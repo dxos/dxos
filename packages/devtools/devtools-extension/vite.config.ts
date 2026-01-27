@@ -49,8 +49,7 @@ export default defineConfig({
 
     WasmPlugin(),
 
-    // https://github.com/preactjs/signals/issues/269
-    ReactPlugin({ jsxRuntime: 'classic' }),
+    ReactPlugin(),
 
     ChromeExtensionPlugin({
       manifest: {

@@ -78,7 +78,9 @@ describe('Migrations', () => {
     Obj.change(space.properties, (p) => {
       p['test.version'] = '1970-01-02';
     });
+    await space.db.graph.schemaRegistry.register([Expando]);
     space.db.add(Obj.make(Type.Expando, { namespace: 'test', count: 5 }));
+    await space.db.flush();
     await Migrations.migrate(space);
     const objects = await space.db.query(Filter.type(Expando, { namespace: 'test' })).run();
     expect(objects).to.have.length(1);

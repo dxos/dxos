@@ -7,13 +7,13 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { Obj, type Type } from '@dxos/echo';
 import { Ref, getValue } from '@dxos/echo/internal';
+import { getSnapshot } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
-import { getSnapshot } from '@dxos/live-object';
 import { type Label, Popover } from '@dxos/react-ui';
 import { Form, type FormRootProps, type RefFieldProps } from '@dxos/react-ui-form';
 import { parseCellIndex, useGridContext } from '@dxos/react-ui-grid';
 import { type FieldProjection } from '@dxos/schema';
-import { getDeep, isTruthy } from '@dxos/util';
+import { getDeep, isTruthy, setDeep } from '@dxos/util';
 
 import { type ModalController, type TableModel, type TableRow } from '../../model';
 import { translationKey } from '../../translations';
@@ -71,7 +71,7 @@ export const FormCellEditor = <T extends Type.Entity.Any = Type.Entity.Any>({
       // Check if this is a draft cell and get the appropriate row data
       const cell = parseCellIndex(contextEditing.index);
       if (model.isDraftCell(cell)) {
-        const draftRow = model.draftRows.value[cell.row];
+        const draftRow = model.getDraftRows()[cell.row];
         invariant(draftRow);
         return draftRow.data;
       } else {
@@ -97,31 +97,40 @@ export const FormCellEditor = <T extends Type.Entity.Any = Type.Entity.Any>({
 
   const handleSave = useCallback<NonNullable<FormRootProps<any>['onSave']>>(
     (values) => {
+      if (!originalRow) {
+        return;
+      }
       const path = fieldProjection.field.path;
       const value = getDeep(values, [path]);
-      if (originalRow && Obj.isObject(originalRow)) {
-        Obj.change(originalRow, () => {
-          Obj.setValue(originalRow, [path], value);
+      // Use model's changeRow for consistent mutation handling.
+      if (model) {
+        model.changeRow(originalRow, (mutableRow) => {
+          setDeep(mutableRow, [path], value);
         });
+      } else {
+        setDeep(originalRow, [path], value);
       }
       contextEditing?.cellElement?.focus();
       setEditing(null);
       setLocalEditing(false);
       onSave?.();
     },
-    [fieldProjection.field.path, onSave, contextEditing, originalRow],
+    [fieldProjection.field.path, onSave, contextEditing, originalRow, model],
   );
 
   const handleCreate = useCallback<NonNullable<FormRootProps<any>['onCreate']>>(
     (schema, values) => {
       const objectWithId = onCreate?.(schema, values);
-      if (objectWithId) {
+      if (objectWithId && originalRow) {
         const ref = Ref.make(objectWithId);
         const path = fieldProjection.field.path;
-        if (originalRow && Obj.isObject(originalRow)) {
-          Obj.change(originalRow, () => {
-            Obj.setValue(originalRow, [path], ref);
+        // Use model's changeRow for consistent mutation handling.
+        if (model) {
+          model.changeRow(originalRow, (mutableRow) => {
+            setDeep(mutableRow, [path], ref);
           });
+        } else {
+          setDeep(originalRow, [path], ref);
         }
       }
       contextEditing?.cellElement?.focus();
@@ -129,7 +138,7 @@ export const FormCellEditor = <T extends Type.Entity.Any = Type.Entity.Any>({
       setLocalEditing(false);
       onSave?.();
     },
-    [fieldProjection.field.path, onSave, contextEditing, originalRow, onCreate],
+    [fieldProjection.field.path, onSave, contextEditing, originalRow, onCreate, model],
   );
 
   const getOptions = useCallback<NonNullable<RefFieldProps['getOptions']>>(

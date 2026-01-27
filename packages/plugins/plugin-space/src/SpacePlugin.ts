@@ -9,7 +9,7 @@ import { ActivationEvent, Capability, Common, Plugin } from '@dxos/app-framework
 import { Ref, Tag, Type } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 import { AttentionEvents } from '@dxos/plugin-attention';
-import { ClientEvents } from '@dxos/plugin-client';
+import { ClientEvents } from '@dxos/plugin-client/types';
 import { translations as componentsTranslations } from '@dxos/react-ui-components';
 import { translations as formTranslations } from '@dxos/react-ui-form';
 import { Collection, DataTypes, createDefaultSchema } from '@dxos/schema';
@@ -39,9 +39,9 @@ import {
   SpaceState,
   SpacesReady,
 } from './capabilities';
-import { SpaceEvents } from './events';
 import { meta } from './meta';
 import { translations } from './translations';
+import { SpaceEvents } from './types';
 import { type CreateObject, SpaceOperation, type SpacePluginOptions } from './types';
 
 export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(

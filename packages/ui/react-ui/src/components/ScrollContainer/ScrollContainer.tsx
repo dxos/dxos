@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useState } from '@preact-signals/safe-react/react';
 import { createContext } from '@radix-ui/react-context';
 import React, {
   type HTMLAttributes,
@@ -13,6 +12,7 @@ import React, {
   useImperativeHandle,
   useMemo,
   useRef,
+  useState,
 } from 'react';
 
 // TODO(burdon): Move these deps to @dxos/dom-util.

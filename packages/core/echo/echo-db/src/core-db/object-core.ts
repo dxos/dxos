@@ -10,6 +10,7 @@ import { type DocHandleChangePayload } from '@automerge/automerge-repo';
 import { Event } from '@dxos/async';
 import { inspectCustom } from '@dxos/debug';
 import { EntityKind, type ObjectMeta } from '@dxos/echo/internal';
+import { isProxy } from '@dxos/echo/internal';
 import {
   type DatabaseDirectory,
   EncodedReference,
@@ -18,7 +19,6 @@ import {
 } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { DXN, ObjectId } from '@dxos/keys';
-import { isLiveObject } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { defer, getDeep, setDeep, throwUnhandledError } from '@dxos/util';
 
@@ -107,7 +107,9 @@ export class ObjectCore {
   }
 
   bind(options: BindOptions): void {
-    invariant(options.docHandle.isReady());
+    // When loading existing documents, wait for the document to be ready.
+    // When creating new documents (assignFromLocalState), the local doc is immediately usable.
+    invariant(options.assignFromLocalState || options.docHandle.isReady());
     this.database = options.db;
     this.docHandle = options.docHandle;
     this.mountPath = options.path;
@@ -256,7 +258,7 @@ export class ObjectCore {
    * Encode a value to be stored in the Automerge document.
    */
   encode(value: DecodedAutomergePrimaryValue) {
-    if (isLiveObject(value) as boolean) {
+    if (isProxy(value) as boolean) {
       throw new TypeError('Linking is not allowed');
     }
 

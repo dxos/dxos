@@ -33,9 +33,6 @@
       "path": "../../common/storybook-utils"
     },
     {
-      "path": "../../core/echo/echo-signals"
-    },
-    {
       "path": "../react-ui"
     },
     {

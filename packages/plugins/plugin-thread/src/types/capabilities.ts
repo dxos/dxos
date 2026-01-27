@@ -2,14 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type Atom } from '@effect-atom/atom-react';
+
 import { Capability } from '@dxos/app-framework';
-import { type DeepReadonly } from '@dxos/util';
 
 import { type CallManager, type CallState, type MediaState } from '../calls';
 import { meta } from '../meta';
-import { type Channel, type ThreadState, type ViewState } from '../types';
+import { type Channel, type ThreadSettingsProps, type ThreadState, type ViewStore } from '../types';
 
 export namespace ThreadCapabilities {
+  export const Settings = Capability.make<Atom.Writable<ThreadSettingsProps>>(`${meta.id}/capability/settings`);
   export const CallManager = Capability.make<CallManager>(`${meta.id}/capability/call-manager`);
 
   // TODO(burdon): Better way to define specific extensions for meeting companions.
@@ -24,11 +26,9 @@ export namespace ThreadCapabilities {
 
   export const CallExtension = Capability.make<CallProperties>(`${meta.id}/capability/call-extension`);
 
-  type GetViewState = (subjectId: string) => ViewState;
-  export const State = Capability.make<{ state: DeepReadonly<ThreadState>; getViewState: GetViewState }>(
-    `${meta.id}/capability/state`,
-  );
-  export const MutableState = Capability.make<{ state: ThreadState; getViewState: GetViewState }>(
-    `${meta.id}/capability/state`,
-  );
+  /** Thread state (drafts, toolbar state, current selection). */
+  export const State = Capability.make<Atom.Writable<ThreadState>>(`${meta.id}/capability/state`);
+
+  /** Per-subject view state (e.g., showResolvedThreads). */
+  export const ViewState = Capability.make<Atom.Writable<ViewStore>>(`${meta.id}/capability/view-state`);
 }

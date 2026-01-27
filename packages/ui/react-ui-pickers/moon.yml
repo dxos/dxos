@@ -10,7 +10,6 @@ tasks:
     args:
       - '--entryPoint=src/index.ts'
       - '--entryPoint=src/components/IconPicker/icons.ts'
-      - '--preactSignalTracking'
   test:
     inputs:
       - .storybook/*

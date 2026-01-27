@@ -5,19 +5,26 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability, Common } from '@dxos/app-framework';
-import { live } from '@dxos/live-object';
+import { createKvsStore } from '@dxos/effect';
 
 import { meta } from '../../meta';
-import { type PresenterSettingsProps, PresenterSettingsSchema } from '../../types';
+import { PresenterCapabilities, PresenterSettingsSchema } from '../../types';
 
 export default Capability.makeModule(() =>
   Effect.sync(() => {
-    const settings = live<PresenterSettingsProps>({});
-
-    return Capability.contributes(Common.Capability.Settings, {
-      prefix: meta.id,
+    const settingsAtom = createKvsStore({
+      key: meta.id,
       schema: PresenterSettingsSchema,
-      value: settings,
+      defaultValue: () => ({}),
     });
+
+    return [
+      Capability.contributes(PresenterCapabilities.Settings, settingsAtom),
+      Capability.contributes(Common.Capability.Settings, {
+        prefix: meta.id,
+        schema: PresenterSettingsSchema,
+        atom: settingsAtom,
+      }),
+    ];
   }),
 );

@@ -4,9 +4,9 @@
 
 import { Obj } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
+import { getProxyTarget } from '@dxos/echo/internal';
 import { type ForeignKey } from '@dxos/echo-protocol';
 import { DXN } from '@dxos/keys';
-import { type Live, getProxyTarget } from '@dxos/live-object';
 
 import { type EchoDatabase } from '../proxy-db';
 
@@ -14,7 +14,7 @@ import { type AnyLiveObject } from './echo-handler';
 import { isEchoObject } from './echo-object-utils';
 import { type ProxyTarget, symbolInternals } from './echo-proxy-target';
 
-export const getDatabaseFromObject = (obj: Live<any>): EchoDatabase | undefined => {
+export const getDatabaseFromObject = (obj: any): EchoDatabase | undefined => {
   if (!isEchoObject(obj)) {
     return undefined;
   }

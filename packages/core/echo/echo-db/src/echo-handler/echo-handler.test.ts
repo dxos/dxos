@@ -4,7 +4,6 @@
 
 import { inspect } from 'node:util';
 
-import { effect } from '@preact/signals-core';
 import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
@@ -20,7 +19,6 @@ import {
 } from '@dxos/echo/internal';
 import { TestSchema, prepareAstForCompare } from '@dxos/echo/testing';
 import { EncodedReference } from '@dxos/echo-protocol';
-import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { DXN, PublicKey, SpaceId } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { log } from '@dxos/log';
@@ -35,8 +33,6 @@ import { createDocAccessor } from './doc-accessor';
 import { type AnyLiveObject, createObject, isEchoObject } from './echo-handler';
 import { getObjectCore } from './echo-handler';
 import { getDatabaseFromObject } from './util';
-
-registerSignalsRuntime();
 
 const TEST_OBJECT: TestSchema.ExampleSchema = {
   string: 'foo',
@@ -232,7 +228,8 @@ describe('Reactive Object with ECHO database', () => {
     const obj = db.add(Obj.make(Type.Expando, { string: 'foo' }));
     expect(obj.id).to.be.a('string');
     expect(obj.string).to.eq('foo');
-    expect(Obj.getSchema(obj)).to.eq(undefined);
+    // Note: Schema is now tracked for all typed objects (Expando is the default schema).
+    expect(Obj.getSchema(obj)).to.eq(Type.Expando);
   });
 
   test('instantiating reactive objects after a restart', async () => {
@@ -722,6 +719,7 @@ describe('Reactive Object with ECHO database', () => {
       expect(employeeJson).to.deep.eq({
         id: employee.id,
         '@meta': { keys: [] },
+        '@type': 'dxn:type:dxos.org/type/Expando:0.1.0',
         name: 'John',
         worksAt: EncodedReference.fromDXN(DXN.fromLocalObjectId(org.id)),
       });
@@ -748,17 +746,18 @@ describe('Reactive Object with ECHO database', () => {
 
     const obj1 = db.add(Obj.make(Type.Expando, { title: 'Object 1' }));
     const obj2 = db.add(Obj.make(Type.Expando, { title: 'Object 2' }));
+    // Wait for document creation to complete so docHandle is ready.
+    await db.flush();
 
     let updateCount = 0;
-    using _ = defer(
-      effect(() => {
-        obj1.title;
-        obj2.title;
-        updateCount++;
-      }),
-    );
+    const unsub1 = Obj.subscribe(obj1, () => updateCount++);
+    const unsub2 = Obj.subscribe(obj2, () => updateCount++);
+    using _ = defer(() => {
+      unsub1();
+      unsub2();
+    });
 
-    expect(updateCount).to.eq(1);
+    expect(updateCount).to.eq(0);
 
     // Rebind obj2 to obj1
     getObjectCore(obj2).bind({
@@ -768,7 +767,7 @@ describe('Reactive Object with ECHO database', () => {
       assignFromLocalState: false,
     });
 
-    expect(updateCount).to.eq(2);
+    expect(updateCount).to.eq(1);
     expect(obj2.title).to.eq('Object 1');
   });
 

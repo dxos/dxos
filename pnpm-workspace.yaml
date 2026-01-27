@@ -28,9 +28,9 @@ catalog:
   '@automerge/automerge-repo-storage-indexeddb': 2.5.1
   '@babel/core': ^7.18.13
   '@babel/runtime': ^7.9.6
-  '@bufbuild/buf': 1.43.0
-  '@bufbuild/protobuf': 2.9.0
-  '@bufbuild/protoc-gen-es': 2.9.0
+  '@bufbuild/buf': 1.61.0
+  '@bufbuild/protobuf': 2.10.1
+  '@bufbuild/protoc-gen-es': 2.10.1
   '@ch-ui/colors': 1.2.1
   '@ch-ui/icons': ^1.0.1
   '@ch-ui/tailwind-tokens': 2.8.1
@@ -42,12 +42,12 @@ catalog:
   '@codemirror/lang-html': ^6.4.11
   '@codemirror/lang-javascript': ^6.2.4
   '@codemirror/lang-json': ^6.0.2
-  '@codemirror/lang-markdown': ^6.3.4
+  '@codemirror/lang-markdown': 6.3.4
   '@codemirror/lang-xml': ^6.1.0
   '@codemirror/lang-yaml': ^6.1.2
   '@codemirror/language': ^6.11.3
   '@codemirror/language-data': ^6.5.1
-  '@codemirror/lint': ^6.8.5
+  '@codemirror/lint': 6.8.5
   '@codemirror/search': ^6.5.11
   '@codemirror/state': ^6.5.2
   '@codemirror/theme-one-dark': ^6.1.3
@@ -67,13 +67,12 @@ catalog:
   '@dxos/echo-db': ^0.8.3
   '@dxos/effect': ^0.8.3
   '@dxos/keys': ^0.8.3
-  '@dxos/live-object': ^0.8.3
   '@dxos/log': ^0.8.3
   '@dxos/schema': ^0.8.3
   '@dxos/test-utils': ^0.8.3
   '@dxos/wa-sqlite': ^0.2.1
-  '@effect-atom/atom': ^0.4.10
-  '@effect-atom/atom-react': ^0.4.4
+  '@effect-atom/atom': ^0.4.13
+  '@effect-atom/atom-react': ^0.4.6
   '@effect/ai': 0.32.1
   '@effect/ai-anthropic': 0.22.0
   '@effect/ai-openai': 0.36.0
@@ -157,12 +156,8 @@ catalog:
   '@orama/orama': ^3.1.7
   '@peermetrics/webrtc-stats': 5.7.1
   '@phosphor-icons/core': ^2.1.1
-  '@phosphor-icons/react': ^2.1.10
+  '@phosphor-icons/react': 2.1.10
   '@playwright/test': 1.57.0
-  '@preact-signals/safe-react': ^0.9.0
-  '@preact/signals': ^2.3.1
-  '@preact/signals-core': ^1.12.1
-  '@preact/signals-react': ^3.3.0
   '@radix-ui/primitive': 1.1.1
   '@radix-ui/react-accordion': 1.2.3
   '@radix-ui/react-alert-dialog': 1.1.6
@@ -714,6 +709,6 @@ catalog:
   zen-observable: ^0.10.0
   zen-push: ^0.3.1
   zone.js: '>=0.11.4 <0.12.0-0 || >=0.13.0 <0.14.0-0 || >=0.14.0 <0.15.0-0'
-  zx: ^8.4.1
+  zx: ^8.8.5
 
 strictPeerDependencies: true

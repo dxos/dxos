@@ -78,12 +78,20 @@ export const getMode = (deck: DeckState | DeepReadonly<DeckState>): LayoutMode =
   return 'deck';
 };
 
-// State of the deck plugin.
-export const DeckPluginState = Schema.Struct({
+// Persisted plugin state (stored in KVS/localStorage).
+export const DeckStateSchema = Schema.Struct({
   sidebarState: Schema.Literal('closed', 'collapsed', 'expanded'),
   complementarySidebarState: Schema.Literal('closed', 'collapsed', 'expanded'),
   complementarySidebarPanel: Schema.optional(Schema.String),
+  activeDeck: Schema.String,
+  previousDeck: Schema.String,
+  decks: Schema.mutable(Schema.Record({ key: Schema.String, value: Schema.mutable(DeckState) })),
+  previousMode: Schema.mutable(Schema.Record({ key: Schema.String, value: LayoutMode })),
+}).pipe(Schema.mutable);
+export type DeckStateProps = Schema.Schema.Type<typeof DeckStateSchema>;
 
+// Transient/ephemeral plugin state (not persisted).
+export const DeckEphemeralStateSchema = Schema.Struct({
   dialogOpen: Schema.Boolean,
   dialogType: Schema.optional(Schema.Literal('default', 'alert')),
   dialogBlockAlign: Schema.optional(Schema.Literal('start', 'center', 'end')),
@@ -102,17 +110,13 @@ export const DeckPluginState = Schema.Struct({
   toasts: Schema.mutable(Schema.Array(Common.LayoutOperation.Toast)),
   currentUndoId: Schema.optional(Schema.String),
 
-  activeDeck: Schema.String,
-  previousDeck: Schema.String,
-  decks: Schema.mutable(Schema.Record({ key: Schema.String, value: Schema.mutable(DeckState) })),
-  previousMode: Schema.mutable(Schema.Record({ key: Schema.String, value: LayoutMode })),
-  deck: Schema.mutable(DeckState),
-
   /** The identifier of a component to scroll into view when it is mounted. */
   scrollIntoView: Schema.optional(Schema.String),
 }).pipe(Schema.mutable);
+export type DeckEphemeralStateProps = Schema.Schema.Type<typeof DeckEphemeralStateSchema>;
 
-export type DeckPluginState = Schema.Schema.Type<typeof DeckPluginState>;
+// Combined state type (for convenience in components that need both).
+export type DeckPluginState = DeckStateProps & DeckEphemeralStateProps;
 
 export namespace DeckAction {
   const PartAdjustmentSchema = Schema.Union(

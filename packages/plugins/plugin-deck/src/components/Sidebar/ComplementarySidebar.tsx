@@ -13,14 +13,20 @@ import React, {
 } from 'react';
 
 import { Common } from '@dxos/app-framework';
-import { Surface, useCapability, useOperationInvoker } from '@dxos/app-framework/react';
+import { Surface, useOperationInvoker } from '@dxos/app-framework/react';
 import { IconButton, type Label, Main, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { mx } from '@dxos/ui-theme';
 
-import { type DeckCompanion, getCompanionId, useBreakpoints, useDeckCompanions, useHoistStatusbar } from '../../hooks';
+import {
+  type DeckCompanion,
+  getCompanionId,
+  useBreakpoints,
+  useDeckCompanions,
+  useDeckState,
+  useHoistStatusbar,
+} from '../../hooks';
 import { meta } from '../../meta';
-import { DeckCapabilities } from '../../types';
 import { getMode } from '../../types';
 import { layoutAppliesTopbar } from '../../util';
 import { PlankContentError, PlankLoading } from '../Plank';
@@ -36,8 +42,8 @@ export type ComplementarySidebarProps = {
 export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => {
   const { t } = useTranslation(meta.id);
   const { invokeSync } = useOperationInvoker();
-  const layout = useCapability(DeckCapabilities.MutableDeckState);
-  const layoutMode = getMode(layout.deck);
+  const { state, deck, updateState } = useDeckState();
+  const layoutMode = getMode(deck);
   const breakpoint = useBreakpoints();
   const topbar = layoutAppliesTopbar(breakpoint, layoutMode);
   const hoistStatusbar = useHoistStatusbar(breakpoint, layoutMode);
@@ -55,14 +61,17 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
     (event: MouseEvent) => {
       const nextValue = event.currentTarget.getAttribute('data-value') as string;
       if (nextValue === activeId) {
-        layout.complementarySidebarState = layout.complementarySidebarState === 'expanded' ? 'collapsed' : 'expanded';
+        updateState((s) => ({
+          ...s,
+          complementarySidebarState: s.complementarySidebarState === 'expanded' ? 'collapsed' : 'expanded',
+        }));
       } else {
         setInternalValue(nextValue);
-        layout.complementarySidebarState = 'expanded';
+        updateState((s) => ({ ...s, complementarySidebarState: 'expanded' }));
         invokeSync(Common.LayoutOperation.UpdateComplementary, { subject: nextValue });
       }
     },
-    [layout, activeId, invokeSync],
+    [state.complementarySidebarState, activeId, invokeSync, updateState],
   );
 
   const data = useMemo(
@@ -108,7 +117,7 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
                   data-value={getCompanionId(companion.id)}
                   variant={
                     activeId === getCompanionId(companion.id)
-                      ? layout.complementarySidebarState === 'expanded'
+                      ? state.complementarySidebarState === 'expanded'
                         ? 'primary'
                         : 'default'
                       : 'ghost'
@@ -137,7 +146,7 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
                 'inset-block-0 inline-start-0 is-[calc(100%-var(--r0-size))] lg:is-[--r1-size]',
                 'grid grid-cols-1 grid-rows-[var(--rail-size)_1fr_min-content] pbs-[env(safe-area-inset-top)]',
               ]}
-              {...(layout.complementarySidebarState !== 'expanded' && { inert: true })}
+              {...(state.complementarySidebarState !== 'expanded' && { inert: true })}
             >
               <ComplementarySidebarPanel
                 companion={companion}

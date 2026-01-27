@@ -6,12 +6,12 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { Capability, Common } from '@dxos/app-framework';
+import { useSettingsState } from '@dxos/app-framework/react';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { getSpace } from '@dxos/client/echo';
 import { Sequence } from '@dxos/conductor';
 import { InvocationTraceContainer } from '@dxos/devtools';
 import { Obj } from '@dxos/echo';
-import { SettingsStore } from '@dxos/local-storage';
 import { StackItem } from '@dxos/react-ui-stack';
 
 import {
@@ -31,9 +31,12 @@ export default Capability.makeModule(() =>
       Common.createSurface({
         id: `${meta.id}/plugin-settings`,
         role: 'article',
-        filter: (data): data is { subject: SettingsStore<Assistant.Settings> } =>
-          data.subject instanceof SettingsStore && data.subject.prefix === meta.id,
-        component: ({ data: { subject } }) => <AssistantSettings settings={subject.value} />,
+        filter: (data): data is { subject: Common.Capability.Settings } =>
+          Common.Capability.isSettings(data.subject) && data.subject.prefix === meta.id,
+        component: ({ data: { subject } }) => {
+          const { settings, updateSettings } = useSettingsState<Assistant.Settings>(subject.atom);
+          return <AssistantSettings settings={settings} onSettingsChange={updateSettings} />;
+        },
       }),
       Common.createSurface({
         id: `${meta.id}/chat`,

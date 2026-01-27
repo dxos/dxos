@@ -38,9 +38,6 @@
       "path": "../../common/keys"
     },
     {
-      "path": "../../common/local-storage"
-    },
-    {
       "path": "../../common/log"
     },
     {
@@ -74,6 +71,9 @@
       "path": "../../core/echo/echo"
     },
     {
+      "path": "../../core/echo/echo-atom"
+    },
+    {
       "path": "../../core/echo/echo-db"
     },
     {
@@ -81,9 +81,6 @@
     },
     {
       "path": "../../core/echo/echo-query"
-    },
-    {
-      "path": "../../core/echo/live-object"
     },
     {
       "path": "../../core/functions"

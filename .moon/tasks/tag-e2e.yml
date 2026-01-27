@@ -20,3 +20,4 @@ tasks:
       - $DX_HOST
       - $DX_HUB_URL
       - $DX_IPDATA_API_KEY
+      - $DX_SHARED_WORKER

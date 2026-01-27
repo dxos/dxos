@@ -6,14 +6,13 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { Capability, Common } from '@dxos/app-framework';
-import { useCapability } from '@dxos/app-framework/react';
+import { useAtomCapability, useSettingsState } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
-import { SettingsStore } from '@dxos/local-storage';
 import { Diagram } from '@dxos/plugin-sketch/types';
 
 import { SketchContainer, SketchSettings } from '../../components';
 import { meta } from '../../meta';
-import { EXCALIDRAW_SCHEMA, type SketchSettingsProps } from '../../types';
+import { EXCALIDRAW_SCHEMA, ExcalidrawCapabilities, type SketchSettingsProps } from '../../types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -23,7 +22,7 @@ export default Capability.makeModule(() =>
         role: ['article', 'section', 'slide'],
         filter: (data): data is { subject: Diagram.Diagram } => Diagram.isDiagram(data.subject, EXCALIDRAW_SCHEMA),
         component: ({ data, role }) => {
-          const settings = useCapability(Common.Capability.SettingsStore).getStore<SketchSettingsProps>(meta.id)!.value;
+          const settings = useAtomCapability(ExcalidrawCapabilities.Settings);
 
           return (
             <SketchContainer
@@ -38,9 +37,12 @@ export default Capability.makeModule(() =>
       Common.createSurface({
         id: `${meta.id}/plugin-settings`,
         role: 'article',
-        filter: (data): data is { subject: SettingsStore<SketchSettingsProps> } =>
-          data.subject instanceof SettingsStore && data.subject.prefix === meta.id,
-        component: ({ data: { subject } }) => <SketchSettings settings={subject.value} />,
+        filter: (data): data is { subject: Common.Capability.Settings } =>
+          Common.Capability.isSettings(data.subject) && data.subject.prefix === meta.id,
+        component: ({ data: { subject } }) => {
+          const { settings, updateSettings } = useSettingsState<SketchSettingsProps>(subject.atom);
+          return <SketchSettings settings={settings} onSettingsChange={updateSettings} />;
+        },
       }),
     ]),
   ),

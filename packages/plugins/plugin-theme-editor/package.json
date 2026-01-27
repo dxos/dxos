@@ -35,7 +35,6 @@
     "@dxos/react-ui-stack": "workspace:*",
     "@dxos/ui-editor": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@preact-signals/safe-react": "catalog:",
     "@types/lodash.debounce": "catalog:",
     "lodash.debounce": "catalog:"
   },

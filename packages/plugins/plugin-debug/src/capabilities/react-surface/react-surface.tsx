@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import React, { useCallback } from 'react';
 
 import { Capability, Common } from '@dxos/app-framework';
-import { useCapability, useOperationInvoker } from '@dxos/app-framework/react';
+import { useCapability, useLayout, useOperationInvoker, useSettingsState } from '@dxos/app-framework/react';
 import {
   AutomergePanel,
   ConfigPanel,
@@ -35,7 +35,6 @@ import {
   WorkflowPanel,
 } from '@dxos/devtools';
 import { Obj } from '@dxos/echo';
-import { SettingsStore } from '@dxos/local-storage';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { type Graph } from '@dxos/plugin-graph';
@@ -55,7 +54,7 @@ import {
   Wireframe,
 } from '../../components';
 import { meta } from '../../meta';
-import { type DebugSettingsProps, Devtools } from '../../types';
+import { DebugCapabilities, type DebugSettingsProps, Devtools } from '../../types';
 
 type SpaceDebug = {
   type: string;
@@ -75,7 +74,7 @@ const isGraphDebug = (data: any): data is GraphDebug => {
 
 // TODO(wittjosiah): Factor out?
 const useCurrentSpace = () => {
-  const layout = useCapability(Common.Capability.Layout);
+  const layout = useLayout();
   const client = useCapability(ClientCapabilities.Client);
   const { spaceId } = parseId(layout.workspace);
   const space = spaceId ? client.spaces.get(spaceId) : undefined;
@@ -85,14 +84,19 @@ const useCurrentSpace = () => {
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const capabilities = yield* Capability.Service;
+    const registry = capabilities.get(Common.Capability.AtomRegistry);
+    const settingsAtom = capabilities.get(DebugCapabilities.Settings);
 
     return Capability.contributes(Common.Capability.ReactSurface, [
       Common.createSurface({
         id: `${meta.id}/plugin-settings`,
         role: 'article',
-        filter: (data): data is { subject: SettingsStore<DebugSettingsProps> } =>
-          data.subject instanceof SettingsStore && data.subject.prefix === meta.id,
-        component: ({ data: { subject } }) => <DebugSettings settings={subject.value} />,
+        filter: (data): data is { subject: Common.Capability.Settings } =>
+          Common.Capability.isSettings(data.subject) && data.subject.prefix === meta.id,
+        component: ({ data: { subject } }) => {
+          const { settings, updateSettings } = useSettingsState<DebugSettingsProps>(subject.atom);
+          return <DebugSettings settings={settings} onSettingsChange={updateSettings} />;
+        },
       }),
       Common.createSurface({
         id: `${meta.id}/space`,
@@ -142,9 +146,7 @@ export default Capability.makeModule(
         role: ['article', 'section'],
         position: 'hoist',
         filter: (data): data is { subject: Obj.Any } => {
-          const settings = capabilities
-            .get(Common.Capability.SettingsStore)
-            .getStore<DebugSettingsProps>(meta.id)!.value;
+          const settings = registry.get(settingsAtom);
           return Obj.isObject(data.subject) && !!settings.wireframe;
         },
         component: ({ data, role }) => (

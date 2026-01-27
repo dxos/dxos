@@ -2,12 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import { untracked } from '@preact/signals-core';
+import { Atom, type Registry } from '@effect-atom/atom-react';
 import * as Match from 'effect/Match';
 import * as Schema from 'effect/Schema';
 
 import { invariant } from '@dxos/invariant';
-import { type Live, live } from '@dxos/live-object';
 
 // TODO(burdon): Reconcile with @dxos/graph.
 
@@ -70,117 +69,158 @@ export const getSelectionSet = (selectionManager: SelectionManager, contextId?: 
  * Each context maintains its own selection mode and state.
  */
 export class SelectionManager {
-  private readonly _state = live<{ selections: Record<string, Selection> }>({ selections: {} });
+  private readonly _state: Atom.Writable<{ selections: Record<string, Selection> }>;
 
-  constructor(initial: Record<string, Selection> = {}) {
-    if (Object.keys(initial).length > 0) {
-      untracked(() => {
-        this._state.selections = initial;
-      });
-    }
+  constructor(
+    private readonly _registry: Registry.Registry,
+    initial: Record<string, Selection> = {},
+  ) {
+    this._state = Atom.make<{ selections: Record<string, Selection> }>({
+      selections: { ...initial },
+    });
+  }
+
+  /**
+   * Get the state atom for reactive access in the graph system.
+   */
+  get state(): Atom.Atom<{ selections: Record<string, Selection> }> {
+    return this._state;
+  }
+
+  /**
+   * Gets the current state.
+   */
+  getState(): { selections: Record<string, Selection> } {
+    return this._registry.get(this._state);
+  }
+
+  /**
+   * Subscribe to changes in the selection state.
+   */
+  subscribe(cb: (state: { selections: Record<string, Selection> }) => void): () => void {
+    this._registry.get(this._state);
+    return this._registry.subscribe(this._state, () => {
+      cb(this._registry.get(this._state));
+    });
   }
 
   getSelectionContexts(): string[] {
-    return Object.keys(this._state.selections);
+    return Object.keys(this._registry.get(this._state).selections);
   }
 
+  getSelection(contextId: string): Selection | undefined;
+  getSelection<T extends SelectionMode>(contextId: string, mode: T): Selection;
   getSelection<T extends SelectionMode | undefined>(
     contextId: string,
     mode: T = undefined as T,
-  ): T extends undefined ? Live<Selection> | undefined : Live<Selection> {
-    const selection = untracked(() => this._state.selections[contextId]);
+  ): Selection | undefined {
+    const state = this._registry.get(this._state);
+    const selection = state.selections[contextId];
     if (!mode || selection) {
       return selection;
     }
 
-    return untracked(() => {
-      this._state.selections[contextId] = defaultSelection(mode);
-      return this._state.selections[contextId];
-    });
+    // Create new selection for the context.
+    const newSelection = defaultSelection(mode);
+    this._registry.update(this._state, (state) => ({
+      selections: { ...state.selections, [contextId]: newSelection },
+    }));
+    return newSelection;
   }
 
   // TODO(burdon): Disambiguate with getSelection?
   getSelected<T extends SelectionMode>(contextId: string, mode: T = 'multi' as T): SelectionResult<T> {
     const selection = this.getSelection(contextId, mode);
     invariant(selection?.mode === mode, 'Selection mode mismatch');
+    // Cast required because TypeScript can't infer the relationship between T and the matched result.
     return Match.type<Selection>().pipe(
       Match.when({ mode: 'single' }, (s) => s.id),
       Match.when({ mode: 'multi' }, (s) => s.ids),
       Match.when({ mode: 'range' }, (s) => (s.from && s.to ? { from: s.from, to: s.to } : undefined)),
       Match.when({ mode: 'multi-range' }, (s) => s.ranges),
       Match.exhaustive,
-    )(selection) as any;
+    )(selection) as SelectionResult<T>;
   }
 
   updateSingle(contextId: string, id: string): void {
-    untracked(() => {
-      const selection = this.getSelection(contextId, 'single');
-      invariant(selection?.mode === 'single', 'Selection mode is not single');
-      selection.id = id;
-    });
+    const selection = this.getSelection(contextId, 'single');
+    invariant(selection?.mode === 'single', 'Selection mode is not single');
+    this._registry.update(this._state, (state) => ({
+      selections: {
+        ...state.selections,
+        [contextId]: { ...selection, id },
+      },
+    }));
   }
 
   updateMulti(contextId: string, ids: string[]) {
-    untracked(() => {
-      const selection = this.getSelection(contextId, 'multi');
-      invariant(selection?.mode === 'multi', 'Selection mode is not multi');
-      selection.ids.splice(0, selection.ids.length, ...ids);
-    });
+    const selection = this.getSelection(contextId, 'multi');
+    invariant(selection?.mode === 'multi', 'Selection mode is not multi');
+    this._registry.update(this._state, (state) => ({
+      selections: {
+        ...state.selections,
+        [contextId]: { ...selection, ids: [...ids] },
+      },
+    }));
   }
 
   updateRange(contextId: string, from: string, to: string) {
-    untracked(() => {
-      const selection = this.getSelection(contextId, 'range');
-      invariant(selection?.mode === 'range', 'Selection mode is not range');
-      selection.from = from;
-      selection.to = to;
-    });
+    const selection = this.getSelection(contextId, 'range');
+    invariant(selection?.mode === 'range', 'Selection mode is not range');
+    this._registry.update(this._state, (state) => ({
+      selections: {
+        ...state.selections,
+        [contextId]: { ...selection, from, to },
+      },
+    }));
   }
 
   updateMultiRange(contextId: string, ranges: { from: string; to: string }[]) {
-    untracked(() => {
-      const selection = this.getSelection(contextId, 'multi-range');
-      invariant(selection?.mode === 'multi-range', 'Selection mode is not multi-range');
-      selection.ranges.splice(0, selection.ranges.length, ...ranges);
-    });
+    const selection = this.getSelection(contextId, 'multi-range');
+    invariant(selection?.mode === 'multi-range', 'Selection mode is not multi-range');
+    this._registry.update(this._state, (state) => ({
+      selections: {
+        ...state.selections,
+        [contextId]: { ...selection, ranges: [...ranges] },
+      },
+    }));
   }
 
   clearSelection(contextId: string): void {
-    untracked(() => {
-      const selection = this.getSelection(contextId);
-      Match.type<Selection | undefined>().pipe(
-        Match.when(undefined, () => {
-          // No-op.
-        }),
-        Match.when({ mode: 'single' }, (s) => {
-          s.id = undefined;
-        }),
-        Match.when({ mode: 'multi' }, (s) => {
-          s.ids.splice(0, s.ids.length);
-        }),
-        Match.when({ mode: 'range' }, (s) => {
-          s.from = undefined;
-          s.to = undefined;
-        }),
-        Match.when({ mode: 'multi-range' }, (s) => {
-          s.ranges.splice(0, s.ranges.length);
-        }),
-        Match.exhaustive,
-      )(selection);
-    });
+    const selection = this.getSelection(contextId);
+    if (!selection) {
+      return;
+    }
+
+    const clearedSelection = Match.type<Selection>().pipe(
+      Match.when({ mode: 'single' }, (s) => ({ ...s, id: undefined })),
+      Match.when({ mode: 'multi' }, (s) => ({ ...s, ids: [] })),
+      Match.when({ mode: 'range' }, (s) => ({ ...s, from: undefined, to: undefined })),
+      Match.when({ mode: 'multi-range' }, (s) => ({ ...s, ranges: [] })),
+      Match.exhaustive,
+    )(selection);
+
+    this._registry.update(this._state, (state) => ({
+      selections: {
+        ...state.selections,
+        [contextId]: clearedSelection,
+      },
+    }));
   }
 
   toggleSelection(contextId: string, id: string): void {
-    untracked(() => {
-      const selection = this.getSelection(contextId, 'multi');
-      invariant(selection?.mode === 'multi', 'Selection mode is not multi');
+    const selection = this.getSelection(contextId, 'multi');
+    invariant(selection?.mode === 'multi', 'Selection mode is not multi');
 
-      if (selection.ids.includes(id)) {
-        const index = selection.ids.indexOf(id);
-        selection.ids.splice(index, 1);
-      } else {
-        selection.ids.push(id);
-      }
-    });
+    const newIds = selection.ids.includes(id)
+      ? selection.ids.filter((existingId) => existingId !== id)
+      : [...selection.ids, id];
+
+    this._registry.update(this._state, (state) => ({
+      selections: {
+        ...state.selections,
+        [contextId]: { ...selection, ids: newIds },
+      },
+    }));
   }
 }

@@ -2,9 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useEffect } from '@preact-signals/safe-react/react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
 import { faker } from '@dxos/random';
 import { Toolbar } from '@dxos/react-ui';

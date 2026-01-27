@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Registry } from '@effect-atom/atom-react';
 import { describe, expect, test } from 'vitest';
 
 import { Obj } from '@dxos/echo';
@@ -12,8 +13,9 @@ import { ComputeGraph } from './compute-graph';
 
 describe('notebook', () => {
   test('parse dependency graph', async () => {
+    const registry = Registry.make();
     const notebook = createNotebook();
-    const graph = new ComputeGraph(notebook);
+    const graph = new ComputeGraph(notebook, registry);
     const result = graph.parse();
 
     const getId = (i: number) => notebook.cells[i].id;
@@ -36,6 +38,7 @@ describe('notebook', () => {
   });
 
   test('evalScript blocks access to window and document', async () => {
+    const registry = Registry.make();
     const notebook = createNotebook();
     // Replace one of the cells with code that tries to access window/document.
     const sourceTarget = notebook.cells[2].source?.target;
@@ -45,7 +48,7 @@ describe('notebook', () => {
       });
     }
 
-    const graph = new ComputeGraph(notebook);
+    const graph = new ComputeGraph(notebook, registry);
     graph.parse();
     const values = await graph.evaluate();
 

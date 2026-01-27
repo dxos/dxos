@@ -9,5 +9,6 @@ export * from './useMembers';
 export * from './useQueue';
 export * from './useSpaces';
 export * from './useSpaceInvitations';
+export * from './useSpaceProperties';
 export * from './useSubscription';
 export * from './useSyncState';

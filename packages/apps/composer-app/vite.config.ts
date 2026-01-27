@@ -37,7 +37,26 @@ const dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(file
 
 // Shared plugins for worker that are using in prod build.
 // In dev vite uses root plugins for both worker and page.
-const sharedPlugins = (env: ConfigEnv): PluginOption[] => [wasm(), sourcemaps()];
+const sharedPlugins = (env: ConfigEnv): PluginOption[] => [
+  // Building from dist when creating a prod bundle.
+  env.command === 'serve' &&
+    importSource({
+      exclude: [
+        '**/node_modules/**',
+        '**/common/random-access-storage/**',
+        '**/common/lock-file/**',
+        '**/mesh/network-manager/**',
+        '**/mesh/teleport/**',
+        '**/sdk/config/**',
+        '**/sdk/client-services/**',
+        '**/sdk/observability/**',
+        // TODO(dmaretskyi): Decorators break in lit.
+        '**/ui/lit-*/**',
+      ],
+    }),
+  wasm(),
+  sourcemaps(),
+];
 
 /**
  * https://vitejs.dev/config
@@ -49,9 +68,9 @@ export default defineConfig((env) => ({
     https:
       process.env.HTTPS === 'true'
         ? {
-          key: '../../../key.pem',
-          cert: '../../../cert.pem',
-        }
+            key: '../../../key.pem',
+            cert: '../../../cert.pem',
+          }
         : undefined,
     fs: {
       strict: false,
@@ -138,23 +157,6 @@ export default defineConfig((env) => ({
 
     env.command === 'serve' && devtoolsJson(),
 
-    // Building from dist when creating a prod bundle.
-    env.command === 'serve' &&
-    importSource({
-      exclude: [
-        '**/node_modules/**',
-        '**/common/random-access-storage/**',
-        '**/common/lock-file/**',
-        '**/mesh/network-manager/**',
-        '**/mesh/teleport/**',
-        '**/sdk/config/**',
-        '**/sdk/client-services/**',
-        '**/sdk/observability/**',
-        // TODO(dmaretskyi): Decorators break in lit.
-        '**/ui/lit-*/**',
-      ],
-    }),
-
     // Solid JSX transform for Solid packages.
     // Must be placed before React plugin to process Solid files first.
     solid({
@@ -209,13 +211,6 @@ export default defineConfig((env) => ({
             ],
           },
         ],
-        // https://github.com/XantreDev/preact-signals/tree/main/packages/react#how-parser-plugins-works
-        [
-          '@preact-signals/safe-react/swc',
-          {
-            mode: 'all',
-          },
-        ],
       ],
     }),
 
@@ -233,8 +228,6 @@ export default defineConfig((env) => ({
         '@dxos/client-services',
         '@dxos/config',
         '@dxos/echo',
-        '@dxos/echo-signals',
-        '@dxos/live-object',
         '@dxos/react-client',
         '@dxos/react-client/devtools',
         '@dxos/react-client/echo',

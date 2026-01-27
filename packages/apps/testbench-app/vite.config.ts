@@ -169,8 +169,6 @@ export default defineConfig(
                 ],
               },
             ],
-            // https://github.com/XantreDev/preact-signals/tree/main/packages/react#how-parser-plugins-works
-            ['@preact-signals/safe-react/swc', { mode: 'all' }],
           ],
         }),
         // https://docs.sentry.io/platforms/javascript/sourcemaps/uploading/vite

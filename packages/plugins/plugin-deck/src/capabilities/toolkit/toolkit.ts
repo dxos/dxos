@@ -35,7 +35,9 @@ export namespace DeckToolkit {
     Toolkit$.toLayer({
       'open-item': ({ id }) =>
         Effect.gen(function* () {
-          const state = capabilityManager.get(DeckCapabilities.DeckState);
+          const registry = capabilityManager.get(Common.Capability.AtomRegistry);
+          const stateAtom = capabilityManager.get(DeckCapabilities.State);
+          const state = registry.get(stateAtom);
           const dxn = ArtifactId.toDXN(id, state.activeDeck as SpaceId).asEchoDXN();
           if (!dxn) {
             // TODO(wittjosiah): Support other variants.

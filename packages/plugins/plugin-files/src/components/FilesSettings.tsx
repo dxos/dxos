@@ -11,7 +11,13 @@ import { ControlGroup, ControlItemInput, ControlPage, ControlSection } from '@dx
 import { meta } from '../meta';
 import { type FilesSettingsProps, type FilesState, LocalFilesOperation } from '../types';
 
-export const FilesSettings = ({ settings, state }: { settings: FilesSettingsProps; state: FilesState }) => {
+export type FilesSettingsComponentProps = {
+  settings: FilesSettingsProps;
+  state: FilesState;
+  onSettingsChange: (fn: (current: FilesSettingsProps) => FilesSettingsProps) => void;
+};
+
+export const FilesSettings = ({ settings, state, onSettingsChange }: FilesSettingsComponentProps) => {
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
 
@@ -56,7 +62,7 @@ export const FilesSettings = ({ settings, state }: { settings: FilesSettingsProp
             <Input.Switch
               disabled={!state.rootHandle}
               checked={state.rootHandle ? settings.autoExport : false}
-              onCheckedChange={(checked) => (settings.autoExport = !!checked)}
+              onCheckedChange={(checked) => onSettingsChange((s) => ({ ...s, autoExport: !!checked }))}
             />
           </ControlItemInput>
           <ControlItemInput title={t('auto export interval label')}>
@@ -64,13 +70,15 @@ export const FilesSettings = ({ settings, state }: { settings: FilesSettingsProp
               type='number'
               min={1}
               value={settings.autoExportInterval / 1000}
-              onInput={(event) => (settings.autoExportInterval = parseInt(event.currentTarget.value, 10) * 1000)}
+              onInput={(event) =>
+                onSettingsChange((s) => ({ ...s, autoExportInterval: parseInt(event.currentTarget.value, 10) * 1000 }))
+              }
             />
           </ControlItemInput>
           <ControlItemInput title={t('open local files label')}>
             <Input.Switch
               checked={settings.openLocalFiles}
-              onCheckedChange={(checked) => (settings.openLocalFiles = !!checked)}
+              onCheckedChange={(checked) => onSettingsChange((s) => ({ ...s, openLocalFiles: !!checked }))}
             />
           </ControlItemInput>
         </ControlGroup>

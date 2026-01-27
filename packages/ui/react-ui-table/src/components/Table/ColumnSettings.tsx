@@ -2,9 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
+import { useAtomValue } from '@effect-atom/atom-react';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Obj, type SchemaRegistry } from '@dxos/echo';
+import { type SchemaRegistry } from '@dxos/echo';
 import { Popover } from '@dxos/react-ui';
 import { FieldEditor } from '@dxos/react-ui-form';
 import { type FieldType } from '@dxos/schema';
@@ -20,7 +21,7 @@ type ColumnSettingsProps = {
 
 export const ColumnSettings = ({ registry, model, modals, onNewColumn }: ColumnSettingsProps) => {
   const [newField, setNewField] = useState<FieldType>();
-  const state = modals.state.value;
+  const state = useAtomValue(modals.state);
 
   useEffect(() => {
     if (state?.type === 'columnSettings' && state.mode.type === 'create' && model?.projection) {
@@ -37,11 +38,11 @@ export const ColumnSettings = ({ registry, model, modals, onNewColumn }: ColumnS
     if (state?.type === 'columnSettings') {
       const { mode } = state;
       if (mode.type === 'edit') {
-        return model?.projection?.fields.find((f) => f.id === mode.fieldId);
+        return model?.projection?.getFields().find((f) => f.id === mode.fieldId);
       }
     }
     return undefined;
-  }, [model?.projection?.fields, state]);
+  }, [model?.projection, state]);
 
   const field = existingField ?? newField;
 
@@ -50,12 +51,10 @@ export const ColumnSettings = ({ registry, model, modals, onNewColumn }: ColumnS
   }, [modals]);
 
   const handleCancel = useCallback(() => {
-    if (state?.type === 'columnSettings' && state.mode.type === 'create' && newField && model) {
-      Obj.change(model.view, () => {
-        model.projection.deleteFieldProjection(newField.id);
-      });
+    if (state?.type === 'columnSettings' && state.mode.type === 'create' && newField) {
+      model?.projection.deleteFieldProjection(newField.id);
     }
-  }, [model, state, newField]);
+  }, [model?.projection, state, newField]);
 
   if (!model?.projection || !field) {
     return null;
@@ -71,7 +70,6 @@ export const ColumnSettings = ({ registry, model, modals, onNewColumn }: ColumnS
               projection={model.projection}
               field={field}
               registry={registry}
-              view={model.view}
               onSave={handleSave}
               onCancel={handleCancel}
             />

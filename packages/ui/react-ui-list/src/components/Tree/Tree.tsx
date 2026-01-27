@@ -34,8 +34,8 @@ export const Tree = <T extends HasId = any, O = any>({
   id,
   useItems,
   getProps,
-  isOpen,
-  isCurrent,
+  useIsOpen,
+  useIsCurrent,
   draggable = false,
   gridTemplateColumns = '[tree-row-start] 1fr min-content [tree-row-end]',
   classNames,
@@ -51,10 +51,10 @@ export const Tree = <T extends HasId = any, O = any>({
     () => ({
       useItems,
       getProps,
-      isOpen,
-      isCurrent,
+      useIsOpen,
+      useIsCurrent,
     }),
-    [useItems, getProps, isOpen, isCurrent],
+    [useItems, getProps, useIsOpen, useIsCurrent],
   );
   const items = useItems(root);
   const treePath = useMemo(() => (path ? [...path, id] : [id]), [id, path]);

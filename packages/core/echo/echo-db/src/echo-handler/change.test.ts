@@ -6,11 +6,8 @@ import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
 import { Obj, Type } from '@dxos/echo';
-import { registerSignalsRuntime } from '@dxos/echo-signals';
 
 import { createObject, isEchoObject } from './echo-handler';
-
-registerSignalsRuntime();
 
 const Person = Schema.Struct({
   name: Schema.String,

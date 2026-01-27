@@ -21,10 +21,10 @@
       "path": "../../common/async"
     },
     {
-      "path": "../../common/invariant"
+      "path": "../../common/effect"
     },
     {
-      "path": "../../common/local-storage"
+      "path": "../../common/invariant"
     },
     {
       "path": "../../common/log"
@@ -43,9 +43,6 @@
     },
     {
       "path": "../../core/echo/echo-db"
-    },
-    {
-      "path": "../../core/echo/live-object"
     },
     {
       "path": "../../core/operation"

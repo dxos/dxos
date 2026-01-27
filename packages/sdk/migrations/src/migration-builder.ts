@@ -97,12 +97,14 @@ export class MigrationBuilder {
     };
     const migratedDoc = migrateDocument(oldHandle.doc() as Doc<DatabaseDirectory>, newState);
     const newHandle = this._repo.import<DatabaseDirectory>(A.save(migratedDoc));
+    await newHandle.whenReady();
+    invariant(newHandle.url, 'Migrated document URL not available after whenReady');
     this._newLinks[id] = newHandle.url;
-    this._addHandleToFlushList(newHandle);
+    this._addHandleToFlushList(newHandle.documentId!);
   }
 
   async addObject(schema: Schema.Schema.AnyNoContext, props: any): Promise<string> {
-    const core = this._createObject({ schema, props });
+    const core = await this._createObject({ schema, props });
     return core.id;
   }
 
@@ -114,9 +116,9 @@ export class MigrationBuilder {
     this._deleteObjects.push(id);
   }
 
-  changeProperties(changeFn: (properties: ObjectStructure) => void): void {
+  async changeProperties(changeFn: (properties: ObjectStructure) => void): Promise<void> {
     if (!this._newRoot) {
-      this._buildNewRoot();
+      await this._buildNewRoot();
     }
     invariant(this._newRoot, 'New root not created');
 
@@ -124,7 +126,8 @@ export class MigrationBuilder {
       const propertiesStructure = doc.objects?.[this._space.properties.id];
       propertiesStructure && changeFn(propertiesStructure);
     });
-    this._addHandleToFlushList(this._newRoot);
+    await this._newRoot.whenReady();
+    this._addHandleToFlushList(this._newRoot.documentId!);
   }
 
   /**
@@ -132,13 +135,14 @@ export class MigrationBuilder {
    */
   async _commit(): Promise<void> {
     if (!this._newRoot) {
-      this._buildNewRoot();
+      await this._buildNewRoot();
     }
     invariant(this._newRoot, 'New root not created');
 
     await this._space.db.flush();
 
     // Create new epoch.
+    invariant(this._newRoot.url, 'New root URL not available');
     await this._space.internal.createEpoch({
       migration: CreateEpochRequest.Migration.REPLACE_AUTOMERGE_ROOT,
       automergeRootUrl: this._newRoot.url,
@@ -156,7 +160,7 @@ export class MigrationBuilder {
     return docHandle;
   }
 
-  private _buildNewRoot(): void {
+  private async _buildNewRoot(): Promise<void> {
     const links = { ...(this._rootDoc.links ?? {}) };
     for (const id of this._deleteObjects) {
       delete links[id];
@@ -174,10 +178,11 @@ export class MigrationBuilder {
       objects: this._rootDoc.objects,
       links,
     });
-    this._addHandleToFlushList(this._newRoot);
+    await this._newRoot.whenReady();
+    this._addHandleToFlushList(this._newRoot.documentId!);
   }
 
-  private _createObject({
+  private async _createObject({
     id,
     schema,
     props,
@@ -185,7 +190,7 @@ export class MigrationBuilder {
     id?: string;
     schema: Schema.Schema.AnyNoContext;
     props: any;
-  }): ObjectCore {
+  }): Promise<ObjectCore> {
     const core = new ObjectCore();
     if (id) {
       core.id = id;
@@ -202,13 +207,14 @@ export class MigrationBuilder {
         [core.id]: core.getDoc() as ObjectStructure,
       },
     });
-    this._newLinks[core.id] = newHandle.url;
-    this._addHandleToFlushList(newHandle);
+    await newHandle.whenReady();
+    this._newLinks[core.id] = newHandle.url!;
+    this._addHandleToFlushList(newHandle.documentId!);
 
     return core;
   }
 
-  private _addHandleToFlushList(handle: DocHandleProxy<any>): void {
-    this._flushIds.push(handle.documentId);
+  private _addHandleToFlushList(id: DocumentId): void {
+    this._flushIds.push(id);
   }
 }
