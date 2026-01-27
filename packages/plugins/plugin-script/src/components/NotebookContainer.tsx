@@ -2,10 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
+import { RegistryContext } from '@effect-atom/atom-react';
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useContext, useMemo, useState } from 'react';
 
 import { Agent } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
@@ -42,13 +43,14 @@ export type NotebookContainerProps = {
 
 export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => {
   const { t } = useTranslation(meta.id);
+  const registry = useContext(RegistryContext);
   const db = notebook && Obj.getDatabase(notebook);
   const attendableId = notebook ? Obj.getDXN(notebook).toString() : '';
   const { hasAttention } = useAttention(attendableId);
 
   // TODO(burdon): Consolidate execution and state (with graph).
   //  Generalize ComputeGraph evaluation function (using effects).
-  const graph = useMemo(() => notebook && new ComputeGraph(notebook), [notebook]);
+  const graph = useMemo(() => notebook && new ComputeGraph(notebook, registry), [notebook, registry]);
 
   const [queryValues, setQueryValues] = useState<Record<string, any>>({});
   const handleExecQueries = useCallback(async () => {
@@ -65,11 +67,18 @@ export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => 
             const graph = cell.graph?.target;
             if (!graph) {
               const { view } = await View.makeFromDatabase({ db });
-              const graph = Graph.make({ query: { ast }, view });
-              cell.graph = Ref.make(graph);
-              cell.name = name;
+              const newGraph = Graph.make({ query: { ast }, view });
+              Obj.change(notebook!, (n) => {
+                const c = n.cells.find((c) => c.id === cell.id);
+                if (c) {
+                  c.graph = Ref.make(newGraph);
+                  c.name = name;
+                }
+              });
             } else {
-              graph.query.ast = ast;
+              Obj.change(graph, () => {
+                graph.query.ast = ast;
+              });
             }
           }
         }
@@ -100,7 +109,7 @@ export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => 
       for (const prompt of prompts) {
         yield* runPrompt({
           prompt,
-          input: { ...queryValues, ...graph.valuesByName.value },
+          input: { ...queryValues, ...graph.getValuesByName() },
           onResult: (result) =>
             setPromptResults((prev) => ({
               ...prev,
@@ -126,10 +135,12 @@ export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => 
       const from = notebook.cells.findIndex((cell) => cell.id === source.id);
       const to = notebook.cells.findIndex((cell) => cell.id === target.id);
       if (from != null && to != null) {
-        const cell = notebook.cells.splice(from, 1)[0];
-        if (cell) {
-          notebook.cells.splice(to, 0, cell);
-        }
+        Obj.change(notebook, (n) => {
+          const cell = n.cells.splice(from, 1)[0];
+          if (cell) {
+            n.cells.splice(to, 0, cell);
+          }
+        });
       }
     },
     [notebook],
@@ -160,7 +171,9 @@ export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => 
       }
 
       const idx = after ? notebook.cells.findIndex((cell) => cell.id === after) : notebook.cells.length;
-      notebook.cells.splice(idx, 0, cell);
+      Obj.change(notebook, (n) => {
+        n.cells.splice(idx, 0, cell);
+      });
     },
     [db, notebook],
   );
@@ -170,7 +183,9 @@ export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => 
       invariant(notebook);
       const idx = notebook.cells.findIndex((cell) => cell.id === id);
       if (idx !== -1) {
-        notebook.cells.splice(idx, 1);
+        Obj.change(notebook, (n) => {
+          n.cells.splice(idx, 1);
+        });
       }
     },
     [notebook],

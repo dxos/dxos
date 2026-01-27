@@ -16,7 +16,7 @@ import {
   getCredentialAssertion,
 } from '@dxos/credentials';
 import { Type } from '@dxos/echo';
-import { getTypeReference } from '@dxos/echo/internal';
+import { getSchemaDXN } from '@dxos/echo/internal';
 import {
   AuthStatus,
   CredentialServerExtension,
@@ -33,10 +33,10 @@ import {
 } from '@dxos/echo-pipeline';
 import {
   type DatabaseDirectory,
+  EncodedReference,
   type ObjectStructure,
   SpaceDocVersion,
   createIdFromSpaceKey,
-  encodeReference,
 } from '@dxos/echo-protocol';
 import type { EdgeConnection, EdgeHttpClient } from '@dxos/edge-client';
 import { type FeedStore, writeMessages } from '@dxos/feed-store';
@@ -125,6 +125,11 @@ export type DataSpaceManagerRuntimeProps = {
   spaceMemberPresenceOfflineTimeout?: number;
   activeEdgeNotarizationPollingInterval?: number;
   disableP2pReplication?: boolean;
+  /**
+   * If true, spaces that were previously SPACE_ACTIVE will be automatically activated on startup.
+   * This is used in dedicated worker mode to restore space state after leader changeover.
+   */
+  autoActivateSpaces?: boolean;
 };
 
 export type CreateSpaceOptions = {
@@ -217,14 +222,27 @@ export class DataSpaceManager extends Resource {
     log.trace('dxos.echo.data-space-manager.open', Trace.begin({ id: this._instanceId }));
     log('metadata loaded', { spaces: this._metadataStore.spaces.length });
 
+    const spacesToActivate: DataSpace[] = [];
     await forEachAsync(this._metadataStore.spaces, async (spaceMetadata) => {
       try {
         log('load space', { spaceMetadata });
-        await this._constructSpace(spaceMetadata);
+        const space = await this._constructSpace(spaceMetadata);
+        // Track spaces that were previously active for auto-activation (used in dedicated worker mode).
+        if (this._runtimeProps?.autoActivateSpaces && spaceMetadata.state === SpaceState.SPACE_ACTIVE) {
+          spacesToActivate.push(space);
+        }
       } catch (err) {
         log.error('Error loading space', { spaceMetadata, err });
       }
     });
+
+    // Auto-activate spaces that were previously active (used in dedicated worker mode after leader changeover).
+    for (const space of spacesToActivate) {
+      log('auto-activating space', { spaceKey: space.key });
+      space.activate().catch((err) => {
+        log.error('Error auto-activating space', { spaceKey: space.key, err });
+      });
+    }
 
     this.updated.emit();
 
@@ -365,7 +383,7 @@ export class DataSpaceManager extends Resource {
     // TODO(dmaretskyi): Better API for low-level data access.
     const properties: ObjectStructure = {
       system: {
-        type: encodeReference(getTypeReference(SpaceProperties)!),
+        type: EncodedReference.fromDXN(getSchemaDXN(SpaceProperties)!),
       },
       data: {
         [DEFAULT_SPACE_KEY]: this._signingContext.identityKey.toHex(),

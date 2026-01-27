@@ -5,6 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
+import { Obj } from '@dxos/echo';
 import { Input } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
@@ -45,7 +46,11 @@ const ClientSpace = ({ spaceId }: ClientRepeatedComponentProps) => {
         <Input.TextInput
           placeholder='Name'
           value={space.properties.name}
-          onChange={(event) => (space.properties.name = event.target.value)}
+          onChange={(event) =>
+            Obj.change(space.properties, (p) => {
+              p.name = event.target.value;
+            })
+          }
         />
       </Input.Root>
       <JsonPanel value={client.toJSON()} />

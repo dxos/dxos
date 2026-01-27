@@ -245,7 +245,9 @@ describe('Client', () => {
         ],
       }),
     );
-    thread2.messages.push(Ref.make(message));
+    Obj.change(thread2, (t) => {
+      t.messages.push(Ref.make(message));
+    });
     await space2.db.flush();
 
     await expect.poll(() => thread1.messages.length, { timeout: 1_000 }).toEqual(1);

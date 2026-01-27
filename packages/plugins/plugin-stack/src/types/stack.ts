@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { TypedObject } from '@dxos/echo/internal';
+import { Type } from '@dxos/echo';
 
 // All section metadata needs to be optional/have defaults.
 // Any objects added to the collection will start with the section defaults.
@@ -19,9 +19,13 @@ export const SectionSchema = Schema.Struct({
 });
 
 // TODO(wittjosiah): This needs a relation to be connected to a stack.
-export class StackViewType extends TypedObject({
-  typename: 'dxos.org/type/StackView',
-  version: '0.1.0',
-})({
+export const StackViewType = Schema.Struct({
   sections: Schema.mutable(Schema.Record({ key: Schema.String, value: SectionSchema })),
-}) {}
+}).pipe(
+  Type.Obj({
+    typename: 'dxos.org/type/StackView',
+    version: '0.1.0',
+  }),
+);
+
+export interface StackViewType extends Schema.Schema.Type<typeof StackViewType> {}

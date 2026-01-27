@@ -6,9 +6,10 @@ import * as Effect from 'effect/Effect';
 
 import { Capability, Common, UndoMapping } from '@dxos/app-framework';
 import { JsonSchema, Obj } from '@dxos/echo';
+import { type EchoSchema } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { OperationResolver } from '@dxos/operation';
-import { ProjectionModel, getTypenameFromQuery } from '@dxos/schema';
+import { ProjectionModel, createEchoChangeCallback, getTypenameFromQuery } from '@dxos/schema';
 
 import { meta } from '../../meta';
 import { KanbanOperation } from '../../types';
@@ -40,6 +41,7 @@ export default Capability.makeModule(() =>
       OperationResolver.make({
         operation: KanbanOperation.DeleteCardField,
         handler: Effect.fnUntraced(function* ({ view, fieldId }) {
+          const registry = yield* Capability.get(Common.Capability.AtomRegistry);
           const db = Obj.getDatabase(view);
           invariant(db, 'Database not found');
           const schema = yield* Effect.promise(() =>
@@ -50,14 +52,23 @@ export default Capability.makeModule(() =>
               })
               .first(),
           );
-          const projection = new ProjectionModel(JsonSchema.toJsonSchema(schema), view.projection);
-          const { deleted, index } = projection.deleteFieldProjection(fieldId);
+
+          // Create projection with change callbacks that wrap in Obj.change().
+          // Schema from registry is an EchoSchema at runtime.
+          const projection = new ProjectionModel({
+            registry,
+            view,
+            baseSchema: JsonSchema.toJsonSchema(schema),
+            change: createEchoChangeCallback(view, schema as EchoSchema),
+          });
+
+          const result = projection.deleteFieldProjection(fieldId);
 
           // Return data needed for undo.
           return {
-            field: deleted.field,
-            props: deleted.props,
-            index,
+            field: result.deleted.field,
+            props: result.deleted.props,
+            index: result.index,
           };
         }),
       }),
@@ -80,6 +91,7 @@ export default Capability.makeModule(() =>
       OperationResolver.make({
         operation: KanbanOperation.RestoreCardField,
         handler: Effect.fnUntraced(function* ({ view, field, props, index }) {
+          const registry = yield* Capability.get(Common.Capability.AtomRegistry);
           const db = Obj.getDatabase(view);
           invariant(db, 'Database not found');
           const schema = yield* Effect.promise(() =>
@@ -90,7 +102,16 @@ export default Capability.makeModule(() =>
               })
               .first(),
           );
-          const projection = new ProjectionModel(JsonSchema.toJsonSchema(schema), view.projection);
+
+          // Create projection with change callbacks that wrap in Obj.change().
+          // Schema from registry is an EchoSchema at runtime.
+          const projection = new ProjectionModel({
+            registry,
+            view,
+            baseSchema: JsonSchema.toJsonSchema(schema),
+            change: createEchoChangeCallback(view, schema as EchoSchema),
+          });
+
           projection.setFieldProjection({ field, props }, index);
         }),
       }),

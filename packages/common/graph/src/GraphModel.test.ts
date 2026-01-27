@@ -2,16 +2,17 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Registry } from '@effect-atom/atom-react';
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
-import { registerSignalsRuntime } from '@dxos/echo-signals';
 
 import * as Graph from './Graph';
 import * as GraphModel from './GraphModel';
 
-registerSignalsRuntime();
+// Create a registry for tests.
+const createRegistry = () => Registry.make();
 
 const TestNode = Schema.extend(
   Graph.Node,
@@ -39,33 +40,143 @@ describe('Graph', () => {
   });
 
   test('reactive model', async ({ expect }) => {
-    const graph = new GraphModel.ReactiveGraphModel();
+    const registry = createRegistry();
+    const graph = new GraphModel.ReactiveGraphModel(registry);
 
     const done = new Trigger<Graph.Any>();
-    const unsubscribe = graph.subscribe((graph) => {
-      if (graph.edges.length === 2) {
-        done.wake(graph.graph);
+    const unsubscribe = graph.subscribe((model, g) => {
+      if (g.edges.length === 2) {
+        done.wake(g);
       }
     });
 
     setTimeout(() => {
-      graph.builder.addNode({ id: 'node-1' });
-      graph.builder.addNode({ id: 'node-2' });
-      graph.builder.addNode({ id: 'node-3' });
+      graph.addNode({ id: 'node-1' });
+      graph.addNode({ id: 'node-2' });
+      graph.addNode({ id: 'node-3' });
     });
 
     setTimeout(() => {
-      graph.builder.addEdge({ source: 'node-1', target: 'node-2' });
-      graph.builder.addEdge({ source: 'node-2', target: 'node-3' });
+      graph.addEdge({ source: 'node-1', target: 'node-2' });
+      graph.addEdge({ source: 'node-2', target: 'node-3' });
     });
 
     {
-      const graph = await done.wait();
-      expect(graph.nodes).to.have.length(3);
-      expect(graph.edges).to.have.length(2);
+      const g = await done.wait();
+      expect(g.nodes).to.have.length(3);
+      expect(g.edges).to.have.length(2);
     }
 
     unsubscribe();
+  });
+
+  test('reactive model fires immediately with fire option', ({ expect }) => {
+    const registry = createRegistry();
+    const graph = new GraphModel.ReactiveGraphModel(registry);
+    graph.addNode({ id: 'node-1' });
+
+    let callCount = 0;
+    let lastNodeCount = 0;
+
+    const unsubscribe = graph.subscribe(
+      (model) => {
+        callCount++;
+        lastNodeCount = model.nodes.length;
+      },
+      true, // fire immediately
+    );
+
+    // Should fire once immediately with fire option.
+    expect(callCount).to.eq(1);
+    expect(lastNodeCount).to.eq(1);
+
+    unsubscribe();
+  });
+
+  test('reactive model tracks node additions', ({ expect }) => {
+    const registry = createRegistry();
+    const graph = new GraphModel.ReactiveGraphModel(registry);
+
+    const nodeCountHistory: number[] = [];
+    const unsubscribe = graph.subscribe((model) => {
+      nodeCountHistory.push(model.nodes.length);
+    });
+
+    graph.addNode({ id: 'node-1' });
+    graph.addNode({ id: 'node-2' });
+    graph.addNode({ id: 'node-3' });
+
+    // Should have tracked the additions synchronously.
+    expect(nodeCountHistory).to.deep.eq([1, 2, 3]);
+
+    unsubscribe();
+  });
+
+  test('reactive model tracks node removals', ({ expect }) => {
+    const registry = createRegistry();
+    const graph = new GraphModel.ReactiveGraphModel(registry);
+    graph.addNode({ id: 'node-1' });
+    graph.addNode({ id: 'node-2' });
+    graph.addNode({ id: 'node-3' });
+
+    const nodeCountHistory: number[] = [];
+    const unsubscribe = graph.subscribe((model) => {
+      nodeCountHistory.push(model.nodes.length);
+    }, true);
+
+    expect(nodeCountHistory[0]).to.eq(3);
+
+    graph.removeNode('node-2');
+
+    expect(nodeCountHistory[nodeCountHistory.length - 1]).to.eq(2);
+
+    unsubscribe();
+  });
+
+  test('reactive model unsubscribe stops notifications', ({ expect }) => {
+    const registry = createRegistry();
+    const graph = new GraphModel.ReactiveGraphModel(registry);
+
+    let callCount = 0;
+    const unsubscribe = graph.subscribe(() => {
+      callCount++;
+    });
+
+    graph.addNode({ id: 'node-1' });
+
+    const countAfterFirstAdd = callCount;
+    expect(countAfterFirstAdd).to.eq(1);
+
+    unsubscribe();
+
+    graph.addNode({ id: 'node-2' });
+
+    // Should not have received more notifications after unsubscribe.
+    expect(callCount).to.eq(countAfterFirstAdd);
+  });
+
+  test('reactive model supports multiple subscribers', ({ expect }) => {
+    const registry = createRegistry();
+    const graph = new GraphModel.ReactiveGraphModel(registry);
+
+    let subscriber1Count = 0;
+    let subscriber2Count = 0;
+
+    const unsub1 = graph.subscribe(() => {
+      subscriber1Count++;
+    });
+
+    const unsub2 = graph.subscribe(() => {
+      subscriber2Count++;
+    });
+
+    graph.addNode({ id: 'node-1' });
+
+    expect(subscriber1Count).to.eq(1);
+    expect(subscriber2Count).to.eq(1);
+
+    unsub1();
+    unsub2();
   });
 
   test('optional', ({ expect }) => {

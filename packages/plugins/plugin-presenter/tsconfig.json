@@ -21,7 +21,7 @@
       "path": "../../common/async"
     },
     {
-      "path": "../../common/local-storage"
+      "path": "../../common/effect"
     },
     {
       "path": "../../common/log"
@@ -37,9 +37,6 @@
     },
     {
       "path": "../../core/echo/echo"
-    },
-    {
-      "path": "../../core/echo/live-object"
     },
     {
       "path": "../../core/operation"

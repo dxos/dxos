@@ -9,6 +9,7 @@ import { useOperationInvoker } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { Button, Input, useTranslation } from '@dxos/react-ui';
+import { osTranslations } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
 
@@ -22,7 +23,7 @@ export const ObjectRenamePopover = ({ object }: { object: Obj.Any }) => {
 
   const handleDone = useCallback(() => {
     try {
-      name && Obj.setLabel(object, name);
+      name && Obj.change(object, () => Obj.setLabel(object, name));
     } catch (err) {
       log.error('Failed to rename object', { err });
     }
@@ -44,7 +45,7 @@ export const ObjectRenamePopover = ({ object }: { object: Obj.Any }) => {
         </Input.Root>
       </div>
       <Button ref={doneButton} classNames='self-stretch' onClick={handleDone}>
-        {t('done label', { ns: 'os' })}
+        {t('done label', { ns: osTranslations })}
       </Button>
     </div>
   );

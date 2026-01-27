@@ -3,18 +3,30 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import * as Effect from 'effect/Effect';
 import React from 'react';
 
-import { Common, Plugin } from '@dxos/app-framework';
+import { Capability, Common, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import { withTheme } from '@dxos/react-ui/testing';
 
-import { DeckStateFactory, LayoutOperationResolver } from '../../capabilities';
+import { DeckState, LayoutOperationResolver } from '../../capabilities';
+import { meta as pluginMeta } from '../../meta';
 import { translations } from '../../translations';
 
 import { DeckLayout } from './DeckLayout';
+
+const TestPlugin = Plugin.define(pluginMeta).pipe(
+  Plugin.addModule({
+    id: Capability.getModuleTag(DeckState),
+    activatesOn: Common.ActivationEvent.AppGraphReady,
+    activate: () => DeckState(),
+  }),
+  Common.Plugin.addOperationResolverModule({
+    activate: LayoutOperationResolver,
+  }),
+  Plugin.make,
+);
 
 const meta = {
   title: 'plugins/plugin-deck/DeckLayout',
@@ -23,23 +35,7 @@ const meta = {
   decorators: [
     withTheme,
     withPluginManager({
-      plugins: [
-        ...corePlugins(),
-        Plugin.define({
-          id: 'example.com/plutin/testing',
-          name: 'Testing',
-        }).pipe(
-          Plugin.addModule({
-            id: 'deck-state',
-            activatesOn: Common.ActivationEvent.AppGraphReady,
-            activate: () => Effect.succeed(DeckStateFactory()),
-          }),
-          Common.Plugin.addOperationResolverModule({
-            activate: LayoutOperationResolver,
-          }),
-          Plugin.make,
-        )(),
-      ],
+      plugins: [...corePlugins(), TestPlugin()],
     }),
   ],
   parameters: {

@@ -6,7 +6,7 @@ import * as HttpClient from '@effect/platform/HttpClient';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { defineFunction, withAuthorization } from '@dxos/functions';
+import { CredentialsService, defineFunction, withAuthorization } from '@dxos/functions';
 
 export default defineFunction({
   key: 'dxos.org/function/github/fetch-prs',
@@ -21,7 +21,8 @@ export default defineFunction({
     }),
   }),
   handler: Effect.fnUntraced(function* ({ data }) {
-    const client = yield* HttpClient.HttpClient.pipe(Effect.map(withAuthorization({ service: 'github.com' })));
+    const credential = yield* CredentialsService.getCredential({ service: 'github.com' });
+    const client = yield* HttpClient.HttpClient.pipe(Effect.map(withAuthorization(credential.apiKey!)));
 
     const response = yield* client.get(`https://api.github.com/repos/${data.owner}/${data.repo}/pulls`);
     const json: any = yield* response.json;

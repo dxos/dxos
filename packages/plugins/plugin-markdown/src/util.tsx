@@ -116,7 +116,9 @@ export const getContentSnippet = (content = '') => {
 export const setFallbackName = debounce((doc: Markdown.Document, content = '') => {
   const name = getFallbackName(content);
   if (doc.fallbackName !== name) {
-    doc.fallbackName = name;
+    Obj.change(doc, (d) => {
+      d.fallbackName = name;
+    });
   }
 }, 200);
 

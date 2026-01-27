@@ -6,6 +6,7 @@ import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { disableNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/disable-native-drag-preview';
 import { setCustomNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview';
+import { useAtomValue } from '@effect-atom/atom-react';
 import React, {
   type FC,
   type MouseEventHandler,
@@ -58,9 +59,11 @@ export const Frame = ({ Component, showAnchors, ...baseProps }: FrameProps) => {
   const { dragMonitor, layout, editing, setEditing } = useEditorContext();
   const { root, projection, styles: projectionStyles } = useCanvasContext();
 
-  const dragging = dragMonitor.state(
-    (state) => (state.type === 'frame' || state.type === 'resize') && state.shape.id === shape.id,
-  ).value;
+  const state = useAtomValue(dragMonitor.state);
+  const dragging =
+    (state.type === 'frame' || state.type === 'resize') && state.shape.id === shape.id
+      ? state
+      : ({ type: 'inactive' } as const);
   const isDragging = dragging.type === 'frame';
   const isResizing = dragging.type === 'resize';
 

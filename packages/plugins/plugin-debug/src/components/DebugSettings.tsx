@@ -26,7 +26,12 @@ const StorageAdapters = {
   idb: defs.Runtime.Client.Storage.StorageDriver.IDB,
 } as const;
 
-export const DebugSettings = ({ settings }: { settings: DebugSettingsProps }) => {
+export type DebugSettingsComponentProps = {
+  settings: DebugSettingsProps;
+  onSettingsChange: (fn: (current: DebugSettingsProps) => DebugSettingsProps) => void;
+};
+
+export const DebugSettings = ({ settings, onSettingsChange }: DebugSettingsComponentProps) => {
   const { t } = useTranslation(meta.id);
   const [toast, setToast] = useState<Toast>();
   const client = useClient();
@@ -98,7 +103,7 @@ export const DebugSettings = ({ settings }: { settings: DebugSettingsProps }) =>
           <ControlItemInput title={t('settings wireframe')}>
             <Input.Switch
               checked={settings.wireframe}
-              onCheckedChange={(checked) => (settings.wireframe = !!checked)}
+              onCheckedChange={(checked) => onSettingsChange((s) => ({ ...s, wireframe: !!checked }))}
             />
           </ControlItemInput>
           <ControlItemInput title={t('settings download diagnostics')}>

@@ -31,11 +31,9 @@ export default Capability.makeModule(
           const chatCollection = Collection.makeManaged({ key: Assistant.Chat.typename });
           const blueprintCollection = Collection.makeManaged({ key: Blueprint.Blueprint.typename });
           const promptCollection = Collection.makeManaged({ key: Type.getTypename(Prompt.Prompt) });
-          rootCollection.objects.push(
-            Ref.make(chatCollection),
-            Ref.make(blueprintCollection),
-            Ref.make(promptCollection),
-          );
+          Obj.change(rootCollection, (c) => {
+            c.objects.push(Ref.make(chatCollection), Ref.make(blueprintCollection), Ref.make(promptCollection));
+          });
 
           // TODO(wittjosiah): Remove once function registry is avaiable.
           space.db.add(serializeFunction(Agent.prompt));
@@ -48,6 +46,7 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: AssistantOperation.CreateChat,
         handler: Effect.fnUntraced(function* ({ db, name }) {
+          const registry = yield* Capability.get(Common.Capability.AtomRegistry);
           const client = yield* Capability.get(ClientCapabilities.Client);
           const space = client.spaces.get(db.spaceId);
           invariant(space, 'Space not found');
@@ -56,13 +55,13 @@ export default Capability.makeModule(
 
           // TODO(wittjosiah): This should be a space-level setting.
           // TODO(burdon): Clone when activated. Copy-on-write for template.
-          const blueprints = yield* Effect.promise(async () => db.query(Filter.type(Blueprint.Blueprint)).run());
+          const blueprints = yield* Effect.promise(() => db.query(Filter.type(Blueprint.Blueprint)).run());
           let defaultBlueprint = blueprints.find((blueprint) => blueprint.key === AssistantBlueprint.Key);
           if (!defaultBlueprint) {
             defaultBlueprint = db.add(createBlueprint());
           }
 
-          const binder = new AiContextBinder(queue);
+          const binder = new AiContextBinder({ queue, registry });
           yield* Effect.promise(() =>
             binder.use((b: AiContextBinder) => b.bind({ blueprints: [Ref.make(defaultBlueprint!)] })),
           );
@@ -73,6 +72,7 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: AssistantOperation.UpdateChatName,
         handler: Effect.fnUntraced(function* ({ chat }) {
+          const registry = yield* Capability.get(Common.Capability.AtomRegistry);
           const db = Obj.getDatabase(chat);
           const queue = chat.queue.target as Queue<Message.Message>;
           if (!db || !queue) {
@@ -87,15 +87,21 @@ export default Capability.makeModule(
           );
 
           yield* Effect.promise(() =>
-            new AiConversation(queue).use(async (conversation) => updateName(runtime, conversation, chat)),
+            new AiConversation({ queue, registry }).use(async (conversation) =>
+              updateName(runtime, conversation, chat),
+            ),
           );
         }),
       }),
       OperationResolver.make({
         operation: AssistantOperation.SetCurrentChat,
         handler: Effect.fnUntraced(function* ({ companionTo, chat }) {
-          const mutableState = yield* Capability.get(AssistantCapabilities.MutableState);
-          mutableState.currentChat[Obj.getDXN(companionTo).toString()] = chat && Obj.getDXN(chat).toString();
+          const companionToId = Obj.getDXN(companionTo).toString();
+          const chatId = chat && Obj.getDXN(chat).toString();
+          yield* Common.Capability.updateAtomValue(AssistantCapabilities.State, (current) => ({
+            ...current,
+            currentChat: { ...current.currentChat, [companionToId]: chatId },
+          }));
         }),
       }),
     ]);

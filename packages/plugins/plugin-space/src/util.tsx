@@ -3,13 +3,12 @@
 //
 
 import { type Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
-import { Atom } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 import type * as Schema from 'effect/Schema';
 
 import { type CapabilityManager, Common } from '@dxos/app-framework';
 import { type Space, SpaceState, isSpace } from '@dxos/client/echo';
-import { type Database, type Entity, Filter, Obj, Query, type QueryResult, Ref, Type } from '@dxos/echo';
+import { type Database, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { EXPANDO_TYPENAME } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { Migrations } from '@dxos/migrations';
@@ -27,20 +26,6 @@ export const SPACES = `${meta.id}-spaces`;
 export const COMPOSER_SPACE_LOCK = `${meta.id}/lock`;
 // TODO(wittjosiah): Remove.
 export const SHARED = 'shared-spaces';
-
-/**
- * Convert a query result to an Atom value of the objects.
- */
-export const atomFromQuery = <T extends Entity.Unknown>(query: QueryResult.QueryResult<T>): Atom.Atom<T[]> => {
-  return Atom.make((get) => {
-    const unsubscribe = query.subscribe((result) => {
-      get.setSelf(result.results);
-    });
-
-    get.addFinalizer(() => unsubscribe());
-    return query.results;
-  });
-};
 
 // TODO(wittjosiah): Factor out? Expose via capability?
 export const getSpaceDisplayName = (
@@ -71,7 +56,9 @@ const getCollectionGraphNodePartials = ({
     role: 'branch',
     onRearrangeChildren: (nextOrder: unknown[]) => {
       // Change on disk.
-      collection.objects = nextOrder.filter(Obj.isObject).map(Ref.make);
+      Obj.change(collection, (c) => {
+        c.objects = nextOrder.filter(Obj.isObject).map(Ref.make);
+      });
     },
     onTransferStart: (child: Node.Node<Obj.Any>, index?: number) => {
       // TODO(wittjosiah): Support transfer between spaces.
@@ -92,22 +79,26 @@ const getCollectionGraphNodePartials = ({
 
       // Add child to destination collection.
       // TODO(dmaretskyi): Compare by id.
-      if (!collection.objects.find((object) => object.target === child.data)) {
-        if (typeof index !== 'undefined') {
-          collection.objects.splice(index, 0, Ref.make(child.data));
-        } else {
-          collection.objects.push(Ref.make(child.data));
+      Obj.change(collection, (c) => {
+        if (!c.objects.find((object) => object.target === child.data)) {
+          if (typeof index !== 'undefined') {
+            c.objects.splice(index, 0, Ref.make(child.data));
+          } else {
+            c.objects.push(Ref.make(child.data));
+          }
         }
-      }
+      });
 
       // }
     },
     onTransferEnd: (child: Node.Node<Obj.Any>, destination: Node.Node) => {
       // Remove child from origin collection.
-      const index = collection.objects.findIndex((object) => object.target === child.data);
-      if (index > -1) {
-        collection.objects.splice(index, 1);
-      }
+      Obj.change(collection, (c) => {
+        const index = c.objects.findIndex((object) => object.target === child.data);
+        if (index > -1) {
+          c.objects.splice(index, 1);
+        }
+      });
 
       // TODO(wittjosiah): Support transfer between spaces.
       // const childSpace = getSpace(child.data);
@@ -122,11 +113,13 @@ const getCollectionGraphNodePartials = ({
       // Create clone of child and add to destination space.
       const newObject = await cloneObject(child.data, resolve, db);
       db.add(newObject);
-      if (typeof index !== 'undefined') {
-        collection.objects.splice(index, 0, Ref.make(newObject));
-      } else {
-        collection.objects.push(Ref.make(newObject));
-      }
+      Obj.change(collection, (c) => {
+        if (typeof index !== 'undefined') {
+          c.objects.splice(index, 0, Ref.make(newObject));
+        } else {
+          c.objects.push(Ref.make(newObject));
+        }
+      });
     },
   };
 };
@@ -391,7 +384,9 @@ export const createStaticSchemaActions = ({
             (typename: string) => typename === Type.getTypename(schema),
           );
           if (index > -1) {
-            space.properties.staticRecords.splice(index, 1);
+            Obj.change(space.properties, (p) => {
+              p.staticRecords.splice(index, 1);
+            });
           }
         }),
       properties: {

@@ -40,7 +40,7 @@ describe('Design Blueprint', { timeout: 120_000 }, () => {
       function* ({ expect }) {
         const observer = GenerationObserver.fromPrinter(new ConsolePrinter());
         const queue = yield* QueueService.createQueue<Message.Message | ContextBinding>();
-        const conversation = yield* acquireReleaseResource(() => new AiConversation(queue));
+        const conversation = yield* acquireReleaseResource(() => new AiConversation({ queue }));
 
         yield* Database.Service.add(blueprint);
         yield* Effect.promise(() =>

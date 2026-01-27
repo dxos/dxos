@@ -8,8 +8,8 @@ import { ActivationEvent, Capability, Common, Plugin } from '@dxos/app-framework
 import { AttentionManager, SelectionManager } from '@dxos/react-ui-attention';
 
 import { Keyboard, OperationResolver, ReactContext } from './capabilities';
-import { AttentionEvents } from './events';
 import { meta } from './meta';
+import { AttentionEvents } from './types';
 import { AttentionCapabilities } from './types';
 
 export const AttentionPlugin = Plugin.define(meta).pipe(
@@ -18,9 +18,10 @@ export const AttentionPlugin = Plugin.define(meta).pipe(
     activatesOn: Common.ActivationEvent.Startup,
     activatesAfter: [AttentionEvents.AttentionReady],
     activate: () =>
-      Effect.sync(() => {
-        const attention = new AttentionManager();
-        const selection = new SelectionManager();
+      Effect.gen(function* () {
+        const registry = yield* Capability.get(Common.Capability.AtomRegistry);
+        const attention = new AttentionManager(registry);
+        const selection = new SelectionManager(registry);
         setupDevtools(attention);
         return [
           Capability.contributes(AttentionCapabilities.Attention, attention),
@@ -48,10 +49,10 @@ const setupDevtools = (attention: AttentionManager) => {
       return attention;
     },
     get attended() {
-      return attention.current;
+      return attention.getCurrent();
     },
     get currentSpace() {
-      for (const id of attention.current) {
+      for (const id of attention.getCurrent()) {
         const [spaceId, objectId] = id.split(':');
         if (spaceId && objectId && spaceId.length === 33) {
           return spaceId;

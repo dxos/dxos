@@ -55,7 +55,6 @@ const createStorybookProject = (dirname: string) =>
       },
       setupFiles: [new URL('./tools/storybook-react/.storybook/vitest.setup.ts', import.meta.url).pathname],
     },
-    optimizeDeps: { include: ['@preact-signals/safe-react/tracking'] },
     plugins: [
       storybookTest({
         configDir: path.join(dirname, '.storybook'),

@@ -77,6 +77,99 @@ export class DeferredTask {
   }
 }
 
+// TODO(dmaretskyi): Protyping this an alternative API to DeferredTask.
+export class AsyncTask {
+  #callback: () => Promise<void>;
+  #ctx?: Context = undefined;
+
+  #scheduled = false;
+  #currentTask: Promise<void> | null = null; // Can't be rejected.
+  #nextTask = new Trigger();
+
+  constructor(callback: () => Promise<void>) {
+    this.#callback = callback;
+  }
+
+  get scheduled() {
+    return this.#scheduled;
+  }
+
+  /**
+   * Context of the resource that owns the task.
+   * When the context is disposed, the task is cancelled and cannot be scheduled again.
+   */
+  // TODO(dmaretskyi): We don't really need to pass ctx in here, since close will also signal dispose.
+  open(ctx: Context): void {
+    this.#ctx = ctx;
+  }
+
+  /**
+   * Closes the task and waits for it to finish if it is running.
+   */
+  async close(): Promise<void> {
+    this.#ctx = undefined;
+    await this.join();
+  }
+
+  [Symbol.asyncDispose](): Promise<void> {
+    return this.close();
+  }
+
+  /**
+   * Schedule the task to run asynchronously.
+   */
+  schedule(): void {
+    if (!this.#ctx || this.#ctx.disposed) {
+      throw new Error('AsyncTask not open');
+    }
+
+    if (this.#scheduled) {
+      return; // Already scheduled.
+    }
+
+    scheduleTask(this.#ctx, async () => {
+      // The previous task might still be running, so we need to wait for it to finish.
+      await this.#currentTask; // Can't be rejected.
+
+      if (!this.#ctx || this.#ctx.disposed) {
+        return;
+      }
+
+      // Reset the flag. New tasks can now be scheduled. They would wait for the callback to finish.
+      this.#scheduled = false;
+      const completionTrigger = this.#nextTask;
+      this.#nextTask = new Trigger(); // Re-create the trigger as opposed to resetting it since there might be listeners waiting for it.
+
+      // Store the promise so that new tasks could wait for this one to finish.
+      this.#currentTask = runInContextAsync(this.#ctx, () => this.#callback()).then(() => {
+        completionTrigger.wake();
+      });
+    });
+
+    this.#scheduled = true;
+  }
+
+  /**
+   * Schedule the task to run and wait for it to finish.
+   */
+  async runBlocking(): Promise<void> {
+    if (this.#ctx?.disposed) {
+      throw new ContextDisposedError();
+    }
+
+    this.schedule();
+    await this.#nextTask.wait();
+  }
+
+  /**
+   * Waits for the current task to finish if it is running.
+   * Does not schedule a new task.
+   */
+  async join(): Promise<void> {
+    await this.#currentTask;
+  }
+}
+
 export const runInContext = (ctx: Context, fn: () => void) => {
   try {
     fn();

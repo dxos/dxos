@@ -65,8 +65,6 @@ Arguments:
 
 It's possible to obtain strongly typed objects from `useQuery`.
 
-Because `useQuery` returns tracked ECHO objects, their type must descend from `TypedObject`.
-
 DXOS provides apis to define these types using [Effect Schema](https://effect.website).
 
 ::: details Benefits of schema declarations
@@ -79,15 +77,19 @@ Consider this expression of schema declared with Effect Schema:
 ```ts file=./snippets/schema.ts#L5-
 import { Schema } from 'effect';
 
-import { TypedObject } from '@dxos/echo/internal';
+import { Type } from '@dxos/echo';
 
-export class TaskType extends TypedObject({
-  typename: 'dxos.org/type/Task',
-  version: '0.1.0',
-})({
+export const TaskType = Schema.Struct({
   name: Schema.String,
   completed: Schema.optional(Schema.Boolean),
-}) {}
+}).pipe(
+  Type.Obj({
+    typename: 'dxos.org/type/Task',
+    version: '0.1.0',
+  }),
+);
+
+export interface TaskType extends Schema.Schema.Type<typeof TaskType> {}
 ```
 
 Types can be used to make queries as well:

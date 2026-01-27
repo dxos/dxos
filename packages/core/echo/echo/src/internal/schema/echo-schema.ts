@@ -10,7 +10,8 @@ import { type ObjectId } from '@dxos/keys';
 
 import { type SchemaMeta, SchemaMetaSymbol, type TypeAnnotation, getTypeAnnotation } from '../annotations';
 import { type JsonSchemaType, toEffectSchema, toJsonSchema } from '../json-schema';
-import { type TypedObject, type TypedObjectPrototype } from '../object';
+import { type TypedObject, type TypedObjectPrototype, getSnapshot } from '../object';
+import { ChangeId } from '../proxy';
 
 import {
   addFieldsToSchema,
@@ -20,7 +21,6 @@ import {
   updateFieldsInSchema,
 } from './manipulation';
 import { PersistentSchema } from './persistent-schema';
-import { getSnapshot } from './snapshot';
 
 /**
  * Base schema type.
@@ -249,7 +249,7 @@ export class EchoSchema<A = any, I = any> extends EchoSchemaConstructor() implem
   }
 
   /**
-   * @reactive
+   * Returns the JSON schema for the schema.
    */
   public get jsonSchema(): JsonSchemaType {
     return this._persistentSchema.jsonSchema;
@@ -309,8 +309,10 @@ export class EchoSchema<A = any, I = any> extends EchoSchemaConstructor() implem
    */
   public updateTypename(typename: string): void {
     const updated = setTypenameInSchema(this._getSchema(), typename);
-    this._persistentSchema.typename = typename;
-    this._persistentSchema.jsonSchema = toJsonSchema(updated);
+    this._change((schema) => {
+      schema.typename = typename;
+      schema.jsonSchema = toJsonSchema(updated);
+    });
   }
 
   /**
@@ -318,7 +320,9 @@ export class EchoSchema<A = any, I = any> extends EchoSchemaConstructor() implem
    */
   public addFields(fields: Schema.Struct.Fields): void {
     const extended = addFieldsToSchema(this._getSchema(), fields);
-    this._persistentSchema.jsonSchema = toJsonSchema(extended);
+    this._change((schema) => {
+      schema.jsonSchema = toJsonSchema(extended);
+    });
   }
 
   /**
@@ -326,7 +330,9 @@ export class EchoSchema<A = any, I = any> extends EchoSchemaConstructor() implem
    */
   public updateFields(fields: Schema.Struct.Fields): void {
     const updated = updateFieldsInSchema(this._getSchema(), fields);
-    this._persistentSchema.jsonSchema = toJsonSchema(updated);
+    this._change((schema) => {
+      schema.jsonSchema = toJsonSchema(updated);
+    });
   }
 
   /**
@@ -334,7 +340,9 @@ export class EchoSchema<A = any, I = any> extends EchoSchemaConstructor() implem
    */
   public updateFieldPropertyName({ before, after }: { before: PropertyKey; after: PropertyKey }): void {
     const renamed = updateFieldNameInSchema(this._getSchema(), { before, after });
-    this._persistentSchema.jsonSchema = toJsonSchema(renamed);
+    this._change((schema) => {
+      schema.jsonSchema = toJsonSchema(renamed);
+    });
   }
 
   /**
@@ -342,7 +350,21 @@ export class EchoSchema<A = any, I = any> extends EchoSchemaConstructor() implem
    */
   public removeFields(fieldNames: string[]): void {
     const removed = removeFieldsFromSchema(this._getSchema(), fieldNames);
-    this._persistentSchema.jsonSchema = toJsonSchema(removed);
+    this._change((schema) => {
+      schema.jsonSchema = toJsonSchema(removed);
+    });
+  }
+
+  /**
+   * Wrapper for Obj.change that handles the change context for the persistent schema.
+   */
+  private _change(callback: (schema: PersistentSchema) => void): void {
+    const changeFn = (this._persistentSchema as any)[ChangeId];
+    if (changeFn) {
+      changeFn(callback);
+    } else {
+      callback(this._persistentSchema);
+    }
   }
 
   //

@@ -11,7 +11,7 @@ import { Filter, getSpace, isSpace, useQuery } from '@dxos/react-client/echo';
 import { useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui-mosaic';
 import { CardStack, StackItem, cardStackDefaultInlineSizeRem, cardStackHeading } from '@dxos/react-ui-stack';
-import { ProjectionModel } from '@dxos/schema';
+import { ProjectionModel, createDirectChangeCallback, createEchoChangeCallback } from '@dxos/schema';
 import { type Project } from '@dxos/types';
 
 import { meta } from '../meta';
@@ -56,10 +56,17 @@ export const ProjectColumn = ({ column }: ProjectColumnProps) => {
     // TODO(burdon): Hack to reverse queue.
     return isSpace(queryTarget) ? items : [...items.reverse()];
   }, [queryTarget, items]);
-  const projectionModel = useMemo(
-    () => (schema && view ? new ProjectionModel(Type.toJsonSchema(schema), view.projection) : undefined),
-    [schema, view?.projection],
-  );
+  const projectionModel = useMemo(() => {
+    if (!schema || !view) {
+      return undefined;
+    }
+    // For mutable schemas (EchoSchema), use the live jsonSchema reference for reactivity.
+    const jsonSchema = Type.isMutable(schema) ? schema.jsonSchema : Type.toJsonSchema(schema);
+    const change = Type.isMutable(schema)
+      ? createEchoChangeCallback(view, schema)
+      : createDirectChangeCallback(view.projection, jsonSchema);
+    return new ProjectionModel({ view, baseSchema: jsonSchema, change });
+  }, [schema, view]);
 
   if (!view) {
     return null;

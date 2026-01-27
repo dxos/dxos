@@ -15,6 +15,7 @@ import { ClientCapability, ObservabilityCapabilities, ObservabilityOperation } f
 export default Capability.makeModule(
   Effect.fnUntraced(function* (props?: { namespace: string }) {
     const { namespace } = props!;
+    const capabilities = yield* Capability.Service;
 
     return Capability.contributes(Common.Capability.OperationResolver, [
       //
@@ -25,19 +26,25 @@ export default Capability.makeModule(
         handler: Effect.fnUntraced(function* (input) {
           const client = yield* Capability.get(ClientCapability);
           const observability = yield* Capability.get(ObservabilityCapabilities.Observability);
-          const settingsStore = yield* Capability.get(Common.Capability.SettingsStore);
-          const settings = settingsStore.getStore<ObservabilitySettingsProps>(meta.id)!.value;
-          settings.enabled = input.state ?? !settings.enabled;
+          const registry = capabilities.get(Common.Capability.AtomRegistry);
+          const allSettings = capabilities.getAll(Common.Capability.Settings);
+          const settingsObj = allSettings.find((s: Common.Capability.Settings) => s.prefix === meta.id);
+          if (!settingsObj) {
+            return false;
+          }
+          const settings = registry.get(settingsObj.atom) as ObservabilitySettingsProps;
+          const newEnabled = input.state ?? !settings.enabled;
+          registry.set(settingsObj.atom, { ...settings, enabled: newEnabled });
           observability.track({
             ...getTelemetryIdentity(client),
             action: 'observability.toggle',
             properties: {
-              enabled: settings.enabled,
+              enabled: newEnabled,
             },
           });
-          observability.setMode(settings.enabled ? 'basic' : 'disabled');
-          yield* Effect.promise(() => storeObservabilityDisabled(namespace, !settings.enabled));
-          return settings.enabled;
+          observability.setMode(newEnabled ? 'basic' : 'disabled');
+          yield* Effect.promise(() => storeObservabilityDisabled(namespace, !newEnabled));
+          return newEnabled;
         }),
       }),
 

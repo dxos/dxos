@@ -25,11 +25,11 @@
     "src"
   ],
   "dependencies": {
-    "@dxos/echo-signals": "workspace:*",
     "@dxos/lit-theme-editor": "workspace:*",
     "@dxos/lit-ui": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/react-ui-dnd": "workspace:*",
+    "@effect-atom/atom-react": "catalog:",
     "lodash.defaultsdeep": "catalog:",
     "storybook": "10.1.11"
   },

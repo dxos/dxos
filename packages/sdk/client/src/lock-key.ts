@@ -2,4 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-export const LOCK_KEY = 'dxos-client-worker';
+/**
+ * Locks the storage to prevent multiple instances of the client from running.
+ */
+export const STORAGE_LOCK_KEY = 'dxos-client-worker';

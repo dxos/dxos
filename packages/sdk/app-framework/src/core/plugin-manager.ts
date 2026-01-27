@@ -4,6 +4,7 @@
 
 import { Atom, Registry } from '@effect-atom/atom-react';
 import * as Array from 'effect/Array';
+import * as Cause from 'effect/Cause';
 import * as Deferred from 'effect/Deferred';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
@@ -139,8 +140,6 @@ class ManagerImpl implements PluginManager {
 
   /**
    * Ids of plugins that are currently enabled.
-   *
-   * @reactive
    */
   get enabled(): Atom.Atom<readonly string[]> {
     return this._enabledAtom;
@@ -148,8 +147,6 @@ class ManagerImpl implements PluginManager {
 
   /**
    * Modules of plugins which are currently enabled.
-   *
-   * @reactive
    */
   get modules(): Atom.Atom<readonly Plugin.PluginModule[]> {
     return this._modulesAtom;
@@ -157,8 +154,6 @@ class ManagerImpl implements PluginManager {
 
   /**
    * Ids of modules which are currently active.
-   *
-   * @reactive
    */
   get active(): Atom.Atom<readonly string[]> {
     return this._activeAtom;
@@ -166,8 +161,6 @@ class ManagerImpl implements PluginManager {
 
   /**
    * Ids of events which have been fired.
-   *
-   * @reactive
    */
   get eventsFired(): Atom.Atom<readonly string[]> {
     return this._eventsFiredAtom;
@@ -175,8 +168,6 @@ class ManagerImpl implements PluginManager {
 
   /**
    * Ids of modules which are pending reset.
-   *
-   * @reactive
    */
   get pendingReset(): Atom.Atom<readonly string[]> {
     return this._pendingResetAtom;
@@ -624,9 +615,15 @@ class ManagerImpl implements PluginManager {
         yield* Effect.forkDaemon(
           loadEffect.pipe(
             Effect.tap((result) => Deferred.succeed(deferred, result)),
-            Effect.catchAll((error) => {
-              log.error('module failed to activate', { module: module.id, error });
-              return Deferred.fail(deferred, error);
+            Effect.catchAllCause((cause) => {
+              const error = Cause.squash(cause);
+              log.error('module failed to activate', {
+                module: module.id,
+                error: error instanceof Error ? error.message : String(error),
+                stack: error instanceof Error ? error.stack : undefined,
+                isDefect: !Cause.isFailure(cause),
+              });
+              return Deferred.fail(deferred, error instanceof Error ? error : new Error(String(error)));
             }),
           ),
         );

@@ -21,7 +21,6 @@ import { type MeetingPayloadSchema } from '@dxos/protocols/buf/dxos/edge/calls_p
 import { type Space } from '@dxos/react-client/echo';
 import { type Message } from '@dxos/types';
 
-import { meta } from '../../meta';
 import { Meeting, MeetingCapabilities, MeetingOperation } from '../../types';
 
 // TODO(wittjosiah): Factor out.
@@ -33,8 +32,7 @@ export default Capability.makeModule(
     // Get context for lazy capability access in callbacks.
     const capabilities = yield* Capability.Service;
 
-    const state = capabilities.get(MeetingCapabilities.State);
-    const _settings = capabilities.get(Common.Capability.SettingsStore).getStore<Meeting.Settings>(meta.id)!.value;
+    const store = capabilities.get(MeetingCapabilities.State);
 
     return Capability.contributes(ThreadCapabilities.CallExtension, {
       onJoin: async ({ channel }: { channel?: Channel.Channel }) => {
@@ -55,12 +53,13 @@ export default Capability.makeModule(
         // }
 
         // TODO(burdon): The TranscriptionManager singleton is part of the state and should just be updated here.
-        state.transcriptionManager = await capabilities.get(TranscriptionCapabilities.TranscriptionManager)({}).open();
+        const transcriptionManager = await capabilities.get(TranscriptionCapabilities.TranscriptionManager)({}).open();
+        store.updateState((current) => ({ ...current, transcriptionManager }));
       },
       onLeave: async () => {
-        await state.transcriptionManager?.close();
-        state.transcriptionManager = undefined;
-        state.activeMeeting = undefined;
+        const { transcriptionManager } = store.state;
+        await transcriptionManager?.close();
+        store.updateState(() => ({}));
       },
       onCallStateUpdated: async (callState: CallState) => {
         const { invokePromise } = capabilities.get(Common.Capability.OperationInvoker);
@@ -74,8 +73,9 @@ export default Capability.makeModule(
         await invokePromise(MeetingOperation.HandlePayload, payload);
       },
       onMediaStateUpdated: async ([mediaState, isSpeaking]: [MediaState, boolean]) => {
-        void state.transcriptionManager?.setAudioTrack(mediaState.audioTrack);
-        void state.transcriptionManager?.setRecording(isSpeaking);
+        const { transcriptionManager } = store.state;
+        void transcriptionManager?.setAudioTrack(mediaState.audioTrack);
+        void transcriptionManager?.setRecording(isSpeaking);
       },
     });
   }),

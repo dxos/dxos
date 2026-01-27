@@ -38,7 +38,9 @@ export default Capability.makeModule(
     const handleAnchorActivate = async ({ refId, label, trigger }: DxAnchorActivate) => {
       const { invokePromise } = capabilities.get(Common.Capability.OperationInvoker);
       const client = capabilities.get(ClientCapabilities.Client);
-      const [layout] = capabilities.getAll(Common.Capability.Layout);
+      const registry = capabilities.get(Common.Capability.AtomRegistry);
+      const [layoutAtom] = capabilities.getAll(Common.Capability.Layout);
+      const layout = registry.get(layoutAtom);
       const { spaceId } = parseId(layout.workspace);
       const space = (spaceId && client.spaces.get(spaceId)) ?? client.spaces.default;
       const result = await handlePreviewLookup(client, space, { ref: refId, label });

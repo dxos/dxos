@@ -4,6 +4,7 @@
 
 import React, { useCallback, useMemo } from 'react';
 
+import { Obj } from '@dxos/echo';
 import { Format } from '@dxos/echo/internal';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -114,7 +115,9 @@ export const SpaceListPanel = ({ onSelect }: { onSelect?: (space: SpaceData | un
             const space = await client.spaces.create();
             await space.waitUntilReady();
             await importData(space, backup);
-            space.properties.name = space.properties.name + ' - IMPORTED';
+            Obj.change(space.properties, (p) => {
+              p.name = p.name + ' - IMPORTED';
+            });
           } else if (backup.type === 'application/x-tar') {
             const archive = {
               filename: backup.name,
@@ -132,7 +135,9 @@ export const SpaceListPanel = ({ onSelect }: { onSelect?: (space: SpaceData | un
           const space = await client.spaces.create();
           await space.waitUntilReady();
           await importData(space, backup);
-          space.properties.name = space.properties.name + ' - IMPORTED';
+          Obj.change(space.properties, (p) => {
+            p.name = p.name + ' - IMPORTED';
+          });
         }
       } catch (err) {
         log.catch(err);

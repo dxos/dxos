@@ -9,7 +9,7 @@ import { Client, ClientService } from '@dxos/client';
 import { runAndForwardErrors } from '@dxos/effect';
 import { log } from '@dxos/log';
 
-import { ClientEvents } from '../../events';
+import { ClientEvents } from '../../types';
 import { ClientCapabilities, type ClientPluginOptions } from '../../types';
 
 type ClientCapabilityOptions = Omit<ClientPluginOptions, 'appKey' | 'invitationUrl' | 'invitationParam' | 'onReset'>;

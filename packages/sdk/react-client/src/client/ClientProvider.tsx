@@ -13,7 +13,6 @@ import React, {
 
 import { Client, type ClientOptions, type ClientServicesProvider, SystemStatus } from '@dxos/client';
 import { type Config } from '@dxos/config';
-import { registerSignalsRuntime } from '@dxos/echo-signals/react';
 import { log } from '@dxos/log';
 import { useAsyncEffect, useControlledState } from '@dxos/react-hooks';
 import { type MaybePromise, type Provider, getAsyncProviderValue } from '@dxos/util';
@@ -57,12 +56,6 @@ export type ClientProviderProps = Omit<ClientOptions, 'config' | 'services'> &
     fallback?: FunctionComponent<Partial<ClientContextProps>>;
 
     /**
-     * Enable (by default) registration of Preact signals runtime for reactive ECHO objects.
-     * @see https://www.npmjs.com/package/@preact/signals-react
-     */
-    signalsRuntime?: boolean;
-
-    /**
      * Skip the DXOS banner.
      */
     noBanner?: boolean;
@@ -86,19 +79,12 @@ export const ClientProvider = forwardRef<Client | undefined, ClientProviderProps
       services: servicesProp,
       status: statusProp,
       fallback: Fallback = () => null,
-      signalsRuntime = true,
       noBanner,
       onInitialized,
       ...options
     },
     forwardedRef,
   ) => {
-    useEffect(() => {
-      // TODO(wittjosiah): Ideally this should be imported asynchronously because it is optional.
-      //   Unfortunately, async import seemed to break signals React instrumentation.
-      signalsRuntime && registerSignalsRuntime();
-    }, []);
-
     // The client is initialized asynchronously.
     // If an error occurs during initialization, it is caught and the state is set.
     // This allows the error to be thrown in the render method.

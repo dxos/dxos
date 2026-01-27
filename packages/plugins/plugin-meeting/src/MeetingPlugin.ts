@@ -21,13 +21,15 @@ import {
 } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
-import { Meeting, MeetingOperation } from './types';
+import { Meeting, MeetingCapabilities, MeetingOperation } from './types';
 
 const StateReady = Common.ActivationEvent.createStateEvent(meta.id);
+const SettingsReady = Common.ActivationEvent.createSettingsEvent(MeetingCapabilities.Settings.identifier);
 
 export const MeetingPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
     activatesOn: Common.ActivationEvent.SetupSettings,
+    activatesAfter: [SettingsReady],
     activate: MeetingSettings,
   }),
   Plugin.addModule({
@@ -68,7 +70,7 @@ export const MeetingPlugin = Plugin.define(meta).pipe(
   Common.Plugin.addOperationResolverModule({ activate: OperationResolver }),
   Common.Plugin.addAppGraphModule({ activate: AppGraphBuilder }),
   Plugin.addModule({
-    activatesOn: ActivationEvent.allOf(Common.ActivationEvent.SettingsReady, StateReady),
+    activatesOn: ActivationEvent.allOf(SettingsReady, StateReady),
     activate: CallExtension,
   }),
   Plugin.make,

@@ -76,7 +76,10 @@ export default Capability.makeModule(
           handler: (input) =>
             Effect.sync(() => {
               const thread = Thread.make({ status: 'active' });
-              input.channel.threads.push(Ref.make(thread));
+              const threadRef = Ref.make(thread);
+              Obj.change(input.channel, (c) => {
+                c.threads.push(threadRef);
+              });
               return { object: thread };
             }),
         }),
@@ -87,8 +90,10 @@ export default Capability.makeModule(
         OperationResolver.make({
           operation: ThreadOperation.Select,
           handler: Effect.fnUntraced(function* (input) {
-            const { state } = yield* Capability.get(ThreadCapabilities.MutableState);
-            state.current = input.current;
+            const registry = yield* Capability.get(Common.Capability.AtomRegistry);
+            const stateAtom = yield* Capability.get(ThreadCapabilities.State);
+            const current = registry.get(stateAtom);
+            registry.set(stateAtom, { ...current, current: input.current });
           }),
         }),
 
@@ -100,11 +105,13 @@ export default Capability.makeModule(
           handler: Effect.fnUntraced(function* (input) {
             const thread = input.thread;
 
-            if (thread.status === 'active' || thread.status === undefined) {
-              thread.status = 'resolved';
-            } else if (thread.status === 'resolved') {
-              thread.status = 'active';
-            }
+            Obj.change(thread, (t) => {
+              if (t.status === 'active' || t.status === undefined) {
+                t.status = 'resolved';
+              } else if (t.status === 'resolved') {
+                t.status = 'active';
+              }
+            });
 
             const db = Obj.getDatabase(thread);
             invariant(db, 'Database not found');
@@ -130,7 +137,9 @@ export default Capability.makeModule(
             }
 
             const collection = Collection.makeManaged({ key: Type.getTypename(Channel.Channel) });
-            rootCollection.objects.push(Ref.make(collection));
+            Obj.change(rootCollection, (c) => {
+              c.objects.push(Ref.make(collection));
+            });
 
             const { object: channel } = yield* Operation.invoke(ThreadOperation.CreateChannel, {
               name: 'General',
@@ -146,7 +155,8 @@ export default Capability.makeModule(
         OperationResolver.make({
           operation: ThreadOperation.Create,
           handler: Effect.fnUntraced(function* ({ name, anchor: _anchor, subject }) {
-            const { state } = yield* Capability.get(ThreadCapabilities.MutableState);
+            const registry = yield* Capability.get(Common.Capability.AtomRegistry);
+            const stateAtom = yield* Capability.get(ThreadCapabilities.State);
             const subjectId = Obj.getDXN(subject).toString();
             const thread = Thread.make({ name });
             const anchor = Relation.make(AnchoredTo.AnchoredTo, {
@@ -155,12 +165,15 @@ export default Capability.makeModule(
               anchor: _anchor,
             });
 
-            const draft = state.drafts[subjectId];
-            if (draft) {
-              draft.push(anchor);
-            } else {
-              state.drafts[subjectId] = [anchor];
-            }
+            const state = registry.get(stateAtom);
+            const existingDrafts = state.drafts[subjectId];
+            registry.set(stateAtom, {
+              ...state,
+              drafts: {
+                ...state.drafts,
+                [subjectId]: existingDrafts ? [...existingDrafts, anchor] : [anchor],
+              },
+            });
 
             // Follow-up operations.
             yield* Operation.invoke(ThreadOperation.Select, { current: Obj.getDXN(thread).toString() });
@@ -177,15 +190,23 @@ export default Capability.makeModule(
         OperationResolver.make({
           operation: ThreadOperation.Delete,
           handler: Effect.fnUntraced(function* ({ subject, anchor, thread: _thread }) {
-            const { state } = yield* Capability.get(ThreadCapabilities.MutableState);
+            const registry = yield* Capability.get(Common.Capability.AtomRegistry);
+            const stateAtom = yield* Capability.get(ThreadCapabilities.State);
             const thread = _thread ?? (Relation.getSource(anchor) as Thread.Thread);
             const subjectId = Obj.getDXN(subject).toString();
+            const state = registry.get(stateAtom);
             const draft = state.drafts[subjectId];
             if (draft) {
               // Check if we're deleting a draft; if so, remove it.
               const index = draft.findIndex((a: { id: string }) => a.id === anchor.id);
               if (index !== -1) {
-                draft.splice(index, 1);
+                registry.set(stateAtom, {
+                  ...state,
+                  drafts: {
+                    ...state.drafts,
+                    [subjectId]: state.drafts[subjectId]?.filter((_, i) => i !== index),
+                  },
+                });
                 // Draft deletion is not undoable.
                 return {};
               }
@@ -221,7 +242,8 @@ export default Capability.makeModule(
         OperationResolver.make({
           operation: ThreadOperation.AddMessage,
           handler: Effect.fnUntraced(function* ({ anchor, subject, sender, text }) {
-            const { state } = yield* Capability.get(ThreadCapabilities.MutableState);
+            const registry = yield* Capability.get(Common.Capability.AtomRegistry);
+            const stateAtom = yield* Capability.get(ThreadCapabilities.State);
             const thread = Relation.getSource(anchor) as Thread.Thread;
             const subjectId = Obj.getDXN(subject).toString();
             const db = Obj.getDatabase(subject);
@@ -232,13 +254,24 @@ export default Capability.makeModule(
               sender,
               blocks: [{ _tag: 'text', text }],
             });
-            thread.messages.push(Ref.make(message));
+            Obj.change(thread, (t) => {
+              t.messages.push(Ref.make(message));
+            });
 
+            const state = registry.get(stateAtom);
             const draft = state.drafts[subjectId]?.find((a: { id: string }) => a.id === anchor.id);
             if (draft) {
               // Move draft to document.
-              thread.status = 'active';
-              state.drafts[subjectId] = state.drafts[subjectId]?.filter((a: { id: string }) => a.id !== anchor.id);
+              Obj.change(thread, (t) => {
+                t.status = 'active';
+              });
+              registry.set(stateAtom, {
+                ...state,
+                drafts: {
+                  ...state.drafts,
+                  [subjectId]: state.drafts[subjectId]?.filter((a: { id: string }) => a.id !== anchor.id),
+                },
+              });
               yield* Operation.invoke(SpaceOperation.AddObject, { object: thread, target: db, hidden: true });
               yield* Operation.invoke(SpaceOperation.AddRelation, {
                 db,
@@ -291,7 +324,9 @@ export default Capability.makeModule(
               return { messageIndex: -1 };
             }
 
-            thread.messages.splice(msgIndex, 1);
+            Obj.change(thread, (t) => {
+              t.messages.splice(msgIndex, 1);
+            });
 
             yield* Operation.schedule(ObservabilityOperation.SendEvent, {
               name: 'threads.message.delete',
@@ -345,7 +380,9 @@ export default Capability.makeModule(
             const db = Obj.getDatabase(thread);
             invariant(db, 'Database not found');
 
-            thread.messages.splice(messageIndex, 0, Ref.make(message));
+            Obj.change(thread, (t) => {
+              t.messages.splice(messageIndex, 0, Ref.make(message));
+            });
 
             yield* Operation.schedule(ObservabilityOperation.SendEvent, {
               name: 'threads.message.undo-delete',

@@ -58,6 +58,9 @@ export const translations = [
         'event toolbar create note menu': 'Create note',
 
         'message toolbar label': 'Message toolbar',
+        'message toolbar reply': 'Reply',
+        'message toolbar reply all': 'Reply All',
+        'message toolbar forward': 'Forward',
         'message toolbar show enriched message': 'Show enriched message',
         'message toolbar show plain message': 'Show plain message',
         'message toolbar enriched message not available': 'Enriched message not available',
@@ -83,11 +86,15 @@ export const translations = [
 
         'compose email label': 'Compose email',
         'compose email dialog title': 'Compose Email',
+        'compose email dialog title reply': 'Reply',
+        'compose email dialog title forward': 'Forward Email',
         'close label': 'Close',
         'send email button label': 'Send',
         'send email error title': 'Failed to send email',
         'send email error no runtime': 'Email service not available',
         'send email error unknown': 'An unknown error occurred',
+
+        'send as email label': 'Send as email',
       },
     },
   },

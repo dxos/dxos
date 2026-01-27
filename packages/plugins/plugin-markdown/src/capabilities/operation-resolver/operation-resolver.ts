@@ -23,8 +23,10 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: MarkdownOperation.SetViewMode,
         handler: Effect.fnUntraced(function* ({ id, viewMode }) {
-          const { state } = yield* Capability.get(MarkdownCapabilities.State);
-          state.viewMode[id] = viewMode;
+          yield* Common.Capability.updateAtomValue(MarkdownCapabilities.State, (current) => ({
+            ...current,
+            viewMode: { ...current.viewMode, [id]: viewMode },
+          }));
         }),
       }),
     ]);

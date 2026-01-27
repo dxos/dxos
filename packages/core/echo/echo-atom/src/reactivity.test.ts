@@ -27,8 +27,10 @@ describe('Echo Atom - Reactivity', () => {
     // Subscribe to enable reactivity.
     registry.subscribe(atom, () => {});
 
-    // Update the object directly.
-    obj.name = 'Updated';
+    // Update the object via Obj.change.
+    Obj.change(obj, (o) => {
+      o.name = 'Updated';
+    });
 
     const updatedSnapshot = registry.get(atom);
     expect(updatedSnapshot.name).toBe('Updated');
@@ -47,8 +49,10 @@ describe('Echo Atom - Reactivity', () => {
     // Subscribe to enable reactivity.
     registry.subscribe(atom, () => {});
 
-    // Update the property directly.
-    obj.name = 'Updated';
+    // Update the property via Obj.change.
+    Obj.change(obj, (o) => {
+      o.name = 'Updated';
+    });
 
     expect(registry.get(atom)).toBe('Updated');
   });
@@ -77,8 +81,10 @@ describe('Echo Atom - Reactivity', () => {
       emailUpdateCount++;
     });
 
-    // Update only email property.
-    obj.email = 'updated@example.com';
+    // Update only email property via Obj.change.
+    Obj.change(obj, (o) => {
+      o.email = 'updated@example.com';
+    });
 
     // Name atom should NOT have changed.
     expect(registry.get(nameAtom)).toBe('Test');
@@ -102,9 +108,11 @@ describe('Echo Atom - Reactivity', () => {
     registry.subscribe(nameAtom, () => {});
     registry.subscribe(emailAtom, () => {});
 
-    // Update multiple properties directly.
-    obj.name = 'Updated';
-    obj.email = 'updated@example.com';
+    // Update multiple properties via Obj.change.
+    Obj.change(obj, (o) => {
+      o.name = 'Updated';
+      o.email = 'updated@example.com';
+    });
 
     expect(registry.get(nameAtom)).toBe('Updated');
     expect(registry.get(emailAtom)).toBe('updated@example.com');
@@ -131,11 +139,15 @@ describe('Echo Atom - Reactivity', () => {
     const initialCount = updateCount;
     expect(initialCount).toBe(1);
 
-    // Update object directly.
-    obj.name = 'Updated';
-    obj.email = 'updated@example.com';
+    // Update object via Obj.change.
+    Obj.change(obj, (o) => {
+      o.name = 'Updated';
+    });
+    Obj.change(obj, (o) => {
+      o.email = 'updated@example.com';
+    });
 
-    // Updates fire through Obj.subscribe.
+    // Updates fire through Obj.subscribe (one per Obj.change call).
     expect(updateCount).toBe(initialCount + 2);
 
     // Verify final state - returns snapshot (plain object).

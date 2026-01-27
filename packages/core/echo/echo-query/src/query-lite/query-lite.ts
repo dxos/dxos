@@ -452,6 +452,14 @@ class QueryClass implements Query$.Any {
     });
   }
 
+  limit(limit: number): Query$.Any {
+    return new QueryClass({
+      type: 'limit',
+      query: this.ast,
+      limit,
+    });
+  }
+
   options(options: QueryAST.QueryOptions): Query$.Any {
     return new QueryClass({
       type: 'options',

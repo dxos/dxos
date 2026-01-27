@@ -89,6 +89,14 @@ export class IndexEngine {
     return this.#reverseRefIndex.query(query);
   }
 
+  /**
+   * Query snapshots by recordIds.
+   * Used to load queue objects from indexed snapshots.
+   */
+  querySnapshotsJSON(recordIds: number[]) {
+    return this.#ftsIndex.querySnapshotsJSON(recordIds);
+  }
+
   queryType(
     query: Pick<ObjectMeta, 'spaceId' | 'typeDxn'>,
   ): Effect.Effect<readonly ObjectMeta[], SqlError.SqlError, SqlClient.SqlClient> {
@@ -145,7 +153,8 @@ export class IndexEngine {
           const cursors = yield* this.#tracker.queryCursors({
             indexName: opts.indexName,
             sourceName: source.sourceName,
-            spaceId: opts.spaceId,
+            // Pass undefined to get all cursors when spaceId is null.
+            spaceId: opts.spaceId ?? undefined,
           });
           const { objects, cursors: updatedCursors } = yield* source.getChangedObjects(cursors, { limit: opts.limit });
           if (objects.length === 0) {
@@ -163,7 +172,7 @@ export class IndexEngine {
             updatedCursors.map(
               (_): IndexCursor => ({
                 indexName: opts.indexName,
-                spaceId: opts.spaceId,
+                spaceId: _.spaceId,
                 sourceName: source.sourceName,
                 resourceId: _.resourceId,
                 cursor: _.cursor,

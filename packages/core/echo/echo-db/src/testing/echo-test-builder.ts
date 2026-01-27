@@ -5,6 +5,7 @@
 import type { AutomergeUrl } from '@automerge/automerge-repo';
 import * as Reactivity from '@effect/experimental/Reactivity';
 import type * as SqlClient from '@effect/sql/SqlClient';
+import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 import type * as Schema from 'effect/Schema';
@@ -12,6 +13,7 @@ import isEqual from 'lodash.isequal';
 
 import { waitForCondition } from '@dxos/async';
 import { type Context, Resource } from '@dxos/context';
+import { Type } from '@dxos/echo';
 import { EchoHost, type EchoHostIndexingConfig } from '@dxos/echo-pipeline';
 import { createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
@@ -19,6 +21,7 @@ import { PublicKey } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { layerMemory } from '@dxos/sql-sqlite/platform';
+import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 import { range } from '@dxos/util';
 
 import { EchoClient } from '../client';
@@ -38,7 +41,7 @@ type PeerOptions = {
   assignQueuePositions?: boolean;
 
   kv?: LevelDB;
-  runtime?: ManagedRuntime.ManagedRuntime<SqlClient.SqlClient, never>;
+  runtime?: ManagedRuntime.ManagedRuntime<SqlClient.SqlClient | SqlExport.SqlExport, never>;
 };
 
 export class EchoTestBuilder extends Resource {
@@ -89,13 +92,14 @@ export class EchoTestPeer extends Resource {
   private _lastDatabaseRootUrl?: string = undefined;
 
   private _foreignRuntime: boolean;
-  private _managedRuntime!: ManagedRuntime.ManagedRuntime<SqlClient.SqlClient, never>;
+  private _managedRuntime!: ManagedRuntime.ManagedRuntime<SqlClient.SqlClient | SqlExport.SqlExport, never>;
 
   constructor({ kv = createTestLevel(), indexing = {}, types, assignQueuePositions, runtime }: PeerOptions) {
     super();
     this._kv = kv;
     this._indexing = indexing;
-    this._types = types ?? [];
+    // Include Expando as default type for tests that use Obj.make(Type.Expando, ...).
+    this._types = [Type.Expando, ...(types ?? [])];
     this._assignQueuePositions = assignQueuePositions;
 
     this._foreignRuntime = !!runtime;
@@ -211,6 +215,15 @@ export class EchoTestPeer extends Resource {
       reactiveSchemaQuery,
       preloadSchemaOnOpen,
     });
+  }
+
+  async exportSqliteDatabase(): Promise<Uint8Array> {
+    return await this._managedRuntime.runPromise(
+      Effect.gen(function* () {
+        const sql = yield* SqlExport.SqlExport;
+        return yield* sql.export;
+      }),
+    );
   }
 }
 

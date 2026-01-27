@@ -9,27 +9,29 @@ import * as SchemaAST from 'effect/SchemaAST';
 
 import { Event } from '@dxos/async';
 import { inspectCustom } from '@dxos/debug';
-import { type EncodedReference } from '@dxos/echo-protocol';
-import { type GenericSignal, compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
-import {
-  EventId,
-  ReactiveArray,
-  type ReactiveHandler,
-  createProxy,
-  defineHiddenProperty,
-  isValidProxyTarget,
-  objectData,
-  symbolIsProxy,
-} from '@dxos/live-object';
 
 import { getSchemaDXN } from '../annotations';
 import { ObjectDeletedId } from '../entities';
-import { SchemaValidator } from '../object';
 import { ParentId, SchemaId, TypeId } from '../types';
 
-const symbolSignal = Symbol('signal');
-const symbolPropertySignal = Symbol('property-signal');
+import { defineHiddenProperty } from './define-hidden-property';
+import { batchEvents, emitEvent } from './event-batch';
+import { type ReactiveHandler, objectData } from './proxy-types';
+import { createProxy, getProxyTarget, isProxy, isValidProxyTarget, symbolIsProxy } from './proxy-utils';
+import { ReactiveArray } from './reactive-array';
+import { SchemaValidator } from './schema-validator';
+import { EventId } from './symbols';
+
+/**
+ * Symbol to store the owning ECHO object reference on nested JS objects (records).
+ * Every nested record is attributed to exactly one ECHO object.
+ * This achieves:
+ * - No cycles in the object graph (cyclical Refs are still allowed).
+ * - No multiple inbound pointers to one record.
+ * - Centralized reactivity for entire ECHO object.
+ */
+const EchoOwner = Symbol.for('@dxos/echo/Owner');
 
 type ProxyTarget = {
   /**
@@ -41,13 +43,7 @@ type ProxyTarget = {
    * Schema for the root.
    */
   [SchemaId]: Schema.Schema.AnyNoContext;
-  [ParentId]?: EncodedReference;
-
-  /**
-   * For get and set operations on value properties.
-   */
-  // TODO(dmaretskyi): Turn into a map of signals per-field.
-  [symbolSignal]: GenericSignal;
+  [ParentId]?: any;
 
   /**
    * For modifications.
@@ -55,13 +51,291 @@ type ProxyTarget = {
   [EventId]: Event<void>;
 
   /**
-   * For modifying the structure of the object.
+   * Reference to the root ECHO object that owns this nested record.
+   * Only present on nested objects, not on root objects.
    */
-  [symbolPropertySignal]: GenericSignal;
+  [EchoOwner]?: object;
 } & ({ [key: keyof any]: any } | any[]);
 
 /**
+ * Get the raw target from a value, unwrapping proxy if needed.
+ */
+const getRawTarget = (value: any): any => {
+  return isProxy(value) ? getProxyTarget(value) : value;
+};
+
+/**
+ * Get the ECHO object that owns this nested record.
+ *
+ * The owner is always the raw target object (not a proxy) of the root ECHO object.
+ * For example, if you have `echoObject.nested.deep`, both `nested` and `deep`
+ * will have their owner set to the raw target of `echoObject`.
+ *
+ * @param value - The nested record to check (can be a proxy or raw target).
+ * @returns The raw target of the owning root ECHO object, or undefined if not owned.
+ */
+const getOwner = (value: object | null | undefined): object | undefined => {
+  return (value as ProxyTarget | null | undefined)?.[EchoOwner];
+};
+
+/**
+ * Set the ECHO object owner on a value and all its nested records.
+ * All nested JS objects point directly to the root ECHO object.
+ *
+ * @param value - The value to set ownership on (can be a proxy or raw target).
+ * @param owner - The raw target of the root ECHO object that will own this value.
+ * @param options.visited - Set of already-visited objects to avoid infinite loops.
+ * @param options.depth - Current recursion depth (unused, kept for debugging).
+ * @param options.allowedPreviousOwner - When reassigning a root ECHO object, its nested structures
+ *   are allowed to have this as their previous owner without triggering the invariant.
+ */
+const setOwnerRecursive = (
+  value: any,
+  owner: object,
+  options: {
+    visited?: Set<object>;
+    depth?: number;
+    allowedPreviousOwner?: object;
+  } = {},
+): void => {
+  const { visited = new Set<object>(), depth = 0, allowedPreviousOwner } = options;
+  if (value == null || typeof value !== 'object') {
+    return;
+  }
+
+  const actualValue = getRawTarget(value);
+  if (visited.has(actualValue)) {
+    return;
+  }
+  visited.add(actualValue);
+
+  // Check that we're not stealing a nested record owned by a different ECHO object.
+  // Root ECHO objects (those with EventId) can be reassigned - they maintain their own
+  // identity and choosing to embed them in another object is a valid operation.
+  // When reassigning a root, its nested records (owned by that root) are also allowed.
+  const existingOwner = getOwner(actualValue);
+  const isRootEchoObject = EventId in actualValue;
+
+  // Track if this is a root being assigned - its nested structures are allowed to transfer.
+  let newAllowedPreviousOwner = allowedPreviousOwner;
+  if (isRootEchoObject && depth === 0) {
+    // This is the top-level root being assigned; allow its nested structures to transfer.
+    newAllowedPreviousOwner = actualValue;
+  }
+
+  if (!isRootEchoObject) {
+    const ownershipAllowed =
+      existingOwner == null || existingOwner === owner || existingOwner === newAllowedPreviousOwner;
+    invariant(
+      ownershipAllowed,
+      'Cannot reassign ownership of a nested record to a different ECHO object. Use deep copy first.',
+    );
+  }
+
+  // Set owner directly to the root ECHO object.
+  defineHiddenProperty(actualValue, EchoOwner, owner);
+
+  // Recursively set owner on nested objects and array elements.
+  const recursiveOptions = {
+    visited,
+    depth: depth + 1,
+    allowedPreviousOwner: newAllowedPreviousOwner,
+  };
+  if (Array.isArray(actualValue)) {
+    for (const item of actualValue) {
+      if (isValidProxyTarget(item) || isProxy(item)) {
+        setOwnerRecursive(item, owner, recursiveOptions);
+      }
+    }
+  } else {
+    for (const key in actualValue) {
+      if (Object.prototype.hasOwnProperty.call(actualValue, key)) {
+        const nested = actualValue[key];
+        if (isValidProxyTarget(nested) || isProxy(nested)) {
+          setOwnerRecursive(nested, owner, recursiveOptions);
+        }
+      }
+    }
+  }
+};
+
+/**
+ * Traverse an object graph, calling the visitor on each object.
+ * Handles proxy unwrapping and cycle detection.
+ *
+ * @param value - The value to traverse (can be a proxy or raw target).
+ * @param visitor - Called for each object. Return true to stop traversal (early exit).
+ * @returns true if the visitor returns true for any object.
+ */
+const traverseObjectGraph = (
+  value: any,
+  visitor: (actualValue: any) => boolean,
+  visited = new Set<object>(),
+): boolean => {
+  if (value == null || typeof value !== 'object') {
+    return false;
+  }
+
+  const actualValue = getRawTarget(value);
+
+  if (visited.has(actualValue)) {
+    return false;
+  }
+  visited.add(actualValue);
+
+  if (visitor(actualValue)) {
+    return true;
+  }
+
+  if (Array.isArray(actualValue)) {
+    for (const item of actualValue) {
+      if (traverseObjectGraph(item, visitor, visited)) {
+        return true;
+      }
+    }
+  } else {
+    for (const key in actualValue) {
+      if (Object.prototype.hasOwnProperty.call(actualValue, key)) {
+        if (traverseObjectGraph(actualValue[key], visitor, visited)) {
+          return true;
+        }
+      }
+    }
+  }
+
+  return false;
+};
+
+/**
+ * Check if a value would create a cycle when assigned to a target ECHO object.
+ * Returns true if the value (or any nested object) IS the target root.
+ */
+const wouldCreateCycle = (targetRoot: object, value: any): boolean =>
+  traverseObjectGraph(value, (v) => v === targetRoot);
+
+/**
+ * Check if a value or any of its nested objects has an owner different from the target.
+ * Used to determine if deep copy is needed during init.
+ */
+const hasForeignOwner = (value: any, target: object): boolean =>
+  traverseObjectGraph(value, (v) => {
+    const owner = getOwner(v);
+    if (owner != null && owner !== target) {
+      return true;
+    }
+    // Root ECHO objects (with EventId) have their nested structures owned by them.
+    if (EventId in v && v !== target) {
+      return true;
+    }
+    return false;
+  });
+
+/**
+ * Deep copy a value, handling arrays and nested objects.
+ * Preserves ReactiveArray type and hidden properties (SchemaId, TypeId).
+ * Does not copy class instances or functions (except ReactiveArray).
+ *
+ * Note: Cannot use structuredClone because we need to:
+ * - Unwrap proxies
+ * - Preserve ReactiveArray instances
+ * - Copy Symbol-keyed hidden properties (SchemaId, TypeId)
+ * - Convert plain arrays to ReactiveArray
+ *
+ * Performance: O(n) where n is the total number of nested objects/arrays.
+ * For large structures, consider using Refs for frequently reassigned subtrees.
+ */
+const deepCopy = <T>(value: T, visited = new Map<object, object>()): T => {
+  if (value == null || typeof value !== 'object') {
+    return value;
+  }
+
+  // Handle proxies - get the underlying target.
+  const actualValue = getRawTarget(value);
+
+  // Check for circular references in the copy.
+  if (visited.has(actualValue)) {
+    return visited.get(actualValue) as T;
+  }
+
+  // Handle ReactiveArray specially to preserve reactivity.
+  if (actualValue instanceof ReactiveArray) {
+    const copy = new ReactiveArray<any>();
+    visited.set(actualValue, copy);
+    for (const item of actualValue) {
+      copy.push(deepCopy(item, visited));
+    }
+    // Copy hidden properties.
+    copyHiddenProperties(actualValue, copy);
+    return copy as T;
+  }
+
+  // Don't copy other class instances (objects with non-Object prototype).
+  const proto = Object.getPrototypeOf(actualValue);
+  if (proto !== Object.prototype && proto !== Array.prototype && proto !== null) {
+    return value; // Return as-is, don't copy class instances.
+  }
+
+  if (Array.isArray(actualValue)) {
+    // Plain arrays become ReactiveArrays.
+    const copy = new ReactiveArray<any>();
+    visited.set(actualValue, copy);
+    for (const item of actualValue) {
+      copy.push(deepCopy(item, visited));
+    }
+    return copy as T;
+  }
+
+  const copy: Record<string, any> = {};
+  visited.set(actualValue, copy);
+  for (const key of Object.keys(actualValue)) {
+    copy[key] = deepCopy((actualValue as any)[key], visited);
+  }
+  // Copy hidden properties (SchemaId, TypeId).
+  copyHiddenProperties(actualValue, copy);
+  return copy as T;
+};
+
+/**
+ * Copy hidden properties (SchemaId, TypeId) from source to target.
+ */
+const copyHiddenProperties = (source: any, target: any): void => {
+  if (SchemaId in source) {
+    defineHiddenProperty(target, SchemaId, source[SchemaId]);
+  }
+  if (TypeId in source) {
+    defineHiddenProperty(target, TypeId, source[TypeId]);
+  }
+};
+
+/**
+ * Maximum depth for owner chain traversal.
+ * This is a defensive measure against malformed circular ownership.
+ * Primary cycle detection is handled by wouldCreateCycle() before assignment.
+ */
+const MAX_OWNER_DEPTH = 100;
+
+/**
+ * Get the root ECHO object for a target.
+ * Follows the owner chain to find the ultimate root.
+ * An object may have EventId (from being created standalone) but if it now
+ * has an owner, it's nested and we should use its owner's root instead.
+ */
+const getEchoRoot = (target: object, depth = 0): object => {
+  invariant(depth < MAX_OWNER_DEPTH, 'Owner chain too deep - possible circular ownership');
+  // If target has an owner, follow the chain to find the true root.
+  // This handles the case where a standalone reactive object (with EventId)
+  // is later nested into another object.
+  const owner = getOwner(target);
+  if (owner) {
+    return getEchoRoot(owner, depth + 1);
+  }
+  // No owner means this is a root object.
+  return target;
+};
+
+/**
  * Typed in-memory reactive store (with Schema).
+ * Reactivity is based on Event subscriptions, not signals.
  */
 export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
   public static readonly instance: ReactiveHandler<any> = new TypedReactiveHandler();
@@ -75,25 +349,38 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
     invariant(typeof target === 'object' && target !== null);
     invariant(SchemaId in target, 'Schema is not defined for the target');
 
-    if (!(symbolSignal in target)) {
-      defineHiddenProperty(target, symbolSignal, compositeRuntime.createSignal());
-      defineHiddenProperty(target, symbolPropertySignal, compositeRuntime.createSignal());
-    }
-
-    if (!(EventId in target)) {
+    // Only set EventId on root objects (those without an owner).
+    // Nested objects share their root's EventId for centralized reactivity.
+    const hasOwner = !!getOwner(target);
+    if (!(EventId in target) && !hasOwner) {
       defineHiddenProperty(target, EventId, new Event());
     }
 
     defineHiddenProperty(target, ObjectDeletedId, false);
 
-    for (const key of Object.getOwnPropertyNames(target)) {
-      const descriptor = Object.getOwnPropertyDescriptor(target, key)!;
-      if (descriptor.get) {
-        // Ignore getters.
-        continue;
+    // Only set owners if this is a root object (no existing owner).
+    // Nested objects already have owners set by their root's initialization.
+    // If we re-set owners here for nested objects, we'd incorrectly point
+    // array elements to the array instead of the true root ECHO object.
+    if (!hasOwner) {
+      // Set owner on all nested objects to this root ECHO object.
+      // All nested records point directly to this root for centralized reactivity.
+      for (const key in target) {
+        if ((target as any)[symbolIsProxy]) {
+          continue;
+        }
+        let value = (target as any)[key];
+        if (isValidProxyTarget(value) || isProxy(value)) {
+          // Deep copy values that have foreign owners (owned by a different object,
+          // or are root ECHO objects whose nested structures would be owned by them).
+          // This recursively checks all nested objects.
+          if (hasForeignOwner(value, target)) {
+            value = deepCopy(value);
+            (target as any)[key] = value;
+          }
+          setOwnerRecursive(value, target);
+        }
       }
-
-      // Array reactivity is already handled by the schema validator.
     }
 
     // Maybe have been set by `create`.
@@ -108,21 +395,14 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
     switch (prop) {
       // TODO(burdon): Remove?
       case objectData: {
-        target[symbolSignal].notifyRead();
         return toJSON(target);
       }
     }
 
-    // Handle getter properties. Will not subscribe the value signal.
+    // Handle getter properties.
     if (Object.getOwnPropertyDescriptor(target, prop)?.get) {
-      target[symbolPropertySignal].notifyRead();
-
-      // TODO(dmaretskyi): Turn getters into computed fields.
       return Reflect.get(target, prop, receiver);
     }
-
-    target[symbolSignal].notifyRead();
-    target[symbolPropertySignal].notifyRead();
 
     const value = Reflect.get(target, prop, receiver);
     if (isValidProxyTarget(value)) {
@@ -133,19 +413,14 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   set(target: ProxyTarget, prop: string | symbol, value: any, receiver: any): boolean {
-    // Convert arrays to reactive arrays on write.
-    if (Array.isArray(value)) {
-      value = ReactiveArray.from(value);
-    }
-
     let result: boolean = false;
     this._inSet = true;
     try {
-      compositeRuntime.batch(() => {
-        const validatedValue = this._validateValue(target, prop, value);
-        result = Reflect.set(target, prop, validatedValue, receiver);
-        target[symbolSignal].notifyWrite();
-        target[EventId].emit();
+      batchEvents(() => {
+        const { echoRoot, preparedValue } = this._prepareValueForAssignment(target, prop, value);
+        result = Reflect.set(target, prop, preparedValue, receiver);
+        // Emit event on the root ECHO object (centralized reactivity).
+        emitEvent(echoRoot);
       });
     } finally {
       this._inSet = false;
@@ -154,23 +429,65 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   ownKeys(target: ProxyTarget): ArrayLike<string | symbol> {
-    // Touch both signals since `set` and `delete` operations may create or remove properties.
-    target[symbolSignal].notifyRead();
-    target[symbolPropertySignal].notifyRead();
     return Reflect.ownKeys(target);
   }
 
   defineProperty(target: ProxyTarget, property: string | symbol, attributes: PropertyDescriptor): boolean {
-    const validatedValue = this._validateValue(target, property, attributes.value);
+    const { echoRoot, preparedValue } = this._prepareValueForAssignment(target, property, attributes.value);
     const result = Reflect.defineProperty(target, property, {
       ...attributes,
-      value: validatedValue,
+      value: preparedValue,
     });
-    target[symbolPropertySignal].notifyWrite();
     if (!this._inSet) {
-      target[EventId].emit();
+      // Emit event on the root ECHO object (centralized reactivity).
+      emitEvent(echoRoot);
     }
     return result;
+  }
+
+  /**
+   * Prepare a value for assignment to a typed object property.
+   * Handles cycle detection, copy-on-assign, array conversion, validation, and ownership.
+   */
+  private _prepareValueForAssignment(
+    target: ProxyTarget,
+    prop: string | symbol,
+    value: any,
+  ): { echoRoot: object; preparedValue: any } {
+    const echoRoot = getEchoRoot(target);
+
+    // Check for cycles before assignment.
+    if (isValidProxyTarget(value) || isProxy(value)) {
+      if (wouldCreateCycle(echoRoot, value)) {
+        throw new Error('Cannot create cycles in typed object graph. Consider using Ref for circular references.');
+      }
+    }
+
+    // Copy-on-assign: If the value is a nested record owned by a different ECHO object, deep copy it.
+    // Note: Root ECHO objects (those with EventId) maintain their own identity and should NOT be
+    // copied - they can be legitimately referenced by multiple objects.
+    if (isValidProxyTarget(value) || isProxy(value)) {
+      const actualValue = getRawTarget(value);
+      const existingOwner = getOwner(actualValue);
+      const isRootEchoObject = EventId in actualValue;
+      if (existingOwner != null && existingOwner !== echoRoot && !isRootEchoObject) {
+        value = deepCopy(value);
+      }
+    }
+
+    // Convert arrays to reactive arrays.
+    if (Array.isArray(value) && !(value instanceof ReactiveArray)) {
+      value = ReactiveArray.from(value);
+    }
+
+    const validatedValue = this._validateValue(target, prop, value);
+
+    // Set owner on new value to the root ECHO object.
+    if (isValidProxyTarget(validatedValue) || isProxy(validatedValue)) {
+      setOwnerRecursive(validatedValue, echoRoot);
+    }
+
+    return { echoRoot, preparedValue: validatedValue };
   }
 
   private _validateValue(target: any, prop: string | symbol, value: any) {
@@ -179,9 +496,6 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
     }
     const schema = SchemaValidator.getTargetPropertySchema(target, prop);
     const _ = Schema.asserts(schema)(value);
-    if (Array.isArray(value)) {
-      value = new ReactiveArray(...value);
-    }
     if (isValidProxyTarget(value)) {
       setSchemaProperties(value, schema);
     }

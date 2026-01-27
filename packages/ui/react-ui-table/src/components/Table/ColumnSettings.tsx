@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { useAtomValue } from '@effect-atom/atom-react';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { type SchemaRegistry } from '@dxos/echo';
@@ -20,7 +21,7 @@ type ColumnSettingsProps = {
 
 export const ColumnSettings = ({ registry, model, modals, onNewColumn }: ColumnSettingsProps) => {
   const [newField, setNewField] = useState<FieldType>();
-  const state = modals.state.value;
+  const state = useAtomValue(modals.state);
 
   useEffect(() => {
     if (state?.type === 'columnSettings' && state.mode.type === 'create' && model?.projection) {
@@ -37,11 +38,11 @@ export const ColumnSettings = ({ registry, model, modals, onNewColumn }: ColumnS
     if (state?.type === 'columnSettings') {
       const { mode } = state;
       if (mode.type === 'edit') {
-        return model?.projection?.fields.find((f) => f.id === mode.fieldId);
+        return model?.projection?.getFields().find((f) => f.id === mode.fieldId);
       }
     }
     return undefined;
-  }, [model?.projection?.fields, state]);
+  }, [model?.projection, state]);
 
   const field = existingField ?? newField;
 

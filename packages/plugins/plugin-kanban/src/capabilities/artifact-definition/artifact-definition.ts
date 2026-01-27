@@ -72,6 +72,7 @@ export default Capability.makeModule(() =>
             const { view } = await View.makeFromDatabase({
               db: extensions.space.db,
               typename,
+              pivotFieldName: pivotColumn,
             });
             const kanban = Kanban.make({ view });
 

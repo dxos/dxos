@@ -19,7 +19,6 @@ export const WelcomePlugin = Plugin.define(meta).pipe(
       Common.ActivationEvent.AppGraphReady,
       Common.ActivationEvent.OperationInvokerReady,
       Common.ActivationEvent.LayoutReady,
-      Common.ActivationEvent.SettingsReady,
       ClientEvents.ClientReady,
     ),
     activate: Onboarding,

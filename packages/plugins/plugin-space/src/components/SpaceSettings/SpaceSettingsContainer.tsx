@@ -7,6 +7,7 @@ import React, { type ChangeEvent, forwardRef, useCallback, useMemo, useState } f
 
 import { Common } from '@dxos/app-framework';
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/react';
+import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { useClient } from '@dxos/react-client';
@@ -64,14 +65,21 @@ export const SpaceSettingsContainer = forwardRef<HTMLDivElement, SpaceSettingsCo
     const handleSave = useCallback(
       (properties: Schema.Schema.Type<typeof SpaceFormSchema>) => {
         void toggleEdgeReplication(properties.edgeReplication ?? false);
-        if (properties.name !== space.properties.name) {
-          space.properties.name = properties.name;
-        }
-        if (properties.icon !== space.properties.icon) {
-          space.properties.icon = properties.icon;
-        }
-        if (properties.hue !== space.properties.hue) {
-          space.properties.hue = properties.hue;
+        const nameChanged = properties.name !== space.properties.name;
+        const iconChanged = properties.icon !== space.properties.icon;
+        const hueChanged = properties.hue !== space.properties.hue;
+        if (nameChanged || iconChanged || hueChanged) {
+          Obj.change(space.properties, (p) => {
+            if (nameChanged) {
+              p.name = properties.name;
+            }
+            if (iconChanged) {
+              p.icon = properties.icon;
+            }
+            if (hueChanged) {
+              p.hue = properties.hue;
+            }
+          });
         }
         if (properties.archived && !archived) {
           void (async () => {

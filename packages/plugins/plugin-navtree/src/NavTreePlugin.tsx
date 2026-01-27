@@ -10,9 +10,9 @@ import { type TreeData } from '@dxos/react-ui-list';
 
 import { AppGraphBuilder, Keyboard, OperationResolver, ReactSurface, State } from './capabilities';
 import { NODE_TYPE } from './components';
-import { NavTreeEvents } from './events';
 import { meta } from './meta';
 import { translations } from './translations';
+import { NavTreeEvents } from './types';
 
 export const NavTreePlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
@@ -48,7 +48,7 @@ export const NavTreePlugin = Plugin.define(meta).pipe(
       NavTreeEvents.StateReady,
     ),
     activate: Effect.fnUntraced(function* () {
-      const layout = yield* Capability.get(Common.Capability.Layout);
+      const layout = yield* Common.Capability.getAtomValue(Common.Capability.Layout);
       const { invokePromise } = yield* Capability.get(Common.Capability.OperationInvoker);
       const { graph } = yield* Capability.get(Common.Capability.AppGraph);
       if (invokePromise && layout.active.length === 1) {

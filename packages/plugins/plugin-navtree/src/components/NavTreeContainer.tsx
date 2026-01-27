@@ -4,11 +4,10 @@
 
 import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { type Instruction, extractInstruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
-import { untracked } from '@preact/signals-core';
 import React, { forwardRef, memo, useCallback, useEffect, useMemo } from 'react';
 
 import { Common } from '@dxos/app-framework';
-import { Surface, useAppGraph, useCapability, useLayout, useOperationInvoker } from '@dxos/app-framework/react';
+import { Surface, useAppGraph, useLayout, useOperationInvoker } from '@dxos/app-framework/react';
 import { PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { Graph, Node, useActionRunner } from '@dxos/plugin-graph';
 import { useConnections, useActions as useGraphActions } from '@dxos/plugin-graph';
@@ -17,8 +16,8 @@ import { type TreeData, type TreeItemDataProps, isTreeData } from '@dxos/react-u
 import { mx } from '@dxos/ui-theme';
 import { arrayMove, byPosition } from '@dxos/util';
 
+import { useIsAlternateTree, useIsCurrent, useIsOpen, useNavTreeState } from '../hooks';
 import { meta } from '../meta';
-import { NavTreeCapabilities } from '../types';
 import { type FlattenedActions, type NavTreeItemGraphNode } from '../types';
 import { getChildren, getParent, resolveMigrationOperation } from '../util';
 
@@ -34,9 +33,7 @@ const renderItemEnd = ({ node, open }: { node: Node.Node; open: boolean }) => (
 );
 
 const getChildrenFilter = (node: Node.Node): node is Node.Node =>
-  untracked(
-    () => !Node.isActionLike(node) && node.type !== PLANK_COMPANION_TYPE && node.properties.disposition !== 'hidden',
-  );
+  !Node.isActionLike(node) && node.type !== PLANK_COMPANION_TYPE && node.properties.disposition !== 'hidden';
 
 const filterItems = (node: Node.Node, disposition?: string) => {
   if (!disposition && (node.properties.disposition === 'hidden' || node.properties.disposition === 'alternate-tree')) {
@@ -98,7 +95,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
     const { invokeSync, invokePromise } = useOperationInvoker();
     const runAction = useActionRunner();
     const { graph } = useAppGraph();
-    const { isOpen, isCurrent, isAlternateTree, setItem } = useCapability(NavTreeCapabilities.State);
+    const { getItem, setItem } = useNavTreeState();
     const layout = useLayout();
     const { navigationSidebarState } = useSidebars(meta.id);
 
@@ -197,7 +194,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
           return;
         }
 
-        const current = isCurrent(path, node);
+        const current = getItem(path).current;
         if (!current) {
           invokeSync(Common.LayoutOperation.Open, { subject: [node.id], key: node.properties.key });
         } else if (option) {
@@ -217,7 +214,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
           invokeSync(Common.LayoutOperation.UpdateSidebar, { state: 'closed' });
         }
       },
-      [graph, invokeSync, invokePromise, isCurrent, isLg, runAction],
+      [graph, invokeSync, invokePromise, getItem, isLg, runAction],
     );
 
     const handleBack = useCallback(() => invokeSync(Common.LayoutOperation.RevertWorkspace), [invokeSync]);
@@ -294,9 +291,9 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
         canDrop,
         canSelect,
         getProps,
-        isAlternateTree,
-        isCurrent,
-        isOpen,
+        useIsAlternateTree,
+        useIsCurrent,
+        useIsOpen,
         loadDescendents,
         onBack: handleBack,
         onOpenChange: handleOpenChange,
@@ -319,9 +316,6 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
         handleOpenChange,
         handleSelect,
         handleTabChange,
-        isAlternateTree,
-        isCurrent,
-        isOpen,
         loadDescendents,
         popoverAnchorId,
         renderItemEnd,

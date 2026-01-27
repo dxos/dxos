@@ -123,6 +123,13 @@ export interface Query<T> {
   orderBy(...order: EffectArray.NonEmptyArray<Order.Order<T>>): Query<T>;
 
   /**
+   * Limit the number of results.
+   * @param limit - Maximum number of results to return.
+   * @returns Query for the limited results.
+   */
+  limit(limit: number): Query<T>;
+
+  /**
    * Add options to a query.
    */
   options(options: QueryAST.QueryOptions): Query<T>;
@@ -228,6 +235,14 @@ class QueryClass implements Any {
       type: 'order',
       query: this.ast,
       order: order.map((o) => o.ast),
+    });
+  }
+
+  limit(limit: number): Any {
+    return new QueryClass({
+      type: 'limit',
+      query: this.ast,
+      limit,
     });
   }
 

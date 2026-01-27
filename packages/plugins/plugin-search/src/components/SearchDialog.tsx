@@ -13,7 +13,7 @@ import { useClient } from '@dxos/react-client';
 import { Filter, useQuery } from '@dxos/react-client/echo';
 import { Button, Dialog, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { SearchList } from '@dxos/react-ui-searchlist';
-import { descriptionText, mx } from '@dxos/ui-theme';
+import { descriptionText, mx, osTranslations } from '@dxos/ui-theme';
 
 import { useSearchResults } from '../hooks';
 import { meta } from '../meta';
@@ -119,7 +119,7 @@ export const SearchDialog = ({ pivotId }: SearchDialogProps) => {
 
       <Dialog.Close asChild>
         <Button variant='primary' classNames='mbs-2'>
-          {t('close label', { ns: 'os' })}
+          {t('close label', { ns: osTranslations })}
         </Button>
       </Dialog.Close>
     </Dialog.Content>

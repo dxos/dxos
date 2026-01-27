@@ -2,7 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import { batch } from '@preact/signals-core';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
@@ -55,8 +54,10 @@ export const BaseObjectSettings = ({ classNames, children, object }: BaseObjectS
     invariant(db);
     const newObject = db.add(Obj.make(schema, values));
     if (Obj.instanceOf(Tag.Tag, newObject)) {
-      const meta = Obj.getMeta(object);
-      meta.tags = [...(meta.tags ?? []), Obj.getDXN(newObject).toString()];
+      Obj.change(object, () => {
+        const meta = Obj.getMeta(object);
+        meta.tags = [...(meta.tags ?? []), Obj.getDXN(newObject).toString()];
+      });
     }
   }, []);
 
@@ -71,7 +72,7 @@ export const BaseObjectSettings = ({ classNames, children, object }: BaseObjectS
       }
 
       const changedPaths = Object.keys(changed).filter((path) => changed[path as JsonPath]) as JsonPath[];
-      batch(() => {
+      Obj.change(object, () => {
         for (const path of changedPaths) {
           const parts = splitJsonPath(path);
           // TODO(wittjosiah): This doesn't handle array paths well.

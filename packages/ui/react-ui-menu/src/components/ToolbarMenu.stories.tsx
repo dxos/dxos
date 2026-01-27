@@ -2,25 +2,26 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Atom } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useCallback, useMemo } from 'react';
+import React, { useMemo } from 'react';
 
 import { faker } from '@dxos/random';
 import { IconButton } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
+import { withRegistry } from '@dxos/storybook-utils';
 
 import { MenuProvider, DropdownMenu as NaturalDropdownMenu, ToolbarMenu } from '../components';
-import { useMenuActions } from '../hooks';
+import { type ActionGraphProps, useMenuActions } from '../hooks';
 import { createActions, createNestedActions, createNestedActionsResolver, useMutateActions } from '../testing';
 import { translations } from '../translations';
-import { type MenuAction } from '../types';
 
 faker.seed(1234);
 
 const meta = {
   title: 'ui/react-ui-menu/ToolbarMenu',
   component: ToolbarMenu,
-  decorators: [withTheme],
+  decorators: [withTheme, withRegistry],
   parameters: {
     translations,
   },
@@ -32,12 +33,18 @@ type Story = StoryObj<typeof meta>;
 
 export const DropdownMenu: Story = {
   render: () => {
-    const menuActions = useMemo(() => createActions() as MenuAction[], []);
-    const resolveGroupItems = useCallback(() => menuActions, [menuActions]);
-    useMutateActions(menuActions);
+    const actionsAtom = useMemo(() => {
+      const actions = createActions();
+      return Atom.make<ActionGraphProps>({
+        nodes: actions,
+        edges: actions.map((action) => ({ source: 'root', target: action.id })),
+      }).pipe(Atom.keepAlive);
+    }, []);
+    useMutateActions(actionsAtom);
+    const menu = useMenuActions(actionsAtom);
 
     return (
-      <MenuProvider useGroupItems={resolveGroupItems}>
+      <MenuProvider {...menu}>
         <NaturalDropdownMenu.Root>
           <NaturalDropdownMenu.Trigger asChild>
             <IconButton icon='ph--list-checks--regular' label='Options' />
@@ -62,6 +69,7 @@ export const Toolbar: Story = {
 
 export const UseMenuActionsToolbar: Story = {
   render: () => {
+    useMutateActions(createNestedActions);
     const menu = useMenuActions(createNestedActions);
 
     return (

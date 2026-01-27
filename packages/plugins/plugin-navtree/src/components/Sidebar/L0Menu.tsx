@@ -42,7 +42,7 @@ import { Tabs } from '@dxos/react-ui-tabs';
 import { mx } from '@dxos/ui-theme';
 import { arrayMove } from '@dxos/util';
 
-import { useLoadDescendents } from '../../hooks';
+import { useLoadDescendents, useNavTreeState } from '../../hooks';
 import { meta } from '../../meta';
 import { l0ItemType } from '../../util';
 import { useNavTreeContext } from '../NavTreeContext';
@@ -72,7 +72,8 @@ type L0ItemProps = L0ItemRootProps & {
 };
 
 const useL0ItemClick = ({ item, parent, path }: L0ItemProps, type: string) => {
-  const { tab, isCurrent, onSelect, onTabChange } = useNavTreeContext();
+  const { tab, onSelect, onTabChange } = useNavTreeContext();
+  const { getItem } = useNavTreeState();
   const [isLg] = useMediaQuery('lg');
   const runAction = useActionRunner();
 
@@ -88,10 +89,10 @@ const useL0ItemClick = ({ item, parent, path }: L0ItemProps, type: string) => {
           return onTabChange?.(item);
 
         case 'link':
-          return onSelect?.({ item, path, current: !isCurrent(path, item), option: event.altKey });
+          return onSelect?.({ item, path, current: !getItem(path).current, option: event.altKey });
       }
     },
-    [item, parent, type, tab, isCurrent, onSelect, onTabChange, isLg, runAction],
+    [item, parent, type, tab, getItem, onSelect, onTabChange, isLg, runAction],
   );
 };
 

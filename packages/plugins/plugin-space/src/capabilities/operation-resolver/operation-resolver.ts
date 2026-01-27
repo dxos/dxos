@@ -17,7 +17,7 @@ import { ObservabilityOperation } from '@dxos/plugin-observability/types';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention/types';
 import { iconValues } from '@dxos/react-ui-pickers/icons';
-import { Collection, ProjectionModel, getTypenameFromQuery } from '@dxos/schema';
+import { Collection, ProjectionModel, createEchoChangeCallback, getTypenameFromQuery } from '@dxos/schema';
 import { hues } from '@dxos/ui-theme';
 
 import { type JoinDialogProps } from '../../components';
@@ -28,7 +28,7 @@ import {
   OBJECT_RENAME_POPOVER,
   SPACE_RENAME_POPOVER,
 } from '../../constants';
-import { SpaceEvents } from '../../events';
+import { SpaceEvents } from '../../types';
 import { SpaceCapabilities, SpaceOperation } from '../../types';
 import { COMPOSER_SPACE_LOCK, cloneObject, getNestedObjects } from '../../util';
 
@@ -123,8 +123,10 @@ export default Capability.makeModule(
         OperationResolver.make({
           operation: SpaceOperation.WaitForObject,
           handler: Effect.fnUntraced(function* (input) {
-            const state = yield* Capability.get(SpaceCapabilities.MutableState);
-            state.awaiting = input.id;
+            yield* Common.Capability.updateAtomValue(SpaceCapabilities.EphemeralState, (current) => ({
+              ...current,
+              awaiting: input.id,
+            }));
           }),
         }),
 
@@ -147,7 +149,7 @@ export default Capability.makeModule(
         OperationResolver.make({
           operation: SpaceOperation.RemoveObjects,
           handler: Effect.fnUntraced(function* (input) {
-            const layout = yield* Capability.get(Common.Capability.Layout);
+            const layout = yield* Common.Capability.getAtomValue(Common.Capability.Layout);
             const objects = input.objects as Obj.Any[];
 
             // All objects must be a member of the same space.
@@ -182,7 +184,9 @@ export default Capability.makeModule(
               // Remove from parent collection.
               const index = parentCollection.objects.findIndex((ref) => ref.target === obj);
               if (index !== -1) {
-                parentCollection.objects.splice(index, 1);
+                Obj.change(parentCollection, (c) => {
+                  c.objects.splice(index, 1);
+                });
               }
 
               // Delete nested objects.
@@ -220,25 +224,33 @@ export default Capability.makeModule(
         //
         OperationResolver.make({
           operation: SpaceOperation.DeleteField,
-          handler: (input) =>
-            Effect.promise(async () => {
-              const view = input.view as any;
-              const db = Obj.getDatabase(view);
-              invariant(db);
-              const typename = getTypenameFromQuery(view.query.ast);
-              invariant(typename);
-              const schema = await db.schemaRegistry.query({ typename }).firstOrUndefined();
-              invariant(schema);
-              const projection = new ProjectionModel(schema.jsonSchema, view.projection);
-              const { deleted, index } = projection.deleteFieldProjection(input.fieldId);
+          handler: Effect.fnUntraced(function* (input) {
+            const registry = yield* Capability.get(Common.Capability.AtomRegistry);
+            const view = input.view as any;
+            const db = Obj.getDatabase(view);
+            invariant(db);
+            const typename = getTypenameFromQuery(view.query.ast);
+            invariant(typename);
+            const schema = yield* Effect.promise(() => db.schemaRegistry.query({ typename }).firstOrUndefined());
+            invariant(schema);
 
-              // Return data needed for undo.
-              return {
-                field: deleted.field,
-                props: deleted.props,
-                index,
-              };
-            }),
+            // Create projection with change callbacks that wrap in Obj.change().
+            const projection = new ProjectionModel({
+              registry,
+              view,
+              baseSchema: schema.jsonSchema,
+              change: createEchoChangeCallback(view, schema),
+            });
+
+            const result = projection.deleteFieldProjection(input.fieldId);
+
+            // Return data needed for undo.
+            return {
+              field: result.deleted.field,
+              props: result.deleted.props,
+              index: result.index,
+            };
+          }),
         }),
 
         //
@@ -247,7 +259,7 @@ export default Capability.makeModule(
         OperationResolver.make({
           operation: SpaceOperation.OpenCreateObject,
           handler: Effect.fnUntraced(function* (input) {
-            const state = yield* Capability.get(SpaceCapabilities.State);
+            const ephemeralState = yield* Common.Capability.getAtomValue(SpaceCapabilities.EphemeralState);
             const navigable = input.navigable ?? true;
             yield* Operation.invoke(Common.LayoutOperation.UpdateDialog, {
               subject: CREATE_OBJECT_DIALOG,
@@ -262,7 +274,7 @@ export default Capability.makeModule(
                   ? (object: Obj.Any) => {
                       const isCollection = Obj.instanceOf(Collection.Collection, object);
                       const isSystemCollection = Obj.instanceOf(Collection.Managed, object);
-                      return (!isCollection && !isSystemCollection) || state.navigableCollections;
+                      return (!isCollection && !isSystemCollection) || ephemeralState.navigableCollections;
                     }
                   : () => false,
               },
@@ -330,7 +342,9 @@ export default Capability.makeModule(
         OperationResolver.make({
           operation: SpaceOperation.Lock,
           handler: Effect.fnUntraced(function* ({ space }) {
-            space.properties[COMPOSER_SPACE_LOCK] = true;
+            Obj.change(space.properties, (p) => {
+              p[COMPOSER_SPACE_LOCK] = true;
+            });
 
             if (observability) {
               yield* Operation.schedule(ObservabilityOperation.SendEvent, {
@@ -348,7 +362,9 @@ export default Capability.makeModule(
         OperationResolver.make({
           operation: SpaceOperation.Unlock,
           handler: Effect.fnUntraced(function* ({ space }) {
-            space.properties[COMPOSER_SPACE_LOCK] = false;
+            Obj.change(space.properties, (p) => {
+              p[COMPOSER_SPACE_LOCK] = false;
+            });
 
             if (observability) {
               yield* Operation.schedule(ObservabilityOperation.SendEvent, {
@@ -389,15 +405,18 @@ export default Capability.makeModule(
 
             // Create root collection.
             const collection = Obj.make(Collection.Collection, { objects: [] });
-            space.properties[Collection.Collection.typename] = Ref.make(collection);
-
-            // Set current migration version.
-            if (Migrations.versionProperty) {
-              space.properties[Migrations.versionProperty] = Migrations.targetVersion;
-            }
+            Obj.change(space.properties, (p) => {
+              p[Collection.Collection.typename] = Ref.make(collection);
+              // Set current migration version.
+              if (Migrations.versionProperty) {
+                p[Migrations.versionProperty] = Migrations.targetVersion;
+              }
+            });
 
             // Create records smart collection.
-            collection.objects.push(Ref.make(Collection.makeManaged({ key: Type.getTypename(Type.PersistentType) })));
+            Obj.change(collection, (c) => {
+              c.objects.push(Ref.make(Collection.makeManaged({ key: Type.getTypename(Type.PersistentType) })));
+            });
 
             // Allow other plugins to add default content.
             yield* Plugin.activate(SpaceEvents.SpaceCreated);
@@ -425,13 +444,18 @@ export default Capability.makeModule(
         OperationResolver.make({
           operation: SpaceOperation.Migrate,
           handler: Effect.fnUntraced(function* (input) {
-            const state = yield* Capability.get(SpaceCapabilities.MutableState);
             const { space, version: targetVersion } = input;
 
             if (space.state.get() === SpaceState.SPACE_REQUIRES_MIGRATION) {
-              state.sdkMigrationRunning[space.id] = true;
+              yield* Common.Capability.updateAtomValue(SpaceCapabilities.EphemeralState, (current) => ({
+                ...current,
+                sdkMigrationRunning: { ...current.sdkMigrationRunning, [space.id]: true },
+              }));
               yield* Effect.promise(() => space.internal.migrate());
-              state.sdkMigrationRunning[space.id] = false;
+              yield* Common.Capability.updateAtomValue(SpaceCapabilities.EphemeralState, (current) => ({
+                ...current,
+                sdkMigrationRunning: { ...current.sdkMigrationRunning, [space.id]: false },
+              }));
             }
             const result = yield* Effect.promise(() => Migrations.migrate(space, targetVersion));
 
@@ -557,13 +581,14 @@ export default Capability.makeModule(
             const space = client.spaces.get(db.spaceId);
             invariant(space, 'Space not found');
 
-            if (!space.properties.staticRecords) {
-              space.properties.staticRecords = [];
-            }
-
-            if (!space.properties.staticRecords.includes(input.typename)) {
-              space.properties.staticRecords.push(input.typename);
-            }
+            Obj.change(space.properties, (p) => {
+              if (!p.staticRecords) {
+                p.staticRecords = [];
+              }
+              if (!p.staticRecords.includes(input.typename)) {
+                p.staticRecords.push(input.typename);
+              }
+            });
 
             yield* Plugin.activate(SpaceEvents.SchemaAdded);
             const onSchemaAdded = yield* Capability.getAll(SpaceCapabilities.OnSchemaAdded);
@@ -593,15 +618,17 @@ export default Capability.makeModule(
             const db = input.db as any;
             const schemas = (yield* Effect.promise(() => db.schemaRegistry.register([input.schema]))) as any[];
             const schema = schemas[0];
-            if (input.name) {
-              schema.storedSchema.name = input.name;
-            }
-            if (input.typename) {
-              schema.storedSchema.typename = input.typename;
-            }
-            if (input.version) {
-              schema.storedSchema.version = input.version;
-            }
+            Obj.change(schema.storedSchema, (s) => {
+              if (input.name) {
+                s.name = input.name;
+              }
+              if (input.typename) {
+                s.typename = input.typename;
+              }
+              if (input.version) {
+                s.version = input.version;
+              }
+            });
 
             yield* Plugin.activate(SpaceEvents.SchemaAdded);
             const onSchemaAdded = yield* Capability.getAll(SpaceCapabilities.OnSchemaAdded);
@@ -662,18 +689,26 @@ export default Capability.makeModule(
         //
         OperationResolver.make({
           operation: SpaceOperation.RestoreField,
-          handler: (input) =>
-            Effect.promise(async () => {
-              const view = input.view as any;
-              const db = Obj.getDatabase(view);
-              invariant(db);
-              const typename = getTypenameFromQuery(view.query.ast);
-              invariant(typename);
-              const schema = await db.schemaRegistry.query({ typename }).firstOrUndefined();
-              invariant(schema);
-              const projection = new ProjectionModel(schema.jsonSchema, view.projection);
-              projection.setFieldProjection({ field: input.field, props: input.props }, input.index);
-            }),
+          handler: Effect.fnUntraced(function* (input) {
+            const registry = yield* Capability.get(Common.Capability.AtomRegistry);
+            const view = input.view as any;
+            const db = Obj.getDatabase(view);
+            invariant(db);
+            const typename = getTypenameFromQuery(view.query.ast);
+            invariant(typename);
+            const schema = yield* Effect.promise(() => db.schemaRegistry.query({ typename }).firstOrUndefined());
+            invariant(schema);
+
+            // Create projection with change callbacks that wrap in Obj.change().
+            const projection = new ProjectionModel({
+              registry,
+              view,
+              baseSchema: schema.jsonSchema,
+              change: createEchoChangeCallback(view, schema),
+            });
+
+            projection.setFieldProjection({ field: input.field, props: input.props }, input.index);
+          }),
         }),
 
         //
@@ -705,10 +740,12 @@ export default Capability.makeModule(
             });
 
             // Restore objects to the parent collection at their original indices.
-            indices.forEach((index: number, i: number) => {
-              if (index !== -1) {
-                parentCollection.objects.splice(index, 0, Ref.make(restoredObjects[i] as Obj.Any));
-              }
+            Obj.change(parentCollection, (c) => {
+              indices.forEach((index: number, i: number) => {
+                if (index !== -1) {
+                  c.objects.splice(index, 0, Ref.make(restoredObjects[i] as Obj.Any));
+                }
+              });
             });
 
             // Re-open objects that were active.
