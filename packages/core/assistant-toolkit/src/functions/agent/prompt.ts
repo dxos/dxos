@@ -90,9 +90,7 @@ export default defineFunction({
     const promptInstructions = yield* Database.load(prompt.instructions.source);
     const promptText = Template.process(promptInstructions.content, input);
 
-    const systemInstructions = systemPrompt
-      ? yield* Database.load(systemPrompt.instructions.source)
-      : undefined;
+    const systemInstructions = systemPrompt ? yield* Database.load(systemPrompt.instructions.source) : undefined;
     const systemText = systemInstructions ? Template.process(systemInstructions.content, {}) : undefined;
 
     const session = new AiSession();
