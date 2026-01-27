@@ -141,7 +141,7 @@ export namespace QueryPlan {
   /**
    * Describes a traversal of the object graph.
    */
-  export type Traversal = ReferenceTraversal | RelationTraversal;
+  export type Traversal = ReferenceTraversal | RelationTraversal | HierarchyTraversal;
 
   /**
    * Traverse a reference connection.
@@ -173,6 +173,19 @@ export namespace QueryPlan {
      * There are for variants since each relation has two connectors (source & target) and there are two directions to traverse each.
      */
     direction: 'source-to-relation' | 'relation-to-source' | 'target-to-relation' | 'relation-to-target';
+  };
+
+  /**
+   * Traverse parent-child hierarchy.
+   */
+  export type HierarchyTraversal = {
+    _tag: 'HierarchyTraversal';
+
+    /**
+     * to-parent: traverse from child to parent.
+     * to-children: traverse from parent to children.
+     */
+    direction: 'to-parent' | 'to-children';
   };
 
   /**

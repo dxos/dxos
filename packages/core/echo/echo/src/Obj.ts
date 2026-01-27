@@ -392,7 +392,9 @@ export const isDeleted = (entity: Entity.Unknown): boolean => {
   return deleted;
 };
 
-// ... (will be determined after viewing internal)
+//
+// Annotations
+//
 
 export const getLabel = (entity: Entity.Unknown): string | undefined => {
   const schema = getSchema$(entity);

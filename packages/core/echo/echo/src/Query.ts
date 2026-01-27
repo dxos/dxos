@@ -103,6 +103,18 @@ export interface Query<T> {
   target(): Query<Type$.Relation.Target<T>>;
 
   /**
+   * Get the parent object of the current selection.
+   * @returns Query for the parent objects.
+   */
+  parent(): Query<any>;
+
+  /**
+   * Get all child objects of the current selection.
+   * @returns Query for the child objects.
+   */
+  children(): Query<any>;
+
+  /**
    * Order the query results.
    * Orders are specified in priority order. The first order will be applied first, etc.
    * @param order - Order to sort the results.
@@ -192,6 +204,22 @@ class QueryClass implements Any {
       type: 'relation-traversal',
       anchor: this.ast,
       direction: 'target',
+    });
+  }
+
+  parent(): Any {
+    return new QueryClass({
+      type: 'hierarchy-traversal',
+      anchor: this.ast,
+      direction: 'to-parent',
+    });
+  }
+
+  children(): Any {
+    return new QueryClass({
+      type: 'hierarchy-traversal',
+      anchor: this.ast,
+      direction: 'to-children',
     });
   }
 

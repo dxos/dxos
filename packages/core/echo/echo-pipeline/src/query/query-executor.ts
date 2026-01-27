@@ -627,6 +627,65 @@ export class QueryExecutor extends Resource {
         }
         break;
       }
+      case 'HierarchyTraversal': {
+        switch (step.traversal.direction) {
+          case 'to-parent': {
+            // Traverse from child to parent using the parent reference in the document.
+            const refs = workingSet
+              .map((item) => {
+                const ref = ObjectStructure.getParent(item.doc);
+                if (!isEncodedReference(ref)) {
+                  return null;
+                }
+                try {
+                  return {
+                    ref: DXN.parse(ref['/']),
+                    spaceId: item.spaceId,
+                  };
+                } catch {
+                  log.warn('invalid parent reference', { ref: ref['/'] });
+                  return null;
+                }
+              })
+              .filter(isNonNullable);
+
+            const beginLoad = performance.now();
+            const items = await Promise.all(
+              refs.map(({ ref, spaceId }) => this._loadFromDXN(ref, { sourceSpaceId: spaceId })),
+            );
+            trace.documentLoadTime += performance.now() - beginLoad;
+
+            newWorkingSet.push(...items.filter(isNonNullable));
+            trace.objectCount = newWorkingSet.length;
+            break;
+          }
+
+          case 'to-children': {
+            // Traverse from parent to children using index.
+            const indexHits = await this._indexer.execQuery({
+              typenames: [],
+              inverted: false,
+              graph: {
+                kind: 'children',
+                anchors: workingSet.map((item) => item.objectId),
+                property: null,
+              },
+            });
+
+            trace.indexHits += indexHits.length;
+
+            const documentLoadStart = performance.now();
+            const results = await this._loadDocumentsAfterIndexQuery(indexHits);
+            trace.documentsLoaded += results.length;
+            trace.documentLoadTime += performance.now() - documentLoadStart;
+
+            newWorkingSet.push(...results.filter(isNonNullable));
+            trace.objectCount = newWorkingSet.length;
+            break;
+          }
+        }
+        break;
+      }
       default:
         throw new Error(`Unknown traversal type: ${(step.traversal as any)._tag}`);
     }

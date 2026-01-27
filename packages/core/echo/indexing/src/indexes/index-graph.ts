@@ -60,6 +60,13 @@ export class IndexGraph extends Resource implements Index {
   private readonly _relationSources = new Map<ObjectId, Set<ObjectPointerEncoded>>();
 
   /**
+   * Tracks children for each parent object.
+   *
+   * parent object id -> set of child object ids
+   */
+  private readonly _children = new Map<ObjectId, Set<ObjectPointerEncoded>>();
+
+  /**
    * Mapping from the object to the list of reference targets.
    * We need this because on index update we don't know what the previous version of the object was.
    * This mapping is used to remove the old relations on update.
@@ -79,6 +86,7 @@ export class IndexGraph extends Resource implements Index {
         // Clear old links.
         this._removeReferencesFrom(id);
         this._trackOutgoingReferences(id, object);
+        this._trackParentChild(id, object);
 
         break;
       }
@@ -136,6 +144,8 @@ export class IndexGraph extends Resource implements Index {
       // TODO(dmaretskyi): Technically relation endpoints cannot change, but we still track them here for safety.
       this._relationTargets.get(target)?.delete(id);
       this._relationSources.get(target)?.delete(id);
+      // Remove from children index.
+      this._children.get(target)?.delete(id);
     }
 
     this._objectToTargets.get(id)?.clear();
@@ -158,6 +168,19 @@ export class IndexGraph extends Resource implements Index {
       ).add(id);
 
       targetMapping.add(targetObject);
+    }
+  }
+
+  private _trackParentChild(id: ObjectPointerEncoded, object: ObjectStructure): void {
+    const targetMapping = defaultMap(this._objectToTargets, id, () => new Set());
+
+    const parent = ObjectStructure.getParent(object);
+    if (parent) {
+      const parentObject = decodeReference(parent).toDXN().asEchoDXN()?.echoId;
+      if (parentObject) {
+        defaultMap(this._children, parentObject, () => new Set()).add(id);
+        targetMapping.add(parentObject);
+      }
     }
   }
 
@@ -216,6 +239,17 @@ export class IndexGraph extends Resource implements Index {
         }
         return results;
       }
+      case 'children': {
+        const results: FindResult[] = [];
+        for (const anchor of anchors) {
+          const children = this._children.get(anchor);
+          if (!children) {
+            continue;
+          }
+          results.push(...Array.from(children).map((id) => ({ id, rank: 0 })));
+        }
+        return results;
+      }
       default: {
         throw new TypeError('Unknown graph query kind');
       }
@@ -240,6 +274,9 @@ export class IndexGraph extends Resource implements Index {
       objectToTargets: Object.fromEntries(
         [...this._objectToTargets.entries()].map(([target, sources]) => [target, Array.from(sources)]),
       ),
+      children: Object.fromEntries(
+        [...this._children.entries()].map(([parent, children]) => [parent, Array.from(children)]),
+      ),
     };
     return JSON.stringify(data);
   }
@@ -259,6 +296,7 @@ export class IndexGraph extends Resource implements Index {
     this._relationTargets.clear();
     this._relationSources.clear();
     this._objectToTargets.clear();
+    this._children.clear();
 
     for (const [target, perProp] of entries(data.inboundReferences)) {
       const propMap = new Map<string, Set<ObjectPointerEncoded>>();
@@ -278,6 +316,10 @@ export class IndexGraph extends Resource implements Index {
 
     for (const [target, sources] of entries(data.objectToTargets)) {
       this._objectToTargets.set(target, new Set(sources));
+    }
+
+    for (const [parent, children] of entries(data.children ?? {})) {
+      this._children.set(parent, new Set(children));
     }
   }
 }
@@ -302,5 +344,11 @@ const GraphIndexData = Schema.Struct({
     key: ObjectPointerEncoded,
     value: Schema.Array(ObjectId),
   }),
+  children: Schema.optional(
+    Schema.Record({
+      key: ObjectId,
+      value: Schema.Array(ObjectPointerEncoded),
+    }),
+  ),
 });
 interface GraphIndexData extends Schema.Schema.Type<typeof GraphIndexData> {}
