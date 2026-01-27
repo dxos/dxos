@@ -8,4 +8,4 @@ export { default as classify } from './classify';
 
 export * as calendar from './google/calendar';
 export * as gmail from './google/gmail';
-export * as create from './create';
+export { default as create } from './create';

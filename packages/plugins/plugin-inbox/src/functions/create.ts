@@ -2,19 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Array from 'effect/Array';
 import * as Effect from 'effect/Effect';
-import * as Function from 'effect/Function';
 import * as Schema from 'effect/Schema';
 
-import { ArtifactId } from '@dxos/assistant';
-import { DXN, Obj, Type } from '@dxos/echo';
-import { Database } from '@dxos/echo';
-import { QueueService, defineFunction } from '@dxos/functions';
+import { Database, Obj, Type } from '@dxos/echo';
+import { defineFunction } from '@dxos/functions';
 import { Message } from '@dxos/types';
-
-import { Mailbox } from '../types';
-import { renderMarkdown } from '../util';
 
 export default defineFunction({
   key: 'dxos.org/function/inbox/email-create',
