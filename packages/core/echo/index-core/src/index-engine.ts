@@ -7,6 +7,7 @@ import type * as SqlError from '@effect/sql/SqlError';
 import * as Effect from 'effect/Effect';
 
 import type { SpaceId } from '@dxos/keys';
+import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 
 import { type IndexCursor, IndexTracker } from './index-tracker';
 import {
@@ -20,7 +21,6 @@ import {
   ReverseRefIndex,
   type ReverseRefQuery,
 } from './indexes';
-import { SqlTransaction } from './sql-transaction';
 
 /**
  * Cursor into indexable data-source.
@@ -108,7 +108,11 @@ export class IndexEngine {
   update(
     dataSource: IndexDataSource,
     opts: { spaceId: SpaceId | null; limit?: number },
-  ): Effect.Effect<{ updated: number; done: boolean }, SqlError.SqlError, SqlTransaction | SqlClient.SqlClient> {
+  ): Effect.Effect<
+    { updated: number; done: boolean },
+    SqlError.SqlError,
+    SqlTransaction.SqlTransaction | SqlClient.SqlClient
+  > {
     return Effect.gen(this, function* () {
       let updated = 0;
 
@@ -149,7 +153,7 @@ export class IndexEngine {
     opts: { indexName: string; spaceId: SpaceId | null; limit?: number },
   ): Effect.Effect<{ updated: number; done: boolean }, SqlError.SqlError, SqlTransaction | SqlClient.SqlClient> {
     return Effect.gen(this, function* () {
-      const sqlTransaction = yield* SqlTransaction;
+      const sqlTransaction = yield* SqlTransaction.SqlTransaction;
 
       return yield* sqlTransaction.withTransaction(
         Effect.gen(this, function* () {

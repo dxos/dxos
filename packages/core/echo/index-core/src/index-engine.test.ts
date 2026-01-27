@@ -11,17 +11,17 @@ import * as Layer from 'effect/Layer';
 import { ATTR_TYPE } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { DXN, ObjectId, SpaceId } from '@dxos/keys';
+import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 
 import { type DataSourceCursor, type IndexDataSource, IndexEngine } from './index-engine';
 import { type IndexCursor, IndexTracker } from './index-tracker';
 import { FtsIndex, type IndexerObject, ObjectMetaIndex, ReverseRefIndex } from './indexes';
-import { SqlTransaction } from './sql-transaction';
 
 const TYPE_DEFAULT = DXN.parse('dxn:type:test.com/type/Type:0.1.0').toString();
 const TYPE_A = DXN.parse('dxn:type:test.com/type/TypeA:0.1.0').toString();
 const TYPE_B = DXN.parse('dxn:type:test.com/type/TypeB:0.1.0').toString();
 
-const TestLayer = SqlTransaction.layer.pipe(
+const TestLayer = SqlTransaction.SqlTransaction.layer.pipe(
   Layer.provideMerge(
     SqliteClient.layer({
       filename: ':memory:',
