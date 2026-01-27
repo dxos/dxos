@@ -16,8 +16,6 @@ tasks:
       - '--entryPoint=src/sentry/node.ts'
       - '--entryPoint=src/otel/traces.ts'
       - '--entryPoint=src/otel/traces-browser.ts'
-      - '--entryPoint=src/testing/testkit/index.ts'
-      - '--entryPoint=src/testing/testkit/browser.ts'
     deps:
       - prebuild
   prebuild:

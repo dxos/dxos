@@ -2,5 +2,5 @@
 // Copyright 2022 DXOS.org
 //
 
-export * from '#sentry-platform';
+export * from './node';
 export type * from './types';
