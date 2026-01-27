@@ -292,6 +292,7 @@ const Root = forwardRef<HTMLDivElement, RootProps>(({ classNames, children, asCh
                   source: { ...sourceData, object },
                   target: targetData,
                 });
+
                 return true;
               });
             }

@@ -33,6 +33,8 @@ export const useEventHandlerAdapter = <TItem, TObject extends Obj.Any>({
         const from = items.findIndex((item) => get(item)?.id === source.object.id);
         if (from !== -1) {
           items.splice(from, 1);
+          // TODO(burdon): This doesn't cause an immediate update.
+          console.log('useEventHandlerAdapter.onTake', items.length, from);
         }
 
         void cb(source.object);
@@ -46,6 +48,7 @@ export const useEventHandlerAdapter = <TItem, TObject extends Obj.Any>({
             arrayMove(items, from, to);
           } else {
             items.splice(to, 0, make(source.object as TObject));
+            console.log('useEventHandlerAdapter.onDrop', items.length, to);
           }
         }
       },

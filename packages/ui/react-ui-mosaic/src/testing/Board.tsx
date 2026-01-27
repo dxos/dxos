@@ -211,7 +211,7 @@ const Tile = forwardRef<HTMLDivElement, TileProps>(({ classNames, object, locati
           </Card.Row>
           <Card.Row icon='ph--tag--regular'>
             {object.label && (
-              <div role='none' className='flex shrink-0 gap-1 text-xs'>
+              <div role='none' className='flex shrink-0 gap-1 text-xs items-center'>
                 <Tag palette={getHashStyles(object.label).hue}>{object.label}</Tag>
               </div>
             )}
