@@ -28,6 +28,12 @@
       "node": "./dist/lib/node-esm/sentry/index.mjs"
     }
   },
+  "browser": {
+    "./src/segment/node.ts": "./src/segment/browser.ts",
+    "./src/sentry/node.ts": "./src/sentry/browser.ts",
+    "./src/otel/traces.ts": "./src/otel/traces-browser.ts",
+    "./src/testing/testkit/index.ts": "./src/testing/testkit/browser.ts"
+  },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
