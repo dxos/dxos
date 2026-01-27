@@ -22,7 +22,6 @@ import { type EchoDatabase } from '../proxy-db';
 import { EchoTestBuilder, type EchoTestPeer, createTmpPath } from '../testing';
 
 import { Filter, Query } from './api';
-import { writeFileSync } from 'fs';
 
 faker.seed(1);
 

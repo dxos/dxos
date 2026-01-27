@@ -8,10 +8,10 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { ATTR_DELETED, ATTR_PARENT, ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET, ATTR_TYPE } from '@dxos/echo/internal';
+import { DXN, type ObjectId, type SpaceId } from '@dxos/keys';
 
 import type { IndexerObject } from './interface';
 import type { Index } from './interface';
-import { DXN, type ObjectId, type SpaceId } from '@dxos/keys';
 
 export const ObjectMeta = Schema.Struct({
   recordId: Schema.Number,
