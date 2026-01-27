@@ -275,10 +275,14 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   set(target: ProxyTarget, prop: string | symbol, value: any, receiver: any): boolean {
     invariant(Array.isArray(target[symbolPath]));
     if (prop === ParentId) {
-      const objectId = value.id;
-      // TODO(dmaretskyi): Validate object is from the same space.
-      invariant(ObjectId.isValid(objectId));
-      target[symbolInternals].core.setParent(Reference.fromDXN(DXN.fromLocalObjectId(objectId)));
+      if (value === undefined) {
+        target[symbolInternals].core.setParent(undefined);
+      } else {
+        const objectId = value.id ?? value;
+        // TODO(dmaretskyi): Validate object is from the same space.
+        invariant(ObjectId.isValid(objectId));
+        target[symbolInternals].core.setParent(EncodedReference.fromDXN(DXN.fromLocalObjectId(objectId)));
+      }
       return true;
     }
     invariant(typeof prop === 'string');
@@ -1170,7 +1174,7 @@ const initCore = (core: ObjectCore, target: ProxyTarget) => {
   if (parentValue !== undefined) {
     const parentId = parentValue.id ?? parentValue;
     if (ObjectId.isValid(parentId)) {
-      core.setParent(Reference.fromDXN(DXN.fromLocalObjectId(parentId)));
+      core.setParent(EncodedReference.fromDXN(DXN.fromLocalObjectId(parentId)));
     }
     delete (target as any)[ParentId];
   }

@@ -782,22 +782,47 @@ export class QueryExecutor extends Resource {
           }
 
           case 'to-children': {
-            // Traverse from parent to children using index.
-            const indexHits = await this._indexer.execQuery({
-              typenames: [],
-              inverted: false,
-              graph: {
-                kind: 'children',
-                anchors: workingSet.map((item) => item.objectId),
-                property: null,
-              },
-            });
+            // Traverse from parent to children using indexer2 (SQLite-based index).
+            // Return empty result if indexer2 is not available.
+            if (!this._indexer2 || !this._runtime) {
+              break;
+            }
 
-            trace.indexHits += indexHits.length;
+            const runtime = await unwrapExit(await this._runtime.make.pipe(Runtime.runPromiseExit));
+
+            // Group working set by spaceId.
+            const bySpace = new Map<SpaceId, ObjectId[]>();
+            for (const item of workingSet) {
+              const existing = bySpace.get(item.spaceId);
+              if (existing) {
+                existing.push(item.objectId);
+              } else {
+                bySpace.set(item.spaceId, [item.objectId]);
+              }
+            }
+
+            // Query children for each space.
+            const allChildren: { spaceId: SpaceId; objectId: ObjectId }[] = [];
+            for (const [spaceId, parentIds] of bySpace) {
+              const children = await unwrapExit(
+                await this._indexer2
+                  .queryChildren({ spaceId, parentIds })
+                  .pipe(Runtime.runPromiseExit(runtime)),
+              );
+              for (const child of children) {
+                allChildren.push({ spaceId, objectId: child.objectId as ObjectId });
+              }
+            }
+
+            trace.indexHits += allChildren.length;
 
             const documentLoadStart = performance.now();
-            const results = await this._loadDocumentsAfterIndexQuery(indexHits);
-            trace.documentsLoaded += results.length;
+            const results = await Promise.all(
+              allChildren.map(({ spaceId, objectId }) =>
+                this._loadFromDXN(DXN.fromLocalObjectId(objectId), { sourceSpaceId: spaceId }),
+              ),
+            );
+            trace.documentsLoaded += results.filter(isNonNullable).length;
             trace.documentLoadTime += performance.now() - documentLoadStart;
 
             newWorkingSet.push(...results.filter(isNonNullable));

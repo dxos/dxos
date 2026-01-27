@@ -103,6 +103,26 @@ export class IndexEngine {
     return this.#objectMetaIndex.query(query);
   }
 
+  /**
+   * Query children by parent object ids.
+   */
+  queryChildren(query: {
+    spaceId: string;
+    parentIds: string[];
+  }): Effect.Effect<readonly ObjectMeta[], SqlError.SqlError, SqlClient.SqlClient> {
+    return this.#objectMetaIndex.queryChildren(query);
+  }
+
+  /**
+   * Query parent by object id.
+   */
+  queryParent(query: {
+    spaceId: string;
+    objectId: string;
+  }): Effect.Effect<ObjectMeta | null, SqlError.SqlError, SqlClient.SqlClient> {
+    return this.#objectMetaIndex.queryParent(query);
+  }
+
   update(
     dataSource: IndexDataSource,
     opts: { spaceId: SpaceId | null; limit?: number },
