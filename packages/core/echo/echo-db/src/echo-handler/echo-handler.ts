@@ -1117,6 +1117,16 @@ const initCore = (core: ObjectCore, target: ProxyTarget) => {
   }
 
   core.initNewObject(linkAllNestedProperties(target));
+
+  // Handle parent reference set via [Obj.Parent] in Obj.make.
+  const parentValue = (target as any)[ParentId];
+  if (parentValue !== undefined) {
+    const parentId = parentValue.id ?? parentValue;
+    if (ObjectId.isValid(parentId)) {
+      core.setParent(Reference.fromDXN(DXN.fromLocalObjectId(parentId)));
+    }
+    delete (target as any)[ParentId];
+  }
 };
 
 /**
