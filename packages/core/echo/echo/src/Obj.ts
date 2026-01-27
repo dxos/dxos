@@ -96,6 +96,7 @@ type Props<T = any> = {
 export type MakeProps<T extends Schema.Schema.AnyNoContext> = {
   id?: ObjectId;
   [Meta]?: Partial<ObjectMeta>;
+  [Parent]?: any;
 } & NoInfer<Props<Schema.Schema.Type<T>>>;
 
 /**
