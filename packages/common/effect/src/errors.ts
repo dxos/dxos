@@ -8,6 +8,7 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as GlobalValue from 'effect/GlobalValue';
 import * as Option from 'effect/Option';
+import * as Runtime from 'effect/Runtime';
 import type * as Tracer from 'effect/Tracer';
 
 const spanSymbol = Symbol.for('effect/SpanAnnotation');
@@ -176,6 +177,15 @@ export const runAndForwardErrors = async <A, E>(
   options?: { signal?: AbortSignal },
 ): Promise<A> => {
   const exit = await Effect.runPromiseExit(effect, options);
+  return unwrapExit(exit);
+};
+
+export const runInRuntime = async <A, E, R>(
+  runtime: Runtime.Runtime<R>,
+  effect: Effect.Effect<A, E, R>,
+  options?: { signal?: AbortSignal },
+): Promise<A> => {
+  const exit = await Runtime.runPromiseExit(runtime, effect, options);
   return unwrapExit(exit);
 };
 
