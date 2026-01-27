@@ -59,9 +59,7 @@ export const createServiceContext = async ({
   const level = createTestLevel();
   await level.open();
 
-  const runtime = ManagedRuntime.make(
-    Layer.merge(sqliteLayerMemory, Reactivity.layer).pipe(Layer.orDie),
-  ).runtimeEffect;
+  const runtime = ManagedRuntime.make(Layer.merge(sqliteLayerMemory, Reactivity.layer).pipe(Layer.orDie)).runtimeEffect;
 
   return new ServiceContext(storage, level, networkManager, signalManager, undefined, undefined, runtime, {
     invitationConnectionDefaultProps: { teleport: { controlHeartbeatInterval: 200 } },
@@ -126,9 +124,7 @@ export type TestPeerProps = {
 
 export class TestPeer {
   private _props: TestPeerProps = {};
-  private readonly _runtime = ManagedRuntime.make(
-    Layer.merge(sqliteLayerMemory, Reactivity.layer).pipe(Layer.orDie),
-  );
+  private readonly _runtime = ManagedRuntime.make(Layer.merge(sqliteLayerMemory, Reactivity.layer).pipe(Layer.orDie));
 
   constructor(
     private readonly _signalContext: MemorySignalManagerContext,

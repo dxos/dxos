@@ -9,14 +9,15 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Record from 'effect/Record';
 import * as Schema from 'effect/Schema';
+import type * as SchemaAST from 'effect/SchemaAST';
 
 import { AiToolNotFoundError, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { todo } from '@dxos/debug';
-import { Query, Ref, Type } from '@dxos/echo';
+import { Query, Type } from '@dxos/echo';
 import { Database } from '@dxos/echo';
 import { Function, FunctionDefinition, FunctionInvocationService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
-import * as SchemaAST from 'effect/SchemaAST';
+
 import { RefFromLLM } from '../types';
 
 /**

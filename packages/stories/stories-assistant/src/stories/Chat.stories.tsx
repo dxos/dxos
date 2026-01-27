@@ -65,8 +65,8 @@ import {
   type ComponentProps,
   ExecutionGraphModule,
   GraphModule,
+  InboxModule,
   InvocationsModule,
-  MessageModule,
   ProjectModule,
   PromptModule,
   ResearchInputModule,
@@ -75,7 +75,6 @@ import {
   TasksModule,
   TokenManagerModule,
   TriggersModule,
-  InboxModule,
 } from '../components';
 import {
   ResearchInputQueue,

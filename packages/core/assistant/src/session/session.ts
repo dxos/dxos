@@ -32,7 +32,6 @@ import { type AiAssistantError } from '../errors';
 
 import { formatSystemPrompt, formatUserPrompt } from './format';
 import { GenerationObserver } from './observer';
-import { createToolkit } from './toolkit';
 
 export type AiSessionRunError = AiError.AiError | PromptPreprocessingError | AiToolNotFoundError | AiAssistantError;
 

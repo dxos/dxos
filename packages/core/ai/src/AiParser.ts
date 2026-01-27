@@ -2,9 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Response from '@effect/ai/Response';
+import type * as Response from '@effect/ai/Response';
 import type * as Tool from '@effect/ai/Tool';
-import type * as Toolkit from '@effect/ai/Toolkit';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';

@@ -4,19 +4,19 @@
 
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
+import * as Schema from 'effect/Schema';
 
+import { ConsolePrinter } from '@dxos/ai';
 import { MemoizedAiService } from '@dxos/ai/testing';
-import { AiSession, createToolkit, GenerationObserver } from '@dxos/assistant';
+import { AiSession, GenerationObserver, createToolkit } from '@dxos/assistant';
+import { Blueprint } from '@dxos/blueprints';
 import { Database, Obj, Type } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { defineFunction } from '@dxos/functions';
 import { ObjectId } from '@dxos/keys';
 import { Organization } from '@dxos/types';
 
-import { Blueprint } from '@dxos/blueprints';
-import { Schema } from 'effect';
 import { AssistantTestLayer } from './testing';
-import { ConsolePrinter } from '@dxos/ai';
 
 ObjectId.dangerouslyDisableRandomness();
 

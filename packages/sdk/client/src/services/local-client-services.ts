@@ -23,7 +23,7 @@ import { type SignalManager } from '@dxos/messaging';
 import { type SwarmNetworkManagerOptions, type TransportFactory, createIceProvider } from '@dxos/network-manager';
 import { type ServiceBundle } from '@dxos/rpc';
 import { layerMemory, sqlExportLayer } from '@dxos/sql-sqlite/platform';
-import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
+import type * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 import * as SqliteClient from '@dxos/sql-sqlite/SqliteClient';
 import { trace } from '@dxos/tracing';
 import { isBun } from '@dxos/util';

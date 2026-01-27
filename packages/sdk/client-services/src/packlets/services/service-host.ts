@@ -3,7 +3,6 @@
 //
 
 import * as SqlClient from '@effect/sql/SqlClient';
-import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 import * as Effect from 'effect/Effect';
 
 import { Event, synchronized } from '@dxos/async';
@@ -26,6 +25,7 @@ import {
 import { trace } from '@dxos/protocols';
 import { SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { type Storage } from '@dxos/random-access-storage';
+import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 import { TRACE_PROCESSOR, trace as Trace } from '@dxos/tracing';
 import { WebsocketRpcClient } from '@dxos/websocket-rpc';
 

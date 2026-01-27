@@ -1,11 +1,17 @@
-import { CredentialsService, TracingService, type FunctionDefinition, type ServiceCredential } from '@dxos/functions';
+//
+// Copyright 2026 DXOS.org
+//
+
 import * as Layer from 'effect/Layer';
-import { GenericToolkit } from '../session';
+
 import { AiService, type ModelName } from '@dxos/ai';
 import { TestAiService } from '@dxos/ai/testing';
-import { FunctionInvocationServiceLayerTest, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
 import type { Type } from '@dxos/echo';
+import { CredentialsService, type FunctionDefinition, type ServiceCredential, TracingService } from '@dxos/functions';
+import { FunctionInvocationServiceLayerTest, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
+
 import { makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '../functions';
+import { GenericToolkit } from '../session';
 
 interface TestLayerOptions {
   aiServicePreset?: 'direct' | 'edge-local' | 'edge-remote';

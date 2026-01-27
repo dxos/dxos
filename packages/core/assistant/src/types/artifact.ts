@@ -5,11 +5,11 @@
 import type * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { Obj, type Err, Type, Ref } from '@dxos/echo';
+import { type Err, Obj, Type } from '@dxos/echo';
 import { Database } from '@dxos/echo';
+import { EncodedReference } from '@dxos/echo-protocol';
 import { DXN, LOCAL_SPACE_TAG, type ObjectId, type SpaceId } from '@dxos/keys';
 import { trim } from '@dxos/util';
-import { EncodedReference } from '@dxos/echo-protocol';
 
 /**
  * @deprecated

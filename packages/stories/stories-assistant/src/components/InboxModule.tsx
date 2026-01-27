@@ -5,10 +5,9 @@
 import React, { useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework/react';
-import { Filter, Obj } from '@dxos/echo';
+import { Filter } from '@dxos/echo';
 import { Mailbox } from '@dxos/plugin-inbox/types';
 import { useQuery } from '@dxos/react-client/echo';
-import { useSelected } from '@dxos/react-ui-attention';
 
 import { type ComponentProps } from './types';
 
