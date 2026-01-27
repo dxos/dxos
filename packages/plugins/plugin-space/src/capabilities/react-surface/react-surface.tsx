@@ -8,11 +8,10 @@ import type * as Schema from 'effect/Schema';
 import React, { useCallback } from 'react';
 
 import { Capability, Common } from '@dxos/app-framework';
-import { Surface, useCapability, useLayout } from '@dxos/app-framework/react';
+import { Surface, useAtomCapability, useLayout, useSettingsState } from '@dxos/app-framework/react';
 import { Database, Obj, type Ref } from '@dxos/echo';
 import { findAnnotation } from '@dxos/effect';
-import { SettingsStore } from '@dxos/local-storage';
-import { type Space, SpaceState, getSpace, isLiveObject, isSpace, parseId, useSpace } from '@dxos/react-client/echo';
+import { type Space, SpaceState, getSpace, isSpace, parseId, useSpace } from '@dxos/react-client/echo';
 import { Input } from '@dxos/react-ui';
 import { type FormFieldComponentProps, SelectField } from '@dxos/react-ui-form';
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
@@ -104,9 +103,12 @@ export default Capability.makeModule(
       Common.createSurface({
         id: `${meta.id}/plugin-settings`,
         role: 'article',
-        filter: (data): data is { subject: SettingsStore<SpaceSettingsProps> } =>
-          data.subject instanceof SettingsStore && data.subject.prefix === meta.id,
-        component: ({ data: { subject } }) => <SpacePluginSettings settings={subject.value} />,
+        filter: (data): data is { subject: Common.Capability.Settings } =>
+          Common.Capability.isSettings(data.subject) && data.subject.prefix === meta.id,
+        component: ({ data: { subject } }) => {
+          const { settings, updateSettings } = useSettingsState<SpaceSettingsProps>(subject.atom);
+          return <SpacePluginSettings settings={settings} onSettingsChange={updateSettings} />;
+        },
       }),
       Common.createSurface({
         id: `${meta.id}/companion/object-settings`,
@@ -306,7 +308,7 @@ export default Capability.makeModule(
         id: OBJECT_RENAME_POPOVER,
         role: 'card--popover',
         filter: (data): data is { props: Obj.Any } =>
-          data.component === OBJECT_RENAME_POPOVER && isLiveObject(data.props),
+          data.component === OBJECT_RENAME_POPOVER && Obj.isObject(data.props),
         component: ({ data }) => <ObjectRenamePopover object={data.props} />,
       }),
       Common.createSurface({
@@ -321,9 +323,8 @@ export default Capability.makeModule(
         filter: (data): data is { id: string; subject: Obj.Any; open?: boolean } =>
           typeof data.id === 'string' && Obj.isObject(data.subject),
         component: ({ data }) => {
-          // TODO(wittjosiah): Doesn't need to be mutable but readonly type messes with ComplexMap.
-          const state = useCapability(SpaceCapabilities.MutableState);
-          return <SmallPresenceLive id={data.id} open={data.open} viewers={state.viewersByObject[data.id]} />;
+          const ephemeral = useAtomCapability(SpaceCapabilities.EphemeralState);
+          return <SmallPresenceLive id={data.id} open={data.open} viewers={ephemeral.viewersByObject[data.id]} />;
         },
       }),
       // TODO(wittjosiah): Attention glyph for non-echo items should be handled elsewhere.

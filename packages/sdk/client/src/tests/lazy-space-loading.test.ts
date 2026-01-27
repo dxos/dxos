@@ -101,6 +101,7 @@ describe('Lazy Space Loading', () => {
 
   test('replication starts after space gets opened', async () => {
     const [host, guest] = await createInitializedClients(2, { fastPresence: true });
+    await Promise.all([host, guest].map((c) => c.addTypes([Type.Expando])));
     const createdSpace = await host.spaces.create();
     const guestSpace = await inviteMember(createdSpace, guest);
 

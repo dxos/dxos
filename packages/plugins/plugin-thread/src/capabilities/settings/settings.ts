@@ -5,19 +5,29 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability, Common } from '@dxos/app-framework';
-import { live } from '@dxos/live-object';
+import { createKvsStore } from '@dxos/effect';
 
 import { meta } from '../../meta';
-import { type ThreadSettingsProps, ThreadSettingsSchema } from '../../types';
+import { ThreadSettingsSchema } from '../../types';
+import { ThreadCapabilities } from '../../types/capabilities';
 
 export default Capability.makeModule(() =>
   Effect.sync(() => {
-    const settings = live<ThreadSettingsProps>({});
-
-    return Capability.contributes(Common.Capability.Settings, {
-      prefix: meta.id,
+    const settingsAtom = createKvsStore({
+      key: meta.id,
       schema: ThreadSettingsSchema,
-      value: settings,
+      defaultValue: () => ({}),
     });
+
+    return [
+      // Expose atom directly for programmatic access.
+      Capability.contributes(ThreadCapabilities.Settings, settingsAtom),
+      // Contribute to common settings for UI discovery.
+      Capability.contributes(Common.Capability.Settings, {
+        prefix: meta.id,
+        schema: ThreadSettingsSchema,
+        atom: settingsAtom,
+      }),
+    ];
   }),
 );

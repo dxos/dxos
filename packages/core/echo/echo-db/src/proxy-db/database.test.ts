@@ -6,10 +6,9 @@ import { inspect } from 'node:util';
 
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { Trigger, asyncTimeout, sleep } from '@dxos/async';
+import { asyncTimeout, sleep } from '@dxos/async';
 import { Obj, Query, Ref, Type } from '@dxos/echo';
-import { TestSchema, updateCounter } from '@dxos/echo/testing';
-import { registerSignalsRuntime } from '@dxos/echo-signals';
+import { TestSchema } from '@dxos/echo/testing';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { openAndClose } from '@dxos/test-utils';
@@ -125,7 +124,8 @@ describe('Database', () => {
     const task = Obj.make(Type.Expando, {
       title: 'Main task',
       tags: ['red', 'green'],
-      assignee: Obj.make(Type.Expando, { name: 'Test' }),
+      // Note: Using plain object for nested data. For typed object references, use Ref.make.
+      assignee: { name: 'Test' },
     });
     db.add(task);
     await db.flush();
@@ -183,8 +183,7 @@ describe('Database', () => {
     }
   });
 
-  test('query by ID async loading with signals', async () => {
-    registerSignalsRuntime();
+  test('query by ID async loading', async () => {
     const peer = await builder.createPeer();
     let id: string, rootUrl: string;
     const spaceKey = PublicKey.random();
@@ -202,22 +201,10 @@ describe('Database', () => {
     {
       const db = await peer.openDatabase(spaceKey, rootUrl);
 
-      const query = db.query(Filter.id(id));
-      const loaded = new Trigger();
-      query.subscribe();
-      using updates = updateCounter(() => {
-        if (query.results.length > 0) {
-          loaded.wake();
-        }
-      });
-
-      expect(query.results).toHaveLength(0);
-      expect(updates.count).toEqual(0);
-
-      await loaded.wait();
-      expect(updates.count).toBeGreaterThan(0);
-      expect(query.results).toHaveLength(1);
-      expect(query.results[0].name).toEqual('Object 1');
+      // Use query.run() for async loading instead of reactive subscription.
+      const results = await db.query(Filter.id(id)).run();
+      expect(results).toHaveLength(1);
+      expect(results[0].name).toEqual('Object 1');
     }
   });
 

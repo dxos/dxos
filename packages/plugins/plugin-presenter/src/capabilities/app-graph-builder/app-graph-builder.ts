@@ -10,12 +10,12 @@ import { Obj } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 import { DeckCapabilities } from '@dxos/plugin-deck';
 import { ATTENDABLE_PATH_SEPARATOR, DeckOperation } from '@dxos/plugin-deck/types';
-import { CreateAtom, GraphBuilder, type Node, NodeMatcher } from '@dxos/plugin-graph';
+import { GraphBuilder, type Node, NodeMatcher } from '@dxos/plugin-graph';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { Collection } from '@dxos/schema';
 
 import { meta } from '../../meta';
-import { PresenterOperation, type PresenterSettingsProps } from '../../types';
+import { PresenterCapabilities, PresenterOperation } from '../../types';
 
 /** Match nodes that can be presented (Collection or Document). */
 const whenPresentable = (node: Node.Node) =>
@@ -32,11 +32,8 @@ export default Capability.makeModule(
       // TODO(wittjosiah): This is a hack to work around presenter previously relying on "variant". Remove.
       match: whenPresentable,
       connector: (object, get) => {
-        const settingsStoreAtom = capabilities.atom(Common.Capability.SettingsStore);
-        const [settingsStore] = get(settingsStoreAtom);
-        const settings = get(
-          CreateAtom.fromSignal(() => settingsStore?.getStore<PresenterSettingsProps>(meta.id)?.value),
-        );
+        const settingsAtom = capabilities.get(PresenterCapabilities.Settings);
+        const settings = get(settingsAtom);
         const isPresentable = settings?.presentCollections
           ? Obj.instanceOf(Collection.Collection, object) || Obj.instanceOf(Markdown.Document, object)
           : Obj.instanceOf(Markdown.Document, object);
@@ -58,11 +55,8 @@ export default Capability.makeModule(
         ]);
       },
       actions: (object, get) => {
-        const settingsStoreAtom = capabilities.atom(Common.Capability.SettingsStore);
-        const [settingsStore] = get(settingsStoreAtom);
-        const settings = get(
-          CreateAtom.fromSignal(() => settingsStore?.getStore<PresenterSettingsProps>(meta.id)?.value),
-        );
+        const settingsAtom = capabilities.get(PresenterCapabilities.Settings);
+        const settings = get(settingsAtom);
         const isPresentable = settings?.presentCollections
           ? Obj.instanceOf(Collection.Collection, object) || Obj.instanceOf(Markdown.Document, object)
           : Obj.instanceOf(Markdown.Document, object);
@@ -78,9 +72,10 @@ export default Capability.makeModule(
             // TODO(burdon): Allow function so can generate state when activated.
             //  So can set explicit fullscreen state coordinated with current presenter state.
             data: Effect.fnUntraced(function* () {
-              const deckState = yield* Capability.get(DeckCapabilities.MutableDeckState);
+              const deckState = yield* Common.Capability.getAtomValue(DeckCapabilities.State);
+              const deck = deckState.decks[deckState.activeDeck];
               const presenterId = [id, 'presenter'].join(ATTENDABLE_PATH_SEPARATOR);
-              if (!deckState.deck.fullscreen) {
+              if (!deck?.fullscreen) {
                 yield* Operation.invoke(DeckOperation.Adjust, {
                   type: 'solo--fullscreen' as const,
                   id: presenterId,

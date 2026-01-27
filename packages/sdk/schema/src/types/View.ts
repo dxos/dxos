@@ -43,7 +43,6 @@ import {
 } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
-import { type Live } from '@dxos/live-object';
 
 import { FieldSchema, ProjectionModel, createDirectChangeCallback } from '../projection';
 import { createDefaultSchema, getSchema } from '../util';
@@ -113,14 +112,7 @@ type MakeProps = {
 /**
  * Create view from provided schema.
  */
-export const make = ({
-  query,
-  queryRaw,
-  jsonSchema,
-  overrideSchema,
-  fields,
-  pivotFieldName,
-}: MakeProps): Live<View> => {
+export const make = ({ query, queryRaw, jsonSchema, overrideSchema, fields, pivotFieldName }: MakeProps): View => {
   const view = Obj.make(View, {
     query: { raw: queryRaw, ast: query.ast },
     projection: {
@@ -129,11 +121,11 @@ export const make = ({
     },
   });
 
-  const projection = new ProjectionModel(
-    jsonSchema,
-    view.projection,
-    createDirectChangeCallback(view.projection, jsonSchema),
-  );
+  const projection = new ProjectionModel({
+    view,
+    baseSchema: jsonSchema,
+    change: createDirectChangeCallback(view.projection, jsonSchema),
+  });
   projection.normalizeView();
   const schema = toEffectSchema(jsonSchema);
   const properties = getProperties(schema.ast);
@@ -188,7 +180,7 @@ export const makeWithReferences = async ({
   fields,
   pivotFieldName,
   registry,
-}: MakeWithReferencesProps): Promise<Live<View>> => {
+}: MakeWithReferencesProps): Promise<View> => {
   const view = make({
     query,
     queryRaw,
@@ -198,11 +190,11 @@ export const makeWithReferences = async ({
     pivotFieldName,
   });
 
-  const projection = new ProjectionModel(
-    jsonSchema,
-    view.projection,
-    createDirectChangeCallback(view.projection, jsonSchema),
-  );
+  const projection = new ProjectionModel({
+    view,
+    baseSchema: jsonSchema,
+    change: createDirectChangeCallback(view.projection, jsonSchema),
+  });
   const schema = toEffectSchema(jsonSchema);
   const properties = getProperties(schema.ast);
   for (const property of properties) {

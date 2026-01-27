@@ -37,8 +37,7 @@
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@preact-signals/safe-react": "catalog:",
-    "@preact/signals-core": "catalog:",
+    "@effect-atom/atom-react": "catalog:",
     "@radix-ui/react-context": "catalog:",
     "chess.js": "catalog:",
     "react-resize-detector": "catalog:"

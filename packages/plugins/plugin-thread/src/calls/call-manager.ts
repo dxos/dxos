@@ -2,13 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { computed } from '@preact/signals-core';
+import { Atom, type Registry } from '@effect-atom/atom-react';
 
 import { Event, synchronized } from '@dxos/async';
 import { type Client } from '@dxos/client';
 import { Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
-import { live } from '@dxos/live-object';
 import { type Tracks } from '@dxos/protocols/proto/dxos/edge/calls';
 import { isNonNullable } from '@dxos/util';
 
@@ -31,84 +30,103 @@ export class CallManager extends Resource {
   public readonly left = new Event<string>();
 
   /**
-   * Live object state. Is changed on internal events.
+   * Atom-based state. Updated via `_updateState()`.
    * CAUTION: Do not change directly.
    */
-  private readonly _state = live<GlobalState>({
+  private readonly _stateAtom = Atom.make<GlobalState>({
     call: {},
     media: { pulledAudioTracks: {}, pulledVideoStreams: {} },
   });
 
-  // TODO(wittjosiah): This shouldn't be necessary, live-object's signals should be granular.
-  private readonly _raisedHandSignal = computed(() => this._state.call.raisedHand ?? false);
-  private readonly _speakingSignal = computed(() => this._state.call.speaking ?? false);
-  private readonly _joinedSignal = computed(() => this._state.call.joined ?? false);
+  // Derived atoms for reactive subscriptions.
+  private readonly _roomIdAtom = Atom.make((get) => get(this._stateAtom).call.roomId);
+  private readonly _raisedHandAtom = Atom.make((get) => get(this._stateAtom).call.raisedHand ?? false);
+  private readonly _speakingAtom = Atom.make((get) => get(this._stateAtom).call.speaking ?? false);
+  private readonly _joinedAtom = Atom.make((get) => get(this._stateAtom).call.joined ?? false);
+  private readonly _selfAtom = Atom.make((get) => get(this._stateAtom).call.self ?? {});
+  private readonly _tracksAtom = Atom.make((get) => get(this._stateAtom).call.tracks ?? {});
+  private readonly _usersAtom = Atom.make((get) => get(this._stateAtom).call.users ?? []);
+  private readonly _mediaAtom = Atom.make((get) => get(this._stateAtom).media);
+  private readonly _audioTracksToPlayAtom = Atom.make((get) => {
+    const state = get(this._stateAtom);
+    return (state.call.users ?? [])
+      .map((user: UserState) => (user.tracks?.audioEnabled ? user.tracks?.audio : undefined))
+      .filter(isNonNullable)
+      .map((track: string) => state.media.pulledAudioTracks[track as EncodedTrackName]?.track)
+      .filter(isNonNullable);
+  });
+  private readonly _videoStreamAtomFamily = Atom.family<EncodedTrackName, Atom.Atom<MediaStream | undefined>>((name) =>
+    Atom.make((get) => get(this._stateAtom).media.pulledVideoStreams[name]?.stream),
+  );
+  private readonly _activityAtomFamily = Atom.family<string, Atom.Atom<ActivityState | undefined>>((key) =>
+    Atom.make((get) => get(this._stateAtom).call.activities?.[key]),
+  );
 
   private readonly _swarmSynchronizer: CallSwarmSynchronizer;
   private readonly _mediaManager: MediaManager;
 
-  /** @reactive */
-  get roomId(): string | undefined {
-    return this._state.call.roomId;
+  //
+  // Derived atoms for reactive UI subscriptions.
+  //
+
+  /** Derived atom for roomId. */
+  get roomIdAtom(): Atom.Atom<string | undefined> {
+    return this._roomIdAtom;
   }
 
-  /** @reactive */
-  get raisedHand(): boolean {
-    return this._raisedHandSignal.value;
+  /** Derived atom for raisedHand. */
+  get raisedHandAtom(): Atom.Atom<boolean> {
+    return this._raisedHandAtom;
   }
 
-  /** @reactive */
-  get speaking(): boolean {
-    return this._speakingSignal.value;
+  /** Derived atom for speaking. */
+  get speakingAtom(): Atom.Atom<boolean> {
+    return this._speakingAtom;
   }
 
-  /** @reactive */
-  get joined(): boolean {
-    return this._joinedSignal.value;
+  /** Derived atom for joined. */
+  get joinedAtom(): Atom.Atom<boolean> {
+    return this._joinedAtom;
   }
 
-  /** @reactive */
-  get self(): UserState {
-    return this._state.call.self ?? {};
+  /** Derived atom for self. */
+  get selfAtom(): Atom.Atom<UserState> {
+    return this._selfAtom;
   }
 
-  /** @reactive */
-  get tracks(): Tracks {
-    return this._state.call.tracks ?? {};
+  /** Derived atom for tracks. */
+  get tracksAtom(): Atom.Atom<Tracks> {
+    return this._tracksAtom;
   }
 
-  /** @reactive */
-  get users(): UserState[] {
-    return this._state.call.users ?? [];
+  /** Derived atom for users. */
+  get usersAtom(): Atom.Atom<UserState[]> {
+    return this._usersAtom;
   }
 
-  /** @reactive */
-  get media() {
-    return this._state.media;
+  /** Derived atom for media. */
+  get mediaAtom(): Atom.Atom<MediaState> {
+    return this._mediaAtom;
   }
 
-  /** @reactive */
-  get audioTracksToPlay(): MediaStreamTrack[] {
-    return (this._state.call.users ?? [])
-      .map((user) => (user.tracks?.audioEnabled ? user.tracks?.audio : undefined))
-      .filter(isNonNullable)
-      .map((track) => this._state.media.pulledAudioTracks[track as EncodedTrackName]?.track)
-      .filter(isNonNullable);
+  /** Derived atom for audioTracksToPlay. */
+  get audioTracksToPlayAtom(): Atom.Atom<MediaStreamTrack[]> {
+    return this._audioTracksToPlayAtom;
   }
 
-  /** @reactive */
-  get state() {
-    return this._state;
+  /** Returns the full state atom for reactive subscriptions. */
+  get stateAtom(): Atom.Atom<GlobalState> {
+    return this._stateAtom;
   }
 
-  /** @reactive */
-  getVideoStream(name?: EncodedTrackName): MediaStream | undefined {
-    return name ? this._state.media.pulledVideoStreams[name]?.stream : undefined;
+  /** Returns a derived atom for a video stream by name. */
+  videoStreamAtom(name: EncodedTrackName): Atom.Atom<MediaStream | undefined> {
+    return this._videoStreamAtomFamily(name);
   }
 
-  /** @reactive */
-  getActivity(key: string): ActivityState | undefined {
-    return this._state.call.activities?.[key];
+  /** Returns a derived atom for an activity by key. */
+  activityAtom(key: string): Atom.Atom<ActivityState | undefined> {
+    return this._activityAtomFamily(key);
   }
 
   setRoomId(roomId: string): void {
@@ -152,7 +170,10 @@ export class CallManager extends Resource {
   }
 
   // TODO(burdon): Can this be mocked?
-  constructor(private readonly _client: Client) {
+  constructor(
+    private readonly _client: Client,
+    private readonly _registry: Registry.Registry,
+  ) {
     super();
     this._client.config.getOrThrow('runtime.services.edge.url');
     const networkService = this._client.services.services.NetworkService;
@@ -205,7 +226,8 @@ export class CallManager extends Resource {
     this._swarmSynchronizer.setJoined(false);
     await this._swarmSynchronizer.leave();
     await this._mediaManager.leave();
-    this.roomId && this.left.emit(this.roomId);
+    const roomId = this._registry.get(this._roomIdAtom);
+    roomId && this.left.emit(roomId);
   }
 
   private _onCallStateUpdated(state: CallState): void {
@@ -240,7 +262,9 @@ export class CallManager extends Resource {
    * Only this method is allowed to change state.
    */
   private _updateState(): void {
-    this._state.call = this._swarmSynchronizer._getState();
-    this._state.media = this._mediaManager._getState();
+    this._registry.set(this._stateAtom, {
+      call: this._swarmSynchronizer._getState(),
+      media: this._mediaManager._getState(),
+    });
   }
 }

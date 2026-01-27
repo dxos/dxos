@@ -3,14 +3,20 @@
 //
 
 import * as Effect from 'effect/Effect';
-import React, { forwardRef, useCallback } from 'react';
+import React, { forwardRef, useCallback, useMemo } from 'react';
 
 import { Capability, Common } from '@dxos/app-framework';
-import { SurfaceCardRole, useCapability } from '@dxos/app-framework/react';
+import {
+  SurfaceCardRole,
+  useAtomCapability,
+  useAtomCapabilityState,
+  useCapability,
+  useSettingsState,
+} from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
-import { SettingsStore } from '@dxos/local-storage';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { Text } from '@dxos/schema';
+import { type EditorViewMode } from '@dxos/ui-editor';
 
 import { MarkdownCard, MarkdownContainer, type MarkdownContainerProps, MarkdownSettings } from '../../components';
 import { meta } from '../../meta';
@@ -50,9 +56,12 @@ export default Capability.makeModule(() =>
       Common.createSurface({
         id: `${meta.id}/surface/plugin-settings`,
         role: 'article',
-        filter: (data): data is { subject: SettingsStore<Markdown.Settings> } =>
-          data.subject instanceof SettingsStore && data.subject.prefix === meta.id,
-        component: ({ data: { subject } }) => <MarkdownSettings settings={subject.value} />,
+        filter: (data): data is { subject: Common.Capability.Settings } =>
+          Common.Capability.isSettings(data.subject) && data.subject.prefix === meta.id,
+        component: ({ data: { subject } }) => {
+          const { settings, updateSettings } = useSettingsState<Markdown.Settings>(subject.atom);
+          return <MarkdownSettings settings={settings} onSettingsChange={updateSettings} />;
+        },
       }),
       Common.createSurface({
         id: `${meta.id}/surface/preview`,
@@ -72,13 +81,16 @@ export default Capability.makeModule(() =>
 const Container = forwardRef<HTMLDivElement, { id: string; subject: MarkdownContainerProps['object']; role: string }>(
   ({ id, subject, role }, forwardedRef) => {
     const selectionManager = useCapability(AttentionCapabilities.Selection);
-    const settingsStore = useCapability(Common.Capability.SettingsStore);
-    const settings = settingsStore.getStore<Markdown.Settings>(meta.id)!.value;
-    const { state, editorState, getViewMode, setViewMode } = useCapability(MarkdownCapabilities.State);
-    const viewMode = getViewMode(id);
+    const settings = useAtomCapability(MarkdownCapabilities.Settings);
+    const [state, setState] = useAtomCapabilityState(MarkdownCapabilities.State);
+    const editorState = useCapability(MarkdownCapabilities.EditorState);
+    const extensions = useCapability(MarkdownCapabilities.Extensions);
+    const extensionProviders = useMemo(() => extensions.flat(), [extensions]);
+
+    const viewMode: EditorViewMode = (id && state.viewMode[id]) || settings?.defaultViewMode || 'source';
     const handleViewModeChange = useCallback<NonNullable<MarkdownContainerProps['onViewModeChange']>>(
-      (mode) => setViewMode(id, mode),
-      [id, setViewMode],
+      (mode) => setState((current) => ({ ...current, viewMode: { ...current.viewMode, [id]: mode } })),
+      [id, setState],
     );
 
     return (
@@ -88,7 +100,7 @@ const Container = forwardRef<HTMLDivElement, { id: string; subject: MarkdownCont
         role={role}
         settings={settings}
         selectionManager={selectionManager}
-        extensionProviders={state.extensionProviders}
+        extensionProviders={extensionProviders}
         editorStateStore={editorState}
         viewMode={viewMode}
         onViewModeChange={handleViewModeChange}

@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import React, { useCallback, useMemo } from 'react';
 
 import { Common, type Plugin, SettingsOperation } from '@dxos/app-framework';
-import { useCapability, useOperationInvoker, usePluginManager } from '@dxos/app-framework/react';
+import { useCapabilities, useOperationInvoker, usePluginManager } from '@dxos/app-framework/react';
 import { runAndForwardErrors } from '@dxos/effect';
 import { ObservabilityOperation } from '@dxos/plugin-observability/types';
 import { StackItem } from '@dxos/react-ui-stack';
@@ -22,7 +22,7 @@ export const RegistryContainer = ({ id, plugins: _plugins }: { id: string; plugi
   const { invoke, invokePromise } = useOperationInvoker();
   const plugins = useMemo(() => _plugins.sort(sortByPluginMeta), [_plugins]);
   const enabled = useAtomValue(manager.enabled);
-  const settingsStore = useCapability(Common.Capability.SettingsStore);
+  const allSettings = useCapabilities(Common.Capability.Settings);
 
   // TODO(wittjosiah): Factor out to an intent?
   const handleChange = useCallback(
@@ -56,7 +56,7 @@ export const RegistryContainer = ({ id, plugins: _plugins }: { id: string; plugi
     [invokePromise, id],
   );
 
-  const hasSettings = useCallback((pluginId: string) => !!settingsStore.getStore(pluginId), [settingsStore]);
+  const hasSettings = useCallback((pluginId: string) => allSettings.some((s) => s.prefix === pluginId), [allSettings]);
 
   const handleSettings = useCallback(
     (pluginId: string) => invokePromise(SettingsOperation.Open, { plugin: pluginId }),

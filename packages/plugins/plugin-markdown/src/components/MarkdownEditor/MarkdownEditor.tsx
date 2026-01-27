@@ -4,13 +4,13 @@
 
 import { type Extension } from '@codemirror/state';
 import { type EditorView } from '@codemirror/view';
+import { type Atom } from '@effect-atom/atom-react';
 import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { Surface } from '@dxos/app-framework/react';
 import { DXN } from '@dxos/keys';
-import { type Live } from '@dxos/live-object';
 import { useClient } from '@dxos/react-client';
 import {
   EditorMenuProvider,
@@ -48,7 +48,7 @@ type MarkdownEditorContextValue = {
   setEditorView: (view: EditorView) => void;
   extensions: Extension[];
   previewBlocks: PreviewBlock[];
-  toolbarState: Live<EditorToolbarState>;
+  toolbarState: Atom.Writable<EditorToolbarState>;
   popoverMenu: Omit<UseEditorMenu, 'extension'>;
 } & (Pick<ExtensionsOptions, 'viewMode'> &
   Pick<NaturalMarkdownToolbarProps, 'editorView' | 'onAction' | 'onFileUpload' | 'onViewModeChange'>);

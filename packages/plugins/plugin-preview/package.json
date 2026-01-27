@@ -50,8 +50,7 @@
     "@dxos/ui-editor": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom-react": "catalog:",
-    "@preact-signals/safe-react": "catalog:"
+    "@effect-atom/atom-react": "catalog:"
   },
   "devDependencies": {
     "@dxos/echo-db": "workspace:*",

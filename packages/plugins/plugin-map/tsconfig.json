@@ -28,9 +28,6 @@
       "path": "../../common/invariant"
     },
     {
-      "path": "../../common/local-storage"
-    },
-    {
       "path": "../../common/storybook-utils"
     },
     {
@@ -49,7 +46,7 @@
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../core/echo/live-object"
+      "path": "../../core/echo/echo-atom"
     },
     {
       "path": "../../core/functions"

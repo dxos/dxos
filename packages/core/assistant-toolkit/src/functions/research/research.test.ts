@@ -109,7 +109,7 @@ describe('Research', () => {
         );
 
         const queue = yield* QueueService.createQueue<Message.Message | ContextBinding>();
-        const conversation = yield* acquireReleaseResource(() => new AiConversation(queue));
+        const conversation = yield* acquireReleaseResource(() => new AiConversation({ queue }));
 
         yield* Database.Service.flush({ indexes: true });
         const researchBlueprint = yield* Database.Service.add(Obj.clone(ResearchBlueprint));

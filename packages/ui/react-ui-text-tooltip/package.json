@@ -25,7 +25,6 @@
     "src"
   ],
   "dependencies": {
-    "@preact-signals/safe-react": "catalog:",
     "@radix-ui/react-compose-refs": "catalog:"
   },
   "devDependencies": {

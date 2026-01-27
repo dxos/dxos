@@ -2,9 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
+import { RegistryContext } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
-import React, { useCallback } from 'react';
+import React, { useCallback, useContext } from 'react';
+import { expect, waitFor, within } from 'storybook/test';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj, type QueryAST, Type } from '@dxos/echo';
@@ -13,7 +15,7 @@ import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { SpacePlugin } from '@dxos/plugin-space';
-import { corePlugins } from '@dxos/plugin-testing';
+import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { faker } from '@dxos/random';
 import { Filter, useQuery, useSchema, useSpaces } from '@dxos/react-client/echo';
 import { withTheme } from '@dxos/react-ui/testing';
@@ -41,6 +43,7 @@ const rollOrg = () => ({
 });
 
 const StorybookKanban = () => {
+  const registry = useContext(RegistryContext);
   const spaces = useSpaces();
   const space = spaces[spaces.length - 1];
   const [object] = useQuery(space?.db, Filter.type(Kanban.Kanban));
@@ -50,7 +53,7 @@ const StorybookKanban = () => {
   const objects = useQuery(space?.db, schema ? Filter.type(schema) : Filter.nothing());
   const filteredObjects = useGlobalFilteredObjects(objects);
 
-  const projection = useProjectionModel(schema, object);
+  const projection = useProjectionModel(schema, object, registry);
   const model = useKanbanModel({
     object,
     projection,
@@ -146,9 +149,9 @@ const meta = {
               });
             }),
         }),
-        ...corePlugins(),
-        SpacePlugin({}),
         PreviewPlugin(),
+        SpacePlugin({}),
+        StorybookPlugin({}),
       ],
     }),
   ],
@@ -162,4 +165,52 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {};
+export const Default: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    // Wait for the kanban columns to render by finding the status tags.
+    // Organization.StatusOptions: prospect, qualified, active, commit, reject.
+    const activeTag = await canvas.findByText('Active', undefined, { timeout: 30_000 });
+    const prospectTag = await canvas.findByText('Prospect', undefined, { timeout: 10_000 });
+    const commitTag = await canvas.findByText('Commit', undefined, { timeout: 10_000 });
+
+    // Verify all expected columns are rendered.
+    await expect(activeTag).toBeTruthy();
+    await expect(prospectTag).toBeTruthy();
+    await expect(commitTag).toBeTruthy();
+
+    // Find the column containers.
+    const activeColumn = activeTag.closest('[data-dx-stack-item]') as HTMLElement;
+    const prospectColumn = prospectTag.closest('[data-dx-stack-item]') as HTMLElement;
+    await expect(activeColumn).toBeTruthy();
+    await expect(prospectColumn).toBeTruthy();
+
+    // Wait for cards to render in the columns.
+    // Cards have data-dx-item-id attribute from StackItem.Root.
+    const getColumnCards = (column: HTMLElement) =>
+      Array.from(column.querySelectorAll('[data-dx-item-id]')) as HTMLElement[];
+
+    await waitFor(() => expect(getColumnCards(activeColumn).length).toBeGreaterThan(0));
+
+    // Verify cards are distributed across columns.
+    const activeCards = getColumnCards(activeColumn);
+    const prospectCards = getColumnCards(prospectColumn);
+    await expect(activeCards.length).toBeGreaterThan(0);
+    await expect(prospectCards.length).toBeGreaterThan(0);
+
+    // Verify cards have drag handles (first button in toolbar).
+    const firstActiveCard = activeCards[0];
+    const buttons = firstActiveCard.querySelectorAll('button');
+    await expect(buttons.length).toBeGreaterThan(0);
+
+    // Verify the drop zone exists in each column.
+    const activeDropZone = activeColumn.querySelector('.kanban-drop');
+    const prospectDropZone = prospectColumn.querySelector('.kanban-drop');
+    await expect(activeDropZone).toBeTruthy();
+    await expect(prospectDropZone).toBeTruthy();
+
+    // TODO(wittjosiah): Get drag & drop tests working.
+    //   See packages/apps/composer-app/src/playwright/stack.spec.ts for reference.
+  },
+};

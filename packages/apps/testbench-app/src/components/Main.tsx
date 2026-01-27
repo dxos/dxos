@@ -8,7 +8,6 @@ import React, { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Devtools, StatsPanel, useStats } from '@dxos/devtools';
 import { Obj, Type } from '@dxos/echo';
-import { type Live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { type PublicKey, useClient } from '@dxos/react-client';
 import { Query, type Space, useQuery, useSpaces } from '@dxos/react-client/echo';
@@ -87,7 +86,7 @@ export const Main = () => {
 
     // TODO(burdon): Migrate generator from DebugPlugin.
     Array.from({ length: n }).forEach(() => {
-      let object: Live<any>;
+      let object: Obj.Any;
       switch (type) {
         case Document.typename: {
           object = Obj.make(Document, {

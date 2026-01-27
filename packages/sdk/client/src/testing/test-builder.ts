@@ -35,7 +35,14 @@ import { type ProtoRpcPeer, createLinkedPorts, createProtoRpcPeer } from '@dxos/
 import { layerMemory as sqliteLayerMemory } from '@dxos/sql-sqlite/platform';
 
 import { Client } from '../client';
-import { ClientServicesProxy, LocalClientServices } from '../services';
+import {
+  ClientServicesProxy,
+  DedicatedWorkerClientServices,
+  LocalClientServices,
+  MemoryWorkerCoordiantor,
+} from '../services';
+
+import { TestWorkerFactory } from './test-worker-factory';
 
 export const testConfigWithLocalSignal = new Config({
   version: 1,
@@ -64,6 +71,8 @@ export class TestBuilder {
   public level?: () => LevelDB;
 
   _transport: TransportKind;
+  private _coordinator?: MemoryWorkerCoordiantor;
+  private _workerFactory?: TestWorkerFactory;
 
   // TODO(burdon): Pass in params as object.
   constructor(
@@ -141,6 +150,32 @@ export class TestBuilder {
     this._ctx.onDispose(() => server.close());
     this._ctx.onDispose(() => client.destroy());
     return [client, server];
+  }
+
+  /**
+   * Create dedicated worker client services.
+   * All services share the same worker factory and coordinator.
+   */
+  createDedicatedWorkerClientServices(): DedicatedWorkerClientServices {
+    // Shared coordinator for leader election across all services.
+    if (!this._coordinator) {
+      this._coordinator = new MemoryWorkerCoordiantor();
+    }
+
+    // Shared worker factory.
+    if (!this._workerFactory) {
+      this._workerFactory = new TestWorkerFactory(this.config);
+      void this._workerFactory.open();
+      this._ctx.onDispose(() => this._workerFactory!.close());
+    }
+
+    const services = new DedicatedWorkerClientServices({
+      createWorker: () => this._workerFactory!.make(),
+      createCoordinator: () => this._coordinator!,
+    });
+
+    this._ctx.onDispose(() => services.close());
+    return services;
   }
 
   /**

@@ -6,9 +6,9 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/react';
 import { Filter, Obj, Ref } from '@dxos/echo';
+import { useObject, useObjects } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
 import { useQuery } from '@dxos/react-client/echo';
-import { useSignalsMemo } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { Board, type BoardController, type BoardRootProps, type Position } from '@dxos/react-ui-board';
 import { ObjectPicker, type ObjectPickerContentProps } from '@dxos/react-ui-form';
@@ -30,7 +30,8 @@ export type BoardContainerProps = {
 
 export const BoardContainer = ({ board }: BoardContainerProps) => {
   const controller = useRef<BoardController>(null);
-  const items = useSignalsMemo(() => board.items.map((ref) => ref.target).filter(isNonNullable), [board]);
+  const [boardItems] = useObject(board, 'items');
+  const items = useObjects(boardItems ?? []);
   const addTriggerRef = useRef<HTMLButtonElement | null>(null);
   const [pickerState, setPickerState] = useState<PickerState | null>(null);
   const attendableId = Obj.getDXN(board).toString();
