@@ -42,7 +42,10 @@ type PeerOptions = {
   assignQueuePositions?: boolean;
 
   kv?: LevelDB;
-  runtime?: ManagedRuntime.ManagedRuntime<SqlClient.SqlClient | SqlExport.SqlExport | SqlTransaction.Service, never>;
+  runtime?: ManagedRuntime.ManagedRuntime<
+    SqlClient.SqlClient | SqlExport.SqlExport | SqlTransaction.SqlTransaction,
+    never
+  >;
 };
 
 export class EchoTestBuilder extends Resource {
@@ -94,7 +97,7 @@ export class EchoTestPeer extends Resource {
 
   private _foreignRuntime: boolean;
   private _managedRuntime!: ManagedRuntime.ManagedRuntime<
-    SqlClient.SqlClient | SqlExport.SqlExport | SqlTransaction.Service,
+    SqlClient.SqlClient | SqlExport.SqlExport | SqlTransaction.SqlTransaction,
     never
   >;
 
@@ -115,7 +118,9 @@ export class EchoTestPeer extends Resource {
   private _initEcho(): void {
     if (!this._foreignRuntime) {
       this._managedRuntime = ManagedRuntime.make(
-        SqlTransaction.layer.pipe(Layer.provideMerge(Layer.merge(layerMemory, Reactivity.layer))).pipe(Layer.orDie),
+        SqlTransaction.SqlTransaction.layer
+          .pipe(Layer.provideMerge(Layer.merge(layerMemory, Reactivity.layer)))
+          .pipe(Layer.orDie),
       );
     }
     this._echoHost = new EchoHost({

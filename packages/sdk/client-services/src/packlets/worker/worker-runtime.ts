@@ -25,6 +25,7 @@ import { type RpcPort } from '@dxos/rpc';
 import * as OpfsWorker from '@dxos/sql-sqlite/OpfsWorker';
 import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 import * as SqliteClient from '@dxos/sql-sqlite/SqliteClient';
+import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 import { type MaybePromise } from '@dxos/util';
 
 import { ClientServicesHost } from '../services';
@@ -74,7 +75,10 @@ export class WorkerRuntime {
   private _config!: Config;
   private _signalMetadataTags: any = { runtime: 'worker-runtime' };
   private _signalTelemetryEnabled: boolean = false;
-  private _runtime!: ManagedRuntime.ManagedRuntime<SqlClient.SqlClient | SqlExport.SqlExport, never>;
+  private _runtime!: ManagedRuntime.ManagedRuntime<
+    SqlTransaction.SqlTransaction | SqlClient.SqlClient | SqlExport.SqlExport,
+    never
+  >;
 
   constructor({
     channel = DEFAULT_WORKER_BROADCAST_CHANNEL,
@@ -90,7 +94,11 @@ export class WorkerRuntime {
     this._releaseLock = releaseLock;
     this._onStop = onStop;
     this._channel = channel;
-    this._runtime = ManagedRuntime.make(Layer.merge(LocalSqliteOpfsLayer, Reactivity.layer).pipe(Layer.orDie));
+    this._runtime = ManagedRuntime.make(
+      SqlTransaction.SqlTransaction.layer
+        .pipe(Layer.provideMerge(LocalSqliteOpfsLayer), Layer.provideMerge(Reactivity.layer))
+        .pipe(Layer.orDie),
+    );
     this._clientServices = new ClientServicesHost({
       callbacks: {
         onReset: async () => this.stop(),

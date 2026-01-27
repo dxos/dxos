@@ -151,7 +151,11 @@ export class IndexEngine {
     index: Index,
     source: IndexDataSource,
     opts: { indexName: string; spaceId: SpaceId | null; limit?: number },
-  ): Effect.Effect<{ updated: number; done: boolean }, SqlError.SqlError, SqlTransaction | SqlClient.SqlClient> {
+  ): Effect.Effect<
+    { updated: number; done: boolean },
+    SqlError.SqlError,
+    SqlTransaction.SqlTransaction | SqlClient.SqlClient
+  > {
     return Effect.gen(this, function* () {
       const sqlTransaction = yield* SqlTransaction.SqlTransaction;
 
