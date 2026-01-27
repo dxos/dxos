@@ -10,22 +10,18 @@ import { type Person } from '@dxos/types';
 
 import { type CardPreviewProps } from '../types';
 
-export const PersonCard = ({ children, role, subject, onSelect }: CardPreviewProps<Person.Person>) => {
+export const PersonCard = ({ subject, onSelect }: CardPreviewProps<Person.Person>) => {
   const { fullName, image, organization: { target: organization } = {}, emails = [] } = subject;
 
   return (
-    <Card.Root id={subject.id} role={role}>
+    <Card.Content>
       <Avatar.Root>
-        <Card.Toolbar>
-          <Card.Icon toolbar icon='ph--user--regular' />
-          <Avatar.Label asChild>
-            <h2 className='grow truncate'>{fullName}</h2>
-          </Avatar.Label>
-          {/* TODO(burdon): Menu. */}
-          <Card.Close onClose={() => {}} />
-        </Card.Toolbar>
-
         <Card.Content>
+          <Card.Row>
+            <Avatar.Label asChild>
+              <Card.Heading>{fullName}</Card.Heading>
+            </Avatar.Label>
+          </Card.Row>
           {image && (
             <Card.Row className='plb-1'>
               <Avatar.Content
@@ -52,9 +48,8 @@ export const PersonCard = ({ children, role, subject, onSelect }: CardPreviewPro
               </Card.Text>
             </Card.Row>
           ))}
-          {children}
         </Card.Content>
       </Avatar.Root>
-    </Card.Root>
+    </Card.Content>
   );
 };

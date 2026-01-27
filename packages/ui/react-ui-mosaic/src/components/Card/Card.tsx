@@ -13,7 +13,6 @@ import React, {
 
 import {
   Button,
-  type ClassNameValue,
   DropdownMenu,
   Icon,
   type IconProps,
@@ -22,12 +21,17 @@ import {
   type ToolbarRootProps,
   useTranslation,
 } from '@dxos/react-ui';
-import { hoverableControls, mx } from '@dxos/ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations';
 import { Image } from '../Image';
 
 import { styles } from './styles';
+
+type CardSharedProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & {
+  asChild?: boolean;
+  className?: string;
+};
 
 //
 // Context
@@ -37,13 +41,8 @@ type CardContextValue = {
   menuItems?: CardMenuItem<any>[];
 };
 
-// TODO(burdon): Move into Root.
+/** @deprecated Create context for menus. */
 const CardContext = createContext<CardContextValue>({});
-
-type CardSharedProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & {
-  asChild?: boolean;
-  className?: string;
-};
 
 //
 // Root
@@ -55,21 +54,12 @@ const CardRoot = forwardRef<HTMLDivElement, CardRootProps>(
   ({ children, classNames, className, id, asChild, role = 'group', ...props }, forwardedRef) => {
     const Root = asChild ? Slot : 'div';
 
-    // TODO(burdon): Remove card--xxx roles and just have card--content.
-    // TODO(burdon): Document (see app-framework, and ui-theme size.css, length.ts)
-    const roleClassNames: Record<string, ClassNameValue> = {
-      'card--popover': 'contents',
-      'card--extrinsic': 'is-full min-is-cardMinWidth',
-      'card--intrinsic': 'is-cardDefaultWidth',
-      'card--transclusion': ['is-full mlb-1', hoverableControls], // TODO(burdon): Why hoverableControls?
-    };
-
     return (
       <Root
         {...(id && { 'data-object-id': id })}
         {...props}
         role={role}
-        className={mx(styles.root, roleClassNames[role], className, classNames)}
+        className={mx(styles.root, className, classNames)}
         ref={forwardedRef}
       >
         {children}

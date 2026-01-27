@@ -14,16 +14,15 @@ import { Chess } from '../types';
 import { Chessboard } from './Chessboard';
 
 type DefaultStoryProps = {
-  role: 'card--popover' | 'card--intrinsic' | 'card--extrinsic';
   game: Chess.Game;
 };
 
 const meta = {
   title: 'plugins/plugin-chess/Card',
-  render: ({ role, game }) => (
-    <CardContainer icon={pluginMeta.icon} role={role}>
+  render: ({ game }) => (
+    <CardContainer icon={pluginMeta.icon}>
       <Chessboard.Root game={game}>
-        <Chessboard.Content role={role}>
+        <Chessboard.Content>
           <Chessboard.Board />
         </Chessboard.Content>
       </Chessboard.Root>
@@ -46,21 +45,6 @@ type Story = StoryObj<typeof meta>;
 
 export const Popover: Story = {
   args: {
-    role: 'card--popover',
-    game: game,
-  },
-};
-
-export const Intrinsic: Story = {
-  args: {
-    role: 'card--intrinsic',
-    game: game,
-  },
-};
-
-export const Extrinsic: Story = {
-  args: {
-    role: 'card--extrinsic',
     game: game,
   },
 };

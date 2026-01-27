@@ -22,7 +22,7 @@ type CardStoryProps = {
 const DefaultStory = ({ title, description, image }: CardStoryProps) => {
   const handleRef = useRef<HTMLButtonElement>(null);
   return (
-    <Card.Root role='card--intrinsic'>
+    <Card.Root>
       <Card.Toolbar>
         <Card.DragHandle ref={handleRef} />
         <Card.Title>{title}</Card.Title>
@@ -83,7 +83,7 @@ export const Simple: Story = {
   render: ({ title }) => {
     const handleRef = useRef<HTMLButtonElement>(null);
     return (
-      <Card.Root role='card--intrinsic'>
+      <Card.Root>
         <Card.Toolbar>
           <Card.DragHandle ref={handleRef} />
           <Card.Title>{title}</Card.Title>
@@ -102,7 +102,7 @@ export const Description: Story = {
   render: ({ title, description }) => {
     const handleRef = useRef<HTMLButtonElement>(null);
     return (
-      <Card.Root role='card--intrinsic'>
+      <Card.Root>
         <Card.Toolbar>
           <Card.DragHandle ref={handleRef} />
           <Card.Title>{title}</Card.Title>

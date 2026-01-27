@@ -6,7 +6,6 @@ import { OperationPlugin, type Plugin, RuntimePlugin, SettingsPlugin } from '@dx
 import { AttentionPlugin } from '@dxos/plugin-attention';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { GraphPlugin } from '@dxos/plugin-graph';
-import { SpacePlugin } from '@dxos/plugin-space';
 import { ThemePlugin } from '@dxos/plugin-theme';
 import { defaultTx } from '@dxos/ui-theme';
 
@@ -25,6 +24,5 @@ export const corePlugins = (): Plugin.Plugin[] => [
   OperationPlugin(),
   RuntimePlugin(),
   SettingsPlugin(),
-  SpacePlugin({}),
   ThemePlugin({ tx: defaultTx }),
 ];

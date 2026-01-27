@@ -148,8 +148,13 @@ export const Kanban = <T extends BaseKanbanItem = { id: string }>({
                       <CardStackDragPreview.Content itemsCount={cards.length}>
                         {cards.map((card) => (
                           <Card.Root key={card.id}>
+                            <Card.Toolbar>
+                              <Card.DragHandle />
+                              <Card.Title>{card.title}</Card.Title>
+                              <Card.Close onClose={() => onRemoveCard?.(card)} />
+                            </Card.Toolbar>
                             <Surface
-                              role='card--intrinsic'
+                              role='card--content'
                               limit={1}
                               data={{
                                 subject: card,

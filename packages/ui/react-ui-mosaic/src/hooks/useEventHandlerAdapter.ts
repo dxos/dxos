@@ -14,6 +14,12 @@ export type UseEventHandlerProps<TItem, TObject extends Obj.Any> = Pick<MosaicEv
   items: TItem[];
   get: (item: TItem) => TObject | undefined;
   make: (object: TObject) => TItem;
+  /**
+   * Optional change callback for wrapping mutations in Obj.change style.
+   * When provided, all array mutations will be wrapped in this callback.
+   * When not provided, mutations happen directly on the items array.
+   */
+  onChange?: (mutator: (items: TItem[]) => void) => void;
 };
 
 /**
@@ -24,6 +30,7 @@ export const useEventHandlerAdapter = <TItem, TObject extends Obj.Any>({
   items,
   get,
   make,
+  onChange,
   ...props
 }: UseEventHandlerProps<TItem, TObject>): MosaicEventHandler => {
   return useMemo<MosaicEventHandler>(
@@ -31,29 +38,43 @@ export const useEventHandlerAdapter = <TItem, TObject extends Obj.Any>({
       ...props,
       onTake: ({ source }, cb) => {
         log.info('onTake', { source });
-        const from = items.findIndex((item) => get(item)?.id === source.object.id);
-        if (from !== -1) {
-          items.splice(from, 1);
-          // TODO(burdon): This doesn't cause an immediate update.
-          console.log('useEventHandlerAdapter.onTake', items.length, from);
+        const mutate = (items: TItem[]) => {
+          const from = items.findIndex((item) => get(item)?.id === source.object.id);
+          if (from !== -1) {
+            items.splice(from, 1);
+          }
+        };
+
+        if (onChange) {
+          onChange(mutate);
+        } else {
+          mutate(items);
         }
 
         void cb(source.object);
       },
       onDrop: ({ source, target }) => {
-        const from = items.findIndex((item) => get(item)?.id === source.object.id);
         const to = target?.type === 'tile' || target?.type === 'placeholder' ? target.location : -1;
-        log.info('onDrop', { source, target, from, to });
-        if (to !== -1) {
-          if (from !== -1) {
-            arrayMove(items, from, to);
-          } else {
-            items.splice(to, 0, make(source.object as TObject));
-            console.log('useEventHandlerAdapter.onDrop', items.length, to);
+        log.info('onDrop', { source, target, to });
+
+        const mutate = (items: TItem[]) => {
+          const from = items.findIndex((item) => get(item)?.id === source.object.id);
+          if (to !== -1) {
+            if (from !== -1) {
+              arrayMove(items, from, to);
+            } else {
+              items.splice(to, 0, make(source.object as TObject));
+            }
           }
+        };
+
+        if (onChange) {
+          onChange(mutate);
+        } else {
+          mutate(items);
         }
       },
     }),
-    [items],
+    [items, onChange],
   );
 };

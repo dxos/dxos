@@ -7,6 +7,7 @@ import React, { type FC } from 'react';
 
 import { Obj, Ref, type Type } from '@dxos/echo';
 import { faker } from '@dxos/random';
+import { Card } from '@dxos/react-ui-mosaic';
 import { CardContainer } from '@dxos/react-ui-mosaic/testing';
 import { Organization, Person, Project, Task } from '@dxos/types';
 
@@ -19,12 +20,7 @@ export type DefaultStoryProps<T extends Obj.Any> = {
 };
 
 export const DefaultStory = <T extends Obj.Any>({ Component, object, image }: DefaultStoryProps<T>) => {
-  const roles: CardPreviewProps['role'][] = [
-    'card--popover',
-    'card--extrinsic',
-    'card--intrinsic',
-    'card--transclusion',
-  ];
+  const roles: CardPreviewProps['role'][] = ['card--popover', 'card--intrinsic'];
 
   return (
     <div className='grid grid-rows-4 gap-16 plb-8'>
@@ -33,7 +29,9 @@ export const DefaultStory = <T extends Obj.Any>({ Component, object, image }: De
           <div className='flex flex-col gap-4 is-full items-center'>
             <label className='text-sm text-description'>{role}</label>
             <CardContainer role={role}>
-              <Component role={role} subject={image ? object : omitImage(object)} />
+              <Card.Root>
+                <Component role={role} subject={image ? object : omitImage(object)} />
+              </Card.Root>
             </CardContainer>
           </div>
         </div>

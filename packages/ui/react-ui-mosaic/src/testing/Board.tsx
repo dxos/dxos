@@ -8,6 +8,7 @@ import React, { forwardRef, useMemo, useRef } from 'react';
 
 import { Obj, Ref, Type } from '@dxos/echo';
 import { ObjectId } from '@dxos/keys';
+import { useObject } from '@dxos/react-client/echo';
 import { Tag, type ThemedClassName } from '@dxos/react-ui';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { getHashStyles, mx } from '@dxos/ui-theme';
@@ -108,16 +109,17 @@ type ColumnProps = Pick<MosaicTileProps<TestColumn>, 'classNames' | 'object' | '
 
 export const Column = forwardRef<HTMLDivElement, ColumnProps>(
   ({ classNames, object, debug, location }, forwardedRef) => {
-    const { id, items } = object;
+    const [column, updateColumn] = useObject(object);
     const [DebugInfo, debugHandler] = useContainerDebug(debug);
     const dragHandleRef = useRef<HTMLButtonElement>(null);
     const viewportRef = useRef<HTMLElement | null>(null);
     const eventHandler = useEventHandlerAdapter({
-      id,
-      items,
+      id: object.id,
+      items: object.items,
       canDrop: ({ source }) => Obj.instanceOf(TestItem, source.object),
       get: (item) => item.target,
       make: (object) => Ref.make(object),
+      onChange: (mutator) => updateColumn((column) => mutator(column.items)),
     });
 
     // Context menu.
@@ -125,15 +127,17 @@ export const Column = forwardRef<HTMLDivElement, ColumnProps>(
       () => [
         {
           label: 'Delete',
-          onSelect: (object) => {
-            const idx = items.findIndex((item) => item.target?.id === object?.id);
-            if (idx !== -1) {
-              items.splice(idx, 1);
-            }
+          onSelect: (obj) => {
+            updateColumn((column) => {
+              const idx = column.items.findIndex((item) => item.target?.id === obj?.id);
+              if (idx !== -1) {
+                column.items.splice(idx, 1);
+              }
+            });
           },
         },
       ],
-      [items],
+      [updateColumn],
     );
 
     return (
@@ -149,9 +153,10 @@ export const Column = forwardRef<HTMLDivElement, ColumnProps>(
           >
             <Card.Toolbar>
               <Card.DragHandle ref={dragHandleRef} />
-              <Card.Title>{id}</Card.Title>
+              <Card.Title>{column.id}</Card.Title>
               <Card.Menu items={[]} />
             </Card.Toolbar>
+            {/* TODO(burdon): See deprecation warning. */}
             <Card.Context value={{ menuItems }}>
               <Mosaic.Container
                 asChild
@@ -165,14 +170,14 @@ export const Column = forwardRef<HTMLDivElement, ColumnProps>(
                   <Mosaic.Stack
                     axis='vertical'
                     className='pli-3'
-                    items={items.map((item: any) => item.target).filter(isTruthy)}
+                    items={column.items.map((item: any) => item.target).filter(isTruthy)}
                     Component={Tile}
                   />
                 </Mosaic.Viewport>
               </Mosaic.Container>
             </Card.Context>
             <div>
-              <div className='grow flex p-1 justify-center text-xs'>{items.length}</div>
+              <div className='grow flex p-1 justify-center text-xs'>{column.items.length}</div>
               <DebugInfo />
             </div>
           </div>

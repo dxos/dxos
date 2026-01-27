@@ -9,7 +9,6 @@ import { type PropertyMetaAnnotation, PropertyMetaAnnotationId } from '@dxos/ech
 import { Card } from '@dxos/react-ui-mosaic';
 import { Task } from '@dxos/types';
 
-import { CardSubjectMenu } from '../components';
 import { type CardPreviewProps } from '../types';
 
 // TODO(thure): Should this move upstream as a helper? Is there an easier way to get options?
@@ -25,21 +24,18 @@ const getActiveStatusOption = (status?: string) => {
   return options.find(({ id }) => id === status);
 };
 
-export const TaskCard = ({ subject, role, db }: CardPreviewProps<Task.Task>) => {
+export const TaskCard = ({ subject }: CardPreviewProps<Task.Task>) => {
   const { title, status } = subject;
   const statusOption = getActiveStatusOption(status);
 
   return (
-    <Card.Root id={subject.id} role={role}>
-      <div role='none' className='flex items-center gap-2'>
-        <Card.Heading classNames='min-is-0 flex-1 truncate'>{title}</Card.Heading>
-        {statusOption && (
-          <span className='dx-tag' data-hue={statusOption.color}>
-            {statusOption.title}
-          </span>
-        )}
-        <CardSubjectMenu db={db} subject={subject} />
-      </div>
-    </Card.Root>
+    <Card.Content>
+      <Card.Heading classNames='min-is-0 flex-1 truncate'>{title}</Card.Heading>
+      {statusOption && (
+        <span className='dx-tag' data-hue={statusOption.color}>
+          {statusOption.title}
+        </span>
+      )}
+    </Card.Content>
   );
 };
