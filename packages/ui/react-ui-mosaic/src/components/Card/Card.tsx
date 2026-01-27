@@ -37,6 +37,7 @@ type CardContextValue = {
   menuItems?: CardMenuItem<any>[];
 };
 
+// TODO(burdon): Move into Root.
 const CardContext = createContext<CardContextValue>({});
 
 type CardSharedProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & {
@@ -54,8 +55,7 @@ const CardRoot = forwardRef<HTMLDivElement, CardRootProps>(
   ({ children, classNames, className, id, asChild, role = 'group', ...props }, forwardedRef) => {
     const Root = asChild ? Slot : 'div';
 
-    // TODO(burdon): Should surface cards implement the toolbar?
-    // TODO(burdon): Option for drag handle (via surface).
+    // TODO(burdon): Remove card--xxx roles and just have card--content.
     // TODO(burdon): Document (see app-framework, and ui-theme size.css, length.ts)
     const roleClassNames: Record<string, ClassNameValue> = {
       'card--popover': 'contents',
@@ -396,7 +396,7 @@ const CardIcon = ({ toolbar, ...props }: IconProps & { toolbar?: boolean }) => {
 //
 
 export const Card = {
-  Context: CardContext,
+  Context: CardContext, // TODO(burdon): Remove.
   Root: CardRoot,
 
   // Toolbar

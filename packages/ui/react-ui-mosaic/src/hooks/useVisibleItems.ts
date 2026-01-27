@@ -21,7 +21,7 @@ export type UseVisibleItemsProps<T extends Obj.Any> = {
  * Returns items with the dragging item removed.
  */
 // TODO(burdon): Check 'dragging' is stable.
-// TODO(burdon): Flicker when dropping to other column (re-appears in column dragging from).
+// TODO(burdon): Dragged item flickers when dropping to other column (re-appears in column dragging from).
 export const useVisibleItems = <T extends Obj.Any>({ id, items, dragging }: UseVisibleItemsProps<T>): T[] => {
   const visibleItems = useMemo(() => {
     if (!items || !dragging || id !== dragging.containerId) {
@@ -36,7 +36,7 @@ export const useVisibleItems = <T extends Obj.Any>({ id, items, dragging }: UseV
     const visibleItems = items.slice();
     visibleItems.splice(idx, 1);
     return visibleItems;
-  }, [id, items, items?.length, dragging]);
+  }, [id, items, dragging]);
 
   console.log('useVisibleItems', id, dragging, items?.length, visibleItems.length);
   return visibleItems;
