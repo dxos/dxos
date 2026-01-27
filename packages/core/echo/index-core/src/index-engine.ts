@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as SqlClient from '@effect/sql/SqlClient';
+import type * as SqlClient from '@effect/sql/SqlClient';
 import type * as SqlError from '@effect/sql/SqlError';
 import * as Effect from 'effect/Effect';
 
@@ -20,6 +20,7 @@ import {
   ReverseRefIndex,
   type ReverseRefQuery,
 } from './indexes';
+import { SqlTransaction } from './sql-transaction';
 
 /**
  * Cursor into indexable data-source.
@@ -107,7 +108,7 @@ export class IndexEngine {
   update(
     dataSource: IndexDataSource,
     opts: { spaceId: SpaceId | null; limit?: number },
-  ): Effect.Effect<{ updated: number; done: boolean }, SqlError.SqlError, SqlClient.SqlClient> {
+  ): Effect.Effect<{ updated: number; done: boolean }, SqlError.SqlError, SqlTransaction | SqlClient.SqlClient> {
     return Effect.gen(this, function* () {
       let updated = 0;
 
@@ -146,10 +147,11 @@ export class IndexEngine {
     index: Index,
     source: IndexDataSource,
     opts: { indexName: string; spaceId: SpaceId | null; limit?: number },
-  ): Effect.Effect<{ updated: number; done: boolean }, SqlError.SqlError, SqlClient.SqlClient> {
+  ): Effect.Effect<{ updated: number; done: boolean }, SqlError.SqlError, SqlTransaction | SqlClient.SqlClient> {
     return Effect.gen(this, function* () {
-      const sql = yield* SqlClient.SqlClient;
-      return yield* sql.withTransaction(
+      const sqlTransaction = yield* SqlTransaction;
+
+      return yield* sqlTransaction.withTransaction(
         Effect.gen(this, function* () {
           const cursors = yield* this.#tracker.queryCursors({
             indexName: opts.indexName,

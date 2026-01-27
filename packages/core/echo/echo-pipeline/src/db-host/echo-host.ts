@@ -11,7 +11,7 @@ import { todo } from '@dxos/debug';
 import { type DatabaseDirectory, SpaceDocVersion, createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { RuntimeProvider } from '@dxos/effect';
 import { FeedStore } from '@dxos/feed';
-import { IndexEngine } from '@dxos/index-core';
+import { IndexEngine, type SqlTransaction } from '@dxos/index-core';
 import { IndexMetadataStore, IndexStore, Indexer } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
@@ -100,7 +100,7 @@ export class EchoHost extends Resource {
   private readonly _automergeDataSource: AutomergeDataSource;
   private readonly _indexer2: IndexEngine;
   private readonly _indexConfig: EchoHostIndexingConfig;
-  private readonly _runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
+  private readonly _runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransaction>;
   private readonly _feedStore?: FeedStore;
   private readonly _queueDataSource?: QueueDataSource;
 
