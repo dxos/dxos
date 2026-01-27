@@ -33,31 +33,30 @@ export const mapMessage = Effect.fn(function* (message: GoogleMail.Message) {
   // Normalize text.
   const text = normalizeText(Buffer.from(data, 'base64').toString('utf-8'));
 
-  return Obj.make(
-    Message.Message,
-    {
-      id: Obj.ID.random(),
-      created,
-      sender,
-      blocks: [
-        {
-          _tag: 'text',
-          text,
-        },
-      ],
-      properties: {
-        threadId: message.threadId,
-        snippet: message.snippet,
-        subject: message.payload.headers.find(({ name }) => name === 'Subject')?.value,
-        labels: message.labelIds,
-        messageId: message.payload.headers.find(({ name }) => name === 'Message-ID')?.value,
-        references: message.payload.headers.find(({ name }) => name === 'References')?.value,
-        to: message.payload.headers.find(({ name }) => name === 'To')?.value,
-        cc: message.payload.headers.find(({ name }) => name === 'Cc')?.value,
-      },
-    },
-    {
+  return Obj.make(Message.Message, {
+    [Obj.Meta]: {
       keys: [{ id: message.id, source: 'gmail.com' }],
     },
-  );
+
+    created,
+    sender,
+
+    properties: {
+      threadId: message.threadId,
+      snippet: message.snippet,
+      subject: message.payload.headers.find(({ name }) => name === 'Subject')?.value,
+      labels: message.labelIds,
+      messageId: message.payload.headers.find(({ name }) => name === 'Message-ID')?.value,
+      references: message.payload.headers.find(({ name }) => name === 'References')?.value,
+      to: message.payload.headers.find(({ name }) => name === 'To')?.value,
+      cc: message.payload.headers.find(({ name }) => name === 'Cc')?.value,
+    },
+
+    blocks: [
+      {
+        _tag: 'text',
+        text,
+      },
+    ],
+  });
 });

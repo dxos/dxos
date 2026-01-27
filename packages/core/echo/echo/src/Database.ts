@@ -210,6 +210,8 @@ export class Service extends Context.Tag('@dxos/echo/Database/Service')<
     return Layer.succeed(Service, Service.make(db));
   };
 
+  // TODO(dmaretskyi): Move all those to the top-level API of Database.ts module.
+
   /**
    * Returns the space ID of the database.
    */
@@ -266,6 +268,7 @@ export class Service extends Context.Tag('@dxos/echo/Database/Service')<
   /**
    * Loads an object reference option.
    */
+  // TODO(dmaretskyi): Do we need this -- you can just use `Effect.catchTag` in calling code instead.
   static loadOption: <T>(ref: Ref.Ref<T>) => Effect.Effect<Option.Option<T>, never, never> = Effect.fn(function* (ref) {
     const object = yield* Service.load(ref).pipe(
       Effect.catchTag('ObjectNotFoundError', () => Effect.succeed(undefined)),
