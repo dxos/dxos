@@ -67,7 +67,7 @@ export const Mock = (data: { people?: Person.Person[]; organizations?: Organizat
 
 const createOrganizationResolver = Effect.gen(function* () {
   // Cache.
-  const organizations = yield* Database.Service.runQuery(Query.select(Filter.type(Organization.Organization)));
+  const organizations = yield* Database.runQuery(Query.select(Filter.type(Organization.Organization)));
   const resolver: InboxResolverFunction<Organization.Organization> = ({ email }: HasEmail) => {
     const domain = extractDomain(email);
     return Effect.succeed(
@@ -82,7 +82,7 @@ const createOrganizationResolver = Effect.gen(function* () {
 
 const createPersonResolver = Effect.gen(function* () {
   // Cache.
-  const contacts = yield* Database.Service.runQuery(Query.select(Filter.type(Person.Person)));
+  const contacts = yield* Database.runQuery(Query.select(Filter.type(Person.Person)));
   const resolver: InboxResolverFunction<Person.Person> = ({ email }: HasEmail) => {
     return Effect.succeed(contacts.find((contact) => contact.emails?.some(({ value }) => value === email)));
   };

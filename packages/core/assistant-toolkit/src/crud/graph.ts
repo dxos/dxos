@@ -115,7 +115,7 @@ export const LocalSearchToolkit = Toolkit.make(
 
 export const LocalSearchHandler = LocalSearchToolkit.toLayer({
   search_local_search: Effect.fn(function* ({ query }) {
-    const objects = yield* Database.Service.runQuery(Query.select(Filter.text(query, { type: 'vector' })));
+    const objects = yield* Database.runQuery(Query.select(Filter.text(query, { type: 'vector' })));
     const results = [...objects];
 
     const option = yield* Effect.serviceOption(ContextQueueService);

@@ -24,8 +24,8 @@ export default defineFunction({
   }),
   outputSchema: Schema.Void,
   handler: Effect.fn(function* ({ data: { id, content } }) {
-    const doc = yield* Database.Service.resolve(ArtifactId.toDXN(id), Markdown.Document);
-    const text = yield* Database.Service.load(doc.content);
+    const doc = yield* Database.resolve(ArtifactId.toDXN(id), Markdown.Document);
+    const text = yield* Database.load(doc.content);
     text.content = content;
   }),
 });

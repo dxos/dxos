@@ -51,10 +51,8 @@ export const add = Command.make(
         return metadata?.createObject ? (metadata as Metadata) : undefined;
       };
 
-      const [properties] = yield* Database.Service.runQuery(Filter.type(SpaceProperties));
-      const collection = yield* Database.Service.load<Collection.Collection>(
-        properties[Collection.Collection.typename],
-      );
+      const [properties] = yield* Database.runQuery(Filter.type(SpaceProperties));
+      const collection = yield* Database.load<Collection.Collection>(properties[Collection.Collection.typename]);
 
       const selectedTypename = yield* Option.match(typename, {
         onNone: () => selectTypename(resolve),
@@ -92,7 +90,7 @@ export const add = Command.make(
  * Prompts for typename selection if not provided.
  */
 const selectTypename = Effect.fn(function* (resolve: (typename: string) => Metadata | undefined) {
-  const schemas = yield* Database.Service.runSchemaQuery({
+  const schemas = yield* Database.runSchemaQuery({
     location: ['database', 'runtime'],
     includeSystem: false,
   }).pipe(

@@ -129,8 +129,8 @@ export const waitForSync = Effect.fn(function* (space: Space) {
 });
 
 export const flushAndSync = Effect.fn(function* (opts?: Database.FlushOptions) {
-  yield* Database.Service.flush(opts);
-  const spaceId = yield* Database.Service.spaceId;
+  yield* Database.flush(opts);
+  const spaceId = yield* Database.spaceId;
   const space = yield* getSpace(spaceId);
   yield* waitForSync(space);
 });

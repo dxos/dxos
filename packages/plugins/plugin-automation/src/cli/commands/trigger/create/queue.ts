@@ -36,7 +36,7 @@ export const queue = Command.make(
         onNone: () => selectFunction(),
         onSome: (id) => Effect.succeed(id),
       });
-      const functions = yield* Database.Service.runQuery(Filter.type(Function.Function));
+      const functions = yield* Database.runQuery(Filter.type(Function.Function));
       const fn = functions.find((fn) => fn.id === functionId);
       if (!fn) {
         return yield* Effect.fail(new Error(`Function not found: ${functionId}`));
@@ -72,7 +72,7 @@ export const queue = Command.make(
         input,
       });
 
-      yield* Database.Service.add(trigger);
+      yield* Database.add(trigger);
 
       if (json) {
         yield* Console.log(JSON.stringify(trigger, null, 2));

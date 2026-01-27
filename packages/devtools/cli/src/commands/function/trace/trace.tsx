@@ -49,7 +49,7 @@ export const trace = Command.make(
       log.info('trace: command starting', { spaceId, functionId, localTriggers });
 
       // Query for SpaceProperties to get the invocation trace queue DXN.
-      const objects = yield* Database.Service.runQuery(Filter.type(SpaceProperties));
+      const objects = yield* Database.runQuery(Filter.type(SpaceProperties));
       const properties = objects.at(0);
       invariant(properties, 'SpaceProperties not found');
       const queueDxn = properties.invocationTraceQueue?.dxn;

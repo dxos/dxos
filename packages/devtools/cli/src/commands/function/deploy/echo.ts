@@ -87,7 +87,7 @@ export const upsertFunctionObject: (opts: {
 const makeObjectNavigableInComposer = Effect.fn(function* (space: Space, obj: Obj.Any) {
   const collectionRef = space.properties['dxos.org/type/Collection'] as Ref.Ref<Collection.Collection> | undefined;
   if (collectionRef) {
-    const collection = yield* Database.Service.load(collectionRef);
+    const collection = yield* Database.load(collectionRef);
     if (collection) {
       collection.objects.push(Ref.make(obj));
     }
@@ -118,7 +118,7 @@ export const upsertComposerScript = Effect.fn(function* ({
       yield* Console.log('Updated composer script', script.id);
     }
   } else {
-    const obj = yield* Database.Service.add(Script.make({ name: scriptFileName, source: scriptFileContent }));
+    const obj = yield* Database.add(Script.make({ name: scriptFileName, source: scriptFileContent }));
     functionObject.source = Ref.make(obj);
     yield* makeObjectNavigableInComposer(space, obj);
     if (verbose) {

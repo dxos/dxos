@@ -42,14 +42,14 @@ describe('Design Blueprint', { timeout: 120_000 }, () => {
         const queue = yield* QueueService.createQueue<Message.Message | ContextBinding>();
         const conversation = yield* acquireReleaseResource(() => new AiConversation({ queue }));
 
-        yield* Database.Service.add(blueprint);
+        yield* Database.add(blueprint);
         yield* Effect.promise(() =>
           conversation.context.bind({
             blueprints: [Ref.make(blueprint)],
           }),
         );
 
-        const artifact = yield* Database.Service.add(Markdown.make({ content: 'Hello, world!' }));
+        const artifact = yield* Database.add(Markdown.make({ content: 'Hello, world!' }));
         let prevContent = artifact.content;
 
         {

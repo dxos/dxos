@@ -56,7 +56,7 @@ const DefaultStory = ({ generator = [], delay = 0, wait, ...props }: StoryProps)
           }
         }
         setDone(true);
-      }).pipe(Effect.provide(Layer.mergeAll(Database.Service.layer(space.db), ContextQueueService.layer(queue)))),
+      }).pipe(Effect.provide(Layer.mergeAll(Database.layer(space.db), ContextQueueService.layer(queue)))),
     );
 
     return () => {

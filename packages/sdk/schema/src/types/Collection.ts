@@ -57,9 +57,9 @@ export const add = Effect.fn(function* ({ object, target, hidden }: AddProps) {
       t.objects.push(objectRef);
     });
   } else if (hidden) {
-    yield* Database.Service.add(object);
+    yield* Database.add(object);
   } else {
-    const objects = yield* Database.Service.runQuery(Query.type(SpaceProperties));
+    const objects = yield* Database.runQuery(Query.type(SpaceProperties));
     invariant(objects.length === 1, 'Space properties not found');
     const properties: Expando = objects[0];
 

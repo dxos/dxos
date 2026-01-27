@@ -37,7 +37,7 @@ export const queue = Command.make(
         onSome: (id) => Effect.succeed(id),
       });
       const dxn = DXN.fromLocalObjectId(triggerId);
-      const trigger = yield* Database.Service.resolve(dxn, Trigger.Trigger);
+      const trigger = yield* Database.resolve(dxn, Trigger.Trigger);
       if (trigger.spec?.kind !== 'queue') {
         return yield* Effect.fail(new Error(`Invalid trigger type: ${trigger.spec?.kind}`));
       }
@@ -68,7 +68,7 @@ export const queue = Command.make(
  */
 const updateFunction = Effect.fn(function* (trigger: Trigger.Trigger, functionIdOption: Option.Option<string>) {
   let currentFn: Function.Function | undefined = trigger.function
-    ? yield* Database.Service.load(trigger.function) as any
+    ? yield* Database.load(trigger.function) as any
     : undefined;
   if (currentFn && !Obj.instanceOf(Function.Function, currentFn)) {
     currentFn = undefined;
@@ -87,7 +87,7 @@ const updateFunction = Effect.fn(function* (trigger: Trigger.Trigger, functionId
       onNone: () => selectFunction(),
       onSome: (id) => Effect.succeed(id),
     });
-    const functions = yield* Database.Service.runQuery(Filter.type(Function.Function));
+    const functions = yield* Database.runQuery(Filter.type(Function.Function));
     const foundFn = functions.find((fn) => fn.id === functionId);
     if (!foundFn || !Obj.instanceOf(Function.Function, foundFn)) {
       return yield* Effect.fail(new Error(`Function not found: ${functionId}`));

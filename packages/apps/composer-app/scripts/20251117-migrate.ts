@@ -38,13 +38,13 @@ const migrateViewType = Effect.fn(function* (
     targetSchema: Type.getDXN(targetSchema)?.toString(),
   });
 
-  const objects = yield* Database.Service.runQuery(
+  const objects = yield* Database.runQuery(
     Query.select(Filter.type(currentSchema)).referencedBy(View.ViewV4, 'presentation'),
   );
 
   for (const object of objects) {
     const { name, presentation: ref, ...view } = object;
-    const presentation = yield* Database.Service.load(ref);
+    const presentation = yield* Database.load(ref);
     yield* Effect.promise(() =>
       db.coreDatabase.atomicReplaceObject(presentation.id, {
         data: {
@@ -115,8 +115,8 @@ const command = Command.make(
       migrateViewType(space.internal.db, Masonry.MasonryV1, Masonry.Masonry),
       migrateViewType(space.internal.db, Table.TableV1, Table.Table),
     ]).pipe(
-      Effect.andThen(() => Database.Service.flush()),
-      Effect.provide(Database.Service.layer(space.db)),
+      Effect.andThen(() => Database.flush()),
+      Effect.provide(Database.layer(space.db)),
     );
 
     log.info('exporting', { spaceId: space.id });

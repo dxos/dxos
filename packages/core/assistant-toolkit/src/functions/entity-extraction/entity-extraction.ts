@@ -74,7 +74,7 @@ export default defineFunction({
         if (created.length > 1) {
           throw new Error('Multiple organizations created');
         } else if (created.length === 1) {
-          organization = yield* Database.Service.resolve(created[0], Organization.Organization);
+          organization = yield* Database.resolve(created[0], Organization.Organization);
           Obj.change(organization, (o) => {
             Obj.getMeta(o).tags ??= [];
             Obj.getMeta(o).tags!.push(...(tags ?? []));
@@ -112,7 +112,7 @@ const extractContact = Effect.fn('extractContact')(function* (actor: Actor.Actor
     return undefined;
   }
 
-  const existingContacts = yield* Database.Service.runQuery(Filter.type(Person.Person));
+  const existingContacts = yield* Database.runQuery(Filter.type(Person.Person));
 
   // Check for existing contact
   // TODO(dmaretskyi): Query filter DSL - https://linear.app/dxos/issue/DX-541/filtercontains-should-work-with-partial-objects
@@ -129,7 +129,7 @@ const extractContact = Effect.fn('extractContact')(function* (actor: Actor.Actor
     [Obj.Meta]: { tags },
     emails: [{ value: email }],
   });
-  yield* Database.Service.add(newContact);
+  yield* Database.add(newContact);
 
   if (name) {
     Obj.change(newContact, (c) => {
@@ -145,7 +145,7 @@ const extractContact = Effect.fn('extractContact')(function* (actor: Actor.Actor
 
   log.info('extracted email domain', { emailDomain });
 
-  const existingOrganisations = yield* Database.Service.runQuery(Filter.type(Organization.Organization));
+  const existingOrganisations = yield* Database.runQuery(Filter.type(Organization.Organization));
   const matchingOrg = existingOrganisations.find((org) => {
     if (org.website) {
       try {

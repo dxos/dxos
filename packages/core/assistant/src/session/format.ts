@@ -34,7 +34,7 @@ export const formatSystemPrompt = ({
     const blueprintDefs = yield* Function.pipe(
       blueprints,
       Effect.forEach((blueprint) => Effect.succeed(blueprint.instructions)),
-      Effect.flatMap(Effect.forEach((template) => Database.Service.loadOption(template.source))),
+      Effect.flatMap(Effect.forEach((template) => Database.loadOption(template.source))),
       Effect.map(Array.filter(Option.isSome)),
       Effect.map(
         Array.map(

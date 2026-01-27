@@ -68,13 +68,13 @@ describe('Research', () => {
     'call a function to generate a research report',
     Effect.fnUntraced(
       function* (_) {
-        yield* Database.Service.add(
+        yield* Database.add(
           Obj.make(Organization.Organization, {
             name: 'BlueYard',
             website: 'https://blueyard.com',
           }),
         );
-        yield* Database.Service.flush({ indexes: true });
+        yield* Database.flush({ indexes: true });
         const result = yield* FunctionInvocationService.invokeFunction(research, {
           query: 'Founders and portfolio of BlueYard.',
         });
@@ -82,10 +82,10 @@ describe('Research', () => {
         console.log(inspect(result, { depth: null, colors: true }));
         console.log(JSON.stringify(result, null, 2));
 
-        yield* Database.Service.flush({ indexes: true });
+        yield* Database.flush({ indexes: true });
         const researchGraph = yield* queryResearchGraph();
         if (researchGraph) {
-          const data = yield* Database.Service.load(researchGraph.queue).pipe(
+          const data = yield* Database.load(researchGraph.queue).pipe(
             Effect.flatMap((queue) => Effect.promise(() => queue.queryObjects())),
           );
           console.log(inspect(data, { depth: null, colors: true }));
@@ -101,7 +101,7 @@ describe('Research', () => {
     'create and update research report',
     Effect.fnUntraced(
       function* (_) {
-        const organization = yield* Database.Service.add(
+        const organization = yield* Database.add(
           Obj.make(Organization.Organization, {
             name: 'BlueYard',
             website: 'https://blueyard.com',
@@ -111,9 +111,9 @@ describe('Research', () => {
         const queue = yield* QueueService.createQueue<Message.Message | ContextBinding>();
         const conversation = yield* acquireReleaseResource(() => new AiConversation({ queue }));
 
-        yield* Database.Service.flush({ indexes: true });
-        const researchBlueprint = yield* Database.Service.add(Obj.clone(ResearchBlueprint));
-        const markdownBlueprint = yield* Database.Service.add(Obj.clone(MarkdownBlueprint.make()));
+        yield* Database.flush({ indexes: true });
+        const researchBlueprint = yield* Database.add(Obj.clone(ResearchBlueprint));
+        const markdownBlueprint = yield* Database.add(Obj.clone(MarkdownBlueprint.make()));
         yield* Effect.promise(() =>
           conversation.context.bind({
             blueprints: [Ref.make(researchBlueprint), Ref.make(markdownBlueprint)],
@@ -128,7 +128,7 @@ describe('Research', () => {
           prompt: `Create a research summary about ${organization.name}.`,
         });
         {
-          const docs = yield* Database.Service.runQuery(
+          const docs = yield* Database.runQuery(
             Query.select(Filter.id(organization.id)).targetOf(HasSubject.HasSubject).source(),
           );
           if (docs.length !== 1) {
@@ -139,7 +139,7 @@ describe('Research', () => {
           invariant(Obj.instanceOf(Markdown.Document, doc));
           console.log({
             name: doc.name,
-            content: yield* Database.Service.load(doc.content).pipe(Effect.map((_) => _.content)),
+            content: yield* Database.load(doc.content).pipe(Effect.map((_) => _.content)),
           });
         }
 
@@ -148,7 +148,7 @@ describe('Research', () => {
           prompt: 'Add a section about their portfolio.',
         });
         {
-          const docs = yield* Database.Service.runQuery(
+          const docs = yield* Database.runQuery(
             Query.select(Filter.id(organization.id)).targetOf(HasSubject.HasSubject).source(),
           );
           if (docs.length !== 1) {
@@ -159,7 +159,7 @@ describe('Research', () => {
           invariant(Obj.instanceOf(Markdown.Document, doc));
           console.log({
             name: doc.name,
-            content: yield* Database.Service.load(doc.content).pipe(Effect.map((_) => _.content)),
+            content: yield* Database.load(doc.content).pipe(Effect.map((_) => _.content)),
           });
         }
       },

@@ -32,7 +32,7 @@ const TestRouter = AiModelResolver.AiModelResolver.buildAiService.pipe(
 
 const TestLayer = Function.pipe(
   AiService.model('@anthropic/claude-3-5-sonnet-20241022'),
-  Layer.provideMerge(Database.Service.notAvailable),
+  Layer.provideMerge(Database.notAvailable),
   Layer.provideMerge(ToolResolverService.layerEmpty),
   Layer.provideMerge(ToolExecutionService.layerEmpty),
   Layer.provide(TestRouter),

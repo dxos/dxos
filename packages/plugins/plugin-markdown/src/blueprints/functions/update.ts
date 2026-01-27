@@ -30,7 +30,7 @@ export default defineFunction({
   }),
   outputSchema: Schema.Void,
   handler: Effect.fn(function* ({ data: { id, diffs } }) {
-    const object = yield* Database.Service.resolve(ArtifactId.toDXN(id), Markdown.Document);
+    const object = yield* Database.resolve(ArtifactId.toDXN(id), Markdown.Document);
     const content = yield* Effect.promise(() => object.content.load());
     const accessor = createDocAccessor(content, ['content']);
     applyDiffs(accessor, diffs);

@@ -15,7 +15,7 @@ export default defineFunction({
   inputSchema: Schema.Any,
   outputSchema: Schema.Any,
   handler: Effect.fn(function* ({ data }) {
-    const results = yield* Database.Service.runQuery(Query.select(Filter.everything()));
+    const results = yield* Database.runQuery(Query.select(Filter.everything()));
     return { count: results.length };
   }),
 });

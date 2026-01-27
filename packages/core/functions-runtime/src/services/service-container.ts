@@ -106,7 +106,7 @@ export class ServiceContainer {
     const database =
       this._services.database != null
         ? Layer.succeed(Database.Service, this._services.database)
-        : Database.Service.notAvailable;
+        : Database.notAvailable;
     const queues =
       this._services.queues != null ? Layer.succeed(QueueService, this._services.queues) : QueueService.notAvailable;
     const tracing = Layer.succeed(TracingService, this._services.tracing ?? TracingService.noop);

@@ -32,12 +32,12 @@ export const remove = Command.make(
         onSome: (value) =>
           Effect.gen(function* () {
             const dxn = DXN.fromLocalObjectId(value);
-            return yield* Database.Service.resolve(dxn, AccessToken.AccessToken);
+            return yield* Database.resolve(dxn, AccessToken.AccessToken);
           }),
         onNone: () =>
           Effect.gen(function* () {
             const filter = Filter.type(AccessToken.AccessToken);
-            const tokens = yield* Database.Service.runQuery(filter);
+            const tokens = yield* Database.runQuery(filter);
 
             if (tokens.length === 0) {
               return yield* Effect.fail(new Error('No tokens found to remove'));
@@ -54,10 +54,10 @@ export const remove = Command.make(
             }).pipe(Prompt.run);
 
             const dxn = DXN.fromLocalObjectId(selectedId);
-            return yield* Database.Service.resolve(dxn, AccessToken.AccessToken);
+            return yield* Database.resolve(dxn, AccessToken.AccessToken);
           }),
       });
-      yield* Database.Service.remove(token);
+      yield* Database.remove(token);
 
       if (json) {
         yield* Console.log(

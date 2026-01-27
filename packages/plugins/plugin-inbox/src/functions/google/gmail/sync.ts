@@ -101,7 +101,7 @@ export default defineFunction({
   }) =>
     Effect.gen(function* () {
       log('syncing gmail', { mailbox: mailboxRef.dxn.toString(), userId, after, restrictedMode });
-      const mailbox = yield* Database.Service.load(mailboxRef);
+      const mailbox = yield* Database.load(mailboxRef);
 
       // Get labels.
       const labelCount = yield* syncLabels(mailbox, userId).pipe(

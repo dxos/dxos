@@ -79,7 +79,7 @@ export const TestDatabaseLayer = ({ indexing, types, spaceKey, storagePath, onIn
 
           if (onInit) {
             yield* onInit().pipe(
-              Effect.provideService(Database.Service, Database.Service.make(db)),
+              Effect.provideService(Database.Service, Database.make(db)),
               Effect.provideService(QueueService, QueueService.make(queues, undefined)),
             );
           }
@@ -94,7 +94,7 @@ export const TestDatabaseLayer = ({ indexing, types, spaceKey, storagePath, onIn
         queues = peer.client.constructQueueFactory(db.spaceId);
         if (onInit) {
           yield* onInit().pipe(
-            Effect.provideService(Database.Service, Database.Service.make(db)),
+            Effect.provideService(Database.Service, Database.make(db)),
             Effect.provideService(QueueService, QueueService.make(queues, undefined)),
           );
         }
@@ -114,7 +114,7 @@ export const TestDatabaseLayer = ({ indexing, types, spaceKey, storagePath, onIn
       );
 
       return Context.mergeAll(
-        Context.make(Database.Service, Database.Service.make(db)),
+        Context.make(Database.Service, Database.make(db)),
         Context.make(QueueService, QueueService.make(queues, undefined)),
       );
     }),

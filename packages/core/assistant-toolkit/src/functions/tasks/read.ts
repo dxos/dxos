@@ -23,10 +23,10 @@ export default defineFunction({
     content: Schema.String,
   }),
   handler: Effect.fn(function* ({ data: { id } }) {
-    const doc = yield* Database.Service.resolve(ArtifactId.toDXN(id), Markdown.Document);
+    const doc = yield* Database.resolve(ArtifactId.toDXN(id), Markdown.Document);
 
     // Return content with line numbers prefixed.
-    const { content } = yield* Database.Service.load(doc.content);
+    const { content } = yield* Database.load(doc.content);
     const lines = content.split('\n');
     const len = String(lines.length).length;
     const numbered = lines.map((line, i) => `${String(i + 1).padStart(len, ' ')}. ${line}`).join('\n');

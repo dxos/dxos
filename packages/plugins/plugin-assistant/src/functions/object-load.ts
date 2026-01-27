@@ -30,7 +30,7 @@ export default defineFunction({
     object: Schema.Any,
   }),
   handler: Effect.fn(function* ({ data: { id, typename } }) {
-    const object = yield* Database.Service.resolve(ArtifactId.toDXN(id));
+    const object = yield* Database.resolve(ArtifactId.toDXN(id));
     return yield* Function.pipe(
       Option.fromNullable(object),
       Option.flatMap((object) => (Obj.getTypename(object) === typename ? Option.some(object) : Option.none())),

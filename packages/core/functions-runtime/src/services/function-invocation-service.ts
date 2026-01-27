@@ -94,6 +94,6 @@ export const FunctionInvocationServiceLayerTestMocked = ({
   FunctionInvocationServiceLayerTest({ functions }).pipe(
     Layer.provide(AiService.notAvailable),
     Layer.provide(CredentialsService.configuredLayer([])),
-    Layer.provide(Database.Service.notAvailable),
+    Layer.provide(Database.notAvailable),
     Layer.provide(QueueService.notAvailable),
   );

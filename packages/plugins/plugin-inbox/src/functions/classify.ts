@@ -54,7 +54,7 @@ export default defineFunction({
       log.info('classify message', { message });
 
       // Query all Tag objects
-      const tags = yield* Database.Service.runQuery(Filter.type(Tag.Tag));
+      const tags = yield* Database.runQuery(Filter.type(Tag.Tag));
       log.info('tags', { count: tags.length });
 
       if (tags.length === 0) {
@@ -136,7 +136,7 @@ export default defineFunction({
       yield* QueueService.append(queue, [relation]).pipe(Effect.provide(ContextQueueService.layer(queue)));
 
       // TODO(wittjosiah): Flush queue?
-      yield* Database.Service.flush();
+      yield* Database.flush();
 
       return {
         tagId: Obj.getDXN(selectedTag).toString(),
