@@ -9,16 +9,6 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { SERVICES_CONFIG } from '@dxos/ai/testing';
-import {
-  ActivationEvent,
-  Capability,
-  type CapabilityManager,
-  Common,
-  OperationPlugin,
-  Plugin,
-  RuntimePlugin,
-  SettingsPlugin,
-} from '@dxos/app-framework';
 import { ActivationEvent, Capability, type CapabilityManager, Common, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AiContextBinder, ArtifactId, GenericToolkit } from '@dxos/assistant';

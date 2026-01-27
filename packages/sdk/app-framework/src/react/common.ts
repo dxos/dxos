@@ -5,8 +5,6 @@
 import { type Atom, RegistryContext, useAtomValue } from '@effect-atom/atom-react';
 import { useCallback, useContext } from 'react';
 
-import type { OperationInvoker } from '@dxos/operation';
-
 import * as Common from '../common';
 
 import { useAtomCapability, useCapability } from './useCapabilities';

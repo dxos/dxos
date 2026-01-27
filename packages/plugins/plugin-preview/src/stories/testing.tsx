@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import type * as Schema from 'effect/Schema';
 import React, { type FC } from 'react';
 
 import { Obj, Ref, type Type } from '@dxos/echo';
@@ -43,8 +44,10 @@ export const DefaultStory = <T extends Obj.Any>({ Component, object, image }: De
 
 export const omitImage = ({ image: _, ...rest }: any) => rest;
 
-// TODO(burdon): Type of schema and object should agree?
-export const createObject = <T extends Obj.Any>(type: Type.Obj.Any): T => {
+/**
+ * Creates a test object for a given schema type.
+ */
+export const createObject = <S extends Type.Obj.Any>(type: S): Schema.Schema.Type<S> => {
   switch (type) {
     case Organization.Organization: {
       return Obj.make(Organization.Organization, {
@@ -53,7 +56,7 @@ export const createObject = <T extends Obj.Any>(type: Type.Obj.Any): T => {
           'https://plus.unsplash.com/premium_photo-1672116452571-896980a801c8?q=80&w=2671&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
         website: faker.internet.url(),
         description: faker.lorem.paragraph(),
-      }) as T;
+      }) as Schema.Schema.Type<S>;
     }
 
     case Person.Person: {
@@ -77,7 +80,7 @@ export const createObject = <T extends Obj.Any>(type: Type.Obj.Any): T => {
             value: faker.internet.email(),
           },
         ],
-      }) as T;
+      }) as Schema.Schema.Type<S>;
     }
 
     case Project.Project: {
@@ -86,14 +89,14 @@ export const createObject = <T extends Obj.Any>(type: Type.Obj.Any): T => {
         image: 'https://dxos.network/dxos-logotype-blue.png',
         description: faker.lorem.paragraph(),
         columns: [],
-      }) as T;
+      }) as Schema.Schema.Type<S>;
     }
 
     case Task.Task: {
       return Obj.make(Task.Task, {
         title: faker.lorem.sentence(),
-        status: faker.helpers.arrayElement(['todo', 'in-progress', 'done']),
-      }) as T;
+        status: faker.helpers.arrayElement(['todo', 'in-progress', 'done'] as const),
+      }) as Schema.Schema.Type<S>;
     }
 
     default: {

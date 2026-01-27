@@ -36,9 +36,7 @@ const meta = {
 
 export default meta;
 
-type Story = StoryObj<typeof meta>;
-
-export const _Person: Story = {
+export const _Person: StoryObj<typeof DefaultStory<Person.Person>> = {
   args: {
     Component: PersonCard,
     object: createObject(Person.Person),
@@ -46,7 +44,7 @@ export const _Person: Story = {
   },
 };
 
-export const _Organization: Story = {
+export const _Organization: StoryObj<typeof DefaultStory<Organization.Organization>> = {
   args: {
     Component: OrganizationCard,
     object: createObject(Organization.Organization),
@@ -54,7 +52,7 @@ export const _Organization: Story = {
   },
 };
 
-export const _Project: Story = {
+export const _Project: StoryObj<typeof DefaultStory<Project.Project>> = {
   args: {
     Component: ProjectCard,
     object: createObject(Project.Project),
@@ -62,7 +60,7 @@ export const _Project: Story = {
   },
 };
 
-export const _Task: Story = {
+export const _Task: StoryObj<typeof DefaultStory<Task.Task>> = {
   args: {
     Component: TaskCard,
     object: createObject(Task.Task),
