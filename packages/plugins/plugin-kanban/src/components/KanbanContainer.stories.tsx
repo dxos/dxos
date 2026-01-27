@@ -12,7 +12,9 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj, type QueryAST, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { ClientPlugin } from '@dxos/plugin-client';
+import { PreviewPlugin } from '@dxos/plugin-preview';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
+import { SpacePlugin } from '@dxos/plugin-space';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { faker } from '@dxos/random';
 import { Filter, useQuery, useSchema, useSpaces } from '@dxos/react-client/echo';
@@ -147,6 +149,8 @@ const meta = {
               });
             }),
         }),
+        PreviewPlugin(),
+        SpacePlugin({}),
         StorybookPlugin({}),
       ],
     }),
