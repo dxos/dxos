@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useDebugValue } from 'react';
+import React from 'react';
 
 import { Filter } from '@dxos/echo';
 import {
@@ -31,8 +31,6 @@ export const ChatModule = ({ space }: ComponentProps) => {
   const blueprintRegistry = useBlueprintRegistry();
   const services = useChatServices({ id: space?.id, chat });
   const processor = useChatProcessor({ space, chat, preset, services, blueprintRegistry });
-
-  console.log({ chat });
 
   if (!chat || !processor) {
     return null;
