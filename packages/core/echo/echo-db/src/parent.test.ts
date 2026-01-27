@@ -21,6 +21,22 @@ describe('Parent Hierarchy', () => {
     await builder.close();
   });
 
+  test('create object with Obj.Parent in props', async () => {
+    await using peer = await builder.createPeer({ types: [TestSchema.Person, TestSchema.Organization] });
+    await using db = await peer.createDatabase();
+
+    const parent = db.add(Obj.make(TestSchema.Organization, { name: 'DXOS' }));
+    const child = db.add(
+      Obj.make(TestSchema.Person, {
+        [Obj.Parent]: parent,
+        name: 'John',
+      }),
+    );
+
+    expect(child.name).toBe('John');
+    expect(Obj.getParent(child)).toBe(parent);
+  });
+
   test('parent is persisted and loaded', async () => {
     const [spaceKey] = PublicKey.randomSequence();
     await using peer = await builder.createPeer({ types: [TestSchema.Person] });
