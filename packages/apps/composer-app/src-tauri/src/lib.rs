@@ -1,12 +1,15 @@
 //! Composer Tauri application entry point.
 
 mod oauth;
+mod window_state;
 #[cfg(target_os = "macos")]
 mod menubar;
 #[cfg(target_os = "macos")]
 mod spotlight;
 
 use oauth::OAuthServerState;
+use tauri::Manager;
+use window_state::WindowState;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -85,6 +88,17 @@ pub fn run() {
                         .level(log::LevelFilter::Info)
                         .build(),
                 )?;
+            }
+
+            // Restore window state from previous session.
+            if let Some(main_window) = app.get_webview_window("main") {
+                if let Some(saved_state) = WindowState::load(&app.handle()) {
+                    if let Err(e) = saved_state.apply_to_window(&main_window) {
+                        log::warn!("Failed to restore window state: {}", e);
+                    }
+                }
+                // Set up tracking to save window state on resize/move.
+                window_state::setup_window_state_tracking(&main_window);
             }
 
             // Initialize menu bar (macOS only).
