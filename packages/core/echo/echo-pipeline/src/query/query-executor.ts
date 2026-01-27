@@ -12,12 +12,13 @@ import type { Obj } from '@dxos/echo';
 import { ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET } from '@dxos/echo/internal';
 import {
   DatabaseDirectory,
+  EncodedReference,
   type ObjectPropPath,
   ObjectStructure,
   type QueryAST,
   isEncodedReference,
 } from '@dxos/echo-protocol';
-import { type RuntimeProvider, runAndForwardErrors, unwrapExit } from '@dxos/effect';
+import { RuntimeProvider, runAndForwardErrors, unwrapExit } from '@dxos/effect';
 import { type IndexEngine } from '@dxos/index-core';
 import { EscapedPropPath, type FindResult, type Indexer } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
@@ -757,6 +758,90 @@ export class QueryExecutor extends Resource {
             newWorkingSet.push(...results.filter(isNonNullable));
             trace.objectCount = newWorkingSet.length;
 
+            break;
+          }
+        }
+        break;
+      }
+      case 'HierarchyTraversal': {
+        switch (step.traversal.direction) {
+          case 'to-parent': {
+            // Traverse from child to parent using the parent reference in the document.
+            const refs = workingSet
+              .map((item) => {
+                if (!item.doc) {
+                  return null; // TODO(dmaretskyi): Queue items not supported here.
+                }
+                const ref = ObjectStructure.getParent(item.doc);
+                if (!EncodedReference.isEncodedReference(ref)) {
+                  return null;
+                }
+                try {
+                  return {
+                    ref: DXN.parse(ref['/']),
+                    spaceId: item.spaceId,
+                  };
+                } catch {
+                  log.warn('invalid parent reference', { ref: ref['/'] });
+                  return null;
+                }
+              })
+              .filter(isNonNullable);
+
+            const beginLoad = performance.now();
+            const items = await Promise.all(
+              refs.map(({ ref, spaceId }) => this._loadFromDXN(ref, { sourceSpaceId: spaceId })),
+            );
+            trace.documentLoadTime += performance.now() - beginLoad;
+
+            newWorkingSet.push(...items.filter(isNonNullable));
+            trace.objectCount = newWorkingSet.length;
+            break;
+          }
+
+          case 'to-children': {
+            // Traverse from parent to children using indexer2 (SQLite-based index).
+            // Return empty result if indexer2 is not available.
+            if (!this._indexer2 || !this._runtime) {
+              break;
+            }
+
+            // Group working set by spaceId.
+            const bySpace = new Map<SpaceId, ObjectId[]>();
+            for (const item of workingSet) {
+              const existing = bySpace.get(item.spaceId);
+              if (existing) {
+                existing.push(item.objectId);
+              } else {
+                bySpace.set(item.spaceId, [item.objectId]);
+              }
+            }
+
+            // Query children for each space.
+            const allChildren: { spaceId: SpaceId; objectId: ObjectId }[] = [];
+            for (const [spaceId, parentIds] of bySpace) {
+              const children = await this._indexer2
+                .queryChildren({ spaceId: [spaceId], parentIds })
+                .pipe(RuntimeProvider.runPromise(this._runtime));
+
+              for (const child of children) {
+                allChildren.push({ spaceId, objectId: child.objectId as ObjectId });
+              }
+            }
+
+            trace.indexHits += allChildren.length;
+
+            const documentLoadStart = performance.now();
+            const results = await Promise.all(
+              allChildren.map(({ spaceId, objectId }) =>
+                this._loadFromDXN(DXN.fromLocalObjectId(objectId), { sourceSpaceId: spaceId }),
+              ),
+            );
+            trace.documentsLoaded += results.filter(isNonNullable).length;
+            trace.documentLoadTime += performance.now() - documentLoadStart;
+
+            newWorkingSet.push(...results.filter(isNonNullable));
+            trace.objectCount = newWorkingSet.length;
             break;
           }
         }

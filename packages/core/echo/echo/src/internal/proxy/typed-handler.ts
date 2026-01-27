@@ -13,7 +13,7 @@ import { invariant } from '@dxos/invariant';
 
 import { getSchemaDXN } from '../annotations';
 import { ObjectDeletedId } from '../entities';
-import { SchemaId, TypeId } from '../types';
+import { ParentId, SchemaId, TypeId } from '../types';
 
 import { defineHiddenProperty } from './define-hidden-property';
 import { batchEvents, emitEvent } from './event-batch';
@@ -43,6 +43,7 @@ type ProxyTarget = {
    * Schema for the root.
    */
   [SchemaId]: Schema.Schema.AnyNoContext;
+  [ParentId]?: any;
 
   /**
    * For modifications.
@@ -490,6 +491,9 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   private _validateValue(target: any, prop: string | symbol, value: any) {
+    if (prop === ParentId) {
+      return value;
+    }
     const schema = SchemaValidator.getTargetPropertySchema(target, prop);
     const _ = Schema.asserts(schema)(value);
     if (isValidProxyTarget(value)) {

@@ -384,7 +384,7 @@ export class ObjectCore {
 
   getSource(): EncodedReference | undefined {
     const res = this._getRaw([SYSTEM_NAMESPACE, 'source']);
-    if (!res || !isEncodedReference(res)) {
+    if (!res || !EncodedReference.isEncodedReference(res)) {
       return undefined;
     }
     return res;
@@ -397,7 +397,7 @@ export class ObjectCore {
 
   getTarget(): EncodedReference | undefined {
     const res = this._getRaw([SYSTEM_NAMESPACE, 'target']);
-    if (!res || !isEncodedReference(res)) {
+    if (!res || !EncodedReference.isEncodedReference(res)) {
       return undefined;
     }
     return res;
@@ -408,9 +408,25 @@ export class ObjectCore {
     this._setRaw([SYSTEM_NAMESPACE, 'target'], ref);
   }
 
+  getParent(): EncodedReference | undefined {
+    const res = this._getRaw([SYSTEM_NAMESPACE, 'parent']);
+    if (!res || !EncodedReference.isEncodedReference(res)) {
+      return undefined;
+    }
+    return res;
+  }
+
+  setParent(ref: EncodedReference | undefined): void {
+    if (ref === undefined) {
+      this.delete([SYSTEM_NAMESPACE, 'parent']);
+    } else {
+      this._setRaw([SYSTEM_NAMESPACE, 'parent'], ref);
+    }
+  }
+
   getType(): EncodedReference | undefined {
     const res = this._getRaw([SYSTEM_NAMESPACE, 'type']);
-    if (!res || !isEncodedReference(res)) {
+    if (!res || !EncodedReference.isEncodedReference(res)) {
       return undefined;
     }
     return res;
@@ -430,7 +446,32 @@ export class ObjectCore {
 
   isDeleted(): boolean {
     const value = this._getRaw([SYSTEM_NAMESPACE, 'deleted']);
-    return typeof value === 'boolean' ? value : false;
+    const ownDeleted = typeof value === 'boolean' ? value : false;
+    if (ownDeleted) {
+      return true;
+    }
+
+    if (this.database) {
+      const parentRef = this.getParent();
+      if (parentRef) {
+        // TODO(dmaretskyi): Support cross-space parents?
+        // Checks if the reference is pointing to an object in the same space.
+        // TODO(dmaretskyi): This logic is brittle and should be unified with how references are handled elsewhere.
+        const parentDXN = EncodedReference.toDXN(parentRef);
+        const echoDXN = parentDXN.asEchoDXN();
+        if (echoDXN && (echoDXN.spaceId === undefined || echoDXN.spaceId === this.database.spaceKey.toHex())) {
+          const parentId = echoDXN.echoId;
+          // NOTE: We can't use `loadObjectCoreById` here because it might be async and we need a sync check.
+          // If the parent is not loaded, we assume it's not deleted for now, or should we assume deleted?
+          // Given strong dependencies, the parent SHOULD be loaded if the child is loaded.
+          const parent = this.database.getObjectCoreById(parentId);
+          if (parent && parent.isDeleted()) {
+            return true;
+          }
+        }
+      }
+    }
+    return false;
   }
 
   setDeleted(value: boolean): void {
@@ -462,6 +503,11 @@ export class ObjectCore {
       if (targetRef) {
         res.push(EncodedReference.toDXN(targetRef));
       }
+    }
+
+    const parentRef = this.getParent();
+    if (parentRef) {
+      res.push(EncodedReference.toDXN(parentRef));
     }
 
     return res;

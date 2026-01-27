@@ -449,6 +449,22 @@ class QueryClass implements Query$.Any {
     });
   }
 
+  parent(): Query$.Any {
+    return new QueryClass({
+      type: 'hierarchy-traversal',
+      anchor: this.ast,
+      direction: 'to-parent',
+    });
+  }
+
+  children(): Query$.Any {
+    return new QueryClass({
+      type: 'hierarchy-traversal',
+      anchor: this.ast,
+      direction: 'to-children',
+    });
+  }
+
   orderBy(...order: Order$.Any[]): Query$.Any {
     return new QueryClass({
       type: 'order',

@@ -6,7 +6,7 @@ import * as SqlClient from '@effect/sql/SqlClient';
 import type * as SqlError from '@effect/sql/SqlError';
 import * as Effect from 'effect/Effect';
 
-import type { SpaceId } from '@dxos/keys';
+import type { ObjectId, SpaceId } from '@dxos/keys';
 
 import { type IndexCursor, IndexTracker } from './index-tracker';
 import {
@@ -104,6 +104,26 @@ export class IndexEngine {
     return this.#objectMetaIndex.query(query);
   }
 
+  /**
+   * Query children by parent object ids.
+   */
+  queryChildren(query: {
+    spaceId: SpaceId[];
+    parentIds: ObjectId[];
+  }): Effect.Effect<readonly ObjectMeta[], SqlError.SqlError, SqlClient.SqlClient> {
+    return this.#objectMetaIndex.queryChildren(query);
+  }
+
+  /**
+   * Query parent by object id.
+   */
+  queryParent(query: {
+    spaceId: string;
+    objectId: string;
+  }): Effect.Effect<ObjectMeta | null, SqlError.SqlError, SqlClient.SqlClient> {
+    return this.#objectMetaIndex.queryParent(query);
+  }
+
   update(
     dataSource: IndexDataSource,
     opts: { spaceId: SpaceId | null; limit?: number },
@@ -183,6 +203,6 @@ export class IndexEngine {
           return { updated: objects.length, done: false };
         }),
       );
-    }).pipe(Effect.withSpan('IndexEngine.#updateDependentIndex'));
+    }).pipe(Effect.withSpan('IndexEngine.#update'));
   }
 }

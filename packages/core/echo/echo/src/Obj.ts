@@ -29,6 +29,8 @@ import {
   type ObjectJSON,
   type ObjectMeta,
   ObjectVersionId,
+  // TODO(dmaretskyi): Export ParentId?
+  ParentId,
   VersionTypeId,
   getDescription as getDescription$,
   getLabel as getLabel$,
@@ -94,6 +96,7 @@ type Props<T = any> = {
 export type MakeProps<T extends Schema.Schema.AnyNoContext> = {
   id?: ObjectId;
   [Meta]?: Partial<ObjectMeta>;
+  [Parent]?: any;
 } & NoInfer<Props<Schema.Schema.Type<T>>>;
 
 /**
@@ -132,8 +135,16 @@ export const make: {
     delete props[MetaId];
   }
 
-  // Filter undefined values.
-  const filterUndefined = Object.fromEntries(Object.entries(props).filter(([_, v]) => v !== undefined));
+  // Filter undefined values (Object.entries only returns string-keyed properties).
+  const filterUndefined: any = Object.fromEntries(Object.entries(props).filter(([_, v]) => v !== undefined));
+
+  // Copy symbol properties (like ParentId) that Object.entries doesn't include.
+  for (const sym of Object.getOwnPropertySymbols(props)) {
+    const value = (props as any)[sym];
+    if (value !== undefined) {
+      filterUndefined[sym] = value;
+    }
+  }
 
   return makeObject<Schema.Schema.Type<S>>(schema, filterUndefined as any, {
     ...defaultMeta,
@@ -472,6 +483,32 @@ export const setDescription = (entity: Entity.Unknown, description: string) => {
   }
 };
 
+/**
+ * Symbol to set parent when creating objects with `Obj.make`.
+ * @example
+ * ```ts
+ * Obj.make(TestSchema.Person, {
+ *   [Obj.Parent]: parentObject,
+ *   name: 'John',
+ * })
+ * ```
+ */
+export const Parent: unique symbol = ParentId as any;
+
+export const getParent = (entity: Any): Any | undefined => {
+  assertArgument(isObject(entity), 'Expected an object');
+  assumeType<InternalObjectProps>(entity);
+  return entity[ParentId] as Any;
+};
+
+export const setParent = (entity: Entity.Unknown, parent: Any | undefined) => {
+  assertArgument(isObject(entity), 'Expected an object');
+  assertArgument(parent === undefined || isObject(parent), 'Expected an object');
+  assumeType<InternalObjectProps>(entity);
+  assumeType<InternalObjectProps | undefined>(parent);
+  entity[ParentId] = parent;
+};
+
 //
 // JSON
 //
@@ -500,9 +537,26 @@ export const toJSON = (entity: Entity.Unknown): JSON => objectToJSON(entity);
 export const fromJSON: (json: unknown, options?: { refResolver?: Ref.Resolver; dxn?: DXN }) => Promise<Any> =
   objectFromJSON as any;
 
-//
-// Sorting
-//
+export const setDeleted = (entity: Entity.Unknown, value: boolean) => {
+  if (value === false && isObject(entity)) {
+    const parent = getParent(entity);
+    // TODO(dmaretskyi): This is broken because getParent returns undefined if the parent is deleted.
+    if (parent && isDeleted(parent)) {
+      throw new Error('Cannot restore object when parent is deleted.');
+    }
+  }
+
+  // TODO(dmaretskyi): What kind of AI slop is this?
+  const db = getDatabase(entity) as any;
+  // Try coreDatabase first (EchoDatabase), then fallback to direct method (CoreDatabase).
+  const coreDatabase = db?.coreDatabase ?? db;
+  if (coreDatabase && typeof coreDatabase.getObjectCoreById === 'function') {
+    const core = coreDatabase.getObjectCoreById(entity.id);
+    if (core) {
+      core.setDeleted(value);
+    }
+  }
+};
 
 const compare = (a?: string, b?: string) => {
   if (a == null) {

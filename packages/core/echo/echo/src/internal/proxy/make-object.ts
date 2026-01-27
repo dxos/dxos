@@ -8,7 +8,7 @@ import { ObjectId } from '@dxos/keys';
 
 import { getTypeAnnotation } from '../annotations';
 import { Expando } from '../entities';
-import { type AnyProperties, KindId, MetaId, type ObjectMeta, ObjectMetaSchema } from '../types';
+import { type AnyProperties, KindId, MetaId, type ObjectMeta, ObjectMetaSchema, ParentId } from '../types';
 
 import { defineHiddenProperty } from './define-hidden-property';
 import { attachTypedJsonSerializer } from './json-serializer';
@@ -43,9 +43,10 @@ export const makeObject: {
 ): T => {
   // TODO(dmaretskyi): Remove Expando special case.
   if (obj && (objOrSchema as any) !== Expando) {
-    return createReactiveObject<T>({ ...obj } as T, meta, objOrSchema as Schema.Schema<T, any>);
+    // Use Object.assign to copy symbol properties (like ParentId) that spread operator doesn't copy.
+    return createReactiveObject<T>(Object.assign({}, obj) as T, meta, objOrSchema as Schema.Schema<T, any>);
   } else if (obj && (objOrSchema as any) === Expando) {
-    return createReactiveObject<T>({ ...obj } as T, meta, undefined, { expando: true });
+    return createReactiveObject<T>(Object.assign({}, obj) as T, meta, undefined, { expando: true });
   } else {
     return createReactiveObject<T>(objOrSchema as T, meta);
   }
@@ -65,6 +66,12 @@ const createReactiveObject = <T extends AnyProperties>(
     throw new Error('Schema is required for reactive objects. Use Atom for untyped reactive state.');
   }
 
+  // Extract parent from props (can be set via [Obj.Parent]).
+  const parent = (obj as any)[ParentId];
+  if (parent !== undefined) {
+    delete (obj as any)[ParentId];
+  }
+
   // Use Expando schema if the expando option is set but no schema provided.
   const effectiveSchema = schema ?? (options?.expando ? (Expando as unknown as Schema.Schema<T>) : undefined);
 
@@ -77,6 +84,9 @@ const createReactiveObject = <T extends AnyProperties>(
     defineHiddenProperty(obj, KindId, annotation.kind);
   }
   initMeta(obj, meta);
+  if (parent !== undefined) {
+    defineHiddenProperty(obj, ParentId, parent);
+  }
   if (effectiveSchema) {
     prepareTypedTarget(obj, effectiveSchema);
     attachTypedJsonSerializer(obj);
