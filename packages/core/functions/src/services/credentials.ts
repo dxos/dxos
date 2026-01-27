@@ -82,7 +82,7 @@ export class CredentialsService extends Context.Tag('@dxos/functions/Credentials
       }),
     );
 
-  static layerFromDatabase = () =>
+  static layerFromDatabase = ({ caching = false }: { caching?: boolean } = {}) =>
     Layer.effect(
       CredentialsService,
       Effect.gen(function* () {
@@ -91,7 +91,7 @@ export class CredentialsService extends Context.Tag('@dxos/functions/Credentials
 
         const queryCredentials = async (query: CredentialQuery): Promise<ServiceCredential[]> => {
           const cacheKey = JSON.stringify(query);
-          if (cache.has(cacheKey)) {
+          if (caching && cache.has(cacheKey)) {
             return cache.get(cacheKey)!;
           }
 
@@ -103,7 +103,10 @@ export class CredentialsService extends Context.Tag('@dxos/functions/Credentials
               apiKey: accessToken.token,
             }));
 
-          cache.set(cacheKey, credentials);
+          if (caching) {
+            cache.set(cacheKey, credentials);
+          }
+
           return credentials;
         };
 

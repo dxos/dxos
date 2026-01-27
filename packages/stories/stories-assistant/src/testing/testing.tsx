@@ -59,12 +59,16 @@ export const config = {
         storage: {
           persistent: true,
         },
+        enableLocalQueues: true,
       },
       services: SERVICES_CONFIG.REMOTE,
     },
   }),
   local: new Config({
     runtime: {
+      client: {
+        enableLocalQueues: true,
+      },
       services: SERVICES_CONFIG.LOCAL,
     },
   }),
@@ -112,6 +116,7 @@ export const getDecorators = ({
   withPluginManager({
     plugins: [
       // System plugins.
+      RuntimePlugin(),
       AttentionPlugin(),
       AutomationPlugin(),
       GraphPlugin(),
@@ -158,6 +163,8 @@ export const getDecorators = ({
             }
             yield* Effect.promise(() => space.db.flush({ indexes: true }));
           }),
+        // Directly importing the "@dxos/client/opfs-worker" didn't work.
+        createOpfsWorker: () => new Worker(new URL('./opfs-worker', import.meta.url), { type: 'module' }),
         ...props,
       }),
 

@@ -19,7 +19,7 @@ import { MemorySignalManager, MemorySignalManagerContext, type SignalManager } f
 import { MemoryTransportFactory, SwarmNetworkManager } from '@dxos/network-manager';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { type Storage, StorageType, createStorage } from '@dxos/random-access-storage';
-import * as SqliteClient from '@dxos/sql-sqlite/SqliteClient';
+import { layerMemory as sqliteLayerMemory } from '@dxos/sql-sqlite/platform';
 import { BlobStore } from '@dxos/teleport-extension-object-sync';
 
 import { InvitationsHandler, InvitationsManager, SpaceInvitationProtocol } from '../invitations';
@@ -35,8 +35,7 @@ export const createServiceHost = (config: Config, signalManagerContext: MemorySi
     config,
     signalManager: new MemorySignalManager(signalManagerContext),
     transportFactory: MemoryTransportFactory,
-    runtime: ManagedRuntime.make(Layer.merge(SqliteClient.layerMemory({}), Reactivity.layer).pipe(Layer.orDie))
-      .runtimeEffect,
+    runtime: ManagedRuntime.make(Layer.merge(sqliteLayerMemory, Reactivity.layer).pipe(Layer.orDie)).runtimeEffect,
   });
 };
 
@@ -60,9 +59,7 @@ export const createServiceContext = async ({
   const level = createTestLevel();
   await level.open();
 
-  const runtime = ManagedRuntime.make(
-    Layer.merge(SqliteClient.layerMemory({}), Reactivity.layer).pipe(Layer.orDie),
-  ).runtimeEffect;
+  const runtime = ManagedRuntime.make(Layer.merge(sqliteLayerMemory, Reactivity.layer).pipe(Layer.orDie)).runtimeEffect;
 
   return new ServiceContext(storage, level, networkManager, signalManager, undefined, undefined, runtime, {
     invitationConnectionDefaultProps: { teleport: { controlHeartbeatInterval: 200 } },
@@ -127,9 +124,7 @@ export type TestPeerProps = {
 
 export class TestPeer {
   private _props: TestPeerProps = {};
-  private readonly _runtime = ManagedRuntime.make(
-    Layer.merge(SqliteClient.layerMemory({}), Reactivity.layer).pipe(Layer.orDie),
-  );
+  private readonly _runtime = ManagedRuntime.make(Layer.merge(sqliteLayerMemory, Reactivity.layer).pipe(Layer.orDie));
 
   constructor(
     private readonly _signalContext: MemorySignalManagerContext,
