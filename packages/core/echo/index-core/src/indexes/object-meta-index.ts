@@ -11,6 +11,7 @@ import { ATTR_DELETED, ATTR_PARENT, ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET, 
 
 import type { IndexerObject } from './interface';
 import type { Index } from './interface';
+import { DXN, type ObjectId, type SpaceId } from '@dxos/keys';
 
 export const ObjectMeta = Schema.Struct({
   recordId: Schema.Number,
@@ -176,7 +177,7 @@ export class ObjectMetaIndex implements Index {
 
           if (result.length === 0) {
             // TODO(mykola): Handle this case gracefully.
-            yield* Effect.die(
+            return yield* Effect.die(
               new Error(`Object not found in ObjectMetaIndex: ${spaceId}/${documentId ?? queueId}/${objectId}`),
             );
           }
@@ -214,8 +215,8 @@ export class ObjectMetaIndex implements Index {
    */
   queryChildren = Effect.fn('ObjectMetaIndex.queryChildren')(
     (query: {
-      spaceId: string;
-      parentIds: string[];
+      spaceId: SpaceId[];
+      parentIds: ObjectId[];
     }): Effect.Effect<readonly ObjectMeta[], SqlError.SqlError, SqlClient.SqlClient> =>
       Effect.gen(function* () {
         if (query.parentIds.length === 0) {
@@ -223,11 +224,8 @@ export class ObjectMetaIndex implements Index {
         }
 
         const sql = yield* SqlClient.SqlClient;
-        const placeholders = query.parentIds.map(() => '?').join(', ');
-        const rows = yield* sql.unsafe<ObjectMeta>(
-          `SELECT * FROM objectMeta WHERE spaceId = ? AND parent IN (${placeholders})`,
-          [query.spaceId, ...query.parentIds],
-        );
+        const rows =
+          yield* sql<ObjectMeta>`SELECT * FROM objectMeta WHERE spaceId IN ${sql.in(query.spaceId)} AND parent IN ${sql.in(query.parentIds.map((id) => DXN.fromLocalObjectId(id).toString()))}`;
 
         return rows.map((row) => ({
           ...row,

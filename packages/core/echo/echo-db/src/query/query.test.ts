@@ -22,6 +22,7 @@ import { type EchoDatabase } from '../proxy-db';
 import { EchoTestBuilder, type EchoTestPeer, createTmpPath } from '../testing';
 
 import { Filter, Query } from './api';
+import { writeFileSync } from 'fs';
 
 faker.seed(1);
 
@@ -514,14 +515,16 @@ describe('Query', () => {
   });
 
   describe('Traversal', () => {
+    let peer: EchoTestPeer;
     let db: EchoDatabase;
     let person1: TestSchema.Person;
     let person2: TestSchema.Person;
 
     beforeEach(async () => {
-      ({ db } = await builder.createDatabase({
+      peer = await builder.createPeer({
         types: [TestSchema.Person, TestSchema.HasManager, TestSchema.Task],
-      }));
+      });
+      db = await peer.createDatabase();
 
       person1 = db.add(Obj.make(TestSchema.Person, { name: 'Alice' }));
       person2 = db.add(Obj.make(TestSchema.Person, { name: 'Bob' }));
@@ -752,6 +755,8 @@ describe('Query', () => {
         }),
       );
       await db.flush({ indexes: true });
+      // writeFileSync('index-core.db', await peer.exportSqliteDatabase());
+      // console.log('exported ./index-core.db');
 
       // Query for children from parent.
       const objects = await db.query(Query.select(Filter.id(parent.id)).children()).run();

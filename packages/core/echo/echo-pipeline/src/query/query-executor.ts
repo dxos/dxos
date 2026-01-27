@@ -12,12 +12,13 @@ import type { Obj } from '@dxos/echo';
 import { ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET } from '@dxos/echo/internal';
 import {
   DatabaseDirectory,
+  EncodedReference,
   type ObjectPropPath,
   ObjectStructure,
   type QueryAST,
   isEncodedReference,
 } from '@dxos/echo-protocol';
-import { type RuntimeProvider, runAndForwardErrors, unwrapExit } from '@dxos/effect';
+import { RuntimeProvider, runAndForwardErrors, unwrapExit } from '@dxos/effect';
 import { type IndexEngine } from '@dxos/index-core';
 import { EscapedPropPath, type FindResult, type Indexer } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
@@ -754,8 +755,11 @@ export class QueryExecutor extends Resource {
             // Traverse from child to parent using the parent reference in the document.
             const refs = workingSet
               .map((item) => {
+                if (!item.doc) {
+                  return null; // TODO(dmaretskyi): Queue items not supported here.
+                }
                 const ref = ObjectStructure.getParent(item.doc);
-                if (!isEncodedReference(ref)) {
+                if (!EncodedReference.isEncodedReference(ref)) {
                   return null;
                 }
                 try {
@@ -788,8 +792,6 @@ export class QueryExecutor extends Resource {
               break;
             }
 
-            const runtime = await unwrapExit(await this._runtime.make.pipe(Runtime.runPromiseExit));
-
             // Group working set by spaceId.
             const bySpace = new Map<SpaceId, ObjectId[]>();
             for (const item of workingSet) {
@@ -804,11 +806,10 @@ export class QueryExecutor extends Resource {
             // Query children for each space.
             const allChildren: { spaceId: SpaceId; objectId: ObjectId }[] = [];
             for (const [spaceId, parentIds] of bySpace) {
-              const children = await unwrapExit(
-                await this._indexer2
-                  .queryChildren({ spaceId, parentIds })
-                  .pipe(Runtime.runPromiseExit(runtime)),
-              );
+              const children = await this._indexer2
+                .queryChildren({ spaceId: [spaceId], parentIds })
+                .pipe(RuntimeProvider.runPromise(this._runtime));
+
               for (const child of children) {
                 allChildren.push({ spaceId, objectId: child.objectId as ObjectId });
               }

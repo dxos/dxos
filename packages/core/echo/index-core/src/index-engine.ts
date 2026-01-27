@@ -6,7 +6,7 @@ import * as SqlClient from '@effect/sql/SqlClient';
 import type * as SqlError from '@effect/sql/SqlError';
 import * as Effect from 'effect/Effect';
 
-import type { SpaceId } from '@dxos/keys';
+import type { ObjectId, SpaceId } from '@dxos/keys';
 
 import { type IndexCursor, IndexTracker } from './index-tracker';
 import {
@@ -107,8 +107,8 @@ export class IndexEngine {
    * Query children by parent object ids.
    */
   queryChildren(query: {
-    spaceId: string;
-    parentIds: string[];
+    spaceId: SpaceId[];
+    parentIds: ObjectId[];
   }): Effect.Effect<readonly ObjectMeta[], SqlError.SqlError, SqlClient.SqlClient> {
     return this.#objectMetaIndex.queryChildren(query);
   }

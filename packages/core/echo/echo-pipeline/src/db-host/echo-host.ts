@@ -172,8 +172,8 @@ export class EchoHost extends Resource {
     this._queryService = new QueryServiceImpl({
       automergeHost: this._automergeHost,
       indexer: this._indexer,
-      indexer2: this._indexConfig.fullText ? this._indexer2 : undefined,
-      runtime: this._indexConfig.fullText ? this._runtime : undefined,
+      indexer2: this._indexer2,
+      runtime: this._runtime,
       spaceStateManager: this._spaceStateManager,
     });
 
@@ -182,11 +182,9 @@ export class EchoHost extends Resource {
       spaceStateManager: this._spaceStateManager,
       updateIndexes: async () => {
         await this._indexer.updateIndexes();
-        if (this._indexConfig.fullText) {
-          do {
-            await this._updateIndexes.runBlocking();
-          } while (!this._indexesUpToDate);
-        }
+        do {
+          await this._updateIndexes.runBlocking();
+        } while (!this._indexesUpToDate);
       },
     });
 
@@ -264,16 +262,12 @@ export class EchoHost extends Resource {
       await RuntimeProvider.runPromise(this._runtime)(this._feedStore.migrate());
       this._feedStore.onNewBlocks.on(this._ctx, () => {
         this._queryService.invalidateQueries();
-        if (this._indexConfig.fullText) {
-          this._updateIndexes.schedule();
-        }
+        this._updateIndexes.schedule();
       });
     }
 
-    if (this._indexConfig.fullText) {
-      await RuntimeProvider.runPromise(this._runtime)(this._indexer2.migrate());
-      this._updateIndexes = new DeferredTask(this._ctx, this._runUpdateIndexes);
-    }
+    await RuntimeProvider.runPromise(this._runtime)(this._indexer2.migrate());
+    this._updateIndexes = new DeferredTask(this._ctx, this._runUpdateIndexes);
 
     this._spaceStateManager.spaceDocumentListUpdated.on(this._ctx, (e) => {
       if (e.previousRootId) {
@@ -286,13 +280,9 @@ export class EchoHost extends Resource {
     });
     this._automergeHost.documentsSaved.on(this._ctx, () => {
       this._queryService.invalidateQueries();
-      if (this._indexConfig.fullText) {
-        this._updateIndexes.schedule();
-      }
-    });
-    if (this._indexConfig.fullText) {
       this._updateIndexes.schedule();
-    }
+    });
+    this._updateIndexes.schedule();
   }
 
   protected override async _close(ctx: Context): Promise<void> {
