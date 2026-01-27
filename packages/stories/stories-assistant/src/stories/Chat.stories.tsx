@@ -65,8 +65,8 @@ import {
   type ComponentProps,
   ExecutionGraphModule,
   GraphModule,
+  InboxModule,
   InvocationsModule,
-  MessageModule,
   ProjectModule,
   PromptModule,
   ResearchInputModule,
@@ -393,7 +393,7 @@ export const WithMail: Story = {
 export const WithGmail: Story = {
   decorators: getDecorators({
     plugins: [InboxPlugin(), TokenManagerPlugin()],
-    config: config.remote,
+    config: config.persistent,
     types: [Mailbox.Mailbox],
     onInit: async ({ space }) => {
       space.db.add(Mailbox.make({ name: 'Mailbox', space }));
@@ -405,7 +405,7 @@ export const WithGmail: Story = {
   }),
   args: {
     showContext: true,
-    modules: [[ChatModule], [MessageModule, TokenManagerModule]],
+    modules: [[ChatModule], [InboxModule], [TokenManagerModule]],
     blueprints: [AssistantBlueprint.Key, 'dxos.org/blueprint/inbox'],
   },
 };

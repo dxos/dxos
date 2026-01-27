@@ -112,7 +112,17 @@ export type MakeProps<T extends Schema.Schema.AnyNoContext> = {
  * const obj = Obj.make(Person, { [Obj.Meta]: { keys: [...] }, name: 'John' });
  * ```
  */
-export const make = <S extends Schema.Schema.AnyNoContext>(
+export const make: {
+  <S extends Schema.Schema.AnyNoContext>(schema: S, props: MakeProps<S>): Obj<Schema.Schema.Type<S>>;
+  /**
+   * @deprecated Pass meta as in the example: `Obj.make(Person, { [Obj.Meta]: { keys: [...] }, name: 'John' })`.
+   */
+  <S extends Schema.Schema.AnyNoContext>(
+    schema: S,
+    props: MakeProps<S>,
+    meta: Partial<ObjectMeta>,
+  ): Obj<Schema.Schema.Type<S>>;
+} = <S extends Schema.Schema.AnyNoContext>(
   schema: S,
   props: MakeProps<S>,
   meta?: Partial<ObjectMeta>,

@@ -50,7 +50,7 @@ export const bundleDepsPlugin = (options: BundleDepsPluginOptions): Plugin => ({
         });
       }
 
-      // Ignore external imports.
+      // Keep subpath imports (#) as external - let the consuming code do the resolution.
       if (args.path.startsWith('#')) {
         return { external: true, path: args.path };
       }

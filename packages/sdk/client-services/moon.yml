@@ -9,4 +9,8 @@ tasks:
     args:
       - '--entryPoint=src/index.ts'
       - '--entryPoint=src/testing/index.ts'
+      - '--entryPoint=src/packlets/locks/node.ts'
+      - '--entryPoint=src/packlets/locks/browser.ts'
+      - '--entryPoint=src/packlets/diagnostics/diagnostics-broadcast.ts'
+      - '--entryPoint=src/packlets/diagnostics/browser-diagnostics-broadcast.ts'
       - '--injectGlobals'

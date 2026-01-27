@@ -50,6 +50,9 @@
       "path": "../plugin-graph"
     },
     {
+      "path": "../plugin-preview"
+    },
+    {
       "path": "../plugin-search"
     },
     {

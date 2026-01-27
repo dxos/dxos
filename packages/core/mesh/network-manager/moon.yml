@@ -10,4 +10,6 @@ tasks:
       - '--entryPoint=src/index.ts'
       - '--entryPoint=src/testing/index.ts'
       - '--entryPoint=src/transport/tcp/index.ts'
+      - '--entryPoint=src/transport/tcp/tcp-transport.ts'
+      - '--entryPoint=src/transport/tcp/tcp-transport.browser.ts'
       - '--injectGlobals'

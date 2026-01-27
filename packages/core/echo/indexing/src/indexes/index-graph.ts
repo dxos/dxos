@@ -184,6 +184,10 @@ export class IndexGraph extends Resource implements Index {
     }
   }
 
+  /**
+   * Find all objects that match the given filter.
+   * Returns rank 1 for all matches as ranking is not applicable for graph traversal queries.
+   */
   @trace.span({ showInBrowserTimeline: true })
   async find(filter: IndexQuery): Promise<FindResult[]> {
     if (filter.inverted || filter.typenames.length > 0 || !filter.graph) {
@@ -206,12 +210,12 @@ export class IndexGraph extends Resource implements Index {
               const firstSegmentMatches = prop[0] === property;
               const secondSegmentIsNumeric = !isNaN(Number(prop[1]));
               if (firstSegmentMatches && (prop.length === 1 || (prop.length === 2 && secondSegmentIsNumeric))) {
-                results.push(...Array.from(source).map((id) => ({ id, rank: 0 })));
+                results.push(...Array.from(source).map((id) => ({ id, rank: 1 })));
               }
             }
           } else {
             for (const source of sources.values()) {
-              results.push(...Array.from(source).map((id) => ({ id, rank: 0 })));
+              results.push(...Array.from(source).map((id) => ({ id, rank: 1 })));
             }
           }
         }
@@ -224,7 +228,7 @@ export class IndexGraph extends Resource implements Index {
           if (!sources) {
             continue;
           }
-          results.push(...Array.from(sources).map((id) => ({ id, rank: 0 })));
+          results.push(...Array.from(sources).map((id) => ({ id, rank: 1 })));
         }
         return results;
       }
@@ -235,7 +239,7 @@ export class IndexGraph extends Resource implements Index {
           if (!sources) {
             continue;
           }
-          results.push(...Array.from(sources).map((id) => ({ id, rank: 0 })));
+          results.push(...Array.from(sources).map((id) => ({ id, rank: 1 })));
         }
         return results;
       }
