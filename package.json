@@ -61,7 +61,6 @@
     "@octokit/rest": "catalog:",
     "@phosphor-icons/core": "catalog:",
     "@playwright/test": "catalog:",
-    "@preact-signals/safe-react": "catalog:",
     "@rollup/plugin-inject": "catalog:",
     "@rushstack/eslint-patch": "catalog:",
     "@swc/core": "catalog:",
@@ -203,6 +202,7 @@
       "yarn"
     ],
     "overrides": {
+      "typescript": "^5.9.3",
       "@automerge/automerge": "3.2.1",
       "better-sqlite3": "12.6.0",
       "@lezer/lr": "^1.4.2",

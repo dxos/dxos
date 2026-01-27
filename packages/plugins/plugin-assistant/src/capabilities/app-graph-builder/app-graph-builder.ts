@@ -8,11 +8,12 @@ import { Capability, Common } from '@dxos/app-framework';
 import { Prompt } from '@dxos/blueprints';
 import { Sequence } from '@dxos/conductor';
 import { DXN, type Database, Obj } from '@dxos/echo';
+import { AtomObj } from '@dxos/echo-atom';
 import { invariant } from '@dxos/invariant';
 import { Operation, type OperationInvoker } from '@dxos/operation';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ATTENDABLE_PATH_SEPARATOR, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
-import { CreateAtom, GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
+import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 import { getActiveSpace } from '@dxos/plugin-space';
 import { SpaceOperation } from '@dxos/plugin-space/types';
 import { Query } from '@dxos/react-client/echo';
@@ -87,18 +88,40 @@ export default Capability.makeModule(
       GraphBuilder.createExtension({
         id: `${meta.id}/companion-chat`,
         match: NodeMatcher.whenEchoObject,
-        connector: (object, get) => {
-          const assistantState = capabilities.get(AssistantCapabilities.State);
-          const currentChatState = get(
-            CreateAtom.fromSignal(() => assistantState.currentChat[Obj.getDXN(object).toString()]),
-          );
-          // If no state, continue to allow chat initialization.
-          if (!currentChatState) {
-            return Effect.succeed([
+        connector: (object, get) =>
+          Effect.gen(function* () {
+            const state = get(yield* Capability.get(AssistantCapabilities.State));
+            const currentChatState = state.currentChat[Obj.getDXN(object).toString()];
+            // If no state, continue to allow chat initialization.
+            if (!currentChatState) {
+              return [
+                {
+                  id: [Obj.getDXN(object).toString(), 'assistant-chat'].join(ATTENDABLE_PATH_SEPARATOR),
+                  type: PLANK_COMPANION_TYPE,
+                  data: 'assistant-chat',
+                  properties: {
+                    label: ['assistant chat label', { ns: meta.id }],
+                    icon: 'ph--sparkle--regular',
+                    position: 'hoist',
+                    disposition: 'hidden',
+                  },
+                },
+              ];
+            }
+
+            const db = Obj.getDatabase(object);
+            const currentChatDxn = DXN.tryParse(currentChatState);
+            const currentChatRef = currentChatDxn ? db?.makeRef(currentChatDxn) : undefined;
+            const currentChat = currentChatRef ? get(AtomObj.make(currentChatRef)) : undefined;
+            if (!Obj.isObject(currentChat)) {
+              return [];
+            }
+
+            return [
               {
                 id: [Obj.getDXN(object).toString(), 'assistant-chat'].join(ATTENDABLE_PATH_SEPARATOR),
                 type: PLANK_COMPANION_TYPE,
-                data: 'assistant-chat',
+                data: currentChat,
                 properties: {
                   label: ['assistant chat label', { ns: meta.id }],
                   icon: 'ph--sparkle--regular',
@@ -106,31 +129,8 @@ export default Capability.makeModule(
                   disposition: 'hidden',
                 },
               },
-            ]);
-          }
-
-          const db = Obj.getDatabase(object);
-          const currentChatDxn = DXN.tryParse(currentChatState);
-          const currentChatRef = currentChatDxn ? db?.makeRef(currentChatDxn) : undefined;
-          const currentChat = get(CreateAtom.fromSignal(() => currentChatRef?.target));
-          if (!Obj.isObject(currentChat)) {
-            return Effect.succeed([]);
-          }
-
-          return Effect.succeed([
-            {
-              id: [Obj.getDXN(object).toString(), 'assistant-chat'].join(ATTENDABLE_PATH_SEPARATOR),
-              type: PLANK_COMPANION_TYPE,
-              data: currentChat,
-              properties: {
-                label: ['assistant chat label', { ns: meta.id }],
-                icon: 'ph--sparkle--regular',
-                position: 'hoist',
-                disposition: 'hidden',
-              },
-            },
-          ]);
-        },
+            ];
+          }),
       }),
 
       GraphBuilder.createExtension({
@@ -139,7 +139,7 @@ export default Capability.makeModule(
           NodeMatcher.whenEchoTypeMatches(Sequence),
           NodeMatcher.whenEchoTypeMatches(Prompt.Prompt),
         ),
-        connector: (node, get) =>
+        connector: (node) =>
           Effect.succeed([
             {
               id: [node.id, 'invocations'].join(ATTENDABLE_PATH_SEPARATOR),

@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { useAtomValue } from '@effect-atom/atom-react';
 import React, { useCallback, useEffect } from 'react';
 
 import { Surface } from '@dxos/app-framework/react';
@@ -24,16 +25,23 @@ import { type BaseKanbanItem, type KanbanModel, UNCATEGORIZED_VALUE } from '../m
 import { translationKey } from '../translations';
 
 export type KanbanProps<T extends BaseKanbanItem = { id: string }> = {
-  model: KanbanModel;
+  model: KanbanModel<T>;
   onAddCard?: (columnValue: string | undefined) => string | undefined;
   onRemoveCard?: (card: T) => void;
 };
 
-export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
+export const Kanban = <T extends BaseKanbanItem = { id: string }>({
+  model,
+  onAddCard,
+  onRemoveCard,
+}: KanbanProps<T>) => {
   const { t } = useTranslation(translationKey);
   const { multiSelect, clear } = useSelectionActions([model.id]);
   const selected = useSelected(model.id, 'multi');
   useEffect(() => () => clear(), []);
+
+  // Subscribe to arranged cards atom for reactivity.
+  const arrangedCards = useAtomValue(model.cards);
 
   const handleAddCard = useCallback(
     (columnValue: string | undefined) => onAddCard?.(columnValue === UNCATEGORIZED_VALUE ? undefined : columnValue),
@@ -47,10 +55,10 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
       rail={false}
       classNames='p-2 gap-4 density-fine'
       onRearrange={model.handleRearrange}
-      itemsCount={model.arrangedCards.length}
+      itemsCount={arrangedCards.length}
       {...autoScrollRootAttributes}
     >
-      {model.arrangedCards.map(({ columnValue, cards }, index, array) => {
+      {arrangedCards.map(({ columnValue, cards }, index, array) => {
         const { color, title } = model.getPivotAttributes(columnValue);
         const uncategorized = columnValue === UNCATEGORIZED_VALUE;
         const prevSiblingId = index > 0 ? array[index - 1].columnValue : undefined;
@@ -115,7 +123,7 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
               <StackItem.DragPreview>
                 {({ item }) => {
                   // Find the column data for this item.
-                  const columnData = model.arrangedCards.find((col) => col.columnValue === item.id);
+                  const columnData = arrangedCards.find((col) => col.columnValue === item.id);
                   if (!columnData) {
                     return null;
                   }
@@ -178,7 +186,7 @@ type CardComponentProps<T extends BaseKanbanItem = { id: string }> = {
   onRemoveCard?: (card: T) => void;
 } & Pick<StackItemRootProps, 'prevSiblingId' | 'nextSiblingId'>;
 
-const CardComponent = ({
+const CardComponent = <T extends BaseKanbanItem = { id: string }>({
   item,
   projection,
   selected,
@@ -186,7 +194,7 @@ const CardComponent = ({
   prevSiblingId,
   nextSiblingId,
   onRemoveCard,
-}: CardComponentProps) => {
+}: CardComponentProps<T>) => {
   const { t } = useTranslation(translationKey);
   return (
     <CardStack.Item key={item.id} asChild>

@@ -71,7 +71,9 @@ export const MapViewEditor = ({ object }: MapViewEditorProps) => {
   const onSave = useCallback(
     (values: Partial<{ coordinateColumn: string }>) => {
       if (view && values.coordinateColumn) {
-        view.projection.pivotFieldId = values.coordinateColumn;
+        Obj.change(view, (v) => {
+          v.projection.pivotFieldId = values.coordinateColumn;
+        });
       }
     },
     [view],

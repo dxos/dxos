@@ -54,9 +54,6 @@
       "path": "../echo/echo-db"
     },
     {
-      "path": "../echo/live-object"
-    },
-    {
       "path": "../functions"
     },
     {

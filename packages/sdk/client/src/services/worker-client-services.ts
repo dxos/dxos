@@ -14,7 +14,7 @@ import { createWorkerPort } from '@dxos/rpc-tunnel';
 import { trace } from '@dxos/tracing';
 
 import { RPC_TIMEOUT } from '../common';
-import { LOCK_KEY } from '../lock-key';
+import { STORAGE_LOCK_KEY } from '../lock-key';
 
 import { ClientServicesProxy } from './service-proxy';
 import { SharedWorkerConnection } from './shared-worker-connection';
@@ -110,7 +110,7 @@ export class WorkerClientServices implements ClientServicesProvider {
 
     this._services = new ClientServicesProxy(createWorkerPort({ port: appPort }));
     await this._services.open();
-    void navigator.locks.request(LOCK_KEY, () => {
+    void navigator.locks.request(STORAGE_LOCK_KEY, () => {
       log('terminated');
       if (this._isOpen) {
         this.closed.emit(new Error('Shared worker terminated.'));

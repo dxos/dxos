@@ -9,10 +9,10 @@ import { Capability, Common, Plugin } from '@dxos/app-framework';
 import { OperationResolver, State } from './capabilities';
 import { Layout } from './components';
 import { meta } from './meta';
-import { type LayoutState } from './types';
+import { type LayoutStateProps } from './types';
 
 export type StorybookPluginOptions = {
-  initialState?: Partial<LayoutState>;
+  initialState?: Partial<LayoutStateProps>;
 };
 
 export const StorybookPlugin = Plugin.define<StorybookPluginOptions>(meta).pipe(

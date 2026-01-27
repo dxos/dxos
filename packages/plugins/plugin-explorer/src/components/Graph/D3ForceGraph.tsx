@@ -52,7 +52,7 @@ export const D3ForceGraph = ({ classNames, model, selection: _selection, grid, .
 
   const graph = useRef<GraphController>(null);
   const selection = useMemo(() => _selection ?? new SelectionModel(), [_selection]);
-  useEffect(() => graph.current?.repaint(), [selection.selected.value]);
+  useEffect(() => selection.subscribe(() => graph.current?.repaint()), [selection]);
 
   const handleSelect = useCallback<NonNullable<GraphProps['onSelect']>>(
     (node) => {

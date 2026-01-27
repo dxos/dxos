@@ -169,13 +169,7 @@ export const createConfig = ({
           topLevelAwait(),
 
           // https://www.npmjs.com/package/@vitejs/plugin-react-swc
-          react({
-            tsDecorators: true,
-            plugins: [
-              // https://github.com/XantreDev/preact-signals/tree/main/packages/react#how-parser-plugins-works
-              ['@preact-signals/safe-react/swc', { mode: 'all' }],
-            ],
-          }),
+          react({ tsDecorators: true }),
 
           // https://www.npmjs.com/package/vite-plugin-turbosnap
           turbosnap({

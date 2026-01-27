@@ -1,0 +1,24 @@
+//
+// Copyright 2024 DXOS.org
+//
+
+import { deepMapValues } from '@dxos/util';
+
+/**
+ * Returns an immutable snapshot of the reactive object.
+ */
+export const getSnapshot = <T extends object>(obj: T): T => {
+  return deepMapValues(obj, (value, recurse) => {
+    // Do not recurse on references (but do recurse on arrays).
+    if (
+      typeof value === 'object' &&
+      value !== null &&
+      Object.getPrototypeOf(value) !== Object.prototype &&
+      !Array.isArray(value)
+    ) {
+      return value;
+    }
+
+    return recurse(value);
+  });
+};

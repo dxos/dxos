@@ -8,7 +8,6 @@ import { Show, createMemo, createSignal } from 'solid-js';
 
 import { Filter, Obj } from '@dxos/echo';
 import { useObject, useQuery, useSchema } from '@dxos/echo-solid';
-import { useRef } from '@dxos/echo-solid';
 import { type Map as MapType } from '@dxos/plugin-map/types';
 import { getTypenameFromQuery } from '@dxos/schema';
 import { type GeoMarker } from '@dxos/solid-ui-geo';
@@ -26,7 +25,7 @@ const MapSurface = (props: MapSurfaceProps) => {
 
   const map = props.data?.subject;
   const [viewRef] = useObject(map, 'view');
-  const view = useRef(viewRef);
+  const [view] = useObject(viewRef);
   const typename = createMemo(() => {
     const v = view();
     return v?.query ? getTypenameFromQuery(v.query.ast) : undefined;

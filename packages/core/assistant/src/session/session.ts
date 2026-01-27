@@ -148,6 +148,8 @@ export class AiSession {
           Effect.map(Chunk.toArray),
         );
 
+        log.info('blocks', { blocks });
+
         // Create the response message.
         const response = yield* submitMessage(
           Obj.make(Message.Message, {

@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type Registry } from '@effect-atom/atom-react';
 import { DebugOverlayCorner, type KeyEvent, hexToRgb } from '@opentui/core';
 import { useKeyboard, useRenderer } from '@opentui/solid';
 import {
@@ -15,6 +16,7 @@ import {
   onMount,
 } from 'solid-js';
 
+import { RegistryProvider } from '@dxos/effect-atom-solid';
 import { log } from '@dxos/log';
 import { isTruthy } from '@dxos/util';
 
@@ -40,6 +42,7 @@ export type AppProps = ParentProps<{
   debug?: boolean;
   focusElements?: string[];
   logBuffer?: LogBuffer;
+  registry?: Registry.Registry;
   theme?: Theme;
 }>;
 
@@ -158,7 +161,7 @@ export const App = (props: AppProps) => {
     });
   });
 
-  return (
+  const content = (
     <AppContext.Provider value={{ focus, hint, processing, setProcessing }}>
       <ErrorBoundary
         fallback={(err: any) => {
@@ -174,4 +177,6 @@ export const App = (props: AppProps) => {
       </ErrorBoundary>
     </AppContext.Provider>
   );
+
+  return props.registry ? <RegistryProvider registry={props.registry}>{content}</RegistryProvider> : content;
 };

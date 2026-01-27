@@ -9,7 +9,9 @@ import { parseId, useSpace } from '@dxos/react-client/echo';
 
 export const getActiveSpace = (capabilities: CapabilityManager.CapabilityManager) => {
   const client = capabilities.get(ClientCapabilities.Client);
-  const layout = capabilities.get(Common.Capability.Layout);
+  const registry = capabilities.get(Common.Capability.AtomRegistry);
+  const layoutAtom = capabilities.get(Common.Capability.Layout);
+  const layout = registry.get(layoutAtom);
   const { spaceId } = parseId(layout.workspace);
   return spaceId ? client.spaces.get(spaceId) : undefined;
 };

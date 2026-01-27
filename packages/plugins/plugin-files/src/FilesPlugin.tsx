@@ -11,14 +11,19 @@ import { Node } from '@dxos/plugin-graph';
 import { AppGraphBuilder, FileSettings, FileState, Markdown, OperationResolver, ReactSurface } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
+import { FileCapabilities } from './types';
+
+// TODO(burdon): Rename package plugin-file (singular).
+
+const SettingsReady = Common.ActivationEvent.createSettingsEvent(FileCapabilities.Settings.identifier);
 
 export const FilesPlugin = Plugin.define(meta).pipe(
-  Common.Plugin.addSettingsModule({ activate: FileSettings }),
+  Common.Plugin.addSettingsModule({ activate: FileSettings, activatesAfter: [SettingsReady] }),
   Plugin.addModule({
     id: 'state',
     activatesOn: ActivationEvent.allOf(
       Common.ActivationEvent.OperationInvokerReady,
-      Common.ActivationEvent.SettingsReady,
+      SettingsReady,
       AttentionEvents.AttentionReady,
     ),
     activate: FileState,
@@ -26,7 +31,7 @@ export const FilesPlugin = Plugin.define(meta).pipe(
   Common.Plugin.addTranslationsModule({ translations }),
   Plugin.addModule({
     id: 'markdown',
-    activatesOn: Common.ActivationEvent.SettingsReady,
+    activatesOn: SettingsReady,
     activate: Markdown,
   }),
   Common.Plugin.addSurfaceModule({ activate: ReactSurface }),

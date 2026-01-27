@@ -3,6 +3,7 @@
 //
 
 import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
+import { useAtomValue } from '@effect-atom/atom-react';
 import React, { type PropsWithChildren, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 
@@ -50,7 +51,7 @@ export const CanvasContent = ({ children }: PropsWithChildren) => {
   const { root, styles: projectionStyles, scale, offset } = useCanvasContext();
   const shapesRef = useRef<HTMLDivElement>(null);
 
-  const dragging = dragMonitor.state((state) => state.type === 'tool').value;
+  const dragging = useAtomValue(dragMonitor.state);
 
   // Drop target.
   useEffect(() => {

@@ -27,7 +27,11 @@ export const KanbanPlugin = Plugin.define(meta).pipe(
         inputSchema: CreateKanbanSchema,
         createObject: ((props, { db }) =>
           Effect.promise(async () => {
-            const { view } = await View.makeFromDatabase({ db, typename: props.typename });
+            const { view } = await View.makeFromDatabase({
+              db,
+              typename: props.typename,
+              pivotFieldName: props.initialPivotColumn,
+            });
             return Kanban.make({ name: props.name, view });
           })) satisfies CreateObject,
       },

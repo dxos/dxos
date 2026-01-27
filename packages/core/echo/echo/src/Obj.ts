@@ -9,17 +9,17 @@ import { type ForeignKey } from '@dxos/echo-protocol';
 import { createJsonPath, getValue as getValue$ } from '@dxos/effect';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { type DXN, ObjectId } from '@dxos/keys';
+import { assumeType, deepMapValues } from '@dxos/util';
+
+import type * as Database from './Database';
+import * as Entity from './Entity';
 import {
   type ChangeCallback,
   type Mutable,
   change as change$,
   getSnapshot as getSnapshot$,
   subscribe as subscribe$,
-} from '@dxos/live-object';
-import { assumeType, deepMapValues } from '@dxos/util';
-
-import type * as Database from './Database';
-import * as Entity from './Entity';
+} from './internal';
 import {
   type AnyEchoObject,
   type AnyProperties,
@@ -109,7 +109,17 @@ export type MakeProps<T extends Schema.Schema.AnyNoContext> = {
  * const obj = Obj.make(Person, { [Obj.Meta]: { keys: [...] }, name: 'John' });
  * ```
  */
-export const make = <S extends Schema.Schema.AnyNoContext>(
+export const make: {
+  <S extends Schema.Schema.AnyNoContext>(schema: S, props: MakeProps<S>): Obj<Schema.Schema.Type<S>>;
+  /**
+   * @deprecated Pass meta as in the example: `Obj.make(Person, { [Obj.Meta]: { keys: [...] }, name: 'John' })`.
+   */
+  <S extends Schema.Schema.AnyNoContext>(
+    schema: S,
+    props: MakeProps<S>,
+    meta: Partial<ObjectMeta>,
+  ): Obj<Schema.Schema.Type<S>>;
+} = <S extends Schema.Schema.AnyNoContext>(
   schema: S,
   props: MakeProps<S>,
   meta?: Partial<ObjectMeta>,

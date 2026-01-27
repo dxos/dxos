@@ -2,12 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { type FC, useEffect, useRef, useState } from 'react';
+import React, { type FC, useRef, useState } from 'react';
 
 import { Client } from '@dxos/client';
 import { TestBuilder, performInvitation } from '@dxos/client/testing';
 import { type Type } from '@dxos/echo';
-import { registerSignalsRuntime } from '@dxos/echo-signals/react';
 import { faker } from '@dxos/random';
 import { useAsyncEffect } from '@dxos/react-hooks';
 
@@ -51,9 +50,6 @@ export const ClientRepeater = <P extends ClientRepeatedComponentProps>(props: Cl
     createSpace,
     onCreateSpace,
   } = props;
-  useEffect(() => {
-    registerSignalsRuntime();
-  }, []);
 
   const [clients, setClients] = useState(props.clients ?? []);
   const [spaceId, setSpaceId] = useState<SpaceId>();

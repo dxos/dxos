@@ -74,11 +74,11 @@ export const Default: Story = {
   args: {
     projection: (() => {
       const jsonSchema = createEchoSchema(Example).jsonSchema;
-      return new ProjectionModel(
-        jsonSchema,
-        testView.projection,
-        createDirectChangeCallback(testView.projection, jsonSchema),
-      );
+      return new ProjectionModel({
+        view: testView,
+        baseSchema: jsonSchema,
+        change: createDirectChangeCallback(testView.projection, jsonSchema),
+      });
     })(),
     field: testView.projection.fields[0],
   },

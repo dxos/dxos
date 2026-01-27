@@ -21,6 +21,7 @@ export default defineFunction({
   description: 'Send emails via Gmail.',
   inputSchema: Schema.Struct({
     userId: Schema.String.pipe(Schema.optional),
+    // TODO(dmaretskyi): This should be a ref s we can send a message from database.
     message: Message.Message,
     mailbox: Type.Ref(Mailbox.Mailbox).pipe(
       Schema.annotations({ description: 'Optional mailbox to send from. Uses mailbox credentials if provided.' }),

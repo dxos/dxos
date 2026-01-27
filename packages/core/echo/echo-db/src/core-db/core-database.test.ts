@@ -2,14 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
-import { effect } from '@preact/signals-core';
 import { describe, expect, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 import { type Entity, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { type DatabaseDirectory, SpaceDocVersion, createIdFromSpaceKey } from '@dxos/echo-protocol';
-import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { ObjectId } from '@dxos/keys';
 import { DXN, PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
@@ -53,27 +51,15 @@ describe('CoreDatabase', () => {
       expect(docHandles.spaceRootHandle.doc()?.links?.[object.id].toString()).to.eq(docHandles.linkedDocHandles[0].url);
     });
 
-    test('effect nested reference access triggers document loading', async () => {
-      registerSignalsRuntime();
-
+    test('reference loading via load() method', async () => {
       const document = Obj.make(Type.Expando, { text: Ref.make(createTextObject('Hello, world!')) });
       const db = await createClientDbInSpaceWithObject(document);
       const loadedDocument = await db.query(Query.type(Type.Expando, { id: document.id })).first();
       expect(loadedDocument).not.to.be.undefined;
 
-      let isFirstInvocation = true;
-      const onPropertyLoaded = new Trigger();
-      const clearEffect = effect(() => {
-        if (isFirstInvocation) {
-          expect(loadedDocument.text.target).to.be.undefined;
-        } else {
-          expect(loadedDocument.text.target?.content).to.eq('Hello, world!');
-          onPropertyLoaded.wake();
-        }
-        isFirstInvocation = false;
-      });
-      await onPropertyLoaded.wait();
-      clearEffect();
+      // Wait for the referenced object to be loaded.
+      const loadedTarget = await loadedDocument.text.load();
+      expect(loadedTarget.content).to.eq('Hello, world!');
     });
 
     test('reference access triggers document loading', async () => {

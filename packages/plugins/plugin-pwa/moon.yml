@@ -9,4 +9,3 @@ tasks:
       - '--entryPoint=src/index.ts'
       - '--platform=browser'
       - '--ignorePackage=virtual:pwa-register'
-      - '--preactSignalTracking'

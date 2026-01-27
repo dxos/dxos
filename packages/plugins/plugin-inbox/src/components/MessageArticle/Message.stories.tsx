@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { signal } from '@preact/signals-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
@@ -46,6 +45,6 @@ export const Default: Story = {
       sender: { name: 'John Doe', email: 'john@doe.com' },
       blocks: [{ _tag: 'text', text: 'Hello world!' }],
     }),
-    sender: signal(undefined),
+    sender: undefined,
   },
 };

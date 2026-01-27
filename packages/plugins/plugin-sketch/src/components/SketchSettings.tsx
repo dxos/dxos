@@ -10,7 +10,12 @@ import { ControlGroup, ControlItemInput, ControlPage, ControlSection } from '@dx
 import { meta } from '../meta';
 import { type SketchSettingsProps } from '../types';
 
-export const SketchSettings = ({ settings }: { settings: SketchSettingsProps }) => {
+export type SketchSettingsComponentProps = {
+  settings: SketchSettingsProps;
+  onSettingsChange: (fn: (current: SketchSettingsProps) => SketchSettingsProps) => void;
+};
+
+export const SketchSettings = ({ settings, onSettingsChange }: SketchSettingsComponentProps) => {
   const { t } = useTranslation(meta.id);
 
   return (
@@ -20,13 +25,13 @@ export const SketchSettings = ({ settings }: { settings: SketchSettingsProps }) 
           <ControlItemInput title={t('settings grid')}>
             <Input.Switch
               checked={settings.showGrid !== false}
-              onCheckedChange={(checked) => (settings.showGrid = checked)}
+              onCheckedChange={(checked) => onSettingsChange((s) => ({ ...s, showGrid: checked }))}
             />
           </ControlItemInput>
           <ControlItemInput title={t('settings grid type label')}>
             <Input.Switch
               checked={settings.gridType === 'dotted'}
-              onCheckedChange={(checked) => (settings.gridType = checked ? 'dotted' : 'mesh')}
+              onCheckedChange={(checked) => onSettingsChange((s) => ({ ...s, gridType: checked ? 'dotted' : 'mesh' }))}
             />
           </ControlItemInput>
         </ControlGroup>

@@ -18,6 +18,7 @@ export default defineFunction({
   name: 'Load object',
   description: 'Loads the object.',
   inputSchema: Schema.Struct({
+    // TODO(dmaretskyi): Use Ref.
     id: ArtifactId.annotations({
       description: 'The ID of the object.',
     }),

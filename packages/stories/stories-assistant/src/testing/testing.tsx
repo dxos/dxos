@@ -9,6 +9,16 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { SERVICES_CONFIG } from '@dxos/ai/testing';
+import {
+  ActivationEvent,
+  Capability,
+  type CapabilityManager,
+  Common,
+  OperationPlugin,
+  Plugin,
+  RuntimePlugin,
+  SettingsPlugin,
+} from '@dxos/app-framework';
 import { ActivationEvent, Capability, type CapabilityManager, Common, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AiContextBinder, ArtifactId, GenericToolkit } from '@dxos/assistant';
@@ -47,12 +57,16 @@ export const config = {
         storage: {
           persistent: true,
         },
+        enableLocalQueues: true,
       },
       services: SERVICES_CONFIG.REMOTE,
     },
   }),
   local: new Config({
     runtime: {
+      client: {
+        enableLocalQueues: true,
+      },
       services: SERVICES_CONFIG.LOCAL,
     },
   }),
@@ -140,6 +154,8 @@ export const getDecorators = ({
             }
             yield* Effect.promise(() => space.db.flush({ indexes: true }));
           }),
+        // Directly importing the "@dxos/client/opfs-worker" didn't work.
+        createOpfsWorker: () => new Worker(new URL('./opfs-worker', import.meta.url), { type: 'module' }),
         ...props,
       }),
       SpacePlugin({}),
@@ -241,8 +257,10 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>({
         }),
         OperationResolver.make({
           operation: AssistantOperation.CreateChat,
+          position: 'hoist',
           handler: ({ db, name }) =>
             Effect.gen(function* () {
+              const registry = yield* Capability.get(Common.Capability.AtomRegistry);
               const space = client.spaces.get(db.spaceId);
               invariant(space, 'Space not found');
 
@@ -253,7 +271,7 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>({
                 queue: Ref.fromDXN(queue.dxn),
                 traceQueue: Ref.fromDXN(traceQueue.dxn),
               });
-              const binder = new AiContextBinder(queue);
+              const binder = new AiContextBinder({ queue, registry });
 
               // Story-specific behaviour to allow chat creation to be extended.
               space.db.add(chat);

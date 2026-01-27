@@ -4,6 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
+import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/operation';
 import { TypeInputOptionsAnnotation } from '@dxos/plugin-space/types';
 import { FieldSchema, View } from '@dxos/schema';
@@ -61,6 +62,7 @@ export namespace KanbanOperation {
 
   export const DeleteCardField = Operation.make({
     meta: { key: `${KANBAN_OPERATION}/delete-card-field`, name: 'Delete Card Field' },
+    services: [Capability.Service],
     schema: {
       input: Schema.Struct({
         view: View.View,
@@ -91,6 +93,7 @@ export namespace KanbanOperation {
    */
   export const RestoreCardField = Operation.make({
     meta: { key: `${KANBAN_OPERATION}/restore-card-field`, name: 'Restore Card Field' },
+    services: [Capability.Service],
     schema: {
       input: Schema.Struct({
         view: View.View.annotations({ description: 'The view to restore the field to.' }),

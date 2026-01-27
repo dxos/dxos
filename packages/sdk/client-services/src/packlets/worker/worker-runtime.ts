@@ -23,6 +23,7 @@ import {
 import { RtcTransportProxyFactory } from '@dxos/network-manager';
 import { type RpcPort } from '@dxos/rpc';
 import * as OpfsWorker from '@dxos/sql-sqlite/OpfsWorker';
+import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 import * as SqliteClient from '@dxos/sql-sqlite/SqliteClient';
 import { type MaybePromise } from '@dxos/util';
 
@@ -43,10 +44,16 @@ export type WorkerRuntimeOptions = {
   acquireLock: () => Promise<void>;
   releaseLock: () => void;
   onStop?: () => Promise<void>;
+  /**
+   * @default true
+   */
+  automaticallyConnectWebrtc?: boolean;
+
+  enableFullTextIndexing?: boolean;
 };
 
 /**
- * Runtime for the shared worker.
+ * Runtime for the shared and dedciated worker.
  * Manages connections from proxies (in tabs).
  * Tabs make requests to the `ClientServicesHost`, and provide a WebRTC gateway.
  */
@@ -60,12 +67,14 @@ export class WorkerRuntime {
   private readonly _sessions = new Set<WorkerSession>();
   private readonly _clientServices!: ClientServicesHost;
   private readonly _channel: string;
+  private readonly _automaticallyConnectWebrtc: boolean;
+  private readonly _livenessLock = new WebLockWrapper(`@dxos/client-services/WorkerRuntime/${crypto.randomUUID()}`);
   private _broadcastChannel?: BroadcastChannel;
   private _sessionForNetworking?: WorkerSession; // TODO(burdon): Expose to client QueryStatusResponse.
   private _config!: Config;
   private _signalMetadataTags: any = { runtime: 'worker-runtime' };
   private _signalTelemetryEnabled: boolean = false;
-  private _runtime!: ManagedRuntime.ManagedRuntime<SqlClient.SqlClient, never>;
+  private _runtime!: ManagedRuntime.ManagedRuntime<SqlClient.SqlClient | SqlExport.SqlExport, never>;
 
   constructor({
     channel = DEFAULT_WORKER_BROADCAST_CHANNEL,
@@ -73,6 +82,8 @@ export class WorkerRuntime {
     acquireLock,
     releaseLock,
     onStop,
+    automaticallyConnectWebrtc = true,
+    enableFullTextIndexing,
   }: WorkerRuntimeOptions) {
     this._configProvider = configProvider;
     this._acquireLock = acquireLock;
@@ -85,16 +96,29 @@ export class WorkerRuntime {
         onReset: async () => this.stop(),
       },
       runtime: this._runtime.runtimeEffect,
+      runtimeProps: {
+        enableFullTextIndexing: enableFullTextIndexing,
+        // Auto-activate spaces that were previously active after leader changeover.
+        autoActivateSpaces: true,
+      },
     });
+    this._automaticallyConnectWebrtc = automaticallyConnectWebrtc;
   }
 
   get host() {
     return this._clientServices;
   }
 
+  get livenessLockKey(): string {
+    return this._livenessLock.key;
+  }
+
   async start(): Promise<void> {
     log('starting...');
     try {
+      void this._livenessLock.acquire();
+
+      // Steal the lock from the other worker.
       this._broadcastChannel = new BroadcastChannel(this._channel);
       this._broadcastChannel.postMessage({ action: 'stop' });
       this._broadcastChannel.onmessage = async (event) => {
@@ -140,12 +164,13 @@ export class WorkerRuntime {
     await this._clientServices.close();
     await this._runtime.dispose();
     await this._onStop?.();
+    await this._livenessLock.release();
   }
 
   /**
    * Create a new session.
    */
-  async createSession({ appPort, systemPort, shellPort }: CreateSessionProps): Promise<void> {
+  async createSession({ appPort, systemPort, shellPort }: CreateSessionProps): Promise<WorkerSession> {
     const session = new WorkerSession({
       serviceHost: this._clientServices,
       appPort,
@@ -161,7 +186,9 @@ export class WorkerRuntime {
         // Terminate the worker when all sessions are closed.
         await this.stop();
       } else {
-        this._reconnectWebrtc();
+        if (this._automaticallyConnectWebrtc) {
+          this._reconnectWebrtc();
+        }
       }
     });
 
@@ -178,7 +205,24 @@ export class WorkerRuntime {
     this._signalMetadataTags.origin = session.origin;
     this._sessions.add(session);
 
-    this._reconnectWebrtc();
+    if (this._automaticallyConnectWebrtc) {
+      this._reconnectWebrtc();
+    }
+
+    return session;
+  }
+
+  /**
+   * Connects the WebRTC bridge to the specified session.
+   * If no session is provided, disconnects the WebRTC bridge.
+   *
+   * Called automatically if `automaticallyConnectWebrtc` is true.
+   *
+   * @param session The session to connect the WebRTC bridge to.
+   */
+  connectWebrtcBridge(session: WorkerSession | undefined): void {
+    this._sessionForNetworking = session;
+    this._transportFactory.setBridgeService(session?.bridgeService);
   }
 
   /**
@@ -196,17 +240,26 @@ export class WorkerRuntime {
     // Select existing session.
     if (!this._sessionForNetworking) {
       const selected = Array.from(this._sessions).find((session) => session.bridgeService);
-      if (selected) {
-        this._sessionForNetworking = selected;
-        this._transportFactory.setBridgeService(selected.bridgeService);
-      } else {
-        this._transportFactory.setBridgeService(undefined);
-      }
+      this.connectWebrtcBridge(selected);
     }
   }
 }
 
 const DB_NAME = 'DXOS';
+
+/**
+ * SqlExport layer that wraps SqliteClient to provide export functionality.
+ */
+const SqlExportLayer: Layer.Layer<SqlExport.SqlExport, never, SqliteClient.SqliteClient> = Layer.effect(
+  SqlExport.SqlExport,
+  Effect.gen(function* () {
+    const sql = yield* SqliteClient.SqliteClient;
+    return {
+      export: sql.export,
+    } satisfies SqlExport.Service;
+  }),
+);
+
 /**
  * Local SQLite layer for the worker.
  * Uses OPFS sync API as an FS backend.
@@ -227,6 +280,38 @@ const LocalSqliteOpfsLayer = Layer.unwrapScoped(
     );
 
     yield* Effect.forkScoped(OpfsWorker.run({ port: serverPort, dbName: DB_NAME }));
-    return SqliteClient.layer({ worker: Effect.succeed(clientPort) });
+    return SqlExportLayer.pipe(Layer.provideMerge(SqliteClient.layer({ worker: Effect.succeed(clientPort) })));
   }),
 );
+
+// TODO(wittjosiah): Factor out to a separate module.
+class WebLockWrapper {
+  readonly #key: string;
+  #release?: () => void;
+
+  constructor(key: string) {
+    this.#key = key;
+  }
+
+  get key(): string {
+    return this.#key;
+  }
+
+  acquire(options: LockOptions = {}) {
+    return navigator.locks.request(this.#key, options, async () => {
+      await new Promise<void>((resolve) => {
+        this.#release = resolve;
+      }); // Blocks for the duration of the worker's lifetime.
+      this.#release = undefined;
+    });
+  }
+
+  release() {
+    this.#release?.();
+    this.#release = undefined;
+  }
+
+  [Symbol.dispose]() {
+    this.release();
+  }
+}

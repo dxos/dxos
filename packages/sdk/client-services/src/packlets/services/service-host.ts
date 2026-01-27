@@ -2,14 +2,15 @@
 // Copyright 2021 DXOS.org
 //
 
-import type * as SqlClient from '@effect/sql/SqlClient';
+import * as SqlClient from '@effect/sql/SqlClient';
+import * as Effect from 'effect/Effect';
 
 import { Event, synchronized } from '@dxos/async';
 import { type ClientServices, clientServiceBundle } from '@dxos/client-protocol';
 import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { EdgeClient, type EdgeConnection, EdgeHttpClient, createStubEdgeIdentity } from '@dxos/edge-client';
-import { type RuntimeProvider } from '@dxos/effect';
+import { RuntimeProvider } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
@@ -24,6 +25,7 @@ import {
 import { trace } from '@dxos/protocols';
 import { SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { type Storage } from '@dxos/random-access-storage';
+import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 import { TRACE_PROCESSOR, trace as Trace } from '@dxos/tracing';
 import { WebsocketRpcClient } from '@dxos/websocket-rpc';
 
@@ -60,7 +62,7 @@ export type ClientServicesHostProps = {
   level?: LevelDB;
   lockKey?: string;
   callbacks?: ClientServicesHostCallbacks;
-  runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
+  runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlExport.SqlExport>;
   runtimeProps?: ServiceContextRuntimeProps;
 };
 
@@ -99,7 +101,7 @@ export class ClientServicesHost {
   private _edgeHttpClient?: EdgeHttpClient = undefined;
 
   private _serviceContext!: ServiceContext;
-  private readonly _runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
+  private readonly _runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlExport.SqlExport>;
   private readonly _runtimeProps: ServiceContextRuntimeProps;
   private diagnosticsBroadcastHandler: CollectDiagnosticsBroadcastHandler;
 
@@ -200,6 +202,30 @@ export class ClientServicesHost {
   }
 
   /**
+   * Debugging util.
+   */
+  async exportSqliteDatabase(): Promise<Uint8Array> {
+    return await RuntimeProvider.runPromise(this._runtime)(
+      Effect.gen(function* () {
+        const sql = yield* SqlExport.SqlExport;
+        return yield* sql.export;
+      }),
+    );
+  }
+
+  /**
+   * Debugging util.
+   */
+  async runSqliteQuery(query: string, params?: any[]): Promise<readonly Record<string, unknown>[]> {
+    return await RuntimeProvider.runPromise(this._runtime)(
+      Effect.gen(function* () {
+        const sql = yield* SqlClient.SqlClient;
+        return yield* sql`${sql.unsafe(query, params)}`;
+      }),
+    );
+  }
+
+  /**
    * Initialize the service host with the config.
    * Config can also be provided in the constructor.
    * Can only be called once.
@@ -212,9 +238,11 @@ export class ClientServicesHost {
       if (this._runtimeProps.disableP2pReplication === undefined) {
         this._runtimeProps.disableP2pReplication = config?.get('runtime.client.disableP2pReplication', false);
       }
-
       if (this._runtimeProps.enableVectorIndexing === undefined) {
         this._runtimeProps.enableVectorIndexing = config?.get('runtime.client.enableVectorIndexing', false);
+      }
+      if (this._runtimeProps.enableLocalQueues === undefined) {
+        this._runtimeProps.enableLocalQueues = config?.get('runtime.client.enableLocalQueues', false);
       }
 
       invariant(!this._config, 'config already set');

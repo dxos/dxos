@@ -35,6 +35,11 @@ namespace Order1 {
       property,
       direction,
     });
+  export const rank = <T>(direction: QueryAST.OrderDirection = 'desc'): Order$.Order<T> =>
+    new OrderClass({
+      kind: 'rank',
+      direction,
+    });
 }
 
 const Order2: typeof Order$ = Order1;

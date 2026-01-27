@@ -14,12 +14,6 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../core/echo/echo-signals"
-    },
-    {
-      "path": "../../core/echo/live-object"
-    },
-    {
       "path": "../../core/operation"
     },
     {
@@ -54,6 +48,9 @@
     },
     {
       "path": "../plugin-graph"
+    },
+    {
+      "path": "../plugin-preview"
     },
     {
       "path": "../plugin-search"

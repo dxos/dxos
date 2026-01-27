@@ -2,10 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Atom } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 
 import { Capability, Common } from '@dxos/app-framework';
 import { Obj, Type } from '@dxos/echo';
+import { AtomObj } from '@dxos/echo-atom';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Operation } from '@dxos/operation';
@@ -18,6 +20,22 @@ import { SpaceState, getSpace } from '@dxos/react-client/echo';
 
 import { meta } from '../../meta';
 import { Meeting, MeetingCapabilities, MeetingOperation } from '../../types';
+
+/**
+ * Atom families to derive meeting state properties.
+ * Keyed by store to ensure proper caching.
+ */
+const activeMeetingFamily = Atom.family((store: MeetingCapabilities.MeetingStateStore) =>
+  Atom.make((get) => get(store.stateAtom).activeMeeting),
+);
+
+const activeMeetingOrPlaceholderFamily = Atom.family((store: MeetingCapabilities.MeetingStateStore) =>
+  Atom.make((get) => get(store.stateAtom).activeMeeting ?? ('meeting' as const)),
+);
+
+const transcriptionManagerFamily = Atom.family((store: MeetingCapabilities.MeetingStateStore) =>
+  Atom.make((get) => get(store.stateAtom).transcriptionManager),
+);
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -56,25 +74,25 @@ export default Capability.makeModule(
         id: `${meta.id}/call-thread`,
         type: Channel.Channel,
         connector: Effect.fnUntraced(function* (channel, get) {
-          const state = yield* Capability.get(MeetingCapabilities.State);
-          const meeting = get(CreateAtom.fromSignal(() => state.activeMeeting));
+          const store = yield* Capability.get(MeetingCapabilities.State);
+          const meeting = get(activeMeetingFamily(store));
           if (!meeting) {
             return [];
           }
 
           const callManager = yield* Capability.get(ThreadCapabilities.CallManager);
-          const joined = get(
-            CreateAtom.fromSignal(() => callManager.joined && callManager.roomId === Obj.getDXN(channel).toString()),
-          );
-          if (!joined) {
+          const channelDxn = Obj.getDXN(channel).toString();
+          const joined = get(callManager.joinedAtom);
+          const roomId = get(callManager.roomIdAtom);
+          if (!joined || roomId !== channelDxn) {
             return [];
           }
 
           return [
             {
-              id: `${Obj.getDXN(channel).toString()}${ATTENDABLE_PATH_SEPARATOR}meeting-thread`,
+              id: `${channelDxn}${ATTENDABLE_PATH_SEPARATOR}meeting-thread`,
               type: PLANK_COMPANION_TYPE,
-              data: get(CreateAtom.fromSignal(() => meeting.thread.target)),
+              data: get(AtomObj.make(meeting.thread)),
               properties: {
                 label: ['meeting thread label', { ns: meta.id }],
                 icon: 'ph--chat-text--regular',
@@ -91,19 +109,19 @@ export default Capability.makeModule(
         type: Channel.Channel,
         connector: Effect.fnUntraced(function* (channel, get) {
           const callManager = yield* Capability.get(ThreadCapabilities.CallManager);
-          const isCallActive = get(
-            CreateAtom.fromSignal(() => callManager.joined && callManager.roomId === Obj.getDXN(channel).toString()),
-          );
-          if (!isCallActive) {
+          const channelDxn = Obj.getDXN(channel).toString();
+          const joined = get(callManager.joinedAtom);
+          const roomId = get(callManager.roomIdAtom);
+          if (!joined || roomId !== channelDxn) {
             return [];
           }
 
-          const state = yield* Capability.get(MeetingCapabilities.State);
-          const data = get(CreateAtom.fromSignal(() => state.activeMeeting ?? 'meeting'));
+          const store = yield* Capability.get(MeetingCapabilities.State);
+          const data = get(activeMeetingOrPlaceholderFamily(store));
 
           return [
             {
-              id: `${Obj.getDXN(channel).toString()}${ATTENDABLE_PATH_SEPARATOR}meeting`,
+              id: `${channelDxn}${ATTENDABLE_PATH_SEPARATOR}meeting`,
               type: PLANK_COMPANION_TYPE,
               data,
               properties: {
@@ -121,14 +139,15 @@ export default Capability.makeModule(
         id: `${meta.id}/call-transcript`,
         type: Channel.Channel,
         actions: Effect.fnUntraced(function* (channel, get) {
-          const state = yield* Capability.get(MeetingCapabilities.State);
-          const enabled = get(CreateAtom.fromSignal(() => state.transcriptionManager?.enabled ?? false));
+          const store = yield* Capability.get(MeetingCapabilities.State);
+          const transcriptionManager = get(transcriptionManagerFamily(store));
+          const enabled = transcriptionManager ? get(transcriptionManager.enabled) : false;
           return [
             {
               id: `${Obj.getDXN(channel).toString()}/action/start-stop-transcription`,
               data: Effect.fnUntraced(function* () {
-                const state = yield* Capability.get(MeetingCapabilities.State);
-                let meeting = state.activeMeeting;
+                const store = yield* Capability.get(MeetingCapabilities.State);
+                let meeting = store.state.activeMeeting;
                 if (!meeting) {
                   const db = Obj.getDatabase(channel);
                   invariant(db);
@@ -171,8 +190,8 @@ export default Capability.makeModule(
           ];
         }),
         connector: Effect.fnUntraced(function* (channel, get) {
-          const state = yield* Capability.get(MeetingCapabilities.State);
-          const meeting = get(CreateAtom.fromSignal(() => state.activeMeeting));
+          const store = yield* Capability.get(MeetingCapabilities.State);
+          const meeting = get(activeMeetingFamily(store));
           if (!meeting) {
             return [];
           }
@@ -181,7 +200,7 @@ export default Capability.makeModule(
             {
               id: `${Obj.getDXN(channel).toString()}${ATTENDABLE_PATH_SEPARATOR}transcript`,
               type: PLANK_COMPANION_TYPE,
-              data: get(CreateAtom.fromSignal(() => meeting.transcript.target)),
+              data: get(AtomObj.make(meeting.transcript)),
               properties: {
                 label: ['transcript companion label', { ns: meta.id }],
                 icon: 'ph--subtitles--regular',
@@ -201,7 +220,7 @@ export default Capability.makeModule(
             {
               id: `${Obj.getDXN(meeting).toString()}${ATTENDABLE_PATH_SEPARATOR}transcript`,
               type: PLANK_COMPANION_TYPE,
-              data: get(CreateAtom.fromSignal(() => meeting.transcript.target)),
+              data: get(AtomObj.make(meeting.transcript)),
               properties: {
                 label: ['transcript companion label', { ns: meta.id }],
                 icon: 'ph--subtitles--regular',

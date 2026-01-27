@@ -106,7 +106,8 @@ const CardDragHandle = forwardRef<HTMLButtonElement, CardDragHandleProps>((_, fo
   }
 
   return (
-    <Toolbar.IconButton
+    <Root
+      data-testid='card-drag-handle'
       noTooltip
       iconOnly
       icon='ph--dots-six-vertical--regular'

@@ -8,11 +8,12 @@ import * as ParseResult from 'effect/ParseResult';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { type EncodedReference } from '@dxos/echo-protocol';
-import { compositeRuntime } from '@dxos/echo-signals/runtime';
+import { Event } from '@dxos/async';
+import { EncodedReference } from '@dxos/echo-protocol';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN, ObjectId } from '@dxos/keys';
 
+import * as Database from '../../Database';
 import { ReferenceAnnotationId, getSchemaDXN, getTypeAnnotation, getTypeIdentifierAnnotation } from '../annotations';
 import { type JsonSchemaType } from '../json-schema';
 import type { AnyProperties, WithId } from '../types';
@@ -142,8 +143,6 @@ export interface Ref<T> {
    * @returns The reference target.
    * May return `undefined` if the object is not loaded in the working set.
    * Accessing this property, even if it returns `undefined` will trigger the object to be loaded to the working set.
-   *
-   * @reactive Supports signal subscriptions.
    */
   get target(): T | undefined;
 
@@ -157,6 +156,7 @@ export interface Ref<T> {
   /**
    * @returns Promise that will resolves with the target object or undefined if the object is not loaded locally.
    */
+
   tryLoad(): Promise<T | undefined>;
 
   /**
@@ -261,25 +261,39 @@ export const createEchoReferenceSchema = (
     [],
     {
       encode: () => {
-        return (value) => {
-          return Effect.succeed({
-            '/': (value as Ref<any>).dxn.toString(),
+        return (value) =>
+          Effect.gen(function* () {
+            if (Ref.isRef(value)) {
+              return EncodedReference.fromDXN((value as Ref<any>).dxn);
+            } else if (EncodedReference.isEncodedReference(value)) {
+              return value;
+            }
+            throw new Error('Invalid reference');
           });
-        };
       },
       decode: () => {
-        return (value) => {
-          // TODO(dmaretskyi): This branch seems to be taken by Schema.is
-          if (Ref.isRef(value)) {
-            return Effect.succeed(value);
-          }
+        return (value) =>
+          Effect.gen(function* () {
+            const dbService = yield* Effect.serviceOption(Database.Service);
 
-          if (typeof value !== 'object' || value == null || typeof (value as any)['/'] !== 'string') {
-            return Effect.fail(new ParseResult.Unexpected(value, 'reference'));
-          }
+            // TODO(dmaretskyi): This branch seems to be taken by Schema.is
+            if (Ref.isRef(value)) {
+              if (Option.isSome(dbService)) {
+                return dbService.value.db.makeRef(value.dxn);
+              } else {
+                return value;
+              }
+            }
 
-          return Effect.succeed(Ref.fromDXN(DXN.parse((value as any)['/'])));
-        };
+            if (!EncodedReference.isEncodedReference(value)) {
+              return yield* Effect.fail(new ParseResult.Unexpected(value, 'reference'));
+            }
+            if (Option.isSome(dbService)) {
+              return dbService.value.db.makeRef(EncodedReference.toDXN(value));
+            } else {
+              return Ref.fromDXN(EncodedReference.toDXN(value));
+            }
+          });
       },
     },
     {
@@ -329,7 +343,7 @@ export interface RefResolver {
 export class RefImpl<T> implements Ref<T> {
   #dxn: DXN;
   #resolver?: RefResolver = undefined;
-  #signal = compositeRuntime.createSignal();
+  #resolved = new Event<void>();
 
   /**
    * Target is set when the reference is created from a specific object.
@@ -341,7 +355,7 @@ export class RefImpl<T> implements Ref<T> {
    * Callback to issue a reactive notification when object is resolved.
    */
   #resolverCallback = () => {
-    this.#signal.notifyWrite();
+    this.#resolved.emit();
   };
 
   constructor(dxn: DXN, target?: T) {
@@ -367,7 +381,6 @@ export class RefImpl<T> implements Ref<T> {
    * @inheritdoc
    */
   get target(): T | undefined {
-    this.#signal.notifyRead();
     if (this.#target) {
       return this.#target;
     }

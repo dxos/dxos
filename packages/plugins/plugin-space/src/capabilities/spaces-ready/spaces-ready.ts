@@ -8,7 +8,6 @@ import * as Option from 'effect/Option';
 import { Capability, Common } from '@dxos/app-framework';
 import { SubscriptionList } from '@dxos/async';
 import { Filter, Obj, Type } from '@dxos/echo';
-import { scheduledEffect } from '@dxos/echo-signals/core';
 import { log } from '@dxos/log';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { ClientCapabilities } from '@dxos/plugin-client';
@@ -35,18 +34,24 @@ export default Capability.makeModule(
 
     const { invoke, invokePromise } = yield* Capability.get(Common.Capability.OperationInvoker);
     const { graph } = yield* Capability.get(Common.Capability.AppGraph);
-    const layout = yield* Capability.get(Common.Capability.Layout);
-    const deckStates = yield* Capability.getAll(DeckCapabilities.DeckState);
-    const deck = deckStates.flat()[0];
+    const registry = yield* Capability.get(Common.Capability.AtomRegistry);
+    const layoutAtom = yield* Capability.get(Common.Capability.Layout);
+    const deckStateAtoms = yield* Capability.getAll(DeckCapabilities.State);
+    const deckStateAtom = deckStateAtoms.flat()[0];
     const attention = yield* Capability.get(AttentionCapabilities.Attention);
-    const state = yield* Capability.get(SpaceCapabilities.MutableState);
+    const stateAtom = yield* Capability.get(SpaceCapabilities.State);
+    const ephemeralAtom = yield* Capability.get(SpaceCapabilities.EphemeralState);
     const client = yield* Capability.get(ClientCapabilities.Client);
 
     const defaultSpace = client.spaces.default;
     yield* Effect.tryPromise(() => defaultSpace.waitUntilReady());
 
-    if (deck?.activeDeck === 'default') {
-      yield* invoke(Common.LayoutOperation.SwitchWorkspace, { subject: defaultSpace.id });
+    // Check if deck state indicates we should switch to default space.
+    if (deckStateAtom) {
+      const deckState = registry.get(deckStateAtom);
+      if (deckState.activeDeck === 'default') {
+        yield* invoke(Common.LayoutOperation.SwitchWorkspace, { subject: defaultSpace.id });
+      }
     }
 
     // Initialize space sharing lock in default space.
@@ -66,31 +71,37 @@ export default Capability.makeModule(
       defaultSpace.db.add(Obj.make(Type.Expando, { key: SHARED, order: [] }));
     }
 
-    // Await missing objects.
+    // Await missing objects - subscribe to layout atom changes.
+    let lastActiveCleanup: (() => void) | undefined;
     subscriptions.add(
-      scheduledEffect(
-        () => ({ active: layout.active }),
-        ({ active }) => {
-          if (active.length !== 1) {
-            return;
-          }
+      registry.subscribe(layoutAtom, () => {
+        // Clean up previous effect.
+        lastActiveCleanup?.();
+        lastActiveCleanup = undefined;
 
-          const id = active[0];
-          const node = Graph.getNode(graph, id).pipe(Option.getOrNull);
-          if (!node && id.length === ECHO_DXN_LENGTH) {
-            void Graph.initialize(graph, id);
-            const timeout = setTimeout(async () => {
-              const node = Graph.getNode(graph, id).pipe(Option.getOrNull);
-              if (!node) {
-                await invokePromise(SpaceOperation.WaitForObject, { id });
-              }
-            }, WAIT_FOR_OBJECT_TIMEOUT);
+        const layout = registry.get(layoutAtom);
+        const active = layout.active;
+        if (active.length !== 1) {
+          return;
+        }
 
-            return () => clearTimeout(timeout);
-          }
-        },
-      ),
+        const id = active[0];
+        const node = Graph.getNode(graph, id).pipe(Option.getOrNull);
+        if (!node && id.length === ECHO_DXN_LENGTH) {
+          void Graph.initialize(graph, id);
+          const timeout = setTimeout(async () => {
+            const node = Graph.getNode(graph, id).pipe(Option.getOrNull);
+            if (!node) {
+              await invokePromise(SpaceOperation.WaitForObject, { id });
+            }
+          }, WAIT_FOR_OBJECT_TIMEOUT);
+
+          lastActiveCleanup = () => clearTimeout(timeout);
+        }
+      }),
     );
+    // Also add cleanup for the last effect.
+    subscriptions.add(() => lastActiveCleanup?.());
 
     // Cache space names.
     subscriptions.add(
@@ -103,92 +114,104 @@ export default Capability.makeModule(
         spaces
           .filter((space) => space.state.get() === SpaceState.SPACE_READY)
           .forEach((space) => {
-            subscriptions.add(
-              scheduledEffect(
-                () => ({ name: space.properties.name }),
-                ({ name }) => {
-                  if (!name) {
-                    delete state.spaceNames[space.id];
-                  } else {
-                    state.spaceNames[space.id] = name;
-                  }
-                },
-              ),
-            );
+            const updateSpaceName = () => {
+              const name = space.properties.name;
+              if (!name) {
+                registry.update(stateAtom, (current) => {
+                  const { [space.id]: _, ...rest } = current.spaceNames;
+                  return { ...current, spaceNames: rest };
+                });
+              } else {
+                registry.update(stateAtom, (current) => ({
+                  ...current,
+                  spaceNames: { ...current.spaceNames, [space.id]: name },
+                }));
+              }
+            };
+            updateSpaceName();
+            subscriptions.add(Obj.subscribe(space.properties, updateSpaceName));
           });
       }).unsubscribe,
     );
 
-    // Broadcast active node to other peers in the space.
-    subscriptions.add(
-      scheduledEffect(
-        () => ({
-          current: attention.current,
-          active: layout.active,
-          inactive: layout.inactive,
-        }),
-        ({ current, active, inactive }) => {
-          const send = () => {
-            const spaces = client.spaces.get();
-            const identity = client.halo.identity.get();
-            if (identity) {
-              // Group parts by space for efficient messaging.
-              const idsBySpace = reduceGroupBy(active, (id) => {
-                try {
-                  const { spaceId } = parseId(id);
-                  return spaceId;
-                } catch {
-                  return null;
-                }
-              });
+    // Broadcast active node to other peers in the space - subscribe to both layout and attention.
+    let broadcastCleanup: (() => void) | undefined;
+    const setupBroadcast = () => {
+      broadcastCleanup?.();
 
-              const removedBySpace = reduceGroupBy(inactive, (id) => {
-                try {
-                  const { spaceId } = parseId(id);
-                  return spaceId;
-                } catch {
-                  return null;
-                }
-              });
+      const layout = registry.get(layoutAtom);
+      const current = attention.getCurrent();
+      const active = layout.active;
+      const inactive = layout.inactive;
 
-              // NOTE: Ensure all spaces are included so that we send the correct `removed` object arrays.
-              for (const space of spaces) {
-                if (!idsBySpace.has(space.id)) {
-                  idsBySpace.set(space.id, []);
-                }
-              }
-
-              for (const [spaceId, added] of idsBySpace) {
-                const removed = removedBySpace.get(spaceId) ?? [];
-                const space = spaces.find((space) => space.id === spaceId);
-                if (!space) {
-                  continue;
-                }
-
-                void space
-                  .postMessage('viewing', {
-                    identityKey: identity.identityKey.toHex(),
-                    attended: current,
-                    added,
-                    removed,
-                  })
-                  // TODO(burdon): This seems defensive; why would this fail? Backoff interval.
-                  .catch((err) => {
-                    log.warn('Failed to broadcast active node for presence.', {
-                      err: err.message,
-                    });
-                  });
-              }
+      const send = () => {
+        const spaces = client.spaces.get();
+        const identity = client.halo.identity.get();
+        if (identity) {
+          // Group parts by space for efficient messaging.
+          const idsBySpace = reduceGroupBy(active, (id: string) => {
+            try {
+              const { spaceId } = parseId(id);
+              return spaceId;
+            } catch {
+              return null;
             }
-          };
+          });
 
-          send();
-          // Send at interval to allow peers to expire entries if they become disconnected.
-          const interval = setInterval(() => send(), ACTIVE_NODE_BROADCAST_INTERVAL);
-          return () => clearInterval(interval);
-        },
-      ),
-    );
+          const removedBySpace = reduceGroupBy(inactive, (id: string) => {
+            try {
+              const { spaceId } = parseId(id);
+              return spaceId;
+            } catch {
+              return null;
+            }
+          });
+
+          // NOTE: Ensure all spaces are included so that we send the correct `removed` object arrays.
+          for (const space of spaces) {
+            if (!idsBySpace.has(space.id)) {
+              idsBySpace.set(space.id, []);
+            }
+          }
+
+          for (const [spaceId, added] of idsBySpace) {
+            const removed = removedBySpace.get(spaceId) ?? [];
+            const space = spaces.find((space) => space.id === spaceId);
+            if (!space) {
+              continue;
+            }
+
+            void space
+              .postMessage('viewing', {
+                identityKey: identity.identityKey.toHex(),
+                attended: current,
+                added,
+                removed,
+              })
+              // TODO(burdon): This seems defensive; why would this fail? Backoff interval.
+              .catch((err) => {
+                log.warn('Failed to broadcast active node for presence.', {
+                  err: err.message,
+                });
+              });
+          }
+        }
+      };
+
+      send();
+      // Send at interval to allow peers to expire entries if they become disconnected.
+      const interval = setInterval(() => send(), ACTIVE_NODE_BROADCAST_INTERVAL);
+      broadcastCleanup = () => clearInterval(interval);
+    };
+
+    // Subscribe to layout changes for broadcast.
+    subscriptions.add(registry.subscribe(layoutAtom, setupBroadcast));
+    // Subscribe to attention.current changes.
+    subscriptions.add(attention.subscribeCurrent(() => setupBroadcast()));
+    // Initial setup.
+    setupBroadcast();
+    // Cleanup.
+    subscriptions.add(() => broadcastCleanup?.());
 
     // Listen for active nodes from other peers in the space.
     subscriptions.add(
@@ -207,28 +230,33 @@ export default Capability.makeModule(
                 Array.isArray(added) &&
                 Array.isArray(removed)
               ) {
-                added.forEach((id) => {
-                  if (typeof id === 'string') {
-                    if (!(id in state.viewersByObject)) {
-                      state.viewersByObject[id] = new ComplexMap(PublicKey.hash);
+                // TODO(wittjosiah): Stop using (Complex)Map inside reactive object.
+                registry.update(ephemeralAtom, (ephemeral) => {
+                  added.forEach((id) => {
+                    if (typeof id === 'string') {
+                      if (!(id in ephemeral.viewersByObject)) {
+                        ephemeral.viewersByObject[id] = new ComplexMap(PublicKey.hash);
+                      }
+                      ephemeral.viewersByObject[id]!.set(identityKey, {
+                        lastSeen: Date.now(),
+                        currentlyAttended: new Set(attended).has(id),
+                      });
+                      if (!ephemeral.viewersByIdentity.has(identityKey)) {
+                        ephemeral.viewersByIdentity.set(identityKey, new Set());
+                      }
+                      ephemeral.viewersByIdentity.get(identityKey)!.add(id);
                     }
-                    state.viewersByObject[id]!.set(identityKey, {
-                      lastSeen: Date.now(),
-                      currentlyAttended: new Set(attended).has(id),
-                    });
-                    if (!state.viewersByIdentity.has(identityKey)) {
-                      state.viewersByIdentity.set(identityKey, new Set());
-                    }
-                    state.viewersByIdentity.get(identityKey)!.add(id);
-                  }
-                });
+                  });
 
-                removed.forEach((id) => {
-                  if (typeof id === 'string') {
-                    state.viewersByObject[id]?.delete(identityKey);
-                    state.viewersByIdentity.get(identityKey)?.delete(id);
-                    // It’s okay for these to be empty sets/maps, reduces churn.
-                  }
+                  removed.forEach((id) => {
+                    if (typeof id === 'string') {
+                      ephemeral.viewersByObject[id]?.delete(identityKey);
+                      ephemeral.viewersByIdentity.get(identityKey)?.delete(id);
+                      // It's okay for these to be empty sets/maps, reduces churn.
+                    }
+                  });
+
+                  return { ...ephemeral };
                 });
               }
             }),
@@ -246,7 +274,7 @@ export default Capability.makeModule(
             .map((space) => space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED)),
         ),
       );
-      state.enabledEdgeReplication = true;
+      registry.update(stateAtom, (current) => ({ ...current, enabledEdgeReplication: true }));
     } catch (err) {
       log.catch(err);
     }

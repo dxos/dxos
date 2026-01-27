@@ -42,7 +42,6 @@
     "@dxos/graph": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
-    "@dxos/live-object": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-edge-client": "workspace:*",
@@ -58,14 +57,12 @@
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/platform": "catalog:",
-    "@preact-signals/safe-react": "catalog:",
     "chess.js": "catalog:"
   },
   "devDependencies": {
     "@dxos/app-framework": "workspace:*",
     "@dxos/assistant-toolkit": "workspace:*",
     "@dxos/compute": "workspace:*",
-    "@dxos/echo-signals": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",

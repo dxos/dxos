@@ -9,4 +9,3 @@ tasks:
       - '--entryPoint=src/index.ts'
       - '--entryPoint=src/types/index.ts'
       - '--platform=browser'
-      - '--preactSignalTracking'

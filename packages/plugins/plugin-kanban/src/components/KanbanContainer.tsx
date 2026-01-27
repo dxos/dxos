@@ -2,8 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
+import { RegistryContext } from '@effect-atom/atom-react';
 import type * as Schema from 'effect/Schema';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useState } from 'react';
 
 import { Common } from '@dxos/app-framework';
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/react';
@@ -18,6 +19,7 @@ import { getTypenameFromQuery } from '@dxos/schema';
 import { KanbanOperation } from '../types';
 
 export const KanbanContainer = ({ object }: { object: Kanban.Kanban; role: string }) => {
+  const registry = useContext(RegistryContext);
   const schemas = useCapabilities(Common.Capability.Schema);
   const [cardSchema, setCardSchema] = useState<Schema.Schema.AnyNoContext>();
   const db = Obj.getDatabase(object);
@@ -47,7 +49,7 @@ export const KanbanContainer = ({ object }: { object: Kanban.Kanban; role: strin
   const objects = useQuery(db, cardSchema ? Filter.type(cardSchema) : Filter.nothing());
   const filteredObjects = useGlobalFilteredObjects(objects);
 
-  const projection = useProjectionModel(cardSchema, object);
+  const projection = useProjectionModel(cardSchema, object, registry);
   const model = useKanbanModel({
     object,
     projection,

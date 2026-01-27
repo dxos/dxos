@@ -6,34 +6,38 @@ import * as Effect from 'effect/Effect';
 import React, { useCallback } from 'react';
 
 import { Capability, Common } from '@dxos/app-framework';
-import { useCapability } from '@dxos/app-framework/react';
 
 import { DeckLayout } from '../../components';
+import { useDeckState } from '../../hooks';
 import { meta } from '../../meta';
-import { DeckCapabilities } from '../../types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Common.Capability.ReactRoot, {
       id: meta.id,
       root: () => {
-        const layout = useCapability(DeckCapabilities.MutableDeckState);
+        const { state, updateEphemeral } = useDeckState();
 
         const handleDismissToast = useCallback(
           (id: string) => {
-            const index = layout.toasts.findIndex((toast) => toast.id === id);
+            const index = state.toasts.findIndex((toast) => toast.id === id);
             if (index !== -1) {
               // Allow time for the toast to animate out.
               // TODO(burdon): Factor out and unregister timeout.
               setTimeout(() => {
-                if (layout.toasts[index].id === layout.currentUndoId) {
-                  layout.currentUndoId = undefined;
-                }
-                layout.toasts.splice(index, 1);
+                updateEphemeral((s) => {
+                  const toastToRemove = s.toasts[index];
+                  const newCurrentUndoId = toastToRemove?.id === s.currentUndoId ? undefined : s.currentUndoId;
+                  return {
+                    ...s,
+                    currentUndoId: newCurrentUndoId,
+                    toasts: s.toasts.filter((_, i) => i !== index),
+                  };
+                });
               }, 1_000);
             }
           },
-          [layout.toasts],
+          [state.toasts, updateEphemeral],
         );
 
         return <DeckLayout onDismissToast={handleDismissToast} />;

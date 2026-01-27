@@ -11,4 +11,3 @@ tasks:
       - '--entryPoint=src/index.ts'
       - '--platform=browser'
       - '--platform=node'
-      - '--preactSignalTracking'

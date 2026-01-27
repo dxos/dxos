@@ -20,12 +20,13 @@ import { Stream } from '@dxos/codec-protobuf/stream';
 import { Context, ContextDisposedError } from '@dxos/context';
 import { raise } from '@dxos/debug';
 import { type Database, Ref } from '@dxos/echo';
+import { batchEvents } from '@dxos/echo/internal';
 import { type DatabaseDirectory, EncodedReference, type ObjectStructure, type SpaceState } from '@dxos/echo-protocol';
-import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { type ObjectId } from '@dxos/keys';
 import { type DXN, type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { RpcClosedError } from '@dxos/protocols';
 import type { QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 import type { DataService, SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
 import { trace } from '@dxos/tracing';
@@ -110,6 +111,9 @@ export class CoreDatabase {
   readonly rootChanged = new Event<void>();
 
   readonly saveStateChanged: ReadOnlyEvent<SaveStateChangedEvent>;
+
+  /** Fires when service connection is re-established after a leader change. */
+  private readonly _reconnected = new Event<void>();
 
   constructor({ graph, dataService, queryService, spaceId, spaceKey }: CoreDatabaseProps) {
     this._hypergraph = graph;
@@ -213,7 +217,8 @@ export class CoreDatabase {
   @synchronized
   async updateSpaceState(spaceState: SpaceState): Promise<void> {
     invariant(this._ctx, 'Must be open');
-    if (spaceState.rootUrl === this._automergeDocLoader.getSpaceRootDocHandle().url) {
+    const currentRootUrl = this._automergeDocLoader.getSpaceRootDocHandle().url;
+    if (spaceState.rootUrl === currentRootUrl) {
       return;
     }
     this._unsubscribeFromHandles();
@@ -523,6 +528,7 @@ export class CoreDatabase {
     core.setDecoded([], newStruct);
   }
 
+  // TODO(wittjosiah): Handle RpcClosedError and TimeoutError during reconnection gracefully.
   async flush({ disk = true, indexes = false, updates = false }: Database.FlushOptions = {}): Promise<void> {
     log('flush', { disk, indexes, updates });
     // Wait for pending document creations to complete before flushing.
@@ -634,19 +640,46 @@ export class CoreDatabase {
   }
 
   subscribeToSyncState(ctx: Context, callback: (state: SpaceSyncState) => void): CleanupFn {
-    const stream = this._dataService.subscribeSpaceSyncState({ spaceId: this.spaceId }, { timeout: RPC_TIMEOUT });
-    stream.subscribe(
-      (data) => {
-        void runInContextAsync(ctx, () => callback(data));
-      },
-      (err) => {
-        if (err) {
-          ctx.raise(err);
-        }
-      },
-    );
-    ctx.onDispose(() => stream.close());
-    return () => stream.close();
+    let currentStream: ReturnType<DataService['subscribeSpaceSyncState']> | undefined;
+
+    const setupStream = () => {
+      currentStream = this._dataService.subscribeSpaceSyncState({ spaceId: this.spaceId }, { timeout: RPC_TIMEOUT });
+      currentStream.subscribe(
+        (data) => {
+          void runInContextAsync(ctx, () => callback(data));
+        },
+        (err) => {
+          if (err instanceof RpcClosedError) {
+            // Wait for reconnection and re-establish the stream.
+            this._reconnected.once(ctx, () => setupStream());
+          } else if (err) {
+            ctx.raise(err);
+          }
+        },
+      );
+    };
+
+    setupStream();
+    ctx.onDispose(() => currentStream?.close());
+    return () => currentStream?.close();
+  }
+
+  /**
+   * Update service references after reconnection.
+   */
+  _updateServices({ dataService, queryService }: { dataService: DataService; queryService: QueryService }): void {
+    (this as any)._dataService = dataService;
+    (this as any)._queryService = queryService;
+    this._repoProxy._updateDataService(dataService);
+  }
+
+  /**
+   * Handle reconnection to re-establish RPC streams.
+   */
+  async _onReconnect(): Promise<void> {
+    log('re-establishing database streams');
+    await this._repoProxy._onReconnect();
+    this._reconnected.emit();
   }
 
   getLoadedDocumentHandles(): DocHandleProxy<any>[] {
@@ -717,7 +750,7 @@ export class CoreDatabase {
       return;
     }
 
-    compositeRuntime.batch(() => {
+    batchEvents(() => {
       for (const id of itemsUpdated) {
         const objCore = this._objects.get(id);
         if (objCore) {
@@ -891,7 +924,7 @@ export class CoreDatabase {
     this._objectsForNextUpdate.clear();
     this._objectsForNextDbUpdate.clear();
 
-    compositeRuntime.batch(() => {
+    batchEvents(() => {
       if (allDbUpdates.size > 0) {
         this._updateEvent.emit({
           spaceId: this.spaceId,
