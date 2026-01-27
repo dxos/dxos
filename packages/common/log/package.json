@@ -8,6 +8,26 @@
   "author": "DXOS.org",
   "sideEffects": true,
   "type": "module",
+  "imports": {
+    "#platform": {
+      "source": {
+        "browser": "./src/platform/browser/index.ts",
+        "default": "./src/platform/node/index.ts"
+      },
+      "types": "./dist/types/src/platform/node/index.d.ts",
+      "browser": "./dist/lib/browser/platform/browser/index.mjs",
+      "default": "./dist/lib/node-esm/platform/node/index.mjs"
+    },
+    "#console-processor": {
+      "source": {
+        "browser": "./src/processors/console-stub.ts",
+        "default": "./src/processors/console-processor.ts"
+      },
+      "types": "./dist/types/src/processors/console-processor.d.ts",
+      "browser": "./dist/lib/browser/processors/console-stub.mjs",
+      "default": "./dist/lib/node-esm/processors/console-processor.mjs"
+    }
+  },
   "exports": {
     ".": {
       "types": "./dist/types/src/index.d.ts",
@@ -17,10 +37,6 @@
         "default": "./dist/lib/node-esm/index.mjs"
       }
     }
-  },
-  "browser": {
-    "./src/platform/node/index.ts": "./src/platform/browser/index.ts",
-    "./src/processors/console-processor.ts": "./src/processors/console-stub.ts"
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
