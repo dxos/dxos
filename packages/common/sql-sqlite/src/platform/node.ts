@@ -11,15 +11,16 @@ import * as Layer from 'effect/Layer';
 
 import * as SqlExport from '../SqlExport';
 
-exportconst sqlExportLayer: Layer.Layer<SqlExport.SqlExport, SqlError.SqlError, SqliteClient.SqliteClient> = Layer.effect(
-  SqlExport.SqlExport,
-  Effect.gen(function* () {
-    const sql = yield* SqliteClient.SqliteClient;
-    return {
-      export: sql.export,
-    } satisfies SqlExport.Service;
-  }),
-);
+export const sqlExportLayer: Layer.Layer<SqlExport.SqlExport, SqlError.SqlError, SqliteClient.SqliteClient> =
+  Layer.effect(
+    SqlExport.SqlExport,
+    Effect.gen(function* () {
+      const sql = yield* SqliteClient.SqliteClient;
+      return {
+        export: sql.export,
+      } satisfies SqlExport.Service;
+    }),
+  );
 
 export const layerMemory: Layer.Layer<
   SqlClient.SqlClient | SqliteClient.SqliteClient,

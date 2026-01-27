@@ -23,6 +23,7 @@ import {
 import { RtcTransportProxyFactory } from '@dxos/network-manager';
 import { type RpcPort } from '@dxos/rpc';
 import * as OpfsWorker from '@dxos/sql-sqlite/OpfsWorker';
+import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 import * as SqliteClient from '@dxos/sql-sqlite/SqliteClient';
 import { type MaybePromise } from '@dxos/util';
 
@@ -65,7 +66,7 @@ export class WorkerRuntime {
   private _config!: Config;
   private _signalMetadataTags: any = { runtime: 'worker-runtime' };
   private _signalTelemetryEnabled: boolean = false;
-  private _runtime!: ManagedRuntime.ManagedRuntime<SqlClient.SqlClient, never>;
+  private _runtime!: ManagedRuntime.ManagedRuntime<SqlClient.SqlClient | SqlExport.SqlExport, never>;
 
   constructor({
     channel = DEFAULT_WORKER_BROADCAST_CHANNEL,
@@ -207,6 +208,20 @@ export class WorkerRuntime {
 }
 
 const DB_NAME = 'DXOS';
+
+/**
+ * SqlExport layer that wraps SqliteClient to provide export functionality.
+ */
+const SqlExportLayer: Layer.Layer<SqlExport.SqlExport, never, SqliteClient.SqliteClient> = Layer.effect(
+  SqlExport.SqlExport,
+  Effect.gen(function* () {
+    const sql = yield* SqliteClient.SqliteClient;
+    return {
+      export: sql.export,
+    } satisfies SqlExport.Service;
+  }),
+);
+
 /**
  * Local SQLite layer for the worker.
  * Uses OPFS sync API as an FS backend.
@@ -227,6 +242,6 @@ const LocalSqliteOpfsLayer = Layer.unwrapScoped(
     );
 
     yield* Effect.forkScoped(OpfsWorker.run({ port: serverPort, dbName: DB_NAME }));
-    return SqliteClient.layer({ worker: Effect.succeed(clientPort) });
+    return SqlExportLayer.pipe(Layer.provideMerge(SqliteClient.layer({ worker: Effect.succeed(clientPort) })));
   }),
 );

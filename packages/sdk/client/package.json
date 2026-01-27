@@ -7,7 +7,7 @@
   "repository": "github:dxos/dxos",
   "license": "MIT",
   "author": "DXOS.org",
-  "sideEffects": false,
+  "sideEffects": true,
   "type": "module",
   "imports": {
     "#opfs-worker": {
