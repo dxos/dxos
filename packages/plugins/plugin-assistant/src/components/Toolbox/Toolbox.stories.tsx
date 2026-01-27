@@ -11,7 +11,6 @@ import { capabilities } from '@dxos/assistant-toolkit/testing';
 import { ChessPlugin } from '@dxos/plugin-chess';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { MapPlugin } from '@dxos/plugin-map';
-import { SpacePlugin } from '@dxos/plugin-space';
 import { TablePlugin } from '@dxos/plugin-table';
 import { corePlugins } from '@dxos/plugin-testing';
 import { withTheme } from '@dxos/react-ui/testing';
@@ -39,7 +38,6 @@ const meta = {
               yield* Effect.promise(() => client.halo.createIdentity());
             }),
         }),
-        SpacePlugin({}),
         ChessPlugin(),
         MapPlugin(),
         TablePlugin(),

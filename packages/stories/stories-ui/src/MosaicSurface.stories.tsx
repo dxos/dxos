@@ -87,6 +87,7 @@ const meta = {
     withPluginManager<{ title?: string; content?: string }>(() => ({
       plugins: [
         ...corePlugins(),
+        StorybookPlugin({}),
         ClientPlugin({
           types: [TestColumn, TestItem, Organization.Organization, Person.Person, Project.Project],
           onClientInitialized: ({ client }) =>
@@ -106,8 +107,6 @@ const meta = {
               );
             }),
         }),
-        StorybookPlugin({}),
-        // PreviewPlugin(),
       ],
     })),
   ],
@@ -126,3 +125,6 @@ export const Default: Story = {
     columns: 3,
   },
 };
+function PreviewPlugin() {
+  throw new Error('Function not implemented.');
+}

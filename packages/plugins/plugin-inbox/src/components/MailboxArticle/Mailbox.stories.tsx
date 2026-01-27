@@ -13,7 +13,6 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
-import { SpacePlugin } from '@dxos/plugin-space';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { Filter, useDatabase, useQuery } from '@dxos/react-client/echo';
 import { withTheme } from '@dxos/react-ui/testing';
@@ -92,10 +91,10 @@ export const WithCompanion: Story = {
               yield* Effect.promise(() => initializeMailbox(client.spaces.default));
             }),
         }),
-        SpacePlugin({}),
-        PreviewPlugin(),
-        InboxPlugin(),
+
         StorybookPlugin({}),
+        InboxPlugin(),
+        PreviewPlugin(),
       ],
     }),
   ],

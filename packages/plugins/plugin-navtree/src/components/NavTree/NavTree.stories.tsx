@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import React, { type KeyboardEvent, useCallback, useRef } from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
-import { Capability, Common, RuntimePlugin } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { useAtomCapability } from '@dxos/app-framework/react';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { OperationResolver } from '@dxos/operation';
@@ -123,9 +123,11 @@ const meta = {
     withPluginManager({
       plugins: [
         ...corePlugins(),
-        RuntimePlugin(),
+        StorybookPlugin({
+          initialState: { sidebarState: 'expanded' },
+        }),
+
         NavTreePlugin(),
-        StorybookPlugin({ initialState: { sidebarState: 'expanded' } }),
       ],
       capabilities: () => {
         const storyStateAtom = Atom.make({ tab: 'space-0' }).pipe(Atom.keepAlive);

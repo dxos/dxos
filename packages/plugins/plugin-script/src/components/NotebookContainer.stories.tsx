@@ -16,7 +16,6 @@ import { AutomationPlugin } from '@dxos/plugin-automation';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { ExplorerPlugin } from '@dxos/plugin-explorer';
 import { Markdown, MarkdownPlugin } from '@dxos/plugin-markdown';
-import { SpacePlugin } from '@dxos/plugin-space';
 import { corePlugins } from '@dxos/plugin-testing';
 import { Config, useClient } from '@dxos/react-client';
 import { useQuery } from '@dxos/react-client/echo';
@@ -64,7 +63,6 @@ const meta = {
               space.db.add(serializeFunction(Agent.prompt));
             }),
         }),
-        SpacePlugin({}),
         AssistantPlugin(),
         AutomationPlugin(),
         ExplorerPlugin(),
