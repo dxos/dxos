@@ -328,14 +328,22 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     if (parentRef === undefined) {
       return undefined;
     }
+    const parentDXN = EncodedReference.toDXN(parentRef);
     const database = target[symbolInternals].database;
     if (database) {
-      // Include deleted objects when resolving parent, since parent hierarchy
-      // needs to work even when the parent is deleted.
-      return database.getObjectById(parentRef.objectId, { deleted: true });
+      // TODO(dmaretskyi): Put refs into proxy cache.
+      return database.graph
+        .createRefResolver({
+          context: {
+            space: database.spaceId,
+          },
+        })
+        .resolveSync(parentDXN, false);
     } else {
       invariant(target[symbolInternals].linkCache);
-      return target[symbolInternals].linkCache.get(parentRef.objectId);
+      const echoId = parentDXN.asEchoDXN()?.echoId;
+      invariant(echoId);
+      return target[symbolInternals].linkCache.get(echoId);
     }
   }
 

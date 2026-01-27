@@ -527,19 +527,16 @@ export const toJSON = (entity: Entity.Unknown): JSON => objectToJSON(entity);
 export const fromJSON: (json: unknown, options?: { refResolver?: Ref.Resolver; dxn?: DXN }) => Promise<Any> =
   objectFromJSON as any;
 
-//
-// Annotations
-//
-
 export const setDeleted = (entity: Entity.Unknown, value: boolean) => {
   if (value === false && isObject(entity)) {
     const parent = getParent(entity);
+    // TODO(dmaretskyi): This is broken because getParent returns undefined if the parent is deleted.
     if (parent && isDeleted(parent)) {
       throw new Error('Cannot restore object when parent is deleted.');
     }
   }
 
-  // TODO(dmaretskyi): Move this to a more appropriate place or expose via public API.
+  // TODO(dmaretskyi): What kind of AI slop is this?
   const db = getDatabase(entity) as any;
   // Try coreDatabase first (EchoDatabase), then fallback to direct method (CoreDatabase).
   const coreDatabase = db?.coreDatabase ?? db;

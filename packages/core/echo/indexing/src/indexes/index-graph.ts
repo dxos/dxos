@@ -176,7 +176,7 @@ export class IndexGraph extends Resource implements Index {
 
     const parent = ObjectStructure.getParent(object);
     if (parent) {
-      const parentObject = decodeReference(parent).toDXN().asEchoDXN()?.echoId;
+      const parentObject = EncodedReference.toDXN(parent).asEchoDXN()?.echoId;
       if (parentObject) {
         defaultMap(this._children, parentObject, () => new Set()).add(id);
         targetMapping.add(parentObject);

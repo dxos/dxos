@@ -384,7 +384,7 @@ export class ObjectCore {
 
   getSource(): EncodedReference | undefined {
     const res = this._getRaw([SYSTEM_NAMESPACE, 'source']);
-    if (!res || !isEncodedReference(res)) {
+    if (!res || !EncodedReference.isEncodedReference(res)) {
       return undefined;
     }
     return res;
@@ -397,7 +397,7 @@ export class ObjectCore {
 
   getTarget(): EncodedReference | undefined {
     const res = this._getRaw([SYSTEM_NAMESPACE, 'target']);
-    if (!res || !isEncodedReference(res)) {
+    if (!res || !EncodedReference.isEncodedReference(res)) {
       return undefined;
     }
     return res;
@@ -410,7 +410,7 @@ export class ObjectCore {
 
   getParent(): EncodedReference | undefined {
     const res = this._getRaw([SYSTEM_NAMESPACE, 'parent']);
-    if (!res || !isEncodedReference(res)) {
+    if (!res || !EncodedReference.isEncodedReference(res)) {
       return undefined;
     }
     return res;
@@ -426,7 +426,7 @@ export class ObjectCore {
 
   getType(): EncodedReference | undefined {
     const res = this._getRaw([SYSTEM_NAMESPACE, 'type']);
-    if (!res || !isEncodedReference(res)) {
+    if (!res || !EncodedReference.isEncodedReference(res)) {
       return undefined;
     }
     return res;
