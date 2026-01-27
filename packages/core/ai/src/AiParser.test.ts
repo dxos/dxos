@@ -71,12 +71,7 @@ describe('parser', () => {
       Effect.fn(function* ({ expect }) {
         const result = yield* makeInputStream([
           ...text(['Hello, world!']),
-          Response.makePart('tool-call', {
-            id: '123',
-            name: 'foo',
-            params: { bar: 'baz' },
-            providerExecuted: false,
-          }),
+          ...toolCall('123', 'foo', { bar: 'baz' }),
         ])
           .pipe(parseResponse())
           .pipe(Stream.runCollect)
@@ -103,12 +98,7 @@ describe('parser', () => {
       Effect.fn(function* ({ expect }) {
         const result = yield* makeInputStream([
           ...text(['<status>I am thinking...']),
-          Response.makePart('tool-call', {
-            id: '123',
-            name: 'foo',
-            params: { bar: 'baz' },
-            providerExecuted: false,
-          }),
+          ...toolCall('123', 'foo', { bar: 'baz' }),
         ])
           .pipe(parseResponse())
           .pipe(Stream.runCollect)
@@ -269,12 +259,7 @@ describe('parser', () => {
     const PARTS: Response.StreamPart<any>[] = [
       ...reasoning('My thoughts are...'),
       ...text(['Hello, ', 'world!']),
-      Response.makePart('tool-call', {
-        id: '123',
-        name: 'foo',
-        params: { bar: 'baz' },
-        providerExecuted: false,
-      }),
+      ...toolCall('123', 'foo', { bar: 'baz' }),
     ];
 
     it.effect(
@@ -326,6 +311,22 @@ describe('parser', () => {
                 _tag: 'toolCall',
                 toolCallId: '123',
                 name: 'foo',
+                input: '',
+                pending: true,
+                providerExecuted: false,
+              },
+              {
+                _tag: 'toolCall',
+                toolCallId: '123',
+                name: 'foo',
+                input: '{"bar":"baz"}',
+                pending: true,
+                providerExecuted: false,
+              },
+              {
+                _tag: 'toolCall',
+                toolCallId: '123',
+                name: 'foo',
                 input: '{"bar":"baz"}',
                 providerExecuted: false,
               },
@@ -360,5 +361,13 @@ const reasoning = (text: string): Iterable<Response.StreamPart<any>> => {
     Response.makePart('reasoning-start', { id }),
     Response.makePart('reasoning-delta', { id, delta: text }),
     Response.makePart('reasoning-end', { id }),
+  ];
+};
+
+const toolCall = (id: string, name: string, params: Record<string, unknown>): Iterable<Response.StreamPart<any>> => {
+  return [
+    Response.makePart('tool-params-start', { id, name, providerExecuted: false }),
+    Response.makePart('tool-params-delta', { id, delta: JSON.stringify(params) }),
+    Response.makePart('tool-params-end', { id }),
   ];
 };
