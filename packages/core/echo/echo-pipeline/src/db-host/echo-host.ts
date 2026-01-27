@@ -11,7 +11,7 @@ import { todo } from '@dxos/debug';
 import { type DatabaseDirectory, SpaceDocVersion, createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { RuntimeProvider } from '@dxos/effect';
 import { FeedStore } from '@dxos/feed';
-import { IndexEngine, type SqlTransaction } from '@dxos/index-core';
+import { IndexEngine } from '@dxos/index-core';
 import { IndexMetadataStore, IndexStore, Indexer } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
@@ -19,6 +19,7 @@ import { type LevelDB } from '@dxos/kv-store';
 import { log } from '@dxos/log';
 import type { QueueService } from '@dxos/protocols';
 import { IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
+import type * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 import { trace } from '@dxos/tracing';
 
 import {
@@ -67,7 +68,7 @@ export type EchoHostProps = {
   getSpaceKeyByRootDocumentId?: RootDocumentSpaceKeyProvider;
 
   indexing?: Partial<EchoHostIndexingConfig>;
-  runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
+  runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransaction.SqlTransaction>;
 
   /**
    * Use SQLite-backed local-first durable queues.
@@ -100,7 +101,7 @@ export class EchoHost extends Resource {
   private readonly _automergeDataSource: AutomergeDataSource;
   private readonly _indexer2: IndexEngine;
   private readonly _indexConfig: EchoHostIndexingConfig;
-  private readonly _runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransaction>;
+  private readonly _runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransaction.SqlTransaction>;
   private readonly _feedStore?: FeedStore;
   private readonly _queueDataSource?: QueueDataSource;
 
