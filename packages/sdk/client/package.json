@@ -9,6 +9,13 @@
   "author": "DXOS.org",
   "sideEffects": false,
   "type": "module",
+  "imports": {
+    "#opfs-worker": {
+      "source": "./src/worker/opfs-worker.ts",
+      "types": "./dist/types/src/worker/opfs-worker.d.ts",
+      "browser": "./dist/lib/browser/worker/opfs-worker.mjs"
+    }
+  },
   "exports": {
     "./devtools": {
       "source": "./src/devtools/index.ts",

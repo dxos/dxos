@@ -11,6 +11,8 @@ import { type LocalClientServicesParams, fromHost } from './local-client-service
 import { fromSocket } from './socket';
 import { type WorkerClientServicesProps, fromWorker } from './worker-client-services';
 
+const DEFAULT_CREATE_OPFS_WORKER = () => new Worker(new URL('#opfs-worker', import.meta.url), { type: 'module' });
+
 /**
  * Create services from config.
  * @param config
@@ -50,6 +52,10 @@ export const createClientServices = (
     //  However, while SharedWorker is supported by iOS, it is not fully working and there's no way to inspect it.
     useWorker = typeof SharedWorker !== 'undefined' && parser.getOS().name !== 'iOS';
   }
+
+  // Create OPFS worker if we're running in a tab.
+  const actaulCreateOpfsWorker =
+    createOpfsWorker ?? (typeof window !== 'undefined' ? DEFAULT_CREATE_OPFS_WORKER : undefined);
 
   return createWorker && useWorker
     ? fromWorker(config, { createWorker, observabilityGroup, signalTelemetryEnabled })
