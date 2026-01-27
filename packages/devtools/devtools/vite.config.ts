@@ -72,13 +72,7 @@ export default defineConfig({
     }),
     TopLevelAwaitPlugin(),
     WasmPlugin(),
-    react({
-      tsDecorators: true,
-      plugins: [
-        // https://github.com/XantreDev/preact-signals/tree/main/packages/react#how-parser-plugins-works
-        ['@preact-signals/safe-react/swc', { mode: 'all' }],
-      ],
-    }),
+    react({ tsDecorators: true }),
     VitePWA({
       // TODO(wittjosiah): Remove once this has been released.
       selfDestroying: true,

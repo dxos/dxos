@@ -22,8 +22,7 @@ export default Capability.makeModule(
           {
             id: HelpOperation.Start.meta.key,
             data: Effect.fnUntraced(function* () {
-              const state = yield* Capability.get(HelpCapabilities.MutableState);
-              state.showHints = true;
+              yield* Common.Capability.updateAtomValue(HelpCapabilities.State, (s) => ({ ...s, showHints: true }));
               yield* Operation.invoke(HelpOperation.Start);
             }),
             properties: {
@@ -40,8 +39,7 @@ export default Capability.makeModule(
           {
             id: `${meta.id}/open-shortcuts`,
             data: Effect.fnUntraced(function* () {
-              const state = yield* Capability.get(HelpCapabilities.MutableState);
-              state.showHints = true;
+              yield* Common.Capability.updateAtomValue(HelpCapabilities.State, (s) => ({ ...s, showHints: true }));
               yield* Operation.invoke(Common.LayoutOperation.UpdateDialog, {
                 subject: SHORTCUTS_DIALOG,
                 blockAlign: 'center',

@@ -2,13 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
-import { effect } from '@preact/signals-core';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { Trigger, sleep } from '@dxos/async';
+import { Trigger } from '@dxos/async';
 import { Obj, Type } from '@dxos/echo';
-import { registerSignalsRuntime } from '@dxos/echo-signals';
-import { log } from '@dxos/log';
 
 import { EchoTestBuilder } from '../testing';
 
@@ -62,34 +59,6 @@ describe('create subscription', () => {
     });
     actions.push('after');
 
-    // NOTE: This order is required for input components in react to function properly when directly bound to ECHO objects.
-    expect(actions).to.deep.equal(['update', 'before', 'update', 'after']);
-  });
-
-  test('signal updates are synchronous', async () => {
-    registerSignalsRuntime();
-
-    const { db } = await builder.createDatabase();
-    const task = Obj.make(Type.Expando, {});
-    db.add(task);
-
-    const actions: string[] = [];
-    const clearEffect = effect(() => {
-      log('effect', { title: task.title });
-      actions.push('update');
-    });
-    // Initial update caused by changed selection.
-    expect(actions).to.deep.equal(['update']);
-
-    actions.push('before');
-    Obj.change(task, (t) => {
-      t.title = 'Test title';
-    });
-    actions.push('after');
-
-    await sleep(10);
-
-    clearEffect();
     // NOTE: This order is required for input components in react to function properly when directly bound to ECHO objects.
     expect(actions).to.deep.equal(['update', 'before', 'update', 'after']);
   });

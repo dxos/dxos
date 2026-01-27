@@ -28,7 +28,7 @@ import {
   OBJECT_RENAME_POPOVER,
   SPACE_RENAME_POPOVER,
 } from '../../constants';
-import { SpaceEvents } from '../../events';
+import { SpaceEvents } from '../../types';
 import { SpaceCapabilities, SpaceOperation } from '../../types';
 import { COMPOSER_SPACE_LOCK, cloneObject, getNestedObjects } from '../../util';
 
@@ -123,8 +123,10 @@ export default Capability.makeModule(
         OperationResolver.make({
           operation: SpaceOperation.WaitForObject,
           handler: Effect.fnUntraced(function* (input) {
-            const state = yield* Capability.get(SpaceCapabilities.MutableState);
-            state.awaiting = input.id;
+            yield* Common.Capability.updateAtomValue(SpaceCapabilities.EphemeralState, (current) => ({
+              ...current,
+              awaiting: input.id,
+            }));
           }),
         }),
 
@@ -147,7 +149,7 @@ export default Capability.makeModule(
         OperationResolver.make({
           operation: SpaceOperation.RemoveObjects,
           handler: Effect.fnUntraced(function* (input) {
-            const layout = yield* Capability.get(Common.Capability.Layout);
+            const layout = yield* Common.Capability.getAtomValue(Common.Capability.Layout);
             const objects = input.objects as Obj.Any[];
 
             // All objects must be a member of the same space.
@@ -222,32 +224,33 @@ export default Capability.makeModule(
         //
         OperationResolver.make({
           operation: SpaceOperation.DeleteField,
-          handler: (input) =>
-            Effect.promise(async () => {
-              const view = input.view as any;
-              const db = Obj.getDatabase(view);
-              invariant(db);
-              const typename = getTypenameFromQuery(view.query.ast);
-              invariant(typename);
-              const schema = await db.schemaRegistry.query({ typename }).firstOrUndefined();
-              invariant(schema);
+          handler: Effect.fnUntraced(function* (input) {
+            const registry = yield* Capability.get(Common.Capability.AtomRegistry);
+            const view = input.view as any;
+            const db = Obj.getDatabase(view);
+            invariant(db);
+            const typename = getTypenameFromQuery(view.query.ast);
+            invariant(typename);
+            const schema = yield* Effect.promise(() => db.schemaRegistry.query({ typename }).firstOrUndefined());
+            invariant(schema);
 
-              // Create projection with change callbacks that wrap in Obj.change().
-              const projection = new ProjectionModel(
-                schema.jsonSchema,
-                view.projection,
-                createEchoChangeCallback(view, schema),
-              );
+            // Create projection with change callbacks that wrap in Obj.change().
+            const projection = new ProjectionModel({
+              registry,
+              view,
+              baseSchema: schema.jsonSchema,
+              change: createEchoChangeCallback(view, schema),
+            });
 
-              const result = projection.deleteFieldProjection(input.fieldId);
+            const result = projection.deleteFieldProjection(input.fieldId);
 
-              // Return data needed for undo.
-              return {
-                field: result.deleted.field,
-                props: result.deleted.props,
-                index: result.index,
-              };
-            }),
+            // Return data needed for undo.
+            return {
+              field: result.deleted.field,
+              props: result.deleted.props,
+              index: result.index,
+            };
+          }),
         }),
 
         //
@@ -256,7 +259,7 @@ export default Capability.makeModule(
         OperationResolver.make({
           operation: SpaceOperation.OpenCreateObject,
           handler: Effect.fnUntraced(function* (input) {
-            const state = yield* Capability.get(SpaceCapabilities.State);
+            const ephemeralState = yield* Common.Capability.getAtomValue(SpaceCapabilities.EphemeralState);
             const navigable = input.navigable ?? true;
             yield* Operation.invoke(Common.LayoutOperation.UpdateDialog, {
               subject: CREATE_OBJECT_DIALOG,
@@ -271,7 +274,7 @@ export default Capability.makeModule(
                   ? (object: Obj.Any) => {
                       const isCollection = Obj.instanceOf(Collection.Collection, object);
                       const isSystemCollection = Obj.instanceOf(Collection.Managed, object);
-                      return (!isCollection && !isSystemCollection) || state.navigableCollections;
+                      return (!isCollection && !isSystemCollection) || ephemeralState.navigableCollections;
                     }
                   : () => false,
               },
@@ -441,13 +444,18 @@ export default Capability.makeModule(
         OperationResolver.make({
           operation: SpaceOperation.Migrate,
           handler: Effect.fnUntraced(function* (input) {
-            const state = yield* Capability.get(SpaceCapabilities.MutableState);
             const { space, version: targetVersion } = input;
 
             if (space.state.get() === SpaceState.SPACE_REQUIRES_MIGRATION) {
-              state.sdkMigrationRunning[space.id] = true;
+              yield* Common.Capability.updateAtomValue(SpaceCapabilities.EphemeralState, (current) => ({
+                ...current,
+                sdkMigrationRunning: { ...current.sdkMigrationRunning, [space.id]: true },
+              }));
               yield* Effect.promise(() => space.internal.migrate());
-              state.sdkMigrationRunning[space.id] = false;
+              yield* Common.Capability.updateAtomValue(SpaceCapabilities.EphemeralState, (current) => ({
+                ...current,
+                sdkMigrationRunning: { ...current.sdkMigrationRunning, [space.id]: false },
+              }));
             }
             const result = yield* Effect.promise(() => Migrations.migrate(space, targetVersion));
 
@@ -681,25 +689,26 @@ export default Capability.makeModule(
         //
         OperationResolver.make({
           operation: SpaceOperation.RestoreField,
-          handler: (input) =>
-            Effect.promise(async () => {
-              const view = input.view as any;
-              const db = Obj.getDatabase(view);
-              invariant(db);
-              const typename = getTypenameFromQuery(view.query.ast);
-              invariant(typename);
-              const schema = await db.schemaRegistry.query({ typename }).firstOrUndefined();
-              invariant(schema);
+          handler: Effect.fnUntraced(function* (input) {
+            const registry = yield* Capability.get(Common.Capability.AtomRegistry);
+            const view = input.view as any;
+            const db = Obj.getDatabase(view);
+            invariant(db);
+            const typename = getTypenameFromQuery(view.query.ast);
+            invariant(typename);
+            const schema = yield* Effect.promise(() => db.schemaRegistry.query({ typename }).firstOrUndefined());
+            invariant(schema);
 
-              // Create projection with change callbacks that wrap in Obj.change().
-              const projection = new ProjectionModel(
-                schema.jsonSchema,
-                view.projection,
-                createEchoChangeCallback(view, schema),
-              );
+            // Create projection with change callbacks that wrap in Obj.change().
+            const projection = new ProjectionModel({
+              registry,
+              view,
+              baseSchema: schema.jsonSchema,
+              change: createEchoChangeCallback(view, schema),
+            });
 
-              projection.setFieldProjection({ field: input.field, props: input.props }, input.index);
-            }),
+            projection.setFieldProjection({ field: input.field, props: input.props }, input.index);
+          }),
         }),
 
         //

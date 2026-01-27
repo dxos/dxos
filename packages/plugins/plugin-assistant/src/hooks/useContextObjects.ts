@@ -40,7 +40,7 @@ export const useContextObjects = ({ db, context }: UseContextObjectsProps): UseC
   );
 
   return {
-    objects: context?.objects.value ?? [],
+    objects: context?.getObjects() ?? [],
     onUpdateObject: handleUpdateObject,
   };
 };

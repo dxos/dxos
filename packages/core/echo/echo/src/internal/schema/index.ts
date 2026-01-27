@@ -5,4 +5,3 @@
 export * from './echo-schema';
 export * from './manipulation';
 export * from './persistent-schema';
-export * from './snapshot';

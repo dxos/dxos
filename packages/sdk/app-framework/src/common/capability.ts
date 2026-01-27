@@ -3,7 +3,8 @@
 //
 
 import type * as Command$ from '@effect/cli/Command';
-import type { Registry } from '@effect-atom/atom-react';
+import { Atom, type Registry } from '@effect-atom/atom-react';
+import * as Effect from 'effect/Effect';
 import type * as Layer$ from 'effect/Layer';
 import type * as ManagedRuntime$ from 'effect/ManagedRuntime';
 import type * as Schema$ from 'effect/Schema';
@@ -15,7 +16,6 @@ import type { GenericToolkit } from '@dxos/assistant';
 import type { Blueprint } from '@dxos/blueprints';
 import type { Database, Type } from '@dxos/echo';
 import type { FunctionDefinition } from '@dxos/functions';
-import type { RootSettingsStore } from '@dxos/local-storage';
 import type { OperationInvoker as OperationInvoker$, OperationResolver as OperationResolver$ } from '@dxos/operation';
 import type { AnchoredTo } from '@dxos/types';
 
@@ -103,9 +103,11 @@ export namespace Capability {
   }>;
 
   /**
+   * Layout capability - provides reactive access to the current layout state.
+   * Use `useAtomValue(layoutAtom)` in React or `registry.get(layoutAtom)` in Effects.
    * @category Capability
    */
-  export const Layout = Capability$.make<Layout>('dxos.org/app-framework/capability/layout');
+  export const Layout = Capability$.make<Atom.Atom<Layout>>('dxos.org/app-framework/capability/layout');
 
   /**
    * @category Capability
@@ -136,19 +138,26 @@ export namespace Capability {
     'dxos.org/app-framework/capability/app-graph-serializer',
   );
 
-  /**
-   * @category Capability
-   */
-  export const SettingsStore = Capability$.make<RootSettingsStore>('dxos.org/app-framework/capability/settings-store');
-
   // TODO(wittjosiah): The generics caused type inference issues for schemas when contributing settings.
   // export type Settings = Parameters<RootSettingsStore['createStore']>[0];
   // export type Settings<T extends SettingsValue = SettingsValue> = SettingsProps<T>;
   export type Settings = {
     prefix: string;
     schema: Schema$.Schema.All;
-    value?: Record<string, any>;
+    atom: Atom.Writable<any>;
   };
+
+  /**
+   * Type guard to check if a value is a Settings object.
+   */
+  export const isSettings = (value: unknown): value is Settings =>
+    typeof value === 'object' &&
+    value !== null &&
+    'prefix' in value &&
+    typeof (value as Settings).prefix === 'string' &&
+    'atom' in value &&
+    Atom.isAtom(value.atom) &&
+    Atom.isWritable(value.atom);
 
   /**
    * @category Capability
@@ -286,4 +295,49 @@ export namespace Capability {
    * @category Capability
    */
   export const HistoryTracker = Capability$.make<HistoryTracker>('dxos.org/app-framework/capability/history-tracker');
+
+  //
+  // Atom Capability Helpers
+  //
+
+  /**
+   * Get the current value of an atom capability.
+   * @example const settings = yield* Common.Capability.getAtomValue(ThreadCapabilities.Settings);
+   */
+  export const getAtomValue = <T>(
+    atomCapability: Capability$.InterfaceDef<Atom.Atom<T>>,
+  ): Effect.Effect<T, Error, Capability$.Service> =>
+    Effect.gen(function* () {
+      const registry = yield* Capability$.get(AtomRegistry);
+      const atom = yield* Capability$.get(atomCapability);
+      return registry.get(atom);
+    });
+
+  /**
+   * Update an atom capability value (requires writable atom).
+   * @example yield* Common.Capability.updateAtomValue(ThreadCapabilities.Settings, (s) => ({ ...s, foo: true }));
+   */
+  export const updateAtomValue = <T>(
+    atomCapability: Capability$.InterfaceDef<Atom.Writable<T>>,
+    fn: (current: T) => T,
+  ): Effect.Effect<void, Error, Capability$.Service> =>
+    Effect.gen(function* () {
+      const registry = yield* Capability$.get(AtomRegistry);
+      const atom = yield* Capability$.get(atomCapability);
+      registry.set(atom, fn(registry.get(atom)));
+    });
+
+  /**
+   * Subscribe to an atom capability.
+   * @example const unsubscribe = yield* Common.Capability.subscribeAtom(ThreadCapabilities.Settings, (value) => ...);
+   */
+  export const subscribeAtom = <T>(
+    atomCapability: Capability$.InterfaceDef<Atom.Atom<T>>,
+    callback: (value: T) => void,
+  ): Effect.Effect<() => void, Error, Capability$.Service> =>
+    Effect.gen(function* () {
+      const registry = yield* Capability$.get(AtomRegistry);
+      const atom = yield* Capability$.get(atomCapability);
+      return registry.subscribe(atom, () => callback(registry.get(atom)));
+    });
 }

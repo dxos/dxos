@@ -31,8 +31,7 @@
     "@dxos/debug": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/operation": "workspace:*",
-    "@dxos/util": "workspace:*",
-    "@preact-signals/safe-react": "catalog:"
+    "@dxos/util": "workspace:*"
   },
   "devDependencies": {
     "@dxos/react-client": "workspace:*",

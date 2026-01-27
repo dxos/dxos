@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type ReadonlySignal, signal } from '@preact/signals-core';
+import { Atom, type Registry } from '@effect-atom/atom-react';
 import { Chess as ChessJS } from 'chess.js';
 import { type FC, type SVGProps } from 'react';
 
@@ -85,15 +85,18 @@ export const createChess = (pgn?: string): ChessJS => {
  */
 export class ChessModel implements GameboardModel<ChessPiece> {
   private readonly _chess = new ChessJS();
-  private readonly _pieces = signal<PieceMap<ChessPiece>>({});
-  private readonly _moveIndex = signal(0);
+  private readonly _pieces = Atom.make<PieceMap<ChessPiece>>({});
+  private readonly _moveIndex = Atom.make(0);
 
-  constructor(pgn?: string) {
+  constructor(
+    private readonly _registry: Registry.Registry,
+    pgn?: string,
+  ) {
     this.update(pgn);
   }
 
   get readonly(): boolean {
-    return this._moveIndex.value !== this._chess.history().length;
+    return this._registry.get(this._moveIndex) !== this._chess.history().length;
   }
 
   get turn(): Player {
@@ -104,11 +107,11 @@ export class ChessModel implements GameboardModel<ChessPiece> {
     return this._chess;
   }
 
-  get pieces(): ReadonlySignal<PieceMap<ChessPiece>> {
+  get pieces(): Atom.Atom<PieceMap<ChessPiece>> {
     return this._pieces;
   }
 
-  get moveIndex(): ReadonlySignal<number> {
+  get moveIndex(): Atom.Atom<number> {
     return this._moveIndex;
   }
 
@@ -158,7 +161,7 @@ export class ChessModel implements GameboardModel<ChessPiece> {
 
     const current = this._chess.history();
     if (!isValidNextMove(previous, current)) {
-      this._pieces.value = {};
+      this._registry.set(this._pieces, {});
     }
 
     this._updateBoard(this._chess);
@@ -201,8 +204,8 @@ export class ChessModel implements GameboardModel<ChessPiece> {
    * Update pieces preserving identity.
    */
   private _updateBoard(chess: ChessJS): void {
-    this._pieces.value = createPieceMap(chess);
-    this._moveIndex.value = chess.history().length;
+    this._registry.set(this._pieces, createPieceMap(chess));
+    this._registry.set(this._moveIndex, chess.history().length);
   }
 }
 

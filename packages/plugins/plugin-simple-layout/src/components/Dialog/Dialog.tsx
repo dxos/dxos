@@ -4,33 +4,33 @@
 
 import React from 'react';
 
-import { Surface, useCapability } from '@dxos/app-framework/react';
+import { Surface } from '@dxos/app-framework/react';
 import { AlertDialog, Dialog as NaturalDialog } from '@dxos/react-ui';
 
-import { SimpleLayoutState } from '../../types';
+import { useSimpleLayoutState } from '../../hooks';
 import { ContentError } from '../ContentError';
 
 export const Dialog = () => {
-  const layout = useCapability(SimpleLayoutState);
+  const { state, updateState } = useSimpleLayoutState();
 
-  const DialogRoot = layout.dialogType === 'alert' ? AlertDialog.Root : NaturalDialog.Root;
-  const DialogOverlay = layout.dialogType === 'alert' ? AlertDialog.Overlay : NaturalDialog.Overlay;
+  const DialogRoot = state.dialogType === 'alert' ? AlertDialog.Root : NaturalDialog.Root;
+  const DialogOverlay = state.dialogType === 'alert' ? AlertDialog.Overlay : NaturalDialog.Overlay;
 
   return (
     <DialogRoot
-      modal={layout.dialogBlockAlign !== 'end'}
-      open={layout.dialogOpen}
-      onOpenChange={(nextOpen) => (layout.dialogOpen = nextOpen)}
+      modal={state.dialogBlockAlign !== 'end'}
+      open={state.dialogOpen}
+      onOpenChange={(nextOpen) => updateState((s) => ({ ...s, dialogOpen: nextOpen }))}
     >
-      {layout.dialogBlockAlign === 'end' ? (
-        <Surface role='dialog' data={layout.dialogContent} limit={1} fallback={ContentError} placeholder={<div />} />
+      {state.dialogBlockAlign === 'end' ? (
+        <Surface role='dialog' data={state.dialogContent} limit={1} fallback={ContentError} placeholder={<div />} />
       ) : (
         <DialogOverlay
-          blockAlign={layout.dialogBlockAlign}
-          classNames={layout.dialogOverlayClasses}
-          style={layout.dialogOverlayStyle}
+          blockAlign={state.dialogBlockAlign}
+          classNames={state.dialogOverlayClasses}
+          style={state.dialogOverlayStyle}
         >
-          <Surface role='dialog' data={layout.dialogContent} limit={1} fallback={ContentError} />
+          <Surface role='dialog' data={state.dialogContent} limit={1} fallback={ContentError} />
         </DialogOverlay>
       )}
     </DialogRoot>

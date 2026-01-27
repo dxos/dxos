@@ -9,14 +9,13 @@ import Redis from 'ioredis';
 
 import { Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { Type } from '@dxos/echo';
+import { Obj, Type } from '@dxos/echo';
 import { type EchoDatabaseImpl, Filter, type QueryResult, createDocAccessor } from '@dxos/echo-db';
 import { EchoTestPeer } from '@dxos/echo-db/testing';
 import { TestReplicator, TestReplicatorConnection } from '@dxos/echo-pipeline/testing';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
-import { type Live, live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
 
@@ -100,7 +99,7 @@ export class EchoReplicant {
 
     invariant(this._db, 'Database not initialized.');
     for (let objIdx = 0; objIdx < amount; objIdx++) {
-      const doc = live(Text, { content: '' }) satisfies Live<Text>;
+      const doc = Obj.make(Text, { content: '' }) satisfies Text;
       this._db!.add(doc);
       const accessor = createDocAccessor(doc, ['content']);
       for (let mutationIdx = 0; mutationIdx < insertions; mutationIdx++) {

@@ -60,15 +60,11 @@ export type SubscriptionOptions = {
 export interface QueryResult<T> {
   /**
    * Currently available results along with their match metadata.
-   *
-   * @reactive
    */
   readonly entries: Entry<T>[];
 
   /**
    * Currently available results.
-   *
-   * @reactive
    */
   readonly results: T[];
 

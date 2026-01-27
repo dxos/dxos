@@ -5,21 +5,28 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability, Common } from '@dxos/app-framework';
-import { live } from '@dxos/live-object';
+import { createKvsStore } from '@dxos/effect';
 
 import { meta } from '../../meta';
-import { type SpaceSettingsProps, SpaceSettingsSchema } from '../../types';
+import { SpaceCapabilities, SpaceSettingsSchema } from '../../types';
 
 export default Capability.makeModule(() =>
   Effect.sync(() => {
-    const settings = live<SpaceSettingsProps>({
-      showHidden: false,
+    const settingsAtom = createKvsStore({
+      key: meta.id,
+      schema: SpaceSettingsSchema,
+      defaultValue: () => ({
+        showHidden: false,
+      }),
     });
 
-    return Capability.contributes(Common.Capability.Settings, {
-      prefix: meta.id,
-      schema: SpaceSettingsSchema,
-      value: settings,
-    });
+    return [
+      Capability.contributes(SpaceCapabilities.Settings, settingsAtom),
+      Capability.contributes(Common.Capability.Settings, {
+        prefix: meta.id,
+        schema: SpaceSettingsSchema,
+        atom: settingsAtom,
+      }),
+    ];
   }),
 );

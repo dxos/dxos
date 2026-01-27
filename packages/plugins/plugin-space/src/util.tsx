@@ -3,13 +3,12 @@
 //
 
 import { type Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
-import { Atom } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 import type * as Schema from 'effect/Schema';
 
 import { type CapabilityManager, Common } from '@dxos/app-framework';
 import { type Space, SpaceState, isSpace } from '@dxos/client/echo';
-import { type Database, type Entity, Filter, Obj, Query, type QueryResult, Ref, Type } from '@dxos/echo';
+import { type Database, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { EXPANDO_TYPENAME } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { Migrations } from '@dxos/migrations';
@@ -27,20 +26,6 @@ export const SPACES = `${meta.id}-spaces`;
 export const COMPOSER_SPACE_LOCK = `${meta.id}/lock`;
 // TODO(wittjosiah): Remove.
 export const SHARED = 'shared-spaces';
-
-/**
- * Convert a query result to an Atom value of the objects.
- */
-export const atomFromQuery = <T extends Entity.Unknown>(query: QueryResult.QueryResult<T>): Atom.Atom<T[]> => {
-  return Atom.make((get) => {
-    const unsubscribe = query.subscribe((result) => {
-      get.setSelf(result.results);
-    });
-
-    get.addFinalizer(() => unsubscribe());
-    return query.results;
-  });
-};
 
 // TODO(wittjosiah): Factor out? Expose via capability?
 export const getSpaceDisplayName = (

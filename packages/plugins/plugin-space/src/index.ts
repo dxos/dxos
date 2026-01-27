@@ -2,8 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-export { SpaceCapabilities } from './types/capabilities';
-export { SpaceEvents } from './events';
+export { SpaceCapabilities, SpaceEvents } from './types';
 
 export * from './components';
 export * from './helpers';

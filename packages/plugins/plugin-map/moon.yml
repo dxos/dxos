@@ -10,4 +10,3 @@ tasks:
       - '--entryPoint=src/blueprints/index.ts'
       - '--entryPoint=src/types/index.ts'
       - '--entryPoint=src/testing.ts'
-      - '--preactSignalTracking'

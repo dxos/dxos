@@ -202,6 +202,101 @@ describe('PluginManager', () => {
     }),
   );
 
+  it.effect('should catch and log defects (synchronous throws) in module activation', () =>
+    Effect.gen(function* () {
+      const DefectEvent = ActivationEvent.make('dxos.org/test/defect');
+      const capturedErrors: LogEntry[] = [];
+      const removeProcessor = log.addProcessor((_config: LogConfig, entry: LogEntry) => {
+        if (entry.level === LogLevel.ERROR) {
+          capturedErrors.push(entry);
+        }
+      });
+
+      plugins = [
+        Plugin.define(testMeta).pipe(
+          Plugin.addModule({
+            activatesOn: DefectEvent,
+            id: 'DefectInEffectSync',
+            activate: () =>
+              Effect.sync(() => {
+                // This is a defect - a synchronous throw inside Effect.sync.
+                throw new Error('defect in Effect.sync');
+              }),
+          }),
+          Plugin.make,
+        )(),
+      ];
+
+      const manager = PluginManager.make({ pluginLoader });
+      yield* manager.add(testMeta.id);
+      const error = yield* Effect.flip(manager.activate(DefectEvent));
+
+      // Verify the error was caught and propagated.
+      assert.strictEqual(error.message, 'defect in Effect.sync');
+
+      // Verify the error was logged with isDefect: true.
+      const defectLog = capturedErrors.find(
+        (entry) =>
+          entry.message?.includes('module failed to activate') &&
+          entry.context?.module === 'dxos.org/plugin/test/module/DefectInEffectSync',
+      );
+      assert.isNotNull(defectLog, 'Expected error log for defect');
+      assert.strictEqual(defectLog?.context?.isDefect, true, 'Expected isDefect to be true for synchronous throw');
+
+      removeProcessor();
+    }),
+  );
+
+  it.effect('should catch and log defects when activate throws before returning Effect', () =>
+    Effect.gen(function* () {
+      const DefectEvent = ActivationEvent.make('dxos.org/test/defect-immediate');
+      const capturedErrors: LogEntry[] = [];
+      const removeProcessor = log.addProcessor((_config: LogConfig, entry: LogEntry) => {
+        if (entry.level === LogLevel.ERROR) {
+          capturedErrors.push(entry);
+        }
+      });
+
+      plugins = [
+        Plugin.define(testMeta).pipe(
+          Plugin.addModule({
+            activatesOn: DefectEvent,
+            id: 'DefectImmediate',
+            activate: () => {
+              // This throws immediately before even returning an Effect.
+              // This is the most severe type of defect.
+              throw new Error('immediate throw before Effect');
+              return Effect.succeed(undefined);
+            },
+          }),
+          Plugin.make,
+        )(),
+      ];
+
+      const manager = PluginManager.make({ pluginLoader });
+      yield* manager.add(testMeta.id);
+      const error = yield* Effect.flip(manager.activate(DefectEvent));
+
+      // Verify the error was caught and propagated.
+      assert.strictEqual(error.message, 'immediate throw before Effect');
+
+      // Verify the error was logged with isDefect: true.
+      const defectLog = capturedErrors.find(
+        (entry) =>
+          entry.message?.includes('module failed to activate') &&
+          entry.context?.module === 'dxos.org/plugin/test/module/DefectImmediate',
+      );
+      assert.isNotNull(defectLog, 'Expected error log for immediate defect');
+      assert.strictEqual(
+        defectLog?.context?.isDefect,
+        true,
+        'Expected isDefect to be true for immediate throw before Effect',
+      );
+
+      removeProcessor();
+    }),
+  );
+
   it.effect('should fire activation events', () =>
     Effect.gen(function* () {
       plugins = [

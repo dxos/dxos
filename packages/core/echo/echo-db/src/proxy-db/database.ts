@@ -9,9 +9,9 @@ import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { inspectObject } from '@dxos/debug';
 import { Database, type Entity, Obj, type QueryAST, Ref } from '@dxos/echo';
 import { type AnyProperties, assertObjectModel, setRefResolver } from '@dxos/echo/internal';
+import { getProxyTarget, isProxy } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { DXN, type PublicKey, type SpaceId } from '@dxos/keys';
-import { getProxyTarget, isLiveObject } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { type QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 import { type DataService, type SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
@@ -325,6 +325,20 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   }
 
   /**
+   * Update service references after reconnection.
+   */
+  _updateServices({ dataService, queryService }: { dataService: DataService; queryService: QueryService }): void {
+    this._coreDatabase._updateServices({ dataService, queryService });
+  }
+
+  /**
+   * Handle reconnection to re-establish RPC streams.
+   */
+  async _onReconnect(): Promise<void> {
+    await this._coreDatabase._onReconnect();
+  }
+
+  /**
    * @internal
    */
   async _loadObjectById(objectId: string, options: LoadObjectOptions = {}): Promise<Obj.Any | undefined> {
@@ -334,7 +348,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     }
 
     const obj = defaultMap(this._rootProxies, core, () => initEchoReactiveObjectRootProxy(core, this));
-    invariant(isLiveObject(obj));
+    invariant(isProxy(obj));
     return obj;
   }
 

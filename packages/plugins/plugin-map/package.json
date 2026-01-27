@@ -59,11 +59,10 @@
     "@dxos/async": "workspace:*",
     "@dxos/blueprints": "workspace:*",
     "@dxos/echo": "workspace:*",
+    "@dxos/echo-atom": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/functions": "workspace:*",
     "@dxos/invariant": "workspace:*",
-    "@dxos/live-object": "workspace:*",
-    "@dxos/local-storage": "workspace:*",
     "@dxos/operation": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
@@ -78,8 +77,7 @@
     "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@preact-signals/safe-react": "catalog:",
-    "@preact/signals-core": "catalog:",
+    "@effect-atom/atom": "catalog:",
     "react-resize-detector": "catalog:"
   },
   "devDependencies": {

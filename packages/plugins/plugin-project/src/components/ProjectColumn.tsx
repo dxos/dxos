@@ -65,8 +65,8 @@ export const ProjectColumn = ({ column }: ProjectColumnProps) => {
     const change = Type.isMutable(schema)
       ? createEchoChangeCallback(view, schema)
       : createDirectChangeCallback(view.projection, jsonSchema);
-    return new ProjectionModel(jsonSchema, view.projection, change);
-  }, [schema, view?.projection]);
+    return new ProjectionModel({ view, baseSchema: jsonSchema, change });
+  }, [schema, view]);
 
   if (!view) {
     return null;

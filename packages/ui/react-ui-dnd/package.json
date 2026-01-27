@@ -26,7 +26,6 @@
   ],
   "dependencies": {
     "@atlaskit/pragmatic-drag-and-drop": "catalog:",
-    "@preact-signals/safe-react": "catalog:",
     "@radix-ui/react-use-controllable-state": "catalog:"
   },
   "devDependencies": {

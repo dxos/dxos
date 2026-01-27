@@ -87,7 +87,9 @@ export class IndexSchema extends Resource implements Index {
         typename === EXPANDO_TYPENAME ||
         (DXN.isDXNString(typename) && DXN.parse(typename).asTypeDXN()?.type === EXPANDO_TYPENAME)
       ) {
+// Look for Expando objects under both null (legacy) and EXPANDO_TYPENAME (new).
         results.push(...Array.from(this._index.get(null) ?? []).map((id) => ({ id, rank: 1 })));
+        results.push(...Array.from(this._index.get(EXPANDO_TYPENAME) ?? []).map((id) => ({ id, rank: 1 })));
       } else if (DXN.isDXNString(typename)) {
         const dxn = DXN.parse(typename);
         if (dxn.isLocalObjectId()) {

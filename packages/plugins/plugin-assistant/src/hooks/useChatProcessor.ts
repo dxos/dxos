@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { RegistryContext } from '@effect-atom/atom-react';
+import { type Registry, RegistryContext } from '@effect-atom/atom-react';
 import type * as Runtime from 'effect/Runtime';
 import { useContext, useMemo, useState } from 'react';
 
@@ -47,7 +47,10 @@ export const useChatProcessor = ({
     // NOTE: Passing in space and getting queue from space rather than resolving the reference.
     //  This is because if the chat isn't in a space yet, the reference will not be resolvable.
     const queue = space.queues.get(chat.queue.dxn);
-    const conversation = new AiConversation(queue as Queue<any>);
+    const conversation = new AiConversation({
+      queue: queue as Queue<any>,
+      registry: observableRegistry as Registry.Registry,
+    });
     await conversation.open();
     setConversation(conversation);
     return () => {

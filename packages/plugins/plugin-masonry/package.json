@@ -49,10 +49,7 @@
     "@dxos/react-ui-stack": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",
-    "@dxos/util": "workspace:*",
-    "@preact-signals/safe-react": "catalog:",
-    "@preact/signals-core": "catalog:",
-    "@preact/signals-react": "catalog:"
+    "@dxos/util": "workspace:*"
   },
   "devDependencies": {
     "@dxos/plugin-preview": "workspace:*",

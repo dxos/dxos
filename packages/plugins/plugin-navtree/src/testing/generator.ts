@@ -6,7 +6,6 @@ import * as Schema from 'effect/Schema';
 
 import { type Node } from '@dxos/app-graph';
 import { Obj, Type } from '@dxos/echo';
-import { type Live } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 import { range } from '@dxos/util';
 
@@ -21,7 +20,7 @@ type ObjectDataGenerator = {
   createData: () => any;
 };
 
-type ObjectFactory<T extends Live<any>> = {
+type ObjectFactory<T> = {
   schema?: Schema.Schema.AnyNoContext; // TODO(burdon): Support both typed and expando schema.
   createObject: () => T;
 };

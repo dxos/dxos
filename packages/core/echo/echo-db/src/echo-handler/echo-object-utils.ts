@@ -4,8 +4,8 @@
 
 import { type Obj } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
+import { getProxyTarget, isProxy } from '@dxos/echo/internal';
 import { DATA_NAMESPACE } from '@dxos/echo-protocol';
-import { type Live, getProxyTarget, isLiveObject } from '@dxos/live-object';
 
 import { type ObjectCore } from '../core-db';
 
@@ -14,7 +14,7 @@ import { type ProxyTarget, symbolInternals, symbolNamespace, symbolPath } from '
 /**
  * Gets the ObjectCore from an ECHO object.
  */
-export const getObjectCore = <T extends AnyProperties>(obj: Live<T>): ObjectCore => {
+export const getObjectCore = <T extends AnyProperties>(obj: T): ObjectCore => {
   if (!(obj as any as ProxyTarget)[symbolInternals]) {
     throw new Error('object is not an EchoObjectSchema');
   }
@@ -40,7 +40,7 @@ export const isRootDataObject = (target: ProxyTarget) => {
  * Uses structural checks instead of instanceof to avoid circular dependencies.
  */
 export const isEchoObject = (value: any): value is Obj.Any => {
-  if (!isLiveObject(value)) {
+  if (!isProxy(value)) {
     return false;
   }
 

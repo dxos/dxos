@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { Capability, Common } from '@dxos/app-framework';
-import { useCapability } from '@dxos/app-framework/react';
+import { useAtomCapabilityState } from '@dxos/app-framework/react';
 
 import { WelcomeTour } from '../../components';
 import { meta } from '../../meta';
@@ -17,15 +17,15 @@ export default Capability.makeModule(
     return Capability.contributes(Common.Capability.ReactRoot, {
       id: meta.id,
       root: () => {
-        const state = useCapability(HelpCapabilities.MutableState);
+        const [state, updateState] = useAtomCapabilityState(HelpCapabilities.State);
         return (
           <WelcomeTour
             steps={steps ?? []}
             running={state.running}
             onRunningChanged={(newState) => {
-              state.running = newState;
+              updateState((s) => ({ ...s, running: newState }));
               if (!newState) {
-                state.showHints = false;
+                updateState((s) => ({ ...s, showHints: false }));
               }
             }}
           />

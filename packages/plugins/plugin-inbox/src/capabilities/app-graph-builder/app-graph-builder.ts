@@ -2,23 +2,41 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Atom } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capability, Common } from '@dxos/app-framework';
-import { Filter, Obj, type QueryResult, Ref } from '@dxos/echo';
+import { Filter, Obj, Ref } from '@dxos/echo';
+import { AtomObj, AtomQuery, AtomRef } from '@dxos/echo-atom';
 import { invariant } from '@dxos/invariant';
+import { Operation } from '@dxos/operation';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { AutomationCapabilities, invokeFunctionWithTracing } from '@dxos/plugin-automation';
 import { ATTENDABLE_PATH_SEPARATOR, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
-import { CreateAtom, GraphBuilder, Node } from '@dxos/plugin-graph';
-import { atomFromQuery } from '@dxos/plugin-space';
-import { type Event, type Message } from '@dxos/types';
+import { GraphBuilder, Node } from '@dxos/plugin-graph';
+import { Markdown } from '@dxos/plugin-markdown/types';
+import { type SelectionManager } from '@dxos/react-ui-attention';
+import { AccessToken, type Event, type Message } from '@dxos/types';
 import { kebabize } from '@dxos/util';
 
 import { calendar, gmail } from '../../functions';
 import { meta } from '../../meta';
-import { Calendar, Mailbox } from '../../types';
+import { Calendar, InboxOperation, Mailbox } from '../../types';
+
+/**
+ * Atom family to derive the selected item ID from selection state.
+ * Keyed by (selectionManager, nodeId) to ensure proper caching.
+ */
+const selectedIdFamily = Atom.family((selectionManager: SelectionManager) =>
+  Atom.family((nodeId: string) =>
+    Atom.make((get) => {
+      const state = get(selectionManager.state);
+      const selection = state.selections[nodeId];
+      return selection?.mode === 'single' ? selection.id : undefined;
+    }),
+  ),
+);
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -33,68 +51,66 @@ export default Capability.makeModule(
           node.properties.filter === undefined
             ? Option.some(node.data)
             : Option.none(),
-        connector: (mailbox, get) =>
-          Effect.succeed(
-            get(
-              CreateAtom.fromSignal(() => [
+        connector: (mailbox, get) => {
+          // Subscribe to mailbox changes to track filter updates.
+          const mailboxSnapshot = get(AtomObj.make(mailbox));
+          return Effect.succeed([
+            {
+              id: `${Obj.getDXN(mailbox).toString()}-unfiltered`,
+              type: `${Mailbox.Mailbox.typename}-filter`,
+              data: mailbox,
+              properties: {
+                label: ['inbox label', { ns: meta.id }],
+                icon: 'ph--tray--regular',
+                filter: null,
+              },
+            },
+            ...(mailboxSnapshot.filters?.map(({ name, filter }: { name: string; filter: any }) => ({
+              id: `${Obj.getDXN(mailbox).toString()}-filter-${kebabize(name)}`,
+              type: `${Mailbox.Mailbox.typename}-filter`,
+              data: mailbox,
+              properties: {
+                label: name,
+                icon: 'ph--tray--regular',
+                filter,
+              },
+              nodes: [
                 {
-                  id: `${Obj.getDXN(mailbox).toString()}-unfiltered`,
-                  type: `${Mailbox.Mailbox.typename}-filter`,
-                  data: mailbox,
+                  id: `${Obj.getDXN(mailbox).toString()}-filter-${kebabize(name)}-delete`,
+                  type: Node.ActionType,
+                  data: Effect.fnUntraced(function* () {
+                    const index = mailbox.filters.findIndex((f: any) => f.name === name);
+                    Obj.change(mailbox, (m) => {
+                      m.filters.splice(index, 1);
+                    });
+                  }),
                   properties: {
-                    label: ['inbox label', { ns: meta.id }],
-                    icon: 'ph--tray--regular',
-                    filter: null,
+                    label: ['delete filter label', { ns: meta.id }],
+                    icon: 'ph--trash--regular',
+                    disposition: 'list-item',
                   },
                 },
-                ...mailbox.filters?.map(({ name, filter }: { name: string; filter: any }) => ({
-                  id: `${Obj.getDXN(mailbox).toString()}-filter-${kebabize(name)}`,
-                  type: `${Mailbox.Mailbox.typename}-filter`,
-                  data: mailbox,
-                  properties: {
-                    label: name,
-                    icon: 'ph--tray--regular',
-                    filter,
-                  },
-                  nodes: [
-                    {
-                      id: `${Obj.getDXN(mailbox).toString()}-filter-${kebabize(name)}-delete`,
-                      type: Node.ActionType,
-                      data: Effect.fnUntraced(function* () {
-                        const index = mailbox.filters.findIndex((f: any) => f.name === name);
-                        Obj.change(mailbox, (m) => {
-                          m.filters.splice(index, 1);
-                        });
-                      }),
-                      properties: {
-                        label: ['delete filter label', { ns: meta.id }],
-                        icon: 'ph--trash--regular',
-                        disposition: 'list-item',
-                      },
-                    },
-                  ],
-                })),
-              ]),
-            ),
-          ),
+              ],
+            })) ?? []),
+          ]);
+        },
       }),
       GraphBuilder.createTypeExtension({
         id: `${meta.id}/mailbox-message`,
         type: Mailbox.Mailbox,
         connector: (mailbox, get) => {
-          const queue = get(CreateAtom.fromSignal(() => mailbox.queue.target));
+          // Subscribe to queue ref to reactively load the target.
+          const queue = get(AtomRef.make(mailbox.queue));
           if (!queue) {
             return Effect.succeed([]);
           }
 
-          const selectionAtom = capabilities.atom(AttentionCapabilities.Selection);
-          const selection = get(selectionAtom)[0];
+          const selectionManager = capabilities.get(AttentionCapabilities.Selection);
           const nodeId = Obj.getDXN(mailbox).toString();
-          const messageId = get(CreateAtom.fromSignal(() => selection?.getSelected(nodeId, 'single')));
-          const query = queue.query(
-            messageId ? Filter.id(messageId) : Filter.nothing(),
-          ) as QueryResult.QueryResult<Message.Message>;
-          const message = get(atomFromQuery(query))[0];
+          const messageId = get(selectedIdFamily(selectionManager)(nodeId));
+          const message = get(
+            AtomQuery.make<Message.Message>(queue, messageId ? Filter.id(messageId) : Filter.nothing()),
+          )[0];
           return Effect.succeed([
             {
               id: `${nodeId}${ATTENDABLE_PATH_SEPARATOR}message`,
@@ -112,20 +128,17 @@ export default Capability.makeModule(
       GraphBuilder.createTypeExtension({
         id: `${meta.id}/calendar-event`,
         type: Calendar.Calendar,
-        connector: (calendar, get) => {
-          const queue = get(CreateAtom.fromSignal(() => calendar.queue.target));
+        connector: (cal, get) => {
+          // Subscribe to queue ref to reactively load the target.
+          const queue = get(AtomRef.make(cal.queue));
           if (!queue) {
             return Effect.succeed([]);
           }
 
-          const selectionAtom = capabilities.atom(AttentionCapabilities.Selection);
-          const selection = get(selectionAtom)[0];
-          const nodeId = Obj.getDXN(calendar).toString();
-          const eventId = get(CreateAtom.fromSignal(() => selection?.getSelected(nodeId, 'single')));
-          const query = queue.query(
-            eventId ? Filter.id(eventId) : Filter.nothing(),
-          ) as QueryResult.QueryResult<Event.Event>;
-          const event = get(atomFromQuery(query))[0];
+          const selectionManager = capabilities.get(AttentionCapabilities.Selection);
+          const nodeId = Obj.getDXN(cal).toString();
+          const eventId = get(selectedIdFamily(selectionManager)(nodeId));
+          const event = get(AtomQuery.make<Event.Event>(queue, eventId ? Filter.id(eventId) : Filter.nothing()))[0];
           return Effect.succeed([
             {
               id: `${nodeId}${ATTENDABLE_PATH_SEPARATOR}event`,
@@ -167,18 +180,18 @@ export default Capability.makeModule(
       GraphBuilder.createTypeExtension({
         id: `${meta.id}/sync-calendar`,
         type: Calendar.Calendar,
-        actions: (calendarObj) =>
+        actions: (cal) =>
           Effect.succeed([
             {
-              id: `${Obj.getDXN(calendarObj).toString()}-sync`,
+              id: `${Obj.getDXN(cal).toString()}-sync`,
               data: Effect.fnUntraced(function* () {
                 const computeRuntime = yield* Capability.get(AutomationCapabilities.ComputeRuntime);
-                const db = Obj.getDatabase(calendarObj);
+                const db = Obj.getDatabase(cal);
                 invariant(db);
                 const runtime = computeRuntime.getRuntime(db.spaceId);
                 yield* Effect.tryPromise(() =>
                   runtime.runPromise(
-                    invokeFunctionWithTracing(calendar.sync, { calendarId: Obj.getDXN(calendarObj).toString() }),
+                    invokeFunctionWithTracing(calendar.sync, { calendarId: Obj.getDXN(cal).toString() }),
                   ),
                 );
               }),
@@ -189,6 +202,40 @@ export default Capability.makeModule(
               },
             },
           ]),
+      }),
+      GraphBuilder.createTypeExtension({
+        id: `${meta.id}/send-document-as-email`,
+        type: Markdown.Document,
+        actions: (doc, get) => {
+          const db = Obj.getDatabase(doc);
+          if (!db) {
+            return Effect.succeed([]);
+          }
+
+          // Single function call - no family creation inside callback.
+          const tokens = get(AtomQuery.make(db, Filter.type(AccessToken.AccessToken)));
+          const hasGoogleToken = tokens.some((token) => token.source?.includes('google'));
+          if (!hasGoogleToken) {
+            return Effect.succeed([]);
+          }
+
+          return Effect.succeed([
+            {
+              id: `${Obj.getDXN(doc).toString()}-send-as-email`,
+              data: Effect.fnUntraced(function* () {
+                const text = yield* Effect.tryPromise(() => doc.content.load());
+                const subject = doc.name ?? doc.fallbackName ?? '';
+                const body = text?.content ?? '';
+                yield* Operation.invoke(InboxOperation.OpenComposeEmail, { subject, body });
+              }),
+              properties: {
+                label: ['send as email label', { ns: meta.id }],
+                icon: 'ph--envelope--regular',
+                disposition: 'list-item',
+              },
+            },
+          ]);
+        },
       }),
     ]);
 

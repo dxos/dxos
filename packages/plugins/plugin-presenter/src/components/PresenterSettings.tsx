@@ -10,7 +10,12 @@ import { ControlGroup, ControlItemInput, ControlPage, ControlSection } from '@dx
 import { meta } from '../meta';
 import { type PresenterSettingsProps } from '../types';
 
-export const PresenterSettings = ({ settings }: { settings: PresenterSettingsProps }) => {
+export type PresenterSettingsComponentProps = {
+  settings: PresenterSettingsProps;
+  onSettingsChange: (fn: (current: PresenterSettingsProps) => PresenterSettingsProps) => void;
+};
+
+export const PresenterSettings = ({ settings, onSettingsChange }: PresenterSettingsComponentProps) => {
   const { t } = useTranslation(meta.id);
 
   return (
@@ -20,7 +25,7 @@ export const PresenterSettings = ({ settings }: { settings: PresenterSettingsPro
           <ControlItemInput title={t('present collections label')}>
             <Input.Switch
               checked={settings.presentCollections}
-              onCheckedChange={(checked) => (settings.presentCollections = !!checked)}
+              onCheckedChange={(checked) => onSettingsChange((s) => ({ ...s, presentCollections: !!checked }))}
             />
           </ControlItemInput>
         </ControlGroup>

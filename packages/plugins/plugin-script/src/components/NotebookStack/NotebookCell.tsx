@@ -150,7 +150,7 @@ export const NotebookCell = ({ db, graph, dragging, cell, promptResults, env }: 
 };
 
 const NotebookCellValue = ({ cell, graph }: NotebookCellProps) => {
-  const name = graph?.expressions.value[cell.id]?.name;
+  const name = graph?.getExpressions()[cell.id]?.name;
   const value = graph?.getValue(cell.id);
   if (value == null) {
     return null;

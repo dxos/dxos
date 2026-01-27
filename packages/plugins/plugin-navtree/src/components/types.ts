@@ -15,7 +15,7 @@ import type { L1PanelProps } from './Sidebar';
 
 export type NavTreeContextValue = Pick<
   TreeProps<NavTreeItemGraphNode, { disposition?: string; sort?: boolean }>,
-  'useItems' | 'getProps' | 'isCurrent' | 'isOpen' | 'blockInstruction' | 'canDrop' | 'onOpenChange' | 'onSelect'
+  'useItems' | 'getProps' | 'useIsCurrent' | 'useIsOpen' | 'blockInstruction' | 'canDrop' | 'onOpenChange' | 'onSelect'
 > &
   Pick<L1PanelProps, 'onBack'> & {
     tab: string;
@@ -24,7 +24,7 @@ export type NavTreeContextValue = Pick<
     renderItemEnd?: FC<{ node: Node.Node; open: boolean }>;
     useActions: (node: Node.Node) => FlattenedActions;
     loadDescendents?: (node: Node.Node) => MaybePromise<void>;
-    isAlternateTree?: (path: string[], item: NavTreeItemGraphNode) => boolean;
+    useIsAlternateTree?: (path: string[], item: NavTreeItemGraphNode) => boolean;
     setAlternateTree?: (path: string[], open: boolean) => void;
     onTabChange?: (node: NavTreeItemGraphNode) => void;
   };

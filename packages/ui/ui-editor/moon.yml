@@ -12,7 +12,6 @@ tasks:
       - '--entryPoint=src/types/index.ts'
       - '--platform=browser'
       - '--platform=node'
-      - '--preactSignalTracking'
   test:
     inputs:
       - .storybook/*

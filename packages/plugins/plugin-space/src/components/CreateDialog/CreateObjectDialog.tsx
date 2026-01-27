@@ -13,7 +13,7 @@ import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { Operation } from '@dxos/operation';
 import { useClient } from '@dxos/react-client';
-import { isLiveObject, useSpaces } from '@dxos/react-client/echo';
+import { useSpaces } from '@dxos/react-client/echo';
 import { Dialog, IconButton, useTranslation } from '@dxos/react-ui';
 import { cardDialogContent, cardDialogHeader } from '@dxos/react-ui-mosaic';
 import { type Collection } from '@dxos/schema';
@@ -85,7 +85,7 @@ export const CreateObjectDialog = ({
         const db = Database.isDatabase(target) ? target : target && Obj.getDatabase(target);
         invariant(db, 'Missing database');
         const object = yield* metadata.createObject(data, { db });
-        if (isLiveObject(object) && !Obj.instanceOf(Type.PersistentType, object)) {
+        if (Obj.isObject(object) && !Obj.instanceOf(Type.PersistentType, object)) {
           // TODO(wittjosiah): Selection in navtree isn't working as expected when hidden typenames evals to true.
           const hidden = !metadata.addToCollectionOnCreate;
           yield* operationInvoker.invoke(SpaceOperation.AddObject, {

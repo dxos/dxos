@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { useAtomValue } from '@effect-atom/atom-react';
 import React, { type JSX, type PropsWithChildren, useEffect, useMemo, useRef } from 'react';
 
 import { generateName } from '@dxos/display-name';
@@ -99,6 +100,7 @@ type HistoryProps = ThemedClassName<{
 
 const History = ({ classNames, model, min, max, onSelect }: HistoryProps) => {
   const { t } = useTranslation(meta.id);
+  const moveIndex = useAtomValue(model.moveIndex);
   const label = model.game.isGameOver()
     ? model.game.isCheckmate()
       ? t('game.checkmate label')
@@ -132,11 +134,11 @@ const History = ({ classNames, model, min, max, onSelect }: HistoryProps) => {
   }, [history.length]);
 
   useEffect(() => {
-    const div = scrollerRef.current?.querySelector(`[data-index="${model.moveIndex.value - 1}"]`);
+    const div = scrollerRef.current?.querySelector(`[data-index="${moveIndex - 1}"]`);
     scrollerRef.current?.classList.add('scrollbar-none');
     div?.scrollIntoView({ behavior: 'smooth' });
     scrollerRef.current?.classList.remove('scrollbar-none');
-  }, [model.moveIndex.value]);
+  }, [moveIndex]);
 
   return (
     <div
@@ -153,7 +155,7 @@ const History = ({ classNames, model, min, max, onSelect }: HistoryProps) => {
           {a && (
             <div
               data-index={a.index}
-              className={mx('pis-2 cursor-pointer', a.index === model.moveIndex.value - 1 && 'bg-primary-500')}
+              className={mx('pis-2 cursor-pointer', a.index === moveIndex - 1 && 'bg-primary-500')}
               onClick={() => onSelect?.(a.index + 1)}
             >
               {a.move}
@@ -162,7 +164,7 @@ const History = ({ classNames, model, min, max, onSelect }: HistoryProps) => {
           {b && (
             <div
               data-index={b.index}
-              className={mx('pis-2 cursor-pointer', b.index === model.moveIndex.value - 1 && 'bg-primary-500')}
+              className={mx('pis-2 cursor-pointer', b.index === moveIndex - 1 && 'bg-primary-500')}
               onClick={() => onSelect?.(b.index + 1)}
             >
               {b.move}

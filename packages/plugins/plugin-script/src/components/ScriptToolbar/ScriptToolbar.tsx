@@ -12,14 +12,13 @@ import {
   type ActionGraphProps,
   MenuProvider,
   ToolbarMenu,
-  atomFromSignal,
   createGapSeparator,
   useMenuActions,
 } from '@dxos/react-ui-menu';
 
 import {
   type CreateDeployOptions,
-  type ScriptToolbarState,
+  type ScriptToolbarStateStore,
   createDeploy,
   createFormat,
   createTemplateSelect,
@@ -30,7 +29,7 @@ import { meta } from '../../meta';
 export type ScriptToolbarProps = {
   role?: string;
   script: Script.Script;
-  state: ScriptToolbarState;
+  state: ScriptToolbarStateStore;
 };
 
 export const ScriptToolbar = ({ script, role, state }: ScriptToolbarProps) => {
@@ -49,17 +48,15 @@ export const ScriptToolbar = ({ script, role, state }: ScriptToolbarProps) => {
 };
 
 const createToolbarActions = ({ state, script, ...options }: CreateDeployOptions): Atom.Atom<ActionGraphProps> =>
-  Atom.make((get) =>
-    get(
-      atomFromSignal(() => {
-        const templateSelect = createTemplateSelect(script);
-        const format = createFormat(script);
-        const gap = createGapSeparator();
-        const deploy = createDeploy({ state, script, ...options });
-        return {
-          nodes: [...templateSelect.nodes, ...format.nodes, ...gap.nodes, ...deploy.nodes],
-          edges: [...templateSelect.edges, ...format.edges, ...gap.edges, ...deploy.edges],
-        };
-      }),
-    ),
-  );
+  Atom.make((get) => {
+    // Subscribe to state changes.
+    get(state.atom);
+    const templateSelect = createTemplateSelect(script);
+    const format = createFormat(script);
+    const gap = createGapSeparator();
+    const deploy = createDeploy({ state, script, ...options });
+    return {
+      nodes: [...templateSelect.nodes, ...format.nodes, ...gap.nodes, ...deploy.nodes],
+      edges: [...templateSelect.edges, ...format.edges, ...gap.edges, ...deploy.edges],
+    };
+  });

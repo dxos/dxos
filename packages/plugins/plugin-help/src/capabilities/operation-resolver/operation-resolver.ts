@@ -15,8 +15,7 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: HelpOperation.Start,
         handler: Effect.fnUntraced(function* () {
-          const state = yield* Capability.get(HelpCapabilities.MutableState);
-          state.running = true;
+          yield* Common.Capability.updateAtomValue(HelpCapabilities.State, (state) => ({ ...state, running: true }));
         }),
       }),
     ]);

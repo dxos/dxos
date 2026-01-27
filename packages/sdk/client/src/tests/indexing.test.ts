@@ -64,7 +64,7 @@ describe('Index queries', () => {
   const initClient = async (services: ClientServicesProvider) => {
     const client = new Client({
       services,
-      types: [TestSchema.ContactType, TestSchema.DocumentType, TestSchema.TextV0Type],
+      types: [Type.Expando, TestSchema.ContactType, TestSchema.DocumentType, TestSchema.TextV0Type],
     });
     await client.initialize();
     return client;

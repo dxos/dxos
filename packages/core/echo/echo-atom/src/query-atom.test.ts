@@ -52,7 +52,7 @@ describe('AtomQuery', () => {
     );
     await queryResult.run();
 
-    const atom = AtomQuery.make(queryResult);
+    const atom = AtomQuery.fromQuery(queryResult);
     const results = registry.get(atom);
 
     expect(results).toHaveLength(2);
@@ -68,7 +68,7 @@ describe('AtomQuery', () => {
     );
     await queryResult.run();
 
-    const atom = AtomQuery.make(queryResult);
+    const atom = AtomQuery.fromQuery(queryResult);
 
     // Get initial results.
     const initialResults = registry.get(atom);
@@ -101,7 +101,7 @@ describe('AtomQuery', () => {
     );
     await queryResult.run();
 
-    const atom = AtomQuery.make(queryResult);
+    const atom = AtomQuery.fromQuery(queryResult);
 
     // Get initial results.
     const initialResults = registry.get(atom);
@@ -134,7 +134,7 @@ describe('AtomQuery', () => {
     );
     await queryResult.run();
 
-    const atom = AtomQuery.make(queryResult);
+    const atom = AtomQuery.fromQuery(queryResult);
 
     // Initialize the atom by getting its value first.
     const initialResults = registry.get(atom);
@@ -169,7 +169,7 @@ describe('AtomQuery', () => {
     );
     await queryResult.run();
 
-    const atom = AtomQuery.make(queryResult);
+    const atom = AtomQuery.fromQuery(queryResult);
     const results = registry.get(atom);
 
     expect(results).toHaveLength(0);
@@ -185,8 +185,8 @@ describe('AtomQuery', () => {
     await queryResult.run();
 
     // Create two atoms from the same query result.
-    const atom1 = AtomQuery.make(queryResult);
-    const atom2 = AtomQuery.make(queryResult);
+    const atom1 = AtomQuery.fromQuery(queryResult);
+    const atom2 = AtomQuery.fromQuery(queryResult);
 
     // Both should return the same results.
     const results1 = registry.get(atom1);
