@@ -9,7 +9,6 @@ import { Capability, Common, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { ClientOperation, ClientPlugin } from '@dxos/plugin-client';
 import { SearchPlugin } from '@dxos/plugin-search';
-import { SpacePlugin } from '@dxos/plugin-space';
 import { SpaceOperation } from '@dxos/plugin-space/types';
 import { corePlugins } from '@dxos/plugin-testing';
 import { withTheme } from '@dxos/react-ui/testing';
@@ -78,7 +77,6 @@ const createPluginManager = ({ isPopover }: { isPopover: boolean }) => {
             });
           }),
       }),
-      SpacePlugin({}),
       SearchPlugin(),
       TestPlugin({ isPopover }),
     ],

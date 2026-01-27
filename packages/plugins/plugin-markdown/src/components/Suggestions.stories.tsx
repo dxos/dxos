@@ -18,7 +18,6 @@ import { createDocAccessor, toCursorRange } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
-import { SpacePlugin } from '@dxos/plugin-space';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { faker } from '@dxos/random';
 import { useQueue, useSpace } from '@dxos/react-client/echo';
@@ -161,6 +160,7 @@ const storybook: Meta<typeof DefaultStory> = {
     withPluginManager({
       plugins: [
         ...corePlugins(),
+        StorybookPlugin({}),
         ClientPlugin({
           types: [Markdown.Document, TestItem],
           onClientInitialized: ({ client }) =>
@@ -168,10 +168,9 @@ const storybook: Meta<typeof DefaultStory> = {
               yield* Effect.promise(() => client.halo.createIdentity());
             }),
         }),
-        SpacePlugin({}),
+
         MarkdownPlugin(),
         PreviewPlugin(),
-        StorybookPlugin({}),
       ],
     }),
   ],

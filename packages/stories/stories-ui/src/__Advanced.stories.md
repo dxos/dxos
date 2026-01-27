@@ -288,6 +288,7 @@ const meta = {
     withPluginManager<{ title?: string; content?: string }>(() => ({
       plugins: [
         ...corePlugins(),
+        StorybookPlugin(),
         ClientPlugin({
           types: [GridData, Organization.Organization, Person.Person, Project.Project],
           onClientInitialized: async ({ client }) => {
@@ -304,7 +305,6 @@ const meta = {
             ]);
           },
         }),
-        StorybookPlugin(),
         // PreviewPlugin(),
       ],
     })),

@@ -8,7 +8,6 @@ import * as Effect from 'effect/Effect';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AutomationPlugin } from '@dxos/plugin-automation';
 import { ClientPlugin } from '@dxos/plugin-client';
-import { SpacePlugin } from '@dxos/plugin-space';
 import { corePlugins } from '@dxos/plugin-testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
@@ -33,7 +32,6 @@ const meta = {
               yield* Effect.promise(() => client.spaces.waitUntilReady());
             }),
         }),
-        SpacePlugin({}),
         AutomationPlugin(),
       ],
     }),

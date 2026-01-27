@@ -45,6 +45,9 @@
       "path": "../plugin-graph"
     },
     {
+      "path": "../plugin-space"
+    },
+    {
       "path": "../plugin-theme"
     }
   ]

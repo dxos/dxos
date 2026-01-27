@@ -27,7 +27,6 @@ import { type ClientPluginOptions } from '@dxos/plugin-client/types';
 import { DeckOperation } from '@dxos/plugin-deck/types';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { PreviewPlugin } from '@dxos/plugin-preview';
-import { SpacePlugin } from '@dxos/plugin-space';
 import { StorybookPlugin } from '@dxos/plugin-testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import { type Client, Config } from '@dxos/react-client';
@@ -99,7 +98,6 @@ export const getDecorators = ({
 }: DecoratorsProps) => [
   withPluginManager({
     plugins: [
-      // System plugins.
       ...corePlugins(),
       ClientPlugin({
         types: [
@@ -142,18 +140,15 @@ export const getDecorators = ({
           }),
         ...props,
       }),
-      SpacePlugin({}),
-
-      // Cards
-      StorybookPlugin({}),
-      PreviewPlugin(),
 
       // User plugins.
+      PreviewPlugin(),
       AutomationPlugin(),
       AssistantPlugin(),
-      StoryPlugin({ onChatCreated }),
 
       // Test-specific.
+      StorybookPlugin({}),
+      StoryPlugin({ onChatCreated }),
       ...plugins,
     ],
   }),

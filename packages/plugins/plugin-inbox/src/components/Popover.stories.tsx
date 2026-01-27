@@ -12,7 +12,6 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { Filter } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
-import { SpacePlugin } from '@dxos/plugin-space';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { useDatabase, useQuery } from '@dxos/react-client/echo';
 import { List, ListItem } from '@dxos/react-ui';
@@ -86,6 +85,7 @@ const meta = {
     withPluginManager({
       plugins: [
         ...corePlugins(),
+        StorybookPlugin({}),
         ClientPlugin({
           types: [Mailbox.Mailbox, Message.Message, Person.Person, Organization.Organization],
           onClientInitialized: ({ client }) =>
@@ -102,10 +102,9 @@ const meta = {
               space.db.add(mailbox);
             }),
         }),
-        SpacePlugin({}),
-        PreviewPlugin(),
-        StorybookPlugin({}),
+
         InboxPlugin(),
+        PreviewPlugin(),
       ],
     }),
   ],
