@@ -7,7 +7,6 @@ import React, { forwardRef, useCallback, useMemo } from 'react';
 import { Common } from '@dxos/app-framework';
 import { useOperationInvoker } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
-import { type CardPreviewProps } from '@dxos/plugin-preview';
 import { IconButton, useTranslation } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui-mosaic';
 import { Text } from '@dxos/schema';
@@ -17,10 +16,10 @@ import { Markdown } from '../../types';
 import { getContentSnippet, getFallbackName } from '../../util';
 import { MarkdownEditor } from '../MarkdownEditor';
 
-export type MarkdownCardProps = CardPreviewProps<Markdown.Document | Text.Text>;
+export type MarkdownCardProps = { subject: Markdown.Document | Text.Text };
 
 export const MarkdownCard = forwardRef<HTMLDivElement, MarkdownCardProps>(
-  ({ subject, role }: MarkdownCardProps, forwardedRef) => {
+  ({ subject }: MarkdownCardProps, forwardedRef) => {
     const { invokePromise } = useOperationInvoker();
     const { t } = useTranslation(meta.id);
     const snippet = useMemo(() => getSnippet(subject), [subject]);
@@ -33,7 +32,7 @@ export const MarkdownCard = forwardRef<HTMLDivElement, MarkdownCardProps>(
     }, [invokePromise, subject]);
 
     return (
-      <Card.Root role={role} ref={forwardedRef}>
+      <Card.Root ref={forwardedRef}>
         <Card.Heading classNames='flex items-center'>
           {getTitle(subject, t('fallback title'))}
           <span className='grow' />

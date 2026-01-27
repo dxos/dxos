@@ -6,13 +6,7 @@ import * as Effect from 'effect/Effect';
 import React, { forwardRef, useCallback, useMemo } from 'react';
 
 import { Capability, Common } from '@dxos/app-framework';
-import {
-  SurfaceCardRole,
-  useAtomCapability,
-  useAtomCapabilityState,
-  useCapability,
-  useSettingsState,
-} from '@dxos/app-framework/react';
+import { useAtomCapability, useAtomCapabilityState, useCapability, useSettingsState } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { Text } from '@dxos/schema';
@@ -65,10 +59,10 @@ export default Capability.makeModule(() =>
       }),
       Common.createSurface({
         id: `${meta.id}/surface/preview`,
-        role: SurfaceCardRole.literals as any,
+        role: 'card--content',
         filter: (data): data is { subject: Markdown.Document | Text.Text } =>
           Obj.instanceOf(Markdown.Document, data.subject) || Obj.instanceOf(Text.Text, data.subject),
-        component: ({ data, role, ref }) => <MarkdownCard {...data} role={role as SurfaceCardRole} ref={ref} />,
+        component: ({ data, ref }) => <MarkdownCard {...data} ref={ref} />,
       }),
     ]),
   ),

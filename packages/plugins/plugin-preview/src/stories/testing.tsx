@@ -5,22 +5,21 @@
 import type * as Schema from 'effect/Schema';
 import React, { type FC } from 'react';
 
+import { type SurfaceComponentProps } from '@dxos/app-framework/react';
 import { Obj, Ref, type Type } from '@dxos/echo';
 import { faker } from '@dxos/random';
 import { Card } from '@dxos/react-ui-mosaic';
 import { CardContainer } from '@dxos/react-ui-mosaic/testing';
 import { Organization, Person, Project, Task } from '@dxos/types';
 
-import { type CardPreviewProps } from '../types';
-
 export type DefaultStoryProps<T extends Obj.Any> = {
-  Component: FC<CardPreviewProps<T>>;
+  Component: FC<SurfaceComponentProps<T>>;
   object: T;
   image?: boolean;
 };
 
 export const DefaultStory = <T extends Obj.Any>({ Component, object, image }: DefaultStoryProps<T>) => {
-  const roles: CardPreviewProps['role'][] = ['card--popover', 'card--intrinsic'];
+  const roles: SurfaceComponentProps['role'][] = ['card--popover', 'card--intrinsic'];
 
   return (
     <div className='grid grid-rows-4 gap-16 plb-8'>

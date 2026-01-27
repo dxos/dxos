@@ -15,13 +15,16 @@ import { type ProjectionModel } from '@dxos/schema';
 import { descriptionMessage, mx } from '@dxos/ui-theme';
 
 import { meta } from '../meta';
-import { type CardPreviewProps } from '../types';
 
 export const FormCard = ({
   subject,
   projection,
   role,
-}: CardPreviewProps<Obj.Any> & { projection?: ProjectionModel }) => {
+}: {
+  subject: Obj.Any;
+  projection?: ProjectionModel;
+  role?: string;
+}) => {
   const { invokePromise } = useOperationInvoker();
   const schema = Obj.getSchema(subject);
   const { t } = useTranslation(meta.id);

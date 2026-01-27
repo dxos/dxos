@@ -24,6 +24,7 @@ export const CardContainer = ({
     case 'card--popover':
       return <PopoverCardContainer icon={icon}>{children}</PopoverCardContainer>;
     case 'card--intrinsic':
+    default:
       return <IntrinsicCardContainer>{children}</IntrinsicCardContainer>;
   }
 };

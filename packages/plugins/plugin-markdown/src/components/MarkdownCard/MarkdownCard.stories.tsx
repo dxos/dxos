@@ -21,10 +21,10 @@ faker.seed(1234);
 const meta: Meta<typeof MarkdownCard> = {
   title: 'plugins/plugin-markdown/Card',
   component: MarkdownCard,
-  render: ({ role, subject, ...args }) => {
+  render: ({ subject, ...args }) => {
     return (
-      <CardContainer icon='ph--text-aa--regular' role={role}>
-        <MarkdownCard role={role} subject={subject} {...args} />
+      <CardContainer icon='ph--text-aa--regular'>
+        <MarkdownCard subject={subject} {...args} />
       </CardContainer>
     );
   },
@@ -45,29 +45,8 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Popover: Story = {
+export const Default: Story = {
   args: {
-    role: 'card--popover',
-    subject: Markdown.make({
-      name: faker.lorem.words(3),
-      content: faker.lorem.paragraphs(3),
-    }),
-  },
-};
-
-export const Intrinsic: Story = {
-  args: {
-    role: 'card--intrinsic',
-    subject: Markdown.make({
-      name: faker.lorem.words(3),
-      content: faker.lorem.paragraphs(3),
-    }),
-  },
-};
-
-export const Extrinsic: Story = {
-  args: {
-    role: 'card--extrinsic',
     subject: Markdown.make({
       name: faker.lorem.words(3),
       content: faker.lorem.paragraphs(3),

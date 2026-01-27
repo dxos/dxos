@@ -144,13 +144,13 @@ export const Kanban = <T extends BaseKanbanItem = { id: string }>({
                         </Tag>
                       </CardStackDragPreview.Heading>
 
-                      {/* Cards Container */}
+                      {/* Card Container */}
                       <CardStackDragPreview.Content itemsCount={cards.length}>
                         {cards.map((card) => (
                           <Card.Root key={card.id}>
                             <Card.Toolbar>
                               <Card.DragHandle />
-                              <Card.Title>{card.title}</Card.Title>
+                              <Card.ToolbarSeparator />
                               <Card.Close onClose={() => onRemoveCard?.(card)} />
                             </Card.Toolbar>
                             <Surface
