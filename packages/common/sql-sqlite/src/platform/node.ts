@@ -11,7 +11,7 @@ import * as Layer from 'effect/Layer';
 
 import * as SqlExport from '../SqlExport';
 
-const sqlExportNode: Layer.Layer<SqlExport.SqlExport, SqlError.SqlError, SqliteClient.SqliteClient> = Layer.effect(
+exportconst sqlExportLayer: Layer.Layer<SqlExport.SqlExport, SqlError.SqlError, SqliteClient.SqliteClient> = Layer.effect(
   SqlExport.SqlExport,
   Effect.gen(function* () {
     const sql = yield* SqliteClient.SqliteClient;
@@ -24,7 +24,7 @@ const sqlExportNode: Layer.Layer<SqlExport.SqlExport, SqlError.SqlError, SqliteC
 export const layerMemory: Layer.Layer<
   SqlClient.SqlClient | SqliteClient.SqliteClient,
   ConfigError.ConfigError | SqlError.SqlError
-> = sqlExportNode.pipe(
+> = sqlExportLayer.pipe(
   Layer.provideMerge(
     SqliteClient.layer({
       filename: ':memory:',
