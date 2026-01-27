@@ -52,7 +52,7 @@ export default defineFunction({
     function* ({ data: { game: gameRef } }) {
       // Load the chess game
       log.info('load game', { gameRef });
-      const chessGame = yield* Database.Service.load(gameRef);
+      const chessGame = yield* Database.load(gameRef);
 
       // Load the chess position from PGN or FEN
       const chess = new ChessJS();
@@ -108,10 +108,10 @@ export default defineFunction({
       log.info('commentary', { commentary });
 
       // TODO(wittjosiah): Functions currently don't support traversals.
-      // const docs = yield* Database.Service.runQuery(
+      // const docs = yield* Database.runQuery(
       //   Query.select(Filter.id(chessGame.id)).targetOf(HasSubject.HasSubject).source(),
       // ).pipe(Effect.map((objects) => objects.filter((object) => Obj.instanceOf(Markdown.Document, object))));
-      const docs = yield* Database.Service.runQuery(Filter.type(HasSubject.HasSubject)).pipe(
+      const docs = yield* Database.runQuery(Filter.type(HasSubject.HasSubject)).pipe(
         Effect.map((relations) =>
           relations.filter((relation) => {
             // TODO(wittjosiah): This is a workaround for getTarget not handling deleted objects.
@@ -149,8 +149,8 @@ export default defineFunction({
       let document: Markdown.Document;
       if (docs.length === 0) {
         // TODO(wittjosiah): Deploy fails if `SpaceProperties` schema is imported because its from `client-protocol`.
-        const [properties] = yield* Database.Service.runQuery(Filter.typename('dxos.org/type/Properties'));
-        const rootCollection = yield* Database.Service.load<Collection.Collection>(
+        const [properties] = yield* Database.runQuery(Filter.typename('dxos.org/type/Properties'));
+        const rootCollection = yield* Database.load<Collection.Collection>(
           properties[Collection.Collection.typename],
         );
 
@@ -158,7 +158,7 @@ export default defineFunction({
 
         // Create a new markdown document
         const gameName = chessGame.name || 'Chess Game';
-        document = yield* Database.Service.add(
+        document = yield* Database.add(
           Markdown.make({
             name: `${gameName} Commentary`,
             content: `# ${gameName} Commentary\n\n${commentary}`,
@@ -171,7 +171,7 @@ export default defineFunction({
         });
 
         // Create the HasSubject relation
-        yield* Database.Service.add(
+        yield* Database.add(
           Relation.make(HasSubject.HasSubject, {
             [Relation.Source]: document,
             [Relation.Target]: chessGame,
@@ -182,7 +182,7 @@ export default defineFunction({
         document = docs[0];
 
         // Load the text content and append the commentary
-        const text = yield* Database.Service.load(document.content);
+        const text = yield* Database.load(document.content);
         const accessor = createDocAccessor(text, ['content']);
         accessor.handle.change((doc: A.Doc<Text.Text>) => {
           A.splice(doc, accessor.path.slice(), text.content.length, 0, commentary);
@@ -191,7 +191,7 @@ export default defineFunction({
 
       log.info('result', { documentId: Obj.getDXN(document).toString(), commentary });
 
-      yield* Database.Service.flush();
+      yield* Database.flush();
 
       return {
         documentId: Obj.getDXN(document).toString(),

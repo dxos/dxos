@@ -329,3 +329,50 @@ export class Service extends Context.Tag('@dxos/echo/Database/Service')<
   ): Effect.Effect<SchemaRegistry.ExtractQueryResult<Q>[], never, Service> =>
     Service.schemaQuery(query).pipe(Effect.flatMap((queryResult) => promiseWithCauseCapture(() => queryResult.run())));
 }
+
+//
+// Re-export Service methods at top level for convenience.
+// Allows `Database.resolve(...)` instead of `Database.Service.resolve(...)`.
+//
+
+/** @see {@link Service.notAvailable} */
+export const notAvailable = Service.notAvailable;
+
+/** @see {@link Service.make} */
+export const make = Service.make;
+
+/** @see {@link Service.layer} */
+export const layer = Service.layer;
+
+/** @see {@link Service.spaceId} */
+export const spaceId = Service.spaceId;
+
+/** @see {@link Service.resolve} */
+export const resolve = Service.resolve;
+
+/** @see {@link Service.load} */
+export const load = Service.load;
+
+/** @see {@link Service.loadOption} */
+export const loadOption = Service.loadOption;
+
+/** @see {@link Service.add} */
+export const add = Service.add;
+
+/** @see {@link Service.remove} */
+export const remove = Service.remove;
+
+/** @see {@link Service.flush} */
+export const flush = Service.flush;
+
+/** @see {@link Service.query} */
+export const query = Service.query;
+
+/** @see {@link Service.runQuery} */
+export const runQuery = Service.runQuery;
+
+/** @see {@link Service.schemaQuery} */
+export const schemaQuery = Service.schemaQuery;
+
+/** @see {@link Service.runSchemaQuery} */
+export const runSchemaQuery = Service.runSchemaQuery;

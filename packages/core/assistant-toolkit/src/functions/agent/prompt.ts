@@ -46,7 +46,7 @@ export default defineFunction({
     // for (const key of Object.keys(data.input)) {
     //   const value = data.input[key];
     //   if (Ref.isRef(value)) {
-    //     const object = yield* Database.Service.load(value);
+    //     const object = yield* Database.load(value);
     //     input[key] = Obj.toJSON(object);
     //   } else {
     //     input[key] = JSON.stringify(value);
@@ -56,16 +56,16 @@ export default defineFunction({
       Match.when(
         (value: any) => Ref.isRef(value),
         Effect.fnUntraced(function* (ref) {
-          const object = yield* Database.Service.load(ref);
+          const object = yield* Database.load(ref);
           return Obj.toJSON(object as Obj.Any);
         }),
       ),
       Match.orElse(() => Effect.succeed(data.input)),
     );
 
-    yield* Database.Service.flush({ indexes: true });
-    const prompt = yield* Database.Service.load(data.prompt);
-    const systemPrompt = data.systemPrompt ? yield* Database.Service.load(data.systemPrompt) : undefined;
+    yield* Database.flush({ indexes: true });
+    const prompt = yield* Database.load(data.prompt);
+    const systemPrompt = data.systemPrompt ? yield* Database.load(data.systemPrompt) : undefined;
     yield* TracingService.emitStatus({ message: `Running ${prompt.id}` });
 
     log.info('starting agent', { prompt: prompt.id, input });
@@ -73,7 +73,7 @@ export default defineFunction({
     const blueprints = yield* Function.pipe(
       prompt.blueprints,
       Array.appendAll(systemPrompt?.blueprints ?? []),
-      Effect.forEach(Database.Service.loadOption),
+      Effect.forEach(Database.loadOption),
       Effect.map(Array.filter(Option.isSome)),
       Effect.map(Array.map((option) => option.value)),
     );
@@ -82,16 +82,16 @@ export default defineFunction({
     const objects = yield* Function.pipe(
       prompt.context,
       Array.appendAll(systemPrompt?.context ?? []),
-      Effect.forEach(Database.Service.loadOption),
+      Effect.forEach(Database.loadOption),
       Effect.map(Array.filter(Option.isSome)),
       Effect.map(Array.map((option) => option.value)),
     );
 
-    const promptInstructions = yield* Database.Service.load(prompt.instructions.source);
+    const promptInstructions = yield* Database.load(prompt.instructions.source);
     const promptText = Template.process(promptInstructions.content, input);
 
     const systemInstructions = systemPrompt
-      ? yield* Database.Service.load(systemPrompt.instructions.source)
+      ? yield* Database.load(systemPrompt.instructions.source)
       : undefined;
     const systemText = systemInstructions ? Template.process(systemInstructions.content, {}) : undefined;
 

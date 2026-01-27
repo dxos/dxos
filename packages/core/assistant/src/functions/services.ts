@@ -44,7 +44,7 @@ export const makeToolResolverFromFunctions = (
               return tool;
             }
 
-            const [dbFunction] = yield* Database.Service.runQuery(Query.type(Function.Function, { key: id }));
+            const [dbFunction] = yield* Database.runQuery(Query.type(Function.Function, { key: id }));
 
             const functionDef = dbFunction
               ? FunctionDefinition.deserialize(dbFunction)

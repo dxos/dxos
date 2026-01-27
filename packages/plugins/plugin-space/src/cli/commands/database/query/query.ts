@@ -20,7 +20,7 @@ export const handler = ({ typename }: { typename: Option.Option<string> }) =>
       onNone: () => Filter.everything(),
       onSome: (typename) => Filter.typename(typename),
     });
-    const objects = yield* Database.Service.runQuery(filter);
+    const objects = yield* Database.runQuery(filter);
 
     if (json) {
       yield* Console.log(JSON.stringify(objects, null, 2));

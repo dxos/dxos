@@ -31,7 +31,7 @@ const makeService = (cachedToken: string | undefined): Context.Tag.Service<Googl
 const loadAccessToken = (accessTokenRef: Ref.Ref<AccessToken.AccessToken> | undefined, label: string) =>
   Effect.gen(function* () {
     if (accessTokenRef) {
-      const accessToken = yield* Database.Service.load(accessTokenRef);
+      const accessToken = yield* Database.load(accessTokenRef);
       if (accessToken?.token) {
         log(`using ${label}-specific access token`, { note: accessToken.note });
         return accessToken.token;
@@ -65,7 +65,7 @@ export class GoogleCredentials extends Context.Tag('GoogleCredentials')<
   static fromMailboxRef = (mailboxRef: Ref.Ref<Mailbox.Mailbox>) =>
     Layer.effect(
       GoogleCredentials,
-      Effect.flatMap(Database.Service.load(mailboxRef), (mailbox) =>
+      Effect.flatMap(Database.load(mailboxRef), (mailbox) =>
         Effect.map(loadAccessToken(mailbox.accessToken, 'mailbox'), makeService),
       ),
     );
@@ -84,7 +84,7 @@ export class GoogleCredentials extends Context.Tag('GoogleCredentials')<
   static fromCalendarRef = (calendarRef: Ref.Ref<Calendar.Calendar>) =>
     Layer.effect(
       GoogleCredentials,
-      Effect.flatMap(Database.Service.load(calendarRef), (calendar) =>
+      Effect.flatMap(Database.load(calendarRef), (calendar) =>
         Effect.map(loadAccessToken(calendar.accessToken, 'calendar'), makeService),
       ),
     );

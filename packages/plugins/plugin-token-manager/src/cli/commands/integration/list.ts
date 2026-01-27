@@ -23,7 +23,7 @@ export const list = Command.make(
     Effect.gen(function* () {
       const { json } = yield* CommandConfig;
       const filter = Filter.type(AccessToken.AccessToken);
-      const tokens = yield* Database.Service.runQuery(filter);
+      const tokens = yield* Database.runQuery(filter);
 
       if (json) {
         // Exclude token values from JSON output for security

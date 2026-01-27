@@ -354,7 +354,7 @@ export const registry: Record<NodeType, Executable> = {
           throw new Error(`Function not specified on ${node?.id}.`);
         }
 
-        const func = yield* Database.Service.load(functionRef);
+        const func = yield* Database.load(functionRef);
         const funcDefinition = FunctionDefinition.deserialize(func);
         return yield* FunctionInvocationService.invokeFunction(funcDefinition, input);
       }),

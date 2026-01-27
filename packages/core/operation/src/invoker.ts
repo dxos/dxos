@@ -318,7 +318,7 @@ class OperationInvokerImpl implements OperationInvokerInternal {
  * ```ts
  * const databaseResolver = (spaceId) => Effect.gen(function* () {
  *   const space = client.spaces.get(spaceId);
- *   return Context.make(Database.Service, Database.Service.make(space.db));
+ *   return Context.make(Database.Service, Database.make(space.db));
  * });
  * const invoker = OperationInvoker.make(getHandlers, runtime, databaseResolver);
  * yield* invoker.invoke(MyOperation, { id: '123' }, { spaceId: 'space-id' });

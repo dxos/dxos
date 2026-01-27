@@ -69,16 +69,16 @@ describe('update', () => {
           name: 'BlueYard',
           content: 'Founders and portfolio of BlueYard.',
         });
-        yield* Database.Service.add(doc);
+        yield* Database.add(doc);
 
         yield* FunctionInvocationService.invokeFunction(update, {
           id: doc.id,
           diffs: ['- Founders', '+ # Founders'],
         });
 
-        const updatedDoc = yield* Database.Service.resolve(Obj.getDXN(doc), Markdown.Document);
+        const updatedDoc = yield* Database.resolve(Obj.getDXN(doc), Markdown.Document);
         expect(updatedDoc.name).toBe(doc.name);
-        const text = yield* Database.Service.load(updatedDoc.content);
+        const text = yield* Database.load(updatedDoc.content);
         expect(text.content).toBe('# Founders and portfolio of BlueYard.');
       },
       WithProperties,
@@ -94,8 +94,8 @@ describe('update', () => {
         const queue = yield* QueueService.createQueue<Message.Message | ContextBinding>();
         const conversation = yield* acquireReleaseResource(() => new AiConversation({ queue }));
 
-        yield* Database.Service.flush({ indexes: true });
-        const markdownBlueprint = yield* Database.Service.add(Obj.clone(MarkdownBlueprint.make()));
+        yield* Database.flush({ indexes: true });
+        const markdownBlueprint = yield* Database.add(Obj.clone(MarkdownBlueprint.make()));
         yield* Effect.promise(() =>
           conversation.context.bind({
             blueprints: [Ref.make(markdownBlueprint)],
@@ -109,7 +109,7 @@ describe('update', () => {
           prompt: `Create a document with a cookie recipe.`,
         });
         {
-          const docs = yield* Database.Service.runQuery(Query.type(Markdown.Document));
+          const docs = yield* Database.runQuery(Query.type(Markdown.Document));
           if (docs.length !== 1) {
             throw new Error(`Expected 1 document; got ${docs.length}: ${docs.map((_) => _.name)}`);
           }
@@ -118,7 +118,7 @@ describe('update', () => {
           invariant(Obj.instanceOf(Markdown.Document, doc));
           console.log({
             name: doc.name,
-            content: yield* Database.Service.load(doc.content).pipe(Effect.map((_) => _.content)),
+            content: yield* Database.load(doc.content).pipe(Effect.map((_) => _.content)),
           });
         }
 
@@ -127,7 +127,7 @@ describe('update', () => {
           prompt: 'Add a section with a holiday-themed variation.',
         });
         {
-          const docs = yield* Database.Service.runQuery(Query.type(Markdown.Document));
+          const docs = yield* Database.runQuery(Query.type(Markdown.Document));
           if (docs.length !== 1) {
             throw new Error(`Expected 1 document; got ${docs.length}: ${docs.map((_) => _.name)}`);
           }
@@ -136,7 +136,7 @@ describe('update', () => {
           invariant(Obj.instanceOf(Markdown.Document, doc));
           console.log({
             name: doc.name,
-            content: yield* Database.Service.load(doc.content).pipe(Effect.map((_) => _.content)),
+            content: yield* Database.load(doc.content).pipe(Effect.map((_) => _.content)),
           });
         }
       },
