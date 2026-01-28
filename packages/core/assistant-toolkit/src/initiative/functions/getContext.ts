@@ -4,6 +4,7 @@ import { defineFunction } from '@dxos/functions';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import * as Initiative from '../Initiative';
+import { Text } from '@dxos/schema';
 
 export default defineFunction({
   key: 'dxos.org/function/initiative/get-context',
@@ -40,19 +41,21 @@ export default defineFunction({
 
     const spec = initiative.artifacts.find((artifact) => artifact.name === Initiative.SPEC_ARTIFACT_NAME);
     const plan = initiative.artifacts.find((artifact) => artifact.name === Initiative.PLAN_ARTIFACT_NAME);
+    const specObj = !spec ? undefined : yield* Database.Service.resolve(spec.data, Text.Text);
+    const planObj = !plan ? undefined : yield* Database.Service.resolve(plan.data, Text.Text);
 
     return {
-      goal: {
-        dxn: spec?.data.dxn,
-        content: !spec ? 'No spec found.' : JSON.stringify(yield* Database.Service.load(spec.data)),
+      spec: {
+        dxn: spec?.data.dxn.toString(),
+        content: specObj?.content ?? 'No spec found.',
       },
       plan: {
-        dxn: plan?.data.dxn,
-        content: !plan ? 'No plan found.' : JSON.stringify(yield* Database.Service.load(plan.data)),
+        dxn: plan?.data.dxn.toString(),
+        content: planObj?.content ?? 'No plan found.',
       },
       artifacts: initiative.artifacts.map((artifact) => ({
         name: artifact.name,
-        dxn: artifact.data.dxn,
+        dxn: artifact.data.dxn.toString(),
       })),
     };
   }) as any, // TODO(dmaretskyi): Services don't align -- need to refactor how functions are defined.

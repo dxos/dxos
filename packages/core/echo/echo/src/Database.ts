@@ -20,7 +20,7 @@ import * as Err from './Err';
 import type * as Filter from './Filter';
 import type * as Hypergraph from './Hypergraph';
 import { isInstanceOf } from './internal/annotations';
-import type { Ref } from './internal/ref/ref';
+import { Ref } from './internal/ref/ref';
 import { type AnyProperties } from './internal/types';
 import type * as Obj from './Obj';
 import type * as Query from './Query';
@@ -225,18 +225,19 @@ export class Service extends Context.Tag('@dxos/echo/Database/Service')<
    */
   static resolve: {
     // No type check.
-    (dxn: DXN): Effect.Effect<Entity.Unknown, never, Service>;
+    (ref: DXN | Ref<any>): Effect.Effect<Entity.Unknown, never, Service>;
     // Check matches schema.
     <S extends Type.Entity.Any>(
-      dxn: DXN,
+      ref: DXN | Ref<any>,
       schema: S,
     ): Effect.Effect<Schema.Schema.Type<S>, Err.ObjectNotFoundError, Service>;
   } = (<S extends Type.Entity.Any>(
-    dxn: DXN,
+    ref: DXN | Ref<any>,
     schema?: S,
   ): Effect.Effect<Schema.Schema.Type<S>, Err.ObjectNotFoundError, Service> =>
     Effect.gen(function* () {
       const { db } = yield* Service;
+      const dxn = Ref.isRef(ref) ? ref.dxn : ref;
       const object = yield* promiseWithCauseCapture(() =>
         db.graph
           .createRefResolver({

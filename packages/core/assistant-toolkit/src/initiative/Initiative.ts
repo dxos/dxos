@@ -15,7 +15,12 @@ export const Initiative = Schema.Struct({
   chats: Schema.Array(Type.Ref(Obj.Any)), // TODO(dmaretskyi): Move Chat type here.
 
   // TODO(dmaretskyi): Triggers & input queue.
-});
+}).pipe(
+  Type.Obj({
+    typename: 'dxos.org/type/Initiative',
+    version: '0.1.0',
+  }),
+);
 export interface Initiative extends Schema.Schema.Type<typeof Initiative> {}
 
 export const SPEC_ARTIFACT_NAME = 'Spec';
@@ -66,9 +71,11 @@ export const InitiativeBlueprint = Blueprint.make({
         {{initiative.plan.content}}
 
       Other artifacts:
-        {{#each initiative.artifacts as artifact}}
+      {{#with initative}}
+        {{#each artifacts as artifact}}
           {{artifact.name}}: {{artifact.dxn}}
         {{/each}}
+      {{/with}}
     `,
     inputs: [
       {

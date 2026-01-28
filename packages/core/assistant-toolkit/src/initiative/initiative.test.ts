@@ -17,13 +17,20 @@ import { ObjectId } from '@dxos/keys';
 import { type Message } from '@dxos/types';
 import * as Initiative from './Initiative';
 import { getContext } from './functions';
+import { Blueprint } from '@dxos/blueprints';
+import { trim } from '@dxos/util';
+
 ObjectId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayer({
   aiServicePreset: 'edge-remote',
   functions: [getContext],
-  types: [Initiative.Initiative],
+  types: [Initiative.Initiative, Blueprint.Blueprint],
 });
+
+const SYSTEM = trim`
+  If you do not have tools to complete the task, inform the user. DO NOT PRETEND TO DO SOMETHING YOU CAN'T DO.
+`;
 
 describe('Initiative', () => {
   it.scoped(
@@ -49,6 +56,7 @@ describe('Initiative', () => {
         );
 
         yield* conversation.createRequest({
+          system: SYSTEM,
           prompt: `List ingredients for a scrambled eggs on a toast breakfast.`,
           observer,
         });

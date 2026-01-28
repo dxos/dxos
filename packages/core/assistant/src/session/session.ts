@@ -119,6 +119,8 @@ export class AiSession {
       // Generate system and prompt messages.
       const system = yield* formatSystemPrompt({ system: systemTemplate, blueprints, objects }).pipe(Effect.orDie);
 
+      log.info('system', { prompt: system });
+
       // Tool call loop.
       do {
         log('request', {
