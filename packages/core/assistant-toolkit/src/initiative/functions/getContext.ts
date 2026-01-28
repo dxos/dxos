@@ -53,10 +53,15 @@ export default defineFunction({
         dxn: plan?.data.dxn.toString(),
         content: planObj?.content ?? 'No plan found.',
       },
-      artifacts: initiative.artifacts.map((artifact) => ({
-        name: artifact.name,
-        dxn: artifact.data.dxn.toString(),
-      })),
+      artifacts: yield* Effect.forEach(initiative.artifacts, (artifact) =>
+        Effect.gen(function* () {
+          return {
+            name: artifact.name,
+            type: Obj.getTypename(yield* Database.Service.load(artifact.data)),
+            dxn: artifact.data.dxn.toString(),
+          };
+        }),
+      ),
     };
   }) as any, // TODO(dmaretskyi): Services don't align -- need to refactor how functions are defined.
 });

@@ -19,12 +19,13 @@ import * as Initiative from './Initiative';
 import { getContext } from './functions';
 import { Blueprint } from '@dxos/blueprints';
 import { trim } from '@dxos/util';
+import { Text } from '@dxos/schema';
 
 ObjectId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayer({
   aiServicePreset: 'edge-remote',
-  functions: [getContext],
+  functions: [...Initiative.functions],
   types: [Initiative.Initiative, Blueprint.Blueprint],
 });
 
@@ -60,6 +61,8 @@ describe('Initiative', () => {
           prompt: `List ingredients for a scrambled eggs on a toast breakfast.`,
           observer,
         });
+
+        console.log(yield* Effect.promise(() => dumpInitiative(initiative)));
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
@@ -67,3 +70,19 @@ describe('Initiative', () => {
     MemoizedAiService.isGenerationEnabled() ? 240_000 : 30_000,
   );
 });
+
+const dumpInitiative = async (initiative: Initiative.Initiative) => {
+  let text = '';
+  text += `# Initiative: ${initiative.name}\n\n`;
+  for (const artifact of initiative.artifacts) {
+    const data = await artifact.data.load();
+    text += `## ${artifact.name} (${Obj.getTypename(data)}):\n`;
+    if (Obj.instanceOf(Text.Text, data)) {
+      text += `    ${data.content}\n`;
+    } else {
+      text += `    ${JSON.stringify(data, null, 2)}\n`;
+    }
+    text += '\n';
+  }
+  return text;
+};

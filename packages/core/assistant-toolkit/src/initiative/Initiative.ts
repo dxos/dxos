@@ -3,6 +3,7 @@ import { Obj, Ref, Type } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 import { Blueprint, Template } from '@dxos/blueprints';
 import { trim } from '@dxos/util';
+import { getContext, update } from './functions';
 
 export const Initiative = Schema.Struct({
   name: Schema.String,
@@ -51,6 +52,8 @@ export const make = (
     chats: props.chats ?? [],
   });
 
+export const functions = [getContext, update];
+
 export const InitiativeBlueprint = Blueprint.make({
   key: 'dxos.org/blueprint/initiative',
   name: 'Initiative blueprint',
@@ -62,18 +65,18 @@ export const InitiativeBlueprint = Blueprint.make({
       Spec and plan are also artifacts.
       You can edit them if necessary.
       
-      Initiative spec:
-        {{initiative.spec.dxn}}
-        {{initiative.spec.content}}
+      {{#with initiative}}
+        Initiative spec:
+          {{spec.dxn}}
+          {{spec.content}}
 
-      Initiative plan:
-        {{initiative.plan.dxn}}
-        {{initiative.plan.content}}
+        Initiative plan:
+          {{plan.dxn}}
+          {{plan.content}}
 
-      Other artifacts:
-      {{#with initative}}
-        {{#each artifacts as artifact}}
-          {{artifact.name}}: {{artifact.dxn}}
+        All artifacts:
+        {{#each artifacts}}
+          {{name}}: {{type}} {{dxn}}
         {{/each}}
       {{/with}}
     `,
@@ -85,5 +88,5 @@ export const InitiativeBlueprint = Blueprint.make({
       },
     ],
   }),
-  tools: Blueprint.toolDefinitions({ functions: [] }),
+  tools: Blueprint.toolDefinitions({ functions: [update] }),
 });
