@@ -20,6 +20,7 @@ import { MemoryTransportFactory, SwarmNetworkManager } from '@dxos/network-manag
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { type Storage, StorageType, createStorage } from '@dxos/random-access-storage';
 import { layerMemory as sqliteLayerMemory } from '@dxos/sql-sqlite/platform';
+import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 import { BlobStore } from '@dxos/teleport-extension-object-sync';
 
 import { InvitationsHandler, InvitationsManager, SpaceInvitationProtocol } from '../invitations';
@@ -35,7 +36,11 @@ export const createServiceHost = (config: Config, signalManagerContext: MemorySi
     config,
     signalManager: new MemorySignalManager(signalManagerContext),
     transportFactory: MemoryTransportFactory,
-    runtime: ManagedRuntime.make(Layer.merge(sqliteLayerMemory, Reactivity.layer).pipe(Layer.orDie)).runtimeEffect,
+    runtime: ManagedRuntime.make(
+      SqlTransaction.layer
+        .pipe(Layer.provideMerge(sqliteLayerMemory), Layer.provideMerge(Reactivity.layer))
+        .pipe(Layer.orDie),
+    ).runtimeEffect,
   });
 };
 
@@ -59,7 +64,11 @@ export const createServiceContext = async ({
   const level = createTestLevel();
   await level.open();
 
-  const runtime = ManagedRuntime.make(Layer.merge(sqliteLayerMemory, Reactivity.layer).pipe(Layer.orDie)).runtimeEffect;
+  const runtime = ManagedRuntime.make(
+    SqlTransaction.layer
+      .pipe(Layer.provideMerge(sqliteLayerMemory), Layer.provideMerge(Reactivity.layer))
+      .pipe(Layer.orDie),
+  ).runtimeEffect;
 
   return new ServiceContext(storage, level, networkManager, signalManager, undefined, undefined, runtime, {
     invitationConnectionDefaultProps: { teleport: { controlHeartbeatInterval: 200 } },
@@ -124,7 +133,11 @@ export type TestPeerProps = {
 
 export class TestPeer {
   private _props: TestPeerProps = {};
-  private readonly _runtime = ManagedRuntime.make(Layer.merge(sqliteLayerMemory, Reactivity.layer).pipe(Layer.orDie));
+  private readonly _runtime = ManagedRuntime.make(
+    SqlTransaction.layer
+      .pipe(Layer.provideMerge(sqliteLayerMemory), Layer.provideMerge(Reactivity.layer))
+      .pipe(Layer.orDie),
+  );
 
   constructor(
     private readonly _signalContext: MemorySignalManagerContext,
