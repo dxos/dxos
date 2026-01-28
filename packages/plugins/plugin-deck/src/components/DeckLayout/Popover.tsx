@@ -6,9 +6,11 @@ import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren, useCallback, useEffect, useRef, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/react';
-import { Popover, type PopoverContentInteractOutsideEvent } from '@dxos/react-ui';
+import { Popover, type PopoverContentInteractOutsideEvent, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Card } from '@dxos/react-ui-mosaic';
 
 import { useDeckState } from '../../hooks';
+import { meta } from '../../meta';
 
 export type DeckPopoverRootProps = PropsWithChildren<{}>;
 
@@ -54,10 +56,22 @@ export const PopoverRoot = ({ children }: DeckPopoverRootProps) => {
 };
 
 export const PopoverContent = () => {
+  const { t } = useTranslation(meta.id);
   const { state, updateEphemeral } = useDeckState();
   const { setOpen } = useDeckPopoverContext('PopoverContent');
 
-  const handleClose = useCallback(
+  const handleClose = useCallback(() => {
+    setOpen(false);
+    updateEphemeral((s) => ({
+      ...s,
+      popoverOpen: false,
+      popoverAnchor: undefined,
+      popoverAnchorId: undefined,
+      popoverSide: undefined,
+    }));
+  }, [updateEphemeral]);
+
+  const handleInteractOutside = useCallback(
     (event: KeyboardEvent | PopoverContentInteractOutsideEvent) => {
       if (
         // TODO(thure): CodeMirror should not focus itself when it updates.
@@ -66,17 +80,10 @@ export const PopoverContent = () => {
       ) {
         event.preventDefault();
       } else {
-        setOpen(false);
-        updateEphemeral((s) => ({
-          ...s,
-          popoverOpen: false,
-          popoverAnchor: undefined,
-          popoverAnchorId: undefined,
-          popoverSide: undefined,
-        }));
+        handleClose();
       }
     },
-    [setOpen, updateEphemeral],
+    [handleClose],
   );
 
   return (
@@ -85,11 +92,22 @@ export const PopoverContent = () => {
         side={state.popoverSide}
         sticky='always'
         hideWhenDetached
-        onInteractOutside={handleClose}
-        onEscapeKeyDown={handleClose}
+        onInteractOutside={handleInteractOutside}
+        onEscapeKeyDown={handleInteractOutside}
       >
         <Popover.Viewport>
-          <Surface role='card--popover' data={state.popoverContent} limit={1} />
+          {state.popoverKind === 'card' && (
+            <Card.Root>
+              <Card.Toolbar>
+                {/* TODO(wittjosiah): Cleaner way to handle no drag handle in toolbar? */}
+                <span />
+                {state.popoverTitle ? <Card.Title>{toLocalizedString(state.popoverTitle, t)}</Card.Title> : <span />}
+                <Card.Close onClose={handleClose} />
+              </Card.Toolbar>
+              <Surface role='card--content' data={state.popoverContent} limit={1} />
+            </Card.Root>
+          )}
+          {state.popoverKind === 'base' && <Surface role='popover' data={state.popoverContent} limit={1} />}
         </Popover.Viewport>
         <Popover.Arrow />
       </Popover.Content>

@@ -63,6 +63,8 @@ export default Capability.makeModule(
           updateState((state) => ({
             ...state,
             popoverOpen: input.state ?? Boolean(input.subject),
+            popoverKind: input.kind ?? 'base',
+            popoverTitle: input.kind === 'card' ? input.title : undefined,
             popoverContent:
               typeof input.subject === 'string'
                 ? { component: input.subject, props: input.props }

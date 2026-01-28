@@ -12,8 +12,10 @@ import {
   Main,
   Popover,
   type PopoverContentInteractOutsideEvent,
+  toLocalizedString,
   useTranslation,
 } from '@dxos/react-ui';
+import { Card } from '@dxos/react-ui-mosaic';
 import { descriptionMessage, mx } from '@dxos/ui-theme';
 
 import { meta } from '../meta';
@@ -23,6 +25,7 @@ const debounce_delay = 100;
 
 // TODO(wittjosiah): Support dialogs, tooltips, maybe toast.
 export const Layout = ({ children }: PropsWithChildren<{}>) => {
+  const { t } = useTranslation(meta.id);
   const trigger = useRef<HTMLButtonElement | null>(null);
   const registry = useContext(RegistryContext);
   const stateAtom = useCapability(LayoutState);
@@ -52,6 +55,16 @@ export const Layout = ({ children }: PropsWithChildren<{}>) => {
     }
   }, [layout.popoverAnchor, layout.popoverContent, layout.popoverOpen]);
 
+  const handleClose = useCallback(() => {
+    setOpen(false);
+    updateState({
+      popoverOpen: false,
+      popoverAnchor: undefined,
+      popoverAnchorId: undefined,
+      popoverSide: undefined,
+    });
+  }, [updateState]);
+
   const handleInteractOutside = useCallback(
     (event: KeyboardEvent | PopoverContentInteractOutsideEvent) => {
       if (
@@ -61,16 +74,10 @@ export const Layout = ({ children }: PropsWithChildren<{}>) => {
       ) {
         event.preventDefault();
       } else {
-        setOpen(false);
-        updateState({
-          popoverOpen: false,
-          popoverAnchor: undefined,
-          popoverAnchorId: undefined,
-          popoverSide: undefined,
-        });
+        handleClose();
       }
     },
-    [updateState],
+    [handleClose],
   );
 
   const DialogRoot = layout.dialogType === 'alert' ? AlertDialog.Root : Dialog.Root;
@@ -122,7 +129,22 @@ export const Layout = ({ children }: PropsWithChildren<{}>) => {
             hideWhenDetached
           >
             <Popover.Viewport>
-              <Surface role='card--popover' data={layout.popoverContent} limit={1} />
+              {layout.popoverKind === 'card' && (
+                <Card.Root>
+                  <Card.Toolbar>
+                    {/* TODO(wittjosiah): Cleaner way to handle no drag handle in toolbar? */}
+                    <span />
+                    {layout.popoverTitle ? (
+                      <Card.Title>{toLocalizedString(layout.popoverTitle, t)}</Card.Title>
+                    ) : (
+                      <span />
+                    )}
+                    <Card.Close onClose={handleClose} />
+                  </Card.Toolbar>
+                  <Surface role='card--content' data={layout.popoverContent} limit={1} />
+                </Card.Root>
+              )}
+              {layout.popoverKind === 'base' && <Surface role='popover' data={layout.popoverContent} limit={1} />}
             </Popover.Viewport>
             <Popover.Arrow />
           </Popover.Content>

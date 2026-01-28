@@ -300,13 +300,13 @@ export default Capability.makeModule(
       }),
       Common.createSurface({
         id: SPACE_RENAME_POPOVER,
-        role: 'card--popover',
+        role: 'popover',
         filter: (data): data is { props: Space } => data.component === SPACE_RENAME_POPOVER && isSpace(data.props),
         component: ({ data }) => <SpaceRenamePopover space={data.props} />,
       }),
       Common.createSurface({
         id: OBJECT_RENAME_POPOVER,
-        role: 'card--popover',
+        role: 'popover',
         filter: (data): data is { props: Obj.Any } =>
           data.component === OBJECT_RENAME_POPOVER && Obj.isObject(data.props),
         component: ({ data }) => <ObjectRenamePopover object={data.props} />,

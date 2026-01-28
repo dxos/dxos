@@ -115,6 +115,8 @@ export default Capability.makeModule(
           yield* Common.Capability.updateAtomValue(DeckCapabilities.EphemeralState, (s) => ({
             ...s,
             popoverOpen: input.state ?? Boolean(input.subject),
+            popoverKind: input.kind ?? 'base',
+            popoverTitle: input.kind === 'card' ? input.title : undefined,
             popoverContent:
               typeof input.subject === 'string'
                 ? { component: input.subject, props: input.props }
