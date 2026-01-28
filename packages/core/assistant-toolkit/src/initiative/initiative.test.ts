@@ -21,7 +21,7 @@ import * as Initiative from './Initiative';
 import { agent } from './functions';
 import { invariant } from '@dxos/invariant';
 import * as Layer from 'effect/Layer';
-import { InvocationTracer, TriggerDispatcher, TriggerStateStore } from '@dxos/functions-runtime';
+import { TriggerDispatcher, TriggerStateStore } from '@dxos/functions-runtime';
 import { Message } from '@dxos/types';
 import { log } from '@dxos/log';
 
@@ -30,12 +30,13 @@ ObjectId.dangerouslyDisableRandomness();
 const TestLayer = Layer.mergeAll(
   TriggerDispatcher.layer({ timeControl: 'manual', startingTime: new Date('2025-09-05T15:01:00.000Z') }),
 ).pipe(
-  Layer.provideMerge(Layer.mergeAll(InvocationTracer.layerTest, TriggerStateStore.layerMemory)),
+  Layer.provideMerge(TriggerStateStore.layerMemory),
   Layer.provideMerge(
     AssistantTestLayer({
       aiServicePreset: 'edge-remote',
       functions: [...Initiative.functions],
       types: [Initiative.Initiative, Blueprint.Blueprint, Trigger.Trigger, Text.Text],
+      tracing: 'console',
     }),
   ),
 );

@@ -12,6 +12,7 @@ import { FunctionInvocationServiceLayerTest, TestDatabaseLayer } from '@dxos/fun
 
 import { makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '../functions';
 import { GenericToolkit } from '../session';
+import { TracingServiceExt } from '@dxos/functions-runtime';
 
 interface TestLayerOptions {
   aiServicePreset?: 'direct' | 'edge-local' | 'edge-remote';
@@ -20,6 +21,11 @@ interface TestLayerOptions {
   toolkits?: GenericToolkit.GenericToolkit[];
   types?: Type.Entity.Any[];
   credentials?: ServiceCredential[];
+  /*
+   * Tracing configuration.
+   * @default 'noop'
+   */
+  tracing?: 'noop' | 'console';
 }
 
 export const AssistantTestLayer = ({
@@ -29,6 +35,7 @@ export const AssistantTestLayer = ({
   toolkits = [],
   types = [],
   credentials = [],
+  tracing = 'noop',
 }: TestLayerOptions) =>
   Layer.mergeAll(
     AiService.model(model),
@@ -51,7 +58,7 @@ export const AssistantTestLayer = ({
           types,
         }),
         CredentialsService.configuredLayer(credentials),
-        TracingService.layerNoop,
+        tracing === 'noop' ? TracingService.layerNoop : TracingServiceExt.layerLogInfo(),
       ),
     ),
   );

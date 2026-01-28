@@ -119,11 +119,11 @@ export class AiSession {
       // Generate system and prompt messages.
       const system = yield* formatSystemPrompt({ system: systemTemplate, blueprints, objects }).pipe(Effect.orDie);
 
-      log.info('system', { prompt: system });
+      // log('system', { prompt: system });
 
       // Tool call loop.
       do {
-        log.info('request', {
+        log('request', {
           prompt: promptMessage,
           system: { snippet: createSnippet(system), length: system.length },
           pending: this._pending.length,
@@ -151,7 +151,7 @@ export class AiSession {
           Effect.map(Chunk.toArray),
         );
 
-        log.info('blocks', { blocks });
+        // log('blocks', { blocks });
 
         // Create the response message.
         const response = yield* submitMessage(

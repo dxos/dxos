@@ -52,7 +52,7 @@ export const processTemplate = (
       }),
     ).pipe(Effect.map(Record.fromEntries));
 
-    log.info('processTemplate', { variables });
+    log('processTemplate', { variables });
 
     return process((yield* Database.Service.load(template.source)).content, variables);
   });

@@ -5,14 +5,13 @@
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
-import { Obj, type Ref, Type } from '@dxos/echo';
+import { Obj, Ref, Type } from '@dxos/echo';
 import { Queue } from '@dxos/echo-db';
-import { TracingService } from '@dxos/functions';
-import { Trigger } from '@dxos/functions';
-import { ObjectId } from '@dxos/keys';
+import { QueueService, TracingService, Trigger } from '@dxos/functions';
+import { DXN, ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { SerializedError } from '@dxos/protocols';
-import { FunctionRuntimeKind } from '@dxos/protocols';
+import { ErrorCodec, FunctionRuntimeKind, SerializedError } from '@dxos/protocols';
+import { Effect } from 'effect';
 
 export enum InvocationOutcome {
   SUCCESS = 'success',
@@ -195,7 +194,8 @@ export const createInvocationSpans = (items?: InvocationTraceEvent[]): Invocatio
  */
 export namespace TracingServiceExt {
   /**
-   * Creates a TracingService layer that writes events to a specific queue.
+   * Creates a TracingService layer that writes events to a single specific queue.
+   * Assumes we are working with a single invocation.
    */
   export const layerQueue = (queue: Queue): Layer.Layer<TracingService> =>
     Layer.succeed(TracingService, {
@@ -205,6 +205,8 @@ export namespace TracingServiceExt {
           log.warn('Failed to write trace event to queue', { error });
         });
       },
+      traceInvocationStart: () => Effect.die('TracingService.traceInvocationStart is not supported in this context.'),
+      traceInvocationEnd: () => Effect.die('TracingService.traceInvocationEnd is not supported in this context.'),
     });
 
   /**
@@ -213,14 +215,83 @@ export namespace TracingServiceExt {
   export const layerLogInfo = (): Layer.Layer<TracingService> =>
     Layer.succeed(TracingService, {
       getTraceContext: () => ({}),
-      write: (event: Obj.Any) => {
+      write: (event: Obj.Any, context: TracingService.TraceContext) => {
         log.info('trace event', { event });
       },
+      traceInvocationStart: ({ payload, target }) =>
+        Effect.sync(() => {
+          const invocationId = ObjectId.random();
+          log.info('trace invocation start', { invocationId, payload });
+          return { invocationId, invocationTraceQueue: undefined };
+        }),
+      traceInvocationEnd: ({ trace, exception }) =>
+        Effect.sync(() => {
+          log.info('trace invocation end', { trace, exception });
+        }),
     });
-}
 
-// Add layer helpers as static methods on TracingService for convenience
-Object.assign(TracingService, {
-  layerQueue: TracingServiceExt.layerQueue,
-  layerLogInfo: TracingServiceExt.layerLogInfo,
-});
+  /**
+   * Creates a TracingService layer that maintains a global queue of invocation events with subqueues for each invocation.
+   */
+  export const layerInvocationsQueue = (opts: { invocationTraceQueue: Queue }) =>
+    Layer.effect(
+      TracingService,
+      Effect.gen(function* () {
+        const queueService = yield* QueueService;
+        return {
+          getTraceContext: () => ({}),
+          write: (event: Obj.Any, traceContext: TracingService.TraceContext) => {
+            const specificQueueDXN = traceContext.currentInvocation?.invocationTraceQueue;
+            const queue = specificQueueDXN
+              ? queueService.queues.get(DXN.parse(specificQueueDXN))
+              : opts.invocationTraceQueue;
+            void queue.append([event]).catch((error) => {
+              log.warn('Failed to write trace event to queue', { error });
+            });
+          },
+          traceInvocationStart: Effect.fn('traceInvocationStart')(
+            function* ({ payload, target }) {
+              const invocationId = ObjectId.random();
+              const invocationTraceQueue = yield* QueueService.createQueue({ subspaceTag: 'trace' });
+              const now = Date.now();
+              const traceEvent = Obj.make(InvocationTraceStartEvent, {
+                type: InvocationTraceEventType.START,
+                invocationId,
+                timestamp: now,
+                // TODO(dmaretskyi): Not json-stringifying this makes ECHO fail when one ECHO object becomes embedded in another ECHO object.
+                input: JSON.parse(JSON.stringify(payload.data ?? {})),
+                invocationTraceQueue: Ref.fromDXN(invocationTraceQueue.dxn),
+                invocationTarget: target ? Ref.fromDXN(target) : undefined,
+                trigger: payload.trigger ? Ref.fromDXN(DXN.fromLocalObjectId(payload.trigger.id)) : undefined,
+              });
+              yield* QueueService.append(opts.invocationTraceQueue, [traceEvent]);
+
+              return { invocationId, invocationTraceQueue: invocationTraceQueue.dxn.toString() };
+            },
+            Effect.provideService(QueueService, queueService),
+          ),
+          traceInvocationEnd: Effect.fn('traceInvocationEnd')(
+            function* ({ trace, exception }) {
+              const now = Date.now();
+              const traceEvent = Obj.make(InvocationTraceEndEvent, {
+                type: InvocationTraceEventType.END,
+                invocationId: trace.invocationId,
+                timestamp: now,
+                outcome: exception ? InvocationOutcome.FAILURE : InvocationOutcome.SUCCESS,
+                error: exception ? ErrorCodec.encode(exception) : undefined,
+              });
+              yield* QueueService.append(opts.invocationTraceQueue, [traceEvent]);
+            },
+            Effect.provideService(QueueService, queueService),
+          ),
+        };
+      }),
+    );
+
+  export const layerInvocationsQueueTest = Layer.unwrapEffect(
+    Effect.gen(function* () {
+      const queue = yield* QueueService.createQueue({ subspaceTag: 'trace' });
+      return layerInvocationsQueue({ invocationTraceQueue: queue });
+    }),
+  );
+}
