@@ -28,13 +28,16 @@ export type InputKind = Schema.Schema.Type<typeof InputKind>;
  * Template input variable.
  * E.g., {{foo}}
  */
-export const Input = Schema.mutable(
-  Schema.Struct({
-    name: Schema.String,
-    kind: Schema.optional(InputKind),
-    default: Schema.optional(Schema.Any),
-  }),
-);
+export const Input = Schema.Struct({
+  name: Schema.String,
+  kind: Schema.optional(InputKind),
+  default: Schema.optional(Schema.Any),
+
+  /**
+   * Function to call if the kind is 'function'.
+   */
+  function: Schema.optional(Schema.String),
+}).pipe(Schema.mutable);
 
 export type Input = Schema.Schema.Type<typeof Input>;
 

@@ -17,9 +17,9 @@ export const createInvocationPayload = (trigger: Trigger.Trigger, event: Trigger
     }
 
     const propertyPath = value.slice(2, -2);
-    let valueSubstitution: any = propertyPath.startsWith('trigger.')
+    let valueSubstitution: any = propertyPath.startsWith('trigger')
       ? trigger
-      : propertyPath.startsWith('event.')
+      : propertyPath.startsWith('event')
         ? event
         : undefined;
 

@@ -185,6 +185,7 @@ class FunctionContext extends Resource {
 
 const MockedFunctionInvocationService = Layer.succeed(FunctionInvocationService, {
   invokeFunction: () => Effect.die('Calling functions from functions is not implemented yet.'),
+  resolveFunction: () => Effect.die('Not implemented.'),
 });
 
 const decodeRefsFromSchema = (ast: SchemaAST.AST, value: unknown, db: EchoDatabaseImpl): unknown => {

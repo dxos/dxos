@@ -7,8 +7,8 @@ import type * as ManagedRuntime from 'effect/ManagedRuntime';
 import { type AiService, type ToolExecutionService, type ToolResolverService } from '@dxos/ai';
 import { Capability } from '@dxos/app-framework';
 import { type Database } from '@dxos/echo';
-import type { CredentialsService, FunctionInvocationService, QueueService } from '@dxos/functions';
-import type { InvocationTracer, TriggerDispatcher, TriggerStateStore } from '@dxos/functions-runtime';
+import type { CredentialsService, FunctionInvocationService, QueueService, TracingService } from '@dxos/functions';
+import type { TriggerDispatcher, TriggerStateStore } from '@dxos/functions-runtime';
 import type { SpaceId } from '@dxos/keys';
 
 import { meta } from '../meta';
@@ -25,7 +25,7 @@ export namespace AutomationCapabilities {
     | QueueService
     | CredentialsService
     | FunctionInvocationService
-    | InvocationTracer
+    | TracingService
     // TODO(dmaretskyi): Those should be provided at AI-chat call site.
     | ToolResolverService
     | ToolExecutionService;

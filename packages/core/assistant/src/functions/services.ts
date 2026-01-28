@@ -42,6 +42,8 @@ export const makeToolResolverFromFunctions = (
       return {
         resolve: (id): Effect.Effect<Tool.Any, AiToolNotFoundError> =>
           Effect.gen(function* () {
+            // TODO(dmaretskyi): Use FunctionInvocationService.resolveFunction().
+
             const tool = toolkit.tools[id];
             if (tool) {
               return tool;

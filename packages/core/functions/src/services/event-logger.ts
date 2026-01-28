@@ -75,7 +75,7 @@ export class ComputeEventLogger extends Context.Tag('@dxos/functions/ComputeEven
       const tracing = yield* TracingService;
       return {
         log: (event: ComputeEventPayload) => {
-          tracing.write(Obj.make(ComputeEvent, { payload: event }));
+          tracing.write(Obj.make(ComputeEvent, { payload: event }), tracing.getTraceContext());
         },
         nodeId: undefined,
       };

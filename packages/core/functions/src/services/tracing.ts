@@ -7,9 +7,11 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { AgentStatus } from '@dxos/ai';
-import { Obj } from '@dxos/echo';
-import { type ObjectId } from '@dxos/keys';
+import { type DXN, Obj } from '@dxos/echo';
+import { ObjectId } from '@dxos/keys';
 import { Message } from '@dxos/types';
+
+import type { Trigger } from '../types';
 
 /**
  * Provides a way for compute primitives (functions, workflows, tools)
@@ -27,15 +29,35 @@ export class TracingService extends Context.Tag('@dxos/functions/TracingService'
      * Write an event to the tracing queue.
      * @param event - The event to write. Must be an a typed object.
      */
-    write: (event: Obj.Any) => void;
+    write: (event: Obj.Any, traceContext: TracingService.TraceContext) => void;
+
+    traceInvocationStart({
+      payload,
+      target,
+    }: {
+      payload: TracingService.FunctionInvocationPayload;
+      target?: DXN;
+    }): Effect.Effect<TracingService.InvocationTraceData>;
+
+    traceInvocationEnd({
+      trace,
+      exception,
+    }: {
+      trace: TracingService.InvocationTraceData;
+      exception?: any;
+    }): Effect.Effect<void>;
   }
 >() {
   static noop: Context.Tag.Service<TracingService> = {
     getTraceContext: () => ({}),
     write: () => {},
+    traceInvocationStart: () =>
+      Effect.sync(() => ({ invocationId: ObjectId.random(), invocationTraceQueue: undefined })),
+    traceInvocationEnd: () => Effect.sync(() => {}),
   };
 
   static layerNoop: Layer.Layer<TracingService> = Layer.succeed(TracingService, TracingService.noop);
+
   /**
    * Creates a TracingService layer that emits events to the parent tracing service.
    */
@@ -46,11 +68,24 @@ export class TracingService extends Context.Tag('@dxos/functions/TracingService'
         const tracing = yield* TracingService;
         const context = mapContext(tracing.getTraceContext());
         return {
-          write: (event) => tracing.write(event),
+          write: (event, context) => tracing.write(event, context),
           getTraceContext: () => context,
+          traceInvocationStart: () => Effect.die('Tracing invocation inside another invocation is not supported.'),
+          traceInvocationEnd: () => Effect.die('Tracing invocation inside another invocation is not supported.'),
         };
       }),
     );
+
+  /**
+   * Create sublayer to trace an invocation.
+   * @param data
+   * @returns
+   */
+  static layerInvocation = (data: TracingService.InvocationTraceData) =>
+    TracingService.layerSubframe((context) => ({
+      ...context,
+      currentInvocation: data,
+    }));
 
   /**
    * Emit the current human-readable execution status.
@@ -66,6 +101,7 @@ export class TracingService extends Context.Tag('@dxos/functions/TracingService'
         created: new Date().toISOString(),
         ...data,
       }),
+      tracing.getTraceContext(),
     );
   });
 
@@ -82,12 +118,15 @@ export class TracingService extends Context.Tag('@dxos/functions/TracingService'
           ...data.properties,
         },
       }),
+      tracing.getTraceContext(),
     );
   });
 }
 
 export namespace TracingService {
   export interface TraceContext {
+    currentInvocation?: InvocationTraceData;
+
     /**
      * If this thread sprung from a tool call, this is the ID of the message containing the tool call.
      */
@@ -99,6 +138,26 @@ export namespace TracingService {
     toolCallId?: string;
 
     debugInfo?: unknown;
+  }
+
+  /**
+   * Trace data for a function/trigger invocation.
+   */
+  export interface InvocationTraceData {
+    invocationId: ObjectId;
+    invocationTraceQueue?: DXN.String;
+  }
+
+  /**
+   * Payload for a function/trigger invocation.
+   */
+  export interface FunctionInvocationPayload {
+    data?: any;
+    inputNodeId?: string;
+    trigger?: {
+      id: string;
+      kind: Trigger.Kind;
+    };
   }
 }
 

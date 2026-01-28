@@ -9,6 +9,7 @@ import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
 import { Event } from '@dxos/async';
+import { type CustomInspectFunction, inspectCustom } from '@dxos/debug';
 import { EncodedReference } from '@dxos/echo-protocol';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN, ObjectId } from '@dxos/keys';
@@ -450,6 +451,10 @@ export class RefImpl<T> implements Ref<T> {
 
     return `Ref(${this.#dxn.toString()})`;
   }
+
+  [inspectCustom]: CustomInspectFunction = (depth, options, inspect) => {
+    return this.toString();
+  };
 
   [RefTypeId] = refVariance;
 
