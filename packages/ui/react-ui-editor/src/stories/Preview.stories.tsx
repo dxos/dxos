@@ -54,10 +54,18 @@ const PreviewCard = () => {
   return (
     <Popover.Portal>
       <Popover.Content onOpenAutoFocus={(event) => event.preventDefault()}>
-        <Popover.Viewport>
-          <Card.Root role='card--popover'>
-            <Card.Heading>{target?.label}</Card.Heading>
-            {target && <Card.Text variant='description'>{target.text}</Card.Text>}
+        <Popover.Viewport classNames='popover-card-width'>
+          <Card.Root>
+            <Card.Toolbar>
+              <Card.Icon icon='ph--document--regular' />
+              <Card.Title>{target?.label}</Card.Title>
+              <Card.Close onClick={() => {}} />
+            </Card.Toolbar>
+            {target && (
+              <Card.Row>
+                <Card.Text variant='description'>{target.text}</Card.Text>
+              </Card.Row>
+            )}
           </Card.Root>
         </Popover.Viewport>
         <Popover.Arrow />
@@ -134,35 +142,39 @@ const PreviewBlockComponent = ({ link, el, view }: { link: PreviewLinkRef; el: H
 
   return createPortal(
     <Card.Root classNames={hoverableControls}>
-      <div className='flex items-start'>
-        {!view?.state.readOnly && (
-          <Card.Toolbar classNames='is-min p-[--dx-cardSpacingInline]'>
-            {(link.suggest && (
-              <>
-                <Card.ToolbarIconButton label='Discard' icon='ph--x--regular' onClick={handleDelete} />
-                {target && (
-                  <Card.ToolbarIconButton
-                    classNames='bg-successSurface text-successSurfaceText'
-                    label='Apply'
-                    icon='ph--check--regular'
-                    onClick={handleInsert}
-                  />
-                )}
-              </>
-            )) || (
-              <Card.ToolbarIconButton
-                iconOnly
-                label='Delete'
-                icon='ph--x--regular'
-                classNames={[hoverableControlItem, hoverableControlItemTransition]}
-                onClick={handleDelete}
-              />
-            )}
-          </Card.Toolbar>
-        )}
-        <Card.Heading classNames='grow order-first mie-0'>{link.label}</Card.Heading>
-      </div>
-      {target && <Card.Text variant='description'>{target.text}</Card.Text>}
+      {!view?.state.readOnly && (
+        <Card.Toolbar>
+          {(link.suggest && (
+            <>
+              <Card.ToolbarIconButton label='Discard' icon='ph--x--regular' onClick={handleDelete} />
+              {target && (
+                <Card.ToolbarIconButton
+                  classNames='bg-successSurface text-successSurfaceText'
+                  label='Apply'
+                  icon='ph--check--regular'
+                  onClick={handleInsert}
+                />
+              )}
+            </>
+          )) || (
+            <Card.ToolbarIconButton
+              iconOnly
+              label='Delete'
+              icon='ph--x--regular'
+              classNames={[hoverableControlItem, hoverableControlItemTransition]}
+              onClick={handleDelete}
+            />
+          )}
+        </Card.Toolbar>
+      )}
+      <Card.Row>
+        <Card.Heading>{link.label}</Card.Heading>
+      </Card.Row>
+      {target && (
+        <Card.Row>
+          <Card.Text variant='description'>{target.text}</Card.Text>
+        </Card.Row>
+      )}
     </Card.Root>,
     el,
   );

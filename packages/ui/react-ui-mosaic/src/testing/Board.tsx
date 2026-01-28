@@ -127,7 +127,7 @@ export const Column = forwardRef<HTMLDivElement, ColumnProps>(
       () => [
         {
           label: 'Delete',
-          onSelect: (obj) => {
+          onClick: (obj) => {
             updateColumn((column) => {
               const idx = column.items.findIndex((item) => item.target?.id === obj?.id);
               if (idx !== -1) {

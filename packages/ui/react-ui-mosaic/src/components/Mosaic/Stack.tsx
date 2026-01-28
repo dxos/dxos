@@ -190,7 +190,7 @@ const DefaultComponent: StackProps['Component'] = (props) => {
           items={[
             {
               label: open ? 'Hide details' : 'Show details',
-              onSelect: () => setOpen((open) => !open),
+              onClick: () => setOpen((open) => !open),
             },
           ]}
         />

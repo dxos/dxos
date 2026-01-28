@@ -7,7 +7,7 @@ import React, { forwardRef, useCallback, useMemo } from 'react';
 import { Common } from '@dxos/app-framework';
 import { useOperationInvoker } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
-import { IconButton, useTranslation } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui-mosaic';
 import { Text } from '@dxos/schema';
 
@@ -33,22 +33,24 @@ export const MarkdownCard = forwardRef<HTMLDivElement, MarkdownCardProps>(
 
     return (
       <Card.Root ref={forwardedRef}>
-        <Card.Heading classNames='flex items-center'>
-          {getTitle(subject, t('fallback title'))}
-          <span className='grow' />
-          <IconButton
-            iconOnly
-            icon='ph--arrow-right--regular'
-            label={t('navigate to document label')}
-            onClick={handleNavigate}
+        <Card.Toolbar>
+          <div />
+          <Card.Title classNames='flex items-center'>{getTitle(subject, t('fallback title'))}</Card.Title>
+          <Card.Menu
+            items={[
+              {
+                label: t('navigate to document label'),
+                onClick: handleNavigate,
+              },
+            ]}
           />
-        </Card.Heading>
+        </Card.Toolbar>
         {snippet && (
-          <Card.Text classNames='flex max-h-[300px] overflow-hidden'>
+          <div className='max-h-[300px] overflow-hidden'>
             <MarkdownEditor.Root id={subject.id} viewMode='readonly'>
               <MarkdownEditor.Content initialValue={snippet} slots={{}} classNames='!bg-transparent' />
             </MarkdownEditor.Root>
-          </Card.Text>
+          </div>
         )}
         <Card.Text classNames='text-xs text-description'>
           {info.words} {t('words label', { count: info.words })}

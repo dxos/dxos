@@ -8,7 +8,7 @@ export const styles = {
   root: [
     'group/card relative',
     'min-bs-[--rail-item] overflow-hidden',
-    'is-cardMinWidth is-cardMaxWidth is-cardMinWidth',
+    'is-full is-cardMaxWidth is-cardMinWidth',
     'bg-cardSurface border border-separator dark:border-subduedSeparator rounded-sm dx-focus-ring-group-y-indicator',
   ],
 

@@ -114,9 +114,9 @@ const CardDragHandle = forwardRef<HTMLButtonElement, CardDragHandleProps>((_, fo
 // Close
 //
 
-type CardCloseProps = { onClose: () => void };
+type CardCloseProps = { onClick: () => void };
 
-const CardClose = forwardRef<HTMLButtonElement, CardCloseProps>(({ onClose }, forwardedRef) => {
+const CardClose = forwardRef<HTMLButtonElement, CardCloseProps>(({ onClick }, forwardedRef) => {
   const { t } = useTranslation(translationKey);
 
   return (
@@ -127,7 +127,7 @@ const CardClose = forwardRef<HTMLButtonElement, CardCloseProps>(({ onClose }, fo
       label={t('card close label')}
       classNames='cursor-pointer'
       size={5}
-      onClick={onClose}
+      onClick={onClick}
       ref={forwardedRef}
     />
   );
@@ -139,7 +139,7 @@ const CardClose = forwardRef<HTMLButtonElement, CardCloseProps>(({ onClose }, fo
 
 type CardMenuItem<T extends any | void = void> = {
   label: string;
-  onSelect: (context: T) => void;
+  onClick: (context: T) => void;
 };
 
 type CardMenuProps<T extends any | void = void> = {
@@ -165,7 +165,7 @@ const CardMenu = <T extends any | void = void>({ context, items }: CardMenuProps
         <DropdownMenu.Portal>
           <DropdownMenu.Content>
             <DropdownMenu.Viewport>
-              {combinedItems?.map(({ label, onSelect }, i) => (
+              {combinedItems?.map(({ label, onClick: onSelect }, i) => (
                 <DropdownMenu.Item key={i} onSelect={() => onSelect(context as T)}>
                   {label}
                 </DropdownMenu.Item>

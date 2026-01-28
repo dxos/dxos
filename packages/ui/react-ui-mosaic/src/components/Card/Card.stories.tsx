@@ -26,7 +26,7 @@ const DefaultStory = ({ title, description, image }: CardStoryProps) => {
       <Card.Toolbar>
         <Card.DragHandle ref={handleRef} />
         <Card.Title>{title}</Card.Title>
-        <Card.Close onClose={() => console.log('close')} />
+        <Card.Close onClick={() => console.log('close')} />
       </Card.Toolbar>
       <Card.Content>
         <Card.Poster alt='Card.Poster' image={image} />
@@ -87,7 +87,7 @@ export const Simple: Story = {
         <Card.Toolbar>
           <Card.DragHandle ref={handleRef} />
           <Card.Title>{title}</Card.Title>
-          <Card.Close onClose={() => console.log('close')} />
+          <Card.Close onClick={() => console.log('close')} />
         </Card.Toolbar>
       </Card.Root>
     );
@@ -106,7 +106,7 @@ export const Description: Story = {
         <Card.Toolbar>
           <Card.DragHandle ref={handleRef} />
           <Card.Title>{title}</Card.Title>
-          <Card.Close onClose={() => console.log('close')} />
+          <Card.Close onClick={() => console.log('close')} />
         </Card.Toolbar>
         <Card.Content>
           <Card.Row>

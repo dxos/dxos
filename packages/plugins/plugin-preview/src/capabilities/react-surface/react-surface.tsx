@@ -22,10 +22,10 @@ export default Capability.makeModule(() =>
       // TODO(burdon): Create helpers and factor out.
       //
 
-      // TODO(burdon): Infer Role type.
       Common.createSurface<{ subject: Person.Person }>({
         id: `${meta.id}/schema-popover--contact`,
         role: 'card--content',
+        position: 'hoist',
         filter: (data): data is { subject: Person.Person } => Obj.instanceOf(Person.Person, data.subject),
         component: ({ data, role }) => {
           return <PersonCard role={role} subject={data.subject} />;
@@ -34,6 +34,7 @@ export default Capability.makeModule(() =>
       Common.createSurface({
         id: `${meta.id}/schema-popover--organization`,
         role: 'card--content',
+        position: 'hoist',
         filter: (data): data is { subject: Organization.Organization } =>
           Obj.instanceOf(Organization.Organization, data.subject),
         component: ({ data, role }) => {
@@ -43,6 +44,7 @@ export default Capability.makeModule(() =>
       Common.createSurface({
         id: `${meta.id}/schema-popover--project`,
         role: 'card--content',
+        position: 'hoist',
         filter: (data): data is { subject: Project.Project } => Obj.instanceOf(Project.Project, data.subject),
         component: ({ data, role }) => {
           return <ProjectCard role={role} subject={data.subject} />;
@@ -51,6 +53,7 @@ export default Capability.makeModule(() =>
       Common.createSurface({
         id: `${meta.id}/schema-popover--task`,
         role: 'card--content',
+        position: 'hoist',
         filter: (data): data is { subject: Task.Task } => Obj.instanceOf(Task.Task, data.subject),
         component: ({ data, role }) => {
           return <TaskCard role={role} subject={data.subject} />;

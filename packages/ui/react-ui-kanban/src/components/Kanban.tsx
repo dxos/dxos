@@ -7,7 +7,7 @@ import React, { useCallback, useEffect } from 'react';
 
 import { Surface } from '@dxos/app-framework/react';
 import { IconButton, Tag, useTranslation } from '@dxos/react-ui';
-import { AttentionGlyph, type UseSelectionActions, useSelected, useSelectionActions } from '@dxos/react-ui-attention';
+import { type UseSelectionActions, useSelected, useSelectionActions } from '@dxos/react-ui-attention';
 import { Card, CardDragPreview } from '@dxos/react-ui-mosaic';
 import {
   CardStack,
@@ -108,9 +108,9 @@ export const Kanban = <T extends BaseKanbanItem = { id: string }>({
                 )}
 
                 <StackItem.Heading classNames={cardStackHeading} separateOnScroll>
-                  <StackItem.DragHandle asChild>
+                  {/* <StackItem.DragHandle asChild>
                     <CardStack.DragHandle />
-                  </StackItem.DragHandle>
+                  </StackItem.DragHandle> */}
                   <Tag
                     palette={color as any}
                     data-uncategorized={uncategorized}
@@ -120,6 +120,7 @@ export const Kanban = <T extends BaseKanbanItem = { id: string }>({
                   </Tag>
                 </StackItem.Heading>
               </CardStack.Content>
+
               <StackItem.DragPreview>
                 {({ item }) => {
                   // Find the column data for this item.
@@ -151,7 +152,7 @@ export const Kanban = <T extends BaseKanbanItem = { id: string }>({
                             <Card.Toolbar>
                               <Card.DragHandle />
                               <Card.ToolbarSeparator />
-                              <Card.Close onClose={() => onRemoveCard?.(card)} />
+                              <Card.Close onClick={() => onRemoveCard?.(card)} />
                             </Card.Toolbar>
                             <Surface
                               role='card--content'
@@ -216,7 +217,7 @@ const CardComponent = <T extends BaseKanbanItem = { id: string }>({
             <StackItem.DragHandle asChild>
               <Card.DragHandle />
             </StackItem.DragHandle>
-            <AttentionGlyph attended={selected.includes(item.id)} />
+            {/* <AttentionGlyph attended={selected.includes(item.id)} /> */}
             {/* TODO(burdon): Coordinate actions. */}
             {onRemoveCard && (
               <>
@@ -225,15 +226,14 @@ const CardComponent = <T extends BaseKanbanItem = { id: string }>({
                   items={[
                     {
                       label: t('remove card label'),
-                      onSelect: () => onRemoveCard(item),
+                      onClick: () => onRemoveCard(item),
                     },
                   ]}
                 />
               </>
             )}
           </Card.Toolbar>
-          {/* TODO(burdon): Entire card should be inside surface. */}
-          <Surface role='card--intrinsic' limit={1} data={{ subject: item, projection }} />
+          <Surface role='card--content' limit={1} data={{ subject: item, projection }} />
         </Card.Root>
         <StackItem.DragPreview>
           {({ item }) => (
@@ -242,7 +242,7 @@ const CardComponent = <T extends BaseKanbanItem = { id: string }>({
                 <Card.Toolbar>
                   <Card.DragHandle />
                 </Card.Toolbar>
-                <Surface role='card--intrinsic' limit={1} data={{ subject: item, projection }} />
+                <Surface role='card--content' limit={1} data={{ subject: item, projection }} />
               </CardDragPreview.Content>
             </CardDragPreview.Root>
           )}
