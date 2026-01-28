@@ -2,21 +2,22 @@
 // Copyright 2024 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
+import * as Record from 'effect/Record';
 import handlebars from 'handlebars';
 
-import { invariant } from '@dxos/invariant';
-import * as Effect from 'effect/Effect';
-import type { Template } from '..';
+import { Database } from '@dxos/echo';
+import type { ObjectNotFoundError } from '@dxos/echo/Err';
 import {
-  FunctionInvocationService,
   type FunctionDefinition,
+  FunctionInvocationService,
   type FunctionNotFoundError,
   type TracingService,
 } from '@dxos/functions';
-import * as Record from 'effect/Record';
-import { Database } from '@dxos/echo';
-import type { ObjectNotFoundError } from '@dxos/echo/Err';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+
+import type { Template } from '..';
 
 /**
  * Process Handlebars template.

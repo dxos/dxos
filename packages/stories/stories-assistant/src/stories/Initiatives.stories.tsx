@@ -3,90 +3,26 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import * as Schema from 'effect/Schema';
 import React, { type FC, useCallback } from 'react';
 
-import { ToolId } from '@dxos/ai';
-import { EXA_API_KEY } from '@dxos/ai/testing';
 import { Common } from '@dxos/app-framework';
 import { Surface, useCapabilities, useCapability } from '@dxos/app-framework/react';
 import { AiContextBinder } from '@dxos/assistant';
-import { Agent, LinearBlueprint, ResearchBlueprint, ResearchDataTypes, ResearchGraph } from '@dxos/assistant-toolkit';
-import { Blueprint, Prompt, Template } from '@dxos/blueprints';
-import { Filter, Obj, Query, Ref, Tag, Type } from '@dxos/echo';
-import { Example, Script, Trigger, serializeFunction } from '@dxos/functions';
-import { invariant } from '@dxos/invariant';
+import { Blueprint } from '@dxos/blueprints';
+import { Filter, Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { AssistantBlueprint, translations, useContextBinder } from '@dxos/plugin-assistant';
+import { translations, useContextBinder } from '@dxos/plugin-assistant';
 import { Assistant } from '@dxos/plugin-assistant/types';
-import { Board, BoardPlugin } from '@dxos/plugin-board';
-import { Chess, ChessPlugin } from '@dxos/plugin-chess';
-import { ChessFunctions } from '@dxos/plugin-chess/blueprints';
-import { InboxPlugin } from '@dxos/plugin-inbox';
-import { Calendar, Mailbox } from '@dxos/plugin-inbox/types';
-import { Map, MapPlugin } from '@dxos/plugin-map';
-import { createLocationSchema } from '@dxos/plugin-map/testing';
-import { Markdown, MarkdownPlugin } from '@dxos/plugin-markdown';
-import { PreviewPlugin } from '@dxos/plugin-preview';
-import { ProjectPlugin } from '@dxos/plugin-project';
-import { ScriptPlugin, getAccessCredential } from '@dxos/plugin-script';
-import { templates } from '@dxos/plugin-script/templates';
-import { TablePlugin } from '@dxos/plugin-table';
-import { ThreadPlugin } from '@dxos/plugin-thread';
-import { TokenManagerPlugin } from '@dxos/plugin-token-manager';
-import { TranscriptionPlugin } from '@dxos/plugin-transcription';
+import { MarkdownPlugin } from '@dxos/plugin-markdown';
 import { useQuery, useSpace } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 import { Stack, StackItem } from '@dxos/react-ui-stack';
-import { Table } from '@dxos/react-ui-table/types';
-import { Text, View } from '@dxos/schema';
 import { render } from '@dxos/storybook-utils';
-import {
-  AccessToken,
-  Employer,
-  Event,
-  HasConnection,
-  HasSubject,
-  Message,
-  Organization,
-  Person,
-  Project,
-  Task,
-  Transcript,
-} from '@dxos/types';
-import { isNonNullable, trim } from '@dxos/util';
+import { isNonNullable } from '@dxos/util';
 
-import {
-  BlueprintModule,
-  ChatModule,
-  ChessModule,
-  CommentsModule,
-  type ComponentProps,
-  ExecutionGraphModule,
-  GraphModule,
-  InboxModule,
-  InvocationsModule,
-  ProjectModule,
-  PromptModule,
-  ResearchInputModule,
-  ResearchOutputModule,
-  ScriptModule,
-  TasksModule,
-  TokenManagerModule,
-  TriggersModule,
-} from '../components';
-import {
-  ResearchInputQueue,
-  accessTokensFromEnv,
-  addTestData,
-  config,
-  createTestMailbox,
-  createTestTranscription,
-  getDecorators,
-  organizations,
-  testTypes,
-} from '../testing';
+import { ChatModule, type ComponentProps } from '../components';
+import { config, getDecorators } from '../testing';
 
 const panelClassNames = 'bg-baseSurface rounded-sm border border-separator overflow-hidden';
 

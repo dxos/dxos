@@ -2,18 +2,19 @@
 // Copyright 2025 DXOS.org
 //
 
+import type * as Context from 'effect/Context';
+import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
+import { ConsolePrinter } from '@dxos/ai';
 import { Obj, Ref, Type } from '@dxos/echo';
 import { Queue } from '@dxos/echo-db';
 import { QueueService, TracingService, Trigger } from '@dxos/functions';
 import { DXN, ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ErrorCodec, FunctionRuntimeKind, SerializedError } from '@dxos/protocols';
-import { Effect, type Context } from 'effect';
 import { Message } from '@dxos/types';
-import { ConsolePrinter } from '@dxos/ai';
 
 export enum InvocationOutcome {
   SUCCESS = 'success',
@@ -309,6 +310,7 @@ class PrettyConsoleTracer implements Context.Tag.Service<TracingService> {
     if (Obj.instanceOf(Message.Message, event)) {
       new ConsolePrinter({ tag: traceContext.currentInvocation?.invocationId }).printMessage(event as Message.Message);
     } else {
+      // eslint-disable-next-line no-console
       console.log('[EVENT]', JSON.stringify(traceContext), JSON.stringify(event, null, 2));
     }
   }
@@ -332,6 +334,7 @@ class PrettyConsoleTracer implements Context.Tag.Service<TracingService> {
     // eslint-disable-next-line no-console
     console.log(`${exception ? '❌' : '✅'} ${trace.invocationId} ${outcome}\n`);
     if (exception) {
+      // eslint-disable-next-line no-console
       console.error(exception);
     }
   });

@@ -9,6 +9,7 @@ import { AiContextService } from '@dxos/assistant';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
 import { Text } from '@dxos/schema';
+
 import * as Initiative from '../InitiativeSchema';
 
 export default defineFunction({

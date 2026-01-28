@@ -7,9 +7,10 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { AgentStatus } from '@dxos/ai';
-import { Obj, type DXN } from '@dxos/echo';
+import { type DXN, Obj } from '@dxos/echo';
 import { ObjectId } from '@dxos/keys';
 import { Message } from '@dxos/types';
+
 import type { Trigger } from '../types';
 
 /**

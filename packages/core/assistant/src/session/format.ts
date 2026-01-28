@@ -2,14 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Array from 'effect/Array';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 
 import { Template } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';
-import { Database } from '@dxos/echo';
 import { ObjectVersion } from '@dxos/echo-db';
 import { type ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';

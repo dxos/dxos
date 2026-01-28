@@ -14,6 +14,7 @@ import { TestHelpers } from '@dxos/effect/testing';
 import { log } from '@dxos/log';
 
 import { AssistantTestLayer } from '../testing';
+
 import { AiSession } from './session';
 
 // Define a calendar event artifact schema.

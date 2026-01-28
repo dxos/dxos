@@ -9,7 +9,7 @@ import { type ForeignKey } from '@dxos/echo-protocol';
 import { createJsonPath, getValue as getValue$ } from '@dxos/effect';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { type DXN, ObjectId } from '@dxos/keys';
-import { assumeType, deepMapValues } from '@dxos/util';
+import { assumeType } from '@dxos/util';
 
 import type * as Database from './Database';
 import * as Entity from './Entity';
@@ -30,6 +30,7 @@ import {
   type ObjectMeta,
   ObjectVersionId,
   VersionTypeId,
+  clone as clone$,
   getDescription as getDescription$,
   getLabel as getLabel$,
   getMeta as getMeta$,
@@ -46,9 +47,8 @@ import {
   setDescription as setDescription$,
   setLabel as setLabel$,
   setValue as setValue$,
-  clone as clone$,
 } from './internal';
-import * as Ref from './Ref';
+import type * as Ref from './Ref';
 import * as Type from './Type';
 
 /**

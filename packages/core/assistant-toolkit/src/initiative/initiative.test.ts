@@ -5,25 +5,23 @@
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
-import { ConsolePrinter } from '@dxos/ai';
 import { MemoizedAiService } from '@dxos/ai/testing';
-import { AiConversation, GenerationObserver } from '@dxos/assistant';
-import { AssistantTestLayer, AssistantTestLayerWithTriggers } from '@dxos/assistant/testing';
+import { AiConversation } from '@dxos/assistant';
+import { AssistantTestLayerWithTriggers } from '@dxos/assistant/testing';
 import { Blueprint } from '@dxos/blueprints';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
 import { FunctionDefinition, QueueService, Trigger } from '@dxos/functions';
+import { TriggerDispatcher } from '@dxos/functions-runtime';
+import { invariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
 import { Text } from '@dxos/schema';
-import { trim } from '@dxos/util';
-import * as Initiative from './Initiative';
-import { agent } from './functions';
-import { invariant } from '@dxos/invariant';
-import * as Layer from 'effect/Layer';
-import { TriggerDispatcher, TriggerStateStore } from '@dxos/functions-runtime';
 import { Message } from '@dxos/types';
-import { log } from '@dxos/log';
+import { trim } from '@dxos/util';
+
+import { agent } from './functions';
+import * as Initiative from './Initiative';
 
 ObjectId.dangerouslyDisableRandomness();
 

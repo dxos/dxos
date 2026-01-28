@@ -24,7 +24,7 @@ import {
 import { type Blueprint } from '@dxos/blueprints';
 import { todo } from '@dxos/debug';
 import { Obj } from '@dxos/echo';
-import { TracingService, type FunctionInvocationService } from '@dxos/functions';
+import { type FunctionInvocationService, TracingService } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
 

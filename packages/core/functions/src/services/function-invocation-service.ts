@@ -4,8 +4,9 @@
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import { type FunctionDefinition, type InvocationServices } from '../sdk';
+
 import type { FunctionNotFoundError } from '../errors';
+import { type FunctionDefinition, type InvocationServices } from '../sdk';
 
 export class FunctionInvocationService extends Context.Tag('@dxos/functions/FunctionInvocationService')<
   FunctionInvocationService,

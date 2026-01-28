@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Obj, Ref, Type } from '@dxos/echo';
+import { Obj, Type } from '@dxos/echo';
 import { Queue } from '@dxos/echo-db';
 
 /**

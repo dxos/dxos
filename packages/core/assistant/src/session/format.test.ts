@@ -2,23 +2,22 @@
 // Copyright 2025 DXOS.org
 //
 
-import { beforeAll, describe, expect, it } from '@effect/vitest';
+import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
+import * as Schema from 'effect/Schema';
 
 import { Blueprint, Template } from '@dxos/blueprints';
-import { Database, Filter, Obj, Query } from '@dxos/echo';
-import { EchoTestBuilder } from '@dxos/echo-db/testing';
+import { Database, Obj, Query } from '@dxos/echo';
+import { TestHelpers } from '@dxos/effect/testing';
+import { defineFunction } from '@dxos/functions';
 import { Text } from '@dxos/schema';
 import { Organization } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { createSystemPrompt } from '../templates/system';
+import { AssistantTestLayer } from '../testing';
 
 import { formatSystemPrompt } from './format';
-import { AssistantTestLayer } from '../testing';
-import { TestHelpers } from '@dxos/effect/testing';
-import * as Schema from 'effect/Schema';
-import { defineFunction } from '@dxos/functions';
 
 const organizationListFunction = defineFunction({
   key: 'dxos.org/function/organization-list',

@@ -1,13 +1,17 @@
-import { ConsolePrinter } from '@dxos/ai';
-import { AiContextService, AiConversation, GenerationObserver } from '@dxos/assistant';
-import { Database, Obj, Type } from '@dxos/echo';
-import { acquireReleaseResource } from '@dxos/effect';
-import { defineFunction, TriggerEvent } from '@dxos/functions';
-import { invariant } from '@dxos/invariant';
+//
+// Copyright 2026 DXOS.org
+//
+
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
+
+import { AiContextService, AiConversation } from '@dxos/assistant';
+import { Database, Obj, Type } from '@dxos/echo';
+import { acquireReleaseResource } from '@dxos/effect';
+import { TriggerEvent, defineFunction } from '@dxos/functions';
+import { invariant } from '@dxos/invariant';
+
 import * as Initiative from '../InitiativeSchema';
-import { log } from '@dxos/log';
 
 export default defineFunction({
   key: 'dxos.org/function/initiative/agent',

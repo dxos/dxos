@@ -1,10 +1,16 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import * as Effect from 'effect/Effect';
+import * as Schema from 'effect/Schema';
+
 import { AiContextService } from '@dxos/assistant';
 import { Database, Obj } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
-import * as Effect from 'effect/Effect';
-import * as Schema from 'effect/Schema';
-import * as Initiative from '../InitiativeSchema';
 import { Text } from '@dxos/schema';
+
+import * as Initiative from '../InitiativeSchema';
 
 export default defineFunction({
   key: 'dxos.org/function/initiative/get-context',

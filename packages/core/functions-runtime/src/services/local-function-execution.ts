@@ -4,13 +4,13 @@
 
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
+import * as Either from 'effect/Either';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
-import * as Either from 'effect/Either';
-import { Function } from '@dxos/functions';
 
 import { AiService } from '@dxos/ai';
 import { Database, Query } from '@dxos/echo';
+import { Function } from '@dxos/functions';
 import {
   CredentialsService,
   type FunctionContext,
