@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Obj, Type } from '@dxos/echo';
+import { Entity, Obj, Ref, Type } from '@dxos/echo';
 import {
   Format,
   FormatAnnotation,
@@ -21,7 +21,28 @@ import * as Project from './Project';
 /**
  * Task schema.
  */
-export const Task = Schema.Struct({
+export interface Task extends Entity.OfKind<typeof Entity.Kind.Object> {
+  readonly title: string;
+  readonly priority?: 'none' | 'low' | 'medium' | 'high' | 'urgent';
+  readonly status?: 'todo' | 'in-progress' | 'done';
+  readonly assigned?: Ref.Ref<Person.Person>;
+  readonly estimate?: number;
+  readonly description?: string;
+  readonly project?: Ref.Ref<Project.Project>;
+}
+
+export type TaskEncoded = {
+  readonly id: string;
+  readonly title: string;
+  readonly priority?: 'none' | 'low' | 'medium' | 'high' | 'urgent';
+  readonly status?: 'todo' | 'in-progress' | 'done';
+  readonly assigned?: string;
+  readonly estimate?: number;
+  readonly description?: string;
+  readonly project?: string;
+};
+
+const TaskSchema = Schema.Struct({
   title: Schema.String.pipe(
     Schema.annotations({ title: 'Title' }),
     GeneratorAnnotation.set({
@@ -94,6 +115,7 @@ export const Task = Schema.Struct({
   LabelAnnotation.set(['title']),
 );
 
-export interface Task extends Schema.Schema.Type<typeof Task> {}
+// Type annotation hides internal types while preserving brand properties.
+export const Task: Type.Obj.Of<Schema.Schema<Task, TaskEncoded>> = TaskSchema as any;
 
-export const make = (props: Obj.MakeProps<typeof Task>): Task => Obj.make(Task, props);
+export const make = (props: Type.Properties<Task>): Task => Obj.make(Task, props);

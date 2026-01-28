@@ -107,7 +107,8 @@ export const addTestData = async (space: Space): Promise<void> => {
     const schema = space.internal.db.graph.schemaRegistry.getSchema(typename);
     invariant(schema, `Schema not found: ${typename}`);
     for (const { id, ...data } of objects) {
-      const object = space.internal.db.add(Obj.make(schema, data));
+      // Schema registry returns schemas without brand - cast to Obj.Any for Obj.make.
+      const object = space.internal.db.add(Obj.make(schema as unknown as Type.Obj.Any, data));
       objectMap.set(id, object);
     }
   }
@@ -123,7 +124,8 @@ export const addTestData = async (space: Space): Promise<void> => {
       invariant(targetObject, `Target object not found: ${target}`);
 
       space.db.add(
-        Relation.make(schema, {
+        // Schema registry returns schemas without brand - cast to Relation.Any for Relation.make.
+        Relation.make(schema as unknown as Type.Relation.Any, {
           // TODO(burdon): Test source/target types match.
           [Relation.Source]: sourceObject,
           [Relation.Target]: targetObject,

@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Obj, Type } from '@dxos/echo';
+import { Obj, Relation, Type } from '@dxos/echo';
 
 import { Organization } from './Organization';
 
@@ -30,4 +30,4 @@ export const HasConnection = Schema.Struct({
 // TODO(burdon): Rename HasBusinessRelationship?
 export interface HasConnection extends Schema.Schema.Type<typeof HasConnection> {}
 
-export const make = (props: Obj.MakeProps<typeof HasConnection>) => Obj.make(HasConnection, props);
+export const make = (props: Relation.MakeProps<typeof HasConnection>) => Relation.make(HasConnection, props);

@@ -84,6 +84,19 @@ export type EchoRelationSchemaOptions<
 };
 
 /**
+ * Relation schema type with kind marker.
+ */
+export type EchoRelationSchema<
+  Self extends Schema.Schema.Any,
+  Source extends Schema.Schema.AnyNoContext,
+  Target extends Schema.Schema.AnyNoContext,
+> = EchoTypeSchema<
+  Self,
+  RelationSourceTargetRefs<Schema.Schema.Type<Source>, Schema.Schema.Type<Target>>,
+  EntityKind.Relation
+>;
+
+/**
  * Schema for Relation entity types.
  */
 export const EchoRelationSchema = <
@@ -106,9 +119,7 @@ export const EchoRelationSchema = <
     raise(new Error('Target schema must be an echo object schema.'));
   }
 
-  return <Self extends Schema.Schema.Any>(
-    self: Self,
-  ): EchoTypeSchema<Self, RelationSourceTargetRefs<Schema.Schema.Type<Source>, Schema.Schema.Type<Target>>> => {
+  return <Self extends Schema.Schema.Any>(self: Self): EchoRelationSchema<Self, Source, Target> => {
     invariant(SchemaAST.isTypeLiteral(self.ast), 'Schema must be a TypeLiteral.');
 
     // TODO(dmaretskyi): Does `Schema.mutable` work for deep mutability here?
@@ -135,7 +146,12 @@ export const EchoRelationSchema = <
       }),
     });
 
-    return makeEchoTypeSchema<Self>(/* self.fields, */ ast, typename, version);
+    return makeEchoTypeSchema<Self, EntityKind.Relation>(
+      /* self.fields, */ ast,
+      typename,
+      version,
+      EntityKind.Relation,
+    );
   };
 };
 

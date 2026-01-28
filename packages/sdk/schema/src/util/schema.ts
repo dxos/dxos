@@ -61,7 +61,7 @@ export const createDefaultSchema = () =>
 export const getSchema = async (
   dxn: DXN,
   registry?: SchemaRegistry.SchemaRegistry,
-): Promise<Schema.Schema.AnyNoContext | undefined> => {
+): Promise<Type.Entity.Any | undefined> => {
   const typeDxn = dxn.asTypeDXN();
   if (!typeDxn) {
     return;

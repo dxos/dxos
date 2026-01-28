@@ -91,14 +91,25 @@ type Props<T = any> = {
 } & Type.Properties<T>;
 
 // TODO(burdon): Should we allow the caller to set the id?
+/**
+ * @deprecated Use the inline props type in `Obj.make` instead.
+ */
 export type MakeProps<T extends Schema.Schema.AnyNoContext> = {
   id?: ObjectId;
   [Meta]?: Partial<ObjectMeta>;
 } & NoInfer<Props<Schema.Schema.Type<T>>>;
 
 /**
- * Creates a new object of the given types.
- * @param schema - Object schema.
+ * Props type for object creation with a given schema.
+ */
+type ObjectMakeProps<S extends Schema.Schema.AnyNoContext> = {
+  id?: ObjectId;
+  [Meta]?: Partial<ObjectMeta>;
+} & NoInfer<Props<Schema.Schema.Type<S>>>;
+
+/**
+ * Creates a new echo object of the given schema.
+ * @param schema - Object schema (must be created with `Type.Obj`).
  * @param props - Object properties.
  * @param meta - Object metadata (deprecated) -- pass with Obj.Meta.
  *
@@ -108,20 +119,18 @@ export type MakeProps<T extends Schema.Schema.AnyNoContext> = {
  * ```ts
  * const obj = Obj.make(Person, { [Obj.Meta]: { keys: [...] }, name: 'John' });
  * ```
+ *
+ * Note: Only accepts object schemas, not relation schemas. Use `Relation.make` for relations.
  */
 export const make: {
-  <S extends Schema.Schema.AnyNoContext>(schema: S, props: MakeProps<S>): Obj<Schema.Schema.Type<S>>;
+  <S extends Type.Obj.Any>(schema: S, props: ObjectMakeProps<S>): Obj<Schema.Schema.Type<S>>;
   /**
    * @deprecated Pass meta as in the example: `Obj.make(Person, { [Obj.Meta]: { keys: [...] }, name: 'John' })`.
    */
-  <S extends Schema.Schema.AnyNoContext>(
-    schema: S,
-    props: MakeProps<S>,
-    meta: Partial<ObjectMeta>,
-  ): Obj<Schema.Schema.Type<S>>;
-} = <S extends Schema.Schema.AnyNoContext>(
+  <S extends Type.Obj.Any>(schema: S, props: ObjectMakeProps<S>, meta: Partial<ObjectMeta>): Obj<Schema.Schema.Type<S>>;
+} = <S extends Type.Obj.Any>(
   schema: S,
-  props: MakeProps<S>,
+  props: ObjectMakeProps<S>,
   meta?: Partial<ObjectMeta>,
 ): Obj<Schema.Schema.Type<S>> => {
   assertArgument(getTypeAnnotation(schema)?.kind === Entity.Kind.Object, 'schema', 'Expected an object schema');
@@ -216,16 +225,16 @@ export const clone = <T extends Any>(obj: T, opts?: CloneOptions): T => {
 export type { Mutable };
 
 /**
- * Perform mutations on an ECHO object within a controlled context.
+ * Perform mutations on an echo object within a controlled context.
  *
  * All mutations within the callback are batched and trigger a single notification
  * when the callback completes. Direct mutations outside of `Obj.change` will throw
- * an error for ECHO objects.
+ * an error for echo objects.
  *
- * This function also works with nested objects within ECHO objects (e.g., Template structs)
+ * This function also works with nested objects within echo objects (e.g., Template structs)
  * that are reactive at runtime.
  *
- * @param obj - The ECHO object or nested reactive object to mutate.
+ * @param obj - The echo object to mutate. Use `Relation.change` for relations.
  * @param callback - The callback that performs mutations on the object.
  *
  * @example
@@ -242,8 +251,10 @@ export type { Mutable };
  * // Direct mutation throws
  * person.name = 'Bob'; // Error: Cannot modify outside Obj.change()
  * ```
+ *
+ * Note: Only accepts objects. Use `Relation.change` for relations, or `Entity.change` for either.
  */
-export const change = <T extends Entity.Unknown>(obj: T, callback: ChangeCallback<T>): void => {
+export const change = <T extends Any>(obj: T, callback: ChangeCallback<T>): void => {
   change$(obj, callback);
 };
 
@@ -341,8 +352,9 @@ export const getTypeDXN = getTypeDXN$;
 
 /**
  * Get the schema of the object.
+ * Returns the branded ECHO schema used to create the object.
  */
-export const getSchema = getSchema$;
+export const getSchema: (obj: unknown | undefined) => Type.Entity.Any | undefined = getSchema$ as any;
 
 /**
  * @returns The typename of the object's type.

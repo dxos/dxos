@@ -6,11 +6,25 @@ import * as Match from 'effect/Match';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { Obj, Ref, Type } from '@dxos/echo';
+import { Entity, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation, type JsonPath, type JsonSchemaType, LabelAnnotation } from '@dxos/echo/internal';
 import { View, ViewAnnotation } from '@dxos/schema';
 
-const TableSchema = Schema.Struct({
+export interface Table extends Entity.OfKind<typeof Entity.Kind.Object> {
+  readonly name?: string;
+  readonly view: Ref.Ref<View.View>;
+  readonly sizes: Record<string, number>;
+}
+
+export interface TableEncoded {
+  readonly id: string;
+  readonly name?: string;
+  readonly view: string;
+  readonly sizes: Record<string, number>;
+}
+
+// Type annotation hides internal types while preserving brand properties.
+export const Table: Type.Obj.Of<Schema.Schema<Table, TableEncoded>> = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
 
   view: Type.Ref(View.View).pipe(FormInputAnnotation.set(false)),
@@ -27,13 +41,11 @@ const TableSchema = Schema.Struct({
   }),
   LabelAnnotation.set(['name']),
   ViewAnnotation.set(true),
-);
+) as any;
 
-export interface Table extends Schema.Schema.Type<typeof TableSchema> {}
-export interface TableEncoded extends Schema.Schema.Encoded<typeof TableSchema> {}
-export const Table: Schema.Schema<Table, TableEncoded> = TableSchema;
-
-type MakeProps = Omit<Partial<Obj.MakeProps<typeof Table>>, 'view'> & {
+type MakeProps = {
+  name?: string;
+  sizes?: Record<string, number>;
   view: View.View;
   /** Required to auto-size columns. */
   jsonSchema?: JsonSchemaType;
@@ -43,7 +55,7 @@ type MakeProps = Omit<Partial<Obj.MakeProps<typeof Table>>, 'view'> & {
  * Make a table as a view of a data set.
  */
 export const make = ({ name, sizes = {}, view, jsonSchema }: MakeProps): Table => {
-  const table = Obj.make(Table, { name, view: Ref.make(view), sizes });
+  const table = Obj.make(Table, { name, view: Ref.make(view), sizes } as Obj.MakeProps<typeof Table>);
 
   // Preset sizes.
   if (jsonSchema) {

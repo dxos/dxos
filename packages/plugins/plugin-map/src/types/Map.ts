@@ -4,11 +4,28 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Format, Obj, Ref, Type } from '@dxos/echo';
+import { Entity, Format, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { View, ViewAnnotation } from '@dxos/schema';
 
-const MapSchema = Schema.Struct({
+export interface Map extends Entity.OfKind<typeof Entity.Kind.Object> {
+  name?: string;
+  view?: Ref.Ref<View.View>;
+  center?: Format.GeoPoint;
+  zoom?: number;
+  coordinates?: Format.GeoPoint[];
+}
+
+export interface MapEncoded {
+  id: string;
+  name?: string;
+  view?: string;
+  center?: Format.GeoPoint;
+  zoom?: number;
+  coordinates?: Format.GeoPoint[];
+}
+
+export const Map: Type.Obj.Of<Schema.Schema<Map, MapEncoded>> = Schema.Struct({
   name: Schema.optional(Schema.String),
 
   view: Type.Ref(View.View).pipe(FormInputAnnotation.set(false), Schema.optional),
@@ -25,10 +42,7 @@ const MapSchema = Schema.Struct({
   }),
   LabelAnnotation.set(['name']),
   ViewAnnotation.set(true),
-);
-export interface Map extends Schema.Schema.Type<typeof MapSchema> {}
-export interface MapEncoded extends Schema.Schema.Encoded<typeof MapSchema> {}
-export const Map: Schema.Schema<Map, MapEncoded> = MapSchema;
+) as any;
 
 type MakeProps = Omit<Partial<Obj.MakeProps<typeof Map>>, 'view'> & {
   view?: View.View;

@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { JsonSchema, Obj, Type } from '@dxos/echo';
-import { EchoSchema, EntityKind, PersistentSchema, type TypeAnnotation, TypeAnnotationId } from '@dxos/echo/internal';
+import { EchoSchema } from '@dxos/echo/internal';
 
 import { Filter } from '../query';
 import { EchoTestBuilder } from '../testing';
@@ -14,23 +14,21 @@ import { EchoTestBuilder } from '../testing';
 const Organization = Schema.Struct({
   name: Schema.String,
   address: Schema.String,
-}).annotations({
-  [TypeAnnotationId]: {
-    kind: EntityKind.Object,
+}).pipe(
+  Type.Obj({
     typename: 'example.com/type/Organization',
     version: '0.1.0',
-  } satisfies TypeAnnotation,
-});
+  }),
+);
 
 const Contact = Schema.Struct({
   name: Schema.String,
-}).annotations({
-  [TypeAnnotationId]: {
-    kind: EntityKind.Object,
+}).pipe(
+  Type.Obj({
     typename: 'example.com/type/Person',
     version: '0.1.0',
-  } satisfies TypeAnnotation,
-});
+  }),
+);
 
 describe('schema registry', () => {
   let builder: EchoTestBuilder;
@@ -91,7 +89,7 @@ describe('schema registry', () => {
     const { registry } = await setupTest();
     const [echoSchema] = await registry.register([Organization]);
     expect(registry.hasSchema(echoSchema)).to.be.true;
-    expect(echoSchema.jsonSchema.propertyOrder).to.deep.eq(Object.keys(Organization.fields));
+    expect(echoSchema.jsonSchema.propertyOrder).to.deep.eq(['name', 'address']);
   });
 
   test('can store the same schema multiple times', async () => {
@@ -114,7 +112,7 @@ describe('schema registry', () => {
   test('get all raw stored schemas', async () => {
     const { db, registry } = await setupTest();
     const schemas = await registry.register([Organization, Contact]);
-    const retrieved = await db.query(Filter.type(PersistentSchema)).run();
+    const retrieved = await db.query(Filter.type(Type.PersistentType)).run();
     expect(retrieved.length).to.eq(schemas.length);
     for (const schema of retrieved) {
       expect(schemas.find((s) => s.id === schema.id)).not.to.undefined;
@@ -156,14 +154,14 @@ describe('schema registry', () => {
 
   test('is registered if was stored in db', async () => {
     const { db, registry } = await setupTest();
-    const schemaToStore = Obj.make(PersistentSchema, {
+    const schemaToStore = Obj.make(Type.PersistentType, {
       typename: 'example.com/type/Test',
       version: '0.1.0',
       jsonSchema: JsonSchema.toJsonSchema(Schema.Struct({ field: Schema.Number })),
     });
-    expect(registry.hasSchema(new EchoSchema(schemaToStore))).to.be.false;
+    expect(registry.hasSchema(new EchoSchema(schemaToStore as any))).to.be.false;
     const persistentSchema = db.add(schemaToStore);
-    expect(registry.hasSchema(new EchoSchema(persistentSchema))).to.be.true;
+    expect(registry.hasSchema(new EchoSchema(persistentSchema as any))).to.be.true;
   });
 
   test('schema is invalidated on update', async () => {

@@ -8,7 +8,6 @@ import type * as SqlClient from '@effect/sql/SqlClient';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
-import type * as Schema from 'effect/Schema';
 import isEqual from 'lodash.isequal';
 
 import { waitForCondition } from '@dxos/async';
@@ -37,7 +36,7 @@ type OpenDatabaseOptions = {
 
 type PeerOptions = {
   indexing?: Partial<EchoHostIndexingConfig>;
-  types?: Schema.Schema.AnyNoContext[];
+  types?: Type.Entity.Any[];
   assignQueuePositions?: boolean;
 
   kv?: LevelDB;
@@ -83,7 +82,7 @@ export class EchoTestBuilder extends Resource {
 export class EchoTestPeer extends Resource {
   private readonly _kv: LevelDB;
   private readonly _indexing: Partial<EchoHostIndexingConfig>;
-  private readonly _types: Schema.Schema.AnyNoContext[];
+  private readonly _types: Type.Entity.Any[];
   private readonly _assignQueuePositions?: boolean;
   private readonly _clients = new Set<EchoClient>();
   private _echoHost!: EchoHost;

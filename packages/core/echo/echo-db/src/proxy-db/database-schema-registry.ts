@@ -114,7 +114,7 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
     type Entry =
       | {
           source: 'runtime';
-          schema: Schema.Schema.AnyNoContext;
+          schema: Type.Entity.Any;
         }
       | {
           source: 'database';
@@ -271,12 +271,13 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
       if (Schema.isSchema(input)) {
         results.push(this._addSchema(input));
       } else if (typeof input === 'object' && 'typename' in input && 'version' in input && 'jsonSchema' in input) {
+        // The schema from toEffectSchema contains typename/version in annotations.
         const schema = this._addSchema(
           Type.toEffectSchema({
             ...input.jsonSchema,
             typename: input.typename,
             version: input.version,
-          }),
+          }) as Type.Entity.Any,
         );
         results.push(schema);
         if (input.name) {
@@ -362,11 +363,12 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
   }
 
   // TODO(dmaretskyi): Figure out how to migrate the usages to the async `register` method.
-  private _addSchema(schema: Type.Entity.Any): Type.RuntimeType {
+  private _addSchema(schema: Type.Entity.Any | Schema.Schema.AnyNoContext): Type.RuntimeType {
     if (schema instanceof Type.RuntimeType) {
+      // The snapshot preserves typename/version in annotations.
       schema = schema.snapshot.annotations({
         [TypeIdentifierAnnotationId]: undefined,
-      });
+      }) as Type.Entity.Any;
     }
 
     const meta = getTypeAnnotation(schema);

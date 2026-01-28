@@ -12,6 +12,7 @@ import { type SchemaMeta, SchemaMetaSymbol, type TypeAnnotation, getTypeAnnotati
 import { type JsonSchemaType, toEffectSchema, toJsonSchema } from '../json-schema';
 import { type TypedObject, type TypedObjectPrototype, getSnapshot } from '../object';
 import { ChangeId } from '../proxy';
+import { EchoSchemaBrandSymbol, EntityKind } from '../types';
 
 import {
   addFieldsToSchema,
@@ -82,6 +83,10 @@ export class ImmutableSchema<A = any, I = any> implements BaseSchema<A, I> {
   //
   // TypedObject
   //
+
+  get kind(): EntityKind {
+    return this._objectAnnotation.kind;
+  }
 
   get typename(): string {
     return this._objectAnnotation.typename;
@@ -185,6 +190,12 @@ export class EchoSchema<A = any, I = any> extends EchoSchemaConstructor() implem
   private _schema: Schema.Schema.AnyNoContext | undefined;
   private _isDirty = true;
 
+  /**
+   * Brand symbol that marks this as an ECHO schema.
+   * Makes EchoSchema satisfy the Type.Obj.Any branded type.
+   */
+  readonly [EchoSchemaBrandSymbol]: EntityKind.Object = EntityKind.Object;
+
   constructor(private readonly _persistentSchema: PersistentSchema) {
     super();
   }
@@ -228,6 +239,11 @@ export class EchoSchema<A = any, I = any> extends EchoSchemaConstructor() implem
   //
   // BaseSchema
   //
+
+  public get kind(): EntityKind.Object {
+    // Dynamic schemas are always object schemas.
+    return EntityKind.Object;
+  }
 
   public get typename(): string {
     return this._persistentSchema.typename;

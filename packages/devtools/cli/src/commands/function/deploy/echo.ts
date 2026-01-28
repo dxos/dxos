@@ -8,22 +8,16 @@ import * as FileSystem from '@effect/platform/FileSystem';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
-import type * as Schema from 'effect/Schema';
 
 import { CommandConfig } from '@dxos/cli-util';
 import { Filter, type Space } from '@dxos/client/echo';
-import { Database, Obj, Ref } from '@dxos/echo';
+import { Database, Obj, Ref, type Type } from '@dxos/echo';
 import { Function, Script, getUserFunctionIdInMetadata, setUserFunctionIdInMetadata } from '@dxos/functions';
 import { incrementSemverPatch } from '@dxos/functions-runtime/edge';
 import { type UploadFunctionResponseBody } from '@dxos/protocols';
 import { Collection, Text } from '@dxos/schema';
 
-export const DATA_TYPES: Schema.Schema.AnyNoContext[] = [
-  Function.Function,
-  Script.Script,
-  Collection.Collection,
-  Text.Text,
-];
+export const DATA_TYPES: Type.Entity.Any[] = [Function.Function, Script.Script, Collection.Collection, Text.Text];
 
 export const getNextVersion = (fnObject: Option.Option<Function.Function>) => {
   return Option.match(fnObject, {

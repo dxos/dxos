@@ -40,7 +40,7 @@ export const Subgraph = Schema.Struct({
 export interface Subgraph extends Schema.Schema.Type<typeof Subgraph> {}
 
 export type RelatedSchema = {
-  schema: Schema.Schema.AnyNoContext;
+  schema: Type.Entity.Any;
   kind: 'reference' | 'relation';
 };
 
@@ -53,7 +53,7 @@ export type RelatedSchema = {
  */
 export const findRelatedSchema = async (
   db: Database.Database,
-  anchor: Schema.Schema.AnyNoContext,
+  anchor: Type.Entity.Any,
 ): Promise<RelatedSchema[]> => {
   // TODO(dmaretskyi): Query stored schemas.
   const allSchemas = await db.graph.schemaRegistry.query().run();
@@ -82,7 +82,7 @@ export const findRelatedSchema = async (
  * Non-strict DXN comparison.
  * Returns true if the DXN could be resolved to the schema.
  */
-const isSchemaAddressableByDxn = (schema: Schema.Schema.AnyNoContext, dxn: DXN): boolean => {
+const isSchemaAddressableByDxn = (schema: Type.Entity.Any, dxn: DXN): boolean => {
   if (getTypeIdentifierAnnotation(schema) === dxn.toString()) {
     return true;
   }
@@ -146,7 +146,7 @@ class GraphWriterSchema extends Context.Tag('@dxos/assistant/GraphWriterSchema')
 /**
  * Forms typed objects that can be written to the graph database.
  */
-export const makeGraphWriterToolkit = ({ schema }: { schema: Schema.Schema.AnyNoContext[] }) => {
+export const makeGraphWriterToolkit = ({ schema }: { schema: Type.Entity.Any[] }) => {
   return Toolkit.make(
     Tool.make('graph_writer', {
       description: 'Write to the local graph database',
@@ -188,7 +188,7 @@ export const makeGraphWriterHandler = (
 /**
  * Create a schema for structured data extraction.
  */
-export const createExtractionSchema = (types: Schema.Schema.AnyNoContext[]) => {
+export const createExtractionSchema = (types: Type.Entity.Any[]) => {
   return Schema.Struct({
     ...Object.fromEntries(
       types.map(preprocessSchema).map((schema, index) => [
@@ -201,14 +201,14 @@ export const createExtractionSchema = (types: Schema.Schema.AnyNoContext[]) => {
   });
 };
 
-export const getSanitizedSchemaName = (schema: Schema.Schema.AnyNoContext) => {
+export const getSanitizedSchemaName = (schema: Type.Entity.Any) => {
   return Type.getDXN(schema)!
     .asTypeDXN()!
     .type.replaceAll(/[^a-zA-Z0-9]+/g, '_');
 };
 
 export const sanitizeObjects = async (
-  types: Schema.Schema.AnyNoContext[],
+  types: Type.Entity.Any[],
   data: Record<string, readonly unknown[]>,
   db: Database.Database,
   queue?: Queue,

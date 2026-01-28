@@ -138,6 +138,7 @@ const Trigger_ = Schema.Struct({
 
 export interface Trigger extends Schema.Schema.Type<typeof Trigger_> {}
 export interface TriggerEncoded extends Schema.Schema.Encoded<typeof Trigger_> {}
-export const Trigger: Schema.Schema<Trigger, TriggerEncoded> = Trigger_;
+// Type annotation preserves brand properties while hiding internal types.
+export const Trigger: typeof Trigger_ = Trigger_;
 
 export const make = (props: Obj.MakeProps<typeof Trigger>) => Obj.make(Trigger, props);

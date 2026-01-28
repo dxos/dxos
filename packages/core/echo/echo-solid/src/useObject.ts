@@ -5,7 +5,7 @@
 import { type MaybeAccessor, access } from '@solid-primitives/utils';
 import { type Accessor, createEffect, createMemo, createSignal, onCleanup } from 'solid-js';
 
-import { type Entity, Obj, Ref } from '@dxos/echo';
+import { Entity, Obj, Ref } from '@dxos/echo';
 import { AtomObj } from '@dxos/echo-atom';
 import { type Registry, useRegistry } from '@dxos/effect-atom-solid';
 
@@ -160,7 +160,7 @@ export function useObject<T extends Entity.Unknown, K extends keyof T>(
       return;
     }
 
-    Obj.change(obj as Entity.Unknown, (o: any) => {
+    Entity.change(obj, (o: any) => {
       if (typeof updateOrValue === 'function') {
         const returnValue = (updateOrValue as (obj: unknown) => unknown)(property !== undefined ? o[property] : o);
         if (returnValue !== undefined) {

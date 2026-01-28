@@ -96,8 +96,8 @@ export const ViewSchema = Schema.Struct({
 
 export interface View extends Schema.Schema.Type<typeof ViewSchema> {}
 export interface ViewEncoded extends Schema.Schema.Encoded<typeof ViewSchema> {}
-// TODO(wittjosiah): Should be Type.obj<...> or equivalent.
-export const View: Schema.Schema<View, ViewEncoded> = ViewSchema;
+// Type annotation hides internal QueryAST types while preserving brand properties.
+export const View: Type.Obj.Of<Schema.Schema<View, ViewEncoded>> = ViewSchema;
 
 type MakeProps = {
   name?: string;
@@ -280,6 +280,7 @@ export const makeFromDatabase = async ({
   const schema = await db.schemaRegistry.query({ typename, location: ['database', 'runtime'] }).firstOrUndefined();
   const jsonSchema = schema && JsonSchema.toJsonSchema(schema);
   invariant(jsonSchema, `Schema not found: ${typename}`);
+  invariant(schema && Type.Entity.isObject(schema), `Schema is not an object schema: ${typename}`);
 
   Array.from({ length: createInitial }).forEach(() => {
     db.add(Obj.make(schema, {}));
@@ -322,4 +323,5 @@ export const ViewSchemaV4 = Schema.Struct({
 );
 export interface ViewV4 extends Schema.Schema.Type<typeof ViewSchemaV4> {}
 export interface ViewEncodedV4 extends Schema.Schema.Encoded<typeof ViewSchemaV4> {}
-export const ViewV4: Schema.Schema<ViewV4, ViewEncodedV4> = ViewSchemaV4;
+// Type annotation hides internal QueryAST types while preserving brand properties.
+export const ViewV4: Type.Obj.Of<Schema.Schema<ViewV4, ViewEncodedV4>> = ViewSchemaV4;

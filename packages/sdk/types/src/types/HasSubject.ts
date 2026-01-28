@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Obj, Type } from '@dxos/echo';
+import { Obj, Relation, Type } from '@dxos/echo';
 import { Format } from '@dxos/echo/internal';
 
 export const HasSubject = Schema.Struct({
@@ -24,4 +24,4 @@ export const HasSubject = Schema.Struct({
  */
 export interface HasSubject extends Schema.Schema.Type<typeof HasSubject> {}
 
-export const make = (props: Obj.MakeProps<typeof HasSubject>) => Obj.make(HasSubject, props);
+export const make = (props: Relation.MakeProps<typeof HasSubject>) => Relation.make(HasSubject, props);

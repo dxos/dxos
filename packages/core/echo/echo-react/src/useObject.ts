@@ -6,7 +6,7 @@ import * as Atom from '@effect-atom/atom/Atom';
 import { useAtomValue } from '@effect-atom/atom-react';
 import { useCallback, useMemo } from 'react';
 
-import { type Entity, Obj, Ref } from '@dxos/echo';
+import { Entity, Ref } from '@dxos/echo';
 import { AtomObj } from '@dxos/echo-atom';
 
 export interface ObjectUpdateCallback<T> {
@@ -114,7 +114,7 @@ export const useObject: {
       if (obj === undefined) {
         return;
       }
-      Obj.change(obj as Entity.Unknown, (o: any) => {
+      Entity.change(obj, (o: any) => {
         if (typeof updateOrValue === 'function') {
           const returnValue = updateOrValue(property !== undefined ? o[property] : o);
           if (returnValue !== undefined) {

@@ -47,6 +47,7 @@ const TEST_OBJECT: TestSchema.ExampleSchema = {
 
 test('id property name is reserved', () => {
   const invalidSchema = Schema.Struct({ id: Schema.Number });
+  // @ts-expect-error - Testing invalid schema (missing typename/version).
   expect(() => createObject(Obj.make(invalidSchema, { id: 42 } as any))).to.throw();
 });
 
@@ -184,7 +185,9 @@ describe('Reactive Object with ECHO database', () => {
   test('throws if schema was not annotated as echo object', async () => {
     const NonEchoSchema = Schema.Struct({ field: Schema.String });
     const { graph } = await builder.createDatabase();
-    await expect(graph.schemaRegistry.register([NonEchoSchema])).rejects.toThrow();
+    // Runtime validation throws for schemas without TypeAnnotationId annotation.
+    // Use type assertion to test runtime behavior with invalid input.
+    await expect(graph.schemaRegistry.register([NonEchoSchema as any])).rejects.toThrow();
   });
 
   test('throws if schema was not registered in Hypergraph', async () => {
@@ -415,7 +418,7 @@ describe('Reactive Object with ECHO database', () => {
     const Organization = Schema.Struct({
       name: Schema.String,
     }).pipe(
-      EchoObjectSchema({
+      Type.Obj({
         typename: 'example.com/type/Organization',
         version: '0.1.0',
       }),
@@ -426,7 +429,7 @@ describe('Reactive Object with ECHO database', () => {
       organization: Type.Ref(Organization),
       previousEmployment: Schema.optional(Schema.Array(Type.Ref(Organization))),
     }).pipe(
-      EchoObjectSchema({
+      Type.Obj({
         typename: 'example.com/type/Person',
         version: '0.1.0',
       }),

@@ -7,7 +7,7 @@ import { inspect } from 'node:util';
 import { type CleanupFn, Event, type ReadOnlyEvent, synchronized } from '@dxos/async';
 import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { inspectObject } from '@dxos/debug';
-import { Database, type Entity, Obj, type QueryAST, Ref } from '@dxos/echo';
+import { Database, type Entity, Obj, type QueryAST, Ref, type Type } from '@dxos/echo';
 import { type AnyProperties, assertObjectModel, setRefResolver } from '@dxos/echo/internal';
 import { getProxyTarget, isProxy } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
@@ -257,7 +257,9 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     if (!isEchoObject(obj)) {
       const schema = Obj.getSchema(obj);
       if (schema != null) {
-        if (!this.schemaRegistry.hasSchema(schema) && !this.graph.schemaRegistry.hasSchema(schema)) {
+        // The schema from an echo object has typename/version via annotations.
+        const entitySchema = schema as Type.Entity.Any;
+        if (!this.schemaRegistry.hasSchema(entitySchema) && !this.graph.schemaRegistry.hasSchema(entitySchema)) {
           throw createSchemaNotRegisteredError(schema);
         }
       }

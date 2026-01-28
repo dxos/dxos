@@ -20,4 +20,4 @@ const ExpandoSchema = Schema.Struct({}, { key: Schema.String, value: Schema.Any 
  */
 export interface Expando extends Schema.Schema.Type<typeof ExpandoSchema> {}
 export interface ExpandoEncoded extends Schema.Schema.Encoded<typeof ExpandoSchema> {}
-export const Expando: Schema.Schema<Expando, ExpandoEncoded> = ExpandoSchema;
+export const Expando: typeof ExpandoSchema = ExpandoSchema;

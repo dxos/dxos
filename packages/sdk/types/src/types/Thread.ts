@@ -30,7 +30,7 @@ const _Thread = Schema.Struct({
 
 export interface Thread extends Schema.Schema.Type<typeof _Thread> {}
 export interface ThreadEncoded extends Schema.Schema.Encoded<typeof _Thread> {}
-export const Thread: Schema.Schema<Thread, ThreadEncoded> = _Thread;
+export const Thread: typeof _Thread = _Thread;
 
 export const make = ({ status = 'staged', messages = [], ...props }: Partial<Obj.MakeProps<typeof Thread>> = {}) =>
   Obj.make(Thread, { status, messages, ...props });

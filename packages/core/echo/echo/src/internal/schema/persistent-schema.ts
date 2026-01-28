@@ -25,4 +25,4 @@ const PersistentEchoSchema = Schema.Struct({
 );
 export interface PersistentSchema extends Schema.Schema.Type<typeof PersistentEchoSchema> {}
 export interface PersistentSchemaEncoded extends Schema.Schema.Encoded<typeof PersistentEchoSchema> {}
-export const PersistentSchema: Schema.Schema<PersistentSchema, PersistentSchemaEncoded> = PersistentEchoSchema;
+export const PersistentSchema: typeof PersistentEchoSchema = PersistentEchoSchema;

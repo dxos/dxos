@@ -35,6 +35,9 @@ export const ObjectForm = ({ object, schema }: ObjectFormProps) => {
 
   const handleCreate = useCallback((schema: Type.Entity.Any, values: any) => {
     invariant(db);
+    if (!Type.Entity.isObject(schema)) {
+      return;
+    }
     const newObject = db.add(Obj.make(schema, values));
     if (Obj.instanceOf(Tag.Tag, newObject)) {
       Obj.change(object, () => {

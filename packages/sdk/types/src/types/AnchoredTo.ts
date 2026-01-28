@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Obj, Type } from '@dxos/echo';
+import { Obj, Relation, Type } from '@dxos/echo';
 
 export const AnchoredTo = Schema.Struct({
   id: Obj.ID,
@@ -20,4 +20,4 @@ export const AnchoredTo = Schema.Struct({
 
 export interface AnchoredTo extends Schema.Schema.Type<typeof AnchoredTo> {}
 
-export const make = (props: Obj.MakeProps<typeof AnchoredTo>) => Obj.make(AnchoredTo, props);
+export const make = (props: Relation.MakeProps<typeof AnchoredTo>) => Relation.make(AnchoredTo, props);

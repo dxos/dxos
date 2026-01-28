@@ -58,7 +58,7 @@ const Meeting_ = Schema.Struct({
 );
 export interface Meeting extends Schema.Schema.Type<typeof Meeting_> {}
 export interface MeetingEncoded extends Schema.Schema.Encoded<typeof Meeting_> {}
-export const Meeting: Schema.Schema<Meeting, MeetingEncoded> = Meeting_;
+export const Meeting: typeof Meeting_ = Meeting_;
 
 // TODO(burdon): Create with decode consistently: Schema.decodeSync(TranscriptionSettingsSchema)({}))
 export const Settings = Schema.mutable(

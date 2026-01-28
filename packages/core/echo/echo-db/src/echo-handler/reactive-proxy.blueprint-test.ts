@@ -2,7 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import type * as Schema from 'effect/Schema';
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 
 import { Obj, Type } from '@dxos/echo';
@@ -40,7 +39,7 @@ export interface TestConfiguration {
   createObjectFn: (props?: Partial<TestSchema.Example>) => Promise<TestSchema.Example>;
 }
 
-export type TestConfigurationFactory = (schema: Schema.Schema.AnyNoContext) => TestConfiguration | null;
+export type TestConfigurationFactory = (schema: Type.Obj.Any) => TestConfiguration | null;
 
 /**
  * Helper to wrap mutations for ECHO objects.

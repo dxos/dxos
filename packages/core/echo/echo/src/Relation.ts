@@ -14,14 +14,17 @@ import {
   ATTR_RELATION_SOURCE,
   ATTR_RELATION_TARGET,
   type AnyEchoObject,
+  type ChangeCallback,
   EntityKind,
   type InternalObjectProps,
   MetaId,
+  type Mutable,
   type ObjectMeta,
   RelationSourceDXNId,
   RelationSourceId,
   RelationTargetDXNId,
   RelationTargetId,
+  change as change$,
   getObjectDXN,
   getTypeAnnotation,
   makeObject,
@@ -63,7 +66,10 @@ export type Source = typeof Source;
 export const Target: unique symbol = RelationTargetId as any;
 export type Target = typeof Target;
 
-type MakeProps<T extends Any> = {
+/**
+ * Internal props type for relation instance creation.
+ */
+type RelationMakeProps<T extends Any> = {
   id?: ObjectId;
   [MetaId]?: ObjectMeta;
   [Source]: T[Source];
@@ -71,8 +77,14 @@ type MakeProps<T extends Any> = {
 } & Type.Properties<T>;
 
 /**
+ * Props type for relation creation with a given schema.
+ * Takes a schema type (created with Type.Relation) and extracts the props type.
+ */
+export type MakeProps<S extends Type.Relation.Any> = RelationMakeProps<Schema.Schema.Type<S>>;
+
+/**
  * Creates new relation.
- * @param schema - Relation schema.
+ * @param schema - Relation schema (must be created with `Type.Relation`).
  * @param props - Relation properties. Endpoints are passed as [Relation.Source] and [Relation.Target] keys.
  * @param meta - Relation metadata.
  * @returns
@@ -81,7 +93,7 @@ type MakeProps<T extends Any> = {
 // TODO(dmaretskyi): Move meta into props.
 export const make = <S extends Type.Relation.Any>(
   schema: S,
-  props: NoInfer<MakeProps<Schema.Schema.Type<S>>>,
+  props: NoInfer<RelationMakeProps<Schema.Schema.Type<S>>>,
   meta?: ObjectMeta,
 ): Schema.Schema.Type<S> & Entity.OfKind<typeof Entity.Kind.Relation> => {
   assertArgument(getTypeAnnotation(schema)?.kind === EntityKind.Relation, 'schema', 'Expected a relation schema');
@@ -158,4 +170,44 @@ export const getTarget = <T extends Any>(relation: T): Type.Relation.Target<T> =
   const obj = (relation as InternalObjectProps)[RelationTargetId];
   invariant(obj !== undefined, `Invalid target: ${relation.id}`);
   return obj as Type.Relation.Target<T>;
+};
+
+//
+// Change
+//
+
+/**
+ * Makes all properties mutable recursively.
+ * Used to provide a mutable view of a relation within `Relation.change`.
+ */
+export type { Mutable };
+
+/**
+ * Perform mutations on an echo relation within a controlled context.
+ *
+ * All mutations within the callback are batched and trigger a single notification
+ * when the callback completes. Direct mutations outside of `Relation.change` will throw
+ * an error for echo relations.
+ *
+ * @param relation - The echo relation to mutate. Use `Obj.change` for objects.
+ * @param callback - The callback that performs mutations on the relation.
+ *
+ * @example
+ * ```ts
+ * const worksFor = Relation.make(EmployedBy, {
+ *   [Relation.Source]: person,
+ *   [Relation.Target]: company,
+ *   role: 'Engineer',
+ * });
+ *
+ * // Mutate within Relation.change
+ * Relation.change(worksFor, (r) => {
+ *   r.role = 'Senior Engineer';
+ * });
+ * ```
+ *
+ * Note: Only accepts relations. Use `Obj.change` for objects, or `Entity.change` for either.
+ */
+export const change = <T extends Any>(relation: T, callback: ChangeCallback<T>): void => {
+  change$(relation, callback);
 };

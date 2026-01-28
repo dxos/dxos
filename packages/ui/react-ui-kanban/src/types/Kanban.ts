@@ -4,11 +4,30 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Obj, Ref, Type } from '@dxos/echo';
+import { Entity, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { View, ViewAnnotation } from '@dxos/schema';
 
-const KanbanSchema = Schema.Struct({
+export interface KanbanArrangement {
+  readonly columnValue: string;
+  readonly ids: readonly string[];
+  readonly hidden?: boolean;
+}
+
+export interface Kanban extends Entity.OfKind<typeof Entity.Kind.Object> {
+  name?: string;
+  view: Ref.Ref<View.View>;
+  arrangement: KanbanArrangement[];
+}
+
+export interface KanbanEncoded {
+  readonly id: string;
+  readonly name?: string;
+  readonly view: string;
+  readonly arrangement: readonly { readonly columnValue: string; readonly ids: readonly string[]; readonly hidden?: boolean }[];
+}
+
+export const Kanban: Type.Obj.Of<Schema.Schema<Kanban, KanbanEncoded>> = Schema.Struct({
   name: Schema.optional(Schema.String),
 
   view: Type.Ref(View.View).pipe(FormInputAnnotation.set(false)),
@@ -34,10 +53,7 @@ const KanbanSchema = Schema.Struct({
   }),
   LabelAnnotation.set(['name']),
   ViewAnnotation.set(true),
-);
-export interface Kanban extends Schema.Schema.Type<typeof KanbanSchema> {}
-export interface KanbanEncoded extends Schema.Schema.Encoded<typeof KanbanSchema> {}
-export const Kanban: Schema.Schema<Kanban, KanbanEncoded> = KanbanSchema;
+) as any;
 
 type MakeProps = Omit<Partial<Obj.MakeProps<typeof Kanban>>, 'view'> & {
   view: View.View;

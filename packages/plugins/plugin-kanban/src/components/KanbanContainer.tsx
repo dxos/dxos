@@ -3,7 +3,6 @@
 //
 
 import { RegistryContext } from '@effect-atom/atom-react';
-import type * as Schema from 'effect/Schema';
 import React, { useCallback, useContext, useEffect, useState } from 'react';
 
 import { Common } from '@dxos/app-framework';
@@ -21,7 +20,7 @@ import { KanbanOperation } from '../types';
 export const KanbanContainer = ({ object }: { object: Kanban.Kanban; role: string }) => {
   const registry = useContext(RegistryContext);
   const schemas = useCapabilities(Common.Capability.Schema);
-  const [cardSchema, setCardSchema] = useState<Schema.Schema.AnyNoContext>();
+  const [cardSchema, setCardSchema] = useState<Type.Obj.Any | undefined>();
   const db = Obj.getDatabase(object);
   const { invokePromise } = useOperationInvoker();
   const typename = object.view.target?.query ? getTypenameFromQuery(object.view.target.query.ast) : undefined;
@@ -29,7 +28,7 @@ export const KanbanContainer = ({ object }: { object: Kanban.Kanban; role: strin
   useEffect(() => {
     const staticSchema = schemas.flat().find((schema) => Type.getTypename(schema) === typename);
     if (staticSchema) {
-      setCardSchema(() => staticSchema);
+      setCardSchema(() => staticSchema as Type.Obj.Any);
     }
     if (!staticSchema && typename && db) {
       const query = db.schemaRegistry.query({ typename });
@@ -37,7 +36,8 @@ export const KanbanContainer = ({ object }: { object: Kanban.Kanban; role: strin
         () => {
           const [schema] = query.results;
           if (schema) {
-            setCardSchema(schema);
+            // Schema registry returns EchoSchema which doesn't carry the brand.
+            setCardSchema(schema as unknown as Type.Obj.Any);
           }
         },
         { fire: true },

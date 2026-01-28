@@ -16,7 +16,7 @@ const _Channel = Schema.Struct({
 }).pipe(Type.Obj({ typename: 'dxos.org/type/Channel', version: '0.1.0' }));
 export interface Channel extends Schema.Schema.Type<typeof _Channel> {}
 export interface ChannelEncoded extends Schema.Schema.Encoded<typeof _Channel> {}
-export const Channel: Schema.Schema<Channel, ChannelEncoded> = _Channel;
+export const Channel: typeof _Channel = _Channel;
 
 export const make = (props: Pick<Obj.MakeProps<typeof Channel>, 'name'> = {}) =>
   Obj.make(Channel, {

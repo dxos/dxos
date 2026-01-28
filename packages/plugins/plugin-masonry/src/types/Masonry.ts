@@ -4,11 +4,29 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Obj, Ref, Type } from '@dxos/echo';
+import { Entity, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { View, ViewAnnotation } from '@dxos/schema';
 
-const MasonrySchema = Schema.Struct({
+export interface MasonryArrangement {
+  readonly ids: readonly string[];
+  readonly hidden?: boolean;
+}
+
+export interface Masonry extends Entity.OfKind<typeof Entity.Kind.Object> {
+  readonly name?: string;
+  readonly view: Ref.Ref<View.View>;
+  readonly arrangement?: MasonryArrangement[];
+}
+
+export interface MasonryEncoded {
+  readonly id: string;
+  readonly name?: string;
+  readonly view: string;
+  readonly arrangement?: readonly { readonly ids: readonly string[]; readonly hidden?: boolean }[];
+}
+
+export const Masonry: Type.Obj.Of<Schema.Schema<Masonry, MasonryEncoded>> = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
 
   view: Type.Ref(View.View).pipe(FormInputAnnotation.set(false)),
@@ -27,10 +45,7 @@ const MasonrySchema = Schema.Struct({
   }),
   LabelAnnotation.set(['name']),
   ViewAnnotation.set(true),
-);
-export interface Masonry extends Schema.Schema.Type<typeof MasonrySchema> {}
-export interface MasonryEncoded extends Schema.Schema.Encoded<typeof MasonrySchema> {}
-export const Masonry: Schema.Schema<Masonry, MasonryEncoded> = MasonrySchema;
+) as any;
 
 type MakeProps = Omit<Partial<Obj.MakeProps<typeof Masonry>>, 'view'> & {
   view: View.View;
