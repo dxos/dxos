@@ -20,7 +20,7 @@ import * as Err from './Err';
 import type * as Filter from './Filter';
 import type * as Hypergraph from './Hypergraph';
 import { isInstanceOf } from './internal/annotations';
-import { Ref } from './internal/ref/ref';
+import type { Ref } from './internal/ref/ref';
 import { type AnyProperties } from './internal/types';
 import type * as Obj from './Obj';
 import type * as Query from './Query';
@@ -237,7 +237,7 @@ export class Service extends Context.Tag('@dxos/echo/Database/Service')<
   ): Effect.Effect<Schema.Schema.Type<S>, Err.ObjectNotFoundError, Service> =>
     Effect.gen(function* () {
       const { db } = yield* Service;
-      const dxn = Ref.isRef(ref) ? ref.dxn : ref;
+      const dxn = ref instanceof DXN ? ref : ref.dxn;
       const object = yield* promiseWithCauseCapture(() =>
         db.graph
           .createRefResolver({

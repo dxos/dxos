@@ -3,7 +3,7 @@ import { Database, Obj } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
-import * as Initiative from '../Initiative';
+import * as Initiative from '../InitiativeSchema';
 import { Text } from '@dxos/schema';
 
 export default defineFunction({

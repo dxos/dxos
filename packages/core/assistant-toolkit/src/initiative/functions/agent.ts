@@ -6,7 +6,7 @@ import { defineFunction, TriggerEvent } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
-import * as Initiative from '../Initiative';
+import * as Initiative from '../InitiativeSchema';
 import { log } from '@dxos/log';
 
 export default defineFunction({
