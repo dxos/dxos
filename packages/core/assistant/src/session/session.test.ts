@@ -9,13 +9,11 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
-import { AiService, ToolExecutionService, ToolResolverService } from '@dxos/ai';
-import { AiServiceTestingPreset, MemoizedAiService } from '@dxos/ai/testing';
 import { Obj, Type } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { TracingService } from '@dxos/functions';
 import { log } from '@dxos/log';
 
+import { AssistantTestLayer } from '../testing';
 import { AiSession } from './session';
 
 // Define a calendar event artifact schema.
@@ -66,15 +64,10 @@ const toolkitLayer = TestToolkit.toLayer({
 });
 
 const TestLayer = Layer.mergeAll(
+  AssistantTestLayer({
+    types: [CalendarEventSchema],
+  }),
   toolkitLayer,
-  AiService.model('@anthropic/claude-3-5-sonnet-20241022'),
-  TracingService.layerNoop,
-  ToolResolverService.layerEmpty,
-  ToolExecutionService.layerEmpty,
-).pipe(
-  //
-  Layer.provideMerge(MemoizedAiService.layerTest()),
-  Layer.provide(AiServiceTestingPreset('direct')),
 );
 
 describe('AiSession', () => {

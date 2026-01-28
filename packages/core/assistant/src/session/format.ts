@@ -34,15 +34,15 @@ export const formatSystemPrompt = ({
     const blueprintDefs = yield* Function.pipe(
       blueprints,
       Effect.forEach((blueprint) => Effect.succeed(blueprint.instructions)),
-      Effect.flatMap(Effect.forEach((template) => Database.Service.loadOption(template.source))),
-      Effect.map(Array.filter(Option.isSome)),
-      Effect.map(
-        Array.map(
-          (template) => trim`
+      Effect.flatMap(
+        Effect.forEach((template) =>
+          Effect.gen(function* () {
+            return trim`
             <blueprint>
-              ${Template.process(template.value.content)}
+              ${yield* Template.processTemplate(template)}
             </blueprint>
-          `,
+          `;
+          }),
         ),
       ),
       Effect.map((blueprints) =>

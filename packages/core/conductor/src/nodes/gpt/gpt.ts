@@ -15,7 +15,7 @@ import { AiService, DEFAULT_EDGE_MODEL, ToolExecutionService, ToolId, ToolResolv
 import { AiSession, GenerationObserver } from '@dxos/assistant';
 import { Type } from '@dxos/echo';
 import { Queue } from '@dxos/echo-db';
-import { ComputeEventLogger, QueueService, TracingService } from '@dxos/functions';
+import { ComputeEventLogger, FunctionInvocationService, QueueService, TracingService } from '@dxos/functions';
 import { assertArgument } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
@@ -157,6 +157,7 @@ export const gptNode = defineComputeNode({
       ToolResolverService.layerEmpty,
       ToolExecutionService.layerEmpty,
       TracingService.layerNoop,
+      FunctionInvocationService.layerNotAvailable,
     );
 
     // TODO(dmaretskyi): Should this use conversation instead?

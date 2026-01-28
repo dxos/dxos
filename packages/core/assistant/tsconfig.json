@@ -1,12 +1,7 @@
 {
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {},
-  "include": [
-    "../assistant-testing/src/functions/testing",
-    "bin",
-    "src",
-    "src/**/*.json"
-  ],
+  "include": ["bin", "src", "src/**/*.json"],
   "references": [
     {
       "path": "../../common/async"
