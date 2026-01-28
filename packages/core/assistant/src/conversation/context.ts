@@ -288,6 +288,8 @@ export class AiContextBinder extends Resource {
           target = ref.target;
         }
 
+        console.log('resolve', { ref, target });
+
         // Fallback to existing object.
         return target ?? current.find((obj) => Obj.getDXN(obj as any).toString() === ref.dxn.toString());
       })

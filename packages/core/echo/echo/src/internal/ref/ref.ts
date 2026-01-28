@@ -17,6 +17,7 @@ import * as Database from '../../Database';
 import { ReferenceAnnotationId, getSchemaDXN, getTypeAnnotation, getTypeIdentifierAnnotation } from '../annotations';
 import { type JsonSchemaType } from '../json-schema';
 import type { AnyProperties, WithId } from '../types';
+import { inspectCustom, type CustomInspectFunction } from '@dxos/debug';
 
 /**
  * The `$id` and `$ref` fields for an ECHO reference schema.
@@ -450,6 +451,10 @@ export class RefImpl<T> implements Ref<T> {
 
     return `Ref(${this.#dxn.toString()})`;
   }
+
+  [inspectCustom]: CustomInspectFunction = (depth, options, inspect) => {
+    return this.toString();
+  };
 
   [RefTypeId] = refVariance;
 
