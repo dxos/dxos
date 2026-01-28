@@ -5,12 +5,9 @@
 import { type ClassNameValue } from '@dxos/react-ui';
 
 export const styles = {
-  root: [
-    'group/card relative',
-    'min-bs-[--rail-item] overflow-hidden',
-    'is-full is-cardMaxWidth is-cardMinWidth',
+  root: 'group/card relative min-bs-[--rail-item] overflow-hidden is-full is-cardMaxWidth is-cardMinWidth',
+  border:
     'bg-cardSurface border border-separator dark:border-subduedSeparator rounded-sm dx-focus-ring-group-y-indicator',
-  ],
 
   /**
    * Row grid.

@@ -139,7 +139,7 @@ export const Layout = ({ children }: PropsWithChildren<{}>) => {
                     ) : (
                       <span />
                     )}
-                    <Card.Close onClose={handleClose} />
+                    <Card.Close onClick={handleClose} />
                   </Card.Toolbar>
                   <Surface role='card--content' data={layout.popoverContent} limit={1} />
                 </Card.Root>

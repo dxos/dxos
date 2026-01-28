@@ -48,10 +48,10 @@ const CardContext = createContext<CardContextValue>({});
 // Root
 //
 
-type CardRootProps = CardSharedProps & { id?: string };
+type CardRootProps = CardSharedProps & { id?: string; border?: boolean };
 
 const CardRoot = forwardRef<HTMLDivElement, CardRootProps>(
-  ({ children, classNames, className, id, asChild, role = 'group', ...props }, forwardedRef) => {
+  ({ children, classNames, className, id, asChild, role = 'group', border = true, ...props }, forwardedRef) => {
     const Root = asChild ? Slot : 'div';
 
     return (
@@ -59,7 +59,7 @@ const CardRoot = forwardRef<HTMLDivElement, CardRootProps>(
         {...(id && { 'data-object-id': id })}
         {...props}
         role={role}
-        className={mx(styles.root, className, classNames)}
+        className={mx(styles.root, border && styles.border, className, classNames)}
         ref={forwardedRef}
       >
         {children}
@@ -91,9 +91,6 @@ type CardDragHandleProps = {};
 
 const CardDragHandle = forwardRef<HTMLButtonElement, CardDragHandleProps>((_, forwardedRef) => {
   const { t } = useTranslation(translationKey);
-  if (!forwardedRef) {
-    return <CardIcon classNames='text-subdued' toolbar icon='ph--square--regular' />;
-  }
 
   return (
     <Toolbar.IconButton
@@ -114,7 +111,7 @@ const CardDragHandle = forwardRef<HTMLButtonElement, CardDragHandleProps>((_, fo
 // Close
 //
 
-type CardCloseProps = { onClick: () => void };
+type CardCloseProps = { onClick?: () => void };
 
 const CardClose = forwardRef<HTMLButtonElement, CardCloseProps>(({ onClick }, forwardedRef) => {
   const { t } = useTranslation(translationKey);

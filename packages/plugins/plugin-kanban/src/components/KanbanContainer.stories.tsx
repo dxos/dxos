@@ -20,7 +20,12 @@ import { faker } from '@dxos/random';
 import { Filter, useQuery, useSchema, useSpaces } from '@dxos/react-client/echo';
 import { withTheme } from '@dxos/react-ui/testing';
 import { ViewEditor } from '@dxos/react-ui-form';
-import { Kanban as KanbanComponent, useKanbanModel, useProjectionModel } from '@dxos/react-ui-kanban';
+import {
+  Kanban as KanbanComponent,
+  translations as kanbanTranslations,
+  useKanbanModel,
+  useProjectionModel,
+} from '@dxos/react-ui-kanban';
 import { Kanban } from '@dxos/react-ui-kanban/types';
 import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
 import { View, getTypenameFromQuery } from '@dxos/schema';
@@ -30,11 +35,7 @@ import { translations } from '../translations';
 
 faker.seed(0);
 
-//
-// Story components.
-//
-
-const rollOrg = () => ({
+const createOrg = () => ({
   name: faker.commerce.productName(),
   description: faker.lorem.paragraph(),
   image: faker.image.url(),
@@ -42,7 +43,11 @@ const rollOrg = () => ({
   status: faker.helpers.arrayElement(Organization.StatusOptions).id as Organization.Organization['status'],
 });
 
-const StorybookKanban = () => {
+//
+// Story components.
+//
+
+const DefaultComponent = () => {
   const registry = useContext(RegistryContext);
   const spaces = useSpaces();
   const space = spaces[spaces.length - 1];
@@ -65,7 +70,7 @@ const StorybookKanban = () => {
       const path = model?.columnFieldPath;
       if (space && schema && path) {
         const card = Obj.make(schema, {
-          ...rollOrg(),
+          ...createOrg(),
           [path]: columnValue,
         });
 
@@ -97,8 +102,9 @@ const StorybookKanban = () => {
   return (
     <div className='grow grid grid-cols-[1fr_350px] overflow-hidden'>
       {model ? <KanbanComponent model={model} onAddCard={handleAddCard} onRemoveCard={handleRemoveCard} /> : <div />}
-      <div className='flex flex-col bs-full overflow-hidden'>
+      <div className='flex flex-col bs-full overflow-hidden border-l border-separator'>
         <ViewEditor
+          classNames='p-2'
           registry={space?.db.schemaRegistry}
           schema={schema}
           view={object.view.target}
@@ -119,8 +125,8 @@ const StorybookKanban = () => {
 
 const meta = {
   title: 'plugins/plugin-kanban/Kanban',
-  component: StorybookKanban,
-  render: () => <StorybookKanban />,
+  component: DefaultComponent,
+  render: () => <DefaultComponent />,
   decorators: [
     withTheme,
     withPluginManager({
@@ -145,7 +151,7 @@ const meta = {
 
               // TODO(burdon): Replace with sdk/schema/testing.
               Array.from({ length: 80 }).map(() => {
-                return space.db.add(Obj.make(Organization.Organization, rollOrg()));
+                return space.db.add(Obj.make(Organization.Organization, createOrg()));
               });
             }),
         }),
@@ -157,9 +163,9 @@ const meta = {
   ],
   parameters: {
     layout: 'fullscreen',
-    translations,
+    translations: [...translations, ...kanbanTranslations],
   },
-} satisfies Meta<typeof StorybookKanban>;
+} satisfies Meta<typeof DefaultComponent>;
 
 export default meta;
 

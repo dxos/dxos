@@ -7,7 +7,7 @@ import React, { useCallback, useEffect } from 'react';
 
 import { Surface } from '@dxos/app-framework/react';
 import { IconButton, Tag, useTranslation } from '@dxos/react-ui';
-import { type UseSelectionActions, useSelected, useSelectionActions } from '@dxos/react-ui-attention';
+import { AttentionGlyph, type UseSelectionActions, useSelected, useSelectionActions } from '@dxos/react-ui-attention';
 import { Card, CardDragPreview } from '@dxos/react-ui-mosaic';
 import {
   CardStack,
@@ -108,16 +108,20 @@ export const Kanban = <T extends BaseKanbanItem = { id: string }>({
                 )}
 
                 <StackItem.Heading classNames={cardStackHeading} separateOnScroll>
-                  {/* <StackItem.DragHandle asChild>
-                    <CardStack.DragHandle />
-                  </StackItem.DragHandle> */}
-                  <Tag
-                    palette={color as any}
-                    data-uncategorized={uncategorized}
-                    classNames='mis-1 data-[uncategorized="true"]:mis-2'
-                  >
-                    {title}
-                  </Tag>
+                  <Card.Toolbar>
+                    <StackItem.DragHandle asChild>
+                      <CardStack.DragHandle />
+                    </StackItem.DragHandle>
+                    <div className='flex items-center'>
+                      <Tag
+                        palette={color as any}
+                        data-uncategorized={uncategorized}
+                        classNames='mis-1 data-[uncategorized="true"]:mis-2'
+                      >
+                        {title}
+                      </Tag>
+                    </div>
+                  </Card.Toolbar>
                 </StackItem.Heading>
               </CardStack.Content>
 
@@ -152,7 +156,6 @@ export const Kanban = <T extends BaseKanbanItem = { id: string }>({
                             <Card.Toolbar>
                               <Card.DragHandle />
                               <Card.ToolbarSeparator />
-                              <Card.Close onClick={() => onRemoveCard?.(card)} />
                             </Card.Toolbar>
                             <Surface
                               role='card--content'
@@ -204,7 +207,6 @@ const CardComponent = <T extends BaseKanbanItem = { id: string }>({
   const { t } = useTranslation(translationKey);
   return (
     <CardStack.Item key={item.id} asChild>
-      {/* TODO(burdon): Why is this required? */}
       <StackItem.Root
         item={item}
         focusIndicatorVariant='group-always'
@@ -217,20 +219,16 @@ const CardComponent = <T extends BaseKanbanItem = { id: string }>({
             <StackItem.DragHandle asChild>
               <Card.DragHandle />
             </StackItem.DragHandle>
-            {/* <AttentionGlyph attended={selected.includes(item.id)} /> */}
-            {/* TODO(burdon): Coordinate actions. */}
+            <AttentionGlyph attended={selected.includes(item.id)} />
             {onRemoveCard && (
-              <>
-                <Card.ToolbarSeparator variant='gap' />
-                <Card.Menu
-                  items={[
-                    {
-                      label: t('remove card label'),
-                      onClick: () => onRemoveCard(item),
-                    },
-                  ]}
-                />
-              </>
+              <Card.Menu
+                items={[
+                  {
+                    label: t('remove card label'),
+                    onClick: () => onRemoveCard(item),
+                  },
+                ]}
+              />
             )}
           </Card.Toolbar>
           <Surface role='card--content' limit={1} data={{ subject: item, projection }} />
@@ -239,10 +237,12 @@ const CardComponent = <T extends BaseKanbanItem = { id: string }>({
           {({ item }) => (
             <CardDragPreview.Root>
               <CardDragPreview.Content>
-                <Card.Toolbar>
-                  <Card.DragHandle />
-                </Card.Toolbar>
-                <Surface role='card--content' limit={1} data={{ subject: item, projection }} />
+                <Card.Root>
+                  <Card.Toolbar>
+                    <Card.DragHandle />
+                  </Card.Toolbar>
+                  <Surface role='card--content' limit={1} data={{ subject: item, projection }} />
+                </Card.Root>
               </CardDragPreview.Content>
             </CardDragPreview.Root>
           )}

@@ -62,8 +62,8 @@ export const PopoverContent = () => {
 
   const handleClose = useCallback(() => {
     setOpen(false);
-    updateEphemeral((s) => ({
-      ...s,
+    updateEphemeral((state) => ({
+      ...state,
       popoverOpen: false,
       popoverAnchor: undefined,
       popoverAnchorId: undefined,
@@ -102,7 +102,7 @@ export const PopoverContent = () => {
                 {/* TODO(wittjosiah): Cleaner way to handle no drag handle in toolbar? */}
                 <span />
                 {state.popoverTitle ? <Card.Title>{toLocalizedString(state.popoverTitle, t)}</Card.Title> : <span />}
-                <Card.Close onClose={handleClose} />
+                <Card.Close onClick={handleClose} />
               </Card.Toolbar>
               <Surface role='card--content' data={state.popoverContent} limit={1} />
             </Card.Root>

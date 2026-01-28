@@ -21,8 +21,8 @@ import {
   image,
   preview,
 } from '@dxos/ui-editor';
-import { hoverableControlItem, hoverableControlItemTransition, hoverableControls } from '@dxos/ui-theme';
-import { trim } from '@dxos/util';
+import { hoverableControls } from '@dxos/ui-theme';
+import { isTruthy, trim } from '@dxos/util';
 
 import { type EditorController, EditorPreviewProvider, useEditorPreview } from '../components';
 
@@ -51,15 +51,18 @@ const useRefTarget = (link: PreviewLinkRef): PreviewLinkTarget | undefined => {
 
 const PreviewCard = () => {
   const { target } = useEditorPreview('PreviewCard');
+
   return (
     <Popover.Portal>
       <Popover.Content onOpenAutoFocus={(event) => event.preventDefault()}>
         <Popover.Viewport classNames='popover-card-width'>
-          <Card.Root>
+          <Card.Root border={false}>
             <Card.Toolbar>
-              <Card.Icon icon='ph--document--regular' />
+              <Card.Icon toolbar icon='ph--file-text--regular' />
               <Card.Title>{target?.label}</Card.Title>
-              <Card.Close onClick={() => {}} />
+              <Popover.Close asChild>
+                <Card.Close />
+              </Popover.Close>
             </Card.Toolbar>
             {target && (
               <Card.Row>
@@ -144,35 +147,29 @@ const PreviewBlockComponent = ({ link, el, view }: { link: PreviewLinkRef; el: H
     <Card.Root classNames={hoverableControls}>
       {!view?.state.readOnly && (
         <Card.Toolbar>
-          {(link.suggest && (
-            <>
-              <Card.ToolbarIconButton label='Discard' icon='ph--x--regular' onClick={handleDelete} />
-              {target && (
-                <Card.ToolbarIconButton
-                  classNames='bg-successSurface text-successSurfaceText'
-                  label='Apply'
-                  icon='ph--check--regular'
-                  onClick={handleInsert}
-                />
-              )}
-            </>
-          )) || (
-            <Card.ToolbarIconButton
-              iconOnly
-              label='Delete'
-              icon='ph--x--regular'
-              classNames={[hoverableControlItem, hoverableControlItemTransition]}
-              onClick={handleDelete}
-            />
-          )}
+          <Card.Icon toolbar icon='ph--bookmark--regular' />
+          <Card.Title>{link.label}</Card.Title>
+          <Card.Menu
+            items={[
+              {
+                id: 'delete',
+                label: link.suggest ? 'Discard' : 'Delete',
+                icon: 'ph--x--regular',
+                onClick: handleDelete,
+              },
+              target && {
+                id: 'apply',
+                label: 'Apply',
+                icon: 'ph--check--regular',
+                onClick: handleInsert,
+              },
+            ].filter(isTruthy)}
+          />
         </Card.Toolbar>
       )}
-      <Card.Row>
-        <Card.Heading>{link.label}</Card.Heading>
-      </Card.Row>
       {target && (
         <Card.Row>
-          <Card.Text variant='description'>{target.text}</Card.Text>
+          <Card.Text className='text-description'>{target.text}</Card.Text>
         </Card.Row>
       )}
     </Card.Root>,
