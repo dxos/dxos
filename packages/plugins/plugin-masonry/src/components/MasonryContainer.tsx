@@ -7,15 +7,21 @@ import React, { useEffect, useState } from 'react';
 
 import { Common } from '@dxos/app-framework';
 import { Surface, useCapabilities } from '@dxos/app-framework/react';
-import { Filter, Obj, Type } from '@dxos/echo';
+import { type Database, Filter, Obj, Type } from '@dxos/echo';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { useQuery } from '@dxos/react-client/echo';
 import { Masonry as MasonryComponent } from '@dxos/react-ui-masonry';
+import { Card } from '@dxos/react-ui-mosaic';
 import { type View, getTypenameFromQuery } from '@dxos/schema';
 
-export const MasonryContainer = ({ view }: { view: View.View; role?: string }) => {
+export type MasonryContainerProps = {
+  db: Database.Database;
+  view: View.View;
+  role?: string;
+};
+
+export const MasonryContainer = ({ db, view }: MasonryContainerProps) => {
   const schemas = useCapabilities(Common.Capability.Schema);
-  const db = Obj.getDatabase(view);
   const typename = view.query ? getTypenameFromQuery(view.query.ast) : undefined;
 
   const [cardSchema, setCardSchema] = useState<Schema.Schema.AnyNoContext>();
@@ -53,5 +59,14 @@ export const MasonryContainer = ({ view }: { view: View.View; role?: string }) =
 };
 
 const Item = ({ data }: { data: any }) => {
-  return <Surface role='card' limit={1} data={{ subject: data }} />;
+  return (
+    <Card.Root>
+      <Card.Toolbar>
+        <span />
+        <Card.Title>{Obj.getLabel(data)}</Card.Title>
+        <Card.Menu />
+      </Card.Toolbar>
+      <Surface role='card--content' limit={1} data={{ subject: data }} />
+    </Card.Root>
+  );
 };

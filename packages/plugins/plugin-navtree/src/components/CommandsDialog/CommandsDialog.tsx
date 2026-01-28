@@ -71,54 +71,57 @@ export const CommandsDialogContent = forwardRef<HTMLDivElement, CommandsDialogCo
     return (
       <Dialog.Content classNames={dialogStyles.content} ref={forwardedRef}>
         <Dialog.Title classNames={dialogStyles.header}>{t('commands dialog title', { ns: meta.id })}</Dialog.Title>
-        <SearchList.Root
-          label={t('command list input placeholder')}
-          onSearch={handleSearch}
-          classNames={dialogStyles.searchListRoot}
-        >
-          <SearchList.Input placeholder={t('command list input placeholder')} />
-          <SearchList.Content classNames={dialogStyles.paddedOverflow}>
-            <SearchList.Viewport>
-              {results.map((action) => {
-                const shortcut =
-                  typeof action.properties.keyBinding === 'string'
-                    ? action.properties.keyBinding
-                    : action.properties.keyBinding?.[getHostPlatform()];
-                return (
-                  <SearchList.Item
-                    value={action.id}
-                    key={action.id}
-                    label={toLocalizedString(action.properties.label, t)}
-                    icon={action.properties.icon}
-                    suffix={shortcut ? keySymbols(shortcut).join('') : undefined}
-                    onSelect={() => {
-                      if (action.properties.disabled) {
-                        return;
-                      }
-
-                      if (Node.isActionGroup(action)) {
-                        setSelected(action.id);
-                        return;
-                      }
-
-                      invokeSync(Common.LayoutOperation.UpdateDialog, { state: false });
-                      setTimeout(() => {
-                        const node = Graph.getConnections(graph, group?.id ?? action.id, 'inbound')[0];
-                        if (node && Node.isAction(action)) {
-                          void runAction(action, { parent: node, caller: KEY_BINDING });
+        <SearchList.Root onSearch={handleSearch}>
+          <div
+            aria-label={t('command list input placeholder')}
+            role='combobox'
+            aria-expanded='true'
+            className={dialogStyles.searchListRoot}
+          >
+            <SearchList.Input placeholder={t('command list input placeholder')} />
+            <SearchList.Content classNames={dialogStyles.paddedOverflow}>
+              <SearchList.Viewport>
+                {results.map((action) => {
+                  const shortcut =
+                    typeof action.properties.keyBinding === 'string'
+                      ? action.properties.keyBinding
+                      : action.properties.keyBinding?.[getHostPlatform()];
+                  return (
+                    <SearchList.Item
+                      value={action.id}
+                      key={action.id}
+                      label={toLocalizedString(action.properties.label, t)}
+                      icon={action.properties.icon}
+                      suffix={shortcut ? keySymbols(shortcut).join('') : undefined}
+                      onSelect={() => {
+                        if (action.properties.disabled) {
+                          return;
                         }
-                      });
-                    }}
-                    classNames='flex items-center gap-2'
-                    disabled={action.properties.disabled}
-                    {...(action.properties?.testId && {
-                      'data-testid': action.properties.testId,
-                    })}
-                  />
-                );
-              })}
-            </SearchList.Viewport>
-          </SearchList.Content>
+
+                        if (Node.isActionGroup(action)) {
+                          setSelected(action.id);
+                          return;
+                        }
+
+                        invokeSync(Common.LayoutOperation.UpdateDialog, { state: false });
+                        setTimeout(() => {
+                          const node = Graph.getConnections(graph, group?.id ?? action.id, 'inbound')[0];
+                          if (node && Node.isAction(action)) {
+                            void runAction(action, { parent: node, caller: KEY_BINDING });
+                          }
+                        });
+                      }}
+                      classNames='flex items-center gap-2'
+                      disabled={action.properties.disabled}
+                      {...(action.properties?.testId && {
+                        'data-testid': action.properties.testId,
+                      })}
+                    />
+                  );
+                })}
+              </SearchList.Viewport>
+            </SearchList.Content>
+          </div>
         </SearchList.Root>
         <div role='none' className='pli-cardSpacingInline pbe-cardSpacingBlock'>
           <Dialog.Close asChild>

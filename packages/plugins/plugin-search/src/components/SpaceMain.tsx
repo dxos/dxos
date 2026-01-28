@@ -10,6 +10,7 @@ import { Filter, Obj, Query } from '@dxos/echo';
 import { Graph, type Node, useConnections } from '@dxos/plugin-graph';
 import { type Space, useQuery } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
+import { Card } from '@dxos/react-ui-mosaic';
 import { SearchList } from '@dxos/react-ui-searchlist';
 import { StackItem } from '@dxos/react-ui-stack';
 import { Text } from '@dxos/schema';
@@ -50,27 +51,43 @@ export const SpaceMain = ({ space }: { space: Space }) => {
 
   return (
     <StackItem.Content toolbar>
-      <SearchList.Root onSearch={handleSearch} classNames='flex flex-col bs-full overflow-hidden'>
-        <SearchList.Input placeholder={t('search placeholder')} classNames='pli-2' />
-        <SearchList.Content classNames='overflow-y-auto'>
-          <SearchList.Viewport>
-            {isQueryEmpty &&
-              filteredDescendents.map((node) => (
-                <div key={node.id} role='none' className='pli-2 first:pbs-2 pbe-2'>
-                  <Surface role='card' data={{ subject: node.data }} limit={1} />
-                </div>
-              ))}
-            {!isQueryEmpty &&
-              results
-                .filter((obj) => Obj.getLabel(obj))
-                .map((obj) => (
-                  <div key={obj.id} role='none' className='pli-2 first:pbs-2 pbe-2'>
-                    <Surface role='card' data={{ subject: obj }} limit={1} />
+      <SearchList.Root onSearch={handleSearch}>
+        <div role='combobox' aria-expanded='true' className='flex flex-col bs-full overflow-hidden'>
+          <SearchList.Input placeholder={t('search placeholder')} classNames='pli-2' />
+          <SearchList.Content classNames='overflow-y-auto'>
+            <SearchList.Viewport>
+              {isQueryEmpty &&
+                filteredDescendents.map((node) => (
+                  <div key={node.id} role='none' className='pli-2 first:pbs-2 pbe-2'>
+                    <Card.Root>
+                      <Card.Toolbar>
+                        <span />
+                        <Card.Title>{Obj.getLabel(node.data)}</Card.Title>
+                      </Card.Toolbar>
+                      <Surface role='card--content' data={{ subject: node.data }} limit={1} />
+                    </Card.Root>
                   </div>
                 ))}
-            {!isQueryEmpty && results.length === 0 && <SearchList.Empty>{t('empty results message')}</SearchList.Empty>}
-          </SearchList.Viewport>
-        </SearchList.Content>
+              {!isQueryEmpty &&
+                results
+                  .filter((obj) => Obj.getLabel(obj))
+                  .map((obj) => (
+                    <div key={obj.id} role='none' className='pli-2 first:pbs-2 pbe-2'>
+                      <Card.Root>
+                        <Card.Toolbar>
+                          <span />
+                          <Card.Title>{Obj.getLabel(obj)}</Card.Title>
+                        </Card.Toolbar>
+                        <Surface role='card--content' data={{ subject: obj }} limit={1} />
+                      </Card.Root>
+                    </div>
+                  ))}
+              {!isQueryEmpty && results.length === 0 && (
+                <SearchList.Empty>{t('empty results message')}</SearchList.Empty>
+              )}
+            </SearchList.Viewport>
+          </SearchList.Content>
+        </div>
       </SearchList.Root>
     </StackItem.Content>
   );

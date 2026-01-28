@@ -10,6 +10,7 @@ import { type Database, type Entity, Filter, Obj, Ref, Relation } from '@dxos/ec
 import { useQuery } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
+import { Card as MosaicCard } from '@dxos/react-ui-mosaic';
 import { StackItem } from '@dxos/react-ui-stack';
 import { mx } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
@@ -51,7 +52,15 @@ export const RecordArticle = ({ subject }: SurfaceComponentProps) => {
 
 const Card = ({ data: subject }: { data: Entity.Unknown }) => {
   const data = useMemo(() => ({ subject }), [subject]);
-  return <Surface role='card' data={data} limit={1} />;
+  return (
+    <MosaicCard.Root>
+      <MosaicCard.Toolbar>
+        <span />
+        <MosaicCard.Title>{Obj.getLabel(subject)}</MosaicCard.Title>
+      </MosaicCard.Toolbar>
+      <Surface role='card--content' data={data} limit={1} />
+    </MosaicCard.Root>
+  );
 };
 
 // TODO(wittjosiah): This is a hack. ECHO needs to have a back reference index to easily query for related objects.

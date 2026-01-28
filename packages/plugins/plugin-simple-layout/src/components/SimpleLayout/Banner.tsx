@@ -10,6 +10,7 @@ import { type Node } from '@dxos/plugin-graph';
 import { IconButton, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { mx, osTranslations, surfaceZIndex } from '@dxos/ui-theme';
 
+import { HOME_ID } from '../../capabilities/state';
 import { useSimpleLayoutState } from '../../hooks';
 import { meta } from '../../meta';
 
@@ -27,7 +28,7 @@ export const Banner = ({ node }: BannerProps) => {
     if (state.active) {
       await invokePromise(Common.LayoutOperation.Close, { subject: [state.active] });
     } else {
-      await invokePromise(Common.LayoutOperation.SwitchWorkspace, { subject: 'default' });
+      await invokePromise(Common.LayoutOperation.SwitchWorkspace, { subject: HOME_ID });
     }
   }, [invokePromise, state.active]);
 
