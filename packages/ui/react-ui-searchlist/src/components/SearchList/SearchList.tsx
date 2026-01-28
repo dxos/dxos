@@ -210,28 +210,28 @@ const SearchListRoot = ({
     [query, handleQueryChange, selectedValue, getItemValues, triggerSelect],
   );
 
-  // TODO(burdon): ???
+  // TODO(burdon): Why double nested?
   return (
-    <SearchListItemContextProvider
-      selectedValue={itemContextValue.selectedValue}
-      onSelectedValueChange={itemContextValue.onSelectedValueChange}
-      registerItem={itemContextValue.registerItem}
-      unregisterItem={itemContextValue.unregisterItem}
+    <SearchListInputContextProvider
+      query={inputContextValue.query}
+      selectedValue={inputContextValue.selectedValue}
+      getItemValues={inputContextValue.getItemValues}
+      triggerSelect={inputContextValue.triggerSelect}
+      onSelectedValueChange={inputContextValue.onSelectedValueChange}
+      onQueryChange={inputContextValue.onQueryChange}
     >
-      <SearchListInputContextProvider
-        query={inputContextValue.query}
-        onQueryChange={inputContextValue.onQueryChange}
-        selectedValue={inputContextValue.selectedValue}
-        onSelectedValueChange={inputContextValue.onSelectedValueChange}
-        getItemValues={inputContextValue.getItemValues}
-        triggerSelect={inputContextValue.triggerSelect}
+      <SearchListItemContextProvider
+        selectedValue={itemContextValue.selectedValue}
+        registerItem={itemContextValue.registerItem}
+        unregisterItem={itemContextValue.unregisterItem}
+        onSelectedValueChange={itemContextValue.onSelectedValueChange}
       >
         {/* TODO(burdon): Roots should be headless. */}
         <div {...props} className={mx(classNames)} aria-label={label} role='combobox' aria-expanded='true'>
           {children}
         </div>
-      </SearchListInputContextProvider>
-    </SearchListItemContextProvider>
+      </SearchListItemContextProvider>
+    </SearchListInputContextProvider>
   );
 };
 

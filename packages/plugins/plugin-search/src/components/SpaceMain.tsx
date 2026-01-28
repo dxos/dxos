@@ -49,7 +49,7 @@ export const SpaceMain = ({ space }: { space: Space }) => {
   const filteredDescendents = useMemo(() => descendents.filter((node) => Obj.isObject(node.data)), [descendents]);
 
   return (
-    <StackItem.Content>
+    <StackItem.Content toolbar>
       <SearchList.Root onSearch={handleSearch} classNames='flex flex-col bs-full overflow-hidden'>
         <SearchList.Input placeholder={t('search placeholder')} classNames='pli-2' />
         <SearchList.Content classNames='overflow-y-auto'>
