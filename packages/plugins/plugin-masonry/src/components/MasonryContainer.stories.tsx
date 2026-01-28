@@ -11,7 +11,7 @@ import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { faker } from '@dxos/random';
-import { Filter, useQuery, useSpaces } from '@dxos/react-client/echo';
+import { Filter, useObject, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { withTheme } from '@dxos/react-ui/testing';
 import { View } from '@dxos/schema';
 import { createObjectFactory } from '@dxos/schema/testing';
@@ -27,10 +27,10 @@ const StorybookMasonry = () => {
   const spaces = useSpaces();
   const space = spaces[spaces.length - 1];
   const masonries = useQuery(space?.db, Filter.type(Masonry.Masonry));
-  const masonry = masonries.at(0);
-  const view = masonry?.view.target;
+  const [masonry] = useObject(masonries.at(0));
+  const [view] = useObject(masonry?.view);
 
-  return view ? <MasonryContainer view={view} role='story' /> : null;
+  return view && space?.db ? <MasonryContainer db={space.db} view={view} role='story' /> : null;
 };
 
 const meta = {

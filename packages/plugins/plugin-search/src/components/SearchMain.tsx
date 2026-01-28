@@ -8,6 +8,7 @@ import { Surface } from '@dxos/app-framework/react';
 import { Obj, Query } from '@dxos/echo';
 import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
+import { Card } from '@dxos/react-ui-mosaic';
 import { SearchList } from '@dxos/react-ui-searchlist';
 import { StackItem } from '@dxos/react-ui-stack';
 import { Text } from '@dxos/schema';
@@ -48,7 +49,7 @@ export const SearchMain = ({ space }: { space?: Space }) => {
   return (
     <StackItem.Content toolbar>
       {/* TODO(burdon): Add selection. */}
-      <SearchList.Root onSearch={handleSearch} classNames='flex flex-col bs-full overflow-hidden'>
+      <SearchList.Root onSearch={handleSearch}>
         <SearchList.Input placeholder={t('search placeholder')} classNames='pli-2' />
         <SearchList.Content classNames='overflow-y-auto'>
           <SearchList.Viewport>
@@ -57,8 +58,15 @@ export const SearchMain = ({ space }: { space?: Space }) => {
               .filter((item) => Obj.getLabel(item.object))
               .map(({ id, object }) => (
                 <div key={id} role='none' className='pli-2 first:pbs-2 pbe-2'>
-                  {/* TODO(burdon): Card.Root here and Surface with card--content. */}
-                  <Surface role='card' data={{ subject: object }} limit={1} />
+                  <Card.Root>
+                    <Card.Toolbar>
+                      {/* TODO(wittjosiah): Get icon for object type. */}
+                      <span />
+                      <Card.Title>{Obj.getLabel(object)}</Card.Title>
+                      {/* TODO(wittjosiah): Button to navigate to object. */}
+                    </Card.Toolbar>
+                    <Surface role='card--content' data={{ subject: object }} limit={1} />
+                  </Card.Root>
                 </div>
               ))}
             {allResults.length === 0 && <SearchList.Empty>{t('empty results message')}</SearchList.Empty>}

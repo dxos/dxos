@@ -9,6 +9,7 @@ import { Capability, Common, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { ClientOperation, ClientPlugin } from '@dxos/plugin-client';
 import { SearchPlugin } from '@dxos/plugin-search';
+import { SpacePlugin } from '@dxos/plugin-space';
 import { SpaceOperation } from '@dxos/plugin-space/types';
 import { corePlugins } from '@dxos/plugin-testing';
 import { withTheme } from '@dxos/react-ui/testing';
@@ -68,16 +69,10 @@ const createPluginManager = ({ isPopover }: { isPopover: boolean }) => {
     plugins: [
       ...corePlugins(),
       ClientPlugin({
-        onClientInitialized: ({ client }) =>
-          Effect.gen(function* () {
-            yield* Effect.promise(() => client.halo.createIdentity());
-            yield* Effect.promise(async () => {
-              await client.spaces.create({ name: 'Work Space' });
-              await client.spaces.create({ name: 'Shared Project' });
-            });
-          }),
+        types: [Collection.Collection],
       }),
       SearchPlugin(),
+      SpacePlugin({}),
       TestPlugin({ isPopover }),
     ],
   });

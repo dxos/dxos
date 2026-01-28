@@ -9,7 +9,7 @@ import { Obj } from '@dxos/echo';
 import { Card } from '@dxos/react-ui-mosaic';
 import { ghostHover } from '@dxos/ui-theme';
 
-import { type SearchResult } from '../../types';
+import { type SearchResult } from '../types';
 
 export type SearchResultsProps = {
   items: SearchResult[];
@@ -29,7 +29,13 @@ export const SearchResults = ({ items }: SearchResultsProps) => {
           .filter((item) => Obj.getLabel(item.object))
           .map((item) => (
             <div key={item.id} role='none' className='pli-2 first:pbs-2 pbe-2'>
-              <Surface role='card' data={{ subject: item.object }} limit={1} />
+              <Card.Root>
+                <Card.Toolbar>
+                  <span />
+                  <Card.Title>{Obj.getLabel(item.object)}</Card.Title>
+                </Card.Toolbar>
+                <Surface role='card--content' data={{ subject: item.object }} limit={1} />
+              </Card.Root>
             </div>
           ))}
       </div>

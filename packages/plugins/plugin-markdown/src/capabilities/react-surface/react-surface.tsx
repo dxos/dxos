@@ -62,7 +62,7 @@ export default Capability.makeModule(() =>
         role: 'card--content',
         filter: (data): data is { subject: Markdown.Document | Text.Text } =>
           Obj.instanceOf(Markdown.Document, data.subject) || Obj.instanceOf(Text.Text, data.subject),
-        component: ({ data, ref }) => <MarkdownCard {...data} ref={ref} />,
+        component: ({ data }) => <MarkdownCard {...data} />,
       }),
     ]),
   ),

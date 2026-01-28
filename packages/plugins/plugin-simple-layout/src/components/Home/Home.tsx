@@ -29,17 +29,19 @@ export const Home = ({ classNames }: HomeProps) => {
   return (
     <div className={mx('flex flex-col pli-3', classNames)}>
       {/* <div className='container-max-width'>{t('workspaces heading')}</div> */}
-      <SearchList.Root onSearch={handleSearch} classNames='container-max-width'>
-        <div className='plb-3'>
-          <SearchList.Input placeholder={t('search placeholder')} autoFocus />
+      <SearchList.Root onSearch={handleSearch}>
+        <div className='container-max-width'>
+          <div className='plb-3'>
+            <SearchList.Input placeholder={t('search placeholder')} autoFocus />
+          </div>
+          <SearchList.Content>
+            <SearchList.Viewport classNames='flex flex-col gap-1'>
+              {results.map((node) => (
+                <Workspace key={node.id} node={node} />
+              ))}
+            </SearchList.Viewport>
+          </SearchList.Content>
         </div>
-        <SearchList.Content>
-          <SearchList.Viewport classNames='flex flex-col gap-1'>
-            {results.map((node) => (
-              <Workspace key={node.id} node={node} />
-            ))}
-          </SearchList.Viewport>
-        </SearchList.Content>
       </SearchList.Root>
     </div>
   );

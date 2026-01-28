@@ -38,10 +38,6 @@ import {
   useSearchListItemContext,
 } from './context';
 
-// TODO(burdon): Remove fragments (this is a severe anti-pattern).
-export const searchListItem =
-  'plb-1 pli-2 rounded-sm select-none cursor-pointer data-[selected=true]:bg-hoverOverlay hover:bg-hoverOverlay';
-
 //
 // Internal types
 //
@@ -56,30 +52,23 @@ type ItemData = {
 // Root
 //
 
-type SearchListRootProps = ThemedClassName<
-  PropsWithChildren<{
-    /** Controlled query value. */
-    value?: string;
-    /** Default query value for uncontrolled mode. */
-    defaultValue?: string;
-    /** Debounce delay in milliseconds. */
-    debounceMs?: number;
-    /** Accessibility label for the search list. */
-    label?: string;
-    /** Callback when search query changes (debounced). */
-    onSearch?: (query: string) => void;
-  }>
->;
+type SearchListRootProps = PropsWithChildren<{
+  /** Controlled query value. */
+  value?: string;
+  /** Default query value for uncontrolled mode. */
+  defaultValue?: string;
+  /** Debounce delay in milliseconds. */
+  debounceMs?: number;
+  /** Callback when search query changes (debounced). */
+  onSearch?: (query: string) => void;
+}>;
 
 const SearchListRoot = ({
   children,
   value: valueProp,
   defaultValue = '',
   debounceMs = 200,
-  label,
-  classNames,
   onSearch,
-  ...props
 }: SearchListRootProps) => {
   const [query = '', setQuery] = useControllableState({
     prop: valueProp,
@@ -210,28 +199,25 @@ const SearchListRoot = ({
     [query, handleQueryChange, selectedValue, getItemValues, triggerSelect],
   );
 
-  // TODO(burdon): ???
+  // NOTE: Separate contexts for items and input to avoid unnecessary re-renders of items when query changes.
   return (
-    <SearchListItemContextProvider
-      selectedValue={itemContextValue.selectedValue}
-      onSelectedValueChange={itemContextValue.onSelectedValueChange}
-      registerItem={itemContextValue.registerItem}
-      unregisterItem={itemContextValue.unregisterItem}
+    <SearchListInputContextProvider
+      query={inputContextValue.query}
+      onQueryChange={inputContextValue.onQueryChange}
+      selectedValue={inputContextValue.selectedValue}
+      onSelectedValueChange={inputContextValue.onSelectedValueChange}
+      getItemValues={inputContextValue.getItemValues}
+      triggerSelect={inputContextValue.triggerSelect}
     >
-      <SearchListInputContextProvider
-        query={inputContextValue.query}
-        onQueryChange={inputContextValue.onQueryChange}
-        selectedValue={inputContextValue.selectedValue}
-        onSelectedValueChange={inputContextValue.onSelectedValueChange}
-        getItemValues={inputContextValue.getItemValues}
-        triggerSelect={inputContextValue.triggerSelect}
+      <SearchListItemContextProvider
+        selectedValue={itemContextValue.selectedValue}
+        onSelectedValueChange={itemContextValue.onSelectedValueChange}
+        registerItem={itemContextValue.registerItem}
+        unregisterItem={itemContextValue.unregisterItem}
       >
-        {/* TODO(burdon): Roots should be headless. */}
-        <div {...props} className={mx(classNames)} aria-label={label} role='combobox' aria-expanded='true'>
-          {children}
-        </div>
-      </SearchListInputContextProvider>
-    </SearchListItemContextProvider>
+        {children}
+      </SearchListItemContextProvider>
+    </SearchListInputContextProvider>
   );
 };
 
@@ -483,7 +469,7 @@ const SearchListItem = forwardRef<HTMLDivElement, SearchListItemProps>(
         tabIndex={-1}
         className={mx(
           'flex gap-2 items-center',
-          searchListItem,
+          'plb-1 pli-2 rounded-sm select-none cursor-pointer data-[selected=true]:bg-hoverOverlay hover:bg-hoverOverlay',
           disabled && 'opacity-50 cursor-not-allowed hover:bg-transparent data-[selected=true]:bg-transparent',
           classNames,
         )}

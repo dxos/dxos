@@ -2,10 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { forwardRef, useCallback, useMemo } from 'react';
+import React, { useMemo } from 'react';
 
-import { Common } from '@dxos/app-framework';
-import { useOperationInvoker } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui-mosaic';
@@ -18,47 +16,26 @@ import { MarkdownEditor } from '../MarkdownEditor';
 
 export type MarkdownCardProps = { subject: Markdown.Document | Text.Text };
 
-export const MarkdownCard = forwardRef<HTMLDivElement, MarkdownCardProps>(
-  ({ subject }: MarkdownCardProps, forwardedRef) => {
-    const { invokePromise } = useOperationInvoker();
-    const { t } = useTranslation(meta.id);
-    const snippet = useMemo(() => getSnippet(subject), [subject]);
-    const info = getInfo(subject);
+export const MarkdownCard = ({ subject }: MarkdownCardProps) => {
+  const { t } = useTranslation(meta.id);
+  const snippet = useMemo(() => getSnippet(subject), [subject]);
+  const info = getInfo(subject);
 
-    // TODO(wittjosiah): Factor out so this component isn't dependent on the app framework.
-    const handleNavigate = useCallback(async () => {
-      await invokePromise(Common.LayoutOperation.UpdatePopover, { state: false, anchorId: '' });
-      await invokePromise(Common.LayoutOperation.Open, { subject: [Obj.getDXN(subject).toString()] });
-    }, [invokePromise, subject]);
-
-    return (
-      <Card.Root ref={forwardedRef}>
-        <Card.Toolbar>
-          <div />
-          <Card.Title classNames='flex items-center'>{getTitle(subject, t('fallback title'))}</Card.Title>
-          <Card.Menu
-            items={[
-              {
-                label: t('navigate to document label'),
-                onClick: handleNavigate,
-              },
-            ]}
-          />
-        </Card.Toolbar>
-        {snippet && (
-          <div className='max-h-[300px] overflow-hidden'>
-            <MarkdownEditor.Root id={subject.id} viewMode='readonly'>
-              <MarkdownEditor.Content initialValue={snippet} slots={{}} classNames='!bg-transparent' />
-            </MarkdownEditor.Root>
-          </div>
-        )}
-        <Card.Text classNames='text-xs text-description'>
-          {info.words} {t('words label', { count: info.words })}
-        </Card.Text>
-      </Card.Root>
-    );
-  },
-);
+  return (
+    <Card.Content>
+      {snippet && (
+        <div className='max-h-[300px] overflow-hidden'>
+          <MarkdownEditor.Root id={subject.id} viewMode='readonly'>
+            <MarkdownEditor.Content initialValue={snippet} slots={{}} classNames='!bg-transparent' />
+          </MarkdownEditor.Root>
+        </div>
+      )}
+      <Card.Text classNames='text-xs text-description'>
+        {info.words} {t('words label', { count: info.words })}
+      </Card.Text>
+    </Card.Content>
+  );
+};
 
 const getInfo = (subject: Markdown.Document | Text.Text) => {
   const text = (Obj.instanceOf(Markdown.Document, subject) ? subject.content?.target?.content : subject.content) ?? '';

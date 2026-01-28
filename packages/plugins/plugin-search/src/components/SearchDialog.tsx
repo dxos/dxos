@@ -87,34 +87,38 @@ export const SearchDialog = ({ pivotId }: SearchDialogProps) => {
   return (
     <Dialog.Content classNames={['md:max-is-[24rem] overflow-hidden mbs-12']}>
       <Dialog.Title>{t('search dialog title')}</Dialog.Title>
-      <SearchList.Root
-        label={t('search placeholder')}
-        value={queryString}
-        onSearch={handleSearch}
-        classNames='flex flex-col grow overflow-hidden my-2'
-      >
-        <SearchList.Input placeholder={t('search placeholder')} classNames='pli-1 my-2' />
-        <SearchList.Content classNames='max-bs-[24rem] overflow-auto'>
-          <SearchList.Viewport>
-            {queryString.length > 0 ? (
-              resultObjects.length > 0 ? (
-                resultObjects
-                  .map((object) => Graph.getNode(graph, Obj.getDXN(object).toString()))
-                  .filter(Option.isSome)
-                  .map((node) => <SearchListResult key={node.value.id} node={node.value} onSelect={handleSelect} />)
+      <SearchList.Root onSearch={handleSearch}>
+        <div
+          aria-label={t('search placeholder')}
+          role='combobox'
+          aria-expanded='true'
+          className='flex flex-col grow overflow-hidden my-2'
+        >
+          <SearchList.Input placeholder={t('search placeholder')} classNames='pli-1 my-2' />
+          <SearchList.Content classNames='max-bs-[24rem] overflow-auto'>
+            <SearchList.Viewport>
+              {queryString.length > 0 ? (
+                resultObjects.length > 0 ? (
+                  resultObjects
+                    .map((object) => Graph.getNode(graph, Obj.getDXN(object).toString()))
+                    .filter(Option.isSome)
+                    .map((node) => <SearchListResult key={node.value.id} node={node.value} onSelect={handleSelect} />)
+                ) : (
+                  <p className='pli-1'>{t(pending ? 'pending results message' : 'empty results message')}</p>
+                )
               ) : (
-                <p className='pli-1'>{t(pending ? 'pending results message' : 'empty results message')}</p>
-              )
-            ) : (
-              <>
-                {closed.length > 0 && <h2 className={mx('mlb-1', descriptionText)}>{t('recently closed heading')}</h2>}
-                {closed.filter(Option.isSome).map((node) => (
-                  <SearchListResult key={node.value.id} node={node.value} onSelect={handleSelect} />
-                ))}
-              </>
-            )}
-          </SearchList.Viewport>
-        </SearchList.Content>
+                <>
+                  {closed.length > 0 && (
+                    <h2 className={mx('mlb-1', descriptionText)}>{t('recently closed heading')}</h2>
+                  )}
+                  {closed.filter(Option.isSome).map((node) => (
+                    <SearchListResult key={node.value.id} node={node.value} onSelect={handleSelect} />
+                  ))}
+                </>
+              )}
+            </SearchList.Viewport>
+          </SearchList.Content>
+        </div>
       </SearchList.Root>
 
       <Dialog.Close asChild>

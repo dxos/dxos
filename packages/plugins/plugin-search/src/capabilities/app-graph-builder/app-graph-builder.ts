@@ -16,20 +16,18 @@ import { SearchOperation } from '../../types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const capabilities = yield* Capability.Service;
-
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
         id: `${meta.id}/space-search`,
         match: NodeMatcher.whenRoot,
-        connector: (node, get) => {
-          const layoutAtom = capabilities.get(Common.Capability.Layout);
-          const client = capabilities.get(ClientCapabilities.Client);
-          const layout = get(layoutAtom);
-          const { spaceId } = parseId(layout.workspace);
+        connector: Effect.fnUntraced(function* (node, get) {
+          const client = yield* Capability.get(ClientCapabilities.Client);
+          const layoutAtom = get(yield* Capability.atom(Common.Capability.Layout))[0];
+          const layout = layoutAtom ? get(layoutAtom) : undefined;
+          const { spaceId } = parseId(layout?.workspace);
           const space = spaceId ? client.spaces.get(spaceId) : null;
 
-          return Effect.succeed([
+          return [
             {
               id: [node.id, 'search'].join(ATTENDABLE_PATH_SEPARATOR),
               type: DECK_COMPANION_TYPE,
@@ -40,8 +38,8 @@ export default Capability.makeModule(
                 disposition: 'hidden',
               },
             },
-          ]);
-        },
+          ];
+        }),
       }),
       GraphBuilder.createExtension({
         id: meta.id,

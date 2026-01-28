@@ -10,10 +10,12 @@ import { Capability, Common } from '@dxos/app-framework';
 import { type SimpleLayoutState } from '../../types';
 import { SimpleLayoutState as SimpleLayoutStateCapability } from '../../types';
 
+export const HOME_ID = 'home';
+
 const defaultState: SimpleLayoutState = {
   dialogOpen: false,
-  workspace: 'default',
-  previousWorkspace: 'default',
+  workspace: HOME_ID,
+  previousWorkspace: HOME_ID,
   isPopover: false,
 };
 
