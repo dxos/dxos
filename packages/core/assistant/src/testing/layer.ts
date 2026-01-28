@@ -12,7 +12,7 @@ import { FunctionInvocationServiceLayerTest, TestDatabaseLayer } from '@dxos/fun
 
 import { makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '../functions';
 import { GenericToolkit } from '../session';
-import { TracingServiceExt } from '@dxos/functions-runtime';
+import { TracingServiceExt, TriggerDispatcher, TriggerStateStore } from '@dxos/functions-runtime';
 import { Match } from 'effect';
 
 interface TestLayerOptions {
@@ -68,3 +68,11 @@ export const AssistantTestLayer = ({
       ),
     ),
   );
+
+interface TestLayerWithTriggersOptions extends TestLayerOptions {}
+
+export const AssistantTestLayerWithTriggers = (options: TestLayerWithTriggersOptions) =>
+  Layer.mergeAll(
+    AssistantTestLayer(options),
+    TriggerDispatcher.layer({ timeControl: 'manual', startingTime: new Date('2025-09-05T15:01:00.000Z') }),
+  ).pipe(Layer.provideMerge(TriggerStateStore.layerMemory));

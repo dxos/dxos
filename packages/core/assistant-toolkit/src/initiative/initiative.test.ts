@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import { ConsolePrinter } from '@dxos/ai';
 import { MemoizedAiService } from '@dxos/ai/testing';
 import { AiConversation, GenerationObserver } from '@dxos/assistant';
-import { AssistantTestLayer } from '@dxos/assistant/testing';
+import { AssistantTestLayer, AssistantTestLayerWithTriggers } from '@dxos/assistant/testing';
 import { Blueprint } from '@dxos/blueprints';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
@@ -27,19 +27,12 @@ import { log } from '@dxos/log';
 
 ObjectId.dangerouslyDisableRandomness();
 
-const TestLayer = Layer.mergeAll(
-  TriggerDispatcher.layer({ timeControl: 'manual', startingTime: new Date('2025-09-05T15:01:00.000Z') }),
-).pipe(
-  Layer.provideMerge(TriggerStateStore.layerMemory),
-  Layer.provideMerge(
-    AssistantTestLayer({
-      aiServicePreset: 'edge-remote',
-      functions: [...Initiative.functions],
-      types: [Initiative.Initiative, Blueprint.Blueprint, Trigger.Trigger, Text.Text],
-      tracing: 'pretty',
-    }),
-  ),
-);
+const TestLayer = AssistantTestLayerWithTriggers({
+  aiServicePreset: 'edge-remote',
+  functions: [...Initiative.functions],
+  types: [Initiative.Initiative, Blueprint.Blueprint, Trigger.Trigger, Text.Text],
+  tracing: 'pretty',
+});
 
 const SYSTEM = trim`
   If you do not have tools to complete the task, inform the user. DO NOT PRETEND TO DO SOMETHING YOU CAN'T DO.
@@ -50,7 +43,6 @@ describe('Initiative', () => {
     'shopping list',
     Effect.fnUntraced(
       function* (_) {
-        const observer = GenerationObserver.fromPrinter(new ConsolePrinter());
         const initiative = yield* Database.Service.add(
           yield* Initiative.make({
             name: 'Shopping list',
@@ -67,7 +59,6 @@ describe('Initiative', () => {
         yield* conversation.createRequest({
           system: SYSTEM,
           prompt: `List ingredients for a scrambled eggs on a toast breakfast.`,
-          observer,
         });
 
         console.log(yield* Effect.promise(() => dumpInitiative(initiative)));
@@ -78,7 +69,6 @@ describe('Initiative', () => {
     MemoizedAiService.isGenerationEnabled() ? 240_000 : 30_000,
   );
 
-  // TODO(dmaretskyi): Broken in non-only mode since Clone is not deep and does not cover template in initiative blueprint.
   it.scoped.only(
     'expense tracking list',
     Effect.fnUntraced(
@@ -136,10 +126,10 @@ describe('Initiative', () => {
 
 const dumpInitiative = async (initiative: Initiative.Initiative) => {
   let text = '';
-  text += `# Initiative: ${initiative.name}\n\n`;
+  text += `============== Initiative: ${initiative.name} ==============\n\n`;
   for (const artifact of initiative.artifacts) {
     const data = await artifact.data.load();
-    text += `## ${artifact.name} (${Obj.getTypename(data)}):\n`;
+    text += `============== ${artifact.name} (${Obj.getTypename(data)}) ==============\n`;
     if (Obj.instanceOf(Text.Text, data)) {
       text += `    ${data.content}\n`;
     } else {
