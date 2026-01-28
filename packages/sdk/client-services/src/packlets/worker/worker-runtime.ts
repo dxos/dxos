@@ -95,7 +95,7 @@ export class WorkerRuntime {
     this._onStop = onStop;
     this._channel = channel;
     this._runtime = ManagedRuntime.make(
-      SqlTransaction.SqlTransaction.layer
+      SqlTransaction.layer
         .pipe(Layer.provideMerge(LocalSqliteOpfsLayer), Layer.provideMerge(Reactivity.layer))
         .pipe(Layer.orDie),
     );

@@ -310,7 +310,7 @@ describe('queues', () => {
   describe('Durability', () => {
     test('queue objects survive reload', async ({ expect }) => {
       const runtime = ManagedRuntime.make(
-        SqlTransaction.SqlTransaction.layer
+        SqlTransaction.layer
           .pipe(Layer.provideMerge(Layer.merge(layerMemory, Reactivity.layer)))
           .pipe(Layer.orDie),
       );

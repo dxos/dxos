@@ -118,7 +118,7 @@ export class EchoTestPeer extends Resource {
   private _initEcho(): void {
     if (!this._foreignRuntime) {
       this._managedRuntime = ManagedRuntime.make(
-        SqlTransaction.SqlTransaction.layer
+        SqlTransaction.layer
           .pipe(Layer.provideMerge(Layer.merge(layerMemory, Reactivity.layer)))
           .pipe(Layer.orDie),
       );

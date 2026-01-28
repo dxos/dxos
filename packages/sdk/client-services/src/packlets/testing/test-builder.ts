@@ -37,7 +37,7 @@ export const createServiceHost = (config: Config, signalManagerContext: MemorySi
     signalManager: new MemorySignalManager(signalManagerContext),
     transportFactory: MemoryTransportFactory,
     runtime: ManagedRuntime.make(
-      SqlTransaction.SqlTransaction.layer
+      SqlTransaction.layer
         .pipe(Layer.provideMerge(sqliteLayerMemory), Layer.provideMerge(Reactivity.layer))
         .pipe(Layer.orDie),
     ).runtimeEffect,
@@ -65,7 +65,7 @@ export const createServiceContext = async ({
   await level.open();
 
   const runtime = ManagedRuntime.make(
-    SqlTransaction.SqlTransaction.layer
+    SqlTransaction.layer
       .pipe(Layer.provideMerge(sqliteLayerMemory), Layer.provideMerge(Reactivity.layer))
       .pipe(Layer.orDie),
   ).runtimeEffect;
@@ -134,7 +134,7 @@ export type TestPeerProps = {
 export class TestPeer {
   private _props: TestPeerProps = {};
   private readonly _runtime = ManagedRuntime.make(
-    SqlTransaction.SqlTransaction.layer
+    SqlTransaction.layer
       .pipe(Layer.provideMerge(sqliteLayerMemory), Layer.provideMerge(Reactivity.layer))
       .pipe(Layer.orDie),
   );

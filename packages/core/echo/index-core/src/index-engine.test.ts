@@ -21,7 +21,7 @@ const TYPE_DEFAULT = DXN.parse('dxn:type:test.com/type/Type:0.1.0').toString();
 const TYPE_A = DXN.parse('dxn:type:test.com/type/TypeA:0.1.0').toString();
 const TYPE_B = DXN.parse('dxn:type:test.com/type/TypeB:0.1.0').toString();
 
-const TestLayer = SqlTransaction.SqlTransaction.layer.pipe(
+const TestLayer = SqlTransaction.layer.pipe(
   Layer.provideMerge(
     SqliteClient.layer({
       filename: ':memory:',

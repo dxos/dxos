@@ -17,6 +17,9 @@ export interface Service {
  *
  * Should be used instead of SqlClient.withTransaction() or SQL native transaction syntaxes (e.g. `BEGIN; COMMIT;`).
  *
+ * Platform runtimes (e.g. edge, Durable Objects) can provide alternative implementations by supplying a custom
+ * `SqlTransaction` layer.
+ *
  * @example
  * ```typescript
  * const transaction = yield* SqlTransaction;
@@ -25,14 +28,17 @@ export interface Service {
  * }));
  * ```
  */
-export class SqlTransaction extends Context.Tag('@dxos/sql-sqlite/SqlTransaction')<SqlTransaction, Service>() {
-  static layer: Layer.Layer<SqlTransaction, never, SqlClient.SqlClient> = Layer.effect(
-    SqlTransaction,
-    Effect.map(
-      SqlClient.SqlClient,
-      (sql: SqlClient.SqlClient): Context.Tag.Service<SqlTransaction> => ({
-        withTransaction: (self) => sql.withTransaction(self),
-      }),
-    ),
-  );
-}
+export class SqlTransaction extends Context.Tag('@dxos/sql-sqlite/SqlTransaction')<SqlTransaction, Service>() {}
+
+/**
+ * Default `SqlTransaction` layer backed by `SqlClient.withTransaction`.
+ */
+export const layer: Layer.Layer<SqlTransaction, never, SqlClient.SqlClient> = Layer.effect(
+  SqlTransaction,
+  Effect.map(
+    SqlClient.SqlClient,
+    (sql: SqlClient.SqlClient): Context.Tag.Service<SqlTransaction> => ({
+      withTransaction: (self) => sql.withTransaction(self),
+    }),
+  ),
+);

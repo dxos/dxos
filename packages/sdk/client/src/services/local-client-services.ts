@@ -182,7 +182,7 @@ export class LocalClientServices implements ClientServicesProvider {
 
     this._runtime = ManagedRuntime.make(
       sqlExportLayer.pipe(
-        Layer.provideMerge(SqlTransaction.SqlTransaction.layer),
+        Layer.provideMerge(SqlTransaction.layer),
         Layer.provideMerge(sqliteLayer),
         Layer.provideMerge(Reactivity.layer),
         Layer.orDie,

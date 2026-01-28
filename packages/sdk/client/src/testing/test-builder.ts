@@ -99,7 +99,7 @@ export class TestBuilder {
    */
   createClientServicesHost(runtimeProps?: ServiceContextRuntimeProps): ClientServicesHost {
     const runtime = ManagedRuntime.make(
-      SqlTransaction.SqlTransaction.layer
+      SqlTransaction.layer
         .pipe(Layer.provideMerge(sqliteLayerMemory), Layer.provideMerge(Reactivity.layer))
         .pipe(Layer.orDie),
     );
