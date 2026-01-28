@@ -2,11 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import { beforeAll, describe, it } from '@effect/vitest';
+import { beforeAll, describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import { Blueprint, Template } from '@dxos/blueprints';
-import { Database, Obj } from '@dxos/echo';
+import { Database, Filter, Obj, Query } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { Text } from '@dxos/schema';
 import { Organization } from '@dxos/types';
@@ -17,9 +17,24 @@ import { createSystemPrompt } from '../templates/system';
 import { formatSystemPrompt } from './format';
 import { AssistantTestLayer } from '../testing';
 import { TestHelpers } from '@dxos/effect/testing';
+import * as Schema from 'effect/Schema';
+import { defineFunction } from '@dxos/functions';
+
+const organizationListFunction = defineFunction({
+  key: 'dxos.org/function/organization-list',
+  name: 'Organization List',
+  description: 'List organizations',
+  inputSchema: Schema.Struct({}),
+  outputSchema: Schema.Array(Schema.String),
+  handler: Effect.fnUntraced(function* () {
+    const organizations = yield* Database.Service.runQuery(Query.type(Organization.Organization));
+    return organizations.map((organization) => organization.name);
+  }),
+});
 
 const TestLayer = AssistantTestLayer({
   types: [Text.Text, Organization.Organization, Blueprint.Blueprint],
+  functions: [organizationListFunction],
 });
 
 describe('format', () => {
@@ -41,20 +56,67 @@ describe('format', () => {
             name: 'Test',
             instructions: Template.make({
               source: trim`
-              Test
-              This is the test blueprint.
-            `,
+                Test
+                This is the test blueprint.
+              `,
             }),
           }),
         );
 
         const output = yield* formatSystemPrompt({
           system: createSystemPrompt({}),
-          blueprints: [blueprint, blueprint],
-          objects: [object, object],
+          blueprints: [blueprint],
+          objects: [object],
         });
 
         console.log(output);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'should format with function input',
+    Effect.fnUntraced(
+      function* (_) {
+        const { db } = yield* Database.Service;
+        const object = db.add(
+          Obj.make(Organization.Organization, {
+            name: 'Test Org',
+            website: 'https://www.test.com',
+          }),
+        );
+
+        const blueprint = db.add(
+          Blueprint.make({
+            key: 'example.com/blueprint/test',
+            name: 'Test',
+            instructions: Template.make({
+              source: trim`
+                Organization List:
+                {{#each organizations}}
+                  - {{this}}
+                {{/each}}
+                `,
+              inputs: [
+                {
+                  name: 'organizations',
+                  kind: 'function',
+                  function: organizationListFunction.key,
+                },
+              ],
+            }),
+          }),
+        );
+
+        const output = yield* formatSystemPrompt({
+          system: createSystemPrompt({}),
+          blueprints: [blueprint],
+          objects: [object],
+        });
+
+        expect(output).to.include('Test Org');
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

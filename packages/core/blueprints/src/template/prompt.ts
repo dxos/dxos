@@ -16,6 +16,7 @@ import {
 import * as Record from 'effect/Record';
 import { Database } from '@dxos/echo';
 import type { ObjectNotFoundError } from '@dxos/echo/Err';
+import { log } from '@dxos/log';
 
 /**
  * Process Handlebars template.
@@ -39,8 +40,8 @@ export const processTemplate = (
       Effect.gen(function* () {
         if (input.kind === 'function') {
           const fn = (yield* functionInvoker.resolveFunction(input.function!)) as FunctionDefinition<
-            unknown,
             {},
+            unknown,
             never
           >;
           const result = yield* functionInvoker.invokeFunction(fn, {});
@@ -50,6 +51,8 @@ export const processTemplate = (
         }
       }),
     ).pipe(Effect.map(Record.fromEntries));
+
+    log.info('processTemplate', { variables });
 
     return process((yield* Database.Service.load(template.source)).content, variables);
   });
