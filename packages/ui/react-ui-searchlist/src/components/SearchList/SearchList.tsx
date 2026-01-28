@@ -38,10 +38,7 @@ import {
   useSearchListItemContext,
 } from './context';
 
-//
-// Styling
-//
-
+// TODO(burdon): Remove fragments (this is a severe anti-pattern).
 export const searchListItem =
   'plb-1 pli-2 rounded-sm select-none cursor-pointer data-[selected=true]:bg-hoverOverlay hover:bg-hoverOverlay';
 
@@ -51,8 +48,8 @@ export const searchListItem =
 
 type ItemData = {
   element: HTMLElement;
-  onSelect?: () => void;
   disabled?: boolean;
+  onSelect?: () => void;
 };
 
 //
@@ -61,8 +58,6 @@ type ItemData = {
 
 type SearchListRootProps = ThemedClassName<
   PropsWithChildren<{
-    /** Callback when search query changes (debounced). */
-    onSearch?: (query: string) => void;
     /** Controlled query value. */
     value?: string;
     /** Default query value for uncontrolled mode. */
@@ -71,17 +66,19 @@ type SearchListRootProps = ThemedClassName<
     debounceMs?: number;
     /** Accessibility label for the search list. */
     label?: string;
+    /** Callback when search query changes (debounced). */
+    onSearch?: (query: string) => void;
   }>
 >;
 
 const SearchListRoot = ({
   children,
-  onSearch,
   value: valueProp,
   defaultValue = '',
   debounceMs = 200,
   label,
   classNames,
+  onSearch,
   ...props
 }: SearchListRootProps) => {
   const [query = '', setQuery] = useControllableState({
@@ -100,8 +97,8 @@ const SearchListRoot = ({
   const handleQueryChange = useCallback(
     (newQuery: string) => {
       setQuery(newQuery);
-      // Don't update selectedValue here - let the effect handle it when items actually change
-      // This prevents unnecessary re-renders of items when query changes
+      // Don't update selectedValue here - let the effect handle it when items actually change.
+      // This prevents unnecessary re-renders of items when query changes.
 
       // Debounce onSearch callback.
       if (debounceRef.current) {
@@ -173,19 +170,14 @@ const SearchListRoot = ({
 
   // Get item values in DOM order by sorting registered elements (excludes disabled items).
   const getItemValues = useCallback(() => {
-    const entries = Array.from(itemsRef.current.entries()).filter(([, data]) => !data.disabled);
-    // Sort by DOM position using compareDocumentPosition.
-    entries.sort(([, a], [, b]) => {
-      const position = a.element.compareDocumentPosition(b.element);
-      if (position & Node.DOCUMENT_POSITION_FOLLOWING) {
-        return -1;
-      }
-      if (position & Node.DOCUMENT_POSITION_PRECEDING) {
-        return 1;
-      }
-      return 0;
-    });
-    return entries.map(([value]) => value);
+    return Array.from(itemsRef.current.entries())
+      .filter(([, data]) => !data.disabled)
+      .sort(([, a], [, b]) => {
+        // Sort by DOM position using compareDocumentPosition.
+        const position = a.element.compareDocumentPosition(b.element);
+        return position & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : position & Node.DOCUMENT_POSITION_PRECEDING ? 1 : 0;
+      })
+      .map(([value]) => value);
   }, []);
 
   const triggerSelect = useCallback(() => {
@@ -195,7 +187,7 @@ const SearchListRoot = ({
     }
   }, [selectedValue]);
 
-  // Item context - stable, doesn't change when query changes
+  // Item context; stable, doesn't change when query changes.
   const itemContextValue = useMemo(
     () => ({
       selectedValue,
@@ -203,10 +195,9 @@ const SearchListRoot = ({
       registerItem,
       unregisterItem,
     }),
-    [selectedValue, registerItem, unregisterItem], // setSelectedValue is stable, don't include it
+    [selectedValue, registerItem, unregisterItem],
   );
 
-  // Input context - can change when query changes
   const inputContextValue = useMemo(
     () => ({
       query,
@@ -216,9 +207,10 @@ const SearchListRoot = ({
       getItemValues,
       triggerSelect,
     }),
-    [query, handleQueryChange, selectedValue, getItemValues, triggerSelect], // setSelectedValue is stable
+    [query, handleQueryChange, selectedValue, getItemValues, triggerSelect],
   );
 
+  // TODO(burdon): ???
   return (
     <SearchListItemContextProvider
       selectedValue={itemContextValue.selectedValue}
@@ -234,6 +226,7 @@ const SearchListRoot = ({
         getItemValues={inputContextValue.getItemValues}
         triggerSelect={inputContextValue.triggerSelect}
       >
+        {/* TODO(burdon): Roots should be headless. */}
         <div {...props} className={mx(classNames)} aria-label={label} role='combobox' aria-expanded='true'>
           {children}
         </div>

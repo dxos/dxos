@@ -13,11 +13,7 @@ import { useQuery } from '@dxos/react-client/echo';
 import { Masonry as MasonryComponent } from '@dxos/react-ui-masonry';
 import { type View, getTypenameFromQuery } from '@dxos/schema';
 
-const Item = ({ data }: { data: any }) => {
-  return <Surface role='card' limit={1} data={{ subject: data }} />;
-};
-
-export const MasonryContainer = ({ view, role }: { view: View.View; role?: string }) => {
+export const MasonryContainer = ({ view }: { view: View.View; role?: string }) => {
   const schemas = useCapabilities(Common.Capability.Schema);
   const db = Obj.getDatabase(view);
   const typename = view.query ? getTypenameFromQuery(view.query.ast) : undefined;
@@ -54,4 +50,8 @@ export const MasonryContainer = ({ view, role }: { view: View.View; role?: strin
       classNames='is-full max-is-full bs-full max-bs-full overflow-y-auto p-4'
     />
   );
+};
+
+const Item = ({ data }: { data: any }) => {
+  return <Surface role='card' limit={1} data={{ subject: data }} />;
 };

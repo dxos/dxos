@@ -32,10 +32,9 @@ export const SearchMain = ({ space }: { space?: Space }) => {
             .referencedBy('dxos.org/type/Document', 'content'),
         ),
   );
+
   const results = useGlobalSearchResults(objects);
-
   const { results: webResults } = useWebSearch({ query });
-
   const allResults = [...results, ...webResults];
 
   const handleSearch = useCallback(
@@ -47,7 +46,8 @@ export const SearchMain = ({ space }: { space?: Space }) => {
   );
 
   return (
-    <StackItem.Content>
+    <StackItem.Content toolbar>
+      {/* TODO(burdon): Add selection. */}
       <SearchList.Root onSearch={handleSearch} classNames='flex flex-col bs-full overflow-hidden'>
         <SearchList.Input placeholder={t('search placeholder')} classNames='pli-2' />
         <SearchList.Content classNames='overflow-y-auto'>
@@ -55,9 +55,10 @@ export const SearchMain = ({ space }: { space?: Space }) => {
             {/* TODO(burdon): Support selection on search results. */}
             {allResults
               .filter((item) => Obj.getLabel(item.object))
-              .map((item) => (
-                <div key={item.id} role='none' className='pli-2 first:pbs-2 pbe-2'>
-                  <Surface role='card' data={{ subject: item.object }} limit={1} />
+              .map(({ id, object }) => (
+                <div key={id} role='none' className='pli-2 first:pbs-2 pbe-2'>
+                  {/* TODO(burdon): Card.Root here and Surface with card--content. */}
+                  <Surface role='card' data={{ subject: object }} limit={1} />
                 </div>
               ))}
             {allResults.length === 0 && <SearchList.Empty>{t('empty results message')}</SearchList.Empty>}

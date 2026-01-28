@@ -16,6 +16,7 @@ import { Text } from '@dxos/schema';
 
 import { meta } from '../meta';
 
+// TODO(burdon): Name?
 export const SpaceMain = ({ space }: { space: Space }) => {
   const { t } = useTranslation(meta.id);
   const [query, setQuery] = useState<string>();
