@@ -9,7 +9,7 @@ import { Card } from '@dxos/react-ui-mosaic';
 import { type Organization } from '@dxos/types';
 
 export const OrganizationCard = ({ subject }: SurfaceComponentProps<Organization.Organization>) => {
-  const { name, image, description, website } = subject;
+  const { image, description, website } = subject;
 
   return (
     <Card.Content>

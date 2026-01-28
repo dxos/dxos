@@ -84,7 +84,7 @@ export default Capability.makeModule(() =>
       }),
       Common.createSurface({
         id: POPOVER_SAVE_FILTER,
-        role: 'card--popover',
+        role: 'popover',
         filter: (data): data is { props: { mailbox: Mailbox.Mailbox; filter: string } } =>
           data.component === POPOVER_SAVE_FILTER &&
           data.props !== null &&

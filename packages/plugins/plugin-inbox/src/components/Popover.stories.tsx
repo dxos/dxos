@@ -31,10 +31,12 @@ const ContactItem = ({ contact }: { contact: Person.Person }) => {
       invokePromise(Common.LayoutOperation.UpdatePopover, {
         subject: contact,
         state: true,
+        kind: 'card',
+        title: contact.fullName,
         variant: 'virtual',
         anchor: ref.current,
       }),
-    [invokePromise],
+    [invokePromise, contact],
   );
 
   return (
@@ -59,10 +61,12 @@ const OrganizationItem = ({ organization }: { organization: Organization.Organiz
       invokePromise(Common.LayoutOperation.UpdatePopover, {
         subject: organization,
         state: true,
+        kind: 'card',
+        title: organization.name,
         variant: 'virtual',
         anchor: ref.current,
       }),
-    [invokePromise],
+    [invokePromise, organization],
   );
 
   return (

@@ -68,9 +68,11 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: Common.LayoutOperation.UpdatePopover,
         handler: Effect.fnUntraced(function* (input) {
-          const { subject, state, side, props } = input;
+          const { subject, state, side, kind, props } = input;
           updateState(() => {
             const base: Partial<LayoutStateProps> = {
+              popoverKind: kind ?? 'base',
+              popoverTitle: kind === 'card' ? input.title : undefined,
               popoverContent:
                 typeof subject === 'string' ? { component: subject, props } : subject ? { subject } : undefined,
               popoverOpen: state ?? Boolean(subject),

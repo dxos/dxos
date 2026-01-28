@@ -10,16 +10,11 @@ import { Card } from '@dxos/react-ui-mosaic';
 import { type Person } from '@dxos/types';
 
 export const PersonCard = ({ subject }: SurfaceComponentProps<Person.Person>) => {
-  const { fullName, image, organization: { target: organization } = {}, emails = [] } = subject;
+  const { image, organization: { target: organization } = {}, emails = [] } = subject;
 
   return (
     <Avatar.Root>
       <Card.Content>
-        <Card.Row>
-          <Avatar.Label asChild>
-            <Card.Heading>{fullName}</Card.Heading>
-          </Avatar.Label>
-        </Card.Row>
         {image && (
           <Card.Row className='plb-1'>
             <Avatar.Content
