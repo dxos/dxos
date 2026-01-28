@@ -12,15 +12,15 @@ import { GenericToolkit, makeToolExecutionServiceFromFunctions, makeToolResolver
 import { SpaceProperties } from '@dxos/client/echo';
 import { Resource } from '@dxos/context';
 import { Database, Obj, Query, Ref } from '@dxos/echo';
-import { CredentialsService, QueueService } from '@dxos/functions';
+import { CredentialsService, QueueService, TracingService } from '@dxos/functions';
 import {
   FunctionImplementationResolver,
   FunctionInvocationServiceLayerWithLocalLoopbackExecutor,
-  InvocationTracer,
   RemoteFunctionExecutionService,
+  TracingServiceExt,
   TriggerDispatcher,
+  TriggerStateStore,
 } from '@dxos/functions-runtime';
-import { TriggerStateStore } from '@dxos/functions-runtime';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
@@ -81,7 +81,7 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
         return Layer.mergeAll(TriggerDispatcher.layer({ timeControl: 'natural' })).pipe(
           Layer.provideMerge(
             Layer.mergeAll(
-              InvocationTracerLive,
+              TracingServiceLive,
               TriggerStateStore.layerKv.pipe(Layer.provide(BrowserKeyValueStore.layerLocalStorage)),
               makeToolResolverFromFunctions(functions, toolkit),
               makeToolExecutionServiceFromFunctions(toolkit, toolkitLayer),
@@ -113,7 +113,7 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
   }
 }
 
-const InvocationTracerLive = Layer.unwrapEffect(
+const TracingServiceLive = Layer.unwrapEffect(
   Effect.gen(function* () {
     const objects = yield* Database.Service.runQuery(Query.type(SpaceProperties));
     const [properties] = objects;
@@ -128,6 +128,6 @@ const InvocationTracerLive = Layer.unwrapEffect(
 
     const queue = properties.invocationTraceQueue.target;
     invariant(queue);
-    return InvocationTracer.layerLive({ invocationTraceQueue: queue });
+    return TracingServiceExt.layerInvocationsQueue({ invocationTraceQueue: queue });
   }),
 );
