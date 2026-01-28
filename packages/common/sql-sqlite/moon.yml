@@ -12,6 +12,7 @@ tasks:
       - '--entryPoint=src/OpfsWorker.ts'
       - '--entryPoint=src/SqliteMigrator.ts'
       - '--entryPoint=src/SqlExport.ts'
+      - '--entryPoint=src/SqlTransaction.ts'
       - '--entryPoint=src/platform/node.ts'
       - '--entryPoint=src/platform/browser.ts'
       - '--entryPoint=src/platform/bun.ts'
