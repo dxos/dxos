@@ -112,9 +112,12 @@ export class TriggerDispatcher extends Context.Tag('@dxos/functions/TriggerDispa
 
     /**
      * Invoke all scheduled triggers who are due.
+     * @param opts.kinds - The kinds of triggers to invoke.
+     * @param opts.untilExhausted - Invoke until no more triggers are due. By default only one queue/subscription item is processed at a time.
      */
     invokeScheduledTriggers(opts?: {
       kinds?: Trigger.Kind[];
+      untilExhausted?: boolean;
     }): Effect.Effect<TriggerExecutionResult[], never, TriggerDispatcherServices>;
 
     /**
@@ -268,11 +271,10 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
       return triggerExecutionResult;
     });
 
-  invokeScheduledTriggers = ({ kinds = ['timer', 'queue', 'subscription'] } = {}): Effect.Effect<
-    TriggerExecutionResult[],
-    never,
-    TriggerDispatcherServices
-  > =>
+  invokeScheduledTriggers = ({
+    kinds = ['timer', 'queue', 'subscription'],
+    untilExhausted = false,
+  } = {}): Effect.Effect<TriggerExecutionResult[], never, TriggerDispatcherServices> =>
     Effect.gen(this, function* () {
       const invocations: TriggerExecutionResult[] = [];
       for (const kind of kinds) {
@@ -344,7 +346,9 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
                 yield* Database.Service.flush();
 
                 // We only invoke one trigger for each queue at a time.
-                break;
+                if (!untilExhausted) {
+                  break;
+                }
               }
             }
             break;

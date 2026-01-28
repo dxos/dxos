@@ -63,7 +63,7 @@ export const make = (
     yield* Database.Service.add(initiative);
     const queue = yield* QueueService.createQueue<Message.Message | ContextBinding>();
     const contextBinder = new AiContextBinder({ queue });
-    const initiativeBlueprint = yield* Database.Service.add(Obj.clone(InitiativeBlueprint));
+    const initiativeBlueprint = yield* Database.Service.add(Obj.clone(InitiativeBlueprint, { deep: true }));
     yield* Effect.promise(() =>
       contextBinder.bind({
         blueprints: [Ref.make(initiativeBlueprint), ...(props.blueprints ?? [])],

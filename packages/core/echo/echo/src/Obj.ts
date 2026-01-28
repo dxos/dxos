@@ -46,6 +46,7 @@ import {
   setDescription as setDescription$,
   setLabel as setLabel$,
   setValue as setValue$,
+  clone as clone$,
 } from './internal';
 import * as Ref from './Ref';
 import * as Type from './Type';
@@ -173,6 +174,12 @@ export type CloneOptions = {
    * @default false
    */
   retainId?: boolean;
+
+  /**
+   * Recursively clone referenced objects.
+   * @default false
+   */
+  deep?: boolean;
 };
 
 /**
@@ -180,31 +187,7 @@ export type CloneOptions = {
  * This does not clone referenced objects, only the properties in the object.
  * @returns A new object with the same schema and properties.
  */
-export const clone = <T extends Any>(obj: T, opts?: CloneOptions): T => {
-  const { id, ...data } = obj;
-  const schema = getSchema$(obj);
-  invariant(schema != null, 'Object should have a schema');
-  const props: any = deepMapValues(data, (value, recurse) => {
-    if (Ref.isRef(value)) {
-      return value;
-    }
-    return recurse(value);
-  });
-
-  if (opts?.retainId) {
-    props.id = id;
-  }
-  const meta = getMeta(obj);
-  props[MetaId] = deepMapValues(meta, (value, recurse) => {
-    if (Ref.isRef(value)) {
-      return value;
-    }
-    return recurse(value);
-  });
-
-  return make(schema as Type.Obj.Any, props);
-};
-
+export const clone: <T extends Any>(obj: T, opts?: CloneOptions) => T = clone$;
 //
 // Change
 //

@@ -26,7 +26,7 @@ export type CloneOptions<T extends Obj.Any> = {
 
 /**
  * Returns new unbound clone of the object.
- * @deprecated
+ * @deprecated Use `Obj.clone` instead.
  */
 // TODO(burdon): Remove?
 export const clone = <T extends Obj.Any>(obj: T, { retainId = true, additional = [] }: CloneOptions<T> = {}): T => {
