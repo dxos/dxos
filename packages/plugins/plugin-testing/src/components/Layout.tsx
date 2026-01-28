@@ -134,7 +134,11 @@ export const Layout = ({ children }: PropsWithChildren<{}>) => {
                   <Card.Toolbar>
                     {/* TODO(wittjosiah): Cleaner way to handle no drag handle in toolbar? */}
                     <span />
-                    {layout.popoverTitle && <Card.Title>{toLocalizedString(layout.popoverTitle, t)}</Card.Title>}
+                    {layout.popoverTitle ? (
+                      <Card.Title>{toLocalizedString(layout.popoverTitle, t)}</Card.Title>
+                    ) : (
+                      <span />
+                    )}
                     <Card.Close onClose={handleClose} />
                   </Card.Toolbar>
                   <Surface role='card--content' data={layout.popoverContent} limit={1} />
