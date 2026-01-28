@@ -111,7 +111,7 @@ export class AiConversation extends Resource {
         }),
       );
 
-      log.info('result', {
+      log('result', {
         messages: messages.length,
         duration: session.duration,
         toolCalls: session.toolCalls,

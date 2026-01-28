@@ -11,7 +11,9 @@ import { QueueService, TracingService, Trigger } from '@dxos/functions';
 import { DXN, ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ErrorCodec, FunctionRuntimeKind, SerializedError } from '@dxos/protocols';
-import { Effect } from 'effect';
+import { Effect, type Context } from 'effect';
+import { Message } from '@dxos/types';
+import { ConsolePrinter } from '@dxos/ai';
 
 export enum InvocationOutcome {
   SUCCESS = 'success',
@@ -294,4 +296,43 @@ export namespace TracingServiceExt {
       return layerInvocationsQueue({ invocationTraceQueue: queue });
     }),
   );
+
+  export const layerConsolePrettyPrint = () => Layer.succeed(TracingService, new PrettyConsoleTracer());
+}
+
+class PrettyConsoleTracer implements Context.Tag.Service<TracingService> {
+  getTraceContext(): TracingService.TraceContext {
+    return {};
+  }
+
+  write(event: Obj.Any, traceContext: TracingService.TraceContext): void {
+    if (Obj.instanceOf(Message.Message, event)) {
+      new ConsolePrinter({ tag: traceContext.currentInvocation?.invocationId }).printMessage(event as Message.Message);
+    } else {
+      console.log('[EVENT]', JSON.stringify(traceContext), JSON.stringify(event, null, 2));
+    }
+  }
+
+  traceInvocationStart = Effect.fn('traceInvocationStart')(function* ({ payload, target }) {
+    const now = Date.now();
+    const invocationId = ObjectId.random();
+
+    const triggerType = payload.trigger ? payload.trigger.kind : undefined;
+
+    // eslint-disable-next-line no-console
+    console.log(
+      `⚡️ ${triggerType ? `Trigger: ${triggerType}` : ''} ${target ? Ref.fromDXN(target) : undefined}\n`,
+      JSON.stringify(payload.data, null, 2),
+    );
+    return { invocationId, invocationTraceQueue: undefined };
+  });
+
+  traceInvocationEnd = Effect.fn('traceInvocationEnd')(function* ({ trace, exception }) {
+    const outcome = exception ? InvocationOutcome.FAILURE : InvocationOutcome.SUCCESS;
+    // eslint-disable-next-line no-console
+    console.log(`${exception ? '❌' : '✅'} ${trace.invocationId} ${outcome}\n`);
+    if (exception) {
+      console.error(exception);
+    }
+  });
 }

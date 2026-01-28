@@ -28,6 +28,11 @@ export default defineFunction({
     invariant(chatQueue, 'Initiative chat queue not found.');
     const conversation = yield* acquireReleaseResource(() => new AiConversation({ queue: chatQueue as any }));
 
+    const iniativesInContext = conversation.context.getObjects().filter(Obj.instanceOf(Initiative.Initiative));
+    if (iniativesInContext.length !== 1) {
+      throw new Error('There should be exactly one initiative in context. Got: ' + iniativesInContext.length);
+    }
+
     if (!data.prompt && !data.event) {
       throw new Error('Either prompt or event must be provided.');
     }
@@ -42,7 +47,7 @@ export default defineFunction({
 
     yield* conversation.createRequest({
       prompt: input,
-      observer: GenerationObserver.fromPrinter(new ConsolePrinter()),
+      // observer: GenerationObserver.fromPrinter(new ConsolePrinter()),
     });
   }, Effect.scoped) as any, // TODO(dmaretskyi): Services don't align -- need to refactor how functions are defined.
 });

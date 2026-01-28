@@ -13,6 +13,7 @@ import { FunctionInvocationServiceLayerTest, TestDatabaseLayer } from '@dxos/fun
 import { makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '../functions';
 import { GenericToolkit } from '../session';
 import { TracingServiceExt } from '@dxos/functions-runtime';
+import { Match } from 'effect';
 
 interface TestLayerOptions {
   aiServicePreset?: 'direct' | 'edge-local' | 'edge-remote';
@@ -25,7 +26,7 @@ interface TestLayerOptions {
    * Tracing configuration.
    * @default 'noop'
    */
-  tracing?: 'noop' | 'console';
+  tracing?: 'noop' | 'console' | 'pretty';
 }
 
 export const AssistantTestLayer = ({
@@ -58,7 +59,12 @@ export const AssistantTestLayer = ({
           types,
         }),
         CredentialsService.configuredLayer(credentials),
-        tracing === 'noop' ? TracingService.layerNoop : TracingServiceExt.layerLogInfo(),
+        Match.value(tracing).pipe(
+          Match.when('noop', () => TracingService.layerNoop),
+          Match.when('console', () => TracingServiceExt.layerLogInfo()),
+          Match.when('pretty', () => TracingServiceExt.layerConsolePrettyPrint()),
+          Match.exhaustive,
+        ),
       ),
     ),
   );

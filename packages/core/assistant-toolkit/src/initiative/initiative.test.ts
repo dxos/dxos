@@ -36,7 +36,7 @@ const TestLayer = Layer.mergeAll(
       aiServicePreset: 'edge-remote',
       functions: [...Initiative.functions],
       types: [Initiative.Initiative, Blueprint.Blueprint, Trigger.Trigger, Text.Text],
-      tracing: 'console',
+      tracing: 'pretty',
     }),
   ),
 );
@@ -100,7 +100,6 @@ describe('Initiative', () => {
           }),
         );
         yield* Database.Service.flush({ indexes: true });
-        log.info('initiative', { queue: yield* Effect.promise(() => initiative.chat!.target!.queryObjects()) });
 
         const inboxQueue = yield* QueueService.createQueue();
         yield* Database.Service.add(

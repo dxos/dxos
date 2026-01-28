@@ -208,7 +208,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
   ): Effect.Effect<TriggerExecutionResult, never, TriggerDispatcherServices> =>
     Effect.gen(this, function* () {
       const { trigger, event } = options;
-      log.info('running trigger', { triggerId: trigger.id, spec: trigger.spec, event });
+      log('running trigger', { triggerId: trigger.id, spec: trigger.spec, event });
 
       const tracer = yield* TracingService;
       const trace = yield* tracer.traceInvocationStart({
@@ -252,7 +252,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
         result,
       };
       if (Exit.isSuccess(result)) {
-        log.info('trigger execution success', {
+        log('trigger execution success', {
           triggerId: trigger.id,
         });
       } else {
