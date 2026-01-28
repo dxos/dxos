@@ -12,7 +12,7 @@ import { GenericToolkit, makeToolExecutionServiceFromFunctions, makeToolResolver
 import { SpaceProperties } from '@dxos/client/echo';
 import { Resource } from '@dxos/context';
 import { Database, Obj, Query, Ref } from '@dxos/echo';
-import { CredentialsService, QueueService, TracingService } from '@dxos/functions';
+import { CredentialsService, QueueService } from '@dxos/functions';
 import {
   FunctionImplementationResolver,
   FunctionInvocationServiceLayerWithLocalLoopbackExecutor,

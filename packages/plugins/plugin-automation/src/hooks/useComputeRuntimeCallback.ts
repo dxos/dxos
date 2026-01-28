@@ -10,7 +10,6 @@ import { type DependencyList, useCallback } from 'react';
 import { useCapability } from '@dxos/app-framework/react';
 import { type Key } from '@dxos/echo';
 import { type FunctionDefinition, FunctionInvocationService, TracingService } from '@dxos/functions';
-import { TracingServiceExt } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
 
 import { AutomationCapabilities } from '../types';
