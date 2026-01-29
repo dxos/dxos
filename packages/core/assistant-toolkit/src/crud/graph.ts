@@ -139,7 +139,7 @@ export const LocalSearchHandler = LocalSearchToolkit.toLayer({
 class GraphWriterSchema extends Context.Tag('@dxos/assistant/GraphWriterSchema')<
   GraphWriterSchema,
   {
-    schema: Schema.Schema.AnyNoContext[];
+    schema: Type.Entity.Any[];
   }
 >() {}
 

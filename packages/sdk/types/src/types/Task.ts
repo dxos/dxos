@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Entity, Obj, Ref, Type } from '@dxos/echo';
+import { Obj, Type } from '@dxos/echo';
 import {
   Format,
   FormatAnnotation,
@@ -18,31 +18,7 @@ import { View as _View } from '@dxos/schema';
 import * as Person from './Person';
 import * as Project from './Project';
 
-/**
- * Task schema.
- */
-export interface Task extends Entity.OfKind<typeof Entity.Kind.Object> {
-  readonly title: string;
-  readonly priority?: 'none' | 'low' | 'medium' | 'high' | 'urgent';
-  readonly status?: 'todo' | 'in-progress' | 'done';
-  readonly assigned?: Ref.Ref<Person.Person>;
-  readonly estimate?: number;
-  readonly description?: string;
-  readonly project?: Ref.Ref<Project.Project>;
-}
-
-export type TaskEncoded = {
-  readonly id: string;
-  readonly title: string;
-  readonly priority?: 'none' | 'low' | 'medium' | 'high' | 'urgent';
-  readonly status?: 'todo' | 'in-progress' | 'done';
-  readonly assigned?: string;
-  readonly estimate?: number;
-  readonly description?: string;
-  readonly project?: string;
-};
-
-const TaskSchema = Schema.Struct({
+export const Task = Schema.Struct({
   title: Schema.String.pipe(
     Schema.annotations({ title: 'Title' }),
     GeneratorAnnotation.set({
@@ -108,14 +84,13 @@ const TaskSchema = Schema.Struct({
   // TODO(burdon): Generic tags.
   // tags: [String],
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/Task',
     version: '0.2.0',
   }),
   LabelAnnotation.set(['title']),
 );
 
-// Type annotation hides internal types while preserving brand properties.
-export const Task: Type.Obj.Of<Schema.Schema<Task, TaskEncoded>> = TaskSchema as any;
+export interface Task extends Schema.Schema.Type<typeof Task> {}
 
-export const make = (props: Type.Properties<Task>): Task => Obj.make(Task, props);
+export const make = (props: Obj.MakeProps<typeof Task>): Task => Obj.make(Task, props);

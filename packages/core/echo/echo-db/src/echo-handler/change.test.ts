@@ -21,11 +21,11 @@ const Person = Schema.Struct({
       }),
     ),
   ),
-}).pipe(Type.Obj({ typename: 'test.com/type/Person', version: '0.1.0' }));
+}).pipe(Type.object({ typename: 'test.com/type/Person', version: '0.1.0' }));
 
 const Contact = Schema.Struct({
   email: Schema.String,
-}).pipe(Type.Obj({ typename: 'test.com/type/Contact', version: '0.1.0' }));
+}).pipe(Type.object({ typename: 'test.com/type/Contact', version: '0.1.0' }));
 
 describe('Obj.change', () => {
   test('basic property mutation within Obj.change', ({ expect }) => {
@@ -98,7 +98,8 @@ describe('Obj.change', () => {
     const obj = createObject(Obj.make(Person, { name: 'John' }));
 
     expect(() => {
-      obj.name = 'Jane';
+      // Cast to any to bypass TypeScript readonly check and test runtime behavior.
+      (obj as any).name = 'Jane';
     }).toThrow(/Cannot modify ECHO object property.*outside of Obj.change/);
   });
 
@@ -138,7 +139,8 @@ describe('Obj.change', () => {
 
     // Object should still be readonly after error.
     expect(() => {
-      obj.name = 'Bob';
+      // Cast to any to bypass TypeScript readonly check and test runtime behavior.
+      (obj as any).name = 'Bob';
     }).toThrow(/Cannot modify ECHO object property.*outside of Obj.change/);
   });
 

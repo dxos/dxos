@@ -65,12 +65,14 @@ export const upsertFunctionObject: (opts: {
     });
     space.db.add(functionObject);
   }
-  functionObject.key = uploadResult.meta.key ?? functionObject.key;
-  functionObject.name = name ?? uploadResult.meta.name ?? functionObject.name;
-  functionObject.version = uploadResult.version;
-  functionObject.description = uploadResult.meta.description;
-  functionObject.inputSchema = uploadResult.meta.inputSchema;
-  functionObject.outputSchema = uploadResult.meta.outputSchema;
+  Obj.change(functionObject, (f) => {
+    f.key = uploadResult.meta.key ?? f.key;
+    f.name = name ?? uploadResult.meta.name ?? f.name;
+    f.version = uploadResult.version;
+    f.description = uploadResult.meta.description;
+    f.inputSchema = uploadResult.meta.inputSchema;
+    f.outputSchema = uploadResult.meta.outputSchema;
+  });
   setUserFunctionIdInMetadata(Obj.getMeta(functionObject), uploadResult.functionId);
   if (verbose) {
     yield* Console.log('Upserted function object', functionObject.id);
@@ -107,13 +109,17 @@ export const upsertComposerScript = Effect.fn(function* ({
   if (functionObject.source) {
     const script = yield* Effect.tryPromise(() => functionObject.source!.load());
     const source = yield* Effect.tryPromise(() => script.source.load());
-    source.content = scriptFileContent;
+    Obj.change(source, (s) => {
+      s.content = scriptFileContent;
+    });
     if (verbose) {
       yield* Console.log('Updated composer script', script.id);
     }
   } else {
     const obj = yield* Database.Service.add(Script.make({ name: scriptFileName, source: scriptFileContent }));
-    functionObject.source = Ref.make(obj);
+    Obj.change(functionObject, (f) => {
+      f.source = Ref.make(obj);
+    });
     yield* makeObjectNavigableInComposer(space, obj);
     if (verbose) {
       yield* Console.log('Created composer script', obj.id);

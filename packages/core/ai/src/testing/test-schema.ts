@@ -13,7 +13,7 @@ export const Contact = Schema.Struct({
   name: Schema.String.annotations({ description: 'The name of the person.' }),
   email: Schema.optional(Schema.String).annotations({ description: 'Email address.' }),
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'example.com/type/Person',
     version: '0.1.0',
   }),
@@ -26,7 +26,7 @@ export const Project = Schema.Struct({
   name: Schema.String.annotations({ description: 'The name of the project.' }),
   description: Schema.optional(Schema.String).annotations({ description: 'The description of the project.' }),
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'example.com/type/Project',
     version: '0.1.0',
   }),
@@ -40,7 +40,7 @@ export const Task = Schema.Struct({
   project: Type.Ref(Project),
   assignee: Type.Ref(Contact),
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'example.com/type/Task',
     version: '0.1.0',
   }),
@@ -54,7 +54,7 @@ export const Organization = Schema.Struct({
   projects: Schema.Array(Type.Ref(Project)),
   employees: Schema.Array(Type.Ref(Contact)),
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'example.com/type/Organization',
     version: '0.1.0',
   }),

@@ -48,7 +48,9 @@ export default Capability.makeModule(
             emails: [{ value: email }],
           });
           if (name) {
-            newContact.fullName = name;
+            Obj.change(newContact, (c) => {
+              c.fullName = name;
+            });
           }
 
           const emailDomain = email.split('@')[1]?.toLowerCase();
@@ -95,7 +97,9 @@ export default Capability.makeModule(
             log.info('found matching organization', {
               organization: matchingOrg,
             });
-            newContact.organization = Ref.make(matchingOrg);
+            Obj.change(newContact, (c) => {
+              c.organization = Ref.make(matchingOrg);
+            });
           }
 
           if (!space.properties.staticRecords.includes(Person.Person.typename)) {

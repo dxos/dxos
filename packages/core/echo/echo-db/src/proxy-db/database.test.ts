@@ -311,7 +311,9 @@ describe('Database', () => {
   test('object fields', async () => {
     const task = Obj.make(TestSchema.Task, {});
 
-    task.title = 'test';
+    Obj.change(task, (t) => {
+      t.title = 'test';
+    });
     expect(task.title).to.eq('test');
     expect(Obj.getMeta(task).keys).to.have.length(0);
 
@@ -418,20 +420,24 @@ describe('Database', () => {
       root.subTasks!.forEach((task: any, i: number) => expect(task.target!.id).to.eq(ids[i]));
       expect(Array.from(root.subTasks!.values())).to.have.length(5);
 
-      root.subTasks = [
-        Ref.make(Obj.make(TestSchema.Task, {})),
-        Ref.make(Obj.make(TestSchema.Task, {})),
-        Ref.make(Obj.make(TestSchema.Task, {})),
-      ];
-      expect(root.subTasks.length).to.eq(3);
+      Obj.change(root, (r) => {
+        r.subTasks = [
+          Ref.make(Obj.make(TestSchema.Task, {})),
+          Ref.make(Obj.make(TestSchema.Task, {})),
+          Ref.make(Obj.make(TestSchema.Task, {})),
+        ];
+      });
+      expect(root.subTasks!.length).to.eq(3);
 
       await addToDatabase(root);
     });
 
     test('splice', async () => {
       const root = newTask();
-      root.subTasks = range(3).map((i) => Ref.make(newTask()));
-      root.subTasks.splice(0, 2, Ref.make(newTask()));
+      Obj.change(root, (r) => {
+        r.subTasks = range(3).map((i) => Ref.make(newTask()));
+      });
+      root.subTasks!.splice(0, 2, Ref.make(newTask()));
       expect(root.subTasks).to.have.length(2);
       await addToDatabase(root);
     });

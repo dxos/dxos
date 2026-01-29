@@ -47,7 +47,7 @@ const TestItem = Schema.Struct({
     description: 'Product description',
   }),
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/Test',
     version: '0.1.0',
   }),

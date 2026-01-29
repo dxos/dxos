@@ -72,7 +72,7 @@ export type Projection = Schema.Schema.Type<typeof Projection>;
  * Views are generated or user-defined projections of a schema's properties.
  * They are used to configure the visual representation of the data.
  */
-export const ViewSchema = Schema.Struct({
+const ViewSchema = Schema.Struct({
   /**
    * Query used to retrieve data.
    * Can be a user-provided query grammar string or a query AST.
@@ -87,7 +87,7 @@ export const ViewSchema = Schema.Struct({
    */
   projection: Projection,
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/View',
     version: '0.5.0',
   }),
@@ -95,9 +95,18 @@ export const ViewSchema = Schema.Struct({
 );
 
 export interface View extends Schema.Schema.Type<typeof ViewSchema> {}
-export interface ViewEncoded extends Schema.Schema.Encoded<typeof ViewSchema> {}
-// Type annotation hides internal QueryAST types while preserving brand properties.
-export const View: Type.Obj.Of<Schema.Schema<View, ViewEncoded>> = ViewSchema;
+
+/**
+ * View instance type.
+ *
+ * NOTE: This interface is explicitly defined rather than derived from the schema to avoid
+ * TypeScript "cannot be named" portability errors. The schema contains QueryAST.Query which
+ * references internal @dxos/echo-protocol module paths. Without this explicit interface,
+ * any schema using Type.Ref(View) would inherit the non-portable type and fail to compile.
+ *
+ */
+// TODO(wittjosiah): Find a better solution that doesn't require manually keeping the interface in sync.
+export const View: Type.Obj<View> = ViewSchema as any;
 
 type MakeProps = {
   name?: string;
@@ -301,7 +310,7 @@ export const makeFromDatabase = async ({
 // V4
 //
 
-export const ViewSchemaV4 = Schema.Struct({
+const ViewSchemaV4 = Schema.Struct({
   name: Schema.optional(
     Schema.String.annotations({
       title: 'Name',
@@ -315,13 +324,11 @@ export const ViewSchemaV4 = Schema.Struct({
   projection: Projection.pipe(FormInputAnnotation.set(false)),
   presentation: Type.Ref(Obj.Any).pipe(FormInputAnnotation.set(false)),
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/View',
     version: '0.4.0',
   }),
   LabelAnnotation.set(['name']),
 );
 export interface ViewV4 extends Schema.Schema.Type<typeof ViewSchemaV4> {}
-export interface ViewEncodedV4 extends Schema.Schema.Encoded<typeof ViewSchemaV4> {}
-// Type annotation hides internal QueryAST types while preserving brand properties.
-export const ViewV4: Type.Obj.Of<Schema.Schema<ViewV4, ViewEncodedV4>> = ViewSchemaV4;
+export const ViewV4: Type.Obj<ViewV4> = ViewSchemaV4 as any;

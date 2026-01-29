@@ -14,7 +14,7 @@ export namespace TestSchema {
   export const TextV0Type = Schema.Struct({
     content: Schema.String,
   }).pipe(
-    Type.Obj({
+    Type.object({
       typename: 'dxos.org/TextV0',
       version: '0.1.0',
     }),
@@ -26,7 +26,7 @@ export namespace TestSchema {
     title: Schema.optional(Schema.String), // TODO(burdon): Change to name.
     content: Type.Ref(TextV0Type),
   }).pipe(
-    Type.Obj({
+    Type.object({
       typename: 'braneframe.com/Document',
       version: '0.1.0',
     }),
@@ -44,7 +44,7 @@ export namespace TestSchema {
         }),
       ),
     ),
-  }).pipe(Type.Obj({ typename: 'braneframe.com/Contact', version: '0.1.0' }));
+  }).pipe(Type.object({ typename: 'braneframe.com/Contact', version: '0.1.0' }));
 
   const BlockSchema = Schema.Struct({
     timestamp: Schema.String,
@@ -70,7 +70,7 @@ export namespace TestSchema {
       }),
     ),
   }).pipe(
-    Type.Obj({
+    Type.object({
       typename: 'braneframe.com/Message',
       version: '0.1.0',
     }),
@@ -88,7 +88,7 @@ export namespace TestSchema {
       }),
     ),
   }).pipe(
-    Type.Obj({
+    Type.object({
       typename: 'braneframe.com/Thread',
       version: '0.1.0',
     }),

@@ -417,11 +417,11 @@ describe('Query', () => {
       const ContactV1 = Schema.Struct({
         firstName: Schema.String,
         lastName: Schema.String,
-      }).pipe(Type.Obj({ typename: 'example.com/type/Person', version: '0.1.0' }));
+      }).pipe(Type.object({ typename: 'example.com/type/Person', version: '0.1.0' }));
 
       const ContactV2 = Schema.Struct({
         name: Schema.String,
-      }).pipe(Type.Obj({ typename: 'example.com/type/Person', version: '0.2.0' }));
+      }).pipe(Type.object({ typename: 'example.com/type/Person', version: '0.2.0' }));
 
       const { peer, db } = await builder.createDatabase({
         types: [ContactV1, ContactV2],

@@ -18,7 +18,7 @@ import { ContextQueueService, QueueService } from '@dxos/functions';
 export const ResearchGraph = Schema.Struct({
   queue: Type.Ref(Queue),
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/ResearchGraph',
     version: '0.1.0',
   }),

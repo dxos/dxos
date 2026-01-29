@@ -93,8 +93,8 @@ export const ProjectObjectSettings = ({ classNames, project }: ProjectObjectSett
         query,
         jsonSchema: Type.toJsonSchema(newSchema),
       });
-      Obj.change(view, () => {
-        view.projection = Obj.getSnapshot(newView).projection;
+      Obj.change(view, (v) => {
+        v.projection = Obj.getSnapshot(newView).projection;
       });
 
       setSchema(() => newSchema);
@@ -145,7 +145,7 @@ export const ProjectObjectSettings = ({ classNames, project }: ProjectObjectSett
       if (column) {
         const columnIndex = project.columns.findIndex((c) => c === column);
         Obj.change(project, (p) => {
-          p.columns[columnIndex].name = values.name;
+          (p.columns[columnIndex] as { name?: string }).name = values.name;
         });
       }
     },

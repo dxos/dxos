@@ -17,7 +17,6 @@ const createTemplateSelectActions = (script: Script.Script) => {
       () => {
         Obj.change(script, (s) => {
           s.name = template.name;
-          s.source!.target!.content = template.source;
           const metaKeys = Obj.getMeta(s).keys;
           const oldPresetIndex = metaKeys.findIndex((key) => key.source === FUNCTIONS_PRESET_META_KEY);
           if (oldPresetIndex >= 0) {
@@ -27,6 +26,11 @@ const createTemplateSelectActions = (script: Script.Script) => {
             metaKeys.push({ source: FUNCTIONS_PRESET_META_KEY, id: template.presetId });
           }
         });
+        if (script.source?.target) {
+          Obj.change(script.source.target, (s) => {
+            s.content = template.source;
+          });
+        }
       },
       {
         label: template.name,

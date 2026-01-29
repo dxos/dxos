@@ -23,7 +23,7 @@ Goal: Refactor Type.ts to have cleaner API with runtime schemas
 |---------|-----|-------------|
 | `Type.Obj.Any` | `Type.Obj.Any` | Alias for `Type.Obj<any>` |
 | `Type.Obj.Of<Self>` | `Type.Obj<T>` | Schema type (Self=schema → T=instance) |
-| `Type.Obj({...})` | `Type.makeObject({...})` | Factory function |
+| `Type.makeObject({...})` | `Type.makeObject({...})` | Factory function |
 | (none) | `Type.Obj` (value) | Runtime schema for any ECHO object |
 
 #### Implementation Steps
@@ -56,8 +56,8 @@ Goal: Refactor Type.ts to have cleaner API with runtime schemas
   - Add `Type.Entity.Any` alias
 
 - [ ] **1.5.7** Update all usages
-  - `Type.Obj({...})` → `Type.makeObject({...})`
-  - `Type.Relation({...})` → `Type.makeRelation({...})`
+  - `Type.makeObject({...})` → `Type.makeObject({...})`
+  - `Type.makeRelation({...})` → `Type.makeRelation({...})`
   - `Type.Obj.Of<typeof Schema>` → `Type.Obj<InstanceType>`
 
 - [ ] **1.5.8** Remove old exports
@@ -68,7 +68,7 @@ Goal: Refactor Type.ts to have cleaner API with runtime schemas
 #### Files to Modify
 - `packages/core/echo/echo/src/Type.ts` - Main changes
 - `packages/core/echo/echo/src/internal/schema/echo-schema.ts` - Runtime schema creation
-- All files using `Type.Obj({...})` - Update to `Type.makeObject({...})`
+- All files using `Type.makeObject({...})` - Update to `Type.makeObject({...})`
 - All files using `Type.Obj.Of<T>` - Update to `Type.Obj<T>`
 
 #### Technical Notes

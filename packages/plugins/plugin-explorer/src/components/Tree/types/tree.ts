@@ -22,7 +22,7 @@ export const TreeType = Schema.Struct({
   root: Key.ObjectId,
   nodes: Schema.mutable(Schema.Record({ key: Key.ObjectId, value: TreeNodeType })),
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/Tree',
     version: '0.1.0',
   }),
@@ -184,9 +184,11 @@ export class Tree {
   clear(): void {
     const root = this._tree.nodes[this._tree.root];
     root.children.length = 0;
-    this._tree.nodes = {
-      [root.id]: root,
-    };
+    Obj.change(this._tree, (t) => {
+      t.nodes = {
+        [root.id]: root,
+      };
+    });
   }
 
   /**

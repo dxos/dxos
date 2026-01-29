@@ -16,7 +16,7 @@ export const HasConnection = Schema.Struct({
   }),
 })
   .pipe(
-    Type.Relation({
+    Type.relation({
       typename: 'dxos.org/relation/HasConnection',
       version: '0.1.0',
       source: Organization,

@@ -53,7 +53,9 @@ export const ViewEditor = ({ view }: ViewEditorProps) => {
 
       const queue = target && DXN.tryParse(target) ? target : undefined;
       const query = queue ? Query.fromAst(newQuery).options({ queues: [queue] }) : Query.fromAst(newQuery);
-      view.query.ast = query.ast;
+      Obj.change(view, (v) => {
+        v.query.ast = query.ast;
+      });
       const newSchema = await resolveSchemaWithRegistry(space.db.schemaRegistry, query.ast);
       if (!newSchema) {
         return;
@@ -63,7 +65,9 @@ export const ViewEditor = ({ view }: ViewEditorProps) => {
         query,
         jsonSchema: Type.toJsonSchema(newSchema),
       });
-      view.projection = Obj.getSnapshot(newView).projection;
+      Obj.change(view, (v) => {
+        v.projection = Obj.getSnapshot(newView).projection;
+      });
 
       setSchema(() => newSchema);
     },

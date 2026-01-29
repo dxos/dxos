@@ -63,7 +63,7 @@ export const defaultGenerators: { [type: string]: ObjectDataGenerator } = {
         status: Schema.String,
         priority: Schema.Number,
       }).pipe(
-        Type.Obj({
+        Type.object({
           typename: 'example.com/type/Project',
           version: '0.1.0',
         }),

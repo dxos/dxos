@@ -96,7 +96,7 @@ export type Spec = Schema.Schema.Type<typeof Spec>;
  * Function is invoked with the `payload` passed as input data.
  * The event that triggers the function is available in the function context.
  */
-const Trigger_ = Schema.Struct({
+export const Trigger = Schema.Struct({
   /**
    * Function or workflow to invoke.
    */
@@ -129,16 +129,13 @@ const Trigger_ = Schema.Struct({
    */
   input: Schema.optional(Schema.mutable(Schema.Record({ key: Schema.String, value: Schema.Any }))),
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/Trigger',
     version: '0.1.0',
   }),
   SystemTypeAnnotation.set(true),
 );
 
-export interface Trigger extends Schema.Schema.Type<typeof Trigger_> {}
-export interface TriggerEncoded extends Schema.Schema.Encoded<typeof Trigger_> {}
-// Type annotation preserves brand properties while hiding internal types.
-export const Trigger: typeof Trigger_ = Trigger_;
+export interface Trigger extends Schema.Schema.Type<typeof Trigger> {}
 
 export const make = (props: Obj.MakeProps<typeof Trigger>) => Obj.make(Trigger, props);

@@ -451,7 +451,7 @@ describe('Integration tests', () => {
 
         const TestSchema = Schema.Struct({
           field: Schema.String,
-        }).pipe(Type.Obj({ typename: 'example.com/type/Test', version: '0.1.0' }));
+        }).pipe(Type.object({ typename: 'example.com/type/Test', version: '0.1.0' }));
         const [stored] = await db.schemaRegistry.register([TestSchema]);
         schemaDxn = DXN.fromLocalObjectId(stored.id).toString();
 

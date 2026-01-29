@@ -51,7 +51,7 @@ const Example = Schema.Struct({
     title: 'Parent',
   }),
 }).pipe(
-  Type.Obj({ typename: `example.com/type/${PublicKey.random().truncate()}`, version: '0.1.0' }),
+  Type.object({ typename: `example.com/type/${PublicKey.random().truncate()}`, version: '0.1.0' }),
   Annotation.LabelAnnotation.set(['name']),
 );
 interface Example extends Schema.Schema.Type<typeof Example> {}
@@ -225,7 +225,7 @@ const ContactWithArrayOfEmails = Schema.Struct({
     ),
   ),
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/ContactWithArrayOfEmails',
     version: '0.1.0',
   }),

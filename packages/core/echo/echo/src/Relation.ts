@@ -47,7 +47,7 @@ interface BaseRelation<Source, Target>
 export interface Any extends BaseRelation<Obj.Any, Obj.Any> {}
 
 export const Any = Schema.Struct({}).pipe(
-  Type.Relation({
+  Type.relation({
     typename: 'dxos.org/type/Any',
     version: '0.1.0',
     source: Obj.Any,

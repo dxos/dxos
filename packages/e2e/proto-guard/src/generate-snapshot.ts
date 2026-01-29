@@ -115,7 +115,7 @@ const main = async () => {
 
     // TODO(burdon): Should just be example.org/type/Test
     const TestType = Schema.Struct({}).pipe(
-      Type.Obj({
+      Type.object({
         typename: 'example.org/type/TestType',
         version: '0.1.0',
       }),

@@ -4,28 +4,11 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Entity, Format, Obj, Ref, Type } from '@dxos/echo';
+import { Format, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { View, ViewAnnotation } from '@dxos/schema';
 
-export interface Map extends Entity.OfKind<typeof Entity.Kind.Object> {
-  name?: string;
-  view?: Ref.Ref<View.View>;
-  center?: Format.GeoPoint;
-  zoom?: number;
-  coordinates?: Format.GeoPoint[];
-}
-
-export interface MapEncoded {
-  id: string;
-  name?: string;
-  view?: string;
-  center?: Format.GeoPoint;
-  zoom?: number;
-  coordinates?: Format.GeoPoint[];
-}
-
-export const Map: Type.Obj.Of<Schema.Schema<Map, MapEncoded>> = Schema.Struct({
+export const Map = Schema.Struct({
   name: Schema.optional(Schema.String),
 
   view: Type.Ref(View.View).pipe(FormInputAnnotation.set(false), Schema.optional),
@@ -36,13 +19,15 @@ export const Map: Type.Obj.Of<Schema.Schema<Map, MapEncoded>> = Schema.Struct({
   //   e.g., points, lines, polygons, etc.
   coordinates: Schema.Array(Format.GeoPoint).pipe(Schema.mutable, FormInputAnnotation.set(false), Schema.optional),
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/Map',
     version: '0.3.0',
   }),
   LabelAnnotation.set(['name']),
   ViewAnnotation.set(true),
-) as any;
+);
+
+export interface Map extends Schema.Schema.Type<typeof Map> {}
 
 type MakeProps = Omit<Partial<Obj.MakeProps<typeof Map>>, 'view'> & {
   view?: View.View;
@@ -71,7 +56,7 @@ export const MapV2 = Schema.Struct({
   zoom: Schema.optional(Schema.Number),
   coordinates: Schema.Array(Format.GeoPoint).pipe(Schema.mutable, Schema.optional),
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/Map',
     version: '0.2.0',
   }),

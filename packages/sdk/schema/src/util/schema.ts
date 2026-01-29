@@ -52,7 +52,7 @@ export const createDefaultSchema = () =>
       title: 'Description',
     }),
   }).pipe(
-    Type.Obj({
+    Type.object({
       typename: `example.com/type/${PublicKey.random().truncate()}`,
       version: '0.1.0',
     }),

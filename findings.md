@@ -6,11 +6,11 @@
 ```ts
 Type.Obj.Any              // Type alias for any object schema
 Type.Obj.Of<Self>         // TypeScript type for effect schema (Self = schema type)
-Type.Obj({...})           // Function that adds object metadata annotation
+Type.makeObject({...})           // Function that adds object metadata annotation
 
 Type.Relation.Any         // Type alias for any relation schema
 Type.Relation.Of<Self>    // TypeScript type for effect schema (Self = schema type)
-Type.Relation({...})      // Function that adds relation metadata annotation
+Type.makeRelation({...})      // Function that adds relation metadata annotation
 
 Type.Entity.Any           // Type alias for any entity schema
 Type.Entity.Of<Self>      // TypeScript type for effect schema
@@ -43,7 +43,7 @@ Type.Entity.Any           // Alias for Type.Entity<any>
 
 1. **`Type.Obj` becomes dual-purpose**: Both a runtime Effect schema AND a generic type
 2. **Instance type parameter**: `Type.Obj<T>` uses instance type (e.g., `Person`), not schema type
-3. **Factory rename**: `Type.Obj({...})` → `Type.makeObject({...})`
+3. **Factory rename**: `Type.makeObject({...})` → `Type.makeObject({...})`
 4. **Runtime schemas**: Actual Effect schemas for validating/parsing any ECHO object/relation/entity
 5. **`.Any` preserved**: `Type.Obj.Any` remains as alias for `Type.Obj<any>`
 
@@ -68,7 +68,7 @@ export namespace Obj {
 Before:
 ```ts
 const PersonSchema = Schema.Struct({ name: Schema.String }).pipe(
-  Type.Obj({ typename: 'Person', version: '0.1.0' })
+  Type.makeObject({ typename: 'Person', version: '0.1.0' })
 );
 export const Person: Type.Obj.Of<typeof PersonSchema> = PersonSchema;
 ```

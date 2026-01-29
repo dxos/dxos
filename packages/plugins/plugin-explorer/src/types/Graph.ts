@@ -8,7 +8,7 @@ import { Filter, Obj, Query, QueryAST, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { View, ViewAnnotation } from '@dxos/schema';
 
-export const Graph = Schema.Struct({
+const GraphSchema = Schema.Struct({
   name: Schema.optional(Schema.String),
 
   view: Type.Ref(View.View).pipe(FormInputAnnotation.set(false)),
@@ -18,14 +18,15 @@ export const Graph = Schema.Struct({
     ast: QueryAST.Query,
   }).pipe(Schema.mutable, FormInputAnnotation.set(false)),
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/Graph',
     version: '0.2.0',
   }),
   LabelAnnotation.set(['name']),
   ViewAnnotation.set(true),
 );
-export interface Graph extends Schema.Schema.Type<typeof Graph> {}
+export interface Graph extends Schema.Schema.Type<typeof GraphSchema> {}
+export const Graph: Type.Obj<Graph> = GraphSchema as any;
 
 type MakeProps = Omit<Partial<Obj.MakeProps<typeof Graph>>, 'view'> & {
   view: View.View;
@@ -53,7 +54,7 @@ export const GraphV1 = Schema.Struct({
     ast: QueryAST.Query,
   }).pipe(Schema.mutable),
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/Graph',
     version: '0.1.0',
   }),

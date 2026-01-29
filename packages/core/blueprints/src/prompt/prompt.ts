@@ -51,7 +51,7 @@ const Prompt$ = Schema.Struct({
    */
   context: Schema.Array(Schema.Any).pipe(Annotation.FormInputAnnotation.set(false)),
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/Prompt',
     version: '0.1.0',
   }),

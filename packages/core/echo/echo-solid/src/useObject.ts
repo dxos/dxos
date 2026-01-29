@@ -10,11 +10,13 @@ import { AtomObj } from '@dxos/echo-atom';
 import { type Registry, useRegistry } from '@dxos/effect-atom-solid';
 
 export interface ObjectUpdateCallback<T> {
-  (update: (obj: T) => void): void;
-  (update: (obj: T) => T): void;
+  (update: (obj: Entity.Mutable<T>) => void): void;
+  (update: (obj: Entity.Mutable<T>) => Entity.Mutable<T>): void;
 }
 
-export interface ObjectPropUpdateCallback<T> extends ObjectUpdateCallback<T> {
+export interface ObjectPropUpdateCallback<T> {
+  (update: (value: Entity.Mutable<T>) => void): void;
+  (update: (value: Entity.Mutable<T>) => Entity.Mutable<T>): void;
   (newValue: T): void;
 }
 

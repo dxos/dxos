@@ -50,7 +50,7 @@ namespace Proposition {
   export interface Fields extends Schema.Schema.Type<typeof Fields> {}
 
   export const Object = Fields.pipe(
-    Type.Obj({
+    Type.object({
       typename: 'dxos.org/type/Proposition',
       version: '0.1.0',
     }),
@@ -86,7 +86,7 @@ export namespace OKR {
   });
 
   const Object = Properties.pipe(
-    Type.Obj({
+    Type.object({
       typename: 'dxos.org/type/OKR',
       version: '0.1.0',
     }),
@@ -123,7 +123,7 @@ export namespace SWOT {
   });
 
   const Object = Properties.pipe(
-    Type.Obj({
+    Type.object({
       typename: 'dxos.org/type/SWOT',
       version: '0.1.0',
     }),
@@ -140,7 +140,7 @@ export namespace Plan {
   });
 
   const Object = Properties.pipe(
-    Type.Obj({
+    Type.object({
       typename: 'dxos.org/type/Plan',
       version: '0.1.0',
     }),

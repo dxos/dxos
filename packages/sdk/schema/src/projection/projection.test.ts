@@ -55,7 +55,7 @@ describe('ProjectionModel', () => {
       email: Format.Email,
       salary: Format.Currency({ code: 'usd', decimals: 2 }),
     }).pipe(
-      Type.Obj({
+      Type.object({
         typename: 'example.com/type/Person',
         version: '0.1.0',
       }),
@@ -150,7 +150,7 @@ describe('ProjectionModel', () => {
       email: Format.Email,
       salary: Format.Currency({ code: 'usd', decimals: 2 }),
       organization: Ref(TestSchema.Organization),
-    }).pipe(Type.Obj({ typename, version: '0.1.0' }));
+    }).pipe(Type.object({ typename, version: '0.1.0' }));
     const jsonSchema = toJsonSchema(schema);
 
     const view = await View.makeWithReferences({
@@ -202,7 +202,7 @@ describe('ProjectionModel', () => {
       name: Schema.String.annotations({ title: 'Name' }),
       email: Format.Email,
     }).pipe(
-      Type.Obj({
+      Type.object({
         typename: 'example.com/type/Person',
         version: '0.1.0',
       }),
@@ -241,7 +241,7 @@ describe('ProjectionModel', () => {
       email: Schema.optional(Schema.Number),
       description: Schema.optional(Schema.String),
     }).pipe(
-      Type.Obj({
+      Type.object({
         typename: 'example.com/type/Person',
         version: '0.1.0',
       }),
@@ -294,7 +294,7 @@ describe('ProjectionModel', () => {
       name: Schema.String,
       email: Format.Email,
     }).pipe(
-      Type.Obj({
+      Type.object({
         typename: 'example.com/type/Person',
         version: '0.1.0',
       }),
@@ -349,7 +349,7 @@ describe('ProjectionModel', () => {
       email: Format.Email,
       age: Schema.Number,
     }).pipe(
-      Type.Obj({
+      Type.object({
         typename: 'example.com/type/Person',
         version: '0.1.0',
       }),
@@ -409,7 +409,7 @@ describe('ProjectionModel', () => {
     const schema = Schema.Struct({
       status: Schema.String,
     }).pipe(
-      Type.Obj({
+      Type.object({
         typename: 'example.com/type/Task',
         version: '0.1.0',
       }),
@@ -523,7 +523,7 @@ describe('ProjectionModel', () => {
     const schema = Schema.Struct({
       tags: Schema.String,
     }).pipe(
-      Type.Obj({
+      Type.object({
         typename: 'example.com/type/Task',
         version: '0.1.0',
       }),
@@ -662,7 +662,7 @@ describe('ProjectionModel', () => {
       email: Format.Email,
       createdAt: Schema.String,
     }).pipe(
-      Type.Obj({
+      Type.object({
         typename: 'example.com/type/Person',
         version: '0.1.0',
       }),
@@ -770,7 +770,7 @@ describe('ProjectionModel', () => {
       description: Schema.String,
       status: Schema.String,
     }).pipe(
-      Type.Obj({
+      Type.object({
         typename: 'example.com/type/Task',
         version: '0.1.0',
       }),
@@ -813,7 +813,7 @@ describe('ProjectionModel', () => {
     const initialSchema = Schema.Struct({
       title: Schema.String,
     }).pipe(
-      Type.Obj({
+      Type.object({
         typename: 'example.com/type/Task',
         version: '0.1.0',
       }),
@@ -866,7 +866,7 @@ describe('ProjectionModel', () => {
       email: Format.Email,
       phone: Schema.String,
     }).pipe(
-      Type.Obj({
+      Type.object({
         typename: 'example.com/type/Person',
         version: '0.1.0',
       }),
@@ -980,7 +980,7 @@ describe('ProjectionModel', () => {
         ),
       ),
     }).pipe(
-      Type.Obj({
+      Type.object({
         typename: 'dxos.org/type/ContactWithArrayOfEmails',
         version: '0.1.0',
       }),
@@ -1028,7 +1028,7 @@ describe('ProjectionModel', () => {
       const schema = Schema.Struct({
         [fieldName]: schemaType,
       }).pipe(
-        Type.Obj({
+        Type.object({
           typename: 'example.com/type/TestObject',
           version: '0.1.0',
         }),
@@ -1083,7 +1083,7 @@ describe('ProjectionModel', () => {
     const schema = Schema.Struct({
       email: Format.Email,
     }).pipe(
-      Type.Obj({
+      Type.object({
         typename: 'example.com/type/EmailTest',
         version: '0.1.0',
       }),

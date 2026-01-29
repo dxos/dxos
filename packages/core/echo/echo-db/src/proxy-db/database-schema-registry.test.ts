@@ -15,7 +15,7 @@ const Organization = Schema.Struct({
   name: Schema.String,
   address: Schema.String,
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'example.com/type/Organization',
     version: '0.1.0',
   }),
@@ -24,7 +24,7 @@ const Organization = Schema.Struct({
 const Contact = Schema.Struct({
   name: Schema.String,
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'example.com/type/Person',
     version: '0.1.0',
   }),

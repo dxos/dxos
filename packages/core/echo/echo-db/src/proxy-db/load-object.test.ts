@@ -157,12 +157,12 @@ describe.skip('loadObjectReferences', () => {
 
   test('loads as array of non-nullable items', async () => {
     const Nested = Schema.Struct({ value: Schema.Number }).pipe(
-      Type.Obj({ typename: 'example.com/Nested', version: '0.1.0' }),
+      Type.object({ typename: 'example.com/Nested', version: '0.1.0' }),
     );
 
     const TestSchema = Schema.Struct({
       nested: Schema.mutable(Schema.Array(Type.Ref(Nested))),
-    }).pipe(Type.Obj({ typename: 'example.com/Test', version: '0.1.0' }));
+    }).pipe(Type.object({ typename: 'example.com/Test', version: '0.1.0' }));
 
     const testBuilder = new EchoTestBuilder();
     await openAndClose(testBuilder);

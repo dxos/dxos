@@ -18,11 +18,11 @@
 ### Current API State (after today's work)
 ```ts
 // Exported
-Type.Obj({...})           // Function to create object schema
+Type.makeObject({...})           // Function to create object schema
 Type.Obj.Any              // Type alias for any object schema
 Type.Obj.Of<Self>         // Interface for branded object schema
 
-Type.Relation({...})      // Function to create relation schema
+Type.makeRelation({...})      // Function to create relation schema
 Type.Relation.Any         // Type alias for any relation schema
 Type.Relation.Of<Self>    // Interface for branded relation schema
 
@@ -41,7 +41,7 @@ RelationSchemaBase        // Not exported
 Transform API from:
 ```ts
 Type.Obj.Of<typeof Schema>  →  Type.Obj<InstanceType>
-Type.Obj({...})             →  Type.makeObject({...})
+Type.makeObject({...})             →  Type.makeObject({...})
 (none)                      →  Type.Obj (runtime schema value)
 ```
 

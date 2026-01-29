@@ -210,7 +210,7 @@ describe('Reactive Object with ECHO database', () => {
   test('existing proxy objects can be passed to create', async () => {
     const TestSchema = Schema.Struct({
       field: Schema.Any,
-    }).pipe(Type.Obj({ typename: 'example.com/type/Test', version: '0.1.0' }));
+    }).pipe(Type.object({ typename: 'example.com/type/Test', version: '0.1.0' }));
 
     const { db, graph } = await builder.createDatabase();
     await graph.schemaRegistry.register([TestSchema]);
@@ -418,7 +418,7 @@ describe('Reactive Object with ECHO database', () => {
     const Organization = Schema.Struct({
       name: Schema.String,
     }).pipe(
-      Type.Obj({
+      Type.object({
         typename: 'example.com/type/Organization',
         version: '0.1.0',
       }),
@@ -429,7 +429,7 @@ describe('Reactive Object with ECHO database', () => {
       organization: Type.Ref(Organization),
       previousEmployment: Schema.optional(Schema.Array(Type.Ref(Organization))),
     }).pipe(
-      Type.Obj({
+      Type.object({
         typename: 'example.com/type/Person',
         version: '0.1.0',
       }),
@@ -645,10 +645,10 @@ describe('Reactive Object with ECHO database', () => {
     test('object with meta pushed to array', async () => {
       const NestedType = Schema.Struct({
         field: Schema.Number,
-      }).pipe(Type.Obj({ typename: 'example.com/type/TestNested', version: '0.1.0' }));
+      }).pipe(Type.object({ typename: 'example.com/type/TestNested', version: '0.1.0' }));
       const TestType = Schema.Struct({
         objects: Schema.mutable(Schema.Array(Type.Ref(NestedType))),
-      }).pipe(Type.Obj({ typename: 'example.com/type/Test', version: '0.1.0' }));
+      }).pipe(Type.object({ typename: 'example.com/type/Test', version: '0.1.0' }));
 
       const key = foreignKey('example.com', '123');
       const { db, graph } = await builder.createDatabase();
@@ -664,7 +664,7 @@ describe('Reactive Object with ECHO database', () => {
     test('push key to object created with', async () => {
       const TestType = Schema.Struct({
         field: Schema.Number,
-      }).pipe(Type.Obj({ typename: 'example.com/type/Test', version: '0.1.0' }));
+      }).pipe(Type.object({ typename: 'example.com/type/Test', version: '0.1.0' }));
       const { db, graph } = await builder.createDatabase();
       await graph.schemaRegistry.register([TestType]);
       const obj = db.add(Obj.make(TestType, { field: 1 }, { keys: [foreignKey('example.com', '123')] }));

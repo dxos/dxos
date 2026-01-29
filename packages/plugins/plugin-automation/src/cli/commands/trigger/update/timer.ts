@@ -45,7 +45,10 @@ export const timer = Command.make(
       const currentFn = yield* updateFunction(trigger, options.functionId);
       yield* updateCron(trigger, options.cron);
       yield* updateInput(trigger, currentFn, options.input);
-      trigger.enabled = yield* updateEnabled(trigger, options.id, options.enabled);
+      const newEnabled = yield* updateEnabled(trigger, options.id, options.enabled);
+      Obj.change(trigger, (t) => {
+        t.enabled = newEnabled;
+      });
 
       if (json) {
         yield* Console.log(JSON.stringify(trigger, null, 2));
@@ -93,7 +96,9 @@ const updateFunction = Effect.fn(function* (trigger: Trigger.Trigger, functionId
       return yield* Effect.fail(new Error(`Function not found: ${functionId}`));
     }
     currentFn = foundFn;
-    trigger.function = Ref.make(currentFn);
+    Obj.change(trigger, (t) => {
+      t.function = Ref.make(currentFn!);
+    });
   }
 
   if (!currentFn) {
@@ -127,7 +132,11 @@ const updateCron = Effect.fn(function* (trigger: Trigger.Trigger, cronOption: Op
       onSome: (value) => Effect.succeed(value),
     });
     if (trigger.spec?.kind === 'timer') {
-      trigger.spec.cron = cron;
+      Obj.change(trigger, (t) => {
+        if (t.spec?.kind === 'timer') {
+          t.spec.cron = cron;
+        }
+      });
     }
   }
 });
@@ -160,7 +169,9 @@ const updateInput = Effect.fn(function* (
         promptForSchemaInput(fn.inputSchema ? Type.toEffectSchema(fn.inputSchema) : undefined, currentInput),
       onSome: (value) => Effect.succeed(value as Record<string, any>),
     });
-    trigger.input = inputObj as any;
+    Obj.change(trigger, (t) => {
+      t.input = inputObj as any;
+    });
   }
 });
 

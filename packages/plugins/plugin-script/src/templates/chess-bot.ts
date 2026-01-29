@@ -6,7 +6,7 @@ import { Chess as ChessJS } from 'chess.js';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { Database, Type } from '@dxos/echo';
+import { Database, Obj, Type } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
 import { Chess } from '@dxos/plugin-chess/types';
 
@@ -49,7 +49,11 @@ export default defineFunction({
 
     chess.move(move.san);
     const newPgn = chess.pgn();
-    loadedGame.pgn = newPgn;
+    yield* Effect.sync(() => {
+      Obj.change(loadedGame, (g) => {
+        g.pgn = newPgn;
+      });
+    });
     yield* Database.Service.flush();
     return { state: chess.ascii() };
   }),

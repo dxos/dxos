@@ -52,7 +52,6 @@ import * as Type from './Type';
 
 /**
  * Base type for all ECHO objects.
- * @private
  */
 interface BaseObj extends AnyEchoObject, Entity.OfKind<typeof Entity.Kind.Object> {}
 
@@ -62,7 +61,7 @@ interface BaseObj extends AnyEchoObject, Entity.OfKind<typeof Entity.Kind.Object
 export interface Any extends BaseObj {}
 
 export const Any = Schema.Struct({}).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/Any',
     version: '0.1.0',
   }),
@@ -92,17 +91,9 @@ type Props<T = any> = {
 
 // TODO(burdon): Should we allow the caller to set the id?
 /**
- * @deprecated Use the inline props type in `Obj.make` instead.
- */
-export type MakeProps<T extends Schema.Schema.AnyNoContext> = {
-  id?: ObjectId;
-  [Meta]?: Partial<ObjectMeta>;
-} & NoInfer<Props<Schema.Schema.Type<T>>>;
-
-/**
  * Props type for object creation with a given schema.
  */
-type ObjectMakeProps<S extends Schema.Schema.AnyNoContext> = {
+export type MakeProps<S extends Schema.Schema.AnyNoContext> = {
   id?: ObjectId;
   [Meta]?: Partial<ObjectMeta>;
 } & NoInfer<Props<Schema.Schema.Type<S>>>;
@@ -123,14 +114,14 @@ type ObjectMakeProps<S extends Schema.Schema.AnyNoContext> = {
  * Note: Only accepts object schemas, not relation schemas. Use `Relation.make` for relations.
  */
 export const make: {
-  <S extends Type.Obj.Any>(schema: S, props: ObjectMakeProps<S>): Obj<Schema.Schema.Type<S>>;
+  <S extends Type.Obj.Any>(schema: S, props: MakeProps<S>): Obj<Schema.Schema.Type<S>>;
   /**
    * @deprecated Pass meta as in the example: `Obj.make(Person, { [Obj.Meta]: { keys: [...] }, name: 'John' })`.
    */
-  <S extends Type.Obj.Any>(schema: S, props: ObjectMakeProps<S>, meta: Partial<ObjectMeta>): Obj<Schema.Schema.Type<S>>;
+  <S extends Type.Obj.Any>(schema: S, props: MakeProps<S>, meta: Partial<ObjectMeta>): Obj<Schema.Schema.Type<S>>;
 } = <S extends Type.Obj.Any>(
   schema: S,
-  props: ObjectMakeProps<S>,
+  props: MakeProps<S>,
   meta?: Partial<ObjectMeta>,
 ): Obj<Schema.Schema.Type<S>> => {
   assertArgument(getTypeAnnotation(schema)?.kind === Entity.Kind.Object, 'schema', 'Expected an object schema');

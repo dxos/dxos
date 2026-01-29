@@ -13,7 +13,7 @@ import { createObject } from '@dxos/echo-db';
 import { Registry } from '@dxos/effect-atom-solid';
 import { RegistryProvider } from '@dxos/effect-atom-solid';
 
-import { useObject } from './useObject';
+import { type ObjectUpdateCallback, useObject } from './useObject';
 
 const createWrapper = (registry: Registry.Registry) => {
   return (props: { children: JSX.Element }) => (
@@ -334,7 +334,7 @@ describe('useObject', () => {
     const registry = Registry.make();
     const Wrapper = createWrapper(registry);
 
-    let updatePerson: ((updater: (p: Entity.Entity<TestSchema.Person>) => void) => void) | undefined;
+    let updatePerson: ObjectUpdateCallback<TestSchema.Person> | undefined;
     const { getByTestId } = render(
       () => {
         const [value, update] = useObject(obj);

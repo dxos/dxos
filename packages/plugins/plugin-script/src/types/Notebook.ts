@@ -13,7 +13,7 @@ import { Text } from '@dxos/schema';
 
 export type CellType = 'markdown' | 'script' | 'query' | 'prompt' | 'view';
 
-const Cell_ = Schema.Struct({
+export const Cell = Schema.Struct({
   id: Schema.String,
   type: Schema.String,
   name: Schema.optional(Schema.String),
@@ -22,15 +22,14 @@ const Cell_ = Schema.Struct({
   prompt: Schema.optional(Type.Ref(Prompt.Prompt)),
   graph: Schema.optional(Type.Ref(Graph.Graph)),
 }).pipe(Schema.mutable);
-export interface Cell extends Schema.Schema.Type<typeof Cell_> {}
-export interface Cell_Encoded extends Schema.Schema.Encoded<typeof Cell_> {}
-export const Cell: Schema.Schema<Cell, Cell_Encoded> = Cell_;
+
+export interface Cell extends Schema.Schema.Type<typeof Cell> {}
 
 export const Notebook = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
   cells: Cell.pipe(Schema.Array, Schema.mutable, FormInputAnnotation.set(false)),
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/Notebook',
     version: '0.1.0',
   }),
@@ -39,4 +38,4 @@ export const Notebook = Schema.Struct({
 
 export type Notebook = Schema.Schema.Type<typeof Notebook>;
 
-export const make = (props: Obj.MakeProps<typeof Notebook> = { cells: [] }) => Obj.make(Notebook, props);
+export const make = (props: Obj.MakeProps<typeof Notebook> = { cells: [] }): Notebook => Obj.make(Notebook, props);

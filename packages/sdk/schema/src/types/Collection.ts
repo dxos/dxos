@@ -15,7 +15,7 @@ export const Collection = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
   objects: Schema.Array(Type.Ref(Obj.Any)).pipe(Schema.mutable, FormInputAnnotation.set(false)),
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/Collection',
     version: '0.1.0',
   }),
@@ -23,7 +23,7 @@ export const Collection = Schema.Struct({
 
 export type Collection = Schema.Schema.Type<typeof Collection>;
 
-export const make = (props: Partial<Obj.MakeProps<typeof Collection>> = {}) =>
+export const make = (props: Partial<Obj.MakeProps<typeof Collection>> = {}): Collection =>
   Obj.make(Collection, { objects: [], ...props });
 
 /**
@@ -33,7 +33,7 @@ export const make = (props: Partial<Obj.MakeProps<typeof Collection>> = {}) =>
 export const Managed = Schema.Struct({
   key: Schema.String,
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/ManagedCollection',
     version: '0.1.0',
   }),
@@ -42,7 +42,7 @@ export const Managed = Schema.Struct({
 
 export type Managed = Schema.Schema.Type<typeof Managed>;
 
-export const makeManaged = (props: Obj.MakeProps<typeof Managed>) => Obj.make(Managed, props);
+export const makeManaged = (props: Obj.MakeProps<typeof Managed>): Managed => Obj.make(Managed, props);
 
 type AddProps = {
   object: Obj.Any;

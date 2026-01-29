@@ -12,6 +12,11 @@ export type MaybePromise<T> = T | Promise<T>;
 
 export type GuardedType<T> = T extends (value: any) => value is infer R ? R : never;
 
+/**
+ * Removes readonly modifiers from top-level properties of T.
+ * Also converts readonly arrays at the top level to mutable arrays.
+ * For nested properties, mutability depends on the schema definition.
+ */
 export type ToMutable<T> = T extends object
   ? { -readonly [K in keyof T]: T[K] extends readonly (infer U)[] ? U[] : T[K] }
   : T;

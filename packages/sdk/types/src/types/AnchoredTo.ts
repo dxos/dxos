@@ -10,7 +10,7 @@ export const AnchoredTo = Schema.Struct({
   id: Obj.ID,
   anchor: Schema.optional(Schema.String),
 }).pipe(
-  Type.Relation({
+  Type.relation({
     typename: 'dxos.org/relation/AnchoredTo',
     version: '0.1.0',
     source: Type.Expando, // TODO(burdon): Type.Obj.Any.

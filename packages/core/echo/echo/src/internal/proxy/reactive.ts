@@ -21,11 +21,13 @@ export const subscribe = (obj: unknown, callback: () => void): (() => void) => {
 };
 
 /**
- * Recursively removes readonly modifiers from all properties of T.
+ * Removes readonly modifiers from top-level properties of T.
+ * Also converts readonly arrays at the top level to mutable arrays.
+ * For nested properties, mutability depends on the schema definition.
  */
-export type Mutable<T> = {
-  -readonly [P in keyof T]: T[P] extends object ? Mutable<T[P]> : T[P];
-};
+export type Mutable<T> = T extends object
+  ? { -readonly [K in keyof T]: T[K] extends readonly (infer U)[] ? U[] : T[K] }
+  : T;
 
 /**
  * Callback type for the change function.

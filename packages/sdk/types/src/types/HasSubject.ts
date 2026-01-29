@@ -11,7 +11,7 @@ export const HasSubject = Schema.Struct({
   id: Obj.ID,
   completedAt: Format.DateTime,
 }).pipe(
-  Type.Relation({
+  Type.relation({
     typename: 'dxos.org/relation/HasSubject',
     version: '0.1.0',
     source: Type.Expando, // TODO(burdon): Type.Obj.Any.

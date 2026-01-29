@@ -44,7 +44,7 @@ const Task = Schema.Struct({
     Schema.optional,
   ),
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'example.com/type/Task',
     version: '0.1.0',
   }),

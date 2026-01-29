@@ -16,7 +16,7 @@ export const HasRelationship = Schema.Struct({
   }),
 })
   .pipe(
-    Type.Relation({
+    Type.relation({
       typename: 'dxos.org/relation/HasRelationship',
       version: '0.1.0',
       source: Person,

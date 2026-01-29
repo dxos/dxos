@@ -6,25 +6,11 @@ import * as Match from 'effect/Match';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { Entity, Obj, Ref, Type } from '@dxos/echo';
+import { Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation, type JsonPath, type JsonSchemaType, LabelAnnotation } from '@dxos/echo/internal';
 import { View, ViewAnnotation } from '@dxos/schema';
 
-export interface Table extends Entity.OfKind<typeof Entity.Kind.Object> {
-  readonly name?: string;
-  readonly view: Ref.Ref<View.View>;
-  readonly sizes: Record<string, number>;
-}
-
-export interface TableEncoded {
-  readonly id: string;
-  readonly name?: string;
-  readonly view: string;
-  readonly sizes: Record<string, number>;
-}
-
-// Type annotation hides internal types while preserving brand properties.
-export const Table: Type.Obj.Of<Schema.Schema<Table, TableEncoded>> = Schema.Struct({
+export const Table = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
 
   view: Type.Ref(View.View).pipe(FormInputAnnotation.set(false)),
@@ -35,13 +21,15 @@ export const Table: Type.Obj.Of<Schema.Schema<Table, TableEncoded>> = Schema.Str
     value: Schema.Number,
   }).pipe(Schema.mutable, FormInputAnnotation.set(false)),
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/Table',
     version: '0.2.0',
   }),
   LabelAnnotation.set(['name']),
   ViewAnnotation.set(true),
-) as any;
+);
+
+export interface Table extends Schema.Schema.Type<typeof Table> {}
 
 type MakeProps = {
   name?: string;
@@ -95,7 +83,7 @@ export const TableV1 = Schema.Struct({
     value: Schema.Number,
   }).pipe(Schema.mutable),
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/Table',
     version: '0.1.0',
   }),
