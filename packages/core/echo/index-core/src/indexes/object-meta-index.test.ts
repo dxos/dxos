@@ -151,7 +151,7 @@ describe('ObjectMetaIndex', () => {
     }).pipe(Effect.provide(TestLayer)),
   );
 
-  it.effect('should support queryAll/queryTypes/queryNotTypes/queryRelations', () =>
+  it.effect('should support queryAll/queryTypes/queryRelations', () =>
     Effect.gen(function* () {
       const index = new ObjectMetaIndex();
       yield* index.migrate();
@@ -213,16 +213,20 @@ describe('ObjectMetaIndex', () => {
       const onlyPersonVersionless = yield* index.queryTypes({ spaceId, typeDxns: [TYPE_PERSON_VERSIONLESS] });
       expect(onlyPersonVersionless.map((_) => _.objectId)).toEqual([objectId1]);
 
-      const notPerson = yield* index.queryNotTypes({ spaceId, typeDxns: [TYPE_PERSON] });
+      const notPerson = yield* index.queryTypes({ spaceId, typeDxns: [TYPE_PERSON], inverted: true });
       expect(notPerson.map((_) => _.objectId).sort()).toEqual([objectId2, relationId].sort());
 
-      const notPersonVersionless = yield* index.queryNotTypes({ spaceId, typeDxns: [TYPE_PERSON_VERSIONLESS] });
+      const notPersonVersionless = yield* index.queryTypes({
+        spaceId,
+        typeDxns: [TYPE_PERSON_VERSIONLESS],
+        inverted: true,
+      });
       expect(notPersonVersionless.map((_) => _.objectId).sort()).toEqual([objectId2, relationId].sort());
 
       const emptyTypes = yield* index.queryTypes({ spaceId, typeDxns: [] });
       expect(emptyTypes).toEqual([]);
 
-      const notEmptyTypes = yield* index.queryNotTypes({ spaceId, typeDxns: [] });
+      const notEmptyTypes = yield* index.queryTypes({ spaceId, typeDxns: [], inverted: true });
       expect(notEmptyTypes.map((_) => _.objectId).sort()).toEqual([objectId1, objectId2, relationId].sort());
 
       const bySource = yield* index.queryRelations({

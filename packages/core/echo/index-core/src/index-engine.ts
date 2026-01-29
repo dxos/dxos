@@ -114,7 +114,7 @@ export class IndexEngine {
   queryTypes(
     query: Pick<ObjectMeta, 'spaceId'> & { typeDxns: readonly ObjectMeta['typeDxn'][]; inverted?: boolean },
   ): Effect.Effect<readonly ObjectMeta[], SqlError.SqlError, SqlClient.SqlClient> {
-    return query.inverted ? this.#objectMetaIndex.queryNotTypes(query) : this.#objectMetaIndex.queryTypes(query);
+    return this.#objectMetaIndex.queryTypes(query);
   }
 
   queryRelations(

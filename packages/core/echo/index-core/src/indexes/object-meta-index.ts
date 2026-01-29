@@ -93,49 +93,26 @@ export class ObjectMetaIndex implements Index {
     ({
       spaceId,
       typeDxns,
+      inverted = false,
     }: {
       spaceId: ObjectMeta['spaceId'];
       typeDxns: readonly ObjectMeta['typeDxn'][];
+      inverted?: boolean;
     }): Effect.Effect<readonly ObjectMeta[], SqlError.SqlError, SqlClient.SqlClient> =>
       Effect.gen(function* () {
         if (typeDxns.length === 0) {
-          return [];
-        }
-        const sql = yield* SqlClient.SqlClient;
-        const typeWhere = sql.or(
-          typeDxns.map((typeDxn) => {
-            const parsedType = DXN.tryParse(typeDxn)?.asTypeDXN();
-            return parsedType && parsedType.version === undefined
-              ? sql.or([sql`typeDxn = ${typeDxn}`, sql`typeDxn LIKE ${`${typeDxn}:%`}`])
-              : sql`typeDxn = ${typeDxn}`;
-          }),
-        );
-        const rows = yield* sql<ObjectMeta>`SELECT * FROM objectMeta WHERE spaceId = ${spaceId} AND ${typeWhere}`;
-        return rows.map((row) => ({
-          ...row,
-          deleted: !!row.deleted,
-        }));
-      }),
-  );
+          if (!inverted) {
+            return [];
+          }
 
-  queryNotTypes = Effect.fn('ObjectMetaIndex.queryNotTypes')(
-    ({
-      spaceId,
-      typeDxns,
-    }: {
-      spaceId: ObjectMeta['spaceId'];
-      typeDxns: readonly ObjectMeta['typeDxn'][];
-    }): Effect.Effect<readonly ObjectMeta[], SqlError.SqlError, SqlClient.SqlClient> =>
-      Effect.gen(function* () {
-        const sql = yield* SqlClient.SqlClient;
-        if (typeDxns.length === 0) {
+          const sql = yield* SqlClient.SqlClient;
           const rows = yield* sql<ObjectMeta>`SELECT * FROM objectMeta WHERE spaceId = ${spaceId}`;
           return rows.map((row) => ({
             ...row,
             deleted: !!row.deleted,
           }));
         }
-
+        const sql = yield* SqlClient.SqlClient;
         const typeWhere = sql.or(
           typeDxns.map((typeDxn) => {
             const parsedType = DXN.tryParse(typeDxn)?.asTypeDXN();
@@ -144,7 +121,9 @@ export class ObjectMetaIndex implements Index {
               : sql`typeDxn = ${typeDxn}`;
           }),
         );
-        const rows = yield* sql<ObjectMeta>`SELECT * FROM objectMeta WHERE spaceId = ${spaceId} AND NOT ${typeWhere}`;
+        const rows = inverted
+          ? yield* sql<ObjectMeta>`SELECT * FROM objectMeta WHERE spaceId = ${spaceId} AND NOT ${typeWhere}`
+          : yield* sql<ObjectMeta>`SELECT * FROM objectMeta WHERE spaceId = ${spaceId} AND ${typeWhere}`;
         return rows.map((row) => ({
           ...row,
           deleted: !!row.deleted,
