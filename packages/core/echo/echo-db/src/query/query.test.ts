@@ -246,6 +246,37 @@ describe('Query', () => {
     });
   });
 
+  describe('Queue queries', () => {
+    test('typeDXN: versionless matches any version', async () => {
+      const ContactV1 = Schema.Struct({
+        firstName: Schema.String,
+        lastName: Schema.String,
+      }).pipe(Type.Obj({ typename: 'example.com/type/Person', version: '0.1.0' }));
+
+      const ContactV2 = Schema.Struct({
+        name: Schema.String,
+      }).pipe(Type.Obj({ typename: 'example.com/type/Person', version: '0.2.0' }));
+
+      const peer = await builder.createPeer({ types: [ContactV1, ContactV2] });
+      const db = await peer.createDatabase();
+      const queues = peer.client.constructQueueFactory(db.spaceId);
+      const queue = queues.create();
+
+      const contactV1 = Obj.make(ContactV1, { firstName: 'John', lastName: 'Doe' });
+      const contactV2 = Obj.make(ContactV2, { name: 'Brian Smith' });
+      await queue.append([contactV1, contactV2]);
+
+      const both = await queue.query(Query.select(Filter.typeDXN(DXN.parse('dxn:type:example.com/type/Person')))).run();
+      expect(both).toHaveLength(2);
+
+      const v1 = await queue.query(Query.select(Filter.typeDXN(DXN.parse('dxn:type:example.com/type/Person:0.1.0')))).run();
+      expect(v1).toEqual([contactV1]);
+
+      const v2 = await queue.query(Query.select(Filter.typeDXN(DXN.parse('dxn:type:example.com/type/Person:0.2.0')))).run();
+      expect(v2).toEqual([contactV2]);
+    });
+  });
+
   test('query.run() queries everything after restart', async () => {
     const tmpPath = createTmpPath();
     const spaceKey = PublicKey.random();

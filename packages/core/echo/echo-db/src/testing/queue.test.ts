@@ -5,7 +5,6 @@
 import * as Reactivity from '@effect/experimental/Reactivity';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
-import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
 import { Event } from '@dxos/async';
@@ -218,39 +217,6 @@ describe('queues', () => {
       const result = await queue.query(Query.select(Filter.type(TestSchema.Person))).run();
       expect(result).toHaveLength(2);
       expect(result.map((o) => (o as TestSchema.Person).name).sort()).toEqual(['jane', 'john']);
-    });
-
-    test('typeDXN: versionless matches any version', async ({ expect }) => {
-      const ContactV1 = Schema.Struct({
-        firstName: Schema.String,
-        lastName: Schema.String,
-      }).pipe(Type.Obj({ typename: 'example.com/type/Person', version: '0.1.0' }));
-
-      const ContactV2 = Schema.Struct({
-        name: Schema.String,
-      }).pipe(Type.Obj({ typename: 'example.com/type/Person', version: '0.2.0' }));
-
-      await using peer = await builder.createPeer({ types: [ContactV1, ContactV2] });
-      const spaceId = SpaceId.random();
-      const queues = peer.client.constructQueueFactory(spaceId);
-      const queue = queues.create();
-
-      const contactV1 = Obj.make(ContactV1, { firstName: 'John', lastName: 'Doe' });
-      const contactV2 = Obj.make(ContactV2, { name: 'Brian Smith' });
-      await queue.append([contactV1, contactV2]);
-
-      const both = await queue.query(Query.select(Filter.typeDXN(DXN.parse('dxn:type:example.com/type/Person')))).run();
-      expect(both).toHaveLength(2);
-
-      const v1 = await queue
-        .query(Query.select(Filter.typeDXN(DXN.parse('dxn:type:example.com/type/Person:0.1.0'))))
-        .run();
-      expect(v1).toEqual([contactV1]);
-
-      const v2 = await queue
-        .query(Query.select(Filter.typeDXN(DXN.parse('dxn:type:example.com/type/Person:0.2.0'))))
-        .run();
-      expect(v2).toEqual([contactV2]);
     });
 
     test('one shot query with name predicate', async ({ expect }) => {
