@@ -199,7 +199,7 @@ const MessageBlockObjectTile = forwardRef<HTMLDivElement, { subject: Obj.Any }>(
       className={mx('grid col-span-3 plb-1 pr-4', hoverableControls, hoverableFocusedWithinControls)}
       ref={forwardedRef}
     >
-      <Surface role='card' limit={1} data={{ subject }} fallback={title} />
+      <Surface role='card-content' limit={1} data={{ subject }} fallback={title} />
     </Card.Root>
   );
 });

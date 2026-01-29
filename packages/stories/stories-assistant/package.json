@@ -1,6 +1,12 @@
 {
-  "author": "DXOS.org",
+  "name": "@dxos/stories-assistant",
+  "version": "0.8.3",
+  "description": "Chat integration tests",
+  "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "sideEffects": true,
   "dependencies": {
     "@dxos/ai": "workspace:*",
     "@dxos/app-framework": "workspace:*",
@@ -83,7 +89,6 @@
     "@effect/ai": "catalog:",
     "effect": "catalog:"
   },
-  "description": "Chat integration tests",
   "devDependencies": {
     "@dxos/assistant-toolkit": "workspace:*",
     "@dxos/devtools": "workspace:*",
@@ -116,9 +121,6 @@
     "react-dom": "catalog:",
     "vite": "catalog:"
   },
-  "homepage": "https://dxos.org",
-  "license": "MIT",
-  "name": "@dxos/stories-assistant",
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
@@ -128,7 +130,5 @@
   },
   "publishConfig": {
     "access": "public"
-  },
-  "sideEffects": true,
-  "version": "0.8.3"
+  }
 }

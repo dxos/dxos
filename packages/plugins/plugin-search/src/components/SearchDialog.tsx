@@ -85,16 +85,16 @@ export const SearchDialog = ({ pivotId }: SearchDialogProps) => {
   }, []);
 
   return (
-    <Dialog.Content classNames={['md:max-is-[24rem] overflow-hidden mbs-12']}>
+    <Dialog.Content classNames='md:max-is-[24rem] overflow-hidden mbs-12'>
       <Dialog.Title>{t('search dialog title')}</Dialog.Title>
       <SearchList.Root onSearch={handleSearch}>
         <div
-          aria-label={t('search placeholder')}
           role='combobox'
           aria-expanded='true'
-          className='flex flex-col grow overflow-hidden my-2'
+          aria-label={t('search placeholder')}
+          className='flex flex-col grow overflow-hidden'
         >
-          <SearchList.Input placeholder={t('search placeholder')} classNames='pli-1 my-2' />
+          <SearchList.Input placeholder={t('search placeholder')} />
           <SearchList.Content classNames='max-bs-[24rem] overflow-auto'>
             <SearchList.Viewport>
               {queryString.length > 0 ? (
@@ -120,7 +120,6 @@ export const SearchDialog = ({ pivotId }: SearchDialogProps) => {
           </SearchList.Content>
         </div>
       </SearchList.Root>
-
       <Dialog.Close asChild>
         <Button variant='primary' classNames='mbs-2'>
           {t('close label', { ns: osTranslations })}

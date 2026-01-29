@@ -2,19 +2,20 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/react';
 import { Obj, Query } from '@dxos/echo';
 import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
-import { useTranslation } from '@dxos/react-ui';
-import { Card } from '@dxos/react-ui-mosaic';
+import { Toolbar, useTranslation } from '@dxos/react-ui';
+import { Card, Mosaic, type StackComponent } from '@dxos/react-ui-mosaic';
 import { SearchList } from '@dxos/react-ui-searchlist';
 import { StackItem } from '@dxos/react-ui-stack';
 import { Text } from '@dxos/schema';
 
 import { useGlobalSearch, useGlobalSearchResults, useWebSearch } from '../hooks';
 import { meta } from '../meta';
+import { type SearchResult } from '../types';
 
 export const SearchMain = ({ space }: { space?: Space }) => {
   const { t } = useTranslation(meta.id);
@@ -34,9 +35,12 @@ export const SearchMain = ({ space }: { space?: Space }) => {
         ),
   );
 
-  const results = useGlobalSearchResults(objects);
+  const results = useGlobalSearchResults<Obj.Any>(objects);
   const { results: webResults } = useWebSearch({ query });
-  const allResults = [...results, ...webResults];
+  const allResults = useMemo(
+    () => [...results, ...webResults].filter(({ object }) => object && Obj.getLabel(object)),
+    [results, webResults],
+  );
 
   const handleSearch = useCallback(
     (text: string) => {
@@ -50,29 +54,35 @@ export const SearchMain = ({ space }: { space?: Space }) => {
     <StackItem.Content toolbar>
       {/* TODO(burdon): Add selection. */}
       <SearchList.Root onSearch={handleSearch}>
-        <SearchList.Input placeholder={t('search placeholder')} classNames='pli-2' />
-        <SearchList.Content classNames='overflow-y-auto'>
+        <Toolbar.Root>
+          <SearchList.Input placeholder={t('search placeholder')} />
+        </Toolbar.Root>
+        <SearchList.Content>
           <SearchList.Viewport>
-            {/* TODO(burdon): Support selection on search results. */}
-            {allResults
-              .filter((item) => Obj.getLabel(item.object))
-              .map(({ id, object }) => (
-                <div key={id} role='none' className='pli-2 first:pbs-2 pbe-2'>
-                  <Card.Root>
-                    <Card.Toolbar>
-                      {/* TODO(wittjosiah): Get icon for object type. */}
-                      <span />
-                      <Card.Title>{Obj.getLabel(object)}</Card.Title>
-                      {/* TODO(wittjosiah): Button to navigate to object. */}
-                    </Card.Toolbar>
-                    <Surface role='card--content' data={{ subject: object }} limit={1} />
-                  </Card.Root>
-                </div>
-              ))}
+            <Mosaic.Root>
+              <Mosaic.Container asChild>
+                <Mosaic.Viewport>
+                  <Mosaic.Stack items={allResults} Component={Component} />
+                </Mosaic.Viewport>
+              </Mosaic.Container>
+            </Mosaic.Root>
             {allResults.length === 0 && <SearchList.Empty>{t('empty results message')}</SearchList.Empty>}
           </SearchList.Viewport>
         </SearchList.Content>
       </SearchList.Root>
     </StackItem.Content>
+  );
+};
+
+const Component: StackComponent<SearchResult<Obj.Any>> = ({ object }) => {
+  return (
+    <Card.Root key={object.id}>
+      <Card.Toolbar>
+        <Card.DragHandle />
+        <Card.Title>{object.label}</Card.Title>
+        <Card.Menu />
+      </Card.Toolbar>
+      <Surface role='card--content' data={{ subject: object }} limit={1} />
+    </Card.Root>
   );
 };

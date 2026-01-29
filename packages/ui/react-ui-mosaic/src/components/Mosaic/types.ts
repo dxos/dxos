@@ -8,16 +8,17 @@ import { type Obj } from '@dxos/echo';
 export type Axis = 'vertical' | 'horizontal';
 export type AllowedAxis = Axis | 'all';
 
+export type MosaicBaseItem = { id: string };
+
 /**
  * Draggable item.
  */
-export type MosaicTileData<T extends Obj.Any = Obj.Any, Location = any> = {
+export type MosaicTileData<T extends MosaicBaseItem = MosaicBaseItem, Location = any> = {
   type: 'tile';
   id: string;
   containerId: string;
   location: Location;
   bounds?: DOMRect;
-  // TODO(burdon): Generalize (has ID).
   object: T;
 };
 

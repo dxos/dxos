@@ -102,6 +102,7 @@ const CardDragHandle = forwardRef<HTMLButtonElement, CardDragHandleProps>((_, fo
       label={t('drag handle label')}
       classNames='cursor-pointer'
       size={5}
+      disabled={!forwardedRef}
       ref={forwardedRef}
     />
   );

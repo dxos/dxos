@@ -5,6 +5,7 @@
 import React, { type PropsWithChildren, createContext, useCallback, useContext, useState } from 'react';
 
 import { raise } from '@dxos/debug';
+import { type Obj } from '@dxos/echo';
 import { GlobalFilterProvider } from '@dxos/react-ui-searchlist';
 
 import { type SearchResult } from '../types';
@@ -51,7 +52,7 @@ export const useGlobalSearch = () => {
   return useContext(SearchContext) ?? raise(new Error('Missing SearchContext.'));
 };
 
-export const useGlobalSearchResults = <T extends Record<string, any>>(objects?: T[]): SearchResult[] => {
+export const useGlobalSearchResults = <T extends Obj.Any>(objects?: T[]): SearchResult<T>[] => {
   const { match } = useGlobalSearch();
   return objects && match ? filterObjectsSync(objects, match) : [];
 };

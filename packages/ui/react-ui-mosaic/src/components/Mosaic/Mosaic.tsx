@@ -52,7 +52,6 @@ import { createPortal } from 'react-dom';
 import 'overlayscrollbars/styles/overlayscrollbars.css';
 import './styles.css';
 
-import { type Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { type SlottableClassName, type ThemedClassName } from '@dxos/react-ui';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
@@ -61,10 +60,11 @@ import { isTruthy } from '@dxos/util';
 
 import { useFocus } from '../Focus';
 
-import { Stack, type StackProps } from './Stack';
+import { DefaultStackComponent, Stack, type StackProps, VirtualStack } from './Stack';
 import {
   type AllowedAxis,
   type Axis,
+  type MosaicBaseItem,
   type MosaicContainerData,
   type MosaicData,
   type MosaicEventHandler,
@@ -97,7 +97,7 @@ import {
 // Types
 //
 
-const getSourceData = <T extends Obj.Any = Obj.Any, Location = any>(
+const getSourceData = <T extends MosaicBaseItem = MosaicBaseItem, Location = any>(
   source: ElementDragPayload,
 ): MosaicTileData<T, Location> | null => {
   return source.data.type === 'tile' ? (source.data as MosaicTileData<T, Location>) : null;
@@ -375,7 +375,7 @@ const CONTAINER_PLACEHOLDER_HEIGHT = '--mosaic-placeholder-height';
 
 type ContainerProps = SlottableClassName<
   PropsWithChildren<
-    Pick<ContainerContextValue, 'eventHandler' | 'axis'> & {
+    Partial<Pick<ContainerContextValue, 'eventHandler' | 'axis'>> & {
       asChild?: boolean;
       autoScroll?: HTMLElement | null;
       withFocus?: boolean;
@@ -384,6 +384,8 @@ type ContainerProps = SlottableClassName<
   >
 >;
 
+let counter = 0;
+
 // TODO(burdon): Rename Viewport?
 const Container = forwardRef<HTMLDivElement, ContainerProps>(
   (
@@ -391,7 +393,7 @@ const Container = forwardRef<HTMLDivElement, ContainerProps>(
       className,
       classNames,
       children,
-      eventHandler,
+      eventHandler: eventHandlerProp,
       axis = 'vertical',
       asChild,
       autoScroll: autoscrollElement,
@@ -404,6 +406,15 @@ const Container = forwardRef<HTMLDivElement, ContainerProps>(
     const rootRef = useRef<HTMLDivElement>(null);
     const composedRef = useComposedRefs<HTMLDivElement>(rootRef, forwardedRef);
     const Root = asChild ? Slot : Primitive.div;
+
+    // Handler.
+    const eventHandler = useMemo(
+      () =>
+        eventHandlerProp ?? {
+          id: `mosaic-container-${counter++}`,
+        },
+      [eventHandlerProp],
+    );
 
     // State.
     const { dragging } = useRootContext(Container.displayName!);
@@ -690,7 +701,7 @@ const [TileContextProvider, useTileContext] = createContext<TileContextValue>('M
 // State attribute: data-[mosaic-tile-state=dragging]
 const TILE_STATE_ATTR = 'mosaic-tile-state';
 
-type TileProps<T extends Obj.Any = Obj.Any, Location = LocationType> = SlottableClassName<
+type TileProps<T extends MosaicBaseItem = MosaicBaseItem, Location = LocationType> = SlottableClassName<
   PropsWithChildren<{
     asChild?: boolean;
     dragHandle?: HTMLElement | null;
@@ -979,7 +990,11 @@ export const Mosaic = {
   Tile,
   Placeholder,
   DropIndicator,
+
+  // Stack
+  DefaultStackComponent,
   Stack,
+  VirtualStack,
 };
 
 export type {

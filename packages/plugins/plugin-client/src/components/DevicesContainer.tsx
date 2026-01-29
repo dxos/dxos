@@ -20,8 +20,8 @@ import {
   ControlPage,
   ControlSection,
 } from '@dxos/react-ui-form';
+import { translationKey } from '@dxos/shell/react';
 import { AuthCode, Centered, DeviceListItem, Emoji, Viewport } from '@dxos/shell/react';
-import { osTranslations } from '@dxos/ui-theme';
 import { hexToEmoji } from '@dxos/util';
 
 import { meta } from '../meta';
@@ -32,7 +32,7 @@ export type DevicesContainerProps = {
 };
 
 export const DevicesContainer = ({ createInvitationUrl }: DevicesContainerProps) => {
-  const { t } = useTranslation(osTranslations);
+  const { t } = useTranslation(translationKey);
   const { invokePromise } = useOperationInvoker();
   const devices = useDevices();
   const { swarm: connectionState } = useNetworkStatus();

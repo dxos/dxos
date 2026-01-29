@@ -15,13 +15,15 @@ import { Card } from '../Card';
 import { Mosaic, type MosiacPlaceholderProps, useMosaicContainer } from '../Mosaic';
 
 import { styles } from './styles';
-import { type Axis } from './types';
+import { type Axis, type MosaicBaseItem } from './types';
 
-type StackProps<T extends Obj.Any = Obj.Any> = SlottableClassName<{
+type StackComponent<T extends MosaicBaseItem = MosaicBaseItem> = FC<{ object: T; location: number }>;
+
+type StackProps<T extends MosaicBaseItem = MosaicBaseItem> = SlottableClassName<{
   role?: string;
   axis?: Axis;
   items?: T[];
-  Component?: FC<{ object: T; location: number }>;
+  Component: StackComponent<T>;
 }>;
 
 /**
@@ -29,10 +31,7 @@ type StackProps<T extends Obj.Any = Obj.Any> = SlottableClassName<{
  * NOTE: This is a low-level component and should be wrapped by a scrollable container.
  */
 const StackInner = forwardRef<HTMLDivElement, StackProps>(
-  (
-    { className, classNames, role = 'list', axis = 'vertical', items, Component = DefaultComponent, ...props },
-    forwardedRef,
-  ) => {
+  ({ className, classNames, role = 'list', axis = 'vertical', items, Component, ...props }, forwardedRef) => {
     invariant(Component);
     const { id, dragging } = useMosaicContainer(StackInner.displayName!);
     const visibleItems = useVisibleItems({ id, items, dragging: dragging?.source.data });
@@ -64,7 +63,7 @@ const StackInner = forwardRef<HTMLDivElement, StackProps>(
 
 StackInner.displayName = 'Stack';
 
-const Stack = StackInner as <T extends Obj.Any = Obj.Any>(
+const Stack = StackInner as <T extends MosaicBaseItem = MosaicBaseItem>(
   props: StackProps<T> & { ref?: Ref<HTMLDivElement> },
 ) => ReactElement;
 
@@ -72,7 +71,7 @@ const Stack = StackInner as <T extends Obj.Any = Obj.Any>(
 // VirtualStack
 //
 
-type VirtualStackProps<T extends Obj.Any = Obj.Any> = StackProps<T> &
+type VirtualStackProps<T extends MosaicBaseItem = MosaicBaseItem> = StackProps<T> &
   Pick<
     ReactVirtualizerOptions<HTMLDivElement, HTMLDivElement>,
     'estimateSize' | 'getScrollElement' | 'overscan' | 'onChange'
@@ -86,7 +85,7 @@ const VirtualStackInner = forwardRef<HTMLDivElement, VirtualStackProps>(
       role = 'list',
       axis = 'vertical',
       items,
-      Component = DefaultComponent,
+      Component,
       estimateSize,
       getScrollElement,
       overscan = 8,
@@ -170,15 +169,15 @@ const VirtualStackInner = forwardRef<HTMLDivElement, VirtualStackProps>(
 
 VirtualStackInner.displayName = 'VirtualStackInner';
 
-const VirtualStack = VirtualStackInner as <T extends Obj.Any = Obj.Any>(
+const VirtualStack = VirtualStackInner as <T extends MosaicBaseItem = MosaicBaseItem>(
   props: VirtualStackProps<T> & { ref?: Ref<HTMLDivElement> },
 ) => ReactElement;
 
 //
-// DefaultComponent
+// DefaultStackComponent
 //
 
-const DefaultComponent: StackProps['Component'] = (props) => {
+const DefaultStackComponent: StackComponent<Obj.Any> = (props) => {
   const dragHandleRef = useRef<HTMLButtonElement>(null);
   const [open, setOpen] = useState(false);
   return (
@@ -204,7 +203,7 @@ const DefaultComponent: StackProps['Component'] = (props) => {
   );
 };
 
-DefaultComponent.displayName = 'DefaultComponent';
+DefaultStackComponent.displayName = 'DefaultStackComponent';
 
 //
 // Placeholder
@@ -229,6 +228,6 @@ Placeholder.displayName = 'Placeholder';
 // Stack
 //
 
-export { Stack, VirtualStack };
+export { DefaultStackComponent, Stack, VirtualStack };
 
-export type { StackProps, VirtualStackProps };
+export type { StackComponent, StackProps, VirtualStackProps };

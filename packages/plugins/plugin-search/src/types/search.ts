@@ -2,9 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
+import type { Obj } from '@dxos/echo';
 import type { DXN } from '@dxos/keys';
 
-export type SearchResult = {
+export type SearchResult<T extends Obj.Any = Obj.Any> = {
   id: string;
 
   /**
@@ -23,7 +24,7 @@ export type SearchResult = {
   /**
    * DXN of the object type.
    */
+  // TODO(burdon): Different from `type` above?
   objectType?: DXN.String;
-
-  object?: any;
+  object?: T;
 };

@@ -4,11 +4,9 @@
 
 import { useMemo } from 'react';
 
-import { type Obj } from '@dxos/echo';
+import { type MosaicBaseItem, type MosaicTileData } from '../components';
 
-import { type MosaicTileData } from '../components';
-
-export type UseVisibleItemsProps<T extends Obj.Any> = {
+export type UseVisibleItemsProps<T extends MosaicBaseItem> = {
   /** Container id. */
   id: string;
   /** Current items. */
@@ -20,7 +18,7 @@ export type UseVisibleItemsProps<T extends Obj.Any> = {
 /**
  * Returns items with the dragging item removed.
  */
-export const useVisibleItems = <T extends Obj.Any>({ id, items, dragging }: UseVisibleItemsProps<T>): T[] => {
+export const useVisibleItems = <T extends MosaicBaseItem>({ id, items, dragging }: UseVisibleItemsProps<T>): T[] => {
   const visibleItems = useMemo(() => {
     if (!items || !dragging || id !== dragging.containerId) {
       return items ?? [];

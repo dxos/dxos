@@ -31,9 +31,7 @@ export const Home = ({ classNames }: HomeProps) => {
       {/* <div className='container-max-width'>{t('workspaces heading')}</div> */}
       <SearchList.Root onSearch={handleSearch}>
         <div className='container-max-width'>
-          <div className='plb-3'>
-            <SearchList.Input placeholder={t('search placeholder')} autoFocus />
-          </div>
+          <SearchList.Input placeholder={t('search placeholder')} autoFocus />
           <SearchList.Content>
             <SearchList.Viewport classNames='flex flex-col gap-1'>
               {results.map((node) => (
