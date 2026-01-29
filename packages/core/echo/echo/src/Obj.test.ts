@@ -84,9 +84,7 @@ describe('Obj.clone', () => {
     expect(person.employer?.target?.name).toBe('Updated DXOS');
   });
 
-  test('deep clone recursively clones referenced objects in meta', ({ expect }) => {
-    // Note: Deep clone currently only works for refs in meta, not in props
-    // This test verifies the current behavior - refs in props are not deep cloned
+  test('deep clone recursively clones referenced objects', ({ expect }) => {
     const employer = Obj.make(TestSchema.Organization, {
       name: 'DXOS',
     });
@@ -100,21 +98,21 @@ describe('Obj.clone', () => {
 
     const cloned = Obj.clone(person, { deep: true });
 
-    // Refs in props are not deep cloned - they remain the same reference
-    expect(cloned.employer).toBe(person.employer);
-    expect(cloned.employer?.target).toBe(employer);
+    expect(cloned.employer).not.toBe(person.employer);
+    expect(cloned.employer?.target).not.toBe(employer);
+    expect(cloned.employer?.target?.id).not.toBe(employer.id);
+    expect(cloned.employer?.target?.name).toBe(employer.name);
 
-    // Modifying the original referenced object affects both
+    // Modifying the original referenced object does not affect the clone
     Obj.change(employer, (org) => {
       org.name = 'Updated DXOS';
     });
 
-    expect(cloned.employer?.target?.name).toBe('Updated DXOS');
+    expect(cloned.employer?.target?.name).toBe('DXOS');
     expect(person.employer?.target?.name).toBe('Updated DXOS');
   });
 
-  test('deep clone with nested references in arrays', ({ expect }) => {
-    // Note: Deep clone currently only works for refs in meta, not in props
+  test('deep clone with nested references', ({ expect }) => {
     const task1 = Obj.make(TestSchema.Task, {
       title: 'Task 1',
       description: 'First task',
@@ -135,13 +133,20 @@ describe('Obj.clone', () => {
 
     const cloned = Obj.clone(person, { deep: true });
 
-    // Arrays are cloned but refs inside are not deep cloned
     expect(cloned.tasks).not.toBe(person.tasks);
     expect(cloned.tasks?.length).toBe(2);
-    // Refs in props are not deep cloned
-    expect(cloned.tasks?.[0]?.target).toBe(task1);
-    expect(cloned.tasks?.[1]?.target).toBe(task2);
-    expect(cloned.tasks?.[1]?.target?.previous?.target).toBe(task1);
+    expect(cloned.tasks?.[0]?.target).not.toBe(task1);
+    expect(cloned.tasks?.[0]?.target?.id).not.toBe(task1.id);
+    expect(cloned.tasks?.[0]?.target?.title).toBe(task1.title);
+
+    expect(cloned.tasks?.[1]?.target).not.toBe(task2);
+    expect(cloned.tasks?.[1]?.target?.id).not.toBe(task2.id);
+    expect(cloned.tasks?.[1]?.target?.title).toBe(task2.title);
+
+    // Deep clone should also clone nested references
+    expect(cloned.tasks?.[1]?.target?.previous?.target).not.toBe(task1);
+    expect(cloned.tasks?.[1]?.target?.previous?.target?.id).not.toBe(task1.id);
+    expect(cloned.tasks?.[1]?.target?.previous?.target?.title).toBe(task1.title);
   });
 
   test('deep clone with optional reference', ({ expect }) => {
@@ -191,23 +196,22 @@ describe('Obj.clone', () => {
 
     const cloned = Obj.clone(person, { deep: true });
 
-    expect(cloned.address.city).toBe('San Francisco');
-    expect(cloned.address.state).toBe('CA');
-    expect(cloned.address.zip).toBe('94102');
-    expect(cloned.address.coordinates.lat).toBe(37.7749);
-    expect(cloned.address.coordinates.lng).toBe(-122.4194);
+    expect(cloned.address?.city).toBe('San Francisco');
+    expect(cloned.address?.state).toBe('CA');
+    expect(cloned.address?.zip).toBe('94102');
+    expect(cloned.address?.coordinates.lat).toBe(37.7749);
+    expect(cloned.address?.coordinates.lng).toBe(-122.4194);
 
     // Modifying nested properties should be independent
     Obj.change(person, (p) => {
-      p.address.city = 'New York';
+      p.address!.city = 'New York';
     });
 
-    expect(cloned.address.city).toBe('San Francisco');
-    expect(person.address.city).toBe('New York');
+    expect(cloned.address?.city).toBe('San Francisco');
+    expect(person.address?.city).toBe('New York');
   });
 
   test('deep clone with array of references', ({ expect }) => {
-    // Note: Deep clone currently only works for refs in meta, not in props
     const task1 = Obj.make(TestSchema.Task, { title: 'Task 1' });
     const task2 = Obj.make(TestSchema.Task, { title: 'Task 2' });
     const task3 = Obj.make(TestSchema.Task, { title: 'Task 3' });
@@ -226,18 +230,17 @@ describe('Obj.clone', () => {
     expect(cloned.tasks?.[1]?.target?.title).toBe('Task 2');
     expect(cloned.tasks?.[2]?.target?.title).toBe('Task 3');
 
-    // Arrays are cloned but refs inside are not deep cloned
-    expect(cloned.tasks).not.toBe(person.tasks);
-    expect(cloned.tasks?.[0]?.target).toBe(task1);
-    expect(cloned.tasks?.[1]?.target).toBe(task2);
-    expect(cloned.tasks?.[2]?.target).toBe(task3);
+    // All referenced tasks should be cloned
+    expect(cloned.tasks?.[0]?.target).not.toBe(task1);
+    expect(cloned.tasks?.[1]?.target).not.toBe(task2);
+    expect(cloned.tasks?.[2]?.target).not.toBe(task3);
 
-    // Modifying original tasks affects both since refs are shared
+    // Modifying original tasks should not affect cloned ones
     Obj.change(task1, (t) => {
       t.title = 'Updated Task 1';
     });
 
-    expect(cloned.tasks?.[0]?.target?.title).toBe('Updated Task 1');
+    expect(cloned.tasks?.[0]?.target?.title).toBe('Task 1');
     expect(person.tasks?.[0]?.target?.title).toBe('Updated Task 1');
   });
 
@@ -256,8 +259,10 @@ describe('Obj.clone', () => {
     const cloned = Obj.clone(person, { deep: true, retainId: true });
 
     expect(cloned.id).toBe(person.id);
-    // Refs in props are not deep cloned even with deep: true
-    expect(cloned.employer?.target).toBe(employer);
+    expect(cloned.employer?.target).not.toBe(employer);
+    // When retainId is true, nested objects also retain their IDs
+    expect(cloned.employer?.target?.id).toBe(employer.id);
+    expect(cloned.employer?.target?.name).toBe(employer.name);
   });
 
   test('clone preserves schema type', ({ expect }) => {
