@@ -10,7 +10,7 @@ import { Database, Obj } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
 import { Text } from '@dxos/schema';
 
-import * as Initiative from '../InitiativeSchema';
+import * as Initiative from '../Initiative';
 
 export default defineFunction({
   key: 'dxos.org/function/initiative/get-context',

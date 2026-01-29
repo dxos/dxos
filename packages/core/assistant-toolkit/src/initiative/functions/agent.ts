@@ -11,7 +11,7 @@ import { acquireReleaseResource } from '@dxos/effect';
 import { TriggerEvent, defineFunction } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 
-import * as Initiative from '../InitiativeSchema';
+import * as Initiative from '../Initiative';
 
 export default defineFunction({
   key: 'dxos.org/function/initiative/agent',
