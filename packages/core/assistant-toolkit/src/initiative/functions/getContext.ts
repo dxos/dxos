@@ -29,6 +29,7 @@ export default defineFunction({
     artifacts: Schema.Array(
       Schema.Struct({
         name: Schema.String,
+        type: Schema.String,
         dxn: Schema.String,
       }),
     ),
