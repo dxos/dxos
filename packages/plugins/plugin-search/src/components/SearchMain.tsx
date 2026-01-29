@@ -59,13 +59,11 @@ export const SearchMain = ({ space }: { space?: Space }) => {
         </Toolbar.Root>
         <SearchList.Content>
           <SearchList.Viewport>
-            <Mosaic.Root>
-              <Mosaic.Container asChild>
-                <Mosaic.Viewport>
-                  <Mosaic.Stack items={allResults} Component={Component} />
-                </Mosaic.Viewport>
-              </Mosaic.Container>
-            </Mosaic.Root>
+            <Mosaic.Container asChild>
+              <Mosaic.Viewport>
+                <Mosaic.Stack items={allResults} Component={Component} />
+              </Mosaic.Viewport>
+            </Mosaic.Container>
             {allResults.length === 0 && <SearchList.Empty>{t('empty results message')}</SearchList.Empty>}
           </SearchList.Viewport>
         </SearchList.Content>

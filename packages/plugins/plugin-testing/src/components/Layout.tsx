@@ -15,7 +15,7 @@ import {
   toLocalizedString,
   useTranslation,
 } from '@dxos/react-ui';
-import { Card } from '@dxos/react-ui-mosaic';
+import { Card, Mosaic } from '@dxos/react-ui-mosaic';
 import { descriptionMessage, mx } from '@dxos/ui-theme';
 
 import { meta } from '../meta';
@@ -85,71 +85,73 @@ export const Layout = ({ children }: PropsWithChildren<{}>) => {
 
   return (
     <div role='none' className='fixed inset-0 flex overflow-hidden'>
-      <Popover.Root open={open}>
-        <Main.Root
-          navigationSidebarState={layout.sidebarState}
-          complementarySidebarState={layout.complementarySidebarState}
-          onNavigationSidebarStateChange={(next) => updateState({ sidebarState: next })}
-          onComplementarySidebarStateChange={(next) => updateState({ complementarySidebarState: next })}
-        >
-          {children}
-        </Main.Root>
-
-        <DialogRoot
-          modal={layout.dialogBlockAlign !== 'end'}
-          open={layout.dialogOpen}
-          onOpenChange={(nextOpen) => updateState({ dialogOpen: nextOpen })}
-        >
-          {layout.dialogBlockAlign === 'end' ? (
-            <Surface
-              role='dialog'
-              data={layout.dialogContent}
-              limit={1}
-              fallback={ContentError}
-              placeholder={<div />}
-            />
-          ) : (
-            <DialogOverlay
-              blockAlign={layout.dialogBlockAlign}
-              classNames={layout.dialogOverlayClasses}
-              style={layout.dialogOverlayStyle}
-            >
-              <Surface role='dialog' data={layout.dialogContent} limit={1} fallback={ContentError} />
-            </DialogOverlay>
-          )}
-        </DialogRoot>
-
-        <Popover.VirtualTrigger key={iter} virtualRef={trigger} />
-        <Popover.Portal>
-          <Popover.Content
-            side={layout.popoverSide}
-            onInteractOutside={handleInteractOutside}
-            onEscapeKeyDown={handleInteractOutside}
-            sticky='always'
-            hideWhenDetached
+      <Mosaic.Root>
+        <Popover.Root open={open}>
+          <Main.Root
+            navigationSidebarState={layout.sidebarState}
+            complementarySidebarState={layout.complementarySidebarState}
+            onNavigationSidebarStateChange={(next) => updateState({ sidebarState: next })}
+            onComplementarySidebarStateChange={(next) => updateState({ complementarySidebarState: next })}
           >
-            <Popover.Viewport>
-              {layout.popoverKind === 'card' && (
-                <Card.Root>
-                  <Card.Toolbar>
-                    {/* TODO(wittjosiah): Cleaner way to handle no drag handle in toolbar? */}
-                    <span />
-                    {layout.popoverTitle ? (
-                      <Card.Title>{toLocalizedString(layout.popoverTitle, t)}</Card.Title>
-                    ) : (
+            {children}
+          </Main.Root>
+
+          <DialogRoot
+            modal={layout.dialogBlockAlign !== 'end'}
+            open={layout.dialogOpen}
+            onOpenChange={(nextOpen) => updateState({ dialogOpen: nextOpen })}
+          >
+            {layout.dialogBlockAlign === 'end' ? (
+              <Surface
+                role='dialog'
+                data={layout.dialogContent}
+                limit={1}
+                fallback={ContentError}
+                placeholder={<div />}
+              />
+            ) : (
+              <DialogOverlay
+                blockAlign={layout.dialogBlockAlign}
+                classNames={layout.dialogOverlayClasses}
+                style={layout.dialogOverlayStyle}
+              >
+                <Surface role='dialog' data={layout.dialogContent} limit={1} fallback={ContentError} />
+              </DialogOverlay>
+            )}
+          </DialogRoot>
+
+          <Popover.VirtualTrigger key={iter} virtualRef={trigger} />
+          <Popover.Portal>
+            <Popover.Content
+              side={layout.popoverSide}
+              onInteractOutside={handleInteractOutside}
+              onEscapeKeyDown={handleInteractOutside}
+              sticky='always'
+              hideWhenDetached
+            >
+              <Popover.Viewport>
+                {layout.popoverKind === 'card' && (
+                  <Card.Root>
+                    <Card.Toolbar>
+                      {/* TODO(wittjosiah): Cleaner way to handle no drag handle in toolbar? */}
                       <span />
-                    )}
-                    <Card.Close onClick={handleClose} />
-                  </Card.Toolbar>
-                  <Surface role='card--content' data={layout.popoverContent} limit={1} />
-                </Card.Root>
-              )}
-              {layout.popoverKind === 'base' && <Surface role='popover' data={layout.popoverContent} limit={1} />}
-            </Popover.Viewport>
-            <Popover.Arrow />
-          </Popover.Content>
-        </Popover.Portal>
-      </Popover.Root>
+                      {layout.popoverTitle ? (
+                        <Card.Title>{toLocalizedString(layout.popoverTitle, t)}</Card.Title>
+                      ) : (
+                        <span />
+                      )}
+                      <Card.Close onClick={handleClose} />
+                    </Card.Toolbar>
+                    <Surface role='card--content' data={layout.popoverContent} limit={1} />
+                  </Card.Root>
+                )}
+                {layout.popoverKind === 'base' && <Surface role='popover' data={layout.popoverContent} limit={1} />}
+              </Popover.Viewport>
+              <Popover.Arrow />
+            </Popover.Content>
+          </Popover.Portal>
+        </Popover.Root>
+      </Mosaic.Root>
     </div>
   );
 };

@@ -35,15 +35,7 @@ export default Capability.makeModule(
     const capabilities = yield* Capability.Service;
 
     // TODO(wittjosiah): Factor out lookup handlers to other plugins to make not ECHO-specific.
-    const handleAnchorActivate = async ({
-      refId,
-      label,
-      trigger,
-      kind,
-      title,
-      side,
-      props,
-    }: DxAnchorActivate) => {
+    const handleAnchorActivate = async ({ refId, label, trigger, kind, title, side, props }: DxAnchorActivate) => {
       const { invokePromise } = capabilities.get(Common.Capability.OperationInvoker);
       const client = capabilities.get(ClientCapabilities.Client);
       const registry = capabilities.get(Common.Capability.AtomRegistry);

@@ -15,6 +15,7 @@ import { corePlugins } from '@dxos/plugin-testing';
 import { faker } from '@dxos/random';
 import { useSpaces } from '@dxos/react-client/echo';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { withMosaic } from '@dxos/react-ui-mosaic/testing';
 
 import { SearchContextProvider } from '../hooks';
 import { translations } from '../translations';
@@ -44,6 +45,7 @@ const meta = {
   decorators: [
     withTheme,
     withLayout({ layout: 'column' }),
+    withMosaic(),
     withSearchContext(),
     withPluginManager({
       plugins: [
