@@ -8,7 +8,7 @@ import { useAtomValue } from '@effect-atom/atom-react';
 import { createContext } from '@radix-ui/react-context';
 import * as Array from 'effect/Array';
 import * as Option from 'effect/Option';
-import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { use, type PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Event } from '@dxos/async';
 import { type Database, Obj } from '@dxos/echo';
@@ -21,7 +21,7 @@ import { type MarkdownStreamController } from '@dxos/react-ui-components';
 import { MenuProvider, ToolbarMenu } from '@dxos/react-ui-menu';
 import { Message } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
-import { isTruthy } from '@dxos/util';
+import { isTruthy, trim } from '@dxos/util';
 
 import { useChatToolbarActions } from '../../hooks';
 import { meta } from '../../meta';
@@ -38,6 +38,7 @@ import {
 import { ChatThread as NaturalChatThread, type ChatThreadProps as NaturalChatThreadProps } from '../ChatThread';
 
 import { type ChatEvent } from './events';
+import type { Tool } from '@effect/ai';
 
 //
 // Context
@@ -86,6 +87,22 @@ const ChatRoot = ({ children, chat, processor, onEvent, ...props }: ChatRootProp
       switch (ev.type) {
         case 'toggle-debug': {
           setDebug((current) => !current);
+          // Dump state to console.
+          queueMicrotask(async () => {
+            const objects = processor.context.getObjects();
+            const blueprints = processor.context.getBlueprints();
+            const tools = await processor.getTools();
+            const system = await processor.getSystemPrompt();
+            console.log('Chat processor state:', { objects, blueprints });
+            console.log(`
+              ==== System Prompt ====
+              ${system}
+              ==== Tools ====
+              ${Object.values(tools)
+                .map((tool) => JSON.stringify(tool, null, 2))
+                .join('\n')}
+            `);
+          });
           break;
         }
 

@@ -28,7 +28,8 @@ import {
 import { type Blueprint } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';
 import { type Database } from '@dxos/echo';
-import { runAndForwardErrors, throwCause } from '@dxos/effect';
+import { runAndForwardErrors, throwCause, unwrapExit } from '@dxos/effect';
+import { formatSystemPrompt } from '@dxos/assistant';
 import {
   type CredentialsService,
   type FunctionInvocationService,
@@ -41,6 +42,7 @@ import { type ContentBlock, Message } from '@dxos/types';
 import { type Assistant } from '../types';
 
 import { updateName } from './update-name';
+import type { Tool } from '@effect/ai';
 
 export type AiChatServices =
   | CredentialsService
@@ -139,6 +141,25 @@ export class AiChatProcessor {
 
   get blueprintRegistry() {
     return this._options.blueprintRegistry;
+  }
+
+  get system(): string {
+    return this._options.system ?? '';
+  }
+
+  async getTools(): Promise<Record<string, Tool.Any>> {
+    return unwrapExit(await this._conversation.getTools().pipe(await Runtime.runPromiseExit(await this._services())));
+  }
+
+  async getSystemPrompt(): Promise<string> {
+    return unwrapExit(
+      await Effect.gen(this, function* () {
+        const blueprints = this.context.getBlueprints();
+        const objects = this.context.getObjects();
+        const system = yield* formatSystemPrompt({ system: this._options.system, blueprints, objects });
+        return system;
+      }).pipe(await Runtime.runPromiseExit(await this._services())),
+    );
   }
 
   /**
