@@ -78,5 +78,7 @@ export const setFrom = (target: Function, source: Function) => {
     t.inputSchema = source.inputSchema ? JSON.parse(JSON.stringify(source.inputSchema)) : undefined;
     t.outputSchema = source.outputSchema ? JSON.parse(JSON.stringify(source.outputSchema)) : undefined;
   });
-  Obj.getMeta(target).keys = JSON.parse(JSON.stringify(Obj.getMeta(source).keys));
+  Obj.changeMeta(target, (meta) => {
+    meta.keys = JSON.parse(JSON.stringify(Obj.getMeta(source).keys));
+  });
 };

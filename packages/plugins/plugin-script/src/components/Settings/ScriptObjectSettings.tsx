@@ -274,8 +274,8 @@ const Publishing = ({ object }: ScriptObjectSettingsProps) => {
         });
         const gistId = response.data.id;
         if (gistId) {
-          Obj.change(object, () => {
-            meta.keys.push({ source: 'github.com', id: gistId });
+          Obj.changeMeta(object, (m) => {
+            m.keys.push({ source: 'github.com', id: gistId });
           });
         }
       }

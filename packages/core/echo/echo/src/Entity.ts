@@ -4,15 +4,7 @@
 
 import type { ObjectId } from '@dxos/keys';
 
-import {
-  type ChangeCallback,
-  EntityKind,
-  EntityKindSchema,
-  KindId,
-  type Mutable,
-  change as change$,
-  getEntityKind,
-} from './internal';
+import { EntityKind, EntityKindSchema, KindId, getEntityKind } from './internal';
 
 // Re-export KindId from internal.
 export { KindId };
@@ -58,42 +50,3 @@ export interface Any extends OfKind<Kind> {
 }
 
 export const getKind = getEntityKind;
-
-//
-// Change
-//
-
-/**
- * Makes all properties mutable recursively.
- * Used to provide a mutable view of an entity within `Entity.change`.
- */
-export type { Mutable };
-
-/**
- * Perform mutations on an echo entity (object or relation) within a controlled context.
- *
- * All mutations within the callback are batched and trigger a single notification
- * when the callback completes. Direct mutations outside of `Entity.change` will throw
- * an error for echo entities.
- *
- * @param entity - The echo object or relation to mutate.
- * @param callback - The callback that performs mutations on the entity.
- *
- * @example
- * ```ts
- * // Works with objects
- * Entity.change(person, (p) => {
- *   p.name = 'Jane';
- * });
- *
- * // Works with relations
- * Entity.change(worksFor, (r) => {
- *   r.role = 'Senior Engineer';
- * });
- * ```
- *
- * Note: Accepts both objects and relations. Use `Obj.change` or `Relation.change` for type-specific APIs.
- */
-export const change = <T extends Unknown>(entity: T, callback: ChangeCallback<T>): void => {
-  change$(entity, callback);
-};

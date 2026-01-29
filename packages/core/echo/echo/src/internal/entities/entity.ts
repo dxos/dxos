@@ -17,10 +17,14 @@ import { EchoSchemaBrandSymbol, type EntityKind, type HasId } from '../types';
 export type EchoTypeSchemaProps<T, ExtraFields = {}> = Types.Simplify<HasId & ToMutable<T> & ExtraFields>;
 
 // TODO(burdon): Rename EchoEntitySchema.
-export interface EchoTypeSchema<Self extends Schema.Schema.Any, ExtraFields = {}, K extends EntityKind = EntityKind>
-  extends TypeMeta,
+export interface EchoTypeSchema<
+  Self extends Schema.Schema.Any,
+  ExtraFields = {},
+  K extends EntityKind = EntityKind,
+  Fields extends Schema.Struct.Fields = Schema.Struct.Fields,
+> extends TypeMeta,
     Schema.AnnotableClass<
-      EchoTypeSchema<Self, ExtraFields, K>,
+      EchoTypeSchema<Self, ExtraFields, K, Fields>,
       EchoTypeSchemaProps<Schema.Schema.Type<Self>, ExtraFields>,
       EchoTypeSchemaProps<Schema.Schema.Encoded<Self>, ExtraFields>,
       Schema.Schema.Context<Self>
@@ -30,6 +34,12 @@ export interface EchoTypeSchema<Self extends Schema.Schema.Any, ExtraFields = {}
    * Makes EchoTypeSchema satisfy the Type.Obj.Any or Type.Relation.Any branded type.
    */
   readonly [EchoSchemaBrandSymbol]: K;
+
+  /**
+   * The fields defined in the original struct schema.
+   * Allows accessing field definitions for introspection.
+   */
+  readonly fields: Fields;
 
   instanceOf(value: unknown): boolean;
 }
@@ -68,13 +78,17 @@ export interface EchoTypeSchema<Self extends Schema.Schema.Any, ExtraFields = {}
 /**
  * @internal
  */
-export const makeEchoTypeSchema = <Self extends Schema.Schema.Any, K extends EntityKind = EntityKind>(
-  // fields: Fields,
+export const makeEchoTypeSchema = <
+  Self extends Schema.Schema.Any,
+  K extends EntityKind = EntityKind,
+  Fields extends Schema.Struct.Fields = Schema.Struct.Fields,
+>(
+  fields: Fields,
   ast: SchemaAST.AST,
   typename: string,
   version: string,
   kind: K,
-): EchoTypeSchema<Self, {}, K> => {
+): EchoTypeSchema<Self, {}, K, Fields> => {
   return class EchoObjectSchemaClass extends Schema.make<
     EchoTypeSchemaProps<Schema.Schema.Type<Self>>,
     EchoTypeSchemaProps<Schema.Schema.Encoded<Self>>,
@@ -83,12 +97,13 @@ export const makeEchoTypeSchema = <Self extends Schema.Schema.Any, K extends Ent
     static readonly typename = typename;
     static readonly version = version;
     static readonly [EchoSchemaBrandSymbol] = kind;
+    static readonly fields = fields;
 
     static override annotations(
       annotations: Schema.Annotations.GenericSchema<EchoTypeSchemaProps<Schema.Schema.Type<Self>>>,
-    ): EchoTypeSchema<Self, {}, K> {
+    ): EchoTypeSchema<Self, {}, K, Fields> {
       const schema = Schema.make<EchoTypeSchemaProps<Schema.Schema.Type<Self>>>(ast).annotations(annotations);
-      return makeEchoTypeSchema<Self, K>(/* fields, */ schema.ast, typename, version, kind);
+      return makeEchoTypeSchema<Self, K, Fields>(fields, schema.ast, typename, version, kind);
     }
 
     // static make(

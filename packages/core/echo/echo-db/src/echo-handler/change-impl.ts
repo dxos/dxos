@@ -3,7 +3,7 @@
 //
 
 import { type Entity } from '@dxos/echo';
-import { EventId, batchEvents } from '@dxos/echo/internal';
+import { EventId, batchEvents, type Mutable } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 
 import { clearPendingNotifications, enterChangeContext, hasPendingNotifications } from '../core-db/change-context';
@@ -12,9 +12,9 @@ import { getObjectCore, isEchoObject } from './echo-object-utils';
 import { type ProxyTarget } from './echo-proxy-target';
 
 /**
- * Re-export Mutable from Entity for consistency.
+ * Re-export Mutable type for downstream usage.
  */
-export type Mutable<T> = Entity.Mutable<T>;
+export type { Mutable };
 
 /**
  * Internal implementation of the change function.

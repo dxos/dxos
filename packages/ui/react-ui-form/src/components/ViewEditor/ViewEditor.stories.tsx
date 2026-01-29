@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { DXN, Filter, Obj, Query, type QueryAST, Tag, Type } from '@dxos/echo';
-import { type EchoSchema, Format } from '@dxos/echo/internal';
+import { type EchoSchema, Format, type Mutable } from '@dxos/echo/internal';
 import { useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
@@ -91,7 +91,7 @@ const DefaultStory = (props: StoryProps) => {
         const queue = target && DXN.tryParse(target) ? target : undefined;
         const query = queue ? Query.fromAst(newQuery).options({ queues: [queue] }) : Query.fromAst(newQuery);
         Obj.change(view, (v) => {
-          v.query.ast = query.ast;
+          v.query.ast = query.ast as Mutable<typeof query.ast>;
         });
 
         const typename = getTypenameFromQuery(query.ast);
@@ -105,12 +105,12 @@ const DefaultStory = (props: StoryProps) => {
           jsonSchema: newSchema.jsonSchema,
         });
         Obj.change(view, (v) => {
-          v.projection = Obj.getSnapshot(newView).projection;
+          v.projection = Obj.getSnapshot(newView).projection as Mutable<typeof v.projection>;
         });
         setSchema(() => newSchema);
       } else {
         Obj.change(view, (v) => {
-          v.query.ast = newQuery;
+          v.query.ast = newQuery as Mutable<typeof newQuery>;
         });
         schema.updateTypename(getTypenameFromQuery(newQuery));
       }

@@ -89,7 +89,14 @@ describe('schema registry', () => {
     const { registry } = await setupTest();
     const [echoSchema] = await registry.register([Organization]);
     expect(registry.hasSchema(echoSchema)).to.be.true;
-    expect(echoSchema.jsonSchema.propertyOrder).to.deep.eq(['name', 'address']);
+    // Note: 'id' is added by EchoObjectSchema when extending the schema.
+    expect(echoSchema.jsonSchema.propertyOrder).to.deep.eq(['name', 'address', 'id']);
+  });
+
+  test('schema has fields property for introspection', () => {
+    // Type.Obj schemas should have .fields property from the original struct.
+    expect(Object.keys(Organization.fields)).to.deep.eq(['name', 'address']);
+    expect(Object.keys(Contact.fields)).to.deep.eq(['name']);
   });
 
   test('can store the same schema multiple times', async () => {
@@ -159,9 +166,9 @@ describe('schema registry', () => {
       version: '0.1.0',
       jsonSchema: JsonSchema.toJsonSchema(Schema.Struct({ field: Schema.Number })),
     });
-    expect(registry.hasSchema(new EchoSchema(schemaToStore as any))).to.be.false;
+    expect(registry.hasSchema(new EchoSchema(schemaToStore))).to.be.false;
     const persistentSchema = db.add(schemaToStore);
-    expect(registry.hasSchema(new EchoSchema(persistentSchema as any))).to.be.true;
+    expect(registry.hasSchema(new EchoSchema(persistentSchema))).to.be.true;
   });
 
   test('schema is invalidated on update', async () => {

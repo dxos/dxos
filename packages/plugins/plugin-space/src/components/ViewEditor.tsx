@@ -7,6 +7,7 @@ import React, { useCallback, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/react';
 import { DXN, Filter, Obj, Query, type QueryAST, Tag, Type } from '@dxos/echo';
+import { type Mutable } from '@dxos/echo/internal';
 import { useClient } from '@dxos/react-client';
 import { getSpace, useQuery } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
@@ -54,7 +55,7 @@ export const ViewEditor = ({ view }: ViewEditorProps) => {
       const queue = target && DXN.tryParse(target) ? target : undefined;
       const query = queue ? Query.fromAst(newQuery).options({ queues: [queue] }) : Query.fromAst(newQuery);
       Obj.change(view, (v) => {
-        v.query.ast = query.ast;
+        v.query.ast = query.ast as Mutable<typeof query.ast>;
       });
       const newSchema = await resolveSchemaWithRegistry(space.db.schemaRegistry, query.ast);
       if (!newSchema) {
@@ -66,7 +67,7 @@ export const ViewEditor = ({ view }: ViewEditorProps) => {
         jsonSchema: Type.toJsonSchema(newSchema),
       });
       Obj.change(view, (v) => {
-        v.projection = Obj.getSnapshot(newView).projection;
+        v.projection = Obj.getSnapshot(newView).projection as Mutable<typeof v.projection>;
       });
 
       setSchema(() => newSchema);

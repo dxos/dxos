@@ -258,8 +258,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
       const schema = Obj.getSchema(obj);
       if (schema != null) {
         // The schema from an echo object has typename/version via annotations.
-        const entitySchema = schema as Type.Entity.Any;
-        if (!this.schemaRegistry.hasSchema(entitySchema) && !this.graph.schemaRegistry.hasSchema(entitySchema)) {
+        if (!this.schemaRegistry.hasSchema(schema) && !this.graph.schemaRegistry.hasSchema(schema)) {
           throw createSchemaNotRegisteredError(schema);
         }
       }

@@ -13,7 +13,7 @@ import * as Template from '../template';
  * Executable instructions, which may use Blueprints.
  * May reference additional context.
  */
-const Prompt$ = Schema.Struct({
+export const Prompt = Schema.Struct({
   /**
    * Name of the prompt.
    */
@@ -57,10 +57,7 @@ const Prompt$ = Schema.Struct({
   }),
 );
 
-export interface Prompt extends Schema.Schema.Type<typeof Prompt$> {}
-export interface Prompt_Encoded extends Schema.Schema.Encoded<typeof Prompt$> {}
-// Type annotation preserves brand properties while hiding internal types.
-export const Prompt: typeof Prompt$ = Prompt$;
+export interface Prompt extends Schema.Schema.Type<typeof Prompt> {}
 
 export const make = (params: {
   name?: string;

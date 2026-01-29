@@ -17,13 +17,14 @@ const createTemplateSelectActions = (script: Script.Script) => {
       () => {
         Obj.change(script, (s) => {
           s.name = template.name;
-          const metaKeys = Obj.getMeta(s).keys;
-          const oldPresetIndex = metaKeys.findIndex((key) => key.source === FUNCTIONS_PRESET_META_KEY);
+        });
+        Obj.changeMeta(script, (meta) => {
+          const oldPresetIndex = meta.keys.findIndex((key) => key.source === FUNCTIONS_PRESET_META_KEY);
           if (oldPresetIndex >= 0) {
-            metaKeys.splice(oldPresetIndex, 1);
+            meta.keys.splice(oldPresetIndex, 1);
           }
           if ('presetId' in template) {
-            metaKeys.push({ source: FUNCTIONS_PRESET_META_KEY, id: template.presetId });
+            meta.keys.push({ source: FUNCTIONS_PRESET_META_KEY, id: template.presetId });
           }
         });
         if (script.source?.target) {

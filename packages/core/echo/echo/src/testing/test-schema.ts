@@ -14,7 +14,7 @@ export namespace TestSchema {
 
   const Nested = Schema.Struct({
     field: Schema.String,
-  }).pipe(Schema.mutable);
+  });
 
   export class TestClass {
     field = 'value';
@@ -30,16 +30,16 @@ export namespace TestSchema {
     boolean: Schema.Boolean,
     null: Schema.Null,
     undefined: Schema.Undefined,
-    stringArray: Schema.mutable(Schema.Array(Schema.String)),
-    twoDimNumberArray: Schema.mutable(Schema.Array(Schema.mutable(Schema.Array(Schema.Number)))),
-    nested: Schema.mutable(Nested),
-    nestedArray: Schema.mutable(Schema.Array(Nested)),
-    nestedNullableArray: Schema.mutable(Schema.Array(Schema.Union(Nested, Schema.Null))),
+    stringArray: Schema.Array(Schema.String),
+    twoDimNumberArray: Schema.Array(Schema.Array(Schema.Number)),
+    nested: Nested,
+    nestedArray: Schema.Array(Nested),
+    nestedNullableArray: Schema.Array(Schema.Union(Nested, Schema.Null)),
     reference: Schema.suspend((): Type.Ref<Example> => Type.Ref(Example)),
-    referenceArray: Schema.mutable(Schema.Array(Schema.suspend((): Type.Ref<Example> => Type.Ref(Example)))),
+    referenceArray: Schema.Array(Schema.suspend((): Type.Ref<Example> => Type.Ref(Example))),
     classInstance: Schema.instanceOf(TestClass),
     other: Schema.Any,
-  }).pipe(Schema.partial, Schema.mutable);
+  }).pipe(Schema.partial);
 
   /** @deprecated Use another test schema or create a specific local test schema. */
   export interface ExampleSchema extends Schema.Schema.Type<typeof ExampleSchema> {}
@@ -108,7 +108,7 @@ export namespace TestSchema {
     username: Schema.String,
     email: Schema.String,
     age: Schema.Number.pipe(Schema.optional),
-    tasks: Schema.mutable(Schema.Array(Schema.suspend((): Type.Ref<Task> => Type.Ref(Task)))),
+    tasks: Schema.Array(Schema.suspend((): Type.Ref<Task> => Type.Ref(Task))),
     employer: Schema.optional(Type.Ref(Organization)),
     address: Schema.Struct({
       city: Schema.optional(Schema.String),
@@ -143,7 +143,7 @@ export namespace TestSchema {
     completed: Schema.optional(Schema.Boolean),
     assignee: Schema.optional(Type.Ref(Person)),
     previous: Schema.optional(Schema.suspend((): Type.Ref<Task> => Type.Ref(Task))),
-    subTasks: Schema.optional(Schema.mutable(Schema.Array(Schema.suspend((): Type.Ref<Task> => Type.Ref(Task))))),
+    subTasks: Schema.optional(Schema.Array(Schema.suspend((): Type.Ref<Task> => Type.Ref(Task)))),
     description: Schema.optional(Schema.String),
   }).pipe(
     Schema.partial,
@@ -199,17 +199,15 @@ export namespace TestSchema {
   }
 
   export const Container = Schema.Struct({
-    objects: Schema.mutable(Schema.Array(Type.Ref(Obj.Any))),
-    records: Schema.mutable(
-      Schema.Array(
-        Schema.partial(
-          Schema.Struct({
-            title: Schema.String,
-            description: Schema.String,
-            contacts: Schema.mutable(Schema.Array(Type.Ref(Person))),
-            type: Schema.Enums(RecordType),
-          }),
-        ),
+    objects: Schema.Array(Type.Ref(Obj.Any)),
+    records: Schema.Array(
+      Schema.partial(
+        Schema.Struct({
+          title: Schema.String,
+          description: Schema.String,
+          contacts: Schema.Array(Type.Ref(Person)),
+          type: Schema.Enums(RecordType),
+        }),
       ),
     ),
   }).pipe(

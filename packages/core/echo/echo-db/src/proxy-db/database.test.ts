@@ -212,13 +212,13 @@ describe('Database', () => {
     const { db } = await builder.createDatabase();
 
     const obj = Obj.make(Type.Expando, {});
-    expectObjects(Obj.getMeta(obj).keys, []);
-    Obj.getMeta(obj).keys.push({ source: 'test', id: 'test-key' });
-    expectObjects(Obj.getMeta(obj).keys, [{ source: 'test', id: 'test-key' }]);
+    expectObjects([...Obj.getMeta(obj).keys], []);
+    Obj.changeMeta(obj, (meta) => meta.keys.push({ source: 'test', id: 'test-key' }));
+    expectObjects([...Obj.getMeta(obj).keys], [{ source: 'test', id: 'test-key' }]);
 
     db.add(obj);
     await db.flush();
-    expectObjects(Obj.getMeta(obj).keys, [{ source: 'test', id: 'test-key' }]);
+    expectObjects([...Obj.getMeta(obj).keys], [{ source: 'test', id: 'test-key' }]);
   });
 
   test('creating objects', async () => {
@@ -317,7 +317,7 @@ describe('Database', () => {
     expect(task.title).to.eq('test');
     expect(Obj.getMeta(task).keys).to.have.length(0);
 
-    Obj.getMeta(task).keys.push({ source: 'example', id: 'test' });
+    Obj.changeMeta(task, (meta) => meta.keys.push({ source: 'example', id: 'test' }));
     expect(Obj.getMeta(task).keys).to.have.length(1);
   });
 
@@ -408,8 +408,10 @@ describe('Database', () => {
       const root = newTask();
       expect(root.subTasks).to.have.length(0);
 
-      range(3).forEach(() => root.subTasks!.push(Ref.make(newTask())));
-      root.subTasks!.push(Ref.make(newTask()), Ref.make(newTask()));
+      Obj.change(root, (r) => {
+        range(3).forEach(() => r.subTasks!.push(Ref.make(newTask())));
+        r.subTasks!.push(Ref.make(newTask()), Ref.make(newTask()));
+      });
 
       expect(root.subTasks).to.have.length(5);
       expect(root.subTasks!.length).to.eq(5);
@@ -437,16 +439,20 @@ describe('Database', () => {
       Obj.change(root, (r) => {
         r.subTasks = range(3).map((i) => Ref.make(newTask()));
       });
-      root.subTasks!.splice(0, 2, Ref.make(newTask()));
+      Obj.change(root, (r) => {
+        r.subTasks!.splice(0, 2, Ref.make(newTask()));
+      });
       expect(root.subTasks).to.have.length(2);
       await addToDatabase(root);
     });
 
     test('array of plain objects', async () => {
       const root = Obj.make(TestSchema.Container, { records: [] });
-      root.records!.push({
-        title: 'test',
-        contacts: [Ref.make(Obj.make(TestSchema.Person, { name: 'tester' }))],
+      Obj.change(root, (r) => {
+        r.records!.push({
+          title: 'test',
+          contacts: [Ref.make(Obj.make(TestSchema.Person, { name: 'tester' }))],
+        });
       });
       const { db } = await addToDatabase(root);
 

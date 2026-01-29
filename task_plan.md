@@ -15,8 +15,57 @@ Fix type inference issues in the @dxos/echo API so that consumers can use the AP
 - [x] Document findings in findings.md
 - [x] Analyze gap between current and desired API
 
-### Phase 1.5: Type.ts API Refactor ⬅️ CURRENT
+### Phase 1.5: Type.ts API Refactor ✅
 Goal: Refactor Type.ts to have cleaner API with runtime schemas
+
+### Phase 1.6: PR Feedback Items ⬅️ CURRENT
+Goal: Address code review feedback on the draft PR
+
+#### 1.6.1 Remove Mutable re-exports from Obj and Relation
+- [ ] Remove `Mutable` export from `Obj` namespace
+- [ ] Remove `Mutable` export from `Relation` namespace
+- [ ] Keep `Mutable` only in `Entity` namespace for consistency
+- [ ] Update all usages to use `Entity.Mutable<T>` instead
+
+#### 1.6.2 Make Type.Obj behave like an Effect schema
+- [ ] Ensure `Type.Obj` has `.fields` property like Effect schemas
+- [ ] In database-schema-registry.test.ts, use `organization.fields` to get field keys
+- [ ] Test assertions should use `Object.keys(schema.fields)` instead of manual specification
+
+#### 1.6.3 Deep readonly for ECHO objects outside Obj.change
+- [ ] Create regression test at echo level for nested array mutation (e.g., `task.subtasks.splice()`)
+- [ ] `Obj.Obj<T>` must return deep readonly type
+- [ ] Mutations on nested arrays/objects outside `Obj.change` should be type errors
+- [ ] Inside `Obj.change` callback, the schema type should have native mutability as defined by schema author
+- [ ] Test in proxy-db database.test.ts: splicing subtasks outside Obj.change should throw
+
+#### 1.6.4 Remove unnecessary `as Type.Entity.Any` casts
+- [ ] Audit codebase for `as Type.Entity.Any` casts
+- [ ] Remove casts that are no longer needed now that types are working
+- [ ] Fix any remaining type issues properly instead of casting
+
+#### 1.6.5 Remove Entity.change function
+- [ ] Remove `Entity.change` export
+- [ ] Users should use `Obj.change` for objects and `Relation.change` for relations
+- [ ] Update all usages of `Entity.change` to appropriate specific function
+
+#### 1.6.6 Fix Type.Obj and Type.Relation export casts
+- [ ] Investigate why Type.Obj and Type.Relation exports need casts
+- [ ] Fix underlying type issues to eliminate the need for casts
+- [ ] Ensure exports have proper types without `as` assertions
+
+#### 1.6.7 Make Obj.getMeta return read-only
+- [ ] Change `Obj.getMeta` return type to be read-only
+- [ ] Add `Obj.changeMeta(obj, fn)` function for meta mutations
+- [ ] Update all usages that mutate meta to use `Obj.changeMeta`
+
+#### Files to Modify
+- `packages/core/echo/echo/src/Obj.ts` - Remove Mutable, add changeMeta, deep readonly
+- `packages/core/echo/echo/src/Relation.ts` - Remove Mutable
+- `packages/core/echo/echo/src/Entity.ts` - Remove Entity.change, keep Mutable
+- `packages/core/echo/echo/src/Type.ts` - Fix export casts, add .fields
+- `packages/core/echo/echo-db/src/proxy-db/database.test.ts` - Add nested array mutation test
+- Various files - Remove unnecessary casts, update Entity.change usages
 
 #### Summary of Changes
 | Current | New | Description |

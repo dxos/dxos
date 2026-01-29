@@ -35,13 +35,10 @@ export const ObjectForm = ({ object, schema }: ObjectFormProps) => {
 
   const handleCreate = useCallback((schema: Type.Entity.Any, values: any) => {
     invariant(db);
-    if (!Type.Entity.isObject(schema)) {
-      return;
-    }
+    invariant(Type.Entity.isObject(schema));
     const newObject = db.add(Obj.make(schema, values));
     if (Obj.instanceOf(Tag.Tag, newObject)) {
-      Obj.change(object, () => {
-        const meta = Obj.getMeta(object);
+      Obj.changeMeta(object, (meta) => {
         meta.tags = [...(meta.tags ?? []), Obj.getDXN(newObject).toString()];
       });
     }
@@ -55,20 +52,26 @@ export const ObjectForm = ({ object, schema }: ObjectFormProps) => {
       }
 
       const changedPaths = Object.keys(changed).filter((path) => changed[path as JsonPath]) as JsonPath[];
-      Obj.change(object, () => {
-        for (const path of changedPaths) {
-          const parts = splitJsonPath(path);
-          // TODO(wittjosiah): This doesn't handle array paths well.
-          if (parts[0] === 'tags') {
-            const meta = Obj.getMeta(object);
-            meta.tags = tags?.map((tag: Ref.Ref<Tag.Tag>) => tag.dxn.toString()) ?? [];
-            continue;
-          }
 
-          const value = Obj.getValue(values, parts);
-          Obj.setValue(object, parts, value);
-        }
-      });
+      // Handle tags separately using changeMeta.
+      const hasTagsChange = changedPaths.some((path) => splitJsonPath(path)[0] === 'tags');
+      if (hasTagsChange) {
+        Obj.changeMeta(object, (meta) => {
+          meta.tags = tags?.map((tag: Ref.Ref<Tag.Tag>) => tag.dxn.toString()) ?? [];
+        });
+      }
+
+      // Handle other property changes.
+      const nonTagPaths = changedPaths.filter((path) => splitJsonPath(path)[0] !== 'tags');
+      if (nonTagPaths.length > 0) {
+        Obj.change(object, () => {
+          for (const path of nonTagPaths) {
+            const parts = splitJsonPath(path);
+            const value = Obj.getValue(values, parts);
+            Obj.setValue(object, parts, value);
+          }
+        });
+      }
     },
     [object],
   );

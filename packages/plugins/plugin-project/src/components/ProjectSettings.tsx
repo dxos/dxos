@@ -6,6 +6,7 @@ import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { DXN, Filter, Obj, Query, type QueryAST, Ref, Tag, Type } from '@dxos/echo';
+import { type Mutable } from '@dxos/echo/internal';
 import { useTypeOptions } from '@dxos/plugin-space';
 import { resolveSchemaWithRegistry } from '@dxos/plugin-space';
 import { getSpace, useQuery } from '@dxos/react-client/echo';
@@ -81,8 +82,8 @@ export const ProjectObjectSettings = ({ classNames, project }: ProjectObjectSett
 
       const queue = target && DXN.tryParse(target) ? target : undefined;
       const query = queue ? Query.fromAst(newQuery).options({ queues: [queue] }) : Query.fromAst(newQuery);
-      Obj.change(view, () => {
-        view.query.ast = query.ast;
+      Obj.change(view, (v) => {
+        v.query.ast = query.ast as Mutable<typeof query.ast>;
       });
       const newSchema = await resolveSchemaWithRegistry(space.db.schemaRegistry, query.ast);
       if (!newSchema) {
@@ -94,7 +95,7 @@ export const ProjectObjectSettings = ({ classNames, project }: ProjectObjectSett
         jsonSchema: Type.toJsonSchema(newSchema),
       });
       Obj.change(view, (v) => {
-        v.projection = Obj.getSnapshot(newView).projection;
+        v.projection = Obj.getSnapshot(newView).projection as Mutable<typeof v.projection>;
       });
 
       setSchema(() => newSchema);
@@ -145,7 +146,7 @@ export const ProjectObjectSettings = ({ classNames, project }: ProjectObjectSett
       if (column) {
         const columnIndex = project.columns.findIndex((c) => c === column);
         Obj.change(project, (p) => {
-          (p.columns[columnIndex] as { name?: string }).name = values.name;
+          p.columns[columnIndex].name = values.name;
         });
       }
     },

@@ -66,7 +66,7 @@ export const TableContainer = forwardRef<HTMLDivElement, TableContainerProps>(({
     });
   }, [graph]);
 
-  const addRow = useAddRow({ db, schema: schema as Type.Obj.Any | undefined });
+  const addRow = useAddRow({ db, schema: schema });
 
   const handleDeleteRows = useCallback(
     (_row: number, objects: any[]) => {
@@ -119,7 +119,8 @@ export const TableContainer = forwardRef<HTMLDivElement, TableContainerProps>(({
   const handleCreate = useCallback(
     (schema: Type.Entity.Any, values: any) => {
       invariant(db);
-      return db.add(Obj.make(schema as Type.Obj.Any, values));
+      invariant(Type.Entity.isObject(schema));
+      return db.add(Obj.make(schema, values));
     },
     [db],
   );

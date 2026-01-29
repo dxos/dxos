@@ -5,7 +5,7 @@
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
-import { Entity, Obj, Ref, Type } from '@dxos/echo';
+import { Obj, type Ref, Type } from '@dxos/echo';
 import { Queue } from '@dxos/echo-db';
 import { TracingService } from '@dxos/functions';
 import { Trigger } from '@dxos/functions';
@@ -35,20 +35,10 @@ export const TraceEventException = Schema.Struct({
   name: Schema.String,
   stack: Schema.optional(Schema.String),
 });
+
 export type TraceEventException = Schema.Schema.Type<typeof TraceEventException>;
 
-export interface InvocationTraceStartEvent extends Entity.OfKind<typeof Entity.Kind.Object> {
-  readonly type: typeof InvocationTraceEventType.START;
-  readonly invocationId: string;
-  readonly timestamp: number;
-  readonly input: object;
-  readonly invocationTraceQueue?: Ref.Ref<Queue>;
-  readonly invocationTarget?: Ref.Ref<Obj.Any>;
-  readonly trigger?: Ref.Ref<Trigger.Trigger>;
-  readonly runtime?: FunctionRuntimeKind;
-}
-
-const InvocationTraceStartEventSchema = Schema.Struct({
+export const InvocationTraceStartEvent = Schema.Struct({
   /**
    * Queue message id.
    */
@@ -83,50 +73,42 @@ const InvocationTraceStartEventSchema = Schema.Struct({
    * Runtime executing the function.
    */
   runtime: Schema.optional(FunctionRuntimeKind),
-}).pipe(Type.object({ typename: 'dxos.org/type/InvocationTraceStart', version: '0.1.0' }));
+}).pipe(
+  Type.object({
+    typename: 'dxos.org/type/InvocationTraceStart',
+    version: '0.1.0',
+  }),
+);
 
-// Type annotation hides internal types while preserving brand properties.
-export const InvocationTraceStartEvent: Type.Obj<InvocationTraceStartEvent> =
-  InvocationTraceStartEventSchema as any;
+export interface InvocationTraceStartEvent extends Schema.Schema.Type<typeof InvocationTraceStartEvent> {}
 
-export interface InvocationTraceEndEvent extends Entity.OfKind<typeof Entity.Kind.Object> {
-  readonly type: typeof InvocationTraceEventType.END;
-  readonly invocationId: string;
-  readonly timestamp: number;
-  readonly outcome: InvocationOutcome;
-  readonly error?: SerializedError;
-}
+export const InvocationTraceEndEvent = Schema.Struct({
+  /**
+   * Trace event id.
+   */
+  id: ObjectId,
+  type: Schema.Literal(InvocationTraceEventType.END),
+  /**
+   * Invocation id, will be the same for invocation start and end.
+   */
+  invocationId: ObjectId,
+  /**
+   * Event generation time.
+   */
+  // TODO(burdon): Remove ms suffix.
+  timestamp: Schema.Number,
 
-export interface InvocationTraceEndEventEncoded {
-  readonly id: string;
-  readonly type: typeof InvocationTraceEventType.END;
-  readonly invocationId: string;
-  readonly timestamp: number;
-  readonly outcome: InvocationOutcome;
-  readonly error?: SerializedError;
-}
+  outcome: Schema.Enums(InvocationOutcome),
 
-export const InvocationTraceEndEvent: Type.Obj<InvocationTraceEndEvent> =
-  Schema.Struct({
-    /**
-     * Trace event id.
-     */
-    id: ObjectId,
-    type: Schema.Literal(InvocationTraceEventType.END),
-    /**
-     * Invocation id, will be the same for invocation start and end.
-     */
-    invocationId: ObjectId,
-    /**
-     * Event generation time.
-     */
-    // TODO(burdon): Remove ms suffix.
-    timestamp: Schema.Number,
+  error: Schema.optional(SerializedError),
+}).pipe(
+  Type.object({
+    typename: 'dxos.org/type/InvocationTraceEnd',
+    version: '0.1.0',
+  }),
+);
 
-    outcome: Schema.Enums(InvocationOutcome),
-
-    error: Schema.optional(SerializedError),
-  }).pipe(Type.object({ typename: 'dxos.org/type/InvocationTraceEnd', version: '0.1.0' })) as any;
+export interface InvocationTraceEndEvent extends Schema.Schema.Type<typeof InvocationTraceEndEvent> {}
 
 export type InvocationTraceEvent = InvocationTraceStartEvent | InvocationTraceEndEvent;
 

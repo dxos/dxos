@@ -92,10 +92,8 @@ export default defineFunction({
       // Update the calendar's last synced update timestamp.
       const lastUpdate = yield* Ref.get(latestUpdate);
       if (lastUpdate) {
-        yield* Effect.sync(() => {
-          Obj.change(calendar, (c) => {
-            c.lastSyncedUpdate = lastUpdate;
-          });
+        Obj.change(calendar, (c) => {
+          c.lastSyncedUpdate = lastUpdate;
         });
         log('updated lastSyncedUpdate', { lastUpdate });
       }

@@ -4,6 +4,7 @@
 
 import { getProxyTarget, isProxy } from './proxy-utils';
 import { ChangeId, EventId } from './symbols';
+import { type RefTypeId } from '../ref/ref';
 
 /**
  * Subscribe to changes on a reactive object.
@@ -21,13 +22,20 @@ export const subscribe = (obj: unknown, callback: () => void): (() => void) => {
 };
 
 /**
- * Removes readonly modifiers from top-level properties of T.
- * Also converts readonly arrays at the top level to mutable arrays.
- * For nested properties, mutability depends on the schema definition.
+ * Deeply removes readonly modifiers from all properties of T.
+ * Inside Obj.change, all properties are fully mutable regardless of schema definition.
+ * Ref types are preserved as-is since they are value-like objects that are replaced, not mutated.
+ * Primitive types (including branded primitives) are preserved as-is.
  */
-export type Mutable<T> = T extends object
-  ? { -readonly [K in keyof T]: T[K] extends readonly (infer U)[] ? U[] : T[K] }
-  : T;
+export type Mutable<T> = T extends string | number | boolean | bigint | symbol | null | undefined
+  ? T // Primitives (including branded primitives like JsonPath) stay as-is.
+  : T extends { [RefTypeId]: any }
+    ? T // Keep Ref types as-is (they're value-like, not mutated in place).
+    : T extends object
+      ? T extends readonly (infer U)[]
+        ? Mutable<U>[]
+        : { -readonly [K in keyof T]: Mutable<T[K]> }
+      : T;
 
 /**
  * Callback type for the change function.

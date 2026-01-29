@@ -79,7 +79,8 @@ const copyObjectData = (existing: Obj.Any, newObj: Obj.Any) => {
   }
   for (const foreignKey of Obj.getMeta(newObj).keys) {
     Obj.deleteKeys(existing, foreignKey.source);
-    // TODO(dmaretskyi): Doesn't work: `Obj.getMeta(existing).keys.push(foreignKey);`
-    Obj.getMeta(existing).keys.push({ ...foreignKey });
+    Obj.changeMeta(existing, (meta) => {
+      meta.keys.push({ ...foreignKey });
+    });
   }
 };

@@ -8,10 +8,10 @@ import React, { useCallback, useContext, useEffect, useMemo, useState } from 're
 import { expect, userEvent, within } from 'storybook/test';
 
 import { Obj, Type } from '@dxos/echo';
+import { invariant } from '@dxos/invariant';
 import { type DxGrid } from '@dxos/lit-grid';
 import '@dxos/lit-ui/dx-tag-picker.pcss';
 import { faker } from '@dxos/random';
-import { useClient } from '@dxos/react-client';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -82,14 +82,14 @@ const useTestModel = <S extends Type.Obj.Any>(schema: S, count: number) => {
 };
 
 const DefaultStory = () => {
-  const client = useClient();
   const { model: orgModel, presentation: orgPresentation } = useTestModel(Organization.Organization, 50);
   const { model: contactModel, presentation: contactPresentation } = useTestModel(Person.Person, 50);
   const { space } = useClientStory();
 
   const handleCreate = useCallback(
     (schema: Type.Entity.Any, values: any) => {
-      return client.spaces.default.db.add(Obj.make(schema as Type.Obj.Any, values));
+      invariant(Type.Entity.isObject(schema));
+      return space?.db.add(Obj.make(schema, values));
     },
     [space],
   );

@@ -120,8 +120,7 @@ export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<
     } else {
       const existingSchema = this._space.internal.db.graph.schemaRegistry.getSchema(typename);
       if (existingSchema != null) {
-        // Runtime schemas have typename/version via annotations.
-        return existingSchema as Type.Obj.Any;
+        return existingSchema;
       }
       await this._space.internal.db.graph.schemaRegistry.register([schema]);
       return schema;

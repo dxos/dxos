@@ -43,12 +43,13 @@ export type TestConfigurationFactory = (schema: Type.Obj.Any) => TestConfigurati
 
 /**
  * Helper to wrap mutations for ECHO objects.
+ * Uses Obj.Mutable<T> for callback type to handle DeepReadonly instance types.
  */
-const mutate = <T>(obj: T, requiresObjChange: boolean, callback: (o: T) => void): void => {
+const mutate = <T>(obj: T, requiresObjChange: boolean, callback: (o: Obj.Mutable<T>) => void): void => {
   if (requiresObjChange) {
     Obj.change(obj as any, callback as any);
   } else {
-    callback(obj);
+    callback(obj as Obj.Mutable<T>);
   }
 };
 
@@ -69,7 +70,7 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
     } = testConfig;
 
     // Helper for this test configuration.
-    const change = <T>(obj: T, callback: (o: T) => void): void => {
+    const change = <T>(obj: T, callback: (o: Obj.Mutable<T>) => void): void => {
       mutate(obj, requiresObjChange, callback);
     };
 
@@ -492,7 +493,7 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
       describe('array operations', () => {
         const createReactiveArray = async (
           stringArray: string[],
-        ): Promise<{ array: string[]; parent: TestSchema.Example }> => {
+        ): Promise<{ array: readonly string[]; parent: TestSchema.Example }> => {
           const obj = await createObject({ stringArray });
           return { array: obj.stringArray!, parent: obj };
         };

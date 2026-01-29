@@ -27,6 +27,7 @@
   "dependencies": {
     "@dxos/echo": "workspace:*",
     "@dxos/echo-atom": "workspace:*",
+    "@dxos/util": "catalog:",
     "@effect-atom/atom": "catalog:",
     "@effect-atom/atom-react": "catalog:"
   },

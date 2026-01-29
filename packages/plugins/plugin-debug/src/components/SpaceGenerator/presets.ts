@@ -79,8 +79,8 @@ export const generator = () => ({
 
           const tag = space.db.add(Tag.make({ label: 'Investor' }));
           const tagDxn = Obj.getDXN(tag).toString();
-          Obj.change(doc, () => {
-            Obj.getMeta(doc).tags = [tagDxn];
+          Obj.changeMeta(doc, (meta) => {
+            meta.tags = [tagDxn];
           });
 
           // space.db.add(

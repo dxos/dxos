@@ -14,6 +14,7 @@ import { CommandConfig } from '@dxos/cli-util';
 import { flushAndSync, print, spaceLayer, withTypes } from '@dxos/cli-util';
 import { Common } from '@dxos/cli-util';
 import { DXN, Database, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
+import { type Mutable } from '@dxos/echo/internal';
 import { Function, Trigger } from '@dxos/functions';
 
 import { Deep, Delay, Enabled, Input, TriggerId, Typename } from '../options';
@@ -184,7 +185,7 @@ const updateSpec = Effect.fn(function* (
       Obj.change(trigger, (t) => {
         if (t.spec?.kind === 'subscription') {
           t.spec.query = {
-            ast: queryAst,
+            ast: queryAst as Mutable<typeof queryAst>,
           };
         }
       });

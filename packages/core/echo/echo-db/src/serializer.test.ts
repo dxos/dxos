@@ -53,8 +53,7 @@ describe('Serializer', () => {
 
       {
         const { db } = await builder.createDatabase();
-        const obj = Obj.make(Type.Expando, {});
-        obj.title = 'Test';
+        const obj = Obj.make(Type.Expando, { title: 'Test' });
         db.add(obj);
         await db.flush();
 

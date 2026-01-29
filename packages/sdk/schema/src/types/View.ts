@@ -25,6 +25,7 @@ import {
   FormInputAnnotation,
   JsonSchemaType,
   LabelAnnotation,
+  type Mutable,
   ReferenceAnnotationId,
   type ReferenceAnnotationValue,
   SystemTypeAnnotation,
@@ -44,7 +45,7 @@ import {
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 
-import { FieldSchema, ProjectionModel, createDirectChangeCallback } from '../projection';
+import { FieldSchema, ProjectionModel, type ProjectionChangeCallback } from '../projection';
 import { createDefaultSchema, getSchema } from '../util';
 
 export const Projection = Schema.Struct({
@@ -57,14 +58,14 @@ export const Projection = Schema.Struct({
    * UX metadata associated with displayed fields (in table, form, etc.)
    */
   // TODO(wittjosiah): Should this just be an array of JsonPath?
-  fields: Schema.Array(FieldSchema).pipe(Schema.mutable),
+  fields: Schema.Array(FieldSchema),
 
   /**
    * The id for the field used to pivot the view.
    * E.g., the field to use for kanban columns or the field to use for map coordinates.
    */
   pivotFieldId: Schema.String.pipe(Schema.optional),
-}).pipe(Schema.mutable);
+});
 
 export type Projection = Schema.Schema.Type<typeof Projection>;
 
@@ -80,7 +81,7 @@ const ViewSchema = Schema.Struct({
   query: Schema.Struct({
     raw: Schema.optional(Schema.String),
     ast: QueryAST.Query,
-  }).pipe(Schema.mutable),
+  }),
 
   /**
    * Projection of the data returned from the query.
@@ -130,10 +131,16 @@ export const make = ({ query, queryRaw, jsonSchema, overrideSchema, fields, pivo
     },
   });
 
+  // Create change callback that wraps mutations in Obj.change.
+  const changeCallback: ProjectionChangeCallback = {
+    projection: (mutate) => Obj.change(view, (v) => mutate(v.projection as Mutable<Projection>)),
+    schema: (mutate) => mutate(jsonSchema as Mutable<JsonSchemaType>),
+  };
+
   const projection = new ProjectionModel({
     view,
     baseSchema: jsonSchema,
-    change: createDirectChangeCallback(view.projection, jsonSchema),
+    change: changeCallback,
   });
   projection.normalizeView();
   const schema = toEffectSchema(jsonSchema);
@@ -156,17 +163,21 @@ export const make = ({ query, queryRaw, jsonSchema, overrideSchema, fields, pivo
 
   // Sort fields to match the order in the params.
   if (fields) {
-    view.projection.fields.sort((a, b) => {
-      const indexA = fields.indexOf(a.path);
-      const indexB = fields.indexOf(b.path);
-      return indexA - indexB;
+    Obj.change(view, (v) => {
+      (v.projection.fields as Mutable<Projection>['fields']).sort((a, b) => {
+        const indexA = fields.indexOf(a.path);
+        const indexB = fields.indexOf(b.path);
+        return indexA - indexB;
+      });
     });
   }
 
   if (pivotFieldName) {
     const fieldId = projection.getFieldId(pivotFieldName);
     if (fieldId) {
-      view.projection.pivotFieldId = fieldId;
+      Obj.change(view, (v) => {
+        v.projection.pivotFieldId = fieldId;
+      });
     }
   }
 
@@ -199,10 +210,16 @@ export const makeWithReferences = async ({
     pivotFieldName,
   });
 
+  // Create change callback that wraps mutations in Obj.change.
+  const changeCallback: ProjectionChangeCallback = {
+    projection: (mutate) => Obj.change(view, (v) => mutate(v.projection as Mutable<Projection>)),
+    schema: (mutate) => mutate(jsonSchema as Mutable<JsonSchemaType>),
+  };
+
   const projection = new ProjectionModel({
     view,
     baseSchema: jsonSchema,
-    change: createDirectChangeCallback(view.projection, jsonSchema),
+    change: changeCallback,
   });
   const schema = toEffectSchema(jsonSchema);
   const properties = getProperties(schema.ast);

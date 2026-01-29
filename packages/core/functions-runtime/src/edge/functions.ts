@@ -94,7 +94,7 @@ export const getDeployedFunctions = async (client: Client, dedupe = false): Prom
       outputSchema: versionMeta.outputSchema,
     });
 
-    setUserFunctionIdInMetadata(Obj.getMeta(fn), record.id);
+    Obj.changeMeta(fn, (meta) => setUserFunctionIdInMetadata(meta, record.id));
     return [fn];
   });
 

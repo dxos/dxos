@@ -12,7 +12,7 @@ import { JsonSchemaType } from '../json-schema';
  * Persistent representation of a schema.
  */
 // TODO(burdon): Move.
-const PersistentEchoSchema = Schema.Struct({
+export const PersistentSchema = Schema.Struct({
   name: Schema.optional(Schema.String),
   typename: TypenameSchema,
   version: VersionSchema,
@@ -23,6 +23,5 @@ const PersistentEchoSchema = Schema.Struct({
     version: '0.1.0',
   }),
 );
-export interface PersistentSchema extends Schema.Schema.Type<typeof PersistentEchoSchema> {}
-export interface PersistentSchemaEncoded extends Schema.Schema.Encoded<typeof PersistentEchoSchema> {}
-export const PersistentSchema: typeof PersistentEchoSchema = PersistentEchoSchema;
+
+export interface PersistentSchema extends Schema.Schema.Type<typeof PersistentSchema> {}

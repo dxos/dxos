@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import React, { useCallback } from 'react';
 
 import { Annotation, type Database, Format, Obj, type QueryAST, Type } from '@dxos/echo';
-import { PropertyMetaAnnotationId } from '@dxos/echo/internal';
+import { type Mutable, PropertyMetaAnnotationId } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { faker } from '@dxos/random';
 import { PublicKey } from '@dxos/react-client';
@@ -73,7 +73,9 @@ const StoryViewEditor = ({
       invariant(Type.isMutable(schema));
       schema.updateTypename(getTypenameFromQuery(newQuery));
       invariant(view);
-      view.query.ast = newQuery;
+      Obj.change(view, (v) => {
+        v.query.ast = newQuery as Mutable<typeof newQuery>;
+      });
     },
     [schema, view],
   );
@@ -151,10 +153,12 @@ const meta = {
         const [schema] = await space.db.schemaRegistry.register([Example]);
         const { view, jsonSchema } = await View.makeFromDatabase({ db: space.db, typename: schema.typename });
         const table = Table.make({ view, jsonSchema });
-        view.projection.fields = [
-          view.projection.fields.find((field: any) => field.path === 'name')!,
-          ...view.projection.fields.filter((field: any) => field.path !== 'name'),
-        ];
+        Obj.change(view, (v) => {
+          v.projection.fields = [
+            v.projection.fields.find((field) => field.path === 'name')!,
+            ...v.projection.fields.filter((field) => field.path !== 'name'),
+          ];
+        });
 
         space.db.add(table);
 

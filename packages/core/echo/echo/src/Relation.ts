@@ -84,7 +84,7 @@ export type MakeProps<S extends Type.Relation.Any> = RelationMakeProps<Schema.Sc
 
 /**
  * Creates new relation.
- * @param schema - Relation schema (must be created with `Type.Relation`).
+ * @param schema - Relation schema.
  * @param props - Relation properties. Endpoints are passed as [Relation.Source] and [Relation.Target] keys.
  * @param meta - Relation metadata.
  * @returns
@@ -206,7 +206,7 @@ export type { Mutable };
  * });
  * ```
  *
- * Note: Only accepts relations. Use `Obj.change` for objects, or `Entity.change` for either.
+ * Note: Only accepts relations. Use `Obj.change` for objects.
  */
 export const change = <T extends Any>(relation: T, callback: ChangeCallback<T>): void => {
   change$(relation, callback);

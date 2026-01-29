@@ -7,6 +7,7 @@ import React, { useEffect } from 'react';
 
 import { VoidInput } from '@dxos/conductor';
 import { Filter, Obj, Query, Ref, Type } from '@dxos/echo';
+import { type Mutable } from '@dxos/echo/internal';
 import { Trigger, TriggerEvent } from '@dxos/functions';
 import { DXN, SpaceId } from '@dxos/keys';
 import { useSpace } from '@dxos/react-client/echo';
@@ -16,18 +17,15 @@ import { type ShapeComponentProps, type ShapeDef } from '@dxos/react-ui-canvas-e
 import { FunctionBody, createFunctionAnchors, getHeight } from './common';
 import { ComputeShape, type CreateShapeProps, createShape } from './defs';
 
-export interface TriggerShape extends ComputeShape {
-  readonly type: 'trigger';
-  readonly functionTrigger?: Ref.Ref<Trigger.Trigger>;
-}
-
-export const TriggerShape: Schema.Schema<TriggerShape> = Schema.extend(
+export const TriggerShape = Schema.extend(
   ComputeShape,
   Schema.Struct({
     type: Schema.Literal('trigger'),
     functionTrigger: Schema.optional(Type.Ref(Trigger.Trigger)),
   }),
-) as any;
+);
+
+export interface TriggerShape extends Schema.Schema.Type<typeof TriggerShape> {}
 
 export type CreateTriggerProps = CreateShapeProps<Omit<TriggerShape, 'functionTrigger'>> & {
   spaceId?: SpaceId;
@@ -56,7 +54,7 @@ export const TriggerComponent = ({ shape }: TriggerComponentProps) => {
   useEffect(() => {
     if (functionTrigger && !functionTrigger.spec) {
       Obj.change(functionTrigger, (t) => {
-        t.spec = createTriggerSpec({ triggerKind: 'email', spaceId: space?.id });
+        t.spec = createTriggerSpec({ triggerKind: 'email', spaceId: space?.id }) as Mutable<Trigger.Spec>;
       });
     }
   }, [functionTrigger, functionTrigger?.spec]);
@@ -68,7 +66,7 @@ export const TriggerComponent = ({ shape }: TriggerComponentProps) => {
   const setKind = (kind: Trigger.Kind) => {
     if (functionTrigger?.spec?.kind !== kind) {
       Obj.change(functionTrigger!, (t) => {
-        t.spec = createTriggerSpec({ triggerKind: kind, spaceId: space?.id });
+        t.spec = createTriggerSpec({ triggerKind: kind, spaceId: space?.id }) as Mutable<Trigger.Spec>;
       });
     }
   };

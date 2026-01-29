@@ -12,12 +12,26 @@ import { createObject, isEchoObject } from './echo-handler';
 const Person = Schema.Struct({
   name: Schema.String,
   age: Schema.optional(Schema.Number),
-  tags: Schema.optional(Schema.mutable(Schema.Array(Schema.String))),
+  tags: Schema.optional(Schema.Array(Schema.String)),
   address: Schema.optional(
-    Schema.mutable(
+    Schema.Struct({
+      street: Schema.String,
+      city: Schema.optional(Schema.String),
+      // Deeper nesting for regression tests.
+      coordinates: Schema.optional(
+        Schema.Struct({
+          lat: Schema.Number,
+          lng: Schema.Number,
+        }),
+      ),
+    }),
+  ),
+  // Nested array of objects for deep mutation tests.
+  contacts: Schema.optional(
+    Schema.Array(
       Schema.Struct({
-        street: Schema.String,
-        city: Schema.optional(Schema.String),
+        type: Schema.String,
+        value: Schema.String,
       }),
     ),
   ),
@@ -98,8 +112,8 @@ describe('Obj.change', () => {
     const obj = createObject(Obj.make(Person, { name: 'John' }));
 
     expect(() => {
-      // Cast to any to bypass TypeScript readonly check and test runtime behavior.
-      (obj as any).name = 'Jane';
+      // @ts-expect-error - TypeScript should catch this as a readonly property violation.
+      obj.name = 'Jane';
     }).toThrow(/Cannot modify ECHO object property.*outside of Obj.change/);
   });
 
@@ -107,6 +121,7 @@ describe('Obj.change', () => {
     const obj = createObject(Obj.make(Person, { name: 'John', tags: ['a'] }));
 
     expect(() => {
+      // @ts-expect-error - TypeScript correctly flags push() on readonly array.
       obj.tags!.push('b');
     }).toThrow(/Cannot call array.push\(\) on ECHO object outside of Obj.change/);
   });
@@ -115,16 +130,117 @@ describe('Obj.change', () => {
     const obj = createObject(Obj.make(Person, { name: 'John', tags: ['a'] }));
 
     expect(() => {
+      // @ts-expect-error - TypeScript correctly flags pop() on readonly array.
       obj.tags!.pop();
     }).toThrow(/Cannot call array.pop\(\) on ECHO object outside of Obj.change/);
+  });
+
+  test('mutation outside Obj.change throws error for array splice', ({ expect }) => {
+    const obj = createObject(Obj.make(Person, { name: 'John', tags: ['a', 'b', 'c'] }));
+
+    expect(() => {
+      // @ts-expect-error - TypeScript correctly flags splice() on readonly array.
+      obj.tags!.splice(1, 1);
+    }).toThrow(/Cannot call array.splice\(\) on ECHO object outside of Obj.change/);
   });
 
   test('mutation outside Obj.change throws error for property delete', ({ expect }) => {
     const obj = createObject(Obj.make(Person, { name: 'John', age: 25 }));
 
     expect(() => {
-      delete (obj as any).age;
+      // @ts-expect-error - TypeScript should catch this as a readonly property deletion.
+      delete obj.age;
     }).toThrow(/Cannot delete ECHO object property.*outside of Obj.change/);
+  });
+
+  //
+  // Deeply nested mutation regression tests.
+  //
+
+  test('mutation outside Obj.change throws error for nested object property (1 level deep)', ({ expect }) => {
+    const obj = createObject(Obj.make(Person, { name: 'John', address: { street: '123 Main St' } }));
+
+    expect(() => {
+      // @ts-expect-error - TypeScript should catch nested readonly property violations.
+      obj.address!.street = 'New Street';
+    }).toThrow(/Cannot modify ECHO object property.*outside of Obj.change/);
+  });
+
+  test('mutation outside Obj.change throws error for deeply nested object property (2 levels deep)', ({ expect }) => {
+    const obj = createObject(
+      Obj.make(Person, {
+        name: 'John',
+        address: { street: '123 Main St', coordinates: { lat: 40.7128, lng: -74.006 } },
+      }),
+    );
+
+    expect(() => {
+      // @ts-expect-error - TypeScript should catch deeply nested readonly property violations.
+      obj.address!.coordinates!.lat = 0;
+    }).toThrow(/Cannot modify ECHO object property.*outside of Obj.change/);
+  });
+
+  test('mutation outside Obj.change throws error for nested array element property', ({ expect }) => {
+    const obj = createObject(
+      Obj.make(Person, {
+        name: 'John',
+        contacts: [{ type: 'email', value: 'john@example.com' }],
+      }),
+    );
+
+    expect(() => {
+      // @ts-expect-error - TypeScript should catch mutations to array element properties.
+      obj.contacts![0].value = 'new@example.com';
+    }).toThrow(/Cannot modify ECHO object property.*outside of Obj.change/);
+  });
+
+  test('mutation outside Obj.change throws error for nested array push', ({ expect }) => {
+    const obj = createObject(
+      Obj.make(Person, {
+        name: 'John',
+        contacts: [{ type: 'email', value: 'john@example.com' }],
+      }),
+    );
+
+    expect(() => {
+      // @ts-expect-error - TypeScript correctly flags push() on readonly array.
+      obj.contacts!.push({ type: 'phone', value: '555-1234' });
+    }).toThrow(/Cannot call array.push\(\) on ECHO object outside of Obj.change/);
+  });
+
+  test('deeply nested mutations work within Obj.change (2 levels deep)', ({ expect }) => {
+    const obj = createObject(
+      Obj.make(Person, {
+        name: 'John',
+        address: { street: '123 Main St', coordinates: { lat: 40.7128, lng: -74.006 } },
+      }),
+    );
+
+    Obj.change(obj, (p) => {
+      p.address!.coordinates!.lat = 51.5074;
+      p.address!.coordinates!.lng = -0.1278;
+    });
+
+    expect(obj.address?.coordinates?.lat).toBe(51.5074);
+    expect(obj.address?.coordinates?.lng).toBe(-0.1278);
+  });
+
+  test('nested array element mutations work within Obj.change', ({ expect }) => {
+    const obj = createObject(
+      Obj.make(Person, {
+        name: 'John',
+        contacts: [{ type: 'email', value: 'john@example.com' }],
+      }),
+    );
+
+    Obj.change(obj, (p) => {
+      p.contacts![0].value = 'updated@example.com';
+      p.contacts!.push({ type: 'phone', value: '555-1234' });
+    });
+
+    expect(obj.contacts![0].value).toBe('updated@example.com');
+    expect(obj.contacts!.length).toBe(2);
+    expect(obj.contacts![1].type).toBe('phone');
   });
 
   test('error in callback does not leave object in broken state', ({ expect }) => {
@@ -139,8 +255,8 @@ describe('Obj.change', () => {
 
     // Object should still be readonly after error.
     expect(() => {
-      // Cast to any to bypass TypeScript readonly check and test runtime behavior.
-      (obj as any).name = 'Bob';
+      // @ts-expect-error - TypeScript should catch this as a readonly property violation.
+      obj.name = 'Bob';
     }).toThrow(/Cannot modify ECHO object property.*outside of Obj.change/);
   });
 

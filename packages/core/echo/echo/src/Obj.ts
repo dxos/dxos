@@ -9,7 +9,7 @@ import { type ForeignKey } from '@dxos/echo-protocol';
 import { createJsonPath, getValue as getValue$ } from '@dxos/effect';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { type DXN, ObjectId } from '@dxos/keys';
-import { assumeType, deepMapValues } from '@dxos/util';
+import { assumeType, deepMapValues, type DeepReadonly } from '@dxos/util';
 
 import type * as Database from './Database';
 import * as Entity from './Entity';
@@ -100,7 +100,7 @@ export type MakeProps<S extends Schema.Schema.AnyNoContext> = {
 
 /**
  * Creates a new echo object of the given schema.
- * @param schema - Object schema (must be created with `Type.Obj`).
+ * @param schema - Object schema.
  * @param props - Object properties.
  * @param meta - Object metadata (deprecated) -- pass with Obj.Meta.
  *
@@ -243,7 +243,7 @@ export type { Mutable };
  * person.name = 'Bob'; // Error: Cannot modify outside Obj.change()
  * ```
  *
- * Note: Only accepts objects. Use `Relation.change` for relations, or `Entity.change` for either.
+ * Note: Only accepts objects. Use `Relation.change` for relations.
  */
 export const change = <T extends Any>(obj: T, callback: ChangeCallback<T>): void => {
   change$(obj, callback);
@@ -379,13 +379,51 @@ export const getDatabase = (entity: Entity.Unknown): Database.Database | undefin
 
 export const Meta: unique symbol = MetaId as any;
 
+/**
+ * Deeply read-only version of ObjectMeta.
+ * Prevents mutation at all nesting levels (e.g., `meta.keys.push()` is a TypeScript error).
+ */
+export type ReadonlyMeta = DeepReadonly<ObjectMeta>;
+
+/**
+ * Mutable meta type received in the `Obj.changeMeta()` callback.
+ */
+export type Meta = ObjectMeta;
+
 // TODO(burdon): Narrow type.
 // TODO(dmaretskyi): Allow returning undefined.
-export const getMeta = (entity: AnyProperties): ObjectMeta => {
+/**
+ * Get the metadata for an entity.
+ * Returns a read-only view of the metadata.
+ * Use `Obj.changeMeta` to mutate metadata.
+ */
+export const getMeta = (entity: AnyProperties): ReadonlyMeta => {
   assertArgument(entity, 'entity', 'Should be an object.');
   const meta = getMeta$(entity);
   invariant(meta != null, 'Invalid object.');
   return meta;
+};
+
+/**
+ * Perform mutations on an entity's metadata within a controlled context.
+ *
+ * @param entity - The entity whose metadata to mutate.
+ * @param callback - The callback that performs mutations on the metadata.
+ *
+ * @example
+ * ```ts
+ * Obj.changeMeta(person, (meta) => {
+ *   meta.keys.push({ source: 'external', id: '123' });
+ * });
+ * ```
+ */
+export const changeMeta = (entity: Entity.Unknown, callback: (meta: ObjectMeta) => void): void => {
+  assertArgument(entity, 'entity', 'Should be an object.');
+  const meta = getMeta$(entity);
+  invariant(meta != null, 'Invalid object.');
+  change$(entity, () => {
+    callback(meta);
+  });
 };
 
 /**
@@ -407,33 +445,35 @@ export const getKeys: {
  * @param source
  */
 export const deleteKeys = (entity: Entity.Unknown, source: string) => {
-  assertArgument(entity, 'entity', 'Should be an object.');
-  const meta = getMeta(entity);
-  for (let i = 0; i < meta.keys.length; i++) {
-    if (meta.keys[i].source === source) {
-      meta.keys.splice(i, 1);
-      i--;
+  changeMeta(entity, (meta) => {
+    for (let i = 0; i < meta.keys.length; i++) {
+      if (meta.keys[i].source === source) {
+        meta.keys.splice(i, 1);
+        i--;
+      }
     }
-  }
+  });
 };
 
 export const addTag = (entity: Entity.Unknown, tag: string) => {
-  const meta = getMeta(entity);
-  meta.tags ??= [];
-  meta.tags.push(tag);
+  changeMeta(entity, (meta) => {
+    meta.tags ??= [];
+    meta.tags.push(tag);
+  });
 };
 
 export const removeTag = (entity: Entity.Unknown, tag: string) => {
-  const meta = getMeta(entity);
-  if (!meta.tags) {
-    return;
-  }
-  for (let i = 0; i < meta.tags.length; i++) {
-    if (meta.tags[i] === tag) {
-      meta.tags.splice(i, 1);
-      i--;
+  changeMeta(entity, (meta) => {
+    if (!meta.tags) {
+      return;
     }
-  }
+    for (let i = 0; i < meta.tags.length; i++) {
+      if (meta.tags[i] === tag) {
+        meta.tags.splice(i, 1);
+        i--;
+      }
+    }
+  });
 };
 
 // TODO(dmaretskyi): Default to `false`.

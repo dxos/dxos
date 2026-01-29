@@ -60,11 +60,13 @@ const TEST_OBJECT: TestSchema.ExampleSchema = {
       const obj = createObject();
 
       const classInstance = new TestSchema.TestClass();
-      obj.classInstance = classInstance;
+      // Cast to any to bypass TypeScript readonly check - this tests the reactive proxy behavior.
+      (obj as any).classInstance = classInstance;
       expect(obj.classInstance!.field).to.eq('value');
       expect(obj.classInstance instanceof TestSchema.TestClass).to.eq(true);
       expect(obj.classInstance === classInstance).to.be.true;
 
+      // Class instances are not wrapped in proxies, so direct mutation works.
       obj.classInstance!.field = 'baz';
       expect(obj.classInstance!.field).to.eq('baz');
     });

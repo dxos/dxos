@@ -108,23 +108,33 @@ export const Obj: Schema.Schema<{ id: ObjectId } & Record<string, unknown>, { id
 /**
  * TypeScript type for an ECHO object schema.
  * `T` is the instance type produced by the schema.
+ * `Fields` is the optional struct fields type for introspection.
  *
  * @example
  * ```ts
  * const PersonSchema: Type.Obj<Person> = Schema.Struct({
  *   name: Schema.String,
  * }).pipe(Type.object({ typename: 'Person', version: '0.1.0' }));
+ *
+ * // Access fields for introspection:
+ * Object.keys(PersonSchema.fields); // ['name']
  * ```
  */
-export interface Obj<T = any>
+export interface Obj<T = any, Fields extends Schema.Struct.Fields = Schema.Struct.Fields>
   extends TypeMeta,
     EchoSchemaBranded<EntityKind.Object>,
     Schema.AnnotableClass<
-      Obj<T>,
+      Obj<T, Fields>,
       Entity$.OfKind<typeof Entity$.Kind.Object> & T,
       Schema.Simplify<ObjJsonProps & ToMutable<T>>,
       never
-    > {}
+    > {
+  /**
+   * The fields defined in the original struct schema.
+   * Allows accessing field definitions for introspection.
+   */
+  readonly fields: Fields;
+}
 
 /**
  * Structural base type for any ECHO object schema.
@@ -208,16 +218,23 @@ export const Relation: Schema.Schema<
  * TypeScript type for an ECHO relation schema.
  * `T` is the instance type produced by the schema (excluding source/target).
  * `Source` and `Target` are the endpoint types.
+ * `Fields` is the optional struct fields type for introspection.
  */
-export interface Relation<T = any, Source = any, Target = any>
+export interface Relation<T = any, Source = any, Target = any, Fields extends Schema.Struct.Fields = Schema.Struct.Fields>
   extends TypeMeta,
     EchoSchemaBranded<EntityKind.Relation>,
     Schema.AnnotableClass<
-      Relation<T, Source, Target>,
+      Relation<T, Source, Target, Fields>,
       Entity$.OfKind<typeof Entity$.Kind.Relation> & Relation.Endpoints<Source, Target> & T,
       Schema.Simplify<RelationJsonProps & ToMutable<T>>,
       never
-    > {}
+    > {
+  /**
+   * The fields defined in the original struct schema.
+   * Allows accessing field definitions for introspection.
+   */
+  readonly fields: Fields;
+}
 
 /**
  * Structural base type for any ECHO relation schema.

@@ -22,9 +22,7 @@ export default Capability.makeModule(() =>
         filter: (data): data is { subject: Masonry.Masonry | View.View } =>
           Obj.instanceOf(Masonry.Masonry, data.subject) || Obj.instanceOf(View.View, data.subject),
         component: ({ data, role }) => {
-          const view = Obj.instanceOf(View.View, data.subject)
-            ? data.subject
-            : (data.subject as Masonry.Masonry).view.target;
+          const view = Obj.instanceOf(View.View, data.subject) ? data.subject : data.subject.view.target;
           return view ? <MasonryContainer view={view} role={role} /> : null;
         },
       }),

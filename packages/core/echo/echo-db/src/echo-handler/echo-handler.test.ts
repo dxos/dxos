@@ -72,7 +72,8 @@ describe('ECHO specific proxy properties with schema', () => {
 
   test('throws when assigning a class instances', () => {
     expect(() => {
-      createObject(Obj.make(TestSchema.Example, {})).classInstance = new TestSchema.TestClass();
+      // Use type assertion to bypass readonly check - testing runtime behavior.
+      (createObject(Obj.make(TestSchema.Example, {})) as any).classInstance = new TestSchema.TestClass();
     }).to.throw();
   });
 
@@ -479,9 +480,11 @@ describe('Reactive Object with ECHO database', () => {
 
     test('circular references', async () => {
       const { db } = await builder.createDatabase();
-      const task = Obj.make(Type.Expando, { title: 'test' });
-      task.previous = Ref.make(Obj.make(Type.Expando, { title: 'another' }));
-      task.previous!.previous = Ref.make(task);
+      const another = Obj.make(Type.Expando, { title: 'another' });
+      const task = Obj.make(Type.Expando, { title: 'test', previous: Ref.make(another) });
+      Obj.change(another, (o) => {
+        o.previous = Ref.make(task);
+      });
       db.add(task);
     });
 
@@ -615,15 +618,17 @@ describe('Reactive Object with ECHO database', () => {
       const obj = Obj.make(Type.Expando, { string: 'foo' });
       expect(Obj.getMeta(obj)).to.deep.eq({ keys: [] });
       const testKey = { source: 'test', id: 'hello' };
-      Obj.getMeta(obj).keys.push(testKey);
+      Obj.changeMeta(obj, (meta) => meta.keys.push(testKey));
       expect(Obj.getMeta(obj)).to.deep.eq({ keys: [testKey] });
-      expect(() => Obj.getMeta(obj).keys.push(1 as any)).to.throw();
+      expect(() =>
+        Obj.changeMeta(obj, (meta) => meta.keys.push(1 as any)),
+      ).to.throw();
     });
 
     test('meta taken from reactive object when saving to echo', async () => {
       const testKey = { source: 'test', id: 'hello' };
       const reactiveObject = Obj.make(Type.Expando, {});
-      Obj.getMeta(reactiveObject).keys.push(testKey);
+      Obj.changeMeta(reactiveObject, (meta) => meta.keys.push(testKey));
 
       const { db } = await builder.createDatabase();
       const obj = db.add(reactiveObject);
@@ -636,8 +641,8 @@ describe('Reactive Object with ECHO database', () => {
 
       expect(Obj.getMeta(obj).keys).to.deep.eq([]);
       const key = { source: 'example.com', id: '123' };
-      Obj.change(obj, () => {
-        Obj.getMeta(obj).keys.push(key);
+      Obj.changeMeta(obj, (meta) => {
+        meta.keys.push(key);
       });
       expect(Obj.getMeta(obj).keys).to.deep.eq([key]);
     });
@@ -668,8 +673,8 @@ describe('Reactive Object with ECHO database', () => {
       const { db, graph } = await builder.createDatabase();
       await graph.schemaRegistry.register([TestType]);
       const obj = db.add(Obj.make(TestType, { field: 1 }, { keys: [foreignKey('example.com', '123')] }));
-      Obj.change(obj, () => {
-        Obj.getMeta(obj).keys.push(foreignKey('example.com', '456'));
+      Obj.changeMeta(obj, (meta) => {
+        meta.keys.push(foreignKey('example.com', '456'));
       });
       expect(Obj.getMeta(obj).keys.length).to.eq(2);
     });
@@ -697,8 +702,8 @@ describe('Reactive Object with ECHO database', () => {
         const db = await peer.openDatabase(spaceKey, root.url);
         const obj = db.add(Obj.make(Type.Expando, { string: 'foo' }));
         id = obj.id;
-        Obj.change(obj, () => {
-          Obj.getMeta(obj).keys.push(metaKey);
+        Obj.changeMeta(obj, (meta) => {
+          meta.keys.push(metaKey);
         });
         await db.flush();
         await peer.close();
@@ -903,31 +908,32 @@ describe('Reactive Object with ECHO database', () => {
   test('foreign key copying from new object to existing object', async () => {
     const { db } = await builder.createDatabase();
 
-    // Create an object in the database
+    // Create an object in the database.
     const existing = db.add(Obj.make(Type.Expando, { title: 'Existing object' }));
     expect(Obj.getMeta(existing).keys).to.deep.eq([]);
 
-    // Create a new object with foreign keys (not in database, so no Obj.change needed)
+    // Create a new object with foreign keys (not in database).
     const newObj = Obj.make(Type.Expando, { title: 'New object' });
     const foreignKey1 = { source: 'example.com', id: 'key-1' };
     const foreignKey2 = { source: 'another.com', id: 'key-2' };
-    Obj.getMeta(newObj).keys.push(foreignKey1);
-    Obj.getMeta(newObj).keys.push(foreignKey2);
-
-    // Copy foreign keys from new object to existing object (existing is in database)
-    Obj.change(existing, () => {
-      for (const foreignKey of Obj.getMeta(newObj).keys) {
-        Obj.deleteKeys(existing, foreignKey.source);
-        // Using spread operator to copy the foreign key object
-        Obj.getMeta(existing).keys.push({ ...foreignKey });
-      }
+    Obj.changeMeta(newObj, (meta) => {
+      meta.keys.push(foreignKey1);
+      meta.keys.push(foreignKey2);
     });
 
-    // Verify foreign keys were copied
+    // Copy foreign keys from new object to existing object (existing is in database).
+    for (const foreignKey of Obj.getMeta(newObj).keys) {
+      Obj.deleteKeys(existing, foreignKey.source);
+      Obj.changeMeta(existing, (meta) => {
+        meta.keys.push({ ...foreignKey });
+      });
+    }
+
+    // Verify foreign keys were copied.
     expect(Obj.getMeta(existing).keys).to.have.length(2);
     expect(Obj.getMeta(existing).keys).to.deep.eq([foreignKey1, foreignKey2]);
 
-    // Verify the original object still has its keys
+    // Verify the original object still has its keys.
     expect(Obj.getMeta(newObj).keys).to.have.length(2);
   });
 });

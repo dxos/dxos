@@ -49,10 +49,8 @@ export default defineFunction({
 
     chess.move(move.san);
     const newPgn = chess.pgn();
-    yield* Effect.sync(() => {
-      Obj.change(loadedGame, (g) => {
-        g.pgn = newPgn;
-      });
+    Obj.change(loadedGame, (g) => {
+      g.pgn = newPgn;
     });
     yield* Database.Service.flush();
     return { state: chess.ascii() };

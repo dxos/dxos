@@ -96,7 +96,7 @@ export type Spec = Schema.Schema.Type<typeof Spec>;
  * Function is invoked with the `payload` passed as input data.
  * The event that triggers the function is available in the function context.
  */
-export const Trigger = Schema.Struct({
+const TriggerSchema = Schema.Struct({
   /**
    * Function or workflow to invoke.
    */
@@ -136,6 +136,7 @@ export const Trigger = Schema.Struct({
   SystemTypeAnnotation.set(true),
 );
 
-export interface Trigger extends Schema.Schema.Type<typeof Trigger> {}
+export interface Trigger extends Schema.Schema.Type<typeof TriggerSchema> {}
+export const Trigger: Type.Obj<Trigger> = TriggerSchema as any;
 
 export const make = (props: Obj.MakeProps<typeof Trigger>) => Obj.make(Trigger, props);

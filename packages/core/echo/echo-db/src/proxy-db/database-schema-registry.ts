@@ -277,7 +277,7 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
             ...input.jsonSchema,
             typename: input.typename,
             version: input.version,
-          }) as Type.Entity.Any,
+          }),
         );
         results.push(schema);
         if (input.name) {
@@ -368,7 +368,7 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
       // The snapshot preserves typename/version in annotations.
       schema = schema.snapshot.annotations({
         [TypeIdentifierAnnotationId]: undefined,
-      }) as Type.Entity.Any;
+      });
     }
 
     const meta = getTypeAnnotation(schema);

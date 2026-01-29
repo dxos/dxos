@@ -75,9 +75,9 @@ export default defineFunction({
           throw new Error('Multiple organizations created');
         } else if (created.length === 1) {
           organization = yield* Database.Service.resolve(created[0], Organization.Organization);
-          Obj.change(organization, (o) => {
-            Obj.getMeta(o).tags ??= [];
-            Obj.getMeta(o).tags!.push(...(tags ?? []));
+          Obj.changeMeta(organization, (meta) => {
+            meta.tags ??= [];
+            meta.tags.push(...(tags ?? []));
           });
           Obj.change(contact, (c) => {
             c.organization = Ref.make(organization!);
@@ -104,7 +104,7 @@ export default defineFunction({
   ),
 });
 
-const extractContact = Effect.fn('extractContact')(function* (actor: Actor.Actor, tags?: string[]) {
+const extractContact = Effect.fn('extractContact')(function* (actor: Actor.Actor, tags?: readonly string[]) {
   const name = actor.name;
   const email = actor.email;
   if (!email) {
@@ -126,7 +126,7 @@ const extractContact = Effect.fn('extractContact')(function* (actor: Actor.Actor
   }
 
   const newContact = Obj.make(Person.Person, {
-    [Obj.Meta]: { tags },
+    [Obj.Meta]: { tags: tags ? [...tags] : undefined },
     emails: [{ value: email }],
   });
   yield* Database.Service.add(newContact);
