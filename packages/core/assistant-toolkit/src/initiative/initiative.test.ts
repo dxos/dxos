@@ -67,7 +67,7 @@ describe('Initiative', () => {
     MemoizedAiService.isGenerationEnabled() ? 240_000 : 30_000,
   );
 
-  it.scoped.only(
+  it.scoped(
     'expense tracking list',
     Effect.fnUntraced(
       function* (_) {
