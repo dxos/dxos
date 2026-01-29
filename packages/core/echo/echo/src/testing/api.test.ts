@@ -97,4 +97,30 @@ describe('Experimental API review', () => {
       }
     }
   });
+
+  /**
+   * Test that Obj.make return types are clean and don't expose internal markers like OfKind.
+   * The return type of Obj.make(Schema, props) should be assignable to Obj.Obj<InstanceType>.
+   */
+  describe('Obj.make return type', () => {
+    test('Obj.make with custom schema should be assignable to Obj.Obj<Person>', ({ expect }) => {
+      {
+        const expando = Obj.make(Type.Expando, { content: 'Test' });
+        expect(Obj.isObject(expando)).to.be.true;
+        expect(expando.content).to.eq('Test');
+
+        // This should work: assign to Obj.Obj of the schema's instance type
+        const _typed: Obj.Obj<Type.Expando> = expando;
+      }
+
+      {
+        const person = Obj.make(TestSchema.Person, { name: 'Test' });
+        expect(Obj.isObject(person)).to.be.true;
+        expect(person.name).to.eq('Test');
+
+        // This should work: assign to Obj.Obj of the schema's instance type
+        const _typed: Obj.Obj<TestSchema.Person> = person;
+      }
+    });
+  });
 });

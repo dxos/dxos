@@ -3,7 +3,6 @@
 //
 
 import { EditorView } from '@codemirror/view';
-import type * as Schema from 'effect/Schema';
 import React, { forwardRef, useCallback, useEffect, useRef, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/react';
@@ -28,8 +27,7 @@ export const buttonGroupClassNames = 'flex flex-row items-center gap-0.5 pie-2';
 export const buttonClassNames = '!p-1 transition-opacity';
 
 export type MessageContainerProps = {
-  // TODO(wittjosiah): Find a simpler way to define this type.
-  message: Obj.Obj<Schema.Schema.Type<typeof Message.Message>>;
+  message: Obj.Obj<Message.Message>;
   members: SpaceMember[];
   editable?: boolean;
   onDelete?: (id: string) => void;

@@ -3,7 +3,6 @@
 //
 
 import { type EditorView } from '@codemirror/view';
-import type * as Schema from 'effect/Schema';
 import React, { type ReactNode, forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 
 import { Obj, Type } from '@dxos/echo';
@@ -39,8 +38,7 @@ export type StoryProps = Pick<UseTextEditorProps, 'id' | 'scrollTo' | 'selection
     debug?: DebugMode;
     debugCustom?: (view: EditorView) => ReactNode;
     text?: string;
-    // TODO(wittjosiah): Find a simpler way to define this type.
-    object?: Obj.Obj<Schema.Schema.Type<typeof Type.Expando>>;
+    object?: Obj.Obj<Type.Expando>;
     readOnly?: boolean;
     placeholder?: string;
     lineNumbers?: boolean;

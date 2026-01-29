@@ -165,7 +165,7 @@ export const subscribe = (obj: Entity.Unknown, callback: () => void): (() => voi
 /**
  * Returns an immutable snapshot of an object.
  */
-export const getSnapshot: <T extends Any>(obj: Obj<T>) => T = getSnapshot$;
+export const getSnapshot: <T extends Any>(obj: T) => T = getSnapshot$;
 
 export type CloneOptions = {
   /**

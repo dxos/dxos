@@ -175,14 +175,16 @@ export const object: {
 //
 
 export const Expando: Obj<Expando$> = Expando$ as any;
-export type Expando = Obj<Expando$>;
+
+export interface Expando extends Schema.Schema.Type<typeof Expando> {}
 
 //
 // PersistentType (Schema stored in database)
 //
 
 export const PersistentType: Obj<PersistentSchema> = PersistentSchema as any;
-export type PersistentType = Obj<PersistentSchema>;
+
+export interface PersistentType extends Schema.Schema.Type<typeof PersistentType> {}
 
 export { EchoSchema as RuntimeType };
 
