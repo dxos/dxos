@@ -21,6 +21,10 @@ export const clone = <T extends Obj.Any>(obj: T, opts?: Obj.CloneOptions): T => 
   invariant(schema != null, 'Object should have a schema');
   const props: any = deepMapValues(data, (value, recurse) => {
     if (Ref.isRef(value)) {
+      if (opts?.deep) {
+        // TODO(dmaretskyi): Will break on circular references.
+        return Ref.make(clone(value.target!, opts));
+      }
       return value;
     }
     return recurse(value);
