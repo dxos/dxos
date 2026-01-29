@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Capability, Common } from '@dxos/app-framework';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { Sequence } from '@dxos/conductor';
-import { DXN, type Database, Obj } from '@dxos/echo';
+import { DXN, Database, Obj } from '@dxos/echo';
 import { AtomObj } from '@dxos/echo-atom';
 import { invariant } from '@dxos/invariant';
 import { Operation, type OperationInvoker } from '@dxos/operation';
@@ -88,10 +88,13 @@ export default Capability.makeModule(
                 const capabilities = yield* Capability.Service;
                 const client = yield* Capability.get(ClientCapabilities.Client);
                 const space = getActiveSpace(capabilities) ?? client.spaces.default;
-                const blueprints = yield* Effect.tryPromise(() => space.db.query(Query.type(Blueprint.Blueprint)).run());
+                const blueprints = yield* Effect.tryPromise(() =>
+                  space.db.query(Query.type(Blueprint.Blueprint)).run(),
+                );
                 for (const blueprint of blueprints) {
                   space.db.remove(blueprint);
                 }
+                yield* Database.Service.flush({ indexes: true });
               }),
               properties: {
                 label: ['reset blueprints label', { ns: meta.id }],
