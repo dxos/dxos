@@ -53,7 +53,7 @@ export const MarkdownPlugin = Plugin.define(meta).pipe(
           managesAutofocus: true,
         },
         // TODO(wittjosiah): Move out of metadata.
-        loadReferences: async (doc: Markdown.Document) => await Ref.Array.loadAll<Obj.Any>([doc.content]),
+        loadReferences: async (doc: Markdown.Document) => await Ref.Array.loadAll<Obj.Unknown>([doc.content]),
         serializer,
         // TODO(wittjosiah): Consider how to do generic comments without these.
         comments: 'anchored',

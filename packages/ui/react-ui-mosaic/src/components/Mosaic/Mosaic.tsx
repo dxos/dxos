@@ -97,7 +97,7 @@ import {
 // Types
 //
 
-const getSourceData = <T extends Obj.Any = Obj.Any, Location = any>(
+const getSourceData = <T extends Obj.Unknown = Obj.Unknown, Location = any>(
   source: ElementDragPayload,
 ): MosaicTileData<T, Location> | null => {
   return source.data.type === 'tile' ? (source.data as MosaicTileData<T, Location>) : null;
@@ -689,7 +689,7 @@ const [TileContextProvider, useTileContext] = createContext<TileContextValue>('M
 // State attribute: data-[mosaic-tile-state=dragging]
 const TILE_STATE_ATTR = 'mosaic-tile-state';
 
-type TileProps<T extends Obj.Any = Obj.Any, Location = LocationType> = SlottableClassName<
+type TileProps<T extends Obj.Unknown = Obj.Unknown, Location = LocationType> = SlottableClassName<
   PropsWithChildren<{
     asChild?: boolean;
     dragHandle?: HTMLElement | null;

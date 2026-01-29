@@ -405,7 +405,7 @@ describe('Query', () => {
     }
 
     const queryResult = await db.query(Filter.type(Type.Expando, { name: 'folder' })).run();
-    const result = queryResult.flatMap(({ objects }) => objects.map((o: Ref.Any) => o.target));
+    const result = queryResult.flatMap(({ objects }) => objects.map((o: Ref.Unknown) => o.target));
 
     for (const i in objects) {
       expect(result[i]).to.eq(objects[i]);
@@ -1214,7 +1214,7 @@ describe('Query', () => {
 
   describe('Reactivity', () => {
     let db: EchoDatabase;
-    let objects: Obj.Any[];
+    let objects: Obj.Unknown[];
 
     beforeEach(async () => {
       ({ db } = await builder.createDatabase());

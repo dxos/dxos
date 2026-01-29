@@ -6,7 +6,6 @@ import { Filter, type Space } from '@dxos/client/echo';
 import { Obj, type Type } from '@dxos/echo';
 import { EchoSchema, getTypeAnnotation } from '@dxos/echo/internal';
 import { isProxy } from '@dxos/echo/internal';
-import { type AnyLiveObject } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { faker } from '@dxos/random';
 import { entries, range } from '@dxos/util';
@@ -105,7 +104,7 @@ export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<
     types,
   }: {
     types?: T[];
-  } = {}): Promise<AnyLiveObject<any>> {
+  } = {}): Promise<Obj.Any> {
     return this._space.db.add(await super.createObject({ types }));
   }
 
@@ -127,7 +126,7 @@ export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<
     }
   }
 
-  async mutateObject(object: AnyLiveObject<any>, params: MutationsProviderProps): Promise<void> {
+  async mutateObject(object: Obj.Any, params: MutationsProviderProps): Promise<void> {
     invariant(this._mutations, 'Mutations not defined.');
     const type = getTypeAnnotation(Obj.getSchema(object)!)!.typename as T;
     invariant(type && this._mutations?.[type], 'Invalid object type.');
@@ -135,7 +134,7 @@ export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<
     await this._mutations![type](object, params);
   }
 
-  async mutateObjects(objects: AnyLiveObject<any>[], params: MutationsProviderProps): Promise<void> {
+  async mutateObjects(objects: Obj.Any[], params: MutationsProviderProps): Promise<void> {
     for (const object of objects) {
       await this.mutateObject(object, params);
     }

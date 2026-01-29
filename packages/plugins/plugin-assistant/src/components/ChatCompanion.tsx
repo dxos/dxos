@@ -24,7 +24,7 @@ export type ChatCompanionProps = {
   role?: string;
   data: {
     subject: Assistant.Chat | 'assistant-chat';
-    companionTo: Obj.Any;
+    companionTo: Obj.Unknown;
   };
 };
 

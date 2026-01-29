@@ -39,7 +39,7 @@ export const isRootDataObject = (target: ProxyTarget) => {
  * Checks if a value is an ECHO object.
  * Uses structural checks instead of instanceof to avoid circular dependencies.
  */
-export const isEchoObject = (value: any): value is Obj.Any => {
+export const isEchoObject = (value: any): value is Obj.Unknown => {
   if (!isProxy(value)) {
     return false;
   }

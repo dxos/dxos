@@ -47,7 +47,7 @@ export const useObject: {
    * @param obj - The Echo object to subscribe to (objects only, not relations)
    * @returns The current object value and update callback
    */
-  <T extends Obj.Any>(obj: T): [T, ObjectUpdateCallback<T>];
+  <T extends Obj.Unknown>(obj: T): [T, ObjectUpdateCallback<T>];
 
   /**
    * Hook to subscribe to an entire Echo object that may be undefined.
@@ -56,7 +56,7 @@ export const useObject: {
    * @param obj - The Echo object to subscribe to (can be undefined, objects only)
    * @returns The current object value (or undefined) and update callback
    */
-  <T extends Obj.Any>(obj: T | undefined): [T | undefined, ObjectUpdateCallback<T>];
+  <T extends Obj.Unknown>(obj: T | undefined): [T | undefined, ObjectUpdateCallback<T>];
 
   /**
    * Hook to subscribe to a specific property of an Echo object.
@@ -66,7 +66,7 @@ export const useObject: {
    * @param property - Property key to subscribe to
    * @returns The current property value and update callback
    */
-  <T extends Obj.Any, K extends keyof T>(obj: T, property: K): [T[K], ObjectPropUpdateCallback<T[K]>];
+  <T extends Obj.Unknown, K extends keyof T>(obj: T, property: K): [T[K], ObjectPropUpdateCallback<T[K]>];
 
   /**
    * Hook to subscribe to a specific property of an Echo object that may be undefined.
@@ -76,7 +76,7 @@ export const useObject: {
    * @param property - Property key to subscribe to
    * @returns The current property value (or undefined) and update callback
    */
-  <T extends Obj.Any, K extends keyof T>(
+  <T extends Obj.Unknown, K extends keyof T>(
     obj: T | undefined,
     property: K,
   ): [T[K] | undefined, ObjectPropUpdateCallback<T[K]>];
@@ -101,7 +101,7 @@ export const useObject: {
    * @returns The current property value (or undefined) and update callback
    */
   <T, K extends keyof T>(ref: Ref.Ref<T> | undefined, property: K): [T[K] | undefined, ObjectPropUpdateCallback<T[K]>];
-} = (<T extends Obj.Any, K extends keyof T>(objOrRef: T | Ref.Ref<T> | undefined, property?: K): any => {
+} = (<T extends Obj.Unknown, K extends keyof T>(objOrRef: T | Ref.Ref<T> | undefined, property?: K): any => {
   // Get the live object for the callback (refs need to dereference).
   const isRef = Ref.isRef(objOrRef);
   const liveObj = isRef ? (objOrRef as Ref.Ref<T>)?.target : (objOrRef as T | undefined);
@@ -146,7 +146,7 @@ export const useObject: {
  * Internal hook for subscribing to an Echo object or Ref.
  * AtomObj.make handles both objects and refs, returning snapshots.
  */
-const useObjectValue = <T extends Obj.Any>(objOrRef: T | Ref.Ref<T> | undefined): T | undefined => {
+const useObjectValue = <T extends Obj.Unknown>(objOrRef: T | Ref.Ref<T> | undefined): T | undefined => {
   const atom = useMemo(() => AtomObj.make(objOrRef), [objOrRef]);
   return useAtomValue(atom);
 };
@@ -155,7 +155,7 @@ const useObjectValue = <T extends Obj.Any>(objOrRef: T | Ref.Ref<T> | undefined)
  * Internal hook for subscribing to a specific property of an Echo object.
  * Uses useAtomValue directly since makeProperty returns the value directly.
  */
-const useObjectProperty = <T extends Obj.Any, K extends keyof T>(obj: T | undefined, property: K): T[K] | undefined => {
+const useObjectProperty = <T extends Obj.Unknown, K extends keyof T>(obj: T | undefined, property: K): T[K] | undefined => {
   const atom = useMemo(() => AtomObj.makeProperty(obj, property), [obj, property]);
   return useAtomValue(atom);
 };
@@ -171,7 +171,7 @@ const useObjectProperty = <T extends Obj.Any, K extends keyof T>(obj: T | undefi
  * @param refs - Array of Refs to dereference and subscribe to
  * @returns Array of loaded target snapshots (excludes unloaded refs)
  */
-export const useObjects = <T extends Obj.Any>(refs: readonly Ref.Ref<T>[]): T[] => {
+export const useObjects = <T extends Obj.Unknown>(refs: readonly Ref.Ref<T>[]): T[] => {
   const atom = useMemo(
     () =>
       Atom.make((get) => {

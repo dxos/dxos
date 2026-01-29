@@ -94,7 +94,7 @@ export default Capability.makeModule(() =>
         id: `${meta.id}/fallback-popover`,
         role: SurfaceCardRole.literals as any,
         position: 'fallback',
-        filter: (data): data is { subject: Obj.Any; projection?: ProjectionModel } => Obj.isObject(data.subject),
+        filter: (data): data is { subject: Obj.Unknown; projection?: ProjectionModel } => Obj.isObject(data.subject),
         component: ({ data, role }) => {
           return <FormCard subject={data.subject} projection={data.projection} role={role as SurfaceCardRole} />;
         },
@@ -104,7 +104,7 @@ export default Capability.makeModule(() =>
         id: `${meta.id}/section`,
         role: ['section'],
         position: 'fallback',
-        filter: (data): data is { subject: Obj.Any } => Obj.isObject(data.subject),
+        filter: (data): data is { subject: Obj.Unknown } => Obj.isObject(data.subject),
         component: ({ data }) => {
           return (
             <div role='none' className='flex is-full justify-center'>

@@ -14,7 +14,7 @@ import { type HasId } from '../types';
  *
  * In contrast to {@link EchoSchema} this definition is not recorded in the database.
  *
- * @deprecated Use `Type.Obj.Any` from `@dxos/echo` instead.
+ * @deprecated Use `Type.Obj.Unknown` from `@dxos/echo` instead.
  */
 export interface TypedObject<A = any, I = any> extends TypeMeta, Schema.Schema<A, I> {}
 
@@ -22,7 +22,7 @@ export interface TypedObject<A = any, I = any> extends TypeMeta, Schema.Schema<A
  * Typed object that could be used as a prototype in class definitions.
  * This is an internal API type.
  *
- * @deprecated Use `Type.Obj.Any` from `@dxos/echo` instead.
+ * @deprecated Use `Type.Obj.Unknown` from `@dxos/echo` instead.
  */
 export interface TypedObjectPrototype<A = any, I = any> extends TypedObject<A, I> {
   /** Type constructor. */

@@ -15,7 +15,7 @@ import {
   type JsonSchemaType,
   getSchemaReference,
 } from '@dxos/echo/internal';
-import { type AnyLiveObject, Filter, Query } from '@dxos/echo-db';
+import { Filter, Query } from '@dxos/echo-db';
 import {
   type SchemaProperty,
   findAnnotation,
@@ -166,7 +166,7 @@ export const createReactiveObject = <S extends Type.Obj.Any>(type: S) => {
 
 export const addToDatabase = (db: Database.Database) => {
   // TODO(dmaretskyi): Fix DB types.
-  return <T extends AnyProperties>(obj: T): AnyLiveObject<T> => db.add(obj as any) as any;
+  return <T extends AnyProperties>(obj: T): Obj.Obj<T> => db.add(obj as any) as any;
 };
 
 export const logObject = (message: string) => (obj: any) => log.info(message, { obj });
@@ -209,7 +209,7 @@ export const createObjectPipeline = <S extends Type.Obj.Any>(
     };
   } else {
     return (obj: Type.Properties<T>) => {
-      const pipeline: Effect.Effect<AnyLiveObject<any>, never, never> = Effect.gen(function* () {
+      const pipeline: Effect.Effect<Obj.Obj<any>, never, never> = Effect.gen(function* () {
         const withProps = createProps(generator, type, force)(obj);
         const liveObj = createReactiveObject(type)(withProps);
         const withRefs = yield* Effect.promise(() => createReferences(type, db)(liveObj));

@@ -28,7 +28,7 @@ const grid = 'grid grid-cols-[40px_1fr_32px_32px] min-bs-[2.5rem]';
 
 export type AutomationPanelProps = ThemedClassName<{
   space: Space;
-  object?: Obj.Any;
+  object?: Obj.Unknown;
   initialTrigger?: Trigger.Trigger;
   onDone?: () => void;
 }>;
@@ -237,7 +237,7 @@ const projectMatch = (project: Project.Project) => {
   };
 };
 
-const triggerMatch = Match.type<Obj.Any>().pipe(
+const triggerMatch = Match.type<Obj.Unknown>().pipe(
   Match.withReturnType<(trigger: Trigger.Trigger) => boolean>(),
   Match.when(
     (obj) => Obj.instanceOf(Script.Script, obj),

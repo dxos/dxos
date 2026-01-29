@@ -8,7 +8,7 @@ import { type TypeSpec, type ValueGenerator, createObjectFactory } from '@dxos/s
 import { HasRelationship, Organization, Person, Project } from '@dxos/types';
 import { range } from '@dxos/util';
 
-const getObject = (objects: Obj.Any[]) => objects[Math.floor(Math.random() * objects.length)];
+const getObject = (objects: Obj.Unknown[]) => objects[Math.floor(Math.random() * objects.length)];
 
 const defaultTypes: TypeSpec[] = [
   { type: Organization.Organization, count: 5 },

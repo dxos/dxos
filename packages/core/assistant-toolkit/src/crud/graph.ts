@@ -173,7 +173,7 @@ export const makeGraphWriterHandler = (
       const { db } = yield* Database.Service;
       const { queue } = yield* ContextQueueService;
       const data = yield* Effect.promise(() => sanitizeObjects(schema, input as any, db, queue));
-      yield* Effect.promise(() => queue.append(data as Obj.Any[]));
+      yield* Effect.promise(() => queue.append(data as Obj.Unknown[]));
 
       const dxns = data.map((obj) => Obj.getDXN(obj));
       onAppend?.(dxns);
@@ -209,7 +209,7 @@ export const sanitizeObjects = async (
   data: Record<string, readonly unknown[]>,
   db: Database.Database,
   queue?: Queue,
-): Promise<Obj.Any[]> => {
+): Promise<Obj.Unknown[]> => {
   const entries = types
     .map(
       (type) =>

@@ -20,7 +20,6 @@ import {
   ChangeId,
   EchoSchema,
   EntityKind,
-  type HasId,
   MetaId,
   ObjectDatabaseId,
   ObjectDeletedId,
@@ -736,7 +735,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       // Can be caused not using `object(Expando, { ... })` constructor.
       // TODO(dmaretskyi): Add better validation.
       invariant(otherObjId != null);
-      target[symbolInternals].linkCache.set(otherObjId, otherEchoObj as AnyLiveObject<any>);
+      target[symbolInternals].linkCache.set(otherObjId, otherEchoObj as Entity.Unknown);
       return DXN.fromLocalObjectId(otherObjId);
     }
 
@@ -973,7 +972,7 @@ export { getObjectCore };
  * @returns Automerge document (or a part of it) that backs the object.
  * Mostly used for debugging.
  */
-export const getObjectDocument = (obj: AnyLiveObject<any>): A.Doc<ObjectStructure> => {
+export const getObjectDocument = (obj: Obj.Any): A.Doc<ObjectStructure> => {
   const core = getObjectCore(obj);
   return getDeep(core.getDoc(), core.mountPath)!;
 };
@@ -997,10 +996,6 @@ interface DecodedValueAtPath {
   namespace: string;
   dataPath: KeyPath;
 }
-
-/** @deprecated */
-// TODO(burdon): Remove.
-export type AnyLiveObject<T extends AnyProperties = any> = T & HasId & AnyProperties;
 
 // Re-export from echo-object-utils for backward compatibility.
 export { isEchoObject };
@@ -1027,7 +1022,7 @@ export const isTypedObjectProxy = (value: any): value is any => {
 /**
  * Helper type to preserve Obj<Props> types, otherwise return Entity.Entity<T>.
  */
-type CreateObjectReturn<T> = T extends Obj.Any ? T : Entity.Entity<T>;
+type CreateObjectReturn<T> = T extends Obj.Unknown ? T : Entity.Entity<T>;
 
 /**
  * Creates a reactive ECHO object backed by a CRDT.
@@ -1120,7 +1115,7 @@ const metaNotEmpty = (meta: ObjectMeta) => meta.keys.length > 0 || (meta.tags &&
  * @internal
  */
 // TODO(burdon): Call and remove subscriptions.
-export const destroyObject = <T extends AnyProperties>(proxy: AnyLiveObject<T>) => {
+export const destroyObject = <T extends Obj.Unknown>(proxy: T) => {
   invariant(isEchoObject(proxy));
   const target: ProxyTarget = getProxyTarget(proxy);
   const internals: ObjectInternals = target[symbolInternals];
@@ -1142,7 +1137,7 @@ const initCore = (core: ObjectCore, target: ProxyTarget) => {
 /**
  * @internal
  */
-export const initEchoReactiveObjectRootProxy = (core: ObjectCore, database?: EchoDatabase): AnyLiveObject<any> => {
+export const initEchoReactiveObjectRootProxy = (core: ObjectCore, database?: EchoDatabase): Entity.Unknown => {
   const target: ProxyTarget = {
     [symbolInternals]: new ObjectInternals(core, database),
     [symbolPath]: [],

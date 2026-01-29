@@ -14,8 +14,8 @@ export const HasSubject = Schema.Struct({
   Type.relation({
     typename: 'dxos.org/relation/HasSubject',
     version: '0.1.0',
-    source: Type.Expando, // TODO(burdon): Type.Obj.Any.
-    target: Type.Expando, // TODO(burdon): Type.Obj.Any.
+    source: Type.Expando, // TODO(burdon): Type.Obj.Unknown.
+    target: Type.Expando, // TODO(burdon): Type.Obj.Unknown.
   }),
 );
 

@@ -39,7 +39,7 @@ import { Type, Obj, Relation, Ref, Query, Filter } from '@dxos/echo';
 
 |
 | **DATA API** |
-| Any instance type | `Obj.Any` | `Relation.Any` | `Ref.Any` |
+| Unknown instance type | `Obj.Unknown` | `Relation.Unknown` | `Ref.Unknown` |
 | Create object | `Obj.make(Schema, { ... })` | `Relation.make(Schema, { ... })` | `Ref.make(obj)` |
 | Check kind | `Obj.isObject(obj)` | `Relation.isRelation(obj)` | `Ref.isRef(ref)` |
 | Get relation source | | `Relation.getSource(relation)` | |

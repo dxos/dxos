@@ -199,7 +199,7 @@ export namespace TestSchema {
   }
 
   export const Container = Schema.Struct({
-    objects: Schema.Array(Type.Ref(Obj.Any)),
+    objects: Schema.Array(Type.Ref(Type.Obj)),
     records: Schema.Array(
       Schema.partial(
         Schema.Struct({

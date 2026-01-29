@@ -63,7 +63,7 @@ export type ProjectionChangeCallback = {
 export const createEchoChangeCallback = (view: View.View, schema: EchoSchema): ProjectionChangeCallback => ({
   // Inside Obj.change, v is Mutable<View.View>, so v.projection is already mutable.
   projection: (mutate) => Obj.change(view, (v) => mutate(v.projection as Mutable<View.Projection>)),
-  schema: (mutate) => Obj.change(schema.persistentSchema as unknown as Obj.Any, (s: any) => mutate(s.jsonSchema)),
+  schema: (mutate) => Obj.change(schema.persistentSchema as unknown as Obj.Unknown, (s: any) => mutate(s.jsonSchema)),
 });
 
 /**

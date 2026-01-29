@@ -12,12 +12,12 @@ import { type Database, type Obj } from '@dxos/echo';
  */
 // TODO(burdon): Remove?
 export type CardPreviewProps<
-  Subject extends Obj.Any = Obj.Any,
+  Subject extends Obj.Unknown = Obj.Unknown,
   Role extends SurfaceCardRole = SurfaceCardRole,
 > = PropsWithChildren<
   SurfaceComponentProps<Subject, Role> & {
     db?: Database.Database;
     // TODO(burdon): Remove in favor of intents?
-    onSelect?: (obj: Obj.Any) => void;
+    onSelect?: (obj: Obj.Unknown) => void;
   }
 >;

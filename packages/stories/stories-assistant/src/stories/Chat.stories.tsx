@@ -172,7 +172,7 @@ const DefaultStory = ({ modules, showContext, blueprints = [] }: StoryProps) => 
   );
 };
 
-const StackContainer = ({ objects }: { objects: Obj.Any[] }) => {
+const StackContainer = ({ objects }: { objects: Obj.Unknown[] }) => {
   return (
     <Stack
       orientation='vertical'

@@ -11,7 +11,6 @@ export {
   getObjectCore,
   initEchoReactiveObjectRootProxy,
   isEchoObject,
-  type AnyLiveObject,
 } from './echo-handler';
 export * from './edit-history';
 export { type ProxyTarget } from './echo-proxy-target';

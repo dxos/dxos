@@ -117,13 +117,13 @@ export const MessageContainer = ({
       )}
       {proposalBlock && <ProposalBlock block={proposalBlock} />}
       {Ref.Array.targets(references).map((reference, index) => (
-        <MessagePart key={index} part={reference as Obj.Any} />
+        <MessagePart key={index} part={reference as Obj.Unknown} />
       ))}
     </MessageRoot>
   );
 };
 
-const MessagePart = ({ part }: { part: Obj.Any }) => {
+const MessagePart = ({ part }: { part: Obj.Unknown }) => {
   return <MessageBlockObjectTile subject={part} />;
 };
 
@@ -184,7 +184,7 @@ const ProposalBlock = ({ block }: { block: ContentBlock.Proposal }) => {
   );
 };
 
-const MessageBlockObjectTile = forwardRef<HTMLDivElement, { subject: Obj.Any }>(({ subject }, forwardedRef) => {
+const MessageBlockObjectTile = forwardRef<HTMLDivElement, { subject: Obj.Unknown }>(({ subject }, forwardedRef) => {
   // TODO(burdon): Use annotation to get title.
   let title = (subject as any).name ?? (subject as any).title ?? (subject as any).type ?? 'Object';
   if (typeof title !== 'string') {

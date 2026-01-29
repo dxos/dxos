@@ -17,7 +17,7 @@ import { Mosaic, type MosiacPlaceholderProps, useMosaicContainer } from '../Mosa
 import { styles } from './styles';
 import { type Axis } from './types';
 
-type StackProps<T extends Obj.Any = Obj.Any> = SlottableClassName<{
+type StackProps<T extends Obj.Unknown = Obj.Unknown> = SlottableClassName<{
   role?: string;
   axis?: Axis;
   items?: T[];
@@ -64,7 +64,7 @@ const StackInner = forwardRef<HTMLDivElement, StackProps>(
 
 StackInner.displayName = 'Stack';
 
-const Stack = StackInner as <T extends Obj.Any = Obj.Any>(
+const Stack = StackInner as <T extends Obj.Unknown = Obj.Unknown>(
   props: StackProps<T> & { ref?: Ref<HTMLDivElement> },
 ) => ReactElement;
 
@@ -72,7 +72,7 @@ const Stack = StackInner as <T extends Obj.Any = Obj.Any>(
 // VirtualStack
 //
 
-type VirtualStackProps<T extends Obj.Any = Obj.Any> = StackProps<T> &
+type VirtualStackProps<T extends Obj.Unknown = Obj.Unknown> = StackProps<T> &
   Pick<
     ReactVirtualizerOptions<HTMLDivElement, HTMLDivElement>,
     'estimateSize' | 'getScrollElement' | 'overscan' | 'onChange'
@@ -170,7 +170,7 @@ const VirtualStackInner = forwardRef<HTMLDivElement, VirtualStackProps>(
 
 VirtualStackInner.displayName = 'VirtualStackInner';
 
-const VirtualStack = VirtualStackInner as <T extends Obj.Any = Obj.Any>(
+const VirtualStack = VirtualStackInner as <T extends Obj.Unknown = Obj.Unknown>(
   props: VirtualStackProps<T> & { ref?: Ref<HTMLDivElement> },
 ) => ReactElement;
 

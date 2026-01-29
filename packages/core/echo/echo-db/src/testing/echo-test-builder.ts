@@ -12,7 +12,7 @@ import isEqual from 'lodash.isequal';
 
 import { waitForCondition } from '@dxos/async';
 import { type Context, Resource } from '@dxos/context';
-import { Type } from '@dxos/echo';
+import { type Obj, Type } from '@dxos/echo';
 import { EchoHost, type EchoHostIndexingConfig } from '@dxos/echo-pipeline';
 import { createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
@@ -24,7 +24,6 @@ import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 import { range } from '@dxos/util';
 
 import { EchoClient } from '../client';
-import { type AnyLiveObject } from '../echo-handler';
 import { type EchoDatabase } from '../proxy-db';
 import { Filter, Query } from '../query';
 
@@ -231,7 +230,7 @@ export const createDataAssertion = ({
   onlyObject = true,
   numObjects = 1,
 }: { referenceEquality?: boolean; onlyObject?: boolean; numObjects?: number } = {}) => {
-  let seedObjects: AnyLiveObject<any>[];
+  let seedObjects: Obj.Any[];
   const findSeedObject = async (db: EchoDatabase) => {
     const objects = await db.query(Query.select(Filter.everything())).run();
     const received = seedObjects.map((seedObject) => objects.find((object) => object.id === seedObject.id));

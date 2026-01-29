@@ -9,7 +9,7 @@ import { Trigger, TriggerState, asyncTimeout } from '@dxos/async';
 import { type ClientServicesProvider, type Space, SpaceProperties } from '@dxos/client-protocol';
 import { type Entity, Obj, type QueryResult, Type } from '@dxos/echo';
 import { Ref } from '@dxos/echo/internal';
-import { type AnyLiveObject, Filter } from '@dxos/echo-db';
+import { Filter } from '@dxos/echo-db';
 import { type PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { log } from '@dxos/log';
@@ -80,12 +80,11 @@ describe('Index queries', () => {
     return objectsInDataBase;
   };
 
-  // TODO(burdon): Remove AnyLiveObject.
   const matchObjects = async <T extends Entity.Unknown = Entity.Unknown>(
     query: QueryResult.QueryResult<T>,
-    objects: AnyLiveObject<any>[],
+    objects: Entity.Unknown[],
   ) => {
-    const receivedIndexedObject = new Trigger<AnyLiveObject<any>[]>();
+    const receivedIndexedObject = new Trigger<T[]>();
     const unsubscribe = query.subscribe(
       (query) => {
         const indexResults = query.entries;

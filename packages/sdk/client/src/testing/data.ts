@@ -49,7 +49,7 @@ export namespace TestSchema {
   const BlockSchema = Schema.Struct({
     timestamp: Schema.String,
     content: Schema.optional(Type.Ref(TextV0Type)),
-    object: Schema.optional(Type.Ref(Obj.Any)),
+    object: Schema.optional(Type.Ref(Type.Obj)),
   });
 
   export interface BlockType extends Schema.Schema.Type<typeof BlockSchema> {}
@@ -60,7 +60,7 @@ export namespace TestSchema {
     date: Schema.optional(Schema.String),
     subject: Schema.optional(Schema.String),
     blocks: Schema.mutable(Schema.Array(BlockSchema)),
-    links: Schema.optional(Schema.Array(Type.Ref(Obj.Any))),
+    links: Schema.optional(Schema.Array(Type.Ref(Type.Obj))),
     read: Schema.optional(Schema.Boolean),
     context: Schema.optional(
       Schema.Struct({

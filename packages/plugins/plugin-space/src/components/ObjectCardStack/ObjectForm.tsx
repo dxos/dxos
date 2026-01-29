@@ -15,7 +15,7 @@ import { meta as pluginMeta } from '../../meta';
 
 export type ObjectFormProps = {
   schema: Schema.Schema.AnyNoContext;
-  object: Obj.Any;
+  object: Obj.Unknown;
 };
 
 export const ObjectForm = ({ object, schema }: ObjectFormProps) => {

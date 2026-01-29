@@ -94,7 +94,7 @@ const DefaultStory = ({
 
     let executor: FunctionExecutor | undefined;
     let extractionFunction: ExtractionFunction | undefined;
-    let objects: Promise<Obj.Any[]> | undefined;
+    let objects: Promise<Obj.Unknown[]> | undefined;
 
     if (entityExtraction === 'ner') {
       // Init model loading. Takes time.

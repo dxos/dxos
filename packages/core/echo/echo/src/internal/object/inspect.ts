@@ -7,7 +7,7 @@ import type { InspectOptionsStylized, inspect as inspectFn } from 'node:util';
 import { type CustomInspectFunction, inspectCustom } from '@dxos/debug';
 
 import { getTypeDXN } from '../annotations';
-import { ATTR_META, ATTR_TYPE, type AnyEchoObject, MetaId } from '../types';
+import { ATTR_META, ATTR_TYPE, type AnyEntity, MetaId } from '../types';
 
 /*
  * @internal
@@ -27,8 +27,8 @@ export const attachedTypedObjectInspector = (obj: any) => {
 };
 
 // NOTE: KEEP as function.
-const typedObjectInspectFunction: CustomInspectFunction<AnyEchoObject> = function (
-  this: AnyEchoObject,
+const typedObjectInspectFunction: CustomInspectFunction<AnyEntity> = function (
+  this: AnyEntity,
   depth: number,
   options: InspectOptionsStylized,
   inspect: typeof inspectFn,

@@ -843,7 +843,7 @@ describe('ProjectionModel', () => {
 
     // Modify the schema - add a field.
     // Type assertion needed because PersistentSchema's type doesn't include [KindId] but runtime value does.
-    Obj.change(mutable.persistentSchema as unknown as Obj.Any, (s: any) => {
+    Obj.change(mutable.persistentSchema as unknown as Obj.Unknown, (s: any) => {
       s.jsonSchema.properties!.status = { type: 'string' };
     });
     projectionModel.normalizeView();

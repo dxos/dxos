@@ -2,8 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Type } from '@dxos/echo';
-import { type AnyLiveObject } from '@dxos/echo-db';
+import { type Obj, type Type } from '@dxos/echo';
 
 // TODO(burdon): Use echo-schema types.
 export type TestObject = { id: string } & Record<string, any>;
@@ -25,4 +24,4 @@ export type MutationsProviderProps = {
   maxContentLength: number;
 };
 
-export type TestObjectMutators = (object: AnyLiveObject<any>, params: MutationsProviderProps) => Promise<void>;
+export type TestObjectMutators = (object: Obj.Any, params: MutationsProviderProps) => Promise<void>;

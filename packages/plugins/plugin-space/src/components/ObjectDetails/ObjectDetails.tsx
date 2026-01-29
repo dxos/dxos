@@ -12,7 +12,7 @@ import { StackItem } from '@dxos/react-ui-stack';
 import { BaseObjectSettings } from './BaseObjectSettings';
 
 export type ObjectDetailsProps = {
-  object: Obj.Any;
+  object: Obj.Unknown;
   role: string;
 };
 

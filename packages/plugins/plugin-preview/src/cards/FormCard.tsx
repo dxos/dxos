@@ -21,7 +21,7 @@ export const FormCard = ({
   subject,
   projection,
   role,
-}: CardPreviewProps<Obj.Any> & { projection?: ProjectionModel }) => {
+}: CardPreviewProps<Obj.Unknown> & { projection?: ProjectionModel }) => {
   const { invokePromise } = useOperationInvoker();
   const schema = Obj.getSchema(subject);
   const { t } = useTranslation(meta.id);

@@ -58,7 +58,7 @@ export function useObject<T>(
  * @param obj - The Echo object to subscribe to (can be reactive)
  * @returns A tuple of [accessor, updateCallback]
  */
-export function useObject<T extends Obj.Any>(
+export function useObject<T extends Obj.Unknown>(
   obj: MaybeAccessor<T>,
 ): [Accessor<ConditionalUndefined<T, T>>, ObjectUpdateCallback<T>];
 
@@ -69,7 +69,7 @@ export function useObject<T extends Obj.Any>(
  * @param obj - The Echo object to subscribe to (can be undefined/reactive)
  * @returns A tuple of [accessor, updateCallback]
  */
-export function useObject<T extends Obj.Any>(
+export function useObject<T extends Obj.Unknown>(
   obj: MaybeAccessor<T | undefined>,
 ): [Accessor<ConditionalUndefined<T, T>>, ObjectUpdateCallback<T>];
 
@@ -81,7 +81,7 @@ export function useObject<T extends Obj.Any>(
  * @param property - Property key to subscribe to
  * @returns A tuple of [accessor, updateCallback]
  */
-export function useObject<T extends Obj.Any, K extends keyof T>(
+export function useObject<T extends Obj.Unknown, K extends keyof T>(
   obj: MaybeAccessor<T>,
   property: K,
 ): [Accessor<T[K]>, ObjectPropUpdateCallback<T[K]>];
@@ -94,7 +94,7 @@ export function useObject<T extends Obj.Any, K extends keyof T>(
  * @param property - Property key to subscribe to
  * @returns A tuple of [accessor, updateCallback]
  */
-export function useObject<T extends Obj.Any, K extends keyof T>(
+export function useObject<T extends Obj.Unknown, K extends keyof T>(
   obj: MaybeAccessor<T | undefined>,
   property: K,
 ): [Accessor<T[K] | undefined>, ObjectPropUpdateCallback<T[K]>];
@@ -134,7 +134,7 @@ export function useObject<T, K extends keyof T>(
  * @param property - Optional property key to subscribe to a specific property
  * @returns A tuple of [accessor, updateCallback]
  */
-export function useObject<T extends Obj.Any, K extends keyof T>(
+export function useObject<T extends Obj.Unknown, K extends keyof T>(
   objOrRef: MaybeAccessor<T | Ref.Ref<T> | undefined>,
   property?: K,
 ): [Accessor<any>, ObjectUpdateCallback<T> | ObjectPropUpdateCallback<T[K]>] {
@@ -190,7 +190,7 @@ export function useObject<T extends Obj.Any, K extends keyof T>(
  * Internal function for subscribing to an Echo object or Ref.
  * AtomObj.make handles both objects and refs, returning snapshots.
  */
-function useObjectValue<T extends Obj.Any>(
+function useObjectValue<T extends Obj.Unknown>(
   registry: Registry.Registry,
   objOrRef: MaybeAccessor<T | Ref.Ref<T> | undefined>,
 ): Accessor<T | undefined> {
@@ -232,7 +232,7 @@ function useObjectValue<T extends Obj.Any>(
 /**
  * Internal function for subscribing to a specific property of an Echo object.
  */
-function useObjectProperty<T extends Obj.Any, K extends keyof T>(
+function useObjectProperty<T extends Obj.Unknown, K extends keyof T>(
   registry: Registry.Registry,
   obj: Accessor<T | undefined>,
   property: K,
@@ -280,7 +280,7 @@ function useObjectProperty<T extends Obj.Any, K extends keyof T>(
  * @param refs - Array of Refs to dereference and subscribe to (can be reactive)
  * @returns Accessor to array of loaded target snapshots (excludes unloaded refs)
  */
-export const useObjects = <T extends Obj.Any>(refs: MaybeAccessor<readonly Ref.Ref<T>[]>): Accessor<T[]> => {
+export const useObjects = <T extends Obj.Unknown>(refs: MaybeAccessor<readonly Ref.Ref<T>[]>): Accessor<T[]> => {
   // Track version to trigger re-renders when any ref or target changes.
   const [version, setVersion] = createSignal(0);
 

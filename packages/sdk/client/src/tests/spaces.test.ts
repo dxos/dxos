@@ -609,7 +609,7 @@ describe('Spaces', () => {
     return Obj.make(Type.Expando, props);
   };
 
-  const waitForObject = async (space: Space, object: Obj.Any) => {
+  const waitForObject = async (space: Space, object: Obj.Unknown) => {
     await expect.poll(() => space.db.getObjectById(object.id)).not.toEqual(undefined);
   };
 

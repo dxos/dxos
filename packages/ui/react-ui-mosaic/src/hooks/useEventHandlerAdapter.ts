@@ -10,7 +10,7 @@ import { arrayMove } from '@dxos/util';
 
 import { type MosaicEventHandler } from '../components';
 
-export type UseEventHandlerProps<TItem, TObject extends Obj.Any> = Pick<MosaicEventHandler, 'id' | 'canDrop'> & {
+export type UseEventHandlerProps<TItem, TObject extends Obj.Unknown> = Pick<MosaicEventHandler, 'id' | 'canDrop'> & {
   items: TItem[];
   get: (item: TItem) => TObject | undefined;
   make: (object: TObject) => TItem;
@@ -19,7 +19,7 @@ export type UseEventHandlerProps<TItem, TObject extends Obj.Any> = Pick<MosaicEv
 /**
  * Returns a handler for the given items.
  */
-export const useEventHandlerAdapter = <TItem, TObject extends Obj.Any>({
+export const useEventHandlerAdapter = <TItem, TObject extends Obj.Unknown>({
   items,
   get,
   make,

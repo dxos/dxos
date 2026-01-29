@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Schema from 'effect/Schema';
+import type * as Schema from 'effect/Schema';
 
 import { raise } from '@dxos/debug';
 import { assertArgument, invariant } from '@dxos/invariant';
@@ -13,7 +13,7 @@ import * as Entity from './Entity';
 import {
   ATTR_RELATION_SOURCE,
   ATTR_RELATION_TARGET,
-  type AnyEchoObject,
+  type AnyEntity,
   type ChangeCallback,
   EntityKind,
   type InternalObjectProps,
@@ -29,36 +29,32 @@ import {
   getTypeAnnotation,
   makeObject,
 } from './internal';
-import * as Obj from './Obj';
-import * as Type from './Type';
+import type * as Obj from './Obj';
+import type * as Type from './Type';
 
 /**
  * Base type for all ECHO relations.
  * @private
  */
 interface BaseRelation<Source, Target>
-  extends AnyEchoObject,
+  extends AnyEntity,
     Type.Relation.Endpoints<Source, Target>,
     Entity.OfKind<EntityKind.Relation> {}
 
 /**
- * Base type for all Relations objects.
+ * Relation with no known properties beyond id, kind, source, and target.
+ * Use this when the relation's schema/properties are not known.
+ *
+ * NOTE: This is a TypeScript type only, not a schema.
+ * To validate that a value is an ECHO relation, use `Relation.isRelation`.
  */
-export interface Any extends BaseRelation<Obj.Any, Obj.Any> {}
-
-export const Any = Schema.Struct({}).pipe(
-  Type.relation({
-    typename: 'dxos.org/type/Any',
-    version: '0.1.0',
-    source: Obj.Any,
-    target: Obj.Any,
-  }),
-);
+export interface Unknown extends BaseRelation<Obj.Unknown, Obj.Unknown> {}
 
 /**
  * Relation type with specific source and target types.
  */
-export type Relation<Source extends Obj.Any, Target extends Obj.Any, Props> = BaseRelation<Source, Target> & Props;
+export type Relation<Source extends Obj.Unknown, Target extends Obj.Unknown, Props> = BaseRelation<Source, Target> &
+  Props;
 
 export const Source: unique symbol = RelationSourceId as any;
 export type Source = typeof Source;
@@ -69,7 +65,7 @@ export type Target = typeof Target;
 /**
  * Internal props type for relation instance creation.
  */
-type RelationMakeProps<T extends Any> = {
+type RelationMakeProps<T extends Unknown> = {
   id?: ObjectId;
   [MetaId]?: ObjectMeta;
   [Source]: T[Source];
@@ -112,7 +108,7 @@ export const make = <S extends Type.Relation.Any>(
   return makeObject<Schema.Schema.Type<S>>(schema, props as any, meta);
 };
 
-export const isRelation = (value: unknown): value is Any => {
+export const isRelation = (value: unknown): value is Unknown => {
   if (typeof value !== 'object' || value === null) {
     return false;
   }
@@ -128,7 +124,7 @@ export const isRelation = (value: unknown): value is Any => {
  * @returns Relation source DXN.
  * @throws If the object is not a relation.
  */
-export const getSourceDXN = (value: Any): DXN => {
+export const getSourceDXN = (value: Unknown): DXN => {
   assertArgument(isRelation(value), 'Expected a relation');
   assumeType<InternalObjectProps>(value);
   const dxn = (value as InternalObjectProps)[RelationSourceDXNId];
@@ -140,7 +136,7 @@ export const getSourceDXN = (value: Any): DXN => {
  * @returns Relation target DXN.
  * @throws If the object is not a relation.
  */
-export const getTargetDXN = (value: Any): DXN => {
+export const getTargetDXN = (value: Unknown): DXN => {
   assertArgument(isRelation(value), 'Expected a relation');
   assumeType<InternalObjectProps>(value);
   const dxn = (value as InternalObjectProps)[RelationTargetDXNId];
@@ -152,7 +148,7 @@ export const getTargetDXN = (value: Any): DXN => {
  * @returns Relation source.
  * @throws If the object is not a relation.
  */
-export const getSource = <T extends Any>(relation: T): Type.Relation.Source<T> => {
+export const getSource = <T extends Unknown>(relation: T): Type.Relation.Source<T> => {
   assertArgument(isRelation(relation), 'Expected a relation');
   assumeType<InternalObjectProps>(relation);
   const obj = (relation as InternalObjectProps)[RelationSourceId];
@@ -164,7 +160,7 @@ export const getSource = <T extends Any>(relation: T): Type.Relation.Source<T> =
  * @returns Relation target.
  * @throws If the object is not a relation.
  */
-export const getTarget = <T extends Any>(relation: T): Type.Relation.Target<T> => {
+export const getTarget = <T extends Unknown>(relation: T): Type.Relation.Target<T> => {
   assertArgument(isRelation(relation), 'Expected a relation');
   assumeType<InternalObjectProps>(relation);
   const obj = (relation as InternalObjectProps)[RelationTargetId];
@@ -208,6 +204,6 @@ export type { Mutable };
  *
  * Note: Only accepts relations. Use `Obj.change` for objects.
  */
-export const change = <T extends Any>(relation: T, callback: ChangeCallback<T>): void => {
+export const change = <T extends Unknown>(relation: T, callback: ChangeCallback<T>): void => {
   change$(relation, callback);
 };

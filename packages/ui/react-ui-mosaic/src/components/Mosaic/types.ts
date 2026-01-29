@@ -11,7 +11,7 @@ export type AllowedAxis = Axis | 'all';
 /**
  * Draggable item.
  */
-export type MosaicTileData<T extends Obj.Any = Obj.Any, Location = any> = {
+export type MosaicTileData<T extends Obj.Unknown = Obj.Unknown, Location = any> = {
   type: 'tile';
   id: string;
   containerId: string;
@@ -73,7 +73,7 @@ export interface MosaicEventHandler {
    * If the callback returns true, then the callback may decide to remove the item from the source container,
    * completing the transfer.
    */
-  onTake?: (props: { source: MosaicTileData }, cb: (object: Obj.Any) => Promise<boolean>) => void;
+  onTake?: (props: { source: MosaicTileData }, cb: (object: Obj.Unknown) => Promise<boolean>) => void;
 
   /**
    * Dragging ended.

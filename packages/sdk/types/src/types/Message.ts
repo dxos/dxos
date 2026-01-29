@@ -80,9 +80,9 @@ export const MessageV1 = Schema.Struct({
   state: Schema.optional(Schema.Enums(MessageV1State)),
   sender: Actor.Actor,
   text: Schema.String,
-  parts: Schema.optional(Schema.mutable(Schema.Array(Type.Ref(Obj.Any)))),
+  parts: Schema.optional(Schema.mutable(Schema.Array(Type.Ref(Type.Obj)))),
   properties: Schema.optional(Schema.mutable(Schema.Record({ key: Schema.String, value: Schema.Any }))),
-  context: Schema.optional(Type.Ref(Obj.Any)),
+  context: Schema.optional(Type.Ref(Type.Obj)),
 }).pipe(
   Type.object({
     typename: 'dxos.org/type/Message',

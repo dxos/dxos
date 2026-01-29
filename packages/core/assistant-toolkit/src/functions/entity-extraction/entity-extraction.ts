@@ -10,7 +10,7 @@ import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
 import { AiSession, makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
-import { Filter, Obj, Ref } from '@dxos/echo';
+import { Filter, Obj, Ref, Type } from '@dxos/echo';
 import { Database } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
 import { FunctionInvocationServiceLayerTest } from '@dxos/functions-runtime/testing';
@@ -38,7 +38,7 @@ export default defineFunction({
   }),
   outputSchema: Schema.Struct({
     entities: Schema.optional(
-      Schema.Array(Obj.Any).annotations({
+      Schema.Array(Type.Obj).annotations({
         description: 'Extracted entities.',
       }),
     ),

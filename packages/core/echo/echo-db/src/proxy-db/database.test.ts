@@ -492,7 +492,7 @@ describe('Database', () => {
     return { db, graph };
   };
 
-  const addToDatabase = async <T extends Obj.Any>(obj: T) => {
+  const addToDatabase = async <T extends Obj.Unknown>(obj: T) => {
     const { db } = await createDbWithTypes();
     db.add(obj);
     await db.flush();

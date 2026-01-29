@@ -33,19 +33,18 @@ export type HasTypename = {};
 export type AnyProperties = Record<string, any>;
 
 /**
- * Canonical type for all ECHO objects.
+ * Canonical type for all ECHO entities (objects and relations).
  */
-export interface AnyEchoObject extends HasId, HasTypename {}
-
-// TODO(dmaretskyi): Remove; this type effectively disables type safety due to `any`.
-export type WithId<T extends AnyProperties = AnyProperties> = T & HasId;
+export interface AnyEntity extends HasId, HasTypename {}
 
 export type ExcludeId<T extends AnyProperties> = Omit<T, 'id'>;
 
 export type PropertyKey<T extends AnyProperties> = Extract<keyof ExcludeId<T>, string>;
 
-// TODO(dmaretskyi): Remove. This should be using the symbol type.
-export type WithMeta = { [ATTR_META]?: ObjectMeta };
+/**
+ * Internal type for objects with optional metadata.
+ */
+type WithMeta = { [ATTR_META]?: ObjectMeta };
 
 /**
  * The raw object should not include the ECHO id, but may include metadata.

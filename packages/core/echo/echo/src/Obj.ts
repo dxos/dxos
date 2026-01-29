@@ -14,28 +14,25 @@ import { type DeepReadonly, assumeType, deepMapValues } from '@dxos/util';
 import type * as Database from './Database';
 import * as Entity from './Entity';
 import {
-  type ChangeCallback,
-  type Mutable,
-  change as change$,
-  getSnapshot as getSnapshot$,
-  subscribe as subscribe$,
-} from './internal';
-import {
-  type AnyEchoObject,
+  type AnyEntity,
   type AnyProperties,
+  type ChangeCallback,
   type InternalObjectProps,
   MetaId,
+  type Mutable,
   ObjectDatabaseId,
   type ObjectJSON,
   type ObjectMeta,
   ObjectVersionId,
   VersionTypeId,
+  change as change$,
   getDescription as getDescription$,
   getLabel as getLabel$,
   getMeta as getMeta$,
   getObjectDXN,
   getSchema as getSchema$,
   getSchemaTypename,
+  getSnapshot as getSnapshot$,
   getTypeAnnotation,
   getTypeDXN as getTypeDXN$,
   isDeleted as isDeleted$,
@@ -46,26 +43,15 @@ import {
   setDescription as setDescription$,
   setLabel as setLabel$,
   setValue as setValue$,
+  subscribe as subscribe$,
 } from './internal';
 import * as Ref from './Ref';
-import * as Type from './Type';
+import type * as Type from './Type';
 
 /**
  * Base type for all ECHO objects.
  */
-interface BaseObj extends AnyEchoObject, Entity.OfKind<typeof Entity.Kind.Object> {}
-
-/**
- * Base type for all Obj objects.
- */
-export interface Any extends BaseObj {}
-
-export const Any = Schema.Struct({}).pipe(
-  Type.object({
-    typename: 'dxos.org/type/Any',
-    version: '0.1.0',
-  }),
-);
+interface BaseObj extends AnyEntity, Entity.OfKind<typeof Entity.Kind.Object> {}
 
 /**
  * Object type with specific properties.
@@ -73,12 +59,24 @@ export const Any = Schema.Struct({}).pipe(
 export type Obj<Props> = BaseObj & Props;
 
 /**
+ * Object with no known properties beyond id and kind.
+ * Use this when the object's schema/properties are not known.
+ * For objects with arbitrary properties, use `Obj.AnyProps`.
+ *
+ * NOTE: This is a TypeScript type only, not a schema.
+ * To validate that a value is an ECHO object, use `Schema.is(Type.Obj)`.
+ */
+export interface Unknown extends BaseObj {}
+
+/**
  * Object with arbitrary properties.
  *
- * NOTE: Due to how typescript works, this type is not assignable to a specific schema type.
+ * NOTE: Due to how TypeScript works, this type is not assignable to a specific schema type.
  * In that case, use `Obj.instanceOf` to check if an object is of a specific type.
+ *
+ * Prefer using `Obj.Unknown` when you don't need to access arbitrary properties.
  */
-export interface AnyProps extends BaseObj, AnyProperties {}
+export interface Any extends BaseObj, AnyProperties {}
 
 const defaultMeta: ObjectMeta = {
   keys: [],
@@ -144,7 +142,7 @@ export const make: {
 /**
  * Determine if object is an ECHO object.
  */
-export const isObject = (obj: unknown): obj is Any => {
+export const isObject = (obj: unknown): obj is Unknown => {
   assumeType<InternalObjectProps>(obj);
   return typeof obj === 'object' && obj !== null && obj[Entity.KindId] === Entity.Kind.Object;
 };
@@ -165,7 +163,7 @@ export const subscribe = (obj: Entity.Unknown, callback: () => void): (() => voi
 /**
  * Returns an immutable snapshot of an object.
  */
-export const getSnapshot: <T extends Any>(obj: T) => T = getSnapshot$;
+export const getSnapshot: <T extends Unknown>(obj: T) => T = getSnapshot$;
 
 export type CloneOptions = {
   /**
@@ -180,7 +178,7 @@ export type CloneOptions = {
  * This does not clone referenced objects, only the properties in the object.
  * @returns A new object with the same schema and properties.
  */
-export const clone = <T extends Any>(obj: T, opts?: CloneOptions): T => {
+export const clone = <T extends Unknown>(obj: T, opts?: CloneOptions): T => {
   const { id, ...data } = obj;
   const schema = getSchema$(obj);
   invariant(schema != null, 'Object should have a schema');
@@ -245,7 +243,7 @@ export type { Mutable };
  *
  * Note: Only accepts objects. Use `Relation.change` for relations.
  */
-export const change = <T extends Any>(obj: T, callback: ChangeCallback<T>): void => {
+export const change = <T extends Unknown>(obj: T, callback: ChangeCallback<T>): void => {
   change$(obj, callback);
 };
 
@@ -540,7 +538,7 @@ export const toJSON = (entity: Entity.Unknown): JSON => objectToJSON(entity);
  * @param options.refResolver - Resolver for references. Produces hydrated references that can be resolved.
  * @param options.dxn - Override object DXN. Changes the result of `Obj.getDXN`.
  */
-export const fromJSON: (json: unknown, options?: { refResolver?: Ref.Resolver; dxn?: DXN }) => Promise<Any> =
+export const fromJSON: (json: unknown, options?: { refResolver?: Ref.Resolver; dxn?: DXN }) => Promise<Unknown> =
   objectFromJSON as any;
 
 //

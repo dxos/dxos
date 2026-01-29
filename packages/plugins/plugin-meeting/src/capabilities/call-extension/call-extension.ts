@@ -91,7 +91,7 @@ const _createEntityExtractionEnricher = ({ contextTypes, space }: EntityExtracti
 
   return async (message: Message.Message) => {
     const objects = await space.db
-      .query(Query.select(Filter.or(...contextTypes.map((schema) => Filter.type(schema as Schema.Schema<Obj.Any>)))))
+      .query(Query.select(Filter.or(...contextTypes.map((schema) => Filter.type(schema as Schema.Schema<Obj.Unknown>)))))
       .run();
 
     log.info('context', { objects });
@@ -112,7 +112,7 @@ const _createEntityExtractionEnricher = ({ contextTypes, space }: EntityExtracti
 };
 
 // TODO(dmaretskyi): Use Type.Any
-const processContextObject = async (object: Obj.Any): Promise<any> => {
+const processContextObject = async (object: Obj.Unknown): Promise<any> => {
   // TODO(dmaretskyi): Documents need special processing is the content is behind a ref.
   // TODO(dmaretskyi): Think about a way to handle this serialization with a decorator.
   // if (Obj.instanceOf(DocumentType, object)) {

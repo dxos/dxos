@@ -17,7 +17,7 @@ import { BaseObjectSettings } from './BaseObjectSettings';
 
 const DefaultStory = () => {
   const { space } = useClientStory();
-  const [object, setObject] = useState<Obj.Any>();
+  const [object, setObject] = useState<Obj.Unknown>();
 
   useEffect(() => {
     if (space && !object) {

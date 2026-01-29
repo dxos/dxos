@@ -23,7 +23,7 @@ const BaseSchema = Schema.Struct({
 
 export type BaseObjectSettingsProps = ThemedClassName<
   PropsWithChildren<{
-    object: Obj.Any;
+    object: Obj.Unknown;
   }>
 >;
 

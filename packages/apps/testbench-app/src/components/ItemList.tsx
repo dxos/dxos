@@ -56,8 +56,8 @@ export const Item = ({ object, onDelete }: ItemProps<Obj.Any>) => {
   const props = mapSchemaToFields(schema);
 
   // TODO(burdon): [API]: Type check?
-  const getValue = (object: Obj.Any, prop: string) => (object as any)[prop];
-  const setValue = (object: Obj.Any, prop: string, value: any) => ((object as any)[prop] = value);
+  const getValue = (object: Obj.Any, prop: string) => object[prop];
+  const setValue = (object: Obj.Any, prop: string, value: any) => (object[prop] = value);
 
   return (
     <div className={mx('flex m-1 p-2 border', subtleHover)}>
@@ -102,7 +102,7 @@ const Editor = ({ object, prop }: { object: Obj.Any; prop: string }) => {
   const { themeMode } = useThemeContext();
   const { parentRef } = useTextEditor(() => {
     return {
-      initialValue: (object as any)[prop],
+      initialValue: object[prop],
       extensions: [
         createBasicExtensions(),
         createMarkdownExtensions(),

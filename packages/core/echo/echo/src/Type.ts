@@ -13,6 +13,8 @@ import type * as Entity$ from './Entity';
 import {
   type ATTR_RELATION_SOURCE,
   type ATTR_RELATION_TARGET,
+  type AnyEntity,
+  type AnyProperties,
   EchoObjectSchema,
   EchoRelationSchema,
   type EchoRelationSchemaOptions,
@@ -73,37 +75,56 @@ interface RelationJsonProps {
 }
 
 //
-// Runtime schema for any ECHO object
-//
-
-/**
- * Runtime Effect schema that validates any ECHO object.
- * An ECHO object has an `id` field and can have any additional properties.
- */
-const AnyObjectSchema = Schema.Struct({
-  id: Schema.String,
-}).pipe(Schema.extend(Schema.Record({ key: Schema.String, value: Schema.Unknown }))) as Schema.Schema<
-  { id: ObjectId } & Record<string, unknown>,
-  { id: string } & Record<string, unknown>
->;
-
-//
-// Obj - Object schema types and factory
+// Obj - Runtime schema for any ECHO object
 //
 
 /**
  * Runtime Effect schema for any ECHO object.
- * Use for validation, parsing, or type guards on unknown values.
+ * Use for validation, parsing, type guards, or as a reference target for collections
+ * that can hold references to any ECHO object type.
  *
  * @example
  * ```ts
+ * // Type guard
  * if (Schema.is(Type.Obj)(unknownValue)) {
  *   // unknownValue is an ECHO object
  * }
+ *
+ * // Reference to any object type
+ * const Collection = Schema.Struct({
+ *   objects: Schema.Array(Type.Ref(Type.Obj)),
+ * }).pipe(Type.object({ typename: 'Collection', version: '0.1.0' }));
  * ```
  */
-export const Obj: Schema.Schema<{ id: ObjectId } & Record<string, unknown>, { id: string } & Record<string, unknown>> =
-  AnyObjectSchema;
+// NOTE: The `any` in the type intersection is intentional. It makes this type bidirectionally
+//   assignable with specific object types (e.g., you can assign `Type.Obj` to `Meeting.Meeting`
+//   and vice versa). This is a pragmatic choice to avoid requiring casts everywhere operation
+//   schemas are used, since operations erase the specific type information.
+// TODO(wittjosiah): Consider alternatives to the `any` intersection hack.
+//   The `any` in the type makes it assignable to/from specific object types (e.g., Meeting.Meeting).
+//   This is needed because operation schemas (like SpaceOperation.AddObject) erase type information -
+//   you pass in a specific type but get back a generic Type.Obj. Without `any`, callers would need
+//   explicit casts or instanceOf checks at every call site.
+//   Alternatives to consider:
+//   - Generic operation schemas that preserve input type in output
+//   - Branded types that specific schemas also carry
+//   - Accept the limitation and require explicit type narrowing at call sites
+// NOTE: The EchoObjectSchema annotation below is required for Type.Ref(Type.Obj) to work.
+//   The typename and version are not used for validation - they only satisfy the ECHO schema
+//   machinery that requires these annotations for reference targets. No objects will ever
+//   have this typename; it exists only to make Type.Obj a valid reference target.
+export const Obj: Schema.Schema<
+  any & AnyEntity & Entity$.OfKind<typeof Entity$.Kind.Object> & AnyProperties,
+  { id: string } & AnyProperties
+> = Schema.Struct({
+  id: Schema.String,
+}).pipe(
+  Schema.extend(Schema.Record({ key: Schema.String, value: Schema.Unknown })),
+  EchoObjectSchema({ typename: 'dxos.org/schema/AnyObject', version: '0.0.0' }),
+) as unknown as Schema.Schema<
+  any & AnyEntity & Entity$.OfKind<typeof Entity$.Kind.Object> & AnyProperties,
+  { id: string } & AnyProperties
+>;
 
 /**
  * TypeScript type for an ECHO object schema.
@@ -189,32 +210,34 @@ export interface PersistentType extends Schema.Schema.Type<typeof PersistentType
 export { EchoSchema as RuntimeType };
 
 //
-// Runtime schema for any ECHO relation
-//
-
-/**
- * Runtime Effect schema that validates any ECHO relation.
- * A relation has `id`, source, and target fields plus any additional properties.
- */
-const AnyRelationSchema = Schema.Struct({
-  id: Schema.String,
-}).pipe(Schema.extend(Schema.Record({ key: Schema.String, value: Schema.Unknown }))) as Schema.Schema<
-  { id: ObjectId } & Record<string, unknown>,
-  { id: string } & Record<string, unknown>
->;
-
-//
-// Relation - Relation schema types and factory
+// Relation - Runtime schema for any ECHO relation
 //
 
 /**
  * Runtime Effect schema for any ECHO relation.
- * Use for validation, parsing, or type guards on unknown values.
+ * Use for validation, parsing, type guards, or as a reference target for collections
+ * that can hold references to any ECHO relation type.
+ * A relation has `id`, source, and target fields plus any additional properties.
  */
+// NOTE: The EchoRelationSchema annotation below is required for Type.Ref(Type.Relation) to work.
+//   The typename, version, source, and target are not used for validation - they only satisfy
+//   the ECHO schema machinery that requires these annotations for reference targets. No relations
+//   will ever have this typename; it exists only to make Type.Relation a valid reference target.
 export const Relation: Schema.Schema<
   { id: ObjectId } & Record<string, unknown>,
   { id: string } & Record<string, unknown>
-> = AnyRelationSchema;
+> = Schema.Struct({
+  id: Schema.String,
+}).pipe(
+  Schema.extend(Schema.Record({ key: Schema.String, value: Schema.Unknown })),
+  EchoRelationSchema({
+    typename: 'dxos.org/schema/AnyRelation',
+    version: '0.0.0',
+    // Source and target use Type.Obj to satisfy the ECHO schema requirement.
+    source: Obj,
+    target: Obj,
+  }),
+) as unknown as Schema.Schema<{ id: ObjectId } & Record<string, unknown>, { id: string } & Record<string, unknown>>;
 
 /**
  * TypeScript type for an ECHO relation schema.
@@ -319,7 +342,7 @@ export namespace Entity {
   export const Any: Schema.Schema<
     { id: ObjectId } & Record<string, unknown>,
     { id: string } & Record<string, unknown>
-  > = Schema.Union(AnyObjectSchema, AnyRelationSchema);
+  > = Schema.Union(Obj, Relation);
 
   /**
    * Type alias for any ECHO entity schema (object or relation).

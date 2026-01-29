@@ -31,7 +31,7 @@ export interface EchoTypeSchema<
     > {
   /**
    * Brand symbol that marks this as an ECHO schema and indicates its kind.
-   * Makes EchoTypeSchema satisfy the Type.Obj.Any or Type.Relation.Any branded type.
+   * Makes EchoTypeSchema satisfy the Type.Obj.Unknown or Type.Relation.Any branded type.
    */
   readonly [EchoSchemaBrandSymbol]: K;
 

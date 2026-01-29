@@ -19,7 +19,7 @@ import { Assistant, AssistantOperation } from '../types';
 
 export type ChatToolbarActionsProps = {
   chat?: Assistant.Chat;
-  companionTo?: Obj.Any;
+  companionTo?: Obj.Unknown;
 };
 
 export const useChatToolbarActions = ({ chat, companionTo }: ChatToolbarActionsProps) => {
@@ -46,12 +46,15 @@ export const useChatToolbarActions = ({ chat, companionTo }: ChatToolbarActionsP
               label: ['new thread button', { ns: meta.id }],
               icon: 'ph--plus--regular',
               type: 'new',
+              disabled: !companionTo,
             },
-            () =>
-              invoke(AssistantOperation.SetCurrentChat, {
-                companionTo,
+            () => {
+              invariant(companionTo);
+              return invoke(AssistantOperation.SetCurrentChat, {
+                companionTo: companionTo as Obj.Any,
                 chat: undefined,
-              }).pipe(runAndForwardErrors),
+              }).pipe(runAndForwardErrors);
+            },
           )
           .action(
             'rename',
@@ -101,7 +104,7 @@ export const useChatToolbarActions = ({ chat, companionTo }: ChatToolbarActionsP
                       Effect.gen(function* () {
                         invariant(companionTo);
                         yield* invoke(AssistantOperation.SetCurrentChat, {
-                          companionTo,
+                          companionTo: companionTo as Obj.Any,
                           chat,
                         });
                       }).pipe(runAndForwardErrors),

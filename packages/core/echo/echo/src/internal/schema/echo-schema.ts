@@ -192,7 +192,7 @@ export class EchoSchema<A = any, I = any> extends EchoSchemaConstructor() implem
 
   /**
    * Brand symbol that marks this as an ECHO schema.
-   * Makes EchoSchema satisfy the Type.Obj.Any branded type.
+   * Makes EchoSchema satisfy the Type.Obj.Unknown branded type.
    */
   readonly [EchoSchemaBrandSymbol]: EntityKind.Object = EntityKind.Object;
 

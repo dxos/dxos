@@ -22,9 +22,9 @@ export type MapSchema = Schema.Schema.Type<typeof MapSchema>;
 
 // TODO(burdon): Move to ECHO def.
 export type ArtifactsContext = {
-  items: Obj.Any[];
-  getArtifacts: () => Obj.Any[];
-  addArtifact: (artifact: Obj.Any) => void;
+  items: Obj.Unknown[];
+  getArtifacts: () => Obj.Unknown[];
+  addArtifact: (artifact: Obj.Unknown) => void;
 };
 
 declare global {

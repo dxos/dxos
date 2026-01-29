@@ -18,9 +18,9 @@ import { log } from '@dxos/log';
  * @param opts.foreignKeyId - The key to use for matching objects.
  */
 export const syncObjects: (
-  objs: Obj.Any[],
+  objs: Obj.Unknown[],
   opts: { foreignKeyId: string },
-) => Effect.Effect<Obj.Any[], never, Database.Service> = Effect.fn('syncObjects')(function* (objs, { foreignKeyId }) {
+) => Effect.Effect<Obj.Unknown[], never, Database.Service> = Effect.fn('syncObjects')(function* (objs, { foreignKeyId }) {
   return yield* Effect.forEach(
     objs,
     Effect.fnUntraced(function* (obj) {
@@ -28,7 +28,7 @@ export const syncObjects: (
       for (const key of Object.keys(obj)) {
         if (typeof key !== 'string' || key === 'id') continue;
         if (!Ref.isRef((obj as any)[key])) continue;
-        const ref: Ref.Any = (obj as any)[key];
+        const ref: Ref.Unknown = (obj as any)[key];
         if (!ref.target) continue;
         if (Obj.getDXN(ref.target).isLocalObjectId()) {
           // obj not persisted to db.
@@ -59,7 +59,7 @@ export const syncObjects: (
   );
 });
 
-const copyObjectData = (existing: Obj.Any, newObj: Obj.Any) => {
+const copyObjectData = (existing: Obj.Unknown, newObj: Obj.Unknown) => {
   for (const key of Object.keys(newObj)) {
     if (typeof key !== 'string' || key === 'id') continue;
     if (

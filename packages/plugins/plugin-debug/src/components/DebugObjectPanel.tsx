@@ -10,7 +10,7 @@ import { StackItem } from '@dxos/react-ui-stack';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 
 export type DebugObjectPanelProps = {
-  object: Obj.Any;
+  object: Obj.Unknown;
 };
 
 // TODO(burdon): Get schema and traverse references.

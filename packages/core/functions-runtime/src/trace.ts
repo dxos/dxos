@@ -64,7 +64,7 @@ export const InvocationTraceStartEvent = Schema.Struct({
   /**
    * DXN of the invoked function/workflow.
    */
-  invocationTarget: Schema.optional(Type.Ref(Obj.Any)),
+  invocationTarget: Schema.optional(Type.Ref(Type.Obj)),
   /**
    * Present for automatic invocations.
    */
@@ -143,7 +143,7 @@ export type InvocationSpan = {
   outcome: InvocationOutcome;
   input: object;
   invocationTraceQueue?: Ref.Ref<Queue>;
-  invocationTarget?: Ref.Ref<Obj.Any>;
+  invocationTarget?: Ref.Ref<Obj.Unknown>;
   trigger?: Ref.Ref<Trigger.Trigger>;
   error?: SerializedError;
   runtime?: FunctionRuntimeKind;
@@ -211,7 +211,7 @@ export namespace TracingServiceExt {
   export const layerQueue = (queue: Queue): Layer.Layer<TracingService> =>
     Layer.succeed(TracingService, {
       getTraceContext: () => ({}),
-      write: (event: Obj.Any) => {
+      write: (event: Obj.Unknown) => {
         void queue.append([event]).catch((error) => {
           log.warn('Failed to write trace event to queue', { error });
         });
@@ -224,7 +224,7 @@ export namespace TracingServiceExt {
   export const layerLogInfo = (): Layer.Layer<TracingService> =>
     Layer.succeed(TracingService, {
       getTraceContext: () => ({}),
-      write: (event: Obj.Any) => {
+      write: (event: Obj.Unknown) => {
         log.info('trace event', { event });
       },
     });

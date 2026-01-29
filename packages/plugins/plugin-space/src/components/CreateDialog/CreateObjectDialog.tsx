@@ -29,8 +29,8 @@ export type CreateObjectDialogProps = Pick<
   CreateObjectPanelProps,
   'target' | 'views' | 'typename' | 'initialFormValues'
 > & {
-  onCreateObject?: (object: Obj.Any) => void;
-  shouldNavigate?: (object: Obj.Any) => boolean;
+  onCreateObject?: (object: Obj.Unknown) => void;
+  shouldNavigate?: (object: Obj.Unknown) => boolean;
 };
 
 export const CreateObjectDialog = ({

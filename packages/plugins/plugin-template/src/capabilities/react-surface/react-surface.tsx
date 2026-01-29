@@ -19,8 +19,8 @@ export default Capability.makeModule(() =>
       Common.createSurface({
         id: meta.id,
         role: 'article',
-        filter: (data): data is { subject: Obj.Any } => Obj.instanceOf(Template.Data, data.subject),
-        component: ({ data, role }: { data: { subject: Obj.Any }; role: string }) => (
+        filter: (data): data is { subject: Obj.Unknown } => Obj.instanceOf(Template.Data, data.subject),
+        component: ({ data, role }: { data: { subject: Obj.Unknown }; role: string }) => (
           <TemplateContainer role={role} object={data.subject} />
         ),
       }),
