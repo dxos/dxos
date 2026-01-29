@@ -483,6 +483,23 @@ export const toJSON = (entity: Entity.Unknown): JSON => objectToJSON(entity);
 export const fromJSON: (json: unknown, options?: { refResolver?: Ref.Resolver; dxn?: DXN }) => Promise<Any> =
   objectFromJSON as any;
 
+/**
+ * Sets the deleted state of an object.
+ * @param entity - The object to mark as deleted or restore.
+ * @param value - `true` to mark as deleted, `false` to restore.
+ */
+export const setDeleted = (entity: Entity.Unknown, value: boolean) => {
+  const db = getDatabase(entity) as any;
+  // Try coreDatabase first (EchoDatabase), then fallback to direct method (CoreDatabase).
+  const coreDatabase = db?.coreDatabase ?? db;
+  if (coreDatabase && typeof coreDatabase.getObjectCoreById === 'function') {
+    const core = coreDatabase.getObjectCoreById(entity.id);
+    if (core) {
+      core.setDeleted(value);
+    }
+  }
+};
+
 //
 // Sorting
 //
