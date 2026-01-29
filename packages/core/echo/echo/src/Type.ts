@@ -220,8 +220,12 @@ export const Relation: Schema.Schema<
  * `Source` and `Target` are the endpoint types.
  * `Fields` is the optional struct fields type for introspection.
  */
-export interface Relation<T = any, Source = any, Target = any, Fields extends Schema.Struct.Fields = Schema.Struct.Fields>
-  extends TypeMeta,
+export interface Relation<
+  T = any,
+  Source = any,
+  Target = any,
+  Fields extends Schema.Struct.Fields = Schema.Struct.Fields,
+> extends TypeMeta,
     EchoSchemaBranded<EntityKind.Relation>,
     Schema.AnnotableClass<
       Relation<T, Source, Target, Fields>,

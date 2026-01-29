@@ -72,11 +72,7 @@ export const createObjectFactory =
 /**
  * Set properties based on generator annotation.
  */
-export const createProps = <S extends Type.Obj.Any>(
-  generator: ValueGenerator,
-  schema: S,
-  force = false,
-) => {
+export const createProps = <S extends Type.Obj.Any>(generator: ValueGenerator, schema: S, force = false) => {
   type T = Schema.Schema.Type<S>;
   return (data: Type.Properties<T> = {} as Type.Properties<T>): Type.Properties<T> => {
     return getProperties(schema.ast).reduce<Type.Properties<T>>((obj, property) => {

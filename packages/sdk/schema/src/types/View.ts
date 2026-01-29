@@ -45,7 +45,7 @@ import {
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 
-import { FieldSchema, ProjectionModel, type ProjectionChangeCallback } from '../projection';
+import { FieldSchema, type ProjectionChangeCallback, ProjectionModel } from '../projection';
 import { createDefaultSchema, getSchema } from '../util';
 
 export const Projection = Schema.Struct({

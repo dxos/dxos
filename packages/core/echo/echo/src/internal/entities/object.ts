@@ -25,7 +25,9 @@ export type EchoObjectSchema<
  * Pipeable function to add ECHO object annotations to a schema.
  */
 export const EchoObjectSchema: {
-  (meta: TypeMeta): <Self extends Schema.Schema.Any, Fields extends Schema.Struct.Fields = Schema.Struct.Fields>(
+  (
+    meta: TypeMeta,
+  ): <Self extends Schema.Schema.Any, Fields extends Schema.Struct.Fields = Schema.Struct.Fields>(
     self: Self & { fields?: Fields },
   ) => EchoObjectSchema<Self, Fields>;
 } = ({ typename, version }) => {

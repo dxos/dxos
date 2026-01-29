@@ -100,10 +100,7 @@ export const useObject: {
    * @param property - Property key to subscribe to
    * @returns The current property value (or undefined) and update callback
    */
-  <T, K extends keyof T>(
-    ref: Ref.Ref<T> | undefined,
-    property: K,
-  ): [T[K] | undefined, ObjectPropUpdateCallback<T[K]>];
+  <T, K extends keyof T>(ref: Ref.Ref<T> | undefined, property: K): [T[K] | undefined, ObjectPropUpdateCallback<T[K]>];
 } = (<T extends Obj.Any, K extends keyof T>(objOrRef: T | Ref.Ref<T> | undefined, property?: K): any => {
   // Get the live object for the callback (refs need to dereference).
   const isRef = Ref.isRef(objOrRef);
@@ -158,10 +155,7 @@ const useObjectValue = <T extends Obj.Any>(objOrRef: T | Ref.Ref<T> | undefined)
  * Internal hook for subscribing to a specific property of an Echo object.
  * Uses useAtomValue directly since makeProperty returns the value directly.
  */
-const useObjectProperty = <T extends Obj.Any, K extends keyof T>(
-  obj: T | undefined,
-  property: K,
-): T[K] | undefined => {
+const useObjectProperty = <T extends Obj.Any, K extends keyof T>(obj: T | undefined, property: K): T[K] | undefined => {
   const atom = useMemo(() => AtomObj.makeProperty(obj, property), [obj, property]);
   return useAtomValue(atom);
 };

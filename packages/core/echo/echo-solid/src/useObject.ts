@@ -38,9 +38,7 @@ type ConditionalUndefined<T, R> = [T] extends [Exclude<T, undefined>]
  * @param ref - The Ref to dereference and subscribe to (can be reactive)
  * @returns A tuple of [accessor, updateCallback]
  */
-export function useObject<T>(
-  ref: MaybeAccessor<Ref.Ref<T>>,
-): [Accessor<T | undefined>, ObjectUpdateCallback<T>];
+export function useObject<T>(ref: MaybeAccessor<Ref.Ref<T>>): [Accessor<T | undefined>, ObjectUpdateCallback<T>];
 
 /**
  * Subscribe to a Ref's target object that may be undefined.
@@ -282,9 +280,7 @@ function useObjectProperty<T extends Obj.Any, K extends keyof T>(
  * @param refs - Array of Refs to dereference and subscribe to (can be reactive)
  * @returns Accessor to array of loaded target snapshots (excludes unloaded refs)
  */
-export const useObjects = <T extends Obj.Any>(
-  refs: MaybeAccessor<readonly Ref.Ref<T>[]>,
-): Accessor<T[]> => {
+export const useObjects = <T extends Obj.Any>(refs: MaybeAccessor<readonly Ref.Ref<T>[]>): Accessor<T[]> => {
   // Track version to trigger re-renders when any ref or target changes.
   const [version, setVersion] = createSignal(0);
 

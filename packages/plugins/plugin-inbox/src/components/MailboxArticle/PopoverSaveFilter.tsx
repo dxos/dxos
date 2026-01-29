@@ -5,8 +5,8 @@
 import React, { useCallback, useRef, useState } from 'react';
 
 import { Common } from '@dxos/app-framework';
-import { Obj } from '@dxos/echo';
 import { useOperationInvoker } from '@dxos/app-framework/react';
+import { Obj } from '@dxos/echo';
 import { Button, Input, Popover, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '../../meta';

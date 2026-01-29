@@ -3,7 +3,7 @@
 //
 
 import { type Entity } from '@dxos/echo';
-import { EventId, batchEvents, type Mutable } from '@dxos/echo/internal';
+import { EventId, type Mutable, batchEvents } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 
 import { clearPendingNotifications, enterChangeContext, hasPendingNotifications } from '../core-db/change-context';

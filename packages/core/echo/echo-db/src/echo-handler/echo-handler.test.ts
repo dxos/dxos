@@ -620,9 +620,7 @@ describe('Reactive Object with ECHO database', () => {
       const testKey = { source: 'test', id: 'hello' };
       Obj.changeMeta(obj, (meta) => meta.keys.push(testKey));
       expect(Obj.getMeta(obj)).to.deep.eq({ keys: [testKey] });
-      expect(() =>
-        Obj.changeMeta(obj, (meta) => meta.keys.push(1 as any)),
-      ).to.throw();
+      expect(() => Obj.changeMeta(obj, (meta) => meta.keys.push(1 as any))).to.throw();
     });
 
     test('meta taken from reactive object when saving to echo', async () => {
