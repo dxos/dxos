@@ -125,7 +125,7 @@ export const ChatCompanion = forwardRef<HTMLDivElement, ChatCompanionProps>(
           continue;
         }
 
-        space.db.add(Obj.clone(blueprint));
+        space.db.add(Obj.clone(blueprint, { deep: true }));
       }
     }, [space, blueprintRegistry, blueprintKeys]);
 

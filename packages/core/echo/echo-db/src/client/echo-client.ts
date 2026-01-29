@@ -241,6 +241,6 @@ export class EchoClient extends Resource {
       return undefined;
     }
 
-    return db._loadObjectById(objectId);
+    return db._loadObjectById(objectId, { allowDeleted: true });
   }
 }
