@@ -5,45 +5,65 @@
 import * as Function from 'effect/Function';
 import * as Schema from 'effect/Schema';
 
-import { type ForeignKey } from '@dxos/echo-protocol';
+import type { ForeignKey } from '@dxos/echo-protocol';
 import { createJsonPath, getValue as getValue$ } from '@dxos/effect';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { type DXN, ObjectId } from '@dxos/keys';
-import { type DeepReadonly, assumeType, deepMapValues } from '@dxos/util';
+import { assumeType, deepMapValues } from '@dxos/util';
 
 import type * as Database from './Database';
 import * as Entity from './Entity';
 import {
+  type ObjectJSON as APIJSON,
   type AnyEntity,
   type AnyProperties,
+  type Comparator as ApiComparator,
+  type Meta as ApiMeta,
+  type ReadonlyMeta as ApiReadonlyMeta,
+  type EntityVersion as ApiVersion,
   type ChangeCallback,
   type InternalObjectProps,
+  type KindId,
   MetaId,
   type Mutable,
-  ObjectDatabaseId,
-  type ObjectJSON,
   type ObjectMeta,
-  ObjectVersionId,
+  type SnapshotKindId,
+  type VersionCompareResult,
   VersionTypeId,
+  addTag as addTag$,
   change as change$,
+  changeMeta as changeMeta$,
+  compareVersions,
+  decodeVersion,
+  deleteKeys as deleteKeys$,
+  encodeVersion,
+  getDXN as getDXN$,
+  getDatabase as getDatabase$,
   getDescription as getDescription$,
+  getKeys as getKeys$,
   getLabel as getLabel$,
-  getMeta as getMeta$,
-  getObjectDXN,
+  getMetaChecked as getMeta$,
   getSchema as getSchema$,
-  getSchemaTypename,
   getSnapshot as getSnapshot$,
   getTypeAnnotation,
   getTypeDXN as getTypeDXN$,
+  getTypename as getTypename$,
   isDeleted as isDeleted$,
   isInstanceOf,
+  isVersion,
   makeObject,
   objectFromJSON,
-  objectToJSON,
+  objectToJSON as toJSON$,
+  removeTag as removeTag$,
   setDescription as setDescription$,
   setLabel as setLabel$,
   setValue as setValue$,
+  sort as sort$,
+  sortByLabel as sortByLabel$,
+  sortByTypename as sortByTypename$,
   subscribe as subscribe$,
+  version as version$,
+  versionValid,
 } from './internal';
 import * as Ref from './Ref';
 import type * as Type from './Type';
@@ -77,6 +97,34 @@ export interface Unknown extends BaseObj {}
  * Prefer using `Obj.Unknown` when you don't need to access arbitrary properties.
  */
 export interface Any extends BaseObj, AnyProperties {}
+
+/**
+ * Unbranded base type - common structure without the brand.
+ * Both reactive objects and snapshots are assignable to this.
+ * Use this when you don't care whether you have a reactive object or snapshot.
+ */
+export interface Base extends AnyEntity {
+  readonly id: ObjectId;
+}
+
+/**
+ * Base type for snapshot objects (has SnapshotKindId instead of KindId).
+ */
+interface BaseSnapshot extends AnyEntity {
+  readonly [SnapshotKindId]: typeof Entity.Kind.Object;
+  readonly id: ObjectId;
+}
+
+/**
+ * Immutable snapshot of an ECHO object.
+ * Branded with SnapshotKindId (not KindId).
+ * Property values are frozen at the time the snapshot was created.
+ * Returned by getSnapshot() and hooks like useObject().
+ *
+ * Snapshots are structurally identical to reactive objects but have a different brand,
+ * making them distinguishable at the TypeScript level. Neither is assignable to the other.
+ */
+export type Snapshot<T extends Unknown = Unknown> = Omit<T, KindId> & BaseSnapshot;
 
 const defaultMeta: ObjectMeta = {
   keys: [],
@@ -150,9 +198,10 @@ export const isObject = (obj: unknown): obj is Unknown => {
 /**
  * Subscribe to object updates.
  * The callback is called synchronously when the object is modified.
+ * Only accepts reactive objects (not snapshots).
  * @returns Unsubscribe function.
  */
-export const subscribe = (obj: Entity.Unknown, callback: () => void): (() => void) => {
+export const subscribe = (obj: Unknown, callback: () => void): (() => void) => {
   return subscribe$(obj, callback);
 };
 
@@ -162,8 +211,10 @@ export const subscribe = (obj: Entity.Unknown, callback: () => void): (() => voi
 
 /**
  * Returns an immutable snapshot of an object.
+ * The snapshot is branded with SnapshotKindId instead of KindId,
+ * making it distinguishable from the reactive object at the type level.
  */
-export const getSnapshot: <T extends Unknown>(obj: T) => T = getSnapshot$;
+export const getSnapshot: <T extends Unknown>(obj: T) => Snapshot<T> = getSnapshot$ as any;
 
 export type CloneOptions = {
   /**
@@ -252,6 +303,7 @@ export const change = <T extends Unknown>(obj: T, callback: ChangeCallback<T>): 
  *
  * Similar to lodash.get and getDeep from @dxos/util.
  * This is the complementary function to setValue.
+ * Accepts both reactive objects and snapshots.
  *
  * @param obj - The ECHO object to get the property from.
  * @param path - Path to the property (array of keys).
@@ -268,7 +320,7 @@ export const change = <T extends Unknown>(obj: T, callback: ChangeCallback<T>): 
  * Obj.getValue(person, ['addresses', 1, 'street']); // undefined
  * ```
  */
-export const getValue = (obj: Entity.Unknown, path: readonly (string | number)[]): any => {
+export const getValue = (obj: Unknown | Snapshot, path: readonly (string | number)[]): any => {
   return getValue$(obj, createJsonPath(path));
 };
 
@@ -277,6 +329,7 @@ export const getValue = (obj: Entity.Unknown, path: readonly (string | number)[]
  * whether to initialize nested data as an empty object or array.
  *
  * Similar to lodash.set and setDeep from @dxos/util, but schema-aware.
+ * Only accepts reactive objects (not snapshots).
  *
  * @param obj - The ECHO object to set the property on.
  * @param path - Path to the property (array of keys).
@@ -292,7 +345,7 @@ export const getValue = (obj: Entity.Unknown, path: readonly (string | number)[]
  * ```
  */
 // TODO(wittjosiah): Compute possible path values + type value based on generic object type.
-export const setValue: (obj: Entity.Unknown, path: readonly (string | number)[], value: any) => void = setValue$ as any;
+export const setValue: (obj: Unknown, path: readonly (string | number)[], value: any) => void = setValue$ as any;
 
 //
 // Type
@@ -325,11 +378,13 @@ export const instanceOf: {
 }) as any;
 
 // TODO(dmaretskyi): Allow returning undefined.
-export const getDXN = (entity: Entity.Unknown): DXN => {
+/**
+ * Get the DXN of the object.
+ * Accepts both reactive objects and snapshots.
+ */
+export const getDXN = (entity: Unknown | Snapshot): DXN => {
   assertArgument(!Schema.isSchema(entity), 'obj', 'Object should not be a schema.');
-  const dxn = getObjectDXN(entity);
-  invariant(dxn != null, 'Invalid object.');
-  return dxn;
+  return getDXN$(entity);
 };
 
 /**
@@ -347,17 +402,10 @@ export const getSchema: (obj: unknown | undefined) => Type.Entity.Any | undefine
 
 /**
  * @returns The typename of the object's type.
+ * Accepts both reactive objects and snapshots.
  * @example `example.com/type/Person`
  */
-export const getTypename = (entity: Entity.Unknown): string | undefined => {
-  const schema = getSchema$(entity);
-  if (schema == null) {
-    // Try to extract typename from DXN.
-    return getTypeDXN$(entity)?.asTypeDXN()?.type;
-  }
-
-  return getSchemaTypename(schema);
-};
+export const getTypename = (entity: Unknown | Snapshot): string | undefined => getTypename$(entity);
 
 //
 // Database
@@ -365,11 +413,9 @@ export const getTypename = (entity: Entity.Unknown): string | undefined => {
 
 /**
  * Get the database the object belongs to.
+ * Accepts both reactive objects and snapshots.
  */
-export const getDatabase = (entity: Entity.Unknown): Database.Database | undefined => {
-  assumeType<InternalObjectProps>(entity);
-  return entity[ObjectDatabaseId];
-};
+export const getDatabase = (entity: Unknown | Snapshot): Database.Database | undefined => getDatabase$(entity);
 
 //
 // Meta
@@ -381,31 +427,27 @@ export const Meta: unique symbol = MetaId as any;
  * Deeply read-only version of ObjectMeta.
  * Prevents mutation at all nesting levels (e.g., `meta.keys.push()` is a TypeScript error).
  */
-export type ReadonlyMeta = DeepReadonly<ObjectMeta>;
+export type ReadonlyMeta = ApiReadonlyMeta;
 
 /**
  * Mutable meta type received in the `Obj.changeMeta()` callback.
  */
-export type Meta = ObjectMeta;
+export type Meta = ApiMeta;
 
 // TODO(burdon): Narrow type.
 // TODO(dmaretskyi): Allow returning undefined.
 /**
- * Get the metadata for an entity.
+ * Get the metadata for an object.
  * Returns a read-only view of the metadata.
  * Use `Obj.changeMeta` to mutate metadata.
  */
-export const getMeta = (entity: AnyProperties): ReadonlyMeta => {
-  assertArgument(entity, 'entity', 'Should be an object.');
-  const meta = getMeta$(entity);
-  invariant(meta != null, 'Invalid object.');
-  return meta;
-};
+export const getMeta = (entity: Unknown | Snapshot): ReadonlyMeta => getMeta$(entity);
 
 /**
- * Perform mutations on an entity's metadata within a controlled context.
+ * Perform mutations on an object's metadata within a controlled context.
+ * Only accepts reactive objects (not snapshots).
  *
- * @param entity - The entity whose metadata to mutate.
+ * @param entity - The object whose metadata to mutate.
  * @param callback - The callback that performs mutations on the metadata.
  *
  * @example
@@ -415,103 +457,70 @@ export const getMeta = (entity: AnyProperties): ReadonlyMeta => {
  * });
  * ```
  */
-export const changeMeta = (entity: Entity.Unknown, callback: (meta: ObjectMeta) => void): void => {
-  assertArgument(entity, 'entity', 'Should be an object.');
-  const meta = getMeta$(entity);
-  invariant(meta != null, 'Invalid object.');
-  change$(entity, () => {
-    callback(meta);
-  });
-};
+export const changeMeta = (entity: Unknown, callback: (meta: ObjectMeta) => void): void =>
+  changeMeta$(entity, callback);
 
 /**
  * @returns Foreign keys for the object from the specified source.
+ * Accepts both reactive objects and snapshots.
  */
 export const getKeys: {
-  (entity: Entity.Unknown, source: string): ForeignKey[];
-  (source: string): (entity: Entity.Unknown) => ForeignKey[];
-} = Function.dual(2, (entity: Entity.Unknown, source?: string): ForeignKey[] => {
-  assertArgument(entity, 'entity', 'Should be an object.');
-  const meta = getMeta(entity);
-  invariant(meta != null, 'Invalid object.');
-  return meta.keys.filter((key) => key.source === source);
-});
+  (entity: Unknown | Snapshot, source: string): ForeignKey[];
+  (source: string): (entity: Unknown | Snapshot) => ForeignKey[];
+} = Function.dual(2, (entity: Unknown | Snapshot, source?: string): ForeignKey[] => getKeys$(entity, source!));
 
 /**
  * Delete all keys from the object for the specified source.
- * @param entity
- * @param source
+ * Only accepts reactive objects (not snapshots).
  */
-export const deleteKeys = (entity: Entity.Unknown, source: string) => {
-  changeMeta(entity, (meta) => {
-    for (let i = 0; i < meta.keys.length; i++) {
-      if (meta.keys[i].source === source) {
-        meta.keys.splice(i, 1);
-        i--;
-      }
-    }
-  });
-};
+export const deleteKeys = (entity: Unknown, source: string): void => deleteKeys$(entity, source);
 
-export const addTag = (entity: Entity.Unknown, tag: string) => {
-  changeMeta(entity, (meta) => {
-    meta.tags ??= [];
-    meta.tags.push(tag);
-  });
-};
+/**
+ * Add a tag to the object.
+ * Only accepts reactive objects (not snapshots).
+ */
+export const addTag = (entity: Unknown, tag: string): void => addTag$(entity, tag);
 
-export const removeTag = (entity: Entity.Unknown, tag: string) => {
-  changeMeta(entity, (meta) => {
-    if (!meta.tags) {
-      return;
-    }
-    for (let i = 0; i < meta.tags.length; i++) {
-      if (meta.tags[i] === tag) {
-        meta.tags.splice(i, 1);
-        i--;
-      }
-    }
-  });
-};
+/**
+ * Remove a tag from the object.
+ * Only accepts reactive objects (not snapshots).
+ */
+export const removeTag = (entity: Unknown, tag: string): void => removeTag$(entity, tag);
 
+/**
+ * Check if the object is deleted.
+ * Accepts both reactive objects and snapshots.
+ */
 // TODO(dmaretskyi): Default to `false`.
-export const isDeleted = (entity: Entity.Unknown): boolean => {
-  const deleted = isDeleted$(entity);
-  invariant(typeof deleted === 'boolean', 'Invalid object.');
-  return deleted;
-};
+export const isDeleted = (entity: Unknown | Snapshot): boolean => isDeleted$(entity);
 
 //
 // Annotations
 //
 
-export const getLabel = (entity: Entity.Unknown): string | undefined => {
-  const schema = getSchema$(entity);
-  if (schema != null) {
-    return getLabel$(schema, entity);
-  }
-};
+/**
+ * Get the label of the object.
+ * Accepts both reactive objects and snapshots.
+ */
+export const getLabel = (entity: Unknown | Snapshot): string | undefined => getLabel$(entity);
 
-export const setLabel = (entity: Entity.Unknown, label: string) => {
-  const schema = getSchema$(entity);
-  if (schema != null) {
-    setLabel$(schema, entity, label);
-  }
-};
+/**
+ * Set the label of the object.
+ * Only accepts reactive objects (not snapshots).
+ */
+export const setLabel = (entity: Unknown, label: string): void => setLabel$(entity, label);
 
-export const getDescription = (entity: Entity.Unknown): string | undefined => {
-  const schema = getSchema$(entity);
-  if (schema != null) {
-    return getDescription$(schema, entity);
-  }
-};
+/**
+ * Get the description of the object.
+ * Accepts both reactive objects and snapshots.
+ */
+export const getDescription = (entity: Unknown | Snapshot): string | undefined => getDescription$(entity);
 
-export const setDescription = (entity: Entity.Unknown, description: string) => {
-  const schema = getSchema$(entity);
-  if (schema != null) {
-    setDescription$(schema, entity, description);
-  }
-};
+/**
+ * Set the description of the object.
+ * Only accepts reactive objects (not snapshots).
+ */
+export const setDescription = (entity: Unknown, description: string): void => setDescription$(entity, description);
 
 //
 // JSON
@@ -520,14 +529,15 @@ export const setDescription = (entity: Entity.Unknown, description: string) => {
 /**
  * JSON representation of an object.
  */
-export type JSON = ObjectJSON;
+export type JSON = APIJSON;
 
 /**
  * Converts object to its JSON representation.
+ * Accepts both reactive objects and snapshots.
  *
  * The same algorithm is used when calling the standard `JSON.stringify(obj)` function.
  */
-export const toJSON = (entity: Entity.Unknown): JSON => objectToJSON(entity);
+export const toJSON = (entity: Unknown | Snapshot): JSON => toJSON$(entity);
 
 /**
  * Creates an object from its json representation, performing schema validation.
@@ -545,128 +555,34 @@ export const fromJSON: (json: unknown, options?: { refResolver?: Ref.Resolver; d
 // Sorting
 //
 
-const compare = (a?: string, b?: string) => {
-  if (a == null) {
-    return b == null ? 0 : 1;
-  }
+/**
+ * Comparator function type for sorting objects.
+ * Accepts both reactive objects and snapshots.
+ */
+export type Comparator = ApiComparator<Unknown | Snapshot>;
 
-  if (b == null) {
-    return -1;
-  }
-
-  return a.localeCompare(b);
-};
-
-export type Comparator = (a: Entity.Unknown, b: Entity.Unknown) => number;
-
-export const sortByLabel: Comparator = (a: Entity.Unknown, b: Entity.Unknown) => compare(getLabel(a), getLabel(b));
-export const sortByTypename: Comparator = (a: Entity.Unknown, b: Entity.Unknown) =>
-  compare(getTypename(a), getTypename(b));
-export const sort = (...comparators: Comparator[]): Comparator => {
-  return (a: Entity.Unknown, b: Entity.Unknown) => {
-    for (const comparator of comparators) {
-      const result = comparator(a, b);
-      if (result !== 0) {
-        return result;
-      }
-    }
-
-    return 0;
-  };
-};
+export const sortByLabel: Comparator = sortByLabel$ as Comparator;
+export const sortByTypename: Comparator = sortByTypename$ as Comparator;
+export const sort = (...comparators: Comparator[]): Comparator => sort$(...comparators) as Comparator;
 
 //
 // Version
 //
 
-/**
- * Unique symbol for version type identification.
- */
 export { VersionTypeId };
+export type { VersionCompareResult };
 
 /**
  * Represent object version.
  * May be backed by Automerge.
  * Objects with no history are not versioned.
  */
-export interface Version {
-  [VersionTypeId]: {};
+export type Version = ApiVersion;
 
-  /**
-   * Whether the object is versioned.
-   */
-  versioned: boolean;
-
-  /**
-   * Automerge heads.
-   */
-  automergeHeads?: string[];
-}
-
-const unversioned: Version = {
-  [VersionTypeId]: {},
-  versioned: false,
-};
-
-/**
- * Checks that `obj` is a version object.
- */
-export const isVersion = (entity: unknown): entity is Version => {
-  return entity != null && typeof entity === 'object' && VersionTypeId in entity;
-};
+export { isVersion, versionValid, compareVersions, encodeVersion, decodeVersion };
 
 /**
  * Returns the version of the object.
+ * Accepts both reactive objects and snapshots.
  */
-export const version = (entity: Entity.Unknown): Version => {
-  const version = (entity as any)[ObjectVersionId];
-  if (version === undefined) {
-    return unversioned;
-  }
-
-  return version;
-};
-
-/**
- * Checks that `version` is a valid version object.
- */
-export const versionValid = (version: Version): boolean => {
-  assertArgument(isVersion(version), 'version', 'Invalid version object');
-  return !!version.versioned;
-};
-
-export type VersionCompareResult = 'unversioned' | 'equal' | 'different';
-
-/**
- * Compares two versions.
- * @param version1
- * @param version2
- * @returns 'unversioned' if either object is unversioned, 'equal' if the versions are equal, 'different' if the versions are different.
- */
-export const compareVersions = (version1: Version, version2: Version): VersionCompareResult => {
-  assertArgument(isVersion(version1), 'version1', 'Invalid version object');
-  assertArgument(isVersion(version2), 'version2', 'Invalid version object');
-
-  if (!versionValid(version1) || !versionValid(version2)) {
-    return 'unversioned';
-  }
-
-  if (version1.automergeHeads?.length !== version2.automergeHeads?.length) {
-    return 'different';
-  }
-  if (version1.automergeHeads?.some((head) => !version2.automergeHeads?.includes(head))) {
-    return 'different';
-  }
-
-  return 'equal';
-};
-
-export const encodeVersion = (version: Version): string => {
-  return JSON.stringify(version);
-};
-
-export const decodeVersion = (version: string): Version => {
-  const parsed = JSON.parse(version);
-  parsed[VersionTypeId] = {};
-  return parsed;
-};
+export const version = (entity: Unknown | Snapshot): Version => version$(entity);

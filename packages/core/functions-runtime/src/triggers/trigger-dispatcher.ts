@@ -15,7 +15,7 @@ import * as Option from 'effect/Option';
 import * as Record from 'effect/Record';
 import * as Schedule from 'effect/Schedule';
 
-import { DXN, Filter, Obj, Query } from '@dxos/echo';
+import { DXN, Entity, Filter, Obj, Query } from '@dxos/echo';
 import { Database } from '@dxos/echo';
 import { causeToError } from '@dxos/effect';
 import { FunctionInvocationService, QueueService, deserializeFunction } from '@dxos/functions';
@@ -319,7 +319,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
               // TODO(dmaretskyi): Include cursor & limit in the query.
               const objects = yield* Effect.promise(() => queue.queryObjects());
               for (const object of objects) {
-                const objectPos = Obj.getKeys(object, KEY_QUEUE_POSITION).at(0)?.id;
+                const objectPos = Entity.getKeys(object, KEY_QUEUE_POSITION).at(0)?.id;
                 // TODO(dmaretskyi): Extract methods for managing queue position.
                 if (!objectPos || (cursor && parseInt(cursor) >= parseInt(objectPos))) {
                   continue;

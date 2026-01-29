@@ -6,7 +6,7 @@ import '@dxos/lit-ui/dx-tag-picker.pcss';
 
 import React, { useCallback, useMemo } from 'react';
 
-import { type Database, type Entity, Filter, Obj, Ref, type Type } from '@dxos/echo';
+import { type Database, Entity, Filter, Obj, Ref, type Type } from '@dxos/echo';
 import { ReferenceAnnotationId, type ReferenceAnnotationValue } from '@dxos/echo/internal';
 import { useQuery, useSchema as useSchema$ } from '@dxos/echo-react';
 import { findAnnotation } from '@dxos/effect';
@@ -27,8 +27,8 @@ const isRefSnapshot = (val: any): val is { '/': string } => {
 
 const defaultGetOptions: NonNullable<RefFieldProps['getOptions']> = (results) =>
   results.map((result) => {
-    const id = Obj.getDXN(result).toString();
-    const label = Obj.getLabel(result);
+    const id = Entity.getDXN(result).toString();
+    const label = Entity.getLabel(result);
     return { id, label: label ?? id };
   });
 

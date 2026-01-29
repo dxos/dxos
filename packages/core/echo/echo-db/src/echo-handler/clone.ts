@@ -8,8 +8,8 @@ import { ObjectId } from '@dxos/keys';
 
 import { ObjectCore } from '../core-db';
 
-import { initEchoReactiveObjectRootProxy, isEchoObject } from './echo-handler';
-import { getObjectCore } from './echo-handler';
+import { initEchoReactiveObjectRootProxy, getObjectCore } from './echo-handler';
+import { isEchoObject } from './echo-object-utils';
 import { symbolInternals } from './echo-proxy-target';
 
 export type CloneOptions<T extends Obj.Unknown> = {

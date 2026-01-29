@@ -7,7 +7,7 @@ import { inspect } from 'node:util';
 import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { Obj, Query, Ref, Relation, Type } from '@dxos/echo';
+import { Entity, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
 import {
   ATTR_RELATION_SOURCE,
   ATTR_RELATION_TARGET,
@@ -30,8 +30,8 @@ import { Filter } from '../query';
 import { EchoTestBuilder, createTmpPath } from '../testing';
 
 import { createDocAccessor } from './doc-accessor';
-import { createObject, isEchoObject } from './echo-handler';
-import { getObjectCore } from './echo-handler';
+import { createObject, getObjectCore } from './echo-handler';
+import { isEchoObject } from './echo-object-utils';
 import { getDatabaseFromObject } from './util';
 
 const TEST_OBJECT: TestSchema.ExampleSchema = {
@@ -390,7 +390,7 @@ describe('Reactive Object with ECHO database', () => {
         [Relation.Source]: alice,
       }),
     );
-    const objData = Obj.toJSON(manager);
+    const objData = Relation.toJSON(manager);
     expect(objData).to.deep.contain({
       id: manager.id,
       [ATTR_RELATION_SOURCE]: DXN.fromLocalObjectId(alice.id).toString(),

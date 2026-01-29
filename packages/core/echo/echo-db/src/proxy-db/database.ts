@@ -119,7 +119,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
    * Mapping `object core` -> `root proxy` (User facing proxies).
    * @internal
    */
-  readonly _rootProxies = new Map<ObjectCore, Obj.Unknown>();
+  readonly _rootProxies = new Map<ObjectCore, Entity.Unknown>();
 
   readonly saveStateChanged: ReadOnlyEvent<SaveStateChangedEvent>;
 

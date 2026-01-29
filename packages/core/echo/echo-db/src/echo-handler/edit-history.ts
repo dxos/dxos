@@ -12,7 +12,8 @@ import { getDeep } from '@dxos/util';
 
 import { ObjectCore } from '../core-db';
 
-import { getObjectCore, isEchoObject } from './echo-handler';
+import { getObjectCore } from './echo-handler';
+import { isEchoObject } from './echo-object-utils';
 
 /**
  * Returns the edit history of an ECHO object.

@@ -10,8 +10,8 @@ export {
   EchoReactiveHandler,
   getObjectCore,
   initEchoReactiveObjectRootProxy,
-  isEchoObject,
 } from './echo-handler';
+export { isEchoObject } from './echo-object-utils';
 export * from './edit-history';
 export { type ProxyTarget } from './echo-proxy-target';
 export * from './errors';

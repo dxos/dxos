@@ -6,7 +6,7 @@ import { type Extension } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import { type Atom, type Registry } from '@effect-atom/atom-react';
 
-import { Filter, Obj, Query, Relation } from '@dxos/echo';
+import { Entity, Filter, Obj, Query, Relation } from '@dxos/echo';
 import { createDocAccessor, getTextInRange } from '@dxos/echo-db';
 import { type OperationInvoker } from '@dxos/operation';
 import { type Markdown } from '@dxos/plugin-markdown/types';
@@ -114,7 +114,7 @@ export const threads = (
       onDelete: ({ id }) => {
         const drafts = registry.get(stateAtom).drafts[objectId];
         if (drafts) {
-          const index = drafts.findIndex((thread) => Obj.getDXN(thread).toString() === id);
+          const index = drafts.findIndex((draft) => Relation.getDXN(draft).toString() === id);
           if (index !== -1) {
             const current = registry.get(stateAtom);
             registry.set(stateAtom, {
@@ -135,7 +135,7 @@ export const threads = (
         }
       },
       onUpdate: ({ id, cursor }) => {
-        const draft = registry.get(stateAtom).drafts[objectId]?.find((thread) => Obj.getDXN(thread).toString() === id);
+        const draft = registry.get(stateAtom).drafts[objectId]?.find((d) => Relation.getDXN(d).toString() === id);
         if (draft) {
           const thread = Relation.getSource(draft) as Thread.Thread;
           Obj.change(thread, (t) => {

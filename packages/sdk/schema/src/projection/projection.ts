@@ -110,7 +110,7 @@ export class ProjectionModel {
   private readonly _change: ProjectionChangeCallback;
 
   // Internal atoms.
-  private readonly _viewAtom: Atom.Atom<View.View>;
+  private readonly _viewAtom: Atom.Atom<Obj.Snapshot<View.View>>;
   private readonly _projectionAtom: Atom.Atom<View.Projection>;
   private readonly _fieldsAtom: Atom.Atom<readonly FieldType[]>;
   private readonly _hiddenFieldsAtom: Atom.Atom<readonly FieldType[]>;

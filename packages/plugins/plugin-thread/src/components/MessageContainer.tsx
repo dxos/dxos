@@ -6,7 +6,8 @@ import { EditorView } from '@codemirror/view';
 import React, { forwardRef, useCallback, useEffect, useRef, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/react';
-import { Obj, Ref } from '@dxos/echo';
+import { type Obj, Ref } from '@dxos/echo';
+import { useObject } from '@dxos/echo-react';
 import { PublicKey } from '@dxos/react-client';
 import { type SpaceMember } from '@dxos/react-client/echo';
 import { type Identity, useIdentity } from '@dxos/react-client/halo';
@@ -27,7 +28,7 @@ export const buttonGroupClassNames = 'flex flex-row items-center gap-0.5 pie-2';
 export const buttonClassNames = '!p-1 transition-opacity';
 
 export type MessageContainerProps = {
-  message: Obj.Obj<Message.Message>;
+  message: Obj.Obj<Message.Message> | Ref.Ref<Obj.Obj<Message.Message>>;
   members: SpaceMember[];
   editable?: boolean;
   onDelete?: (id: string) => void;
@@ -35,42 +36,54 @@ export type MessageContainerProps = {
 };
 
 export const MessageContainer = ({
-  message,
+  message: messageOrRef,
   members,
   editable = false,
   onDelete,
   onAcceptProposal,
 }: MessageContainerProps) => {
   const { t } = useTranslation(meta.id);
-  const senderIdentity = members.find(
-    (member) =>
-      (message.sender.identityDid && member.identity.did === message.sender.identityDid) ||
-      (message.sender.identityKey && PublicKey.equals(member.identity.identityKey, message.sender.identityKey)),
-  )?.identity;
-  const messageMetadata = getMessageMetadata(message.id, senderIdentity);
-  const userIsAuthor = useIdentity()?.did === messageMetadata.authorId;
+  const [message, updateMessage] = useObject(messageOrRef);
+  const identity = useIdentity();
   const [editing, setEditing] = useState(false);
-  const handleEdit = useCallback(() => setEditing((editing) => !editing), []);
-  const handleDelete = useCallback(() => onDelete?.(message.id), [message, onDelete]);
-  const handleAcceptProposal = useCallback(() => onAcceptProposal?.(message.id), [message, onAcceptProposal]);
-  const textBlockIndex = message.blocks.findIndex((block) => block._tag === 'text');
-  const textBlock = textBlockIndex !== -1 ? (message.blocks[textBlockIndex] as ContentBlock.Text) : undefined;
-  const proposalBlock = message.blocks.find((block) => block._tag === 'proposal');
-  const references = message.blocks.filter((block) => block._tag === 'reference').map((block) => block.reference);
 
+  const textBlockIndex = message?.blocks.findIndex((block) => block._tag === 'text') ?? -1;
+
+  const handleEdit = useCallback(() => setEditing((editing) => !editing), []);
+  const handleDelete = useCallback(() => message && onDelete?.(message.id), [message, onDelete]);
+  const handleAcceptProposal = useCallback(
+    () => message && onAcceptProposal?.(message.id),
+    [message, onAcceptProposal],
+  );
   const handleTextBlockChange = useCallback(
     (newText: string) => {
-      Obj.change(message, (m) => {
+      updateMessage((m) => {
         const targetBlock = m.blocks[textBlockIndex];
         if (targetBlock && targetBlock._tag === 'text') {
           targetBlock.text = newText;
         }
       });
     },
-    [message, textBlockIndex],
+    [updateMessage, textBlockIndex],
   );
 
+  const textBlock =
+    message && textBlockIndex !== -1 ? (message.blocks[textBlockIndex] as ContentBlock.Text) : undefined;
   useOnEditAnalytics(message, textBlock, !!editing);
+
+  if (!message) {
+    return null;
+  }
+
+  const senderIdentity = members.find(
+    (member) =>
+      (message.sender.identityDid && member.identity.did === message.sender.identityDid) ||
+      (message.sender.identityKey && PublicKey.equals(member.identity.identityKey, message.sender.identityKey)),
+  )?.identity;
+  const messageMetadata = getMessageMetadata(message.id, senderIdentity);
+  const userIsAuthor = identity?.did === messageMetadata.authorId;
+  const proposalBlock = message.blocks.find((block) => block._tag === 'proposal');
+  const references = message.blocks.filter((block) => block._tag === 'reference').map((block) => block.reference);
 
   return (
     <MessageRoot {...messageMetadata} classNames={[hoverableControls, hoverableFocusedWithinControls]}>

@@ -96,7 +96,7 @@ const useRelatedObjects = (
         }
       };
 
-      const relations = objects.filter((obj) => Relation.isRelation(obj)).filter((obj) => isValidRelation(obj));
+      const relations = objects.filter(Relation.isRelation).filter((obj) => isValidRelation(obj));
       const targetObjects = relations
         .filter((relation) => Relation.getTarget(relation) === record)
         .map((relation) => Relation.getSource(relation));

@@ -25,6 +25,14 @@ export const SchemaKindId = '~@dxos/echo/SchemaKind' as const;
 export type SchemaKindId = typeof SchemaKindId;
 
 /**
+ * String key used to brand snapshot types.
+ * Snapshots have SnapshotKindId instead of KindId, making them
+ * distinguishable from reactive objects at the type level.
+ */
+export const SnapshotKindId = '~@dxos/echo/SnapshotKind' as const;
+export type SnapshotKindId = typeof SnapshotKindId;
+
+/**
  * Kinds of entities stored in ECHO: objects and relations.
  */
 export enum EntityKind {

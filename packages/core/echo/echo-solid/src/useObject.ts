@@ -213,12 +213,12 @@ function useObjectValue<T extends Obj.Unknown>(
 
     const atom = AtomObj.make(input);
     const currentValue = registry.get(atom);
-    setValue(() => currentValue as T);
+    setValue(() => currentValue as unknown as T);
 
     const unsubscribe = registry.subscribe(
       atom,
       () => {
-        setValue(() => registry.get(atom) as T);
+        setValue(() => registry.get(atom) as unknown as T);
       },
       { immediate: true },
     );

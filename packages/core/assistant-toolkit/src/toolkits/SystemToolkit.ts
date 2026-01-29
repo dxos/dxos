@@ -10,7 +10,7 @@ import * as Record from 'effect/Record';
 import * as Schema from 'effect/Schema';
 
 import { ArtifactId } from '@dxos/assistant';
-import { DXN, Database, Filter, Obj, Relation, Tag, Type } from '@dxos/echo';
+import { DXN, Database, Entity, Filter, Obj, Relation, Tag, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { trim } from '@dxos/util';
 
@@ -285,13 +285,13 @@ export const layer = (): Layer.Layer<Tool.Handler<any>, never, never> =>
 
     ['tag-add' as const]: Effect.fnUntraced(function* ({ tagId, objectId }) {
       const object = yield* Database.Service.resolve(DXN.parse(objectId));
-      Obj.addTag(object, DXN.parse(tagId).toString());
+      Entity.addTag(object, DXN.parse(tagId).toString());
       return object;
     }),
 
     ['tag-remove' as const]: Effect.fnUntraced(function* ({ tagId, objectId }) {
       const object = yield* Database.Service.resolve(DXN.parse(objectId));
-      Obj.removeTag(object, DXN.parse(tagId).toString());
+      Entity.removeTag(object, DXN.parse(tagId).toString());
       return object;
     }),
   });

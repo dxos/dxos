@@ -7,7 +7,8 @@ import { describe, test } from 'vitest';
 
 import { Obj, Type } from '@dxos/echo';
 
-import { createObject, isEchoObject } from './echo-handler';
+import { createObject } from './echo-handler';
+import { isEchoObject } from './echo-object-utils';
 
 const Person = Schema.Struct({
   name: Schema.String,

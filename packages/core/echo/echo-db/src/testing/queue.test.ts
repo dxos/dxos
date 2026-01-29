@@ -8,7 +8,7 @@ import * as ManagedRuntime from 'effect/ManagedRuntime';
 import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
 import { Event } from '@dxos/async';
-import { Filter, Obj, Query, type Ref, Relation, Type } from '@dxos/echo';
+import { Entity, Filter, Obj, Query, type Ref, Relation, Type } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { DXN, SpaceId } from '@dxos/keys';
 import { KEY_QUEUE_POSITION } from '@dxos/protocols';
@@ -43,7 +43,7 @@ describe('queues', () => {
     expect(await obj.queue.load()).toBeDefined();
   });
 
-  test('Obj.getDXN on queue objects returns absolute dxn', async () => {
+  test('Entity.getDXN on queue objects returns absolute dxn', async () => {
     await using peer = await builder.createPeer({ types: [TestSchema.Person] });
     const db = await peer.createDatabase();
     const queues = peer.client.constructQueueFactory(db.spaceId);
@@ -51,7 +51,7 @@ describe('queues', () => {
 
     await queue.append([Obj.make(TestSchema.Person, { name: 'john' })]);
     const obj = queue.objects[0];
-    expect(Obj.getDXN(obj)?.toString()).toEqual(queue.dxn.extend([obj.id]).toString());
+    expect(Entity.getDXN(obj)?.toString()).toEqual(queue.dxn.extend([obj.id]).toString());
   });
 
   test('create and resolve an object from a queue', async () => {
@@ -97,16 +97,16 @@ describe('queues', () => {
     {
       const objects = await queue.query(Filter.everything()).run();
       expect(objects).toHaveLength(2);
-      expect(Obj.getKeys(objects[0], KEY_QUEUE_POSITION).at(0)?.id).toEqual('0');
-      expect(Obj.getKeys(objects[1], KEY_QUEUE_POSITION).at(0)?.id).toEqual('1');
+      expect(Entity.getKeys(objects[0], KEY_QUEUE_POSITION).at(0)?.id).toEqual('0');
+      expect(Entity.getKeys(objects[1], KEY_QUEUE_POSITION).at(0)?.id).toEqual('1');
     }
 
     {
       await queue.refresh();
       const objects = queue.objects;
       expect(objects).toHaveLength(2);
-      expect(Obj.getKeys(objects[0], KEY_QUEUE_POSITION).at(0)?.id).toEqual('0');
-      expect(Obj.getKeys(objects[1], KEY_QUEUE_POSITION).at(0)?.id).toEqual('1');
+      expect(Entity.getKeys(objects[0], KEY_QUEUE_POSITION).at(0)?.id).toEqual('0');
+      expect(Entity.getKeys(objects[1], KEY_QUEUE_POSITION).at(0)?.id).toEqual('1');
     }
   });
 

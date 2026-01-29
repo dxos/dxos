@@ -49,7 +49,8 @@
 - [x] Obj.AnyProps => Obj.Any
 - [x] Factor Expando out of @dxos/echo (moved to @dxos/schema)
 - [x] Obj.instanceOf works with Expando (tested in @dxos/schema)
-- [ ] Obj.Snapshot should be same shape as Obj.Obj but with a different brand
+- [x] Obj.Snapshot should be same shape as Obj.Obj but with a different brand
+- [ ] Mutators should only work on object after it is made mutable
 
 - [ ] Review usage of Obj.Any, see if it could be stricter
 - [ ] Type.Obj should validate using the echo object brand
