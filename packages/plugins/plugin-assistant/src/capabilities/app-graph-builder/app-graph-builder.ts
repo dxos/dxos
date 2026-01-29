@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability, Common } from '@dxos/app-framework';
-import { Prompt } from '@dxos/blueprints';
+import { Blueprint, Prompt } from '@dxos/blueprints';
 import { Sequence } from '@dxos/conductor';
 import { DXN, type Database, Obj } from '@dxos/echo';
 import { AtomObj } from '@dxos/echo-atom';
@@ -80,6 +80,22 @@ export default Capability.makeModule(
                   macos: 'shift+meta+k',
                   windows: 'shift+ctrl+k',
                 },
+              },
+            },
+            {
+              id: `${meta.id}/reset-blueprints`,
+              data: Effect.fnUntraced(function* () {
+                const capabilities = yield* Capability.Service;
+                const client = yield* Capability.get(ClientCapabilities.Client);
+                const space = getActiveSpace(capabilities) ?? client.spaces.default;
+                const blueprints = yield* Effect.tryPromise(() => space.db.query(Query.type(Blueprint.Blueprint)).run());
+                for (const blueprint of blueprints) {
+                  space.db.remove(blueprint);
+                }
+              }),
+              properties: {
+                label: ['reset blueprints label', { ns: meta.id }],
+                icon: 'ph--arrow-clockwise--regular',
               },
             },
           ]),

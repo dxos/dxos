@@ -83,6 +83,7 @@ export const translations = [
 
         'assistant dialog title': 'Assistant',
         'open assistant label': 'Open assistant',
+        'reset blueprints label': 'Reset blueprints',
 
         'no tools': 'No tools are configured',
         'no results': 'No results',
