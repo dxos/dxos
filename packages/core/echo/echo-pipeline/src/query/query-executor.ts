@@ -848,7 +848,7 @@ export class QueryExecutor extends Resource {
     return !!this._indexer2 && !!this._runtime;
   }
 
-  private async _runSql<T>(effect: Effect.Effect<T, unknown, SqlClient.SqlClient>): Promise<T> {
+  private async _runInRuntime<T>(effect: Effect.Effect<T, unknown, SqlClient.SqlClient>): Promise<T> {
     invariant(this._runtime, 'SQL runtime is required.');
     const runtime = await runAndForwardErrors(this._runtime);
     return await unwrapExit(await effect.pipe(Runtime.runPromiseExit(runtime)));
@@ -856,7 +856,9 @@ export class QueryExecutor extends Resource {
 
   private async _queryAllFromSqlIndex(spaceIds: readonly SpaceId[]): Promise<readonly ObjectMeta[]> {
     invariant(this._indexer2, 'SQL indexer is required.');
-    const metas = await Promise.all(spaceIds.map((spaceId) => this._runSql(this._indexer2.queryAll({ spaceId }))));
+    const metas = await Promise.all(
+      spaceIds.map((spaceId) => this._runInRuntime(this._indexer2.queryAll({ spaceId }))),
+    );
     return metas.flat();
   }
 
@@ -867,7 +869,7 @@ export class QueryExecutor extends Resource {
   ): Promise<readonly ObjectMeta[]> {
     invariant(this._indexer2, 'SQL indexer is required.');
     const metas = await Promise.all(
-      spaceIds.map((spaceId) => this._runSql(this._indexer2.queryTypes({ spaceId, typeDxns, inverted }))),
+      spaceIds.map((spaceId) => this._runInRuntime(this._indexer2.queryTypes({ spaceId, typeDxns, inverted }))),
     );
     return metas.flat();
   }
@@ -881,7 +883,9 @@ export class QueryExecutor extends Resource {
     const anchorDxns = workingSet.map((item) => DXN.fromLocalObjectId(item.objectId).toString());
 
     const rows: readonly ReverseRef[] = (
-      await Promise.all(anchorDxns.map((targetDxn) => this._runSql(this._indexer2.queryReverseRef({ targetDxn }))))
+      await Promise.all(
+        anchorDxns.map((targetDxn) => this._runInRuntime(this._indexer2.queryReverseRef({ targetDxn }))),
+      )
     ).flat();
 
     const recordIds = rows
@@ -894,7 +898,7 @@ export class QueryExecutor extends Resource {
       .map((row) => row.recordId);
 
     const uniqueRecordIds = Array.from(new Set<number>(recordIds));
-    return await this._runSql(this._indexer2.lookupByRecordIds(uniqueRecordIds));
+    return await this._runInRuntime(this._indexer2.lookupByRecordIds(uniqueRecordIds));
   }
 
   private async _queryRelationsFromSqlIndex(
@@ -903,7 +907,7 @@ export class QueryExecutor extends Resource {
   ): Promise<readonly ObjectMeta[]> {
     invariant(this._indexer2, 'SQL indexer is required.');
     const anchorDxns = workingSet.map((item) => DXN.fromLocalObjectId(item.objectId).toString());
-    return await this._runSql(this._indexer2.queryRelations({ endpoint, anchorDxns }));
+    return await this._runInRuntime(this._indexer2.queryRelations({ endpoint, anchorDxns }));
   }
 
   private async _loadDocumentsAfterSqlQuery(metas: readonly ObjectMeta[]): Promise<(QueryItem | null)[]> {
@@ -914,9 +918,13 @@ export class QueryExecutor extends Resource {
     if (!meta.documentId) {
       return null;
     }
-    const handle = await this._automergeHost.loadDoc<DatabaseDirectory>(Context.default(), meta.documentId as DocumentId, {
-      fetchFromNetwork: true,
-    });
+    const handle = await this._automergeHost.loadDoc<DatabaseDirectory>(
+      Context.default(),
+      meta.documentId as DocumentId,
+      {
+        fetchFromNetwork: true,
+      },
+    );
     const doc = handle.doc();
     if (!doc) {
       return null;
