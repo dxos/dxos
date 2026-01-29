@@ -265,9 +265,9 @@ export class QueryExecutor extends Resource {
     return this._trace;
   }
 
-  protected override async _open(ctx: Context): Promise<void> {}
+  protected override async _open(_ctx: Context): Promise<void> {}
 
-  protected override async _close(ctx: Context): Promise<void> {}
+  protected override async _close(_ctx: Context): Promise<void> {}
 
   getResults(): QueryResult[] {
     return this._lastResultSet.map(
@@ -319,7 +319,6 @@ export class QueryExecutor extends Resource {
 
   private async _execPlan(plan: QueryPlan.Plan, workingSet: QueryItem[]): Promise<StepExecutionResult> {
     const trace = ExecutionTrace.makeEmpty();
-    const begin = performance.now();
     for (const step of plan.steps) {
       if (this._ctx.disposed) {
         throw new ContextDisposedError();
@@ -491,10 +490,13 @@ export class QueryExecutor extends Resource {
       case 'TextSelector': {
         // TODO(dmaretskyi): type + FTS queries would be very common so we should support those, maybe chunk the fts index.
         // TODO(dmaretskyi): nice to have matched text snippets/highlighting.
-        if (step.selector.searchKind === 'full-text' && this._indexer2 && this._runtime) {
+        if (step.selector.searchKind === 'full-text' && this._supportsSqlIndexing()) {
           // Use indexer2 for full-text search.
           const beginIndexQuery = performance.now();
-          const runtime = await runAndForwardErrors(this._runtime);
+          const indexer2 = this._indexer2;
+          const runtimeProvider = this._runtime;
+          invariant(indexer2 && runtimeProvider, 'SQL indexer/runtime is required for full-text search.');
+          const runtime = await runAndForwardErrors(runtimeProvider);
           invariant(step.spaces.length <= 1, 'Multiple spaces are not supported for full-text search');
           // Extract queue IDs from DXN strings.
           const queueIds =
@@ -502,7 +504,7 @@ export class QueryExecutor extends Resource {
               ? (step.queues.map((dxnStr) => DXN.parse(dxnStr).asQueueDXN()?.queueId).filter(Boolean) as ObjectId[])
               : null;
           const textResults = await unwrapExit(
-            await this._indexer2
+            await indexer2
               .queryText({
                 query: step.selector.text,
                 spaceId: step.spaces,
@@ -532,7 +534,7 @@ export class QueryExecutor extends Resource {
           let queueItems: QueryItem[] = [];
           if (queueResults.length > 0) {
             const snapshots = await unwrapExit(
-              await this._indexer2
+              await indexer2
                 .querySnapshotsJSON(queueResults.map((r) => r.recordId))
                 .pipe(Runtime.runPromiseExit(runtime)),
             );
@@ -633,6 +635,7 @@ export class QueryExecutor extends Resource {
       } else if (item.data) {
         return filterMatchObjectJSON(step.filter, item.data);
       } else {
+        return false;
       }
     });
 
@@ -665,7 +668,6 @@ export class QueryExecutor extends Resource {
     };
   }
 
-  // TODO(dmaretskyi): This needs to be completed.
   private async _execTraverseStep(step: QueryPlan.TraverseStep, workingSet: QueryItem[]): Promise<StepExecutionResult> {
     const trace: ExecutionTrace = {
       ...ExecutionTrace.makeEmpty(),
@@ -1001,25 +1003,21 @@ export class QueryExecutor extends Resource {
     );
   }
 
-  private _supportsSqlIndexing(): this is this & {
-    _indexer2: IndexEngine;
-    _runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
-  } {
+  private _supportsSqlIndexing(): boolean {
     return !!this._indexer2 && !!this._runtime;
   }
 
   private async _runInRuntime<T>(effect: Effect.Effect<T, unknown, SqlClient.SqlClient>): Promise<T> {
-    invariant(this._runtime, 'SQL runtime is required.');
-    const runtime = await runAndForwardErrors(this._runtime);
+    const runtimeProvider = this._runtime;
+    invariant(runtimeProvider, 'SQL runtime is required.');
+    const runtime = await runAndForwardErrors(runtimeProvider);
     return await unwrapExit(await effect.pipe(Runtime.runPromiseExit(runtime)));
   }
 
   private async _queryAllFromSqlIndex(spaceIds: readonly SpaceId[]): Promise<readonly ObjectMeta[]> {
-    invariant(this._indexer2, 'SQL indexer is required.');
-    const metas = await Promise.all(
-      spaceIds.map((spaceId) => this._runInRuntime(this._indexer2.queryAll({ spaceId }))),
-    );
-    return metas.flat();
+    const indexer2 = this._indexer2;
+    invariant(indexer2, 'SQL indexer is required.');
+    return await this._runInRuntime(indexer2.queryAll({ spaceIds }));
   }
 
   private async _queryTypesFromSqlIndex(
@@ -1027,47 +1025,46 @@ export class QueryExecutor extends Resource {
     typeDxns: readonly string[],
     inverted: boolean,
   ): Promise<readonly ObjectMeta[]> {
-    invariant(this._indexer2, 'SQL indexer is required.');
-    const metas = await Promise.all(
-      spaceIds.map((spaceId) => this._runInRuntime(this._indexer2.queryTypes({ spaceId, typeDxns, inverted }))),
-    );
-    return metas.flat();
+    const indexer2 = this._indexer2;
+    invariant(indexer2, 'SQL indexer is required.');
+    return await this._runInRuntime(indexer2.queryTypes({ spaceIds, typeDxns, inverted }));
   }
 
   private async _queryIncomingReferencesFromSqlIndex(
     workingSet: QueryItem[],
-    property: EscapedPropPath,
+    property: EscapedPropPath | null,
   ): Promise<readonly ObjectMeta[]> {
-    invariant(this._indexer2, 'SQL indexer is required.');
-    const firstSegment = EscapedPropPath.unescape(property)[0];
+    const indexer2 = this._indexer2;
+    invariant(indexer2, 'SQL indexer is required.');
     const anchorDxns = workingSet.map((item) => DXN.fromLocalObjectId(item.objectId).toString());
 
     const rows: readonly ReverseRef[] = (
       await Promise.all(
-        anchorDxns.map((targetDxn) => this._runInRuntime(this._indexer2.queryReverseRef({ targetDxn }))),
+        anchorDxns.map((targetDxn) => this._runInRuntime(indexer2.queryReverseRef({ targetDxn }))),
       )
     ).flat();
 
     const recordIds = rows
       .filter((row) => {
         const path = EscapedPropPath.unescape(row.propPath);
-        const firstSegmentMatches = path[0] === firstSegment;
+        const firstSegmentMatches = property === null ? true : path[0] === EscapedPropPath.unescape(property)[0];
         const secondSegmentIsNumeric = path.length === 2 && !isNaN(Number(path[1]));
         return firstSegmentMatches && (path.length === 1 || secondSegmentIsNumeric);
       })
       .map((row) => row.recordId);
 
     const uniqueRecordIds = Array.from(new Set<number>(recordIds));
-    return await this._runInRuntime(this._indexer2.lookupByRecordIds(uniqueRecordIds));
+    return await this._runInRuntime(indexer2.lookupByRecordIds(uniqueRecordIds));
   }
 
   private async _queryRelationsFromSqlIndex(
     workingSet: QueryItem[],
     endpoint: 'source' | 'target',
   ): Promise<readonly ObjectMeta[]> {
-    invariant(this._indexer2, 'SQL indexer is required.');
+    const indexer2 = this._indexer2;
+    invariant(indexer2, 'SQL indexer is required.');
     const anchorDxns = workingSet.map((item) => DXN.fromLocalObjectId(item.objectId).toString());
-    return await this._runInRuntime(this._indexer2.queryRelations({ endpoint, anchorDxns }));
+    return await this._runInRuntime(indexer2.queryRelations({ endpoint, anchorDxns }));
   }
 
   private async _loadDocumentsAfterSqlQuery(metas: readonly ObjectMeta[]): Promise<(QueryItem | null)[]> {
@@ -1097,7 +1094,11 @@ export class QueryExecutor extends Resource {
       objectId: meta.objectId,
       documentId: meta.documentId as DocumentId,
       spaceId: meta.spaceId as SpaceId,
+      queueId: null,
+      queueNamespace: null,
       doc: object,
+      data: null,
+      rank: 1,
     };
   }
 

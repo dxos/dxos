@@ -91,9 +91,9 @@ export class IndexEngine {
     return this.#reverseRefIndex.query(query);
   }
 
-  queryAll(
-    query: Pick<ObjectMeta, 'spaceId'>,
-  ): Effect.Effect<readonly ObjectMeta[], SqlError.SqlError, SqlClient.SqlClient> {
+  queryAll(query: {
+    spaceIds: readonly SpaceId[];
+  }): Effect.Effect<readonly ObjectMeta[], SqlError.SqlError, SqlClient.SqlClient> {
     return this.#objectMetaIndex.queryAll(query);
   }
 
@@ -111,15 +111,18 @@ export class IndexEngine {
     return this.#objectMetaIndex.query(query);
   }
 
-  queryTypes(
-    query: Pick<ObjectMeta, 'spaceId'> & { typeDxns: readonly ObjectMeta['typeDxn'][]; inverted?: boolean },
-  ): Effect.Effect<readonly ObjectMeta[], SqlError.SqlError, SqlClient.SqlClient> {
+  queryTypes(query: {
+    spaceIds: readonly SpaceId[];
+    typeDxns: readonly ObjectMeta['typeDxn'][];
+    inverted?: boolean;
+  }): Effect.Effect<readonly ObjectMeta[], SqlError.SqlError, SqlClient.SqlClient> {
     return this.#objectMetaIndex.queryTypes(query);
   }
 
-  queryRelations(
-    query: { endpoint: 'source' | 'target'; anchorDxns: readonly string[] },
-  ): Effect.Effect<readonly ObjectMeta[], SqlError.SqlError, SqlClient.SqlClient> {
+  queryRelations(query: {
+    endpoint: 'source' | 'target';
+    anchorDxns: readonly string[];
+  }): Effect.Effect<readonly ObjectMeta[], SqlError.SqlError, SqlClient.SqlClient> {
     return this.#objectMetaIndex.queryRelations(query);
   }
 
