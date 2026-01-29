@@ -15,6 +15,7 @@ import type { IndexerObject } from './interface';
 import { ObjectMetaIndex } from './object-meta-index';
 
 const TYPE_PERSON = DXN.parse('dxn:type:example.com/type/Person:0.1.0').toString();
+const TYPE_PERSON_VERSIONLESS = DXN.parse('dxn:type:example.com/type/Person').toString();
 const TYPE_RELATION = DXN.parse('dxn:type:example.com/type/Relation:0.1.0').toString();
 const TYPE_RELATION_UPDATED = DXN.parse('dxn:type:example.com/type/RelationUpdated:0.1.0').toString();
 
@@ -26,6 +27,39 @@ const TestLayer = Layer.merge(
 );
 
 describe('ObjectMetaIndex', () => {
+  it.effect('should match versioned types when queried by versionless type', () =>
+    Effect.gen(function* () {
+      const index = new ObjectMetaIndex();
+      yield* index.migrate();
+
+      const spaceId = SpaceId.random();
+      const objectId = ObjectId.random();
+
+      const item: IndexerObject = {
+        spaceId,
+        queueId: ObjectId.random(),
+        documentId: null,
+        recordId: null,
+        data: {
+          id: objectId,
+          [ATTR_TYPE]: TYPE_PERSON,
+          [ATTR_DELETED]: false,
+        },
+      };
+
+      yield* index.update([item]);
+
+      const results = yield* index.query({ spaceId, typeDxn: TYPE_PERSON_VERSIONLESS });
+      expect(results.map((_) => _.objectId)).toEqual([objectId]);
+
+      const otherTypeResults = yield* index.query({
+        spaceId,
+        typeDxn: DXN.parse('dxn:type:example.com/type/Other').toString(),
+      });
+      expect(otherTypeResults).toEqual([]);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
   it.effect('should store and update object metadata', () =>
     Effect.gen(function* () {
       const index = new ObjectMetaIndex();

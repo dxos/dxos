@@ -8,6 +8,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { ATTR_DELETED, ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET, ATTR_TYPE } from '@dxos/echo/internal';
+import { DXN } from '@dxos/keys';
 
 import type { IndexerObject } from './interface';
 import type { Index } from './interface';
@@ -57,9 +58,15 @@ export class ObjectMetaIndex implements Index {
     ): Effect.Effect<readonly ObjectMeta[], SqlError.SqlError, SqlClient.SqlClient> =>
       Effect.gen(function* () {
         const sql = yield* SqlClient.SqlClient;
+        const parsedType = DXN.tryParse(query.typeDxn)?.asTypeDXN();
+
         // SQLite stores booleans as integers, so we need to specify the raw row type.
         const rows =
-          yield* sql<ObjectMeta>`SELECT * FROM objectMeta WHERE spaceId = ${query.spaceId} AND typeDxn = ${query.typeDxn}`;
+          parsedType && parsedType.version === undefined
+            ? yield* sql<ObjectMeta>`SELECT * FROM objectMeta WHERE spaceId = ${query.spaceId} AND (typeDxn = ${
+                query.typeDxn
+              } OR typeDxn LIKE ${`${query.typeDxn}:%`})`
+            : yield* sql<ObjectMeta>`SELECT * FROM objectMeta WHERE spaceId = ${query.spaceId} AND typeDxn = ${query.typeDxn}`;
         return rows.map((row) => ({
           ...row,
           deleted: !!row.deleted,
@@ -68,7 +75,9 @@ export class ObjectMetaIndex implements Index {
   );
 
   queryAll = Effect.fn('ObjectMetaIndex.queryAll')(
-    (query: Pick<ObjectMeta, 'spaceId'>): Effect.Effect<readonly ObjectMeta[], SqlError.SqlError, SqlClient.SqlClient> =>
+    (
+      query: Pick<ObjectMeta, 'spaceId'>,
+    ): Effect.Effect<readonly ObjectMeta[], SqlError.SqlError, SqlClient.SqlClient> =>
       Effect.gen(function* () {
         const sql = yield* SqlClient.SqlClient;
         const rows = yield* sql<ObjectMeta>`SELECT * FROM objectMeta WHERE spaceId = ${query.spaceId}`;
