@@ -6,7 +6,7 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "imports": {
     "#node-datachannel": {
@@ -26,6 +26,15 @@
       "node": "./dist/lib/node-esm/transport/tcp/index.mjs",
       "import": "./dist/lib/browser/transport/tcp/index.mjs",
       "require": "./dist/lib/node-esm/transport/tcp/index.mjs"
+    },
+    "#tcp-transport-impl": {
+      "source": {
+        "browser": "./src/transport/tcp/tcp-transport.browser.ts",
+        "default": "./src/transport/tcp/tcp-transport.ts"
+      },
+      "types": "./dist/types/src/transport/tcp/tcp-transport.d.ts",
+      "browser": "./dist/lib/browser/transport/tcp/tcp-transport.browser.mjs",
+      "default": "./dist/lib/node-esm/transport/tcp/tcp-transport.mjs"
     }
   },
   "exports": {
@@ -47,9 +56,6 @@
       "browser": "./dist/lib/browser/transport/tcp/index.mjs",
       "node": "./dist/lib/node-esm/transport/tcp/index.mjs"
     }
-  },
-  "browser": {
-    "./src/transport/tcp/tcp-transport.ts": "./src/transport/tcp/tcp-transport.browser.ts"
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {

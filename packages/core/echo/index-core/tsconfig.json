@@ -5,5 +5,36 @@
     "src",
     "src/**/*.json"
   ],
-  "references": []
+  "references": [
+    {
+      "path": "../../../common/async"
+    },
+    {
+      "path": "../../../common/context"
+    },
+    {
+      "path": "../../../common/debug"
+    },
+    {
+      "path": "../../../common/effect"
+    },
+    {
+      "path": "../../../common/invariant"
+    },
+    {
+      "path": "../../../common/keys"
+    },
+    {
+      "path": "../../../common/log"
+    },
+    {
+      "path": "../../../common/sql-sqlite"
+    },
+    {
+      "path": "../echo"
+    },
+    {
+      "path": "../echo-protocol"
+    }
+  ]
 }

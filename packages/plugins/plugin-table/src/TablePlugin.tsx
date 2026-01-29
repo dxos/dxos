@@ -6,11 +6,13 @@ import * as Effect from 'effect/Effect';
 
 import { Capability, Common, Plugin } from '@dxos/app-framework';
 import { Type } from '@dxos/echo';
+import { Operation } from '@dxos/operation';
 import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
 import { type CreateObject } from '@dxos/plugin-space/types';
 import { translations as formTranslations } from '@dxos/react-ui-form';
 import { translations as tableTranslations } from '@dxos/react-ui-table';
 import { Table } from '@dxos/react-ui-table/types';
+import { View } from '@dxos/schema';
 
 import { BlueprintDefinition, OperationResolver, ReactSurface } from './capabilities';
 import { meta } from './meta';
@@ -27,7 +29,11 @@ export const TablePlugin = Plugin.define(meta).pipe(
         iconHue: 'green',
         comments: 'unanchored',
         inputSchema: CreateTableSchema,
-        createObject: ((props) => Effect.sync(() => Table.make(props))) satisfies CreateObject,
+        createObject: ((props, { db }) =>
+          Effect.promise(async () => {
+            const { view, jsonSchema } = await View.makeFromDatabase({ db, typename: props.typename });
+            return Table.make({ name: props.name, view, jsonSchema });
+          })) satisfies CreateObject,
       },
     },
   }),
@@ -35,23 +41,21 @@ export const TablePlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
     id: 'on-space-created',
     activatesOn: SpaceEvents.SpaceCreated,
-    activate: (context) =>
+    activate: () =>
       Effect.succeed(
-        Capability.contributes(SpaceCapabilities.OnCreateSpace, (params) => {
-          const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
-          return invoke(TableOperation.OnCreateSpace, params);
-        }),
+        Capability.contributes(SpaceCapabilities.OnCreateSpace, (params) =>
+          Operation.invoke(TableOperation.OnCreateSpace, params),
+        ),
       ),
   }),
   Plugin.addModule({
     id: 'on-schema-added',
     activatesOn: SpaceEvents.SchemaAdded,
-    activate: (context) =>
+    activate: () =>
       Effect.succeed(
-        Capability.contributes(SpaceCapabilities.OnSchemaAdded, ({ db, schema, show }) => {
-          const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
-          return invoke(TableOperation.OnSchemaAdded, { db, schema, show });
-        }),
+        Capability.contributes(SpaceCapabilities.OnSchemaAdded, ({ db, schema, show }) =>
+          Operation.invoke(TableOperation.OnSchemaAdded, { db, schema, show }),
+        ),
       ),
   }),
   Common.Plugin.addSurfaceModule({ activate: ReactSurface }),

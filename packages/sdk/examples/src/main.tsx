@@ -7,11 +7,11 @@ import '@dxos-theme';
 import React, { useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { registerSignalsRuntime } from '@dxos/echo-signals';
+import { type Type } from '@dxos/echo';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { faker } from '@dxos/random';
 import { Client, ClientProvider } from '@dxos/react-client';
-import { type Space, type TypedObject } from '@dxos/react-client/echo';
+import { type Space } from '@dxos/react-client/echo';
 import { ConnectionState } from '@dxos/react-client/mesh';
 import { TestBuilder, performInvitation } from '@dxos/react-client/testing';
 import { Icon, Input, Status, ThemeProvider, Tooltip } from '@dxos/react-ui';
@@ -27,13 +27,12 @@ const testBuilder = new TestBuilder();
 
 type PeersInSpaceProps = {
   count?: number;
-  types?: TypedObject<any>[];
+  types?: Type.Obj.Any[];
   onCreateSpace?: (props: { space: Space }) => MaybePromise<void>;
 };
 
 const setupPeersInSpace = async (options: PeersInSpaceProps = {}) => {
   const { count = 1, types, onCreateSpace } = options;
-  registerSignalsRuntime();
   const clients = [...Array(count)].map(
     (_) => new Client({ services: testBuilder.createLocalClientServices(), types }),
   );

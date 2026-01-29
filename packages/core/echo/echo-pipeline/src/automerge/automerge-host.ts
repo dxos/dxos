@@ -360,7 +360,7 @@ export class AutomergeHost extends Resource {
   /**
    * Create new persisted document.
    */
-  createDoc<T>(initialValue?: T | Doc<T> | Uint8Array, opts?: CreateDocOptions): DocHandle<T> {
+  async createDoc<T>(initialValue?: T | Doc<T> | Uint8Array, opts?: CreateDocOptions): Promise<DocHandle<T>> {
     invariant(this.isOpen, 'AutomergeHost is not open');
     if (opts?.preserveHistory) {
       if (initialValue instanceof Uint8Array) {
@@ -384,10 +384,10 @@ export class AutomergeHost extends Resource {
       if (opts?.documentId) {
         throw new Error('Cannot prefil document id when not importing an existing doc');
       }
-      const handle = this._repo.create(initialValue);
+      const handle = await this._repo.create2<T>(initialValue);
       this._createdDocuments.add(handle.documentId);
       this._sharePolicyChangedTask!.schedule();
-      return handle as DocHandle<T>;
+      return handle;
     }
   }
 

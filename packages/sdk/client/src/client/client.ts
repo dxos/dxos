@@ -64,6 +64,9 @@ export type ClientOptions = {
   shell?: string;
   /** Create client worker. */
   createWorker?: () => SharedWorker;
+
+  /** When running in the host mode, a factory to create the worker for OPFS sqlite database. */
+  createOpfsWorker?: () => Worker;
 };
 
 /**
@@ -361,7 +364,11 @@ export class Client {
     this._ctx = new Context();
     this._config = this._options.config ?? new Config();
     // NOTE: Must currently match the host.
-    this._services = await (this._options.services ?? createClientServices(this._config, this._options.createWorker));
+    this._services = await (this._options.services ??
+      createClientServices(this._config, {
+        createWorker: this._options.createWorker,
+        createOpfsWorker: this._options.createOpfsWorker,
+      }));
     this._iframeManager = this._options.shell
       ? new IFrameManager({ source: new URL(this._options.shell, window.location.origin) })
       : undefined;
@@ -410,10 +417,17 @@ export class Client {
     await this._services.open();
 
     const edgeUrl = this._config!.get('runtime.services.edge.url');
-    if (edgeUrl) {
+    const useLocalFirstQueues = this._config!.get('runtime.client.enableLocalQueues');
+    if (useLocalFirstQueues) {
+      log.verbose('running with local-first queues');
+      invariant(this._services.services.QueueService, 'QueueService not available.');
+      this._queuesService = this._services.services.QueueService;
+    } else if (edgeUrl) {
+      log.verbose('running with edge queues');
       this._edgeClient = new EdgeHttpClient(edgeUrl);
       this._queuesService = new QueueServiceImpl(this._edgeClient);
     } else {
+      log.verbose('running with mock queues');
       this._queuesService = new MockQueueService();
     }
 

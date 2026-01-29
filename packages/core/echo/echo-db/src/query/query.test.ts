@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import * as A from '@automerge/automerge';
 import { type AutomergeUrl } from '@automerge/automerge-repo';
 import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
@@ -114,6 +115,32 @@ describe('Query', () => {
       const objects = await db.query(Query.select(Filter.everything()).orderBy(Order.property('label', 'desc'))).run();
       const sortedObjects = objects.sort((a, b) => b.label?.localeCompare(a.label));
       expect(objects.map((obj) => obj.label)).to.deep.equal(sortedObjects.map((obj) => obj.label));
+    });
+
+    test('limit results', async () => {
+      const objects = await db.query(Query.select(Filter.everything()).limit(5)).run();
+      expect(objects).to.have.length(5);
+    });
+
+    test('limit with ordering', async () => {
+      const allObjects = await db.query(Query.select(Filter.everything()).orderBy(Order.natural)).run();
+      const limitedObjects = await db.query(Query.select(Filter.everything()).orderBy(Order.natural).limit(3)).run();
+
+      expect(limitedObjects).to.have.length(3);
+      // Verify the results are ordered consistently.
+      const limitedIds = limitedObjects.map((obj) => obj.id);
+      const sortedLimitedIds = [...limitedIds].sort();
+      expect(limitedIds).to.deep.equal(sortedLimitedIds);
+      // Verify the limited results are a subset of all results.
+      const allIds = new Set(allObjects.map((obj) => obj.id));
+      for (const id of limitedIds) {
+        expect(allIds.has(id)).to.be.true;
+      }
+    });
+
+    test('limit larger than result set returns all results', async () => {
+      const objects = await db.query(Query.select(Filter.everything()).limit(100)).run();
+      expect(objects).to.have.length(10);
     });
 
     test('filter by type', async () => {
@@ -235,7 +262,7 @@ describe('Query', () => {
       await createObjects(peer, db, { count: 3 });
 
       expect((await db.query(Query.select(Filter.everything())).run()).length).to.eq(3);
-      root = db.coreDatabase._automergeDocLoader.getSpaceRootDocHandle().url;
+      root = db.coreDatabase._automergeDocLoader.getSpaceRootDocHandle().url!;
       await peer.close();
     }
 
@@ -268,7 +295,7 @@ describe('Query', () => {
         doc.links![obj1.id] = 'automerge:4hjTgo9zLNsfRTJiLcpPY8P4smy';
       });
       await db.flush();
-      root = rootDocHandle.url;
+      root = rootDocHandle.url!;
       expectedObjectId = obj2.id;
       await peer.close();
     }
@@ -299,24 +326,28 @@ describe('Query', () => {
 
       expect((await db.query(Query.select(Filter.everything())).run()).length).to.eq(2);
       const rootDocHandle = db.coreDatabase._automergeDocLoader.getSpaceRootDocHandle();
+      const obj1DocHandle = getObjectCore(obj1).docHandle!;
       const anotherDocHandle = getObjectCore(obj2).docHandle!;
+      // Wait for documents to be ready before accessing url and objects.
+      await Promise.all([rootDocHandle.whenReady(), obj1DocHandle.whenReady(), anotherDocHandle.whenReady()]);
       anotherDocHandle.change((doc: DatabaseDirectory) => {
-        doc.objects![obj1.id] = getObjectCore(obj1).docHandle!.doc()!.objects![obj1.id];
+        doc.objects![obj1.id] = obj1DocHandle.doc()!.objects![obj1.id];
       });
       rootDocHandle.change((doc: DatabaseDirectory) => {
-        doc.links![obj1.id] = anotherDocHandle.url;
+        doc.links![obj1.id] = new A.RawString(anotherDocHandle.url!);
       });
       await db.flush();
       await peer.host.queryService.reindex();
 
-      root = rootDocHandle.url;
-      assertion = { objectId: obj2.id, documentUrl: anotherDocHandle.url };
+      root = rootDocHandle.url!;
+      assertion = { objectId: obj2.id, documentUrl: anotherDocHandle.url! };
     }
 
     await peer.reload();
 
     {
       const db = await peer.openDatabase(spaceKey, root);
+      await db.coreDatabase.updateIndexes();
       const queryResult = await db.query(Query.select(Filter.everything())).run();
       expect(queryResult.length).to.eq(2);
 
@@ -600,6 +631,47 @@ describe('Query', () => {
       expect(objects).toMatchObject([{ name: 'Contacts' }]);
     });
 
+    test('traverse inbound references with only type filter (any property)', async () => {
+      const objects = await db
+        .query(Query.select(Filter.type(TestSchema.Person, { name: 'Alice' })).referencedBy(TestSchema.Task))
+        .run();
+
+      // Should return Task 1 and Task 2 which reference Alice via assignee property.
+      expect(objects.sort((a, b) => a.title!.localeCompare(b.title!))).toMatchObject([
+        { title: 'Task 1' },
+        { title: 'Task 2' },
+      ]);
+    });
+
+    test('traverse inbound references with no filter (any type, any property)', async () => {
+      // Add an expando that references person1.
+      db.add(
+        Obj.make(Type.Expando, {
+          name: 'Note about Alice',
+          subject: Ref.make(person1),
+        }),
+      );
+      await db.flush({ indexes: true });
+
+      const objects = await db
+        .query(Query.select(Filter.type(TestSchema.Person, { name: 'Alice' })).referencedBy())
+        .run();
+
+      // Should return all objects that reference Alice via regular references: Task 1, Task 2, and the Note.
+      // Note: Relations (like HasManager) are not included because they use a different storage mechanism.
+      expect(objects).toHaveLength(3);
+      const titles = objects
+        .filter((o) => o.title)
+        .map((o) => o.title)
+        .sort();
+      expect(titles).toEqual(['Task 1', 'Task 2']);
+      const names = objects
+        .filter((o) => o.name)
+        .map((o) => o.name)
+        .sort();
+      expect(names).toEqual(['Note about Alice']);
+    });
+
     test('traverse query started from id', async () => {
       const objects = await db
         .query(Query.select(Filter.id(person2.id)).sourceOf(TestSchema.HasManager).target())
@@ -620,6 +692,23 @@ describe('Query', () => {
       const query = Query.all(query1, query2);
       const objects = await db.query(query).run();
       expect(objects).toHaveLength(3);
+    });
+
+    test('union of limited queries', async () => {
+      // Query for tasks assigned to Alice, limited to 1.
+      const query1 = Query.select(Filter.type(TestSchema.Person, { name: 'Alice' }))
+        .referencedBy(TestSchema.Task, 'assignee')
+        .limit(1);
+      // Query for tasks assigned to Bob, limited to 1.
+      const query2 = Query.select(Filter.type(TestSchema.Person, { name: 'Bob' }))
+        .referencedBy(TestSchema.Task, 'assignee')
+        .limit(1);
+
+      const query = Query.all(query1, query2);
+      const objects = await db.query(query).run();
+
+      // Should get 1 task from Alice (out of 2) + 1 task from Bob (out of 1) = 2 total.
+      expect(objects).toHaveLength(2);
     });
 
     test('query set difference', async () => {
@@ -820,7 +909,9 @@ describe('Query', () => {
       }
 
       // Update the object.
-      obj.title = 'Updated Title';
+      Obj.change(obj, (o) => {
+        o.title = 'Updated Title';
+      });
       await db.flush({ indexes: true });
 
       // Verify search results.
@@ -895,6 +986,230 @@ describe('Query', () => {
         expect(object.title).toContain(needle);
       }
     });
+
+    test('full-text search in queues via indexer2', async () => {
+      const peer = await builder.createPeer({ indexing: { fullText: true }, types: [TestSchema.Task] });
+      const db = await peer.createDatabase();
+      const queues = peer.client.constructQueueFactory(db.spaceId);
+      const queue = queues.create();
+
+      // Add objects to the queue.
+      await queue.append([
+        Obj.make(TestSchema.Task, { title: 'Introduction to TypeScript' }),
+        Obj.make(TestSchema.Task, { title: 'Getting Started with React' }),
+        Obj.make(TestSchema.Task, { title: 'Advanced Python Programming' }),
+      ]);
+
+      // Wait for indexing.
+      await db.flush({ indexes: true });
+
+      // Search in specific queue.
+      {
+        const objects = await db
+          .query(
+            Query.select(Filter.text('TypeScript', { type: 'full-text' })).options({ queues: [queue.dxn.toString()] }),
+          )
+          .run();
+        expect(objects).toHaveLength(1);
+        expect((objects[0] as TestSchema.Task).title).toEqual('Introduction to TypeScript');
+      }
+
+      // Search for React.
+      {
+        const objects = await db
+          .query(Query.select(Filter.text('React', { type: 'full-text' })).options({ queues: [queue.dxn.toString()] }))
+          .run();
+        expect(objects).toHaveLength(1);
+        expect((objects[0] as TestSchema.Task).title).toEqual('Getting Started with React');
+      }
+
+      // Non-matching query.
+      {
+        const objects = await db
+          .query(
+            Query.select(Filter.text('JavaScript', { type: 'full-text' })).options({ queues: [queue.dxn.toString()] }),
+          )
+          .run();
+        expect(objects).toHaveLength(0);
+      }
+    });
+
+    test('full-text search with allQueuesFromSpaces via indexer2', async () => {
+      const peer = await builder.createPeer({ indexing: { fullText: true }, types: [TestSchema.Task] });
+      const db = await peer.createDatabase();
+      const queues = peer.client.constructQueueFactory(db.spaceId);
+      const queue = queues.create();
+
+      // Add objects to the database (space objects).
+      db.add(Obj.make(TestSchema.Task, { title: 'Space Object TypeScript' }));
+
+      // Add objects to the queue.
+      await queue.append([Obj.make(TestSchema.Task, { title: 'Queue Object TypeScript' })]);
+
+      // Wait for indexing.
+      await db.flush({ indexes: true });
+
+      // Search with allQueuesFromSpaces: true should return both space and queue objects.
+      {
+        const objects: TestSchema.Task[] = await db
+          .query(
+            Query.select(Filter.text('TypeScript', { type: 'full-text' })).options({
+              allQueuesFromSpaces: true,
+            }),
+          )
+          .run();
+        expect(objects).toHaveLength(2);
+        expect(objects.map((_) => _.title).sort()).toEqual(['Queue Object TypeScript', 'Space Object TypeScript']);
+      }
+
+      // Search without allQueuesFromSpaces should return only space objects.
+      {
+        const objects = await db
+          .query(Query.select(Filter.text('TypeScript', { type: 'full-text' })).options({}))
+          .run();
+        expect(objects).toHaveLength(1);
+        expect((objects[0] as TestSchema.Task).title).toEqual('Space Object TypeScript');
+      }
+
+      // console.log('dumpSqliteDatabase', await peer.dumpSqliteDatabase());
+    });
+
+    test('full-text search from queue returns valid echo objects', async () => {
+      const peer = await builder.createPeer({ indexing: { fullText: true }, types: [TestSchema.Task] });
+      const db = await peer.createDatabase();
+      const queues = peer.client.constructQueueFactory(db.spaceId);
+      const queue = queues.create();
+      const task = Obj.make(TestSchema.Task, { title: 'Queue Object TypeScript' });
+      await queue.append([task]);
+      await db.flush({ indexes: true });
+
+      const obj: TestSchema.Task = await db
+        .query(
+          Query.select(Filter.text('TypeScript', { type: 'full-text' })).options({ queues: [queue.dxn.toString()] }),
+        )
+        .first();
+      expect(obj).toBeDefined();
+      expect(Obj.getDXN(obj)?.toString().startsWith(queue.dxn.toString())).toBe(true);
+      expect(Obj.getTypename(obj)).toBe(TestSchema.Task.typename);
+      expect(Obj.getSchema(obj)).toEqual(TestSchema.Task);
+      expect(obj.id).toEqual(task.id);
+      expect(Obj.isDeleted(obj)).toBe(false);
+      expect(Obj.getMeta(obj).keys).toEqual([]);
+      expect(obj.title).toEqual('Queue Object TypeScript');
+    });
+
+    test('full-text search returns rank in entries', async () => {
+      const { db } = await builder.createDatabase({ indexing: { fullText: true } });
+
+      db.add(Obj.make(Type.Expando, { title: 'TypeScript TypeScript TypeScript' })); // High relevance.
+      db.add(Obj.make(Type.Expando, { title: 'TypeScript Programming' })); // Medium relevance.
+      db.add(Obj.make(Type.Expando, { title: 'Python Programming' })); // No match.
+      await db.flush({ indexes: true });
+
+      const query = db.query(Query.select(Filter.text('TypeScript', { type: 'full-text' })));
+      const entries = await query.runEntries();
+
+      expect(entries).toHaveLength(2);
+      // All FTS results should have a rank in their match metadata.
+      for (const entry of entries) {
+        expect(entry.match).toBeDefined();
+        expect(entry.match!.rank).toBeDefined();
+        expect(typeof entry.match!.rank).toBe('number');
+        expect(entry.match!.rank).toBeGreaterThan(0);
+      }
+    });
+
+    test('full-text search order by rank descending (default)', async () => {
+      const { db } = await builder.createDatabase({ indexing: { fullText: true } });
+
+      // Create objects with varying relevance to the search term "TypeScript".
+      db.add(Obj.make(Type.Expando, { title: 'TypeScript' })); // Single occurrence.
+      db.add(Obj.make(Type.Expando, { title: 'TypeScript TypeScript TypeScript TypeScript' })); // High relevance.
+      db.add(Obj.make(Type.Expando, { title: 'TypeScript Programming Guide' })); // Medium relevance.
+      await db.flush({ indexes: true });
+
+      // Order by rank descending (best matches first) - default direction.
+      const query = db.query(Query.select(Filter.text('TypeScript', { type: 'full-text' })).orderBy(Order.rank()));
+      const entries = await query.runEntries();
+
+      expect(entries).toHaveLength(3);
+
+      // Verify ranks are in descending order (higher rank = better match = first).
+      for (let i = 0; i < entries.length - 1; i++) {
+        expect(entries[i].match!.rank).toBeGreaterThanOrEqual(entries[i + 1].match!.rank);
+      }
+
+      // The item with highest relevance (most occurrences) should be first.
+      expect(entries[0].result!.title).toBe('TypeScript TypeScript TypeScript TypeScript');
+    });
+
+    test('full-text search order by rank ascending', async () => {
+      const { db } = await builder.createDatabase({ indexing: { fullText: true } });
+
+      // Create objects with varying relevance to the search term "TypeScript".
+      db.add(Obj.make(Type.Expando, { title: 'TypeScript' })); // Single occurrence.
+      db.add(Obj.make(Type.Expando, { title: 'TypeScript TypeScript TypeScript TypeScript' })); // High relevance.
+      db.add(Obj.make(Type.Expando, { title: 'TypeScript Programming Guide' })); // Medium relevance.
+      await db.flush({ indexes: true });
+
+      // Order by rank ascending (worst matches first).
+      const query = db.query(Query.select(Filter.text('TypeScript', { type: 'full-text' })).orderBy(Order.rank('asc')));
+      const entries = await query.runEntries();
+
+      expect(entries).toHaveLength(3);
+
+      // Verify ranks are in ascending order (lower rank = worse match = first).
+      for (let i = 0; i < entries.length - 1; i++) {
+        expect(entries[i].match!.rank).toBeLessThanOrEqual(entries[i + 1].match!.rank);
+      }
+
+      // The item with lowest relevance should be first.
+      expect(entries[entries.length - 1].result!.title).toBe('TypeScript TypeScript TypeScript TypeScript');
+    });
+
+    test('non-FTS queries return default rank of 1', async () => {
+      const { db } = await builder.createDatabase();
+
+      db.add(Obj.make(Type.Expando, { title: 'Non-FTS Test Object 1' }));
+      db.add(Obj.make(Type.Expando, { title: 'Non-FTS Test Object 2' }));
+      await db.flush({ indexes: true });
+
+      // Non-FTS query (all expandos, no text search).
+      const query = db.query(Query.select(Filter.type(Type.Expando)));
+      const entries = await query.runEntries();
+
+      // Should have at least 2 entries (the ones we created).
+      expect(entries.length).toBeGreaterThanOrEqual(2);
+      // All non-FTS results should have a default rank of 1.
+      for (const entry of entries) {
+        expect(entry.match).toBeDefined();
+        expect(entry.match!.rank).toBe(1);
+      }
+    });
+
+    test('order by rank with limit', async () => {
+      const { db } = await builder.createDatabase({ indexing: { fullText: true } });
+
+      // Create multiple objects with varying relevance.
+      db.add(Obj.make(Type.Expando, { title: 'TypeScript' }));
+      db.add(Obj.make(Type.Expando, { title: 'TypeScript TypeScript' }));
+      db.add(Obj.make(Type.Expando, { title: 'TypeScript TypeScript TypeScript' }));
+      db.add(Obj.make(Type.Expando, { title: 'TypeScript TypeScript TypeScript TypeScript' }));
+      await db.flush({ indexes: true });
+
+      // Order by rank descending and limit to top 2 results.
+      const query = db.query(
+        Query.select(Filter.text('TypeScript', { type: 'full-text' }))
+          .orderBy(Order.rank())
+          .limit(2),
+      );
+      const entries = await query.runEntries();
+
+      expect(entries).toHaveLength(2);
+      // Should get the top 2 most relevant results.
+      expect(entries[0].result!.title).toBe('TypeScript TypeScript TypeScript TypeScript');
+      expect(entries[1].result!.title).toBe('TypeScript TypeScript TypeScript');
+    });
   });
 
   describe('Reactivity', () => {
@@ -953,7 +1268,9 @@ describe('Query', () => {
       query.subscribe(() => {
         updateCount++;
       });
-      (objects[0] as any).title = 'Task 0a';
+      Obj.change(objects[0], (o: any) => {
+        o.title = 'Task 0a';
+      });
       await sleep(10);
       expect(updateCount).to.equal(0);
     });
@@ -1150,7 +1467,9 @@ describe('Query', () => {
       });
       onTestFinished(() => unsub());
 
-      contact.name = name;
+      Obj.change(contact, (c) => {
+        c.name = name;
+      });
       db.add(Obj.make(TestSchema.Person, {}));
 
       await asyncTimeout(nameUpdate.wait(), 1000);

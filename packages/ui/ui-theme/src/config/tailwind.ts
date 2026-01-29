@@ -39,6 +39,7 @@ export const tailwindConfig = ({
         spacing: {
           prose: 'var(--dx-prose)',
           containerMaxWidth: 'var(--dx-containerMaxWidth)',
+          cardDefaultWidth: 'var(--dx-cardDefaultWidth)',
           cardMinWidth: 'var(--dx-cardMinWidth)',
           cardMaxWidth: 'var(--dx-cardMaxWidth)',
           popoverMaxWidth: 'var(--dx-popoverMaxWidth)',

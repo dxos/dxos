@@ -6,7 +6,7 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "exports": {
     ".": {
@@ -60,7 +60,6 @@
     "@dxos/echo-db": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/lit-ui": "workspace:*",
-    "@dxos/live-object": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/ui": "workspace:*",
@@ -88,7 +87,6 @@
     "@automerge/automerge-repo-network-broadcastchannel": "catalog:",
     "@dxos/config": "workspace:*",
     "@dxos/echo": "workspace:*",
-    "@dxos/echo-signals": "workspace:*",
     "@dxos/keyboard": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/schema": "workspace:*",

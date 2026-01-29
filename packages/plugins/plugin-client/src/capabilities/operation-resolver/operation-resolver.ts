@@ -4,42 +4,43 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common, FollowupScheduler, OperationResolver } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { PublicKey } from '@dxos/client';
 import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
+import { OperationResolver } from '@dxos/operation';
+import { Operation } from '@dxos/operation';
 import { ObservabilityOperation } from '@dxos/plugin-observability/types';
 import { type JoinPanelProps } from '@dxos/shell/react';
 
 import { JOIN_DIALOG, RECOVERY_CODE_DIALOG, RESET_DIALOG } from '../../constants';
-import { ClientEvents } from '../../events';
+import { ClientEvents } from '../../types';
 import { Account, ClientCapabilities, ClientOperation } from '../../types';
 
 type OperationResolverOptions = {
-  context: Capability.PluginContext;
   appName?: string;
 };
 
 const RECOVER_IDENTITY_RPC_TIMEOUT = 20_000;
 
-export default Capability.makeModule(({ context, appName = 'Composer' }: OperationResolverOptions) =>
-  Effect.succeed(
-    Capability.contributes(Common.Capability.OperationResolver, [
+export default Capability.makeModule(
+  Effect.fnUntraced(function* (props?: OperationResolverOptions) {
+    const { appName = 'Composer' } = props ?? {};
+
+    return Capability.contributes(Common.Capability.OperationResolver, [
       //
       // CreateIdentity
       //
       OperationResolver.make({
         operation: ClientOperation.CreateIdentity,
-        handler: (profile) =>
-          Effect.gen(function* () {
-            const manager = context.getCapability(Common.Capability.PluginManager);
-            const client = context.getCapability(ClientCapabilities.Client);
-            const scheduler = yield* FollowupScheduler.Service;
-            const data = yield* Effect.promise(() => client.halo.createIdentity(profile));
-            yield* Effect.promise(() => runAndForwardErrors(manager.activate(ClientEvents.IdentityCreated)));
-            yield* scheduler.schedule(ObservabilityOperation.SendEvent, { name: 'identity.create' });
-            return data;
-          }),
+        handler: Effect.fnUntraced(function* (profile) {
+          const manager = yield* Capability.get(Common.Capability.PluginManager);
+          const client = yield* Capability.get(ClientCapabilities.Client);
+          const data = yield* Effect.promise(() => client.halo.createIdentity(profile));
+          yield* Effect.promise(() => runAndForwardErrors(manager.activate(ClientEvents.IdentityCreated)));
+          yield* Operation.schedule(ObservabilityOperation.SendEvent, { name: 'identity.create' });
+          return data;
+        }),
       }),
 
       //
@@ -47,15 +48,16 @@ export default Capability.makeModule(({ context, appName = 'Composer' }: Operati
       //
       OperationResolver.make({
         operation: ClientOperation.JoinIdentity,
-        handler: (data) =>
-          context.getCapability(Common.Capability.OperationInvoker).invoke(Common.LayoutOperation.UpdateDialog, {
+        handler: Effect.fnUntraced(function* (data) {
+          yield* Operation.invoke(Common.LayoutOperation.UpdateDialog, {
             subject: JOIN_DIALOG,
             blockAlign: 'start',
             props: {
               initialInvitationCode: data.invitationCode,
               initialDisposition: 'accept-halo-invitation',
             },
-          }),
+          });
+        }),
       }),
 
       //
@@ -63,14 +65,11 @@ export default Capability.makeModule(({ context, appName = 'Composer' }: Operati
       //
       OperationResolver.make({
         operation: ClientOperation.ShareIdentity,
-        handler: () =>
-          Effect.gen(function* () {
-            const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
-            const scheduler = yield* FollowupScheduler.Service;
-            yield* invoke(Common.LayoutOperation.SwitchWorkspace, { subject: Account.id });
-            yield* invoke(Common.LayoutOperation.Open, { subject: [Account.Profile] });
-            yield* scheduler.schedule(ObservabilityOperation.SendEvent, { name: 'identity.share' });
-          }),
+        handler: Effect.fnUntraced(function* () {
+          yield* Operation.invoke(Common.LayoutOperation.SwitchWorkspace, { subject: Account.id });
+          yield* Operation.invoke(Common.LayoutOperation.Open, { subject: [Account.Profile] });
+          yield* Operation.schedule(ObservabilityOperation.SendEvent, { name: 'identity.share' });
+        }),
       }),
 
       //
@@ -78,14 +77,15 @@ export default Capability.makeModule(({ context, appName = 'Composer' }: Operati
       //
       OperationResolver.make({
         operation: ClientOperation.RecoverIdentity,
-        handler: () =>
-          context.getCapability(Common.Capability.OperationInvoker).invoke(Common.LayoutOperation.UpdateDialog, {
+        handler: Effect.fnUntraced(function* () {
+          yield* Operation.invoke(Common.LayoutOperation.UpdateDialog, {
             subject: JOIN_DIALOG,
             blockAlign: 'start',
             props: {
               initialDisposition: 'recover-identity',
             } satisfies Partial<JoinPanelProps>,
-          }),
+          });
+        }),
       }),
 
       //
@@ -93,14 +93,15 @@ export default Capability.makeModule(({ context, appName = 'Composer' }: Operati
       //
       OperationResolver.make({
         operation: ClientOperation.ResetStorage,
-        handler: (data) =>
-          context.getCapability(Common.Capability.OperationInvoker).invoke(Common.LayoutOperation.UpdateDialog, {
+        handler: Effect.fnUntraced(function* (data) {
+          yield* Operation.invoke(Common.LayoutOperation.UpdateDialog, {
             subject: RESET_DIALOG,
             blockAlign: 'start',
             props: {
               mode: data.mode ?? 'reset storage',
             },
-          }),
+          });
+        }),
       }),
 
       //
@@ -108,12 +109,13 @@ export default Capability.makeModule(({ context, appName = 'Composer' }: Operati
       //
       OperationResolver.make({
         operation: ClientOperation.CreateAgent,
-        handler: () =>
-          Effect.promise(async () => {
-            const client = context.getCapability(ClientCapabilities.Client);
-            invariant(client.services.services.EdgeAgentService, 'Missing EdgeAgentService');
-            await client.services.services.EdgeAgentService.createAgent(undefined, { timeout: 10_000 });
-          }),
+        handler: Effect.fnUntraced(function* () {
+          const client = yield* Capability.get(ClientCapabilities.Client);
+          invariant(client.services.services.EdgeAgentService, 'Missing EdgeAgentService');
+          yield* Effect.promise(() =>
+            client.services.services.EdgeAgentService!.createAgent(undefined, { timeout: 10_000 }),
+          );
+        }),
       }),
 
       //
@@ -121,22 +123,19 @@ export default Capability.makeModule(({ context, appName = 'Composer' }: Operati
       //
       OperationResolver.make({
         operation: ClientOperation.CreateRecoveryCode,
-        handler: () =>
-          Effect.gen(function* () {
-            const client = context.getCapability(ClientCapabilities.Client);
-            invariant(client.services.services.IdentityService, 'IdentityService not available');
-            const { recoveryCode } = yield* Effect.promise(() =>
-              client.services.services.IdentityService!.createRecoveryCredential({}),
-            );
-            yield* context
-              .getCapability(Common.Capability.OperationInvoker)
-              .invoke(Common.LayoutOperation.UpdateDialog, {
-                subject: RECOVERY_CODE_DIALOG,
-                blockAlign: 'start',
-                type: 'alert',
-                props: { code: recoveryCode },
-              });
-          }),
+        handler: Effect.fnUntraced(function* () {
+          const client = yield* Capability.get(ClientCapabilities.Client);
+          invariant(client.services.services.IdentityService, 'IdentityService not available');
+          const { recoveryCode } = yield* Effect.promise(() =>
+            client.services.services.IdentityService!.createRecoveryCredential({}),
+          );
+          yield* Operation.invoke(Common.LayoutOperation.UpdateDialog, {
+            subject: RECOVERY_CODE_DIALOG,
+            blockAlign: 'start',
+            type: 'alert',
+            props: { code: recoveryCode },
+          });
+        }),
       }),
 
       //
@@ -144,14 +143,14 @@ export default Capability.makeModule(({ context, appName = 'Composer' }: Operati
       //
       OperationResolver.make({
         operation: ClientOperation.CreatePasskey,
-        handler: () =>
-          Effect.promise(async () => {
-            const client = context.getCapability(ClientCapabilities.Client);
-            const identity = client.halo.identity.get();
-            invariant(identity, 'Identity not available');
+        handler: Effect.fnUntraced(function* () {
+          const client = yield* Capability.get(ClientCapabilities.Client);
+          const identity = client.halo.identity.get();
+          invariant(identity, 'Identity not available');
 
-            const lookupKey = PublicKey.random();
-            const credential = await navigator.credentials.create({
+          const lookupKey = PublicKey.random();
+          const credential = yield* Effect.promise(() =>
+            navigator.credentials.create({
               publicKey: {
                 challenge: new Uint8Array(),
                 rp: { id: location.hostname, name: appName },
@@ -169,21 +168,24 @@ export default Capability.makeModule(({ context, appName = 'Composer' }: Operati
                   requireResidentKey: true,
                 },
               },
-            });
+            }),
+          );
 
-            invariant(credential, 'Credential not available');
-            const recoveryKey = PublicKey.from(new Uint8Array((credential as any).response.getPublicKey()));
-            const algorithm = (credential as any).response.getPublicKeyAlgorithm() === -7 ? 'ES256' : 'ED25519';
+          invariant(credential, 'Credential not available');
+          const recoveryKey = PublicKey.from(new Uint8Array((credential as any).response.getPublicKey()));
+          const algorithm = (credential as any).response.getPublicKeyAlgorithm() === -7 ? 'ES256' : 'ED25519';
 
-            invariant(client.services.services.IdentityService, 'IdentityService not available');
-            await client.services.services.IdentityService.createRecoveryCredential({
+          invariant(client.services.services.IdentityService, 'IdentityService not available');
+          yield* Effect.promise(() =>
+            client.services.services.IdentityService!.createRecoveryCredential({
               data: {
                 recoveryKey,
                 algorithm,
                 lookupKey,
               },
-            });
-          }),
+            }),
+          );
+        }),
       }),
 
       //
@@ -191,21 +193,24 @@ export default Capability.makeModule(({ context, appName = 'Composer' }: Operati
       //
       OperationResolver.make({
         operation: ClientOperation.RedeemPasskey,
-        handler: () =>
-          Effect.promise(async () => {
-            const client = context.getCapability(ClientCapabilities.Client);
-            invariant(client.services.services.IdentityService, 'IdentityService not available');
-            const { deviceKey, controlFeedKey, challenge } =
-              await client.services.services.IdentityService.requestRecoveryChallenge();
-            const credential = await navigator.credentials.get({
+        handler: Effect.fnUntraced(function* () {
+          const client = yield* Capability.get(ClientCapabilities.Client);
+          invariant(client.services.services.IdentityService, 'IdentityService not available');
+          const { deviceKey, controlFeedKey, challenge } = yield* Effect.promise(() =>
+            client.services.services.IdentityService!.requestRecoveryChallenge(),
+          );
+          const credential = yield* Effect.promise(() =>
+            navigator.credentials.get({
               publicKey: {
                 challenge: Buffer.from(challenge, 'base64'),
                 rpId: location.hostname,
                 userVerification: 'required',
               },
-            });
-            const lookupKey = PublicKey.from(new Uint8Array((credential as any).response.userHandle));
-            await client.services.services.IdentityService.recoverIdentity(
+            }),
+          );
+          const lookupKey = PublicKey.from(new Uint8Array((credential as any).response.userHandle));
+          yield* Effect.promise(() =>
+            client.services.services.IdentityService!.recoverIdentity(
               {
                 external: {
                   lookupKey,
@@ -217,8 +222,9 @@ export default Capability.makeModule(({ context, appName = 'Composer' }: Operati
                 },
               },
               { timeout: RECOVER_IDENTITY_RPC_TIMEOUT },
-            );
-          }),
+            ),
+          );
+        }),
       }),
 
       //
@@ -226,16 +232,17 @@ export default Capability.makeModule(({ context, appName = 'Composer' }: Operati
       //
       OperationResolver.make({
         operation: ClientOperation.RedeemToken,
-        handler: (data) =>
-          Effect.promise(async () => {
-            const client = context.getCapability(ClientCapabilities.Client);
-            invariant(client.services.services.IdentityService, 'IdentityService not available');
-            await client.services.services.IdentityService.recoverIdentity(
+        handler: Effect.fnUntraced(function* (data) {
+          const client = yield* Capability.get(ClientCapabilities.Client);
+          invariant(client.services.services.IdentityService, 'IdentityService not available');
+          yield* Effect.promise(() =>
+            client.services.services.IdentityService!.recoverIdentity(
               { token: data.token },
               { timeout: RECOVER_IDENTITY_RPC_TIMEOUT },
-            );
-          }),
+            ),
+          );
+        }),
       }),
-    ]),
-  ),
+    ]);
+  }),
 );

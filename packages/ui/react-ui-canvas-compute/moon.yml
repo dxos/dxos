@@ -10,7 +10,6 @@ tasks:
     args:
       - '--entryPoint=src/index.ts'
       - '--injectGlobals'
-      - '--preactSignalTracking'
   test:
     inputs:
       - .storybook/*

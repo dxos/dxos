@@ -21,21 +21,22 @@ import { type MeetingPayloadSchema } from '@dxos/protocols/buf/dxos/edge/calls_p
 import { type Space } from '@dxos/react-client/echo';
 import { type Message } from '@dxos/types';
 
-import { meta } from '../../meta';
 import { Meeting, MeetingCapabilities, MeetingOperation } from '../../types';
 
 // TODO(wittjosiah): Factor out.
 // TODO(wittjosiah): Can we stop using protobuf for this?
 type MeetingPayload = buf.MessageInitShape<typeof MeetingPayloadSchema>;
 
-export default Capability.makeModule((context) =>
-  Effect.sync(() => {
-    const state = context.getCapability(MeetingCapabilities.State);
-    const _settings = context.getCapability(Common.Capability.SettingsStore).getStore<Meeting.Settings>(meta.id)!.value;
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    // Get context for lazy capability access in callbacks.
+    const capabilities = yield* Capability.Service;
+
+    const store = capabilities.get(MeetingCapabilities.State);
 
     return Capability.contributes(ThreadCapabilities.CallExtension, {
       onJoin: async ({ channel }: { channel?: Channel.Channel }) => {
-        const client = context.getCapability(ClientCapabilities.Client);
+        const client = capabilities.get(ClientCapabilities.Client);
         const identity = client.halo.identity.get();
         invariant(identity);
 
@@ -52,17 +53,16 @@ export default Capability.makeModule((context) =>
         // }
 
         // TODO(burdon): The TranscriptionManager singleton is part of the state and should just be updated here.
-        state.transcriptionManager = await context
-          .getCapability(TranscriptionCapabilities.TranscriptionManager)({})
-          .open();
+        const transcriptionManager = await capabilities.get(TranscriptionCapabilities.TranscriptionManager)({}).open();
+        store.updateState((current) => ({ ...current, transcriptionManager }));
       },
       onLeave: async () => {
-        await state.transcriptionManager?.close();
-        state.transcriptionManager = undefined;
-        state.activeMeeting = undefined;
+        const { transcriptionManager } = store.state;
+        await transcriptionManager?.close();
+        store.updateState(() => ({}));
       },
       onCallStateUpdated: async (callState: CallState) => {
-        const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
+        const { invokePromise } = capabilities.get(Common.Capability.OperationInvoker);
         const typename = Type.getTypename(Meeting.Meeting);
         const activity = typename ? callState.activities?.[typename] : undefined;
         if (!activity?.payload) {
@@ -73,8 +73,9 @@ export default Capability.makeModule((context) =>
         await invokePromise(MeetingOperation.HandlePayload, payload);
       },
       onMediaStateUpdated: async ([mediaState, isSpeaking]: [MediaState, boolean]) => {
-        void state.transcriptionManager?.setAudioTrack(mediaState.audioTrack);
-        void state.transcriptionManager?.setRecording(isSpeaking);
+        const { transcriptionManager } = store.state;
+        void transcriptionManager?.setAudioTrack(mediaState.audioTrack);
+        void transcriptionManager?.setRecording(isSpeaking);
       },
     });
   }),

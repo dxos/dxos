@@ -55,7 +55,6 @@ const createStorybookProject = (dirname: string) =>
       },
       setupFiles: [new URL('./tools/storybook-react/.storybook/vitest.setup.ts', import.meta.url).pathname],
     },
-    optimizeDeps: { include: ['@preact-signals/safe-react/tracking'] },
     plugins: [
       storybookTest({
         configDir: path.join(dirname, '.storybook'),
@@ -73,13 +72,20 @@ type BrowserOptions = {
   browserName: string;
   nodeExternal?: boolean;
   injectGlobals?: boolean;
+  plugins?: Plugin[];
 };
 
-const createBrowserProject = ({ browserName, nodeExternal = false, injectGlobals = true }: BrowserOptions) =>
+const createBrowserProject = ({
+  browserName,
+  nodeExternal = false,
+  injectGlobals = true,
+  plugins = [],
+}: BrowserOptions) =>
   defineProject({
     plugins: [
       nodeStdPlugin(),
       WasmPlugin(),
+      ...plugins,
       // Inspect()
     ],
     optimizeDeps: {
@@ -92,7 +98,7 @@ const createBrowserProject = ({ browserName, nodeExternal = false, injectGlobals
           ...(nodeExternal ? [NodeExternalPlugin({ injectGlobals, nodeStd: true })] : []),
         ],
       },
-      exclude: ['@effect/sql-sqlite-wasm', '@effect/wa-sqlite'],
+      exclude: ['@dxos/wa-sqlite'],
     },
     esbuild: {
       target: 'esnext',

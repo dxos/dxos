@@ -8,9 +8,9 @@ import * as Layer from 'effect/Layer';
 import { AiModelResolver } from '@dxos/ai';
 import { Capability, Common } from '@dxos/app-framework';
 
-export default Capability.makeModule((context) =>
-  Effect.sync(() => {
-    const resolvers = context.getCapabilities(Common.Capability.AiModelResolver);
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const resolvers = yield* Capability.getAll(Common.Capability.AiModelResolver);
 
     // TODO(dmaretskyi): Extract function to reduce them.
     const combinedLayer = resolvers.reduce(

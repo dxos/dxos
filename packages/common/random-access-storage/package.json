@@ -6,8 +6,19 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
+  "imports": {
+    "#storage": {
+      "source": {
+        "browser": "./src/browser/index.ts",
+        "default": "./src/node/index.ts"
+      },
+      "types": "./dist/types/src/node/index.d.ts",
+      "browser": "./dist/lib/browser/browser/index.mjs",
+      "default": "./dist/lib/node-esm/node/index.mjs"
+    }
+  },
   "exports": {
     ".": {
       "source": "./src/index.ts",
@@ -15,9 +26,6 @@
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
     }
-  },
-  "browser": {
-    "./src/index.ts": "./src/browser/index.ts"
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {

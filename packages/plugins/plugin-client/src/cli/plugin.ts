@@ -8,8 +8,8 @@ import { Capability, Common, Plugin } from '@dxos/app-framework';
 import { Client } from '../capabilities/client';
 import { OperationResolver } from '../capabilities/operation-resolver';
 import { SchemaDefs } from '../capabilities/schema-defs';
-import { ClientEvents } from '../events';
 import { meta } from '../meta';
+import { ClientEvents } from '../types';
 import { type ClientPluginOptions } from '../types';
 
 import { config, device, edge, halo, profile } from './commands';
@@ -19,7 +19,7 @@ export const ClientPlugin = Plugin.define<ClientPluginOptions>(meta).pipe(
     id: Capability.getModuleTag(Client),
     activatesOn: Common.ActivationEvent.Startup,
     activatesAfter: [ClientEvents.ClientReady],
-    activate: (context) => Client({ ...options, context }),
+    activate: () => Client(options),
   })),
   Plugin.addModule({
     activatesOn: ClientEvents.ClientReady,
@@ -28,6 +28,6 @@ export const ClientPlugin = Plugin.define<ClientPluginOptions>(meta).pipe(
   }),
   // TODO(wittjosiah): Could some of these commands make use of operations?
   Common.Plugin.addCommandModule({ commands: [config, device, edge, halo, profile] }),
-  Common.Plugin.addOperationResolverModule({ activate: (context) => OperationResolver({ context }) }),
+  Common.Plugin.addOperationResolverModule({ activate: () => OperationResolver() }),
   Plugin.make,
 );

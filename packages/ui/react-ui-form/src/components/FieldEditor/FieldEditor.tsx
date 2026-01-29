@@ -4,7 +4,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { type SchemaRegistry } from '@dxos/echo';
+import { Obj, type SchemaRegistry } from '@dxos/echo';
 import { type EchoSchema, Format, FormatEnums, formatToType } from '@dxos/echo/internal';
 import { type SchemaProperty } from '@dxos/effect';
 import { log } from '@dxos/log';
@@ -25,6 +25,7 @@ export type FieldEditorProps = {
   projection: ProjectionModel;
   field: FieldType;
   registry?: SchemaRegistry.SchemaRegistry;
+  view?: Obj.Any;
   onSave: () => void;
   onCancel?: () => void;
 } & Pick<FormRootProps<any>, 'readonly'>;
@@ -32,7 +33,7 @@ export type FieldEditorProps = {
 /**
  * Displays a Form representing the metadata for a given `Field` and `View`.
  */
-export const FieldEditor = ({ readonly, projection, field, registry, onSave, onCancel }: FieldEditorProps) => {
+export const FieldEditor = ({ readonly, projection, field, registry, view, onSave, onCancel }: FieldEditorProps) => {
   const { t } = useTranslation(translationKey);
   const [props, setProps] = useState<PropertyType>(projection.getFieldProjection(field.id).props);
   useEffect(() => setProps(projection.getFieldProjection(field.id).props), [field, projection]);
@@ -136,7 +137,7 @@ export const FieldEditor = ({ readonly, projection, field, registry, onSave, onC
 
   const handleValidate = useCallback<NonNullable<FormRootProps<PropertyType>['onValidate']>>(
     ({ property }) => {
-      if (property && projection.fields.find((f) => f.path === property && f.path !== field.path)) {
+      if (property && projection.getFields().find((f) => f.path === property && f.path !== field.path)) {
         return [
           {
             path: 'property',
@@ -145,15 +146,21 @@ export const FieldEditor = ({ readonly, projection, field, registry, onSave, onC
         ];
       }
     },
-    [projection.fields, field],
+    [projection.getFields(), field],
   );
 
   const handleSave = useCallback<NonNullable<FormRootProps<PropertyType>['onSave']>>(
     (props) => {
-      projection.setFieldProjection({ field, props });
+      if (view) {
+        Obj.change(view, () => {
+          projection.setFieldProjection({ field, props });
+        });
+      } else {
+        projection.setFieldProjection({ field, props });
+      }
       onSave();
     },
-    [projection, field, onSave],
+    [projection, field, view, onSave],
   );
 
   const handleCancel = useCallback<NonNullable<FormRootProps<PropertyType>['onCancel']>>(() => {

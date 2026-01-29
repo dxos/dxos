@@ -3,4 +3,4 @@
 //
 
 export type * from './resource-lock';
-export * from './node';
+export * from '#locks-platform';

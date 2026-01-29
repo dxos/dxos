@@ -29,8 +29,9 @@
     "@dxos/app-graph": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/debug": "workspace:*",
-    "@dxos/util": "workspace:*",
-    "@preact-signals/safe-react": "catalog:"
+    "@dxos/effect": "workspace:*",
+    "@dxos/operation": "workspace:*",
+    "@dxos/util": "workspace:*"
   },
   "devDependencies": {
     "@dxos/react-client": "workspace:*",

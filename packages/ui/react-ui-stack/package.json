@@ -6,7 +6,7 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "exports": {
     ".": {
@@ -42,13 +42,11 @@
     "@atlaskit/pragmatic-drag-and-drop-react-drop-indicator": "catalog:",
     "@dxos/echo": "workspace:*",
     "@dxos/keyboard": "workspace:*",
-    "@dxos/live-object": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-dnd": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/util": "workspace:*",
     "@fluentui/react-tabster": "catalog:",
-    "@preact-signals/safe-react": "catalog:",
     "@radix-ui/primitive": "catalog:",
     "@radix-ui/react-compose-refs": "catalog:",
     "@radix-ui/react-context": "catalog:",

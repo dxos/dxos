@@ -9,7 +9,15 @@ import * as Match from 'effect/Match';
 import * as Runtime from 'effect/Runtime';
 
 import { Context, ContextDisposedError, LifecycleState, Resource } from '@dxos/context';
-import { DatabaseDirectory, ObjectStructure, type QueryAST, isEncodedReference } from '@dxos/echo-protocol';
+import type { Obj } from '@dxos/echo';
+import { ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET } from '@dxos/echo/internal';
+import {
+  DatabaseDirectory,
+  type ObjectPropPath,
+  ObjectStructure,
+  type QueryAST,
+  isEncodedReference,
+} from '@dxos/echo-protocol';
 import { type RuntimeProvider, runAndForwardErrors, unwrapExit } from '@dxos/effect';
 import { type IndexEngine, type ObjectMeta, type ReverseRef } from '@dxos/index-core';
 import { EscapedPropPath, type FindResult, type Indexer } from '@dxos/indexing';
@@ -23,7 +31,7 @@ import { getDeep, isNonNullable } from '@dxos/util';
 import type { AutomergeHost } from '../automerge';
 import { createIdFromSpaceKey } from '../common';
 import type { SpaceStateManager } from '../db-host';
-import { filterMatchObject } from '../filter';
+import { filterMatchObject, filterMatchObjectJSON } from '../filter';
 
 import type { QueryPlan } from './plan';
 import { QueryPlanner } from './query-planner';
@@ -52,10 +60,69 @@ type QueryExecutionResult = {
  */
 type QueryItem = {
   objectId: ObjectId;
-  documentId: DocumentId;
+
   spaceId: SpaceId;
-  doc: ObjectStructure;
+  queueId: ObjectId | null;
+  queueNamespace: string | null;
+
+  // For objects from automerge documents.
+  documentId: DocumentId | null;
+
+  // For objects from automerge documents.
+  doc: ObjectStructure | null;
+
+  // For objects from queues.
+  data: Obj.JSON | null;
+
+  /**
+   * Relevance rank for this item.
+   * Higher values indicate better matches for FTS/vector searches.
+   * Defaults to 1 for non-ranked queries (predicate matches).
+   */
+  rank: number;
 };
+
+const QueryItem = Object.freeze({
+  isDeleted: (item: QueryItem) => {
+    if (item.doc) {
+      return ObjectStructure.isDeleted(item.doc);
+    } else if (item.data) {
+      return item.data['@deleted'] === true;
+    } else {
+      throw new Error('Invalid query item');
+    }
+  },
+
+  getProperty: (item: QueryItem, property: ObjectPropPath) => {
+    if (item.doc) {
+      return getDeep(item.doc.data, property);
+    } else if (item.data) {
+      return getDeep(item.data, property);
+    } else {
+      throw new Error('Invalid query item');
+    }
+  },
+
+  getRelationSource: (item: QueryItem): DXN.String => {
+    if (item.doc) {
+      return ObjectStructure.getRelationSource(item.doc)?.['/'] as DXN.String;
+    } else if (item.data) {
+      return item.data[ATTR_RELATION_SOURCE] as DXN.String;
+    } else {
+      throw new Error('Invalid query item');
+    }
+  },
+
+  getRelationTarget: (item: QueryItem): DXN.String => {
+    if (item.doc) {
+      return ObjectStructure.getRelationTarget(item.doc)?.['/'] as DXN.String;
+    } else if (item.data) {
+      return item.data[ATTR_RELATION_TARGET] as DXN.String;
+    } else {
+      throw new Error('Invalid query item');
+    }
+  },
+});
 
 /**
  * Recursive data structure that represents the execution trace of a query.
@@ -206,11 +273,14 @@ export class QueryExecutor extends Resource {
     return this._lastResultSet.map(
       (item): QueryResult => ({
         id: item.objectId,
-        documentId: item.documentId,
+        documentId: item.documentId ?? undefined,
+        queueId: item.queueId ?? undefined,
+        queueNamespace: item.queueNamespace ?? undefined,
         spaceId: item.spaceId,
 
-        // TODO(dmaretskyi): Plumb through the rank.
-        rank: 0,
+        rank: item.rank,
+
+        documentJson: item.doc ? JSON.stringify(item.doc) : item.data ? JSON.stringify(item.data) : undefined,
       }),
     );
   }
@@ -296,6 +366,9 @@ export class QueryExecutor extends Resource {
         break;
       case 'OrderStep':
         ({ workingSet: newWorkingSet, trace } = await this._execOrderStep(step, workingSet));
+        break;
+      case 'LimitStep':
+        ({ workingSet: newWorkingSet, trace } = await this._execLimitStep(step, workingSet));
         break;
       default:
         throw new Error(`Unknown step type: ${(step as any)._tag}`);
@@ -416,17 +489,26 @@ export class QueryExecutor extends Resource {
       }
 
       case 'TextSelector': {
-        // TODO(dmaretskyi): ranking https://sqlite.org/fts5.html#the_bm25_function
-        // TODO(dmaretskyi): type + FTS queries would be very common so we should support those, maybe chunk the fts index
-        // TODO(dmaretskyi): nice to have matched text snippets/highlighting
+        // TODO(dmaretskyi): type + FTS queries would be very common so we should support those, maybe chunk the fts index.
+        // TODO(dmaretskyi): nice to have matched text snippets/highlighting.
         if (step.selector.searchKind === 'full-text' && this._indexer2 && this._runtime) {
           // Use indexer2 for full-text search.
           const beginIndexQuery = performance.now();
           const runtime = await runAndForwardErrors(this._runtime);
           invariant(step.spaces.length <= 1, 'Multiple spaces are not supported for full-text search');
+          // Extract queue IDs from DXN strings.
+          const queueIds =
+            step.queues.length > 0
+              ? (step.queues.map((dxnStr) => DXN.parse(dxnStr).asQueueDXN()?.queueId).filter(Boolean) as ObjectId[])
+              : null;
           const textResults = await unwrapExit(
             await this._indexer2
-              .queryText({ query: step.selector.text, spaceId: step.spaces[0] })
+              .queryText({
+                query: step.selector.text,
+                spaceId: step.spaces,
+                includeAllQueues: step.allQueuesFromSpaces,
+                queueIds,
+              })
               .pipe(Runtime.runPromiseExit(runtime)),
           );
           trace.indexHits = textResults.length;
@@ -438,16 +520,61 @@ export class QueryExecutor extends Resource {
 
           // Load documents from the results.
           const documentLoadStart = performance.now();
-          const items = await Promise.all(
-            textResults.map(async (result): Promise<QueryItem | null> => {
+
+          // Separate queue items from space items.
+          const queueResults = textResults.filter((r) => r.queueId);
+          const spaceResults = textResults.filter((r) => !r.queueId);
+
+          // Build a map from recordId to rank for all FTS results.
+          const rankMap = new Map(textResults.map((r) => [r.recordId, r.rank]));
+
+          // Load queue items from indexed snapshots.
+          let queueItems: QueryItem[] = [];
+          if (queueResults.length > 0) {
+            const snapshots = await unwrapExit(
+              await this._indexer2
+                .querySnapshotsJSON(queueResults.map((r) => r.recordId))
+                .pipe(Runtime.runPromiseExit(runtime)),
+            );
+            const snapshotMap = new Map(snapshots.map((s) => [s.recordId, s.snapshot]));
+            queueItems = queueResults
+              .map((result): QueryItem | null => {
+                const snapshot = snapshotMap.get(result.recordId);
+                if (!snapshot || typeof snapshot !== 'object') {
+                  return null;
+                }
+                return {
+                  objectId: result.objectId as ObjectId,
+                  spaceId: result.spaceId as SpaceId,
+                  queueId: result.queueId as ObjectId,
+                  queueNamespace: 'data',
+                  documentId: null,
+                  doc: null,
+                  data: snapshot as Obj.JSON,
+                  rank: rankMap.get(result.recordId) ?? 1,
+                };
+              })
+              .filter(isNonNullable);
+          }
+
+          // Load space items from documents.
+          const spaceItems = await Promise.all(
+            spaceResults.map(async (result): Promise<QueryItem | null> => {
               const dxn = DXN.fromLocalObjectId(result.objectId);
-              return this._loadFromDXN(dxn, { sourceSpaceId: result.spaceId as SpaceId });
+              const item = await this._loadFromDXN(dxn, { sourceSpaceId: result.spaceId as SpaceId });
+              if (item) {
+                // Override the default rank with the FTS rank.
+                item.rank = rankMap.get(result.recordId) ?? 1;
+              }
+              return item;
             }),
           );
-          trace.documentsLoaded += items.filter(isNonNullable).length;
+
+          const items = [...queueItems, ...spaceItems.filter(isNonNullable)];
+          trace.documentsLoaded += items.length;
           trace.documentLoadTime += performance.now() - documentLoadStart;
 
-          workingSet.push(...items.filter(isNonNullable).filter((item) => step.spaces.includes(item.spaceId)));
+          workingSet.push(...items.filter((item) => step.spaces.includes(item.spaceId)));
           trace.objectCount = workingSet.length;
         } else {
           // Fall back to old indexer for vector search.
@@ -486,17 +613,28 @@ export class QueryExecutor extends Resource {
         throw new Error(`Unknown selector type: ${(step.selector as any)._tag}`);
     }
 
+    // Apply limit if specified on the select step.
+    if (step.limit !== undefined && workingSet.length > step.limit) {
+      workingSet = workingSet.slice(0, step.limit);
+      trace.objectCount = workingSet.length;
+    }
+
     return { workingSet, trace };
   }
 
   private async _execFilterStep(step: QueryPlan.FilterStep, workingSet: QueryItem[]): Promise<StepExecutionResult> {
-    const result = workingSet.filter((item) =>
-      filterMatchObject(step.filter, {
-        id: item.objectId,
-        spaceId: item.spaceId,
-        doc: item.doc,
-      }),
-    );
+    const result = workingSet.filter((item) => {
+      if (item.doc) {
+        return filterMatchObject(step.filter, {
+          id: item.objectId,
+          spaceId: item.spaceId,
+          doc: item.doc,
+        });
+      } else if (item.data) {
+        return filterMatchObjectJSON(step.filter, item.data);
+      } else {
+      }
+    });
 
     return {
       workingSet: result,
@@ -514,7 +652,8 @@ export class QueryExecutor extends Resource {
     workingSet: QueryItem[],
   ): Promise<StepExecutionResult> {
     const expected = step.mode === 'only-deleted';
-    const result = workingSet.filter((item) => ObjectStructure.isDeleted(item.doc) === expected);
+    // TODO(dmaretskyi): How do we handle items with parents and cascade deletions? -- perhaps we forbid queue items from having parents -- i.e. queue is their parent.
+    const result = workingSet.filter((item) => QueryItem.isDeleted(item) === expected);
     return {
       workingSet: result,
       trace: {
@@ -540,11 +679,12 @@ export class QueryExecutor extends Resource {
       case 'ReferenceTraversal': {
         switch (step.traversal.direction) {
           case 'outgoing': {
+            invariant(step.traversal.property !== null, 'Outgoing reference traversal requires a property');
             const property = EscapedPropPath.unescape(step.traversal.property);
 
             const refs = workingSet
               .flatMap((item) => {
-                const ref = getDeep(item.doc.data, property);
+                const ref = QueryItem.getProperty(item, property);
                 const refs = Array.isArray(ref) ? ref : [ref];
                 return refs.map((ref) => {
                   try {
@@ -619,21 +759,17 @@ export class QueryExecutor extends Resource {
           case 'relation-to-target': {
             const refs = workingSet
               .map((item) => {
-                const ref =
+                const dxn =
                   step.traversal.direction === 'relation-to-source'
-                    ? ObjectStructure.getRelationSource(item.doc)
-                    : ObjectStructure.getRelationTarget(item.doc);
-
-                if (!isEncodedReference(ref)) {
-                  return null;
-                }
+                    ? QueryItem.getRelationSource(item)
+                    : QueryItem.getRelationTarget(item);
                 try {
                   return {
-                    ref: DXN.parse(ref['/']),
+                    ref: DXN.parse(dxn),
                     spaceId: item.spaceId,
                   };
                 } catch {
-                  log.warn('invalid reference', { ref: ref['/'] });
+                  log.warn('invalid reference', { ref: dxn });
                   return null;
                 }
               })
@@ -751,15 +887,34 @@ export class QueryExecutor extends Resource {
   }
 
   private async _execOrderStep(step: QueryPlan.OrderStep, workingSet: QueryItem[]): Promise<StepExecutionResult> {
-    const sortedWorkingSet = [...workingSet].sort((a, b) => this._compareMultiOrder(a, b, step.order));
+    let sortedWorkingSet = [...workingSet].sort((a, b) => this._compareMultiOrder(a, b, step.order));
+
+    // Apply limit if specified on the order step.
+    if (step.limit !== undefined && sortedWorkingSet.length > step.limit) {
+      sortedWorkingSet = sortedWorkingSet.slice(0, step.limit);
+    }
 
     return {
       workingSet: sortedWorkingSet,
       trace: {
         ...ExecutionTrace.makeEmpty(),
         name: 'Order',
-        details: JSON.stringify(step.order),
+        details: JSON.stringify({ order: step.order, limit: step.limit }),
         objectCount: sortedWorkingSet.length,
+      },
+    };
+  }
+
+  private async _execLimitStep(step: QueryPlan.LimitStep, workingSet: QueryItem[]): Promise<StepExecutionResult> {
+    const limitedWorkingSet = workingSet.slice(0, step.limit);
+
+    return {
+      workingSet: limitedWorkingSet,
+      trace: {
+        ...ExecutionTrace.makeEmpty(),
+        name: 'Limit',
+        details: JSON.stringify({ limit: step.limit }),
+        objectCount: limitedWorkingSet.length,
       },
     };
   }
@@ -789,15 +944,20 @@ export class QueryExecutor extends Resource {
         const comparison = this._compareByProperty(a, b, order.property);
         return order.direction === 'desc' ? -comparison : comparison;
       }
+      case 'rank': {
+        // Higher rank = better match. By default, descending order (best first).
+        const comparison = a.rank - b.rank;
+        return order.direction === 'desc' ? -comparison : comparison;
+      }
       default:
-        // Should never reach here with proper TypeScript types
+        // Should never reach here with proper TypeScript types.
         return 0;
     }
   }
 
   private _compareByProperty(a: QueryItem, b: QueryItem, property: string): number {
-    const aValue = a.doc.data[property];
-    const bValue = b.doc.data[property];
+    const aValue = QueryItem.getProperty(a, [property]);
+    const bValue = QueryItem.getProperty(b, [property]);
 
     // Both null or undefined
     if (aValue == null && bValue == null) {
@@ -977,7 +1137,11 @@ export class QueryExecutor extends Resource {
       objectId,
       documentId: documentId as DocumentId,
       spaceId,
+      queueId: null,
+      queueNamespace: null,
+      data: null,
       doc: object,
+      rank: hit.rank,
     };
   }
 
@@ -1007,7 +1171,11 @@ export class QueryExecutor extends Resource {
         objectId: echoDxn.echoId,
         documentId: spaceRoot.documentId,
         spaceId,
+        queueId: null,
+        queueNamespace: null,
+        data: null,
         doc: inlineObject,
+        rank: 1,
       };
     }
 
@@ -1033,7 +1201,11 @@ export class QueryExecutor extends Resource {
       objectId: echoDxn.echoId,
       documentId: handle.documentId,
       spaceId,
+      queueId: null,
+      queueNamespace: null,
+      data: null,
       doc: object,
+      rank: 1,
     };
   }
 }

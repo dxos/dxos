@@ -4,13 +4,13 @@
 
 import { type Extension } from '@codemirror/state';
 import { type EditorView } from '@codemirror/view';
+import { type Atom } from '@effect-atom/atom-react';
 import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { Surface } from '@dxos/app-framework/react';
 import { DXN } from '@dxos/keys';
-import { type Live } from '@dxos/live-object';
 import { useClient } from '@dxos/react-client';
 import {
   EditorMenuProvider,
@@ -48,10 +48,10 @@ type MarkdownEditorContextValue = {
   setEditorView: (view: EditorView) => void;
   extensions: Extension[];
   previewBlocks: PreviewBlock[];
-  toolbarState: Live<EditorToolbarState>;
+  toolbarState: Atom.Writable<EditorToolbarState>;
   popoverMenu: Omit<UseEditorMenu, 'extension'>;
 } & (Pick<ExtensionsOptions, 'viewMode'> &
-  Pick<NaturalMarkdownToolbarProps, 'editorView' | 'onFileUpload' | 'onViewModeChange'>);
+  Pick<NaturalMarkdownToolbarProps, 'editorView' | 'onAction' | 'onFileUpload' | 'onViewModeChange'>);
 
 const [MarkdownEditorContextProvider, useMarkdownEditorContext] =
   createContext<MarkdownEditorContextValue>('MarkdownEditor.Context');
@@ -64,7 +64,7 @@ type MarkdownEditorRootProps = PropsWithChildren<
   {
     object?: DocumentType;
     extensions?: Extension[];
-  } & Pick<MarkdownEditorContextValue, 'id' | 'onFileUpload' | 'onViewModeChange' | 'viewMode'> &
+  } & Pick<MarkdownEditorContextValue, 'id' | 'onAction' | 'onFileUpload' | 'onViewModeChange' | 'viewMode'> &
     Pick<UseEditorMenuOptionsProps, 'slashCommandGroups' | 'onLinkQuery'> &
     Pick<ExtensionsOptions, 'editorStateStore' | 'selectionManager' | 'settings'>
 >;
@@ -183,7 +183,7 @@ MarkdownEditorContent.displayName = 'MarkdownEditor.Content';
 
 type MarkdownEditorToolbarProps = Omit<
   NaturalMarkdownToolbarProps,
-  'state' | 'editorView' | 'onFileUpload' | 'onViewModeChange'
+  'state' | 'editorView' | 'onAction' | 'onFileUpload' | 'onViewModeChange'
 >;
 
 const MarkdownEditorToolbar = (props: MarkdownEditorToolbarProps) => {

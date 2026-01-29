@@ -10,6 +10,7 @@ import { Obj } from '@dxos/echo';
 import { useClient } from '@dxos/react-client';
 import { Filter, useQuery } from '@dxos/react-client/echo';
 import { Button, Icon, Toast, useTranslation } from '@dxos/react-ui';
+import { osTranslations } from '@dxos/ui-theme';
 
 import { meta } from '../meta';
 import { SpaceOperation } from '../types';
@@ -96,12 +97,14 @@ export const AwaitingObject = ({ id }: { id: string }) => {
               </Button>
             </Toast.Action>
             <Toast.Close asChild>
-              <Button onClick={handleClose}>{t('close label', { ns: 'appkit' })}</Button>
+              <Button onClick={handleClose}>{t('close label', { ns: osTranslations })}</Button>
             </Toast.Close>
           </>
         ) : (
           <Toast.Close asChild>
-            <Button onClick={handleClose}>{t(waiting ? 'close label' : 'confirm label', { ns: 'appkit' })}</Button>
+            <Button onClick={handleClose}>
+              {t(waiting ? 'close label' : 'confirm label', { ns: osTranslations })}
+            </Button>
           </Toast.Close>
         )}
       </Toast.Actions>

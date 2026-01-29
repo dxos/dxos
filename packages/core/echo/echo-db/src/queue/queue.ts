@@ -7,10 +7,9 @@ import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { type Database, type Entity, Obj, type Ref } from '@dxos/echo';
 import { type HasId, type ObjectJSON, SelfDXNId, assertObjectModel, setRefResolverOnData } from '@dxos/echo/internal';
-import { compositeRuntime } from '@dxos/echo-signals/runtime';
+import { defineHiddenProperty } from '@dxos/echo/internal';
 import { assertArgument, failedInvariant } from '@dxos/invariant';
 import { type DXN, type ObjectId, type SpaceId } from '@dxos/keys';
-import { defineHiddenProperty } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { type QueueService } from '@dxos/protocols';
 
@@ -31,24 +30,34 @@ const POLLING_INTERVAL = 1_000;
  * Client-side view onto an EDGE queue.
  */
 export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Queue<T> {
-  private readonly _signal = compositeRuntime.createSignal();
+  private readonly _ctx = new Context();
 
   public readonly updated = new Event();
 
-  private readonly _refreshTask = new DeferredTask(Context.default(), async () => {
+  // TODO(dmaretskyi): This task occasionally fails with "The database connection is not open" error in tests -- some issue with teardown ordering.
+  private readonly _refreshTask = new DeferredTask(this._ctx, async () => {
     const thisRefreshId = ++this._refreshId;
     let changed = false;
     try {
       TRACE_QUEUE_LOAD &&
         log.info('queue refresh begin', { currentObjects: this._objects.length, refreshId: thisRefreshId });
-      const { objects } = await this._service.queryQueue(this._subspaceTag, this._spaceId, { queueId: this._queueId });
-      TRACE_QUEUE_LOAD && log.info('items fetched', { refreshId: thisRefreshId, count: objects.length });
+      const { objects } = await this._service.queryQueue({
+        query: {
+          queuesNamespace: this._subspaceTag,
+          spaceId: this._spaceId,
+          queueIds: [this._queueId],
+        },
+      });
+      TRACE_QUEUE_LOAD && log.info('items fetched', { refreshId: thisRefreshId, count: objects?.length ?? 0 });
       if (thisRefreshId !== this._refreshId) {
+        return;
+      }
+      if (this._ctx.disposed) {
         return;
       }
 
       const decodedObjects = await Promise.all(
-        objects.map((obj) =>
+        (objects ?? []).map((obj) =>
           Obj.fromJSON(obj, {
             refResolver: this._refResolver,
             dxn: this._dxn.extend([(obj as any).id]),
@@ -66,7 +75,8 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
 
       changed = objectSetChanged(this._objects, decodedObjects);
 
-      TRACE_QUEUE_LOAD && log.info('queue refresh', { changed, objects: objects.length, refreshId: thisRefreshId });
+      TRACE_QUEUE_LOAD &&
+        log.info('queue refresh', { changed, objects: objects?.length ?? 0, refreshId: thisRefreshId });
       this._objects = decodedObjects as T[];
     } catch (err) {
       log.catch(err);
@@ -74,7 +84,6 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
     } finally {
       this._isLoading = false;
       if (changed) {
-        this._signal.notifyWrite();
         this.updated.emit();
       }
     }
@@ -120,10 +129,16 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
   }
 
   /**
+   * Subscribe to queue updates.
+   */
+  subscribe(callback: () => void): () => void {
+    return this.updated.on(callback);
+  }
+
+  /**
    * @deprecated Use `query` method instead.
    */
   get isLoading(): boolean {
-    this._signal.notifyRead();
     return this._isLoading;
   }
 
@@ -131,7 +146,6 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
    * @deprecated Use `query` method instead.
    */
   get error(): Error | null {
-    this._signal.notifyRead();
     return this._error;
   }
 
@@ -139,7 +153,6 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
    * @deprecated Use `query` method instead.
    */
   get objects(): T[] {
-    this._signal.notifyRead();
     return this.getObjectsSync();
   }
 
@@ -163,24 +176,22 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
     for (const item of items) {
       this._objectCache.set(item.id, item as T);
     }
-    this._signal.notifyWrite();
     this.updated.emit();
 
     const json = items.map((item) => Obj.toJSON(item));
 
     try {
       for (let i = 0; i < json.length; i += QUEUE_APPEND_BATCH_SIZE) {
-        await this._service.insertIntoQueue(
-          this._subspaceTag,
-          this._spaceId,
-          this._queueId,
-          json.slice(i, i + QUEUE_APPEND_BATCH_SIZE),
-        );
+        await this._service.insertIntoQueue({
+          subspaceTag: this._subspaceTag,
+          spaceId: this._spaceId,
+          queueId: this._queueId,
+          objects: json.slice(i, i + QUEUE_APPEND_BATCH_SIZE) as any,
+        });
       }
     } catch (err) {
       log.catch(err);
       this._error = err as Error;
-      this._signal.notifyWrite();
       this.updated.emit();
     }
   }
@@ -192,14 +203,17 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
     for (const id of ids) {
       this._objectCache.delete(id);
     }
-    this._signal.notifyWrite();
     this.updated.emit();
 
     try {
-      await this._service.deleteFromQueue(this._subspaceTag, this._spaceId, this._queueId, ids);
+      await this._service.deleteFromQueue({
+        subspaceTag: this._subspaceTag,
+        spaceId: this._spaceId,
+        queueId: this._queueId,
+        objectIds: ids,
+      });
     } catch (err) {
       this._error = err as Error;
-      this._signal.notifyWrite();
       this.updated.emit();
     }
   }
@@ -236,7 +250,13 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
   }
 
   async fetchObjectsJSON(): Promise<ObjectJSON[]> {
-    const { objects } = await this._service.queryQueue(this._subspaceTag, this._spaceId, { queueId: this._queueId });
+    const { objects } = await this._service.queryQueue({
+      query: {
+        queuesNamespace: this._subspaceTag,
+        spaceId: this._spaceId,
+        queueIds: [this._queueId],
+      },
+    });
     return objects as ObjectJSON[];
   }
 
@@ -250,7 +270,7 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
 
   /**
    * Internal use.
-   * Doesn't trigger signals.
+   * Doesn't trigger update events.
    */
   getObjectsSync(): T[] {
     return this._objects;
@@ -304,6 +324,11 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
         this._pollingInterval = null;
       }
     };
+  }
+
+  async dispose() {
+    await this._ctx.dispose();
+    await this._refreshTask.join();
   }
 }
 

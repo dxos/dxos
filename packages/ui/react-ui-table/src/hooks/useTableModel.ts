@@ -2,23 +2,28 @@
 // Copyright 2024 DXOS.org
 //
 
-import { effect } from '@preact/signals-core';
-import { useEffect, useMemo, useState } from 'react';
+import { RegistryContext } from '@effect-atom/atom-react';
+import { useContext, useEffect, useMemo, useState } from 'react';
 
 import { type Database, Obj } from '@dxos/echo';
-import { type Live } from '@dxos/live-object';
 import { useSelected, useSelectionActions } from '@dxos/react-ui-attention';
 import { type ProjectionModel } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
-import { TableModel, type TableModelProps, type TableRow, type TableRowAction } from '../model';
+import {
+  TableModel,
+  type TableModelProps,
+  type TableRow,
+  type TableRowAction,
+  createEchoChangeCallback,
+} from '../model';
 import { type Table } from '../types';
 
 export type UseTableModelProps<T extends TableRow = TableRow> = {
   object?: Table.Table;
   projection?: ProjectionModel;
   db?: Database.Database;
-  rows?: Live<T>[];
+  rows?: T[];
   rowActions?: TableRowAction[];
   onSelectionChanged?: (selection: string[]) => void;
   onRowAction?: (actionId: string, data: T) => void;
@@ -38,6 +43,7 @@ export const useTableModel = <T extends TableRow = TableRow>({
   onRowAction,
   ...props
 }: UseTableModelProps<T>): TableModel<T> | undefined => {
+  const registry = useContext(RegistryContext);
   const selected = useSelected(object && Obj.getDXN(object).toString(), 'multi');
   const initialSelection = useMemo(() => selected, [object]);
 
@@ -50,9 +56,11 @@ export const useTableModel = <T extends TableRow = TableRow>({
     let model: TableModel<T> | undefined;
     const t = setTimeout(async () => {
       model = new TableModel<T>({
+        registry,
         object,
         projection,
         db,
+        change: createEchoChangeCallback<T>(object),
         features,
         rowActions,
         initialSelection,
@@ -68,7 +76,7 @@ export const useTableModel = <T extends TableRow = TableRow>({
       void model?.close();
     };
     // TODO(burdon): Trigger if callbacks change?
-  }, [object, projection, features, rowActions, initialSelection]);
+  }, [registry, object, projection, features, rowActions, initialSelection]);
 
   // Update data when rows change.
   useEffect(() => {
@@ -84,8 +92,8 @@ export const useTableModel = <T extends TableRow = TableRow>({
       return;
     }
 
-    const unsubscribe = effect(() => {
-      const selectedItems = [...model.selection.selection.value];
+    const unsubscribe = registry.subscribe(model.selection.selectionAtom, () => {
+      const selectedItems = [...model.selection.selection];
       multiSelect(selectedItems);
       onSelectionChanged?.(selectedItems);
     });
@@ -95,7 +103,7 @@ export const useTableModel = <T extends TableRow = TableRow>({
       clear();
       unsubscribe();
     };
-  }, [model, onSelectionChanged]);
+  }, [registry, model, onSelectionChanged]);
 
   return model;
 };

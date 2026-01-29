@@ -5,6 +5,8 @@
 // NOTE(ZaymonFC): Workaround; see: https://discord.com/channels/837138313172353095/1363955461350621235
 import '@dxos/plugin-inbox/css';
 
+import * as Effect from 'effect/Effect';
+
 import { OperationPlugin, type Plugin, RuntimePlugin, SettingsPlugin } from '@dxos/app-framework';
 import { type ClientServicesProvider, type Config } from '@dxos/client';
 import { type Observability } from '@dxos/observability';
@@ -213,13 +215,14 @@ export const getPlugins = ({
     .flat();
 };
 
-const handleReset: ClientPluginOptions['onReset'] = ({ target }) => {
-  localStorage.clear();
-  if (target === 'deviceInvitation') {
-    window.location.assign(new URL('/?deviceInvitationCode=', window.location.origin));
-  } else if (target === 'recoverIdentity') {
-    window.location.assign(new URL('/?recoverIdentity=true', window.location.origin));
-  } else {
-    window.location.pathname = '/';
-  }
-};
+const handleReset: ClientPluginOptions['onReset'] = ({ target }) =>
+  Effect.sync(() => {
+    localStorage.clear();
+    if (target === 'deviceInvitation') {
+      window.location.assign(new URL('/?deviceInvitationCode=', window.location.origin));
+    } else if (target === 'recoverIdentity') {
+      window.location.assign(new URL('/?recoverIdentity=true', window.location.origin));
+    } else {
+      window.location.pathname = '/';
+    }
+  });

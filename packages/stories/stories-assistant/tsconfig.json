@@ -37,9 +37,6 @@
       "path": "../../common/keys"
     },
     {
-      "path": "../../common/local-storage"
-    },
-    {
       "path": "../../common/log"
     },
     {
@@ -82,9 +79,6 @@
       "path": "../../core/echo/echo-query"
     },
     {
-      "path": "../../core/echo/live-object"
-    },
-    {
       "path": "../../core/functions"
     },
     {
@@ -92,6 +86,9 @@
     },
     {
       "path": "../../core/mesh/edge-client"
+    },
+    {
+      "path": "../../core/operation"
     },
     {
       "path": "../../core/protocols"

@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { effect } from '@preact/signals-core';
 import { describe, test } from 'vitest';
 
 import { scheduleTaskInterval } from '@dxos/async';
@@ -133,10 +132,6 @@ describe.skip('SentenceNormalization', () => {
 
     // Start normalizer.
     await normalizer.open();
-    effect(() => {
-      log.info('normalizer');
-      log.info(JSON.stringify(queue.objects, null, 2));
-    });
 
     await new Promise(() => {});
   });

@@ -11,22 +11,24 @@ import { meta } from '../../meta';
 import { ClientCapability, ObservabilityCapabilities, ObservabilityOperation } from '../../types';
 
 type ClientReadyOptions = {
-  context: Capability.PluginContext;
   namespace: string;
   observability: Observability;
 };
 
-export default Capability.makeModule(({ context, namespace, observability }: ClientReadyOptions) =>
-  Effect.gen(function* () {
-    const manager = context.getCapability(Common.Capability.PluginManager);
-    const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
-    const state = context.getCapability(ObservabilityCapabilities.State);
-    const client = context.getCapability(ClientCapability);
+export default Capability.makeModule(
+  Effect.fnUntraced(function* (props?: ClientReadyOptions) {
+    const { namespace, observability } = props!;
+    const manager = yield* Capability.get(Common.Capability.PluginManager);
+    const { invokePromise } = yield* Capability.get(Common.Capability.OperationInvoker);
+    const registry = yield* Capability.get(Common.Capability.AtomRegistry);
+    const stateAtom = yield* Capability.get(ObservabilityCapabilities.State);
+    const client = yield* Capability.get(ClientCapability);
 
     const sendPrivacyNotice = async () => {
       const environment = client?.config?.values.runtime?.app?.env?.DX_ENVIRONMENT;
       const notify =
         environment && environment !== 'ci' && !environment.endsWith('.local') && !environment.endsWith('.lan');
+      const state = registry.get(stateAtom);
       if (!state.notified && notify) {
         await invokePromise(Common.LayoutOperation.AddToast, {
           id: `${meta.id}/notice`,
@@ -40,7 +42,7 @@ export default Capability.makeModule(({ context, namespace, observability }: Cli
           onAction: () => invokePromise(SettingsOperation.Open, { plugin: meta.id }),
         });
 
-        state.notified = true;
+        registry.set(stateAtom, { ...registry.get(stateAtom), notified: true });
       }
     };
 

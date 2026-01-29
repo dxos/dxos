@@ -6,7 +6,7 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "exports": {
     ".": {
@@ -28,12 +28,10 @@
     "@dxos/async": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo": "workspace:*",
-    "@dxos/echo-signals": "workspace:*",
+    "@dxos/echo-atom": "workspace:*",
     "@dxos/invariant": "workspace:*",
-    "@dxos/live-object": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@preact/signals-core": "catalog:",
     "main-thread-scheduling": "catalog:"
   },
   "devDependencies": {

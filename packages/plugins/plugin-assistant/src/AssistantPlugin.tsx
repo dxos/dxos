@@ -9,8 +9,9 @@ import { ResearchGraph } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { Sequence } from '@dxos/conductor';
 import { Obj, Type } from '@dxos/echo';
-import { ClientEvents } from '@dxos/plugin-client';
-import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
+import { Operation } from '@dxos/operation';
+import { ClientEvents } from '@dxos/plugin-client/types';
+import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space/types';
 import { type CreateObject } from '@dxos/plugin-space/types';
 import { HasSubject } from '@dxos/types';
 
@@ -27,9 +28,9 @@ import {
   Settings,
   Toolkit,
 } from './capabilities';
-import { AssistantEvents } from './events';
 import { meta } from './meta';
 import { translations } from './translations';
+import { AssistantEvents } from './types';
 import { Assistant, AssistantOperation } from './types';
 
 export const AssistantPlugin = Plugin.define(meta).pipe(
@@ -94,12 +95,11 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
     id: 'on-space-created',
     activatesOn: SpaceEvents.SpaceCreated,
-    activate: (context) =>
+    activate: () =>
       Effect.succeed(
-        Capability.contributes(SpaceCapabilities.OnCreateSpace, (params) => {
-          const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
-          return invoke(AssistantOperation.OnCreateSpace, params);
-        }),
+        Capability.contributes(SpaceCapabilities.OnCreateSpace, (params) =>
+          Operation.invoke(AssistantOperation.OnCreateSpace, params),
+        ),
       ),
   }),
   Plugin.addModule({

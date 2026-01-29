@@ -6,7 +6,7 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "exports": {
     ".": {
@@ -26,7 +26,6 @@
   ],
   "dependencies": {
     "@fluentui/react-tabster": "catalog:",
-    "@preact-signals/safe-react": "catalog:",
     "@radix-ui/react-compose-refs": "catalog:",
     "@radix-ui/react-context": "catalog:",
     "@radix-ui/react-use-controllable-state": "catalog:",

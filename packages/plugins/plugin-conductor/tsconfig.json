@@ -43,9 +43,6 @@
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../core/echo/live-object"
-    },
-    {
       "path": "../../core/functions"
     },
     {

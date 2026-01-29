@@ -8,7 +8,7 @@ import React, { useEffect, useMemo } from 'react';
 import { createEchoSchema } from '@dxos/echo/testing';
 import { log } from '@dxos/log';
 import { withTheme } from '@dxos/react-ui/testing';
-import { ProjectionModel } from '@dxos/schema';
+import { ProjectionModel, createDirectChangeCallback } from '@dxos/schema';
 import { Example, testView } from '@dxos/schema/testing';
 
 import { translations } from '../../translations';
@@ -72,7 +72,14 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    projection: new ProjectionModel(createEchoSchema(Example).jsonSchema, testView.projection),
+    projection: (() => {
+      const jsonSchema = createEchoSchema(Example).jsonSchema;
+      return new ProjectionModel({
+        view: testView,
+        baseSchema: jsonSchema,
+        change: createDirectChangeCallback(testView.projection, jsonSchema),
+      });
+    })(),
     field: testView.projection.fields[0],
   },
 };

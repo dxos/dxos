@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { ClientCapabilities } from '@dxos/plugin-client';
 
 import { MediaStreamRecorder, Transcriber, TranscriptionManager } from '../../transcriber';
@@ -31,8 +31,12 @@ const TRANSCRIBE_AFTER_CHUNKS_AMOUNT = 50;
 /**
  * Records audio while user is speaking and transcribes it after user is done speaking.
  */
-export default Capability.makeModule((context) =>
-  Effect.sync(() => {
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    // Get context for lazy capability access in callbacks.
+    const capabilities = yield* Capability.Service;
+    const registry = yield* Capability.get(Common.Capability.AtomRegistry);
+
     const getTranscriber: TranscriptionCapabilities.GetTranscriber = ({
       audioStreamTrack,
       onSegments,
@@ -58,10 +62,11 @@ export default Capability.makeModule((context) =>
     };
 
     const getTranscriptionManager: TranscriptionCapabilities.GetTranscriptionManager = ({ messageEnricher }) => {
-      const client = context.getCapability(ClientCapabilities.Client);
+      const client = capabilities.get(ClientCapabilities.Client);
       const transcriptionManager = new TranscriptionManager({
         edgeClient: client.edge,
         messageEnricher,
+        registry,
       });
 
       const identity = client.halo.identity.get();

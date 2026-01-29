@@ -5,28 +5,26 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability, Common } from '@dxos/app-framework';
+import { Operation } from '@dxos/operation';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
-import { CreateAtom, GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
+import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 
 import { meta } from '../../meta';
 import { DeckCapabilities } from '../../types';
 
-export default Capability.makeModule((context) =>
-  Effect.succeed(
-    Capability.contributes(
-      Common.Capability.AppGraphBuilder,
-      GraphBuilder.createExtension({
-        id: meta.id,
-        match: NodeMatcher.whenRoot,
-        actions: (node, get) => {
-          const state = context.getCapability(DeckCapabilities.MutableDeckState);
-
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const extensions = yield* GraphBuilder.createExtension({
+      id: meta.id,
+      match: NodeMatcher.whenRoot,
+      actions: (_node, get) =>
+        Effect.gen(function* () {
           // NOTE(Zan): This is currently disabled.
           // TODO(Zan): Fullscreen needs to know the active node and provide that to the layout part.
           // const _fullscreen = {
           //   id: `${LayoutAction.UpdateLayout._tag}/fullscreen`,
           //   data: async () => {
-          //     const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+          //     const { dispatchPromise: dispatch } = context.get(Capabilities.IntentDispatcher);
           //     await dispatch(
           //       createIntent(LayoutAction.SetLayoutMode, { part: 'mode', options: { mode: 'fullscreen' } }),
           //     );
@@ -43,14 +41,13 @@ export default Capability.makeModule((context) =>
 
           const closeCurrent = {
             id: `${Common.LayoutOperation.Close.meta.key}/current`,
-            data: () => {
-              const attention = context.getCapability(AttentionCapabilities.Attention);
-              const attended = attention.current.at(-1);
+            data: Effect.fnUntraced(function* () {
+              const attention = yield* Capability.get(AttentionCapabilities.Attention);
+              const attended = attention.getCurrent().at(-1);
               if (attended) {
-                const { invokeSync } = context.getCapability(Common.Capability.OperationInvoker);
-                invokeSync(Common.LayoutOperation.Close, { subject: [attended] });
+                yield* Operation.invoke(Common.LayoutOperation.Close, { subject: [attended] });
               }
-            },
+            }),
             properties: {
               label: ['close current label', { ns: meta.id }],
               icon: 'ph--x--regular',
@@ -59,13 +56,13 @@ export default Capability.makeModule((context) =>
 
           const closeOthers = {
             id: `${Common.LayoutOperation.Close.meta.key}/others`,
-            data: () => {
-              const { invokeSync } = context.getCapability(Common.Capability.OperationInvoker);
-              const attention = context.getCapability(AttentionCapabilities.Attention);
-              const attended = attention.current.at(-1);
-              const ids = state.deck.active.filter((id) => id !== attended) ?? [];
-              invokeSync(Common.LayoutOperation.Close, { subject: ids });
-            },
+            data: Effect.fnUntraced(function* () {
+              const attention = yield* Capability.get(AttentionCapabilities.Attention);
+              const deck = yield* DeckCapabilities.getDeck();
+              const attended = attention.getCurrent().at(-1);
+              const ids = deck.active.filter((id: string) => id !== attended) ?? [];
+              yield* Operation.invoke(Common.LayoutOperation.Close, { subject: ids });
+            }),
             properties: {
               label: ['close others label', { ns: meta.id }],
               icon: 'ph--x-square--regular',
@@ -74,30 +71,32 @@ export default Capability.makeModule((context) =>
 
           const closeAll = {
             id: `${Common.LayoutOperation.Close.meta.key}/all`,
-            data: () => {
-              const { invokeSync } = context.getCapability(Common.Capability.OperationInvoker);
-              invokeSync(Common.LayoutOperation.Close, { subject: state.deck.active });
-            },
+            data: Effect.fnUntraced(function* () {
+              const deck = yield* DeckCapabilities.getDeck();
+              yield* Operation.invoke(Common.LayoutOperation.Close, { subject: deck.active });
+            }),
             properties: {
               label: ['close all label', { ns: meta.id }],
               icon: 'ph--x-circle--regular',
             },
           };
 
+          const state = get(yield* Capability.get(DeckCapabilities.State));
+          const deck = state.decks[state.activeDeck];
+
           const toggleSidebar = {
             id: `${Common.LayoutOperation.UpdateSidebar.meta.key}/nav`,
-            data: async () => {
-              state.sidebarState = state.sidebarState === 'expanded' ? 'collapsed' : 'expanded';
-            },
+            data: Effect.fnUntraced(function* () {
+              yield* Common.Capability.updateAtomValue(DeckCapabilities.State, (s) => ({
+                ...s,
+                sidebarState: s.sidebarState === 'expanded' ? ('collapsed' as const) : ('expanded' as const),
+              }));
+            }),
             properties: {
               label: [
-                get(
-                  CreateAtom.fromSignal(() =>
-                    state.sidebarState === 'expanded'
-                      ? 'collapse navigation sidebar label'
-                      : 'open navigation sidebar label',
-                  ),
-                ),
+                state.sidebarState === 'expanded'
+                  ? 'collapse navigation sidebar label'
+                  : 'open navigation sidebar label',
                 { ns: meta.id },
               ],
               icon: 'ph--sidebar--regular',
@@ -110,13 +109,10 @@ export default Capability.makeModule((context) =>
             },
           };
 
-          return get(
-            CreateAtom.fromSignal(() =>
-              !state.deck.solo ? [closeCurrent, closeOthers, closeAll, toggleSidebar] : [toggleSidebar],
-            ),
-          );
-        },
-      }),
-    ),
-  ),
+          return !deck?.solo ? [closeCurrent, closeOthers, closeAll, toggleSidebar] : [toggleSidebar];
+        }),
+    });
+
+    return Capability.contributes(Common.Capability.AppGraphBuilder, extensions);
+  }),
 );

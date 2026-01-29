@@ -5,7 +5,7 @@
 import { Event } from '@dxos/async';
 import { Resource } from '@dxos/context';
 import { EXPANDO_TYPENAME } from '@dxos/echo/internal';
-import { type ObjectStructure, decodeReference } from '@dxos/echo-protocol';
+import { EncodedReference, type ObjectStructure } from '@dxos/echo-protocol';
 import { DXN, PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type ObjectPointerEncoded } from '@dxos/protocols';
@@ -63,6 +63,7 @@ export class IndexSchema extends Resource implements Index {
   /**
    * Find all objects that match the given filter.
    * Note that the schema index does not discern schema versions.
+   * Returns rank 1 for all matches as ranking is not applicable for predicate-based queries.
    */
   @trace.span({ showInBrowserTimeline: true })
   async find(filter: IndexQuery): Promise<FindResult[]> {
@@ -71,13 +72,13 @@ export class IndexSchema extends Resource implements Index {
       return Array.from(this._index.entries())
         .filter(([key]) => !filter.typenames.includes(key ?? EXPANDO_TYPENAME) === false)
         .flatMap(([, value]) => Array.from(value))
-        .map((id) => ({ id, rank: 0 }));
+        .map((id) => ({ id, rank: 1 }));
     }
 
     if (filter.typenames.length === 0) {
       return Array.from(this._index.values())
         .flatMap((ids) => Array.from(ids))
-        .map((id) => ({ id, rank: 0 }));
+        .map((id) => ({ id, rank: 1 }));
     }
 
     const results: FindResult[] = [];
@@ -86,20 +87,22 @@ export class IndexSchema extends Resource implements Index {
         typename === EXPANDO_TYPENAME ||
         (DXN.isDXNString(typename) && DXN.parse(typename).asTypeDXN()?.type === EXPANDO_TYPENAME)
       ) {
-        results.push(...Array.from(this._index.get(null) ?? []).map((id) => ({ id, rank: 0 })));
+        // Look for Expando objects under both null (legacy) and EXPANDO_TYPENAME (new).
+        results.push(...Array.from(this._index.get(null) ?? []).map((id) => ({ id, rank: 1 })));
+        results.push(...Array.from(this._index.get(EXPANDO_TYPENAME) ?? []).map((id) => ({ id, rank: 1 })));
       } else if (DXN.isDXNString(typename)) {
         const dxn = DXN.parse(typename);
         if (dxn.isLocalObjectId()) {
           const objectId = dxn.parts[1];
-          results.push(...Array.from(this._index.get(objectId) ?? []).map((id) => ({ id, rank: 0 })));
+          results.push(...Array.from(this._index.get(objectId) ?? []).map((id) => ({ id, rank: 1 })));
         } else if (dxn.kind === DXN.kind.TYPE) {
           const typename = dxn.parts[0];
-          results.push(...Array.from(this._index.get(typename) ?? []).map((id) => ({ id, rank: 0 })));
+          results.push(...Array.from(this._index.get(typename) ?? []).map((id) => ({ id, rank: 1 })));
         } else {
           log.warn('Unsupported DXN', { dxn });
         }
       } else {
-        results.push(...Array.from(this._index.get(typename) ?? []).map((id) => ({ id, rank: 0 })));
+        results.push(...Array.from(this._index.get(typename) ?? []).map((id) => ({ id, rank: 1 })));
       }
     }
     return results.flat();
@@ -127,5 +130,11 @@ export class IndexSchema extends Resource implements Index {
   }
 }
 
-const getTypeFromObject = (object: Partial<ObjectStructure>): string | null =>
-  object.system?.type ? (decodeReference(object.system.type).objectId ?? null) : null;
+const getTypeFromObject = (object: Partial<ObjectStructure>): string | null => {
+  if (!object.system?.type) {
+    return null;
+  }
+  const dxn = EncodedReference.toDXN(object.system.type);
+  // For type DXNs, return the typename; for echo DXNs (stored schemas), return the object id.
+  return dxn.asTypeDXN()?.type ?? dxn.asEchoDXN()?.echoId ?? null;
+};

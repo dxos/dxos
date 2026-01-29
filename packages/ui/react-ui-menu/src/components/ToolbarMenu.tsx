@@ -19,6 +19,7 @@ import {
   isMenuGroup,
   isSeparator,
 } from '../types';
+import { executeMenuAction } from '../util';
 
 import { ActionLabel, actionLabel } from './ActionLabel';
 import { DropdownMenu } from './DropdownMenu';
@@ -53,7 +54,7 @@ export type ToolbarMenuActionProps = {
 };
 
 const ActionToolbarItem = ({ action, __menuScope }: MenuScopedProps<{ action: MenuAction }>) => {
-  const { iconSize } = useMenu('ActionToolbarItem', __menuScope);
+  const { iconSize, onAction } = useMenu('ActionToolbarItem', __menuScope);
   const { t } = useTranslation(translationKey);
 
   const { icon, iconOnly = true, disabled, testId, hidden, classNames } = action.properties;
@@ -62,7 +63,13 @@ const ActionToolbarItem = ({ action, __menuScope }: MenuScopedProps<{ action: Me
     ? { icon, size: iconSize, iconOnly, label: actionLabel(action, t) }
     : { children: <ActionLabel action={action} /> };
 
-  const handleClick = useCallback(() => action.data?.(), [action]);
+  const handleClick = useCallback(() => {
+    if (onAction) {
+      onAction(action, {});
+    } else {
+      void executeMenuAction(action);
+    }
+  }, [action, onAction]);
 
   return hidden ? null : (
     <Root
@@ -121,10 +128,16 @@ const DropdownMenuToolbarItem = ({
 };
 
 const ToggleGroupItem = ({ group, action, __menuScope }: MenuScopedProps<ToolbarMenuActionProps>) => {
-  const { iconSize } = useMenu('ToggleGroupItem', __menuScope);
+  const { iconSize, onAction } = useMenu('ToggleGroupItem', __menuScope);
   const { t } = useTranslation(translationKey);
   const { icon, iconOnly = true, disabled, testId, hidden, classNames } = action.properties;
-  const handleClick = useCallback(() => action.data?.({ parent: group }), [action, group]);
+  const handleClick = useCallback(() => {
+    if (onAction) {
+      onAction(action, { parent: group });
+    } else {
+      void executeMenuAction(action, { parent: group });
+    }
+  }, [action, group, onAction]);
   const Root = icon ? NaturalToolbar.ToggleGroupIconItem : NaturalToolbar.ToggleGroupItem;
   const rootProps = icon
     ? { icon, size: iconSize, iconOnly, label: actionLabel(action, t) }

@@ -2,11 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
+import { RegistryContext } from '@effect-atom/atom-react';
 import React, {
   type ForwardedRef,
   type PropsWithChildren,
   forwardRef,
   useCallback,
+  useContext,
   useEffect,
   useImperativeHandle,
   useMemo,
@@ -102,9 +104,12 @@ const RootInner = <S extends Shape = Shape>(
   // Canvas layout.
   const overlayRef = useRef<SVGSVGElement>(null);
 
+  // Atom registry for reactive state.
+  const atomRegistry = useContext(RegistryContext);
+
   // Editor state.
   const [ready, setReady] = useState(!autoZoom);
-  const [dragMonitor] = useState(() => new DragMonitor());
+  const [dragMonitor] = useState(() => new DragMonitor(atomRegistry));
   const [editing, setEditing] = useState<EditingState<any>>();
 
   // Actions.

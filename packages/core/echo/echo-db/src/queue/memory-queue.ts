@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Event } from '@dxos/async';
 import { type Entity } from '@dxos/echo';
-import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { DXN, ObjectId, SpaceId } from '@dxos/keys';
 
@@ -36,7 +36,7 @@ export class MemoryQueue<T extends Entity.Unknown> implements Queue<T> {
     return queue;
   }
 
-  private readonly _signal = compositeRuntime.createSignal();
+  public readonly updated = new Event();
 
   private _objects: T[] = [];
 
@@ -53,6 +53,10 @@ export class MemoryQueue<T extends Entity.Unknown> implements Queue<T> {
     return this._dxn;
   }
 
+  subscribe(callback: () => void): () => void {
+    return this.updated.on(callback);
+  }
+
   get isLoading(): boolean {
     return false;
   }
@@ -62,7 +66,6 @@ export class MemoryQueue<T extends Entity.Unknown> implements Queue<T> {
   }
 
   get objects(): T[] {
-    this._signal.notifyRead();
     return [...this._objects];
   }
 
@@ -75,7 +78,7 @@ export class MemoryQueue<T extends Entity.Unknown> implements Queue<T> {
    */
   async append(objects: T[]): Promise<void> {
     this._objects = [...this._objects, ...objects];
-    this._signal.notifyWrite();
+    this.updated.emit();
   }
 
   async queryObjects(): Promise<T[]> {
@@ -89,7 +92,7 @@ export class MemoryQueue<T extends Entity.Unknown> implements Queue<T> {
   async delete(ids: ObjectId[]): Promise<void> {
     // TODO(dmaretskyi): Restrict types.
     this._objects = this._objects.filter((object) => !ids.includes(object.id));
-    this._signal.notifyWrite();
+    this.updated.emit();
   }
 
   async refresh(): Promise<void> {

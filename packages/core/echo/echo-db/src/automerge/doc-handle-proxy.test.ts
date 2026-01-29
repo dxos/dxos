@@ -2,11 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { generateAutomergeUrl, parseAutomergeUrl } from '@automerge/automerge-repo';
 import { describe, expect, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
-import { Context } from '@dxos/context';
 import { AutomergeHost, DocumentsSynchronizer } from '@dxos/echo-pipeline';
 import { IndexMetadataStore } from '@dxos/indexing';
 import { createTestLevel } from '@dxos/kv-store/testing';
@@ -17,19 +15,24 @@ import { DocHandleProxy } from './doc-handle-proxy';
 describe('DocHandleProxy', () => {
   test('get update from handle', async () => {
     const text = 'Hello World!';
-    const { documentId } = parseAutomergeUrl(generateAutomergeUrl());
-    const clientHandle = new DocHandleProxy<{ text: string }>(documentId);
+
+    const { host } = await setup();
+    // Create document on host first so synchronizer can load it.
+    const workerHandle = await host.createDoc<{ text: string }>();
+    const documentId = workerHandle.documentId;
+
+    const clientHandle = new DocHandleProxy<{ text: string }>({ onDelete: () => {} });
+    clientHandle._setDocumentId(documentId);
     clientHandle.change((doc: { text: string }) => {
       doc.text = text;
     });
 
-    const { host } = await setup();
     const docsSynchronizer = new DocumentsSynchronizer({ automergeHost: host, sendUpdates: () => {} });
     await openAndClose(docsSynchronizer);
+    await docsSynchronizer.addDocuments([documentId]);
 
     const mutation = clientHandle._getPendingChanges()!;
-    await docsSynchronizer.update([{ documentId, mutation, isNew: true }]);
-    const workerHandle = await host.loadDoc<{ text: string }>(Context.default(), documentId);
+    await docsSynchronizer.update([{ documentId, mutation }]);
     expect(workerHandle.doc()?.text).to.equal(text);
   });
 
@@ -37,9 +40,12 @@ describe('DocHandleProxy', () => {
     const text = 'Hello World!';
 
     const { host } = await setup();
-    const workerHandle = host.createDoc<{ text: string }>();
+    const workerHandle = await host.createDoc<{ text: string }>();
 
-    const clientHandle = new DocHandleProxy<{ text: string }>(workerHandle.documentId);
+    const clientHandle = new DocHandleProxy<{ text: string }>({
+      documentId: workerHandle.documentId,
+      onDelete: () => {},
+    });
 
     const docsSynchronizer = new DocumentsSynchronizer({
       automergeHost: host,
@@ -62,7 +68,7 @@ describe('DocHandleProxy', () => {
     type DocType = { clientText: string; foreignPeerText: string };
 
     const { host } = await setup();
-    const workerHandle = host.createDoc<DocType>();
+    const workerHandle = await host.createDoc<DocType>();
     const synchronizer = new DocumentsSynchronizer({
       automergeHost: host,
       sendUpdates: ({ updates }) => updates?.forEach((update) => clientHandle._integrateHostUpdate(update.mutation)),
@@ -72,7 +78,10 @@ describe('DocHandleProxy', () => {
       doc.foreignPeerText = foreignPeerText;
     });
 
-    const clientHandle = new DocHandleProxy<DocType>(workerHandle.documentId);
+    const clientHandle = new DocHandleProxy<DocType>({
+      documentId: workerHandle.documentId,
+      onDelete: () => {},
+    });
     clientHandle.change((doc: DocType) => {
       doc.clientText = clientText;
     });
@@ -87,7 +96,7 @@ describe('DocHandleProxy', () => {
     const clientUpdate = clientHandle._getPendingChanges()!;
     await synchronizer.update([{ documentId: workerHandle.documentId, mutation: clientUpdate }]);
 
-    for (const handle of [clientHandle, workerHandle]) {
+    for (const handle of [clientHandle, workerHandle] as const) {
       expect(handle.doc()?.clientText).to.equal(clientText);
       expect(handle.doc()?.foreignPeerText).to.equal(foreignPeerText);
     }

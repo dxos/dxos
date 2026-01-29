@@ -88,7 +88,10 @@ export const getMessage = Effect.fn(function* (userId: string, messageId: string
  * Sends a message.
  * https://developers.google.com/workspace/gmail/api/reference/rest/v1/users.messages/send
  */
-export const sendMessage = Effect.fn('sendMessage')(function* (userId: string, message: { raw: string }) {
+export const sendMessage = Effect.fn('sendMessage')(function* (
+  userId: string,
+  message: { raw: string; threadId?: string },
+) {
   const url = createUrl([API_URL, 'users', userId, 'messages', 'send']).toString();
   return yield* makeGoogleApiRequest(url, { method: 'POST', body: JSON.stringify(message) }).pipe(
     Effect.flatMap(

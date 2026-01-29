@@ -12,6 +12,7 @@ import { CommandConfig } from '@dxos/cli-util';
 import { print, waitForSync } from '@dxos/cli-util';
 import { FormBuilder } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
+import { Obj } from '@dxos/echo';
 
 export const handler = Effect.fn(function* ({ name }: { name: Option.Option<string> }) {
   const { json } = yield* CommandConfig;
@@ -21,7 +22,9 @@ export const handler = Effect.fn(function* ({ name }: { name: Option.Option<stri
   yield* Effect.tryPromise(() => space.waitUntilReady());
 
   if (Option.isSome(name)) {
-    space.properties.name = Option.getOrUndefined(name);
+    Obj.change(space.properties, (p) => {
+      p.name = Option.getOrUndefined(name);
+    });
   }
 
   // Output first, then flush and sync

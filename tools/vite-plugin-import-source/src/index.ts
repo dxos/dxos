@@ -28,8 +28,8 @@ const PluginImportSource = ({
     resolveId: {
       order: 'pre',
       async handler(source, importer, options) {
-        // Check if source looks like an npm package name
-        if (!source.match(/^[a-zA-Z@][a-zA-Z0-9._-]*(\/[a-zA-Z0-9._-]+)*$/)) {
+        // Check if source looks like an npm package name or a subpath import (#)
+        if (!source.match(/^[a-zA-Z@#][a-zA-Z0-9._-]*(\/[a-zA-Z0-9._-]+)*$/)) {
           return null; // Skip to next importer
         }
 

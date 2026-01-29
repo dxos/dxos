@@ -6,7 +6,7 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "exports": {
     ".": {
@@ -26,18 +26,16 @@
   ],
   "dependencies": {
     "@dxos/app-graph": "workspace:*",
+    "@dxos/effect": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keyboard": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/ui-types": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@preact-signals/safe-react": "catalog:",
-    "@preact/signals-react": "catalog:",
     "@radix-ui/react-context": "catalog:",
     "@radix-ui/react-use-controllable-state": "catalog:"
   },
   "devDependencies": {
-    "@dxos/live-object": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",

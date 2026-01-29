@@ -11,6 +11,7 @@ import * as Layer from 'effect/Layer';
 import { ATTR_TYPE } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { DXN, ObjectId, SpaceId } from '@dxos/keys';
+import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 
 import { type DataSourceCursor, type IndexDataSource, IndexEngine } from './index-engine';
 import { type IndexCursor, IndexTracker } from './index-tracker';
@@ -20,11 +21,13 @@ const TYPE_DEFAULT = DXN.parse('dxn:type:test.com/type/Type:0.1.0').toString();
 const TYPE_A = DXN.parse('dxn:type:test.com/type/TypeA:0.1.0').toString();
 const TYPE_B = DXN.parse('dxn:type:test.com/type/TypeB:0.1.0').toString();
 
-const TestLayer = Layer.merge(
-  SqliteClient.layer({
-    filename: ':memory:',
-  }),
-  Reactivity.layer,
+const TestLayer = SqlTransaction.layer.pipe(
+  Layer.provideMerge(
+    SqliteClient.layer({
+      filename: ':memory:',
+    }),
+  ),
+  Layer.provideMerge(Reactivity.layer),
 );
 
 class MockIndexDataSource implements IndexDataSource {
@@ -136,7 +139,12 @@ describe('IndexEngine', () => {
       expect(results1[0].version).toBeGreaterThan(0);
 
       // Verify FTS index gets updated.
-      const ftsResults1 = yield* ftsIndex.query({ query: 'Hello' });
+      const ftsResults1 = yield* ftsIndex.query({
+        query: 'Hello',
+        spaceId: null,
+        includeAllQueues: false,
+        queueIds: null,
+      });
       expect(ftsResults1.length).toBeGreaterThan(0);
       expect(ftsResults1.some((row) => row.objectId === obj1.data.id)).toBe(true);
 
@@ -160,7 +168,12 @@ describe('IndexEngine', () => {
       expect(results2[0].objectId).toBe(obj1Updated.data.id);
       expect(results2[0].version).toBeGreaterThan(results1[0].version);
 
-      const ftsResults2 = yield* ftsIndex.query({ query: 'World' });
+      const ftsResults2 = yield* ftsIndex.query({
+        query: 'World',
+        spaceId: null,
+        includeAllQueues: false,
+        queueIds: null,
+      });
       expect(ftsResults2.length).toBeGreaterThan(0);
     }, Effect.provide(TestLayer)),
   );
@@ -220,7 +233,12 @@ describe('IndexEngine', () => {
       const resultsB = yield* metaIndex.query({ spaceId: spaceId.toString(), typeDxn: TYPE_B });
       expect(resultsB).toHaveLength(1);
 
-      const ftsResults = yield* ftsIndex.query({ query: 'TypeA' });
+      const ftsResults = yield* ftsIndex.query({
+        query: 'TypeA',
+        spaceId: null,
+        includeAllQueues: false,
+        queueIds: null,
+      });
       expect(ftsResults).toHaveLength(2);
     }, Effect.provide(TestLayer)),
   );

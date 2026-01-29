@@ -2,7 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type PropsWithChildren, useCallback, useEffect, useRef, useState } from 'react';
+import { RegistryContext, useAtomValue } from '@effect-atom/atom-react';
+import React, { type PropsWithChildren, useCallback, useContext, useEffect, useRef, useState } from 'react';
 
 import { Surface, useCapability } from '@dxos/app-framework/react';
 import {
@@ -16,17 +17,27 @@ import {
 import { descriptionMessage, mx } from '@dxos/ui-theme';
 
 import { meta } from '../meta';
-import { LayoutState } from '../types';
+import { LayoutState, type LayoutStateProps } from '../types';
 
 const debounce_delay = 100;
 
 // TODO(wittjosiah): Support dialogs, tooltips, maybe toast.
 export const Layout = ({ children }: PropsWithChildren<{}>) => {
   const trigger = useRef<HTMLButtonElement | null>(null);
-  const layout = useCapability(LayoutState);
+  const registry = useContext(RegistryContext);
+  const stateAtom = useCapability(LayoutState);
+  const layout = useAtomValue(stateAtom);
   const [iter, setIter] = useState(0);
   const [open, setOpen] = useState(false);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
+
+  const updateState = useCallback(
+    (updates: Partial<LayoutStateProps>) => {
+      const current = registry.get(stateAtom);
+      registry.set(stateAtom, { ...current, ...updates });
+    },
+    [registry, stateAtom],
+  );
 
   useEffect(() => {
     setOpen(false);
@@ -41,21 +52,26 @@ export const Layout = ({ children }: PropsWithChildren<{}>) => {
     }
   }, [layout.popoverAnchor, layout.popoverContent, layout.popoverOpen]);
 
-  const handleInteractOutside = useCallback((event: KeyboardEvent | PopoverContentInteractOutsideEvent) => {
-    if (
-      // TODO(thure): CodeMirror should not focus itself when it updates.
-      event.type === 'dismissableLayer.focusOutside' &&
-      (event.currentTarget as HTMLElement | undefined)?.classList.contains('cm-content')
-    ) {
-      event.preventDefault();
-    } else {
-      setOpen(false);
-      layout.popoverOpen = false;
-      layout.popoverAnchor = undefined;
-      layout.popoverAnchorId = undefined;
-      layout.popoverSide = undefined;
-    }
-  }, []);
+  const handleInteractOutside = useCallback(
+    (event: KeyboardEvent | PopoverContentInteractOutsideEvent) => {
+      if (
+        // TODO(thure): CodeMirror should not focus itself when it updates.
+        event.type === 'dismissableLayer.focusOutside' &&
+        (event.currentTarget as HTMLElement | undefined)?.classList.contains('cm-content')
+      ) {
+        event.preventDefault();
+      } else {
+        setOpen(false);
+        updateState({
+          popoverOpen: false,
+          popoverAnchor: undefined,
+          popoverAnchorId: undefined,
+          popoverSide: undefined,
+        });
+      }
+    },
+    [updateState],
+  );
 
   const DialogRoot = layout.dialogType === 'alert' ? AlertDialog.Root : Dialog.Root;
   const DialogOverlay = layout.dialogType === 'alert' ? AlertDialog.Overlay : Dialog.Overlay;
@@ -66,8 +82,8 @@ export const Layout = ({ children }: PropsWithChildren<{}>) => {
         <Main.Root
           navigationSidebarState={layout.sidebarState}
           complementarySidebarState={layout.complementarySidebarState}
-          onNavigationSidebarStateChange={(next) => (layout.sidebarState = next)}
-          onComplementarySidebarStateChange={(next) => (layout.complementarySidebarState = next)}
+          onNavigationSidebarStateChange={(next) => updateState({ sidebarState: next })}
+          onComplementarySidebarStateChange={(next) => updateState({ complementarySidebarState: next })}
         >
           {children}
         </Main.Root>
@@ -75,7 +91,7 @@ export const Layout = ({ children }: PropsWithChildren<{}>) => {
         <DialogRoot
           modal={layout.dialogBlockAlign !== 'end'}
           open={layout.dialogOpen}
-          onOpenChange={(nextOpen) => (layout.dialogOpen = nextOpen)}
+          onOpenChange={(nextOpen) => updateState({ dialogOpen: nextOpen })}
         >
           {layout.dialogBlockAlign === 'end' ? (
             <Surface

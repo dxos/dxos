@@ -2,10 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type Atom } from '@effect-atom/atom-react';
 import * as Schema from 'effect/Schema';
 import { type Context, createContext } from 'react';
 
-import * as Operation from '@dxos/operation';
+import { Capability } from '@dxos/app-framework';
+import { Operation } from '@dxos/operation';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { Collection } from '@dxos/schema';
 
@@ -46,3 +48,7 @@ export const PresenterSettingsSchema = Schema.mutable(
 );
 
 export type PresenterSettingsProps = Schema.Schema.Type<typeof PresenterSettingsSchema>;
+
+export namespace PresenterCapabilities {
+  export const Settings = Capability.make<Atom.Writable<PresenterSettingsProps>>(`${meta.id}/capability/settings`);
+}

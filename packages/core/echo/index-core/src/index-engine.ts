@@ -2,16 +2,18 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as SqlClient from '@effect/sql/SqlClient';
+import type * as SqlClient from '@effect/sql/SqlClient';
 import type * as SqlError from '@effect/sql/SqlError';
 import * as Effect from 'effect/Effect';
 
 import type { SpaceId } from '@dxos/keys';
+import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 
 import { type IndexCursor, IndexTracker } from './index-tracker';
 import {
   FtsIndex,
   type FtsQuery,
+  type FtsQueryResult,
   type Index,
   type IndexerObject,
   type ObjectMeta,
@@ -41,7 +43,7 @@ export interface IndexDataSource {
   readonly sourceName: string; // e.g. queue, automerge, etc.
 
   getChangedObjects(
-    cursors: IndexCursor[],
+    cursors: DataSourceCursor[],
     opts?: { limit?: number },
   ): Effect.Effect<{ objects: IndexerObject[]; cursors: DataSourceCursor[] }>;
 }
@@ -76,9 +78,9 @@ export class IndexEngine {
   }
 
   /**
-   * Query text index and return full object metadata.
+   * Query text index and return full object metadata with rank.
    */
-  queryText(query: FtsQuery): Effect.Effect<readonly ObjectMeta[], SqlError.SqlError, SqlClient.SqlClient> {
+  queryText(query: FtsQuery): Effect.Effect<readonly FtsQueryResult[], SqlError.SqlError, SqlClient.SqlClient> {
     return Effect.gen(this, function* () {
       return yield* this.#ftsIndex.query(query);
     });
@@ -93,6 +95,14 @@ export class IndexEngine {
     query: Pick<ObjectMeta, 'spaceId'>,
   ): Effect.Effect<readonly ObjectMeta[], SqlError.SqlError, SqlClient.SqlClient> {
     return this.#objectMetaIndex.queryAll(query);
+  }
+
+  /**
+   * Query snapshots by recordIds.
+   * Used to load queue objects from indexed snapshots.
+   */
+  querySnapshotsJSON(recordIds: number[]) {
+    return this.#ftsIndex.querySnapshotsJSON(recordIds);
   }
 
   queryType(
@@ -120,7 +130,11 @@ export class IndexEngine {
   update(
     dataSource: IndexDataSource,
     opts: { spaceId: SpaceId | null; limit?: number },
-  ): Effect.Effect<{ updated: number; done: boolean }, SqlError.SqlError, SqlClient.SqlClient> {
+  ): Effect.Effect<
+    { updated: number; done: boolean },
+    SqlError.SqlError,
+    SqlTransaction.SqlTransaction | SqlClient.SqlClient
+  > {
     return Effect.gen(this, function* () {
       let updated = 0;
 
@@ -159,15 +173,21 @@ export class IndexEngine {
     index: Index,
     source: IndexDataSource,
     opts: { indexName: string; spaceId: SpaceId | null; limit?: number },
-  ): Effect.Effect<{ updated: number; done: boolean }, SqlError.SqlError, SqlClient.SqlClient> {
+  ): Effect.Effect<
+    { updated: number; done: boolean },
+    SqlError.SqlError,
+    SqlTransaction.SqlTransaction | SqlClient.SqlClient
+  > {
     return Effect.gen(this, function* () {
-      const sql = yield* SqlClient.SqlClient;
-      return yield* sql.withTransaction(
+      const sqlTransaction = yield* SqlTransaction.SqlTransaction;
+
+      return yield* sqlTransaction.withTransaction(
         Effect.gen(this, function* () {
           const cursors = yield* this.#tracker.queryCursors({
             indexName: opts.indexName,
             sourceName: source.sourceName,
-            spaceId: opts.spaceId,
+            // Pass undefined to get all cursors when spaceId is null.
+            spaceId: opts.spaceId ?? undefined,
           });
           const { objects, cursors: updatedCursors } = yield* source.getChangedObjects(cursors, { limit: opts.limit });
           if (objects.length === 0) {
@@ -185,7 +205,7 @@ export class IndexEngine {
             updatedCursors.map(
               (_): IndexCursor => ({
                 indexName: opts.indexName,
-                spaceId: opts.spaceId,
+                spaceId: _.spaceId,
                 sourceName: source.sourceName,
                 resourceId: _.resourceId,
                 cursor: _.cursor,

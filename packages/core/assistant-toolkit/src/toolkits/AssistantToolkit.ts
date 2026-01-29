@@ -9,7 +9,7 @@ import * as Record from 'effect/Record';
 import * as Schema from 'effect/Schema';
 
 import { AiContextService, ArtifactId } from '@dxos/assistant';
-import { Database, Ref } from '@dxos/echo';
+import { Database, type Ref } from '@dxos/echo';
 import { trim } from '@dxos/util';
 
 export const AssistantToolkit = Toolkit.make(
@@ -48,7 +48,7 @@ export const layer = () =>
     ['context-add' as const]: Effect.fnUntraced(function* ({ id }) {
       const { binder } = yield* AiContextService;
       const { db } = yield* Database.Service;
-      const ref = Ref.fromDXN(ArtifactId.toDXN(id, db.spaceId));
+      const ref = db.makeRef(ArtifactId.toDXN(id, db.spaceId)) as Ref.Ref<any>;
       yield* Effect.promise(() =>
         binder.bind({
           blueprints: [],
@@ -59,7 +59,7 @@ export const layer = () =>
     ['context-remove' as const]: Effect.fnUntraced(function* ({ id }) {
       const { binder } = yield* AiContextService;
       const { db } = yield* Database.Service;
-      const ref = Ref.fromDXN(ArtifactId.toDXN(id, db.spaceId));
+      const ref = db.makeRef(ArtifactId.toDXN(id, db.spaceId)) as Ref.Ref<any>;
       yield* Effect.promise(() =>
         binder.unbind({
           blueprints: [],

@@ -6,7 +6,7 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "exports": {
     ".": {
@@ -28,7 +28,6 @@
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/util": "workspace:*",
     "@fluentui/react-tabster": "catalog:",
-    "@preact-signals/safe-react": "catalog:",
     "@radix-ui/primitive": "catalog:",
     "@radix-ui/react-context": "catalog:",
     "@radix-ui/react-primitive": "catalog:",

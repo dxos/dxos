@@ -33,7 +33,6 @@
     "@dxos/echo-query": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/invariant": "workspace:*",
-    "@dxos/live-object": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/operation": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
@@ -48,7 +47,6 @@
     "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@preact-signals/safe-react": "catalog:",
     "exa-js": "catalog:",
     "main-thread-scheduling": "catalog:"
   },

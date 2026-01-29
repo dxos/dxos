@@ -4,13 +4,13 @@
 
 import React, { Activity, useMemo } from 'react';
 
-import { Surface, useAppGraph, useCapability } from '@dxos/app-framework/react';
+import { Surface, useAppGraph } from '@dxos/app-framework/react';
 import { useNode } from '@dxos/plugin-graph';
 import { Main as NaturalMain } from '@dxos/react-ui';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention';
 import { mx } from '@dxos/ui-theme';
 
-import { SimpleLayoutState } from '../../types';
+import { useSimpleLayoutState } from '../../hooks';
 import { ContentError } from '../ContentError';
 import { ContentLoading } from '../ContentLoading';
 import { Home } from '../Home';
@@ -19,8 +19,8 @@ import { Banner } from './Banner';
 import { NavBar } from './NavBar';
 
 export const Main = () => {
-  const layout = useCapability(SimpleLayoutState);
-  const id = layout.active ?? layout.workspace;
+  const { state } = useSimpleLayoutState();
+  const id = state.active ?? state.workspace;
   const { graph } = useAppGraph();
   const node = useNode(graph, id);
 
@@ -34,9 +34,9 @@ export const Main = () => {
         subject: node.data,
         properties: node.properties,
         variant,
-        popoverAnchorId: layout.popoverAnchorId,
+        popoverAnchorId: state.popoverAnchorId,
       },
-    [node, node?.data, node?.properties, layout.popoverAnchorId, variant, id],
+    [node, node?.data, node?.properties, state.popoverAnchorId, variant, id],
   );
 
   const handleActiveIdChange = (nextActiveId: string | null) => {
@@ -44,15 +44,14 @@ export const Main = () => {
     console.log('[navigate]', nextActiveId);
   };
 
-  const showNavBar = !layout.isPopover;
+  const showNavBar = !state.isPopover;
 
   return (
     <NaturalMain.Root complementarySidebarState='closed' navigationSidebarState='closed'>
-      <NaturalMain.Content bounce classNames='!overflow-y-auto'>
+      <NaturalMain.Content bounce classNames='dx-mobile-main dx-mobile-main-scroll-area--flush !overflow-y-auto'>
         <div
           className={mx(
             'bs-full overflow-hidden grid',
-            'pis-[env(safe-area-inset-left)] pie-[env(safe-area-inset-right)]',
             showNavBar ? 'grid-rows-[min-content_1fr_min-content]' : 'grid-rows-[min-content_1fr]',
           )}
         >
@@ -61,8 +60,7 @@ export const Main = () => {
             <Home />
           </Activity>
           <Activity mode={id !== 'default' ? 'visible' : 'hidden'}>
-            {/* TODO(wittjosiah): This class is needed to constrain the content area on mobile. Better way? */}
-            <section className='overflow-x-hidden'>
+            <section>
               <Surface
                 key={id}
                 role='article'

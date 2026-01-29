@@ -12,6 +12,9 @@
   ],
   "references": [
     {
+      "path": "../../common/effect"
+    },
+    {
       "path": "../../common/invariant"
     },
     {
@@ -25,9 +28,6 @@
     },
     {
       "path": "../../common/util"
-    },
-    {
-      "path": "../../core/echo/live-object"
     },
     {
       "path": "../../sdk/app-graph"

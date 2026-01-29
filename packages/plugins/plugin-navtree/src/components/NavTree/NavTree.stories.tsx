@@ -2,15 +2,16 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Atom, type Registry } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React, { type KeyboardEvent, useCallback, useRef } from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
-import { Capability, Common, OperationResolver, RuntimePlugin } from '@dxos/app-framework';
-import { useCapability } from '@dxos/app-framework/react';
+import { Capability, Common, RuntimePlugin } from '@dxos/app-framework';
+import { useAtomCapability } from '@dxos/app-framework/react';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { live } from '@dxos/live-object';
+import { OperationResolver } from '@dxos/operation';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { faker } from '@dxos/random';
 import { IconButton, Input, Main, Toolbar } from '@dxos/react-ui';
@@ -26,7 +27,7 @@ import { NavTreeContainer } from '../NavTreeContainer';
 
 faker.seed(1234);
 
-const StoryState = Capability.make<{ tab: string }>('story-state');
+const StoryState = Capability.make<Atom.Atom<{ tab: string }>>('story-state');
 
 // TODO(burdon): Fix outline (e.g., button in sidebar nav is clipped when focused).
 // TODO(burdon): Consider similar containment of: Table, Sheet, Kanban Column, Form, etc.
@@ -96,7 +97,7 @@ const StoryPlank = ({ attendableId }: { attendableId: string }) => {
 };
 
 const DefaultStory = () => {
-  const state = useCapability(StoryState);
+  const state = useAtomCapability(StoryState);
 
   return (
     <Main.Root complementarySidebarState='closed'>
@@ -126,20 +127,23 @@ const meta = {
         NavTreePlugin(),
         StorybookPlugin({ initialState: { sidebarState: 'expanded' } }),
       ],
-      capabilities: (context) => [
-        Capability.contributes(StoryState, live({ tab: 'space-0' })),
-        Capability.contributes(Common.Capability.AppGraphBuilder, storybookGraphBuilders(context)),
-        Capability.contributes(Common.Capability.OperationResolver, [
-          OperationResolver.make({
-            operation: Common.LayoutOperation.SwitchWorkspace,
-            handler: ({ subject }) =>
-              Effect.sync(() => {
-                const state = context.getCapability(StoryState);
-                state.tab = subject;
-              }),
-          }),
-        ]),
-      ],
+      capabilities: () => {
+        const storyStateAtom = Atom.make({ tab: 'space-0' }).pipe(Atom.keepAlive);
+        return [
+          Capability.contributes(StoryState, storyStateAtom),
+          Capability.contributes(Common.Capability.AppGraphBuilder, storybookGraphBuilders()),
+          Capability.contributes(Common.Capability.OperationResolver, [
+            OperationResolver.make({
+              operation: Common.LayoutOperation.SwitchWorkspace,
+              handler: ({ subject }) =>
+                Effect.gen(function* () {
+                  const registry: Registry.Registry = yield* Capability.get(Common.Capability.AtomRegistry);
+                  registry.set(storyStateAtom, { tab: subject });
+                }),
+            }),
+          ]),
+        ];
+      },
     }),
   ],
   parameters: {

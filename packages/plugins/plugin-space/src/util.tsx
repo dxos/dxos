@@ -3,16 +3,16 @@
 //
 
 import { type Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
-import { Atom } from '@effect-atom/atom-react';
+import * as Effect from 'effect/Effect';
 import type * as Schema from 'effect/Schema';
 
-import { type Capability, Common, type OperationInvoker } from '@dxos/app-framework';
+import { type CapabilityManager, Common } from '@dxos/app-framework';
 import { type Space, SpaceState, isSpace } from '@dxos/client/echo';
-import { type Database, type Entity, Filter, Obj, Query, type QueryResult, Ref, Type } from '@dxos/echo';
+import { type Database, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { EXPANDO_TYPENAME } from '@dxos/echo/internal';
-import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { Migrations } from '@dxos/migrations';
+import { Operation } from '@dxos/operation';
 import { Graph, Node } from '@dxos/plugin-graph';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention/types';
 import { type TreeData } from '@dxos/react-ui-list';
@@ -26,20 +26,6 @@ export const SPACES = `${meta.id}-spaces`;
 export const COMPOSER_SPACE_LOCK = `${meta.id}/lock`;
 // TODO(wittjosiah): Remove.
 export const SHARED = 'shared-spaces';
-
-/**
- * Convert a query result to an Atom value of the objects.
- */
-export const atomFromQuery = <T extends Entity.Unknown>(query: QueryResult.QueryResult<T>): Atom.Atom<T[]> => {
-  return Atom.make((get) => {
-    const unsubscribe = query.subscribe((result) => {
-      get.setSelf(result.results);
-    });
-
-    get.addFinalizer(() => unsubscribe());
-    return query.results;
-  });
-};
 
 // TODO(wittjosiah): Factor out? Expose via capability?
 export const getSpaceDisplayName = (
@@ -70,7 +56,9 @@ const getCollectionGraphNodePartials = ({
     role: 'branch',
     onRearrangeChildren: (nextOrder: unknown[]) => {
       // Change on disk.
-      collection.objects = nextOrder.filter(Obj.isObject).map(Ref.make);
+      Obj.change(collection, (c) => {
+        c.objects = nextOrder.filter(Obj.isObject).map(Ref.make);
+      });
     },
     onTransferStart: (child: Node.Node<Obj.Any>, index?: number) => {
       // TODO(wittjosiah): Support transfer between spaces.
@@ -91,22 +79,26 @@ const getCollectionGraphNodePartials = ({
 
       // Add child to destination collection.
       // TODO(dmaretskyi): Compare by id.
-      if (!collection.objects.find((object) => object.target === child.data)) {
-        if (typeof index !== 'undefined') {
-          collection.objects.splice(index, 0, Ref.make(child.data));
-        } else {
-          collection.objects.push(Ref.make(child.data));
+      Obj.change(collection, (c) => {
+        if (!c.objects.find((object) => object.target === child.data)) {
+          if (typeof index !== 'undefined') {
+            c.objects.splice(index, 0, Ref.make(child.data));
+          } else {
+            c.objects.push(Ref.make(child.data));
+          }
         }
-      }
+      });
 
       // }
     },
     onTransferEnd: (child: Node.Node<Obj.Any>, destination: Node.Node) => {
       // Remove child from origin collection.
-      const index = collection.objects.findIndex((object) => object.target === child.data);
-      if (index > -1) {
-        collection.objects.splice(index, 1);
-      }
+      Obj.change(collection, (c) => {
+        const index = c.objects.findIndex((object) => object.target === child.data);
+        if (index > -1) {
+          c.objects.splice(index, 1);
+        }
+      });
 
       // TODO(wittjosiah): Support transfer between spaces.
       // const childSpace = getSpace(child.data);
@@ -121,11 +113,13 @@ const getCollectionGraphNodePartials = ({
       // Create clone of child and add to destination space.
       const newObject = await cloneObject(child.data, resolve, db);
       db.add(newObject);
-      if (typeof index !== 'undefined') {
-        collection.objects.splice(index, 0, Ref.make(newObject));
-      } else {
-        collection.objects.push(Ref.make(newObject));
-      }
+      Obj.change(collection, (c) => {
+        if (typeof index !== 'undefined') {
+          c.objects.splice(index, 0, Ref.make(newObject));
+        } else {
+          c.objects.push(Ref.make(newObject));
+        }
+      });
     },
   };
 };
@@ -260,27 +254,23 @@ export const constructSpaceNode = ({
 
 export const constructSpaceActions = ({
   space,
-  invokePromise,
   personal,
   migrating,
 }: {
   space: Space;
-  invokePromise: OperationInvoker.OperationInvoker['invokePromise'];
   personal?: boolean;
   migrating?: boolean;
 }) => {
   const state = space.state.get();
   const hasPendingMigration = checkPendingMigration(space);
   const getId = (id: string) => `${id}/${space.id}`;
-  const actions: Node.NodeArg<Node.ActionData>[] = [];
+  const actions: Node.NodeArg<Node.ActionData<Operation.Service>>[] = [];
 
   if (hasPendingMigration) {
     actions.push({
       id: getId(SpaceOperation.Migrate.meta.key),
       type: Node.ActionGroupType,
-      data: async () => {
-        await invokePromise(SpaceOperation.Migrate, { space });
-      },
+      data: () => Operation.invoke(SpaceOperation.Migrate, { space }),
       properties: {
         label: ['migrate space label', { ns: meta.id }],
         icon: 'ph--database--regular',
@@ -295,9 +285,7 @@ export const constructSpaceActions = ({
       {
         id: getId(SpaceOperation.OpenCreateObject.meta.key),
         type: Node.ActionType,
-        data: async () => {
-          await invokePromise(SpaceOperation.OpenCreateObject, { target: space.db });
-        },
+        data: () => Operation.invoke(SpaceOperation.OpenCreateObject, { target: space.db }),
         properties: {
           label: ['create object in space label', { ns: meta.id }],
           icon: 'ph--plus--regular',
@@ -308,9 +296,7 @@ export const constructSpaceActions = ({
       {
         id: getId(SpaceOperation.Rename.meta.key),
         type: Node.ActionType,
-        data: async (params?: Node.InvokeProps) => {
-          await invokePromise(SpaceOperation.Rename, { space, caller: params?.caller });
-        },
+        data: (params?: Node.InvokeProps) => Operation.invoke(SpaceOperation.Rename, { space, caller: params?.caller }),
         properties: {
           label: ['rename space label', { ns: meta.id }],
           icon: 'ph--pencil-simple-line--regular',
@@ -352,27 +338,24 @@ export const createStaticSchemaNode = ({
 export const createStaticSchemaActions = ({
   schema,
   space,
-  invokePromise,
   deletable,
 }: {
   schema: Type.Obj.Any;
   space: Space;
-  invokePromise: OperationInvoker.OperationInvoker['invokePromise'];
   deletable: boolean;
 }) => {
   const getId = (id: string) => `${space.id}/${Type.getTypename(schema)}/${id}`;
 
-  const actions: Node.NodeArg<Node.ActionData>[] = [
+  const actions: Node.NodeArg<Node.ActionData<Operation.Service>>[] = [
     {
       id: getId(SpaceOperation.AddObject.meta.key),
       type: Node.ActionType,
-      data: async () => {
-        await invokePromise(SpaceOperation.OpenCreateObject, {
+      data: () =>
+        Operation.invoke(SpaceOperation.OpenCreateObject, {
           target: space.db,
           views: true,
           initialFormValues: { typename: Type.getTypename(schema) },
-        });
-      },
+        }),
       properties: {
         label: ['add view to schema label', { ns: meta.id }],
         icon: 'ph--plus--regular',
@@ -383,9 +366,7 @@ export const createStaticSchemaActions = ({
     {
       id: getId(SpaceOperation.RenameObject.meta.key),
       type: Node.ActionType,
-      data: async (params?: Node.InvokeProps) => {
-        throw new Error('Not implemented');
-      },
+      data: () => Effect.fail(new Error('Not implemented')),
       properties: {
         label: ['rename object label', { ns: Type.getTypename(Type.PersistentType) }],
         icon: 'ph--pencil-simple-line--regular',
@@ -397,14 +378,17 @@ export const createStaticSchemaActions = ({
     {
       id: getId(SpaceOperation.RemoveObjects.meta.key),
       type: Node.ActionType,
-      data: async () => {
-        const index = space.properties.staticRecords.findIndex(
-          (typename: string) => typename === Type.getTypename(schema),
-        );
-        if (index > -1) {
-          space.properties.staticRecords.splice(index, 1);
-        }
-      },
+      data: () =>
+        Effect.sync(() => {
+          const index = space.properties.staticRecords.findIndex(
+            (typename: string) => typename === Type.getTypename(schema),
+          );
+          if (index > -1) {
+            Obj.change(space.properties, (p) => {
+              p.staticRecords.splice(index, 1);
+            });
+          }
+        }),
       properties: {
         label: ['delete object label', { ns: Type.getTypename(Type.PersistentType) }],
         icon: 'ph--trash--regular',
@@ -416,18 +400,17 @@ export const createStaticSchemaActions = ({
     {
       id: getId(SpaceOperation.Snapshot.meta.key),
       type: Node.ActionType,
-      data: async () => {
-        const result = await invokePromise(SpaceOperation.Snapshot, {
+      data: Effect.fnUntraced(function* () {
+        const result = yield* Operation.invoke(SpaceOperation.Snapshot, {
           db: space.db,
           query: Query.select(Filter.type(schema)).ast,
         });
-        if (result.data?.snapshot) {
-          await downloadBlob(
-            result.data.snapshot,
-            createFilename({ parts: [space.id, Type.getTypename(schema)], ext: 'json' }),
+        if (result.snapshot) {
+          yield* Effect.tryPromise(() =>
+            downloadBlob(result.snapshot, createFilename({ parts: [space.id, Type.getTypename(schema)], ext: 'json' })),
           );
         }
-      },
+      }),
       properties: {
         label: ['snapshot by schema label', { ns: meta.id }],
         icon: 'ph--camera--regular',
@@ -522,17 +505,15 @@ export const createObjectNode = ({
 export const constructObjectActions = ({
   object,
   graph,
-  invokePromise,
   resolve,
-  context,
+  capabilities,
   deletable = true,
   navigable = false,
 }: {
   object: Obj.Any;
   graph: Graph.ReadableGraph;
-  invokePromise: OperationInvoker.OperationInvoker['invokePromise'];
   resolve: (typename: string) => Record<string, any>;
-  context: Capability.PluginContext;
+  capabilities: CapabilityManager.CapabilityManager;
   deletable?: boolean;
   navigable?: boolean;
 }) => {
@@ -548,15 +529,13 @@ export const constructObjectActions = ({
   const createObject = metadata.createObject;
   const inputSchema = metadata.inputSchema;
 
-  const actions: Node.NodeArg<Node.ActionData>[] = [
+  const actions: Node.NodeArg<Node.ActionData<Operation.Service>>[] = [
     ...(Obj.instanceOf(Collection.Collection, object)
       ? [
           {
             id: getId(SpaceOperation.OpenCreateObject.meta.key),
             type: Node.ActionType,
-            data: async () => {
-              await invokePromise(SpaceOperation.OpenCreateObject, { target: object });
-            },
+            data: () => Operation.invoke(SpaceOperation.OpenCreateObject, { target: object }),
             properties: {
               label: ['create object in collection label', { ns: meta.id }],
               icon: 'ph--plus--regular',
@@ -571,13 +550,12 @@ export const constructObjectActions = ({
           {
             id: getId(SpaceOperation.AddObject.meta.key),
             type: Node.ActionType,
-            data: async () => {
-              await invokePromise(SpaceOperation.OpenCreateObject, {
+            data: () =>
+              Operation.invoke(SpaceOperation.OpenCreateObject, {
                 target: db,
                 views: true,
                 initialFormValues: { typename: object.typename },
-              });
-            },
+              }),
             properties: {
               label: ['add view to schema label', { ns: meta.id }],
               icon: 'ph--plus--regular',
@@ -588,18 +566,17 @@ export const constructObjectActions = ({
           {
             id: getId(SpaceOperation.Snapshot.meta.key),
             type: Node.ActionType,
-            data: async () => {
-              const result = await invokePromise(SpaceOperation.Snapshot, {
+            data: Effect.fnUntraced(function* () {
+              const result = yield* Operation.invoke(SpaceOperation.Snapshot, {
                 db,
                 query: Query.select(Filter.type(Type.toEffectSchema(object.jsonSchema))).ast,
               });
-              if (result.data?.snapshot) {
-                await downloadBlob(
-                  result.data.snapshot,
-                  createFilename({ parts: [db.spaceId, object.typename], ext: 'json' }),
+              if (result.snapshot) {
+                yield* Effect.promise(() =>
+                  downloadBlob(result.snapshot, createFilename({ parts: [db.spaceId, object.typename], ext: 'json' })),
                 );
               }
-            },
+            }),
             properties: {
               label: ['snapshot by schema label', { ns: meta.id }],
               icon: 'ph--camera--regular',
@@ -613,24 +590,28 @@ export const constructObjectActions = ({
           {
             id: getId(SpaceOperation.OpenCreateObject.meta.key),
             type: Node.ActionType,
-            data: async () => {
+            data: Effect.fnUntraced(function* () {
               if (inputSchema) {
-                await invokePromise(SpaceOperation.OpenCreateObject, {
+                yield* Operation.invoke(SpaceOperation.OpenCreateObject, {
                   target: db,
                   typename: managedCollection ? managedCollection.key : undefined,
                 });
               } else {
-                const createdObject = await runAndForwardErrors(createObject({}, { db, context }));
-                const addResult = await invokePromise(SpaceOperation.AddObject, {
+                const createdObject = yield* createObject({}, { db, capabilities }) as Effect.Effect<
+                  Obj.Any,
+                  Error,
+                  never
+                >;
+                const addResult = yield* Operation.invoke(SpaceOperation.AddObject, {
                   target: db,
                   hidden: true,
                   object: createdObject,
                 });
-                if (addResult.data?.id) {
-                  await invokePromise(Common.LayoutOperation.Open, { subject: [addResult.data.id] });
+                if (addResult.id) {
+                  yield* Operation.invoke(Common.LayoutOperation.Open, { subject: [addResult.id] });
                 }
               }
-            },
+            }),
             properties: {
               label: ['create object in system collection label', { ns: meta.id }],
               icon: 'ph--plus--regular',
@@ -646,9 +627,8 @@ export const constructObjectActions = ({
           {
             id: getId(SpaceOperation.RenameObject.meta.key),
             type: Node.ActionType,
-            data: async (params?: Node.InvokeProps) => {
-              await invokePromise(SpaceOperation.RenameObject, { object, caller: params?.caller });
-            },
+            data: (params?: Node.InvokeProps) =>
+              Operation.invoke(SpaceOperation.RenameObject, { object, caller: params?.caller }),
             properties: {
               label: ['rename object label', { ns: typename }],
               icon: 'ph--pencil-simple-line--regular',
@@ -663,13 +643,13 @@ export const constructObjectActions = ({
           {
             id: getId(SpaceOperation.RemoveObjects.meta.key),
             type: Node.ActionType,
-            data: async () => {
+            data: Effect.fnUntraced(function* () {
               const collection = Graph.getConnections(graph, Obj.getDXN(object).toString(), 'inbound').find(
                 (node: Node.Node): node is Node.Node<Collection.Collection> =>
                   Obj.instanceOf(Collection.Collection, node.data),
               )?.data;
-              await invokePromise(SpaceOperation.RemoveObjects, { objects: [object], target: collection });
-            },
+              yield* Operation.invoke(SpaceOperation.RemoveObjects, { objects: [object], target: collection });
+            }),
             properties: {
               label: ['delete object label', { ns: typename }],
               icon: 'ph--trash--regular',
@@ -689,10 +669,11 @@ export const constructObjectActions = ({
           {
             id: getId('copy-link'),
             type: Node.ActionType,
-            data: async () => {
-              const url = `${window.location.origin}/${db.spaceId}/${Obj.getDXN(object).toString()}`;
-              await navigator.clipboard.writeText(url);
-            },
+            data: () =>
+              Effect.promise(async () => {
+                const url = `${window.location.origin}/${db.spaceId}/${Obj.getDXN(object).toString()}`;
+                await navigator.clipboard.writeText(url);
+              }),
             properties: {
               label: ['copy link label', { ns: meta.id }],
               icon: 'ph--link--regular',
@@ -704,11 +685,9 @@ export const constructObjectActions = ({
       : []),
     // TODO(wittjosiah): Factor out and apply to all nodes.
     {
-      id: getId(Common.LayoutAction.Expose._tag),
+      id: getId(Common.LayoutOperation.Expose.meta.key),
       type: Node.ActionType,
-      data: async () => {
-        await invokePromise(Common.LayoutOperation.Expose, { subject: Obj.getDXN(object).toString() });
-      },
+      data: () => Operation.invoke(Common.LayoutOperation.Expose, { subject: Obj.getDXN(object).toString() }),
       properties: {
         label: ['expose object label', { ns: meta.id }],
         icon: 'ph--eye--regular',

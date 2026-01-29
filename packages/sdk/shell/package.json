@@ -6,7 +6,9 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": [
+    "*.css"
+  ],
   "type": "module",
   "exports": {
     ".": {
@@ -60,7 +62,6 @@
     "@emoji-mart/data": "catalog:",
     "@emoji-mart/react": "catalog:",
     "@fluentui/react-tabster": "catalog:",
-    "@preact-signals/safe-react": "catalog:",
     "@radix-ui/react-accordion": "catalog:",
     "@radix-ui/react-context": "catalog:",
     "@radix-ui/react-radio-group": "catalog:",

@@ -7,16 +7,16 @@ import * as Schema from 'effect/Schema';
 import React, { type PropsWithChildren, useRef, useState } from 'react';
 
 import { Filter, Obj, Type } from '@dxos/echo';
-import { type Live } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { Form, TupleField } from '@dxos/react-ui-form';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { createGraph } from '@dxos/schema';
 import { TestSchema, type TypeSpec, type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
+import { withRegistry } from '@dxos/storybook-utils';
 
 import { doLayout } from '../../layout';
 import { Container, DragTest, useSelection } from '../../testing';
@@ -52,9 +52,7 @@ const DefaultStory = ({ id = 'test', init, sidebar, children, ...props }: Render
     // Load objects.
     const objects = await space.db.query(Filter.everything()).run();
     const model = await doLayout(
-      createGraph(
-        objects.filter((object: Live<any>) => types.some((type) => type.typename === Obj.getTypename(object))),
-      ),
+      createGraph(objects.filter((object: Obj.Any) => types.some((type) => type.typename === Obj.getTypename(object)))),
     );
     setGraph(model);
   }, [space, init]);
@@ -105,7 +103,9 @@ const meta = {
   component: Editor.Root as any,
   render: DefaultStory,
   decorators: [
+    withRegistry,
     withTheme,
+    withLayout(),
     withClientProvider({
       createIdentity: true,
       createSpace: true,

@@ -24,12 +24,11 @@ import { FunctionInvocationServiceLayerTestMocked } from '../services/function-i
 import { TestDatabaseLayer } from '../testing';
 import { TracingServiceExt } from '../trace';
 
-import { InvocationTracer } from './invocation-tracer';
 import { TriggerDispatcher } from './trigger-dispatcher';
 import { TriggerStateStore } from './trigger-state-store';
 
 const TestLayer = Fn.pipe(
-  Layer.mergeAll(InvocationTracer.layerTest, TriggerStateStore.layerMemory),
+  Layer.mergeAll(TriggerStateStore.layerMemory),
   Layer.provideMerge(
     Layer.mergeAll(
       AiService.notAvailable,
@@ -508,7 +507,9 @@ describe('TriggerDispatcher', () => {
         expect(results.length).toBe(1);
 
         // Update the person object
-        person.fullName = 'Robert Jones';
+        Obj.change(person, (p) => {
+          p.fullName = 'Robert Jones';
+        });
         yield* Database.Service.flush();
 
         // Should trigger again for the update
@@ -556,7 +557,9 @@ describe('TriggerDispatcher', () => {
         expect(results.length).toBe(0);
 
         // Update the object
-        person.fullName = 'Charles Brown';
+        Obj.change(person, (p) => {
+          p.fullName = 'Charles Brown';
+        });
         yield* Database.Service.flush();
 
         // Third invocation - should trigger for the update

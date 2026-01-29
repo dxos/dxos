@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { SpaceSchema } from '@dxos/client/echo';
-import * as Operation from '@dxos/operation';
+import { Operation } from '@dxos/operation';
 import { Transcript } from '@dxos/types';
 
 import { meta } from '../meta';

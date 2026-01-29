@@ -4,7 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common } from '@dxos/app-framework';
+import { Capability, Common, Plugin } from '@dxos/app-framework';
+import { Operation } from '@dxos/operation';
 import { Graph } from '@dxos/plugin-graph';
 import { SPACES, SpaceEvents } from '@dxos/plugin-space';
 import { SpaceCapabilities } from '@dxos/plugin-space/types';
@@ -13,30 +14,38 @@ import README_CONTENT from '../content/README.md?raw';
 
 const SPACE_ICON = 'house-line';
 
-export default Capability.makeModule((context) =>
-  Effect.gen(function* () {
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
     const { Obj, Ref, Type } = yield* Effect.tryPromise(() => import('@dxos/echo'));
     const { ClientCapabilities } = yield* Effect.tryPromise(() => import('@dxos/plugin-client'));
     const { Markdown } = yield* Effect.tryPromise(() => import('@dxos/plugin-markdown/types'));
     const { Collection } = yield* Effect.tryPromise(() => import('@dxos/schema'));
 
-    const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
-    const { graph } = context.getCapability(Common.Capability.AppGraph);
-    const client = context.getCapability(ClientCapabilities.Client);
+    const operationInvoker = yield* Capability.get(Common.Capability.OperationInvoker);
+    const { invoke } = operationInvoker;
+    const { graph } = yield* Capability.get(Common.Capability.AppGraph);
+    const client = yield* Capability.get(ClientCapabilities.Client);
 
     const space = client.spaces.default;
-    space.properties.icon = SPACE_ICON;
+    Obj.change(space.properties, (p) => {
+      p.icon = SPACE_ICON;
+    });
     const defaultSpaceCollection = space.properties[Collection.Collection.typename].target;
 
-    defaultSpaceCollection?.objects.push(
-      Ref.make(Collection.makeManaged({ key: Type.getTypename(Type.PersistentType) })),
-    );
+    if (defaultSpaceCollection) {
+      const typesCollectionRef = Ref.make(Collection.makeManaged({ key: Type.getTypename(Type.PersistentType) }));
+      Obj.change(defaultSpaceCollection, (c) => {
+        c.objects.push(typesCollectionRef);
+      });
+    }
 
-    yield* context.activate(SpaceEvents.SpaceCreated);
-    const onCreateSpaceCallbacks = context.getCapabilities(SpaceCapabilities.OnCreateSpace);
+    yield* Plugin.activate(SpaceEvents.SpaceCreated);
+    const onCreateSpaceCallbacks = yield* Capability.getAll(SpaceCapabilities.OnCreateSpace);
     yield* Effect.all(
       onCreateSpaceCallbacks.map((onCreateSpace) =>
-        onCreateSpace({ space: space, isDefault: true, rootCollection: defaultSpaceCollection }),
+        onCreateSpace({ space: space, isDefault: true, rootCollection: defaultSpaceCollection }).pipe(
+          Effect.provideService(Operation.Service, operationInvoker),
+        ),
       ),
     );
 
@@ -44,7 +53,12 @@ export default Capability.makeModule((context) =>
       name: 'README',
       content: README_CONTENT,
     });
-    defaultSpaceCollection?.objects.push(Ref.make(readme));
+    if (defaultSpaceCollection) {
+      const readmeRef = Ref.make(readme);
+      Obj.change(defaultSpaceCollection, (c) => {
+        c.objects.push(readmeRef);
+      });
+    }
 
     // Ensure the default content is in the graph and connected.
     // This will allow the expose action to work before the navtree renders for the first time.

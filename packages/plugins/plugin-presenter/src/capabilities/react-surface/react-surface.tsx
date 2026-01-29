@@ -6,8 +6,8 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { Capability, Common } from '@dxos/app-framework';
+import { useSettingsState } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
-import { SettingsStore } from '@dxos/local-storage';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { Collection } from '@dxos/schema';
 
@@ -58,9 +58,12 @@ export default Capability.makeModule(() =>
       Common.createSurface({
         id: `${meta.id}/plugin-settings`,
         role: 'article',
-        filter: (data): data is { subject: SettingsStore<PresenterSettingsProps> } =>
-          data.subject instanceof SettingsStore && data.subject.prefix === meta.id,
-        component: ({ data: { subject } }) => <PresenterSettings settings={subject.value} />,
+        filter: (data): data is { subject: Common.Capability.Settings } =>
+          Common.Capability.isSettings(data.subject) && data.subject.prefix === meta.id,
+        component: ({ data: { subject } }) => {
+          const { settings, updateSettings } = useSettingsState<PresenterSettingsProps>(subject.atom);
+          return <PresenterSettings settings={settings} onSettingsChange={updateSettings} />;
+        },
       }),
     ]),
   ),

@@ -11,7 +11,7 @@ import { describe, expect, test } from 'vitest';
 import { Filter, Order, Query } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { type QueryAST } from '@dxos/echo-protocol';
-import { SpaceId } from '@dxos/keys';
+import { DXN, SpaceId } from '@dxos/keys';
 
 import { QueryPlanner } from './query-planner';
 
@@ -27,6 +27,8 @@ describe('QueryPlanner', () => {
         "steps": [
           {
             "_tag": "SelectStep",
+            "allQueuesFromSpaces": false,
+            "queues": [],
             "selector": {
               "_tag": "TypeSelector",
               "inverted": false,
@@ -73,6 +75,8 @@ describe('QueryPlanner', () => {
         "steps": [
           {
             "_tag": "SelectStep",
+            "allQueuesFromSpaces": false,
+            "queues": [],
             "selector": {
               "_tag": "TypeSelector",
               "inverted": false,
@@ -121,6 +125,8 @@ describe('QueryPlanner', () => {
         "steps": [
           {
             "_tag": "SelectStep",
+            "allQueuesFromSpaces": false,
+            "queues": [],
             "selector": {
               "_tag": "TypeSelector",
               "inverted": false,
@@ -177,6 +183,8 @@ describe('QueryPlanner', () => {
         "steps": [
           {
             "_tag": "SelectStep",
+            "allQueuesFromSpaces": false,
+            "queues": [],
             "selector": {
               "_tag": "IdSelector",
               "objectIds": [
@@ -262,6 +270,8 @@ describe('QueryPlanner', () => {
         "steps": [
           {
             "_tag": "SelectStep",
+            "allQueuesFromSpaces": false,
+            "queues": [],
             "selector": {
               "_tag": "IdSelector",
               "objectIds": [
@@ -330,6 +340,8 @@ describe('QueryPlanner', () => {
         "steps": [
           {
             "_tag": "SelectStep",
+            "allQueuesFromSpaces": false,
+            "queues": [],
             "selector": {
               "_tag": "TypeSelector",
               "inverted": false,
@@ -441,6 +453,8 @@ describe('QueryPlanner', () => {
                 "steps": [
                   {
                     "_tag": "SelectStep",
+                    "allQueuesFromSpaces": false,
+                    "queues": [],
                     "selector": {
                       "_tag": "TypeSelector",
                       "inverted": false,
@@ -465,12 +479,22 @@ describe('QueryPlanner', () => {
                       "typename": "dxn:type:example.com/type/Person:0.1.0",
                     },
                   },
+                  {
+                    "_tag": "OrderStep",
+                    "order": [
+                      {
+                        "kind": "natural",
+                      },
+                    ],
+                  },
                 ],
               },
               {
                 "steps": [
                   {
                     "_tag": "SelectStep",
+                    "allQueuesFromSpaces": false,
+                    "queues": [],
                     "selector": {
                       "_tag": "TypeSelector",
                       "inverted": false,
@@ -494,6 +518,14 @@ describe('QueryPlanner', () => {
                       "type": "object",
                       "typename": "dxn:type:example.com/type/Organization:0.1.0",
                     },
+                  },
+                  {
+                    "_tag": "OrderStep",
+                    "order": [
+                      {
+                        "kind": "natural",
+                      },
+                    ],
                   },
                 ],
               },
@@ -528,6 +560,8 @@ describe('QueryPlanner', () => {
               "steps": [
                 {
                   "_tag": "SelectStep",
+                  "allQueuesFromSpaces": false,
+                  "queues": [],
                   "selector": {
                     "_tag": "TypeSelector",
                     "inverted": false,
@@ -583,12 +617,22 @@ describe('QueryPlanner', () => {
                   "_tag": "FilterDeletedStep",
                   "mode": "only-non-deleted",
                 },
+                {
+                  "_tag": "OrderStep",
+                  "order": [
+                    {
+                      "kind": "natural",
+                    },
+                  ],
+                },
               ],
             },
             "source": {
               "steps": [
                 {
                   "_tag": "SelectStep",
+                  "allQueuesFromSpaces": false,
+                  "queues": [],
                   "selector": {
                     "_tag": "TypeSelector",
                     "inverted": false,
@@ -612,6 +656,14 @@ describe('QueryPlanner', () => {
                     "type": "object",
                     "typename": "dxn:type:example.com/type/Person:0.1.0",
                   },
+                },
+                {
+                  "_tag": "OrderStep",
+                  "order": [
+                    {
+                      "kind": "natural",
+                    },
+                  ],
                 },
               ],
             },
@@ -642,6 +694,8 @@ describe('QueryPlanner', () => {
         "steps": [
           {
             "_tag": "SelectStep",
+            "allQueuesFromSpaces": false,
+            "queues": [],
             "selector": {
               "_tag": "TypeSelector",
               "inverted": false,
@@ -706,10 +760,13 @@ describe('QueryPlanner', () => {
         "steps": [
           {
             "_tag": "SelectStep",
+            "allQueuesFromSpaces": false,
+            "queues": [],
             "selector": {
               "_tag": "TextSelector",
               "searchKind": "full-text",
               "text": "Bill",
+              "typename": null,
             },
             "spaces": [
               "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
@@ -750,10 +807,13 @@ describe('QueryPlanner', () => {
         "steps": [
           {
             "_tag": "SelectStep",
+            "allQueuesFromSpaces": false,
+            "queues": [],
             "selector": {
               "_tag": "TextSelector",
               "searchKind": "vector",
               "text": "Bill",
+              "typename": null,
             },
             "spaces": [
               "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
@@ -785,6 +845,8 @@ describe('QueryPlanner', () => {
         "steps": [
           {
             "_tag": "SelectStep",
+            "allQueuesFromSpaces": false,
+            "queues": [],
             "selector": {
               "_tag": "TypeSelector",
               "inverted": false,
@@ -853,6 +915,8 @@ describe('QueryPlanner', () => {
         "steps": [
           {
             "_tag": "SelectStep",
+            "allQueuesFromSpaces": false,
+            "queues": [],
             "selector": {
               "_tag": "TypeSelector",
               "inverted": true,
@@ -911,6 +975,8 @@ describe('QueryPlanner', () => {
         "steps": [
           {
             "_tag": "SelectStep",
+            "allQueuesFromSpaces": false,
+            "queues": [],
             "selector": {
               "_tag": "TypeSelector",
               "inverted": false,
@@ -947,9 +1013,323 @@ describe('QueryPlanner', () => {
       }
     `);
   });
+
+  test('select items from a specific queue', () => {
+    const query = Query.select(Filter.type(TestSchema.Task)).options({ queues: [QUEUE_DXN] });
+
+    const plan = planner.createPlan(query.ast);
+    expect(plan).toMatchInlineSnapshot(`
+      {
+        "steps": [
+          {
+            "_tag": "SelectStep",
+            "allQueuesFromSpaces": false,
+            "queues": [
+              "dxn:queue:data:B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO:01JJRA86VK4H1TEB6QQVSWXP0E",
+            ],
+            "selector": {
+              "_tag": "TypeSelector",
+              "inverted": false,
+              "typename": [
+                "dxn:type:example.com/type/Task:0.1.0",
+              ],
+            },
+            "spaces": [],
+          },
+          {
+            "_tag": "FilterDeletedStep",
+            "mode": "only-non-deleted",
+          },
+          {
+            "_tag": "FilterStep",
+            "filter": {
+              "id": undefined,
+              "props": {},
+              "type": "object",
+              "typename": "dxn:type:example.com/type/Task:0.1.0",
+            },
+          },
+          {
+            "_tag": "OrderStep",
+            "order": [
+              {
+                "kind": "natural",
+              },
+            ],
+          },
+        ],
+      }
+    `);
+  });
+
+  test('select items from all queues in a space', () => {
+    const query = Query.select(Filter.type(TestSchema.Task)).options({
+      spaceIds: [SPACE_ID],
+      allQueuesFromSpaces: true,
+    });
+
+    const plan = planner.createPlan(query.ast);
+    expect(plan).toMatchInlineSnapshot(`
+      {
+        "steps": [
+          {
+            "_tag": "SelectStep",
+            "allQueuesFromSpaces": true,
+            "queues": [],
+            "selector": {
+              "_tag": "TypeSelector",
+              "inverted": false,
+              "typename": [
+                "dxn:type:example.com/type/Task:0.1.0",
+              ],
+            },
+            "spaces": [
+              "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
+            ],
+          },
+          {
+            "_tag": "FilterDeletedStep",
+            "mode": "only-non-deleted",
+          },
+          {
+            "_tag": "FilterStep",
+            "filter": {
+              "id": undefined,
+              "props": {},
+              "type": "object",
+              "typename": "dxn:type:example.com/type/Task:0.1.0",
+            },
+          },
+          {
+            "_tag": "OrderStep",
+            "order": [
+              {
+                "kind": "natural",
+              },
+            ],
+          },
+        ],
+      }
+    `);
+  });
+
+  test('limit results', () => {
+    const query = Query.select(Filter.type(TestSchema.Task)).limit(10);
+
+    const plan = planner.createPlan(withSpaceIdOptions(query.ast));
+    expect(plan).toMatchInlineSnapshot(`
+      {
+        "steps": [
+          {
+            "_tag": "SelectStep",
+            "allQueuesFromSpaces": false,
+            "limit": 10,
+            "queues": [],
+            "selector": {
+              "_tag": "TypeSelector",
+              "inverted": false,
+              "typename": [
+                "dxn:type:example.com/type/Task:0.1.0",
+              ],
+            },
+            "spaces": [
+              "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
+            ],
+          },
+          {
+            "_tag": "FilterDeletedStep",
+            "mode": "only-non-deleted",
+          },
+          {
+            "_tag": "FilterStep",
+            "filter": {
+              "id": undefined,
+              "props": {},
+              "type": "object",
+              "typename": "dxn:type:example.com/type/Task:0.1.0",
+            },
+          },
+          {
+            "_tag": "OrderStep",
+            "limit": 10,
+            "order": [
+              {
+                "kind": "natural",
+              },
+            ],
+          },
+        ],
+      }
+    `);
+  });
+
+  test('ordered and limited results', () => {
+    const query = Query.select(Filter.type(TestSchema.Task)).orderBy(Order.property('title', 'asc')).limit(10);
+
+    const plan = planner.createPlan(withSpaceIdOptions(query.ast));
+    expect(plan).toMatchInlineSnapshot(`
+      {
+        "steps": [
+          {
+            "_tag": "SelectStep",
+            "allQueuesFromSpaces": false,
+            "limit": 10,
+            "queues": [],
+            "selector": {
+              "_tag": "TypeSelector",
+              "inverted": false,
+              "typename": [
+                "dxn:type:example.com/type/Task:0.1.0",
+              ],
+            },
+            "spaces": [
+              "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
+            ],
+          },
+          {
+            "_tag": "FilterDeletedStep",
+            "mode": "only-non-deleted",
+          },
+          {
+            "_tag": "FilterStep",
+            "filter": {
+              "id": undefined,
+              "props": {},
+              "type": "object",
+              "typename": "dxn:type:example.com/type/Task:0.1.0",
+            },
+          },
+          {
+            "_tag": "OrderStep",
+            "limit": 10,
+            "order": [
+              {
+                "direction": "asc",
+                "kind": "property",
+                "property": "title",
+              },
+            ],
+          },
+        ],
+      }
+    `);
+  });
+
+  test('union of limited queries', () => {
+    const query = Query.all(
+      Query.select(Filter.type(TestSchema.Person)).limit(5),
+      Query.select(Filter.type(TestSchema.Organization)).limit(5),
+    );
+
+    const plan = planner.createPlan(withSpaceIdOptions(query.ast));
+    expect(plan).toMatchInlineSnapshot(`
+      {
+        "steps": [
+          {
+            "_tag": "UnionStep",
+            "plans": [
+              {
+                "steps": [
+                  {
+                    "_tag": "SelectStep",
+                    "allQueuesFromSpaces": false,
+                    "limit": 5,
+                    "queues": [],
+                    "selector": {
+                      "_tag": "TypeSelector",
+                      "inverted": false,
+                      "typename": [
+                        "dxn:type:example.com/type/Person:0.1.0",
+                      ],
+                    },
+                    "spaces": [
+                      "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
+                    ],
+                  },
+                  {
+                    "_tag": "FilterDeletedStep",
+                    "mode": "only-non-deleted",
+                  },
+                  {
+                    "_tag": "FilterStep",
+                    "filter": {
+                      "id": undefined,
+                      "props": {},
+                      "type": "object",
+                      "typename": "dxn:type:example.com/type/Person:0.1.0",
+                    },
+                  },
+                  {
+                    "_tag": "OrderStep",
+                    "limit": 5,
+                    "order": [
+                      {
+                        "kind": "natural",
+                      },
+                    ],
+                  },
+                ],
+              },
+              {
+                "steps": [
+                  {
+                    "_tag": "SelectStep",
+                    "allQueuesFromSpaces": false,
+                    "limit": 5,
+                    "queues": [],
+                    "selector": {
+                      "_tag": "TypeSelector",
+                      "inverted": false,
+                      "typename": [
+                        "dxn:type:example.com/type/Organization:0.1.0",
+                      ],
+                    },
+                    "spaces": [
+                      "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
+                    ],
+                  },
+                  {
+                    "_tag": "FilterDeletedStep",
+                    "mode": "only-non-deleted",
+                  },
+                  {
+                    "_tag": "FilterStep",
+                    "filter": {
+                      "id": undefined,
+                      "props": {},
+                      "type": "object",
+                      "typename": "dxn:type:example.com/type/Organization:0.1.0",
+                    },
+                  },
+                  {
+                    "_tag": "OrderStep",
+                    "limit": 5,
+                    "order": [
+                      {
+                        "kind": "natural",
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+          {
+            "_tag": "OrderStep",
+            "order": [
+              {
+                "kind": "natural",
+              },
+            ],
+          },
+        ],
+      }
+    `);
+  });
 });
 
 const SPACE_ID = SpaceId.make('B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO'); // Stable id for inline snapshots.
+const QUEUE_DXN = DXN.parse('dxn:queue:data:B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO:01JJRA86VK4H1TEB6QQVSWXP0E').toString(); // Stable queue DXN for inline snapshots.
 
 const withSpaceIdOptions = (query: QueryAST.Query): QueryAST.Query => ({
   type: 'options',

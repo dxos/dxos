@@ -6,6 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { type SchemaRegistry, Type } from '@dxos/echo';
 import {
+  EchoObjectSchema,
   type EchoSchema,
   Format,
   FormatAnnotation,
@@ -13,7 +14,6 @@ import {
   PropertyMetaAnnotationId,
   type SelectOption,
   TypeEnum,
-  TypedObject,
   formatToType,
 } from '@dxos/echo/internal';
 import { createEchoSchema } from '@dxos/echo/testing';
@@ -94,7 +94,8 @@ export const getSchemaFromPropertyDefinitions = (
     properties.filter((prop) => prop.name !== 'id').map((prop) => [prop.name, typeToSchema[formatToType[prop.format]]]),
   );
 
-  const schema = createEchoSchema(TypedObject({ typename, version: '0.1.0' })(fields));
+  const typeSchema = Schema.Struct(fields).pipe(EchoObjectSchema({ typename, version: '0.1.0' }));
+  const schema = createEchoSchema(typeSchema as unknown as Schema.Schema.AnyNoContext);
 
   for (const prop of properties) {
     if (prop.config?.options) {

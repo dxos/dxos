@@ -2,106 +2,117 @@
 // Copyright 2025 DXOS.org
 //
 
-import { effect, untracked } from '@preact/signals-core';
+import { Atom } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 
 import { Capability, Common } from '@dxos/app-framework';
-import { type Live, live } from '@dxos/live-object';
 import { Path } from '@dxos/react-ui-list';
 
 import { meta } from '../../meta';
-import { NavTreeCapabilities } from '../../types';
+import { type NavTreeCapabilities as NC, NavTreeCapabilities } from '../../types';
 
 const KEY = `${meta.id}/state/v1`;
 
-const getInitialState = () => {
+/** Default item state for new entries. */
+const defaultItemState: NC.NavTreeItemState = { open: false, current: false, alternateTree: false };
+
+/** Default state entries for initial tree structure. */
+// TODO(thure): Initialize these dynamically.
+const defaultStateEntries: [string, NC.NavTreeItemState][] = [
+  ['root', { open: true, current: false }],
+  ['root~dxos.org/plugin/space-spaces', { open: true, current: false }],
+  ['root~dxos.org/plugin/files', { open: true, current: false }],
+];
+
+const getInitialState = (): Map<string, NC.NavTreeItemState> => {
   const stringified = localStorage.getItem(KEY);
   if (!stringified) {
-    return;
+    return new Map(defaultStateEntries);
   }
 
   try {
     const cached: [string, { open: boolean; current: boolean }][] = JSON.parse(stringified);
-    return cached.map(([key, value]): [string, Live<{ open: boolean; current: boolean }>] => [
-      key,
-      live({ open: value.open, current: false }),
-    ]);
-  } catch {}
+    return new Map(cached.map(([key, value]) => [key, { open: value.open, current: false }]));
+  } catch {
+    return new Map(defaultStateEntries);
+  }
 };
 
-export default Capability.makeModule((context) =>
-  Effect.sync(() => {
-    const layout = context.getCapability(Common.Capability.Layout);
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const registry = yield* Capability.get(Common.Capability.AtomRegistry);
+    const layoutAtom = yield* Capability.get(Common.Capability.Layout);
 
-    // TODO(wittjosiah): This currently needs to be not a Live at the root.
-    //   If it is a Live then React errors when initializing new paths because of state change during render.
-    //   Ideally this could be a Live but be able to access and update the root level without breaking render.
-    //   Wrapping accesses and updates in `untracked` didn't seem to work in all cases.
-    const state = new Map<string, Live<{ open: boolean; current: boolean; alternateTree?: boolean }>>(
-      getInitialState() ?? [
-        // TODO(thure): Initialize these dynamically.
-        ['root', live({ open: true, current: false })],
-        ['root~dxos.org/plugin/space-spaces', live({ open: true, current: false })],
-        ['root~dxos.org/plugin/files', live({ open: true, current: false })],
-      ],
+    // Backing state for persistence (not reactive).
+    const backingState = getInitialState();
+
+    // Per-path atom family for fine-grained reactivity.
+    const itemAtomFamily = Atom.family((pathString: string) =>
+      Atom.make<NC.NavTreeItemState>(backingState.get(pathString) ?? { ...defaultItemState }),
     );
 
-    const getItem = (_path: string[]) => {
-      const path = Path.create(..._path);
-      const value = state.get(path) ?? live({ open: false, current: false, alternateTree: false });
-      if (!state.has(path)) {
-        state.set(path, value);
-      }
+    const getItemAtom = (path: string[]): Atom.Atom<NC.NavTreeItemState> => {
+      const pathString = Path.create(...path);
+      return itemAtomFamily(pathString);
+    };
 
-      return value;
+    const getItem = (path: string[]): NC.NavTreeItemState => {
+      return registry.get(getItemAtom(path));
     };
 
     const setItem = (path: string[], key: 'open' | 'current' | 'alternateTree', next: boolean) => {
-      const value = getItem(path);
-      value[key] = next;
+      const pathString = Path.create(...path);
+      const atom = itemAtomFamily(pathString);
+      const currentValue = registry.get(atom);
+      const newValue = { ...currentValue, [key]: next };
 
-      localStorage.setItem(KEY, JSON.stringify(Array.from(state.entries())));
+      // Update the atom.
+      registry.set(atom, newValue);
+
+      // Update backing state and persist to localStorage.
+      backingState.set(pathString, newValue);
+      localStorage.setItem(KEY, JSON.stringify(Array.from(backingState.entries())));
     };
 
-    const isOpen = (path: string[]) => getItem(path).open;
-    const isCurrent = (path: string[]) => getItem(path).current;
-    const isAlternateTree = (path: string[]) => {
-      const item = getItem(path);
-      return item.alternateTree ?? false;
-    };
-
+    // Subscribe to layout changes to update current state.
     let previous: string[] = [];
-    const unsubscribe = effect(() => {
+    const unsubscribe = registry.subscribe(layoutAtom, (layout) => {
       const removed = previous.filter((id) => !layout.active.includes(id));
       previous = layout.active;
 
       const handleUpdate = () => {
+        // Mark removed items as not current.
         removed.forEach((id) => {
-          const keys = Array.from(state.keys()).filter((key) => Path.last(key) === id);
+          const keys = Array.from(backingState.keys()).filter((key) => Path.last(key) === id);
           keys.forEach((key) => {
             setItem(Path.parts(key), 'current', false);
           });
         });
 
+        // Mark active items as current.
         layout.active.forEach((id: string) => {
-          const keys = Array.from(new Set([...state.keys(), id])).filter((key) => Path.last(key) === id);
+          const keys = Array.from(new Set([...backingState.keys(), id])).filter((key) => Path.last(key) === id);
           keys.forEach((key) => {
             setItem(Path.parts(key), 'current', true);
           });
         });
       };
 
-      // TODO(wittjosiah): This is setTimeout because there's a race between the keys be initialized.
+      // TODO(wittjosiah): This is setTimeout because there's a race between the keys being initialized.
       //   Keys are initialized on the first render of an item in the navtree.
       //   This could be avoided if the location was a path as well and not just an id.
       const timeout = setTimeout(handleUpdate, 500);
-      untracked(() => handleUpdate());
+      handleUpdate();
       return () => clearTimeout(timeout);
     });
 
     return Capability.contributes(
       NavTreeCapabilities.State,
-      { state, getItem, setItem, isOpen, isCurrent, isAlternateTree },
+      {
+        getItem,
+        getItemAtom,
+        setItem,
+      },
       () => Effect.sync(() => unsubscribe()),
     );
   }),

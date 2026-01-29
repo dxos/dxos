@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 import { Event } from '@dxos/async';
 import { Resource } from '@dxos/context';
 import { EntityKind } from '@dxos/echo/internal';
-import { ObjectStructure, decodeReference } from '@dxos/echo-protocol';
+import { EncodedReference, ObjectStructure } from '@dxos/echo-protocol';
 import { InternalError } from '@dxos/errors';
 import { ObjectId, PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -90,7 +90,7 @@ export class IndexGraph extends Resource implements Index {
         const source = ObjectStructure.getRelationSource(object);
         const target = ObjectStructure.getRelationTarget(object);
         if (source) {
-          const sourceObject = decodeReference(source).toDXN().asEchoDXN()?.echoId;
+          const sourceObject = EncodedReference.toDXN(source).asEchoDXN()?.echoId;
           if (sourceObject) {
             defaultMap(this._relationSources, sourceObject, () => new Set()).add(id);
             targetMapping.add(sourceObject);
@@ -99,7 +99,7 @@ export class IndexGraph extends Resource implements Index {
           log.warn('relation has no source', { id });
         }
         if (target) {
-          const targetObject = decodeReference(target).toDXN().asEchoDXN()?.echoId;
+          const targetObject = EncodedReference.toDXN(target).asEchoDXN()?.echoId;
           if (targetObject) {
             defaultMap(this._relationTargets, targetObject, () => new Set()).add(id);
             targetMapping.add(targetObject);
@@ -146,7 +146,7 @@ export class IndexGraph extends Resource implements Index {
 
     const references = ObjectStructure.getAllOutgoingReferences(object);
     for (const { path, reference } of references) {
-      const targetObject = decodeReference(reference).toDXN().asEchoDXN()?.echoId;
+      const targetObject = EncodedReference.toDXN(reference).asEchoDXN()?.echoId;
       if (!targetObject) {
         continue;
       }
@@ -161,6 +161,10 @@ export class IndexGraph extends Resource implements Index {
     }
   }
 
+  /**
+   * Find all objects that match the given filter.
+   * Returns rank 1 for all matches as ranking is not applicable for graph traversal queries.
+   */
   @trace.span({ showInBrowserTimeline: true })
   async find(filter: IndexQuery): Promise<FindResult[]> {
     if (filter.inverted || filter.typenames.length > 0 || !filter.graph) {
@@ -183,12 +187,12 @@ export class IndexGraph extends Resource implements Index {
               const firstSegmentMatches = prop[0] === property;
               const secondSegmentIsNumeric = !isNaN(Number(prop[1]));
               if (firstSegmentMatches && (prop.length === 1 || (prop.length === 2 && secondSegmentIsNumeric))) {
-                results.push(...Array.from(source).map((id) => ({ id, rank: 0 })));
+                results.push(...Array.from(source).map((id) => ({ id, rank: 1 })));
               }
             }
           } else {
             for (const source of sources.values()) {
-              results.push(...Array.from(source).map((id) => ({ id, rank: 0 })));
+              results.push(...Array.from(source).map((id) => ({ id, rank: 1 })));
             }
           }
         }
@@ -201,7 +205,7 @@ export class IndexGraph extends Resource implements Index {
           if (!sources) {
             continue;
           }
-          results.push(...Array.from(sources).map((id) => ({ id, rank: 0 })));
+          results.push(...Array.from(sources).map((id) => ({ id, rank: 1 })));
         }
         return results;
       }
@@ -212,7 +216,7 @@ export class IndexGraph extends Resource implements Index {
           if (!sources) {
             continue;
           }
-          results.push(...Array.from(sources).map((id) => ({ id, rank: 0 })));
+          results.push(...Array.from(sources).map((id) => ({ id, rank: 1 })));
         }
         return results;
       }

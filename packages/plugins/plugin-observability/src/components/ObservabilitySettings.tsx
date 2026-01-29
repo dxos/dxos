@@ -24,7 +24,12 @@ export const ObservabilitySettingsSchema = Schema.mutable(
 
 export type ObservabilitySettingsProps = Schema.Schema.Type<typeof ObservabilitySettingsSchema>;
 
-export const ObservabilitySettings = ({ settings }: { settings: ObservabilitySettingsProps }) => {
+export type ObservabilitySettingsComponentProps = {
+  settings: ObservabilitySettingsProps;
+  onSettingsChange: (fn: (current: ObservabilitySettingsProps) => ObservabilitySettingsProps) => void;
+};
+
+export const ObservabilitySettings = ({ settings }: ObservabilitySettingsComponentProps) => {
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
 

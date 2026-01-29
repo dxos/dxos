@@ -35,20 +35,29 @@ const ensureSystemCollections = async (space: Space) => {
     (object) => Obj.instanceOf(Collection.Managed, object) && object.key === Assistant.Chat.typename,
   );
   if (!chats) {
-    rootCollection.objects.push(Ref.make(Collection.makeManaged({ key: Assistant.Chat.typename })));
+    const chatsCollectionRef = Ref.make(Collection.makeManaged({ key: Assistant.Chat.typename }));
+    Obj.change(rootCollection, (c) => {
+      c.objects.push(chatsCollectionRef);
+    });
   }
 
   const blueprints = objects.find(
     (object) => Obj.instanceOf(Collection.Managed, object) && object.key === Blueprint.Blueprint.typename,
   );
   if (!blueprints) {
-    rootCollection.objects.push(Ref.make(Collection.makeManaged({ key: Blueprint.Blueprint.typename })));
+    const blueprintsCollectionRef = Ref.make(Collection.makeManaged({ key: Blueprint.Blueprint.typename }));
+    Obj.change(rootCollection, (c) => {
+      c.objects.push(blueprintsCollectionRef);
+    });
   }
 
   const prompts = objects.find(
     (object) => Obj.instanceOf(Collection.Managed, object) && object.key === Type.getTypename(Prompt.Prompt),
   );
   if (!prompts) {
-    rootCollection.objects.push(Ref.make(Collection.makeManaged({ key: Type.getTypename(Prompt.Prompt) })));
+    const promptsCollectionRef = Ref.make(Collection.makeManaged({ key: Type.getTypename(Prompt.Prompt) }));
+    Obj.change(rootCollection, (c) => {
+      c.objects.push(promptsCollectionRef);
+    });
   }
 };

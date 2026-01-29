@@ -7,44 +7,38 @@ import * as Option from 'effect/Option';
 
 import { Capability, Common } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
-import { CreateAtom, GraphBuilder } from '@dxos/plugin-graph';
+import { AtomObj } from '@dxos/echo-atom';
+import { Operation } from '@dxos/operation';
+import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 import { View } from '@dxos/schema';
 
 import { meta } from '../../meta';
 import { Map, MapAction } from '../../types';
 
-export default Capability.makeModule((context) =>
-  Effect.sync(() => {
-    return Capability.contributes(
-      Common.Capability.AppGraphBuilder,
-      GraphBuilder.createExtension({
-        id: MapAction.MapOperation.Toggle.meta.key,
-        match: (node) => {
-          if (!Obj.instanceOf(View.View, node.data)) {
-            return Option.none();
-          }
-          return Option.some({ view: node.data, node });
-        },
-        actions: ({ view, node }, get) => {
-          const target = get(CreateAtom.fromSignal(() => (node.properties as any).presentation?.target));
-          if (!Obj.instanceOf(Map.Map, target)) {
-            return [];
-          }
-          return [
-            {
-              id: `${view.id}/toggle-map`,
-              data: async () => {
-                const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
-                await invokePromise(MapAction.MapOperation.Toggle, undefined);
-              },
-              properties: {
-                label: ['toggle type label', { ns: meta.id }],
-                icon: 'ph--compass--regular',
-              },
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const extensions = yield* GraphBuilder.createExtension({
+      id: MapAction.MapOperation.Toggle.meta.key,
+      match: (node) => Option.map(NodeMatcher.whenEchoType(View.View)(node), (view) => ({ view, node })),
+      actions: ({ view, node }, get) => {
+        const presentationRef = (node.properties as any).presentation;
+        const target = presentationRef ? get(AtomObj.make(presentationRef)) : undefined;
+        if (!Obj.instanceOf(Map.Map, target)) {
+          return Effect.succeed([]);
+        }
+        return Effect.succeed([
+          {
+            id: `${view.id}/toggle-map`,
+            data: () => Operation.invoke(MapAction.MapOperation.Toggle, undefined),
+            properties: {
+              label: ['toggle type label', { ns: meta.id }],
+              icon: 'ph--compass--regular',
             },
-          ];
-        },
-      }),
-    );
+          },
+        ]);
+      },
+    });
+
+    return Capability.contributes(Common.Capability.AppGraphBuilder, extensions);
   }),
 );

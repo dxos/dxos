@@ -19,6 +19,7 @@ import * as Common from '../common';
 
 import * as ActivationEvent from './activation-event';
 import * as Capability from './capability';
+import type * as CapabilityManager from './capability-manager';
 import * as Plugin from './plugin';
 import * as PluginManager from './plugin-manager';
 
@@ -105,7 +106,7 @@ describe('PluginManager', () => {
       const manager = PluginManager.make({ plugins: [plugin], core: [], pluginLoader });
       yield* manager.enable(testMeta.id);
       yield* manager.activate(Common.ActivationEvent.Startup);
-      const strings = manager.context.getCapabilities(String);
+      const strings = manager.capabilities.getAll(String);
       assert.strictEqual(strings.length, 2);
       assert.strictEqual(strings[0].string, 'hello-5');
       assert.strictEqual(strings[1].string, 'world');
@@ -177,7 +178,7 @@ describe('PluginManager', () => {
       const result = yield* manager.activate(Common.ActivationEvent.Startup);
       assert.isTrue(result);
       assert.deepStrictEqual(manager.getActive(), [testPlugin.modules[0].id]);
-      assert.strictEqual(manager.context.getCapabilities(String).length, 0);
+      assert.strictEqual(manager.capabilities.getAll(String).length, 0);
     }),
   );
 
@@ -198,6 +199,101 @@ describe('PluginManager', () => {
       yield* manager.add(testMeta.id);
       const error = yield* Effect.flip(manager.activate(FailEvent));
       assert.strictEqual(error.message, 'test');
+    }),
+  );
+
+  it.effect('should catch and log defects (synchronous throws) in module activation', () =>
+    Effect.gen(function* () {
+      const DefectEvent = ActivationEvent.make('dxos.org/test/defect');
+      const capturedErrors: LogEntry[] = [];
+      const removeProcessor = log.addProcessor((_config: LogConfig, entry: LogEntry) => {
+        if (entry.level === LogLevel.ERROR) {
+          capturedErrors.push(entry);
+        }
+      });
+
+      plugins = [
+        Plugin.define(testMeta).pipe(
+          Plugin.addModule({
+            activatesOn: DefectEvent,
+            id: 'DefectInEffectSync',
+            activate: () =>
+              Effect.sync(() => {
+                // This is a defect - a synchronous throw inside Effect.sync.
+                throw new Error('defect in Effect.sync');
+              }),
+          }),
+          Plugin.make,
+        )(),
+      ];
+
+      const manager = PluginManager.make({ pluginLoader });
+      yield* manager.add(testMeta.id);
+      const error = yield* Effect.flip(manager.activate(DefectEvent));
+
+      // Verify the error was caught and propagated.
+      assert.strictEqual(error.message, 'defect in Effect.sync');
+
+      // Verify the error was logged with isDefect: true.
+      const defectLog = capturedErrors.find(
+        (entry) =>
+          entry.message?.includes('module failed to activate') &&
+          entry.context?.module === 'dxos.org/plugin/test/module/DefectInEffectSync',
+      );
+      assert.isNotNull(defectLog, 'Expected error log for defect');
+      assert.strictEqual(defectLog?.context?.isDefect, true, 'Expected isDefect to be true for synchronous throw');
+
+      removeProcessor();
+    }),
+  );
+
+  it.effect('should catch and log defects when activate throws before returning Effect', () =>
+    Effect.gen(function* () {
+      const DefectEvent = ActivationEvent.make('dxos.org/test/defect-immediate');
+      const capturedErrors: LogEntry[] = [];
+      const removeProcessor = log.addProcessor((_config: LogConfig, entry: LogEntry) => {
+        if (entry.level === LogLevel.ERROR) {
+          capturedErrors.push(entry);
+        }
+      });
+
+      plugins = [
+        Plugin.define(testMeta).pipe(
+          Plugin.addModule({
+            activatesOn: DefectEvent,
+            id: 'DefectImmediate',
+            activate: () => {
+              // This throws immediately before even returning an Effect.
+              // This is the most severe type of defect.
+              throw new Error('immediate throw before Effect');
+              return Effect.succeed(undefined);
+            },
+          }),
+          Plugin.make,
+        )(),
+      ];
+
+      const manager = PluginManager.make({ pluginLoader });
+      yield* manager.add(testMeta.id);
+      const error = yield* Effect.flip(manager.activate(DefectEvent));
+
+      // Verify the error was caught and propagated.
+      assert.strictEqual(error.message, 'immediate throw before Effect');
+
+      // Verify the error was logged with isDefect: true.
+      const defectLog = capturedErrors.find(
+        (entry) =>
+          entry.message?.includes('module failed to activate') &&
+          entry.context?.module === 'dxos.org/plugin/test/module/DefectImmediate',
+      );
+      assert.isNotNull(defectLog, 'Expected error log for immediate defect');
+      assert.strictEqual(
+        defectLog?.context?.isDefect,
+        true,
+        'Expected isDefect to be true for immediate throw before Effect',
+      );
+
+      removeProcessor();
     }),
   );
 
@@ -354,17 +450,17 @@ describe('PluginManager', () => {
 
       const manager = PluginManager.make({ pluginLoader });
       assert.deepStrictEqual(manager.getActive(), []);
-      assert.strictEqual(manager.context.getCapabilities(Number).length, 0);
+      assert.strictEqual(manager.capabilities.getAll(Number).length, 0);
 
       yield* manager.add(Plugin1.meta.id);
       yield* manager.activate(CountEvent);
       assert.deepStrictEqual(manager.getActive(), [plugin1.modules[0].id]);
-      assert.strictEqual(manager.context.getCapabilities(Number).length, 1);
+      assert.strictEqual(manager.capabilities.getAll(Number).length, 1);
 
       yield* manager.add(Plugin2.meta.id);
       yield* manager.activate(CountEvent);
       assert.deepStrictEqual(manager.getActive(), [plugin1.modules[0].id, plugin2.modules[0].id]);
-      assert.strictEqual(manager.context.getCapabilities(Number).length, 2);
+      assert.strictEqual(manager.capabilities.getAll(Number).length, 2);
 
       yield* manager.add(Plugin3.meta.id);
       yield* manager.activate(CountEvent);
@@ -373,7 +469,7 @@ describe('PluginManager', () => {
         plugin2.modules[0].id,
         plugin3.modules[0].id,
       ]);
-      assert.strictEqual(manager.context.getCapabilities(Number).length, 3);
+      assert.strictEqual(manager.capabilities.getAll(Number).length, 3);
     }),
   );
 
@@ -394,16 +490,16 @@ describe('PluginManager', () => {
 
       const manager = PluginManager.make({ pluginLoader });
       assert.deepStrictEqual(manager.getActive(), []);
-      assert.strictEqual(manager.context.getCapabilities(String).length, 0);
+      assert.strictEqual(manager.capabilities.getAll(String).length, 0);
 
       yield* manager.add(testMeta.id);
       yield* manager.activate(Common.ActivationEvent.Startup);
       assert.deepStrictEqual(manager.getActive(), []);
-      assert.strictEqual(manager.context.getCapabilities(String).length, 0);
+      assert.strictEqual(manager.capabilities.getAll(String).length, 0);
 
       yield* manager.activate(CountEvent);
       assert.deepStrictEqual(manager.getActive(), [testPlugin.modules[0].id]);
-      assert.strictEqual(manager.context.getCapabilities(String).length, 1);
+      assert.strictEqual(manager.capabilities.getAll(String).length, 1);
     }),
   );
 
@@ -426,18 +522,18 @@ describe('PluginManager', () => {
 
       const manager = PluginManager.make({ pluginLoader });
       assert.deepStrictEqual(manager.getActive(), []);
-      assert.strictEqual(manager.context.getCapabilities(String).length, 0);
+      assert.strictEqual(manager.capabilities.getAll(String).length, 0);
       assert.strictEqual(count, 0);
 
       yield* manager.add(testMeta.id);
       yield* manager.activate(CountEvent);
       assert.deepStrictEqual(manager.getActive(), [testPlugin.modules[0].id]);
-      assert.strictEqual(manager.context.getCapabilities(String).length, 1);
+      assert.strictEqual(manager.capabilities.getAll(String).length, 1);
       assert.strictEqual(count, 1);
 
       yield* manager.activate(Common.ActivationEvent.Startup);
       assert.deepStrictEqual(manager.getActive(), [testPlugin.modules[0].id]);
-      assert.strictEqual(manager.context.getCapabilities(String).length, 1);
+      assert.strictEqual(manager.capabilities.getAll(String).length, 1);
       assert.strictEqual(count, 1);
     }),
   );
@@ -445,9 +541,9 @@ describe('PluginManager', () => {
   it.effect('should be able to disable and re-enable an active plugin', () =>
     Effect.gen(function* () {
       const state = { total: 0 };
-      const computeTotal = (context: Capability.PluginContext) => {
-        const numbers = context.getCapabilities(Number);
-        state.total = numbers.reduce((acc, n) => acc + n.number, 0);
+      const computeTotal = (capabilityManager: CapabilityManager.CapabilityManager) => {
+        const numbers = capabilityManager.getAll(Number);
+        state.total = numbers.reduce((acc: number, n: { number: number }) => acc + n.number, 0);
       };
 
       const Count = Plugin.define({ id: 'dxos.org/test/count', name: 'Count' }).pipe(
@@ -455,11 +551,11 @@ describe('PluginManager', () => {
           id: 'Count',
           activatesOn: Common.ActivationEvent.Startup,
           activatesBefore: [CountEvent],
-          activate: (context) =>
-            Effect.sync(() => {
-              computeTotal(context);
-              return Capability.contributes(Total, state);
-            }),
+          activate: Effect.fnUntraced(function* () {
+            const capabilityManager = yield* Capability.Service;
+            computeTotal(capabilityManager);
+            return Capability.contributes(Total, state);
+          }),
         }),
         Plugin.make,
       );
@@ -497,7 +593,7 @@ describe('PluginManager', () => {
         ]);
         assert.deepStrictEqual(manager.getPendingReset(), []);
 
-        const totals = manager.context.getCapabilities(Total);
+        const totals = manager.capabilities.getAll(Total);
         assert.strictEqual(totals.length, 1);
         assert.strictEqual(totals[0].total, 6);
       }
@@ -507,7 +603,7 @@ describe('PluginManager', () => {
         assert.deepStrictEqual(manager.getActive(), [countPlugin.modules[0].id]);
         assert.deepStrictEqual(manager.getPendingReset(), []);
 
-        const totals = manager.context.getCapabilities(Total);
+        const totals = manager.capabilities.getAll(Total);
         assert.strictEqual(totals.length, 1);
         // Total doesn't change because it is not reactive.
         assert.strictEqual(totals[0].total, 6);
@@ -521,7 +617,7 @@ describe('PluginManager', () => {
         ]);
         assert.deepStrictEqual(manager.getPendingReset(), []);
 
-        const totals = manager.context.getCapabilities(Total);
+        const totals = manager.capabilities.getAll(Total);
         assert.strictEqual(totals.length, 1);
         assert.strictEqual(totals[0].total, 6);
       }
@@ -741,7 +837,7 @@ describe('PluginManager', () => {
       assert.strictEqual(activateCallCount, 1, 'module activate should only be called once due to semaphore');
 
       // Verify the capability was contributed.
-      const strings = manager.context.getCapabilities(String);
+      const strings = manager.capabilities.getAll(String);
       assert.isTrue(strings.length >= 1, 'capability should be contributed');
       assert.strictEqual(strings[0].string, 'concurrent');
     }),

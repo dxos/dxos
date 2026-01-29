@@ -5,13 +5,10 @@
 import { type CleanupFn, Event } from '@dxos/async';
 import { StackTrace } from '@dxos/debug';
 import { type Entity, type QueryResult } from '@dxos/echo';
-import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
 import { isNonNullable } from '@dxos/util';
-
-import { prohibitSignalActions } from '../guarded-scope';
 
 import { type Query } from './api';
 import { type QueryContext } from './query-context';
@@ -20,7 +17,6 @@ import { type QueryContext } from './query-context';
  * Predicate based query.
  */
 export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implements QueryResult.QueryResult<T> {
-  private readonly _signal = compositeRuntime.createSignal();
   private readonly _event = new Event<QueryResult.QueryResult<T>>();
   private readonly _diagnostic: QueryDiagnostic;
 
@@ -35,11 +31,7 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
   ) {
     this._queryContext.changed.on(() => {
       if (this._recomputeResult()) {
-        // Clear `prohibitSignalActions` to allow the signal to be emitted.
-        compositeRuntime.untracked(() => {
-          this._event.emit(this);
-          this._signal.notifyWrite();
-        });
+        this._event.emit(this);
       }
     });
 
@@ -61,14 +53,12 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
 
   get entries(): QueryResult.EntityEntry<T>[] {
     this._checkQueryIsRunning();
-    this._signal.notifyRead();
     this._ensureCachePresent();
     return this._resultCache!;
   }
 
   get results(): T[] {
     this._checkQueryIsRunning();
-    this._signal.notifyRead();
     this._ensureCachePresent();
     return this._objectCache!;
   }
@@ -164,12 +154,7 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
 
   private _ensureCachePresent(): void {
     if (!this._resultCache) {
-      prohibitSignalActions(() => {
-        // TODO(dmaretskyi): Clean up getters in the internal signals so they don't use the Proxy API and don't hit the signals.
-        compositeRuntime.untracked(() => {
-          this._recomputeResult();
-        });
-      });
+      this._recomputeResult();
     }
   }
 

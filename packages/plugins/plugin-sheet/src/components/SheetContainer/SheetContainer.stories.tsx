@@ -6,15 +6,15 @@ import { type Meta } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React from 'react';
 
-import { Capability, Common, OperationResolver } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj } from '@dxos/echo';
+import { OperationResolver } from '@dxos/operation';
 import { corePlugins } from '@dxos/plugin-testing';
 import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/react-ui/testing';
 import { AttendableContainer } from '@dxos/react-ui-attention';
-import { withAttention } from '@dxos/react-ui-attention/testing';
 
 import { createTestCells, useTestSheet, withComputeGraphDecorator } from '../../testing';
 import { translations } from '../../translations';
@@ -31,7 +31,6 @@ const meta = {
     withTheme,
     withClientProvider({ types: [Sheet.Sheet], createSpace: true }),
     withComputeGraphDecorator(),
-    withAttention,
     // TODO(wittjosiah): Consider whether we should refactor component so story doesn't need to depend on intents.
     withPluginManager({
       plugins: [...corePlugins()],
@@ -85,7 +84,7 @@ export const Spec = () => {
 
   return (
     <AttendableContainer id={Obj.getDXN(sheet).toString()} classNames='contents'>
-      <div role='none' className='grid grid-rows-[66%_33%] bs-full grid-cols-1'>
+      <div role='none' className='grid grid-rows-[66%_33%] h-[100dvh] grid-cols-1'>
         <SheetContainer space={space} sheet={sheet} role='story' ignoreAttention />
         <div role='none' data-testid='grid.range-list'>
           <RangeList sheet={sheet} />

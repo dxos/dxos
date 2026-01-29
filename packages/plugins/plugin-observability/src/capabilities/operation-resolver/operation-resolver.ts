@@ -4,77 +4,79 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common, OperationResolver } from '@dxos/app-framework';
-import { runAndForwardErrors } from '@dxos/effect';
+import { Capability, Common } from '@dxos/app-framework';
 import { getTelemetryIdentity, storeObservabilityDisabled } from '@dxos/observability';
+import { OperationResolver } from '@dxos/operation';
 
 import { type ObservabilitySettingsProps } from '../../components';
 import { meta } from '../../meta';
 import { ClientCapability, ObservabilityCapabilities, ObservabilityOperation } from '../../types';
 
 export default Capability.makeModule(
-  ({ context, namespace }: { context: Capability.PluginContext; namespace: string }) =>
-    Effect.succeed(
-      Capability.contributes(Common.Capability.OperationResolver, [
-        //
-        // Toggle
-        //
-        OperationResolver.make({
-          operation: ObservabilityOperation.Toggle,
-          handler: (input) =>
-            Effect.promise(async () => {
-              const client = context.getCapability(ClientCapability);
-              const observability = context.getCapability(ObservabilityCapabilities.Observability);
-              const settings = context
-                .getCapability(Common.Capability.SettingsStore)
-                .getStore<ObservabilitySettingsProps>(meta.id)!.value;
-              settings.enabled = input.state ?? !settings.enabled;
-              observability.track({
-                ...getTelemetryIdentity(client),
-                action: 'observability.toggle',
-                properties: {
-                  enabled: settings.enabled,
-                },
-              });
-              observability.setMode(settings.enabled ? 'basic' : 'disabled');
-              await storeObservabilityDisabled(namespace, !settings.enabled);
-              return settings.enabled;
-            }),
-        }),
+  Effect.fnUntraced(function* (props?: { namespace: string }) {
+    const { namespace } = props!;
+    const capabilities = yield* Capability.Service;
 
-        //
-        // SendEvent
-        //
-        OperationResolver.make({
-          operation: ObservabilityOperation.SendEvent,
-          handler: (input) =>
-            Effect.gen(function* () {
-              const client = context.getCapability(ClientCapability);
-              const properties = input.properties ?? {};
-
-              // NOTE: This is to ensure that events fired before observability is ready are still sent.
-              void Effect.gen(function* () {
-                const observability = yield* context.waitForCapability(ObservabilityCapabilities.Observability);
-                observability.track({
-                  ...getTelemetryIdentity(client),
-                  action: input.name,
-                  properties,
-                });
-              }).pipe(runAndForwardErrors);
-            }),
+    return Capability.contributes(Common.Capability.OperationResolver, [
+      //
+      // Toggle
+      //
+      OperationResolver.make({
+        operation: ObservabilityOperation.Toggle,
+        handler: Effect.fnUntraced(function* (input) {
+          const client = yield* Capability.get(ClientCapability);
+          const observability = yield* Capability.get(ObservabilityCapabilities.Observability);
+          const registry = capabilities.get(Common.Capability.AtomRegistry);
+          const allSettings = capabilities.getAll(Common.Capability.Settings);
+          const settingsObj = allSettings.find((s: Common.Capability.Settings) => s.prefix === meta.id);
+          if (!settingsObj) {
+            return false;
+          }
+          const settings = registry.get(settingsObj.atom) as ObservabilitySettingsProps;
+          const newEnabled = input.state ?? !settings.enabled;
+          registry.set(settingsObj.atom, { ...settings, enabled: newEnabled });
+          observability.track({
+            ...getTelemetryIdentity(client),
+            action: 'observability.toggle',
+            properties: {
+              enabled: newEnabled,
+            },
+          });
+          observability.setMode(newEnabled ? 'basic' : 'disabled');
+          yield* Effect.promise(() => storeObservabilityDisabled(namespace, !newEnabled));
+          return newEnabled;
         }),
+      }),
 
-        //
-        // CaptureUserFeedback
-        //
-        OperationResolver.make({
-          operation: ObservabilityOperation.CaptureUserFeedback,
-          handler: (input) =>
-            Effect.sync(() => {
-              const observability = context.getCapability(ObservabilityCapabilities.Observability);
-              observability.captureUserFeedback(input.message);
-            }),
+      //
+      // SendEvent
+      //
+      OperationResolver.make({
+        operation: ObservabilityOperation.SendEvent,
+        handler: Effect.fnUntraced(function* (input) {
+          // NOTE: This is to ensure that events fired before observability is ready are still sent.
+          const observability = yield* Capability.waitFor(ObservabilityCapabilities.Observability);
+          const client = yield* Capability.get(ClientCapability);
+          const properties = input.properties ?? {};
+
+          observability.track({
+            ...getTelemetryIdentity(client),
+            action: input.name,
+            properties,
+          });
         }),
-      ]),
-    ),
+      }),
+
+      //
+      // CaptureUserFeedback
+      //
+      OperationResolver.make({
+        operation: ObservabilityOperation.CaptureUserFeedback,
+        handler: Effect.fnUntraced(function* (input) {
+          const observability = yield* Capability.get(ObservabilityCapabilities.Observability);
+          observability.captureUserFeedback(input.message);
+        }),
+      }),
+    ]);
+  }),
 );

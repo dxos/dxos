@@ -10,6 +10,3 @@ tasks:
       - '--entryPoint=src/index.ts'
       - '--entryPoint=src/cli/index.ts'
       - '--entryPoint=src/types/index.ts'
-      - '--platform=browser'
-      - '--platform=node'
-      - '--preactSignalTracking'

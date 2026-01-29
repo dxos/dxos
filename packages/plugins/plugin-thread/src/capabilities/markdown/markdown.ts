@@ -14,27 +14,38 @@ import { type EditorState, commentClickedEffect, commentsState, overlap } from '
 import { threads } from '../../extensions';
 import { ThreadCapabilities } from '../../types';
 
-export default Capability.makeModule((context) =>
-  Effect.succeed(
-    Capability.contributes(MarkdownCapabilities.Extensions, [
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    // Get context for lazy capability access in callbacks.
+    const capabilities = yield* Capability.Service;
+
+    return Capability.contributes(MarkdownCapabilities.Extensions, [
       ({ document: doc }) => {
-        const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
-        const { state } = context.getCapability(ThreadCapabilities.MutableState);
-        return threads(state, doc, invokePromise);
+        const { invokePromise } = capabilities.get(Common.Capability.OperationInvoker);
+        const registry = capabilities.get(Common.Capability.AtomRegistry);
+        const stateAtom = capabilities.get(ThreadCapabilities.State);
+        return threads({ registry, stateAtom }, doc, invokePromise);
       },
       ({ document: doc }) => {
         if (!doc) return [];
-        const { state } = context.getCapability(ThreadCapabilities.MutableState);
+        const registry = capabilities.get(Common.Capability.AtomRegistry);
+        const stateAtom = capabilities.get(ThreadCapabilities.State);
 
         return EditorView.updateListener.of((update) => {
           if (update.docChanged || update.selectionSet) {
-            state.toolbar[Obj.getDXN(doc).toString()] = selectionOverlapsComment(update.state);
+            const objectId = Obj.getDXN(doc).toString();
+            const overlaps = selectionOverlapsComment(update.state);
+            const current = registry.get(stateAtom);
+            registry.set(stateAtom, {
+              ...current,
+              toolbar: { ...current.toolbar, [objectId]: overlaps },
+            });
           }
         });
       },
       ({ document: doc }) => {
         if (!doc) return [];
-        const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
+        const { invokePromise } = capabilities.get(Common.Capability.OperationInvoker);
         const id = Obj.getDXN(doc).toString();
 
         return EditorView.updateListener.of((update) => {
@@ -50,8 +61,8 @@ export default Capability.makeModule((context) =>
           });
         });
       },
-    ]),
-  ),
+    ]);
+  }),
 );
 
 const selectionOverlapsComment = (state: EditorState): boolean => {

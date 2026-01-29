@@ -3,7 +3,6 @@
 //
 
 import * as Reactivity from '@effect/experimental/Reactivity';
-import * as SqliteClient from '@effect/sql-sqlite-wasm/SqliteClient';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 import { type ExpectStatic } from 'vitest';
@@ -33,9 +32,18 @@ import { TcpTransportFactory } from '@dxos/network-manager/transport/tcp';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { type Storage } from '@dxos/random-access-storage';
 import { type ProtoRpcPeer, createLinkedPorts, createProtoRpcPeer } from '@dxos/rpc';
+import { layerMemory as sqliteLayerMemory } from '@dxos/sql-sqlite/platform';
+import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 
 import { Client } from '../client';
-import { ClientServicesProxy, LocalClientServices } from '../services';
+import {
+  ClientServicesProxy,
+  DedicatedWorkerClientServices,
+  LocalClientServices,
+  MemoryWorkerCoordiantor,
+} from '../services';
+
+import { TestWorkerFactory } from './test-worker-factory';
 
 export const testConfigWithLocalSignal = new Config({
   version: 1,
@@ -64,6 +72,8 @@ export class TestBuilder {
   public level?: () => LevelDB;
 
   _transport: TransportKind;
+  private _coordinator?: MemoryWorkerCoordiantor;
+  private _workerFactory?: TestWorkerFactory;
 
   // TODO(burdon): Pass in params as object.
   constructor(
@@ -88,7 +98,11 @@ export class TestBuilder {
    * Create backend service handlers.
    */
   createClientServicesHost(runtimeProps?: ServiceContextRuntimeProps): ClientServicesHost {
-    const runtime = ManagedRuntime.make(Layer.merge(SqliteClient.layerMemory({}), Reactivity.layer).pipe(Layer.orDie));
+    const runtime = ManagedRuntime.make(
+      SqlTransaction.layer
+        .pipe(Layer.provideMerge(sqliteLayerMemory), Layer.provideMerge(Reactivity.layer))
+        .pipe(Layer.orDie),
+    );
 
     const services = new ClientServicesHost({
       config: this.config,
@@ -141,6 +155,32 @@ export class TestBuilder {
     this._ctx.onDispose(() => server.close());
     this._ctx.onDispose(() => client.destroy());
     return [client, server];
+  }
+
+  /**
+   * Create dedicated worker client services.
+   * All services share the same worker factory and coordinator.
+   */
+  createDedicatedWorkerClientServices(): DedicatedWorkerClientServices {
+    // Shared coordinator for leader election across all services.
+    if (!this._coordinator) {
+      this._coordinator = new MemoryWorkerCoordiantor();
+    }
+
+    // Shared worker factory.
+    if (!this._workerFactory) {
+      this._workerFactory = new TestWorkerFactory(this.config);
+      void this._workerFactory.open();
+      this._ctx.onDispose(() => this._workerFactory!.close());
+    }
+
+    const services = new DedicatedWorkerClientServices({
+      createWorker: () => this._workerFactory!.make(),
+      createCoordinator: () => this._coordinator!,
+    });
+
+    this._ctx.onDispose(() => services.close());
+    return services;
   }
 
   /**

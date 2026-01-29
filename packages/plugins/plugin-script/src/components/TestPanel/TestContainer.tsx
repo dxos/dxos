@@ -21,7 +21,7 @@ export const TestContainer = ({ script }: TestContainerProps) => {
   useDeployState({ state, script });
   return (
     <StackItem.Content>
-      <TestPanel functionUrl={state.functionUrl} />
+      <TestPanel functionUrl={state.value.functionUrl} />
     </StackItem.Content>
   );
 };

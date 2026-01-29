@@ -5,14 +5,15 @@
 import * as Effect from 'effect/Effect';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
-import { Common } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { useOperationInvoker, usePluginManager } from '@dxos/app-framework/react';
 import { Database, Obj, Type } from '@dxos/echo';
 import { EntityKind, getTypeAnnotation } from '@dxos/echo/internal';
 import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
+import { Operation } from '@dxos/operation';
 import { useClient } from '@dxos/react-client';
-import { isLiveObject, useSpaces } from '@dxos/react-client/echo';
+import { useSpaces } from '@dxos/react-client/echo';
 import { Dialog, IconButton, useTranslation } from '@dxos/react-ui';
 import { cardDialogContent, cardDialogHeader } from '@dxos/react-ui-mosaic';
 import { type Collection } from '@dxos/schema';
@@ -42,7 +43,7 @@ export const CreateObjectDialog = ({
 }: CreateObjectDialogProps) => {
   const manager = usePluginManager();
   const { t } = useTranslation(meta.id);
-  const { invoke, invokePromise } = useOperationInvoker();
+  const operationInvoker = useOperationInvoker();
   const [target, setTarget] = useState<Database.Database | Collection.Collection | undefined>(initialTarget);
   const [typename, setTypename] = useState<string | undefined>(initialTypename);
   const client = useClient();
@@ -51,8 +52,8 @@ export const CreateObjectDialog = ({
 
   const resolve = useCallback<NonNullable<CreateObjectPanelProps['resolve']>>(
     (typename) => {
-      const metadata = manager.context
-        .getCapabilities(Common.Capability.Metadata)
+      const metadata = manager.capabilities
+        .getAll(Common.Capability.Metadata)
         .find(({ id }) => id === typename)?.metadata;
       return metadata?.createObject ? (metadata as Metadata) : undefined;
     },
@@ -83,11 +84,11 @@ export const CreateObjectDialog = ({
 
         const db = Database.isDatabase(target) ? target : target && Obj.getDatabase(target);
         invariant(db, 'Missing database');
-        const object = yield* metadata.createObject(data, { db, context: manager.context });
-        if (isLiveObject(object) && !Obj.instanceOf(Type.PersistentType, object)) {
+        const object = yield* metadata.createObject(data, { db });
+        if (Obj.isObject(object) && !Obj.instanceOf(Type.PersistentType, object)) {
           // TODO(wittjosiah): Selection in navtree isn't working as expected when hidden typenames evals to true.
           const hidden = !metadata.addToCollectionOnCreate;
-          yield* invoke(SpaceOperation.AddObject, {
+          yield* operationInvoker.invoke(SpaceOperation.AddObject, {
             target,
             object,
             hidden,
@@ -95,14 +96,20 @@ export const CreateObjectDialog = ({
           const shouldNavigate = _shouldNavigate ?? (() => true);
           if (shouldNavigate(object)) {
             yield* Effect.promise(() =>
-              invokePromise(Common.LayoutOperation.Open, { subject: [Obj.getDXN(object).toString()] }),
+              operationInvoker.invokePromise(Common.LayoutOperation.Open, {
+                subject: [Obj.getDXN(object).toString()],
+              }),
             );
           }
 
           onCreateObject?.(object);
         }
-      }).pipe(runAndForwardErrors),
-    [invoke, invokePromise, target, _shouldNavigate, manager.context, onCreateObject],
+      }).pipe(
+        Effect.provideService(Capability.Service, manager.capabilities),
+        Effect.provideService(Operation.Service, operationInvoker),
+        runAndForwardErrors,
+      ),
+    [target, _shouldNavigate, onCreateObject, manager.capabilities, operationInvoker],
   );
 
   return (

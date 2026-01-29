@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { ActivationEvent, Capability, Common, Plugin } from '@dxos/app-framework';
 import { Type } from '@dxos/echo';
+import { Operation } from '@dxos/operation';
 import { ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
 
@@ -20,13 +21,15 @@ import {
 } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
-import { Meeting, MeetingOperation } from './types';
+import { Meeting, MeetingCapabilities, MeetingOperation } from './types';
 
 const StateReady = Common.ActivationEvent.createStateEvent(meta.id);
+const SettingsReady = Common.ActivationEvent.createSettingsEvent(MeetingCapabilities.Settings.identifier);
 
 export const MeetingPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
     activatesOn: Common.ActivationEvent.SetupSettings,
+    activatesAfter: [SettingsReady],
     activate: MeetingSettings,
   }),
   Plugin.addModule({
@@ -52,12 +55,11 @@ export const MeetingPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
     id: 'on-space-created',
     activatesOn: SpaceEvents.SpaceCreated,
-    activate: (context) =>
+    activate: () =>
       Effect.succeed(
-        Capability.contributes(SpaceCapabilities.OnCreateSpace, (params) => {
-          const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
-          return invoke(MeetingOperation.OnCreateSpace, params);
-        }),
+        Capability.contributes(SpaceCapabilities.OnCreateSpace, (params) =>
+          Operation.invoke(MeetingOperation.OnCreateSpace, params),
+        ),
       ),
   }),
   Plugin.addModule({
@@ -68,7 +70,7 @@ export const MeetingPlugin = Plugin.define(meta).pipe(
   Common.Plugin.addOperationResolverModule({ activate: OperationResolver }),
   Common.Plugin.addAppGraphModule({ activate: AppGraphBuilder }),
   Plugin.addModule({
-    activatesOn: ActivationEvent.allOf(Common.ActivationEvent.SettingsReady, StateReady),
+    activatesOn: ActivationEvent.allOf(SettingsReady, StateReady),
     activate: CallExtension,
   }),
   Plugin.make,

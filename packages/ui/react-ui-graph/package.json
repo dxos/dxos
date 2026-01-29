@@ -6,7 +6,9 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": [
+    "*.css"
+  ],
   "type": "module",
   "exports": {
     ".": {
@@ -39,14 +41,12 @@
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/debug": "workspace:*",
-    "@dxos/echo-signals": "workspace:*",
     "@dxos/graph": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
-    "@preact-signals/safe-react": "catalog:",
-    "@preact/signals-core": "catalog:",
+    "@effect-atom/atom-react": "catalog:",
     "d3": "catalog:",
     "d3-force": "catalog:",
     "immutability-helper": "catalog:",

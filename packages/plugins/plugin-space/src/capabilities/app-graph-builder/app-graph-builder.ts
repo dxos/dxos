@@ -3,16 +3,16 @@
 //
 
 import { type Atom } from '@effect-atom/atom-react';
-import * as Array from 'effect/Array';
 import * as Effect from 'effect/Effect';
-import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import { Capability, Common } from '@dxos/app-framework';
 import { type Space, SpaceState, getSpace, isSpace } from '@dxos/client/echo';
-import { DXN, type Entity, Filter, Obj, type QueryResult, Type } from '@dxos/echo';
+import { DXN, Filter, Obj, type Ref, Type } from '@dxos/echo';
+import { AtomObj, AtomQuery } from '@dxos/echo-atom';
 import { log } from '@dxos/log';
+import { Operation } from '@dxos/operation';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ATTENDABLE_PATH_SEPARATOR, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { CreateAtom, Graph, GraphBuilder, type Node, NodeMatcher } from '@dxos/plugin-graph';
@@ -21,11 +21,10 @@ import { isNonNullable } from '@dxos/util';
 
 import { getActiveSpace } from '../../hooks';
 import { meta } from '../../meta';
-import { SPACE_TYPE, SpaceCapabilities, SpaceOperation, type SpaceSettingsProps } from '../../types';
+import { SPACE_TYPE, SpaceCapabilities, SpaceOperation } from '../../types';
 import {
   SHARED,
   SPACES,
-  atomFromQuery,
   constructObjectActions,
   constructSpaceActions,
   constructSpaceNode,
@@ -34,11 +33,17 @@ import {
   createStaticSchemaNode,
 } from '../../util';
 
-export default Capability.makeModule((context) =>
-  Effect.sync(() => {
+/** Match space nodes and return the Space object. */
+const whenSpace = (node: Node.Node): Option.Option<Space> =>
+  node.type === SPACE_TYPE && isSpace(node.data) ? Option.some(node.data) : Option.none();
+
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const capabilities = yield* Capability.Service;
+
     // TODO(wittjosiah): Using `get` and being reactive seems to cause a bug with Atom where disposed atoms are accessed.
     const resolve = (get: Atom.Context) => (typename: string) =>
-      context.getCapabilities(Common.Capability.Metadata).find(({ id }) => id === typename)?.metadata ?? {};
+      capabilities.getAll(Common.Capability.Metadata).find(({ id }) => id === typename)?.metadata ?? {};
 
     const spacesNode = {
       id: SPACES,
@@ -53,8 +58,8 @@ export default Capability.makeModule((context) =>
         disabled: true,
         childrenPersistenceClass: 'echo',
         onRearrangeChildren: async (nextOrder: Space[]) => {
-          const { graph } = context.getCapability(Common.Capability.AppGraph);
-          const client = context.getCapability(ClientCapabilities.Client);
+          const { graph } = capabilities.get(Common.Capability.AppGraph);
+          const client = capabilities.get(ClientCapabilities.Client);
 
           // NOTE: This is needed to ensure order is updated by next animation frame.
           // TODO(wittjosiah): Is there a better way to do this?
@@ -76,75 +81,68 @@ export default Capability.makeModule((context) =>
       },
     };
 
-    return Capability.contributes(Common.Capability.AppGraphBuilder, [
+    const extensions = yield* Effect.all([
       // Primary actions.
       GraphBuilder.createExtension({
         id: `${meta.id}/primary-actions`,
         position: 'hoist',
         match: NodeMatcher.whenRoot,
-        actions: () => [
-          {
-            id: SpaceOperation.OpenCreateSpace.meta.key,
-            data: async () => {
-              const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
-              await invokePromise(SpaceOperation.OpenCreateSpace);
-            },
-            properties: {
-              label: ['create space label', { ns: meta.id }],
-              icon: 'ph--plus--regular',
-              testId: 'spacePlugin.createSpace',
-              disposition: 'menu',
-            },
-          },
-          {
-            id: SpaceOperation.Join.meta.key,
-            data: async () => {
-              const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
-              await invokePromise(SpaceOperation.Join, {});
-            },
-            properties: {
-              label: ['join space label', { ns: meta.id }],
-              icon: 'ph--sign-in--regular',
-              testId: 'spacePlugin.joinSpace',
-              disposition: 'menu',
-            },
-          },
-          {
-            id: SpaceOperation.OpenMembers.meta.key,
-            data: async () => {
-              const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
-              const client = context.getCapability(ClientCapabilities.Client);
-              const space = getActiveSpace(context) ?? client.spaces.default;
-              await invokePromise(SpaceOperation.OpenMembers, { space });
-            },
-            properties: {
-              label: ['share space label', { ns: meta.id }],
-              icon: 'ph--users--regular',
-              testId: 'spacePlugin.shareSpace',
-              keyBinding: {
-                macos: 'meta+.',
-                windows: 'alt+.',
+        actions: () =>
+          Effect.succeed([
+            {
+              id: SpaceOperation.OpenCreateSpace.meta.key,
+              data: () => Operation.invoke(SpaceOperation.OpenCreateSpace),
+              properties: {
+                label: ['create space label', { ns: meta.id }],
+                icon: 'ph--plus--regular',
+                testId: 'spacePlugin.createSpace',
+                disposition: 'menu',
               },
             },
-          },
-          {
-            id: SpaceOperation.OpenSettings.meta.key,
-            data: async () => {
-              const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
-              const client = context.getCapability(ClientCapabilities.Client);
-              const space = getActiveSpace(context) ?? client.spaces.default;
-              await invokePromise(SpaceOperation.OpenSettings, { space });
-            },
-            properties: {
-              label: ['open current space settings label', { ns: meta.id }],
-              icon: 'ph--faders--regular',
-              keyBinding: {
-                macos: 'meta+shift+,',
-                windows: 'ctrl+shift+,',
+            {
+              id: SpaceOperation.Join.meta.key,
+              data: () => Operation.invoke(SpaceOperation.Join, {}),
+              properties: {
+                label: ['join space label', { ns: meta.id }],
+                icon: 'ph--sign-in--regular',
+                testId: 'spacePlugin.joinSpace',
+                disposition: 'menu',
               },
             },
-          },
-        ],
+            {
+              id: SpaceOperation.OpenMembers.meta.key,
+              data: Effect.fnUntraced(function* () {
+                const client = yield* Capability.get(ClientCapabilities.Client);
+                const space = getActiveSpace(capabilities) ?? client.spaces.default;
+                yield* Operation.invoke(SpaceOperation.OpenMembers, { space });
+              }),
+              properties: {
+                label: ['share space label', { ns: meta.id }],
+                icon: 'ph--users--regular',
+                testId: 'spacePlugin.shareSpace',
+                keyBinding: {
+                  macos: 'meta+.',
+                  windows: 'alt+.',
+                },
+              },
+            },
+            {
+              id: SpaceOperation.OpenSettings.meta.key,
+              data: Effect.fnUntraced(function* () {
+                const client = yield* Capability.get(ClientCapabilities.Client);
+                const space = getActiveSpace(capabilities) ?? client.spaces.default;
+                yield* Operation.invoke(SpaceOperation.OpenSettings, { space });
+              }),
+              properties: {
+                label: ['open current space settings label', { ns: meta.id }],
+                icon: 'ph--faders--regular',
+                keyBinding: {
+                  macos: 'meta+shift+,',
+                  windows: 'ctrl+shift+,',
+                },
+              },
+            },
+          ]),
       }),
 
       // Create spaces group node.
@@ -152,7 +150,7 @@ export default Capability.makeModule((context) =>
         id: `${meta.id}/root`,
         position: 'hoist',
         match: NodeMatcher.whenRoot,
-        connector: () => [spacesNode],
+        connector: () => Effect.succeed([spacesNode]),
       }),
 
       // Create space nodes.
@@ -160,10 +158,9 @@ export default Capability.makeModule((context) =>
         id: SPACES,
         match: NodeMatcher.whenId(SPACES),
         connector: (node, get) => {
-          // TODO(wittjosiah): Find a simpler way to define this type.
-          let query: QueryResult.QueryResult<Schema.Schema.Type<typeof Type.Expando>> | undefined;
-          const state = context.getCapability(SpaceCapabilities.State);
-          const client = context.getCapability(ClientCapabilities.Client);
+          const client = capabilities.get(ClientCapabilities.Client);
+          const stateAtom = capabilities.get(SpaceCapabilities.State);
+          const ephemeralAtom = capabilities.get(SpaceCapabilities.EphemeralState);
           const spacesAtom = CreateAtom.fromObservable(client.spaces);
           const isReadyAtom = CreateAtom.fromObservable(client.spaces.isReady);
 
@@ -171,43 +168,54 @@ export default Capability.makeModule((context) =>
           const isReady = get(isReadyAtom);
 
           if (!spaces || !isReady) {
-            return [];
+            return Effect.succeed([]);
           }
 
-          const settings = get(context.capabilities(Common.Capability.SettingsStore))[0]?.getStore<SpaceSettingsProps>(
-            meta.id,
-          )?.value;
+          const settingsAtom = capabilities.get(SpaceCapabilities.Settings);
+          const settings = get(settingsAtom);
+          const state = get(stateAtom);
+          const ephemeralState = get(ephemeralAtom);
 
-          // TODO(wittjosiah): During client reset, accessing default space throws.
           try {
-            if (!query) {
-              query = client.spaces.default.db.query(Filter.type(Type.Expando, { key: SHARED }));
-            }
-            const [spacesOrder] = get(atomFromQuery(query));
-            return get(
-              CreateAtom.fromSignal(() => {
-                const order: string[] = spacesOrder?.order ?? [];
-                const orderMap = new Map(order.map((id, index) => [id, index]));
-                return [
-                  ...spaces
-                    .filter((space) => orderMap.has(space.id))
-                    .sort((a, b) => orderMap.get(a.id)! - orderMap.get(b.id)!),
-                  ...spaces.filter((space) => !orderMap.has(space.id)),
-                ]
-                  .filter((space) => (settings?.showHidden ? true : space.state.get() !== SpaceState.SPACE_INACTIVE))
-                  .map((space) =>
-                    constructSpaceNode({
-                      space,
-                      navigable: state.navigableCollections,
-                      personal: space === client.spaces.default,
-                      namesCache: state.spaceNames,
-                      resolve: resolve(get),
-                    }),
-                  );
-              }),
+            const [spacesOrder] = get(
+              AtomQuery.make(client.spaces.default.db, Filter.type(Type.Expando, { key: SHARED })),
+            );
+
+            // Get order from spacesOrder snapshot using AtomObj (cached via Atom.family).
+            const spacesOrderSnapshot = spacesOrder ? get(AtomObj.make(spacesOrder)) : undefined;
+            const order: string[] = (spacesOrderSnapshot as any)?.order ?? [];
+            const orderMap = new Map(order.map((id, index) => [id, index]));
+
+            // Subscribe to space states for filtering.
+            const spaceStates = spaces.map((space) => get(CreateAtom.fromObservable(space.state)));
+
+            // Subscribe to space properties to react when root collection is assigned.
+            spaces.forEach((space) => {
+              if (space.state.get() === SpaceState.SPACE_READY) {
+                get(AtomObj.make(space.properties));
+              }
+            });
+
+            return Effect.succeed(
+              [
+                ...spaces
+                  .filter((space) => orderMap.has(space.id))
+                  .sort((a, b) => orderMap.get(a.id)! - orderMap.get(b.id)!),
+                ...spaces.filter((space) => !orderMap.has(space.id)),
+              ]
+                .filter((space, i) => (settings?.showHidden ? true : spaceStates[i] !== SpaceState.SPACE_INACTIVE))
+                .map((space) =>
+                  constructSpaceNode({
+                    space,
+                    navigable: ephemeralState.navigableCollections,
+                    personal: space === client.spaces.default,
+                    namesCache: state.spaceNames,
+                    resolve: resolve(get),
+                  }),
+                ),
             );
           } catch {
-            return [];
+            return Effect.succeed([]);
           }
         },
       }),
@@ -215,62 +223,75 @@ export default Capability.makeModule((context) =>
       // Create space actions.
       GraphBuilder.createExtension({
         id: `${meta.id}/actions`,
-        match: (node) => (node.type === SPACE_TYPE && isSpace(node.data) ? Option.some(node.data) : Option.none()),
+        match: whenSpace,
         actions: (space, get) => {
-          const [operationInvoker] = get(context.capabilities(Common.Capability.OperationInvoker));
-          const [client] = get(context.capabilities(ClientCapabilities.Client));
-          const [state] = get(context.capabilities(SpaceCapabilities.State));
+          const [client] = get(capabilities.atom(ClientCapabilities.Client));
+          const ephemeralAtom = capabilities.get(SpaceCapabilities.EphemeralState);
+          const ephemeralState = get(ephemeralAtom);
 
-          if (!operationInvoker || !client || !state) {
-            return [];
+          if (!client) {
+            return Effect.succeed([]);
           }
 
-          return constructSpaceActions({
-            space,
-            invokePromise: operationInvoker.invokePromise,
-            personal: space === client.spaces.default,
-            migrating: state.sdkMigrationRunning[space.id],
-          });
+          return Effect.succeed(
+            constructSpaceActions({
+              space,
+              personal: space === client.spaces.default,
+              migrating: ephemeralState.sdkMigrationRunning[space.id],
+            }),
+          );
         },
       }),
 
       // Create nodes for objects in the root collection of a space.
       GraphBuilder.createExtension({
         id: `${meta.id}/root-collection`,
-        match: (node) => (node.type === SPACE_TYPE && isSpace(node.data) ? Option.some(node.data) : Option.none()),
+        match: whenSpace,
         connector: (space, get) => {
-          const state = context.getCapability(SpaceCapabilities.State);
+          const ephemeralAtom = capabilities.get(SpaceCapabilities.EphemeralState);
+          const ephemeralState = get(ephemeralAtom);
           const spaceState = get(CreateAtom.fromObservable(space.state));
           if (spaceState !== SpaceState.SPACE_READY) {
-            return [];
+            return Effect.succeed([]);
           }
 
-          const collection = get(
-            CreateAtom.fromSignal(
-              () => space.properties[Collection.Collection.typename]?.target as Collection.Collection | undefined,
-            ),
-          );
+          // Get the collection ref from space.properties snapshot (AtomObj cached via Atom.family).
+          const propertiesSnapshot = get(AtomObj.make(space.properties));
+          const collectionRef = propertiesSnapshot[Collection.Collection.typename] as
+            | Ref.Ref<Collection.Collection>
+            | undefined;
+          // Resolve the collection using AtomObj (subscribes to collection changes).
+          const collection = collectionRef ? get(AtomObj.make(collectionRef)) : undefined;
           if (!collection) {
-            return [];
+            return Effect.succeed([]);
           }
 
-          return get(
-            CreateAtom.fromSignal(() =>
-              Function.pipe(
-                collection.objects,
-                Array.map((object) => object.target),
-                Array.filter(isNonNullable),
-                Array.map((object) =>
-                  createObjectNode({
-                    db: space.db,
-                    object,
-                    resolve: resolve(get),
-                    navigable: state.navigableCollections,
-                  }),
-                ),
-                Array.filter(isNonNullable),
-              ),
-            ),
+          const rawRefs = collection.objects ?? [];
+
+          // TODO(wittjosiah): Workaround for Obj.getTypename not working on snapshots.
+          //   AtomObj.make(ref) returns snapshots (plain objects without ECHO metadata),
+          //   but createObjectNode needs live objects to access typename and other metadata.
+          //   Once Obj.getTypename works on snapshots, we can use snapshots directly.
+          const objects = rawRefs
+            .map((ref) => {
+              // Subscribe to the ref for reactivity (triggers re-render when target changes).
+              get(AtomObj.make(ref));
+              // Return the live object for createObjectNode (has typename metadata).
+              return ref.target;
+            })
+            .filter(isNonNullable);
+
+          return Effect.succeed(
+            objects
+              .map((object) =>
+                createObjectNode({
+                  db: space.db,
+                  object,
+                  resolve: resolve(get),
+                  navigable: ephemeralState.navigableCollections,
+                }),
+              )
+              .filter(isNonNullable),
           );
         },
       }),
@@ -280,58 +301,63 @@ export default Capability.makeModule((context) =>
         id: `${meta.id}/objects`,
         match: (node) => (Obj.instanceOf(Collection.Collection, node.data) ? Option.some(node.data) : Option.none()),
         connector: (collection, get) => {
-          const state = context.getCapability(SpaceCapabilities.State);
+          const ephemeralAtom = capabilities.get(SpaceCapabilities.EphemeralState);
+          const ephemeralState = get(ephemeralAtom);
           const space = getSpace(collection);
 
-          return get(
-            CreateAtom.fromSignal(() =>
-              Function.pipe(
-                collection.objects,
-                Array.map((object) => object.target),
-                Array.filter(isNonNullable),
-                Array.map(
-                  (object) =>
-                    space &&
-                    createObjectNode({
-                      object,
-                      db: space.db,
-                      resolve: resolve(get),
-                      navigable: state.navigableCollections,
-                    }),
-                ),
-                Array.filter(isNonNullable),
-              ),
-            ),
+          // Get collection snapshot using AtomObj (cached via Atom.family).
+          const collectionSnapshot = get(AtomObj.make(collection));
+          const refs = collectionSnapshot.objects ?? [];
+
+          // TODO(wittjosiah): Workaround for Obj.getTypename not working on snapshots.
+          //   See root-collection connector for details.
+          const objects = refs
+            .map((ref) => {
+              get(AtomObj.make(ref));
+              return ref.target;
+            })
+            .filter(isNonNullable);
+
+          return Effect.succeed(
+            objects
+              .map(
+                (object) =>
+                  space &&
+                  createObjectNode({
+                    object,
+                    db: space.db,
+                    resolve: resolve(get),
+                    navigable: ephemeralState.navigableCollections,
+                  }),
+              )
+              .filter(isNonNullable),
           );
         },
         resolver: (id, get) => {
-          let query: QueryResult.QueryResult<Entity.Unknown> | undefined;
-          const client = context.getCapability(ClientCapabilities.Client);
+          const client = capabilities.get(ClientCapabilities.Client);
           const dxn = DXN.tryParse(id)?.asEchoDXN();
           if (!dxn || !dxn.spaceId) {
-            return null;
+            return Effect.succeed(null);
           }
 
           const space = client.spaces.get(dxn.spaceId);
           if (!space) {
-            return null;
+            return Effect.succeed(null);
           }
 
-          if (!query) {
-            query = space.db.query(Filter.id(dxn.echoId));
-          }
-
-          const object = get(atomFromQuery(query)).at(0);
+          const object = get(AtomQuery.make(space.db, Filter.id(dxn.echoId))).at(0);
           if (!Obj.isObject(object)) {
-            return null;
+            return Effect.succeed(null);
           }
 
-          return createObjectNode({
-            object,
-            db: space.db,
-            resolve: resolve(get),
-            disposition: 'hidden',
-          });
+          return Effect.succeed(
+            createObjectNode({
+              object,
+              db: space.db,
+              resolve: resolve(get),
+              disposition: 'hidden',
+            }),
+          );
         },
       }),
 
@@ -340,31 +366,27 @@ export default Capability.makeModule((context) =>
         id: `${meta.id}/system-collections`,
         match: (node) => (Obj.instanceOf(Collection.Managed, node.data) ? Option.some(node.data) : Option.none()),
         connector: (collection, get) => {
-          // TODO(wittjosiah): Find a simpler way to define this type.
-          let query: QueryResult.QueryResult<Schema.Schema.Type<typeof Type.Expando>> | undefined;
-          const client = get(context.capabilities(ClientCapabilities.Client)).at(0);
+          const client = get(capabilities.atom(ClientCapabilities.Client)).at(0);
           const space = getSpace(collection);
-          // TODO(wittjosiah): Support reactive schema registry queries.
           const schema = client?.graph.schemaRegistry
             .query({ typename: collection.key, location: ['runtime'] })
             .runSync()[0];
           if (!space || !schema) {
-            return [];
+            return Effect.succeed([]);
           }
 
-          if (!query) {
-            query = space.db.query(Filter.type(schema));
-          }
-          return get(atomFromQuery(query))
-            .map((object) =>
-              createObjectNode({
-                object,
-                db: space.db,
-                managedCollectionChild: true,
-                resolve: resolve(get),
-              }),
-            )
-            .filter(isNonNullable);
+          return Effect.succeed(
+            get(AtomQuery.make(space.db, Filter.type(schema)))
+              .map((object) =>
+                createObjectNode({
+                  object,
+                  db: space.db,
+                  managedCollectionChild: true,
+                  resolve: resolve(get),
+                }),
+              )
+              .filter(isNonNullable),
+          );
         },
       }),
 
@@ -376,17 +398,22 @@ export default Capability.makeModule((context) =>
             ? Option.some(node.data)
             : Option.none(),
         connector: (collection, get) => {
-          const client = get(context.capabilities(ClientCapabilities.Client)).at(0);
+          const client = get(capabilities.atom(ClientCapabilities.Client)).at(0);
           const space = getSpace(collection);
-          if (!space?.properties.staticRecords) {
-            return [];
+          if (!space) {
+            return Effect.succeed([]);
           }
 
-          // TODO(wittjosiah): Support reactive schema registry queries.
-          return get(CreateAtom.fromSignal(() => (space.properties.staticRecords ?? []) as string[]))
-            .map((typename) => client?.graph.schemaRegistry.query({ typename, location: ['runtime'] }).runSync()[0])
-            .filter(isNonNullable)
-            .map((schema) => createStaticSchemaNode({ schema, space }));
+          // Get staticRecords from properties snapshot (AtomObj cached via Atom.family).
+          const propertiesSnapshot = get(AtomObj.make(space.properties));
+          const staticRecords = (propertiesSnapshot.staticRecords ?? []) as string[];
+
+          return Effect.succeed(
+            staticRecords
+              .map((typename) => client?.graph.schemaRegistry.query({ typename, location: ['runtime'] }).runSync()[0])
+              .filter(isNonNullable)
+              .map((schema) => createStaticSchemaNode({ schema, space })),
+          );
         },
       }),
 
@@ -398,10 +425,8 @@ export default Capability.makeModule((context) =>
           return space && Schema.isSchema(node.data) ? Option.some({ space, schema: node.data }) : Option.none();
         },
         actions: ({ space, schema }, get) => {
-          let query: QueryResult.QueryResult<Obj.Any> | undefined;
-          // TODO(wittjosiah): Support reactive schema registry queries.
           const schemas =
-            get(context.capabilities(ClientCapabilities.Client))
+            get(capabilities.atom(ClientCapabilities.Client))
               .at(0)
               ?.graph.schemaRegistry.query({ location: ['runtime'] })
               .runSync() ?? [];
@@ -411,36 +436,25 @@ export default Capability.makeModule((context) =>
               .map((schema) => Filter.type(schema)),
           );
 
-          if (!query) {
-            // TODO(wittjosiah): Ideally this query would traverse the view reference & filter by the query ast.
-            // TODO(wittjosiah): Remove cast.
-            query = space.db.query(filter) as unknown as QueryResult.QueryResult<Obj.Any>;
-          }
+          const objects = get(AtomQuery.make(space.db, filter));
 
-          const objects = get(atomFromQuery(query));
-          const filteredViews = get(
-            CreateAtom.fromSignal(() =>
-              objects.filter(
-                (viewObject) =>
-                  getTypenameFromQuery((viewObject as any).view.target?.query.ast) ===
-                  Type.getTypename(schema as Type.Obj.Any),
-              ),
-            ),
-          );
+          // Filter views that match the schema typename using AtomObj and AtomRef (cached via Atom.family).
+          const targetTypename = Type.getTypename(schema as Type.Obj.Any);
+          const filteredViews = objects.filter((viewObject) => {
+            const viewSnapshot = get(AtomObj.make(viewObject));
+            const viewRef = (viewSnapshot as any).view;
+            const viewTarget = viewRef ? get(AtomObj.make(viewRef)) : undefined;
+            return getTypenameFromQuery((viewTarget as any)?.query?.ast) === targetTypename;
+          });
           const deletable = filteredViews.length === 0;
 
-          const [operationInvoker] = get(context.capabilities(Common.Capability.OperationInvoker));
-          if (!operationInvoker) {
-            return [];
-          }
-
-          // TODO(wittjosiah): Remove cast.
-          return createStaticSchemaActions({
-            schema: schema as Type.Obj.Any,
-            space,
-            invokePromise: operationInvoker.invokePromise,
-            deletable,
-          });
+          return Effect.succeed(
+            createStaticSchemaActions({
+              schema: schema as Type.Obj.Any,
+              space,
+              deletable,
+            }),
+          );
         },
       }),
 
@@ -454,10 +468,8 @@ export default Capability.makeModule((context) =>
             : Option.none();
         },
         connector: ({ space, schema }, get) => {
-          let query: QueryResult.QueryResult<Obj.Any> | undefined;
-          // TODO(wittjosiah): Support reactive schema registry queries.
           const schemas =
-            get(context.capabilities(ClientCapabilities.Client))
+            get(capabilities.atom(ClientCapabilities.Client))
               .at(0)
               ?.graph.schemaRegistry.query({ location: ['runtime'] })
               .runSync() ?? [];
@@ -467,33 +479,28 @@ export default Capability.makeModule((context) =>
               .map((schema) => Filter.type(schema)),
           );
 
-          if (!query) {
-            // TODO(wittjosiah): Ideally this query would traverse the view reference & filter by the query ast.
-            // TODO(wittjosiah): Remove cast.
-            query = space.db.query(filter) as unknown as QueryResult.QueryResult<Obj.Any>;
-          }
-
-          // TODO(wittjosiah): Remove casts.
           const typename = Schema.isSchema(schema) ? Type.getTypename(schema as Type.Obj.Any) : schema.typename;
-          return get(atomFromQuery(query))
-            .filter((object) =>
-              get(
-                CreateAtom.fromSignal(() => getTypenameFromQuery((object as any).view.target?.query.ast) === typename),
-              ),
-            )
-            .map((object) =>
-              get(
-                CreateAtom.fromSignal(() =>
-                  createObjectNode({
-                    object,
-                    db: space.db,
-                    resolve: resolve(get),
-                    droppable: false,
-                  }),
-                ),
-              ),
-            )
-            .filter(isNonNullable);
+          const objects = get(AtomQuery.make(space.db, filter));
+
+          // Filter and map using AtomObj and AtomRef (cached via Atom.family).
+          return Effect.succeed(
+            objects
+              .filter((object) => {
+                const objectSnapshot = get(AtomObj.make(object));
+                const viewRef = (objectSnapshot as any).view;
+                const viewTarget = viewRef ? get(AtomObj.make(viewRef)) : undefined;
+                return getTypenameFromQuery((viewTarget as any)?.query?.ast) === typename;
+              })
+              .map((object) =>
+                createObjectNode({
+                  object,
+                  db: space.db,
+                  resolve: resolve(get),
+                  droppable: false,
+                }),
+              )
+              .filter(isNonNullable),
+          );
         },
       }),
 
@@ -507,10 +514,8 @@ export default Capability.makeModule((context) =>
             : Option.none();
         },
         actions: ({ space, object }, get) => {
-          let query: QueryResult.QueryResult<Obj.Any> | undefined;
-          // TODO(wittjosiah): Support reactive schema registry queries.
           const schemas =
-            get(context.capabilities(ClientCapabilities.Client))
+            get(capabilities.atom(ClientCapabilities.Client))
               .at(0)
               ?.graph.schemaRegistry.query({ location: ['runtime'] })
               .runSync() ?? [];
@@ -521,45 +526,38 @@ export default Capability.makeModule((context) =>
           );
 
           const isSchema = Obj.instanceOf(Type.PersistentType, object);
-          if (!query && isSchema) {
-            // TODO(wittjosiah): Ideally this query would traverse the view reference & filter by the query ast.
-            // TODO(wittjosiah): Remove cast.
-            query = space.db.query(filter) as unknown as QueryResult.QueryResult<Obj.Any>;
-          }
 
-          let deletable =
-            !isSchema &&
-            // Don't allow system collections to be deleted.
-            !Obj.instanceOf(Collection.Managed, object);
-          if (isSchema && query) {
-            const objects = get(atomFromQuery(query));
-            const filteredViews = get(
-              CreateAtom.fromSignal(() =>
-                objects.filter(
-                  (viewObject) => getTypenameFromQuery((viewObject as any).view.target?.query.ast) === object.typename,
-                ),
-              ),
-            );
+          let deletable = !isSchema && !Obj.instanceOf(Collection.Managed, object);
+          if (isSchema) {
+            const objects = get(AtomQuery.make(space.db, filter));
+            // Filter views using AtomObj and AtomRef (cached via Atom.family).
+            const filteredViews = objects.filter((viewObject) => {
+              const viewSnapshot = get(AtomObj.make(viewObject));
+              const viewRef = (viewSnapshot as any).view;
+              const viewTarget = viewRef ? get(AtomObj.make(viewRef)) : undefined;
+              return getTypenameFromQuery((viewTarget as any)?.query?.ast) === object.typename;
+            });
             deletable = filteredViews.length === 0;
           }
 
-          const [operationInvoker] = get(context.capabilities(Common.Capability.OperationInvoker));
-          const [appGraph] = get(context.capabilities(Common.Capability.AppGraph));
-          const [state] = get(context.capabilities(SpaceCapabilities.State));
+          const [appGraph] = get(capabilities.atom(Common.Capability.AppGraph));
+          const ephemeralAtom = capabilities.get(SpaceCapabilities.EphemeralState);
+          const ephemeralState = get(ephemeralAtom);
 
-          if (!operationInvoker || !appGraph || !state) {
-            return [];
+          if (!appGraph) {
+            return Effect.succeed([]);
           }
 
-          return constructObjectActions({
-            object,
-            graph: appGraph.graph,
-            invokePromise: operationInvoker.invokePromise,
-            resolve: resolve(get),
-            context,
-            deletable,
-            navigable: get(CreateAtom.fromSignal(() => state.navigableCollections)),
-          });
+          return Effect.succeed(
+            constructObjectActions({
+              object,
+              graph: appGraph.graph,
+              resolve: resolve(get),
+              capabilities,
+              deletable,
+              navigable: ephemeralState.navigableCollections,
+            }),
+          );
         },
       }),
 
@@ -582,38 +580,42 @@ export default Capability.makeModule((context) =>
 
           return Option.some(node);
         },
-        connector: (node) => [
-          {
-            id: [node.id, 'selected-objects'].join(ATTENDABLE_PATH_SEPARATOR),
-            type: PLANK_COMPANION_TYPE,
-            data: 'selected-objects',
-            properties: {
-              label: ['companion selected objects label', { ns: meta.id }],
-              icon: 'ph--tree-view--regular',
-              disposition: 'hidden',
+        connector: (node) =>
+          Effect.succeed([
+            {
+              id: [node.id, 'selected-objects'].join(ATTENDABLE_PATH_SEPARATOR),
+              type: PLANK_COMPANION_TYPE,
+              data: 'selected-objects',
+              properties: {
+                label: ['companion selected objects label', { ns: meta.id }],
+                icon: 'ph--tree-view--regular',
+                disposition: 'hidden',
+              },
             },
-          },
-        ],
+          ]),
       }),
 
       // Object settings plank companion.
       GraphBuilder.createExtension({
         id: `${meta.id}/settings`,
-        match: (node) => (Obj.isObject(node.data) ? Option.some(node) : Option.none()),
-        connector: (node) => [
-          {
-            id: [node.id, 'settings'].join(ATTENDABLE_PATH_SEPARATOR),
-            type: PLANK_COMPANION_TYPE,
-            data: 'settings',
-            properties: {
-              label: ['object settings label', { ns: meta.id }],
-              icon: 'ph--sliders--regular',
-              disposition: 'hidden',
-              position: 'fallback',
+        match: NodeMatcher.whenEchoObjectMatches,
+        connector: (node) =>
+          Effect.succeed([
+            {
+              id: [node.id, 'settings'].join(ATTENDABLE_PATH_SEPARATOR),
+              type: PLANK_COMPANION_TYPE,
+              data: 'settings',
+              properties: {
+                label: ['object settings label', { ns: meta.id }],
+                icon: 'ph--sliders--regular',
+                disposition: 'hidden',
+                position: 'fallback',
+              },
             },
-          },
-        ],
+          ]),
       }),
     ]);
+
+    return Capability.contributes(Common.Capability.AppGraphBuilder, extensions);
   }),
 );

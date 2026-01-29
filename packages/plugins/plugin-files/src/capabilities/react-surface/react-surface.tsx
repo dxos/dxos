@@ -5,17 +5,20 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { Capability, Common } from '@dxos/app-framework';
-import { useCapability } from '@dxos/app-framework/react';
-import { SettingsStore } from '@dxos/local-storage';
+import { useAtomCapability, useSettingsState } from '@dxos/app-framework/react';
 
 import { ExportStatus, FilesSettings, LocalFileContainer } from '../../components';
 import { meta } from '../../meta';
 import { FileCapabilities, type FilesSettingsProps, type LocalFile } from '../../types';
 import { isLocalFile } from '../../util';
 
-export default Capability.makeModule((context) =>
-  Effect.succeed(
-    Capability.contributes(Common.Capability.ReactSurface, [
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const capabilities = yield* Capability.Service;
+    const registry = capabilities.get(Common.Capability.AtomRegistry);
+    const settingsAtom = capabilities.get(FileCapabilities.Settings);
+
+    return Capability.contributes(Common.Capability.ReactSurface, [
       Common.createSurface({
         id: `${meta.id}/article`,
         role: 'article',
@@ -25,27 +28,26 @@ export default Capability.makeModule((context) =>
       Common.createSurface({
         id: `${meta.id}/plugin-settings`,
         role: 'article',
-        filter: (data): data is { subject: SettingsStore<FilesSettingsProps> } =>
-          data.subject instanceof SettingsStore && data.subject.prefix === meta.id,
+        filter: (data): data is { subject: Common.Capability.Settings } =>
+          Common.Capability.isSettings(data.subject) && data.subject.prefix === meta.id,
         component: ({ data: { subject } }) => {
-          const state = useCapability(FileCapabilities.State);
-          return <FilesSettings settings={subject.value} state={state} />;
+          const { settings, updateSettings } = useSettingsState<FilesSettingsProps>(subject.atom);
+          const state = useAtomCapability(FileCapabilities.State);
+          return <FilesSettings settings={settings} state={state} onSettingsChange={updateSettings} />;
         },
       }),
       Common.createSurface({
         id: `${meta.id}/status`,
         role: 'status',
-        filter: (data): data is any => {
-          const settings = context
-            .getCapability(Common.Capability.SettingsStore)
-            .getStore<FilesSettingsProps>(meta.id)!.value;
-          return settings.autoExport;
+        filter: (data): data is Record<string, unknown> => {
+          const settings = registry.get(settingsAtom);
+          return !!settings.autoExport;
         },
         component: () => {
-          const state = useCapability(FileCapabilities.State);
+          const state = useAtomCapability(FileCapabilities.State);
           return <ExportStatus running={state.exportRunning} lastExport={state.lastExport} />;
         },
       }),
-    ]),
-  ),
+    ]);
+  }),
 );

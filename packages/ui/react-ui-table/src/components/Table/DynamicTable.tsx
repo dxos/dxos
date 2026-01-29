@@ -2,16 +2,18 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useCallback, useMemo, useRef } from 'react';
+import { RegistryContext } from '@effect-atom/atom-react';
+import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
 import { type Type } from '@dxos/echo';
 import { type JsonSchemaType } from '@dxos/echo/internal';
 import { type ThemedClassName, useDefaultValue } from '@dxos/react-ui';
-import { ProjectionModel } from '@dxos/schema';
+import { type ProjectionModel } from '@dxos/schema';
 import { mx } from '@dxos/ui-theme';
 
 import { useTableModel } from '../../hooks';
 import { type TableFeatures, TablePresentation, type TableRowAction } from '../../model';
+import { type Table as TableType } from '../../types';
 import { type TablePropertyDefinition, getBaseSchema, makeDynamicTable } from '../../util';
 
 import { Table, type TableController } from './Table';
@@ -45,13 +47,18 @@ export const DynamicTable = <T extends Type.Entity.Any = Type.Entity.Any>({
   onRowAction,
   ...props
 }: DynamicTableProps<T>) => {
+  const registry = useContext(RegistryContext);
+  const [dynamicTable, setDynamicTable] = useState<{ object: TableType.Table; projection: ProjectionModel }>();
+
   // TODO(burdon): Remove variance from the props (should be normalized externally; possibly via hooks).
   const { jsonSchema } = useMemo(
     () => getBaseSchema({ typename: name, properties, jsonSchema: _jsonSchema, schema }),
     [name, properties, _jsonSchema, schema],
   );
 
-  const { object, projection } = useMemo(() => makeDynamicTable({ jsonSchema, properties }), [jsonSchema, properties]);
+  useEffect(() => {
+    setDynamicTable(makeDynamicTable({ registry, jsonSchema, properties }));
+  }, [registry, jsonSchema, properties]);
 
   const tableRef = useRef<TableController>(null);
   const handleCellUpdate = useCallback((cell: any) => {
@@ -71,18 +78,10 @@ export const DynamicTable = <T extends Type.Entity.Any = Type.Entity.Any>({
       }) as const,
   );
 
-  const projectionModel = useMemo(() => {
-    if (jsonSchema && projection) {
-      const model = new ProjectionModel(jsonSchema, projection);
-      model.normalizeView();
-      return model;
-    }
-  }, [jsonSchema, projection]);
-
   const model = useTableModel({
     rows,
-    object,
-    projection: projectionModel,
+    object: dynamicTable?.object,
+    projection: dynamicTable?.projection,
     features,
     rowActions,
     onCellUpdate: handleCellUpdate,
@@ -92,9 +91,9 @@ export const DynamicTable = <T extends Type.Entity.Any = Type.Entity.Any>({
 
   const presentation = useMemo(() => {
     if (model) {
-      return new TablePresentation(model);
+      return new TablePresentation(registry, model);
     }
-  }, [model]);
+  }, [registry, model]);
 
   // TODO(burdon): Do we need the outer divs?
   return (

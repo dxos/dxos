@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capability, Common, Plugin } from '@dxos/app-framework';
 import { Tag } from '@dxos/echo';
-import { ClientEvents } from '@dxos/plugin-client';
+import { ClientEvents } from '@dxos/plugin-client/types';
 import { Collection, DataTypes } from '@dxos/schema';
 import {
   AnchoredTo,
@@ -23,8 +23,8 @@ import {
 
 import { IdentityCreated } from '../capabilities/identity-created';
 import { OperationResolver } from '../capabilities/operation-resolver';
-import { SpaceEvents } from '../events';
 import { meta } from '../meta';
+import { SpaceEvents } from '../types';
 import { type CreateObject, type SpacePluginOptions } from '../types';
 
 import { database, queue, space } from './commands';
@@ -69,7 +69,7 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
     return {
       id: Capability.getModuleTag(OperationResolver),
       activatesOn: Common.ActivationEvent.SetupOperationResolver,
-      activate: (context) => OperationResolver({ context, createInvitationUrl, observability: false }),
+      activate: () => OperationResolver({ createInvitationUrl, observability: false }),
     };
   }),
   Plugin.addModule({

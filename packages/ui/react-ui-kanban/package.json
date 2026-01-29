@@ -6,7 +6,7 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "exports": {
     "./types": {
@@ -50,8 +50,7 @@
     "@dxos/react-ui-stack": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@preact-signals/safe-react": "catalog:",
-    "@preact/signals-core": "catalog:"
+    "@effect-atom/atom-react": "catalog:"
   },
   "devDependencies": {
     "@dxos/invariant": "workspace:*",

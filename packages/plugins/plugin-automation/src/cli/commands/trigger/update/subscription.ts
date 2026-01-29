@@ -48,7 +48,7 @@ export const subscription = Command.make(
       const currentFn = yield* updateFunction(trigger, options.functionId);
       yield* updateSpec(trigger, options.typename, options.deep, options.delay);
       yield* updateInput(trigger, currentFn, options.input);
-      trigger.enabled = yield* updateEnabled(trigger, options.id, options.enabled);
+      yield* updateEnabled(trigger, options.id, options.enabled);
 
       if (json) {
         yield* Console.log(JSON.stringify(trigger, null, 2));
@@ -120,8 +120,10 @@ const updateFunction = Effect.fn(function* (trigger: Trigger.Trigger, functionId
     if (!foundFn || !Obj.instanceOf(Function.Function, foundFn)) {
       return yield* Effect.fail(new Error(`Function not found: ${functionId}`));
     }
+    Obj.change(trigger, (mutableTrigger) => {
+      mutableTrigger.function = Ref.make(foundFn);
+    });
     currentFn = foundFn;
-    trigger.function = Ref.make(currentFn);
   }
 
   if (!currentFn) {
@@ -175,11 +177,6 @@ const updateSpec = Effect.fn(function* (
       onSome: (value) => Effect.succeed(value),
     });
     const queryAst = Query.select(Filter.type(typename)).ast;
-    if (trigger.spec?.kind === 'subscription') {
-      trigger.spec.query = {
-        ast: queryAst,
-      };
-    }
 
     const deepOptionValue = yield* Option.match(deepOption, {
       onNone: () =>
@@ -212,9 +209,13 @@ const updateSpec = Effect.fn(function* (
     if (Option.isSome(delayOptionValue)) {
       subscriptionOptions.delay = delayOptionValue.value;
     }
-    if (trigger.spec?.kind === 'subscription') {
-      trigger.spec.options = Object.keys(subscriptionOptions).length > 0 ? subscriptionOptions : undefined;
-    }
+
+    Obj.change(trigger, (mutableTrigger) => {
+      if (mutableTrigger.spec?.kind === 'subscription') {
+        mutableTrigger.spec.query = { ast: queryAst };
+        mutableTrigger.spec.options = Object.keys(subscriptionOptions).length > 0 ? subscriptionOptions : undefined;
+      }
+    });
   }
 });
 
@@ -246,7 +247,9 @@ const updateInput = Effect.fn(function* (
         promptForSchemaInput(fn.inputSchema ? Type.toEffectSchema(fn.inputSchema) : undefined, currentInput),
       onSome: (value) => Effect.succeed(value as Record<string, any>),
     });
-    trigger.input = inputObj as any;
+    Obj.change(trigger, (mutableTrigger) => {
+      mutableTrigger.input = inputObj;
+    });
   }
 });
 
@@ -259,12 +262,15 @@ const updateEnabled = Effect.fn(function* (
   idOption: Option.Option<string>,
   enabled: boolean,
 ) {
-  return yield* Option.match(idOption, {
+  const enabledValue = yield* Option.match(idOption, {
     onNone: () =>
       Prompt.confirm({
         message: 'Enable the trigger?',
         initial: trigger.enabled,
       }).pipe(Prompt.run),
     onSome: () => Effect.succeed(enabled),
+  });
+  Obj.change(trigger, (mutableTrigger) => {
+    mutableTrigger.enabled = enabledValue;
   });
 });

@@ -40,8 +40,8 @@
     "@dxos/display-name": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/invariant": "workspace:*",
-    "@dxos/live-object": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/operation": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
@@ -50,8 +50,6 @@
     "@dxos/react-ui-stack": "workspace:*",
     "@dxos/util": "workspace:*",
     "@huggingface/transformers": "catalog:",
-    "@preact-signals/safe-react": "catalog:",
-    "@preact/signals-core": "catalog:",
     "date-fns": "catalog:",
     "effect": "catalog:"
   },
