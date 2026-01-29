@@ -17,7 +17,7 @@ import { blueprints as AssistantBlueprints, functions as AssistantFunctions } fr
 import { Assistant } from '@dxos/plugin-assistant/types';
 import { ChessBlueprint } from '@dxos/plugin-chess/blueprints';
 import { Chess } from '@dxos/plugin-chess/types';
-import { CalendarBlueprint, InboxBlueprint } from '@dxos/plugin-inbox/blueprints';
+import { CalendarBlueprint, InboxBlueprint, InboxSendBlueprint } from '@dxos/plugin-inbox/blueprints';
 import { Calendar, Mailbox } from '@dxos/plugin-inbox/types';
 import { KanbanBlueprint } from '@dxos/plugin-kanban/blueprints';
 import { MapBlueprint } from '@dxos/plugin-map/blueprints';
@@ -49,6 +49,7 @@ export const blueprintRegistry = new Blueprint.Registry([
   CalendarBlueprint.make(),
   ChessBlueprint.make(),
   InboxBlueprint.make(),
+  InboxSendBlueprint.make(),
   KanbanBlueprint.make(),
   MapBlueprint.make(),
   MarkdownBlueprint.make(),
@@ -69,6 +70,7 @@ export const functions: FunctionDefinition.Any[] = [
   ...CalendarBlueprint.functions,
   ...ChessBlueprint.functions,
   ...InboxBlueprint.functions,
+  ...InboxSendBlueprint.functions,
   ...KanbanBlueprint.functions,
   ...MapBlueprint.functions,
   ...MarkdownBlueprint.functions,

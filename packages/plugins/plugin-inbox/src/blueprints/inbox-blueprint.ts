@@ -44,6 +44,8 @@ export const make = () =>
         - [ ] Task description.
 
         Additional information can be included (indented).
+
+        Note: Sending emails is handled by the "Inbox (Send)" blueprint.
       `,
     }),
   });
