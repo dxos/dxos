@@ -31,12 +31,12 @@ export const functions$: FunctionDefinition[] = [list, load, search];
 export const functions = [
   ...functions$,
   // Factor out.
-  Research.create,
-  Research.research,
-  Agent.prompt,
-  EntityExtraction.extract,
-  Discord.fetch,
-  Linear.sync,
+  // Research.create,
+  // Research.research,
+  // Agent.prompt,
+  // EntityExtraction.extract,
+  // Discord.fetch,
+  // Linear.sync,
 ];
 export const tools = [...AssistantToolkit.tools, ...SystemToolkit.tools, ...deckTools];
 
