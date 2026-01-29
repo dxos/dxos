@@ -19,12 +19,12 @@ import {
   EchoRelationSchema,
   type EchoRelationSchemaOptions,
   EchoSchema,
-  EchoSchemaBrandSymbol,
   EntityKind,
   PersistentSchema,
   Ref as Ref$,
   type RefFn,
   type RefSchema,
+  SchemaKindId,
   type TypeAnnotation,
   type TypeMeta,
   getSchemaDXN,
@@ -50,11 +50,11 @@ export type Properties<T = any> = Omit<T, 'id' | Entity$.KindId | Relation$.Sour
 //
 
 /**
- * Brand type that marks a schema as an ECHO schema.
- * The brand value indicates the entity kind (Object or Relation).
+ * Type that marks a schema as an ECHO schema.
+ * The value indicates the entity kind (Object or Relation).
  */
-type EchoSchemaBranded<K extends EntityKind = EntityKind> = {
-  readonly [EchoSchemaBrandSymbol]: K;
+type EchoSchemaKind<K extends EntityKind = EntityKind> = {
+  readonly [SchemaKindId]: K;
 };
 
 /**
@@ -77,17 +77,45 @@ interface RelationJsonProps {
 // Obj - Runtime schema for any ECHO object
 //
 
+// Internal type for the Obj schema constant.
+// NOTE: The `any` in the type intersection is intentional - it makes this type bidirectionally
+//   assignable with specific object types (e.g., Type.Obj can be assigned to/from Meeting.Meeting).
+//   This is needed because operation schemas erase type information.
+// TODO(wittjosiah): Consider alternatives to the `any` intersection hack:
+//   - Generic operation schemas that preserve input type in output
+//   - Branded types that specific schemas also carry
+//   - Accept the limitation and require explicit type narrowing at call sites
+type ObjSchemaType = Schema.Schema<
+  any & AnyEntity & Entity$.OfKind<typeof Entity$.Kind.Object> & AnyProperties,
+  { id: string } & AnyProperties
+> &
+  EchoSchemaKind<EntityKind.Object> &
+  TypeMeta;
+
+// Internal schema definition.
+// NOTE: The EchoObjectSchema annotation is required for Type.Ref(Type.Obj) to work.
+//   The typename/version only satisfy ECHO schema machinery for reference targets.
+const ObjSchema = Schema.Struct({
+  id: Schema.String,
+}).pipe(
+  Schema.extend(Schema.Record({ key: Schema.String, value: Schema.Unknown })),
+  EchoObjectSchema({ typename: 'dxos.org/schema/AnyObject', version: '0.0.0' }),
+);
+
 /**
  * Runtime Effect schema for any ECHO object.
- * Use for validation, parsing, type guards, or as a reference target for collections
- * that can hold references to any ECHO object type.
+ * Use for validation, parsing, or as a reference target for collections.
+ *
+ * NOTE: `Schema.is(Type.Obj)` does STRUCTURAL validation only (checks for `id` field).
+ * Use `Obj.isObject()` for proper ECHO instance type guards that check the KindId brand.
  *
  * @example
  * ```ts
- * // Type guard
- * if (Schema.is(Type.Obj)(unknownValue)) {
- *   // unknownValue is an ECHO object
- * }
+ * // Structural type guard (accepts any object with id field)
+ * if (Schema.is(Type.Obj)(unknownValue)) { ... }
+ *
+ * // ECHO instance type guard (checks KindId brand)
+ * if (Obj.isObject(unknownValue)) { ... }
  *
  * // Reference to any object type
  * const Collection = Schema.Struct({
@@ -95,35 +123,12 @@ interface RelationJsonProps {
  * }).pipe(Type.object({ typename: 'Collection', version: '0.1.0' }));
  * ```
  */
-// NOTE: The `any` in the type intersection is intentional. It makes this type bidirectionally
-//   assignable with specific object types (e.g., you can assign `Type.Obj` to `Meeting.Meeting`
-//   and vice versa). This is a pragmatic choice to avoid requiring casts everywhere operation
-//   schemas are used, since operations erase the specific type information.
-// TODO(wittjosiah): Consider alternatives to the `any` intersection hack.
-//   The `any` in the type makes it assignable to/from specific object types (e.g., Meeting.Meeting).
-//   This is needed because operation schemas (like SpaceOperation.AddObject) erase type information -
-//   you pass in a specific type but get back a generic Type.Obj. Without `any`, callers would need
-//   explicit casts or instanceOf checks at every call site.
-//   Alternatives to consider:
-//   - Generic operation schemas that preserve input type in output
-//   - Branded types that specific schemas also carry
-//   - Accept the limitation and require explicit type narrowing at call sites
-// NOTE: The EchoObjectSchema annotation below is required for Type.Ref(Type.Obj) to work.
-//   The typename and version are not used for validation - they only satisfy the ECHO schema
-//   machinery that requires these annotations for reference targets. No objects will ever
-//   have this typename; it exists only to make Type.Obj a valid reference target.
-export const Obj: Schema.Schema<
-  any & AnyEntity & Entity$.OfKind<typeof Entity$.Kind.Object> & AnyProperties,
-  { id: string } & AnyProperties
-> = Schema.Struct({
-  id: Schema.String,
-}).pipe(
-  Schema.extend(Schema.Record({ key: Schema.String, value: Schema.Unknown })),
-  EchoObjectSchema({ typename: 'dxos.org/schema/AnyObject', version: '0.0.0' }),
-) as unknown as Schema.Schema<
-  any & AnyEntity & Entity$.OfKind<typeof Entity$.Kind.Object> & AnyProperties,
-  { id: string } & AnyProperties
->;
+// TODO(wittjosiah): Investigate if Schema.filter can validate KindId on ECHO instances.
+//   Effect Schema normalizes proxy objects to plain objects before calling filter predicates.
+//   Possible approaches: custom Schema.declare, AST manipulation, or upstream contribution.
+export const Obj: ObjSchemaType = Object.assign(ObjSchema, {
+  [SchemaKindId]: (ObjSchema as any)[SchemaKindId],
+}) as unknown as ObjSchemaType;
 
 /**
  * TypeScript type for an ECHO object schema.
@@ -142,7 +147,7 @@ export const Obj: Schema.Schema<
  */
 export interface Obj<T = any, Fields extends Schema.Struct.Fields = Schema.Struct.Fields>
   extends TypeMeta,
-    EchoSchemaBranded<EntityKind.Object>,
+    EchoSchemaKind<EntityKind.Object>,
     Schema.AnnotableClass<
       Obj<T, Fields>,
       Entity$.OfKind<typeof Entity$.Kind.Object> & T,
@@ -204,31 +209,49 @@ export { EchoSchema as RuntimeType };
 // Relation - Runtime schema for any ECHO relation
 //
 
-/**
- * Runtime Effect schema for any ECHO relation.
- * Use for validation, parsing, type guards, or as a reference target for collections
- * that can hold references to any ECHO relation type.
- * A relation has `id`, source, and target fields plus any additional properties.
- */
-// NOTE: The EchoRelationSchema annotation below is required for Type.Ref(Type.Relation) to work.
-//   The typename, version, source, and target are not used for validation - they only satisfy
-//   the ECHO schema machinery that requires these annotations for reference targets. No relations
-//   will ever have this typename; it exists only to make Type.Relation a valid reference target.
-export const Relation: Schema.Schema<
+// Internal type for the Relation schema constant.
+type RelationSchemaType = Schema.Schema<
   { id: ObjectId } & Record<string, unknown>,
   { id: string } & Record<string, unknown>
-> = Schema.Struct({
+> &
+  EchoSchemaKind<EntityKind.Relation> &
+  TypeMeta;
+
+// Internal schema definition.
+// NOTE: The EchoRelationSchema annotation is required for Type.Ref(Type.Relation) to work.
+//   The typename/version/source/target only satisfy ECHO schema machinery for reference targets.
+const RelationSchema = Schema.Struct({
   id: Schema.String,
 }).pipe(
   Schema.extend(Schema.Record({ key: Schema.String, value: Schema.Unknown })),
   EchoRelationSchema({
     typename: 'dxos.org/schema/AnyRelation',
     version: '0.0.0',
-    // Source and target use Type.Obj to satisfy the ECHO schema requirement.
-    source: Obj,
-    target: Obj,
+    source: ObjSchema,
+    target: ObjSchema,
   }),
-) as unknown as Schema.Schema<{ id: ObjectId } & Record<string, unknown>, { id: string } & Record<string, unknown>>;
+);
+
+/**
+ * Runtime Effect schema for any ECHO relation.
+ * Use for validation, parsing, or as a reference target for collections.
+ * A relation has `id`, source, and target fields plus any additional properties.
+ *
+ * NOTE: `Schema.is(Type.Relation)` does STRUCTURAL validation only (checks for `id` field).
+ * Use `Relation.isRelation()` for proper ECHO instance type guards that check the KindId brand.
+ *
+ * @example
+ * ```ts
+ * // Structural type guard (accepts any object with id field)
+ * if (Schema.is(Type.Relation)(unknownValue)) { ... }
+ *
+ * // ECHO instance type guard (checks KindId brand)
+ * if (Relation.isRelation(unknownValue)) { ... }
+ * ```
+ */
+export const Relation: RelationSchemaType = Object.assign(RelationSchema, {
+  [SchemaKindId]: (RelationSchema as any)[SchemaKindId],
+}) as unknown as RelationSchemaType;
 
 /**
  * TypeScript type for an ECHO relation schema.
@@ -242,7 +265,7 @@ export interface Relation<
   Target = any,
   Fields extends Schema.Struct.Fields = Schema.Struct.Fields,
 > extends TypeMeta,
-    EchoSchemaBranded<EntityKind.Relation>,
+    EchoSchemaKind<EntityKind.Relation>,
     Schema.AnnotableClass<
       Relation<T, Source, Target, Fields>,
       Entity$.OfKind<typeof Entity$.Kind.Relation> & Relation.Endpoints<Source, Target> & T,
@@ -346,7 +369,7 @@ export namespace Entity {
    * NOTE: This checks SCHEMAS, not instances. Use Obj.isObject for instances.
    */
   export const isObject = (schema: Any): schema is Obj.Any => {
-    return (schema as any)[EchoSchemaBrandSymbol] === EntityKind.Object;
+    return (schema as any)[SchemaKindId] === EntityKind.Object;
   };
 
   /**
@@ -354,7 +377,7 @@ export namespace Entity {
    * NOTE: This checks SCHEMAS, not instances. Use Relation.isRelation for instances.
    */
   export const isRelation = (schema: Any): schema is Relation.Any => {
-    return (schema as any)[EchoSchemaBrandSymbol] === EntityKind.Relation;
+    return (schema as any)[SchemaKindId] === EntityKind.Relation;
   };
 }
 

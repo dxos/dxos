@@ -4,7 +4,6 @@
 
 import * as Schema from 'effect/Schema';
 
-import * as Obj from '../Obj';
 import * as Type from '../Type';
 
 export namespace TestSchema {

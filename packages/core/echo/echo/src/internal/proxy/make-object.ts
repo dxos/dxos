@@ -34,19 +34,11 @@ export const makeObject: {
     obj: NoInfer<MakeObjectProps<T>>,
     meta?: ObjectMeta,
   ): T;
-} = <T extends AnyProperties>(
-  schema: Schema.Schema<T, any>,
-  obj: MakeObjectProps<T>,
-  meta?: ObjectMeta,
-): T => {
+} = <T extends AnyProperties>(schema: Schema.Schema<T, any>, obj: MakeObjectProps<T>, meta?: ObjectMeta): T => {
   return createReactiveObject<T>({ ...obj } as T, meta, schema);
 };
 
-const createReactiveObject = <T extends AnyProperties>(
-  obj: T,
-  meta?: ObjectMeta,
-  schema?: Schema.Schema<T>,
-): T => {
+const createReactiveObject = <T extends AnyProperties>(obj: T, meta?: ObjectMeta, schema?: Schema.Schema<T>): T => {
   if (!isValidProxyTarget(obj)) {
     throw new Error('Value cannot be made into a reactive object.');
   }

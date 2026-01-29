@@ -49,10 +49,10 @@
 - [x] Obj.AnyProps => Obj.Any
 - [x] Factor Expando out of @dxos/echo (moved to @dxos/schema)
 - [x] Obj.instanceOf works with Expando (tested in @dxos/schema)
-- [ ] Type.Obj should validate using the echo object brand
 - [ ] Obj.Snapshot should be same shape as Obj.Obj but with a different brand
 
 - [ ] Review usage of Obj.Any, see if it could be stricter
+- [ ] Type.Obj should validate using the echo object brand
 - [ ] space properties, queues, messagins preventing getSpace from being removed
 - [ ] Schema registry should use Query.Query.
 - [ ] Move EchoSchemaRegistry into hypergraph

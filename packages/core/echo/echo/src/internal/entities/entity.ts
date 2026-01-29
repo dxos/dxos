@@ -9,7 +9,7 @@ import type * as Types from 'effect/Types';
 import { type ToMutable } from '@dxos/util';
 
 import { type TypeMeta } from '../annotations';
-import { EchoSchemaBrandSymbol, type EntityKind, type HasId } from '../types';
+import { type EntityKind, type HasId, SchemaKindId } from '../types';
 
 // TODO(burdon): Define Schema type for `typename` and use consistently for all DXN-like properties.
 
@@ -30,10 +30,10 @@ export interface EchoTypeSchema<
       Schema.Schema.Context<Self>
     > {
   /**
-   * Brand symbol that marks this as an ECHO schema and indicates its kind.
-   * Makes EchoTypeSchema satisfy the Type.Obj.Any or Type.Relation.Any branded type.
+   * Schema kind key that marks this as an ECHO schema and indicates its kind.
+   * Makes EchoTypeSchema satisfy the Type.Obj.Any or Type.Relation.Any type.
    */
-  readonly [EchoSchemaBrandSymbol]: K;
+  readonly [SchemaKindId]: K;
 
   /**
    * The fields defined in the original struct schema.
@@ -96,7 +96,7 @@ export const makeEchoTypeSchema = <
   >(ast) {
     static readonly typename = typename;
     static readonly version = version;
-    static readonly [EchoSchemaBrandSymbol] = kind;
+    static readonly [SchemaKindId] = kind;
     static readonly fields = fields;
 
     static override annotations(

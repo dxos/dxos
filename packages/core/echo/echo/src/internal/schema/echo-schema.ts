@@ -12,7 +12,7 @@ import { type SchemaMeta, SchemaMetaSymbol, type TypeAnnotation, getTypeAnnotati
 import { type JsonSchemaType, toEffectSchema, toJsonSchema } from '../json-schema';
 import { type TypedObject, type TypedObjectPrototype, getSnapshot } from '../object';
 import { ChangeId } from '../proxy';
-import { EchoSchemaBrandSymbol, EntityKind } from '../types';
+import { EntityKind, SchemaKindId } from '../types';
 
 import {
   addFieldsToSchema,
@@ -191,10 +191,10 @@ export class EchoSchema<A = any, I = any> extends EchoSchemaConstructor() implem
   private _isDirty = true;
 
   /**
-   * Brand symbol that marks this as an ECHO schema.
-   * Makes EchoSchema satisfy the Type.Obj.Any branded type.
+   * Schema kind key that marks this as an ECHO schema.
+   * Makes EchoSchema satisfy the Type.Obj.Any type.
    */
-  readonly [EchoSchemaBrandSymbol]: EntityKind.Object = EntityKind.Object;
+  readonly [SchemaKindId]: EntityKind.Object = EntityKind.Object;
 
   constructor(private readonly _persistentSchema: PersistentSchema) {
     super();
