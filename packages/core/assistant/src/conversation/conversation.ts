@@ -96,7 +96,7 @@ export class AiConversation extends Resource {
       // Context objects.
       const objects = self.context.getObjects();
 
-      log.info('run', {
+      log('run', {
         history: history.length,
         blueprints: blueprints.length,
         tools: Object.keys(toolkit.tools).length,
@@ -111,7 +111,7 @@ export class AiConversation extends Resource {
         }),
       );
 
-      log.info('result', {
+      log('result', {
         messages: messages.length,
         duration: session.duration,
         toolCalls: session.toolCalls,

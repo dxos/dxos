@@ -5382,6 +5382,9 @@ importers:
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema
+      '@dxos/types':
+        specifier: workspace:*
+        version: link:../../sdk/types
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -5413,9 +5416,6 @@ importers:
       '@aws-sdk/client-s3':
         specifier: 3.955.0
         version: 3.955.0
-      '@dxos/types':
-        specifier: workspace:*
-        version: link:../../sdk/types
       chess.js:
         specifier: 'catalog:'
         version: 1.4.0

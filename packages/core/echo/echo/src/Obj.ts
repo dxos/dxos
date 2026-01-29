@@ -9,7 +9,7 @@ import { type ForeignKey } from '@dxos/echo-protocol';
 import { createJsonPath, getValue as getValue$ } from '@dxos/effect';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { type DXN, ObjectId } from '@dxos/keys';
-import { assumeType, deepMapValues } from '@dxos/util';
+import { assumeType } from '@dxos/util';
 
 import type * as Database from './Database';
 import * as Entity from './Entity';
@@ -30,6 +30,7 @@ import {
   type ObjectMeta,
   ObjectVersionId,
   VersionTypeId,
+  clone as clone$,
   getDescription as getDescription$,
   getLabel as getLabel$,
   getMeta as getMeta$,
@@ -47,7 +48,7 @@ import {
   setLabel as setLabel$,
   setValue as setValue$,
 } from './internal';
-import * as Ref from './Ref';
+import type * as Ref from './Ref';
 import * as Type from './Type';
 
 /**
@@ -173,6 +174,12 @@ export type CloneOptions = {
    * @default false
    */
   retainId?: boolean;
+
+  /**
+   * Recursively clone referenced objects.
+   * @default false
+   */
+  deep?: boolean;
 };
 
 /**
@@ -180,31 +187,7 @@ export type CloneOptions = {
  * This does not clone referenced objects, only the properties in the object.
  * @returns A new object with the same schema and properties.
  */
-export const clone = <T extends Any>(obj: T, opts?: CloneOptions): T => {
-  const { id, ...data } = obj;
-  const schema = getSchema$(obj);
-  invariant(schema != null, 'Object should have a schema');
-  const props: any = deepMapValues(data, (value, recurse) => {
-    if (Ref.isRef(value)) {
-      return value;
-    }
-    return recurse(value);
-  });
-
-  if (opts?.retainId) {
-    props.id = id;
-  }
-  const meta = getMeta(obj);
-  props[MetaId] = deepMapValues(meta, (value, recurse) => {
-    if (Ref.isRef(value)) {
-      return value;
-    }
-    return recurse(value);
-  });
-
-  return make(schema as Type.Obj.Any, props);
-};
-
+export const clone: <T extends Any>(obj: T, opts?: CloneOptions) => T = clone$;
 //
 // Change
 //
