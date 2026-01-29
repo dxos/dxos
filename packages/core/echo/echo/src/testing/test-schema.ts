@@ -9,6 +9,23 @@ import * as Type from '../Type';
 
 export namespace TestSchema {
   //
+  // Expando
+  //
+
+  /**
+   * Expando object is an object with an arbitrary set of properties.
+   * This is the test variant with example.com namespace.
+   */
+  export const Expando = Schema.Struct({}, { key: Schema.String, value: Schema.Any }).pipe(
+    Type.object({
+      typename: 'example.com/type/Expando',
+      version: '0.1.0',
+    }),
+  );
+
+  export interface Expando extends Schema.Schema.Type<typeof Expando> {}
+
+  //
   // Example
   //
 

@@ -99,7 +99,7 @@ The runtime `Type.Obj` schema enables:
 - `Type.Obj.Any` - Any object schema
 - `Type.Relation` - Relation schema via `Type.makeRelation()` pipe
 - `Type.Relation.Any` - Any relation schema
-- `Type.Expando` - Special expandable object type
+- `Expando.Expando` (from @dxos/schema) - Special expandable object type
 
 ### Instance Types
 - `Obj.Obj<T>` - Reactive object instance, **readonly by default**
@@ -148,7 +148,7 @@ React hooks: `packages/core/echo/echo-react/src/`
 |------|---------|
 | `packages/core/echo/echo/src/Obj.ts` | Object types (`Any`, `Obj<T>`, `AnyProps`) and functions (`make`, `change`, `getTypename`, etc.) |
 | `packages/core/echo/echo/src/Entity.ts` | Entity types (`Unknown`, `Any`, `Kind`) |
-| `packages/core/echo/echo/src/Type.ts` | Schema types (`Type.Obj`, `Type.Relation`, `Type.Expando`) |
+| `packages/core/echo/echo/src/Type.ts` | Schema types (`Type.Obj`, `Type.Relation`) - Note: `Expando` moved to @dxos/schema |
 | `packages/core/echo/echo/src/Relation.ts` | Relation types and functions (`make`, `isRelation`, etc.) |
 | `packages/core/echo/echo/src/internal/proxy/reactive.ts` | `Mutable<T>` type and `change` function |
 | `packages/core/echo/echo/src/internal/object/snapshot.ts` | `getSnapshot` function |

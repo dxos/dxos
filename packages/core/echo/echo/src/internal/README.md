@@ -11,7 +11,7 @@
 - [x] Entity.Any = Obj.Any | Relation.Any
   - NOTE: Relation does not extend (in not polymorphic with) Obj.
 - [x] import LabelAnnotation => Annotation.LabelAnnotation
-- [x] import Expando => Type.Expando
+- [x] import Expando => @dxos/schema (Expando.Expando)
 - [x] live => Obj.make
 - [x] Rename live => makeObject
 - [x] Rename {EchoObject, EchoRelation} => {EchoObjecSchema, EchoRelationSchema}
@@ -23,7 +23,7 @@
 - [x] TODO(burdon): FIX!!!
 - [x] Fix failing tests.
 - [x] Reconcile types/version with entities/model/version
-- [x] Type.Expando => Obj.Any
+- [x] Expando moved to @dxos/schema
 - [x] Narrow QueryResult and match Schema and Object generics.
 
 2. Clean-up
@@ -47,11 +47,9 @@
 - [x] Relation.Any => Relation.Unknown
 - [x] Ref.Any => Ref.Unknown
 - [x] Obj.AnyProps => Obj.Any
-- [ ] 
-- [ ] Factor Expando out of @dxos/echo
-- [ ] Fix Obj.instanceOf(Type.Expando...
-- [ ] 
-- [ ] Type.Obj should validate used echo object brand
+- [x] Factor Expando out of @dxos/echo (moved to @dxos/schema)
+- [x] Obj.instanceOf works with Expando (tested in @dxos/schema)
+- [ ] Type.Obj should validate using the echo object brand
 - [ ] Obj.Snapshot should be same shape as Obj.Obj but with a different brand
 
 - [ ] Review usage of Obj.Any, see if it could be stricter

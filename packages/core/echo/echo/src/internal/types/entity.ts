@@ -15,18 +15,14 @@ export const EchoSchemaBrandSymbol: unique symbol = _EchoSchemaBrandSymbol as an
 
 /**
  * String key used to identify the kind of an entity (object or relation).
- *
- * NOTE: This is intentionally a string literal instead of a unique symbol.
- * Unique symbols cause TS4023 "cannot be named" errors when external packages
- * try to export types that reference this key (e.g., `export const Graph = ...`).
- * TypeScript cannot emit declaration files that reference unique symbols from
- * external modules. Using a string literal allows the type to be inlined in
- * declaration files, making the API portable across package boundaries.
- *
- * TODO(burdon): Consider if there's a way to get the type safety benefits of
- * unique symbols while maintaining declaration file portability.
  */
-export const KindId = '@dxos/echo/kind' as const;
+// NOTE: This is intentionally a string literal instead of a unique symbol.
+//   Unique symbols cause TS4023 "cannot be named" errors when external packages
+//   try to export types that reference this key (e.g., `export const Graph = ...`).
+//   TypeScript cannot emit declaration files that reference unique symbols from
+//   external modules. Using a string literal allows the type to be inlined in
+//   declaration files, making the API portable across package boundaries.
+export const KindId = '~@dxos/echo/Kind' as const;
 export type KindId = typeof KindId;
 
 /**

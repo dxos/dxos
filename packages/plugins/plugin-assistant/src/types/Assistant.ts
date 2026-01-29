@@ -7,6 +7,7 @@ import * as Schema from 'effect/Schema';
 import { Obj, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { Queue } from '@dxos/echo-db';
+import { Expando } from '@dxos/schema';
 
 import { LLM_PROVIDERS } from './defs';
 
@@ -40,7 +41,7 @@ export const CompanionTo = Schema.Struct({
     typename: 'dxos.org/relation/assistant/CompanionTo',
     version: '0.1.0',
     source: Chat,
-    target: Type.Expando,
+    target: Expando.Expando,
   }),
 );
 

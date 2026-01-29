@@ -11,6 +11,7 @@ import { hideBin } from 'yargs/helpers';
 
 import { Client } from '@dxos/client';
 import { Obj, Type } from '@dxos/echo';
+import { TestSchema } from '@dxos/echo/testing';
 import { Ref } from '@dxos/echo/internal';
 import { log } from '@dxos/log';
 import { STORAGE_VERSION } from '@dxos/protocols';
@@ -82,7 +83,7 @@ const main = async () => {
     await space.waitUntilReady();
 
     space.db.add(
-      Obj.make(Type.Expando, {
+      Obj.make(TestSchema.Expando, {
         value: 100,
         string: 'hello world!',
         array: ['one', 'two', 'three'],
@@ -96,7 +97,7 @@ const main = async () => {
     await promise;
     await space.db.flush();
 
-    const expando = space.db.add(Obj.make(Type.Expando, { value: [1, 2, 3] }));
+    const expando = space.db.add(Obj.make(TestSchema.Expando, { value: [1, 2, 3] }));
     const todo = space.db.add(
       Obj.make(Todo, {
         name: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',

@@ -13,6 +13,7 @@ import React, { type FC, useEffect, useMemo, useState } from 'react';
 import { useAtomCapability, useCapability } from '@dxos/app-framework/react';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj, Ref, Type } from '@dxos/echo';
+import { TestSchema } from '@dxos/echo/testing';
 import { createDocAccessor, toCursorRange } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { ClientPlugin } from '@dxos/plugin-client';
@@ -91,7 +92,7 @@ const TestChat: FC<{ doc: Markdown.Document; content: string }> = ({ doc, conten
 
     // void dispatch(
     //   createIntent(CollaborationActions.InsertContent, {
-    //     target: doc as any as Type.Expando,
+    //     target: doc as any as TestSchema.Expando,
     //     object: Ref.fromDXN(new DXN(DXN.kind.QUEUE, [...queue.dxn.parts, message.id])),
     //     at: cursor,
     //     label: 'Proposal',

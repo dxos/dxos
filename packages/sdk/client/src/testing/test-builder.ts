@@ -15,6 +15,7 @@ import { Context } from '@dxos/context';
 import { raise } from '@dxos/debug';
 import { Filter } from '@dxos/echo';
 import { Obj, Type } from '@dxos/echo';
+import { TestSchema } from '@dxos/echo/testing';
 import { type Database } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
@@ -225,7 +226,7 @@ export const testSpaceAutomerge = async (
   createDb: Database.Database,
   checkDb: Database.Database = createDb,
 ) => {
-  const object = Obj.make(Type.Expando, {});
+  const object = Obj.make(TestSchema.Expando, {});
   createDb.add(object);
   await expect.poll(() => checkDb.query(Filter.id(object.id)).first({ timeout: 1000 }));
 

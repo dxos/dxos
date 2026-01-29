@@ -30,7 +30,7 @@ describe('useQuery', () => {
     let result: any[] | undefined;
 
     render(() => {
-      const objects = useQuery(undefined, Filter.type(Type.Expando));
+      const objects = useQuery(undefined, Filter.type(TestSchema.Expando));
       result = objects();
       return (<div>test</div>) as JSX.Element;
     });
@@ -42,7 +42,7 @@ describe('useQuery', () => {
     let result: any[] | undefined;
 
     render(() => {
-      const objects = useQuery(db, Filter.type(Type.Expando));
+      const objects = useQuery(db, Filter.type(TestSchema.Expando));
       result = objects();
       return (<div>test</div>) as JSX.Element;
     });
@@ -54,8 +54,8 @@ describe('useQuery', () => {
 
   test('returns matching objects', async () => {
     // Add some objects to the database
-    const obj1 = Obj.make(Type.Expando, { name: 'Alice' });
-    const obj2 = Obj.make(Type.Expando, { name: 'Bob' });
+    const obj1 = Obj.make(TestSchema.Expando, { name: 'Alice' });
+    const obj2 = Obj.make(TestSchema.Expando, { name: 'Bob' });
     db.add(obj1);
     db.add(obj2);
     await db.flush({ indexes: true });
@@ -63,7 +63,7 @@ describe('useQuery', () => {
     let objectsAccessor: (() => any[]) | undefined;
 
     function TestComponent() {
-      const objects = useQuery(db, Filter.type(Type.Expando));
+      const objects = useQuery(db, Filter.type(TestSchema.Expando));
       objectsAccessor = objects;
       return (<div data-testid='count'>{objects().length}</div>) as JSX.Element;
     }
@@ -84,7 +84,7 @@ describe('useQuery', () => {
     let objectsAccessor: (() => any[]) | undefined;
 
     function TestComponent() {
-      const objects = useQuery(db, Filter.type(Type.Expando));
+      const objects = useQuery(db, Filter.type(TestSchema.Expando));
       objectsAccessor = objects;
       return (<div data-testid='count'>{objects().length}</div>) as JSX.Element;
     }
@@ -96,7 +96,7 @@ describe('useQuery', () => {
     });
 
     // Add an object
-    const obj = Obj.make(Type.Expando, { name: 'Charlie' });
+    const obj = Obj.make(TestSchema.Expando, { name: 'Charlie' });
     db.add(obj);
     await db.flush({ indexes: true });
 
@@ -112,8 +112,8 @@ describe('useQuery', () => {
 
   test('updates when objects are removed', async () => {
     // Add objects first
-    const obj1 = Obj.make(Type.Expando, { name: 'Alice' });
-    const obj2 = Obj.make(Type.Expando, { name: 'Bob' });
+    const obj1 = Obj.make(TestSchema.Expando, { name: 'Alice' });
+    const obj2 = Obj.make(TestSchema.Expando, { name: 'Bob' });
     db.add(obj1);
     db.add(obj2);
     await db.flush({ indexes: true });
@@ -121,7 +121,7 @@ describe('useQuery', () => {
     let objectsAccessor: (() => any[]) | undefined;
 
     function TestComponent() {
-      const objects = useQuery(db, Filter.type(Type.Expando));
+      const objects = useQuery(db, Filter.type(TestSchema.Expando));
       objectsAccessor = objects;
       return (<div data-testid='count'>{objects().length}</div>) as JSX.Element;
     }
@@ -175,14 +175,14 @@ describe('useQuery', () => {
   });
 
   test('accepts Query directly', async () => {
-    const obj = Obj.make(Type.Expando, { name: 'Test' });
+    const obj = Obj.make(TestSchema.Expando, { name: 'Test' });
     db.add(obj);
     await db.flush({ indexes: true });
 
     let objectsAccessor: (() => any[]) | undefined;
 
     function TestComponent() {
-      const objects = useQuery(db, Query.select(Filter.type(Type.Expando)));
+      const objects = useQuery(db, Query.select(Filter.type(TestSchema.Expando)));
       objectsAccessor = objects;
       return (<div data-testid='count'>{objects().length}</div>) as JSX.Element;
     }
@@ -200,7 +200,7 @@ describe('useQuery', () => {
   });
 
   test('accepts reactive database accessor', async () => {
-    const obj = Obj.make(Type.Expando, { name: 'Test' });
+    const obj = Obj.make(TestSchema.Expando, { name: 'Test' });
     db.add(obj);
     await db.flush({ indexes: true });
 
@@ -208,7 +208,7 @@ describe('useQuery', () => {
     let dbAccessor: any = db;
 
     function TestComponent() {
-      const objects = useQuery(() => dbAccessor, Filter.type(Type.Expando));
+      const objects = useQuery(() => dbAccessor, Filter.type(TestSchema.Expando));
       objectsAccessor = objects;
       return (<div data-testid='count'>{objects().length}</div>) as JSX.Element;
     }
@@ -235,7 +235,7 @@ describe('useQuery', () => {
     // Register schema first
     await db.graph.schemaRegistry.register([TestSchema.Person]);
 
-    const obj1 = Obj.make(Type.Expando, { name: 'Test1' });
+    const obj1 = Obj.make(TestSchema.Expando, { name: 'Test1' });
     const obj2 = Obj.make(TestSchema.Person, { name: 'Test2', username: 'test', email: 'test@example.com' });
     db.add(obj1);
     db.add(obj2);
@@ -246,7 +246,7 @@ describe('useQuery', () => {
 
     function TestComponent() {
       const objects = useQuery(db, () =>
-        usePersonFilter() ? Filter.type(TestSchema.Person) : Filter.type(Type.Expando),
+        usePersonFilter() ? Filter.type(TestSchema.Person) : Filter.type(TestSchema.Expando),
       );
       objectsAccessor = objects;
       return (<div data-testid='count'>{objects().length}</div>) as JSX.Element;

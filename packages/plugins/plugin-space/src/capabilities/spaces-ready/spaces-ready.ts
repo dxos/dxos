@@ -9,6 +9,7 @@ import { Capability, Common } from '@dxos/app-framework';
 import { SubscriptionList } from '@dxos/async';
 import { Filter, Obj, Type } from '@dxos/echo';
 import { log } from '@dxos/log';
+import { Expando } from '@dxos/schema';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { DeckCapabilities } from '@dxos/plugin-deck';
@@ -62,13 +63,13 @@ export default Capability.makeModule(
     }
 
     const queryResults = yield* Effect.tryPromise(() =>
-      defaultSpace.db.query(Filter.type(Type.Expando, { key: SHARED })).run(),
+      defaultSpace.db.query(Filter.type(Expando.Expando, { key: SHARED })).run(),
     );
     const spacesOrder = queryResults[0];
     if (!spacesOrder) {
       // TODO(wittjosiah): Cannot be a Folder because Spaces are not TypedObjects so can't be saved in the database.
       //  Instead, we store order as an array of space ids.
-      defaultSpace.db.add(Obj.make(Type.Expando, { key: SHARED, order: [] }));
+      defaultSpace.db.add(Obj.make(Expando.Expando, { key: SHARED, order: [] }));
     }
 
     // Await missing objects - subscribe to layout atom changes.

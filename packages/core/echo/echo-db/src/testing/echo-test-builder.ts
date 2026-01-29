@@ -13,6 +13,7 @@ import isEqual from 'lodash.isequal';
 import { waitForCondition } from '@dxos/async';
 import { type Context, Resource } from '@dxos/context';
 import { type Obj, Type } from '@dxos/echo';
+import { TestSchema } from '@dxos/echo/testing';
 import { EchoHost, type EchoHostIndexingConfig } from '@dxos/echo-pipeline';
 import { createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
@@ -96,8 +97,8 @@ export class EchoTestPeer extends Resource {
     super();
     this._kv = kv;
     this._indexing = indexing;
-    // Include Expando as default type for tests that use Obj.make(Type.Expando, ...).
-    this._types = [Type.Expando, ...(types ?? [])];
+    // Include Expando as default type for tests that use Obj.make(TestSchema.Expando, ...).
+    this._types = [TestSchema.Expando, ...(types ?? [])];
     this._assignQueuePositions = assignQueuePositions;
 
     this._foreignRuntime = !!runtime;

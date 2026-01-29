@@ -8,7 +8,10 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 import { Trigger, TriggerState, asyncTimeout } from '@dxos/async';
 import { type ClientServicesProvider, type Space, SpaceProperties } from '@dxos/client-protocol';
 import { type Entity, Obj, type QueryResult, Type } from '@dxos/echo';
+import { TestSchema as TestSchema$ } from '@dxos/echo/testing';
 import { Ref } from '@dxos/echo/internal';
+
+import { TestSchema } from '../testing';
 import { Filter } from '@dxos/echo-db';
 import { type PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
@@ -16,7 +19,7 @@ import { log } from '@dxos/log';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
 
 import { Client } from '../client';
-import { TestBuilder, TestSchema } from '../testing';
+import { TestBuilder } from '../testing';
 
 describe('Index queries', () => {
   const createObjects = () => ({
@@ -53,9 +56,9 @@ describe('Index queries', () => {
       }),
     ],
     expandos: [
-      Obj.make(Type.Expando, { org: 'DXOS' }), //
-      Obj.make(Type.Expando, { name: 'Mykola' }),
-      Obj.make(Type.Expando, { height: 185 }),
+      Obj.make(TestSchema$.Expando, { org: 'DXOS' }), //
+      Obj.make(TestSchema$.Expando, { name: 'Mykola' }),
+      Obj.make(TestSchema$.Expando, { height: 185 }),
     ],
   });
 
@@ -64,7 +67,7 @@ describe('Index queries', () => {
   const initClient = async (services: ClientServicesProvider) => {
     const client = new Client({
       services,
-      types: [Type.Expando, TestSchema.ContactType, TestSchema.DocumentType, TestSchema.TextV0Type],
+      types: [TestSchema$.Expando, TestSchema.ContactType, TestSchema.DocumentType, TestSchema.TextV0Type],
     });
     await client.initialize();
     return client;
@@ -303,7 +306,7 @@ describe('Index queries', () => {
     const { expandos } = createObjects();
 
     await addObjects(space, expandos);
-    const query = space.db.query(Filter.type(Type.Expando));
+    const query = space.db.query(Filter.type(TestSchema$.Expando));
     await matchObjects(query, expandos);
   });
 

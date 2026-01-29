@@ -9,6 +9,7 @@ import React from 'react';
 import { OperationPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj, Query, Relation, Type } from '@dxos/echo';
+import { TestSchema } from '@dxos/echo/testing';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { faker } from '@dxos/random';
 import { useDatabase, useQuery } from '@dxos/react-client/echo';
@@ -32,7 +33,7 @@ const DefaultStory = () => {
 
   useAsyncEffect(async () => {
     if (identity && db) {
-      const object = db.add(Obj.make(Type.Expando, {}));
+      const object = db.add(Obj.make(TestSchema.Expando, {}));
       const thread1 = db.add(createCommentThread(identity));
       const thread2 = db.add(createProposalThread(identity));
       db.add(

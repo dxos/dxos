@@ -6,6 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { type Node } from '@dxos/app-graph';
 import { Obj, Type } from '@dxos/echo';
+import { TestSchema } from '@dxos/echo/testing';
 import { faker } from '@dxos/random';
 import { range } from '@dxos/util';
 
@@ -31,7 +32,7 @@ const createFactory = ({ createSchema, createData }: ObjectDataGenerator) => {
   const schema = createSchema?.();
   return {
     schema,
-    createObject: () => (schema ? Obj.make(schema, createData()) : Obj.make(Type.Expando, createData())),
+    createObject: () => (schema ? Obj.make(schema, createData()) : Obj.make(TestSchema.Expando, createData())),
   };
 };
 

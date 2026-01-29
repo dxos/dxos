@@ -105,12 +105,12 @@ describe('Experimental API review', () => {
   describe('Obj.make return type', () => {
     test('Obj.make with custom schema should be assignable to Obj.Obj<Person>', ({ expect }) => {
       {
-        const expando = Obj.make(Type.Expando, { content: 'Test' });
+        const expando = Obj.make(TestSchema.Expando, { content: 'Test' });
         expect(Obj.isObject(expando)).to.be.true;
         expect(expando.content).to.eq('Test');
 
         // This should work: assign to Obj.Obj of the schema's instance type
-        const _typed: Obj.Obj<Type.Expando> = expando;
+        const _typed: Obj.Obj<TestSchema.Expando> = expando;
       }
 
       {

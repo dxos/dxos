@@ -54,7 +54,7 @@ const mutate = <T>(obj: T, requiresObjChange: boolean, callback: (o: Obj.Mutable
 };
 
 export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory): void => {
-  for (const schema of [Type.Expando, TestSchema.Example]) {
+  for (const schema of [TestSchema.Expando, TestSchema.Example]) {
     const testConfig = testConfigFactory(schema);
     if (testConfig == null) {
       continue;
@@ -178,7 +178,7 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
       });
 
       test('validation failures', async (ctx) => {
-        if (schema == Type.Expando) {
+        if (schema == TestSchema.Expando) {
           ctx.skip();
           return;
         }

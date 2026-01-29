@@ -6,6 +6,7 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Filter, Query } from '@dxos/echo';
 import { Obj, Ref, Type } from '@dxos/echo';
+import { TestSchema } from '@dxos/echo/testing';
 
 import { EchoTestBuilder } from '../testing';
 
@@ -26,7 +27,7 @@ describe('clone', () => {
     const { db: db1 } = await builder.createDatabase();
     const { db: db2 } = await builder.createDatabase();
 
-    const task1 = Obj.make(Type.Expando, {
+    const task1 = Obj.make(TestSchema.Expando, {
       title: 'Main task',
       tags: ['red', 'green'],
     });
@@ -49,7 +50,7 @@ describe('clone', () => {
   test('clone to the same database by changing the id', async () => {
     const { db } = await builder.createDatabase();
 
-    const task1 = Obj.make(Type.Expando, {
+    const task1 = Obj.make(TestSchema.Expando, {
       title: 'Main task',
       tags: ['red', 'green'],
     });
@@ -69,11 +70,11 @@ describe('clone', () => {
     const { db: db1 } = await builder.createDatabase();
     const { db: db2 } = await builder.createDatabase();
 
-    const task1 = Obj.make(Type.Expando, {
+    const task1 = Obj.make(TestSchema.Expando, {
       title: 'Main task',
       tags: ['red', 'green'],
       assignee: Ref.make(
-        Obj.make(Type.Expando, {
+        Obj.make(TestSchema.Expando, {
           type: 'Person',
           name: 'John Doe',
         }),
@@ -100,7 +101,7 @@ describe('clone', () => {
     expect(task2.assignee.target?.id).to.equal(task1.assignee.target?.id);
     expect(task2.assignee.target?.name).to.equal(task1.assignee.target?.name);
     expect(
-      (await db2.query(Query.select(Filter.type(Type.Expando, { type: 'Person' }))).run())[0] === task2.assignee.target,
+      (await db2.query(Query.select(Filter.type(TestSchema.Expando, { type: 'Person' }))).run())[0] === task2.assignee.target,
     ).to.be.true;
   });
 
@@ -109,11 +110,11 @@ describe('clone', () => {
     const { db: db2 } = await builder.createDatabase();
 
     // Create the nested object first and add to database.
-    const details1 = Obj.make(Type.Expando, { content: 'Some details' });
+    const details1 = Obj.make(TestSchema.Expando, { content: 'Some details' });
     db1.add(details1);
 
     // Create parent object with Ref to the nested object.
-    const task1 = Obj.make(Type.Expando, {
+    const task1 = Obj.make(TestSchema.Expando, {
       title: 'Main task',
       tags: ['red', 'green'],
       details: Ref.make(details1),

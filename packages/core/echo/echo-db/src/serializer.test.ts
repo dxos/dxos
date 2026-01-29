@@ -53,7 +53,7 @@ describe('Serializer', () => {
 
       {
         const { db } = await builder.createDatabase();
-        const obj = Obj.make(Type.Expando, { title: 'Test' });
+        const obj = Obj.make(TestSchema.Expando, { title: 'Test' });
         db.add(obj);
         await db.flush();
 
@@ -88,8 +88,8 @@ describe('Serializer', () => {
 
       {
         const { db } = await builder.createDatabase();
-        const obj1 = db.add(Obj.make(Type.Expando, { title: 'Hello' }));
-        db.add(Obj.make(Type.Expando, { title: 'World' }));
+        const obj1 = db.add(Obj.make(TestSchema.Expando, { title: 'Hello' }));
+        db.add(Obj.make(TestSchema.Expando, { title: 'World' }));
         await db.flush();
 
         const objects = await db.query(Query.select(Filter.everything())).run();
@@ -124,8 +124,8 @@ describe('Serializer', () => {
 
       {
         const { db } = await builder.createDatabase();
-        const preserved = db.add(Obj.make(Type.Expando, objValue));
-        const deleted = db.add(Obj.make(Type.Expando, { value: preserved.value + 1 }));
+        const preserved = db.add(Obj.make(TestSchema.Expando, objValue));
+        const deleted = db.add(Obj.make(TestSchema.Expando, { value: preserved.value + 1 }));
         db.remove(deleted);
         await db.flush();
 
@@ -158,22 +158,22 @@ describe('Serializer', () => {
 
       {
         const { db } = await builder.createDatabase();
-        const obj = Obj.make(Type.Expando, {
+        const obj = Obj.make(TestSchema.Expando, {
           title: 'Main task',
           subtasks: [
             Type.Ref.make(
-              Obj.make(Type.Expando, {
+              Obj.make(TestSchema.Expando, {
                 title: 'Subtask 1',
               }),
             ),
             Type.Ref.make(
-              Obj.make(Type.Expando, {
+              Obj.make(TestSchema.Expando, {
                 title: 'Subtask 2',
               }),
             ),
           ],
           previous: Type.Ref.make(
-            Obj.make(Type.Expando, {
+            Obj.make(TestSchema.Expando, {
               title: 'Previous task',
             }),
           ),
@@ -242,7 +242,7 @@ describe('Serializer', () => {
       {
         const db = await peer.openDatabase(spaceKey, root.url);
         for (let i = 0; i < totalObjects; i++) {
-          db.add(Obj.make(Type.Expando, { value: i }));
+          db.add(Obj.make(TestSchema.Expando, { value: i }));
         }
         await db.flush();
         await peer.close();

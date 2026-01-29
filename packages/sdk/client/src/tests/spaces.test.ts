@@ -10,6 +10,9 @@ import { SpaceProperties } from '@dxos/client-protocol';
 import { performInvitation } from '@dxos/client-services/testing';
 import { Context } from '@dxos/context';
 import { Filter, Obj, Ref, Type } from '@dxos/echo';
+import { TestSchema as TestSchema$ } from '@dxos/echo/testing';
+
+import { TestSchema } from '../testing';
 import { getObjectCore } from '@dxos/echo-db';
 import { EncodedReference } from '@dxos/echo-protocol';
 import { SpaceId } from '@dxos/keys';
@@ -22,7 +25,6 @@ import { CreateEpochRequest } from '../halo';
 import {
   type CreateInitializedClientsOptions,
   TestBuilder,
-  TestSchema,
   createInitializedClientsWithContext,
   testSpaceAutomerge,
   waitForSpace,
@@ -594,7 +596,7 @@ describe('Spaces', () => {
   };
 
   const registerTypes = async (client: Client) => {
-    await client.addTypes([Type.Expando, TestSchema.DocumentType, TestSchema.TextV0Type]);
+    await client.addTypes([TestSchema$.Expando, TestSchema.DocumentType, TestSchema.TextV0Type]);
   };
 
   const createDocument = (): TestSchema.DocumentType => {
@@ -606,7 +608,7 @@ describe('Spaces', () => {
   };
 
   const createObject = <T extends {}>(props: T) => {
-    return Obj.make(Type.Expando, props);
+    return Obj.make(TestSchema$.Expando, props);
   };
 
   const waitForObject = async (space: Space, object: Obj.Unknown) => {

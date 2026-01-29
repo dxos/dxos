@@ -134,7 +134,7 @@ describe('schema registry', () => {
     const retrieved = await registry.query({ location: ['database', 'runtime'] }).run();
     // Note: Expando is registered by default in test builder.
     expect(retrieved.map(Type.getTypename)).toEqual([
-      'dxos.org/type/Expando',
+      'example.com/type/Expando',
       'example.com/type/Organization',
       'example.com/type/Person',
     ]);
@@ -147,7 +147,7 @@ describe('schema registry', () => {
     const [echoSchema] = await registry.register([Contact]);
     const retrieved = await registry.query({ location: ['runtime'] }).run();
     // Note: Expando is registered by default in test builder.
-    expect(retrieved.map(Type.getTypename)).toEqual(['dxos.org/type/Expando', 'example.com/type/Organization']);
+    expect(retrieved.map(Type.getTypename)).toEqual(['example.com/type/Expando', 'example.com/type/Organization']);
   });
 
   test('query only database schemas', async () => {

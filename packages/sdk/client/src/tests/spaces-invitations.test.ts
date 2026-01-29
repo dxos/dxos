@@ -8,6 +8,7 @@ import { Trigger, sleep } from '@dxos/async';
 import { performInvitation } from '@dxos/client-services/testing';
 import { Context } from '@dxos/context';
 import { Type } from '@dxos/echo';
+import { TestSchema } from '@dxos/echo/testing';
 import { log } from '@dxos/log';
 import { Invitation, QueryInvitationsResponse } from '@dxos/protocols/proto/dxos/client/services';
 
@@ -17,7 +18,7 @@ import { createInitializedClientsWithContext, testSpaceAutomerge, waitForSpace }
 describe('Spaces/invitations', () => {
   test('creates a space and invites a peer', async () => {
     const [client1, client2] = await createInitializedClients(2);
-    await Promise.all([client1, client2].map((c) => c.addTypes([Type.Expando])));
+    await Promise.all([client1, client2].map((c) => c.addTypes([TestSchema.Expando])));
 
     log('initialized');
 

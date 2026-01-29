@@ -48,7 +48,7 @@ describe('Database', () => {
     await openAndClose(testBuilder);
     const { db } = await testBuilder.createDatabase();
 
-    db.add(Obj.make(Type.Expando, { name: 'Test' }));
+    db.add(Obj.make(TestSchema.Expando, { name: 'Test' }));
     await db.flush();
   });
 
@@ -67,7 +67,7 @@ describe('Database', () => {
       const db = await testPeer.createDatabase();
       spaceKey = db.spaceKey;
       rootUrl = db.rootUrl!;
-      db.add(Obj.make(Type.Expando, { name: 'Test' }));
+      db.add(Obj.make(TestSchema.Expando, { name: 'Test' }));
       const objects = await db.query(Query.select(Filter.everything())).run();
       expect(objects).to.have.length(1);
       expect(objects[0].name).to.eq('Test');
@@ -93,7 +93,7 @@ describe('Database', () => {
     await openAndClose(testBuilder);
     const { db } = await testBuilder.createDatabase();
 
-    const obj1 = db.add(Obj.make(Type.Expando, { name: 'Test' }));
+    const obj1 = db.add(Obj.make(TestSchema.Expando, { name: 'Test' }));
     await db.flush();
     // TODO(burdon): Should fail?
     const obj2 = db.add(obj1);
@@ -108,7 +108,7 @@ describe('Database', () => {
     await openAndClose(testBuilder);
     const { db } = await testBuilder.createDatabase();
 
-    const obj = db.add(Obj.make(Type.Expando, { name: 'Test' }));
+    const obj = db.add(Obj.make(TestSchema.Expando, { name: 'Test' }));
     await db.flush();
 
     db.remove(obj);
@@ -121,7 +121,7 @@ describe('Database', () => {
   test('inspect', async () => {
     const { db } = await builder.createDatabase();
 
-    const task = Obj.make(Type.Expando, {
+    const task = Obj.make(TestSchema.Expando, {
       title: 'Main task',
       tags: ['red', 'green'],
       // Note: Using plain object for nested data. For typed object references, use Ref.make.
@@ -141,7 +141,7 @@ describe('Database', () => {
     const add = 10;
     {
       for (const _ of Array.from({ length: add })) {
-        db.add(Obj.make(Type.Expando, {}));
+        db.add(Obj.make(TestSchema.Expando, {}));
       }
       await db.flush();
 
@@ -168,8 +168,8 @@ describe('Database', () => {
   test('query by ID', async () => {
     const { db } = await builder.createDatabase();
 
-    const obj1 = db.add(Obj.make(Type.Expando, { name: 'Object 1' }));
-    const obj2 = db.add(Obj.make(Type.Expando, { name: 'Object 2' }));
+    const obj1 = db.add(Obj.make(TestSchema.Expando, { name: 'Object 1' }));
+    const obj2 = db.add(Obj.make(TestSchema.Expando, { name: 'Object 2' }));
     await db.flush({ indexes: true });
 
     {
@@ -192,7 +192,7 @@ describe('Database', () => {
       const db = await peer.createDatabase(spaceKey);
       rootUrl = db.rootUrl!;
 
-      ({ id } = db.add(Obj.make(Type.Expando, { name: 'Object 1' })));
+      ({ id } = db.add(Obj.make(TestSchema.Expando, { name: 'Object 1' })));
       await db.flush();
     }
 
@@ -211,7 +211,7 @@ describe('Database', () => {
   test('meta', async () => {
     const { db } = await builder.createDatabase();
 
-    const obj = Obj.make(Type.Expando, {});
+    const obj = Obj.make(TestSchema.Expando, {});
     expectObjects([...Obj.getMeta(obj).keys], []);
     Obj.changeMeta(obj, (meta) => meta.keys.push({ source: 'test', id: 'test-key' }));
     expectObjects([...Obj.getMeta(obj).keys], [{ source: 'test', id: 'test-key' }]);
@@ -267,8 +267,8 @@ describe('Database', () => {
       await db.flush();
 
       Obj.change(container, (c) => {
-        c.objects!.push(Ref.make(Obj.make(Type.Expando, { foo: 100 })));
-        c.objects!.push(Ref.make(Obj.make(Type.Expando, { bar: 200 })));
+        c.objects!.push(Ref.make(Obj.make(TestSchema.Expando, { foo: 100 })));
+        c.objects!.push(Ref.make(Obj.make(TestSchema.Expando, { bar: 200 })));
       });
     }
 
@@ -279,8 +279,8 @@ describe('Database', () => {
       const target1 = await container.objects![0].load();
       const target2 = await container.objects![1].load();
       // TODO(wittjosiah): Fix.
-      // assert(Obj.instanceOf(Type.Expando, target1));
-      // assert(Obj.instanceOf(Type.Expando, target2));
+      // assert(Obj.instanceOf(TestSchema.Expando, target1));
+      // assert(Obj.instanceOf(TestSchema.Expando, target2));
       expect((target1 as any).foo).to.equal(100);
       expect((target2 as any).bar).to.equal(200);
     }

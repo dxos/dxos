@@ -150,8 +150,8 @@ describe('Integration tests', () => {
     let outerId: string;
     {
       await using db = await peer.createDatabase();
-      const inner = db.add(Obj.make(Type.Expando, { name: 'inner' }));
-      const outer = db.add(Obj.make(Type.Expando, { inner: Ref.make(inner) }));
+      const inner = db.add(Obj.make(TestSchema.Expando, { name: 'inner' }));
+      const outer = db.add(Obj.make(TestSchema.Expando, { inner: Ref.make(inner) }));
       outerId = outer.id;
       await db.flush();
     }
@@ -178,8 +178,8 @@ describe('Integration tests', () => {
     {
       await using db = await peer.createDatabase(spaceKey);
       rootUrl = db.rootUrl!;
-      const inner = db.add(Obj.make(Type.Expando, { name: 'inner' }));
-      const outer = db.add(Obj.make(Type.Expando, { inner: Ref.make(inner) }));
+      const inner = db.add(Obj.make(TestSchema.Expando, { name: 'inner' }));
+      const outer = db.add(Obj.make(TestSchema.Expando, { inner: Ref.make(inner) }));
       outerId = outer.id;
       await db.flush();
     }
@@ -323,7 +323,7 @@ describe('Integration tests', () => {
 
     await teleportConnections[0].whenOpen(true);
     await using db1 = await peer1.createDatabase(spaceKey);
-    db1.add(Obj.make(Type.Expando, {}));
+    db1.add(Obj.make(TestSchema.Expando, {}));
     await teleportConnections[0].whenOpen(false);
   });
 
@@ -382,7 +382,7 @@ describe('Integration tests', () => {
     await using db2 = await peer2.openDatabase(spaceKey, db1.rootUrl!);
 
     const obj1 = db1.add(
-      Obj.make(Type.Expando, {
+      Obj.make(TestSchema.Expando, {
         content: 'test',
       }),
     );
@@ -449,16 +449,16 @@ describe('Integration tests', () => {
         await using db = await peer.createDatabase(spaceKey);
         rootUrl = db.rootUrl!;
 
-        const TestSchema = Schema.Struct({
+        const LocalTestSchema = Schema.Struct({
           field: Schema.String,
         }).pipe(Type.object({ typename: 'example.com/type/Test', version: '0.1.0' }));
-        const [stored] = await db.schemaRegistry.register([TestSchema]);
+        const [stored] = await db.schemaRegistry.register([LocalTestSchema]);
         schemaDxn = DXN.fromLocalObjectId(stored.id).toString();
 
         const object = db.add(makeObject(stored, { field: 'test' }));
         expect(Obj.getSchema(object)).to.eq(stored);
 
-        db.add(Obj.make(Type.Expando, { text: 'Expando object' })); // Add Expando object to test filtering
+        db.add(Obj.make(TestSchema.Expando, { text: 'Expando object' })); // Add Expando object to test filtering
         await db.flush({ indexes: true });
       }
 

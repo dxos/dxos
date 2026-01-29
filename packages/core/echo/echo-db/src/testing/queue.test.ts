@@ -32,7 +32,7 @@ describe('queues', () => {
     const db = await peer.createDatabase();
     const queues = peer.client.constructQueueFactory(db.spaceId);
     const obj = db.add(
-      Obj.make(Type.Expando, {
+      Obj.make(TestSchema.Expando, {
         // TODO(dmaretskyi): Support Ref.make
         queue: Type.Ref.fromDXN(queues.create().dxn) as Ref.Ref<Queue>,
       }),

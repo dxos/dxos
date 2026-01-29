@@ -5,7 +5,7 @@
 import { describe, test } from 'vitest';
 
 import * as Obj from './Obj';
-import { Expando } from './internal';
+import { TestSchema } from './testing';
 
 describe('Obj', () => {
   describe('Unknown', () => {
@@ -18,7 +18,7 @@ describe('Obj', () => {
 
     test('AnyProps type allows arbitrary properties', ({ expect }) => {
       // Create an actual ECHO object and verify AnyProps works
-      const obj = Obj.make(Expando, { customField: 'value', anotherField: 123 });
+      const obj = Obj.make(TestSchema.Expando, { customField: 'value', anotherField: 123 });
       const anyPropsObj: Obj.Any = obj;
 
       expect(anyPropsObj.customField).toBe('value');
@@ -28,13 +28,13 @@ describe('Obj', () => {
 
   describe('make', () => {
     test('creates object with Expando schema', ({ expect }) => {
-      const obj = Obj.make(Expando, { name: 'test' });
+      const obj = Obj.make(TestSchema.Expando, { name: 'test' });
       expect(obj.id).toBeDefined();
       expect((obj as any).name).toBe('test');
     });
 
     test('created object satisfies Unknown type', ({ expect }) => {
-      const obj = Obj.make(Expando, { name: 'test' });
+      const obj = Obj.make(TestSchema.Expando, { name: 'test' });
       const unknownObj: Obj.Unknown = obj;
       expect(unknownObj.id).toBeDefined();
     });
@@ -42,7 +42,7 @@ describe('Obj', () => {
 
   describe('isObject', () => {
     test('returns true for ECHO objects', ({ expect }) => {
-      const obj = Obj.make(Expando, { name: 'test' });
+      const obj = Obj.make(TestSchema.Expando, { name: 'test' });
       expect(Obj.isObject(obj)).toBe(true);
     });
 

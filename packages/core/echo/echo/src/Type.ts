@@ -21,7 +21,6 @@ import {
   EchoSchema,
   EchoSchemaBrandSymbol,
   EntityKind,
-  Expando as Expando$,
   PersistentSchema,
   Ref as Ref$,
   type RefFn,
@@ -190,14 +189,6 @@ export namespace Obj {
 export const object: {
   (opts: TypeMeta): <Self extends Schema.Schema.Any>(self: Self) => Obj<Schema.Schema.Type<Self>>;
 } = EchoObjectSchema as any;
-
-//
-// Expando
-//
-
-export const Expando: Obj<Expando$> = Expando$ as any;
-
-export interface Expando extends Schema.Schema.Type<typeof Expando> {}
 
 //
 // PersistentType (Schema stored in database)

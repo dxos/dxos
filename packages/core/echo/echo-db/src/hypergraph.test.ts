@@ -5,6 +5,7 @@
 import { describe, expect, test } from 'vitest';
 
 import { Obj, Ref, Type } from '@dxos/echo';
+import { TestSchema } from '@dxos/echo/testing';
 import { PublicKey } from '@dxos/keys';
 import { openAndClose } from '@dxos/test-utils';
 
@@ -22,13 +23,13 @@ describe('HyperGraph', () => {
     const db2 = await peer.createDatabase(spaceKey2);
 
     const obj1 = db1.add(
-      Obj.make(Type.Expando, {
+      Obj.make(TestSchema.Expando, {
         type: 'task',
         title: 'A',
       }),
     );
     const obj2 = db2.add(
-      Obj.make(Type.Expando, {
+      Obj.make(TestSchema.Expando, {
         type: 'task',
         title: 'B',
       }),
@@ -58,13 +59,13 @@ describe('HyperGraph', () => {
     const db2 = await peer.createDatabase(spaceKey2);
 
     const obj1 = db1.add(
-      Obj.make(Type.Expando, {
+      Obj.make(TestSchema.Expando, {
         type: 'task',
         title: 'A',
       }),
     );
     const obj2 = db2.add(
-      Obj.make(Type.Expando, {
+      Obj.make(TestSchema.Expando, {
         type: 'task',
         title: 'B',
       }),

@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { EXPANDO_TYPENAME } from '@dxos/echo/internal';
+const EXPANDO_TYPENAME = 'dxos.org/type/Expando';
+
 import { ATTR_META, type ObjectJSON } from '@dxos/echo/internal';
 import { EncodedReference, ObjectStructure, type QueryAST, isEncodedReference } from '@dxos/echo-protocol';
 import { DXN, type ObjectId, type SpaceId } from '@dxos/keys';

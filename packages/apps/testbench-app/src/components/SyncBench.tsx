@@ -13,6 +13,7 @@ import { scheduleTaskInterval } from '@dxos/async';
 import { Invitation, InvitationEncoder } from '@dxos/client/invitations';
 import { Context } from '@dxos/context';
 import { Filter, Obj, Type } from '@dxos/echo';
+import { TestSchema } from '@dxos/echo/testing';
 import { useClient, useConfig } from '@dxos/react-client';
 import { type SpaceId, type SpaceSyncState } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
@@ -100,7 +101,7 @@ export const SyncBench = () => {
     }
     for (let i = 0; i < count; i++) {
       space.db.add(
-        Obj.make(Type.Expando, {
+        Obj.make(TestSchema.Expando, {
           data: crypto.randomUUID(),
         }),
       );

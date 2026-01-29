@@ -8,14 +8,13 @@ import * as Effect from 'effect/Effect';
 import { type CapabilityManager, Common } from '@dxos/app-framework';
 import { type Space, SpaceState, isSpace } from '@dxos/client/echo';
 import { type Database, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
-import { EXPANDO_TYPENAME } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { Migrations } from '@dxos/migrations';
 import { Operation } from '@dxos/operation';
 import { Graph, Node } from '@dxos/plugin-graph';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention/types';
 import { type TreeData } from '@dxos/react-ui-list';
-import { Collection } from '@dxos/schema';
+import { Collection, Expando } from '@dxos/schema';
 import { createFilename } from '@dxos/util';
 
 import { meta } from './meta';
@@ -740,7 +739,7 @@ export const cloneObject = async (
   newDb: Database.Database,
 ): Promise<Obj.Unknown> => {
   const schema = Obj.getSchema(object);
-  const typename = schema ? (Type.getTypename(schema) ?? EXPANDO_TYPENAME) : EXPANDO_TYPENAME;
+  const typename = schema ? (Type.getTypename(schema) ?? Expando.Expando.typename) : Expando.Expando.typename;
   const metadata = resolve(typename);
   const serializer = metadata.serializer;
   invariant(serializer, `No serializer for type: ${typename}`);

@@ -3,7 +3,6 @@
 //
 
 export * from './entity';
-export * from './expando';
 export * from './model'; // TODO(burdon): Rename.
 export * from './object';
 export * from './relation';

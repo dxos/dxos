@@ -6,6 +6,7 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 import { Obj, Type } from '@dxos/echo';
+import { TestSchema } from '@dxos/echo/testing';
 
 import { EchoTestBuilder } from '../testing';
 
@@ -24,7 +25,7 @@ describe('create subscription', () => {
 
   test('updates are propagated', async () => {
     const { db } = await builder.createDatabase();
-    const task = Obj.make(Type.Expando, {});
+    const task = Obj.make(TestSchema.Expando, {});
     db.add(task);
 
     const counter = createUpdateCounter(task);
@@ -42,7 +43,7 @@ describe('create subscription', () => {
 
   test('updates are synchronous', async () => {
     const { db } = await builder.createDatabase();
-    const task = Obj.make(Type.Expando, {});
+    const task = Obj.make(TestSchema.Expando, {});
     db.add(task);
 
     const actions: string[] = [];
@@ -65,7 +66,7 @@ describe('create subscription', () => {
 
   test('latest value is available in subscription', async () => {
     const { db } = await builder.createDatabase();
-    const task = Obj.make(Type.Expando, {});
+    const task = Obj.make(TestSchema.Expando, {});
     db.add(task);
 
     let counter = 0;
@@ -91,7 +92,7 @@ describe('create subscription', () => {
 
   test('updates for nested objects', async () => {
     const { db } = await builder.createDatabase();
-    const task = Obj.make(Type.Expando, { nested: { title: 'Test title' } });
+    const task = Obj.make(TestSchema.Expando, { nested: { title: 'Test title' } });
     db.add(task);
 
     const counter = createUpdateCounter(task);
@@ -105,7 +106,7 @@ describe('create subscription', () => {
 
   test('updates for deep nested objects', async () => {
     const { db } = await builder.createDatabase();
-    const task = Obj.make(Type.Expando, {
+    const task = Obj.make(TestSchema.Expando, {
       nested: { deep_nested: { title: 'Test title' } },
     });
     db.add(task);
@@ -121,7 +122,7 @@ describe('create subscription', () => {
 
   test('updates for array objects', async () => {
     const { db } = await builder.createDatabase();
-    const task = Obj.make(Type.Expando, { array: ['Test value'] });
+    const task = Obj.make(TestSchema.Expando, { array: ['Test value'] });
     db.add(task);
 
     const counter = createUpdateCounter(task);
@@ -135,7 +136,7 @@ describe('create subscription', () => {
 
   test('updates for automerge array object fields', async () => {
     const { db } = await builder.createDatabase();
-    const task = Obj.make(Type.Expando, { array: [{ title: 'Test value' }] });
+    const task = Obj.make(TestSchema.Expando, { array: [{ title: 'Test value' }] });
     db.add(task);
 
     const counter = createUpdateCounter(task);
@@ -150,7 +151,7 @@ describe('create subscription', () => {
   test('updates for nested automerge array object fields', async () => {
     const { db } = await builder.createDatabase();
     const nestedArrayHolder = { nested_array: [{ title: 'Test value' }] };
-    const task = Obj.make(Type.Expando, { array: [nestedArrayHolder] });
+    const task = Obj.make(TestSchema.Expando, { array: [nestedArrayHolder] });
     db.add(task);
 
     const counter = createUpdateCounter(task);

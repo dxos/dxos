@@ -195,7 +195,7 @@ describe('AtomRef - Expando Objects', () => {
   });
 
   test('works with Expando objects', async () => {
-    const targetObj = Obj.make(Type.Expando, { name: 'Expando Target', value: 42 });
+    const targetObj = Obj.make(TestSchema.Expando, { name: 'Expando Target', value: 42 });
     db.add(targetObj);
     await db.flush({ indexes: true });
 
