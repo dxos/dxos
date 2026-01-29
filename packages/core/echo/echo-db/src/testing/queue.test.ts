@@ -13,6 +13,7 @@ import { TestSchema } from '@dxos/echo/testing';
 import { DXN, SpaceId } from '@dxos/keys';
 import { KEY_QUEUE_POSITION } from '@dxos/protocols';
 import { layerMemory } from '@dxos/sql-sqlite/platform';
+import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 
 import { type Queue } from '../queue';
 
@@ -329,7 +330,9 @@ describe('queues', () => {
 
   describe('Durability', () => {
     test('queue objects survive reload', async ({ expect }) => {
-      const runtime = ManagedRuntime.make(Layer.merge(layerMemory, Reactivity.layer).pipe(Layer.orDie));
+      const runtime = ManagedRuntime.make(
+        SqlTransaction.layer.pipe(Layer.provideMerge(Layer.merge(layerMemory, Reactivity.layer))).pipe(Layer.orDie),
+      );
       onTestFinished(() => runtime.dispose());
 
       await using peer = await builder.createPeer({

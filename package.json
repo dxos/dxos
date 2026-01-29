@@ -203,7 +203,7 @@
     ],
     "overrides": {
       "typescript": "^5.9.3",
-      "@automerge/automerge": "3.2.1",
+      "@automerge/automerge": "catalog:",
       "better-sqlite3": "12.6.0",
       "@lezer/lr": "^1.4.2",
       "@types/node": "22.10.2",
