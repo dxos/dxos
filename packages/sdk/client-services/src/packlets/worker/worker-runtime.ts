@@ -50,7 +50,7 @@ export type WorkerRuntimeOptions = {
    */
   automaticallyConnectWebrtc?: boolean;
 
-  enableFullTextIndexing?: boolean;
+  enableSqlite?: boolean;
 };
 
 /**
@@ -87,7 +87,7 @@ export class WorkerRuntime {
     releaseLock,
     onStop,
     automaticallyConnectWebrtc = true,
-    enableFullTextIndexing,
+    enableSqlite,
   }: WorkerRuntimeOptions) {
     this._configProvider = configProvider;
     this._acquireLock = acquireLock;
@@ -105,7 +105,7 @@ export class WorkerRuntime {
       },
       runtime: this._runtime.runtimeEffect,
       runtimeProps: {
-        enableFullTextIndexing: enableFullTextIndexing,
+        enableSqlite,
         // Auto-activate spaces that were previously active after leader changeover.
         autoActivateSpaces: true,
       },

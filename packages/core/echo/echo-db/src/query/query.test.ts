@@ -750,7 +750,7 @@ describe('Query', () => {
 
     test('full-text', async () => {
       const { db, graph } = await builder.createDatabase({
-        indexing: { fullText: true },
+        indexing: { sqlIndex: true },
       });
       await graph.schemaRegistry.register([TestSchema.Task]);
 
@@ -785,7 +785,7 @@ describe('Query', () => {
 
   describe('indexer2 text search', () => {
     test('full-text search via indexer2', async () => {
-      const { db } = await builder.createDatabase({ indexing: { fullText: true } });
+      const { db } = await builder.createDatabase({ indexing: { sqlIndex: true } });
 
       db.add(Obj.make(Type.Expando, { title: 'Introduction to TypeScript' }));
       db.add(Obj.make(Type.Expando, { title: 'Getting Started with React' }));
@@ -824,7 +824,7 @@ describe('Query', () => {
     });
 
     test('full-text search across multiple matching objects', async () => {
-      const { db } = await builder.createDatabase({ indexing: { fullText: true } });
+      const { db } = await builder.createDatabase({ indexing: { sqlIndex: true } });
 
       db.add(Obj.make(Type.Expando, { title: 'Programming with JavaScript' }));
       db.add(Obj.make(Type.Expando, { title: 'JavaScript Best Practices' }));
@@ -839,7 +839,7 @@ describe('Query', () => {
     });
 
     test('full-text search with partial word matching (trigram)', async () => {
-      const { db } = await builder.createDatabase({ indexing: { fullText: true } });
+      const { db } = await builder.createDatabase({ indexing: { sqlIndex: true } });
 
       db.add(Obj.make(Type.Expando, { title: 'Introduction to TypeScript' }));
       db.add(Obj.make(Type.Expando, { title: 'Getting Started with React' }));
@@ -875,7 +875,7 @@ describe('Query', () => {
     });
 
     test('full-text search with wrong word order', async () => {
-      const { db } = await builder.createDatabase({ indexing: { fullText: true } });
+      const { db } = await builder.createDatabase({ indexing: { sqlIndex: true } });
 
       db.add(Obj.make(Type.Expando, { title: 'Python Programming Guide' }));
       db.add(Obj.make(Type.Expando, { title: 'JavaScript Basics' }));
@@ -897,7 +897,7 @@ describe('Query', () => {
     });
 
     test('full-text search after content update', async () => {
-      const { db } = await builder.createDatabase({ indexing: { fullText: true } });
+      const { db } = await builder.createDatabase({ indexing: { sqlIndex: true } });
 
       const obj = db.add(Obj.make(Type.Expando, { title: 'Original Title' }));
       await db.flush({ indexes: true });
@@ -988,7 +988,7 @@ describe('Query', () => {
     });
 
     test('full-text search in queues via indexer2', async () => {
-      const peer = await builder.createPeer({ indexing: { fullText: true }, types: [TestSchema.Task] });
+      const peer = await builder.createPeer({ indexing: { sqlIndex: true }, types: [TestSchema.Task] });
       const db = await peer.createDatabase();
       const queues = peer.client.constructQueueFactory(db.spaceId);
       const queue = queues.create();
@@ -1035,7 +1035,7 @@ describe('Query', () => {
     });
 
     test('full-text search with allQueuesFromSpaces via indexer2', async () => {
-      const peer = await builder.createPeer({ indexing: { fullText: true }, types: [TestSchema.Task] });
+      const peer = await builder.createPeer({ indexing: { sqlIndex: true }, types: [TestSchema.Task] });
       const db = await peer.createDatabase();
       const queues = peer.client.constructQueueFactory(db.spaceId);
       const queue = queues.create();
@@ -1075,7 +1075,7 @@ describe('Query', () => {
     });
 
     test('full-text search from queue returns valid echo objects', async () => {
-      const peer = await builder.createPeer({ indexing: { fullText: true }, types: [TestSchema.Task] });
+      const peer = await builder.createPeer({ indexing: { sqlIndex: true }, types: [TestSchema.Task] });
       const db = await peer.createDatabase();
       const queues = peer.client.constructQueueFactory(db.spaceId);
       const queue = queues.create();
@@ -1099,7 +1099,7 @@ describe('Query', () => {
     });
 
     test('full-text search returns rank in entries', async () => {
-      const { db } = await builder.createDatabase({ indexing: { fullText: true } });
+      const { db } = await builder.createDatabase({ indexing: { sqlIndex: true } });
 
       db.add(Obj.make(Type.Expando, { title: 'TypeScript TypeScript TypeScript' })); // High relevance.
       db.add(Obj.make(Type.Expando, { title: 'TypeScript Programming' })); // Medium relevance.
@@ -1120,7 +1120,7 @@ describe('Query', () => {
     });
 
     test('full-text search order by rank descending (default)', async () => {
-      const { db } = await builder.createDatabase({ indexing: { fullText: true } });
+      const { db } = await builder.createDatabase({ indexing: { sqlIndex: true } });
 
       // Create objects with varying relevance to the search term "TypeScript".
       db.add(Obj.make(Type.Expando, { title: 'TypeScript' })); // Single occurrence.
@@ -1144,7 +1144,7 @@ describe('Query', () => {
     });
 
     test('full-text search order by rank ascending', async () => {
-      const { db } = await builder.createDatabase({ indexing: { fullText: true } });
+      const { db } = await builder.createDatabase({ indexing: { sqlIndex: true } });
 
       // Create objects with varying relevance to the search term "TypeScript".
       db.add(Obj.make(Type.Expando, { title: 'TypeScript' })); // Single occurrence.
@@ -1188,7 +1188,7 @@ describe('Query', () => {
     });
 
     test('order by rank with limit', async () => {
-      const { db } = await builder.createDatabase({ indexing: { fullText: true } });
+      const { db } = await builder.createDatabase({ indexing: { sqlIndex: true } });
 
       // Create multiple objects with varying relevance.
       db.add(Obj.make(Type.Expando, { title: 'TypeScript' }));
