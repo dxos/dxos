@@ -30,7 +30,7 @@ ObjectId.dangerouslyDisableRandomness();
 const TestLayer = AssistantTestLayerWithTriggers({
   aiServicePreset: 'edge-remote',
   functions: [...Initiative.getFunctions()],
-  types: [Initiative.Initiative, Chat.Chat, Blueprint.Blueprint, Trigger.Trigger, Text.Text],
+  types: [Initiative.Initiative, Chat.CompanionTo, Chat.Chat, Blueprint.Blueprint, Trigger.Trigger, Text.Text],
   tracing: 'pretty',
 });
 
