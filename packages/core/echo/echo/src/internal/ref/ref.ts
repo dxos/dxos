@@ -18,6 +18,7 @@ import * as Database from '../../Database';
 import { ReferenceAnnotationId, getSchemaDXN, getTypeAnnotation, getTypeIdentifierAnnotation } from '../annotations';
 import { type JsonSchemaType } from '../json-schema';
 import type { AnyProperties, WithId } from '../types';
+import * as Pipeable from 'effect/Pipeable';
 
 /**
  * The `$id` and `$ref` fields for an ECHO reference schema.
@@ -129,7 +130,7 @@ export const Ref: RefFn = <S extends Schema.Schema.Any>(schema: S): RefSchema<Sc
  * Represents materialized reference to a target.
  * This is the data type for the fields marked as ref.
  */
-export interface Ref<T> {
+export interface Ref<T> extends Pipeable.Pipeable {
   /**
    * Target object DXN.
    */
@@ -472,6 +473,11 @@ export class RefImpl<T> implements Ref<T> {
    */
   _getSavedTarget(): T | undefined {
     return this.#target;
+  }
+
+  pipe() {
+    // eslint-disable-next-line prefer-rest-params
+    return Pipeable.pipeArguments(this, arguments);
   }
 }
 

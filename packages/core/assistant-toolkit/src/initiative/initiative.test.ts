@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { describe, it } from '@effect/vitest';
+import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import { MemoizedAiService } from '@dxos/ai/testing';
@@ -20,15 +20,17 @@ import { Text } from '@dxos/schema';
 import { Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
+import * as Chat from '../chat/Chat';
 import { agent } from './functions';
-import * as Initiative from './Initiative';
+import * as Initiative from '.';
+import { Exit } from 'effect';
 
 ObjectId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayerWithTriggers({
   aiServicePreset: 'edge-remote',
-  functions: [...Initiative.functions],
-  types: [Initiative.Initiative, Blueprint.Blueprint, Trigger.Trigger, Text.Text],
+  functions: [...Initiative.getFunctions()],
+  types: [Initiative.Initiative, Chat.Chat, Blueprint.Blueprint, Trigger.Trigger, Text.Text],
   tracing: 'pretty',
 });
 
@@ -42,16 +44,15 @@ describe('Initiative', () => {
     Effect.fnUntraced(
       function* (_) {
         const initiative = yield* Database.Service.add(
-          yield* Initiative.make({
+          yield* Initiative.makeInitialized({
             name: 'Shopping list',
             spec: 'Keep a shopping list of items to buy.',
           }),
         );
-        invariant(initiative.chat?.target, 'Initiative chat queue not found.');
+        const chatQueue = initiative.chat?.target?.queue?.target as any;
+        invariant(chatQueue, 'Initiative chat queue not found.');
         yield* Database.Service.flush({ indexes: true });
-        const conversation = yield* acquireReleaseResource(
-          () => new AiConversation({ queue: initiative.chat?.target as any }),
-        );
+        const conversation = yield* acquireReleaseResource(() => new AiConversation({ queue: chatQueue }));
         yield* Effect.promise(() => conversation.context.open());
 
         yield* conversation.createRequest({
@@ -72,7 +73,7 @@ describe('Initiative', () => {
     Effect.fnUntraced(
       function* (_) {
         const initiative = yield* Database.Service.add(
-          yield* Initiative.make({
+          yield* Initiative.makeInitialized({
             name: 'Expense tracking',
             spec: trim`
               Keep a list of expenses in a markdown document (create artifact "Expenses").
@@ -111,7 +112,8 @@ describe('Initiative', () => {
         );
 
         const dispatcher = yield* TriggerDispatcher;
-        yield* dispatcher.invokeScheduledTriggers({ kinds: ['queue'], untilExhausted: true });
+        const invocations = yield* dispatcher.invokeScheduledTriggers({ kinds: ['queue'], untilExhausted: true });
+        expect(invocations.every((invocation) => Exit.isSuccess(invocation.result))).toBe(true);
 
         console.log(yield* Effect.promise(() => dumpInitiative(initiative)));
       },

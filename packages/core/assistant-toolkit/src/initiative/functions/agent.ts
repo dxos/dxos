@@ -5,11 +5,13 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { AiContextService, AiConversation } from '@dxos/assistant';
+import { AiContextService, AiConversation, type ContextBinding } from '@dxos/assistant';
 import { Database, Obj, Type } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
 import { TriggerEvent, defineFunction } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
+import { type Queue } from '@dxos/echo-db';
+import { type Message } from '@dxos/types';
 
 import * as Initiative from '../Initiative';
 
@@ -28,9 +30,14 @@ export default defineFunction({
     const initiative = yield* Database.Service.load(data.initiative);
     invariant(Obj.instanceOf(Initiative.Initiative, initiative));
     invariant(initiative.chat, 'Initiative has no chat.');
-    const chatQueue = yield* Database.Service.load(initiative.chat!);
+    const chatQueue = yield* initiative.chat.pipe(
+      Database.Service.load,
+      Effect.flatMap((chat) => Database.Service.load(chat.queue)),
+    );
     invariant(chatQueue, 'Initiative chat queue not found.');
-    const conversation = yield* acquireReleaseResource(() => new AiConversation({ queue: chatQueue as any }));
+    const conversation = yield* acquireReleaseResource(
+      () => new AiConversation({ queue: chatQueue as Queue<Message.Message | ContextBinding> }),
+    );
 
     const iniativesInContext = conversation.context.getObjects().filter(Obj.instanceOf(Initiative.Initiative));
     if (iniativesInContext.length !== 1) {
