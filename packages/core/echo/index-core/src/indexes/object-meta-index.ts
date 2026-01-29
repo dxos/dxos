@@ -20,6 +20,7 @@ export const ObjectMeta = Schema.Struct({
   spaceId: Schema.String,
   documentId: Schema.String,
   entityKind: Schema.String,
+  /** The versioned DXN of the type of the object. */
   typeDxn: Schema.String,
   deleted: Schema.Boolean,
   source: Schema.NullOr(Schema.String),
@@ -101,11 +102,15 @@ export class ObjectMetaIndex implements Index {
           return [];
         }
         const sql = yield* SqlClient.SqlClient;
-        const placeholders = typeDxns.map(() => '?').join(', ');
-        const rows = yield* sql.unsafe<ObjectMeta>(
-          `SELECT * FROM objectMeta WHERE spaceId = ? AND typeDxn IN (${placeholders})`,
-          [spaceId, ...typeDxns],
+        const typeWhere = sql.or(
+          typeDxns.map((typeDxn) => {
+            const parsedType = DXN.tryParse(typeDxn)?.asTypeDXN();
+            return parsedType && parsedType.version === undefined
+              ? sql.or([sql`typeDxn = ${typeDxn}`, sql`typeDxn LIKE ${`${typeDxn}:%`}`])
+              : sql`typeDxn = ${typeDxn}`;
+          }),
         );
+        const rows = yield* sql<ObjectMeta>`SELECT * FROM objectMeta WHERE spaceId = ${spaceId} AND ${typeWhere}`;
         return rows.map((row) => ({
           ...row,
           deleted: !!row.deleted,
@@ -131,11 +136,15 @@ export class ObjectMetaIndex implements Index {
           }));
         }
 
-        const placeholders = typeDxns.map(() => '?').join(', ');
-        const rows = yield* sql.unsafe<ObjectMeta>(
-          `SELECT * FROM objectMeta WHERE spaceId = ? AND typeDxn NOT IN (${placeholders})`,
-          [spaceId, ...typeDxns],
+        const typeWhere = sql.or(
+          typeDxns.map((typeDxn) => {
+            const parsedType = DXN.tryParse(typeDxn)?.asTypeDXN();
+            return parsedType && parsedType.version === undefined
+              ? sql.or([sql`typeDxn = ${typeDxn}`, sql`typeDxn LIKE ${`${typeDxn}:%`}`])
+              : sql`typeDxn = ${typeDxn}`;
+          }),
         );
+        const rows = yield* sql<ObjectMeta>`SELECT * FROM objectMeta WHERE spaceId = ${spaceId} AND NOT ${typeWhere}`;
         return rows.map((row) => ({
           ...row,
           deleted: !!row.deleted,
@@ -157,11 +166,10 @@ export class ObjectMetaIndex implements Index {
         }
         const sql = yield* SqlClient.SqlClient;
         const column = endpoint === 'source' ? 'source' : 'target';
-        const placeholders = anchorDxns.map(() => '?').join(', ');
-        const rows = yield* sql.unsafe<ObjectMeta>(
-          `SELECT * FROM objectMeta WHERE entityKind = 'relation' AND ${column} IN (${placeholders})`,
+        const rows = yield* sql<ObjectMeta>`SELECT * FROM objectMeta WHERE entityKind = 'relation' AND ${sql.in(
+          column,
           anchorDxns,
-        );
+        )}`;
         return rows.map((row) => ({
           ...row,
           deleted: !!row.deleted,
@@ -290,11 +298,7 @@ export class ObjectMetaIndex implements Index {
         }
 
         const sql = yield* SqlClient.SqlClient;
-        const placeholders = recordIds.map(() => '?').join(', ');
-        const rows = yield* sql.unsafe<ObjectMeta>(
-          `SELECT * FROM objectMeta WHERE recordId IN (${placeholders})`,
-          recordIds,
-        );
+        const rows = yield* sql<ObjectMeta>`SELECT * FROM objectMeta WHERE ${sql.in('recordId', recordIds)}`;
 
         return rows.map((row) => ({
           ...row,
