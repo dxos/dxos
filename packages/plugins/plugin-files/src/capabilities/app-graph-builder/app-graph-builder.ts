@@ -7,10 +7,10 @@ import * as Option from 'effect/Option';
 
 import { Capability, Common } from '@dxos/app-framework';
 import { Operation } from '@dxos/operation';
-import { CreateAtom, GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
+import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 
 import { meta } from '../../meta';
-import { FileCapabilities, type FilesSettingsProps, LocalFilesOperation } from '../../types';
+import { FileCapabilities, LocalFilesOperation } from '../../types';
 import { isLocalDirectory, isLocalEntity, isLocalFile } from '../../util';
 
 export default Capability.makeModule(
@@ -48,11 +48,8 @@ export default Capability.makeModule(
         id: `${meta.id}/root`,
         match: NodeMatcher.whenRoot,
         connector: (node, get) => {
-          const settingsStoreAtom = capabilities.atom(Common.Capability.SettingsStore);
-          const settingsStore = get(settingsStoreAtom)[0];
-          const settings = get(
-            CreateAtom.fromSignal(() => settingsStore?.getStore<FilesSettingsProps>(meta.id)?.value),
-          );
+          const settingsAtom = capabilities.get(FileCapabilities.Settings);
+          const settings = get(settingsAtom);
           return Effect.succeed(
             settings && settings.openLocalFiles
               ? [
@@ -110,10 +107,11 @@ export default Capability.makeModule(
                 ]
               : []),
           ]),
-        connector: () => {
-          const filesState = capabilities.get(FileCapabilities.State);
+        connector: (_node, get) => {
+          const stateAtom = capabilities.get(FileCapabilities.State);
+          const state = get(stateAtom);
           return Effect.succeed(
-            filesState.files.map((entity) => ({
+            state.files.map((entity) => ({
               id: entity.id,
               type: isLocalDirectory(entity) ? 'directory' : 'file',
               data: entity,

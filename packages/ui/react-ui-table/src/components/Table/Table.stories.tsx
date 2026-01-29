@@ -17,6 +17,7 @@ import { ViewEditor, translations as formTranslations } from '@dxos/react-ui-for
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { View, getSchemaFromPropertyDefinitions, getTypenameFromQuery } from '@dxos/schema';
 import { TestSchema, createObjectFactory } from '@dxos/schema/testing';
+import { withRegistry } from '@dxos/storybook-utils';
 
 import { useTestTableModel } from '../../testing';
 import { translations } from '../../translations';
@@ -141,6 +142,7 @@ const meta = {
   render: DefaultStory,
   decorators: [
     withTheme,
+    withRegistry,
     withClientProvider({
       types: [View.View, Table.Table],
       createIdentity: true,

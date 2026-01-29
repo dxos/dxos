@@ -255,7 +255,7 @@ class OperationInvokerImpl implements OperationInvokerInternal {
         return yield* Effect.fail(new NoHandlerError(op.meta.key));
       }
 
-      log('invoking operation', { key: op.meta.key, input });
+      log.info('invoking operation', { key: op.meta.key, input });
 
       // Build the effect with Operation.Service provided.
       let handlerEffect = handler(input).pipe(

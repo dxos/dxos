@@ -2,11 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
+import { RegistryContext } from '@effect-atom/atom-react';
 import { createContext } from '@radix-ui/react-context';
 import * as Match from 'effect/Match';
-import React, { type PropsWithChildren, useCallback, useMemo } from 'react';
+import React, { type PropsWithChildren, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
-import { useDefaultValue } from '@dxos/react-ui';
+import { useDefaultValue } from '@dxos/react-hooks';
 
 import {
   type Selection,
@@ -23,7 +24,7 @@ type SelectionContextValue = {
 };
 
 const [SelectionContextProvider, useSelectionContext] = createContext<SelectionContextValue>(SELECTION_NAME, {
-  selection: new SelectionManager(),
+  selection: undefined as unknown as SelectionManager,
 });
 
 /**
@@ -34,7 +35,8 @@ export const SelectionProvider = ({
   children,
   selection: propsSelection,
 }: PropsWithChildren<{ selection?: SelectionManager }>) => {
-  const selection = useDefaultValue(propsSelection, () => new SelectionManager());
+  const registry = useContext(RegistryContext);
+  const selection = useDefaultValue(propsSelection, () => new SelectionManager(registry));
   return <SelectionContextProvider selection={selection}>{children}</SelectionContextProvider>;
 };
 
@@ -46,6 +48,16 @@ export const useSelectionManager = () => {
   return selection;
 };
 
+const getDefaultResult = <T extends SelectionMode>(mode: T): SelectionResult<T> => {
+  return Match.type<Selection>().pipe(
+    Match.when({ mode: 'single' }, (s) => s.id),
+    Match.when({ mode: 'multi' }, (s) => s.ids),
+    Match.when({ mode: 'range' }, (s) => (s.from && s.to ? { from: s.from, to: s.to } : undefined)),
+    Match.when({ mode: 'multi-range' }, (s) => s.ranges),
+    Match.exhaustive,
+  )(defaultSelection(mode)) as SelectionResult<T>;
+};
+
 /**
  * Get the selected objects for a given context.
  */
@@ -54,17 +66,26 @@ export const useSelected = <T extends SelectionMode>(
   mode: T = 'multi' as T,
 ): SelectionResult<T> => {
   const { selection } = useSelectionContext(SELECTION_NAME);
-  if (contextId) {
-    return selection.getSelected(contextId, mode);
-  }
+  const [state, setState] = useState<SelectionResult<T>>(() =>
+    contextId && selection ? selection.getSelected(contextId, mode) : getDefaultResult(mode),
+  );
 
-  return Match.type<Selection>().pipe(
-    Match.when({ mode: 'single' }, (s) => s.id),
-    Match.when({ mode: 'multi' }, (s) => s.ids),
-    Match.when({ mode: 'range' }, (s) => (s.from && s.to ? { from: s.from, to: s.to } : undefined)),
-    Match.when({ mode: 'multi-range' }, (s) => s.ranges),
-    Match.exhaustive,
-  )(defaultSelection(mode)) as any;
+  useEffect(() => {
+    if (!contextId || !selection) {
+      setState(getDefaultResult(mode));
+      return;
+    }
+
+    // Set initial state.
+    setState(selection.getSelected(contextId, mode));
+
+    // Subscribe to changes.
+    return selection.subscribe(() => {
+      setState(selection.getSelected(contextId, mode));
+    });
+  }, [selection, contextId, mode]);
+
+  return state;
 };
 
 export type UseSelectionActions = {
@@ -85,6 +106,9 @@ export const useSelectionActions = (contextIds: string[], mode: SelectionMode = 
 
   const singleSelect = useCallback(
     (id: string) => {
+      if (!selection) {
+        return;
+      }
       for (const contextId of stableContextIds) {
         selection.updateSingle(contextId, id);
       }
@@ -94,6 +118,9 @@ export const useSelectionActions = (contextIds: string[], mode: SelectionMode = 
 
   const multiSelect = useCallback(
     (ids: string[]) => {
+      if (!selection) {
+        return;
+      }
       for (const contextId of stableContextIds) {
         selection.updateMulti(contextId, ids);
       }
@@ -103,6 +130,9 @@ export const useSelectionActions = (contextIds: string[], mode: SelectionMode = 
 
   const rangeSelect = useCallback(
     (from: string, to: string) => {
+      if (!selection) {
+        return;
+      }
       for (const contextId of stableContextIds) {
         selection.updateRange(contextId, from, to);
       }
@@ -112,6 +142,9 @@ export const useSelectionActions = (contextIds: string[], mode: SelectionMode = 
 
   const toggle = useCallback(
     (id: string) => {
+      if (!selection) {
+        return;
+      }
       for (const contextId of stableContextIds) {
         selection.toggleSelection(contextId, id);
       }
@@ -120,6 +153,9 @@ export const useSelectionActions = (contextIds: string[], mode: SelectionMode = 
   );
 
   const clear = useCallback(() => {
+    if (!selection) {
+      return;
+    }
     for (const contextId of stableContextIds) {
       selection.clearSelection(contextId);
     }

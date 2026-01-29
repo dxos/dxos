@@ -27,7 +27,6 @@ void (async () => {
       .option('sourcemap', { type: 'boolean', default: true, describe: 'Output sourcemaps' })
       .option('watch', { type: 'boolean', default: false, describe: 'Watch mode' })
       .option('alias', { type: 'string', default: '{}', describe: 'Alias imports (JSON string)' })
-      .option('preactSignalTracking', { type: 'boolean', default: false, describe: 'Enable preact signal tracking' })
       .help().argv;
 
     // Parse alias JSON string if provided.
@@ -52,7 +51,6 @@ void (async () => {
       sourcemap: argv.sourcemap as boolean,
       watch: argv.watch as boolean,
       alias,
-      preactSignalTracking: argv.preactSignalTracking as boolean,
       verbose: argv.verbose as boolean,
     };
     const result = await main(options);

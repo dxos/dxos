@@ -2,10 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Atom } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 
 import { Capability, Common } from '@dxos/app-framework';
-import { live } from '@dxos/live-object';
 
 import { type SimpleLayoutState } from '../../types';
 import { SimpleLayoutState as SimpleLayoutStateCapability } from '../../types';
@@ -23,38 +23,25 @@ export type SimpleLayoutStateOptions = {
 
 export default Capability.makeModule(({ initialState }: SimpleLayoutStateOptions = {}) =>
   Effect.sync(() => {
-    const state = live<SimpleLayoutState>({ ...defaultState, ...initialState });
+    const stateAtom = Atom.make<SimpleLayoutState>({ ...defaultState, ...initialState });
 
-    const layout = live<Common.Capability.Layout>({
-      get mode() {
-        return 'simple';
-      },
-      get dialogOpen() {
-        return state.dialogOpen;
-      },
-      get sidebarOpen() {
-        return false;
-      },
-      get complementarySidebarOpen() {
-        return false;
-      },
-      get workspace() {
-        return state.workspace;
-      },
-      get active() {
-        return state.active ? [state.active] : [];
-      },
-      get inactive() {
-        return [];
-      },
-      get scrollIntoView() {
-        return undefined;
-      },
+    const layoutAtom = Atom.make((get): Common.Capability.Layout => {
+      const state = get(stateAtom);
+      return {
+        mode: 'simple',
+        dialogOpen: state.dialogOpen,
+        sidebarOpen: false,
+        complementarySidebarOpen: false,
+        workspace: state.workspace,
+        active: state.active ? [state.active] : [],
+        inactive: [],
+        scrollIntoView: undefined,
+      };
     });
 
     return [
-      Capability.contributes(SimpleLayoutStateCapability, state),
-      Capability.contributes(Common.Capability.Layout, layout),
+      Capability.contributes(SimpleLayoutStateCapability, stateAtom),
+      Capability.contributes(Common.Capability.Layout, layoutAtom),
     ];
   }),
 );

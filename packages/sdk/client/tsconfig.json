@@ -77,9 +77,6 @@
       "path": "../../core/echo/indexing"
     },
     {
-      "path": "../../core/echo/live-object"
-    },
-    {
       "path": "../../core/halo/credentials"
     },
     {

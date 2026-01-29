@@ -11,8 +11,6 @@
   "type": "module",
   "dependencies": {
     "@dxos/echo": "workspace:*",
-    "@dxos/echo-signals": "workspace:*",
-    "@dxos/live-object": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-client": "workspace:*",

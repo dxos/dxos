@@ -72,6 +72,13 @@ type QueryItem = {
 
   // For objects from queues.
   data: Obj.JSON | null;
+
+  /**
+   * Relevance rank for this item.
+   * Higher values indicate better matches for FTS/vector searches.
+   * Defaults to 1 for non-ranked queries (predicate matches).
+   */
+  rank: number;
 };
 
 const QueryItem = Object.freeze({
@@ -270,8 +277,7 @@ export class QueryExecutor extends Resource {
         queueNamespace: item.queueNamespace ?? undefined,
         spaceId: item.spaceId,
 
-        // TODO(dmaretskyi): Plumb through the rank.
-        rank: 0,
+        rank: item.rank,
 
         documentJson: item.doc ? JSON.stringify(item.doc) : item.data ? JSON.stringify(item.data) : undefined,
       }),
@@ -446,9 +452,8 @@ export class QueryExecutor extends Resource {
       }
 
       case 'TextSelector': {
-        // TODO(dmaretskyi): ranking https://sqlite.org/fts5.html#the_bm25_function
-        // TODO(dmaretskyi): type + FTS queries would be very common so we should support those, maybe chunk the fts index
-        // TODO(dmaretskyi): nice to have matched text snippets/highlighting
+        // TODO(dmaretskyi): type + FTS queries would be very common so we should support those, maybe chunk the fts index.
+        // TODO(dmaretskyi): nice to have matched text snippets/highlighting.
         if (step.selector.searchKind === 'full-text' && this._indexer2 && this._runtime) {
           // Use indexer2 for full-text search.
           const beginIndexQuery = performance.now();
@@ -483,6 +488,9 @@ export class QueryExecutor extends Resource {
           const queueResults = textResults.filter((r) => r.queueId);
           const spaceResults = textResults.filter((r) => !r.queueId);
 
+          // Build a map from recordId to rank for all FTS results.
+          const rankMap = new Map(textResults.map((r) => [r.recordId, r.rank]));
+
           // Load queue items from indexed snapshots.
           let queueItems: QueryItem[] = [];
           if (queueResults.length > 0) {
@@ -506,6 +514,7 @@ export class QueryExecutor extends Resource {
                   documentId: null,
                   doc: null,
                   data: snapshot as Obj.JSON,
+                  rank: rankMap.get(result.recordId) ?? 1,
                 };
               })
               .filter(isNonNullable);
@@ -515,7 +524,12 @@ export class QueryExecutor extends Resource {
           const spaceItems = await Promise.all(
             spaceResults.map(async (result): Promise<QueryItem | null> => {
               const dxn = DXN.fromLocalObjectId(result.objectId);
-              return this._loadFromDXN(dxn, { sourceSpaceId: result.spaceId as SpaceId });
+              const item = await this._loadFromDXN(dxn, { sourceSpaceId: result.spaceId as SpaceId });
+              if (item) {
+                // Override the default rank with the FTS rank.
+                item.rank = rankMap.get(result.recordId) ?? 1;
+              }
+              return item;
             }),
           );
 
@@ -860,8 +874,13 @@ export class QueryExecutor extends Resource {
         const comparison = this._compareByProperty(a, b, order.property);
         return order.direction === 'desc' ? -comparison : comparison;
       }
+      case 'rank': {
+        // Higher rank = better match. By default, descending order (best first).
+        const comparison = a.rank - b.rank;
+        return order.direction === 'desc' ? -comparison : comparison;
+      }
       default:
-        // Should never reach here with proper TypeScript types
+        // Should never reach here with proper TypeScript types.
         return 0;
     }
   }
@@ -952,6 +971,7 @@ export class QueryExecutor extends Resource {
       queueNamespace: null,
       data: null,
       doc: object,
+      rank: hit.rank,
     };
   }
 
@@ -985,6 +1005,7 @@ export class QueryExecutor extends Resource {
         queueNamespace: null,
         data: null,
         doc: inlineObject,
+        rank: 1,
       };
     }
 
@@ -1014,6 +1035,7 @@ export class QueryExecutor extends Resource {
       queueNamespace: null,
       data: null,
       doc: object,
+      rank: 1,
     };
   }
 }

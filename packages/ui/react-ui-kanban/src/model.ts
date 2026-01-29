@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { batch, effect, signal, untracked } from '@preact/signals-core';
+import { Atom, type Registry } from '@effect-atom/atom-react';
 
 import { Resource } from '@dxos/context';
 import { Obj } from '@dxos/echo';
@@ -29,22 +29,75 @@ export type ArrangedCards<T extends BaseKanbanItem = { id: string }> = {
   cards: T[];
 }[];
 
-export type KanbanModelProps = {
+/**
+ * Callback type for wrapping mutations in Obj.change().
+ * Contains separate callbacks for kanban object and item mutations.
+ */
+export type KanbanChangeCallback<T extends BaseKanbanItem> = {
+  /** Callback to wrap kanban object mutations. */
+  kanban: (mutate: (mutableKanban: Kanban.Kanban) => void) => void;
+  /** Sets a field on an item, wrapping in Obj.change() if needed. */
+  setItemField: (item: T, field: JsonProp, value: unknown) => void;
+};
+
+/**
+ * Creates a change callback for ECHO-backed kanban and items.
+ * Use this when the kanban and items are stored in the ECHO database.
+ */
+export const createEchoChangeCallback = <T extends BaseKanbanItem>(kanban: Kanban.Kanban): KanbanChangeCallback<T> => ({
+  kanban: (mutate) => Obj.change(kanban, (mutableKanban) => mutate(mutableKanban as unknown as Kanban.Kanban)),
+  setItemField: (item, field, value) => {
+    if (Obj.isObject(item)) {
+      Obj.change(item, (mutableItem) => {
+        (mutableItem as Record<JsonProp, unknown>)[field] = value;
+      });
+    } else {
+      (item as Record<JsonProp, unknown>)[field] = value;
+    }
+  },
+});
+
+/**
+ * Creates a change callback that directly mutates objects without wrapping.
+ * Use this for plain JavaScript objects (tests, non-ECHO scenarios).
+ */
+export const createDirectChangeCallback = <T extends BaseKanbanItem>(
+  kanban: Kanban.Kanban,
+): KanbanChangeCallback<T> => ({
+  kanban: (mutate) => mutate(kanban),
+  setItemField: (item, field, value) => {
+    (item as Record<JsonProp, unknown>)[field] = value;
+  },
+});
+
+export type KanbanModelProps<T extends BaseKanbanItem> = {
+  registry: Registry.Registry;
   object: Kanban.Kanban;
   projection: ProjectionModel;
+  /**
+   * Callbacks to wrap mutations in Obj.change().
+   * Use createEchoChangeCallback() for ECHO-backed objects or createDirectChangeCallback() for plain objects.
+   */
+  change: KanbanChangeCallback<T>;
 };
 
 export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Resource {
+  private readonly _registry: Registry.Registry;
   private readonly _object: Kanban.Kanban;
   private readonly _projection: ProjectionModel;
+  private readonly _change: KanbanChangeCallback<T>;
 
-  private readonly _items = signal<T[]>([]);
-  private readonly _cards = signal<ArrangedCards<T>>([]);
+  private readonly _items: Atom.Writable<T[]>;
+  private readonly _cards: Atom.Writable<ArrangedCards<T>>;
 
-  constructor({ object, projection }: KanbanModelProps) {
+  constructor({ registry, object, projection, change }: KanbanModelProps<T>) {
     super();
+    this._registry = registry;
     this._object = object;
     this._projection = projection;
+    this._change = change;
+    this._items = Atom.make<T[]>([]);
+    this._cards = Atom.make<ArrangedCards<T>>([]);
   }
 
   get id() {
@@ -75,25 +128,40 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
   }
 
   /**
-   * @reactive Gets the current items.
+   * Atom for reactive access to items.
    */
-  get items() {
-    return this._items.value;
-  }
-
-  set items(items: T[]) {
-    untracked(() => {
-      this._items.value = items;
-      this._moveInvalidItemsToUncategorized();
-      this._cards.value = this._computeArrangement();
-    });
+  get items(): Atom.Atom<T[]> {
+    return this._items;
   }
 
   /**
-   * @reactive Gets the current arrangement of kanban items.
+   * Gets the current items value.
    */
-  get arrangedCards() {
-    return this._cards.value;
+  getItems(): T[] {
+    return this._registry.get(this._items);
+  }
+
+  /**
+   * Sets the items and recomputes the arrangement.
+   */
+  setItems(items: T[]): void {
+    this._registry.set(this._items, items);
+    this._moveInvalidItemsToUncategorized();
+    this._registry.set(this._cards, this._computeArrangement());
+  }
+
+  /**
+   * Atom for reactive access to the arranged cards.
+   */
+  get cards(): Atom.Atom<ArrangedCards<T>> {
+    return this._cards;
+  }
+
+  /**
+   * Gets the current arrangement of kanban items.
+   */
+  getCards(): ArrangedCards<T> {
+    return this._registry.get(this._cards);
   }
 
   //
@@ -102,30 +170,48 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
 
   protected override async _open(): Promise<void> {
     await this._object.view.load();
-    this._computeArrangement();
-    this.initializeEffects();
+    this._registry.set(this._cards, this._computeArrangement());
+    this._initializeSubscriptions();
   }
 
-  private initializeEffects(): void {
-    const arrangementWatcher = effect(() => {
-      // Subscribe to changes in:
-      // - the current column field selection
-      const pivotPath = this.columnFieldPath;
-      // - the column field selection options
-      void this._getSelectOptions();
-      // - the list of items
-      const items = this._items.value;
-      // - and each item's column field value
-      if (pivotPath) {
-        for (const item of items) {
-          item[pivotPath];
-        }
+  private _initializeSubscriptions(): void {
+    // Track item subscriptions for cleanup.
+    const itemSubscriptions = new Map<string, () => void>();
+
+    const recomputeArrangement = () => {
+      this._registry.set(this._cards, this._computeArrangement());
+    };
+
+    // Subscribe to changes in the items list to manage individual item subscriptions.
+    // Note: We don't call recomputeArrangement() here because setItems() handles it.
+    const itemsUnsubscribe = this._registry.subscribe(this._items, () => {
+      // Unsubscribe from old items.
+      for (const [id, unsub] of itemSubscriptions) {
+        unsub();
+        itemSubscriptions.delete(id);
       }
 
-      // Finally, recompute arrangement.
-      this._cards.value = this._computeArrangement();
+      // Subscribe to each item's changes.
+      const items = this._registry.get(this._items);
+      for (const item of items) {
+        if (Obj.isObject(item) && !itemSubscriptions.has(item.id)) {
+          const unsub = Obj.subscribe(item, recomputeArrangement);
+          itemSubscriptions.set(item.id, unsub);
+        }
+      }
     });
-    this._ctx.onDispose(arrangementWatcher);
+
+    // Subscribe to changes in the projection fields (e.g., pivot field options updated).
+    // This fixes missing reactivity for pivot field changes.
+    const fieldsUnsubscribe = this._registry.subscribe(this._projection.fields, recomputeArrangement);
+
+    this._ctx.onDispose(() => {
+      itemsUnsubscribe();
+      fieldsUnsubscribe();
+      for (const unsub of itemSubscriptions.values()) {
+        unsub();
+      }
+    });
   }
 
   //
@@ -149,28 +235,32 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
    * Supports both reordering columns and moving cards between columns.
    */
   public handleRearrange: StackItemRearrangeHandler = (source, target, closestEdge) => {
-    batch(() => {
-      const nextArrangement = this.arrangedCards;
-      const sourceColumn = this._findColumn(source.id, nextArrangement);
-      const targetColumn = this._findColumn(target.id, nextArrangement);
+    // Deep clone to ensure reactivity (new array reference triggers atom notifications).
+    const nextArrangement = this.getCards().map((col) => ({
+      columnValue: col.columnValue,
+      cards: [...col.cards],
+    }));
+    const sourceColumn = this._findColumn(source.id, nextArrangement);
+    const targetColumn = this._findColumn(target.id, nextArrangement);
 
-      if (!sourceColumn || !targetColumn) {
-        return;
-      }
+    if (!sourceColumn || !targetColumn) {
+      return;
+    }
 
-      if (source.type === 'column' && target.type === 'column') {
-        this._handleColumnReorder(source, target, closestEdge as 'left' | 'right');
-        return;
-      }
+    if (source.type === 'column' && target.type === 'column') {
+      this._handleColumnReorder(source, target, closestEdge as 'left' | 'right');
+      return;
+    }
 
-      this._handleCardMove(sourceColumn, targetColumn, source, target, closestEdge as 'top' | 'bottom');
+    this._handleCardMove(sourceColumn, targetColumn, source, target, closestEdge as 'top' | 'bottom');
 
-      this.object.arrangement = nextArrangement.map(({ columnValue, cards }) => ({
+    this._change.kanban((mutableKanban) => {
+      mutableKanban.arrangement = nextArrangement.map(({ columnValue, cards }) => ({
         columnValue,
         ids: cards.map(({ id }) => id),
       }));
-      this._cards.value = nextArrangement;
     });
+    this._registry.set(this._cards, nextArrangement);
   };
 
   //
@@ -191,13 +281,11 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
       return [];
     }
 
-    return untracked(() => {
-      return computeArrangement<T>({
-        object: this.object,
-        items: this._items.value,
-        pivotPath: this.columnFieldPath,
-        selectOptions: options,
-      });
+    return computeArrangement<T>({
+      object: this.object,
+      items: this._registry.get(this._items),
+      pivotPath: this.columnFieldPath,
+      selectOptions: options,
     });
   }
 
@@ -205,13 +293,17 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
    * Moves items with invalid column values to uncategorized by setting their column field to undefined.
    */
   private _moveInvalidItemsToUncategorized(): void {
-    const validColumnValues = new Set(this._getSelectOptions()?.map((opt) => opt.id));
     const columnPath = this.columnFieldPath;
-    for (const item of this._items.value) {
-      const itemColumn = item[columnPath as keyof typeof item];
-      if (itemColumn && !validColumnValues.has(itemColumn as string)) {
+    if (columnPath === undefined) {
+      return;
+    }
+
+    const validColumnValues = new Set(this._getSelectOptions()?.map((opt) => opt.id));
+    for (const item of this._registry.get(this._items)) {
+      const itemColumn = item[columnPath];
+      if (itemColumn && !validColumnValues.has(itemColumn)) {
         // Set to undefined which will place it in uncategorized.
-        item[columnPath as keyof typeof item] = undefined as any;
+        this._change.setItemField(item, columnPath, undefined);
       }
     }
   }
@@ -274,8 +366,10 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
 
     const columnField = this.columnFieldPath;
     const [movedCard] = sourceColumn.cards.splice(sourceCardIndex, 1);
-    (movedCard[columnField as keyof typeof movedCard] as any) =
-      targetColumn.columnValue === UNCATEGORIZED_VALUE ? undefined : targetColumn.columnValue;
+    if (columnField !== undefined) {
+      const newValue = targetColumn.columnValue === UNCATEGORIZED_VALUE ? undefined : targetColumn.columnValue;
+      this._change.setItemField(movedCard, columnField, newValue);
+    }
 
     let insertIndex;
     if (source.type === 'card' && target.type === 'column') {

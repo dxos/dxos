@@ -11,8 +11,8 @@ import { performInvitation } from '@dxos/client-services/testing';
 import { Context } from '@dxos/context';
 import { Filter, Obj, Ref, Type } from '@dxos/echo';
 import { getObjectCore } from '@dxos/echo-db';
+import { EncodedReference } from '@dxos/echo-protocol';
 import { SpaceId } from '@dxos/keys';
-import { type Live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { range } from '@dxos/util';
 
@@ -41,6 +41,7 @@ describe('Spaces', () => {
 
   test('creates a space', async () => {
     const [client] = await createInitializedClients(1, { storage: true });
+    await registerTypes(client);
 
     // TODO(burdon): Extend basic queries.
     const space = await client.spaces.create();
@@ -81,6 +82,7 @@ describe('Spaces', () => {
 
   test('creates a space re-opens the client', async () => {
     const [client] = await createInitializedClients(1, { storage: true });
+    await registerTypes(client);
 
     let objectId: string;
     {
@@ -238,6 +240,7 @@ describe('Spaces', () => {
 
   test('objects are owned by spaces', async () => {
     const [client] = await createInitializedClients(1, { storage: true });
+    await registerTypes(client);
 
     const space = await client.spaces.create();
 
@@ -247,6 +250,7 @@ describe('Spaces', () => {
 
   test('spaces can be opened and closed', async () => {
     const [client] = await createInitializedClients(1);
+    await registerTypes(client);
 
     const space = await client.spaces.create();
 
@@ -278,11 +282,13 @@ describe('Spaces', () => {
     const [client1, server1] = testBuilder.createClientServer(host);
     void server1.open();
     await client1.initialize();
+    await registerTypes(client1);
     onTestFinished(() => client1.destroy());
 
     const [client2, server2] = testBuilder.createClientServer(host);
     void server2.open();
     await client2.initialize();
+    await registerTypes(client2);
     onTestFinished(() => client2.destroy());
 
     log.info('ready');
@@ -443,6 +449,7 @@ describe('Spaces', () => {
 
   test('queries respect space boundaries', async () => {
     const [client] = await createInitializedClients(1, { storage: true });
+    await registerTypes(client);
 
     const spaceA = await client.spaces.create();
     const spaceB = await client.spaces.create();
@@ -455,12 +462,16 @@ describe('Spaces', () => {
 
     const [wait, inc] = latch({ count: 2, timeout: 1000 });
 
+    const getTypename = (obj: any) => {
+      const typeRef = getObjectCore(obj).getType();
+      return typeRef ? EncodedReference.toDXN(typeRef).asTypeDXN()?.type : undefined;
+    };
+
     spaceA.db.query(Filter.everything()).subscribe(
       (query) => {
         const objects = query.results;
         expect(objects).to.have.length(2);
-        expect(objects.some((obj) => getObjectCore(obj).getType()?.objectId === Type.getTypename(SpaceProperties))).to
-          .be.true;
+        expect(objects.some((obj) => getTypename(obj) === Type.getTypename(SpaceProperties))).to.be.true;
         expect(objects.some((obj) => obj === objA)).to.be.true;
         inc();
       },
@@ -471,8 +482,7 @@ describe('Spaces', () => {
       (query) => {
         const objects = query.results;
         expect(objects).to.have.length(2);
-        expect(objects.some((obj) => getObjectCore(obj).getType()?.objectId === Type.getTypename(SpaceProperties))).to
-          .be.true;
+        expect(objects.some((obj) => getTypename(obj) === Type.getTypename(SpaceProperties))).to.be.true;
         expect(objects.some((obj) => obj === objB)).to.be.true;
         inc();
       },
@@ -484,6 +494,7 @@ describe('Spaces', () => {
 
   test('object receives updates from another peer', async () => {
     const [host, guest] = await createInitializedClients(2);
+    await Promise.all([host, guest].map(registerTypes));
 
     const hostSpace = await host.spaces.create();
     await hostSpace.waitUntilReady();
@@ -583,10 +594,10 @@ describe('Spaces', () => {
   };
 
   const registerTypes = async (client: Client) => {
-    await client.addTypes([TestSchema.DocumentType, TestSchema.TextV0Type]);
+    await client.addTypes([Type.Expando, TestSchema.DocumentType, TestSchema.TextV0Type]);
   };
 
-  const createDocument = (): Live<TestSchema.DocumentType> => {
+  const createDocument = (): TestSchema.DocumentType => {
     const text = Obj.make(TestSchema.TextV0Type, { content: 'Hello, world!' });
     return Obj.make(TestSchema.DocumentType, {
       title: 'Test document',

@@ -6,14 +6,13 @@ import type * as Schema from 'effect/Schema';
 
 import { type EchoSchema } from '@dxos/echo/internal';
 import { type AnyLiveObject } from '@dxos/echo-db';
-import { type Live } from '@dxos/live-object';
 
 // TODO(burdon): Use echo-schema types.
 export type TestObject = { id: string } & Record<string, any>;
 
 export type TestSchemaMap<T extends string = string> = Record<T, EchoSchema | Schema.Schema.AnyNoContext>;
 
-export type TestObjectProvider<T extends string = string> = (type: T) => Promise<Live<any>[]>;
+export type TestObjectProvider<T extends string = string> = (type: T) => Promise<any[]>;
 
 export type TestGeneratorMap<T extends string = string> = Record<
   T,

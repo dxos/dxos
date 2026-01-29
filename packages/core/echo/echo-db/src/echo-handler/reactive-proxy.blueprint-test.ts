@@ -6,13 +6,10 @@ import type * as Schema from 'effect/Schema';
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 
 import { Obj, Type } from '@dxos/echo';
-import { getTypeReference } from '@dxos/echo/internal';
+import { getSchemaDXN } from '@dxos/echo/internal';
+import { getProxyHandler } from '@dxos/echo/internal';
 import { TestSchema, updateCounter } from '@dxos/echo/testing';
-import { registerSignalsRuntime } from '@dxos/echo-signals';
-import { getProxyHandler } from '@dxos/live-object';
 import { log } from '@dxos/log';
-
-registerSignalsRuntime();
 
 const TEST_OBJECT: TestSchema.ExampleSchema = {
   string: 'foo',
@@ -200,9 +197,10 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
         expect(() => change(obj, (o) => (o.nestedArray![1].field = 1 as any))).to.throw();
       });
 
-      test('getTypeReference', async () => {
+      test('getSchemaDXN', async () => {
         const obj = await createObject({ number: 42 });
-        expect(Obj.getTypeDXN(obj)?.toString()).to.deep.eq(getTypeReference(Obj.getSchema(obj))?.toDXN().toString());
+        const schema = Obj.getSchema(obj);
+        expect(Obj.getTypeDXN(obj)?.toString()).to.deep.eq(schema && getSchemaDXN(schema)?.toString());
       });
 
       test('can assign arrays with objects', async () => {
@@ -270,9 +268,7 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
         });
         expect(obj.other.string).to.eq('qux');
 
-        using updates = updateCounter(() => {
-          obj.other.string;
-        });
+        using updates = updateCounter(obj);
 
         expect(updates.count, 'update count').to.eq(0);
         change(other, (o) => {
@@ -372,9 +368,7 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
       // Not a typical use case, but might come up when interacting with 3rd party libraries.
       test('defineProperty', async () => {
         const obj = await createObject();
-        using updates = updateCounter(() => {
-          obj.string;
-        });
+        using updates = updateCounter(obj);
 
         change(obj, () => {
           Object.defineProperty(obj, 'string', { value: 'bar' });
@@ -426,9 +420,7 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
       describe('signal updates', () => {
         test('are synchronous', async () => {
           const obj = await createObject({ string: 'bar' });
-          using updates = updateCounter(() => {
-            obj.string;
-          });
+          using updates = updateCounter(obj);
           expect(updates.count, 'update count').to.eq(0);
 
           change(obj, (o) => {
@@ -439,9 +431,7 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
 
         test('in nested objects', async () => {
           const obj = await createObject({ nested: { field: 'bar' } });
-          using updates = updateCounter(() => {
-            obj.nested!.field; // TODO(burdon): Better way to demonstrate this? E.g., log?
-          });
+          using updates = updateCounter(obj);
           expect(updates.count, 'update count').to.eq(0);
 
           change(obj, (o) => {
@@ -452,9 +442,7 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
 
         test('in nested arrays', async () => {
           const obj = await createObject({ stringArray: ['7'] });
-          using updates = updateCounter(() => {
-            obj.stringArray![0];
-          });
+          using updates = updateCounter(obj);
           expect(updates.count, 'update count').to.eq(0);
 
           change(obj, (o) => {
@@ -465,9 +453,7 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
 
         test('in nested arrays with objects', async () => {
           const obj = await createObject({ nestedArray: [{ field: 'bar' }] });
-          using updates = updateCounter(() => {
-            obj.nestedArray![0].field;
-          });
+          using updates = updateCounter(obj);
           expect(updates.count, 'update count').to.eq(0);
 
           change(obj, (o) => {
@@ -478,9 +464,7 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
 
         test('in nested arrays with arrays', async () => {
           const obj = await createObject({ twoDimNumberArray: [[1, 2, 3]] });
-          using updates = updateCounter(() => {
-            obj.twoDimNumberArray![0][0];
-          });
+          using updates = updateCounter(obj);
           expect(updates.count, 'update count').to.eq(0);
 
           change(obj, (o) => {
@@ -491,9 +475,7 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
 
         test('Object.keys', async () => {
           const obj = await createObject({ number: 42 });
-          using updates = updateCounter(() => {
-            Object.keys(obj);
-          });
+          using updates = updateCounter(obj);
           expect(updates.count).to.eq(0);
 
           change(obj, (o) => {
@@ -518,9 +500,7 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
 
         test('set by index', async () => {
           const { array, parent } = await createReactiveArray(['1', '2', '3']);
-          using updates = updateCounter(() => {
-            array[0];
-          });
+          using updates = updateCounter(parent);
 
           change(parent, (o) => {
             o.stringArray![0] = '2';
@@ -531,9 +511,7 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
 
         test('length', async () => {
           const { array, parent } = await createReactiveArray(['1', '2', '3']);
-          using updates = updateCounter(() => {
-            array[0];
-          });
+          using updates = updateCounter(parent);
           expect(array.length).to.eq(3);
 
           change(parent, (o) => {
@@ -545,9 +523,7 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
 
         test('set length', async () => {
           const { array, parent } = await createReactiveArray(['1', '2', '3']);
-          using updates = updateCounter(() => {
-            array[0];
-          });
+          using updates = updateCounter(parent);
 
           change(parent, (o) => {
             o.stringArray!.length = 2;
@@ -558,9 +534,7 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
 
         test('push', async () => {
           const { array, parent } = await createReactiveArray(['1', '2', '3']);
-          using updates = updateCounter(() => {
-            array[0];
-          });
+          using updates = updateCounter(parent);
 
           change(parent, (o) => {
             o.stringArray!.push('4');
@@ -571,9 +545,7 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
 
         test('pop', async () => {
           const { array, parent } = await createReactiveArray(['1', '2', '3']);
-          using updates = updateCounter(() => {
-            array[0];
-          });
+          using updates = updateCounter(parent);
 
           let value: string | undefined;
           change(parent, (o) => {
@@ -586,9 +558,7 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
 
         test('shift', async () => {
           const { array, parent } = await createReactiveArray(['1', '2', '3']);
-          using updates = updateCounter(() => {
-            array[0];
-          });
+          using updates = updateCounter(parent);
 
           let value: string | undefined;
           change(parent, (o) => {
@@ -601,9 +571,7 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
 
         test('unshift', async () => {
           const { array, parent } = await createReactiveArray(['1', '2', '3']);
-          using updates = updateCounter(() => {
-            array[0];
-          });
+          using updates = updateCounter(parent);
 
           let newLength: number = 0;
           change(parent, (o) => {
@@ -616,9 +584,7 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
 
         test('splice', async () => {
           const { array, parent } = await createReactiveArray(['1', '2', '3']);
-          using updates = updateCounter(() => {
-            array[0];
-          });
+          using updates = updateCounter(parent);
 
           let removed: string[] = [];
           change(parent, (o) => {
@@ -631,9 +597,7 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
 
         test('sort', async () => {
           const { array, parent } = await createReactiveArray(['3', '2', '1']);
-          using updates = updateCounter(() => {
-            array[0];
-          });
+          using updates = updateCounter(parent);
 
           let returnValue: string[] = [];
           change(parent, (o) => {
@@ -652,9 +616,7 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
 
         test('reverse', async () => {
           const { array, parent } = await createReactiveArray(['1', '2', '3']);
-          using updates = updateCounter(() => {
-            array[0];
-          });
+          using updates = updateCounter(parent);
 
           let returnValue: string[] = [];
           change(parent, (o) => {
@@ -666,10 +628,8 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
         });
 
         test('map', async () => {
-          const { array } = await createReactiveArray(['1', '2', '3']);
-          using updates = updateCounter(() => {
-            array[0];
-          });
+          const { array, parent } = await createReactiveArray(['1', '2', '3']);
+          using updates = updateCounter(parent);
 
           const result = array.map((value) => String(Number(value) * 2));
           expect(Array.isArray(result)).to.be.true;
@@ -679,10 +639,8 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
         });
 
         test('flatMap', async () => {
-          const { array } = await createReactiveArray(['1', '2', '3']);
-          using updates = updateCounter(() => {
-            array[0];
-          });
+          const { array, parent } = await createReactiveArray(['1', '2', '3']);
+          using updates = updateCounter(parent);
 
           const result = array.flatMap((value) => [value, String(Number(value) * 2)]);
           expect(Array.isArray(result)).to.be.true;
@@ -694,9 +652,7 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
         test('flat', async () => {
           const obj = await createObject({ twoDimNumberArray: [[1], [2, 3]] });
           const array = obj.twoDimNumberArray!;
-          using updates = updateCounter(() => {
-            array[0];
-          });
+          using updates = updateCounter(obj);
 
           const result = array.flat();
           expect(Array.isArray(result)).to.be.true;
@@ -706,10 +662,8 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
         });
 
         test('forEach', async () => {
-          const { array } = await createReactiveArray(['1', '2', '3']);
-          using updates = updateCounter(() => {
-            array[0];
-          });
+          const { array, parent } = await createReactiveArray(['1', '2', '3']);
+          using updates = updateCounter(parent);
 
           let sum = 0;
           array.forEach((value) => {
@@ -720,10 +674,8 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
         });
 
         test('spreading', async () => {
-          const { array } = await createReactiveArray(['1', '2', '3']);
-          using updates = updateCounter(() => {
-            array[0];
-          });
+          const { array, parent } = await createReactiveArray(['1', '2', '3']);
+          using updates = updateCounter(parent);
 
           const result = [...array];
           expect(Array.isArray(result)).to.be.true;
@@ -733,10 +685,8 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
         });
 
         test('values', async () => {
-          const { array } = await createReactiveArray(['1', '2', '3']);
-          using updates = updateCounter(() => {
-            array[0];
-          });
+          const { array, parent } = await createReactiveArray(['1', '2', '3']);
+          using updates = updateCounter(parent);
 
           const result = array.values();
           expect(result.next().value).to.eq('1');
@@ -747,10 +697,8 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
         });
 
         test('for loop', async () => {
-          const { array } = await createReactiveArray(['1', '2', '3']);
-          using updates = updateCounter(() => {
-            array[0];
-          });
+          const { array, parent } = await createReactiveArray(['1', '2', '3']);
+          using updates = updateCounter(parent);
 
           let sum = 0;
           for (const value of array) {

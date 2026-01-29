@@ -3,14 +3,13 @@
 //
 
 import { type Entity, type Obj } from '@dxos/echo';
-import { compositeRuntime } from '@dxos/echo-signals/runtime';
+import { EventId, batchEvents } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
-import { EventId } from '@dxos/live-object';
 
 import { clearPendingNotifications, enterChangeContext, hasPendingNotifications } from '../core-db/change-context';
 
 import { getObjectCore, isEchoObject } from './echo-object-utils';
-import { type ProxyTarget, symbolInternals } from './echo-proxy-target';
+import { type ProxyTarget } from './echo-proxy-target';
 
 /**
  * Makes all properties mutable recursively.
@@ -41,9 +40,9 @@ export const changeInternal = <T extends Entity.Unknown>(obj: T, callback: (muta
   const exitChangeContext = enterChangeContext(core);
 
   try {
-    // Batch signal notifications and execute the callback.
+    // Batch event notifications and execute the callback.
     // Mutations through the proxy will be allowed since we're in a change context.
-    compositeRuntime.batch(() => {
+    batchEvents(() => {
       callback(obj as Mutable<T>);
     });
   } finally {
@@ -53,7 +52,6 @@ export const changeInternal = <T extends Entity.Unknown>(obj: T, callback: (muta
     // Fire a single notification if any changes occurred during the callback.
     if (hasPendingNotifications(core)) {
       clearPendingNotifications(core);
-      target[symbolInternals].signal.notifyWrite();
       target[EventId]?.emit();
     }
   }

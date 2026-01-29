@@ -51,9 +51,9 @@ export class DocumentsSynchronizer extends Resource {
     super();
   }
 
-  addDocuments(documentIds: DocumentId[]): void {
-    for (const documentId of documentIds) {
-      queueMicrotask(async () => {
+  async addDocuments(documentIds: DocumentId[]): Promise<void> {
+    await Promise.all(
+      documentIds.map(async (documentId) => {
         try {
           await retry(
             { count: WRAP_AROUND_RETRY_LIMIT, delayMs: WRAP_AROUND_RETRY_INITIAL_DELAY, exponent: 2 },
@@ -77,8 +77,8 @@ export class DocumentsSynchronizer extends Resource {
         } catch (err) {
           log.catch(err);
         }
-      });
-    }
+      }),
+    );
   }
 
   removeDocuments(documentIds: DocumentId[]): void {
@@ -101,8 +101,8 @@ export class DocumentsSynchronizer extends Resource {
   }
 
   async update(updates: DocumentUpdate[]): Promise<void> {
-    for (const { documentId, mutation, isNew } of updates) {
-      this._writeMutation(documentId as DocumentId, mutation, isNew);
+    for (const { documentId, mutation } of updates) {
+      await this._writeMutation(documentId as DocumentId, mutation);
     }
     // TODO(mykola): This should not be required.
     await this._params.automergeHost.flush({ documentIds: updates.map(({ documentId }) => documentId as DocumentId) });
@@ -166,30 +166,21 @@ export class DocumentsSynchronizer extends Resource {
     return mutation;
   }
 
-  private _writeMutation(documentId: DocumentId, mutation: Uint8Array, isNew?: boolean): void {
+  private async _writeMutation(documentId: DocumentId, mutation: Uint8Array): Promise<void> {
     if (this._lifecycleState === LifecycleState.CLOSED) {
       return;
     }
-    log('write mutation', { documentId, isNew });
+    log('write mutation', { documentId });
 
-    if (isNew) {
-      const newHandle = this._params.automergeHost.createDoc<DatabaseDirectory>(mutation, {
-        documentId,
-        preserveHistory: true,
-      });
-      const syncState = this._startSync(newHandle);
-      syncState!.lastSentHead = A.getHeads(newHandle.doc());
-    } else {
-      const syncState = this._syncStates.get(documentId);
-      invariant(syncState, 'Sync state for document not found');
-      const headsBefore = A.getHeads(syncState.handle.doc());
-      // This will update corresponding handle in the repo.
-      this._params.automergeHost.createDoc(mutation, { documentId, preserveHistory: true });
+    const syncState = this._syncStates.get(documentId);
+    invariant(syncState, 'Sync state for document not found');
+    const headsBefore = A.getHeads(syncState.handle.doc());
+    // This will update corresponding handle in the repo.
+    await this._params.automergeHost.createDoc(mutation, { documentId, preserveHistory: true });
 
-      if (A.equals(headsBefore, syncState!.lastSentHead)) {
-        // No new mutations were discovered on network, so we do not need to send updates from worker to client.
-        syncState!.lastSentHead = A.getHeads(syncState.handle.doc());
-      }
+    if (A.equals(headsBefore, syncState.lastSentHead)) {
+      // No new mutations were discovered on network, so we do not need to send updates from worker to client.
+      syncState.lastSentHead = A.getHeads(syncState.handle.doc());
     }
   }
 }

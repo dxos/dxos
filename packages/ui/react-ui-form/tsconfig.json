@@ -48,12 +48,6 @@
       "path": "../../core/echo/echo-react"
     },
     {
-      "path": "../../core/echo/echo-signals"
-    },
-    {
-      "path": "../../core/echo/live-object"
-    },
-    {
       "path": "../../sdk/react-client"
     },
     {

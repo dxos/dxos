@@ -9,7 +9,6 @@ tasks:
   compile:
     args:
       - '--entryPoint=src/index.ts'
-      - '--preactSignalTracking'
     deps:
       - gen-pieces
   gen-pieces:

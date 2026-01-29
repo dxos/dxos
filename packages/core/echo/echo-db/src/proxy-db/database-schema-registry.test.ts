@@ -127,7 +127,12 @@ describe('schema registry', () => {
 
     const [echoSchema] = await registry.register([Contact]);
     const retrieved = await registry.query({ location: ['database', 'runtime'] }).run();
-    expect(retrieved.map(Type.getTypename)).toEqual(['example.com/type/Organization', 'example.com/type/Person']);
+    // Note: Expando is registered by default in test builder.
+    expect(retrieved.map(Type.getTypename)).toEqual([
+      'dxos.org/type/Expando',
+      'example.com/type/Organization',
+      'example.com/type/Person',
+    ]);
   });
 
   test('query only runtime schemas', async () => {
@@ -136,7 +141,8 @@ describe('schema registry', () => {
 
     const [echoSchema] = await registry.register([Contact]);
     const retrieved = await registry.query({ location: ['runtime'] }).run();
-    expect(retrieved.map(Type.getTypename)).toEqual(['example.com/type/Organization']);
+    // Note: Expando is registered by default in test builder.
+    expect(retrieved.map(Type.getTypename)).toEqual(['dxos.org/type/Expando', 'example.com/type/Organization']);
   });
 
   test('query only database schemas', async () => {

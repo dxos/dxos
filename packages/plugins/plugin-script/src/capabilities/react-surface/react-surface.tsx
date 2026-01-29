@@ -6,11 +6,10 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { Capability, Common } from '@dxos/app-framework';
-import { useCapability } from '@dxos/app-framework/react';
+import { useAtomCapability, useSettingsState } from '@dxos/app-framework/react';
 import { InvocationTraceContainer } from '@dxos/devtools';
 import { Obj } from '@dxos/echo';
 import { Script } from '@dxos/functions';
-import { SettingsStore } from '@dxos/local-storage';
 import { getSpace } from '@dxos/react-client/echo';
 import { StackItem } from '@dxos/react-ui-stack';
 import { type AccessToken } from '@dxos/types';
@@ -27,7 +26,7 @@ import {
 } from '../../components';
 import { useCompiler } from '../../hooks';
 import { meta } from '../../meta';
-import { Notebook, type ScriptSettings } from '../../types';
+import { Notebook, ScriptCapabilities, type ScriptSettings } from '../../types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -35,9 +34,12 @@ export default Capability.makeModule(() =>
       Common.createSurface({
         id: `${meta.id}/plugin-settings`,
         role: 'article',
-        filter: (data): data is { subject: SettingsStore<ScriptSettings> } =>
-          data.subject instanceof SettingsStore && data.subject.prefix === meta.id,
-        component: ({ data: { subject } }) => <ScriptPluginSettings settings={subject.value} />,
+        filter: (data): data is { subject: Common.Capability.Settings } =>
+          Common.Capability.isSettings(data.subject) && data.subject.prefix === meta.id,
+        component: ({ data: { subject } }) => {
+          const { settings, updateSettings } = useSettingsState<ScriptSettings>(subject.atom);
+          return <ScriptPluginSettings settings={settings} onSettingsChange={updateSettings} />;
+        },
       }),
       Common.createSurface({
         id: `${meta.id}/script/article`,
@@ -45,8 +47,7 @@ export default Capability.makeModule(() =>
         filter: (data): data is { subject: Script.Script } => Obj.instanceOf(Script.Script, data.subject),
         component: ({ data, role }) => {
           const compiler = useCompiler();
-          // TODO(dmaretskyi): Since settings store is not reactive, this would break on the script plugin being enabled without a page reload.
-          const settings = useCapability(Common.Capability.SettingsStore).getStore<ScriptSettings>(meta.id)?.value;
+          const settings = useAtomCapability(ScriptCapabilities.Settings);
           // TODO(wittjosiah): Why? The editor should be allow to render even if the environment is not ready.
           if (!compiler?.environment) {
             return null;

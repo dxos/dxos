@@ -40,12 +40,12 @@ const setupAutomergeHost = async (level: LevelDB): Promise<AutomergeHost> => {
 /**
  * Create a DatabaseDirectory document with the given objects.
  */
-const createDatabaseDirectory = (
+const createDatabaseDirectory = async (
   host: AutomergeHost,
   spaceKey: string,
   objects: Record<string, ObjectStructure>,
-): ReturnType<typeof host.createDoc<DatabaseDirectory>> => {
-  const handle = host.createDoc<DatabaseDirectory>({
+): Promise<Awaited<ReturnType<typeof host.createDoc<DatabaseDirectory>>>> => {
+  const handle = await host.createDoc<DatabaseDirectory>({
     version: SpaceDocVersion.CURRENT,
     access: { spaceKey },
     objects: {},
@@ -93,7 +93,7 @@ describe('AutomergeDataSource', () => {
     const host = await setupAutomergeHost(level);
     const spaceKey = SpaceId.random();
 
-    const handle = createDatabaseDirectory(host, spaceKey, {
+    const handle = await createDatabaseDirectory(host, spaceKey, {
       'obj-1': ObjectStructure.makeObject({ type: TEST_TYPE as DXN.String, data: { title: 'Test Document' } }),
     });
     await host.flush();
@@ -116,10 +116,10 @@ describe('AutomergeDataSource', () => {
     const host = await setupAutomergeHost(level);
     const spaceKey = SpaceId.random();
 
-    const handle1 = createDatabaseDirectory(host, spaceKey, {
+    const handle1 = await createDatabaseDirectory(host, spaceKey, {
       'obj-1': ObjectStructure.makeObject({ type: TEST_TYPE as DXN.String, data: { title: 'Doc 1' } }),
     });
-    const handle2 = createDatabaseDirectory(host, spaceKey, {
+    const handle2 = await createDatabaseDirectory(host, spaceKey, {
       'obj-2': ObjectStructure.makeObject({ type: TEST_TYPE as DXN.String, data: { title: 'Doc 2' } }),
     });
     await host.flush();
@@ -152,7 +152,7 @@ describe('AutomergeDataSource', () => {
     const host = await setupAutomergeHost(level);
     const spaceKey = SpaceId.random();
 
-    const handle = createDatabaseDirectory(host, spaceKey, {
+    const handle = await createDatabaseDirectory(host, spaceKey, {
       'obj-1': ObjectStructure.makeObject({ type: TEST_TYPE as DXN.String, data: { title: 'Doc 1' } }),
     });
     await host.flush();
@@ -184,7 +184,7 @@ describe('AutomergeDataSource', () => {
 
     // Create 3 documents.
     for (let i = 1; i <= 3; i++) {
-      createDatabaseDirectory(host, spaceKey, {
+      await createDatabaseDirectory(host, spaceKey, {
         [`obj-${i}`]: ObjectStructure.makeObject({ type: TEST_TYPE as DXN.String, data: { title: `Doc ${i}` } }),
       });
     }
@@ -203,7 +203,7 @@ describe('AutomergeDataSource', () => {
     const host = await setupAutomergeHost(level);
     const spaceKey = SpaceId.random();
 
-    createDatabaseDirectory(host, spaceKey, {
+    await createDatabaseDirectory(host, spaceKey, {
       'obj-1': ObjectStructure.makeObject({ type: TEST_TYPE as DXN.String, data: { title: 'Object 1' } }),
       'obj-2': ObjectStructure.makeObject({ type: OTHER_TYPE as DXN.String, data: { title: 'Object 2' } }),
     });
@@ -224,7 +224,7 @@ describe('AutomergeDataSource', () => {
     const spaceKey = SpaceId.random();
 
     // Create a document with outdated version.
-    const handle = host.createDoc<DatabaseDirectory>({
+    const handle = await host.createDoc<DatabaseDirectory>({
       version: 0 as SpaceDocVersion, // Outdated version.
       access: { spaceKey },
       objects: {},
@@ -249,7 +249,7 @@ describe('AutomergeDataSource', () => {
     const host = await setupAutomergeHost(level);
     const spaceKey = SpaceId.random();
 
-    createDatabaseDirectory(host, spaceKey, {
+    await createDatabaseDirectory(host, spaceKey, {
       'person-1': ObjectStructure.makeObject({
         type: PERSON_TYPE as DXN.String,
         data: { name: 'Alice', age: 30 },
@@ -274,7 +274,7 @@ describe('AutomergeDataSource', () => {
     const host = await setupAutomergeHost(level);
 
     // Create a document without access.spaceKey.
-    const handle = host.createDoc<DatabaseDirectory>({
+    const handle = await host.createDoc<DatabaseDirectory>({
       version: SpaceDocVersion.CURRENT,
       objects: {},
       links: {},

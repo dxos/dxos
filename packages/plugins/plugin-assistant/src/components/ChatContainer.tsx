@@ -4,15 +4,13 @@
 
 import React, { forwardRef } from 'react';
 
-import { Common } from '@dxos/app-framework';
-import { useCapability } from '@dxos/app-framework/react';
+import { useAtomCapability } from '@dxos/app-framework/react';
 import { type Space, getSpace } from '@dxos/client/echo';
 import { type Obj } from '@dxos/echo';
 import { StackItem } from '@dxos/react-ui-stack';
 
 import { useBlueprintRegistry, useChatProcessor, useChatServices, useOnline, usePresets } from '../hooks';
-import { meta } from '../meta';
-import { type Assistant } from '../types';
+import { type Assistant, AssistantCapabilities } from '../types';
 
 import { Chat, type ChatRootProps } from './Chat';
 
@@ -26,7 +24,7 @@ export type ChatContainerProps = {
 export const ChatContainer = forwardRef<HTMLDivElement, ChatContainerProps>((props, forwardedRef) => {
   const { space: spaceProp, chat, companionTo, onEvent } = props;
   const space = spaceProp ?? getSpace(chat);
-  const settings = useCapability(Common.Capability.SettingsStore).getStore<Assistant.Settings>(meta.id)?.value;
+  const settings = useAtomCapability(AssistantCapabilities.Settings);
   const services = useChatServices({ id: space?.id, chat });
   const [online, setOnline] = useOnline();
   const { preset, ...chatProps } = usePresets(online);

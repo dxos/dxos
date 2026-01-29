@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Atom } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
@@ -10,11 +11,40 @@ import { Obj } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { ATTENDABLE_PATH_SEPARATOR, DECK_COMPANION_TYPE, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
-import { CreateAtom, GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
+import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
+import { type SelectionManager, type SelectionMode, defaultSelection } from '@dxos/react-ui-attention';
 
 import { meta } from '../../meta';
-import { Channel, ThreadCapabilities, ThreadOperation } from '../../types';
+import { Channel, ThreadCapabilities, ThreadOperation, type ThreadState } from '../../types';
 import { getAnchor } from '../../util';
+
+type CommentDisabledParams = {
+  stateAtom: Atom.Atom<Atom.Writable<ThreadState>[]>;
+  selectionManager: SelectionManager;
+  objectId: string;
+  commentsType: string;
+  selectionMode: SelectionMode | undefined;
+};
+
+/**
+ * Atom family to derive whether the comment button should be disabled.
+ * Uses a composite key to ensure proper caching.
+ */
+const commentDisabledFamily = Atom.family(
+  ({ stateAtom, selectionManager, objectId, commentsType, selectionMode }: CommentDisabledParams) =>
+    Atom.make((get) => {
+      const stateAtoms = get(stateAtom);
+      const state = stateAtoms[0] ? get(stateAtoms[0]) : undefined;
+      const toolbar = state?.toolbar ?? {};
+      const selectionState = get(selectionManager.state);
+      const selection =
+        selectionState.selections[objectId] ?? (selectionMode ? defaultSelection(selectionMode) : undefined);
+      const anchor = getAnchor(selection);
+      const invalidSelection = !anchor;
+      const overlappingComment = toolbar[objectId];
+      return (commentsType === 'anchored' && invalidSelection) || overlappingComment;
+    }),
+);
 
 /** Match ECHO objects that are NOT Channels (i.e. objects that can have comments). */
 const whenCommentableObject = NodeMatcher.whenAll(
@@ -38,26 +68,27 @@ export default Capability.makeModule(
         connector: (node, get) => {
           const callManagerAtom = capabilities.atom(ThreadCapabilities.CallManager);
           const [call] = get(callManagerAtom);
+          if (!call) {
+            return Effect.succeed([]);
+          }
+          // Use derived joinedAtom for efficient subscription.
+          const joined = get(call.joinedAtom);
           return Effect.succeed(
-            get(
-              CreateAtom.fromSignal(() =>
-                call?.joined
-                  ? [
-                      {
-                        id: `${node.id}${ATTENDABLE_PATH_SEPARATOR}active-call`,
-                        type: DECK_COMPANION_TYPE,
-                        data: null,
-                        properties: {
-                          label: ['call panel label', { ns: meta.id }],
-                          icon: 'ph--video-conference--regular',
-                          position: 'hoist',
-                          disposition: 'hidden',
-                        },
-                      },
-                    ]
-                  : [],
-              ),
-            ),
+            joined
+              ? [
+                  {
+                    id: `${node.id}${ATTENDABLE_PATH_SEPARATOR}active-call`,
+                    type: DECK_COMPANION_TYPE,
+                    data: null,
+                    properties: {
+                      label: ['call panel label', { ns: meta.id }],
+                      icon: 'ph--video-conference--regular',
+                      position: 'hoist',
+                      disposition: 'hidden',
+                    },
+                  },
+                ]
+              : [],
           );
         },
       }),
@@ -66,10 +97,11 @@ export default Capability.makeModule(
         type: Channel.Channel,
         connector: (channel, get) => {
           const callManager = capabilities.get(ThreadCapabilities.CallManager);
-          const joined = get(
-            CreateAtom.fromSignal(() => callManager.joined && callManager.roomId === Obj.getDXN(channel).toString()),
-          );
-          if (!joined) {
+          // Use derived atoms for efficient subscription.
+          const joined = get(callManager.joinedAtom);
+          const roomId = get(callManager.roomIdAtom);
+          const isActive = joined && roomId === Obj.getDXN(channel).toString();
+          if (!isActive) {
             return Effect.succeed([]);
           }
 
@@ -123,16 +155,17 @@ export default Capability.makeModule(
         },
         actions: (object, get) => {
           const stateAtom = capabilities.atom(ThreadCapabilities.State);
-          const toolbar = get(stateAtom)[0]?.state.toolbar ?? {};
           const selectionManager = capabilities.get(AttentionCapabilities.Selection);
+          const objectId = Obj.getDXN(object).toString();
+          const metadata = resolve(Obj.getTypename(object)!);
+
           const disabled = get(
-            CreateAtom.fromSignal(() => {
-              const metadata = resolve(Obj.getTypename(object)!);
-              const selection = selectionManager.getSelection(Obj.getDXN(object).toString(), metadata.selectionMode);
-              const anchor = getAnchor(selection);
-              const invalidSelection = !anchor;
-              const overlappingComment = toolbar[Obj.getDXN(object).toString()];
-              return (metadata.comments === 'anchored' && invalidSelection) || overlappingComment;
+            commentDisabledFamily({
+              stateAtom,
+              selectionManager,
+              objectId,
+              commentsType: metadata.comments as string,
+              selectionMode: metadata.selectionMode,
             }),
           );
 

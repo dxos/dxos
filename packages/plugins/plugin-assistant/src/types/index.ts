@@ -7,4 +7,5 @@ export { AssistantOperation } from './AssistantAction';
 
 export * from './capabilities';
 export * from './defs';
+export * from './events';
 export * from './service';

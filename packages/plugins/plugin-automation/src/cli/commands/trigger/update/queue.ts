@@ -45,7 +45,7 @@ export const queue = Command.make(
       const currentFn = yield* updateFunction(trigger, options.functionId);
       yield* updateQueue(trigger, options.queue);
       yield* updateInput(trigger, currentFn, options.input);
-      trigger.enabled = yield* updateEnabled(trigger, options.id, options.enabled);
+      yield* updateEnabled(trigger, options.id, options.enabled);
 
       if (json) {
         yield* Console.log(JSON.stringify(trigger, null, 2));
@@ -92,8 +92,10 @@ const updateFunction = Effect.fn(function* (trigger: Trigger.Trigger, functionId
     if (!foundFn || !Obj.instanceOf(Function.Function, foundFn)) {
       return yield* Effect.fail(new Error(`Function not found: ${functionId}`));
     }
+    Obj.change(trigger, (mutableTrigger) => {
+      mutableTrigger.function = Ref.make(foundFn);
+    });
     currentFn = foundFn;
-    trigger.function = Ref.make(currentFn);
   }
 
   if (!currentFn) {
@@ -128,9 +130,11 @@ const updateQueue = Effect.fn(function* (trigger: Trigger.Trigger, queueOption: 
       onNone: () => selectQueue(),
       onSome: (dxn) => Effect.succeed(dxn.toString()),
     });
-    if (trigger.spec?.kind === 'queue') {
-      trigger.spec.queue = queueDxn;
-    }
+    Obj.change(trigger, (mutableTrigger) => {
+      if (mutableTrigger.spec?.kind === 'queue') {
+        mutableTrigger.spec.queue = queueDxn;
+      }
+    });
   }
 });
 
@@ -162,7 +166,9 @@ const updateInput = Effect.fn(function* (
         promptForSchemaInput(fn.inputSchema ? Type.toEffectSchema(fn.inputSchema) : undefined, currentInput),
       onSome: (value) => Effect.succeed(value as Record<string, any>),
     });
-    trigger.input = inputObj as any;
+    Obj.change(trigger, (mutableTrigger) => {
+      mutableTrigger.input = inputObj;
+    });
   }
 });
 
@@ -175,12 +181,15 @@ const updateEnabled = Effect.fn(function* (
   idOption: Option.Option<string>,
   enabled: boolean,
 ) {
-  return yield* Option.match(idOption, {
+  const enabledValue = yield* Option.match(idOption, {
     onNone: () =>
       Prompt.confirm({
         message: 'Enable the trigger?',
         initial: trigger.enabled,
       }).pipe(Prompt.run),
     onSome: () => Effect.succeed(enabled),
+  });
+  Obj.change(trigger, (mutableTrigger) => {
+    mutableTrigger.enabled = enabledValue;
   });
 });

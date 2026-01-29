@@ -63,9 +63,6 @@
       "path": "../../core/echo/echo-generator"
     },
     {
-      "path": "../../core/echo/live-object"
-    },
-    {
       "path": "../../core/functions"
     },
     {

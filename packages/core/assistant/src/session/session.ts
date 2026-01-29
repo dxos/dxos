@@ -24,7 +24,7 @@ import {
 import { type Blueprint } from '@dxos/blueprints';
 import { todo } from '@dxos/debug';
 import { Obj } from '@dxos/echo';
-import { TracingService } from '@dxos/functions';
+import { type FunctionInvocationService, TracingService } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
 
@@ -39,7 +39,8 @@ export type AiSessionRunRequirements =
   | LanguageModel.LanguageModel
   | ToolExecutionService
   | ToolResolverService
-  | TracingService;
+  | TracingService
+  | FunctionInvocationService;
 
 export type AiSessionOptions = {};
 
@@ -116,7 +117,9 @@ export class AiSession {
       const promptMessage = yield* submitMessage(yield* formatUserPrompt({ prompt, history }));
 
       // Generate system and prompt messages.
-      const system = yield* formatSystemPrompt({ system: systemTemplate, blueprints, objects });
+      const system = yield* formatSystemPrompt({ system: systemTemplate, blueprints, objects }).pipe(Effect.orDie);
+
+      // log('system', { prompt: system });
 
       // Tool call loop.
       do {
@@ -147,6 +150,8 @@ export class AiSession {
           Stream.runCollect,
           Effect.map(Chunk.toArray),
         );
+
+        // log('blocks', { blocks });
 
         // Create the response message.
         const response = yield* submitMessage(

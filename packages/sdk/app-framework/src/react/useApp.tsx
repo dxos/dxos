@@ -158,6 +158,7 @@ export const useApp = ({
       );
 
       yield* Effect.all([
+        manager.activate(Common.ActivationEvent.SetupSettings),
         manager.activate(Common.ActivationEvent.SetupReactSurface),
         manager.activate(Common.ActivationEvent.Startup),
       ]);

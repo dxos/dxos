@@ -2,14 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Atom } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 
 import { Capability, Common } from '@dxos/app-framework';
-import { live } from '@dxos/live-object';
 
-import { LayoutState } from '../../types';
+import { LayoutState, type LayoutStateProps } from '../../types';
 
-const defaultState: LayoutState = {
+const defaultState: LayoutStateProps = {
   sidebarState: 'closed',
   complementarySidebarState: 'closed',
   dialogOpen: false,
@@ -17,37 +17,27 @@ const defaultState: LayoutState = {
 };
 
 export default Capability.makeModule(
-  Effect.fnUntraced(function* (props?: { initialState?: Partial<LayoutState> }) {
+  Effect.fnUntraced(function* (props?: { initialState?: Partial<LayoutStateProps> }) {
     const { initialState } = props ?? {};
-    const state = live<LayoutState>({ ...defaultState, ...initialState });
+    const stateAtom = Atom.make<LayoutStateProps>({ ...defaultState, ...initialState });
 
-    const layout = live<Common.Capability.Layout>({
-      get mode() {
-        return 'storybook';
-      },
-      get dialogOpen() {
-        return state.dialogOpen;
-      },
-      get sidebarOpen() {
-        return state.sidebarState === 'expanded';
-      },
-      get complementarySidebarOpen() {
-        return state.complementarySidebarState === 'expanded';
-      },
-      get workspace() {
-        return state.workspace;
-      },
-      get active() {
-        return [];
-      },
-      get inactive() {
-        return [];
-      },
-      get scrollIntoView() {
-        return undefined;
-      },
+    const layoutAtom = Atom.make((get): Common.Capability.Layout => {
+      const state = get(stateAtom);
+      return {
+        mode: 'storybook',
+        dialogOpen: state.dialogOpen,
+        sidebarOpen: state.sidebarState === 'expanded',
+        complementarySidebarOpen: state.complementarySidebarState === 'expanded',
+        workspace: state.workspace,
+        active: [],
+        inactive: [],
+        scrollIntoView: undefined,
+      };
     });
 
-    return [Capability.contributes(LayoutState, state), Capability.contributes(Common.Capability.Layout, layout)];
+    return [
+      Capability.contributes(LayoutState, stateAtom),
+      Capability.contributes(Common.Capability.Layout, layoutAtom),
+    ];
   }),
 );

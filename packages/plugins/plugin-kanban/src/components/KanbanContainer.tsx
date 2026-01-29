@@ -2,12 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useCallback, useEffect, useState } from 'react';
+import { RegistryContext } from '@effect-atom/atom-react';
+import type * as Schema from 'effect/Schema';
+import React, { useCallback, useContext, useEffect, useState } from 'react';
 
 import { Common } from '@dxos/app-framework';
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/react';
 import { Filter, Obj, Type } from '@dxos/echo';
-import { type TypedObject } from '@dxos/echo/internal';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { useQuery } from '@dxos/react-client/echo';
 import { Kanban as KanbanComponent, useKanbanModel, useProjectionModel } from '@dxos/react-ui-kanban';
@@ -18,8 +19,9 @@ import { getTypenameFromQuery } from '@dxos/schema';
 import { KanbanOperation } from '../types';
 
 export const KanbanContainer = ({ object }: { object: Kanban.Kanban; role: string }) => {
+  const registry = useContext(RegistryContext);
   const schemas = useCapabilities(Common.Capability.Schema);
-  const [cardSchema, setCardSchema] = useState<TypedObject<any, any>>();
+  const [cardSchema, setCardSchema] = useState<Schema.Schema.AnyNoContext>();
   const db = Obj.getDatabase(object);
   const { invokePromise } = useOperationInvoker();
   const typename = object.view.target?.query ? getTypenameFromQuery(object.view.target.query.ast) : undefined;
@@ -27,7 +29,7 @@ export const KanbanContainer = ({ object }: { object: Kanban.Kanban; role: strin
   useEffect(() => {
     const staticSchema = schemas.flat().find((schema) => Type.getTypename(schema) === typename);
     if (staticSchema) {
-      setCardSchema(() => staticSchema as TypedObject<any, any>);
+      setCardSchema(() => staticSchema);
     }
     if (!staticSchema && typename && db) {
       const query = db.schemaRegistry.query({ typename });
@@ -47,7 +49,7 @@ export const KanbanContainer = ({ object }: { object: Kanban.Kanban; role: strin
   const objects = useQuery(db, cardSchema ? Filter.type(cardSchema) : Filter.nothing());
   const filteredObjects = useGlobalFilteredObjects(objects);
 
-  const projection = useProjectionModel(cardSchema, object);
+  const projection = useProjectionModel(cardSchema, object, registry);
   const model = useKanbanModel({
     object,
     projection,

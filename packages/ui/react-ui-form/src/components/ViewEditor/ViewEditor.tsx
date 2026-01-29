@@ -2,11 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
+import { RegistryContext } from '@effect-atom/atom-react';
 import * as Array from 'effect/Array';
 import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
-import React, { forwardRef, useCallback, useImperativeHandle, useMemo, useState } from 'react';
+import React, { forwardRef, useCallback, useContext, useImperativeHandle, useMemo, useState } from 'react';
 
 import { Filter, Format, Obj, Query, QueryAST, type SchemaRegistry } from '@dxos/echo';
 import { EchoSchema, type JsonProp, isMutable, toJsonSchema } from '@dxos/echo/internal';
@@ -72,8 +73,10 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
     },
     forwardedRef,
   ) => {
+    const atomRegistry = useContext(RegistryContext);
     const schemaReadonly = !isMutable(schema);
     const { t } = useTranslation(translationKey);
+
     const projectionModel = useMemo(() => {
       // Use reactive and mutable version of json schema when schema is mutable.
       const jsonSchema = schema instanceof EchoSchema ? schema.jsonSchema : toJsonSchema(schema);
@@ -84,8 +87,16 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
           ? createEchoChangeCallback(view, schema)
           : createDirectChangeCallback(view.projection, jsonSchema);
 
-      return new ProjectionModel(jsonSchema, view.projection, change);
-    }, [schema, JSON.stringify(view.projection)]);
+      const model = new ProjectionModel({
+        registry: atomRegistry,
+        view,
+        baseSchema: jsonSchema,
+        change,
+      });
+
+      return model;
+    }, [atomRegistry, schema, view]);
+
     useImperativeHandle(forwardedRef, () => projectionModel, [projectionModel]);
     const [expandedField, setExpandedField] = useState<FieldType['id']>();
 
@@ -137,7 +148,7 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
       invariant(!readonly);
       const field = projectionModel.createFieldProjection();
       setExpandedField(field.id);
-    }, [schema, projectionModel, readonly]);
+    }, [projectionModel, readonly]);
 
     const handleUpdate = useCallback(
       (values: any) => {
@@ -205,8 +216,10 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
 type FieldListProps = Pick<ViewEditorProps, 'schema' | 'view' | 'registry' | 'readonly' | 'showHeading' | 'onDelete'>;
 
 const FieldList = ({ schema, view, registry, readonly, showHeading = false, onDelete }: FieldListProps) => {
+  const atomRegistry = useContext(RegistryContext);
   const schemaReadonly = !isMutable(schema);
   const { t } = useTranslation(translationKey);
+
   const projectionModel = useMemo(() => {
     // Use reactive and mutable version of json schema when schema is mutable.
     const jsonSchema = schema instanceof EchoSchema ? schema.jsonSchema : toJsonSchema(schema);
@@ -217,8 +230,16 @@ const FieldList = ({ schema, view, registry, readonly, showHeading = false, onDe
         ? createEchoChangeCallback(view, schema)
         : createDirectChangeCallback(view.projection, jsonSchema);
 
-    return new ProjectionModel(jsonSchema, view.projection, change);
-  }, [schema, JSON.stringify(view.projection)]);
+    const model = new ProjectionModel({
+      registry: atomRegistry,
+      view,
+      baseSchema: jsonSchema,
+      change,
+    });
+
+    return model;
+  }, [atomRegistry, schema, view]);
+
   const [expandedField, setExpandedField] = useState<FieldType['id']>();
 
   const handleToggleField = useCallback(
@@ -303,7 +324,7 @@ const FieldList = ({ schema, view, registry, readonly, showHeading = false, onDe
                       data-testid={hidden ? 'show-field-button' : 'hide-field-button'}
                       icon={hidden ? 'ph--eye-closed--regular' : 'ph--eye--regular'}
                       autoHide={false}
-                      disabled={readonly || (!hidden && projectionModel.fields.length <= 1)}
+                      disabled={readonly || (!hidden && projectionModel.getFields().length <= 1)}
                       onClick={() => (hidden ? handleShow(field.path) : handleHide(field.id))}
                     />
                     {!readonly && (

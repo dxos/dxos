@@ -92,7 +92,7 @@ describe('update', () => {
     Effect.fnUntraced(
       function* (_) {
         const queue = yield* QueueService.createQueue<Message.Message | ContextBinding>();
-        const conversation = yield* acquireReleaseResource(() => new AiConversation(queue));
+        const conversation = yield* acquireReleaseResource(() => new AiConversation({ queue }));
 
         yield* Database.Service.flush({ indexes: true });
         const markdownBlueprint = yield* Database.Service.add(Obj.clone(MarkdownBlueprint.make()));

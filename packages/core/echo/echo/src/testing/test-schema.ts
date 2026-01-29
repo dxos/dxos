@@ -110,15 +110,17 @@ export namespace TestSchema {
     age: Schema.Number.pipe(Schema.optional),
     tasks: Schema.mutable(Schema.Array(Schema.suspend((): Type.Ref<Task> => Type.Ref(Task)))),
     employer: Schema.optional(Type.Ref(Organization)),
-    address: Schema.Struct({
-      city: Schema.optional(Schema.String),
-      state: Schema.optional(Schema.String),
-      zip: Schema.optional(Schema.String),
-      coordinates: Schema.Struct({
-        lat: Schema.optional(Schema.Number),
-        lng: Schema.optional(Schema.Number),
+    address: Schema.mutable(
+      Schema.Struct({
+        city: Schema.optional(Schema.String),
+        state: Schema.optional(Schema.String),
+        zip: Schema.optional(Schema.String),
+        coordinates: Schema.Struct({
+          lat: Schema.optional(Schema.Number),
+          lng: Schema.optional(Schema.Number),
+        }),
       }),
-    }),
+    ),
     fields: Schema.Struct({
       label: Schema.String,
       value: Schema.String,

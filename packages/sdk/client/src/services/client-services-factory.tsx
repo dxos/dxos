@@ -7,24 +7,33 @@ import UAParser from 'ua-parser-js';
 import { type ClientServicesProvider } from '@dxos/client-protocol';
 import { type Config } from '@dxos/config';
 
+import { type DedeciatedWorkerClientServicesOptions, DedicatedWorkerClientServices } from './dedicated';
+import { SharedWorkerCoordinator } from './dedicated';
 import { type LocalClientServicesParams, fromHost } from './local-client-services';
 import { fromSocket } from './socket';
 import { type WorkerClientServicesProps, fromWorker } from './worker-client-services';
 
+export type CreateClientServicesOptions = {
+  /** Factory for creating a shared worker. */
+  createWorker?: WorkerClientServicesProps['createWorker'];
+  /** Factory for creating a dedicated worker. */
+  createDedicatedWorker?: DedeciatedWorkerClientServicesOptions['createWorker'];
+  /** Factory for creating an OPFS worker. */
+  createOpfsWorker?: LocalClientServicesParams['createOpfsWorker'];
+  /** Observability group sent with signaling metadata. */
+  observabilityGroup?: string;
+  /** Enable telemetry metadata sent with signaling requests. */
+  signalTelemetryEnabled?: boolean;
+};
+
 /**
  * Create services from config.
- * @param config
- * @param createWorker
- * @param observabilityGroup - Optional observability group that will be sent with Signaling metadata.
- * @param signalTelemetryEnabled - Optional flag to enable telemetry metadata sent with Signaling requests.
  */
-export const createClientServices = (
+export const createClientServices = async (
   config: Config,
-  createWorker?: WorkerClientServicesProps['createWorker'],
-  observabilityGroup?: string,
-  signalTelemetryEnabled?: boolean,
-  createOpfsWorker?: LocalClientServicesParams['createOpfsWorker'],
+  options: CreateClientServicesOptions = {},
 ): Promise<ClientServicesProvider> => {
+  const { createWorker, createDedicatedWorker, createOpfsWorker, observabilityGroup, signalTelemetryEnabled } = options;
   const remote = config.values.runtime?.client?.remoteSource;
   if (remote) {
     const url = new URL(remote);
@@ -51,15 +60,21 @@ export const createClientServices = (
     useWorker = typeof SharedWorker !== 'undefined' && parser.getOS().name !== 'iOS';
   }
 
-  return createWorker && useWorker
-    ? fromWorker(config, { createWorker, observabilityGroup, signalTelemetryEnabled })
-    : fromHost(
+  return createDedicatedWorker
+    ? new DedicatedWorkerClientServices({
+        createWorker: createDedicatedWorker,
+        createCoordinator: () => new SharedWorkerCoordinator(),
         config,
-        {
-          createOpfsWorker,
-          runtimeProps: { enableFullTextIndexing: true },
-        },
-        observabilityGroup,
-        signalTelemetryEnabled,
-      );
+      })
+    : createWorker && useWorker
+      ? fromWorker(config, { createWorker, observabilityGroup, signalTelemetryEnabled })
+      : fromHost(
+          config,
+          {
+            createOpfsWorker,
+            runtimeProps: { enableFullTextIndexing: true },
+          },
+          observabilityGroup,
+          signalTelemetryEnabled,
+        );
 };

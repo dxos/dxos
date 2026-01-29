@@ -6,8 +6,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { effect } from '@preact/signals-core';
-
 import { DeferredTask, asyncTimeout } from '@dxos/async';
 import { LifecycleState, Resource } from '@dxos/context';
 import { type Queue } from '@dxos/echo-db';
@@ -51,7 +49,8 @@ export class MessageNormalizer extends Resource {
 
   protected override async _open(): Promise<void> {
     this._normalizationTask = new DeferredTask(this._ctx, () => this._processMessages());
-    const unsubscribe = effect(() => {
+
+    const updateMessages = () => {
       if (this._lifecycleState !== LifecycleState.OPEN) {
         return;
       }
@@ -62,8 +61,14 @@ export class MessageNormalizer extends Resource {
       });
 
       this._normalizationTask!.schedule();
-    });
-    this._ctx.onDispose(() => unsubscribe());
+    };
+
+    // Initial update.
+    updateMessages();
+
+    // Subscribe to queue changes.
+    const unsubscribe = this._queue.subscribe(updateMessages);
+    this._ctx.onDispose(unsubscribe);
   }
 
   // Need to unpack strings from blocks from messages run them through the function and then pack them back into blocks into messages.

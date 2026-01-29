@@ -217,4 +217,63 @@ describe('useObject', () => {
     // Callback should be the same reference (memoized)
     expect(firstUpdateCallback).toBe(secondUpdateCallback);
   });
+
+  test('returns undefined when object is undefined', () => {
+    const registry = Registry.make();
+    const wrapper = createWrapper(registry);
+
+    const { result } = renderHook(() => useObject(undefined as TestSchema.Person | undefined), { wrapper });
+
+    const [value] = result.current;
+    expect(value).toBeUndefined();
+  });
+
+  test('returns undefined for property when object is undefined', () => {
+    const registry = Registry.make();
+    const wrapper = createWrapper(registry);
+
+    const { result } = renderHook(() => useObject(undefined as TestSchema.Person | undefined, 'name'), { wrapper });
+
+    const [value] = result.current;
+    expect(value).toBeUndefined();
+  });
+
+  test('update callback is no-op when object is undefined', () => {
+    const registry = Registry.make();
+    const wrapper = createWrapper(registry);
+
+    const { result } = renderHook(() => useObject(undefined as TestSchema.Person | undefined), { wrapper });
+
+    const [, updateCallback] = result.current;
+
+    // Should not throw when calling update on undefined object.
+    expect(() => {
+      updateCallback((obj) => {
+        obj.name = 'Updated';
+      });
+    }).not.toThrow();
+  });
+
+  test('transitions from undefined to defined object', async () => {
+    const registry = Registry.make();
+    const wrapper = createWrapper(registry);
+
+    const { result, rerender } = renderHook(({ obj }) => useObject(obj), {
+      wrapper,
+      initialProps: { obj: undefined as TestSchema.Person | undefined },
+    });
+
+    expect(result.current[0]).toBeUndefined();
+
+    const obj: TestSchema.Person = createObject(
+      Obj.make(TestSchema.Person, { name: 'Test', username: 'test', email: 'test@example.com' }),
+    );
+
+    rerender({ obj });
+
+    await waitFor(() => {
+      expect(result.current[0]).not.toBeUndefined();
+      expect(result.current[0]?.name).toBe('Test');
+    });
+  });
 });

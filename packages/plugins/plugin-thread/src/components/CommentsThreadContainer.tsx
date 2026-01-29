@@ -4,7 +4,8 @@
 
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
-import { Obj, Ref, Relation } from '@dxos/echo';
+import { Obj, Relation } from '@dxos/echo';
+import { useObject, useObjects } from '@dxos/echo-react';
 import { getSpace, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { IconButton, Tag, Tooltip, useThemeContext, useTranslation } from '@dxos/react-ui';
@@ -17,7 +18,6 @@ import {
 import { type AnchoredTo, type Thread } from '@dxos/types';
 import { createBasicExtensions, createThemeExtensions, listener } from '@dxos/ui-editor';
 import { hoverableControlItem, hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/ui-theme';
-import { isNonNullable } from '@dxos/util';
 
 import { useStatus } from '../hooks';
 import { meta } from '../meta';
@@ -53,6 +53,8 @@ export const CommentsThreadContainer = ({
   const members = useMembers(space?.id);
   const detached = !anchor.anchor;
   const thread = Relation.getSource(anchor) as Thread.Thread;
+  const [messages] = useObject(thread, 'messages');
+  const loadedMessages = useObjects(messages ?? []);
   const activity = useStatus(space, Obj.getDXN(thread).toString());
   const threadScrollRef = useRef<HTMLDivElement | null>(null);
 
@@ -144,8 +146,7 @@ export const CommentsThreadContainer = ({
         </div>
       </div>
 
-      {/** TODO(dmaretskyi): How's `thread.messages` undefined? */}
-      {Ref.Array.targets(thread.messages?.filter(isNonNullable) ?? []).map((message) => (
+      {loadedMessages.map((message) => (
         <MessageContainer
           key={message.id}
           editable

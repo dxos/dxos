@@ -7,9 +7,9 @@ import type * as Schema from 'effect/Schema';
 import { Filter, type Space } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';
 import { EchoSchema, getTypeAnnotation } from '@dxos/echo/internal';
+import { isProxy } from '@dxos/echo/internal';
 import { type AnyLiveObject } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
-import { type Live, isLiveObject, live } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 import { entries, range } from '@dxos/util';
 
@@ -46,20 +46,21 @@ export class TestObjectGenerator<T extends string = TestSchemaType> {
     this._schemas[type] = schema;
   }
 
-  async createObject({ types }: { types?: T[] } = {}): Promise<Live<any>> {
+  async createObject({ types }: { types?: T[] } = {}): Promise<any> {
     const type = faker.helpers.arrayElement(types ?? (Object.keys(this._schemas) as T[]));
     const data = await this._generators[type](this._provider);
-    if (isLiveObject(data)) {
+    if (isProxy(data)) {
       return data;
     }
 
     const schema = this.getSchema(type);
-    return schema ? Obj.make(schema, data) : live(data);
+    invariant(schema, `Schema is required for type: ${type}. Register a schema for this type.`);
+    return Obj.make(schema, data);
   }
 
   // TODO(burdon): Based on dependencies (e.g., organization before contact).
   async createObjects(map: Partial<Record<T, number>>) {
-    const results: Live<any>[] = [];
+    const results: any[] = [];
     for (const [type, count] of entries(map)) {
       results.push(...(await Promise.all(range(count ?? 0, () => this.createObject({ types: [type as T] })))));
     }

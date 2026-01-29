@@ -26,6 +26,9 @@
       "path": "../../common/effect"
     },
     {
+      "path": "../../common/effect-atom-solid"
+    },
+    {
       "path": "../../common/errors"
     },
     {
