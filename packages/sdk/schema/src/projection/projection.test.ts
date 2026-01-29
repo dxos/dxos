@@ -496,10 +496,10 @@ describe('ProjectionModel', () => {
     });
 
     const effectSchema = mutable.snapshot;
-    expect(() => Schema.validateSync(effectSchema)({ status: 'draft' })).not.to.throw();
-    expect(() => Schema.validateSync(effectSchema)({ status: 'published' })).not.to.throw();
-    expect(() => Schema.validateSync(effectSchema)({ status: 'archived' })).not.to.throw();
-    expect(() => Schema.validateSync(effectSchema)({ status: 'invalid-status' })).to.throw();
+    expect(() => Schema.validateSync(effectSchema)({ id: '1', status: 'draft' })).not.to.throw();
+    expect(() => Schema.validateSync(effectSchema)({ id: '2', status: 'published' })).not.to.throw();
+    expect(() => Schema.validateSync(effectSchema)({ id: '3', status: 'archived' })).not.to.throw();
+    expect(() => Schema.validateSync(effectSchema)({ id: '4', status: 'invalid-status' })).to.throw();
 
     const properties = SchemaAST.getPropertySignatures(effectSchema.ast);
     const statusProperty = properties.find((p) => p.name === 'status');
@@ -629,8 +629,8 @@ describe('ProjectionModel', () => {
 
     const effectSchema = mutable.snapshot;
     expect(effectSchema).not.toBeUndefined;
-    expect(() => Schema.validateSync(effectSchema)({ tags: ['draft'] })).not.to.throw();
-    expect(() => Schema.validateSync(effectSchema)({ tags: ['published'] })).not.to.throw();
+    expect(() => Schema.validateSync(effectSchema)({ id: '1', tags: ['draft'] })).not.to.throw();
+    expect(() => Schema.validateSync(effectSchema)({ id: '2', tags: ['published'] })).not.to.throw();
 
     // TODO(ZaymonFC): Get validation working.
     // expect(() => Schema.validateSync(effectSchema)({ tags: ['archived', 'NOT'] })).to.throw();
@@ -1089,9 +1089,9 @@ describe('ProjectionModel', () => {
       }),
     );
 
-    // Check with the primary schema
-    expect(() => Schema.validateSync(schema)({ email: 'valid@example.com' })).not.toThrow();
-    expect(() => Schema.validateSync(schema)({ email: 'invalid-email' })).toThrow();
+    // Check with the primary schema (id is added by Type.object)
+    expect(() => Schema.validateSync(schema)({ id: '1', email: 'valid@example.com' })).not.toThrow();
+    expect(() => Schema.validateSync(schema)({ id: '2', email: 'invalid-email' })).toThrow();
 
     const [registeredSchema] = await registry.register([schema]);
 
@@ -1106,7 +1106,7 @@ describe('ProjectionModel', () => {
     // Verify reconstructed Effect schema maintains validation
     const reconstructedSchema = registeredSchema.snapshot;
 
-    expect(() => Schema.validateSync(reconstructedSchema)({ email: 'valid@example.com' })).not.toThrow();
-    expect(() => Schema.validateSync(reconstructedSchema)({ email: 'invalid-email' })).toThrow();
+    expect(() => Schema.validateSync(reconstructedSchema)({ id: '1', email: 'valid@example.com' })).not.toThrow();
+    expect(() => Schema.validateSync(reconstructedSchema)({ id: '2', email: 'invalid-email' })).toThrow();
   });
 });
