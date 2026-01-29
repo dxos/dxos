@@ -76,9 +76,9 @@ export class ObjectMetaIndex implements Index {
   );
 
   queryAll = Effect.fn('ObjectMetaIndex.queryAll')(
-    (
-      query: { spaceIds: readonly ObjectMeta['spaceId'][] },
-    ): Effect.Effect<readonly ObjectMeta[], SqlError.SqlError, SqlClient.SqlClient> =>
+    (query: {
+      spaceIds: readonly ObjectMeta['spaceId'][];
+    }): Effect.Effect<readonly ObjectMeta[], SqlError.SqlError, SqlClient.SqlClient> =>
       Effect.gen(function* () {
         if (query.spaceIds.length === 0) {
           return [];

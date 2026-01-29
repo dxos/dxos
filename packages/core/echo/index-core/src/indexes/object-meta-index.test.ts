@@ -210,7 +210,10 @@ describe('ObjectMetaIndex', () => {
       const onlyPerson = yield* index.queryTypes({ spaceIds: [spaceId], typeDxns: [TYPE_PERSON] });
       expect(onlyPerson.map((_) => _.objectId)).toEqual([objectId1]);
 
-      const onlyPersonVersionless = yield* index.queryTypes({ spaceIds: [spaceId], typeDxns: [TYPE_PERSON_VERSIONLESS] });
+      const onlyPersonVersionless = yield* index.queryTypes({
+        spaceIds: [spaceId],
+        typeDxns: [TYPE_PERSON_VERSIONLESS],
+      });
       expect(onlyPersonVersionless.map((_) => _.objectId)).toEqual([objectId1]);
 
       const notPerson = yield* index.queryTypes({ spaceIds: [spaceId], typeDxns: [TYPE_PERSON], inverted: true });
