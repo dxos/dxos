@@ -4,7 +4,6 @@
 
 import { Atom, RegistryContext } from '@effect-atom/atom-react';
 import * as Match from 'effect/Match';
-import type * as Schema from 'effect/Schema';
 import React, { forwardRef, useCallback, useContext, useMemo, useRef } from 'react';
 
 import { Common } from '@dxos/app-framework';
@@ -67,7 +66,7 @@ export const TableContainer = forwardRef<HTMLDivElement, TableContainerProps>(({
     });
   }, [graph]);
 
-  const addRow = useAddRow({ db, schema });
+  const addRow = useAddRow({ db, schema: schema as Type.Obj.Any | undefined });
 
   const handleDeleteRows = useCallback(
     (_row: number, objects: any[]) => {
@@ -118,9 +117,9 @@ export const TableContainer = forwardRef<HTMLDivElement, TableContainerProps>(({
   }, []);
 
   const handleCreate = useCallback(
-    (schema: Schema.Schema.AnyNoContext, values: any) => {
+    (schema: Type.Entity.Any, values: any) => {
       invariant(db);
-      return db.add(Obj.make(schema, values));
+      return db.add(Obj.make(schema as Type.Obj.Any, values));
     },
     [db],
   );

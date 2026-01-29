@@ -16,14 +16,18 @@ import { type ShapeComponentProps, type ShapeDef } from '@dxos/react-ui-canvas-e
 import { FunctionBody, createFunctionAnchors, getHeight } from './common';
 import { ComputeShape, type CreateShapeProps, createShape } from './defs';
 
-export const TriggerShape = Schema.extend(
+export interface TriggerShape extends ComputeShape {
+  readonly type: 'trigger';
+  readonly functionTrigger?: Ref.Ref<Trigger.Trigger>;
+}
+
+export const TriggerShape: Schema.Schema<TriggerShape> = Schema.extend(
   ComputeShape,
   Schema.Struct({
     type: Schema.Literal('trigger'),
     functionTrigger: Schema.optional(Type.Ref(Trigger.Trigger)),
   }),
-);
-export type TriggerShape = Schema.Schema.Type<typeof TriggerShape>;
+) as any;
 
 export type CreateTriggerProps = CreateShapeProps<Omit<TriggerShape, 'functionTrigger'>> & {
   spaceId?: SpaceId;
@@ -51,7 +55,9 @@ export const TriggerComponent = ({ shape }: TriggerComponentProps) => {
 
   useEffect(() => {
     if (functionTrigger && !functionTrigger.spec) {
-      functionTrigger.spec = createTriggerSpec({ triggerKind: 'email', spaceId: space?.id });
+      Obj.change(functionTrigger, (t) => {
+        t.spec = createTriggerSpec({ triggerKind: 'email', spaceId: space?.id });
+      });
     }
   }, [functionTrigger, functionTrigger?.spec]);
 
@@ -61,7 +67,9 @@ export const TriggerComponent = ({ shape }: TriggerComponentProps) => {
 
   const setKind = (kind: Trigger.Kind) => {
     if (functionTrigger?.spec?.kind !== kind) {
-      functionTrigger!.spec = createTriggerSpec({ triggerKind: kind, spaceId: space?.id });
+      Obj.change(functionTrigger!, (t) => {
+        t.spec = createTriggerSpec({ triggerKind: kind, spaceId: space?.id });
+      });
     }
   };
 

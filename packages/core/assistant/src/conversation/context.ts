@@ -30,7 +30,7 @@ export const ContextBinding = Schema.Struct({
     removed: Schema.Array(Type.Ref(Obj.Any)),
   }),
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/ContextBinding',
     version: '0.1.0',
   }),

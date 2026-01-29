@@ -12,7 +12,7 @@ export const Tag = Schema.Struct({
   label: Schema.String,
   hue: Schema.optional(Schema.String), // TODO(burdon): Color name?
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/Tag',
     version: '0.1.0',
   }),

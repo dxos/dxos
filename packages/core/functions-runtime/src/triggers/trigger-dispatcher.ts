@@ -352,7 +352,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
           case 'subscription': {
             const triggers = yield* this._fetchTriggers();
             for (const trigger of triggers) {
-              const spec = Obj.getSnapshot(trigger).spec;
+              const spec = trigger.spec;
               if (spec?.kind !== 'subscription') {
                 continue;
               }

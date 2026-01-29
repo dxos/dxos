@@ -56,7 +56,7 @@ export const CanvasBoardType = Schema.Struct({
    */
   layout: Graph.Graph,
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/CanvasBoard',
     version: '0.1.0',
   }),

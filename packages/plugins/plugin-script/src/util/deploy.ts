@@ -61,7 +61,9 @@ export const deployScript = async ({
     });
 
     const storedFunction = createOrUpdateFunctionInSpace(space, fn, script, newFunction);
-    script.changed = false;
+    Obj.change(script, (s) => {
+      s.changed = false;
+    });
 
     return { success: true, functionId: getUserFunctionIdInMetadata(Obj.getMeta(storedFunction)) };
   } catch (err: any) {
@@ -90,7 +92,9 @@ const createOrUpdateFunctionInSpace = (
     Function.setFrom(fn, newFunction);
     return fn;
   } else {
-    newFunction.source = Ref.make(script);
+    Obj.change(newFunction, (f) => {
+      f.source = Ref.make(script);
+    });
     return space.db.add(newFunction);
   }
 };

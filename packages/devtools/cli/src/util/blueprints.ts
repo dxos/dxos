@@ -11,7 +11,7 @@ import * as Schema from 'effect/Schema';
 import { ArtifactId, GenericToolkit } from '@dxos/assistant';
 import { AssistantToolkit, SystemToolkit, WebSearchToolkit } from '@dxos/assistant-toolkit';
 import { Blueprint } from '@dxos/blueprints';
-import { Tag } from '@dxos/echo';
+import { Tag, type Type } from '@dxos/echo';
 import { type FunctionDefinition } from '@dxos/functions';
 import { blueprints as AssistantBlueprints, functions as AssistantFunctions } from '@dxos/plugin-assistant/blueprints';
 import { Assistant } from '@dxos/plugin-assistant/types';
@@ -105,7 +105,7 @@ export const toolkits: GenericToolkit.GenericToolkit[] = [
   ),
 ];
 
-export const types: Schema.Schema.AnyNoContext[] = [
+export const types: Type.Entity.Any[] = [
   // NOTE: Types referenced by blueprints above need to be added here.
   DataTypes,
   [Assistant.Chat],

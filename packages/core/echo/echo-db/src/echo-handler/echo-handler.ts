@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 
 import { Event } from '@dxos/async';
 import { type DevtoolsFormatter, devtoolsFormatter, inspectCustom } from '@dxos/debug';
-import { type Entity, Obj } from '@dxos/echo';
+import { Entity, Obj } from '@dxos/echo';
 import {
   ATTR_DELETED,
   ATTR_META,
@@ -21,7 +21,6 @@ import {
   EchoSchema,
   EntityKind,
   type HasId,
-  KindId,
   MetaId,
   ObjectDatabaseId,
   ObjectDeletedId,
@@ -190,7 +189,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
             return DXN.fromLocalObjectId(target[symbolInternals].core.id);
           }
         }
-        case KindId: {
+        case Entity.KindId: {
           return target[symbolInternals].core.getKind();
         }
         case ChangeId: {
@@ -226,7 +225,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       }
     } else {
       switch (prop) {
-        case KindId:
+        case Entity.KindId:
         case RelationSourceDXNId:
         case RelationTargetDXNId:
         case RelationSourceId:

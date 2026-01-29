@@ -316,7 +316,7 @@ export const createStaticSchemaNode = ({
   schema,
   space,
 }: {
-  schema: Schema.Schema.AnyNoContext;
+  schema: Type.Entity.Any;
   space: Space;
 }): Node.Node => {
   return {

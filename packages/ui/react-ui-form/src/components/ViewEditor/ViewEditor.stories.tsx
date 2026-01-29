@@ -52,7 +52,7 @@ const DefaultStory = (props: StoryProps) => {
         email: Format.Email,
         salary: Format.Currency(),
       }).pipe(
-        Type.Obj({
+        Type.object({
           typename: 'example.com/type/Test',
           version: '0.1.0',
         }),
@@ -63,7 +63,7 @@ const DefaultStory = (props: StoryProps) => {
         description: Schema.String,
         completed: Schema.Boolean,
       }).pipe(
-        Type.Obj({
+        Type.object({
           typename: 'example.com/type/Alternate',
           version: '0.1.0',
         }),
@@ -90,7 +90,9 @@ const DefaultStory = (props: StoryProps) => {
       if (props.mode === 'tag') {
         const queue = target && DXN.tryParse(target) ? target : undefined;
         const query = queue ? Query.fromAst(newQuery).options({ queues: [queue] }) : Query.fromAst(newQuery);
-        view.query.ast = query.ast;
+        Obj.change(view, (v) => {
+          v.query.ast = query.ast;
+        });
 
         const typename = getTypenameFromQuery(query.ast);
         const [newSchema] = await space.db.schemaRegistry.query({ typename }).run();
@@ -102,10 +104,14 @@ const DefaultStory = (props: StoryProps) => {
           query,
           jsonSchema: newSchema.jsonSchema,
         });
-        view.projection = Obj.getSnapshot(newView).projection;
+        Obj.change(view, (v) => {
+          v.projection = Obj.getSnapshot(newView).projection;
+        });
         setSchema(() => newSchema);
       } else {
-        view.query.ast = newQuery;
+        Obj.change(view, (v) => {
+          v.query.ast = newQuery;
+        });
         schema.updateTypename(getTypenameFromQuery(newQuery));
       }
     },

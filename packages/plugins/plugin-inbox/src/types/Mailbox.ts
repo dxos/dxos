@@ -45,7 +45,7 @@ export const Mailbox = Schema.Struct({
     }),
   ),
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/Mailbox',
     version: '0.1.0',
   }),

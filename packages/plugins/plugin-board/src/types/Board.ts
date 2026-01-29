@@ -16,7 +16,7 @@ export const Board = Schema.Struct({
   items: Type.Ref(Obj.Any).pipe(Schema.Array, Schema.mutable, FormInputAnnotation.set(false)),
   layout: BoardLayout.pipe(Schema.mutable, FormInputAnnotation.set(false)),
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/Board',
     version: '0.1.0',
   }),

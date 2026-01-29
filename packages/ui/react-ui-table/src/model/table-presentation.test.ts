@@ -91,7 +91,7 @@ const Test = Schema.Struct({
   title: Schema.String,
   count: Schema.Number,
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'example.com/type/Test',
     version: '0.1.0',
   }),

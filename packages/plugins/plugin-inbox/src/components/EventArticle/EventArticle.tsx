@@ -31,7 +31,9 @@ export const EventArticle = ({
     const event = createShadowEvent();
     const notes = await event.notes?.load();
     if (!notes) {
-      event.notes = Ref.make(Text.make());
+      Obj.change(event, (e) => {
+        e.notes = Ref.make(Text.make());
+      });
     }
   }, [id, subject, db, shadowedEvent]);
 

@@ -7,14 +7,12 @@ import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { type Entity, Filter, Obj, Query, Type } from '@dxos/echo';
+import { Filter, Obj, Query, Type } from '@dxos/echo';
 import {
-  EntityKind,
   Format,
   type JsonPath,
   type JsonProp,
   Ref,
-  TypeAnnotationId,
   TypeEnum,
   getPropertyMetaAnnotation,
   toJsonSchema,
@@ -56,13 +54,12 @@ describe('ProjectionModel', () => {
       name: Schema.String.annotations({ title: 'Name' }),
       email: Format.Email,
       salary: Format.Currency({ code: 'usd', decimals: 2 }),
-    }).annotations({
-      [TypeAnnotationId]: {
-        kind: EntityKind.Object,
+    }).pipe(
+      Type.object({
         typename: 'example.com/type/Person',
         version: '0.1.0',
-      },
-    });
+      }),
+    );
     const [mutable] = await registry.register([schema]);
 
     const view = View.make({
@@ -153,7 +150,7 @@ describe('ProjectionModel', () => {
       email: Format.Email,
       salary: Format.Currency({ code: 'usd', decimals: 2 }),
       organization: Ref(TestSchema.Organization),
-    }).pipe(Type.Obj({ typename, version: '0.1.0' }));
+    }).pipe(Type.object({ typename, version: '0.1.0' }));
     const jsonSchema = toJsonSchema(schema);
 
     const view = await View.makeWithReferences({
@@ -204,12 +201,12 @@ describe('ProjectionModel', () => {
     const schema = Schema.Struct({
       name: Schema.String.annotations({ title: 'Name' }),
       email: Format.Email,
-    }).annotations({
-      [TypeAnnotationId]: {
+    }).pipe(
+      Type.object({
         typename: 'example.com/type/Person',
         version: '0.1.0',
-      },
-    });
+      }),
+    );
 
     const [mutable] = await registry.register([schema]);
     const view = View.make({
@@ -243,13 +240,12 @@ describe('ProjectionModel', () => {
       name: Schema.optional(Schema.Number),
       email: Schema.optional(Schema.Number),
       description: Schema.optional(Schema.String),
-    }).annotations({
-      [TypeAnnotationId]: {
-        kind: EntityKind.Object,
+    }).pipe(
+      Type.object({
         typename: 'example.com/type/Person',
         version: '0.1.0',
-      },
-    });
+      }),
+    );
 
     const [mutable] = await registry.register([schema]);
     const view = View.make({
@@ -297,13 +293,12 @@ describe('ProjectionModel', () => {
     const schema = Schema.Struct({
       name: Schema.String,
       email: Format.Email,
-    }).annotations({
-      [TypeAnnotationId]: {
-        kind: EntityKind.Object,
+    }).pipe(
+      Type.object({
         typename: 'example.com/type/Person',
         version: '0.1.0',
-      },
-    });
+      }),
+    );
 
     const [mutable] = await registry.register([schema]);
     const view = View.make({
@@ -353,13 +348,12 @@ describe('ProjectionModel', () => {
       name: Schema.String,
       email: Format.Email,
       age: Schema.Number,
-    }).annotations({
-      [TypeAnnotationId]: {
-        kind: EntityKind.Object,
+    }).pipe(
+      Type.object({
         typename: 'example.com/type/Person',
         version: '0.1.0',
-      },
-    });
+      }),
+    );
 
     const [mutable] = await registry.register([schema]);
     const view = View.make({
@@ -414,13 +408,12 @@ describe('ProjectionModel', () => {
 
     const schema = Schema.Struct({
       status: Schema.String,
-    }).annotations({
-      [TypeAnnotationId]: {
-        kind: EntityKind.Object,
+    }).pipe(
+      Type.object({
         typename: 'example.com/type/Task',
         version: '0.1.0',
-      },
-    });
+      }),
+    );
 
     const [mutable] = await registry.register([schema]);
     const view = View.make({
@@ -529,13 +522,12 @@ describe('ProjectionModel', () => {
 
     const schema = Schema.Struct({
       tags: Schema.String,
-    }).annotations({
-      [TypeAnnotationId]: {
-        kind: EntityKind.Object,
+    }).pipe(
+      Type.object({
         typename: 'example.com/type/Task',
         version: '0.1.0',
-      },
-    });
+      }),
+    );
 
     const [mutable] = await registry.register([schema]);
     const view = View.make({
@@ -669,13 +661,12 @@ describe('ProjectionModel', () => {
       name: Schema.String,
       email: Format.Email,
       createdAt: Schema.String,
-    }).annotations({
-      [TypeAnnotationId]: {
-        kind: EntityKind.Object,
+    }).pipe(
+      Type.object({
         typename: 'example.com/type/Person',
         version: '0.1.0',
-      },
-    });
+      }),
+    );
 
     const [mutable] = await registry.register([schema]);
 
@@ -778,13 +769,12 @@ describe('ProjectionModel', () => {
       title: Schema.String,
       description: Schema.String,
       status: Schema.String,
-    }).annotations({
-      [TypeAnnotationId]: {
-        kind: EntityKind.Object,
+    }).pipe(
+      Type.object({
         typename: 'example.com/type/Task',
         version: '0.1.0',
-      },
-    });
+      }),
+    );
 
     const [mutable] = await registry.register([schema]);
 
@@ -822,13 +812,12 @@ describe('ProjectionModel', () => {
     // Create initial schema with a single field.
     const initialSchema = Schema.Struct({
       title: Schema.String,
-    }).annotations({
-      [TypeAnnotationId]: {
-        kind: EntityKind.Object,
+    }).pipe(
+      Type.object({
         typename: 'example.com/type/Task',
         version: '0.1.0',
-      },
-    });
+      }),
+    );
 
     const [mutable] = await registry.register([initialSchema]);
 
@@ -854,7 +843,7 @@ describe('ProjectionModel', () => {
 
     // Modify the schema - add a field.
     // Type assertion needed because PersistentSchema's type doesn't include [KindId] but runtime value does.
-    Obj.change(mutable.persistentSchema as unknown as Entity.Any, (s: any) => {
+    Obj.change(mutable.persistentSchema as unknown as Obj.Any, (s: any) => {
       s.jsonSchema.properties!.status = { type: 'string' };
     });
     projectionModel.normalizeView();
@@ -876,13 +865,12 @@ describe('ProjectionModel', () => {
       name: Schema.String,
       email: Format.Email,
       phone: Schema.String,
-    }).annotations({
-      [TypeAnnotationId]: {
-        kind: EntityKind.Object,
+    }).pipe(
+      Type.object({
         typename: 'example.com/type/Person',
         version: '0.1.0',
-      },
-    });
+      }),
+    );
 
     const [mutable] = await registry.register([schema]);
     const view = View.make({
@@ -992,7 +980,7 @@ describe('ProjectionModel', () => {
         ),
       ),
     }).pipe(
-      Type.Obj({
+      Type.object({
         typename: 'dxos.org/type/ContactWithArrayOfEmails',
         version: '0.1.0',
       }),
@@ -1039,13 +1027,12 @@ describe('ProjectionModel', () => {
       const schemaType = expectedType === TypeEnum.Number ? Schema.Number : Schema.String;
       const schema = Schema.Struct({
         [fieldName]: schemaType,
-      }).annotations({
-        [TypeAnnotationId]: {
-          kind: EntityKind.Object,
+      }).pipe(
+        Type.object({
           typename: 'example.com/type/TestObject',
           version: '0.1.0',
-        },
-      });
+        }),
+      );
 
       const [mutable] = await registry.register([schema]);
       const view = View.make({
@@ -1095,13 +1082,12 @@ describe('ProjectionModel', () => {
     // Create and register schema using Format.Email
     const schema = Schema.Struct({
       email: Format.Email,
-    }).annotations({
-      [TypeAnnotationId]: {
-        kind: EntityKind.Object,
+    }).pipe(
+      Type.object({
         typename: 'example.com/type/EmailTest',
         version: '0.1.0',
-      },
-    });
+      }),
+    );
 
     // Check with the primary schema
     expect(() => Schema.validateSync(schema)({ email: 'valid@example.com' })).not.toThrow();

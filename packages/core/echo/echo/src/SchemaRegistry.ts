@@ -55,6 +55,10 @@ export type Query = {
 /**
  * Input for schema registration.
  * The typename, version and schema mutability metadata is read from the schema annotations.
+ *
+ * Accepts:
+ * - Branded ECHO schemas created with Type.Obj() or Type.Relation()
+ * - JSON schema with typename and version
  */
 export type RegisterSchemaInput =
   | Type.Entity.Any

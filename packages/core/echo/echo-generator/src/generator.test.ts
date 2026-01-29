@@ -95,7 +95,7 @@ describe('TestObjectGenerator', () => {
     const Task = Schema.Struct({
       name: Schema.optional(Schema.String),
     }).pipe(
-      Type.Obj({
+      Type.object({
         typename: 'example.org/type/Task',
         version: '0.1.0',
       }),

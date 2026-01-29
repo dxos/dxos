@@ -5,6 +5,7 @@
 import React, { useCallback, useRef, useState } from 'react';
 
 import { Common } from '@dxos/app-framework';
+import { Obj } from '@dxos/echo';
 import { useOperationInvoker } from '@dxos/app-framework/react';
 import { Button, Input, Popover, useTranslation } from '@dxos/react-ui';
 
@@ -18,7 +19,9 @@ export const PopoverSaveFilter = ({ mailbox, filter }: { mailbox: Mailbox.Mailbo
   const { invokePromise } = useOperationInvoker();
 
   const handleDone = useCallback(() => {
-    (mailbox.filters ??= []).push({ name, filter });
+    Obj.change(mailbox, (m) => {
+      (m.filters ??= []).push({ name, filter });
+    });
     void invokePromise(Common.LayoutOperation.UpdatePopover, { state: false, anchorId: '' });
   }, [mailbox, name, invokePromise]);
 

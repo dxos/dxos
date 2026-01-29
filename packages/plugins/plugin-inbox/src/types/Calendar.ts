@@ -23,7 +23,7 @@ export const Calendar = Schema.Struct({
     }),
   ),
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/Calendar',
     version: '0.1.0',
   }),

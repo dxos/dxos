@@ -4,7 +4,6 @@
 
 import { RegistryContext } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import type * as Schema from 'effect/Schema';
 import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
@@ -89,8 +88,8 @@ const DefaultStory = () => {
   const { space } = useClientStory();
 
   const handleCreate = useCallback(
-    (schema: Schema.Schema.AnyNoContext, values: any) => {
-      return client.spaces.default.db.add(Obj.make(schema, values));
+    (schema: Type.Entity.Any, values: any) => {
+      return client.spaces.default.db.add(Obj.make(schema as Type.Obj.Any, values));
     },
     [space],
   );

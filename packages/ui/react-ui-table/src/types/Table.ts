@@ -10,7 +10,7 @@ import { Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation, type JsonPath, type JsonSchemaType, LabelAnnotation } from '@dxos/echo/internal';
 import { View, ViewAnnotation } from '@dxos/schema';
 
-const TableSchema = Schema.Struct({
+export const Table = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
 
   view: Type.Ref(View.View).pipe(FormInputAnnotation.set(false)),
@@ -21,7 +21,7 @@ const TableSchema = Schema.Struct({
     value: Schema.Number,
   }).pipe(Schema.mutable, FormInputAnnotation.set(false)),
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/Table',
     version: '0.2.0',
   }),
@@ -29,11 +29,11 @@ const TableSchema = Schema.Struct({
   ViewAnnotation.set(true),
 );
 
-export interface Table extends Schema.Schema.Type<typeof TableSchema> {}
-export interface TableEncoded extends Schema.Schema.Encoded<typeof TableSchema> {}
-export const Table: Schema.Schema<Table, TableEncoded> = TableSchema;
+export interface Table extends Schema.Schema.Type<typeof Table> {}
 
-type MakeProps = Omit<Partial<Obj.MakeProps<typeof Table>>, 'view'> & {
+type MakeProps = {
+  name?: string;
+  sizes?: Record<string, number>;
   view: View.View;
   /** Required to auto-size columns. */
   jsonSchema?: JsonSchemaType;
@@ -43,7 +43,7 @@ type MakeProps = Omit<Partial<Obj.MakeProps<typeof Table>>, 'view'> & {
  * Make a table as a view of a data set.
  */
 export const make = ({ name, sizes = {}, view, jsonSchema }: MakeProps): Table => {
-  const table = Obj.make(Table, { name, view: Ref.make(view), sizes });
+  const table = Obj.make(Table, { name, view: Ref.make(view), sizes } as Obj.MakeProps<typeof Table>);
 
   // Preset sizes.
   if (jsonSchema) {
@@ -83,7 +83,7 @@ export const TableV1 = Schema.Struct({
     value: Schema.Number,
   }).pipe(Schema.mutable),
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/Table',
     version: '0.1.0',
   }),

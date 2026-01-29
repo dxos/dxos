@@ -139,7 +139,9 @@ describe('Echo Atom - Basic Functionality', () => {
     expect(propertyUpdateCount).toBe(1);
 
     // Mutate the standalone object.
-    obj.name = 'Updated Standalone';
+    Obj.change(obj, (o) => {
+      o.name = 'Updated Standalone';
+    });
 
     // Both atoms should have received updates.
     expect(objectUpdateCount).toBe(2);

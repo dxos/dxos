@@ -21,8 +21,8 @@ const DefaultStory = () => {
 
   useEffect(() => {
     if (space && !object) {
-      const object = space.db.add(Project.make());
-      setObject(object as Obj.Any);
+      const object = space.db.add(Project.make() as unknown as Obj.Any);
+      setObject(object);
     }
   }, [space, object]);
 

@@ -54,7 +54,7 @@ export const Blueprint = Schema.Struct({
     description: 'Array of tools that the AI assistant can use when this blueprint is active',
   }),
 }).pipe(
-  Type.Obj({
+  Type.object({
     // TODO(burdon): Is this a DXN? Need to create a Format type for these IDs.
     typename: 'dxos.org/type/Blueprint',
     version: '0.1.0',

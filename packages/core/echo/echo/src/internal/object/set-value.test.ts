@@ -61,7 +61,7 @@ describe('Obj.setValue', () => {
       name: Schema.String,
       items: Schema.optional(Schema.mutable(Schema.Array(Item))),
     }).pipe(
-      Type.Obj({
+      Type.object({
         typename: 'test.com/Container',
         version: '0.1.0',
       }),
@@ -147,7 +147,7 @@ describe('Obj.setValue', () => {
     const Matrix = Schema.Struct({
       values: Schema.optional(Schema.mutable(Schema.Array(Schema.mutable(Schema.Array(Schema.Number))))),
     }).pipe(
-      Type.Obj({
+      Type.object({
         typename: 'test.com/Matrix',
         version: '0.1.0',
       }),
@@ -197,7 +197,7 @@ describe('Obj.setValue', () => {
       name: Schema.String,
       items: Schema.optional(Schema.mutable(Schema.Array(Item))),
     }).pipe(
-      Type.Obj({
+      Type.object({
         typename: 'test.com/Container',
         version: '0.1.0',
       }),
@@ -224,7 +224,7 @@ describe('Obj.setValue', () => {
       name: Schema.String,
       tasks: Schema.optional(Schema.mutable(Schema.Array(Task))),
     }).pipe(
-      Type.Obj({
+      Type.object({
         typename: 'test.com/TodoList',
         version: '0.1.0',
       }),
@@ -253,7 +253,7 @@ describe('Obj.setValue', () => {
       name: Schema.String,
       items: Schema.optional(Schema.mutable(Schema.Array(Item))),
     }).pipe(
-      Type.Obj({
+      Type.object({
         typename: 'test.com/Container',
         version: '0.1.0',
       }),

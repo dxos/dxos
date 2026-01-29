@@ -35,7 +35,7 @@ export type ArrangedCards<T extends BaseKanbanItem = { id: string }> = {
  */
 export type KanbanChangeCallback<T extends BaseKanbanItem> = {
   /** Callback to wrap kanban object mutations. */
-  kanban: (mutate: (mutableKanban: Kanban.Kanban) => void) => void;
+  kanban: (mutate: (mutableKanban: Obj.Mutable<Kanban.Kanban>) => void) => void;
   /** Sets a field on an item, wrapping in Obj.change() if needed. */
   setItemField: (item: T, field: JsonProp, value: unknown) => void;
 };
@@ -45,7 +45,7 @@ export type KanbanChangeCallback<T extends BaseKanbanItem> = {
  * Use this when the kanban and items are stored in the ECHO database.
  */
 export const createEchoChangeCallback = <T extends BaseKanbanItem>(kanban: Kanban.Kanban): KanbanChangeCallback<T> => ({
-  kanban: (mutate) => Obj.change(kanban, (mutableKanban) => mutate(mutableKanban as unknown as Kanban.Kanban)),
+  kanban: (mutate) => Obj.change(kanban, (mutableKanban) => mutate(mutableKanban)),
   setItemField: (item, field, value) => {
     if (Obj.isObject(item)) {
       Obj.change(item, (mutableItem) => {
@@ -64,7 +64,7 @@ export const createEchoChangeCallback = <T extends BaseKanbanItem>(kanban: Kanba
 export const createDirectChangeCallback = <T extends BaseKanbanItem>(
   kanban: Kanban.Kanban,
 ): KanbanChangeCallback<T> => ({
-  kanban: (mutate) => mutate(kanban),
+  kanban: (mutate) => mutate(kanban as Obj.Mutable<Kanban.Kanban>),
   setItemField: (item, field, value) => {
     (item as Record<JsonProp, unknown>)[field] = value;
   },

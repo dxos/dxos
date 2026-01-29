@@ -20,7 +20,7 @@ export const Employer = Schema.Struct({
   endDate: Schema.optional(Schema.String),
 })
   .pipe(
-    Type.Relation({
+    Type.relation({
       typename: 'dxos.org/relation/Employer',
       version: '0.1.0',
       source: Person,

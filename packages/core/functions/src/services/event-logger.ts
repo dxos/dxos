@@ -52,7 +52,7 @@ export type ComputeEventPayload = Schema.Schema.Type<typeof ComputeEventPayload>
 
 export const ComputeEvent = Schema.Struct({
   payload: ComputeEventPayload,
-}).pipe(Type.Obj({ typename: 'dxos.org/type/ComputeEvent', version: '0.1.0' }));
+}).pipe(Type.object({ typename: 'dxos.org/type/ComputeEvent', version: '0.1.0' }));
 
 /**
  * Logs event for the compute workflows.

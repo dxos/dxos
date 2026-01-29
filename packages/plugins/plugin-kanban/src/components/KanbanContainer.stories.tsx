@@ -63,7 +63,7 @@ const StorybookKanban = () => {
   const handleAddCard = useCallback(
     (columnValue: string | undefined) => {
       const path = model?.columnFieldPath;
-      if (space && schema && path) {
+      if (space && schema && Type.Entity.isObject(schema) && path) {
         const card = Obj.make(schema, {
           ...rollOrg(),
           [path]: columnValue,

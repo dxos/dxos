@@ -39,31 +39,33 @@ export const updateFunctionMetadata = (
   meta: any,
   functionId: string,
 ) => {
-  if (script.description !== undefined && script.description.trim() !== '') {
-    storedFunction.description = script.description;
-  } else if (meta.description) {
-    storedFunction.description = meta.description;
-  } else {
-    log.verbose('no description in function metadata', { functionId });
-  }
+  Obj.change(storedFunction, (f) => {
+    if (script.description !== undefined && script.description.trim() !== '') {
+      f.description = script.description;
+    } else if (meta.description) {
+      f.description = meta.description;
+    } else {
+      log.verbose('no description in function metadata', { functionId });
+    }
 
-  if (meta.inputSchema) {
-    storedFunction.inputSchema = meta.inputSchema;
-  } else {
-    log.verbose('no input schema in function metadata', { functionId });
-  }
+    if (meta.inputSchema) {
+      f.inputSchema = meta.inputSchema;
+    } else {
+      log.verbose('no input schema in function metadata', { functionId });
+    }
 
-  if (meta.outputSchema) {
-    storedFunction.outputSchema = meta.outputSchema;
-  } else {
-    log.verbose('no output schema in function metadata', { functionId });
-  }
+    if (meta.outputSchema) {
+      f.outputSchema = meta.outputSchema;
+    } else {
+      log.verbose('no output schema in function metadata', { functionId });
+    }
 
-  if (meta.key) {
-    storedFunction.key = meta.key;
-  } else {
-    log.verbose('no key in function metadata', { functionId });
-  }
+    if (meta.key) {
+      f.key = meta.key;
+    } else {
+      log.verbose('no key in function metadata', { functionId });
+    }
+  });
 };
 
 export const getAccessCredential = (identityKey: PublicKey): Credential => {

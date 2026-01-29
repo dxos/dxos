@@ -50,7 +50,7 @@ export const Function = Schema.Struct({
   // Local binding to a function name.
   binding: Schema.optional(Schema.String),
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/Function',
     version: '0.1.0',
   }),
@@ -68,13 +68,15 @@ export const make = (props: Obj.MakeProps<typeof Function>) => Obj.make(Function
  * @param source - Source object to copy properties from.
  */
 export const setFrom = (target: Function, source: Function) => {
-  target.key = source.key ?? target.key;
-  target.name = source.name ?? target.name;
-  target.version = source.version;
-  target.description = source.description;
-  target.updated = source.updated;
-  // TODO(dmaretskyi): A workaround for an ECHO bug.
-  target.inputSchema = source.inputSchema ? JSON.parse(JSON.stringify(source.inputSchema)) : undefined;
-  target.outputSchema = source.outputSchema ? JSON.parse(JSON.stringify(source.outputSchema)) : undefined;
+  Obj.change(target, (t) => {
+    t.key = source.key ?? target.key;
+    t.name = source.name ?? target.name;
+    t.version = source.version;
+    t.description = source.description;
+    t.updated = source.updated;
+    // TODO(dmaretskyi): A workaround for an ECHO bug.
+    t.inputSchema = source.inputSchema ? JSON.parse(JSON.stringify(source.inputSchema)) : undefined;
+    t.outputSchema = source.outputSchema ? JSON.parse(JSON.stringify(source.outputSchema)) : undefined;
+  });
   Obj.getMeta(target).keys = JSON.parse(JSON.stringify(Obj.getMeta(source).keys));
 };

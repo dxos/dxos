@@ -46,7 +46,7 @@ export namespace TestSchema {
 
   /** @deprecated Use another test schema or create a specific local test schema. */
   export const Example = ExampleSchema.pipe(
-    Type.Obj({
+    Type.object({
       typename: 'example.com/type/Example',
       version: '0.1.0',
     }),
@@ -70,7 +70,7 @@ export namespace TestSchema {
   });
 
   export const Message = MessageStruct.pipe(
-    Type.Obj({
+    Type.object({
       typename: 'example.com/type/Message',
       version: '0.1.0',
     }),
@@ -91,7 +91,7 @@ export namespace TestSchema {
       }),
     ),
   }).pipe(
-    Type.Obj({
+    Type.object({
       typename: 'example.com/type/Organization',
       version: '0.1.0',
     }),
@@ -125,7 +125,7 @@ export namespace TestSchema {
     }).pipe(Schema.Array, Schema.optional),
   }).pipe(
     Schema.partial,
-    Type.Obj({
+    Type.object({
       typename: 'example.com/type/Person',
       version: '0.1.0',
     }),
@@ -147,7 +147,7 @@ export namespace TestSchema {
     description: Schema.optional(Schema.String),
   }).pipe(
     Schema.partial,
-    Type.Obj({
+    Type.object({
       typename: 'example.com/type/Task',
       version: '0.1.0',
     }),
@@ -160,7 +160,7 @@ export namespace TestSchema {
   //
 
   export const HasManager = Schema.Struct({}).pipe(
-    Type.Relation({
+    Type.relation({
       typename: 'example.com/type/HasManager',
       version: '0.1.0',
       source: Person,
@@ -178,7 +178,7 @@ export namespace TestSchema {
     role: Schema.String,
     since: Schema.optional(Schema.String),
   }).pipe(
-    Type.Relation({
+    Type.relation({
       typename: 'example.com/type/EmployedBy',
       version: '0.1.0',
       source: Person,
@@ -214,7 +214,7 @@ export namespace TestSchema {
     ),
   }).pipe(
     Schema.partial,
-    Type.Obj({
+    Type.object({
       typename: 'example.com/type/Container',
       version: '0.1.0',
     }),

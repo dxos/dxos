@@ -15,7 +15,7 @@ import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 
 import { ArtifactId } from '@dxos/assistant';
-import { DXN } from '@dxos/echo';
+import { DXN, Obj } from '@dxos/echo';
 import { Database } from '@dxos/echo';
 import { CredentialsService, QueueService, defineFunction } from '@dxos/functions';
 import { log } from '@dxos/log';
@@ -92,7 +92,11 @@ export default defineFunction({
       // Update the calendar's last synced update timestamp.
       const lastUpdate = yield* Ref.get(latestUpdate);
       if (lastUpdate) {
-        calendar.lastSyncedUpdate = lastUpdate;
+        yield* Effect.sync(() => {
+          Obj.change(calendar, (c) => {
+            c.lastSyncedUpdate = lastUpdate;
+          });
+        });
         log('updated lastSyncedUpdate', { lastUpdate });
       }
 

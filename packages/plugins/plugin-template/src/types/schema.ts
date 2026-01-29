@@ -10,7 +10,7 @@ export namespace Template {
   export const Data = Schema.Struct({
     name: Schema.optional(Schema.String),
   }).pipe(
-    Type.Obj({
+    Type.object({
       typename: 'dxos.org/type/Data',
       version: '0.1.0',
     }),

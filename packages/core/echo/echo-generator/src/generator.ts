@@ -2,10 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import type * as Schema from 'effect/Schema';
-
 import { Filter, type Space } from '@dxos/client/echo';
-import { Obj } from '@dxos/echo';
+import { Obj, type Type } from '@dxos/echo';
 import { EchoSchema, getTypeAnnotation } from '@dxos/echo/internal';
 import { isProxy } from '@dxos/echo/internal';
 import { type AnyLiveObject } from '@dxos/echo-db';
@@ -34,15 +32,15 @@ export class TestObjectGenerator<T extends string = TestSchemaType> {
 		private readonly _provider?: TestObjectProvider<T>,
 	) {}
 
-  get schemas(): (EchoSchema | Schema.Schema.AnyNoContext)[] {
+  get schemas(): Type.Obj.Any[] {
     return Object.values(this._schemas);
   }
 
-  getSchema(type: T): EchoSchema | Schema.Schema.AnyNoContext | undefined {
+  getSchema(type: T): Type.Obj.Any | undefined {
     return this.schemas.find((schema) => getTypeAnnotation(schema)!.typename === type);
   }
 
-  protected setSchema(type: T, schema: EchoSchema | Schema.Schema.AnyNoContext): void {
+  protected setSchema(type: T, schema: Type.Obj.Any): void {
     this._schemas[type] = schema;
   }
 
@@ -93,9 +91,9 @@ export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<
   }
 
   async addSchemas() {
-    const result: (EchoSchema | Schema.Schema.AnyNoContext)[] = [];
+    const result: Type.Obj.Any[] = [];
     for (const [typename, schema] of Object.entries(this._schemas)) {
-      const echoSchema = await this._maybeRegisterSchema(typename, schema as EchoSchema | Schema.Schema.AnyNoContext);
+      const echoSchema = await this._maybeRegisterSchema(typename, schema as Type.Obj.Any);
       this.setSchema(typename as T, echoSchema);
       result.push(echoSchema);
     }
@@ -111,10 +109,7 @@ export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<
     return this._space.db.add(await super.createObject({ types }));
   }
 
-  private async _maybeRegisterSchema(
-    typename: string,
-    schema: EchoSchema | Schema.Schema.AnyNoContext,
-  ): Promise<EchoSchema | Schema.Schema.AnyNoContext> {
+  private async _maybeRegisterSchema(typename: string, schema: Type.Obj.Any): Promise<Type.Obj.Any> {
     if (schema instanceof EchoSchema) {
       const existingSchema = this._space.internal.db.schemaRegistry.getSchema(typename);
       if (existingSchema != null) {
@@ -125,7 +120,8 @@ export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<
     } else {
       const existingSchema = this._space.internal.db.graph.schemaRegistry.getSchema(typename);
       if (existingSchema != null) {
-        return existingSchema;
+        // Runtime schemas have typename/version via annotations.
+        return existingSchema as Type.Obj.Any;
       }
       await this._space.internal.db.graph.schemaRegistry.register([schema]);
       return schema;

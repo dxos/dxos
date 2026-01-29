@@ -5,7 +5,7 @@
 import { Atom, Registry } from '@effect-atom/atom-react';
 import * as Schema from 'effect/Schema';
 
-import { type Entity, Format, Obj } from '@dxos/echo';
+import { Format, Obj } from '@dxos/echo';
 import {
   type EchoSchema,
   type JsonProp,
@@ -60,7 +60,7 @@ export type ProjectionChangeCallback = {
  */
 export const createEchoChangeCallback = (view: View.View, schema: EchoSchema): ProjectionChangeCallback => ({
   projection: (mutate) => Obj.change(view, (v) => mutate(v.projection as View.Projection)),
-  schema: (mutate) => Obj.change(schema.persistentSchema as unknown as Entity.Any, (s: any) => mutate(s.jsonSchema)),
+  schema: (mutate) => Obj.change(schema.persistentSchema as unknown as Obj.Any, (s: any) => mutate(s.jsonSchema)),
 });
 
 /**

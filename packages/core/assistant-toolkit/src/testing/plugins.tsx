@@ -12,7 +12,7 @@ import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
 export const MapSchema = Schema.Struct({
   coordinates: Format.GeoPoint,
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'example.com/type/Map',
     version: '0.1.0',
   }),

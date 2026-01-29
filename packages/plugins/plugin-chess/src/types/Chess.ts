@@ -30,7 +30,7 @@ export const Game = Schema.Struct({
     description: 'Forsyth-Edwards Notation.',
   }).pipe(FormInputAnnotation.set(false), Schema.optional),
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/Chess',
     version: '0.2.0',
   }),

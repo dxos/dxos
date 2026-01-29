@@ -13,7 +13,7 @@ export const File = Schema.Struct({
   cid: Schema.String.pipe(FormInputAnnotation.set(false)),
   timestamp: Schema.String.pipe(FormInputAnnotation.set(false), Schema.optional),
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/File',
     version: '0.1.0',
   }),

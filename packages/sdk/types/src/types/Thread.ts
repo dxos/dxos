@@ -15,12 +15,12 @@ export const ThreadStatus = Schema.Union(
   Schema.Literal('resolved'),
 );
 
-const _Thread = Schema.Struct({
+export const Thread = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
   status: ThreadStatus.pipe(Schema.optional),
   messages: Schema.mutable(Schema.Array(Type.Ref(Message.Message))),
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/Thread',
     version: '0.1.0',
   }),
@@ -28,9 +28,10 @@ const _Thread = Schema.Struct({
   SystemTypeAnnotation.set(true),
 );
 
-export interface Thread extends Schema.Schema.Type<typeof _Thread> {}
-export interface ThreadEncoded extends Schema.Schema.Encoded<typeof _Thread> {}
-export const Thread: Schema.Schema<Thread, ThreadEncoded> = _Thread;
+export interface Thread extends Schema.Schema.Type<typeof Thread> {}
 
-export const make = ({ status = 'staged', messages = [], ...props }: Partial<Obj.MakeProps<typeof Thread>> = {}) =>
-  Obj.make(Thread, { status, messages, ...props });
+export const make = ({
+  status = 'staged',
+  messages = [],
+  ...props
+}: Partial<Obj.MakeProps<typeof Thread>> = {}): Thread => Obj.make(Thread, { status, messages, ...props });

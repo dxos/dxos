@@ -13,15 +13,20 @@ import { EntityKind } from '../types';
 import { type EchoTypeSchema, makeEchoTypeSchema } from './entity';
 
 /**
+ * Object schema type with kind marker.
+ */
+export type EchoObjectSchema<Self extends Schema.Schema.Any> = EchoTypeSchema<Self, {}, EntityKind.Object>;
+
+/**
  * Schema for Obj entity types.
  * Pipeable function to add ECHO object annotations to a schema.
  */
 export const EchoObjectSchema: {
   // TODO(burdon): Tighten Self type to Schema.TypeLiteral or Schema.Struct to facilitate definition of `make` method.
   // (meta: TypeMeta): <Self extends Schema.Struct<Fields>, Fields extends Schema.Struct.Fields>(self: Self) => EchoObjectSchema<Self, Fields>;
-  (meta: TypeMeta): <Self extends Schema.Schema.Any>(self: Self) => EchoTypeSchema<Self>;
+  (meta: TypeMeta): <Self extends Schema.Schema.Any>(self: Self) => EchoObjectSchema<Self>;
 } = ({ typename, version }) => {
-  return <Self extends Schema.Schema.Any>(self: Self): EchoTypeSchema<Self> => {
+  return <Self extends Schema.Schema.Any>(self: Self): EchoObjectSchema<Self> => {
     invariant(typeof TypeAnnotationId === 'symbol', 'Sanity.');
     invariant(SchemaAST.isTypeLiteral(self.ast), 'Schema must be a TypeLiteral.');
 
@@ -40,6 +45,6 @@ export const EchoObjectSchema: {
       }),
     });
 
-    return makeEchoTypeSchema<Self>(/* self.fields, */ ast, typename, version);
+    return makeEchoTypeSchema<Self, EntityKind.Object>(/* self.fields, */ ast, typename, version, EntityKind.Object);
   };
 };

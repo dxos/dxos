@@ -48,7 +48,10 @@ export const subscription = Command.make(
       const currentFn = yield* updateFunction(trigger, options.functionId);
       yield* updateSpec(trigger, options.typename, options.deep, options.delay);
       yield* updateInput(trigger, currentFn, options.input);
-      trigger.enabled = yield* updateEnabled(trigger, options.id, options.enabled);
+      const newEnabled = yield* updateEnabled(trigger, options.id, options.enabled);
+      Obj.change(trigger, (t) => {
+        t.enabled = newEnabled;
+      });
 
       if (json) {
         yield* Console.log(JSON.stringify(trigger, null, 2));
@@ -121,7 +124,9 @@ const updateFunction = Effect.fn(function* (trigger: Trigger.Trigger, functionId
       return yield* Effect.fail(new Error(`Function not found: ${functionId}`));
     }
     currentFn = foundFn;
-    trigger.function = Ref.make(currentFn);
+    Obj.change(trigger, (t) => {
+      t.function = Ref.make(currentFn!);
+    });
   }
 
   if (!currentFn) {
@@ -176,9 +181,13 @@ const updateSpec = Effect.fn(function* (
     });
     const queryAst = Query.select(Filter.type(typename)).ast;
     if (trigger.spec?.kind === 'subscription') {
-      trigger.spec.query = {
-        ast: queryAst,
-      };
+      Obj.change(trigger, (t) => {
+        if (t.spec?.kind === 'subscription') {
+          t.spec.query = {
+            ast: queryAst,
+          };
+        }
+      });
     }
 
     const deepOptionValue = yield* Option.match(deepOption, {
@@ -213,7 +222,11 @@ const updateSpec = Effect.fn(function* (
       subscriptionOptions.delay = delayOptionValue.value;
     }
     if (trigger.spec?.kind === 'subscription') {
-      trigger.spec.options = Object.keys(subscriptionOptions).length > 0 ? subscriptionOptions : undefined;
+      Obj.change(trigger, (t) => {
+        if (t.spec?.kind === 'subscription') {
+          t.spec.options = Object.keys(subscriptionOptions).length > 0 ? subscriptionOptions : undefined;
+        }
+      });
     }
   }
 });
@@ -246,7 +259,9 @@ const updateInput = Effect.fn(function* (
         promptForSchemaInput(fn.inputSchema ? Type.toEffectSchema(fn.inputSchema) : undefined, currentInput),
       onSome: (value) => Effect.succeed(value as Record<string, any>),
     });
-    trigger.input = inputObj as any;
+    Obj.change(trigger, (t) => {
+      t.input = inputObj as any;
+    });
   }
 });
 

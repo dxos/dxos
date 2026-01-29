@@ -129,7 +129,7 @@ export const threads = (
 
         const thread = query.results.find((object) => Relation.getSource(object).id === id);
         if (thread) {
-          Obj.change(thread, (t) => {
+          Relation.change(thread, (t) => {
             t.anchor = undefined;
           });
         }
@@ -141,7 +141,7 @@ export const threads = (
           Obj.change(thread, (t) => {
             t.name = getName(doc, cursor);
           });
-          Obj.change(draft, (d) => {
+          Relation.change(draft, (d) => {
             d.anchor = cursor;
           });
         }
@@ -153,7 +153,7 @@ export const threads = (
             Obj.change(thread, (t) => {
               t.name = getName(doc, cursor);
             });
-            Obj.change(relation, (r) => {
+            Relation.change(relation, (r) => {
               r.anchor = cursor;
             });
           }

@@ -70,7 +70,7 @@ export const Sheet = Schema.Struct({
   // Cell formatting referenced by indexed range.
   ranges: Schema.Array(Range).pipe(Schema.mutable, FormInputAnnotation.set(false)),
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/Sheet',
     version: '0.1.0',
   }),

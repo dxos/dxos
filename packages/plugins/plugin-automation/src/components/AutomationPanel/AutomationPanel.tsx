@@ -130,7 +130,7 @@ export const AutomationPanel = ({ classNames, space, object, initialTrigger, onD
                     <Input.Root>
                       <Input.Switch
                         checked={trigger.enabled}
-                        onCheckedChange={(checked) => (trigger.enabled = checked)}
+                        onCheckedChange={(checked) => Obj.change(trigger, (t) => { t.enabled = checked; })}
                       />
                     </Input.Root>
 

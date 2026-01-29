@@ -29,7 +29,7 @@ describe('AiContextBinder', () => {
     const binder = new AiContextBinder({ queue });
 
     const TestSchema = Schema.Struct({}).pipe(
-      Type.Obj({
+      Type.object({
         typename: 'dxos.org/type/Example',
         version: '0.1.0',
       }),

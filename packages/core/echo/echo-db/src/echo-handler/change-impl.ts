@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Entity, type Obj } from '@dxos/echo';
+import { type Entity } from '@dxos/echo';
 import { EventId, batchEvents } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 
@@ -12,16 +12,9 @@ import { getObjectCore, isEchoObject } from './echo-object-utils';
 import { type ProxyTarget } from './echo-proxy-target';
 
 /**
- * Makes all properties mutable recursively.
- * Used to provide a mutable view of an object within `Obj.change`.
+ * Re-export Mutable from Entity for consistency.
  */
-export type Mutable<T> = T extends Obj.Any
-  ? {
-      -readonly [P in keyof T]: T[P] extends object ? Mutable<T[P]> : T[P];
-    }
-  : {
-      -readonly [P in keyof T]: T[P] extends object ? Mutable<T[P]> : T[P];
-    };
+export type Mutable<T> = Entity.Mutable<T>;
 
 /**
  * Internal implementation of the change function.

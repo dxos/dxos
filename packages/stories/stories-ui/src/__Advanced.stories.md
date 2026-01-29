@@ -77,7 +77,7 @@ faker.seed(1);
 const GridData = Schema.Struct({
   objects: Schema.mutable(Schema.Array(Type.Ref(Obj.Any))),
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'example.com/type/Grid',
     version: '0.1.0',
   }),

@@ -35,7 +35,7 @@ export const TestItem = Schema.Struct({
   description: Schema.optional(Schema.String),
   label: Schema.optional(Schema.String),
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'example.com/type/Item',
     version: '0.1.0',
   }),
@@ -47,7 +47,7 @@ export const TestColumn = Schema.Struct({
   id: ObjectId,
   items: Schema.mutable(Schema.Array(Type.Ref(TestItem))),
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'example.com/type/Column',
     version: '0.1.0',
   }),

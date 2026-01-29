@@ -4,8 +4,6 @@
 
 import { inspect } from 'node:util';
 
-import type * as Schema from 'effect/Schema';
-
 import { Event, MulticastObservable, Trigger, synchronized } from '@dxos/async';
 import {
   type ClientServices,
@@ -59,7 +57,7 @@ export type ClientOptions = {
   /** Custom services provider. */
   services?: MaybePromise<ClientServicesProvider>;
   /** ECHO schema. */
-  types?: Schema.Schema.AnyNoContext[];
+  types?: Type.Entity.Any[];
   /** Shell path. */
   shell?: string;
   /** Create client worker. */
@@ -254,7 +252,7 @@ export class Client {
    * Add schema types to the client.
    */
   // TODO(burdon): Check if already registered (and remove downstream checks).
-  async addTypes(types: Schema.Schema.AnyNoContext[]) {
+  async addTypes(types: Type.Entity.Any[]) {
     log('addTypes', { schema: types.map((type) => Type.getTypename(type)) });
 
     // TODO(dmaretskyi): Uncomment after release.
