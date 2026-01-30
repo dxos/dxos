@@ -4,7 +4,7 @@
 
 import { ActivationEvent, Capability, Common, Plugin } from '@dxos/app-framework';
 
-import { OperationResolver, ReactRoot, SpotlightDismiss, State, UrlHandler } from './capabilities';
+import { OperationResolver, ReactRoot, ReactSurface, SpotlightDismiss, State, UrlHandler } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
 import { SimpleLayoutEvents } from './types';
@@ -30,6 +30,11 @@ export const SimpleLayoutPlugin = Plugin.define<SimpleLayoutPluginOptions>(meta)
     id: Capability.getModuleTag(ReactRoot),
     activatesOn: Common.ActivationEvent.Startup,
     activate: ReactRoot,
+  }),
+  Plugin.addModule({
+    id: Capability.getModuleTag(ReactSurface),
+    activatesOn: Common.ActivationEvent.Startup,
+    activate: ReactSurface,
   }),
   Plugin.addModule({
     id: Capability.getModuleTag(UrlHandler),

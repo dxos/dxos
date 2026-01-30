@@ -5,14 +5,14 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability, Common } from '@dxos/app-framework';
+import { Node } from '@dxos/plugin-graph';
 
 import { type SimpleLayoutState, SimpleLayoutState as SimpleLayoutStateCapability } from '../../types';
-import { HOME_ID } from '../state';
 
 /**
  * URL handler for simple layout that syncs browser URL with layout state.
  * URL format: /{workspace} or /{workspace}/{active}
- * Home is represented as / or /home.
+ * Root is represented as / or /root.
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -28,8 +28,8 @@ export default Capability.makeModule(
       // Parse URL segments: /{workspace}/{active}
       const [_, nextWorkspace, nextActive] = pathname.split('/');
 
-      // Determine target workspace (empty or 'home' means HOME_ID).
-      const targetWorkspace = !nextWorkspace || nextWorkspace === 'home' ? HOME_ID : nextWorkspace;
+      // Determine target workspace (empty or 'root' means Node.RootId).
+      const targetWorkspace = !nextWorkspace || nextWorkspace === 'root' ? Node.RootId : nextWorkspace;
 
       // Navigate via operations (they will update state accordingly).
       invokeSync(Common.LayoutOperation.SwitchWorkspace, { subject: targetWorkspace });
@@ -55,10 +55,10 @@ export default Capability.makeModule(
           lastWorkspace = workspace;
           lastActive = active;
 
-          // Build path: home is represented as /, other workspaces as /{workspace}.
+          // Build path: root is represented as /, other workspaces as /{workspace}.
           let path: string;
-          if (workspace === HOME_ID) {
-            path = active ? `/${HOME_ID}/${active}` : '/';
+          if (workspace === Node.RootId) {
+            path = active ? `/${Node.RootId}/${active}` : '/';
           } else {
             path = active ? `/${workspace}/${active}` : `/${workspace}`;
           }

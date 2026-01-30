@@ -6,46 +6,35 @@ import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { Common } from '@dxos/app-framework';
 import { useAppGraph, useOperationInvoker } from '@dxos/app-framework/react';
-import { Graph, Node, useConnections } from '@dxos/plugin-graph';
+import { Graph, type Node, useConnections } from '@dxos/plugin-graph';
 import { Avatar, Icon, Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Card, Mosaic, type StackTileComponent } from '@dxos/react-ui-mosaic';
 import { SearchList, useSearchListItem, useSearchListResults } from '@dxos/react-ui-searchlist';
 import { StackItem } from '@dxos/react-ui-stack';
 import { mx } from '@dxos/ui-theme';
-import { byPosition } from '@dxos/util';
 
 import { meta } from '../../meta';
 
-/** Filters nodes by disposition. */
-const filterItems = (node: Node.Node, disposition: string) => {
-  return node.properties.disposition === disposition;
+type WorkspaceArticleProps = {
+  id: string;
 };
 
-/** Returns root-level items filtered by disposition. */
-const useItemsByDisposition = (disposition: string, sort = false) => {
-  const { graph } = useAppGraph();
-  const connections = useConnections(graph, Node.RootId);
-  const filtered = connections.filter((node) => filterItems(node, disposition));
-  return sort ? filtered.toSorted((a, b) => byPosition(a.properties, b.properties)) : filtered;
-};
-
-type HomeProps = {};
-
-export const Home = (_props: HomeProps) => {
+/**
+ * Renders a searchable list of children for a workspace node.
+ */
+export const WorkspaceArticle = ({ id }: WorkspaceArticleProps) => {
   const { t } = useTranslation(meta.id);
-  const userAccountItem = useItemsByDisposition('user-account')[0];
-  const pinnedItems = useItemsByDisposition('pin-end', true);
-  const workspaceItems = useItemsByDisposition('workspace');
-  useLoadDescendents(Node.RootId);
+  const { graph } = useAppGraph();
 
-  const items = useMemo(
-    () => [...(userAccountItem ? [userAccountItem] : []), ...pinnedItems, ...workspaceItems],
-    [userAccountItem, pinnedItems, workspaceItems],
-  );
+  // Expand the workspace node to load its children.
+  useLoadDescendents(id);
+
+  // Get direct children of the workspace node.
+  const children = useConnections(graph, id, 'outbound');
 
   const { results, handleSearch } = useSearchListResults({
-    items,
-    extract: (node) => toLocalizedString(node.properties.label, t),
+    items: children,
+    extract: (child) => toLocalizedString(child.properties.label, t),
   });
 
   return (
@@ -58,7 +47,7 @@ export const Home = (_props: HomeProps) => {
           <SearchList.Viewport classNames='flex flex-col gap-1'>
             <Mosaic.Container asChild>
               <Mosaic.Viewport>
-                <Mosaic.Stack items={results} getId={(node) => node.id} Tile={WorkspaceTile} />
+                <Mosaic.Stack items={results} getId={(child) => child.id} Tile={WorkspaceChildTile} />
               </Mosaic.Viewport>
             </Mosaic.Container>
           </SearchList.Viewport>
@@ -68,23 +57,21 @@ export const Home = (_props: HomeProps) => {
   );
 };
 
-const WorkspaceTile: StackTileComponent<Node.Node> = ({ data }) => {
+const WorkspaceChildTile: StackTileComponent<Node.Node> = ({ data }) => {
   const { t } = useTranslation(meta.id);
-  const { invokePromise } = useOperationInvoker();
+  const { invokeSync } = useOperationInvoker();
   const { selectedValue, registerItem, unregisterItem } = useSearchListItem();
   const ref = useRef<HTMLDivElement>(null);
 
   const handleSelect = useCallback(
-    () => invokePromise(Common.LayoutOperation.SwitchWorkspace, { subject: data.id }),
-    [invokePromise, data.id],
+    () => invokeSync(Common.LayoutOperation.Open, { subject: [data.id] }),
+    [invokeSync, data.id],
   );
-
-  useLoadDescendents(data.id);
 
   const name = toLocalizedString(data.properties.label, t);
   const isSelected = selectedValue === data.id;
 
-  // Register this workspace with the search context.
+  // Register this item with the search context.
   useEffect(() => {
     if (ref.current) {
       registerItem(data.id, ref.current, handleSelect);
@@ -100,7 +87,6 @@ const WorkspaceTile: StackTileComponent<Node.Node> = ({ data }) => {
     }
   }, [isSelected]);
 
-  // TODO(wittjosiah): Update this to use mosaic selection, integrating with the search list.
   return (
     <Card.Root
       ref={ref}
@@ -128,13 +114,18 @@ const WorkspaceTile: StackTileComponent<Node.Node> = ({ data }) => {
   );
 };
 
+/**
+ * Hook to expand graph nodes two levels deep when directly linked to.
+ */
 const useLoadDescendents = (nodeId?: string) => {
   const { graph } = useAppGraph();
 
   useEffect(() => {
     const frame = requestAnimationFrame(() => {
       if (nodeId) {
+        // First level: expand the node itself.
         Graph.expand(graph, nodeId, 'outbound');
+        // Second level: expand each child.
         Graph.getConnections(graph, nodeId, 'outbound').forEach((child) => {
           Graph.expand(graph, child.id, 'outbound');
         });

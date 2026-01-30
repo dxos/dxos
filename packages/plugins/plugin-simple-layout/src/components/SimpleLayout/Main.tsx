@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { Activity, useMemo } from 'react';
+import React, { useMemo } from 'react';
 
 import { Surface, useAppGraph } from '@dxos/app-framework/react';
 import { useNode } from '@dxos/plugin-graph';
@@ -11,11 +11,9 @@ import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention';
 import { Mosaic } from '@dxos/react-ui-mosaic';
 import { mx } from '@dxos/ui-theme';
 
-import { HOME_ID } from '../../capabilities/state';
 import { useSimpleLayoutState } from '../../hooks';
 import { ContentError } from '../ContentError';
 import { ContentLoading } from '../ContentLoading';
-import { Home } from '../Home';
 
 import { Banner } from './Banner';
 import { NavBar } from './NavBar';
@@ -59,22 +57,16 @@ export const Main = () => {
             )}
           >
             <Banner node={node} />
-            {/* TODO(wittjosiah): Stop special-casing home and treat it as a graph node instead. */}
-            <Activity mode={id === HOME_ID ? 'visible' : 'hidden'}>
-              <Home />
-            </Activity>
-            <Activity mode={id !== HOME_ID ? 'visible' : 'hidden'}>
-              <article className='bs-full overflow-hidden'>
-                <Surface
-                  key={id}
-                  role='article'
-                  data={data}
-                  limit={1}
-                  fallback={ContentError}
-                  placeholder={placeholder}
-                />
-              </article>
-            </Activity>
+            <article className='bs-full overflow-hidden'>
+              <Surface
+                key={id}
+                role='article'
+                data={data}
+                limit={1}
+                fallback={ContentError}
+                placeholder={placeholder}
+              />
+            </article>
             {showNavBar && <NavBar activeId={id} onActiveIdChange={handleActiveIdChange} />}
           </div>
         </NaturalMain.Content>

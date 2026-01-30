@@ -6,16 +6,15 @@ import { Atom } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 
 import { Capability, Common } from '@dxos/app-framework';
+import { Node } from '@dxos/plugin-graph';
 
 import { type SimpleLayoutState } from '../../types';
 import { SimpleLayoutState as SimpleLayoutStateCapability } from '../../types';
 
-export const HOME_ID = 'home';
-
 const defaultState: SimpleLayoutState = {
   dialogOpen: false,
-  workspace: HOME_ID,
-  previousWorkspace: HOME_ID,
+  workspace: Node.RootId,
+  previousWorkspace: Node.RootId,
   history: [],
   isPopover: false,
 };

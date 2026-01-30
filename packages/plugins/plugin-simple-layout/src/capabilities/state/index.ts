@@ -6,5 +6,4 @@ import { Capability } from '@dxos/app-framework';
 
 export const State = Capability.lazy('State', () => import('./state'));
 
-export { HOME_ID } from './state';
 export type { SimpleLayoutStateOptions } from './state';
