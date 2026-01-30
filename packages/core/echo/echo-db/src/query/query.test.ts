@@ -304,44 +304,6 @@ describe('Query', () => {
       expect(obj.title).toEqual('Queue type selector task');
       expect(Obj.getDXN(obj)?.toString().startsWith(queue.dxn.toString())).toBe(true);
     });
-
-    test('sqlIndex: referencedBy property path matches full path (not just first segment)', async () => {
-      const { db } = await builder.createDatabase({ indexing: { sqlIndex: true }, types: [TestSchema.Person] });
-
-      const person = db.add(Obj.make(TestSchema.Person, { name: 'Alice' }));
-
-      db.add(
-        Obj.make(Type.Expando, {
-          name: 'direct',
-          a: Ref.make(person),
-        }),
-      );
-
-      db.add(
-        Obj.make(Type.Expando, {
-          name: 'nested',
-          a: { b: Ref.make(person) },
-        }),
-      );
-
-      await db.flush({ indexes: true });
-
-      // When no property is specified, referencedBy() should return all incoming references (including nested ones).
-      const allIncoming = await db
-        .query(Query.select(Filter.type(TestSchema.Person, { name: 'Alice' })).referencedBy(Type.Expando))
-        .run();
-      expect(allIncoming.map((o) => o.name).sort()).toEqual(['direct', 'nested']);
-
-      const nested = await db
-        .query(Query.select(Filter.type(TestSchema.Person, { name: 'Alice' })).referencedBy(Type.Expando, 'a.b'))
-        .run();
-      expect(nested.map((o) => o.name).sort()).toEqual(['nested']);
-
-      const direct = await db
-        .query(Query.select(Filter.type(TestSchema.Person, { name: 'Alice' })).referencedBy(Type.Expando, 'a'))
-        .run();
-      expect(direct.map((o) => o.name).sort()).toEqual(['direct']);
-    });
   });
 
   test('query.run() queries everything after restart', async () => {
@@ -712,6 +674,44 @@ describe('Query', () => {
         { title: 'Task 1' },
         { title: 'Task 2' },
       ]);
+    });
+
+    test('sqlIndex: referencedBy property path matches full path (not just first segment)', async () => {
+      const { db: sqlDb } = await builder.createDatabase({ indexing: { sqlIndex: true }, types: [TestSchema.Person] });
+
+      const person = sqlDb.add(Obj.make(TestSchema.Person, { name: 'Alice' }));
+
+      sqlDb.add(
+        Obj.make(Type.Expando, {
+          name: 'direct',
+          a: Ref.make(person),
+        }),
+      );
+
+      sqlDb.add(
+        Obj.make(Type.Expando, {
+          name: 'nested',
+          a: { b: Ref.make(person) },
+        }),
+      );
+
+      await sqlDb.flush({ indexes: true });
+
+      // When no property is specified, referencedBy() should return all incoming references (including nested ones).
+      const allIncoming = await sqlDb
+        .query(Query.select(Filter.type(TestSchema.Person, { name: 'Alice' })).referencedBy(Type.Expando))
+        .run();
+      expect(allIncoming.map((o) => o.name).sort()).toEqual(['direct', 'nested']);
+
+      const nested = await sqlDb
+        .query(Query.select(Filter.type(TestSchema.Person, { name: 'Alice' })).referencedBy(Type.Expando, 'a.b'))
+        .run();
+      expect(nested.map((o) => o.name).sort()).toEqual(['nested']);
+
+      const direct = await sqlDb
+        .query(Query.select(Filter.type(TestSchema.Person, { name: 'Alice' })).referencedBy(Type.Expando, 'a'))
+        .run();
+      expect(direct.map((o) => o.name).sort()).toEqual(['direct']);
     });
 
     test('traverse inbound array references', async () => {
