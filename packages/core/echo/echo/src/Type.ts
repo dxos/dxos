@@ -165,7 +165,7 @@ export interface Obj<T = any, Fields extends Schema.Struct.Fields = Schema.Struc
  * Structural base type for any ECHO object schema.
  * Accepts both static schemas (created with Type.object()) and EchoSchema.
  * NOTE: Does not include the brand symbol to avoid TS4053 declaration portability issues.
- * Use Type.Entity.isObject() for runtime type guards.
+ * Use Type.isObjectSchema() for runtime type guards.
  */
 type ObjectSchemaBase = Schema.Schema.AnyNoContext & {
   readonly typename: string;
@@ -283,7 +283,7 @@ export interface Relation<
  * Structural base type for any ECHO relation schema.
  * Accepts static schemas (created with Type.relation()).
  * NOTE: Does not include the brand symbol to avoid TS4053 declaration portability issues.
- * Use Type.Entity.isRelation() for runtime type guards.
+ * Use Type.isRelationSchema() for runtime type guards.
  */
 type RelationSchemaBase = Schema.Schema.AnyNoContext & {
   readonly typename: string;
@@ -363,23 +363,23 @@ export namespace Entity {
    * Use this in type annotations for schema parameters.
    */
   export type Any = Obj.Any | Relation.Any;
-
-  /**
-   * Type guard to check if a schema is an object schema.
-   * NOTE: This checks SCHEMAS, not instances. Use Obj.isObject for instances.
-   */
-  export const isObject = (schema: Any): schema is Obj.Any => {
-    return (schema as any)[SchemaKindId] === EntityKind.Object;
-  };
-
-  /**
-   * Type guard to check if a schema is a relation schema.
-   * NOTE: This checks SCHEMAS, not instances. Use Relation.isRelation for instances.
-   */
-  export const isRelation = (schema: Any): schema is Relation.Any => {
-    return (schema as any)[SchemaKindId] === EntityKind.Relation;
-  };
 }
+
+/**
+ * Type guard to check if a schema is an object schema.
+ * NOTE: This checks SCHEMAS, not instances. Use Obj.isObject for instances.
+ */
+export const isObjectSchema = (schema: Entity.Any): schema is Obj.Any => {
+  return (schema as any)[SchemaKindId] === EntityKind.Object;
+};
+
+/**
+ * Type guard to check if a schema is a relation schema.
+ * NOTE: This checks SCHEMAS, not instances. Use Relation.isRelation for instances.
+ */
+export const isRelationSchema = (schema: Entity.Any): schema is Relation.Any => {
+  return (schema as any)[SchemaKindId] === EntityKind.Relation;
+};
 
 //
 // Ref

@@ -235,7 +235,7 @@ export const layer = (): Layer.Layer<Tool.Handler<any>, never, never> =>
       const schema = yield* Effect.promise(() =>
         db.schemaRegistry.query({ typename, location: ['database', 'runtime'] }).first(),
       );
-      invariant(Type.Entity.isObject(schema), 'Schema is not an object schema');
+      invariant(Type.isObjectSchema(schema), 'Schema is not an object schema');
 
       // TODO(dmaretskyi): How to add object to a collection?
       const object = db.add(Obj.make(schema, data));
@@ -262,7 +262,7 @@ export const layer = (): Layer.Layer<Tool.Handler<any>, never, never> =>
       const schema = yield* Effect.promise(() =>
         db.schemaRegistry.query({ typename, location: ['database', 'runtime'] }).first(),
       );
-      invariant(Type.Entity.isRelation(schema), 'Schema is not a relation schema');
+      invariant(Type.isRelationSchema(schema), 'Schema is not a relation schema');
 
       const sourceObj = yield* Database.Service.resolve(DXN.parse(source));
       const targetObj = yield* Database.Service.resolve(DXN.parse(target));

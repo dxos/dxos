@@ -119,7 +119,7 @@ export const TableContainer = forwardRef<HTMLDivElement, TableContainerProps>(({
   const handleCreate = useCallback(
     (schema: Type.Entity.Any, values: any) => {
       invariant(db);
-      invariant(Type.Entity.isObject(schema));
+      invariant(Type.isObjectSchema(schema));
       return db.add(Obj.make(schema, values));
     },
     [db],

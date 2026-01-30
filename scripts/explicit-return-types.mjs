@@ -324,7 +324,7 @@ for (const filePath of tsFiles) {
     }
 
     // Handle type references (but not import types)
-    if (type.isObject()) {
+    if (Type.isObjectSchema()) {
       const symbol = type.getSymbol();
       if (!symbol) {
         return false;

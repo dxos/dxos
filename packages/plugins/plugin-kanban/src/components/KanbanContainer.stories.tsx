@@ -69,7 +69,7 @@ const DefaultComponent = () => {
   const handleAddCard = useCallback(
     (columnValue: string | undefined) => {
       const path = model?.columnFieldPath;
-      if (space && schema && Type.Entity.isObject(schema) && path) {
+      if (space && schema && Type.isObjectSchema(schema) && path) {
         const card = Obj.make(schema, {
           ...createOrg(),
           [path]: columnValue,

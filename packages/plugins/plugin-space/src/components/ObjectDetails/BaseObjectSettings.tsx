@@ -52,7 +52,7 @@ export const BaseObjectSettings = ({ classNames, children, object }: BaseObjectS
 
   const handleCreate = useCallback((schema: Type.Entity.Any, values: any) => {
     invariant(db);
-    invariant(Type.Entity.isObject(schema));
+    invariant(Type.isObjectSchema(schema));
     const newObject = db.add(Obj.make(schema, values));
     if (Obj.instanceOf(Tag.Tag, newObject)) {
       Obj.change(object, (obj) => {

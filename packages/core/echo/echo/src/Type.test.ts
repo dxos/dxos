@@ -13,10 +13,10 @@ import * as Type from './Type';
 describe('Type', () => {
   describe('Type.Obj', () => {
     test('has SchemaKindId for schema type checking', ({ expect }) => {
-      // Type.Entity.isObject uses SchemaKindId to check if a schema is an object schema.
-      expect(Type.Entity.isObject(Type.Obj)).toBe(true);
-      expect(Type.Entity.isObject(TestSchema.Person)).toBe(true);
-      expect(Type.Entity.isObject(Type.Relation)).toBe(false);
+      // Type.isObjectSchema uses SchemaKindId to check if a schema is an object schema.
+      expect(Type.isObjectSchema(Type.Obj)).toBe(true);
+      expect(Type.isObjectSchema(TestSchema.Person)).toBe(true);
+      expect(Type.isObjectSchema(Type.Relation)).toBe(false);
     });
 
     test('Schema.is validates structural compatibility only', ({ expect }) => {
@@ -30,10 +30,10 @@ describe('Type', () => {
 
   describe('Type.Relation', () => {
     test('has SchemaKindId for schema type checking', ({ expect }) => {
-      // Type.Entity.isRelation uses SchemaKindId to check if a schema is a relation schema.
-      expect(Type.Entity.isRelation(Type.Relation)).toBe(true);
-      expect(Type.Entity.isRelation(TestSchema.HasManager)).toBe(true);
-      expect(Type.Entity.isRelation(Type.Obj)).toBe(false);
+      // Type.isRelationSchema uses SchemaKindId to check if a schema is a relation schema.
+      expect(Type.isRelationSchema(Type.Relation)).toBe(true);
+      expect(Type.isRelationSchema(TestSchema.HasManager)).toBe(true);
+      expect(Type.isRelationSchema(Type.Obj)).toBe(false);
     });
 
     test('Schema.is validates structural compatibility only', ({ expect }) => {

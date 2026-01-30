@@ -304,7 +304,7 @@ export const makeFromDatabase = async ({
   const schema = await db.schemaRegistry.query({ typename, location: ['database', 'runtime'] }).firstOrUndefined();
   const jsonSchema = schema && JsonSchema.toJsonSchema(schema);
   invariant(jsonSchema, `Schema not found: ${typename}`);
-  invariant(schema && Type.Entity.isObject(schema), `Schema is not an object schema: ${typename}`);
+  invariant(schema && Type.isObjectSchema(schema), `Schema is not an object schema: ${typename}`);
 
   Array.from({ length: createInitial }).forEach(() => {
     db.add(Obj.make(schema, {}));
