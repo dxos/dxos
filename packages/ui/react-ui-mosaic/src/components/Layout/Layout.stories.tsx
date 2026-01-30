@@ -15,22 +15,24 @@ import { Layout } from './Layout';
 
 const DefaultStory = () => {
   return (
-    <Layout.Root toolbar statusbar>
+    <Layout.Main toolbar statusbar>
       <Toolbar.Root>
         <Toolbar.IconButton icon='ph--plus--regular' label='Add' />
       </Toolbar.Root>
-      <Layout.Flex column scrollable classNames='__border border-primary-500 p-1 pie-3 gap-1'>
-        {Array.from({ length: 100 }).map((_, index) => (
-          <div key={index} className='border border-separator pli-2 plb-1'>
-            {index}
-          </div>
-        ))}
-      </Layout.Flex>
+      <Layout.Scrollbar column>
+        <Layout.Flex column classNames='p-1 gap-1'>
+          {Array.from({ length: 100 }).map((_, index) => (
+            <div key={index} className='border border-separator pli-2 plb-1'>
+              {index}
+            </div>
+          ))}
+        </Layout.Flex>
+      </Layout.Scrollbar>
       <Toolbar.Root classNames='justify-between'>
         <Toolbar.IconButton icon='ph--house--regular' iconOnly label='Add' size={3} />
         <Toolbar.IconButton icon='ph--circle--regular' iconOnly label='Status' size={3} />
       </Toolbar.Root>
-    </Layout.Root>
+    </Layout.Main>
   );
 };
 

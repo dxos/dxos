@@ -16,7 +16,7 @@ const DefaultStory = () => {
   return (
     <Flex column grow>
       <Flex classNames='p-2'>{faker.lorem.sentence()}</Flex>
-      <Flex column scroll>
+      <Flex column scrollable>
         {items.map((item, i) => (
           <Flex key={i} classNames='p-2'>
             {item}

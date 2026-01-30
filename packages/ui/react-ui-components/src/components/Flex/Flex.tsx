@@ -13,7 +13,7 @@ export type FlexProps = ThemedClassName<
   PropsWithChildren<
     {
       column?: boolean;
-      scroll?: boolean;
+      scrollable?: boolean;
       grow?: boolean;
     } & Omit<HTMLAttributes<HTMLDivElement>, 'className'>
   >
@@ -23,7 +23,7 @@ export type FlexProps = ThemedClassName<
  * @deprecated See radix-ui
  */
 export const Flex = forwardRef<HTMLDivElement, FlexProps>(
-  ({ classNames, children, column, scroll, grow, role = 'none', ...props }, forwardedRef) => {
+  ({ classNames, children, column, scrollable, grow, role = 'none', ...props }, forwardedRef) => {
     return (
       <div
         role={role}
@@ -31,7 +31,7 @@ export const Flex = forwardRef<HTMLDivElement, FlexProps>(
           'flex',
           grow && 'flex-1 overflow-hidden',
           column && 'flex-col',
-          scroll && (column ? 'overflow-y-auto pie-3' : 'overflow-x-auto'),
+          scrollable && (column ? 'overflow-y-auto pie-3' : 'overflow-x-auto'),
           classNames,
         )}
         ref={forwardedRef}

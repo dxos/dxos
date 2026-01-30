@@ -8,16 +8,16 @@ import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 //
-// Root
+// Main
 //
 
-type RootProps = PropsWithChildren<{
+type MainProps = PropsWithChildren<{
   role?: string;
   toolbar?: boolean;
   statusbar?: boolean;
 }>;
 
-const Root = ({ children, role, toolbar, statusbar }: RootProps) => {
+const Main = ({ children, role, toolbar, statusbar }: MainProps) => {
   const style = useMemo(
     () => ({
       gridTemplateRows: [
@@ -45,16 +45,35 @@ type FlexProps = ThemedClassName<
   PropsWithChildren<{
     role?: string;
     column?: boolean;
-    scrollable?: boolean;
+    grow?: boolean;
   }>
 >;
 
-const Flex = ({ children, classNames, role, column, scrollable }: FlexProps) => {
+const Flex = ({ children, classNames, role, column, grow }: FlexProps) => {
   return (
     <div
       role={role ?? 'none'}
-      className={mx('flex', column && 'flex-col', scrollable ? 'overflow-y-auto' : 'overflow-hidden', classNames)}
+      className={mx('flex', column && 'flex-col', grow && 'flex-1 overflow-hidden', classNames)}
     >
+      {children}
+    </div>
+  );
+};
+
+//
+// Scrollbar
+// TODO(burdon): Reconcile with mosaic viewport.
+//
+
+type ScrollbarProps = ThemedClassName<
+  PropsWithChildren<{
+    column?: boolean;
+  }>
+>;
+
+const Scrollbar = ({ classNames, children, column }: ScrollbarProps) => {
+  return (
+    <div className={mx('__scrollbar __scrollbar-thin', column ? 'overflow-y-auto' : 'overflow-x-auto', classNames)}>
       {children}
     </div>
   );
@@ -65,8 +84,9 @@ const Flex = ({ children, classNames, role, column, scrollable }: FlexProps) => 
 //
 
 export const Layout = {
-  Root,
+  Main,
   Flex,
+  Scrollbar,
 };
 
-export type { RootProps, FlexProps };
+export type { MainProps, FlexProps, ScrollbarProps };

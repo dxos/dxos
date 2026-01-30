@@ -9,19 +9,6 @@ import { Flex, ProgressBar, type ProgressBarProps, TextCrawl, useExecutionGraph 
 
 import { type Assistant } from '../../types';
 
-// TODO(burdon): Reset after each session.
-// TODO(burdon): Show after delay.
-// TODO(burdon): Test with errors.
-// TODO(burdon): Filter out empty trace messages.
-
-// {
-//   "id": "01K3TE3C2VAXETP500QKDHK3C4_block_3",
-//   "branch": "main",
-//   "parents": [],
-//   "icon": "ph--robot--regular",
-//   "message": "\n"
-// }
-
 export type ChatProgressProps = {
   chat: Assistant.Chat;
 };
