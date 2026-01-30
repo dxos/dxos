@@ -69,7 +69,9 @@ export const MembersContainer = ({ space, createInvitationUrl }: MembersContaine
 
   const locked = space.properties[COMPOSER_SPACE_LOCK];
   const handleChangeLocked = useCallback(() => {
-    space.properties[COMPOSER_SPACE_LOCK] = !locked;
+    Obj.change(space.properties, (p) => {
+      p[COMPOSER_SPACE_LOCK] = !locked;
+    });
   }, [locked, space]);
 
   const inviteActions = useMemo(

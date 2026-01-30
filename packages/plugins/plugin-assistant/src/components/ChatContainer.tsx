@@ -18,7 +18,7 @@ export type ChatContainerProps = {
   role?: string;
   space?: Space;
   chat?: Assistant.Chat;
-  companionTo?: Obj.Any;
+  companionTo?: Obj.Unknown;
 } & Pick<ChatRootProps, 'onEvent'>;
 
 export const ChatContainer = forwardRef<HTMLDivElement, ChatContainerProps>((props, forwardedRef) => {

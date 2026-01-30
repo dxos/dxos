@@ -2,60 +2,110 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Schema from 'effect/Schema';
+import type * as Schema from 'effect/Schema';
 
 import { raise } from '@dxos/debug';
+import type { ForeignKey } from '@dxos/echo-protocol';
+import { createJsonPath, getValue as getValue$ } from '@dxos/effect';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN, type ObjectId } from '@dxos/keys';
 import { assumeType } from '@dxos/util';
 
+import type * as Database from './Database';
 import * as Entity from './Entity';
 import {
+  type ObjectJSON as APIJSON,
   ATTR_RELATION_SOURCE,
   ATTR_RELATION_TARGET,
-  type AnyEchoObject,
+  type AnyEntity,
+  type Comparator as ApiComparator,
+  type Meta as ApiMeta,
+  type ReadonlyMeta as ApiReadonlyMeta,
+  type EntityVersion as ApiVersion,
+  type ChangeCallback,
   EntityKind,
   type InternalObjectProps,
+  type KindId,
   MetaId,
+  type Mutable,
   type ObjectMeta,
   RelationSourceDXNId,
   RelationSourceId,
   RelationTargetDXNId,
   RelationTargetId,
+  SnapshotKindId,
+  VersionTypeId,
+  addTag as addTag$,
+  change as change$,
+  deleteKeys as deleteKeys$,
+  getDXN as getDXN$,
+  getDatabase as getDatabase$,
+  getDescription as getDescription$,
+  getKeys as getKeys$,
+  getLabel as getLabel$,
+  getMetaChecked as getMeta$,
   getObjectDXN,
+  getSchema as getSchema$,
+  getSnapshot as getSnapshot$,
   getTypeAnnotation,
+  getTypeDXN as getTypeDXN$,
+  getTypename as getTypename$,
+  isDeleted as isDeleted$,
+  isVersion,
   makeObject,
+  removeTag as removeTag$,
+  setDescription as setDescription$,
+  setLabel as setLabel$,
+  setValue as setValue$,
+  sort as sort$,
+  sortByLabel as sortByLabel$,
+  sortByTypename as sortByTypename$,
+  subscribe as subscribe$,
+  objectToJSON as toJSON$,
+  version as version$,
 } from './internal';
-import * as Obj from './Obj';
-import * as Type from './Type';
+import type * as Obj from './Obj';
+import type * as Type from './Type';
 
 /**
  * Base type for all ECHO relations.
  * @private
  */
 interface BaseRelation<Source, Target>
-  extends AnyEchoObject,
+  extends AnyEntity,
     Type.Relation.Endpoints<Source, Target>,
     Entity.OfKind<EntityKind.Relation> {}
 
 /**
- * Base type for all Relations objects.
+ * Relation with no known properties beyond id, kind, source, and target.
+ * Use this when the relation's schema/properties are not known.
+ *
+ * NOTE: This is a TypeScript type only, not a schema.
+ * To validate that a value is an ECHO relation, use `Relation.isRelation`.
  */
-export interface Any extends BaseRelation<Obj.Any, Obj.Any> {}
-
-export const Any = Schema.Struct({}).pipe(
-  Type.Relation({
-    typename: 'dxos.org/type/Any',
-    version: '0.1.0',
-    source: Obj.Any,
-    target: Obj.Any,
-  }),
-);
+export interface Unknown extends BaseRelation<Obj.Unknown, Obj.Unknown> {}
 
 /**
  * Relation type with specific source and target types.
  */
-export type Relation<Source extends Obj.Any, Target extends Obj.Any, Props> = BaseRelation<Source, Target> & Props;
+export type Relation<Source extends Obj.Unknown, Target extends Obj.Unknown, Props> = BaseRelation<Source, Target> &
+  Props;
+
+/**
+ * Base type for snapshot relations (has SnapshotKindId instead of KindId).
+ */
+interface BaseRelationSnapshot<Source, Target> extends AnyEntity, Type.Relation.Endpoints<Source, Target> {
+  readonly [SnapshotKindId]: EntityKind.Relation;
+  readonly id: ObjectId;
+}
+
+/**
+ * Immutable snapshot of an ECHO relation.
+ * Branded with SnapshotKindId (not KindId).
+ * Property values are frozen at the time the snapshot was created.
+ * Returned by getSnapshot() and hooks.
+ */
+export type Snapshot<T extends Unknown = Unknown> = Omit<T, KindId> & BaseRelationSnapshot<Obj.Unknown, Obj.Unknown>;
 
 export const Source: unique symbol = RelationSourceId as any;
 export type Source = typeof Source;
@@ -63,12 +113,21 @@ export type Source = typeof Source;
 export const Target: unique symbol = RelationTargetId as any;
 export type Target = typeof Target;
 
-type MakeProps<T extends Any> = {
+/**
+ * Internal props type for relation instance creation.
+ */
+type RelationMakeProps<T extends Unknown> = {
   id?: ObjectId;
   [MetaId]?: ObjectMeta;
   [Source]: T[Source];
   [Target]: T[Target];
 } & Type.Properties<T>;
+
+/**
+ * Props type for relation creation with a given schema.
+ * Takes a schema type (created with Type.Relation) and extracts the props type.
+ */
+export type MakeProps<S extends Type.Relation.Any> = RelationMakeProps<Schema.Schema.Type<S>>;
 
 /**
  * Creates new relation.
@@ -81,7 +140,7 @@ type MakeProps<T extends Any> = {
 // TODO(dmaretskyi): Move meta into props.
 export const make = <S extends Type.Relation.Any>(
   schema: S,
-  props: NoInfer<MakeProps<Schema.Schema.Type<S>>>,
+  props: NoInfer<RelationMakeProps<Schema.Schema.Type<S>>>,
   meta?: ObjectMeta,
 ): Schema.Schema.Type<S> & Entity.OfKind<typeof Entity.Kind.Relation> => {
   assertArgument(getTypeAnnotation(schema)?.kind === EntityKind.Relation, 'schema', 'Expected a relation schema');
@@ -100,7 +159,11 @@ export const make = <S extends Type.Relation.Any>(
   return makeObject<Schema.Schema.Type<S>>(schema, props as any, meta);
 };
 
-export const isRelation = (value: unknown): value is Any => {
+/**
+ * Type guard for relations.
+ * Returns true for both reactive relations and relation snapshots.
+ */
+export const isRelation = (value: unknown): value is Unknown => {
   if (typeof value !== 'object' || value === null) {
     return false;
   }
@@ -108,15 +171,17 @@ export const isRelation = (value: unknown): value is Any => {
     return true;
   }
 
-  const kind = (value as any)[Entity.KindId];
+  // Check for reactive relation (KindId) or snapshot (SnapshotKindId).
+  const kind = (value as any)[Entity.KindId] ?? (value as any)[SnapshotKindId];
   return kind === EntityKind.Relation;
 };
 
 /**
  * @returns Relation source DXN.
+ * Accepts both reactive relations and snapshots.
  * @throws If the object is not a relation.
  */
-export const getSourceDXN = (value: Any): DXN => {
+export const getSourceDXN = (value: Unknown | Snapshot): DXN => {
   assertArgument(isRelation(value), 'Expected a relation');
   assumeType<InternalObjectProps>(value);
   const dxn = (value as InternalObjectProps)[RelationSourceDXNId];
@@ -126,9 +191,10 @@ export const getSourceDXN = (value: Any): DXN => {
 
 /**
  * @returns Relation target DXN.
+ * Accepts both reactive relations and snapshots.
  * @throws If the object is not a relation.
  */
-export const getTargetDXN = (value: Any): DXN => {
+export const getTargetDXN = (value: Unknown | Snapshot): DXN => {
   assertArgument(isRelation(value), 'Expected a relation');
   assumeType<InternalObjectProps>(value);
   const dxn = (value as InternalObjectProps)[RelationTargetDXNId];
@@ -138,9 +204,10 @@ export const getTargetDXN = (value: Any): DXN => {
 
 /**
  * @returns Relation source.
+ * Accepts both reactive relations and snapshots.
  * @throws If the object is not a relation.
  */
-export const getSource = <T extends Any>(relation: T): Type.Relation.Source<T> => {
+export const getSource = <T extends Unknown | Snapshot>(relation: T): Type.Relation.Source<T> => {
   assertArgument(isRelation(relation), 'Expected a relation');
   assumeType<InternalObjectProps>(relation);
   const obj = (relation as InternalObjectProps)[RelationSourceId];
@@ -150,12 +217,283 @@ export const getSource = <T extends Any>(relation: T): Type.Relation.Source<T> =
 
 /**
  * @returns Relation target.
+ * Accepts both reactive relations and snapshots.
  * @throws If the object is not a relation.
  */
-export const getTarget = <T extends Any>(relation: T): Type.Relation.Target<T> => {
+export const getTarget = <T extends Unknown | Snapshot>(relation: T): Type.Relation.Target<T> => {
   assertArgument(isRelation(relation), 'Expected a relation');
   assumeType<InternalObjectProps>(relation);
   const obj = (relation as InternalObjectProps)[RelationTargetId];
   invariant(obj !== undefined, `Invalid target: ${relation.id}`);
   return obj as Type.Relation.Target<T>;
 };
+
+//
+// Change
+//
+
+/**
+ * Makes all properties mutable recursively.
+ * Used to provide a mutable view of a relation within `Relation.change`.
+ */
+export type { Mutable };
+
+/**
+ * Perform mutations on an echo relation within a controlled context.
+ *
+ * All mutations within the callback are batched and trigger a single notification
+ * when the callback completes. Direct mutations outside of `Relation.change` will throw
+ * an error for echo relations.
+ *
+ * @param relation - The echo relation to mutate. Use `Obj.change` for objects.
+ * @param callback - The callback that performs mutations on the relation.
+ *
+ * @example
+ * ```ts
+ * const worksFor = Relation.make(EmployedBy, {
+ *   [Relation.Source]: person,
+ *   [Relation.Target]: company,
+ *   role: 'Engineer',
+ * });
+ *
+ * // Mutate within Relation.change
+ * Relation.change(worksFor, (r) => {
+ *   r.role = 'Senior Engineer';
+ * });
+ * ```
+ *
+ * Note: Only accepts relations. Use `Obj.change` for objects.
+ */
+export const change = <T extends Unknown>(relation: T, callback: ChangeCallback<T>): void => {
+  change$(relation, callback);
+};
+
+//
+// Snapshot
+//
+
+/**
+ * Returns an immutable snapshot of a relation.
+ * The snapshot is branded with SnapshotKindId instead of KindId,
+ * making it distinguishable from the reactive relation at the type level.
+ */
+export const getSnapshot: <T extends Unknown>(rel: T) => Snapshot<T> = getSnapshot$ as any;
+
+//
+// Subscribe
+//
+
+/**
+ * Subscribe to relation updates.
+ * The callback is called synchronously when the relation is modified.
+ * Only accepts reactive relations (not snapshots).
+ * @returns Unsubscribe function.
+ */
+export const subscribe = (rel: Unknown, callback: () => void): (() => void) => {
+  return subscribe$(rel, callback);
+};
+
+//
+// Property Access
+//
+
+/**
+ * Get a deeply nested property from a relation.
+ * Accepts both reactive relations and snapshots.
+ */
+export const getValue = (rel: Unknown | Snapshot, path: readonly (string | number)[]): any => {
+  return getValue$(rel, createJsonPath(path));
+};
+
+/**
+ * Set a deeply nested property on a relation.
+ * Must be called within a `Relation.change` callback.
+ *
+ * NOTE: TypeScript's structural typing allows readonly objects to be passed to `Mutable<T>`
+ * parameters, so there is no compile-time error. Enforcement is runtime-only.
+ */
+export const setValue: (rel: Mutable<Unknown>, path: readonly (string | number)[], value: any) => void =
+  setValue$ as any;
+
+//
+// Type
+//
+
+/**
+ * Get the DXN of the relation.
+ * Accepts both reactive relations and snapshots.
+ */
+export const getDXN = (entity: Unknown | Snapshot): DXN => getDXN$(entity);
+
+/**
+ * @returns The DXN of the relation's type.
+ */
+export const getTypeDXN = getTypeDXN$;
+
+/**
+ * Get the schema of the relation.
+ * Returns the branded ECHO schema used to create the relation.
+ */
+export const getSchema: (rel: unknown | undefined) => Type.Entity.Any | undefined = getSchema$ as any;
+
+/**
+ * @returns The typename of the relation's type.
+ * Accepts both reactive relations and snapshots.
+ */
+export const getTypename = (entity: Unknown | Snapshot): string | undefined => getTypename$(entity);
+
+//
+// Database
+//
+
+/**
+ * Get the database the relation belongs to.
+ * Accepts both reactive relations and snapshots.
+ */
+export const getDatabase = (entity: Unknown | Snapshot): Database.Database | undefined => getDatabase$(entity);
+
+//
+// Meta
+//
+
+/**
+ * Deeply read-only version of ObjectMeta.
+ */
+export type ReadonlyMeta = ApiReadonlyMeta;
+
+/**
+ * Mutable meta type returned by `Relation.getMeta` inside a `Relation.change` callback.
+ */
+export type Meta = ApiMeta;
+
+/**
+ * Get the metadata for a relation.
+ * Returns mutable meta when passed a mutable relation (inside `Relation.change` callback).
+ * Returns read-only meta when passed a regular relation or snapshot.
+ */
+// TODO(wittjosiah): When passed a Snapshot, should return a snapshot of meta, not the live meta proxy.
+export function getMeta(entity: Mutable<Unknown>): ObjectMeta;
+export function getMeta(entity: Unknown | Snapshot): ReadonlyMeta;
+export function getMeta(entity: Unknown | Snapshot | Mutable<Unknown>): ObjectMeta | ReadonlyMeta {
+  return getMeta$(entity);
+}
+
+/**
+ * @returns Foreign keys for the relation from the specified source.
+ * Accepts both reactive relations and snapshots.
+ */
+export const getKeys = (entity: Unknown | Snapshot, source: string): ForeignKey[] => getKeys$(entity, source);
+
+/**
+ * Delete all keys from the relation for the specified source.
+ * Must be called within a `Relation.change` callback.
+ *
+ * NOTE: TypeScript's structural typing allows readonly objects to be passed to `Mutable<T>`
+ * parameters, so there is no compile-time error. Enforcement is runtime-only.
+ */
+export const deleteKeys = (entity: Mutable<Unknown>, source: string): void => deleteKeys$(entity, source);
+
+/**
+ * Add a tag to the relation.
+ * Must be called within a `Relation.change` callback.
+ *
+ * NOTE: TypeScript's structural typing allows readonly objects to be passed to `Mutable<T>`
+ * parameters, so there is no compile-time error. Enforcement is runtime-only.
+ */
+export const addTag = (entity: Mutable<Unknown>, tag: string): void => addTag$(entity, tag);
+
+/**
+ * Remove a tag from the relation.
+ * Must be called within a `Relation.change` callback.
+ *
+ * NOTE: TypeScript's structural typing allows readonly objects to be passed to `Mutable<T>`
+ * parameters, so there is no compile-time error. Enforcement is runtime-only.
+ */
+export const removeTag = (entity: Mutable<Unknown>, tag: string): void => removeTag$(entity, tag);
+
+/**
+ * Check if the relation is deleted.
+ * Accepts both reactive relations and snapshots.
+ */
+export const isDeleted = (entity: Unknown | Snapshot): boolean => isDeleted$(entity);
+
+//
+// Annotations
+//
+
+/**
+ * Get the label of the relation.
+ * Accepts both reactive relations and snapshots.
+ */
+export const getLabel = (entity: Unknown | Snapshot): string | undefined => getLabel$(entity);
+
+/**
+ * Set the label of the relation.
+ * Must be called within a `Relation.change` callback.
+ *
+ * NOTE: TypeScript's structural typing allows readonly objects to be passed to `Mutable<T>`
+ * parameters, so there is no compile-time error. Enforcement is runtime-only.
+ */
+export const setLabel = (entity: Mutable<Unknown>, label: string): void => setLabel$(entity, label);
+
+/**
+ * Get the description of the relation.
+ * Accepts both reactive relations and snapshots.
+ */
+export const getDescription = (entity: Unknown | Snapshot): string | undefined => getDescription$(entity);
+
+/**
+ * Set the description of the relation.
+ * Must be called within a `Relation.change` callback.
+ *
+ * NOTE: TypeScript's structural typing allows readonly objects to be passed to `Mutable<T>`
+ * parameters, so there is no compile-time error. Enforcement is runtime-only.
+ */
+export const setDescription = (entity: Mutable<Unknown>, description: string): void =>
+  setDescription$(entity, description);
+
+//
+// JSON
+//
+
+/**
+ * JSON representation of a relation.
+ */
+export type JSON = APIJSON;
+
+/**
+ * Converts relation to its JSON representation.
+ * Accepts both reactive relations and snapshots.
+ */
+export const toJSON = (entity: Unknown | Snapshot): JSON => toJSON$(entity);
+
+//
+// Sorting
+//
+
+/**
+ * Comparator function type for sorting relations.
+ * Accepts both reactive relations and snapshots.
+ */
+export type Comparator = ApiComparator<Unknown | Snapshot>;
+
+export const sortByLabel: Comparator = sortByLabel$ as Comparator;
+export const sortByTypename: Comparator = sortByTypename$ as Comparator;
+export const sort = (...comparators: Comparator[]): Comparator => sort$(...comparators) as Comparator;
+
+//
+// Version
+//
+
+export { VersionTypeId, isVersion };
+
+/**
+ * Represent relation version.
+ */
+export type Version = ApiVersion;
+
+/**
+ * Returns the version of the relation.
+ * Accepts both reactive relations and snapshots.
+ */
+export const version = (entity: Unknown | Snapshot): Version => version$(entity);

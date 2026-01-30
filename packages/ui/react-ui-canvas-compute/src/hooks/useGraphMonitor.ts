@@ -112,8 +112,10 @@ export const createComputeGraph = (graph?: CanvasGraphModel<ComputeShape>) => {
 const linkTriggerToCompute = (graph: ComputeGraphModel, computeNode: ComputeNode, triggerData: TriggerShape) => {
   const functionTrigger = triggerData.functionTrigger?.target;
   invariant(functionTrigger);
-  functionTrigger.function = Ref.make(graph.root);
-  functionTrigger.inputNodeId = computeNode.id;
+  Obj.change(functionTrigger, (t) => {
+    t.function = Ref.make(graph.root);
+    t.inputNodeId = computeNode.id;
+  });
 };
 
 const deleteTriggerObjects = (computeGraph: ComputeGraphModel, deleted: CanvasGraphModel) => {

@@ -7,7 +7,8 @@ import { BroadcastChannelNetworkAdapter } from '@automerge/automerge-repo-networ
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useEffect, useState } from 'react';
 
-import { Obj, Ref, Type } from '@dxos/echo';
+import { Obj, Ref } from '@dxos/echo';
+import { TestSchema } from '@dxos/echo/testing';
 import { DocAccessor, createDocAccessor } from '@dxos/echo-db';
 import { log } from '@dxos/log';
 import { type Messenger } from '@dxos/protocols';
@@ -91,7 +92,7 @@ const EchoStory = () => {
   const { spaceId, index } = useClientStory();
   const identity = useIdentity();
   const space = useSpace(spaceId);
-  const objects = useQuery(space?.db, Query.type(Type.Expando, { type: 'test' }));
+  const objects = useQuery(space?.db, Query.type(TestSchema.Expando, { type: 'test' }));
 
   const [source, setSource] = useState<DocAccessor>();
   const init = useCallback(() => {
@@ -162,9 +163,9 @@ export const WithEcho: Story = {
       createSpace: true,
       onCreateSpace: async ({ space }) => {
         space.db.add(
-          Obj.make(Type.Expando, {
+          Obj.make(TestSchema.Expando, {
             type: 'test',
-            content: Ref.make(Obj.make(Type.Expando, { content: initialContent })),
+            content: Ref.make(Obj.make(TestSchema.Expando, { content: initialContent })),
           }),
         );
       },

@@ -46,7 +46,7 @@ const TestItem = Schema.Struct({
     description: 'Product description',
   }),
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/Test',
     version: '0.1.0',
   }),
@@ -90,7 +90,7 @@ const TestChat: FC<{ doc: Markdown.Document; content: string }> = ({ doc, conten
 
     // void dispatch(
     //   createIntent(CollaborationActions.InsertContent, {
-    //     target: doc as any as Type.Expando,
+    //     target: doc as any as TestSchema.Expando,
     //     object: Ref.fromDXN(new DXN(DXN.kind.QUEUE, [...queue.dxn.parts, message.id])),
     //     at: cursor,
     //     label: 'Proposal',

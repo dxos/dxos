@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Obj, Type } from '@dxos/echo';
+import { Type } from '@dxos/echo';
 import { Queue } from '@dxos/echo-db';
 
 /**
@@ -15,7 +15,7 @@ export const Initiative = Schema.Struct({
   artifacts: Schema.Array(
     Schema.Struct({
       name: Schema.String,
-      data: Type.Ref(Obj.Any),
+      data: Type.Ref(Type.Obj),
     }),
   ),
 
@@ -25,7 +25,7 @@ export const Initiative = Schema.Struct({
 
   // TODO(dmaretskyi): Triggers & input queue.
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/Initiative',
     version: '0.1.0',
   }),

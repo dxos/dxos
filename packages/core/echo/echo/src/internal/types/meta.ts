@@ -8,7 +8,7 @@ import { ForeignKey } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { type Comparator, intersection } from '@dxos/util';
 
-import { type AnyProperties, type WithMeta } from './base';
+import { type AnyProperties } from './base';
 
 /**
  * Property name for meta when object is serialized to JSON.
@@ -52,16 +52,6 @@ export const getMeta = (obj: AnyProperties): ObjectMeta => {
   const metadata = (obj as any)[MetaId];
   invariant(metadata, 'ObjectMeta not found.');
   return metadata;
-};
-
-/**
- * Utility to split meta property from raw object.
- * @deprecated Bad API.
- */
-export const splitMeta = <T>(object: T & WithMeta): { object: T; meta?: ObjectMeta } => {
-  const meta = object[ATTR_META];
-  delete object[ATTR_META];
-  return { meta, object };
 };
 
 //

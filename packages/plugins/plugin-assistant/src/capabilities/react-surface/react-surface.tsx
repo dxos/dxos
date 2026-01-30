@@ -49,7 +49,7 @@ export default Capability.makeModule(() =>
       Common.createSurface({
         id: `${meta.id}/companion-chat`,
         role: 'article',
-        filter: (data): data is { companionTo: Obj.Any; subject: Assistant.Chat | 'assistant-chat' } =>
+        filter: (data): data is { companionTo: Obj.Unknown; subject: Assistant.Chat | 'assistant-chat' } =>
           Obj.isObject(data.companionTo) &&
           (Obj.instanceOf(Assistant.Chat, data.subject) || data.subject === 'assistant-chat'),
         component: ({ data, role, ref }) => <ChatCompanion role={role} data={data} ref={ref} />,

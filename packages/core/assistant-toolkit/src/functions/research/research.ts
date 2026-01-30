@@ -21,7 +21,7 @@ import {
   makeToolResolverFromFunctions,
 } from '@dxos/assistant';
 import { Template } from '@dxos/blueprints';
-import { type DXN, Obj } from '@dxos/echo';
+import { type DXN, Entity, Obj } from '@dxos/echo';
 import { Database } from '@dxos/echo';
 import { TracingService, defineFunction } from '@dxos/functions';
 import { FunctionInvocationServiceLayerTestMocked } from '@dxos/functions-runtime/testing';
@@ -137,7 +137,7 @@ export default defineFunction({
       });
 
       const objects = yield* Effect.forEach(objectDXNs, (dxn) => Database.Service.resolve(dxn)).pipe(
-        Effect.map(Array.map((obj) => Obj.toJSON(obj))),
+        Effect.map(Array.map((obj) => Entity.toJSON(obj))),
       );
 
       return {

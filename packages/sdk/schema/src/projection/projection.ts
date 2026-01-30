@@ -5,11 +5,12 @@
 import { Atom, Registry } from '@effect-atom/atom-react';
 import * as Schema from 'effect/Schema';
 
-import { type Entity, Format, Obj } from '@dxos/echo';
+import { Format, Obj } from '@dxos/echo';
 import {
   type EchoSchema,
   type JsonProp,
   type JsonSchemaType,
+  type Mutable,
   TypeEnum,
   formatToType,
   typeToFormat,
@@ -42,12 +43,13 @@ export type FieldProjection = {
  * Contains separate callbacks for projection and schema mutations
  * since Obj.change() cannot be nested.
  * Note: Callbacks return void because Obj.change() returns void.
+ * Uses Mutable<T> to allow mutations within the callbacks since schemas are readonly by default.
  */
 export type ProjectionChangeCallback = {
   /** Callback to wrap projection mutations. */
-  projection: (mutate: (mutableProjection: View.Projection) => void) => void;
+  projection: (mutate: (mutableProjection: Mutable<View.Projection>) => void) => void;
   /** Callback to wrap schema mutations. */
-  schema: (mutate: (mutableSchema: JsonSchemaType) => void) => void;
+  schema: (mutate: (mutableSchema: Mutable<JsonSchemaType>) => void) => void;
 };
 
 /**
@@ -59,20 +61,22 @@ export type ProjectionChangeCallback = {
  * 2. Inside Obj.change, the mutable object has different type constraints
  */
 export const createEchoChangeCallback = (view: View.View, schema: EchoSchema): ProjectionChangeCallback => ({
-  projection: (mutate) => Obj.change(view, (v) => mutate(v.projection as View.Projection)),
-  schema: (mutate) => Obj.change(schema.persistentSchema as unknown as Entity.Any, (s: any) => mutate(s.jsonSchema)),
+  // Inside Obj.change, v is Mutable<View.View>, so v.projection is already mutable.
+  projection: (mutate) => Obj.change(view, (v) => mutate(v.projection as Mutable<View.Projection>)),
+  schema: (mutate) => Obj.change(schema.persistentSchema as unknown as Obj.Unknown, (s: any) => mutate(s.jsonSchema)),
 });
 
 /**
  * Creates a change callback that directly mutates objects without wrapping.
  * Use this for plain JavaScript objects (tests, non-ECHO scenarios).
+ * Cast to mutable types since these are non-ECHO objects that can be directly mutated.
  */
 export const createDirectChangeCallback = (
   projection: View.Projection,
   schema: JsonSchemaType,
 ): ProjectionChangeCallback => ({
-  projection: (mutate) => mutate(projection),
-  schema: (mutate) => mutate(schema),
+  projection: (mutate) => mutate(projection as Mutable<View.Projection>),
+  schema: (mutate) => mutate(schema as Mutable<JsonSchemaType>),
 });
 
 /**
@@ -106,11 +110,11 @@ export class ProjectionModel {
   private readonly _change: ProjectionChangeCallback;
 
   // Internal atoms.
-  private readonly _viewAtom: Atom.Atom<View.View>;
+  private readonly _viewAtom: Atom.Atom<Obj.Snapshot<View.View>>;
   private readonly _projectionAtom: Atom.Atom<View.Projection>;
-  private readonly _fieldsAtom: Atom.Atom<FieldType[]>;
-  private readonly _hiddenFieldsAtom: Atom.Atom<FieldType[]>;
-  private readonly _allFieldsAtom: Atom.Atom<FieldType[]>;
+  private readonly _fieldsAtom: Atom.Atom<readonly FieldType[]>;
+  private readonly _hiddenFieldsAtom: Atom.Atom<readonly FieldType[]>;
+  private readonly _allFieldsAtom: Atom.Atom<readonly FieldType[]>;
 
   constructor({ registry = Registry.make(), view, baseSchema, change }: ProjectionModelProps) {
     this._registry = registry;
@@ -150,21 +154,21 @@ export class ProjectionModel {
   /**
    * Atom for the visible fields in the projection.
    */
-  get fields(): Atom.Atom<FieldType[]> {
+  get fields(): Atom.Atom<readonly FieldType[]> {
     return this._fieldsAtom;
   }
 
   /**
    * Atom for the hidden fields in the projection.
    */
-  get hiddenFields(): Atom.Atom<FieldType[]> {
+  get hiddenFields(): Atom.Atom<readonly FieldType[]> {
     return this._hiddenFieldsAtom;
   }
 
   /**
    * Atom for all fields in the projection (both visible and hidden).
    */
-  get allFields(): Atom.Atom<FieldType[]> {
+  get allFields(): Atom.Atom<readonly FieldType[]> {
     return this._allFieldsAtom;
   }
 
@@ -182,21 +186,21 @@ export class ProjectionModel {
   /**
    * Gets the current visible fields array.
    */
-  getFields(): FieldType[] {
+  getFields(): readonly FieldType[] {
     return this._registry.get(this._fieldsAtom);
   }
 
   /**
    * Gets the current hidden fields array.
    */
-  getHiddenFields(): FieldType[] {
+  getHiddenFields(): readonly FieldType[] {
     return this._registry.get(this._hiddenFieldsAtom);
   }
 
   /**
    * Gets the current all fields array.
    */
-  getAllFields(): FieldType[] {
+  getAllFields(): readonly FieldType[] {
     return this._registry.get(this._allFieldsAtom);
   }
 
@@ -234,7 +238,7 @@ export class ProjectionModel {
   }
 
   getFieldId(path: string): string | undefined {
-    return this._view.projection.fields.find((field: FieldType) => field.path === path)?.id;
+    return this._view.projection.fields.find((field) => field.path === path)?.id;
   }
 
   /**
@@ -242,7 +246,7 @@ export class ProjectionModel {
    */
   getFieldProjection(fieldId: string): FieldProjection {
     invariant(this._baseSchema.properties);
-    const field = this._view.projection.fields.find((field: FieldType) => field.id === fieldId);
+    const field = this._view.projection.fields.find((field) => field.id === fieldId);
     invariant(field, `invalid field: ${fieldId}`);
     invariant(field.path.indexOf('.') === -1);
 
@@ -297,7 +301,7 @@ export class ProjectionModel {
    */
   tryGetFieldProjection(fieldId: string): FieldProjection | undefined {
     invariant(this._baseSchema.properties);
-    const field = this._view.projection.fields.find((field: FieldType) => field.id === fieldId);
+    const field = this._view.projection.fields.find((field) => field.id === fieldId);
     if (!field) {
       return undefined;
     }
@@ -309,7 +313,7 @@ export class ProjectionModel {
    * Get all field projections.
    */
   getFieldProjections(): FieldProjection[] {
-    return this._view.projection.fields.map((field: FieldType) => this.getFieldProjection(field.id));
+    return this._view.projection.fields.map((field) => this.getFieldProjection(field.id));
   }
 
   /**
@@ -426,7 +430,14 @@ export class ProjectionModel {
       invariant(type !== TypeEnum.Ref);
       this._change.schema((baseSchema) => {
         baseSchema.properties ??= {};
-        baseSchema.properties[property!] = { type, format, ...jsonProperty, ...rest };
+        // Type assertion needed: Property values from the readonly schema may contain
+        // readonly nested types, but we're in a mutation context.
+        baseSchema.properties[property!] = {
+          type,
+          format,
+          ...jsonProperty,
+          ...rest,
+        } as Mutable<JsonSchemaType>;
         if (isRename) {
           delete baseSchema.properties[sourcePropertyName!];
 
@@ -461,7 +472,7 @@ export class ProjectionModel {
     const snapshot = getSnapshot(current);
 
     // Calculate field index before deleting (Obj.change returns void, so we can't get return values from the callback).
-    const fieldIndex = this._view.projection.fields.findIndex((field: FieldType) => field.id === fieldId);
+    const fieldIndex = this._view.projection.fields.findIndex((field) => field.id === fieldId);
 
     // Delete field from projection.
     this._change.projection((projection) => {

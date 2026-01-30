@@ -196,12 +196,23 @@ const meta = {
 
 export default meta;
 
-export const Default: StoryObj<typeof BasicStory> = {
-  render: BasicStory,
+// TODO(wittjosiah): ECHO objects don't work when passed via Storybook args.
+const DefaultStory = (props: StoryProps) => {
+  const [messages, setMessages] = useState<Message.Message[]>([]);
+  useEffect(() => {
+    void Promise.all(Array.from({ length: 10 }, () => MessageBuilder.singleton.createMessage())).then(setMessages);
+  }, []);
+  if (messages.length === 0) {
+    return <div>Loading messages...</div>;
+  }
+  return <BasicStory {...props} messages={messages} />;
+};
+
+export const Default: StoryObj<typeof DefaultStory> = {
+  render: DefaultStory,
   args: {
     ignoreAttention: true,
     attendableId: 'story',
-    messages: await Promise.all(Array.from({ length: 10 }, () => MessageBuilder.singleton.createMessage())),
   },
 };
 

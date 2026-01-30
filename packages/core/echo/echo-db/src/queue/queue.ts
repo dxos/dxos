@@ -5,8 +5,8 @@
 import { DeferredTask } from '@dxos/async';
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { type Database, type Entity, Obj, type Ref } from '@dxos/echo';
-import { type HasId, type ObjectJSON, SelfDXNId, assertObjectModel, setRefResolverOnData } from '@dxos/echo/internal';
+import { type Database, Entity, Obj, type Ref } from '@dxos/echo';
+import { type ObjectJSON, SelfDXNId, assertObjectModel, setRefResolverOnData } from '@dxos/echo/internal';
 import { defineHiddenProperty } from '@dxos/echo/internal';
 import { assertArgument, failedInvariant } from '@dxos/invariant';
 import { type DXN, type ObjectId, type SpaceId } from '@dxos/keys';
@@ -178,7 +178,7 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
     }
     this.updated.emit();
 
-    const json = items.map((item) => Obj.toJSON(item));
+    const json = items.map((item) => Entity.toJSON(item));
 
     try {
       for (let i = 0; i < json.length; i += QUEUE_APPEND_BATCH_SIZE) {
@@ -199,7 +199,7 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
   async delete(ids: string[]): Promise<void> {
     // Optimistic update.
     // TODO(dmaretskyi): Restrict types.
-    this._objects = this._objects.filter((item) => !ids.includes((item as HasId).id));
+    this._objects = this._objects.filter((item) => !ids.includes((item as any).id));
     for (const id of ids) {
       this._objectCache.delete(id);
     }

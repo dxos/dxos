@@ -18,7 +18,7 @@ export const TestSchema = Schema.Struct({
   active: Schema.optional(Schema.Boolean),
   netWorth: Schema.optional(Schema.Number),
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'example.com/type/Test',
     version: '0.1.0',
   }),

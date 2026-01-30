@@ -44,7 +44,9 @@ const enrichGoogleTokenWithEmail = (token: AccessToken.AccessToken) =>
     );
 
     if (userInfo.email) {
-      token.note = `${userInfo.email} - ${token.note ?? ''}`.trim();
+      Obj.change(token, (t) => {
+        t.note = `${userInfo.email} - ${t.note ?? ''}`.trim();
+      });
     }
   }).pipe(
     Effect.provide(FetchHttpClient.layer),
@@ -88,7 +90,9 @@ export const NewTokenSelector = ({ spaceId, onAddAccessToken, onCustomToken }: N
             return;
           }
 
-          token.token = data.accessToken;
+          Obj.change(token, (t) => {
+            t.token = data.accessToken;
+          });
           yield* enrichGoogleTokenWithEmail(token);
           onAddAccessToken(token);
         }),

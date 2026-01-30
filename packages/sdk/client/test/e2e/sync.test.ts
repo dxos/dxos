@@ -1,6 +1,7 @@
 import { describe, test } from 'vitest';
 import { Client, Config } from '@dxos/client';
 import { Obj, Type, Database } from '@dxos/echo';
+import { TestSchema } from '@dxos/echo/testing';
 import type { SpaceSyncState } from '@dxos/echo-db';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import type { SpaceId } from '@dxos/keys';
@@ -58,7 +59,7 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('sync-e2e'))('sync', { timeout
     await client.spaces.default.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED);
 
     console.log('\n### Creating object');
-    const obj = client.spaces.default.db.add(Obj.make(Type.Expando, { counter: 1 }));
+    const obj = client.spaces.default.db.add(Obj.make(TestSchema.Expando, { counter: 1 }));
     const dxn = Obj.getDXN(obj);
     await waitForSync(client.spaces.default.db);
 

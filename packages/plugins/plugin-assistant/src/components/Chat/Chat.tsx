@@ -398,7 +398,7 @@ ChatPrompt.displayName = 'Chat.Prompt';
 // Toolbar
 //
 
-type ChatToolbarProps = ThemedClassName<{ companionTo?: Obj.Any }>;
+type ChatToolbarProps = ThemedClassName<{ companionTo?: Obj.Unknown }>;
 
 const ChatToolbar = ({ classNames, companionTo }: ChatToolbarProps) => {
   const { chat } = useChatContext(ChatToolbar.displayName);

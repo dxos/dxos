@@ -107,7 +107,7 @@ export const Person = PersonSchema.pipe(
       location: Format.GeoPoint.pipe(Schema.annotations({ title: 'Location' }), Schema.optional),
     }),
   ),
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/Person',
     version: '0.1.0',
   }),
@@ -123,7 +123,7 @@ export const make = (props: Partial<Obj.MakeProps<typeof Person>> = {}) => Obj.m
  * @deprecated
  */
 export const LegacyPerson = PersonSchema.pipe(
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/Person',
     version: '0.1.0',
   }),

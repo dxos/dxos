@@ -81,7 +81,7 @@ export const ProjectColumn = ({ column }: ProjectColumnProps) => {
           </StackItem.Heading>
           <CardStack.Stack id={view.id} itemsCount={sortedItems.length}>
             {sortedItems.map((liveMarker) => {
-              const item = liveMarker as unknown as Obj.Any;
+              const item = liveMarker as unknown as Obj.Unknown;
               return (
                 <CardStack.Item key={item.id} asChild>
                   <StackItem.Root item={item} focusIndicatorVariant='group'>

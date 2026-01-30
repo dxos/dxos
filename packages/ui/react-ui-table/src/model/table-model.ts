@@ -6,7 +6,7 @@ import { Atom, type Registry } from '@effect-atom/atom-react';
 
 import { Resource } from '@dxos/context';
 import { type Database, Format, Obj, Order, Query, type QueryAST, Ref } from '@dxos/echo';
-import { type JsonProp, type JsonSchemaType, toEffectSchema } from '@dxos/echo/internal';
+import { type JsonProp, type JsonSchemaType, type Mutable, toEffectSchema } from '@dxos/echo/internal';
 import { getSnapshot } from '@dxos/echo/internal';
 import { getValue, setValue } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
@@ -893,11 +893,15 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
       if (field) {
         // Persist sort to view.query.ast
         const newQuery = baseQuery.orderBy(Order.property<any>(field.path as string, inMemorySort.direction));
-        view.query.ast = newQuery.ast;
+        Obj.change(view, (v) => {
+          v.query.ast = newQuery.ast as Mutable<typeof newQuery.ast>;
+        });
       }
     } else {
       // Clear sort from view.query.ast
-      view.query.ast = baseQuery.ast;
+      Obj.change(view, (v) => {
+        v.query.ast = baseQuery.ast as Mutable<typeof baseQuery.ast>;
+      });
     }
 
     // Clear in-memory sort since it's now persisted.

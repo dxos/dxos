@@ -13,7 +13,7 @@ export type UseContextObjectsProps = {
 };
 
 export type UseContextObjects = {
-  objects: Obj.Any[];
+  objects: Obj.Unknown[];
   onUpdateObject: (dxn: DXN, checked: boolean) => Promise<void>;
 };
 

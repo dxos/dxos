@@ -19,7 +19,7 @@ import { Assistant, AssistantOperation } from '../types';
 
 export type ChatToolbarActionsProps = {
   chat?: Assistant.Chat;
-  companionTo?: Obj.Any;
+  companionTo?: Obj.Unknown;
 };
 
 export const useChatToolbarActions = ({ chat, companionTo }: ChatToolbarActionsProps) => {
@@ -46,12 +46,15 @@ export const useChatToolbarActions = ({ chat, companionTo }: ChatToolbarActionsP
               label: ['new thread button', { ns: meta.id }],
               icon: 'ph--plus--regular',
               type: 'new',
+              disabled: !companionTo,
             },
-            () =>
-              invoke(AssistantOperation.SetCurrentChat, {
+            () => {
+              invariant(companionTo);
+              return invoke(AssistantOperation.SetCurrentChat, {
                 companionTo,
                 chat: undefined,
-              }).pipe(runAndForwardErrors),
+              }).pipe(runAndForwardErrors);
+            },
           )
           .action(
             'rename',

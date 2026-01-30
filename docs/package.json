@@ -27,6 +27,7 @@
     "@dxos/client-protocol": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/echo": "workspace:*",
-    "@dxos/react-client": "workspace:*"
+    "@dxos/react-client": "workspace:*",
+    "@dxos/schema": "workspace:*"
   }
 }

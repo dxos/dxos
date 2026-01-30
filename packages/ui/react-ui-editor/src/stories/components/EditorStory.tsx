@@ -3,10 +3,10 @@
 //
 
 import { type EditorView } from '@codemirror/view';
-import type * as Schema from 'effect/Schema';
 import React, { type ReactNode, forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 
-import { Obj, Type } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
+import { TestSchema } from '@dxos/echo/testing';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -39,8 +39,7 @@ export type StoryProps = Pick<UseTextEditorProps, 'id' | 'scrollTo' | 'selection
     debug?: DebugMode;
     debugCustom?: (view: EditorView) => ReactNode;
     text?: string;
-    // TODO(wittjosiah): Find a simpler way to define this type.
-    object?: Obj.Obj<Schema.Schema.Type<typeof Type.Expando>>;
+    object?: Obj.Obj<TestSchema.Expando>;
     readOnly?: boolean;
     placeholder?: string;
     lineNumbers?: boolean;
@@ -55,7 +54,7 @@ export const EditorStory = forwardRef<EditorController, StoryProps>(
 
     const attentionAttrs = useAttentionAttributes('test-panel');
     const [tree, setTree] = useState<DebugNode>();
-    const [object] = useState(Obj.make(Type.Expando, { content: text ?? '' }));
+    const [object] = useState(Obj.make(TestSchema.Expando, { content: text ?? '' }));
 
     const extensions = useMemo(
       () => (debug ? [extensionsProp, debugTree(setTree)].filter(isNonNullable) : extensionsProp),

@@ -5,7 +5,7 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework/react';
-import { type Database } from '@dxos/echo';
+import { type Database, Obj } from '@dxos/echo';
 import { createDocAccessor } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { TemplateEditor } from '@dxos/plugin-assistant';
@@ -61,7 +61,9 @@ export const NotebookCell = ({ db, graph, dragging, cell, promptResults, env }: 
   const handleQueryChange = useCallback<NonNullable<QueryEditorProps['onChange']>>(
     (value: string) => {
       invariant(cell.source?.target);
-      cell.source.target.content = value;
+      Obj.change(cell.source.target, (s) => {
+        s.content = value;
+      });
     },
     [cell],
   );

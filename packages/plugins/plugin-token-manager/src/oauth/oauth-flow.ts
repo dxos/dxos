@@ -9,6 +9,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import * as Ref from 'effect/Ref';
 
+import { Obj } from '@dxos/echo';
 import { type EdgeHttpClient } from '@dxos/edge-client';
 import { type EdgeEnvelope, type InitiateOAuthFlowResponse, type OAuthFlowResult } from '@dxos/protocols';
 import { type AccessToken } from '@dxos/types';
@@ -189,7 +190,9 @@ export const performOAuthFlow = Effect.fn(function* (
       return yield* Effect.fail(new Error(`OAuth flow failed: ${oauthResult.reason}`));
     }
 
-    accessToken.token = oauthResult.accessToken;
+    Obj.change(accessToken, (t) => {
+      t.token = oauthResult.accessToken;
+    });
   }).pipe(Effect.ensuring(server.stop().pipe(Effect.catchAll(() => Effect.void))));
 });
 

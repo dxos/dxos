@@ -86,7 +86,7 @@ export const Main = () => {
 
     // TODO(burdon): Migrate generator from DebugPlugin.
     Array.from({ length: n }).forEach(() => {
-      let object: Obj.Any;
+      let object: Obj.Unknown;
       switch (type) {
         case Document.typename: {
           object = Obj.make(Document, {

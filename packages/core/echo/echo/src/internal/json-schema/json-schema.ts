@@ -23,9 +23,8 @@ import {
   TypeIdentifierAnnotationId,
   makeTypeJsonSchemaAnnotation,
 } from '../annotations';
-import { Expando } from '../entities';
-import { type JsonSchemaReferenceInfo, Ref, createEchoReferenceSchema } from '../ref';
-import { EntityKind, EntityKindSchema } from '../types';
+import { type JsonSchemaReferenceInfo, createEchoReferenceSchema } from '../ref';
+import { ANY_OBJECT_TYPENAME, ANY_OBJECT_VERSION, EntityKind, EntityKindSchema } from '../types';
 
 import { CustomAnnotations, DecodedAnnotations, EchoAnnotations } from './annotations';
 import {
@@ -352,7 +351,8 @@ const anyToEffectSchema = (root: JSONSchema.JsonSchema7Any): Schema.Schema.AnyNo
 // TODO(dmaretskyi): Types.
 const refToEffectSchema = (root: any): Schema.Schema.AnyNoContext => {
   if (!('reference' in root)) {
-    return Ref(Expando);
+    // Fallback to generic object ref when no reference info is provided.
+    return createEchoReferenceSchema(undefined, ANY_OBJECT_TYPENAME, ANY_OBJECT_VERSION);
   }
 
   const reference: JsonSchemaReferenceInfo = root.reference;

@@ -3,7 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React from 'react';
+import React, { useMemo } from 'react';
 
 import { OperationPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
@@ -15,20 +15,36 @@ import { AccessToken } from '@dxos/types';
 
 import { translations } from '../../translations';
 
-import { DeploymentDialog, type DeploymentDialogProps } from './DeploymentDialog';
+import { DeploymentDialog } from './DeploymentDialog';
 
-const DefaultStory = (props: DeploymentDialogProps) => {
+// TODO(wittjosiah): ECHO objects don't work when passed via Storybook args.
+const DeploymentDialogStory = () => {
+  const accessToken = useMemo(
+    () =>
+      Obj.make(AccessToken.AccessToken, {
+        source: 'example.com',
+        token: 'example-token',
+      }),
+    [],
+  );
+  const scriptTemplates = useMemo(
+    () => [
+      { id: 't-1', name: 'Script 1', source: 'template1' },
+      { id: 't-2', name: 'Script 2', source: 'template2' },
+      { id: 't-3', name: 'Script 3', source: 'template3' },
+    ],
+    [],
+  );
   return (
     <Dialog.Root defaultOpen={true}>
-      <DeploymentDialog {...props} />
+      <DeploymentDialog accessToken={accessToken} scriptTemplates={scriptTemplates} />
     </Dialog.Root>
   );
 };
 
 const meta = {
   title: 'plugins/plugin-script/DeploymentDialog',
-  component: DeploymentDialog,
-  render: DefaultStory,
+  component: DeploymentDialogStory,
   parameters: { translations },
   // TODO(wittjosiah): Try to write story which does not depend on plugin manager.
   decorators: [
@@ -37,22 +53,10 @@ const meta = {
       plugins: [OperationPlugin(), ClientPlugin({})],
     }),
   ],
-} satisfies Meta<typeof DefaultStory>;
+} satisfies Meta<typeof DeploymentDialogStory>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {
-  args: {
-    accessToken: Obj.make(AccessToken.AccessToken, {
-      source: 'example.com',
-      token: 'example-token',
-    }),
-    scriptTemplates: [
-      { id: 't-1', name: 'Script 1', source: 'template1' },
-      { id: 't-2', name: 'Script 2', source: 'template2' },
-      { id: 't-3', name: 'Script 3', source: 'template3' },
-    ],
-  },
-};
+export const Default: Story = {};

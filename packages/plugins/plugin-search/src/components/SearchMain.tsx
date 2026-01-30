@@ -5,7 +5,7 @@
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/react';
-import { Obj, Query } from '@dxos/echo';
+import { Entity, Query } from '@dxos/echo';
 import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
 import { Toolbar, useTranslation } from '@dxos/react-ui';
 import { Card, Mosaic, type StackTileComponent } from '@dxos/react-ui-mosaic';
@@ -38,7 +38,7 @@ export const SearchMain = ({ space }: { space?: Space }) => {
   const results = useGlobalSearchResults(objects);
   const { results: webResults } = useWebSearch({ query });
   const allResults = useMemo(
-    () => [...results, ...webResults].filter(({ object }) => object && Obj.getLabel(object)),
+    () => [...results, ...webResults].filter(({ object }) => object && Entity.getLabel(object)),
     [results, webResults],
   );
 
@@ -77,7 +77,7 @@ const SearchResultTile: StackTileComponent<SearchResult> = ({ data }) => {
     <Card.Root key={data.id}>
       <Card.Toolbar>
         <Card.DragHandle />
-        <Card.Title>{data.label ?? (data.object && Obj.getLabel(data.object))}</Card.Title>
+        <Card.Title>{data.label ?? (data.object && Entity.getLabel(data.object))}</Card.Title>
         <Card.Menu />
       </Card.Toolbar>
       <Surface role='card--content' data={{ subject: data.object }} limit={1} />

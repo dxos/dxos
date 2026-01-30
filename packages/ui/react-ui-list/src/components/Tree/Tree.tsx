@@ -4,13 +4,12 @@
 
 import React, { useMemo } from 'react';
 
-import { type HasId } from '@dxos/echo/internal';
 import { Treegrid, type TreegridRootProps } from '@dxos/react-ui';
 
 import { type TreeContextType, TreeProvider } from './TreeContext';
 import { TreeItem, type TreeItemProps } from './TreeItem';
 
-export type TreeProps<T extends HasId = any, O = any> = {
+export type TreeProps<T extends { id: string } = any, O = any> = {
   root?: T;
   path?: string[];
   id: string;
@@ -28,7 +27,7 @@ export type TreeProps<T extends HasId = any, O = any> = {
     | 'levelOffset'
   >;
 
-export const Tree = <T extends HasId = any, O = any>({
+export const Tree = <T extends { id: string } = any, O = any>({
   root,
   path,
   id,

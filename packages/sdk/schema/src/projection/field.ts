@@ -17,7 +17,7 @@ export const FieldSchema = Schema.Struct({
 
   // TODO(wittjosiah): Presentation-specific?
   referencePath: Schema.optional(JsonPath),
-}).pipe(Schema.mutable);
+});
 
 export type FieldType = Schema.Schema.Type<typeof FieldSchema>;
 

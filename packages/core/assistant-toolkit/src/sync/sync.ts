@@ -18,9 +18,12 @@ import { log } from '@dxos/log';
  * @param opts.foreignKeyId - The key to use for matching objects.
  */
 export const syncObjects: (
-  objs: Obj.Any[],
+  objs: Obj.Unknown[],
   opts: { foreignKeyId: string },
-) => Effect.Effect<Obj.Any[], never, Database.Service> = Effect.fn('syncObjects')(function* (objs, { foreignKeyId }) {
+) => Effect.Effect<Obj.Unknown[], never, Database.Service> = Effect.fn('syncObjects')(function* (
+  objs,
+  { foreignKeyId },
+) {
   return yield* Effect.forEach(
     objs,
     Effect.fnUntraced(function* (obj) {
@@ -28,7 +31,7 @@ export const syncObjects: (
       for (const key of Object.keys(obj)) {
         if (typeof key !== 'string' || key === 'id') continue;
         if (!Ref.isRef((obj as any)[key])) continue;
-        const ref: Ref.Any = (obj as any)[key];
+        const ref: Ref.Unknown = (obj as any)[key];
         if (!ref.target) continue;
         if (Obj.getDXN(ref.target).isLocalObjectId()) {
           // obj not persisted to db.
@@ -59,27 +62,34 @@ export const syncObjects: (
   );
 });
 
-const copyObjectData = (existing: Obj.Any, newObj: Obj.Any) => {
-  for (const key of Object.keys(newObj)) {
-    if (typeof key !== 'string' || key === 'id') continue;
-    if (
-      typeof (newObj as any)[key] !== 'string' &&
-      typeof (newObj as any)[key] !== 'number' &&
-      typeof (newObj as any)[key] !== 'boolean' &&
-      !Ref.isRef((newObj as any)[key])
-    )
-      continue;
-    (existing as any)[key] = (newObj as any)[key];
-  }
-  for (const key of Object.keys(existing)) {
-    if (typeof key !== 'string' || key === 'id') continue;
-    if (!(key in newObj)) {
-      delete (existing as any)[key];
+const copyObjectData = (existing: Obj.Unknown, newObj: Obj.Unknown) => {
+  Obj.change(existing, (obj) => {
+    // Copy properties from newObj to existing.
+    for (const key of Object.keys(newObj)) {
+      if (typeof key !== 'string' || key === 'id') continue;
+      if (
+        typeof (newObj as any)[key] !== 'string' &&
+        typeof (newObj as any)[key] !== 'number' &&
+        typeof (newObj as any)[key] !== 'boolean' &&
+        !Ref.isRef((newObj as any)[key])
+      )
+        continue;
+      (obj as any)[key] = (newObj as any)[key];
     }
-  }
-  for (const foreignKey of Obj.getMeta(newObj).keys) {
-    Obj.deleteKeys(existing, foreignKey.source);
-    // TODO(dmaretskyi): Doesn't work: `Obj.getMeta(existing).keys.push(foreignKey);`
-    Obj.getMeta(existing).keys.push({ ...foreignKey });
-  }
+
+    // Delete properties that don't exist in newObj.
+    for (const key of Object.keys(obj)) {
+      if (typeof key !== 'string' || key === 'id') continue;
+      if (!(key in newObj)) {
+        delete (obj as any)[key];
+      }
+    }
+
+    // Update foreign keys.
+    for (const foreignKey of Obj.getMeta(newObj).keys) {
+      Obj.deleteKeys(obj, foreignKey.source);
+      // TODO(dmaretskyi): Doesn't work: `Obj.getMeta(existing).keys.push(foreignKey);`
+      Obj.getMeta(obj).keys.push({ ...foreignKey });
+    }
+  });
 };

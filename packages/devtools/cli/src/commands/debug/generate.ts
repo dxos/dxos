@@ -10,7 +10,8 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { CommandConfig, Common, getSpace, spaceLayer } from '@dxos/cli-util';
-import { Database, Filter, Obj, Type } from '@dxos/echo';
+import { Database, Filter, Obj } from '@dxos/echo';
+import { TestSchema } from '@dxos/echo/testing';
 import { faker } from '@dxos/random';
 
 const pause = (interval: number, jitter: number) =>
@@ -84,18 +85,20 @@ export const handler = Effect.fn(function* ({
 
   // Create objects
   for (let i = 0; i < objects; i++) {
-    yield* Database.Service.add(Obj.make(Type.Expando, { type, title: faker.lorem.word() }));
+    yield* Database.Service.add(Obj.make(TestSchema.Expando, { type, title: faker.lorem.word() }));
     yield* Database.Service.flush({ indexes: true });
     yield* pause(interval, jitter);
   }
 
   // Query objects and mutate them
-  const queriedObjects = yield* Database.Service.runQuery(Filter.type(Type.Expando, { type }));
+  const queriedObjects = yield* Database.Service.runQuery(Filter.type(TestSchema.Expando, { type }));
 
   if (queriedObjects.length > 0) {
     for (let i = 0; i < mutations; i++) {
       const object = faker.helpers.arrayElement(queriedObjects);
-      object.title = faker.lorem.word();
+      Obj.change(object, (o) => {
+        o.title = faker.lorem.word();
+      });
       yield* Database.Service.flush({ indexes: true });
       yield* pause(interval, jitter);
 

@@ -49,7 +49,7 @@ export default Capability.makeModule(() =>
       Common.createSurface({
         id: `${meta.id}/companion/automation`,
         role: 'article',
-        filter: (data): data is { companionTo: Obj.Any; subject: 'automation' } =>
+        filter: (data): data is { companionTo: Obj.Unknown; subject: 'automation' } =>
           Obj.isObject(data.companionTo) && data.subject === 'automation',
         component: ({ data }) => {
           return <AutomationSettings space={getSpace(data.companionTo)!} object={data.companionTo} />;

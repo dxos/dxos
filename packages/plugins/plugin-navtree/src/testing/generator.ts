@@ -6,6 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { type Node } from '@dxos/app-graph';
 import { Obj, Type } from '@dxos/echo';
+import { TestSchema } from '@dxos/echo/testing';
 import { faker } from '@dxos/random';
 import { range } from '@dxos/util';
 
@@ -16,12 +17,12 @@ import { range } from '@dxos/util';
 export type TestItem = { id: string; type: string } & Record<string, any>;
 
 type ObjectDataGenerator = {
-  createSchema?: () => Schema.Schema.AnyNoContext;
+  createSchema?: () => Type.Obj.Any;
   createData: () => any;
 };
 
 type ObjectFactory<T> = {
-  schema?: Schema.Schema.AnyNoContext; // TODO(burdon): Support both typed and expando schema.
+  schema?: Type.Obj.Any; // TODO(burdon): Support both typed and expando schema.
   createObject: () => T;
 };
 
@@ -31,7 +32,7 @@ const createFactory = ({ createSchema, createData }: ObjectDataGenerator) => {
   const schema = createSchema?.();
   return {
     schema,
-    createObject: () => (schema ? Obj.make(schema, createData()) : Obj.make(Type.Expando, createData())),
+    createObject: () => (schema ? Obj.make(schema, createData()) : Obj.make(TestSchema.Expando, createData())),
   };
 };
 
@@ -63,7 +64,7 @@ export const defaultGenerators: { [type: string]: ObjectDataGenerator } = {
         status: Schema.String,
         priority: Schema.Number,
       }).pipe(
-        Type.Obj({
+        Type.object({
           typename: 'example.com/type/Project',
           version: '0.1.0',
         }),
@@ -93,7 +94,7 @@ export class TestObjectGenerator {
       }, {});
   }
 
-  get schema(): Schema.Schema.AnyNoContext[] {
+  get schema(): Type.Obj.Any[] {
     return Object.values(this.factories).map((f) => f.schema!);
   }
 

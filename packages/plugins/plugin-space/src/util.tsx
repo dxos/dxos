@@ -4,19 +4,17 @@
 
 import { type Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
 import * as Effect from 'effect/Effect';
-import type * as Schema from 'effect/Schema';
 
 import { type CapabilityManager, Common } from '@dxos/app-framework';
 import { type Space, SpaceState, isSpace } from '@dxos/client/echo';
 import { type Database, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
-import { EXPANDO_TYPENAME } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { Migrations } from '@dxos/migrations';
 import { Operation } from '@dxos/operation';
 import { Graph, Node } from '@dxos/plugin-graph';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention/types';
 import { type TreeData } from '@dxos/react-ui-list';
-import { Collection } from '@dxos/schema';
+import { Collection, Expando } from '@dxos/schema';
 import { createFilename } from '@dxos/util';
 
 import { meta } from './meta';
@@ -60,7 +58,7 @@ const getCollectionGraphNodePartials = ({
         c.objects = nextOrder.filter(Obj.isObject).map(Ref.make);
       });
     },
-    onTransferStart: (child: Node.Node<Obj.Any>, index?: number) => {
+    onTransferStart: (child: Node.Node<Obj.Unknown>, index?: number) => {
       // TODO(wittjosiah): Support transfer between spaces.
       // const childSpace = getSpace(child.data);
       // if (space && childSpace && !childSpace.key.equals(space.key)) {
@@ -91,7 +89,7 @@ const getCollectionGraphNodePartials = ({
 
       // }
     },
-    onTransferEnd: (child: Node.Node<Obj.Any>, destination: Node.Node) => {
+    onTransferEnd: (child: Node.Node<Obj.Unknown>, destination: Node.Node) => {
       // Remove child from origin collection.
       Obj.change(collection, (c) => {
         const index = c.objects.findIndex((object) => object.target === child.data);
@@ -109,7 +107,7 @@ const getCollectionGraphNodePartials = ({
       //   childSpace.db.remove(child.data);
       // }
     },
-    onCopy: async (child: Node.Node<Obj.Any>, index?: number) => {
+    onCopy: async (child: Node.Node<Obj.Unknown>, index?: number) => {
       // Create clone of child and add to destination space.
       const newObject = await cloneObject(child.data, resolve, db);
       db.add(newObject);
@@ -312,13 +310,7 @@ export const constructSpaceActions = ({
   return actions;
 };
 
-export const createStaticSchemaNode = ({
-  schema,
-  space,
-}: {
-  schema: Schema.Schema.AnyNoContext;
-  space: Space;
-}): Node.Node => {
+export const createStaticSchemaNode = ({ schema, space }: { schema: Type.Entity.Any; space: Space }): Node.Node => {
   return {
     id: `${space.id}/${Type.getTypename(schema)}`,
     type: `${meta.id}/static-schema`,
@@ -432,7 +424,7 @@ export const createObjectNode = ({
   resolve,
 }: {
   db: Database.Database;
-  object: Obj.Any;
+  object: Obj.Unknown;
   disposition?: string;
   droppable?: boolean;
   navigable?: boolean;
@@ -510,7 +502,7 @@ export const constructObjectActions = ({
   deletable = true,
   navigable = false,
 }: {
-  object: Obj.Any;
+  object: Obj.Unknown;
   graph: Graph.ReadableGraph;
   resolve: (typename: string) => Record<string, any>;
   capabilities: CapabilityManager.CapabilityManager;
@@ -598,7 +590,7 @@ export const constructObjectActions = ({
                 });
               } else {
                 const createdObject = yield* createObject({}, { db, capabilities }) as Effect.Effect<
-                  Obj.Any,
+                  Obj.Unknown,
                   Error,
                   never
                 >;
@@ -718,9 +710,9 @@ const downloadBlob = async (blob: Blob, filename: string) => {
  * @deprecated This is a temporary solution.
  */
 export const getNestedObjects = async (
-  object: Obj.Any,
+  object: Obj.Unknown,
   resolve: (typename: string) => Record<string, any>,
-): Promise<Obj.Any[]> => {
+): Promise<Obj.Unknown[]> => {
   const type = Obj.getTypename(object);
   if (!type) {
     return [];
@@ -732,7 +724,7 @@ export const getNestedObjects = async (
     return [];
   }
 
-  const objects: Obj.Any[] = await loadReferences(object);
+  const objects: Obj.Unknown[] = await loadReferences(object);
   const nested = await Promise.all(objects.map((object) => getNestedObjects(object, resolve)));
   return [...objects, ...nested.flat()];
 };
@@ -742,12 +734,12 @@ export const getNestedObjects = async (
  */
 // TODO(burdon): Remove.
 export const cloneObject = async (
-  object: Obj.Any,
+  object: Obj.Unknown,
   resolve: (typename: string) => Record<string, any>,
   newDb: Database.Database,
-): Promise<Obj.Any> => {
+): Promise<Obj.Unknown> => {
   const schema = Obj.getSchema(object);
-  const typename = schema ? (Type.getTypename(schema) ?? EXPANDO_TYPENAME) : EXPANDO_TYPENAME;
+  const typename = schema ? (Type.getTypename(schema) ?? Expando.Expando.typename) : Expando.Expando.typename;
   const metadata = resolve(typename);
   const serializer = metadata.serializer;
   invariant(serializer, `No serializer for type: ${typename}`);

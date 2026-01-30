@@ -8,12 +8,12 @@ import type * as SqlClient from '@effect/sql/SqlClient';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
-import type * as Schema from 'effect/Schema';
 import isEqual from 'lodash.isequal';
 
 import { waitForCondition } from '@dxos/async';
 import { type Context, Resource } from '@dxos/context';
-import { Type } from '@dxos/echo';
+import { type Obj, type Type } from '@dxos/echo';
+import { TestSchema } from '@dxos/echo/testing';
 import { EchoHost, type EchoHostIndexingConfig } from '@dxos/echo-pipeline';
 import { createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
@@ -26,7 +26,6 @@ import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 import { range } from '@dxos/util';
 
 import { EchoClient } from '../client';
-import { type AnyLiveObject } from '../echo-handler';
 import { type EchoDatabase } from '../proxy-db';
 import { Filter, Query } from '../query';
 
@@ -38,7 +37,7 @@ type OpenDatabaseOptions = {
 
 type PeerOptions = {
   indexing?: Partial<EchoHostIndexingConfig>;
-  types?: Schema.Schema.AnyNoContext[];
+  types?: Type.Entity.Any[];
   assignQueuePositions?: boolean;
 
   kv?: LevelDB;
@@ -87,7 +86,7 @@ export class EchoTestBuilder extends Resource {
 export class EchoTestPeer extends Resource {
   private readonly _kv: LevelDB;
   private readonly _indexing: Partial<EchoHostIndexingConfig>;
-  private readonly _types: Schema.Schema.AnyNoContext[];
+  private readonly _types: Type.Entity.Any[];
   private readonly _assignQueuePositions?: boolean;
   private readonly _clients = new Set<EchoClient>();
   private _echoHost!: EchoHost;
@@ -105,8 +104,8 @@ export class EchoTestPeer extends Resource {
     super();
     this._kv = kv;
     this._indexing = indexing;
-    // Include Expando as default type for tests that use Obj.make(Type.Expando, ...).
-    this._types = [Type.Expando, ...(types ?? [])];
+    // Include Expando as default type for tests that use Obj.make(TestSchema.Expando, ...).
+    this._types = [TestSchema.Expando, ...(types ?? [])];
     this._assignQueuePositions = assignQueuePositions;
 
     this._foreignRuntime = !!runtime;
@@ -241,7 +240,7 @@ export const createDataAssertion = ({
   onlyObject = true,
   numObjects = 1,
 }: { referenceEquality?: boolean; onlyObject?: boolean; numObjects?: number } = {}) => {
-  let seedObjects: AnyLiveObject<any>[];
+  let seedObjects: Obj.Any[];
   const findSeedObject = async (db: EchoDatabase) => {
     const objects = await db.query(Query.select(Filter.everything())).run();
     const received = seedObjects.map((seedObject) => objects.find((object) => object.id === seedObject.id));

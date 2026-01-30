@@ -41,7 +41,7 @@ export type CreateObjectProps<T> = T extends { id: string } ? Omit<T, 'id' | Kin
  * const Contact = Schema.Struct({
  *   name: Schema.String,
  *   email: Schema.String,
- * }).pipe(Type.Obj({
+ * }).pipe(Type.object({
  *   typename: 'example.com/type/Person',
  *   version: '0.1.0',
  * }))

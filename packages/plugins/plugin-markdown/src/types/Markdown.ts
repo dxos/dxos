@@ -18,7 +18,7 @@ export const Document = Schema.Struct({
   fallbackName: Schema.String.pipe(FormInputAnnotation.set(false), Schema.optional),
   content: Type.Ref(Text.Text).pipe(FormInputAnnotation.set(false)),
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/Document',
     version: '0.1.0',
   }),

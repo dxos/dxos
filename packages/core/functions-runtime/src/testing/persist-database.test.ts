@@ -5,8 +5,9 @@
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
-import { Filter, Obj, Query, Type } from '@dxos/echo';
+import { Filter, Obj, Query } from '@dxos/echo';
 import { Database } from '@dxos/echo';
+import { TestSchema } from '@dxos/echo/testing';
 import { Person } from '@dxos/types';
 
 import { TestDatabaseLayer, testStoragePath } from './layer';
@@ -20,7 +21,7 @@ describe('TestDatabaseLayer', { timeout: 600_000 }, () => {
       });
 
       yield* Effect.gen(function* () {
-        yield* Database.Service.add(Obj.make(Type.Expando, { label: 'test' }));
+        yield* Database.Service.add(Obj.make(TestSchema.Expando, { label: 'test' }));
         yield* Database.Service.flush({ indexes: true });
       }).pipe(Effect.provide(DbLayer));
 

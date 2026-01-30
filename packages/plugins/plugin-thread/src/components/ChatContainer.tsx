@@ -44,7 +44,7 @@ export type ChatContainerProps = ThemedClassName<
   {
     space: Space;
     thread: Thread.Thread;
-    context?: Obj.Any;
+    context?: Obj.Unknown;
     autoFocusTextbox?: boolean;
   } & Pick<ThreadRootProps, 'current'>
 >;
