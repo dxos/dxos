@@ -13,4 +13,5 @@ export const BlueprintArticle = lazy(() => import('./BlueprintArticle'));
 export const ChatCompanion = lazy(() => import('./ChatCompanion'));
 export const ChatContainer = lazy(() => import('./ChatContainer'));
 export const ChatDialog = lazy(() => import('./ChatDialog'));
+export const InitiativeContainer = lazy(() => import('./InitiativeContainer'));
 export const PromptArticle = lazy(() => import('./PromptArticle'));

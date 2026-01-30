@@ -11,9 +11,9 @@ import * as Option from 'effect/Option';
 import React, { use, type PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Event } from '@dxos/async';
-import { type Database, Obj } from '@dxos/echo';
+import { Filter, type Database, Obj } from '@dxos/echo';
 import { useVoiceInput } from '@dxos/plugin-transcription';
-import { useQueue } from '@dxos/react-client/echo';
+import { useQuery, useQueue } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Input, type ThemedClassName, useDynamicRef, useTranslation } from '@dxos/react-ui';
 import { ChatEditor, type ChatEditorController, type ChatEditorProps } from '@dxos/react-ui-chat';
@@ -74,11 +74,10 @@ const ChatRoot = ({ children, chat, processor, onEvent, ...props }: ChatRootProp
   const lastPrompt = useRef<string | undefined>(undefined);
 
   // Messages.
-  const queue = useQueue<Message.Message>(chat?.queue.dxn);
+  const storedMessages = useQuery(chat?.queue?.target, Filter.type(Message.Message));
   const messages = useMemo(() => {
-    const queueMessages = queue?.objects?.filter(Obj.instanceOf(Message.Message)) ?? [];
-    return Array.dedupeWith([...queueMessages, ...pending], ({ id: a }, { id: b }) => a === b);
-  }, [queue?.objects, pending]);
+    return Array.dedupeWith([...storedMessages, ...pending], ({ id: a }, { id: b }) => a === b);
+  }, [storedMessages, pending]);
 
   // Events.
   const event = useMemo(() => new Event<ChatEvent>(), []);

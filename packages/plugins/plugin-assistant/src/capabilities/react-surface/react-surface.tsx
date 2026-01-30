@@ -13,6 +13,7 @@ import { Sequence } from '@dxos/conductor';
 import { InvocationTraceContainer } from '@dxos/devtools';
 import { Obj } from '@dxos/echo';
 import { StackItem } from '@dxos/react-ui-stack';
+import { Initiative } from '@dxos/assistant-toolkit';
 
 import {
   AssistantSettings,
@@ -20,6 +21,7 @@ import {
   ChatCompanion,
   ChatContainer,
   ChatDialog,
+  InitiativeContainer,
   PromptArticle,
 } from '../../components';
 import { ASSISTANT_DIALOG, meta } from '../../meta';
@@ -44,6 +46,13 @@ export default Capability.makeModule(() =>
         filter: (data): data is { subject: Assistant.Chat; variant: undefined } =>
           Obj.instanceOf(Assistant.Chat, data.subject) && data.variant !== 'assistant-chat',
         component: ({ data, role, ref }) => <ChatContainer role={role} chat={data.subject} ref={ref} />,
+      }),
+      Common.createSurface({
+        id: `${meta.id}/initiative`,
+        role: 'article',
+        filter: (data): data is { subject: Initiative.Initiative } =>
+          Obj.instanceOf(Initiative.Initiative, data.subject),
+        component: ({ data, role }) => <InitiativeContainer role={role} initiative={data.subject} />,
       }),
       // TODO(wittjosiah): This is flashing when chat changes.
       Common.createSurface({

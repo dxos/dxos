@@ -15,6 +15,7 @@ import {
   ResearchBlueprint,
   SystemToolkit,
   WebSearchBlueprint,
+  Initiative,
 } from '@dxos/assistant-toolkit';
 import { Blueprint } from '@dxos/blueprints';
 import { type FunctionDefinition } from '@dxos/functions';
