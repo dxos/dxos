@@ -4,6 +4,8 @@
 
 import React from 'react';
 
+import { Mosaic } from '@dxos/react-ui-mosaic';
+
 import { useDeckState } from '../../hooks';
 
 import { ActiveNode } from './ActiveNode';
@@ -19,12 +21,14 @@ export const DeckLayout = ({ onDismissToast }: DeckLayoutProps) => {
   const { toasts } = state;
 
   return (
-    <PopoverRoot>
-      <ActiveNode />
-      <DeckMain />
-      <PopoverContent />
-      <Dialog />
-      <Toaster toasts={toasts} onDismissToast={onDismissToast} />
-    </PopoverRoot>
+    <Mosaic.Root>
+      <PopoverRoot>
+        <ActiveNode />
+        <DeckMain />
+        <PopoverContent />
+        <Dialog />
+        <Toaster toasts={toasts} onDismissToast={onDismissToast} />
+      </PopoverRoot>
+    </Mosaic.Root>
   );
 };

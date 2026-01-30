@@ -4,7 +4,7 @@
 
 import { Capability, Common, Plugin } from '@dxos/app-framework';
 
-import { OperationResolver, ReactRoot, type SimpleLayoutStateOptions, State } from './capabilities';
+import { OperationResolver, ReactRoot, SpotlightDismiss, State } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
 
@@ -18,7 +18,12 @@ export const SimpleLayoutPlugin = Plugin.define<SimpleLayoutPluginOptions>(meta)
     id: Capability.getModuleTag(State),
     activatesOn: Common.ActivationEvent.Startup,
     activatesAfter: [Common.ActivationEvent.LayoutReady],
-    activate: () => State({ initialState: { isPopover } } satisfies SimpleLayoutStateOptions),
+    activate: () => State({ initialState: { isPopover } }),
+  })),
+  Plugin.addModule(({ isPopover = false }) => ({
+    id: Capability.getModuleTag(SpotlightDismiss),
+    activatesOn: Common.ActivationEvent.Startup,
+    activate: () => SpotlightDismiss({ isPopover }),
   })),
   Plugin.addModule({
     id: Capability.getModuleTag(ReactRoot),

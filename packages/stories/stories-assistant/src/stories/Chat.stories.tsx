@@ -555,7 +555,8 @@ export const WithResearch: Story = {
     showContext: true,
     modules: [[ChatModule], [GraphModule, ExecutionGraphModule]],
     blueprints: [
-      // AssistantBlueprint.Key, -- too many open-ended tools (querying for tools, querying for schema) confuses the model.
+      // AssistantBlueprint.Key
+      // TODO(burdon): Too many open-ended tools (querying for tools, querying for schema) confuses the model.
       ResearchBlueprint.key,
     ],
   },

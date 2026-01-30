@@ -7,8 +7,10 @@ import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Obj, type QueryResult, Type } from '@dxos/echo';
+import { TestSchema } from '@dxos/echo/testing';
 import { type EchoDatabase, Filter, Query } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
+import { SpaceId } from '@dxos/keys';
 
 import * as AtomQuery from './query-atom';
 
@@ -196,5 +198,65 @@ describe('AtomQuery', () => {
     expect(results2).toHaveLength(1);
     expect(results1[0].name).toBe('Object');
     expect(results2[0].name).toBe('Object');
+  });
+});
+
+describe('AtomQuery with queues', () => {
+  let testBuilder: EchoTestBuilder;
+  let registry: Registry.Registry;
+
+  beforeEach(async () => {
+    testBuilder = await new EchoTestBuilder().open();
+    registry = Registry.make();
+  });
+
+  afterEach(async () => {
+    await testBuilder.close();
+  });
+
+  test('AtomQuery.make with Filter.type on queue', async () => {
+    const peer = await testBuilder.createPeer({ types: [TestSchema.Person] });
+    const spaceId = SpaceId.random();
+    const queues = peer.client.constructQueueFactory(spaceId);
+    const queue = queues.create();
+
+    const john = Obj.make(TestSchema.Person, { name: 'john' });
+    const jane = Obj.make(TestSchema.Person, { name: 'jane' });
+    await queue.append([john, jane]);
+
+    // Verify queue.query works directly (sanity check).
+    const directResult = await queue.query(Query.select(Filter.type(TestSchema.Person))).run();
+    expect(directResult).toHaveLength(2);
+
+    // Now test AtomQuery.make.
+    const atom = AtomQuery.make<TestSchema.Person>(queue, Filter.type(TestSchema.Person));
+    const results = registry.get(atom);
+
+    expect(results).toHaveLength(2);
+    expect(results.map((r) => r.name).sort()).toEqual(['jane', 'john']);
+  });
+
+  test('AtomQuery.make with Filter.id on queue', async () => {
+    const peer = await testBuilder.createPeer({ types: [TestSchema.Person] });
+    const spaceId = SpaceId.random();
+    const queues = peer.client.constructQueueFactory(spaceId);
+    const queue = queues.create();
+
+    const john = Obj.make(TestSchema.Person, { name: 'john' });
+    const jane = Obj.make(TestSchema.Person, { name: 'jane' });
+    const alice = Obj.make(TestSchema.Person, { name: 'alice' });
+    await queue.append([john, jane, alice]);
+
+    // Verify queue.query works directly (sanity check).
+    const directResult = await queue.query(Query.select(Filter.id(jane.id))).run();
+    expect(directResult).toHaveLength(1);
+
+    // Use AtomQuery.make with Filter.id - this is what app-graph-builder uses.
+    const atom = AtomQuery.make<TestSchema.Person>(queue, Filter.id(jane.id));
+    const results = registry.get(atom);
+
+    expect(results).toHaveLength(1);
+    expect(results[0].id).toEqual(jane.id);
+    expect(results[0].name).toEqual('jane');
   });
 });

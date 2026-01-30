@@ -3,13 +3,12 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useState } from 'react';
+import React from 'react';
 
-import { Obj, Ref } from '@dxos/echo';
+import { type Database, Filter, Obj, Ref } from '@dxos/echo';
 import { faker } from '@dxos/random';
-import { useSpaces } from '@dxos/react-client/echo';
-import { withClientProvider } from '@dxos/react-client/testing';
-import { IconButton, Toolbar } from '@dxos/react-ui';
+import { useQuery } from '@dxos/react-client/echo';
+import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
@@ -20,18 +19,10 @@ import { Mosaic } from './Mosaic';
 
 faker.seed(999);
 
-type StoryProps = {
-  columns?: number;
-  debug?: boolean;
-};
-
-const DefaultStory = ({ columns: columnsProp = 1, debug = false }: StoryProps) => {
-  const [space] = useSpaces();
-  const db = space.db;
-
-  const [columns, setColumns] = useState<TestColumn[]>(
-    Array.from({ length: columnsProp }).map((_, i) => {
-      const col = Obj.make(TestColumn, {
+const createTestData = (db: Database.Database, columnCount: number) => {
+  Array.from({ length: columnCount }).forEach((_, i) => {
+    db.add(
+      Obj.make(TestColumn, {
         items: Array.from({ length: faker.number.int({ min: 0, max: 20 }) }).map((_, j) => {
           const item = db.add(
             Obj.make(TestItem, {
@@ -43,11 +34,23 @@ const DefaultStory = ({ columns: columnsProp = 1, debug = false }: StoryProps) =
 
           return Ref.make(item);
         }),
-      });
+      }),
+    );
+  });
+};
 
-      return col;
-    }),
-  );
+type StoryProps = {
+  columns?: number;
+  debug?: boolean;
+};
+
+const DefaultStory = ({ debug = false }: StoryProps) => {
+  const { space } = useClientStory();
+  const columns = useQuery(space?.db, Filter.type(TestColumn));
+
+  if (columns.length === 0) {
+    return <></>;
+  }
 
   return (
     <Mosaic.Root asChild debug={debug}>
@@ -55,14 +58,6 @@ const DefaultStory = ({ columns: columnsProp = 1, debug = false }: StoryProps) =
         <BoardComponent id='board' columns={columns} debug={debug} />
         {debug && (
           <Focus.Group classNames='flex flex-col gap-2 overflow-hidden'>
-            <Toolbar.Root classNames='border-b border-separator'>
-              <IconButton
-                icon='ph--arrows-clockwise--regular'
-                iconOnly
-                label='refresh'
-                onClick={() => setColumns([...columns])}
-              />
-            </Toolbar.Root>
             <DebugRoot classNames='p-2' />
           </Focus.Group>
         )}
@@ -80,6 +75,11 @@ const meta = {
     withClientProvider({
       types: [TestColumn, TestItem],
       createIdentity: true,
+      createSpace: true,
+      onCreateSpace: ({ space }, context) => {
+        const columnCount = (context.args as StoryProps).columns ?? 4;
+        createTestData(space.db, columnCount);
+      },
     }),
   ],
   parameters: {

@@ -112,9 +112,6 @@ const SurfaceContextProvider = memo(
     ({ id, role, data, limit, fallback = DefaultFallback, definition, ...rest }, forwardedRef) => {
       const contextValue = useMemo(() => ({ id, role, data }), [id, role, data]);
 
-      // TODO(burdon): Remove from production build?
-      const active = DEBUG || '__DX_DEBUG__' in window;
-
       // Handle Web Component surfaces
       if (definition.kind === 'web-component') {
         return (
@@ -136,23 +133,30 @@ const SurfaceContextProvider = memo(
 
       // Handle React component surfaces
       const Component = definition.component;
-      if (active) {
+
+      // TODO(burdon): Remove from production build?
+      const debug = DEBUG || '__DX_DEBUG__' in window;
+      if (debug) {
         return (
           <ErrorBoundary data={data} fallback={fallback}>
-            <SurfaceContext.Provider value={contextValue}>
-              <SurfaceInfo ref={forwardedRef}>
-                <Component id={id} role={role} data={data} limit={limit} {...rest} />
-              </SurfaceInfo>
-            </SurfaceContext.Provider>
+            <div role='none' className='contents' data-id={id} data-role={role}>
+              <SurfaceContext.Provider value={contextValue}>
+                <SurfaceInfo ref={forwardedRef}>
+                  <Component id={id} role={role} data={data} limit={limit} {...rest} />
+                </SurfaceInfo>
+              </SurfaceContext.Provider>
+            </div>
           </ErrorBoundary>
         );
       }
 
       return (
         <ErrorBoundary data={data} fallback={fallback}>
-          <SurfaceContext.Provider value={contextValue}>
-            <Component id={id} role={role} data={data} limit={limit} {...rest} ref={forwardedRef} />
-          </SurfaceContext.Provider>
+          <div role='none' className='contents' data-id={id} data-role={role}>
+            <SurfaceContext.Provider value={contextValue}>
+              <Component id={id} role={role} data={data} limit={limit} {...rest} ref={forwardedRef} />
+            </SurfaceContext.Provider>
+          </div>
         </ErrorBoundary>
       );
     },

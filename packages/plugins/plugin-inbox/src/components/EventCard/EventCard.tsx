@@ -12,7 +12,7 @@ import { ActorList, DateComponent } from '../common';
 
 export const EventCard = ({ subject: event, role }: SurfaceComponentProps<Event.Event>) => {
   return (
-    <Card.SurfaceRoot
+    <Card.Root
       role={role}
       classNames="
         flex flex-col is-full gap-2 overflow-hidden p-2
@@ -26,6 +26,6 @@ export const EventCard = ({ subject: event, role }: SurfaceComponentProps<Event.
         <DateComponent icon start={new Date(event.startDate)} end={new Date(event.endDate)} />
       </div>
       <ActorList classNames='[grid-area:right] overflow-hidden' actors={event.attendees} />
-    </Card.SurfaceRoot>
+    </Card.Root>
   );
 };

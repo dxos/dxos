@@ -10,6 +10,7 @@ import { Main as NaturalMain } from '@dxos/react-ui';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention';
 import { mx } from '@dxos/ui-theme';
 
+import { HOME_ID } from '../../capabilities/state';
 import { useSimpleLayoutState } from '../../hooks';
 import { ContentError } from '../ContentError';
 import { ContentLoading } from '../ContentLoading';
@@ -56,10 +57,11 @@ export const Main = () => {
           )}
         >
           <Banner node={node} />
-          <Activity mode={id === 'default' ? 'visible' : 'hidden'}>
+          {/* TODO(wittjosiah): Stop special-casing home and treat it as a graph node instead. */}
+          <Activity mode={id === HOME_ID ? 'visible' : 'hidden'}>
             <Home />
           </Activity>
-          <Activity mode={id !== 'default' ? 'visible' : 'hidden'}>
+          <Activity mode={id !== HOME_ID ? 'visible' : 'hidden'}>
             <section>
               <Surface
                 key={id}

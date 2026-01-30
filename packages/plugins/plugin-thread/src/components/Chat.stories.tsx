@@ -45,7 +45,7 @@ const DefaultStory = () => {
   }
 
   return (
-    <main className='is-full max-is-prose mli-auto bs-dvh overflow-hidden'>
+    <main className='is-full max-is-proseMaxWidth mli-auto bs-full overflow-hidden'>
       <ChatContainer space={space} thread={channel.defaultThread.target} />
     </main>
   );

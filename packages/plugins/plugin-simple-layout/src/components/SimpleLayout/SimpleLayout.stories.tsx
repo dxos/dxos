@@ -69,17 +69,10 @@ const createPluginManager = ({ isPopover }: { isPopover: boolean }) => {
     plugins: [
       ...corePlugins(),
       ClientPlugin({
-        onClientInitialized: ({ client }) =>
-          Effect.gen(function* () {
-            yield* Effect.promise(() => client.halo.createIdentity());
-            yield* Effect.promise(async () => {
-              await client.spaces.create({ name: 'Work Space' });
-              await client.spaces.create({ name: 'Shared Project' });
-            });
-          }),
+        types: [Collection.Collection],
       }),
-      SpacePlugin({}),
       SearchPlugin(),
+      SpacePlugin({}),
       TestPlugin({ isPopover }),
     ],
   });

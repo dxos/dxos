@@ -11,7 +11,6 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj, Ref } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { MarkdownPlugin } from '@dxos/plugin-markdown';
-import { SpacePlugin } from '@dxos/plugin-space';
 import { corePlugins } from '@dxos/plugin-testing';
 import { Channel } from '@dxos/plugin-thread/types';
 import { Query, useDatabase, useQuery } from '@dxos/react-client/echo';
@@ -65,8 +64,6 @@ const meta = {
               );
             }),
         }),
-        ...corePlugins(),
-        SpacePlugin({}),
         MarkdownPlugin(),
       ],
       capabilities: [

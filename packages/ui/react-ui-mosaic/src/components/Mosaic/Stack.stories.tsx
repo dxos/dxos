@@ -13,11 +13,11 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { TestItem } from '../../testing';
 import { Mosaic } from '../Mosaic';
 
-import { Stack, VirtualStack } from './Stack';
+import { Stack } from './Stack';
 
 faker.seed(999);
 
-const meta: Meta<typeof Stack> = {
+const meta: Meta<typeof Stack<Obj.Any>> = {
   title: 'ui/react-ui-mosaic/Stack',
   component: Stack,
   decorators: [withLayout({ layout: 'column' }), withTheme],
@@ -33,6 +33,7 @@ const meta: Meta<typeof Stack> = {
         description: faker.lorem.paragraph(),
       }),
     ),
+    Tile: Mosaic.DefaultStackTile,
   },
 };
 
@@ -51,7 +52,7 @@ export const Default: Story = {
         <Mosaic.Root asChild>
           <Mosaic.Container asChild axis='vertical' autoScroll={viewportRef.current} eventHandler={{ id: 'test' }}>
             <Mosaic.Viewport options={{ overflow: { y: 'scroll' } }} viewportRef={viewportRef}>
-              <Stack {...props} />
+              <Mosaic.Stack {...props} />
             </Mosaic.Viewport>
           </Mosaic.Container>
         </Mosaic.Root>
@@ -72,7 +73,7 @@ export const Virtual: Story = {
         <Mosaic.Root asChild>
           <Mosaic.Container asChild axis='vertical' autoScroll={viewportRef.current} eventHandler={{ id: 'test' }}>
             <Mosaic.Viewport options={{ overflow: { y: 'scroll' } }} viewportRef={viewportRef}>
-              <VirtualStack
+              <Mosaic.VirtualStack
                 {...props}
                 getScrollElement={() => viewportRef.current}
                 estimateSize={() => 40}

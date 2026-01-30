@@ -155,4 +155,48 @@ describe('Echo Atom - Reactivity', () => {
     expect(finalSnapshot.name).toBe('Updated');
     expect(finalSnapshot.email).toBe('updated@example.com');
   });
+
+  test('property mutation on standalone Obj.make object is synchronous', () => {
+    // Test objects created with just Obj.make() - no createObject/database.
+    const obj = Obj.make(TestSchema.Person, { name: 'Test', username: 'test', email: 'test@example.com' });
+
+    const actions: string[] = [];
+    const unsubscribe = Obj.subscribe(obj, () => {
+      actions.push('update');
+    });
+
+    actions.push('before');
+    obj.name = 'Updated';
+    actions.push('after');
+
+    // Updates must be synchronous: before -> update -> after.
+    expect(actions).toEqual(['before', 'update', 'after']);
+
+    // Verify the property was modified.
+    expect(obj.name).toBe('Updated');
+
+    unsubscribe();
+  });
+
+  test('array splice on standalone Obj.make object is synchronous', () => {
+    // Test objects created with just Obj.make() - no createObject/database.
+    const obj = Obj.make(TestSchema.Example, { stringArray: ['a', 'b', 'c', 'd'] });
+
+    const actions: string[] = [];
+    const unsubscribe = Obj.subscribe(obj, () => {
+      actions.push('update');
+    });
+
+    actions.push('before');
+    obj.stringArray!.splice(1, 1);
+    actions.push('after');
+
+    // Updates must be synchronous: before -> update -> after.
+    expect(actions).toEqual(['before', 'update', 'after']);
+
+    // Verify the array was modified.
+    expect(obj.stringArray).toEqual(['a', 'c', 'd']);
+
+    unsubscribe();
+  });
 });
