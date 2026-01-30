@@ -11,7 +11,6 @@ import { Filter, Obj, Type } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { ClientCapabilities } from '@dxos/plugin-client';
-import { DeckCapabilities } from '@dxos/plugin-deck';
 import { Graph } from '@dxos/plugin-graph';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { PublicKey } from '@dxos/react-client';
@@ -36,8 +35,6 @@ export default Capability.makeModule(
     const { graph } = yield* Capability.get(Common.Capability.AppGraph);
     const registry = yield* Capability.get(Common.Capability.AtomRegistry);
     const layoutAtom = yield* Capability.get(Common.Capability.Layout);
-    const deckStateAtoms = yield* Capability.getAll(DeckCapabilities.State);
-    const deckStateAtom = deckStateAtoms.flat()[0];
     const attention = yield* Capability.get(AttentionCapabilities.Attention);
     const stateAtom = yield* Capability.get(SpaceCapabilities.State);
     const ephemeralAtom = yield* Capability.get(SpaceCapabilities.EphemeralState);
@@ -47,11 +44,9 @@ export default Capability.makeModule(
     yield* Effect.tryPromise(() => defaultSpace.waitUntilReady());
 
     // Check if deck state indicates we should switch to default space.
-    if (deckStateAtom) {
-      const deckState = registry.get(deckStateAtom);
-      if (deckState.activeDeck === 'default') {
-        yield* invoke(Common.LayoutOperation.SwitchWorkspace, { subject: defaultSpace.id });
-      }
+    const layout = registry.get(layoutAtom);
+    if (layout.workspace === 'default') {
+      yield* invoke(Common.LayoutOperation.SwitchWorkspace, { subject: defaultSpace.id });
     }
 
     // Initialize space sharing lock in default space.

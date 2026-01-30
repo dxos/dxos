@@ -13,7 +13,7 @@ import { AutomationCapabilities, invokeFunctionWithTracing } from '@dxos/plugin-
 import { useActiveSpace } from '@dxos/plugin-space';
 import { Dialog, IconButton, Message, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
-import { cardDialogContent, cardDialogHeader } from '@dxos/react-ui-mosaic';
+import { dialogStyles } from '@dxos/react-ui-mosaic';
 import { Message as MessageType } from '@dxos/types';
 
 import { gmail } from '../../functions';
@@ -151,8 +151,8 @@ export const ComposeEmailDialog = ({ mode = 'compose', originalMessage, subject,
   );
 
   return (
-    <Dialog.Content classNames={cardDialogContent}>
-      <div role='none' className={cardDialogHeader}>
+    <Dialog.Content classNames={dialogStyles.content}>
+      <div role='none' className={dialogStyles.header}>
         <Dialog.Title>{dialogTitle}</Dialog.Title>
         <Dialog.Close asChild>
           <IconButton

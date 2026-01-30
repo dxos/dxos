@@ -101,7 +101,7 @@ const ComboboxRoot = ({
 // ContentProps
 //
 
-type ComboboxContentProps = SearchListRootProps & PopoverContentProps;
+type ComboboxContentProps = SearchListRootProps & PopoverContentProps & { label?: string };
 
 const ComboboxContent = forwardRef<HTMLDivElement, ComboboxContentProps>(
   (
@@ -163,15 +163,10 @@ const ComboboxContent = forwardRef<HTMLDivElement, ComboboxContentProps>(
         id={modalId}
         ref={forwardedRef}
       >
-        <SearchList.Root
-          onSearch={onSearch}
-          value={value}
-          defaultValue={defaultValue}
-          debounceMs={debounceMs}
-          label={label}
-          classNames='contents density-fine'
-        >
-          {children}
+        <SearchList.Root onSearch={onSearch} value={value} defaultValue={defaultValue} debounceMs={debounceMs}>
+          <div className='contents density-fine' aria-label={label} role='combobox' aria-expanded='true'>
+            {children}
+          </div>
         </SearchList.Root>
       </Popover.Content>
     );

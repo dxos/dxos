@@ -15,7 +15,7 @@ import { getMessageProps } from '../../util';
 export const MessageCard = ({ subject: message, role }: SurfaceComponentProps<Message.Message>) => {
   const { date, email, from, hue, subject, snippet } = getMessageProps(message, new Date(), true);
   return (
-    <Card.SurfaceRoot role={role} classNames='grid grid-cols-[52px_1fr] grid-rows-[min-content_1fr] overflow-hidden'>
+    <Card.Root role={role} classNames='grid grid-cols-[52px_1fr] grid-rows-[min-content_1fr] overflow-hidden'>
       <div role='none' className='grid aspect-square place-items-center'>
         <DxAvatar hue={hue} hueVariant='surface' variant='square' size={10} fallback={from} />
       </div>
@@ -40,6 +40,6 @@ export const MessageCard = ({ subject: message, role }: SurfaceComponentProps<Me
           </div>
         )}
       </div>
-    </Card.SurfaceRoot>
+    </Card.Root>
   );
 };

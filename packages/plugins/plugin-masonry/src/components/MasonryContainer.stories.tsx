@@ -9,10 +9,9 @@ import React from 'react';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
-import { SpacePlugin } from '@dxos/plugin-space';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { faker } from '@dxos/random';
-import { Filter, useQuery, useSpaces } from '@dxos/react-client/echo';
+import { Filter, useObject, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { withTheme } from '@dxos/react-ui/testing';
 import { View } from '@dxos/schema';
 import { createObjectFactory } from '@dxos/schema/testing';
@@ -28,10 +27,10 @@ const StorybookMasonry = () => {
   const spaces = useSpaces();
   const space = spaces[spaces.length - 1];
   const masonries = useQuery(space?.db, Filter.type(Masonry.Masonry));
-  const masonry = masonries.at(0);
-  const view = masonry?.view.target;
+  const [masonry] = useObject(masonries.at(0));
+  const [view] = useObject(masonry?.view);
 
-  return view ? <MasonryContainer view={view} role='story' /> : null;
+  return view && space?.db ? <MasonryContainer db={space.db} view={view} role='story' /> : null;
 };
 
 const meta = {
@@ -43,6 +42,7 @@ const meta = {
     withPluginManager({
       plugins: [
         ...corePlugins(),
+        StorybookPlugin({}),
         ClientPlugin({
           types: [Organization.Organization, View.View, Masonry.Masonry],
           onClientInitialized: ({ client }) =>
@@ -50,7 +50,6 @@ const meta = {
               yield* Effect.promise(() => client.halo.createIdentity());
               const space = yield* Effect.promise(() => client.spaces.create());
               yield* Effect.promise(() => space.waitUntilReady());
-
               const { view } = yield* Effect.promise(() =>
                 View.makeFromDatabase({
                   db: space.db,
@@ -59,15 +58,12 @@ const meta = {
               );
               const masonry = Masonry.make({ view });
               space.db.add(masonry);
-
               const factory = createObjectFactory(space.db, faker as any);
               yield* Effect.promise(() => factory([{ type: Organization.Organization, count: 64 }]));
             }),
         }),
-        ...corePlugins(),
-        SpacePlugin({}),
+
         PreviewPlugin(),
-        StorybookPlugin({}),
       ],
     }),
   ],

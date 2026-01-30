@@ -2,119 +2,102 @@
 // Copyright 2025 DXOS.org
 //
 
+import type * as Schema from 'effect/Schema';
 import React, { type FC } from 'react';
 
-import { Obj, Ref } from '@dxos/echo';
+import { type SurfaceComponentProps } from '@dxos/app-framework/react';
+import { Obj, Ref, type Type } from '@dxos/echo';
 import { faker } from '@dxos/random';
+import { Card } from '@dxos/react-ui-mosaic';
 import { CardContainer } from '@dxos/react-ui-mosaic/testing';
-import { Organization, Person, Task } from '@dxos/types';
-import { Project } from '@dxos/types';
+import { Organization, Person, Project, Task } from '@dxos/types';
 
-import { FormCard, OrganizationCard, PersonCard, ProjectCard, TaskCard } from '../cards';
-import { type CardPreviewProps } from '../types';
-
-type CardProps<T extends Obj.Any> = {
-  Component: FC<CardPreviewProps<T>>;
-  subject: T;
-  icon?: string;
+export type DefaultStoryProps<T extends Obj.Any> = {
+  Component: FC<SurfaceComponentProps<T>>;
+  object: T;
   image?: boolean;
 };
 
-export type DefaultstoryProps = {
-  role: 'card--popover' | 'card--intrinsic' | 'card--extrinsic' | 'card--transclusion';
-  cards: CardProps<any>[];
-};
+export const DefaultStory = <T extends Obj.Any>({ Component, object, image }: DefaultStoryProps<T>) => {
+  const roles: SurfaceComponentProps['role'][] = ['card--popover', 'card--intrinsic'];
 
-export const Defaultstory = ({ role, cards }: DefaultstoryProps) => {
   return (
-    <div className='flex bs-full'>
-      <div className='flex shrink-0 gap-8 overflow-x-auto pbe-4'>
-        {cards.map(({ Component, icon, image, subject }, i) => (
-          <div key={i} className='flex is-[24rem] justify-center'>
-            <CardContainer icon={icon} role={role}>
-              <Component role={role} subject={image ? subject : omitImage(subject)} />
+    <div className='grid grid-rows-4 gap-16 plb-8'>
+      {roles.map((role, i) => (
+        <div key={i} className='flex justify-center'>
+          <div className='flex flex-col gap-4 is-full items-center'>
+            <label className='text-sm text-description'>{role}</label>
+            <CardContainer role={role}>
+              <Card.Root>
+                <Component role={role} subject={image ? object : omitImage(object)} />
+              </Card.Root>
             </CardContainer>
           </div>
-        ))}
-      </div>
+        </div>
+      ))}
     </div>
   );
 };
 
 export const omitImage = ({ image: _, ...rest }: any) => rest;
 
-// TODO(burdon): Test data should exercise the standard data generators.
-export const createCards = (image = true): CardProps<any>[] => {
-  const organization = Obj.make(Organization.Organization, {
-    name: faker.company.name(),
-    image:
-      'https://plus.unsplash.com/premium_photo-1672116452571-896980a801c8?q=80&w=2671&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-    website: faker.internet.url(),
-    description: faker.lorem.paragraph(),
-  });
+/**
+ * Creates a test object for a given schema type.
+ */
+export const createObject = <S extends Type.Obj.Any>(type: S): Schema.Schema.Type<S> => {
+  switch (type) {
+    case Organization.Organization: {
+      return Obj.make(Organization.Organization, {
+        name: faker.company.name(),
+        image:
+          'https://plus.unsplash.com/premium_photo-1672116452571-896980a801c8?q=80&w=2671&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+        website: faker.internet.url(),
+        description: faker.lorem.paragraph(),
+      }) as Schema.Schema.Type<S>;
+    }
 
-  const contact = Obj.make(Person.Person, {
-    fullName: faker.person.fullName(),
-    image:
-      'https://plus.unsplash.com/premium_photo-1664536392779-049ba8fde933?q=80&w=2574&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-    organization: Ref.make(organization),
-    emails: [
-      {
-        label: 'Work',
-        value: faker.internet.email(),
-      },
-      {
-        label: 'Work',
-        value: faker.internet.email(),
-      },
-      {
-        label: 'Work',
-        value: faker.internet.email(),
-      },
-    ],
-  });
+    case Person.Person: {
+      const organization = createObject(Organization.Organization);
+      return Obj.make(Person.Person, {
+        fullName: faker.person.fullName(),
+        image:
+          'https://plus.unsplash.com/premium_photo-1664536392779-049ba8fde933?q=80&w=2574&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+        organization: Ref.make(organization),
+        emails: [
+          {
+            label: 'Work',
+            value: faker.internet.email(),
+          },
+          {
+            label: 'Work',
+            value: faker.internet.email(),
+          },
+          {
+            label: 'Work',
+            value: faker.internet.email(),
+          },
+        ],
+      }) as Schema.Schema.Type<S>;
+    }
 
-  const project = Project.make({
-    name: faker.person.fullName(),
-    image: 'https://dxos.network/dxos-logotype-blue.png',
-    description: faker.lorem.paragraph(),
-  });
+    case Project.Project: {
+      return Obj.make(Project.Project, {
+        name: faker.person.fullName(),
+        image: 'https://dxos.network/dxos-logotype-blue.png',
+        description: faker.lorem.paragraph(),
+        columns: [],
+      }) as Schema.Schema.Type<S>;
+    }
 
-  const task = Obj.make(Task.Task, {
-    title: faker.lorem.sentence(),
-    status: faker.helpers.arrayElement(['todo', 'in-progress', 'done']),
-  });
+    case Task.Task: {
+      return Obj.make(Task.Task, {
+        title: faker.lorem.sentence(),
+        status: faker.helpers.arrayElement(['todo', 'in-progress', 'done'] as const),
+      }) as Schema.Schema.Type<S>;
+    }
 
-  return [
-    {
-      Component: OrganizationCard,
-      subject: organization,
-      icon: 'ph--building-office--regular',
-      image,
-    },
-    {
-      Component: PersonCard,
-      subject: contact,
-      icon: 'ph--user--regular',
-      image,
-    },
-    {
-      Component: ProjectCard,
-      subject: project,
-      icon: 'ph--building--regular',
-      image,
-    },
-    {
-      Component: TaskCard,
-      subject: task,
-      icon: 'ph--list-checks--regular',
-      image,
-    },
-    {
-      Component: FormCard,
-      subject: contact,
-      icon: 'ph--user--regular',
-      image,
-    },
-  ];
+    default: {
+      throw new Error(`Unsupported type: ${type}`);
+    }
+  }
 };

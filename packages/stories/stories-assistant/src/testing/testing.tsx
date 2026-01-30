@@ -9,16 +9,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { SERVICES_CONFIG } from '@dxos/ai/testing';
-import {
-  ActivationEvent,
-  Capability,
-  type CapabilityManager,
-  Common,
-  OperationPlugin,
-  Plugin,
-  RuntimePlugin,
-  SettingsPlugin,
-} from '@dxos/app-framework';
+import { ActivationEvent, Capability, type CapabilityManager, Common, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AiContextBinder, ArtifactId, GenericToolkit } from '@dxos/assistant';
 import { Agent, DesignBlueprint, Document, PlanningBlueprint, Research, Tasks } from '@dxos/assistant-toolkit';
@@ -30,20 +21,16 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { OperationResolver } from '@dxos/operation';
 import { Assistant, AssistantOperation, AssistantPlugin } from '@dxos/plugin-assistant';
-import { AttentionPlugin } from '@dxos/plugin-attention';
 import { AutomationPlugin } from '@dxos/plugin-automation';
 import { ClientCapabilities, ClientEvents, ClientPlugin } from '@dxos/plugin-client';
 import { type ClientPluginOptions } from '@dxos/plugin-client/types';
 import { DeckOperation } from '@dxos/plugin-deck/types';
-import { GraphPlugin } from '@dxos/plugin-graph';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { PreviewPlugin } from '@dxos/plugin-preview';
-import { SpacePlugin } from '@dxos/plugin-space';
 import { StorybookPlugin } from '@dxos/plugin-testing';
-import { ThemePlugin } from '@dxos/plugin-theme';
+import { corePlugins } from '@dxos/plugin-testing';
 import { type Client, Config } from '@dxos/react-client';
 import { AccessToken } from '@dxos/types';
-import { defaultTx } from '@dxos/ui-theme';
 import { trim } from '@dxos/util';
 
 // TODO(burdon): Factor out.
@@ -115,15 +102,7 @@ export const getDecorators = ({
 }: DecoratorsProps) => [
   withPluginManager({
     plugins: [
-      // System plugins.
-      RuntimePlugin(),
-      AttentionPlugin(),
-      AutomationPlugin(),
-      GraphPlugin(),
-      OperationPlugin(),
-      RuntimePlugin(),
-      SettingsPlugin(),
-      SpacePlugin({}),
+      ...corePlugins(),
       ClientPlugin({
         types: [
           Assistant.Chat,
@@ -168,16 +147,14 @@ export const getDecorators = ({
         ...props,
       }),
 
-      // Cards
-      ThemePlugin({ tx: defaultTx }),
-      StorybookPlugin({}),
-      PreviewPlugin(),
-
       // User plugins.
+      PreviewPlugin(),
+      AutomationPlugin(),
       AssistantPlugin(),
-      StoryPlugin({ onChatCreated }),
 
       // Test-specific.
+      StorybookPlugin({}),
+      StoryPlugin({ onChatCreated }),
       ...plugins,
     ],
   }),
@@ -242,9 +219,9 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>({
     id: 'example.com/plugin/testing/module/setup',
     activatesOn: ActivationEvent.allOf(Common.ActivationEvent.OperationInvokerReady, ClientEvents.SpacesReady),
     activate: Effect.fnUntraced(function* () {
+      const { invoke } = yield* Capability.get(Common.Capability.OperationInvoker);
       const client = yield* Capability.get(ClientCapabilities.Client);
       const space = client.spaces.default;
-      const { invoke } = yield* Capability.get(Common.Capability.OperationInvoker);
 
       // Ensure workspace is set.
       yield* invoke(Common.LayoutOperation.SwitchWorkspace, { subject: space.id });

@@ -8,10 +8,10 @@ import React, { forwardRef, useMemo, useRef } from 'react';
 
 import { Obj, Ref, Type } from '@dxos/echo';
 import { ObjectId } from '@dxos/keys';
+import { useObject } from '@dxos/react-client/echo';
 import { Tag, type ThemedClassName } from '@dxos/react-ui';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { getHashStyles, mx } from '@dxos/ui-theme';
-import { isTruthy } from '@dxos/util';
 
 import {
   Card,
@@ -68,7 +68,8 @@ export const Board = forwardRef<HTMLDivElement, BoardProps>(({ id, columns, debu
   const eventHandler = useEventHandlerAdapter({
     id,
     items: columns,
-    canDrop: ({ source }) => Obj.instanceOf(TestColumn, source.object),
+    getId: (item) => item.id,
+    canDrop: ({ source }) => Obj.instanceOf(TestColumn, source.data),
     get: (item) => item,
     make: (object) => object,
   });
@@ -89,7 +90,7 @@ export const Board = forwardRef<HTMLDivElement, BoardProps>(({ id, columns, debu
           debug={debugHandler}
         >
           <Mosaic.Viewport options={{ overflow: { x: 'scroll' } }} viewportRef={viewportRef}>
-            <Mosaic.Stack axis='horizontal' className='plb-3' items={columns} Component={Column} />
+            <Mosaic.Stack axis='horizontal' className='plb-3' items={columns} getId={(item) => item.id} Tile={Column} />
           </Mosaic.Viewport>
         </Mosaic.Container>
       </Focus.Group>
@@ -102,127 +103,136 @@ export const Board = forwardRef<HTMLDivElement, BoardProps>(({ id, columns, debu
 // Column
 //
 
-type ColumnProps = Pick<MosaicTileProps<TestColumn>, 'classNames' | 'object' | 'location'> & {
+type ColumnProps = Pick<MosaicTileProps<TestColumn>, 'classNames' | 'data' | 'location'> & {
   debug?: boolean;
 };
 
-export const Column = forwardRef<HTMLDivElement, ColumnProps>(
-  ({ classNames, object, debug, location }, forwardedRef) => {
-    const { id, items } = object;
-    const [DebugInfo, debugHandler] = useContainerDebug(debug);
-    const dragHandleRef = useRef<HTMLButtonElement>(null);
-    const viewportRef = useRef<HTMLElement | null>(null);
-    const eventHandler = useEventHandlerAdapter({
-      id,
-      items,
-      canDrop: ({ source }) => Obj.instanceOf(TestItem, source.object),
-      get: (item) => item.target,
-      make: (object) => Ref.make(object),
-    });
+export const Column = forwardRef<HTMLDivElement, ColumnProps>(({ classNames, data, debug, location }, forwardedRef) => {
+  const [column, updateColumn] = useObject(data);
+  const [DebugInfo, debugHandler] = useContainerDebug(debug);
+  const dragHandleRef = useRef<HTMLButtonElement>(null);
+  const viewportRef = useRef<HTMLElement | null>(null);
+  const eventHandler = useEventHandlerAdapter<Ref.Any>({
+    id: data.id,
+    items: column.items,
+    getId: (item) => item.target!.id,
+    canDrop: ({ source }) => Obj.instanceOf(TestItem, source.data),
+    get: (item) => item.target!,
+    make: (object) => Ref.make(object),
+    onChange: (mutator) => updateColumn((column) => mutator(column.items)),
+  });
 
-    // Context menu.
-    const menuItems = useMemo<NonNullable<CardMenuProps<TestItem>['items']>>(
-      () => [
-        {
-          label: 'Delete',
-          onSelect: (object) => {
-            const idx = items.findIndex((item) => item.target?.id === object?.id);
+  // Context menu.
+  const menuItems = useMemo<NonNullable<CardMenuProps<TestItem>['items']>>(
+    () => [
+      {
+        label: 'Delete',
+        onClick: (obj) => {
+          updateColumn((column) => {
+            const idx = column.items.findIndex((item) => item.target?.id === obj?.id);
             if (idx !== -1) {
-              items.splice(idx, 1);
+              column.items.splice(idx, 1);
             }
-          },
+          });
         },
-      ],
-      [items],
-    );
+      },
+    ],
+    [updateColumn],
+  );
 
-    return (
-      <Mosaic.Tile asChild dragHandle={dragHandleRef.current} object={object} location={location}>
-        <Focus.Group asChild>
-          <div
-            className={mx(
-              'grid bs-full is-[--dx-cardDefaultWidth] overflow-hidden bg-deckSurface',
-              debug ? 'grid-rows-[min-content_1fr_20rem]' : 'grid-rows-[min-content_1fr_min-content]',
-              classNames,
-            )}
-            ref={forwardedRef}
-          >
-            <Card.Toolbar>
-              <Card.DragHandle ref={dragHandleRef} />
-              <Card.Heading>{id}</Card.Heading>
-              <Card.Menu items={[]} />
-            </Card.Toolbar>
-            <Card.Context value={{ menuItems }}>
-              <Mosaic.Container
-                asChild
-                axis='vertical'
-                withFocus
-                autoScroll={viewportRef.current}
-                eventHandler={eventHandler}
-                debug={debugHandler}
-              >
-                <Mosaic.Viewport options={{ overflow: { y: 'scroll' } }} viewportRef={viewportRef}>
-                  <Mosaic.Stack
-                    axis='vertical'
-                    className='pli-3'
-                    items={items.map((item: any) => item.target).filter(isTruthy)}
-                    Component={Tile}
-                  />
-                </Mosaic.Viewport>
-              </Mosaic.Container>
-            </Card.Context>
-            <div>
-              <div className='grow flex p-1 justify-center text-xs'>{items.length}</div>
-              <DebugInfo />
-            </div>
+  return (
+    <Mosaic.Tile asChild dragHandle={dragHandleRef.current} data={data} location={location}>
+      <Focus.Group asChild>
+        <div
+          className={mx(
+            'grid bs-full is-[--dx-cardDefaultWidth] overflow-hidden bg-deckSurface',
+            debug ? 'grid-rows-[min-content_1fr_20rem]' : 'grid-rows-[min-content_1fr_min-content]',
+            classNames,
+          )}
+          ref={forwardedRef}
+        >
+          <Card.Toolbar>
+            <Card.DragHandle ref={dragHandleRef} />
+            <Card.Title>{column.id}</Card.Title>
+            <Card.Menu items={[]} />
+          </Card.Toolbar>
+          {/* TODO(burdon): See deprecation warning. */}
+          <Card.Context value={{ menuItems }}>
+            <Mosaic.Container
+              asChild
+              axis='vertical'
+              withFocus
+              autoScroll={viewportRef.current}
+              eventHandler={eventHandler}
+              debug={debugHandler}
+            >
+              <Mosaic.Viewport options={{ overflow: { y: 'scroll' } }} viewportRef={viewportRef}>
+                <Mosaic.Stack
+                  axis='vertical'
+                  className='pli-3'
+                  items={column.items}
+                  // items={column.items.map((item: any) => item.target).filter(isTruthy)}
+                  getId={(item) => item.target!.id}
+                  Tile={Item}
+                />
+              </Mosaic.Viewport>
+            </Mosaic.Container>
+          </Card.Context>
+          <div>
+            <div className='grow flex p-1 justify-center text-xs'>{column.items.length}</div>
+            <DebugInfo />
           </div>
-        </Focus.Group>
-      </Mosaic.Tile>
-    );
-  },
-);
+        </div>
+      </Focus.Group>
+    </Mosaic.Tile>
+  );
+});
 
 Column.displayName = 'Column';
 
 //
-// Tile
+// Item
 //
 
-type TileProps = Pick<MosaicTileProps<TestItem>, 'classNames' | 'object' | 'location'> & {
+type ItemProps = Pick<MosaicTileProps<Ref.Ref<TestItem>>, 'classNames' | 'data' | 'location'> & {
   menuItems?: CardMenuProps<TestItem>['items'];
 };
 
-const Tile = forwardRef<HTMLDivElement, TileProps>(({ classNames, object, location, menuItems }, forwardedRef) => {
+const Item = forwardRef<HTMLDivElement, ItemProps>(({ classNames, data: ref, location, menuItems }, forwardedRef) => {
   const rootRef = useRef<HTMLDivElement>(null);
   const composedRef = useComposedRefs<HTMLDivElement>(rootRef, forwardedRef);
   const dragHandleRef = useRef<HTMLButtonElement>(null);
+  const object = ref.target;
+  if (!object) {
+    return null;
+  }
 
   return (
-    <Mosaic.Tile asChild dragHandle={dragHandleRef.current} object={object} location={location}>
+    <Mosaic.Tile asChild dragHandle={dragHandleRef.current} data={ref} location={location}>
       <Focus.Group asChild>
         <Card.Root classNames={classNames} onClick={() => rootRef.current?.focus()} ref={composedRef}>
           <Card.Toolbar>
             <Card.DragHandle ref={dragHandleRef} />
-            <Card.Heading>{object.name}</Card.Heading>
+            <Card.Title>{object.name}</Card.Title>
             <Card.Menu context={object} items={menuItems} />
           </Card.Toolbar>
-          <Card.Section icon='ph--note--regular' classNames='text-description'>
+          <Card.Row icon='ph--note--regular' classNames='text-description'>
             {object.description}
-          </Card.Section>
-          <Card.Section icon='ph--tag--regular'>
+          </Card.Row>
+          <Card.Row icon='ph--tag--regular'>
             {object.label && (
-              <div role='none' className='flex shrink-0 gap-1 text-xs'>
+              <div role='none' className='flex shrink-0 gap-1 text-xs items-center'>
                 <Tag palette={getHashStyles(object.label).hue}>{object.label}</Tag>
               </div>
             )}
-          </Card.Section>
+          </Card.Row>
         </Card.Root>
       </Focus.Group>
     </Mosaic.Tile>
   );
 });
 
-Tile.displayName = 'Tile';
+Item.displayName = 'Tile';
 
 //
 // Placeholder

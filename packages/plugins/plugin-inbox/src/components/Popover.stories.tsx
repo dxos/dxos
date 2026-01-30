@@ -12,7 +12,6 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { Filter } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
-import { SpacePlugin } from '@dxos/plugin-space';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { useDatabase, useQuery } from '@dxos/react-client/echo';
 import { List, ListItem } from '@dxos/react-ui';
@@ -32,10 +31,12 @@ const ContactItem = ({ contact }: { contact: Person.Person }) => {
       invokePromise(Common.LayoutOperation.UpdatePopover, {
         subject: contact,
         state: true,
+        kind: 'card',
+        title: contact.fullName,
         variant: 'virtual',
         anchor: ref.current,
       }),
-    [invokePromise],
+    [invokePromise, contact],
   );
 
   return (
@@ -60,10 +61,12 @@ const OrganizationItem = ({ organization }: { organization: Organization.Organiz
       invokePromise(Common.LayoutOperation.UpdatePopover, {
         subject: organization,
         state: true,
+        kind: 'card',
+        title: organization.name,
         variant: 'virtual',
         anchor: ref.current,
       }),
-    [invokePromise],
+    [invokePromise, organization],
   );
 
   return (
@@ -86,6 +89,7 @@ const meta = {
     withPluginManager({
       plugins: [
         ...corePlugins(),
+        StorybookPlugin({}),
         ClientPlugin({
           types: [Mailbox.Mailbox, Message.Message, Person.Person, Organization.Organization],
           onClientInitialized: ({ client }) =>
@@ -102,11 +106,9 @@ const meta = {
               space.db.add(mailbox);
             }),
         }),
-        ...corePlugins(),
-        SpacePlugin({}),
-        PreviewPlugin(),
-        StorybookPlugin({}),
+
         InboxPlugin(),
+        PreviewPlugin(),
       ],
     }),
   ],

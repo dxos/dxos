@@ -244,6 +244,27 @@ describe('queues', () => {
       expect(result[0].name).toEqual('jane');
     });
 
+    test('one shot query by id', async ({ expect }) => {
+      await using peer = await builder.createPeer({
+        types: [TestSchema.Person],
+      });
+      const spaceId = SpaceId.random();
+      const queues = peer.client.constructQueueFactory(spaceId);
+      const queue = queues.create();
+
+      const john = Obj.make(TestSchema.Person, { name: 'john' });
+      const jane = Obj.make(TestSchema.Person, { name: 'jane' });
+      const alice = Obj.make(TestSchema.Person, { name: 'alice' });
+
+      await queue.append([john, jane, alice]);
+
+      // Query by specific ID.
+      const result = await queue.query(Query.select(Filter.id(jane.id))).run();
+      expect(result).toHaveLength(1);
+      expect(result[0].id).toEqual(jane.id);
+      expect((result[0] as TestSchema.Person).name).toEqual('jane');
+    });
+
     test('subscription query gets initial result', async ({ expect }) => {
       await using peer = await builder.createPeer({
         types: [TestSchema.Person],

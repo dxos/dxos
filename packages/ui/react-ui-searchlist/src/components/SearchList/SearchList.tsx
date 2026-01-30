@@ -39,50 +39,36 @@ import {
 } from './context';
 
 //
-// Styling
-//
-
-export const searchListItem =
-  'plb-1 pli-2 rounded-sm select-none cursor-pointer data-[selected=true]:bg-hoverOverlay hover:bg-hoverOverlay';
-
-//
 // Internal types
 //
 
 type ItemData = {
   element: HTMLElement;
-  onSelect?: () => void;
   disabled?: boolean;
+  onSelect?: () => void;
 };
 
 //
 // Root
 //
 
-type SearchListRootProps = ThemedClassName<
-  PropsWithChildren<{
-    /** Callback when search query changes (debounced). */
-    onSearch?: (query: string) => void;
-    /** Controlled query value. */
-    value?: string;
-    /** Default query value for uncontrolled mode. */
-    defaultValue?: string;
-    /** Debounce delay in milliseconds. */
-    debounceMs?: number;
-    /** Accessibility label for the search list. */
-    label?: string;
-  }>
->;
+type SearchListRootProps = PropsWithChildren<{
+  /** Controlled query value. */
+  value?: string;
+  /** Default query value for uncontrolled mode. */
+  defaultValue?: string;
+  /** Debounce delay in milliseconds. */
+  debounceMs?: number;
+  /** Callback when search query changes (debounced). */
+  onSearch?: (query: string) => void;
+}>;
 
 const SearchListRoot = ({
   children,
-  onSearch,
   value: valueProp,
   defaultValue = '',
   debounceMs = 200,
-  label,
-  classNames,
-  ...props
+  onSearch,
 }: SearchListRootProps) => {
   const [query = '', setQuery] = useControllableState({
     prop: valueProp,
@@ -100,8 +86,8 @@ const SearchListRoot = ({
   const handleQueryChange = useCallback(
     (newQuery: string) => {
       setQuery(newQuery);
-      // Don't update selectedValue here - let the effect handle it when items actually change
-      // This prevents unnecessary re-renders of items when query changes
+      // Don't update selectedValue here - let the effect handle it when items actually change.
+      // This prevents unnecessary re-renders of items when query changes.
 
       // Debounce onSearch callback.
       if (debounceRef.current) {
@@ -173,19 +159,14 @@ const SearchListRoot = ({
 
   // Get item values in DOM order by sorting registered elements (excludes disabled items).
   const getItemValues = useCallback(() => {
-    const entries = Array.from(itemsRef.current.entries()).filter(([, data]) => !data.disabled);
-    // Sort by DOM position using compareDocumentPosition.
-    entries.sort(([, a], [, b]) => {
-      const position = a.element.compareDocumentPosition(b.element);
-      if (position & Node.DOCUMENT_POSITION_FOLLOWING) {
-        return -1;
-      }
-      if (position & Node.DOCUMENT_POSITION_PRECEDING) {
-        return 1;
-      }
-      return 0;
-    });
-    return entries.map(([value]) => value);
+    return Array.from(itemsRef.current.entries())
+      .filter(([, data]) => !data.disabled)
+      .sort(([, a], [, b]) => {
+        // Sort by DOM position using compareDocumentPosition.
+        const position = a.element.compareDocumentPosition(b.element);
+        return position & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : position & Node.DOCUMENT_POSITION_PRECEDING ? 1 : 0;
+      })
+      .map(([value]) => value);
   }, []);
 
   const triggerSelect = useCallback(() => {
@@ -195,7 +176,7 @@ const SearchListRoot = ({
     }
   }, [selectedValue]);
 
-  // Item context - stable, doesn't change when query changes
+  // Item context; stable, doesn't change when query changes.
   const itemContextValue = useMemo(
     () => ({
       selectedValue,
@@ -203,10 +184,9 @@ const SearchListRoot = ({
       registerItem,
       unregisterItem,
     }),
-    [selectedValue, registerItem, unregisterItem], // setSelectedValue is stable, don't include it
+    [selectedValue, registerItem, unregisterItem],
   );
 
-  // Input context - can change when query changes
   const inputContextValue = useMemo(
     () => ({
       query,
@@ -216,29 +196,28 @@ const SearchListRoot = ({
       getItemValues,
       triggerSelect,
     }),
-    [query, handleQueryChange, selectedValue, getItemValues, triggerSelect], // setSelectedValue is stable
+    [query, handleQueryChange, selectedValue, getItemValues, triggerSelect],
   );
 
+  // NOTE: Separate contexts for items and input to avoid unnecessary re-renders of items when query changes.
   return (
-    <SearchListItemContextProvider
-      selectedValue={itemContextValue.selectedValue}
-      onSelectedValueChange={itemContextValue.onSelectedValueChange}
-      registerItem={itemContextValue.registerItem}
-      unregisterItem={itemContextValue.unregisterItem}
+    <SearchListInputContextProvider
+      query={inputContextValue.query}
+      onQueryChange={inputContextValue.onQueryChange}
+      selectedValue={inputContextValue.selectedValue}
+      onSelectedValueChange={inputContextValue.onSelectedValueChange}
+      getItemValues={inputContextValue.getItemValues}
+      triggerSelect={inputContextValue.triggerSelect}
     >
-      <SearchListInputContextProvider
-        query={inputContextValue.query}
-        onQueryChange={inputContextValue.onQueryChange}
-        selectedValue={inputContextValue.selectedValue}
-        onSelectedValueChange={inputContextValue.onSelectedValueChange}
-        getItemValues={inputContextValue.getItemValues}
-        triggerSelect={inputContextValue.triggerSelect}
+      <SearchListItemContextProvider
+        selectedValue={itemContextValue.selectedValue}
+        onSelectedValueChange={itemContextValue.onSelectedValueChange}
+        registerItem={itemContextValue.registerItem}
+        unregisterItem={itemContextValue.unregisterItem}
       >
-        <div {...props} className={mx(classNames)} aria-label={label} role='combobox' aria-expanded='true'>
-          {children}
-        </div>
-      </SearchListInputContextProvider>
-    </SearchListItemContextProvider>
+        {children}
+      </SearchListItemContextProvider>
+    </SearchListInputContextProvider>
   );
 };
 
@@ -490,7 +469,7 @@ const SearchListItem = forwardRef<HTMLDivElement, SearchListItemProps>(
         tabIndex={-1}
         className={mx(
           'flex gap-2 items-center',
-          searchListItem,
+          'plb-1 pli-2 rounded-sm select-none cursor-pointer data-[selected=true]:bg-hoverOverlay hover:bg-hoverOverlay',
           disabled && 'opacity-50 cursor-not-allowed hover:bg-transparent data-[selected=true]:bg-transparent',
           classNames,
         )}

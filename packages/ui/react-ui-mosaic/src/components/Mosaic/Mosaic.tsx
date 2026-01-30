@@ -52,7 +52,6 @@ import { createPortal } from 'react-dom';
 import 'overlayscrollbars/styles/overlayscrollbars.css';
 import './styles.css';
 
-import { type Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { type SlottableClassName, type ThemedClassName } from '@dxos/react-ui';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
@@ -61,7 +60,7 @@ import { isTruthy } from '@dxos/util';
 
 import { useFocus } from '../Focus';
 
-import { Stack, type StackProps } from './Stack';
+import { DefaultStackTile, Stack, type StackProps, VirtualStack } from './Stack';
 import {
   type AllowedAxis,
   type Axis,
@@ -97,10 +96,10 @@ import {
 // Types
 //
 
-const getSourceData = <T extends Obj.Any = Obj.Any, Location = any>(
+const getSourceData = <TData = any, TLocation = any>(
   source: ElementDragPayload,
-): MosaicTileData<T, Location> | null => {
-  return source.data.type === 'tile' ? (source.data as MosaicTileData<T, Location>) : null;
+): MosaicTileData<TData, TLocation> | null => {
+  return source.data.type === 'tile' ? (source.data as MosaicTileData<TData, TLocation>) : null;
 };
 
 //
@@ -289,9 +288,11 @@ const Root = forwardRef<HTMLDivElement, RootProps>(({ classNames, children, asCh
 
               sourceHandler.onTake?.({ source: sourceData }, async (object) => {
                 targetHandler.onDrop?.({
-                  source: { ...sourceData, object },
+                  // TODO(burdon): Change source!!!
+                  source: { ...sourceData, data: object },
                   target: targetData,
                 });
+
                 return true;
               });
             }
@@ -350,9 +351,9 @@ const Root = forwardRef<HTMLDivElement, RootProps>(({ classNames, children, asCh
 
 type ContainerState = { type: 'idle' } | { type: 'active'; bounds?: DOMRect };
 
-type ContainerContextValue<Location = LocationType> = {
+type ContainerContextValue<TData = any, Location = LocationType> = {
   id: string;
-  eventHandler: MosaicEventHandler;
+  eventHandler: MosaicEventHandler<TData>;
   axis?: AllowedAxis;
   dragging?: DraggingState;
   scrolling?: boolean;
@@ -374,7 +375,7 @@ const CONTAINER_PLACEHOLDER_HEIGHT = '--mosaic-placeholder-height';
 
 type ContainerProps = SlottableClassName<
   PropsWithChildren<
-    Pick<ContainerContextValue, 'eventHandler' | 'axis'> & {
+    Partial<Pick<ContainerContextValue, 'eventHandler' | 'axis'>> & {
       asChild?: boolean;
       autoScroll?: HTMLElement | null;
       withFocus?: boolean;
@@ -383,6 +384,9 @@ type ContainerProps = SlottableClassName<
   >
 >;
 
+let counter = 0;
+
+// TODO(burdon): Make generic.
 // TODO(burdon): Rename Viewport?
 const Container = forwardRef<HTMLDivElement, ContainerProps>(
   (
@@ -390,7 +394,7 @@ const Container = forwardRef<HTMLDivElement, ContainerProps>(
       className,
       classNames,
       children,
-      eventHandler,
+      eventHandler: eventHandlerProp,
       axis = 'vertical',
       asChild,
       autoScroll: autoscrollElement,
@@ -403,6 +407,15 @@ const Container = forwardRef<HTMLDivElement, ContainerProps>(
     const rootRef = useRef<HTMLDivElement>(null);
     const composedRef = useComposedRefs<HTMLDivElement>(rootRef, forwardedRef);
     const Root = asChild ? Slot : Primitive.div;
+
+    // Handler.
+    const eventHandler = useMemo(
+      () =>
+        eventHandlerProp ?? {
+          id: `mosaic-container-${counter++}`,
+        },
+      [eventHandlerProp],
+    );
 
     // State.
     const { dragging } = useRootContext(Container.displayName!);
@@ -689,13 +702,13 @@ const [TileContextProvider, useTileContext] = createContext<TileContextValue>('M
 // State attribute: data-[mosaic-tile-state=dragging]
 const TILE_STATE_ATTR = 'mosaic-tile-state';
 
-type TileProps<T extends Obj.Any = Obj.Any, Location = LocationType> = SlottableClassName<
+type TileProps<TData = any, TLocation = LocationType> = SlottableClassName<
   PropsWithChildren<{
     asChild?: boolean;
     dragHandle?: HTMLElement | null;
     allowedEdges?: Edge[];
-    location: Location;
-    object: T;
+    data: TData;
+    location: TLocation;
   }>
 >;
 
@@ -709,7 +722,7 @@ const Tile = forwardRef<HTMLDivElement, TileProps>(
       dragHandle,
       allowedEdges: allowedEdgesProp,
       location,
-      object,
+      data: dataProp,
       ...props
     }: TileProps,
     forwardedRef,
@@ -737,12 +750,12 @@ const Tile = forwardRef<HTMLDivElement, TileProps>(
       () =>
         ({
           type: 'tile',
-          id: object.id,
+          id: dataProp.id,
           containerId,
           location,
-          object,
+          data: dataProp,
         }) satisfies MosaicTileData,
-      [containerId, location, object],
+      [containerId, location, dataProp],
     );
 
     useLayoutEffect(() => {
@@ -752,7 +765,7 @@ const Tile = forwardRef<HTMLDivElement, TileProps>(
       }
 
       const handleChange = ({ self, source }: { self: DropTargetRecord; source: ElementDragPayload }) => {
-        if (source.data.id !== object.id) {
+        if (source.data.id !== dataProp.id) {
           const closestEdge = extractClosestEdge(self.data);
           const location = data.location + (closestEdge === 'top' || closestEdge === 'left' ? -0.5 : 0.5);
           setActiveLocation(location);
@@ -978,7 +991,11 @@ export const Mosaic = {
   Tile,
   Placeholder,
   DropIndicator,
+
+  // Stack
+  DefaultStackTile,
   Stack,
+  VirtualStack,
 };
 
 export type {

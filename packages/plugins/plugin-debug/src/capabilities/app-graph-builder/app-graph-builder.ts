@@ -26,8 +26,9 @@ export default Capability.makeModule(
         connector: (node, get) =>
           Effect.gen(function* () {
             const client = yield* Capability.get(ClientCapabilities.Client);
-            const layout = get(yield* Capability.get(Common.Capability.Layout));
-            const { spaceId } = parseId(layout.workspace);
+            const layoutAtom = get(yield* Capability.atom(Common.Capability.Layout))[0];
+            const layout = layoutAtom ? get(layoutAtom) : undefined;
+            const { spaceId } = parseId(layout?.workspace);
             const space = spaceId ? client.spaces.get(spaceId) : undefined;
             const [graph] = get(yield* Capability.atom(Common.Capability.AppGraph));
 

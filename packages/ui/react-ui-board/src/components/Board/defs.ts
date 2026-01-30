@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { cardDefaultInlineSize } from '@dxos/react-ui-mosaic';
+import { cardDefaultInlineSize } from '@dxos/ui-theme';
 
 import { type BoardGeometry } from './geometry';
 import { type BoardLayout } from './types';

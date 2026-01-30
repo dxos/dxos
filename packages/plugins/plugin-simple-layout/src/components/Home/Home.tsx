@@ -29,17 +29,17 @@ export const Home = ({ classNames }: HomeProps) => {
   return (
     <div className={mx('flex flex-col pli-3', classNames)}>
       {/* <div className='container-max-width'>{t('workspaces heading')}</div> */}
-      <SearchList.Root onSearch={handleSearch} classNames='container-max-width'>
-        <div className='plb-3'>
+      <SearchList.Root onSearch={handleSearch}>
+        <div className='container-max-width'>
           <SearchList.Input placeholder={t('search placeholder')} autoFocus />
+          <SearchList.Content>
+            <SearchList.Viewport classNames='flex flex-col gap-1'>
+              {results.map((node) => (
+                <Workspace key={node.id} node={node} />
+              ))}
+            </SearchList.Viewport>
+          </SearchList.Content>
         </div>
-        <SearchList.Content>
-          <SearchList.Viewport classNames='flex flex-col gap-1'>
-            {results.map((node) => (
-              <Workspace key={node.id} node={node} />
-            ))}
-          </SearchList.Viewport>
-        </SearchList.Content>
       </SearchList.Root>
     </div>
   );
@@ -86,7 +86,7 @@ const Workspace = ({ node }: { node: Node.Node }) => {
       classNames={mx('dx-focus-ring', isSelected && 'bg-hoverOverlay')}
       onClick={handleSelect}
     >
-      <Card.Chrome classNames='grid grid-cols-[min-content_1fr_min-content] items-center gap-cardSpacingInline pie-cardSpacingInline'>
+      <Card.Toolbar>
         <Avatar.Root>
           <Avatar.Content
             hue={node.properties.hue}
@@ -99,7 +99,7 @@ const Workspace = ({ node }: { node: Node.Node }) => {
           <Avatar.Label>{name}</Avatar.Label>
           <Icon icon='ph--caret-right--regular' />
         </Avatar.Root>
-      </Card.Chrome>
+      </Card.Toolbar>
     </Card.Root>
   );
 };
