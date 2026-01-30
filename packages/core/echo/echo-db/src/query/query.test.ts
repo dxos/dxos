@@ -257,7 +257,7 @@ describe('Query', () => {
         name: Schema.String,
       }).pipe(Type.Obj({ typename: 'example.com/type/Person', version: '0.2.0' }));
 
-      const peer = await builder.createPeer({ types: [ContactV1, ContactV2] });
+      const peer = await builder.createPeer({ indexing: { sqlIndex: true }, types: [ContactV1, ContactV2] });
       const db = await peer.createDatabase();
       const queues = peer.client.constructQueueFactory(db.spaceId);
       const queue = queues.create();
@@ -278,6 +278,31 @@ describe('Query', () => {
         .query(Query.select(Filter.typeDXN(DXN.parse('dxn:type:example.com/type/Person:0.2.0'))))
         .run();
       expect(v2).toEqual([contactV2]);
+    });
+
+    test('sqlIndex: type selector loads queue-backed objects', async () => {
+      const peer = await builder.createPeer({ indexing: { sqlIndex: true }, types: [TestSchema.Task] });
+      const db = await peer.createDatabase();
+      const queues = peer.client.constructQueueFactory(db.spaceId);
+      const queue = queues.create();
+
+      const task = Obj.make(TestSchema.Task, { title: 'Queue type selector task' });
+      await queue.append([task]);
+
+      await db.flush({ indexes: true });
+
+      const obj: TestSchema.Task = await db
+        .query(
+          Query.select(Filter.type(TestSchema.Task, { title: 'Queue type selector task' })).options({
+            queues: [queue.dxn.toString()],
+          }),
+        )
+        .first();
+
+      expect(obj).toBeDefined();
+      expect(obj.id).toEqual(task.id);
+      expect(obj.title).toEqual('Queue type selector task');
+      expect(Obj.getDXN(obj)?.toString().startsWith(queue.dxn.toString())).toBe(true);
     });
   });
 

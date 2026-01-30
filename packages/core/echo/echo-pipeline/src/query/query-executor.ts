@@ -1066,10 +1066,69 @@ export class QueryExecutor extends Resource {
   }
 
   private async _loadDocumentsAfterSqlQuery(metas: readonly ObjectMeta[]): Promise<(QueryItem | null)[]> {
-    return await Promise.all(metas.map((meta) => this._loadFromObjectMeta(meta)));
+    const snapshotMap = await this._loadQueueSnapshotMap(metas);
+    return await Promise.all(metas.map((meta) => this._loadFromSqlMeta(meta, snapshotMap)));
   }
 
-  private async _loadFromObjectMeta(meta: ObjectMeta): Promise<QueryItem | null> {
+  private async _loadQueueSnapshotMap(metas: readonly ObjectMeta[]): Promise<Map<number, unknown>> {
+    const queueMetas = metas.filter((meta) => !meta.documentId && !!meta.queueId);
+    if (queueMetas.length === 0) {
+      return new Map();
+    }
+
+    const indexer2 = this._indexer2;
+    const runtimeProvider = this._runtime;
+    invariant(indexer2 && runtimeProvider, 'SQL indexer/runtime is required.');
+    const runtime = await runAndForwardErrors(runtimeProvider);
+
+    const snapshots = await unwrapExit(
+      await indexer2.querySnapshotsJSON(queueMetas.map((meta) => meta.recordId)).pipe(Runtime.runPromiseExit(runtime)),
+    );
+    return new Map(snapshots.map((s) => [s.recordId, s.snapshot]));
+  }
+
+  private async _loadFromSqlMeta(meta: ObjectMeta, snapshotMap: Map<number, unknown>): Promise<QueryItem | null> {
+    // Branch 1: Document-backed object.
+    if (meta.documentId) {
+      return await this._loadFromAutomerge(meta);
+    }
+
+    // Branch 2: Queue-backed object.
+    if (meta.queueId) {
+      return this._loadFromQueue(meta, snapshotMap);
+    }
+
+    return null;
+  }
+
+  /**
+   * Loads a queue-backed object from an indexed snapshot (by `recordId`).
+   * Returns `null` when the snapshot is missing or is not a JSON object.
+   */
+  private _loadFromQueue(meta: ObjectMeta, snapshotMap: Map<number, unknown>): QueryItem | null {
+    const snapshot = snapshotMap.get(meta.recordId);
+    if (!snapshot || typeof snapshot !== 'object') {
+      return null;
+    }
+
+    return {
+      objectId: meta.objectId as ObjectId,
+      spaceId: meta.spaceId as SpaceId,
+      queueId: meta.queueId as ObjectId,
+      queueNamespace: 'data',
+      documentId: null,
+      doc: null,
+      data: snapshot as Obj.JSON,
+      rank: 1,
+    };
+  }
+
+  /**
+   * Loads a document-backed object from an Automerge `DatabaseDirectory`.
+   * Returns `null` if the document can't be loaded, the inline object isn't present, or if the meta does not have a
+   * document id (e.g. queue-backed objects).
+   */
+  private async _loadFromAutomerge(meta: ObjectMeta): Promise<QueryItem | null> {
     if (!meta.documentId) {
       return null;
     }
