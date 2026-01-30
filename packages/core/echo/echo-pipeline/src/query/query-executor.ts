@@ -489,23 +489,20 @@ export class QueryExecutor extends Resource {
         if (step.selector.searchKind === 'full-text' && this._supportsSqlIndexing()) {
           // Use indexer2 for full-text search.
           const beginIndexQuery = performance.now();
-          invariant(this._indexer2 && this._runtime, 'SQL indexer/runtime is required.');
-          const runtime = await runAndForwardErrors(this._runtime);
+          invariant(this._indexer2, 'SQL indexer is required.');
           invariant(step.spaces.length <= 1, 'Multiple spaces are not supported for full-text search');
           // Extract queue IDs from DXN strings.
           const queueIds =
             step.queues.length > 0
               ? (step.queues.map((dxnStr) => DXN.parse(dxnStr).asQueueDXN()?.queueId).filter(Boolean) as ObjectId[])
               : null;
-          const textResults = await unwrapExit(
-            await this._indexer2
-              .queryText({
-                query: step.selector.text,
-                spaceId: step.spaces,
-                includeAllQueues: step.allQueuesFromSpaces,
-                queueIds,
-              })
-              .pipe(Runtime.runPromiseExit(runtime)),
+          const textResults = await this._runInRuntime(
+            this._indexer2.queryText({
+              query: step.selector.text,
+              spaceId: step.spaces,
+              includeAllQueues: step.allQueuesFromSpaces,
+              queueIds,
+            }),
           );
           trace.indexHits = textResults.length;
           trace.indexQueryTime += performance.now() - beginIndexQuery;
@@ -527,10 +524,8 @@ export class QueryExecutor extends Resource {
           // Load queue items from indexed snapshots.
           let queueItems: QueryItem[] = [];
           if (queueResults.length > 0) {
-            const snapshots = await unwrapExit(
-              await this._indexer2
-                .querySnapshotsJSON(queueResults.map((r) => r.recordId))
-                .pipe(Runtime.runPromiseExit(runtime)),
+            const snapshots = await this._runInRuntime(
+              this._indexer2.querySnapshotsJSON(queueResults.map((r) => r.recordId)),
             );
             const snapshotMap = new Map(snapshots.map((s) => [s.recordId, s.snapshot]));
             queueItems = queueResults
@@ -1010,9 +1005,8 @@ export class QueryExecutor extends Resource {
   }
 
   private async _queryAllFromSqlIndex(spaceIds: readonly SpaceId[]): Promise<readonly ObjectMeta[]> {
-    const indexer2 = this._indexer2;
-    invariant(indexer2, 'SQL indexer is required.');
-    return await this._runInRuntime(indexer2.queryAll({ spaceIds }));
+    invariant(this._indexer2, 'SQL indexer is required.');
+    return await this._runInRuntime(this._indexer2.queryAll({ spaceIds }));
   }
 
   private async _queryTypesFromSqlIndex(
@@ -1020,19 +1014,17 @@ export class QueryExecutor extends Resource {
     typeDxns: readonly string[],
     inverted: boolean,
   ): Promise<readonly ObjectMeta[]> {
-    const indexer2 = this._indexer2;
-    invariant(indexer2, 'SQL indexer is required.');
-    return await this._runInRuntime(indexer2.queryTypes({ spaceIds, typeDxns, inverted }));
+    invariant(this._indexer2, 'SQL indexer is required.');
+    return await this._runInRuntime(this._indexer2.queryTypes({ spaceIds, typeDxns, inverted }));
   }
 
   private async _queryIncomingReferencesFromSqlIndex(
     workingSet: QueryItem[],
     property: EscapedPropPath | null,
   ): Promise<readonly ObjectMeta[]> {
+    const anchorDxns = workingSet.map((item) => DXN.fromLocalObjectId(item.objectId).toString());
     const indexer2 = this._indexer2;
     invariant(indexer2, 'SQL indexer is required.');
-    const anchorDxns = workingSet.map((item) => DXN.fromLocalObjectId(item.objectId).toString());
-
     const rows: readonly ReverseRef[] = (
       await Promise.all(anchorDxns.map((targetDxn) => this._runInRuntime(indexer2.queryReverseRef({ targetDxn }))))
     ).flat();
@@ -1050,7 +1042,7 @@ export class QueryExecutor extends Resource {
       .map((row) => row.recordId);
 
     const uniqueRecordIds = Array.from(new Set<number>(recordIds));
-    return await this._runInRuntime(indexer2.lookupByRecordIds(uniqueRecordIds));
+    return await this._runInRuntime(this._indexer2.lookupByRecordIds(uniqueRecordIds));
   }
 
   /**
@@ -1104,10 +1096,9 @@ export class QueryExecutor extends Resource {
     workingSet: QueryItem[],
     endpoint: 'source' | 'target',
   ): Promise<readonly ObjectMeta[]> {
-    const indexer2 = this._indexer2;
-    invariant(indexer2, 'SQL indexer is required.');
+    invariant(this._indexer2, 'SQL indexer is required.');
     const anchorDxns = workingSet.map((item) => DXN.fromLocalObjectId(item.objectId).toString());
-    return await this._runInRuntime(indexer2.queryRelations({ endpoint, anchorDxns }));
+    return await this._runInRuntime(this._indexer2.queryRelations({ endpoint, anchorDxns }));
   }
 
   private async _loadDocumentsAfterSqlQuery(metas: readonly ObjectMeta[]): Promise<(QueryItem | null)[]> {
@@ -1121,13 +1112,9 @@ export class QueryExecutor extends Resource {
       return new Map();
     }
 
-    const indexer2 = this._indexer2;
-    const runtimeProvider = this._runtime;
-    invariant(indexer2 && runtimeProvider, 'SQL indexer/runtime is required.');
-    const runtime = await runAndForwardErrors(runtimeProvider);
-
-    const snapshots = await unwrapExit(
-      await indexer2.querySnapshotsJSON(queueMetas.map((meta) => meta.recordId)).pipe(Runtime.runPromiseExit(runtime)),
+    invariant(this._indexer2, 'SQL indexer is required.');
+    const snapshots = await this._runInRuntime(
+      this._indexer2.querySnapshotsJSON(queueMetas.map((meta) => meta.recordId)),
     );
     return new Map(snapshots.map((s) => [s.recordId, s.snapshot]));
   }
