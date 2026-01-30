@@ -326,6 +326,12 @@ describe('Query', () => {
 
       await db.flush({ indexes: true });
 
+      // When no property is specified, referencedBy() should return all incoming references (including nested ones).
+      const allIncoming = await db
+        .query(Query.select(Filter.type(TestSchema.Person, { name: 'Alice' })).referencedBy(Type.Expando))
+        .run();
+      expect(allIncoming.map((o) => o.name).sort()).toEqual(['direct', 'nested']);
+
       const nested = await db
         .query(Query.select(Filter.type(TestSchema.Person, { name: 'Alice' })).referencedBy(Type.Expando, 'a.b'))
         .run();

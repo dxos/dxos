@@ -1049,12 +1049,6 @@ export class QueryExecutor extends Resource {
         }
 
         const queryPath = EscapedPropPath.unescape(property);
-        if (queryPath.length !== 1) {
-          throw new Error(
-            `SQL incoming reference traversal currently supports only direct reference properties (single segment). Received: ${property}`,
-          );
-        }
-
         const rowPath = EscapedPropPath.unescape(row.propPath);
         return QueryExecutor._matchesReferencePropertyPath(rowPath, queryPath);
       })
