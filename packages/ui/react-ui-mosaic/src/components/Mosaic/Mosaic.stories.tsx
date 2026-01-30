@@ -101,13 +101,13 @@ type Story = StoryObj<typeof meta>;
 
 export const Board: Story = {
   args: {
-    columns: 3,
+    columns: 4,
   },
 };
 
 export const Debug: Story = {
   args: {
     debug: true,
-    columns: 3,
+    columns: 2,
   },
 };
