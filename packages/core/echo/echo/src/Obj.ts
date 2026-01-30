@@ -98,15 +98,6 @@ export interface Unknown extends BaseObj {}
 export interface Any extends BaseObj, AnyProperties {}
 
 /**
- * Unbranded base type - common structure without the brand.
- * Both reactive objects and snapshots are assignable to this.
- * Use this when you don't care whether you have a reactive object or snapshot.
- */
-export interface Base extends AnyEntity {
-  readonly id: ObjectId;
-}
-
-/**
  * Base type for snapshot objects (has SnapshotKindId instead of KindId).
  */
 interface BaseSnapshot extends AnyEntity {
@@ -396,13 +387,14 @@ export const getDXN = (entity: Unknown | Snapshot): DXN => {
  * @returns The DXN of the object's type.
  * @example dxn:example.com/type/Person:1.0.0
  */
-// TODO(burdon): Must define and return type for expando.
-export const getTypeDXN = getTypeDXN$;
+// TODO(wittjosiah): Narrow types.
+export const getTypeDXN: (obj: unknown | undefined) => DXN | undefined = getTypeDXN$ as any;
 
 /**
  * Get the schema of the object.
  * Returns the branded ECHO schema used to create the object.
  */
+// TODO(wittjosiah): Narrow types.
 export const getSchema: (obj: unknown | undefined) => Type.Entity.Any | undefined = getSchema$ as any;
 
 /**
@@ -446,8 +438,6 @@ export type Meta = ApiMeta;
  * Returns mutable meta when passed a mutable object (inside `Obj.change` callback).
  * Returns read-only meta when passed a regular object or snapshot.
  *
- * TODO(burdon): When passed a Snapshot, should return a snapshot of meta, not the live meta proxy.
- *
  * @example
  * ```ts
  * // Read-only access outside change callback
@@ -461,6 +451,7 @@ export type Meta = ApiMeta;
  * });
  * ```
  */
+// TODO(wittjosiah): When passed a Snapshot, should return a snapshot of meta, not the live meta proxy.
 export function getMeta(entity: Mutable<Unknown>): ObjectMeta;
 export function getMeta(entity: Unknown | Snapshot): ReadonlyMeta;
 export function getMeta(entity: Unknown | Snapshot | Mutable<Unknown>): ObjectMeta | ReadonlyMeta {

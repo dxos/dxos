@@ -4,6 +4,7 @@
 
 import { Atom, Registry } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import React, { useMemo } from 'react';
 
 import { OperationPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
@@ -30,9 +31,24 @@ const createMockStore = (initialState: ScriptToolbarState = {}): ScriptToolbarSt
   };
 };
 
+// Wrapper to create script at render time (ECHO objects can't be created at module load).
+const ScriptToolbarStory = () => {
+  const state = useMemo(() => createMockStore(), []);
+  const script = useMemo(
+    () =>
+      Script.make({
+        name: 'test',
+        description: 'test',
+        source: 'test',
+      }),
+    [],
+  );
+  return <ScriptToolbar state={state} script={script} />;
+};
+
 const meta = {
   title: 'plugins/plugin-script/Toolbar',
-  component: ScriptToolbar,
+  component: ScriptToolbarStory,
   // TODO(wittjosiah): Try to write story which does not depend on plugin manager.
   decorators: [
     withTheme,
@@ -45,19 +61,10 @@ const meta = {
     layout: 'centered',
     translations,
   },
-} satisfies Meta<typeof ScriptToolbar>;
+} satisfies Meta<typeof ScriptToolbarStory>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {
-  args: {
-    state: createMockStore(),
-    script: Script.make({
-      name: 'test',
-      description: 'test',
-      source: 'test',
-    }),
-  },
-};
+export const Default: Story = {};

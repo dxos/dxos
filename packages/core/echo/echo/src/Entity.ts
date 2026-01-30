@@ -6,7 +6,6 @@ import type { ForeignKey } from '@dxos/echo-protocol';
 import type { DXN, ObjectId } from '@dxos/keys';
 
 import {
-  type AnyEntity,
   EntityKind,
   EntityKindSchema,
   KindId,
@@ -70,14 +69,6 @@ export type Entity<Props> = OfKind<Kind> & Props;
 export interface Unknown extends OfKind<Kind> {}
 
 /**
- * Unbranded base type for entities - common structure without the brand.
- * Both reactive entities and snapshots are assignable to this.
- */
-export interface Base extends AnyEntity {
-  readonly id: ObjectId;
-}
-
-/**
  * Snapshot of an Obj or Relation.
  * Branded with SnapshotKindId instead of KindId.
  */
@@ -112,7 +103,7 @@ export type JSON = ObjectJSON;
 /**
  * Get the DXN of an entity (object or relation).
  */
-export const getDXN = (entity: Base): DXN => getDXN$(entity);
+export const getDXN = (entity: Unknown | Snapshot): DXN => getDXN$(entity);
 
 /**
  * Get the DXN of an entity's type.
@@ -122,50 +113,49 @@ export const getTypeDXN = getTypeDXN$;
 /**
  * Get the typename of an entity's type.
  */
-export const getTypename = (entity: Base): string | undefined => getTypename$(entity);
+export const getTypename = (entity: Unknown | Snapshot): string | undefined => getTypename$(entity);
 
 /**
  * Get the database an entity belongs to.
  */
-export const getDatabase = (entity: Base): any | undefined => getDatabase$(entity);
+export const getDatabase = (entity: Unknown | Snapshot): any | undefined => getDatabase$(entity);
 
 /**
  * Get the metadata for an entity.
  * Returns mutable meta when passed a mutable entity (inside change callback).
  * Returns read-only meta when passed a regular entity or snapshot.
- *
- * TODO(burdon): When passed a Snapshot, should return a snapshot of meta, not the live meta proxy.
  */
+// TODO(wittjosiah): When passed a Snapshot, should return a snapshot of meta, not the live meta proxy.
 export function getMeta(entity: Mutable<Unknown>): ObjectMeta;
-export function getMeta(entity: Base): ReadonlyMeta;
-export function getMeta(entity: Base | Mutable<Unknown>): ObjectMeta | ReadonlyMeta {
+export function getMeta(entity: Unknown | Snapshot): ReadonlyMeta;
+export function getMeta(entity: Unknown | Snapshot | Mutable<Unknown>): ObjectMeta | ReadonlyMeta {
   return getMeta$(entity);
 }
 
 /**
  * Get foreign keys for an entity from the specified source.
  */
-export const getKeys = (entity: Base, source: string): ForeignKey[] => getKeys$(entity, source);
+export const getKeys = (entity: Unknown | Snapshot, source: string): ForeignKey[] => getKeys$(entity, source);
 
 /**
  * Check if an entity is deleted.
  */
-export const isDeleted = (entity: Base): boolean => isDeleted$(entity);
+export const isDeleted = (entity: Unknown | Snapshot): boolean => isDeleted$(entity);
 
 /**
  * Get the label of an entity.
  */
-export const getLabel = (entity: Base): string | undefined => getLabel$(entity);
+export const getLabel = (entity: Unknown | Snapshot): string | undefined => getLabel$(entity);
 
 /**
  * Get the description of an entity.
  */
-export const getDescription = (entity: Base): string | undefined => getDescription$(entity);
+export const getDescription = (entity: Unknown | Snapshot): string | undefined => getDescription$(entity);
 
 /**
  * Convert an entity to its JSON representation.
  */
-export const toJSON = (entity: Base): JSON => toJSON$(entity);
+export const toJSON = (entity: Unknown | Snapshot): JSON => toJSON$(entity);
 
 /**
  * Subscribe to changes on an entity (object or relation).

@@ -92,14 +92,6 @@ export type Relation<Source extends Obj.Unknown, Target extends Obj.Unknown, Pro
   Props;
 
 /**
- * Unbranded base type for relations - common structure without the brand.
- * Both reactive relations and snapshots are assignable to this.
- */
-export interface Base extends AnyEntity, Type.Relation.Endpoints<Obj.Base, Obj.Base> {
-  readonly id: ObjectId;
-}
-
-/**
  * Base type for snapshot relations (has SnapshotKindId instead of KindId).
  */
 interface BaseRelationSnapshot<Source, Target> extends AnyEntity, Type.Relation.Endpoints<Source, Target> {
@@ -113,7 +105,7 @@ interface BaseRelationSnapshot<Source, Target> extends AnyEntity, Type.Relation.
  * Property values are frozen at the time the snapshot was created.
  * Returned by getSnapshot() and hooks.
  */
-export type Snapshot<T extends Unknown = Unknown> = Omit<T, KindId> & BaseRelationSnapshot<Obj.Base, Obj.Base>;
+export type Snapshot<T extends Unknown = Unknown> = Omit<T, KindId> & BaseRelationSnapshot<Obj.Unknown, Obj.Unknown>;
 
 export const Source: unique symbol = RelationSourceId as any;
 export type Source = typeof Source;
@@ -189,7 +181,7 @@ export const isRelation = (value: unknown): value is Unknown => {
  * Accepts both reactive relations and snapshots.
  * @throws If the object is not a relation.
  */
-export const getSourceDXN = (value: Base): DXN => {
+export const getSourceDXN = (value: Unknown | Snapshot): DXN => {
   assertArgument(isRelation(value), 'Expected a relation');
   assumeType<InternalObjectProps>(value);
   const dxn = (value as InternalObjectProps)[RelationSourceDXNId];
@@ -202,7 +194,7 @@ export const getSourceDXN = (value: Base): DXN => {
  * Accepts both reactive relations and snapshots.
  * @throws If the object is not a relation.
  */
-export const getTargetDXN = (value: Base): DXN => {
+export const getTargetDXN = (value: Unknown | Snapshot): DXN => {
   assertArgument(isRelation(value), 'Expected a relation');
   assumeType<InternalObjectProps>(value);
   const dxn = (value as InternalObjectProps)[RelationTargetDXNId];
@@ -215,7 +207,7 @@ export const getTargetDXN = (value: Base): DXN => {
  * Accepts both reactive relations and snapshots.
  * @throws If the object is not a relation.
  */
-export const getSource = <T extends Base>(relation: T): Type.Relation.Source<T> => {
+export const getSource = <T extends Unknown | Snapshot>(relation: T): Type.Relation.Source<T> => {
   assertArgument(isRelation(relation), 'Expected a relation');
   assumeType<InternalObjectProps>(relation);
   const obj = (relation as InternalObjectProps)[RelationSourceId];
@@ -228,7 +220,7 @@ export const getSource = <T extends Base>(relation: T): Type.Relation.Source<T> 
  * Accepts both reactive relations and snapshots.
  * @throws If the object is not a relation.
  */
-export const getTarget = <T extends Base>(relation: T): Type.Relation.Target<T> => {
+export const getTarget = <T extends Unknown | Snapshot>(relation: T): Type.Relation.Target<T> => {
   assertArgument(isRelation(relation), 'Expected a relation');
   assumeType<InternalObjectProps>(relation);
   const obj = (relation as InternalObjectProps)[RelationTargetId];
@@ -309,7 +301,7 @@ export const subscribe = (rel: Unknown, callback: () => void): (() => void) => {
  * Get a deeply nested property from a relation.
  * Accepts both reactive relations and snapshots.
  */
-export const getValue = (rel: Base, path: readonly (string | number)[]): any => {
+export const getValue = (rel: Unknown | Snapshot, path: readonly (string | number)[]): any => {
   return getValue$(rel, createJsonPath(path));
 };
 
@@ -378,9 +370,8 @@ export type Meta = ApiMeta;
  * Get the metadata for a relation.
  * Returns mutable meta when passed a mutable relation (inside `Relation.change` callback).
  * Returns read-only meta when passed a regular relation or snapshot.
- *
- * TODO(burdon): When passed a Snapshot, should return a snapshot of meta, not the live meta proxy.
  */
+// TODO(wittjosiah): When passed a Snapshot, should return a snapshot of meta, not the live meta proxy.
 export function getMeta(entity: Mutable<Unknown>): ObjectMeta;
 export function getMeta(entity: Unknown | Snapshot): ReadonlyMeta;
 export function getMeta(entity: Unknown | Snapshot | Mutable<Unknown>): ObjectMeta | ReadonlyMeta {

@@ -6,6 +6,7 @@ import { EditorView } from '@codemirror/view';
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
+import { Obj } from '@dxos/echo';
 import { type ContentBlock } from '@dxos/types';
 
 import { createMessage } from '../../testing';
@@ -54,7 +55,9 @@ describe('reducers', () => {
       syncer.append(messages);
       expect(doc.content).toEqual(['<prompt>Hello</prompt>', 'Hi there!', ''].join('\n'));
 
-      messages[1].blocks.push({ _tag: 'text', text: 'How can I help?' });
+      Obj.change(messages[1], (m) => {
+        m.blocks.push({ _tag: 'text', text: 'How can I help?' });
+      });
       syncer.append(messages);
       expect(doc.content).toEqual(['<prompt>Hello</prompt>', 'Hi there!', 'How can I help?', ''].join('\n'));
     }),
@@ -74,12 +77,16 @@ describe('reducers', () => {
       syncer.append(messages);
       expect(doc.content).toEqual(['<prompt>Hello</prompt>', 'Hi there!'].join('\n'));
 
-      const block = messages[1].blocks[0] as ContentBlock.Text;
-      block.text = 'Hi there! How are you?';
-      block.pending = false;
+      Obj.change(messages[1], (m) => {
+        const block = m.blocks[0] as ContentBlock.Text;
+        block.text = 'Hi there! How are you?';
+        block.pending = false;
+      });
       syncer.append(messages);
 
-      messages[1].blocks.push({ _tag: 'text', text: 'How can I help?' });
+      Obj.change(messages[1], (m) => {
+        m.blocks.push({ _tag: 'text', text: 'How can I help?' });
+      });
       syncer.append(messages);
       expect(doc.content).toEqual(
         ['<prompt>Hello</prompt>', 'Hi there! How are you?', 'How can I help?', ''].join('\n'),

@@ -54,6 +54,7 @@
 
 - [ ] Review usage of Obj.Any, see if it could be stricter
 - [ ] Type.Obj should validate using the echo object brand
+- [ ] Mutable could be a branded type to fix "NOTE: TypeScript's structural typing allows readonly objects to be passed to `Mutable<T>`"
 - [ ] space properties, queues, messagins preventing getSpace from being removed
 - [ ] Schema registry should use Query.Query.
 - [ ] Move EchoSchemaRegistry into hypergraph

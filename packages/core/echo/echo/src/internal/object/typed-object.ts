@@ -5,7 +5,7 @@
 import type * as Schema from 'effect/Schema';
 
 import { type TypeMeta } from '../annotations';
-import { type HasId } from '../types';
+import { type AnyEntity } from '../types';
 
 /**
  * Definition for an object type that can be stored in an ECHO database.
@@ -26,5 +26,5 @@ export interface TypedObject<A = any, I = any> extends TypeMeta, Schema.Schema<A
  */
 export interface TypedObjectPrototype<A = any, I = any> extends TypedObject<A, I> {
   /** Type constructor. */
-  new (): HasId & A;
+  new (): AnyEntity & A;
 }

@@ -138,7 +138,7 @@ export const createReferences = <S extends Type.Obj.Any>(schema: S, db: Database
   type T = Schema.Schema.Type<S>;
   return async (obj: T): Promise<T> => {
     // Collect all references to set.
-    const refsToSet: Array<{ name: string | symbol; ref: any }> = [];
+    const refsToSet: Array<{ name: PropertyKey; ref: any }> = [];
 
     for (const property of getProperties(schema.ast)) {
       if (!property.isOptional || randomBoolean()) {

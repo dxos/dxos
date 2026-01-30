@@ -55,6 +55,7 @@ const DefaultStory = () => {
   const props: FieldEditorProps = {
     projection,
     field: view.projection.fields[0],
+    onSave: handleComplete,
   };
 
   // Expose objects on window for test access.
@@ -75,7 +76,7 @@ const DefaultStory = () => {
 
   return (
     <TestLayout json={json}>
-      <FieldEditor {...props} onSave={handleComplete} />
+      <FieldEditor {...props} />
     </TestLayout>
   );
 };

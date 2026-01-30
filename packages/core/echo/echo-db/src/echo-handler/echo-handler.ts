@@ -990,7 +990,6 @@ interface DecodedValueAtPath {
   dataPath: KeyPath;
 }
 
-
 /**
  * Used to determine if the value should be placed at the root of a separate ECHO object.
  *
@@ -1033,7 +1032,7 @@ export const createObject = <T extends AnyProperties>(obj: T): CreateObjectRetur
   const core = new ObjectCore();
   if (isProxy(obj)) {
     // Already an echo-schema reactive object.
-    const meta = getProxyTarget<ObjectMeta>(Entity.getMeta(obj as unknown as Entity.Base));
+    const meta = getProxyTarget<ObjectMeta>(Entity.getMeta(obj as unknown as Entity.Unknown));
 
     // TODO(burdon): Requires comment.
     const slot = getProxySlot(obj);

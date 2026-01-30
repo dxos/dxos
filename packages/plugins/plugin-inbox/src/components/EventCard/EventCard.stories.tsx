@@ -3,8 +3,9 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React from 'react';
+import React, { useMemo } from 'react';
 
+import { type SurfaceComponentProps } from '@dxos/app-framework/react';
 import { faker } from '@dxos/random';
 import { withTheme } from '@dxos/react-ui/testing';
 import { Card } from '@dxos/react-ui-mosaic';
@@ -31,23 +32,26 @@ const createMockEvent = (): Event.Event =>
     },
   });
 
+// Wrapper to create event at render time (ECHO objects can't be created at module load).
+const EventCardStory = ({ role }: Pick<SurfaceComponentProps<Event.Event>, 'role'>) => {
+  const subject = useMemo(() => createMockEvent(), []);
+  return (
+    <IntrinsicCardContainer>
+      <Card.Root>
+        <EventCard role={role} subject={subject} />
+      </Card.Root>
+    </IntrinsicCardContainer>
+  );
+};
+
 const meta = {
   title: 'plugins/plugin-inbox/EventCard',
-  component: EventCard,
-  render: (args) => {
-    return (
-      <IntrinsicCardContainer>
-        <Card.Root>
-          <EventCard {...args} />
-        </Card.Root>
-      </IntrinsicCardContainer>
-    );
-  },
+  component: EventCardStory,
   decorators: [withTheme],
   parameters: {
     layout: 'fullscreen',
   },
-} satisfies Meta<typeof EventCard>;
+} satisfies Meta<typeof EventCardStory>;
 
 export default meta;
 
@@ -56,6 +60,5 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   args: {
     role: 'card--intrinsic',
-    subject: createMockEvent(),
   },
 };

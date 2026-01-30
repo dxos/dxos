@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import type { HasId } from '@dxos/echo/internal';
+import { type AnyEntity } from '@dxos/echo/internal';
 import { type DXN, type SpaceId } from '@dxos/keys';
 import type { QueryResult } from '@dxos/protocols';
 import { type EdgeFunctionEnv } from '@dxos/protocols';
@@ -67,7 +67,7 @@ export class ServiceContainer {
     };
   }
 
-  async insertIntoQueue(queue: DXN, objects: HasId[]): Promise<void> {
+  async insertIntoQueue(queue: DXN, objects: AnyEntity[]): Promise<void> {
     await this._queueService.append({}, queue.toString(), objects);
   }
 }

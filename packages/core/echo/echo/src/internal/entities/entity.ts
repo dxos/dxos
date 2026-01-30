@@ -9,12 +9,12 @@ import type * as Types from 'effect/Types';
 import { type ToMutable } from '@dxos/util';
 
 import { type TypeMeta } from '../annotations';
-import { type EntityKind, type HasId, SchemaKindId } from '../types';
+import { type AnyEntity, type EntityKind, SchemaKindId } from '../types';
 
 // TODO(burdon): Define Schema type for `typename` and use consistently for all DXN-like properties.
 
 // type RequiredKeys<T> = { [K in keyof T]-?: {} extends Pick<T, K> ? never : K }[keyof T];
-export type EchoTypeSchemaProps<T, ExtraFields = {}> = Types.Simplify<HasId & ToMutable<T> & ExtraFields>;
+export type EchoTypeSchemaProps<T, ExtraFields = {}> = Types.Simplify<AnyEntity & ToMutable<T> & ExtraFields>;
 
 // TODO(burdon): Rename EchoEntitySchema.
 export interface EchoTypeSchema<

@@ -11,7 +11,7 @@ import { withTheme } from '@dxos/react-ui/testing';
 import { translations } from '../translations';
 import { Chess } from '../types';
 
-import { ChessboardArticle, type ChessboardArticleProps } from './ChessboardArticle';
+import { ChessboardArticle } from './ChessboardArticle';
 
 type StoryProps = {
   pgn?: string;
