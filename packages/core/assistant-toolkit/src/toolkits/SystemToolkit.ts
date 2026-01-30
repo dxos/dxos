@@ -251,9 +251,11 @@ export const layer = (): Layer.Layer<Tool.Handler<any>, never, never> =>
 
     ['object-update' as const]: Effect.fnUntraced(function* ({ id, properties }) {
       const object = yield* Database.Service.resolve(DXN.parse(id));
-      for (const [key, value] of Object.entries(properties)) {
-        (object as any)[key] = value;
-      }
+      Entity.change(object as Entity.Any, (obj) => {
+        for (const [key, value] of Object.entries(properties)) {
+          obj[key] = value;
+        }
+      });
       return object;
     }),
 
@@ -285,13 +287,13 @@ export const layer = (): Layer.Layer<Tool.Handler<any>, never, never> =>
 
     ['tag-add' as const]: Effect.fnUntraced(function* ({ tagId, objectId }) {
       const object = yield* Database.Service.resolve(DXN.parse(objectId));
-      Entity.addTag(object, DXN.parse(tagId).toString());
+      Entity.change(object, (obj) => Entity.addTag(obj, DXN.parse(tagId).toString()));
       return object;
     }),
 
     ['tag-remove' as const]: Effect.fnUntraced(function* ({ tagId, objectId }) {
       const object = yield* Database.Service.resolve(DXN.parse(objectId));
-      Entity.removeTag(object, DXN.parse(tagId).toString());
+      Entity.change(object, (obj) => Entity.removeTag(obj, DXN.parse(tagId).toString()));
       return object;
     }),
   });

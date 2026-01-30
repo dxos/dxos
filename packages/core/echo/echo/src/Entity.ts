@@ -6,6 +6,7 @@ import type { ForeignKey } from '@dxos/echo-protocol';
 import type { DXN, ObjectId } from '@dxos/keys';
 
 import {
+  type ChangeCallback,
   EntityKind,
   EntityKindSchema,
   KindId,
@@ -15,6 +16,7 @@ import {
   type ReadonlyMeta,
   SnapshotKindId,
   addTag as addTag$,
+  change as change$,
   getDXN as getDXN$,
   getDatabase as getDatabase$,
   getDescription as getDescription$,
@@ -165,14 +167,51 @@ export const subscribe = (entity: Unknown, callback: () => void): (() => void) =
   return subscribe$(entity, callback);
 };
 
+//
+// Change
+//
+
+/**
+ * Used to provide a mutable view of an entity within `Entity.change`.
+ */
+export type { Mutable };
+
+/**
+ * Perform mutations on an entity (object or relation) within a change context.
+ *
+ * Entities are read-only by default. Mutations are batched and notifications fire
+ * when the callback completes. Direct mutations outside of `Entity.change` will throw
+ * at runtime.
+ *
+ * @param entity - The echo entity (object or relation) to mutate.
+ * @param callback - Receives a mutable view of the entity. All mutations must occur here.
+ *
+ * @example
+ * ```typescript
+ * // Mutate within Entity.change
+ * Entity.change(entity, (e) => {
+ *   e.name = 'Updated';
+ *   e.count = 42;
+ * });
+ *
+ * // Direct mutation throws
+ * entity.name = 'Bob'; // Error: Cannot modify outside Entity.change()
+ * ```
+ *
+ * Note: For type-specific operations, prefer `Obj.change` or `Relation.change`.
+ */
+export const change = <T extends Unknown>(entity: T, callback: ChangeCallback<T>): void => {
+  change$(entity, callback);
+};
+
 /**
  * Add a tag to an entity.
- * Must be called within an `Obj.change` or `Relation.change` callback.
+ * Must be called within an `Entity.change`, `Obj.change`, or `Relation.change` callback.
  */
 export const addTag = (entity: Mutable<Unknown>, tag: string): void => addTag$(entity, tag);
 
 /**
  * Remove a tag from an entity.
- * Must be called within an `Obj.change` or `Relation.change` callback.
+ * Must be called within an `Entity.change`, `Obj.change`, or `Relation.change` callback.
  */
 export const removeTag = (entity: Mutable<Unknown>, tag: string): void => removeTag$(entity, tag);
