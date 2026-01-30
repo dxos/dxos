@@ -101,6 +101,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Board: Story = {
   args: {
-    columns: 4,
+    debug: true,
+    columns: 1,
   },
 };

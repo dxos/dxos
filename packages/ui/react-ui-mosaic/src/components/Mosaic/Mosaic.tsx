@@ -669,6 +669,7 @@ const useContainerDebug = (debug?: boolean): [FC<ThemedClassName>, (() => ReactN
 const ContainerInfo = forwardRef<HTMLDivElement, ThemedClassName>(({ classNames }, forwardedRef) => {
   const { id, state, activeLocation, scrolling } = useContainerContext(ContainerInfo.displayName!);
   const counter = useRef(0);
+  console.log('===', id);
   return (
     <Json
       data={{ id, activeLocation, scrolling, state, count: counter.current++ }}
@@ -707,8 +708,10 @@ type TileProps<TData = any, TLocation = LocationType> = SlottableClassName<
     asChild?: boolean;
     dragHandle?: HTMLElement | null;
     allowedEdges?: Edge[];
-    data: TData;
     location: TLocation;
+    id: string;
+    data: TData;
+    debug?: boolean;
   }>
 >;
 
@@ -722,6 +725,7 @@ const Tile = forwardRef<HTMLDivElement, TileProps>(
       dragHandle,
       allowedEdges: allowedEdgesProp,
       location,
+      id,
       data: dataProp,
       ...props
     }: TileProps,
@@ -750,10 +754,10 @@ const Tile = forwardRef<HTMLDivElement, TileProps>(
       () =>
         ({
           type: 'tile',
-          id: dataProp.id,
+          id,
           containerId,
-          location,
           data: dataProp,
+          location,
         }) satisfies MosaicTileData,
       [containerId, location, dataProp],
     );

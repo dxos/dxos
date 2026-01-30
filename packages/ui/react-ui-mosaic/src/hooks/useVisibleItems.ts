@@ -22,6 +22,7 @@ export type UseVisibleItemsProps<TItem = any> = {
  */
 export const useVisibleItems = <TItem = any>({ id, items, dragging, getId }: UseVisibleItemsProps<TItem>): TItem[] => {
   const visibleItems = useMemo(() => {
+    console.log('useVisibleItems', { id, items, dragging, getId });
     if (!items || !dragging || id !== dragging.containerId) {
       return items ?? [];
     }

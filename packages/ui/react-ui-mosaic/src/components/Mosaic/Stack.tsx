@@ -17,7 +17,12 @@ import { Mosaic, type MosiacPlaceholderProps, useMosaicContainer } from '../Mosa
 import { styles } from './styles';
 import { type Axis, type GetId } from './types';
 
-type StackTileComponent<TData = any> = FC<{ data: TData; location: number }>;
+type StackTileComponent<TData = any> = FC<{
+  id: string;
+  data: TData;
+  location: number;
+  debug?: boolean;
+}>;
 
 type StackProps<TData = any> = SlottableClassName<{
   role?: string;
@@ -25,6 +30,7 @@ type StackProps<TData = any> = SlottableClassName<{
   items?: TData[];
   getId: GetId<TData>;
   Tile: StackTileComponent<TData>;
+  debug?: boolean;
 }>;
 
 /**
@@ -32,11 +38,8 @@ type StackProps<TData = any> = SlottableClassName<{
  * NOTE: This is a low-level component and should be wrapped by a scrollable container.
  */
 const StackInner = forwardRef<HTMLDivElement, StackProps>(
-  (
-    { className, classNames, role = 'list', axis = 'vertical', items, getId, Tile: Component, ...props },
-    forwardedRef,
-  ) => {
-    invariant(Component);
+  ({ className, classNames, role = 'list', axis = 'vertical', items, getId, Tile, debug, ...props }, forwardedRef) => {
+    invariant(Tile);
     const { id, dragging } = useMosaicContainer(StackInner.displayName!);
     const visibleItems = useVisibleItems({ id, items, dragging: dragging?.source.data, getId });
 
@@ -55,8 +58,8 @@ const StackInner = forwardRef<HTMLDivElement, StackProps>(
       >
         <Placeholder axis={axis} location={0.5} />
         {visibleItems?.map((item, index) => (
-          <Fragment key={item.id}>
-            <Component data={item} location={index + 1} />
+          <Fragment key={getId(item)}>
+            <Tile id={getId(item)} data={item} location={index + 1} debug={debug} />
             <Placeholder axis={axis} location={index + 1.5} />
           </Fragment>
         ))}
@@ -88,16 +91,17 @@ const VirtualStackInner = forwardRef<HTMLDivElement, VirtualStackProps>(
       axis = 'vertical',
       items,
       getId,
-      Tile: Component,
+      Tile,
       estimateSize,
       getScrollElement,
       overscan = 8,
       onChange,
+      debug,
       ...props
     },
     forwardedRef,
   ) => {
-    invariant(Component);
+    invariant(Tile);
     const { id, dragging } = useMosaicContainer(VirtualStackInner.displayName!);
     const visibleItems = useVisibleItems({ id, items, dragging: dragging?.source.data, getId });
     const virtualizer = useVirtualizer({
@@ -135,36 +139,36 @@ const VirtualStackInner = forwardRef<HTMLDivElement, VirtualStackProps>(
         }}
         ref={forwardedRef}
       >
-        {virtualItems.map((virtualItem) => (
-          <div
-            key={virtualItem.key}
-            data-index={virtualItem.index}
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              ...(axis === 'vertical'
-                ? {
-                    width: '100%',
-                    transform: `translateY(${virtualItem.start}px)`,
-                  }
-                : {
-                    height: '100%',
-                    transform: `translateX(${virtualItem.start}px)`,
-                  }),
-            }}
-            ref={virtualizer.measureElement}
-          >
-            {virtualItem.index % 2 === 0 ? (
-              <Placeholder axis={axis} location={Math.floor(virtualItem.index / 2) + 0.5} />
-            ) : (
-              <Component
-                data={visibleItems![Math.floor(virtualItem.index / 2)]}
-                location={Math.floor(virtualItem.index / 2) + 1}
-              />
-            )}
-          </div>
-        ))}
+        {virtualItems.map((virtualItem) => {
+          const data = visibleItems![Math.floor(virtualItem.index / 2)];
+          return (
+            <div
+              key={virtualItem.key}
+              data-index={virtualItem.index}
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                ...(axis === 'vertical'
+                  ? {
+                      width: '100%',
+                      transform: `translateY(${virtualItem.start}px)`,
+                    }
+                  : {
+                      height: '100%',
+                      transform: `translateX(${virtualItem.start}px)`,
+                    }),
+              }}
+              ref={virtualizer.measureElement}
+            >
+              {virtualItem.index % 2 === 0 ? (
+                <Placeholder axis={axis} location={Math.floor(virtualItem.index / 2) + 0.5} />
+              ) : (
+                <Tile id={getId(data)} data={data} location={Math.floor(virtualItem.index / 2) + 1} debug={debug} />
+              )}
+            </div>
+          );
+        })}
       </div>
     );
   },
