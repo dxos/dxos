@@ -89,6 +89,7 @@ export const tailwindConfig = ({
           'in-out-symmetric': 'cubic-bezier(0.5,0,0.5,1)',
         },
         keyframes: {
+          // Fade
           'fade-in': {
             from: { opacity: 0 },
             to: { opacity: 1 },
@@ -198,8 +199,9 @@ export const tailwindConfig = ({
           },
         },
         animation: {
+          // Fade
           'fade-in': 'fade-in 200ms ease-out',
-          'fade-out': 'fade-out 200ms ease-out',
+          'fade-out': 'fade-out 400ms ease-out',
 
           // Popper chrome
           'slide-down-and-fade': 'slide-down-and-fade 400ms cubic-bezier(0.16, 1, 0.3, 1)',
