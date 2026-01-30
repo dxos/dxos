@@ -15,7 +15,7 @@ import { meta } from '../meta';
 
 import { ProjectColumn } from './ProjectColumn';
 
-type ItemProps = { item: Obj.Any; projectionModel?: ProjectionModel };
+type ItemProps = { item: Obj.Unknown; projectionModel?: ProjectionModel };
 
 const itemNoOp = ({ item }: ItemProps) => <span>{item.id}</span>;
 

@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { DXN, Obj, Type } from '@dxos/echo';
+import { DXN, Type } from '@dxos/echo';
 
 // TODO(wittjosiah): Review this type.
 //   - Should be discriminated union.
@@ -42,7 +42,7 @@ export const SubscriptionEvent = Schema.Struct({
   /**
    * Reference to the object that was changed or created.
    */
-  subject: Type.Ref(Obj.Any),
+  subject: Type.Ref(Type.Obj),
 
   /**
    * @deprecated

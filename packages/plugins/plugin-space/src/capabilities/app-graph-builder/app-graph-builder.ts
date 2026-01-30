@@ -16,7 +16,7 @@ import { Operation } from '@dxos/operation';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ATTENDABLE_PATH_SEPARATOR, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { CreateAtom, Graph, GraphBuilder, type Node, NodeMatcher } from '@dxos/plugin-graph';
-import { Collection, ViewAnnotation, getTypenameFromQuery } from '@dxos/schema';
+import { Collection, Expando, ViewAnnotation, getTypenameFromQuery } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
 import { getActiveSpace } from '../../hooks';
@@ -71,9 +71,13 @@ export default Capability.makeModule(
             nextOrder.map(({ id }) => id),
           );
 
-          const [spacesOrder] = await client.spaces.default.db.query(Filter.type(Type.Expando, { key: SHARED })).run();
+          const [spacesOrder] = await client.spaces.default.db
+            .query(Filter.type(Expando.Expando, { key: SHARED }))
+            .run();
           if (spacesOrder) {
-            spacesOrder.order = nextOrder.map(({ id }) => id);
+            Obj.change(spacesOrder, (o) => {
+              o.order = nextOrder.map(({ id }) => id);
+            });
           } else {
             log.warn('spaces order object not found');
           }
@@ -178,7 +182,7 @@ export default Capability.makeModule(
 
           try {
             const [spacesOrder] = get(
-              AtomQuery.make(client.spaces.default.db, Filter.type(Type.Expando, { key: SHARED })),
+              AtomQuery.make(client.spaces.default.db, Filter.type(Expando.Expando, { key: SHARED })),
             );
 
             // Get order from spacesOrder snapshot using AtomObj (cached via Atom.family).

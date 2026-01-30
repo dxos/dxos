@@ -3,8 +3,9 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React from 'react';
+import React, { useMemo } from 'react';
 
+import { type SurfaceComponentProps } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
 import { faker } from '@dxos/random';
 import { withTheme } from '@dxos/react-ui/testing';
@@ -34,23 +35,26 @@ const createMockMessage = (): Message.Message =>
     },
   });
 
+// TODO(wittjosiah): ECHO objects don't work when passed via Storybook args.
+const MessageCardStory = ({ role }: Pick<SurfaceComponentProps<Message.Message>, 'role'>) => {
+  const subject = useMemo(() => createMockMessage(), []);
+  return (
+    <IntrinsicCardContainer>
+      <Card.Root>
+        <MessageCard role={role} subject={subject} />
+      </Card.Root>
+    </IntrinsicCardContainer>
+  );
+};
+
 const meta = {
   title: 'plugins/plugin-inbox/MessageCard',
-  component: MessageCard,
-  render: (args) => {
-    return (
-      <IntrinsicCardContainer>
-        <Card.Root>
-          <MessageCard {...args} />
-        </Card.Root>
-      </IntrinsicCardContainer>
-    );
-  },
+  component: MessageCardStory,
   decorators: [withTheme],
   parameters: {
     layout: 'fullscreen',
   },
-} satisfies Meta<typeof MessageCard>;
+} satisfies Meta<typeof MessageCardStory>;
 
 export default meta;
 
@@ -59,6 +63,5 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   args: {
     role: 'card--intrinsic',
-    subject: createMockMessage(),
   },
 };

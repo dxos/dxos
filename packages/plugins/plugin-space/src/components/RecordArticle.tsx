@@ -6,7 +6,7 @@ import React, { useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework/react';
 import { type SurfaceComponentProps } from '@dxos/app-framework/react';
-import { type Database, type Entity, Filter, Obj, Ref, Relation } from '@dxos/echo';
+import { type Database, Entity, Filter, Obj, Ref, Relation } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
@@ -56,7 +56,7 @@ const Card = ({ data: subject }: { data: Entity.Unknown }) => {
     <MosaicCard.Root>
       <MosaicCard.Toolbar>
         <span />
-        <MosaicCard.Title>{Obj.getLabel(subject)}</MosaicCard.Title>
+        <MosaicCard.Title>{Entity.getLabel(subject)}</MosaicCard.Title>
       </MosaicCard.Toolbar>
       <Surface role='card--content' data={data} limit={1} />
     </MosaicCard.Root>
@@ -66,7 +66,7 @@ const Card = ({ data: subject }: { data: Entity.Unknown }) => {
 // TODO(wittjosiah): This is a hack. ECHO needs to have a back reference index to easily query for related objects.
 const useRelatedObjects = (
   db?: Database.Database,
-  record?: Obj.Any,
+  record?: Obj.Unknown,
   options: { references?: boolean; relations?: boolean } = {},
 ) => {
   const objects = useQuery(db, Filter.everything());
@@ -79,10 +79,10 @@ const useRelatedObjects = (
 
     // TODO(burdon): Change Person => Organization to relations.
     if (options.references) {
-      const getReferences = (obj: Entity.Unknown): Ref.Any[] => {
+      const getReferences = (obj: Entity.Unknown): Ref.Unknown[] => {
         return Object.getOwnPropertyNames(obj)
-          .map((name) => obj[name as keyof Obj.Any])
-          .filter((value) => Ref.isRef(value)) as Ref.Any[];
+          .map((name) => obj[name as keyof Obj.Unknown])
+          .filter((value) => Ref.isRef(value)) as Ref.Unknown[];
       };
 
       const references = getReferences(record);
@@ -97,7 +97,7 @@ const useRelatedObjects = (
 
     if (options.relations) {
       // TODO(dmaretskyi): Workaround until https://github.com/dxos/dxos/pull/10100 lands.
-      const isValidRelation = (obj: Relation.Any) => {
+      const isValidRelation = (obj: Relation.Unknown) => {
         try {
           return Relation.isRelation(obj) && Relation.getSource(obj) && Relation.getTarget(obj);
         } catch {
@@ -105,7 +105,7 @@ const useRelatedObjects = (
         }
       };
 
-      const relations = objects.filter((obj) => Relation.isRelation(obj)).filter((obj) => isValidRelation(obj));
+      const relations = objects.filter(Relation.isRelation).filter((obj) => isValidRelation(obj));
       const targetObjects = relations
         .filter((relation) => Relation.getTarget(relation) === record)
         .map((relation) => Relation.getSource(relation));

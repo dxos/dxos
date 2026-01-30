@@ -5,9 +5,8 @@
 import type * as Schema from 'effect/Schema';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Obj, type Type } from '@dxos/echo';
+import { Entity, type Type } from '@dxos/echo';
 import { Ref, getValue } from '@dxos/echo/internal';
-import { getSnapshot } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { type Label, Popover } from '@dxos/react-ui';
 import { Form, type FormRootProps, type RefFieldProps } from '@dxos/react-ui-form';
@@ -21,7 +20,7 @@ import { narrowSchema } from '../../util';
 
 const createOptionLabel: Label = ['create new object label', { ns: translationKey }];
 
-export type OnCreateHandler = (schema: Schema.Schema.AnyNoContext, values: any) => Parameters<typeof Ref.make>[0];
+export type OnCreateHandler = (schema: Type.Entity.Any, values: any) => Parameters<typeof Ref.make>[0];
 
 export type FormCellEditorProps<T extends Type.Entity.Any = Type.Entity.Any> = {
   __gridScope: any;
@@ -84,8 +83,9 @@ export const FormCellEditor = <T extends Type.Entity.Any = Type.Entity.Any>({
     return undefined;
   }, [model, contextEditing]);
 
-  // NOTE: Important to get a snapshot to eject from the live object.
-  const formValues = useMemo(() => (originalRow ? getSnapshot(originalRow) : {}), [originalRow]);
+  // NOTE: Important to get a mutable deep clone to eject from the echo object.
+  // TODO(wittjosiah): Consider using something like Obj.clone for this use case.
+  const formValues = useMemo(() => (originalRow ? JSON.parse(JSON.stringify(originalRow)) : {}), [originalRow]);
 
   const handleOpenChange = useCallback((nextOpen: boolean) => {
     if (nextOpen === false) {
@@ -146,7 +146,7 @@ export const FormCellEditor = <T extends Type.Entity.Any = Type.Entity.Any>({
       results
         .map((obj) => {
           return {
-            id: Obj.getDXN(obj).toString(),
+            id: Entity.getDXN(obj).toString(),
             label: getValue(obj, fieldProjection.field.referencePath!) || obj.id.toString(),
           };
         })

@@ -5,9 +5,8 @@
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import type * as Schema from 'effect/Schema';
 
-import { Database } from '@dxos/echo';
+import { Database, type Type } from '@dxos/echo';
 import { type EchoDatabaseImpl, type QueueFactory } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import type { EchoHostIndexingConfig } from '@dxos/echo-pipeline';
@@ -28,7 +27,7 @@ const FIXED_SPACE_KEY = PublicKey.from('665c420e0dec9aa36c2bedca567afb0778701920
 
 export type TestDatabaseOptions = {
   indexing?: Partial<EchoHostIndexingConfig>;
-  types?: Schema.Schema.AnyNoContext[];
+  types?: Type.Entity.Any[];
   /**
    * Setting this to fixed will use the same space key for all tests.
    * Important for tests with memoization.

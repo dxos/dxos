@@ -42,7 +42,7 @@ const noViewers = new ComplexMap<PublicKey, ObjectViewerProps>(PublicKey.hash);
 const getName = (identity: Identity) => identity.profile?.displayName ?? generateName(identity.identityKey.toHex());
 
 export type SpacePresenceProps = {
-  object: Obj.Any;
+  object: Obj.Unknown;
   spaceId?: Key.SpaceId;
 };
 

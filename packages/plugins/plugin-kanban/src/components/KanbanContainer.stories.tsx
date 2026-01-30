@@ -10,6 +10,7 @@ import { expect, waitFor, within } from 'storybook/test';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj, type QueryAST, Type } from '@dxos/echo';
+import { type Mutable } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
@@ -68,7 +69,7 @@ const DefaultComponent = () => {
   const handleAddCard = useCallback(
     (columnValue: string | undefined) => {
       const path = model?.columnFieldPath;
-      if (space && schema && path) {
+      if (space && schema && Type.isObjectSchema(schema) && path) {
         const card = Obj.make(schema, {
           ...createOrg(),
           [path]: columnValue,
@@ -90,7 +91,9 @@ const DefaultComponent = () => {
       invariant(object.view.target);
 
       schema.updateTypename(getTypenameFromQuery(newQuery));
-      object.view.target.query.ast = newQuery;
+      Obj.change(object.view.target, (v) => {
+        v.query.ast = newQuery as Mutable<typeof newQuery>;
+      });
     },
     [object, schema],
   );

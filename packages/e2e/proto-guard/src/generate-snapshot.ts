@@ -12,6 +12,7 @@ import { hideBin } from 'yargs/helpers';
 import { Client } from '@dxos/client';
 import { Obj, Type } from '@dxos/echo';
 import { Ref } from '@dxos/echo/internal';
+import { TestSchema } from '@dxos/echo/testing';
 import { log } from '@dxos/log';
 import { STORAGE_VERSION } from '@dxos/protocols';
 import { CreateEpochRequest } from '@dxos/protocols/proto/dxos/client/services';
@@ -82,7 +83,7 @@ const main = async () => {
     await space.waitUntilReady();
 
     space.db.add(
-      Obj.make(Type.Expando, {
+      Obj.make(TestSchema.Expando, {
         value: 100,
         string: 'hello world!',
         array: ['one', 'two', 'three'],
@@ -96,7 +97,7 @@ const main = async () => {
     await promise;
     await space.db.flush();
 
-    const expando = space.db.add(Obj.make(Type.Expando, { value: [1, 2, 3] }));
+    const expando = space.db.add(Obj.make(TestSchema.Expando, { value: [1, 2, 3] }));
     const todo = space.db.add(
       Obj.make(Todo, {
         name: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
@@ -115,7 +116,7 @@ const main = async () => {
 
     // TODO(burdon): Should just be example.org/type/Test
     const TestType = Schema.Struct({}).pipe(
-      Type.Obj({
+      Type.object({
         typename: 'example.org/type/TestType',
         version: '0.1.0',
       }),

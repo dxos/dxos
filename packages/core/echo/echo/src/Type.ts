@@ -2,28 +2,31 @@
 // Copyright 2025 DXOS.org
 //
 
-import type * as Schema$ from 'effect/Schema';
+import * as Schema from 'effect/Schema';
 
 import { type EncodedReference } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
-import { type DXN } from '@dxos/keys';
+import { type DXN, type ObjectId } from '@dxos/keys';
 import { type ToMutable } from '@dxos/util';
 
 import type * as Entity$ from './Entity';
 import {
+  ANY_OBJECT_TYPENAME,
+  ANY_OBJECT_VERSION,
   type ATTR_RELATION_SOURCE,
   type ATTR_RELATION_TARGET,
+  type AnyEntity,
+  type AnyProperties,
   EchoObjectSchema,
   EchoRelationSchema,
   type EchoRelationSchemaOptions,
   EchoSchema,
-  Expando as Expando$,
-  type ExpandoEncoded,
+  EntityKind,
   PersistentSchema,
-  type PersistentSchemaEncoded,
   Ref as Ref$,
   type RefFn,
   type RefSchema,
+  SchemaKindId,
   type TypeAnnotation,
   type TypeMeta,
   getSchemaDXN,
@@ -45,125 +48,256 @@ export { toEffectSchema, toJsonSchema };
 export type Properties<T = any> = Omit<T, 'id' | Entity$.KindId | Relation$.Source | Relation$.Target>;
 
 //
-// Entity
+// Internal types (not exported)
 //
 
-export namespace Entity {
-  /**
-   * Type.Obj.Any | Type.Relation.Any.
-   */
-  export type Any = Obj.Any | Relation.Any;
-}
+/**
+ * Type that marks a schema as an ECHO schema.
+ * The value indicates the entity kind (Object or Relation).
+ */
+type EchoSchemaKind<K extends EntityKind = EntityKind> = {
+  readonly [SchemaKindId]: K;
+};
 
-//
-// Obj
-//
-
+/**
+ * JSON-encoded properties for objects.
+ */
 interface ObjJsonProps {
   id: string;
 }
 
 /**
- * Return type of the `Obj` schema constructor.
- *
- * This typedef avoids `TS4023` error (name from external module cannot be used named).
- * See Effect's note on interface types.
+ * JSON-encoded properties for relations.
  */
-export interface obj<Self extends Schema$.Schema.Any>
-  extends TypeMeta,
-    Schema$.AnnotableClass<
-      obj<Self>,
-      Entity$.OfKind<typeof Entity$.Kind.Object> & ToMutable<Schema$.Schema.Type<Self>>,
-      Schema$.Simplify<ObjJsonProps & ToMutable<Schema$.Schema.Encoded<Self>>>,
-      Schema$.Schema.Context<Self>
-    > {}
-
-/**
- * Object schema.
- */
-export const Obj: {
-  (opts: TypeMeta): <Self extends Schema$.Schema.Any>(self: Self) => obj<Self>;
-} = EchoObjectSchema as any;
-
-/**
- * Object schema type definitions.
- */
-export declare namespace Obj {
-  /**
-   * Type that represents an arbitrary schema type of an object.
-   * NOTE: This is not an instance type.
-   */
-  // TODO(dmaretskyi): If schema was covariant, we could specify props in here, like `id: ObjectId`.
-  export type Any = obj<Schema$.Schema.AnyNoContext>;
-}
-
-//
-// Expando
-//
-
-export const Expando: obj<Schema$.Schema<Expando$, ExpandoEncoded>> = Expando$ as any;
-export type Expando = obj<Schema$.Schema<Expando$, ExpandoEncoded>>;
-
-//
-// Schema
-//
-
-export const PersistentType: obj<Schema$.Schema<PersistentSchema, PersistentSchemaEncoded>> = PersistentSchema as any;
-export type PersistentType = obj<Schema$.Schema<PersistentSchema, PersistentSchemaEncoded>>;
-
-export { EchoSchema as RuntimeType };
-
-//
-// Relation
-//
-
 interface RelationJsonProps {
   id: string;
   [ATTR_RELATION_SOURCE]: string;
   [ATTR_RELATION_TARGET]: string;
 }
 
+//
+// Obj - Runtime schema for any ECHO object
+//
+
+// Internal type for the Obj schema constant.
+// NOTE: The `any` in the type intersection is intentional - it makes this type bidirectionally
+//   assignable with specific object types (e.g., Type.Obj can be assigned to/from Meeting.Meeting).
+//   This is needed because operation schemas erase type information.
+// TODO(wittjosiah): Consider alternatives to the `any` intersection hack:
+//   - Generic operation schemas that preserve input type in output
+//   - Branded types that specific schemas also carry
+//   - Accept the limitation and require explicit type narrowing at call sites
+type ObjSchemaType = Schema.Schema<
+  any & AnyEntity & Entity$.OfKind<typeof Entity$.Kind.Object> & AnyProperties,
+  { id: string } & AnyProperties
+> &
+  EchoSchemaKind<EntityKind.Object> &
+  TypeMeta;
+
+// Internal schema definition.
+// NOTE: The EchoObjectSchema annotation is required for Type.Ref(Type.Obj) to work.
+//   The typename/version only satisfy ECHO schema machinery for reference targets.
+const ObjSchema = Schema.Struct({
+  id: Schema.String,
+}).pipe(
+  Schema.extend(Schema.Record({ key: Schema.String, value: Schema.Unknown })),
+  EchoObjectSchema({ typename: ANY_OBJECT_TYPENAME, version: ANY_OBJECT_VERSION }),
+);
+
 /**
- * Return type of the `Relation` schema constructor.
+ * Runtime Effect schema for any ECHO object.
+ * Use for validation, parsing, or as a reference target for collections.
  *
- * This typedef avoids `TS4023` error (name from external module cannot be used named).
- * See Effect's note on interface types.
+ * NOTE: `Schema.is(Type.Obj)` does STRUCTURAL validation only (checks for `id` field).
+ * Use `Obj.isObject()` for proper ECHO instance type guards that check the KindId brand.
+ *
+ * @example
+ * ```ts
+ * // Structural type guard (accepts any object with id field)
+ * if (Schema.is(Type.Obj)(unknownValue)) { ... }
+ *
+ * // ECHO instance type guard (checks KindId brand)
+ * if (Obj.isObject(unknownValue)) { ... }
+ *
+ * // Reference to any object type
+ * const Collection = Schema.Struct({
+ *   objects: Schema.Array(Type.Ref(Type.Obj)),
+ * }).pipe(Type.object({ typename: 'Collection', version: '0.1.0' }));
+ * ```
  */
-export interface relation<
-  Self extends Schema$.Schema.Any,
-  SourceSchema extends Schema$.Schema.Any,
-  TargetSchema extends Schema$.Schema.Any,
+// TODO(wittjosiah): Investigate if Schema.filter can validate KindId on ECHO instances.
+//   Effect Schema normalizes proxy objects to plain objects before calling filter predicates.
+//   Possible approaches: custom Schema.declare, AST manipulation, or upstream contribution.
+export const Obj: ObjSchemaType = Object.assign(ObjSchema, {
+  [SchemaKindId]: (ObjSchema as any)[SchemaKindId],
+}) as unknown as ObjSchemaType;
+
+/**
+ * TypeScript type for an ECHO object schema.
+ * `T` is the instance type produced by the schema.
+ * `Fields` is the optional struct fields type for introspection.
+ *
+ * @example
+ * ```ts
+ * const PersonSchema: Type.Obj<Person> = Schema.Struct({
+ *   name: Schema.String,
+ * }).pipe(Type.object({ typename: 'Person', version: '0.1.0' }));
+ *
+ * // Access fields for introspection:
+ * Object.keys(PersonSchema.fields); // ['name']
+ * ```
+ */
+export interface Obj<T = any, Fields extends Schema.Struct.Fields = Schema.Struct.Fields>
+  extends TypeMeta,
+    EchoSchemaKind<EntityKind.Object>,
+    Schema.AnnotableClass<
+      Obj<T, Fields>,
+      Entity$.OfKind<typeof Entity$.Kind.Object> & T,
+      Schema.Simplify<ObjJsonProps & ToMutable<T>>,
+      never
+    > {
+  /**
+   * The fields defined in the original struct schema.
+   * Allows accessing field definitions for introspection.
+   */
+  readonly fields: Fields;
+}
+
+/**
+ * Structural base type for any ECHO object schema.
+ * Accepts both static schemas (created with Type.object()) and EchoSchema.
+ * NOTE: Does not include the brand symbol to avoid TS4053 declaration portability issues.
+ * Use Type.isObjectSchema() for runtime type guards.
+ */
+type ObjectSchemaBase = Schema.Schema.AnyNoContext & {
+  readonly typename: string;
+  readonly version: string;
+};
+
+export namespace Obj {
+  /**
+   * Type that represents any ECHO object schema.
+   * Accepts both static schemas (Type.object()) and mutable schemas (EchoSchema).
+   */
+  export type Any = ObjectSchemaBase;
+}
+
+/**
+ * Factory function to create an ECHO object schema.
+ * Adds object metadata annotations to an Effect schema.
+ *
+ * @example
+ * ```ts
+ * const Person = Schema.Struct({
+ *   name: Schema.String,
+ * }).pipe(Type.object({ typename: 'example.com/type/Person', version: '0.1.0' }));
+ * ```
+ */
+export const object: {
+  (opts: TypeMeta): <Self extends Schema.Schema.Any>(self: Self) => Obj<Schema.Schema.Type<Self>>;
+} = EchoObjectSchema as any;
+
+//
+// PersistentType (Schema stored in database)
+//
+
+export const PersistentType: Obj<PersistentSchema> = PersistentSchema as any;
+
+export interface PersistentType extends Schema.Schema.Type<typeof PersistentType> {}
+
+export { EchoSchema as RuntimeType };
+
+//
+// Relation - Runtime schema for any ECHO relation
+//
+
+// Internal type for the Relation schema constant.
+type RelationSchemaType = Schema.Schema<
+  { id: ObjectId } & Record<string, unknown>,
+  { id: string } & Record<string, unknown>
+> &
+  EchoSchemaKind<EntityKind.Relation> &
+  TypeMeta;
+
+// Internal schema definition.
+// NOTE: The EchoRelationSchema annotation is required for Type.Ref(Type.Relation) to work.
+//   The typename/version/source/target only satisfy ECHO schema machinery for reference targets.
+const RelationSchema = Schema.Struct({
+  id: Schema.String,
+}).pipe(
+  Schema.extend(Schema.Record({ key: Schema.String, value: Schema.Unknown })),
+  EchoRelationSchema({
+    typename: 'dxos.org/schema/AnyRelation',
+    version: '0.0.0',
+    source: ObjSchema,
+    target: ObjSchema,
+  }),
+);
+
+/**
+ * Runtime Effect schema for any ECHO relation.
+ * Use for validation, parsing, or as a reference target for collections.
+ * A relation has `id`, source, and target fields plus any additional properties.
+ *
+ * NOTE: `Schema.is(Type.Relation)` does STRUCTURAL validation only (checks for `id` field).
+ * Use `Relation.isRelation()` for proper ECHO instance type guards that check the KindId brand.
+ *
+ * @example
+ * ```ts
+ * // Structural type guard (accepts any object with id field)
+ * if (Schema.is(Type.Relation)(unknownValue)) { ... }
+ *
+ * // ECHO instance type guard (checks KindId brand)
+ * if (Relation.isRelation(unknownValue)) { ... }
+ * ```
+ */
+export const Relation: RelationSchemaType = Object.assign(RelationSchema, {
+  [SchemaKindId]: (RelationSchema as any)[SchemaKindId],
+}) as unknown as RelationSchemaType;
+
+/**
+ * TypeScript type for an ECHO relation schema.
+ * `T` is the instance type produced by the schema (excluding source/target).
+ * `Source` and `Target` are the endpoint types.
+ * `Fields` is the optional struct fields type for introspection.
+ */
+export interface Relation<
+  T = any,
+  Source = any,
+  Target = any,
+  Fields extends Schema.Struct.Fields = Schema.Struct.Fields,
 > extends TypeMeta,
-    Schema$.AnnotableClass<
-      relation<Self, SourceSchema, TargetSchema>,
-      Entity$.OfKind<typeof Entity$.Kind.Relation> &
-        Relation.Endpoints<Schema$.Schema.Type<SourceSchema>, Schema$.Schema.Type<TargetSchema>> &
-        ToMutable<Schema$.Schema.Type<Self>>,
-      Schema$.Simplify<RelationJsonProps & ToMutable<Schema$.Schema.Encoded<Self>>>,
-      Schema$.Schema.Context<Self>
-    > {}
+    EchoSchemaKind<EntityKind.Relation>,
+    Schema.AnnotableClass<
+      Relation<T, Source, Target, Fields>,
+      Entity$.OfKind<typeof Entity$.Kind.Relation> & Relation.Endpoints<Source, Target> & T,
+      Schema.Simplify<RelationJsonProps & ToMutable<T>>,
+      never
+    > {
+  /**
+   * The fields defined in the original struct schema.
+   * Allows accessing field definitions for introspection.
+   */
+  readonly fields: Fields;
+}
 
 /**
- * Relation schema.
+ * Structural base type for any ECHO relation schema.
+ * Accepts static schemas (created with Type.relation()).
+ * NOTE: Does not include the brand symbol to avoid TS4053 declaration portability issues.
+ * Use Type.isRelationSchema() for runtime type guards.
  */
-// TODO(dmaretskyi): I have to redefine the type here so that the definition uses symbols from @dxos/echo/Relation.
-// TODO(burdon): Remove?
-export const Relation: {
-  <Source extends Schema$.Schema.AnyNoContext, Target extends Schema$.Schema.AnyNoContext>(
-    opts: EchoRelationSchemaOptions<Source, Target>,
-  ): <Self extends Schema$.Schema.Any>(self: Self) => relation<Self, Source, Target>;
-} = EchoRelationSchema as any;
+type RelationSchemaBase = Schema.Schema.AnyNoContext & {
+  readonly typename: string;
+  readonly version: string;
+};
 
-/**
- * Relation schema type definitions.
- */
 export namespace Relation {
   /**
-   * Type that represents an arbitrary schema type of a relation.
-   * NOTE: This is not an instance type.
+   * Type that represents any ECHO relation schema.
+   * Accepts static schemas (Type.relation()).
    */
-  // TODO(dmaretskyi): If schema was covariant, we could specify props in here, like `id: ObjectId`.
-  export type Any = Schema$.Schema.AnyNoContext;
+  export type Any = RelationSchemaBase;
 
   /**
    * Get relation source type.
@@ -181,9 +315,84 @@ export namespace Relation {
   };
 }
 
+/**
+ * Factory function to create an ECHO relation schema.
+ * Adds relation metadata annotations to an Effect schema.
+ *
+ * @example
+ * ```ts
+ * const WorksFor = Schema.Struct({
+ *   role: Schema.String,
+ * }).pipe(Type.relation({
+ *   typename: 'example.com/type/WorksFor',
+ *   version: '0.1.0',
+ *   source: Person,
+ *   target: Company,
+ * }));
+ * ```
+ */
+export const relation: {
+  <SourceSchema extends Schema.Schema.AnyNoContext, TargetSchema extends Schema.Schema.AnyNoContext>(
+    opts: EchoRelationSchemaOptions<SourceSchema, TargetSchema>,
+  ): <Self extends Schema.Schema.Any>(
+    self: Self,
+  ) => Relation<Schema.Schema.Type<Self>, Schema.Schema.Type<SourceSchema>, Schema.Schema.Type<TargetSchema>>;
+} = EchoRelationSchema as any;
+
+//
+// Entity - Entity schema types (union of Object | Relation)
+//
+
+export namespace Entity {
+  /**
+   * Runtime Effect schema for any ECHO entity (object or relation).
+   * Use for validation, parsing, or type guards on unknown values.
+   *
+   * @example
+   * ```ts
+   * if (Schema.is(Type.Entity.Any)(unknownValue)) {
+   *   // unknownValue is an ECHO entity
+   * }
+   * ```
+   */
+  export const Any: Schema.Schema<
+    { id: ObjectId } & Record<string, unknown>,
+    { id: string } & Record<string, unknown>
+  > = Schema.Union(Obj, Relation);
+
+  /**
+   * Type alias for any ECHO entity schema (object or relation).
+   * Use this in type annotations for schema parameters.
+   */
+  export type Any = Obj.Any | Relation.Any;
+}
+
+/**
+ * Type guard to check if a schema is an object schema.
+ * NOTE: This checks SCHEMAS, not instances. Use Obj.isObject for instances.
+ */
+export const isObjectSchema = (schema: Entity.Any): schema is Obj.Any => {
+  return (schema as any)[SchemaKindId] === EntityKind.Object;
+};
+
+/**
+ * Type guard to check if a schema is a relation schema.
+ * NOTE: This checks SCHEMAS, not instances. Use Relation.isRelation for instances.
+ */
+export const isRelationSchema = (schema: Entity.Any): schema is Relation.Any => {
+  return (schema as any)[SchemaKindId] === EntityKind.Relation;
+};
+
 //
 // Ref
-// TODO(burdon): Reconcile Type.Ref with Ref.Ref.
+//
+// NOTE: `Type.Ref` vs `Ref.Ref`:
+// - `Type.Ref<T>` is the SCHEMA type - a schema that produces `Ref.Ref<T>` instances.
+// - `Ref.Ref<T>` is the INSTANCE type - the actual runtime ref object.
+//
+// Example:
+//   const taskRef: Ref.Ref<Task> = Ref.make(task);  // Instance
+//   const schema: Type.Ref<Task> = Type.Ref(Task);  // Schema
 //
 
 /**
@@ -192,22 +401,48 @@ export namespace Relation {
  * This typedef avoids `TS4023` error (name from external module cannot be used named).
  * See Effect's note on interface types.
  */
-export interface ref<TargetSchema extends Schema$.Schema.Any> extends RefSchema<Schema$.Schema.Type<TargetSchema>> {}
+export interface ref<TargetSchema extends Schema.Schema.Any> extends RefSchema<Schema.Schema.Type<TargetSchema>> {}
 
 /**
- * Ref schema.
+ * Factory function to create a Ref schema for the given target schema.
+ * Use this in schema definitions to declare reference fields.
+ *
+ * @example
+ * ```ts
+ * const Task = Schema.Struct({
+ *   assignee: Type.Ref(Person),  // Creates a Ref schema
+ * }).pipe(Type.object({ typename: 'Task', version: '0.1.0' }));
+ * ```
  */
 export const Ref: RefFn = Ref$;
 
-export interface Ref<T> extends Schema$.SchemaClass<Ref$<T>, EncodedReference> {}
+/**
+ * TypeScript type for a Ref schema.
+ * This is the type of the SCHEMA itself, not the runtime ref instance.
+ * For the instance type, use `Ref.Ref<T>` from the Ref module.
+ *
+ * @example
+ * ```ts
+ * // Schema type annotation (rarely needed, usually inferred):
+ * const refSchema: Type.Ref<Task> = Type.Ref(Task);
+ *
+ * // Instance type annotation (use Ref.Ref instead):
+ * const refInstance: Ref.Ref<Task> = Ref.make(task);
+ * ```
+ */
+export interface Ref<T> extends Schema.SchemaClass<Ref$<T>, EncodedReference> {}
 
 export namespace Ref {
   /**
-   * Type that represents an arbitrary schema type of a reference.
-   * NOTE: This is not an instance type.
+   * Type that represents any Ref schema (with unknown target type).
+   * This is a schema type, not an instance type.
    */
-  export type Any = Schema$.Schema<Ref$<any>, EncodedReference>;
+  export type Any = Schema.Schema<Ref$<any>, EncodedReference>;
 }
+
+//
+// Schema utility functions
+//
 
 /**
  * Gets the full DXN of the schema.

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import type { HasId } from '@dxos/echo/internal';
+import { type AnyEntity } from '@dxos/echo/internal';
 import type { DXN, SpaceId } from '@dxos/keys';
 import type { QueryResult } from '@dxos/protocols';
 
@@ -15,7 +15,7 @@ import type { ServiceContainer } from './internal';
  */
 export interface QueuesAPI {
   queryQueue(queue: DXN, options?: {}): Promise<QueryResult>;
-  insertIntoQueue(queue: DXN, objects: HasId[]): Promise<void>;
+  insertIntoQueue(queue: DXN, objects: AnyEntity[]): Promise<void>;
 }
 
 /**
@@ -31,7 +31,7 @@ export class QueuesAPIImpl implements QueuesAPI {
     return this._serviceContainer.queryQueue(queue);
   }
 
-  insertIntoQueue(queue: DXN, objects: HasId[]): Promise<void> {
+  insertIntoQueue(queue: DXN, objects: AnyEntity[]): Promise<void> {
     // TODO(dmaretskyi): Ugly.
     return this._serviceContainer.insertIntoQueue(queue, JSON.parse(JSON.stringify(objects)));
   }

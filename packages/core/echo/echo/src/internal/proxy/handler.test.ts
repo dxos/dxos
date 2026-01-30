@@ -14,6 +14,7 @@ import { ATTR_META } from '../types';
 
 import { makeObject } from './make-object';
 import { objectData } from './proxy-types';
+import { change } from './reactive';
 
 describe('proxy', () => {
   test.skipIf(!isNode())('inspect', ({ expect }) => {
@@ -56,15 +57,19 @@ const TEST_OBJECT: TestSchema.ExampleSchema = {
       });
     });
 
+    // TODO(wittjosiah): Should we prevent this?
     test('can assign class instances', () => {
       const obj = createObject();
 
       const classInstance = new TestSchema.TestClass();
-      obj.classInstance = classInstance;
+      change(obj, (o) => {
+        o.classInstance = classInstance;
+      });
       expect(obj.classInstance!.field).to.eq('value');
       expect(obj.classInstance instanceof TestSchema.TestClass).to.eq(true);
       expect(obj.classInstance === classInstance).to.be.true;
 
+      // Class instances are not wrapped in proxies, so direct mutation works.
       obj.classInstance!.field = 'baz';
       expect(obj.classInstance!.field).to.eq('baz');
     });

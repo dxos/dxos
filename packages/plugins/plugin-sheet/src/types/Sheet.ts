@@ -70,7 +70,7 @@ export const Sheet = Schema.Struct({
   // Cell formatting referenced by indexed range.
   ranges: Schema.Array(Range).pipe(Schema.mutable, FormInputAnnotation.set(false)),
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/Sheet',
     version: '0.1.0',
   }),
@@ -86,18 +86,21 @@ export type SheetProps = {
 export const make = ({ name, cells = {}, ...size }: SheetProps = {}) => {
   const sheet = Obj.make(Sheet, { name, cells: {}, rows: [], columns: [], rowMeta: {}, columnMeta: {}, ranges: [] });
 
-  initialize(sheet, size);
+  // Initialize and set cells within Obj.change to satisfy change context requirements.
+  Obj.change(sheet, () => {
+    initialize(sheet, size);
 
-  if (cells) {
-    Object.entries(cells).forEach(([key, { value }]) => {
-      const idx = addressToIndex(sheet, addressFromA1Notation(key));
-      if (isFormula(value)) {
-        value = mapFormulaRefsToIndices(sheet, value);
-      }
+    if (cells) {
+      Object.entries(cells).forEach(([key, { value }]) => {
+        const idx = addressToIndex(sheet, addressFromA1Notation(key));
+        if (isFormula(value)) {
+          value = mapFormulaRefsToIndices(sheet, value);
+        }
 
-      sheet.cells[idx] = { value };
-    });
-  }
+        sheet.cells[idx] = { value };
+      });
+    }
+  });
 
   return sheet;
 };

@@ -4,6 +4,7 @@
 
 import React, { useMemo } from 'react';
 
+import { Obj } from '@dxos/echo';
 import { createDocAccessor } from '@dxos/echo-db';
 import { type Script } from '@dxos/functions';
 import { getSpace } from '@dxos/react-client/echo';
@@ -44,7 +45,9 @@ export const ScriptContainer = ({ role, script, settings = { editorInputMode: 'v
       listener({
         onChange: ({ text }) => {
           if (script.source.target?.content !== text) {
-            script.changed = true;
+            Obj.change(script, (s) => {
+              s.changed = true;
+            });
           }
         },
       }),

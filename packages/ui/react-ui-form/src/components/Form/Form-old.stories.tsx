@@ -292,7 +292,7 @@ export const Enum: StoryObj<StoryProps<ColorType>> = {
 //   optionalContact: Schema.optional(Type.Ref(TestSchema.Person).annotations({ title: 'Optional Contact Reference' })),
 //   refArray: Schema.optional(Schema.Array(Type.Ref(TestSchema.Person))),
 //   unknownExpando: Schema.optional(
-//     Type.Ref(Type.Expando).annotations({ title: 'Optional Ref to an Expando (DXN Input)' }),
+//     Type.Ref(TestSchema.Expando).annotations({ title: 'Optional Ref to an Expando (DXN Input)' }),
 //   ),
 // });
 

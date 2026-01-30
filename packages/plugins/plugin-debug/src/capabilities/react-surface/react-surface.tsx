@@ -106,7 +106,7 @@ export default Capability.makeModule(
           const { invokePromise } = useOperationInvoker();
 
           const handleCreateObject = useCallback(
-            (objects: Obj.Any[]) => {
+            (objects: Obj.Unknown[]) => {
               if (!isSpace(data.subject.space)) {
                 return;
               }
@@ -145,7 +145,7 @@ export default Capability.makeModule(
         id: `${meta.id}/wireframe`,
         role: ['article', 'section'],
         position: 'hoist',
-        filter: (data): data is { subject: Obj.Any } => {
+        filter: (data): data is { subject: Obj.Unknown } => {
           const settings = registry.get(settingsAtom);
           return Obj.isObject(data.subject) && !!settings.wireframe;
         },
@@ -156,7 +156,8 @@ export default Capability.makeModule(
       Common.createSurface({
         id: `${meta.id}/object-debug`,
         role: 'article',
-        filter: (data): data is { companionTo: Obj.Any } => data.subject === 'debug' && Obj.isObject(data.companionTo),
+        filter: (data): data is { companionTo: Obj.Unknown } =>
+          data.subject === 'debug' && Obj.isObject(data.companionTo),
         component: ({ data }) => <DebugObjectPanel object={data.companionTo} />,
       }),
       Common.createSurface({

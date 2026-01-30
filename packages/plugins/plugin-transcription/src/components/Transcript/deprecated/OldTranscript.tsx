@@ -43,7 +43,7 @@ const TranscriptBlock = Schema.Struct({
   authorHue: Schema.optional(Schema.String), // TOOD(burdon): Remove.
   segments: Schema.Array(TranscriptSegment),
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/TranscriptBlock',
     version: '0.1.0',
   }),

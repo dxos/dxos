@@ -11,7 +11,7 @@
 - [x] Entity.Any = Obj.Any | Relation.Any
   - NOTE: Relation does not extend (in not polymorphic with) Obj.
 - [x] import LabelAnnotation => Annotation.LabelAnnotation
-- [x] import Expando => Type.Expando
+- [x] import Expando => @dxos/schema (Expando.Expando)
 - [x] live => Obj.make
 - [x] Rename live => makeObject
 - [x] Rename {EchoObject, EchoRelation} => {EchoObjecSchema, EchoRelationSchema}
@@ -23,7 +23,7 @@
 - [x] TODO(burdon): FIX!!!
 - [x] Fix failing tests.
 - [x] Reconcile types/version with entities/model/version
-- [x] Type.Expando => Obj.Any
+- [x] Expando moved to @dxos/schema
 - [x] Narrow QueryResult and match Schema and Object generics.
 
 2. Clean-up
@@ -33,27 +33,37 @@
 - [x] Schema registry should return Type.Entity.Any instead of Schema.Schema.AnyNoContext.
 - [x] Hypergraph interface
 - [x] Obj.getDatabase
+- [x] SpaceAction.AddObject target should be a db not a space.
+- [x] Add Relation.MakeProps
+- [x] Add Obj.Unknown and Relation.Unknown to match Entity.Unknown.
+- [x] TODO(wittjosiah): Should be Type.obj<...> or equivalent.
+- [x] TODO(wittjosiah): Find a simpler way to define this type.
+- [x] Ref.Array.targets doesn't satisfy Obj.Any because it uses AnyEchoObject.
+- [x] Remove echo-db/AnyLiveObject<T> => Obj.Obj<T>
+- [x] Rename AnyEchoObject => AnyEntity
+- [x] Remove WithId => AnyEntity
+- [x] Remove WithMeta => AnyEntity
+- [x] Obj.Any => Obj.Unknown
+- [x] Relation.Any => Relation.Unknown
+- [x] Ref.Any => Ref.Unknown
+- [x] Obj.AnyProps => Obj.Any
+- [x] Factor Expando out of @dxos/echo (moved to @dxos/schema)
+- [x] Obj.instanceOf works with Expando (tested in @dxos/schema)
+- [x] Obj.Snapshot should be same shape as Obj.Obj but with a different brand
+- [x] Mutators should only work on object after it is made mutable
+
+- [ ] Review usage of Obj.Any, see if it could be stricter
+- [ ] Type.Obj should validate using the echo object brand
+- [ ] Mutable could be a branded type to fix "NOTE: TypeScript's structural typing allows readonly objects to be passed to `Mutable<T>`"
 - [ ] space properties, queues, messagins preventing getSpace from being removed
-- [ ] SpaceAction.AddObject target should be a db not a space.
 - [ ] Schema registry should use Query.Query.
-- [ ] TODO(wittjosiah): Find a simpler way to define this type.
-- [ ] TODO(wittjosiah): Should be Type.obj<...> or equivalent.
-- [ ] Fix Obj.instanceOf(Type.Expando...
-- [ ] Add Obj.Unknown and Relation.Unknown to match Entity.Unknown.
-- [ ] Ref.Array.targets doesn't satisfy Obj.Any because it uses AnyEchoObject.
-- [ ] Add Relation.MakeProps
-- [ ] Remove echo-db/AnyLiveObject<T> => Obj.Obj<T>
-- [ ] Narrow QueryResult and match Schema and Object generics.
-- [ ] Directly import JSONPath, etc. from @dxos/effect.
-- [ ] DISCUSS: Standradize $ suffix to disambuguate imports (GPT recommended).
-- [ ] Reconcile Type.Ref with Ref.Ref
-- [ ] Promote parts of src/internal/ref to Ref.ts
-- [ ] Rename AnyEchoObject => AnyEntity? (or accept that Object != Obj from naming perspective.)
-- [ ] Remove WithId => AnyEchoObject
-- [ ] Remove WithMeta => AnyEchoObject
-- [ ] BaseSchema
-- [ ] JsonPath, JsonProp, getValue, setValue => Json.Path?
 - [ ] Move EchoSchemaRegistry into hypergraph
+- [ ] Narrow QueryResult and match Schema and Object generics.
+- [ ] BaseSchema
+- [ ] Directly import JSONPath, etc. from @dxos/effect.
+- [ ] Promote parts of src/internal/ref to Ref.ts
+- [ ] JsonPath, JsonProp, getValue, setValue => Json.Path?
+- [ ] DISCUSS: Standradize $ suffix to disambuguate imports (GPT recommended).
 
 3. Audit usage from @dxos/echo-db
 

@@ -2,14 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Filter, type Query } from '@dxos/echo';
+import { Filter, type Obj, type Query } from '@dxos/echo';
 import { EncodedReference as EncodedRef, type EncodedReference } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { deepMapValues, isNonNullable, stripUndefined } from '@dxos/util';
 
 import { ObjectCore } from './core-db';
-import { type AnyLiveObject, getObjectCore } from './echo-handler';
+import { getObjectCore } from './echo-handler';
 import { type EchoDatabase } from './proxy-db';
 import type { SerializedObject, SerializedSpace } from './serialized-space';
 
@@ -32,7 +32,7 @@ export class Serializer {
   static version = 1;
 
   async export(database: EchoDatabase, query?: Query.Any): Promise<SerializedSpace> {
-    const loadedObjects: Array<AnyLiveObject<any> | undefined> = [];
+    const loadedObjects: Array<Obj.Any | undefined> = [];
 
     if (query) {
       const objects = await database.query(query).run();
@@ -70,7 +70,7 @@ export class Serializer {
     await database.flush();
   }
 
-  exportObject(object: AnyLiveObject<any>): SerializedObject {
+  exportObject(object: Obj.Any): SerializedObject {
     const core = getObjectCore(object);
 
     // TODO(dmaretskyi): Unify JSONinfication with echo-handler.

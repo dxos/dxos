@@ -6,6 +6,7 @@
 export { JsonPath, JsonProp, getValue, splitJsonPath } from '@dxos/effect';
 
 export * from './annotations';
+export * from './api';
 export * from './entities';
 export * from './formats';
 export * from './json-schema';

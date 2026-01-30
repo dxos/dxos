@@ -37,6 +37,7 @@ export const TraceEventException = Schema.Struct({
   name: Schema.String,
   stack: Schema.optional(Schema.String),
 });
+
 export type TraceEventException = Schema.Schema.Type<typeof TraceEventException>;
 
 export const InvocationTraceStartEvent = Schema.Struct({
@@ -65,7 +66,7 @@ export const InvocationTraceStartEvent = Schema.Struct({
   /**
    * DXN of the invoked function/workflow.
    */
-  invocationTarget: Schema.optional(Type.Ref(Obj.Any)),
+  invocationTarget: Schema.optional(Type.Ref(Type.Obj)),
   /**
    * Present for automatic invocations.
    */
@@ -74,9 +75,14 @@ export const InvocationTraceStartEvent = Schema.Struct({
    * Runtime executing the function.
    */
   runtime: Schema.optional(FunctionRuntimeKind),
-}).pipe(Type.Obj({ typename: 'dxos.org/type/InvocationTraceStart', version: '0.1.0' }));
+}).pipe(
+  Type.object({
+    typename: 'dxos.org/type/InvocationTraceStart',
+    version: '0.1.0',
+  }),
+);
 
-export type InvocationTraceStartEvent = Schema.Schema.Type<typeof InvocationTraceStartEvent>;
+export interface InvocationTraceStartEvent extends Schema.Schema.Type<typeof InvocationTraceStartEvent> {}
 
 export const InvocationTraceEndEvent = Schema.Struct({
   /**
@@ -97,9 +103,14 @@ export const InvocationTraceEndEvent = Schema.Struct({
   outcome: Schema.Enums(InvocationOutcome),
 
   error: Schema.optional(SerializedError),
-}).pipe(Type.Obj({ typename: 'dxos.org/type/InvocationTraceEnd', version: '0.1.0' }));
+}).pipe(
+  Type.object({
+    typename: 'dxos.org/type/InvocationTraceEnd',
+    version: '0.1.0',
+  }),
+);
 
-export type InvocationTraceEndEvent = Schema.Schema.Type<typeof InvocationTraceEndEvent>;
+export interface InvocationTraceEndEvent extends Schema.Schema.Type<typeof InvocationTraceEndEvent> {}
 
 export type InvocationTraceEvent = InvocationTraceStartEvent | InvocationTraceEndEvent;
 
@@ -119,7 +130,7 @@ export const TraceEvent = Schema.Struct({
   ingestionTimestamp: Schema.Number,
   logs: Schema.Array(TraceEventLog),
   exceptions: Schema.Array(TraceEventException),
-}).pipe(Type.Obj({ typename: 'dxos.org/type/TraceEvent', version: '0.1.0' }));
+}).pipe(Type.object({ typename: 'dxos.org/type/TraceEvent', version: '0.1.0' }));
 
 export type TraceEvent = Schema.Schema.Type<typeof TraceEvent>;
 
@@ -134,7 +145,7 @@ export type InvocationSpan = {
   outcome: InvocationOutcome;
   input: object;
   invocationTraceQueue?: Ref.Ref<Queue>;
-  invocationTarget?: Ref.Ref<Obj.Any>;
+  invocationTarget?: Ref.Ref<Obj.Unknown>;
   trigger?: Ref.Ref<Trigger.Trigger>;
   error?: SerializedError;
   runtime?: FunctionRuntimeKind;
@@ -203,7 +214,7 @@ export namespace TracingServiceExt {
   export const layerQueue = (queue: Queue): Layer.Layer<TracingService> =>
     Layer.succeed(TracingService, {
       getTraceContext: () => ({}),
-      write: (event: Obj.Any) => {
+      write: (event: Obj.Unknown) => {
         void queue.append([event]).catch((error) => {
           log.warn('Failed to write trace event to queue', { error });
         });
@@ -218,7 +229,7 @@ export namespace TracingServiceExt {
   export const layerLogInfo = (): Layer.Layer<TracingService> =>
     Layer.succeed(TracingService, {
       getTraceContext: () => ({}),
-      write: (event: Obj.Any, context: TracingService.TraceContext) => {
+      write: (event: Obj.Unknown, context: TracingService.TraceContext) => {
         log.info('trace event', { event });
       },
       traceInvocationStart: ({ payload, target }) =>
