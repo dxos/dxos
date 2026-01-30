@@ -1044,15 +1044,71 @@ export class QueryExecutor extends Resource {
 
     const recordIds = rows
       .filter((row) => {
-        const path = EscapedPropPath.unescape(row.propPath);
-        const firstSegmentMatches = property === null ? true : path[0] === EscapedPropPath.unescape(property)[0];
-        const secondSegmentIsNumeric = path.length === 2 && !isNaN(Number(path[1]));
-        return firstSegmentMatches && (path.length === 1 || secondSegmentIsNumeric);
+        if (property === null) {
+          return true;
+        }
+
+        const queryPath = EscapedPropPath.unescape(property);
+        if (queryPath.length !== 1) {
+          throw new Error(
+            `SQL incoming reference traversal currently supports only direct reference properties (single segment). Received: ${property}`,
+          );
+        }
+
+        const rowPath = EscapedPropPath.unescape(row.propPath);
+        return QueryExecutor._matchesReferencePropertyPath(rowPath, queryPath);
       })
       .map((row) => row.recordId);
 
     const uniqueRecordIds = Array.from(new Set<number>(recordIds));
     return await this._runInRuntime(indexer2.lookupByRecordIds(uniqueRecordIds));
+  }
+
+  /**
+   * Matches a reverse-reference row path against a query property path.
+   * Allows numeric segments in the row path (array indices) that are not present in the query.
+   *
+   * Examples:
+   * - query: ['assignee'] matches row: ['assignee'] and ['assignee', '0'].
+   * - query: ['items', 'assignee'] matches row: ['items', '0', 'assignee'].
+   * - query: ['a', 'b'] does NOT match row: ['a'].
+   * - query: ['a'] does NOT match row: ['a', 'b'].
+   */
+  private static _matchesReferencePropertyPath(rowPath: readonly string[], queryPath: readonly string[]): boolean {
+    const isNumericSegment = (segment: string) => /^[0-9]+$/.test(segment);
+
+    let i = 0; // queryPath index.
+    let j = 0; // rowPath index.
+
+    while (i < queryPath.length && j < rowPath.length) {
+      if (rowPath[j] === queryPath[i]) {
+        i++;
+        j++;
+        continue;
+      }
+
+      // Row may contain array indices that aren't present in the query path.
+      if (isNumericSegment(rowPath[j])) {
+        j++;
+        continue;
+      }
+
+      return false;
+    }
+
+    // Must consume full query path.
+    if (i !== queryPath.length) {
+      return false;
+    }
+
+    // Any remaining row segments must be numeric (array indices).
+    for (; j < rowPath.length; j++) {
+      if (!isNumericSegment(rowPath[j])) {
+        return false;
+      }
+    }
+
+    return true;
   }
 
   private async _queryRelationsFromSqlIndex(

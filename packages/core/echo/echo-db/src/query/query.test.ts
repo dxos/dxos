@@ -304,6 +304,37 @@ describe('Query', () => {
       expect(obj.title).toEqual('Queue type selector task');
       expect(Obj.getDXN(obj)?.toString().startsWith(queue.dxn.toString())).toBe(true);
     });
+
+    test('sqlIndex: referencedBy supports only direct reference properties (single segment)', async () => {
+      const { db } = await builder.createDatabase({ indexing: { sqlIndex: true }, types: [TestSchema.Person] });
+
+      const person = db.add(Obj.make(TestSchema.Person, { name: 'Alice' }));
+
+      db.add(
+        Obj.make(Type.Expando, {
+          name: 'direct',
+          a: Ref.make(person),
+        }),
+      );
+
+      db.add(
+        Obj.make(Type.Expando, {
+          name: 'nested',
+          a: { b: Ref.make(person) },
+        }),
+      );
+
+      await db.flush({ indexes: true });
+
+      await expect(
+        db.query(Query.select(Filter.type(TestSchema.Person, { name: 'Alice' })).referencedBy(Type.Expando, 'a.b')).run(),
+      ).rejects.toThrow(/only direct reference properties/i);
+
+      const direct = await db
+        .query(Query.select(Filter.type(TestSchema.Person, { name: 'Alice' })).referencedBy(Type.Expando, 'a'))
+        .run();
+      expect(direct.map((o) => o.name).sort()).toEqual(['direct']);
+    });
   });
 
   test('query.run() queries everything after restart', async () => {
