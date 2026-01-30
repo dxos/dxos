@@ -37,7 +37,7 @@ const meta: Meta<typeof Stack<Obj.Any>> = {
     ),
     getId: (item) => item.id,
     Tile: Mosaic.DefaultStackTile,
-    debug: true,
+    // debug: true,
   },
 };
 
@@ -58,7 +58,7 @@ export const Default: Story = {
           asChild
           axis='vertical'
           autoScroll={viewportRef.current}
-          eventHandler={{ id: 'test' }}
+          eventHandler={{ id: 'test', canDrop: () => true }}
           debug={debugHandler}
         >
           <Mosaic.Viewport options={{ overflow: { y: 'scroll' } }} viewportRef={viewportRef}>
@@ -85,7 +85,7 @@ export const Virtual: Story = {
           asChild
           axis='vertical'
           autoScroll={viewportRef.current}
-          eventHandler={{ id: 'test' }}
+          eventHandler={{ id: 'test', canDrop: () => true }}
           debug={debugHandler}
         >
           <Mosaic.Viewport options={{ overflow: { y: 'scroll' } }} viewportRef={viewportRef}>

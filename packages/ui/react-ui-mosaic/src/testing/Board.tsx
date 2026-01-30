@@ -68,10 +68,10 @@ export const Board = forwardRef<HTMLDivElement, BoardProps>(({ id, columns, debu
   const eventHandler = useEventHandlerAdapter({
     id,
     items: columns,
-    getId: (item) => item.id,
-    canDrop: ({ source }) => Obj.instanceOf(TestColumn, source.data),
-    get: (item) => item,
+    getId: (data) => data.id,
+    get: (data) => data,
     make: (object) => object,
+    canDrop: ({ source }) => Obj.instanceOf(TestColumn, source.data),
   });
 
   return (
@@ -120,10 +120,10 @@ export const Column = forwardRef<HTMLDivElement, ColumnProps>(({ classNames, loc
   const eventHandler = useEventHandlerAdapter<Ref.Any>({
     id: data.id,
     items: column.items,
-    getId: (item) => item.dxn.toString(),
-    canDrop: ({ source }) => Obj.instanceOf(TestItem, source.data),
-    get: (item) => item.target!,
+    getId: (data) => data.dxn.toString(),
+    get: (data) => data.target!,
     make: (object) => Ref.make(object),
+    canDrop: ({ source }) => Obj.instanceOf(TestItem, source.data.target),
     onChange: (mutator) => updateColumn((column) => mutator(column.items)),
   });
 
@@ -176,7 +176,7 @@ export const Column = forwardRef<HTMLDivElement, ColumnProps>(({ classNames, loc
                   axis='vertical'
                   className='pli-3'
                   items={column.items}
-                  getId={(item) => item.dxn.toString()}
+                  getId={(data) => data.dxn.toString()}
                   Tile={Item}
                 />
               </Mosaic.Viewport>
@@ -247,7 +247,7 @@ const Placeholder = (props: MosiacPlaceholderProps<number>) => {
     <Mosaic.Placeholder {...props} classNames={mosaicStyles.placeholder.root}>
       <div
         className={mx(
-          'flex bs-full bg-baseSurface border border-dashed border-separator rounded-sm',
+          'flex bs-full border border-dashed border-separator rounded-sm',
           mosaicStyles.placeholder.content,
         )}
       />

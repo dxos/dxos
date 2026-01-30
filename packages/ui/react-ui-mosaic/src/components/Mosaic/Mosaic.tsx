@@ -851,7 +851,7 @@ const Tile = forwardRef<HTMLDivElement, TileProps>(
             [`data-${TILE_STATE_ATTR}`]: state.type,
           }}
           role='listitem'
-          className={mx('relative transition-opacity', className, classNames)}
+          className={mx('relative', className, classNames)}
           ref={composedRef}
         >
           {children}
@@ -864,7 +864,8 @@ const Tile = forwardRef<HTMLDivElement, TileProps>(
                 // NOTE: Use to control appearance while dragging.
                 [`data-${TILE_STATE_ATTR}`]: state.type,
               }}
-              className={mx(className, classNames)}
+              // TODO(burdon): Configure drop animation.
+              className={mx('relative', className, classNames)}
               style={
                 {
                   width: `${state.rect.width}px`,
