@@ -339,7 +339,10 @@ export const LabelAnnotation = createAnnotationHelper<string[]>(LabelAnnotationI
  * Lower-level version that requires explicit schema parameter.
  */
 // TODO(burdon): Convert to JsonPath?
-export const getLabelWithSchema = <S extends Schema.Schema.Any>(schema: S, object: Schema.Schema.Type<S>): string | undefined => {
+export const getLabelWithSchema = <S extends Schema.Schema.Any>(
+  schema: S,
+  object: Schema.Schema.Type<S>,
+): string | undefined => {
   const annotation = LabelAnnotation.get(schema).pipe(Option.getOrElse(() => ['name']));
   for (const accessor of annotation) {
     assertArgument(
@@ -369,7 +372,11 @@ export const getLabelWithSchema = <S extends Schema.Schema.Any>(schema: S, objec
  * Sets the label for a given object based on {@link LabelAnnotationId}.
  * Lower-level version that requires explicit schema parameter.
  */
-export const setLabelWithSchema = <S extends Schema.Schema.Any>(schema: S, object: Schema.Schema.Type<S>, label: string) => {
+export const setLabelWithSchema = <S extends Schema.Schema.Any>(
+  schema: S,
+  object: Schema.Schema.Type<S>,
+  label: string,
+) => {
   const annotation = LabelAnnotation.get(schema).pipe(
     Option.map((field) => field[0]),
     Option.getOrElse(() => 'name'),

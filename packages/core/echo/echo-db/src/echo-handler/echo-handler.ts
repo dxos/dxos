@@ -20,6 +20,7 @@ import {
   ChangeId,
   EchoSchema,
   EntityKind,
+  EventId,
   MetaId,
   ObjectDatabaseId,
   ObjectDeletedId,
@@ -28,6 +29,7 @@ import {
   ObjectMetaSchema,
   ObjectVersionId,
   PersistentSchema,
+  type ReactiveHandler,
   Ref,
   RefImpl,
   RelationSourceDXNId,
@@ -40,22 +42,21 @@ import {
   SelfDXNId,
   TypeId,
   assertObjectModel,
-  getEntityKind,
-  getRefSavedTarget,
-  getSchemaDXN,
-  getTypeAnnotation,
-  isInstanceOf,
-  setRefResolver,
-} from '@dxos/echo/internal';
-import {
-  EventId,
-  type ReactiveHandler,
   createProxy,
   defineHiddenProperty,
+  executeChange,
+  getEntityKind,
   getProxyHandler,
   getProxySlot,
   getProxyTarget,
+  getRefSavedTarget,
+  getSchemaDXN,
+  getTypeAnnotation,
+  isInChangeContext,
+  isInstanceOf,
   isProxy,
+  queueNotification,
+  setRefResolver,
   symbolIsProxy,
 } from '@dxos/echo/internal';
 import {
@@ -70,17 +71,9 @@ import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { deepMapValues, defaultMap, getDeep, setDeep } from '@dxos/util';
 
-import {
-  type DecodedAutomergePrimaryValue,
-  type KeyPath,
-  META_NAMESPACE,
-  ObjectCore,
-  isInChangeContext,
-  queueNotification,
-} from '../core-db';
+import { type DecodedAutomergePrimaryValue, type KeyPath, META_NAMESPACE, ObjectCore } from '../core-db';
 import { type EchoDatabase } from '../proxy-db';
 
-import { changeInternal } from './change-impl';
 import { getBody, getHeader } from './devtools-formatter';
 import { EchoArray } from './echo-array';
 import { getObjectCore, isEchoObject, isRootDataObject } from './echo-object-utils';
@@ -193,9 +186,9 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         }
         case ChangeId: {
           // Return a function that allows mutations within a controlled context.
-          return (callback: (mutableObj: any) => void) => {
-            changeInternal(receiver, callback);
-          };
+          // Uses ObjectCore as context key (what mutation checks use), target for events.
+          const core = target[symbolInternals].core;
+          return (callback: (mutableObj: any) => void) => executeChange(core, target, receiver, callback);
         }
         case RelationSourceDXNId: {
           const sourceRef = target[symbolInternals].core.getSource();
@@ -1033,7 +1026,9 @@ export const createObject = <T extends AnyProperties>(obj: T): CreateObjectRetur
   if (schema != null) {
     validateSchema(schema);
   }
-  validateInitialProps(obj);
+  // Validate initial props on the raw target to avoid change context restrictions.
+  const rawTarget = isProxy(obj) ? getProxyTarget(obj) : obj;
+  validateInitialProps(rawTarget);
 
   const core = new ObjectCore();
   if (isProxy(obj)) {

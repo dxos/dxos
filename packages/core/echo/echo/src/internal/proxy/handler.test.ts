@@ -8,6 +8,7 @@ import { describe, expect, test } from 'vitest';
 
 import { isNode } from '@dxos/util';
 
+import * as Obj from '../../Obj';
 import { TestSchema, updateCounter } from '../../testing';
 import { createObject } from '../object';
 import { ATTR_META } from '../types';
@@ -60,8 +61,9 @@ const TEST_OBJECT: TestSchema.ExampleSchema = {
       const obj = createObject();
 
       const classInstance = new TestSchema.TestClass();
-      // Cast to any to bypass TypeScript readonly check - this tests the reactive proxy behavior.
-      (obj as any).classInstance = classInstance;
+      Obj.change(obj, (o: any) => {
+        o.classInstance = classInstance;
+      });
       expect(obj.classInstance!.field).to.eq('value');
       expect(obj.classInstance instanceof TestSchema.TestClass).to.eq(true);
       expect(obj.classInstance === classInstance).to.be.true;

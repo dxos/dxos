@@ -37,7 +37,6 @@ import {
   VersionTypeId,
   addTag as addTag$,
   change as change$,
-  changeMeta as changeMeta$,
   deleteKeys as deleteKeys$,
   getDXN as getDXN$,
   getDatabase as getDatabase$,
@@ -54,7 +53,6 @@ import {
   isDeleted as isDeleted$,
   isVersion,
   makeObject,
-  objectToJSON as toJSON$,
   removeTag as removeTag$,
   setDescription as setDescription$,
   setLabel as setLabel$,
@@ -63,6 +61,7 @@ import {
   sortByLabel as sortByLabel$,
   sortByTypename as sortByTypename$,
   subscribe as subscribe$,
+  objectToJSON as toJSON$,
   version as version$,
 } from './internal';
 import type * as Obj from './Obj';
@@ -316,9 +315,13 @@ export const getValue = (rel: Base, path: readonly (string | number)[]): any => 
 
 /**
  * Set a deeply nested property on a relation.
- * Only accepts reactive relations (not snapshots).
+ * Must be called within a `Relation.change` callback.
+ *
+ * NOTE: TypeScript's structural typing allows readonly objects to be passed to `Mutable<T>`
+ * parameters, so there is no compile-time error. Enforcement is runtime-only.
  */
-export const setValue: (rel: Unknown, path: readonly (string | number)[], value: any) => void = setValue$ as any;
+export const setValue: (rel: Mutable<Unknown>, path: readonly (string | number)[], value: any) => void =
+  setValue$ as any;
 
 //
 // Type
@@ -367,22 +370,22 @@ export const getDatabase = (entity: Unknown | Snapshot): Database.Database | und
 export type ReadonlyMeta = ApiReadonlyMeta;
 
 /**
- * Mutable meta type received in the `Relation.changeMeta()` callback.
+ * Mutable meta type returned by `Relation.getMeta` inside a `Relation.change` callback.
  */
 export type Meta = ApiMeta;
 
 /**
  * Get the metadata for a relation.
- * Returns a read-only view of the metadata.
+ * Returns mutable meta when passed a mutable relation (inside `Relation.change` callback).
+ * Returns read-only meta when passed a regular relation or snapshot.
+ *
+ * TODO(burdon): When passed a Snapshot, should return a snapshot of meta, not the live meta proxy.
  */
-export const getMeta = (entity: Unknown | Snapshot): ReadonlyMeta => getMeta$(entity);
-
-/**
- * Perform mutations on a relation's metadata within a controlled context.
- * Only accepts reactive relations (not snapshots).
- */
-export const changeMeta = (entity: Unknown, callback: (meta: ObjectMeta) => void): void =>
-  changeMeta$(entity, callback);
+export function getMeta(entity: Mutable<Unknown>): ObjectMeta;
+export function getMeta(entity: Unknown | Snapshot): ReadonlyMeta;
+export function getMeta(entity: Unknown | Snapshot | Mutable<Unknown>): ObjectMeta | ReadonlyMeta {
+  return getMeta$(entity);
+}
 
 /**
  * @returns Foreign keys for the relation from the specified source.
@@ -392,21 +395,30 @@ export const getKeys = (entity: Unknown | Snapshot, source: string): ForeignKey[
 
 /**
  * Delete all keys from the relation for the specified source.
- * Only accepts reactive relations (not snapshots).
+ * Must be called within a `Relation.change` callback.
+ *
+ * NOTE: TypeScript's structural typing allows readonly objects to be passed to `Mutable<T>`
+ * parameters, so there is no compile-time error. Enforcement is runtime-only.
  */
-export const deleteKeys = (entity: Unknown, source: string): void => deleteKeys$(entity, source);
+export const deleteKeys = (entity: Mutable<Unknown>, source: string): void => deleteKeys$(entity, source);
 
 /**
  * Add a tag to the relation.
- * Only accepts reactive relations (not snapshots).
+ * Must be called within a `Relation.change` callback.
+ *
+ * NOTE: TypeScript's structural typing allows readonly objects to be passed to `Mutable<T>`
+ * parameters, so there is no compile-time error. Enforcement is runtime-only.
  */
-export const addTag = (entity: Unknown, tag: string): void => addTag$(entity, tag);
+export const addTag = (entity: Mutable<Unknown>, tag: string): void => addTag$(entity, tag);
 
 /**
  * Remove a tag from the relation.
- * Only accepts reactive relations (not snapshots).
+ * Must be called within a `Relation.change` callback.
+ *
+ * NOTE: TypeScript's structural typing allows readonly objects to be passed to `Mutable<T>`
+ * parameters, so there is no compile-time error. Enforcement is runtime-only.
  */
-export const removeTag = (entity: Unknown, tag: string): void => removeTag$(entity, tag);
+export const removeTag = (entity: Mutable<Unknown>, tag: string): void => removeTag$(entity, tag);
 
 /**
  * Check if the relation is deleted.
@@ -426,9 +438,12 @@ export const getLabel = (entity: Unknown | Snapshot): string | undefined => getL
 
 /**
  * Set the label of the relation.
- * Only accepts reactive relations (not snapshots).
+ * Must be called within a `Relation.change` callback.
+ *
+ * NOTE: TypeScript's structural typing allows readonly objects to be passed to `Mutable<T>`
+ * parameters, so there is no compile-time error. Enforcement is runtime-only.
  */
-export const setLabel = (entity: Unknown, label: string): void => setLabel$(entity, label);
+export const setLabel = (entity: Mutable<Unknown>, label: string): void => setLabel$(entity, label);
 
 /**
  * Get the description of the relation.
@@ -438,9 +453,13 @@ export const getDescription = (entity: Unknown | Snapshot): string | undefined =
 
 /**
  * Set the description of the relation.
- * Only accepts reactive relations (not snapshots).
+ * Must be called within a `Relation.change` callback.
+ *
+ * NOTE: TypeScript's structural typing allows readonly objects to be passed to `Mutable<T>`
+ * parameters, so there is no compile-time error. Enforcement is runtime-only.
  */
-export const setDescription = (entity: Unknown, description: string): void => setDescription$(entity, description);
+export const setDescription = (entity: Mutable<Unknown>, description: string): void =>
+  setDescription$(entity, description);
 
 //
 // JSON

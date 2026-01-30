@@ -4,7 +4,7 @@
 
 import { type RefTypeId } from '../ref/ref';
 
-import { getProxyTarget, isProxy } from './proxy-utils';
+import { getProxyTarget } from './proxy-utils';
 import { ChangeId, EventId } from './symbols';
 
 /**
@@ -58,9 +58,9 @@ export type ChangeCallback<T> = (mutableObj: Mutable<T>) => void;
  * @param callback - Callback that receives a mutable view of the object.
  */
 export const change = <T>(obj: T, callback: ChangeCallback<T>): void => {
-  // Check proxy target first if it's a proxy, otherwise check the object directly.
-  const target = isProxy(obj) ? getProxyTarget(obj as any) : null;
-  const changeFn = (target as any)?.[ChangeId] ?? (obj as any)[ChangeId];
+  // Check proxy first (allows handler to intercept), then fall back to target.
+  // This order is important for EchoReactiveHandler which handles ChangeId in the proxy trap.
+  const changeFn = (obj as any)[ChangeId];
   if (changeFn) {
     changeFn(callback);
   } else {

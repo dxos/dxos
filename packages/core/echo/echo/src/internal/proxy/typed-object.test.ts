@@ -5,6 +5,7 @@
 import * as Schema from 'effect/Schema';
 import { describe, expect, test } from 'vitest';
 
+import * as Obj from '../../Obj';
 import { EchoObjectSchema } from '../entities';
 import { getSchema } from '../types';
 
@@ -50,10 +51,12 @@ describe('EchoObjectSchema class DSL', () => {
   describe('class options', () => {
     test('can assign undefined to partial fields', async () => {
       const person = makeObject(Contact, { name: 'John' });
-      person.name = undefined;
-      person.recordField = 'hello';
+      Obj.change(person, (p) => {
+        p.name = undefined;
+        (p as any).recordField = 'hello';
+      });
       expect(person.name).to.be.undefined;
-      expect(person.recordField).to.eq('hello');
+      expect((person as any).recordField).to.eq('hello');
     });
   });
 
@@ -70,17 +73,22 @@ describe('EchoObjectSchema class DSL', () => {
 
     {
       const object = makeObject(schema, {});
-      (object.meta ??= {}).test = 100;
+      Obj.change(object, (o) => {
+        (o.meta ??= {}).test = 100;
+      });
       expect(object.meta.test).to.eq(100);
     }
 
     {
       const object = makeObject(schema, {});
-      object.meta = { test: { value: 300 } };
+      Obj.change(object, (o) => {
+        o.meta = { test: { value: 300 } };
+      });
       expect(object.meta.test.value).to.eq(300);
     }
 
     {
+      // Plain object (not a reactive proxy) - doesn't need Obj.change.
       type Test1 = Schema.Schema.Type<typeof schema>;
 
       const object: Test1 = {};
@@ -99,7 +107,9 @@ describe('EchoObjectSchema class DSL', () => {
       );
 
       const object = makeObject(Test2, {});
-      (object.meta ??= {}).test = 100;
+      Obj.change(object, (o) => {
+        (o.meta ??= {}).test = 100;
+      });
       expect(object.meta.test).to.eq(100);
     }
   });

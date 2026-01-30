@@ -76,8 +76,8 @@ const meta: Meta<typeof QueryEditor> = {
           { type: Person.Person, count: 50 },
         ]);
         objects.forEach((obj) => {
-          Obj.changeMeta(obj, (meta) => {
-            meta.tags = faker.helpers.uniqueArray(Object.keys(tags), faker.number.int(3));
+          Obj.change(obj, (o) => {
+            Obj.getMeta(o).tags = faker.helpers.uniqueArray(Object.keys(tags), faker.number.int(3));
           });
         });
       },

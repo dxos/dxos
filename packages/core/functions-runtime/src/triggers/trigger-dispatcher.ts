@@ -337,9 +337,9 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
                 );
 
                 // Update trigger cursor.
-                Obj.deleteKeys(trigger, KEY_QUEUE_CURSOR);
-                Obj.changeMeta(trigger, (meta) => {
-                  meta.keys.push({ source: KEY_QUEUE_CURSOR, id: objectPos });
+                Obj.change(trigger, (trigger) => {
+                  Obj.deleteKeys(trigger, KEY_QUEUE_CURSOR);
+                  Obj.getMeta(trigger).keys.push({ source: KEY_QUEUE_CURSOR, id: objectPos });
                 });
                 yield* Database.Service.flush();
 

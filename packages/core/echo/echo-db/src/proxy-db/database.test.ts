@@ -213,7 +213,7 @@ describe('Database', () => {
 
     const obj = Obj.make(TestSchema.Expando, {});
     expectObjects([...Obj.getMeta(obj).keys], []);
-    Obj.changeMeta(obj, (meta) => meta.keys.push({ source: 'test', id: 'test-key' }));
+    Obj.change(obj, (obj) => Obj.getMeta(obj).keys.push({ source: 'test', id: 'test-key' }));
     expectObjects([...Obj.getMeta(obj).keys], [{ source: 'test', id: 'test-key' }]);
 
     db.add(obj);
@@ -317,7 +317,7 @@ describe('Database', () => {
     expect(task.title).to.eq('test');
     expect(Obj.getMeta(task).keys).to.have.length(0);
 
-    Obj.changeMeta(task, (meta) => meta.keys.push({ source: 'example', id: 'test' }));
+    Obj.change(task, (task) => Obj.getMeta(task).keys.push({ source: 'example', id: 'test' }));
     expect(Obj.getMeta(task).keys).to.have.length(1);
   });
 

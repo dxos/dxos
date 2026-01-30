@@ -769,8 +769,8 @@ export const WithProject: Story = {
       const tagDxn = Obj.getDXN(tag).toString();
 
       people.slice(0, 4).forEach((person) => {
-        Obj.changeMeta(person, (meta) => {
-          meta.tags = [tagDxn];
+        Obj.change(person, (p) => {
+          Obj.getMeta(p).tags = [tagDxn];
         });
       });
 
@@ -792,16 +792,16 @@ export const WithProject: Story = {
         }),
       );
       [dxosResearch, blueyardResearch].forEach((research) => {
-        Obj.changeMeta(research, (meta) => {
-          meta.tags = [tagDxn];
+        Obj.change(research, (r) => {
+          Obj.getMeta(r).tags = [tagDxn];
         });
       });
 
       const dxos = organizations.find((org) => org.name === 'DXOS')!;
       const blueyard = organizations.find((org) => org.name === 'BlueYard')!;
       [dxos, blueyard].forEach((organization) => {
-        Obj.changeMeta(organization, (meta) => {
-          meta.tags = [tagDxn];
+        Obj.change(organization, (org) => {
+          Obj.getMeta(org).tags = [tagDxn];
         });
       });
       // TODO(wittjosiah): Support relations.

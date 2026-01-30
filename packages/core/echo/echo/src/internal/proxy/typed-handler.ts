@@ -13,15 +13,26 @@ import { invariant } from '@dxos/invariant';
 
 import { getSchemaDXN } from '../annotations';
 import { ObjectDeletedId } from '../entities';
-import { SchemaId, TypeId } from '../types';
+import { KindId, SchemaId, TypeId } from '../types';
 
+import { executeChange, isInChangeContext, queueNotification, queueOwnerNotification } from './change-context';
 import { defineHiddenProperty } from './define-hidden-property';
-import { batchEvents, emitEvent } from './event-batch';
+import { createPropertyDeleteError } from './errors';
+import { batchEvents } from './event-batch';
 import { type ReactiveHandler, objectData } from './proxy-types';
 import { createProxy, getProxyTarget, isProxy, isValidProxyTarget, symbolIsProxy } from './proxy-utils';
 import { ReactiveArray } from './reactive-array';
 import { SchemaValidator } from './schema-validator';
-import { EventId } from './symbols';
+import { ChangeId, EventId } from './symbols';
+
+/**
+ * Set the owner of a meta object to its parent.
+ * This allows meta mutations to respect the parent's change context.
+ * @internal
+ */
+export const setMetaOwner = (metaTarget: object, parent: object): void => {
+  defineHiddenProperty(metaTarget, EchoOwner, parent);
+};
 
 /**
  * Symbol to store the owning ECHO object reference on nested JS objects (records).
@@ -318,18 +329,41 @@ const MAX_OWNER_DEPTH = 100;
  * Follows the owner chain to find the ultimate root.
  * An object may have EventId (from being created standalone) but if it now
  * has an owner, it's nested and we should use its owner's root instead.
+ * @internal
  */
-const getEchoRoot = (target: object, depth = 0): object => {
+export const getEchoRoot = (target: object, depth = 0): object => {
   invariant(depth < MAX_OWNER_DEPTH, 'Owner chain too deep - possible circular ownership');
-  // If target has an owner, follow the chain to find the true root.
-  // This handles the case where a standalone reactive object (with EventId)
-  // is later nested into another object.
+
+  // Root ECHO objects (those created with Obj.make or Relation.make) have KindId set.
+  // They maintain their own change context identity even when nested inside another object.
+  // Nested helper objects like ObjectMeta don't have KindId and should follow their owner.
+  if (KindId in target) {
+    return target;
+  }
+
+  // For non-root objects (nested records, ObjectMeta, etc.), follow the owner chain.
   const owner = getOwner(target);
   if (owner) {
     return getEchoRoot(owner, depth + 1);
   }
-  // No owner means this is a root object.
+
+  // No owner means this is an unowned object (e.g., during initialization).
   return target;
+};
+
+/**
+ * Notify all owners in the ownership chain.
+ * When a nested object changes, its parent should also be notified.
+ * This handles the case where a root ECHO object is nested inside another object.
+ */
+const notifyOwnerChain = (target: object): void => {
+  const owner = getOwner(target);
+  if (owner) {
+    // Queue notification for the owner's root (which has EventId).
+    queueOwnerNotification(getEchoRoot(owner));
+    // Continue up the chain (owner might also be nested).
+    notifyOwnerChain(owner);
+  }
 };
 
 /**
@@ -356,6 +390,12 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
     }
 
     defineHiddenProperty(target, ObjectDeletedId, false);
+
+    // Mark root objects as having a change handler.
+    // The actual handler is returned dynamically in get() to have access to the proxy.
+    if (!hasOwner && !(ChangeId in target)) {
+      defineHiddenProperty(target, ChangeId, true);
+    }
 
     // Only set owners if this is a root object (no existing owner).
     // Nested objects already have owners set by their root's initialization.
@@ -396,6 +436,15 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
       case objectData: {
         return toJSON(target);
       }
+      case ChangeId: {
+        // Return change handler only for root objects that have been marked with ChangeId.
+        if ((target as any)[ChangeId] !== true) {
+          return undefined;
+        }
+        // Return a function that allows mutations within a controlled context.
+        // Uses target as both the context key and event target for non-database objects.
+        return (callback: (obj: any) => void) => executeChange(target, target, receiver, callback);
+      }
     }
 
     // Handle getter properties.
@@ -412,14 +461,33 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   set(target: ProxyTarget, prop: string | symbol, value: any, receiver: any): boolean {
+    const echoRoot = getEchoRoot(target);
+
+    // Check readonly enforcement - mutations only allowed within Obj.change().
+    // Skip check if the object is still being initialized (no ChangeId handler yet).
+    // Also skip for non-initialized root objects (those without EventId).
+    // Skip for symbol properties (internal infrastructure, not user data).
+    const isInitialized = ChangeId in echoRoot || EventId in echoRoot;
+    const isSymbolProp = typeof prop === 'symbol';
+    if (isInitialized && !isSymbolProp && !isInChangeContext(echoRoot)) {
+      throw new Error(
+        `Cannot modify object property "${String(prop)}" outside of Obj.change(). ` +
+          'Use Obj.change(obj, (mutableObj) => { mutableObj.property = value; }) instead.',
+      );
+    }
+
     let result: boolean = false;
     this._inSet = true;
     try {
       batchEvents(() => {
-        const { echoRoot, preparedValue } = this._prepareValueForAssignment(target, prop, value);
+        const { echoRoot: _, preparedValue } = this._prepareValueForAssignment(target, prop, value);
         result = Reflect.set(target, prop, preparedValue, receiver);
-        // Emit event on the root ECHO object (centralized reactivity).
-        emitEvent(echoRoot);
+        // Queue notification instead of emitting immediately (batched).
+        if (isInitialized) {
+          queueNotification(echoRoot);
+          // Also notify the owner chain so parent objects are updated when nested objects change.
+          notifyOwnerChain(target);
+        }
       });
     } finally {
       this._inSet = false;
@@ -431,15 +499,47 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
     return Reflect.ownKeys(target);
   }
 
+  deleteProperty(target: ProxyTarget, property: string | symbol): boolean {
+    const echoRoot = getEchoRoot(target);
+
+    // Check readonly enforcement - mutations only allowed within Obj.change().
+    // Skip for symbol properties (internal infrastructure, not user data).
+    const isInitialized = (echoRoot as any)[ChangeId] === true || EventId in echoRoot;
+    const isSymbolProp = typeof property === 'symbol';
+    if (isInitialized && !isSymbolProp && !isInChangeContext(echoRoot)) {
+      throw createPropertyDeleteError(property);
+    }
+
+    const result = Reflect.deleteProperty(target, property);
+    if (isInitialized) {
+      queueNotification(echoRoot);
+    }
+    return result;
+  }
+
   defineProperty(target: ProxyTarget, property: string | symbol, attributes: PropertyDescriptor): boolean {
-    const { echoRoot, preparedValue } = this._prepareValueForAssignment(target, property, attributes.value);
+    const echoRoot = getEchoRoot(target);
+
+    // Check readonly enforcement - mutations only allowed within Obj.change().
+    // Skip check if the object is still being initialized (no ChangeId handler yet).
+    // Skip for symbol properties (internal infrastructure, not user data).
+    const isInitialized = ChangeId in echoRoot || EventId in echoRoot;
+    const isSymbolProp = typeof property === 'symbol';
+    if (isInitialized && !isSymbolProp && !isInChangeContext(echoRoot)) {
+      throw new Error(
+        `Cannot modify object property "${String(property)}" outside of Obj.change(). ` +
+          'Use Obj.change(obj, (mutableObj) => { mutableObj.property = value; }) instead.',
+      );
+    }
+
+    const { echoRoot: _, preparedValue } = this._prepareValueForAssignment(target, property, attributes.value);
     const result = Reflect.defineProperty(target, property, {
       ...attributes,
       value: preparedValue,
     });
-    if (!this._inSet) {
-      // Emit event on the root ECHO object (centralized reactivity).
-      emitEvent(echoRoot);
+    if (!this._inSet && isInitialized) {
+      // Queue notification instead of emitting immediately (batched).
+      queueNotification(echoRoot);
     }
     return result;
   }
@@ -462,14 +562,22 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
       }
     }
 
+    // Prevent direct assignment of root ECHO objects (those created with Obj.make/Relation.make).
+    // These must be wrapped with Ref.make for proper reference handling.
+    // This matches database object behavior for consistency.
+    if (isValidProxyTarget(value) || isProxy(value)) {
+      const actualValue = getRawTarget(value);
+      const isRootEchoObject = EventId in actualValue;
+      if (isRootEchoObject) {
+        throw new Error('Object references must be wrapped with `Ref.make`');
+      }
+    }
+
     // Copy-on-assign: If the value is a nested record owned by a different ECHO object, deep copy it.
-    // Note: Root ECHO objects (those with EventId) maintain their own identity and should NOT be
-    // copied - they can be legitimately referenced by multiple objects.
     if (isValidProxyTarget(value) || isProxy(value)) {
       const actualValue = getRawTarget(value);
       const existingOwner = getOwner(actualValue);
-      const isRootEchoObject = EventId in actualValue;
-      if (existingOwner != null && existingOwner !== echoRoot && !isRootEchoObject) {
+      if (existingOwner != null && existingOwner !== echoRoot) {
         value = deepCopy(value);
       }
     }

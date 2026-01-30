@@ -12,6 +12,7 @@ import {
   setDescriptionWithSchema,
   setLabelWithSchema,
 } from '../annotations';
+import { type Mutable } from '../proxy';
 import { type AnyProperties, getSchema as getSchema$ } from '../types';
 
 /**
@@ -27,9 +28,9 @@ export const getLabel = (entity: AnyProperties): string | undefined => {
 
 /**
  * Set the label of an entity.
- * Only accepts reactive entities (not snapshots).
+ * Must be called within an Obj.change or Relation.change callback.
  */
-export const setLabel = (entity: AnyProperties, label: string) => {
+export const setLabel = (entity: Mutable<AnyProperties>, label: string) => {
   const schema = getSchema$(entity);
   if (schema != null) {
     setLabelWithSchema(schema, entity, label);
@@ -49,9 +50,9 @@ export const getDescription = (entity: AnyProperties): string | undefined => {
 
 /**
  * Set the description of an entity.
- * Only accepts reactive entities (not snapshots).
+ * Must be called within an Obj.change or Relation.change callback.
  */
-export const setDescription = (entity: AnyProperties, description: string) => {
+export const setDescription = (entity: Mutable<AnyProperties>, description: string) => {
   const schema = getSchema$(entity);
   if (schema != null) {
     setDescriptionWithSchema(schema, entity, description);

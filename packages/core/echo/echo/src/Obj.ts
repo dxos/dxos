@@ -32,7 +32,6 @@ import {
   VersionTypeId,
   addTag as addTag$,
   change as change$,
-  changeMeta as changeMeta$,
   compareVersions,
   decodeVersion,
   deleteKeys as deleteKeys$,
@@ -53,7 +52,6 @@ import {
   isVersion,
   makeObject,
   objectFromJSON,
-  objectToJSON as toJSON$,
   removeTag as removeTag$,
   setDescription as setDescription$,
   setLabel as setLabel$,
@@ -62,6 +60,7 @@ import {
   sortByLabel as sortByLabel$,
   sortByTypename as sortByTypename$,
   subscribe as subscribe$,
+  objectToJSON as toJSON$,
   version as version$,
   versionValid,
 } from './internal';
@@ -329,9 +328,12 @@ export const getValue = (obj: Unknown | Snapshot, path: readonly (string | numbe
  * whether to initialize nested data as an empty object or array.
  *
  * Similar to lodash.set and setDeep from @dxos/util, but schema-aware.
- * Only accepts reactive objects (not snapshots).
+ * Must be called within an `Obj.change` callback.
  *
- * @param obj - The ECHO object to set the property on.
+ * NOTE: TypeScript's structural typing allows readonly objects to be passed to `Mutable<T>`
+ * parameters, so there is no compile-time error. Enforcement is runtime-only.
+ *
+ * @param obj - The mutable ECHO object to set the property on.
  * @param path - Path to the property (array of keys).
  * @param value - Value to set.
  * @returns The value that was set.
@@ -340,12 +342,15 @@ export const getValue = (obj: Unknown | Snapshot, path: readonly (string | numbe
  * ```ts
  * const person = Obj.make(Person, { name: 'John' });
  * // Person schema has: addresses: Schema.mutable(Schema.Array(Address))
- * Obj.setValue(person, ['addresses', 0, 'street'], '123 Main St');
+ * Obj.change(person, (p) => {
+ *   Obj.setValue(p, ['addresses', 0, 'street'], '123 Main St');
+ * });
  * // Creates: person.addresses = [{ street: '123 Main St' }]
  * ```
  */
 // TODO(wittjosiah): Compute possible path values + type value based on generic object type.
-export const setValue: (obj: Unknown, path: readonly (string | number)[], value: any) => void = setValue$ as any;
+export const setValue: (obj: Mutable<Unknown>, path: readonly (string | number)[], value: any) => void =
+  setValue$ as any;
 
 //
 // Type
@@ -430,7 +435,7 @@ export const Meta: unique symbol = MetaId as any;
 export type ReadonlyMeta = ApiReadonlyMeta;
 
 /**
- * Mutable meta type received in the `Obj.changeMeta()` callback.
+ * Mutable meta type returned by `Obj.getMeta` inside an `Obj.change` callback.
  */
 export type Meta = ApiMeta;
 
@@ -438,27 +443,29 @@ export type Meta = ApiMeta;
 // TODO(dmaretskyi): Allow returning undefined.
 /**
  * Get the metadata for an object.
- * Returns a read-only view of the metadata.
- * Use `Obj.changeMeta` to mutate metadata.
- */
-export const getMeta = (entity: Unknown | Snapshot): ReadonlyMeta => getMeta$(entity);
-
-/**
- * Perform mutations on an object's metadata within a controlled context.
- * Only accepts reactive objects (not snapshots).
+ * Returns mutable meta when passed a mutable object (inside `Obj.change` callback).
+ * Returns read-only meta when passed a regular object or snapshot.
  *
- * @param entity - The object whose metadata to mutate.
- * @param callback - The callback that performs mutations on the metadata.
+ * TODO(burdon): When passed a Snapshot, should return a snapshot of meta, not the live meta proxy.
  *
  * @example
  * ```ts
- * Obj.changeMeta(person, (meta) => {
- *   meta.keys.push({ source: 'external', id: '123' });
+ * // Read-only access outside change callback
+ * const meta = Obj.getMeta(person);  // ReadonlyMeta
+ *
+ * // Mutable access inside change callback
+ * Obj.change(person, (p) => {
+ *   const meta = Obj.getMeta(p);     // ObjectMeta (mutable)
+ *   meta.tags ??= [];
+ *   meta.tags.push('important');
  * });
  * ```
  */
-export const changeMeta = (entity: Unknown, callback: (meta: ObjectMeta) => void): void =>
-  changeMeta$(entity, callback);
+export function getMeta(entity: Mutable<Unknown>): ObjectMeta;
+export function getMeta(entity: Unknown | Snapshot): ReadonlyMeta;
+export function getMeta(entity: Unknown | Snapshot | Mutable<Unknown>): ObjectMeta | ReadonlyMeta {
+  return getMeta$(entity);
+}
 
 /**
  * @returns Foreign keys for the object from the specified source.
@@ -471,21 +478,30 @@ export const getKeys: {
 
 /**
  * Delete all keys from the object for the specified source.
- * Only accepts reactive objects (not snapshots).
+ * Must be called within an `Obj.change` callback.
+ *
+ * NOTE: TypeScript's structural typing allows readonly objects to be passed to `Mutable<T>`
+ * parameters, so there is no compile-time error. Enforcement is runtime-only.
  */
-export const deleteKeys = (entity: Unknown, source: string): void => deleteKeys$(entity, source);
+export const deleteKeys = (entity: Mutable<Unknown>, source: string): void => deleteKeys$(entity, source);
 
 /**
  * Add a tag to the object.
- * Only accepts reactive objects (not snapshots).
+ * Must be called within an `Obj.change` callback.
+ *
+ * NOTE: TypeScript's structural typing allows readonly objects to be passed to `Mutable<T>`
+ * parameters, so there is no compile-time error. Enforcement is runtime-only.
  */
-export const addTag = (entity: Unknown, tag: string): void => addTag$(entity, tag);
+export const addTag = (entity: Mutable<Unknown>, tag: string): void => addTag$(entity, tag);
 
 /**
  * Remove a tag from the object.
- * Only accepts reactive objects (not snapshots).
+ * Must be called within an `Obj.change` callback.
+ *
+ * NOTE: TypeScript's structural typing allows readonly objects to be passed to `Mutable<T>`
+ * parameters, so there is no compile-time error. Enforcement is runtime-only.
  */
-export const removeTag = (entity: Unknown, tag: string): void => removeTag$(entity, tag);
+export const removeTag = (entity: Mutable<Unknown>, tag: string): void => removeTag$(entity, tag);
 
 /**
  * Check if the object is deleted.
@@ -506,9 +522,12 @@ export const getLabel = (entity: Unknown | Snapshot): string | undefined => getL
 
 /**
  * Set the label of the object.
- * Only accepts reactive objects (not snapshots).
+ * Must be called within an `Obj.change` callback.
+ *
+ * NOTE: TypeScript's structural typing allows readonly objects to be passed to `Mutable<T>`
+ * parameters, so there is no compile-time error. Enforcement is runtime-only.
  */
-export const setLabel = (entity: Unknown, label: string): void => setLabel$(entity, label);
+export const setLabel = (entity: Mutable<Unknown>, label: string): void => setLabel$(entity, label);
 
 /**
  * Get the description of the object.
@@ -518,9 +537,13 @@ export const getDescription = (entity: Unknown | Snapshot): string | undefined =
 
 /**
  * Set the description of the object.
- * Only accepts reactive objects (not snapshots).
+ * Must be called within an `Obj.change` callback.
+ *
+ * NOTE: TypeScript's structural typing allows readonly objects to be passed to `Mutable<T>`
+ * parameters, so there is no compile-time error. Enforcement is runtime-only.
  */
-export const setDescription = (entity: Unknown, description: string): void => setDescription$(entity, description);
+export const setDescription = (entity: Mutable<Unknown>, description: string): void =>
+  setDescription$(entity, description);
 
 //
 // JSON

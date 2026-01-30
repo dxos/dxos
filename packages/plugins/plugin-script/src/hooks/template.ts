@@ -17,8 +17,7 @@ const createTemplateSelectActions = (script: Script.Script) => {
       () => {
         Obj.change(script, (s) => {
           s.name = template.name;
-        });
-        Obj.changeMeta(script, (meta) => {
+          const meta = Obj.getMeta(s);
           const oldPresetIndex = meta.keys.findIndex((key) => key.source === FUNCTIONS_PRESET_META_KEY);
           if (oldPresetIndex >= 0) {
             meta.keys.splice(oldPresetIndex, 1);

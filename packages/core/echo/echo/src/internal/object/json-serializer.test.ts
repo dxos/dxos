@@ -6,6 +6,7 @@ import { describe, expect, test } from 'vitest';
 
 import { DXN } from '@dxos/keys';
 
+import * as Obj from '../../Obj';
 import { TestSchema } from '../../testing';
 import { getSchemaDXN, getSchemaTypename, getTypeDXN, getTypename } from '../annotations';
 import { RelationSourceId, RelationTargetId, getObjectDXN } from '../entities';
@@ -19,7 +20,9 @@ import { objectFromJSON, objectToJSON } from './json-serializer';
 describe('Object JSON serializer', () => {
   test('should serialize and deserialize object', async () => {
     const contact = makeObject(TestSchema.Person, { name: 'Alice' });
-    getMeta(contact).keys.push({ id: '12345', source: 'example.com' });
+    Obj.change(contact, (c) => {
+      getMeta(c).keys.push({ id: '12345', source: 'example.com' });
+    });
 
     const task = createObject(TestSchema.Task, {
       title: 'Fix the tests',

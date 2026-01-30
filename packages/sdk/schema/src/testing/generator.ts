@@ -137,6 +137,9 @@ const createValue = <S extends Type.Obj.Any>(
 export const createReferences = <S extends Type.Obj.Any>(schema: S, db: Database.Database) => {
   type T = Schema.Schema.Type<S>;
   return async (obj: T): Promise<T> => {
+    // Collect all references to set.
+    const refsToSet: Array<{ name: string | symbol; ref: any }> = [];
+
     for (const property of getProperties(schema.ast)) {
       if (!property.isOptional || randomBoolean()) {
         if (Ref.isRefType(property.type)) {
@@ -149,11 +152,20 @@ export const createReferences = <S extends Type.Obj.Any>(schema: S, db: Database
             const objects = allObjects.filter((obj) => Obj.getTypename(obj) === typename);
             if (objects.length) {
               const object = randomElement(objects);
-              (obj as any)[property.name] = Ref.make(object);
+              refsToSet.push({ name: property.name, ref: Ref.make(object) });
             }
           }
         }
       }
+    }
+
+    // Set all references within a change context.
+    if (refsToSet.length > 0) {
+      Obj.change(obj as any, (mutableObj: any) => {
+        for (const { name, ref } of refsToSet) {
+          mutableObj[name] = ref;
+        }
+      });
     }
 
     return obj;

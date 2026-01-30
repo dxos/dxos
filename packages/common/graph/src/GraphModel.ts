@@ -11,6 +11,11 @@ import { type MakeOptional, isTruthy, removeBy } from '@dxos/util';
 import * as Graph from './Graph';
 
 /**
+ * Optional function to wrap mutations (e.g., for ECHO objects that require Obj.change).
+ */
+export type GraphChangeFunction = (fn: () => void) => void;
+
+/**
  * Readonly Graph wrapper.
  */
 export class ReadonlyGraphModel<
@@ -18,15 +23,23 @@ export class ReadonlyGraphModel<
   Edge extends Graph.Edge.Any = Graph.Edge.Any,
 > {
   protected readonly _graph: Graph.Graph<Node, Edge>;
+  /**
+   * Optional function to wrap mutations.
+   * When set, all graph mutations are wrapped in this function.
+   */
+  protected readonly _change?: GraphChangeFunction;
 
   /**
    * NOTE: Pass in simple Graph or Live.
+   * @param graph - The graph data.
+   * @param change - Optional function to wrap mutations (e.g., Obj.change for ECHO objects).
    */
-  constructor(graph?: Graph.Graph<Node, Edge>) {
+  constructor(graph?: Graph.Graph<Node, Edge>, change?: GraphChangeFunction) {
     this._graph = graph ?? {
       nodes: [],
       edges: [],
     };
+    this._change = change;
   }
 
   [inspectCustom]() {
@@ -131,9 +144,23 @@ export abstract class AbstractGraphModel<
    */
   abstract copy(graph?: Partial<Graph.Graph<Node, Edge>>): Model;
 
+  /**
+   * Execute a mutation on the graph.
+   * If a change function is set, wraps the mutation in it.
+   */
+  protected _mutate(fn: (graph: Graph.Graph<Node, Edge>) => void): void {
+    if (this._change != null) {
+      this._change(() => fn(this._graph));
+    } else {
+      fn(this._graph);
+    }
+  }
+
   clear(): this {
-    this._graph.nodes.length = 0;
-    this._graph.edges.length = 0;
+    this._mutate((graph) => {
+      graph.nodes.length = 0;
+      graph.edges.length = 0;
+    });
     return this;
   }
 
@@ -154,7 +181,9 @@ export abstract class AbstractGraphModel<
   addNode(node: Node): Node {
     invariant(node.id, 'ID is required');
     invariant(!this.findNode(node.id), `node already exists: ${node.id}`);
-    this._graph.nodes.push(node);
+    this._mutate((graph) => {
+      graph.nodes.push(node);
+    });
     return node;
   }
 
@@ -170,7 +199,9 @@ export abstract class AbstractGraphModel<
       edge = { id: Graph.createEdgeId(edge), ...edge };
     }
     invariant(!this.findNode(edge.id!));
-    this._graph.edges.push(edge as Edge);
+    this._mutate((graph) => {
+      graph.edges.push(edge as Edge);
+    });
     return edge as Edge;
   }
 

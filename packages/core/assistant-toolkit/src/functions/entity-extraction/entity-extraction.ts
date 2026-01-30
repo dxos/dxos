@@ -75,7 +75,8 @@ export default defineFunction({
           throw new Error('Multiple organizations created');
         } else if (created.length === 1) {
           organization = yield* Database.Service.resolve(created[0], Organization.Organization);
-          Obj.changeMeta(organization, (meta) => {
+          Obj.change(organization, (org) => {
+            const meta = Obj.getMeta(org);
             meta.tags ??= [];
             meta.tags.push(...(tags ?? []));
           });

@@ -969,6 +969,9 @@ describe('ProjectionModel', () => {
   });
 
   test('property that is an array of objects', async () => {
+    const { db } = await builder.createDatabase();
+    const registry = new DatabaseSchemaRegistry(db);
+
     const ContactWithArrayOfEmails = Schema.Struct({
       name: Schema.String,
       emails: Schema.optional(
@@ -986,17 +989,17 @@ describe('ProjectionModel', () => {
       }),
     );
 
-    const jsonSchema = toJsonSchema(ContactWithArrayOfEmails);
+    const [mutable] = await registry.register([ContactWithArrayOfEmails]);
 
     const view = View.make({
-      query: Query.select(Filter.type(ContactWithArrayOfEmails)),
-      jsonSchema,
+      query: Query.select(Filter.type(mutable)),
+      jsonSchema: mutable.jsonSchema,
     });
     const projection = new ProjectionModel({
       registry: atomRegistry,
       view,
-      baseSchema: jsonSchema,
-      change: createDirectChangeCallback(view.projection, jsonSchema),
+      baseSchema: mutable.jsonSchema,
+      change: createEchoChangeCallback(view, mutable),
     });
 
     const fieldId = createFieldId();

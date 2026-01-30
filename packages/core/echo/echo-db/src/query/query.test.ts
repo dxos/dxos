@@ -188,7 +188,7 @@ describe('Query', () => {
 
     test('filter by foreign keys', async () => {
       const obj = Obj.make(TestSchema.Expando, { value: 100 });
-      Obj.changeMeta(obj, (meta) => meta.keys.push({ id: 'test-id', source: 'test-source' }));
+      Obj.change(obj, (obj) => Obj.getMeta(obj).keys.push({ id: 'test-id', source: 'test-source' }));
       db.add(obj);
 
       await db.flush({ indexes: true });
@@ -200,7 +200,7 @@ describe('Query', () => {
 
     test('filter by foreign keys without flushing index', async () => {
       const obj = Obj.make(TestSchema.Expando, { value: 100 });
-      Obj.changeMeta(obj, (meta) => meta.keys.push({ id: 'test-id', source: 'test-source' }));
+      Obj.change(obj, (obj) => Obj.getMeta(obj).keys.push({ id: 'test-id', source: 'test-source' }));
       db.add(obj);
 
       const objects = await db

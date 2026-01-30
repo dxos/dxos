@@ -16,9 +16,14 @@ import {
 } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
+import { type Mutable } from '../proxy';
 import { getSchema } from '../types';
 
-export const setValue = (obj: any, path: readonly (string | number)[], value: any): void => {
+/**
+ * Set a deeply nested property on an object.
+ * Must be called within an Obj.change or Relation.change callback.
+ */
+export const setValue = (obj: Mutable<any>, path: readonly (string | number)[], value: any): void => {
   invariant(path.length > 0, 'Path must not be empty');
 
   const schema = getSchema(obj);

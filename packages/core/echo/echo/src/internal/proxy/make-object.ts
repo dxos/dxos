@@ -11,8 +11,8 @@ import { type AnyProperties, KindId, MetaId, type ObjectMeta, ObjectMetaSchema }
 
 import { defineHiddenProperty } from './define-hidden-property';
 import { attachTypedJsonSerializer } from './json-serializer';
-import { createProxy, isValidProxyTarget } from './proxy-utils';
-import { TypedReactiveHandler, prepareTypedTarget } from './typed-handler';
+import { createProxy, getProxyTarget, isValidProxyTarget } from './proxy-utils';
+import { TypedReactiveHandler, prepareTypedTarget, setMetaOwner } from './typed-handler';
 
 /**
  *
@@ -55,7 +55,20 @@ const createReactiveObject = <T extends AnyProperties>(obj: T, meta?: ObjectMeta
   initMeta(obj, meta);
   prepareTypedTarget(obj, schema);
   attachTypedJsonSerializer(obj);
-  return createProxy<T>(obj, TypedReactiveHandler.instance);
+  const proxy = createProxy<T>(obj, TypedReactiveHandler.instance);
+
+  // Set meta's owner to the main object so meta mutations respect the parent's change context.
+  // For non-database objects using TypedReactiveHandler, this links the meta to the main object's
+  // change context. For database objects, meta is handled by EchoReactiveHandler.getMeta().
+  const metaProxy = (obj as any)[MetaId];
+  if (metaProxy) {
+    const metaTarget = getProxyTarget(metaProxy);
+    if (metaTarget) {
+      setMetaOwner(metaTarget, obj);
+    }
+  }
+
+  return proxy;
 };
 
 /**

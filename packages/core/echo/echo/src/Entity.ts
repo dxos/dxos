@@ -6,25 +6,27 @@ import type { ForeignKey } from '@dxos/echo-protocol';
 import type { DXN, ObjectId } from '@dxos/keys';
 
 import {
-  addTag as addTag$,
   type AnyEntity,
-  type ObjectJSON,
   EntityKind,
   EntityKindSchema,
+  KindId,
+  type Mutable,
+  type ObjectJSON,
+  type ObjectMeta,
+  type ReadonlyMeta,
+  SnapshotKindId,
+  addTag as addTag$,
+  getDXN as getDXN$,
   getDatabase as getDatabase$,
   getDescription as getDescription$,
-  getDXN as getDXN$,
+  getEntityKind,
   getKeys as getKeys$,
   getLabel as getLabel$,
   getMetaChecked as getMeta$,
   getTypeDXN as getTypeDXN$,
   getTypename as getTypename$,
   isDeleted as isDeleted$,
-  KindId,
-  type ReadonlyMeta,
   removeTag as removeTag$,
-  SnapshotKindId,
-  getEntityKind,
   subscribe as subscribe$,
   objectToJSON as toJSON$,
 } from './internal';
@@ -129,8 +131,16 @@ export const getDatabase = (entity: Base): any | undefined => getDatabase$(entit
 
 /**
  * Get the metadata for an entity.
+ * Returns mutable meta when passed a mutable entity (inside change callback).
+ * Returns read-only meta when passed a regular entity or snapshot.
+ *
+ * TODO(burdon): When passed a Snapshot, should return a snapshot of meta, not the live meta proxy.
  */
-export const getMeta = (entity: Base): ReadonlyMeta => getMeta$(entity);
+export function getMeta(entity: Mutable<Unknown>): ObjectMeta;
+export function getMeta(entity: Base): ReadonlyMeta;
+export function getMeta(entity: Base | Mutable<Unknown>): ObjectMeta | ReadonlyMeta {
+  return getMeta$(entity);
+}
 
 /**
  * Get foreign keys for an entity from the specified source.
@@ -167,12 +177,12 @@ export const subscribe = (entity: Unknown, callback: () => void): (() => void) =
 
 /**
  * Add a tag to an entity.
- * Only accepts reactive entities (not snapshots).
+ * Must be called within an `Obj.change` or `Relation.change` callback.
  */
-export const addTag = (entity: Unknown, tag: string): void => addTag$(entity, tag);
+export const addTag = (entity: Mutable<Unknown>, tag: string): void => addTag$(entity, tag);
 
 /**
  * Remove a tag from an entity.
- * Only accepts reactive entities (not snapshots).
+ * Must be called within an `Obj.change` or `Relation.change` callback.
  */
-export const removeTag = (entity: Unknown, tag: string): void => removeTag$(entity, tag);
+export const removeTag = (entity: Mutable<Unknown>, tag: string): void => removeTag$(entity, tag);

@@ -24,16 +24,6 @@ const TEST_OBJECT: TestSchema.ExampleSchema = {
 // TODO(dmaretskyi): Come up with a test fixture pattern?
 export interface TestConfiguration {
   objectsHaveId: boolean;
-  /**
-   * Whether to test assigning objects to properties in other objects.
-   * @default true
-   */
-  allowObjectAssignments?: boolean;
-  /**
-   * Whether this is an ECHO object that requires Obj.change for mutations.
-   * @default false
-   */
-  requiresObjChange?: boolean;
   beforeAllCb?: () => Promise<void>;
   afterAllCb?: () => Promise<void>;
   createObjectFn: (props?: Partial<TestSchema.Example>) => Promise<TestSchema.Example>;
@@ -42,15 +32,10 @@ export interface TestConfiguration {
 export type TestConfigurationFactory = (schema: Type.Obj.Any) => TestConfiguration | null;
 
 /**
- * Helper to wrap mutations for ECHO objects.
- * Uses Obj.Mutable<T> for callback type to handle DeepReadonly instance types.
+ * Helper to wrap mutations. All ECHO objects require Obj.change for mutations.
  */
-const mutate = <T>(obj: T, requiresObjChange: boolean, callback: (o: Obj.Mutable<T>) => void): void => {
-  if (requiresObjChange) {
-    Obj.change(obj as any, callback as any);
-  } else {
-    callback(obj as Obj.Mutable<T>);
-  }
+const change = <T>(obj: T, callback: (o: Obj.Mutable<T>) => void): void => {
+  Obj.change(obj as any, callback as any);
 };
 
 export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory): void => {
@@ -60,19 +45,7 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
       continue;
     }
 
-    const {
-      objectsHaveId,
-      beforeAllCb,
-      afterAllCb,
-      createObjectFn: createObject,
-      allowObjectAssignments = true,
-      requiresObjChange = false,
-    } = testConfig;
-
-    // Helper for this test configuration.
-    const change = <T>(obj: T, callback: (o: Obj.Mutable<T>) => void): void => {
-      mutate(obj, requiresObjChange, callback);
-    };
+    const { objectsHaveId, beforeAllCb, afterAllCb, createObjectFn: createObject } = testConfig;
 
     beforeAll(async () => {
       await beforeAllCb?.();
@@ -249,38 +222,36 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
         expect(obj.nestedArray === obj.nestedArray).to.be.true;
       });
 
-      test.skipIf(!allowObjectAssignments)('assigning another reactive object', async () => {
+      test('assigning another reactive object requires Ref.make', async () => {
+        const obj = await createObject();
+        const other = await createObject({ string: 'bar' });
+
+        // Direct assignment of root ECHO objects (created with Obj.make) is not allowed.
+        // Must use Ref.make for object references.
+        expect(() => {
+          change(obj, (o) => {
+            o.other = other;
+          });
+        }).toThrow(/Object references must be wrapped with `Ref\.make`/);
+      });
+
+      test('assigning plain objects works', async () => {
         const obj = await createObject();
 
-        const other = await createObject({ string: 'bar' });
+        // Plain objects (not created with Obj.make) can be assigned directly.
         change(obj, (o) => {
-          o.other = other;
+          o.nested = { field: 'bar' };
         });
-        expect(obj.other.string).to.eq('bar');
-
-        change(obj, (o) => {
-          o.other!.string = 'baz';
-        });
-        expect(obj.other.string).to.eq('baz');
-
-        change(other, (o) => {
-          o.string = 'qux';
-        });
-        expect(obj.other.string).to.eq('qux');
+        expect(obj.nested.field).to.eq('bar');
 
         using updates = updateCounter(obj);
 
         expect(updates.count, 'update count').to.eq(0);
-        change(other, (o) => {
-          o.string = 'quux';
+        change(obj, (o) => {
+          o.nested.field = 'baz';
         });
         expect(updates.count, 'update count').to.eq(1);
-
-        change(obj, (o) => {
-          o.other = { string: 'bar' };
-        });
-        expect(obj.other.string).to.eq('bar');
-        expect(updates.count, 'update count').to.eq(2);
+        expect(obj.nested.field).to.eq('baz');
       });
 
       test('keys enumeration', async () => {

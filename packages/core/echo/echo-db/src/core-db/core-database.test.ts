@@ -238,15 +238,12 @@ describe('CoreDatabase', () => {
       const loadedLinks = range(4).map(() => createTextObject('test'));
       const partiallyLoadedLinks = range(3).map(() => createTextObject('test2'));
       const objectsToAdd = range(2).map(() => Obj.make(TestSchema.Expando, {}));
-      const rootObject = [linksToRemove, loadedLinks, partiallyLoadedLinks]
-        .flatMap((v: any[]) => v)
-        .reduce(
-          (acc: Entity.Any, obj: any) => {
-            acc[obj.id] = Ref.make(obj);
-            return acc;
-          },
-          Obj.make(TestSchema.Expando, {}),
-        );
+      const rootObject = Obj.make(TestSchema.Expando, {});
+      Obj.change(rootObject, (root: any) => {
+        [linksToRemove, loadedLinks, partiallyLoadedLinks].flatMap((v: any[]) => v).forEach((obj: any) => {
+          root[obj.id] = Ref.make(obj);
+        });
+      });
 
       const db = await createClientDbInSpaceWithObject(rootObject);
 

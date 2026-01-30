@@ -73,7 +73,7 @@ export const upsertFunctionObject: (opts: {
     f.inputSchema = uploadResult.meta.inputSchema;
     f.outputSchema = uploadResult.meta.outputSchema;
   });
-  Obj.changeMeta(functionObject, (meta) => setUserFunctionIdInMetadata(meta, uploadResult.functionId));
+  Obj.change(functionObject, (fn) => setUserFunctionIdInMetadata(Obj.getMeta(fn), uploadResult.functionId));
   if (verbose) {
     yield* Console.log('Upserted function object', functionObject.id);
   }

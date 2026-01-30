@@ -618,15 +618,15 @@ describe('Reactive Object with ECHO database', () => {
       const obj = Obj.make(TestSchema.Expando, { string: 'foo' });
       expect(Obj.getMeta(obj)).to.deep.eq({ keys: [] });
       const testKey = { source: 'test', id: 'hello' };
-      Obj.changeMeta(obj, (meta) => meta.keys.push(testKey));
+      Obj.change(obj, (obj) => Obj.getMeta(obj).keys.push(testKey));
       expect(Obj.getMeta(obj)).to.deep.eq({ keys: [testKey] });
-      expect(() => Obj.changeMeta(obj, (meta) => meta.keys.push(1 as any))).to.throw();
+      expect(() => Obj.change(obj, (obj) => Obj.getMeta(obj).keys.push(1 as any))).to.throw();
     });
 
     test('meta taken from reactive object when saving to echo', async () => {
       const testKey = { source: 'test', id: 'hello' };
       const reactiveObject = Obj.make(TestSchema.Expando, {});
-      Obj.changeMeta(reactiveObject, (meta) => meta.keys.push(testKey));
+      Obj.change(reactiveObject, (obj) => Obj.getMeta(obj).keys.push(testKey));
 
       const { db } = await builder.createDatabase();
       const obj = db.add(reactiveObject);
@@ -639,8 +639,8 @@ describe('Reactive Object with ECHO database', () => {
 
       expect(Obj.getMeta(obj).keys).to.deep.eq([]);
       const key = { source: 'example.com', id: '123' };
-      Obj.changeMeta(obj, (meta) => {
-        meta.keys.push(key);
+      Obj.change(obj, (obj) => {
+        Obj.getMeta(obj).keys.push(key);
       });
       expect(Obj.getMeta(obj).keys).to.deep.eq([key]);
     });
@@ -671,8 +671,8 @@ describe('Reactive Object with ECHO database', () => {
       const { db, graph } = await builder.createDatabase();
       await graph.schemaRegistry.register([TestType]);
       const obj = db.add(Obj.make(TestType, { field: 1 }, { keys: [foreignKey('example.com', '123')] }));
-      Obj.changeMeta(obj, (meta) => {
-        meta.keys.push(foreignKey('example.com', '456'));
+      Obj.change(obj, (obj) => {
+        Obj.getMeta(obj).keys.push(foreignKey('example.com', '456'));
       });
       expect(Obj.getMeta(obj).keys.length).to.eq(2);
     });
@@ -700,8 +700,8 @@ describe('Reactive Object with ECHO database', () => {
         const db = await peer.openDatabase(spaceKey, root.url);
         const obj = db.add(Obj.make(TestSchema.Expando, { string: 'foo' }));
         id = obj.id;
-        Obj.changeMeta(obj, (meta) => {
-          meta.keys.push(metaKey);
+        Obj.change(obj, (obj) => {
+          Obj.getMeta(obj).keys.push(metaKey);
         });
         await db.flush();
         await peer.close();
@@ -914,16 +914,17 @@ describe('Reactive Object with ECHO database', () => {
     const newObj = Obj.make(TestSchema.Expando, { title: 'New object' });
     const foreignKey1 = { source: 'example.com', id: 'key-1' };
     const foreignKey2 = { source: 'another.com', id: 'key-2' };
-    Obj.changeMeta(newObj, (meta) => {
+    Obj.change(newObj, (obj) => {
+      const meta = Obj.getMeta(obj);
       meta.keys.push(foreignKey1);
       meta.keys.push(foreignKey2);
     });
 
     // Copy foreign keys from new object to existing object (existing is in database).
     for (const foreignKey of Obj.getMeta(newObj).keys) {
-      Obj.deleteKeys(existing, foreignKey.source);
-      Obj.changeMeta(existing, (meta) => {
-        meta.keys.push({ ...foreignKey });
+      Obj.change(existing, (obj) => {
+        Obj.deleteKeys(obj, foreignKey.source);
+        Obj.getMeta(obj).keys.push({ ...foreignKey });
       });
     }
 

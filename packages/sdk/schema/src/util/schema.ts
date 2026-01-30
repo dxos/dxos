@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { type SchemaRegistry, Type } from '@dxos/echo';
+import { Obj, type SchemaRegistry, Type } from '@dxos/echo';
 import {
   EchoObjectSchema,
   type EchoSchema,
@@ -97,22 +97,25 @@ export const getSchemaFromPropertyDefinitions = (
   const typeSchema = Schema.Struct(fields).pipe(EchoObjectSchema({ typename, version: '0.1.0' }));
   const schema = createEchoSchema(typeSchema as unknown as Schema.Schema.AnyNoContext);
 
-  for (const prop of properties) {
-    if (prop.config?.options) {
-      if (prop.format === Format.TypeFormat.SingleSelect) {
-        makeSingleSelectAnnotations(schema.jsonSchema.properties![prop.name], [...prop.config.options]);
+  // Wrap schema modifications in Obj.change since the persistent schema is an ECHO object.
+  Obj.change(schema.persistentSchema as unknown as Obj.Unknown, () => {
+    for (const prop of properties) {
+      if (prop.config?.options) {
+        if (prop.format === Format.TypeFormat.SingleSelect) {
+          makeSingleSelectAnnotations(schema.jsonSchema.properties![prop.name], [...prop.config.options]);
+        }
+        if (prop.format === Format.TypeFormat.MultiSelect) {
+          makeMultiSelectAnnotations(schema.jsonSchema.properties![prop.name], [...prop.config.options]);
+        }
       }
-      if (prop.format === Format.TypeFormat.MultiSelect) {
-        makeMultiSelectAnnotations(schema.jsonSchema.properties![prop.name], [...prop.config.options]);
+
+      if (prop.format === Format.TypeFormat.GeoPoint) {
+        schema.jsonSchema.properties![prop.name].type = TypeEnum.Object;
       }
-    }
 
-    if (prop.format === Format.TypeFormat.GeoPoint) {
-      schema.jsonSchema.properties![prop.name].type = TypeEnum.Object;
+      schema.jsonSchema.properties![prop.name].format = prop.format;
     }
-
-    schema.jsonSchema.properties![prop.name].format = prop.format;
-  }
+  });
 
   return schema;
 };
