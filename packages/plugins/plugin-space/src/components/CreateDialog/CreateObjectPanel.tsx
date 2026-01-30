@@ -103,8 +103,6 @@ export const CreateObjectPanel = ({
 
   const inputSurfaceLookup = useInputSurfaceLookup({ target });
 
-  console.log(4, metadata, target);
-
   // TODO(wittjosiah): These inputs should be rolled into a `Form` once it supports the necessary variants.
   return !metadata ? (
     <SelectSchema options={options} resolve={resolve} onChange={handleSetTypename} />
