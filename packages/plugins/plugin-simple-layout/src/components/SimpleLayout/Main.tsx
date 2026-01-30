@@ -64,7 +64,7 @@ export const Main = () => {
               <Home />
             </Activity>
             <Activity mode={id !== HOME_ID ? 'visible' : 'hidden'}>
-              <section>
+              <article className='bs-full overflow-hidden'>
                 <Surface
                   key={id}
                   role='article'
@@ -73,7 +73,7 @@ export const Main = () => {
                   fallback={ContentError}
                   placeholder={placeholder}
                 />
-              </section>
+              </article>
             </Activity>
             {showNavBar && <NavBar activeId={id} onActiveIdChange={handleActiveIdChange} />}
           </div>

@@ -6,16 +6,7 @@ import React from 'react';
 
 import { useAppGraph } from '@dxos/app-framework/react';
 import { Node, useActionRunner, useConnections } from '@dxos/plugin-graph';
-import {
-  Avatar,
-  Button,
-  ButtonGroup,
-  DensityProvider,
-  IconButton,
-  type Size,
-  Tooltip,
-  useTranslation,
-} from '@dxos/react-ui';
+import { DensityProvider, IconButton, type Size, Tooltip, useTranslation } from '@dxos/react-ui';
 import { DropdownMenu, MenuProvider } from '@dxos/react-ui-menu';
 import { mx, surfaceZIndex } from '@dxos/ui-theme';
 
@@ -46,14 +37,14 @@ export const NavBar = ({ activeId, onActiveIdChange }: NavBarProps) => {
     <DensityProvider density='coarse'>
       <nav
         className={mx(
-          'fixed inset-inline-0',
+          'inset-inline-0',
           'grid grid-cols-[min-content_min-content] gap-2 place-content-center',
           'block-end-[--dx-mobile-bottombar-inset-bottom,0px] bs-[--dx-mobile-bottombar-content-height,64px]',
           'bg-baseSurface border-bs border-separator',
           surfaceZIndex({ level: 'menu' }),
         )}
       >
-        <ButtonGroup>
+        {/* <ButtonGroup>
           <IconButton
             {...buttonProps}
             label={t('browse label')}
@@ -81,7 +72,7 @@ export const NavBar = ({ activeId, onActiveIdChange }: NavBarProps) => {
               <Avatar.Content size={8} status='active' hue='cyan' fallback='🗿' />
             </Avatar.Root>
           </Button>
-        </ButtonGroup>
+        </ButtonGroup> */}
         <MenuProvider onAction={runAction}>
           <DropdownMenu.Root items={menuActions}>
             <Tooltip.Trigger asChild content={t('app menu label')} side='right'>

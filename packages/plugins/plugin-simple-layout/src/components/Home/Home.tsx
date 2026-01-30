@@ -12,18 +12,53 @@ import { Card, Mosaic, type StackTileComponent } from '@dxos/react-ui-mosaic';
 import { SearchList, useSearchListItem, useSearchListResults } from '@dxos/react-ui-searchlist';
 import { StackItem } from '@dxos/react-ui-stack';
 import { mx } from '@dxos/ui-theme';
+import { byPosition } from '@dxos/util';
 
 import { meta } from '../../meta';
+
+/** Filters nodes by disposition. */
+const filterItems = (node: Node.Node, disposition: string) => {
+  return node.properties.disposition === disposition;
+};
+
+/** Returns root-level items filtered by disposition. */
+const useItemsByDisposition = (disposition: string, sort = false) => {
+  const { graph } = useAppGraph();
+  const connections = useConnections(graph, Node.RootId);
+  const filtered = connections.filter((node) => filterItems(node, disposition));
+  return sort ? filtered.toSorted((a, b) => byPosition(a.properties, b.properties)) : filtered;
+};
+
+// TODO(wittjosiah): Remove collection disposition support once all workspaces use the workspace disposition.
+/** Returns children of the first collection (legacy support). */
+const useCollectionItems = () => {
+  const { graph } = useAppGraph();
+  const rootConnections = useConnections(graph, Node.RootId);
+  const collections = useMemo(
+    () => rootConnections.filter((node) => node.properties.disposition === 'collection'),
+    [rootConnections],
+  );
+  const firstCollection = collections[0];
+  return useConnections(graph, firstCollection?.id);
+};
 
 type HomeProps = {};
 
 export const Home = (props: HomeProps) => {
   const { t } = useTranslation(meta.id);
-  const workspaces = useWorkspaces();
+  const userAccountItem = useItemsByDisposition('user-account')[0];
+  const pinnedItems = useItemsByDisposition('pin-end', true);
+  const workspaceItems = useItemsByDisposition('workspace');
+  const collectionItems = useCollectionItems();
   useLoadDescendents(Node.RootId);
 
+  const items = useMemo(
+    () => [...(userAccountItem ? [userAccountItem] : []), ...pinnedItems, ...workspaceItems, ...collectionItems],
+    [userAccountItem, pinnedItems, workspaceItems, collectionItems],
+  );
+
   const { results, handleSearch } = useSearchListResults({
-    items: workspaces,
+    items,
     extract: (node) => toLocalizedString(node.properties.label, t),
   });
 
@@ -122,20 +157,4 @@ const useLoadDescendents = (nodeId?: string) => {
 
     return () => cancelAnimationFrame(frame);
   }, [nodeId, graph]);
-};
-
-const useWorkspaces = () => {
-  const { graph } = useAppGraph();
-
-  // Get root connections to find collections.
-  const rootConnections = useConnections(graph, Node.RootId);
-  const collections = useMemo(
-    () => rootConnections.filter((node) => node.properties.disposition === 'collection'),
-    [rootConnections],
-  );
-
-  // Get first collection's children as workspaces.
-  // TODO(wittjosiah): Support multiple collections or nested workspaces if needed.
-  const firstCollection = collections[0];
-  return useConnections(graph, firstCollection?.id);
 };
