@@ -305,7 +305,7 @@ describe('Query', () => {
       expect(Obj.getDXN(obj)?.toString().startsWith(queue.dxn.toString())).toBe(true);
     });
 
-    test('sqlIndex: referencedBy supports only direct reference properties (single segment)', async () => {
+    test('sqlIndex: referencedBy property path matches full path (not just first segment)', async () => {
       const { db } = await builder.createDatabase({ indexing: { sqlIndex: true }, types: [TestSchema.Person] });
 
       const person = db.add(Obj.make(TestSchema.Person, { name: 'Alice' }));
@@ -326,9 +326,10 @@ describe('Query', () => {
 
       await db.flush({ indexes: true });
 
-      await expect(
-        db.query(Query.select(Filter.type(TestSchema.Person, { name: 'Alice' })).referencedBy(Type.Expando, 'a.b')).run(),
-      ).rejects.toThrow(/only direct reference properties/i);
+      const nested = await db
+        .query(Query.select(Filter.type(TestSchema.Person, { name: 'Alice' })).referencedBy(Type.Expando, 'a.b'))
+        .run();
+      expect(nested.map((o) => o.name).sort()).toEqual(['nested']);
 
       const direct = await db
         .query(Query.select(Filter.type(TestSchema.Person, { name: 'Alice' })).referencedBy(Type.Expando, 'a'))
