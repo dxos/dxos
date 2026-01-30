@@ -104,3 +104,10 @@ export const Board: Story = {
     columns: 4,
   },
 };
+
+export const Debug: Story = {
+  args: {
+    debug: true,
+    columns: 2,
+  },
+};

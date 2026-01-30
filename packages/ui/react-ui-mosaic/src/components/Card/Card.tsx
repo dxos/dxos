@@ -157,7 +157,12 @@ const CardMenu = <T extends any | void = void>({ context, items }: CardMenuProps
   return (
     <DropdownMenu.Root>
       <DropdownMenu.Trigger asChild>
-        <Card.ToolbarIconButton iconOnly variant='ghost' icon='ph--list--regular' label={t('action menu label')} />
+        <Card.ToolbarIconButton
+          iconOnly
+          variant='ghost'
+          icon='ph--dots-three-vertical--regular'
+          label={t('action menu label')}
+        />
       </DropdownMenu.Trigger>
       {(combinedItems?.length ?? 0) > 0 && (
         <DropdownMenu.Portal>
@@ -169,6 +174,7 @@ const CardMenu = <T extends any | void = void>({ context, items }: CardMenuProps
                 </DropdownMenu.Item>
               ))}
             </DropdownMenu.Viewport>
+            <DropdownMenu.Arrow />
           </DropdownMenu.Content>
         </DropdownMenu.Portal>
       )}

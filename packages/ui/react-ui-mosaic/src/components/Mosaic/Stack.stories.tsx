@@ -11,11 +11,13 @@ import { Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { TestItem } from '../../testing';
-import { Mosaic } from '../Mosaic';
+import { Mosaic, useContainerDebug } from '../Mosaic';
 
 import { Stack } from './Stack';
 
 faker.seed(999);
+
+const NUM_ITEMS = 10;
 
 const meta: Meta<typeof Stack<Obj.Any>> = {
   title: 'ui/react-ui-mosaic/Stack',
@@ -27,13 +29,15 @@ const meta: Meta<typeof Stack<Obj.Any>> = {
   args: {
     axis: 'vertical',
     className: 'pli-3',
-    items: Array.from({ length: 100 }, () =>
+    items: Array.from({ length: NUM_ITEMS }, () =>
       Obj.make(TestItem, {
         name: faker.lorem.sentence(3),
         description: faker.lorem.paragraph(),
       }),
     ),
+    getId: (item) => item.id,
     Tile: Mosaic.DefaultStackTile,
+    // debug: true,
   },
 };
 
@@ -43,48 +47,60 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   render: (props) => {
+    const [DebugInfo, debugHandler] = useContainerDebug(props.debug);
     const viewportRef = useRef<HTMLElement | null>(null);
     return (
-      <>
-        <Toolbar.Root>
+      <Mosaic.Root debug={props.debug} classNames='bs-full grid grid-rows-[min-content_1fr_min-content]'>
+        <Toolbar.Root classNames='border-b border-separator'>
           <div className='flex grow justify-center'>Items: {props.items?.length}</div>
         </Toolbar.Root>
-        <Mosaic.Root asChild>
-          <Mosaic.Container asChild axis='vertical' autoScroll={viewportRef.current} eventHandler={{ id: 'test' }}>
-            <Mosaic.Viewport options={{ overflow: { y: 'scroll' } }} viewportRef={viewportRef}>
-              <Mosaic.Stack {...props} />
-            </Mosaic.Viewport>
-          </Mosaic.Container>
-        </Mosaic.Root>
-      </>
+        <Mosaic.Container
+          asChild
+          axis='vertical'
+          autoScroll={viewportRef.current}
+          eventHandler={{ id: 'test', canDrop: () => true }}
+          debug={debugHandler}
+        >
+          <Mosaic.Viewport options={{ overflow: { y: 'scroll' } }} viewportRef={viewportRef}>
+            <Mosaic.Stack {...props} />
+          </Mosaic.Viewport>
+        </Mosaic.Container>
+        <DebugInfo classNames='border-t border-separator' />
+      </Mosaic.Root>
     );
   },
 };
 
 export const Virtual: Story = {
   render: (props) => {
-    const viewportRef = useRef<HTMLDivElement | null>(null);
     const [info, setInfo] = useState<any>(null);
+    const [DebugInfo, debugHandler] = useContainerDebug(props.debug);
+    const viewportRef = useRef<HTMLDivElement | null>(null);
     return (
-      <>
+      <Mosaic.Root debug={props.debug} classNames='grid grid-rows-[min-content_1fr_min-content]'>
         <Toolbar.Root>
           <div className='flex grow justify-center'>{JSON.stringify(info)}</div>
         </Toolbar.Root>
-        <Mosaic.Root asChild>
-          <Mosaic.Container asChild axis='vertical' autoScroll={viewportRef.current} eventHandler={{ id: 'test' }}>
-            <Mosaic.Viewport options={{ overflow: { y: 'scroll' } }} viewportRef={viewportRef}>
-              <Mosaic.VirtualStack
-                {...props}
-                getScrollElement={() => viewportRef.current}
-                estimateSize={() => 40}
-                onChange={(virtualizer) => {
-                  setInfo({ range: virtualizer.range });
-                }}
-              />
-            </Mosaic.Viewport>
-          </Mosaic.Container>
-        </Mosaic.Root>
-      </>
+        <Mosaic.Container
+          asChild
+          axis='vertical'
+          autoScroll={viewportRef.current}
+          eventHandler={{ id: 'test', canDrop: () => true }}
+          debug={debugHandler}
+        >
+          <Mosaic.Viewport options={{ overflow: { y: 'scroll' } }} viewportRef={viewportRef}>
+            <Mosaic.VirtualStack
+              {...props}
+              getScrollElement={() => viewportRef.current}
+              estimateSize={() => 40}
+              onChange={(virtualizer) => {
+                setInfo({ range: virtualizer.range });
+              }}
+            />
+          </Mosaic.Viewport>
+        </Mosaic.Container>
+        <DebugInfo />
+      </Mosaic.Root>
     );
   },
 };
