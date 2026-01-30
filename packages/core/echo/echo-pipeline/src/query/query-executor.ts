@@ -1023,10 +1023,11 @@ export class QueryExecutor extends Resource {
     property: EscapedPropPath | null,
   ): Promise<readonly ObjectMeta[]> {
     const anchorDxns = workingSet.map((item) => DXN.fromLocalObjectId(item.objectId).toString());
-    const indexer2 = this._indexer2;
-    invariant(indexer2, 'SQL indexer is required.');
+    invariant(this._indexer2, 'SQL indexer is required.');
     const rows: readonly ReverseRef[] = (
-      await Promise.all(anchorDxns.map((targetDxn) => this._runInRuntime(indexer2.queryReverseRef({ targetDxn }))))
+      await Promise.all(
+        anchorDxns.map((targetDxn) => this._runInRuntime(this._indexer2!.queryReverseRef({ targetDxn }))),
+      )
     ).flat();
 
     const recordIds = rows
@@ -1103,7 +1104,21 @@ export class QueryExecutor extends Resource {
 
   private async _loadDocumentsAfterSqlQuery(metas: readonly ObjectMeta[]): Promise<(QueryItem | null)[]> {
     const snapshotMap = await this._loadQueueSnapshotMap(metas);
-    return await Promise.all(metas.map((meta) => this._loadFromSqlMeta(meta, snapshotMap)));
+    return await Promise.all(
+      metas.map(async (meta) => {
+        // Branch 1: Document-backed object.
+        if (meta.documentId) {
+          return this._loadFromAutomerge(meta);
+        }
+
+        // Branch 2: Queue-backed object.
+        if (meta.queueId) {
+          return this._loadFromQueue(meta, snapshotMap);
+        }
+
+        return null;
+      }),
+    );
   }
 
   private async _loadQueueSnapshotMap(metas: readonly ObjectMeta[]): Promise<Map<number, unknown>> {
@@ -1117,20 +1132,6 @@ export class QueryExecutor extends Resource {
       this._indexer2.querySnapshotsJSON(queueMetas.map((meta) => meta.recordId)),
     );
     return new Map(snapshots.map((s) => [s.recordId, s.snapshot]));
-  }
-
-  private async _loadFromSqlMeta(meta: ObjectMeta, snapshotMap: Map<number, unknown>): Promise<QueryItem | null> {
-    // Branch 1: Document-backed object.
-    if (meta.documentId) {
-      return await this._loadFromAutomerge(meta);
-    }
-
-    // Branch 2: Queue-backed object.
-    if (meta.queueId) {
-      return this._loadFromQueue(meta, snapshotMap);
-    }
-
-    return null;
   }
 
   /**
