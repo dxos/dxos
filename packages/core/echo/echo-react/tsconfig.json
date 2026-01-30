@@ -12,9 +12,6 @@
   ],
   "references": [
     {
-      "path": "../../../common/util"
-    },
-    {
       "path": "../echo"
     },
     {

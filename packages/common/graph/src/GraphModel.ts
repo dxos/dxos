@@ -210,9 +210,13 @@ export abstract class AbstractGraphModel<
   }
 
   removeNode(id: string): Model {
-    const edges = removeBy<Edge>(this._graph.edges as Edge[], (edge) => edge.source === id || edge.target === id);
-    const nodes = removeBy<Node>(this._graph.nodes as Node[], (node) => node.id === id);
-    return this.copy({ nodes, edges });
+    let removedEdges: Edge[] = [];
+    let removedNodes: Node[] = [];
+    this._mutate((graph) => {
+      removedEdges = removeBy<Edge>(graph.edges as Edge[], (edge) => edge.source === id || edge.target === id);
+      removedNodes = removeBy<Node>(graph.nodes as Node[], (node) => node.id === id);
+    });
+    return this.copy({ nodes: removedNodes, edges: removedEdges });
   }
 
   removeNodes(ids: string[]): Model {
@@ -221,8 +225,11 @@ export abstract class AbstractGraphModel<
   }
 
   removeEdge(id: string): Model {
-    const edges = removeBy<Edge>(this._graph.edges as Edge[], (edge) => edge.id === id);
-    return this.copy({ nodes: [], edges });
+    let removedEdges: Edge[] = [];
+    this._mutate((graph) => {
+      removedEdges = removeBy<Edge>(graph.edges as Edge[], (edge) => edge.id === id);
+    });
+    return this.copy({ nodes: [], edges: removedEdges });
   }
 
   removeEdges(ids: string[]): Model {

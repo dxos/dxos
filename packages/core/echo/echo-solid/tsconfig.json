@@ -17,9 +17,6 @@
       "path": "../../../common/effect-atom-solid"
     },
     {
-      "path": "../../../common/util"
-    },
-    {
       "path": "../echo"
     },
     {
