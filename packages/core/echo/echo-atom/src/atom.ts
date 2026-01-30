@@ -106,8 +106,12 @@ const propertyFamily = Atom.family(<T extends Obj.Unknown>(obj: T) =>
  */
 export function make<T extends Obj.Unknown>(obj: T): Atom.Atom<Obj.Snapshot<T>>;
 export function make<T extends Obj.Unknown>(ref: Ref.Ref<T>): Atom.Atom<Obj.Snapshot<T> | undefined>;
-export function make<T extends Obj.Unknown>(objOrRef: T | Ref.Ref<T> | undefined): Atom.Atom<Obj.Snapshot<T> | undefined>;
-export function make<T extends Obj.Unknown>(objOrRef: T | Ref.Ref<T> | undefined): Atom.Atom<Obj.Snapshot<T> | undefined> {
+export function make<T extends Obj.Unknown>(
+  objOrRef: T | Ref.Ref<T> | undefined,
+): Atom.Atom<Obj.Snapshot<T> | undefined>;
+export function make<T extends Obj.Unknown>(
+  objOrRef: T | Ref.Ref<T> | undefined,
+): Atom.Atom<Obj.Snapshot<T> | undefined> {
   if (objOrRef === undefined) {
     return Atom.make<Obj.Snapshot<T> | undefined>(() => undefined);
   }

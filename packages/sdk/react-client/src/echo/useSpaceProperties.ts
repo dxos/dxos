@@ -4,7 +4,7 @@
 
 import { MulticastObservable } from '@dxos/async';
 import { type SpaceProperties, SpaceState } from '@dxos/client/echo';
-import { type Key, Obj } from '@dxos/echo';
+import { type Key, type Obj } from '@dxos/echo';
 import { type ObjectUpdateCallback, useObject } from '@dxos/echo-react';
 import { useMulticastObservable } from '@dxos/react-hooks';
 

@@ -10,7 +10,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { CommandConfig, Common, getSpace, spaceLayer } from '@dxos/cli-util';
-import { Database, Filter, Obj, Type } from '@dxos/echo';
+import { Database, Filter, Obj } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { faker } from '@dxos/random';
 

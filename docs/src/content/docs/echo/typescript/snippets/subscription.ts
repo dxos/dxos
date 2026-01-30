@@ -3,7 +3,7 @@
 //
 
 import { Client } from '@dxos/client';
-import { Filter, Obj, Type } from '@dxos/echo';
+import { Filter, Obj } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 
 const client = new Client();
@@ -16,7 +16,9 @@ async () => {
 
   const space = await client.spaces.create();
 
-  const query = space.db.query(Filter.type(TestSchema.Expando, { type: 'task' }));
+  const query = space.db.query(
+    Filter.type(TestSchema.Expando, { type: 'task' }),
+  );
 
   const unsubscribeFn = query.subscribe((query) => {
     query.results.forEach((object) => {

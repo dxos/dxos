@@ -5,7 +5,7 @@
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Filter, Query } from '@dxos/echo';
-import { Obj, Ref, Type } from '@dxos/echo';
+import { Obj, Ref } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 
 import { EchoTestBuilder } from '../testing';
@@ -101,7 +101,8 @@ describe('clone', () => {
     expect(task2.assignee.target?.id).to.equal(task1.assignee.target?.id);
     expect(task2.assignee.target?.name).to.equal(task1.assignee.target?.name);
     expect(
-      (await db2.query(Query.select(Filter.type(TestSchema.Expando, { type: 'Person' }))).run())[0] === task2.assignee.target,
+      (await db2.query(Query.select(Filter.type(TestSchema.Expando, { type: 'Person' }))).run())[0] ===
+        task2.assignee.target,
     ).to.be.true;
   });
 

@@ -6,7 +6,7 @@ import { type Extension } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import { type Atom, type Registry } from '@effect-atom/atom-react';
 
-import { Entity, Filter, Obj, Query, Relation } from '@dxos/echo';
+import { Filter, Obj, Query, Relation } from '@dxos/echo';
 import { createDocAccessor, getTextInRange } from '@dxos/echo-db';
 import { type OperationInvoker } from '@dxos/operation';
 import { type Markdown } from '@dxos/plugin-markdown/types';

@@ -6,7 +6,7 @@ import { render, waitFor } from '@solidjs/testing-library';
 import { type JSX, createSignal } from 'solid-js';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { Filter, Obj, Query, Type } from '@dxos/echo';
+import { Filter, Obj, Query } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 

@@ -5,7 +5,7 @@
 import type * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { type Err, Obj, Type } from '@dxos/echo';
+import { type Err, Type } from '@dxos/echo';
 import { Database } from '@dxos/echo';
 import { EncodedReference } from '@dxos/echo-protocol';
 import { DXN, LOCAL_SPACE_TAG, type ObjectId, type SpaceId } from '@dxos/keys';

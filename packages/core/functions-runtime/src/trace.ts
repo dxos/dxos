@@ -5,7 +5,7 @@
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
-import { Obj, type Ref, Type } from '@dxos/echo';
+import { type Obj, type Ref, Type } from '@dxos/echo';
 import { Queue } from '@dxos/echo-db';
 import { TracingService } from '@dxos/functions';
 import { Trigger } from '@dxos/functions';

@@ -3,7 +3,7 @@
 //
 
 import { Client } from '@dxos/client';
-import { Obj, Type } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 
 const client = new Client();

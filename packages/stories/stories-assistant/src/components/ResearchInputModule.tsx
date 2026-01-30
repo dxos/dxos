@@ -40,7 +40,9 @@ const DebugCard = ({ object }: DebugCardProps) => {
           <span className='text-sm font-mono dx-text-hue' data-hue={getHashHue(object.id)}>
             {object.id.slice(-6)}
           </span>
-          <span className='text-sm text-description bg-neutral-800 pli-2 plb-1 rounded'>{Entity.getTypename(object)}</span>
+          <span className='text-sm text-description bg-neutral-800 pli-2 plb-1 rounded'>
+            {Entity.getTypename(object)}
+          </span>
         </p>
       </div>
       <details className='group'>

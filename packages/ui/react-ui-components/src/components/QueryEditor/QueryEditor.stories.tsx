@@ -32,9 +32,12 @@ const meta = {
     // Create tags and builder at render time to avoid Storybook serialization issues.
     const tags = useMemo(() => args.tags ?? createTags(), [args.tags]);
     const builder = useMemo(() => new QueryBuilder(tags), [tags]);
-    const handleChange = useCallback<NonNullable<QueryEditorProps['onChange']>>((value) => {
-      setFilter(builder.build(value).filter);
-    }, [builder]);
+    const handleChange = useCallback<NonNullable<QueryEditorProps['onChange']>>(
+      (value) => {
+        setFilter(builder.build(value).filter);
+      },
+      [builder],
+    );
 
     return (
       <div role='none' className='flex flex-col gap-2'>

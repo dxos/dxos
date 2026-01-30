@@ -71,7 +71,9 @@ describe.skip('loadObjectReferences', () => {
 
     const testPeer = await testBuilder.createPeer({ kv: createTestLevel(tmpPath) });
     const db = await testPeer.createDatabase(spaceKey);
-    const object = Obj.make(TestSchema.Expando, { nestedArray: [Obj.make(TestSchema.Expando, {}), Obj.make(TestSchema.Expando, {})] });
+    const object = Obj.make(TestSchema.Expando, {
+      nestedArray: [Obj.make(TestSchema.Expando, {}), Obj.make(TestSchema.Expando, {})],
+    });
     db.add(object);
     await db.flush();
     await testPeer.close();
@@ -92,9 +94,15 @@ describe.skip('loadObjectReferences', () => {
 
     const testPeer = await testBuilder.createPeer({ kv: createTestLevel(tmpPath) });
     const objects = [
-      Obj.make(TestSchema.Expando, { nestedArray: [Obj.make(TestSchema.Expando, {}), Obj.make(TestSchema.Expando, {})] }),
       Obj.make(TestSchema.Expando, {
-        nestedArray: [Obj.make(TestSchema.Expando, {}), Obj.make(TestSchema.Expando, {}), Obj.make(TestSchema.Expando, {})],
+        nestedArray: [Obj.make(TestSchema.Expando, {}), Obj.make(TestSchema.Expando, {})],
+      }),
+      Obj.make(TestSchema.Expando, {
+        nestedArray: [
+          Obj.make(TestSchema.Expando, {}),
+          Obj.make(TestSchema.Expando, {}),
+          Obj.make(TestSchema.Expando, {}),
+        ],
       }),
     ];
     const db = await testPeer.createDatabase(spaceKey);

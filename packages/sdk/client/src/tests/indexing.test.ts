@@ -7,11 +7,9 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, TriggerState, asyncTimeout } from '@dxos/async';
 import { type ClientServicesProvider, type Space, SpaceProperties } from '@dxos/client-protocol';
-import { type Entity, Obj, type QueryResult, Type } from '@dxos/echo';
-import { TestSchema as TestSchema$ } from '@dxos/echo/testing';
+import { type Entity, Obj, type QueryResult } from '@dxos/echo';
 import { Ref } from '@dxos/echo/internal';
-
-import { TestSchema } from '../testing';
+import { TestSchema as TestSchema$ } from '@dxos/echo/testing';
 import { Filter } from '@dxos/echo-db';
 import { type PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
@@ -19,6 +17,7 @@ import { log } from '@dxos/log';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
 
 import { Client } from '../client';
+import { TestSchema } from '../testing';
 import { TestBuilder } from '../testing';
 
 describe('Index queries', () => {

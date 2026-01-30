@@ -9,7 +9,7 @@ import * as Option from 'effect/Option';
 import React, { type PropsWithChildren, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Filter, type Space, SpaceState, isSpace } from '@dxos/client/echo';
-import { Obj, Query, Type } from '@dxos/echo';
+import { Obj, Query } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { AtomObj, AtomQuery } from '@dxos/echo-atom';
 import { faker } from '@dxos/random';

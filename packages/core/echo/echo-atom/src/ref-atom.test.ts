@@ -5,7 +5,7 @@
 import * as Registry from '@effect-atom/atom/Registry';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { Obj, Ref, Type } from '@dxos/echo';
+import { Obj, Ref } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { type EchoDatabase } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';

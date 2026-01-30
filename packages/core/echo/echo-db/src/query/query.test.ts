@@ -960,7 +960,9 @@ describe('Query', () => {
         const animal = faker.helpers.arrayElement(ANIMALS);
         counts[animal]++;
         db.add(
-          Obj.make(TestSchema.Expando, { title: faker.lorem.sentence(10) + ' ' + animal + ' ' + faker.lorem.sentence(10) }),
+          Obj.make(TestSchema.Expando, {
+            title: faker.lorem.sentence(10) + ' ' + animal + ' ' + faker.lorem.sentence(10),
+          }),
         );
         if (_ % 1000 === 0) {
           await sleep(1);

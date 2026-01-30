@@ -20,7 +20,10 @@ import { log } from '@dxos/log';
 export const syncObjects: (
   objs: Obj.Unknown[],
   opts: { foreignKeyId: string },
-) => Effect.Effect<Obj.Unknown[], never, Database.Service> = Effect.fn('syncObjects')(function* (objs, { foreignKeyId }) {
+) => Effect.Effect<Obj.Unknown[], never, Database.Service> = Effect.fn('syncObjects')(function* (
+  objs,
+  { foreignKeyId },
+) {
   return yield* Effect.forEach(
     objs,
     Effect.fnUntraced(function* (obj) {

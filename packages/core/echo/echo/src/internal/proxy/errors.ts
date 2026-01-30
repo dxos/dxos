@@ -38,8 +38,5 @@ export const createPropertyDeleteError = (prop: string | symbol): MutationOutsid
  * Create an error for attempting to call an array method outside of a change context.
  */
 export const createArrayMethodError = (method: string): MutationOutsideChangeContextError => {
-  return new MutationOutsideChangeContextError(
-    `call array.${method}()`,
-    `mutableObj.array.${method}(...);`,
-  );
+  return new MutationOutsideChangeContextError(`call array.${method}()`, `mutableObj.array.${method}(...);`);
 };

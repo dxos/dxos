@@ -7,7 +7,7 @@ import { inspect } from 'node:util';
 import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { Entity, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
+import { Obj, Query, Ref, Relation, Type } from '@dxos/echo';
 import {
   ATTR_RELATION_SOURCE,
   ATTR_RELATION_TARGET,

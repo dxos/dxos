@@ -12,7 +12,7 @@ import isEqual from 'lodash.isequal';
 
 import { waitForCondition } from '@dxos/async';
 import { type Context, Resource } from '@dxos/context';
-import { type Obj, Type } from '@dxos/echo';
+import { type Obj, type Type } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { EchoHost, type EchoHostIndexingConfig } from '@dxos/echo-pipeline';
 import { createIdFromSpaceKey } from '@dxos/echo-protocol';

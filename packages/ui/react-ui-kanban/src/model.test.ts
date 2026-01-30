@@ -12,7 +12,12 @@ import { createEchoSchema } from '@dxos/echo/testing';
 import { ObjectId } from '@dxos/keys';
 import { ProjectionModel, View, createEchoChangeCallback } from '@dxos/schema';
 
-import { type BaseKanbanItem, KanbanModel, UNCATEGORIZED_VALUE, createEchoChangeCallback as createEchoKanbanChangeCallback } from './model';
+import {
+  type BaseKanbanItem,
+  KanbanModel,
+  UNCATEGORIZED_VALUE,
+  createEchoChangeCallback as createEchoKanbanChangeCallback,
+} from './model';
 import { Kanban } from './types';
 
 // Use deterministic IDs for tests.

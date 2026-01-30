@@ -91,7 +91,9 @@ const _createEntityExtractionEnricher = ({ contextTypes, space }: EntityExtracti
 
   return async (message: Message.Message) => {
     const objects = await space.db
-      .query(Query.select(Filter.or(...contextTypes.map((schema) => Filter.type(schema as Schema.Schema<Obj.Unknown>)))))
+      .query(
+        Query.select(Filter.or(...contextTypes.map((schema) => Filter.type(schema as Schema.Schema<Obj.Unknown>)))),
+      )
       .run();
 
     log.info('context', { objects });

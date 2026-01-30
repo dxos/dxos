@@ -156,7 +156,8 @@ export default Capability.makeModule(
       Common.createSurface({
         id: `${meta.id}/object-debug`,
         role: 'article',
-        filter: (data): data is { companionTo: Obj.Unknown } => data.subject === 'debug' && Obj.isObject(data.companionTo),
+        filter: (data): data is { companionTo: Obj.Unknown } =>
+          data.subject === 'debug' && Obj.isObject(data.companionTo),
         component: ({ data }) => <DebugObjectPanel object={data.companionTo} />,
       }),
       Common.createSurface({

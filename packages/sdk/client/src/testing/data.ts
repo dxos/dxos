@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Obj, Type } from '@dxos/echo';
+import { Type } from '@dxos/echo';
 
 /**
  * @deprecated Use @dxos/echo/testing.

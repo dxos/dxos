@@ -13,7 +13,6 @@ import React, { type FC, useEffect, useMemo, useState } from 'react';
 import { useAtomCapability, useCapability } from '@dxos/app-framework/react';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj, Ref, Type } from '@dxos/echo';
-import { TestSchema } from '@dxos/echo/testing';
 import { createDocAccessor, toCursorRange } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { ClientPlugin } from '@dxos/plugin-client';

@@ -3,7 +3,7 @@
 //
 
 import { Client } from '@dxos/client';
-import { Obj, Type } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 
 const client = new Client();
@@ -17,7 +17,10 @@ async () => {
 
   const space = await client.spaces.create();
 
-  const object = Obj.make(TestSchema.Expando, { type: 'task', name: 'buy milk' });
+  const object = Obj.make(TestSchema.Expando, {
+    type: 'task',
+    name: 'buy milk',
+  });
   space.db.add(object);
 
   const names: string[] = [object.name];

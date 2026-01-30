@@ -6,7 +6,7 @@ import '@dxos/lit-ui/dx-tag-picker.pcss';
 
 import React, { useCallback, useMemo } from 'react';
 
-import { type Database, Entity, Filter, Obj, Ref, type Type } from '@dxos/echo';
+import { type Database, Entity, Filter, Ref, type Type } from '@dxos/echo';
 import { ReferenceAnnotationId, type ReferenceAnnotationValue } from '@dxos/echo/internal';
 import { useQuery, useSchema as useSchema$ } from '@dxos/echo-react';
 import { findAnnotation } from '@dxos/effect';

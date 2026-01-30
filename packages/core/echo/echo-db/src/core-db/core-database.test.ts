@@ -5,7 +5,7 @@
 import { describe, expect, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
-import { type Entity, Filter, Obj, Ref, Type } from '@dxos/echo';
+import { type Entity, Filter, Obj, Ref } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { type DatabaseDirectory, SpaceDocVersion, createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { ObjectId } from '@dxos/keys';
@@ -240,9 +240,11 @@ describe('CoreDatabase', () => {
       const objectsToAdd = range(2).map(() => Obj.make(TestSchema.Expando, {}));
       const rootObject = Obj.make(TestSchema.Expando, {});
       Obj.change(rootObject, (root: any) => {
-        [linksToRemove, loadedLinks, partiallyLoadedLinks].flatMap((v: any[]) => v).forEach((obj: any) => {
-          root[obj.id] = Ref.make(obj);
-        });
+        [linksToRemove, loadedLinks, partiallyLoadedLinks]
+          .flatMap((v: any[]) => v)
+          .forEach((obj: any) => {
+            root[obj.id] = Ref.make(obj);
+          });
       });
 
       const db = await createClientDbInSpaceWithObject(rootObject);

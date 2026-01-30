@@ -11,8 +11,6 @@ import { performInvitation } from '@dxos/client-services/testing';
 import { Context } from '@dxos/context';
 import { Filter, Obj, Ref, Type } from '@dxos/echo';
 import { TestSchema as TestSchema$ } from '@dxos/echo/testing';
-
-import { TestSchema } from '../testing';
 import { getObjectCore } from '@dxos/echo-db';
 import { EncodedReference } from '@dxos/echo-protocol';
 import { SpaceId } from '@dxos/keys';
@@ -22,6 +20,7 @@ import { range } from '@dxos/util';
 import { Client } from '../client';
 import { SpaceState, getSpace } from '../echo';
 import { CreateEpochRequest } from '../halo';
+import { TestSchema } from '../testing';
 import {
   type CreateInitializedClientsOptions,
   TestBuilder,

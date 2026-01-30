@@ -7,7 +7,6 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 import { Trigger, sleep } from '@dxos/async';
 import { performInvitation } from '@dxos/client-services/testing';
 import { Context } from '@dxos/context';
-import { Type } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { log } from '@dxos/log';
 import { Invitation, QueryInvitationsResponse } from '@dxos/protocols/proto/dxos/client/services';

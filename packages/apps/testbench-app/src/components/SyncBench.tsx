@@ -12,7 +12,7 @@ import React, { useEffect, useState } from 'react';
 import { scheduleTaskInterval } from '@dxos/async';
 import { Invitation, InvitationEncoder } from '@dxos/client/invitations';
 import { Context } from '@dxos/context';
-import { Filter, Obj, Type } from '@dxos/echo';
+import { Filter, Obj } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { useClient, useConfig } from '@dxos/react-client';
 import { type SpaceId, type SpaceSyncState } from '@dxos/react-client/echo';
