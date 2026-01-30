@@ -43,8 +43,8 @@ export const KindSchema = EntityKindSchema;
 
 /**
  * Assigns a kind to an Object or Relation instance.
+ * NOTE: Needed to make `isRelation` and `isObject` checks work.
  */
-// NOTE: Needed to make `isRelation` and `isObject` checks work.
 export interface OfKind<K extends Kind> {
   readonly [KindId]: K;
   readonly id: ObjectId;

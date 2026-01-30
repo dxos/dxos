@@ -39,6 +39,11 @@
       "types": "./dist/types/src/SqlExport.d.ts",
       "browser": "./dist/lib/browser/SqlExport.mjs",
       "node": "./dist/lib/node-esm/SqlExport.mjs"
+    },
+    "./SqlTransaction": {
+      "types": "./dist/types/src/SqlTransaction.d.ts",
+      "browser": "./dist/lib/browser/SqlTransaction.mjs",
+      "node": "./dist/lib/node-esm/SqlTransaction.mjs"
     }
   },
   "files": [

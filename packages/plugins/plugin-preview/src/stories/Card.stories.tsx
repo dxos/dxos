@@ -3,64 +3,66 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useMemo } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import { faker } from '@dxos/random';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { type Organization, type Person, type Project, type Task } from '@dxos/types';
 
+import { OrganizationCard, PersonCard, ProjectCard, TaskCard } from '../cards';
 import { translations } from '../translations';
 
-import { Defaultstory, type DefaultstoryProps, createCards } from './testing';
+import { DefaultStory, createOrganization, createPerson, createProject, createTask } from './testing';
 
 faker.seed(999);
 
-// Wrapper to create cards at render time (ECHO objects can't be created at module load).
-const DefaultStoryWithCards = ({ role, image = true }: { role: DefaultstoryProps['role']; image?: boolean }) => {
-  const cards = useMemo(() => createCards(image), [image]);
-  return <Defaultstory role={role} cards={cards} />;
-};
-
 const meta = {
   title: 'plugins/plugin-preview/Card',
-  render: DefaultStoryWithCards,
+  render: DefaultStory,
   decorators: [
     withTheme,
+    withLayout({ layout: 'column', scroll: true }),
     // TODO(wittjosiah): Try to write story which does not depend on plugin manager.
     withPluginManager({ plugins: corePlugins() }),
   ],
   parameters: {
     translations,
+    layout: 'fullscreen',
   },
   tags: ['cards'],
-} satisfies Meta<typeof DefaultStoryWithCards>;
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
-type Story = StoryObj<typeof meta>;
-
-export const Popover: Story = {
+export const _Person: StoryObj<typeof DefaultStory<Person.Person>> = {
   args: {
-    role: 'card--popover',
+    Component: PersonCard,
+    createObject: createPerson,
+    image: true,
   },
 };
 
-export const Intrinsic: Story = {
+export const _Organization: StoryObj<typeof DefaultStory<Organization.Organization>> = {
   args: {
-    role: 'card--intrinsic',
+    Component: OrganizationCard,
+    createObject: createOrganization,
+    image: true,
   },
 };
 
-export const Extrinsic: Story = {
+export const _Project: StoryObj<typeof DefaultStory<Project.Project>> = {
   args: {
-    role: 'card--extrinsic',
+    Component: ProjectCard,
+    createObject: createProject,
+    image: true,
   },
 };
 
-export const ExtrinsicNoImage: Story = {
+export const _Task: StoryObj<typeof DefaultStory<Task.Task>> = {
   args: {
-    role: 'card--extrinsic',
-    image: false,
+    Component: TaskCard,
+    createObject: createTask,
+    image: true,
   },
 };

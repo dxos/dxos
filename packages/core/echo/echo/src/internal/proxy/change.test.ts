@@ -51,9 +51,9 @@ describe('Obj.change enforcement', () => {
       const obj = Obj.make(TestSchema.Person, { name: 'Test' });
       const meta = Obj.getMeta(obj);
 
-      // Runtime errors for direct meta mutations (no compile-time readonly on meta properties).
-      expect(() => (meta.keys = [])).toThrow(/outside of Obj.change/);
-      expect(() => (meta.tags = ['tag'])).toThrow(/outside of Obj.change/);
+      // Runtime errors for direct meta mutations.
+      expect(() => ((meta as any).keys = [])).toThrow(/outside of Obj.change/);
+      expect(() => ((meta as any).tags = ['tag'])).toThrow(/outside of Obj.change/);
     });
 
     test('getMeta returns mutable ObjectMeta inside change callback', ({ expect }) => {
@@ -286,7 +286,6 @@ describe('Obj.change enforcement', () => {
       });
 
       expect(() => {
-        // @ts-expect-error - nested property assignment should be caught.
         obj.address!.city = 'LA';
       }).toThrow(/outside of Obj.change/);
     });

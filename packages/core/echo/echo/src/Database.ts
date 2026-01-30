@@ -12,7 +12,7 @@ import type * as Types from 'effect/Types';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { promiseWithCauseCapture } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { type DXN, type PublicKey, type SpaceId } from '@dxos/keys';
+import { DXN, type PublicKey, type SpaceId } from '@dxos/keys';
 import { type QueryOptions as QueryOptionsProto } from '@dxos/protocols/proto/dxos/echo/filter';
 
 import type * as Entity from './Entity';
@@ -225,18 +225,19 @@ export class Service extends Context.Tag('@dxos/echo/Database/Service')<
    */
   static resolve: {
     // No type check.
-    (dxn: DXN): Effect.Effect<Entity.Unknown, never, Service>;
+    (ref: DXN | Ref<any>): Effect.Effect<Entity.Unknown, never, Service>;
     // Check matches schema.
     <S extends Type.Entity.Any>(
-      dxn: DXN,
+      ref: DXN | Ref<any>,
       schema: S,
     ): Effect.Effect<Schema.Schema.Type<S>, Err.ObjectNotFoundError, Service>;
   } = (<S extends Type.Entity.Any>(
-    dxn: DXN,
+    ref: DXN | Ref<any>,
     schema?: S,
   ): Effect.Effect<Schema.Schema.Type<S>, Err.ObjectNotFoundError, Service> =>
     Effect.gen(function* () {
       const { db } = yield* Service;
+      const dxn = ref instanceof DXN ? ref : ref.dxn;
       const object = yield* promiseWithCauseCapture(() =>
         db.graph
           .createRefResolver({

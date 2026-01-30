@@ -12,9 +12,7 @@ import { Agent } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
-import { type FunctionDefinition, FunctionInvocationService } from '@dxos/functions';
-import { InvocationTracer } from '@dxos/functions-runtime';
-import { TracingServiceExt } from '@dxos/functions-runtime';
+import { type FunctionDefinition, FunctionInvocationService, TracingService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { useComputeRuntimeCallback } from '@dxos/plugin-automation';
@@ -241,7 +239,7 @@ const runPrompt = Effect.fn(function* ({
     prompt,
     input,
   };
-  const tracer = yield* InvocationTracer;
+  const tracer = yield* TracingService;
   const trace = yield* tracer.traceInvocationStart({
     target: undefined,
     payload: {
@@ -251,7 +249,7 @@ const runPrompt = Effect.fn(function* ({
 
   // Invoke the function.
   const result = yield* FunctionInvocationService.invokeFunction(Agent.prompt, inputData).pipe(
-    Effect.provide(TracingServiceExt.layerQueue(trace.invocationTraceQueue)),
+    Effect.provide(trace.invocationTraceQueue ? TracingService.layerInvocation(trace) : TracingService.layerNoop),
     Effect.exit,
   );
 

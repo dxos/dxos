@@ -17,9 +17,9 @@ export const OutlineCard = ({ subject }: SurfaceComponentProps<OutlineType.Outli
   }
 
   return (
-    <Card.SurfaceRoot id={subject.id} classNames='p-2'>
+    <Card.Root id={subject.id} classNames='p-2'>
       <Outline id={subject.content.target.id} text={subject.content.target} />
-    </Card.SurfaceRoot>
+    </Card.Root>
   );
 };
 

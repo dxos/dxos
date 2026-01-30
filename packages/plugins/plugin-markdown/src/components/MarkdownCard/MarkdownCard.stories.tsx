@@ -19,7 +19,7 @@ import { MarkdownCard, type MarkdownCardProps } from './MarkdownCard';
 faker.seed(1234);
 
 // Wrapper to create Markdown at render time (ECHO objects can't be created at module load).
-const MarkdownCardStory = ({ role, ...args }: Omit<MarkdownCardProps, 'subject'>) => {
+const MarkdownCardStory = ({ ...args }: Omit<MarkdownCardProps, 'subject'>) => {
   const subject = useMemo(
     () =>
       Markdown.make({
@@ -29,8 +29,8 @@ const MarkdownCardStory = ({ role, ...args }: Omit<MarkdownCardProps, 'subject'>
     [],
   );
   return (
-    <CardContainer icon='ph--text-aa--regular' role={role}>
-      <MarkdownCard role={role} subject={subject} {...args} />
+    <CardContainer icon='ph--text-aa--regular'>
+      <MarkdownCard subject={subject} {...args} />
     </CardContainer>
   );
 };
@@ -55,20 +55,4 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Popover: Story = {
-  args: {
-    role: 'card--popover',
-  },
-};
-
-export const Intrinsic: Story = {
-  args: {
-    role: 'card--intrinsic',
-  },
-};
-
-export const Extrinsic: Story = {
-  args: {
-    role: 'card--extrinsic',
-  },
-};
+export const Default: Story = {};

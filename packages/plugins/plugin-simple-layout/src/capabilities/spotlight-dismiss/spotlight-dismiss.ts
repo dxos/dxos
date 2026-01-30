@@ -5,14 +5,14 @@
 // Based on the frontend-driven dismiss pattern from:
 // https://github.com/Jedliu/tauri-template-demo
 
-import { useEffect } from 'react';
+import * as Effect from 'effect/Effect';
 
+import { Capability, Common } from '@dxos/app-framework';
 import { log } from '@dxos/log';
 import { isTauri } from '@dxos/util';
 
 /**
  * Get the Tauri window API from the global object.
- * Returns undefined if not running in Tauri.
  */
 const getTauriWindow = (): any => {
   const tauri = (globalThis as any).__TAURI__;
@@ -21,60 +21,46 @@ const getTauriWindow = (): any => {
 
 /**
  * Get the Tauri core API (invoke) from the global object.
- * Returns undefined if not running in Tauri.
  */
 const getTauriCore = (): any => {
   const tauri = (globalThis as any).__TAURI__;
   return tauri?.core;
 };
 
+export type SpotlightDismissOptions = {
+  /** Whether running in popover window context. */
+  isPopover?: boolean;
+};
+
 /**
- * Hook to set up spotlight panel dismiss behavior.
+ * Capability that sets up spotlight panel dismiss behavior.
  * When running in Tauri popover mode, listens for focus loss and Escape key
- * to dismiss the spotlight panel.
+ * to dismiss the spotlight panel. Runs at startup before React renders.
  */
-export const useSpotlightDismiss = (isPopover: boolean | undefined) => {
-  // Handle blur (click outside) to dismiss spotlight.
-  useEffect(() => {
+export default Capability.makeModule(({ isPopover = false }: SpotlightDismissOptions = {}) =>
+  Effect.promise(async () => {
     if (!isPopover || !isTauri()) {
-      return;
+      return [];
     }
 
-    let cleanup: (() => void) | undefined;
-
-    const setup = async () => {
-      try {
-        const tauriWindow = getTauriWindow();
-        const tauriCore = getTauriCore();
-        if (!tauriWindow || !tauriCore) {
-          return;
-        }
-
+    // Set up focus listener.
+    let focusCleanup: (() => void) | undefined;
+    try {
+      const tauriWindow = getTauriWindow();
+      const tauriCore = getTauriCore();
+      if (tauriWindow && tauriCore) {
         const win = tauriWindow.getCurrentWindow();
-        const unlisten = await win.onFocusChanged(async ({ payload }: { payload: boolean }) => {
+        focusCleanup = await win.onFocusChanged(async ({ payload }: { payload: boolean }) => {
           if (!payload) {
             await tauriCore.invoke('hide_spotlight');
           }
         });
-        cleanup = unlisten;
-      } catch (err) {
-        log.catch(err);
       }
-    };
-
-    void setup();
-
-    return () => {
-      cleanup?.();
-    };
-  }, [isPopover]);
-
-  // Handle Escape key to dismiss spotlight.
-  useEffect(() => {
-    if (!isPopover || !isTauri()) {
-      return;
+    } catch (err) {
+      log.catch(err);
     }
 
+    // Set up Escape key listener.
     const handleKeyDown = async (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         event.preventDefault();
@@ -88,8 +74,13 @@ export const useSpotlightDismiss = (isPopover: boolean | undefined) => {
         }
       }
     };
-
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isPopover]);
-};
+
+    return Capability.contributes(Common.Capability.Null, null, () =>
+      Effect.sync(() => {
+        focusCleanup?.();
+        window.removeEventListener('keydown', handleKeyDown);
+      }),
+    );
+  }),
+);

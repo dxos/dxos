@@ -10,10 +10,9 @@ import { faker } from '@dxos/random';
 import { useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/react-ui/testing';
-import { Card, cardNoSpacing, cardSpacing } from '@dxos/react-ui-mosaic';
+import { Card } from '@dxos/react-ui-mosaic';
 import { createObjectFactory } from '@dxos/schema/testing';
 import { Organization } from '@dxos/types';
-import { mx } from '@dxos/ui-theme';
 
 import { Masonry } from './Masonry';
 
@@ -21,10 +20,8 @@ const StoryItem = ({ data: { image, name, description } }: { data: Organization.
   return (
     <Card.Root>
       <Card.Poster alt={name!} {...(image ? { image } : { icon: 'ph--building-office--regular' })} />
-      <div role='none' className={mx('flex items-center gap-2', cardSpacing)}>
-        <Card.Heading classNames={cardNoSpacing}>{name}</Card.Heading>
-      </div>
-      {description && <Card.Text classNames='line-clamp-2'>{description}</Card.Text>}
+      <Card.Heading>{name}</Card.Heading>
+      {description && <Card.Text variant='description'>{description}</Card.Text>}
     </Card.Root>
   );
 };

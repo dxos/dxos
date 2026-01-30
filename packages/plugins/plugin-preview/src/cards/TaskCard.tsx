@@ -5,13 +5,10 @@
 import * as SchemaAST from 'effect/SchemaAST';
 import React from 'react';
 
+import { type SurfaceComponentProps } from '@dxos/app-framework/react';
 import { type PropertyMetaAnnotation, PropertyMetaAnnotationId } from '@dxos/echo/internal';
-import { Card, cardNoSpacing, cardSpacing } from '@dxos/react-ui-mosaic';
+import { Card } from '@dxos/react-ui-mosaic';
 import { Task } from '@dxos/types';
-import { mx } from '@dxos/ui-theme';
-
-import { CardSubjectMenu } from '../components';
-import { type CardPreviewProps } from '../types';
 
 // TODO(thure): Should this move upstream as a helper? Is there an easier way to get options?
 const getActiveStatusOption = (status?: string) => {
@@ -26,21 +23,18 @@ const getActiveStatusOption = (status?: string) => {
   return options.find(({ id }) => id === status);
 };
 
-export const TaskCard = ({ subject, role, db }: CardPreviewProps<Task.Task>) => {
+export const TaskCard = ({ subject }: SurfaceComponentProps<Task.Task>) => {
   const { title, status } = subject;
   const statusOption = getActiveStatusOption(status);
 
   return (
-    <Card.SurfaceRoot id={subject.id} role={role}>
-      <div role='none' className={mx('flex items-center gap-2', cardSpacing)}>
-        <Card.Heading classNames={[cardNoSpacing, 'min-is-0 flex-1 truncate']}>{title}</Card.Heading>
-        {statusOption && (
-          <span className='dx-tag' data-hue={statusOption.color}>
-            {statusOption.title}
-          </span>
-        )}
-        <CardSubjectMenu subject={subject} db={db} />
-      </div>
-    </Card.SurfaceRoot>
+    <Card.Content>
+      <Card.Heading classNames='min-is-0 flex-1 truncate'>{title}</Card.Heading>
+      {statusOption && (
+        <span className='dx-tag' data-hue={statusOption.color}>
+          {statusOption.title}
+        </span>
+      )}
+    </Card.Content>
   );
 };

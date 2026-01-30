@@ -86,7 +86,7 @@ export const maxSizesFacet = {
     namespace: 'dx-',
     conditions: { root: [':root'] },
     sememes: {
-      prose: { root: ['size', 50] },
+      proseMaxWidth: { root: ['size', 50] },
       containerMaxWidth: { root: ['size', 50] },
       popoverMaxWidth: { root: ['size', cardDefaultInlineSize] },
       cardDefaultWidth: { root: ['size', cardDefaultInlineSize] },

@@ -87,7 +87,8 @@ export const TypescriptEditor = memo(
 
           // https://github.com/val-town/codemirror-ts
           env && [
-            tsFacet.of({ env, path: `./src/${id}.ts` }),
+            // TODO(burdon): Fix type.
+            tsFacet.of({ env: env as any, path: `./src/${id}.ts` }),
             tsSync(),
             tsLinter(),
             tsHover({ renderTooltip: createTooltipRenderer(themeMode) }),

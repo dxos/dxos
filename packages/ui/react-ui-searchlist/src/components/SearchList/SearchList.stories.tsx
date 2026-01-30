@@ -39,7 +39,7 @@ const DefaultStory = ({ items = defaultItems }: DefaultStoryProps) => {
   const { results, handleSearch } = useSearchListResults({ items });
 
   return (
-    <div className='is-full bs-[400px] flex flex-col'>
+    <div className='flex flex-col is-full bs-[400px]'>
       <SearchList.Root onSearch={handleSearch}>
         <SearchList.Input placeholder='Search items...' autoFocus />
         <SearchList.Content>
@@ -332,11 +332,10 @@ const CustomInput = () => {
 
   return (
     <div className='flex gap-2 items-center p-2 bg-input rounded'>
-      <span>🔎</span>
       <input
         type='text'
         value={query}
-        onChange={(e) => onQueryChange(e.target.value)}
+        onChange={(ev) => onQueryChange(ev.target.value)}
         onKeyDown={handleKeyDown}
         placeholder='Custom input...'
         className='bg-transparent outline-none grow'
@@ -354,7 +353,7 @@ const CustomInputStory = ({ items = defaultItems }: DefaultStoryProps) => {
   const { results, handleSearch } = useSearchListResults({ items });
 
   return (
-    <div className='is-full bs-[400px] flex flex-col'>
+    <div className='is-full bs-[400px] flex flex-col border border-separator'>
       <SearchList.Root onSearch={handleSearch}>
         <CustomInput />
         <SearchList.Content>
@@ -472,8 +471,9 @@ const WithGroupsStory = () => {
 const meta = {
   title: 'ui/react-ui-searchlist/SearchList',
   component: SearchList.Root as any,
-  decorators: [withTheme, withLayout({ layout: 'column', classNames: 'p-4' })],
+  decorators: [withTheme, withLayout({ layout: 'column' })],
   parameters: {
+    layout: 'fullscreen',
     translations,
   },
 } satisfies Meta<typeof DefaultStory>;

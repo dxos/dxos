@@ -11,10 +11,12 @@ import { Filter, Obj, type Ref, Type } from '@dxos/echo';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { Masonry as MasonryComponent } from '@dxos/react-ui-masonry';
+import { Card } from '@dxos/react-ui-mosaic';
 import { type View, getTypenameFromQuery } from '@dxos/schema';
 
-const Item = ({ data }: { data: any }) => {
-  return <Surface role='card' limit={1} data={{ subject: data }} />;
+export type MasonryContainerProps = {
+  view: View.View;
+  role?: string;
 };
 
 export const MasonryContainer = ({
@@ -60,5 +62,18 @@ export const MasonryContainer = ({
       render={Item as any}
       classNames='is-full max-is-full bs-full max-bs-full overflow-y-auto p-4'
     />
+  );
+};
+
+const Item = ({ data }: { data: any }) => {
+  return (
+    <Card.Root>
+      <Card.Toolbar>
+        <span />
+        <Card.Title>{Obj.getLabel(data)}</Card.Title>
+        <Card.Menu />
+      </Card.Toolbar>
+      <Surface role='card--content' limit={1} data={{ subject: data }} />
+    </Card.Root>
   );
 };

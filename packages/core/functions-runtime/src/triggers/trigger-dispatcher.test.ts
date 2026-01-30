@@ -24,12 +24,11 @@ import { FunctionInvocationServiceLayerTestMocked } from '../services/function-i
 import { TestDatabaseLayer } from '../testing';
 import { TracingServiceExt } from '../trace';
 
-import { InvocationTracer } from './invocation-tracer';
 import { TriggerDispatcher } from './trigger-dispatcher';
 import { TriggerStateStore } from './trigger-state-store';
 
 const TestLayer = Fn.pipe(
-  Layer.mergeAll(InvocationTracer.layerTest, TriggerStateStore.layerMemory),
+  Layer.mergeAll(TriggerStateStore.layerMemory),
   Layer.provideMerge(
     Layer.mergeAll(
       AiService.notAvailable,

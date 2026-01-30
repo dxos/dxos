@@ -13,7 +13,6 @@ import { getSpace, useQuery } from '@dxos/react-client/echo';
 import { IconButton, type ThemedClassName, useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { Form, ViewEditor } from '@dxos/react-ui-form';
 import { List } from '@dxos/react-ui-list';
-import { cardChrome, cardText } from '@dxos/react-ui-mosaic';
 import { type ProjectionModel, View } from '@dxos/schema';
 import { Project, Task } from '@dxos/types';
 import { inputTextLabel, mx, osTranslations, subtleHover } from '@dxos/ui-theme';
@@ -145,8 +144,8 @@ export const ProjectObjectSettings = ({ classNames, project }: ProjectObjectSett
     (values: Schema.Schema.Type<typeof ColumnFormSchema>) => {
       if (column) {
         const columnIndex = project.columns.findIndex((c) => c === column);
-        Obj.change(project, (p) => {
-          p.columns[columnIndex].name = values.name;
+        Obj.change(project, (project) => {
+          project.columns[columnIndex].name = values.name;
         });
       }
     },
@@ -155,7 +154,7 @@ export const ProjectObjectSettings = ({ classNames, project }: ProjectObjectSett
 
   return (
     <div role='none' className={mx('plb-cardSpacingBlock overflow-y-auto', classNames)}>
-      <h2 className={mx(inputTextLabel, cardText)}>{t('views label')}</h2>
+      <h2 className={mx(inputTextLabel)}>{t('views label')}</h2>
 
       <List.Root<Project.Column>
         items={project.columns}
@@ -165,7 +164,7 @@ export const ProjectObjectSettings = ({ classNames, project }: ProjectObjectSett
       >
         {({ items: columns }) => (
           <>
-            <div role='list' className={mx(listGrid, cardChrome)}>
+            <div role='list' className={mx(listGrid)}>
               {columns.map((column) => (
                 <List.Item<Project.Column>
                   key={column.view.dxn.toString()}

@@ -45,10 +45,7 @@ export const timer = Command.make(
       const currentFn = yield* updateFunction(trigger, options.functionId);
       yield* updateCron(trigger, options.cron);
       yield* updateInput(trigger, currentFn, options.input);
-      const newEnabled = yield* updateEnabled(trigger, options.id, options.enabled);
-      Obj.change(trigger, (t) => {
-        t.enabled = newEnabled;
-      });
+      yield* updateEnabled(trigger, options.id, options.enabled);
 
       if (json) {
         yield* Console.log(JSON.stringify(trigger, null, 2));
@@ -95,10 +92,10 @@ const updateFunction = Effect.fn(function* (trigger: Trigger.Trigger, functionId
     if (!foundFn || !Obj.instanceOf(Function.Function, foundFn)) {
       return yield* Effect.fail(new Error(`Function not found: ${functionId}`));
     }
-    currentFn = foundFn;
-    Obj.change(trigger, (t) => {
-      t.function = Ref.make(currentFn!);
+    Obj.change(trigger, (mutableTrigger) => {
+      mutableTrigger.function = Ref.make(foundFn);
     });
+    currentFn = foundFn;
   }
 
   if (!currentFn) {
@@ -131,13 +128,11 @@ const updateCron = Effect.fn(function* (trigger: Trigger.Trigger, cronOption: Op
         }).pipe(Prompt.run),
       onSome: (value) => Effect.succeed(value),
     });
-    if (trigger.spec?.kind === 'timer') {
-      Obj.change(trigger, (t) => {
-        if (t.spec?.kind === 'timer') {
-          t.spec.cron = cron;
-        }
-      });
-    }
+    Obj.change(trigger, (mutableTrigger) => {
+      if (mutableTrigger.spec?.kind === 'timer') {
+        mutableTrigger.spec.cron = cron;
+      }
+    });
   }
 });
 
@@ -169,8 +164,8 @@ const updateInput = Effect.fn(function* (
         promptForSchemaInput(fn.inputSchema ? Type.toEffectSchema(fn.inputSchema) : undefined, currentInput),
       onSome: (value) => Effect.succeed(value as Record<string, any>),
     });
-    Obj.change(trigger, (t) => {
-      t.input = inputObj as any;
+    Obj.change(trigger, (mutableTrigger) => {
+      mutableTrigger.input = inputObj;
     });
   }
 });
@@ -184,12 +179,15 @@ const updateEnabled = Effect.fn(function* (
   idOption: Option.Option<string>,
   enabled: boolean,
 ) {
-  return yield* Option.match(idOption, {
+  const enabledValue = yield* Option.match(idOption, {
     onNone: () =>
       Prompt.confirm({
         message: 'Enable the trigger?',
         initial: trigger.enabled,
       }).pipe(Prompt.run),
     onSome: () => Effect.succeed(enabled),
+  });
+  Obj.change(trigger, (mutableTrigger) => {
+    mutableTrigger.enabled = enabledValue;
   });
 });

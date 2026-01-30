@@ -11,8 +11,6 @@ import { DXN, Type } from '@dxos/echo';
 //   - Should be more consistent (e.g. subject vs item).
 //   - Should re-use schemas if possible.
 
-export type TriggerEvent = EmailEvent | QueueEvent | SubscriptionEvent | TimerEvent | WebhookEvent;
-
 // TODO(burdon): Reuse trigger schema from @dxos/functions (TriggerType).
 export const EmailEvent = Schema.mutable(
   Schema.Struct({
@@ -65,3 +63,6 @@ export const WebhookEvent = Schema.mutable(
   }),
 );
 export type WebhookEvent = Schema.Schema.Type<typeof WebhookEvent>;
+
+export const TriggerEvent = Schema.Union(EmailEvent, QueueEvent, SubscriptionEvent, TimerEvent, WebhookEvent);
+export type TriggerEvent = Schema.Schema.Type<typeof TriggerEvent>;

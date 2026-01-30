@@ -16,7 +16,6 @@ import { AutomationPlugin } from '@dxos/plugin-automation';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { ExplorerPlugin } from '@dxos/plugin-explorer';
 import { Markdown, MarkdownPlugin } from '@dxos/plugin-markdown';
-import { SpacePlugin } from '@dxos/plugin-space';
 import { corePlugins } from '@dxos/plugin-testing';
 import { Config, useClient } from '@dxos/react-client';
 import { useQuery } from '@dxos/react-client/echo';
@@ -40,9 +39,10 @@ const meta = {
   },
   decorators: [
     withTheme,
-    withLayout({ layout: 'column', classNames: 'is-prose' }),
+    withLayout({ layout: 'column', classNames: 'is-proseMaxWidth' }),
     withPluginManager({
       plugins: [
+        ...corePlugins(),
         ClientPlugin({
           // TODO(wittjosiah): ComputeRuntime requires edge to be configured or it will throw.
           config: new Config({
@@ -63,8 +63,6 @@ const meta = {
               space.db.add(serializeFunction(Agent.prompt));
             }),
         }),
-        ...corePlugins(),
-        SpacePlugin({}),
         AssistantPlugin(),
         AutomationPlugin(),
         ExplorerPlugin(),

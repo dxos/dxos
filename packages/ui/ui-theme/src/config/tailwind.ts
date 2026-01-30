@@ -37,7 +37,7 @@ export const tailwindConfig = ({
     extend: merge(
       {
         spacing: {
-          prose: 'var(--dx-prose)',
+          proseMaxWidth: 'var(--dx-proseMaxWidth)',
           containerMaxWidth: 'var(--dx-containerMaxWidth)',
           cardDefaultWidth: 'var(--dx-cardDefaultWidth)',
           cardMinWidth: 'var(--dx-cardMinWidth)',
@@ -52,7 +52,7 @@ export const tailwindConfig = ({
           none: '0',
           sm: '0.25rem',
           DEFAULT: '0.5rem',
-          md: '.75rem',
+          md: '0.75rem',
           lg: '1rem',
         },
         screens: {

@@ -22,6 +22,7 @@ import { type LevelDB } from '@dxos/kv-store';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { layerMemory } from '@dxos/sql-sqlite/platform';
 import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
+import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 import { range } from '@dxos/util';
 
 import { EchoClient } from '../client';
@@ -40,7 +41,10 @@ type PeerOptions = {
   assignQueuePositions?: boolean;
 
   kv?: LevelDB;
-  runtime?: ManagedRuntime.ManagedRuntime<SqlClient.SqlClient | SqlExport.SqlExport, never>;
+  runtime?: ManagedRuntime.ManagedRuntime<
+    SqlClient.SqlClient | SqlExport.SqlExport | SqlTransaction.SqlTransaction,
+    never
+  >;
 };
 
 export class EchoTestBuilder extends Resource {
@@ -91,7 +95,10 @@ export class EchoTestPeer extends Resource {
   private _lastDatabaseRootUrl?: string = undefined;
 
   private _foreignRuntime: boolean;
-  private _managedRuntime!: ManagedRuntime.ManagedRuntime<SqlClient.SqlClient | SqlExport.SqlExport, never>;
+  private _managedRuntime!: ManagedRuntime.ManagedRuntime<
+    SqlClient.SqlClient | SqlExport.SqlExport | SqlTransaction.SqlTransaction,
+    never
+  >;
 
   constructor({ kv = createTestLevel(), indexing = {}, types, assignQueuePositions, runtime }: PeerOptions) {
     super();
@@ -109,7 +116,9 @@ export class EchoTestPeer extends Resource {
 
   private _initEcho(): void {
     if (!this._foreignRuntime) {
-      this._managedRuntime = ManagedRuntime.make(Layer.merge(layerMemory, Reactivity.layer).pipe(Layer.orDie));
+      this._managedRuntime = ManagedRuntime.make(
+        SqlTransaction.layer.pipe(Layer.provideMerge(Layer.merge(layerMemory, Reactivity.layer))).pipe(Layer.orDie),
+      );
     }
     this._echoHost = new EchoHost({
       kv: this._kv,

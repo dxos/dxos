@@ -13,6 +13,7 @@ import { type SpaceMember } from '@dxos/react-client/echo';
 import { type Identity, useIdentity } from '@dxos/react-client/halo';
 import { IconButton, useOnTransition, useThemeContext, useTranslation } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
+import { Card } from '@dxos/react-ui-mosaic';
 import { MessageHeading, MessageRoot } from '@dxos/react-ui-thread';
 import { type ContentBlock, type Message } from '@dxos/types';
 import { createBasicExtensions, createThemeExtensions } from '@dxos/ui-editor';
@@ -205,12 +206,11 @@ const MessageBlockObjectTile = forwardRef<HTMLDivElement, { subject: Obj.Unknown
   }
 
   return (
-    <div
-      role='group'
+    <Card.Root
       className={mx('grid col-span-3 plb-1 pr-4', hoverableControls, hoverableFocusedWithinControls)}
       ref={forwardedRef}
     >
-      <Surface role='card' limit={1} data={{ subject }} fallback={title} />
-    </div>
+      <Surface role='card-content' limit={1} data={{ subject }} fallback={title} />
+    </Card.Root>
   );
 });

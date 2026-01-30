@@ -18,16 +18,13 @@ import * as Schedule from 'effect/Schedule';
 import { DXN, Entity, Filter, Obj, Query } from '@dxos/echo';
 import { Database } from '@dxos/echo';
 import { causeToError } from '@dxos/effect';
-import { FunctionInvocationService, QueueService, deserializeFunction } from '@dxos/functions';
+import { FunctionInvocationService, QueueService, TracingService, deserializeFunction } from '@dxos/functions';
 import { Function, Trigger, type TriggerEvent } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { KEY_QUEUE_POSITION } from '@dxos/protocols';
 
-import { TracingServiceExt } from '../trace';
-
 import { createInvocationPayload } from './input-builder';
-import { InvocationTracer } from './invocation-tracer';
 import { type TriggerState, TriggerStateStore } from './trigger-state-store';
 
 export type TimeControl = 'natural' | 'manual';
@@ -76,7 +73,7 @@ type TriggerDispatcherServices =
   | FunctionInvocationService
   // TODO(dmaretskyi): Move those into layer deps.
   | TriggerStateStore
-  | InvocationTracer
+  | TracingService
   | QueueService
   | Database.Service;
 
@@ -112,9 +109,12 @@ export class TriggerDispatcher extends Context.Tag('@dxos/functions/TriggerDispa
 
     /**
      * Invoke all scheduled triggers who are due.
+     * @param opts.kinds - The kinds of triggers to invoke.
+     * @param opts.untilExhausted - Invoke until no more triggers are due. By default only one queue/subscription item is processed at a time.
      */
     invokeScheduledTriggers(opts?: {
       kinds?: Trigger.Kind[];
+      untilExhausted?: boolean;
     }): Effect.Effect<TriggerExecutionResult[], never, TriggerDispatcherServices>;
 
     /**
@@ -208,9 +208,9 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
   ): Effect.Effect<TriggerExecutionResult, never, TriggerDispatcherServices> =>
     Effect.gen(this, function* () {
       const { trigger, event } = options;
-      log.info('running trigger', { triggerId: trigger.id, spec: trigger.spec, event });
+      log('running trigger', { triggerId: trigger.id, spec: trigger.spec, event });
 
-      const tracer = yield* InvocationTracer;
+      const tracer = yield* TracingService;
       const trace = yield* tracer.traceInvocationStart({
         target: trigger.function?.dxn,
         payload: {
@@ -243,7 +243,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
 
         // Invoke the function
         return yield* FunctionInvocationService.invokeFunction(functionDef, inputData).pipe(
-          Effect.provide(TracingServiceExt.layerQueue(trace.invocationTraceQueue)),
+          Effect.provide(TracingService.layerInvocation(trace)),
         );
       }).pipe(Effect.exit);
 
@@ -252,7 +252,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
         result,
       };
       if (Exit.isSuccess(result)) {
-        log.info('trigger execution success', {
+        log('trigger execution success', {
           triggerId: trigger.id,
         });
       } else {
@@ -268,11 +268,10 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
       return triggerExecutionResult;
     });
 
-  invokeScheduledTriggers = ({ kinds = ['timer', 'queue', 'subscription'] } = {}): Effect.Effect<
-    TriggerExecutionResult[],
-    never,
-    TriggerDispatcherServices
-  > =>
+  invokeScheduledTriggers = ({
+    kinds = ['timer', 'queue', 'subscription'],
+    untilExhausted = false,
+  } = {}): Effect.Effect<TriggerExecutionResult[], never, TriggerDispatcherServices> =>
     Effect.gen(this, function* () {
       const invocations: TriggerExecutionResult[] = [];
       for (const kind of kinds) {
@@ -344,7 +343,9 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
                 yield* Database.Service.flush();
 
                 // We only invoke one trigger for each queue at a time.
-                break;
+                if (!untilExhausted) {
+                  break;
+                }
               }
             }
             break;

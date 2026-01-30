@@ -300,7 +300,7 @@ export default Capability.makeModule(
       }),
       Common.createSurface({
         id: SPACE_RENAME_POPOVER,
-        role: 'card--popover',
+        role: 'popover',
         filter: (data): data is { props: Space } => data.component === SPACE_RENAME_POPOVER && isSpace(data.props),
         component: ({ data }) => <SpaceRenamePopover space={data.props} />,
       }),

@@ -17,6 +17,7 @@ export type ImageProps = ThemedClassName<
   } & ColorOptions
 >;
 
+// TODO(burdon): Option for neutral background color.
 export const Image = ({
   classNames,
   src,
