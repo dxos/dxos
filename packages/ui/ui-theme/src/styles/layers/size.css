@@ -2,6 +2,13 @@
  * @layer dx-components
  */
 
+/** 
+ * Container query root.
+ */
+.size-container {
+  container-type: size;
+}
+
 .container-max-width {
   @apply is-full max-is-containerMaxWidth mli-auto;
 }
@@ -39,10 +46,6 @@
 
 .popover-card-max-width {
   max-inline-size: min(var(--radix-popper-available-width), var(--dx-popoverMaxWidth));
-}
-
-.size-container {
-  container-type: size;
 }
 
 @layer dx-components {
