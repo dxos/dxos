@@ -489,10 +489,8 @@ export class QueryExecutor extends Resource {
         if (step.selector.searchKind === 'full-text' && this._supportsSqlIndexing()) {
           // Use indexer2 for full-text search.
           const beginIndexQuery = performance.now();
-          const indexer2 = this._indexer2;
-          const runtimeProvider = this._runtime;
-          invariant(indexer2 && runtimeProvider, 'SQL indexer/runtime is required for full-text search.');
-          const runtime = await runAndForwardErrors(runtimeProvider);
+          invariant(this._indexer2 && this._runtime, 'SQL indexer/runtime is required.');
+          const runtime = await runAndForwardErrors(this._runtime);
           invariant(step.spaces.length <= 1, 'Multiple spaces are not supported for full-text search');
           // Extract queue IDs from DXN strings.
           const queueIds =
@@ -500,7 +498,7 @@ export class QueryExecutor extends Resource {
               ? (step.queues.map((dxnStr) => DXN.parse(dxnStr).asQueueDXN()?.queueId).filter(Boolean) as ObjectId[])
               : null;
           const textResults = await unwrapExit(
-            await indexer2
+            await this._indexer2
               .queryText({
                 query: step.selector.text,
                 spaceId: step.spaces,
@@ -530,7 +528,7 @@ export class QueryExecutor extends Resource {
           let queueItems: QueryItem[] = [];
           if (queueResults.length > 0) {
             const snapshots = await unwrapExit(
-              await indexer2
+              await this._indexer2
                 .querySnapshotsJSON(queueResults.map((r) => r.recordId))
                 .pipe(Runtime.runPromiseExit(runtime)),
             );
@@ -664,6 +662,7 @@ export class QueryExecutor extends Resource {
     };
   }
 
+  // TODO(dmaretskyi): This needs to be completed.
   private async _execTraverseStep(step: QueryPlan.TraverseStep, workingSet: QueryItem[]): Promise<StepExecutionResult> {
     const trace: ExecutionTrace = {
       ...ExecutionTrace.makeEmpty(),
