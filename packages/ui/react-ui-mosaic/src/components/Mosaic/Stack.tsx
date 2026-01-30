@@ -8,6 +8,7 @@ import React, { type FC, Fragment, type ReactElement, type Ref, forwardRef, useR
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { type SlottableClassName } from '@dxos/react-ui';
+import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
 
 import { useVisibleItems } from '../../hooks';
@@ -184,6 +185,7 @@ const VirtualStack = VirtualStackInner as <TData = any>(
 // DefaultStackTile
 //
 
+// TODO(burdon): Move to separate file.
 const DefaultStackTile: StackTileComponent<Obj.Any> = (props) => {
   const dragHandleRef = useRef<HTMLButtonElement>(null);
   const [open, setOpen] = useState(false);
@@ -203,7 +205,7 @@ const DefaultStackTile: StackTileComponent<Obj.Any> = (props) => {
       </Card.Toolbar>
       {open && (
         <Card.Row>
-          <pre className='text-xs whitespace-pre-wrap text-description'>{JSON.stringify(props.data, null, 2)}</pre>
+          <Json data={props.data} classNames='text-xs' />
         </Card.Row>
       )}
     </Mosaic.Tile>

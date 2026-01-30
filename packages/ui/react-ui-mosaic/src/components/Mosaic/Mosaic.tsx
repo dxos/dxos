@@ -333,7 +333,7 @@ const Root = forwardRef<HTMLDivElement, RootProps>(({ classNames, children, asCh
       dragging={dragging}
     >
       <Root
-        className={mx('group', classNames)}
+        className={mx('group overflow-hidden', classNames)}
         {...{
           [`data-${ROOT_DEBUG_ATTR}`]: debug,
         }}
@@ -652,7 +652,13 @@ const Viewport = forwardRef<HTMLDivElement, ViewportProps>(
 // Container Debug
 //
 
-const useContainerDebug = (debug?: boolean): [FC<ThemedClassName>, (() => ReactNode) | undefined] => {
+type UseContainerDebug = [FC<ThemedClassName>, (() => ReactNode) | undefined];
+
+/**
+ * Hook that returns a component to be rendered in the container's viewport (within the context),
+ * and a component that creates a portal in the container's debug area.
+ */
+const useContainerDebug = (debug?: boolean): UseContainerDebug => {
   const debugRef = useRef<HTMLDivElement | null>(null);
   return useMemo(() => {
     if (!debug) {
@@ -669,7 +675,6 @@ const useContainerDebug = (debug?: boolean): [FC<ThemedClassName>, (() => ReactN
 const ContainerInfo = forwardRef<HTMLDivElement, ThemedClassName>(({ classNames }, forwardedRef) => {
   const { id, state, activeLocation, scrolling } = useContainerContext(ContainerInfo.displayName!);
   const counter = useRef(0);
-  console.log('===', id);
   return (
     <Json
       data={{ id, activeLocation, scrolling, state, count: counter.current++ }}
@@ -727,7 +732,7 @@ const Tile = forwardRef<HTMLDivElement, TileProps>(
       location,
       id,
       data: dataProp,
-      ...props
+      debug: _,
     }: TileProps,
     forwardedRef,
   ) => {
@@ -842,7 +847,6 @@ const Tile = forwardRef<HTMLDivElement, TileProps>(
     return (
       <TileContextProvider state={state}>
         <Root
-          {...props}
           {...{
             [`data-${TILE_STATE_ATTR}`]: state.type,
           }}
@@ -860,7 +864,7 @@ const Tile = forwardRef<HTMLDivElement, TileProps>(
                 // NOTE: Use to control appearance while dragging.
                 [`data-${TILE_STATE_ATTR}`]: state.type,
               }}
-              className={mx(classNames)}
+              className={mx(className, classNames)}
               style={
                 {
                   width: `${state.rect.width}px`,
