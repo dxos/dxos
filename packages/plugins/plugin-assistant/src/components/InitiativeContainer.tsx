@@ -12,8 +12,23 @@ export type InitiativeContainerProps = {
   initiative: Initiative.Initiative;
 };
 
+const TAB_INITATIVE = 'Initiative';
+const TAB_CHAT = 'Chat';
+
 export const InitiativeContainer = ({ role, initiative }: InitiativeContainerProps) => {
-  const [selectedTab, setSelectedTab] = useState<'initiative' | 'chat' | 'artifacts'>('initiative');
+  const [selectedTab, setSelectedTab] = useState<string>(TAB_INITATIVE);
+
+  const tabs = useAtomValue(
+    useMemo(
+      () =>
+        AtomObj.make(initiative).pipe((initiative) =>
+          Atom.make((get) => {
+            return [TAB_INITATIVE, TAB_CHAT, ...get(initiative).artifacts.map((artifact) => artifact.name)];
+          }),
+        ),
+      [initiative],
+    ),
+  );
 
   const chat = useAtomValue(
     useMemo(
@@ -27,39 +42,7 @@ export const InitiativeContainer = ({ role, initiative }: InitiativeContainerPro
       [initiative],
     ),
   );
-  return (
-    <StackItem.Content toolbar>
-      <div
-        role='none'
-        className='flex-1 min-is-0 overflow-x-auto scrollbar-none flex gap-1 border-b border-subduedSeparator'
-      >
-        <IconButton
-          icon='ph--sparkle--regular'
-          label='Initiative'
-          variant={selectedTab === 'initiative' ? 'primary' : 'ghost'}
-          onClick={() => setSelectedTab('initiative')}
-        />
-        <IconButton
-          icon='ph--chat--regular'
-          label='Chat'
-          variant={selectedTab === 'chat' ? 'primary' : 'ghost'}
-          onClick={() => setSelectedTab('chat')}
-        />
-        <IconButton
-          icon='ph--list-bullets--regular'
-          label='Artifacts'
-          variant={selectedTab === 'artifacts' ? 'primary' : 'ghost'}
-          onClick={() => setSelectedTab('artifacts')}
-        />
-      </div>
-      {selectedTab === 'initiative' && <Surface role='section' data={{ subject: initiative }} />}
-      {selectedTab === 'chat' && <Surface role='article' data={{ subject: chat }} />}
-      {selectedTab === 'artifacts' && <ArtifactsStack initiative={initiative} />}
-    </StackItem.Content>
-  );
-};
 
-const ArtifactsStack = ({ initiative }: { initiative: Initiative.Initiative }) => {
   const artifacts = useAtomValue(
     useMemo(
       () =>
@@ -75,19 +58,28 @@ const ArtifactsStack = ({ initiative }: { initiative: Initiative.Initiative }) =
     ),
   );
 
+  const selectedArtifact = artifacts.find((artifact) => artifact.name === selectedTab);
+
   return (
-    <div>
-      {artifacts.map((artifact) => (
-        <StackItem.Root key={artifact.name} item={{ id: artifact.name }}>
-          <StackItem.Heading>
-            <StackItem.HeadingLabel>{artifact.name}</StackItem.HeadingLabel>
-          </StackItem.Heading>
-          <StackItem.Content>
-            <Surface role='section' data={{ subject: artifact.data }} />
-          </StackItem.Content>
-        </StackItem.Root>
-      ))}
-    </div>
+    <StackItem.Content toolbar>
+      <div
+        role='none'
+        className='flex-1 min-is-0 overflow-x-auto scrollbar-none flex gap-1 border-b border-subduedSeparator'
+      >
+        {tabs.map((tab) => (
+          <IconButton
+            key={tab}
+            icon='ph--sparkle--regular'
+            label={tab}
+            variant={selectedTab === tab ? 'primary' : 'ghost'}
+            onClick={() => setSelectedTab(tab)}
+          />
+        ))}
+      </div>
+      {selectedTab === TAB_INITATIVE && <Surface role='section' data={{ subject: initiative }} limit={1} />}
+      {selectedTab === TAB_CHAT && <Surface role='article' data={{ subject: chat }} limit={1} />}
+      {selectedArtifact && <Surface role='section' data={{ subject: selectedArtifact.data }} limit={1} />}
+    </StackItem.Content>
   );
 };
 
