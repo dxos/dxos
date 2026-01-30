@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { AiContextService } from '@dxos/assistant';
-import { Obj, Type } from '@dxos/echo';
+import { Database, Obj, Type } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
 
 import * as Initiative from '../Initiative';
@@ -26,6 +26,10 @@ export default defineFunction({
   outputSchema: Schema.Void,
   services: [AiContextService],
   handler: Effect.fnUntraced(function* ({ data }) {
+    if (!(yield* Database.Service.load(data.artifact))) {
+      throw new Error('Artifact not found.');
+    }
+
     const { binder } = yield* AiContextService;
 
     const initiative = binder

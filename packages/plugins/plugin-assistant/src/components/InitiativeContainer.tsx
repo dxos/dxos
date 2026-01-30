@@ -5,7 +5,7 @@ import { Icon, IconButton, Popover, toLocalizedString, useTranslation } from '@d
 import { Surface } from '@dxos/app-framework/react';
 import { Atom, useAtom, useAtomValue } from '@effect-atom/atom-react';
 import { AtomObj, AtomRef } from '@dxos/echo-atom';
-import { Record } from 'effect';
+import { Match, Record } from 'effect';
 
 export type InitiativeContainerProps = {
   role?: string;
@@ -69,7 +69,11 @@ export const InitiativeContainer = ({ role, initiative }: InitiativeContainerPro
         {tabs.map((tab) => (
           <IconButton
             key={tab}
-            icon='ph--sparkle--regular'
+            icon={Match.value(tab).pipe(
+              Match.when(TAB_INITATIVE, () => 'ph--sparkle--regular'),
+              Match.when(TAB_CHAT, () => 'ph--chat--regular'),
+              Match.orElse(() => 'ph--file--regular'),
+            )}
             label={tab}
             variant={selectedTab === tab ? 'primary' : 'ghost'}
             onClick={() => setSelectedTab(tab)}

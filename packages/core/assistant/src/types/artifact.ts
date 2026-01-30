@@ -33,11 +33,16 @@ export const ArtifactId: Schema.Schema<string> & {
   // TODO(dmaretskyi): This section gets overriden.
   description: trim`
     The ID of the referenced object. Formats accepted:
-    - DXN (dxn:echo:@:XXXXX). DXNs can be prepended with an @ symbol for compatibility with in-text references.
+    - DXN (dxn:echo:@:01KG7R1ZXWFMWQ4DA1Q6TN1DG4). DXNs can be prepended with an @ symbol for compatibility with in-text references.
     - space ID, object ID tuple (spaceID:objectID)
-    - Only object ID that is assumed to be in the current space (XXXXX)
+    - Only object ID that is assumed to be in the current space (01KG7R1ZXWFMWQ4DA1Q6TN1DG4)
   `,
-  examples: ['dxn:echo:@:XXXXX', '@dxn:echo:@:XXXXX', 'spaceID:objectID', 'XXXXX'],
+  examples: [
+    'dxn:echo:@:01KG7R1ZXWFMWQ4DA1Q6TN1DG4',
+    '@dxn:echo:@:01KG7R1ZXWFMWQ4DA1Q6TN1DG4',
+    'BM3FSHFOMJCHCG5QW7JTVKGYABD2GAA7G:01KG7R1ZXWFMWQ4DA1Q6TN1DG4',
+    '01KG7R1ZXWFMWQ4DA1Q6TN1DG4',
+  ],
 }) {
   static toDXN(reference: ArtifactId, owningSpaceId?: SpaceId): DXN {
     // Allow @dxn: prefix for compatibility with in-text references.
