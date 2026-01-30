@@ -211,10 +211,11 @@ const updateSpec = Effect.fn(function* (
     }
 
     Obj.change(trigger, (mutableTrigger) => {
-      if (mutableTrigger.spec?.kind === 'subscription') {
-        // Type assertion needed due to effect/Schema union type inference limitations.
-        (mutableTrigger.spec.query as any) = { ast: queryAst };
-        mutableTrigger.spec.options = Object.keys(subscriptionOptions).length > 0 ? subscriptionOptions : undefined;
+      const spec = mutableTrigger.spec;
+      if (spec?.kind === 'subscription') {
+        // Cast needed because QueryAST types are deeply readonly but spec.query expects mutable.
+        spec.query = { ast: queryAst } as NonNullable<typeof spec.query>;
+        spec.options = Object.keys(subscriptionOptions).length > 0 ? subscriptionOptions : undefined;
       }
     });
   }

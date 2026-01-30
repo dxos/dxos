@@ -286,6 +286,7 @@ describe('Obj.change enforcement', () => {
       });
 
       expect(() => {
+        // @ts-expect-error - nested property assignment is readonly.
         obj.address!.city = 'LA';
       }).toThrow(/outside of Obj.change/);
     });
