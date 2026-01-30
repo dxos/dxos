@@ -7,7 +7,7 @@ import React, { useRef } from 'react';
 
 import { faker } from '@dxos/random';
 import { Icon } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { Card } from './Card';
 
@@ -17,12 +17,13 @@ type CardStoryProps = {
   title: string;
   description?: string;
   image?: string;
+  fullWidth?: boolean;
 };
 
-const DefaultStory = ({ title, description, image }: CardStoryProps) => {
+const DefaultStory = ({ title, description, image, fullWidth }: CardStoryProps) => {
   const handleRef = useRef<HTMLButtonElement>(null);
   return (
-    <Card.Root>
+    <Card.Root fullWidth={fullWidth}>
       <Card.Toolbar>
         <Card.DragHandle ref={handleRef} />
         <Card.Title>{title}</Card.Title>
@@ -56,10 +57,7 @@ const DefaultStory = ({ title, description, image }: CardStoryProps) => {
 const meta = {
   title: 'ui/react-ui-mosaic/Card',
   render: DefaultStory,
-  decorators: [withTheme],
-  parameters: {
-    layout: 'centered',
-  },
+  decorators: [withTheme, withLayout({ layout: 'column', classNames: 'grid is-[30rem] place-items-center' })],
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;
@@ -73,6 +71,15 @@ export const Default: Story = {
     title: faker.commerce.productName(),
     description: faker.lorem.paragraph(3),
     image,
+  },
+};
+
+export const FullWidth: Story = {
+  args: {
+    title: faker.commerce.productName(),
+    description: faker.lorem.paragraph(3),
+    image,
+    fullWidth: true,
   },
 };
 
@@ -119,7 +126,7 @@ export const Description: Story = {
 };
 
 export const Mock = () => (
-  <div className='grid grid-cols-[2rem_1fr_2rem] is-cardMinWidth border border-separator rounded-sm'>
+  <div className='grid grid-cols-[2rem_1fr_2rem] is-full card-min-width card-max-width border border-separator rounded-sm'>
     <div className='grid grid-cols-subgrid col-span-full'>
       <div role='none' className='grid bs-[var(--rail-item)] is-[var(--rail-item)] place-items-center'>
         <Icon icon='ph--dots-six-vertical--regular' />
