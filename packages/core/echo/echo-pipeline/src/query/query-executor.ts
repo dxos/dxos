@@ -1039,9 +1039,7 @@ export class QueryExecutor extends Resource {
     const anchorDxns = workingSet.map((item) => DXN.fromLocalObjectId(item.objectId).toString());
 
     const rows: readonly ReverseRef[] = (
-      await Promise.all(
-        anchorDxns.map((targetDxn) => this._runInRuntime(indexer2.queryReverseRef({ targetDxn }))),
-      )
+      await Promise.all(anchorDxns.map((targetDxn) => this._runInRuntime(indexer2.queryReverseRef({ targetDxn }))))
     ).flat();
 
     const recordIds = rows
