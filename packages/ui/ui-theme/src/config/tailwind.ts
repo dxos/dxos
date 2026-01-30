@@ -109,6 +109,10 @@ export const tailwindConfig = ({
             from: { opacity: 0 },
             to: { opacity: 1 },
           },
+          fadeOut: {
+            from: { opacity: 1 },
+            to: { opacity: 0 },
+          },
 
           // Accordion
           slideDown: {
@@ -180,7 +184,7 @@ export const tailwindConfig = ({
             },
           },
 
-          // Border trail
+          // Border trail effect
           ['trail']: {
             to: { 'offset-distance': '100%' },
           },
@@ -190,9 +194,7 @@ export const tailwindConfig = ({
           },
         },
         animation: {
-          ['fade-in']: 'fadeIn 100ms ease-in forwards',
-
-          // Border trail
+          // Border trail effect
           ['trail']: 'trail 6s linear infinite',
           ['trail-offset']: 'trail-offset 6s linear infinite',
 
@@ -212,9 +214,9 @@ export const tailwindConfig = ({
           ['slideDown']: 'slideDown 300ms cubic-bezier(0.87, 0, 0.13, 1)',
           ['slideUp']: 'slideUp 300ms cubic-bezier(0.87, 0, 0.13, 1)',
 
+          // Progress effects
           ['spin']: 'spin 1.5s linear infinite',
           ['spin-slow']: 'spin 3s linear infinite',
-
           ['shimmer']: 'shimmer-loop 2s infinite',
           ['halo-pulse']: 'halo-pulse 2s ease-out infinite',
           ['progress-indeterminate']: 'progress-indeterminate 2s ease-out infinite',
