@@ -90,8 +90,8 @@ export const tailwindConfig = ({
         keyframes: {
           // Popper chrome
           slideDownAndFade: {
-            from: { opacity: 0, transform: 'translateY(-16px)' },
-            to: { opacity: 1, transform: 'translateY(0)' },
+            from: { opacity: 1, transform: 'translateY(0)' },
+            to: { opacity: 0, transform: 'translateY(16px)' },
           },
           slideLeftAndFade: {
             from: { opacity: 0, transform: 'translateX(-16px)' },
