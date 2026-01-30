@@ -8,6 +8,7 @@ import { Surface, useAppGraph } from '@dxos/app-framework/react';
 import { useNode } from '@dxos/plugin-graph';
 import { Main as NaturalMain } from '@dxos/react-ui';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention';
+import { Mosaic } from '@dxos/react-ui-mosaic';
 import { mx } from '@dxos/ui-theme';
 
 import { HOME_ID } from '../../capabilities/state';
@@ -48,35 +49,37 @@ export const Main = () => {
   const showNavBar = !state.isPopover;
 
   return (
-    <NaturalMain.Root complementarySidebarState='closed' navigationSidebarState='closed'>
-      <NaturalMain.Content bounce classNames='dx-mobile-main dx-mobile-main-scroll-area--flush !overflow-y-auto'>
-        <div
-          className={mx(
-            'bs-full overflow-hidden grid',
-            showNavBar ? 'grid-rows-[min-content_1fr_min-content]' : 'grid-rows-[min-content_1fr]',
-          )}
-        >
-          <Banner node={node} />
-          {/* TODO(wittjosiah): Stop special-casing home and treat it as a graph node instead. */}
-          <Activity mode={id === HOME_ID ? 'visible' : 'hidden'}>
-            <Home />
-          </Activity>
-          <Activity mode={id !== HOME_ID ? 'visible' : 'hidden'}>
-            <section>
-              <Surface
-                key={id}
-                role='article'
-                data={data}
-                limit={1}
-                fallback={ContentError}
-                placeholder={placeholder}
-              />
-            </section>
-          </Activity>
-          {showNavBar && <NavBar activeId={id} onActiveIdChange={handleActiveIdChange} />}
-        </div>
-      </NaturalMain.Content>
-    </NaturalMain.Root>
+    <Mosaic.Root>
+      <NaturalMain.Root complementarySidebarState='closed' navigationSidebarState='closed'>
+        <NaturalMain.Content bounce classNames='dx-mobile-main dx-mobile-main-scroll-area--flush !overflow-y-auto'>
+          <div
+            className={mx(
+              'bs-full overflow-hidden grid',
+              showNavBar ? 'grid-rows-[min-content_1fr_min-content]' : 'grid-rows-[min-content_1fr]',
+            )}
+          >
+            <Banner node={node} />
+            {/* TODO(wittjosiah): Stop special-casing home and treat it as a graph node instead. */}
+            <Activity mode={id === HOME_ID ? 'visible' : 'hidden'}>
+              <Home />
+            </Activity>
+            <Activity mode={id !== HOME_ID ? 'visible' : 'hidden'}>
+              <section>
+                <Surface
+                  key={id}
+                  role='article'
+                  data={data}
+                  limit={1}
+                  fallback={ContentError}
+                  placeholder={placeholder}
+                />
+              </section>
+            </Activity>
+            {showNavBar && <NavBar activeId={id} onActiveIdChange={handleActiveIdChange} />}
+          </div>
+        </NaturalMain.Content>
+      </NaturalMain.Root>
+    </Mosaic.Root>
   );
 };
 

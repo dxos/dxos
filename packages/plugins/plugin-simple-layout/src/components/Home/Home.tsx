@@ -7,16 +7,17 @@ import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import { Common } from '@dxos/app-framework';
 import { useAppGraph, useOperationInvoker } from '@dxos/app-framework/react';
 import { Graph, Node, useConnections } from '@dxos/plugin-graph';
-import { Avatar, Icon, type ThemedClassName, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { Card } from '@dxos/react-ui-mosaic';
+import { Avatar, Icon, Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Card, Mosaic, type StackTileComponent } from '@dxos/react-ui-mosaic';
 import { SearchList, useSearchListItem, useSearchListResults } from '@dxos/react-ui-searchlist';
+import { StackItem } from '@dxos/react-ui-stack';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
 
-type HomeProps = ThemedClassName;
+type HomeProps = {};
 
-export const Home = ({ classNames }: HomeProps) => {
+export const Home = (props: HomeProps) => {
   const { t } = useTranslation(meta.id);
   const workspaces = useWorkspaces();
   useLoadDescendents(Node.RootId);
@@ -27,48 +28,49 @@ export const Home = ({ classNames }: HomeProps) => {
   });
 
   return (
-    <div className={mx('flex flex-col pli-3', classNames)}>
-      {/* <div className='container-max-width'>{t('workspaces heading')}</div> */}
+    <StackItem.Content toolbar>
       <SearchList.Root onSearch={handleSearch}>
-        <div className='container-max-width'>
+        <Toolbar.Root>
           <SearchList.Input placeholder={t('search placeholder')} autoFocus />
-          <SearchList.Content>
-            <SearchList.Viewport classNames='flex flex-col gap-1'>
-              {results.map((node) => (
-                <Workspace key={node.id} node={node} />
-              ))}
-            </SearchList.Viewport>
-          </SearchList.Content>
-        </div>
+        </Toolbar.Root>
+        <SearchList.Content>
+          <SearchList.Viewport classNames='flex flex-col gap-1'>
+            <Mosaic.Container asChild>
+              <Mosaic.Viewport>
+                <Mosaic.Stack items={results} getId={(node) => node.id} Tile={WorkspaceTile} />
+              </Mosaic.Viewport>
+            </Mosaic.Container>
+          </SearchList.Viewport>
+        </SearchList.Content>
       </SearchList.Root>
-    </div>
+    </StackItem.Content>
   );
 };
 
-const Workspace = ({ node }: { node: Node.Node }) => {
+const WorkspaceTile: StackTileComponent<Node.Node> = ({ data }) => {
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
   const { selectedValue, registerItem, unregisterItem } = useSearchListItem();
   const ref = useRef<HTMLDivElement>(null);
 
   const handleSelect = useCallback(
-    () => invokePromise(Common.LayoutOperation.SwitchWorkspace, { subject: node.id }),
-    [invokePromise, node.id],
+    () => invokePromise(Common.LayoutOperation.SwitchWorkspace, { subject: data.id }),
+    [invokePromise, data.id],
   );
 
-  useLoadDescendents(node.id);
+  useLoadDescendents(data.id);
 
-  const name = toLocalizedString(node.properties.label, t);
-  const isSelected = selectedValue === node.id;
+  const name = toLocalizedString(data.properties.label, t);
+  const isSelected = selectedValue === data.id;
 
   // Register this workspace with the search context.
   useEffect(() => {
     if (ref.current) {
-      registerItem(node.id, ref.current, handleSelect);
+      registerItem(data.id, ref.current, handleSelect);
     }
 
-    return () => unregisterItem(node.id);
-  }, [node.id, handleSelect, registerItem, unregisterItem]);
+    return () => unregisterItem(data.id);
+  }, [data.id, handleSelect, registerItem, unregisterItem]);
 
   // Scroll into view when selected.
   useEffect(() => {
@@ -77,6 +79,7 @@ const Workspace = ({ node }: { node: Node.Node }) => {
     }
   }, [isSelected]);
 
+  // TODO(wittjosiah): Update this to use mosaic selection, integrating with the search list.
   return (
     <Card.Root
       ref={ref}
@@ -89,8 +92,8 @@ const Workspace = ({ node }: { node: Node.Node }) => {
       <Card.Toolbar>
         <Avatar.Root>
           <Avatar.Content
-            hue={node.properties.hue}
-            icon={node.properties.icon}
+            hue={data.properties.hue}
+            icon={data.properties.icon}
             hueVariant='surface'
             variant='square'
             size={12}

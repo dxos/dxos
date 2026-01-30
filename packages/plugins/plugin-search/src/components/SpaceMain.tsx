@@ -5,12 +5,11 @@
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { useAppGraph } from '@dxos/app-framework/react';
-import { Surface } from '@dxos/app-framework/react';
 import { Filter, Obj, Query } from '@dxos/echo';
 import { Graph, type Node, useConnections } from '@dxos/plugin-graph';
 import { type Space, useQuery } from '@dxos/react-client/echo';
-import { useTranslation } from '@dxos/react-ui';
-import { Card } from '@dxos/react-ui-mosaic';
+import { Toolbar, useTranslation } from '@dxos/react-ui';
+import { Card, Mosaic, type StackTileComponent } from '@dxos/react-ui-mosaic';
 import { SearchList } from '@dxos/react-ui-searchlist';
 import { StackItem } from '@dxos/react-ui-stack';
 import { Text } from '@dxos/schema';
@@ -52,11 +51,18 @@ export const SpaceMain = ({ space }: { space: Space }) => {
   return (
     <StackItem.Content toolbar>
       <SearchList.Root onSearch={handleSearch}>
-        <div role='combobox' aria-expanded='true' className='flex flex-col bs-full overflow-hidden'>
-          <SearchList.Input placeholder={t('search placeholder')} classNames='pli-2' />
-          <SearchList.Content classNames='overflow-y-auto'>
-            <SearchList.Viewport>
-              {isQueryEmpty &&
+        <Toolbar.Root>
+          <SearchList.Input placeholder={t('search placeholder')} />
+        </Toolbar.Root>
+        <SearchList.Content>
+          {/* TODO(wittjosiah): Should we be using both the search list and mosaic viewports? */}
+          <SearchList.Viewport>
+            <Mosaic.Container asChild>
+              <Mosaic.Viewport>
+                <Mosaic.Stack items={filteredDescendents} getId={(node) => node.id} Tile={NodeTile} />
+              </Mosaic.Viewport>
+            </Mosaic.Container>
+            {/* {isQueryEmpty &&
                 filteredDescendents.map((node) => (
                   <div key={node.id} role='none' className='pli-2 first:pbs-2 pbe-2'>
                     <Card.Root>
@@ -84,12 +90,23 @@ export const SpaceMain = ({ space }: { space: Space }) => {
                   ))}
               {!isQueryEmpty && results.length === 0 && (
                 <SearchList.Empty>{t('empty results message')}</SearchList.Empty>
-              )}
-            </SearchList.Viewport>
-          </SearchList.Content>
-        </div>
+              )}*/}
+          </SearchList.Viewport>
+        </SearchList.Content>
       </SearchList.Root>
     </StackItem.Content>
+  );
+};
+
+const NodeTile: StackTileComponent<Node.Node> = ({ data: node }) => {
+  return (
+    <Card.Root>
+      <Card.Toolbar>
+        <Card.ToolbarIconButton label={Obj.getLabel(node.data) ?? ''} icon='ph--placeholder--regular' />
+        <Card.Title onClick={() => {}}>{Obj.getLabel(node.data)}</Card.Title>
+        <Card.Menu />
+      </Card.Toolbar>
+    </Card.Root>
   );
 };
 

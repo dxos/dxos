@@ -58,6 +58,7 @@ export const SearchMain = ({ space }: { space?: Space }) => {
           <SearchList.Input placeholder={t('search placeholder')} />
         </Toolbar.Root>
         <SearchList.Content>
+          {/* TODO(wittjosiah): Should we be using both the search list and mosaic viewports? */}
           <SearchList.Viewport>
             <Mosaic.Container asChild>
               <Mosaic.Viewport>
