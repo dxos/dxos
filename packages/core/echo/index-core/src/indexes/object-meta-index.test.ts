@@ -18,6 +18,9 @@ const TYPE_PERSON = DXN.parse('dxn:type:example.com/type/Person:0.1.0').toString
 const TYPE_PERSON_VERSIONLESS = DXN.parse('dxn:type:example.com/type/Person').toString();
 const TYPE_RELATION = DXN.parse('dxn:type:example.com/type/Relation:0.1.0').toString();
 const TYPE_RELATION_UPDATED = DXN.parse('dxn:type:example.com/type/RelationUpdated:0.1.0').toString();
+const TYPE_WITH_UNDERSCORE = DXN.parse('dxn:type:example.com/type/Person_Extra:0.1.0').toString();
+const TYPE_WITH_UNDERSCORE_VERSIONLESS = DXN.parse('dxn:type:example.com/type/Person_Extra').toString();
+const TYPE_UNDERSCORE_FALSE_POSITIVE = DXN.parse('dxn:type:example.com/type/PersonAExtra:0.1.0').toString();
 
 const TestLayer = Layer.merge(
   SqliteClient.layer({
@@ -57,6 +60,53 @@ describe('ObjectMetaIndex', () => {
         typeDxn: DXN.parse('dxn:type:example.com/type/Other').toString(),
       });
       expect(otherTypeResults).toEqual([]);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('should not treat LIKE wildcards in versionless type queries', () =>
+    Effect.gen(function* () {
+      const index = new ObjectMetaIndex();
+      yield* index.migrate();
+
+      const spaceId = SpaceId.random();
+      const objectIdMatch = ObjectId.random();
+      const objectIdFalsePositive = ObjectId.random();
+
+      const match: IndexerObject = {
+        spaceId,
+        queueId: ObjectId.random(),
+        documentId: null,
+        recordId: null,
+        data: {
+          id: objectIdMatch,
+          [ATTR_TYPE]: TYPE_WITH_UNDERSCORE,
+          [ATTR_DELETED]: false,
+        },
+      };
+
+      // Would match prior implementation because '_' is a LIKE wildcard.
+      const falsePositive: IndexerObject = {
+        spaceId,
+        queueId: ObjectId.random(),
+        documentId: null,
+        recordId: null,
+        data: {
+          id: objectIdFalsePositive,
+          [ATTR_TYPE]: TYPE_UNDERSCORE_FALSE_POSITIVE,
+          [ATTR_DELETED]: false,
+        },
+      };
+
+      yield* index.update([match, falsePositive]);
+
+      const queryResults = yield* index.query({ spaceId, typeDxn: TYPE_WITH_UNDERSCORE_VERSIONLESS });
+      expect(queryResults.map((_) => _.objectId)).toEqual([objectIdMatch]);
+
+      const queryTypesResults = yield* index.queryTypes({
+        spaceIds: [spaceId],
+        typeDxns: [TYPE_WITH_UNDERSCORE_VERSIONLESS],
+      });
+      expect(queryTypesResults.map((_) => _.objectId)).toEqual([objectIdMatch]);
     }).pipe(Effect.provide(TestLayer)),
   );
 

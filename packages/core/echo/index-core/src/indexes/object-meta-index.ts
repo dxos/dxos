@@ -13,6 +13,14 @@ import { DXN } from '@dxos/keys';
 import type { IndexerObject } from './interface';
 import type { Index } from './interface';
 
+const _escapeLikePrefix = (prefix: string) => {
+  // Escape LIKE metacharacters in the *literal* prefix (we still append a wildcard for the version suffix).
+  // Backslash is used as the ESCAPE character.
+  // See: https://www.sqlite.org/lang_expr.html#like
+  const escaped = prefix.replaceAll('\\', '\\\\').replaceAll('%', '\\%').replaceAll('_', '\\_');
+  return `${escaped}:%`;
+};
+
 export const ObjectMeta = Schema.Struct({
   recordId: Schema.Number,
   objectId: Schema.String,
@@ -66,7 +74,7 @@ export class ObjectMetaIndex implements Index {
           parsedType && parsedType.version === undefined
             ? yield* sql<ObjectMeta>`SELECT * FROM objectMeta WHERE spaceId = ${query.spaceId} AND (typeDxn = ${
                 query.typeDxn
-              } OR typeDxn LIKE ${`${query.typeDxn}:%`})`
+              } OR typeDxn LIKE ${_escapeLikePrefix(query.typeDxn)} ESCAPE '\\')`
             : yield* sql<ObjectMeta>`SELECT * FROM objectMeta WHERE spaceId = ${query.spaceId} AND typeDxn = ${query.typeDxn}`;
         return rows.map((row) => ({
           ...row,
@@ -126,7 +134,7 @@ export class ObjectMetaIndex implements Index {
           typeDxns.map((typeDxn) => {
             const parsedType = DXN.tryParse(typeDxn)?.asTypeDXN();
             return parsedType && parsedType.version === undefined
-              ? sql.or([sql`typeDxn = ${typeDxn}`, sql`typeDxn LIKE ${`${typeDxn}:%`}`])
+              ? sql.or([sql`typeDxn = ${typeDxn}`, sql`typeDxn LIKE ${_escapeLikePrefix(typeDxn)} ESCAPE '\\'`])
               : sql`typeDxn = ${typeDxn}`;
           }),
         );
