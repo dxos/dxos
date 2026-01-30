@@ -28,7 +28,6 @@
     "@dxos/echo": "workspace:*",
     "@dxos/echo-atom": "workspace:*",
     "@dxos/effect-atom-solid": "workspace:*",
-    "@dxos/util": "catalog:",
     "@effect-atom/atom": "catalog:",
     "@solid-primitives/utils": "catalog:"
   },
