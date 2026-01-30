@@ -12,10 +12,10 @@ import { trim } from '@dxos/util';
 import * as Chat from '../chat/Chat';
 import { agent, getContext, update } from './functions';
 import { makeBlueprint } from './blueprint';
-import { Initiative, PLAN_ARTIFACT_NAME, SPEC_ARTIFACT_NAME } from './Initiative';
+import { Initiative } from './Initiative';
 
 export const makeInitialized = (
-  props: Omit<Obj.MakeProps<typeof Initiative>, 'artifacts' | 'chat'> &
+  props: Omit<Obj.MakeProps<typeof Initiative>, 'spec' | 'plan' | 'artifacts' | 'chat'> &
     Partial<Pick<Obj.MakeProps<typeof Initiative>, 'artifacts'>> & {
       spec: string;
       plan?: string;
@@ -26,17 +26,9 @@ export const makeInitialized = (
   Effect.gen(function* () {
     const initiative = Obj.make(Initiative, {
       ...props,
-      artifacts: [
-        {
-          name: SPEC_ARTIFACT_NAME,
-          data: Ref.make(Text.make(props.spec)),
-        },
-        {
-          name: PLAN_ARTIFACT_NAME,
-          data: Ref.make(Text.make(props.plan ?? '')),
-        },
-        ...(props.artifacts ?? []),
-      ],
+      spec: Ref.make(Text.make(props.spec)),
+      plan: Ref.make(Text.make(props.plan ?? '')),
+      artifacts: props.artifacts ?? [],
     });
     yield* Database.Service.add(initiative);
     const queue = yield* QueueService.createQueue<Message.Message | ContextBinding>();

@@ -1,4 +1,4 @@
-import { agent, getContext, update } from './functions';
+import { addArtifact, agent, getContext } from './functions';
 
 import { AiContextBinder, type ContextBinding } from '@dxos/assistant';
 import { Blueprint, Template } from '@dxos/blueprints';
@@ -11,7 +11,7 @@ import { trim } from '@dxos/util';
 /**
  * Get all initiative functions. This is a function to avoid circular dependency issues.
  */
-export const getFunctions = () => [getContext, update, agent];
+export const getFunctions = () => [getContext, addArtifact, agent];
 
 /**
  * Creates the Initiative blueprint. This is a function to avoid circular dependency issues.
@@ -27,20 +27,24 @@ export const makeBlueprint = () =>
         Initiative has an number of associated artifacts you can read/write.
         Spec and plan are also artifacts.
         You can edit them if necessary.
+
+        IMPORTANT: When create a new artifact, always add it to the initiative using the add-artifact function.
         
         {{#with initiative}}
-          Initiative spec:
-            {{spec.dxn}}
-            {{spec.content}}
+          <spec>
+            {{spec}}
+          </spec>
+          <plan>
+            {{plan}}
+          </plan>
 
-          Initiative plan:
-            {{plan.dxn}}
-            {{plan.content}}
-
-          All artifacts:
+          <artifacts>
           {{#each artifacts}}
-            {{name}}: {{type}} {{dxn}}
+            <artifact type="{{type}}" dxn="{{dxn}}">
+              {{name}}
+            </artifact>
           {{/each}}
+          </artifacts>
         {{/with}}
       `,
       inputs: [
@@ -51,5 +55,5 @@ export const makeBlueprint = () =>
         },
       ],
     }),
-    tools: Blueprint.toolDefinitions({ functions: [update] }),
+    tools: Blueprint.toolDefinitions({ functions: [addArtifact] }),
   });

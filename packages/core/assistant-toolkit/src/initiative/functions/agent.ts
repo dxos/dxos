@@ -56,9 +56,10 @@ export default defineFunction({
       input += `<event>\n${JSON.stringify(data.event, null, 2)}\n</event>\n\n`;
     }
 
-    yield* conversation.createRequest({
-      prompt: input,
-      // observer: GenerationObserver.fromPrinter(new ConsolePrinter()),
-    });
+    yield* conversation
+      .createRequest({
+        prompt: input,
+      })
+      .pipe(Effect.retry({ times: 2 }));
   }, Effect.scoped) as any, // TODO(dmaretskyi): Services don't align -- need to refactor how functions are defined.
 });

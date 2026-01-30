@@ -16,13 +16,13 @@ import { trim } from '@dxos/util';
  */
 export const createArtifactElement = (id: ObjectId) => `<artifact id=${id} />`;
 
+// TODO(burdon): Rename RefFromLLM? -- yes -dm
 /**
  * A model-friendly way to reference an object.
  * Supports vairous formats that will be normalized to a DXN.
  *
  * @deprecated Use `RefFromLLM` instead.
  */
-// TODO(burdon): Rename RefFromLLM? -- yes -dm
 export const ArtifactId: Schema.Schema<string> & {
   toDXN: (reference: ArtifactId, owningSpaceId?: SpaceId) => DXN;
   resolve: <S extends Type.Entity.Any>(

@@ -20,8 +20,13 @@ import * as Chat from '../chat/Chat';
  */
 export const Initiative = Schema.Struct({
   name: Schema.String,
+
+  spec: Type.Ref(Text.Text),
+  plan: Type.Ref(Text.Text),
+
   artifacts: Schema.Array(
     Schema.Struct({
+      // TODO(dmaretskyi): Consider gettings names from the artifact itself using Obj.getLabel.
       name: Schema.String,
       data: Type.Ref(Obj.Any),
     }),
@@ -38,7 +43,3 @@ export const Initiative = Schema.Struct({
   }),
 );
 export interface Initiative extends Schema.Schema.Type<typeof Initiative> {}
-
-export const SPEC_ARTIFACT_NAME = 'Spec';
-
-export const PLAN_ARTIFACT_NAME = 'Plan';

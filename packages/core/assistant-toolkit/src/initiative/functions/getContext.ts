@@ -18,14 +18,8 @@ export default defineFunction({
   description: 'Get the context of an initiative.',
   inputSchema: Schema.Struct({}),
   outputSchema: Schema.Struct({
-    spec: Schema.Struct({
-      dxn: Schema.String,
-      content: Schema.String,
-    }),
-    plan: Schema.Struct({
-      dxn: Schema.String,
-      content: Schema.String,
-    }),
+    spec: Schema.String,
+    plan: Schema.String,
     artifacts: Schema.Array(
       Schema.Struct({
         name: Schema.String,
@@ -46,20 +40,9 @@ export default defineFunction({
       throw new Error('No initiative in context.');
     }
 
-    const spec = initiative.artifacts.find((artifact) => artifact.name === Initiative.SPEC_ARTIFACT_NAME);
-    const plan = initiative.artifacts.find((artifact) => artifact.name === Initiative.PLAN_ARTIFACT_NAME);
-    const specObj = !spec ? undefined : yield* Database.Service.resolve(spec.data, Text.Text);
-    const planObj = !plan ? undefined : yield* Database.Service.resolve(plan.data, Text.Text);
-
     return {
-      spec: {
-        dxn: spec?.data.dxn.toString(),
-        content: specObj?.content ?? 'No spec found.',
-      },
-      plan: {
-        dxn: plan?.data.dxn.toString(),
-        content: planObj?.content ?? 'No plan found.',
-      },
+      spec: yield* initiative.spec.pipe(Database.Service.load).pipe(Effect.map((_) => _.content)),
+      plan: yield* initiative.plan?.pipe(Database.Service.load).pipe(Effect.map((_) => _.content)) ?? 'No plan found.',
       artifacts: yield* Effect.forEach(initiative.artifacts, (artifact) =>
         Effect.gen(function* () {
           return {

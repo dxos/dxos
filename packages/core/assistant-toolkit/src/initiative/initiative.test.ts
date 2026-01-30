@@ -24,13 +24,24 @@ import * as Chat from '../chat/Chat';
 import { agent } from './functions';
 import * as Initiative from '.';
 import { Exit } from 'effect';
+import { MarkdownBlueprint } from '../blueprints';
+import { Document } from '../functions';
+import { Markdown } from '@dxos/plugin-markdown/types';
 
 ObjectId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayerWithTriggers({
   aiServicePreset: 'edge-remote',
-  functions: [...Initiative.getFunctions()],
-  types: [Initiative.Initiative, Chat.CompanionTo, Chat.Chat, Blueprint.Blueprint, Trigger.Trigger, Text.Text],
+  functions: [...Initiative.getFunctions(), Document.read, Document.update, Document.create],
+  types: [
+    Initiative.Initiative,
+    Chat.CompanionTo,
+    Chat.Chat,
+    Blueprint.Blueprint,
+    Trigger.Trigger,
+    Text.Text,
+    Markdown.Document,
+  ],
   tracing: 'pretty',
 });
 
@@ -47,6 +58,7 @@ describe('Initiative', () => {
           yield* Initiative.makeInitialized({
             name: 'Shopping list',
             spec: 'Keep a shopping list of items to buy.',
+            blueprints: [Ref.make(MarkdownBlueprint)],
           }),
         );
         const chatQueue = initiative.chat?.target?.queue?.target as any;
@@ -86,6 +98,7 @@ describe('Initiative', () => {
               - Flight to London (2026-02-01): £100
               - Hotel in London (2026-02-01): £100
             `,
+            blueprints: [Ref.make(MarkdownBlueprint)],
           }),
         );
         yield* Database.Service.flush({ indexes: true });
@@ -130,8 +143,8 @@ const dumpInitiative = async (initiative: Initiative.Initiative) => {
   for (const artifact of initiative.artifacts) {
     const data = await artifact.data.load();
     text += `============== ${artifact.name} (${Obj.getTypename(data)}) ==============\n`;
-    if (Obj.instanceOf(Text.Text, data)) {
-      text += `    ${data.content}\n`;
+    if (Obj.instanceOf(Markdown.Document, data)) {
+      text += `# ${Obj.getLabel(data)}\n\n${await data.content.load().then((_) => _.content)}\n`;
     } else {
       text += `    ${JSON.stringify(data, null, 2)}\n`;
     }
