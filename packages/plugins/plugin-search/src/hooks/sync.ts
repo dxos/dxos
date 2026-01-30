@@ -5,7 +5,7 @@
 import type * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { Obj } from '@dxos/echo';
+import { type Entity, Obj } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 
 import { type SearchResult } from '../types';
@@ -39,7 +39,7 @@ const getIcon = (schema: Schema.Schema.AnyNoContext | undefined): string | undef
 export type TextFields = Record<string, string>;
 
 // TODO(thure): This returns `SearchResult[]` which is not just a narrower set of objects as the name implies.
-export const filterObjectsSync = <T extends Obj.Any>(objects: T[], match?: RegExp): SearchResult<T>[] => {
+export const filterObjectsSync = <T extends Entity.Unknown>(objects: T[], match?: RegExp): SearchResult<T>[] => {
   if (!match) {
     return [];
   }
@@ -90,7 +90,7 @@ export const getStringProperty = (object: any, keys: string[]): string | undefin
 };
 
 // TODO(burdon): Filter system fields.
-const getKeys = <T extends Obj.Any>(object: T): string[] => {
+const getKeys = <T extends Entity.Unknown>(object: T): string[] => {
   try {
     const obj = JSON.parse(JSON.stringify(object));
     return Object.keys(obj).filter(
@@ -104,7 +104,7 @@ const getKeys = <T extends Obj.Any>(object: T): string[] => {
 };
 
 // TODO(burdon): Use ECHO schema.
-export const mapObjectToTextFields = <T extends Obj.Any>(object: T): TextFields => {
+export const mapObjectToTextFields = <T extends Entity.Unknown>(object: T): TextFields => {
   return getKeys(object).reduce<TextFields>((fields, key) => {
     const value = (object as any)[key];
     if (typeof value === 'string' || value instanceof Text.Text) {

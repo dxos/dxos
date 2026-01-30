@@ -33,7 +33,7 @@ const meta: Meta<typeof Stack<Obj.Any>> = {
         description: faker.lorem.paragraph(),
       }),
     ),
-    Component: Mosaic.DefaultStackComponent,
+    Tile: Mosaic.DefaultStackTile,
   },
 };
 

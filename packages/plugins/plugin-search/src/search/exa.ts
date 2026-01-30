@@ -8,7 +8,7 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { Key, Obj } from '@dxos/echo';
+import { type Entity, Key, Obj } from '@dxos/echo';
 import { ReferenceAnnotationId } from '@dxos/echo/internal';
 import { isEncodedReference } from '@dxos/echo-protocol';
 import { mapAst } from '@dxos/effect';
@@ -31,9 +31,10 @@ export type SearchResult<T = unknown> = {
   };
 };
 
+/** @deprecated Use MixedStreamParser */
 export const search = async <Schema extends Schema.Schema.AnyNoContext>(
   options: SearchOptions<Schema>,
-): Promise<SearchResult<Schema.Schema.Type<Schema>>> => {
+): Promise<SearchResult<Entity.Unknown>> => {
   throw new Error('Not implemented');
   // assertArgument(options.query || options.context, "query or context", "query or context is required");
   // let contextSearchTerms: readonly string[] = [];

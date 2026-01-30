@@ -2,10 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import type { Obj } from '@dxos/echo';
-import type { DXN } from '@dxos/keys';
+import type { Entity } from '@dxos/echo';
 
-export type SearchResult<T extends Obj.Any = Obj.Any> = {
+export type SearchResult<T extends Entity.Unknown = Entity.Unknown> = {
   id: string;
 
   /**
@@ -20,11 +19,5 @@ export type SearchResult<T extends Obj.Any = Obj.Any> = {
    * Icon id.
    */
   icon?: string;
-
-  /**
-   * DXN of the object type.
-   */
-  // TODO(burdon): Different from `type` above?
-  objectType?: DXN.String;
   object?: T;
 };

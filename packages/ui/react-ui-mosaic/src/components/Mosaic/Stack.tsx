@@ -15,15 +15,16 @@ import { Card } from '../Card';
 import { Mosaic, type MosiacPlaceholderProps, useMosaicContainer } from '../Mosaic';
 
 import { styles } from './styles';
-import { type Axis, type MosaicBaseItem } from './types';
+import { type Axis, type GetId } from './types';
 
-type StackComponent<T extends MosaicBaseItem = MosaicBaseItem> = FC<{ object: T; location: number }>;
+type StackTileComponent<TData = any> = FC<{ data: TData; location: number }>;
 
-type StackProps<T extends MosaicBaseItem = MosaicBaseItem> = SlottableClassName<{
+type StackProps<TData = any> = SlottableClassName<{
   role?: string;
   axis?: Axis;
-  items?: T[];
-  Component: StackComponent<T>;
+  items?: TData[];
+  getId: GetId<TData>;
+  Tile: StackTileComponent<TData>;
 }>;
 
 /**
@@ -31,10 +32,13 @@ type StackProps<T extends MosaicBaseItem = MosaicBaseItem> = SlottableClassName<
  * NOTE: This is a low-level component and should be wrapped by a scrollable container.
  */
 const StackInner = forwardRef<HTMLDivElement, StackProps>(
-  ({ className, classNames, role = 'list', axis = 'vertical', items, Component, ...props }, forwardedRef) => {
+  (
+    { className, classNames, role = 'list', axis = 'vertical', items, getId, Tile: Component, ...props },
+    forwardedRef,
+  ) => {
     invariant(Component);
     const { id, dragging } = useMosaicContainer(StackInner.displayName!);
-    const visibleItems = useVisibleItems({ id, items, dragging: dragging?.source.data });
+    const visibleItems = useVisibleItems({ id, items, dragging: dragging?.source.data, getId });
 
     return (
       <div
@@ -52,7 +56,7 @@ const StackInner = forwardRef<HTMLDivElement, StackProps>(
         <Placeholder axis={axis} location={0.5} />
         {visibleItems?.map((item, index) => (
           <Fragment key={item.id}>
-            <Component object={item} location={index + 1} />
+            <Component data={item} location={index + 1} />
             <Placeholder axis={axis} location={index + 1.5} />
           </Fragment>
         ))}
@@ -63,15 +67,13 @@ const StackInner = forwardRef<HTMLDivElement, StackProps>(
 
 StackInner.displayName = 'Stack';
 
-const Stack = StackInner as <T extends MosaicBaseItem = MosaicBaseItem>(
-  props: StackProps<T> & { ref?: Ref<HTMLDivElement> },
-) => ReactElement;
+const Stack = StackInner as <TData = any>(props: StackProps<TData> & { ref?: Ref<HTMLDivElement> }) => ReactElement;
 
 //
 // VirtualStack
 //
 
-type VirtualStackProps<T extends MosaicBaseItem = MosaicBaseItem> = StackProps<T> &
+type VirtualStackProps<TData = any> = StackProps<TData> &
   Pick<
     ReactVirtualizerOptions<HTMLDivElement, HTMLDivElement>,
     'estimateSize' | 'getScrollElement' | 'overscan' | 'onChange'
@@ -85,7 +87,8 @@ const VirtualStackInner = forwardRef<HTMLDivElement, VirtualStackProps>(
       role = 'list',
       axis = 'vertical',
       items,
-      Component,
+      getId,
+      Tile: Component,
       estimateSize,
       getScrollElement,
       overscan = 8,
@@ -96,7 +99,7 @@ const VirtualStackInner = forwardRef<HTMLDivElement, VirtualStackProps>(
   ) => {
     invariant(Component);
     const { id, dragging } = useMosaicContainer(VirtualStackInner.displayName!);
-    const visibleItems = useVisibleItems({ id, items, dragging: dragging?.source.data });
+    const visibleItems = useVisibleItems({ id, items, dragging: dragging?.source.data, getId });
     const virtualizer = useVirtualizer({
       count: visibleItems.length * 2 + 1,
       estimateSize,
@@ -156,7 +159,7 @@ const VirtualStackInner = forwardRef<HTMLDivElement, VirtualStackProps>(
               <Placeholder axis={axis} location={Math.floor(virtualItem.index / 2) + 0.5} />
             ) : (
               <Component
-                object={visibleItems![Math.floor(virtualItem.index / 2)]}
+                data={visibleItems![Math.floor(virtualItem.index / 2)]}
                 location={Math.floor(virtualItem.index / 2) + 1}
               />
             )}
@@ -169,22 +172,22 @@ const VirtualStackInner = forwardRef<HTMLDivElement, VirtualStackProps>(
 
 VirtualStackInner.displayName = 'VirtualStackInner';
 
-const VirtualStack = VirtualStackInner as <T extends MosaicBaseItem = MosaicBaseItem>(
-  props: VirtualStackProps<T> & { ref?: Ref<HTMLDivElement> },
+const VirtualStack = VirtualStackInner as <TData = any>(
+  props: VirtualStackProps<TData> & { ref?: Ref<HTMLDivElement> },
 ) => ReactElement;
 
 //
-// DefaultStackComponent
+// DefaultStackTile
 //
 
-const DefaultStackComponent: StackComponent<Obj.Any> = (props) => {
+const DefaultStackTile: StackTileComponent<Obj.Any> = (props) => {
   const dragHandleRef = useRef<HTMLButtonElement>(null);
   const [open, setOpen] = useState(false);
   return (
     <Mosaic.Tile {...props} className='border border-separator rounded-sm font-mono'>
       <Card.Toolbar>
         <Card.DragHandle ref={dragHandleRef} />
-        <Card.Title>{Obj.getLabel(props.object) ?? props.object.id}</Card.Title>
+        <Card.Title>{Obj.getLabel(props.data) ?? props.data.id}</Card.Title>
         <Card.Menu
           items={[
             {
@@ -196,14 +199,14 @@ const DefaultStackComponent: StackComponent<Obj.Any> = (props) => {
       </Card.Toolbar>
       {open && (
         <Card.Row>
-          <pre className='text-xs whitespace-pre-wrap text-description'>{JSON.stringify(props.object, null, 2)}</pre>
+          <pre className='text-xs whitespace-pre-wrap text-description'>{JSON.stringify(props.data, null, 2)}</pre>
         </Card.Row>
       )}
     </Mosaic.Tile>
   );
 };
 
-DefaultStackComponent.displayName = 'DefaultStackComponent';
+DefaultStackTile.displayName = 'DefaultStackTile';
 
 //
 // Placeholder
@@ -228,6 +231,6 @@ Placeholder.displayName = 'Placeholder';
 // Stack
 //
 
-export { DefaultStackComponent, Stack, VirtualStack };
+export { DefaultStackTile, Stack, VirtualStack };
 
-export type { StackComponent, StackProps, VirtualStackProps };
+export type { StackTileComponent, StackProps, VirtualStackProps };

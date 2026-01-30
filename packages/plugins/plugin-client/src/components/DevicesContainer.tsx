@@ -22,6 +22,7 @@ import {
 } from '@dxos/react-ui-form';
 import { translationKey } from '@dxos/shell/react';
 import { AuthCode, Centered, DeviceListItem, Emoji, Viewport } from '@dxos/shell/react';
+import { osTranslations } from '@dxos/ui-theme';
 import { hexToEmoji } from '@dxos/util';
 
 import { meta } from '../meta';

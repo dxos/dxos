@@ -4,27 +4,29 @@
 
 import { useMemo } from 'react';
 
-import { type MosaicBaseItem, type MosaicTileData } from '../components';
+import { type GetId, type MosaicTileData } from '../components';
 
-export type UseVisibleItemsProps<T extends MosaicBaseItem> = {
+export type UseVisibleItemsProps<TItem = any> = {
   /** Container id. */
   id: string;
   /** Current items. */
-  items?: T[];
+  items?: TItem[];
   /** Currently dragging item. */
-  dragging: MosaicTileData | undefined;
+  dragging: MosaicTileData<TItem> | undefined;
+  /** ID getter */
+  getId: GetId<TItem>;
 };
 
 /**
  * Returns items with the dragging item removed.
  */
-export const useVisibleItems = <T extends MosaicBaseItem>({ id, items, dragging }: UseVisibleItemsProps<T>): T[] => {
+export const useVisibleItems = <TItem = any>({ id, items, dragging, getId }: UseVisibleItemsProps<TItem>): TItem[] => {
   const visibleItems = useMemo(() => {
     if (!items || !dragging || id !== dragging.containerId) {
       return items ?? [];
     }
 
-    const idx = items.findIndex((item) => item.id === dragging.object.id);
+    const idx = items.findIndex((item) => getId(item) === dragging.id);
     if (idx === -1) {
       return items;
     }
@@ -32,7 +34,7 @@ export const useVisibleItems = <T extends MosaicBaseItem>({ id, items, dragging 
     const visibleItems = items.slice();
     visibleItems.splice(idx, 1);
     return visibleItems;
-  }, [id, items, dragging]);
+  }, [id, items, dragging, getId]);
 
   return visibleItems;
 };

@@ -8,7 +8,7 @@ import { Surface } from '@dxos/app-framework/react';
 import { Obj, Query } from '@dxos/echo';
 import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
 import { Toolbar, useTranslation } from '@dxos/react-ui';
-import { Card, Mosaic, type StackComponent } from '@dxos/react-ui-mosaic';
+import { Card, Mosaic, type StackTileComponent } from '@dxos/react-ui-mosaic';
 import { SearchList } from '@dxos/react-ui-searchlist';
 import { StackItem } from '@dxos/react-ui-stack';
 import { Text } from '@dxos/schema';
@@ -35,7 +35,7 @@ export const SearchMain = ({ space }: { space?: Space }) => {
         ),
   );
 
-  const results = useGlobalSearchResults<Obj.Any>(objects);
+  const results = useGlobalSearchResults(objects);
   const { results: webResults } = useWebSearch({ query });
   const allResults = useMemo(
     () => [...results, ...webResults].filter(({ object }) => object && Obj.getLabel(object)),
@@ -61,7 +61,7 @@ export const SearchMain = ({ space }: { space?: Space }) => {
           <SearchList.Viewport>
             <Mosaic.Container asChild>
               <Mosaic.Viewport>
-                <Mosaic.Stack items={allResults} Component={Component} />
+                <Mosaic.Stack items={allResults} getId={(result) => result.object!.id} Tile={SearchResultTile} />
               </Mosaic.Viewport>
             </Mosaic.Container>
             {allResults.length === 0 && <SearchList.Empty>{t('empty results message')}</SearchList.Empty>}
@@ -72,15 +72,15 @@ export const SearchMain = ({ space }: { space?: Space }) => {
   );
 };
 
-const Component: StackComponent<SearchResult<Obj.Any>> = ({ object }) => {
+const SearchResultTile: StackTileComponent<SearchResult> = ({ data }) => {
   return (
-    <Card.Root key={object.id}>
+    <Card.Root key={data.id}>
       <Card.Toolbar>
         <Card.DragHandle />
-        <Card.Title>{object.label}</Card.Title>
+        <Card.Title>{data.label ?? (data.object && Obj.getLabel(data.object))}</Card.Title>
         <Card.Menu />
       </Card.Toolbar>
-      <Surface role='card--content' data={{ subject: object }} limit={1} />
+      <Surface role='card--content' data={{ subject: data.object }} limit={1} />
     </Card.Root>
   );
 };

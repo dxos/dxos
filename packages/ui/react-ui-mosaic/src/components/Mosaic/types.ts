@@ -2,33 +2,32 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Obj } from '@dxos/echo';
-
 // These are not exported from the pragmatic-drag-and-drop-auto-scroll package.
 export type Axis = 'vertical' | 'horizontal';
 export type AllowedAxis = Axis | 'all';
 
-export type MosaicBaseItem = { id: string };
+export type GetId<TData = any> = (data: TData) => string;
 
 /**
  * Draggable item.
+ * Tiles may contain arbitrary data (which may not be an ECHO object; e.g., search result).
  */
-export type MosaicTileData<T extends MosaicBaseItem = MosaicBaseItem, Location = any> = {
+export type MosaicTileData<TData = any, TLocation = any> = {
   type: 'tile';
-  id: string;
   containerId: string;
-  location: Location;
+  id: string;
+  data: TData;
+  location: TLocation;
   bounds?: DOMRect;
-  object: T;
 };
 
 /**
  * Drop target placeholder.
  */
-export type MosaicPlaceholderData<Location = any> = {
+export type MosaicPlaceholderData<TLocation = any> = {
   type: 'placeholder';
   containerId: string;
-  location: Location;
+  location: TLocation;
 };
 
 /**
@@ -46,7 +45,7 @@ export type MosaicTargetData = MosaicTileData | MosaicPlaceholderData;
 /**
  * Handler implemented by drop containers.
  */
-export interface MosaicEventHandler {
+export interface MosaicEventHandler<TData = any, TObject = any> {
   /**
    * Container identifier.
    */
@@ -56,17 +55,17 @@ export interface MosaicEventHandler {
    * Determine if the item can be dropped into this container.
    * NOTE: This is continuously called while dragging (doesn't require mouse movement).
    */
-  canDrop?: (props: { source: MosaicTileData }) => boolean;
+  canDrop?: (props: { source: MosaicTileData<TData> }) => boolean;
 
   /**
    * Called during drag for custom visualization.
    */
-  onDrag?: (props: { source: MosaicTileData; position: { x: number; y: number } }) => void;
+  onDrag?: (props: { source: MosaicTileData<TData>; position: { x: number; y: number } }) => void;
 
   /**
    * Insert/rearrange the item at the given location.
    */
-  onDrop?: (props: { source: MosaicTileData; target?: MosaicData }) => void;
+  onDrop?: (props: { source: MosaicTileData<TData>; target?: MosaicData }) => void;
 
   /**
    * Request the object to be dropped.
@@ -74,7 +73,7 @@ export interface MosaicEventHandler {
    * If the callback returns true, then the callback may decide to remove the item from the source container,
    * completing the transfer.
    */
-  onTake?: (props: { source: MosaicTileData }, cb: (object: Obj.Any) => Promise<boolean>) => void;
+  onTake?: (props: { source: MosaicTileData<TData> }, cb: (object: TObject) => Promise<boolean>) => void;
 
   /**
    * Dragging ended.
