@@ -265,10 +265,6 @@ export class QueryExecutor extends Resource {
     return this._trace;
   }
 
-  protected override async _open(_ctx: Context): Promise<void> {}
-
-  protected override async _close(_ctx: Context): Promise<void> {}
-
   getResults(): QueryResult[] {
     return this._lastResultSet.map(
       (item): QueryResult => ({
