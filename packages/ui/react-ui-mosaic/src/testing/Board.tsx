@@ -68,10 +68,10 @@ export const Board = forwardRef<HTMLDivElement, BoardProps>(({ id, columns, debu
   const eventHandler = useEventHandlerAdapter({
     id,
     items: columns,
-    getId: (item) => item.id,
-    canDrop: ({ source }) => Obj.instanceOf(TestColumn, source.data),
-    get: (item) => item,
+    getId: (data) => data.id,
+    get: (data) => data,
     make: (object) => object,
+    canDrop: ({ source }) => Obj.instanceOf(TestColumn, source.data),
   });
 
   return (
@@ -90,7 +90,14 @@ export const Board = forwardRef<HTMLDivElement, BoardProps>(({ id, columns, debu
           debug={debugHandler}
         >
           <Mosaic.Viewport options={{ overflow: { x: 'scroll' } }} viewportRef={viewportRef}>
-            <Mosaic.Stack axis='horizontal' className='plb-3' items={columns} getId={(item) => item.id} Tile={Column} />
+            <Mosaic.Stack
+              axis='horizontal'
+              className='plb-3'
+              items={columns}
+              getId={(item) => item.id}
+              Tile={Column}
+              debug={debug}
+            />
           </Mosaic.Viewport>
         </Mosaic.Container>
       </Focus.Group>
@@ -103,11 +110,9 @@ export const Board = forwardRef<HTMLDivElement, BoardProps>(({ id, columns, debu
 // Column
 //
 
-type ColumnProps = Pick<MosaicTileProps<TestColumn>, 'classNames' | 'data' | 'location'> & {
-  debug?: boolean;
-};
+type ColumnProps = Pick<MosaicTileProps<TestColumn>, 'classNames' | 'location' | 'data' | 'debug'>;
 
-export const Column = forwardRef<HTMLDivElement, ColumnProps>(({ classNames, data, debug, location }, forwardedRef) => {
+export const Column = forwardRef<HTMLDivElement, ColumnProps>(({ classNames, location, data, debug }, forwardedRef) => {
   const [column, updateColumn] = useObject(data);
   const [DebugInfo, debugHandler] = useContainerDebug(debug);
   const dragHandleRef = useRef<HTMLButtonElement>(null);
@@ -115,10 +120,10 @@ export const Column = forwardRef<HTMLDivElement, ColumnProps>(({ classNames, dat
   const eventHandler = useEventHandlerAdapter<Ref.Unknown>({
     id: data.id,
     items: column.items,
-    getId: (item) => item.target!.id,
-    canDrop: ({ source }) => Obj.instanceOf(TestItem, source.data),
-    get: (item) => item.target!,
+    getId: (data) => data.dxn.toString(),
+    get: (data) => data.target!,
     make: (object) => Ref.make(object),
+    canDrop: ({ source }) => Obj.instanceOf(TestItem, source.data.target),
     onChange: (mutator) => updateColumn((column) => mutator(column.items)),
   });
 
@@ -141,7 +146,7 @@ export const Column = forwardRef<HTMLDivElement, ColumnProps>(({ classNames, dat
   );
 
   return (
-    <Mosaic.Tile asChild dragHandle={dragHandleRef.current} data={data} location={location}>
+    <Mosaic.Tile asChild dragHandle={dragHandleRef.current} location={location} id={data.id} data={data} debug={debug}>
       <Focus.Group asChild>
         <div
           className={mx(
@@ -171,8 +176,7 @@ export const Column = forwardRef<HTMLDivElement, ColumnProps>(({ classNames, dat
                   axis='vertical'
                   className='pli-3'
                   items={column.items}
-                  // items={column.items.map((item: any) => item.target).filter(isTruthy)}
-                  getId={(item) => item.target!.id}
+                  getId={(data) => data.dxn.toString()}
                   Tile={Item}
                 />
               </Mosaic.Viewport>
@@ -208,7 +212,7 @@ const Item = forwardRef<HTMLDivElement, ItemProps>(({ classNames, data: ref, loc
   }
 
   return (
-    <Mosaic.Tile asChild dragHandle={dragHandleRef.current} data={ref} location={location}>
+    <Mosaic.Tile asChild dragHandle={dragHandleRef.current} id={ref.dxn.toString()} data={ref} location={location}>
       <Focus.Group asChild>
         <Card.Root classNames={classNames} onClick={() => rootRef.current?.focus()} ref={composedRef}>
           <Card.Toolbar>
@@ -243,7 +247,7 @@ const Placeholder = (props: MosiacPlaceholderProps<number>) => {
     <Mosaic.Placeholder {...props} classNames={mosaicStyles.placeholder.root}>
       <div
         className={mx(
-          'flex bs-full bg-baseSurface border border-dashed border-separator rounded-sm',
+          'flex bs-full border border-dashed border-separator rounded-sm',
           mosaicStyles.placeholder.content,
         )}
       />

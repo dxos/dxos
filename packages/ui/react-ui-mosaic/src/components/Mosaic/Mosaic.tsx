@@ -333,7 +333,7 @@ const Root = forwardRef<HTMLDivElement, RootProps>(({ classNames, children, asCh
       dragging={dragging}
     >
       <Root
-        className={mx('group', classNames)}
+        className={mx('group overflow-hidden', classNames)}
         {...{
           [`data-${ROOT_DEBUG_ATTR}`]: debug,
         }}
@@ -652,7 +652,13 @@ const Viewport = forwardRef<HTMLDivElement, ViewportProps>(
 // Container Debug
 //
 
-const useContainerDebug = (debug?: boolean): [FC<ThemedClassName>, (() => ReactNode) | undefined] => {
+type UseContainerDebug = [FC<ThemedClassName>, (() => ReactNode) | undefined];
+
+/**
+ * Hook that returns a component to be rendered in the container's viewport (within the context),
+ * and a component that creates a portal in the container's debug area.
+ */
+const useContainerDebug = (debug?: boolean): UseContainerDebug => {
   const debugRef = useRef<HTMLDivElement | null>(null);
   return useMemo(() => {
     if (!debug) {
@@ -707,8 +713,10 @@ type TileProps<TData = any, TLocation = LocationType> = SlottableClassName<
     asChild?: boolean;
     dragHandle?: HTMLElement | null;
     allowedEdges?: Edge[];
-    data: TData;
     location: TLocation;
+    id: string;
+    data: TData;
+    debug?: boolean;
   }>
 >;
 
@@ -722,8 +730,9 @@ const Tile = forwardRef<HTMLDivElement, TileProps>(
       dragHandle,
       allowedEdges: allowedEdgesProp,
       location,
+      id,
       data: dataProp,
-      ...props
+      debug: _,
     }: TileProps,
     forwardedRef,
   ) => {
@@ -750,10 +759,10 @@ const Tile = forwardRef<HTMLDivElement, TileProps>(
       () =>
         ({
           type: 'tile',
-          id: dataProp.id,
+          id,
           containerId,
-          location,
           data: dataProp,
+          location,
         }) satisfies MosaicTileData,
       [containerId, location, dataProp],
     );
@@ -838,12 +847,11 @@ const Tile = forwardRef<HTMLDivElement, TileProps>(
     return (
       <TileContextProvider state={state}>
         <Root
-          {...props}
           {...{
             [`data-${TILE_STATE_ATTR}`]: state.type,
           }}
           role='listitem'
-          className={mx('relative transition-opacity', className, classNames)}
+          className={mx('relative', className, classNames)}
           ref={composedRef}
         >
           {children}
@@ -856,7 +864,8 @@ const Tile = forwardRef<HTMLDivElement, TileProps>(
                 // NOTE: Use to control appearance while dragging.
                 [`data-${TILE_STATE_ATTR}`]: state.type,
               }}
-              className={mx(classNames)}
+              // TODO(burdon): Configure drop animation.
+              className={mx('relative', className, classNames)}
               style={
                 {
                   width: `${state.rect.width}px`,

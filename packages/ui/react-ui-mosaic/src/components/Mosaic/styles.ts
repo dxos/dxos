@@ -10,13 +10,12 @@ export const styles = {
       'border border-separator',
       'data-[mosaic-tile-state=target]:border-neutralFocusIndicator',
       'data-[mosaic-tile-state=preview]:bg-groupSurface',
-      'data-[mosaic-tile-state=dragging]:opacity-20',
+      'data-[mosaic-tile-state=dragging]:opacity-0',
     ],
   },
   placeholder: {
     root: [
-      'group',
-      'transition-all opacity-0 delay-0 duration-0',
+      'group opacity-0',
       'group-data-[mosaic-debug="true"]:bg-orange-500',
       'group-data-[mosaic-debug="true"]:opacity-100',
       'data-[mosaic-placeholder-state=active]:opacity-100',
@@ -28,6 +27,8 @@ export const styles = {
     content: [
       'transition-all delay-0 duration-0',
       'group-data-[mosaic-placeholder-state=active]:duration-200',
+      'group-data-[mosaic-placeholder-axis=vertical]:bs-0',
+      'group-data-[mosaic-placeholder-axis=horizontal]:is-0',
       'group-data-[mosaic-placeholder-axis=vertical]:group-data-[mosaic-placeholder-state=active]:bs-[var(--mosaic-placeholder-height)]',
       'group-data-[mosaic-placeholder-axis=horizontal]:group-data-[mosaic-placeholder-state=active]:is-[var(--mosaic-placeholder-width)]',
     ],
