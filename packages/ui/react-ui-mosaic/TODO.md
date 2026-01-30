@@ -11,7 +11,7 @@
   - [ ] Menu (via context).
   - [ ] Drag handle/menu (via surface)
   - [ ] Form and list (plugin-preview).
-  - [ ] Remove dialogStyles fragment exports (plugin-inbox, plugin-navtree, plugin-space).
+  - [x] Remove dialogStyles fragment exports (plugin-inbox, plugin-navtree, plugin-space).
 
 ## Usage
 

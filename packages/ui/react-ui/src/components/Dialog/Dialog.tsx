@@ -27,9 +27,13 @@ import React, {
   type PropsWithChildren,
   forwardRef,
 } from 'react';
+import { useTranslation } from 'react-i18next';
+
+import { type DialogSize, osTranslations } from '@dxos/ui-theme';
 
 import { useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
+import { IconButton, type IconButtonProps } from '../Button';
 import { ElevationProvider } from '../ElevationProvider';
 
 //
@@ -101,11 +105,12 @@ DialogOverlay.displayName = DIALOG_OVERLAY_NAME;
 const DIALOG_CONTENT_NAME = 'DialogContent';
 
 type DialogContentProps = ThemedClassName<ComponentPropsWithRef<typeof DialogContentPrimitive>> & {
+  size?: DialogSize;
   inOverlayLayout?: boolean;
 };
 
 const DialogContent: ForwardRefExoticComponent<DialogContentProps> = forwardRef<HTMLDivElement, DialogContentProps>(
-  ({ classNames, children, inOverlayLayout: propsInOverlayLayout, ...props }, forwardedRef) => {
+  ({ classNames, children, size, inOverlayLayout: propsInOverlayLayout, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     const { inOverlayLayout } = useOverlayLayoutContext(DIALOG_CONTENT_NAME);
 
@@ -118,7 +123,7 @@ const DialogContent: ForwardRefExoticComponent<DialogContentProps> = forwardRef<
         className={tx(
           'dialog.content',
           'dialog',
-          { inOverlayLayout: propsInOverlayLayout || inOverlayLayout },
+          { inOverlayLayout: propsInOverlayLayout || inOverlayLayout, size },
           classNames,
         )}
         ref={forwardedRef}
@@ -199,6 +204,31 @@ type DialogCloseProps = DialogClosePrimitiveProps;
 const DialogClose: FunctionComponent<DialogCloseProps> = DialogClosePrimitive;
 
 //
+// Close Button
+//
+
+type DialogCloseIconButtonProps = ThemedClassName<Partial<IconButtonProps>>;
+
+const DialogCloseIconButton: ForwardRefExoticComponent<DialogCloseIconButtonProps> = forwardRef<
+  HTMLButtonElement,
+  DialogCloseIconButtonProps
+>((props, forwardedRef) => {
+  const { t } = useTranslation(osTranslations);
+  return (
+    <IconButton
+      {...props}
+      label={props.label ?? t('close dialog label')}
+      icon='ph--x--regular'
+      iconOnly
+      size={4}
+      density='fine'
+      variant='ghost'
+      ref={forwardedRef}
+    />
+  );
+});
+
+//
 // Dialog
 //
 
@@ -212,6 +242,7 @@ export const Dialog = {
   Title: DialogTitle,
   Description: DialogDescription,
   Close: DialogClose,
+  CloseIconButton: DialogCloseIconButton,
 };
 
 export type {
@@ -224,4 +255,5 @@ export type {
   DialogTitleProps,
   DialogDescriptionProps,
   DialogCloseProps,
+  DialogCloseIconButtonProps,
 };

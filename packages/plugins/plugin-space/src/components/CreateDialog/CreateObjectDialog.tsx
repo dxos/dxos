@@ -14,8 +14,7 @@ import { invariant } from '@dxos/invariant';
 import { Operation } from '@dxos/operation';
 import { useClient } from '@dxos/react-client';
 import { useSpaces } from '@dxos/react-client/echo';
-import { Dialog, IconButton, useTranslation } from '@dxos/react-ui';
-import { dialogStyles } from '@dxos/react-ui-mosaic';
+import { Dialog, useTranslation } from '@dxos/react-ui';
 import { type Collection } from '@dxos/schema';
 
 import { meta } from '../../meta';
@@ -113,10 +112,8 @@ export const CreateObjectDialog = ({
   );
 
   return (
-    // TODO(wittjosiah): The tablist dialog pattern is copied from @dxos/plugin-manager.
-    //  Consider factoring it out to the tabs package.
-    <Dialog.Content classNames={dialogStyles.content}>
-      <div role='none' className={dialogStyles.header}>
+    <Dialog.Content>
+      <Dialog.Header>
         <Dialog.Title>
           {t('create object dialog title', {
             object: t('typename label', {
@@ -126,19 +123,9 @@ export const CreateObjectDialog = ({
           })}
         </Dialog.Title>
         <Dialog.Close asChild>
-          <IconButton
-            ref={closeRef}
-            icon='ph--x--regular'
-            size={4}
-            label='Close'
-            iconOnly
-            density='fine'
-            variant='ghost'
-            autoFocus
-          />
+          <Dialog.CloseIconButton ref={closeRef} />
         </Dialog.Close>
-      </div>
-
+      </Dialog.Header>
       <CreateObjectPanel
         schemas={userSchemas}
         spaces={spaces}

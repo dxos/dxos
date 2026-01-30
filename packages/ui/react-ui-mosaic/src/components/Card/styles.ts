@@ -18,16 +18,3 @@ export const styles = {
 
   poster: 'max-bs-[200px]',
 } satisfies Record<string, ClassNameValue>;
-
-// TODO(burdon): Remove (support as variants in dialog components)
-export const dialogStyles = {
-  // Dialog.Content
-  content: 'p-0 bs-content min-bs-[8rem] max-bs-full md:max-is-[32rem] overflow-hidden',
-
-  // TODO(burdon): Create Dialog.Header
-  header: 'flex justify-between pli-cardSpacingInline mbs-cardSpacingBlock',
-
-  // TODO(burdon): Move.
-  paddedOverflow: 'flex-1 min-bs-0 overflow-y-auto plb-cardSpacingBlock',
-  searchListRoot: 'flex flex-1 flex-col min-bs-0 pli-cardSpacingInline pbs-cardSpacingBlock [&>input]:mbe-0',
-} satisfies Record<string, ClassNameValue>;

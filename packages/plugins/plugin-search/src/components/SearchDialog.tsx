@@ -85,7 +85,7 @@ export const SearchDialog = ({ pivotId }: SearchDialogProps) => {
   }, []);
 
   return (
-    <Dialog.Content classNames='md:max-is-[24rem] overflow-hidden mbs-12'>
+    <Dialog.Content>
       <Dialog.Title>{t('search dialog title')}</Dialog.Title>
       <SearchList.Root onSearch={handleSearch}>
         <div
