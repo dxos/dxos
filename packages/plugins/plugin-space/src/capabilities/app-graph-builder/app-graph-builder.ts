@@ -8,7 +8,7 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import { Capability, Common } from '@dxos/app-framework';
-import { type Space, SpaceState, getSpace, isSpace } from '@dxos/client/echo';
+import { type Space, SpaceState, getSpace, isSpace, parseId } from '@dxos/client/echo';
 import { DXN, Filter, Obj, type Ref, Type } from '@dxos/echo';
 import { AtomObj, AtomQuery } from '@dxos/echo-atom';
 import { log } from '@dxos/log';
@@ -221,6 +221,36 @@ export default Capability.makeModule(
           } catch {
             return Effect.succeed([]);
           }
+        },
+        resolver: (id, get) => {
+          // Resolve space ID to space node.
+          const { spaceId } = parseId(id);
+          if (!spaceId) {
+            return Effect.succeed(null);
+          }
+
+          const client = capabilities.get(ClientCapabilities.Client);
+
+          // Subscribe to spaces observable to react when space becomes available.
+          const spaces = get(CreateAtom.fromObservable(client.spaces));
+          const space = spaces?.find((s) => s.id === spaceId);
+          if (!space) {
+            return Effect.succeed(null);
+          }
+
+          // Only subscribe to these atoms if the space exists.
+          const state = get(capabilities.get(SpaceCapabilities.State));
+          const ephemeralState = get(capabilities.get(SpaceCapabilities.EphemeralState));
+
+          return Effect.succeed(
+            constructSpaceNode({
+              space,
+              navigable: ephemeralState.navigableCollections,
+              personal: space === client.spaces.default,
+              namesCache: state.spaceNames,
+              resolve: resolve(get),
+            }),
+          );
         },
       }),
 

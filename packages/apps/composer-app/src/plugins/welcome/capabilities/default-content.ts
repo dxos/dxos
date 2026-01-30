@@ -53,12 +53,7 @@ export default Capability.makeModule(
       name: 'README',
       content: README_CONTENT,
     });
-    if (defaultSpaceCollection) {
-      const readmeRef = Ref.make(readme);
-      Obj.change(defaultSpaceCollection, (c) => {
-        c.objects.push(readmeRef);
-      });
-    }
+    space.db.add(readme);
 
     // Ensure the default content is in the graph and connected.
     // This will allow the expose action to work before the navtree renders for the first time.

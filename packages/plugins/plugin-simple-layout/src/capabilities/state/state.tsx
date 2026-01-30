@@ -16,6 +16,7 @@ const defaultState: SimpleLayoutState = {
   dialogOpen: false,
   workspace: HOME_ID,
   previousWorkspace: HOME_ID,
+  history: [],
   isPopover: false,
 };
 
