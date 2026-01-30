@@ -127,7 +127,7 @@ const extractContact = Effect.fn('extractContact')(function* (actor: Actor.Actor
   }
 
   const newContact = Obj.make(Person.Person, {
-    [Obj.Meta]: { tags: tags ? [...tags] : undefined },
+    ...(tags ? { [Obj.Meta]: { tags: [...tags] } } : {}),
     emails: [{ value: email }],
   });
   yield* Database.Service.add(newContact);

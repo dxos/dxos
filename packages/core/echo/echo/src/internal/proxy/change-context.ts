@@ -21,11 +21,6 @@ import { EventId } from './symbols';
 let currentChangeContext: object | null = null;
 
 /**
- * Tracks re-entry depth into the same object's change context.
- */
-let changeContextDepth = 0;
-
-/**
  * The primary object that has pending notifications, if any.
  * This uses the contextKey (target or ObjectCore).
  */
@@ -40,20 +35,15 @@ const pendingOwnerNotifications = new Set<object>();
 /**
  * Enter a change context for the given key.
  * While in a change context, mutations are allowed on the associated object.
+ * Nested Obj.change calls are not supported.
  *
  * @param key - The key to enter the change context for (target object or ObjectCore).
  * @returns A cleanup function that exits the change context.
  */
 export const enterChangeContext = (key: object): (() => void) => {
-  if (currentChangeContext === null) {
-    currentChangeContext = key;
-  }
-  changeContextDepth++;
+  currentChangeContext = key;
   return () => {
-    changeContextDepth--;
-    if (changeContextDepth === 0) {
-      currentChangeContext = null;
-    }
+    currentChangeContext = null;
   };
 };
 

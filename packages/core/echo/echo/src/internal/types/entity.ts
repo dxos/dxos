@@ -41,3 +41,14 @@ export enum EntityKind {
 }
 
 export const EntityKindSchema = Schema.Enums(EntityKind);
+
+/**
+ * Typename for generic object references (Type.Obj / Type.Ref(Type.Obj)).
+ * Used when referencing any object without a specific schema.
+ */
+export const ANY_OBJECT_TYPENAME = 'dxos.org/schema/AnyObject';
+
+/**
+ * Version for generic object references.
+ */
+export const ANY_OBJECT_VERSION = '0.0.0';

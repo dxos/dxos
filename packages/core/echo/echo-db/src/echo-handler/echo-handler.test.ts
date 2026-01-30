@@ -70,10 +70,12 @@ describe('ECHO specific proxy properties with schema', () => {
     );
   });
 
-  test('throws when assigning a class instances', () => {
+  test('throws when assigning a class instance inside Obj.change', () => {
+    const obj = createObject(Obj.make(TestSchema.Example, {}));
     expect(() => {
-      // Use type assertion to bypass readonly check - testing runtime behavior.
-      (createObject(Obj.make(TestSchema.Example, {})) as any).classInstance = new TestSchema.TestClass();
+      Obj.change(obj, (o) => {
+        o.classInstance = new TestSchema.TestClass();
+      });
     }).to.throw();
   });
 

@@ -24,7 +24,7 @@ import {
   makeTypeJsonSchemaAnnotation,
 } from '../annotations';
 import { type JsonSchemaReferenceInfo, createEchoReferenceSchema } from '../ref';
-import { EntityKind, EntityKindSchema } from '../types';
+import { ANY_OBJECT_TYPENAME, ANY_OBJECT_VERSION, EntityKind, EntityKindSchema } from '../types';
 
 import { CustomAnnotations, DecodedAnnotations, EchoAnnotations } from './annotations';
 import {
@@ -352,7 +352,7 @@ const anyToEffectSchema = (root: JSONSchema.JsonSchema7Any): Schema.Schema.AnyNo
 const refToEffectSchema = (root: any): Schema.Schema.AnyNoContext => {
   if (!('reference' in root)) {
     // Fallback to generic object ref when no reference info is provided.
-    return createEchoReferenceSchema(undefined, 'dxos.org/schema/AnyObject', '0.0.0');
+    return createEchoReferenceSchema(undefined, ANY_OBJECT_TYPENAME, ANY_OBJECT_VERSION);
   }
 
   const reference: JsonSchemaReferenceInfo = root.reference;

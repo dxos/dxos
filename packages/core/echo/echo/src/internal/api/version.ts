@@ -2,12 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-/**
- * Common version helpers shared by Obj and Relation modules.
- *
- * NOTE: EntityVersion is used instead of Version to avoid conflict with types/version.ts.
- */
-
 import { assertArgument } from '@dxos/invariant';
 
 import { ObjectVersionId } from '../entities';

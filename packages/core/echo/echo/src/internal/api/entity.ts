@@ -2,15 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-/**
- * Common entity helpers shared by Obj and Relation modules.
- * These operate on Entity.Base (accepting both reactive and snapshots).
- *
- * NOTE: getTypeDXN, getSchema, getTypename, isDeleted are NOT exported here
- * to avoid conflicts with existing internal exports. Use the versions from
- * internal/annotations, internal/types, and internal/object respectively.
- */
-
 import { invariant } from '@dxos/invariant';
 import { type DXN } from '@dxos/keys';
 import { assumeType } from '@dxos/util';

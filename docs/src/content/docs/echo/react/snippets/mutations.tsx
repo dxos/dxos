@@ -6,13 +6,13 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { Filter, Obj } from '@dxos/echo';
-import { TestSchema } from '@dxos/echo/testing';
+import { Expando } from '@dxos/schema';
 import { ClientProvider } from '@dxos/react-client';
 import { useDatabase, useQuery } from '@dxos/react-client/echo';
 
 export const App = () => {
   const db = useDatabase();
-  const tasks = useQuery(db, Filter.type(TestSchema.Expando));
+  const tasks = useQuery(db, Filter.type(Expando.Expando));
   return (
     <>
       {tasks.map((task) => (
@@ -30,7 +30,7 @@ export const App = () => {
       <button
         name='add'
         onClick={() => {
-          const task = Obj.make(TestSchema.Expando, {
+          const task = Obj.make(Expando.Expando, {
             type: 'task',
             name: 'buy milk',
           });

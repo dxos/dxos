@@ -2,12 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-/**
- * Common meta helpers shared by Obj and Relation modules.
- *
- * NOTE: getMeta is renamed to getMetaChecked to avoid conflict with types/meta.ts.
- */
-
 import type { ForeignKey } from '@dxos/echo-protocol';
 import { assertArgument, invariant } from '@dxos/invariant';
 import type { DeepReadonly } from '@dxos/util';

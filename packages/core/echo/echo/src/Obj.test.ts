@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { describe, test } from 'vitest';
+import { describe, expectTypeOf, test } from 'vitest';
 
 import * as Entity from './Entity';
 import { SnapshotKindId } from './internal';
@@ -345,6 +345,42 @@ describe('Obj', () => {
 
       expect(Obj.instanceOf(TestSchema.Person, cloned)).toBe(true);
       expect(Obj.getSchema(cloned)).toBe(Obj.getSchema(person));
+    });
+  });
+
+  describe('type-level tests', () => {
+    test('Obj.Unknown does not allow arbitrary property access', () => {
+      // Obj.Unknown only exposes `id` - no arbitrary properties.
+      expectTypeOf<Obj.Unknown>().toHaveProperty('id');
+      expectTypeOf<Obj.Unknown>().not.toHaveProperty('name');
+      expectTypeOf<Obj.Unknown>().not.toHaveProperty('foo');
+
+      // Accessing an unknown property should be a type error.
+      // This verifies that Obj.Unknown is NOT an index signature type.
+      type HasName = Obj.Unknown extends { name: unknown } ? true : false;
+      expectTypeOf<HasName>().toEqualTypeOf<false>();
+    });
+
+    test('Obj.Any allows arbitrary property access via index signature', () => {
+      // Obj.Any has an index signature allowing any string key.
+      expectTypeOf<Obj.Any>().toHaveProperty('id');
+
+      // Any string key returns `any`.
+      type AnyPropertyType = Obj.Any['anyArbitraryProperty'];
+      expectTypeOf<AnyPropertyType>().toBeAny();
+
+      // This verifies that Obj.Any IS an index signature type.
+      type HasIndexSignature = Obj.Any extends { [key: string]: any } ? true : false;
+      expectTypeOf<HasIndexSignature>().toEqualTypeOf<true>();
+    });
+
+    test('Obj.Unknown and Obj.Any are mutually assignable', () => {
+      // Both types are mutually assignable due to structural typing.
+      // The key difference is in property ACCESS, not assignability:
+      // - Obj.Unknown: cannot access arbitrary properties (no index signature)
+      // - Obj.Any: can access arbitrary properties (has [key: string]: any)
+      expectTypeOf<Obj.Unknown>().toMatchTypeOf<Obj.Any>();
+      expectTypeOf<Obj.Any>().toMatchTypeOf<Obj.Unknown>();
     });
   });
 });

@@ -4,7 +4,7 @@
 
 import { Client } from '@dxos/client';
 import { Obj } from '@dxos/echo';
-import { TestSchema } from '@dxos/echo/testing';
+import { Expando } from '@dxos/schema';
 
 const client = new Client();
 
@@ -17,7 +17,7 @@ async () => {
 
   const space = await client.spaces.create();
 
-  const object = Obj.make(TestSchema.Expando, {
+  const object = Obj.make(Expando.Expando, {
     type: 'task',
     name: 'buy milk',
   });

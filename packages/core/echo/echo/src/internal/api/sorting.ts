@@ -2,10 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-/**
- * Common sorting helpers shared by Obj and Relation modules.
- */
-
 import { getTypename } from '../annotations';
 import type { AnyEntity } from '../types';
 

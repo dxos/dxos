@@ -4,7 +4,7 @@
 
 import { Client } from '@dxos/client';
 import { Filter, Obj } from '@dxos/echo';
-import { TestSchema } from '@dxos/echo/testing';
+import { Expando } from '@dxos/schema';
 
 const client = new Client();
 await client.initialize();
@@ -22,7 +22,7 @@ const space = spaces[0];
 
 // Grab an object.
 const result = await space.db
-  .query(Filter.type(TestSchema.Expando, { type: 'task' }))
+  .query(Filter.type(Expando.Expando, { type: 'task' }))
   .run();
 const object = result[0];
 

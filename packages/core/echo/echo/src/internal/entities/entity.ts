@@ -81,6 +81,7 @@ export interface EchoTypeSchema<
 export const makeEchoTypeSchema = <
   Self extends Schema.Schema.Any,
   K extends EntityKind = EntityKind,
+  // TODO(wittjosiah): Can this be inferred from the schema?
   Fields extends Schema.Struct.Fields = Schema.Struct.Fields,
 >(
   fields: Fields,

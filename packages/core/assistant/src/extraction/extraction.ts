@@ -5,15 +5,15 @@
 import * as Schema from 'effect/Schema';
 
 import { asyncTimeout } from '@dxos/async';
+import { Type } from '@dxos/echo';
 import { type FunctionDefinition } from '@dxos/functions';
 import { type FunctionExecutor } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
-import { Expando } from '@dxos/schema';
 import { Message } from '@dxos/types';
 
 export const ExtractionInput = Schema.Struct({
   message: Message.Message,
-  objects: Schema.optional(Schema.Array(Expando.Expando)),
+  objects: Schema.optional(Schema.Array(Type.Obj)),
   options: Schema.optional(
     Schema.Struct({
       timeout: Schema.optional(Schema.Number),

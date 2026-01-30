@@ -11,6 +11,8 @@ import { type ToMutable } from '@dxos/util';
 
 import type * as Entity$ from './Entity';
 import {
+  ANY_OBJECT_TYPENAME,
+  ANY_OBJECT_VERSION,
   type ATTR_RELATION_SOURCE,
   type ATTR_RELATION_TARGET,
   type AnyEntity,
@@ -99,7 +101,7 @@ const ObjSchema = Schema.Struct({
   id: Schema.String,
 }).pipe(
   Schema.extend(Schema.Record({ key: Schema.String, value: Schema.Unknown })),
-  EchoObjectSchema({ typename: 'dxos.org/schema/AnyObject', version: '0.0.0' }),
+  EchoObjectSchema({ typename: ANY_OBJECT_TYPENAME, version: ANY_OBJECT_VERSION }),
 );
 
 /**
