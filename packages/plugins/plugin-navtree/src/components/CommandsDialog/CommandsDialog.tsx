@@ -10,7 +10,6 @@ import { Keyboard, keySymbols } from '@dxos/keyboard';
 import { Graph, Node, useActionRunner } from '@dxos/plugin-graph';
 import { useActions } from '@dxos/plugin-graph';
 import { Button, Dialog, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { dialogStyles } from '@dxos/react-ui-mosaic';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-searchlist';
 import { osTranslations } from '@dxos/ui-theme';
 import { getHostPlatform } from '@dxos/util';
@@ -69,17 +68,12 @@ export const CommandsDialogContent = forwardRef<HTMLDivElement, CommandsDialogCo
     });
 
     return (
-      <Dialog.Content classNames={dialogStyles.content} ref={forwardedRef}>
-        <Dialog.Title classNames={dialogStyles.header}>{t('commands dialog title', { ns: meta.id })}</Dialog.Title>
+      <Dialog.Content ref={forwardedRef}>
+        <Dialog.Title>{t('commands dialog title', { ns: meta.id })}</Dialog.Title>
         <SearchList.Root onSearch={handleSearch}>
-          <div
-            aria-label={t('command list input placeholder')}
-            role='combobox'
-            aria-expanded='true'
-            className={dialogStyles.searchListRoot}
-          >
+          <div aria-label={t('command list input placeholder')} role='combobox' aria-expanded='true'>
             <SearchList.Input placeholder={t('command list input placeholder')} />
-            <SearchList.Content classNames={dialogStyles.paddedOverflow}>
+            <SearchList.Content>
               <SearchList.Viewport>
                 {results.map((action) => {
                   const shortcut =

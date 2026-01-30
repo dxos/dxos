@@ -3,7 +3,7 @@
 - [ ] SearchList using Mosaic
 
 - [ ] Remove fragments
-  - [ ] Remove react-ui-mosaic: dialogStyles
+  - [x] Remove react-ui-mosaic: dialogStyles
 
 - [ ] Remove classNames
   - [ ] Dialog

@@ -22,8 +22,8 @@
       justify-items: center;
     }
   }
+
   .dx-dialog__content {
-    /* TODO(thure): `flex` should not be default. */
     @apply flex flex-col is-dvw max-is-full p-4 animate-slideUpAndFade shadow-md backdrop-blur;
     will-change: opacity, transform;
     @media (min-width: theme('screens.sm')) {
@@ -33,9 +33,11 @@
       @apply max-is-[24rem];
     }
   }
+
   .dx-dialog__title {
     @apply rounded shrink-0 text-xl font-medium;
   }
+
   .dx-dialog__description {
     @apply mlb-2;
   }

@@ -48,10 +48,17 @@ const CardContext = createContext<CardContextValue>({});
 // Root
 //
 
-type CardRootProps = CardSharedProps & { id?: string; border?: boolean };
+type CardRootProps = CardSharedProps & {
+  id?: string;
+  border?: boolean;
+  fullWidth?: boolean;
+};
 
 const CardRoot = forwardRef<HTMLDivElement, CardRootProps>(
-  ({ children, classNames, className, id, asChild, role = 'group', border = true, ...props }, forwardedRef) => {
+  (
+    { children, classNames, className, id, asChild, role = 'group', border = true, fullWidth, ...props },
+    forwardedRef,
+  ) => {
     const Root = asChild ? Slot : 'div';
 
     return (
@@ -59,7 +66,7 @@ const CardRoot = forwardRef<HTMLDivElement, CardRootProps>(
         {...(id && { 'data-object-id': id })}
         {...props}
         role={role}
-        className={mx(styles.root, border && styles.border, className, classNames)}
+        className={mx(styles.root, border && styles.border, fullWidth && '!max-is-none', className, classNames)}
         ref={forwardedRef}
       >
         {children}
@@ -309,7 +316,7 @@ const CardPoster = (props: CardPosterProps) => {
   if (props.image) {
     return (
       <div role='none' className='mbe-1'>
-        <Image classNames={[`dx-card__poster`, aspect, props.classNames]} src={props.image} alt={props.alt} />
+        <Image classNames={[styles.poster, aspect, props.classNames]} src={props.image} alt={props.alt} />
       </div>
     );
   }
@@ -318,7 +325,7 @@ const CardPoster = (props: CardPosterProps) => {
     return (
       <div
         role='image'
-        className={mx(`dx-card__poster grid place-items-center bg-inputSurface text-subdued`, aspect, props.classNames)}
+        className={mx('grid place-items-center bg-inputSurface text-subdued', styles.poster, aspect, props.classNames)}
         aria-label={props.alt}
       >
         <Icon icon={props.icon} size={10} />

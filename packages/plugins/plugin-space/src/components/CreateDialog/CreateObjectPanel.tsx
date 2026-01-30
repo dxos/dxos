@@ -11,7 +11,6 @@ import { type AnyProperties, type TypeAnnotation, getTypeAnnotation } from '@dxo
 import { type Space, type SpaceId } from '@dxos/react-client/echo';
 import { toLocalizedString, useDefaultValue, useTranslation } from '@dxos/react-ui';
 import { Form, omitId } from '@dxos/react-ui-form';
-import { dialogStyles } from '@dxos/react-ui-mosaic';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-searchlist';
 import { type Collection, ViewAnnotation } from '@dxos/schema';
 import { type MaybePromise, isNonNullable } from '@dxos/util';
@@ -169,18 +168,13 @@ const SelectSpace = ({
 
   return (
     <SearchList.Root onSearch={handleSearch}>
-      <div
-        className={dialogStyles.searchListRoot}
-        aria-label={t('space input label')}
-        role='combobox'
-        aria-expanded='true'
-      >
+      <div aria-label={t('space input label')} role='combobox' aria-expanded='true'>
         <SearchList.Input
           autoFocus
           data-testid='create-object-form.space-input'
           placeholder={t('space input placeholder')}
         />
-        <SearchList.Content classNames={dialogStyles.paddedOverflow}>
+        <SearchList.Content>
           <SearchList.Viewport>
             {results.map((space) => (
               <SearchList.Item
@@ -224,18 +218,13 @@ const SelectSchema = ({
 
   return (
     <SearchList.Root onSearch={handleSearch}>
-      <div
-        aria-label={t('schema input label')}
-        role='combobox'
-        aria-expanded='true'
-        className={dialogStyles.searchListRoot}
-      >
+      <div aria-label={t('schema input label')} role='combobox' aria-expanded='true'>
         <SearchList.Input
           autoFocus
           data-testid='create-object-form.schema-input'
           placeholder={t('schema input placeholder')}
         />
-        <SearchList.Content classNames={dialogStyles.paddedOverflow}>
+        <SearchList.Content>
           <SearchList.Viewport>
             {results.map((option) => (
               <SearchList.Item
