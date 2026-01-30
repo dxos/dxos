@@ -47,11 +47,11 @@
     @apply flex flex-col is-dvw max-is-full p-4 shadow-md backdrop-blur;
 
     &[data-state='open'] {
-      @apply animate-slideUpAndFade;
+      @apply animate-slide-up-and-fade;
     }
 
     &[data-state='closed'] {
-      @apply animate-slideDownAndFade;
+      @apply animate-slide-down-and-fade;
     }
   }
 
