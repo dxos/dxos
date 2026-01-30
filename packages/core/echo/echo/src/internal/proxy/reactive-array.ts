@@ -5,9 +5,9 @@
 import { isInChangeContext } from './change-context';
 import { createArrayMethodError } from './errors';
 import { batchEvents } from './event-batch';
+import { getEchoRoot } from './ownership';
 import { getProxyTarget, isProxy } from './proxy-utils';
 import { ChangeId, EventId } from './symbols';
-import { getEchoRoot } from './typed-handler';
 
 /**
  * Check if array mutation is allowed (inside a change context).
