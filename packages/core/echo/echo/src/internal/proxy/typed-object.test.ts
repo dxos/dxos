@@ -53,10 +53,10 @@ describe('EchoObjectSchema class DSL', () => {
       const person = makeObject(Contact, { name: 'John' });
       change(person, (p) => {
         p.name = undefined;
-        (p as any).recordField = 'hello';
+        p.recordField = 'hello';
       });
       expect(person.name).to.be.undefined;
-      expect((person as any).recordField).to.eq('hello');
+      expect(person.recordField).to.eq('hello');
     });
   });
 

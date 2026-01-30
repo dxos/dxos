@@ -18,7 +18,7 @@ import { MarkdownCard, type MarkdownCardProps } from './MarkdownCard';
 
 faker.seed(1234);
 
-// Wrapper to create Markdown at render time (ECHO objects can't be created at module load).
+// TODO(wittjosiah): ECHO objects don't work when passed via Storybook args.
 const MarkdownCardStory = ({ ...args }: Omit<MarkdownCardProps, 'subject'>) => {
   const subject = useMemo(
     () =>

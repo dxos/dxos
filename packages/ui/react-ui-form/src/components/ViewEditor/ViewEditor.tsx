@@ -295,7 +295,6 @@ const FieldList = ({ schema, view, registry, readonly, showHeading = false, onDe
 
   return (
     <List.Root<FieldType>
-      // Cast readonly fields to mutable for the list component (read-only display).
       items={view.projection.fields as FieldType[]}
       isItem={Schema.is(FieldSchema)}
       getId={(field) => field.id}

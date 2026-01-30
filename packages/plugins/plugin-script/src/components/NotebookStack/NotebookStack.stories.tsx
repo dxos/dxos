@@ -17,7 +17,7 @@ import { translations } from '../../translations';
 
 import { NotebookStack } from './NotebookStack';
 
-// Wrapper to create notebook at render time (ECHO objects can't be created at module load).
+// TODO(wittjosiah): ECHO objects don't work when passed via Storybook args.
 const NotebookStackStory = () => {
   const notebook = useMemo(() => createNotebook(), []);
   return <NotebookStack notebook={notebook} />;

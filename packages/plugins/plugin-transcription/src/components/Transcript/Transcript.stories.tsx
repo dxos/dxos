@@ -196,7 +196,7 @@ const meta = {
 
 export default meta;
 
-// Wrapper to create messages at render time (ECHO objects can't be created at module load).
+// TODO(wittjosiah): ECHO objects don't work when passed via Storybook args.
 const DefaultStory = (props: StoryProps) => {
   const [messages, setMessages] = useState<Message.Message[]>([]);
   useEffect(() => {

@@ -63,28 +63,33 @@ export const syncObjects: (
 });
 
 const copyObjectData = (existing: Obj.Unknown, newObj: Obj.Unknown) => {
-  for (const key of Object.keys(newObj)) {
-    if (typeof key !== 'string' || key === 'id') continue;
-    if (
-      typeof (newObj as any)[key] !== 'string' &&
-      typeof (newObj as any)[key] !== 'number' &&
-      typeof (newObj as any)[key] !== 'boolean' &&
-      !Ref.isRef((newObj as any)[key])
-    )
-      continue;
-    (existing as any)[key] = (newObj as any)[key];
-  }
-  for (const key of Object.keys(existing)) {
-    if (typeof key !== 'string' || key === 'id') continue;
-    if (!(key in newObj)) {
-      delete (existing as any)[key];
+  Obj.change(existing, (obj) => {
+    // Copy properties from newObj to existing.
+    for (const key of Object.keys(newObj)) {
+      if (typeof key !== 'string' || key === 'id') continue;
+      if (
+        typeof (newObj as any)[key] !== 'string' &&
+        typeof (newObj as any)[key] !== 'number' &&
+        typeof (newObj as any)[key] !== 'boolean' &&
+        !Ref.isRef((newObj as any)[key])
+      )
+        continue;
+      (obj as any)[key] = (newObj as any)[key];
     }
-  }
-  for (const foreignKey of Obj.getMeta(newObj).keys) {
-    Obj.change(existing, (obj) => {
+
+    // Delete properties that don't exist in newObj.
+    for (const key of Object.keys(obj)) {
+      if (typeof key !== 'string' || key === 'id') continue;
+      if (!(key in newObj)) {
+        delete (obj as any)[key];
+      }
+    }
+
+    // Update foreign keys.
+    for (const foreignKey of Obj.getMeta(newObj).keys) {
       Obj.deleteKeys(obj, foreignKey.source);
       // TODO(dmaretskyi): Doesn't work: `Obj.getMeta(existing).keys.push(foreignKey);`
       Obj.getMeta(obj).keys.push({ ...foreignKey });
-    });
-  }
+    }
+  });
 };

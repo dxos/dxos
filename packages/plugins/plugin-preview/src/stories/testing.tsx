@@ -18,7 +18,7 @@ export type DefaultStoryProps<T extends Obj.Any> = {
 };
 
 export const DefaultStory = <T extends Obj.Any>({ Component, createObject, image }: DefaultStoryProps<T>) => {
-  // Create object at render time (ECHO objects can't be created at module load).
+  // TODO(wittjosiah): ECHO objects don't work when passed via Storybook args.
   const object = useMemo(() => createObject(), [createObject]);
   const roles: SurfaceComponentProps['role'][] = ['card--popover', 'card--intrinsic'];
 

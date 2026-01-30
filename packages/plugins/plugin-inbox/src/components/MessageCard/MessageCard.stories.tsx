@@ -35,7 +35,7 @@ const createMockMessage = (): Message.Message =>
     },
   });
 
-// Wrapper to create message at render time (ECHO objects can't be created at module load).
+// TODO(wittjosiah): ECHO objects don't work when passed via Storybook args.
 const MessageCardStory = ({ role }: Pick<SurfaceComponentProps<Message.Message>, 'role'>) => {
   const subject = useMemo(() => createMockMessage(), []);
   return (

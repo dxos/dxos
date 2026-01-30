@@ -23,10 +23,7 @@ export type FieldEditorDebugObjects = {
   projection: ProjectionModel;
 };
 
-/**
- * Create test view and projection at render time to avoid issues with
- * ECHO objects being created at module load time.
- */
+// TODO(wittjosiah): ECHO objects don't work when passed via Storybook args.
 const useTestProjection = () => {
   return useMemo(() => {
     const schema = createEchoSchema(Example);

@@ -12,7 +12,7 @@ import { translations } from '../../translations';
 
 import { Event } from './Event';
 
-// Wrapper to create event at render time (ECHO objects can't be created at module load).
+// TODO(wittjosiah): ECHO objects don't work when passed via Storybook args.
 const DefaultStory = () => {
   const event = useMemo(
     () =>

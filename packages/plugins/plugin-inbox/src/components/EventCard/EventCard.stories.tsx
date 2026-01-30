@@ -32,7 +32,7 @@ const createMockEvent = (): Event.Event =>
     },
   });
 
-// Wrapper to create event at render time (ECHO objects can't be created at module load).
+// TODO(wittjosiah): ECHO objects don't work when passed via Storybook args.
 const EventCardStory = ({ role }: Pick<SurfaceComponentProps<Event.Event>, 'role'>) => {
   const subject = useMemo(() => createMockEvent(), []);
   return (

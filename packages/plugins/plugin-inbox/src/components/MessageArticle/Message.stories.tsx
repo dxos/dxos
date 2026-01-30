@@ -12,7 +12,7 @@ import { translations } from '../../translations';
 
 import { Message } from './Message';
 
-// Wrapper to create message at render time (ECHO objects can't be created at module load).
+// TODO(wittjosiah): ECHO objects don't work when passed via Storybook args.
 const DefaultStory = () => {
   const message = useMemo(
     () =>

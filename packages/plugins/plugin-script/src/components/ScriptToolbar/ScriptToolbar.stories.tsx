@@ -31,7 +31,7 @@ const createMockStore = (initialState: ScriptToolbarState = {}): ScriptToolbarSt
   };
 };
 
-// Wrapper to create script at render time (ECHO objects can't be created at module load).
+// TODO(wittjosiah): ECHO objects don't work when passed via Storybook args.
 const ScriptToolbarStory = () => {
   const state = useMemo(() => createMockStore(), []);
   const script = useMemo(

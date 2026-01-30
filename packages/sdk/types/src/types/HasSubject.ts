@@ -6,8 +6,10 @@ import * as Schema from 'effect/Schema';
 
 import { Obj, Relation, Type } from '@dxos/echo';
 import { Format } from '@dxos/echo/internal';
-import { Expando } from '@dxos/schema';
 
+/**
+ * @deprecated Reconcile with AnchoredTo?
+ */
 export const HasSubject = Schema.Struct({
   id: Obj.ID,
   completedAt: Format.DateTime,
@@ -15,8 +17,8 @@ export const HasSubject = Schema.Struct({
   Type.relation({
     typename: 'dxos.org/relation/HasSubject',
     version: '0.1.0',
-    source: Expando.Expando, // TODO(burdon): Type.Obj.Any.
-    target: Expando.Expando, // TODO(burdon): Type.Obj.Any.
+    source: Type.Obj,
+    target: Type.Obj,
   }),
 );
 

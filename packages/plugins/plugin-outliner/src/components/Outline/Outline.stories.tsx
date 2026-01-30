@@ -15,7 +15,7 @@ import { Outline } from '../../types';
 
 import { Outline as OutlineComponent } from './Outline';
 
-// Wrapper to create text at render time (ECHO objects can't be created at module load).
+// TODO(wittjosiah): ECHO objects don't work when passed via Storybook args.
 const OutlineStory = () => {
   const space = useSpace();
   const text = useMemo(() => {

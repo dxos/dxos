@@ -25,7 +25,7 @@ const generator = new TestObjectGenerator(
   },
 );
 
-// Wrapper to create tokens at render time (ECHO objects can't be created at module load).
+// TODO(wittjosiah): ECHO objects don't work when passed via Storybook args.
 const TokenManagerStory = (props: Omit<TokenManagerProps, 'tokens'>) => {
   const [tokens, setTokens] = useState<AccessToken.AccessToken[]>([]);
   useEffect(() => {

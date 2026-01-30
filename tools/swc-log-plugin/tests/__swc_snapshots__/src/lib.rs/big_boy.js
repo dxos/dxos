@@ -57,7 +57,7 @@ export class EchoDataSource implements DataSource {
             ...this._db.graph.schemaRegistry.schemas.filter((schema)=>getSchemaTypename(schema)?.startsWith('example.org'))
         ].filter((schema)=>getSchemaTypename(schema) !== StoredSchema.typename);
     }
-    private _objectToNode(object: Obj.AnyProps): Node {
+    private _objectToNode(object: Obj.Any): Node {
         const { id, ...properties } = object;
         return {
             id,
@@ -66,7 +66,7 @@ export class EchoDataSource implements DataSource {
             properties
         };
     }
-    private async _projectRefRelationship(object: Obj.AnyProps, prop: string): Promise<Relationship[]> {
+    private async _projectRefRelationship(object: Obj.Any, prop: string): Promise<Relationship[]> {
         if (!object[prop]) {
             return [];
         }

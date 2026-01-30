@@ -17,7 +17,7 @@ type StoryProps = {
   pgn?: string;
 };
 
-// Wrapper to create game at render time (ECHO objects can't be created at module load).
+// TODO(wittjosiah): ECHO objects don't work when passed via Storybook args.
 const ChessboardStory = ({ pgn }: StoryProps) => {
   const game = useMemo(() => Chess.make(pgn ? { pgn } : undefined), [pgn]);
   return <ChessboardArticle game={game} />;

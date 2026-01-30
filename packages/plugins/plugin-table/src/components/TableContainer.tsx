@@ -66,7 +66,7 @@ export const TableContainer = forwardRef<HTMLDivElement, TableContainerProps>(({
     });
   }, [graph]);
 
-  const addRow = useAddRow({ db, schema: schema });
+  const addRow = useAddRow({ db, schema });
 
   const handleDeleteRows = useCallback(
     (_row: number, objects: any[]) => {

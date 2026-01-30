@@ -16,7 +16,7 @@ import { Journal, Outline, getDateString } from '../../types';
 
 import { Journal as JournalComponent } from './Journal';
 
-// Wrapper to create journal at render time (ECHO objects can't be created at module load).
+// TODO(wittjosiah): ECHO objects don't work when passed via Storybook args.
 const DefaultJournalStory = () => {
   const space = useSpace();
   const journal = useMemo(() => {
@@ -31,7 +31,7 @@ const DefaultJournalStory = () => {
   return null;
 };
 
-// Wrapper to create journal with entries at render time.
+// Create journal with entries at render time (see above comment).
 const JournalsStory = () => {
   const space = useSpace();
   const journal = useMemo(() => {

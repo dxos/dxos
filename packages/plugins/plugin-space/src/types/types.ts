@@ -12,7 +12,7 @@ import { SpaceSchema } from '@dxos/client/echo';
 import { CancellableInvitationObservable, Invitation } from '@dxos/client/invitations';
 import { Database, type Obj, QueryAST, Type } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
-import { Collection, Expando, FieldSchema, View } from '@dxos/schema';
+import { Collection, FieldSchema, View } from '@dxos/schema';
 import { type ComplexMap } from '@dxos/util';
 
 import { meta } from '../meta';
@@ -583,8 +583,8 @@ export namespace SpaceOperation {
         db: Database.Database,
         // TODO(wittjosiah): Relation schema.
         schema: Schema.Any,
-        source: Expando.Expando,
-        target: Expando.Expando,
+        source: Type.Obj,
+        target: Type.Obj,
         // TODO(wittjosiah): Type based on relation schema.
         fields: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
       }),

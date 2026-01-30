@@ -51,7 +51,7 @@ export const useChatToolbarActions = ({ chat, companionTo }: ChatToolbarActionsP
             () => {
               invariant(companionTo);
               return invoke(AssistantOperation.SetCurrentChat, {
-                companionTo: companionTo as Obj.Any,
+                companionTo,
                 chat: undefined,
               }).pipe(runAndForwardErrors);
             },
@@ -104,7 +104,7 @@ export const useChatToolbarActions = ({ chat, companionTo }: ChatToolbarActionsP
                       Effect.gen(function* () {
                         invariant(companionTo);
                         yield* invoke(AssistantOperation.SetCurrentChat, {
-                          companionTo: companionTo as Obj.Any,
+                          companionTo,
                           chat,
                         });
                       }).pipe(runAndForwardErrors),

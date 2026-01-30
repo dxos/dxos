@@ -78,7 +78,7 @@ export class EchoDataSource implements DataSource {
     ].filter((schema) => getSchemaTypename(schema) !== StoredSchema.typename);
   }
 
-  private _objectToNode(object: Obj.AnyProps): Node {
+  private _objectToNode(object: Obj.Any): Node {
     const { id, ...properties } = object;
     return {
       id,
@@ -88,7 +88,7 @@ export class EchoDataSource implements DataSource {
     };
   }
 
-  private async _projectRefRelationship(object: Obj.AnyProps, prop: string): Promise<Relationship[]> {
+  private async _projectRefRelationship(object: Obj.Any, prop: string): Promise<Relationship[]> {
     if (!object[prop]) {
       return [];
     }

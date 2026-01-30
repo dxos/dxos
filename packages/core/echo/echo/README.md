@@ -35,7 +35,6 @@ import { Type, Obj, Relation, Ref, Query, Filter } from '@dxos/echo';
 | Get typename (of schema)      | `Type.getTypename(schema)` | `Type.getTypename(schema)` |                |
 | Get type metadata (of schema) | `Type.getMeta(schema)`     | `Type.getMeta(schema)`     |                |
 | Is mutable schema             | `Type.isMutable(schema)`   | `Type.isMutable(schema)`   |                |
-| Expando                       | `Expando.Expando` (from @dxos/schema) |
 
 |
 | **DATA API** |

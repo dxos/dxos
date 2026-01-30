@@ -17,7 +17,7 @@ import { translations } from '../../translations';
 
 import { DeploymentDialog } from './DeploymentDialog';
 
-// Wrapper to create access token at render time (ECHO objects can't be created at module load).
+// TODO(wittjosiah): ECHO objects don't work when passed via Storybook args.
 const DeploymentDialogStory = () => {
   const accessToken = useMemo(
     () =>

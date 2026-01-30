@@ -12,7 +12,7 @@ import { createEvents } from '../../testing';
 
 import { EventList, type EventListProps } from './EventList';
 
-// Wrapper to create events at render time (ECHO objects can't be created at module load).
+// TODO(wittjosiah): ECHO objects don't work when passed via Storybook args.
 const EventListStory = (props: Omit<EventListProps, 'events'>) => {
   const events = useMemo(() => createEvents(100), []);
   return <EventList events={events} {...props} />;
