@@ -36,13 +36,14 @@ export const tailwindConfig = ({
     },
     extend: merge(
       {
+        // Generates is-card-default-width, is-card-min-width, etc.
         spacing: {
-          proseMaxWidth: 'var(--dx-proseMaxWidth)',
-          containerMaxWidth: 'var(--dx-containerMaxWidth)',
-          cardDefaultWidth: 'var(--dx-cardDefaultWidth)',
-          cardMinWidth: 'var(--dx-cardMinWidth)',
-          cardMaxWidth: 'var(--dx-cardMaxWidth)',
-          popoverMaxWidth: 'var(--dx-popoverMaxWidth)',
+          'card-default-width': 'var(--dx-card-default-width)',
+          'card-min-width': 'var(--dx-card-min-width)',
+          'card-max-width': 'var(--dx-card-max-width)',
+          'container-max-width': 'var(--dx-container-max-width)',
+          'popover-max-width': 'var(--dx-popover-max-width)',
+          'prose-max-width': 'var(--dx-prose-max-width)',
         },
         backgroundImage: {
           'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
@@ -58,17 +59,17 @@ export const tailwindConfig = ({
         screens: {
           'pointer-fine': { raw: '(pointer: fine)' },
           'hover-hover': { raw: '(hover: hover)' },
-          md: '768px',
-          lg: '1024px',
+          'md': '768px',
+          'lg': '1024px',
         },
         fontSize: {
           // Base size 16px
           // Scale 1.125
-          xs: ['0.790rem', { lineHeight: '1rem' }],
-          sm: ['0.889rem', { lineHeight: '1.25rem' }],
-          base: ['1rem', { lineHeight: '1.5rem' }],
-          lg: ['1.125rem', { lineHeight: '1.75rem' }],
-          xl: ['1.266rem', { lineHeight: '1.75rem' }],
+          'xs': ['0.790rem', { lineHeight: '1rem' }],
+          'sm': ['0.889rem', { lineHeight: '1.25rem' }],
+          'base': ['1rem', { lineHeight: '1.5rem' }],
+          'lg': ['1.125rem', { lineHeight: '1.75rem' }],
+          'xl': ['1.266rem', { lineHeight: '1.75rem' }],
           '2xl': ['1.424rem', { lineHeight: '2rem' }],
           '3xl': ['1.602rem', { lineHeight: '2.25rem' }],
           '4xl': ['1.802rem', { lineHeight: '2.5rem' }],
@@ -79,45 +80,41 @@ export const tailwindConfig = ({
           '9xl': ['3.247rem', { lineHeight: '3.25rem' }],
         },
         boxShadow: {
-          slider: '0 0 0 5px rgba(0, 0, 0, 0.3)',
+          'slider': '0 0 0 5px rgba(0, 0, 0, 0.3)',
         },
         transitionProperty: {
           'max-height': 'max-height',
         },
         transitionTimingFunction: {
-          'in-out-symmetric': 'cubic-bezier(0.5,0,0.5,1)',
+          'in-out-symmetric': 'cubic-bezier(0.5, 0, 0.5, 1)',
         },
         keyframes: {
-          // Popper chrome
-          slideDownAndFade: {
-            from: { opacity: 0, transform: 'translateY(-16px)' },
-            to: { opacity: 1, transform: 'translateY(0)' },
-          },
-          slideLeftAndFade: {
-            from: { opacity: 0, transform: 'translateX(-16px)' },
-            to: { opacity: 1, transform: 'translateX(0)' },
-          },
-          slideUpAndFade: {
-            from: { opacity: 0, transform: 'translateY(16px)' },
-            to: { opacity: 1, transform: 'translateY(0)' },
-          },
-          slideRightAndFade: {
-            from: { opacity: 0, transform: 'translateX(16px)' },
-            to: { opacity: 1, transform: 'translateX(0)' },
-          },
-          fadeIn: {
+          // Fade
+          'fade-in': {
             from: { opacity: 0 },
             to: { opacity: 1 },
           },
-
-          // Accordion
-          slideDown: {
-            from: { height: '0px' },
-            to: { height: 'var(--radix-accordion-content-height)' },
+          'fade-out': {
+            from: { opacity: 1 },
+            to: { opacity: 0 },
           },
-          slideUp: {
-            from: { height: 'var(--radix-accordion-content-height)' },
-            to: { height: '0px' },
+
+          // Popper chrome
+          'slide-down-and-fade': {
+            from: { opacity: 1, transform: 'translateY(0)' },
+            to: { opacity: 0, transform: 'translateY(16px)' },
+          },
+          'slide-left-and-fade': {
+            from: { opacity: 0, transform: 'translateX(-16px)' },
+            to: { opacity: 1, transform: 'translateX(0)' },
+          },
+          'slide-up-and-fade': {
+            from: { opacity: 0, transform: 'translateY(16px)' },
+            to: { opacity: 1, transform: 'translateY(0)' },
+          },
+          'slide-right-and-fade': {
+            from: { opacity: 0, transform: 'translateX(16px)' },
+            to: { opacity: 1, transform: 'translateX(0)' },
           },
 
           // Toast
@@ -142,6 +139,16 @@ export const tailwindConfig = ({
             },
           },
 
+          // Accordion
+          'slide-down': {
+            from: { height: '0px' },
+            to: { height: 'var(--radix-accordion-content-height)' },
+          },
+          'slide-up': {
+            from: { height: 'var(--radix-accordion-content-height)' },
+            to: { height: '0px' },
+          },
+
           // Shimmer
           'shimmer-loop': {
             '100%': {
@@ -149,6 +156,7 @@ export const tailwindConfig = ({
             },
           },
 
+          // HALO
           'halo-pulse': {
             '0%': {
               opacity: 0.3,
@@ -161,6 +169,7 @@ export const tailwindConfig = ({
             },
           },
 
+          // Progress
           'progress-indeterminate': {
             '0%': {
               left: 0,
@@ -180,45 +189,47 @@ export const tailwindConfig = ({
             },
           },
 
-          // Border trail
-          ['trail']: {
+          // Border trail effect
+          'trail': {
             to: { 'offset-distance': '100%' },
           },
-          ['trail-offset']: {
+          'trail-offset': {
             '0%': { 'offset-distance': '50%' },
             '100%': { 'offset-distance': '150%' },
           },
         },
         animation: {
-          ['fade-in']: 'fadeIn 100ms ease-in forwards',
-
-          // Border trail
-          ['trail']: 'trail 6s linear infinite',
-          ['trail-offset']: 'trail-offset 6s linear infinite',
+          // Fade
+          'fade-in': 'fade-in 200ms ease-out',
+          'fade-out': 'fade-out 400ms ease-out',
 
           // Popper chrome
-          ['slideDownAndFade']: 'slideDownAndFade 400ms cubic-bezier(0.16, 1, 0.3, 1)',
-          ['slideLeftAndFade']: 'slideLeftAndFade 400ms cubic-bezier(0.16, 1, 0.3, 1)',
-          ['slideUpAndFade']: 'slideUpAndFade 400ms cubic-bezier(0.16, 1, 0.3, 1)',
-          ['slideRightAndFade']: 'slideRightAndFade 400ms cubic-bezier(0.16, 1, 0.3, 1)',
+          'slide-down-and-fade': 'slide-down-and-fade 400ms cubic-bezier(0.16, 1, 0.3, 1)',
+          'slide-left-and-fade': 'slide-left-and-fade 400ms cubic-bezier(0.16, 1, 0.3, 1)',
+          'slide-up-and-fade': 'slide-up-and-fade 400ms cubic-bezier(0.16, 1, 0.3, 1)',
+          'slide-right-and-fade': 'slide-right-and-fade 400ms cubic-bezier(0.16, 1, 0.3, 1)',
 
           // Toast
-          ['toast-hide']: 'toast-hide 100ms ease-in forwards',
-          ['toast-slide-in-right']: 'toast-slide-in-right 150ms cubic-bezier(0.16, 1, 0.3, 1)',
-          ['toast-slide-in-bottom']: 'toast-slide-in-bottom 150ms cubic-bezier(0.16, 1, 0.3, 1)',
-          ['toast-swipe-out']: 'toast-swipe-out 100ms ease-out forwards',
+          'toast-hide': 'toast-hide 100ms ease-in forwards',
+          'toast-slide-in-right': 'toast-slide-in-right 150ms cubic-bezier(0.16, 1, 0.3, 1)',
+          'toast-slide-in-bottom': 'toast-slide-in-bottom 150ms cubic-bezier(0.16, 1, 0.3, 1)',
+          'toast-swipe-out': 'toast-swipe-out 100ms ease-out forwards',
 
           // Accordion
-          ['slideDown']: 'slideDown 300ms cubic-bezier(0.87, 0, 0.13, 1)',
-          ['slideUp']: 'slideUp 300ms cubic-bezier(0.87, 0, 0.13, 1)',
+          'slide-down': 'slide-down 300ms cubic-bezier(0.87, 0, 0.13, 1)',
+          'slide-up': 'slide-up 300ms cubic-bezier(0.87, 0, 0.13, 1)',
 
-          ['spin']: 'spin 1.5s linear infinite',
-          ['spin-slow']: 'spin 3s linear infinite',
+          // Border trail effect
+          'trail': 'trail 6s linear infinite',
+          'trail-offset': 'trail-offset 6s linear infinite',
 
-          ['shimmer']: 'shimmer-loop 2s infinite',
-          ['halo-pulse']: 'halo-pulse 2s ease-out infinite',
-          ['progress-indeterminate']: 'progress-indeterminate 2s ease-out infinite',
-          ['progress-linear']: 'progress-linear 2s ease-out infinite',
+          // Progress effects
+          'spin': 'spin 1.5s linear infinite',
+          'spin-slow': 'spin 3s linear infinite',
+          'shimmer': 'shimmer-loop 2s infinite',
+          'halo-pulse': 'halo-pulse 2s ease-out infinite',
+          'progress-indeterminate': 'progress-indeterminate 2s ease-out infinite',
+          'progress-linear': 'progress-linear 2s ease-out infinite',
         },
       },
       extendTokens,

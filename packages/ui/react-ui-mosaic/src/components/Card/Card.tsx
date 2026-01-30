@@ -157,13 +157,9 @@ const CardMenu = <T extends any | void = void>({ context, items }: CardMenuProps
   const { menuItems } = useContext(CardContext) ?? {};
   const combinedItems = [...(items ?? []), ...((menuItems as CardMenuItem<T>[]) ?? [])];
 
-  if (!combinedItems.length) {
-    return null;
-  }
-
   return (
     <DropdownMenu.Root>
-      <DropdownMenu.Trigger asChild>
+      <DropdownMenu.Trigger disabled={!combinedItems.length} asChild>
         <Card.ToolbarIconButton
           iconOnly
           variant='ghost'
