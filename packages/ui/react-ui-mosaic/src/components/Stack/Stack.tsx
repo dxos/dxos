@@ -13,10 +13,8 @@ import { mx } from '@dxos/ui-theme';
 
 import { useVisibleItems } from '../../hooks';
 import { Card } from '../Card';
-import { Mosaic, type MosiacPlaceholderProps, useMosaicContainer } from '../Mosaic';
-
-import { styles } from './styles';
-import { type Axis, type GetId } from './types';
+import { type Axis, type GetId, Mosaic, type MosiacPlaceholderProps, useMosaicContainer } from '../Mosaic';
+import { mosaicStyles } from '../Mosaic';
 
 type StackTileComponent<TData = any> = FC<{
   id: string;
@@ -220,11 +218,11 @@ DefaultStackTile.displayName = 'DefaultStackTile';
 
 const Placeholder = (props: MosiacPlaceholderProps<number>) => {
   return (
-    <Mosaic.Placeholder {...props} classNames={styles.placeholder.root}>
+    <Mosaic.Placeholder {...props} classNames={mosaicStyles.placeholder.root}>
       <div
         className={mx(
           'flex bs-full bg-baseSurface border border-dashed border-separator rounded-sm',
-          styles.placeholder.content,
+          mosaicStyles.placeholder.content,
         )}
       />
     </Mosaic.Placeholder>

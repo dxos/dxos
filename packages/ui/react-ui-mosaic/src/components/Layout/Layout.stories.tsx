@@ -8,6 +8,8 @@ import React from 'react';
 import { Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
+import { Scrollable } from '../Scrollable';
+
 import { Layout } from './Layout';
 
 // TODO(burdon): Scrollable (asChild); with standard padding.
@@ -19,7 +21,7 @@ const DefaultStory = () => {
       <Toolbar.Root>
         <Toolbar.IconButton icon='ph--plus--regular' label='Add' />
       </Toolbar.Root>
-      <Layout.Scrollbar column>
+      <Scrollable>
         <Layout.Flex column classNames='p-1 gap-1'>
           {Array.from({ length: 100 }).map((_, index) => (
             <div key={index} className='border border-separator pli-2 plb-1'>
@@ -27,7 +29,7 @@ const DefaultStory = () => {
             </div>
           ))}
         </Layout.Flex>
-      </Layout.Scrollbar>
+      </Scrollable>
       <Toolbar.Root classNames='justify-between'>
         <Toolbar.IconButton icon='ph--house--regular' iconOnly label='Add' size={3} />
         <Toolbar.IconButton icon='ph--circle--regular' iconOnly label='Status' size={3} />
