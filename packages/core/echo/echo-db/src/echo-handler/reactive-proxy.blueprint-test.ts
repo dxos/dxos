@@ -31,13 +31,6 @@ export interface TestConfiguration {
 
 export type TestConfigurationFactory = (schema: Type.Obj.Any) => TestConfiguration | null;
 
-/**
- * Helper to wrap mutations. All ECHO objects require Obj.change for mutations.
- */
-const change = <T>(obj: T, callback: (o: Obj.Mutable<T>) => void): void => {
-  Obj.change(obj as any, callback as any);
-};
-
 export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory): void => {
   for (const schema of [TestSchema.Expando, TestSchema.Example]) {
     const testConfig = testConfigFactory(schema);
@@ -65,7 +58,7 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
         const obj = await createObject({ string: 'bar' });
         expect(obj.string).to.eq('bar');
 
-        change(obj, (o) => {
+        Obj.change(obj, (o) => {
           o.string = 'baz';
         });
         expect(obj.string).to.eq('baz');
@@ -74,7 +67,7 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
       test('can assign scalar values', async () => {
         const obj = await createObject();
 
-        change(obj, (o) => {
+        Obj.change(obj, (o) => {
           o.string = 'foo';
           o.number = 42;
           o.boolean = true;
@@ -93,13 +86,13 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
         const obj = await createObject();
 
         const plainObject = { field: 'bar' };
-        change(obj, (o) => {
+        Obj.change(obj, (o) => {
           o.nested = plainObject;
         });
         expect(obj.nested!.field).to.eq('bar');
         expect(obj.nested!).to.deep.eq(plainObject);
 
-        change(obj, (o) => {
+        Obj.change(obj, (o) => {
           o.nested!.field = 'baz';
         });
         expect(obj.nested!.field).to.eq('baz');
@@ -108,7 +101,7 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
       test('sub-proxies maintain their identity', async () => {
         const obj = await createObject();
 
-        change(obj, (o) => {
+        Obj.change(obj, (o) => {
           o.nested = { field: 'bar' };
         });
         expect(obj.nested === obj.nested).to.be.true;
@@ -117,12 +110,12 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
       test('can assign array values', async () => {
         const obj = await createObject();
 
-        change(obj, (o) => {
+        Obj.change(obj, (o) => {
           o.stringArray = ['1', '2', '3'];
         });
         expect(obj.stringArray).to.deep.eq(['1', '2', '3']);
 
-        change(obj, (o) => {
+        Obj.change(obj, (o) => {
           o.stringArray![0] = '4';
         });
         expect(obj.stringArray).to.deep.eq(['4', '2', '3']);
@@ -133,18 +126,18 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
         const obj = await createObject({ nestedNullableArray: [circle] });
         expect(obj.nestedNullableArray![0]).to.deep.eq(circle);
 
-        change(obj, (o) => {
+        Obj.change(obj, (o) => {
           o.nestedNullableArray?.push(null);
         });
         expect(obj.nestedNullableArray).to.deep.eq([circle, null]);
 
         const square: any = { field: 'square' };
-        change(obj, (o) => {
+        Obj.change(obj, (o) => {
           o.nestedNullableArray?.push(square);
         });
         expect(obj.nestedNullableArray).to.deep.eq([circle, null, square]);
 
-        change(obj, (o) => {
+        Obj.change(obj, (o) => {
           (o.nestedNullableArray![2] as any).field = 'rectangle';
         });
         expect((obj.nestedNullableArray![2] as any).field).to.eq('rectangle');
@@ -157,17 +150,17 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
         }
 
         const obj = await createObject({ nestedArray: [{ field: 'foo' }] });
-        expect(() => change(obj, (o) => (o.string = 1 as any))).to.throw();
-        expect(() => change(obj, (o) => (o.nested = { field: 1 } as any))).to.throw();
-        change(obj, (o) => (o.nested = { field: 'bar' }));
-        expect(() => change(obj, (o) => (o.nested!.field = 1 as any))).to.throw();
-        expect(() => change(obj, (o) => o.nestedArray?.push({ field: 1 } as any))).to.throw();
-        expect(() => change(obj, (o) => o.nestedArray?.unshift({ field: 1 } as any))).to.throw();
-        expect(() => change(obj, (o) => (o.nestedArray![0] = { field: 1 } as any))).to.throw();
-        expect(() => change(obj, (o) => (o.nestedArray![0].field = 1 as any))).to.throw();
-        change(obj, (o) => o.nestedArray?.push({ field: 'bar' }));
-        expect(() => change(obj, (o) => o.nestedArray?.splice(1, 0, { field: 1 } as any))).to.throw();
-        expect(() => change(obj, (o) => (o.nestedArray![1].field = 1 as any))).to.throw();
+        expect(() => Obj.change(obj, (o) => (o.string = 1 as any))).to.throw();
+        expect(() => Obj.change(obj, (o) => (o.nested = { field: 1 } as any))).to.throw();
+        Obj.change(obj, (o) => (o.nested = { field: 'bar' }));
+        expect(() => Obj.change(obj, (o) => (o.nested!.field = 1 as any))).to.throw();
+        expect(() => Obj.change(obj, (o) => o.nestedArray?.push({ field: 1 } as any))).to.throw();
+        expect(() => Obj.change(obj, (o) => o.nestedArray?.unshift({ field: 1 } as any))).to.throw();
+        expect(() => Obj.change(obj, (o) => (o.nestedArray![0] = { field: 1 } as any))).to.throw();
+        expect(() => Obj.change(obj, (o) => (o.nestedArray![0].field = 1 as any))).to.throw();
+        Obj.change(obj, (o) => o.nestedArray?.push({ field: 'bar' }));
+        expect(() => Obj.change(obj, (o) => o.nestedArray?.splice(1, 0, { field: 1 } as any))).to.throw();
+        expect(() => Obj.change(obj, (o) => (o.nestedArray![1].field = 1 as any))).to.throw();
       });
 
       test('getSchemaDXN', async () => {
@@ -179,17 +172,17 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
       test('can assign arrays with objects', async () => {
         const obj = await createObject();
 
-        change(obj, (o) => {
+        Obj.change(obj, (o) => {
           o.nestedArray = [{ field: 'bar' }, { field: 'baz' }];
         });
         expect(obj.nestedArray![0].field).to.eq('bar');
 
-        change(obj, (o) => {
+        Obj.change(obj, (o) => {
           o.nestedArray![0].field = 'baz';
         });
         expect(obj.nestedArray![0].field).to.eq('baz');
 
-        change(obj, (o) => {
+        Obj.change(obj, (o) => {
           o.nestedArray![1].field = 'bar';
         });
         expect(obj.nestedArray![1].field).to.eq('bar');
@@ -198,7 +191,7 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
       test('can assign arrays with arrays', async () => {
         const obj = await createObject();
 
-        change(obj, (o) => {
+        Obj.change(obj, (o) => {
           o.twoDimNumberArray = [
             [1, 2, 3],
             [4, 5, 6],
@@ -206,7 +199,7 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
         });
         expect(obj.twoDimNumberArray![0][0]).to.eq(1);
 
-        change(obj, (o) => {
+        Obj.change(obj, (o) => {
           o.twoDimNumberArray![0][0] = 4;
         });
         expect(obj.twoDimNumberArray![0][0]).to.eq(4);
@@ -215,7 +208,7 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
       test('array sub-proxies maintain their identity', async () => {
         const obj = await createObject();
 
-        change(obj, (o) => {
+        Obj.change(obj, (o) => {
           o.nestedArray = [{ field: 'bar' }];
         });
 
@@ -229,7 +222,7 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
         // Direct assignment of root ECHO objects (created with Obj.make) is not allowed.
         // Must use Ref.make for object references.
         expect(() => {
-          change(obj, (o) => {
+          Obj.change(obj, (o) => {
             o.other = other;
           });
         }).toThrow(/Object references must be wrapped with `Ref\.make`/);
@@ -239,26 +232,26 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
         const obj = await createObject();
 
         // Plain objects (not created with Obj.make) can be assigned directly.
-        change(obj, (o) => {
+        Obj.change(obj, (o) => {
           o.nested = { field: 'bar' };
         });
-        expect(obj.nested.field).to.eq('bar');
+        expect(obj.nested!.field).to.eq('bar');
 
         using updates = updateCounter(obj);
 
         expect(updates.count, 'update count').to.eq(0);
-        change(obj, (o) => {
-          o.nested.field = 'baz';
+        Obj.change(obj, (o) => {
+          o.nested!.field = 'baz';
         });
         expect(updates.count, 'update count').to.eq(1);
-        expect(obj.nested.field).to.eq('baz');
+        expect(obj.nested!.field).to.eq('baz');
       });
 
       test('keys enumeration', async () => {
         const obj = await createObject({ string: 'bar' });
         expect(Object.keys(obj).filter((key) => key !== 'id')).to.deep.eq(['string']);
 
-        change(obj, (o) => {
+        Obj.change(obj, (o) => {
           o.number = 42;
         });
         expect(Object.keys(obj).filter((key) => key !== 'id')).to.deep.eq(['string', 'number']);
@@ -273,7 +266,7 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
         expect('string' in obj).to.be.true;
         expect('number' in obj).to.be.false;
 
-        change(obj, (o) => {
+        Obj.change(obj, (o) => {
           o.number = 42;
         });
         expect('number' in obj).to.be.true;
@@ -341,7 +334,7 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
         const obj = await createObject();
         using updates = updateCounter(obj);
 
-        change(obj, () => {
+        Obj.change(obj, () => {
           Object.defineProperty(obj, 'string', { value: 'bar' });
         });
         expect(obj.string).to.eq('bar');
@@ -369,32 +362,32 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
         expect(obj.string).to.eq('bar');
         expect(obj.number).to.eq(42);
 
-        change(obj, (o) => {
+        Obj.change(obj, (o) => {
           delete o.string;
         });
         expect(obj.string).to.be.undefined;
-        change(obj, (o) => {
+        Obj.change(obj, (o) => {
           delete o.number;
         });
         expect(obj.number).to.be.undefined;
-        change(obj, (o) => {
+        Obj.change(obj, (o) => {
           delete o.stringArray;
         });
         expect(obj.stringArray).to.be.undefined;
-        change(obj, (o) => {
+        Obj.change(obj, (o) => {
           delete o.other.first;
         });
         expect(obj.other.first).to.be.undefined;
         expect(obj.other).to.deep.eq({ second: 2 });
       });
 
-      describe('signal updates', () => {
+      describe('event updates', () => {
         test('are synchronous', async () => {
           const obj = await createObject({ string: 'bar' });
           using updates = updateCounter(obj);
           expect(updates.count, 'update count').to.eq(0);
 
-          change(obj, (o) => {
+          Obj.change(obj, (o) => {
             o.string = 'baz';
           });
           expect(updates.count, 'update count').to.eq(1);
@@ -405,7 +398,7 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
           using updates = updateCounter(obj);
           expect(updates.count, 'update count').to.eq(0);
 
-          change(obj, (o) => {
+          Obj.change(obj, (o) => {
             o.nested!.field = 'baz';
           });
           expect(updates.count, 'update count').to.eq(1);
@@ -416,7 +409,7 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
           using updates = updateCounter(obj);
           expect(updates.count, 'update count').to.eq(0);
 
-          change(obj, (o) => {
+          Obj.change(obj, (o) => {
             o.stringArray![0] = '42';
           });
           expect(updates.count, 'update count').to.eq(1);
@@ -427,7 +420,7 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
           using updates = updateCounter(obj);
           expect(updates.count, 'update count').to.eq(0);
 
-          change(obj, (o) => {
+          Obj.change(obj, (o) => {
             o.nestedArray![0].field = 'baz';
           });
           expect(updates.count, 'update count').to.eq(1);
@@ -438,7 +431,7 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
           using updates = updateCounter(obj);
           expect(updates.count, 'update count').to.eq(0);
 
-          change(obj, (o) => {
+          Obj.change(obj, (o) => {
             o.twoDimNumberArray![0][0] = 4;
           });
           expect(updates.count, 'update count').to.eq(1);
@@ -449,12 +442,12 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
           using updates = updateCounter(obj);
           expect(updates.count).to.eq(0);
 
-          change(obj, (o) => {
+          Obj.change(obj, (o) => {
             o.string = 'foo';
           });
           expect(updates.count).to.eq(1);
 
-          change(obj, (o) => {
+          Obj.change(obj, (o) => {
             o.boolean = false;
           });
           expect(updates.count).to.eq(2);
@@ -473,7 +466,7 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
           const { array, parent } = await createReactiveArray(['1', '2', '3']);
           using updates = updateCounter(parent);
 
-          change(parent, (o) => {
+          Obj.change(parent, (o) => {
             o.stringArray![0] = '2';
           });
           expect(array[0]).to.eq('2');
@@ -485,7 +478,7 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
           using updates = updateCounter(parent);
           expect(array.length).to.eq(3);
 
-          change(parent, (o) => {
+          Obj.change(parent, (o) => {
             o.stringArray!.push('4');
           });
           expect(array.length).to.eq(4);
@@ -496,7 +489,7 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
           const { array, parent } = await createReactiveArray(['1', '2', '3']);
           using updates = updateCounter(parent);
 
-          change(parent, (o) => {
+          Obj.change(parent, (o) => {
             o.stringArray!.length = 2;
           });
           expect(array.length).to.eq(2);
@@ -507,7 +500,7 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
           const { array, parent } = await createReactiveArray(['1', '2', '3']);
           using updates = updateCounter(parent);
 
-          change(parent, (o) => {
+          Obj.change(parent, (o) => {
             o.stringArray!.push('4');
           });
           expect(array).to.deep.eq(['1', '2', '3', '4']);
@@ -519,7 +512,7 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
           using updates = updateCounter(parent);
 
           let value: string | undefined;
-          change(parent, (o) => {
+          Obj.change(parent, (o) => {
             value = o.stringArray!.pop();
           });
           expect(value).to.eq('3');
@@ -532,7 +525,7 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
           using updates = updateCounter(parent);
 
           let value: string | undefined;
-          change(parent, (o) => {
+          Obj.change(parent, (o) => {
             value = o.stringArray!.shift();
           });
           expect(value).to.eq('1');
@@ -545,7 +538,7 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
           using updates = updateCounter(parent);
 
           let newLength: number = 0;
-          change(parent, (o) => {
+          Obj.change(parent, (o) => {
             newLength = o.stringArray!.unshift('0');
           });
           expect(newLength).to.eq(4);
@@ -558,7 +551,7 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
           using updates = updateCounter(parent);
 
           let removed: string[] = [];
-          change(parent, (o) => {
+          Obj.change(parent, (o) => {
             removed = o.stringArray!.splice(1, 1, '4');
           });
           expect(removed).to.deep.eq(['2']);
@@ -571,7 +564,7 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
           using updates = updateCounter(parent);
 
           let returnValue: string[] = [];
-          change(parent, (o) => {
+          Obj.change(parent, (o) => {
             returnValue = o.stringArray!.sort();
           });
           expect(returnValue === array).to.be.true;
@@ -590,7 +583,7 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
           using updates = updateCounter(parent);
 
           let returnValue: string[] = [];
-          change(parent, (o) => {
+          Obj.change(parent, (o) => {
             returnValue = o.stringArray!.reverse();
           });
           expect(returnValue === array).to.be.true;

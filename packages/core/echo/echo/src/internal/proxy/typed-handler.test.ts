@@ -5,19 +5,20 @@
 import * as Schema from 'effect/Schema';
 import { describe, expect, test } from 'vitest';
 
-import * as Obj from '../../Obj';
 import { TestSchema } from '../../testing';
 import { EchoObjectSchema } from '../entities';
+import { setValue } from '../object';
 import { Ref } from '../ref';
 import { foreignKey, getMeta } from '../types';
 
 import { makeObject } from './make-object';
+import { change, subscribe } from './reactive';
 
 describe('complex schema validations', () => {
   test('any', () => {
     const schema = Schema.Struct({ field: Schema.Any });
     const object = makeObject(schema, { field: { nested: { value: 100 } } });
-    Obj.change(object, (o) => {
+    change(object, (o) => {
       expect(() => (o.field = { any: 'value' })).not.to.throw();
     });
   });
@@ -32,7 +33,7 @@ describe('complex schema validations', () => {
   test('object', () => {
     const schema = Schema.Struct({ field: Schema.optional(Schema.Object) });
     const object = makeObject(schema, { field: { nested: { value: 100 } } });
-    Obj.change(object, (o) => {
+    change(object, (o) => {
       expect(() => (o.field = { any: 'value' })).not.to.throw();
     });
   });
@@ -54,9 +55,9 @@ describe('complex schema validations', () => {
   test('index signatures', () => {
     const schema = Schema.Struct({}, { key: Schema.String, value: Schema.Number });
     const object = makeObject(schema, { unknownField: 1 });
-    Obj.change(object, (o) => {
-      expect(() => Obj.setValue(o, ['field'], '42')).to.throw();
-      expect(() => Obj.setValue(o, ['unknown_field'], 42)).not.to.throw();
+    change(object, (o) => {
+      expect(() => setValue(o, ['field'], '42')).to.throw();
+      expect(() => setValue(o, ['unknown_field'], 42)).not.to.throw();
     });
   });
 
@@ -67,11 +68,11 @@ describe('complex schema validations', () => {
     });
 
     const object = makeObject(schema, { array: [1, 2, null], object: { field: 3 } });
-    Obj.change(object, (o) => {
+    change(object, (o) => {
       expect(() => (o.object = { field: 4 })).not.to.throw();
-      expect(() => Obj.setValue(o, ['object', 'field'], 4)).not.to.throw();
-      expect(() => Obj.setValue(o, ['array', 0], 4)).not.to.throw();
-      expect(() => Obj.setValue(o, ['array', 0], '4')).to.throw();
+      expect(() => setValue(o, ['object', 'field'], 4)).not.to.throw();
+      expect(() => setValue(o, ['array', 0], 4)).not.to.throw();
+      expect(() => setValue(o, ['array', 0], '4')).to.throw();
     });
   });
 
@@ -98,17 +99,17 @@ describe('complex schema validations', () => {
     );
     const object = makeObject(TestSchema, { field: 'value' });
     let called = 0;
-    const unsubscribe = Obj.subscribe(object as any, () => {
+    const unsubscribe = subscribe(object as any, () => {
       called++;
     });
 
-    Obj.change(object, (o) => {
+    change(object, (o) => {
       o.field = 'value2';
     });
     expect(called).to.eq(1);
 
     unsubscribe();
-    Obj.change(object, (o) => {
+    change(object, (o) => {
       o.field = 'value3';
     });
     expect(called).to.eq(1);
@@ -125,7 +126,7 @@ describe('object structure restrictions', () => {
 
   test('prevents direct cycles', () => {
     const obj = makeObject(NestedSchema, { data: null });
-    Obj.change(obj, (o) => {
+    change(obj, (o) => {
       expect(() => {
         o.data = obj;
       }).to.throw('Cannot create cycles');
@@ -136,7 +137,7 @@ describe('object structure restrictions', () => {
     const obj = makeObject(NestedSchema, {
       nested: { value: 1 },
     });
-    Obj.change(obj, (o) => {
+    change(obj, (o) => {
       expect(() => {
         o.nested.parent = obj;
       }).to.throw('Cannot create cycles');
@@ -150,7 +151,7 @@ describe('object structure restrictions', () => {
     const obj2 = makeObject(NestedSchema, {});
 
     // Assign obj1's nested data to obj2.
-    Obj.change(obj2, (o) => {
+    change(obj2, (o) => {
       o.data = obj1.data;
     });
 
@@ -158,7 +159,7 @@ describe('object structure restrictions', () => {
     expect(obj2.data).to.deep.eq({ shared: 'original' });
 
     // Modifying obj2.data should not affect obj1.data.
-    Obj.change(obj2, (o) => {
+    change(obj2, (o) => {
       o.data.shared = 'modified';
     });
     expect(obj1.data.shared).to.eq('original');
@@ -172,7 +173,7 @@ describe('object structure restrictions', () => {
     });
 
     // Moving data within the same typed object should work without copying.
-    Obj.change(obj, (o) => {
+    change(obj, (o) => {
       o.nested = o.data;
       o.data = null;
     });
@@ -184,7 +185,7 @@ describe('object structure restrictions', () => {
     const obj = makeObject(NestedSchema, {});
     const plainData = { value: 'plain' };
 
-    Obj.change(obj, (o) => {
+    change(obj, (o) => {
       o.data = plainData;
     });
     expect(obj.data).to.deep.eq({ value: 'plain' });
@@ -210,7 +211,7 @@ describe('object structure restrictions', () => {
     // All nested objects should be owned.
     // Assigning any of them to another ECHO object should trigger copy.
     const obj2 = makeObject(NestedSchema, {});
-    Obj.change(obj2, (o) => {
+    change(obj2, (o) => {
       o.data = obj.data.level1;
     });
 
@@ -218,7 +219,7 @@ describe('object structure restrictions', () => {
     expect(obj2.data).to.deep.eq({ level2: { value: 'deep' } });
 
     // Modifying should not affect original.
-    Obj.change(obj2, (o) => {
+    change(obj2, (o) => {
       o.data.level2.value = 'modified';
     });
     expect(obj.data.level1.level2.value).to.eq('deep');
@@ -238,7 +239,7 @@ describe('object structure restrictions', () => {
     const obj2 = makeObject(ArraySchema, { items: [] });
 
     // Assign an array element from obj1 to obj2.
-    Obj.change(obj2, (o) => {
+    change(obj2, (o) => {
       o.items.push(obj1.items[0]);
     });
 
@@ -246,7 +247,7 @@ describe('object structure restrictions', () => {
     expect(obj2.items[0]).to.deep.eq({ id: 1 });
 
     // Modifying should not affect original.
-    Obj.change(obj2, (o) => {
+    change(obj2, (o) => {
       o.items[0].id = 100;
     });
     expect(obj1.items[0].id).to.eq(1);
@@ -258,12 +259,12 @@ describe('object structure restrictions', () => {
     });
 
     let notificationCount = 0;
-    const unsubscribe = Obj.subscribe(obj as any, () => {
+    const unsubscribe = subscribe(obj as any, () => {
       notificationCount++;
     });
 
     // Mutate direct property.
-    Obj.change(obj, (o) => {
+    change(obj, (o) => {
       o.data = { value: 2 };
     });
     expect(notificationCount).to.eq(1);
@@ -277,18 +278,18 @@ describe('object structure restrictions', () => {
     });
 
     let notificationCount = 0;
-    const unsubscribe = Obj.subscribe(obj as any, () => {
+    const unsubscribe = subscribe(obj as any, () => {
       notificationCount++;
     });
 
     // Mutate deeply nested property - should trigger event on root.
-    Obj.change(obj, (o) => {
+    change(obj, (o) => {
       o.data.level1.value = 2;
     });
     expect(notificationCount).to.eq(1);
 
     // Another nested mutation.
-    Obj.change(obj, (o) => {
+    change(obj, (o) => {
       o.data.level1 = { value: 3 };
     });
     expect(notificationCount).to.eq(2);
@@ -306,7 +307,7 @@ describe('object structure restrictions', () => {
     const originalData = obj.data;
 
     // Move within same ECHO object.
-    Obj.change(obj, (o) => {
+    change(obj, (o) => {
       o.nested = o.data;
       o.data = null;
     });

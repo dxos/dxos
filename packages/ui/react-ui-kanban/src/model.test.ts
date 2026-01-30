@@ -10,14 +10,9 @@ import { Filter, Query, Type } from '@dxos/echo';
 import { Format, FormatAnnotation, PropertyMetaAnnotationId } from '@dxos/echo/internal';
 import { createEchoSchema } from '@dxos/echo/testing';
 import { ObjectId } from '@dxos/keys';
-import { ProjectionModel, View, createDirectChangeCallback } from '@dxos/schema';
+import { ProjectionModel, View, createEchoChangeCallback } from '@dxos/schema';
 
-import {
-  type BaseKanbanItem,
-  KanbanModel,
-  UNCATEGORIZED_VALUE,
-  createDirectChangeCallback as createDirectKanbanChangeCallback,
-} from './model';
+import { type BaseKanbanItem, KanbanModel, UNCATEGORIZED_VALUE, createEchoChangeCallback as createEchoKanbanChangeCallback } from './model';
 import { Kanban } from './types';
 
 // Use deterministic IDs for tests.
@@ -71,7 +66,7 @@ const createKanbanModel = (registry: Registry.Registry): { model: KanbanModel<Ta
     registry,
     view,
     baseSchema: schema.jsonSchema,
-    change: createDirectChangeCallback(view.projection, schema.jsonSchema),
+    change: createEchoChangeCallback(view, schema),
   });
   projection.normalizeView();
 
@@ -79,7 +74,7 @@ const createKanbanModel = (registry: Registry.Registry): { model: KanbanModel<Ta
     registry,
     object: kanban,
     projection,
-    change: createDirectKanbanChangeCallback<TaskItem>(kanban),
+    change: createEchoKanbanChangeCallback<TaskItem>(kanban),
   });
 
   return { model, kanban };

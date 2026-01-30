@@ -5,11 +5,11 @@
 import * as Schema from 'effect/Schema';
 import { describe, expect, test } from 'vitest';
 
-import * as Obj from '../../Obj';
 import { EchoObjectSchema } from '../entities';
 import { getSchema } from '../types';
 
 import { makeObject } from './make-object';
+import { change } from './reactive';
 
 const Organization = Schema.Struct({
   name: Schema.String,
@@ -51,7 +51,7 @@ describe('EchoObjectSchema class DSL', () => {
   describe('class options', () => {
     test('can assign undefined to partial fields', async () => {
       const person = makeObject(Contact, { name: 'John' });
-      Obj.change(person, (p) => {
+      change(person, (p) => {
         p.name = undefined;
         (p as any).recordField = 'hello';
       });
@@ -73,18 +73,18 @@ describe('EchoObjectSchema class DSL', () => {
 
     {
       const object = makeObject(schema, {});
-      Obj.change(object, (o) => {
+      change(object, (o) => {
         (o.meta ??= {}).test = 100;
       });
-      expect(object.meta.test).to.eq(100);
+      expect(object.meta!.test).to.eq(100);
     }
 
     {
       const object = makeObject(schema, {});
-      Obj.change(object, (o) => {
+      change(object, (o) => {
         o.meta = { test: { value: 300 } };
       });
-      expect(object.meta.test.value).to.eq(300);
+      expect(object.meta!.test.value).to.eq(300);
     }
 
     {
@@ -93,7 +93,7 @@ describe('EchoObjectSchema class DSL', () => {
 
       const object: Test1 = {};
       (object.meta ??= {}).test = 100;
-      expect(object.meta.test).to.eq(100);
+      expect(object.meta!.test).to.eq(100);
     }
 
     {
@@ -107,10 +107,10 @@ describe('EchoObjectSchema class DSL', () => {
       );
 
       const object = makeObject(Test2, {});
-      Obj.change(object, (o) => {
+      change(object, (o) => {
         (o.meta ??= {}).test = 100;
       });
-      expect(object.meta.test).to.eq(100);
+      expect(object.meta!.test).to.eq(100);
     }
   });
 });

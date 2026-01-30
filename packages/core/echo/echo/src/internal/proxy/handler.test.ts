@@ -8,13 +8,13 @@ import { describe, expect, test } from 'vitest';
 
 import { isNode } from '@dxos/util';
 
-import * as Obj from '../../Obj';
 import { TestSchema, updateCounter } from '../../testing';
 import { createObject } from '../object';
 import { ATTR_META } from '../types';
 
 import { makeObject } from './make-object';
 import { objectData } from './proxy-types';
+import { change } from './reactive';
 
 describe('proxy', () => {
   test.skipIf(!isNode())('inspect', ({ expect }) => {
@@ -57,11 +57,12 @@ const TEST_OBJECT: TestSchema.ExampleSchema = {
       });
     });
 
+    // TODO(wittjosiah): Should we prevent this?
     test('can assign class instances', () => {
       const obj = createObject();
 
       const classInstance = new TestSchema.TestClass();
-      Obj.change(obj, (o: any) => {
+      change(obj, (o) => {
         o.classInstance = classInstance;
       });
       expect(obj.classInstance!.field).to.eq('value');
