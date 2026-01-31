@@ -1,6 +1,6 @@
 {
   "name": "@dxos/ui-theme",
-  "version": "0.8.3",
+  "version": "0.0.0",
   "description": "A set of design system tokens to use with DXOS UI.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

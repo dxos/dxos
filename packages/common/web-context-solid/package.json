@@ -1,6 +1,6 @@
 {
   "name": "@dxos/web-context-solid",
-  "version": "0.8.3",
+  "version": "0.0.0",
   "description": "Solid.js integration with web context protocol",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

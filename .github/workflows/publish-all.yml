@@ -20,6 +20,10 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+  id-token: write  # Required for npm trusted publisher OIDC
+
 jobs:
   publish:
     runs-on: depot-ubuntu-24.04-4

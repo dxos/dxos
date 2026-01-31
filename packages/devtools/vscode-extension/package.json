@@ -2,6 +2,7 @@
   "name": "@dxos/vscode-extension",
   "displayName": "DXOS VSCode Extension",
   "version": "0.0.1",
+  "private": true,
   "description": "VSCode extension for DXOS development",
   "categories": [
     "Other"
