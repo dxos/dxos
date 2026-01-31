@@ -22,7 +22,7 @@ export const ScriptModule = ({ space }: ComponentProps) => {
 
   return (
     <div className='flex is-full bs-[70vh] min-bs-[20rem] overflow-auto'>
-      <ScriptContainerComponent role={'section'} script={script} settings={settings} env={compiler.environment} />
+      <ScriptContainerComponent role={'section'} subject={script} settings={settings} env={compiler.environment} />
     </div>
   );
 };

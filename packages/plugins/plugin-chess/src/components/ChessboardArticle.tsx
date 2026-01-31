@@ -4,6 +4,7 @@
 
 import React, { useCallback, useRef, useState } from 'react';
 
+import { type SurfaceComponentProps } from '@dxos/app-framework/react';
 import { Toolbar, useTranslation } from '@dxos/react-ui';
 import { type Player } from '@dxos/react-ui-gameboard';
 import { StackItem } from '@dxos/react-ui-stack';
@@ -14,7 +15,9 @@ import { type Chess } from '../types';
 
 import { Chessboard, type ChessboardController, type ChessboardInfoProps } from './Chessboard';
 
-export const ChessboardArticle = ({ game, role }: { game: Chess.Game; role?: string }) => {
+export type ChessboardArticleProps = SurfaceComponentProps<Chess.Game>;
+
+export const ChessboardArticle = ({ role, subject: game }: ChessboardArticleProps) => {
   const { t } = useTranslation(meta.id);
   const [orientation, setOrientation] = useState<Player>('white');
   const [open, setOpen] = useState(true);

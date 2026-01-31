@@ -26,16 +26,16 @@ import { createNotebook } from '../testing';
 import { translations } from '../translations';
 import { Notebook } from '../types';
 
-import { NotebookContainer } from './NotebookContainer';
+import { NotebookContainer, type NotebookContainerProps } from './NotebookContainer';
 
-const meta = {
+const meta: Meta<typeof NotebookContainer> = {
   title: 'plugins/plugin-script/NotebookContainer',
   component: NotebookContainer,
   render: (args) => {
     const client = useClient();
     const space = client.spaces.default;
     const notebooks = useQuery(space?.db, Filter.type(Notebook.Notebook));
-    return <NotebookContainer {...args} notebook={notebooks[0]} />;
+    return <NotebookContainer {...args} subject={notebooks[0]} />;
   },
   decorators: [
     withTheme,
@@ -73,10 +73,15 @@ const meta = {
   parameters: {
     translations,
   },
-} satisfies Meta<typeof NotebookContainer>;
+};
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {};
+export const Default: Story = {
+  args: {
+    role: 'article',
+    subject: undefined as any,
+  },
+};

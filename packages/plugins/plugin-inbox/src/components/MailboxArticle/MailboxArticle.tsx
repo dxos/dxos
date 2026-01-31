@@ -29,9 +29,15 @@ import { sortByCreated } from '../../util';
 import { type MailboxActionHandler, Mailbox as MailboxComponent } from './Mailbox';
 import { MailboxEmpty } from './MailboxEmpty';
 
-export type MailboxArticleProps = SurfaceComponentProps<Mailbox.Mailbox> & { filter?: string; attendableId?: string };
+export type MailboxArticleProps = SurfaceComponentProps<
+  Mailbox.Mailbox,
+  {
+    filter?: string;
+    attendableId?: string;
+  }
+>;
 
-export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendableId }: MailboxArticleProps) => {
+export const MailboxArticle = ({ role, subject: mailbox, filter: filterProp, attendableId }: MailboxArticleProps) => {
   const { t } = useTranslation(meta.id);
   const id = attendableId ?? Obj.getDXN(mailbox).toString();
   const { invokePromise } = useOperationInvoker();

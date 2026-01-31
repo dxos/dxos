@@ -4,7 +4,7 @@
 
 import React, { useState } from 'react';
 
-import { useCapability } from '@dxos/app-framework/react';
+import { type SurfaceComponentProps, useCapability } from '@dxos/app-framework/react';
 import { invariant } from '@dxos/invariant';
 import { getSpace } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
@@ -16,12 +16,9 @@ import { type WnfsFile } from '../types';
 
 import { FilePreview } from './FilePreview';
 
-export type FileContainerProps = {
-  role: string;
-  file: WnfsFile.File;
-};
+export type FileContainerProps = SurfaceComponentProps<WnfsFile.File>;
 
-export const FileContainer = ({ file }: FileContainerProps) => {
+export const FileContainer = ({ role, subject: file }: FileContainerProps) => {
   const blockstore = useCapability(WnfsCapabilities.Blockstore);
   const instances = useCapability(WnfsCapabilities.Instances);
   const [blobUrl, setBlobUrl] = useState<string>();

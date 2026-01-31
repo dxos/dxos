@@ -4,6 +4,7 @@
 
 import React, { useCallback, useMemo, useState } from 'react';
 
+import { type SurfaceComponentProps } from '@dxos/app-framework/react';
 import { type Filter } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { useGlobalSearch } from '@dxos/plugin-search';
@@ -17,12 +18,9 @@ import { useGraphModel } from '../hooks';
 
 import { D3ForceGraph } from './Graph';
 
-type ExplorerContainerProps = {
-  role: string;
-  view: View.View;
-};
+export type ExplorerContainerProps = SurfaceComponentProps<View.View>;
 
-const ExplorerContainer = ({ role, view }: ExplorerContainerProps) => {
+const ExplorerContainer = ({ role, subject: view }: ExplorerContainerProps) => {
   const space = getSpace(view);
   const [filter, setFilter] = useState<Filter.Any>();
   const model = useGraphModel(space, filter);

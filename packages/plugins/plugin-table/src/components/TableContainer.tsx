@@ -7,7 +7,7 @@ import * as Match from 'effect/Match';
 import React, { forwardRef, useCallback, useContext, useMemo, useRef } from 'react';
 
 import { Common } from '@dxos/app-framework';
-import { useAppGraph, useOperationInvoker } from '@dxos/app-framework/react';
+import { type SurfaceComponentProps, useAppGraph, useOperationInvoker } from '@dxos/app-framework/react';
 import { type Database, Filter, Obj, Order, Query, type QueryAST, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
@@ -27,18 +27,15 @@ import {
   useProjectionModel,
   useTableModel,
 } from '@dxos/react-ui-table';
-import { type Table } from '@dxos/react-ui-table/types';
 import { getTypenameFromQuery } from '@dxos/schema';
 
 import { meta } from '../meta';
+import { Table } from '../types';
 
-export type TableContainerProps = {
-  role: string;
-  object: Table.Table;
-};
+export type TableContainerProps = SurfaceComponentProps<Table.Table>;
 
 // TODO(wittjosiah): Need to handle more complex queries by restricting add row.
-export const TableContainer = forwardRef<HTMLDivElement, TableContainerProps>(({ role, object }, forwardedRef) => {
+export const TableContainer = forwardRef<HTMLDivElement, TableContainerProps>(({ role, subject: object }, forwardedRef) => {
   const registry = useContext(RegistryContext);
   const { invokePromise } = useOperationInvoker();
   const tableRef = useRef<TableController>(null);

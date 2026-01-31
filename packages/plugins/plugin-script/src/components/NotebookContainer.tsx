@@ -8,6 +8,7 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import React, { useCallback, useContext, useMemo, useState } from 'react';
 
+import { type SurfaceComponentProps } from '@dxos/app-framework/react';
 import { Agent } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
@@ -34,12 +35,12 @@ const INCLUDE_BLUEPRINTS = ['dxos.org/blueprint/assistant', 'dxos.org/blueprint/
 
 // TODO(burdon): Support calling named deployed functions (as with sheet).
 
-export type NotebookContainerProps = {
-  role?: string;
-  notebook?: Notebook.Notebook;
-} & Pick<TypescriptEditorProps, 'env'>;
+export type NotebookContainerProps = SurfaceComponentProps<
+  Notebook.Notebook,
+  Pick<TypescriptEditorProps, 'env'>
+>;
 
-export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => {
+export const NotebookContainer = ({ role, subject: notebook, env }: NotebookContainerProps) => {
   const { t } = useTranslation(meta.id);
   const registry = useContext(RegistryContext);
   const db = notebook && Obj.getDatabase(notebook);

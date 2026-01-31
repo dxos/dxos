@@ -21,7 +21,7 @@ export default Capability.makeModule(() =>
         id: meta.id,
         role: 'article',
         filter: (data): data is { subject: Project.Project } => Obj.instanceOf(Project.Project, data.subject),
-        component: ({ data, role }) => <ProjectContainer role={role} project={data.subject} />,
+        component: ({ data, role }) => <ProjectContainer role={role} subject={data.subject} />,
       }),
       Common.createSurface({
         id: `${meta.id}/companion/invocations`,

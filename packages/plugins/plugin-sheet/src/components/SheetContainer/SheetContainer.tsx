@@ -4,6 +4,7 @@
 
 import React from 'react';
 
+import { type SurfaceComponentProps } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
 import { type Space } from '@dxos/react-client/echo';
 import { StackItem } from '@dxos/react-ui-stack';
@@ -15,14 +16,15 @@ import { GridSheet } from '../GridSheet';
 import { SheetProvider } from '../SheetContext';
 import { SheetToolbar } from '../SheetToolbar';
 
-export type SheetContainerProps = {
-  space: Space;
-  sheet: Sheet.Sheet;
-  role?: string;
-  ignoreAttention?: boolean;
-};
+export type SheetContainerProps = SurfaceComponentProps<
+  Sheet.Sheet,
+  {
+    space: Space;
+    ignoreAttention?: boolean;
+  }
+>;
 
-export const SheetContainer = ({ space, sheet, role, ignoreAttention }: SheetContainerProps) => {
+export const SheetContainer = ({ role, subject: sheet, space, ignoreAttention }: SheetContainerProps) => {
   const graph = useComputeGraph(space);
 
   return graph ? (

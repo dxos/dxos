@@ -21,7 +21,7 @@ export default Capability.makeModule(() =>
         role: 'article',
         filter: (data): data is { subject: Obj.Unknown } => Obj.instanceOf(Template.Data, data.subject),
         component: ({ data, role }: { data: { subject: Obj.Unknown }; role: string }) => (
-          <TemplateContainer role={role} object={data.subject} />
+          <TemplateContainer role={role} subject={data.subject} />
         ),
       }),
     ),

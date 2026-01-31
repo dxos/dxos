@@ -53,7 +53,7 @@ export default Capability.makeModule(() =>
             return null;
           }
 
-          return <ScriptContainer role={role} script={data.subject} settings={settings} env={compiler?.environment} />;
+          return <ScriptContainer role={role} subject={data.subject} settings={settings} env={compiler?.environment} />;
         },
       }),
       Common.createSurface({
@@ -62,7 +62,7 @@ export default Capability.makeModule(() =>
         filter: (data): data is { subject: Notebook.Notebook } => Obj.instanceOf(Notebook.Notebook, data.subject),
         component: ({ data, role }) => {
           const compiler = useCompiler();
-          return <NotebookContainer role={role} notebook={data.subject} env={compiler?.environment} />;
+          return <NotebookContainer role={role} subject={data.subject} env={compiler?.environment} />;
         },
       }),
       // TODO(burdon): Standardize PluginSettings vs ObjectSettings.

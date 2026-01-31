@@ -15,7 +15,12 @@ import { InboxOperation, type Mailbox } from '../../types';
 import { Message, type MessageHeaderProps } from './Message';
 import { type ViewMode } from './useToolbar';
 
-export type MessageArticleProps = SurfaceComponentProps<MessageType.Message> & { mailbox: Mailbox.Mailbox };
+export type MessageArticleProps = SurfaceComponentProps<
+  MessageType.Message,
+  {
+    mailbox: Mailbox.Mailbox;
+  }
+>;
 
 export const MessageArticle = ({
   role,

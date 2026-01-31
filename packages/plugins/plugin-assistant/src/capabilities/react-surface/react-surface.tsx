@@ -43,7 +43,7 @@ export default Capability.makeModule(() =>
         role: 'article',
         filter: (data): data is { subject: Assistant.Chat; variant: undefined } =>
           Obj.instanceOf(Assistant.Chat, data.subject) && data.variant !== 'assistant-chat',
-        component: ({ data, role, ref }) => <ChatContainer role={role} chat={data.subject} ref={ref} />,
+        component: ({ data, role, ref }) => <ChatContainer role={role} subject={data.subject} ref={ref} />,
       }),
       // TODO(wittjosiah): This is flashing when chat changes.
       Common.createSurface({

@@ -24,7 +24,7 @@ export default Capability.makeModule(() =>
         id: meta.id,
         role: ['article', 'section'],
         filter: (data): data is { subject: Kanban.Kanban } => Obj.instanceOf(Kanban.Kanban, data.subject),
-        component: ({ data, role }) => <KanbanContainer object={data.subject} role={role} />,
+        component: ({ data, role }) => <KanbanContainer role={role} subject={data.subject} />,
       }),
       Common.createSurface({
         id: `${meta.id}/object-settings`,

@@ -11,26 +11,28 @@ import { mx } from '@dxos/ui-theme';
 // Main
 //
 
-type MainProps = PropsWithChildren<{
-  role?: string;
-  toolbar?: boolean;
-  statusbar?: boolean;
-}>;
+type MainProps = ThemedClassName<
+  PropsWithChildren<{
+    role?: string;
+    toolbar?: boolean;
+    statusbar?: boolean;
+  }>
+>;
 
-const Main = ({ children, role, toolbar, statusbar }: MainProps) => {
+// TODO(burdon): Support scrolling content.
+
+const Main = ({ classNames, children, role, toolbar, statusbar }: MainProps) => {
   const style = useMemo(
     () => ({
-      gridTemplateRows: [
-        ...(toolbar ? ['var(--toolbar-size)'] : []),
-        '1fr',
-        ...(statusbar ? ['var(--statusbar-size)'] : []),
-      ].join(' '),
+      gridTemplateRows: [toolbar && 'var(--toolbar-size)', '1fr', statusbar && 'var(--statusbar-size)']
+        .filter(Boolean)
+        .join(' '),
     }),
     [toolbar, statusbar],
   );
 
   return (
-    <div role={role ?? 'none'} style={style} className={mx('bs-full grid grid-cols-[100%] density-fine')}>
+    <div role={role ?? 'none'} style={style} className={mx('bs-full grid grid-cols-[100%] density-fine', classNames)}>
       {children}
     </div>
   );

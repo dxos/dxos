@@ -12,7 +12,7 @@ import { useQuery } from '@dxos/react-client/echo';
 import { useAttention } from '@dxos/react-ui-attention';
 import { Board, type BoardController, type BoardRootProps, type Position } from '@dxos/react-ui-board';
 import { ObjectPicker, type ObjectPickerContentProps } from '@dxos/react-ui-form';
-import { StackItem } from '@dxos/react-ui-stack';
+import { Layout } from '@dxos/react-ui-mosaic';
 import { isNonNullable } from '@dxos/util';
 
 import { type Board as BoardType } from '../types';
@@ -28,7 +28,7 @@ export type BoardContainerProps = {
   board: BoardType.Board;
 };
 
-export const BoardContainer = ({ board }: BoardContainerProps) => {
+export const BoardContainer = ({ role, board }: BoardContainerProps) => {
   const controller = useRef<BoardController>(null);
   const [boardItems] = useObject(board, 'items');
   const items = useObjects(boardItems ?? []);
@@ -128,7 +128,7 @@ export const BoardContainer = ({ board }: BoardContainerProps) => {
           setPickerState(nextOpen ? { position: DEFAULT_POSITION } : null);
         }}
       >
-        <StackItem.Content toolbar>
+        <Layout.Main role={role} toolbar>
           <Board.Toolbar disabled={!hasAttention} />
           <Board.Container>
             <Board.Viewport classNames='border-none'>
@@ -142,7 +142,7 @@ export const BoardContainer = ({ board }: BoardContainerProps) => {
               </Board.Content>
             </Board.Viewport>
           </Board.Container>
-        </StackItem.Content>
+        </Layout.Main>
         <ObjectPicker.Content options={options} onSelect={handleSelect} classNames='popover-card-width' />
         <ObjectPicker.VirtualTrigger virtualRef={addTriggerRef} />
       </ObjectPicker.Root>

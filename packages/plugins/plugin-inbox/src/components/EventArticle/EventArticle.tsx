@@ -16,10 +16,14 @@ import { type Calendar, InboxOperation } from '../../types';
 
 import { Event, type EventHeaderProps } from './Event';
 
-export const EventArticle = ({
-  subject,
-  calendar,
-}: SurfaceComponentProps<EventType.Event> & { calendar: Calendar.Calendar }) => {
+export type EventArticleProps = SurfaceComponentProps<
+  EventType.Event,
+  {
+    calendar: Calendar.Calendar;
+  }
+>;
+
+export const EventArticle = ({ role, subject, calendar }: EventArticleProps) => {
   const { invokePromise } = useOperationInvoker();
   const id = Obj.getDXN(subject).toString();
   const db = Obj.getDatabase(calendar);

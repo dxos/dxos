@@ -6,6 +6,7 @@ import { Excalidraw, MainMenu } from '@excalidraw/excalidraw';
 import { type ExcalidrawImperativeAPI, type ExcalidrawProps } from '@excalidraw/excalidraw/types';
 import React, { useEffect, useRef, useState } from 'react';
 
+import { type SurfaceComponentProps } from '@dxos/app-framework/react';
 import { type Diagram } from '@dxos/plugin-sketch/types';
 import { useThemeContext } from '@dxos/react-ui';
 import { StackItem } from '@dxos/react-ui-stack';
@@ -13,16 +14,17 @@ import { StackItem } from '@dxos/react-ui-stack';
 import { useStoreAdapter } from '../../hooks';
 import { type SketchSettingsProps } from '../../types';
 
-export type SketchContainerProps = {
-  sketch: Diagram.Diagram;
-  role: string;
-  settings: SketchSettingsProps;
-};
+export type SketchContainerProps = SurfaceComponentProps<
+  Diagram.Diagram,
+  {
+    settings: SketchSettingsProps;
+  }
+>;
 
 /**
  * https://docs.excalidraw.com/docs/@excalidraw/excalidraw/api/props
  */
-export const SketchContainer = ({ sketch, role, settings }: SketchContainerProps) => {
+export const SketchContainer = ({ role, subject: sketch, settings }: SketchContainerProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const { themeMode } = useThemeContext();
   const [down, setDown] = useState<boolean>(false);

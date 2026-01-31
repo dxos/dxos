@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { useAppGraph } from '@dxos/app-framework/react';
+import { type SurfaceComponentProps, useAppGraph } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
 import { useActions } from '@dxos/plugin-graph';
 import { useAttention } from '@dxos/react-ui-attention';
@@ -14,13 +14,14 @@ import { type Diagram, type SketchSettingsProps } from '../types';
 
 import { Sketch } from './Sketch';
 
-export type SketchContainerProps = {
-  role: string;
-  sketch: Diagram.Diagram;
-  settings: SketchSettingsProps;
-};
+export type SketchContainerProps = SurfaceComponentProps<
+  Diagram.Diagram,
+  {
+    settings: SketchSettingsProps;
+  }
+>;
 
-export const SketchContainer = ({ role, sketch, settings }: SketchContainerProps) => {
+export const SketchContainer = ({ role, subject: sketch, settings }: SketchContainerProps) => {
   const id = Obj.getDXN(sketch).toString();
   const { hasAttention } = useAttention(id);
 

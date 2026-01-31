@@ -19,7 +19,7 @@ export default Capability.makeModule(() =>
         id: `${meta.id}/table`,
         role: ['article', 'section', 'slide'],
         filter: (data): data is { subject: Table.Table } => Obj.instanceOf(Table.Table, data.subject),
-        component: ({ data, role, ref }) => <TableContainer object={data.subject} role={role} ref={ref} />,
+        component: ({ data, role, ref }) => <TableContainer role={role} subject={data.subject} ref={ref} />,
       }),
       Common.createSurface({
         id: `${meta.id}/table-card`,

@@ -5,6 +5,7 @@
 import * as Predicate from 'effect/Predicate';
 import React from 'react';
 
+import { type SurfaceComponentProps } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
 import { Filter, useQuery, useSchema } from '@dxos/react-client/echo';
 import { useControlledState } from '@dxos/react-ui';
@@ -22,13 +23,12 @@ import { type GeoControlProps } from './types';
 
 export type MapControlType = 'globe' | 'map';
 
-export type MapContainerProps = {
-  role?: string;
-  type?: MapControlType;
-  object?: Map.Map;
-} & (GeoControlProps & Pick<MapRootProps, 'onChange'>);
+export type MapContainerProps = SurfaceComponentProps<
+  Map.Map,
+  GeoControlProps & Pick<MapRootProps, 'onChange'> & { type?: MapControlType }
+>;
 
-export const MapContainer = ({ role, type: typeProp = 'map', object, ...props }: MapContainerProps) => {
+export const MapContainer = ({ role, subject: object, type: typeProp = 'map', ...props }: MapContainerProps) => {
   const [type, setType] = useControlledState(typeProp);
   const db = object && Obj.getDatabase(object);
 

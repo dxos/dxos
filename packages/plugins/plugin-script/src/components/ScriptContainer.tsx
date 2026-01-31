@@ -4,6 +4,7 @@
 
 import React, { useMemo } from 'react';
 
+import { type SurfaceComponentProps } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
 import { createDocAccessor } from '@dxos/echo-db';
 import { type Script } from '@dxos/functions';
@@ -18,13 +19,14 @@ import { type ScriptSettings } from '../types';
 import { ScriptToolbar } from './ScriptToolbar';
 import { TypescriptEditor, type TypescriptEditorProps } from './TypescriptEditor';
 
-export type ScriptEditorProps = {
-  role: string;
-  script: Script.Script;
-  settings?: ScriptSettings;
-} & Pick<TypescriptEditorProps, 'env'>;
+export type ScriptEditorProps = SurfaceComponentProps<
+  Script.Script,
+  {
+    settings?: ScriptSettings;
+  } & Pick<TypescriptEditorProps, 'env'>
+>;
 
-export const ScriptContainer = ({ role, script, settings = { editorInputMode: 'vscode' }, env }: ScriptEditorProps) => {
+export const ScriptContainer = ({ role, subject: script, settings = { editorInputMode: 'vscode' }, env }: ScriptEditorProps) => {
   const identity = useIdentity();
   const space = getSpace(script);
   const state = useToolbarState();
