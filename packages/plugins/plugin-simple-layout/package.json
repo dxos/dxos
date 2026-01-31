@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-simple-layout",
-  "version": "0.8.3",
+  "version": "0.0.0",
   "description": "Simple layout plugin for minimal UI contexts like popover windows.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

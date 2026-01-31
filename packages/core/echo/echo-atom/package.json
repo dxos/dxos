@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echo-atom",
-  "version": "0.8.3",
+  "version": "0.0.0",
   "description": "Effect Atom wrappers for ECHO objects with explicit subscriptions.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
