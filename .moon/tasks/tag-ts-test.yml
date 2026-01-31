@@ -27,4 +27,5 @@ tasks:
       - esbuild-plugins:compile
       - node-std:compile
       - ^:compile
-    local: true
+    options:
+      runInCI: false

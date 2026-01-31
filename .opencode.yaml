@@ -6,7 +6,7 @@ instructions: |
   - Project uses moon to run tasks, tests, lint etc. (moon run package-name:task-name)
   - Check the `moon.yml` for any package to see available tasks
   - Lint task takes `--fix` argument to fix issues
-  - Use `moon :build --quiet --no-bail` to build all packages
+  - Use `moon exec :build --on-failure continue --quiet` to build all packages
   - When reaching a natural stopping point, run the linter for impacted packages
   - Create a new branch before starting work
   - Use `gh pr create` to create a pull request
