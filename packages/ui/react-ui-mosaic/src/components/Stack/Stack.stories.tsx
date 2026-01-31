@@ -51,10 +51,10 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   render: (props) => {
-    const [DebugInfo, debugHandler] = useContainerDebug(props.debug);
-    const viewportRef = useRef<HTMLElement | null>(null);
     // Create items at render time to avoid Storybook serialization issues with ECHO objects.
     const items = useMemo(() => createTestItems(NUM_ITEMS), []);
+    const [DebugInfo, debugHandler] = useContainerDebug(props.debug);
+    const viewportRef = useRef<HTMLElement | null>(null);
     return (
       <Mosaic.Root debug={props.debug} classNames='bs-full grid grid-rows-[min-content_1fr_min-content]'>
         <Toolbar.Root classNames='border-b border-separator'>
@@ -67,7 +67,7 @@ export const Default: Story = {
           eventHandler={{ id: 'test', canDrop: () => true }}
           debug={debugHandler}
         >
-          <Mosaic.Viewport options={{ overflow: { y: 'scroll' } }} viewportRef={viewportRef}>
+          <Mosaic.Viewport axis='vertical' viewportRef={viewportRef}>
             <Mosaic.Stack {...props} items={items} />
           </Mosaic.Viewport>
         </Mosaic.Container>
@@ -79,11 +79,11 @@ export const Default: Story = {
 
 export const Virtual: Story = {
   render: (props) => {
+    // Create items at render time to avoid Storybook serialization issues with ECHO objects.
+    const items = useMemo(() => createTestItems(NUM_ITEMS), []);
     const [info, setInfo] = useState<any>(null);
     const [DebugInfo, debugHandler] = useContainerDebug(props.debug);
     const viewportRef = useRef<HTMLDivElement | null>(null);
-    // Create items at render time to avoid Storybook serialization issues with ECHO objects.
-    const items = useMemo(() => createTestItems(), []);
     return (
       <Mosaic.Root debug={props.debug} classNames='grid grid-rows-[min-content_1fr_min-content]'>
         <Toolbar.Root>
@@ -96,7 +96,7 @@ export const Virtual: Story = {
           eventHandler={{ id: 'test', canDrop: () => true }}
           debug={debugHandler}
         >
-          <Mosaic.Viewport options={{ overflow: { y: 'scroll' } }} viewportRef={viewportRef}>
+          <Mosaic.Viewport axis='vertical' viewportRef={viewportRef}>
             <Mosaic.VirtualStack
               {...props}
               items={items}
