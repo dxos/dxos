@@ -5,7 +5,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { addEventListener } from '@dxos/async';
-import { Flex, ProgressBar, type ProgressBarProps, TextCrawl, useExecutionGraph } from '@dxos/react-ui-components';
+import { ProgressBar, type ProgressBarProps, TextCrawl, useExecutionGraph } from '@dxos/react-ui-components';
 
 import { type Assistant } from '../../types';
 
@@ -46,9 +46,9 @@ export const ChatProgress = ({ chat }: ChatProgressProps) => {
   }, [nodes.length]);
 
   return (
-    <Flex column tabIndex={0} ref={ref} classNames='outline-none'>
+    <div role='none' tabIndex={0} ref={ref} className='flex flex-col outline-none'>
       <ProgressBar nodes={nodes} index={index} onSelect={handleSelect} />
       <TextCrawl classNames='pis-4 text-sm text-description' lines={lines} autoAdvance />
-    </Flex>
+    </div>
   );
 };

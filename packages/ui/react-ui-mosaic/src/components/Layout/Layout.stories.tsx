@@ -15,8 +15,9 @@ import { Layout } from './Layout';
 const DefaultStory = () => {
   return (
     <Layout.Main toolbar statusbar>
-      <Toolbar.Root>
-        <Toolbar.IconButton icon='ph--plus--regular' label='Add' />
+      <Toolbar.Root classNames='justify-between'>
+        <Toolbar.IconButton icon='ph--plus--regular' variant='primary' label='Add' />
+        <Toolbar.IconButton icon='ph--dots-three-vertical--regular' iconOnly label='Menu' />
       </Toolbar.Root>
       <Scrollable axis='vertical'>
         <Layout.Flex column role='list' classNames='pli-3 plb-1 gap-1'>
