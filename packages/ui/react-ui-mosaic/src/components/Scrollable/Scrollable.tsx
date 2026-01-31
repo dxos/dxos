@@ -10,6 +10,8 @@ import {
 } from 'overlayscrollbars-react';
 import React, { type RefObject, forwardRef, useEffect, useMemo, useRef } from 'react';
 
+import { type Axis } from '../Mosaic';
+
 import 'overlayscrollbars/styles/overlayscrollbars.css';
 import './scrollable.css';
 
@@ -21,7 +23,9 @@ const defaultOptions: ScrollableProps['options'] = {
   },
 };
 
+// TODO(burdon): row/column: options={{ overflow: { x: 'scroll' } }}
 export type ScrollableProps = OverlayScrollbarsComponentProps & {
+  axis?: Axis;
   onScroll?: (event: Event) => void;
   viewportRef?: RefObject<HTMLElement | null>;
 };
@@ -30,8 +34,18 @@ export type ScrollableProps = OverlayScrollbarsComponentProps & {
  * https://www.npmjs.com/package/overlayscrollbars-react
  */
 export const Scrollable = forwardRef<HTMLDivElement, ScrollableProps>(
-  ({ options = defaultOptions, onScroll, viewportRef, ...props }, forwardedRef) => {
+  ({ axis, options: optionsProp = defaultOptions, onScroll, viewportRef, ...props }, forwardedRef) => {
     const osRef = useRef<OverlayScrollbarsComponentRef<'div'>>(null);
+    const options = useMemo(() => {
+      const options = { ...optionsProp };
+      if (axis) {
+        options.overflow = {
+          x: axis === 'horizontal' ? 'scroll' : 'hidden',
+          y: axis === 'vertical' ? 'scroll' : 'hidden',
+        };
+      }
+      return options;
+    }, [axis, optionsProp]);
 
     // Forward the host element to the forwardedRef for asChild/Slot compatibility.
     useEffect(() => {

@@ -11,7 +11,7 @@ import { faker } from '@dxos/random';
 import { Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { TestItem } from '../../testing';
+import { DefaultStackTile, TestItem } from '../../testing';
 import { Mosaic, useContainerDebug } from '../Mosaic';
 
 import { Stack } from './Stack';
@@ -40,7 +40,7 @@ const meta: Meta<typeof Stack<Obj.Any>> = {
     axis: 'vertical',
     className: 'pli-3',
     getId: (item) => item.id,
-    Tile: Mosaic.DefaultStackTile,
+    Tile: DefaultStackTile,
     // debug: true,
   },
 };

@@ -11,7 +11,7 @@ import { Scrollable } from './Scrollable';
 
 const DefaultStory = ({ count }: { count: number }) => {
   return (
-    <Scrollable>
+    <Scrollable axis='vertical'>
       <div className='p-1 gap-1'>
         {Array.from({ length: count }).map((_, index) => (
           <div key={index} className='border border-separator pli-2 plb-1'>

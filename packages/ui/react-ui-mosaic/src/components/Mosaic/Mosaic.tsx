@@ -50,7 +50,7 @@ import { isTruthy } from '@dxos/util';
 
 import { useFocus } from '../Focus';
 import { Scrollable, type ScrollableProps } from '../Scrollable';
-import { DefaultStackTile, Stack, type StackProps, VirtualStack } from '../Stack';
+import { Stack, type StackProps, VirtualStack } from '../Stack';
 
 import {
   type AllowedAxis,
@@ -927,13 +927,14 @@ export const Mosaic = {
   Root,
   Container,
   ContainerInfo,
-  Viewport: Scrollable,
   Tile,
   Placeholder,
   DropIndicator,
 
+  // TODO(burdon): Move out of Mosaic namespace?
+  Viewport: Scrollable,
+
   // Stack
-  DefaultStackTile,
   Stack,
   VirtualStack,
 };
