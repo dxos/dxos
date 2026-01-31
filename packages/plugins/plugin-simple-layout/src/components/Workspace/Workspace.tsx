@@ -6,7 +6,7 @@ import React, { useCallback, useEffect, useRef } from 'react';
 
 import { Common } from '@dxos/app-framework';
 import { useAppGraph, useOperationInvoker } from '@dxos/app-framework/react';
-import { Graph, type Node, useConnections } from '@dxos/plugin-graph';
+import { type Node, useConnections } from '@dxos/plugin-graph';
 import { Avatar, Icon, Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Card, Mosaic, type StackTileComponent } from '@dxos/react-ui-mosaic';
 import { SearchList, useSearchListItem, useSearchListResults } from '@dxos/react-ui-searchlist';
@@ -14,6 +14,7 @@ import { StackItem } from '@dxos/react-ui-stack';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
+import { useLoadDescendents } from '../hooks';
 
 export type WorkspaceProps = {
   id: string;
@@ -113,24 +114,3 @@ const WorkspaceChildTile: StackTileComponent<Node.Node> = ({ data }) => {
   );
 };
 
-/**
- * Hook to expand graph nodes two levels deep when directly linked to.
- */
-const useLoadDescendents = (nodeId?: string) => {
-  const { graph } = useAppGraph();
-
-  useEffect(() => {
-    const frame = requestAnimationFrame(() => {
-      if (nodeId) {
-        // First level: expand the node itself.
-        Graph.expand(graph, nodeId, 'outbound');
-        // Second level: expand each child.
-        Graph.getConnections(graph, nodeId, 'outbound').forEach((child) => {
-          Graph.expand(graph, child.id, 'outbound');
-        });
-      }
-    });
-
-    return () => cancelAnimationFrame(frame);
-  }, [nodeId, graph]);
-};

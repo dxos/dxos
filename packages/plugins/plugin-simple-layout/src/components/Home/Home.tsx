@@ -6,7 +6,7 @@ import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { Common } from '@dxos/app-framework';
 import { useAppGraph, useOperationInvoker } from '@dxos/app-framework/react';
-import { Graph, Node, useConnections } from '@dxos/plugin-graph';
+import { Node, useConnections } from '@dxos/plugin-graph';
 import { Avatar, Icon, Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Card, Mosaic, type StackTileComponent } from '@dxos/react-ui-mosaic';
 import { SearchList, useSearchListItem, useSearchListResults } from '@dxos/react-ui-searchlist';
@@ -15,6 +15,7 @@ import { mx } from '@dxos/ui-theme';
 import { byPosition } from '@dxos/util';
 
 import { meta } from '../../meta';
+import { useLoadDescendents } from '../hooks';
 
 export type HomeProps = {};
 
@@ -113,23 +114,6 @@ const WorkspaceTile: StackTileComponent<Node.Node> = ({ data }) => {
       </Card.Toolbar>
     </Card.Root>
   );
-};
-
-const useLoadDescendents = (nodeId?: string) => {
-  const { graph } = useAppGraph();
-
-  useEffect(() => {
-    const frame = requestAnimationFrame(() => {
-      if (nodeId) {
-        Graph.expand(graph, nodeId, 'outbound');
-        Graph.getConnections(graph, nodeId, 'outbound').forEach((child) => {
-          Graph.expand(graph, child.id, 'outbound');
-        });
-      }
-    });
-
-    return () => cancelAnimationFrame(frame);
-  }, [nodeId, graph]);
 };
 
 /** Filters nodes by disposition. */
