@@ -92,11 +92,7 @@ export const SketchContainer = ({ sketch, role, settings }: SketchContainerProps
   //  https://docs.excalidraw.com/docs/@excalidraw/excalidraw/api/children-components/live-collaboration-trigger
   return (
     // NOTE: Min 500px height (for tools palette to be visible).
-    <StackItem.Content
-      size={role === 'section' ? 'square' : 'intrinsic'}
-      // classNames='min-bs-[32rem]'
-      ref={containerRef}
-    >
+    <StackItem.Content size={role === 'section' ? 'square' : 'intrinsic'} ref={containerRef}>
       <Excalidraw
         excalidrawAPI={(api) => (excalidrawAPIRef.current = api)}
         initialData={{ elements: adapter.getElements() }}

@@ -3,20 +3,15 @@
 //
 
 import { type ReactVirtualizerOptions, useVirtualizer } from '@tanstack/react-virtual';
-import React, { type FC, Fragment, type ReactElement, type Ref, forwardRef, useRef, useState } from 'react';
+import React, { type FC, Fragment, type ReactElement, type Ref, forwardRef } from 'react';
 
-import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { type SlottableClassName } from '@dxos/react-ui';
-import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
 
 import { useVisibleItems } from '../../hooks';
-import { Card } from '../Card';
-import { Mosaic, type MosiacPlaceholderProps, useMosaicContainer } from '../Mosaic';
-
-import { styles } from './styles';
-import { type Axis, type GetId } from './types';
+import { type Axis, type GetId, Mosaic, type MosiacPlaceholderProps, useMosaicContainer } from '../Mosaic';
+import { mosaicStyles } from '../Mosaic';
 
 type StackTileComponent<TData = any> = FC<{
   id: string;
@@ -182,49 +177,16 @@ const VirtualStack = VirtualStackInner as <TData = any>(
 ) => ReactElement;
 
 //
-// DefaultStackTile
-//
-
-// TODO(burdon): Move to separate file.
-const DefaultStackTile: StackTileComponent<Obj.Any> = (props) => {
-  const dragHandleRef = useRef<HTMLButtonElement>(null);
-  const [open, setOpen] = useState(false);
-  return (
-    <Mosaic.Tile {...props} className='border border-separator rounded-sm font-mono'>
-      <Card.Toolbar>
-        <Card.DragHandle ref={dragHandleRef} />
-        <Card.Title>{Obj.getLabel(props.data) ?? props.data.id}</Card.Title>
-        <Card.Menu
-          items={[
-            {
-              label: open ? 'Hide details' : 'Show details',
-              onClick: () => setOpen((open) => !open),
-            },
-          ]}
-        />
-      </Card.Toolbar>
-      {open && (
-        <Card.Row>
-          <Json data={props.data} classNames='text-xs' />
-        </Card.Row>
-      )}
-    </Mosaic.Tile>
-  );
-};
-
-DefaultStackTile.displayName = 'DefaultStackTile';
-
-//
 // Placeholder
 //
 
 const Placeholder = (props: MosiacPlaceholderProps<number>) => {
   return (
-    <Mosaic.Placeholder {...props} classNames={styles.placeholder.root}>
+    <Mosaic.Placeholder {...props} classNames={mosaicStyles.placeholder.root}>
       <div
         className={mx(
           'flex bs-full bg-baseSurface border border-dashed border-separator rounded-sm',
-          styles.placeholder.content,
+          mosaicStyles.placeholder.content,
         )}
       />
     </Mosaic.Placeholder>
@@ -237,6 +199,6 @@ Placeholder.displayName = 'Placeholder';
 // Stack
 //
 
-export { DefaultStackTile, Stack, VirtualStack };
+export { Stack, VirtualStack };
 
 export type { StackTileComponent, StackProps, VirtualStackProps };
