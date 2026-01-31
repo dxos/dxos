@@ -1,8 +1,14 @@
 layer: tool
 language: typescript
-tags:
-  - ts-compile
 tasks:
   compile:
+    command: vite-node ./src/main.ts
     deps:
       - esbuild-plugins:compile
+    inputs:
+      - tsconfig.json
+      - '@group(production)'
+    outputs:
+      - dist/
+    options:
+      timeout: 60

@@ -18,7 +18,6 @@ tasks:
       - $NODE_OPTIONS
     outputs:
       - out/storybook/
-    preset: server
   serve:
     command: storybook dev
     args:

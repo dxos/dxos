@@ -4,8 +4,6 @@ tasks:
     command: pnpm exec dx-build
     deps:
       - dx-build:compile
-      - ^:build
-      - ^:compile
       - compile
       # TODO(burdon): Add root moon.yml?
       # - root:checkPackageCycles
@@ -23,7 +21,6 @@ tasks:
       - --outputPath=dist/lib
     deps:
       - dx-compile:compile
-      - ^:compile
     inputs:
       - '@group(production)'
     outputs:
