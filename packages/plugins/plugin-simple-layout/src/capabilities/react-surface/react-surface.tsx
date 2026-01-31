@@ -8,7 +8,7 @@ import React from 'react';
 import { Capability, Common } from '@dxos/app-framework';
 import { Node } from '@dxos/plugin-graph';
 
-import { Home, WorkspaceArticle } from '../../components';
+import { Home, Workspace } from '../../components';
 import { meta } from '../../meta';
 
 type SurfaceData = {
@@ -33,7 +33,7 @@ export default Capability.makeModule(() =>
         position: 'fallback',
         filter: (data): data is SurfaceData =>
           ALLOWED_DISPOSITIONS.includes((data.properties as Record<string, any>)?.disposition),
-        component: ({ data }) => <WorkspaceArticle id={data.attendableId} />,
+        component: ({ data }) => <Workspace id={data.attendableId} />,
       }),
     ]),
   ),

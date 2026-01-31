@@ -26,23 +26,20 @@ const useMetadataResolver = () => {
   return useCallback((typename: string) => allMetadata.find((m) => m.id === typename)?.metadata ?? {}, [allMetadata]);
 };
 
-// TODO(burdon): Rename to SpaceArticle.
 export const SpaceMain = ({ space }: { space: Space }) => {
   const { t } = useTranslation(meta.id);
   const { items, handleSearch } = useSpaceItems(space);
 
   return (
-    // TODO(wittjosiah): Remove classNames.
     <StackItem.Content toolbar classNames='bs-full'>
       <SearchList.Root onSearch={handleSearch}>
         <Toolbar.Root>
           <SearchList.Input placeholder={t('search placeholder')} />
         </Toolbar.Root>
         <SearchList.Content>
-          {/* TODO(wittjosiah): Should we be using both the search list and mosaic viewports? */}
           <SearchList.Viewport>
             <Mosaic.Container asChild>
-              <Mosaic.Viewport>
+              <Mosaic.Viewport classNames='pli-1'>
                 <Mosaic.Stack items={items} getId={(node) => node.id} Tile={NodeTile} />
               </Mosaic.Viewport>
             </Mosaic.Container>
@@ -76,17 +73,15 @@ const NodeTile: StackTileComponent<Node.Node> = ({ data: node }) => {
   };
 
   return (
-    <Card.Root>
+    <Card.Root fullWidth>
       <Card.Toolbar>
-        <Card.ToolbarIconButton label={label} icon={icon} />
+        <Card.ToolbarIconButton label={label} icon={icon} iconOnly />
         <Card.Title onClick={handleClick}>{label}</Card.Title>
         <Card.Menu />
       </Card.Toolbar>
     </Card.Root>
   );
 };
-
-export default SpaceMain;
 
 /**
  * Hook to get space items with search/filter support.
@@ -168,3 +163,5 @@ const useSpaceItems = (space: Space) => {
 
   return { items, handleSearch };
 };
+
+export default SpaceMain;

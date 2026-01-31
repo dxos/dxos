@@ -31,7 +31,7 @@ export const CollectionArticle = ({ subject }: { subject: Collection.Collection 
         <SearchList.Content>
           <SearchList.Viewport>
             <Mosaic.Container asChild>
-              <Mosaic.Viewport>
+              <Mosaic.Viewport classNames='pli-1'>
                 <Mosaic.Stack items={items} getId={(node) => node.id} Tile={NodeTile} />
               </Mosaic.Viewport>
             </Mosaic.Container>
@@ -65,7 +65,7 @@ const NodeTile: StackTileComponent<Node.Node> = ({ data: node }) => {
   };
 
   return (
-    <Card.Root>
+    <Card.Root fullWidth>
       <Card.Toolbar>
         <Card.ToolbarIconButton label={label} icon={icon} />
         <Card.Title onClick={handleClick}>{label}</Card.Title>

@@ -1,10 +1,9 @@
 # Simple Layout
 
-- [ ] Card toolbar layout support for large icons/avatars.
-- [ ] Support toast.
+App
+- [ ] Replace toast with notifications panel (history).
+
+Mosaic/UI
+- [ ] Card context
 - [ ] Density issues.
-
-
-Nav
-- [ ] Banner
-- [ ] NavBar
+- [ ] Pattern for SearchList + Mosaic Viewport (asChild)?

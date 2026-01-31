@@ -52,13 +52,12 @@ export const Main = () => {
         <NaturalMain.Content bounce classNames='dx-mobile-main dx-mobile-main-scroll-area--flush !overflow-y-auto'>
           <div
             className={mx(
-              'bs-full overflow-hidden grid',
+              'grid bs-full overflow-hidden',
               showNavBar ? 'grid-rows-[min-content_1fr_min-content]' : 'grid-rows-[min-content_1fr]',
             )}
           >
             <Banner node={node} />
-            {/* TODO(burdon): Layout. */}
-            <article className='bs-full overflow-hidden'>
+            <article className='contents'>
               <Surface
                 key={id}
                 role='article'

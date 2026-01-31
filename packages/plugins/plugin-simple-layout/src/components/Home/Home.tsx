@@ -16,20 +16,7 @@ import { byPosition } from '@dxos/util';
 
 import { meta } from '../../meta';
 
-/** Filters nodes by disposition. */
-const filterItems = (node: Node.Node, disposition: string) => {
-  return node.properties.disposition === disposition;
-};
-
-/** Returns root-level items filtered by disposition. */
-const useItemsByDisposition = (disposition: string, sort = false) => {
-  const { graph } = useAppGraph();
-  const connections = useConnections(graph, Node.RootId);
-  const filtered = connections.filter((node) => filterItems(node, disposition));
-  return sort ? filtered.toSorted((a, b) => byPosition(a.properties, b.properties)) : filtered;
-};
-
-type HomeProps = {};
+export type HomeProps = {};
 
 export const Home = (_props: HomeProps) => {
   const { t } = useTranslation(meta.id);
@@ -49,15 +36,16 @@ export const Home = (_props: HomeProps) => {
   });
 
   return (
-    <StackItem.Content toolbar>
+    // TODO(burdon): bs-full should be standard?
+    <StackItem.Content toolbar classNames='bs-full'>
       <SearchList.Root onSearch={handleSearch}>
         <Toolbar.Root>
           <SearchList.Input placeholder={t('search placeholder')} autoFocus />
         </Toolbar.Root>
         <SearchList.Content>
-          <SearchList.Viewport classNames='flex flex-col gap-1'>
+          <SearchList.Viewport>
             <Mosaic.Container asChild>
-              <Mosaic.Viewport>
+              <Mosaic.Viewport classNames='pli-1'>
                 <Mosaic.Stack items={results} getId={(node) => node.id} Tile={WorkspaceTile} />
               </Mosaic.Viewport>
             </Mosaic.Container>
@@ -107,15 +95,17 @@ const WorkspaceTile: StackTileComponent<Node.Node> = ({ data }) => {
       role='button'
       tabIndex={-1}
       data-selected={isSelected}
+      // TODO(burdon): Use mosaic to manage selection.
       classNames={mx('dx-focus-ring', isSelected && 'bg-hoverOverlay')}
+      fullWidth
       onClick={handleSelect}
     >
-      <Card.Toolbar>
+      <Card.Toolbar density='coarse'>
         <Avatar.Root>
           <Avatar.Content
             hue={data.properties.hue}
             icon={data.properties.icon}
-            hueVariant='surface'
+            hueVariant='fill'
             variant='square'
             size={12}
             fallback={name}
@@ -143,4 +133,17 @@ const useLoadDescendents = (nodeId?: string) => {
 
     return () => cancelAnimationFrame(frame);
   }, [nodeId, graph]);
+};
+
+/** Filters nodes by disposition. */
+const filterItems = (node: Node.Node, disposition: string) => {
+  return node.properties.disposition === disposition;
+};
+
+/** Returns root-level items filtered by disposition. */
+const useItemsByDisposition = (disposition: string, sort = false) => {
+  const { graph } = useAppGraph();
+  const connections = useConnections(graph, Node.RootId);
+  const filtered = connections.filter((node) => filterItems(node, disposition));
+  return sort ? filtered.toSorted((a, b) => byPosition(a.properties, b.properties)) : filtered;
 };

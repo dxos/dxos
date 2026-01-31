@@ -15,14 +15,14 @@ import { mx } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
 
-export type WorkspaceArticleProps = {
+export type WorkspaceProps = {
   id: string;
 };
 
 /**
- * Renders a searchable list of children for a workspace node.
+ * Searchable list of children for a workspace node.
  */
-export const WorkspaceArticle = ({ id }: WorkspaceArticleProps) => {
+export const Workspace = ({ id }: WorkspaceProps) => {
   const { t } = useTranslation(meta.id);
   const { graph } = useAppGraph();
 
@@ -38,15 +38,15 @@ export const WorkspaceArticle = ({ id }: WorkspaceArticleProps) => {
   });
 
   return (
-    <StackItem.Content toolbar>
+    <StackItem.Content toolbar classNames='bs-full'>
       <SearchList.Root onSearch={handleSearch}>
         <Toolbar.Root>
           <SearchList.Input placeholder={t('search placeholder')} autoFocus />
         </Toolbar.Root>
         <SearchList.Content>
-          <SearchList.Viewport classNames='flex flex-col gap-1'>
+          <SearchList.Viewport>
             <Mosaic.Container asChild>
-              <Mosaic.Viewport>
+              <Mosaic.Viewport classNames='pli-1'>
                 <Mosaic.Stack items={results} getId={(child) => child.id} Tile={WorkspaceChildTile} />
               </Mosaic.Viewport>
             </Mosaic.Container>
@@ -94,9 +94,10 @@ const WorkspaceChildTile: StackTileComponent<Node.Node> = ({ data }) => {
       tabIndex={-1}
       data-selected={isSelected}
       classNames={mx('dx-focus-ring', isSelected && 'bg-hoverOverlay')}
+      fullWidth
       onClick={handleSelect}
     >
-      <Card.Toolbar>
+      <Card.Toolbar density='coarse'>
         <Avatar.Root>
           <Avatar.Content
             hue={data.properties.hue}

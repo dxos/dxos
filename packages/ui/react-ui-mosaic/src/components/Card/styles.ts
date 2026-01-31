@@ -16,5 +16,8 @@ export const styles = {
   grid_3: 'grid grid-cols-[var(--rail-item)_minmax(0,1fr)_var(--rail-item)] gap-x-1',
   grid_2: 'grid grid-cols-[var(--rail-item)_minmax(0,1fr)] gap-x-1',
 
+  // TODO(burdon): Address density.
+  grid_3_coarse: 'grid grid-cols-[var(--l0-avatar-size)_minmax(0,1fr)_var(--rail-item)] gap-x-1',
+
   poster: 'max-bs-[200px]',
 } satisfies Record<string, ClassNameValue>;
