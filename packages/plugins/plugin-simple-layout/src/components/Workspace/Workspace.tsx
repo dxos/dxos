@@ -113,4 +113,3 @@ const WorkspaceChildTile: StackTileComponent<Node.Node> = ({ data }) => {
     </Card.Root>
   );
 };
-

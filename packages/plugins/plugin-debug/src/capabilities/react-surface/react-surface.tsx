@@ -69,7 +69,9 @@ type GraphDebug = {
 const isSpaceDebug = (data: any): data is SpaceDebug => data?.type === `${meta.id}/space` && isSpace(data.space);
 const isGraphDebug = (data: any): data is GraphDebug => {
   const graph = data?.graph;
-  return graph != null && typeof graph === 'object' && typeof graph.json === 'function' && typeof data?.root === 'string';
+  return (
+    graph != null && typeof graph === 'object' && typeof graph.json === 'function' && typeof data?.root === 'string'
+  );
 };
 
 // TODO(wittjosiah): Factor out?
