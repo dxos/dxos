@@ -56,7 +56,7 @@ export const Main = () => {
               showNavBar ? 'grid-rows-[min-content_1fr_min-content]' : 'grid-rows-[min-content_1fr]',
             )}
           >
-            <Banner node={node} />
+            <Banner node={node} classNames='border-be border-separator' />
             <article className='contents'>
               <Surface
                 key={id}
@@ -67,7 +67,9 @@ export const Main = () => {
                 placeholder={placeholder}
               />
             </article>
-            {showNavBar && <NavBar activeId={id} onActiveIdChange={handleActiveIdChange} />}
+            {showNavBar && (
+              <NavBar classNames='border-bs border-separator' activeId={id} onActiveIdChange={handleActiveIdChange} />
+            )}
           </div>
         </NaturalMain.Content>
       </NaturalMain.Root>

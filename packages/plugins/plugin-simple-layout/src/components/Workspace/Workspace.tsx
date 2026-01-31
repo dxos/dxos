@@ -44,13 +44,11 @@ export const Workspace = ({ id }: WorkspaceProps) => {
           <SearchList.Input placeholder={t('search placeholder')} autoFocus />
         </Toolbar.Root>
         <SearchList.Content>
-          <SearchList.Viewport>
-            <Mosaic.Container asChild>
-              <Mosaic.Viewport classNames='pli-1'>
-                <Mosaic.Stack items={results} getId={(child) => child.id} Tile={WorkspaceChildTile} />
-              </Mosaic.Viewport>
-            </Mosaic.Container>
-          </SearchList.Viewport>
+          <Mosaic.Container asChild>
+            <Mosaic.Viewport classNames='pli-1'>
+              <Mosaic.Stack items={results} getId={(child) => child.id} Tile={WorkspaceChildTile} />
+            </Mosaic.Viewport>
+          </Mosaic.Container>
         </SearchList.Content>
       </SearchList.Root>
     </StackItem.Content>

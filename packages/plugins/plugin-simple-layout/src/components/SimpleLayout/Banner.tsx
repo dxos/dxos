@@ -7,7 +7,7 @@ import React, { useCallback, useMemo } from 'react';
 import { Common } from '@dxos/app-framework';
 import { useAppGraph, useOperationInvoker } from '@dxos/app-framework/react';
 import { Graph, Node } from '@dxos/plugin-graph';
-import { IconButton, Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { IconButton, type ThemedClassName, Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { mx, osTranslations } from '@dxos/ui-theme';
 
 import { useSimpleLayoutState } from '../../hooks';
@@ -24,11 +24,11 @@ const isWorkspaceOrCollectionChild = (graph: Graph.ReadableGraph, itemId: string
   );
 };
 
-export type BannerProps = {
+export type BannerProps = ThemedClassName<{
   node?: Node.Node;
-};
+}>;
 
-export const Banner = ({ node }: BannerProps) => {
+export const Banner = ({ node, classNames }: BannerProps) => {
   const { t } = useTranslation(meta.id);
   const { state } = useSimpleLayoutState();
   const { invokePromise } = useOperationInvoker();
@@ -63,10 +63,7 @@ export const Banner = ({ node }: BannerProps) => {
   }
 
   return (
-    <Toolbar.Root
-      role='banner'
-      classNames={mx('grid grid-cols-[var(--rail-size)_1fr_var(--rail-size)]', 'border-be border-separator')}
-    >
+    <Toolbar.Root role='banner' classNames={mx('grid grid-cols-[var(--rail-size)_1fr_var(--rail-size)]', classNames)}>
       {node.id !== Node.RootId ? (
         <IconButton
           iconOnly

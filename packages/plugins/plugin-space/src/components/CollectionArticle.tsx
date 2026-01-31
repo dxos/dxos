@@ -29,13 +29,11 @@ export const CollectionArticle = ({ subject }: { subject: Collection.Collection 
           <SearchList.Input placeholder={t('search placeholder')} />
         </Toolbar.Root>
         <SearchList.Content>
-          <SearchList.Viewport>
-            <Mosaic.Container asChild>
-              <Mosaic.Viewport classNames='pli-1'>
-                <Mosaic.Stack items={items} getId={(node) => node.id} Tile={NodeTile} />
-              </Mosaic.Viewport>
-            </Mosaic.Container>
-          </SearchList.Viewport>
+          <Mosaic.Container asChild>
+            <Mosaic.Viewport classNames='pli-1'>
+              <Mosaic.Stack items={items} getId={(node) => node.id} Tile={NodeTile} />
+            </Mosaic.Viewport>
+          </Mosaic.Container>
         </SearchList.Content>
       </SearchList.Root>
     </StackItem.Content>

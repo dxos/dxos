@@ -52,21 +52,17 @@ export const SearchMain = ({ space }: { space?: Space }) => {
 
   return (
     <StackItem.Content toolbar>
-      {/* TODO(burdon): Add selection. */}
       <SearchList.Root onSearch={handleSearch}>
         <Toolbar.Root>
           <SearchList.Input placeholder={t('search placeholder')} />
         </Toolbar.Root>
         <SearchList.Content>
-          {/* TODO(wittjosiah): Should we be using both the search list and mosaic viewports? */}
-          <SearchList.Viewport>
-            <Mosaic.Container asChild>
-              <Mosaic.Viewport>
-                <Mosaic.Stack items={allResults} getId={(result) => result.object!.id} Tile={SearchResultTile} />
-              </Mosaic.Viewport>
-            </Mosaic.Container>
+          <Mosaic.Container asChild>
+            <Mosaic.Viewport>
+              <Mosaic.Stack items={allResults} getId={(result) => result.object!.id} Tile={SearchResultTile} />
+            </Mosaic.Viewport>
             {allResults.length === 0 && <SearchList.Empty>{t('empty results message')}</SearchList.Empty>}
-          </SearchList.Viewport>
+          </Mosaic.Container>
         </SearchList.Content>
       </SearchList.Root>
     </StackItem.Content>

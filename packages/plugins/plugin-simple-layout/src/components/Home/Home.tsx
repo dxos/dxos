@@ -36,20 +36,17 @@ export const Home = (_props: HomeProps) => {
   });
 
   return (
-    // TODO(burdon): bs-full should be standard?
     <StackItem.Content toolbar classNames='bs-full'>
       <SearchList.Root onSearch={handleSearch}>
         <Toolbar.Root>
           <SearchList.Input placeholder={t('search placeholder')} autoFocus />
         </Toolbar.Root>
         <SearchList.Content>
-          <SearchList.Viewport>
-            <Mosaic.Container asChild>
-              <Mosaic.Viewport classNames='pli-1'>
-                <Mosaic.Stack items={results} getId={(node) => node.id} Tile={WorkspaceTile} />
-              </Mosaic.Viewport>
-            </Mosaic.Container>
-          </SearchList.Viewport>
+          <Mosaic.Container asChild>
+            <Mosaic.Viewport classNames='pli-1'>
+              <Mosaic.Stack items={results} getId={(node) => node.id} Tile={WorkspaceTile} />
+            </Mosaic.Viewport>
+          </Mosaic.Container>
         </SearchList.Content>
       </SearchList.Root>
     </StackItem.Content>

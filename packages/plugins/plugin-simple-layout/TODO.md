@@ -3,8 +3,11 @@
 App
 - [ ] Replace toast with notifications panel (history).
 
-Mosaic/UI
-- [ ] Card context
+UI/Mosaic
+- [ ] Card context (menu).
+- [ ] Stack:
+  - [ ] Selection/nav/focus
+  - [ ] Stack: enable/disable DND (add/remove placeholders)
+    - variants for padding (remove className from Viewport).
+  - [ ] Reconcile SearchList.Viewport with Mosaic.Viewport
 - [ ] Density issues.
-- [ ] Pattern for SearchList + Mosaic Viewport (asChild)?
-- [ ] Stack: enable/disable DND (add/remove placeholders); variants for padding (remove className from Viewport).

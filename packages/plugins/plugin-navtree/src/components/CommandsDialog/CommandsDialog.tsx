@@ -80,6 +80,7 @@ export const CommandsDialogContent = forwardRef<HTMLDivElement, CommandsDialogCo
                     typeof action.properties.keyBinding === 'string'
                       ? action.properties.keyBinding
                       : action.properties.keyBinding?.[getHostPlatform()];
+
                   return (
                     <SearchList.Item
                       value={action.id}
