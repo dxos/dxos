@@ -17,4 +17,4 @@
 // - Outline smart collection (Outliner)
 // - Project smart collection
 export const INITIAL_OBJECT_COUNT = 13;
-export const INITIAL_CREATE_ACTION_COUNT = 5;
+export const INITIAL_CREATE_ACTION_COUNT = 12;

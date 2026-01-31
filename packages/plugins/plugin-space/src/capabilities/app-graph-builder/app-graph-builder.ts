@@ -276,6 +276,7 @@ export default Capability.makeModule(
                   object,
                   resolve: resolve(get),
                   navigable: ephemeralState.navigableCollections,
+                  parentCollection: collectionRef?.target,
                 }),
               )
               .filter(isNonNullable),
@@ -315,6 +316,7 @@ export default Capability.makeModule(
                     db: space.db,
                     resolve: resolve(get),
                     navigable: ephemeralState.navigableCollections,
+                    parentCollection: collection,
                   }),
               )
               .filter(isNonNullable),

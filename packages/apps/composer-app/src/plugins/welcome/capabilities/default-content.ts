@@ -22,7 +22,7 @@ export default Capability.makeModule(
     const { Collection } = yield* Effect.tryPromise(() => import('@dxos/schema'));
 
     const operationInvoker = yield* Capability.get(Common.Capability.OperationInvoker);
-    const { invoke } = operationInvoker;
+    const { invoke, schedule } = operationInvoker;
     const { graph } = yield* Capability.get(Common.Capability.AppGraph);
     const client = yield* Capability.get(ClientCapabilities.Client);
 
@@ -64,5 +64,6 @@ export default Capability.makeModule(
       mode: 'solo',
       subject: Obj.getDXN(readme).toString(),
     });
+    yield* schedule(Common.LayoutOperation.Expose, { subject: Obj.getDXN(readme).toString() });
   }),
 );
