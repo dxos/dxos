@@ -3,8 +3,6 @@ language: typescript
 tasks:
   compile:
     command: vite-node ./src/main.ts
-    deps:
-      - esbuild-plugins:compile
     inputs:
       - tsconfig.json
       - '@group(production)'
