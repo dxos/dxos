@@ -195,6 +195,11 @@ export default Capability.makeModule(
           const state = get(capabilities.get(SpaceCapabilities.State));
           const ephemeralState = get(capabilities.get(SpaceCapabilities.EphemeralState));
 
+          const { graph } = capabilities.get(Common.Capability.AppGraph);
+          const [spacesOrder] = get(
+            AtomQuery.make(client.spaces.default.db, Filter.type(Expando.Expando, { key: SHARED })),
+          );
+
           return Effect.succeed(
             constructSpaceNode({
               space,
@@ -202,6 +207,8 @@ export default Capability.makeModule(
               personal: space === client.spaces.default,
               namesCache: state.spaceNames,
               resolve: resolve(get),
+              graph,
+              spacesOrder,
             }),
           );
         },
