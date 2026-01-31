@@ -251,7 +251,10 @@ export const tailwindConfig = ({
     tailwindcssLogical,
     tailwindcssRadix(),
     // https://adoxography.github.io/tailwind-scrollbar/utilities
-    tailwindScrollbar,
+    tailwindScrollbar({
+      nocompatible: true,
+      preferredStrategy: 'pseudoelements',
+    }),
   ],
   ...(env === 'development' && { mode: 'jit' }),
   content,

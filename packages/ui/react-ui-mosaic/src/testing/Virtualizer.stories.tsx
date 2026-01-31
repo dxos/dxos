@@ -18,7 +18,7 @@ import { TestItem } from './Board';
 faker.seed(999);
 
 const meta: Meta<typeof Stack> = {
-  title: 'ui/react-ui-mosaic/Virtual',
+  title: 'ui/react-ui-mosaic/Virtualizer',
   decorators: [withLayout({ layout: 'column' }), withTheme],
   parameters: {
     layout: 'fullscreen',
@@ -61,12 +61,7 @@ export const Default = {
     return (
       <div className='flex flex-col bs-full'>
         <ScrollToolbar items={items} index={index} setIndex={setIndex} />
-        <Mosaic.Viewport
-          options={{ overflow: { y: 'scroll' } }}
-          className='pli-3'
-          viewportRef={viewportRef}
-          ref={parentRef}
-        >
+        <Mosaic.Viewport axis='vertical' classNames='pli-3' viewportRef={viewportRef} ref={parentRef}>
           <div
             role='none'
             style={{

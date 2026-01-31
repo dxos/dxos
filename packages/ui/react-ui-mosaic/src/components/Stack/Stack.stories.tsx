@@ -11,18 +11,18 @@ import { faker } from '@dxos/random';
 import { Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { TestItem } from '../../testing';
+import { DefaultStackTile, TestItem } from '../../testing';
 import { Mosaic, useContainerDebug } from '../Mosaic';
 
 import { Stack } from './Stack';
 
 faker.seed(999);
 
-const NUM_ITEMS = 10;
+const NUM_ITEMS = 50;
 
 // Create test items factory (deferred to render time).
-const createTestItems = () =>
-  Array.from({ length: NUM_ITEMS }, () =>
+const createTestItems = (n: number) =>
+  Array.from({ length: n }, () =>
     Obj.make(TestItem, {
       name: faker.lorem.sentence(3),
       description: faker.lorem.paragraph(),
@@ -40,7 +40,7 @@ const meta: Meta<typeof Stack<Obj.Any>> = {
     axis: 'vertical',
     className: 'pli-3',
     getId: (item) => item.id,
-    Tile: Mosaic.DefaultStackTile,
+    Tile: DefaultStackTile,
     // debug: true,
   },
 };
@@ -51,10 +51,10 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   render: (props) => {
+    // Create items at render time to avoid Storybook serialization issues with ECHO objects.
+    const items = useMemo(() => createTestItems(NUM_ITEMS), []);
     const [DebugInfo, debugHandler] = useContainerDebug(props.debug);
     const viewportRef = useRef<HTMLElement | null>(null);
-    // Create items at render time to avoid Storybook serialization issues with ECHO objects.
-    const items = useMemo(() => createTestItems(), []);
     return (
       <Mosaic.Root debug={props.debug} classNames='bs-full grid grid-rows-[min-content_1fr_min-content]'>
         <Toolbar.Root classNames='border-b border-separator'>
@@ -67,7 +67,7 @@ export const Default: Story = {
           eventHandler={{ id: 'test', canDrop: () => true }}
           debug={debugHandler}
         >
-          <Mosaic.Viewport options={{ overflow: { y: 'scroll' } }} viewportRef={viewportRef}>
+          <Mosaic.Viewport axis='vertical' viewportRef={viewportRef}>
             <Mosaic.Stack {...props} items={items} />
           </Mosaic.Viewport>
         </Mosaic.Container>
@@ -79,11 +79,11 @@ export const Default: Story = {
 
 export const Virtual: Story = {
   render: (props) => {
+    // Create items at render time to avoid Storybook serialization issues with ECHO objects.
+    const items = useMemo(() => createTestItems(NUM_ITEMS), []);
     const [info, setInfo] = useState<any>(null);
     const [DebugInfo, debugHandler] = useContainerDebug(props.debug);
     const viewportRef = useRef<HTMLDivElement | null>(null);
-    // Create items at render time to avoid Storybook serialization issues with ECHO objects.
-    const items = useMemo(() => createTestItems(), []);
     return (
       <Mosaic.Root debug={props.debug} classNames='grid grid-rows-[min-content_1fr_min-content]'>
         <Toolbar.Root>
@@ -96,7 +96,7 @@ export const Virtual: Story = {
           eventHandler={{ id: 'test', canDrop: () => true }}
           debug={debugHandler}
         >
-          <Mosaic.Viewport options={{ overflow: { y: 'scroll' } }} viewportRef={viewportRef}>
+          <Mosaic.Viewport axis='vertical' viewportRef={viewportRef}>
             <Mosaic.VirtualStack
               {...props}
               items={items}

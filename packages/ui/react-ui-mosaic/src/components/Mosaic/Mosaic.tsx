@@ -27,18 +27,11 @@ import { createContext } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import { bind } from 'bind-event-listener';
-import { type EventListeners } from 'overlayscrollbars';
-import {
-  OverlayScrollbarsComponent,
-  type OverlayScrollbarsComponentProps,
-  type OverlayScrollbarsComponentRef,
-} from 'overlayscrollbars-react';
 import React, {
   type CSSProperties,
   type FC,
   type PropsWithChildren,
   type ReactNode,
-  type RefObject,
   forwardRef,
   useCallback,
   useEffect,
@@ -49,9 +42,6 @@ import React, {
 } from 'react';
 import { createPortal } from 'react-dom';
 
-import 'overlayscrollbars/styles/overlayscrollbars.css';
-import './styles.css';
-
 import { log } from '@dxos/log';
 import { type SlottableClassName, type ThemedClassName } from '@dxos/react-ui';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
@@ -59,8 +49,9 @@ import { mx } from '@dxos/ui-theme';
 import { isTruthy } from '@dxos/util';
 
 import { useFocus } from '../Focus';
+import { Scrollable, type ScrollableProps } from '../Scrollable';
+import { Stack, type StackProps, VirtualStack } from '../Stack';
 
-import { DefaultStackTile, Stack, type StackProps, VirtualStack } from './Stack';
 import {
   type AllowedAxis,
   type Axis,
@@ -590,65 +581,6 @@ const Container = forwardRef<HTMLDivElement, ContainerProps>(
 Container.displayName = 'MosaicContainer';
 
 //
-// Viewport
-//
-
-const defaultOptions: ViewportProps['options'] = {
-  scrollbars: {
-    autoHide: 'leave',
-    autoHideDelay: 1_000,
-    autoHideSuspend: true,
-  },
-};
-
-type ViewportProps = OverlayScrollbarsComponentProps & {
-  onScroll?: (event: Event) => void;
-  viewportRef?: RefObject<HTMLElement | null>;
-};
-
-/**
- * https://www.npmjs.com/package/overlayscrollbars-react
- */
-const Viewport = forwardRef<HTMLDivElement, ViewportProps>(
-  ({ options = defaultOptions, onScroll, viewportRef, ...props }, forwardedRef) => {
-    const osRef = useRef<OverlayScrollbarsComponentRef<'div'>>(null);
-
-    // Forward the host element to the forwardedRef for asChild/Slot compatibility.
-    useEffect(() => {
-      const hostElement = osRef.current?.getElement();
-      if (forwardedRef) {
-        if (typeof forwardedRef === 'function') {
-          forwardedRef(hostElement ?? null);
-        } else {
-          forwardedRef.current = hostElement ?? null;
-        }
-      }
-    });
-
-    useEffect(() => {
-      const instance = osRef.current?.osInstance();
-      if (viewportRef) {
-        viewportRef.current = instance?.elements().viewport ?? null;
-      }
-    }, [osRef, viewportRef]);
-
-    const events = useMemo<EventListeners | null>(() => {
-      if (!onScroll) {
-        return null;
-      }
-
-      return {
-        scroll: (_, event: Event) => {
-          onScroll(event);
-        },
-      } satisfies EventListeners;
-    }, [onScroll]);
-
-    return <OverlayScrollbarsComponent options={options} {...props} events={events} ref={osRef} />;
-  },
-);
-
-//
 // Container Debug
 //
 
@@ -991,18 +923,18 @@ DropIndicator.displayName = 'MosaicDropIndicator';
 // Mosaic
 //
 
-// TOOD(burdon): Rename? (Use name Mosaic for package).
 export const Mosaic = {
   Root,
   Container,
   ContainerInfo,
-  Viewport,
   Tile,
   Placeholder,
   DropIndicator,
 
+  // TODO(burdon): Move out of Mosaic namespace?
+  Viewport: Scrollable,
+
   // Stack
-  DefaultStackTile,
   Stack,
   VirtualStack,
 };
@@ -1010,7 +942,7 @@ export const Mosaic = {
 export type {
   RootProps as MosaicRootProps,
   ContainerProps as MosaicContainerProps,
-  ViewportProps as MosaicViewportProps,
+  ScrollableProps as MosaicViewportProps,
   TileProps as MosaicTileProps,
   PlaceholderProps as MosiacPlaceholderProps,
   DropIndicatorProps as MosaicDropIndicatorProps,
