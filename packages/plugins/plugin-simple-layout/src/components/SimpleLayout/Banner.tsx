@@ -7,8 +7,8 @@ import React, { useCallback, useMemo } from 'react';
 import { Common } from '@dxos/app-framework';
 import { useAppGraph, useOperationInvoker } from '@dxos/app-framework/react';
 import { Graph, Node } from '@dxos/plugin-graph';
-import { IconButton, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { mx, osTranslations, surfaceZIndex } from '@dxos/ui-theme';
+import { IconButton, Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { mx, osTranslations } from '@dxos/ui-theme';
 
 import { useSimpleLayoutState } from '../../hooks';
 import { meta } from '../../meta';
@@ -33,7 +33,8 @@ export const Banner = ({ node }: BannerProps) => {
   const { state } = useSimpleLayoutState();
   const { invokePromise } = useOperationInvoker();
   const { graph } = useAppGraph();
-  const label = node ? toLocalizedString(node.properties.label, t) : t('current app name', { ns: osTranslations });
+
+  const label = (node && toLocalizedString(node.properties.label, t)) ?? t('current app name', { ns: osTranslations });
 
   // Check if current active item is a top-level workspace/collection child.
   const isTopLevelItem = useMemo(() => {
@@ -57,18 +58,16 @@ export const Banner = ({ node }: BannerProps) => {
     }
   }, [invokePromise, state.active, state.history.length, isTopLevelItem]);
 
+  if (!node) {
+    return null;
+  }
+
   return (
-    // Note that the HTML5 element `header` has a default role of `banner`, hence the name of this component.
-    // It should not be confused with the `heading` role (elements h1-6).
-    // TODO(burdon): Fixed or not?
-    <header
-      className={mx(
-        '_fixed flex items-center gap-2 pli-2 block-start-0 inset-inline-0 bs-[--dx-mobile-topbar-content-height,48px] bg-baseSurface border-be border-separator',
-        'grid grid-cols-[min-content_1fr_min-content]',
-        surfaceZIndex({ level: 'menu' }),
-      )}
+    <Toolbar.Root
+      role='banner'
+      classNames={mx('grid grid-cols-[var(--rail-size)_1fr_var(--rail-size)]', 'border-be border-separator')}
     >
-      {node ? (
+      {node.id !== Node.RootId ? (
         <IconButton
           iconOnly
           variant='ghost'
@@ -79,10 +78,8 @@ export const Banner = ({ node }: BannerProps) => {
       ) : (
         <div />
       )}
-      <h1 className={'grow text-center truncate font-medium'}>
-        {label || t('current app name', { ns: osTranslations })}
-      </h1>
-      {/* TODO(burdon): Menu. */}
-    </header>
+      <h1 className={'grow text-center truncate font-medium'}>{label}</h1>
+      <IconButton iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label={t('menu label')} />
+    </Toolbar.Root>
   );
 };

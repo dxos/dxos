@@ -6,9 +6,8 @@ import React from 'react';
 
 import { useAppGraph } from '@dxos/app-framework/react';
 import { Node, useActionRunner, useConnections } from '@dxos/plugin-graph';
-import { DensityProvider, IconButton, type Size, Tooltip, useTranslation } from '@dxos/react-ui';
+import { IconButton, type Size, Toolbar, Tooltip, useTranslation } from '@dxos/react-ui';
 import { DropdownMenu, MenuProvider } from '@dxos/react-ui-menu';
-import { mx, surfaceZIndex } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
 
@@ -34,17 +33,8 @@ export const NavBar = ({ activeId, onActiveIdChange }: NavBarProps) => {
   const isBrowseActive = activeId !== 'notifications' && activeId !== 'profile';
 
   return (
-    <DensityProvider density='coarse'>
-      <nav
-        className={mx(
-          'inset-inline-0',
-          'grid grid-cols-[min-content_min-content] gap-2 place-content-center',
-          'block-end-[--dx-mobile-bottombar-inset-bottom,0px] bs-[--dx-mobile-bottombar-content-height,64px]',
-          'bg-baseSurface border-bs border-separator',
-          surfaceZIndex({ level: 'menu' }),
-        )}
-      >
-        {/* <ButtonGroup>
+    <Toolbar.Root classNames='justify-center'>
+      {/* <ButtonGroup>
           <IconButton
             {...buttonProps}
             label={t('browse label')}
@@ -73,16 +63,15 @@ export const NavBar = ({ activeId, onActiveIdChange }: NavBarProps) => {
             </Avatar.Root>
           </Button>
         </ButtonGroup> */}
-        <MenuProvider onAction={runAction}>
-          <DropdownMenu.Root items={menuActions}>
-            <Tooltip.Trigger asChild content={t('app menu label')} side='right'>
-              <DropdownMenu.Trigger asChild data-testid='spacePlugin.addSpace'>
-                <IconButton {...buttonProps} icon='ph--plus--regular' label={t('main menu label')} />
-              </DropdownMenu.Trigger>
-            </Tooltip.Trigger>
-          </DropdownMenu.Root>
-        </MenuProvider>
-      </nav>
-    </DensityProvider>
+      <MenuProvider onAction={runAction}>
+        <DropdownMenu.Root items={menuActions}>
+          <Tooltip.Trigger asChild content={t('app menu label')} side='right'>
+            <DropdownMenu.Trigger asChild data-testid='spacePlugin.addSpace'>
+              <IconButton {...buttonProps} icon='ph--plus--regular' label={t('main menu label')} />
+            </DropdownMenu.Trigger>
+          </Tooltip.Trigger>
+        </DropdownMenu.Root>
+      </MenuProvider>
+    </Toolbar.Root>
   );
 };

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useCallback, useEffect, useMemo, useRef } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 
 import { Common } from '@dxos/app-framework';
 import { useAppGraph, useOperationInvoker } from '@dxos/app-framework/react';
@@ -15,7 +15,7 @@ import { mx } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
 
-type WorkspaceArticleProps = {
+export type WorkspaceArticleProps = {
   id: string;
 };
 
@@ -60,16 +60,16 @@ export const WorkspaceArticle = ({ id }: WorkspaceArticleProps) => {
 const WorkspaceChildTile: StackTileComponent<Node.Node> = ({ data }) => {
   const { t } = useTranslation(meta.id);
   const { invokeSync } = useOperationInvoker();
-  const { selectedValue, registerItem, unregisterItem } = useSearchListItem();
   const ref = useRef<HTMLDivElement>(null);
+  const { selectedValue, registerItem, unregisterItem } = useSearchListItem();
+  const isSelected = selectedValue === data.id;
+
+  const name = toLocalizedString(data.properties.label, t);
 
   const handleSelect = useCallback(
     () => invokeSync(Common.LayoutOperation.Open, { subject: [data.id] }),
     [invokeSync, data.id],
   );
-
-  const name = toLocalizedString(data.properties.label, t);
-  const isSelected = selectedValue === data.id;
 
   // Register this item with the search context.
   useEffect(() => {

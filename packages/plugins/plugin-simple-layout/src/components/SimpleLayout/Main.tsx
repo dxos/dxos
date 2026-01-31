@@ -57,6 +57,7 @@ export const Main = () => {
             )}
           >
             <Banner node={node} />
+            {/* TODO(burdon): Layout. */}
             <article className='bs-full overflow-hidden'>
               <Surface
                 key={id}
@@ -74,6 +75,8 @@ export const Main = () => {
     </Mosaic.Root>
   );
 };
+
+Main.displayName = 'SimpleLayout.Main';
 
 // TODO(wittjosiah): Factor out. Copied from deck plugin.
 const parseEntryId = (entryId: string) => {
