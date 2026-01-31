@@ -29,6 +29,15 @@ export const NavBar = ({ classNames, activeId, onActiveIdChange }: NavBarProps) 
 
   return (
     <Toolbar.Root classNames={mx('justify-center', classNames)}>
+      <MenuProvider onAction={runAction}>
+        <DropdownMenu.Root items={menuActions}>
+          <Tooltip.Trigger asChild content={t('app menu label')}>
+            <DropdownMenu.Trigger asChild data-testid='spacePlugin.addSpace'>
+              <IconButton icon='ph--plus--regular' iconOnly label={t('main menu label')} />
+            </DropdownMenu.Trigger>
+          </Tooltip.Trigger>
+        </DropdownMenu.Root>
+      </MenuProvider>
       {/*
         <ButtonGroup>
           <IconButton
@@ -60,15 +69,6 @@ export const NavBar = ({ classNames, activeId, onActiveIdChange }: NavBarProps) 
           </Button>
         </ButtonGroup>
       */}
-      <MenuProvider onAction={runAction}>
-        <DropdownMenu.Root items={menuActions}>
-          <Tooltip.Trigger asChild content={t('app menu label')}>
-            <DropdownMenu.Trigger asChild data-testid='spacePlugin.addSpace'>
-              <IconButton icon='ph--plus--regular' iconOnly label={t('main menu label')} />
-            </DropdownMenu.Trigger>
-          </Tooltip.Trigger>
-        </DropdownMenu.Root>
-      </MenuProvider>
     </Toolbar.Root>
   );
 };
