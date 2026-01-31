@@ -305,6 +305,8 @@ export class Toolbox {
    */
   async updatePackages(): Promise<void> {
     console.log('Updating all package.json');
+    const commonKeysList = this.config.package?.commonKeys ?? [];
+
     for (const project of this.graph.projects) {
       const packagePath = join(project.path, 'package.json');
       const packageJson = await loadJson<PackageJson>(packagePath);
@@ -313,9 +315,21 @@ export class Toolbox {
       //   packageJson.type = 'module';
       // }
 
-      const commonKeys = pick(this.rootPackage, this.config.package?.commonKeys ?? []);
+      const commonKeys = pick(this.rootPackage, commonKeysList);
       // TODO(burdon): Investigate util: https://github.com/JamieMason/syncpack
-      const updated = sortPackageJson(defaultsDeep(packageJson, commonKeys));
+      const merged = defaultsDeep(packageJson, commonKeys);
+
+      // Enforce common keys from root package.json.
+      // If root has the key, set it; if root doesn't have it, delete it from package.
+      for (const key of commonKeysList) {
+        if ((this.rootPackage as any)[key] !== undefined) {
+          (merged as any)[key] = (this.rootPackage as any)[key];
+        } else {
+          delete (merged as any)[key];
+        }
+      }
+
+      const updated = sortPackageJson(merged);
       await saveJson(packagePath, updated, this.options.verbose);
     }
   }

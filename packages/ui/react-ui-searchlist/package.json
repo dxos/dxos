@@ -4,6 +4,10 @@
   "description": "A themed ⌘K-style combobox component, triggered by a button (or keyboard shortcut), where values are queried only within the invoked modal.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
   "license": "MIT",
   "author": "DXOS.org",
   "sideEffects": false,
