@@ -27,7 +27,7 @@ permissions:
 jobs:
   publish:
     # Must use GitHub-hosted runner for npm provenance (sigstore attestation).
-    runs-on: ubuntu-24.04-large
+    runs-on: ubuntu-24.04-4
     container:
       image: ghcr.io/dxos/gh-actions:24.11.1
       credentials:
