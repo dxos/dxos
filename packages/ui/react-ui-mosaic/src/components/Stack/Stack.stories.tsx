@@ -18,11 +18,11 @@ import { Stack } from './Stack';
 
 faker.seed(999);
 
-const NUM_ITEMS = 10;
+const NUM_ITEMS = 50;
 
 // Create test items factory (deferred to render time).
-const createTestItems = () =>
-  Array.from({ length: NUM_ITEMS }, () =>
+const createTestItems = (n: number) =>
+  Array.from({ length: n }, () =>
     Obj.make(TestItem, {
       name: faker.lorem.sentence(3),
       description: faker.lorem.paragraph(),
@@ -54,7 +54,7 @@ export const Default: Story = {
     const [DebugInfo, debugHandler] = useContainerDebug(props.debug);
     const viewportRef = useRef<HTMLElement | null>(null);
     // Create items at render time to avoid Storybook serialization issues with ECHO objects.
-    const items = useMemo(() => createTestItems(), []);
+    const items = useMemo(() => createTestItems(NUM_ITEMS), []);
     return (
       <Mosaic.Root debug={props.debug} classNames='bs-full grid grid-rows-[min-content_1fr_min-content]'>
         <Toolbar.Root classNames='border-b border-separator'>

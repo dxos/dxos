@@ -10,6 +10,9 @@ import {
 } from 'overlayscrollbars-react';
 import React, { type RefObject, forwardRef, useEffect, useMemo, useRef } from 'react';
 
+import { type ThemedClassName } from '@dxos/react-ui';
+import { mx } from '@dxos/ui-theme';
+
 import { type Axis } from '../Mosaic';
 
 import 'overlayscrollbars/styles/overlayscrollbars.css';
@@ -24,7 +27,7 @@ const defaultOptions: ScrollableProps['options'] = {
 };
 
 // TODO(burdon): row/column: options={{ overflow: { x: 'scroll' } }}
-export type ScrollableProps = OverlayScrollbarsComponentProps & {
+export type ScrollableProps = ThemedClassName<OverlayScrollbarsComponentProps> & {
   axis?: Axis;
   onScroll?: (event: Event) => void;
   viewportRef?: RefObject<HTMLElement | null>;
@@ -34,7 +37,7 @@ export type ScrollableProps = OverlayScrollbarsComponentProps & {
  * https://www.npmjs.com/package/overlayscrollbars-react
  */
 export const Scrollable = forwardRef<HTMLDivElement, ScrollableProps>(
-  ({ axis, options: optionsProp = defaultOptions, onScroll, viewportRef, ...props }, forwardedRef) => {
+  ({ classNames, axis, options: optionsProp = defaultOptions, onScroll, viewportRef, ...props }, forwardedRef) => {
     const osRef = useRef<OverlayScrollbarsComponentRef<'div'>>(null);
     const options = useMemo(() => {
       const options = { ...optionsProp };
@@ -78,6 +81,8 @@ export const Scrollable = forwardRef<HTMLDivElement, ScrollableProps>(
       } satisfies EventListeners;
     }, [onScroll]);
 
-    return <OverlayScrollbarsComponent options={options} {...props} events={events} ref={osRef} />;
+    return (
+      <OverlayScrollbarsComponent {...props} className={mx(classNames)} options={options} events={events} ref={osRef} />
+    );
   },
 );

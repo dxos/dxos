@@ -5,28 +5,31 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { Toolbar } from '@dxos/react-ui';
+import { Input, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { Scrollable } from '../Scrollable';
 
 import { Layout } from './Layout';
 
-const DefaultStory = () => {
+const DefaultStory = ({ count }: { count: number }) => {
   return (
     <Layout.Main toolbar statusbar>
-      <Toolbar.Root classNames='justify-between'>
+      <Toolbar.Root classNames='gap-2'>
         <Toolbar.IconButton icon='ph--plus--regular' variant='primary' label='Add' />
+        <Input.Root>
+          <Input.TextInput placeholder='Search' />
+        </Input.Root>
         <Toolbar.IconButton icon='ph--dots-three-vertical--regular' iconOnly label='Menu' />
       </Toolbar.Root>
       <Scrollable axis='vertical'>
-        <Layout.Flex column role='list' classNames='pli-3 plb-1 gap-1'>
-          {Array.from({ length: 100 }).map((_, index) => (
-            <div key={index} role='listitem' className='border border-separator pli-2 plb-1'>
+        <div role='list' className='flex flex-col pli-2 plb-1 gap-1'>
+          {Array.from({ length: count }).map((_, index) => (
+            <div key={index} role='listitem' className='pli-2 plb-1 border border-separator'>
               {index}
             </div>
           ))}
-        </Layout.Flex>
+        </div>
       </Scrollable>
       <Toolbar.Root classNames='justify-between'>
         <Toolbar.IconButton variant='ghost' icon='ph--house--regular' iconOnly label='Add' size={4} />
@@ -50,5 +53,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  args: {},
+  args: {
+    count: 100,
+  },
 };

@@ -12,9 +12,9 @@ import { Scrollable } from './Scrollable';
 const DefaultStory = ({ count }: { count: number }) => {
   return (
     <Scrollable axis='vertical'>
-      <div className='p-1 gap-1'>
+      <div role='list' className='flex flex-col pli-2 plb-1 gap-1'>
         {Array.from({ length: count }).map((_, index) => (
-          <div key={index} className='border border-separator pli-2 plb-1'>
+          <div key={index} role='listitem' className='pli-2 plb-1 border border-separator'>
             {index}
           </div>
         ))}
