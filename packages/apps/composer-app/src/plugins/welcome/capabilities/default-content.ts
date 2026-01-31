@@ -6,8 +6,8 @@ import * as Effect from 'effect/Effect';
 
 import { Capability, Common, Plugin } from '@dxos/app-framework';
 import { Operation } from '@dxos/operation';
-import { Graph } from '@dxos/plugin-graph';
-import { SPACES, SpaceEvents } from '@dxos/plugin-space';
+import { Graph, Node } from '@dxos/plugin-graph';
+import { SpaceEvents } from '@dxos/plugin-space';
 import { SpaceCapabilities } from '@dxos/plugin-space/types';
 
 import README_CONTENT from '../content/README.md?raw';
@@ -57,7 +57,7 @@ export default Capability.makeModule(
 
     // Ensure the default content is in the graph and connected.
     // This will allow the expose action to work before the navtree renders for the first time.
-    graph.pipe(Graph.expand(SPACES), Graph.expand(space.id));
+    graph.pipe(Graph.expand(Node.RootId), Graph.expand(space.id));
 
     yield* invoke(Common.LayoutOperation.SwitchWorkspace, { subject: space.id });
     yield* invoke(Common.LayoutOperation.SetLayoutMode, {
