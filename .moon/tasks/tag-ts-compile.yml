@@ -4,7 +4,6 @@ tasks:
     command: pnpm exec dx-build
     deps:
       - dx-build:compile
-      - ^:compile
     inputs:
       - /tsconfig.base.json
       - tsconfig.json
