@@ -45,18 +45,15 @@ export const PluginDetail = ({ plugin, enabled, onEnable }: PluginDetailProps) =
             </Input.Root>
             <p className='pbs-0.5 text-sm text-description'>{id}</p>
           </div>
-
           <div role='none'>
             <p className='text-description'>{description}</p>
           </div>
-
           {screenshots && screenshots.length > 0 && (
             <div role='none' className='flex flex-col gap-2'>
               <h2>Preview</h2>
               <img src={screenshots[0]} alt={name} className='aspect-video object-fit' />
             </div>
           )}
-
           <div role='none' className='flex flex-col gap-2'>
             <h2>Resources</h2>
             <div className='flex gap-2'>

@@ -14,7 +14,7 @@ import { ClientCapabilities } from '@dxos/plugin-client';
 import { Graph } from '@dxos/plugin-graph';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { PublicKey } from '@dxos/react-client';
-import { SpaceState, parseId } from '@dxos/react-client/echo';
+import { SPACE_ID_LENGTH, SpaceState, parseId } from '@dxos/react-client/echo';
 import { Expando } from '@dxos/schema';
 import { ComplexMap, reduceGroupBy } from '@dxos/util';
 
@@ -68,33 +68,37 @@ export default Capability.makeModule(
     }
 
     // Await missing objects - subscribe to layout atom changes.
+    // NOTE: Use immediate: true to check initial state (URL handler may have already set active).
     let lastActiveCleanup: (() => void) | undefined;
     subscriptions.add(
-      registry.subscribe(layoutAtom, () => {
-        // Clean up previous effect.
-        lastActiveCleanup?.();
-        lastActiveCleanup = undefined;
+      registry.subscribe(
+        layoutAtom,
+        (layout) => {
+          // Clean up previous effect.
+          lastActiveCleanup?.();
+          lastActiveCleanup = undefined;
 
-        const layout = registry.get(layoutAtom);
-        const active = layout.active;
-        if (active.length !== 1) {
-          return;
-        }
+          // Determine the ID to check - either from active item or workspace.
+          const id = layout.active.length === 1 ? layout.active[0] : layout.workspace;
+          if (!id) {
+            return;
+          }
 
-        const id = active[0];
-        const node = Graph.getNode(graph, id).pipe(Option.getOrNull);
-        if (!node && id.length === ECHO_DXN_LENGTH) {
-          void Graph.initialize(graph, id);
-          const timeout = setTimeout(async () => {
-            const node = Graph.getNode(graph, id).pipe(Option.getOrNull);
-            if (!node) {
-              await invokePromise(SpaceOperation.WaitForObject, { id });
-            }
-          }, WAIT_FOR_OBJECT_TIMEOUT);
+          const node = Graph.getNode(graph, id).pipe(Option.getOrNull);
+          if (!node && (id.length === ECHO_DXN_LENGTH || id.length === SPACE_ID_LENGTH)) {
+            void Graph.initialize(graph, id);
+            const timeout = setTimeout(async () => {
+              const node = Graph.getNode(graph, id).pipe(Option.getOrNull);
+              if (!node) {
+                await invokePromise(SpaceOperation.WaitForObject, { id });
+              }
+            }, WAIT_FOR_OBJECT_TIMEOUT);
 
-          lastActiveCleanup = () => clearTimeout(timeout);
-        }
-      }),
+            lastActiveCleanup = () => clearTimeout(timeout);
+          }
+        },
+        { immediate: true },
+      ),
     );
     // Also add cleanup for the last effect.
     subscriptions.add(() => lastActiveCleanup?.());

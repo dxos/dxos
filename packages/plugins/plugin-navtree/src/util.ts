@@ -90,12 +90,8 @@ export const getChildren = (
 };
 
 export const l0ItemType = (item: Node.Node) => {
-  if (item.properties.disposition === 'collection') {
-    return 'collection';
-  } else if (Node.isActionLike(item)) {
+  if (Node.isActionLike(item)) {
     return 'action';
-  } else if (item.properties.disposition === 'navigation') {
-    return 'link';
   } else {
     return 'tab';
   }

@@ -6,8 +6,8 @@ import * as Effect from 'effect/Effect';
 
 import { Capability, Common, Plugin } from '@dxos/app-framework';
 import { Operation } from '@dxos/operation';
-import { Graph } from '@dxos/plugin-graph';
-import { SPACES, SpaceEvents } from '@dxos/plugin-space';
+import { Graph, Node } from '@dxos/plugin-graph';
+import { SpaceEvents } from '@dxos/plugin-space';
 import { SpaceCapabilities } from '@dxos/plugin-space/types';
 
 import README_CONTENT from '../content/README.md?raw';
@@ -22,7 +22,7 @@ export default Capability.makeModule(
     const { Collection } = yield* Effect.tryPromise(() => import('@dxos/schema'));
 
     const operationInvoker = yield* Capability.get(Common.Capability.OperationInvoker);
-    const { invoke } = operationInvoker;
+    const { invoke, schedule } = operationInvoker;
     const { graph } = yield* Capability.get(Common.Capability.AppGraph);
     const client = yield* Capability.get(ClientCapabilities.Client);
 
@@ -53,21 +53,17 @@ export default Capability.makeModule(
       name: 'README',
       content: README_CONTENT,
     });
-    if (defaultSpaceCollection) {
-      const readmeRef = Ref.make(readme);
-      Obj.change(defaultSpaceCollection, (c) => {
-        c.objects.push(readmeRef);
-      });
-    }
+    space.db.add(readme);
 
     // Ensure the default content is in the graph and connected.
     // This will allow the expose action to work before the navtree renders for the first time.
-    graph.pipe(Graph.expand(SPACES), Graph.expand(space.id));
+    graph.pipe(Graph.expand(Node.RootId), Graph.expand(space.id));
 
     yield* invoke(Common.LayoutOperation.SwitchWorkspace, { subject: space.id });
     yield* invoke(Common.LayoutOperation.SetLayoutMode, {
       mode: 'solo',
       subject: Obj.getDXN(readme).toString(),
     });
+    yield* schedule(Common.LayoutOperation.Expose, { subject: Obj.getDXN(readme).toString() });
   }),
 );

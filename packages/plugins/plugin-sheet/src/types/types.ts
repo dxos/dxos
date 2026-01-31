@@ -4,7 +4,10 @@
 
 import * as Schema from 'effect/Schema';
 
+import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/operation';
+import { SpaceSchema } from '@dxos/react-client/echo';
+import { Collection } from '@dxos/schema';
 
 import { meta } from '../meta';
 
@@ -31,6 +34,19 @@ const SHEET_OPERATION = `${meta.id}/operation`;
 const Axis = Schema.Union(Schema.Literal('row'), Schema.Literal('col'));
 
 export namespace SheetOperation {
+  export const OnCreateSpace = Operation.make({
+    meta: { key: `${SHEET_OPERATION}/on-create-space`, name: 'On Create Space' },
+    services: [Capability.Service],
+    schema: {
+      input: Schema.Struct({
+        space: SpaceSchema,
+        rootCollection: Collection.Collection,
+        isDefault: Schema.optional(Schema.Boolean),
+      }),
+      output: Schema.Void,
+    },
+  });
+
   export const InsertAxis = Operation.make({
     meta: { key: `${SHEET_OPERATION}/axis-insert`, name: 'Insert Axis' },
     schema: {

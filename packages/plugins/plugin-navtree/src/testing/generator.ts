@@ -142,7 +142,7 @@ export const createTree = () => {
         properties: {
           label: l0.title,
           icon: 'ph--horse--regular',
-          disposition: 'collection',
+          disposition: 'workspace',
         },
         nodes: [
           ...[...Array(4)].map(() => {

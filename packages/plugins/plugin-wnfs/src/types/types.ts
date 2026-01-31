@@ -7,6 +7,8 @@ import * as Schema from 'effect/Schema';
 import { Capability, Common } from '@dxos/app-framework';
 import { Database } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
+import { SpaceSchema } from '@dxos/react-client/echo';
+import { Collection } from '@dxos/schema';
 
 import { meta } from '../meta';
 
@@ -32,6 +34,19 @@ export namespace WnfsAction {
 const WNFS_OPERATION = `${meta.id}/operation`;
 
 export namespace WnfsOperation {
+  export const OnCreateSpace = Operation.make({
+    meta: { key: `${WNFS_OPERATION}/on-create-space`, name: 'On Create Space' },
+    services: [Capability.Service],
+    schema: {
+      input: Schema.Struct({
+        space: SpaceSchema,
+        rootCollection: Collection.Collection,
+        isDefault: Schema.optional(Schema.Boolean),
+      }),
+      output: Schema.Void,
+    },
+  });
+
   export const Create = Operation.make({
     meta: { key: `${WNFS_OPERATION}/create`, name: 'Create WNFS File' },
     services: [Capability.Service],

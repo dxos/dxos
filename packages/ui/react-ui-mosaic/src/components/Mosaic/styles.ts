@@ -5,14 +5,6 @@
 import { type ClassNameValue } from '@dxos/react-ui';
 
 export const styles = {
-  // tile: {
-  //   root: [
-  //     'border border-separator',
-  //     'data-[mosaic-tile-state=target]:border-neutralFocusIndicator',
-  //     'data-[mosaic-tile-state=preview]:bg-groupSurface',
-  //     'data-[mosaic-tile-state=dragging]:opacity-0',
-  //   ],
-  // },
   placeholder: {
     root: [
       'group opacity-0',
