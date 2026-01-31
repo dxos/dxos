@@ -32,17 +32,17 @@ if [ -n "$NPM_TOKEN" ]; then
 fi
 
 if [ "$DX_ENVIRONMENT" = "production" ]; then
-  pnpm --filter-prod="./packages/**" --filter-prod="./vendor/**" publish --no-git-checks --tag=latest
-  moon :publish -- --tag latest
+  pnpm --filter-prod="./packages/**" --filter-prod="./vendor/**" publish --no-git-checks --provenance --tag=latest
+  moon :publish -- --provenance --tag latest
 elif [ "$DX_ENVIRONMENT" = "staging" ]; then
-  pnpm --filter-prod="./packages/**" --filter-prod="./vendor/**" publish --no-git-checks --tag=next
-  moon :publish -- --tag next
+  pnpm --filter-prod="./packages/**" --filter-prod="./vendor/**" publish --no-git-checks --provenance --tag=next
+  moon :publish -- --provenance --tag next
 elif [ "$DX_ENVIRONMENT" = "main" ]; then
-  pnpm --filter-prod="./packages/**" --filter-prod="./vendor/**" publish --no-git-checks --tag=main
-  moon :publish -- --tag main
+  pnpm --filter-prod="./packages/**" --filter-prod="./vendor/**" publish --no-git-checks --provenance --tag=main
+  moon :publish -- --provenance --tag main
 elif [ "$DX_ENVIRONMENT" = "labs" ]; then
-  pnpm --filter-prod="./packages/**" --filter-prod="./vendor/**" publish --no-git-checks --tag=labs
-  moon :publish -- --tag labs
+  pnpm --filter-prod="./packages/**" --filter-prod="./vendor/**" publish --no-git-checks --provenance --tag=labs
+  moon :publish -- --provenance --tag labs
 fi
 
 if [[ $? -eq 0 ]]; then
