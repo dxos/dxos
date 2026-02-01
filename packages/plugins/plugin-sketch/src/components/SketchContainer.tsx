@@ -8,8 +8,7 @@ import { type SurfaceComponentProps, useAppGraph } from '@dxos/app-framework/rea
 import { Obj } from '@dxos/echo';
 import { useActions } from '@dxos/plugin-graph';
 import { useAttention } from '@dxos/react-ui-attention';
-import { type LayoutFlexProps } from '@dxos/react-ui-mosaic';
-import { Layout } from '@dxos/react-ui-mosaic';
+import { Layout, type LayoutFlexProps } from '@dxos/react-ui-mosaic';
 
 import { type Diagram, type SketchSettingsProps } from '../types';
 
