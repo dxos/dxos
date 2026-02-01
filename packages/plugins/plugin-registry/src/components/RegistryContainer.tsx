@@ -10,17 +10,22 @@ import { Common, type Plugin, SettingsOperation } from '@dxos/app-framework';
 import { useCapabilities, useOperationInvoker, usePluginManager } from '@dxos/app-framework/react';
 import { runAndForwardErrors } from '@dxos/effect';
 import { ObservabilityOperation } from '@dxos/plugin-observability/types';
-import { StackItem } from '@dxos/react-ui-stack';
+import { Layout } from '@dxos/react-ui-mosaic';
 
 import { PluginList } from './PluginList';
 
 const sortByPluginMeta = ({ meta: { name: a = '' } }: Plugin.Plugin, { meta: { name: b = '' } }: Plugin.Plugin) =>
   a.localeCompare(b);
 
-export const RegistryContainer = ({ id, plugins: _plugins }: { id: string; plugins: Plugin.Plugin[] }) => {
+export type RegistryContainerProps = {
+  id: string;
+  plugins: Plugin.Plugin[];
+};
+
+export const RegistryContainer = ({ id, plugins: pluginsProp }: RegistryContainerProps) => {
   const manager = usePluginManager();
   const { invoke, invokePromise } = useOperationInvoker();
-  const plugins = useMemo(() => _plugins.sort(sortByPluginMeta), [_plugins]);
+  const plugins = useMemo(() => pluginsProp.sort(sortByPluginMeta), [pluginsProp]);
   const enabled = useAtomValue(manager.enabled);
   const allSettings = useCapabilities(Common.Capability.Settings);
 
@@ -64,7 +69,7 @@ export const RegistryContainer = ({ id, plugins: _plugins }: { id: string; plugi
   );
 
   return (
-    <StackItem.Content scrollable>
+    <Layout.Container scrollable>
       <PluginList
         plugins={plugins}
         enabled={enabled}
@@ -73,6 +78,6 @@ export const RegistryContainer = ({ id, plugins: _plugins }: { id: string; plugi
         hasSettings={hasSettings}
         onSettings={handleSettings}
       />
-    </StackItem.Content>
+    </Layout.Container>
   );
 };

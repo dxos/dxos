@@ -20,7 +20,7 @@ import { useComputeRuntimeCallback } from '@dxos/plugin-automation';
 import { Graph } from '@dxos/plugin-explorer/types';
 import { DropdownMenu, IconButton, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
-import { StackItem } from '@dxos/react-ui-stack';
+import { Layout } from '@dxos/react-ui-mosaic';
 import { Text, View } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
@@ -191,7 +191,7 @@ export const NotebookContainer = ({ role, subject: notebook, env }: NotebookCont
   );
 
   return (
-    <StackItem.Content toolbar>
+    <Layout.Main role={role} toolbar>
       <Toolbar.Root disabled={!hasAttention} textBlockWidth>
         <DropdownMenu.Root>
           <DropdownMenu.Trigger asChild>
@@ -220,7 +220,7 @@ export const NotebookContainer = ({ role, subject: notebook, env }: NotebookCont
           onCellDelete={handleCellDelete}
         />
       </div>
-    </StackItem.Content>
+    </Layout.Main>
   );
 };
 

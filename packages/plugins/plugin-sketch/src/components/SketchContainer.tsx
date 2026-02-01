@@ -8,7 +8,8 @@ import { type SurfaceComponentProps, useAppGraph } from '@dxos/app-framework/rea
 import { Obj } from '@dxos/echo';
 import { useActions } from '@dxos/plugin-graph';
 import { useAttention } from '@dxos/react-ui-attention';
-import { StackItem } from '@dxos/react-ui-stack';
+import { type LayoutFlexProps } from '@dxos/react-ui-mosaic';
+import { Layout } from '@dxos/react-ui-mosaic';
 
 import { type Diagram, type SketchSettingsProps } from '../types';
 
@@ -36,8 +37,10 @@ export const SketchContainer = ({ role, subject: sketch, settings }: SketchConta
   const actions = useActions(graph, id);
   const handleThreadCreate = actions.find((action) => action.id === `${id}/comment`)?.data;
 
+  const Root = role === 'section' ? Container : Layout.Main;
+
   return (
-    <StackItem.Content size={role === 'section' ? 'square' : 'intrinsic'}>
+    <Root>
       <Sketch
         // Force instance per sketch object. Otherwise, sketch shares the same instance.
         key={id}
@@ -48,8 +51,10 @@ export const SketchContainer = ({ role, subject: sketch, settings }: SketchConta
         onThreadCreate={handleThreadCreate}
         {...props}
       />
-    </StackItem.Content>
+    </Root>
   );
 };
+
+const Container = (props: LayoutFlexProps) => <Layout.Flex {...props} className='aspect-square' />;
 
 export default SketchContainer;

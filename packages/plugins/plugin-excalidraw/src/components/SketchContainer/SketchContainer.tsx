@@ -4,11 +4,12 @@
 
 import { Excalidraw, MainMenu } from '@excalidraw/excalidraw';
 import { type ExcalidrawImperativeAPI, type ExcalidrawProps } from '@excalidraw/excalidraw/types';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { Fragment, useEffect, useRef, useState } from 'react';
 
 import { type SurfaceComponentProps } from '@dxos/app-framework/react';
 import { type Diagram } from '@dxos/plugin-sketch/types';
 import { useThemeContext } from '@dxos/react-ui';
+import { Layout, type LayoutFlexProps } from '@dxos/react-ui-mosaic';
 import { StackItem } from '@dxos/react-ui-stack';
 
 import { useStoreAdapter } from '../../hooks';
@@ -89,25 +90,31 @@ export const SketchContainer = ({ role, subject: sketch, settings }: SketchConta
     }
   };
 
+  // NOTE: Min 500px height (for tools palette to be visible).
+  const Root = role === 'section' ? Container : Fragment;
+
   // TODO(burdon): Disable scrolling with mouse pad unless focused.
   // TODO(burdon): Show live collaborators.
   //  https://docs.excalidraw.com/docs/@excalidraw/excalidraw/api/children-components/live-collaboration-trigger
   return (
-    // NOTE: Min 500px height (for tools palette to be visible).
-    <StackItem.Content size={role === 'section' ? 'square' : 'intrinsic'} ref={containerRef}>
-      <Excalidraw
-        excalidrawAPI={(api) => (excalidrawAPIRef.current = api)}
-        initialData={{ elements: adapter.getElements() }}
-        // gridModeEnabled={true}
-        // detectScroll={false}
-        theme={themeMode}
-        onChange={handleChange}
-        onPointerUpdate={handlePointerUpdate}
-      >
-        <MainMenu>
-          <MainMenu.Item onSelect={handleRefresh}>Refresh</MainMenu.Item>
-        </MainMenu>
-      </Excalidraw>
-    </StackItem.Content>
+    <Root>
+      <StackItem.Content ref={containerRef}>
+        <Excalidraw
+          excalidrawAPI={(api) => (excalidrawAPIRef.current = api)}
+          initialData={{ elements: adapter.getElements() }}
+          // gridModeEnabled={true}
+          // detectScroll={false}
+          theme={themeMode}
+          onChange={handleChange}
+          onPointerUpdate={handlePointerUpdate}
+        >
+          <MainMenu>
+            <MainMenu.Item onSelect={handleRefresh}>Refresh</MainMenu.Item>
+          </MainMenu>
+        </Excalidraw>
+      </StackItem.Content>
+    </Root>
   );
 };
+
+const Container = (props: LayoutFlexProps) => <Layout.Flex {...props} className='aspect-square' />;

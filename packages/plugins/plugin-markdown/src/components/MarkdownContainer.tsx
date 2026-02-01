@@ -12,7 +12,7 @@ import { Obj } from '@dxos/echo';
 import { useActionRunner } from '@dxos/plugin-graph';
 import { useObject } from '@dxos/react-client/echo';
 import { type SelectionManager } from '@dxos/react-ui-attention';
-import { StackItem } from '@dxos/react-ui-stack';
+import { Layout } from '@dxos/react-ui-mosaic';
 import { Text } from '@dxos/schema';
 
 import { useLinkQuery } from '../hooks';
@@ -86,7 +86,7 @@ export const MarkdownContainer = forwardRef<HTMLDivElement, MarkdownContainerPro
     const handleLinkQuery = useLinkQuery(db);
 
     return (
-      <StackItem.Content toolbar={settings.toolbar} ref={forwardedRef}>
+      <Layout.Main toolbar={settings.toolbar} ref={forwardedRef}>
         <MarkdownEditor.Root
           id={attendableId ?? id}
           object={object}
@@ -103,7 +103,7 @@ export const MarkdownContainer = forwardRef<HTMLDivElement, MarkdownContainerPro
           <MarkdownEditor.Content initialValue={initialValue} scrollPastEnd={role === 'article'} />
           <MarkdownEditor.Blocks />
         </MarkdownEditor.Root>
-      </StackItem.Content>
+      </Layout.Main>
     );
   },
 );

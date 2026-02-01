@@ -8,7 +8,7 @@ import { type SurfaceComponentProps, useCapability } from '@dxos/app-framework/r
 import { invariant } from '@dxos/invariant';
 import { getSpace } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
-import { StackItem } from '@dxos/react-ui-stack';
+import { Layout } from '@dxos/react-ui-mosaic';
 
 import { filePath, getBlobUrl, loadWnfs, wnfsUrl } from '../helpers';
 import { WnfsCapabilities } from '../types';
@@ -47,9 +47,9 @@ export const FileContainer = ({ role, subject: file }: FileContainerProps) => {
   }
 
   return (
-    <StackItem.Content>
+    <Layout.Main role={role}>
       <FilePreview type={file.type} url={blobUrl} />
-    </StackItem.Content>
+    </Layout.Main>
   );
 };
 

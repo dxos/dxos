@@ -6,7 +6,7 @@ import React, { useCallback, useMemo } from 'react';
 
 import { type SurfaceComponentProps, useOperationInvoker } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
-import { StackItem } from '@dxos/react-ui-stack';
+import { Layout } from '@dxos/react-ui-mosaic';
 import { type Message as MessageType } from '@dxos/types';
 
 import { useActorContact } from '../../hooks';
@@ -67,7 +67,7 @@ export const MessageArticle = ({
   }, [invokePromise, message]);
 
   return (
-    <StackItem.Content toolbar>
+    <Layout.Main role={role} toolbar>
       <Message.Root
         attendableId={Obj.getDXN(mailbox).toString()}
         viewMode={viewMode}
@@ -83,6 +83,6 @@ export const MessageArticle = ({
           <Message.Content />
         </Message.Viewport>
       </Message.Root>
-    </StackItem.Content>
+    </Layout.Main>
   );
 };

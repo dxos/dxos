@@ -4,7 +4,7 @@
 
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
-import { Surface } from '@dxos/app-framework/react';
+import { Surface, type SurfaceComponentProps } from '@dxos/app-framework/react';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useObject, useObjects } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
@@ -23,12 +23,9 @@ type PickerState = {
   position: Position;
 };
 
-export type BoardContainerProps = {
-  role?: string;
-  board: BoardType.Board;
-};
+export type BoardContainerProps = SurfaceComponentProps<BoardType.Board>;
 
-export const BoardContainer = ({ role, board }: BoardContainerProps) => {
+export const BoardContainer = ({ role, subject: board }: BoardContainerProps) => {
   const controller = useRef<BoardController>(null);
   const [boardItems] = useObject(board, 'items');
   const items = useObjects(boardItems ?? []);

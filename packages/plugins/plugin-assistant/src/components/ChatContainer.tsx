@@ -7,7 +7,7 @@ import React, { forwardRef } from 'react';
 import { type SurfaceComponentProps, useAtomCapability } from '@dxos/app-framework/react';
 import { type Space, getSpace } from '@dxos/client/echo';
 import { type Obj } from '@dxos/echo';
-import { StackItem } from '@dxos/react-ui-stack';
+import { Layout } from '@dxos/react-ui-mosaic';
 
 import { useBlueprintRegistry, useChatProcessor, useChatServices, useOnline, usePresets } from '../hooks';
 import { type Assistant, AssistantCapabilities } from '../types';
@@ -44,7 +44,7 @@ export const ChatContainer = forwardRef<HTMLDivElement, ChatContainerProps>((pro
   }
 
   return (
-    <StackItem.Content toolbar ref={forwardedRef}>
+    <Layout.Main role={role} ref={forwardedRef}>
       <Chat.Root db={space?.db} chat={chat} processor={processor} onEvent={onEvent}>
         <Chat.Toolbar companionTo={companionTo} />
         <Chat.Viewport classNames='container-max-width'>
@@ -54,7 +54,7 @@ export const ChatContainer = forwardRef<HTMLDivElement, ChatContainerProps>((pro
           </div>
         </Chat.Viewport>
       </Chat.Root>
-    </StackItem.Content>
+    </Layout.Main>
   );
 });
 

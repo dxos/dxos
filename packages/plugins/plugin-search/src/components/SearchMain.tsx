@@ -10,7 +10,7 @@ import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
 import { Toolbar, useTranslation } from '@dxos/react-ui';
 import { Card, Mosaic, type StackTileComponent } from '@dxos/react-ui-mosaic';
 import { SearchList } from '@dxos/react-ui-searchlist';
-import { StackItem } from '@dxos/react-ui-stack';
+import { Layout } from '@dxos/react-ui-mosaic';
 import { Text } from '@dxos/schema';
 
 import { useGlobalSearch, useGlobalSearchResults, useWebSearch } from '../hooks';
@@ -51,7 +51,7 @@ export const SearchMain = ({ space }: { space?: Space }) => {
   );
 
   return (
-    <StackItem.Content toolbar>
+    <Layout.Main toolbar>
       {/* TODO(burdon): Add selection. */}
       <SearchList.Root onSearch={handleSearch}>
         <Toolbar.Root>
@@ -68,7 +68,7 @@ export const SearchMain = ({ space }: { space?: Space }) => {
           </SearchList.Viewport>
         </SearchList.Content>
       </SearchList.Root>
-    </StackItem.Content>
+    </Layout.Main>
   );
 };
 

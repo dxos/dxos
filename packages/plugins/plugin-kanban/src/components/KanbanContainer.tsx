@@ -12,7 +12,7 @@ import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { useQuery } from '@dxos/react-client/echo';
 import { Kanban as KanbanComponent, useKanbanModel, useProjectionModel } from '@dxos/react-ui-kanban';
 import { type Kanban } from '@dxos/react-ui-kanban/types';
-import { StackItem } from '@dxos/react-ui-stack';
+import { Layout } from '@dxos/react-ui-mosaic';
 import { getTypenameFromQuery } from '@dxos/schema';
 
 import { KanbanOperation } from '../types';
@@ -77,8 +77,8 @@ export const KanbanContainer = ({ role, subject: object }: KanbanContainerProps)
   );
 
   return (
-    <StackItem.Content>
+    <Layout.Main role={role}>
       {model && <KanbanComponent model={model} onAddCard={handleAddCard} onRemoveCard={handleRemoveCard} />}
-    </StackItem.Content>
+    </Layout.Main>
   );
 };

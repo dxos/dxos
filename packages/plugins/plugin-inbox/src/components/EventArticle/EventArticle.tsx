@@ -7,7 +7,7 @@ import React, { useCallback } from 'react';
 import { Surface, type SurfaceComponentProps, useOperationInvoker } from '@dxos/app-framework/react';
 import { Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { StackItem } from '@dxos/react-ui-stack';
+import { Layout } from '@dxos/react-ui-mosaic';
 import { Text } from '@dxos/schema';
 import { Event as EventType } from '@dxos/types';
 
@@ -51,7 +51,7 @@ export const EventArticle = ({ role, subject, calendar }: EventArticleProps) => 
   );
 
   return (
-    <StackItem.Content toolbar>
+    <Layout.Main role={role} toolbar>
       <Event.Root event={subject}>
         <Event.Toolbar onNoteCreate={handleNoteCreate} />
         <Event.Viewport>
@@ -61,6 +61,6 @@ export const EventArticle = ({ role, subject, calendar }: EventArticleProps) => 
           {notes && <Surface role='section' data={{ id, subject: notes }} limit={1} />}
         </Event.Viewport>
       </Event.Root>
-    </StackItem.Content>
+    </Layout.Main>
   );
 };

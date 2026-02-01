@@ -22,20 +22,20 @@ import { Meeting } from '../types';
 
 import { MeetingContainer, type MeetingContainerProps } from './MeetingContainer';
 
-const Story = () => {
+const Render = () => {
   const db = useDatabase();
   const [meeting] = useQuery(db, Query.type(Meeting.Meeting));
   if (!meeting) {
     return null;
   }
 
-  return <MeetingContainer meeting={meeting} />;
+  return <MeetingContainer subject={meeting} />;
 };
 
 const meta = {
   title: 'plugins/plugin-meeting/MeetingContainer',
   component: MeetingContainer,
-  render: () => <Story />,
+  render: () => <Render />,
   decorators: [
     withTheme,
     withLayout({ layout: 'column' }),

@@ -12,7 +12,7 @@ import { getSpace } from '@dxos/client/echo';
 import { Sequence } from '@dxos/conductor';
 import { InvocationTraceContainer } from '@dxos/devtools';
 import { Obj } from '@dxos/echo';
-import { StackItem } from '@dxos/react-ui-stack';
+import { Layout } from '@dxos/react-ui-mosaic';
 
 import {
   AssistantSettings,
@@ -60,15 +60,15 @@ export default Capability.makeModule(() =>
         filter: (data): data is { companionTo: Sequence } =>
           (Obj.instanceOf(Sequence, data.companionTo) || Obj.instanceOf(Prompt.Prompt, data.companionTo)) &&
           data.subject === 'invocations',
-        component: ({ data }) => {
+        component: ({ data, role }) => {
           const space = getSpace(data.companionTo);
           const queueDxn = space?.properties.invocationTraceQueue?.dxn;
           // TODO(wittjosiah): Support invocation filtering for prompts.
           const target = Obj.instanceOf(Prompt.Prompt, data.companionTo) ? undefined : data.companionTo;
           return (
-            <StackItem.Content>
+            <Layout.Main role={role}>
               <InvocationTraceContainer db={space?.db} queueDxn={queueDxn} target={target} detailAxis='block' />
-            </StackItem.Content>
+            </Layout.Main>
           );
         },
       }),

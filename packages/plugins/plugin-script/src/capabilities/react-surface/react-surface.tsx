@@ -11,7 +11,7 @@ import { InvocationTraceContainer } from '@dxos/devtools';
 import { Obj } from '@dxos/echo';
 import { Script } from '@dxos/functions';
 import { getSpace } from '@dxos/react-client/echo';
-import { StackItem } from '@dxos/react-ui-stack';
+import { Layout } from '@dxos/react-ui-mosaic';
 import { type AccessToken } from '@dxos/types';
 
 import {
@@ -91,18 +91,18 @@ export default Capability.makeModule(() =>
         role: 'article',
         filter: (data): data is { companionTo: Script.Script } =>
           Obj.instanceOf(Script.Script, data.companionTo) && data.subject === 'logs',
-        component: ({ data }) => {
+        component: ({ data, role }) => {
           const space = getSpace(data.companionTo);
           const queueDxn = space?.properties.invocationTraceQueue?.dxn;
           return (
-            <StackItem.Content>
+            <Layout.Main role={role}>
               <InvocationTraceContainer
                 db={space?.db}
                 queueDxn={queueDxn}
                 target={data.companionTo}
                 detailAxis='block'
               />
-            </StackItem.Content>
+            </Layout.Main>
           );
         },
       }),

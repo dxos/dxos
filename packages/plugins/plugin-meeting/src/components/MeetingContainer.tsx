@@ -4,19 +4,18 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { Surface, useOperationInvoker } from '@dxos/app-framework/react';
+import { Surface, type SurfaceComponentProps, useOperationInvoker } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
 import { IconButton, useTranslation } from '@dxos/react-ui';
+import { Layout } from '@dxos/react-ui-mosaic';
 import { Stack, StackItem } from '@dxos/react-ui-stack';
 
 import { meta } from '../meta';
 import { type Meeting, MeetingOperation } from '../types';
 
-export type MeetingContainerProps = {
-  meeting: Meeting.Meeting;
-};
+export type MeetingContainerProps = SurfaceComponentProps<Meeting.Meeting>;
 
-export const MeetingContainer = ({ meeting }: MeetingContainerProps) => {
+export const MeetingContainer = ({ role, subject: meeting }: MeetingContainerProps) => {
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
   const notes = meeting.notes?.target;
@@ -41,7 +40,7 @@ export const MeetingContainer = ({ meeting }: MeetingContainerProps) => {
   }
 
   return (
-    <StackItem.Content>
+    <Layout.Main role={role}>
       <Stack orientation='vertical' size='contain' rail>
         <StackItem.Root item={notes} role='section'>
           <StackItem.Heading>
@@ -85,7 +84,7 @@ export const MeetingContainer = ({ meeting }: MeetingContainerProps) => {
           </StackItem.Content>
         </StackItem.Root>
       </Stack>
-    </StackItem.Content>
+    </Layout.Main>
   );
 };
 

@@ -47,7 +47,7 @@ export default Capability.makeModule(() =>
           'object' in data.subject &&
           data.subject.type === meta.id &&
           Obj.instanceOf(Collection.Collection, data.subject.object),
-        component: ({ data }) => <CollectionPresenterContainer collection={data.subject.object} />,
+        component: ({ role, data }) => <CollectionPresenterContainer role={role} subject={data.subject.object} />,
       }),
       Common.createSurface({
         id: `${meta.id}/slide`,

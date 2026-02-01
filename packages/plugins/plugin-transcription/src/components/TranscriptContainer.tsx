@@ -7,7 +7,7 @@ import React from 'react';
 import { type SurfaceComponentProps } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
 import { useMembers, useQueue } from '@dxos/react-client/echo';
-import { StackItem } from '@dxos/react-ui-stack';
+import { Layout } from '@dxos/react-ui-mosaic';
 import { type Message, type Transcript } from '@dxos/types';
 
 import { useQueueModelAdapter } from '../hooks';
@@ -25,9 +25,9 @@ export const TranscriptionContainer = ({ role, subject: transcript }: Transcript
   const model = useQueueModelAdapter(renderByline(members), queue);
 
   return (
-    <StackItem.Content>
+    <Layout.Main role={role}>
       <TranscriptView attendableId={attendableId} model={model} transcript={transcript} />
-    </StackItem.Content>
+    </Layout.Main>
   );
 };
 

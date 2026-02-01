@@ -13,7 +13,7 @@ import { OperationResolver } from '@dxos/operation';
 import { corePlugins } from '@dxos/plugin-testing';
 import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { AttendableContainer } from '@dxos/react-ui-attention';
 
 import { createTestCells, useTestSheet, withComputeGraphDecorator } from '../../testing';
@@ -29,6 +29,7 @@ const meta = {
   component: SheetContainer,
   decorators: [
     withTheme,
+    withLayout({ layout: 'fullscreen' }),
     withClientProvider({ types: [Sheet.Sheet], createSpace: true }),
     withComputeGraphDecorator(),
     // TODO(wittjosiah): Consider whether we should refactor component so story doesn't need to depend on intents.
@@ -67,25 +68,42 @@ export const Default = () => {
 
   return (
     <AttendableContainer id={Obj.getDXN(sheet).toString()} classNames='contents'>
-      <SheetContainer space={space} subject={sheet} role='story' ignoreAttention />
+      <SheetContainer role='article' space={space} subject={sheet} ignoreAttention />
     </AttendableContainer>
+  );
+};
+
+export const Section = () => {
+  const space = useSpace();
+  const graph = useComputeGraph(space);
+  const sheet = useTestSheet(space, graph, { cells: createTestCells() });
+  if (!sheet || !space) {
+    return null;
+  }
+
+  return (
+    <div className='is-full flex justify-center'>
+      <div className='is-[40rem]'>
+        <AttendableContainer id={Obj.getDXN(sheet).toString()} classNames='contents'>
+          <SheetContainer role='section' space={space} subject={sheet} ignoreAttention />
+        </AttendableContainer>
+      </div>
+    </div>
   );
 };
 
 export const Spec = () => {
   const space = useSpace();
   const graph = useComputeGraph(space);
-  const sheet = useTestSheet(space, graph, {
-    cells: { A1: { value: 'Ready' } },
-  });
+  const sheet = useTestSheet(space, graph, { cells: { A1: { value: 'Ready' } } });
   if (!sheet || !space) {
     return null;
   }
 
   return (
     <AttendableContainer id={Obj.getDXN(sheet).toString()} classNames='contents'>
-      <div role='none' className='grid grid-rows-[66%_33%] h-[100dvh] grid-cols-1'>
-        <SheetContainer space={space} subject={sheet} role='story' ignoreAttention />
+      <div role='none' className='is-full grid grid-cols-[1fr_20rem]'>
+        <SheetContainer role='article' space={space} subject={sheet} ignoreAttention />
         <div role='none' data-testid='grid.range-list'>
           <RangeList sheet={sheet} />
         </div>

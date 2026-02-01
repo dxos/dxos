@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useEffect, useMemo, useRef } from 'react';
+import React, { Fragment, useEffect, useMemo, useRef } from 'react';
 
 import { type SurfaceComponentProps, useCapability } from '@dxos/app-framework/react';
 import { ComputeGraphModel } from '@dxos/conductor';
@@ -25,7 +25,7 @@ import {
   KeyboardContainer,
   ShapeRegistry,
 } from '@dxos/react-ui-canvas-editor';
-import { StackItem } from '@dxos/react-ui-stack';
+import { Layout, type LayoutFlexProps } from '@dxos/react-ui-mosaic';
 
 export type CanvasContainerProps = SurfaceComponentProps<CanvasBoardType>;
 
@@ -48,9 +48,11 @@ export const CanvasContainer = ({ role, subject: canvas }: CanvasContainerProps)
     return;
   }
 
+  const Root = role === 'section' ? Container : Fragment;
+
   return (
     <ComputeContext.Provider value={{ controller }}>
-      <StackItem.Content size={role === 'section' ? 'square' : 'intrinsic'}>
+      <Root>
         <KeyboardContainer id={id}>
           <Editor.Root
             id={id}
@@ -64,10 +66,12 @@ export const CanvasContainer = ({ role, subject: canvas }: CanvasContainerProps)
             <Editor.UI showTools />
           </Editor.Root>
         </KeyboardContainer>
-      </StackItem.Content>
+      </Root>
     </ComputeContext.Provider>
   );
 };
+
+const Container = (props: LayoutFlexProps) => <Layout.Flex {...props} classNames='aspect-square' />;
 
 const useGraphController = (canvas: CanvasBoardType) => {
   const db = Obj.getDatabase(canvas);

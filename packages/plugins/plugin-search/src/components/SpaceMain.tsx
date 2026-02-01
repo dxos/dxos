@@ -12,7 +12,7 @@ import { type Space, useQuery } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui-mosaic';
 import { SearchList } from '@dxos/react-ui-searchlist';
-import { StackItem } from '@dxos/react-ui-stack';
+import { Layout } from '@dxos/react-ui-mosaic';
 import { Text } from '@dxos/schema';
 
 import { meta } from '../meta';
@@ -50,7 +50,7 @@ export const SpaceMain = ({ space }: { space: Space }) => {
   const filteredDescendents = useMemo(() => descendents.filter((node) => Obj.isObject(node.data)), [descendents]);
 
   return (
-    <StackItem.Content toolbar>
+    <Layout.Main toolbar>
       <SearchList.Root onSearch={handleSearch}>
         <div role='combobox' aria-expanded='true' className='flex flex-col bs-full overflow-hidden'>
           <SearchList.Input placeholder={t('search placeholder')} classNames='pli-2' />
@@ -89,7 +89,7 @@ export const SpaceMain = ({ space }: { space: Space }) => {
           </SearchList.Content>
         </div>
       </SearchList.Root>
-    </StackItem.Content>
+    </Layout.Main>
   );
 };
 
