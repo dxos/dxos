@@ -20,8 +20,9 @@ export type WorkspaceProps = {
 };
 
 /**
- * Searchable list of children for a workspace node.
+ *
  */
+// TODO(burdon): Rename or motivate name in comment.
 export const Workspace = ({ id }: WorkspaceProps) => {
   const { t } = useTranslation(meta.id);
   const { graph } = useAppGraph();
@@ -45,7 +46,7 @@ export const Workspace = ({ id }: WorkspaceProps) => {
         </Toolbar.Root>
         <SearchList.Content>
           <Mosaic.Container asChild>
-            <Mosaic.Viewport classNames='pli-1'>
+            <Mosaic.Viewport padding>
               <Mosaic.Stack items={results} getId={(child) => child.id} Tile={WorkspaceChildTile} />
             </Mosaic.Viewport>
           </Mosaic.Container>
@@ -89,10 +90,10 @@ const WorkspaceChildTile: StackTileComponent<Node.Node> = ({ data }) => {
     <Card.Root
       ref={ref}
       role='button'
-      tabIndex={-1}
+      fullWidth
+      tabIndex={-1} // TODO(burdon): Use Mosaic.Focus.
       data-selected={isSelected}
       classNames={mx('dx-focus-ring', isSelected && 'bg-hoverOverlay')}
-      fullWidth
       onClick={handleSelect}
     >
       <Card.Toolbar density='coarse'>
@@ -100,7 +101,7 @@ const WorkspaceChildTile: StackTileComponent<Node.Node> = ({ data }) => {
           <Avatar.Content
             hue={data.properties.hue}
             icon={data.properties.icon}
-            hueVariant='surface'
+            hueVariant='transparent'
             variant='square'
             size={12}
             fallback={name}

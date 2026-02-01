@@ -5,7 +5,7 @@
 import React, { useMemo } from 'react';
 
 import { Common } from '@dxos/app-framework';
-import { useAppGraph, useOperationInvoker } from '@dxos/app-framework/react';
+import { type SurfaceComponentProps, useAppGraph, useOperationInvoker } from '@dxos/app-framework/react';
 import { Filter, Obj } from '@dxos/echo';
 import { Graph, Node, useActionRunner, useConnections } from '@dxos/plugin-graph';
 import { useClient } from '@dxos/react-client';
@@ -17,7 +17,10 @@ import { Collection } from '@dxos/schema';
 
 import { meta } from '../meta';
 
-export const CollectionArticle = ({ subject }: { subject: Collection.Collection | Collection.Managed }) => {
+/**
+ *
+ */
+export const CollectionArticle = ({ subject }: SurfaceComponentProps<Collection.Collection | Collection.Managed>) => {
   const { t } = useTranslation(meta.id);
   const { items, handleSearch } = useCollectionItems(subject);
 
@@ -29,7 +32,7 @@ export const CollectionArticle = ({ subject }: { subject: Collection.Collection 
         </Toolbar.Root>
         <SearchList.Content>
           <Mosaic.Container asChild>
-            <Mosaic.Viewport classNames='pli-1'>
+            <Mosaic.Viewport padding>
               <Mosaic.Stack items={items} getId={(node) => node.id} Tile={NodeTile} />
             </Mosaic.Viewport>
           </Mosaic.Container>
@@ -64,7 +67,7 @@ const NodeTile: StackTileComponent<Node.Node> = ({ data: node }) => {
   return (
     <Card.Root fullWidth>
       <Card.Toolbar>
-        <Card.ToolbarIconButton label={label} icon={icon} />
+        <Card.ToolbarIconButton variant='ghost' label={label} icon={icon} />
         <Card.Title onClick={handleClick}>{label}</Card.Title>
         <Card.Menu />
       </Card.Toolbar>

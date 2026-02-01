@@ -48,6 +48,7 @@
     }
   ],
   "files.associations": {
+    "*.pcss": "css",
     "workspace.json": "jsonc",
     "schema.json": "jsonc",
     "eslintConfig.json": "jsonc",

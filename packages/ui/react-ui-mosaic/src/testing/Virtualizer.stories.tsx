@@ -27,6 +27,8 @@ const meta: Meta<typeof Stack> = {
 
 export default meta;
 
+const NUM_ITEMS = 500;
+
 /**
  * https://tanstack.com/virtual/latest/docs/introduction
  */
@@ -35,7 +37,7 @@ export const Default = {
     const [index, setIndex] = useState(0);
     const items = useMemo<TestItem[]>(
       () =>
-        Array.from({ length: 200 }, () =>
+        Array.from({ length: NUM_ITEMS }, () =>
           Obj.make(TestItem, {
             name: faker.lorem.paragraph(),
           }),
@@ -61,7 +63,7 @@ export const Default = {
     return (
       <div className='flex flex-col bs-full'>
         <ScrollToolbar items={items} index={index} setIndex={setIndex} />
-        <Mosaic.Viewport axis='vertical' classNames='pli-3' viewportRef={viewportRef} ref={parentRef}>
+        <Mosaic.Viewport axis='vertical' padding viewportRef={viewportRef} ref={parentRef}>
           <div
             role='none'
             style={{
@@ -74,7 +76,7 @@ export const Default = {
               <div
                 key={virtualItem.key}
                 role='list'
-                className='grid grid-cols-[3rem_1fr] overflow-hidden border border-separator border-sm'
+                className='grid grid-cols-[3rem_1fr] overflow-hidden border border-separator rounded-sm'
                 style={{
                   position: 'absolute',
                   top: 0,
@@ -85,7 +87,7 @@ export const Default = {
                 data-index={virtualItem.index}
                 ref={virtualizer.measureElement}
               >
-                <div className='p-1'>{virtualItem.index}</div>
+                <div className='p-1'>{virtualItem.index + 1}</div>
                 <div className='p-1'>{items[virtualItem.index].name}</div>
               </div>
             ))}
@@ -123,7 +125,9 @@ const ScrollToolbar = ({
           onClick={() => setIndex(items.length - 1)}
         />
       </div>
-      <div className='p-1 text-right'>{index}</div>
+      <div className='p-1 text-right'>
+        {index + 1}/{items.length}
+      </div>
     </Toolbar.Root>
   );
 };

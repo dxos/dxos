@@ -1,5 +1,9 @@
 # Card
 
+- PRIORITY: HIGH
+  - [ ] Migrate kanban + search list + inbox + project
+  - [ ] Drag to document
+
 - Simplify and use cards everywhere as primary UI.
 - Universal DND.
 - https://m2.material.io/components/cards#anatomy
@@ -7,10 +11,10 @@
 ## API
 
 - react-ui-mosaic
-  - [x] Card components; impl. all use cases (Toolbar, Poster, Section).
   - [ ] Menu (via context).
-  - [ ] Drag handle/menu (via surface)
   - [ ] Form and list (plugin-preview).
+  - [x] Card components; impl. all use cases (Toolbar, Poster, Section).
+  - [x] Drag handle/menu (via surface)
   - [x] Remove dialogStyles fragment exports (plugin-inbox, plugin-navtree, plugin-space).
 
 ## Usage
