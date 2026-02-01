@@ -21,10 +21,9 @@ import {
   type MosaicTileProps,
   type MosiacPlaceholderProps,
   mosaicStyles,
-  useContainerDebug,
   useMosaic,
 } from '../components';
-import { useEventHandlerAdapter } from '../hooks';
+import { useContainerDebug, useEventHandlerAdapter } from '../hooks';
 
 //
 // Test Data
@@ -56,12 +55,16 @@ export const TestColumn = Schema.Struct({
 export interface TestColumn extends Schema.Schema.Type<typeof TestColumn> {}
 
 //
-// Board
+// Root
 //
 
-type BoardProps = { id: string; columns: TestColumn[]; debug?: boolean };
+type RootProps = {
+  id: string;
+  columns: TestColumn[];
+  debug?: boolean;
+};
 
-export const Board = forwardRef<HTMLDivElement, BoardProps>(({ id, columns, debug }, forwardedRef) => {
+const Root = forwardRef<HTMLDivElement, RootProps>(({ id, columns, debug }, forwardedRef) => {
   const [DebugInfo, debugHandler] = useContainerDebug(debug);
   const viewportRef = useRef<HTMLElement | null>(null);
 
@@ -105,7 +108,7 @@ export const Board = forwardRef<HTMLDivElement, BoardProps>(({ id, columns, debu
 
 type ColumnProps = Pick<MosaicTileProps<TestColumn>, 'classNames' | 'location' | 'data' | 'debug'>;
 
-export const Column = forwardRef<HTMLDivElement, ColumnProps>(({ classNames, location, data, debug }, forwardedRef) => {
+const Column = forwardRef<HTMLDivElement, ColumnProps>(({ classNames, location, data, debug }, forwardedRef) => {
   const [column, updateColumn] = useObject(data);
   const [DebugInfo, debugHandler] = useContainerDebug(debug);
   const dragHandleRef = useRef<HTMLButtonElement>(null);
@@ -184,11 +187,9 @@ Column.displayName = 'Column';
 // Item
 //
 
-type ItemProps = Pick<MosaicTileProps<Ref.Ref<TestItem>>, 'classNames' | 'data' | 'location'> & {
-  menuItems?: CardMenuProps<TestItem>['items'];
-};
+type ItemProps = Pick<MosaicTileProps<Ref.Ref<TestItem>>, 'classNames' | 'location' | 'data' | 'debug'>;
 
-const Item = forwardRef<HTMLDivElement, ItemProps>(({ classNames, data: ref, location, menuItems }, forwardedRef) => {
+const Item = forwardRef<HTMLDivElement, ItemProps>(({ classNames, data: ref, location, debug }, forwardedRef) => {
   const rootRef = useRef<HTMLDivElement>(null);
   const composedRef = useComposedRefs<HTMLDivElement>(rootRef, forwardedRef);
   const dragHandleRef = useRef<HTMLButtonElement>(null);
@@ -198,13 +199,20 @@ const Item = forwardRef<HTMLDivElement, ItemProps>(({ classNames, data: ref, loc
   }
 
   return (
-    <Mosaic.Tile asChild dragHandle={dragHandleRef.current} id={ref.dxn.toString()} data={ref} location={location}>
+    <Mosaic.Tile
+      asChild
+      dragHandle={dragHandleRef.current}
+      id={ref.dxn.toString()}
+      data={ref}
+      location={location}
+      debug={debug}
+    >
       <Focus.Group asChild>
         <Card.Root classNames={classNames} onClick={() => rootRef.current?.focus()} ref={composedRef}>
           <Card.Toolbar>
             <Card.DragHandle ref={dragHandleRef} />
             <Card.Title>{object.name}</Card.Title>
-            <Card.Menu context={object} items={menuItems} />
+            <Card.Menu context={object} />
           </Card.Toolbar>
           <Card.Row icon='ph--note--regular' classNames='text-description'>
             {object.description}
@@ -222,7 +230,7 @@ const Item = forwardRef<HTMLDivElement, ItemProps>(({ classNames, data: ref, loc
   );
 });
 
-Item.displayName = 'Tile';
+Item.displayName = 'Item';
 
 //
 // Placeholder
@@ -247,8 +255,8 @@ Placeholder.displayName = 'Placeholder';
 // Debug
 //
 
-export const DebugRoot = forwardRef<HTMLDivElement, ThemedClassName>(({ classNames }, forwardedRef) => {
-  const { containers, dragging } = useMosaic(DebugRoot.displayName!);
+export const Debug = forwardRef<HTMLDivElement, ThemedClassName>(({ classNames }, forwardedRef) => {
+  const { containers, dragging } = useMosaic(Debug.displayName!);
   const counter = useRef(0);
   return (
     <Json
@@ -259,4 +267,12 @@ export const DebugRoot = forwardRef<HTMLDivElement, ThemedClassName>(({ classNam
   );
 });
 
-DebugRoot.displayName = 'DebugRoot';
+Debug.displayName = 'Debug';
+
+//
+// Board
+//
+
+export const Board = { Root, Column, Item, Placeholder, Debug };
+
+export type { RootProps, ColumnProps, ItemProps };

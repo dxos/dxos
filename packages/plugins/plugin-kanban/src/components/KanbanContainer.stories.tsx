@@ -142,6 +142,7 @@ const meta = {
               yield* Effect.promise(() => client.halo.createIdentity());
               const space = yield* Effect.promise(() => client.spaces.create());
               yield* Effect.promise(() => space.waitUntilReady());
+
               const { view } = yield* Effect.promise(() =>
                 View.makeFromDatabase({
                   db: space.db,

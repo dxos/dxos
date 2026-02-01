@@ -14,7 +14,7 @@ import { useSpaces } from '@dxos/react-client/echo';
 import { IconButton, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Focus, Mosaic } from '@dxos/react-ui-mosaic';
-import { Board, DebugRoot, TestColumn, TestItem } from '@dxos/react-ui-mosaic/testing';
+import { Board, TestColumn, TestItem } from '@dxos/react-ui-mosaic/testing';
 import { type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
 import { Organization, Person, Project } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
@@ -22,9 +22,6 @@ import { mx } from '@dxos/ui-theme';
 const generator = faker as any as ValueGenerator;
 
 faker.seed(999);
-
-// TODO(burdon): Surfaces.
-// TODO(burdon): Editor extension.
 
 type StoryProps = {
   columns?: number;
@@ -58,7 +55,7 @@ const DefaultStory = ({ columns: columnsProp = 1, debug = false }: StoryProps) =
   return (
     <Mosaic.Root asChild debug={debug}>
       <div className={mx('grid overflow-hidden', debug && 'grid-cols-[1fr_20rem] gap-2')}>
-        <Board id='board' columns={columns} debug={debug} />
+        <Board.Root id='board' columns={columns} debug={debug} />
 
         {debug && (
           <Focus.Group classNames='flex flex-col gap-2 overflow-hidden'>
@@ -70,7 +67,7 @@ const DefaultStory = ({ columns: columnsProp = 1, debug = false }: StoryProps) =
                 onClick={() => setColumns([...columns])}
               />
             </Toolbar.Root>
-            <DebugRoot classNames='p-2' />
+            <Board.Debug classNames='p-2' />
           </Focus.Group>
         )}
       </div>
