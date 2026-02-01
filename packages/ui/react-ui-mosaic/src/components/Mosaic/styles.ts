@@ -16,8 +16,9 @@ export const styles = {
       'data-[mosaic-placeholder-axis=horizontal]:pli-1',
       'data-[mosaic-placeholder-axis=horizontal]:data-[mosaic-placeholder-state=active]:pli-2.5',
     ],
+    // TODO(burdon): Don't animate open if placeholder is the source.
     content: [
-      'transition-all delay-0 duration-0',
+      'transition-all duration-0',
       'group-data-[mosaic-placeholder-state=active]:duration-200',
       'group-data-[mosaic-placeholder-axis=vertical]:bs-0',
       'group-data-[mosaic-placeholder-axis=horizontal]:is-0',

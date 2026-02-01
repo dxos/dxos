@@ -645,9 +645,10 @@ type TileProps<TData = any, TLocation = LocationType> = SlottableClassName<
     asChild?: boolean;
     dragHandle?: HTMLElement | null;
     allowedEdges?: Edge[];
-    location: TLocation;
     id: string;
     data: TData;
+    location: TLocation;
+    draggable?: boolean;
     debug?: boolean;
   }>
 >;
@@ -933,8 +934,6 @@ export const Mosaic = {
 
   // TODO(burdon): Move out of Mosaic namespace?
   Viewport: Scrollable,
-
-  // Stack
   Stack,
   VirtualStack,
 };

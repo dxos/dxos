@@ -89,15 +89,8 @@ export const Board = forwardRef<HTMLDivElement, BoardProps>(({ id, columns, debu
           eventHandler={eventHandler}
           debug={debugHandler}
         >
-          <Mosaic.Viewport options={{ overflow: { x: 'scroll' } }} viewportRef={viewportRef}>
-            <Mosaic.Stack
-              axis='horizontal'
-              className='plb-3'
-              items={columns}
-              getId={(item) => item.id}
-              Tile={Column}
-              debug={debug}
-            />
+          <Mosaic.Viewport axis='horizontal' padding viewportRef={viewportRef}>
+            <Mosaic.Stack axis='horizontal' items={columns} getId={(item) => item.id} Tile={Column} debug={debug} />
           </Mosaic.Viewport>
         </Mosaic.Container>
       </Focus.Group>
@@ -170,14 +163,8 @@ export const Column = forwardRef<HTMLDivElement, ColumnProps>(({ classNames, loc
               eventHandler={eventHandler}
               debug={debugHandler}
             >
-              <Mosaic.Viewport options={{ overflow: { y: 'scroll' } }} viewportRef={viewportRef}>
-                <Mosaic.Stack
-                  axis='vertical'
-                  className='pli-3'
-                  items={column.items}
-                  getId={(data) => data.dxn.toString()}
-                  Tile={Item}
-                />
+              <Mosaic.Viewport axis='vertical' padding viewportRef={viewportRef}>
+                <Mosaic.Stack axis='vertical' items={column.items} getId={(data) => data.dxn.toString()} Tile={Item} />
               </Mosaic.Viewport>
             </Mosaic.Container>
           </Card.Context>

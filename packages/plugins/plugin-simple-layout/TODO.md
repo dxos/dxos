@@ -1,13 +1,11 @@
 # Simple Layout
 
-App
+## Layout
+- [ ] Mosaic focus/selection.
+- [ ] Unflatten app graph (e.g., move actions into NavBar/Menu)
 - [ ] Replace toast with notifications panel (history).
 
-UI/Mosaic
+## UI/Mosaic
 - [ ] Card context (menu).
 - [ ] Stack:
-  - [ ] Selection/nav/focus
-  - [ ] Stack: enable/disable DND (add/remove placeholders)
-    - variants for padding (remove className from Viewport).
-  - [ ] Reconcile SearchList.Viewport with Mosaic.Viewport
-- [ ] Density issues.
+  - [ ] Enable/disable DND (add/remove placeholders)

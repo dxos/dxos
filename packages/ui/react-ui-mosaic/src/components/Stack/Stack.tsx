@@ -10,19 +10,22 @@ import { type SlottableClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { useVisibleItems } from '../../hooks';
-import { type Axis, type GetId, Mosaic, type MosiacPlaceholderProps, useMosaicContainer } from '../Mosaic';
+import {
+  type Axis,
+  type GetId,
+  Mosaic,
+  type MosaicTileProps,
+  type MosiacPlaceholderProps,
+  useMosaicContainer,
+} from '../Mosaic';
 import { mosaicStyles } from '../Mosaic';
 
-type StackTileComponent<TData = any> = FC<{
-  id: string;
-  data: TData;
-  location: number;
-  debug?: boolean;
-}>;
+type StackTileComponent<TData = any> = FC<MosaicTileProps<TData>>;
 
 type StackProps<TData = any> = SlottableClassName<{
   role?: string;
   axis?: Axis;
+  draggable?: boolean;
   items?: TData[];
   getId: GetId<TData>;
   Tile: StackTileComponent<TData>;
@@ -34,7 +37,10 @@ type StackProps<TData = any> = SlottableClassName<{
  * NOTE: This is a low-level component and should be wrapped by a scrollable container.
  */
 const StackInner = forwardRef<HTMLDivElement, StackProps>(
-  ({ className, classNames, role = 'list', axis = 'vertical', items, getId, Tile, debug, ...props }, forwardedRef) => {
+  (
+    { className, classNames, role = 'list', axis = 'vertical', draggable = true, items, getId, Tile, debug, ...props },
+    forwardedRef,
+  ) => {
     invariant(Tile);
     const { id, dragging } = useMosaicContainer(StackInner.displayName!);
     const visibleItems = useVisibleItems({ id, items, dragging: dragging?.source.data, getId });
@@ -55,7 +61,7 @@ const StackInner = forwardRef<HTMLDivElement, StackProps>(
         <Placeholder axis={axis} location={0.5} />
         {visibleItems?.map((item, index) => (
           <Fragment key={getId(item)}>
-            <Tile id={getId(item)} data={item} location={index + 1} debug={debug} />
+            <Tile id={getId(item)} data={item} location={index + 1} draggable={draggable} debug={debug} />
             <Placeholder axis={axis} location={index + 1.5} />
           </Fragment>
         ))}

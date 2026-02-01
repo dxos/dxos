@@ -18,27 +18,21 @@ import { Text } from '@dxos/schema';
 import { meta } from '../meta';
 
 /**
- * Hook to resolve metadata (icon, iconHue, etc.) for objects based on their typename.
+ *
  */
-// TODO(wittjosiah): Factor out.
-const useMetadataResolver = () => {
-  const allMetadata = useCapabilities(Common.Capability.Metadata);
-  return useCallback((typename: string) => allMetadata.find((m) => m.id === typename)?.metadata ?? {}, [allMetadata]);
-};
-
 export const SpaceMain = ({ space }: { space: Space }) => {
   const { t } = useTranslation(meta.id);
   const { items, handleSearch } = useSpaceItems(space);
 
   return (
-    <Layout.Main toolbar classNames='bs-full'>
+    <Layout.Main toolbar>
       <SearchList.Root onSearch={handleSearch}>
         <Toolbar.Root>
           <SearchList.Input placeholder={t('search placeholder')} />
         </Toolbar.Root>
         <SearchList.Content>
           <Mosaic.Container asChild>
-            <Mosaic.Viewport classNames='pli-1'>
+            <Mosaic.Viewport padding>
               <Mosaic.Stack items={items} getId={(node) => node.id} Tile={NodeTile} />
             </Mosaic.Viewport>
           </Mosaic.Container>
@@ -73,12 +67,21 @@ const NodeTile: StackTileComponent<Node.Node> = ({ data: node }) => {
   return (
     <Card.Root fullWidth>
       <Card.Toolbar>
-        <Card.ToolbarIconButton label={label} icon={icon} iconOnly />
+        <Card.ToolbarIconButton variant='ghost' label={label} icon={icon} iconOnly />
         <Card.Title onClick={handleClick}>{label}</Card.Title>
         <Card.Menu />
       </Card.Toolbar>
     </Card.Root>
   );
+};
+
+/**
+ * Hook to resolve metadata (icon, iconHue, etc.) for objects based on their typename.
+ */
+// TODO(wittjosiah): Factor out.
+const useMetadataResolver = () => {
+  const allMetadata = useCapabilities(Common.Capability.Metadata);
+  return useCallback((typename: string) => allMetadata.find((m) => m.id === typename)?.metadata ?? {}, [allMetadata]);
 };
 
 /**
@@ -161,5 +164,3 @@ const useSpaceItems = (space: Space) => {
 
   return { items, handleSearch };
 };
-
-export default SpaceMain;

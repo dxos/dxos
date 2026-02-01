@@ -18,7 +18,10 @@ import { useLoadDescendents } from '../hooks';
 
 export type HomeProps = {};
 
-export const Home = (_props: HomeProps) => {
+/**
+ * Home screen.
+ */
+export const Home = (_: HomeProps) => {
   const { t } = useTranslation(meta.id);
   const userAccountItem = useItemsByDisposition('user-account')[0];
   const pinnedItems = useItemsByDisposition('pin-end', true);
@@ -43,7 +46,7 @@ export const Home = (_props: HomeProps) => {
         </Toolbar.Root>
         <SearchList.Content>
           <Mosaic.Container asChild>
-            <Mosaic.Viewport classNames='pli-1'>
+            <Mosaic.Viewport padding>
               <Mosaic.Stack items={results} getId={(node) => node.id} Tile={WorkspaceTile} />
             </Mosaic.Viewport>
           </Mosaic.Container>
@@ -85,24 +88,22 @@ const WorkspaceTile: StackTileComponent<Node.Node> = ({ data }) => {
     }
   }, [isSelected]);
 
-  // TODO(wittjosiah): Update this to use mosaic selection, integrating with the search list.
   return (
     <Card.Root
       ref={ref}
       role='button'
-      tabIndex={-1}
-      data-selected={isSelected}
-      // TODO(burdon): Use mosaic to manage selection.
-      classNames={mx('dx-focus-ring', isSelected && 'bg-hoverOverlay')}
       fullWidth
+      tabIndex={-1} // TODO(burdon): Use Mosaic.Focus.
+      data-selected={isSelected}
+      classNames={mx('dx-focus-ring', isSelected && 'bg-hoverOverlay')}
       onClick={handleSelect}
     >
       <Card.Toolbar density='coarse'>
         <Avatar.Root>
           <Avatar.Content
-            hue={data.properties.hue}
             icon={data.properties.icon}
-            hueVariant='fill'
+            hue={data.properties.hue}
+            hueVariant='transparent'
             variant='square'
             size={12}
             fallback={name}

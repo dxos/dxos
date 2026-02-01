@@ -19,12 +19,9 @@ import { ContentLoading } from '../ContentLoading';
 import { Banner } from './Banner';
 import { NavBar } from './NavBar';
 
-// TODO(wittjosiah): Factor out. Copied from deck plugin.
-const parseEntryId = (entryId: string) => {
-  const [id, variant] = entryId.split(ATTENDABLE_PATH_SEPARATOR);
-  return { id, variant };
-};
-
+/**
+ * Main root component.
+ */
 export const Main = () => {
   const { state } = useSimpleLayoutState();
   const id = state.active ?? state.workspace;
@@ -73,6 +70,12 @@ export const Main = () => {
       </NaturalMain.Root>
     </Mosaic.Root>
   );
+};
+
+// TODO(wittjosiah): Factor out. Copied from deck plugin.
+const parseEntryId = (entryId: string) => {
+  const [id, variant] = entryId.split(ATTENDABLE_PATH_SEPARATOR);
+  return { id, variant };
 };
 
 Main.displayName = 'SimpleLayout.Main';

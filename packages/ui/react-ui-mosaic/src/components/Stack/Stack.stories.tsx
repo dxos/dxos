@@ -38,7 +38,6 @@ const meta: Meta<typeof Stack<Obj.Any>> = {
   },
   args: {
     axis: 'vertical',
-    className: 'pli-3',
     getId: (item) => item.id,
     Tile: DefaultStackTile,
     // debug: true,
@@ -67,7 +66,7 @@ export const Default: Story = {
           eventHandler={{ id: 'test', canDrop: () => true }}
           debug={debugHandler}
         >
-          <Mosaic.Viewport axis='vertical' viewportRef={viewportRef}>
+          <Mosaic.Viewport axis='vertical' padding viewportRef={viewportRef}>
             <Mosaic.Stack {...props} items={items} />
           </Mosaic.Viewport>
         </Mosaic.Container>
@@ -96,7 +95,7 @@ export const Virtual: Story = {
           eventHandler={{ id: 'test', canDrop: () => true }}
           debug={debugHandler}
         >
-          <Mosaic.Viewport axis='vertical' viewportRef={viewportRef}>
+          <Mosaic.Viewport axis='vertical' padding viewportRef={viewportRef}>
             <Mosaic.VirtualStack
               {...props}
               items={items}
