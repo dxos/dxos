@@ -56,12 +56,12 @@ export const TestColumn = Schema.Struct({
 export interface TestColumn extends Schema.Schema.Type<typeof TestColumn> {}
 
 //
-// Board
+// Root
 //
 
-type BoardProps = { id: string; columns: TestColumn[]; debug?: boolean };
+type RootProps = { id: string; columns: TestColumn[]; debug?: boolean };
 
-export const Board = forwardRef<HTMLDivElement, BoardProps>(({ id, columns, debug }, forwardedRef) => {
+const Root = forwardRef<HTMLDivElement, RootProps>(({ id, columns, debug }, forwardedRef) => {
   const [DebugInfo, debugHandler] = useContainerDebug(debug);
   const viewportRef = useRef<HTMLElement | null>(null);
 
@@ -105,7 +105,7 @@ export const Board = forwardRef<HTMLDivElement, BoardProps>(({ id, columns, debu
 
 type ColumnProps = Pick<MosaicTileProps<TestColumn>, 'classNames' | 'location' | 'data' | 'debug'>;
 
-export const Column = forwardRef<HTMLDivElement, ColumnProps>(({ classNames, location, data, debug }, forwardedRef) => {
+const Column = forwardRef<HTMLDivElement, ColumnProps>(({ classNames, location, data, debug }, forwardedRef) => {
   const [column, updateColumn] = useObject(data);
   const [DebugInfo, debugHandler] = useContainerDebug(debug);
   const dragHandleRef = useRef<HTMLButtonElement>(null);
@@ -164,7 +164,7 @@ export const Column = forwardRef<HTMLDivElement, ColumnProps>(({ classNames, loc
               debug={debugHandler}
             >
               <Mosaic.Viewport axis='vertical' padding viewportRef={viewportRef}>
-                <Mosaic.Stack axis='vertical' items={column.items} getId={(data) => data.dxn.toString()} Tile={Item} />
+                <Mosaic.Stack axis='vertical' items={column.items} getId={(data) => data.dxn.toString()} Tile={Tile} />
               </Mosaic.Viewport>
             </Mosaic.Container>
           </Card.Context>
@@ -181,14 +181,14 @@ export const Column = forwardRef<HTMLDivElement, ColumnProps>(({ classNames, loc
 Column.displayName = 'Column';
 
 //
-// Item
+// Tile
 //
 
-type ItemProps = Pick<MosaicTileProps<Ref.Ref<TestItem>>, 'classNames' | 'data' | 'location'> & {
+type TileProps = Pick<MosaicTileProps<Ref.Ref<TestItem>>, 'classNames' | 'data' | 'location'> & {
   menuItems?: CardMenuProps<TestItem>['items'];
 };
 
-const Item = forwardRef<HTMLDivElement, ItemProps>(({ classNames, data: ref, location, menuItems }, forwardedRef) => {
+const Tile = forwardRef<HTMLDivElement, TileProps>(({ classNames, data: ref, location, menuItems }, forwardedRef) => {
   const rootRef = useRef<HTMLDivElement>(null);
   const composedRef = useComposedRefs<HTMLDivElement>(rootRef, forwardedRef);
   const dragHandleRef = useRef<HTMLButtonElement>(null);
@@ -222,7 +222,7 @@ const Item = forwardRef<HTMLDivElement, ItemProps>(({ classNames, data: ref, loc
   );
 });
 
-Item.displayName = 'Tile';
+Tile.displayName = 'Tile';
 
 //
 // Placeholder
@@ -260,3 +260,11 @@ export const DebugRoot = forwardRef<HTMLDivElement, ThemedClassName>(({ classNam
 });
 
 DebugRoot.displayName = 'DebugRoot';
+
+//
+// Board
+//
+
+export const Board = { Root, Column, Item: Tile, Placeholder };
+
+export type { RootProps };
