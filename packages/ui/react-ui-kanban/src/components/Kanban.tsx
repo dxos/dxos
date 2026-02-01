@@ -187,6 +187,28 @@ export const Kanban = <T extends BaseKanbanItem = { id: string }>({
   );
 };
 
+//
+// Column
+// TODO(burdon): Extract Column component.
+//
+
+type ColumnComponentProps<T extends BaseKanbanItem = { id: string }> = {
+  item: T;
+  projection: ProjectionModel;
+};
+
+const ColumnComponent = <T extends BaseKanbanItem = { id: string }>({ item, projection }: ColumnComponentProps<T>) => {
+  return (
+    <CardStack.Root>
+      <CardStack.Content />
+    </CardStack.Root>
+  );
+};
+
+//
+// Card
+//
+
 type CardComponentProps<T extends BaseKanbanItem = { id: string }> = {
   item: T;
   projection: ProjectionModel;

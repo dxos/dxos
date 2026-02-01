@@ -3,98 +3,23 @@
 //
 
 import { Registry } from '@effect-atom/atom-react';
-import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
-import { Filter, Query, Type } from '@dxos/echo';
-import { Format, FormatAnnotation, PropertyMetaAnnotationId } from '@dxos/echo/internal';
-import { createEchoSchema } from '@dxos/echo/testing';
 import { ObjectId } from '@dxos/keys';
-import { ProjectionModel, View, createEchoChangeCallback } from '@dxos/schema';
 
-import {
-  type BaseKanbanItem,
-  KanbanModel,
-  UNCATEGORIZED_VALUE,
-  createEchoChangeCallback as createEchoKanbanChangeCallback,
-} from './model';
-import { Kanban } from './types';
+import { type KanbanModel, UNCATEGORIZED_VALUE } from './model';
+import { type TaskItem, createKanbanModel, createTaskItem } from './testing';
 
 // Use deterministic IDs for tests.
 ObjectId.dangerouslyDisableRandomness();
 
-const StatusOptions = [
-  { id: 'todo', title: 'Todo', color: 'indigo' },
-  { id: 'in-progress', title: 'In Progress', color: 'purple' },
-  { id: 'done', title: 'Done', color: 'green' },
-];
-
-const Task = Schema.Struct({
-  title: Schema.String,
-  status: Schema.Literal('todo', 'in-progress', 'done').pipe(
-    FormatAnnotation.set(Format.TypeFormat.SingleSelect),
-    Schema.annotations({
-      title: 'Status',
-      [PropertyMetaAnnotationId]: {
-        singleSelect: {
-          options: StatusOptions,
-        },
-      },
-    }),
-    Schema.optional,
-  ),
-}).pipe(
-  Type.object({
-    typename: 'example.com/type/Task',
-    version: '0.1.0',
-  }),
-);
-
-type TaskItem = BaseKanbanItem & { title: string; status?: 'todo' | 'in-progress' | 'done' };
-
-const createTaskItem = (title: string, status?: 'todo' | 'in-progress' | 'done'): TaskItem => ({
-  id: ObjectId.random(),
-  title,
-  status,
-});
-
-const createKanbanModel = (registry: Registry.Registry): { model: KanbanModel<TaskItem>; kanban: Kanban.Kanban } => {
-  const schema = createEchoSchema(Task);
-  const view = View.make({
-    query: Query.select(Filter.type(schema)),
-    jsonSchema: schema.jsonSchema,
-    pivotFieldName: 'status',
-  });
-
-  const kanban = Kanban.make({ view });
-  const projection = new ProjectionModel({
-    registry,
-    view,
-    baseSchema: schema.jsonSchema,
-    change: createEchoChangeCallback(view, schema),
-  });
-  projection.normalizeView();
-
-  const model = new KanbanModel<TaskItem>({
-    registry,
-    object: kanban,
-    projection,
-    change: createEchoKanbanChangeCallback<TaskItem>(kanban),
-  });
-
-  return { model, kanban };
-};
-
 describe('KanbanModel', () => {
   let registry: Registry.Registry;
   let model: KanbanModel<TaskItem>;
-  let kanban: Kanban.Kanban;
 
   beforeEach(async () => {
     registry = Registry.make();
-    const result = createKanbanModel(registry);
-    model = result.model;
-    kanban = result.kanban;
+    model = createKanbanModel(registry);
     await model.open();
   });
 
@@ -178,7 +103,6 @@ describe('KanbanModel', () => {
       const task2 = createTaskItem('Task 2', 'todo');
       const task3 = createTaskItem('Task 3', 'in-progress');
       const items: TaskItem[] = [task1, task2, task3];
-
       model.setItems(items);
 
       // Verify initial state.
@@ -208,7 +132,6 @@ describe('KanbanModel', () => {
       const task1 = createTaskItem('Task 1', 'todo');
       const task2 = createTaskItem('Task 2', 'in-progress');
       const items: TaskItem[] = [task1, task2];
-
       model.setItems(items);
 
       // Verify initial state.
@@ -232,14 +155,13 @@ describe('KanbanModel', () => {
       const task1 = createTaskItem('Task 1', 'todo');
       const task2 = createTaskItem('Task 2', 'todo');
       const items: TaskItem[] = [task1, task2];
-
       model.setItems(items);
 
       // Rearrange cards.
       model.handleRearrange({ id: task2.id, type: 'card' }, { id: task1.id, type: 'card' }, 'top');
 
       // Verify the arrangement was persisted to the kanban object.
-      const todoArrangement = kanban.arrangement.find((a) => a.columnValue === 'todo');
+      const todoArrangement = model.object.arrangement.find((a) => a.columnValue === 'todo');
       expect(todoArrangement?.ids).toEqual([task2.id, task1.id]);
     });
   });
@@ -249,13 +171,10 @@ describe('KanbanModel', () => {
       const task1 = createTaskItem('Task 1', 'todo');
       const task2 = createTaskItem('Task 2', 'todo');
       const items: TaskItem[] = [task1, task2];
-
       model.setItems(items);
 
       const cardsBefore = model.getCards();
-
       model.handleRearrange({ id: task2.id, type: 'card' }, { id: task1.id, type: 'card' }, 'top');
-
       const cardsAfter = model.getCards();
 
       // The arrays should be different references for reactivity to work.
