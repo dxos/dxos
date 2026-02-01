@@ -54,6 +54,6 @@ export const SketchContainer = ({ role, subject: sketch, settings }: SketchConta
   );
 };
 
-const Container = (props: LayoutFlexProps) => <Layout.Flex {...props} className='aspect-square' />;
+const Container = (props: LayoutFlexProps) => <Layout.Flex {...props} classNames='aspect-square' />;
 
 export default SketchContainer;
