@@ -29,6 +29,7 @@ const defaultOptions: ScrollableProps['options'] = {
 // TODO(burdon): row/column: options={{ overflow: { x: 'scroll' } }}
 export type ScrollableProps = ThemedClassName<OverlayScrollbarsComponentProps> & {
   axis?: Axis;
+  padding?: boolean;
   onScroll?: (event: Event) => void;
   viewportRef?: RefObject<HTMLElement | null>;
 };
@@ -37,7 +38,10 @@ export type ScrollableProps = ThemedClassName<OverlayScrollbarsComponentProps> &
  * https://www.npmjs.com/package/overlayscrollbars-react
  */
 export const Scrollable = forwardRef<HTMLDivElement, ScrollableProps>(
-  ({ classNames, axis, options: optionsProp = defaultOptions, onScroll, viewportRef, ...props }, forwardedRef) => {
+  (
+    { classNames, axis = 'vertical', padding, options: optionsProp = defaultOptions, onScroll, viewportRef, ...props },
+    forwardedRef,
+  ) => {
     const osRef = useRef<OverlayScrollbarsComponentRef<'div'>>(null);
     const options = useMemo(() => {
       const options = { ...optionsProp };
@@ -47,6 +51,7 @@ export const Scrollable = forwardRef<HTMLDivElement, ScrollableProps>(
           y: axis === 'vertical' ? 'scroll' : 'hidden',
         };
       }
+
       return options;
     }, [axis, optionsProp]);
 
@@ -82,7 +87,13 @@ export const Scrollable = forwardRef<HTMLDivElement, ScrollableProps>(
     }, [onScroll]);
 
     return (
-      <OverlayScrollbarsComponent {...props} className={mx(classNames)} options={options} events={events} ref={osRef} />
+      <OverlayScrollbarsComponent
+        {...props}
+        className={mx(padding && axis === 'vertical' ? 'pli-3' : 'pbe-3', classNames)}
+        options={options}
+        events={events}
+        ref={osRef}
+      />
     );
   },
 );
