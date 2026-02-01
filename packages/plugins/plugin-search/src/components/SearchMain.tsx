@@ -9,8 +9,8 @@ import { Entity, Query } from '@dxos/echo';
 import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
 import { Toolbar, useTranslation } from '@dxos/react-ui';
 import { Card, Mosaic, type StackTileComponent } from '@dxos/react-ui-mosaic';
-import { SearchList } from '@dxos/react-ui-searchlist';
 import { Layout } from '@dxos/react-ui-mosaic';
+import { SearchList } from '@dxos/react-ui-searchlist';
 import { Text } from '@dxos/schema';
 
 import { useGlobalSearch, useGlobalSearchResults, useWebSearch } from '../hooks';

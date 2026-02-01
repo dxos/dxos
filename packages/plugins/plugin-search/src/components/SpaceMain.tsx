@@ -11,8 +11,8 @@ import { Graph, Node, useActionRunner, useConnections } from '@dxos/plugin-graph
 import { type Space, useQuery } from '@dxos/react-client/echo';
 import { Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Card, Mosaic, type StackTileComponent } from '@dxos/react-ui-mosaic';
-import { SearchList } from '@dxos/react-ui-searchlist';
 import { Layout } from '@dxos/react-ui-mosaic';
+import { SearchList } from '@dxos/react-ui-searchlist';
 import { Text } from '@dxos/schema';
 
 import { meta } from '../meta';

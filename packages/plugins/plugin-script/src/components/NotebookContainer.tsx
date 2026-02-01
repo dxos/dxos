@@ -35,10 +35,7 @@ const INCLUDE_BLUEPRINTS = ['dxos.org/blueprint/assistant', 'dxos.org/blueprint/
 
 // TODO(burdon): Support calling named deployed functions (as with sheet).
 
-export type NotebookContainerProps = SurfaceComponentProps<
-  Notebook.Notebook,
-  Pick<TypescriptEditorProps, 'env'>
->;
+export type NotebookContainerProps = SurfaceComponentProps<Notebook.Notebook, Pick<TypescriptEditorProps, 'env'>>;
 
 export const NotebookContainer = ({ role, subject: notebook, env }: NotebookContainerProps) => {
   const { t } = useTranslation(meta.id);

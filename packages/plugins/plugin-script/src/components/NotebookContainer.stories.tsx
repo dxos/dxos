@@ -26,7 +26,7 @@ import { createNotebook } from '../testing';
 import { translations } from '../translations';
 import { Notebook } from '../types';
 
-import { NotebookContainer, type NotebookContainerProps } from './NotebookContainer';
+import { NotebookContainer } from './NotebookContainer';
 
 const meta: Meta<typeof NotebookContainer> = {
   title: 'plugins/plugin-script/NotebookContainer',

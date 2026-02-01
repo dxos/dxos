@@ -26,7 +26,12 @@ export type ScriptEditorProps = SurfaceComponentProps<
   } & Pick<TypescriptEditorProps, 'env'>
 >;
 
-export const ScriptContainer = ({ role, subject: script, settings = { editorInputMode: 'vscode' }, env }: ScriptEditorProps) => {
+export const ScriptContainer = ({
+  role,
+  subject: script,
+  settings = { editorInputMode: 'vscode' },
+  env,
+}: ScriptEditorProps) => {
   const identity = useIdentity();
   const space = getSpace(script);
   const state = useToolbarState();
