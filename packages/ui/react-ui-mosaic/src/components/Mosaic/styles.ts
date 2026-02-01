@@ -16,10 +16,10 @@ export const styles = {
       'data-[mosaic-placeholder-axis=horizontal]:pli-1',
       'data-[mosaic-placeholder-axis=horizontal]:data-[mosaic-placeholder-state=active]:pli-2.5',
     ],
-    // TODO(burdon): Don't animate open if placeholder is the source.
     content: [
       'transition-all duration-0',
-      'group-data-[mosaic-placeholder-state=active]:duration-200',
+      // TODO(burdon): Don't animate open if placeholder is the source.
+      // 'group-data-[mosaic-placeholder-state=active]:duration-200',
       'group-data-[mosaic-placeholder-axis=vertical]:bs-0',
       'group-data-[mosaic-placeholder-axis=horizontal]:is-0',
       'group-data-[mosaic-placeholder-axis=vertical]:group-data-[mosaic-placeholder-state=active]:bs-[var(--mosaic-placeholder-height)]',

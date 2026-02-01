@@ -101,7 +101,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    columns: 4,
+    columns: 5,
   },
 };
 

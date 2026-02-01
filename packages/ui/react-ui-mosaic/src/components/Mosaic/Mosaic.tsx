@@ -29,7 +29,6 @@ import { Slot } from '@radix-ui/react-slot';
 import { bind } from 'bind-event-listener';
 import React, {
   type CSSProperties,
-  type FC,
   type PropsWithChildren,
   type ReactNode,
   forwardRef,
@@ -44,7 +43,6 @@ import { createPortal } from 'react-dom';
 
 import { log } from '@dxos/log';
 import { type SlottableClassName, type ThemedClassName } from '@dxos/react-ui';
-import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
 import { isTruthy } from '@dxos/util';
 
@@ -472,6 +470,7 @@ const Container = forwardRef<HTMLDivElement, ContainerProps>(
       return combine(
         ...[
           // Autoscroll.
+          // TODO(burdon): Autoscroll doesn't work well horizontally.
           autoscrollElement && [
             autoScrollForElements({
               element: autoscrollElement,
@@ -596,44 +595,6 @@ const Container = forwardRef<HTMLDivElement, ContainerProps>(
 );
 
 Container.displayName = 'MosaicContainer';
-
-//
-// Container Debug
-//
-
-type UseContainerDebug = [FC<ThemedClassName>, (() => ReactNode) | undefined];
-
-/**
- * Hook that returns a component to be rendered in the container's viewport (within the context),
- * and a component that creates a portal in the container's debug area.
- */
-const useContainerDebug = (debug?: boolean): UseContainerDebug => {
-  const debugRef = useRef<HTMLDivElement | null>(null);
-  return useMemo(() => {
-    if (!debug) {
-      return [() => null, undefined];
-    }
-
-    return [
-      ({ classNames }) => <div role='none' className={mx('overflow-hidden', classNames)} ref={debugRef} />,
-      () => debugRef.current && createPortal(<ContainerInfo />, debugRef.current),
-    ];
-  }, [debug, debugRef]);
-};
-
-const ContainerInfo = forwardRef<HTMLDivElement, ThemedClassName>(({ classNames }, forwardedRef) => {
-  const { id, state, activeLocation, scrolling } = useContainerContext(ContainerInfo.displayName!);
-  const counter = useRef(0);
-  return (
-    <Json
-      data={{ id, activeLocation, scrolling, state, count: counter.current++ }}
-      classNames={mx('text-xs', classNames)}
-      ref={forwardedRef}
-    />
-  );
-});
-
-ContainerInfo.displayName = 'ContainerInfo';
 
 //
 // Tile
@@ -944,7 +905,6 @@ DropIndicator.displayName = 'MosaicDropIndicator';
 export const Mosaic = {
   Root,
   Container,
-  ContainerInfo,
   Tile,
   Placeholder,
   DropIndicator,
@@ -965,9 +925,4 @@ export type {
   StackProps as MosaicStackProps,
 };
 
-export {
-  useRootContext as useMosaic,
-  useContainerContext as useMosaicContainer,
-  useContainerDebug,
-  useTileContext as useMosaicTile,
-};
+export { useRootContext as useMosaic, useContainerContext as useMosaicContainer, useTileContext as useMosaicTile };

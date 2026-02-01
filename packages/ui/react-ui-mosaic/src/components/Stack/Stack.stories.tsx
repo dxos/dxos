@@ -11,8 +11,9 @@ import { faker } from '@dxos/random';
 import { Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
+import { useContainerDebug } from '../../hooks';
 import { DefaultStackTile, TestItem } from '../../testing';
-import { Mosaic, useContainerDebug } from '../Mosaic';
+import { Mosaic } from '../Mosaic';
 
 import { Stack } from './Stack';
 

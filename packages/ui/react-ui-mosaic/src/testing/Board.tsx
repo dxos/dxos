@@ -21,10 +21,9 @@ import {
   type MosaicTileProps,
   type MosiacPlaceholderProps,
   mosaicStyles,
-  useContainerDebug,
   useMosaic,
 } from '../components';
-import { useEventHandlerAdapter } from '../hooks';
+import { useContainerDebug, useEventHandlerAdapter } from '../hooks';
 
 //
 // Test Data
