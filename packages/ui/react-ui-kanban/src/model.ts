@@ -22,13 +22,16 @@ export const UNCATEGORIZED_ATTRIBUTES = {
   color: 'neutral',
 } as const;
 
-export type BaseKanbanItem = Record<JsonProp, any> & { id: string };
+// TODO(burdon): Use Schema directly.
+export type BaseKanbanItem = { id: string } & Record<JsonProp, any>;
 
-// TODO(burdon): Rename Column?
-export type ArrangedCards<T extends BaseKanbanItem = { id: string }> = {
+export type KanbanColumn<T extends BaseKanbanItem = { id: string }> = {
   columnValue: string;
   cards: T[];
-}[];
+};
+
+// TODO(burdon): Rename?
+export type ArrangedCards<T extends BaseKanbanItem = { id: string }> = KanbanColumn<T>[];
 
 /**
  * Callback type for wrapping mutations in Obj.change().

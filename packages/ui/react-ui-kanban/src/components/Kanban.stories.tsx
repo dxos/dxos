@@ -36,10 +36,6 @@ const DefaultStory = (_: StoryProps) => {
     };
 
     void init();
-
-    return () => {
-      console.log('Story effect cleanup running');
-    };
   }, []);
 
   if (!state) {
