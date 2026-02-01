@@ -1,6 +1,7 @@
 {
   "name": "@dxos/swc-log-plugin",
   "version": "0.8.3",
+  "private": true,
   "keywords": [
     "swc-plugin"
   ],
