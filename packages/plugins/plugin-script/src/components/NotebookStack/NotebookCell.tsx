@@ -161,7 +161,7 @@ const NotebookCellValue = ({ cell, graph }: NotebookCellProps) => {
   return (
     <div
       className={mx(
-        'flex is-full bg-groupSurface border-t border-subduedSeparator text-description font-mono',
+        'flex is-full bg-groupSurface border-bs border-subduedSeparator text-description font-mono',
         valueStyles,
       )}
     >
@@ -187,7 +187,7 @@ const NotebookPromptResult = ({ cell, promptResults }: NotebookCellProps) => {
   }
 
   return (
-    <div className={mx('flex is-full bg-groupSurface text-description border-t border-subduedSeparator', valueStyles)}>
+    <div className={mx('flex is-full bg-groupSurface text-description border-bs border-subduedSeparator', valueStyles)}>
       <NotebookTextEditor readOnly value={value} />
     </div>
   );

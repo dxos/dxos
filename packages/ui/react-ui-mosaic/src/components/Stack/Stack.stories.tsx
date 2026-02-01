@@ -57,7 +57,7 @@ export const Default: Story = {
     const viewportRef = useRef<HTMLElement | null>(null);
     return (
       <Mosaic.Root debug={props.debug} classNames='bs-full grid grid-rows-[min-content_1fr_min-content]'>
-        <Toolbar.Root classNames='border-b border-separator'>
+        <Toolbar.Root classNames='border-be border-separator'>
           <div className='flex grow justify-center'>Items: {items.length}</div>
         </Toolbar.Root>
         <Mosaic.Container
@@ -71,7 +71,7 @@ export const Default: Story = {
             <Mosaic.Stack {...props} items={items} />
           </Mosaic.Viewport>
         </Mosaic.Container>
-        <DebugInfo classNames='border-t border-separator' />
+        <DebugInfo classNames='border-bs border-separator' />
       </Mosaic.Root>
     );
   },

@@ -146,7 +146,7 @@ const CustomItem = ({ value, label, description, onSelect }: CustomItemProps) =>
       role='option'
       aria-selected={isSelected}
       data-selected={isSelected}
-      className={`p-2 border-b border-separator cursor-pointer ${isSelected ? 'bg-hoverOverlay' : 'hover:bg-hoverOverlay'}`}
+      className={`p-2 border-be border-separator cursor-pointer ${isSelected ? 'bg-hoverOverlay' : 'hover:bg-hoverOverlay'}`}
       onClick={onSelect}
     >
       <div className='font-medium'>{label}</div>

@@ -62,7 +62,7 @@ const DefaultStory = ({ columns: columnsProp = 1, debug = false }: StoryProps) =
 
         {debug && (
           <Focus.Group classNames='flex flex-col gap-2 overflow-hidden'>
-            <Toolbar.Root classNames='border-b border-separator'>
+            <Toolbar.Root classNames='border-be border-separator'>
               <IconButton
                 icon='ph--arrows-clockwise--regular'
                 iconOnly

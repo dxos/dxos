@@ -36,7 +36,11 @@ const Main = forwardRef<HTMLDivElement, MainProps>(
         ref={forwardedRef}
         role={role ?? 'none'}
         style={style}
-        className={mx('bs-full is-full grid grid-cols-[100%] overflow-hidden', classNames)}
+        className={mx(
+          'bs-full is-full grid grid-cols-[100%] overflow-hidden',
+          toolbar && '[&>.dx-toolbar]:relative [&>.dx-toolbar]:border-be [&>.dx-toolbar]:border-subduedSeparator',
+          classNames,
+        )}
       >
         {children}
       </div>
