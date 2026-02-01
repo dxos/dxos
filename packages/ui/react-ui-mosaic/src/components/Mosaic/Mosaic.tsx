@@ -918,10 +918,12 @@ export const Mosaic = {
 export type {
   RootProps as MosaicRootProps,
   ContainerProps as MosaicContainerProps,
-  ScrollableProps as MosaicViewportProps,
   TileProps as MosaicTileProps,
   PlaceholderProps as MosiacPlaceholderProps,
   DropIndicatorProps as MosaicDropIndicatorProps,
+
+  // TODO(burdon): Move out of Mosaic namespace?
+  ScrollableProps as MosaicViewportProps,
   StackProps as MosaicStackProps,
 };
 
