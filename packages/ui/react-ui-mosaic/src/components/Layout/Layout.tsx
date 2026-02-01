@@ -35,7 +35,7 @@ const Main = forwardRef<HTMLDivElement, MainProps>(
         ref={forwardedRef}
         role={role ?? 'none'}
         style={style}
-        className={mx('bs-full is-full grid grid-cols-[100%] density-fine', classNames)}
+        className={mx('bs-full is-full grid grid-cols-[100%] overflow-hidden', classNames)}
       >
         {children}
       </div>
@@ -60,7 +60,7 @@ const Container = forwardRef<HTMLDivElement, ContainerProps>(
       <div
         ref={forwardedRef}
         role={role ?? 'none'}
-        className={mx('bs-full', scrollable ? 'overflow-y-auto' : 'overflow-hidden', classNames)}
+        className={mx('grid bs-full', scrollable ? 'overflow-y-auto' : 'overflow-hidden', classNames)}
       >
         {children}
       </div>

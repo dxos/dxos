@@ -2,11 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capability, Common, Plugin } from '@dxos/app-framework';
+import { ActivationEvent, Capability, Common, Plugin } from '@dxos/app-framework';
 
-import { OperationResolver, ReactRoot, SpotlightDismiss, State } from './capabilities';
+import { OperationResolver, ReactRoot, ReactSurface, SpotlightDismiss, State, UrlHandler } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
+import { SimpleLayoutEvents } from './types';
 
 export type SimpleLayoutPluginOptions = {
   /** Whether running in popover window context (hides mobile-specific UI). */
@@ -17,7 +18,7 @@ export const SimpleLayoutPlugin = Plugin.define<SimpleLayoutPluginOptions>(meta)
   Plugin.addModule(({ isPopover = false }) => ({
     id: Capability.getModuleTag(State),
     activatesOn: Common.ActivationEvent.Startup,
-    activatesAfter: [Common.ActivationEvent.LayoutReady],
+    activatesAfter: [SimpleLayoutEvents.StateReady, Common.ActivationEvent.LayoutReady],
     activate: () => State({ initialState: { isPopover } }),
   })),
   Plugin.addModule(({ isPopover = false }) => ({
@@ -29,6 +30,16 @@ export const SimpleLayoutPlugin = Plugin.define<SimpleLayoutPluginOptions>(meta)
     id: Capability.getModuleTag(ReactRoot),
     activatesOn: Common.ActivationEvent.Startup,
     activate: ReactRoot,
+  }),
+  Plugin.addModule({
+    id: Capability.getModuleTag(ReactSurface),
+    activatesOn: Common.ActivationEvent.Startup,
+    activate: ReactSurface,
+  }),
+  Plugin.addModule({
+    id: Capability.getModuleTag(UrlHandler),
+    activatesOn: ActivationEvent.allOf(Common.ActivationEvent.OperationInvokerReady, SimpleLayoutEvents.StateReady),
+    activate: UrlHandler,
   }),
   Common.Plugin.addOperationResolverModule({ activate: OperationResolver }),
   Common.Plugin.addTranslationsModule({ translations }),

@@ -161,7 +161,6 @@ export const Column = forwardRef<HTMLDivElement, ColumnProps>(({ classNames, loc
             <Card.Title>{column.id}</Card.Title>
             <Card.Menu items={[]} />
           </Card.Toolbar>
-          {/* TODO(burdon): See deprecation warning. */}
           <Card.Context value={{ menuItems }}>
             <Mosaic.Container
               asChild

@@ -52,12 +52,6 @@ const getCollectionGraphNodePartials = ({
     acceptPersistenceClass: new Set(['echo']),
     acceptPersistenceKey: new Set([db.spaceId]),
     role: 'branch',
-    onRearrangeChildren: (nextOrder: unknown[]) => {
-      // Change on disk.
-      Obj.change(collection, (c) => {
-        c.objects = nextOrder.filter(Obj.isObject).map(Ref.make);
-      });
-    },
     onTransferStart: (child: Node.Node<Obj.Unknown>, index?: number) => {
       // TODO(wittjosiah): Support transfer between spaces.
       // const childSpace = getSpace(child.data);
@@ -164,12 +158,19 @@ export const constructSpaceNode = ({
   personal,
   namesCache,
   resolve,
+  graph,
+  spacesOrder,
 }: {
   space: Space;
   navigable?: boolean;
   personal?: boolean;
   namesCache?: Record<string, string>;
   resolve: (typename: string) => Record<string, any>;
+  /** Graph for sorting edges on rearrange. */
+  graph?: Graph.ExpandableGraph;
+  // TODO(wittjosiah): Should be Type.Expando but it doesn't work with the AtomQuery result type.
+  /** Spaces order object for persisting workspace order. */
+  spacesOrder?: Obj.Any;
 }) => {
   const hasPendingMigration = checkPendingMigration(space);
   const collection =
@@ -178,6 +179,24 @@ export const constructSpaceNode = ({
     space.state.get() === SpaceState.SPACE_READY && Obj.instanceOf(Collection.Collection, collection)
       ? getCollectionGraphNodePartials({ collection, db: space.db, resolve })
       : {};
+
+  const onRearrange =
+    graph && spacesOrder
+      ? (nextOrder: Space[]) => {
+          // NOTE: This is needed to ensure order is updated by next animation frame.
+          Graph.sortEdges(
+            graph,
+            Node.RootId,
+            'outbound',
+            nextOrder.map(({ id }) => id),
+          );
+
+          // Persist order to database.
+          Obj.change(spacesOrder, (mutableOrder: any) => {
+            mutableOrder.order = nextOrder.map(({ id }) => id);
+          });
+        }
+      : undefined;
 
   return {
     id: space.id,
@@ -195,7 +214,9 @@ export const constructSpaceNode = ({
           : undefined,
       iconHue: space.state.get() === SpaceState.SPACE_READY && space.properties.iconHue,
       disabled: !navigable || space.state.get() !== SpaceState.SPACE_READY || hasPendingMigration,
+      disposition: 'workspace',
       testId: 'spacePlugin.space',
+      onRearrange,
       canDrop: (source: TreeData) => {
         // TODO(wittjosiah): Find a way to only allow space as source for rearranging.
         return Obj.isObject(source.item.data) || isSpace(source.item.data);
@@ -422,6 +443,7 @@ export const createObjectNode = ({
   navigable = false,
   managedCollectionChild = false,
   resolve,
+  parentCollection,
 }: {
   db: Database.Database;
   object: Obj.Unknown;
@@ -430,6 +452,8 @@ export const createObjectNode = ({
   navigable?: boolean;
   managedCollectionChild?: boolean;
   resolve: (typename: string) => Record<string, any>;
+  /** Parent collection for rearranging objects. */
+  parentCollection?: Collection.Collection;
 }) => {
   const type = Obj.getTypename(object);
   if (!type) {
@@ -473,6 +497,13 @@ export const createObjectNode = ({
       persistenceKey: db.spaceId,
       selectable,
       managedCollectionChild,
+      onRearrange: parentCollection
+        ? (nextOrder: unknown[]) => {
+            Obj.change(parentCollection, (c) => {
+              c.objects = nextOrder.filter(Obj.isObject).map(Ref.make);
+            });
+          }
+        : undefined,
       blockInstruction: (source: TreeData, instruction: Instruction) => {
         if (source.item.properties.managedCollectionChild) {
           // TODO(wittjosiah): Support reordering system collections.

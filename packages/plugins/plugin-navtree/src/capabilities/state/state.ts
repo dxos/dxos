@@ -47,8 +47,10 @@ export default Capability.makeModule(
     const backingState = getInitialState();
 
     // Per-path atom family for fine-grained reactivity.
+    // keepAlive prevents atoms from being garbage collected when components unmount,
+    // ensuring state is preserved across deletion/restoration cycles.
     const itemAtomFamily = Atom.family((pathString: string) =>
-      Atom.make<NC.NavTreeItemState>(backingState.get(pathString) ?? { ...defaultItemState }),
+      Atom.make<NC.NavTreeItemState>(backingState.get(pathString) ?? { ...defaultItemState }).pipe(Atom.keepAlive),
     );
 
     const getItemAtom = (path: string[]): Atom.Atom<NC.NavTreeItemState> => {

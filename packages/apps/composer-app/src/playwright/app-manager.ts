@@ -169,7 +169,7 @@ export class AppManager {
 
   async waitForSpaceReady(timeout = 30_000): Promise<void> {
     await Promise.all([
-      this.page.getByTestId('treeView.alternateTreeButton').waitFor({ timeout }),
+      // this.page.getByTestId('treeView.alternateTreeButton').waitFor({ timeout }),
       this.page.waitForSelector('[data-testid="create-space-form"]', { state: 'detached', timeout }),
     ]);
   }
@@ -220,7 +220,7 @@ export class AppManager {
     await this.page
       .getByTestId('spacePlugin.object')
       .nth(nth)
-      .getByTestId('navtree.treeItem.actionsLevel2')
+      .getByTestId('navtree.treeItem.actionsLevel1')
       .first()
       .click();
     // TODO(thure): For some reason, actions move around when simulating the mouse in Firefox.
@@ -236,7 +236,7 @@ export class AppManager {
     await this.page
       .getByTestId('spacePlugin.object')
       .nth(nth)
-      .getByTestId('navtree.treeItem.actionsLevel2')
+      .getByTestId('navtree.treeItem.actionsLevel1')
       .first()
       .click();
     // TODO(thure): For some reason, actions move around when simulating the mouse in Firefox.

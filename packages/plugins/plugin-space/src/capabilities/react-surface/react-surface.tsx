@@ -86,19 +86,19 @@ export default Capability.makeModule(
         ),
       }),
       Common.createSurface({
+        id: `${meta.id}/collection-fallback`,
+        role: 'article',
+        position: 'fallback',
+        filter: (data): data is { subject: Collection.Collection | Collection.Managed } =>
+          Obj.instanceOf(Collection.Collection, data.subject) || Obj.instanceOf(Collection.Managed, data.subject),
+        component: ({ data }) => <CollectionArticle subject={data.subject} />,
+      }),
+      Common.createSurface({
         id: `${meta.id}/record-article`,
         role: 'article',
         position: 'fallback',
         filter: (data): data is { subject: Obj.Unknown } => Obj.isObject(data.subject),
         component: ({ data }) => <RecordArticle subject={data.subject} />,
-      }),
-      Common.createSurface({
-        id: `${meta.id}/collection-fallback`,
-        role: 'article',
-        position: 'fallback',
-        filter: (data): data is { subject: Collection.Collection } =>
-          Obj.instanceOf(Collection.Collection, data.subject),
-        component: ({ data }) => <CollectionArticle subject={data.subject} />,
       }),
       Common.createSurface({
         id: `${meta.id}/plugin-settings`,

@@ -54,6 +54,9 @@
       "path": "../../ui/ui-theme"
     },
     {
+      "path": "../plugin-debug"
+    },
+    {
       "path": "../plugin-graph"
     }
   ]

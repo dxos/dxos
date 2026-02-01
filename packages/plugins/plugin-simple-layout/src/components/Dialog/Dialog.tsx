@@ -23,7 +23,7 @@ export const Dialog = () => {
       onOpenChange={(nextOpen) => updateState((s) => ({ ...s, dialogOpen: nextOpen }))}
     >
       {state.dialogBlockAlign === 'end' ? (
-        <Surface role='dialog' data={state.dialogContent} limit={1} fallback={ContentError} placeholder={<div />} />
+        <Surface role='dialog' data={state.dialogContent} limit={1} fallback={ContentError} />
       ) : (
         <DialogOverlay
           blockAlign={state.dialogBlockAlign}
