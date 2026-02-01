@@ -27,6 +27,7 @@ export type BoardCellProps<T extends Type.Obj.Any = any> = ThemedClassName<
   }>
 >;
 
+// TODO(burdon): Reconcile with Mosaic.Tile.
 export const BoardCell = ({ classNames, children, item, layout, draggable: isDraggable }: BoardCellProps) => {
   const { t } = useTranslation(translationKey);
   const { grid: board, zoom, onSelect, onDelete, onMove } = useBoardContext(BoardCell.displayName);
@@ -62,7 +63,6 @@ export const BoardCell = ({ classNames, children, item, layout, draggable: isDra
   return (
     <Card.Root
       ref={rootRef}
-      // TODO(burdon): Common fragment for placeholder opacity?
       classNames={mx(
         'absolute p-0 grid grid-rows-[min-content_1fr]',
         dragState === 'dragging' && 'opacity-50',
@@ -73,6 +73,7 @@ export const BoardCell = ({ classNames, children, item, layout, draggable: isDra
     >
       <Card.Toolbar>
         <Card.DragHandle ref={dragHandleRef} />
+        {/* TODO(burdon): Title. */}
         <Card.ToolbarSeparator variant='gap' />
         {dragState !== 'dragging' && (
           <Card.ToolbarIconButton

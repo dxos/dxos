@@ -41,7 +41,7 @@ import { type Graph } from '@dxos/plugin-graph';
 import { ScriptOperation } from '@dxos/plugin-script/types';
 import { SpaceOperation } from '@dxos/plugin-space/types';
 import { type Space, SpaceState, isSpace, parseId } from '@dxos/react-client/echo';
-import { StackItem } from '@dxos/react-ui-stack';
+import { Layout } from '@dxos/react-ui-mosaic';
 import { Collection } from '@dxos/schema';
 
 import {
@@ -104,7 +104,7 @@ export default Capability.makeModule(
         id: `${meta.id}/space`,
         role: 'article',
         filter: (data): data is { subject: SpaceDebug } => isSpaceDebug(data.subject),
-        component: ({ data }) => {
+        component: ({ role, data }) => {
           const { invokePromise } = useOperationInvoker();
 
           const handleCreateObject = useCallback(
@@ -131,9 +131,9 @@ export default Capability.makeModule(
           );
 
           return (
-            <StackItem.Content>
+            <Layout.Main role={role}>
               <SpaceGenerator space={data.subject.space} onCreateObjects={handleCreateObject} />
-            </StackItem.Content>
+            </Layout.Main>
           );
         },
       }),

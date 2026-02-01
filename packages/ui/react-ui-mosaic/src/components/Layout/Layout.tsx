@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type PropsWithChildren, useMemo } from 'react';
+import React, { type HTMLAttributes, type PropsWithChildren, forwardRef, useMemo } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
@@ -11,42 +11,72 @@ import { mx } from '@dxos/ui-theme';
 // Main
 //
 
-type MainProps = PropsWithChildren<{
-  role?: string;
-  toolbar?: boolean;
-  statusbar?: boolean;
-}>;
+type MainProps = ThemedClassName<
+  PropsWithChildren<{
+    role?: string;
+    toolbar?: boolean;
+    statusbar?: boolean;
+  }>
+>;
 
-const Main = ({ children, role, toolbar, statusbar }: MainProps) => {
-  const style = useMemo(
-    () => ({
-      gridTemplateRows: [
-        ...(toolbar ? ['var(--toolbar-size)'] : []),
-        '1fr',
-        ...(statusbar ? ['var(--statusbar-size)'] : []),
-      ].join(' '),
-    }),
-    [toolbar, statusbar],
-  );
+const Main = forwardRef<HTMLDivElement, MainProps>(
+  ({ classNames, children, role, toolbar, statusbar }, forwardedRef) => {
+    const style = useMemo(
+      () => ({
+        gridTemplateRows: [toolbar && 'var(--toolbar-size)', '1fr', statusbar && 'var(--statusbar-size)']
+          .filter(Boolean)
+          .join(' '),
+      }),
+      [toolbar, statusbar],
+    );
 
-  return (
-    <div role={role ?? 'none'} style={style} className={mx('bs-full grid grid-cols-[100%] density-fine')}>
-      {children}
-    </div>
-  );
-};
+    return (
+      <div
+        ref={forwardedRef}
+        role={role ?? 'none'}
+        style={style}
+        className={mx('bs-full is-full grid grid-cols-[100%] overflow-hidden', classNames)}
+      >
+        {children}
+      </div>
+    );
+  },
+);
+
+//
+// Container
+//
+
+type ContainerProps = ThemedClassName<
+  PropsWithChildren<{
+    role?: string;
+    scrollable?: boolean;
+  }>
+>;
+
+const Container = forwardRef<HTMLDivElement, ContainerProps>(
+  ({ classNames, children, role, scrollable }, forwardedRef) => {
+    return (
+      <div
+        ref={forwardedRef}
+        role={role ?? 'none'}
+        className={mx('grid bs-full', scrollable ? 'overflow-y-auto' : 'overflow-hidden', classNames)}
+      >
+        {children}
+      </div>
+    );
+  },
+);
 
 //
 // Flex
-// TODO(burdon): Reconcile with react-ui-components.
 //
 
 type FlexProps = ThemedClassName<
-  PropsWithChildren<{
-    role?: string;
+  HTMLAttributes<HTMLDivElement> & {
     column?: boolean;
     grow?: boolean;
-  }>
+  }
 >;
 
 const Flex = ({ children, classNames, role, column, grow }: FlexProps) => {
@@ -61,32 +91,13 @@ const Flex = ({ children, classNames, role, column, grow }: FlexProps) => {
 };
 
 //
-// Scrollbar
-// TODO(burdon): Reconcile with mosaic viewport.
-//
-
-type ScrollbarProps = ThemedClassName<
-  PropsWithChildren<{
-    column?: boolean;
-  }>
->;
-
-const Scrollbar = ({ classNames, children, column }: ScrollbarProps) => {
-  return (
-    <div className={mx('__scrollbar __scrollbar-thin', column ? 'overflow-y-auto' : 'overflow-x-auto', classNames)}>
-      {children}
-    </div>
-  );
-};
-
-//
 // Layout
 //
 
 export const Layout = {
   Main,
+  Container,
   Flex,
-  Scrollbar,
 };
 
-export type { MainProps, FlexProps, ScrollbarProps };
+export type { MainProps as LayoutMainProps, ContainerProps as LayoutContainerProps, FlexProps as LayoutFlexProps };

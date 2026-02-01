@@ -4,23 +4,24 @@
 
 import { type Obj } from '@dxos/echo';
 
-// TODO(burdon): Define all roles.
+// TODO(burdon): Standardize PluginSettings and ObjectProperties.
+// TODO(burdon): Include attendableId?
+// TODO(burdon): companionTo?
+
 export type SurfaceRole =
   | 'item'
   | 'article'
-  | 'complementary' // (for companion?)
+  | 'complementary' // Companion
   | 'section'
   | 'card--content';
 
 /**
  * Base type for surface components.
  */
-// TODO(burdon): Standardize PluginSettings and ObjectProperties.
-// TODO(burdon): Include attendableId?
-// TODO(burdon): companionTo?
-export type SurfaceComponentProps<Subject extends Obj.Unknown = Obj.Unknown, Role extends string = string> = {
-  role?: Role;
+export type SurfaceComponentProps<Subject extends Obj.Unknown | undefined = Obj.Unknown, Props extends {} = {}> = {
+  /** WAI-ARIA role. */
+  role?: string;
 
   /** The primary object being displayed. */
   subject: Subject;
-};
+} & Props;

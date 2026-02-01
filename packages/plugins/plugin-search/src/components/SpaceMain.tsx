@@ -11,8 +11,8 @@ import { Graph, Node, useActionRunner, useConnections } from '@dxos/plugin-graph
 import { type Space, useQuery } from '@dxos/react-client/echo';
 import { Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Card, Mosaic, type StackTileComponent } from '@dxos/react-ui-mosaic';
+import { Layout } from '@dxos/react-ui-mosaic';
 import { SearchList } from '@dxos/react-ui-searchlist';
-import { StackItem } from '@dxos/react-ui-stack';
 import { Text } from '@dxos/schema';
 
 import { meta } from '../meta';
@@ -31,7 +31,7 @@ export const SpaceMain = ({ space }: { space: Space }) => {
   const { items, handleSearch } = useSpaceItems(space);
 
   return (
-    <StackItem.Content toolbar classNames='bs-full'>
+    <Layout.Main toolbar classNames='bs-full'>
       <SearchList.Root onSearch={handleSearch}>
         <Toolbar.Root>
           <SearchList.Input placeholder={t('search placeholder')} />
@@ -44,7 +44,7 @@ export const SpaceMain = ({ space }: { space: Space }) => {
           </Mosaic.Container>
         </SearchList.Content>
       </SearchList.Root>
-    </StackItem.Content>
+    </Layout.Main>
   );
 };
 

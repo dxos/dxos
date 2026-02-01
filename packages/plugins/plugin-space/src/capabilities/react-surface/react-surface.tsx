@@ -115,7 +115,7 @@ export default Capability.makeModule(
         role: 'article',
         filter: (data): data is { companionTo: Obj.Unknown } =>
           Obj.isObject(data.companionTo) && data.subject === 'settings',
-        component: ({ ref, data, role }) => <ObjectDetails object={data.companionTo} role={role} ref={ref} />,
+        component: ({ ref, data, role }) => <ObjectDetails subject={data.companionTo} role={role} ref={ref} />,
       }),
       Common.createSurface({
         id: `${meta.id}/space-settings-properties`,

@@ -68,7 +68,7 @@ export default Capability.makeModule(() =>
         id: `${meta.id}/calendar`,
         role: ['article'],
         filter: (data): data is { subject: Calendar.Calendar } => Obj.instanceOf(Calendar.Calendar, data.subject),
-        component: ({ data }) => <CalendarArticle subject={data.subject} />,
+        component: ({ data, role }) => <CalendarArticle role={role} subject={data.subject} />,
       }),
       Common.createSurface({
         id: `${meta.id}/message-card`,

@@ -11,9 +11,8 @@ import { Graph, Node, useActionRunner, useConnections } from '@dxos/plugin-graph
 import { useClient } from '@dxos/react-client';
 import { getSpace, useQuery } from '@dxos/react-client/echo';
 import { Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { Card, Mosaic, type StackTileComponent } from '@dxos/react-ui-mosaic';
+import { Card, Layout, Mosaic, type StackTileComponent } from '@dxos/react-ui-mosaic';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-searchlist';
-import { StackItem } from '@dxos/react-ui-stack';
 import { Collection } from '@dxos/schema';
 
 import { meta } from '../meta';
@@ -23,7 +22,7 @@ export const CollectionArticle = ({ subject }: { subject: Collection.Collection 
   const { items, handleSearch } = useCollectionItems(subject);
 
   return (
-    <StackItem.Content toolbar classNames='bs-full'>
+    <Layout.Main toolbar>
       <SearchList.Root onSearch={handleSearch}>
         <Toolbar.Root>
           <SearchList.Input placeholder={t('search placeholder')} />
@@ -36,7 +35,7 @@ export const CollectionArticle = ({ subject }: { subject: Collection.Collection 
           </Mosaic.Container>
         </SearchList.Content>
       </SearchList.Root>
-    </StackItem.Content>
+    </Layout.Main>
   );
 };
 

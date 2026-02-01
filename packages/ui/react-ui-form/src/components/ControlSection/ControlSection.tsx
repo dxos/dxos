@@ -13,23 +13,20 @@ import {
   toLocalizedString,
   useTranslation,
 } from '@dxos/react-ui';
-import { StackItem } from '@dxos/react-ui-stack';
+import { Layout } from '@dxos/react-ui-mosaic';
 import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations';
-
-// TODO(burdon): Factor out.
 
 export type ControlPageParams = ThemedClassName<ComponentPropsWithoutRef<'div'>>;
 
 export const ControlPage = ({ children, classNames, ...props }: ControlPageParams) => {
   return (
-    // TODO(burdon): Remove dependency on react-ui-stack.
-    <StackItem.Content scrollable classNames='[--control-spacing:var(--dx-trimMd)]'>
+    <Layout.Container scrollable classNames='[--control-spacing:var(--dx-trimMd)]'>
       <div role='none' className={mx('pli-cardSpacingInline pbe-trimMd', classNames)} {...props}>
         {children}
       </div>
-    </StackItem.Content>
+    </Layout.Container>
   );
 };
 

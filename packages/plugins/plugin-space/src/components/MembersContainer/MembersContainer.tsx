@@ -13,7 +13,7 @@ import { type Space, useSpaceInvitations } from '@dxos/react-client/echo';
 import { type CancellableInvitationObservable, Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 import { Button, Clipboard, Icon, Input, useId, useTranslation } from '@dxos/react-ui';
 import { ControlFrame, ControlFrameItem, ControlItemInput, ControlPage, ControlSection } from '@dxos/react-ui-form';
-import { StackItem } from '@dxos/react-ui-stack';
+import { Layout } from '@dxos/react-ui-mosaic';
 import { Collection } from '@dxos/schema';
 import {
   type ActionMenuItem,
@@ -130,7 +130,7 @@ export const MembersContainer = ({ space, createInvitationUrl }: MembersContaine
 
   return (
     <Clipboard.Provider>
-      <StackItem.Content scrollable>
+      <Layout.Container scrollable>
         <ControlPage>
           <ControlSection title={t('members verbose label')} description={t('members description')}>
             <ControlFrame>
@@ -174,7 +174,7 @@ export const MembersContainer = ({ space, createInvitationUrl }: MembersContaine
             </div>
           </ControlSection>
         </ControlPage>
-      </StackItem.Content>
+      </Layout.Container>
     </Clipboard.Provider>
   );
 };

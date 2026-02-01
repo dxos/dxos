@@ -45,6 +45,7 @@
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/react-client": "workspace:*",
+    "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
     "@dxos/util": "workspace:*",
     "@radix-ui/react-context": "catalog:",

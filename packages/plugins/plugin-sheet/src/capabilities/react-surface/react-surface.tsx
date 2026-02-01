@@ -27,7 +27,7 @@ export default Capability.makeModule(() =>
 
           return (
             <ComputeGraphContextProvider registry={computeGraphRegistry}>
-              <SheetContainer space={getSpace(data.subject)!} sheet={data.subject} role={role} />
+              <SheetContainer role={role} subject={data.subject} space={getSpace(data.subject)!} />
             </ComputeGraphContextProvider>
           );
         },

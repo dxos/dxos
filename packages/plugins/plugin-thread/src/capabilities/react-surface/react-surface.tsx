@@ -30,7 +30,7 @@ export default Capability.makeModule(() =>
         id: `${meta.id}/channel`,
         role: 'article',
         filter: (data): data is { subject: Channel.Channel } => Obj.instanceOf(Channel.Channel, data.subject),
-        component: ({ data: { subject }, role }) => <ChannelContainer channel={subject} role={role} />,
+        component: ({ data: { subject }, role }) => <ChannelContainer role={role} subject={subject} />,
       }),
       Common.createSurface({
         id: `${meta.id}/chat-companion`,

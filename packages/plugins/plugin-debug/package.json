@@ -14,9 +14,9 @@
   "type": "module",
   "exports": {
     ".": {
+      "browser": "./dist/lib/browser/index.mjs",
       "source": "./src/index.ts",
-      "types": "./dist/types/src/index.d.ts",
-      "browser": "./dist/lib/browser/index.mjs"
+      "types": "./dist/types/src/index.d.ts"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -72,6 +72,7 @@
     "@dxos/react-ui-canvas-editor": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-kanban": "workspace:*",
+    "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/react-ui-table": "workspace:*",

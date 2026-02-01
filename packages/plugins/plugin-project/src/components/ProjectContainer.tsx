@@ -4,19 +4,19 @@
 
 import React, { useCallback } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/react';
+import { type SurfaceComponentProps, useOperationInvoker } from '@dxos/app-framework/react';
 import { Surface } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
 import { ATTENDABLE_PATH_SEPARATOR, DeckOperation } from '@dxos/plugin-deck/types';
 import { useAttention } from '@dxos/react-ui-attention';
-import { StackItem } from '@dxos/react-ui-stack';
+import { Layout } from '@dxos/react-ui-mosaic';
 import { type Project as ProjectType } from '@dxos/types';
 
 import { type ItemProps, Project } from './Project';
 
-export type ProjectContainerProps = { project: ProjectType.Project; role: string };
+export type ProjectContainerProps = SurfaceComponentProps<ProjectType.Project>;
 
-export const ProjectContainer = ({ project }: ProjectContainerProps) => {
+export const ProjectContainer = ({ role, subject: project }: ProjectContainerProps) => {
   const { invokePromise } = useOperationInvoker();
   const attendableId = Obj.getDXN(project).toString();
   const { hasAttention } = useAttention(attendableId);
@@ -31,12 +31,12 @@ export const ProjectContainer = ({ project }: ProjectContainerProps) => {
   );
 
   return (
-    <StackItem.Content toolbar>
+    <Layout.Main role={role} toolbar>
       <Project.Root Item={ProjectItem} onAddColumn={handleColumnAdd}>
         <Project.Toolbar disabled={!hasAttention} />
         <Project.Content project={project} />
       </Project.Root>
-    </StackItem.Content>
+    </Layout.Main>
   );
 };
 

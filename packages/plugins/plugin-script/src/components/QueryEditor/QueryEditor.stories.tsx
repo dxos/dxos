@@ -10,7 +10,7 @@ import { QuerySandbox } from '@dxos/echo-query';
 import { createObject } from '@dxos/react-client/echo';
 import { Toolbar, useAsyncEffect } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { StackItem } from '@dxos/react-ui-stack';
+import { Layout } from '@dxos/react-ui-mosaic';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { createDataExtensions } from '@dxos/ui-editor';
 import { trim } from '@dxos/util';
@@ -63,7 +63,7 @@ const DefaultStory = (props: QueryEditorProps) => {
   }, [object, sandbox]);
 
   return (
-    <StackItem.Content toolbar>
+    <Layout.Main toolbar>
       {/* <ScriptToolbar script={script} state={{}} /> */}
       <Toolbar.Root>
         <Toolbar.Button onClick={handleRun}>Run</Toolbar.Button>
@@ -72,7 +72,7 @@ const DefaultStory = (props: QueryEditorProps) => {
         <QueryEditor {...props} initialValue={object.content} extensions={extensions} />
         <Json data={result} classNames='shrink-0 p-2 border-t border-subduedSeparator' />
       </div>
-    </StackItem.Content>
+    </Layout.Main>
   );
 };
 

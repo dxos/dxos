@@ -9,8 +9,8 @@ import { Entity, Query } from '@dxos/echo';
 import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
 import { Toolbar, useTranslation } from '@dxos/react-ui';
 import { Card, Mosaic, type StackTileComponent } from '@dxos/react-ui-mosaic';
+import { Layout } from '@dxos/react-ui-mosaic';
 import { SearchList } from '@dxos/react-ui-searchlist';
-import { StackItem } from '@dxos/react-ui-stack';
 import { Text } from '@dxos/schema';
 
 import { useGlobalSearch, useGlobalSearchResults, useWebSearch } from '../hooks';
@@ -51,7 +51,7 @@ export const SearchMain = ({ space }: { space?: Space }) => {
   );
 
   return (
-    <StackItem.Content toolbar>
+    <Layout.Main toolbar>
       <SearchList.Root onSearch={handleSearch}>
         <Toolbar.Root>
           <SearchList.Input placeholder={t('search placeholder')} />
@@ -65,7 +65,7 @@ export const SearchMain = ({ space }: { space?: Space }) => {
           </Mosaic.Container>
         </SearchList.Content>
       </SearchList.Root>
-    </StackItem.Content>
+    </Layout.Main>
   );
 };
 

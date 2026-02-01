@@ -151,7 +151,7 @@ export const ChatCompanion = forwardRef<HTMLDivElement, ChatCompanionProps>(
       <ChatContainer
         role={role}
         space={space}
-        chat={chat}
+        subject={chat}
         companionTo={companionTo}
         onEvent={handleEvent}
         ref={forwardedRef}

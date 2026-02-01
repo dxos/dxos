@@ -14,16 +14,16 @@
   "type": "module",
   "exports": {
     ".": {
-      "source": "./src/index.ts",
-      "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
-      "node": "./dist/lib/node-esm/index.mjs"
+      "node": "./dist/lib/node-esm/index.mjs",
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts"
     },
     "./cli": {
-      "source": "./src/cli/index.ts",
-      "types": "./dist/types/src/cli/index.d.ts",
       "browser": "./dist/lib/browser/cli/index.mjs",
-      "node": "./dist/lib/node-esm/cli/index.mjs"
+      "node": "./dist/lib/node-esm/cli/index.mjs",
+      "source": "./src/cli/index.ts",
+      "types": "./dist/types/src/cli/index.d.ts"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -45,6 +45,7 @@
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-observability": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
+    "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect-atom/atom-react": "catalog:",

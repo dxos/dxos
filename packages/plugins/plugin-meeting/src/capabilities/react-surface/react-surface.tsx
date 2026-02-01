@@ -31,7 +31,7 @@ export default Capability.makeModule(() =>
         id: `${meta.id}/meeting`,
         role: 'article',
         filter: (data): data is { subject: Meeting.Meeting } => Obj.instanceOf(Meeting.Meeting, data.subject),
-        component: ({ data }) => <MeetingContainer meeting={data.subject} />,
+        component: ({ role, data }) => <MeetingContainer role={role} subject={data.subject} />,
       }),
       Common.createSurface({
         id: `${meta.id}/meeting-companion`,
@@ -39,11 +39,11 @@ export default Capability.makeModule(() =>
         filter: (data): data is { subject: Meeting.Meeting | 'meeting'; companionTo: Channel.Channel } =>
           (Obj.instanceOf(Meeting.Meeting, data.subject) || data.subject === 'meeting') &&
           Obj.instanceOf(Channel.Channel, data.companionTo),
-        component: ({ data }) => {
+        component: ({ role, data }) => {
           return data.subject === 'meeting' ? (
             <MeetingsList channel={data.companionTo} />
           ) : (
-            <MeetingContainer meeting={data.subject} />
+            <MeetingContainer role={role} subject={data.subject} />
           );
         },
       }),

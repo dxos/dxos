@@ -8,9 +8,8 @@ import { Common } from '@dxos/app-framework';
 import { useAppGraph, useOperationInvoker } from '@dxos/app-framework/react';
 import { type Node, useConnections } from '@dxos/plugin-graph';
 import { Avatar, Icon, Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { Card, Mosaic, type StackTileComponent } from '@dxos/react-ui-mosaic';
+import { Card, Layout, Mosaic, type StackTileComponent } from '@dxos/react-ui-mosaic';
 import { SearchList, useSearchListItem, useSearchListResults } from '@dxos/react-ui-searchlist';
-import { StackItem } from '@dxos/react-ui-stack';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
@@ -39,7 +38,7 @@ export const Workspace = ({ id }: WorkspaceProps) => {
   });
 
   return (
-    <StackItem.Content toolbar classNames='bs-full'>
+    <Layout.Main toolbar>
       <SearchList.Root onSearch={handleSearch}>
         <Toolbar.Root>
           <SearchList.Input placeholder={t('search placeholder')} autoFocus />
@@ -52,7 +51,7 @@ export const Workspace = ({ id }: WorkspaceProps) => {
           </Mosaic.Container>
         </SearchList.Content>
       </SearchList.Root>
-    </StackItem.Content>
+    </Layout.Main>
   );
 };
 
