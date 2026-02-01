@@ -194,116 +194,133 @@ const Root = forwardRef<HTMLDivElement, RootProps>(({ classNames, children, asCh
       });
     };
 
+    const handleCancel = () => {
+      setDragging((dragging) => {
+        requestAnimationFrame(() => {
+          dragging?.target?.handler?.onCancel?.();
+          dragging?.source?.container?.dispatchEvent(new CustomEvent('dnd:cancel', { bubbles: true }));
+        });
+
+        return undefined;
+      });
+    };
+
+    let noTargetTimeout: NodeJS.Timeout;
+
     // Main controller.
-    return monitorForElements({
-      /**
-       * Dragging started within any container.
-       */
-      onDragStart: ({ source, location }) => {
-        log('Root.onDragStart', {
-          source: source.data,
-          location: location.current.dropTargets.map((target) => target.data),
-        });
-
-        handleChange({ source, location });
-      },
-
-      /**
-       * Dragging entered a new container.
-       */
-      onDropTargetChange: ({ source, location }) => {
-        log('Root.onDropTargetChange', {
-          source: source.data,
-          location: location.current.dropTargets.map((target) => target.data),
-        });
-
-        handleChange({ source, location });
-      },
-
-      /**
-       * Dragging within any container.
-       */
-      onDrag: ({ source, location }) => {
-        const { data } = getSourceHandler(source);
-        const { handler } = getTargetHandler(location);
-        if (handler) {
-          const { clientX: x, clientY: y } = location.current.input;
-          handler.onDrag?.({ source: data, position: { x, y } });
-        }
-      },
-
-      /**
-       * Dragging ended.
-       */
-      onDrop: ({ source, location }) => {
-        log('Root.onDrop', {
-          source: source.data,
-          location: location.current.dropTargets.map((target) => target.data),
-        });
-
-        // Get the source container.
-        const { data: sourceData, handler: sourceHandler } = getSourceHandler(source);
-        if (!sourceHandler) {
-          log.warn('invalid source', {
-            source: sourceData,
-            handlers: Object.keys(handlers),
+    return combine(
+      monitorForElements({
+        /**
+         * Dragging started within any container.
+         */
+        onDragStart: ({ source, location }) => {
+          log('Root.onDragStart', {
+            source: source.data,
+            location: location.current.dropTargets.map((target) => target.data),
           });
-          return;
-        }
 
-        try {
-          // If cancelled (e.g., user pressed Escape) then there are no drop targets.
-          if (location.current.dropTargets.length > 0) {
-            // Get the target container.
-            const { data: targetData, handler: targetHandler } = getTargetHandler(location);
-            if (!targetHandler) {
-              log.warn('invalid target', {
-                source: sourceData,
-                location,
-                handlers: Object.keys(handlers),
-              });
-              return;
-            }
+          handleChange({ source, location });
+        },
 
-            // TODO(burdon): Check object doesn't already exist in the collection.
-            if (sourceHandler === targetHandler) {
-              targetHandler.onDrop?.({
-                source: sourceData,
-                target: targetData,
-              });
-            } else {
-              if (!sourceHandler.onTake) {
-                log.warn('invalid source', { source: sourceData });
-                return;
-              }
+        /**
+         * Dragging entered a new container.
+         */
+        onDropTargetChange: ({ source, location }) => {
+          clearTimeout(noTargetTimeout);
+          log('Root.onDropTargetChange', {
+            source: source.data,
+            location: location.current.dropTargets.map((target) => target.data),
+          });
 
-              sourceHandler.onTake?.({ source: sourceData }, async (object) => {
-                targetHandler.onDrop?.({
-                  // TODO(burdon): Change source!!!
-                  source: { ...sourceData, data: object },
-                  target: targetData,
-                });
-
-                return true;
-              });
-            }
+          // Stop dragging if there are no drop targets (or we are cancelling).
+          if (location.current.dropTargets.length === 0) {
+            noTargetTimeout = setTimeout(() => setDragging(undefined), 1_000);
+          } else {
+            handleChange({ source, location });
           }
-        } finally {
-          // NOTE: When dragging is cancelled (e.g., user presses ESC) then onDrop is eventually called after a subsequent event.
+        },
+
+        /**
+         * Dragging within any container.
+         */
+        onDrag: ({ source, location }) => {
+          const { data } = getSourceHandler(source);
+          const { handler } = getTargetHandler(location);
+          if (handler) {
+            const { clientX: x, clientY: y } = location.current.input;
+            handler.onDrag?.({ source: data, position: { x, y } });
+          }
+        },
+
+        /**
+         * Dragging ended.
+         */
+        onDrop: ({ source, location }) => {
+          log.info('Root.onDrop', {
+            source: source.data,
+            location: location.current.dropTargets.map((target) => target.data),
+          });
+
+          // Get the source container.
+          const { data: sourceData, handler: sourceHandler } = getSourceHandler(source);
+          if (!sourceHandler) {
+            log.warn('invalid source', {
+              source: sourceData,
+              handlers: Object.keys(handlers),
+            });
+            return;
+          }
+
+          // NOTE: When dragging is cancelled (e.g., user presses ESC) onDrop is only called after a subsequent event.
+          // NOTE: pDND blocks ESC event propagation while dragging.
           // - ESC only flips internal state.
           // - Completion happens on the next processed input event.
           // - This avoids reentrancy and keeps pointer/keyboard behavior consistent.
-          setDragging((dragging) => {
-            requestAnimationFrame(() => {
-              dragging?.target?.handler?.onCancel?.();
-              dragging?.source?.container?.dispatchEvent(new CustomEvent('dnd:cancel', { bubbles: true }));
-            });
+          // - We set dragging to undefined in onDropTargetChange after a delay if there are no drop targets.
+          try {
+            if (location.current.dropTargets.length === 0) {
+              log.info('cancelled');
+            } else {
+              // Get the target container.
+              const { data: targetData, handler: targetHandler } = getTargetHandler(location);
+              if (!targetHandler) {
+                log.warn('invalid target', {
+                  source: sourceData,
+                  location,
+                  handlers: Object.keys(handlers),
+                });
+                return;
+              }
 
-            return undefined;
-          });
-        }
-      },
-    });
+              // TODO(burdon): Check object doesn't already exist in the collection.
+              if (sourceHandler === targetHandler) {
+                targetHandler.onDrop?.({
+                  source: sourceData,
+                  target: targetData,
+                });
+              } else {
+                if (!sourceHandler.onTake) {
+                  log.warn('invalid source', { source: sourceData });
+                  return;
+                }
+
+                sourceHandler.onTake?.({ source: sourceData }, async (object) => {
+                  targetHandler.onDrop?.({
+                    // TODO(burdon): Change source!!!
+                    source: { ...sourceData, data: object },
+                    target: targetData,
+                  });
+
+                  return true;
+                });
+              }
+            }
+          } finally {
+            handleCancel();
+          }
+        },
+      }),
+    );
   }, [handlers, getSourceHandler, getTargetHandler]);
 
   return (
@@ -378,7 +395,6 @@ type ContainerProps = SlottableClassName<
 let counter = 0;
 
 // TODO(burdon): Make generic.
-// TODO(burdon): Rename Viewport?
 const Container = forwardRef<HTMLDivElement, ContainerProps>(
   (
     {
@@ -455,6 +471,7 @@ const Container = forwardRef<HTMLDivElement, ContainerProps>(
 
       return combine(
         ...[
+          // Autoscroll.
           autoscrollElement && [
             autoScrollForElements({
               element: autoscrollElement,
