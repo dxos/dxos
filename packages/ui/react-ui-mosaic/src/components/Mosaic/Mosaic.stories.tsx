@@ -12,7 +12,7 @@ import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
-import { Board, DebugRoot, TestColumn, TestItem } from '../../testing';
+import { Board, TestColumn, TestItem } from '../../testing';
 import { Focus } from '../Focus';
 
 import { Mosaic } from './Mosaic';
@@ -58,7 +58,7 @@ const DefaultStory = ({ debug = false }: StoryProps) => {
         <Board.Root id='board' columns={columns} debug={debug} />
         {debug && (
           <Focus.Group classNames='flex flex-col gap-2 overflow-hidden'>
-            <DebugRoot classNames='p-2' />
+            <Board.Debug classNames='p-2' />
           </Focus.Group>
         )}
       </div>

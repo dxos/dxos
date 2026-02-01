@@ -58,7 +58,11 @@ export interface TestColumn extends Schema.Schema.Type<typeof TestColumn> {}
 // Root
 //
 
-type RootProps = { id: string; columns: TestColumn[]; debug?: boolean };
+type RootProps = {
+  id: string;
+  columns: TestColumn[];
+  debug?: boolean;
+};
 
 const Root = forwardRef<HTMLDivElement, RootProps>(({ id, columns, debug }, forwardedRef) => {
   const [DebugInfo, debugHandler] = useContainerDebug(debug);
@@ -163,7 +167,7 @@ const Column = forwardRef<HTMLDivElement, ColumnProps>(({ classNames, location, 
               debug={debugHandler}
             >
               <Mosaic.Viewport axis='vertical' padding viewportRef={viewportRef}>
-                <Mosaic.Stack axis='vertical' items={column.items} getId={(data) => data.dxn.toString()} Tile={Tile} />
+                <Mosaic.Stack axis='vertical' items={column.items} getId={(data) => data.dxn.toString()} Tile={Item} />
               </Mosaic.Viewport>
             </Mosaic.Container>
           </Card.Context>
@@ -180,14 +184,12 @@ const Column = forwardRef<HTMLDivElement, ColumnProps>(({ classNames, location, 
 Column.displayName = 'Column';
 
 //
-// Tile
+// Item
 //
 
-type TileProps = Pick<MosaicTileProps<Ref.Ref<TestItem>>, 'classNames' | 'data' | 'location'> & {
-  menuItems?: CardMenuProps<TestItem>['items'];
-};
+type ItemProps = Pick<MosaicTileProps<Ref.Ref<TestItem>>, 'classNames' | 'location' | 'data' | 'debug'>;
 
-const Tile = forwardRef<HTMLDivElement, TileProps>(({ classNames, data: ref, location, menuItems }, forwardedRef) => {
+const Item = forwardRef<HTMLDivElement, ItemProps>(({ classNames, data: ref, location, debug }, forwardedRef) => {
   const rootRef = useRef<HTMLDivElement>(null);
   const composedRef = useComposedRefs<HTMLDivElement>(rootRef, forwardedRef);
   const dragHandleRef = useRef<HTMLButtonElement>(null);
@@ -197,13 +199,20 @@ const Tile = forwardRef<HTMLDivElement, TileProps>(({ classNames, data: ref, loc
   }
 
   return (
-    <Mosaic.Tile asChild dragHandle={dragHandleRef.current} id={ref.dxn.toString()} data={ref} location={location}>
+    <Mosaic.Tile
+      asChild
+      dragHandle={dragHandleRef.current}
+      id={ref.dxn.toString()}
+      data={ref}
+      location={location}
+      debug={debug}
+    >
       <Focus.Group asChild>
         <Card.Root classNames={classNames} onClick={() => rootRef.current?.focus()} ref={composedRef}>
           <Card.Toolbar>
             <Card.DragHandle ref={dragHandleRef} />
             <Card.Title>{object.name}</Card.Title>
-            <Card.Menu context={object} items={menuItems} />
+            <Card.Menu context={object} />
           </Card.Toolbar>
           <Card.Row icon='ph--note--regular' classNames='text-description'>
             {object.description}
@@ -221,7 +230,7 @@ const Tile = forwardRef<HTMLDivElement, TileProps>(({ classNames, data: ref, loc
   );
 });
 
-Tile.displayName = 'Tile';
+Item.displayName = 'Item';
 
 //
 // Placeholder
@@ -246,8 +255,8 @@ Placeholder.displayName = 'Placeholder';
 // Debug
 //
 
-export const DebugRoot = forwardRef<HTMLDivElement, ThemedClassName>(({ classNames }, forwardedRef) => {
-  const { containers, dragging } = useMosaic(DebugRoot.displayName!);
+export const Debug = forwardRef<HTMLDivElement, ThemedClassName>(({ classNames }, forwardedRef) => {
+  const { containers, dragging } = useMosaic(Debug.displayName!);
   const counter = useRef(0);
   return (
     <Json
@@ -258,12 +267,12 @@ export const DebugRoot = forwardRef<HTMLDivElement, ThemedClassName>(({ classNam
   );
 });
 
-DebugRoot.displayName = 'DebugRoot';
+Debug.displayName = 'Debug';
 
 //
 // Board
 //
 
-export const Board = { Root, Column, Item: Tile, Placeholder };
+export const Board = { Root, Column, Item, Placeholder, Debug };
 
-export type { RootProps };
+export type { RootProps, ColumnProps, ItemProps };
