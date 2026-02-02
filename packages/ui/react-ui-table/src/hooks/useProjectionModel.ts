@@ -7,7 +7,7 @@ import { useState } from 'react';
 
 import { Type } from '@dxos/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
-import { ProjectionModel, createDirectChangeCallback, createEchoChangeCallback } from '@dxos/schema';
+import { ProjectionModel, createEchoChangeCallback } from '@dxos/schema';
 
 import { type Table } from '../types';
 
@@ -25,10 +25,9 @@ export const useProjectionModel = <S extends Type.Entity.Any>(
       // For immutable schemas, create a snapshot.
       const jsonSchema = Type.isMutable(schema) ? schema.jsonSchema : Type.toJsonSchema(schema);
 
-      // Use createEchoChangeCallback for mutable schemas (EchoSchema), otherwise use direct mutation.
-      const change = Type.isMutable(schema)
-        ? createEchoChangeCallback(view, schema)
-        : createDirectChangeCallback(view.projection, jsonSchema);
+      // Always use createEchoChangeCallback since the view is ECHO-backed.
+      // Pass schema only when mutable to allow schema mutations.
+      const change = createEchoChangeCallback(view, Type.isMutable(schema) ? schema : undefined);
 
       const projection = new ProjectionModel({ registry, view, baseSchema: jsonSchema, change });
       projection.normalizeView();
