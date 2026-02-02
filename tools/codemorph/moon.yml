@@ -18,3 +18,15 @@ tasks:
     options:
       merge: replace
       timeout: 60
+  build:
+    command: pnpm exec tsc --noEmit
+    deps:
+      - compile
+    inputs:
+      - /tsconfig.base.json
+      - tsconfig.json
+      - '@group(sources)'
+    outputs: []
+    options:
+      merge: replace
+      timeout: 60
