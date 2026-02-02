@@ -26,7 +26,6 @@ const defaultOptions: ScrollableProps['options'] = {
   },
 };
 
-// TODO(burdon): row/column: options={{ overflow: { x: 'scroll' } }}
 export type ScrollableProps = ThemedClassName<OverlayScrollbarsComponentProps> & {
   axis?: Axis;
   padding?: boolean;
@@ -37,12 +36,12 @@ export type ScrollableProps = ThemedClassName<OverlayScrollbarsComponentProps> &
 /**
  * https://www.npmjs.com/package/overlayscrollbars-react
  */
-export const Scrollable = forwardRef<HTMLDivElement, ScrollableProps>(
+export const Scrollable = forwardRef<OverlayScrollbarsComponentRef, ScrollableProps>(
   (
     { classNames, axis = 'vertical', padding, options: optionsProp = defaultOptions, onScroll, viewportRef, ...props },
     forwardedRef,
   ) => {
-    const osRef = useRef<OverlayScrollbarsComponentRef<'div'>>(null);
+    const osRef = useRef<OverlayScrollbarsComponentRef>(null);
     const options = useMemo(() => {
       const options = { ...optionsProp };
       if (axis) {
@@ -55,14 +54,13 @@ export const Scrollable = forwardRef<HTMLDivElement, ScrollableProps>(
       return options;
     }, [axis, optionsProp]);
 
-    // Forward the host element to the forwardedRef for asChild/Slot compatibility.
+    // Forward the OverlayScrollbarsComponentRef to the forwardedRef.
     useEffect(() => {
-      const hostElement = osRef.current?.getElement();
       if (forwardedRef) {
         if (typeof forwardedRef === 'function') {
-          forwardedRef(hostElement ?? null);
+          forwardedRef(osRef.current);
         } else {
-          forwardedRef.current = hostElement ?? null;
+          forwardedRef.current = osRef.current;
         }
       }
     });
@@ -89,7 +87,7 @@ export const Scrollable = forwardRef<HTMLDivElement, ScrollableProps>(
     return (
       <OverlayScrollbarsComponent
         {...props}
-        className={mx(padding && axis === 'vertical' ? 'pli-3' : 'pbe-3', classNames)}
+        className={mx(padding && (axis === 'vertical' ? 'pli-3' : 'pbe-3'), classNames)}
         options={options}
         events={events}
         ref={osRef}
