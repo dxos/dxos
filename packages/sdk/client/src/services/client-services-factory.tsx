@@ -72,7 +72,7 @@ export const createClientServices = async (
           config,
           {
             createOpfsWorker,
-            runtimeProps: { enableFullTextIndexing: true },
+            runtimeProps: { enableSqlite: true },
           },
           observabilityGroup,
           signalTelemetryEnabled,

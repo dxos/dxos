@@ -91,6 +91,12 @@ export class IndexEngine {
     return this.#reverseRefIndex.query(query);
   }
 
+  queryAll(query: {
+    spaceIds: readonly SpaceId[];
+  }): Effect.Effect<readonly ObjectMeta[], SqlError.SqlError, SqlClient.SqlClient> {
+    return this.#objectMetaIndex.queryAll(query);
+  }
+
   /**
    * Query snapshots by recordIds.
    * Used to load queue objects from indexed snapshots.
@@ -103,6 +109,25 @@ export class IndexEngine {
     query: Pick<ObjectMeta, 'spaceId' | 'typeDxn'>,
   ): Effect.Effect<readonly ObjectMeta[], SqlError.SqlError, SqlClient.SqlClient> {
     return this.#objectMetaIndex.query(query);
+  }
+
+  queryTypes(query: {
+    spaceIds: readonly SpaceId[];
+    typeDxns: readonly ObjectMeta['typeDxn'][];
+    inverted?: boolean;
+  }): Effect.Effect<readonly ObjectMeta[], SqlError.SqlError, SqlClient.SqlClient> {
+    return this.#objectMetaIndex.queryTypes(query);
+  }
+
+  queryRelations(query: {
+    endpoint: 'source' | 'target';
+    anchorDxns: readonly string[];
+  }): Effect.Effect<readonly ObjectMeta[], SqlError.SqlError, SqlClient.SqlClient> {
+    return this.#objectMetaIndex.queryRelations(query);
+  }
+
+  lookupByRecordIds(recordIds: number[]): Effect.Effect<readonly ObjectMeta[], SqlError.SqlError, SqlClient.SqlClient> {
+    return this.#objectMetaIndex.lookupByRecordIds(recordIds);
   }
 
   update(
