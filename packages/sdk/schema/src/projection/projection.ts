@@ -54,16 +54,23 @@ export type ProjectionChangeCallback = {
 
 /**
  * Creates a change callback for ECHO-backed View and EchoSchema objects.
- * Use this when the view and schema are stored in the ECHO database.
+ * Use this when the view is stored in the ECHO database.
  *
  * Note: Type assertions are needed because:
  * 1. PersistentSchema's type doesn't include [KindId] but runtime value does
  * 2. Inside Obj.change, the mutable object has different type constraints
+ *
+ * @param view - The ECHO-backed view object.
+ * @param schema - Optional EchoSchema. If not provided, schema mutations will throw.
  */
-export const createEchoChangeCallback = (view: View.View, schema: EchoSchema): ProjectionChangeCallback => ({
+export const createEchoChangeCallback = (view: View.View, schema?: EchoSchema): ProjectionChangeCallback => ({
   // Inside Obj.change, v is Mutable<View.View>, so v.projection is already mutable.
   projection: (mutate) => Obj.change(view, (v) => mutate(v.projection as Mutable<View.Projection>)),
-  schema: (mutate) => Obj.change(schema.persistentSchema as unknown as Obj.Unknown, (s: any) => mutate(s.jsonSchema)),
+  schema: schema
+    ? (mutate) => Obj.change(schema.persistentSchema as unknown as Obj.Unknown, (s: any) => mutate(s.jsonSchema))
+    : () => {
+        throw new Error('Schema is not mutable');
+      },
 });
 
 /**

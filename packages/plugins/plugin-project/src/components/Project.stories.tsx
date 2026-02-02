@@ -12,6 +12,7 @@ import { useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/react-ui/testing';
 import { Form, omitId } from '@dxos/react-ui-form';
+import { withMosaic } from '@dxos/react-ui-mosaic/testing';
 import { Collection, View } from '@dxos/schema';
 import { createObjectFactory } from '@dxos/schema/testing';
 import { Person, Project } from '@dxos/types';
@@ -48,17 +49,19 @@ const DefaultStory = () => {
       return;
     }
 
-    // Create a new view for contacts similar to the initialization
+    // Create a new view for contacts similar to the initialization.
     const view = View.make({
       query: Query.select(Filter.type(Person.Person)),
       jsonSchema: Type.toJsonSchema(Person.Person),
       fields: ['fullName'],
     });
 
-    project.columns.push({
-      name: 'New Contacts',
-      view: Ref.make(view),
-      order: [],
+    Obj.change(project, (p) => {
+      p.columns.push({
+        name: 'New Contacts',
+        view: Ref.make(view) as (typeof p.columns)[number]['view'],
+        order: [],
+      });
     });
 
     return Ref.make(view);
@@ -93,10 +96,12 @@ const MutationsStory = () => {
       fields: ['fullName'],
     });
 
-    project.columns.push({
-      name: 'New Contacts',
-      view: Ref.make(view),
-      order: [],
+    Obj.change(project, (p) => {
+      p.columns.push({
+        name: 'New Contacts',
+        view: Ref.make(view) as (typeof p.columns)[number]['view'],
+        order: [],
+      });
     });
 
     return view;
@@ -146,14 +151,12 @@ const meta = {
   title: 'plugins/plugin-project/Project',
   decorators: [
     withTheme,
+    withMosaic(),
     withClientProvider({
       types: [Project.Project, View.View, Collection.Collection, Person.Person],
       createIdentity: true,
       createSpace: true,
       onCreateSpace: async ({ space }) => {
-        // Create a project.
-        const project = Project.make();
-
         // Create a view for contacts.
         const view = View.make({
           name: 'Contacts',
@@ -162,15 +165,20 @@ const meta = {
           fields: ['fullName'],
         });
 
-        project.columns.push({
-          name: 'Contacts',
-          view: Ref.make(view),
-          order: [],
+        // Create a project with columns.
+        const project = Project.make({
+          columns: [
+            {
+              name: 'Contacts',
+              view: Ref.make(view),
+              order: [],
+            },
+          ],
         });
 
         space.db.add(project);
 
-        // Generate random contacts
+        // Generate random contacts.
         const factory = createObjectFactory(space.db, faker as any);
         await factory([{ type: Person.Person, count: 12 }]);
       },
