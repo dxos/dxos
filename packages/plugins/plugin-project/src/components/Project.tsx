@@ -6,6 +6,7 @@ import { createContext } from '@radix-ui/react-context';
 import React, { type FC } from 'react';
 
 import { type Obj } from '@dxos/echo';
+import { useObject } from '@dxos/react-client/echo';
 import { Toolbar, type ToolbarRootProps, useTranslation } from '@dxos/react-ui';
 import { Stack } from '@dxos/react-ui-stack';
 import { type ProjectionModel } from '@dxos/schema';
@@ -50,9 +51,11 @@ type ProjectContentProps = {
 };
 
 const ProjectContent = ({ project }: ProjectContentProps) => {
+  const [columns] = useObject(project, 'columns');
+
   return (
     <Stack orientation='horizontal' size='contain' rail={false}>
-      {project.columns.map((column) => {
+      {columns.map((column) => {
         return <ProjectColumn key={column.view.dxn.toString()} column={column} />;
       })}
     </Stack>
