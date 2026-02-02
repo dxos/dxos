@@ -124,9 +124,9 @@ describe('without database', () => {
     text: Schema.optional(Schema.String),
     nested: Schema.Struct({
       name: Schema.optional(Schema.String),
-      arr: Schema.optional(Schema.Array(Schema.String).pipe(Schema.mutable)),
+      arr: Schema.optional(Schema.Array(Schema.String)),
       ref: Schema.optional(Schema.suspend((): RefSchema<TestSchema> => Type.Ref(TestSchema))),
-    }).pipe(Schema.mutable),
+    }),
   }).pipe(
     EchoObjectSchema({
       typename: 'example.com/type/Test',
@@ -652,7 +652,7 @@ describe('Reactive Object with ECHO database', () => {
         field: Schema.Number,
       }).pipe(Type.object({ typename: 'example.com/type/TestNested', version: '0.1.0' }));
       const TestType = Schema.Struct({
-        objects: Schema.mutable(Schema.Array(Type.Ref(NestedType))),
+        objects: Schema.Array(Type.Ref(NestedType)),
       }).pipe(Type.object({ typename: 'example.com/type/Test', version: '0.1.0' }));
 
       const key = foreignKey('example.com', '123');

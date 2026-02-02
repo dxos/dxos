@@ -20,7 +20,7 @@ describe('formats', () => {
       birthday: Schema.optional(Format.Date),
       started: Schema.optional(Format.DateTime),
       active: Schema.optional(Schema.Boolean),
-    }).pipe(Schema.mutable);
+    });
 
     type TestType = Schema.Schema.Type<typeof TestSchema>;
 

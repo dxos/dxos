@@ -17,7 +17,7 @@ export type ReadonlyMeta = DeepReadonly<ObjectMeta>;
 /**
  * Mutable meta type received in meta mutation callbacks.
  */
-export type Meta = ObjectMeta;
+export type Meta = Mutable<ObjectMeta>;
 
 /**
  * Get the metadata for an entity with validation.
@@ -26,9 +26,9 @@ export type Meta = ObjectMeta;
  *
  * TODO(burdon): When passed a Snapshot, should return a snapshot of meta, not the live meta proxy.
  */
-export function getMetaChecked(entity: Mutable<AnyProperties>): ObjectMeta;
+export function getMetaChecked(entity: Mutable<AnyProperties>): Meta;
 export function getMetaChecked(entity: AnyProperties): ReadonlyMeta;
-export function getMetaChecked(entity: AnyProperties): ObjectMeta | ReadonlyMeta {
+export function getMetaChecked(entity: AnyProperties): Meta | ReadonlyMeta {
   assertArgument(entity, 'entity', 'Should be an entity.');
   const meta = getMeta$(entity);
   invariant(meta != null, 'Invalid entity.');

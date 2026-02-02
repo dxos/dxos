@@ -28,7 +28,7 @@ export const Meeting = Schema.Struct({
   /**
    * List of dids of identities which joined some portion of the meeting.
    */
-  participants: Schema.mutable(Schema.Array(IdentityDidSchema)).pipe(FormInputAnnotation.set(false)),
+  participants: Schema.Array(IdentityDidSchema).pipe(FormInputAnnotation.set(false)),
 
   /**
    * Transcript of the meeting.

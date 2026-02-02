@@ -94,7 +94,7 @@ describe('complex schema validations', () => {
   });
 
   test('subscribe', () => {
-    const TestSchema = Schema.mutable(Schema.Struct({ field: Schema.String })).pipe(
+    const TestSchema = Schema.Struct({ field: Schema.String }).pipe(
       EchoObjectSchema({ typename: 'Test', version: '0.1.0' }),
     );
     const object = makeObject(TestSchema, { field: 'value' });
@@ -117,12 +117,10 @@ describe('complex schema validations', () => {
 });
 
 describe('object structure restrictions', () => {
-  const NestedSchema = Schema.mutable(
-    Schema.Struct({
-      data: Schema.optional(Schema.Any),
-      nested: Schema.optional(Schema.Any),
-    }),
-  );
+  const NestedSchema = Schema.Struct({
+    data: Schema.optional(Schema.Any),
+    nested: Schema.optional(Schema.Any),
+  });
 
   test('prevents direct cycles', () => {
     const obj = makeObject(NestedSchema, { data: null });
@@ -226,11 +224,9 @@ describe('object structure restrictions', () => {
   });
 
   test('array elements are owned by root ECHO object', () => {
-    const ArraySchema = Schema.mutable(
-      Schema.Struct({
-        items: Schema.mutable(Schema.Array(Schema.Any)),
-      }),
-    );
+    const ArraySchema = Schema.Struct({
+      items: Schema.Array(Schema.Any),
+    });
 
     const obj1 = makeObject(ArraySchema, {
       items: [{ id: 1 }, { id: 2 }, { id: 3 }],

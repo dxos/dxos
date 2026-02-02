@@ -372,9 +372,9 @@ export type Meta = ApiMeta;
  * Returns read-only meta when passed a regular relation or snapshot.
  */
 // TODO(wittjosiah): When passed a Snapshot, should return a snapshot of meta, not the live meta proxy.
-export function getMeta(entity: Mutable<Unknown>): ObjectMeta;
+export function getMeta(entity: Mutable<Unknown>): Meta;
 export function getMeta(entity: Unknown | Snapshot): ReadonlyMeta;
-export function getMeta(entity: Unknown | Snapshot | Mutable<Unknown>): ObjectMeta | ReadonlyMeta {
+export function getMeta(entity: Unknown | Snapshot | Mutable<Unknown>): Meta | ReadonlyMeta {
   return getMeta$(entity);
 }
 

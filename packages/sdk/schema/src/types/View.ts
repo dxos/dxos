@@ -335,7 +335,7 @@ const ViewSchemaV4 = Schema.Struct({
   query: Schema.Struct({
     raw: Schema.optional(Schema.String),
     ast: QueryAST.Query,
-  }).pipe(Schema.mutable, FormInputAnnotation.set(false)),
+  }).pipe(FormInputAnnotation.set(false)),
   projection: Projection.pipe(FormInputAnnotation.set(false)),
   presentation: Type.Ref(Type.Obj).pipe(FormInputAnnotation.set(false)),
 }).pipe(

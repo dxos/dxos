@@ -30,7 +30,7 @@ interface TestEmpty extends Schema.Schema.Type<typeof TestEmpty> {}
 
 const TestWithRefs = Schema.Struct({
   schema: Schema.optional(Ref(EchoSchema)),
-  schemaArray: Schema.optional(Schema.mutable(Schema.Array(Ref(EchoSchema)))),
+  schemaArray: Schema.optional(Schema.Array(Ref(EchoSchema))),
 }).pipe(
   Type.object({
     typename: 'example.com/type/Test',

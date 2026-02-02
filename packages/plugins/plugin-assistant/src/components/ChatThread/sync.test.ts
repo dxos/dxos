@@ -7,6 +7,7 @@ import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import { Obj } from '@dxos/echo';
+import { type Mutable } from '@dxos/echo/internal';
 import { type ContentBlock } from '@dxos/types';
 
 import { createMessage } from '../../testing';
@@ -78,7 +79,7 @@ describe('reducers', () => {
       expect(doc.content).toEqual(['<prompt>Hello</prompt>', 'Hi there!'].join('\n'));
 
       Obj.change(messages[1], (m) => {
-        const block = m.blocks[0] as ContentBlock.Text;
+        const block = m.blocks[0] as Mutable<ContentBlock.Text>;
         block.text = 'Hi there! How are you?';
         block.pending = false;
       });

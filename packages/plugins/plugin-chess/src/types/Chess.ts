@@ -22,7 +22,7 @@ export const Game = Schema.Struct({
         description: 'DID of black player',
       }),
     ),
-  }).pipe(Schema.mutable, FormInputAnnotation.set(false), Schema.optional),
+  }).pipe(FormInputAnnotation.set(false), Schema.optional),
   pgn: Schema.String.annotations({
     description: 'Portable Game Notation.',
   }).pipe(FormInputAnnotation.set(false), Schema.optional),

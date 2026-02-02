@@ -9,6 +9,7 @@ import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 import * as Predicate from 'effect/Predicate';
 import * as Stream from 'effect/Stream';
+import type * as Types from 'effect/Types';
 
 import { Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
@@ -103,29 +104,29 @@ export const parseResponse =
 
         /** Stack of open tags. */
         const tagStack: StreamBlock[] = [];
-        const summary: ContentBlock.Summary = {
+        const summary: Types.Mutable<ContentBlock.Summary> = {
           _tag: 'summary',
         };
 
         /** Current partial block used to accumulate content. */
         let current: StreamBlock | undefined;
-        let block: ContentBlock.Any | undefined;
+        let block: Types.Mutable<ContentBlock.Any> | undefined;
         let blocks = 0;
         let parts = 0;
         let toolCalls = 0;
 
-        const emitPartialContentBlock = Effect.fnUntraced(function* (block: ContentBlock.Any) {
-          yield* onBlock({ ...block });
+        const emitPartialContentBlock = Effect.fnUntraced(function* (block: Types.Mutable<ContentBlock.Any>) {
+          yield* onBlock({ ...block } as ContentBlock.Any);
           blocks++;
         });
 
-        const emitFullBlock = Effect.fnUntraced(function* (block: ContentBlock.Any) {
+        const emitFullBlock = Effect.fnUntraced(function* (block: Types.Mutable<ContentBlock.Any>) {
           log('block', { block });
           if (block.pending === false) {
             delete block.pending;
           }
-          yield* onBlock(block);
-          emit.single(block);
+          yield* onBlock(block as ContentBlock.Any);
+          emit.single(block as ContentBlock.Any);
           blocks++;
         });
 
@@ -378,12 +379,12 @@ export const parseResponse =
     );
 
 /**
- * @returns Content block made from stream block.
+ * @returns Mutable content block made from stream block.
  */
 const makeContentBlock = (
   block: StreamBlock,
   { parseReasoningTags }: Pick<ParseResponseOptions<any>, 'parseReasoningTags'>,
-): ContentBlock.Any | undefined => {
+): Types.Mutable<ContentBlock.Any> | undefined => {
   switch (block.type) {
     //
     // Text

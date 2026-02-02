@@ -30,7 +30,8 @@ export const KanbanContainer = ({ role, subject: object }: KanbanContainerProps)
   useEffect(() => {
     const staticSchema = schemas.flat().find((schema) => Type.getTypename(schema) === typename);
     if (staticSchema) {
-      setCardSchema(staticSchema);
+      // NOTE: Use functional update to prevent React from calling the schema as a function.
+      setCardSchema(() => staticSchema);
     }
     if (!staticSchema && typename && db) {
       const query = db.schemaRegistry.query({ typename });
@@ -38,7 +39,8 @@ export const KanbanContainer = ({ role, subject: object }: KanbanContainerProps)
         () => {
           const [schema] = query.results;
           if (schema) {
-            setCardSchema(schema);
+            // NOTE: Use functional update to prevent React from calling the schema as a function.
+            setCardSchema(() => schema);
           }
         },
         { fire: true },

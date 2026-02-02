@@ -11,6 +11,7 @@ import {
   Format,
   FormatAnnotation,
   type JsonSchemaType,
+  type Mutable,
   PropertyMetaAnnotationId,
   type SelectOption,
   TypeEnum,
@@ -100,20 +101,21 @@ export const getSchemaFromPropertyDefinitions = (
   // Wrap schema modifications in Obj.change since the persistent schema is an ECHO object.
   Obj.change(schema.persistentSchema as unknown as Obj.Unknown, () => {
     for (const prop of properties) {
+      const jsonProp = schema.jsonSchema.properties![prop.name] as Mutable<JsonSchemaType>;
       if (prop.config?.options) {
         if (prop.format === Format.TypeFormat.SingleSelect) {
-          makeSingleSelectAnnotations(schema.jsonSchema.properties![prop.name], [...prop.config.options]);
+          makeSingleSelectAnnotations(jsonProp, [...prop.config.options]);
         }
         if (prop.format === Format.TypeFormat.MultiSelect) {
-          makeMultiSelectAnnotations(schema.jsonSchema.properties![prop.name], [...prop.config.options]);
+          makeMultiSelectAnnotations(jsonProp, [...prop.config.options]);
         }
       }
 
       if (prop.format === Format.TypeFormat.GeoPoint) {
-        schema.jsonSchema.properties![prop.name].type = TypeEnum.Object;
+        jsonProp.type = TypeEnum.Object;
       }
 
-      schema.jsonSchema.properties![prop.name].format = prop.format;
+      jsonProp.format = prop.format;
     }
   });
 
@@ -125,7 +127,7 @@ export const getSchemaFromPropertyDefinitions = (
  */
 // TODO(burdon): Factor out (dxos/echo)
 export const makeSingleSelectAnnotations = (
-  jsonProperty: JsonSchemaType,
+  jsonProperty: Mutable<JsonSchemaType>,
   options: Array<{ id: string; title?: string; color?: string }>,
 ) => {
   jsonProperty.enum = options.map(({ id }) => id);
@@ -146,7 +148,7 @@ export const makeSingleSelectAnnotations = (
  */
 // TODO(burdon): Factor out (dxos/echo)
 export const makeMultiSelectAnnotations = (
-  jsonProperty: JsonSchemaType,
+  jsonProperty: Mutable<JsonSchemaType>,
   options: Array<{ id: string; title?: string; color?: string }>,
 ) => {
   // TODO(ZaymonFC): Is this how do we encode an array of enums?

@@ -12,24 +12,20 @@ import { DXN, Type } from '@dxos/echo';
 //   - Should re-use schemas if possible.
 
 // TODO(burdon): Reuse trigger schema from @dxos/functions (TriggerType).
-export const EmailEvent = Schema.mutable(
-  Schema.Struct({
-    from: Schema.String,
-    to: Schema.String,
-    subject: Schema.String,
-    created: Schema.String,
-    body: Schema.String,
-  }),
-);
+export const EmailEvent = Schema.Struct({
+  from: Schema.String,
+  to: Schema.String,
+  subject: Schema.String,
+  created: Schema.String,
+  body: Schema.String,
+});
 export type EmailEvent = Schema.Schema.Type<typeof EmailEvent>;
 
-export const QueueEvent = Schema.mutable(
-  Schema.Struct({
-    queue: DXN.Schema,
-    item: Schema.Any,
-    cursor: Schema.String,
-  }),
-);
+export const QueueEvent = Schema.Struct({
+  queue: DXN.Schema,
+  item: Schema.Any,
+  cursor: Schema.String,
+});
 export type QueueEvent = Schema.Schema.Type<typeof QueueEvent>;
 
 export const SubscriptionEvent = Schema.Struct({
@@ -48,20 +44,18 @@ export const SubscriptionEvent = Schema.Struct({
    * @deprecated
    */
   changedObjectId: Schema.optional(Schema.String),
-}).pipe(Schema.mutable);
+});
 export type SubscriptionEvent = Schema.Schema.Type<typeof SubscriptionEvent>;
 
-export const TimerEvent = Schema.mutable(Schema.Struct({ tick: Schema.Number }));
+export const TimerEvent = Schema.Struct({ tick: Schema.Number });
 export type TimerEvent = Schema.Schema.Type<typeof TimerEvent>;
 
-export const WebhookEvent = Schema.mutable(
-  Schema.Struct({
-    url: Schema.String,
-    method: Schema.Literal('GET', 'POST'),
-    headers: Schema.Record({ key: Schema.String, value: Schema.String }),
-    bodyText: Schema.String,
-  }),
-);
+export const WebhookEvent = Schema.Struct({
+  url: Schema.String,
+  method: Schema.Literal('GET', 'POST'),
+  headers: Schema.Record({ key: Schema.String, value: Schema.String }),
+  bodyText: Schema.String,
+});
 export type WebhookEvent = Schema.Schema.Type<typeof WebhookEvent>;
 
 export const TriggerEvent = Schema.Union(EmailEvent, QueueEvent, SubscriptionEvent, TimerEvent, WebhookEvent);

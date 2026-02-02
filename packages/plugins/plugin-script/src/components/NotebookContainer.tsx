@@ -6,6 +6,7 @@ import { RegistryContext } from '@effect-atom/atom-react';
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
+import type * as Types from 'effect/Types';
 import React, { useCallback, useContext, useMemo, useState } from 'react';
 
 import { type SurfaceComponentProps } from '@dxos/app-framework/react';
@@ -72,8 +73,8 @@ export const NotebookContainer = ({ role, subject: notebook, env }: NotebookCont
                 }
               });
             } else {
-              Obj.change(graph, () => {
-                graph.query.ast = ast;
+              Obj.change(graph, (g) => {
+                g.query.ast = ast as Obj.Mutable<typeof ast>;
               });
             }
           }
@@ -145,7 +146,7 @@ export const NotebookContainer = ({ role, subject: notebook, env }: NotebookCont
   const handleCellInsert = useCallback<NonNullable<NotebookStackProps['onCellInsert']>>(
     async (type, after) => {
       invariant(notebook);
-      const cell: Notebook.Cell = { id: crypto.randomUUID(), type };
+      const cell: Types.Mutable<Notebook.Cell> = { id: crypto.randomUUID(), type };
       switch (type) {
         case 'markdown':
         case 'script':
