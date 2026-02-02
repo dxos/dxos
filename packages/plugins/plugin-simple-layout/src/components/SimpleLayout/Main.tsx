@@ -60,8 +60,8 @@ export const Main = () => {
         <NaturalMain.Content
           bounce
           classNames={mx(
-            'dx-mobile-main dx-mobile-main-scroll-area--flush',
             'grid bs-full overflow-hidden',
+            'pbs-[env(safe-area-inset-top)] pbe-[env(safe-area-inset-bottom)]',
             showNavBar ? 'grid-rows-[min-content_1fr_min-content]' : 'grid-rows-[min-content_1fr]',
           )}
         >
