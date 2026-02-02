@@ -6,7 +6,7 @@ import { Atom, useAtomSet, useAtomValue } from '@effect-atom/atom-react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Common } from '@dxos/app-framework';
-import { type SurfaceComponentProps, useOperationInvoker } from '@dxos/app-framework/react';
+import { type SurfaceComponentProps, useLayout, useOperationInvoker } from '@dxos/app-framework/react';
 import { type Database, Obj, Relation, Tag } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { AttentionOperation } from '@dxos/plugin-attention/types';
@@ -41,6 +41,7 @@ export const MailboxArticle = ({ role, subject: mailbox, filter: filterProp, att
   const { t } = useTranslation(meta.id);
   const id = attendableId ?? Obj.getDXN(mailbox).toString();
   const { invokePromise } = useOperationInvoker();
+  const layout = useLayout();
   const currentMessageId = useSelected(id, 'single');
 
   const filterEditorRef = useRef<EditorController>(null);
@@ -124,10 +125,20 @@ export const MailboxArticle = ({ role, subject: mailbox, filter: filterProp, att
             contextId: id,
             selection: { mode: 'single', id: message?.id },
           });
-          void invokePromise(DeckOperation.ChangeCompanion, {
-            primary: id,
-            companion: `${id}${ATTENDABLE_PATH_SEPARATOR}message`,
-          });
+
+          const companionId = `${id}${ATTENDABLE_PATH_SEPARATOR}message`;
+          if (layout.mode === 'simple') {
+            // Simple layout: navigate to companion as standalone view.
+            void invokePromise(Common.LayoutOperation.Open, {
+              subject: [companionId],
+            });
+          } else {
+            // Deck layout: open as companion panel.
+            void invokePromise(DeckOperation.ChangeCompanion, {
+              primary: id,
+              companion: companionId,
+            });
+          }
           break;
         }
 
@@ -158,7 +169,7 @@ export const MailboxArticle = ({ role, subject: mailbox, filter: filterProp, att
         }
       }
     },
-    [id, mailbox, sortedMessages, invokePromise],
+    [id, layout.mode, mailbox, sortedMessages, invokePromise],
   );
 
   const handleCancel = useCallback(() => {

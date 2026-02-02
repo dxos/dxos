@@ -15,6 +15,7 @@ import { mx } from '@dxos/ui-theme';
 import { useSimpleLayoutState } from '../../hooks';
 import { ContentError } from '../ContentError';
 import { ContentLoading } from '../ContentLoading';
+import { useLoadDescendents } from '../hooks';
 
 import { Banner } from './Banner';
 import { NavBar } from './NavBar';
@@ -29,20 +30,24 @@ export const Main = () => {
   const { graph } = useAppGraph();
   const node = useNode(graph, id);
 
+  const { id: parentId, variant } = parseEntryId(id);
+  const parentNode = useNode(graph, variant ? parentId : undefined);
+  useLoadDescendents(variant ? parentId : undefined);
+
   const placeholder = useMemo(() => <ContentLoading />, []);
 
   const data = useMemo(() => {
-    const { variant } = parseEntryId(id);
     return (
       node && {
         attendableId: id,
         subject: node.data,
+        companionTo: parentNode?.data,
         properties: node.properties,
         popoverAnchorId: state.popoverAnchorId,
         variant,
       }
     );
-  }, [id, node, node?.data, node?.properties, state.popoverAnchorId]);
+  }, [id, node, node?.data, node?.properties, parentNode?.data, state.popoverAnchorId, variant]);
 
   const handleActiveIdChange = useCallback((nextActiveId: string | null) => {
     log.info('navigate', { nextActiveId });

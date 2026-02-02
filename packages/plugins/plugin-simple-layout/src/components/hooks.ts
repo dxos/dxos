@@ -14,17 +14,13 @@ export const useLoadDescendents = (nodeId?: string) => {
   const { graph } = useAppGraph();
 
   useEffect(() => {
-    const frame = requestAnimationFrame(() => {
-      if (nodeId) {
-        // First level: expand the node itself.
-        Graph.expand(graph, nodeId, 'outbound');
-        // Second level: expand each child.
-        Graph.getConnections(graph, nodeId, 'outbound').forEach((child) => {
-          Graph.expand(graph, child.id, 'outbound');
-        });
-      }
-    });
-
-    return () => cancelAnimationFrame(frame);
+    if (nodeId) {
+      // First level: expand the node itself.
+      Graph.expand(graph, nodeId, 'outbound');
+      // Second level: expand each child.
+      Graph.getConnections(graph, nodeId, 'outbound').forEach((child) => {
+        Graph.expand(graph, child.id, 'outbound');
+      });
+    }
   }, [nodeId, graph]);
 };
