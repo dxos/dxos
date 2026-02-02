@@ -3,4 +3,3 @@
 //
 
 export * from './useSimpleLayoutState';
-export * from './useSpotlightDismiss';

@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import React, { type KeyboardEvent, useCallback, useRef } from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
-import { Capability, Common, RuntimePlugin } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { useAtomCapability } from '@dxos/app-framework/react';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { OperationResolver } from '@dxos/operation';
@@ -39,7 +39,7 @@ const StoryPlankHeading = ({ attendableId }: { attendableId: string }) => {
   const { hasAttention } = useAttention(attendableId);
   console.log('hasAttention', hasAttention);
   return (
-    <div className='flex p-1 items-center border-b border-separator'>
+    <div className='flex p-1 items-center border-be border-separator'>
       <IconButton
         density='coarse'
         icon='ph--atom--regular'
@@ -122,10 +122,12 @@ const meta = {
     withTheme,
     withPluginManager({
       plugins: [
-        RuntimePlugin(),
         ...corePlugins(),
+        StorybookPlugin({
+          initialState: { sidebarState: 'expanded' },
+        }),
+
         NavTreePlugin(),
-        StorybookPlugin({ initialState: { sidebarState: 'expanded' } }),
       ],
       capabilities: () => {
         const storyStateAtom = Atom.make({ tab: 'space-0' }).pipe(Atom.keepAlive);

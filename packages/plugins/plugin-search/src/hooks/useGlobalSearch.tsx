@@ -5,6 +5,7 @@
 import React, { type PropsWithChildren, createContext, useCallback, useContext, useState } from 'react';
 
 import { raise } from '@dxos/debug';
+import { type Entity } from '@dxos/echo';
 import { GlobalFilterProvider } from '@dxos/react-ui-searchlist';
 
 import { type SearchResult } from '../types';
@@ -31,11 +32,14 @@ export const SearchContextProvider = ({ children }: PropsWithChildren) => {
 
   // Provide a filter function for useGlobalFilteredObjects.
   const filterFn = useCallback(
-    <T extends Record<string, any>>(objects: T[]): T[] => {
+    <T extends Entity.Any>(objects: T[]): T[] => {
       if (!match) {
         return objects;
       }
-      return filterObjectsSync(objects, match).map((result) => result.object as T);
+
+      return filterObjectsSync(objects, match)
+        .filter((result) => result.object)
+        .map((result) => result.object!);
     },
     [match],
   );
@@ -51,7 +55,7 @@ export const useGlobalSearch = () => {
   return useContext(SearchContext) ?? raise(new Error('Missing SearchContext.'));
 };
 
-export const useGlobalSearchResults = <T extends Record<string, any>>(objects?: T[]): SearchResult[] => {
+export const useGlobalSearchResults = <T extends Entity.Unknown>(objects?: T[]): SearchResult<T>[] => {
   const { match } = useGlobalSearch();
   return objects && match ? filterObjectsSync(objects, match) : [];
 };

@@ -12,7 +12,6 @@ import { Obj, Query, Tag, Type } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { InboxPlugin } from '@dxos/plugin-inbox';
 import { PreviewPlugin } from '@dxos/plugin-preview';
-import { SpacePlugin } from '@dxos/plugin-space';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { faker } from '@dxos/random';
 import { useDatabase, useQuery } from '@dxos/react-client/echo';
@@ -41,7 +40,7 @@ const DefaultStory = () => {
 
   return (
     <Stack orientation='horizontal' size='split' rail={false} classNames='pli-0'>
-      <ProjectContainer role='article' project={project} />
+      <ProjectContainer role='article' subject={project} />
       <ProjectObjectSettings project={project} classNames='border-is border-separator' />
     </Stack>
   );
@@ -55,6 +54,7 @@ const meta = {
     withPluginManager({
       plugins: [
         ...corePlugins(),
+        StorybookPlugin({}),
         ClientPlugin({
           types: [
             Tag.Tag,
@@ -208,11 +208,9 @@ const meta = {
               yield* Effect.promise(() => messageQueue.append(messages));
             }),
         }),
-        ...corePlugins(),
-        SpacePlugin({}),
-        PreviewPlugin(),
+
         InboxPlugin(),
-        StorybookPlugin({}),
+        PreviewPlugin(),
       ],
     }),
   ],

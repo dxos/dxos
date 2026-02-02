@@ -6,8 +6,8 @@ import { Slot } from '@radix-ui/react-slot';
 import React, { type ComponentPropsWithoutRef, forwardRef } from 'react';
 
 import type { ThemedClassName } from '@dxos/react-ui';
-import { Card, cardDefaultInlineSize } from '@dxos/react-ui-mosaic';
-import { mx } from '@dxos/ui-theme';
+import { Card } from '@dxos/react-ui-mosaic';
+import { cardDefaultInlineSize, mx } from '@dxos/ui-theme';
 
 import { Stack, type StackProps, railGridHorizontalContainFitContent } from '../Stack';
 
@@ -173,6 +173,9 @@ const CardStackDragHandle = Card.DragHandle;
 // CardStack
 //
 
+/**
+ * @deprecated Replace with Mosaic.Stack.
+ */
 export const CardStack = {
   Root: CardStackRoot,
   Content: CardStackContent,

@@ -19,6 +19,7 @@ export type PackageJson = {
   version: string;
   type?: string;
   private: boolean;
+  repository?: string | { type: string; url: string };
   exports?: string | Record<string, string | Record<string, string | Record<string, string>>>;
   imports?: string | Record<string, string | Record<string, string | Record<string, string>>>;
   main?: string;

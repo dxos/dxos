@@ -238,6 +238,8 @@ export const translations = [
         'sync latency label': 'Latency',
         'sync upload label': 'Upload',
         'sync download label': 'Download',
+
+        'search placeholder': 'Search…',
       },
     },
   },

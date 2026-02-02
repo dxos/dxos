@@ -15,7 +15,7 @@ export const Canvas = Schema.Struct({
   schema: Schema.String.pipe(Schema.optional),
   content: Schema.Record({ key: Schema.String, value: Schema.Any }).pipe(Schema.mutable),
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/Canvas',
     version: '0.1.0',
   }),
@@ -27,7 +27,7 @@ export const Diagram = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
   canvas: Type.Ref(Canvas).pipe(FormInputAnnotation.set(false)),
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/Diagram',
     version: '0.1.0',
   }),

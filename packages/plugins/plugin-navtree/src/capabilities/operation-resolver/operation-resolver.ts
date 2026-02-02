@@ -19,18 +19,21 @@ export default Capability.makeModule(
         handler: Effect.fnUntraced(function* ({ subject }) {
           const { graph } = yield* Capability.get(Common.Capability.AppGraph);
           const { getItem, setItem } = yield* Capability.get(NavTreeCapabilities.State);
-          try {
-            const path = yield* Effect.promise(() => Graph.waitForPath(graph, { target: subject }, { timeout: 1_000 }));
-            [...Array(path.length)].forEach((_, index) => {
-              const subpath = path.slice(0, index);
-              const value = getItem(subpath);
-              if (!value.open) {
-                setItem(subpath, 'open', true);
-              }
-            });
-          } catch {
-            log('Path to node not found', { subject });
-          }
+          yield* Effect.tryPromise(() => Graph.waitForPath(graph, { target: subject }, { timeout: 1_000 })).pipe(
+            Effect.andThen((path) => {
+              [...Array(path.length)].forEach((_, index) => {
+                const subpath = path.slice(0, index);
+                const value = getItem(subpath);
+                if (!value.open) {
+                  setItem(subpath, 'open', true);
+                }
+              });
+            }),
+            Effect.catchAll(() => {
+              log('Path to node not found', { subject });
+              return Effect.void;
+            }),
+          );
         }),
       }),
     ]);

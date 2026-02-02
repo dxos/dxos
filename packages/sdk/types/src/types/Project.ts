@@ -11,8 +11,8 @@ import { IconAnnotation, View } from '@dxos/schema';
 export const Column = Schema.Struct({
   name: Schema.String,
   view: Type.Ref(View.View),
-  order: Schema.Array(Schema.String),
-});
+  order: Schema.Array(Schema.String).pipe(Schema.mutable),
+}).pipe(Schema.mutable);
 
 export type Column = Schema.Schema.Type<typeof Column>;
 
@@ -22,7 +22,7 @@ export const Project = Schema.Struct({
   image: Format.URL.pipe(Schema.annotations({ title: 'Image' }), Schema.optional),
   columns: Schema.Array(Column.pipe(Schema.mutable)).pipe(Schema.mutable, FormInputAnnotation.set(false)),
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/Project',
     version: '0.2.0',
   }),
@@ -31,9 +31,9 @@ export const Project = Schema.Struct({
   IconAnnotation.set('ph--check-square-offset--regular'),
 );
 
-export interface Project extends Schema.Schema.Type<typeof Project> {}
+export type Project = Schema.Schema.Type<typeof Project>;
 
-export const make = (props: Partial<Obj.MakeProps<typeof Project>> = {}) =>
+export const make = (props: Partial<Obj.MakeProps<typeof Project>> = {}): Project =>
   Obj.make(Project, {
     columns: [],
     ...props,

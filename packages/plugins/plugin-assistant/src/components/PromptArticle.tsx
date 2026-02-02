@@ -11,7 +11,7 @@ import { Obj } from '@dxos/echo';
 import { invokeFunctionWithTracing, useComputeRuntimeCallback } from '@dxos/plugin-automation';
 import { Toolbar, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
-import { StackItem } from '@dxos/react-ui-stack';
+import { Layout } from '@dxos/react-ui-mosaic';
 
 import { meta } from '../meta';
 
@@ -19,7 +19,7 @@ import { TemplateEditor } from './TemplateEditor';
 
 export type PromptArticleProps = SurfaceComponentProps<Prompt.Prompt>;
 
-export const PromptArticle = ({ subject }: PromptArticleProps) => {
+export const PromptArticle = ({ role, subject }: PromptArticleProps) => {
   const { t } = useTranslation(meta.id);
   const db = Obj.getDatabase(subject);
   const { hasAttention } = useAttention(Obj.getDXN(subject).toString());
@@ -38,12 +38,12 @@ export const PromptArticle = ({ subject }: PromptArticleProps) => {
   ]);
 
   return (
-    <StackItem.Content toolbar>
+    <Layout.Main role={role} toolbar>
       <Toolbar.Root disabled={!hasAttention} onClick={handleRun}>
         <Toolbar.IconButton iconOnly icon='ph--play--regular' label={t('run prompt label')} onClick={handleRun} />
       </Toolbar.Root>
       <TemplateEditor id={subject.id} template={subject.instructions} classNames='container-max-width' />
-    </StackItem.Content>
+    </Layout.Main>
   );
 };
 

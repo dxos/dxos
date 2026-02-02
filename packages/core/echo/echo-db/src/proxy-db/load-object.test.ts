@@ -7,6 +7,7 @@ import { describe, expect, test } from 'vitest';
 
 import { Obj, Ref, Type } from '@dxos/echo';
 import { Filter } from '@dxos/echo';
+import { TestSchema } from '@dxos/echo/testing';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { openAndClose } from '@dxos/test-utils';
@@ -26,7 +27,7 @@ describe.skip('loadObjectReferences', () => {
 
     const testPeer = await testBuilder.createPeer({ kv: createTestLevel(tmpPath) });
     const db = await testPeer.createDatabase(spaceKey);
-    const object = Obj.make(Type.Expando, { nested: Obj.make(Type.Expando, { value: nestedValue }) });
+    const object = Obj.make(TestSchema.Expando, { nested: Obj.make(TestSchema.Expando, { value: nestedValue }) });
     db.add(object);
     await db.flush();
     await testPeer.close();
@@ -46,9 +47,9 @@ describe.skip('loadObjectReferences', () => {
 
     const testPeer = await testBuilder.createPeer({ kv: createTestLevel(tmpPath) });
     const db = await testPeer.createDatabase(spaceKey);
-    const object = Obj.make(Type.Expando, {
-      foo: Obj.make(Type.Expando, { value: 1 }),
-      bar: Obj.make(Type.Expando, { value: 2 }),
+    const object = Obj.make(TestSchema.Expando, {
+      foo: Obj.make(TestSchema.Expando, { value: 1 }),
+      bar: Obj.make(TestSchema.Expando, { value: 2 }),
     });
     db.add(object);
     await db.flush();
@@ -70,7 +71,9 @@ describe.skip('loadObjectReferences', () => {
 
     const testPeer = await testBuilder.createPeer({ kv: createTestLevel(tmpPath) });
     const db = await testPeer.createDatabase(spaceKey);
-    const object = Obj.make(Type.Expando, { nestedArray: [Obj.make(Type.Expando, {}), Obj.make(Type.Expando, {})] });
+    const object = Obj.make(TestSchema.Expando, {
+      nestedArray: [Obj.make(TestSchema.Expando, {}), Obj.make(TestSchema.Expando, {})],
+    });
     db.add(object);
     await db.flush();
     await testPeer.close();
@@ -91,9 +94,15 @@ describe.skip('loadObjectReferences', () => {
 
     const testPeer = await testBuilder.createPeer({ kv: createTestLevel(tmpPath) });
     const objects = [
-      Obj.make(Type.Expando, { nestedArray: [Obj.make(Type.Expando, {}), Obj.make(Type.Expando, {})] }),
-      Obj.make(Type.Expando, {
-        nestedArray: [Obj.make(Type.Expando, {}), Obj.make(Type.Expando, {}), Obj.make(Type.Expando, {})],
+      Obj.make(TestSchema.Expando, {
+        nestedArray: [Obj.make(TestSchema.Expando, {}), Obj.make(TestSchema.Expando, {})],
+      }),
+      Obj.make(TestSchema.Expando, {
+        nestedArray: [
+          Obj.make(TestSchema.Expando, {}),
+          Obj.make(TestSchema.Expando, {}),
+          Obj.make(TestSchema.Expando, {}),
+        ],
       }),
     ];
     const db = await testPeer.createDatabase(spaceKey);
@@ -118,7 +127,7 @@ describe.skip('loadObjectReferences', () => {
 
     const testPeer = await testBuilder.createPeer({ kv: createTestLevel(tmpPath) });
     const db = await testPeer.createDatabase(spaceKey);
-    const object = Obj.make(Type.Expando, { nestedArray: [] });
+    const object = Obj.make(TestSchema.Expando, { nestedArray: [] });
     db.add(object);
     await db.flush();
     await testPeer.close();
@@ -137,7 +146,7 @@ describe.skip('loadObjectReferences', () => {
 
     const testPeer = await testBuilder.createPeer({ kv: createTestLevel(tmpPath) });
     const db = await testPeer.createDatabase(spaceKey);
-    const object = Obj.make(Type.Expando, { nested: Obj.make(Type.Expando, {}) });
+    const object = Obj.make(TestSchema.Expando, { nested: Obj.make(TestSchema.Expando, {}) });
     db.add(object);
     await db.flush();
     await testPeer.close();
@@ -157,12 +166,12 @@ describe.skip('loadObjectReferences', () => {
 
   test('loads as array of non-nullable items', async () => {
     const Nested = Schema.Struct({ value: Schema.Number }).pipe(
-      Type.Obj({ typename: 'example.com/Nested', version: '0.1.0' }),
+      Type.object({ typename: 'example.com/Nested', version: '0.1.0' }),
     );
 
     const TestSchema = Schema.Struct({
       nested: Schema.mutable(Schema.Array(Type.Ref(Nested))),
-    }).pipe(Type.Obj({ typename: 'example.com/Test', version: '0.1.0' }));
+    }).pipe(Type.object({ typename: 'example.com/Test', version: '0.1.0' }));
 
     const testBuilder = new EchoTestBuilder();
     await openAndClose(testBuilder);

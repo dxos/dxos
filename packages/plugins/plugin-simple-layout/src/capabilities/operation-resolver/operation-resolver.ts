@@ -9,6 +9,9 @@ import { Operation, OperationResolver } from '@dxos/operation';
 
 import { type SimpleLayoutState, SimpleLayoutState as SimpleLayoutStateCapability } from '../../types';
 
+/** Maximum number of items to keep in navigation history. */
+const MAX_HISTORY_LENGTH = 50;
+
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const registry = yield* Capability.get(Common.Capability.AtomRegistry);
@@ -63,6 +66,8 @@ export default Capability.makeModule(
           updateState((state) => ({
             ...state,
             popoverOpen: input.state ?? Boolean(input.subject),
+            popoverKind: input.kind ?? 'base',
+            popoverTitle: input.kind === 'card' ? input.title : undefined,
             popoverContent:
               typeof input.subject === 'string'
                 ? { component: input.subject, props: input.props }
@@ -90,6 +95,8 @@ export default Capability.makeModule(
             previousWorkspace: !state.workspace.startsWith('!') ? state.workspace : state.previousWorkspace,
             workspace: input.subject,
             active: undefined,
+            // Clear history when switching workspaces.
+            history: [],
           }));
         }),
       }),
@@ -113,10 +120,18 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: Common.LayoutOperation.Open,
         handler: Effect.fnUntraced(function* (input) {
-          updateState((state) => ({
-            ...state,
-            active: input.subject[0],
-          }));
+          updateState((state) => {
+            // Push current active to history if it exists.
+            const newHistory = state.active ? [...state.history, state.active] : state.history;
+            // Limit history length to prevent memory issues.
+            const trimmedHistory =
+              newHistory.length > MAX_HISTORY_LENGTH ? newHistory.slice(-MAX_HISTORY_LENGTH) : newHistory;
+            return {
+              ...state,
+              active: input.subject[0],
+              history: trimmedHistory,
+            };
+          });
         }),
       }),
 
@@ -126,10 +141,23 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: Common.LayoutOperation.Close,
         handler: Effect.fnUntraced(function* () {
-          updateState((state) => ({
-            ...state,
-            active: undefined,
-          }));
+          updateState((state) => {
+            // Pop from history if available.
+            if (state.history.length > 0) {
+              const newHistory = [...state.history];
+              const previousActive = newHistory.pop();
+              return {
+                ...state,
+                active: previousActive,
+                history: newHistory,
+              };
+            }
+            // No history, just clear active.
+            return {
+              ...state,
+              active: undefined,
+            };
+          });
         }),
       }),
 

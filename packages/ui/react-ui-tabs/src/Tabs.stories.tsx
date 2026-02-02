@@ -17,7 +17,7 @@ export const DefaultStory = () => {
   return (
     <Dialog.Root open>
       <Dialog.Overlay blockAlign='start'>
-        <Dialog.Content classNames='is-[calc(100dvw-4rem)] !max-is-full'>
+        <Dialog.Content size='xl'>
           <NaturalTabs.Root orientation='vertical' defaultValue={Object.keys(content)[3]} defaultActivePart='list'>
             <NaturalTabs.Viewport>
               <NaturalTabs.Tablist>

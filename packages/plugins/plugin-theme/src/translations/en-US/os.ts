@@ -134,4 +134,5 @@ export const os = (appName?: string) => ({
   'toggle expand label': 'Toggle expand',
   'create new person label': 'Create new person',
   'invitations label': 'Invitations',
+  'close dialog label': 'Close',
 });

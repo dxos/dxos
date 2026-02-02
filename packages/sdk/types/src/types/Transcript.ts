@@ -22,7 +22,7 @@ export const Transcript = Schema.Struct({
    */
   queue: Type.Ref(Queue),
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/Transcript',
     version: '0.1.0',
   }),
@@ -43,4 +43,4 @@ const TranscriptHeader = Schema.Struct({
 
 export type TranscriptHeader = Schema.Schema.Type<typeof TranscriptHeader>;
 
-export const make = (queueDxn: DXN) => Obj.make(Transcript, { queue: Ref.fromDXN(queueDxn) });
+export const make = (queueDxn: DXN): Transcript => Obj.make(Transcript, { queue: Ref.fromDXN(queueDxn) });

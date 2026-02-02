@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Key } from '@dxos/echo';
+import { Key, Obj } from '@dxos/echo';
 import { range } from '@dxos/util';
 
 import { Tree, type TreeNodeType } from '../types';
@@ -16,7 +16,9 @@ const random = (min: number, max: number) => Math.floor(Math.random() * (max - m
  */
 export const createTree = (spec: NumberOrNumberArray[] = [], createText?: () => string): Tree => {
   const tree = new Tree();
-  tree.root.data = { text: 'root' };
+  Obj.change(tree.tree, () => {
+    tree.root.data = { text: 'root' };
+  });
 
   const createNodes = (parent: TreeNodeType, spec: NumberOrNumberArray = 0): TreeNodeType[] => {
     const count = Array.isArray(spec) ? random(spec[0], spec[1]) : spec;

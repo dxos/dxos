@@ -31,7 +31,7 @@ export type ChatEvent =
     }
   | {
       type: 'add';
-      object: Obj.Any;
+      object: Obj.Unknown;
     }
   //
   // UX

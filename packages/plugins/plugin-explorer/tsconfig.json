@@ -80,6 +80,9 @@
       "path": "../../ui/react-ui-graph"
     },
     {
+      "path": "../../ui/react-ui-mosaic"
+    },
+    {
       "path": "../../ui/react-ui-stack"
     },
     {

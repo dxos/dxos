@@ -10,26 +10,53 @@ import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/react-ui/testing';
 import { Text as TextType } from '@dxos/schema';
-import { render } from '@dxos/storybook-utils';
 
 import { translations } from '../../translations';
 import { Journal, Outline, getDateString } from '../../types';
 
 import { Journal as JournalComponent } from './Journal';
 
+// TODO(wittjosiah): ECHO objects don't work when passed via Storybook args.
+const DefaultJournalStory = () => {
+  const space = useSpace();
+  const journal = useMemo(() => {
+    if (space) {
+      return space.db.add(Journal.make());
+    }
+    return undefined;
+  }, [space]);
+  if (journal) {
+    return <JournalComponent journal={journal} />;
+  }
+  return null;
+};
+
+// Create journal with entries at render time (see above comment).
+const JournalsStory = () => {
+  const space = useSpace();
+  const journal = useMemo(() => {
+    if (space) {
+      const dates = [new Date(Date.now() - 5 * 24 * 60 * 60 * 1_000), new Date(2025, 0, 1)];
+      return space.db.add(
+        Obj.make(Journal.Journal, {
+          name: 'Journal 1',
+          entries: dates.reduce(
+            (acc, date) => ({ ...acc, [getDateString(date)]: Ref.make(Journal.makeEntry(date)) }),
+            {},
+          ),
+        }),
+      );
+    }
+    return undefined;
+  }, [space]);
+  if (journal) {
+    return <JournalComponent journal={journal} />;
+  }
+  return null;
+};
+
 const meta = {
   title: 'plugins/plugin-outliner/Journal',
-  component: JournalComponent,
-  render: render(({ journal: journalProp }) => {
-    const space = useSpace();
-    // TODO(burdon): Throws:
-    //  Uncaught InvariantViolation: invariant violation: assignFromLocalState [doc] at packages/core/echo/echo-db/src/core-db/object-core.ts:126
-    //  Uncaught Error: Object references must be wrapped with `Ref.make`
-    const journal = useMemo(() => space?.db.add(journalProp), [space, journalProp]);
-    if (journal) {
-      return <JournalComponent journal={journal} />;
-    }
-  }),
   decorators: [
     withTheme,
     withClientProvider({
@@ -42,27 +69,18 @@ const meta = {
     layout: 'fullscreen',
     translations,
   },
-} satisfies Meta<typeof JournalComponent>;
+} satisfies Meta;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  args: {
-    journal: Journal.make(),
-  },
+  render: () => <DefaultJournalStory />,
 };
 
-const dates = [new Date(Date.now() - 5 * 24 * 60 * 60 * 1_000), new Date(2025, 0, 1)];
-
 export const Jounals: Story = {
-  args: {
-    journal: Obj.make(Journal.Journal, {
-      name: 'Journal 1',
-      entries: dates.reduce((acc, date) => ({ ...acc, [getDateString(date)]: Ref.make(Journal.makeEntry(date)) }), {}),
-    }),
-  },
+  render: () => <JournalsStory />,
 };
 
 const FocusContainer = ({ id }: { id: string }) => {

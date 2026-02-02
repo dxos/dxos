@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-export * from './expando';
+export * from './entity';
 export * from './model'; // TODO(burdon): Rename.
 export * from './object';
 export * from './relation';

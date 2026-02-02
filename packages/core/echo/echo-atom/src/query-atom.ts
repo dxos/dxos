@@ -34,10 +34,13 @@ export const fromQuery = <T extends Entity.Unknown>(queryResult: QueryResult.Que
 // Registry: key → Queryable (WeakRef with auto-cleanup when GC'd).
 const queryableRegistry = new WeakDictionary<string, Database.Queryable>();
 
-// Atom.family keyed by "identifier:serializedAST".
+// Key separator that won't appear in identifiers (DXN strings use colons).
+const KEY_SEPARATOR = '~';
+
+// Atom.family keyed by "identifier\0serializedAST".
 const queryFamily = Atom.family((key: string) => {
   // Parse key outside Atom.make - runs once per key.
-  const separatorIndex = key.indexOf(':');
+  const separatorIndex = key.indexOf(KEY_SEPARATOR);
   const identifier = key.slice(0, separatorIndex);
   const serializedAst = key.slice(separatorIndex + 1);
 
@@ -114,8 +117,8 @@ const fromQueryable = <T extends Entity.Unknown>(
     ? queryOrFilter
     : Query.select(queryOrFilter as Filter.Filter<T>);
 
-  // Build key: identifier:serializedAST.
-  const key = `${identifier}:${JSON.stringify(normalizedQuery.ast)}`;
+  // Build key: identifier\0serializedAST (using null char as separator to avoid DXN colon conflicts).
+  const key = `${identifier}${KEY_SEPARATOR}${JSON.stringify(normalizedQuery.ast)}`;
 
   return queryFamily(key) as Atom.Atom<T[]>;
 };

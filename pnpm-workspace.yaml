@@ -68,8 +68,10 @@ catalog:
   '@dxos/effect': ^0.8.3
   '@dxos/keys': ^0.8.3
   '@dxos/log': ^0.8.3
+  '@dxos/react-ui-mosaic': 0.7.5-feature-compute.4d9d99a
   '@dxos/schema': ^0.8.3
   '@dxos/test-utils': ^0.8.3
+  '@dxos/util': ^0.8.3
   '@dxos/wa-sqlite': ^0.2.1
   '@effect-atom/atom': ^0.4.13
   '@effect-atom/atom-react': ^0.4.6
@@ -102,7 +104,7 @@ catalog:
   '@eslint/js': ^9.37.0
   '@excalidraw/excalidraw': ^0.18.0
   '@fluentui/react-tabster': 9.26.11
-  '@fontsource-variable/inter': 5.0.16
+  '@fontsource-variable/inter': 5.2.8
   '@fontsource-variable/jetbrains-mono': 5.0.21
   '@fontsource/k2d': ^5.0.18
   '@fontsource/poiret-one': ^5.0.20
@@ -208,15 +210,15 @@ catalog:
   '@sentry/vite-plugin': ^4.0.2
   '@solid-primitives/utils': ^6.3.2
   '@solidjs/testing-library': ^0.8.10
-  '@storybook/addon-docs': ^10.1.11
-  '@storybook/addon-links': ^10.1.11
-  '@storybook/addon-themes': ^10.1.11
-  '@storybook/addon-vitest': ^10.1.11
-  '@storybook/builder-vite': ^10.1.11
-  '@storybook/html-vite': ^10.1.11
+  '@storybook/addon-docs': ^10.2.1
+  '@storybook/addon-links': ^10.2.1
+  '@storybook/addon-themes': ^10.2.1
+  '@storybook/addon-vitest': ^10.2.1
+  '@storybook/builder-vite': ^10.2.1
+  '@storybook/html-vite': ^10.2.1
   '@storybook/mdx2-csf': ^1.1.0
-  '@storybook/react-vite': ^10.1.11
-  '@storybook/web-components-vite': ^10.1.11
+  '@storybook/react-vite': ^10.2.1
+  '@storybook/web-components-vite': ^10.2.1
   '@svgr/cli': ^8.1.0
   '@swc/core': 1.13.5
   '@swc/types': ^0.1.25
@@ -423,7 +425,7 @@ catalog:
   eslint-plugin-prettier: ^5.5.4
   eslint-plugin-react: ^7.37.5
   eslint-plugin-sort-exports: ^0.9.1
-  eslint-plugin-storybook: 10.1.11
+  eslint-plugin-storybook: ^10.2.1
   eslint-plugin-unused-imports: ^4.1.4
   eventemitter3: ^5.0.1
   events: ^3.3.0
@@ -631,7 +633,7 @@ catalog:
   sort-package-json: ^1.57.0
   stage-js: 1.0.0-alpha.17
   starlight-links-validator: ^0.14.3
-  storybook: ^10.1.11
+  storybook: ^10.2.1
   storybook-solidjs-vite: ^10.0.9
   streamx: ^2.12.5
   style-mod: ^4.1.0

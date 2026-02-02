@@ -3,7 +3,6 @@
 //
 
 import * as Option from 'effect/Option';
-import type * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
@@ -24,7 +23,7 @@ const textFilter = (text?: string) => {
 
   // TODO(burdon): Structured query (e.g., "type:Text").
   const matcher = new RegExp(text, 'i');
-  return (item: Schema.Schema.AnyNoContext) => {
+  return (item: Type.Entity.Any) => {
     let match = false;
     match ||= !!Type.getDXN(item)?.toString().match(matcher);
     match ||= !!SchemaAST.getTitleAnnotation(item.ast).pipe(Option.getOrUndefined)?.match(matcher);
@@ -33,8 +32,8 @@ const textFilter = (text?: string) => {
   };
 };
 
-const useSchemaQuery = (space?: Space): Schema.Schema.AnyNoContext[] => {
-  const [schema, setSchema] = useState<Schema.Schema.AnyNoContext[]>([]);
+const useSchemaQuery = (space?: Space): Type.Entity.Any[] => {
+  const [schema, setSchema] = useState<Type.Entity.Any[]>([]);
   useEffect(() => {
     if (!space) {
       return;
@@ -58,7 +57,7 @@ export const SchemaPanel = (props: { space?: Space }) => {
   const schema = useSchemaQuery(space);
   const [filter, setFilter] = useState('');
   // NOTE: Always call setSelected with a function: setSelected(() => item) because schema is a class constructor.
-  const [selected, setSelected] = useState<Schema.Schema.AnyNoContext>();
+  const [selected, setSelected] = useState<Type.Entity.Any>();
 
   const onNavigate = (dxn: DXN) => {
     const selectedSchema = schema.find((item) => Type.getDXN(item) && DXN.equals(Type.getDXN(item)!, dxn));
@@ -76,7 +75,7 @@ export const SchemaPanel = (props: { space?: Space }) => {
     }
   };
 
-  const itemSelect = (item: Schema.Schema.AnyNoContext) => {
+  const itemSelect = (item: Type.Entity.Any) => {
     setSelected(() => item);
   };
 

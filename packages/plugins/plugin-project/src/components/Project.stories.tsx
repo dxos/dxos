@@ -114,7 +114,9 @@ const MutationsStory = () => {
       if (p < 0.4) {
         // Append to the name
         const contactToAdjust = faker.helpers.arrayElement(contacts);
-        contactToAdjust.fullName += ' X';
+        Obj.change(contactToAdjust, (c) => {
+          c.fullName = (c.fullName ?? '') + ' X';
+        });
         return;
       } else if (p < 0.7 && contacts.length > 1) {
         // Remove a contact (30% chance, but only if we have more than 1)

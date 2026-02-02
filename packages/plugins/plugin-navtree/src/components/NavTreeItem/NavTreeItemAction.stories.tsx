@@ -51,7 +51,12 @@ const meta = {
     menuActions,
     label: 'Select action',
   } satisfies Partial<NavTreeItemActionMenuProps>,
-  decorators: [withTheme, withPluginManager({ plugins: [RuntimePlugin(), ...corePlugins()] })],
+  decorators: [
+    withTheme,
+    withPluginManager({
+      plugins: [...corePlugins(), RuntimePlugin()],
+    }),
+  ],
   parameters: {
     layout: 'centered',
   },

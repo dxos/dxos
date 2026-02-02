@@ -5,7 +5,10 @@
   "description": "A decentralized alternative to the commercial cloud for privacy preserving software.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
-  "repository": "github:dxos/dxos",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
   "license": "MIT",
   "author": "info@dxos.org",
   "sideEffects": false,
@@ -143,7 +146,7 @@
     "rollup-plugin-sourcemaps": "catalog:",
     "semver": "catalog:",
     "serve": "catalog:",
-    "storybook": "10.1.11",
+    "storybook": "catalog:",
     "ts-morph": "catalog:",
     "tsdown": "catalog:",
     "tsx": "catalog:",

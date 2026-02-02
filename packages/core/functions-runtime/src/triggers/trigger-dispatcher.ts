@@ -15,7 +15,7 @@ import * as Option from 'effect/Option';
 import * as Record from 'effect/Record';
 import * as Schedule from 'effect/Schedule';
 
-import { DXN, Filter, Obj, Query } from '@dxos/echo';
+import { DXN, Entity, Filter, Obj, Query } from '@dxos/echo';
 import { Database } from '@dxos/echo';
 import { causeToError } from '@dxos/effect';
 import { FunctionInvocationService, QueueService, TracingService, deserializeFunction } from '@dxos/functions';
@@ -318,7 +318,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
               // TODO(dmaretskyi): Include cursor & limit in the query.
               const objects = yield* Effect.promise(() => queue.queryObjects());
               for (const object of objects) {
-                const objectPos = Obj.getKeys(object, KEY_QUEUE_POSITION).at(0)?.id;
+                const objectPos = Entity.getKeys(object, KEY_QUEUE_POSITION).at(0)?.id;
                 // TODO(dmaretskyi): Extract methods for managing queue position.
                 if (!objectPos || (cursor && parseInt(cursor) >= parseInt(objectPos))) {
                   continue;
@@ -336,9 +336,9 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
                 );
 
                 // Update trigger cursor.
-                Obj.change(trigger, (t) => {
-                  Obj.deleteKeys(t, KEY_QUEUE_CURSOR);
-                  Obj.getMeta(t).keys.push({ source: KEY_QUEUE_CURSOR, id: objectPos });
+                Obj.change(trigger, (trigger) => {
+                  Obj.deleteKeys(trigger, KEY_QUEUE_CURSOR);
+                  Obj.getMeta(trigger).keys.push({ source: KEY_QUEUE_CURSOR, id: objectPos });
                 });
                 yield* Database.Service.flush();
 
@@ -353,7 +353,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
           case 'subscription': {
             const triggers = yield* this._fetchTriggers();
             for (const trigger of triggers) {
-              const spec = Obj.getSnapshot(trigger).spec;
+              const spec = trigger.spec;
               if (spec?.kind !== 'subscription') {
                 continue;
               }

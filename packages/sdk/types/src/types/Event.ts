@@ -46,7 +46,7 @@ export const Event = Schema.Struct({
    */
   thread: Type.Ref(Thread.Thread).pipe(FormInputAnnotation.set(false), Schema.optional),
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/Event',
     version: '0.1.0',
   }),
@@ -56,5 +56,5 @@ export const Event = Schema.Struct({
 
 export interface Event extends Schema.Schema.Type<typeof Event> {}
 
-export const make = ({ attendees = [], ...props }: MakeOptional<Obj.MakeProps<typeof Event>, 'attendees'>) =>
+export const make = ({ attendees = [], ...props }: MakeOptional<Obj.MakeProps<typeof Event>, 'attendees'>): Event =>
   Obj.make(Event, { attendees, ...props });

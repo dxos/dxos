@@ -4,6 +4,10 @@
   "description": "Utilities for DXOS UI Storybooks.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
   "license": "MIT",
   "author": "DXOS.org",
   "sideEffects": true,
@@ -31,7 +35,7 @@
     "@dxos/react-ui-dnd": "workspace:*",
     "@effect-atom/atom-react": "catalog:",
     "lodash.defaultsdeep": "catalog:",
-    "storybook": "10.1.11"
+    "storybook": "10.2.0"
   },
   "devDependencies": {
     "@dxos/react-ui": "workspace:*",

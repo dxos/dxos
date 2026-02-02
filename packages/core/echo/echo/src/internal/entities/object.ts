@@ -13,17 +13,32 @@ import { EntityKind } from '../types';
 import { type EchoTypeSchema, makeEchoTypeSchema } from './entity';
 
 /**
+ * Object schema type with kind marker.
+ */
+export type EchoObjectSchema<
+  Self extends Schema.Schema.Any,
+  Fields extends Schema.Struct.Fields = Schema.Struct.Fields,
+> = EchoTypeSchema<Self, {}, EntityKind.Object, Fields>;
+
+/**
  * Schema for Obj entity types.
  * Pipeable function to add ECHO object annotations to a schema.
  */
 export const EchoObjectSchema: {
-  // TODO(burdon): Tighten Self type to Schema.TypeLiteral or Schema.Struct to facilitate definition of `make` method.
-  // (meta: TypeMeta): <Self extends Schema.Struct<Fields>, Fields extends Schema.Struct.Fields>(self: Self) => EchoObjectSchema<Self, Fields>;
-  (meta: TypeMeta): <Self extends Schema.Schema.Any>(self: Self) => EchoTypeSchema<Self>;
+  (
+    meta: TypeMeta,
+  ): <Self extends Schema.Schema.Any, Fields extends Schema.Struct.Fields = Schema.Struct.Fields>(
+    self: Self & { fields?: Fields },
+  ) => EchoObjectSchema<Self, Fields>;
 } = ({ typename, version }) => {
-  return <Self extends Schema.Schema.Any>(self: Self): EchoTypeSchema<Self> => {
+  return <Self extends Schema.Schema.Any, Fields extends Schema.Struct.Fields = Schema.Struct.Fields>(
+    self: Self & { fields?: Fields },
+  ): EchoObjectSchema<Self, Fields> => {
     invariant(typeof TypeAnnotationId === 'symbol', 'Sanity.');
     invariant(SchemaAST.isTypeLiteral(self.ast), 'Schema must be a TypeLiteral.');
+
+    // Extract fields from the schema if available (Struct schemas have .fields).
+    const fields = ((self as any).fields ?? {}) as Fields;
 
     // TODO(dmaretskyi): Does `Schema.mutable` work for deep mutability here?
     // TODO(dmaretskyi): Do not do mutable here.
@@ -40,6 +55,6 @@ export const EchoObjectSchema: {
       }),
     });
 
-    return makeEchoTypeSchema<Self>(/* self.fields, */ ast, typename, version);
+    return makeEchoTypeSchema<Self, EntityKind.Object, Fields>(fields, ast, typename, version, EntityKind.Object);
   };
 };

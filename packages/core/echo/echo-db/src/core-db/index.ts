@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './change-context';
 export * from './core-database';
 export * from './object-core';
 

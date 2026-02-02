@@ -7,7 +7,7 @@ import * as Function from 'effect/Function';
 
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { type Entity, Obj, type QueryResult } from '@dxos/echo';
+import { Entity, type QueryResult } from '@dxos/echo';
 import { filterMatchObjectJSON } from '@dxos/echo-pipeline/filter';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
@@ -93,7 +93,7 @@ export class QueueQueryContext<T extends Entity.Unknown = Entity.Unknown> implem
     return Function.pipe(
       this.#queue.getObjectsSync(),
       // TODO(dmaretskyi): We end-up marshaling objects from JSON and back.
-      Array.filter((obj) => filterMatchObjectJSON(this.#filter!, Obj.toJSON(obj))),
+      Array.filter((obj) => filterMatchObjectJSON(this.#filter!, Entity.toJSON(obj))),
       Array.map((object) => ({
         id: object.id,
         result: object as T,

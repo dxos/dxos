@@ -24,7 +24,7 @@ export type ChatCompanionProps = {
   role?: string;
   data: {
     subject: Assistant.Chat | 'assistant-chat';
-    companionTo: Obj.Any;
+    companionTo: Obj.Unknown;
   };
 };
 
@@ -151,7 +151,7 @@ export const ChatCompanion = forwardRef<HTMLDivElement, ChatCompanionProps>(
       <ChatContainer
         role={role}
         space={space}
-        chat={chat}
+        subject={chat}
         companionTo={companionTo}
         onEvent={handleEvent}
         ref={forwardedRef}

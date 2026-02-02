@@ -8,7 +8,7 @@ import React from 'react';
 import { Capability, Common } from '@dxos/app-framework';
 import { InvocationTraceContainer } from '@dxos/devtools';
 import { Obj } from '@dxos/echo';
-import { StackItem } from '@dxos/react-ui-stack';
+import { Layout } from '@dxos/react-ui-mosaic';
 import { Project } from '@dxos/types';
 
 import { ProjectContainer, ProjectObjectSettings } from '../../components';
@@ -21,20 +21,20 @@ export default Capability.makeModule(() =>
         id: meta.id,
         role: 'article',
         filter: (data): data is { subject: Project.Project } => Obj.instanceOf(Project.Project, data.subject),
-        component: ({ data, role }) => <ProjectContainer role={role} project={data.subject} />,
+        component: ({ data, role }) => <ProjectContainer role={role} subject={data.subject} />,
       }),
       Common.createSurface({
         id: `${meta.id}/companion/invocations`,
         role: 'article',
         filter: (data): data is { companionTo: Project.Project } =>
           Obj.instanceOf(Project.Project, data.companionTo) && data.subject === 'invocations',
-        component: ({ data }) => {
+        component: ({ data, role }) => {
           const db = Obj.getDatabase(data.companionTo);
           // TODO(wittjosiah): Filter the invocations to those relevant to the project.
           return (
-            <StackItem.Content>
+            <Layout.Main role={role}>
               <InvocationTraceContainer db={db} detailAxis='block' />
-            </StackItem.Content>
+            </Layout.Main>
           );
         },
       }),

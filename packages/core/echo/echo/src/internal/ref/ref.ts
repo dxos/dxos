@@ -17,7 +17,7 @@ import { DXN, ObjectId } from '@dxos/keys';
 import * as Database from '../../Database';
 import { ReferenceAnnotationId, getSchemaDXN, getTypeAnnotation, getTypeIdentifierAnnotation } from '../annotations';
 import { type JsonSchemaType } from '../json-schema';
-import type { AnyProperties, WithId } from '../types';
+import type { AnyEntity, AnyProperties } from '../types';
 
 /**
  * The `$id` and `$ref` fields for an ECHO reference schema.
@@ -72,7 +72,7 @@ export const RefTypeId: unique symbol = Symbol('@dxos/echo/internal/Ref');
 /**
  * Reference Schema.
  */
-export interface RefSchema<T extends WithId> extends Schema.SchemaClass<Ref<T>, EncodedReference> {}
+export interface RefSchema<T extends AnyEntity> extends Schema.SchemaClass<Ref<T>, EncodedReference> {}
 
 /**
  * Type of the `Ref` function and extra methods attached to it.
@@ -103,8 +103,8 @@ export interface RefFn {
   /**
    * Constructs a reference that points to the given object.
    */
-  // TODO(burdon): Narrow to Obj.Any?
-  make: <T extends WithId>(object: T) => Ref<T>;
+  // TODO(burdon): Narrow to Obj.Unknown?
+  make: <T extends AnyEntity>(object: T) => Ref<T>;
 
   /**
    * Constructs a reference that points to the object specified by the provided DXN.

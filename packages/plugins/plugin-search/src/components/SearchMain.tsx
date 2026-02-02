@@ -2,18 +2,20 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/react';
-import { Obj, Query } from '@dxos/echo';
+import { Entity, Query } from '@dxos/echo';
 import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
-import { useTranslation } from '@dxos/react-ui';
+import { Toolbar, useTranslation } from '@dxos/react-ui';
+import { Card, Mosaic, type StackTileComponent } from '@dxos/react-ui-mosaic';
+import { Layout } from '@dxos/react-ui-mosaic';
 import { SearchList } from '@dxos/react-ui-searchlist';
-import { StackItem } from '@dxos/react-ui-stack';
 import { Text } from '@dxos/schema';
 
 import { useGlobalSearch, useGlobalSearchResults, useWebSearch } from '../hooks';
 import { meta } from '../meta';
+import { type SearchResult } from '../types';
 
 export const SearchMain = ({ space }: { space?: Space }) => {
   const { t } = useTranslation(meta.id);
@@ -32,11 +34,13 @@ export const SearchMain = ({ space }: { space?: Space }) => {
             .referencedBy('dxos.org/type/Document', 'content'),
         ),
   );
+
   const results = useGlobalSearchResults(objects);
-
   const { results: webResults } = useWebSearch({ query });
-
-  const allResults = [...results, ...webResults];
+  const allResults = useMemo(
+    () => [...results, ...webResults].filter(({ object }) => object && Entity.getLabel(object)),
+    [results, webResults],
+  );
 
   const handleSearch = useCallback(
     (text: string) => {
@@ -47,23 +51,33 @@ export const SearchMain = ({ space }: { space?: Space }) => {
   );
 
   return (
-    <StackItem.Content>
-      <SearchList.Root onSearch={handleSearch} classNames='flex flex-col bs-full overflow-hidden'>
-        <SearchList.Input placeholder={t('search placeholder')} classNames='pli-2' />
-        <SearchList.Content classNames='overflow-y-auto'>
-          <SearchList.Viewport>
-            {/* TODO(burdon): Support selection on search results. */}
-            {allResults
-              .filter((item) => Obj.getLabel(item.object))
-              .map((item) => (
-                <div key={item.id} role='none' className='pli-2 first:pbs-2 pbe-2'>
-                  <Surface role='card' data={{ subject: item.object }} limit={1} />
-                </div>
-              ))}
+    <Layout.Main toolbar>
+      <SearchList.Root onSearch={handleSearch}>
+        <Toolbar.Root>
+          <SearchList.Input placeholder={t('search placeholder')} />
+        </Toolbar.Root>
+        <SearchList.Content>
+          <Mosaic.Container asChild>
+            <Mosaic.Viewport>
+              <Mosaic.Stack items={allResults} getId={(result) => result.object!.id} Tile={SearchResultTile} />
+            </Mosaic.Viewport>
             {allResults.length === 0 && <SearchList.Empty>{t('empty results message')}</SearchList.Empty>}
-          </SearchList.Viewport>
+          </Mosaic.Container>
         </SearchList.Content>
       </SearchList.Root>
-    </StackItem.Content>
+    </Layout.Main>
+  );
+};
+
+const SearchResultTile: StackTileComponent<SearchResult> = ({ data }) => {
+  return (
+    <Card.Root key={data.id}>
+      <Card.Toolbar>
+        <Card.DragHandle />
+        <Card.Title>{data.label ?? (data.object && Entity.getLabel(data.object))}</Card.Title>
+        <Card.Menu />
+      </Card.Toolbar>
+      <Surface role='card--content' data={{ subject: data.object }} limit={1} />
+    </Card.Root>
   );
 };

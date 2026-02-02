@@ -18,7 +18,7 @@ import { QueryEditor } from '@dxos/react-ui-components';
 import { type EditorController } from '@dxos/react-ui-editor';
 import { MenuBuilder, createGapSeparator, useMenuActions } from '@dxos/react-ui-menu';
 import { MenuProvider, ToolbarMenu } from '@dxos/react-ui-menu';
-import { StackItem } from '@dxos/react-ui-stack';
+import { Layout } from '@dxos/react-ui-mosaic';
 import { HasSubject, Message } from '@dxos/types';
 
 import { POPOVER_SAVE_FILTER } from '../../constants';
@@ -29,9 +29,15 @@ import { sortByCreated } from '../../util';
 import { type MailboxActionHandler, Mailbox as MailboxComponent } from './Mailbox';
 import { MailboxEmpty } from './MailboxEmpty';
 
-export type MailboxArticleProps = SurfaceComponentProps<Mailbox.Mailbox> & { filter?: string; attendableId?: string };
+export type MailboxArticleProps = SurfaceComponentProps<
+  Mailbox.Mailbox,
+  {
+    filter?: string;
+    attendableId?: string;
+  }
+>;
 
-export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendableId }: MailboxArticleProps) => {
+export const MailboxArticle = ({ role, subject: mailbox, filter: filterProp, attendableId }: MailboxArticleProps) => {
   const { t } = useTranslation(meta.id);
   const id = attendableId ?? Obj.getDXN(mailbox).toString();
   const { invokePromise } = useOperationInvoker();
@@ -162,14 +168,7 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
   }, [filterVisible, filterProp, parser]);
 
   return (
-    <StackItem.Content
-      toolbar
-      layoutManaged
-      classNames={[
-        'relative grid',
-        filterVisible.value ? 'grid-rows-[var(--toolbar-size)_min-content_1fr]' : 'grid-rows-[var(--toolbar-size)_1fr]',
-      ]}
-    >
+    <Layout.Main toolbar>
       <ElevationProvider elevation='positioned'>
         <MenuProvider {...menuActions} attendableId={id}>
           <ToolbarMenu />
@@ -219,7 +218,7 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
       ) : (
         <MailboxEmpty mailbox={mailbox} />
       )}
-    </StackItem.Content>
+    </Layout.Main>
   );
 };
 

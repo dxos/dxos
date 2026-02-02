@@ -5,13 +5,11 @@
 import { type Atom, RegistryContext, useAtomValue } from '@effect-atom/atom-react';
 import { useCallback, useContext } from 'react';
 
-import type { OperationInvoker } from '@dxos/operation';
-
 import * as Common from '../common';
 
 import { useAtomCapability, useCapability } from './useCapabilities';
 
-export const useOperationInvoker = (): OperationInvoker.OperationInvoker =>
+export const useOperationInvoker = (): Common.Capability.OperationInvoker =>
   useCapability(Common.Capability.OperationInvoker);
 
 export const useAppGraph = (): Common.Capability.AppGraph => useCapability(Common.Capability.AppGraph);

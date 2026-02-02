@@ -5,7 +5,7 @@
 import type * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { Obj } from '@dxos/echo';
+import { type Entity, Obj } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 
 import { type SearchResult } from '../types';
@@ -39,12 +39,12 @@ const getIcon = (schema: Schema.Schema.AnyNoContext | undefined): string | undef
 export type TextFields = Record<string, string>;
 
 // TODO(thure): This returns `SearchResult[]` which is not just a narrower set of objects as the name implies.
-export const filterObjectsSync = <T extends Record<string, any>>(objects: T[], match?: RegExp): SearchResult[] => {
+export const filterObjectsSync = <T extends Entity.Unknown>(objects: T[], match?: RegExp): SearchResult<T>[] => {
   if (!match) {
     return [];
   }
 
-  return objects.reduce<SearchResult[]>((results, object) => {
+  return objects.reduce<SearchResult<T>[]>((results, object) => {
     // TODO(burdon): Hack to ignore Text objects.
     if (object instanceof Text.Text) {
       return results;
@@ -90,13 +90,13 @@ export const getStringProperty = (object: any, keys: string[]): string | undefin
 };
 
 // TODO(burdon): Filter system fields.
-const getKeys = (object: Record<string, unknown>): string[] => {
+const getKeys = <T extends Entity.Unknown>(object: T): string[] => {
   try {
     const obj = JSON.parse(JSON.stringify(object));
     return Object.keys(obj).filter(
       (key) => key !== 'id' && key !== 'identityKey' && key[0] !== '_' && key[0] !== '@',
     ) as string[];
-  } catch (err) {
+  } catch {
     // TODO(burdon): Error with TLDraw sketch.
     //  Uncaught Error: Type with the name content has already been defined with a different constructor
     return [];
@@ -104,13 +104,13 @@ const getKeys = (object: Record<string, unknown>): string[] => {
 };
 
 // TODO(burdon): Use ECHO schema.
-export const mapObjectToTextFields = <T extends Record<string, unknown>>(object: T): TextFields => {
+export const mapObjectToTextFields = <T extends Entity.Unknown>(object: T): TextFields => {
   return getKeys(object).reduce<TextFields>((fields, key) => {
-    const value = object[key] as any;
+    const value = (object as any)[key];
     if (typeof value === 'string' || value instanceof Text.Text) {
       try {
         fields[key] = String(value);
-      } catch (err) {
+      } catch {
         // TODO(burdon): Exception when parsing sketch document.
       }
     }

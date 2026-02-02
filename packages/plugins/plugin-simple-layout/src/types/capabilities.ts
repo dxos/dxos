@@ -5,6 +5,7 @@
 import { type Atom } from '@effect-atom/atom-react';
 
 import { Capability } from '@dxos/app-framework';
+import { type Label } from '@dxos/react-ui';
 
 import { meta } from '../meta';
 
@@ -26,11 +27,15 @@ export type SimpleLayoutState = {
   popoverVariant?: 'virtual' | 'react';
   popoverAnchor?: HTMLButtonElement;
   popoverAnchorId?: string;
+  popoverKind?: 'base' | 'card';
+  popoverTitle?: Label;
   popoverContent?: any;
 
   workspace: string;
   previousWorkspace: string;
   active?: string;
+  /** Stack of previously active item IDs for back navigation. */
+  history: string[];
 
   /** Whether running in popover window context (hides mobile-specific UI). */
   isPopover?: boolean;

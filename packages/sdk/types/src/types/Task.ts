@@ -18,9 +18,6 @@ import { View as _View } from '@dxos/schema';
 import * as Person from './Person';
 import * as Project from './Project';
 
-/**
- * Task schema.
- */
 export const Task = Schema.Struct({
   title: Schema.String.pipe(
     Schema.annotations({ title: 'Title' }),
@@ -87,7 +84,7 @@ export const Task = Schema.Struct({
   // TODO(burdon): Generic tags.
   // tags: [String],
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/Task',
     version: '0.2.0',
   }),

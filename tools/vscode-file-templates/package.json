@@ -3,9 +3,13 @@
   "version": "0.0.6",
   "license": "MIT",
   "author": "info@dxos.org",
+  "private": true,
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
-  "repository": "https://github.com/dxos/dxos",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
   "main": "./extension.js",
   "scripts": {
     "build": "vsce package && mkdir -p dist && mv *.vsix dist/",
