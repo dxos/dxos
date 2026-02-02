@@ -3,7 +3,7 @@
 //
 
 import { Obj } from '@dxos/echo';
-import { type JsonPath, splitJsonPath, setValue as setValuePlain } from '@dxos/effect';
+import { type JsonPath, setValue as setValuePlain, splitJsonPath } from '@dxos/effect';
 
 /**
  * Sets a value on an object, using Obj.change() if it's an ECHO object.
