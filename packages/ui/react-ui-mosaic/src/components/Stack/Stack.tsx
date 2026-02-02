@@ -80,7 +80,7 @@ const Stack = StackInner as <TData = any>(props: StackProps<TData> & { ref?: Ref
 
 type VirtualStackProps<TData = any> = StackProps<TData> &
   Pick<
-    ReactVirtualizerOptions<HTMLDivElement, HTMLDivElement>,
+    ReactVirtualizerOptions<HTMLElement, HTMLDivElement>,
     'estimateSize' | 'getScrollElement' | 'overscan' | 'onChange'
   >;
 

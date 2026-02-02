@@ -8,7 +8,7 @@ import {
   type OverlayScrollbarsComponentProps,
   type OverlayScrollbarsComponentRef,
 } from 'overlayscrollbars-react';
-import React, { type RefObject, forwardRef, useEffect, useMemo, useRef } from 'react';
+import React, { type RefCallback, forwardRef, useEffect, useImperativeHandle, useMemo, useRef } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
@@ -26,17 +26,17 @@ const defaultOptions: ScrollableProps['options'] = {
   },
 };
 
-export type ScrollableProps = ThemedClassName<OverlayScrollbarsComponentProps> & {
+export type ScrollableProps = ThemedClassName<Omit<OverlayScrollbarsComponentProps, 'ref'>> & {
   axis?: Axis;
   padding?: boolean;
   onScroll?: (event: Event) => void;
-  viewportRef?: RefObject<HTMLElement | null>;
+  viewportRef?: RefCallback<HTMLElement | null>;
 };
 
 /**
  * https://www.npmjs.com/package/overlayscrollbars-react
  */
-export const Scrollable = forwardRef<OverlayScrollbarsComponentRef, ScrollableProps>(
+export const Scrollable = forwardRef<HTMLDivElement, ScrollableProps>(
   (
     { classNames, axis = 'vertical', padding, options: optionsProp = defaultOptions, onScroll, viewportRef, ...props },
     forwardedRef,
@@ -54,21 +54,12 @@ export const Scrollable = forwardRef<OverlayScrollbarsComponentRef, ScrollablePr
       return options;
     }, [axis, optionsProp]);
 
-    // Forward the OverlayScrollbarsComponentRef to the forwardedRef.
-    useEffect(() => {
-      if (forwardedRef) {
-        if (typeof forwardedRef === 'function') {
-          forwardedRef(osRef.current);
-        } else {
-          forwardedRef.current = osRef.current;
-        }
-      }
-    });
+    useImperativeHandle(forwardedRef, () => osRef.current?.getElement() as HTMLDivElement, [osRef]);
 
     useEffect(() => {
       const instance = osRef.current?.osInstance();
       if (viewportRef) {
-        viewportRef.current = instance?.elements().viewport ?? null;
+        viewportRef(instance?.elements().viewport ?? null);
       }
     }, [osRef, viewportRef]);
 

@@ -3,7 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useRef, useState } from 'react';
+import React, { useState } from 'react';
 import { useMemo } from 'react';
 
 import { Obj } from '@dxos/echo';
@@ -54,7 +54,7 @@ export const Default: Story = {
     // Create items at render time to avoid Storybook serialization issues with ECHO objects.
     const items = useMemo(() => createTestItems(NUM_ITEMS), []);
     const [DebugInfo, debugHandler] = useContainerDebug(props.debug);
-    const viewportRef = useRef<HTMLElement | null>(null);
+    const [viewport, setViewport] = useState<HTMLElement | null>(null);
     return (
       <Mosaic.Root debug={props.debug} classNames='bs-full grid grid-rows-[min-content_1fr_min-content]'>
         <Toolbar.Root classNames='border-be border-separator'>
@@ -63,11 +63,11 @@ export const Default: Story = {
         <Mosaic.Container
           asChild
           axis='vertical'
-          autoScroll={viewportRef.current}
+          autoScroll={viewport}
           eventHandler={{ id: 'test', canDrop: () => true }}
           debug={debugHandler}
         >
-          <Mosaic.Viewport axis='vertical' padding viewportRef={viewportRef}>
+          <Mosaic.Viewport axis='vertical' padding viewportRef={setViewport}>
             <Mosaic.Stack {...props} items={items} />
           </Mosaic.Viewport>
         </Mosaic.Container>
@@ -83,7 +83,7 @@ export const Virtual: Story = {
     const items = useMemo(() => createTestItems(NUM_ITEMS), []);
     const [info, setInfo] = useState<any>(null);
     const [DebugInfo, debugHandler] = useContainerDebug(props.debug);
-    const viewportRef = useRef<HTMLDivElement | null>(null);
+    const [viewport, setViewport] = useState<HTMLElement | null>(null);
     return (
       <Mosaic.Root debug={props.debug} classNames='grid grid-rows-[min-content_1fr_min-content]'>
         <Toolbar.Root>
@@ -92,15 +92,15 @@ export const Virtual: Story = {
         <Mosaic.Container
           asChild
           axis='vertical'
-          autoScroll={viewportRef.current}
+          autoScroll={viewport}
           eventHandler={{ id: 'test', canDrop: () => true }}
           debug={debugHandler}
         >
-          <Mosaic.Viewport axis='vertical' padding viewportRef={viewportRef}>
+          <Mosaic.Viewport axis='vertical' padding viewportRef={setViewport}>
             <Mosaic.VirtualStack
               {...props}
               items={items}
-              getScrollElement={() => viewportRef.current}
+              getScrollElement={() => viewport}
               estimateSize={() => 40}
               onChange={(virtualizer) => {
                 setInfo({ range: virtualizer.range });
