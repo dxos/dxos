@@ -16,5 +16,7 @@
 // - Journal smart collection (Outliner)
 // - Outline smart collection (Outliner)
 // - Project smart collection
-export const INITIAL_OBJECT_COUNT = 13;
-export const INITIAL_CREATE_ACTION_COUNT = 12;
+// - Mailbox smart collection
+// - Calendar smart collection
+export const INITIAL_OBJECT_COUNT = 15;
+export const INITIAL_CREATE_ACTION_COUNT = 14;
