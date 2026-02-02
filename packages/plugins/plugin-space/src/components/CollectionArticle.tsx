@@ -61,7 +61,9 @@ const ObjectTile: StackTileComponent<ObjectItem> = ({ data: item }) => {
   const { invokeSync } = useOperationInvoker();
 
   const typename = Obj.getTypename(item.object) ?? '';
-  const label = Obj.getLabel(item.object) ?? toLocalizedString(['object name placeholder', { ns: typename, defaultValue: item.id }], t);
+  const label =
+    Obj.getLabel(item.object) ??
+    toLocalizedString(['object name placeholder', { ns: typename, defaultValue: item.id }], t);
 
   const handleClick = () => {
     invokeSync(Common.LayoutOperation.Open, { subject: [item.id] });
@@ -85,10 +87,7 @@ export default CollectionArticle;
  */
 const useRegularCollectionItems = (collection: Collection.Collection): Obj.Unknown[] => {
   return useMemo(
-    () =>
-      (collection.objects ?? [])
-        .map((ref) => ref.target)
-        .filter((obj): obj is Obj.Unknown => Obj.isObject(obj)),
+    () => (collection.objects ?? []).map((ref) => ref.target).filter((obj): obj is Obj.Unknown => Obj.isObject(obj)),
     [collection.objects],
   );
 };
