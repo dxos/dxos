@@ -17,7 +17,7 @@ tasks:
     deps:
       - compile-plugin
   compile-plugin:
-    command: dx-compile
+    command: pnpm exec dx-compile
     args:
       - '--entryPoint=src/plugin/esbuild-plugin.ts'
       - '--entryPoint=src/plugin/rollup-plugin.ts'

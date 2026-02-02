@@ -8,13 +8,13 @@ tasks:
     deps:
       - prebuild
   gen-buf:
-    command: buf generate
+    command: pnpm exec buf generate
     inputs:
       - src/proto/dxos/**/*.proto
     outputs:
       - src/buf/proto/gen/dxos
   prebuild:
-    command: build-protobuf
+    command: pnpm exec build-protobuf
     args:
       - '--baseDir="./src/proto"'
       - '--src="./src/proto/**/*.proto"'

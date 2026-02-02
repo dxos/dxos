@@ -2,11 +2,23 @@ layer: tool
 language: typescript
 tasks:
   compile:
-    command: vite-node ./src/main.ts
+    command: pnpm exec vite-node ./src/main.ts
+    deps: []
     inputs:
       - tsconfig.json
-      - '@group(production)'
+      - src/**/*
     outputs:
       - dist/
     options:
+      merge: replace
+      timeout: 60
+  build:
+    command: pnpm exec tsc --noEmit
+    deps: []
+    inputs:
+      - tsconfig.json
+      - src/**/*
+    outputs: []
+    options:
+      merge: replace
       timeout: 60

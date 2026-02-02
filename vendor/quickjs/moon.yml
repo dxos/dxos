@@ -7,3 +7,9 @@ workspace:
   inheritedTasks:
     exclude:
       - lint
+tasks:
+  compile:
+    command: echo "No compilation needed for vendor package"
+    outputs: []
+    options:
+      merge: replace

@@ -1,8 +1,13 @@
 layer: tool
 language: typescript
 tasks:
+  compile:
+    command: echo "No compilation needed for storybook tool"
+    outputs: []
+    options:
+      merge: replace
   serve:
-    command: storybook dev
+    command: pnpm exec storybook dev
     args:
       - --port=9009
       - --no-open
@@ -12,7 +17,7 @@ tasks:
       - .storybook/*
     preset: server
   serve-e2e:
-    command: storybook dev
+    command: pnpm exec storybook dev
     args:
       - --port=9009
       - --ci

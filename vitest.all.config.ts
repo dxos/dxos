@@ -31,7 +31,7 @@ export default defineConfig(async () => ({
     ],
   },
   plugins: [
-    // Vitest extension for VSCode doesnt support ESM.
+    // Vitest extension for VSCode doesn't support ESM.
     await import('@dxos/vite-plugin-import-source').then((m) => m.default()),
 
     // We don't care about react but we want the SWC transforers.

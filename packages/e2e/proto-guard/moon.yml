@@ -4,3 +4,9 @@ tags:
   - typecheck
   - ts-test
   - pack
+tasks:
+  compile:
+    command: echo "No compilation needed for test-only package"
+    outputs: []
+    options:
+      merge: replace

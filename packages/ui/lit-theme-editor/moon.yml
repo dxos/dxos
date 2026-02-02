@@ -3,3 +3,19 @@ language: typescript
 tags:
   - ts-compile
   - pack
+tasks:
+  compile:
+    command: pnpm exec dx-build
+    args:
+      - '--entryPoint=src/index.ts'
+    deps:
+      - dx-build:compile
+    inputs:
+      - /tsconfig.base.json
+      - tsconfig.json
+      - '@group(production)'
+    outputs:
+      - dist/
+    options:
+      merge: replace
+      timeout: 60

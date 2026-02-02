@@ -3,9 +3,6 @@ tasks:
   test:
     command: pnpm exec dx-killorphans vitest run --passWithNoTests
     deps:
-      - esbuild-plugins:compile
-      - node-std:compile
-      - vite-plugin-import-source:compile
       - ^:compile
     inputs:
       - /vitest.base.config.ts
@@ -24,8 +21,6 @@ tasks:
   test-watch:
     command: pnpm exec dx-killorphans vitest
     deps:
-      - esbuild-plugins:compile
-      - node-std:compile
       - ^:compile
     options:
       runInCI: false

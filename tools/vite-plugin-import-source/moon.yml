@@ -1,4 +1,19 @@
 layer: library
 language: typescript
 tags:
-  - ts-compile
+  - ts-build
+tasks:
+  compile:
+    command: pnpm exec dx-compile
+    args:
+      - --outputPath=dist/lib
+      - --entryPoint=src/index.ts
+    deps:
+      - dx-compile:compile
+    inputs:
+      - '@group(production)'
+    outputs:
+      - dist/lib/
+    options:
+      merge: replace
+      timeout: 10

@@ -1,2 +1,8 @@
 layer: library
 language: typescript
+tasks:
+  compile:
+    command: echo "No compilation needed for eslint plugin"
+    outputs: []
+    options:
+      merge: replace

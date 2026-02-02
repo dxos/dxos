@@ -4,3 +4,9 @@ workspace:
   inheritedTasks:
     exclude:
       - lint
+tasks:
+  compile:
+    command: echo "No compilation needed for tool"
+    outputs: []
+    options:
+      merge: replace

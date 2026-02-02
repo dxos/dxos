@@ -1,11 +1,16 @@
 layer: tool
 language: typescript
 tasks:
+  compile:
+    command: echo "No compilation needed for storybook tool"
+    outputs: []
+    options:
+      merge: replace
   #
   # Test locally via: npx http-server ./tools/storybook-reactout/storybook
   #
   bundle:
-    command: storybook build
+    command: pnpm exec storybook build
     args:
       - --output-dir=out/storybook-react
     deps:
@@ -19,7 +24,7 @@ tasks:
     outputs:
       - out/storybook/
   serve:
-    command: storybook dev
+    command: pnpm exec storybook dev
     args:
       - --port=9009
       - --no-open
@@ -31,7 +36,7 @@ tasks:
     preset: server
   # TODO(wittjosiah): No inputs or deps to avoid moon re-building things when running e2e tests.
   serve-e2e:
-    command: storybook dev
+    command: pnpm exec storybook dev
     args:
       - --port=9009
       - --ci

@@ -12,8 +12,12 @@ tasks:
     deps:
       - prebuild
   compile:
+    command: echo "No compilation needed for vite application"
     deps:
       - prebuild
+    outputs: []
+    options:
+      merge: replace
   prebuild:
     command: pnpm run --silent copy:assets
     deps:

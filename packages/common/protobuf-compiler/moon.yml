@@ -5,12 +5,20 @@ tags:
   - pack
 tasks:
   compile:
+    command: pnpm exec tsc
     deps:
       - prebuild
     inputs:
-      - bin/main.js
+      - /tsconfig.base.json
+      - tsconfig.json
+      - '@group(production)'
+    outputs:
+      - dist/
+    options:
+      merge: replace
+      timeout: 60
   prebuild:
-    command: vite-node ./src/main.ts --src ./test/proto/**/*.proto -s ./test/proto/substitutions.ts --baseDir ./test/proto -o ./test/proto/gen
+    command: pnpm exec vite-node ./src/main.ts --src ./test/proto/**/*.proto -s ./test/proto/substitutions.ts --baseDir ./test/proto -o ./test/proto/gen
     deps:
       - ^:build
     inputs:
