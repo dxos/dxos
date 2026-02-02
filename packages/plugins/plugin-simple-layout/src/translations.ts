@@ -20,6 +20,7 @@ export const translations = [
         'profile label': 'Profile',
         'app menu label': 'App menu',
         'main menu label': 'Main menu',
+        'companions menu label': 'Companions',
         'error fallback message': 'An error occurred',
         'search placeholder': 'Search...',
       },
