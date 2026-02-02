@@ -251,11 +251,11 @@ describe('Query', () => {
       const ContactV1 = Schema.Struct({
         firstName: Schema.String,
         lastName: Schema.String,
-      }).pipe(Type.Obj({ typename: 'example.com/type/Person', version: '0.1.0' }));
+      }).pipe(Type.object({ typename: 'example.com/type/Person', version: '0.1.0' }));
 
       const ContactV2 = Schema.Struct({
         name: Schema.String,
-      }).pipe(Type.Obj({ typename: 'example.com/type/Person', version: '0.2.0' }));
+      }).pipe(Type.object({ typename: 'example.com/type/Person', version: '0.2.0' }));
 
       const peer = await builder.createPeer({ indexing: { sqlIndex: true }, types: [ContactV1, ContactV2] });
       const db = await peer.createDatabase();
@@ -682,14 +682,14 @@ describe('Query', () => {
       const person = sqlDb.add(Obj.make(TestSchema.Person, { name: 'Alice' }));
 
       sqlDb.add(
-        Obj.make(Type.Expando, {
+        Obj.make(TestSchema.Expando, {
           name: 'direct',
           a: Ref.make(person),
         }),
       );
 
       sqlDb.add(
-        Obj.make(Type.Expando, {
+        Obj.make(TestSchema.Expando, {
           name: 'nested',
           a: { b: Ref.make(person) },
         }),
@@ -699,17 +699,17 @@ describe('Query', () => {
 
       // When no property is specified, referencedBy() should return all incoming references (including nested ones).
       const allIncoming = await sqlDb
-        .query(Query.select(Filter.type(TestSchema.Person, { name: 'Alice' })).referencedBy(Type.Expando))
+        .query(Query.select(Filter.type(TestSchema.Person, { name: 'Alice' })).referencedBy(TestSchema.Expando))
         .run();
       expect(allIncoming.map((o) => o.name).sort()).toEqual(['direct', 'nested']);
 
       const nested = await sqlDb
-        .query(Query.select(Filter.type(TestSchema.Person, { name: 'Alice' })).referencedBy(Type.Expando, 'a.b'))
+        .query(Query.select(Filter.type(TestSchema.Person, { name: 'Alice' })).referencedBy(TestSchema.Expando, 'a.b'))
         .run();
       expect(nested.map((o) => o.name).sort()).toEqual(['nested']);
 
       const direct = await sqlDb
-        .query(Query.select(Filter.type(TestSchema.Person, { name: 'Alice' })).referencedBy(Type.Expando, 'a'))
+        .query(Query.select(Filter.type(TestSchema.Person, { name: 'Alice' })).referencedBy(TestSchema.Expando, 'a'))
         .run();
       expect(direct.map((o) => o.name).sort()).toEqual(['direct']);
     });
