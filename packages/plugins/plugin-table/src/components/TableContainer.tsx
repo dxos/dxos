@@ -159,7 +159,7 @@ export const TableContainer = forwardRef<HTMLDivElement, TableContainerProps>(
     );
 
     return (
-      <Layout.Main role={role} ref={forwardedRef}>
+      <Layout.Main toolbar role={role} ref={forwardedRef}>
         <TableToolbar
           attendableId={Obj.getDXN(object).toString()}
           customActions={customActions}
