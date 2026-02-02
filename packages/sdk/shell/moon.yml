@@ -14,9 +14,20 @@ tasks:
     outputs:
       - dist/bundle
   compile:
+    command: pnpm exec dx-compile
     args:
+      - '--outputPath=dist/lib'
       - '--entryPoint=src/react.ts'
       - '--entryPoint=src/testing/index.ts'
+    deps:
+      - dx-compile:compile
+    inputs:
+      - '@group(production)'
+    outputs:
+      - dist/lib/
+    options:
+      merge: replace
+      timeout: 10
   test:
     inputs:
       - .storybook/*
