@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echo-react",
-  "version": "0.0.0",
+  "version": "0.8.3",
   "description": "React integration for ECHO.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
