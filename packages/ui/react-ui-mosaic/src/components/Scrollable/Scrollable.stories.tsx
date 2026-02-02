@@ -13,22 +13,7 @@ import { Scrollable, type ScrollableProps } from './Scrollable';
 const DefaultStory = (props: ScrollableProps) => {
   return (
     <Scrollable {...props} classNames='bs-full is-full'>
-      <div
-        role='none'
-        style={
-          {
-            '--checker-light': '#222',
-            '--checker-dark': '#333',
-          } as any
-        }
-        className={mx(
-          props.axis === 'vertical' ? 'bs-[200rem]' : 'bs-full is-[200rem]',
-          'bg-[var(--checker-light)]',
-          'bg-repeat bg-[length:256px_256px]',
-          'bg-[linear-gradient(45deg,_var(--checker-dark)_25%,_transparent_25%,_transparent_75%,_var(--checker-dark)_75%,_var(--checker-dark)),linear-gradient(45deg,_var(--checker-dark)_25%,_transparent_25%,_transparent_75%,_var(--checker-dark)_75%,_var(--checker-dark))]',
-          'bg-[position:0_0,128px_128px]',
-        )}
-      />
+      <div role='none' className={mx('bg-cubes', props.axis === 'vertical' ? 'bs-[200rem]' : 'bs-full is-[200rem]')} />
     </Scrollable>
   );
 };
