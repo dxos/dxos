@@ -32,7 +32,8 @@ export const Main = () => {
 
   const { id: parentId, variant } = parseEntryId(id);
   const parentNode = useNode(graph, variant ? parentId : undefined);
-  useLoadDescendents(variant ? parentId : undefined);
+  // Ensures that children are loaded so that they are available to navigate to.
+  useLoadDescendents(id);
 
   const placeholder = useMemo(() => <ContentLoading />, []);
 
@@ -68,6 +69,8 @@ export const Main = () => {
           <article className='contents'>
             <Surface key={id} role='article' data={data} limit={1} fallback={ContentError} placeholder={placeholder} />
           </article>
+          {/* TODO(wittjosiah): Since the navbar isn't fixed, if the Surface resolves to nothing the navbar fills the
+           screen. */}
           {showNavBar && (
             <NavBar classNames='border-bs border-separator' activeId={id} onActiveIdChange={handleActiveIdChange} />
           )}
