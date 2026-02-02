@@ -17,8 +17,8 @@ export const Masonry = Schema.Struct({
     Schema.Struct({
       ids: Schema.Array(Obj.ID),
       hidden: Schema.optional(Schema.Boolean),
-    }).pipe(Schema.mutable),
-  ).pipe(Schema.mutable, FormInputAnnotation.set(false), Schema.optional),
+    }),
+  ).pipe(FormInputAnnotation.set(false), Schema.optional),
   // TODO(wittjosiah): Consider Masonry supporting not being just a view but referencing arbitrary data directly.
 }).pipe(
   Type.object({
@@ -51,8 +51,8 @@ export const MasonryV1 = Schema.Struct({
     Schema.Struct({
       ids: Schema.Array(Obj.ID),
       hidden: Schema.optional(Schema.Boolean),
-    }).pipe(Schema.mutable),
-  ).pipe(Schema.mutable, Schema.optional),
+    }),
+  ).pipe(Schema.optional),
 }).pipe(
   Type.object({
     typename: 'dxos.org/type/Masonry',

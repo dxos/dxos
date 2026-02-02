@@ -3,6 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
+import type * as Types from 'effect/Types';
 import { describe, expect, test } from 'vitest';
 
 import { EchoObjectSchema } from '../entities';
@@ -61,15 +62,13 @@ describe('EchoObjectSchema class DSL', () => {
   });
 
   test('record', () => {
-    const schema = Schema.mutable(
-      Schema.Struct({
-        meta: Schema.optional(Schema.mutable(Schema.Any)),
-        // NOTE: Schema.Record only supports shallow values.
-        // https://www.npmjs.com/package/@effect/schema#mutable-records
-        // meta: Schema.optional(Schema.mutable(Schema.Record({ key: Schema.String, value: Schema.Any }))),
-        // meta: Schema.optional(Schema.mutable(Schema.object)),
-      }),
-    );
+    const schema = Schema.Struct({
+      meta: Schema.optional(Schema.Any),
+      // NOTE: Schema.Record only supports shallow values.
+      // https://www.npmjs.com/package/@effect/schema#mutable-records
+      // meta: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
+      // meta: Schema.optional(Schema.object),
+    });
 
     {
       const object = makeObject(schema, {});
@@ -89,7 +88,8 @@ describe('EchoObjectSchema class DSL', () => {
 
     {
       // Plain object (not a reactive proxy) - doesn't need Obj.change.
-      type Test1 = Schema.Schema.Type<typeof schema>;
+      // Note: Schema.Schema.Type generates readonly types, so we cast to mutable for plain objects.
+      type Test1 = Types.Mutable<Schema.Schema.Type<typeof schema>>;
 
       const object: Test1 = {};
       (object.meta ??= {}).test = 100;
@@ -98,7 +98,7 @@ describe('EchoObjectSchema class DSL', () => {
 
     {
       const Test2 = Schema.Struct({
-        meta: Schema.optional(Schema.mutable(Schema.Record({ key: Schema.String, value: Schema.Any }))),
+        meta: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
       }).pipe(
         EchoObjectSchema({
           typename: 'dxos.org/type/FunctionTrigger',

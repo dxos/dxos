@@ -21,13 +21,13 @@ export const Cell = Schema.Struct({
   source: Schema.optional(Type.Ref(Text.Text)),
   prompt: Schema.optional(Type.Ref(Prompt.Prompt)),
   graph: Schema.optional(Type.Ref(Graph.Graph)),
-}).pipe(Schema.mutable);
+});
 
 export interface Cell extends Schema.Schema.Type<typeof Cell> {}
 
 export const Notebook = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
-  cells: Cell.pipe(Schema.Array, Schema.mutable, FormInputAnnotation.set(false)),
+  cells: Cell.pipe(Schema.Array, FormInputAnnotation.set(false)),
 }).pipe(
   Type.object({
     typename: 'dxos.org/type/Notebook',

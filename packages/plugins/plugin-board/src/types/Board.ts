@@ -13,8 +13,8 @@ import { BoardLayout, defaultLayout } from '@dxos/react-ui-board';
  */
 export const Board = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
-  items: Type.Ref(Type.Obj).pipe(Schema.Array, Schema.mutable, FormInputAnnotation.set(false)),
-  layout: BoardLayout.pipe(Schema.mutable, FormInputAnnotation.set(false)),
+  items: Type.Ref(Type.Obj).pipe(Schema.Array, FormInputAnnotation.set(false)),
+  layout: BoardLayout.pipe(FormInputAnnotation.set(false)),
 }).pipe(
   Type.object({
     typename: 'dxos.org/type/Board',

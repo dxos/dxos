@@ -2,7 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
+import type * as Types from 'effect/Types';
+
 import { type ContentBlock, type Message } from '@dxos/types';
+
+/**
+ * Mutable version of Message for building up display messages.
+ * These are local copies, not ECHO-managed objects.
+ */
+type MutableMessage = Types.Mutable<Message.Message>;
+type MutableSummary = Types.Mutable<ContentBlock.Summary>;
 
 type Reducer<R, I> = (acc: R, value: I, idx: number) => R;
 
@@ -38,8 +47,8 @@ type Reducer<R, I> = (acc: R, value: I, idx: number) => R;
  */
 export const reduceMessages: Reducer<
   {
-    messages: Message.Message[];
-    current?: Message.Message;
+    messages: MutableMessage[];
+    current?: MutableMessage;
     toolBlock?: boolean;
     assistantMessages?: Message.Message[];
   },
@@ -58,11 +67,11 @@ export const reduceMessages: Reducer<
             ...message,
             id: [message.id, i++].join('_'),
             blocks: [block],
-          };
+          } as MutableMessage;
           messages.push(current);
           toolBlock = true;
         } else {
-          current!.blocks.push(block);
+          (current!.blocks as ContentBlock.Any[]).push(block);
         }
         break;
       }
@@ -70,7 +79,7 @@ export const reduceMessages: Reducer<
       case 'toolResult': {
         assistant = true;
         if (toolBlock) {
-          current!.blocks.push(block);
+          (current!.blocks as ContentBlock.Any[]).push(block);
         }
         break;
       }
@@ -78,10 +87,10 @@ export const reduceMessages: Reducer<
       case 'summary': {
         assistant = true;
         if (toolBlock) {
-          current!.blocks.push(block);
+          (current!.blocks as ContentBlock.Any[]).push(block);
         } else {
           const summary = reduceSummary([...assistantMessages, message]);
-          current!.blocks.push(summary);
+          (current!.blocks as ContentBlock.Any[]).push(summary);
         }
         break;
       }
@@ -92,7 +101,7 @@ export const reduceMessages: Reducer<
           ...message,
           id: [message.id, i++].join('_'),
           blocks: [block],
-        };
+        } as MutableMessage;
         messages.push(current);
         toolBlock = false;
         break;
@@ -113,7 +122,7 @@ export const reduceMessages: Reducer<
  */
 const reduceSummary = (messages: Message.Message[]): ContentBlock.Summary => {
   let start: number | undefined;
-  return messages.reduce<ContentBlock.Summary>(
+  return messages.reduce<MutableSummary>(
     (acc, msg) => {
       const time = new Date(msg.created).getTime();
       if (!start) {

@@ -85,7 +85,9 @@ const makeObjectNavigableInComposer = Effect.fn(function* (space: Space, obj: Ob
   if (collectionRef) {
     const collection = yield* Database.Service.load(collectionRef);
     if (collection) {
-      collection.objects.push(Ref.make(obj));
+      Obj.change(collection, (c) => {
+        c.objects.push(Ref.make(obj));
+      });
     }
   }
 });

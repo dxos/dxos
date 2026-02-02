@@ -22,7 +22,7 @@ const kindLiteralAnnotations = { title: 'Kind' };
 
 export const EmailSpec = Schema.Struct({
   kind: Schema.Literal('email').annotations(kindLiteralAnnotations),
-}).pipe(Schema.mutable);
+});
 export type EmailSpec = Schema.Schema.Type<typeof EmailSpec>;
 
 export const QueueSpec = Schema.Struct({
@@ -30,7 +30,7 @@ export const QueueSpec = Schema.Struct({
 
   // TODO(dmaretskyi): Change to a reference.
   queue: DXN.Schema,
-}).pipe(Schema.mutable);
+});
 export type QueueSpec = Schema.Schema.Type<typeof QueueSpec>;
 
 /**
@@ -41,7 +41,7 @@ export const SubscriptionSpec = Schema.Struct({
   query: Schema.Struct({
     raw: Schema.optional(Schema.String.annotations({ title: 'Query' })),
     ast: QueryAST.Query,
-  }).pipe(Schema.mutable),
+  }),
   options: Schema.optional(
     Schema.Struct({
       // Watch changes to object (not just creation).
@@ -50,7 +50,7 @@ export const SubscriptionSpec = Schema.Struct({
       delay: Schema.optional(Schema.Number.annotations({ title: 'Delay' })),
     }).annotations({ title: 'Options' }),
   ),
-}).pipe(Schema.mutable);
+});
 export type SubscriptionSpec = Schema.Schema.Type<typeof SubscriptionSpec>;
 
 /**
@@ -62,7 +62,7 @@ export const TimerSpec = Schema.Struct({
     title: 'Cron',
     [SchemaAST.ExamplesAnnotationId]: ['0 0 * * *'],
   }),
-}).pipe(Schema.mutable);
+});
 export type TimerSpec = Schema.Schema.Type<typeof TimerSpec>;
 
 /**
@@ -81,7 +81,7 @@ export const WebhookSpec = Schema.Struct({
       title: 'Port',
     }),
   ),
-}).pipe(Schema.mutable);
+});
 export type WebhookSpec = Schema.Schema.Type<typeof WebhookSpec>;
 
 /**
@@ -128,7 +128,7 @@ const TriggerSchema = Schema.Struct({
    *   mailbox: { '/': 'dxn:echo:AAA:ZZZ' }
    * }
    */
-  input: Schema.optional(Schema.mutable(Schema.Record({ key: Schema.String, value: Schema.Any }))),
+  input: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
 }).pipe(
   Type.object({
     typename: 'dxos.org/type/Trigger',

@@ -40,7 +40,7 @@ export type Connection = Schema.Schema.Type<typeof Connection>;
 
 // TODO(burdon): Rename scene?
 export const Layout = Schema.Struct({
-  shapes: Schema.mutable(Schema.Array(Shape)),
+  shapes: Schema.Array(Shape),
 });
 
 export type Layout = Schema.Schema.Type<typeof Layout>;

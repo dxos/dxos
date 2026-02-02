@@ -170,7 +170,7 @@ describe.skip('loadObjectReferences', () => {
     );
 
     const TestSchema = Schema.Struct({
-      nested: Schema.mutable(Schema.Array(Type.Ref(Nested))),
+      nested: Schema.Array(Type.Ref(Nested)),
     }).pipe(Type.object({ typename: 'example.com/Test', version: '0.1.0' }));
 
     const testBuilder = new EchoTestBuilder();

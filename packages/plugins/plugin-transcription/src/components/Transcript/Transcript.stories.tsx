@@ -4,6 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
+import type * as Types from 'effect/Types';
 import React, { type FC, useEffect, useMemo, useState } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
@@ -17,7 +18,7 @@ import { IconButton, Toolbar } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { TestSchema } from '@dxos/schema/testing';
-import { type Message, Organization, Person } from '@dxos/types';
+import { type ContentBlock, type Message, Organization, Person } from '@dxos/types';
 
 import { useQueueModelAdapter } from '../../hooks';
 import { SerializationModel } from '../../model';
@@ -79,7 +80,8 @@ const BasicStory = ({ messages: initialMessages = [], ...props }: StoryProps) =>
     [initialMessages, reset],
   );
   const [running, setRunning] = useState(true);
-  const [currentMessage, setCurrentMessage] = useState<Message.Message | null>(null);
+  // Use mutable type for local message building (not ECHO-managed).
+  const [currentMessage, setCurrentMessage] = useState<Types.Mutable<Message.Message> | null>(null);
   useEffect(() => {
     if (!running) {
       return;
@@ -100,7 +102,7 @@ const BasicStory = ({ messages: initialMessages = [], ...props }: StoryProps) =>
         return;
       }
 
-      currentMessage.blocks.push(builder.createBlock());
+      (currentMessage.blocks as ContentBlock.Any[]).push(builder.createBlock());
       model.updateChunk(currentMessage);
     }, 3_000);
 

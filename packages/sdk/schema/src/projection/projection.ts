@@ -415,7 +415,7 @@ export class ProjectionModel {
       invariant(property);
       invariant(format);
 
-      const jsonProperty: JsonSchemaType = {};
+      const jsonProperty: Mutable<JsonSchemaType> = {};
 
       if (referenceSchema) {
         Object.assign(jsonProperty, createSchemaReference(referenceSchema));

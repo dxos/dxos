@@ -158,6 +158,6 @@ export const FieldSchema = Schema.Struct({
   visible: Schema.optional(Schema.Boolean),
   size: Schema.optional(Schema.Number),
   referencePath: Schema.optional(JsonPath),
-}).pipe(Schema.mutable);
+});
 
 export type FieldType = Schema.Schema.Type<typeof FieldSchema>;

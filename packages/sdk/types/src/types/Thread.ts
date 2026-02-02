@@ -18,7 +18,7 @@ export const ThreadStatus = Schema.Union(
 export const Thread = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
   status: ThreadStatus.pipe(Schema.optional),
-  messages: Schema.mutable(Schema.Array(Type.Ref(Message.Message))),
+  messages: Schema.Array(Type.Ref(Message.Message)),
 }).pipe(
   Type.object({
     typename: 'dxos.org/type/Thread',

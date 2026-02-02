@@ -6,6 +6,7 @@ import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
 import { JsonSchema } from '@dxos/echo';
+import { type Mutable } from '@dxos/echo/internal';
 import { type JsonPath, createJsonPath } from '@dxos/effect';
 
 const TestSchema = Schema.Struct({
@@ -277,17 +278,22 @@ export function addProperty({
         throw new Error(`Target schema is not a modifiable 'object' type: ${path}`);
       }
 
+      // Cast to mutable - this function mutates the input schema in place.
+      // The readonly type in signatures is pragmatic since Mutable<T> and T are
+      // incompatible due to array variance in TypeScript.
+      const mutableParent = parent as Mutable<JsonSchema.JsonSchema>;
+
       // Add the new property definition.
-      parent.properties[name] = schema;
+      (mutableParent.properties as Record<string, JsonSchema.JsonSchema>)[name] = schema;
 
       // Handle required status.
       if (!optional) {
-        if (!parent.required) {
-          parent.required = [];
+        if (!mutableParent.required) {
+          mutableParent.required = [];
         }
 
-        if (!parent.required.includes(name)) {
-          parent.required.push(name);
+        if (!mutableParent.required.includes(name)) {
+          mutableParent.required.push(name);
         }
       }
 
