@@ -9,10 +9,13 @@ import { type GetId, type MosaicTileData } from '../components';
 export type UseVisibleItemsProps<TItem = any> = {
   /** Container id. */
   id: string;
+
   /** Current items. */
   items?: TItem[];
+
   /** Currently dragging item. */
   dragging: MosaicTileData<TItem> | undefined;
+
   /** ID getter */
   getId: GetId<TItem>;
 };

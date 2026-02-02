@@ -23,13 +23,13 @@ const DefaultStory = ({ count }: { count: number }) => {
         <Toolbar.IconButton icon='ph--dots-three-vertical--regular' iconOnly label='Menu' />
       </Toolbar.Root>
       <Scrollable axis='vertical'>
-        <div role='list' className='flex flex-col pli-2 plb-1 gap-1'>
+        <Layout.Flex role='list' column classNames='pli-2 plb-1 gap-1'>
           {Array.from({ length: count }).map((_, index) => (
             <div key={index} role='listitem' className='pli-2 plb-1 border border-separator'>
               {index}
             </div>
           ))}
-        </div>
+        </Layout.Flex>
       </Scrollable>
       <Toolbar.Root classNames='justify-between'>
         <Toolbar.IconButton variant='ghost' icon='ph--house--regular' iconOnly label='Add' size={4} />

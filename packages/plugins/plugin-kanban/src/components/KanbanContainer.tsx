@@ -6,18 +6,20 @@ import { RegistryContext } from '@effect-atom/atom-react';
 import React, { useCallback, useContext, useEffect, useState } from 'react';
 
 import { Common } from '@dxos/app-framework';
-import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/react';
+import { type SurfaceComponentProps, useCapabilities, useOperationInvoker } from '@dxos/app-framework/react';
 import { Filter, Obj, Type } from '@dxos/echo';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { useQuery } from '@dxos/react-client/echo';
 import { Kanban as KanbanComponent, useKanbanModel, useProjectionModel } from '@dxos/react-ui-kanban';
 import { type Kanban } from '@dxos/react-ui-kanban/types';
-import { StackItem } from '@dxos/react-ui-stack';
+import { Layout } from '@dxos/react-ui-mosaic';
 import { getTypenameFromQuery } from '@dxos/schema';
 
 import { KanbanOperation } from '../types';
 
-export const KanbanContainer = ({ object }: { object: Kanban.Kanban; role: string }) => {
+export type KanbanContainerProps = SurfaceComponentProps<Kanban.Kanban>;
+
+export const KanbanContainer = ({ role, subject: object }: KanbanContainerProps) => {
   const registry = useContext(RegistryContext);
   const schemas = useCapabilities(Common.Capability.Schema);
   const [cardSchema, setCardSchema] = useState<Type.Obj.Any>();
@@ -75,8 +77,8 @@ export const KanbanContainer = ({ object }: { object: Kanban.Kanban; role: strin
   );
 
   return (
-    <StackItem.Content>
+    <Layout.Main role={role}>
       {model && <KanbanComponent model={model} onAddCard={handleAddCard} onRemoveCard={handleRemoveCard} />}
-    </StackItem.Content>
+    </Layout.Main>
   );
 };

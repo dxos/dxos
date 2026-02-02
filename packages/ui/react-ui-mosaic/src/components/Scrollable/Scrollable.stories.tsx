@@ -9,16 +9,10 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { Scrollable } from './Scrollable';
 
-const DefaultStory = ({ count }: { count: number }) => {
+const DefaultStory = () => {
   return (
     <Scrollable axis='vertical'>
-      <div role='list' className='flex flex-col pli-2 plb-1 gap-1'>
-        {Array.from({ length: count }).map((_, index) => (
-          <div key={index} role='listitem' className='pli-2 plb-1 border border-separator'>
-            {index}
-          </div>
-        ))}
-      </div>
+      <div role='none' className='bs-[200rem]' />
     </Scrollable>
   );
 };
@@ -36,8 +30,4 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {
-  args: {
-    count: 100,
-  },
-};
+export const Default: Story = {};

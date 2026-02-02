@@ -13,6 +13,7 @@ import React, {
 
 import {
   Button,
+  type Density,
   DropdownMenu,
   Icon,
   type IconProps,
@@ -79,13 +80,28 @@ const CardRoot = forwardRef<HTMLDivElement, CardRootProps>(
 // Toolbar
 //
 
-const CardToolbar = forwardRef<HTMLDivElement, ToolbarRootProps>(({ children, classNames, ...props }, forwardedRef) => {
-  return (
-    <Toolbar.Root {...props} classNames={['density-fine bg-transparent', styles.grid_3, classNames]} ref={forwardedRef}>
-      {children}
-    </Toolbar.Root>
-  );
-});
+type CardToolbarProps = ToolbarRootProps & {
+  // TODO(burdon): Generalize: 1. systematic across theme; 2. should affect rows, etc.
+  density?: Density;
+};
+
+const CardToolbar = forwardRef<HTMLDivElement, CardToolbarProps>(
+  ({ children, classNames, density = 'fine', ...props }, forwardedRef) => {
+    return (
+      <Toolbar.Root
+        {...props}
+        classNames={[
+          'density-fine bg-transparent',
+          density === 'fine' ? styles.grid_3 : styles.grid_3_coarse,
+          classNames,
+        ]}
+        ref={forwardedRef}
+      >
+        {children}
+      </Toolbar.Root>
+    );
+  },
+);
 
 const CardToolbarIconButton = Toolbar.IconButton;
 const CardToolbarSeparator = Toolbar.Separator;
@@ -393,7 +409,7 @@ const CardIcon = ({ toolbar, ...props }: IconProps & { toolbar?: boolean }) => {
 //
 
 export const Card = {
-  Context: CardContext, // TODO(burdon): Remove.
+  Context: CardContext,
   Root: CardRoot,
 
   // Toolbar
@@ -416,4 +432,4 @@ export const Card = {
   Link: CardLink,
 };
 
-export type { CardContextValue, CardRootProps, CardMenuProps };
+export type { CardContextValue, CardRootProps, CardToolbarProps, CardMenuProps };

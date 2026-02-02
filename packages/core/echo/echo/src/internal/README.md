@@ -98,3 +98,5 @@
 - [ ] Consolidate getters (getType, getSchema, getTypename, getSchemaTypename, etc.)
 - [ ] ReactiveObject should specify id property? Reconcile AnyProperties, ReactiveObject, HasId, WithId, etc.
 - [ ] Can we us S.is(MyType) to detect objects with our types system? (Branding?)
+- [ ] Type.Expando doesn't work with AtomQuery result type (have to use Obj.Any instead).
+- [ ] Obj.Any doesn't work with Obj.change callback types (have to use `any` for the mutable parameter).

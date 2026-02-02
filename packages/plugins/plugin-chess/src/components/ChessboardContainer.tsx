@@ -4,6 +4,7 @@
 
 import React from 'react';
 
+import { type SurfaceComponentProps } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
 
 import { type Chess } from '../types';
@@ -11,24 +12,19 @@ import { type Chess } from '../types';
 import { Chessboard } from './Chessboard';
 import { ChessboardArticle } from './ChessboardArticle';
 
-export type ChessboardContainerProps = {
-  game: Chess.Game;
-  role?: string;
-};
+export type ChessboardContainerProps = SurfaceComponentProps<Chess.Game>;
 
-export const ChessboardContainer = ({ game, role }: ChessboardContainerProps) => {
+export const ChessboardContainer = ({ role, subject: game }: ChessboardContainerProps) => {
   const db = Obj.getDatabase(game);
   if (!db) {
     return null;
   }
 
   switch (role) {
-    case 'card--popover':
-    case 'card--intrinsic':
-    case 'card--extrinsic': {
+    case 'card--content': {
       return (
         <Chessboard.Root game={game}>
-          <Chessboard.Content role={role}>
+          <Chessboard.Content>
             <Chessboard.Board />
           </Chessboard.Content>
         </Chessboard.Root>
@@ -36,7 +32,7 @@ export const ChessboardContainer = ({ game, role }: ChessboardContainerProps) =>
     }
 
     default: {
-      return <ChessboardArticle game={game} role={role} />;
+      return <ChessboardArticle role={role} subject={game} />;
     }
   }
 };

@@ -21,8 +21,8 @@ import {
   Form,
   type FormFieldMap,
 } from '@dxos/react-ui-form';
+import { Layout } from '@dxos/react-ui-mosaic';
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
-import { StackItem } from '@dxos/react-ui-stack';
 
 import { meta } from '../../meta';
 import { SpaceCapabilities, SpaceForm, SpaceOperation } from '../../types';
@@ -188,7 +188,7 @@ export const SpaceSettingsContainer = forwardRef<HTMLDivElement, SpaceSettingsCo
     }, [client, space, repairs]);
 
     return (
-      <StackItem.Content scrollable ref={forwardedRef}>
+      <Layout.Container scrollable ref={forwardedRef}>
         <ControlPage>
           <ControlSection
             title={t('space properties settings verbose label')}
@@ -212,7 +212,7 @@ export const SpaceSettingsContainer = forwardRef<HTMLDivElement, SpaceSettingsCo
             </div>
           </ControlSection>
         </ControlPage>
-      </StackItem.Content>
+      </Layout.Container>
     );
   },
 );

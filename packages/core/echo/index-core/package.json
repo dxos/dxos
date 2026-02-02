@@ -1,9 +1,13 @@
 {
   "name": "@dxos/index-core",
-  "version": "0.8.3",
+  "version": "0.0.0",
   "description": "Indexing core.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
   "license": "MIT",
   "author": "info@dxos.org",
   "sideEffects": false,

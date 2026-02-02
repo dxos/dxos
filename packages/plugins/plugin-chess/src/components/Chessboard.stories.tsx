@@ -17,21 +17,20 @@ type StoryProps = {
   pgn?: string;
 };
 
-// TODO(wittjosiah): ECHO objects don't work when passed via Storybook args.
-const ChessboardStory = ({ pgn }: StoryProps) => {
+const DefaultStory = ({ pgn }: StoryProps) => {
   const game = useMemo(() => Chess.make(pgn ? { pgn } : undefined), [pgn]);
-  return <ChessboardArticle game={game} />;
+  return <ChessboardArticle subject={game} />;
 };
 
 const meta = {
   title: 'plugins/plugin-chess/Chessboard',
-  component: ChessboardStory,
+  component: DefaultStory,
   decorators: [withTheme, withClientProvider({ createIdentity: true })],
   parameters: {
     layout: 'fullscreen',
     translations,
   },
-} satisfies Meta<typeof ChessboardStory>;
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 

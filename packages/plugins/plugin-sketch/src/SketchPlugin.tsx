@@ -4,14 +4,16 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Common, Plugin } from '@dxos/app-framework';
+import { Capability, Common, Plugin } from '@dxos/app-framework';
+import { Operation } from '@dxos/operation';
+import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
 import { type CreateObject } from '@dxos/plugin-space/types';
 import { RefArray } from '@dxos/react-client/echo';
 
 import { AppGraphSerializer, OperationResolver, ReactSurface, SketchSettings } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
-import { Diagram } from './types';
+import { Diagram, SketchOperation } from './types';
 import { serializer } from './util';
 
 export const SketchPlugin = Plugin.define(meta).pipe(
@@ -28,11 +30,20 @@ export const SketchPlugin = Plugin.define(meta).pipe(
         serializer,
         comments: 'unanchored',
         createObject: ((props) => Effect.sync(() => Diagram.make(props))) satisfies CreateObject,
-        addToCollectionOnCreate: true,
       },
     },
   }),
   Common.Plugin.addSchemaModule({ schema: [Diagram.Canvas, Diagram.Diagram] }),
+  Plugin.addModule({
+    id: 'on-space-created',
+    activatesOn: SpaceEvents.SpaceCreated,
+    activate: () =>
+      Effect.succeed(
+        Capability.contributes(SpaceCapabilities.OnCreateSpace, (params) =>
+          Operation.invoke(SketchOperation.OnCreateSpace, params),
+        ),
+      ),
+  }),
   Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
   Common.Plugin.addOperationResolverModule({ activate: OperationResolver }),
   Plugin.addModule({

@@ -13,7 +13,7 @@ import { StackItem, type StackItemRootProps } from './StackItem';
 const DefaultStory = (props: StackItemRootProps) => {
   return (
     <StackItem.Root role='section' {...props} classNames='is-[20rem] border border-separator'>
-      <StackItem.Heading classNames='is-full border-b border-separator'>
+      <StackItem.Heading classNames='is-full border-be border-separator'>
         <span className='sr-only'>Title</span>
         <div role='none' className='sticky -block-start-px bg-[--sticky-bg] p-1 is-full'>
           <DropdownMenu.Root>

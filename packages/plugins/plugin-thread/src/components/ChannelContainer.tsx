@@ -5,7 +5,7 @@
 import { Atom, useAtomValue } from '@effect-atom/atom-react';
 import React, { type ChangeEvent, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { useCapabilities, useCapability } from '@dxos/app-framework/react';
+import { type SurfaceComponentProps, useCapabilities, useCapability } from '@dxos/app-framework/react';
 import { Context } from '@dxos/context';
 import { failUndefined } from '@dxos/debug';
 import { Obj } from '@dxos/echo';
@@ -26,25 +26,25 @@ import { type Channel } from '../types';
 import { Call } from './Call';
 import ChatContainer from './ChatContainer';
 
-// TODO(burdon): Create Radix style layout.
-
-export type ChannelContainerProps = {
-  channel?: Channel.Channel;
-  roomId?: string;
-  role?: string;
-  fullscreen?: boolean;
-};
+export type ChannelContainerProps = SurfaceComponentProps<
+  Channel.Channel | undefined,
+  {
+    roomId?: string;
+    fullscreen?: boolean;
+  }
+>;
 
 /**
  * Renders a call when active, otherwise renders the channel chat.
  */
-export const ChannelContainer = ({ channel, roomId: _roomId, role, fullscreen }: ChannelContainerProps) => {
+// TODO(burdon): Create Radix style layout.
+export const ChannelContainer = ({ role, subject: channel, roomId: roomIdProp, fullscreen }: ChannelContainerProps) => {
   const space = getSpace(channel);
   const callManager = useCapability(ThreadCapabilities.CallManager);
   const joined = useAtomValue(callManager.joinedAtom);
   const currentRoomId = useAtomValue(callManager.roomIdAtom);
   const attendableId = channel ? Obj.getDXN(channel).toString() : undefined;
-  const roomId = _roomId ?? attendableId ?? failUndefined();
+  const roomId = roomIdProp ?? attendableId ?? failUndefined();
   const identity = useIdentity();
   const isNamed = !!identity?.profile?.displayName;
   const joinSound = useSoundEffect('JoinCall');

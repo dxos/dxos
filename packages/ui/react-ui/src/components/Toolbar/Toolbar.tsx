@@ -24,14 +24,15 @@ import { Separator, type SeparatorProps } from '../Separator';
 
 type ToolbarRootProps = ThemedClassName<
   ToolbarPrimitive.ToolbarProps & {
-    textBlockWidth?: boolean;
-    layoutManaged?: boolean;
     disabled?: boolean;
+    layoutManaged?: boolean; // TODO(burdon): Replace with Toolbar.Content to allow inner layout management?
+    textBlockWidth?: boolean;
   }
 >;
 
+// TODO(burdon): Implement asChild.
 const ToolbarRoot = forwardRef<HTMLDivElement, ToolbarRootProps>(
-  ({ classNames, children, layoutManaged, textBlockWidth: textBlockWidthProp, disabled, ...props }, forwardedRef) => {
+  ({ classNames, children, disabled, layoutManaged, textBlockWidth: textBlockWidthProp, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     const InnerRoot = textBlockWidthProp ? 'div' : Fragment;
     const innerRootProps = textBlockWidthProp

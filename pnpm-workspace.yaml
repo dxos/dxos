@@ -68,6 +68,7 @@ catalog:
   '@dxos/effect': ^0.8.3
   '@dxos/keys': ^0.8.3
   '@dxos/log': ^0.8.3
+  '@dxos/react-ui-mosaic': 0.7.5-feature-compute.4d9d99a
   '@dxos/schema': ^0.8.3
   '@dxos/test-utils': ^0.8.3
   '@dxos/util': ^0.8.3

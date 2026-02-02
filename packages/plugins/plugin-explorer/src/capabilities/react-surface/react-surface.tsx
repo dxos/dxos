@@ -22,7 +22,7 @@ export default Capability.makeModule(() =>
         role: ['article', 'section'],
         filter: (data): data is { subject: View.View } => Obj.instanceOf(Graph.Graph, data.subject),
         component: ({ data, role }) => {
-          return <ExplorerContainer view={data.subject} role={role} />;
+          return <ExplorerContainer role={role} subject={data.subject} />;
         },
       }),
     ),

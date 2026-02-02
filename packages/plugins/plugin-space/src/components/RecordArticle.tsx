@@ -10,14 +10,13 @@ import { type Database, Entity, Filter, Obj, Ref, Relation } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
-import { Card as MosaicCard } from '@dxos/react-ui-mosaic';
-import { StackItem } from '@dxos/react-ui-stack';
+import { Layout, Card as MosaicCard } from '@dxos/react-ui-mosaic';
 import { mx } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 
 import { meta } from '../meta';
 
-export const RecordArticle = ({ subject }: SurfaceComponentProps) => {
+export const RecordArticle = ({ role, subject }: SurfaceComponentProps) => {
   const { t } = useTranslation(meta.id);
   const db = Obj.getDatabase(subject);
   const data = useMemo(() => ({ subject }), [subject]);
@@ -28,7 +27,7 @@ export const RecordArticle = ({ subject }: SurfaceComponentProps) => {
   const singleColumn = related.length === 1;
 
   return (
-    <StackItem.Content>
+    <Layout.Main role={role}>
       <div role='none' className={mx('flex flex-col gap-4 p-4 is-full overflow-y-auto')}>
         <div role='none' className={mx('flex is-full card-max-width')}>
           <Surface role='section' data={data} limit={1} />
@@ -46,7 +45,7 @@ export const RecordArticle = ({ subject }: SurfaceComponentProps) => {
           </div>
         )}
       </div>
-    </StackItem.Content>
+    </Layout.Main>
   );
 };
 

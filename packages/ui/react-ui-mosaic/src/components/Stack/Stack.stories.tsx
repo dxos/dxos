@@ -11,8 +11,9 @@ import { faker } from '@dxos/random';
 import { Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
+import { useContainerDebug } from '../../hooks';
 import { DefaultStackTile, TestItem } from '../../testing';
-import { Mosaic, useContainerDebug } from '../Mosaic';
+import { Mosaic } from '../Mosaic';
 
 import { Stack } from './Stack';
 
@@ -38,7 +39,6 @@ const meta: Meta<typeof Stack<Obj.Any>> = {
   },
   args: {
     axis: 'vertical',
-    className: 'pli-3',
     getId: (item) => item.id,
     Tile: DefaultStackTile,
     // debug: true,
@@ -57,7 +57,7 @@ export const Default: Story = {
     const viewportRef = useRef<HTMLElement | null>(null);
     return (
       <Mosaic.Root debug={props.debug} classNames='bs-full grid grid-rows-[min-content_1fr_min-content]'>
-        <Toolbar.Root classNames='border-b border-separator'>
+        <Toolbar.Root classNames='border-be border-separator'>
           <div className='flex grow justify-center'>Items: {items.length}</div>
         </Toolbar.Root>
         <Mosaic.Container
@@ -67,11 +67,11 @@ export const Default: Story = {
           eventHandler={{ id: 'test', canDrop: () => true }}
           debug={debugHandler}
         >
-          <Mosaic.Viewport axis='vertical' viewportRef={viewportRef}>
+          <Mosaic.Viewport axis='vertical' padding viewportRef={viewportRef}>
             <Mosaic.Stack {...props} items={items} />
           </Mosaic.Viewport>
         </Mosaic.Container>
-        <DebugInfo classNames='border-t border-separator' />
+        <DebugInfo classNames='border-bs border-separator' />
       </Mosaic.Root>
     );
   },
@@ -96,7 +96,7 @@ export const Virtual: Story = {
           eventHandler={{ id: 'test', canDrop: () => true }}
           debug={debugHandler}
         >
-          <Mosaic.Viewport axis='vertical' viewportRef={viewportRef}>
+          <Mosaic.Viewport axis='vertical' padding viewportRef={viewportRef}>
             <Mosaic.VirtualStack
               {...props}
               items={items}

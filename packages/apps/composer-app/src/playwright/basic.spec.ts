@@ -30,7 +30,7 @@ test.describe('Basic tests', () => {
   });
 
   test('create identity, space is created by default', async () => {
-    await expect(host.page.getByTestId('spacePlugin.spaces')).toBeVisible();
+    await expect(host.page.getByTestId('spacePlugin.space')).toHaveCount(1);
     const plank = host.deck.plank();
     await expect(Markdown.getMarkdownTextboxWithLocator(plank.locator).first()).toHaveText(/.+/);
   });

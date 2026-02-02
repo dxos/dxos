@@ -4,9 +4,11 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Common, Plugin } from '@dxos/app-framework';
+import { Capability, Common, Plugin } from '@dxos/app-framework';
 import { type Obj, Ref } from '@dxos/echo';
 import { createDocAccessor, getTextInRange } from '@dxos/echo-db';
+import { Operation } from '@dxos/operation';
+import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
 import { type CreateObject } from '@dxos/plugin-space/types';
 import { translations as editorTranslations } from '@dxos/react-ui-editor';
 import { Text } from '@dxos/schema';
@@ -23,8 +25,7 @@ import {
 } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
-import { MarkdownEvents } from './types';
-import { Markdown } from './types';
+import { Markdown, MarkdownEvents, MarkdownOperation } from './types';
 import { serializer } from './util';
 
 export const MarkdownPlugin = Plugin.define(meta).pipe(
@@ -65,11 +66,20 @@ export const MarkdownPlugin = Plugin.define(meta).pipe(
           }
         },
         createObject: ((props) => Effect.sync(() => Markdown.make(props))) satisfies CreateObject,
-        addToCollectionOnCreate: true,
       },
     },
   }),
   Common.Plugin.addSchemaModule({ schema: [Markdown.Document, Text.Text] }),
+  Plugin.addModule({
+    id: 'on-space-created',
+    activatesOn: SpaceEvents.SpaceCreated,
+    activate: () =>
+      Effect.succeed(
+        Capability.contributes(SpaceCapabilities.OnCreateSpace, (params) =>
+          Operation.invoke(MarkdownOperation.OnCreateSpace, params),
+        ),
+      ),
+  }),
   Common.Plugin.addSurfaceModule({
     activate: ReactSurface,
     activatesBefore: [MarkdownEvents.SetupExtensions],

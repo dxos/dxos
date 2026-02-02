@@ -1,9 +1,13 @@
 {
   "name": "@dxos/plugin-map-solid",
-  "version": "0.8.3",
+  "version": "0.0.0",
   "description": "Map plugin with solid web components",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
   "license": "MIT",
   "author": "DXOS.org",
   "sideEffects": true,
