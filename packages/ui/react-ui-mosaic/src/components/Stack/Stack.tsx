@@ -22,15 +22,15 @@ import { mosaicStyles } from '../Mosaic';
 
 type StackTileComponent<TData = any> = FC<MosaicTileProps<TData>>;
 
-type StackProps<TData = any> = SlottableClassName<{
-  role?: string;
-  axis?: Axis;
-  draggable?: boolean;
-  items?: TData[];
-  getId: GetId<TData>;
-  Tile: StackTileComponent<TData>;
-  debug?: boolean;
-}>;
+type StackProps<TData = any> = SlottableClassName<
+  {
+    Tile: StackTileComponent<TData>;
+    getId: GetId<TData>;
+    role?: string;
+    axis?: Axis;
+    items?: TData[];
+  } & Pick<MosaicTileProps<TData>, 'draggable' | 'debug'>
+>;
 
 /**
  * Linear layout of Mosaic tiles.

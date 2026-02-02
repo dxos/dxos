@@ -5,41 +5,62 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { withTheme } from '../../testing';
-import { Button } from '../Button';
+import { withLayout, withTheme } from '../../testing';
+import { IconButton } from '../Button';
+import { Toolbar } from '../Toolbar';
 
 import { Main, useSidebars } from './Main';
 
 type StoryMainArgs = {};
 
-const NavigationSidebarToggle = () => {
+const NavigationSidebarToggle = ({ close }: { close?: boolean }) => {
   const { toggleNavigationSidebar } = useSidebars('StoryMain__SidebarToggle');
-  return <Button onClick={toggleNavigationSidebar}>Toggle navigation sidebar</Button>;
+  return (
+    <IconButton
+      icon={close ? 'ph--caret-left--regular' : 'ph--caret-right--regular'}
+      iconOnly
+      label='Toggle navigation sidebar'
+      onClick={toggleNavigationSidebar}
+    />
+  );
 };
 
-const ComplementarySidebarToggle = () => {
+const ComplementarySidebarToggle = ({ close }: { close?: boolean }) => {
   const { toggleComplementarySidebar } = useSidebars('StoryMain__SidebarToggle');
-  return <Button onClick={toggleComplementarySidebar}>Toggle complementary sidebar</Button>;
+  return (
+    <IconButton
+      icon={close ? 'ph--caret-right--regular' : 'ph--caret-left--regular'}
+      iconOnly
+      label='Toggle complementary sidebar'
+      onClick={toggleComplementarySidebar}
+    />
+  );
 };
 
 const DefaultStory = (_args: StoryMainArgs) => {
   return (
-    <Main.Root>
+    <Main.Root defaultComplementarySidebarState='closed' defaultNavigationSidebarState='closed'>
       <Main.Overlay />
-      <Main.NavigationSidebar label='Navigation' classNames='p-4'>
-        <p>Navigation sidebar content, hi!</p>
-        <NavigationSidebarToggle />
+      <Main.NavigationSidebar label='Navigation'>
+        <Toolbar.Root>
+          <h1>Navigation</h1>
+          <Toolbar.Separator variant='gap' classNames='grow' />
+          <NavigationSidebarToggle close />
+        </Toolbar.Root>
       </Main.NavigationSidebar>
-      <Main.Content>
-        <div role='group' className='m-2 p-4 bg-neutral-50 dark:bg-neutral-950 rounded space-y-2'>
-          <ComplementarySidebarToggle />
-          <p>Main content, hello!</p>
+      <Main.Content classNames='is-full'>
+        <Toolbar.Root>
           <NavigationSidebarToggle />
-        </div>
+          <Toolbar.Separator variant='gap' classNames='grow' />
+          <ComplementarySidebarToggle />
+        </Toolbar.Root>
       </Main.Content>
-      <Main.ComplementarySidebar label='Complementary content' classNames='p-4'>
-        <p>Complementary sidebar content, hello!</p>
-        <ComplementarySidebarToggle />
+      <Main.ComplementarySidebar label='Complementary'>
+        <Toolbar.Root>
+          <ComplementarySidebarToggle close />
+          <Toolbar.Separator variant='gap' classNames='grow' />
+          <h1>Complementary</h1>
+        </Toolbar.Root>
       </Main.ComplementarySidebar>
     </Main.Root>
   );
@@ -49,7 +70,7 @@ const meta = {
   title: 'ui/react-ui-core/Main',
   component: Main.Root,
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme, withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
     chromatic: {

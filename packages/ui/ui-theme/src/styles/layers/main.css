@@ -1,5 +1,3 @@
-/* Main component classes */
-
 @layer utilities {
   .dx-main-content-padding {
     @apply pis-0 scroll-ps-0 pie-0 scroll-pe-0;

@@ -625,7 +625,7 @@ type TileProps<TData = any, TLocation = LocationType> = SlottableClassName<
     id: string;
     data: TData;
     location: TLocation;
-    draggable?: boolean;
+    draggable?: boolean; // TODO(burdon): Not currently implemented.
     debug?: boolean;
   }>
 >;
