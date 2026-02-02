@@ -1,6 +1,6 @@
 {
   "name": "@dxos/effect-atom-solid",
-  "version": "0.0.0",
+  "version": "0.8.3",
   "description": "Solid.js bindings for Effect Atom",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

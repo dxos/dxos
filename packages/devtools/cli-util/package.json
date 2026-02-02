@@ -1,6 +1,6 @@
 {
   "name": "@dxos/cli-util",
-  "version": "0.0.0",
+  "version": "0.8.3",
   "description": "Shared CLI utilities for DXOS CLI commands and plugins",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
