@@ -44,7 +44,7 @@ export const ChatContainer = forwardRef<HTMLDivElement, ChatContainerProps>((pro
   }
 
   return (
-    <Layout.Main role={role} ref={forwardedRef}>
+    <Layout.Main toolbar role={role} ref={forwardedRef}>
       <Chat.Root db={space?.db} chat={chat} processor={processor} onEvent={onEvent}>
         <Chat.Toolbar companionTo={companionTo} />
         <Chat.Viewport classNames='container-max-width'>

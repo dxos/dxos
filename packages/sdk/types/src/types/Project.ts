@@ -11,8 +11,8 @@ import { IconAnnotation, View } from '@dxos/schema';
 export const Column = Schema.Struct({
   name: Schema.String,
   view: Type.Ref(View.View),
-  order: Schema.Array(Schema.String).pipe(Schema.mutable),
-}).pipe(Schema.mutable);
+  order: Schema.Array(Schema.String),
+});
 
 export type Column = Schema.Schema.Type<typeof Column>;
 
@@ -20,7 +20,7 @@ export const Project = Schema.Struct({
   name: Schema.String.pipe(GeneratorAnnotation.set('commerce.productName'), Schema.optional),
   description: Schema.String.pipe(Schema.optional),
   image: Format.URL.pipe(Schema.annotations({ title: 'Image' }), Schema.optional),
-  columns: Schema.Array(Column.pipe(Schema.mutable)).pipe(Schema.mutable, FormInputAnnotation.set(false)),
+  columns: Schema.Array(Column).pipe(FormInputAnnotation.set(false)),
 }).pipe(
   Type.object({
     typename: 'dxos.org/type/Project',

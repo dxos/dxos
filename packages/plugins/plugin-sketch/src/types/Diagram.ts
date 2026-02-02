@@ -13,7 +13,7 @@ export const Canvas = Schema.Struct({
   /** Fully qualified external schema reference. */
   // TODO(wittjosiah): Remove once the schema is fully internalized.
   schema: Schema.String.pipe(Schema.optional),
-  content: Schema.Record({ key: Schema.String, value: Schema.Any }).pipe(Schema.mutable),
+  content: Schema.Record({ key: Schema.String, value: Schema.Any }),
 }).pipe(
   Type.object({
     typename: 'dxos.org/type/Canvas',

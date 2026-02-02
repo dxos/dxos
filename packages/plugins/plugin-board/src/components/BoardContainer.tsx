@@ -106,10 +106,12 @@ export const BoardContainer = ({ role, subject: board }: BoardContainerProps) =>
       }
 
       // Create a reference to the selected object and add it to the board.
-      board.items.push(Ref.make(selectedObject));
+      Obj.change(board, (b) => {
+        b.items.push(Ref.make(selectedObject));
 
-      // Set the layout position for the new item.
-      board.layout.cells[selectedObject.id.toString()] = pickerState.position;
+        // Set the layout position for the new item.
+        b.layout.cells[selectedObject.id.toString()] = pickerState.position;
+      });
 
       // Close the picker.
       setPickerState(null);

@@ -246,6 +246,66 @@ describe('Query', () => {
     });
   });
 
+  describe('Queue queries', () => {
+    test('typeDXN: versionless matches any version', async () => {
+      const ContactV1 = Schema.Struct({
+        firstName: Schema.String,
+        lastName: Schema.String,
+      }).pipe(Type.object({ typename: 'example.com/type/Person', version: '0.1.0' }));
+
+      const ContactV2 = Schema.Struct({
+        name: Schema.String,
+      }).pipe(Type.object({ typename: 'example.com/type/Person', version: '0.2.0' }));
+
+      const peer = await builder.createPeer({ indexing: { sqlIndex: true }, types: [ContactV1, ContactV2] });
+      const db = await peer.createDatabase();
+      const queues = peer.client.constructQueueFactory(db.spaceId);
+      const queue = queues.create();
+
+      const contactV1 = Obj.make(ContactV1, { firstName: 'John', lastName: 'Doe' });
+      const contactV2 = Obj.make(ContactV2, { name: 'Brian Smith' });
+      await queue.append([contactV1, contactV2]);
+
+      const both = await queue.query(Query.select(Filter.typeDXN(DXN.parse('dxn:type:example.com/type/Person')))).run();
+      expect(both).toHaveLength(2);
+
+      const v1 = await queue
+        .query(Query.select(Filter.typeDXN(DXN.parse('dxn:type:example.com/type/Person:0.1.0'))))
+        .run();
+      expect(v1).toEqual([contactV1]);
+
+      const v2 = await queue
+        .query(Query.select(Filter.typeDXN(DXN.parse('dxn:type:example.com/type/Person:0.2.0'))))
+        .run();
+      expect(v2).toEqual([contactV2]);
+    });
+
+    test('sqlIndex: type selector loads queue-backed objects', async () => {
+      const peer = await builder.createPeer({ indexing: { sqlIndex: true }, types: [TestSchema.Task] });
+      const db = await peer.createDatabase();
+      const queues = peer.client.constructQueueFactory(db.spaceId);
+      const queue = queues.create();
+
+      const task = Obj.make(TestSchema.Task, { title: 'Queue type selector task' });
+      await queue.append([task]);
+
+      await db.flush({ indexes: true });
+
+      const obj: TestSchema.Task = await db
+        .query(
+          Query.select(Filter.type(TestSchema.Task, { title: 'Queue type selector task' })).options({
+            queues: [queue.dxn.toString()],
+          }),
+        )
+        .first();
+
+      expect(obj).toBeDefined();
+      expect(obj.id).toEqual(task.id);
+      expect(obj.title).toEqual('Queue type selector task');
+      expect(Obj.getDXN(obj)?.toString().startsWith(queue.dxn.toString())).toBe(true);
+    });
+  });
+
   test('query.run() queries everything after restart', async () => {
     const tmpPath = createTmpPath();
     const spaceKey = PublicKey.random();
@@ -616,6 +676,44 @@ describe('Query', () => {
       ]);
     });
 
+    test('sqlIndex: referencedBy property path matches full path (not just first segment)', async () => {
+      const { db: sqlDb } = await builder.createDatabase({ indexing: { sqlIndex: true }, types: [TestSchema.Person] });
+
+      const person = sqlDb.add(Obj.make(TestSchema.Person, { name: 'Alice' }));
+
+      sqlDb.add(
+        Obj.make(TestSchema.Expando, {
+          name: 'direct',
+          a: Ref.make(person),
+        }),
+      );
+
+      sqlDb.add(
+        Obj.make(TestSchema.Expando, {
+          name: 'nested',
+          a: { b: Ref.make(person) },
+        }),
+      );
+
+      await sqlDb.flush({ indexes: true });
+
+      // When no property is specified, referencedBy() should return all incoming references (including nested ones).
+      const allIncoming = await sqlDb
+        .query(Query.select(Filter.type(TestSchema.Person, { name: 'Alice' })).referencedBy(TestSchema.Expando))
+        .run();
+      expect(allIncoming.map((o) => o.name).sort()).toEqual(['direct', 'nested']);
+
+      const nested = await sqlDb
+        .query(Query.select(Filter.type(TestSchema.Person, { name: 'Alice' })).referencedBy(TestSchema.Expando, 'a.b'))
+        .run();
+      expect(nested.map((o) => o.name).sort()).toEqual(['nested']);
+
+      const direct = await sqlDb
+        .query(Query.select(Filter.type(TestSchema.Person, { name: 'Alice' })).referencedBy(TestSchema.Expando, 'a'))
+        .run();
+      expect(direct.map((o) => o.name).sort()).toEqual(['direct']);
+    });
+
     test('traverse inbound array references', async () => {
       db.add(
         Obj.make(TestSchema.Expando, {
@@ -750,7 +848,7 @@ describe('Query', () => {
 
     test('full-text', async () => {
       const { db, graph } = await builder.createDatabase({
-        indexing: { fullText: true },
+        indexing: { sqlIndex: true },
       });
       await graph.schemaRegistry.register([TestSchema.Task]);
 
@@ -785,7 +883,7 @@ describe('Query', () => {
 
   describe('indexer2 text search', () => {
     test('full-text search via indexer2', async () => {
-      const { db } = await builder.createDatabase({ indexing: { fullText: true } });
+      const { db } = await builder.createDatabase({ indexing: { sqlIndex: true } });
 
       db.add(Obj.make(TestSchema.Expando, { title: 'Introduction to TypeScript' }));
       db.add(Obj.make(TestSchema.Expando, { title: 'Getting Started with React' }));
@@ -824,7 +922,7 @@ describe('Query', () => {
     });
 
     test('full-text search across multiple matching objects', async () => {
-      const { db } = await builder.createDatabase({ indexing: { fullText: true } });
+      const { db } = await builder.createDatabase({ indexing: { sqlIndex: true } });
 
       db.add(Obj.make(TestSchema.Expando, { title: 'Programming with JavaScript' }));
       db.add(Obj.make(TestSchema.Expando, { title: 'JavaScript Best Practices' }));
@@ -839,7 +937,7 @@ describe('Query', () => {
     });
 
     test('full-text search with partial word matching (trigram)', async () => {
-      const { db } = await builder.createDatabase({ indexing: { fullText: true } });
+      const { db } = await builder.createDatabase({ indexing: { sqlIndex: true } });
 
       db.add(Obj.make(TestSchema.Expando, { title: 'Introduction to TypeScript' }));
       db.add(Obj.make(TestSchema.Expando, { title: 'Getting Started with React' }));
@@ -875,7 +973,7 @@ describe('Query', () => {
     });
 
     test('full-text search with wrong word order', async () => {
-      const { db } = await builder.createDatabase({ indexing: { fullText: true } });
+      const { db } = await builder.createDatabase({ indexing: { sqlIndex: true } });
 
       db.add(Obj.make(TestSchema.Expando, { title: 'Python Programming Guide' }));
       db.add(Obj.make(TestSchema.Expando, { title: 'JavaScript Basics' }));
@@ -897,7 +995,7 @@ describe('Query', () => {
     });
 
     test('full-text search after content update', async () => {
-      const { db } = await builder.createDatabase({ indexing: { fullText: true } });
+      const { db } = await builder.createDatabase({ indexing: { sqlIndex: true } });
 
       const obj = db.add(Obj.make(TestSchema.Expando, { title: 'Original Title' }));
       await db.flush({ indexes: true });
@@ -990,7 +1088,7 @@ describe('Query', () => {
     });
 
     test('full-text search in queues via indexer2', async () => {
-      const peer = await builder.createPeer({ indexing: { fullText: true }, types: [TestSchema.Task] });
+      const peer = await builder.createPeer({ indexing: { sqlIndex: true }, types: [TestSchema.Task] });
       const db = await peer.createDatabase();
       const queues = peer.client.constructQueueFactory(db.spaceId);
       const queue = queues.create();
@@ -1037,7 +1135,7 @@ describe('Query', () => {
     });
 
     test('full-text search with allQueuesFromSpaces via indexer2', async () => {
-      const peer = await builder.createPeer({ indexing: { fullText: true }, types: [TestSchema.Task] });
+      const peer = await builder.createPeer({ indexing: { sqlIndex: true }, types: [TestSchema.Task] });
       const db = await peer.createDatabase();
       const queues = peer.client.constructQueueFactory(db.spaceId);
       const queue = queues.create();
@@ -1077,7 +1175,7 @@ describe('Query', () => {
     });
 
     test('full-text search from queue returns valid echo objects', async () => {
-      const peer = await builder.createPeer({ indexing: { fullText: true }, types: [TestSchema.Task] });
+      const peer = await builder.createPeer({ indexing: { sqlIndex: true }, types: [TestSchema.Task] });
       const db = await peer.createDatabase();
       const queues = peer.client.constructQueueFactory(db.spaceId);
       const queue = queues.create();
@@ -1101,7 +1199,7 @@ describe('Query', () => {
     });
 
     test('full-text search returns rank in entries', async () => {
-      const { db } = await builder.createDatabase({ indexing: { fullText: true } });
+      const { db } = await builder.createDatabase({ indexing: { sqlIndex: true } });
 
       db.add(Obj.make(TestSchema.Expando, { title: 'TypeScript TypeScript TypeScript' })); // High relevance.
       db.add(Obj.make(TestSchema.Expando, { title: 'TypeScript Programming' })); // Medium relevance.
@@ -1122,7 +1220,7 @@ describe('Query', () => {
     });
 
     test('full-text search order by rank descending (default)', async () => {
-      const { db } = await builder.createDatabase({ indexing: { fullText: true } });
+      const { db } = await builder.createDatabase({ indexing: { sqlIndex: true } });
 
       // Create objects with varying relevance to the search term "TypeScript".
       db.add(Obj.make(TestSchema.Expando, { title: 'TypeScript' })); // Single occurrence.
@@ -1146,7 +1244,7 @@ describe('Query', () => {
     });
 
     test('full-text search order by rank ascending', async () => {
-      const { db } = await builder.createDatabase({ indexing: { fullText: true } });
+      const { db } = await builder.createDatabase({ indexing: { sqlIndex: true } });
 
       // Create objects with varying relevance to the search term "TypeScript".
       db.add(Obj.make(TestSchema.Expando, { title: 'TypeScript' })); // Single occurrence.
@@ -1190,7 +1288,7 @@ describe('Query', () => {
     });
 
     test('order by rank with limit', async () => {
-      const { db } = await builder.createDatabase({ indexing: { fullText: true } });
+      const { db } = await builder.createDatabase({ indexing: { sqlIndex: true } });
 
       // Create multiple objects with varying relevance.
       db.add(Obj.make(TestSchema.Expando, { title: 'TypeScript' }));

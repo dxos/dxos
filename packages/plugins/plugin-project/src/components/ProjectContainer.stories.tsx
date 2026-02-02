@@ -76,9 +76,6 @@ const meta = {
               const tag = space.db.add(Tag.make({ label: 'important', hue: 'green' }));
               const tagDxn = Obj.getDXN(tag).toString();
 
-              // Create a project.
-              const project = Project.make();
-
               // Create a view for Contacts.
               const personView = View.make({
                 query: Query.select(Filter.type(Person.Person)),
@@ -112,36 +109,38 @@ const meta = {
                 jsonSchema: Type.toJsonSchema(Message.Message),
               });
 
-              // Add views to project collections
-              project.columns.push(
-                {
-                  name: 'Contacts',
-                  view: Ref.make(personView),
-                  order: [],
-                },
-                {
-                  name: 'Organizations',
-                  view: Ref.make(organizationView),
-                  order: [],
-                },
-                {
-                  name: 'Tasks',
-                  view: Ref.make(taskView),
-                  order: [],
-                },
-                {
-                  name: 'Projects',
-                  view: Ref.make(projectView),
-                  order: [],
-                },
-                {
-                  name: 'Messages',
-                  view: Ref.make(messageView),
-                  order: [],
-                },
-              );
+              // Create project with columns.
+              const project = Project.make({
+                columns: [
+                  {
+                    name: 'Contacts',
+                    view: Ref.make(personView),
+                    order: [],
+                  },
+                  {
+                    name: 'Organizations',
+                    view: Ref.make(organizationView),
+                    order: [],
+                  },
+                  {
+                    name: 'Tasks',
+                    view: Ref.make(taskView),
+                    order: [],
+                  },
+                  {
+                    name: 'Projects',
+                    view: Ref.make(projectView),
+                    order: [],
+                  },
+                  {
+                    name: 'Messages',
+                    view: Ref.make(messageView),
+                    order: [],
+                  },
+                ],
+              });
 
-              // Add project to space
+              // Add project to space.
               space.db.add(project);
 
               // Generate sample Organizations

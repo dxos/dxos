@@ -13,6 +13,6 @@ export const SelectOption = Schema.Struct({
   title: Schema.String,
   /** Color palette used for visual styling. */
   color: Schema.String,
-}).pipe(Schema.mutable);
+});
 
 export type SelectOption = Schema.Schema.Type<typeof SelectOption>;

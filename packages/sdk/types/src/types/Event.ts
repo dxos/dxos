@@ -22,7 +22,7 @@ export const Event = Schema.Struct({
   title: Schema.optional(Schema.String),
   description: Schema.optional(Schema.String),
   owner: Actor.Actor,
-  attendees: Schema.mutable(Schema.Array(Actor.Actor)),
+  attendees: Schema.Array(Actor.Actor),
   startDate: Schema.String, // TODO(burdon): Date.
   endDate: Schema.String,
 

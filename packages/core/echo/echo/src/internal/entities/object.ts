@@ -40,9 +40,7 @@ export const EchoObjectSchema: {
     // Extract fields from the schema if available (Struct schemas have .fields).
     const fields = ((self as any).fields ?? {}) as Fields;
 
-    // TODO(dmaretskyi): Does `Schema.mutable` work for deep mutability here?
-    // TODO(dmaretskyi): Do not do mutable here.
-    const schemaWithId = Schema.extend(Schema.mutable(self), Schema.Struct({ id: Schema.String }));
+    const schemaWithId = Schema.extend(self, Schema.Struct({ id: Schema.String }));
     const ast = SchemaAST.annotations(schemaWithId.ast, {
       // TODO(dmaretskyi): `extend` kills the annotations.
       ...self.ast.annotations,

@@ -316,7 +316,7 @@ export const getValue = (obj: Unknown | Snapshot, path: readonly (string | numbe
  * @example
  * ```ts
  * const person = Obj.make(Person, { name: 'John' });
- * // Person schema has: addresses: Schema.mutable(Schema.Array(Address))
+ * // Person schema has: addresses: Schema.Array(Address)
  * Obj.change(person, (p) => {
  *   Obj.setValue(p, ['addresses', 0, 'street'], '123 Main St');
  * });
@@ -436,9 +436,9 @@ export type Meta = ApiMeta;
  * ```
  */
 // TODO(wittjosiah): When passed a Snapshot, should return a snapshot of meta, not the live meta proxy.
-export function getMeta(entity: Mutable<Unknown>): ObjectMeta;
+export function getMeta(entity: Mutable<Unknown>): Meta;
 export function getMeta(entity: Unknown | Snapshot): ReadonlyMeta;
-export function getMeta(entity: Unknown | Snapshot | Mutable<Unknown>): ObjectMeta | ReadonlyMeta {
+export function getMeta(entity: Unknown | Snapshot | Mutable<Unknown>): Meta | ReadonlyMeta {
   return getMeta$(entity);
 }
 

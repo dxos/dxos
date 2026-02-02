@@ -26,6 +26,7 @@ import {
   ObjectDeletedId,
   type ObjectJSON,
   type ObjectMeta,
+  type ObjectMetaJSON,
   ObjectMetaSchema,
   ObjectVersionId,
   PersistentSchema,
@@ -869,7 +870,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     const obj: Partial<ObjectJSON> = {
       id: target[symbolInternals].core.id,
       [ATTR_TYPE]: typeRef ? (EncodedReference.getReferenceString(typeRef) as DXN.String) : undefined,
-      [ATTR_META]: { ...this.getMeta(target) },
+      [ATTR_META]: { ...this.getMeta(target) } as ObjectMetaJSON,
     };
 
     if (target[symbolInternals].core.isDeleted()) {

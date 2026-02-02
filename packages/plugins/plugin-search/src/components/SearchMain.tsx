@@ -61,8 +61,8 @@ export const SearchMain = ({ space }: { space?: Space }) => {
             <Mosaic.Viewport>
               <Mosaic.Stack items={allResults} getId={(result) => result.object!.id} Tile={SearchResultTile} />
             </Mosaic.Viewport>
-            {allResults.length === 0 && <SearchList.Empty>{t('empty results message')}</SearchList.Empty>}
           </Mosaic.Container>
+          {allResults.length === 0 && <SearchList.Empty>{t('empty results message')}</SearchList.Empty>}
         </SearchList.Content>
       </SearchList.Root>
     </Layout.Main>

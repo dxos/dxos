@@ -72,13 +72,13 @@ export default Capability.makeModule(() =>
       }),
       Common.createSurface({
         id: `${meta.id}/message-card`,
-        role: ['card', 'card--intrinsic', 'card--extrinsic', 'card--popover', 'card--transclusion'],
+        role: 'card--content',
         filter: (data): data is { subject: Message.Message } => Obj.instanceOf(Message.Message, data?.subject),
         component: ({ data: { subject }, role }) => <MessageCard subject={subject} role={role} />,
       }),
       Common.createSurface({
         id: `${meta.id}/event-card`,
-        role: ['card', 'card--intrinsic', 'card--extrinsic', 'card--popover', 'card--transclusion'],
+        role: 'card--content',
         filter: (data): data is { subject: Event.Event } => Obj.instanceOf(Event.Event, data?.subject),
         component: ({ data: { subject }, role }) => <EventCard subject={subject} role={role} />,
       }),

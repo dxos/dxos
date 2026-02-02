@@ -43,7 +43,7 @@ export const ProjectContainer = ({ role, subject: project }: ProjectContainerPro
 const ProjectItem = ({ item, projectionModel }: ItemProps) => {
   return (
     <Surface
-      role='card--intrinsic'
+      role='card--content'
       data={{
         subject: item,
         projection: projectionModel,

@@ -37,7 +37,7 @@ export const Input = Schema.Struct({
    * Function to call if the kind is 'function'.
    */
   function: Schema.optional(Schema.String),
-}).pipe(Schema.mutable);
+});
 
 export type Input = Schema.Schema.Type<typeof Input>;
 
@@ -46,8 +46,8 @@ export type Input = Schema.Schema.Type<typeof Input>;
  */
 export const Template = Schema.Struct({
   source: Type.Ref(Text.Text).annotations({ description: 'Handlebars template source' }),
-  inputs: Schema.optional(Schema.mutable(Schema.Array(Input))),
-}).pipe(Schema.mutable);
+  inputs: Schema.optional(Schema.Array(Input)),
+});
 
 export interface Template extends Schema.Schema.Type<typeof Template> {}
 

@@ -16,7 +16,7 @@ const GraphSchema = Schema.Struct({
   query: Schema.Struct({
     raw: Schema.optional(Schema.String),
     ast: QueryAST.Query,
-  }).pipe(Schema.mutable, FormInputAnnotation.set(false)),
+  }).pipe(FormInputAnnotation.set(false)),
 }).pipe(
   Type.object({
     typename: 'dxos.org/type/Graph',
@@ -52,7 +52,7 @@ export const GraphV1 = Schema.Struct({
   query: Schema.Struct({
     raw: Schema.optional(Schema.String),
     ast: QueryAST.Query,
-  }).pipe(Schema.mutable),
+  }),
 }).pipe(
   Type.object({
     typename: 'dxos.org/type/Graph',

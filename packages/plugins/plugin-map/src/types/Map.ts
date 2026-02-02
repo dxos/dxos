@@ -17,7 +17,7 @@ export const Map = Schema.Struct({
   zoom: Schema.Number.pipe(FormInputAnnotation.set(false), Schema.optional),
   // TODO(wittjosiah): Use GeoJSON format for rendering arbitrary data on the map.
   //   e.g., points, lines, polygons, etc.
-  coordinates: Schema.Array(Format.GeoPoint).pipe(Schema.mutable, FormInputAnnotation.set(false), Schema.optional),
+  coordinates: Schema.Array(Format.GeoPoint).pipe(FormInputAnnotation.set(false), Schema.optional),
 }).pipe(
   Type.object({
     typename: 'dxos.org/type/Map',
@@ -54,7 +54,7 @@ export const MapV2 = Schema.Struct({
   name: Schema.optional(Schema.String),
   center: Schema.optional(Format.GeoPoint),
   zoom: Schema.optional(Schema.Number),
-  coordinates: Schema.Array(Format.GeoPoint).pipe(Schema.mutable, Schema.optional),
+  coordinates: Schema.Array(Format.GeoPoint).pipe(Schema.optional),
 }).pipe(
   Type.object({
     typename: 'dxos.org/type/Map',

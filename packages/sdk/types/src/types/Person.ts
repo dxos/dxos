@@ -52,14 +52,14 @@ const PersonSchema = Schema.Struct({
         GeneratorAnnotation.set('internet.email'),
       ),
     }),
-  ).pipe(Schema.mutable, Schema.optional),
+  ).pipe(Schema.optional),
   identities: Schema.Array(
     Schema.Struct({
       label: Schema.optional(Schema.String),
       // TODO(burdon): Identity types? (socials, DIDs, etc.)
       value: Schema.String,
     }),
-  ).pipe(Schema.mutable, Schema.optional),
+  ).pipe(Schema.optional),
   phoneNumbers: Schema.Array(
     Schema.Struct({
       label: Schema.optional(Schema.String),
@@ -67,14 +67,14 @@ const PersonSchema = Schema.Struct({
       value: Schema.String,
     }),
   )
-    .pipe(Schema.mutable, Schema.optional)
+    .pipe(Schema.optional)
     .annotations({ title: 'Phone Numbers' }),
   addresses: Schema.Array(
     Schema.Struct({
       label: Schema.optional(Schema.String),
       value: Geo.PostalAddress,
     }),
-  ).pipe(Schema.mutable, Schema.optional),
+  ).pipe(Schema.optional),
   urls: Schema.Array(
     Schema.Struct({
       label: Schema.optional(Schema.String),
@@ -83,7 +83,7 @@ const PersonSchema = Schema.Struct({
         GeneratorAnnotation.set('internet.url'),
       ),
     }),
-  ).pipe(Schema.mutable, Schema.optional),
+  ).pipe(Schema.optional),
   // TODO(burdon): Support date or create String type for ISO Date.
   birthday: Schema.String.pipe(
     Schema.annotations({ title: 'Birthday' }),
@@ -97,7 +97,7 @@ const PersonSchema = Schema.Struct({
       label: Schema.String,
       value: Schema.String,
     }),
-  ).pipe(Schema.mutable, Schema.optional),
+  ).pipe(Schema.optional),
 });
 
 export const Person = PersonSchema.pipe(

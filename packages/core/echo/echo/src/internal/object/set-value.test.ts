@@ -55,11 +55,11 @@ describe('Obj.setValue', () => {
   test('sets multiple nested array elements', ({ expect }) => {
     const Item = Schema.Struct({
       value: Schema.optional(Schema.Number),
-    }).pipe(Schema.mutable);
+    });
 
     const Container = Schema.Struct({
       name: Schema.String,
-      items: Schema.optional(Schema.mutable(Schema.Array(Item))),
+      items: Schema.optional(Schema.Array(Item)),
     }).pipe(
       Type.object({
         typename: 'test.com/Container',
@@ -150,7 +150,7 @@ describe('Obj.setValue', () => {
 
   test('handles two-dimensional arrays', ({ expect }) => {
     const Matrix = Schema.Struct({
-      values: Schema.optional(Schema.mutable(Schema.Array(Schema.mutable(Schema.Array(Schema.Number))))),
+      values: Schema.optional(Schema.Array(Schema.Array(Schema.Number))),
     }).pipe(
       Type.object({
         typename: 'test.com/Matrix',
@@ -200,11 +200,11 @@ describe('Obj.setValue', () => {
   test('handles numeric keys as strings', ({ expect }) => {
     const Item = Schema.Struct({
       value: Schema.optional(Schema.Number),
-    }).pipe(Schema.mutable);
+    });
 
     const Container = Schema.Struct({
       name: Schema.String,
-      items: Schema.optional(Schema.mutable(Schema.Array(Item))),
+      items: Schema.optional(Schema.Array(Item)),
     }).pipe(
       Type.object({
         typename: 'test.com/Container',
@@ -227,11 +227,11 @@ describe('Obj.setValue', () => {
       id: Schema.String, // Required field.
       title: Schema.optional(Schema.String),
       completed: Schema.optional(Schema.Boolean),
-    }).pipe(Schema.mutable);
+    });
 
     const TodoList = Schema.Struct({
       name: Schema.String,
-      tasks: Schema.optional(Schema.mutable(Schema.Array(Task))),
+      tasks: Schema.optional(Schema.Array(Task)),
     }).pipe(
       Type.object({
         typename: 'test.com/TodoList',
@@ -256,11 +256,11 @@ describe('Obj.setValue', () => {
       count: Schema.Number, // Required - should default to 0
       active: Schema.Boolean, // Required - should default to false
       label: Schema.optional(Schema.String), // Optional - should not be initialized
-    }).pipe(Schema.mutable);
+    });
 
     const Container = Schema.Struct({
       name: Schema.String,
-      items: Schema.optional(Schema.mutable(Schema.Array(Item))),
+      items: Schema.optional(Schema.Array(Item)),
     }).pipe(
       Type.object({
         typename: 'test.com/Container',
