@@ -1,13 +1,8 @@
 layer: automation
 language: typescript
 tags:
+  - no-compile
   - e2e
   - typecheck
   - vite
   - pack
-tasks:
-  compile:
-    command: echo "No compilation needed for vite e2e package"
-    outputs: []
-    options:
-      merge: replace

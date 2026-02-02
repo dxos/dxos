@@ -1,6 +1,7 @@
 layer: application
 language: typescript
 tags:
+  - no-compile
   - e2e
   - tauri
   - typecheck
@@ -8,16 +9,6 @@ tags:
   - ts-test
   - storybook
 tasks:
-  bundle:
-    deps:
-      - prebuild
-  compile:
-    command: echo "No compilation needed for vite application"
-    deps:
-      - prebuild
-    outputs: []
-    options:
-      merge: replace
   prebuild:
     command: pnpm run --silent copy:assets
     deps:

@@ -1,19 +1,33 @@
 layer: library
 language: typescript
 tags:
-  - ts-build
   - ts-test
   - pack
 tasks:
+  # Workaround for dx-compile WASM bug - use tsc directly without pnpm exec
+  # This avoids moon's WASM plugin intercepting the call
   compile:
-    command: echo "Skipping compile due to dx-compile WASM bug (github.com/dxos/dxos/issues/XXXXX)"
-    outputs: []
+    command: ../../../../node_modules/.bin/tsc
+    deps:
+      - ^:compile
+    inputs:
+      - /tsconfig.base.json
+      - tsconfig.json
+      - '@group(production)'
+    outputs:
+      - dist/types/
     options:
       merge: replace
+      timeout: 60
   build:
-    command: echo "Skipping build due to dx-compile WASM bug (github.com/dxos/dxos/issues/XXXXX)"
+    command: ../../../../node_modules/.bin/tsc --noEmit
     deps:
       - compile
+    inputs:
+      - /tsconfig.base.json
+      - tsconfig.json
+      - '@group(sources)'
     outputs: []
     options:
       merge: replace
+      timeout: 60

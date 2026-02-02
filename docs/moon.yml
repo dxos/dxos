@@ -1,13 +1,9 @@
 layer: application
 language: typescript
 tags:
+  - no-compile
   - typecheck
 tasks:
-  compile:
-    command: echo "No compilation needed for astro application"
-    outputs: []
-    options:
-      merge: replace
   build:
     deps:
       - prebuild

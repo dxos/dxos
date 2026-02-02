@@ -1,0 +1,12 @@
+$schema: https://moonrepo.dev/schemas/tasks.json
+tasks:
+  compile:
+    command: 'true'
+    outputs: []
+    options:
+      merge: replace
+  build:
+    command: 'true'
+    outputs: []
+    options:
+      merge: replace

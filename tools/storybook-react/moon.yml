@@ -1,45 +1,17 @@
 layer: tool
 language: typescript
+tags:
+  - storybook
+  - no-compile
 tasks:
-  compile:
-    command: echo "No compilation needed for storybook tool"
-    outputs: []
-    options:
-      merge: replace
-  #
-  # Test locally via: npx http-server ./tools/storybook-reactout/storybook
-  #
-  bundle:
-    command: pnpm exec storybook build
-    args:
-      - --output-dir=out/storybook-react
-    deps:
-      # Ensure that all packages are built to run storybook.
-      - '#ts-build:build'
-      - '#ts-compile:compile'
-    inputs:
-      - .storybook/*
-      - static/*
-      - $NODE_OPTIONS
-    outputs:
-      - out/storybook/
   serve:
     command: pnpm exec storybook dev
-    args:
-      - --port=9009
-      - --no-open
     deps:
-      - ^:compile
-    inputs:
-      - .storybook/*
-      - static/*
+      - ^:build
     preset: server
-  # TODO(wittjosiah): No inputs or deps to avoid moon re-building things when running e2e tests.
-  serve-e2e:
-    command: pnpm exec storybook dev
-    args:
-      - --port=9009
-      - --ci
-      - --quiet
-      - --config-dir=config/e2e
-    preset: server
+  build:
+    command: pnpm exec storybook build
+    deps:
+      - ^:build
+    outputs:
+      - storybook-static/

@@ -16,8 +16,8 @@
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "browser": "./dist/lib/browser/index.mjs",
-      "node": "./dist/lib/node-esm/index.mjs"
+      "browser": "./src/index.ts",
+      "node": "./src/index.ts"
     }
   },
   "files": [

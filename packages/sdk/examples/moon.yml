@@ -1,17 +1,13 @@
 layer: library
 language: typescript
 tags:
+  - no-compile
   - ts-test
   - typecheck
   - vite
   - pack
   - storybook
 tasks:
-  compile:
-    command: echo "No compilation needed for vite examples package"
-    outputs: []
-    options:
-      merge: replace
   test:
     inputs:
       - .storybook/*

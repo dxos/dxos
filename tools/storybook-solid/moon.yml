@@ -1,29 +1,17 @@
 layer: tool
 language: typescript
+tags:
+  - storybook
+  - no-compile
 tasks:
-  compile:
-    command: echo "No compilation needed for storybook tool"
-    outputs: []
-    options:
-      merge: replace
   serve:
     command: pnpm exec storybook dev
-    args:
-      - --port=9009
-      - --no-open
     deps:
-      - ^:compile
-    inputs:
-      - .storybook/*
+      - ^:build
     preset: server
-  serve-e2e:
-    command: pnpm exec storybook dev
-    args:
-      - --port=9009
-      - --ci
-      - --quiet
+  build:
+    command: pnpm exec storybook build
     deps:
-      - ^:compile
-    inputs:
-      - .storybook/*
-    preset: server
+      - ^:build
+    outputs:
+      - storybook-static/

@@ -1,15 +1,11 @@
 layer: application
 language: typescript
 tags:
+  - no-compile
   - e2e
   - typecheck
   - vite
 tasks:
-  compile:
-    command: echo "No compilation needed for vite application"
-    outputs: []
-    options:
-      merge: replace
   bundle:
     deps:
       - shell:bundle

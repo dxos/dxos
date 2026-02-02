@@ -1,11 +1,6 @@
 layer: library
 language: typescript
 tags:
+  - no-compile
   - typecheck
   - pack
-tasks:
-  compile:
-    command: echo "No compilation needed for type definitions package"
-    outputs: []
-    options:
-      merge: replace
