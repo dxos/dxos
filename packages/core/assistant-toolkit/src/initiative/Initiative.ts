@@ -28,7 +28,7 @@ export const Initiative = Schema.Struct({
     Schema.Struct({
       // TODO(dmaretskyi): Consider gettings names from the artifact itself using Obj.getLabel.
       name: Schema.String,
-      data: Type.Ref(Obj.Any),
+      data: Type.Ref(Type.Obj),
     }),
   ),
 
@@ -39,7 +39,7 @@ export const Initiative = Schema.Struct({
 
   // TODO(dmaretskyi): input queue?
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/Initiative',
     version: '0.1.0',
   }),
@@ -51,6 +51,6 @@ export const Subscription = Schema.Struct({
    * Object with a a canonical queue property.
    * Schema must have the QueueAnnotation.
    */
-  target: Type.Ref(Obj.Any),
+  target: Type.Ref(Type.Obj),
 });
 export interface Subscription extends Schema.Schema.Type<typeof Subscription> {}
