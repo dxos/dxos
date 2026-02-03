@@ -30,6 +30,11 @@ const PluginImportSource = ({
 }: PluginImportSourceOptions = {}): Plugin => {
   let resolver: ResolverFactory;
 
+  const globOptions = { dot: true };
+  const isMatch = (filePath: string) =>
+    include.some((pattern) => Minimatch(filePath, pattern, globOptions)) &&
+    !exclude.some((pattern) => Minimatch(filePath, pattern, globOptions));
+
   return {
     name: 'plugin-import-source',
 
@@ -83,6 +88,25 @@ const PluginImportSource = ({
           return null;
         }
       },
+    },
+
+    // Hook into load to add all matching files to watch list (including relative imports).
+    load(id) {
+      // Skip virtual modules and non-file paths.
+      if (id.startsWith('\0') || !id.startsWith('/')) {
+        return null;
+      }
+
+      // Strip query params (e.g., ?v=123).
+      const filePath = id.split('?')[0];
+
+      if (isMatch(filePath)) {
+        this.addWatchFile(filePath);
+        verbose && console.log(`[watch] ${filePath}`);
+      }
+
+      // Return null to let Vite load the file normally.
+      return null;
     },
   };
 };
