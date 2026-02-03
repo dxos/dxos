@@ -10,9 +10,9 @@ import { Database, Type } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 import { Collection } from '@dxos/schema';
 
-import { meta } from '../meta';
+import { Chat } from '@dxos/assistant-toolkit';
 
-import { Chat } from './Assistant';
+import { meta } from '../meta';
 
 // Operations
 const ASSISTANT_OPERATION = `${meta.id}/operation`;
@@ -39,7 +39,7 @@ export namespace AssistantOperation {
         name: Schema.optional(Schema.String),
       }),
       output: Schema.Struct({
-        object: Chat,
+        object: Chat.Chat,
       }),
     },
   });
@@ -49,7 +49,7 @@ export namespace AssistantOperation {
     services: [Capability.Service],
     schema: {
       input: Schema.Struct({
-        chat: Chat,
+        chat: Chat.Chat,
       }),
       output: Schema.Void,
     },
@@ -61,7 +61,7 @@ export namespace AssistantOperation {
     schema: {
       input: Schema.Struct({
         companionTo: Type.Obj,
-        chat: Chat.pipe(Schema.optional),
+        chat: Chat.Chat.pipe(Schema.optional),
       }),
       output: Schema.Void,
     },

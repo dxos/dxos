@@ -17,7 +17,7 @@ export const Chat = Schema.Struct({
   // TODO(dmaretskyi): Eventually this and the message queue will be the same.
   traceQueue: Type.Ref(Queue).pipe(FormInputAnnotation.set(false), Schema.optional),
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/assistant/Chat',
     version: '0.2.0',
   }),
@@ -34,11 +34,11 @@ export const make = (props: Obj.MakeProps<typeof Chat>) => Obj.make(Chat, props)
 export const CompanionTo = Schema.Struct({
   id: Obj.ID,
 }).pipe(
-  Type.Relation({
+  Type.relation({
     typename: 'dxos.org/relation/assistant/CompanionTo',
     version: '0.1.0',
     source: Chat,
-    target: Type.Expando,
+    target: Type.Obj,
   }),
 );
 

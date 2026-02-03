@@ -2,13 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Chat } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { Sequence } from '@dxos/conductor';
 import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
 
 import { meta } from './meta';
-import { Assistant } from './types';
 
 // TODO(burdon): Standardize translation names.
 export const translations = [
@@ -46,7 +46,7 @@ export const translations = [
         'delete object label': 'Delete sequence',
         'object deleted label': 'Sequence deleted',
       },
-      [Assistant.Chat.typename]: {
+      [Chat.Chat.typename]: {
         'typename label': 'AI Chat',
         'object name placeholder': 'New AI Chat',
         'rename object label': 'Rename AI Chat',

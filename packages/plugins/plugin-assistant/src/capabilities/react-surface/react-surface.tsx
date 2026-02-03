@@ -10,10 +10,10 @@ import { useSettingsState } from '@dxos/app-framework/react';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { getSpace } from '@dxos/client/echo';
 import { Sequence } from '@dxos/conductor';
+import { Chat, Initiative } from '@dxos/assistant-toolkit';
 import { InvocationTraceContainer } from '@dxos/devtools';
 import { Obj } from '@dxos/echo';
 import { Layout } from '@dxos/react-ui-mosaic';
-import { Initiative } from '@dxos/assistant-toolkit';
 
 import {
   AssistantSettings,
@@ -25,7 +25,7 @@ import {
   PromptArticle,
 } from '../../components';
 import { ASSISTANT_DIALOG, meta } from '../../meta';
-import { Assistant } from '../../types';
+import { type Assistant } from '../../types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -43,8 +43,8 @@ export default Capability.makeModule(() =>
       Common.createSurface({
         id: `${meta.id}/chat`,
         role: 'article',
-        filter: (data): data is { subject: Assistant.Chat; variant: undefined } =>
-          Obj.instanceOf(Assistant.Chat, data.subject) && data.variant !== 'assistant-chat',
+        filter: (data): data is { subject: Chat.Chat; variant: undefined } =>
+          Obj.instanceOf(Chat.Chat, data.subject) && data.variant !== 'assistant-chat',
         component: ({ data, role, ref }) => <ChatContainer role={role} subject={data.subject} ref={ref} />,
       }),
       Common.createSurface({
@@ -58,9 +58,9 @@ export default Capability.makeModule(() =>
       Common.createSurface({
         id: `${meta.id}/companion-chat`,
         role: 'article',
-        filter: (data): data is { companionTo: Obj.Unknown; subject: Assistant.Chat | 'assistant-chat' } =>
+        filter: (data): data is { companionTo: Obj.Unknown; subject: Chat.Chat | 'assistant-chat' } =>
           Obj.isObject(data.companionTo) &&
-          (Obj.instanceOf(Assistant.Chat, data.subject) || data.subject === 'assistant-chat'),
+          (Obj.instanceOf(Chat.Chat, data.subject) || data.subject === 'assistant-chat'),
         component: ({ data, role, ref }) => <ChatCompanion role={role} data={data} ref={ref} />,
       }),
       Common.createSurface({
@@ -96,7 +96,7 @@ export default Capability.makeModule(() =>
       Common.createSurface({
         id: ASSISTANT_DIALOG,
         role: 'dialog',
-        filter: (data): data is { props: { chat: Assistant.Chat } } => data.component === ASSISTANT_DIALOG,
+        filter: (data): data is { props: { chat: Chat.Chat } } => data.component === ASSISTANT_DIALOG,
         component: ({ data }) => <ChatDialog {...data.props} />,
       }),
     ]),

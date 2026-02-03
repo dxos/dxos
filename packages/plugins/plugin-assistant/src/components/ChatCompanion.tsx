@@ -16,14 +16,16 @@ import { SpaceOperation } from '@dxos/plugin-space/types';
 import { useQuery } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
 
+import { Chat } from '@dxos/assistant-toolkit';
+
 import { ChatContainer, type ChatEvent } from '../components';
 import { useBlueprintRegistry, useContextBinder } from '../hooks';
-import { Assistant, AssistantOperation } from '../types';
+import { AssistantOperation } from '../types';
 
 export type ChatCompanionProps = {
   role?: string;
   data: {
-    subject: Assistant.Chat | 'assistant-chat';
+    subject: Chat.Chat | 'assistant-chat';
     companionTo: Obj.Unknown;
   };
 };
@@ -69,7 +71,7 @@ export const ChatCompanion = forwardRef<HTMLDivElement, ChatCompanionProps>(
           });
           await invokePromise(SpaceOperation.AddRelation, {
             db: space.db,
-            schema: Assistant.CompanionTo,
+            schema: Chat.CompanionTo,
             source: chat,
             target: companionTo,
           });

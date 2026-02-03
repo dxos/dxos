@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability, Common, Plugin } from '@dxos/app-framework';
-import { Initiative, ResearchGraph } from '@dxos/assistant-toolkit';
+import { Chat, Initiative, ResearchGraph } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { Sequence } from '@dxos/conductor';
 import { Obj, Type } from '@dxos/echo';
@@ -31,8 +31,7 @@ import {
 } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
-import { AssistantEvents } from './types';
-import { Assistant, AssistantOperation } from './types';
+import { AssistantEvents, AssistantOperation } from './types';
 import { AutomationCapabilities } from '@dxos/plugin-automation/types';
 import { Schema } from 'effect';
 
@@ -49,11 +48,11 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
   Common.Plugin.addMetadataModule({
     metadata: [
       {
-        id: Type.getTypename(Assistant.Chat),
+        id: Type.getTypename(Chat.Chat),
         metadata: {
           icon: 'ph--atom--regular',
           iconHue: 'sky',
-          createObject: ((props) => Effect.sync(() => Assistant.make(props))) satisfies CreateObject,
+          createObject: ((props) => Effect.sync(() => Chat.make(props))) satisfies CreateObject,
         },
       },
       {
@@ -99,8 +98,8 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
   }),
   Common.Plugin.addSchemaModule({
     schema: [
-      Assistant.Chat,
-      Assistant.CompanionTo,
+      Chat.Chat,
+      Chat.CompanionTo,
       Blueprint.Blueprint,
       HasSubject.HasSubject,
       Prompt.Prompt,

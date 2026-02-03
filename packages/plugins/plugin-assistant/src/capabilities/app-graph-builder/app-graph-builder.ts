@@ -18,8 +18,10 @@ import { getActiveSpace } from '@dxos/plugin-space';
 import { SpaceOperation } from '@dxos/plugin-space/types';
 import { Query } from '@dxos/react-client/echo';
 
+import { Chat } from '@dxos/assistant-toolkit';
+
 import { ASSISTANT_DIALOG, meta } from '../../meta';
-import { Assistant, AssistantCapabilities, AssistantOperation } from '../../types';
+import { AssistantCapabilities, AssistantOperation } from '../../types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -28,7 +30,7 @@ export default Capability.makeModule(
     const extensions = yield* Effect.all([
       GraphBuilder.createTypeExtension({
         id: `${meta.id}/root`,
-        type: Assistant.Chat,
+        type: Chat.Chat,
         actions: (chat) => {
           const id = Obj.getDXN(chat).toString();
           return Effect.succeed([
@@ -182,10 +184,10 @@ export default Capability.makeModule(
 const getOrCreateChat = async (
   invokePromise: OperationInvoker.OperationInvoker['invokePromise'],
   db: Database.Database,
-): Promise<Assistant.Chat | undefined> => {
+): Promise<Chat.Chat | undefined> => {
   // TODO(wittjosiah): This should be possible with a single query.
-  const allChats = await db.query(Query.type(Assistant.Chat)).run();
-  const relatedChats = await db.query(Query.type(Assistant.Chat).sourceOf(Assistant.CompanionTo).source()).run();
+  const allChats = await db.query(Query.type(Chat.Chat)).run();
+  const relatedChats = await db.query(Query.type(Chat.Chat).sourceOf(Chat.CompanionTo).source()).run();
 
   const chats = allChats.filter((chat) => !relatedChats.includes(chat));
   if (chats.length > 0) {
@@ -193,7 +195,7 @@ const getOrCreateChat = async (
   }
 
   const { data } = await invokePromise(AssistantOperation.CreateChat, { db });
-  invariant(Obj.instanceOf(Assistant.Chat, data?.object));
+  invariant(Obj.instanceOf(Chat.Chat, data?.object));
   await invokePromise(SpaceOperation.AddObject, { target: db, object: data.object });
   return data.object;
 };
