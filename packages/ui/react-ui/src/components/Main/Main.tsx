@@ -22,8 +22,9 @@ import React, {
   useState,
 } from 'react';
 
+import { addEventListener } from '@dxos/async';
 import { log } from '@dxos/log';
-import { useForwardedRef, useMediaQuery, useViewportResize } from '@dxos/react-hooks';
+import { useDynamicRef, useForwardedRef, useMediaQuery, useViewportResize } from '@dxos/react-hooks';
 
 import { useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
@@ -71,11 +72,17 @@ const useLandmarkMover = (propsOnKeyDown: ComponentPropsWithoutRef<'div'>['onKey
   const focusableGroupAttrs = useFocusableGroup({ tabBehavior: 'limited', ignoreDefaultKeydown: { Tab: true } });
 
   return {
-    onKeyDown: handleKeyDown,
     [landmarkAttr]: landmark,
     tabIndex: 0,
+    onKeyDown: handleKeyDown,
     ...focusableGroupAttrs,
   };
+};
+
+// TODO(burdon): Better way to detect software keyboard on mobile?
+const isFullscreen = () => {
+  const isMobile = window.innerHeight <= 1000;
+  return window.visualViewport && isMobile ? window.visualViewport.height < 700 : false;
 };
 
 /**
@@ -83,29 +90,27 @@ const useLandmarkMover = (propsOnKeyDown: ComponentPropsWithoutRef<'div'>['onKey
  * - Device is mobile (width)
  * - Visual viewport is constrained (keyboard visible)
  */
-const useDrawerFullMode = () => {
-  const [fullscreen, setFullscreen] = useState(false);
+const useDynamicDrawer = (consumerName: string) => {
+  const { drawerState, setDrawerState } = useSidebars(consumerName);
+  const drawersStateRef = useDynamicRef(drawerState);
 
-  // TODO(burdon): Figure out better way to detect mobile keyboard.
   const checkViewport = useCallback(() => {
-    const isMobile = window.innerHeight <= 1000;
-    setFullscreen(window.visualViewport && isMobile ? window.visualViewport.height < 700 : false);
-
-    // Update CSS custom property with actual visual viewport height for full mode.
     if (window.visualViewport) {
       document.documentElement.style.setProperty('--visual-viewport-height', `${window.visualViewport.height}px`);
     }
-  }, []);
 
+    if (drawersStateRef.current !== 'closed') {
+      setDrawerState(isFullscreen() ? 'full' : 'expanded');
+    }
+  }, [setDrawerState]);
+
+  // Check resize.
   useViewportResize(checkViewport, [], 100);
 
-  // Also check on window resize (for device orientation changes).
-  useEffect(() => {
-    window.addEventListener('resize', checkViewport);
-    return () => window.removeEventListener('resize', checkViewport);
-  }, [checkViewport]);
+  // Check on window resize (for device orientation changes).
+  useEffect(() => addEventListener(window, 'resize', checkViewport), [checkViewport]);
 
-  return fullscreen;
+  return drawerState;
 };
 
 //
@@ -117,10 +122,16 @@ type DrawerState = 'expanded' | 'full' | 'closed';
 
 type MainContextValue = {
   resizing: boolean;
+
+  // Navigation
   navigationSidebarState: SidebarState;
   setNavigationSidebarState: Dispatch<SetStateAction<SidebarState | undefined>>;
+
+  // Complementary
   complementarySidebarState: SidebarState;
   setComplementarySidebarState: Dispatch<SetStateAction<SidebarState | undefined>>;
+
+  // Drawer
   drawerState: DrawerState;
   setDrawerState: Dispatch<SetStateAction<DrawerState | undefined>>;
 };
@@ -178,7 +189,7 @@ const useSidebars = (consumerName: string) => {
     drawerState,
     setDrawerState,
     toggleDrawer: useCallback(
-      () => setDrawerState(drawerState === 'expanded' ? 'closed' : 'expanded'),
+      () => setDrawerState(drawerState === 'closed' ? (isFullscreen() ? 'full' : 'expanded') : 'closed'),
       [drawerState, setDrawerState],
     ),
     openDrawer: useCallback(() => setDrawerState('expanded'), []),
@@ -186,7 +197,12 @@ const useSidebars = (consumerName: string) => {
   };
 };
 
-// TODO(burdon): Combine to single state/callback.
+//
+// Root
+//
+
+const resizeDebounce = 3000;
+
 type MainRootProps = PropsWithChildren<{
   navigationSidebarState?: SidebarState;
   defaultNavigationSidebarState?: SidebarState;
@@ -201,23 +217,17 @@ type MainRootProps = PropsWithChildren<{
   onDrawerStateChange?: (nextState: DrawerState) => void;
 }>;
 
-const resizeDebounce = 3000;
-
-//
-// Root
-//
-
 const MainRoot = ({
   navigationSidebarState: propsNavigationSidebarState,
-  defaultNavigationSidebarState,
+  defaultNavigationSidebarState = 'closed',
   onNavigationSidebarStateChange,
 
   complementarySidebarState: propsComplementarySidebarState,
-  defaultComplementarySidebarState,
+  defaultComplementarySidebarState = 'closed',
   onComplementarySidebarStateChange,
 
   drawerState: propsDrawerState,
-  defaultDrawerState,
+  defaultDrawerState = 'closed',
   onDrawerStateChange,
 
   children,
@@ -242,20 +252,19 @@ const MainRoot = ({
     onChange: onDrawerStateChange,
   });
 
-  const shouldBeFullMode = useDrawerFullMode();
+  // Auto-switch between expanded and full based on viewport.
+  // const shouldBeFullMode = useDynamicDrawer();
+  // useEffect(() => {
+  //   if (drawerState === 'closed') {
+  //     return;
+  //   }
 
-  // Auto-switch between expanded and full based on viewport
-  useEffect(() => {
-    if (drawerState === 'closed') {
-      return;
-    }
-
-    if (shouldBeFullMode && drawerState === 'expanded') {
-      setDrawerState('full');
-    } else if (!shouldBeFullMode && drawerState === 'full') {
-      setDrawerState('expanded');
-    }
-  }, [shouldBeFullMode, drawerState, setDrawerState]);
+  //   if (shouldBeFullMode && drawerState === 'expanded') {
+  //     setDrawerState('full');
+  //   } else if (!shouldBeFullMode && drawerState === 'full') {
+  //     setDrawerState('expanded');
+  //   }
+  // }, [shouldBeFullMode, drawerState, setDrawerState]);
 
   const [resizing, setResizing] = useState(false);
   const resizeInterval = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -575,7 +584,7 @@ export const Main = {
   Drawer: MainDrawerRoot,
 };
 
-export { useMainContext, useSidebars, useLandmarkMover };
+export { useMainContext, useSidebars, useLandmarkMover, useDynamicDrawer };
 
 export type {
   MainRootProps,

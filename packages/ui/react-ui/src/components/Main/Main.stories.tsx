@@ -10,7 +10,7 @@ import { IconButton } from '../Button';
 import { Input } from '../Input';
 import { Toolbar } from '../Toolbar';
 
-import { Main, useSidebars } from './Main';
+import { Main, useDynamicDrawer, useSidebars } from './Main';
 
 type StoryMainArgs = {};
 
@@ -113,12 +113,18 @@ export const Default: Story = {
 
 const DrawerStory = (_args: StoryMainArgs) => {
   return (
-    <Main.Root
-      defaultDrawerState='closed'
-      defaultNavigationSidebarState='closed'
-      defaultComplementarySidebarState='closed'
-    >
+    <Main.Root>
       <Main.Overlay />
+      <DrawerStoryInner />
+    </Main.Root>
+  );
+};
+
+const DrawerStoryInner = () => {
+  useDynamicDrawer('DrawerStoryInner');
+
+  return (
+    <>
       <Main.Content classNames='flex flex-col is-full overflow-hidden'>
         <Toolbar.Root classNames='pli-2'>
           <h1>Main Content</h1>
@@ -158,7 +164,7 @@ const DrawerStory = (_args: StoryMainArgs) => {
           </Input.Root>
         </div>
       </Main.Drawer>
-    </Main.Root>
+    </>
   );
 };
 
