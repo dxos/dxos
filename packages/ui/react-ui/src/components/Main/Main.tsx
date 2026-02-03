@@ -433,6 +433,7 @@ const MainDrawer = forwardRef<HTMLDivElement, MainDrawerProps>(
     { classNames, children, swipeToDismiss, onOpenAutoFocus, state, resizing, onStateChange, label, ...props },
     forwardedRef,
   ) => {
+    const [isLg] = useMediaQuery('lg');
     const { tx } = useThemeContext();
     const { t } = useTranslation();
     const ref = useForwardedRef(forwardedRef);
@@ -459,6 +460,7 @@ const MainDrawer = forwardRef<HTMLDivElement, MainDrawerProps>(
     return (
       <Primitive.div
         {...(state === 'closed' && { inert: true })}
+        {...(!isLg && { forceMount: true, tabIndex: -1, onOpenAutoFocus: onOpenAutoFocus ?? handleOpenAutoFocus })}
         {...props}
         role='region'
         aria-label={toLocalizedString(label, t)}

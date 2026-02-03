@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { forwardRef, useCallback, useMemo, useRef } from 'react';
+import React, { forwardRef, useCallback, useMemo, useRef, useState } from 'react';
 
 import { DxAvatar } from '@dxos/lit-ui/react';
 import { Card, Focus, Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
@@ -152,7 +152,7 @@ MessageTile.displayName = 'MessageTile';
  * Card-based mailbox component using mosaic layout.
  */
 export const Mailbox = ({ messages, labels, currentMessageId, onAction }: MailboxProps) => {
-  const viewportRef = useRef<HTMLElement | null>(null);
+  const [viewport, setViewport] = useState<HTMLElement | null>(null);
 
   // Transform messages into tile data.
   const items = useMemo(
@@ -169,11 +169,13 @@ export const Mailbox = ({ messages, labels, currentMessageId, onAction }: Mailbo
   // TODO(wittjosiah): This needs Selction.Group in addition to Focus.Group.
   return (
     <Focus.Group asChild>
-      <Mosaic.Container asChild withFocus autoScroll={viewportRef.current}>
-        <Mosaic.Viewport padding viewportRef={viewportRef}>
-          <Mosaic.Stack items={items} getId={(item) => item.message.id} Tile={MessageTile} draggable={false} />
+      <Mosaic.Container asChild withFocus autoScroll={viewport}>
+        <Mosaic.Viewport padding viewportRef={setViewport}>
+          <Mosaic.Stack items={items} getId={(item) => item.message.id} draggable={false} Tile={MessageTile} />
         </Mosaic.Viewport>
       </Mosaic.Container>
     </Focus.Group>
   );
 };
+
+Mailbox.displayName = 'Mailbox';
