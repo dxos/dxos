@@ -80,7 +80,7 @@ const Inner = () => {
         bounce
         classNames={mx(
           'grid bs-full',
-          '!overflow-hidden border', // TODO(burdon): Remove.
+          '!overflow-hidden', // TODO(burdon): Reconcile?
           'pbs-[env(safe-area-inset-top)] pbe-[env(safe-area-inset-bottom)]',
           showNavBar ? 'grid-rows-[min-content_1fr_min-content]' : 'grid-rows-[min-content_1fr]',
         )}
