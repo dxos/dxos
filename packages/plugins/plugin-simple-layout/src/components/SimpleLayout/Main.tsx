@@ -29,7 +29,6 @@ export const Main = () => {
   const { t } = useTranslation(meta.id);
   const { state } = useSimpleLayoutState();
   const id = state.active ?? state.workspace;
-  const showNavBar = !state.isPopover;
   const { graph } = useAppGraph();
   const node = useNode(graph, id);
 
@@ -57,13 +56,16 @@ export const Main = () => {
     log.info('navigate', { nextActiveId });
   }, []);
 
+  const drawersState = 'closed';
+  const showNavBar = !state.isPopover && drawersState === 'closed';
+
   return (
     <Mosaic.Root>
-      <NaturalMain.Root complementarySidebarState='closed' navigationSidebarState='closed' drawerState='closed'>
+      <NaturalMain.Root complementarySidebarState='closed' navigationSidebarState='closed' drawerState={drawersState}>
         <NaturalMain.Content
           bounce
           classNames={mx(
-            'grid bs-full overflow-hidden',
+            'grid bs-full overflow-hidden border',
             'pbs-[env(safe-area-inset-top)] pbe-[env(safe-area-inset-bottom)]',
             showNavBar ? 'grid-rows-[min-content_1fr_min-content]' : 'grid-rows-[min-content_1fr]',
           )}
@@ -72,11 +74,13 @@ export const Main = () => {
           <article className='contents'>
             <Surface key={id} role='article' data={data} limit={1} fallback={ContentError} placeholder={placeholder} />
           </article>
-          {/* TODO(wittjosiah): Since the navbar isn't fixed, if the Surface resolves to nothing the navbar fills the screen. */}
           {showNavBar && (
-            <NavBar classNames='border-bs border-separator' activeId={id} onActiveIdChange={handleActiveIdChange} />
+            <div>
+              <NavBar classNames='border-bs border-separator' activeId={id} onActiveIdChange={handleActiveIdChange} />
+            </div>
           )}
         </NaturalMain.Content>
+
         {/* TODO(burdon): This is just a placeholder for now. */}
         <NaturalMain.Drawer label={t('drawer label')}>
           <Surface role='article' limit={1} fallback={ContentError} placeholder={placeholder} />

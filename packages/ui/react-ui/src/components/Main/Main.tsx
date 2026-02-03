@@ -71,9 +71,9 @@ const useLandmarkMover = (propsOnKeyDown: ComponentPropsWithoutRef<'div'>['onKey
   const focusableGroupAttrs = useFocusableGroup({ tabBehavior: 'limited', ignoreDefaultKeydown: { Tab: true } });
 
   return {
-    onKeyDown: handleKeyDown,
     [landmarkAttr]: landmark,
     tabIndex: 0,
+    onKeyDown: handleKeyDown,
     ...focusableGroupAttrs,
   };
 };
@@ -86,11 +86,10 @@ const useLandmarkMover = (propsOnKeyDown: ComponentPropsWithoutRef<'div'>['onKey
 const useDrawerFullMode = () => {
   const [shouldBeFullMode, setShouldBeFullMode] = useState(false);
 
+  // TODO(burdon): Better way to detect software keyboard on mobile?
   const checkViewport = useCallback(() => {
     const isMobile = window.innerHeight <= 1000;
     setShouldBeFullMode(window.visualViewport && isMobile ? window.visualViewport.height < 700 : false);
-
-    // Update CSS custom property with actual visual viewport height for full mode
     if (window.visualViewport) {
       document.documentElement.style.setProperty('--visual-viewport-height', `${window.visualViewport.height}px`);
     }
@@ -116,10 +115,16 @@ type DrawerState = 'expanded' | 'full' | 'closed';
 
 type MainContextValue = {
   resizing: boolean;
+
+  // Navigation
   navigationSidebarState: SidebarState;
   setNavigationSidebarState: Dispatch<SetStateAction<SidebarState | undefined>>;
+
+  // Complementary
   complementarySidebarState: SidebarState;
   setComplementarySidebarState: Dispatch<SetStateAction<SidebarState | undefined>>;
+
+  // Drawer
   drawerState: DrawerState;
   setDrawerState: Dispatch<SetStateAction<DrawerState | undefined>>;
 };
@@ -185,7 +190,6 @@ const useSidebars = (consumerName: string) => {
   };
 };
 
-// TODO(burdon): Combine to single state/callback.
 type MainRootProps = PropsWithChildren<{
   navigationSidebarState?: SidebarState;
   defaultNavigationSidebarState?: SidebarState;
