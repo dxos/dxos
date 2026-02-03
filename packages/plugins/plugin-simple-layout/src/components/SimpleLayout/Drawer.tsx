@@ -82,6 +82,7 @@ export const Drawer = () => {
       <Toolbar.Root>
         {/* TODO(thure): IMPORTANT: This is a tablist; it should be implemented as such. */}
         <div role='tablist' className='flex-1 min-is-0 overflow-x-auto scrollbar-none flex gap-1'>
+          {/* TODO(burdon): Factor out in common with NavBar. */}
           {companions.map((companion) => (
             <IconButton
               key={companion.id}
@@ -104,7 +105,10 @@ export const Drawer = () => {
         />
         <Toolbar.IconButton icon='ph--x--regular' iconOnly label={t('close drawer label')} onClick={handleClose} />
       </Toolbar.Root>
-      <Surface role='article' data={data} limit={1} fallback={ContentError} placeholder={placeholder} />
+      {/* TODO(burdon): Fix containment. */}
+      <div>
+        <Surface role='article' data={data} limit={1} fallback={ContentError} placeholder={placeholder} />
+      </div>
     </NaturalMain.Drawer>
   );
 };
