@@ -8,7 +8,6 @@ import { Surface, useAppGraph } from '@dxos/app-framework/react';
 import { log } from '@dxos/log';
 import { useNode } from '@dxos/plugin-graph';
 import { Main as NaturalMain, useSidebars } from '@dxos/react-ui';
-import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention';
 import { mx } from '@dxos/ui-theme';
 
 import { useSimpleLayoutState } from '../../hooks';
@@ -30,25 +29,21 @@ export const Main = () => {
   const { graph } = useAppGraph();
   const node = useNode(graph, id);
 
-  const { id: parentId, variant } = parseEntryId(id);
   // Ensures that children are loaded so that they are available to navigate to.
   useLoadDescendents(id);
 
   const placeholder = useMemo(() => <ContentLoading />, []);
 
-  const parentNode = useNode(graph, variant ? parentId : undefined);
   const data = useMemo(() => {
     return (
       node && {
         attendableId: id,
         subject: node.data,
-        companionTo: parentNode?.data,
         properties: node.properties,
         popoverAnchorId: state.popoverAnchorId,
-        variant,
       }
     );
-  }, [id, node, node?.data, node?.properties, parentNode?.data, state.popoverAnchorId, variant]);
+  }, [id, node, node?.data, node?.properties, state.popoverAnchorId]);
 
   const handleActiveIdChange = useCallback((nextActiveId: string | null) => {
     log.info('navigate', { nextActiveId });
@@ -79,9 +74,3 @@ export const Main = () => {
 };
 
 Main.displayName = MAIN_NAME;
-
-// TODO(wittjosiah): Factor out. Copied from deck plugin.
-const parseEntryId = (entryId: string) => {
-  const [id, variant] = entryId.split(ATTENDABLE_PATH_SEPARATOR);
-  return { id, variant };
-};
