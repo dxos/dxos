@@ -10,12 +10,13 @@ import { type Obj } from '@dxos/echo';
 import { Layout } from '@dxos/react-ui-mosaic';
 
 import { useBlueprintRegistry, useChatProcessor, useChatServices, useOnline, usePresets } from '../hooks';
-import { type Assistant, AssistantCapabilities } from '../types';
+import { AssistantCapabilities } from '../types';
+import type { Chat } from '@dxos/assistant-toolkit';
 
-import { Chat, type ChatRootProps } from './Chat';
+import { Chat as ChatComponent, type ChatRootProps } from './Chat';
 
 export type ChatContainerProps = SurfaceComponentProps<
-  Assistant.Chat | undefined,
+  Chat.Chat | undefined,
   {
     space?: Space;
     companionTo?: Obj.Unknown;
@@ -45,15 +46,21 @@ export const ChatContainer = forwardRef<HTMLDivElement, ChatContainerProps>((pro
 
   return (
     <Layout.Main toolbar role={role} ref={forwardedRef}>
-      <Chat.Root db={space?.db} chat={chat} processor={processor} onEvent={onEvent}>
-        <Chat.Toolbar companionTo={companionTo} />
-        <Chat.Viewport classNames='container-max-width'>
-          <Chat.Thread />
+      <ChatComponent.Root db={space?.db} chat={chat} processor={processor} onEvent={onEvent}>
+        <ChatComponent.Toolbar companionTo={companionTo} />
+        <ChatComponent.Viewport classNames='container-max-width'>
+          <ChatComponent.Thread />
           <div role='none' className='p-4'>
-            <Chat.Prompt {...chatProps} outline preset={preset?.id} online={online} onOnlineChange={setOnline} />
+            <ChatComponent.Prompt
+              {...chatProps}
+              outline
+              preset={preset?.id}
+              online={online}
+              onOnlineChange={setOnline}
+            />
           </div>
-        </Chat.Viewport>
-      </Chat.Root>
+        </ChatComponent.Viewport>
+      </ChatComponent.Root>
     </Layout.Main>
   );
 });

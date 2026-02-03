@@ -7285,6 +7285,9 @@ importers:
       '@dxos/plugin-map':
         specifier: workspace:*
         version: link:../plugin-map
+      '@dxos/plugin-markdown':
+        specifier: workspace:*
+        version: link:../plugin-markdown
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space

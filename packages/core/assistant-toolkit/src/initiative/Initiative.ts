@@ -35,7 +35,13 @@ export const Initiative = Schema.Struct({
   // TODO(dmaretskyi): Multiple chats.
   chat: Schema.optional(Type.Ref(Chat.Chat)),
 
-  subscriptions: Schema.Array(Schema.suspend(() => Subscription)),
+  /**
+   * Objects to subscribe to.
+   * References to objects with a a canonical queue property.
+   * Schema must have the QueueAnnotation.
+   */
+  // TODO(dmaretskyi): Turn into an array of objects when form-data
+  subscriptions: Schema.Array(Type.Ref(Type.Obj)),
 
   // TODO(dmaretskyi): input queue?
 }).pipe(
@@ -45,12 +51,3 @@ export const Initiative = Schema.Struct({
   }),
 );
 export interface Initiative extends Schema.Schema.Type<typeof Initiative> {}
-
-export const Subscription = Schema.Struct({
-  /**
-   * Object with a a canonical queue property.
-   * Schema must have the QueueAnnotation.
-   */
-  target: Type.Ref(Type.Obj),
-});
-export interface Subscription extends Schema.Schema.Type<typeof Subscription> {}

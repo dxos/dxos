@@ -6,7 +6,7 @@ import '@dxos/lit-ui/dx-tag-picker.pcss';
 
 import React, { useCallback, useMemo } from 'react';
 
-import { type Database, Entity, Filter, Ref, type Type } from '@dxos/echo';
+import { type Database, Entity, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { ReferenceAnnotationId, type ReferenceAnnotationValue } from '@dxos/echo/internal';
 import { useQuery, useSchema as useSchema$ } from '@dxos/echo-react';
 import { findAnnotation } from '@dxos/effect';
@@ -33,7 +33,15 @@ const defaultGetOptions: NonNullable<RefFieldProps['getOptions']> = (results) =>
   });
 
 const defaultResultsHook: NonNullable<RefFieldProps['resultsHook']> = (db, typename) =>
-  useQuery(db, typename ? Filter.typename(typename) : Filter.nothing());
+  useQuery(
+    db,
+    typename
+      ? // For Type.Ref(Type.Obj) we want to show all objects.
+        typename === Type.getTypename(Type.Obj)
+        ? Filter.everything()
+        : Filter.typename(typename)
+      : Filter.nothing(),
+  );
 
 export type RefFieldProps = FormFieldComponentProps &
   Pick<ObjectPickerContentProps, 'createOptionLabel' | 'createOptionIcon' | 'createInitialValuePath'> & {

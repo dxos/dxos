@@ -19,7 +19,7 @@ export default defineFunction({
     name: Schema.String.annotations({
       description: 'The name of the artifact to add.',
     }),
-    artifact: Type.Ref(Obj.Any).annotations({
+    artifact: Type.Ref(Type.Obj).annotations({
       description: 'The artifact to add. Do NOT guess or try to generate the ID.',
     }),
   }),

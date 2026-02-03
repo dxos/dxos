@@ -92,6 +92,7 @@
     "@dxos/plugin-deck": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-map": "workspace:*",
+    "@dxos/plugin-markdown": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/plugin-table": "workspace:*",
     "@dxos/plugin-transcription": "workspace:*",
