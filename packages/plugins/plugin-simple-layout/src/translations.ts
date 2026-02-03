@@ -27,6 +27,7 @@ export const translations = [
         'close drawer label': 'Close drawer',
         'expand drawer label': 'Expand drawer',
         'collapse drawer label': 'Collapse drawer',
+        'actions menu label': 'Actions',
       },
     },
   },

@@ -5,6 +5,9 @@
   ],
   "references": [
     {
+      "path": "../../common/keyboard"
+    },
+    {
       "path": "../../common/log"
     },
     {
