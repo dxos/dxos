@@ -2,10 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useCallback, useMemo } from 'react';
+import React, { useMemo } from 'react';
 
 import { Surface, useAppGraph } from '@dxos/app-framework/react';
-import { log } from '@dxos/log';
 import { useNode } from '@dxos/plugin-graph';
 import { Main as NaturalMain, useSidebars } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
@@ -25,8 +24,8 @@ const MAIN_NAME = 'SimpleLayout.Main';
  */
 export const Main = () => {
   const { state } = useSimpleLayoutState();
-  const id = state.active ?? state.workspace;
   const { graph } = useAppGraph();
+  const id = state.active ?? state.workspace;
   const node = useNode(graph, id);
 
   // Ensures that children are loaded so that they are available to navigate to.
@@ -45,30 +44,27 @@ export const Main = () => {
     );
   }, [id, node, node?.data, node?.properties, state.popoverAnchorId]);
 
-  const handleActiveIdChange = useCallback((nextActiveId: string | null) => {
-    log.info('navigate', { nextActiveId });
-  }, []);
-
   const { drawerState } = useSidebars(MAIN_NAME);
   const showNavBar = !state.isPopover && drawerState === 'closed';
 
   return (
     <NaturalMain.Content
       bounce
-      classNames={mx(
-        'grid bs-full',
-        '!overflow-hidden', // TODO(burdon): Reconcile?
-        'pbs-[env(safe-area-inset-top)] pbe-[env(safe-area-inset-bottom)]',
-        showNavBar ? 'grid-rows-[min-content_1fr_min-content]' : 'grid-rows-[min-content_1fr]',
-      )}
+      classNames={mx('bs-full', 'pbs-[env(safe-area-inset-top)] pbe-[env(safe-area-inset-bottom)]')}
     >
-      <Banner classNames='border-be border-separator' node={node} />
-      <article className='bs-full overflow-hidden'>
-        <Surface key={id} role='article' data={data} limit={1} fallback={ContentError} placeholder={placeholder} />
-      </article>
-      {showNavBar && (
-        <NavBar classNames='border-bs border-separator' activeId={id} onActiveIdChange={handleActiveIdChange} />
-      )}
+      <div
+        role='none'
+        className={mx(
+          'grid bs-full overflow-hidden',
+          showNavBar ? 'grid-rows-[min-content_1fr_min-content]' : 'grid-rows-[min-content_1fr]',
+        )}
+      >
+        <Banner classNames='border-be border-separator' node={node} />
+        <article className='bs-full overflow-hidden'>
+          <Surface key={id} role='article' data={data} limit={1} fallback={ContentError} placeholder={placeholder} />
+        </article>
+        {showNavBar && <NavBar classNames='border-bs border-separator' activeId={id} />}
+      </div>
     </NaturalMain.Content>
   );
 };

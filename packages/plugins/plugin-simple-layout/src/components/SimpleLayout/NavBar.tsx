@@ -7,7 +7,7 @@ import React, { useMemo } from 'react';
 import { Common } from '@dxos/app-framework';
 import { useAppGraph, useOperationInvoker } from '@dxos/app-framework/react';
 import { Node, useActionRunner, useConnections } from '@dxos/plugin-graph';
-import { IconButton, type ThemedClassName, Toolbar, Tooltip, useSidebars, useTranslation } from '@dxos/react-ui';
+import { IconButton, type ThemedClassName, Toolbar, Tooltip, useTranslation } from '@dxos/react-ui';
 import { DropdownMenu, MenuProvider, createMenuAction } from '@dxos/react-ui-menu';
 import { mx } from '@dxos/ui-theme';
 
@@ -17,16 +17,15 @@ import { meta } from '../../meta';
 const NAVBAR_NAME = 'SimpleLayout.NavBar';
 
 export type NavBarProps = ThemedClassName<{
+  /** Active AppGraph node ID. */
   activeId?: string;
-  onActiveIdChange?: (nextActiveId: string | null) => void;
 }>;
 
-export const NavBar = ({ classNames, activeId, onActiveIdChange }: NavBarProps) => {
+export const NavBar = ({ classNames, activeId }: NavBarProps) => {
   const { t } = useTranslation(meta.id);
   const { graph } = useAppGraph();
   const runAction = useActionRunner();
   const { invokePromise } = useOperationInvoker();
-  const { toggleDrawer } = useSidebars(NAVBAR_NAME);
 
   const connections = useConnections(graph, Node.RootId);
   const menuActions = connections.filter((node) => node.properties.disposition === 'menu');
@@ -52,8 +51,6 @@ export const NavBar = ({ classNames, activeId, onActiveIdChange }: NavBarProps) 
     [companions, invokePromise],
   );
 
-  const isBrowseActive = activeId !== 'notifications' && activeId !== 'profile';
-
   return (
     <Toolbar.Root classNames={mx('justify-center', classNames)}>
       <MenuProvider onAction={runAction}>
@@ -65,6 +62,7 @@ export const NavBar = ({ classNames, activeId, onActiveIdChange }: NavBarProps) 
           </Tooltip.Trigger>
         </DropdownMenu.Root>
 
+        {/* TODO(burdon): Convert to toolbar. */}
         <DropdownMenu.Root items={companionMenuActions}>
           <Tooltip.Trigger asChild content={t('companions menu label')}>
             <DropdownMenu.Trigger asChild disabled={companions.length === 0}>
@@ -78,40 +76,6 @@ export const NavBar = ({ classNames, activeId, onActiveIdChange }: NavBarProps) 
           </Tooltip.Trigger>
         </DropdownMenu.Root>
       </MenuProvider>
-
-      <IconButton icon='ph--arrow-up--regular' iconOnly label='Toggle drawer' onClick={() => toggleDrawer()} />
-
-      {/*
-        <ButtonGroup>
-          <IconButton
-            {...buttonProps}
-            label={t('browse label')}
-            icon='ph--squares-four--regular'
-            onClick={() => onActiveIdChange?.(null)}
-            variant={isBrowseActive ? 'primary' : 'default'}
-            {...(isBrowseActive && { 'aria-current': 'location' })}
-          />
-          <IconButton
-            {...buttonProps}
-            label={t('notifications label')}
-            icon='ph--bell-simple--regular'
-            onClick={() => onActiveIdChange?.('notifications')}
-            variant={activeId === 'notifications' ? 'primary' : 'default'}
-            {...(activeId === 'notifications' && { 'aria-current': 'location' })}
-          />
-          <Button
-            variant={activeId === 'profile' ? 'primary' : 'default'}
-            onClick={() => onActiveIdChange?.('profile')}
-            classNames={buttonProps.classNames}
-          >
-            <span className='sr-only'>{t('profile label')}</span>
-            <Avatar.Root>
-              <Avatar.Label classNames='sr-only'>Profile display name</Avatar.Label>
-              <Avatar.Content size={8} status='active' hue='cyan' fallback='🗿' />
-            </Avatar.Root>
-          </Button>
-        </ButtonGroup>
-      */}
     </Toolbar.Root>
   );
 };
