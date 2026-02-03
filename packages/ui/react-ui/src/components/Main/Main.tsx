@@ -25,6 +25,7 @@ import React, {
 import { addEventListener } from '@dxos/async';
 import { log } from '@dxos/log';
 import { useDynamicRef, useForwardedRef, useMediaQuery, useViewportResize } from '@dxos/react-hooks';
+import { type MainStyleProps } from '@dxos/ui-theme';
 
 import { useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
@@ -206,8 +207,6 @@ const useSidebars = (consumerName: string) => {
 // Root
 //
 
-const resizeDebounce = 3000;
-
 type MainRootProps = PropsWithChildren<{
   navigationSidebarState?: SidebarState;
   defaultNavigationSidebarState?: SidebarState;
@@ -270,7 +269,7 @@ const MainRoot = ({
         resizeInterval.current = setTimeout(() => {
           setResizing(false);
           resizeInterval.current = null;
-        }, resizeDebounce);
+        }, 3_000);
       }),
     [],
   );
@@ -482,9 +481,9 @@ const MainDrawerRoot = forwardRef<HTMLDivElement, MainDrawerRootProps>((props, f
     <MainDrawer
       {...mover}
       {...props}
+      resizing={resizing}
       state={drawerState}
       onStateChange={setDrawerState}
-      resizing={resizing}
       ref={forwardedRef}
     />
   );
@@ -496,18 +495,18 @@ MainDrawerRoot.displayName = DRAWER_NAME;
 // Content
 //
 
-type MainContentProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.div>> & {
-  asChild?: boolean;
-  bounce?: boolean;
-  handlesFocus?: boolean;
-};
+type MainContentProps = ThemedClassName<
+  ComponentPropsWithRef<typeof Primitive.div> &
+    MainStyleProps & {
+      asChild?: boolean;
+    }
+>;
 
 const MainContent = forwardRef<HTMLDivElement, MainContentProps>(
   ({ asChild, classNames, bounce, handlesFocus, children, role, ...props }: MainContentProps, forwardedRef) => {
     const { navigationSidebarState, complementarySidebarState, drawerState } = useMainContext(MAIN_NAME);
     const { tx } = useThemeContext();
     const Root = asChild ? Slot : role ? 'div' : 'main';
-
     const mover = useLandmarkMover(props.onKeyDown, '1');
 
     return (

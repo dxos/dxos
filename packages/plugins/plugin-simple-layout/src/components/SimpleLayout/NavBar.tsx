@@ -31,10 +31,8 @@ export const NavBar = ({ classNames, activeId, onActiveIdChange }: NavBarProps) 
   const connections = useConnections(graph, Node.RootId);
   const menuActions = connections.filter((node) => node.properties.disposition === 'menu');
 
-  // Get companions for the current primary node.
-  const companions = useCompanions(activeId);
-
   // Create menu actions for companions.
+  const companions = useCompanions(activeId);
   const companionMenuActions = useMemo(
     () =>
       companions.map((companion) =>
