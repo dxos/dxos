@@ -8,6 +8,7 @@ export * from './AssistantSettings';
 export * from './Chat';
 export * from './TemplateEditor';
 export * from './Toolbox';
+export * from './TriggerStatus';
 
 export const BlueprintArticle = lazy(() => import('./BlueprintArticle'));
 export const ChatCompanion = lazy(() => import('./ChatCompanion'));

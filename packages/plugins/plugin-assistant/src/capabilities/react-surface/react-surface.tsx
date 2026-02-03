@@ -23,6 +23,7 @@ import {
   ChatDialog,
   InitiativeContainer,
   PromptArticle,
+  TriggerStatus,
 } from '../../components';
 import { ASSISTANT_DIALOG, meta } from '../../meta';
 import { Assistant } from '../../types';
@@ -98,6 +99,11 @@ export default Capability.makeModule(() =>
         role: 'dialog',
         filter: (data): data is { props: { chat: Assistant.Chat } } => data.component === ASSISTANT_DIALOG,
         component: ({ data }) => <ChatDialog {...data.props} />,
+      }),
+      Common.createSurface({
+        id: `${meta.id}/status`,
+        role: 'status',
+        component: () => <TriggerStatus />,
       }),
     ]),
   ),

@@ -114,6 +114,16 @@ export const translations = [
         'settings llm provider label': 'LLM provider',
         'settings edge llm model label': 'Remote language model',
         'settings ollama llm model label': 'Ollama language model',
+
+        // Trigger status
+        'trigger status disabled label': 'Triggers disabled',
+        'trigger status idle label': 'Triggers idle',
+        'trigger status running label': 'Trigger running',
+        'trigger status error label': 'Trigger error',
+        'trigger runtime label': 'Trigger Runtime',
+        'trigger runtime description': 'Enable automatic trigger execution',
+        'trigger last invocation label': 'Last run',
+        'trigger duration label': 'Duration',
       },
     },
   },
