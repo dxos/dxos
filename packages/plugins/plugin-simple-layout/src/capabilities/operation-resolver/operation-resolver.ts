@@ -31,6 +31,15 @@ export default Capability.makeModule(
 
     return Capability.contributes(Common.Capability.OperationResolver, [
       //
+      // SetLayoutMode
+      //
+      // TODO(burdon): No-op for to fix startup bug?
+      OperationResolver.make({
+        operation: Common.LayoutOperation.SetLayoutMode,
+        handler: Effect.fnUntraced(function* () {}),
+      }),
+
+      //
       // UpdateSidebar - No-op for simple layout.
       //
       OperationResolver.make({
