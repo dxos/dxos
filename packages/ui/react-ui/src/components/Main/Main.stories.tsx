@@ -7,6 +7,7 @@ import React from 'react';
 
 import { withLayout, withTheme } from '../../testing';
 import { IconButton } from '../Button';
+import { Input } from '../Input';
 import { Toolbar } from '../Toolbar';
 
 import { Main, useSidebars } from './Main';
@@ -37,6 +38,29 @@ const ComplementarySidebarToggle = ({ close }: { close?: boolean }) => {
   );
 };
 
+const DrawerToggle = ({ close }: { close?: boolean }) => {
+  const { toggleDrawer } = useSidebars('StoryMain__DrawerToggle');
+  return (
+    <IconButton
+      icon={close ? 'ph--caret-down--regular' : 'ph--caret-up--regular'}
+      iconOnly
+      label='Toggle drawer'
+      onClick={toggleDrawer}
+    />
+  );
+};
+
+const DrawerState = () => {
+  const { drawerState } = useSidebars('StoryMain__DrawerStateDisplay');
+  return (
+    <div className='flex items-center gap-2'>
+      <span>Drawer</span>
+      <span>({drawerState})</span>
+      <span>[{window.innerHeight}]</span>
+    </div>
+  );
+};
+
 const DefaultStory = (_args: StoryMainArgs) => {
   return (
     <Main.Root defaultComplementarySidebarState='closed' defaultNavigationSidebarState='closed'>
@@ -51,7 +75,7 @@ const DefaultStory = (_args: StoryMainArgs) => {
       <Main.Content classNames='is-full'>
         <Toolbar.Root>
           <NavigationSidebarToggle />
-          <Toolbar.Separator variant='gap' classNames='grow' />
+          <div className='flex items-center grow justify-center'>Main</div>
           <ComplementarySidebarToggle />
         </Toolbar.Root>
       </Main.Content>
@@ -84,5 +108,52 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
+  args: {},
+};
+
+const DrawerStory = (_args: StoryMainArgs) => {
+  return (
+    <Main.Root
+      defaultDrawerState='closed'
+      defaultNavigationSidebarState='closed'
+      defaultComplementarySidebarState='closed'
+    >
+      <Main.Overlay />
+      <Main.Content classNames='is-full overflow-hidden'>
+        <Toolbar.Root classNames='pli-2'>
+          <h1>Main Content</h1>
+          <Toolbar.Separator variant='gap' classNames='grow' />
+          <DrawerToggle />
+        </Toolbar.Root>
+        <div className='flex flex-col bs-full overflow-y-auto p-2'>
+          <p>The drawer is mutually exclusive with sidebars and is intended for mobile apps.</p>
+        </div>
+      </Main.Content>
+      <Main.Drawer label='Drawer' classNames='grid grid-rows-[min-content_1fr_min-content]'>
+        <Toolbar.Root classNames='pli-2'>
+          <DrawerState />
+          <Toolbar.Separator variant='gap' classNames='grow' />
+          <DrawerToggle close />
+        </Toolbar.Root>
+        <div className='p-2 overflow-y-auto space-y-4'>
+          <p className='text-sm opacity-70'>
+            On mobile devices, the drawer automatically switches to fullscreenwhen the keyboard appears.
+          </p>
+          {Array.from({ length: 20 }).map((_, i) => (
+            <p key={i}>Line {i + 1}</p>
+          ))}
+        </div>
+        <div className='p-2 border-bs border-separator'>
+          <Input.Root>
+            <Input.TextInput autoFocus placeholder='Search' />
+          </Input.Root>
+        </div>
+      </Main.Drawer>
+    </Main.Root>
+  );
+};
+
+export const WithDrawer: Story = {
+  render: DrawerStory,
   args: {},
 };
