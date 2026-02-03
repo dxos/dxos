@@ -23,14 +23,18 @@ const PluginImportSource = ({
 }: PluginImportSourceOptions = {}): Plugin => {
   const globOptions = { dot: true };
 
+  const isMatch = (filePath: string) =>
+    include.some((pattern) => Minimatch(filePath, pattern, globOptions)) &&
+    !exclude.some((pattern) => Minimatch(filePath, pattern, globOptions));
+
   return {
     name: 'plugin-import-source',
     resolveId: {
       order: 'pre',
       async handler(source, importer, options) {
-        // Check if source looks like an npm package name or a subpath import (#)
+        // Check if source looks like an npm package name or a subpath import (#).
         if (!source.match(/^[a-zA-Z@#][a-zA-Z0-9._-]*(\/[a-zA-Z0-9._-]+)*$/)) {
-          return null; // Skip to next importer
+          return null; // Skip to next resolver.
         }
 
         try {
@@ -48,9 +52,7 @@ const PluginImportSource = ({
             return null;
           }
           const resolvedPath = resolved.path!;
-          const match =
-            include.some((pattern) => Minimatch(resolvedPath, pattern, globOptions)) &&
-            !exclude.some((pattern) => Minimatch(resolvedPath, pattern, globOptions));
+          const match = isMatch(resolvedPath);
           verbose &&
             console.log({
               match,
@@ -67,10 +69,29 @@ const PluginImportSource = ({
           return resolvedPath;
         } catch (error) {
           verbose && console.error(error);
-          // If resolution fails, return null to skip to next resolver
+          // If resolution fails, return null to skip to next resolver.
           return null;
         }
       },
+    },
+
+    // Hook into load to add all matching files to watch list (including relative imports).
+    load(id) {
+      // Skip virtual modules and non-file paths.
+      if (id.startsWith('\0') || !id.startsWith('/')) {
+        return null;
+      }
+
+      // Strip query params (e.g., ?v=123).
+      const filePath = id.split('?')[0];
+
+      if (isMatch(filePath)) {
+        this.addWatchFile(filePath);
+        verbose && console.log(`[watch] ${filePath}`);
+      }
+
+      // Return null to let Vite load the file normally.
+      return null;
     },
   };
 };
