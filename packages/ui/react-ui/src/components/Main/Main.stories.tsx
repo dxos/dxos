@@ -126,7 +126,7 @@ const DrawerStory = (_args: StoryMainArgs) => {
           <DrawerToggle />
         </Toolbar.Root>
         <div className='flex flex-col bs-full overflow-y-auto p-2'>
-          <p>The drawer is mutually exclusive with sidebars and is intended for mobile apps</p>
+          <p>The drawer is mutually exclusive with sidebars and is intended for mobile apps.</p>
           <div className='plb-2 space-y-2'>
             {Array.from({ length: 50 }).map((_, i) => (
               <p key={i}>Line {i + 1}</p>
