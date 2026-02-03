@@ -13,8 +13,8 @@ import { getProxyTarget, isProxy } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { DXN, type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type QueryService } from '@dxos/protocols/proto/dxos/echo/query';
-import { type DataService, type SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
+import { type QueryService } from '@dxos/protocols/buf/dxos/echo/query_pb';
+import { type DataService, type SpaceSyncState } from '@dxos/protocols/buf/dxos/echo/service_pb';
 import { defaultMap } from '@dxos/util';
 
 import type { SaveStateChangedEvent } from '../automerge';

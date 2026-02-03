@@ -10,7 +10,7 @@ import { type ObjectPropPath, type ObjectStructure } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { type ObjectId } from '@dxos/keys';
 import { type ObjectPointerEncoded } from '@dxos/protocols';
-import { type IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
+import { type IndexKind } from '@dxos/protocols/buf/dxos/echo/indexing_pb';
 
 /**
  * Unified query interface for all indexes.

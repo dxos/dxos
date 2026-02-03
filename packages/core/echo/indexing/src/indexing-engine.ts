@@ -7,7 +7,7 @@ import { type Context, Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import type { LevelDB } from '@dxos/kv-store';
 import { log } from '@dxos/log';
-import { IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
+import { IndexKind } from '@dxos/protocols/buf/dxos/echo/indexing_pb';
 import { trace } from '@dxos/tracing';
 import { ComplexMap } from '@dxos/util';
 

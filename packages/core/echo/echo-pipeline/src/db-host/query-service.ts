@@ -17,13 +17,13 @@ import { type IndexEngine } from '@dxos/index-core';
 import { type IdToHeads, type Indexer, type ObjectSnapshot } from '@dxos/indexing';
 import { log } from '@dxos/log';
 import { objectPointerCodec } from '@dxos/protocols';
-import { type IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
+import { type IndexConfig } from '@dxos/protocols/buf/dxos/echo/indexing_pb';
 import {
   type QueryRequest,
   type QueryResponse,
   type QueryResult,
   type QueryService,
-} from '@dxos/protocols/proto/dxos/echo/query';
+} from '@dxos/protocols/buf/dxos/echo/query_pb';
 import { trace } from '@dxos/tracing';
 
 import { type AutomergeHost } from '../automerge';

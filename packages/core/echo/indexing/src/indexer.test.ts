@@ -8,7 +8,7 @@ import { asyncTimeout } from '@dxos/async';
 import { ObjectStructure } from '@dxos/echo-protocol';
 import { DXN } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
-import { IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
+import { IndexKind } from '@dxos/protocols/buf/dxos/echo/indexing_pb';
 import { openAndClose } from '@dxos/test-utils';
 
 import { Indexer } from './indexer';

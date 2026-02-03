@@ -27,8 +27,8 @@ import { type ObjectId } from '@dxos/keys';
 import { type DXN, type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { RpcClosedError } from '@dxos/protocols';
-import type { QueryService } from '@dxos/protocols/proto/dxos/echo/query';
-import type { DataService, SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
+import type { QueryService } from '@dxos/protocols/buf/dxos/echo/query_pb';
+import type { DataService, SpaceSyncState } from '@dxos/protocols/buf/dxos/echo/service_pb';
 import { trace } from '@dxos/tracing';
 import { chunkArray, deepMapValues, defaultMap } from '@dxos/util';
 

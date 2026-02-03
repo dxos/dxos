@@ -13,7 +13,7 @@ import type {
   QueryQueueRequest,
   QueueQueryResult,
   QueueService,
-} from '@dxos/protocols/proto/dxos/client/services';
+} from '@dxos/protocols/buf/dxos/client/services_pb';
 import { ComplexMap } from '@dxos/util';
 
 /**

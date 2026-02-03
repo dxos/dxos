@@ -5,7 +5,7 @@
 import { type FeedBlock, type FeedBlockSelector } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import type { FeedMessage } from '@dxos/protocols/buf/dxos/echo/feed_pb';
 
 import { type TimeframeClock } from './timeframe-clock';
 

@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-export { type SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
+export { type SpaceSyncState } from '@dxos/protocols/buf/dxos/echo/service_pb';
 
 export * from './automerge';
 export * from './client';

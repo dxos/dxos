@@ -36,8 +36,8 @@ import { PublicKey } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
 import { log } from '@dxos/log';
 import { objectPointerCodec } from '@dxos/protocols';
-import { type SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
-import { type DocHeadsList, type FlushRequest } from '@dxos/protocols/proto/dxos/echo/service';
+import { type SpaceSyncState } from '@dxos/protocols/buf/dxos/echo/service_pb';
+import { type DocHeadsList, type FlushRequest } from '@dxos/protocols/buf/dxos/echo/service_pb';
 import { trace } from '@dxos/tracing';
 import { ComplexSet, bufferToArray, defaultMap, isNonNullable, range } from '@dxos/util';
 

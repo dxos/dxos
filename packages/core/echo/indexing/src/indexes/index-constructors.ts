@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
+import { IndexKind } from '@dxos/protocols/buf/dxos/echo/indexing_pb';
 
 import { type IndexStaticProps } from '../types';
 

@@ -13,7 +13,7 @@ import { PublicKey, SpaceId } from '@dxos/keys';
 import { EdgeService } from '@dxos/protocols';
 import type { AutomergeProtocolMessage } from '@dxos/protocols';
 import { createBuf } from '@dxos/protocols/buf';
-import type { Peer } from '@dxos/protocols/proto/dxos/edge/messenger';
+import type { Peer } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { openAndClose } from '@dxos/test-utils';
 
 import type { EchoReplicatorContext, ReplicatorConnection } from '../automerge';

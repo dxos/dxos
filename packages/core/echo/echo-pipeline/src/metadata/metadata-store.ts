@@ -12,7 +12,7 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { DataCorruptionError, STORAGE_VERSION } from '@dxos/protocols';
 import { schema } from '@dxos/protocols/proto';
-import { Invitation, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
+import { Invitation, SpaceState } from '@dxos/protocols/buf/dxos/client/services_pb';
 import {
   type ControlPipelineSnapshot,
   type EchoMetadata,
@@ -21,7 +21,7 @@ import {
   type LargeSpaceMetadata,
   type SpaceCache,
   type SpaceMetadata,
-} from '@dxos/protocols/proto/dxos/echo/metadata';
+} from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import { type Directory, type File } from '@dxos/random-access-storage';
 import { type Timeframe } from '@dxos/timeframe';
 import { ComplexMap, arrayToBuffer, forEachAsync, isNonNullable } from '@dxos/util';

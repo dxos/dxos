@@ -17,7 +17,7 @@ import {
   type BatchedDocumentUpdates,
   type DataService,
   type DocumentUpdate,
-} from '@dxos/protocols/proto/dxos/echo/service';
+} from '@dxos/protocols/buf/dxos/echo/service_pb';
 import { trace } from '@dxos/tracing';
 
 import { DocHandleProxy } from './doc-handle-proxy';
