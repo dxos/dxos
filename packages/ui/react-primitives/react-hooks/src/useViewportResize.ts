@@ -5,7 +5,7 @@
 import { useLayoutEffect, useMemo } from 'react';
 
 export const useViewportResize = (
-  handler: (event?: Event) => void,
+  cb: (event?: Event) => void,
   deps: Parameters<typeof useLayoutEffect>[1] = [],
   delay: number = 800,
 ) => {
@@ -14,10 +14,10 @@ export const useViewportResize = (
     return (event?: Event) => {
       clearTimeout(timeout);
       timeout = setTimeout(() => {
-        handler(event);
+        cb(event);
       }, delay);
     };
-  }, [handler, delay]);
+  }, [cb, delay]);
 
   return useLayoutEffect(() => {
     window.visualViewport?.addEventListener('resize', debouncedHandler);

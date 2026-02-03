@@ -91,6 +91,10 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+/**
+ * NOTE: To expose to iphone on network:
+ * `moon run storybook-react:serve dev -H 0.0.0.0`
+ */
 export const Default: Story = {
   decorators: [withTheme, createPluginManager({ isPopover: false })],
 };

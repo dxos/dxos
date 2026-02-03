@@ -7,12 +7,14 @@ import React, { useMemo } from 'react';
 import { Common } from '@dxos/app-framework';
 import { useAppGraph, useOperationInvoker } from '@dxos/app-framework/react';
 import { Node, useActionRunner, useConnections } from '@dxos/plugin-graph';
-import { IconButton, type ThemedClassName, Toolbar, Tooltip, useTranslation } from '@dxos/react-ui';
+import { IconButton, type ThemedClassName, Toolbar, Tooltip, useSidebars, useTranslation } from '@dxos/react-ui';
 import { DropdownMenu, MenuProvider, createMenuAction } from '@dxos/react-ui-menu';
 import { mx } from '@dxos/ui-theme';
 
 import { useCompanions } from '../../hooks';
 import { meta } from '../../meta';
+
+const NAVBAR_NAME = 'SimpleLayout.NavBar';
 
 export type NavBarProps = ThemedClassName<{
   activeId?: string;
@@ -24,6 +26,7 @@ export const NavBar = ({ classNames, activeId, onActiveIdChange }: NavBarProps) 
   const { graph } = useAppGraph();
   const runAction = useActionRunner();
   const { invokePromise } = useOperationInvoker();
+  const { toggleDrawer } = useSidebars(NAVBAR_NAME);
 
   const connections = useConnections(graph, Node.RootId);
   const menuActions = connections.filter((node) => node.properties.disposition === 'menu');
@@ -77,6 +80,9 @@ export const NavBar = ({ classNames, activeId, onActiveIdChange }: NavBarProps) 
           </Tooltip.Trigger>
         </DropdownMenu.Root>
       </MenuProvider>
+
+      <IconButton icon='ph--arrow-up--regular' iconOnly label='Toggle drawer' onClick={() => toggleDrawer()} />
+
       {/*
         <ButtonGroup>
           <IconButton
@@ -111,3 +117,5 @@ export const NavBar = ({ classNames, activeId, onActiveIdChange }: NavBarProps) 
     </Toolbar.Root>
   );
 };
+
+NavBar.displayName = NAVBAR_NAME;

@@ -10,7 +10,7 @@ import { IconButton } from '../Button';
 import { Input } from '../Input';
 import { Toolbar } from '../Toolbar';
 
-import { Main, useSidebars } from './Main';
+import { Main, useDynamicDrawer, useSidebars } from './Main';
 
 type StoryMainArgs = {};
 
@@ -113,12 +113,18 @@ export const Default: Story = {
 
 const DrawerStory = (_args: StoryMainArgs) => {
   return (
-    <Main.Root
-      defaultDrawerState='closed'
-      defaultNavigationSidebarState='closed'
-      defaultComplementarySidebarState='closed'
-    >
+    <Main.Root>
       <Main.Overlay />
+      <DrawerStoryInner />
+    </Main.Root>
+  );
+};
+
+const DrawerStoryInner = () => {
+  useDynamicDrawer('DrawerStoryInner');
+
+  return (
+    <>
       <Main.Content classNames='flex flex-col is-full overflow-hidden'>
         <Toolbar.Root classNames='pli-2'>
           <h1>Main Content</h1>
@@ -126,7 +132,9 @@ const DrawerStory = (_args: StoryMainArgs) => {
           <DrawerToggle />
         </Toolbar.Root>
         <div className='flex flex-col bs-full overflow-y-auto p-2'>
-          <p>The drawer is mutually exclusive with sidebars and is intended for mobile apps.</p>
+          <p className='text-sm text-description'>
+            The drawer is mutually exclusive with sidebars and is intended for mobile apps.
+          </p>
           <div className='plb-2 space-y-2'>
             {Array.from({ length: 50 }).map((_, i) => (
               <p key={i}>Line {i + 1}</p>
@@ -141,7 +149,7 @@ const DrawerStory = (_args: StoryMainArgs) => {
           <DrawerToggle close />
         </Toolbar.Root>
         <div className='p-2 overflow-y-auto'>
-          <p className='text-sm opacity-70'>
+          <p className='text-sm text-description'>
             On mobile devices, the drawer automatically switches to fullscreenwhen the keyboard appears.
           </p>
           <div className='plb-2 space-y-2'>
@@ -156,7 +164,7 @@ const DrawerStory = (_args: StoryMainArgs) => {
           </Input.Root>
         </div>
       </Main.Drawer>
-    </Main.Root>
+    </>
   );
 };
 
