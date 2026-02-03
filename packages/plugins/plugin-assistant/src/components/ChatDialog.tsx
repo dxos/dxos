@@ -5,11 +5,10 @@
 import React, { useCallback, useState } from 'react';
 
 import { useAtomCapability } from '@dxos/app-framework/react';
+import { type Chat as ChatTypes } from '@dxos/assistant-toolkit';
 import { Obj } from '@dxos/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { ChatDialog as NaturalChatDialog } from '@dxos/react-ui-chat';
-
-import { type Chat as ChatTypes } from '@dxos/assistant-toolkit';
 
 import { useBlueprintRegistry, useChatProcessor, useChatServices, useOnline, usePresets } from '../hooks';
 import { meta } from '../meta';

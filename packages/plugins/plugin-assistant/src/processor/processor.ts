@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import type * as Tool from '@effect/ai/Tool';
 import { Atom, Registry } from '@effect-atom/atom-react';
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
@@ -25,11 +26,12 @@ import {
   GenerationObserver,
   createSystemPrompt,
 } from '@dxos/assistant';
+import { formatSystemPrompt } from '@dxos/assistant';
+import { type Chat } from '@dxos/assistant-toolkit';
 import { type Blueprint } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';
 import { type Database } from '@dxos/echo';
 import { runAndForwardErrors, throwCause, unwrapExit } from '@dxos/effect';
-import { formatSystemPrompt } from '@dxos/assistant';
 import {
   type CredentialsService,
   type FunctionInvocationService,
@@ -39,10 +41,7 @@ import {
 import { log } from '@dxos/log';
 import { type ContentBlock, Message } from '@dxos/types';
 
-import { type Chat } from '@dxos/assistant-toolkit';
-
 import { updateName } from './update-name';
-import type { Tool } from '@effect/ai';
 
 export type AiChatServices =
   | CredentialsService

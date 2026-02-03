@@ -5,12 +5,11 @@
 import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
+import { Chat } from '@dxos/assistant-toolkit';
 import { SpaceSchema } from '@dxos/client/echo';
 import { Database, Type } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 import { Collection } from '@dxos/schema';
-
-import { Chat } from '@dxos/assistant-toolkit';
 
 import { meta } from '../meta';
 

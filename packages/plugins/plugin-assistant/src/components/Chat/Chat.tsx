@@ -8,12 +8,13 @@ import { useAtomValue } from '@effect-atom/atom-react';
 import { createContext } from '@radix-ui/react-context';
 import * as Array from 'effect/Array';
 import * as Option from 'effect/Option';
-import React, { use, type PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { type Chat as ChatModule } from '@dxos/assistant-toolkit';
 import { Event } from '@dxos/async';
-import { Filter, type Database, Obj } from '@dxos/echo';
+import { type Database, Filter, Obj } from '@dxos/echo';
 import { useVoiceInput } from '@dxos/plugin-transcription';
-import { useQuery, useQueue } from '@dxos/react-client/echo';
+import { useQuery } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Input, type ThemedClassName, useDynamicRef, useTranslation } from '@dxos/react-ui';
 import { ChatEditor, type ChatEditorController, type ChatEditorProps } from '@dxos/react-ui-chat';
@@ -21,9 +22,7 @@ import { type MarkdownStreamController } from '@dxos/react-ui-components';
 import { MenuProvider, ToolbarMenu } from '@dxos/react-ui-menu';
 import { Message } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
-import { isTruthy, trim } from '@dxos/util';
-
-import { type Chat as ChatModule } from '@dxos/assistant-toolkit';
+import { isTruthy } from '@dxos/util';
 
 import { useChatToolbarActions } from '../../hooks';
 import { meta } from '../../meta';
@@ -39,7 +38,6 @@ import {
 import { ChatThread as NaturalChatThread, type ChatThreadProps as NaturalChatThreadProps } from '../ChatThread';
 
 import { type ChatEvent } from './events';
-import type { Tool } from '@effect/ai';
 
 //
 // Context

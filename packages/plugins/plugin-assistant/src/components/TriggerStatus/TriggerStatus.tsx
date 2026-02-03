@@ -6,19 +6,19 @@ import React, { useMemo } from 'react';
 
 import { useCapability } from '@dxos/app-framework/react';
 import { useLayout } from '@dxos/app-framework/react';
-import { ClientCapabilities } from '@dxos/plugin-client/types';
-import { useTriggerRuntimeControls } from '@dxos/plugin-automation';
-import { StatusBar } from '@dxos/plugin-status-bar';
-import { parseId } from '@dxos/react-client/echo';
-import { useQueue } from '@dxos/react-client/echo';
-import { Icon, Popover, Input, useTranslation } from '@dxos/react-ui';
-import { ControlItemInput } from '@dxos/react-ui-form';
 import {
-  createInvocationSpans,
   InvocationOutcome,
   type InvocationSpan,
   type InvocationTraceEvent,
+  createInvocationSpans,
 } from '@dxos/functions-runtime';
+import { useTriggerRuntimeControls } from '@dxos/plugin-automation';
+import { ClientCapabilities } from '@dxos/plugin-client/types';
+import { StatusBar } from '@dxos/plugin-status-bar';
+import { parseId } from '@dxos/react-client/echo';
+import { useQueue } from '@dxos/react-client/echo';
+import { Icon, Input, Popover, useTranslation } from '@dxos/react-ui';
+import { ControlItemInput } from '@dxos/react-ui-form';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
@@ -60,7 +60,8 @@ const useCurrentSpace = () => {
 export const TriggerStatus = () => {
   const space = useCurrentSpace();
   const db = space?.db;
-  const { isRunning, start, stop } = useTriggerRuntimeControls(db);
+  const { state, start, stop } = useTriggerRuntimeControls(db);
+  const isRunning = state?.enabled ?? false;
 
   // Get invocation trace queue for the current space.
   const queueDxn = space?.properties.invocationTraceQueue?.dxn;
@@ -78,7 +79,7 @@ export const TriggerStatus = () => {
   const lastSpan = invocationSpans.at(-1);
 
   // Determine the current trigger status state.
-  const state: TriggerStatusState = useMemo(() => {
+  const triggerState: TriggerStatusState = useMemo(() => {
     if (!isRunning) {
       return 'disabled';
     }
@@ -98,8 +99,8 @@ export const TriggerStatus = () => {
   }, [isRunning, invocationSpans, lastSpan]);
 
   const { t } = useTranslation(meta.id);
-  const title = t(`trigger status ${state} label`);
-  const icon = <Icon icon={getIcon(state)} classNames={getIconClassNames(state)} />;
+  const title = t(`trigger status ${triggerState} label`);
+  const icon = <Icon icon={getIcon(triggerState)} classNames={getIconClassNames(triggerState)} />;
 
   return (
     <Popover.Root>
@@ -110,7 +111,7 @@ export const TriggerStatus = () => {
         <Popover.Content>
           <TriggerStatusPopover
             isRunning={isRunning}
-            state={state}
+            state={triggerState}
             lastSpan={lastSpan}
             onToggle={isRunning ? stop : start}
           />
@@ -139,23 +140,13 @@ const TriggerStatusPopover = ({ isRunning, state, lastSpan, onToggle }: TriggerS
   return (
     <div className='min-is-[240px] p-2 space-y-3'>
       {/* Runtime Toggle */}
-      <ControlItemInput
-        title={t('trigger runtime label')}
-        description={t('trigger runtime description')}
-      >
-        <Input.Switch
-          classNames='justify-self-end'
-          checked={isRunning}
-          onCheckedChange={onToggle}
-        />
+      <ControlItemInput title={t('trigger runtime label')} description={t('trigger runtime description')}>
+        <Input.Switch classNames='justify-self-end' checked={isRunning} onCheckedChange={onToggle} />
       </ControlItemInput>
 
       {/* Status Indicator */}
       <div className='flex items-center gap-2 pt-2 border-t border-separator'>
-        <Icon
-          icon={getIcon(state)}
-          classNames={mx(getIconClassNames(state), 'shrink-0')}
-        />
+        <Icon icon={getIcon(state)} classNames={mx(getIconClassNames(state), 'shrink-0')} />
         <span className='text-sm'>{t(`trigger status ${state} label`)}</span>
       </div>
 
@@ -164,22 +155,16 @@ const TriggerStatusPopover = ({ isRunning, state, lastSpan, onToggle }: TriggerS
         <div className='space-y-2 text-sm text-description'>
           <div className='flex items-center justify-between'>
             <span>{t('trigger last invocation label')}</span>
-            <span className='font-mono text-xs'>
-              {new Date(lastSpan.timestamp).toLocaleTimeString()}
-            </span>
+            <span className='font-mono text-xs'>{new Date(lastSpan.timestamp).toLocaleTimeString()}</span>
           </div>
           <div className='flex items-center justify-between'>
             <span>{t('trigger duration label')}</span>
             <span className='font-mono text-xs'>
-              {lastSpan.duration < 1000
-                ? `${lastSpan.duration}ms`
-                : `${(lastSpan.duration / 1000).toFixed(1)}s`}
+              {lastSpan.duration < 1000 ? `${lastSpan.duration}ms` : `${(lastSpan.duration / 1000).toFixed(1)}s`}
             </span>
           </div>
           {lastSpan.outcome === InvocationOutcome.FAILURE && lastSpan.error?.message && (
-            <div className='p-2 bg-errorContainer text-errorText rounded text-xs'>
-              {lastSpan.error.message}
-            </div>
+            <div className='p-2 bg-errorContainer text-errorText rounded text-xs'>{lastSpan.error.message}</div>
           )}
         </div>
       )}

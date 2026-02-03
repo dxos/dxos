@@ -1,26 +1,24 @@
-import React, { ChangeEvent, useCallback, useMemo, useState } from 'react';
-import { controlItemClasses, ControlItemInput, Form, FormFieldMap, omitId } from '@dxos/react-ui-form';
-import { Initiative } from '@dxos/assistant-toolkit';
-import { StackItem } from '@dxos/react-ui-stack';
-import { Icon, IconButton, Input, Popover, toLocalizedString, useTranslation } from '@dxos/react-ui';
+//
+// Copyright 2026 DXOS.org
+//
+
+import { Atom, useAtomValue } from '@effect-atom/atom-react';
+import * as Match from 'effect/Match';
+import type * as Record from 'effect/Record';
+import React, { useCallback, useMemo, useState } from 'react';
+
 import { Surface } from '@dxos/app-framework/react';
-import { Atom, useAtom, useAtomValue } from '@effect-atom/atom-react';
-import { AtomObj, AtomRef } from '@dxos/echo-atom';
-import { Match, Record, Schema } from 'effect';
+import { Initiative } from '@dxos/assistant-toolkit';
 import { DXN, Filter, Obj, Ref } from '@dxos/echo';
+import { type JsonPath, splitJsonPath } from '@dxos/echo/internal';
+import { AtomObj, AtomRef } from '@dxos/echo-atom';
 import { FunctionDefinition, Trigger } from '@dxos/functions';
-import { createObject, type JsonPath, splitJsonPath } from '@dxos/echo/internal';
-import { Text } from '@dxos/schema';
-import { Editor } from '@dxos/react-ui-editor';
-import {
-  automerge,
-  createBasicExtensions,
-  createMarkdownExtensions,
-  createThemeExtensions,
-  decorateMarkdown,
-} from '@dxos/ui-editor';
 import { MarkdownEditor } from '@dxos/plugin-markdown';
 import { useObject } from '@dxos/react-client/echo';
+import { IconButton, Input, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Form, type FormFieldMap, omitId } from '@dxos/react-ui-form';
+import { StackItem } from '@dxos/react-ui-stack';
+import { type Text } from '@dxos/schema';
 
 export type InitiativeContainerProps = {
   role?: string;

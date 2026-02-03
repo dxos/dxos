@@ -4,18 +4,12 @@
 
 import { templates } from '@dxos/assistant';
 import {
-  Agent,
   AssistantToolkit,
-  Discord,
   DiscordBlueprint,
-  EntityExtraction,
-  Linear,
   LinearBlueprint,
-  Research,
   ResearchBlueprint,
   SystemToolkit,
   WebSearchBlueprint,
-  Initiative,
 } from '@dxos/assistant-toolkit';
 import { Blueprint } from '@dxos/blueprints';
 import { type FunctionDefinition } from '@dxos/functions';

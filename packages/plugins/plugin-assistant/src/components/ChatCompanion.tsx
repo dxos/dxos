@@ -9,14 +9,13 @@ import React, { forwardRef, useCallback, useEffect, useMemo, useState } from 're
 
 import { Common } from '@dxos/app-framework';
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/react';
+import { Chat } from '@dxos/assistant-toolkit';
 import { Blueprint } from '@dxos/blueprints';
 import { getSpace } from '@dxos/client/echo';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space/types';
 import { useQuery } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
-
-import { Chat } from '@dxos/assistant-toolkit';
 
 import { ChatContainer, type ChatEvent } from '../components';
 import { useBlueprintRegistry, useContextBinder } from '../hooks';

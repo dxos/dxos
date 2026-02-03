@@ -2,10 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
+import type * as Tool from '@effect/ai/Tool';
 import type * as Toolkit from '@effect/ai/Toolkit';
 import type { Registry } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 
+import { type ToolExecutionService, type ToolResolverService } from '@dxos/ai';
 import { Resource } from '@dxos/context';
 import { Obj } from '@dxos/echo';
 import { type Queue } from '@dxos/echo-db';
@@ -22,19 +24,6 @@ import {
 } from '../session';
 
 import { AiContextBinder, AiContextService, type ContextBinding } from './context';
-import type { Tool } from '@effect/ai';
-
-import {
-  AiParser,
-  AiPreprocessor,
-  type AiToolNotFoundError,
-  type PromptPreprocessingError,
-  type ToolExecutionService,
-  type ToolResolverService,
-  callTool,
-  getToolCalls,
-} from '@dxos/ai';
-import { formatSystemPrompt } from '../session/format';
 
 export interface AiConversationRunProps {
   prompt: string;

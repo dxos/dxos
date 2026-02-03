@@ -4,6 +4,7 @@
 
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import { describe, it } from '@effect/vitest';
+import { Registry } from '@effect-atom/atom';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
@@ -28,7 +29,7 @@ import { TriggerDispatcher } from './trigger-dispatcher';
 import { TriggerStateStore } from './trigger-state-store';
 
 const TestLayer = Fn.pipe(
-  Layer.mergeAll(TriggerStateStore.layerMemory),
+  Layer.mergeAll(TriggerStateStore.layerMemory, Registry.layer),
   Layer.provideMerge(
     Layer.mergeAll(
       AiService.notAvailable,

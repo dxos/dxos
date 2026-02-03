@@ -94,6 +94,7 @@
     "@dxos/plugin-map": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
+    "@dxos/plugin-status-bar": "workspace:*",
     "@dxos/plugin-table": "workspace:*",
     "@dxos/plugin-transcription": "workspace:*",
     "@dxos/protocols": "workspace:*",

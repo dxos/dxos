@@ -7,10 +7,10 @@ import React from 'react';
 
 import { Capability, Common } from '@dxos/app-framework';
 import { useSettingsState } from '@dxos/app-framework/react';
+import { Chat, Initiative } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { getSpace } from '@dxos/client/echo';
 import { Sequence } from '@dxos/conductor';
-import { Chat, Initiative } from '@dxos/assistant-toolkit';
 import { InvocationTraceContainer } from '@dxos/devtools';
 import { Obj } from '@dxos/echo';
 import { Layout } from '@dxos/react-ui-mosaic';

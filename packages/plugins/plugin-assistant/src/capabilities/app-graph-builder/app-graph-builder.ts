@@ -5,6 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability, Common } from '@dxos/app-framework';
+import { Chat } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { Sequence } from '@dxos/conductor';
 import { DXN, Database, Obj, type Ref } from '@dxos/echo';
@@ -17,8 +18,6 @@ import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 import { getActiveSpace } from '@dxos/plugin-space';
 import { SpaceOperation } from '@dxos/plugin-space/types';
 import { Query } from '@dxos/react-client/echo';
-
-import { Chat } from '@dxos/assistant-toolkit';
 
 import { ASSISTANT_DIALOG, meta } from '../../meta';
 import { AssistantCapabilities, AssistantOperation } from '../../types';

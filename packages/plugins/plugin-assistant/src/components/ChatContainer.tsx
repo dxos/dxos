@@ -11,7 +11,6 @@ import { Layout } from '@dxos/react-ui-mosaic';
 
 import { useBlueprintRegistry, useChatProcessor, useChatServices, useOnline, usePresets } from '../hooks';
 import { AssistantCapabilities, type ChatType } from '../types';
-import type { Chat } from '@dxos/assistant-toolkit';
 
 import { Chat as ChatComponent, type ChatRootProps } from './Chat';
 

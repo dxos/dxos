@@ -2,6 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Atom } from '@effect-atom/atom';
+import { Registry } from '@effect-atom/atom';
+import * as Array from 'effect/Array';
 import * as Cause from 'effect/Cause';
 import * as Context from 'effect/Context';
 import * as Cron from 'effect/Cron';
@@ -10,10 +13,12 @@ import * as Effect from 'effect/Effect';
 import * as Either from 'effect/Either';
 import * as Exit from 'effect/Exit';
 import * as Fiber from 'effect/Fiber';
+import * as Fn from 'effect/Function';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Record from 'effect/Record';
 import * as Schedule from 'effect/Schedule';
+import * as Struct from 'effect/Struct';
 
 import { DXN, Entity, Filter, Obj, Query } from '@dxos/echo';
 import { Database } from '@dxos/echo';
@@ -30,6 +35,8 @@ import { type TriggerState, TriggerStateStore } from './trigger-state-store';
 export type TimeControl = 'natural' | 'manual';
 
 export interface TriggerDispatcherOptions {
+  registry: Registry.Registry;
+
   /**
    * Time control mode.
    * - 'natural': Use real time.
@@ -77,10 +84,23 @@ type TriggerDispatcherServices =
   | QueueService
   | Database.Service;
 
+export type TriggerDispatcherState = {
+  enabled: boolean;
+  running: TracingService.InvocationTraceData[];
+  recentResults: TriggerExecutionResult[];
+  errors: Error[];
+};
+
+const MAX_TRACKED_TRACES = 10;
+const MAX_RECENT_RESULTS = 10;
+const MAX_TRACKED_ERRORS = 10;
+
 export class TriggerDispatcher extends Context.Tag('@dxos/functions/TriggerDispatcher')<
   TriggerDispatcher,
   {
     readonly timeControl: TimeControl;
+
+    readonly state: Atom.Atom<TriggerDispatcherState>;
 
     get running(): boolean;
 
@@ -129,11 +149,14 @@ export class TriggerDispatcher extends Context.Tag('@dxos/functions/TriggerDispa
     getCurrentTime(): Date;
   }
 >() {
-  static layer = (options: Omit<TriggerDispatcherOptions, 'database'>) =>
+  static layer = (
+    options: Omit<TriggerDispatcherOptions, 'registry'>,
+  ): Layer.Layer<TriggerDispatcher, never, Registry.AtomRegistry> =>
     Layer.effect(
       TriggerDispatcher,
       Effect.gen(function* () {
-        return new TriggerDispatcherImpl(options);
+        const registry = yield* Registry.AtomRegistry;
+        return new TriggerDispatcherImpl({ ...options, registry });
       }),
     );
 }
@@ -142,12 +165,20 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
   readonly livePollInterval: Duration.Duration;
   readonly timeControl: TimeControl;
 
+  protected _registry: Registry.Registry;
   private _running = false;
   private _internalTime: Date;
   private _timerFiber: Fiber.Fiber<void, void> | undefined;
   private _scheduledTriggers = new Map<string, ScheduledTrigger>();
+  private _state: Atom.Writable<TriggerDispatcherState> = Atom.make<TriggerDispatcherState>({
+    enabled: false,
+    running: [],
+    recentResults: [],
+    errors: [],
+  });
 
   constructor(options: TriggerDispatcherOptions) {
+    this._registry = options.registry;
     this.timeControl = options.timeControl;
     this.livePollInterval = options.livePollInterval ?? Duration.seconds(1);
     this._internalTime = options.startingTime ?? new Date();
@@ -157,6 +188,10 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
     return this._running;
   }
 
+  get state(): Atom.Atom<TriggerDispatcherState> {
+    return this._state;
+  }
+
   start = (): Effect.Effect<void, never, TriggerDispatcherServices> =>
     Effect.gen(this, function* () {
       if (this._running) {
@@ -164,6 +199,13 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
       }
 
       this._running = true;
+      this._registry.update(
+        this._state,
+        Struct.evolve({
+          enabled: () => true,
+          errors: () => [],
+        }),
+      );
 
       // Start natural time processing if enabled
       if (this.timeControl === 'natural') {
@@ -172,6 +214,13 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
             const error = causeToError(cause);
             log.error('trigger dispatcher error', { error });
             this._running = false;
+            this._registry.update(
+              this._state,
+              Struct.evolve({
+                enabled: () => false,
+                errors: (errors) => [...errors, error].slice(-MAX_TRACKED_ERRORS),
+              }),
+            );
             return Effect.void;
           }),
           Effect.forkDaemon,
@@ -190,6 +239,12 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
       }
 
       this._running = false;
+      this._registry.update(
+        this._state,
+        Struct.evolve({
+          enabled: () => false,
+        }),
+      );
 
       // Stop timer processing
       if (this._timerFiber) {
@@ -222,6 +277,13 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
           data: event,
         },
       });
+
+      this._registry.update(
+        this._state,
+        Struct.evolve({
+          running: (running) => [...running, trace].slice(-MAX_TRACKED_TRACES),
+        }),
+      );
 
       // Sandboxed section.
       const result = yield* Effect.gen(this, function* () {
@@ -265,6 +327,16 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
         // TODO(dmaretskyi): Might miss errors.
         exception: Exit.isFailure(result) ? Cause.prettyErrors(result.cause)[0] : undefined,
       });
+      this._registry.update(
+        this._state,
+        Struct.evolve({
+          running: Array.filter<TracingService.InvocationTraceData>(
+            (running) => running.invocationId !== trace.invocationId,
+          ),
+          recentResults: Fn.flow(Array.append(triggerExecutionResult), Array.takeRight(MAX_RECENT_RESULTS)),
+        }),
+      );
+
       return triggerExecutionResult;
     });
 

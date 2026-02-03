@@ -9,12 +9,13 @@ import { Chat, Initiative, ResearchGraph } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { Sequence } from '@dxos/conductor';
 import { Obj, Type } from '@dxos/echo';
+import { type SpaceId } from '@dxos/keys';
 import { Operation } from '@dxos/operation';
+import { AutomationCapabilities } from '@dxos/plugin-automation/types';
 import { ClientEvents } from '@dxos/plugin-client/types';
 import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space/types';
 import { type CreateObject } from '@dxos/plugin-space/types';
 import { HasSubject } from '@dxos/types';
-import { SpaceId } from '@dxos/keys';
 
 import {
   AiService,
@@ -32,8 +33,6 @@ import {
 import { meta } from './meta';
 import { translations } from './translations';
 import { AssistantEvents, AssistantOperation } from './types';
-import { AutomationCapabilities } from '@dxos/plugin-automation/types';
-import { Schema } from 'effect';
 
 export const AssistantPlugin = Plugin.define(meta).pipe(
   Common.Plugin.addTranslationsModule({ translations }),

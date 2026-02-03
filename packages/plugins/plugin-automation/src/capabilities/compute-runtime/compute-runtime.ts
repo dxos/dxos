@@ -3,6 +3,7 @@
 //
 
 import * as BrowserKeyValueStore from '@effect/platform-browser/BrowserKeyValueStore';
+import { Registry } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
@@ -79,6 +80,7 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
         yield* Effect.promise(() => space.waitUntilReady());
 
         return Layer.mergeAll(TriggerDispatcher.layer({ timeControl: 'natural' })).pipe(
+          Layer.provideMerge(Registry.layer),
           Layer.provideMerge(
             Layer.mergeAll(
               TracingServiceLive,

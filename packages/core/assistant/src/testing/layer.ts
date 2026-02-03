@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { Registry } from '@effect-atom/atom';
 import * as Layer from 'effect/Layer';
 import * as Match from 'effect/Match';
 
@@ -74,5 +75,7 @@ interface TestLayerWithTriggersOptions extends TestLayerOptions {}
 export const AssistantTestLayerWithTriggers = (options: TestLayerWithTriggersOptions) =>
   Layer.mergeAll(
     AssistantTestLayer(options),
-    TriggerDispatcher.layer({ timeControl: 'manual', startingTime: new Date('2025-09-05T15:01:00.000Z') }),
+    TriggerDispatcher.layer({ timeControl: 'manual', startingTime: new Date('2025-09-05T15:01:00.000Z') }).pipe(
+      Layer.provide(Registry.layer),
+    ),
   ).pipe(Layer.provideMerge(TriggerStateStore.layerMemory));

@@ -12,9 +12,9 @@ import { Blueprint } from '@dxos/blueprints';
 import { Resource } from '@dxos/context';
 import { DXN, Obj, Query, type Ref, Type } from '@dxos/echo';
 import { type Queue } from '@dxos/echo-db';
+import { assertArgument } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ComplexSet, isTruthy } from '@dxos/util';
-import { assertArgument } from '@dxos/invariant';
 
 /**
  * Thread message that binds or unbinds contextual objects to a conversation.

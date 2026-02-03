@@ -4,8 +4,8 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { addEventListener } from '@dxos/async';
 import { type Chat } from '@dxos/assistant-toolkit';
+import { addEventListener } from '@dxos/async';
 import { ProgressBar, type ProgressBarProps, TextCrawl, useExecutionGraph } from '@dxos/react-ui-components';
 
 export type ChatProgressProps = {
