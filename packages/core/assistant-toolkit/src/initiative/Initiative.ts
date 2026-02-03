@@ -35,7 +35,9 @@ export const Initiative = Schema.Struct({
   // TODO(dmaretskyi): Multiple chats.
   chat: Schema.optional(Type.Ref(Chat.Chat)),
 
-  // TODO(dmaretskyi): Triggers & input queue.
+  subscriptions: Schema.Array(Schema.suspend(() => Subscription)),
+
+  // TODO(dmaretskyi): input queue?
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/Initiative',
@@ -43,3 +45,12 @@ export const Initiative = Schema.Struct({
   }),
 );
 export interface Initiative extends Schema.Schema.Type<typeof Initiative> {}
+
+export const Subscription = Schema.Struct({
+  /**
+   * Object with a a canonical queue property.
+   * Schema must have the QueueAnnotation.
+   */
+  target: Type.Ref(Obj.Any),
+});
+export interface Subscription extends Schema.Schema.Type<typeof Subscription> {}

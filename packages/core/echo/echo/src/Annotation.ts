@@ -22,7 +22,7 @@ import { Schema } from 'effect';
 
 interface MakeProps<T> {
   id: string;
-  schema: Schema.Schema<T, unknown, never>;
+  schema: Schema.Schema<T, any, never>;
 }
 
 /**

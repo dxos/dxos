@@ -451,7 +451,7 @@ export const GeneratorAnnotation = createAnnotationHelper<GeneratorAnnotationVal
 
 interface MakeAnnoationsProps<T> {
   id: string;
-  schema: Schema.Schema<T, unknown, never>;
+  schema: Schema.Schema<T, any, never>;
 }
 
 export const makeUserAnnotation = <T>(props: MakeAnnoationsProps<T>): AnnotationHelper<T> => {
