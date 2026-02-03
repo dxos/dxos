@@ -22,14 +22,11 @@ test.describe('Invitations', () => {
   test.beforeAll(async ({ browser, browserName }) => {
     // TODO(wittjosiah): Storybook is broken in Safari/Webkit.
     test.skip(browserName === 'webkit');
-    test.setTimeout(60_000);
     manager = new InvitationsManager(browser);
     await manager.init();
   });
 
   test.beforeEach(async ({ browser }) => {
-    test.slow();
-
     manager = new InvitationsManager(browser);
     await manager.init();
   });
