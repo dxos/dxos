@@ -8,6 +8,7 @@ import { useCapability } from '@dxos/app-framework/react';
 import { useLayout } from '@dxos/app-framework/react';
 import {
   InvocationOutcome,
+  InvocationsState,
   type InvocationSpan,
   type InvocationTraceEvent,
   createInvocationSpans,
@@ -63,21 +64,6 @@ export const TriggerStatus = () => {
   const { state, start, stop } = useTriggerRuntimeControls(db);
   const isRunning = state?.enabled ?? false;
 
-  // Get invocation trace queue for the current space.
-  const queueDxn = space?.properties.invocationTraceQueue?.dxn;
-  const invocationsQueue = useQueue<InvocationTraceEvent>(queueDxn, {
-    pollInterval: 1000,
-  });
-
-  // Convert trace events to invocation spans and determine state.
-  const invocationSpans: InvocationSpan[] = useMemo(
-    () => createInvocationSpans(invocationsQueue?.objects),
-    [invocationsQueue?.objects],
-  );
-
-  // Get the most recent invocation span.
-  const lastSpan = invocationSpans.at(-1);
-
   // Determine the current trigger status state.
   const triggerState: TriggerStatusState = useMemo(() => {
     if (!isRunning) {
@@ -85,18 +71,19 @@ export const TriggerStatus = () => {
     }
 
     // Check if there's any pending invocation.
-    const hasPending = invocationSpans.some((span) => span.outcome === InvocationOutcome.PENDING);
+    const hasPending = state?.invocations.some((invocation) => invocation.result === null);
     if (hasPending) {
       return 'running';
     }
 
     // Check if the last invocation failed.
-    if (lastSpan?.outcome === InvocationOutcome.FAILURE) {
+    const lastInvocation = state?.invocations.at(-1);
+    if (lastInvocation?.result?._tag === 'Failure') {
       return 'error';
     }
 
     return 'idle';
-  }, [isRunning, invocationSpans, lastSpan]);
+  }, [isRunning, state?.invocations]);
 
   const { t } = useTranslation(meta.id);
   const title = t(`trigger status ${triggerState} label`);
@@ -112,7 +99,8 @@ export const TriggerStatus = () => {
           <TriggerStatusPopover
             isRunning={isRunning}
             state={triggerState}
-            lastSpan={lastSpan}
+            currentFunctionName={state?.invocations.at(-1)?.function?.name ?? state?.invocations.at(-1)?.function?.key}
+            lastInvocation={state?.invocations.at(-1)}
             onToggle={isRunning ? stop : start}
           />
           <Popover.Arrow />
@@ -125,16 +113,18 @@ export const TriggerStatus = () => {
 interface TriggerStatusPopoverProps {
   isRunning: boolean;
   state: TriggerStatusState;
-  lastSpan?: {
-    outcome: InvocationOutcome;
-    timestamp: number;
-    duration: number;
-    error?: { message?: string };
-  };
+  currentFunctionName?: string;
+  lastInvocation?: InvocationsState;
   onToggle: () => void;
 }
 
-const TriggerStatusPopover = ({ isRunning, state, lastSpan, onToggle }: TriggerStatusPopoverProps) => {
+const TriggerStatusPopover = ({
+  isRunning,
+  state,
+  currentFunctionName,
+  lastInvocation,
+  onToggle,
+}: TriggerStatusPopoverProps) => {
   const { t } = useTranslation(meta.id);
 
   return (
@@ -148,26 +138,10 @@ const TriggerStatusPopover = ({ isRunning, state, lastSpan, onToggle }: TriggerS
       <div className='flex items-center gap-2 pt-2 border-t border-separator'>
         <Icon icon={getIcon(state)} classNames={mx(getIconClassNames(state), 'shrink-0')} />
         <span className='text-sm'>{t(`trigger status ${state} label`)}</span>
+        {currentFunctionName && state === 'running' && (
+          <span className='text-xs text-description'>{currentFunctionName}</span>
+        )}
       </div>
-
-      {/* Last Invocation Details */}
-      {lastSpan && (
-        <div className='space-y-2 text-sm text-description'>
-          <div className='flex items-center justify-between'>
-            <span>{t('trigger last invocation label')}</span>
-            <span className='font-mono text-xs'>{new Date(lastSpan.timestamp).toLocaleTimeString()}</span>
-          </div>
-          <div className='flex items-center justify-between'>
-            <span>{t('trigger duration label')}</span>
-            <span className='font-mono text-xs'>
-              {lastSpan.duration < 1000 ? `${lastSpan.duration}ms` : `${(lastSpan.duration / 1000).toFixed(1)}s`}
-            </span>
-          </div>
-          {lastSpan.outcome === InvocationOutcome.FAILURE && lastSpan.error?.message && (
-            <div className='p-2 bg-errorContainer text-errorText rounded text-xs'>{lastSpan.error.message}</div>
-          )}
-        </div>
-      )}
     </div>
   );
 };

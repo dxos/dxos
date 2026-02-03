@@ -75,12 +75,14 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
         const toolkit = mergedToolkit.toolkit;
         const toolkitLayer = mergedToolkit.layer;
 
+        const registry = this.#capabilities.get(Common.Capability.AtomRegistry);
+
         const space = client.spaces.get(spaceId);
         invariant(space, `Invalid space: ${spaceId}`);
         yield* Effect.promise(() => space.waitUntilReady());
 
         return Layer.mergeAll(TriggerDispatcher.layer({ timeControl: 'natural' })).pipe(
-          Layer.provideMerge(Registry.layer),
+          Layer.provideMerge(Layer.succeed(Registry.AtomRegistry, registry)),
           Layer.provideMerge(
             Layer.mergeAll(
               TracingServiceLive,

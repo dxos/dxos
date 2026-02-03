@@ -23,14 +23,21 @@ import * as Struct from 'effect/Struct';
 import { DXN, Entity, Filter, Obj, Query } from '@dxos/echo';
 import { Database } from '@dxos/echo';
 import { causeToError } from '@dxos/effect';
-import { FunctionInvocationService, QueueService, TracingService, deserializeFunction } from '@dxos/functions';
+import {
+  FunctionDefinition,
+  FunctionInvocationService,
+  QueueService,
+  TracingService,
+  deserializeFunction,
+} from '@dxos/functions';
 import { Function, Trigger, type TriggerEvent } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { KEY_QUEUE_POSITION } from '@dxos/protocols';
+import { KEY_QUEUE_POSITION, ObjectId } from '@dxos/protocols';
 
 import { createInvocationPayload } from './input-builder';
 import { type TriggerState, TriggerStateStore } from './trigger-state-store';
+import { getDebugName } from '@dxos/util';
 
 export type TimeControl = 'natural' | 'manual';
 
@@ -84,15 +91,21 @@ type TriggerDispatcherServices =
   | QueueService
   | Database.Service;
 
+export type InvocationsState = {
+  invocationId: ObjectId;
+  trigger: Trigger.Trigger;
+  function: FunctionDefinition.Any | null;
+  event: TriggerEvent.TriggerEvent;
+  result: Exit.Exit<unknown> | null;
+};
+
 export type TriggerDispatcherState = {
   enabled: boolean;
-  running: TracingService.InvocationTraceData[];
-  recentResults: TriggerExecutionResult[];
+  invocations: InvocationsState[];
   errors: Error[];
 };
 
-const MAX_TRACKED_TRACES = 10;
-const MAX_RECENT_RESULTS = 10;
+const MAX_TRACKED_INVOCATIONS = 10;
 const MAX_TRACKED_ERRORS = 10;
 
 export class TriggerDispatcher extends Context.Tag('@dxos/functions/TriggerDispatcher')<
@@ -172,8 +185,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
   private _scheduledTriggers = new Map<string, ScheduledTrigger>();
   private _state: Atom.Writable<TriggerDispatcherState> = Atom.make<TriggerDispatcherState>({
     enabled: false,
-    running: [],
-    recentResults: [],
+    invocations: [],
     errors: [],
   });
 
@@ -278,10 +290,18 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
         },
       });
 
+      const invocation: InvocationsState = {
+        invocationId: trace.invocationId,
+        trigger,
+        function: null,
+        event,
+        result: null,
+      };
+
       this._registry.update(
         this._state,
         Struct.evolve({
-          running: (running) => [...running, trace].slice(-MAX_TRACKED_TRACES),
+          invocations: (invocations) => [...invocations, invocation].slice(-MAX_TRACKED_INVOCATIONS),
         }),
       );
 
@@ -299,6 +319,15 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
         const serialiedFunction = yield* Database.Service.load(trigger.function!).pipe(Effect.orDie);
         invariant(Obj.instanceOf(Function.Function, serialiedFunction));
         const functionDef = deserializeFunction(serialiedFunction);
+
+        this._registry.update(
+          this._state,
+          Struct.evolve({
+            invocations: Array.map((_) =>
+              _.invocationId === invocation.invocationId ? { ..._, function: functionDef } : _,
+            ),
+          }),
+        );
 
         // Prepare input data
         const inputData = this._prepareInputData(trigger, event);
@@ -330,10 +359,9 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
       this._registry.update(
         this._state,
         Struct.evolve({
-          running: Array.filter<TracingService.InvocationTraceData>(
-            (running) => running.invocationId !== trace.invocationId,
+          invocations: Array.map((_) =>
+            _.invocationId === invocation.invocationId ? { ..._, result: () => result } : _,
           ),
-          recentResults: Fn.flow(Array.append(triggerExecutionResult), Array.takeRight(MAX_RECENT_RESULTS)),
         }),
       );
 
@@ -584,4 +612,4 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
 /**
  * Key for the current queue cursor for queue triggers.
  */
-const KEY_QUEUE_CURSOR = 'dxos.org/key/local-trigger-dispatcher/queue-cursor';
+export const KEY_QUEUE_CURSOR = 'dxos.org/key/local-trigger-dispatcher/queue-cursor';
