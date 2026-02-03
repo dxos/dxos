@@ -84,13 +84,14 @@ const useLandmarkMover = (propsOnKeyDown: ComponentPropsWithoutRef<'div'>['onKey
  * - Visual viewport is constrained (keyboard visible)
  */
 const useDrawerFullMode = () => {
-  const [shouldBeFullMode, setShouldBeFullMode] = useState(false);
+  const [fullscreen, setFullscreen] = useState(false);
 
+  // TODO(burdon): Figure out better way to detect mobile keyboard.
   const checkViewport = useCallback(() => {
     const isMobile = window.innerHeight <= 1000;
-    setShouldBeFullMode(window.visualViewport && isMobile ? window.visualViewport.height < 700 : false);
+    setFullscreen(window.visualViewport && isMobile ? window.visualViewport.height < 700 : false);
 
-    // Update CSS custom property with actual visual viewport height for full mode
+    // Update CSS custom property with actual visual viewport height for full mode.
     if (window.visualViewport) {
       document.documentElement.style.setProperty('--visual-viewport-height', `${window.visualViewport.height}px`);
     }
@@ -98,13 +99,13 @@ const useDrawerFullMode = () => {
 
   useViewportResize(checkViewport, [], 100);
 
-  // Also check on window resize (for device orientation changes)
+  // Also check on window resize (for device orientation changes).
   useEffect(() => {
     window.addEventListener('resize', checkViewport);
     return () => window.removeEventListener('resize', checkViewport);
   }, [checkViewport]);
 
-  return shouldBeFullMode;
+  return fullscreen;
 };
 
 //

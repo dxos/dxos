@@ -34,12 +34,12 @@ export const Main = () => {
   const node = useNode(graph, id);
 
   const { id: parentId, variant } = parseEntryId(id);
-  const parentNode = useNode(graph, variant ? parentId : undefined);
   // Ensures that children are loaded so that they are available to navigate to.
   useLoadDescendents(id);
 
   const placeholder = useMemo(() => <ContentLoading />, []);
 
+  const parentNode = useNode(graph, variant ? parentId : undefined);
   const data = useMemo(() => {
     return (
       node && {
@@ -77,7 +77,7 @@ export const Main = () => {
             <NavBar classNames='border-bs border-separator' activeId={id} onActiveIdChange={handleActiveIdChange} />
           )}
         </NaturalMain.Content>
-        {/* TODO(burdon): This is just a placeholder for now. */}
+        {/* TODO(burdon): Show companion here. */}
         <NaturalMain.Drawer label={t('drawer label')}>
           <Surface role='article' limit={1} fallback={ContentError} placeholder={placeholder} />
         </NaturalMain.Drawer>
