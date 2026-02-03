@@ -233,6 +233,7 @@ type SearchListViewportProps = ThemedClassName<PropsWithChildren<{}>>;
  * Scrollable viewport wrapper for Content.
  * Only Content wrapped in Viewport will be scrollable.
  */
+// TODO(burdon): Reconcile with Mosaic.Viewport.
 const SearchListViewport = ({ classNames, children }: SearchListViewportProps) => {
   return (
     <div role='none' className={mx('is-full min-bs-0 grow overflow-y-auto', classNames)}>

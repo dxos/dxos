@@ -5,7 +5,9 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability, Common, Plugin } from '@dxos/app-framework';
+import { Operation } from '@dxos/operation';
 import { ClientCapabilities } from '@dxos/plugin-client';
+import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
 import { type CreateObject } from '@dxos/plugin-space/types';
 import { Event, Message } from '@dxos/types';
 
@@ -13,7 +15,7 @@ import { CalendarBlueprint, InboxBlueprint } from './blueprints';
 import { AppGraphBuilder, BlueprintDefinition, OperationResolver, ReactSurface } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
-import { Calendar, Mailbox } from './types';
+import { Calendar, InboxOperation, Mailbox } from './types';
 import { CreateCalendarSchema } from './types/Calendar';
 import { CreateMailboxSchema } from './types/Mailbox';
 
@@ -34,7 +36,6 @@ export const InboxPlugin = Plugin.define(meta).pipe(
               const space = client.spaces.get(db.spaceId);
               return Mailbox.make({ ...props, space });
             })) satisfies CreateObject,
-          addToCollectionOnCreate: true,
         },
       },
       {
@@ -57,7 +58,6 @@ export const InboxPlugin = Plugin.define(meta).pipe(
               const space = client.spaces.get(db.spaceId);
               return Calendar.make({ ...props, space });
             })) satisfies CreateObject,
-          addToCollectionOnCreate: true,
         },
       },
       {
@@ -71,6 +71,16 @@ export const InboxPlugin = Plugin.define(meta).pipe(
   }),
   Common.Plugin.addSchemaModule({
     schema: [Calendar.Calendar, Event.Event, Mailbox.Mailbox, Message.Message],
+  }),
+  Plugin.addModule({
+    id: 'on-space-created',
+    activatesOn: SpaceEvents.SpaceCreated,
+    activate: () =>
+      Effect.succeed(
+        Capability.contributes(SpaceCapabilities.OnCreateSpace, (params) =>
+          Operation.invoke(InboxOperation.OnCreateSpace, params),
+        ),
+      ),
   }),
   Common.Plugin.addAppGraphModule({ activate: AppGraphBuilder }),
   Common.Plugin.addSurfaceModule({ activate: ReactSurface }),

@@ -4,25 +4,26 @@
 
 import React, { forwardRef } from 'react';
 
-import { useAtomCapability } from '@dxos/app-framework/react';
+import { type SurfaceComponentProps, useAtomCapability } from '@dxos/app-framework/react';
 import { type Space, getSpace } from '@dxos/client/echo';
 import { type Obj } from '@dxos/echo';
-import { StackItem } from '@dxos/react-ui-stack';
+import { Layout } from '@dxos/react-ui-mosaic';
 
 import { useBlueprintRegistry, useChatProcessor, useChatServices, useOnline, usePresets } from '../hooks';
 import { type Assistant, AssistantCapabilities } from '../types';
 
 import { Chat, type ChatRootProps } from './Chat';
 
-export type ChatContainerProps = {
-  role?: string;
-  space?: Space;
-  chat?: Assistant.Chat;
-  companionTo?: Obj.Any;
-} & Pick<ChatRootProps, 'onEvent'>;
+export type ChatContainerProps = SurfaceComponentProps<
+  Assistant.Chat | undefined,
+  {
+    space?: Space;
+    companionTo?: Obj.Unknown;
+  } & Pick<ChatRootProps, 'onEvent'>
+>;
 
 export const ChatContainer = forwardRef<HTMLDivElement, ChatContainerProps>((props, forwardedRef) => {
-  const { space: spaceProp, chat, companionTo, onEvent } = props;
+  const { role, subject: chat, space: spaceProp, companionTo, onEvent } = props;
   const space = spaceProp ?? getSpace(chat);
   const settings = useAtomCapability(AssistantCapabilities.Settings);
   const services = useChatServices({ id: space?.id, chat });
@@ -43,7 +44,7 @@ export const ChatContainer = forwardRef<HTMLDivElement, ChatContainerProps>((pro
   }
 
   return (
-    <StackItem.Content toolbar ref={forwardedRef}>
+    <Layout.Main toolbar role={role} ref={forwardedRef}>
       <Chat.Root db={space?.db} chat={chat} processor={processor} onEvent={onEvent}>
         <Chat.Toolbar companionTo={companionTo} />
         <Chat.Viewport classNames='container-max-width'>
@@ -53,7 +54,7 @@ export const ChatContainer = forwardRef<HTMLDivElement, ChatContainerProps>((pro
           </div>
         </Chat.Viewport>
       </Chat.Root>
-    </StackItem.Content>
+    </Layout.Main>
   );
 });
 

@@ -27,7 +27,7 @@ faker.seed(1);
 
 const tags = ['red', 'green', 'blue'];
 
-Obj.make(Type.Expando, { foo: 100 });
+Obj.make(TestSchema.Expando, { foo: 100 });
 
 type ObjectProps = {
   [Obj.Meta]?: { tags?: string[] };
@@ -35,7 +35,7 @@ type ObjectProps = {
 };
 
 const createTestObject = (props: ObjectProps = {}) => {
-  return Obj.make(Type.Expando, {
+  return Obj.make(TestSchema.Expando, {
     title: faker.commerce.productName(),
     ...props,
   });
@@ -145,17 +145,17 @@ describe('Query', () => {
 
     test('filter by type', async () => {
       {
-        const objects = await db.query(Query.select(Filter.type(Type.Expando, { value: undefined }))).run();
+        const objects = await db.query(Query.select(Filter.type(TestSchema.Expando, { value: undefined }))).run();
         expect(objects).to.have.length(1);
       }
 
       {
-        const objects = await db.query(Query.select(Filter.type(Type.Expando, { value: 100 }))).run();
+        const objects = await db.query(Query.select(Filter.type(TestSchema.Expando, { value: 100 }))).run();
         expect(objects).to.have.length(3);
       }
 
       {
-        const objects = await db.query(Query.select(Filter.type(Type.Expando, { value: 400 }))).run();
+        const objects = await db.query(Query.select(Filter.type(TestSchema.Expando, { value: 400 }))).run();
         expect(objects).to.have.length(0);
       }
     });
@@ -173,38 +173,38 @@ describe('Query', () => {
     });
 
     test('filter expando', async () => {
-      const objects = await db.query(Query.select(Filter.type(Type.Expando, { value: 100 }))).run();
+      const objects = await db.query(Query.select(Filter.type(TestSchema.Expando, { value: 100 }))).run();
       expect(objects).to.have.length(3);
     });
 
     test('filter by reference', async () => {
-      const objA = db.add(Obj.make(Type.Expando, { value: 100 }));
-      const objB = db.add(Obj.make(Type.Expando, { value: 200, ref: Ref.make(objA) }));
+      const objA = db.add(Obj.make(TestSchema.Expando, { value: 100 }));
+      const objB = db.add(Obj.make(TestSchema.Expando, { value: 200, ref: Ref.make(objA) }));
       await db.flush({ indexes: true });
 
-      const objects = await db.query(Filter.type(Type.Expando, { ref: Ref.make(objA) })).run();
+      const objects = await db.query(Filter.type(TestSchema.Expando, { ref: Ref.make(objA) })).run();
       expect(objects).toEqual([objB]);
     });
 
     test('filter by foreign keys', async () => {
-      const obj = Obj.make(Type.Expando, { value: 100 });
-      Obj.getMeta(obj).keys.push({ id: 'test-id', source: 'test-source' });
+      const obj = Obj.make(TestSchema.Expando, { value: 100 });
+      Obj.change(obj, (obj) => Obj.getMeta(obj).keys.push({ id: 'test-id', source: 'test-source' }));
       db.add(obj);
 
       await db.flush({ indexes: true });
       const objects = await db
-        .query(Filter.foreignKeys(Type.Expando, [{ id: 'test-id', source: 'test-source' }]))
+        .query(Filter.foreignKeys(TestSchema.Expando, [{ id: 'test-id', source: 'test-source' }]))
         .run();
       expect(objects).toEqual([obj]);
     });
 
     test('filter by foreign keys without flushing index', async () => {
-      const obj = Obj.make(Type.Expando, { value: 100 });
-      Obj.getMeta(obj).keys.push({ id: 'test-id', source: 'test-source' });
+      const obj = Obj.make(TestSchema.Expando, { value: 100 });
+      Obj.change(obj, (obj) => Obj.getMeta(obj).keys.push({ id: 'test-id', source: 'test-source' }));
       db.add(obj);
 
       const objects = await db
-        .query(Filter.foreignKeys(Type.Expando, [{ id: 'test-id', source: 'test-source' }]))
+        .query(Filter.foreignKeys(TestSchema.Expando, [{ id: 'test-id', source: 'test-source' }]))
         .run();
       expect(objects).toEqual([obj]);
     });
@@ -216,7 +216,7 @@ describe('Query', () => {
 
     test('options', async () => {
       {
-        const objects = await db.query(Query.select(Filter.type(Type.Expando, { value: 100 }))).run();
+        const objects = await db.query(Query.select(Filter.type(TestSchema.Expando, { value: 100 }))).run();
         expect(objects).to.have.length(3);
         for (const object of objects) {
           db.remove(object);
@@ -243,6 +243,66 @@ describe('Query', () => {
         const objects = await db.query(Query.select(Filter.everything()), { deleted: 'only' }).run();
         expect(objects).to.have.length(3);
       }
+    });
+  });
+
+  describe('Queue queries', () => {
+    test('typeDXN: versionless matches any version', async () => {
+      const ContactV1 = Schema.Struct({
+        firstName: Schema.String,
+        lastName: Schema.String,
+      }).pipe(Type.object({ typename: 'example.com/type/Person', version: '0.1.0' }));
+
+      const ContactV2 = Schema.Struct({
+        name: Schema.String,
+      }).pipe(Type.object({ typename: 'example.com/type/Person', version: '0.2.0' }));
+
+      const peer = await builder.createPeer({ indexing: { sqlIndex: true }, types: [ContactV1, ContactV2] });
+      const db = await peer.createDatabase();
+      const queues = peer.client.constructQueueFactory(db.spaceId);
+      const queue = queues.create();
+
+      const contactV1 = Obj.make(ContactV1, { firstName: 'John', lastName: 'Doe' });
+      const contactV2 = Obj.make(ContactV2, { name: 'Brian Smith' });
+      await queue.append([contactV1, contactV2]);
+
+      const both = await queue.query(Query.select(Filter.typeDXN(DXN.parse('dxn:type:example.com/type/Person')))).run();
+      expect(both).toHaveLength(2);
+
+      const v1 = await queue
+        .query(Query.select(Filter.typeDXN(DXN.parse('dxn:type:example.com/type/Person:0.1.0'))))
+        .run();
+      expect(v1).toEqual([contactV1]);
+
+      const v2 = await queue
+        .query(Query.select(Filter.typeDXN(DXN.parse('dxn:type:example.com/type/Person:0.2.0'))))
+        .run();
+      expect(v2).toEqual([contactV2]);
+    });
+
+    test('sqlIndex: type selector loads queue-backed objects', async () => {
+      const peer = await builder.createPeer({ indexing: { sqlIndex: true }, types: [TestSchema.Task] });
+      const db = await peer.createDatabase();
+      const queues = peer.client.constructQueueFactory(db.spaceId);
+      const queue = queues.create();
+
+      const task = Obj.make(TestSchema.Task, { title: 'Queue type selector task' });
+      await queue.append([task]);
+
+      await db.flush({ indexes: true });
+
+      const obj: TestSchema.Task = await db
+        .query(
+          Query.select(Filter.type(TestSchema.Task, { title: 'Queue type selector task' })).options({
+            queues: [queue.dxn.toString()],
+          }),
+        )
+        .first();
+
+      expect(obj).toBeDefined();
+      expect(obj.id).toEqual(task.id);
+      expect(obj.title).toEqual('Queue type selector task');
+      expect(Obj.getDXN(obj)?.toString().startsWith(queue.dxn.toString())).toBe(true);
     });
   });
 
@@ -398,14 +458,14 @@ describe('Query', () => {
   // TODO(burdon): Flakey.
   test.skip('map over refs in query result', async () => {
     const { db } = await builder.createDatabase();
-    const folder = db.add(Obj.make(Type.Expando, { name: 'folder', objects: [] as any[] }));
+    const folder = db.add(Obj.make(TestSchema.Expando, { name: 'folder', objects: [] as any[] }));
     const objects = range(3).map(() => createTestObject());
     for (const object of objects) {
       folder.objects.push(Ref.make(object as any));
     }
 
-    const queryResult = await db.query(Filter.type(Type.Expando, { name: 'folder' })).run();
-    const result = queryResult.flatMap(({ objects }) => objects.map((o: Ref.Any) => o.target));
+    const queryResult = await db.query(Filter.type(TestSchema.Expando, { name: 'folder' })).run();
+    const result = queryResult.flatMap(({ objects }) => objects.map((o: Ref.Unknown) => o.target));
 
     for (const i in objects) {
       expect(result[i]).to.eq(objects[i]);
@@ -417,11 +477,11 @@ describe('Query', () => {
       const ContactV1 = Schema.Struct({
         firstName: Schema.String,
         lastName: Schema.String,
-      }).pipe(Type.Obj({ typename: 'example.com/type/Person', version: '0.1.0' }));
+      }).pipe(Type.object({ typename: 'example.com/type/Person', version: '0.1.0' }));
 
       const ContactV2 = Schema.Struct({
         name: Schema.String,
-      }).pipe(Type.Obj({ typename: 'example.com/type/Person', version: '0.2.0' }));
+      }).pipe(Type.object({ typename: 'example.com/type/Person', version: '0.2.0' }));
 
       const { peer, db } = await builder.createDatabase({
         types: [ContactV1, ContactV2],
@@ -453,7 +513,7 @@ describe('Query', () => {
 
       db.add(Obj.make(TestSchema.Person, {}));
       db.add(Obj.make(TestSchema.Task, {}));
-      const expando = db.add(Obj.make(Type.Expando, { name: 'expando' }));
+      const expando = db.add(Obj.make(TestSchema.Expando, { name: 'expando' }));
 
       const query = db.query(
         Query.select(Filter.not(Filter.or(Filter.type(TestSchema.Person), Filter.type(TestSchema.Task)))),
@@ -466,11 +526,11 @@ describe('Query', () => {
     test('filter by refs', async () => {
       const { db } = await builder.createDatabase();
 
-      const a = db.add(Obj.make(Type.Expando, { name: 'a' }));
-      const b = db.add(Obj.make(Type.Expando, { name: 'b', owner: Ref.make(a) }));
-      db.add(Obj.make(Type.Expando, { name: 'c' }));
+      const a = db.add(Obj.make(TestSchema.Expando, { name: 'a' }));
+      const b = db.add(Obj.make(TestSchema.Expando, { name: 'b', owner: Ref.make(a) }));
+      db.add(Obj.make(TestSchema.Expando, { name: 'c' }));
 
-      const objects = await db.query(Query.select(Filter.type(Type.Expando, { owner: Ref.make(a) }))).run();
+      const objects = await db.query(Query.select(Filter.type(TestSchema.Expando, { owner: Ref.make(a) }))).run();
       expect(objects).toEqual([b]);
     });
 
@@ -494,15 +554,15 @@ describe('Query', () => {
     test('tags', async () => {
       const { db } = await builder.createDatabase();
 
-      db.add(Obj.make(Type.Expando, { name: 'a' }));
+      db.add(Obj.make(TestSchema.Expando, { name: 'a' }));
       const b = db.add(
-        Obj.make(Type.Expando, {
+        Obj.make(TestSchema.Expando, {
           name: 'b',
           [Obj.Meta]: { tags: ['important'] },
         }),
       );
       const c = db.add(
-        Obj.make(Type.Expando, {
+        Obj.make(TestSchema.Expando, {
           name: 'c',
           [Obj.Meta]: { tags: ['important', 'investor'] },
         }),
@@ -589,7 +649,7 @@ describe('Query', () => {
 
     test('traverse outbound array references', async () => {
       db.add(
-        Obj.make(Type.Expando, {
+        Obj.make(TestSchema.Expando, {
           name: 'Contacts',
           objects: [Ref.make(person1)],
         }),
@@ -597,7 +657,7 @@ describe('Query', () => {
       await db.flush({ indexes: true });
 
       const objects = await db
-        .query(Query.select(Filter.type(Type.Expando, { name: 'Contacts' })).reference('objects'))
+        .query(Query.select(Filter.type(TestSchema.Expando, { name: 'Contacts' })).reference('objects'))
         .run();
       expect(objects).toMatchObject([{ name: 'Alice' }]);
     });
@@ -616,9 +676,47 @@ describe('Query', () => {
       ]);
     });
 
+    test('sqlIndex: referencedBy property path matches full path (not just first segment)', async () => {
+      const { db: sqlDb } = await builder.createDatabase({ indexing: { sqlIndex: true }, types: [TestSchema.Person] });
+
+      const person = sqlDb.add(Obj.make(TestSchema.Person, { name: 'Alice' }));
+
+      sqlDb.add(
+        Obj.make(TestSchema.Expando, {
+          name: 'direct',
+          a: Ref.make(person),
+        }),
+      );
+
+      sqlDb.add(
+        Obj.make(TestSchema.Expando, {
+          name: 'nested',
+          a: { b: Ref.make(person) },
+        }),
+      );
+
+      await sqlDb.flush({ indexes: true });
+
+      // When no property is specified, referencedBy() should return all incoming references (including nested ones).
+      const allIncoming = await sqlDb
+        .query(Query.select(Filter.type(TestSchema.Person, { name: 'Alice' })).referencedBy(TestSchema.Expando))
+        .run();
+      expect(allIncoming.map((o) => o.name).sort()).toEqual(['direct', 'nested']);
+
+      const nested = await sqlDb
+        .query(Query.select(Filter.type(TestSchema.Person, { name: 'Alice' })).referencedBy(TestSchema.Expando, 'a.b'))
+        .run();
+      expect(nested.map((o) => o.name).sort()).toEqual(['nested']);
+
+      const direct = await sqlDb
+        .query(Query.select(Filter.type(TestSchema.Person, { name: 'Alice' })).referencedBy(TestSchema.Expando, 'a'))
+        .run();
+      expect(direct.map((o) => o.name).sort()).toEqual(['direct']);
+    });
+
     test('traverse inbound array references', async () => {
       db.add(
-        Obj.make(Type.Expando, {
+        Obj.make(TestSchema.Expando, {
           name: 'Contacts',
           objects: [Ref.make(person1)],
         }),
@@ -626,7 +724,7 @@ describe('Query', () => {
       await db.flush({ indexes: true });
 
       const objects = await db
-        .query(Query.select(Filter.type(TestSchema.Person)).referencedBy(Type.Expando, 'objects'))
+        .query(Query.select(Filter.type(TestSchema.Person)).referencedBy(TestSchema.Expando, 'objects'))
         .run();
       expect(objects).toMatchObject([{ name: 'Contacts' }]);
     });
@@ -646,7 +744,7 @@ describe('Query', () => {
     test('traverse inbound references with no filter (any type, any property)', async () => {
       // Add an expando that references person1.
       db.add(
-        Obj.make(Type.Expando, {
+        Obj.make(TestSchema.Expando, {
           name: 'Note about Alice',
           subject: Ref.make(person1),
         }),
@@ -750,7 +848,7 @@ describe('Query', () => {
 
     test('full-text', async () => {
       const { db, graph } = await builder.createDatabase({
-        indexing: { fullText: true },
+        indexing: { sqlIndex: true },
       });
       await graph.schemaRegistry.register([TestSchema.Task]);
 
@@ -785,11 +883,11 @@ describe('Query', () => {
 
   describe('indexer2 text search', () => {
     test('full-text search via indexer2', async () => {
-      const { db } = await builder.createDatabase({ indexing: { fullText: true } });
+      const { db } = await builder.createDatabase({ indexing: { sqlIndex: true } });
 
-      db.add(Obj.make(Type.Expando, { title: 'Introduction to TypeScript' }));
-      db.add(Obj.make(Type.Expando, { title: 'Getting Started with React' }));
-      db.add(Obj.make(Type.Expando, { title: 'Advanced Python Programming' }));
+      db.add(Obj.make(TestSchema.Expando, { title: 'Introduction to TypeScript' }));
+      db.add(Obj.make(TestSchema.Expando, { title: 'Getting Started with React' }));
+      db.add(Obj.make(TestSchema.Expando, { title: 'Advanced Python Programming' }));
       await db.flush({ indexes: true });
 
       // TODO(mykola): Defalut to full-text
@@ -824,11 +922,11 @@ describe('Query', () => {
     });
 
     test('full-text search across multiple matching objects', async () => {
-      const { db } = await builder.createDatabase({ indexing: { fullText: true } });
+      const { db } = await builder.createDatabase({ indexing: { sqlIndex: true } });
 
-      db.add(Obj.make(Type.Expando, { title: 'Programming with JavaScript' }));
-      db.add(Obj.make(Type.Expando, { title: 'JavaScript Best Practices' }));
-      db.add(Obj.make(Type.Expando, { title: 'Python for Data Science' }));
+      db.add(Obj.make(TestSchema.Expando, { title: 'Programming with JavaScript' }));
+      db.add(Obj.make(TestSchema.Expando, { title: 'JavaScript Best Practices' }));
+      db.add(Obj.make(TestSchema.Expando, { title: 'Python for Data Science' }));
       await db.flush({ indexes: true });
 
       const objects = await db.query(Query.select(Filter.text('JavaScript', { type: 'full-text' }))).run();
@@ -839,11 +937,11 @@ describe('Query', () => {
     });
 
     test('full-text search with partial word matching (trigram)', async () => {
-      const { db } = await builder.createDatabase({ indexing: { fullText: true } });
+      const { db } = await builder.createDatabase({ indexing: { sqlIndex: true } });
 
-      db.add(Obj.make(Type.Expando, { title: 'Introduction to TypeScript' }));
-      db.add(Obj.make(Type.Expando, { title: 'Getting Started with React' }));
-      db.add(Obj.make(Type.Expando, { title: 'Advanced Python Programming' }));
+      db.add(Obj.make(TestSchema.Expando, { title: 'Introduction to TypeScript' }));
+      db.add(Obj.make(TestSchema.Expando, { title: 'Getting Started with React' }));
+      db.add(Obj.make(TestSchema.Expando, { title: 'Advanced Python Programming' }));
       await db.flush({ indexes: true });
 
       // Partial word "Script" should match "TypeScript".
@@ -875,10 +973,10 @@ describe('Query', () => {
     });
 
     test('full-text search with wrong word order', async () => {
-      const { db } = await builder.createDatabase({ indexing: { fullText: true } });
+      const { db } = await builder.createDatabase({ indexing: { sqlIndex: true } });
 
-      db.add(Obj.make(Type.Expando, { title: 'Python Programming Guide' }));
-      db.add(Obj.make(Type.Expando, { title: 'JavaScript Basics' }));
+      db.add(Obj.make(TestSchema.Expando, { title: 'Python Programming Guide' }));
+      db.add(Obj.make(TestSchema.Expando, { title: 'JavaScript Basics' }));
       await db.flush({ indexes: true });
 
       // Words in different order should still match.
@@ -897,9 +995,9 @@ describe('Query', () => {
     });
 
     test('full-text search after content update', async () => {
-      const { db } = await builder.createDatabase({ indexing: { fullText: true } });
+      const { db } = await builder.createDatabase({ indexing: { sqlIndex: true } });
 
-      const obj = db.add(Obj.make(Type.Expando, { title: 'Original Title' }));
+      const obj = db.add(Obj.make(TestSchema.Expando, { title: 'Original Title' }));
       await db.flush({ indexes: true });
 
       // Poll until indexer2 has processed the document.
@@ -960,7 +1058,9 @@ describe('Query', () => {
         const animal = faker.helpers.arrayElement(ANIMALS);
         counts[animal]++;
         db.add(
-          Obj.make(Type.Expando, { title: faker.lorem.sentence(10) + ' ' + animal + ' ' + faker.lorem.sentence(10) }),
+          Obj.make(TestSchema.Expando, {
+            title: faker.lorem.sentence(10) + ' ' + animal + ' ' + faker.lorem.sentence(10),
+          }),
         );
         if (_ % 1000 === 0) {
           await sleep(1);
@@ -988,7 +1088,7 @@ describe('Query', () => {
     });
 
     test('full-text search in queues via indexer2', async () => {
-      const peer = await builder.createPeer({ indexing: { fullText: true }, types: [TestSchema.Task] });
+      const peer = await builder.createPeer({ indexing: { sqlIndex: true }, types: [TestSchema.Task] });
       const db = await peer.createDatabase();
       const queues = peer.client.constructQueueFactory(db.spaceId);
       const queue = queues.create();
@@ -1035,7 +1135,7 @@ describe('Query', () => {
     });
 
     test('full-text search with allQueuesFromSpaces via indexer2', async () => {
-      const peer = await builder.createPeer({ indexing: { fullText: true }, types: [TestSchema.Task] });
+      const peer = await builder.createPeer({ indexing: { sqlIndex: true }, types: [TestSchema.Task] });
       const db = await peer.createDatabase();
       const queues = peer.client.constructQueueFactory(db.spaceId);
       const queue = queues.create();
@@ -1075,7 +1175,7 @@ describe('Query', () => {
     });
 
     test('full-text search from queue returns valid echo objects', async () => {
-      const peer = await builder.createPeer({ indexing: { fullText: true }, types: [TestSchema.Task] });
+      const peer = await builder.createPeer({ indexing: { sqlIndex: true }, types: [TestSchema.Task] });
       const db = await peer.createDatabase();
       const queues = peer.client.constructQueueFactory(db.spaceId);
       const queue = queues.create();
@@ -1099,11 +1199,11 @@ describe('Query', () => {
     });
 
     test('full-text search returns rank in entries', async () => {
-      const { db } = await builder.createDatabase({ indexing: { fullText: true } });
+      const { db } = await builder.createDatabase({ indexing: { sqlIndex: true } });
 
-      db.add(Obj.make(Type.Expando, { title: 'TypeScript TypeScript TypeScript' })); // High relevance.
-      db.add(Obj.make(Type.Expando, { title: 'TypeScript Programming' })); // Medium relevance.
-      db.add(Obj.make(Type.Expando, { title: 'Python Programming' })); // No match.
+      db.add(Obj.make(TestSchema.Expando, { title: 'TypeScript TypeScript TypeScript' })); // High relevance.
+      db.add(Obj.make(TestSchema.Expando, { title: 'TypeScript Programming' })); // Medium relevance.
+      db.add(Obj.make(TestSchema.Expando, { title: 'Python Programming' })); // No match.
       await db.flush({ indexes: true });
 
       const query = db.query(Query.select(Filter.text('TypeScript', { type: 'full-text' })));
@@ -1120,12 +1220,12 @@ describe('Query', () => {
     });
 
     test('full-text search order by rank descending (default)', async () => {
-      const { db } = await builder.createDatabase({ indexing: { fullText: true } });
+      const { db } = await builder.createDatabase({ indexing: { sqlIndex: true } });
 
       // Create objects with varying relevance to the search term "TypeScript".
-      db.add(Obj.make(Type.Expando, { title: 'TypeScript' })); // Single occurrence.
-      db.add(Obj.make(Type.Expando, { title: 'TypeScript TypeScript TypeScript TypeScript' })); // High relevance.
-      db.add(Obj.make(Type.Expando, { title: 'TypeScript Programming Guide' })); // Medium relevance.
+      db.add(Obj.make(TestSchema.Expando, { title: 'TypeScript' })); // Single occurrence.
+      db.add(Obj.make(TestSchema.Expando, { title: 'TypeScript TypeScript TypeScript TypeScript' })); // High relevance.
+      db.add(Obj.make(TestSchema.Expando, { title: 'TypeScript Programming Guide' })); // Medium relevance.
       await db.flush({ indexes: true });
 
       // Order by rank descending (best matches first) - default direction.
@@ -1144,12 +1244,12 @@ describe('Query', () => {
     });
 
     test('full-text search order by rank ascending', async () => {
-      const { db } = await builder.createDatabase({ indexing: { fullText: true } });
+      const { db } = await builder.createDatabase({ indexing: { sqlIndex: true } });
 
       // Create objects with varying relevance to the search term "TypeScript".
-      db.add(Obj.make(Type.Expando, { title: 'TypeScript' })); // Single occurrence.
-      db.add(Obj.make(Type.Expando, { title: 'TypeScript TypeScript TypeScript TypeScript' })); // High relevance.
-      db.add(Obj.make(Type.Expando, { title: 'TypeScript Programming Guide' })); // Medium relevance.
+      db.add(Obj.make(TestSchema.Expando, { title: 'TypeScript' })); // Single occurrence.
+      db.add(Obj.make(TestSchema.Expando, { title: 'TypeScript TypeScript TypeScript TypeScript' })); // High relevance.
+      db.add(Obj.make(TestSchema.Expando, { title: 'TypeScript Programming Guide' })); // Medium relevance.
       await db.flush({ indexes: true });
 
       // Order by rank ascending (worst matches first).
@@ -1170,12 +1270,12 @@ describe('Query', () => {
     test('non-FTS queries return default rank of 1', async () => {
       const { db } = await builder.createDatabase();
 
-      db.add(Obj.make(Type.Expando, { title: 'Non-FTS Test Object 1' }));
-      db.add(Obj.make(Type.Expando, { title: 'Non-FTS Test Object 2' }));
+      db.add(Obj.make(TestSchema.Expando, { title: 'Non-FTS Test Object 1' }));
+      db.add(Obj.make(TestSchema.Expando, { title: 'Non-FTS Test Object 2' }));
       await db.flush({ indexes: true });
 
       // Non-FTS query (all expandos, no text search).
-      const query = db.query(Query.select(Filter.type(Type.Expando)));
+      const query = db.query(Query.select(Filter.type(TestSchema.Expando)));
       const entries = await query.runEntries();
 
       // Should have at least 2 entries (the ones we created).
@@ -1188,13 +1288,13 @@ describe('Query', () => {
     });
 
     test('order by rank with limit', async () => {
-      const { db } = await builder.createDatabase({ indexing: { fullText: true } });
+      const { db } = await builder.createDatabase({ indexing: { sqlIndex: true } });
 
       // Create multiple objects with varying relevance.
-      db.add(Obj.make(Type.Expando, { title: 'TypeScript' }));
-      db.add(Obj.make(Type.Expando, { title: 'TypeScript TypeScript' }));
-      db.add(Obj.make(Type.Expando, { title: 'TypeScript TypeScript TypeScript' }));
-      db.add(Obj.make(Type.Expando, { title: 'TypeScript TypeScript TypeScript TypeScript' }));
+      db.add(Obj.make(TestSchema.Expando, { title: 'TypeScript' }));
+      db.add(Obj.make(TestSchema.Expando, { title: 'TypeScript TypeScript' }));
+      db.add(Obj.make(TestSchema.Expando, { title: 'TypeScript TypeScript TypeScript' }));
+      db.add(Obj.make(TestSchema.Expando, { title: 'TypeScript TypeScript TypeScript TypeScript' }));
       await db.flush({ indexes: true });
 
       // Order by rank descending and limit to top 2 results.
@@ -1214,7 +1314,7 @@ describe('Query', () => {
 
   describe('Reactivity', () => {
     let db: EchoDatabase;
-    let objects: Obj.Any[];
+    let objects: Obj.Unknown[];
 
     beforeEach(async () => {
       ({ db } = await builder.createDatabase());
@@ -1228,7 +1328,7 @@ describe('Query', () => {
     });
 
     test('fires only once when new objects are added', async () => {
-      const query = db.query(Query.select(Filter.type(Type.Expando, { value: 100 })));
+      const query = db.query(Query.select(Filter.type(TestSchema.Expando, { value: 100 })));
       expect(query.runSync()).to.have.length(3);
 
       let count = 0;
@@ -1246,7 +1346,7 @@ describe('Query', () => {
     });
 
     test('fires only once when objects are removed', async () => {
-      const query = db.query(Query.select(Filter.type(Type.Expando, { value: 100 })));
+      const query = db.query(Query.select(Filter.type(TestSchema.Expando, { value: 100 })));
       expect(query.runSync()).to.have.length(3);
 
       let count = 0;
@@ -1261,7 +1361,7 @@ describe('Query', () => {
     });
 
     test('does not fire on object updates', async () => {
-      const query = db.query(Query.select(Filter.type(Type.Expando, { value: 100 })));
+      const query = db.query(Query.select(Filter.type(TestSchema.Expando, { value: 100 })));
       expect(query.runSync()).to.have.length(3);
 
       let updateCount = 0;
@@ -1276,7 +1376,7 @@ describe('Query', () => {
     });
 
     test('can unsubscribe and resubscribe', async () => {
-      const query = db.query(Query.select(Filter.type(Type.Expando, { value: 100 })));
+      const query = db.query(Query.select(Filter.type(TestSchema.Expando, { value: 100 })));
 
       let count = 0;
       let lastCount = 0;
@@ -1319,8 +1419,8 @@ describe('Query', () => {
     });
 
     test('multiple queries do not influence each other', async () => {
-      const query1 = db.query(Query.select(Filter.type(Type.Expando, { value: 100 })));
-      const query2 = db.query(Query.select(Filter.type(Type.Expando, { value: 100 })));
+      const query1 = db.query(Query.select(Filter.type(TestSchema.Expando, { value: 100 })));
+      const query2 = db.query(Query.select(Filter.type(TestSchema.Expando, { value: 100 })));
 
       let count1 = 0;
       let count2 = 0;
@@ -1403,12 +1503,12 @@ describe('Query', () => {
       const { db } = await builder.createDatabase();
 
       // Create 10 test objects: 1, 2, 3, ..., 10.
-      const objects = Array.from({ length: 10 }, (_, i) => db.add(Obj.make(Type.Expando, { value: i + 1 })));
+      const objects = Array.from({ length: 10 }, (_, i) => db.add(Obj.make(TestSchema.Expando, { value: i + 1 })));
       await db.flush({ indexes: true, updates: true });
 
       // Track all updates to observe the bug.
       const updates: number[][] = [];
-      const unsub = db.query(Query.select(Filter.type(Type.Expando))).subscribe(
+      const unsub = db.query(Query.select(Filter.type(TestSchema.Expando))).subscribe(
         (query) => {
           const values = [...query.results.map((obj) => obj.value)].sort((a, b) => a - b);
           updates.push(values);

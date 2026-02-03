@@ -24,12 +24,21 @@ import React, {
   type ComponentPropsWithRef,
   type ForwardRefExoticComponent,
   type FunctionComponent,
+  type PropsWithChildren,
   forwardRef,
 } from 'react';
+import { useTranslation } from 'react-i18next';
+
+import { type DialogSize, osTranslations } from '@dxos/ui-theme';
 
 import { useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
+import { IconButton, type IconButtonProps } from '../Button';
 import { ElevationProvider } from '../ElevationProvider';
+
+//
+// Root
+//
 
 type DialogRootProps = DialogRootPrimitiveProps;
 
@@ -39,52 +48,30 @@ const DialogRoot: FunctionComponent<DialogRootProps> = (props) => (
   </ElevationProvider>
 );
 
+//
+// Trigger
+//
+
 type DialogTriggerProps = DialogTriggerPrimitiveProps;
 
 const DialogTrigger: FunctionComponent<DialogTriggerProps> = DialogTriggerPrimitive;
+
+//
+// Portal
+//
 
 type DialogPortalProps = DialogPortalPrimitiveProps;
 
 const DialogPortal: FunctionComponent<DialogPortalProps> = DialogPortalPrimitive;
 
-type DialogTitleProps = ThemedClassName<DialogTitlePrimitiveProps> & { srOnly?: boolean };
+//
+// Overlay
+//
 
-const DialogTitle: ForwardRefExoticComponent<DialogTitleProps> = forwardRef<HTMLHeadingElement, DialogTitleProps>(
-  ({ classNames, srOnly, ...props }, forwardedRef) => {
-    const { tx } = useThemeContext();
-    return (
-      <DialogTitlePrimitive
-        {...props}
-        className={tx('dialog.title', 'dialog__title', { srOnly }, classNames)}
-        ref={forwardedRef}
-      />
-    );
-  },
-);
-
-type DialogDescriptionProps = ThemedClassName<DialogDescriptionPrimitiveProps> & { srOnly?: boolean };
-
-const DialogDescription: ForwardRefExoticComponent<DialogTitleProps> = forwardRef<
-  HTMLParagraphElement,
-  DialogDescriptionProps
->(({ classNames, srOnly, ...props }, forwardedRef) => {
-  const { tx } = useThemeContext();
-  return (
-    <DialogDescriptionPrimitive
-      {...props}
-      className={tx('dialog.description', 'dialog__description', { srOnly }, classNames)}
-      ref={forwardedRef}
-    />
-  );
-});
-
-type DialogCloseProps = DialogClosePrimitiveProps;
-
-const DialogClose: FunctionComponent<DialogCloseProps> = DialogClosePrimitive;
+const DIALOG_OVERLAY_NAME = 'DialogOverlay';
 
 type OverlayLayoutContextValue = { inOverlayLayout?: boolean };
-const DIALOG_OVERLAY_NAME = 'DialogOverlay';
-const DIALOG_CONTENT_NAME = 'DialogContent';
+
 const [OverlayLayoutProvider, useOverlayLayoutContext] = createContext<OverlayLayoutContextValue>(
   DIALOG_OVERLAY_NAME,
   {},
@@ -111,12 +98,19 @@ const DialogOverlay: ForwardRefExoticComponent<DialogOverlayProps> = forwardRef<
 
 DialogOverlay.displayName = DIALOG_OVERLAY_NAME;
 
+//
+// Content
+//
+
+const DIALOG_CONTENT_NAME = 'DialogContent';
+
 type DialogContentProps = ThemedClassName<ComponentPropsWithRef<typeof DialogContentPrimitive>> & {
+  size?: DialogSize;
   inOverlayLayout?: boolean;
 };
 
 const DialogContent: ForwardRefExoticComponent<DialogContentProps> = forwardRef<HTMLDivElement, DialogContentProps>(
-  ({ classNames, children, inOverlayLayout: propsInOverlayLayout, ...props }, forwardedRef) => {
+  ({ classNames, children, size, inOverlayLayout: propsInOverlayLayout, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     const { inOverlayLayout } = useOverlayLayoutContext(DIALOG_CONTENT_NAME);
 
@@ -129,7 +123,7 @@ const DialogContent: ForwardRefExoticComponent<DialogContentProps> = forwardRef<
         className={tx(
           'dialog.content',
           'dialog',
-          { inOverlayLayout: propsInOverlayLayout || inOverlayLayout },
+          { inOverlayLayout: propsInOverlayLayout || inOverlayLayout, size },
           classNames,
         )}
         ref={forwardedRef}
@@ -142,15 +136,113 @@ const DialogContent: ForwardRefExoticComponent<DialogContentProps> = forwardRef<
 
 DialogContent.displayName = DIALOG_CONTENT_NAME;
 
+//
+// Header
+//
+
+type DialogHeaderProps = ThemedClassName<PropsWithChildren> & { srOnly?: boolean };
+
+const DialogHeader: ForwardRefExoticComponent<DialogTitleProps> = forwardRef<HTMLHeadingElement, DialogTitleProps>(
+  ({ classNames, srOnly, ...props }, forwardedRef) => {
+    const { tx } = useThemeContext();
+    return (
+      <div
+        {...props}
+        role='header'
+        className={tx('dialog.header', 'dialog__header', { srOnly }, classNames)}
+        ref={forwardedRef}
+      />
+    );
+  },
+);
+
+//
+// Title
+//
+
+type DialogTitleProps = ThemedClassName<DialogTitlePrimitiveProps> & { srOnly?: boolean };
+
+const DialogTitle: ForwardRefExoticComponent<DialogTitleProps> = forwardRef<HTMLHeadingElement, DialogTitleProps>(
+  ({ classNames, srOnly, ...props }, forwardedRef) => {
+    const { tx } = useThemeContext();
+    return (
+      <DialogTitlePrimitive
+        {...props}
+        className={tx('dialog.title', 'dialog__title', { srOnly }, classNames)}
+        ref={forwardedRef}
+      />
+    );
+  },
+);
+
+//
+// Description
+//
+
+type DialogDescriptionProps = ThemedClassName<DialogDescriptionPrimitiveProps> & { srOnly?: boolean };
+
+const DialogDescription: ForwardRefExoticComponent<DialogTitleProps> = forwardRef<
+  HTMLParagraphElement,
+  DialogDescriptionProps
+>(({ classNames, srOnly, ...props }, forwardedRef) => {
+  const { tx } = useThemeContext();
+  return (
+    <DialogDescriptionPrimitive
+      {...props}
+      className={tx('dialog.description', 'dialog__description', { srOnly }, classNames)}
+      ref={forwardedRef}
+    />
+  );
+});
+
+//
+// Close
+//
+
+type DialogCloseProps = DialogClosePrimitiveProps;
+
+const DialogClose: FunctionComponent<DialogCloseProps> = DialogClosePrimitive;
+
+//
+// Close Button
+//
+
+type DialogCloseIconButtonProps = ThemedClassName<Partial<IconButtonProps>>;
+
+const DialogCloseIconButton: ForwardRefExoticComponent<DialogCloseIconButtonProps> = forwardRef<
+  HTMLButtonElement,
+  DialogCloseIconButtonProps
+>((props, forwardedRef) => {
+  const { t } = useTranslation(osTranslations);
+  return (
+    <IconButton
+      {...props}
+      label={props.label ?? t('close dialog label')}
+      icon='ph--x--regular'
+      iconOnly
+      size={4}
+      density='fine'
+      variant='ghost'
+      ref={forwardedRef}
+    />
+  );
+});
+
+//
+// Dialog
+//
+
 export const Dialog = {
   Root: DialogRoot,
   Trigger: DialogTrigger,
   Portal: DialogPortal,
   Overlay: DialogOverlay,
   Content: DialogContent,
+  Header: DialogHeader,
   Title: DialogTitle,
   Description: DialogDescription,
   Close: DialogClose,
+  CloseIconButton: DialogCloseIconButton,
 };
 
 export type {
@@ -159,7 +251,9 @@ export type {
   DialogPortalProps,
   DialogOverlayProps,
   DialogContentProps,
+  DialogHeaderProps,
   DialogTitleProps,
   DialogDescriptionProps,
   DialogCloseProps,
+  DialogCloseIconButtonProps,
 };

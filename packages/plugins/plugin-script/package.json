@@ -4,34 +4,38 @@
   "description": "Braneframe notebook plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
   "license": "MIT",
   "author": "DXOS.org",
   "sideEffects": true,
   "type": "module",
   "exports": {
     ".": {
-      "source": "./src/index.ts",
-      "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
-      "node": "./dist/lib/node-esm/index.mjs"
+      "node": "./dist/lib/node-esm/index.mjs",
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts"
     },
     "./blueprints": {
-      "source": "./src/blueprints/index.ts",
-      "types": "./dist/types/src/blueprints/index.d.ts",
       "browser": "./dist/lib/browser/blueprints/index.mjs",
-      "node": "./dist/lib/node-esm/blueprints/index.mjs"
-    },
-    "./types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
-      "browser": "./dist/lib/browser/types/index.mjs",
-      "node": "./dist/lib/node-esm/types/index.mjs"
+      "node": "./dist/lib/node-esm/blueprints/index.mjs",
+      "source": "./src/blueprints/index.ts",
+      "types": "./dist/types/src/blueprints/index.d.ts"
     },
     "./templates": {
-      "source": "./src/templates/index.ts",
-      "types": "./dist/types/src/templates/index.d.ts",
       "browser": "./dist/lib/browser/templates/index.mjs",
-      "node": "./dist/lib/node-esm/templates/index.mjs"
+      "node": "./dist/lib/node-esm/templates/index.mjs",
+      "source": "./src/templates/index.ts",
+      "types": "./dist/types/src/templates/index.d.ts"
+    },
+    "./types": {
+      "browser": "./dist/lib/browser/types/index.mjs",
+      "node": "./dist/lib/node-esm/types/index.mjs",
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -40,11 +44,11 @@
       "blueprints": [
         "dist/types/src/blueprints/index.d.ts"
       ],
-      "types": [
-        "dist/types/src/types/index.d.ts"
-      ],
       "templates": [
         "dist/types/src/templates/index.d.ts"
+      ],
+      "types": [
+        "dist/types/src/types/index.d.ts"
       ]
     }
   },
@@ -104,6 +108,7 @@
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
+    "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/rpc": "workspace:*",

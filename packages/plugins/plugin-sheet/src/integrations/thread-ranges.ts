@@ -90,7 +90,7 @@ export const useSelectThreadOnCellFocus = () => {
       if (closestThread) {
         const primary = Obj.getDXN(model.sheet).toString();
         void (async () => {
-          await invokePromise(ThreadOperation.Select, { current: Obj.getDXN(closestThread).toString() });
+          await invokePromise(ThreadOperation.Select, { current: Relation.getDXN(closestThread).toString() });
           await invokePromise(DeckOperation.ChangeCompanion, {
             primary,
             companion: `${primary}${ATTENDABLE_PATH_SEPARATOR}comments`,

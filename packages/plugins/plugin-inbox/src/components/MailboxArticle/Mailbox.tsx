@@ -1,88 +1,17 @@
 //
-// Copyright 2024 DXOS.org
+// Copyright 2025 DXOS.org
 //
 
-import './mailbox.css';
+import React, { forwardRef, useCallback, useMemo, useRef, useState } from 'react';
 
-import React, { useCallback, useMemo, useState } from 'react';
-import { type OnResizeCallback, useResizeDetector } from 'react-resize-detector';
-
-import { useStateWithRef } from '@dxos/react-ui';
-import { useAttention } from '@dxos/react-ui-attention';
-import {
-  type DxGridAxisMeta,
-  type DxGridPlaneCells,
-  Grid,
-  type GridContentProps,
-  gridSeparatorBlockEnd,
-  toPlaneCellIndex,
-} from '@dxos/react-ui-grid';
+import { DxAvatar } from '@dxos/lit-ui/react';
+import { Card, Focus, Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import { type Message } from '@dxos/types';
-import { getHashStyles, mx } from '@dxos/ui-theme';
-import { trim } from '@dxos/util';
+import { getHashStyles } from '@dxos/ui-theme';
 
 import { GoogleMail } from '../../functions/apis';
 import { type Mailbox as MailboxType } from '../../types';
 import { getMessageProps } from '../../util';
-
-const ROW_SIZES = {
-  DEFAULT: 60,
-};
-
-const messageRowDefault = {
-  grid: { size: ROW_SIZES.DEFAULT },
-};
-
-const messageColumnDefault = {
-  grid: { size: 100 },
-};
-
-const renderMessageCell = (message: Message.Message, now: Date, labels?: MailboxType.Labels) => {
-  const { id, hue, from, date, subject } = getMessageProps(message, now);
-
-  // NOTE: Currently all grid cells have borders, so we render a single cell for each row.
-  return trim`
-    <button
-      class="message__thumb dx-focus-ring-inset opacity-70"
-      data-inbox-action="select-message"
-      data-message-id="${id}"
-    >
-      <dx-avatar
-        hue="${hue}"
-        hueVariant="surface"
-        variant="square"
-        size="10"
-        fallback="${from}"
-      ></dx-avatar>
-    </button>
-    <button
-      class="message__abstract dx-focus-ring-inset"
-      data-inbox-action="current-message"
-      data-message-id="${id}"
-    >
-      <div class="message__abstract__heading">
-        <span class="message__abstract__from">${from}</span>
-        <span class="message__abstract__date">${date}</span>
-      </div>
-      <div class="message__abstract__body">
-        <div class="message__snippet">${subject}</div>
-        <div class="message__tags">
-          ${(labels && Array.isArray(message.properties?.labels) ? message.properties.labels : [])
-            // TODO(burdon): Tags are no longer labels.
-            .filter((labelId: string) => !GoogleMail.isSystemLabel(labelId))
-            .map((labelId: string) => ({ hue: getHashStyles(labelId).hue, label: labels![labelId] }))
-            .filter(Boolean)
-            .map(
-              ({ label, hue }) => trim`
-                <span class="dx-tag message__tags-item" data-label="${label}" data-hue="${hue}">${label}</span>
-              `,
-            )
-            .join('\n')}
-        </div>
-      </div>
-    </button>
-  `;
-};
 
 export type MailboxAction =
   | { type: 'current'; messageId: string }
@@ -101,135 +30,152 @@ export type MailboxProps = {
   onAction?: MailboxActionHandler;
 };
 
-export const Mailbox = ({ id, messages, labels, currentMessageId, ignoreAttention, onAction }: MailboxProps) => {
-  const { hasAttention } = useAttention(id);
-  const [columnDefault, setColumnDefault] = useState(messageColumnDefault);
-  const [_, setRow, rowRef] = useStateWithRef<number>(-1);
+type MessageTileData = {
+  message: Message.Message;
+  labels?: MailboxType.Labels;
+  currentMessageId?: string;
+  onAction?: MailboxActionHandler;
+};
 
-  const handleResize = useCallback<OnResizeCallback>(
-    ({ width }) => width && setColumnDefault({ grid: { size: width } }),
-    [],
+type MessageTileProps = Pick<MosaicTileProps<MessageTileData>, 'classNames' | 'location' | 'data'>;
+
+const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ classNames, data, location }, forwardedRef) => {
+  const rootRef = useRef<HTMLDivElement | null>(null);
+  const { message, labels, currentMessageId, onAction } = data;
+  const { hue, from, date, subject, snippet } = getMessageProps(message, new Date(), true);
+  // TODO(wittjosiah): Show selection state in the UI.
+  const _isCurrent = currentMessageId === message.id;
+
+  // Combine forwardedRef with local ref.
+  const setRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      rootRef.current = node;
+      if (typeof forwardedRef === 'function') {
+        forwardedRef(node);
+      } else if (forwardedRef) {
+        forwardedRef.current = node;
+      }
+    },
+    [forwardedRef],
   );
 
-  const { ref: measureRef } = useResizeDetector({
-    onResize: handleResize,
-  });
+  const handleClick = useCallback(() => {
+    rootRef.current?.focus();
+    onAction?.({ type: 'current', messageId: message.id });
+  }, [message.id, onAction]);
 
-  const handleClick = useCallback<NonNullable<GridContentProps['onClick']>>(
-    (event) => {
-      const target = event.target as HTMLElement;
-      const label = target.getAttribute('data-label');
-      if (label) {
-        onAction?.({ type: 'select-tag', label });
-        return;
-      }
+  const handleAvatarClick = useCallback(
+    (event: React.MouseEvent) => {
+      event.stopPropagation();
+      onAction?.({ type: 'select', messageId: message.id });
+    },
+    [message.id, onAction],
+  );
 
-      const actionEl = target.closest('[data-inbox-action]');
-      if (actionEl) {
-        const messageId = actionEl.getAttribute('data-message-id')!;
-        const action = actionEl.getAttribute('data-inbox-action')!;
-        switch (action) {
-          case 'select-message':
-            onAction?.({ type: 'select', messageId });
-            break;
-          case 'current-message':
-            onAction?.({ type: 'current', messageId });
-            break;
-        }
-      }
+  const handleTagClick = useCallback(
+    (event: React.MouseEvent, label: string) => {
+      event.stopPropagation();
+      onAction?.({ type: 'select-tag', label });
     },
     [onAction],
   );
 
-  const handleKeyUp = useCallback<NonNullable<GridContentProps['onKeyUp']>>(
-    (event) => {
-      switch (event.key) {
-        case ' ':
-        case 'Enter': {
-          if (rowRef.current !== -1) {
-            const messageId = messages[rowRef.current]?.id;
-            if (messageId) {
-              onAction?.({ type: 'current', messageId });
-            }
-          }
-          break;
-        }
-      }
-    },
-    [messages, onAction],
-  );
-
-  const handleWheel = useCallback<NonNullable<GridContentProps['onWheelCapture']>>(
-    (event) => {
-      if (!ignoreAttention && !hasAttention) {
-        event.stopPropagation();
-      }
-    },
-    [hasAttention, ignoreAttention],
-  );
-
-  const getCells = useCallback<NonNullable<GridContentProps['getCells']>>(
-    (range, plane) => {
-      const cells: DxGridPlaneCells = {};
-      if (messages) {
-        const now = new Date();
-        switch (plane) {
-          case 'grid': {
-            for (let row = range.start.row; row <= range.end.row && row < messages.length; row++) {
-              const current = currentMessageId === messages[row].id;
-              cells[toPlaneCellIndex({ col: 0, row })] = {
-                readonly: true,
-                accessoryHtml: renderMessageCell(messages[row], now, labels),
-                className: mx('message', current && 'message--current'),
-              };
-            }
-            return cells;
-          }
-        }
-      }
-
-      return cells;
-    },
-    [messages, currentMessageId, labels],
-  );
-
-  const rows = useMemo<DxGridAxisMeta>(() => {
-    const rows = messages.reduce(
-      (acc, _, idx) => {
-        acc[idx] = {
-          size: ROW_SIZES.DEFAULT,
-        };
-
-        return acc;
-      },
-      {} as Record<number, { size: number }>,
-    );
-
-    return { grid: rows };
-  }, [messages]);
+  const messageLabels = useMemo(() => {
+    if (!labels || !Array.isArray(message.properties?.labels)) {
+      return [];
+    }
+    return message.properties.labels
+      .filter((labelId: string) => !GoogleMail.isSystemLabel(labelId))
+      .map((labelId: string) => ({
+        id: labelId,
+        hue: getHashStyles(labelId).hue,
+        label: labels[labelId],
+      }))
+      .filter((item) => item.label);
+  }, [labels, message.properties?.labels]);
 
   return (
-    <div role='none' className={mx('flex flex-col [&_.dx-grid]:grow overflow-hidden')}>
-      <Grid.Root id={`${id}__grid`}>
-        <Grid.Content
-          className={mx(
-            '[--dx-grid-base:var(--dx-baseSurface)] [&_.dx-grid]:max-bs-[--dx-grid-content-block-size] [&_.dx-grid]:min-bs-0 [&_.dx-grid]:min-is-0 [&_.dx-grid]:select-auto',
-            gridSeparatorBlockEnd,
-          )}
-          limitColumns={1}
-          limitRows={messages.length}
-          columnDefault={columnDefault}
-          rowDefault={messageRowDefault}
-          rows={rows}
-          getCells={getCells}
-          focusIndicatorVariant='stack'
-          onSelect={(ev) => setRow(ev.minRow)}
-          onClick={handleClick}
-          onKeyUp={handleKeyUp}
-          onWheelCapture={handleWheel}
-        />
-        <div role='none' {...{ inert: true }} aria-hidden className='absolute inset-inline-0' ref={measureRef} />
-      </Grid.Root>
-    </div>
+    <Mosaic.Tile asChild id={message.id} data={data} location={location}>
+      <Focus.Group asChild>
+        <Card.Root onClick={handleClick} ref={setRef}>
+          <Card.Toolbar density='coarse'>
+            <button
+              type='button'
+              className='grid place-items-center opacity-70 hover:opacity-100 transition-opacity dx-focus-ring rounded'
+              onClick={handleAvatarClick}
+            >
+              <DxAvatar hue={hue} hueVariant='surface' variant='square' size={10} fallback={from} />
+            </button>
+            <Card.Title classNames='flex items-center gap-2'>
+              <span className='grow truncate font-medium'>{from}</span>
+              <span className='text-xs text-description whitespace-nowrap shrink-0'>{date}</span>
+            </Card.Title>
+            <Card.Menu />
+          </Card.Toolbar>
+          <Card.Content>
+            <Card.Row>
+              <Card.Heading>{subject}</Card.Heading>
+            </Card.Row>
+            {snippet && (
+              <Card.Row>
+                <Card.Text variant='description'>{snippet}</Card.Text>
+              </Card.Row>
+            )}
+            {messageLabels.length > 0 && (
+              <Card.Row>
+                <div role='none' className='flex flex-wrap gap-1 plb-1'>
+                  {messageLabels.map(({ id: labelId, label, hue: labelHue }) => (
+                    <button
+                      key={labelId}
+                      type='button'
+                      className='dx-tag dx-focus-ring'
+                      data-label={label}
+                      data-hue={labelHue}
+                      onClick={(e) => handleTagClick(e, label)}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </Card.Row>
+            )}
+          </Card.Content>
+        </Card.Root>
+      </Focus.Group>
+    </Mosaic.Tile>
+  );
+});
+
+MessageTile.displayName = 'MessageTile';
+
+/**
+ * Card-based mailbox component using mosaic layout.
+ */
+export const Mailbox = ({ messages, labels, currentMessageId, onAction }: MailboxProps) => {
+  const [viewport, setViewport] = useState<HTMLElement | null>(null);
+
+  // Transform messages into tile data.
+  const items = useMemo(
+    () =>
+      messages.map((message) => ({
+        message,
+        labels,
+        currentMessageId,
+        onAction,
+      })),
+    [messages, labels, currentMessageId, onAction],
+  );
+
+  // TODO(wittjosiah): This needs Selction.Group in addition to Focus.Group.
+  return (
+    <Focus.Group asChild>
+      <Mosaic.Container asChild withFocus autoScroll={viewport}>
+        <Mosaic.Viewport padding viewportRef={setViewport}>
+          <Mosaic.Stack items={items} getId={(item) => item.message.id} draggable={false} Tile={MessageTile} />
+        </Mosaic.Viewport>
+      </Mosaic.Container>
+    </Focus.Group>
   );
 };
+
+Mailbox.displayName = 'Mailbox';

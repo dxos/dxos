@@ -6,3 +6,4 @@ export * from './decorator';
 
 export * from './Board';
 export * from './CardContainer';
+export * from './DefaultStackTile';

@@ -5,9 +5,9 @@
 import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
-import { Key } from '@dxos/echo';
+import { Key, Type } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
-import { EchoObjectSchema, SpaceSchema } from '@dxos/react-client/echo';
+import { SpaceSchema } from '@dxos/react-client/echo';
 import { Collection } from '@dxos/schema';
 import { Actor, AnchoredTo, Message, Thread } from '@dxos/types';
 
@@ -69,7 +69,7 @@ export namespace ThreadOperation {
       input: Schema.Struct({
         name: Schema.optional(Schema.String),
         anchor: Schema.optional(Schema.String),
-        subject: EchoObjectSchema,
+        subject: Type.Obj,
       }),
       output: Schema.Void,
     },
@@ -88,7 +88,7 @@ export namespace ThreadOperation {
     schema: {
       input: Schema.Struct({
         anchor: AnchoredTo.AnchoredTo,
-        subject: EchoObjectSchema,
+        subject: Type.Obj,
         thread: Schema.optional(Thread.Thread),
       }),
       output: DeleteOutput,
@@ -122,7 +122,7 @@ export namespace ThreadOperation {
     services: [Capability.Service],
     schema: {
       input: Schema.Struct({
-        subject: EchoObjectSchema,
+        subject: Type.Obj,
         anchor: AnchoredTo.AnchoredTo,
         sender: Actor.Actor,
         text: Schema.String,
@@ -146,7 +146,7 @@ export namespace ThreadOperation {
     schema: {
       input: Schema.Struct({
         anchor: AnchoredTo.AnchoredTo,
-        subject: EchoObjectSchema,
+        subject: Type.Obj,
         messageId: Schema.String,
       }),
       output: DeleteMessageOutput,

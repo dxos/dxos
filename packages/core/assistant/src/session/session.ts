@@ -49,7 +49,7 @@ export type AiSessionRunProps<Tools extends Record<string, Tool.Any>> = {
   // TODO(wittjosiah): Rename to systemPrompt.
   system?: string;
   history?: Message.Message[];
-  objects?: Obj.Any[];
+  objects?: Obj.Unknown[];
   blueprints?: readonly Blueprint.Blueprint[];
   toolkit?: Toolkit.WithHandler<Tools>;
   observer?: GenerationObserver<Tools>;

@@ -4,11 +4,11 @@
 
 import React, { useState } from 'react';
 
-import { useCapability } from '@dxos/app-framework/react';
+import { type SurfaceComponentProps, useCapability } from '@dxos/app-framework/react';
 import { invariant } from '@dxos/invariant';
 import { getSpace } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
-import { StackItem } from '@dxos/react-ui-stack';
+import { Layout } from '@dxos/react-ui-mosaic';
 
 import { filePath, getBlobUrl, loadWnfs, wnfsUrl } from '../helpers';
 import { WnfsCapabilities } from '../types';
@@ -16,12 +16,9 @@ import { type WnfsFile } from '../types';
 
 import { FilePreview } from './FilePreview';
 
-export type FileContainerProps = {
-  role: string;
-  file: WnfsFile.File;
-};
+export type FileContainerProps = SurfaceComponentProps<WnfsFile.File>;
 
-export const FileContainer = ({ file }: FileContainerProps) => {
+export const FileContainer = ({ role, subject: file }: FileContainerProps) => {
   const blockstore = useCapability(WnfsCapabilities.Blockstore);
   const instances = useCapability(WnfsCapabilities.Instances);
   const [blobUrl, setBlobUrl] = useState<string>();
@@ -50,9 +47,9 @@ export const FileContainer = ({ file }: FileContainerProps) => {
   }
 
   return (
-    <StackItem.Content>
+    <Layout.Main role={role}>
       <FilePreview type={file.type} url={blobUrl} />
-    </StackItem.Content>
+    </Layout.Main>
   );
 };
 

@@ -86,7 +86,7 @@ export const Main = () => {
 
     // TODO(burdon): Migrate generator from DebugPlugin.
     Array.from({ length: n }).forEach(() => {
-      let object: Obj.Any;
+      let object: Obj.Unknown;
       switch (type) {
         case Document.typename: {
           object = Obj.make(Document, {
@@ -224,7 +224,7 @@ export const Main = () => {
           <div className='grow' />
           <StatusBar flushing={flushing} showStats={showStats} onShowStats={(show) => setShowStats(show)} />
           {showStats && (
-            <div className='z-20 absolute right-0 bottom-[32px] is-[450px] border-l border-t border-neutral-500 dark:border-neutral-800'>
+            <div className='z-20 absolute right-0 bottom-[32px] is-[450px] border-l border-bs border-neutral-500 dark:border-neutral-800'>
               <StatsPanel stats={stats} onRefresh={refreshStats} />
             </div>
           )}

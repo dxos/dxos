@@ -39,7 +39,7 @@ const StoryPlankHeading = ({ attendableId }: { attendableId: string }) => {
   const { hasAttention } = useAttention(attendableId);
   console.log('hasAttention', hasAttention);
   return (
-    <div className='flex p-1 items-center border-b border-separator'>
+    <div className='flex p-1 items-center border-be border-separator'>
       <IconButton
         density='coarse'
         icon='ph--atom--regular'

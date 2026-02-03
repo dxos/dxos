@@ -17,10 +17,15 @@ export type ThemeFunction<P extends Record<string, any>> = (
   ...etc: ClassNameArray
 ) => string;
 
-export type ThemedClassName<P = {}> = Omit<P, 'className'> & { classNames?: ClassNameValue };
+export type ThemedClassName<P = {}> = Omit<P, 'className'> & {
+  classNames?: ClassNameValue;
+};
 
 /**
  * For components that are children of Radix-style asChild primitives.
- * className={mx('', className, classNames)}
+ * `<Root className={mx(<custom>, className, classNames)}>`
  */
-export type SlottableClassName<P = {}> = P & { className?: string; classNames?: ClassNameValue };
+export type SlottableClassName<P = {}> = P & {
+  className?: string;
+  classNames?: ClassNameValue;
+};

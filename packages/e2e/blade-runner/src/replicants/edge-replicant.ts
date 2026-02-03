@@ -26,7 +26,7 @@ import { type ReplicantEnv, ReplicantRegistry } from '../env';
 export const Text = Schema.Struct({
   content: Schema.String,
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/blade-runner/Text',
     version: '0.1.0',
   }),

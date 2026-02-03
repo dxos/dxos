@@ -8,7 +8,7 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { type Entity, Key, Obj } from '@dxos/echo';
+import { type Entity, Key, Obj, type Type } from '@dxos/echo';
 import { ReferenceAnnotationId } from '@dxos/echo/internal';
 import { isEncodedReference } from '@dxos/echo-protocol';
 import { mapAst } from '@dxos/effect';
@@ -181,7 +181,7 @@ const DATA_EXTRACTION_INSTRUCTIONS = trim`
 //   return terms;
 // };
 
-const sanitizeObjects = (entries: { data: any; schema: Schema.Schema.AnyNoContext }[]) => {
+const sanitizeObjects = (entries: { data: any; schema: Type.Obj.Any }[]) => {
   const idMap = new Map<string, string>();
 
   return entries

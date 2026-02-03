@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Capability, Common } from '@dxos/app-framework';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { Sequence } from '@dxos/conductor';
-import { DXN, Database, Obj } from '@dxos/echo';
+import { DXN, Database, Obj, type Ref } from '@dxos/echo';
 import { AtomObj } from '@dxos/echo-atom';
 import { invariant } from '@dxos/invariant';
 import { Operation, type OperationInvoker } from '@dxos/operation';
@@ -131,7 +131,7 @@ export default Capability.makeModule(
             const db = Obj.getDatabase(object);
             const currentChatDxn = DXN.tryParse(currentChatState);
             const currentChatRef = currentChatDxn ? db?.makeRef(currentChatDxn) : undefined;
-            const currentChat = currentChatRef ? get(AtomObj.make(currentChatRef)) : undefined;
+            const currentChat = currentChatRef ? get(AtomObj.make(currentChatRef as Ref.Ref<Obj.Unknown>)) : undefined;
             if (!Obj.isObject(currentChat)) {
               return [];
             }

@@ -34,6 +34,8 @@ export type SimpleLayoutState = {
   workspace: string;
   previousWorkspace: string;
   active?: string;
+  /** Stack of previously active item IDs for back navigation. */
+  history: string[];
 
   /** Whether running in popover window context (hides mobile-specific UI). */
   isPopover?: boolean;

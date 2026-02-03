@@ -5,7 +5,8 @@
 import jsonata from 'jsonata';
 import { assert, describe, test } from 'vitest';
 
-import { Obj, Ref, Type } from '@dxos/echo';
+import { Obj, Ref } from '@dxos/echo';
+import { TestSchema } from '@dxos/echo/testing';
 import { Trigger, type TriggerEvent } from '@dxos/functions';
 import { trim } from '@dxos/util';
 
@@ -59,7 +60,7 @@ describe('jsonata', () => {
       cursor: '01J00J9B45YHYSGZQTQMSKMGJ6',
     };
 
-    const obj = Obj.make(Type.Expando, { id: '01KD35WMWTEEE1WQQPYEGD1X2B', name: 'DXOS' });
+    const obj = Obj.make(TestSchema.Expando, { id: '01KD35WMWTEEE1WQQPYEGD1X2B', name: 'DXOS' });
     const trigger = Trigger.make({
       spec: {
         kind: 'queue',

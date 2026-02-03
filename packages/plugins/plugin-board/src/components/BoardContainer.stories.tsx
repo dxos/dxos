@@ -61,7 +61,7 @@ const DefaultStory = () => {
     return null;
   }
 
-  return <BoardContainer role='board' board={board} />;
+  return <BoardContainer role='board' subject={board} />;
 };
 
 //

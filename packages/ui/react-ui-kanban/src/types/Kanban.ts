@@ -8,7 +8,7 @@ import { Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { View, ViewAnnotation } from '@dxos/schema';
 
-const KanbanSchema = Schema.Struct({
+export const Kanban = Schema.Struct({
   name: Schema.optional(Schema.String),
 
   view: Type.Ref(View.View).pipe(FormInputAnnotation.set(false)),
@@ -28,16 +28,15 @@ const KanbanSchema = Schema.Struct({
 
   // TODO(wittjosiah): Consider Kanban supporting not being just a view but referencing arbitrary data directly.
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/Kanban',
     version: '0.2.0',
   }),
   LabelAnnotation.set(['name']),
   ViewAnnotation.set(true),
 );
-export interface Kanban extends Schema.Schema.Type<typeof KanbanSchema> {}
-export interface KanbanEncoded extends Schema.Schema.Encoded<typeof KanbanSchema> {}
-export const Kanban: Schema.Schema<Kanban, KanbanEncoded> = KanbanSchema;
+
+export interface Kanban extends Schema.Schema.Type<typeof Kanban> {}
 
 type MakeProps = Omit<Partial<Obj.MakeProps<typeof Kanban>>, 'view'> & {
   view: View.View;
@@ -64,7 +63,7 @@ export const KanbanV1 = Schema.Struct({
     }).pipe(Schema.mutable),
   ).pipe(Schema.mutable, Schema.optional),
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/Kanban',
     version: '0.1.0',
   }),

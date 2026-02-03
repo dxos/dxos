@@ -10,6 +10,7 @@ import { describe, expect, test } from 'vitest';
 
 import { Filter } from '@dxos/client/echo';
 import { Obj, Type } from '@dxos/echo';
+import { TestSchema } from '@dxos/echo/testing';
 
 import { createClient, createClientContextProvider } from '../testing/util';
 
@@ -23,9 +24,9 @@ describe('useQuery', () => {
     const wrapper = await createClientContextProvider(client);
 
     // Create 3 test objects: Alice, Bob, Charlie.
-    const alice = Obj.make(Type.Expando, { name: 'Alice' });
-    const bob = Obj.make(Type.Expando, { name: 'Bob' });
-    const charlie = Obj.make(Type.Expando, { name: 'Charlie' });
+    const alice = Obj.make(TestSchema.Expando, { name: 'Alice' });
+    const bob = Obj.make(TestSchema.Expando, { name: 'Bob' });
+    const charlie = Obj.make(TestSchema.Expando, { name: 'Charlie' });
 
     space!.db.add(alice);
     space!.db.add(bob);
@@ -38,7 +39,7 @@ describe('useQuery', () => {
     // Setup useQuery hook that captures every render.
     renderHook(
       () => {
-        const objects = useQuery(space?.db, Filter.type(Type.Expando));
+        const objects = useQuery(space?.db, Filter.type(TestSchema.Expando));
 
         // Capture the names in this render.
         const namesInThisRender = objects.map((obj) => obj.name);
@@ -85,7 +86,7 @@ describe('useQuery', () => {
     const wrapper = await createClientContextProvider(client);
 
     // Create 10 test objects: 1, 2, 3, ..., 10.
-    const objects = Array.from({ length: 10 }, (_, i) => Obj.make(Type.Expando, { value: i + 1 }));
+    const objects = Array.from({ length: 10 }, (_, i) => Obj.make(TestSchema.Expando, { value: i + 1 }));
 
     objects.forEach((obj) => space!.db.add(obj));
     await space!.db.flush();
@@ -96,7 +97,7 @@ describe('useQuery', () => {
     // Setup useQuery hook that captures every render.
     renderHook(
       () => {
-        const queryObjects = useQuery(space?.db, Filter.type(Type.Expando));
+        const queryObjects = useQuery(space?.db, Filter.type(TestSchema.Expando));
 
         // Capture the values in this render.
         const valuesInThisRender = queryObjects.map((obj) => obj.value);

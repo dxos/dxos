@@ -27,8 +27,8 @@ export default Capability.makeModule(() =>
           return (
             <SketchContainer
               key={Obj.getDXN(data.subject).toString()} // Force instance per sketch object. Otherwise, sketch shares the same instance.
-              sketch={data.subject}
               role={role}
+              subject={data.subject}
               settings={settings}
             />
           );

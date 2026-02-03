@@ -12,7 +12,7 @@ import { getSpace } from '@dxos/client/echo';
 import { Sequence } from '@dxos/conductor';
 import { InvocationTraceContainer } from '@dxos/devtools';
 import { Obj } from '@dxos/echo';
-import { StackItem } from '@dxos/react-ui-stack';
+import { Layout } from '@dxos/react-ui-mosaic';
 import { Initiative } from '@dxos/assistant-toolkit';
 
 import {
@@ -45,7 +45,7 @@ export default Capability.makeModule(() =>
         role: 'article',
         filter: (data): data is { subject: Assistant.Chat; variant: undefined } =>
           Obj.instanceOf(Assistant.Chat, data.subject) && data.variant !== 'assistant-chat',
-        component: ({ data, role, ref }) => <ChatContainer role={role} chat={data.subject} ref={ref} />,
+        component: ({ data, role, ref }) => <ChatContainer role={role} subject={data.subject} ref={ref} />,
       }),
       Common.createSurface({
         id: `${meta.id}/initiative`,
@@ -58,7 +58,7 @@ export default Capability.makeModule(() =>
       Common.createSurface({
         id: `${meta.id}/companion-chat`,
         role: 'article',
-        filter: (data): data is { companionTo: Obj.Any; subject: Assistant.Chat | 'assistant-chat' } =>
+        filter: (data): data is { companionTo: Obj.Unknown; subject: Assistant.Chat | 'assistant-chat' } =>
           Obj.isObject(data.companionTo) &&
           (Obj.instanceOf(Assistant.Chat, data.subject) || data.subject === 'assistant-chat'),
         component: ({ data, role, ref }) => <ChatCompanion role={role} data={data} ref={ref} />,
@@ -69,15 +69,15 @@ export default Capability.makeModule(() =>
         filter: (data): data is { companionTo: Sequence } =>
           (Obj.instanceOf(Sequence, data.companionTo) || Obj.instanceOf(Prompt.Prompt, data.companionTo)) &&
           data.subject === 'invocations',
-        component: ({ data }) => {
+        component: ({ data, role }) => {
           const space = getSpace(data.companionTo);
           const queueDxn = space?.properties.invocationTraceQueue?.dxn;
           // TODO(wittjosiah): Support invocation filtering for prompts.
           const target = Obj.instanceOf(Prompt.Prompt, data.companionTo) ? undefined : data.companionTo;
           return (
-            <StackItem.Content>
+            <Layout.Main role={role}>
               <InvocationTraceContainer db={space?.db} queueDxn={queueDxn} target={target} detailAxis='block' />
-            </StackItem.Content>
+            </Layout.Main>
           );
         },
       }),

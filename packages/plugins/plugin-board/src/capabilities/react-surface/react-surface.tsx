@@ -19,7 +19,7 @@ export default Capability.makeModule(() =>
         id: meta.id,
         role: ['article', 'section'],
         filter: (data): data is { subject: Board.Board } => Obj.instanceOf(Board.Board, data.subject),
-        component: ({ data, role }) => <BoardContainer board={data.subject} role={role} />,
+        component: ({ role, data }) => <BoardContainer role={role} subject={data.subject} />,
       }),
     ]),
   ),

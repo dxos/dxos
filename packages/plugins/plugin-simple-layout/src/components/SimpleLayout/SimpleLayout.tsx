@@ -9,7 +9,6 @@ import { PopoverContent, PopoverRoot } from '../Popover';
 
 import { Main } from './Main';
 
-// TODO(wittjosiah): Support toast.
 export const SimpleLayout = () => {
   return (
     <PopoverRoot>

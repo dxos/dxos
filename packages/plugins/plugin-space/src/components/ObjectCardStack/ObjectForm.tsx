@@ -15,7 +15,7 @@ import { meta as pluginMeta } from '../../meta';
 
 export type ObjectFormProps = {
   schema: Schema.Schema.AnyNoContext;
-  object: Obj.Any;
+  object: Obj.Unknown;
 };
 
 export const ObjectForm = ({ object, schema }: ObjectFormProps) => {
@@ -35,11 +35,11 @@ export const ObjectForm = ({ object, schema }: ObjectFormProps) => {
 
   const handleCreate = useCallback((schema: Type.Entity.Any, values: any) => {
     invariant(db);
+    invariant(Type.isObjectSchema(schema));
     const newObject = db.add(Obj.make(schema, values));
     if (Obj.instanceOf(Tag.Tag, newObject)) {
-      Obj.change(object, () => {
-        const meta = Obj.getMeta(object);
-        meta.tags = [...(meta.tags ?? []), Obj.getDXN(newObject).toString()];
+      Obj.change(object, (obj) => {
+        Obj.getMeta(obj).tags = [...(Obj.getMeta(obj).tags ?? []), Obj.getDXN(newObject).toString()];
       });
     }
   }, []);
@@ -52,20 +52,26 @@ export const ObjectForm = ({ object, schema }: ObjectFormProps) => {
       }
 
       const changedPaths = Object.keys(changed).filter((path) => changed[path as JsonPath]) as JsonPath[];
-      Obj.change(object, () => {
-        for (const path of changedPaths) {
-          const parts = splitJsonPath(path);
-          // TODO(wittjosiah): This doesn't handle array paths well.
-          if (parts[0] === 'tags') {
-            const meta = Obj.getMeta(object);
-            meta.tags = tags?.map((tag: Ref.Ref<Tag.Tag>) => tag.dxn.toString()) ?? [];
-            continue;
-          }
 
-          const value = Obj.getValue(values, parts);
-          Obj.setValue(object, parts, value);
-        }
-      });
+      // Handle tags separately using Obj.change.
+      const hasTagsChange = changedPaths.some((path) => splitJsonPath(path)[0] === 'tags');
+      if (hasTagsChange) {
+        Obj.change(object, (obj) => {
+          Obj.getMeta(obj).tags = tags?.map((tag: Ref.Ref<Tag.Tag>) => tag.dxn.toString()) ?? [];
+        });
+      }
+
+      // Handle other property changes.
+      const nonTagPaths = changedPaths.filter((path) => splitJsonPath(path)[0] !== 'tags');
+      if (nonTagPaths.length > 0) {
+        Obj.change(object, () => {
+          for (const path of nonTagPaths) {
+            const parts = splitJsonPath(path);
+            const value = Obj.getValue(values, parts);
+            Obj.setValue(object, parts, value);
+          }
+        });
+      }
     },
     [object],
   );

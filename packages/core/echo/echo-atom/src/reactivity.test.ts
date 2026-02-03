@@ -166,7 +166,9 @@ describe('Echo Atom - Reactivity', () => {
     });
 
     actions.push('before');
-    obj.name = 'Updated';
+    Obj.change(obj, (o) => {
+      o.name = 'Updated';
+    });
     actions.push('after');
 
     // Updates must be synchronous: before -> update -> after.
@@ -188,7 +190,9 @@ describe('Echo Atom - Reactivity', () => {
     });
 
     actions.push('before');
-    obj.stringArray!.splice(1, 1);
+    Obj.change(obj, (o) => {
+      o.stringArray!.splice(1, 1);
+    });
     actions.push('after');
 
     // Updates must be synchronous: before -> update -> after.

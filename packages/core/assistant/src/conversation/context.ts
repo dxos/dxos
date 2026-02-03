@@ -27,11 +27,11 @@ export const ContextBinding = Schema.Struct({
   }),
 
   objects: Schema.Struct({
-    added: Schema.Array(Type.Ref(Obj.Any)),
-    removed: Schema.Array(Type.Ref(Obj.Any)),
+    added: Schema.Array(Type.Ref(Type.Obj)),
+    removed: Schema.Array(Type.Ref(Type.Obj)),
   }),
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/ContextBinding',
     version: '0.1.0',
   }),
@@ -41,14 +41,14 @@ export interface ContextBinding extends Schema.Schema.Type<typeof ContextBinding
 
 export type BindingProps = Partial<{
   blueprints: Ref.Ref<Blueprint.Blueprint>[];
-  objects: Ref.Ref<Obj.Any>[];
+  objects: Ref.Ref<Obj.Unknown>[];
 }>;
 
 export class Bindings {
   readonly blueprints = new ComplexSet<Ref.Ref<Blueprint.Blueprint>>((ref) => ref.dxn.toString());
 
   // TODO(burdon): Some DXNs have the Space prefix so only compare the object ID.
-  readonly objects = new ComplexSet<Ref.Ref<Obj.Any>>((ref) => ref.dxn.asEchoDXN()?.echoId);
+  readonly objects = new ComplexSet<Ref.Ref<Obj.Unknown>>((ref) => ref.dxn.asEchoDXN()?.echoId);
 
   toJSON() {
     return {
@@ -69,7 +69,7 @@ export type AiContextBinderOptions = {
 // TODO(burdon): Context should manage ephemeral state of bindings until prompt is issued?
 export class AiContextBinder extends Resource {
   private readonly _blueprints = Atom.make<Blueprint.Blueprint[]>([]).pipe(Atom.keepAlive);
-  private readonly _objects = Atom.make<Obj.Any[]>([]).pipe(Atom.keepAlive);
+  private readonly _objects = Atom.make<Obj.Unknown[]>([]).pipe(Atom.keepAlive);
   private readonly _registry: Registry.Registry;
   private readonly _queue: Queue;
 
@@ -90,7 +90,7 @@ export class AiContextBinder extends Resource {
   /**
    * Returns the objects atom for subscription.
    */
-  get objects(): Atom.Atom<Obj.Any[]> {
+  get objects(): Atom.Atom<Obj.Unknown[]> {
     return this._objects;
   }
 
@@ -104,7 +104,7 @@ export class AiContextBinder extends Resource {
   /**
    * Gets the current objects value.
    */
-  getObjects(): Obj.Any[] {
+  getObjects(): Obj.Unknown[] {
     return this._registry.get(this._objects);
   }
 
@@ -118,7 +118,7 @@ export class AiContextBinder extends Resource {
   /**
    * Subscribe to changes in objects.
    */
-  subscribeObjects(cb: (objects: Obj.Any[]) => void): () => void {
+  subscribeObjects(cb: (objects: Obj.Unknown[]) => void): () => void {
     return this._registry.subscribe(this._objects, () => cb(this._registry.get(this._objects)));
   }
 
@@ -219,7 +219,7 @@ export class AiContextBinder extends Resource {
   /**
    * Process bindings to filter duplicates and determine next state.
    */
-  private _processBindings<T extends Obj.Any>(
+  private _processBindings<T extends Obj.Unknown>(
     refs: Ref.Ref<T>[] | undefined,
     current: T[],
   ): { added: Ref.Ref<T>[]; next: T[] } {

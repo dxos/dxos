@@ -5,12 +5,12 @@
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/react';
-import { Obj, Query } from '@dxos/echo';
+import { Entity, Query } from '@dxos/echo';
 import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
 import { Toolbar, useTranslation } from '@dxos/react-ui';
 import { Card, Mosaic, type StackTileComponent } from '@dxos/react-ui-mosaic';
+import { Layout } from '@dxos/react-ui-mosaic';
 import { SearchList } from '@dxos/react-ui-searchlist';
-import { StackItem } from '@dxos/react-ui-stack';
 import { Text } from '@dxos/schema';
 
 import { useGlobalSearch, useGlobalSearchResults, useWebSearch } from '../hooks';
@@ -38,7 +38,7 @@ export const SearchMain = ({ space }: { space?: Space }) => {
   const results = useGlobalSearchResults(objects);
   const { results: webResults } = useWebSearch({ query });
   const allResults = useMemo(
-    () => [...results, ...webResults].filter(({ object }) => object && Obj.getLabel(object)),
+    () => [...results, ...webResults].filter(({ object }) => object && Entity.getLabel(object)),
     [results, webResults],
   );
 
@@ -51,24 +51,21 @@ export const SearchMain = ({ space }: { space?: Space }) => {
   );
 
   return (
-    <StackItem.Content toolbar>
-      {/* TODO(burdon): Add selection. */}
+    <Layout.Main toolbar>
       <SearchList.Root onSearch={handleSearch}>
         <Toolbar.Root>
           <SearchList.Input placeholder={t('search placeholder')} />
         </Toolbar.Root>
         <SearchList.Content>
-          <SearchList.Viewport>
-            <Mosaic.Container asChild>
-              <Mosaic.Viewport>
-                <Mosaic.Stack items={allResults} getId={(result) => result.object!.id} Tile={SearchResultTile} />
-              </Mosaic.Viewport>
-            </Mosaic.Container>
-            {allResults.length === 0 && <SearchList.Empty>{t('empty results message')}</SearchList.Empty>}
-          </SearchList.Viewport>
+          <Mosaic.Container asChild>
+            <Mosaic.Viewport>
+              <Mosaic.Stack items={allResults} getId={(result) => result.object!.id} Tile={SearchResultTile} />
+            </Mosaic.Viewport>
+          </Mosaic.Container>
+          {allResults.length === 0 && <SearchList.Empty>{t('empty results message')}</SearchList.Empty>}
         </SearchList.Content>
       </SearchList.Root>
-    </StackItem.Content>
+    </Layout.Main>
   );
 };
 
@@ -77,7 +74,7 @@ const SearchResultTile: StackTileComponent<SearchResult> = ({ data }) => {
     <Card.Root key={data.id}>
       <Card.Toolbar>
         <Card.DragHandle />
-        <Card.Title>{data.label ?? (data.object && Obj.getLabel(data.object))}</Card.Title>
+        <Card.Title>{data.label ?? (data.object && Entity.getLabel(data.object))}</Card.Title>
         <Card.Menu />
       </Card.Toolbar>
       <Surface role='card--content' data={{ subject: data.object }} limit={1} />

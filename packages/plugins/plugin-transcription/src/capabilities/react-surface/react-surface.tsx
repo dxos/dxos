@@ -20,7 +20,7 @@ export default Capability.makeModule(() =>
         role: ['article', 'section'],
         filter: (data): data is { subject: Transcript.Transcript } =>
           Obj.instanceOf(Transcript.Transcript, data.subject),
-        component: ({ data, role }) => <TranscriptionContainer transcript={data.subject} role={role} />,
+        component: ({ data, role }) => <TranscriptionContainer role={role} subject={data.subject} />,
       }),
     ]),
   ),

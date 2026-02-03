@@ -5,7 +5,8 @@
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, asyncTimeout } from '@dxos/async';
-import { Filter, Obj, Type } from '@dxos/echo';
+import { Filter, Obj } from '@dxos/echo';
+import { TestSchema } from '@dxos/echo/testing';
 import { log } from '@dxos/log';
 
 import { Client } from '../../client';
@@ -25,8 +26,8 @@ describe('DedicatedWorkerClientServices', { timeout: 1_000, retry: 0 }, () => {
     await using services = await testBuilder.createDedicatedWorkerClientServices().open();
     await using client = await new Client({ services }).initialize();
     await client.halo.createIdentity();
-    await client.addTypes([Type.Expando]);
-    client.spaces.default.db.add(Obj.make(Type.Expando, { name: 'Test' }));
+    await client.addTypes([TestSchema.Expando]);
+    client.spaces.default.db.add(Obj.make(TestSchema.Expando, { name: 'Test' }));
     await client.spaces.default.db.flush({ indexes: true });
   });
 
@@ -46,9 +47,9 @@ describe('DedicatedWorkerClientServices', { timeout: 1_000, retry: 0 }, () => {
     await client2.spaces.default.db.query(Filter.everything()).run();
 
     // TODO(dmaretskyi): tried doing DB write -> flush(indexes) -> query here but flush(indexes) doesnt work
-    // const object = client1.spaces.default.db.add(Obj.make(Type.Expando, { name: 'Test' }));
+    // const object = client1.spaces.default.db.add(Obj.make(TestSchema.Expando, { name: 'Test' }));
     // await client1.spaces.default.db.flush({ indexes: true });
-    // const objects = await client2.spaces.default.db.query(Filter.type(Type.Expando, { name: 'Test' })).run();
+    // const objects = await client2.spaces.default.db.query(Filter.type(TestSchema.Expando, { name: 'Test' })).run();
     // expect(objects).toHaveLength(1);
     // expect(objects[0]).toEqual(object);
   });

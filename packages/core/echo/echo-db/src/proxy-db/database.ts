@@ -119,7 +119,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
    * Mapping `object core` -> `root proxy` (User facing proxies).
    * @internal
    */
-  readonly _rootProxies = new Map<ObjectCore, Obj.Any>();
+  readonly _rootProxies = new Map<ObjectCore, Entity.Unknown>();
 
   readonly saveStateChanged: ReadOnlyEvent<SaveStateChangedEvent>;
 
@@ -212,7 +212,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
       return undefined;
     }
 
-    return defaultMap(this._rootProxies, core, () => initEchoReactiveObjectRootProxy(core, this));
+    return defaultMap(this._rootProxies, core, () => initEchoReactiveObjectRootProxy(core, this)) as T;
   }
 
   makeRef<T extends AnyProperties = any>(dxn: DXN): Ref.Ref<T> {
@@ -341,7 +341,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   /**
    * @internal
    */
-  async _loadObjectById(objectId: string, options: LoadObjectOptions = {}): Promise<Obj.Any | undefined> {
+  async _loadObjectById(objectId: string, options: LoadObjectOptions = {}): Promise<Entity.Unknown | undefined> {
     const core = await this._coreDatabase.loadObjectCoreById(objectId, options);
     if (!core || (core?.isDeleted() && !options.allowDeleted)) {
       return undefined;

@@ -64,7 +64,7 @@ export type ServiceContextRuntimeProps = Pick<
     invitationConnectionDefaultProps?: InvitationConnectionProps;
     disableP2pReplication?: boolean;
     enableVectorIndexing?: boolean;
-    enableFullTextIndexing?: boolean;
+    enableSqlite?: boolean;
     enableLocalQueues?: boolean;
   };
 /**
@@ -168,7 +168,7 @@ export class ServiceContext extends Resource {
       getSpaceKeyByRootDocumentId: (documentId) => this.spaceManager.findSpaceByRootDocumentId(documentId)?.key,
       indexing: {
         vector: this._runtimeProps?.enableVectorIndexing,
-        fullText: this._runtimeProps?.enableFullTextIndexing,
+        sqlIndex: this._runtimeProps?.enableSqlite,
       },
       runtime: this._runtime,
       localQueues: this._runtimeProps?.enableLocalQueues,

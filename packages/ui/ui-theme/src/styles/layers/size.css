@@ -2,24 +2,35 @@
  * @layer dx-components
  */
 
+/** 
+ * Container query root.
+ */
+.size-container {
+  container-type: size;
+}
+
 .container-max-width {
-  @apply is-full max-is-containerMaxWidth mli-auto;
+  @apply is-full max-is-container-max-width mli-auto;
+}
+
+.card-default-width {
+  @apply is-card-default-width;
 }
 
 .card-min-width {
-  @apply min-is-cardMinWidth;
+  @apply min-is-card-min-width;
 }
 
 .card-max-width {
-  @apply is-full max-is-cardMaxWidth;
+  @apply is-full max-is-card-max-width;
 }
 
 .popover-max-width {
-  @apply is-max max-is-popoverMaxWidth;
+  @apply is-max max-is-popover-max-width;
 }
 
 .popover-card-width {
-  inline-size: min(var(--radix-popper-available-width), calc(var(--dx-popoverMaxWidth) - 2 * var(--dx-hairLine)));
+  inline-size: min(var(--radix-popper-available-width), calc(var(--dx-popover-max-width) - 2 * var(--dx-hairLine)));
 }
 
 .popover-card-height {
@@ -27,18 +38,14 @@
 }
 
 .popover-square {
-  inline-size: min(min(var(--radix-popper-available-width), var(--dx-popoverMaxWidth)),
+  inline-size: min(min(var(--radix-popper-available-width), var(--dx-popover-max-width)),
       min(var(--radix-popper-available-height), 100dvh));
-  block-size: min(min(var(--radix-popper-available-width), var(--dx-popoverMaxWidth)),
+  block-size: min(min(var(--radix-popper-available-width), var(--dx-popover-max-width)),
       min(var(--radix-popper-available-height), 100dvh));
 }
 
 .popover-card-max-width {
-  max-inline-size: min(var(--radix-popper-available-width), var(--dx-popoverMaxWidth));
-}
-
-.size-container {
-  container-type: size;
+  max-inline-size: min(var(--radix-popper-available-width), var(--dx-popover-max-width));
 }
 
 @layer dx-components {

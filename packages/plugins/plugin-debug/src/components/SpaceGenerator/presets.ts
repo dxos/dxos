@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import { Agent, EntityExtraction, ResearchBlueprint } from '@dxos/assistant-toolkit';
 import { Prompt } from '@dxos/blueprints';
 import { type ComputeGraphModel, NODE_INPUT } from '@dxos/conductor';
-import { DXN, Filter, Key, Obj, Query, Ref, Tag, Type } from '@dxos/echo';
+import { DXN, Filter, Key, Obj, Query, type QueryAST, Ref, Tag, Type } from '@dxos/echo';
 import { Trigger, serializeFunction } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { gmail } from '@dxos/plugin-inbox';
@@ -79,8 +79,8 @@ export const generator = () => ({
 
           const tag = space.db.add(Tag.make({ label: 'Investor' }));
           const tagDxn = Obj.getDXN(tag).toString();
-          Obj.change(doc, () => {
-            Obj.getMeta(doc).tags = [tagDxn];
+          Obj.change(doc, (d) => {
+            Obj.getMeta(d).tags = [tagDxn];
           });
 
           // space.db.add(
@@ -313,7 +313,7 @@ export const generator = () => ({
             'subscription',
             (triggerSpec) =>
               (triggerSpec.query = {
-                ast: Query.select(Filter.typename('dxos.org/type/Chess')).ast,
+                ast: Query.select(Filter.typename('dxos.org/type/Chess')).ast as Obj.Mutable<QueryAST.Query>,
               }),
             'type',
           );
@@ -712,7 +712,7 @@ export const generator = () => ({
 const createQueueSinkPreset = <SpecType extends Trigger.Kind>(
   space: Space,
   triggerKind: SpecType,
-  initSpec: (spec: Extract<Trigger.Spec, { kind: SpecType }>) => void,
+  initSpec: (spec: Obj.Mutable<Extract<Trigger.Spec, { kind: SpecType }>>) => void,
   triggerOutputName: string,
 ) => {
   const canvasModel = CanvasGraphModel.create<ComputeShape>();
@@ -760,7 +760,9 @@ const createQueueSinkPreset = <SpecType extends Trigger.Kind>(
     functionTrigger = triggerShape.functionTrigger!.target!;
     const triggerSpec = functionTrigger.spec;
     invariant(triggerSpec && triggerSpec.kind === triggerKind, 'No trigger spec.');
-    initSpec(triggerSpec as any);
+    Obj.change(functionTrigger, (ft) => {
+      initSpec(ft.spec as any);
+    });
   });
 
   const computeModel = createComputeGraph(canvasModel);

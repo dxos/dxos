@@ -27,7 +27,9 @@ export default defineFunction({
     const doc = yield* Database.Service.resolve(ArtifactId.toDXN(id), Markdown.Document);
     const text = yield* Database.Service.load(doc.content);
     Obj.change(text, (text) => {
-      text.content = content;
+      Obj.change(text, (t) => {
+        t.content = content;
+      });
     });
   }),
 });

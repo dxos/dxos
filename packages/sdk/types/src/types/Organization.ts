@@ -83,7 +83,7 @@ export const Organization = OrganizationSchema.pipe(
   Schema.annotations({ title: 'Organization', description: 'An organization.' }),
   LabelAnnotation.set(['name']),
   IconAnnotation.set('ph--building--regular'),
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/Organization',
     version: '0.1.0',
   }),
@@ -99,7 +99,7 @@ export const LegacyOrganization = OrganizationSchema.pipe(
   Schema.annotations({ title: 'Organization', description: 'An organization.' }),
   LabelAnnotation.set(['name']),
   IconAnnotation.set('ph--building--regular'),
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/Organization',
     version: '0.1.0',
   }),

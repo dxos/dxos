@@ -1,9 +1,13 @@
 {
   "name": "@dxos/operation",
-  "version": "0.0.1",
+  "version": "0.8.3",
   "description": "Unified Operation Primitives",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
   "license": "MIT",
   "author": "info@dxos.org",
   "sideEffects": false,

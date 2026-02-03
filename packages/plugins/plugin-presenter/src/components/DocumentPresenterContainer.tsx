@@ -4,7 +4,7 @@
 import React, { type FC } from 'react';
 
 import { type Markdown } from '@dxos/plugin-markdown/types';
-import { StackItem } from '@dxos/react-ui-stack';
+import { Layout } from '@dxos/react-ui-mosaic';
 
 import { useExitPresenter } from '../useExitPresenter';
 
@@ -14,9 +14,9 @@ const DocumentPresenterContainer: FC<{ document: Markdown.Document }> = ({ docum
   const handleExit = useExitPresenter(document);
 
   return (
-    <StackItem.Content classNames='relative'>
+    <Layout.Main classNames='relative'>
       <RevealPlayer content={document.content.target?.content ?? ''} onExit={handleExit} />
-    </StackItem.Content>
+    </Layout.Main>
   );
 };
 

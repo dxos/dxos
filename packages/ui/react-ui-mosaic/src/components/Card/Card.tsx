@@ -13,6 +13,7 @@ import React, {
 
 import {
   Button,
+  type Density,
   DropdownMenu,
   Icon,
   type IconProps,
@@ -48,10 +49,17 @@ const CardContext = createContext<CardContextValue>({});
 // Root
 //
 
-type CardRootProps = CardSharedProps & { id?: string; border?: boolean };
+type CardRootProps = CardSharedProps & {
+  id?: string;
+  border?: boolean;
+  fullWidth?: boolean;
+};
 
 const CardRoot = forwardRef<HTMLDivElement, CardRootProps>(
-  ({ children, classNames, className, id, asChild, role = 'group', border = true, ...props }, forwardedRef) => {
+  (
+    { children, classNames, className, id, asChild, role = 'group', border = true, fullWidth, ...props },
+    forwardedRef,
+  ) => {
     const Root = asChild ? Slot : 'div';
 
     return (
@@ -59,7 +67,7 @@ const CardRoot = forwardRef<HTMLDivElement, CardRootProps>(
         {...(id && { 'data-object-id': id })}
         {...props}
         role={role}
-        className={mx(styles.root, border && styles.border, className, classNames)}
+        className={mx(styles.root, border && styles.border, fullWidth && '!max-is-none', className, classNames)}
         ref={forwardedRef}
       >
         {children}
@@ -72,13 +80,28 @@ const CardRoot = forwardRef<HTMLDivElement, CardRootProps>(
 // Toolbar
 //
 
-const CardToolbar = forwardRef<HTMLDivElement, ToolbarRootProps>(({ children, classNames, ...props }, forwardedRef) => {
-  return (
-    <Toolbar.Root {...props} classNames={['density-fine bg-transparent', styles.grid_3, classNames]} ref={forwardedRef}>
-      {children}
-    </Toolbar.Root>
-  );
-});
+type CardToolbarProps = ToolbarRootProps & {
+  // TODO(burdon): Generalize: 1. systematic across theme; 2. should affect rows, etc.
+  density?: Density;
+};
+
+const CardToolbar = forwardRef<HTMLDivElement, CardToolbarProps>(
+  ({ children, classNames, density = 'fine', ...props }, forwardedRef) => {
+    return (
+      <Toolbar.Root
+        {...props}
+        classNames={[
+          'density-fine bg-transparent',
+          density === 'fine' ? styles.grid_3 : styles.grid_3_coarse,
+          classNames,
+        ]}
+        ref={forwardedRef}
+      >
+        {children}
+      </Toolbar.Root>
+    );
+  },
+);
 
 const CardToolbarIconButton = Toolbar.IconButton;
 const CardToolbarSeparator = Toolbar.Separator;
@@ -150,14 +173,15 @@ const CardMenu = <T extends any | void = void>({ context, items }: CardMenuProps
   const { menuItems } = useContext(CardContext) ?? {};
   const combinedItems = [...(items ?? []), ...((menuItems as CardMenuItem<T>[]) ?? [])];
 
-  if (!combinedItems.length) {
-    return null;
-  }
-
   return (
     <DropdownMenu.Root>
-      <DropdownMenu.Trigger asChild>
-        <Card.ToolbarIconButton iconOnly variant='ghost' icon='ph--list--regular' label={t('action menu label')} />
+      <DropdownMenu.Trigger disabled={!combinedItems.length} asChild>
+        <Card.ToolbarIconButton
+          iconOnly
+          variant='ghost'
+          icon='ph--dots-three-vertical--regular'
+          label={t('action menu label')}
+        />
       </DropdownMenu.Trigger>
       {(combinedItems?.length ?? 0) > 0 && (
         <DropdownMenu.Portal>
@@ -169,6 +193,7 @@ const CardMenu = <T extends any | void = void>({ context, items }: CardMenuProps
                 </DropdownMenu.Item>
               ))}
             </DropdownMenu.Viewport>
+            <DropdownMenu.Arrow />
           </DropdownMenu.Content>
         </DropdownMenu.Portal>
       )}
@@ -303,7 +328,7 @@ const CardPoster = (props: CardPosterProps) => {
   if (props.image) {
     return (
       <div role='none' className='mbe-1'>
-        <Image classNames={[`dx-card__poster`, aspect, props.classNames]} src={props.image} alt={props.alt} />
+        <Image classNames={[styles.poster, aspect, props.classNames]} src={props.image} alt={props.alt} />
       </div>
     );
   }
@@ -312,7 +337,7 @@ const CardPoster = (props: CardPosterProps) => {
     return (
       <div
         role='image'
-        className={mx(`dx-card__poster grid place-items-center bg-inputSurface text-subdued`, aspect, props.classNames)}
+        className={mx('grid place-items-center bg-inputSurface text-subdued', styles.poster, aspect, props.classNames)}
         aria-label={props.alt}
       >
         <Icon icon={props.icon} size={10} />
@@ -384,7 +409,7 @@ const CardIcon = ({ toolbar, ...props }: IconProps & { toolbar?: boolean }) => {
 //
 
 export const Card = {
-  Context: CardContext, // TODO(burdon): Remove.
+  Context: CardContext,
   Root: CardRoot,
 
   // Toolbar
@@ -407,4 +432,4 @@ export const Card = {
   Link: CardLink,
 };
 
-export type { CardContextValue, CardRootProps, CardMenuProps };
+export type { CardContextValue, CardRootProps, CardToolbarProps, CardMenuProps };

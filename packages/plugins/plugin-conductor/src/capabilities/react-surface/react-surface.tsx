@@ -20,7 +20,7 @@ export default Capability.makeModule(() =>
         id: meta.id,
         role: ['article', 'section'],
         filter: (data): data is { subject: CanvasBoardType } => Obj.instanceOf(CanvasBoardType, data.subject),
-        component: ({ data, role }) => <CanvasContainer canvas={data.subject} role={role} />,
+        component: ({ data, role }) => <CanvasContainer role={role} subject={data.subject} />,
       }),
     ),
   ),

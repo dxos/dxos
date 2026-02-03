@@ -8,7 +8,7 @@ import { type Type } from '@dxos/echo';
 import { type Space } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { ControlPage, ControlSection, controlItemClasses } from '@dxos/react-ui-form';
-import { StackItem } from '@dxos/react-ui-stack';
+import { Layout } from '@dxos/react-ui-mosaic';
 
 import { meta } from '../meta';
 
@@ -20,7 +20,7 @@ export const SchemaContainer = ({ space }: SchemaPanelProps) => {
 
   // TODO(ZaymonFC): Support deleting Schema (DangerZone section).
   return (
-    <StackItem.Content scrollable>
+    <Layout.Container scrollable>
       <ControlPage>
         <ControlSection title={t('schema verbose label')} description={t('schema description')}>
           <div role='none' className={controlItemClasses}>
@@ -33,7 +33,7 @@ export const SchemaContainer = ({ space }: SchemaPanelProps) => {
           </div>
         </ControlSection>
       </ControlPage>
-    </StackItem.Content>
+    </Layout.Container>
   );
 };
 

@@ -114,7 +114,7 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
     type Entry =
       | {
           source: 'runtime';
-          schema: Schema.Schema.AnyNoContext;
+          schema: Type.Entity.Any;
         }
       | {
           source: 'database';
@@ -362,8 +362,9 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
   }
 
   // TODO(dmaretskyi): Figure out how to migrate the usages to the async `register` method.
-  private _addSchema(schema: Type.Entity.Any): Type.RuntimeType {
+  private _addSchema(schema: Schema.Schema.AnyNoContext): Type.RuntimeType {
     if (schema instanceof Type.RuntimeType) {
+      // The snapshot preserves typename/version in annotations.
       schema = schema.snapshot.annotations({
         [TypeIdentifierAnnotationId]: undefined,
       });

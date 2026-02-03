@@ -173,6 +173,9 @@ const CardStackDragHandle = Card.DragHandle;
 // CardStack
 //
 
+/**
+ * @deprecated Replace with Mosaic.Stack.
+ */
 export const CardStack = {
   Root: CardStackRoot,
   Content: CardStackContent,

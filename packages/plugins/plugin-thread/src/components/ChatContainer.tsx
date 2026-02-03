@@ -44,7 +44,7 @@ export type ChatContainerProps = ThemedClassName<
   {
     space: Space;
     thread: Thread.Thread;
-    context?: Obj.Any;
+    context?: Obj.Unknown;
     autoFocusTextbox?: boolean;
   } & Pick<ThreadRootProps, 'current'>
 >;
@@ -98,16 +98,18 @@ export const ChatContainer = ({
       return false;
     }
 
-    thread.messages.push(
-      Ref.make(
-        Obj.make(Message.Message, {
-          created: new Date().toISOString(),
-          sender: { identityDid: identity.did },
-          blocks: [{ _tag: 'text', text: messageRef.current }],
-          properties: context ? { context: Ref.make(context) } : undefined,
-        }),
-      ),
-    );
+    Obj.change(thread, (t) => {
+      t.messages.push(
+        Ref.make(
+          Obj.make(Message.Message, {
+            created: new Date().toISOString(),
+            sender: { identityDid: identity.did },
+            blocks: [{ _tag: 'text', text: messageRef.current }],
+            properties: context ? { context: Ref.make(context) } : undefined,
+          }),
+        ),
+      );
+    });
 
     messageRef.current = '';
     setAutoFocus(true);

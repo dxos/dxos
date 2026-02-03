@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability, Common } from '@dxos/app-framework';
-import { Ref } from '@dxos/echo';
+import { Obj, Ref } from '@dxos/echo';
 import { Function, Script, Trigger } from '@dxos/functions';
 import { type DXN } from '@dxos/keys';
 import { Operation, OperationResolver } from '@dxos/operation';
@@ -35,21 +35,27 @@ export default Capability.makeModule(
               );
               const [fn] = functions;
               if (fn) {
-                trigger.function = Ref.make(fn);
+                Obj.change(trigger, (t) => {
+                  t.function = Ref.make(fn);
+                });
               }
             }
           }
 
           switch (template.type) {
             case 'timer': {
-              trigger.spec = { kind: 'timer', cron: template.cron };
+              Obj.change(trigger, (t) => {
+                t.spec = { kind: 'timer', cron: template.cron };
+              });
               break;
             }
             case 'queue': {
-              trigger.spec = {
-                kind: 'queue',
-                queue: (template.queueDXN as DXN).toString(),
-              };
+              Obj.change(trigger, (t) => {
+                t.spec = {
+                  kind: 'queue',
+                  queue: (template.queueDXN as DXN).toString(),
+                };
+              });
               break;
             }
             default: {

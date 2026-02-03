@@ -43,7 +43,7 @@ export type UseEventHandlerProps<TItem = any, TObject = any> = Pick<MosaicEventH
  * Returns a handler for the given items.
  * NOTE: This supports arrays of objects, or arrays of refs to objects.
  */
-export const useEventHandlerAdapter = <TItem = any, TObject extends Obj.Any = Obj.Any>({
+export const useEventHandlerAdapter = <TItem = any, TObject extends Obj.Unknown = Obj.Unknown>({
   items,
   getId,
   get,
