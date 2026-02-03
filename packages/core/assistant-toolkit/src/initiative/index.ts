@@ -5,3 +5,4 @@
 export { Initiative } from './Initiative';
 export { makeInitialized } from './util';
 export { getFunctions, makeBlueprint } from './blueprint';
+export * from './functions';
