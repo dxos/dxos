@@ -119,14 +119,19 @@ const DrawerStory = (_args: StoryMainArgs) => {
       defaultComplementarySidebarState='closed'
     >
       <Main.Overlay />
-      <Main.Content classNames='is-full overflow-hidden'>
+      <Main.Content classNames='flex flex-col is-full overflow-hidden'>
         <Toolbar.Root classNames='pli-2'>
           <h1>Main Content</h1>
           <Toolbar.Separator variant='gap' classNames='grow' />
           <DrawerToggle />
         </Toolbar.Root>
         <div className='flex flex-col bs-full overflow-y-auto p-2'>
-          <p>The drawer is mutually exclusive with sidebars and is intended for mobile apps.</p>
+          <p>The drawer is mutually exclusive with sidebars and is intended for mobile apps</p>
+          <div className='plb-2 space-y-2'>
+            {Array.from({ length: 50 }).map((_, i) => (
+              <p key={i}>Line {i + 1}</p>
+            ))}
+          </div>
         </div>
       </Main.Content>
       <Main.Drawer label='Drawer' classNames='grid grid-rows-[min-content_1fr_min-content]'>
@@ -135,13 +140,15 @@ const DrawerStory = (_args: StoryMainArgs) => {
           <Toolbar.Separator variant='gap' classNames='grow' />
           <DrawerToggle close />
         </Toolbar.Root>
-        <div className='p-2 overflow-y-auto space-y-4'>
+        <div className='p-2 overflow-y-auto'>
           <p className='text-sm opacity-70'>
             On mobile devices, the drawer automatically switches to fullscreenwhen the keyboard appears.
           </p>
-          {Array.from({ length: 20 }).map((_, i) => (
-            <p key={i}>Line {i + 1}</p>
-          ))}
+          <div className='plb-2 space-y-2'>
+            {Array.from({ length: 50 }).map((_, i) => (
+              <p key={i}>Line {i + 1}</p>
+            ))}
+          </div>
         </div>
         <div className='p-2 border-bs border-separator'>
           <Input.Root>
