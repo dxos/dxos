@@ -5,7 +5,7 @@
 import { type Atom } from '@effect-atom/atom-react';
 
 import { Capability } from '@dxos/app-framework';
-import { type Label } from '@dxos/react-ui';
+import { type DrawerState, type Label } from '@dxos/react-ui';
 
 import { meta } from '../meta';
 
@@ -39,6 +39,11 @@ export type SimpleLayoutState = {
 
   /** Whether running in popover window context (hides mobile-specific UI). */
   isPopover?: boolean;
+
+  /** Variant of the companion to display in the drawer (e.g., "comments", "assistant-chat"). */
+  companionVariant?: string;
+  /** State of the companion drawer. */
+  drawerState?: DrawerState;
 };
 
 export const SimpleLayoutState = Capability.make<Atom.Writable<SimpleLayoutState>>(`${meta.id}/state`);

@@ -2,12 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useCallback, useMemo } from 'react';
+import React, { Fragment, useCallback, useMemo } from 'react';
 
 import { Common } from '@dxos/app-framework';
 import { useAppGraph, useOperationInvoker } from '@dxos/app-framework/react';
-import { Graph, Node } from '@dxos/plugin-graph';
-import { IconButton, type ThemedClassName, Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Graph, Node, useActionRunner, useActions } from '@dxos/plugin-graph';
+import { IconButton, Popover, type ThemedClassName, Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { DropdownMenu, MenuProvider } from '@dxos/react-ui-menu';
 import { mx, osTranslations } from '@dxos/ui-theme';
 
 import { useSimpleLayoutState } from '../../hooks';
@@ -33,8 +34,18 @@ export const Banner = ({ node, classNames }: BannerProps) => {
   const { state } = useSimpleLayoutState();
   const { invokePromise } = useOperationInvoker();
   const { graph } = useAppGraph();
+  const runAction = useActionRunner();
 
   const label = (node && toLocalizedString(node.properties.label, t)) ?? t('current app name', { ns: osTranslations });
+
+  // Get actions for the current node, filtered by disposition.
+  // NOTE: Graph expansion is handled by useLoadDescendents in Main.tsx.
+  const allActions = useActions(graph, node?.id);
+  const actions = useMemo(() => {
+    return allActions.filter((a) =>
+      ['list-item', 'list-item-primary', 'heading-list-item'].includes(a.properties.disposition),
+    );
+  }, [allActions]);
 
   // Check if current active item is a top-level workspace/collection child.
   const isTopLevelItem = useMemo(() => {
@@ -58,6 +69,9 @@ export const Banner = ({ node, classNames }: BannerProps) => {
     }
   }, [invokePromise, state.active, state.history.length, isTopLevelItem]);
 
+  // Wrap the menu trigger with Popover.Anchor when the popoverAnchorId matches.
+  const AnchorRoot = node && state.popoverAnchorId === `dxos.org/ui/${meta.id}/${node.id}` ? Popover.Anchor : Fragment;
+
   if (!node) {
     return null;
   }
@@ -76,7 +90,24 @@ export const Banner = ({ node, classNames }: BannerProps) => {
         <div />
       )}
       <h1 className={'grow text-center truncate font-medium'}>{label}</h1>
-      <IconButton iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label={t('menu label')} />
+      {actions.length > 0 ? (
+        <AnchorRoot>
+          <MenuProvider onAction={runAction}>
+            <DropdownMenu.Root items={actions} caller={meta.id}>
+              <DropdownMenu.Trigger asChild>
+                <IconButton
+                  iconOnly
+                  variant='ghost'
+                  icon='ph--dots-three-vertical--regular'
+                  label={t('actions menu label')}
+                />
+              </DropdownMenu.Trigger>
+            </DropdownMenu.Root>
+          </MenuProvider>
+        </AnchorRoot>
+      ) : (
+        <span />
+      )}
     </Toolbar.Root>
   );
 };
