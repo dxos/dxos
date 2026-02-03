@@ -58,7 +58,7 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('CPU limit',
     console.log(result);
   });
 
-  test('break CPU limit', { timeout: 120_000 }, async ({ expect }) => {
+  test.only('break CPU limit', { timeout: 120_000 }, async ({ expect }) => {
     const { client, space, functionsServiceClient } = await setup(config);
     const func = await deployFunction(
       space,
@@ -71,7 +71,7 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('CPU limit',
         enabled: true,
         function: Ref.make(func),
         spec: { kind: 'timer', cron: '* */30 * * * *' },
-        input: { iterations: 1_000_000_000 },
+        input: { iterations: 100 },
       }),
     );
     await sync(space);
@@ -81,6 +81,11 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('CPU limit',
     }
 
     {
+      Obj.change(trigger, (t) => {
+        t.input!.iterations = 1_000_000_000;
+      });
+      await sync(space);
+
       const result = await functionsServiceClient.forceRunCronTrigger(space.id, trigger.id);
       console.log(result);
     }
@@ -115,7 +120,7 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('CPU limit',
     await observeInvocations(space, 100);
   });
 
-  test.only('break CPU limit through natural exection', { timeout: 520_000 }, async ({ expect }) => {
+  test('break CPU limit through natural exection', { timeout: 520_000 }, async ({ expect }) => {
     const { client, space, functionsServiceClient } = await setup(config);
     const func = await deployFunction(
       space,
