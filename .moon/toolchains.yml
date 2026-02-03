@@ -1,17 +1,20 @@
-# https://moonrepo.dev/docs/config/toolchain#node
-node:
-  dedupeOnLockfileChange: false
-  packageManager: pnpm
+# https://moonrepo.dev/docs/config/toolchain
+
+proto:
+  version: 0.51.1
+
+javascript:
+  # dedupeOnLockfileChange: false
+  # packageManager: pnpm
 
   # TODO(wittjosiah): Doesn't seem to always produce stable package.json; conflicting with toolbox?
-  addEnginesConstraint: false
-  syncPackageManagerField: false
+  # addEnginesConstraint: false
+  # syncPackageManagerField: false
 
   # IMPORTANT: Keep in-sync with .prototools
   # This is a workaround for issue with moonrepo not picking up node version from .prototools consistently.
   # TODO(dmaretskyi): Remove when moonrepo fixes this issue.
-  version: 24.11.1
+  # version: 24.11.1
 
-# https://moonrepo.dev/docs/config/toolchain#typescript
 typescript:
   rootOptionsConfigFileName: 'tsconfig.base.json'

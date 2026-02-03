@@ -1,4 +1,4 @@
-type: application
+layer: application
 language: typescript
 tags:
   - ts-test

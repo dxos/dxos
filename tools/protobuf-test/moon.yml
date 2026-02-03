@@ -1,4 +1,4 @@
-type: scaffolding
+layer: scaffolding
 language: typescript
 workspace:
   inheritedTasks:

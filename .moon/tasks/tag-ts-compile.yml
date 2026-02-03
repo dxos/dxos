@@ -5,7 +5,6 @@ tasks:
     deps:
       - dx-build:compile
       - ^:compile
-      - ^:build
     inputs:
       - /tsconfig.base.json
       - tsconfig.json
@@ -14,3 +13,6 @@ tasks:
       - dist/
     options:
       timeout: 60
+
+inheritedBy:
+  tags: ts-compile
