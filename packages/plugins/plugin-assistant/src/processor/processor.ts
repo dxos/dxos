@@ -39,7 +39,7 @@ import {
 import { log } from '@dxos/log';
 import { type ContentBlock, Message } from '@dxos/types';
 
-import { type Assistant } from '../types';
+import { type Chat } from '@dxos/assistant-toolkit';
 
 import { updateName } from './update-name';
 import type { Tool } from '@effect/ai';
@@ -239,7 +239,7 @@ export class AiChatProcessor {
   /**
    * Update the current chat's name.
    */
-  async updateName(chat: Assistant.Chat): Promise<void> {
+  async updateName(chat: Chat.Chat): Promise<void> {
     const runtime = await this._services();
     await updateName(runtime, this._conversation, chat, this._options.model);
   }

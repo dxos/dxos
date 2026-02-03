@@ -5,12 +5,11 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { addEventListener } from '@dxos/async';
+import { type Chat } from '@dxos/assistant-toolkit';
 import { ProgressBar, type ProgressBarProps, TextCrawl, useExecutionGraph } from '@dxos/react-ui-components';
 
-import { type Assistant } from '../../types';
-
 export type ChatProgressProps = {
-  chat: Assistant.Chat;
+  chat: Chat.Chat;
 };
 
 export const ChatProgress = ({ chat }: ChatProgressProps) => {

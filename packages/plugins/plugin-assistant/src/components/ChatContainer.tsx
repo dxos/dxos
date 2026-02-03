@@ -10,13 +10,13 @@ import { type Obj } from '@dxos/echo';
 import { Layout } from '@dxos/react-ui-mosaic';
 
 import { useBlueprintRegistry, useChatProcessor, useChatServices, useOnline, usePresets } from '../hooks';
-import { AssistantCapabilities } from '../types';
+import { AssistantCapabilities, type ChatType } from '../types';
 import type { Chat } from '@dxos/assistant-toolkit';
 
 import { Chat as ChatComponent, type ChatRootProps } from './Chat';
 
 export type ChatContainerProps = SurfaceComponentProps<
-  Chat.Chat | undefined,
+  ChatType.Chat | undefined,
   {
     space?: Space;
     companionTo?: Obj.Unknown;

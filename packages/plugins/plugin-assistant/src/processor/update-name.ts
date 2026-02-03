@@ -9,11 +9,10 @@ import * as Runtime from 'effect/Runtime';
 
 import { AiService, DEFAULT_EDGE_MODEL, type ModelName } from '@dxos/ai';
 import { type AiConversation, AiSession } from '@dxos/assistant';
+import { type Chat } from '@dxos/assistant-toolkit';
 import { Obj } from '@dxos/echo';
 import { throwCause } from '@dxos/effect';
 import { trim } from '@dxos/util';
-
-import { type Assistant } from '../types';
 
 import { type AiChatServices } from './processor';
 
@@ -24,7 +23,7 @@ import { type AiChatServices } from './processor';
 export const updateName = async (
   runtime: Runtime.Runtime<AiChatServices>,
   conversation: AiConversation,
-  chat: Assistant.Chat,
+  chat: Chat.Chat,
   model: ModelName = DEFAULT_EDGE_MODEL,
 ): Promise<void> => {
   const history = await conversation.getHistory();

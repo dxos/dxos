@@ -23,10 +23,11 @@ import { Message } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 import { isTruthy, trim } from '@dxos/util';
 
+import { type Chat as ChatModule } from '@dxos/assistant-toolkit';
+
 import { useChatToolbarActions } from '../../hooks';
 import { meta } from '../../meta';
 import { type AiChatProcessor } from '../../processor';
-import { type Assistant } from '../../types';
 import {
   ChatActions,
   type ChatActionsProps,
@@ -50,7 +51,7 @@ type ChatContextValue = {
   debug?: boolean;
   event: Event<ChatEvent>;
   db?: Database.Database;
-  chat?: Assistant.Chat;
+  chat?: ChatModule.Chat;
   messages: Message.Message[];
   processor: AiChatProcessor;
 };

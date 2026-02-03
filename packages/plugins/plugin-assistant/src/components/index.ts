@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { lazy } from 'react';
+import { type LazyExoticComponent, lazy } from 'react';
 
 export * from './AssistantSettings';
 export * from './Chat';
@@ -11,7 +11,13 @@ export * from './Toolbox';
 
 export const BlueprintArticle = lazy(() => import('./BlueprintArticle'));
 export const ChatCompanion = lazy(() => import('./ChatCompanion'));
-export const ChatContainer = lazy(() => import('./ChatContainer'));
+// Type annotation needed to avoid declaration file emission issues with @dxos/assistant-toolkit types.
+export const ChatContainer: LazyExoticComponent<typeof import('./ChatContainer').default> = lazy(
+  () => import('./ChatContainer'),
+);
 export const ChatDialog = lazy(() => import('./ChatDialog'));
 export const InitiativeContainer = lazy(() => import('./InitiativeContainer'));
 export const PromptArticle = lazy(() => import('./PromptArticle'));
+
+export type { ChatContainerProps } from './ChatContainer';
+export type { ChatDialogProps } from './ChatDialog';
