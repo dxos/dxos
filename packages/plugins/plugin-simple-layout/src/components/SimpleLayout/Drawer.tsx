@@ -106,9 +106,7 @@ export const Drawer = () => {
         <Toolbar.IconButton icon='ph--x--regular' iconOnly label={t('close drawer label')} onClick={handleClose} />
       </Toolbar.Root>
       {/* TODO(burdon): Fix containment. */}
-      <div>
-        <Surface role='article' data={data} limit={1} fallback={ContentError} placeholder={placeholder} />
-      </div>
+      <Surface role='article' data={data} limit={1} fallback={ContentError} placeholder={placeholder} />
     </NaturalMain.Drawer>
   );
 };
