@@ -125,6 +125,7 @@ const InitiativeForm = ({ initiative }: { initiative: Initiative.Initiative }) =
         });
       }
 
+      // TODO(dmaretskyi): Update triggers here.
       console.log('changed', [...initiative.subscriptions]);
     },
     [initiative],
@@ -172,8 +173,8 @@ const InitiativeForm = ({ initiative }: { initiative: Initiative.Initiative }) =
     [],
   );
 
+  // TODO(dmaretskyi): Form breaks if we provide the echo object directly.
   const spreadValue = useMemo(() => ({ ...initiative }), [initiative]);
-
   return (
     <Form.Root
       schema={omitId(Initiative.Initiative)}
