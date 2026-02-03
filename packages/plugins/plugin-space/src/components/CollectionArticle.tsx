@@ -13,6 +13,7 @@ import { Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Card, Layout, Mosaic, type StackTileComponent } from '@dxos/react-ui-mosaic';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-searchlist';
 import { Collection } from '@dxos/schema';
+import { getStyles } from '@dxos/ui-theme';
 
 import { meta } from '../meta';
 
@@ -54,6 +55,7 @@ type ObjectItem = {
   id: string;
   object: Obj.Unknown;
   icon: string;
+  iconHue?: string;
 };
 
 const ObjectTile: StackTileComponent<ObjectItem> = ({ data: item }) => {
@@ -64,6 +66,7 @@ const ObjectTile: StackTileComponent<ObjectItem> = ({ data: item }) => {
   const label =
     Obj.getLabel(item.object) ??
     toLocalizedString(['object name placeholder', { ns: typename, defaultValue: item.id }], t);
+  const styles = item.iconHue ? getStyles(item.iconHue) : undefined;
 
   const handleClick = () => {
     invokeSync(Common.LayoutOperation.Open, { subject: [item.id] });
@@ -72,7 +75,7 @@ const ObjectTile: StackTileComponent<ObjectItem> = ({ data: item }) => {
   return (
     <Card.Root fullWidth>
       <Card.Toolbar>
-        <Card.ToolbarIconButton variant='ghost' label={label} icon={item.icon} iconOnly />
+        <Card.ToolbarIconButton variant='ghost' label={label} icon={item.icon} iconOnly iconClassNames={styles?.icon} />
         <Card.Title onClick={handleClick}>{label}</Card.Title>
         <Card.Menu />
       </Card.Toolbar>
@@ -134,6 +137,7 @@ const useCollectionItems = (
           id: Obj.getDXN(obj).toString(),
           object: obj,
           icon: metadata.icon ?? 'ph--placeholder--regular',
+          iconHue: metadata.iconHue,
         } satisfies ObjectItem;
       }),
     [objects, resolveMetadata],
