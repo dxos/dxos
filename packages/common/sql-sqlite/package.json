@@ -1,6 +1,6 @@
 {
   "name": "@dxos/sql-sqlite",
-  "version": "0.0.0",
+  "version": "0.8.3",
   "description": "Sqlite client",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

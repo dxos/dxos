@@ -5,6 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability, Common } from '@dxos/app-framework';
+import { Obj } from '@dxos/echo';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ATTENDABLE_PATH_SEPARATOR, DECK_COMPANION_TYPE, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
@@ -377,10 +378,10 @@ export default Capability.makeModule(
       GraphBuilder.createExtension({
         id: `${meta.id}/debug-object`,
         match: NodeMatcher.whenEchoObject,
-        connector: (node) =>
+        connector: (object) =>
           Effect.succeed([
             {
-              id: [node.id, 'debug'].join(ATTENDABLE_PATH_SEPARATOR),
+              id: [Obj.getDXN(object).toString(), 'debug'].join(ATTENDABLE_PATH_SEPARATOR),
               type: PLANK_COMPANION_TYPE,
               data: 'debug',
               properties: {

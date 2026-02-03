@@ -1,6 +1,6 @@
 {
   "name": "@dxos/web-context-react",
-  "version": "0.0.0",
+  "version": "0.8.3",
   "description": "React integration with web context protocol",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

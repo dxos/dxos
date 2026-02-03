@@ -2,12 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useMemo } from 'react';
+import React, { useCallback, useMemo } from 'react';
 
 import { Common } from '@dxos/app-framework';
-import { type SurfaceComponentProps, useAppGraph, useOperationInvoker } from '@dxos/app-framework/react';
+import { type SurfaceComponentProps, useCapabilities, useOperationInvoker } from '@dxos/app-framework/react';
 import { Filter, Obj } from '@dxos/echo';
-import { Graph, Node, useActionRunner, useConnections } from '@dxos/plugin-graph';
 import { useClient } from '@dxos/react-client';
 import { getSpace, useQuery } from '@dxos/react-client/echo';
 import { Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
@@ -18,11 +17,20 @@ import { Collection } from '@dxos/schema';
 import { meta } from '../meta';
 
 /**
- *
+ * Hook to resolve metadata (icon, iconHue, etc.) for objects based on their typename.
+ */
+const useMetadataResolver = () => {
+  const allMetadata = useCapabilities(Common.Capability.Metadata);
+  return useCallback((typename: string) => allMetadata.find((m) => m.id === typename)?.metadata ?? {}, [allMetadata]);
+};
+
+/**
+ * Article view for collections.
  */
 export const CollectionArticle = ({ subject }: SurfaceComponentProps<Collection.Collection | Collection.Managed>) => {
   const { t } = useTranslation(meta.id);
-  const { items, handleSearch } = useCollectionItems(subject);
+  const resolveMetadata = useMetadataResolver();
+  const { items, handleSearch } = useCollectionItems(subject, resolveMetadata);
 
   return (
     <Layout.Main toolbar>
@@ -33,7 +41,7 @@ export const CollectionArticle = ({ subject }: SurfaceComponentProps<Collection.
         <SearchList.Content>
           <Mosaic.Container asChild>
             <Mosaic.Viewport padding>
-              <Mosaic.Stack items={items} getId={(node) => node.id} Tile={NodeTile} />
+              <Mosaic.Stack items={items} getId={(item) => item.id} Tile={ObjectTile} />
             </Mosaic.Viewport>
           </Mosaic.Container>
         </SearchList.Content>
@@ -42,32 +50,29 @@ export const CollectionArticle = ({ subject }: SurfaceComponentProps<Collection.
   );
 };
 
-const NodeTile: StackTileComponent<Node.Node> = ({ data: node }) => {
-  const { t } = useTranslation(meta.id);
-  const { graph } = useAppGraph();
-  const { invokeSync } = useOperationInvoker();
-  const runAction = useActionRunner();
+type ObjectItem = {
+  id: string;
+  object: Obj.Unknown;
+  icon: string;
+};
 
-  const label = toLocalizedString(node.properties.label, t);
-  const icon = node.properties.icon ?? 'ph--placeholder--regular';
+const ObjectTile: StackTileComponent<ObjectItem> = ({ data: item }) => {
+  const { t } = useTranslation(meta.id);
+  const { invokeSync } = useOperationInvoker();
+
+  const typename = Obj.getTypename(item.object) ?? '';
+  const label =
+    Obj.getLabel(item.object) ??
+    toLocalizedString(['object name placeholder', { ns: typename, defaultValue: item.id }], t);
 
   const handleClick = () => {
-    if (Node.isAction(node)) {
-      // Run action if this is an action node.
-      const [parent] = Graph.getConnections(graph, node.id, 'inbound');
-      if (parent) {
-        void runAction(node, { parent });
-      }
-    } else {
-      // Navigate to the node.
-      invokeSync(Common.LayoutOperation.Open, { subject: [node.id] });
-    }
+    invokeSync(Common.LayoutOperation.Open, { subject: [item.id] });
   };
 
   return (
     <Card.Root fullWidth>
       <Card.Toolbar>
-        <Card.ToolbarIconButton variant='ghost' label={label} icon={icon} />
+        <Card.ToolbarIconButton variant='ghost' label={label} icon={item.icon} iconOnly />
         <Card.Title onClick={handleClick}>{label}</Card.Title>
         <Card.Menu />
       </Card.Toolbar>
@@ -78,32 +83,19 @@ const NodeTile: StackTileComponent<Node.Node> = ({ data: node }) => {
 export default CollectionArticle;
 
 /**
- * Hook to get items from a regular collection using graph connections.
+ * Hook to get items from a regular collection.
  */
-const useRegularCollectionItems = (collection: Collection.Collection) => {
-  const { graph } = useAppGraph();
-  const collectionId = Obj.getDXN(collection).toString();
-  const children = useConnections(graph, collectionId, 'outbound');
-
-  // Filter children to those which are objects or actions with disposition 'item'.
+const useRegularCollectionItems = (collection: Collection.Collection): Obj.Unknown[] => {
   return useMemo(
-    () =>
-      children.filter((node) => {
-        // Include regular objects.
-        if (Obj.isObject(node.data)) {
-          return true;
-        }
-        // Include actions with disposition 'item'.
-        return Node.isAction(node) && node.properties.disposition === 'item';
-      }),
-    [children],
+    () => (collection.objects ?? []).map((ref) => ref.target).filter((obj): obj is Obj.Unknown => Obj.isObject(obj)),
+    [collection.objects],
   );
 };
 
 /**
  * Hook to get items from a managed collection by querying the space.
  */
-const useManagedCollectionItems = (collection: Collection.Managed) => {
+const useManagedCollectionItems = (collection: Collection.Managed): Obj.Unknown[] => {
   const client = useClient();
   const space = getSpace(collection);
 
@@ -112,46 +104,45 @@ const useManagedCollectionItems = (collection: Collection.Managed) => {
     [client, collection],
   );
 
-  const objects = useQuery(space?.db, schema ? Filter.type(schema) : Filter.nothing());
-
-  // Convert objects to node-like items for consistent rendering.
-  return useMemo(
-    () =>
-      objects.map(
-        (obj) =>
-          ({
-            id: Obj.getDXN(obj).toString(),
-            type: 'managed-object',
-            data: obj,
-            properties: {
-              label: Obj.getLabel(obj) ?? obj.id,
-              icon: 'ph--placeholder--regular',
-            },
-          }) as Node.Node,
-      ),
-    [objects],
-  );
+  return useQuery(space?.db, schema ? Filter.type(schema) : Filter.nothing());
 };
+
+type MetadataResolver = (typename: string) => { icon?: string; iconHue?: string };
 
 /**
  * Combined hook to get collection items with search/filter support.
  */
-const useCollectionItems = (collection: Collection.Collection | Collection.Managed) => {
+const useCollectionItems = (
+  collection: Collection.Collection | Collection.Managed,
+  resolveMetadata: MetadataResolver,
+) => {
   const isManaged = Obj.instanceOf(Collection.Managed, collection);
 
   // Call both hooks unconditionally to satisfy React's rules of hooks.
-  const regularItems = useRegularCollectionItems(collection as Collection.Collection);
-  const managedItems = useManagedCollectionItems(collection as Collection.Managed);
+  const regularObjects = useRegularCollectionItems(collection as Collection.Collection);
+  const managedObjects = useManagedCollectionItems(collection as Collection.Managed);
 
-  const items = isManaged ? managedItems : regularItems;
+  const objects = isManaged ? managedObjects : regularObjects;
+
+  // Convert objects to items with resolved metadata.
+  const items = useMemo(
+    () =>
+      objects.map((obj) => {
+        const typename = Obj.getTypename(obj);
+        const metadata = typename ? resolveMetadata(typename) : {};
+        return {
+          id: Obj.getDXN(obj).toString(),
+          object: obj,
+          icon: metadata.icon ?? 'ph--placeholder--regular',
+        } satisfies ObjectItem;
+      }),
+    [objects, resolveMetadata],
+  );
 
   // Use searchlist results for filtering.
   const { results, handleSearch } = useSearchListResults({
     items,
-    extract: (node) => {
-      const label = node.properties.label;
-      return typeof label === 'string' ? label : (label?.en ?? node.id);
-    },
+    extract: (item) => Obj.getLabel(item.object) ?? item.id,
   });
 
   return { items: results, handleSearch };

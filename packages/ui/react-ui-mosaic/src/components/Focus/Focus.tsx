@@ -46,6 +46,8 @@ type GroupProps = ThemedClassName<
   >
 > & { className?: string };
 
+// TODO(wittjosiah): Consider how this could integrate with with react-ui-attention.
+//   Perhaps react-ui-attention comes under the mosaic umbrella as it supports selection?
 const Group = forwardRef<HTMLDivElement, GroupProps>(
   ({ classNames, className, children, asChild, axis = 'vertical', ...props }: GroupProps, forwardedRef) => {
     const rootRef = useRef<HTMLDivElement>(null);

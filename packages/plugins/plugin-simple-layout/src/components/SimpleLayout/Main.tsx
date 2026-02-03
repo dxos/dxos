@@ -15,6 +15,7 @@ import { mx } from '@dxos/ui-theme';
 import { useSimpleLayoutState } from '../../hooks';
 import { ContentError } from '../ContentError';
 import { ContentLoading } from '../ContentLoading';
+import { useLoadDescendents } from '../hooks';
 
 import { Banner } from './Banner';
 import { NavBar } from './NavBar';
@@ -29,20 +30,25 @@ export const Main = () => {
   const { graph } = useAppGraph();
   const node = useNode(graph, id);
 
+  const { id: parentId, variant } = parseEntryId(id);
+  const parentNode = useNode(graph, variant ? parentId : undefined);
+  // Ensures that children are loaded so that they are available to navigate to.
+  useLoadDescendents(id);
+
   const placeholder = useMemo(() => <ContentLoading />, []);
 
   const data = useMemo(() => {
-    const { variant } = parseEntryId(id);
     return (
       node && {
         attendableId: id,
         subject: node.data,
+        companionTo: parentNode?.data,
         properties: node.properties,
         popoverAnchorId: state.popoverAnchorId,
         variant,
       }
     );
-  }, [id, node, node?.data, node?.properties, state.popoverAnchorId]);
+  }, [id, node, node?.data, node?.properties, parentNode?.data, state.popoverAnchorId, variant]);
 
   const handleActiveIdChange = useCallback((nextActiveId: string | null) => {
     log.info('navigate', { nextActiveId });
@@ -54,8 +60,8 @@ export const Main = () => {
         <NaturalMain.Content
           bounce
           classNames={mx(
-            'dx-mobile-main dx-mobile-main-scroll-area--flush',
             'grid bs-full overflow-hidden',
+            'pbs-[env(safe-area-inset-top)] pbe-[env(safe-area-inset-bottom)]',
             showNavBar ? 'grid-rows-[min-content_1fr_min-content]' : 'grid-rows-[min-content_1fr]',
           )}
         >
@@ -63,6 +69,8 @@ export const Main = () => {
           <article className='contents'>
             <Surface key={id} role='article' data={data} limit={1} fallback={ContentError} placeholder={placeholder} />
           </article>
+          {/* TODO(wittjosiah): Since the navbar isn't fixed, if the Surface resolves to nothing the navbar fills the
+           screen. */}
           {showNavBar && (
             <NavBar classNames='border-bs border-separator' activeId={id} onActiveIdChange={handleActiveIdChange} />
           )}
