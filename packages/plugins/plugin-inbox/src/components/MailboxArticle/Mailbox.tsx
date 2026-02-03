@@ -84,6 +84,7 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ classNames, 
     if (!labels || !Array.isArray(message.properties?.labels)) {
       return [];
     }
+
     return message.properties.labels
       .filter((labelId: string) => !GoogleMail.isSystemLabel(labelId))
       .map((labelId: string) => ({
@@ -101,6 +102,7 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ classNames, 
           <Card.Toolbar density='coarse'>
             <button
               type='button'
+              // TODO(burdon): Remove custom styles.
               className='grid place-items-center opacity-70 hover:opacity-100 transition-opacity dx-focus-ring rounded'
               onClick={handleAvatarClick}
             >
