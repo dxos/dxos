@@ -23,7 +23,7 @@ import React, {
 } from 'react';
 
 import { log } from '@dxos/log';
-import { useForwardedRef, useMediaQuery } from '@dxos/react-hooks';
+import { useForwardedRef, useMediaQuery, useViewportResize } from '@dxos/react-hooks';
 
 import { useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
@@ -35,7 +35,11 @@ const MAIN_NAME = 'Main';
 const MAIN_ROOT_NAME = 'MainRoot';
 const NAVIGATION_SIDEBAR_NAME = 'NavigationSidebar';
 const COMPLEMENTARY_SIDEBAR_NAME = 'ComplementarySidebar';
-const GENERIC_CONSUMER_NAME = 'GenericConsumer';
+const DRAWER_NAME = 'Drawer';
+
+//
+// Landmark
+//
 
 const landmarkAttr = 'data-main-landmark';
 
@@ -74,7 +78,41 @@ const useLandmarkMover = (propsOnKeyDown: ComponentPropsWithoutRef<'div'>['onKey
   };
 };
 
+/**
+ * Detects if drawer should be in full mode based on:
+ * - Device is mobile (width)
+ * - Visual viewport is constrained (keyboard visible)
+ */
+const useDrawerFullMode = () => {
+  const [shouldBeFullMode, setShouldBeFullMode] = useState(false);
+
+  const checkViewport = useCallback(() => {
+    const isMobile = window.innerHeight <= 1000;
+    setShouldBeFullMode(window.visualViewport && isMobile ? window.visualViewport.height < 700 : false);
+
+    // Update CSS custom property with actual visual viewport height for full mode
+    if (window.visualViewport) {
+      document.documentElement.style.setProperty('--visual-viewport-height', `${window.visualViewport.height}px`);
+    }
+  }, []);
+
+  useViewportResize(checkViewport, [], 100);
+
+  // Also check on window resize (for device orientation changes)
+  useEffect(() => {
+    window.addEventListener('resize', checkViewport);
+    return () => window.removeEventListener('resize', checkViewport);
+  }, [checkViewport]);
+
+  return shouldBeFullMode;
+};
+
+//
+// Context
+//
+
 type SidebarState = 'expanded' | 'collapsed' | 'closed';
+type DrawerState = 'expanded' | 'full' | 'closed';
 
 type MainContextValue = {
   resizing: boolean;
@@ -82,25 +120,38 @@ type MainContextValue = {
   setNavigationSidebarState: Dispatch<SetStateAction<SidebarState | undefined>>;
   complementarySidebarState: SidebarState;
   setComplementarySidebarState: Dispatch<SetStateAction<SidebarState | undefined>>;
+  drawerState: DrawerState;
+  setDrawerState: Dispatch<SetStateAction<DrawerState | undefined>>;
 };
 
 const [MainProvider, useMainContext] = createContext<MainContextValue>(MAIN_NAME, {
   resizing: false,
+
   navigationSidebarState: 'closed',
   setNavigationSidebarState: (_nextState) => {
-    // TODO(burdon): Standardize with other context missing errors using raise.
-    log.warn('Attempt to set sidebar state without initializing `MainRoot`');
+    log.warn('Not initialized');
   },
+
   complementarySidebarState: 'closed',
   setComplementarySidebarState: (_nextState) => {
-    // TODO(burdon): Standardize with other context missing errors using raise.
-    log.warn('Attempt to set sidebar state without initializing `MainRoot`');
+    log.warn('Not initialized');
+  },
+
+  drawerState: 'closed',
+  setDrawerState: (_nextState) => {
+    log.warn('Not initialized');
   },
 });
 
-const useSidebars = (consumerName = GENERIC_CONSUMER_NAME) => {
-  const { setNavigationSidebarState, navigationSidebarState, setComplementarySidebarState, complementarySidebarState } =
-    useMainContext(consumerName);
+const useSidebars = (consumerName: string) => {
+  const {
+    navigationSidebarState,
+    setNavigationSidebarState,
+    complementarySidebarState,
+    setComplementarySidebarState,
+    drawerState,
+    setDrawerState,
+  } = useMainContext(consumerName);
 
   return {
     navigationSidebarState,
@@ -112,6 +163,7 @@ const useSidebars = (consumerName = GENERIC_CONSUMER_NAME) => {
     openNavigationSidebar: useCallback(() => setNavigationSidebarState('expanded'), []),
     collapseNavigationSidebar: useCallback(() => setNavigationSidebarState('collapsed'), []),
     closeNavigationSidebar: useCallback(() => setNavigationSidebarState('closed'), []),
+
     complementarySidebarState,
     setComplementarySidebarState,
     toggleComplementarySidebar: useCallback(
@@ -121,27 +173,52 @@ const useSidebars = (consumerName = GENERIC_CONSUMER_NAME) => {
     openComplementarySidebar: useCallback(() => setComplementarySidebarState('expanded'), []),
     collapseComplementarySidebar: useCallback(() => setComplementarySidebarState('collapsed'), []),
     closeComplementarySidebar: useCallback(() => setComplementarySidebarState('closed'), []),
+
+    drawerState,
+    setDrawerState,
+    toggleDrawer: useCallback(
+      () => setDrawerState(drawerState === 'expanded' ? 'closed' : 'expanded'),
+      [drawerState, setDrawerState],
+    ),
+    openDrawer: useCallback(() => setDrawerState('expanded'), []),
+    closeDrawer: useCallback(() => setDrawerState('closed'), []),
   };
 };
 
+// TODO(burdon): Combine to single state/callback.
 type MainRootProps = PropsWithChildren<{
   navigationSidebarState?: SidebarState;
   defaultNavigationSidebarState?: SidebarState;
   onNavigationSidebarStateChange?: (nextState: SidebarState) => void;
+
   complementarySidebarState?: SidebarState;
   defaultComplementarySidebarState?: SidebarState;
   onComplementarySidebarStateChange?: (nextState: SidebarState) => void;
+
+  drawerState?: DrawerState;
+  defaultDrawerState?: DrawerState;
+  onDrawerStateChange?: (nextState: DrawerState) => void;
 }>;
 
 const resizeDebounce = 3000;
+
+//
+// Root
+//
 
 const MainRoot = ({
   navigationSidebarState: propsNavigationSidebarState,
   defaultNavigationSidebarState,
   onNavigationSidebarStateChange,
+
   complementarySidebarState: propsComplementarySidebarState,
   defaultComplementarySidebarState,
   onComplementarySidebarStateChange,
+
+  drawerState: propsDrawerState,
+  defaultDrawerState,
+  onDrawerStateChange,
+
   children,
   ...props
 }: MainRootProps) => {
@@ -158,6 +235,26 @@ const MainRoot = ({
       defaultProp: defaultComplementarySidebarState,
       onChange: onComplementarySidebarStateChange,
     });
+  const [drawerState = 'closed', setDrawerState] = useControllableState<DrawerState>({
+    prop: propsDrawerState,
+    defaultProp: defaultDrawerState,
+    onChange: onDrawerStateChange,
+  });
+
+  const shouldBeFullMode = useDrawerFullMode();
+
+  // Auto-switch between expanded and full based on viewport
+  useEffect(() => {
+    if (drawerState === 'closed') {
+      return;
+    }
+
+    if (shouldBeFullMode && drawerState === 'expanded') {
+      setDrawerState('full');
+    } else if (!shouldBeFullMode && drawerState === 'full') {
+      setDrawerState('expanded');
+    }
+  }, [shouldBeFullMode, drawerState, setDrawerState]);
 
   const [resizing, setResizing] = useState(false);
   const resizeInterval = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -186,6 +283,8 @@ const MainRoot = ({
         setNavigationSidebarState,
         complementarySidebarState,
         setComplementarySidebarState,
+        drawerState,
+        setDrawerState,
       }}
       resizing={resizing}
     >
@@ -199,6 +298,10 @@ MainRoot.displayName = MAIN_ROOT_NAME;
 const handleOpenAutoFocus = (event: Event) => {
   !document.body.hasAttribute('data-is-keyboard') && event.preventDefault();
 };
+
+//
+// Sidebar
+//
 
 type MainSidebarProps = ThemedClassName<ComponentPropsWithRef<typeof DialogContent>> & {
   swipeToDismiss?: boolean;
@@ -219,9 +322,11 @@ const MainSidebar = forwardRef<HTMLDivElement, MainSidebarProps>(
     const { t } = useTranslation();
     const ref = useForwardedRef(forwardedRef);
     const noopRef = useRef(null);
+
     useSwipeToDismiss(swipeToDismiss ? ref : noopRef, {
       onDismiss: () => onStateChange?.('closed'),
     });
+
     // NOTE(thure): This is a workaround for something further down the tree grabbing focus on Escape. Adding this
     //   intervention to `Tabs.Root` or `Tabs.Tabpenel` instances is somehow ineffectual.
     const handleKeyDown = useCallback(
@@ -236,6 +341,7 @@ const MainSidebar = forwardRef<HTMLDivElement, MainSidebarProps>(
       },
       [props.onKeyDown],
     );
+
     const Root = isLg ? Primitive.div : DialogContent;
 
     return (
@@ -243,13 +349,13 @@ const MainSidebar = forwardRef<HTMLDivElement, MainSidebarProps>(
         {!isLg && <DialogTitle className='sr-only'>{toLocalizedString(label, t)}</DialogTitle>}
         <Root
           {...(!isLg && { forceMount: true, tabIndex: -1, onOpenAutoFocus: onOpenAutoFocus ?? handleOpenAutoFocus })}
+          {...(state === 'closed' && { inert: true })}
           {...props}
           data-side={side === 'inline-end' ? 'ie' : 'is'}
           data-state={state}
           data-resizing={resizing ? 'true' : 'false'}
           className={tx('main.sidebar', 'main__sidebar', {}, classNames)}
           onKeyDownCapture={handleKeyDown}
-          {...(state === 'closed' && { inert: true })}
           ref={ref}
         >
           {children}
@@ -258,6 +364,10 @@ const MainSidebar = forwardRef<HTMLDivElement, MainSidebarProps>(
     );
   },
 );
+
+//
+// Navigation Sidebar
+//
 
 type MainNavigationSidebarProps = Omit<MainSidebarProps, 'expanded' | 'side'>;
 
@@ -280,6 +390,10 @@ const MainNavigationSidebar = forwardRef<HTMLDivElement, MainNavigationSidebarPr
 
 MainNavigationSidebar.displayName = NAVIGATION_SIDEBAR_NAME;
 
+//
+// Complementary Sidebar
+//
+
 type MainComplementarySidebarProps = Omit<MainSidebarProps, 'expanded' | 'side'>;
 
 const MainComplementarySidebar = forwardRef<HTMLDivElement, MainComplementarySidebarProps>((props, forwardedRef) => {
@@ -300,17 +414,101 @@ const MainComplementarySidebar = forwardRef<HTMLDivElement, MainComplementarySid
   );
 });
 
-MainNavigationSidebar.displayName = NAVIGATION_SIDEBAR_NAME;
+MainComplementarySidebar.displayName = COMPLEMENTARY_SIDEBAR_NAME;
 
-type MainProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.div>> & {
+//
+// Drawer
+//
+
+type MainDrawerProps = ThemedClassName<ComponentPropsWithRef<typeof DialogContent>> & {
+  swipeToDismiss?: boolean;
+  state?: DrawerState;
+  resizing?: boolean;
+  onStateChange?: (nextState: DrawerState) => void;
+  label: Label;
+};
+
+const MainDrawer = forwardRef<HTMLDivElement, MainDrawerProps>(
+  (
+    { classNames, children, swipeToDismiss, onOpenAutoFocus, state, resizing, onStateChange, label, ...props },
+    forwardedRef,
+  ) => {
+    const [isLg] = useMediaQuery('lg');
+    const { tx } = useThemeContext();
+    const { t } = useTranslation();
+    const ref = useForwardedRef(forwardedRef);
+    const noopRef = useRef(null);
+
+    // TODO(burdon): Implement vertical swipe-to-dismiss for drawer.
+    useSwipeToDismiss(swipeToDismiss ? ref : noopRef, {
+      onDismiss: () => onStateChange?.('closed'),
+    });
+
+    const handleKeyDown = useCallback(
+      (event: KeyboardEvent<HTMLDivElement>) => {
+        const focusGroupParent = (event.target as HTMLElement).closest('[data-tabster]');
+        if (event.key === 'Escape' && focusGroupParent) {
+          event.preventDefault();
+          event.stopPropagation();
+          (focusGroupParent as HTMLElement).focus();
+        }
+        props.onKeyDown?.(event);
+      },
+      [props.onKeyDown],
+    );
+
+    return (
+      <Primitive.div
+        {...(state === 'closed' && { inert: true })}
+        {...(!isLg && { forceMount: true, tabIndex: -1, onOpenAutoFocus: onOpenAutoFocus ?? handleOpenAutoFocus })}
+        {...props}
+        role='region'
+        aria-label={toLocalizedString(label, t)}
+        data-state={state}
+        data-resizing={resizing ? 'true' : 'false'}
+        className={tx('main.drawer', 'main__drawer', {}, classNames)}
+        onKeyDownCapture={handleKeyDown}
+        ref={ref}
+      >
+        {children}
+      </Primitive.div>
+    );
+  },
+);
+
+type MainDrawerRootProps = Omit<MainDrawerProps, 'state' | 'resizing' | 'onStateChange'>;
+
+const MainDrawerRoot = forwardRef<HTMLDivElement, MainDrawerRootProps>((props, forwardedRef) => {
+  const { drawerState, setDrawerState, resizing } = useMainContext(DRAWER_NAME);
+  const mover = useLandmarkMover(props.onKeyDown, '3');
+
+  return (
+    <MainDrawer
+      {...mover}
+      {...props}
+      state={drawerState}
+      onStateChange={setDrawerState}
+      resizing={resizing}
+      ref={forwardedRef}
+    />
+  );
+});
+
+MainDrawerRoot.displayName = DRAWER_NAME;
+
+//
+// Content
+//
+
+type MainContentProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.div>> & {
   asChild?: boolean;
   bounce?: boolean;
   handlesFocus?: boolean;
 };
 
-const MainContent = forwardRef<HTMLDivElement, MainProps>(
-  ({ asChild, classNames, bounce, handlesFocus, children, role, ...props }: MainProps, forwardedRef) => {
-    const { navigationSidebarState, complementarySidebarState } = useMainContext(MAIN_NAME);
+const MainContent = forwardRef<HTMLDivElement, MainContentProps>(
+  ({ asChild, classNames, bounce, handlesFocus, children, role, ...props }: MainContentProps, forwardedRef) => {
+    const { navigationSidebarState, complementarySidebarState, drawerState } = useMainContext(MAIN_NAME);
     const { tx } = useThemeContext();
     const Root = asChild ? Slot : role ? 'div' : 'main';
 
@@ -323,6 +521,7 @@ const MainContent = forwardRef<HTMLDivElement, MainProps>(
         {...props}
         data-sidebar-inline-start-state={navigationSidebarState}
         data-sidebar-inline-end-state={complementarySidebarState}
+        data-drawer-state={drawerState}
         data-handles-focus={handlesFocus}
         className={tx('main.content', 'main', { bounce, handlesFocus }, classNames)}
         ref={forwardedRef}
@@ -335,7 +534,7 @@ const MainContent = forwardRef<HTMLDivElement, MainProps>(
 
 MainContent.displayName = MAIN_NAME;
 
-type MainOverlayProps = ThemedClassName<Omit<ComponentPropsWithRef<typeof Primitive.div>, 'children'>>;
+type MainOverlayProps = ThemedClassName<Omit<ComponentPropsWithRef<typeof Primitive.div>, 'children' | 'onClick'>>;
 
 const MainOverlay = forwardRef<HTMLDivElement, MainOverlayProps>(({ classNames, ...props }, forwardedRef) => {
   const [isLg] = useMediaQuery('lg');
@@ -344,15 +543,19 @@ const MainOverlay = forwardRef<HTMLDivElement, MainOverlayProps>(({ classNames, 
   const { tx } = useThemeContext();
   return (
     <div
+      {...props}
       onClick={() => {
         setNavigationSidebarState('collapsed');
         setComplementarySidebarState('collapsed');
       }}
-      {...props}
       className={tx(
         'main.overlay',
         'main__overlay',
-        { isLg, inlineStartSidebarOpen: navigationSidebarState, inlineEndSidebarOpen: complementarySidebarState },
+        {
+          isLg,
+          inlineStartSidebarOpen: navigationSidebarState,
+          inlineEndSidebarOpen: complementarySidebarState,
+        },
         classNames,
       )}
       data-state={navigationSidebarState === 'expanded' || complementarySidebarState === 'expanded' ? 'open' : 'closed'}
@@ -368,8 +571,17 @@ export const Main = {
   Overlay: MainOverlay,
   NavigationSidebar: MainNavigationSidebar,
   ComplementarySidebar: MainComplementarySidebar,
+  Drawer: MainDrawerRoot,
 };
 
 export { useMainContext, useSidebars, useLandmarkMover };
 
-export type { MainRootProps, MainProps, MainOverlayProps, MainNavigationSidebarProps, SidebarState };
+export type {
+  MainRootProps,
+  MainContentProps,
+  MainOverlayProps,
+  MainNavigationSidebarProps,
+  MainDrawerRootProps,
+  SidebarState,
+  DrawerState,
+};

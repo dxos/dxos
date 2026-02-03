@@ -217,12 +217,14 @@ const StoryThread: FC<{
   );
 };
 
-const Sidebar: FC<{
+type SidebarProps = {
   threads: StoryCommentThread[];
   selected?: string;
   onSelect: (thread: string) => void;
   onResolve: (thread: string) => void;
-}> = ({ threads, selected, onSelect, onResolve }) => {
+};
+
+const Sidebar = ({ threads, selected, onSelect, onResolve }: SidebarProps) => {
   // Sort by y-position.
   const sortedThreads = useMemo(() => {
     const sorted = [...threads];

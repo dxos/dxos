@@ -8,7 +8,7 @@ import {
   type OverlayScrollbarsComponentProps,
   type OverlayScrollbarsComponentRef,
 } from 'overlayscrollbars-react';
-import React, { type RefObject, forwardRef, useEffect, useMemo, useRef } from 'react';
+import React, { type RefCallback, forwardRef, useEffect, useImperativeHandle, useMemo, useRef } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
@@ -26,12 +26,11 @@ const defaultOptions: ScrollableProps['options'] = {
   },
 };
 
-// TODO(burdon): row/column: options={{ overflow: { x: 'scroll' } }}
-export type ScrollableProps = ThemedClassName<OverlayScrollbarsComponentProps> & {
+export type ScrollableProps = ThemedClassName<Omit<OverlayScrollbarsComponentProps, 'ref'>> & {
   axis?: Axis;
   padding?: boolean;
   onScroll?: (event: Event) => void;
-  viewportRef?: RefObject<HTMLElement | null>;
+  viewportRef?: RefCallback<HTMLElement | null>;
 };
 
 /**
@@ -42,7 +41,7 @@ export const Scrollable = forwardRef<HTMLDivElement, ScrollableProps>(
     { classNames, axis = 'vertical', padding, options: optionsProp = defaultOptions, onScroll, viewportRef, ...props },
     forwardedRef,
   ) => {
-    const osRef = useRef<OverlayScrollbarsComponentRef<'div'>>(null);
+    const osRef = useRef<OverlayScrollbarsComponentRef>(null);
     const options = useMemo(() => {
       const options = { ...optionsProp };
       if (axis) {
@@ -55,22 +54,12 @@ export const Scrollable = forwardRef<HTMLDivElement, ScrollableProps>(
       return options;
     }, [axis, optionsProp]);
 
-    // Forward the host element to the forwardedRef for asChild/Slot compatibility.
-    useEffect(() => {
-      const hostElement = osRef.current?.getElement();
-      if (forwardedRef) {
-        if (typeof forwardedRef === 'function') {
-          forwardedRef(hostElement ?? null);
-        } else {
-          forwardedRef.current = hostElement ?? null;
-        }
-      }
-    });
+    useImperativeHandle(forwardedRef, () => osRef.current?.getElement() as HTMLDivElement, [osRef]);
 
     useEffect(() => {
       const instance = osRef.current?.osInstance();
       if (viewportRef) {
-        viewportRef.current = instance?.elements().viewport ?? null;
+        viewportRef(instance?.elements().viewport ?? null);
       }
     }, [osRef, viewportRef]);
 
@@ -89,7 +78,7 @@ export const Scrollable = forwardRef<HTMLDivElement, ScrollableProps>(
     return (
       <OverlayScrollbarsComponent
         {...props}
-        className={mx(padding && axis === 'vertical' ? 'pli-3' : 'pbe-3', classNames)}
+        className={mx(padding && (axis === 'vertical' ? 'pli-3' : 'pbe-3'), classNames)}
         options={options}
         events={events}
         ref={osRef}

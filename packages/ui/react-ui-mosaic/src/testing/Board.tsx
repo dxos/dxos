@@ -4,7 +4,7 @@
 
 import { useComposedRefs } from '@radix-ui/react-compose-refs';
 import * as Schema from 'effect/Schema';
-import React, { forwardRef, useMemo, useRef } from 'react';
+import React, { forwardRef, useMemo, useRef, useState } from 'react';
 
 import { Obj, Ref, Type } from '@dxos/echo';
 import { ObjectId } from '@dxos/keys';
@@ -66,7 +66,7 @@ type RootProps = {
 
 const Root = forwardRef<HTMLDivElement, RootProps>(({ id, columns, debug }, forwardedRef) => {
   const [DebugInfo, debugHandler] = useContainerDebug(debug);
-  const viewportRef = useRef<HTMLElement | null>(null);
+  const [viewport, setViewport] = useState<HTMLElement | null>(null);
 
   const eventHandler = useEventHandlerAdapter({
     id,
@@ -80,19 +80,19 @@ const Root = forwardRef<HTMLDivElement, RootProps>(({ id, columns, debug }, forw
   return (
     <div
       role='none'
-      className={mx('p-2 grid bs-full is-full overflow-hidden', debug && 'grid-cols-[1fr_20rem] gap-2')}
+      className={mx('plb-2 grid bs-full is-full overflow-hidden', debug && 'grid-cols-[1fr_20rem] gap-2')}
       ref={forwardedRef}
     >
       <Focus.Group asChild axis='horizontal'>
         <Mosaic.Container
           asChild
-          axis='horizontal'
           withFocus
-          autoScroll={viewportRef.current}
+          axis='horizontal'
+          autoScroll={viewport}
           eventHandler={eventHandler}
           debug={debugHandler}
         >
-          <Mosaic.Viewport axis='horizontal' padding viewportRef={viewportRef}>
+          <Mosaic.Viewport axis='horizontal' padding viewportRef={setViewport}>
             <Mosaic.Stack axis='horizontal' items={columns} getId={(item) => item.id} Tile={Column} debug={debug} />
           </Mosaic.Viewport>
         </Mosaic.Container>
@@ -112,7 +112,7 @@ const Column = forwardRef<HTMLDivElement, ColumnProps>(({ classNames, location, 
   const [column, updateColumn] = useObject(data);
   const [DebugInfo, debugHandler] = useContainerDebug(debug);
   const dragHandleRef = useRef<HTMLButtonElement>(null);
-  const viewportRef = useRef<HTMLElement | null>(null);
+  const [viewport, setViewport] = useState<HTMLElement | null>(null);
   const eventHandler = useEventHandlerAdapter<Ref.Unknown>({
     id: data.id,
     items: column.items,
@@ -160,18 +160,18 @@ const Column = forwardRef<HTMLDivElement, ColumnProps>(({ classNames, location, 
           <Card.Context value={{ menuItems }}>
             <Mosaic.Container
               asChild
-              axis='vertical'
               withFocus
-              autoScroll={viewportRef.current}
+              axis='vertical'
+              autoScroll={viewport}
               eventHandler={eventHandler}
               debug={debugHandler}
             >
-              <Mosaic.Viewport axis='vertical' padding viewportRef={viewportRef}>
+              <Mosaic.Viewport axis='vertical' padding viewportRef={setViewport}>
                 <Mosaic.Stack axis='vertical' items={column.items} getId={(data) => data.dxn.toString()} Tile={Item} />
               </Mosaic.Viewport>
             </Mosaic.Container>
           </Card.Context>
-          <div>
+          <div role='none'>
             <div className='grow flex p-1 justify-center text-xs'>{column.items.length}</div>
             <DebugInfo />
           </div>

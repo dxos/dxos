@@ -304,7 +304,6 @@ const Root = forwardRef<HTMLDivElement, RootProps>(({ classNames, children, asCh
 
                 sourceHandler.onTake?.({ source: sourceData }, async (object) => {
                   targetHandler.onDrop?.({
-                    // TODO(burdon): Change source!!!
                     source: { ...sourceData, data: object },
                     target: targetData,
                   });
@@ -469,28 +468,15 @@ const Container = forwardRef<HTMLDivElement, ContainerProps>(
 
       return combine(
         ...[
-          // Autoscroll.
-          // TODO(burdon): Autoscroll doesn't work well horizontally.
-          autoscrollElement && [
-            autoScrollForElements({
-              element: autoscrollElement,
-              canScroll: ({ element: _ }) => {
-                // const delta = element.scrollHeight - element.scrollTop - element.clientHeight;
-                return true;
-              },
-              getAllowedAxis: () => axis,
-              getConfiguration: () => ({
-                maxScrollSpeed: 'fast',
-              }),
-            }),
-
-            bind(autoscrollElement, {
-              type: 'scroll',
-              listener: handleScroll,
-            }),
-
-            () => setScrolling(false),
-          ],
+          /**
+           * Custom event for dragging cancellation.
+           */
+          bind(rootRef.current, {
+            type: 'dnd:cancel',
+            listener: () => {
+              setState({ type: 'idle' });
+            },
+          }),
 
           // Target.
           dropTargetForElements({
@@ -544,15 +530,28 @@ const Container = forwardRef<HTMLDivElement, ContainerProps>(
             },
           }),
 
-          /**
-           * Custom event for dragging cancellation.
-           */
-          bind(rootRef.current, {
-            type: 'dnd:cancel',
-            listener: () => {
-              setState({ type: 'idle' });
-            },
-          }),
+          // Autoscroll.
+          // NOTE: When used with Scrollable we get a spurious warning (in dev mode).
+          // "Auto scrolling has been attached to an element that appears not to be scrollable."
+          autoscrollElement && [
+            autoScrollForElements({
+              element: autoscrollElement,
+              // canScroll: ({ element: _ }) => {
+              //   return true;
+              // },
+              getAllowedAxis: () => axis,
+              getConfiguration: () => ({
+                maxScrollSpeed: 'fast',
+              }),
+            }),
+
+            bind(autoscrollElement, {
+              type: 'scroll',
+              listener: handleScroll,
+            }),
+
+            () => setScrolling(false),
+          ],
         ]
           .filter(isTruthy)
           .flatMap((x) => x),
@@ -626,7 +625,7 @@ type TileProps<TData = any, TLocation = LocationType> = SlottableClassName<
     id: string;
     data: TData;
     location: TLocation;
-    draggable?: boolean;
+    draggable?: boolean; // TODO(burdon): Not currently implemented.
     debug?: boolean;
   }>
 >;
