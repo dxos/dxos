@@ -8,11 +8,13 @@ import { Surface, useAppGraph } from '@dxos/app-framework/react';
 import { log } from '@dxos/log';
 import { useNode } from '@dxos/plugin-graph';
 import { Main as NaturalMain } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-ui';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention';
 import { Mosaic } from '@dxos/react-ui-mosaic';
 import { mx } from '@dxos/ui-theme';
 
 import { useSimpleLayoutState } from '../../hooks';
+import { meta } from '../../meta';
 import { ContentError } from '../ContentError';
 import { ContentLoading } from '../ContentLoading';
 import { useLoadDescendents } from '../hooks';
@@ -24,6 +26,7 @@ import { NavBar } from './NavBar';
  * Main root component.
  */
 export const Main = () => {
+  const { t } = useTranslation(meta.id);
   const { state } = useSimpleLayoutState();
   const id = state.active ?? state.workspace;
   const showNavBar = !state.isPopover;
@@ -56,7 +59,7 @@ export const Main = () => {
 
   return (
     <Mosaic.Root>
-      <NaturalMain.Root complementarySidebarState='closed' navigationSidebarState='closed'>
+      <NaturalMain.Root complementarySidebarState='closed' navigationSidebarState='closed' drawerState='closed'>
         <NaturalMain.Content
           bounce
           classNames={mx(
@@ -69,12 +72,15 @@ export const Main = () => {
           <article className='contents'>
             <Surface key={id} role='article' data={data} limit={1} fallback={ContentError} placeholder={placeholder} />
           </article>
-          {/* TODO(wittjosiah): Since the navbar isn't fixed, if the Surface resolves to nothing the navbar fills the
-           screen. */}
+          {/* TODO(wittjosiah): Since the navbar isn't fixed, if the Surface resolves to nothing the navbar fills the screen. */}
           {showNavBar && (
             <NavBar classNames='border-bs border-separator' activeId={id} onActiveIdChange={handleActiveIdChange} />
           )}
         </NaturalMain.Content>
+        {/* TODO(burdon): This is just a placeholder for now. */}
+        <NaturalMain.Drawer label={t('drawer label')}>
+          <Surface role='article' limit={1} fallback={ContentError} placeholder={placeholder} />
+        </NaturalMain.Drawer>
       </NaturalMain.Root>
     </Mosaic.Root>
   );
