@@ -3,7 +3,7 @@
 //
 
 import { type Atom, RegistryContext, useAtomValue } from '@effect-atom/atom-react';
-import { useCallback, useContext, useRef } from 'react';
+import { useCallback, useContext, useEffect, useRef } from 'react';
 
 import { Graph, Node } from '@dxos/app-graph';
 
@@ -62,13 +62,14 @@ export const useMenuActions = (props: Atom.Atom<ActionGraphProps>): MenuActions 
   }
   const graph = graphRef.current;
 
-  // Update graph nodes synchronously when props change (before render completes).
-  // Using a ref to track the previous value to detect changes.
+  // Update graph nodes when props change (after render completes).
   const prevPropsRef = useRef(menuGraphProps);
-  if (prevPropsRef.current !== menuGraphProps) {
-    prevPropsRef.current = menuGraphProps;
-    graph.pipe(Graph.addNodes(menuGraphProps.nodes), Graph.addEdges(menuGraphProps.edges));
-  }
+  useEffect(() => {
+    if (prevPropsRef.current !== menuGraphProps) {
+      prevPropsRef.current = menuGraphProps;
+      graph.pipe(Graph.addNodes(menuGraphProps.nodes), Graph.addEdges(menuGraphProps.edges));
+    }
+  }, [graph, menuGraphProps]);
 
   const useGroupItems = useCallback(
     (sourceNode?: MenuItemGroup) => {
