@@ -17,6 +17,10 @@ export interface AnnotationHelper<T> {
   set: (value: T) => <S extends Schema.Schema.Any>(schema: S) => S;
 }
 
+/**
+ * Note: only for system annotations.
+ */
+// TODO(dmaretskyi): Rename to createSystemAnnotationHelper.
 export const createAnnotationHelper = <T>(id: symbol): AnnotationHelper<T> => {
   return {
     get: (schema) => SchemaAST.getAnnotation(schema.ast, id),
@@ -70,3 +74,4 @@ export const makeTypeJsonSchemaAnnotation = (options: {
 
   return obj;
 };
+
