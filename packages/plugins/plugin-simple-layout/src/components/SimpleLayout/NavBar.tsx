@@ -81,12 +81,7 @@ export const NavBar = ({ classNames, activeId, onActiveIdChange }: NavBarProps) 
         </DropdownMenu.Root>
       </MenuProvider>
 
-      <IconButton
-        icon='ph--air-traffic-control--regular'
-        iconOnly
-        label='Toggle drawer'
-        onClick={() => toggleDrawer()}
-      />
+      <IconButton icon='ph--arrow-up--regular' iconOnly label='Toggle drawer' onClick={() => toggleDrawer()} />
 
       {/*
         <ButtonGroup>

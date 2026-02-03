@@ -38,6 +38,10 @@ const NAVIGATION_SIDEBAR_NAME = 'NavigationSidebar';
 const COMPLEMENTARY_SIDEBAR_NAME = 'ComplementarySidebar';
 const DRAWER_NAME = 'Drawer';
 
+const handleOpenAutoFocus = (event: Event) => {
+  !document.body.hasAttribute('data-is-keyboard') && event.preventDefault();
+};
+
 //
 // Landmark
 //
@@ -117,6 +121,7 @@ const useDynamicDrawer = (consumerName: string) => {
 // Context
 //
 
+// TODO(burdon): Define collapsed state.
 type SidebarState = 'expanded' | 'collapsed' | 'closed';
 type DrawerState = 'expanded' | 'full' | 'closed';
 
@@ -252,38 +257,23 @@ const MainRoot = ({
     onChange: onDrawerStateChange,
   });
 
-  // Auto-switch between expanded and full based on viewport.
-  // const shouldBeFullMode = useDynamicDrawer();
-  // useEffect(() => {
-  //   if (drawerState === 'closed') {
-  //     return;
-  //   }
-
-  //   if (shouldBeFullMode && drawerState === 'expanded') {
-  //     setDrawerState('full');
-  //   } else if (!shouldBeFullMode && drawerState === 'full') {
-  //     setDrawerState('expanded');
-  //   }
-  // }, [shouldBeFullMode, drawerState, setDrawerState]);
-
   const [resizing, setResizing] = useState(false);
   const resizeInterval = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(
+    () =>
+      addEventListener(window, 'resize', () => {
+        setResizing(true);
+        if (resizeInterval.current) {
+          clearTimeout(resizeInterval.current);
+        }
 
-  const handleResize = useCallback(() => {
-    setResizing(true);
-    if (resizeInterval.current) {
-      clearTimeout(resizeInterval.current);
-    }
-    resizeInterval.current = setTimeout(() => {
-      setResizing(false);
-      resizeInterval.current = null;
-    }, resizeDebounce);
-  }, []);
-
-  useEffect(() => {
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, [handleResize]);
+        resizeInterval.current = setTimeout(() => {
+          setResizing(false);
+          resizeInterval.current = null;
+        }, resizeDebounce);
+      }),
+    [],
+  );
 
   return (
     <MainProvider
@@ -304,10 +294,6 @@ const MainRoot = ({
 };
 
 MainRoot.displayName = MAIN_ROOT_NAME;
-
-const handleOpenAutoFocus = (event: Event) => {
-  !document.body.hasAttribute('data-is-keyboard') && event.preventDefault();
-};
 
 //
 // Sidebar
