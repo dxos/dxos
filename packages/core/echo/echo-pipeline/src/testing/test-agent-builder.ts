@@ -11,7 +11,7 @@ import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager
 import { MemoryTransportFactory, SwarmNetworkManager, createRtcTransportFactory } from '@dxos/network-manager';
 import { type FeedMessage } from '@dxos/protocols/buf/dxos/echo/feed_pb';
 import { type SpaceMetadata } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
-import { AdmittedFeed } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { AdmittedFeed_Designation } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type Storage, StorageType, createStorage } from '@dxos/random-access-storage';
 import { Gossip, Presence } from '@dxos/teleport-extension-gossip';
 import { BlobStore } from '@dxos/teleport-extension-object-sync';
@@ -248,7 +248,7 @@ export class TestAgent {
     const generator = new CredentialGenerator(this.keyring, this.identityKey, this.deviceKey);
     const credentials = [
       ...(await generator.createSpaceGenesis(space.key, space.controlFeedKey!)),
-      await generator.createFeedAdmission(space.key, space.dataFeedKey!, AdmittedFeed.Designation.DATA),
+      await generator.createFeedAdmission(space.key, space.dataFeedKey!, AdmittedFeed_Designation.DATA),
       await generator.createEpochCredential(space.key),
     ];
 

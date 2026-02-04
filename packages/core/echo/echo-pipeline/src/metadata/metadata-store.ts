@@ -12,7 +12,7 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { DataCorruptionError, STORAGE_VERSION } from '@dxos/protocols';
 import { schema } from '@dxos/protocols/proto';
-import { Invitation, SpaceState } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { type Invitation, Invitation_Type, SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import {
   type ControlPipelineSnapshot,
   type EchoMetadata,
@@ -374,5 +374,5 @@ export const hasInvitationExpired = (invitation: Invitation): boolean => {
 
 // TODO: remove once "multiuse" type invitations get removed from local metadata of existing profiles
 const isLegacyInvitationFormat = (invitation: Invitation): boolean => {
-  return invitation.type === Invitation.Type.MULTIUSE;
+  return invitation.type === Invitation_Type.MULTIUSE;
 };

@@ -13,7 +13,7 @@ import { InternalError } from '@dxos/errors';
 import { ObjectId, PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ObjectPointerEncoded } from '@dxos/protocols';
-import { IndexKind } from '@dxos/protocols/buf/dxos/echo/indexing_pb';
+import { type IndexKind, IndexKind_Kind } from '@dxos/protocols/buf/dxos/echo/indexing_pb';
 import { trace } from '@dxos/tracing';
 import { defaultMap, entries } from '@dxos/util';
 
@@ -35,7 +35,7 @@ import {
 @staticImplements<IndexStaticProps>()
 export class IndexGraph extends Resource implements Index {
   private _identifier = PublicKey.random().toString();
-  public readonly kind: IndexKind = { kind: IndexKind.Kind.GRAPH };
+  public readonly kind: IndexKind = { kind: IndexKind_Kind.GRAPH };
   public readonly updated = new Event<void>();
 
   /**

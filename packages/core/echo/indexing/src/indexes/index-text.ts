@@ -11,7 +11,7 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import type { ObjectPointerEncoded } from '@dxos/protocols';
-import { IndexKind } from '@dxos/protocols/buf/dxos/echo/indexing_pb';
+import { type IndexKind, IndexKind_Kind } from '@dxos/protocols/buf/dxos/echo/indexing_pb';
 import { trace } from '@dxos/tracing';
 
 import {
@@ -40,7 +40,7 @@ type OramaSchemaType = Orama.Orama<
 @staticImplements<IndexStaticProps>()
 export class IndexText extends Resource implements Index {
   private _identifier = PublicKey.random().toString();
-  public readonly kind: IndexKind = { kind: IndexKind.Kind.FULL_TEXT };
+  public readonly kind: IndexKind = { kind: IndexKind_Kind.FULL_TEXT };
   public readonly updated = new Event<void>();
 
   private _orama?: OramaSchemaType = undefined;

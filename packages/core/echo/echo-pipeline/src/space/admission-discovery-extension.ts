@@ -11,7 +11,7 @@ import {
   type AdmissionDiscoveryService,
   type GetAdmissionCredentialRequest,
   type GetAdmissionCredentialResponse,
-} from '@dxos/protocols/buf/dxos/mesh/teleport_pb';
+} from '@dxos/protocols/buf/dxos/mesh/teleport/admission-discovery_pb';
 import { type ExtensionContext, RpcExtension } from '@dxos/teleport';
 
 import { type Space } from './space';

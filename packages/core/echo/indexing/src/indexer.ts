@@ -9,7 +9,7 @@ import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { type LevelDB } from '@dxos/kv-store';
 import { log } from '@dxos/log';
-import { type IndexConfig, IndexKind } from '@dxos/protocols/buf/dxos/echo/indexing_pb';
+import { type IndexConfig, IndexKind_Kind } from '@dxos/protocols/buf/dxos/echo/indexing_pb';
 import { trace } from '@dxos/tracing';
 
 import { IndexConstructors } from './indexes';
@@ -175,28 +175,28 @@ export class Indexer extends Resource {
     }
 
     if (filter.graph) {
-      const graphIndex = this._engine.getIndex({ kind: IndexKind.Kind.GRAPH });
+      const graphIndex = this._engine.getIndex({ kind: IndexKind_Kind.GRAPH });
       if (!graphIndex) {
         // TODO(dmaretskyi): This shouldn't be the default?
         return [];
       }
       return graphIndex.find(filter);
     } else if (filter.text?.kind === 'vector') {
-      const vectorIndex = this._engine.getIndex({ kind: IndexKind.Kind.VECTOR });
+      const vectorIndex = this._engine.getIndex({ kind: IndexKind_Kind.VECTOR });
       if (!vectorIndex) {
         // TODO(dmaretskyi): This shouldn't be the default?
         return [];
       }
       return vectorIndex.find(filter);
     } else if (filter.text?.kind === 'text') {
-      const textIndex = this._engine.getIndex({ kind: IndexKind.Kind.FULL_TEXT });
+      const textIndex = this._engine.getIndex({ kind: IndexKind_Kind.FULL_TEXT });
       if (!textIndex) {
         // TODO(dmaretskyi): This shouldn't be the default?
         return [];
       }
       return textIndex.find(filter);
     } else {
-      const typenameIndex = this._engine.getIndex({ kind: IndexKind.Kind.SCHEMA_MATCH });
+      const typenameIndex = this._engine.getIndex({ kind: IndexKind_Kind.SCHEMA_MATCH });
       if (!typenameIndex) {
         // TODO(dmaretskyi): This shouldn't be the default?
         return [];

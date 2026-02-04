@@ -7,7 +7,7 @@ import { type Context, Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import type { LevelDB } from '@dxos/kv-store';
 import { log } from '@dxos/log';
-import { IndexKind } from '@dxos/protocols/buf/dxos/echo/indexing_pb';
+import { type IndexKind, IndexKind_Kind } from '@dxos/protocols/buf/dxos/echo/indexing_pb';
 import { trace } from '@dxos/tracing';
 import { ComplexMap } from '@dxos/util';
 
@@ -51,7 +51,7 @@ export class IndexingEngine extends Resource {
    * Indexes that are kept in-sync with the documents and are serialized to disk.
    */
   private readonly _indexes = new ComplexMap<IndexKind, Index>((kind) =>
-    kind.kind === IndexKind.Kind.FIELD_MATCH ? `${kind.kind}:${kind.field}` : kind.kind,
+    kind.kind === IndexKind_Kind.FIELD_MATCH ? `${kind.kind}:${kind.field}` : kind.kind,
   );
 
   /**
@@ -216,7 +216,7 @@ export class IndexingEngine extends Resource {
         return updates;
       }
       switch (index.kind.kind) {
-        case IndexKind.Kind.FIELD_MATCH:
+        case IndexKind_Kind.FIELD_MATCH:
           invariant(index.kind.field, 'Field match index kind should have a field');
           updates.push(
             ...(await updateIndexWithObjects(
@@ -225,16 +225,16 @@ export class IndexingEngine extends Resource {
             )),
           );
           break;
-        case IndexKind.Kind.SCHEMA_MATCH:
+        case IndexKind_Kind.SCHEMA_MATCH:
           updates.push(...(await updateIndexWithObjects(index, documents)));
           break;
-        case IndexKind.Kind.GRAPH:
+        case IndexKind_Kind.GRAPH:
           updates.push(...(await updateIndexWithObjects(index, documents)));
           break;
-        case IndexKind.Kind.VECTOR:
+        case IndexKind_Kind.VECTOR:
           updates.push(...(await updateIndexWithObjects(index, documents)));
           break;
-        case IndexKind.Kind.FULL_TEXT:
+        case IndexKind_Kind.FULL_TEXT:
           updates.push(...(await updateIndexWithObjects(index, documents)));
           break;
       }

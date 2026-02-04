@@ -8,7 +8,7 @@ import { asyncTimeout } from '@dxos/async';
 import { ObjectStructure } from '@dxos/echo-protocol';
 import { DXN } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
-import { IndexKind } from '@dxos/protocols/buf/dxos/echo/indexing_pb';
+import { IndexKind_Kind } from '@dxos/protocols/buf/dxos/echo/indexing_pb';
 import { openAndClose } from '@dxos/test-utils';
 
 import { Indexer } from './indexer';
@@ -57,7 +57,7 @@ describe('Indexer', () => {
 
     {
       const doneIndexing = indexer.updated.waitForCount(1);
-      void indexer.setConfig({ indexes: [{ kind: IndexKind.Kind.SCHEMA_MATCH }], enabled: true });
+      void indexer.setConfig({ indexes: [{ kind: IndexKind_Kind.SCHEMA_MATCH }], enabled: true });
       await indexer.open();
       await asyncTimeout(doneIndexing, 1000);
     }
