@@ -13,6 +13,8 @@ tasks:
   compile:
     args:
       - '--entryPoint=src/hyperformula.js'
+      - '--platform=neutral'
+      - '--mainFields=browser,module,main'
       - '--bundlePackage=hyperformula'
       - '--bundlePackage=chevrotain'
       - '--bundlePackage=unorm'

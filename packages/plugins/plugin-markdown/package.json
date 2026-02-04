@@ -20,10 +20,10 @@
       "node": "./dist/lib/node-esm/index.mjs"
     },
     "./blueprints": {
-      "browser": "./dist/lib/browser/blueprints/index.mjs",
-      "node": "./dist/lib/node-esm/blueprints/index.mjs",
       "source": "./src/blueprints/index.ts",
-      "types": "./dist/types/src/blueprints/index.d.ts"
+      "types": "./dist/types/src/blueprints/index.d.ts",
+      "browser": "./dist/lib/browser/blueprints/index.mjs",
+      "node": "./dist/lib/node-esm/blueprints/index.mjs"
     },
     "./cli": {
       "source": "./src/cli/index.ts",
