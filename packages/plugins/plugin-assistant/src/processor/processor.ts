@@ -20,6 +20,7 @@ import {
   type ToolResolverService,
 } from '@dxos/ai';
 import {
+  AiContextService,
   type AiConversation,
   type AiConversationRunProps,
   ArtifactDiffResolver,
@@ -157,7 +158,12 @@ export class AiChatProcessor {
         const objects = this.context.getObjects();
         const system = yield* formatSystemPrompt({ system: this._options.system, blueprints, objects });
         return system;
-      }).pipe(await Runtime.runPromiseExit(await this._services())),
+      }).pipe(
+        Effect.provideService(AiContextService, {
+          binder: this.context,
+        }),
+        await Runtime.runPromiseExit(await this._services()),
+      ),
     );
   }
 

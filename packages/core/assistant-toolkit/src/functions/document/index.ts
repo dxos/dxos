@@ -6,7 +6,6 @@ import { default as read$ } from './read';
 import { default as update$ } from './update';
 import { default as create$ } from './create';
 
-/** @deprecated */
 export namespace Document {
   export const read = read$;
   export const update = update$;
