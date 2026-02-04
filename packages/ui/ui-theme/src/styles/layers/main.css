@@ -205,8 +205,9 @@
     }
 
     &[data-state='full'] {
-      block-size: var(--visual-viewport-height, 100dvh);
+      inset-block-start: 0;
       inset-block-end: max(0px, env(safe-area-inset-bottom));
+      padding-block-start: max(0.5rem, env(safe-area-inset-top));
     }
   }
 
