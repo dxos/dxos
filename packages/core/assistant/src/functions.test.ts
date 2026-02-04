@@ -29,7 +29,7 @@ const readName = defineFunction({
   }),
   outputSchema: Schema.String,
   handler: Effect.fnUntraced(function* ({ data }) {
-    const org = yield* Database.Service.load(data.org);
+    const org = yield* Database.load(data.org);
     return org.name ?? '<no org>';
   }),
 });
@@ -51,13 +51,13 @@ describe('Research', () => {
     'call a function with a ref input',
     Effect.fnUntraced(
       function* (_) {
-        const org = yield* Database.Service.add(
+        const org = yield* Database.add(
           Obj.make(Organization.Organization, {
             name: 'BlueYard',
             website: 'https://blueyard.com',
           }),
         );
-        yield* Database.Service.flush({ indexes: true });
+        yield* Database.flush({ indexes: true });
         yield* new AiSession().run({
           prompt: `What is the name of the organization? ${org.id}`,
           toolkit: yield* createToolkit({

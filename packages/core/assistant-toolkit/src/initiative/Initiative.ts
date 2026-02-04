@@ -42,10 +42,10 @@ export const make = (
         ...(props.artifacts ?? []),
       ],
     });
-    yield* Database.Service.add(initiative);
+    yield* Database.add(initiative);
     const queue = yield* QueueService.createQueue<Message.Message | ContextBinding>();
     const contextBinder = new AiContextBinder({ queue });
-    const initiativeBlueprint = yield* Database.Service.add(Obj.clone(InitiativeBlueprint, { deep: true }));
+    const initiativeBlueprint = yield* Database.add(Obj.clone(InitiativeBlueprint, { deep: true }));
     yield* Effect.promise(() =>
       contextBinder.bind({
         blueprints: [Ref.make(initiativeBlueprint), ...(props.blueprints ?? [])],

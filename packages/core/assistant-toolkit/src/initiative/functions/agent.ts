@@ -25,10 +25,10 @@ export default defineFunction({
   outputSchema: Schema.Void,
   services: [AiContextService],
   handler: Effect.fnUntraced(function* ({ data }) {
-    const initiative = yield* Database.Service.load(data.initiative);
+    const initiative = yield* Database.load(data.initiative);
     invariant(Obj.instanceOf(Initiative.Initiative, initiative));
     invariant(initiative.chat, 'Initiative has no chat.');
-    const chatQueue = yield* Database.Service.load(initiative.chat!);
+    const chatQueue = yield* Database.load(initiative.chat!);
     invariant(chatQueue, 'Initiative chat queue not found.');
     const conversation = yield* acquireReleaseResource(() => new AiConversation({ queue: chatQueue as any }));
 
