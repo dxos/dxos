@@ -10,7 +10,7 @@ import { Main as NaturalMain, useSidebars } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { mx } from '@dxos/ui-theme';
 
-import { useNavbarActions, useSimpleLayoutState } from '../../hooks';
+import { useBannerProps, useNavbarActions, useSimpleLayoutState } from '../../hooks';
 import { ContentError } from '../ContentError';
 import { ContentLoading } from '../ContentLoading';
 import { useLoadDescendents } from '../hooks';
@@ -49,6 +49,7 @@ export const Main = () => {
   const { drawerState } = useSidebars(MAIN_NAME);
   const showNavBar = !state.isPopover && drawerState === 'closed';
 
+  const bannerProps = useBannerProps(graph);
   const { actions, onAction } = useNavbarActions();
 
   return (
@@ -61,7 +62,7 @@ export const Main = () => {
       )}
       {...attentionAttrs}
     >
-      <Banner classNames='pbs-[max(0.25rem,env(safe-area-inset-top))]' node={node} />
+      <Banner classNames='pbs-[max(0.25rem,env(safe-area-inset-top))]' {...bannerProps} />
       <article className='bs-full overflow-hidden'>
         <Surface key={id} role='article' data={data} limit={1} fallback={ContentError} placeholder={placeholder} />
       </article>
