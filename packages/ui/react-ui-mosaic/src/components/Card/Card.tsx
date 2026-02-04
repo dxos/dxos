@@ -393,14 +393,26 @@ const CardLink = ({ label, href }: CardLinkProps) => {
 };
 
 //
+// IconBlock
+//
+
+const CardIconBlock = ({ children }: PropsWithChildren) => {
+  return (
+    <div role='none' className='grid bs-[var(--rail-item)] is-[var(--rail-item)] place-items-center'>
+      {children}
+    </div>
+  );
+};
+
+//
 // Icon
 //
 
 const CardIcon = ({ toolbar, ...props }: IconProps & { toolbar?: boolean }) => {
   return (
-    <div role='none' className='grid bs-[var(--rail-item)] is-[var(--rail-item)] place-items-center'>
+    <CardIconBlock>
       <Icon {...props} size={toolbar ? 5 : 4} />
-    </div>
+    </CardIconBlock>
   );
 };
 
@@ -421,6 +433,7 @@ export const Card = {
   Close: CardClose,
   Menu: CardMenu,
   Icon: CardIcon,
+  IconBlock: CardIconBlock,
 
   // Content
   Content: CardContent,
