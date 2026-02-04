@@ -267,7 +267,9 @@ const syncTriggers = async (initiative: Initiative.Initiative) => {
   // Add triggers that are not in the database.
   for (const subscription of initiative.subscriptions) {
     const relevantTrigger = triggers.find((trigger) =>
-      Obj.getKeys(trigger, INITIATIVE_TRIGGER_TARGET_EXTENSION_KEY).some((key) => key.id === subscription.target),
+      Obj.getKeys(trigger, INITIATIVE_TRIGGER_TARGET_EXTENSION_KEY).some(
+        (key) => key.id === subscription.dxn.toString(),
+      ),
     );
     if (relevantTrigger) {
       continue;

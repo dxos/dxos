@@ -480,9 +480,7 @@ export const makeUserAnnotation = <T>(props: MakeAnnoationsProps<T>): Annotation
   return {
     get: (schema) => getFromAst(schema.ast),
     getFromAst: (ast) => getFromAst(ast),
-    set:
-      (value) =>
-      <S extends Schema.Schema.Any>(schema: S) =>
-        schema.annotations({ [props.id]: Schema.encodeSync(props.schema)(value) }) as S,
+    set: (value) =>
+      PropertyMeta(props.id, Schema.encodeSync(props.schema)(value)) as <S extends Schema.Schema.Any>(schema: S) => S,
   };
 };
