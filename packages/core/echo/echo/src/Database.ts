@@ -186,151 +186,168 @@ export const isDatabase = (obj: unknown): obj is Database => {
 
 export const Database: Schema.Schema<Database> = Schema.Any.pipe(Schema.filter((space) => isDatabase(space)));
 
+/**
+ * Effect service tag for Database dependency injection.
+ */
 export class Service extends Context.Tag('@dxos/echo/Database/Service')<
   Service,
   {
     readonly db: Database;
   }
->() {
-  static notAvailable = Layer.succeed(Service, {
-    get db(): Database {
-      throw new Error('Database not available');
+>() {}
+
+/**
+ * Layer that provides a Database service that throws when accessed.
+ * Useful as a default layer when no database is available.
+ */
+export const notAvailable = Layer.succeed(Service, {
+  get db(): Database {
+    throw new Error('Database not available');
+  },
+});
+
+/**
+ * Creates a Database service instance from a Database.
+ */
+export const makeService = (db: Database): Context.Tag.Service<Service> => {
+  return {
+    get db() {
+      return db;
     },
-  });
-
-  static make = (db: Database): Context.Tag.Service<Service> => {
-    return {
-      get db() {
-        return db;
-      },
-    };
   };
+};
 
-  static layer = (db: Database): Layer.Layer<Service> => {
-    return Layer.succeed(Service, Service.make(db));
-  };
+/**
+ * Creates a Layer that provides the Database service.
+ */
+export const layer = (db: Database): Layer.Layer<Service> => {
+  return Layer.succeed(Service, makeService(db));
+};
 
-  // TODO(dmaretskyi): Move all those to the top-level API of Database.ts module.
+/**
+ * Returns the space ID of the database.
+ */
+export const spaceId = Effect.gen(function* () {
+  const { db } = yield* Service;
+  return db.spaceId;
+});
 
-  /**
-   * Returns the space ID of the database.
-   */
-  static spaceId = Effect.gen(function* () {
-    const { db } = yield* Service;
-    return db.spaceId;
-  });
-
-  /**
-   * Resolves an object by its DXN.
-   */
-  static resolve: {
-    // No type check.
-    (ref: DXN | Ref<any>): Effect.Effect<Entity.Unknown, never, Service>;
-    // Check matches schema.
-    <S extends Type.Entity.Any>(
-      ref: DXN | Ref<any>,
-      schema: S,
-    ): Effect.Effect<Schema.Schema.Type<S>, Err.ObjectNotFoundError, Service>;
-  } = (<S extends Type.Entity.Any>(
+/**
+ * Resolves an object by its DXN.
+ */
+export const resolve: {
+  // No type check.
+  (ref: DXN | Ref<any>): Effect.Effect<Entity.Unknown, never, Service>;
+  // Check matches schema.
+  <S extends Type.Entity.Any>(
     ref: DXN | Ref<any>,
-    schema?: S,
-  ): Effect.Effect<Schema.Schema.Type<S>, Err.ObjectNotFoundError, Service> =>
-    Effect.gen(function* () {
-      const { db } = yield* Service;
-      const dxn = ref instanceof DXN ? ref : ref.dxn;
-      const object = yield* promiseWithCauseCapture(() =>
-        db.graph
-          .createRefResolver({
-            context: {
-              space: db.spaceId,
-            },
-          })
-          .resolve(dxn),
-      );
+    schema: S,
+  ): Effect.Effect<Schema.Schema.Type<S>, Err.ObjectNotFoundError, Service>;
+} = (<S extends Type.Entity.Any>(
+  ref: DXN | Ref<any>,
+  schema?: S,
+): Effect.Effect<Schema.Schema.Type<S>, Err.ObjectNotFoundError, Service> =>
+  Effect.gen(function* () {
+    const { db } = yield* Service;
+    const dxn = ref instanceof DXN ? ref : ref.dxn;
+    const object = yield* promiseWithCauseCapture(() =>
+      db.graph
+        .createRefResolver({
+          context: {
+            space: db.spaceId,
+          },
+        })
+        .resolve(dxn),
+    );
 
-      if (!object) {
-        return yield* Effect.fail(new Err.ObjectNotFoundError(dxn));
-      }
-      invariant(!schema || isInstanceOf(schema, object), 'Object type mismatch.');
-      return object as any;
-    })) as any;
-
-  /**
-   * Loads an object reference.
-   */
-  static load: <T>(ref: Ref<T>) => Effect.Effect<T, Err.ObjectNotFoundError, never> = Effect.fn(function* (ref) {
-    const object = yield* promiseWithCauseCapture(() => ref.tryLoad());
     if (!object) {
-      return yield* Effect.fail(new Err.ObjectNotFoundError(ref.dxn));
+      return yield* Effect.fail(new Err.ObjectNotFoundError(dxn));
     }
-    return object;
-  });
+    invariant(!schema || isInstanceOf(schema, object), 'Object type mismatch.');
+    return object as any;
+  })) as any;
 
-  /**
-   * Loads an object reference option.
-   */
-  // TODO(dmaretskyi): Do we need this -- you can just use `Effect.catchTag` in calling code instead.
-  static loadOption: <T>(ref: Ref<T>) => Effect.Effect<Option.Option<T>, never, never> = Effect.fn(function* (ref) {
-    const object = yield* Service.load(ref).pipe(
-      Effect.catchTag('ObjectNotFoundError', () => Effect.succeed(undefined)),
-    );
+/**
+ * Loads an object reference.
+ */
+export const load: <T>(ref: Ref<T>) => Effect.Effect<T, Err.ObjectNotFoundError, never> = Effect.fn(function* (ref) {
+  const object = yield* promiseWithCauseCapture(() => ref.tryLoad());
+  if (!object) {
+    return yield* Effect.fail(new Err.ObjectNotFoundError(ref.dxn));
+  }
+  return object;
+});
 
-    return Option.fromNullable(object);
-  });
+/**
+ * Loads an object reference option.
+ */
+// TODO(dmaretskyi): Do we need this -- you can just use `Effect.catchTag` in calling code instead.
+export const loadOption: <T>(ref: Ref<T>) => Effect.Effect<Option.Option<T>, never, never> = Effect.fn(function* (ref) {
+  const object = yield* load(ref).pipe(Effect.catchTag('ObjectNotFoundError', () => Effect.succeed(undefined)));
 
-  /**
-   * @link EchoDatabase.add
-   */
-  static add = <T extends Entity.Unknown>(obj: T): Effect.Effect<T, never, Service> =>
-    Service.pipe(Effect.map(({ db }) => db.add(obj)));
+  return Option.fromNullable(object);
+});
 
-  /**
-   * @link EchoDatabase.remove
-   */
-  static remove = <T extends Entity.Unknown>(obj: T): Effect.Effect<void, never, Service> =>
-    Service.pipe(Effect.map(({ db }) => db.remove(obj)));
+/**
+ * Adds an object to the database.
+ * @see {@link Database.add}
+ */
+export const add = <T extends Entity.Unknown>(obj: T): Effect.Effect<T, never, Service> =>
+  Service.pipe(Effect.map(({ db }) => db.add(obj)));
 
-  /**
-   * @link EchoDatabase.flush
-   */
-  static flush = (opts?: FlushOptions) =>
-    Service.pipe(Effect.flatMap(({ db }) => promiseWithCauseCapture(() => db.flush(opts))));
+/**
+ * Removes an object from the database.
+ * @see {@link Database.remove}
+ */
+export const remove = <T extends Entity.Unknown>(obj: T): Effect.Effect<void, never, Service> =>
+  Service.pipe(Effect.map(({ db }) => db.remove(obj)));
 
-  /**
-   * Creates a `QueryResult` object that can be subscribed to.
-   */
-  static query: {
-    <Q extends Query.Any>(query: Q): Effect.Effect<QueryResult.QueryResult<Query.Type<Q>>, never, Service>;
-    <F extends Filter.Any>(filter: F): Effect.Effect<QueryResult.QueryResult<Filter.Type<F>>, never, Service>;
-  } = (queryOrFilter: Query.Any | Filter.Any) =>
-    Service.pipe(
-      Effect.map(({ db }) => db.query(queryOrFilter as any) as QueryResult.QueryResult<any>),
-      Effect.withSpan('Service.query'),
-    );
+/**
+ * Flushes pending changes to disk.
+ * @see {@link Database.flush}
+ */
+export const flush = (opts?: FlushOptions) =>
+  Service.pipe(Effect.flatMap(({ db }) => promiseWithCauseCapture(() => db.flush(opts))));
 
-  /**
-   * Executes the query once and returns the results.
-   */
-  static runQuery: {
-    <Q extends Query.Any>(query: Q): Effect.Effect<Query.Type<Q>[], never, Service>;
-    <F extends Filter.Any>(filter: F): Effect.Effect<Filter.Type<F>[], never, Service>;
-  } = (queryOrFilter: Query.Any | Filter.Any) =>
-    Service.query(queryOrFilter as any).pipe(
-      Effect.flatMap((queryResult) => promiseWithCauseCapture(() => queryResult.run())),
-    );
+/**
+ * Creates a `QueryResult` object that can be subscribed to.
+ */
+export const query: {
+  <Q extends Query.Any>(query: Q): Effect.Effect<QueryResult.QueryResult<Query.Type<Q>>, never, Service>;
+  <F extends Filter.Any>(filter: F): Effect.Effect<QueryResult.QueryResult<Filter.Type<F>>, never, Service>;
+} = (queryOrFilter: Query.Any | Filter.Any) =>
+  Service.pipe(
+    Effect.map(({ db }) => db.query(queryOrFilter as any) as QueryResult.QueryResult<any>),
+    Effect.withSpan('Database.query'),
+  );
 
-  // TODO(dmaretskyi): Change API to `yield* Service.querySchema(...).first` and `yield* Service.querySchema(...).schema`.
+/**
+ * Executes the query once and returns the results.
+ */
+export const runQuery: {
+  <Q extends Query.Any>(query: Q): Effect.Effect<Query.Type<Q>[], never, Service>;
+  <F extends Filter.Any>(filter: F): Effect.Effect<Filter.Type<F>[], never, Service>;
+} = (queryOrFilter: Query.Any | Filter.Any) =>
+  query(queryOrFilter as any).pipe(Effect.flatMap((queryResult) => promiseWithCauseCapture(() => queryResult.run())));
 
-  static schemaQuery = <Q extends Types.NoExcessProperties<SchemaRegistry.Query, Q>>(
-    query?: Q & SchemaRegistry.Query,
-  ): Effect.Effect<QueryResult.QueryResult<SchemaRegistry.ExtractQueryResult<Q>>, never, Service> =>
-    Service.pipe(
-      Effect.map(({ db }) => db.schemaRegistry.query(query)),
-      Effect.withSpan('Service.schemaQuery'),
-    );
+/**
+ * Creates a schema query result that can be subscribed to.
+ */
+// TODO(dmaretskyi): Change API to `yield* Database.querySchema(...).first` and `yield* Database.querySchema(...).schema`.
+export const schemaQuery = <Q extends Types.NoExcessProperties<SchemaRegistry.Query, Q>>(
+  schemaQueryOptions?: Q & SchemaRegistry.Query,
+): Effect.Effect<QueryResult.QueryResult<SchemaRegistry.ExtractQueryResult<Q>>, never, Service> =>
+  Service.pipe(
+    Effect.map(({ db }) => db.schemaRegistry.query(schemaQueryOptions)),
+    Effect.withSpan('Database.schemaQuery'),
+  );
 
-  static runSchemaQuery = <Q extends Types.NoExcessProperties<SchemaRegistry.Query, Q>>(
-    query?: Q & SchemaRegistry.Query,
-  ): Effect.Effect<SchemaRegistry.ExtractQueryResult<Q>[], never, Service> =>
-    Service.schemaQuery(query).pipe(Effect.flatMap((queryResult) => promiseWithCauseCapture(() => queryResult.run())));
-}
+/**
+ * Executes a schema query once and returns the results.
+ */
+export const runSchemaQuery = <Q extends Types.NoExcessProperties<SchemaRegistry.Query, Q>>(
+  schemaQueryOptions?: Q & SchemaRegistry.Query,
+): Effect.Effect<SchemaRegistry.ExtractQueryResult<Q>[], never, Service> =>
+  schemaQuery(schemaQueryOptions).pipe(
+    Effect.flatMap((queryResult) => promiseWithCauseCapture(() => queryResult.run())),
+  );

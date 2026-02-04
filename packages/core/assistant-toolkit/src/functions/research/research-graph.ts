@@ -30,20 +30,20 @@ export interface ResearchGraph extends Schema.Schema.Type<typeof ResearchGraph> 
 export const queryResearchGraph: () => Effect.Effect<ResearchGraph | undefined, never, Database.Service> = Effect.fn(
   'queryResearchGraph',
 )(function* () {
-  const objects = yield* Database.Service.runQuery(Query.type(ResearchGraph));
+  const objects = yield* Database.runQuery(Query.type(ResearchGraph));
   return objects.at(0);
 });
 
 export const createResearchGraph: () => Effect.Effect<ResearchGraph, never, Database.Service | QueueService> =
   Effect.fn('createResearchGraph')(function* () {
     const queue = yield* QueueService.createQueue();
-    return yield* Database.Service.add(Obj.make(ResearchGraph, { queue: Ref.fromDXN(queue.dxn) }));
+    return yield* Database.add(Obj.make(ResearchGraph, { queue: Ref.fromDXN(queue.dxn) }));
   });
 
 export const contextQueueLayerFromResearchGraph = Layer.unwrapEffect(
   Effect.gen(function* () {
     const researchGraph = (yield* queryResearchGraph()) ?? (yield* createResearchGraph());
-    const researchQueue = yield* Database.Service.load(researchGraph.queue);
+    const researchQueue = yield* Database.load(researchGraph.queue);
     return ContextQueueService.layer(researchQueue);
   }),
 );

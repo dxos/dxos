@@ -55,7 +55,7 @@ export default defineFunction({
       }
     }
 
-    const artifactObj = yield* Database.Service.resolve(artifact.data, Text.Text);
+    const artifactObj = yield* Database.resolve(artifact.data, Text.Text);
     Obj.change(artifactObj, (artifactObj) => {
       artifactObj.content = data.content;
     });

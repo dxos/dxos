@@ -66,7 +66,7 @@ export const ArtifactId: Schema.Schema<string> & {
     ref: ArtifactId,
   ): Effect.Effect<Schema.Schema.Type<S>, Err.ObjectNotFoundError, Database.Service> {
     const dxn = ArtifactId.toDXN(ref);
-    return Database.Service.resolve(dxn, schema);
+    return Database.resolve(dxn, schema);
   }
 };
 

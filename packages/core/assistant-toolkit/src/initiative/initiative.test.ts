@@ -41,14 +41,14 @@ describe('Initiative', () => {
     'shopping list',
     Effect.fnUntraced(
       function* (_) {
-        const initiative = yield* Database.Service.add(
+        const initiative = yield* Database.add(
           yield* Initiative.make({
             name: 'Shopping list',
             spec: 'Keep a shopping list of items to buy.',
           }),
         );
         invariant(initiative.chat?.target, 'Initiative chat queue not found.');
-        yield* Database.Service.flush({ indexes: true });
+        yield* Database.flush({ indexes: true });
         const conversation = yield* acquireReleaseResource(
           () => new AiConversation({ queue: initiative.chat?.target as any }),
         );
@@ -71,7 +71,7 @@ describe('Initiative', () => {
     'expense tracking list',
     Effect.fnUntraced(
       function* (_) {
-        const initiative = yield* Database.Service.add(
+        const initiative = yield* Database.add(
           yield* Initiative.make({
             name: 'Expense tracking',
             spec: trim`
@@ -87,10 +87,10 @@ describe('Initiative', () => {
             `,
           }),
         );
-        yield* Database.Service.flush({ indexes: true });
+        yield* Database.flush({ indexes: true });
 
         const inboxQueue = yield* QueueService.createQueue();
-        yield* Database.Service.add(
+        yield* Database.add(
           Trigger.make({
             enabled: true,
             spec: {

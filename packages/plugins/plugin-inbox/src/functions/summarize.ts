@@ -59,7 +59,7 @@ export default defineFunction({
   }),
   handler: Effect.fnUntraced(
     function* ({ data: { id, skip = 0, limit = 20 } }) {
-      const mailbox = yield* Database.Service.resolve(ArtifactId.toDXN(id), Mailbox.Mailbox);
+      const mailbox = yield* Database.resolve(ArtifactId.toDXN(id), Mailbox.Mailbox);
       const queue = yield* QueueService.getQueue(mailbox.queue.dxn);
       yield* Effect.promise(() => queue?.queryObjects());
       const messages = Function.pipe(
