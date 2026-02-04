@@ -133,7 +133,7 @@ const meta = {
         }
       },
     }),
-    withAttention,
+    withAttention(),
   ],
   parameters: {
     layout: 'fullscreen',
