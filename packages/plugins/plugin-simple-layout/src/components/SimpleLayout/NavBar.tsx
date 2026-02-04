@@ -53,7 +53,7 @@ export const NavBar = ({ classNames, activeId }: NavBarProps) => {
         <DropdownMenu.Root items={menuActions}>
           <Tooltip.Trigger asChild content={t('app menu label')}>
             <DropdownMenu.Trigger asChild data-testid='simpleLayoutPlugin.addSpace'>
-              <IconButton icon='ph--plus--regular' iconOnly label={t('main menu label')} />
+              <IconButton icon='ph--list--regular' iconOnly label={t('main menu label')} />
             </DropdownMenu.Trigger>
           </Tooltip.Trigger>
         </DropdownMenu.Root>
