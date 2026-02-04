@@ -100,7 +100,7 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ classNames, 
     <Mosaic.Tile asChild id={message.id} data={data} location={location}>
       <Focus.Group asChild>
         <Card.Root onClick={handleClick} ref={setRef}>
-          <Card.Toolbar density='coarse'>
+          <Card.Toolbar>
             <Card.IconBlock onClick={handleAvatarClick}>
               <DxAvatar hue={hue} hueVariant='surface' variant='square' size={8} fallback={from} />
             </Card.IconBlock>
