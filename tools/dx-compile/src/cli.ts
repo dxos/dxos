@@ -27,6 +27,7 @@ void (async () => {
       .option('sourcemap', { type: 'boolean', default: true, describe: 'Output sourcemaps' })
       .option('watch', { type: 'boolean', default: false, describe: 'Watch mode' })
       .option('alias', { type: 'string', default: '{}', describe: 'Alias imports (JSON string)' })
+      .option('mainFields', { type: 'array', default: undefined, describe: 'Main fields to emit' })
       .help().argv;
 
     // Parse alias JSON string if provided.
@@ -52,6 +53,7 @@ void (async () => {
       watch: argv.watch as boolean,
       alias,
       verbose: argv.verbose as boolean,
+      mainFields: argv.mainFields?.flatMap((field: string) => field.split(',')),
     };
     const result = await main(options);
     process.exit(result.success ? 0 : 1);

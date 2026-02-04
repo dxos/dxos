@@ -37,6 +37,7 @@ export interface EsbuildExecutorOptions {
   sourcemap: boolean;
   watch: boolean;
   verbose: boolean;
+  mainFields: string[];
 }
 
 export default async (options: EsbuildExecutorOptions): Promise<{ success: boolean }> => {
@@ -180,6 +181,7 @@ export default async (options: EsbuildExecutorOptions): Promise<{ success: boole
         banner: {
           js: format === 'esm' && platform === 'node' ? CREATE_REQUIRE_BANNER : '',
         },
+        mainFields: options.mainFields,
         define:
           format === 'cjs'
             ? {
