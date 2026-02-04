@@ -5,26 +5,28 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability, Common } from '@dxos/app-framework';
+import { meta as debugMeta } from '@dxos/plugin-debug';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 
 import { themeEditorId } from '../../defs';
 import { meta } from '../../meta';
+
+const DEVTOOLS_TYPE = `${debugMeta.id}/devtools`;
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
         id: themeEditorId,
-        match: NodeMatcher.whenRoot,
-        connector: () =>
+        match: NodeMatcher.whenNodeType(DEVTOOLS_TYPE),
+        connector: (node) =>
           Effect.succeed([
             {
-              id: themeEditorId,
+              id: `${themeEditorId}-${node.id}`,
               type: themeEditorId,
               data: themeEditorId,
               properties: {
                 label: ['theme editor label', { ns: meta.id }],
-                disposition: 'navigation',
                 icon: 'ph--palette--regular',
               },
             },

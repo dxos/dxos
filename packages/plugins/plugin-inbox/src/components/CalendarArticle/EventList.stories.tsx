@@ -3,20 +3,24 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import React, { useMemo } from 'react';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 
 import { createEvents } from '../../testing';
 
-import { EventList } from './EventList';
+import { EventList, type EventListProps } from './EventList';
 
-const meta: Meta<typeof EventList> = {
+// TODO(wittjosiah): ECHO objects don't work when passed via Storybook args.
+const EventListStory = (props: Omit<EventListProps, 'events'>) => {
+  const events = useMemo(() => createEvents(100), []);
+  return <EventList events={events} {...props} />;
+};
+
+const meta: Meta<typeof EventListStory> = {
   title: 'plugins/plugin-inbox/EventList',
-  component: EventList,
-  args: {
-    events: createEvents(100),
-  },
+  component: EventListStory,
   parameters: {
     layout: 'fullscreen',
   },

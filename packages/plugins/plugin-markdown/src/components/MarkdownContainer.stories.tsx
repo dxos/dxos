@@ -12,7 +12,6 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj, Query } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
-import { SpacePlugin } from '@dxos/plugin-space';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { faker } from '@dxos/random';
 import { useQuery, useSpace } from '@dxos/react-client/echo';
@@ -61,6 +60,7 @@ const meta = {
     withPluginManager<{ title?: string; content?: string }>((context) => ({
       plugins: [
         ...corePlugins(),
+        StorybookPlugin({}),
         ClientPlugin({
           types: [Markdown.Document, Text.Text, Person.Person, Organization.Organization],
           onClientInitialized: ({ client }) =>
@@ -98,9 +98,7 @@ const meta = {
               yield* Effect.promise(() => space.db.flush({ indexes: true }));
             }),
         }),
-        ...corePlugins(),
-        SpacePlugin({}),
-        StorybookPlugin({}),
+
         MarkdownPlugin(),
         PreviewPlugin(),
       ],

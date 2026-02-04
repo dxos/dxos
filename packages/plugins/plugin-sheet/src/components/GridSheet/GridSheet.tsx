@@ -15,6 +15,7 @@ import React, {
 
 import { useOperationInvoker } from '@dxos/app-framework/react';
 import { type CellRange, rangeToA1Notation } from '@dxos/compute';
+import { Obj } from '@dxos/echo';
 import { defaultColSize, defaultRowSize } from '@dxos/lit-grid';
 import { DropdownMenu, Icon, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
@@ -127,15 +128,17 @@ export const GridSheet = () => {
 
   const handleAxisResize = useCallback<NonNullable<GridContentProps['onAxisResize']>>(
     ({ axis, size, index: numericIndex }) => {
-      if (axis === 'row') {
-        const rowId = model.sheet.rows[parseInt(numericIndex)];
-        model.sheet.rowMeta[rowId] ??= {};
-        model.sheet.rowMeta[rowId].size = size;
-      } else {
-        const columnId = model.sheet.columns[parseInt(numericIndex)];
-        model.sheet.columnMeta[columnId] ??= {};
-        model.sheet.columnMeta[columnId].size = size;
-      }
+      Obj.change(model.sheet, (sheet) => {
+        if (axis === 'row') {
+          const rowId = sheet.rows[parseInt(numericIndex)];
+          sheet.rowMeta[rowId] ??= {};
+          sheet.rowMeta[rowId].size = size;
+        } else {
+          const columnId = sheet.columns[parseInt(numericIndex)];
+          sheet.columnMeta[columnId] ??= {};
+          sheet.columnMeta[columnId].size = size;
+        }
+      });
     },
     [model],
   );

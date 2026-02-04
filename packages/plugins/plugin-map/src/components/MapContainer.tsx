@@ -3,14 +3,15 @@
 //
 
 import * as Predicate from 'effect/Predicate';
-import React from 'react';
+import React, { Fragment } from 'react';
 
+import { type SurfaceComponentProps } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
 import { Filter, useQuery, useSchema } from '@dxos/react-client/echo';
 import { useControlledState } from '@dxos/react-ui';
 import { useSelected } from '@dxos/react-ui-attention';
 import { type GeoMarker, type MapRootProps } from '@dxos/react-ui-geo';
-import { StackItem } from '@dxos/react-ui-stack';
+import { Layout, type LayoutFlexProps } from '@dxos/react-ui-mosaic';
 import { getTypenameFromQuery } from '@dxos/schema';
 import { getDeep } from '@dxos/util';
 
@@ -22,13 +23,12 @@ import { type GeoControlProps } from './types';
 
 export type MapControlType = 'globe' | 'map';
 
-export type MapContainerProps = {
-  role?: string;
-  type?: MapControlType;
-  object?: Map.Map;
-} & (GeoControlProps & Pick<MapRootProps, 'onChange'>);
+export type MapContainerProps = SurfaceComponentProps<
+  Map.Map,
+  GeoControlProps & Pick<MapRootProps, 'onChange'> & { type?: MapControlType }
+>;
 
-export const MapContainer = ({ role, type: typeProp = 'map', object, ...props }: MapContainerProps) => {
+export const MapContainer = ({ role, subject: object, type: typeProp = 'map', ...props }: MapContainerProps) => {
   const [type, setType] = useControlledState(typeProp);
   const db = object && Obj.getDatabase(object);
 
@@ -63,17 +63,22 @@ export const MapContainer = ({ role, type: typeProp = 'map', object, ...props }:
     .filter(Predicate.isNotNullable);
 
   const selected = useSelected(typename, 'multi');
+  const Root = role === 'section' ? Container : Fragment;
 
   return (
-    <StackItem.Content size={role === 'section' ? 'square' : 'intrinsic'}>
-      {type === 'map' && (
-        <MapControl markers={markers} selected={selected} onToggle={() => setType('globe')} {...props} />
-      )}
-      {type === 'globe' && (
-        <GlobeControl markers={markers} selected={selected} onToggle={() => setType('map')} {...props} />
-      )}
-    </StackItem.Content>
+    <Root>
+      <Layout.Main>
+        {type === 'map' && (
+          <MapControl markers={markers} selected={selected} onToggle={() => setType('globe')} {...props} />
+        )}
+        {type === 'globe' && (
+          <GlobeControl markers={markers} selected={selected} onToggle={() => setType('map')} {...props} />
+        )}
+      </Layout.Main>
+    </Root>
   );
 };
+
+const Container = (props: LayoutFlexProps) => <Layout.Flex {...props} classNames='aspect-square' />;
 
 export default MapContainer;

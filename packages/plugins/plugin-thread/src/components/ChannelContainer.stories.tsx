@@ -26,7 +26,7 @@ const DefaultStory = ({ roomId }: ChannelContainerProps) => {
     return null;
   }
 
-  return <ChannelContainer channel={channel} roomId={roomId} />;
+  return <ChannelContainer subject={channel} roomId={roomId} />;
 };
 
 const meta = {
@@ -55,6 +55,7 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   args: {
     // Fixed room for testing.
+    subject: undefined,
     roomId: '04a1d1911703b8e929d0649021a965',
   },
 };

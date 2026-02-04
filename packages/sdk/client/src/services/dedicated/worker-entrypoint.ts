@@ -45,7 +45,7 @@ void navigator.locks.request(STORAGE_LOCK_KEY, async () => {
           acquireLock: async () => {},
           releaseLock: () => {},
           automaticallyConnectWebrtc: false,
-          enableFullTextIndexing: true,
+          enableSqlite: true,
         });
         await runtime.start();
         self.postMessage({

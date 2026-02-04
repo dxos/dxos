@@ -4,6 +4,10 @@
   "description": "Natural language interface to DXOS",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
   "license": "MIT",
   "author": "info@dxos.org",
   "sideEffects": true,
@@ -20,6 +24,12 @@
       "types": "./dist/types/src/extraction/index.d.ts",
       "browser": "./dist/lib/browser/extraction/index.mjs",
       "node": "./dist/lib/node-esm/extraction/index.mjs"
+    },
+    "./testing": {
+      "source": "./src/testing/index.ts",
+      "types": "./dist/types/src/testing/index.d.ts",
+      "browser": "./dist/lib/browser/testing/index.mjs",
+      "node": "./dist/lib/node-esm/testing/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

@@ -57,7 +57,7 @@ export default defineFunction({
         (value: any) => Ref.isRef(value),
         Effect.fnUntraced(function* (ref) {
           const object = yield* Database.load(ref);
-          return Obj.toJSON(object as Obj.Any);
+          return Obj.toJSON(object as Obj.Unknown);
         }),
       ),
       Match.orElse(() => Effect.succeed(data.input)),
@@ -99,7 +99,7 @@ export default defineFunction({
         prompt: promptText,
         system: systemText,
         blueprints,
-        objects: objects as Obj.Any[],
+        objects: objects as Obj.Unknown[],
         toolkit,
         observer: GenerationObserver.fromPrinter(new ConsolePrinter({ tag: 'agent' })),
       })

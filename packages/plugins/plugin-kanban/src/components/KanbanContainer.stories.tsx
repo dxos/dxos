@@ -3,13 +3,14 @@
 //
 
 import { RegistryContext } from '@effect-atom/atom-react';
-import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { type Decorator, type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React, { useCallback, useContext } from 'react';
 import { expect, waitFor, within } from 'storybook/test';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj, type QueryAST, Type } from '@dxos/echo';
+import { type Mutable } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
@@ -17,10 +18,15 @@ import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { faker } from '@dxos/random';
-import { Filter, useQuery, useSchema, useSpaces } from '@dxos/react-client/echo';
+import { Filter, type Space, useQuery, useSchema, useSpaces } from '@dxos/react-client/echo';
 import { withTheme } from '@dxos/react-ui/testing';
 import { ViewEditor } from '@dxos/react-ui-form';
-import { Kanban as KanbanComponent, useKanbanModel, useProjectionModel } from '@dxos/react-ui-kanban';
+import {
+  Kanban as KanbanComponent,
+  translations as kanbanTranslations,
+  useKanbanModel,
+  useProjectionModel,
+} from '@dxos/react-ui-kanban';
 import { Kanban } from '@dxos/react-ui-kanban/types';
 import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
 import { View, getTypenameFromQuery } from '@dxos/schema';
@@ -30,11 +36,7 @@ import { translations } from '../translations';
 
 faker.seed(0);
 
-//
-// Story components.
-//
-
-const rollOrg = () => ({
+const createOrg = () => ({
   name: faker.commerce.productName(),
   description: faker.lorem.paragraph(),
   image: faker.image.url(),
@@ -42,7 +44,43 @@ const rollOrg = () => ({
   status: faker.helpers.arrayElement(Organization.StatusOptions).id as Organization.Organization['status'],
 });
 
-const StorybookKanban = () => {
+//
+// Story setup helpers.
+//
+
+type ClientSetupOptions = {
+  types?: Type.Entity.Any[];
+  onSpaceCreated?: (space: Space) => Promise<void>;
+};
+
+/**
+ * Creates the standard plugin manager decorator with client configuration.
+ */
+const withKanbanPlugins = ({ types = [], onSpaceCreated }: ClientSetupOptions): Decorator =>
+  withPluginManager({
+    plugins: [
+      ...corePlugins(),
+      ClientPlugin({
+        types: [...types, View.View, Kanban.Kanban],
+        onClientInitialized: ({ client }) =>
+          Effect.gen(function* () {
+            yield* Effect.promise(() => client.halo.createIdentity());
+            const space = yield* Effect.promise(() => client.spaces.create());
+            yield* Effect.promise(() => space.waitUntilReady());
+            yield* Effect.promise(() => onSpaceCreated?.(space) ?? Promise.resolve());
+          }),
+      }),
+      PreviewPlugin(),
+      SpacePlugin({}),
+      StorybookPlugin({}),
+    ],
+  });
+
+//
+// Story components.
+//
+
+const DefaultComponent = () => {
   const registry = useContext(RegistryContext);
   const spaces = useSpaces();
   const space = spaces[spaces.length - 1];
@@ -63,9 +101,9 @@ const StorybookKanban = () => {
   const handleAddCard = useCallback(
     (columnValue: string | undefined) => {
       const path = model?.columnFieldPath;
-      if (space && schema && path) {
+      if (space && schema && Type.isObjectSchema(schema) && path) {
         const card = Obj.make(schema, {
-          ...rollOrg(),
+          ...createOrg(),
           [path]: columnValue,
         });
 
@@ -85,9 +123,20 @@ const StorybookKanban = () => {
       invariant(object.view.target);
 
       schema.updateTypename(getTypenameFromQuery(newQuery));
-      object.view.target.query.ast = newQuery;
+      Obj.change(object.view.target, (v) => {
+        v.query.ast = newQuery as Mutable<typeof newQuery>;
+      });
     },
     [object, schema],
+  );
+
+  const handleDeleteField = useCallback(
+    (fieldId: string) => {
+      if (schema && Type.isMutable(schema) && projection) {
+        projection.deleteFieldProjection(fieldId);
+      }
+    },
+    [schema, projection],
   );
 
   if (!schema || !object.view.target) {
@@ -97,15 +146,14 @@ const StorybookKanban = () => {
   return (
     <div className='grow grid grid-cols-[1fr_350px] overflow-hidden'>
       {model ? <KanbanComponent model={model} onAddCard={handleAddCard} onRemoveCard={handleRemoveCard} /> : <div />}
-      <div className='flex flex-col bs-full overflow-hidden'>
+      <div className='flex flex-col bs-full overflow-hidden border-l border-separator'>
         <ViewEditor
+          classNames='p-2'
           registry={space?.db.schemaRegistry}
           schema={schema}
           view={object.view.target}
           onQueryChanged={handleUpdateQuery}
-          onDelete={(fieldId: string) => {
-            console.log('[ViewEditor]', 'onDelete', fieldId);
-          }}
+          onDelete={Type.isMutable(schema) ? handleDeleteField : undefined}
         />
         <JsonFilter data={{ view: object.view.target, schema }} classNames='text-xs' />
       </div>
@@ -119,53 +167,43 @@ const StorybookKanban = () => {
 
 const meta = {
   title: 'plugins/plugin-kanban/Kanban',
-  component: StorybookKanban,
-  render: () => <StorybookKanban />,
-  decorators: [
-    withTheme,
-    withPluginManager({
-      plugins: [
-        ...corePlugins(),
-        ClientPlugin({
-          types: [Organization.Organization, Person.Person, View.View, Kanban.Kanban],
-          onClientInitialized: ({ client }) =>
-            Effect.gen(function* () {
-              yield* Effect.promise(() => client.halo.createIdentity());
-              const space = yield* Effect.promise(() => client.spaces.create());
-              yield* Effect.promise(() => space.waitUntilReady());
-              const { view } = yield* Effect.promise(() =>
-                View.makeFromDatabase({
-                  db: space.db,
-                  typename: Organization.Organization.typename,
-                  pivotFieldName: 'status',
-                }),
-              );
-              const kanban = Kanban.make({ view });
-              space.db.add(kanban);
-
-              // TODO(burdon): Replace with sdk/schema/testing.
-              Array.from({ length: 80 }).map(() => {
-                return space.db.add(Obj.make(Organization.Organization, rollOrg()));
-              });
-            }),
-        }),
-        PreviewPlugin(),
-        SpacePlugin({}),
-        StorybookPlugin({}),
-      ],
-    }),
-  ],
+  component: DefaultComponent,
+  render: () => <DefaultComponent />,
+  decorators: [withTheme],
   parameters: {
     layout: 'fullscreen',
-    translations,
+    translations: [...translations, ...kanbanTranslations],
   },
-} satisfies Meta<typeof StorybookKanban>;
+} satisfies Meta<typeof DefaultComponent>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+/**
+ * Default story using static runtime schema (immutable).
+ * Schema mutations are not allowed.
+ */
 export const Default: Story = {
+  decorators: [
+    withKanbanPlugins({
+      types: [Organization.Organization, Person.Person],
+      onSpaceCreated: async (space) => {
+        const { view } = await View.makeFromDatabase({
+          db: space.db,
+          typename: Organization.Organization.typename,
+          pivotFieldName: 'status',
+        });
+        const kanban = Kanban.make({ view });
+        space.db.add(kanban);
+
+        // TODO(burdon): Replace with sdk/schema/testing.
+        Array.from({ length: 80 }).map(() => {
+          return space.db.add(Obj.make(Organization.Organization, createOrg()));
+        });
+      },
+    }),
+  ],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
@@ -213,4 +251,36 @@ export const Default: Story = {
     // TODO(wittjosiah): Get drag & drop tests working.
     //   See packages/apps/composer-app/src/playwright/stack.spec.ts for reference.
   },
+};
+
+/**
+ * Story variant that uses a mutable database schema (EchoSchema).
+ * This allows testing schema mutations like adding/removing fields.
+ */
+// TODO(wittjosiah): Card previews (e.g., OrganizationCard) are type-specific and hard-coded.
+//   They don't use the projection to determine which fields to display, so deleting a field
+//   from the schema won't remove it from the card preview. To fix this, the type-specific
+//   cards in PreviewPlugin would need to accept and respect the projection prop.
+export const MutableSchema: Story = {
+  decorators: [
+    withKanbanPlugins({
+      onSpaceCreated: async (space) => {
+        // Register schema in the database to make it mutable (EchoSchema).
+        const [schema] = await space.db.schemaRegistry.register([Organization.Organization]);
+
+        const { view } = await View.makeFromDatabase({
+          db: space.db,
+          typename: schema.typename,
+          pivotFieldName: 'status',
+        });
+        const kanban = Kanban.make({ view });
+        space.db.add(kanban);
+
+        // Create test data using the registered schema.
+        Array.from({ length: 80 }).map(() => {
+          return space.db.add(Obj.make(schema, createOrg()));
+        });
+      },
+    }),
+  ],
 };

@@ -10,7 +10,7 @@ import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
 import { AiSession, makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
-import { Filter, Obj, Ref } from '@dxos/echo';
+import { Filter, Obj, Ref, Type } from '@dxos/echo';
 import { Database } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
 import { FunctionInvocationServiceLayerTest } from '@dxos/functions-runtime/testing';
@@ -38,7 +38,7 @@ export default defineFunction({
   }),
   outputSchema: Schema.Struct({
     entities: Schema.optional(
-      Schema.Array(Obj.Any).annotations({
+      Schema.Array(Type.Obj).annotations({
         description: 'Extracted entities.',
       }),
     ),
@@ -75,9 +75,10 @@ export default defineFunction({
           throw new Error('Multiple organizations created');
         } else if (created.length === 1) {
           organization = yield* Database.resolve(created[0], Organization.Organization);
-          Obj.change(organization, (o) => {
-            Obj.getMeta(o).tags ??= [];
-            Obj.getMeta(o).tags!.push(...(tags ?? []));
+          Obj.change(organization, (org) => {
+            const meta = Obj.getMeta(org);
+            meta.tags ??= [];
+            meta.tags.push(...(tags ?? []));
           });
           Obj.change(contact, (c) => {
             c.organization = Ref.make(organization!);
@@ -104,7 +105,7 @@ export default defineFunction({
   ),
 });
 
-const extractContact = Effect.fn('extractContact')(function* (actor: Actor.Actor, tags?: string[]) {
+const extractContact = Effect.fn('extractContact')(function* (actor: Actor.Actor, tags?: readonly string[]) {
   const name = actor.name;
   const email = actor.email;
   if (!email) {
@@ -126,7 +127,7 @@ const extractContact = Effect.fn('extractContact')(function* (actor: Actor.Actor
   }
 
   const newContact = Obj.make(Person.Person, {
-    [Obj.Meta]: { tags },
+    ...(tags ? { [Obj.Meta]: { tags: [...tags] } } : {}),
     emails: [{ value: email }],
   });
   yield* Database.add(newContact);

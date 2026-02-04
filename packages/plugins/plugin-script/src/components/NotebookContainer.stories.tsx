@@ -16,7 +16,6 @@ import { AutomationPlugin } from '@dxos/plugin-automation';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { ExplorerPlugin } from '@dxos/plugin-explorer';
 import { Markdown, MarkdownPlugin } from '@dxos/plugin-markdown';
-import { SpacePlugin } from '@dxos/plugin-space';
 import { corePlugins } from '@dxos/plugin-testing';
 import { Config, useClient } from '@dxos/react-client';
 import { useQuery } from '@dxos/react-client/echo';
@@ -29,20 +28,21 @@ import { Notebook } from '../types';
 
 import { NotebookContainer } from './NotebookContainer';
 
-const meta = {
+const meta: Meta<typeof NotebookContainer> = {
   title: 'plugins/plugin-script/NotebookContainer',
   component: NotebookContainer,
   render: (args) => {
     const client = useClient();
     const space = client.spaces.default;
     const notebooks = useQuery(space?.db, Filter.type(Notebook.Notebook));
-    return <NotebookContainer {...args} notebook={notebooks[0]} />;
+    return <NotebookContainer {...args} subject={notebooks[0]} />;
   },
   decorators: [
     withTheme,
-    withLayout({ layout: 'column', classNames: 'is-prose' }),
+    withLayout({ layout: 'column', classNames: 'is-proseMaxWidth' }),
     withPluginManager({
       plugins: [
+        ...corePlugins(),
         ClientPlugin({
           // TODO(wittjosiah): ComputeRuntime requires edge to be configured or it will throw.
           config: new Config({
@@ -63,8 +63,6 @@ const meta = {
               space.db.add(serializeFunction(Agent.prompt));
             }),
         }),
-        ...corePlugins(),
-        SpacePlugin({}),
         AssistantPlugin(),
         AutomationPlugin(),
         ExplorerPlugin(),
@@ -75,10 +73,15 @@ const meta = {
   parameters: {
     translations,
   },
-} satisfies Meta<typeof NotebookContainer>;
+};
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {};
+export const Default: Story = {
+  args: {
+    role: 'article',
+    subject: undefined as any,
+  },
+};

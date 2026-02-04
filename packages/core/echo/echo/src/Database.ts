@@ -12,18 +12,19 @@ import type * as Types from 'effect/Types';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { promiseWithCauseCapture } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { type DXN, type PublicKey, type SpaceId } from '@dxos/keys';
+import { DXN, type PublicKey, type SpaceId } from '@dxos/keys';
 import { type QueryOptions as QueryOptionsProto } from '@dxos/protocols/proto/dxos/echo/filter';
 
 import type * as Entity from './Entity';
 import * as Err from './Err';
 import type * as Filter from './Filter';
 import type * as Hypergraph from './Hypergraph';
-import { type AnyProperties, isInstanceOf } from './internal';
+import { isInstanceOf } from './internal/annotations';
+import type { Ref } from './internal/ref/ref';
+import { type AnyProperties } from './internal/types';
 import type * as Obj from './Obj';
 import type * as Query from './Query';
 import type * as QueryResult from './QueryResult';
-import type * as Ref from './Ref';
 import type * as SchemaRegistry from './SchemaRegistry';
 import type * as Type from './Type';
 
@@ -144,7 +145,7 @@ export interface Database extends Queryable {
   /**
    * Return object by local ID.
    */
-  getObjectById<T extends Obj.Any = Obj.Obj<AnyProperties>>(id: string, opts?: GetObjectByIdOptions): T | undefined;
+  getObjectById<T extends Obj.Unknown = Obj.Obj<AnyProperties>>(id: string, opts?: GetObjectByIdOptions): T | undefined;
 
   /**
    * Query objects.
@@ -159,7 +160,7 @@ export interface Database extends Queryable {
    * `Ref.fromDXN(dxn)` returns an unhydrated reference. The `.load` and `.target` APIs will not work.
    * `db.makeRef(dxn)` is preferable in cases with access to the database.
    */
-  makeRef<T extends Entity.Unknown = Entity.Unknown>(dxn: DXN): Ref.Ref<T>;
+  makeRef<T extends Entity.Unknown = Entity.Unknown>(dxn: DXN): Ref<T>;
 
   /**
    * Adds object to the database.
@@ -209,6 +210,8 @@ export class Service extends Context.Tag('@dxos/echo/Database/Service')<
     return Layer.succeed(Service, Service.make(db));
   };
 
+  // TODO(dmaretskyi): Move all those to the top-level API of Database.ts module.
+
   /**
    * Returns the space ID of the database.
    */
@@ -222,18 +225,19 @@ export class Service extends Context.Tag('@dxos/echo/Database/Service')<
    */
   static resolve: {
     // No type check.
-    (dxn: DXN): Effect.Effect<Entity.Unknown, never, Service>;
+    (ref: DXN | Ref<any>): Effect.Effect<Entity.Unknown, never, Service>;
     // Check matches schema.
     <S extends Type.Entity.Any>(
-      dxn: DXN,
+      ref: DXN | Ref<any>,
       schema: S,
     ): Effect.Effect<Schema.Schema.Type<S>, Err.ObjectNotFoundError, Service>;
   } = (<S extends Type.Entity.Any>(
-    dxn: DXN,
+    ref: DXN | Ref<any>,
     schema?: S,
   ): Effect.Effect<Schema.Schema.Type<S>, Err.ObjectNotFoundError, Service> =>
     Effect.gen(function* () {
       const { db } = yield* Service;
+      const dxn = ref instanceof DXN ? ref : ref.dxn;
       const object = yield* promiseWithCauseCapture(() =>
         db.graph
           .createRefResolver({
@@ -254,7 +258,7 @@ export class Service extends Context.Tag('@dxos/echo/Database/Service')<
   /**
    * Loads an object reference.
    */
-  static load: <T>(ref: Ref.Ref<T>) => Effect.Effect<T, Err.ObjectNotFoundError, never> = Effect.fn(function* (ref) {
+  static load: <T>(ref: Ref<T>) => Effect.Effect<T, Err.ObjectNotFoundError, never> = Effect.fn(function* (ref) {
     const object = yield* promiseWithCauseCapture(() => ref.tryLoad());
     if (!object) {
       return yield* Effect.fail(new Err.ObjectNotFoundError(ref.dxn));
@@ -265,7 +269,8 @@ export class Service extends Context.Tag('@dxos/echo/Database/Service')<
   /**
    * Loads an object reference option.
    */
-  static loadOption: <T>(ref: Ref.Ref<T>) => Effect.Effect<Option.Option<T>, never, never> = Effect.fn(function* (ref) {
+  // TODO(dmaretskyi): Do we need this -- you can just use `Effect.catchTag` in calling code instead.
+  static loadOption: <T>(ref: Ref<T>) => Effect.Effect<Option.Option<T>, never, never> = Effect.fn(function* (ref) {
     const object = yield* Service.load(ref).pipe(
       Effect.catchTag('ObjectNotFoundError', () => Effect.succeed(undefined)),
     );

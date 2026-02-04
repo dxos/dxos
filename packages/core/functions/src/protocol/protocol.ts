@@ -152,7 +152,7 @@ class FunctionContext extends Resource {
     const dbLayer = this.db ? Database.layer(this.db) : Database.notAvailable;
     const queuesLayer = this.queues ? QueueService.layer(this.queues) : QueueService.notAvailable;
     const credentials = dbLayer
-      ? CredentialsService.layerFromDatabase().pipe(Layer.provide(dbLayer))
+      ? CredentialsService.layerFromDatabase({ caching: true }).pipe(Layer.provide(dbLayer))
       : CredentialsService.configuredLayer([]);
     const functionInvocationService = MockedFunctionInvocationService;
     const tracing = TracingService.layerNoop;
@@ -185,6 +185,7 @@ class FunctionContext extends Resource {
 
 const MockedFunctionInvocationService = Layer.succeed(FunctionInvocationService, {
   invokeFunction: () => Effect.die('Calling functions from functions is not implemented yet.'),
+  resolveFunction: () => Effect.die('Not implemented.'),
 });
 
 const decodeRefsFromSchema = (ast: SchemaAST.AST, value: unknown, db: EchoDatabaseImpl): unknown => {

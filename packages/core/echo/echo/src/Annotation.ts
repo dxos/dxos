@@ -10,9 +10,9 @@ export {
   ReferenceAnnotation,
   SystemTypeAnnotation,
   TypeAnnotation,
-  getDescription,
-  getLabel,
+  getDescriptionWithSchema,
+  getLabelWithSchema,
   getTypeAnnotation,
-  setDescription,
-  setLabel,
+  setDescriptionWithSchema,
+  setLabelWithSchema,
 } from './internal/annotations';

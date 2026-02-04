@@ -23,7 +23,6 @@ import React, {
 } from 'react';
 
 import { type Node } from '@dxos/app-graph';
-import { invariant } from '@dxos/invariant';
 import { DxAvatar } from '@dxos/lit-ui/react';
 import { useActionRunner } from '@dxos/plugin-graph';
 import {
@@ -42,7 +41,7 @@ import { Tabs } from '@dxos/react-ui-tabs';
 import { mx } from '@dxos/ui-theme';
 import { arrayMove } from '@dxos/util';
 
-import { useLoadDescendents, useNavTreeState } from '../../hooks';
+import { useNavTreeState } from '../../hooks';
 import { meta } from '../../meta';
 import { l0ItemType } from '../../util';
 import { useNavTreeContext } from '../NavTreeContext';
@@ -119,9 +118,7 @@ const L0ItemRoot = forwardRef<HTMLElement, PropsWithChildren<L0ItemRootProps>>(
     const rootProps =
       type === 'tab'
         ? { value: item.id, tabIndex: 0, onClick: handleClick, 'data-testid': testId, 'data-object-id': id }
-        : type !== 'collection'
-          ? { onClick: handleClick, 'data-testid': testId, 'data-object-id': id }
-          : { onClick: handleClick, role: 'button' };
+        : { onClick: handleClick, 'data-testid': testId, 'data-object-id': id };
 
     return (
       <Tooltip.Trigger asChild delayDuration={0} side='right' content={localizedString}>
@@ -255,54 +252,6 @@ const ItemAvatar = ({ item }: Pick<L0ItemProps, 'item'>) => {
 };
 
 //
-// L0Collection
-//
-
-const L0Collection = ({ item, path }: L0ItemProps) => {
-  const navTreeContext = useNavTreeContext();
-  useLoadDescendents(item);
-  const collectionItems = navTreeContext.useItems(item);
-  const groupPath = useMemo(() => [...path, item.id], [item.id, path]);
-  const { id, testId } = navTreeContext.getProps?.(item, path) ?? {};
-
-  const handleRearrange = useCallback<StackItemRearrangeHandler<L0ItemData>>(
-    (source, target, closestEdge) => {
-      invariant(item.properties.onRearrangeChildren);
-      const sourceIndex = collectionItems.findIndex((i) => i.id === source.id);
-      const targetIndex = collectionItems.findIndex((i) => i.id === target.id);
-      const insertIndex =
-        source.id === target.id
-          ? sourceIndex
-          : targetIndex +
-            (sourceIndex < targetIndex ? (closestEdge === 'top' ? -1 : 0) : closestEdge === 'bottom' ? 1 : 0);
-      const nextOrder = arrayMove([...collectionItems], sourceIndex, insertIndex);
-      return item.properties.onRearrangeChildren(nextOrder);
-    },
-    [collectionItems, item.properties.onRearrangeChildren],
-  );
-
-  return (
-    <div
-      role='group'
-      className='contents group/l0c'
-      aria-labelledby={`${item.id}__label`}
-      data-object-id={id}
-      data-testid={testId}
-    >
-      {collectionItems.map((collectionItem) => (
-        <L0Item
-          key={collectionItem.id}
-          item={collectionItem}
-          parent={item}
-          path={groupPath}
-          {...(item.properties.onRearrangeChildren && { onRearrange: handleRearrange })}
-        />
-      ))}
-    </div>
-  );
-};
-
-//
 // L0Menu
 //
 
@@ -324,6 +273,29 @@ export const L0Menu = ({ menuActions, topLevelItems, pinnedItems, userAccountIte
     },
     [runAction],
   );
+
+  const handleRearrange = useCallback<StackItemRearrangeHandler<L0ItemData>>(
+    (source, target, closestEdge) => {
+      const sourceItem = topLevelItems.find((i) => i.id === source.id);
+      if (!sourceItem?.properties.onRearrange) {
+        return;
+      }
+
+      const sourceIndex = topLevelItems.findIndex((i) => i.id === source.id);
+      const targetIndex = topLevelItems.findIndex((i) => i.id === target.id);
+      const insertIndex =
+        source.id === target.id
+          ? sourceIndex
+          : targetIndex +
+            (sourceIndex < targetIndex ? (closestEdge === 'top' ? -1 : 0) : closestEdge === 'bottom' ? 1 : 0);
+      const nextOrder = arrayMove([...topLevelItems], sourceIndex, insertIndex);
+      return sourceItem.properties.onRearrange(nextOrder.map((item) => item.data));
+    },
+    [topLevelItems],
+  );
+
+  // Check if any items have onRearrange to enable drag-and-drop.
+  const hasRearrangeableItems = topLevelItems.some((item) => item.properties.onRearrange);
 
   return (
     <Tabs.Tablist
@@ -372,13 +344,15 @@ export const L0Menu = ({ menuActions, topLevelItems, pinnedItems, userAccountIte
               '[body[data-platform="ios"]_&]:pbs-[max(env(safe-area-inset-top),0.25rem)]',
             ])}
           >
-            {topLevelItems.map((item) => {
-              if (l0ItemType(item) === 'collection') {
-                return <L0Collection key={item.id} item={item} parent={parent} path={path} />;
-              } else {
-                return <L0Item key={item.id} item={item} parent={parent} path={path} />;
-              }
-            })}
+            {topLevelItems.map((item) => (
+              <L0Item
+                key={item.id}
+                item={item}
+                parent={parent}
+                path={path}
+                {...(hasRearrangeableItems && { onRearrange: handleRearrange })}
+              />
+            ))}
           </div>
           <ScrollArea.Scrollbar orientation='vertical'>
             <ScrollArea.Thumb />
@@ -388,11 +362,9 @@ export const L0Menu = ({ menuActions, topLevelItems, pinnedItems, userAccountIte
 
       {/* Actions. */}
       <div role='none' className='grid grid-cols-1 auto-rows-[--rail-action] pbs-2'>
-        {pinnedItems
-          .filter((item) => l0ItemType(item) !== 'collection')
-          .map((item) => (
-            <L0Item key={item.id} item={item} parent={parent} path={path} pinned />
-          ))}
+        {pinnedItems.map((item) => (
+          <L0Item key={item.id} item={item} parent={parent} path={path} pinned />
+        ))}
       </div>
 
       {userAccountItem && (

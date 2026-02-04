@@ -7,7 +7,7 @@ import React, { Fragment, type UIEvent, useCallback, useEffect, useMemo, useRef 
 import { Common } from '@dxos/app-framework';
 import { useAtomCapability, useOperationInvoker, usePluginManager } from '@dxos/app-framework/react';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
-import { Main, type MainProps, useMediaQuery, useOnTransition } from '@dxos/react-ui';
+import { Main, type MainContentProps, useMediaQuery, useOnTransition } from '@dxos/react-ui';
 import { DEFAULT_HORIZONTAL_SIZE, Stack, StackContext } from '@dxos/react-ui-stack';
 import { mainPaddingTransitions, mx } from '@dxos/ui-theme';
 
@@ -196,7 +196,7 @@ export const DeckMain = () => {
                     : '0',
               '--dx-main-contentFirstWidth': `${plankSizing[active[0] ?? 'never'] ?? DEFAULT_HORIZONTAL_SIZE}rem`,
               '--dx-main-contentLastWidth': `${plankSizing[active[(active.length ?? 1) - 1] ?? 'never'] ?? DEFAULT_HORIZONTAL_SIZE}rem`,
-            } as MainProps['style']
+            } as MainContentProps['style']
           }
         >
           {/* Deck mode. */}

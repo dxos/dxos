@@ -16,9 +16,9 @@ const GraphSchema = Schema.Struct({
   query: Schema.Struct({
     raw: Schema.optional(Schema.String),
     ast: QueryAST.Query,
-  }).pipe(Schema.mutable, FormInputAnnotation.set(false)),
+  }).pipe(FormInputAnnotation.set(false)),
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/Graph',
     version: '0.2.0',
   }),
@@ -26,8 +26,7 @@ const GraphSchema = Schema.Struct({
   ViewAnnotation.set(true),
 );
 export interface Graph extends Schema.Schema.Type<typeof GraphSchema> {}
-export interface GraphEncoded extends Schema.Schema.Encoded<typeof GraphSchema> {}
-export const Graph: Schema.Schema<Graph, GraphEncoded> = GraphSchema;
+export const Graph: Type.Obj<Graph> = GraphSchema as any;
 
 type MakeProps = Omit<Partial<Obj.MakeProps<typeof Graph>>, 'view'> & {
   view: View.View;
@@ -53,9 +52,9 @@ export const GraphV1 = Schema.Struct({
   query: Schema.Struct({
     raw: Schema.optional(Schema.String),
     ast: QueryAST.Query,
-  }).pipe(Schema.mutable),
+  }),
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/Graph',
     version: '0.1.0',
   }),

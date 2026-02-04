@@ -34,8 +34,10 @@ export const serializer: TypedObjectSerializer<Diagram.Diagram> = {
 };
 
 const setCanvasContent = (object: Diagram.Canvas, content: any) => {
-  object.content = {};
-  Object.entries(content).forEach(([key, value]) => {
-    object.content[key] = value;
+  Obj.change(object, (o) => {
+    o.content = {};
+    Object.entries(content).forEach(([key, value]) => {
+      o.content[key] = value;
+    });
   });
 };

@@ -12,7 +12,7 @@ import type * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
 import { FormBuilder } from '@dxos/cli-util';
-import { Annotation, Database, type Entity, Filter, Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, Database, Entity, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { getProperties } from '@dxos/effect';
 import { Function, Trigger } from '@dxos/functions';
 import { QueueAnnotation } from '@dxos/schema';
@@ -246,9 +246,9 @@ export const promptForSchemaInput = Effect.fn(function* (
           const selected = yield* Prompt.select({
             message: `Select ${info.key}:`,
             choices: objects.map((obj: Entity.Any) => ({
-              title: Obj.getLabel(obj) ?? obj.id,
+              title: Entity.getLabel(obj) ?? obj.id,
               value: Ref.make(obj),
-              description: Obj.getDescription(obj),
+              description: Entity.getDescription(obj),
             })),
           });
           inputObj[key] = selected;

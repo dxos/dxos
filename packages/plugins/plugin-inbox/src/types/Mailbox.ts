@@ -30,7 +30,7 @@ export type Labels = Schema.Schema.Type<typeof Labels>;
 export const Mailbox = Schema.Struct({
   name: Schema.optional(Schema.String),
   queue: Type.Ref(Queue).pipe(FormInputAnnotation.set(false)),
-  labels: Labels.pipe(Schema.mutable, FormInputAnnotation.set(false), Schema.optional),
+  labels: Labels.pipe(FormInputAnnotation.set(false), Schema.optional),
   // TODO(wittjosiah): Factor out to relation?
   filters: Schema.Array(
     Schema.Struct({
@@ -45,7 +45,7 @@ export const Mailbox = Schema.Struct({
     }),
   ),
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/Mailbox',
     version: '0.1.0',
   }),

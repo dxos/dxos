@@ -7,7 +7,7 @@ import React, { useCallback } from 'react';
 import { Surface, type SurfaceComponentProps, useOperationInvoker } from '@dxos/app-framework/react';
 import { Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { StackItem } from '@dxos/react-ui-stack';
+import { Layout } from '@dxos/react-ui-mosaic';
 import { Text } from '@dxos/schema';
 import { Event as EventType } from '@dxos/types';
 
@@ -16,10 +16,14 @@ import { type Calendar, InboxOperation } from '../../types';
 
 import { Event, type EventHeaderProps } from './Event';
 
-export const EventArticle = ({
-  subject,
-  calendar,
-}: SurfaceComponentProps<EventType.Event> & { calendar: Calendar.Calendar }) => {
+export type EventArticleProps = SurfaceComponentProps<
+  EventType.Event,
+  {
+    calendar: Calendar.Calendar;
+  }
+>;
+
+export const EventArticle = ({ role, subject, calendar }: EventArticleProps) => {
   const { invokePromise } = useOperationInvoker();
   const id = Obj.getDXN(subject).toString();
   const db = Obj.getDatabase(calendar);
@@ -31,7 +35,9 @@ export const EventArticle = ({
     const event = createShadowEvent();
     const notes = await event.notes?.load();
     if (!notes) {
-      event.notes = Ref.make(Text.make());
+      Obj.change(event, (e) => {
+        e.notes = Ref.make(Text.make());
+      });
     }
   }, [id, subject, db, shadowedEvent]);
 
@@ -45,7 +51,7 @@ export const EventArticle = ({
   );
 
   return (
-    <StackItem.Content toolbar>
+    <Layout.Main role={role} toolbar>
       <Event.Root event={subject}>
         <Event.Toolbar onNoteCreate={handleNoteCreate} />
         <Event.Viewport>
@@ -55,6 +61,6 @@ export const EventArticle = ({
           {notes && <Surface role='section' data={{ id, subject: notes }} limit={1} />}
         </Event.Viewport>
       </Event.Root>
-    </StackItem.Content>
+    </Layout.Main>
   );
 };

@@ -12,6 +12,11 @@ export type MaybePromise<T> = T | Promise<T>;
 
 export type GuardedType<T> = T extends (value: any) => value is infer R ? R : never;
 
+/**
+ * Removes readonly modifiers from top-level properties of T.
+ * Also converts readonly arrays at the top level to mutable arrays.
+ * For nested properties, mutability depends on the schema definition.
+ */
 export type ToMutable<T> = T extends object
   ? { -readonly [K in keyof T]: T[K] extends readonly (infer U)[] ? U[] : T[K] }
   : T;
@@ -20,13 +25,18 @@ export type Intersection<Types extends readonly unknown[]> = Types extends [infe
   ? First & Intersection<Rest>
   : unknown;
 
-export type DeepReadonly<T> = {
-  readonly [P in keyof T]: T[P] extends Record<string, any>
-    ? DeepReadonly<T[P]>
-    : T[P] extends Array<infer U>
-      ? ReadonlyArray<DeepReadonly<U>>
-      : T[P];
-};
+/**
+ * Recursively makes all properties of T readonly.
+ * Primitives (including branded types like `string & { __brand: true }`) are returned as-is.
+ * Arrays become ReadonlyArrays with deeply readonly elements.
+ */
+export type DeepReadonly<T> = T extends string | number | boolean | bigint | symbol | null | undefined
+  ? T // Primitives (including branded primitives) stay as-is.
+  : T extends Array<infer U>
+    ? ReadonlyArray<DeepReadonly<U>>
+    : T extends object
+      ? { readonly [P in keyof T]: DeepReadonly<T[P]> }
+      : T;
 
 export type DeepWriteable<T> = { -readonly [K in keyof T]: T[K] extends object ? DeepWriteable<T[K]> : T[K] };
 

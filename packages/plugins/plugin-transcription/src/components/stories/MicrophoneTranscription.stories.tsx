@@ -4,7 +4,6 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
-import type * as Schema from 'effect/Schema';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Common } from '@dxos/app-framework';
@@ -24,7 +23,6 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
-import { SpacePlugin } from '@dxos/plugin-space';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { IndexKind, useSpace } from '@dxos/react-client/echo';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -76,8 +74,7 @@ const DefaultStory = ({
   // Queue.
   // TODO(dmaretskyi): Use space.queues.create() instead.
   const queueDxn = useMemo(() => createQueueDXN(), []);
-  // TODO(wittjosiah): Find a simpler way to define this type.
-  const queue = useMemo(() => new MemoryQueue<Schema.Schema.Type<typeof Message.Message>>(queueDxn), [queueDxn]);
+  const queue = useMemo(() => new MemoryQueue<Message.Message>(queueDxn), [queueDxn]);
   const model = useQueueModelAdapter(renderByline([]), queue);
   const space = useSpace();
 
@@ -96,7 +93,7 @@ const DefaultStory = ({
 
     let executor: FunctionExecutor | undefined;
     let extractionFunction: ExtractionFunction | undefined;
-    let objects: Promise<Obj.Any[]> | undefined;
+    let objects: Promise<Obj.Unknown[]> | undefined;
 
     if (entityExtraction === 'ner') {
       // Init model loading. Takes time.
@@ -201,6 +198,7 @@ const meta = {
     withPluginManager({
       plugins: [
         ...corePlugins(),
+        StorybookPlugin({}),
         ClientPlugin({
           types: [TestItem, Person.Person, Organization.Organization, TestSchema.DocumentType],
           onClientInitialized: ({ client }) =>
@@ -226,11 +224,9 @@ const meta = {
               yield* Effect.promise(() => seedTestData(client.spaces.default));
             }),
         }),
-        ...corePlugins(),
-        SpacePlugin({}),
+
         PreviewPlugin(),
         TranscriptionPlugin(),
-        StorybookPlugin({}),
       ],
       fireEvents: [Common.ActivationEvent.SetupAppGraph],
     }),

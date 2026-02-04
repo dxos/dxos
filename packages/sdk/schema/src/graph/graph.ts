@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Entity, Obj, Ref } from '@dxos/echo';
+import { Entity, Obj, Ref } from '@dxos/echo';
 import { getProperties } from '@dxos/effect';
 import { Graph, GraphModel } from '@dxos/graph';
 import { log } from '@dxos/log';
@@ -16,7 +16,7 @@ export const createGraph = <T extends Entity.Unknown>(objects: T[]): GraphModel.
 
   // Map objects.
   objects.forEach((object) => {
-    graph.addNode({ id: object.id, type: Obj.getTypename(object), data: object });
+    graph.addNode({ id: object.id, type: Entity.getTypename(object), data: object });
   });
 
   // Find references.

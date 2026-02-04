@@ -14,7 +14,7 @@ import { type ComponentProps } from './types';
 
 export const MessageModule = ({ space }: ComponentProps) => {
   const [mailbox] = useQuery(space.db, Filter.type(Mailbox.Mailbox));
-  const mailboxDxn = mailbox ? Obj.getDXN(mailbox).toString() : '';
+  const mailboxDxn = mailbox ? Obj.getDXN(mailbox).toString() : undefined;
   const selected = useSelected(mailboxDxn, 'single');
   const message = useQuery(mailbox?.queue.target, selected ? Filter.id(selected) : Filter.nothing())[0];
   const data = useMemo(() => ({ subject: message ?? 'message', companionTo: mailbox }), [message, mailbox]);

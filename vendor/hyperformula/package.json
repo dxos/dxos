@@ -3,14 +3,17 @@
   "version": "0.8.3",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
   "license": "MIT",
   "author": "info@dxos.org",
   "type": "module",
   "exports": {
     ".": {
       "types": "./src/hyperformula.d.ts",
-      "node": "./dist/lib/node-esm/hyperformula.mjs",
-      "default": "./dist/lib/browser/hyperformula.mjs"
+      "default": "./dist/lib/neutral/hyperformula.mjs"
     }
   },
   "files": [

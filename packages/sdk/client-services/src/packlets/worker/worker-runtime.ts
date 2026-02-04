@@ -23,7 +23,9 @@ import {
 import { RtcTransportProxyFactory } from '@dxos/network-manager';
 import { type RpcPort } from '@dxos/rpc';
 import * as OpfsWorker from '@dxos/sql-sqlite/OpfsWorker';
+import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 import * as SqliteClient from '@dxos/sql-sqlite/SqliteClient';
+import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 import { type MaybePromise } from '@dxos/util';
 
 import { ClientServicesHost } from '../services';
@@ -48,7 +50,7 @@ export type WorkerRuntimeOptions = {
    */
   automaticallyConnectWebrtc?: boolean;
 
-  enableFullTextIndexing?: boolean;
+  enableSqlite?: boolean;
 };
 
 /**
@@ -73,7 +75,10 @@ export class WorkerRuntime {
   private _config!: Config;
   private _signalMetadataTags: any = { runtime: 'worker-runtime' };
   private _signalTelemetryEnabled: boolean = false;
-  private _runtime!: ManagedRuntime.ManagedRuntime<SqlClient.SqlClient, never>;
+  private _runtime!: ManagedRuntime.ManagedRuntime<
+    SqlTransaction.SqlTransaction | SqlClient.SqlClient | SqlExport.SqlExport,
+    never
+  >;
 
   constructor({
     channel = DEFAULT_WORKER_BROADCAST_CHANNEL,
@@ -82,21 +87,25 @@ export class WorkerRuntime {
     releaseLock,
     onStop,
     automaticallyConnectWebrtc = true,
-    enableFullTextIndexing,
+    enableSqlite,
   }: WorkerRuntimeOptions) {
     this._configProvider = configProvider;
     this._acquireLock = acquireLock;
     this._releaseLock = releaseLock;
     this._onStop = onStop;
     this._channel = channel;
-    this._runtime = ManagedRuntime.make(Layer.merge(LocalSqliteOpfsLayer, Reactivity.layer).pipe(Layer.orDie));
+    this._runtime = ManagedRuntime.make(
+      SqlTransaction.layer
+        .pipe(Layer.provideMerge(LocalSqliteOpfsLayer), Layer.provideMerge(Reactivity.layer))
+        .pipe(Layer.orDie),
+    );
     this._clientServices = new ClientServicesHost({
       callbacks: {
         onReset: async () => this.stop(),
       },
       runtime: this._runtime.runtimeEffect,
       runtimeProps: {
-        enableFullTextIndexing: enableFullTextIndexing,
+        enableSqlite,
         // Auto-activate spaces that were previously active after leader changeover.
         autoActivateSpaces: true,
       },
@@ -245,6 +254,20 @@ export class WorkerRuntime {
 }
 
 const DB_NAME = 'DXOS';
+
+/**
+ * SqlExport layer that wraps SqliteClient to provide export functionality.
+ */
+const SqlExportLayer: Layer.Layer<SqlExport.SqlExport, never, SqliteClient.SqliteClient> = Layer.effect(
+  SqlExport.SqlExport,
+  Effect.gen(function* () {
+    const sql = yield* SqliteClient.SqliteClient;
+    return {
+      export: sql.export,
+    } satisfies SqlExport.Service;
+  }),
+);
+
 /**
  * Local SQLite layer for the worker.
  * Uses OPFS sync API as an FS backend.
@@ -265,7 +288,7 @@ const LocalSqliteOpfsLayer = Layer.unwrapScoped(
     );
 
     yield* Effect.forkScoped(OpfsWorker.run({ port: serverPort, dbName: DB_NAME }));
-    return SqliteClient.layer({ worker: Effect.succeed(clientPort) });
+    return SqlExportLayer.pipe(Layer.provideMerge(SqliteClient.layer({ worker: Effect.succeed(clientPort) })));
   }),
 );
 

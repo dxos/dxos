@@ -2,8 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import './mailbox.css';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React, { useMemo, useState } from 'react';
@@ -13,12 +11,12 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
-import { SpacePlugin } from '@dxos/plugin-space';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { Filter, useDatabase, useQuery } from '@dxos/react-client/echo';
 import { withTheme } from '@dxos/react-ui/testing';
 import { useAttentionAttributes, useSelected } from '@dxos/react-ui-attention';
 import { withAttention } from '@dxos/react-ui-attention/testing';
+import { withMosaic } from '@dxos/react-ui-mosaic/testing';
 import { render } from '@dxos/storybook-utils';
 import { Message, Person } from '@dxos/types';
 
@@ -63,7 +61,7 @@ const meta = {
   title: 'plugins/plugin-inbox/Mailbox',
   component: MailboxComponent as any,
   render: DefaultStory,
-  decorators: [withTheme, withAttention],
+  decorators: [withTheme, withAttention, withMosaic()],
   parameters: {
     layout: 'fullscreen',
   },
@@ -92,11 +90,10 @@ export const WithCompanion: Story = {
               yield* Effect.promise(() => initializeMailbox(client.spaces.default));
             }),
         }),
-        ...corePlugins(),
-        SpacePlugin({}),
-        PreviewPlugin(),
-        InboxPlugin(),
+
         StorybookPlugin({}),
+        InboxPlugin(),
+        PreviewPlugin(),
       ],
     }),
   ],

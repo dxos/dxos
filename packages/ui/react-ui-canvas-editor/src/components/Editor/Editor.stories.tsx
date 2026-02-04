@@ -52,7 +52,9 @@ const DefaultStory = ({ id = 'test', init, sidebar, children, ...props }: Render
     // Load objects.
     const objects = await space.db.query(Filter.everything()).run();
     const model = await doLayout(
-      createGraph(objects.filter((object: Obj.Any) => types.some((type) => type.typename === Obj.getTypename(object)))),
+      createGraph(
+        objects.filter((object: Obj.Unknown) => types.some((type) => type.typename === Obj.getTypename(object))),
+      ),
     );
     setGraph(model);
   }, [space, init]);
@@ -115,7 +117,7 @@ const meta = {
             // Replace all schema in the spec with the registered schema.
             const registeredSchema = await space.db.schemaRegistry.register([
               ...new Set(spec.map((schema: any) => schema.type)),
-            ] as Schema.Schema.AnyNoContext[]);
+            ] as Type.Entity.Any[]);
 
             spec = spec.map((schema: any) => ({
               ...schema,

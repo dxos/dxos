@@ -4,9 +4,10 @@
 
 import React from 'react';
 
+import { type SurfaceComponentProps } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
 import { useMembers, useQueue } from '@dxos/react-client/echo';
-import { StackItem } from '@dxos/react-ui-stack';
+import { Layout } from '@dxos/react-ui-mosaic';
 import { type Message, type Transcript } from '@dxos/types';
 
 import { useQueueModelAdapter } from '../hooks';
@@ -14,12 +15,9 @@ import { renderByline } from '../util';
 
 import { TranscriptView } from './Transcript';
 
-export type TranscriptionContainerProps = {
-  role: string;
-  transcript: Transcript.Transcript;
-};
+export type TranscriptionContainerProps = SurfaceComponentProps<Transcript.Transcript>;
 
-export const TranscriptionContainer = ({ transcript }: TranscriptionContainerProps) => {
+export const TranscriptionContainer = ({ role, subject: transcript }: TranscriptionContainerProps) => {
   const attendableId = Obj.getDXN(transcript).toString();
   const db = Obj.getDatabase(transcript);
   const members = useMembers(db?.spaceId).map((member) => member.identity);
@@ -27,9 +25,9 @@ export const TranscriptionContainer = ({ transcript }: TranscriptionContainerPro
   const model = useQueueModelAdapter(renderByline(members), queue);
 
   return (
-    <StackItem.Content>
+    <Layout.Main role={role}>
       <TranscriptView attendableId={attendableId} model={model} transcript={transcript} />
-    </StackItem.Content>
+    </Layout.Main>
   );
 };
 

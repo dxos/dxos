@@ -59,7 +59,7 @@ export type AccordionItemBodyProps = ThemedClassName<PropsWithChildren>;
 
 export const AccordionItemBody = ({ children, classNames }: AccordionItemBodyProps) => {
   return (
-    <AccordionPrimitive.Content className='overflow-hidden data-[state=closed]:animate-slideUp data-[state=open]:animate-slideDown'>
+    <AccordionPrimitive.Content className='overflow-hidden data-[state=closed]:animate-slide-up data-[state=open]:animate-slide-down'>
       <div role='none' className={mx('p-2', classNames)}>
         {children}
       </div>

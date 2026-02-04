@@ -23,9 +23,8 @@ import {
   TypeIdentifierAnnotationId,
   makeTypeJsonSchemaAnnotation,
 } from '../annotations';
-import { Expando } from '../entities';
-import { type JsonSchemaReferenceInfo, Ref, createEchoReferenceSchema } from '../ref';
-import { EntityKind, EntityKindSchema } from '../types';
+import { type JsonSchemaReferenceInfo, createEchoReferenceSchema } from '../ref';
+import { ANY_OBJECT_TYPENAME, ANY_OBJECT_VERSION, EntityKind, EntityKindSchema } from '../types';
 
 import { CustomAnnotations, DecodedAnnotations, EchoAnnotations } from './annotations';
 import {
@@ -81,7 +80,11 @@ export type JsonSchemaOptions = {
  */
 // TODO(burdon): Reconcile with possibly extending @effect/Schema/JSONSchema
 //  We add additional propertyOrder (but the object properties ARE ordered); and type "string" for literals.
-export const toJsonSchema = (schema: Schema.Schema.All, options: JsonSchemaOptions = {}): JsonSchemaType => {
+// TODO(wittjosiah): This is mutable because its a pojo, perhaps should be left as readonly at type level though?
+export const toJsonSchema = (
+  schema: Schema.Schema.All,
+  options: JsonSchemaOptions = {},
+): Types.DeepMutable<JsonSchemaType> => {
   assertArgument(Schema.isSchema(schema), 'schema');
   let jsonSchema = _toJsonSchemaAST(schema.ast);
   if (options.strict) {
@@ -104,11 +107,11 @@ export const toJsonSchema = (schema: Schema.Schema.All, options: JsonSchemaOptio
   return jsonSchema;
 };
 
-const _toJsonSchemaAST = (ast: SchemaAST.AST): JsonSchemaType => {
+const _toJsonSchemaAST = (ast: SchemaAST.AST): Types.DeepMutable<JsonSchemaType> => {
   const withRefinements = withEchoRefinements(ast, '#');
   const jsonSchema = JSONSchema.fromAST(withRefinements, {
     definitions: {},
-  }) as JsonSchemaType;
+  }) as Types.DeepMutable<JsonSchemaType>;
 
   return normalizeJsonSchema(jsonSchema);
 };
@@ -327,7 +330,7 @@ const objectToEffectSchema = (root: JsonSchemaType, defs: JsonSchemaType['$defs'
   }
 
   if (immutableIdField) {
-    schema = Schema.extend(Schema.mutable(schema), Schema.Struct({ id: immutableIdField }));
+    schema = Schema.extend(schema, Schema.Struct({ id: immutableIdField }));
   }
 
   const annotations = jsonSchemaFieldsToAnnotations(root);
@@ -352,7 +355,8 @@ const anyToEffectSchema = (root: JSONSchema.JsonSchema7Any): Schema.Schema.AnyNo
 // TODO(dmaretskyi): Types.
 const refToEffectSchema = (root: any): Schema.Schema.AnyNoContext => {
   if (!('reference' in root)) {
-    return Ref(Expando);
+    // Fallback to generic object ref when no reference info is provided.
+    return createEchoReferenceSchema(undefined, ANY_OBJECT_TYPENAME, ANY_OBJECT_VERSION);
   }
 
   const reference: JsonSchemaReferenceInfo = root.reference;
@@ -377,7 +381,7 @@ const refToEffectSchema = (root: any): Schema.Schema.AnyNoContext => {
 const annotations_toJsonSchemaFields = (annotations: SchemaAST.Annotations): Record<symbol, any> => {
   const schemaFields: Record<string, any> = {};
 
-  const echoAnnotations: JsonSchemaEchoAnnotations = {};
+  const echoAnnotations: Types.Mutable<JsonSchemaEchoAnnotations> = {};
   for (const [key, annotationId] of Object.entries(EchoAnnotations)) {
     if (annotations[annotationId] != null) {
       echoAnnotations[key as keyof JsonSchemaEchoAnnotations] = annotations[annotationId] as any;
@@ -495,7 +499,7 @@ const addJsonSchemaFields = (ast: SchemaAST.AST, schema: JsonSchemaType): Schema
  * Fixes field order.
  * Sets `$schema` prop.
  */
-const normalizeJsonSchema = (jsonSchema: JsonSchemaType): JsonSchemaType => {
+const normalizeJsonSchema = (jsonSchema: Types.DeepMutable<JsonSchemaType>): Types.DeepMutable<JsonSchemaType> => {
   if (jsonSchema.properties && 'id' in jsonSchema.properties) {
     jsonSchema.properties = orderKeys(jsonSchema.properties, ['id']); // Put id first.
   }

@@ -4,25 +4,26 @@
   "description": "Provides a common interface for app and platform observability",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
   "license": "MIT",
   "author": "DXOS.org",
   "sideEffects": false,
   "type": "module",
   "exports": {
     ".": {
-      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
     },
     "./segment": {
-      "source": "./src/segment/index.ts",
       "types": "./dist/types/src/segment/index.d.ts",
       "browser": "./dist/lib/browser/segment/index.mjs",
       "node": "./dist/lib/node-esm/segment/index.mjs"
     },
     "./sentry": {
-      "source": "./src/sentry/index.ts",
       "types": "./dist/types/src/sentry/index.d.ts",
       "browser": "./dist/lib/browser/sentry/index.mjs",
       "node": "./dist/lib/node-esm/sentry/index.mjs"
@@ -31,8 +32,8 @@
   "browser": {
     "./src/segment/node.ts": "./src/segment/browser.ts",
     "./src/sentry/node.ts": "./src/sentry/browser.ts",
-    "./testing/testkit/index.ts": "./testing/testkit/browser.ts",
-    "./src/otel/traces.ts": "./src/otel/traces-browser.ts"
+    "./src/otel/traces.ts": "./src/otel/traces-browser.ts",
+    "./src/testing/testkit/index.ts": "./src/testing/testkit/browser.ts"
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {

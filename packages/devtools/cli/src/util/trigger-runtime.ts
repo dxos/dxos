@@ -18,8 +18,8 @@ import { getProfilePath } from '@dxos/client-protocol';
 import { DX_DATA } from '@dxos/client-protocol';
 import { Database, Query } from '@dxos/echo';
 import { type Key } from '@dxos/echo';
-import { Function, FunctionDefinition } from '@dxos/functions';
-import { InvocationTracer, TriggerDispatcher, TriggerStateStore } from '@dxos/functions-runtime';
+import { Function, FunctionDefinition, TracingService } from '@dxos/functions';
+import { TriggerDispatcher, TriggerStateStore } from '@dxos/functions-runtime';
 
 import { functions as blueprintFunctions, toolkits } from './blueprints';
 import { type AiChatServices, chatLayer } from './runtime';
@@ -29,7 +29,7 @@ export type TriggerRuntimeServices =
   | TriggerStateStore
   | ToolResolverService
   | ToolExecutionService
-  | InvocationTracer
+  | TracingService
   | AiChatServices;
 
 export type TriggerRuntimeLayerOptions = {
@@ -88,7 +88,7 @@ export const triggerRuntimeLayer = ({
       // Note: Tool services use the merged toolkit, matching how ChatProcessor.execute() does it
       return TriggerDispatcher.layer({ timeControl: 'natural', livePollInterval }).pipe(
         Layer.provideMerge(triggerStateStoreLayer),
-        Layer.provideMerge(InvocationTracer.layerTest),
+        Layer.provideMerge(TracingService.layerNoop),
         Layer.provideMerge(makeToolResolverFromFunctions(functions, toolkit.toolkit)),
         Layer.provideMerge(makeToolExecutionServiceFromFunctions(toolkit.toolkit, toolkit.layer)),
         Layer.provideMerge(baseChatLayer),

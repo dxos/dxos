@@ -2,14 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Array from 'effect/Array';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 
 import { Template } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';
-import { Database } from '@dxos/echo';
 import { ObjectVersion } from '@dxos/echo-db';
 import { type ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -34,15 +32,15 @@ export const formatSystemPrompt = ({
     const blueprintDefs = yield* Function.pipe(
       blueprints,
       Effect.forEach((blueprint) => Effect.succeed(blueprint.instructions)),
-      Effect.flatMap(Effect.forEach((template) => Database.loadOption(template.source))),
-      Effect.map(Array.filter(Option.isSome)),
-      Effect.map(
-        Array.map(
-          (template) => trim`
+      Effect.flatMap(
+        Effect.forEach((template) =>
+          Effect.gen(function* () {
+            return trim`
             <blueprint>
-              ${Template.process(template.value.content)}
+              ${yield* Template.processTemplate(template)}
             </blueprint>
-          `,
+          `;
+          }),
         ),
       ),
       Effect.map((blueprints) =>

@@ -22,8 +22,10 @@ import { log } from '@dxos/log';
 import { type SignalManager } from '@dxos/messaging';
 import { type SwarmNetworkManagerOptions, type TransportFactory, createIceProvider } from '@dxos/network-manager';
 import { type ServiceBundle } from '@dxos/rpc';
-import { layerMemory } from '@dxos/sql-sqlite/platform';
+import { layerMemory, sqlExportLayer } from '@dxos/sql-sqlite/platform';
+import type * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 import * as SqliteClient from '@dxos/sql-sqlite/SqliteClient';
+import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 import { trace } from '@dxos/tracing';
 import { isBun } from '@dxos/util';
 
@@ -114,7 +116,10 @@ export class LocalClientServices implements ClientServicesProvider {
   private readonly _createOpfsWorker?: () => Worker;
   private _host?: ClientServicesHost;
   private _opfsWorker?: Worker;
-  private _runtime?: ManagedRuntime.ManagedRuntime<SqlClient.SqlClient, never>;
+  private _runtime?: ManagedRuntime.ManagedRuntime<
+    SqlTransaction.SqlTransaction | SqlClient.SqlClient | SqlExport.SqlExport,
+    never
+  >;
   signalMetadataTags: any = {
     runtime: 'local-client-services',
   };
@@ -175,7 +180,14 @@ export class LocalClientServices implements ClientServicesProvider {
       sqliteLayer = layerMemory;
     }
 
-    this._runtime = ManagedRuntime.make(Layer.merge(sqliteLayer, Reactivity.layer).pipe(Layer.orDie));
+    this._runtime = ManagedRuntime.make(
+      sqlExportLayer.pipe(
+        Layer.provideMerge(SqlTransaction.layer),
+        Layer.provideMerge(sqliteLayer),
+        Layer.provideMerge(Reactivity.layer),
+        Layer.orDie,
+      ),
+    );
 
     this._host = new ClientServicesHost({
       ...this._params,

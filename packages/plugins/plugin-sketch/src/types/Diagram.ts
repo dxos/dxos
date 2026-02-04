@@ -13,9 +13,9 @@ export const Canvas = Schema.Struct({
   /** Fully qualified external schema reference. */
   // TODO(wittjosiah): Remove once the schema is fully internalized.
   schema: Schema.String.pipe(Schema.optional),
-  content: Schema.Record({ key: Schema.String, value: Schema.Any }).pipe(Schema.mutable),
+  content: Schema.Record({ key: Schema.String, value: Schema.Any }),
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/Canvas',
     version: '0.1.0',
   }),
@@ -27,7 +27,7 @@ export const Diagram = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
   canvas: Type.Ref(Canvas).pipe(FormInputAnnotation.set(false)),
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/Diagram',
     version: '0.1.0',
   }),

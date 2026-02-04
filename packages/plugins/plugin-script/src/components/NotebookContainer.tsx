@@ -6,22 +6,22 @@ import { RegistryContext } from '@effect-atom/atom-react';
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
+import type * as Types from 'effect/Types';
 import React, { useCallback, useContext, useMemo, useState } from 'react';
 
+import { type SurfaceComponentProps } from '@dxos/app-framework/react';
 import { Agent } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
-import { type FunctionDefinition, FunctionInvocationService } from '@dxos/functions';
-import { InvocationTracer } from '@dxos/functions-runtime';
-import { TracingServiceExt } from '@dxos/functions-runtime';
+import { type FunctionDefinition, FunctionInvocationService, TracingService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { useComputeRuntimeCallback } from '@dxos/plugin-automation';
 import { Graph } from '@dxos/plugin-explorer/types';
 import { DropdownMenu, IconButton, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
-import { StackItem } from '@dxos/react-ui-stack';
+import { Layout } from '@dxos/react-ui-mosaic';
 import { Text, View } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
@@ -36,12 +36,9 @@ const INCLUDE_BLUEPRINTS = ['dxos.org/blueprint/assistant', 'dxos.org/blueprint/
 
 // TODO(burdon): Support calling named deployed functions (as with sheet).
 
-export type NotebookContainerProps = {
-  role?: string;
-  notebook?: Notebook.Notebook;
-} & Pick<TypescriptEditorProps, 'env'>;
+export type NotebookContainerProps = SurfaceComponentProps<Notebook.Notebook, Pick<TypescriptEditorProps, 'env'>>;
 
-export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => {
+export const NotebookContainer = ({ role, subject: notebook, env }: NotebookContainerProps) => {
   const { t } = useTranslation(meta.id);
   const registry = useContext(RegistryContext);
   const db = notebook && Obj.getDatabase(notebook);
@@ -76,8 +73,8 @@ export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => 
                 }
               });
             } else {
-              Obj.change(graph, () => {
-                graph.query.ast = ast;
+              Obj.change(graph, (g) => {
+                g.query.ast = ast as Obj.Mutable<typeof ast>;
               });
             }
           }
@@ -149,7 +146,7 @@ export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => 
   const handleCellInsert = useCallback<NonNullable<NotebookStackProps['onCellInsert']>>(
     async (type, after) => {
       invariant(notebook);
-      const cell: Notebook.Cell = { id: crypto.randomUUID(), type };
+      const cell: Types.Mutable<Notebook.Cell> = { id: crypto.randomUUID(), type };
       switch (type) {
         case 'markdown':
         case 'script':
@@ -192,7 +189,7 @@ export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => 
   );
 
   return (
-    <StackItem.Content toolbar>
+    <Layout.Main role={role} toolbar>
       <Toolbar.Root disabled={!hasAttention} textBlockWidth>
         <DropdownMenu.Root>
           <DropdownMenu.Trigger asChild>
@@ -221,7 +218,7 @@ export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => 
           onCellDelete={handleCellDelete}
         />
       </div>
-    </StackItem.Content>
+    </Layout.Main>
   );
 };
 
@@ -241,7 +238,7 @@ const runPrompt = Effect.fn(function* ({
     prompt,
     input,
   };
-  const tracer = yield* InvocationTracer;
+  const tracer = yield* TracingService;
   const trace = yield* tracer.traceInvocationStart({
     target: undefined,
     payload: {
@@ -251,7 +248,7 @@ const runPrompt = Effect.fn(function* ({
 
   // Invoke the function.
   const result = yield* FunctionInvocationService.invokeFunction(Agent.prompt, inputData).pipe(
-    Effect.provide(TracingServiceExt.layerQueue(trace.invocationTraceQueue)),
+    Effect.provide(trace.invocationTraceQueue ? TracingService.layerInvocation(trace) : TracingService.layerNoop),
     Effect.exit,
   );
 

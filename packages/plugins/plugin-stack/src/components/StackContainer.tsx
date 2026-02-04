@@ -7,6 +7,7 @@ import React, { useCallback, useState } from 'react';
 
 import { Common } from '@dxos/app-framework';
 import { useAppGraph, useCapabilities, useOperationInvoker } from '@dxos/app-framework/react';
+import { type SurfaceComponentProps } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
 import { Graph } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space/types';
@@ -28,12 +29,11 @@ import {
 import { StackContext } from './StackContext';
 import { StackSection } from './StackSection';
 
-type StackContainerProps = {
+type StackContainerProps = SurfaceComponentProps<Collection.Collection> & {
   id: string;
-  collection: Collection.Collection;
 };
 
-const StackContainer = ({ id, collection }: StackContainerProps) => {
+const StackContainer = ({ id, subject: collection }: StackContainerProps) => {
   const { invokePromise } = useOperationInvoker();
   const { graph } = useAppGraph();
   const { t } = useTranslation(meta.id);

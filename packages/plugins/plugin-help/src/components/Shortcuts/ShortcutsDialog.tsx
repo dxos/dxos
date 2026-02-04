@@ -16,7 +16,7 @@ export const ShortcutsDialogContent = () => {
   const { t } = useTranslation(meta.id);
 
   return (
-    <Dialog.Content classNames='p-0 bs-content max-bs-full md:max-is-[25rem] overflow-hidden'>
+    <Dialog.Content>
       <div role='none' className='flex justify-between mbe-1 pbs-3 pis-2 pie-3 @md:pbs-4 @md:pis-4 @md:pie-5'>
         <Dialog.Title>{t('shortcuts dialog title')}</Dialog.Title>
         <Dialog.Close asChild>

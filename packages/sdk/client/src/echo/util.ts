@@ -2,28 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import * as Schema from 'effect/Schema';
-
 import { type Space } from '@dxos/client-protocol';
-import { Obj } from '@dxos/echo';
-import { isProxy } from '@dxos/echo/internal';
-import { type AnyLiveObject, type SpaceSyncState, getDatabaseFromObject } from '@dxos/echo-db';
+import { type SpaceSyncState, getDatabaseFromObject } from '@dxos/echo-db';
 import { type ObjectId, type SpaceId } from '@dxos/keys';
 
 import { SpaceProxy } from './space-proxy';
-
-/** @deprecated */
-// TODO(wittjosiah): Remove.
-export const ReactiveObjectSchema: Schema.Schema<any> = Schema.Any.pipe(
-  Schema.filter((obj) => isProxy(obj)),
-  Schema.annotations({ title: 'Reactive' }),
-);
-
-// TODO(burdon): Rename (remove "Echo").
-export const EchoObjectSchema: Schema.Schema<AnyLiveObject<any>> = Schema.Any.pipe(
-  Schema.filter((obj) => Obj.isObject(obj)),
-  Schema.annotations({ title: 'EchoObject' }),
-);
 
 /**
  * @param object @deprecated

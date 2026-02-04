@@ -84,6 +84,21 @@ export type EchoRelationSchemaOptions<
 };
 
 /**
+ * Relation schema type with kind marker.
+ */
+export type EchoRelationSchema<
+  Self extends Schema.Schema.Any,
+  Source extends Schema.Schema.AnyNoContext,
+  Target extends Schema.Schema.AnyNoContext,
+  Fields extends Schema.Struct.Fields = Schema.Struct.Fields,
+> = EchoTypeSchema<
+  Self,
+  RelationSourceTargetRefs<Schema.Schema.Type<Source>, Schema.Schema.Type<Target>>,
+  EntityKind.Relation,
+  Fields
+>;
+
+/**
  * Schema for Relation entity types.
  */
 export const EchoRelationSchema = <
@@ -106,14 +121,15 @@ export const EchoRelationSchema = <
     raise(new Error('Target schema must be an echo object schema.'));
   }
 
-  return <Self extends Schema.Schema.Any>(
-    self: Self,
-  ): EchoTypeSchema<Self, RelationSourceTargetRefs<Schema.Schema.Type<Source>, Schema.Schema.Type<Target>>> => {
+  return <Self extends Schema.Schema.Any, Fields extends Schema.Struct.Fields = Schema.Struct.Fields>(
+    self: Self & { fields?: Fields },
+  ): EchoRelationSchema<Self, Source, Target, Fields> => {
     invariant(SchemaAST.isTypeLiteral(self.ast), 'Schema must be a TypeLiteral.');
 
-    // TODO(dmaretskyi): Does `Schema.mutable` work for deep mutability here?
-    // TODO(dmaretskyi): Do not do mutable here.
-    const schemaWithId = Schema.extend(Schema.mutable(self), Schema.Struct({ id: Schema.String }));
+    // Extract fields from the schema if available (Struct schemas have .fields).
+    const fields = ((self as any).fields ?? {}) as Fields;
+
+    const schemaWithId = Schema.extend(self, Schema.Struct({ id: Schema.String }));
     const ast = SchemaAST.annotations(schemaWithId.ast, {
       // TODO(dmaretskyi): `extend` kills the annotations.
       ...self.ast.annotations,
@@ -135,7 +151,7 @@ export const EchoRelationSchema = <
       }),
     });
 
-    return makeEchoTypeSchema<Self>(/* self.fields, */ ast, typename, version);
+    return makeEchoTypeSchema<Self, EntityKind.Relation, Fields>(fields, ast, typename, version, EntityKind.Relation);
   };
 };
 

@@ -47,7 +47,7 @@ export default defineFunction({
     yield* TracingService.emitStatus({ message: 'Creating research document...' });
 
     // TODO(burdon): Type check.
-    const target = (yield* Database.resolve(ArtifactId.toDXN(subject))) as Obj.Any;
+    const target = (yield* Database.resolve(ArtifactId.toDXN(subject))) as Obj.Unknown;
 
     // Create document.
     const object = yield* Database.add(

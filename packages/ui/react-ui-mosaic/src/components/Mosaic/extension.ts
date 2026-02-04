@@ -137,5 +137,5 @@ const dropField = StateField.define<DecorationSet>({
     }
     return decorations.map(tr.changes);
   },
-  provide: (f) => EditorView.decorations.from(f),
+  provide: (field) => EditorView.decorations.from(field),
 });

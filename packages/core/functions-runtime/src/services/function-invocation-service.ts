@@ -19,8 +19,8 @@ import { RemoteFunctionExecutionService } from './remote-function-execution-serv
 export const FunctionInvocationServiceLayer = Layer.effect(
   FunctionInvocationService,
   Effect.gen(function* () {
-    const localExecutioner = yield* LocalFunctionExecutionService;
-    const remoteExecutioner = yield* RemoteFunctionExecutionService;
+    const localExecutionService = yield* LocalFunctionExecutionService;
+    const remoteExecutionService = yield* RemoteFunctionExecutionService;
 
     return {
       invokeFunction: <I, O>(
@@ -29,10 +29,15 @@ export const FunctionInvocationServiceLayer = Layer.effect(
       ): Effect.Effect<O, never, InvocationServices> =>
         Effect.gen(function* () {
           if (functionDef.meta?.deployedFunctionId) {
-            return yield* remoteExecutioner.callFunction<I, O>(functionDef.meta.deployedFunctionId, input);
+            return yield* remoteExecutionService.callFunction<I, O>(functionDef.meta.deployedFunctionId, input);
           }
 
-          return yield* localExecutioner.invokeFunction(functionDef, input);
+          return yield* localExecutionService.invokeFunction(functionDef, input);
+        }),
+
+      resolveFunction: (key: string) =>
+        Effect.gen(function* () {
+          return yield* localExecutionService.resolveFunction(key);
         }),
     } satisfies Context.Tag.Service<FunctionInvocationService>;
   }),
@@ -52,6 +57,7 @@ export const FunctionInvocationServiceLayerWithLocalLoopbackExecutor = Layer.eff
             Layer.provide(
               Layer.succeed(FunctionInvocationService, {
                 invokeFunction: (...args) => functionInvocationService.invokeFunction(...args),
+                resolveFunction: (...args) => functionInvocationService.resolveFunction(...args),
               }),
             ),
           ),

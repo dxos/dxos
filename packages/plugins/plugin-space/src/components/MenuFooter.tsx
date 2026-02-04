@@ -12,7 +12,7 @@ import { DropdownMenu, Icon, toLocalizedString, useTranslation } from '@dxos/rea
 import { meta } from '../meta';
 import { getSpaceDisplayName } from '../util';
 
-export const MenuFooter = ({ object }: { object: Obj.Any }) => {
+export const MenuFooter = ({ object }: { object: Obj.Unknown }) => {
   const { t } = useTranslation(meta.id);
   const client = useClient();
   const space = getSpace(object);

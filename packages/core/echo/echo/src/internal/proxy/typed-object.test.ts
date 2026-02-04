@@ -3,12 +3,14 @@
 //
 
 import * as Schema from 'effect/Schema';
+import type * as Types from 'effect/Types';
 import { describe, expect, test } from 'vitest';
 
 import { EchoObjectSchema } from '../entities';
 import { getSchema } from '../types';
 
 import { makeObject } from './make-object';
+import { change } from './reactive';
 
 const Organization = Schema.Struct({
   name: Schema.String,
@@ -50,47 +52,53 @@ describe('EchoObjectSchema class DSL', () => {
   describe('class options', () => {
     test('can assign undefined to partial fields', async () => {
       const person = makeObject(Contact, { name: 'John' });
-      person.name = undefined;
-      person.recordField = 'hello';
+      change(person, (p) => {
+        p.name = undefined;
+        p.recordField = 'hello';
+      });
       expect(person.name).to.be.undefined;
       expect(person.recordField).to.eq('hello');
     });
   });
 
   test('record', () => {
-    const schema = Schema.mutable(
-      Schema.Struct({
-        meta: Schema.optional(Schema.mutable(Schema.Any)),
-        // NOTE: Schema.Record only supports shallow values.
-        // https://www.npmjs.com/package/@effect/schema#mutable-records
-        // meta: Schema.optional(Schema.mutable(Schema.Record({ key: Schema.String, value: Schema.Any }))),
-        // meta: Schema.optional(Schema.mutable(Schema.object)),
-      }),
-    );
+    const schema = Schema.Struct({
+      meta: Schema.optional(Schema.Any),
+      // NOTE: Schema.Record only supports shallow values.
+      // https://www.npmjs.com/package/@effect/schema#mutable-records
+      // meta: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
+      // meta: Schema.optional(Schema.object),
+    });
 
     {
       const object = makeObject(schema, {});
-      (object.meta ??= {}).test = 100;
-      expect(object.meta.test).to.eq(100);
+      change(object, (o) => {
+        (o.meta ??= {}).test = 100;
+      });
+      expect(object.meta!.test).to.eq(100);
     }
 
     {
       const object = makeObject(schema, {});
-      object.meta = { test: { value: 300 } };
-      expect(object.meta.test.value).to.eq(300);
+      change(object, (o) => {
+        o.meta = { test: { value: 300 } };
+      });
+      expect(object.meta!.test.value).to.eq(300);
     }
 
     {
-      type Test1 = Schema.Schema.Type<typeof schema>;
+      // Plain object (not a reactive proxy) - doesn't need Obj.change.
+      // Note: Schema.Schema.Type generates readonly types, so we cast to mutable for plain objects.
+      type Test1 = Types.Mutable<Schema.Schema.Type<typeof schema>>;
 
       const object: Test1 = {};
       (object.meta ??= {}).test = 100;
-      expect(object.meta.test).to.eq(100);
+      expect(object.meta!.test).to.eq(100);
     }
 
     {
       const Test2 = Schema.Struct({
-        meta: Schema.optional(Schema.mutable(Schema.Record({ key: Schema.String, value: Schema.Any }))),
+        meta: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
       }).pipe(
         EchoObjectSchema({
           typename: 'dxos.org/type/FunctionTrigger',
@@ -99,8 +107,10 @@ describe('EchoObjectSchema class DSL', () => {
       );
 
       const object = makeObject(Test2, {});
-      (object.meta ??= {}).test = 100;
-      expect(object.meta.test).to.eq(100);
+      change(object, (o) => {
+        (o.meta ??= {}).test = 100;
+      });
+      expect(object.meta!.test).to.eq(100);
     }
   });
 });

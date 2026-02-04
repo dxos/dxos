@@ -8,7 +8,7 @@ import { Resource } from '@dxos/context';
 import { Obj } from '@dxos/echo';
 import { type JsonProp } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import type { StackItemRearrangeHandler } from '@dxos/react-ui-stack';
+import { type StackItemRearrangeHandler } from '@dxos/react-ui-stack';
 import { type ProjectionModel, type View } from '@dxos/schema';
 import { arrayMove } from '@dxos/util';
 
@@ -22,12 +22,16 @@ export const UNCATEGORIZED_ATTRIBUTES = {
   color: 'neutral',
 } as const;
 
-export type BaseKanbanItem = Record<JsonProp, any> & { id: string };
+// TODO(burdon): Use Schema directly.
+export type BaseKanbanItem = { id: string } & Record<JsonProp, any>;
 
-export type ArrangedCards<T extends BaseKanbanItem = { id: string }> = {
+export type KanbanColumn<T extends BaseKanbanItem = { id: string }> = {
   columnValue: string;
   cards: T[];
-}[];
+};
+
+// TODO(burdon): Rename?
+export type ArrangedCards<T extends BaseKanbanItem = { id: string }> = KanbanColumn<T>[];
 
 /**
  * Callback type for wrapping mutations in Obj.change().
@@ -35,7 +39,8 @@ export type ArrangedCards<T extends BaseKanbanItem = { id: string }> = {
  */
 export type KanbanChangeCallback<T extends BaseKanbanItem> = {
   /** Callback to wrap kanban object mutations. */
-  kanban: (mutate: (mutableKanban: Kanban.Kanban) => void) => void;
+  kanban: (mutate: (mutableKanban: Obj.Mutable<Kanban.Kanban>) => void) => void;
+
   /** Sets a field on an item, wrapping in Obj.change() if needed. */
   setItemField: (item: T, field: JsonProp, value: unknown) => void;
 };
@@ -45,7 +50,7 @@ export type KanbanChangeCallback<T extends BaseKanbanItem> = {
  * Use this when the kanban and items are stored in the ECHO database.
  */
 export const createEchoChangeCallback = <T extends BaseKanbanItem>(kanban: Kanban.Kanban): KanbanChangeCallback<T> => ({
-  kanban: (mutate) => Obj.change(kanban, (mutableKanban) => mutate(mutableKanban as unknown as Kanban.Kanban)),
+  kanban: (mutate) => Obj.change(kanban, (mutableKanban) => mutate(mutableKanban)),
   setItemField: (item, field, value) => {
     if (Obj.isObject(item)) {
       Obj.change(item, (mutableItem) => {
@@ -64,7 +69,7 @@ export const createEchoChangeCallback = <T extends BaseKanbanItem>(kanban: Kanba
 export const createDirectChangeCallback = <T extends BaseKanbanItem>(
   kanban: Kanban.Kanban,
 ): KanbanChangeCallback<T> => ({
-  kanban: (mutate) => mutate(kanban),
+  kanban: (mutate) => mutate(kanban as Obj.Mutable<Kanban.Kanban>),
   setItemField: (item, field, value) => {
     (item as Record<JsonProp, unknown>)[field] = value;
   },
@@ -88,6 +93,7 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
   private readonly _change: KanbanChangeCallback<T>;
 
   private readonly _items: Atom.Writable<T[]>;
+  // TODO(burdon): Rename columns?
   private readonly _cards: Atom.Writable<ArrangedCards<T>>;
 
   constructor({ registry, object, projection, change }: KanbanModelProps<T>) {
@@ -100,17 +106,17 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
     this._cards = Atom.make<ArrangedCards<T>>([]);
   }
 
+  private get _view(): View.View {
+    invariant(this._object.view.target, 'Kanban model not initialized');
+    return this._object.view.target;
+  }
+
   get id() {
     return Obj.getDXN(this._object).toString();
   }
 
   get object(): Kanban.Kanban {
     return this._object;
-  }
-
-  private get _view(): View.View {
-    invariant(this._object.view.target, 'Kanban model not initialized');
-    return this._object.view.target;
   }
 
   get projection(): ProjectionModel {
@@ -135,6 +141,13 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
   }
 
   /**
+   * Atom for reactive access to the arranged cards.
+   */
+  get cards(): Atom.Atom<ArrangedCards<T>> {
+    return this._cards;
+  }
+
+  /**
    * Gets the current items value.
    */
   getItems(): T[] {
@@ -148,13 +161,6 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
     this._registry.set(this._items, items);
     this._moveInvalidItemsToUncategorized();
     this._registry.set(this._cards, this._computeArrangement());
-  }
-
-  /**
-   * Atom for reactive access to the arranged cards.
-   */
-  get cards(): Atom.Atom<ArrangedCards<T>> {
-    return this._cards;
   }
 
   /**
@@ -240,9 +246,9 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
       columnValue: col.columnValue,
       cards: [...col.cards],
     }));
+
     const sourceColumn = this._findColumn(source.id, nextArrangement);
     const targetColumn = this._findColumn(target.id, nextArrangement);
-
     if (!sourceColumn || !targetColumn) {
       return;
     }

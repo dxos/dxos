@@ -78,30 +78,6 @@ const main = async () => {
   const observabilityDisabled = await isObservabilityDisabled(APP_KEY);
   const observabilityGroup = await getObservabilityGroup(APP_KEY);
 
-  const useLocalServices = config.values.runtime?.app?.env?.DX_HOST;
-  const useSharedWorker = config.values.runtime?.app?.env?.DX_SHARED_WORKER;
-  const services = await createClientServices(config, {
-    createWorker:
-      useLocalServices || !useSharedWorker
-        ? undefined
-        : () =>
-            new SharedWorker(new URL('./shared-worker', import.meta.url), {
-              type: 'module',
-              name: 'dxos-client-worker',
-            }),
-    createDedicatedWorker:
-      useLocalServices || useSharedWorker
-        ? undefined
-        : () =>
-            new Worker(new URL('@dxos/client/dedicated-worker', import.meta.url), {
-              type: 'module',
-              name: 'dxos-client-worker',
-            }),
-    createOpfsWorker: () => new Worker(new URL('@dxos/client/opfs-worker', import.meta.url), { type: 'module' }),
-    observabilityGroup,
-    signalTelemetryEnabled: !observabilityDisabled,
-  });
-
   const isTauri = isTauri$();
   if (isTauri) {
     const platform = getHostPlatform();
@@ -137,6 +113,34 @@ const main = async () => {
     Match.exhaustive,
     runAndForwardErrors,
   );
+
+  // Use single-client mode on mobile Tauri apps where SharedWorker crashes on WKWebView.
+  const useSingleClientMode = isTauri && isMobile;
+
+  const useLocalServices = config.values.runtime?.app?.env?.DX_HOST;
+  const useSharedWorker = config.values.runtime?.app?.env?.DX_SHARED_WORKER;
+  const services = await createClientServices(config, {
+    createWorker:
+      useLocalServices || !useSharedWorker
+        ? undefined
+        : () =>
+            new SharedWorker(new URL('./shared-worker', import.meta.url), {
+              type: 'module',
+              name: 'dxos-client-worker',
+            }),
+    createDedicatedWorker:
+      useLocalServices || useSharedWorker
+        ? undefined
+        : () =>
+            new Worker(new URL('@dxos/client/dedicated-worker', import.meta.url), {
+              type: 'module',
+              name: 'dxos-client-worker',
+            }),
+    createOpfsWorker: () => new Worker(new URL('@dxos/client/opfs-worker', import.meta.url), { type: 'module' }),
+    singleClientMode: useSingleClientMode,
+    observabilityGroup,
+    signalTelemetryEnabled: !observabilityDisabled,
+  });
 
   const conf: PluginConfig = {
     appKey: APP_KEY,

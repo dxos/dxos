@@ -15,7 +15,7 @@ import { meta } from '../../meta';
 
 export const OBJECT_RENAME_POPOVER = `${meta.id}/ObjectRenamePopover`;
 
-export const ObjectRenamePopover = ({ object }: { object: Obj.Any }) => {
+export const ObjectRenamePopover = ({ object }: { object: Obj.Unknown }) => {
   const { t } = useTranslation(meta.id);
   const doneButton = useRef<HTMLButtonElement>(null);
   const [name, setName] = useState(Obj.getLabel(object));

@@ -7,7 +7,6 @@ import { Event } from '@dxos/async';
 import type { WorkerCoordinator, WorkerCoordinatorMessage } from './types';
 
 // `#coordinator-worker` resolves via package.json imports to a module in this package.
-// I'm not convincied this has good bundler support, so I'm leaving an escape hatch for now.
 const defaultCreateWorker = () =>
   new SharedWorker(new URL('#coordinator-worker', import.meta.url), {
     type: 'module',
@@ -15,7 +14,7 @@ const defaultCreateWorker = () =>
   });
 
 export class SharedWorkerCoordinator implements WorkerCoordinator {
-  // SharedWorker lifecycles is managed by the browser, we don't need to terminate it.
+  // SharedWorker lifecycle is managed by the browser, we don't need to terminate it.
   #worker: SharedWorker;
 
   constructor(createWorker: () => SharedWorker = defaultCreateWorker) {

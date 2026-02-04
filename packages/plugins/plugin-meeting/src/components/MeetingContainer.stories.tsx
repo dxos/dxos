@@ -11,7 +11,6 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj, Ref } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { MarkdownPlugin } from '@dxos/plugin-markdown';
-import { SpacePlugin } from '@dxos/plugin-space';
 import { corePlugins } from '@dxos/plugin-testing';
 import { Channel } from '@dxos/plugin-thread/types';
 import { Query, useDatabase, useQuery } from '@dxos/react-client/echo';
@@ -23,20 +22,20 @@ import { Meeting } from '../types';
 
 import { MeetingContainer, type MeetingContainerProps } from './MeetingContainer';
 
-const Story = () => {
+const Render = () => {
   const db = useDatabase();
   const [meeting] = useQuery(db, Query.type(Meeting.Meeting));
   if (!meeting) {
     return null;
   }
 
-  return <MeetingContainer meeting={meeting} />;
+  return <MeetingContainer subject={meeting} />;
 };
 
 const meta = {
   title: 'plugins/plugin-meeting/MeetingContainer',
   component: MeetingContainer,
-  render: () => <Story />,
+  render: () => <Render />,
   decorators: [
     withTheme,
     withLayout({ layout: 'column' }),
@@ -65,8 +64,6 @@ const meta = {
               );
             }),
         }),
-        ...corePlugins(),
-        SpacePlugin({}),
         MarkdownPlugin(),
       ],
       capabilities: [
