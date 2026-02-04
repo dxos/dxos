@@ -4,12 +4,13 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Chat } from '@dxos/assistant-toolkit';
+import { Chat as ChatModule } from '@dxos/assistant-toolkit';
 
 import { LLM_PROVIDERS } from './defs';
 
 // Re-export Chat schema for backward compatibility.
-export { Chat };
+export const Chat = ChatModule.Chat;
+export type Chat = ChatModule.Chat;
 
 /**
  * Plugin settings.
