@@ -4,15 +4,14 @@
 
 import { RegistryContext } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import type * as Schema from 'effect/Schema';
 import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
 import { Obj, Type } from '@dxos/echo';
+import { invariant } from '@dxos/invariant';
 import { type DxGrid } from '@dxos/lit-grid';
 import '@dxos/lit-ui/dx-tag-picker.pcss';
 import { faker } from '@dxos/random';
-import { useClient } from '@dxos/react-client';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -83,14 +82,15 @@ const useTestModel = <S extends Type.Obj.Any>(schema: S, count: number) => {
 };
 
 const DefaultStory = () => {
-  const client = useClient();
   const { model: orgModel, presentation: orgPresentation } = useTestModel(Organization.Organization, 50);
   const { model: contactModel, presentation: contactPresentation } = useTestModel(Person.Person, 50);
   const { space } = useClientStory();
 
   const handleCreate = useCallback(
-    (schema: Schema.Schema.AnyNoContext, values: any) => {
-      return client.spaces.default.db.add(Obj.make(schema, values));
+    (schema: Type.Entity.Any, values: any) => {
+      invariant(Type.isObjectSchema(schema));
+      invariant(space);
+      return space.db.add(Obj.make(schema, values));
     },
     [space],
   );

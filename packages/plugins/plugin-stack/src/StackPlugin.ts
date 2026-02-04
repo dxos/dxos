@@ -16,7 +16,7 @@ export const StackPlugin = Plugin.define(meta).pipe(
     metadata: {
       id: SECTION_IDENTIFIER,
       metadata: {
-        parse: (section: { object: Obj.Any }, type: string) => {
+        parse: (section: { object: Obj.Unknown }, type: string) => {
           switch (type) {
             case 'node':
               return { id: section.object.id, label: (section.object as any).title, data: section.object };

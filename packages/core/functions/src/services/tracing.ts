@@ -29,7 +29,7 @@ export class TracingService extends Context.Tag('@dxos/functions/TracingService'
      * Write an event to the tracing queue.
      * @param event - The event to write. Must be an a typed object.
      */
-    write: (event: Obj.Any, traceContext: TracingService.TraceContext) => void;
+    write: (event: Obj.Unknown, traceContext: TracingService.TraceContext) => void;
 
     traceInvocationStart({
       payload,

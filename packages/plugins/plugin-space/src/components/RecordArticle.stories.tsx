@@ -50,18 +50,18 @@ const meta = {
             id: 'section',
             role: 'section',
             component: ({ data }) => (
-              <Card.SurfaceRoot>
+              <Card.Root>
                 <Json classNames='text-sm' data={data} />
-              </Card.SurfaceRoot>
+              </Card.Root>
             ),
           }),
           Common.createSurface({
             id: 'card',
             role: 'card',
             component: ({ data }) => (
-              <Card.SurfaceRoot>
+              <Card.Root>
                 <Json classNames='text-sm' data={data} />
-              </Card.SurfaceRoot>
+              </Card.Root>
             ),
           }),
         ]),

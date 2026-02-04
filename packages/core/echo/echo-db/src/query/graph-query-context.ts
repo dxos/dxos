@@ -13,7 +13,6 @@ import { type ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { type ItemsUpdatedEvent, type ObjectCore } from '../core-db';
-import { type AnyLiveObject } from '../echo-handler';
 import { prohibitSignalActions } from '../guarded-scope';
 import { type EchoDatabaseImpl } from '../proxy-db';
 
@@ -164,7 +163,7 @@ export class SpaceQuerySource implements QuerySource {
 
   private _ctx: Context = new Context();
   private _query: QueryAST.Query | undefined = undefined;
-  private _results?: QueryResult.EntityEntry<AnyLiveObject<any>>[] = undefined;
+  private _results?: QueryResult.EntityEntry<Obj.Any>[] = undefined;
 
   constructor(private readonly _database: EchoDatabaseImpl) {}
 
@@ -216,7 +215,7 @@ export class SpaceQuerySource implements QuerySource {
     });
   };
 
-  async run(query: QueryAST.Query): Promise<QueryResult.EntityEntry<Obj.Any>[]> {
+  async run(query: QueryAST.Query): Promise<QueryResult.EntityEntry<Obj.Unknown>[]> {
     if (!this._isValidSourceForQuery(query)) {
       return [];
     }
@@ -227,7 +226,7 @@ export class SpaceQuerySource implements QuerySource {
     }
 
     const { filter, options } = simple;
-    const results: QueryResult.EntityEntry<AnyLiveObject<any>>[] = [];
+    const results: QueryResult.EntityEntry<Obj.Any>[] = [];
     if (isObjectIdFilter(filter)) {
       results.push(
         ...(await this._database.coreDatabase.batchLoadObjectCores((filter as QueryAST.FilterObject).id as ObjectId[]))
@@ -242,7 +241,7 @@ export class SpaceQuerySource implements QuerySource {
     });
 
     // Dedup
-    const map = new Map<string, QueryResult.EntityEntry<Obj.Any>>();
+    const map = new Map<string, QueryResult.EntityEntry<Obj.Unknown>>();
     for (const result of results) {
       map.set(result.id, result);
     }
@@ -250,7 +249,7 @@ export class SpaceQuerySource implements QuerySource {
     return [...map.values()];
   }
 
-  getResults(): QueryResult.EntityEntry<Obj.Any>[] {
+  getResults(): QueryResult.EntityEntry<Obj.Unknown>[] {
     if (!this._query) {
       return [];
     }
@@ -293,7 +292,7 @@ export class SpaceQuerySource implements QuerySource {
   private _queryWorkingSet(
     filter: QueryAST.Filter,
     options: QueryAST.QueryOptions | undefined,
-  ): QueryResult.EntityEntry<Obj.Any>[] {
+  ): QueryResult.EntityEntry<Obj.Unknown>[] {
     const filteredCores = isObjectIdFilter(filter)
       ? (filter as QueryAST.FilterObject)
           .id!.map((id) => this._database.coreDatabase.getObjectCoreById(id, { load: true }))
@@ -314,7 +313,7 @@ export class SpaceQuerySource implements QuerySource {
     return true;
   }
 
-  private _mapCoreToResult(core: ObjectCore): QueryResult.EntityEntry<Obj.Any> {
+  private _mapCoreToResult(core: ObjectCore): QueryResult.EntityEntry<Obj.Unknown> {
     return {
       id: core.id,
       result: this._database.getObjectById(core.id, { deleted: true }),

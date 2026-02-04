@@ -11,7 +11,7 @@ export const Outline = Schema.Struct({
   name: Schema.optional(Schema.String),
   content: Type.Ref(Text.Text),
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/Outline',
     version: '0.2.0',
   }),

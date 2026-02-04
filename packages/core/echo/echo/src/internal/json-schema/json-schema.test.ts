@@ -35,7 +35,7 @@ const EXAMPLE_NAMESPACE = '@example';
 describe('effect-to-json', () => {
   test('type annotation', () => {
     const Test = Schema.Struct({ name: Schema.String }).pipe(
-      Type.Obj({
+      Type.object({
         typename: 'example.com/type/Test',
         version: '0.1.0',
       }),
@@ -50,7 +50,7 @@ describe('effect-to-json', () => {
     const Test = Schema.Struct({
       name: Schema.String.pipe(PropertyMeta(EXAMPLE_NAMESPACE, meta)),
     }).pipe(
-      Type.Obj({
+      Type.object({
         typename: 'example.com/type/Test',
         version: '0.1.0',
       }),
@@ -63,7 +63,7 @@ describe('effect-to-json', () => {
     const Nested = Schema.Struct({
       name: Schema.String,
     }).pipe(
-      Type.Obj({
+      Type.object({
         typename: 'example.com/type/TestNested',
         version: '0.1.0',
       }),
@@ -71,7 +71,7 @@ describe('effect-to-json', () => {
     const Test = Schema.Struct({
       name: Ref(Nested),
     }).pipe(
-      Type.Obj({
+      Type.object({
         typename: 'example.com/type/Test',
         version: '0.1.0',
       }),
@@ -88,7 +88,7 @@ describe('effect-to-json', () => {
     const Nested = Schema.Struct({
       name: Schema.String,
     }).pipe(
-      Type.Obj({
+      Type.object({
         typename: 'example.com/type/TestNested',
         version: '0.1.0',
       }),
@@ -96,7 +96,7 @@ describe('effect-to-json', () => {
     const Test = Schema.Struct({
       name: Ref(Nested).annotations({ [FieldLookupAnnotationId]: 'name' }),
     }).pipe(
-      Type.Obj({
+      Type.object({
         typename: 'example.com/type/Test',
         version: '0.1.0',
       }),
@@ -112,7 +112,7 @@ describe('effect-to-json', () => {
     const Nested = Schema.Struct({
       name: Schema.String,
     }).pipe(
-      Type.Obj({
+      Type.object({
         typename: 'example.com/type/TestNested',
         version: '0.1.0',
       }),
@@ -120,7 +120,7 @@ describe('effect-to-json', () => {
     const Test = Schema.Struct({
       name: Schema.Array(Ref(Nested)),
     }).pipe(
-      Type.Obj({
+      Type.object({
         typename: 'example.com/type/Test',
         version: '0.1.0',
       }),
@@ -134,7 +134,7 @@ describe('effect-to-json', () => {
     const Nested = Schema.Struct({
       name: Schema.String,
     }).pipe(
-      Type.Obj({
+      Type.object({
         typename: 'example.com/type/TestNested',
         version: '0.1.0',
       }),
@@ -142,7 +142,7 @@ describe('effect-to-json', () => {
     const Test = Schema.Struct({
       name: Schema.optional(Ref(Nested)),
     }).pipe(
-      Type.Obj({
+      Type.object({
         typename: 'example.com/type/Test',
         version: '0.1.0',
       }),
@@ -165,7 +165,7 @@ describe('effect-to-json', () => {
         description: 'Email address',
       }),
     }).pipe(
-      Type.Obj({
+      Type.object({
         typename: 'example.com/type/Person',
         version: '0.1.0',
       }),
@@ -216,7 +216,7 @@ describe('effect-to-json', () => {
     const Organization = Schema.Struct({
       field: Schema.String,
     }).pipe(
-      Type.Obj({
+      Type.object({
         typename: 'example.com/type/Organization',
         version: '0.1.0',
       }),
@@ -226,7 +226,7 @@ describe('effect-to-json', () => {
       name: Schema.String,
       organization: Ref(Organization).annotations({ description: 'Contact organization' }),
     }).pipe(
-      Type.Obj({
+      Type.object({
         typename: 'example.com/type/Person',
         version: '0.1.0',
       }),
@@ -278,7 +278,7 @@ describe('effect-to-json', () => {
     const Organization = Schema.Struct({
       field: Schema.String,
     }).pipe(
-      Type.Obj({
+      Type.object({
         typename: 'example.com/type/Organization',
         version: '0.1.0',
       }),
@@ -288,7 +288,7 @@ describe('effect-to-json', () => {
       name: Schema.String,
       organization: Ref(Organization).annotations({ description: 'Contact organization' }),
     }).pipe(
-      Type.Obj({
+      Type.object({
         typename: 'example.com/type/Person',
         version: '0.1.0',
       }),
@@ -496,7 +496,7 @@ describe('json-to-effect', () => {
       const Organization = Schema.Struct({
         field: Schema.String,
       }).pipe(
-        Type.Obj({
+        Type.object({
           typename: 'example.com/type/Organization',
           version: '0.1.0',
         }),
@@ -517,7 +517,7 @@ describe('json-to-effect', () => {
       } as const;
 
       const Test = (partial ? Schema.partial(Schema.Struct(fields)) : Schema.Struct(fields)).pipe(
-        Type.Obj({
+        Type.object({
           typename: 'example.com/type/Test',
           version: '0.1.0',
         }),

@@ -27,18 +27,10 @@ import { createContext } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import { bind } from 'bind-event-listener';
-import { type EventListeners } from 'overlayscrollbars';
-import {
-  OverlayScrollbarsComponent,
-  type OverlayScrollbarsComponentProps,
-  type OverlayScrollbarsComponentRef,
-} from 'overlayscrollbars-react';
 import React, {
   type CSSProperties,
-  type FC,
   type PropsWithChildren,
   type ReactNode,
-  type RefObject,
   forwardRef,
   useCallback,
   useEffect,
@@ -49,19 +41,15 @@ import React, {
 } from 'react';
 import { createPortal } from 'react-dom';
 
-import 'overlayscrollbars/styles/overlayscrollbars.css';
-import './styles.css';
-
-import { type Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { type SlottableClassName, type ThemedClassName } from '@dxos/react-ui';
-import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
 import { isTruthy } from '@dxos/util';
 
 import { useFocus } from '../Focus';
+import { Scrollable, type ScrollableProps } from '../Scrollable';
+import { Stack, type StackProps, VirtualStack } from '../Stack';
 
-import { Stack, type StackProps } from './Stack';
 import {
   type AllowedAxis,
   type Axis,
@@ -97,10 +85,10 @@ import {
 // Types
 //
 
-const getSourceData = <T extends Obj.Any = Obj.Any, Location = any>(
+const getSourceData = <TData = any, TLocation = any>(
   source: ElementDragPayload,
-): MosaicTileData<T, Location> | null => {
-  return source.data.type === 'tile' ? (source.data as MosaicTileData<T, Location>) : null;
+): MosaicTileData<TData, TLocation> | null => {
+  return source.data.type === 'tile' ? (source.data as MosaicTileData<TData, TLocation>) : null;
 };
 
 //
@@ -204,114 +192,132 @@ const Root = forwardRef<HTMLDivElement, RootProps>(({ classNames, children, asCh
       });
     };
 
+    const handleCancel = () => {
+      setDragging((dragging) => {
+        requestAnimationFrame(() => {
+          dragging?.target?.handler?.onCancel?.();
+          dragging?.source?.container?.dispatchEvent(new CustomEvent('dnd:cancel', { bubbles: true }));
+        });
+
+        return undefined;
+      });
+    };
+
+    let noTargetTimeout: NodeJS.Timeout;
+
     // Main controller.
-    return monitorForElements({
-      /**
-       * Dragging started within any container.
-       */
-      onDragStart: ({ source, location }) => {
-        log('Root.onDragStart', {
-          source: source.data,
-          location: location.current.dropTargets.map((target) => target.data),
-        });
-
-        handleChange({ source, location });
-      },
-
-      /**
-       * Dragging entered a new container.
-       */
-      onDropTargetChange: ({ source, location }) => {
-        log('Root.onDropTargetChange', {
-          source: source.data,
-          location: location.current.dropTargets.map((target) => target.data),
-        });
-
-        handleChange({ source, location });
-      },
-
-      /**
-       * Dragging within any container.
-       */
-      onDrag: ({ source, location }) => {
-        const { data } = getSourceHandler(source);
-        const { handler } = getTargetHandler(location);
-        if (handler) {
-          const { clientX: x, clientY: y } = location.current.input;
-          handler.onDrag?.({ source: data, position: { x, y } });
-        }
-      },
-
-      /**
-       * Dragging ended.
-       */
-      onDrop: ({ source, location }) => {
-        log('Root.onDrop', {
-          source: source.data,
-          location: location.current.dropTargets.map((target) => target.data),
-        });
-
-        // Get the source container.
-        const { data: sourceData, handler: sourceHandler } = getSourceHandler(source);
-        if (!sourceHandler) {
-          log.warn('invalid source', {
-            source: sourceData,
-            handlers: Object.keys(handlers),
+    return combine(
+      monitorForElements({
+        /**
+         * Dragging started within any container.
+         */
+        onDragStart: ({ source, location }) => {
+          log('Root.onDragStart', {
+            source: source.data,
+            location: location.current.dropTargets.map((target) => target.data),
           });
-          return;
-        }
 
-        try {
-          // If cancelled (e.g., user pressed Escape) then there are no drop targets.
-          if (location.current.dropTargets.length > 0) {
-            // Get the target container.
-            const { data: targetData, handler: targetHandler } = getTargetHandler(location);
-            if (!targetHandler) {
-              log.warn('invalid target', {
-                source: sourceData,
-                location,
-                handlers: Object.keys(handlers),
-              });
-              return;
-            }
+          handleChange({ source, location });
+        },
 
-            // TODO(burdon): Check object doesn't already exist in the collection.
-            if (sourceHandler === targetHandler) {
-              targetHandler.onDrop?.({
-                source: sourceData,
-                target: targetData,
-              });
-            } else {
-              if (!sourceHandler.onTake) {
-                log.warn('invalid source', { source: sourceData });
-                return;
-              }
+        /**
+         * Dragging entered a new container.
+         */
+        onDropTargetChange: ({ source, location }) => {
+          clearTimeout(noTargetTimeout);
+          log('Root.onDropTargetChange', {
+            source: source.data,
+            location: location.current.dropTargets.map((target) => target.data),
+          });
 
-              sourceHandler.onTake?.({ source: sourceData }, async (object) => {
-                targetHandler.onDrop?.({
-                  source: { ...sourceData, object },
-                  target: targetData,
-                });
-                return true;
-              });
-            }
+          // Stop dragging if there are no drop targets (or we are cancelling).
+          if (location.current.dropTargets.length === 0) {
+            noTargetTimeout = setTimeout(() => setDragging(undefined), 1_000);
+          } else {
+            handleChange({ source, location });
           }
-        } finally {
-          // NOTE: When dragging is cancelled (e.g., user presses ESC) then onDrop is eventually called after a subsequent event.
+        },
+
+        /**
+         * Dragging within any container.
+         */
+        onDrag: ({ source, location }) => {
+          const { data } = getSourceHandler(source);
+          const { handler } = getTargetHandler(location);
+          if (handler) {
+            const { clientX: x, clientY: y } = location.current.input;
+            handler.onDrag?.({ source: data, position: { x, y } });
+          }
+        },
+
+        /**
+         * Dragging ended.
+         */
+        onDrop: ({ source, location }) => {
+          log.info('Root.onDrop', {
+            source: source.data,
+            location: location.current.dropTargets.map((target) => target.data),
+          });
+
+          // Get the source container.
+          const { data: sourceData, handler: sourceHandler } = getSourceHandler(source);
+          if (!sourceHandler) {
+            log.warn('invalid source', {
+              source: sourceData,
+              handlers: Object.keys(handlers),
+            });
+            return;
+          }
+
+          // NOTE: When dragging is cancelled (e.g., user presses ESC) onDrop is only called after a subsequent event.
+          // NOTE: pDND blocks ESC event propagation while dragging.
           // - ESC only flips internal state.
           // - Completion happens on the next processed input event.
           // - This avoids reentrancy and keeps pointer/keyboard behavior consistent.
-          setDragging((dragging) => {
-            requestAnimationFrame(() => {
-              dragging?.target?.handler?.onCancel?.();
-              dragging?.source?.container?.dispatchEvent(new CustomEvent('dnd:cancel', { bubbles: true }));
-            });
+          // - We set dragging to undefined in onDropTargetChange after a delay if there are no drop targets.
+          try {
+            if (location.current.dropTargets.length === 0) {
+              log.info('cancelled');
+            } else {
+              // Get the target container.
+              const { data: targetData, handler: targetHandler } = getTargetHandler(location);
+              if (!targetHandler) {
+                log.warn('invalid target', {
+                  source: sourceData,
+                  location,
+                  handlers: Object.keys(handlers),
+                });
+                return;
+              }
 
-            return undefined;
-          });
-        }
-      },
-    });
+              // TODO(burdon): Check object doesn't already exist in the collection.
+              if (sourceHandler === targetHandler) {
+                targetHandler.onDrop?.({
+                  source: sourceData,
+                  target: targetData,
+                });
+              } else {
+                if (!sourceHandler.onTake) {
+                  log.warn('invalid source', { source: sourceData });
+                  return;
+                }
+
+                sourceHandler.onTake?.({ source: sourceData }, async (object) => {
+                  targetHandler.onDrop?.({
+                    source: { ...sourceData, data: object },
+                    target: targetData,
+                  });
+
+                  return true;
+                });
+              }
+            }
+          } finally {
+            handleCancel();
+          }
+        },
+      }),
+    );
   }, [handlers, getSourceHandler, getTargetHandler]);
 
   return (
@@ -332,7 +338,7 @@ const Root = forwardRef<HTMLDivElement, RootProps>(({ classNames, children, asCh
       dragging={dragging}
     >
       <Root
-        className={mx('group', classNames)}
+        className={mx('group overflow-hidden', classNames)}
         {...{
           [`data-${ROOT_DEBUG_ATTR}`]: debug,
         }}
@@ -350,9 +356,9 @@ const Root = forwardRef<HTMLDivElement, RootProps>(({ classNames, children, asCh
 
 type ContainerState = { type: 'idle' } | { type: 'active'; bounds?: DOMRect };
 
-type ContainerContextValue<Location = LocationType> = {
+type ContainerContextValue<TData = any, Location = LocationType> = {
   id: string;
-  eventHandler: MosaicEventHandler;
+  eventHandler: MosaicEventHandler<TData>;
   axis?: AllowedAxis;
   dragging?: DraggingState;
   scrolling?: boolean;
@@ -374,7 +380,7 @@ const CONTAINER_PLACEHOLDER_HEIGHT = '--mosaic-placeholder-height';
 
 type ContainerProps = SlottableClassName<
   PropsWithChildren<
-    Pick<ContainerContextValue, 'eventHandler' | 'axis'> & {
+    Partial<Pick<ContainerContextValue, 'eventHandler' | 'axis'>> & {
       asChild?: boolean;
       autoScroll?: HTMLElement | null;
       withFocus?: boolean;
@@ -383,14 +389,16 @@ type ContainerProps = SlottableClassName<
   >
 >;
 
-// TODO(burdon): Rename Viewport?
+let counter = 0;
+
+// TODO(burdon): Make generic.
 const Container = forwardRef<HTMLDivElement, ContainerProps>(
   (
     {
       className,
       classNames,
       children,
-      eventHandler,
+      eventHandler: eventHandlerProp,
       axis = 'vertical',
       asChild,
       autoScroll: autoscrollElement,
@@ -403,6 +411,15 @@ const Container = forwardRef<HTMLDivElement, ContainerProps>(
     const rootRef = useRef<HTMLDivElement>(null);
     const composedRef = useComposedRefs<HTMLDivElement>(rootRef, forwardedRef);
     const Root = asChild ? Slot : Primitive.div;
+
+    // Handler.
+    const eventHandler = useMemo(
+      () =>
+        eventHandlerProp ?? {
+          id: `mosaic-container-${counter++}`,
+        },
+      [eventHandlerProp],
+    );
 
     // State.
     const { dragging } = useRootContext(Container.displayName!);
@@ -451,26 +468,15 @@ const Container = forwardRef<HTMLDivElement, ContainerProps>(
 
       return combine(
         ...[
-          autoscrollElement && [
-            autoScrollForElements({
-              element: autoscrollElement,
-              canScroll: ({ element: _ }) => {
-                // const delta = element.scrollHeight - element.scrollTop - element.clientHeight;
-                return true;
-              },
-              getAllowedAxis: () => axis,
-              getConfiguration: () => ({
-                maxScrollSpeed: 'fast',
-              }),
-            }),
-
-            bind(autoscrollElement, {
-              type: 'scroll',
-              listener: handleScroll,
-            }),
-
-            () => setScrolling(false),
-          ],
+          /**
+           * Custom event for dragging cancellation.
+           */
+          bind(rootRef.current, {
+            type: 'dnd:cancel',
+            listener: () => {
+              setState({ type: 'idle' });
+            },
+          }),
 
           // Target.
           dropTargetForElements({
@@ -524,15 +530,28 @@ const Container = forwardRef<HTMLDivElement, ContainerProps>(
             },
           }),
 
-          /**
-           * Custom event for dragging cancellation.
-           */
-          bind(rootRef.current, {
-            type: 'dnd:cancel',
-            listener: () => {
-              setState({ type: 'idle' });
-            },
-          }),
+          // Autoscroll.
+          // NOTE: When used with Scrollable we get a spurious warning (in dev mode).
+          // "Auto scrolling has been attached to an element that appears not to be scrollable."
+          autoscrollElement && [
+            autoScrollForElements({
+              element: autoscrollElement,
+              // canScroll: ({ element: _ }) => {
+              //   return true;
+              // },
+              getAllowedAxis: () => axis,
+              getConfiguration: () => ({
+                maxScrollSpeed: 'fast',
+              }),
+            }),
+
+            bind(autoscrollElement, {
+              type: 'scroll',
+              listener: handleScroll,
+            }),
+
+            () => setScrolling(false),
+          ],
         ]
           .filter(isTruthy)
           .flatMap((x) => x),
@@ -577,97 +596,6 @@ const Container = forwardRef<HTMLDivElement, ContainerProps>(
 Container.displayName = 'MosaicContainer';
 
 //
-// Viewport
-//
-
-const defaultOptions: ViewportProps['options'] = {
-  scrollbars: {
-    autoHide: 'leave',
-    autoHideDelay: 1_000,
-    autoHideSuspend: true,
-  },
-};
-
-type ViewportProps = OverlayScrollbarsComponentProps & {
-  onScroll?: (event: Event) => void;
-  viewportRef?: RefObject<HTMLElement | null>;
-};
-
-/**
- * https://www.npmjs.com/package/overlayscrollbars-react
- */
-const Viewport = forwardRef<HTMLDivElement, ViewportProps>(
-  ({ options = defaultOptions, onScroll, viewportRef, ...props }, forwardedRef) => {
-    const osRef = useRef<OverlayScrollbarsComponentRef<'div'>>(null);
-
-    // Forward the host element to the forwardedRef for asChild/Slot compatibility.
-    useEffect(() => {
-      const hostElement = osRef.current?.getElement();
-      if (forwardedRef) {
-        if (typeof forwardedRef === 'function') {
-          forwardedRef(hostElement ?? null);
-        } else {
-          forwardedRef.current = hostElement ?? null;
-        }
-      }
-    });
-
-    useEffect(() => {
-      const instance = osRef.current?.osInstance();
-      if (viewportRef) {
-        viewportRef.current = instance?.elements().viewport ?? null;
-      }
-    }, [osRef, viewportRef]);
-
-    const events = useMemo<EventListeners | null>(() => {
-      if (!onScroll) {
-        return null;
-      }
-
-      return {
-        scroll: (_, event: Event) => {
-          onScroll(event);
-        },
-      } satisfies EventListeners;
-    }, [onScroll]);
-
-    return <OverlayScrollbarsComponent options={options} {...props} events={events} ref={osRef} />;
-  },
-);
-
-//
-// Container Debug
-//
-
-const useContainerDebug = (debug?: boolean): [FC<ThemedClassName>, (() => ReactNode) | undefined] => {
-  const debugRef = useRef<HTMLDivElement | null>(null);
-  return useMemo(() => {
-    if (!debug) {
-      return [() => null, undefined];
-    }
-
-    return [
-      ({ classNames }) => <div role='none' className={mx('overflow-hidden', classNames)} ref={debugRef} />,
-      () => debugRef.current && createPortal(<ContainerInfo />, debugRef.current),
-    ];
-  }, [debug, debugRef]);
-};
-
-const ContainerInfo = forwardRef<HTMLDivElement, ThemedClassName>(({ classNames }, forwardedRef) => {
-  const { id, state, activeLocation, scrolling } = useContainerContext(ContainerInfo.displayName!);
-  const counter = useRef(0);
-  return (
-    <Json
-      data={{ id, activeLocation, scrolling, state, count: counter.current++ }}
-      classNames={mx('text-xs', classNames)}
-      ref={forwardedRef}
-    />
-  );
-});
-
-ContainerInfo.displayName = 'ContainerInfo';
-
-//
 // Tile
 //
 
@@ -689,13 +617,16 @@ const [TileContextProvider, useTileContext] = createContext<TileContextValue>('M
 // State attribute: data-[mosaic-tile-state=dragging]
 const TILE_STATE_ATTR = 'mosaic-tile-state';
 
-type TileProps<T extends Obj.Any = Obj.Any, Location = LocationType> = SlottableClassName<
+type TileProps<TData = any, TLocation = LocationType> = SlottableClassName<
   PropsWithChildren<{
     asChild?: boolean;
     dragHandle?: HTMLElement | null;
     allowedEdges?: Edge[];
-    location: Location;
-    object: T;
+    id: string;
+    data: TData;
+    location: TLocation;
+    draggable?: boolean; // TODO(burdon): Not currently implemented.
+    debug?: boolean;
   }>
 >;
 
@@ -709,8 +640,9 @@ const Tile = forwardRef<HTMLDivElement, TileProps>(
       dragHandle,
       allowedEdges: allowedEdgesProp,
       location,
-      object,
-      ...props
+      id,
+      data: dataProp,
+      debug: _,
     }: TileProps,
     forwardedRef,
   ) => {
@@ -737,12 +669,12 @@ const Tile = forwardRef<HTMLDivElement, TileProps>(
       () =>
         ({
           type: 'tile',
-          id: object.id,
+          id,
           containerId,
+          data: dataProp,
           location,
-          object,
         }) satisfies MosaicTileData,
-      [containerId, location, object],
+      [containerId, location, dataProp],
     );
 
     useLayoutEffect(() => {
@@ -752,7 +684,7 @@ const Tile = forwardRef<HTMLDivElement, TileProps>(
       }
 
       const handleChange = ({ self, source }: { self: DropTargetRecord; source: ElementDragPayload }) => {
-        if (source.data.id !== object.id) {
+        if (source.data.id !== dataProp.id) {
           const closestEdge = extractClosestEdge(self.data);
           const location = data.location + (closestEdge === 'top' || closestEdge === 'left' ? -0.5 : 0.5);
           setActiveLocation(location);
@@ -825,12 +757,11 @@ const Tile = forwardRef<HTMLDivElement, TileProps>(
     return (
       <TileContextProvider state={state}>
         <Root
-          {...props}
           {...{
             [`data-${TILE_STATE_ATTR}`]: state.type,
           }}
           role='listitem'
-          className={mx('relative transition-opacity', className, classNames)}
+          className={mx('relative', className, classNames)}
           ref={composedRef}
         >
           {children}
@@ -843,7 +774,8 @@ const Tile = forwardRef<HTMLDivElement, TileProps>(
                 // NOTE: Use to control appearance while dragging.
                 [`data-${TILE_STATE_ATTR}`]: state.type,
               }}
-              className={mx(classNames)}
+              // TODO(burdon): Configure drop animation.
+              className={mx('relative', className, classNames)}
               style={
                 {
                   width: `${state.rect.width}px`,
@@ -969,31 +901,29 @@ DropIndicator.displayName = 'MosaicDropIndicator';
 // Mosaic
 //
 
-// TOOD(burdon): Rename? (Use name Mosaic for package).
 export const Mosaic = {
   Root,
   Container,
-  ContainerInfo,
-  Viewport,
   Tile,
   Placeholder,
   DropIndicator,
+
+  // TODO(burdon): Move out of Mosaic namespace?
+  Viewport: Scrollable,
   Stack,
+  VirtualStack,
 };
 
 export type {
   RootProps as MosaicRootProps,
   ContainerProps as MosaicContainerProps,
-  ViewportProps as MosaicViewportProps,
   TileProps as MosaicTileProps,
   PlaceholderProps as MosiacPlaceholderProps,
   DropIndicatorProps as MosaicDropIndicatorProps,
+
+  // TODO(burdon): Move out of Mosaic namespace?
+  ScrollableProps as MosaicViewportProps,
   StackProps as MosaicStackProps,
 };
 
-export {
-  useRootContext as useMosaic,
-  useContainerContext as useMosaicContainer,
-  useContainerDebug,
-  useTileContext as useMosaicTile,
-};
+export { useRootContext as useMosaic, useContainerContext as useMosaicContainer, useTileContext as useMosaicTile };

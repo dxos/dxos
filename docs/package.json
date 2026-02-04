@@ -4,6 +4,10 @@
   "private": true,
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
   "license": "MIT",
   "author": "info@dxos.org",
   "type": "module",
@@ -27,6 +31,7 @@
     "@dxos/client-protocol": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/echo": "workspace:*",
-    "@dxos/react-client": "workspace:*"
+    "@dxos/react-client": "workspace:*",
+    "@dxos/schema": "workspace:*"
   }
 }

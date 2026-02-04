@@ -127,7 +127,7 @@ export const whenEchoType =
  *   id: 'object-settings',
  *   match: NodeMatcher.whenEchoObject,
  *   connector: (object) => {
- *     // `object` is typed as Obj.Any
+ *     // `object` is typed as Obj.Unknown
  *     const id = Obj.getDXN(object).toString();
  *     return Effect.succeed([{ id: `${id}/settings`, ... }]);
  *   },
@@ -136,7 +136,7 @@ export const whenEchoType =
  *
  * @see {@link whenEchoObjectMatches} - Use instead when composing with whenAll/whenAny.
  */
-export const whenEchoObject = (node: Node.Node): Option.Option<Obj.Any> =>
+export const whenEchoObject = (node: Node.Node): Option.Option<Obj.Unknown> =>
   Obj.isObject(node.data) ? Option.some(node.data) : Option.none();
 
 //

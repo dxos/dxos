@@ -172,7 +172,7 @@ const DefaultStory = ({ modules, showContext, blueprints = [] }: StoryProps) => 
   );
 };
 
-const StackContainer = ({ objects }: { objects: Obj.Any[] }) => {
+const StackContainer = ({ objects }: { objects: Obj.Unknown[] }) => {
   return (
     <Stack
       orientation='vertical'
@@ -555,7 +555,8 @@ export const WithResearch: Story = {
     showContext: true,
     modules: [[ChatModule], [GraphModule, ExecutionGraphModule]],
     blueprints: [
-      // AssistantBlueprint.Key, -- too many open-ended tools (querying for tools, querying for schema) confuses the model.
+      // AssistantBlueprint.Key
+      // TODO(burdon): Too many open-ended tools (querying for tools, querying for schema) confuses the model.
       ResearchBlueprint.key,
     ],
   },
@@ -769,9 +770,8 @@ export const WithProject: Story = {
       const tagDxn = Obj.getDXN(tag).toString();
 
       people.slice(0, 4).forEach((person) => {
-        Obj.change(person, () => {
-          const meta = Obj.getMeta(person);
-          meta.tags = [tagDxn];
+        Obj.change(person, (p) => {
+          Obj.getMeta(p).tags = [tagDxn];
         });
       });
 
@@ -793,18 +793,16 @@ export const WithProject: Story = {
         }),
       );
       [dxosResearch, blueyardResearch].forEach((research) => {
-        Obj.change(research, () => {
-          const meta = Obj.getMeta(research);
-          meta.tags = [tagDxn];
+        Obj.change(research, (r) => {
+          Obj.getMeta(r).tags = [tagDxn];
         });
       });
 
       const dxos = organizations.find((org) => org.name === 'DXOS')!;
       const blueyard = organizations.find((org) => org.name === 'BlueYard')!;
       [dxos, blueyard].forEach((organization) => {
-        Obj.change(organization, () => {
-          const meta = Obj.getMeta(organization);
-          meta.tags = [tagDxn];
+        Obj.change(organization, (org) => {
+          Obj.getMeta(org).tags = [tagDxn];
         });
       });
       // TODO(wittjosiah): Support relations.

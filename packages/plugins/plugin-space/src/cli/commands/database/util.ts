@@ -3,16 +3,16 @@
 //
 
 import { FormBuilder } from '@dxos/cli-util';
-import { type Entity, Obj } from '@dxos/echo';
+import { Entity } from '@dxos/echo';
 
 /**
  * Pretty prints an object with ANSI colors.
  */
 export const printObject = (obj: Entity.Unknown) => {
-  const typename = Obj.getTypename(obj) ?? '<unknown>';
+  const typename = Entity.getTypename(obj) ?? '<unknown>';
 
   // TODO(wittjosiah): Obj.getSchema and thus Obj.getLabel are coming back undefined for some reason.
-  return FormBuilder.make({ title: Obj.getLabel(obj) ?? typename }).pipe(
+  return FormBuilder.make({ title: Entity.getLabel(obj) ?? typename }).pipe(
     FormBuilder.set('id', obj.id),
     FormBuilder.set('typename', typename),
     FormBuilder.build,

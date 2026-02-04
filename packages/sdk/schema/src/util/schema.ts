@@ -4,13 +4,14 @@
 
 import * as Schema from 'effect/Schema';
 
-import { type SchemaRegistry, Type } from '@dxos/echo';
+import { Obj, type SchemaRegistry, Type } from '@dxos/echo';
 import {
   EchoObjectSchema,
   type EchoSchema,
   Format,
   FormatAnnotation,
   type JsonSchemaType,
+  type Mutable,
   PropertyMetaAnnotationId,
   type SelectOption,
   TypeEnum,
@@ -52,7 +53,7 @@ export const createDefaultSchema = () =>
       title: 'Description',
     }),
   }).pipe(
-    Type.Obj({
+    Type.object({
       typename: `example.com/type/${PublicKey.random().truncate()}`,
       version: '0.1.0',
     }),
@@ -61,7 +62,7 @@ export const createDefaultSchema = () =>
 export const getSchema = async (
   dxn: DXN,
   registry?: SchemaRegistry.SchemaRegistry,
-): Promise<Schema.Schema.AnyNoContext | undefined> => {
+): Promise<Type.Entity.Any | undefined> => {
   const typeDxn = dxn.asTypeDXN();
   if (!typeDxn) {
     return;
@@ -97,22 +98,26 @@ export const getSchemaFromPropertyDefinitions = (
   const typeSchema = Schema.Struct(fields).pipe(EchoObjectSchema({ typename, version: '0.1.0' }));
   const schema = createEchoSchema(typeSchema as unknown as Schema.Schema.AnyNoContext);
 
-  for (const prop of properties) {
-    if (prop.config?.options) {
-      if (prop.format === Format.TypeFormat.SingleSelect) {
-        makeSingleSelectAnnotations(schema.jsonSchema.properties![prop.name], [...prop.config.options]);
+  // Wrap schema modifications in Obj.change since the persistent schema is an ECHO object.
+  Obj.change(schema.persistentSchema as unknown as Obj.Unknown, () => {
+    for (const prop of properties) {
+      const jsonProp = schema.jsonSchema.properties![prop.name] as Mutable<JsonSchemaType>;
+      if (prop.config?.options) {
+        if (prop.format === Format.TypeFormat.SingleSelect) {
+          makeSingleSelectAnnotations(jsonProp, [...prop.config.options]);
+        }
+        if (prop.format === Format.TypeFormat.MultiSelect) {
+          makeMultiSelectAnnotations(jsonProp, [...prop.config.options]);
+        }
       }
-      if (prop.format === Format.TypeFormat.MultiSelect) {
-        makeMultiSelectAnnotations(schema.jsonSchema.properties![prop.name], [...prop.config.options]);
+
+      if (prop.format === Format.TypeFormat.GeoPoint) {
+        jsonProp.type = TypeEnum.Object;
       }
-    }
 
-    if (prop.format === Format.TypeFormat.GeoPoint) {
-      schema.jsonSchema.properties![prop.name].type = TypeEnum.Object;
+      jsonProp.format = prop.format;
     }
-
-    schema.jsonSchema.properties![prop.name].format = prop.format;
-  }
+  });
 
   return schema;
 };
@@ -122,7 +127,7 @@ export const getSchemaFromPropertyDefinitions = (
  */
 // TODO(burdon): Factor out (dxos/echo)
 export const makeSingleSelectAnnotations = (
-  jsonProperty: JsonSchemaType,
+  jsonProperty: Mutable<JsonSchemaType>,
   options: Array<{ id: string; title?: string; color?: string }>,
 ) => {
   jsonProperty.enum = options.map(({ id }) => id);
@@ -143,7 +148,7 @@ export const makeSingleSelectAnnotations = (
  */
 // TODO(burdon): Factor out (dxos/echo)
 export const makeMultiSelectAnnotations = (
-  jsonProperty: JsonSchemaType,
+  jsonProperty: Mutable<JsonSchemaType>,
   options: Array<{ id: string; title?: string; color?: string }>,
 ) => {
   // TODO(ZaymonFC): Is this how do we encode an array of enums?

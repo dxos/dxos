@@ -7,6 +7,7 @@ import * as Option from 'effect/Option';
 import * as ParseResult from 'effect/ParseResult';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
+import type * as Types from 'effect/Types';
 
 import { Event } from '@dxos/async';
 import { type CustomInspectFunction, inspectCustom } from '@dxos/debug';
@@ -17,7 +18,7 @@ import { DXN, ObjectId } from '@dxos/keys';
 import * as Database from '../../Database';
 import { ReferenceAnnotationId, getSchemaDXN, getTypeAnnotation, getTypeIdentifierAnnotation } from '../annotations';
 import { type JsonSchemaType } from '../json-schema';
-import type { AnyProperties, WithId } from '../types';
+import type { AnyEntity, AnyProperties } from '../types';
 
 /**
  * The `$id` and `$ref` fields for an ECHO reference schema.
@@ -31,7 +32,7 @@ export const getSchemaReference = (property: JsonSchemaType): { typename: string
   }
 };
 
-export const createSchemaReference = (typename: string): JsonSchemaType => {
+export const createSchemaReference = (typename: string): Types.DeepMutable<JsonSchemaType> => {
   return {
     $id: JSON_SCHEMA_ECHO_REF_ID,
     reference: {
@@ -72,7 +73,7 @@ export const RefTypeId: unique symbol = Symbol('@dxos/echo/internal/Ref');
 /**
  * Reference Schema.
  */
-export interface RefSchema<T extends WithId> extends Schema.SchemaClass<Ref<T>, EncodedReference> {}
+export interface RefSchema<T extends AnyEntity> extends Schema.SchemaClass<Ref<T>, EncodedReference> {}
 
 /**
  * Type of the `Ref` function and extra methods attached to it.
@@ -103,8 +104,8 @@ export interface RefFn {
   /**
    * Constructs a reference that points to the given object.
    */
-  // TODO(burdon): Narrow to Obj.Any?
-  make: <T extends WithId>(object: T) => Ref<T>;
+  // TODO(burdon): Narrow to Obj.Unknown?
+  make: <T extends AnyEntity>(object: T) => Ref<T>;
 
   /**
    * Constructs a reference that points to the object specified by the provided DXN.

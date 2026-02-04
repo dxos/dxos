@@ -39,8 +39,8 @@ export default Capability.makeModule(() =>
           return (
             <MapContainer
               role={role}
+              subject={data.subject}
               type={state.type}
-              object={data.subject}
               center={center}
               zoom={zoom}
               onChange={handleChange}

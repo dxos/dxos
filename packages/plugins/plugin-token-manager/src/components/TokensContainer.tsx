@@ -11,7 +11,7 @@ import { SpaceOperation } from '@dxos/plugin-space/types';
 import { useQuery } from '@dxos/react-client/echo';
 import { Separator, useTranslation } from '@dxos/react-ui';
 import { ControlItem, ControlPage, ControlSection, Form, controlItemClasses } from '@dxos/react-ui-form';
-import { StackItem } from '@dxos/react-ui-stack';
+import { Layout } from '@dxos/react-ui-mosaic';
 import { AccessToken } from '@dxos/types';
 
 import { meta } from '../meta';
@@ -65,7 +65,7 @@ export const TokensContainer = ({ db }: { db: Database.Database }) => {
   const handleDelete = useCallback((token: AccessToken.AccessToken) => db.remove(token), [db]);
 
   return (
-    <StackItem.Content scrollable>
+    <Layout.Container scrollable>
       <ControlPage>
         <ControlSection
           title={t('integrations verbose label', { ns: meta.id })}
@@ -91,6 +91,6 @@ export const TokensContainer = ({ db }: { db: Database.Database }) => {
           )}
         </ControlSection>
       </ControlPage>
-    </StackItem.Content>
+    </Layout.Container>
   );
 };

@@ -158,6 +158,7 @@ const mainPackage = {
   description: sourcePackage.description,
   homepage: sourcePackage.homepage,
   bugs: sourcePackage.bugs,
+  repository: sourcePackage.repository,
   license: sourcePackage.license,
   author: sourcePackage.author,
   type: 'commonjs',

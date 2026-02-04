@@ -1,9 +1,13 @@
 {
   "name": "@dxos/web-context",
-  "version": "0.1.0",
+  "version": "0.8.3",
   "description": "Web Component Context Protocol definitions",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
   "license": "MIT",
   "author": "DXOS.org",
   "sideEffects": false,

@@ -148,7 +148,11 @@ const MessageHeader = ({ onContactCreate }: MessageHeaderProps) => {
       {/* TODO(burdon): List other To/CC/BCC. */}
       <div role='none'>
         <div role='none' className='grid grid-cols-[2rem_1fr] gap-1 items-center'>
-          <UserIconButton value={sender} onContactCreate={() => onContactCreate?.(message.sender)} />
+          <UserIconButton
+            title={message.sender.name}
+            value={sender}
+            onContactCreate={() => onContactCreate?.(message.sender)}
+          />
           <h3 className='truncate text-primaryText'>{message.sender.name || message.sender.email}</h3>
         </div>
       </div>

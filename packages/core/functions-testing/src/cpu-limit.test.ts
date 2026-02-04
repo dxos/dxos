@@ -86,7 +86,9 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('CPU limit',
     }
 
     {
-      trigger.input!.iterations = 100;
+      Obj.change(trigger, (t) => {
+        t.input!.iterations = 100;
+      });
       await sync(space);
       const result = await functionsServiceClient.forceRunCronTrigger(space.id, trigger.id);
       console.log(result);
@@ -132,11 +134,15 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('CPU limit',
     await sync(space);
     await observeInvocations(space, 5);
 
-    trigger.input!.iterations = 1_000_000_000;
+    Obj.change(trigger, (t) => {
+      t.input!.iterations = 1_000_000_000;
+    });
     await sync(space);
     await observeInvocations(space, 10);
 
-    trigger.input!.iterations = 100;
+    Obj.change(trigger, (t) => {
+      t.input!.iterations = 100;
+    });
     await sync(space);
     await observeInvocations(space, 1_000);
   });

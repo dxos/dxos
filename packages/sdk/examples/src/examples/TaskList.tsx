@@ -45,7 +45,14 @@ const TaskList = ({ id, spaceId }: { id: number; spaceId?: SpaceId }) => {
           <li key={task.id} className='flex items-center gap-2 mbe-2 pl-3'>
             <Input.Root>
               <Input.Label srOnly>Complete {task.title}</Input.Label>
-              <Input.Checkbox checked={!!task.completed} onCheckedChange={() => (task.completed = !task.completed)} />
+              <Input.Checkbox
+                checked={!!task.completed}
+                onCheckedChange={() =>
+                  Obj.change(task, (t) => {
+                    t.completed = !t.completed;
+                  })
+                }
+              />
             </Input.Root>
             <div className='grow'>{task.title}</div>
             <IconButton

@@ -5,7 +5,6 @@
 import { invariant } from '@dxos/invariant';
 
 import { type ReactiveHandler } from './proxy-types';
-import { ReactiveArray } from './reactive-array';
 
 export const symbolIsProxy = Symbol.for('@dxos/schema/Proxy');
 
@@ -18,7 +17,7 @@ export const isValidProxyTarget = (value: any): value is object => {
   if (value == null || value[symbolIsProxy]) {
     return false;
   }
-  if (value instanceof ReactiveArray) {
+  if (Array.isArray(value)) {
     return true;
   }
 

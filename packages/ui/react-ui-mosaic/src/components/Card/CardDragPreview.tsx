@@ -6,7 +6,7 @@ import React, { type PropsWithChildren } from 'react';
 
 import { mx } from '@dxos/ui-theme';
 
-import { cardRoot } from './styles';
+import { styles } from './styles';
 
 // TODO(burdon): Why p-2?
 const CardDragPreviewRoot = ({ children }: PropsWithChildren<{}>) => {
@@ -14,7 +14,7 @@ const CardDragPreviewRoot = ({ children }: PropsWithChildren<{}>) => {
 };
 
 const CardDragPreviewContent = ({ children }: PropsWithChildren<{}>) => {
-  return <div className={mx(cardRoot, 'ring-focusLine ring-neutralFocusIndicator')}>{children}</div>;
+  return <div className={mx(styles.root, 'ring-focusLine ring-neutralFocusIndicator')}>{children}</div>;
 };
 
 export const CardDragPreview = {

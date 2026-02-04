@@ -6,7 +6,7 @@ import { Atom, useAtomSet, useAtomValue } from '@effect-atom/atom-react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Common } from '@dxos/app-framework';
-import { type SurfaceComponentProps, useOperationInvoker } from '@dxos/app-framework/react';
+import { type SurfaceComponentProps, useLayout, useOperationInvoker } from '@dxos/app-framework/react';
 import { type Database, Obj, Relation, Tag } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { AttentionOperation } from '@dxos/plugin-attention/types';
@@ -18,7 +18,7 @@ import { QueryEditor } from '@dxos/react-ui-components';
 import { type EditorController } from '@dxos/react-ui-editor';
 import { MenuBuilder, createGapSeparator, useMenuActions } from '@dxos/react-ui-menu';
 import { MenuProvider, ToolbarMenu } from '@dxos/react-ui-menu';
-import { StackItem } from '@dxos/react-ui-stack';
+import { Layout } from '@dxos/react-ui-mosaic';
 import { HasSubject, Message } from '@dxos/types';
 
 import { POPOVER_SAVE_FILTER } from '../../constants';
@@ -29,12 +29,19 @@ import { sortByCreated } from '../../util';
 import { type MailboxActionHandler, Mailbox as MailboxComponent } from './Mailbox';
 import { MailboxEmpty } from './MailboxEmpty';
 
-export type MailboxArticleProps = SurfaceComponentProps<Mailbox.Mailbox> & { filter?: string; attendableId?: string };
+export type MailboxArticleProps = SurfaceComponentProps<
+  Mailbox.Mailbox,
+  {
+    filter?: string;
+    attendableId?: string;
+  }
+>;
 
-export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendableId }: MailboxArticleProps) => {
+export const MailboxArticle = ({ role, subject: mailbox, filter: filterProp, attendableId }: MailboxArticleProps) => {
   const { t } = useTranslation(meta.id);
   const id = attendableId ?? Obj.getDXN(mailbox).toString();
   const { invokePromise } = useOperationInvoker();
+  const layout = useLayout();
   const currentMessageId = useSelected(id, 'single');
 
   const filterEditorRef = useRef<EditorController>(null);
@@ -118,10 +125,20 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
             contextId: id,
             selection: { mode: 'single', id: message?.id },
           });
-          void invokePromise(DeckOperation.ChangeCompanion, {
-            primary: id,
-            companion: `${id}${ATTENDABLE_PATH_SEPARATOR}message`,
-          });
+
+          const companionId = `${id}${ATTENDABLE_PATH_SEPARATOR}message`;
+          if (layout.mode === 'simple') {
+            // Simple layout: navigate to companion as standalone view.
+            void invokePromise(Common.LayoutOperation.Open, {
+              subject: [companionId],
+            });
+          } else {
+            // Deck layout: open as companion panel.
+            void invokePromise(DeckOperation.ChangeCompanion, {
+              primary: id,
+              companion: companionId,
+            });
+          }
           break;
         }
 
@@ -152,7 +169,7 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
         }
       }
     },
-    [id, mailbox, sortedMessages, invokePromise],
+    [id, layout.mode, mailbox, sortedMessages, invokePromise],
   );
 
   const handleCancel = useCallback(() => {
@@ -162,14 +179,7 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
   }, [filterVisible, filterProp, parser]);
 
   return (
-    <StackItem.Content
-      toolbar
-      layoutManaged
-      classNames={[
-        'relative grid',
-        filterVisible.value ? 'grid-rows-[var(--toolbar-size)_min-content_1fr]' : 'grid-rows-[var(--toolbar-size)_1fr]',
-      ]}
-    >
+    <Layout.Main toolbar>
       <ElevationProvider elevation='positioned'>
         <MenuProvider {...menuActions} attendableId={id}>
           <ToolbarMenu />
@@ -219,7 +229,7 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
       ) : (
         <MailboxEmpty mailbox={mailbox} />
       )}
-    </StackItem.Content>
+    </Layout.Main>
   );
 };
 

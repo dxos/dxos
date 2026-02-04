@@ -5,16 +5,18 @@
 import { type MaybeAccessor, access } from '@solid-primitives/utils';
 import { type Accessor, createEffect, createMemo, createSignal, onCleanup } from 'solid-js';
 
-import { type Entity, Obj, Ref } from '@dxos/echo';
+import { Obj, Ref } from '@dxos/echo';
 import { AtomObj } from '@dxos/echo-atom';
 import { type Registry, useRegistry } from '@dxos/effect-atom-solid';
 
 export interface ObjectUpdateCallback<T> {
-  (update: (obj: T) => void): void;
-  (update: (obj: T) => T): void;
+  (update: (obj: Obj.Mutable<T>) => void): void;
+  (update: (obj: Obj.Mutable<T>) => Obj.Mutable<T>): void;
 }
 
-export interface ObjectPropUpdateCallback<T> extends ObjectUpdateCallback<T> {
+export interface ObjectPropUpdateCallback<T> {
+  (update: (value: Obj.Mutable<T>) => void): void;
+  (update: (value: Obj.Mutable<T>) => Obj.Mutable<T>): void;
   (newValue: T): void;
 }
 
@@ -36,9 +38,7 @@ type ConditionalUndefined<T, R> = [T] extends [Exclude<T, undefined>]
  * @param ref - The Ref to dereference and subscribe to (can be reactive)
  * @returns A tuple of [accessor, updateCallback]
  */
-export function useObject<T>(
-  ref: MaybeAccessor<Ref.Ref<T>>,
-): [Accessor<Readonly<T> | undefined>, ObjectUpdateCallback<T>];
+export function useObject<T>(ref: MaybeAccessor<Ref.Ref<T>>): [Accessor<T | undefined>, ObjectUpdateCallback<T>];
 
 /**
  * Subscribe to a Ref's target object that may be undefined.
@@ -49,7 +49,7 @@ export function useObject<T>(
  */
 export function useObject<T>(
   ref: MaybeAccessor<Ref.Ref<T> | undefined>,
-): [Accessor<Readonly<T> | undefined>, ObjectUpdateCallback<T>];
+): [Accessor<T | undefined>, ObjectUpdateCallback<T>];
 
 /**
  * Subscribe to an entire Echo object.
@@ -58,7 +58,7 @@ export function useObject<T>(
  * @param obj - The Echo object to subscribe to (can be reactive)
  * @returns A tuple of [accessor, updateCallback]
  */
-export function useObject<T extends Entity.Unknown>(
+export function useObject<T extends Obj.Unknown>(
   obj: MaybeAccessor<T>,
 ): [Accessor<ConditionalUndefined<T, T>>, ObjectUpdateCallback<T>];
 
@@ -69,7 +69,7 @@ export function useObject<T extends Entity.Unknown>(
  * @param obj - The Echo object to subscribe to (can be undefined/reactive)
  * @returns A tuple of [accessor, updateCallback]
  */
-export function useObject<T extends Entity.Unknown>(
+export function useObject<T extends Obj.Unknown>(
   obj: MaybeAccessor<T | undefined>,
 ): [Accessor<ConditionalUndefined<T, T>>, ObjectUpdateCallback<T>];
 
@@ -81,10 +81,10 @@ export function useObject<T extends Entity.Unknown>(
  * @param property - Property key to subscribe to
  * @returns A tuple of [accessor, updateCallback]
  */
-export function useObject<T extends Entity.Unknown, K extends keyof T>(
+export function useObject<T extends Obj.Unknown, K extends keyof T>(
   obj: MaybeAccessor<T>,
   property: K,
-): [Accessor<Readonly<T[K]>>, ObjectPropUpdateCallback<T[K]>];
+): [Accessor<T[K]>, ObjectPropUpdateCallback<T[K]>];
 
 /**
  * Subscribe to a specific property of an Echo object that may be undefined.
@@ -94,10 +94,10 @@ export function useObject<T extends Entity.Unknown, K extends keyof T>(
  * @param property - Property key to subscribe to
  * @returns A tuple of [accessor, updateCallback]
  */
-export function useObject<T extends Entity.Unknown, K extends keyof T>(
+export function useObject<T extends Obj.Unknown, K extends keyof T>(
   obj: MaybeAccessor<T | undefined>,
   property: K,
-): [Accessor<Readonly<T[K]> | undefined>, ObjectPropUpdateCallback<T[K]>];
+): [Accessor<T[K] | undefined>, ObjectPropUpdateCallback<T[K]>];
 
 /**
  * Subscribe to a specific property of a Ref's target object.
@@ -111,7 +111,7 @@ export function useObject<T extends Entity.Unknown, K extends keyof T>(
 export function useObject<T, K extends keyof T>(
   ref: MaybeAccessor<Ref.Ref<T>>,
   property: K,
-): [Accessor<Readonly<T[K]> | undefined>, ObjectPropUpdateCallback<T[K]>];
+): [Accessor<T[K] | undefined>, ObjectPropUpdateCallback<T[K]>];
 
 /**
  * Subscribe to a specific property of a Ref's target object that may be undefined.
@@ -124,7 +124,7 @@ export function useObject<T, K extends keyof T>(
 export function useObject<T, K extends keyof T>(
   ref: MaybeAccessor<Ref.Ref<T> | undefined>,
   property: K,
-): [Accessor<Readonly<T[K]> | undefined>, ObjectPropUpdateCallback<T[K]>];
+): [Accessor<T[K] | undefined>, ObjectPropUpdateCallback<T[K]>];
 
 /**
  * Subscribe to an Echo object or Ref (entire object or specific property).
@@ -134,7 +134,7 @@ export function useObject<T, K extends keyof T>(
  * @param property - Optional property key to subscribe to a specific property
  * @returns A tuple of [accessor, updateCallback]
  */
-export function useObject<T extends Entity.Unknown, K extends keyof T>(
+export function useObject<T extends Obj.Unknown, K extends keyof T>(
   objOrRef: MaybeAccessor<T | Ref.Ref<T> | undefined>,
   property?: K,
 ): [Accessor<any>, ObjectUpdateCallback<T> | ObjectPropUpdateCallback<T[K]>] {
@@ -160,7 +160,7 @@ export function useObject<T extends Entity.Unknown, K extends keyof T>(
       return;
     }
 
-    Obj.change(obj as Entity.Unknown, (o: any) => {
+    Obj.change(obj, (o: any) => {
       if (typeof updateOrValue === 'function') {
         const returnValue = (updateOrValue as (obj: unknown) => unknown)(property !== undefined ? o[property] : o);
         if (returnValue !== undefined) {
@@ -190,7 +190,7 @@ export function useObject<T extends Entity.Unknown, K extends keyof T>(
  * Internal function for subscribing to an Echo object or Ref.
  * AtomObj.make handles both objects and refs, returning snapshots.
  */
-function useObjectValue<T extends Entity.Unknown>(
+function useObjectValue<T extends Obj.Unknown>(
   registry: Registry.Registry,
   objOrRef: MaybeAccessor<T | Ref.Ref<T> | undefined>,
 ): Accessor<T | undefined> {
@@ -213,12 +213,12 @@ function useObjectValue<T extends Entity.Unknown>(
 
     const atom = AtomObj.make(input);
     const currentValue = registry.get(atom);
-    setValue(() => currentValue as T);
+    setValue(() => currentValue as unknown as T);
 
     const unsubscribe = registry.subscribe(
       atom,
       () => {
-        setValue(() => registry.get(atom) as T);
+        setValue(() => registry.get(atom) as unknown as T);
       },
       { immediate: true },
     );
@@ -232,7 +232,7 @@ function useObjectValue<T extends Entity.Unknown>(
 /**
  * Internal function for subscribing to a specific property of an Echo object.
  */
-function useObjectProperty<T extends Entity.Unknown, K extends keyof T>(
+function useObjectProperty<T extends Obj.Unknown, K extends keyof T>(
   registry: Registry.Registry,
   obj: Accessor<T | undefined>,
   property: K,
@@ -280,9 +280,7 @@ function useObjectProperty<T extends Entity.Unknown, K extends keyof T>(
  * @param refs - Array of Refs to dereference and subscribe to (can be reactive)
  * @returns Accessor to array of loaded target snapshots (excludes unloaded refs)
  */
-export const useObjects = <T extends Entity.Unknown>(
-  refs: MaybeAccessor<readonly Ref.Ref<T>[]>,
-): Accessor<Readonly<T>[]> => {
+export const useObjects = <T extends Obj.Unknown>(refs: MaybeAccessor<readonly Ref.Ref<T>[]>): Accessor<T[]> => {
   // Track version to trigger re-renders when any ref or target changes.
   const [version, setVersion] = createSignal(0);
 
@@ -340,11 +338,11 @@ export const useObjects = <T extends Entity.Unknown>(
     version();
 
     const currentRefs = resolvedRefs();
-    const snapshots: Readonly<T>[] = [];
+    const snapshots: T[] = [];
     for (const ref of currentRefs) {
       const target = ref.target;
       if (target !== undefined) {
-        snapshots.push(target as Readonly<T>);
+        snapshots.push(target as T);
       }
     }
     return snapshots;

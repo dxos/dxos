@@ -2,7 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { getProxyTarget, isProxy } from './proxy-utils';
+import { type RefTypeId } from '../ref/ref';
+
+import { getProxyTarget } from './proxy-utils';
 import { ChangeId, EventId } from './symbols';
 
 /**
@@ -21,11 +23,20 @@ export const subscribe = (obj: unknown, callback: () => void): (() => void) => {
 };
 
 /**
- * Recursively removes readonly modifiers from all properties of T.
+ * Deeply removes readonly modifiers from all properties of T.
+ * Inside Obj.change, all properties are fully mutable regardless of schema definition.
+ * Ref types are preserved as-is since they are value-like objects that are replaced, not mutated.
+ * Primitive types (including branded primitives) are preserved as-is.
  */
-export type Mutable<T> = {
-  -readonly [P in keyof T]: T[P] extends object ? Mutable<T[P]> : T[P];
-};
+export type Mutable<T> = T extends string | number | boolean | bigint | symbol | null | undefined
+  ? T // Primitives (including branded primitives like JsonPath) stay as-is.
+  : T extends { [RefTypeId]: any }
+    ? T // Keep Ref types as-is (they're value-like, not mutated in place).
+    : T extends object
+      ? T extends readonly (infer U)[]
+        ? Mutable<U>[]
+        : { -readonly [K in keyof T]: Mutable<T[K]> }
+      : T;
 
 /**
  * Callback type for the change function.
@@ -47,9 +58,9 @@ export type ChangeCallback<T> = (mutableObj: Mutable<T>) => void;
  * @param callback - Callback that receives a mutable view of the object.
  */
 export const change = <T>(obj: T, callback: ChangeCallback<T>): void => {
-  // Check proxy target first if it's a proxy, otherwise check the object directly.
-  const target = isProxy(obj) ? getProxyTarget(obj as any) : null;
-  const changeFn = (target as any)?.[ChangeId] ?? (obj as any)[ChangeId];
+  // Check proxy first (allows handler to intercept), then fall back to target.
+  // This order is important for EchoReactiveHandler which handles ChangeId in the proxy trap.
+  const changeFn = (obj as any)[ChangeId];
   if (changeFn) {
     changeFn(callback);
   } else {

@@ -5,7 +5,7 @@
 import type * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { type Err, Obj, Type } from '@dxos/echo';
+import { type Err, Type } from '@dxos/echo';
 import { Database } from '@dxos/echo';
 import { EncodedReference } from '@dxos/echo-protocol';
 import { DXN, LOCAL_SPACE_TAG, type ObjectId, type SpaceId } from '@dxos/keys';
@@ -75,7 +75,7 @@ export type ArtifactId = Schema.Schema.Type<typeof ArtifactId>;
 /**
  * Schema that decodes ECHO reference object from an LLM-friendly input.
  */
-export const RefFromLLM = Schema.transform(ArtifactId, Type.Ref(Obj.Any), {
+export const RefFromLLM = Schema.transform(ArtifactId, Type.Ref(Type.Obj), {
   decode: (fromA, fromI) => EncodedReference.fromDXN(ArtifactId.toDXN(fromA)),
   encode: (toI, toA) => EncodedReference.toDXN(toI).toString(),
   strict: false,

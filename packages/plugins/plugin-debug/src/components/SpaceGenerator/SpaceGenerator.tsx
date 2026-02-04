@@ -23,7 +23,7 @@ import { SchemaTable } from './SchemaTable';
 
 export type SpaceGeneratorProps = {
   space: Space;
-  onCreateObjects?: (objects: Obj.Any[]) => void;
+  onCreateObjects?: (objects: Obj.Unknown[]) => void;
 };
 
 export const SpaceGenerator = ({ space, onCreateObjects }: SpaceGeneratorProps) => {

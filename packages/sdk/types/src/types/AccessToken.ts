@@ -24,7 +24,7 @@ export const AccessToken = Schema.Struct({
     description: 'The token provided by the service.',
   }),
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/AccessToken',
     version: '0.1.0',
   }),
