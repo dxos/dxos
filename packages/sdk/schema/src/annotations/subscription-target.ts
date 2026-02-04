@@ -1,5 +1,10 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import * as Schema from 'effect/Schema';
+
 import { Annotation } from '@dxos/echo';
-import { Schema } from 'effect';
 
 // TODO(dmaretskyi): Right now I'm reusing the Queue annotation instead.
 export const SubscriptionTarget = Annotation.make({
