@@ -5138,31 +5138,31 @@ importers:
   packages/core/echo/index-core:
     dependencies:
       '@dxos/async':
-        specifier: 'workspace:'
+        specifier: workspace:*
         version: link:../../../common/async
       '@dxos/context':
-        specifier: 'workspace:'
+        specifier: workspace:*
         version: link:../../../common/context
       '@dxos/debug':
-        specifier: 'workspace:'
+        specifier: workspace:*
         version: link:../../../common/debug
       '@dxos/echo':
-        specifier: 'workspace:'
+        specifier: workspace:*
         version: link:../echo
       '@dxos/echo-protocol':
-        specifier: 'workspace:'
+        specifier: workspace:*
         version: link:../echo-protocol
       '@dxos/effect':
-        specifier: 'workspace:'
+        specifier: workspace:*
         version: link:../../../common/effect
       '@dxos/invariant':
-        specifier: 'workspace:'
+        specifier: workspace:*
         version: link:../../../common/invariant
       '@dxos/keys':
-        specifier: 'workspace:'
+        specifier: workspace:*
         version: link:../../../common/keys
       '@dxos/log':
-        specifier: 'workspace:'
+        specifier: workspace:*
         version: link:../../../common/log
       '@dxos/sql-sqlite':
         specifier: workspace:*
