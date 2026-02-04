@@ -15,7 +15,7 @@ runs:
     - uses: moonrepo/setup-toolchain@v0
       with:
         # IMPORTANT: Keep in-sync with .prototools
-        moon-version: '2.0.0-rc.1'
+        moon-version: '2.0.0-rc.2'
 
     - name: Log out debug info
       run: |
