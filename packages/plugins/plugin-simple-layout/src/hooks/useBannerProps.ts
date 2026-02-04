@@ -42,12 +42,12 @@ export const useBannerProps = (graph: Graph.ReadableGraph): Omit<BannerProps, 'c
         const state = get(stateAtom);
         const activeId = state.active ?? state.workspace;
         const allActions = activeId ? get(graph.actions(activeId)) : [];
-        const filtered = allActions.filter((a) =>
-          ['list-item', 'list-item-primary', 'heading-list-item'].includes(a.properties.disposition),
+        const filtered = allActions.filter((action) =>
+          ['list-item', 'list-item-primary', 'heading-list-item'].includes(action.properties.disposition),
         );
         return {
           nodes: filtered as ActionGraphProps['nodes'],
-          edges: filtered.map((a) => ({ source: 'root', target: a.id })),
+          edges: filtered.map((action) => ({ source: 'root', target: action.id })),
         };
       }),
     [graph, stateAtom],
