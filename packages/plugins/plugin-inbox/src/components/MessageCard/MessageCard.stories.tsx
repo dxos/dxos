@@ -41,6 +41,10 @@ const MessageCardStory = ({ role }: Pick<SurfaceComponentProps<Message.Message>,
   return (
     <IntrinsicCardContainer>
       <Card.Root>
+        <Card.Toolbar>
+          <Card.DragHandle />
+          <Card.Title>{Obj.getLabel(subject)}</Card.Title>
+        </Card.Toolbar>
         <MessageCard role={role} subject={subject} />
       </Card.Root>
     </IntrinsicCardContainer>
@@ -52,7 +56,7 @@ const meta = {
   component: MessageCardStory,
   decorators: [withTheme],
   parameters: {
-    layout: 'fullscreen',
+    layout: 'centered',
   },
 } satisfies Meta<typeof MessageCardStory>;
 

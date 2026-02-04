@@ -100,7 +100,7 @@ const DefaultStory = () => {
   const state = useAtomCapability(StoryState);
 
   return (
-    <Main.Root complementarySidebarState='closed'>
+    <Main.Root navigationSidebarState='expanded'>
       <Main.NavigationSidebar label='Navigation' classNames='grid'>
         <NavTreeContainer tab={state.tab} />
       </Main.NavigationSidebar>

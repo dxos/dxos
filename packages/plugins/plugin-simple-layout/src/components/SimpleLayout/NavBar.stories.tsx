@@ -25,9 +25,6 @@ const meta = {
     layout: 'fullscreen',
     translations,
   },
-  argTypes: {
-    onActiveIdChange: { action: 'activeIdChanged' },
-  },
 } satisfies Meta<typeof NavBar>;
 
 export default meta;

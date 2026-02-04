@@ -2,19 +2,19 @@
   .dx-main-content-padding {
     @apply pis-0 scroll-ps-0 pie-0 scroll-pe-0;
 
-    /* Constrain content height when drawer is expanded */
+    /* Constrain content height when drawer is expanded. */
     &[data-drawer-state='expanded'] {
       max-block-size: calc(100dvh - var(--drawer-size));
     }
 
-    /* Hide content when drawer is full */
+    /* Hide content when drawer is full. */
     &[data-drawer-state='full'] {
       max-block-size: 0;
       overflow: hidden !important;
       visibility: hidden;
       pointer-events: none;
     }
-
+ 
     @media (min-width: theme('screens.lg')) {
       &[data-sidebar-inline-start-state='collapsed'] {
         @apply pis-[--l0-size] scroll-ps-[--l0-size];
@@ -178,7 +178,7 @@
     overscroll-behavior: contain;
     touch-action: pan-y;
 
-    /* Ensure scrollable children contain their scroll */
+    /* Ensure scrollable children contain their scroll. */
     & [class*='overflow-y-auto'],
     & [class*='overflow-auto'] {
       overscroll-behavior-y: contain;
