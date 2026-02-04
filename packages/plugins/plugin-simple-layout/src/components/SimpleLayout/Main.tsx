@@ -53,19 +53,18 @@ export const Main = () => {
     <NaturalMain.Content
       bounce
       classNames={mx(
-        // TODO(burdon): dx-mobile?
-        'dx-mobile grid bs-full overflow-hidden',
+        'dx-mobile', // TODO(burdon): Replace with updated density system (for side padding).
+        'grid bs-full pbs-[max(0.25rem,env(safe-area-inset-top))] pbe-[max(0.25rem,env(safe-area-inset-bottom))] overflow-hidden',
+        'bg-toolbarSurface',
         showNavBar ? 'grid-rows-[min-content_1fr_min-content]' : 'grid-rows-[min-content_1fr]',
       )}
       {...attentionAttrs}
     >
-      <Banner classNames='pbs-[max(0.25rem,env(safe-area-inset-top))]' node={node} />
-      <article className='bs-full overflow-hidden'>
+      <Banner node={node} />
+      <article className='bs-full overflow-hidden bg-baseSurface'>
         <Surface key={id} role='article' data={data} limit={1} fallback={ContentError} placeholder={placeholder} />
       </article>
-      {showNavBar && (
-        <NavBar classNames='border-bs border-separator pbe-[max(0.25rem,env(safe-area-inset-bottom))]' activeId={id} />
-      )}
+      {showNavBar && <NavBar classNames='border-bs border-separator' activeId={id} />}
     </NaturalMain.Content>
   );
 };

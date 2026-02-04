@@ -84,9 +84,9 @@ export const Banner = ({ node, classNames }: BannerProps) => {
     >
       {node.id !== Node.RootId ? (
         <IconButton
-          iconOnly
           variant='ghost'
           icon='ph--caret-left--regular'
+          iconOnly
           label={t('back label')}
           onClick={handleClick}
         />
@@ -100,9 +100,9 @@ export const Banner = ({ node, classNames }: BannerProps) => {
             <DropdownMenu.Root items={actions} caller={meta.id}>
               <DropdownMenu.Trigger asChild>
                 <IconButton
-                  iconOnly
                   variant='ghost'
                   icon='ph--dots-three-vertical--regular'
+                  iconOnly
                   label={t('actions menu label')}
                 />
               </DropdownMenu.Trigger>
