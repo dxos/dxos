@@ -3,9 +3,11 @@
 //
 
 import { Atom, useAtomValue } from '@effect-atom/atom-react';
+import * as Effect from 'effect/Effect';
 import * as Match from 'effect/Match';
 import type * as Record from 'effect/Record';
 import React, { useCallback, useMemo, useState } from 'react';
+
 import { Surface, useCapability } from '@dxos/app-framework/react';
 import { AiContextBinder } from '@dxos/assistant';
 import { Chat, Initiative } from '@dxos/assistant-toolkit';
@@ -13,15 +15,13 @@ import { DXN, Database, Filter, Obj, Ref, Relation } from '@dxos/echo';
 import { type JsonPath, splitJsonPath } from '@dxos/echo/internal';
 import { AtomObj, AtomRef } from '@dxos/echo-atom';
 import { FunctionDefinition, QueueService, Trigger } from '@dxos/functions';
+import { AutomationCapabilities } from '@dxos/plugin-automation/types';
 import { MarkdownEditor } from '@dxos/plugin-markdown';
 import { useObject } from '@dxos/react-client/echo';
 import { Button, ButtonGroup, IconButton, Input, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldMap, omitId } from '@dxos/react-ui-form';
 import { StackItem } from '@dxos/react-ui-stack';
 import { type Text } from '@dxos/schema';
-export { Chat } from '@dxos/assistant-toolkit';
-import { AutomationCapabilities } from '@dxos/plugin-automation/types';
-import * as Effect from 'effect/Effect';
 
 export type InitiativeContainerProps = {
   role?: string;
