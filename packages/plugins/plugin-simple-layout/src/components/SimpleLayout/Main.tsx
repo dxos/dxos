@@ -70,6 +70,7 @@ export const Main = () => {
           classNames='border-bs border-separator pbe-[max(0.25rem,env(safe-area-inset-bottom))]'
           actions={actions}
           onAction={onAction}
+          attendableId={id}
         />
       )}
     </NaturalMain.Content>
