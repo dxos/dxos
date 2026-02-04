@@ -22,10 +22,10 @@ const BANNER_NAME = 'SimpleLayout.Banner';
 export type BannerProps = ThemedClassName<{
   /** Title/label to display in the banner. */
   title?: string;
-  /** Whether to show the back button. */
-  showBackButton?: boolean;
   /** Action graph atom for the dropdown menu. */
   actions: Atom.Atom<ActionGraphProps>;
+  /** Whether to show the back button. */
+  showBackButton?: boolean;
   /** Popover anchor ID for the dropdown trigger. */
   popoverAnchorId?: string;
   /** Action executor callback. */
@@ -40,8 +40,8 @@ export type BannerProps = ThemedClassName<{
 export const Banner = ({
   classNames,
   title,
-  showBackButton,
   actions,
+  showBackButton,
   popoverAnchorId,
   onAction,
   onBack,
@@ -60,23 +60,24 @@ export const Banner = ({
   return (
     <Toolbar.Root
       role='banner'
-      classNames={mx('grid grid-cols-[var(--rail-size)_1fr_var(--rail-size)] bs-[var(--rail-size)]', classNames)}
+      density='coarse'
+      classNames={mx('grid grid-cols-[var(--rail-size)_1fr_var(--rail-size)]', classNames)}
     >
       {showBackButton ? (
-        <IconButton iconOnly variant='ghost' icon='ph--caret-left--regular' label={t('back label')} onClick={onBack} />
+        <IconButton variant='ghost' icon='ph--caret-left--regular' iconOnly label={t('back label')} onClick={onBack} />
       ) : (
         <div />
       )}
-      <h1 className='grow text-center truncate font-medium'>{displayTitle}</h1>
+      <h1 className='text-center truncate text-lg font-thin uppercase'>{displayTitle}</h1>
       {hasActions ? (
         <AnchorRoot>
           <MenuProvider {...menu} onAction={onAction}>
             <DropdownMenu.Root caller={meta.id}>
               <DropdownMenu.Trigger asChild>
                 <IconButton
-                  iconOnly
                   variant='ghost'
                   icon='ph--dots-three-vertical--regular'
+                  iconOnly
                   label={t('actions menu label')}
                 />
               </DropdownMenu.Trigger>

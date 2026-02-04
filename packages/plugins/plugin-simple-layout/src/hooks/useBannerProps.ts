@@ -12,7 +12,7 @@ import { Graph, Node, useActionRunner, useNode } from '@dxos/plugin-graph';
 import { toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { type ActionGraphProps } from '@dxos/react-ui-menu';
 
-import { type BannerProps } from '../components/SimpleLayout/Banner';
+import { type BannerProps } from '../components';
 import { meta } from '../meta';
 import { SimpleLayoutState as SimpleLayoutStateCapability } from '../types';
 
@@ -42,12 +42,12 @@ export const useBannerProps = (graph: Graph.ReadableGraph): Omit<BannerProps, 'c
         const state = get(stateAtom);
         const activeId = state.active ?? state.workspace;
         const allActions = activeId ? get(graph.actions(activeId)) : [];
-        const filtered = allActions.filter((a) =>
-          ['list-item', 'list-item-primary', 'heading-list-item'].includes(a.properties.disposition),
+        const filtered = allActions.filter((action) =>
+          ['list-item', 'list-item-primary', 'heading-list-item'].includes(action.properties.disposition),
         );
         return {
           nodes: filtered as ActionGraphProps['nodes'],
-          edges: filtered.map((a) => ({ source: 'root', target: a.id })),
+          edges: filtered.map((action) => ({ source: 'root', target: action.id })),
         };
       }),
     [graph, stateAtom],
@@ -78,5 +78,5 @@ export const useBannerProps = (graph: Graph.ReadableGraph): Omit<BannerProps, 'c
   const popoverAnchorId =
     node && state.popoverAnchorId === `dxos.org/ui/${meta.id}/${node.id}` ? state.popoverAnchorId : undefined;
 
-  return { title, showBackButton, onBack, actions: actionsAtom, onAction: runAction, popoverAnchorId };
+  return { title, actions: actionsAtom, showBackButton, popoverAnchorId, onBack, onAction: runAction };
 };
