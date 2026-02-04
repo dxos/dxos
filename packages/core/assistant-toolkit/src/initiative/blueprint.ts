@@ -1,12 +1,11 @@
-import { addArtifact, agent, getContext } from './functions';
+//
+// Copyright 2026 DXOS.org
+//
 
-import { AiContextBinder, type ContextBinding } from '@dxos/assistant';
 import { Blueprint, Template } from '@dxos/blueprints';
-import { Database, Obj, Ref, Relation, Type } from '@dxos/echo';
-import { QueueService } from '@dxos/functions';
-import { Text } from '@dxos/schema';
-import type { Message } from '@dxos/types';
 import { trim } from '@dxos/util';
+
+import { addArtifact, agent, getContext } from './functions';
 
 /**
  * Get all initiative functions. This is a function to avoid circular dependency issues.

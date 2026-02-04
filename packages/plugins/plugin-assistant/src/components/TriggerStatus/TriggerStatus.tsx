@@ -6,18 +6,11 @@ import React, { useMemo } from 'react';
 
 import { useCapability } from '@dxos/app-framework/react';
 import { useLayout } from '@dxos/app-framework/react';
-import {
-  InvocationOutcome,
-  InvocationsState,
-  type InvocationSpan,
-  type InvocationTraceEvent,
-  createInvocationSpans,
-} from '@dxos/functions-runtime';
+import { type InvocationsState } from '@dxos/functions-runtime';
 import { useTriggerRuntimeControls } from '@dxos/plugin-automation';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
 import { StatusBar } from '@dxos/plugin-status-bar';
 import { parseId } from '@dxos/react-client/echo';
-import { useQueue } from '@dxos/react-client/echo';
 import { Icon, Input, Popover, useTranslation } from '@dxos/react-ui';
 import { ControlItemInput } from '@dxos/react-ui-form';
 import { mx } from '@dxos/ui-theme';

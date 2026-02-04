@@ -13,6 +13,7 @@ export * from './TriggerStatus';
 export const BlueprintArticle = lazy(() => import('./BlueprintArticle'));
 export const ChatCompanion = lazy(() => import('./ChatCompanion'));
 // Type annotation needed to avoid declaration file emission issues with @dxos/assistant-toolkit types.
+// eslint-disable-next-line @typescript-eslint/consistent-type-imports
 export const ChatContainer: LazyExoticComponent<typeof import('./ChatContainer').default> = lazy(
   () => import('./ChatContainer'),
 );

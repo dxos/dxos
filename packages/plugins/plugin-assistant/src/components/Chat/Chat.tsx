@@ -91,7 +91,9 @@ const ChatRoot = ({ children, chat, processor, onEvent, ...props }: ChatRootProp
             const blueprints = processor.context.getBlueprints();
             const tools = await processor.getTools();
             const system = await processor.getSystemPrompt();
+            // eslint-disable-next-line no-console
             console.log('Chat processor state:', { objects, blueprints });
+            // eslint-disable-next-line no-console
             console.log(`
               ==== System Prompt ====
               ${system}

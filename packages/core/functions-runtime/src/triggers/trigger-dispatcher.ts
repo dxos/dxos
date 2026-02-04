@@ -13,7 +13,6 @@ import * as Effect from 'effect/Effect';
 import * as Either from 'effect/Either';
 import * as Exit from 'effect/Exit';
 import * as Fiber from 'effect/Fiber';
-import * as Fn from 'effect/Function';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Record from 'effect/Record';
@@ -24,7 +23,7 @@ import { DXN, Entity, Filter, Obj, Query } from '@dxos/echo';
 import { Database } from '@dxos/echo';
 import { causeToError } from '@dxos/effect';
 import {
-  FunctionDefinition,
+  type FunctionDefinition,
   FunctionInvocationService,
   QueueService,
   TracingService,
@@ -33,11 +32,10 @@ import {
 import { Function, Trigger, type TriggerEvent } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { KEY_QUEUE_POSITION, ObjectId } from '@dxos/protocols';
+import { KEY_QUEUE_POSITION, type ObjectId } from '@dxos/protocols';
 
 import { createInvocationPayload } from './input-builder';
 import { type TriggerState, TriggerStateStore } from './trigger-state-store';
-import { getDebugName } from '@dxos/util';
 
 export type TimeControl = 'natural' | 'manual';
 

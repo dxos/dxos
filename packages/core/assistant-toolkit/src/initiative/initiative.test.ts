@@ -4,6 +4,7 @@
 
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
 
 import { MemoizedAiService } from '@dxos/ai/testing';
 import { AiConversation } from '@dxos/assistant';
@@ -16,17 +17,18 @@ import { FunctionDefinition, QueueService, Trigger } from '@dxos/functions';
 import { TriggerDispatcher } from '@dxos/functions-runtime';
 import { invariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
+import { Markdown } from '@dxos/plugin-markdown/types';
 import { Text } from '@dxos/schema';
 import { Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import * as Chat from '../chat/Chat';
-import { agent } from './functions';
-import * as Initiative from '.';
-import { Exit } from 'effect';
 import { MarkdownBlueprint } from '../blueprints';
+import * as Chat from '../chat/Chat';
 import { Document } from '../functions';
-import { Markdown } from '@dxos/plugin-markdown/types';
+
+import { agent } from './functions';
+
+import * as Initiative from '.';
 
 ObjectId.dangerouslyDisableRandomness();
 

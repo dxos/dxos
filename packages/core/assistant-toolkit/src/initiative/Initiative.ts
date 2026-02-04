@@ -2,16 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { AiContextBinder, type ContextBinding } from '@dxos/assistant';
-import { Blueprint, Template } from '@dxos/blueprints';
-import { Database, Obj, Ref, Relation, Type } from '@dxos/echo';
-import { QueueService } from '@dxos/functions';
+import { Type } from '@dxos/echo';
 import { Text } from '@dxos/schema';
-import type { Message } from '@dxos/types';
-import { trim } from '@dxos/util';
 
 import * as Chat from '../chat/Chat';
 

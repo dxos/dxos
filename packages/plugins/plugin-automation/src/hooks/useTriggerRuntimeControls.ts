@@ -2,10 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom, RegistryContext, useAtomValue } from '@effect-atom/atom-react';
+import { Atom, useAtomValue } from '@effect-atom/atom-react';
 import type * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
-import { useContext, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { type Database, Filter } from '@dxos/echo';
 import { Trigger } from '@dxos/functions';
@@ -13,7 +13,6 @@ import { TriggerDispatcher, type TriggerDispatcherState } from '@dxos/functions-
 import { useQuery } from '@dxos/react-client/echo';
 
 import { useComputeRuntimeCallback } from './useComputeRuntimeCallback';
-import { getDebugName } from '@dxos/util';
 
 interface TriggerRuntimeControls {
   triggers: Trigger.Trigger[];

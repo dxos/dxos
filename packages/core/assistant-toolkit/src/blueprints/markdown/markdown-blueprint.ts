@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { ToolId } from '@dxos/ai';
 import { Blueprint } from '@dxos/blueprints';
 import { Ref } from '@dxos/echo';
 import { Text } from '@dxos/schema';

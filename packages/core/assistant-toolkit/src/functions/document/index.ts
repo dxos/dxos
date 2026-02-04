@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
+import { default as create$ } from './create';
 import { default as read$ } from './read';
 import { default as update$ } from './update';
-import { default as create$ } from './create';
 
 export namespace Document {
   export const read = read$;

@@ -10,6 +10,7 @@ import React, { useMemo, useState } from 'react';
 
 import { Filter, Obj, Tag } from '@dxos/echo';
 import { Function, Script, Trigger } from '@dxos/functions';
+import { KEY_QUEUE_CURSOR } from '@dxos/functions-runtime';
 import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
 import { useTypeOptions } from '@dxos/plugin-space';
 import { type Client, useClient } from '@dxos/react-client';
@@ -20,7 +21,6 @@ import { List } from '@dxos/react-ui-list';
 import { Project } from '@dxos/types';
 import { ghostHover, mx } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
-import { KEY_QUEUE_CURSOR } from '@dxos/functions-runtime';
 
 import { meta } from '../../meta';
 import { TriggerEditor, type TriggerEditorProps } from '../TriggerEditor';

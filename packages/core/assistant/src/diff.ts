@@ -71,7 +71,6 @@ export const applyDiffs = <T>(
   { errorOnNotFound = false }: { errorOnNotFound?: boolean } = {},
 ): string => {
   for (const diff of reduceDiffs(diffs)) {
-    console.log('diff', diff);
     accessor.handle.change((doc: Doc<T>) => {
       const text = DocAccessor.getValue<string>(accessor);
       const idx = text.indexOf(diff.match);

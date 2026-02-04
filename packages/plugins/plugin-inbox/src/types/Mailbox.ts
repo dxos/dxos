@@ -8,7 +8,7 @@ import { type Space } from '@dxos/client/echo';
 import { Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/internal';
 import { Queue } from '@dxos/echo-db';
-import { QueueAnnotation, SubscriptionTarget } from '@dxos/schema';
+import { QueueAnnotation } from '@dxos/schema';
 import { AccessToken } from '@dxos/types';
 
 // TODO(burdon): Implement as labels?

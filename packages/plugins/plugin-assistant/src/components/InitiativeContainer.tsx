@@ -2,15 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
-import { AiContextBinder, type ContextBinding } from '@dxos/assistant';
 import { Atom, useAtomValue } from '@effect-atom/atom-react';
 import * as Match from 'effect/Match';
 import type * as Record from 'effect/Record';
 import React, { useCallback, useMemo, useState } from 'react';
-
 import { Surface, useCapability } from '@dxos/app-framework/react';
+import { AiContextBinder } from '@dxos/assistant';
 import { Chat, Initiative } from '@dxos/assistant-toolkit';
-import { Database, DXN, Filter, Obj, Ref, Relation } from '@dxos/echo';
+import { DXN, Database, Filter, Obj, Ref, Relation } from '@dxos/echo';
 import { type JsonPath, splitJsonPath } from '@dxos/echo/internal';
 import { AtomObj, AtomRef } from '@dxos/echo-atom';
 import { FunctionDefinition, QueueService, Trigger } from '@dxos/functions';
@@ -21,9 +20,8 @@ import { Form, type FormFieldMap, omitId } from '@dxos/react-ui-form';
 import { StackItem } from '@dxos/react-ui-stack';
 import { type Text } from '@dxos/schema';
 export { Chat } from '@dxos/assistant-toolkit';
-
 import { AutomationCapabilities } from '@dxos/plugin-automation/types';
-import { Effect } from 'effect';
+import * as Effect from 'effect/Effect';
 
 export type InitiativeContainerProps = {
   role?: string;

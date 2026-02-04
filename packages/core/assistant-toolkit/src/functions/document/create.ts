@@ -5,7 +5,6 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { ArtifactId } from '@dxos/assistant';
 import { Database, Ref } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
 import { Markdown } from '@dxos/plugin-markdown/types';
