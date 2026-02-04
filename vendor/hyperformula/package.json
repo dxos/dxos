@@ -13,8 +13,7 @@
   "exports": {
     ".": {
       "types": "./src/hyperformula.d.ts",
-      "node": "./dist/lib/node-esm/hyperformula.mjs",
-      "default": "./dist/lib/browser/hyperformula.mjs"
+      "default": "./dist/lib/neutral/hyperformula.mjs"
     }
   },
   "files": [
