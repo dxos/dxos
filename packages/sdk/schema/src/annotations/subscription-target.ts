@@ -1,5 +1,5 @@
 //
-// Copyright 2026 DXOS.org
+// Copyright 2025 DXOS.org
 //
 
 import * as Schema from 'effect/Schema';
