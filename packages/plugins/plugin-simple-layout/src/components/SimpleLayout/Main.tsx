@@ -61,7 +61,10 @@ export const Main = () => {
           <Surface key={id} role='article' data={data} limit={1} fallback={ContentError} placeholder={placeholder} />
         </article>
         {showNavBar && (
-          <NavBar classNames='border-bs border-separator pbe-[max(0.25rem,env(safe-area-inset-bottom))]' activeId={id} />
+          <NavBar
+            classNames='border-bs border-separator pbe-[max(0.25rem,env(safe-area-inset-bottom))]'
+            activeId={id}
+          />
         )}
       </div>
     </NaturalMain.Content>
