@@ -48,8 +48,8 @@ export default defineFunction({
 
     const spec = initiative.artifacts.find((artifact) => artifact.name === Initiative.SPEC_ARTIFACT_NAME);
     const plan = initiative.artifacts.find((artifact) => artifact.name === Initiative.PLAN_ARTIFACT_NAME);
-    const specObj = !spec ? undefined : yield* Database.Service.resolve(spec.data, Text.Text);
-    const planObj = !plan ? undefined : yield* Database.Service.resolve(plan.data, Text.Text);
+    const specObj = !spec ? undefined : yield* Database.resolve(spec.data, Text.Text);
+    const planObj = !plan ? undefined : yield* Database.resolve(plan.data, Text.Text);
 
     return {
       spec: {
@@ -64,7 +64,7 @@ export default defineFunction({
         Effect.gen(function* () {
           return {
             name: artifact.name,
-            type: Obj.getTypename(yield* Database.Service.load(artifact.data)),
+            type: Obj.getTypename(yield* Database.load(artifact.data)),
             dxn: artifact.data.dxn.toString(),
           };
         }),

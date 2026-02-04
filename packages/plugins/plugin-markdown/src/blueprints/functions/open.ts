@@ -24,7 +24,7 @@ export default defineFunction({
     content: Schema.String,
   }),
   handler: Effect.fn(function* ({ data: { id } }) {
-    const object = yield* Database.Service.resolve(ArtifactId.toDXN(id), Markdown.Document);
+    const object = yield* Database.resolve(ArtifactId.toDXN(id), Markdown.Document);
     const { content } = yield* Effect.promise(() => object.content.load());
     return {
       content,

@@ -43,14 +43,14 @@ export default defineFunction({
     log.info('Creating research document', { subject, name, content });
 
     // TODO(burdon): Auto flush before and after calling function?
-    yield* Database.Service.flush({ indexes: true });
+    yield* Database.flush({ indexes: true });
     yield* TracingService.emitStatus({ message: 'Creating research document...' });
 
     // TODO(burdon): Type check.
-    const target = (yield* Database.Service.resolve(ArtifactId.toDXN(subject))) as Obj.Unknown;
+    const target = (yield* Database.resolve(ArtifactId.toDXN(subject))) as Obj.Unknown;
 
     // Create document.
-    const object = yield* Database.Service.add(
+    const object = yield* Database.add(
       Markdown.make({
         name,
         content,
@@ -58,7 +58,7 @@ export default defineFunction({
     );
 
     // Create relation.
-    yield* Database.Service.add(
+    yield* Database.add(
       Relation.make(HasSubject.HasSubject, {
         [Relation.Source]: object,
         [Relation.Target]: target,
@@ -66,7 +66,7 @@ export default defineFunction({
       }),
     );
 
-    yield* Database.Service.flush({ indexes: true });
+    yield* Database.flush({ indexes: true });
     log.info('Created research document', { subject, object });
 
     return {

@@ -62,7 +62,7 @@ export class LocalFunctionExecutionService extends Context.Tag('@dxos/functions/
           ),
         resolveFunction: (key: string) =>
           Effect.gen(function* () {
-            const [dbFunction] = yield* Database.Service.runQuery(Query.type(Function.Function, { key }));
+            const [dbFunction] = yield* Database.runQuery(Query.type(Function.Function, { key }));
             const functionDef = dbFunction ? FunctionDefinition.deserialize(dbFunction) : null;
             if (functionDef) {
               return functionDef;

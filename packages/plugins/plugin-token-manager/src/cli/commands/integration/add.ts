@@ -137,7 +137,7 @@ const addOAuthPresetToken = Effect.fn(function* (preset: OAuthPreset, json: bool
   });
 
   yield* performOAuthFlow(preset, accessToken);
-  yield* Database.Service.add(accessToken);
+  yield* Database.add(accessToken);
   yield* printTokenResult(accessToken, json);
 });
 
@@ -152,7 +152,7 @@ const addCustomToken = Effect.fn(function* (data: { source: string; token: strin
     token: data.token,
   });
 
-  yield* Database.Service.add(accessToken);
+  yield* Database.add(accessToken);
   yield* printTokenResult(accessToken, json);
 });
 

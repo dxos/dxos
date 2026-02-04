@@ -234,7 +234,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
         }
 
         // Resolve the function
-        const serialiedFunction = yield* Database.Service.load(trigger.function!).pipe(Effect.orDie);
+        const serialiedFunction = yield* Database.load(trigger.function!).pipe(Effect.orDie);
         invariant(Obj.instanceOf(Function.Function, serialiedFunction));
         const functionDef = deserializeFunction(serialiedFunction);
 
@@ -340,7 +340,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
                   Obj.deleteKeys(trigger, KEY_QUEUE_CURSOR);
                   Obj.getMeta(trigger).keys.push({ source: KEY_QUEUE_CURSOR, id: objectPos });
                 });
-                yield* Database.Service.flush();
+                yield* Database.flush();
 
                 // We only invoke one trigger for each queue at a time.
                 if (!untilExhausted) {
@@ -358,7 +358,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
                 continue;
               }
 
-              const objects = yield* Database.Service.runQuery(Query.fromAst(spec.query.ast));
+              const objects = yield* Database.runQuery(Query.fromAst(spec.query.ast));
 
               const state: TriggerState = yield* TriggerStateStore.getState(trigger.id).pipe(
                 Effect.catchTag('TriggerStateNotFound', () =>
@@ -495,7 +495,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
 
   private _fetchTriggers = () =>
     Effect.gen(this, function* () {
-      const objects = yield* Database.Service.runQuery(Filter.type(Trigger.Trigger));
+      const objects = yield* Database.runQuery(Filter.type(Trigger.Trigger));
       return objects;
     }).pipe(Effect.withSpan('TriggerDispatcher.fetchTriggers'));
 
