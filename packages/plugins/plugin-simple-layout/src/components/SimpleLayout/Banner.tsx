@@ -68,7 +68,7 @@ export const Banner = ({
       ) : (
         <div />
       )}
-      <h1 className='grow text-center truncate uppercase font-thin'>{displayTitle}</h1>
+      <h1 className='text-center truncate text-lg font-thin uppercase'>{displayTitle}</h1>
       {hasActions ? (
         <AnchorRoot>
           <MenuProvider {...menu} onAction={onAction}>
