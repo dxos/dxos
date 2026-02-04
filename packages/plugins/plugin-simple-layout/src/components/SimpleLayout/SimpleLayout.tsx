@@ -20,13 +20,13 @@ export const SimpleLayout = () => {
   const handleDrawerStateChange = useCallback(
     (nextState: DrawerState) => {
       // Sync all drawer state changes to state.
-      updateState((s) => ({ ...s, drawerState: nextState }));
+      updateState((state) => ({ ...state, drawerState: nextState }));
     },
     [updateState],
   );
 
   return (
-    <Mosaic.Root>
+    <Mosaic.Root asChild>
       <NaturalMain.Root drawerState={state.drawerState ?? 'closed'} onDrawerStateChange={handleDrawerStateChange}>
         <PopoverRoot>
           <Main />

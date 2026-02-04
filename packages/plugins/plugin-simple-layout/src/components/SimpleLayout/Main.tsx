@@ -7,6 +7,7 @@ import React, { useMemo } from 'react';
 import { Surface, useAppGraph } from '@dxos/app-framework/react';
 import { useNode } from '@dxos/plugin-graph';
 import { Main as NaturalMain, useSidebars } from '@dxos/react-ui';
+import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { mx } from '@dxos/ui-theme';
 
 import { useSimpleLayoutState } from '../../hooks';
@@ -24,8 +25,9 @@ const MAIN_NAME = 'SimpleLayout.Main';
  */
 export const Main = () => {
   const { state } = useSimpleLayoutState();
-  const { graph } = useAppGraph();
   const id = state.active ?? state.workspace;
+  const attentionAttrs = useAttentionAttributes(id);
+  const { graph } = useAppGraph();
   const node = useNode(graph, id);
 
   // Ensures that children are loaded so that they are available to navigate to.
@@ -48,25 +50,22 @@ export const Main = () => {
   const showNavBar = !state.isPopover && drawerState === 'closed';
 
   return (
-    <NaturalMain.Content bounce classNames='bs-full'>
-      <div
-        role='none'
-        className={mx(
-          'grid bs-full overflow-hidden',
-          showNavBar ? 'grid-rows-[min-content_1fr_min-content]' : 'grid-rows-[min-content_1fr]',
-        )}
-      >
-        <Banner classNames='border-be border-separator pbs-[max(0.25rem,env(safe-area-inset-top))]' node={node} />
-        <article className='bs-full overflow-hidden'>
-          <Surface key={id} role='article' data={data} limit={1} fallback={ContentError} placeholder={placeholder} />
-        </article>
-        {showNavBar && (
-          <NavBar
-            classNames='border-bs border-separator pbe-[max(0.25rem,env(safe-area-inset-bottom))]'
-            activeId={id}
-          />
-        )}
-      </div>
+    <NaturalMain.Content
+      bounce
+      classNames={mx(
+        // TODO(burdon): dx-mobile?
+        'dx-mobile grid bs-full overflow-hidden',
+        showNavBar ? 'grid-rows-[min-content_1fr_min-content]' : 'grid-rows-[min-content_1fr]',
+      )}
+      {...attentionAttrs}
+    >
+      <Banner classNames='pbs-[max(0.25rem,env(safe-area-inset-top))]' node={node} />
+      <article className='bs-full overflow-hidden'>
+        <Surface key={id} role='article' data={data} limit={1} fallback={ContentError} placeholder={placeholder} />
+      </article>
+      {showNavBar && (
+        <NavBar classNames='border-bs border-separator pbe-[max(0.25rem,env(safe-area-inset-bottom))]' activeId={id} />
+      )}
     </NaturalMain.Content>
   );
 };
