@@ -30,7 +30,7 @@ type ToolbarRootProps = ThemedClassName<
   }
 >;
 
-// TODO(burdon): Implement asChild.
+// TODO(burdon): Implement asChild property.
 const ToolbarRoot = forwardRef<HTMLDivElement, ToolbarRootProps>(
   ({ classNames, children, disabled, layoutManaged, textBlockWidth: textBlockWidthProp, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();

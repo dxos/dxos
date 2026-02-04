@@ -6,7 +6,7 @@ import React, { Fragment, useCallback } from 'react';
 
 import { Icon, Toolbar as NaturalToolbar, type ToolbarRootProps, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
-import { mx, textBlockWidth, toolbarInactive, toolbarLayout } from '@dxos/ui-theme';
+import { mx, textBlockWidth, toolbarLayout } from '@dxos/ui-theme';
 import { type MenuActionProperties } from '@dxos/ui-types';
 
 import { translationKey } from '../translations';
@@ -197,7 +197,8 @@ export const ToolbarMenu = ({
   return (
     <NaturalToolbar.Root
       {...props}
-      classNames={[attendableId && !hasAttention && toolbarInactive, classNames]}
+      classNames={[attendableId, classNames]}
+      disabled={!hasAttention}
       layoutManaged={textBlockWidthProp}
     >
       <InnerRoot {...innerRootProps}>
