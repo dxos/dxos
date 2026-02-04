@@ -41,7 +41,7 @@ export const Workspace = ({ id }: WorkspaceProps) => {
   return (
     <Layout.Main toolbar>
       <SearchList.Root onSearch={handleSearch}>
-        <Toolbar.Root classNames='pli-3'>
+        <Toolbar.Root>
           <SearchList.Input placeholder={t('search placeholder')} autoFocus />
         </Toolbar.Root>
         <SearchList.Content>

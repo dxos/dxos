@@ -7,6 +7,7 @@ import React, { useMemo } from 'react';
 import { Surface, useAppGraph } from '@dxos/app-framework/react';
 import { useNode } from '@dxos/plugin-graph';
 import { Main as NaturalMain, useSidebars } from '@dxos/react-ui';
+import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { mx } from '@dxos/ui-theme';
 
 import { useSimpleLayoutState } from '../../hooks';
@@ -44,6 +45,7 @@ export const Main = () => {
     );
   }, [id, node, node?.data, node?.properties, state.popoverAnchorId]);
 
+  const attentionAttrs = useAttentionAttributes(id);
   const { drawerState } = useSidebars(MAIN_NAME);
   const showNavBar = !state.isPopover && drawerState === 'closed';
 
@@ -51,10 +53,11 @@ export const Main = () => {
     <NaturalMain.Content
       bounce
       classNames={mx(
-        'bs-full',
-        'grid bs-full overflow-hidden',
+        // TODO(burdon): dx-mobile?
+        'dx-mobile grid bs-full overflow-hidden',
         showNavBar ? 'grid-rows-[min-content_1fr_min-content]' : 'grid-rows-[min-content_1fr]',
       )}
+      {...attentionAttrs}
     >
       <Banner classNames='pbs-[max(0.25rem,env(safe-area-inset-top))]' node={node} />
       <article className='bs-full overflow-hidden'>
