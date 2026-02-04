@@ -5,6 +5,7 @@
 import { Atom } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
+import { expect, fn, screen, userEvent, within } from 'storybook/test';
 
 import { withTheme } from '@dxos/react-ui/testing';
 import { type ActionGraphProps, createMenuAction } from '@dxos/react-ui-menu';
@@ -51,7 +52,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-const DefaultStory = () => {
+const DefaultStory = ({ onBack, onAction }: { onBack: () => void; onAction: (action: { id: string }) => void }) => {
   const actions = useMemo(() => Atom.make(buildDefaultActions()).pipe(Atom.keepAlive), []);
 
   return (
@@ -59,16 +60,44 @@ const DefaultStory = () => {
       classNames='border-be border-separator'
       title='Document Title'
       showBackButton
-      onBack={() => console.log('Back clicked')}
+      onBack={onBack}
       actions={actions}
-      onAction={(action) => console.log('Action:', action.id)}
+      onAction={onAction}
     />
   );
 };
 
 export const Default: Story = {
-  args: {} as any,
-  render: () => <DefaultStory />,
+  tags: ['test'],
+  args: {
+    onBack: fn(),
+    onAction: fn(),
+  } as any,
+  render: (args: any) => <DefaultStory onBack={args.onBack} onAction={args.onAction} />,
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    // Verify the banner renders with the correct title.
+    await expect(canvas.getByRole('banner')).toBeInTheDocument();
+    await expect(canvas.getByText('Document Title')).toBeInTheDocument();
+
+    // Test back button click.
+    const backButton = canvas.getByRole('button', { name: /back/i });
+    await expect(backButton).toBeInTheDocument();
+    await userEvent.click(backButton);
+    await expect(args.onBack).toHaveBeenCalledTimes(1);
+
+    // Test actions menu opens and action fires.
+    const menuTrigger = canvas.getByRole('button', { name: /actions/i });
+    await expect(menuTrigger).toBeInTheDocument();
+    await userEvent.click(menuTrigger);
+
+    // Wait for menu to open and click an action (menu items render in a portal).
+    const editAction = await screen.findByRole('menuitem', { name: /edit/i });
+    await userEvent.click(editAction);
+    await expect(args.onAction).toHaveBeenCalledTimes(1);
+    await expect(args.onAction.mock.calls[0][0]).toHaveProperty('id', 'action-edit');
+  },
 };
 
 const NoBackButtonStory = () => {

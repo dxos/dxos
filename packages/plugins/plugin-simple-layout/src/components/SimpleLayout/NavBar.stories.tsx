@@ -5,6 +5,7 @@
 import { Atom } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
+import { expect, fn, screen, userEvent, within } from 'storybook/test';
 
 import { withTheme } from '@dxos/react-ui/testing';
 import { withAttention } from '@dxos/react-ui-attention/testing';
@@ -105,22 +106,49 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-const DefaultStory = () => {
+const DefaultStory = ({ onAction }: { onAction: (action: { id: string }) => void }) => {
   const actions = useMemo(() => Atom.make(buildDefaultActions()).pipe(Atom.keepAlive), []);
 
   return (
     <NavBar
       classNames='border-bs border-separator'
       actions={actions}
-      onAction={(action) => console.log('Action:', action.id)}
+      onAction={onAction}
       attendableId={STORY_ATTENDABLE_ID}
     />
   );
 };
 
 export const Default: Story = {
-  args: {} as any,
-  render: () => <DefaultStory />,
+  tags: ['test'],
+  args: {
+    onAction: fn(),
+  } as any,
+  render: (args: any) => <DefaultStory onAction={args.onAction} />,
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    // Verify the navbar renders with the toolbar.
+    await expect(canvas.getByRole('toolbar')).toBeInTheDocument();
+
+    // Test companion action click (Browse button).
+    const browseButton = canvas.getByRole('button', { name: /browse/i });
+    await expect(browseButton).toBeInTheDocument();
+    await userEvent.click(browseButton);
+    await expect(args.onAction).toHaveBeenCalledTimes(1);
+    await expect(args.onAction.mock.calls[0][0]).toHaveProperty('id', 'companion-browse');
+
+    // Test dropdown menu opens and action fires.
+    const menuTrigger = canvas.getByRole('button', { name: /main menu/i });
+    await expect(menuTrigger).toBeInTheDocument();
+    await userEvent.click(menuTrigger);
+
+    // Wait for menu to open and click an action (menu items render in a portal).
+    const createSpaceAction = await screen.findByRole('menuitem', { name: /create space/i });
+    await userEvent.click(createSpaceAction);
+    await expect(args.onAction).toHaveBeenCalledTimes(2);
+    await expect(args.onAction.mock.calls[1][0]).toHaveProperty('id', 'action-create-space');
+  },
 };
 
 const CompanionsOnlyStory = () => {
