@@ -17,7 +17,7 @@ export {
   setLabelWithSchema,
 } from './internal/annotations';
 
-import type { Schema } from 'effect';
+import type * as Schema from 'effect/Schema';
 
 import * as internalAnnotations from './internal/annotations';
 
