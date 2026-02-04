@@ -2,23 +2,28 @@
 // Copyright 2026 DXOS.org
 //
 
+import { AiContextBinder, type ContextBinding } from '@dxos/assistant';
 import { Atom, useAtomValue } from '@effect-atom/atom-react';
 import * as Match from 'effect/Match';
 import type * as Record from 'effect/Record';
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { Surface } from '@dxos/app-framework/react';
-import { Initiative } from '@dxos/assistant-toolkit';
-import { DXN, Filter, Obj, Ref } from '@dxos/echo';
+import { Surface, useCapability } from '@dxos/app-framework/react';
+import { Chat, Initiative } from '@dxos/assistant-toolkit';
+import { Database, DXN, Filter, Obj, Ref, Relation } from '@dxos/echo';
 import { type JsonPath, splitJsonPath } from '@dxos/echo/internal';
 import { AtomObj, AtomRef } from '@dxos/echo-atom';
-import { FunctionDefinition, Trigger } from '@dxos/functions';
+import { FunctionDefinition, QueueService, Trigger } from '@dxos/functions';
 import { MarkdownEditor } from '@dxos/plugin-markdown';
 import { useObject } from '@dxos/react-client/echo';
-import { IconButton, Input, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Button, ButtonGroup, IconButton, Input, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldMap, omitId } from '@dxos/react-ui-form';
 import { StackItem } from '@dxos/react-ui-stack';
 import { type Text } from '@dxos/schema';
+export { Chat } from '@dxos/assistant-toolkit';
+
+import { AutomationCapabilities } from '@dxos/plugin-automation/types';
+import { Effect } from 'effect';
 
 export type InitiativeContainerProps = {
   role?: string;
@@ -171,18 +176,57 @@ const InitiativeForm = ({ initiative }: { initiative: Initiative.Initiative }) =
     [],
   );
 
+  const computeRuntime = useCapability(AutomationCapabilities.ComputeRuntime);
+
+  const handleResetHistory = useCallback(async () => {
+    const runtime = computeRuntime.getRuntime(Obj.getDatabase(initiative)!.spaceId);
+
+    await runtime.runPromise(
+      Effect.gen(function* () {
+        const queue = yield* QueueService.createQueue();
+        const contextBinder = new AiContextBinder({ queue });
+        const initiativeBlueprint = yield* Database.Service.add(Obj.clone(Initiative.makeBlueprint(), { deep: true }));
+        yield* Effect.promise(() =>
+          contextBinder.bind({
+            blueprints: [Ref.make(initiativeBlueprint)],
+            objects: [Ref.make(initiative)],
+          }),
+        );
+        const chat = yield* Database.Service.add(
+          Chat.make({
+            queue: Ref.fromDXN(queue.dxn),
+          }),
+        );
+        Obj.change(initiative, (initiative) => {
+          initiative.chat = Ref.make(chat);
+        });
+        yield* Database.Service.add(
+          Relation.make(Chat.CompanionTo, {
+            [Relation.Source]: chat,
+            [Relation.Target]: initiative,
+          }),
+        );
+      }),
+    );
+  }, [initiative]);
+
   // TODO(dmaretskyi): Form breaks if we provide the echo object directly.
   const spreadValue = useMemo(() => ({ ...initiative }), [initiative]);
   return (
-    <Form.Root
-      schema={omitId(Initiative.Initiative)}
-      onValuesChanged={handleChange as any}
-      values={spreadValue}
-      db={Obj.getDatabase(initiative)}
-      fieldMap={fieldMap}
-    >
-      <Form.FieldSet />
-    </Form.Root>
+    <>
+      <Form.Root
+        schema={omitId(Initiative.Initiative)}
+        onValuesChanged={handleChange as any}
+        values={spreadValue}
+        db={Obj.getDatabase(initiative)}
+        fieldMap={fieldMap}
+      >
+        <Form.FieldSet />
+        <ButtonGroup>
+          <Button onClick={handleResetHistory}>Reset History</Button>
+        </ButtonGroup>
+      </Form.Root>
+    </>
   );
 };
 

@@ -33,6 +33,7 @@ export const makeInitialized = (
     yield* Database.Service.add(initiative);
     const queue = yield* QueueService.createQueue<Message.Message | ContextBinding>();
     const contextBinder = new AiContextBinder({ queue });
+    // TODO(dmaretskyi): Blueprint registry.
     const initiativeBlueprint = yield* Database.Service.add(Obj.clone(makeBlueprint(), { deep: true }));
     yield* Effect.promise(() =>
       contextBinder.bind({

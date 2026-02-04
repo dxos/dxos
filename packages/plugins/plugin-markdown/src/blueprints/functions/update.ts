@@ -28,11 +28,16 @@ export default defineFunction({
       description: 'The diffs to apply to the document.',
     }),
   }),
-  outputSchema: Schema.Void,
+  outputSchema: Schema.Struct({
+    newContent: Schema.String,
+  }),
   handler: Effect.fn(function* ({ data: { id, diffs } }) {
     const object = yield* Database.Service.resolve(ArtifactId.toDXN(id), Markdown.Document);
     const content = yield* Effect.promise(() => object.content.load());
     const accessor = createDocAccessor(content, ['content']);
-    applyDiffs(accessor, diffs);
+    const newContent = applyDiffs(accessor, diffs, { errorOnNotFound: true });
+    return {
+      newContent,
+    };
   }),
 });
