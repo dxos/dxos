@@ -29,10 +29,7 @@ export const useMenuActions = (props: Atom.Atom<ActionGraphProps>): MenuActions 
   const graphRef = useRef<{ graph: Graph.WritableGraph; props: ActionGraphProps } | null>(null);
   if (!graphRef.current || graphRef.current.props !== menuGraphProps) {
     const newGraph = Graph.make({ registry });
-    newGraph.pipe(
-      Graph.addNodes(menuGraphProps.nodes as Node.NodeArg<any>[]),
-      Graph.addEdges(menuGraphProps.edges),
-    );
+    newGraph.pipe(Graph.addNodes(menuGraphProps.nodes as Node.NodeArg<any>[]), Graph.addEdges(menuGraphProps.edges));
     graphRef.current = { graph: newGraph, props: menuGraphProps };
   }
   const graph = graphRef.current.graph;
