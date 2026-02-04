@@ -6,6 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
 import { type SurfaceComponentProps } from '@dxos/app-framework/react';
+import { Obj } from '@dxos/echo';
 import { faker } from '@dxos/random';
 import { withTheme } from '@dxos/react-ui/testing';
 import { Card } from '@dxos/react-ui-mosaic';
@@ -38,6 +39,10 @@ const EventCardStory = ({ role }: Pick<SurfaceComponentProps<Event.Event>, 'role
   return (
     <IntrinsicCardContainer>
       <Card.Root>
+        <Card.Toolbar>
+          <Card.DragHandle />
+          <Card.Title>{Obj.getLabel(subject)}</Card.Title>
+        </Card.Toolbar>
         <EventCard role={role} subject={subject} />
       </Card.Root>
     </IntrinsicCardContainer>
@@ -49,7 +54,7 @@ const meta = {
   component: EventCardStory,
   decorators: [withTheme],
   parameters: {
-    layout: 'fullscreen',
+    layout: 'centered',
   },
 } satisfies Meta<typeof EventCardStory>;
 

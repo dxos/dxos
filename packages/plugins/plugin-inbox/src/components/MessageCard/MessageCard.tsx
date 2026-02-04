@@ -12,36 +12,37 @@ import { type Message } from '@dxos/types';
 
 import { getMessageProps } from '../../util';
 
-export const MessageCard = ({ subject: message, role }: SurfaceComponentProps<Message.Message>) => {
-  const { date, email, from, hue, subject, snippet } = getMessageProps(message, new Date(), true);
+// TODO(burdon): Clean-up common card components.
+export const MessageCard = ({ subject: message }: SurfaceComponentProps<Message.Message>) => {
+  const { date, email, from, hue, snippet } = getMessageProps(message, new Date(), true);
   return (
     <Card.Content>
-      <div role='none' className='grid grid-cols-[52px_1fr] grid-rows-[min-content_1fr] overflow-hidden'>
-        <div role='none' className='grid aspect-square place-items-center'>
-          <DxAvatar hue={hue} hueVariant='surface' variant='square' size={10} fallback={from} />
+      <Card.Toolbar>
+        <Card.IconBlock>
+          <DxAvatar hue={hue} hueVariant='surface' variant='square' size={7} fallback={from} />
+        </Card.IconBlock>
+        <div className='flex gap-3 items-center justify-between col-span-2'>
+          <p className='grow truncate'>{from}</p>
+          <p className='text-xs text-description text-right whitespace-nowrap pie-2'>{date}</p>
         </div>
-        <div role='none' className='p-1 pie-2 overflow-hidden'>
-          <div role='none' className='flex items-center gap-2'>
-            <p className='grow truncate'>{from}</p>
-            <p className='text-xs text-description whitespace-nowrap'>{date}</p>
+      </Card.Toolbar>
+      <Card.Row>
+        <p className='text-xs text-description text-infoText'>{email}</p>
+      </Card.Row>
+      <Card.Row>
+        <Card.Text variant='description'>{snippet}</Card.Text>
+      </Card.Row>
+      <Card.Row>
+        {message.properties?.tags && (
+          <div role='none'>
+            {message.properties.tags.map(({ label, hue }: Tag.Tag) => (
+              <span className='dx-tag' key={label} data-label={label} data-hue={hue}>
+                {label}
+              </span>
+            ))}
           </div>
-          <p className='text-xs text-description'>{email}</p>
-        </div>
-        <div />
-        <div role='none' className='flex flex-col gap-1 p-1 pbs-0 pie-2 overflow-hidden'>
-          <p className='text-sm truncate'>{subject}</p>
-          <p className='line-clamp-3 text-sm text-description'>{snippet}</p>
-          {message.properties?.tags && (
-            <div role='none'>
-              {message.properties.tags.map(({ label, hue }: Tag.Tag) => (
-                <span className='dx-tag' key={label} data-label={label} data-hue={hue}>
-                  {label}
-                </span>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
+        )}
+      </Card.Row>
     </Card.Content>
   );
 };

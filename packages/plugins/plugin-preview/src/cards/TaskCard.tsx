@@ -10,19 +10,6 @@ import { type PropertyMetaAnnotation, PropertyMetaAnnotationId } from '@dxos/ech
 import { Card } from '@dxos/react-ui-mosaic';
 import { Task } from '@dxos/types';
 
-// TODO(thure): Should this move upstream as a helper? Is there an easier way to get options?
-const getActiveStatusOption = (status?: string) => {
-  const properties = SchemaAST.getPropertySignatures(Task.Task.ast);
-  const statusProperty = properties.find((p) => p.name === 'status');
-  const statusMeta = SchemaAST.getAnnotation<PropertyMetaAnnotation>(PropertyMetaAnnotationId)(
-    // TODO(thure): Typescript asserts `.type` doesn’t have `.types`, but in runtime it does.
-    (statusProperty!.type as any).types[0],
-  );
-  const options = // TODO(thure): Typescript asserts `statusMeta` doesn’t have `.value`, but in runtime it does.
-    (statusMeta as any).value.singleSelect.options as { id: string; title: string; color: string }[];
-  return options.find(({ id }) => id === status);
-};
-
 export const TaskCard = ({ subject }: SurfaceComponentProps<Task.Task>) => {
   const { title, status } = subject;
   const statusOption = getActiveStatusOption(status);
@@ -37,4 +24,17 @@ export const TaskCard = ({ subject }: SurfaceComponentProps<Task.Task>) => {
       )}
     </Card.Content>
   );
+};
+
+// TODO(thure): Should this move upstream as a helper? Is there an easier way to get options?
+const getActiveStatusOption = (status?: string) => {
+  const properties = SchemaAST.getPropertySignatures(Task.Task.ast);
+  const statusProperty = properties.find((p) => p.name === 'status');
+  const statusMeta = SchemaAST.getAnnotation<PropertyMetaAnnotation>(PropertyMetaAnnotationId)(
+    // TODO(thure): Typescript asserts `.type` doesn’t have `.types`, but in runtime it does.
+    (statusProperty!.type as any).types[0],
+  );
+  const options = // TODO(thure): Typescript asserts `statusMeta` doesn’t have `.value`, but in runtime it does.
+    (statusMeta as any).value.singleSelect.options as { id: string; title: string; color: string }[];
+  return options.find(({ id }) => id === status);
 };
