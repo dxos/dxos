@@ -10,7 +10,7 @@ import { Keyring } from '@dxos/keyring';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import type { FeedMessage } from '@dxos/protocols/buf/dxos/echo/feed_pb';
-import { AdmittedFeed_Designation } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { Timeframe } from '@dxos/timeframe';
 
@@ -98,7 +98,7 @@ describe('space/control-pipeline', () => {
               spaceKey,
               identityKey,
               deviceKey,
-              designation: AdmittedFeed_Designation.CONTROL,
+              designation: AdmittedFeed.Designation.CONTROL,
             },
           }),
         },
@@ -122,7 +122,7 @@ describe('space/control-pipeline', () => {
               spaceKey,
               identityKey,
               deviceKey,
-              designation: AdmittedFeed_Designation.DATA,
+              designation: AdmittedFeed.Designation.DATA,
             },
           }),
         },
@@ -150,7 +150,7 @@ describe('space/control-pipeline', () => {
                 spaceKey,
                 identityKey,
                 deviceKey,
-                designation: AdmittedFeed_Designation.DATA,
+                designation: AdmittedFeed.Designation.DATA,
               },
             }),
           },

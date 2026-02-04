@@ -8,8 +8,9 @@ import { EncodedReference, type ObjectStructure } from '@dxos/echo-protocol';
 import { DXN, PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type ObjectPointerEncoded } from '@dxos/protocols';
-import { type IndexKind, IndexKind_Kind } from '@dxos/protocols/buf/dxos/echo/indexing_pb';
+import { IndexKind_Kind, IndexKindSchema } from '@dxos/protocols/buf/dxos/echo/indexing_pb';
 import { trace } from '@dxos/tracing';
+import { create } from '@bufbuild/protobuf';
 import { defaultMap } from '@dxos/util';
 
 import {
@@ -28,7 +29,7 @@ import {
 @staticImplements<IndexStaticProps>()
 export class IndexSchema extends Resource implements Index {
   private _identifier = PublicKey.random().toString();
-  public readonly kind: IndexKind = { kind: IndexKind_Kind.SCHEMA_MATCH };
+  public readonly kind = create(IndexKindSchema, { kind: IndexKind_Kind.SCHEMA_MATCH });
   public readonly updated = new Event<void>();
 
   /**

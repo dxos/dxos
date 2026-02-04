@@ -11,7 +11,7 @@ import { invariant } from '@dxos/invariant';
 import { type BatchLevel, type SublevelDB } from '@dxos/kv-store';
 import { log } from '@dxos/log';
 import { type ObjectPointerEncoded, objectPointerCodec } from '@dxos/protocols';
-import { type Heads as HeadsProto } from '@dxos/protocols/buf/dxos/echo/query_pb';
+import { type Heads as HeadsProto } from '@dxos/protocols/proto/dxos/echo/query';
 import { schema } from '@dxos/protocols/proto';
 import { trace } from '@dxos/tracing';
 import { joinTables } from '@dxos/util';
