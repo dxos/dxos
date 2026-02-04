@@ -95,20 +95,16 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ classNames, 
       .filter((item) => item.label);
   }, [labels, message.properties?.labels]);
 
+  // TODO(burdon): Reconcile with MessageCard.
   return (
     <Mosaic.Tile asChild id={message.id} data={data} location={location}>
       <Focus.Group asChild>
         <Card.Root onClick={handleClick} ref={setRef}>
           <Card.Toolbar density='coarse'>
-            <button
-              type='button'
-              // TODO(burdon): Remove custom styles.
-              className='grid place-items-center opacity-70 hover:opacity-100 transition-opacity dx-focus-ring rounded'
-              onClick={handleAvatarClick}
-            >
-              <DxAvatar hue={hue} hueVariant='surface' variant='square' size={10} fallback={from} />
-            </button>
-            <Card.Title classNames='flex items-center gap-2'>
+            <Card.IconBlock onClick={handleAvatarClick}>
+              <DxAvatar hue={hue} hueVariant='surface' variant='square' size={8} fallback={from} />
+            </Card.IconBlock>
+            <Card.Title classNames='flex items-center gap-3'>
               <span className='grow truncate font-medium'>{from}</span>
               <span className='text-xs text-description whitespace-nowrap shrink-0'>{date}</span>
             </Card.Title>

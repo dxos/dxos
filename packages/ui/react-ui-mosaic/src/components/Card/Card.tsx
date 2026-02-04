@@ -5,6 +5,7 @@
 import { Slot } from '@radix-ui/react-slot';
 import React, {
   type ComponentPropsWithoutRef,
+  type HTMLAttributes,
   type PropsWithChildren,
   createContext,
   forwardRef,
@@ -396,9 +397,18 @@ const CardLink = ({ label, href }: CardLinkProps) => {
 // IconBlock
 //
 
-const CardIconBlock = ({ children }: PropsWithChildren) => {
+const CardIconBlock = ({
+  classNames,
+  children,
+  role = 'none',
+  ...props
+}: ThemedClassName<PropsWithChildren<HTMLAttributes<HTMLDivElement>>>) => {
   return (
-    <div role='none' className='grid bs-[var(--rail-item)] is-[var(--rail-item)] place-items-center'>
+    <div
+      {...props}
+      role={role}
+      className={mx('grid bs-[var(--rail-item)] is-[var(--rail-item)] place-items-center', classNames)}
+    >
       {children}
     </div>
   );
