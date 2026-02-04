@@ -22,10 +22,10 @@ const BANNER_NAME = 'SimpleLayout.Banner';
 export type BannerProps = ThemedClassName<{
   /** Title/label to display in the banner. */
   title?: string;
-  /** Whether to show the back button. */
-  showBackButton?: boolean;
   /** Action graph atom for the dropdown menu. */
   actions: Atom.Atom<ActionGraphProps>;
+  /** Whether to show the back button. */
+  showBackButton?: boolean;
   /** Popover anchor ID for the dropdown trigger. */
   popoverAnchorId?: string;
   /** Action executor callback. */
@@ -40,8 +40,8 @@ export type BannerProps = ThemedClassName<{
 export const Banner = ({
   classNames,
   title,
-  showBackButton,
   actions,
+  showBackButton,
   popoverAnchorId,
   onAction,
   onBack,
