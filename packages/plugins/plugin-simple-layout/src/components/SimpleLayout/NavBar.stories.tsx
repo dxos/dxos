@@ -8,15 +8,12 @@ import React, { useMemo } from 'react';
 import { expect, fn, screen, userEvent, within } from 'storybook/test';
 
 import { withTheme } from '@dxos/react-ui/testing';
-import { withAttention } from '@dxos/react-ui-attention/testing';
 import { type ActionGraphProps, createGapSeparator, createMenuAction, createMenuItemGroup } from '@dxos/react-ui-menu';
 import { withRegistry } from '@dxos/storybook-utils';
 
 import { translations } from '../../translations';
 
 import { NavBar } from './NavBar';
-
-const STORY_ATTENDABLE_ID = 'navbar-story';
 
 const MAIN_MENU_GROUP_ID = 'navbar-main-menu';
 
@@ -95,7 +92,7 @@ const buildDefaultActions = (): ActionGraphProps => {
 const meta = {
   title: 'plugins/plugin-simple-layout/NavBar',
   component: NavBar,
-  decorators: [withTheme, withRegistry, withAttention(STORY_ATTENDABLE_ID)],
+  decorators: [withTheme, withRegistry],
   parameters: {
     layout: 'fullscreen',
     translations,
@@ -109,14 +106,7 @@ type Story = StoryObj<typeof meta>;
 const DefaultStory = ({ onAction }: { onAction: (action: { id: string }) => void }) => {
   const actions = useMemo(() => Atom.make(buildDefaultActions()).pipe(Atom.keepAlive), []);
 
-  return (
-    <NavBar
-      classNames='border-bs border-separator'
-      actions={actions}
-      onAction={onAction}
-      attendableId={STORY_ATTENDABLE_ID}
-    />
-  );
+  return <NavBar classNames='border-bs border-separator' actions={actions} onAction={onAction} />;
 };
 
 export const Default: Story = {
@@ -154,13 +144,7 @@ export const Default: Story = {
 const CompanionsOnlyStory = () => {
   const actions = useMemo(() => Atom.make(buildCompanionOnlyActions()).pipe(Atom.keepAlive), []);
 
-  return (
-    <NavBar
-      actions={actions}
-      onAction={(action) => console.log('Action:', action.id)}
-      attendableId={STORY_ATTENDABLE_ID}
-    />
-  );
+  return <NavBar actions={actions} onAction={(action) => console.log('Action:', action.id)} />;
 };
 
 export const CompanionsOnly: Story = {
@@ -171,13 +155,7 @@ export const CompanionsOnly: Story = {
 const EmptyStory = () => {
   const actions = useMemo(() => Atom.make(buildEmptyActions()).pipe(Atom.keepAlive), []);
 
-  return (
-    <NavBar
-      actions={actions}
-      onAction={(action) => console.log('Action:', action.id)}
-      attendableId={STORY_ATTENDABLE_ID}
-    />
-  );
+  return <NavBar actions={actions} onAction={(action) => console.log('Action:', action.id)} />;
 };
 
 export const Empty: Story = {

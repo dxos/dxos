@@ -30,6 +30,7 @@ const MenuProvider = ({
   useGroupItems = menuContextDefaults.useGroupItems,
   iconSize = menuContextDefaults.iconSize,
   attendableId,
+  alwaysActive,
   onAction,
 }: MenuProviderProps) => {
   const { scope } = useMenuScope(undefined);
@@ -38,6 +39,7 @@ const MenuProvider = ({
       useGroupItems={useGroupItems}
       iconSize={iconSize}
       attendableId={attendableId}
+      alwaysActive={alwaysActive}
       onAction={onAction}
       scope={scope}
     >
