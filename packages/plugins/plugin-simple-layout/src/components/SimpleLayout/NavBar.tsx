@@ -32,7 +32,7 @@ export const NavBar = ({ classNames, actions, onAction }: NavBarProps) => {
 
   return (
     <MenuProvider {...menu} onAction={onAction} alwaysActive>
-      <ToolbarMenu classNames={mx('justify-center', classNames)} />
+      <ToolbarMenu density='coarse' classNames={mx('justify-center', classNames)} />
     </MenuProvider>
   );
 };

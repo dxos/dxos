@@ -94,7 +94,7 @@ export const useNavbarActions = (): NavbarActions => {
         // Add main menu dropdown group.
         const mainMenuGroup = createMenuItemGroup(MAIN_MENU_GROUP_ID, {
           variant: 'dropdownMenu',
-          icon: 'ph--plus--regular',
+          icon: 'ph--list--regular',
           iconOnly: true,
           label: t('main menu label'),
           testId: 'simpleLayoutPlugin.addSpace',

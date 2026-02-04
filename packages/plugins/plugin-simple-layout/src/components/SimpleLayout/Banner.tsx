@@ -64,14 +64,11 @@ export const Banner = ({
       classNames={mx('grid grid-cols-[var(--rail-size)_1fr_var(--rail-size)]', classNames)}
     >
       {showBackButton ? (
-        <IconButton
-          variant='ghost' icon='ph--caret-left--regular'
-          iconOnly
-          label={t('back label')} onClick={onBack} />
+        <IconButton variant='ghost' icon='ph--caret-left--regular' iconOnly label={t('back label')} onClick={onBack} />
       ) : (
         <div />
       )}
-      <h1 className='grow text-center truncate font-medium'>{displayTitle}</h1>
+      <h1 className='grow text-center truncate uppercase font-thin'>{displayTitle}</h1>
       {hasActions ? (
         <AnchorRoot>
           <MenuProvider {...menu} onAction={onAction}>
