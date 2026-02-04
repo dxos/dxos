@@ -187,7 +187,7 @@ export const ToolbarMenu = ({
   ...props
 }: MenuScopedProps<ToolbarMenuProps>) => {
   const items = useMenuItems(undefined, undefined, 'ToolbarMenu', __menuScope);
-  const { attendableId } = useMenu('ToolbarMenu', __menuScope);
+  const { attendableId, alwaysActive } = useMenu('ToolbarMenu', __menuScope);
   const { hasAttention } = useAttention(attendableId);
   const InnerRoot = textBlockWidthProp ? 'div' : Fragment;
   const innerRootProps = textBlockWidthProp
@@ -198,7 +198,7 @@ export const ToolbarMenu = ({
     <NaturalToolbar.Root
       {...props}
       classNames={[attendableId, classNames]}
-      disabled={!hasAttention}
+      disabled={!alwaysActive && !hasAttention}
       layoutManaged={textBlockWidthProp}
     >
       <InnerRoot {...innerRootProps}>
