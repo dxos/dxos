@@ -13,7 +13,7 @@ import { type QueryAST } from '@dxos/echo-protocol';
 import { promiseWithCauseCapture } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { DXN, type PublicKey, type SpaceId } from '@dxos/keys';
-import { type QueryOptions as QueryOptionsProto } from '@dxos/protocols/buf/dxos/echo/filter_pb';
+import { type QueryOptions_DataLocation } from '@dxos/protocols/buf/dxos/echo/filter_pb';
 
 import type * as Entity from './Entity';
 import * as Err from './Err';
@@ -56,7 +56,7 @@ export type QueryOptions = {
    *   - proto3_optional = true
    */
   // TODO(burdon): Remove?
-  dataLocation?: QueryOptionsProto.DataLocation;
+  dataLocation?: QueryOptions_DataLocation;
 };
 
 /**
