@@ -5,6 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import * as ParseResult from 'effect/ParseResult';
+import * as Pipeable from 'effect/Pipeable';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 import type * as Types from 'effect/Types';
@@ -19,7 +20,6 @@ import * as Database from '../../Database';
 import { ReferenceAnnotationId, getSchemaDXN, getTypeAnnotation, getTypeIdentifierAnnotation } from '../annotations';
 import { type JsonSchemaType } from '../json-schema';
 import type { AnyEntity, AnyProperties } from '../types';
-import * as Pipeable from 'effect/Pipeable';
 
 /**
  * The `$id` and `$ref` fields for an ECHO reference schema.

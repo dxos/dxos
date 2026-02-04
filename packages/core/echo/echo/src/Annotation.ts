@@ -17,8 +17,9 @@ export {
   setLabelWithSchema,
 } from './internal/annotations';
 
+import type { Schema } from 'effect';
+
 import * as internalAnnotations from './internal/annotations';
-import { Schema } from 'effect';
 
 interface MakeProps<T> {
   id: string;

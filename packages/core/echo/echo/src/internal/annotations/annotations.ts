@@ -15,8 +15,7 @@ import { type Primitive } from '@dxos/util';
 
 import { type AnyProperties, EntityKind, TypeId, getSchema } from '../types';
 
-import { AnnotationHelper, createAnnotationHelper } from './util';
-import { Effect } from 'effect';
+import { type AnnotationHelper, createAnnotationHelper } from './util';
 
 /**
  * @internal
@@ -467,7 +466,7 @@ interface MakeAnnoationsProps<T> {
 
 export const makeUserAnnotation = <T>(props: MakeAnnoationsProps<T>): AnnotationHelper<T> => {
   assertArgument(
-    /[a-zA-Z0-9]+\.[a-zA-Z\.]+\/[a-zA-Z/]+/.test(props.id),
+    /[a-zA-Z0-9]+\.[a-zA-Z.]+\/[a-zA-Z/]+/.test(props.id),
     'id',
     'Annotation id must be in the FQN format (dxos.org/annotation/Example).',
   );

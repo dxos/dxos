@@ -74,4 +74,3 @@ export const makeTypeJsonSchemaAnnotation = (options: {
 
   return obj;
 };
-
