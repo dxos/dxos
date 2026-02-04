@@ -11,7 +11,6 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { DataCorruptionError, STORAGE_VERSION } from '@dxos/protocols';
-import { schema } from '@dxos/protocols/proto';
 import { type Invitation, Invitation_Type, SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import {
   type ControlPipelineSnapshot,
@@ -22,6 +21,7 @@ import {
   type SpaceCache,
   type SpaceMetadata,
 } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
+import { schema } from '@dxos/protocols/proto';
 import { type Directory, type File } from '@dxos/random-access-storage';
 import { type Timeframe } from '@dxos/timeframe';
 import { ComplexMap, arrayToBuffer, forEachAsync, isNonNullable } from '@dxos/util';
