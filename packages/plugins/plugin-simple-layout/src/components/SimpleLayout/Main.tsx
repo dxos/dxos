@@ -25,8 +25,9 @@ const MAIN_NAME = 'SimpleLayout.Main';
  */
 export const Main = () => {
   const { state } = useSimpleLayoutState();
-  const { graph } = useAppGraph();
   const id = state.active ?? state.workspace;
+  const attentionAttrs = useAttentionAttributes(id);
+  const { graph } = useAppGraph();
   const node = useNode(graph, id);
 
   // Ensures that children are loaded so that they are available to navigate to.
@@ -45,7 +46,6 @@ export const Main = () => {
     );
   }, [id, node, node?.data, node?.properties, state.popoverAnchorId]);
 
-  const attentionAttrs = useAttentionAttributes(id);
   const { drawerState } = useSidebars(MAIN_NAME);
   const showNavBar = !state.isPopover && drawerState === 'closed';
 
