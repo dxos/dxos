@@ -41,7 +41,7 @@ export const Home = (_: HomeProps) => {
   return (
     <Layout.Main toolbar>
       <SearchList.Root onSearch={handleSearch}>
-        <Toolbar.Root>
+        <Toolbar.Root classNames='pli-3'>
           <SearchList.Input placeholder={t('search placeholder')} autoFocus />
         </Toolbar.Root>
         <SearchList.Content>

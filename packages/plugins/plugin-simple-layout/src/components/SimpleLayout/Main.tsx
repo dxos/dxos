@@ -50,21 +50,19 @@ export const Main = () => {
   return (
     <NaturalMain.Content
       bounce
-      classNames={mx('bs-full', 'pbs-[env(safe-area-inset-top)] pbe-[env(safe-area-inset-bottom)]')}
+      classNames={mx(
+        'bs-full',
+        'grid bs-full overflow-hidden',
+        showNavBar ? 'grid-rows-[min-content_1fr_min-content]' : 'grid-rows-[min-content_1fr]',
+      )}
     >
-      <div
-        role='none'
-        className={mx(
-          'grid bs-full overflow-hidden',
-          showNavBar ? 'grid-rows-[min-content_1fr_min-content]' : 'grid-rows-[min-content_1fr]',
-        )}
-      >
-        <Banner node={node} />
-        <article className='bs-full overflow-hidden'>
-          <Surface key={id} role='article' data={data} limit={1} fallback={ContentError} placeholder={placeholder} />
-        </article>
-        {showNavBar && <NavBar activeId={id} />}
-      </div>
+      <Banner classNames='pbs-[max(0.25rem,env(safe-area-inset-top))]' node={node} />
+      <article className='bs-full overflow-hidden'>
+        <Surface key={id} role='article' data={data} limit={1} fallback={ContentError} placeholder={placeholder} />
+      </article>
+      {showNavBar && (
+        <NavBar classNames='border-bs border-separator pbe-[max(0.25rem,env(safe-area-inset-bottom))]' activeId={id} />
+      )}
     </NaturalMain.Content>
   );
 };
