@@ -25,7 +25,7 @@ import {
   type UpdateRequest,
   type UpdateSubscriptionRequest,
   type WaitUntilHeadsReplicatedRequest,
-} from '@dxos/protocols/proto/dxos/echo/service';
+} from '@dxos/protocols/buf/dxos/echo/service_pb';
 
 import { type AutomergeHost, deriveCollectionIdFromSpaceId } from '../automerge';
 

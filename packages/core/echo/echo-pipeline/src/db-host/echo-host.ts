@@ -18,7 +18,7 @@ import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
 import { log } from '@dxos/log';
 import type { QueueService } from '@dxos/protocols';
-import { IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
+import { IndexKind_Kind } from '@dxos/protocols/buf/dxos/echo/indexing_pb';
 import type * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 import { trace } from '@dxos/tracing';
 
@@ -160,10 +160,10 @@ export class EchoHost extends Resource {
       enabled: true,
       indexes: [
         //
-        { kind: IndexKind.Kind.SCHEMA_MATCH },
-        { kind: IndexKind.Kind.GRAPH },
+        { kind: IndexKind_Kind.SCHEMA_MATCH },
+        { kind: IndexKind_Kind.GRAPH },
 
-        ...(this._indexConfig.vector ? [{ kind: IndexKind.Kind.VECTOR }] : []),
+        ...(this._indexConfig.vector ? [{ kind: IndexKind_Kind.VECTOR }] : []),
       ],
     });
 

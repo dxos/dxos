@@ -5189,6 +5189,9 @@ importers:
       '@automerge/automerge':
         specifier: 3.2.3
         version: 3.2.3
+      '@bufbuild/protobuf':
+        specifier: 'catalog:'
+        version: 2.10.1
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async

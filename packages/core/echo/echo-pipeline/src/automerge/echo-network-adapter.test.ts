@@ -8,7 +8,7 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 import { Trigger, sleep, waitForCondition } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
-import { type SyncMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/automerge';
+import { type SyncMessage } from '@dxos/protocols/buf/dxos/mesh/teleport/automerge_pb';
 import {
   type AutomergeReplicator,
   type AutomergeReplicatorCallbacks,

@@ -11,8 +11,9 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import type { ObjectPointerEncoded } from '@dxos/protocols';
-import { IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
+import { IndexKind_Kind, IndexKindSchema } from '@dxos/protocols/buf/dxos/echo/indexing_pb';
 import { trace } from '@dxos/tracing';
+import { create } from '@bufbuild/protobuf';
 
 import {
   type FindResult,
@@ -48,7 +49,7 @@ export class IndexVector extends Resource implements Index {
 
   private _extractor = new EmbeddingExtractor();
 
-  public readonly kind: IndexKind = { kind: IndexKind.Kind.VECTOR };
+  public readonly kind = create(IndexKindSchema, { kind: IndexKind_Kind.VECTOR });
   public readonly updated = new Event<void>();
 
   private _orama?: OramaInstanceType = undefined;

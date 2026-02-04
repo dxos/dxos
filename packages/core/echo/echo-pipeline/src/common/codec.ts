@@ -4,8 +4,8 @@
 
 import { type Codec } from '@dxos/codec-protobuf';
 import { createCodecEncoding } from '@dxos/hypercore';
+import type { FeedMessage } from '@dxos/protocols/buf/dxos/echo/feed_pb';
 import { schema } from '@dxos/protocols/proto';
-import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 
 /**
  * Codec for feed messages.

@@ -16,7 +16,7 @@ import {
   type QueryResponse,
   type QueryService,
   type QueryResult as RemoteQueryResult,
-} from '@dxos/protocols/proto/dxos/echo/query';
+} from '@dxos/protocols/buf/dxos/echo/query_pb';
 import { isNonNullable } from '@dxos/util';
 
 import { OBJECT_DIAGNOSTICS, type QuerySourceProvider } from '../hypergraph';

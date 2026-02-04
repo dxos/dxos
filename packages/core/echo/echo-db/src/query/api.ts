@@ -5,7 +5,7 @@
 import { type Database, Filter, Query, type QueryAST } from '@dxos/echo';
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type QueryOptions as QueryOptionsProto } from '@dxos/protocols/proto/dxos/echo/filter';
+import { type QueryOptions as QueryOptionsProto } from '@dxos/protocols/buf/dxos/echo/filter_pb';
 
 export { Filter, Query };
 

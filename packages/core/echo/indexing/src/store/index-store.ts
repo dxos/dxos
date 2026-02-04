@@ -6,7 +6,7 @@ import isEqual from 'lodash.isequal';
 
 import { invariant } from '@dxos/invariant';
 import { type SublevelDB } from '@dxos/kv-store';
-import { type IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
+import { type IndexKind } from '@dxos/protocols/buf/dxos/echo/indexing_pb';
 import { trace } from '@dxos/tracing';
 
 import { IndexConstructors } from '../indexes';

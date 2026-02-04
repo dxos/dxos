@@ -10,7 +10,7 @@ import { Context, LifecycleState, Resource } from '@dxos/context';
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { type BatchedDocumentUpdates, type DocumentUpdate } from '@dxos/protocols/proto/dxos/echo/service';
+import { type BatchedDocumentUpdates, type DocumentUpdate } from '@dxos/protocols/buf/dxos/echo/service_pb';
 import { retry } from '@dxos/util';
 
 import type { AutomergeHost } from '../automerge';

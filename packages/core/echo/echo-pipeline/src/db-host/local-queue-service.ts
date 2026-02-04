@@ -18,7 +18,7 @@ import {
   type QueryQueueRequest,
   type QueueQueryResult,
   type QueueService,
-} from '@dxos/protocols/proto/dxos/client/services';
+} from '@dxos/protocols/buf/dxos/client/services_pb';
 
 /**
  * Writes queue data to a local FeedStore.

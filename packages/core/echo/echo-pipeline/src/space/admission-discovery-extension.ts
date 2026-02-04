@@ -5,13 +5,13 @@
 import { type Trigger, scheduleTask } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { ProtocolError } from '@dxos/protocols';
-import { schema } from '@dxos/protocols/proto';
-import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import {
   type AdmissionDiscoveryService,
   type GetAdmissionCredentialRequest,
   type GetAdmissionCredentialResponse,
-} from '@dxos/protocols/proto/dxos/mesh/teleport';
+} from '@dxos/protocols/buf/dxos/mesh/teleport/admission-discovery_pb';
+import { schema } from '@dxos/protocols/proto';
 import { type ExtensionContext, RpcExtension } from '@dxos/teleport';
 
 import { type Space } from './space';

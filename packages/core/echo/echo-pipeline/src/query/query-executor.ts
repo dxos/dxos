@@ -25,7 +25,7 @@ import { invariant } from '@dxos/invariant';
 import { DXN, type ObjectId, PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { objectPointerCodec } from '@dxos/protocols';
-import { type QueryReactivity, type QueryResult } from '@dxos/protocols/proto/dxos/echo/query';
+import { type QueryReactivity, type QueryResult } from '@dxos/protocols/buf/dxos/echo/query_pb';
 import { getDeep, isNonNullable } from '@dxos/util';
 
 import type { AutomergeHost } from '../automerge';
