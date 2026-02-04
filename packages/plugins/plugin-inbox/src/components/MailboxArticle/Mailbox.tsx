@@ -102,17 +102,17 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ classNames, 
         <Card.Root onClick={handleClick} ref={setRef}>
           <Card.Toolbar>
             <Card.IconBlock onClick={handleAvatarClick}>
-              <DxAvatar hue={hue} hueVariant='surface' variant='square' size={8} fallback={from} />
+              <DxAvatar hue={hue} hueVariant='surface' variant='square' size={7} fallback={from} />
             </Card.IconBlock>
             <Card.Title classNames='flex items-center gap-3'>
-              <span className='grow truncate font-medium'>{from}</span>
+              <span className='grow truncate font-medium'>{subject}</span>
               <span className='text-xs text-description whitespace-nowrap shrink-0'>{date}</span>
             </Card.Title>
             <Card.Menu />
           </Card.Toolbar>
           <Card.Content>
             <Card.Row>
-              <Card.Heading>{subject}</Card.Heading>
+              <Card.Text>{from}</Card.Text>
             </Card.Row>
             {snippet && (
               <Card.Row>
