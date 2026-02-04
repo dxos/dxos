@@ -8,17 +8,24 @@ import { type SurfaceComponentProps } from '@dxos/app-framework/react';
 import { Card } from '@dxos/react-ui-mosaic';
 import { type Event } from '@dxos/types';
 
-import { ActorList, DateComponent } from '../common';
+import { DateComponent } from '../common';
 
 export const EventCard = ({ subject: event }: SurfaceComponentProps<Event.Event>) => {
   return (
     <Card.Content>
-      <Card.Row>
-        <DateComponent icon start={new Date(event.startDate)} end={new Date(event.endDate)} />
+      <Card.Row icon='ph--calendar--regular'>
+        <DateComponent start={new Date(event.startDate)} end={new Date(event.endDate)} />
       </Card.Row>
-      <Card.Row>
-        <ActorList classNames='[grid-area:right] overflow-hidden' actors={event.attendees} />
-      </Card.Row>
+      {event.description && (
+        <Card.Row>
+          <Card.Text variant='description'>{event.description}</Card.Text>
+        </Card.Row>
+      )}
+      {event.attendees.map((attendee, i) => (
+        <Card.Row key={i} icon='ph--user--regular'>
+          <Card.Text>{attendee.name}</Card.Text>
+        </Card.Row>
+      ))}
     </Card.Content>
   );
 };

@@ -21,7 +21,13 @@ const createMockEvent = (): Event.Event =>
   Event.make({
     startDate: new Date(Date.now() + 24 * 60 * 60 * 1_000).toISOString(),
     endDate: new Date(Date.now() + 24 * 60 * 60 * 2_000).toISOString(),
+    title: faker.lorem.sentence(3),
+    description: faker.lorem.sentences(2),
     attendees: [
+      {
+        name: faker.person.fullName(),
+        email: faker.internet.email(),
+      },
       {
         name: faker.person.fullName(),
         email: faker.internet.email(),
