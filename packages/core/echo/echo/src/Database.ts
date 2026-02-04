@@ -209,7 +209,7 @@ export const notAvailable = Layer.succeed(Service, {
 /**
  * Creates a Database service instance from a Database.
  */
-export const make = (db: Database): Context.Tag.Service<Service> => {
+export const makeService = (db: Database): Context.Tag.Service<Service> => {
   return {
     get db() {
       return db;
@@ -221,7 +221,7 @@ export const make = (db: Database): Context.Tag.Service<Service> => {
  * Creates a Layer that provides the Database service.
  */
 export const layer = (db: Database): Layer.Layer<Service> => {
-  return Layer.succeed(Service, make(db));
+  return Layer.succeed(Service, makeService(db));
 };
 
 /**

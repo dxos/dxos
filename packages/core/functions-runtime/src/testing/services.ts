@@ -95,7 +95,7 @@ export const createTestServices = ({
   return new ServiceContainer().setServices({
     // ai: createAiService(ai),
     credentials: createCredentialsService(credentials),
-    database: space || db ? Database.make(space?.db || db!) : undefined,
+    database: space || db ? Database.makeService(space?.db || db!) : undefined,
     eventLogger: (logging?.logger ?? logging?.enabled) ? consoleLogger : noopLogger,
     queues: space || queues ? QueueService.make(space?.queues || queues!, undefined) : undefined,
     tracing: tracing?.service,
