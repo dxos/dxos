@@ -3,4 +3,5 @@
 //
 
 export * from './useCompanions';
+export * from './useNavbarActions';
 export * from './useSimpleLayoutState';

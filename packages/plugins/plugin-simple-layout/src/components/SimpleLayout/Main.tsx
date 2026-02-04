@@ -9,7 +9,7 @@ import { useNode } from '@dxos/plugin-graph';
 import { Main as NaturalMain, useSidebars } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { useSimpleLayoutState } from '../../hooks';
+import { useNavbarActions, useSimpleLayoutState } from '../../hooks';
 import { ContentError } from '../ContentError';
 import { ContentLoading } from '../ContentLoading';
 import { useLoadDescendents } from '../hooks';
@@ -47,6 +47,8 @@ export const Main = () => {
   const { drawerState } = useSidebars(MAIN_NAME);
   const showNavBar = !state.isPopover && drawerState === 'closed';
 
+  const { actions, onAction } = useNavbarActions();
+
   return (
     <NaturalMain.Content bounce classNames='bs-full'>
       <div
@@ -63,7 +65,8 @@ export const Main = () => {
         {showNavBar && (
           <NavBar
             classNames='border-bs border-separator pbe-[max(0.25rem,env(safe-area-inset-bottom))]'
-            activeId={id}
+            actions={actions}
+            onAction={onAction}
           />
         )}
       </div>
