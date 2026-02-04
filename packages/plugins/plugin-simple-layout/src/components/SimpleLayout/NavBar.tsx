@@ -27,13 +27,12 @@ export const NavBar = ({ classNames, activeId }: NavBarProps) => {
   const runAction = useActionRunner();
   const { invokePromise } = useOperationInvoker();
 
+  const companions = useCompanions(activeId);
   const connections = useConnections(graph, Node.RootId);
   const menuActions = connections.filter((node) => node.properties.disposition === 'menu');
 
-  const companions = useCompanions(activeId);
-
   return (
-    <Toolbar.Root classNames={mx('justify-center', classNames)}>
+    <Toolbar.Root density='coarse' classNames={mx('justify-center', classNames)}>
       {companions.map((companion) => (
         <Toolbar.IconButton
           key={companion.id}
