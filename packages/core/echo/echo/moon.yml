@@ -27,6 +27,4 @@ tasks:
       - '--entryPoint=src/Order.ts'
       - '--entryPoint=src/Key.ts'
       - '--entryPoint=src/Type.ts'
-      - '--platform=browser'
-      - '--platform=node'
-      - '--injectGlobals'
+      - '--platform=neutral'
