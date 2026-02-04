@@ -55,10 +55,13 @@ type ItemData = {
 type SearchListRootProps = PropsWithChildren<{
   /** Controlled query value. */
   value?: string;
+
   /** Default query value for uncontrolled mode. */
   defaultValue?: string;
+
   /** Debounce delay in milliseconds. */
   debounceMs?: number;
+
   /** Callback when search query changes (debounced). */
   onSearch?: (query: string) => void;
 }>;

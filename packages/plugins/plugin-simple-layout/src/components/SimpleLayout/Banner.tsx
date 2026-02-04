@@ -77,7 +77,10 @@ export const Banner = ({ node, classNames }: BannerProps) => {
   }
 
   return (
-    <Toolbar.Root role='banner' classNames={mx('grid grid-cols-[var(--rail-size)_1fr_var(--rail-size)]', classNames)}>
+    <Toolbar.Root
+      role='banner'
+      classNames={mx('grid grid-cols-[var(--rail-size)_1fr_var(--rail-size)] bs-[var(--rail-size)]', classNames)}
+    >
       {node.id !== Node.RootId ? (
         <IconButton
           iconOnly
