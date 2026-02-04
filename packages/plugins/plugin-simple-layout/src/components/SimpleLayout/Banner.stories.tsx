@@ -5,7 +5,7 @@
 import { Atom } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
-import { expect, fn, screen, userEvent, within } from 'storybook/test';
+import { type Mock, expect, fn, screen, userEvent, within } from 'storybook/test';
 
 import { withTheme } from '@dxos/react-ui/testing';
 import { type ActionGraphProps, createMenuAction } from '@dxos/react-ui-menu';
@@ -96,7 +96,7 @@ export const Default: Story = {
     const editAction = await screen.findByRole('menuitem', { name: /edit/i });
     await userEvent.click(editAction);
     await expect(args.onAction).toHaveBeenCalledTimes(1);
-    await expect(args.onAction.mock.calls[0][0]).toHaveProperty('id', 'action-edit');
+    await expect((args.onAction as Mock).mock.calls[0][0]).toHaveProperty('id', 'action-edit');
   },
 };
 

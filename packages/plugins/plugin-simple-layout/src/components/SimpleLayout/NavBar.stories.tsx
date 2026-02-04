@@ -5,7 +5,7 @@
 import { Atom } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
-import { expect, fn, screen, userEvent, within } from 'storybook/test';
+import { type Mock, expect, fn, screen, userEvent, within } from 'storybook/test';
 
 import { withTheme } from '@dxos/react-ui/testing';
 import { type ActionGraphProps, createGapSeparator, createMenuAction, createMenuItemGroup } from '@dxos/react-ui-menu';
@@ -126,7 +126,7 @@ export const Default: Story = {
     await expect(browseButton).toBeInTheDocument();
     await userEvent.click(browseButton);
     await expect(args.onAction).toHaveBeenCalledTimes(1);
-    await expect(args.onAction.mock.calls[0][0]).toHaveProperty('id', 'companion-browse');
+    await expect((args.onAction as Mock).mock.calls[0][0]).toHaveProperty('id', 'companion-browse');
 
     // Test dropdown menu opens and action fires.
     const menuTrigger = canvas.getByRole('button', { name: /main menu/i });
@@ -137,7 +137,7 @@ export const Default: Story = {
     const createSpaceAction = await screen.findByRole('menuitem', { name: /create space/i });
     await userEvent.click(createSpaceAction);
     await expect(args.onAction).toHaveBeenCalledTimes(2);
-    await expect(args.onAction.mock.calls[1][0]).toHaveProperty('id', 'action-create-space');
+    await expect((args.onAction as Mock).mock.calls[1][0]).toHaveProperty('id', 'action-create-space');
   },
 };
 
