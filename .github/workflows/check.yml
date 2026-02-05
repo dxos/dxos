@@ -205,6 +205,10 @@ jobs:
         if: ${{ steps.extract_branch.outputs.branch == 'main' }}
         run: moon run :bundle
 
+      # Clear Vite dep cache so Storybook dev server does a fresh optimizeDeps run (avoids 504 Outdated Optimize Dep when graph differs from bundle step).
+      - name: Clear Vite cache
+        run: rm -rf node_modules/.vite node_modules/.vite-storybook
+
       - name: Test Affected
         if: ${{ steps.extract_branch.outputs.branch != 'main' }}
         run: PLAYWRIGHT_BROWSER=all moon run plugin-sheet:e2e --affected --remote --concurrency=1
