@@ -398,7 +398,7 @@ catalog:
   effect: 3.19.11
   emoji-mart: ^5.5.2
   enquirer: ^2.3.6
-  esbuild: 0.25.10
+  esbuild: 0.25.11
   esbuild-plugin-glsl: ^1.4.0
   esbuild-plugin-inline-image: ^0.0.9
   esbuild-plugin-raw: 0.3.0
