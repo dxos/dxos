@@ -7,6 +7,8 @@ import * as Schema from 'effect/Schema';
 import { Capability } from '@dxos/app-framework';
 import { Database } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
+import { SpaceSchema } from '@dxos/react-client/echo';
+import { Collection } from '@dxos/schema';
 import { Actor, Message } from '@dxos/types';
 
 import { meta } from '../meta';
@@ -16,6 +18,19 @@ import * as Mailbox from './Mailbox';
 const INBOX_OPERATION = `${meta.id}/operation`;
 
 export namespace InboxOperation {
+  export const OnCreateSpace = Operation.make({
+    meta: { key: `${INBOX_OPERATION}/on-create-space`, name: 'On Create Space' },
+    services: [Capability.Service],
+    schema: {
+      input: Schema.Struct({
+        space: SpaceSchema,
+        rootCollection: Collection.Collection,
+        isDefault: Schema.optional(Schema.Boolean),
+      }),
+      output: Schema.Void,
+    },
+  });
+
   export const ExtractContact = Operation.make({
     meta: { key: `${INBOX_OPERATION}/extract-contact`, name: 'Extract Contact' },
     services: [Capability.Service],

@@ -4,12 +4,20 @@
   "description": "DXOS Client API.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
-  "repository": "github:dxos/dxos",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
   "license": "MIT",
   "author": "DXOS.org",
-  "sideEffects": false,
+  "sideEffects": true,
   "type": "module",
   "imports": {
+    "#opfs-worker": {
+      "source": "./src/worker/opfs-worker.ts",
+      "types": "./dist/types/src/worker/opfs-worker.d.ts",
+      "browser": "./dist/lib/browser/worker/opfs-worker.mjs"
+    },
     "#coordinator-worker": {
       "source": "./src/services/dedicated/coordinator-worker-entrypoint.ts",
       "types": "./dist/types/src/services/dedicated/coordinator-worker-entrypoint.d.ts",

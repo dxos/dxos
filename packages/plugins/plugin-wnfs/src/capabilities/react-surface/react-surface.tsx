@@ -22,7 +22,7 @@ export default Capability.makeModule(() =>
         id: `${meta.id}/article`,
         role: ['article', 'section', 'slide'],
         filter: (data): data is { subject: WnfsFile.File } => Obj.instanceOf(WnfsFile.File, data.subject),
-        component: ({ data, role }) => <FileContainer role={role} file={data.subject} />,
+        component: ({ data, role }) => <FileContainer role={role} subject={data.subject} />,
       }),
       Common.createSurface({
         id: `${meta.id}/create-form`,

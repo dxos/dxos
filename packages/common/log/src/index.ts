@@ -15,5 +15,6 @@ export { parseFilter } from './options';
 export * from './processors';
 export * from './scope';
 export type * from './meta';
+export { dbg } from './dbg';
 
 export { getCurrentOwnershipScope } from './experimental/ownership';

@@ -51,7 +51,7 @@ export const importCommand = Command.make(
       }
 
       // Query database for existing functions with the same key
-      const existingFunctions = yield* Database.Service.runQuery(Filter.type(Function.Function, { key: selectedKey }));
+      const existingFunctions = yield* Database.runQuery(Filter.type(Function.Function, { key: selectedKey }));
 
       let updatedFunctions: Function.Function[];
       if (existingFunctions.length > 0) {
@@ -62,13 +62,13 @@ export const importCommand = Command.make(
         updatedFunctions = existingFunctions;
       } else {
         // Add new function
-        const newFunction = yield* Database.Service.add(Obj.clone(fn));
+        const newFunction = yield* Database.add(Obj.clone(fn));
         updatedFunctions = [newFunction];
       }
 
       // Get status for display (after update/add, function should be up-to-date)
       // Re-query to get the updated state
-      const updatedDbFunctions = yield* Database.Service.runQuery(Filter.type(Function.Function));
+      const updatedDbFunctions = yield* Database.runQuery(Filter.type(Function.Function));
       const status = getFunctionStatus(fn, updatedDbFunctions);
 
       if (json) {

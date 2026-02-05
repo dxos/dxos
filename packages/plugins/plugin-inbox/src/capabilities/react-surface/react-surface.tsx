@@ -68,23 +68,23 @@ export default Capability.makeModule(() =>
         id: `${meta.id}/calendar`,
         role: ['article'],
         filter: (data): data is { subject: Calendar.Calendar } => Obj.instanceOf(Calendar.Calendar, data.subject),
-        component: ({ data }) => <CalendarArticle subject={data.subject} />,
+        component: ({ data, role }) => <CalendarArticle role={role} subject={data.subject} />,
       }),
       Common.createSurface({
         id: `${meta.id}/message-card`,
-        role: ['card', 'card--intrinsic', 'card--extrinsic', 'card--popover', 'card--transclusion'],
+        role: 'card--content',
         filter: (data): data is { subject: Message.Message } => Obj.instanceOf(Message.Message, data?.subject),
         component: ({ data: { subject }, role }) => <MessageCard subject={subject} role={role} />,
       }),
       Common.createSurface({
         id: `${meta.id}/event-card`,
-        role: ['card', 'card--intrinsic', 'card--extrinsic', 'card--popover', 'card--transclusion'],
+        role: 'card--content',
         filter: (data): data is { subject: Event.Event } => Obj.instanceOf(Event.Event, data?.subject),
         component: ({ data: { subject }, role }) => <EventCard subject={subject} role={role} />,
       }),
       Common.createSurface({
         id: POPOVER_SAVE_FILTER,
-        role: 'card--popover',
+        role: 'popover',
         filter: (data): data is { props: { mailbox: Mailbox.Mailbox; filter: string } } =>
           data.component === POPOVER_SAVE_FILTER &&
           data.props !== null &&
@@ -109,6 +109,7 @@ export default Capability.makeModule(() =>
         component: ({ data }) => <MailboxSettings subject={data.subject} />,
       }),
 
+      // TODO(card-cleanup): Remove.
       // TODO(wittjosiah): Generalize the mess below.
       Common.createSurface({
         id: `${meta.id}/contact-related`,

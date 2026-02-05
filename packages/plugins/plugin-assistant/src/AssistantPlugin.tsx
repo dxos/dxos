@@ -5,11 +5,13 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability, Common, Plugin } from '@dxos/app-framework';
-import { ResearchGraph } from '@dxos/assistant-toolkit';
+import { Chat, Initiative, ResearchGraph } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { Sequence } from '@dxos/conductor';
 import { Obj, Type } from '@dxos/echo';
+import { type SpaceId } from '@dxos/keys';
 import { Operation } from '@dxos/operation';
+import { AutomationCapabilities } from '@dxos/plugin-automation/types';
 import { ClientEvents } from '@dxos/plugin-client/types';
 import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space/types';
 import { type CreateObject } from '@dxos/plugin-space/types';
@@ -30,8 +32,7 @@ import {
 } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
-import { AssistantEvents } from './types';
-import { Assistant, AssistantOperation } from './types';
+import { AssistantEvents, AssistantOperation } from './types';
 
 export const AssistantPlugin = Plugin.define(meta).pipe(
   Common.Plugin.addTranslationsModule({ translations }),
@@ -46,11 +47,11 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
   Common.Plugin.addMetadataModule({
     metadata: [
       {
-        id: Type.getTypename(Assistant.Chat),
+        id: Type.getTypename(Chat.Chat),
         metadata: {
           icon: 'ph--atom--regular',
           iconHue: 'sky',
-          createObject: ((props) => Effect.sync(() => Assistant.make(props))) satisfies CreateObject,
+          createObject: ((props) => Effect.sync(() => Chat.make(props))) satisfies CreateObject,
         },
       },
       {
@@ -79,16 +80,30 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
           addToCollectionOnCreate: true,
         },
       },
+      {
+        id: Type.getTypename(Initiative.Initiative),
+        metadata: {
+          icon: 'ph--circuitry--regular',
+          iconHue: 'sky',
+          createObject: ((_, { db }) =>
+            Initiative.makeInitialized({
+              name: 'New Initiative',
+              spec: 'Not specified yet',
+            }).pipe(withComputeRuntime(db.spaceId))) satisfies CreateObject,
+          addToCollectionOnCreate: true,
+        },
+      },
     ],
   }),
   Common.Plugin.addSchemaModule({
     schema: [
-      Assistant.Chat,
-      Assistant.CompanionTo,
+      Chat.Chat,
+      Chat.CompanionTo,
       Blueprint.Blueprint,
       HasSubject.HasSubject,
       Prompt.Prompt,
       ResearchGraph,
+      Initiative.Initiative,
       Sequence,
     ],
   }),
@@ -134,3 +149,16 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
   }),
   Plugin.make,
 );
+
+// TODO(dmaretskyi): Extract to a helper module.
+const withComputeRuntime =
+  (spaceId: SpaceId) =>
+  <A, E, R>(
+    effect: Effect.Effect<A, E, R>,
+  ): Effect.Effect<A, E, Exclude<R, AutomationCapabilities.ComputeServices> | Capability.Service> =>
+    Effect.gen(function* () {
+      // TODO(dmaretskyi): Capability.get has `Error` in the error channel. We should throw those as defects instead.
+      const provider = yield* Capability.get(AutomationCapabilities.ComputeRuntime).pipe(Effect.orDie);
+      const runtime = yield* provider.getRuntime(spaceId).runtimeEffect;
+      return yield* effect.pipe(Effect.provide(runtime));
+    });

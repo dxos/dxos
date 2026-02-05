@@ -12,7 +12,7 @@ import { Ref, useQuery } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { useTranslation } from '@dxos/react-ui';
 import { useAttended } from '@dxos/react-ui-attention';
-import { StackItem } from '@dxos/react-ui-stack';
+import { Layout } from '@dxos/react-ui-mosaic';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { AnchoredTo, Thread } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
@@ -165,7 +165,7 @@ export const ThreadCompanion = ({ subject }: { subject: any }) => {
   );
 
   return (
-    <StackItem.Content toolbar>
+    <Layout.Main toolbar>
       <Tabs.Root
         value={showResolvedThreads ? 'all' : 'unresolved'}
         orientation='horizontal'
@@ -188,6 +188,6 @@ export const ThreadCompanion = ({ subject }: { subject: any }) => {
           <Tabs.Tabpanel value='unresolved'>{!showResolvedThreads && comments}</Tabs.Tabpanel>
         </div>
       </Tabs.Root>
-    </StackItem.Content>
+    </Layout.Main>
   );
 };

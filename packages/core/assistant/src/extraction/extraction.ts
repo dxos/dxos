@@ -13,7 +13,7 @@ import { Message } from '@dxos/types';
 
 export const ExtractionInput = Schema.Struct({
   message: Message.Message,
-  objects: Schema.optional(Schema.Array(Type.Expando)),
+  objects: Schema.optional(Schema.Array(Type.Obj)),
   options: Schema.optional(
     Schema.Struct({
       timeout: Schema.optional(Schema.Number),

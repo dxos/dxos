@@ -11,9 +11,8 @@ import { Format } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { AutomationCapabilities, invokeFunctionWithTracing } from '@dxos/plugin-automation';
 import { useActiveSpace } from '@dxos/plugin-space';
-import { Dialog, IconButton, Message, useTranslation } from '@dxos/react-ui';
+import { Dialog, Message, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
-import { cardDialogContent, cardDialogHeader } from '@dxos/react-ui-mosaic';
 import { Message as MessageType } from '@dxos/types';
 
 import { gmail } from '../../functions';
@@ -151,22 +150,13 @@ export const ComposeEmailDialog = ({ mode = 'compose', originalMessage, subject,
   );
 
   return (
-    <Dialog.Content classNames={cardDialogContent}>
-      <div role='none' className={cardDialogHeader}>
+    <Dialog.Content>
+      <Dialog.Header>
         <Dialog.Title>{dialogTitle}</Dialog.Title>
         <Dialog.Close asChild>
-          <IconButton
-            ref={closeRef}
-            icon='ph--x--regular'
-            size={4}
-            label={t('close label')}
-            iconOnly
-            density='fine'
-            variant='ghost'
-            autoFocus
-          />
+          <Dialog.CloseIconButton ref={closeRef} />
         </Dialog.Close>
-      </div>
+      </Dialog.Header>
       <Form.Root
         testId='compose-email-form'
         autoFocus

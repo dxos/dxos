@@ -4,7 +4,7 @@
 
 import { createContext } from '@radix-ui/react-context';
 
-// Context for items - stable, doesn't change when query changes
+/** Context for items - stable, doesn't change when query changes */
 export type SearchListItemContextValue = {
   /** Currently selected item value for keyboard navigation. */
   selectedValue: string | undefined;
@@ -21,7 +21,7 @@ export type SearchListItemContextValue = {
   unregisterItem: (value: string) => void;
 };
 
-// Context for input - can change frequently with query
+/** Context for input - can change frequently with query */
 export type SearchListInputContextValue = {
   /** Current search query. */
   query: string;

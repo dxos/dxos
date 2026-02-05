@@ -315,7 +315,14 @@ export class Toolbox {
 
       const commonKeys = pick(this.rootPackage, this.config.package?.commonKeys ?? []);
       // TODO(burdon): Investigate util: https://github.com/JamieMason/syncpack
-      const updated = sortPackageJson(defaultsDeep(packageJson, commonKeys));
+      const merged = defaultsDeep(packageJson, commonKeys);
+
+      // Enforce repository field format for npm provenance.
+      if (this.rootPackage.repository) {
+        merged.repository = this.rootPackage.repository;
+      }
+
+      const updated = sortPackageJson(merged);
       await saveJson(packagePath, updated, this.options.verbose);
     }
   }

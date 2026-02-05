@@ -89,7 +89,7 @@ export const SpaceInfoPanel: FC<SpaceInfoPanelProps> = (props) => {
           <div className='bs-48'>
             <FeedTable onSelect={props.onSelectFeed} />
           </div>
-          <div className='border-t border-separator'>
+          <div className='border-bs border-separator'>
             <SyncStateInfo space={space} />
           </div>
         </div>

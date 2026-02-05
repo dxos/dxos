@@ -17,14 +17,13 @@ import { createDocAccessor, toCursorRange } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
-import { SpacePlugin } from '@dxos/plugin-space';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { faker } from '@dxos/random';
 import { useQueue, useSpace } from '@dxos/react-client/echo';
 import { IconButton, Toolbar } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 import { useTextEditor } from '@dxos/react-ui-editor';
-import { StackItem } from '@dxos/react-ui-stack';
+import { Layout } from '@dxos/react-ui-mosaic';
 import { render } from '@dxos/storybook-utils';
 import { Message } from '@dxos/types';
 import { type EditorSelection, type Range } from '@dxos/ui-editor';
@@ -47,7 +46,7 @@ const TestItem = Schema.Struct({
     description: 'Product description',
   }),
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/Test',
     version: '0.1.0',
   }),
@@ -91,7 +90,7 @@ const TestChat: FC<{ doc: Markdown.Document; content: string }> = ({ doc, conten
 
     // void dispatch(
     //   createIntent(CollaborationActions.InsertContent, {
-    //     target: doc as any as Type.Expando,
+    //     target: doc as any as TestSchema.Expando,
     //     object: Ref.fromDXN(new DXN(DXN.kind.QUEUE, [...queue.dxn.parts, message.id])),
     //     at: cursor,
     //     label: 'Proposal',
@@ -100,12 +99,12 @@ const TestChat: FC<{ doc: Markdown.Document; content: string }> = ({ doc, conten
   };
 
   return (
-    <StackItem.Content toolbar>
+    <Layout.Main toolbar>
       <Toolbar.Root>
         <IconButton icon='ph--plus--regular' disabled={!queue} label='Insert' onClick={handleInsert} />
       </Toolbar.Root>
       <div ref={parentRef} className='p-4' />
-    </StackItem.Content>
+    </Layout.Main>
   );
 };
 
@@ -145,7 +144,7 @@ const DefaultStory = ({ document, chat }: { document: string; chat: string }) =>
 
   return (
     <div className='grid grid-cols-2 bs-full overflow-hidden'>
-      <MarkdownContainer id={doc.id} object={doc} settings={settings} editorStateStore={editorState} />
+      <MarkdownContainer id={doc.id} subject={doc} settings={settings} editorStateStore={editorState} />
       <TestChat doc={doc} content={chat} />
     </div>
   );
@@ -159,6 +158,7 @@ const storybook: Meta<typeof DefaultStory> = {
     withPluginManager({
       plugins: [
         ...corePlugins(),
+        StorybookPlugin({}),
         ClientPlugin({
           types: [Markdown.Document, TestItem],
           onClientInitialized: ({ client }) =>
@@ -166,11 +166,9 @@ const storybook: Meta<typeof DefaultStory> = {
               yield* Effect.promise(() => client.halo.createIdentity());
             }),
         }),
-        ...corePlugins(),
-        SpacePlugin({}),
+
         MarkdownPlugin(),
         PreviewPlugin(),
-        StorybookPlugin({}),
       ],
     }),
   ],

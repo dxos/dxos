@@ -4,6 +4,10 @@
   "description": "Plugin testing utils",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
   "license": "MIT",
   "author": "DXOS.org",
   "sideEffects": true,
@@ -27,6 +31,7 @@
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-theme": "workspace:*",
+    "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect-atom/atom": "catalog:",
     "@effect-atom/atom-react": "catalog:"

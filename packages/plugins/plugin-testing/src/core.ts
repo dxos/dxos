@@ -9,16 +9,9 @@ import { GraphPlugin } from '@dxos/plugin-graph';
 import { ThemePlugin } from '@dxos/plugin-theme';
 import { defaultTx } from '@dxos/ui-theme';
 
-export {
-  // Re-export common framework plugins.
-  AttentionPlugin,
-  ClientPlugin,
-  GraphPlugin,
-  OperationPlugin,
-  RuntimePlugin,
-  SettingsPlugin,
-  ThemePlugin,
-};
+// TODO(burdon): Remove this.
+// Re-export common framework plugins.
+export { AttentionPlugin, ClientPlugin, GraphPlugin, OperationPlugin, RuntimePlugin, SettingsPlugin, ThemePlugin };
 
 /**
  * Core plugins for testing/storybook environments.

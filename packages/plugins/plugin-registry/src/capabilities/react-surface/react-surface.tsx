@@ -83,15 +83,15 @@ export default Capability.makeModule(() =>
         component: ({ data: { subject } }) => {
           const manager = usePluginManager();
           const enabled = manager.getEnabled().includes(subject.meta.id);
-          const handleEnable = useCallback(
-            () =>
+          const handleEnableChange = useCallback(
+            (enabled: boolean) =>
               enabled
-                ? runAndForwardErrors(manager.disable(subject.meta.id))
-                : runAndForwardErrors(manager.enable(subject.meta.id)),
-            [manager, subject.meta.id, enabled],
+                ? runAndForwardErrors(manager.enable(subject.meta.id))
+                : runAndForwardErrors(manager.disable(subject.meta.id)),
+            [manager, subject.meta.id],
           );
 
-          return <PluginDetail plugin={subject} enabled={enabled} onEnable={handleEnable} />;
+          return <PluginDetail plugin={subject} enabled={enabled} onEnabledChange={handleEnableChange} />;
         },
       }),
     ]),

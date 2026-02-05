@@ -4,6 +4,10 @@
   "description": "ECHO database.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
   "license": "MIT",
   "author": "info@dxos.org",
   "sideEffects": false,
@@ -71,6 +75,7 @@
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/random-access-storage": "workspace:*",
+    "@dxos/sql-sqlite": "workspace:*",
     "@dxos/teleport": "workspace:*",
     "@dxos/teleport-extension-automerge-replicator": "workspace:*",
     "@dxos/teleport-extension-gossip": "workspace:*",

@@ -219,7 +219,7 @@ const Blueprints = (props: { blueprints: Blueprint.Blueprint[] }) => {
   );
 };
 
-const Artifacts = (props: { objects: Obj.Any[] }) => {
+const Artifacts = (props: { objects: Obj.Unknown[] }) => {
   return (
     <box flexDirection='column' flexShrink={0}>
       {props.objects.length > 0 && <text style={{ fg: theme.text.primary }}>Artifacts</text>}

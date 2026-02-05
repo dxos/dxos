@@ -150,7 +150,7 @@ export default Capability.makeModule(
           operation: SpaceOperation.RemoveObjects,
           handler: Effect.fnUntraced(function* (input) {
             const layout = yield* Common.Capability.getAtomValue(Common.Capability.Layout);
-            const objects = input.objects as Obj.Any[];
+            const objects = input.objects as Obj.Unknown[];
 
             // All objects must be a member of the same space.
             const space = getSpace(objects[0]);
@@ -271,7 +271,7 @@ export default Capability.makeModule(
                 initialFormValues: input.initialFormValues,
                 onCreateObject: input.onCreateObject,
                 shouldNavigate: navigable
-                  ? (object: Obj.Any) => {
+                  ? (object: Obj.Unknown) => {
                       const isCollection = Obj.instanceOf(Collection.Collection, object);
                       const isSystemCollection = Obj.instanceOf(Collection.Managed, object);
                       return (!isCollection && !isSystemCollection) || ephemeralState.navigableCollections;
@@ -289,7 +289,7 @@ export default Capability.makeModule(
           operation: SpaceOperation.AddObject,
           handler: Effect.fnUntraced(function* (input) {
             const target = input.target as any;
-            const object = input.object as Obj.Any;
+            const object = input.object as Obj.Unknown;
             const db = Database.isDatabase(target) ? target : Obj.getDatabase(target);
             invariant(db, 'Database not found.');
 
@@ -297,7 +297,7 @@ export default Capability.makeModule(
               object,
               target: Database.isDatabase(target) ? undefined : target,
               hidden: input.hidden,
-            }).pipe(Effect.provide(Database.Service.layer(db)));
+            }).pipe(Effect.provide(Database.layer(db)));
 
             yield* Operation.schedule(ObservabilityOperation.SendEvent, {
               name: 'space.object.add',
@@ -508,7 +508,7 @@ export default Capability.makeModule(
         OperationResolver.make({
           operation: SpaceOperation.RenameObject,
           handler: Effect.fnUntraced(function* (input) {
-            const object = input.object as Obj.Any;
+            const object = input.object as Obj.Unknown;
             yield* Operation.invoke(Common.LayoutOperation.UpdatePopover, {
               subject: OBJECT_RENAME_POPOVER,
               anchorId: `dxos.org/ui/${input.caller}/${Obj.getDXN(object).toString()}`,
@@ -676,7 +676,7 @@ export default Capability.makeModule(
         OperationResolver.make({
           operation: SpaceOperation.DuplicateObject,
           handler: Effect.fnUntraced(function* (input) {
-            const object = input.object as Obj.Any;
+            const object = input.object as Obj.Unknown;
             const db = Obj.getDatabase(object);
             invariant(db, 'Database not found.');
             const newObject = yield* Effect.promise(() => cloneObject(object, resolve, db));
@@ -717,10 +717,10 @@ export default Capability.makeModule(
         OperationResolver.make({
           operation: SpaceOperation.RestoreObjects,
           handler: Effect.fnUntraced(function* (input) {
-            const objects = input.objects as Obj.Any[];
+            const objects = input.objects as Obj.Unknown[];
             const parentCollection = input.parentCollection as Collection.Collection;
             const indices = input.indices as number[];
-            const nestedObjectsList = input.nestedObjectsList as Obj.Any[][];
+            const nestedObjectsList = input.nestedObjectsList as Obj.Unknown[][];
             const wasActive = input.wasActive as string[];
 
             // Get the space from the first object.
@@ -728,10 +728,10 @@ export default Capability.makeModule(
             invariant(space);
 
             // Restore objects to the space.
-            const restoredObjects = objects.map((obj: Obj.Any) => space.db.add(obj));
+            const restoredObjects = objects.map((obj: Obj.Unknown) => space.db.add(obj));
 
             // Restore nested objects to the space.
-            nestedObjectsList.flat().forEach((obj: Obj.Any) => {
+            nestedObjectsList.flat().forEach((obj: Obj.Unknown) => {
               if (Obj.isObject(obj)) {
                 space.db.add(obj);
               } else if (Relation.isRelation(obj)) {
@@ -743,7 +743,7 @@ export default Capability.makeModule(
             Obj.change(parentCollection, (c) => {
               indices.forEach((index: number, i: number) => {
                 if (index !== -1) {
-                  c.objects.splice(index, 0, Ref.make(restoredObjects[i] as Obj.Any));
+                  c.objects.splice(index, 0, Ref.make(restoredObjects[i] as Obj.Unknown));
                 }
               });
             });

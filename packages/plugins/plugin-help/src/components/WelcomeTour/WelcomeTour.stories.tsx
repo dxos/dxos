@@ -108,7 +108,12 @@ const meta = {
   title: 'plugins/plugin-help/WelcomeTour',
   component: WelcomeTour,
   render: DefaultStory,
-  decorators: [withTheme, withPluginManager({ plugins: [StorybookPlugin({})] })],
+  decorators: [
+    withTheme,
+    withPluginManager({
+      plugins: [StorybookPlugin({})],
+    }),
+  ],
 } satisfies Meta<typeof WelcomeTour>;
 
 export default meta;

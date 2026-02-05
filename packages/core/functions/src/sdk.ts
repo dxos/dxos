@@ -264,7 +264,7 @@ export const serializeFunction = (functionDef: FunctionDefinition.Any): Function
     services: functionDef.services,
   });
   if (functionDef.meta?.deployedFunctionId) {
-    setUserFunctionIdInMetadata(Obj.getMeta(fn), functionDef.meta.deployedFunctionId);
+    Obj.change(fn, (fn) => setUserFunctionIdInMetadata(Obj.getMeta(fn), functionDef.meta!.deployedFunctionId!));
   }
   return fn;
 };

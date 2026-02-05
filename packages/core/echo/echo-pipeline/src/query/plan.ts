@@ -238,6 +238,7 @@ export namespace QueryPlan {
      * Optional limit on the number of results to return after ordering.
      * When set, the sorting can be optimized to only track the top N elements.
      */
+    // TODO(dmaretskyi): Remove. This doesn't belong here.
     limit?: number;
   };
 

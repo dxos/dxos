@@ -105,7 +105,7 @@ export class RuntimeSchemaRegistry implements SchemaRegistry.SchemaRegistry {
    * @deprecated Use getSchemaByDXN.
    */
   // TODO(wittjosiah): Remove.
-  getSchema(typename: string): Schema.Schema.AnyNoContext | undefined {
+  getSchema(typename: string): Type.Entity.Any | undefined {
     return this._registry.get(typename)?.[0];
   }
 }

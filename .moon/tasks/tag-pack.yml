@@ -1,7 +1,7 @@
 $schema: https://moonrepo.dev/schemas/tasks.json
 tasks:
   pack:
-    command: bash -c 'pnpm pack --pack-destination "$(git rev-parse --show-toplevel)/dist/tarballs/$project"'
+    script: pnpm pack --pack-destination "$(git rev-parse --show-toplevel)/dist/tarballs/$project"
     deps:
       - target: build
         optional: true
@@ -11,3 +11,6 @@ tasks:
       - '@group(production)'
     outputs:
       - /dist/tarballs/$project
+
+inheritedBy:
+  tags: pack

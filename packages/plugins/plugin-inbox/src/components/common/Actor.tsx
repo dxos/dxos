@@ -30,7 +30,7 @@ export const ActorComponent = ({ actor, classNames }: ThemedClassName<{ actor: A
   );
 };
 
-export const ActorList = ({ classNames, actors }: ThemedClassName<{ actors: Actor.Actor[] }>) => {
+export const ActorList = ({ classNames, actors }: ThemedClassName<{ actors: readonly Actor.Actor[] }>) => {
   return (
     <div role='none' className={mx('flex flex-col is-full', classNames)}>
       {/* TODO(wittjosiah): Accordion to show all. */}

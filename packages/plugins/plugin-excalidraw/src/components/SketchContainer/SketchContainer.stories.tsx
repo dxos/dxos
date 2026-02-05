@@ -16,13 +16,7 @@ import { SketchContainer } from './SketchContainer';
 const DefaultStory = () => {
   const [sketch] = useState(createObject(Diagram.make({ canvas: { schema: EXCALIDRAW_SCHEMA } })));
 
-  return (
-    <div className='flex flex-col grow overflow-hidden'>
-      <div className='flex grow overflow-hidden'>
-        <SketchContainer sketch={sketch} role='article' settings={{}} />
-      </div>
-    </div>
-  );
+  return <SketchContainer role='article' subject={sketch} settings={{}} />;
 };
 
 const meta = {

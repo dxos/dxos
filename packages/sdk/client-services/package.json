@@ -4,10 +4,34 @@
   "description": "DXOS client services implementation",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
   "license": "MIT",
   "author": "DXOS.org",
   "sideEffects": false,
   "type": "module",
+  "imports": {
+    "#locks-platform": {
+      "source": {
+        "browser": "./src/packlets/locks/browser.ts",
+        "default": "./src/packlets/locks/node.ts"
+      },
+      "types": "./dist/types/src/packlets/locks/node.d.ts",
+      "browser": "./dist/lib/browser/packlets/locks/browser.mjs",
+      "default": "./dist/lib/node-esm/packlets/locks/node.mjs"
+    },
+    "#diagnostics-broadcast": {
+      "source": {
+        "browser": "./src/packlets/diagnostics/browser-diagnostics-broadcast.ts",
+        "default": "./src/packlets/diagnostics/diagnostics-broadcast.ts"
+      },
+      "types": "./dist/types/src/packlets/diagnostics/diagnostics-broadcast.d.ts",
+      "browser": "./dist/lib/browser/packlets/diagnostics/browser-diagnostics-broadcast.mjs",
+      "default": "./dist/lib/node-esm/packlets/diagnostics/diagnostics-broadcast.mjs"
+    }
+  },
   "exports": {
     ".": {
       "source": "./src/index.ts",
@@ -22,12 +46,6 @@
       "node": "./dist/lib/node-esm/testing/index.mjs"
     }
   },
-  "browser": {
-    "jsondown": false,
-    "./src/packlets/locks/node.ts": "./src/packlets/locks/browser.ts",
-    "./src/packlets/diagnostics/diagnostics-broadcast.ts": "./src/packlets/diagnostics/browser-diagnostics-broadcast.ts",
-    "./testing.js": "./dist/lib/browser/packlets/testing/index.mjs"
-  },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
@@ -37,8 +55,6 @@
     }
   },
   "files": [
-    "testing.d.ts",
-    "testing.js",
     "dist",
     "src"
   ],

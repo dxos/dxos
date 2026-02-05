@@ -109,7 +109,7 @@
     {
       "label": "build all",
       "type": "shell",
-      "command": "moon run :build --no-bail",
+      "command": "moon exec --on-failure continue :build",
       "problemMatcher": {
         "owner": "typescript",
         "pattern": [

@@ -15,7 +15,7 @@ import { type Primitive } from '@dxos/util';
 
 import { type AnyProperties, EntityKind, TypeId, getSchema } from '../types';
 
-import { createAnnotationHelper } from './util';
+import { type AnnotationHelper, createAnnotationHelper } from './util';
 
 /**
  * @internal
@@ -336,9 +336,13 @@ export const LabelAnnotation = createAnnotationHelper<string[]>(LabelAnnotationI
 
 /**
  * Returns the label for a given object based on {@link LabelAnnotationId}.
+ * Lower-level version that requires explicit schema parameter.
  */
 // TODO(burdon): Convert to JsonPath?
-export const getLabel = <S extends Schema.Schema.Any>(schema: S, object: Schema.Schema.Type<S>): string | undefined => {
+export const getLabelWithSchema = <S extends Schema.Schema.Any>(
+  schema: S,
+  object: Schema.Schema.Type<S>,
+): string | undefined => {
   const annotation = LabelAnnotation.get(schema).pipe(Option.getOrElse(() => ['name']));
   for (const accessor of annotation) {
     assertArgument(
@@ -366,8 +370,13 @@ export const getLabel = <S extends Schema.Schema.Any>(schema: S, object: Schema.
 
 /**
  * Sets the label for a given object based on {@link LabelAnnotationId}.
+ * Lower-level version that requires explicit schema parameter.
  */
-export const setLabel = <S extends Schema.Schema.Any>(schema: S, object: Schema.Schema.Type<S>, label: string) => {
+export const setLabelWithSchema = <S extends Schema.Schema.Any>(
+  schema: S,
+  object: Schema.Schema.Type<S>,
+  label: string,
+) => {
   const annotation = LabelAnnotation.get(schema).pipe(
     Option.map((field) => field[0]),
     Option.getOrElse(() => 'name'),
@@ -383,10 +392,11 @@ export const DescriptionAnnotationId = Symbol.for('@dxos/schema/annotation/Descr
 export const DescriptionAnnotation = createAnnotationHelper<string>(DescriptionAnnotationId);
 
 /**
- * Returns the label for a given object based on {@link LabelAnnotationId}.
+ * Returns the description for a given object based on {@link DescriptionAnnotationId}.
+ * Lower-level version that requires explicit schema parameter.
  */
 // TODO(burdon): Convert to JsonPath?
-export const getDescription = <S extends Schema.Schema.Any>(
+export const getDescriptionWithSchema = <S extends Schema.Schema.Any>(
   schema: S,
   object: Schema.Schema.Type<S>,
 ): string | undefined => {
@@ -410,8 +420,9 @@ export const getDescription = <S extends Schema.Schema.Any>(
 
 /**
  * Sets the description for a given object based on {@link DescriptionAnnotationId}.
+ * Lower-level version that requires explicit schema parameter.
  */
-export const setDescription = <S extends Schema.Schema.Any>(
+export const setDescriptionWithSchema = <S extends Schema.Schema.Any>(
   schema: S,
   object: Schema.Schema.Type<S>,
   description: string,
@@ -447,3 +458,29 @@ export type GeneratorAnnotationValue =
     };
 
 export const GeneratorAnnotation = createAnnotationHelper<GeneratorAnnotationValue>(GeneratorAnnotationId);
+
+interface MakeAnnoationsProps<T> {
+  id: string;
+  schema: Schema.Schema<T, any, never>;
+}
+
+export const makeUserAnnotation = <T>(props: MakeAnnoationsProps<T>): AnnotationHelper<T> => {
+  assertArgument(
+    /[a-zA-Z0-9]+\.[a-zA-Z.]+\/[a-zA-Z/]+/.test(props.id),
+    'id',
+    'Annotation id must be in the FQN format (dxos.org/annotation/Example).',
+  );
+
+  const getFromAst = (ast: SchemaAST.AST) =>
+    SchemaAST.getAnnotation<PropertyMetaAnnotation>(PropertyMetaAnnotationId)(ast).pipe(
+      Option.map((meta) => meta[props.id] as unknown),
+      Option.map(Schema.decodeUnknownSync(props.schema)),
+    );
+
+  return {
+    get: (schema) => getFromAst(schema.ast),
+    getFromAst: (ast) => getFromAst(ast),
+    set: (value) =>
+      PropertyMeta(props.id, Schema.encodeSync(props.schema)(value)) as <S extends Schema.Schema.Any>(schema: S) => S,
+  };
+};

@@ -39,7 +39,7 @@ export const useLinkQuery = (db: Database.Database | undefined) => {
       const name = query?.startsWith('@') ? query.slice(1).toLowerCase() : (query?.toLowerCase() ?? '');
       const results = await db?.query(Query.select(filter)).run();
 
-      // TODO(wittjosiah): Use `Obj.Any` type.
+      // TODO(wittjosiah): Use `Obj.Unknown` type.
       const getLabel = (object: any) => {
         const label = Obj.getLabel(object);
         if (label) {

@@ -57,6 +57,7 @@ export type SubscriptionOptions = {
   fire?: boolean;
 };
 
+// TODO(burdon): Should T be constrained to Entity.Any?
 export interface QueryResult<T> {
   /**
    * Currently available results along with their match metadata.

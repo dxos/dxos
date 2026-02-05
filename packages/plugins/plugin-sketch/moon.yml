@@ -1,4 +1,4 @@
-type: library
+layer: library
 language: typescript
 tags:
   - ts-build
@@ -17,7 +17,7 @@ tasks:
       - prebuild
   prebuild:
     command: bash ./scripts/copy_assets.sh
-    platform: node # enforce that deps are installed
+    toolchains: node # enforce that deps are installed
     inputs:
       - scripts/copy_assets.sh
       - package.json

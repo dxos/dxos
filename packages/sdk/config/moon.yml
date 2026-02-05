@@ -1,4 +1,4 @@
-type: library
+layer: library
 language: typescript
 tags:
   - ts-build
@@ -8,6 +8,12 @@ tasks:
   compile:
     args:
       - '--entryPoint=src/index.ts'
+      - '--entryPoint=src/loaders/index.ts'
+      - '--entryPoint=src/loaders/browser.ts'
+      - '--entryPoint=src/savers/index.ts'
+      - '--entryPoint=src/savers/browser.ts'
+      - '--entryPoint=src/plugin/index.ts'
+      - '--entryPoint=src/plugin/browser.ts'
     deps:
       - compile-plugin
   compile-plugin:

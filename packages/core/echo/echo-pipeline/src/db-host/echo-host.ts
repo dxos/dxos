@@ -19,6 +19,7 @@ import { type LevelDB } from '@dxos/kv-store';
 import { log } from '@dxos/log';
 import type { QueueService } from '@dxos/protocols';
 import { IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
+import type * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 import { trace } from '@dxos/tracing';
 
 import {
@@ -45,9 +46,9 @@ import { QueueServiceStub } from './stub';
 
 export interface EchoHostIndexingConfig {
   /**
-   * @default true
+   * @default false
    */
-  fullText: boolean;
+  sqlIndex: boolean;
 
   /**
    * @default false
@@ -57,7 +58,7 @@ export interface EchoHostIndexingConfig {
 
 const DEFAULT_INDEXING_CONFIG: EchoHostIndexingConfig = {
   // TODO(mykola): Enable by default when SQLite indexer is stable.
-  fullText: false,
+  sqlIndex: false,
   vector: false,
 };
 
@@ -67,7 +68,7 @@ export type EchoHostProps = {
   getSpaceKeyByRootDocumentId?: RootDocumentSpaceKeyProvider;
 
   indexing?: Partial<EchoHostIndexingConfig>;
-  runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
+  runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransaction.SqlTransaction>;
 
   /**
    * Use SQLite-backed local-first durable queues.
@@ -100,7 +101,7 @@ export class EchoHost extends Resource {
   private readonly _automergeDataSource: AutomergeDataSource;
   private readonly _indexer2: IndexEngine;
   private readonly _indexConfig: EchoHostIndexingConfig;
-  private readonly _runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
+  private readonly _runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransaction.SqlTransaction>;
   private readonly _feedStore?: FeedStore;
   private readonly _queueDataSource?: QueueDataSource;
 
@@ -172,8 +173,8 @@ export class EchoHost extends Resource {
     this._queryService = new QueryServiceImpl({
       automergeHost: this._automergeHost,
       indexer: this._indexer,
-      indexer2: this._indexConfig.fullText ? this._indexer2 : undefined,
-      runtime: this._indexConfig.fullText ? this._runtime : undefined,
+      indexer2: this._indexConfig.sqlIndex ? this._indexer2 : undefined,
+      runtime: this._indexConfig.sqlIndex ? this._runtime : undefined,
       spaceStateManager: this._spaceStateManager,
     });
 
@@ -182,7 +183,7 @@ export class EchoHost extends Resource {
       spaceStateManager: this._spaceStateManager,
       updateIndexes: async () => {
         await this._indexer.updateIndexes();
-        if (this._indexConfig.fullText) {
+        if (this._indexConfig.sqlIndex) {
           do {
             await this._updateIndexes.runBlocking();
           } while (!this._indexesUpToDate);
@@ -264,13 +265,13 @@ export class EchoHost extends Resource {
       await RuntimeProvider.runPromise(this._runtime)(this._feedStore.migrate());
       this._feedStore.onNewBlocks.on(this._ctx, () => {
         this._queryService.invalidateQueries();
-        if (this._indexConfig.fullText) {
+        if (this._indexConfig.sqlIndex) {
           this._updateIndexes.schedule();
         }
       });
     }
 
-    if (this._indexConfig.fullText) {
+    if (this._indexConfig.sqlIndex) {
       await RuntimeProvider.runPromise(this._runtime)(this._indexer2.migrate());
       this._updateIndexes = new DeferredTask(this._ctx, this._runUpdateIndexes);
     }
@@ -286,11 +287,11 @@ export class EchoHost extends Resource {
     });
     this._automergeHost.documentsSaved.on(this._ctx, () => {
       this._queryService.invalidateQueries();
-      if (this._indexConfig.fullText) {
+      if (this._indexConfig.sqlIndex) {
         this._updateIndexes.schedule();
       }
     });
-    if (this._indexConfig.fullText) {
+    if (this._indexConfig.sqlIndex) {
       this._updateIndexes.schedule();
     }
   }

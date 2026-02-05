@@ -128,6 +128,24 @@ export namespace LayoutOperation {
     ),
   });
 
+  const PopoverBaseWithKind = Schema.Union(
+    PopoverBaseInput.pipe(
+      Schema.extend(
+        Schema.Struct({
+          kind: Schema.Literal('base').pipe(Schema.optional),
+        }),
+      ),
+    ),
+    PopoverBaseInput.pipe(
+      Schema.extend(
+        Schema.Struct({
+          kind: Schema.Literal('card'),
+          title: Schema.optional(Label.annotations({ description: 'The title of the card.' })),
+        }),
+      ),
+    ),
+  );
+
   export const UpdatePopover = Operation.make({
     meta: {
       key: `${LAYOUT_PLUGIN}/operation/update-popover`,
@@ -138,7 +156,7 @@ export namespace LayoutOperation {
     services: [Capability.Service],
     schema: {
       input: Schema.Union(
-        PopoverBaseInput.pipe(
+        PopoverBaseWithKind.pipe(
           Schema.extend(
             Schema.Struct({
               variant: Schema.Literal('virtual'),
@@ -146,7 +164,7 @@ export namespace LayoutOperation {
             }),
           ),
         ),
-        PopoverBaseInput.pipe(
+        PopoverBaseWithKind.pipe(
           Schema.extend(
             Schema.Struct({
               variant: Schema.optional(Schema.Literal('react')),

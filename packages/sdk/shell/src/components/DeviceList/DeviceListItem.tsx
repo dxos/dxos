@@ -33,8 +33,8 @@ export const DeviceListItem = forwardRef<
   (
     {
       device,
-      onClickAdd,
-      onClickEdit,
+      onClickAdd, // TODO(burdon): Not used.
+      onClickEdit, // TODO(burdon): Not used.
       onClickReset,
       onClickRecover,
       onClickJoinExisting,

@@ -3,7 +3,6 @@
 //
 
 export * from './AnimatedBorder';
-export * from './Flex';
 export * from './MarkdownStream';
 export * from './NumericTabs';
 export * from './ProgressBar';

@@ -2,59 +2,93 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useCallback } from 'react';
+import { type Atom, useAtomValue } from '@effect-atom/atom-react';
+import React, { Fragment } from 'react';
 
-import { Common } from '@dxos/app-framework';
-import { useOperationInvoker } from '@dxos/app-framework/react';
-import { type Node } from '@dxos/plugin-graph';
-import { IconButton, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { mx, osTranslations, surfaceZIndex } from '@dxos/ui-theme';
+import { IconButton, Popover, type ThemedClassName, Toolbar, useTranslation } from '@dxos/react-ui';
+import {
+  type ActionExecutor,
+  type ActionGraphProps,
+  DropdownMenu,
+  MenuProvider,
+  useMenuActions,
+} from '@dxos/react-ui-menu';
+import { mx, osTranslations } from '@dxos/ui-theme';
 
-import { useSimpleLayoutState } from '../../hooks';
 import { meta } from '../../meta';
 
-export type BannerProps = {
-  node?: Node.Node;
-};
+const BANNER_NAME = 'SimpleLayout.Banner';
 
-export const Banner = ({ node }: BannerProps) => {
+export type BannerProps = ThemedClassName<{
+  /** Title/label to display in the banner. */
+  title?: string;
+  /** Action graph atom for the dropdown menu. */
+  actions: Atom.Atom<ActionGraphProps>;
+  /** Whether to show the back button. */
+  showBackButton?: boolean;
+  /** Popover anchor ID for the dropdown trigger. */
+  popoverAnchorId?: string;
+  /** Action executor callback. */
+  onAction?: ActionExecutor;
+  /** Callback when back button is clicked. */
+  onBack?: () => void;
+}>;
+
+/**
+ * Presentational banner component that renders a title, optional back button, and actions dropdown.
+ */
+export const Banner = ({
+  classNames,
+  title,
+  actions,
+  showBackButton,
+  popoverAnchorId,
+  onAction,
+  onBack,
+}: BannerProps) => {
   const { t } = useTranslation(meta.id);
-  const { state } = useSimpleLayoutState();
-  const { invokePromise } = useOperationInvoker();
-  const label = node ? toLocalizedString(node.properties.label, t) : t('current app name', { ns: osTranslations });
+  const menu = useMenuActions(actions);
+  const actionsValue = useAtomValue(actions);
+  const hasActions = actionsValue.nodes.length > 0;
 
-  const handleClick = useCallback(async () => {
-    if (state.active) {
-      await invokePromise(Common.LayoutOperation.Close, { subject: [state.active] });
-    } else {
-      await invokePromise(Common.LayoutOperation.SwitchWorkspace, { subject: 'default' });
-    }
-  }, [invokePromise, state.active]);
+  // Fall back to app name if no title provided.
+  const displayTitle = title ?? t('current app name', { ns: osTranslations });
+
+  // Wrap the menu trigger with Popover.Anchor when the popoverAnchorId is set.
+  const AnchorRoot = popoverAnchorId ? Popover.Anchor : Fragment;
 
   return (
-    // Note that the HTML5 element `header` has a default role of `banner`, hence the name of this component.
-    // It should not be confused with the `heading` role (elements h1-6).
-    // TODO(burdon): Fixed or not?
-    <header
-      className={mx(
-        '_fixed flex items-center gap-2 pli-2 block-start-0 inset-inline-0 bs-[--dx-mobile-topbar-content-height,48px] bg-baseSurface border-be border-separator',
-        'grid grid-cols-[min-content_1fr_min-content]',
-        surfaceZIndex({ level: 'menu' }),
-      )}
+    <Toolbar.Root
+      role='banner'
+      density='coarse'
+      classNames={mx('grid grid-cols-[var(--rail-size)_1fr_var(--rail-size)]', classNames)}
     >
-      {node ? (
-        <IconButton
-          iconOnly
-          variant='ghost'
-          icon='ph--caret-left--regular'
-          label={t('back label')}
-          onClick={handleClick}
-        />
+      {showBackButton ? (
+        <IconButton variant='ghost' icon='ph--caret-left--regular' iconOnly label={t('back label')} onClick={onBack} />
       ) : (
         <div />
       )}
-      <h1 className={'grow text-center truncate font-medium'}>{label}</h1>
-      {/* TODO(burdon): Menu. */}
-    </header>
+      <h1 className='text-center truncate text-lg font-thin uppercase'>{displayTitle}</h1>
+      {hasActions ? (
+        <AnchorRoot>
+          <MenuProvider {...menu} onAction={onAction}>
+            <DropdownMenu.Root caller={meta.id}>
+              <DropdownMenu.Trigger asChild>
+                <IconButton
+                  variant='ghost'
+                  icon='ph--dots-three-vertical--regular'
+                  iconOnly
+                  label={t('actions menu label')}
+                />
+              </DropdownMenu.Trigger>
+            </DropdownMenu.Root>
+          </MenuProvider>
+        </AnchorRoot>
+      ) : (
+        <span />
+      )}
+    </Toolbar.Root>
   );
 };
+
+Banner.displayName = BANNER_NAME;

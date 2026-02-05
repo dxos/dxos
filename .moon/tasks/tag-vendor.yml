@@ -16,3 +16,6 @@ tasks:
       - dist/lib/
     options:
       timeout: 10
+
+inheritedBy:
+  tags: vendor

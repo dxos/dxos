@@ -4,6 +4,10 @@
   "description": "Web Components for DXOS using Lit",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
   "license": "MIT",
   "author": "DXOS.org",
   "sideEffects": [
@@ -13,16 +17,12 @@
   "type": "module",
   "exports": {
     ".": {
-      "source": "./src/index.ts",
       "types": "./dist/src/index.d.ts",
-      "browser": "./dist/src/index.js",
-      "node": "./dist/src/index.js"
+      "default": "./dist/src/index.js"
     },
     "./react": {
-      "source": "./src/react.ts",
       "types": "./dist/src/react.d.ts",
-      "browser": "./dist/src/react.js",
-      "node": "./dist/src/react.js"
+      "default": "./dist/src/react.js"
     },
     "./dx-avatar.pcss": "./src/dx-avatar/dx-avatar.pcss",
     "./dx-tag-picker.pcss": "./src/dx-tag-picker/dx-tag-picker.pcss"

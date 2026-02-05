@@ -8,9 +8,18 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { ATTR_DELETED, ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET, ATTR_TYPE } from '@dxos/echo/internal';
+import { DXN } from '@dxos/keys';
 
 import type { IndexerObject } from './interface';
 import type { Index } from './interface';
+
+const _escapeLikePrefix = (prefix: string) => {
+  // Escape LIKE metacharacters in the *literal* prefix (we still append a wildcard for the version suffix).
+  // Backslash is used as the ESCAPE character.
+  // See: https://www.sqlite.org/lang_expr.html#like
+  const escaped = prefix.replaceAll('\\', '\\\\').replaceAll('%', '\\%').replaceAll('_', '\\_');
+  return `${escaped}:%`;
+};
 
 export const ObjectMeta = Schema.Struct({
   recordId: Schema.Number,
@@ -19,6 +28,7 @@ export const ObjectMeta = Schema.Struct({
   spaceId: Schema.String,
   documentId: Schema.String,
   entityKind: Schema.String,
+  /** The versioned DXN of the type of the object. */
   typeDxn: Schema.String,
   deleted: Schema.Boolean,
   source: Schema.NullOr(Schema.String),
@@ -57,9 +67,105 @@ export class ObjectMetaIndex implements Index {
     ): Effect.Effect<readonly ObjectMeta[], SqlError.SqlError, SqlClient.SqlClient> =>
       Effect.gen(function* () {
         const sql = yield* SqlClient.SqlClient;
+        const parsedType = DXN.tryParse(query.typeDxn)?.asTypeDXN();
+
         // SQLite stores booleans as integers, so we need to specify the raw row type.
         const rows =
-          yield* sql<ObjectMeta>`SELECT * FROM objectMeta WHERE spaceId = ${query.spaceId} AND typeDxn = ${query.typeDxn}`;
+          parsedType && parsedType.version === undefined
+            ? yield* sql<ObjectMeta>`SELECT * FROM objectMeta WHERE spaceId = ${query.spaceId} AND (typeDxn = ${
+                query.typeDxn
+              } OR typeDxn LIKE ${_escapeLikePrefix(query.typeDxn)} ESCAPE '\\')`
+            : yield* sql<ObjectMeta>`SELECT * FROM objectMeta WHERE spaceId = ${query.spaceId} AND typeDxn = ${query.typeDxn}`;
+        return rows.map((row) => ({
+          ...row,
+          deleted: !!row.deleted,
+        }));
+      }),
+  );
+
+  queryAll = Effect.fn('ObjectMetaIndex.queryAll')(
+    (query: {
+      spaceIds: readonly ObjectMeta['spaceId'][];
+    }): Effect.Effect<readonly ObjectMeta[], SqlError.SqlError, SqlClient.SqlClient> =>
+      Effect.gen(function* () {
+        if (query.spaceIds.length === 0) {
+          return [];
+        }
+
+        const sql = yield* SqlClient.SqlClient;
+        const rows = yield* sql<ObjectMeta>`SELECT * FROM objectMeta WHERE ${sql.in('spaceId', query.spaceIds)}`;
+        return rows.map((row) => ({
+          ...row,
+          deleted: !!row.deleted,
+        }));
+      }),
+  );
+
+  queryTypes = Effect.fn('ObjectMetaIndex.queryTypes')(
+    ({
+      spaceIds,
+      typeDxns,
+      inverted = false,
+    }: {
+      spaceIds: readonly ObjectMeta['spaceId'][];
+      typeDxns: readonly ObjectMeta['typeDxn'][];
+      inverted?: boolean;
+    }): Effect.Effect<readonly ObjectMeta[], SqlError.SqlError, SqlClient.SqlClient> =>
+      Effect.gen(function* () {
+        if (spaceIds.length === 0) {
+          return [];
+        }
+
+        if (typeDxns.length === 0) {
+          if (!inverted) {
+            return [];
+          }
+
+          const sql = yield* SqlClient.SqlClient;
+          const rows = yield* sql<ObjectMeta>`SELECT * FROM objectMeta WHERE ${sql.in('spaceId', spaceIds)}`;
+          return rows.map((row) => ({
+            ...row,
+            deleted: !!row.deleted,
+          }));
+        }
+        const sql = yield* SqlClient.SqlClient;
+        const spaceWhere = sql.in('spaceId', spaceIds);
+        const typeWhere = sql.or(
+          typeDxns.map((typeDxn) => {
+            const parsedType = DXN.tryParse(typeDxn)?.asTypeDXN();
+            return parsedType && parsedType.version === undefined
+              ? sql.or([sql`typeDxn = ${typeDxn}`, sql`typeDxn LIKE ${_escapeLikePrefix(typeDxn)} ESCAPE '\\'`])
+              : sql`typeDxn = ${typeDxn}`;
+          }),
+        );
+        const rows = inverted
+          ? yield* sql<ObjectMeta>`SELECT * FROM objectMeta WHERE ${spaceWhere} AND NOT ${typeWhere}`
+          : yield* sql<ObjectMeta>`SELECT * FROM objectMeta WHERE ${spaceWhere} AND ${typeWhere}`;
+        return rows.map((row) => ({
+          ...row,
+          deleted: !!row.deleted,
+        }));
+      }),
+  );
+
+  queryRelations = Effect.fn('ObjectMetaIndex.queryRelations')(
+    ({
+      endpoint,
+      anchorDxns,
+    }: {
+      endpoint: 'source' | 'target';
+      anchorDxns: readonly string[];
+    }): Effect.Effect<readonly ObjectMeta[], SqlError.SqlError, SqlClient.SqlClient> =>
+      Effect.gen(function* () {
+        if (anchorDxns.length === 0) {
+          return [];
+        }
+        const sql = yield* SqlClient.SqlClient;
+        const column = endpoint === 'source' ? 'source' : 'target';
+        const rows = yield* sql<ObjectMeta>`SELECT * FROM objectMeta WHERE entityKind = 'relation' AND ${sql.in(
+          column,
+          anchorDxns,
+        )}`;
         return rows.map((row) => ({
           ...row,
           deleted: !!row.deleted,
@@ -80,7 +186,6 @@ export class ObjectMetaIndex implements Index {
               const { spaceId, queueId, documentId, data } = object;
 
               // Extract metadata (Logic emulating Echo APIs as strict imports are unavailable).
-              // TODO(agent): Verify property access matches Obj.JSON structure.
               const castData = data;
               const objectId = castData.id;
 
@@ -189,11 +294,7 @@ export class ObjectMetaIndex implements Index {
         }
 
         const sql = yield* SqlClient.SqlClient;
-        const placeholders = recordIds.map(() => '?').join(', ');
-        const rows = yield* sql.unsafe<ObjectMeta>(
-          `SELECT * FROM objectMeta WHERE recordId IN (${placeholders})`,
-          recordIds,
-        );
+        const rows = yield* sql<ObjectMeta>`SELECT * FROM objectMeta WHERE ${sql.in('recordId', recordIds)}`;
 
         return rows.map((row) => ({
           ...row,

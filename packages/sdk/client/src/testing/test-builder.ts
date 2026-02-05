@@ -14,8 +14,9 @@ import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { raise } from '@dxos/debug';
 import { Filter } from '@dxos/echo';
-import { Obj, Type } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
 import { type Database } from '@dxos/echo';
+import { TestSchema } from '@dxos/echo/testing';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
@@ -32,7 +33,8 @@ import { TcpTransportFactory } from '@dxos/network-manager/transport/tcp';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { type Storage } from '@dxos/random-access-storage';
 import { type ProtoRpcPeer, createLinkedPorts, createProtoRpcPeer } from '@dxos/rpc';
-import * as SqliteClient from '@dxos/sql-sqlite/SqliteClient';
+import { layerMemory as sqliteLayerMemory } from '@dxos/sql-sqlite/platform';
+import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 
 import { Client } from '../client';
 import {
@@ -97,7 +99,11 @@ export class TestBuilder {
    * Create backend service handlers.
    */
   createClientServicesHost(runtimeProps?: ServiceContextRuntimeProps): ClientServicesHost {
-    const runtime = ManagedRuntime.make(Layer.merge(SqliteClient.layerMemory({}), Reactivity.layer).pipe(Layer.orDie));
+    const runtime = ManagedRuntime.make(
+      SqlTransaction.layer
+        .pipe(Layer.provideMerge(sqliteLayerMemory), Layer.provideMerge(Reactivity.layer))
+        .pipe(Layer.orDie),
+    );
 
     const services = new ClientServicesHost({
       config: this.config,
@@ -225,7 +231,7 @@ export const testSpaceAutomerge = async (
   createDb: Database.Database,
   checkDb: Database.Database = createDb,
 ) => {
-  const object = Obj.make(Type.Expando, {});
+  const object = Obj.make(TestSchema.Expando, {});
   createDb.add(object);
   await expect.poll(() => checkDb.query(Filter.id(object.id)).first({ timeout: 1000 }));
 

@@ -7,6 +7,7 @@ import type * as Schema from 'effect/Schema';
 import type * as SchemaAST from 'effect/SchemaAST';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
+import { Obj } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
 import {
   type JsonPath,
@@ -19,6 +20,8 @@ import { log } from '@dxos/log';
 import { useDefaultValue } from '@dxos/react-ui';
 import { type ValidationError, validateSchema } from '@dxos/schema';
 import { type MaybePromise } from '@dxos/util';
+
+import { setValueEchoAware } from '../util';
 
 export type FormFieldStatus = {
   status?: 'error';
@@ -267,7 +270,10 @@ export const useFormHandler = <T extends AnyProperties>({
       }
 
       // Update.
-      const newValues = { ...setValue$(values, jsonPath, parsedValue) };
+      // For ECHO objects, mutate in place via Obj.change(); for plain objects, spread to create new reference.
+      const newValues = Obj.isObject(values)
+        ? (setValueEchoAware(values, jsonPath, parsedValue), values)
+        : { ...setValue$(values, jsonPath, parsedValue) };
       setValues(newValues);
 
       // TODO(burdon): Check value has changed from original.

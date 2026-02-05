@@ -41,7 +41,7 @@ export const ResetDialog = ({ mode, onReset, capabilityManager }: ResetDialogPro
   // TODO(wittjosiah): Add the sr-only translations.
   // TODO(wittjosiah): Add missing descriptions to other dialogs.
   return (
-    <Dialog.Content classNames='bs-content min-bs-[15rem] max-bs-full md:max-is-[40rem] overflow-hidden'>
+    <Dialog.Content>
       <Dialog.Title classNames='sr-only'>{t('reset dialog title')}</Dialog.Title>
       <Dialog.Description classNames='sr-only'>{t('reset dialog description')}</Dialog.Description>
       <ConfirmReset active mode={mode} onConfirm={handleReset} onCancel={handleCancel} />

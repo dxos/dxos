@@ -4,6 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
+import { Obj } from '@dxos/echo';
 import { type EdgeHttpClient } from '@dxos/edge-client';
 import { type AccessToken } from '@dxos/types';
 
@@ -77,7 +78,9 @@ export const performMobileOAuthFlow = ({
         return yield* Effect.fail(new Error(`OAuth flow failed: ${oauthResult.reason}`));
       }
 
-      accessToken.token = oauthResult.accessToken;
+      Obj.change(accessToken, (t) => {
+        t.token = oauthResult.accessToken;
+      });
     }).pipe(Effect.ensuring(listener.unlisten()));
   });
 

@@ -6,11 +6,11 @@ import { Blueprint, Template } from '@dxos/blueprints';
 import { type FunctionDefinition } from '@dxos/functions';
 import { trim } from '@dxos/util';
 
-import { gmail, open, summarize } from '../functions';
+import { create, gmail, open, summarize } from '../functions';
 
 export const Key = 'dxos.org/blueprint/inbox';
 
-export const functions: FunctionDefinition[] = [open, summarize, gmail.sync, gmail.send];
+export const functions: FunctionDefinition[] = [open, summarize, create, gmail.sync];
 export const tools: string[] = [];
 
 export const make = () =>
@@ -44,6 +44,8 @@ export const make = () =>
         - [ ] Task description.
 
         Additional information can be included (indented).
+
+        Note: Sending emails is handled by the "Inbox (Send)" blueprint.
       `,
     }),
   });

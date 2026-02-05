@@ -35,7 +35,7 @@ export type InvocationTraceContainerProps = {
   db?: Database.Database;
   queueDxn?: DXN;
   showSpaceSelector?: boolean;
-  target?: Obj.Any;
+  target?: Obj.Unknown;
   detailAxis?: 'block' | 'inline';
 };
 

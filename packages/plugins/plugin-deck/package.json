@@ -4,6 +4,10 @@
   "description": "DXOS Surface plugin for the main application layout.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
   "license": "MIT",
   "author": "DXOS.org",
   "sideEffects": true,
@@ -52,6 +56,7 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
+    "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
     "@dxos/react-ui-tabs": "workspace:*",
     "@dxos/react-ui-text-tooltip": "workspace:*",

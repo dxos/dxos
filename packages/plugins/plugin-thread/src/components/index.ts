@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-// TODO(wittjosiah): Suspense boundary for sidebar?
 export * from './Call';
 export * from './CallDebugPanel';
 export * from './CallSidebar';

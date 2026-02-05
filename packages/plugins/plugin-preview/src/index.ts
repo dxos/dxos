@@ -3,6 +3,5 @@
 //
 
 export * from './meta';
-export type * from './types';
 
 export * from './PreviewPlugin';

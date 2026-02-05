@@ -972,6 +972,12 @@ export type LoadObjectOptions = {
    * Will not eagerly preload strong deps.
    */
   returnWithUnsatisfiedDeps?: boolean;
+
+  /**
+   * Allow deleted objects to be returned.
+   * @default false
+   */
+  allowDeleted?: boolean;
 };
 
 enum CoreDatabaseState {

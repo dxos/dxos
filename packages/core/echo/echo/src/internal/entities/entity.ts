@@ -9,28 +9,37 @@ import type * as Types from 'effect/Types';
 import { type ToMutable } from '@dxos/util';
 
 import { type TypeMeta } from '../annotations';
-import { type HasId } from '../types';
+import { type AnyEntity, type EntityKind, SchemaKindId } from '../types';
 
 // TODO(burdon): Define Schema type for `typename` and use consistently for all DXN-like properties.
 
 // type RequiredKeys<T> = { [K in keyof T]-?: {} extends Pick<T, K> ? never : K }[keyof T];
-export type EchoTypeSchemaProps<T, ExtraFields = {}> = Types.Simplify<HasId & ToMutable<T> & ExtraFields>;
+export type EchoTypeSchemaProps<T, ExtraFields = {}> = Types.Simplify<AnyEntity & ToMutable<T> & ExtraFields>;
 
 // TODO(burdon): Rename EchoEntitySchema.
-export interface EchoTypeSchema<Self extends Schema.Schema.Any, ExtraFields = {}>
-  extends TypeMeta,
+export interface EchoTypeSchema<
+  Self extends Schema.Schema.Any,
+  ExtraFields = {},
+  K extends EntityKind = EntityKind,
+  Fields extends Schema.Struct.Fields = Schema.Struct.Fields,
+> extends TypeMeta,
     Schema.AnnotableClass<
-      EchoTypeSchema<Self, ExtraFields>,
+      EchoTypeSchema<Self, ExtraFields, K, Fields>,
       EchoTypeSchemaProps<Schema.Schema.Type<Self>, ExtraFields>,
       EchoTypeSchemaProps<Schema.Schema.Encoded<Self>, ExtraFields>,
       Schema.Schema.Context<Self>
     > {
-  // make(
-  //   props: RequiredKeys<Schema.TypeLiteral.Constructor<Fields, []>> extends never
-  //     ? void | Simplify<Schema.TypeLiteral.Constructor<Fields, []>>
-  //     : Simplify<Schema.TypeLiteral.Constructor<Fields, []>>,
-  //   options?: MakeProps,
-  // ): Simplify<Schema.TypeLiteral.Type<Fields, []>>;
+  /**
+   * Schema kind key that marks this as an ECHO schema and indicates its kind.
+   * Makes EchoTypeSchema satisfy the Type.Obj.Any or Type.Relation.Any type.
+   */
+  readonly [SchemaKindId]: K;
+
+  /**
+   * The fields defined in the original struct schema.
+   * Allows accessing field definitions for introspection.
+   */
+  readonly fields: Fields;
 
   instanceOf(value: unknown): boolean;
 }
@@ -69,12 +78,18 @@ export interface EchoTypeSchema<Self extends Schema.Schema.Any, ExtraFields = {}
 /**
  * @internal
  */
-export const makeEchoTypeSchema = <Self extends Schema.Schema.Any>(
-  // fields: Fields,
+export const makeEchoTypeSchema = <
+  Self extends Schema.Schema.Any,
+  K extends EntityKind = EntityKind,
+  // TODO(wittjosiah): Can this be inferred from the schema?
+  Fields extends Schema.Struct.Fields = Schema.Struct.Fields,
+>(
+  fields: Fields,
   ast: SchemaAST.AST,
   typename: string,
   version: string,
-): EchoTypeSchema<Self> => {
+  kind: K,
+): EchoTypeSchema<Self, {}, K, Fields> => {
   return class EchoObjectSchemaClass extends Schema.make<
     EchoTypeSchemaProps<Schema.Schema.Type<Self>>,
     EchoTypeSchemaProps<Schema.Schema.Encoded<Self>>,
@@ -82,12 +97,14 @@ export const makeEchoTypeSchema = <Self extends Schema.Schema.Any>(
   >(ast) {
     static readonly typename = typename;
     static readonly version = version;
+    static readonly [SchemaKindId] = kind;
+    static readonly fields = fields;
 
     static override annotations(
       annotations: Schema.Annotations.GenericSchema<EchoTypeSchemaProps<Schema.Schema.Type<Self>>>,
-    ): EchoTypeSchema<Self> {
+    ): EchoTypeSchema<Self, {}, K, Fields> {
       const schema = Schema.make<EchoTypeSchemaProps<Schema.Schema.Type<Self>>>(ast).annotations(annotations);
-      return makeEchoTypeSchema<Self>(/* fields, */ schema.ast, typename, version);
+      return makeEchoTypeSchema<Self, K, Fields>(fields, schema.ast, typename, version, kind);
     }
 
     // static make(

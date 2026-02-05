@@ -4,28 +4,32 @@
   "description": "Composer plugin for managing access tokens to remote systems.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
   "license": "MIT",
   "author": "DXOS.org",
   "sideEffects": true,
   "type": "module",
   "exports": {
     ".": {
-      "source": "./src/index.ts",
-      "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
-      "node": "./dist/lib/node-esm/index.mjs"
+      "node": "./dist/lib/node-esm/index.mjs",
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts"
     },
     "./cli": {
-      "source": "./src/cli/index.ts",
-      "types": "./dist/types/src/cli/index.d.ts",
       "browser": "./dist/lib/browser/cli/index.mjs",
-      "node": "./dist/lib/node-esm/cli/index.mjs"
+      "node": "./dist/lib/node-esm/cli/index.mjs",
+      "source": "./src/cli/index.ts",
+      "types": "./dist/types/src/cli/index.d.ts"
     },
     "./types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
       "browser": "./dist/lib/browser/types/index.mjs",
-      "node": "./dist/lib/node-esm/types/index.mjs"
+      "node": "./dist/lib/node-esm/types/index.mjs",
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -55,6 +59,7 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/react-edge-client": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
+    "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",

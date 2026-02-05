@@ -28,7 +28,7 @@ export default defineFunction({
   }),
   outputSchema: Schema.Void,
   handler: Effect.fn(function* ({ data: { id, diffs: _diffs } }) {
-    const object = yield* Database.Service.resolve(DXN.parse(id), Markdown.Document);
+    const object = yield* Database.resolve(DXN.parse(id), Markdown.Document);
     const content = yield* Effect.promise(() => object.content.load());
     const accessor = createDocAccessor(content, ['content']);
 
@@ -47,8 +47,8 @@ export default defineFunction({
             [Relation.Target]: object,
             anchor: cursor,
           });
-          yield* Database.Service.add(thread);
-          yield* Database.Service.add(relation);
+          yield* Database.add(thread);
+          yield* Database.add(relation);
         }),
       ),
       Effect.allWith({ concurrency: 'unbounded' }),

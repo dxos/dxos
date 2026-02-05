@@ -10,10 +10,11 @@ import * as Array from 'effect/Array';
 import * as Option from 'effect/Option';
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { type Chat as ChatModule } from '@dxos/assistant-toolkit';
 import { Event } from '@dxos/async';
-import { type Database, Obj } from '@dxos/echo';
+import { type Database, Filter, Obj } from '@dxos/echo';
 import { useVoiceInput } from '@dxos/plugin-transcription';
-import { useQueue } from '@dxos/react-client/echo';
+import { useQuery } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Input, type ThemedClassName, useDynamicRef, useTranslation } from '@dxos/react-ui';
 import { ChatEditor, type ChatEditorController, type ChatEditorProps } from '@dxos/react-ui-chat';
@@ -26,7 +27,6 @@ import { isTruthy } from '@dxos/util';
 import { useChatToolbarActions } from '../../hooks';
 import { meta } from '../../meta';
 import { type AiChatProcessor } from '../../processor';
-import { type Assistant } from '../../types';
 import {
   ChatActions,
   type ChatActionsProps,
@@ -49,7 +49,7 @@ type ChatContextValue = {
   debug?: boolean;
   event: Event<ChatEvent>;
   db?: Database.Database;
-  chat?: Assistant.Chat;
+  chat?: ChatModule.Chat;
   messages: Message.Message[];
   processor: AiChatProcessor;
 };
@@ -73,11 +73,10 @@ const ChatRoot = ({ children, chat, processor, onEvent, ...props }: ChatRootProp
   const lastPrompt = useRef<string | undefined>(undefined);
 
   // Messages.
-  const queue = useQueue<Message.Message>(chat?.queue.dxn);
+  const storedMessages = useQuery(chat?.queue?.target, Filter.type(Message.Message));
   const messages = useMemo(() => {
-    const queueMessages = queue?.objects?.filter(Obj.instanceOf(Message.Message)) ?? [];
-    return Array.dedupeWith([...queueMessages, ...pending], ({ id: a }, { id: b }) => a === b);
-  }, [queue?.objects, pending]);
+    return Array.dedupeWith([...storedMessages, ...pending], ({ id: a }, { id: b }) => a === b);
+  }, [storedMessages, pending]);
 
   // Events.
   const event = useMemo(() => new Event<ChatEvent>(), []);
@@ -86,6 +85,24 @@ const ChatRoot = ({ children, chat, processor, onEvent, ...props }: ChatRootProp
       switch (ev.type) {
         case 'toggle-debug': {
           setDebug((current) => !current);
+          // Dump state to console.
+          queueMicrotask(async () => {
+            const objects = processor.context.getObjects();
+            const blueprints = processor.context.getBlueprints();
+            const tools = await processor.getTools();
+            const system = await processor.getSystemPrompt();
+            // eslint-disable-next-line no-console
+            console.log('Chat processor state:', { objects, blueprints });
+            // eslint-disable-next-line no-console
+            console.log(`
+              ==== System Prompt ====
+              ${system}
+              ==== Tools ====
+              ${Object.values(tools)
+                .map((tool) => JSON.stringify(tool, null, 2))
+                .join('\n')}
+            `);
+          });
           break;
         }
 
@@ -398,7 +415,7 @@ ChatPrompt.displayName = 'Chat.Prompt';
 // Toolbar
 //
 
-type ChatToolbarProps = ThemedClassName<{ companionTo?: Obj.Any }>;
+type ChatToolbarProps = ThemedClassName<{ companionTo?: Obj.Unknown }>;
 
 const ChatToolbar = ({ classNames, companionTo }: ChatToolbarProps) => {
   const { chat } = useChatContext(ChatToolbar.displayName);

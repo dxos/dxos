@@ -55,7 +55,9 @@ describe('ComputeGraphRegistry', () => {
 
     // Create a function object in ECHO with binding that maps to DX calls.
     const functionObj = FunctionDefinition.serialize(add);
-    functionObj.binding = 'ADD';
+    Obj.change(functionObj, (f) => {
+      f.binding = 'ADD';
+    });
     space.db.add(functionObj);
 
     const node = await graph.getOrCreateNode('sheet').open();
@@ -124,7 +126,9 @@ describe('ComputeGraphRegistry', () => {
 
     // Add a bound function to the space; graph should pick it up.
     const functionObj = FunctionDefinition.serialize(add);
-    functionObj.binding = 'ADD';
+    Obj.change(functionObj, (f) => {
+      f.binding = 'ADD';
+    });
     space.db.add(functionObj);
 
     await functionsUpdated.wait();

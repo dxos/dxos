@@ -15,7 +15,7 @@ import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 
 import { ArtifactId } from '@dxos/assistant';
-import { DXN } from '@dxos/echo';
+import { DXN, Obj } from '@dxos/echo';
 import { Database } from '@dxos/echo';
 import { CredentialsService, QueueService, defineFunction } from '@dxos/functions';
 import { log } from '@dxos/log';
@@ -58,7 +58,7 @@ export default defineFunction({
         pageSize,
       });
 
-      const calendar = yield* Database.Service.resolve(DXN.parse(calendarId), Calendar.Calendar);
+      const calendar = yield* Database.resolve(DXN.parse(calendarId), Calendar.Calendar);
       const queue = yield* QueueService.getQueue<Event.Event>(calendar.queue.dxn);
 
       // State management for sync process.
@@ -92,7 +92,9 @@ export default defineFunction({
       // Update the calendar's last synced update timestamp.
       const lastUpdate = yield* Ref.get(latestUpdate);
       if (lastUpdate) {
-        calendar.lastSyncedUpdate = lastUpdate;
+        Obj.change(calendar, (c) => {
+          c.lastSyncedUpdate = lastUpdate;
+        });
         log('updated lastSyncedUpdate', { lastUpdate });
       }
 
@@ -121,11 +123,11 @@ export default defineFunction({
           Layer.effect(
             GoogleCredentials,
             Effect.gen(function* () {
-              const calendar = yield* Database.Service.resolve(DXN.parse(calendarId), Calendar.Calendar);
+              const calendar = yield* Database.resolve(DXN.parse(calendarId), Calendar.Calendar);
               // Pre-load token at effect creation time.
               let cachedToken: string | undefined;
               if (calendar.accessToken) {
-                const accessToken = yield* Database.Service.load(calendar.accessToken);
+                const accessToken = yield* Database.load(calendar.accessToken);
                 if (accessToken?.token) {
                   log('using calendar-specific access token', { note: accessToken.note });
                   cachedToken = accessToken.token;

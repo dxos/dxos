@@ -4,14 +4,9 @@
 
 import { templates } from '@dxos/assistant';
 import {
-  Agent,
   AssistantToolkit,
-  Discord,
   DiscordBlueprint,
-  EntityExtraction,
-  Linear,
   LinearBlueprint,
-  Research,
   ResearchBlueprint,
   SystemToolkit,
   WebSearchBlueprint,
@@ -19,7 +14,7 @@ import {
 import { Blueprint } from '@dxos/blueprints';
 import { type FunctionDefinition } from '@dxos/functions';
 
-import { list, load } from '../functions';
+import { list, load, search } from '../functions';
 
 // TODO(burdon): Document plugin structure (blueprint, functions, toolkit.).
 // TODO(burdon): Test framework for developing functions. Error handling.
@@ -27,16 +22,16 @@ import { list, load } from '../functions';
 
 export const deckTools = ['open-item'];
 
-export const functions$: FunctionDefinition[] = [list, load];
+export const functions$: FunctionDefinition[] = [list, load, search];
 export const functions = [
   ...functions$,
   // Factor out.
-  Research.create,
-  Research.research,
-  Agent.prompt,
-  EntityExtraction.extract,
-  Discord.fetch,
-  Linear.sync,
+  // Research.create,
+  // Research.research,
+  // Agent.prompt,
+  // EntityExtraction.extract,
+  // Discord.fetch,
+  // Linear.sync,
 ];
 export const tools = [...AssistantToolkit.tools, ...SystemToolkit.tools, ...deckTools];
 

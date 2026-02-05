@@ -12,7 +12,8 @@ import { useTriggerRuntimeControls } from '../hooks';
 import { meta } from '../meta';
 
 export const TriggersSettings = ({ db }: { db: Database.Database }) => {
-  const { triggers, isRunning, start, stop } = useTriggerRuntimeControls(db);
+  const { state, start, stop } = useTriggerRuntimeControls(db);
+  const isRunning = state?.enabled ?? false;
   const { t } = useTranslation(meta.id);
 
   return (

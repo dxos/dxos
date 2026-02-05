@@ -5,7 +5,10 @@
   "description": "A decentralized alternative to the commercial cloud for privacy preserving software.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
-  "repository": "github:dxos/dxos",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
   "license": "MIT",
   "author": "info@dxos.org",
   "sideEffects": false,
@@ -22,7 +25,7 @@
     "killorphans": "./scripts/killorphans",
     "knip": "knip",
     "lint": "moon run :lint -- --fix",
-    "lint-changed": "moon :lint --affected --remote -- --fix",
+    "lint-changed": "moon run :lint --affected remote -- --fix",
     "lockfile": "vite-node scripts/lockfile.ts",
     "moonx": "./scripts/moonx",
     "pkg-inspect": "./scripts/pkg-inspect.mjs",
@@ -143,7 +146,7 @@
     "rollup-plugin-sourcemaps": "catalog:",
     "semver": "catalog:",
     "serve": "catalog:",
-    "storybook": "10.1.11",
+    "storybook": "catalog:",
     "ts-morph": "catalog:",
     "tsdown": "catalog:",
     "tsx": "catalog:",
@@ -203,7 +206,7 @@
     ],
     "overrides": {
       "typescript": "^5.9.3",
-      "@automerge/automerge": "3.2.1",
+      "@automerge/automerge": "catalog:",
       "better-sqlite3": "12.6.0",
       "@lezer/lr": "^1.4.2",
       "@types/node": "22.10.2",

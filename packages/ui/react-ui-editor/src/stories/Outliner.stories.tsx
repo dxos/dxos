@@ -68,7 +68,7 @@ const DefaultStory = ({ text }: StoryProps) => {
 const meta = {
   title: 'ui/react-ui-editor/Outliner',
   render: DefaultStory,
-  decorators: [withTheme, withAttention],
+  decorators: [withTheme, withAttention()],
   parameters: {
     layout: 'fullscreen',
   },

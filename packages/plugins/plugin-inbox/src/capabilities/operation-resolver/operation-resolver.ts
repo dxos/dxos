@@ -11,14 +11,25 @@ import { log } from '@dxos/log';
 import { Operation, OperationResolver } from '@dxos/operation';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
 import { SpaceOperation } from '@dxos/plugin-space/types';
+import { Collection } from '@dxos/schema';
 import { Organization, Person } from '@dxos/types';
 
 import { COMPOSE_EMAIL_DIALOG } from '../../constants';
-import { InboxOperation } from '../../types';
+import { Calendar, InboxOperation, Mailbox } from '../../types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return Capability.contributes(Common.Capability.OperationResolver, [
+      OperationResolver.make({
+        operation: InboxOperation.OnCreateSpace,
+        handler: Effect.fnUntraced(function* ({ rootCollection }) {
+          const mailboxCollection = Collection.makeManaged({ key: Mailbox.Mailbox.typename });
+          const calendarCollection = Collection.makeManaged({ key: Calendar.Calendar.typename });
+          Obj.change(rootCollection, (c) => {
+            c.objects.push(Ref.make(mailboxCollection), Ref.make(calendarCollection));
+          });
+        }),
+      }),
       OperationResolver.make({
         operation: InboxOperation.ExtractContact,
         handler: Effect.fnUntraced(function* ({ db, actor }) {
@@ -48,7 +59,9 @@ export default Capability.makeModule(
             emails: [{ value: email }],
           });
           if (name) {
-            newContact.fullName = name;
+            Obj.change(newContact, (c) => {
+              c.fullName = name;
+            });
           }
 
           const emailDomain = email.split('@')[1]?.toLowerCase();
@@ -95,7 +108,9 @@ export default Capability.makeModule(
             log.info('found matching organization', {
               organization: matchingOrg,
             });
-            newContact.organization = Ref.make(matchingOrg);
+            Obj.change(newContact, (c) => {
+              c.organization = Ref.make(matchingOrg);
+            });
           }
 
           if (!space.properties.staticRecords.includes(Person.Person.typename)) {
