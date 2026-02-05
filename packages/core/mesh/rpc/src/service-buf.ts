@@ -3,8 +3,9 @@
 //
 
 import type { DescMessage, DescMethod, DescService } from '@bufbuild/protobuf';
-import type { GenMessage, GenService, GenServiceMethods } from '@bufbuild/protobuf/codegenv2';
-import { type Message, type MessageShape, toBinary, fromBinary } from '@bufbuild/protobuf';
+import { type Message, type MessageShape, fromBinary, toBinary } from '@bufbuild/protobuf';
+import type { GenService, GenServiceMethods } from '@bufbuild/protobuf/codegenv2';
+
 import { Stream } from '@dxos/codec-protobuf/stream';
 import { invariant } from '@dxos/invariant';
 import { getAsyncProviderValue } from '@dxos/util';
@@ -57,34 +58,22 @@ type MethodOutputType<M> = M extends { output: infer O extends DescMessage } ? M
 /**
  * Get the client method signature for a unary RPC method.
  */
-type UnaryClientMethod<I, O> = (
-  request: I,
-  options?: BufRequestOptions,
-) => Promise<O>;
+type UnaryClientMethod<I, O> = (request: I, options?: BufRequestOptions) => Promise<O>;
 
 /**
  * Get the client method signature for a server streaming RPC method.
  */
-type StreamingClientMethod<I, O> = (
-  request: I,
-  options?: BufRequestOptions,
-) => Stream<O>;
+type StreamingClientMethod<I, O> = (request: I, options?: BufRequestOptions) => Stream<O>;
 
 /**
  * Get the handler signature for a unary RPC method.
  */
-type UnaryHandler<I, O> = (
-  request: I,
-  options?: BufRequestOptions,
-) => Promise<O>;
+type UnaryHandler<I, O> = (request: I, options?: BufRequestOptions) => Promise<O>;
 
 /**
  * Get the handler signature for a server streaming RPC method.
  */
-type StreamingHandler<I, O> = (
-  request: I,
-  options?: BufRequestOptions,
-) => Stream<O>;
+type StreamingHandler<I, O> = (request: I, options?: BufRequestOptions) => Stream<O>;
 
 /**
  * Maps a method definition to its client signature.
@@ -198,7 +187,10 @@ class BufServiceHandler<S extends GenService<GenServiceMethods>> implements BufS
     const mappedMethodName = methodName[0].toLowerCase() + methodName.slice(1);
     const descMethod = this._service.method[mappedMethodName] as DescMethod | undefined;
     invariant(descMethod, `Method not found: ${methodName}`);
-    invariant(descMethod.methodKind !== 'server_streaming', `Invalid RPC method call: ${methodName} is a streaming method.`);
+    invariant(
+      descMethod.methodKind !== 'server_streaming',
+      `Invalid RPC method call: ${methodName} is a streaming method.`,
+    );
 
     const { input, output } = descMethod;
     const requestDecoded = fromBinary(input, request.value);
@@ -219,7 +211,10 @@ class BufServiceHandler<S extends GenService<GenServiceMethods>> implements BufS
     const mappedMethodName = methodName[0].toLowerCase() + methodName.slice(1);
     const descMethod = this._service.method[mappedMethodName] as DescMethod | undefined;
     invariant(descMethod, `Method not found: ${methodName}`);
-    invariant(descMethod.methodKind === 'server_streaming', `Invalid RPC method call: ${methodName} is not a streaming method.`);
+    invariant(
+      descMethod.methodKind === 'server_streaming',
+      `Invalid RPC method call: ${methodName} is not a streaming method.`,
+    );
 
     const { input, output } = descMethod;
     const requestDecoded = fromBinary(input, request.value);
@@ -322,7 +317,10 @@ export const createBufProtoRpcPeer = <
       const service = exposed[serviceName] as GenService<GenServiceMethods> & DescService;
       const serviceHandler = handlers[serviceName];
       const serviceFqn = service.typeName;
-      exposedHandlers[serviceFqn] = new BufServiceHandler(service, serviceHandler as BufServiceProvider<BufRpcHandlers<GenService<GenServiceMethods>>>);
+      exposedHandlers[serviceFqn] = new BufServiceHandler(
+        service,
+        serviceHandler as BufServiceProvider<BufRpcHandlers<GenService<GenServiceMethods>>>,
+      );
     }
   }
 
@@ -358,7 +356,8 @@ export const createBufProtoRpcPeer = <
 
       requestedClients[serviceName] = createBufClient(service, {
         call: (method, req, options) => peer.call(`${serviceFqn}.${method}`, req, options) as Promise<BufAny>,
-        callStream: (method, req, options) => peer.callStream(`${serviceFqn}.${method}`, req, options) as Stream<BufAny>,
+        callStream: (method, req, options) =>
+          peer.callStream(`${serviceFqn}.${method}`, req, options) as Stream<BufAny>,
       }) as BufRpcClient<Client[typeof serviceName]>;
     }
   }

@@ -9,22 +9,17 @@ import { describe, expect, test } from 'vitest';
 import { latch, sleep } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf/stream';
 import {
-  TestService,
-  TestStreamService,
+  PingReponseSchema,
+  PingRequestSchema,
   PingService,
   TestRpcRequestSchema,
-  TestRpcResponseSchema,
-  PingRequestSchema,
-  PingReponseSchema,
   type TestRpcResponse,
+  TestRpcResponseSchema,
+  TestService,
+  TestStreamService,
 } from '@dxos/protocols/buf/example/testing/rpc_pb';
 
-import {
-  type BufProtoRpcPeer,
-  createBufProtoRpcPeer,
-  createBufServiceBundle,
-  type BufRpcClient,
-} from './service-buf';
+import { type BufProtoRpcPeer, createBufProtoRpcPeer, createBufServiceBundle } from './service-buf';
 import { createLinkedPorts } from './testing';
 
 describe('Buf protobuf service', () => {
@@ -58,9 +53,7 @@ describe('Buf protobuf service', () => {
 
     await Promise.all([server.open(), client.open()]);
 
-    const response = await client.rpc.TestService.testCall(
-      create(TestRpcRequestSchema, { data: 'requestData' }),
-    );
+    const response = await client.rpc.TestService.testCall(create(TestRpcRequestSchema, { data: 'requestData' }));
 
     expect(response.data).toEqual('responseData');
   });
@@ -185,9 +178,7 @@ describe('Buf protobuf service', () => {
 
       await Promise.all([server.open(), client.open()]);
 
-      const stream = client.rpc.TestStreamService.testCall(
-        create(TestRpcRequestSchema, { data: 'requestData' }),
-      );
+      const stream = client.rpc.TestStreamService.testCall(create(TestRpcRequestSchema, { data: 'requestData' }));
 
       expect(await Stream.consume(stream)).toEqual([
         { ready: true },
@@ -234,9 +225,7 @@ describe('Buf protobuf service', () => {
 
       await Promise.all([server.open(), client.open()]);
 
-      const stream = client.rpc.TestStreamService.testCall(
-        create(TestRpcRequestSchema, { data: 'requestData' }),
-      );
+      const stream = client.rpc.TestStreamService.testCall(create(TestRpcRequestSchema, { data: 'requestData' }));
 
       let lastData: string | undefined;
       const [closed, close] = latch();
@@ -285,9 +274,7 @@ describe('Buf protobuf service', () => {
 
       await Promise.all([server.open(), client.open()]);
 
-      const response = await client.rpc.TestService.testCall(
-        create(TestRpcRequestSchema, { data: 'requestData' }),
-      );
+      const response = await client.rpc.TestService.testCall(create(TestRpcRequestSchema, { data: 'requestData' }));
       expect(response.data).toEqual('responseData');
 
       const ping = await client.rpc.PingService.ping(create(PingRequestSchema, { nonce: 5 }));
@@ -335,9 +322,7 @@ describe('Buf protobuf service', () => {
 
       await Promise.all([alice.open(), bob.open()]);
 
-      const response = await alice.rpc.TestService.testCall(
-        create(TestRpcRequestSchema, { data: 'requestData' }),
-      );
+      const response = await alice.rpc.TestService.testCall(create(TestRpcRequestSchema, { data: 'requestData' }));
       expect(response.data).toEqual('responseData');
 
       const ping = await bob.rpc.PingService.ping(create(PingRequestSchema, { nonce: 5 }));
@@ -376,9 +361,7 @@ describe('Buf protobuf service', () => {
 
       await Promise.all([server.open(), client.open()]);
 
-      const response = await client.rpc.TestService.testCall(
-        create(TestRpcRequestSchema, { data: 'requestData' }),
-      );
+      const response = await client.rpc.TestService.testCall(create(TestRpcRequestSchema, { data: 'requestData' }));
       expect(response.data).toEqual('responseData');
     });
 
@@ -415,9 +398,7 @@ describe('Buf protobuf service', () => {
 
       await Promise.all([server.open(), client.open()]);
 
-      const response = await client.rpc.TestService.testCall(
-        create(TestRpcRequestSchema, { data: 'requestData' }),
-      );
+      const response = await client.rpc.TestService.testCall(create(TestRpcRequestSchema, { data: 'requestData' }));
       expect(response.data).toEqual('responseData');
     });
 
@@ -456,9 +437,7 @@ describe('Buf protobuf service', () => {
 
       await Promise.all([server.open(), client.open()]);
 
-      const stream = client.rpc.TestStreamService.testCall(
-        create(TestRpcRequestSchema, { data: 'requestData' }),
-      );
+      const stream = client.rpc.TestStreamService.testCall(create(TestRpcRequestSchema, { data: 'requestData' }));
       expect(await Stream.consume(stream)).toEqual([
         { ready: true },
         { data: { $typeName: 'example.testing.rpc.TestRpcResponse', data: 'foo' } },
@@ -492,9 +471,7 @@ describe('Buf protobuf service', () => {
 
       await Promise.all([server.open(), client.open()]);
 
-      const stream = client.rpc.TestStreamService.testCall(
-        create(TestRpcRequestSchema, { data: 'requestData' }),
-      );
+      const stream = client.rpc.TestStreamService.testCall(create(TestRpcRequestSchema, { data: 'requestData' }));
       expect(await Stream.consume(stream)).toEqual([expect.objectContaining({ closed: true })]);
     });
   });
@@ -530,10 +507,9 @@ describe('Buf protobuf service', () => {
 
     await Promise.all([server.open(), client.open()]);
 
-    const promise = client.rpc.TestService.testCall(
-      create(TestRpcRequestSchema, { data: 'requestData' }),
-      { timeout: 1 },
-    );
+    const promise = client.rpc.TestService.testCall(create(TestRpcRequestSchema, { data: 'requestData' }), {
+      timeout: 1,
+    });
     await expect(promise).rejects.toThrow(/Timeout/);
   });
 });
