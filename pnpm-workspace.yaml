@@ -28,9 +28,9 @@ catalog:
   '@automerge/automerge-repo-storage-indexeddb': 2.5.1
   '@babel/core': ^7.18.13
   '@babel/runtime': ^7.9.6
-  '@bufbuild/buf': 1.61.0
-  '@bufbuild/protobuf': 2.10.1
-  '@bufbuild/protoc-gen-es': 2.10.1
+  '@bufbuild/buf': 1.65.0
+  '@bufbuild/protobuf': 2.11.0
+  '@bufbuild/protoc-gen-es': 2.11.0
   '@ch-ui/colors': 1.2.1
   '@ch-ui/icons': ^1.0.1
   '@ch-ui/tailwind-tokens': 2.8.1
