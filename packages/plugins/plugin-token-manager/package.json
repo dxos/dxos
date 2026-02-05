@@ -62,6 +62,8 @@
     "@effect/cli": "catalog:",
     "@effect/platform-bun": "catalog:",
     "@tauri-apps/api": "catalog:",
+    "@tauri-apps/plugin-deep-link": "catalog:",
+    "@tauri-apps/plugin-os": "catalog:",
     "@tauri-apps/plugin-shell": "catalog:",
     "get-port-please": "catalog:"
   },

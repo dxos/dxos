@@ -1,0 +1,14 @@
+{
+  "name": "@dxos/composer-dxos-org",
+  "version": "0.8.3",
+  "private": true,
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "info@dxos.org",
+  "type": "module",
+  "devDependencies": {
+    "@cloudflare/workers-types": "catalog:",
+    "wrangler": "catalog:"
+  }
+}

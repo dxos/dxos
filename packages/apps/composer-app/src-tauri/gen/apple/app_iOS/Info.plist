@@ -46,5 +46,14 @@
 	<string>Request microphone access for WebRTC</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLSchemes</key>
+			<array/>
+			<key>CFBundleURLName</key>
+			<string>https</string>
+		</dict>
+	</array>
 </dict>
 </plist>

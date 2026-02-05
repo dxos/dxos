@@ -46,7 +46,9 @@
     "macOS": {
       "entitlements": "./Entitlements.plist"
     },
-    "iOS": {},
+    "iOS": {
+      "developmentTeam": "9428WC5MR8"
+    },
     "createUpdaterArtifacts": true,
     "externalBin": ["sidecar/ollama"]
   },
@@ -54,6 +56,19 @@
     "updater": {
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEY2QjhEODU3Rjk5RDhENzAKUldSd2paMzVWOWk0OWxrYVlEVmFnYnFvY2JHekpNTXkxaWpKaGRJSEFmQ1N5SzZwUG93R204RWcK",
       "endpoints": ["https://cdn.crabnebula.app/update/dxos/composer/{{target}}-{{arch}}/{{current_version}}"]
+    },
+    "deep-link": {
+      "mobile": [
+        {
+          "scheme": ["https"],
+          "host": "composer.dxos.org",
+          "pathPrefix": ["/redirect"],
+          "appLink": true
+        }
+      ],
+      "desktop": {
+        "schemes": ["composer"]
+      }
     }
   }
 }

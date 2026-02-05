@@ -225,6 +225,7 @@ catalog:
   '@tanstack/react-virtual': ^3.13.18
   '@tauri-apps/api': ^2.8.0
   '@tauri-apps/cli': ^2.8.4
+  '@tauri-apps/plugin-deep-link': ^2.2.0
   '@tauri-apps/plugin-global-shortcut': ^2.2.0
   '@tauri-apps/plugin-os': ^2.3.1
   '@tauri-apps/plugin-process': ^2.3.0

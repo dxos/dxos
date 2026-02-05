@@ -92,6 +92,7 @@
     "@dxos/util": "workspace:*",
     "@fontsource/poiret-one": "catalog:",
     "@tauri-apps/api": "catalog:",
+    "@tauri-apps/plugin-deep-link": "catalog:",
     "@tauri-apps/plugin-os": "catalog:",
     "effect": "catalog:",
     "isomorphic-fetch": "catalog:",

@@ -27,6 +27,7 @@ tauri-plugin-log = "2"
 tauri-plugin-os = "2"
 tauri-plugin-process = "2"
 tauri-plugin-shell = "2"
+tauri-plugin-deep-link = "2.4"
 
 # OAuth HTTP server dependencies.
 hyper = { version = "1", features = ["http1", "server"] }
