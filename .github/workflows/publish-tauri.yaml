@@ -165,6 +165,9 @@ jobs:
           run_install: true
 
       - uses: moonrepo/setup-toolchain@v0
+        with:
+          # IMPORTANT: Keep in-sync with .prototools
+          moon-version: '2.0.0-rc.2'
 
       - name: Install Rust toolchain
         uses: actions-rust-lang/setup-rust-toolchain@v1
@@ -265,6 +268,9 @@ jobs:
           run_install: true
 
       - uses: moonrepo/setup-toolchain@v0
+        with:
+          # IMPORTANT: Keep in-sync with .prototools
+          moon-version: '2.0.0-rc.2'
 
       - name: Install stable toolchain
         uses: actions-rust-lang/setup-rust-toolchain@v1
