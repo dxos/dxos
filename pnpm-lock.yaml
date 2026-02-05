@@ -286,8 +286,8 @@ catalogs:
       specifier: ^1.0.8
       version: 1.0.8
     '@moonrepo/cli':
-      specifier: 1.41.7
-      version: 1.41.7
+      specifier: 2.0.0-rc.2
+      version: 2.0.0-rc.2
     '@ngneat/falso':
       specifier: ^7.1.1
       version: 7.1.1
@@ -842,7 +842,7 @@ catalogs:
       version: 7.0.0-dev.20250808.1
     '@typescript/vfs':
       specifier: ^1.6.0
-      version: 1.6.0
+      version: 1.6.2
     '@uiw/codemirror-theme-vscode':
       specifier: ^4.25.2
       version: 4.25.2
@@ -1963,8 +1963,8 @@ catalogs:
       specifier: ^0.3.1
       version: 0.3.1
     zone.js:
-      specifier: '>=0.11.4 <0.12.0-0 || >=0.13.0 <0.14.0-0 || >=0.14.0 <0.15.0-0'
-      version: 0.14.8
+      specifier: ^0.15.0
+      version: 0.15.1
     zx:
       specifier: ^8.8.5
       version: 8.8.5
@@ -2072,7 +2072,7 @@ importers:
         version: 9.37.0
       '@moonrepo/cli':
         specifier: 'catalog:'
-        version: 1.41.7
+        version: 2.0.0-rc.2
       '@octokit/rest':
         specifier: 'catalog:'
         version: 19.0.5
@@ -11056,7 +11056,7 @@ importers:
         version: 4.1.0
       '@typescript/vfs':
         specifier: 'catalog:'
-        version: 1.6.0(typescript@5.9.3)
+        version: 1.6.2(typescript@5.9.3)
       '@valtown/codemirror-continue':
         specifier: 'catalog:'
         version: 2.3.1(@codemirror/language@6.11.3)(@codemirror/state@6.5.2)(@codemirror/view@6.38.5)(@lezer/common@1.2.2)
@@ -14020,7 +14020,7 @@ importers:
         version: 0.203.0
       '@opentelemetry/auto-instrumentations-web':
         specifier: 'catalog:'
-        version: 0.51.3(@opentelemetry/api@1.9.0)(zone.js@0.14.8)
+        version: 0.51.3(@opentelemetry/api@1.9.0)(zone.js@0.15.1)
       '@opentelemetry/exporter-logs-otlp-http':
         specifier: 'catalog:'
         version: 0.203.0(@opentelemetry/api@1.9.0)
@@ -14090,7 +14090,7 @@ importers:
         version: 5.0.5
       zone.js:
         specifier: 'catalog:'
-        version: 0.14.8
+        version: 0.15.1
 
   packages/sdk/react-client:
     dependencies:
@@ -22471,42 +22471,37 @@ packages:
     peerDependencies:
       three: '>= 0.159.0'
 
-  '@moonrepo/cli@1.41.7':
-    resolution: {integrity: sha512-zZdE/2m/V/33B3DZOhsuNwRPme+WZiEpggcK6N2og6FCezD/4AxNjc9uZNPBAj2qaDFl3Q+bgtfrHBjdKy4ilg==}
+  '@moonrepo/cli@2.0.0-rc.2':
+    resolution: {integrity: sha512-Iaar67Jyu5JNBUmVH1r8WrkQkb7HTWwcQvduAx1+aI+3YD8vFSF4UqoVh8oZhWkggsNeonjDH0ayBi9QfvA4zQ==}
     hasBin: true
 
-  '@moonrepo/core-linux-arm64-gnu@1.41.7':
-    resolution: {integrity: sha512-Opa+jmNLYsHMRlJcmIn78kKY+76CT/93BvynxuMICPfaQqJTAR/5WPGre1omehGlkg5rbiVshsNTiaa+2bHzpA==}
+  '@moonrepo/core-linux-arm64-gnu@2.0.0-rc.2':
+    resolution: {integrity: sha512-4/N/hD75K6uDSp0hemfsJbWnaOaqe3Rs47QAFbG8xjRXPY6I3BcTTI7DcuQ5UCx0CXe4C8sSta0fCKPL4R5zCQ==}
     cpu: [arm64]
     os: [linux]
 
-  '@moonrepo/core-linux-arm64-musl@1.41.7':
-    resolution: {integrity: sha512-0ipCRwg75iFWfsjxIYY9IAm/cMoUy9iUk/qs2+JhruFeDrY6tCdV9Nyo8F2h45WC+/2qwZ7IMEdfWNPJT0TSyA==}
+  '@moonrepo/core-linux-arm64-musl@2.0.0-rc.2':
+    resolution: {integrity: sha512-t2spMFBJwvYvFYB9/gPRkZ7HvLDWUyjMmXLPtPbV4KWt+ACKF43x5cOy3XsyeWCCSmqBls4Uc6gH/RVfoJnvqg==}
     cpu: [arm64]
     os: [linux]
 
-  '@moonrepo/core-linux-x64-gnu@1.41.7':
-    resolution: {integrity: sha512-iHLaZF0ryKhFTf5G/dFrQHPEFII9p88pXXUl17U9tjfeziFyksbdkQrZhNv6sfbE0bDJGPA3H5TEMR93ZwXo/A==}
+  '@moonrepo/core-linux-x64-gnu@2.0.0-rc.2':
+    resolution: {integrity: sha512-LJk0l/ThN0uQU9/I7tFvM+OPTy6gObHo1eQVBuQ1r8cvBg1CLz8GMG2zT5xFM7NQTsyzcUzGKyREDcrAQWskAQ==}
     cpu: [x64]
     os: [linux]
 
-  '@moonrepo/core-linux-x64-musl@1.41.7':
-    resolution: {integrity: sha512-0nZMjOBBSGHNUSIGcCBrfxgKVmeZQjmXpeMVfO3YG9e2irFR2neHbNIud6vLapC+StgV2UbrKoExR+HRtoyzuA==}
+  '@moonrepo/core-linux-x64-musl@2.0.0-rc.2':
+    resolution: {integrity: sha512-R9bENS682hu/PeAwGR9LcSSjMUe4WXBCVzyGE8s+XuB+JsJjoDZnVJRDsSCnVN1rd8zpUMCH2/uc5xb0K7EipA==}
     cpu: [x64]
     os: [linux]
 
-  '@moonrepo/core-macos-arm64@1.41.7':
-    resolution: {integrity: sha512-Z6okifZS8MA6aXFQ1q/Ej45aAq6i2riDgqWB9CmBVqV7JIdJMLP4++ir+FqGu9S0G34SFgspV0g+mrfFgR+/Nw==}
+  '@moonrepo/core-macos-arm64@2.0.0-rc.2':
+    resolution: {integrity: sha512-Q09iNAmevr5TR49EWv+tcEmhYGJvBWDGA/BfWMfVVcKDI0oGXLBPCtVRckgU8zbUrlMevEd85TC6kdX9/f6IdA==}
     cpu: [arm64]
     os: [darwin]
 
-  '@moonrepo/core-macos-x64@1.41.7':
-    resolution: {integrity: sha512-mOHO4/Ag331oVAxg1QNfaWCNfrKdy6HsUJXNY11ERvpNsi0Fh+qnZ+if3ZiC9jwUdwjw2MvtCRxrlXgtI/shrQ==}
-    cpu: [x64]
-    os: [darwin]
-
-  '@moonrepo/core-windows-x64-msvc@1.41.7':
-    resolution: {integrity: sha512-p7CiKyWh4j1lhdF81vcacQmgPLV/di3nU5QXjg1lL2mF296HMx4H8sOlcxD/RieGfFW0Qfg5zIreugCHCNUCeA==}
+  '@moonrepo/core-windows-x64-msvc@2.0.0-rc.2':
+    resolution: {integrity: sha512-9pHnZKvVyS3kEw+7IzeP69GjxkyB1HBxZri7fjm65WPky7vTa3fxqE2hJmiEgKjCiEpubD9ZhYlLmIsjuQ3Ing==}
     cpu: [x64]
     os: [win32]
 
@@ -27191,11 +27186,6 @@ packages:
     engines: {node: '>=20.6.0'}
     hasBin: true
 
-  '@typescript/vfs@1.6.0':
-    resolution: {integrity: sha512-hvJUjNVeBMp77qPINuUvYXj4FyWeeMMKZkxEATEU3hqBAQ7qdTBCUFT7Sp0Zu0faeEtFf+ldXxMEDr/bk73ISg==}
-    peerDependencies:
-      typescript: ^5.9.3
-
   '@typescript/vfs@1.6.2':
     resolution: {integrity: sha512-hoBwJwcbKHmvd2QVebiytN1aELvpk9B74B4L1mFm/XT1Q/VOYAWl2vQ9AWRFtQq8zmz6enTpfTV8WRc4ATjW/g==}
     peerDependencies:
@@ -27218,16 +27208,8 @@ packages:
   '@ungap/structured-clone@1.2.0':
     resolution: {integrity: sha512-zuVdFrMJiuCDQUMCzQaD6KL28MjnqqN8XnAqiEq9PNm/hCPTSGfrXCOfwj1ow4LFb/tNymJPwsNbVePc1xFqrQ==}
 
-  '@use-gesture/core@10.2.27':
-    resolution: {integrity: sha512-V4XV7hn9GAD2MYu8yBBVi5iuWBsAMfjPRMsEVzoTNGYH72tf0kFP+OKqGKc8YJFQIJx6yj+AOqxmEHOmx2/MEA==}
-
   '@use-gesture/core@10.3.1':
     resolution: {integrity: sha512-WcINiDt8WjqBdUXye25anHiNxPc0VOrlT8F6LLkU6cycrOGUDyY/yyFmsg3k8i5OLvv25llc0QC45GhR/C8llw==}
-
-  '@use-gesture/react@10.2.27':
-    resolution: {integrity: sha512-7E5vnWCxeslWlxwZ8uKIcnUZVMTRMZ8cvSnLLKF1NkyNb3PnNiAzoXM4G1vTKJKRhgOTeI6wK1YsEpwo9ABV5w==}
-    peerDependencies:
-      react: ~19.2.3
 
   '@use-gesture/react@10.3.1':
     resolution: {integrity: sha512-Yy19y6O2GJq8f7CHf7L0nxL8bf4PZCPaVOCgJrusOeFHY1LvHgYXnmnXg6N5iwAnbgbZCDjo60SiM6IPJi9C5g==}
@@ -31041,29 +31023,32 @@ packages:
 
   glob@10.4.5:
     resolution: {integrity: sha512-7Bv8RF0k6xjo7d4A/PxYLbUCfb6c+Vpd2/mB2yRDlew7Jb5hEXiCD9ibfO7wpk8i4sevK6DFny9h7EYbM3/sHg==}
+    deprecated: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
     hasBin: true
 
   glob@11.1.0:
     resolution: {integrity: sha512-vuNwKSaKiqm7g0THUBu2x7ckSs3XJLXE+2ssL7/MfTGPLLcrJQ/4Uq1CjPTtO5cCIiRxqvN6Twy1qOwhL0Xjcw==}
     engines: {node: 20 || >=22}
+    deprecated: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
     hasBin: true
 
   glob@7.1.6:
     resolution: {integrity: sha512-LwaxwyZ72Lk7vZINtNNrywX0ZuLyStrdDtabefZKAY5ZGJhVtgdznluResxNmPitE0SAO+O26sWTHeKSI2wMBA==}
-    deprecated: Glob versions prior to v9 are no longer supported
+    deprecated: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
 
   glob@7.2.3:
     resolution: {integrity: sha512-nFR0zLpU2YCaRxwoCJvL6UvCH2JFyFVIvwTLsIf21AuHlMskA1hhTdk+LlYJtOlYt9v6dvszD2BGRqBL+iQK9Q==}
-    deprecated: Glob versions prior to v9 are no longer supported
+    deprecated: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
 
   glob@8.1.0:
     resolution: {integrity: sha512-r8hpEjiQEYlF2QU0df3dS+nxxSIreXQS1qRhMJM0Q5NDdR386C7jb7Hwwod8Fgiuex+k0GFjgft18yvxm5XoCQ==}
     engines: {node: '>=12'}
-    deprecated: Glob versions prior to v9 are no longer supported
+    deprecated: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
 
   glob@9.3.5:
     resolution: {integrity: sha512-e1LleDykUz2Iu+MTYdkSsuWX8lvAjAcs0Xef0lNIu0S2wOAzuTxCJtcd9S3cijlwYF18EsU3rzb8jPVobxDh9Q==}
     engines: {node: '>=16 || 14 >=14.17'}
+    deprecated: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
 
   global-agent@3.0.0:
     resolution: {integrity: sha512-PT6XReJ+D07JvGoxQMkT6qji/jVNfX/h364XHZOWeRzy64sSFr+xJ5OX7LI3b4MPQzdL4H8Y8M0xzPpsVMwA8Q==}
@@ -36371,6 +36356,7 @@ packages:
   tar@7.4.3:
     resolution: {integrity: sha512-5S7Va8hKfV7W5U6g3aYxXmlPoZVAwUMy9AOKyF2fVuZa2UD3qZjg578OrLRt8PcNN1PleVaL/5/yYATNL0ICUw==}
     engines: {node: '>=18'}
+    deprecated: Old versions of tar are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
 
   temp-dir@2.0.0:
     resolution: {integrity: sha512-aoBAniQmmwtcKp/7BzsH8Cxzv8OL736p7v1ihGb5e9DJ9kTwGWHrQrVB5+lfVDzfGrdRzXch+ig7LHaY1JTOrg==}
@@ -37623,9 +37609,6 @@ packages:
       '@types/emscripten':
         optional: true
 
-  web-worker@1.2.0:
-    resolution: {integrity: sha512-PgF341avzqyx60neE9DD+XS26MMNMoUQRz9NOZwW32nPQrF6p77f1htcnjBSEV8BGMKZ16choqUG4hyI0Hx7mA==}
-
   web-worker@1.5.0:
     resolution: {integrity: sha512-RiMReJrTAiA+mBjGONMnjVDP2u3p9R1vkcGz6gDIrOMT3oGuYwX2WRMYI9ipkphSuE5XKEhydbhNEJh4NY9mlw==}
 
@@ -38183,8 +38166,8 @@ packages:
   zod@4.1.12:
     resolution: {integrity: sha512-JInaHOamG8pt5+Ey8kGmdcAcg3OL9reK8ltczgHTAwNhMys/6ThXHityHxVV2p3fkw/c+MAvBHFVYHFZDmjMCQ==}
 
-  zone.js@0.14.8:
-    resolution: {integrity: sha512-48uh7MnVp4/OQDuCHeFdXw5d8xwPqFTvlHgPJ1LBFb5GaustLSZV+YUH0to5ygNyGpqTsjpbpt141U/j3pCfqQ==}
+  zone.js@0.15.1:
+    resolution: {integrity: sha512-XE96n56IQpJM7NAoXswY3XRLcWFW83xe0BiAOeMD7K5k5xecOeul3Qcpx6GqEeeHNkW5DWL5zOyTbEfB4eti8w==}
 
   zustand@3.7.2:
     resolution: {integrity: sha512-PIJDIZKtokhof+9+60cpockVOq05sJzHCriyvaLBmEJixseQ1a5Kdov6fWZfWOu5SK9c+FhH1jU0tntLxRJYMA==}
@@ -42343,37 +42326,33 @@ snapshots:
       promise-worker-transferable: 1.0.4
       three: 0.178.0
 
-  '@moonrepo/cli@1.41.7':
+  '@moonrepo/cli@2.0.0-rc.2':
     dependencies:
       detect-libc: 2.1.2
     optionalDependencies:
-      '@moonrepo/core-linux-arm64-gnu': 1.41.7
-      '@moonrepo/core-linux-arm64-musl': 1.41.7
-      '@moonrepo/core-linux-x64-gnu': 1.41.7
-      '@moonrepo/core-linux-x64-musl': 1.41.7
-      '@moonrepo/core-macos-arm64': 1.41.7
-      '@moonrepo/core-macos-x64': 1.41.7
-      '@moonrepo/core-windows-x64-msvc': 1.41.7
+      '@moonrepo/core-linux-arm64-gnu': 2.0.0-rc.2
+      '@moonrepo/core-linux-arm64-musl': 2.0.0-rc.2
+      '@moonrepo/core-linux-x64-gnu': 2.0.0-rc.2
+      '@moonrepo/core-linux-x64-musl': 2.0.0-rc.2
+      '@moonrepo/core-macos-arm64': 2.0.0-rc.2
+      '@moonrepo/core-windows-x64-msvc': 2.0.0-rc.2
 
-  '@moonrepo/core-linux-arm64-gnu@1.41.7':
+  '@moonrepo/core-linux-arm64-gnu@2.0.0-rc.2':
     optional: true
 
-  '@moonrepo/core-linux-arm64-musl@1.41.7':
+  '@moonrepo/core-linux-arm64-musl@2.0.0-rc.2':
     optional: true
 
-  '@moonrepo/core-linux-x64-gnu@1.41.7':
+  '@moonrepo/core-linux-x64-gnu@2.0.0-rc.2':
     optional: true
 
-  '@moonrepo/core-linux-x64-musl@1.41.7':
+  '@moonrepo/core-linux-x64-musl@2.0.0-rc.2':
     optional: true
 
-  '@moonrepo/core-macos-arm64@1.41.7':
+  '@moonrepo/core-macos-arm64@2.0.0-rc.2':
     optional: true
 
-  '@moonrepo/core-macos-x64@1.41.7':
-    optional: true
-
-  '@moonrepo/core-windows-x64-msvc@1.41.7':
+  '@moonrepo/core-windows-x64-msvc@2.0.0-rc.2':
     optional: true
 
   '@msgpackr-extract/msgpackr-extract-darwin-arm64@3.0.3':
@@ -42618,15 +42597,15 @@ snapshots:
       - encoding
       - supports-color
 
-  '@opentelemetry/auto-instrumentations-web@0.51.3(@opentelemetry/api@1.9.0)(zone.js@0.14.8)':
+  '@opentelemetry/auto-instrumentations-web@0.51.3(@opentelemetry/api@1.9.0)(zone.js@0.15.1)':
     dependencies:
       '@opentelemetry/api': 1.9.0
       '@opentelemetry/instrumentation': 0.205.0(@opentelemetry/api@1.9.0)
       '@opentelemetry/instrumentation-document-load': 0.51.2(@opentelemetry/api@1.9.0)
       '@opentelemetry/instrumentation-fetch': 0.205.0(@opentelemetry/api@1.9.0)
-      '@opentelemetry/instrumentation-user-interaction': 0.50.2(@opentelemetry/api@1.9.0)(zone.js@0.14.8)
+      '@opentelemetry/instrumentation-user-interaction': 0.50.2(@opentelemetry/api@1.9.0)(zone.js@0.15.1)
       '@opentelemetry/instrumentation-xml-http-request': 0.205.0(@opentelemetry/api@1.9.0)
-      zone.js: 0.14.8
+      zone.js: 0.15.1
     transitivePeerDependencies:
       - supports-color
 
@@ -43345,13 +43324,13 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@opentelemetry/instrumentation-user-interaction@0.50.2(@opentelemetry/api@1.9.0)(zone.js@0.14.8)':
+  '@opentelemetry/instrumentation-user-interaction@0.50.2(@opentelemetry/api@1.9.0)(zone.js@0.15.1)':
     dependencies:
       '@opentelemetry/api': 1.9.0
       '@opentelemetry/core': 2.1.0(@opentelemetry/api@1.9.0)
       '@opentelemetry/instrumentation': 0.205.0(@opentelemetry/api@1.9.0)
       '@opentelemetry/sdk-trace-web': 2.1.0(@opentelemetry/api@1.9.0)
-      zone.js: 0.14.8
+      zone.js: 0.15.1
     transitivePeerDependencies:
       - supports-color
 
@@ -46887,7 +46866,7 @@ snapshots:
       '@tldraw/utils': 3.0.0
       '@tldraw/validate': 3.0.0
       '@types/core-js': 2.5.8
-      '@use-gesture/react': 10.2.27(react@19.2.3)
+      '@use-gesture/react': 10.3.1(react@19.2.3)
       classnames: 2.3.2
       core-js: 3.37.1
       eventemitter3: 4.0.7
@@ -47762,13 +47741,6 @@ snapshots:
       '@typescript/native-preview-win32-arm64': 7.0.0-dev.20250808.1
       '@typescript/native-preview-win32-x64': 7.0.0-dev.20250808.1
 
-  '@typescript/vfs@1.6.0(typescript@5.9.3)':
-    dependencies:
-      debug: 4.4.3
-      typescript: 5.9.3
-    transitivePeerDependencies:
-      - supports-color
-
   '@typescript/vfs@1.6.2(typescript@5.9.3)':
     dependencies:
       debug: 4.4.3
@@ -47800,14 +47772,7 @@ snapshots:
 
   '@ungap/structured-clone@1.2.0': {}
 
-  '@use-gesture/core@10.2.27': {}
-
   '@use-gesture/core@10.3.1': {}
-
-  '@use-gesture/react@10.2.27(react@19.2.3)':
-    dependencies:
-      '@use-gesture/core': 10.2.27
-      react: 19.2.3
 
   '@use-gesture/react@10.3.1(react@19.2.3)':
     dependencies:
@@ -54567,7 +54532,7 @@ snapshots:
       '@radix-ui/react-portal': 1.1.4(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@radix-ui/react-tooltip': 1.1.8(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@stitches/react': 1.2.8(react@19.2.3)
-      '@use-gesture/react': 10.2.27(react@19.2.3)
+      '@use-gesture/react': 10.3.1(react@19.2.3)
       colord: 2.9.3
       dequal: 2.0.3
       merge-value: 1.0.0
@@ -55319,7 +55284,7 @@ snapshots:
       stylis: 4.3.0
       ts-dedent: 2.2.0
       uuid: 9.0.1
-      web-worker: 1.2.0
+      web-worker: 1.5.0
     transitivePeerDependencies:
       - supports-color
 
@@ -60939,8 +60904,6 @@ snapshots:
 
   web-tree-sitter@0.25.10: {}
 
-  web-worker@1.2.0: {}
-
   web-worker@1.5.0: {}
 
   webdriver@8.33.1:
@@ -61665,7 +61628,7 @@ snapshots:
 
   zod@4.1.12: {}
 
-  zone.js@0.14.8: {}
+  zone.js@0.15.1: {}
 
   zustand@3.7.2(react@19.2.3):
     optionalDependencies:

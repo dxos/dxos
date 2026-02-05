@@ -1,5 +1,5 @@
 id: vendor-quickjs
-type: library
+layer: library
 language: typescript
 tags:
   - pack

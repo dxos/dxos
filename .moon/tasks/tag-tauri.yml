@@ -21,3 +21,6 @@ tasks:
     # TODO(wittjosiah): Determine which the outputs are which should be cached.
     options:
       cache: false
+
+inheritedBy:
+  tags: tauri
