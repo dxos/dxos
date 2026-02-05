@@ -27,7 +27,7 @@ export type ChatThreadProps = ThemedClassName<
 >;
 
 // TODO(burdon): Memo thread position.
-export const ChatThread = forwardRef<MarkdownStreamController, ChatThreadProps>(
+export const ChatThread = forwardRef<MarkdownStreamController | null, ChatThreadProps>(
   (
     { classNames, identity, messages = [], error, cursor = false, fadeIn = true, debug = false, onEvent },
     forwardedRef,
