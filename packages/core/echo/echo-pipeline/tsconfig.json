@@ -88,6 +88,9 @@
       "path": "../../mesh/network-manager"
     },
     {
+      "path": "../../mesh/rpc"
+    },
+    {
       "path": "../../mesh/teleport"
     },
     {

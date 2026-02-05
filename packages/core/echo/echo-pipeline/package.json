@@ -49,6 +49,7 @@
   "dependencies": {
     "@automerge/automerge": "catalog:",
     "@automerge/automerge-repo": "catalog:",
+    "@bufbuild/protobuf": "catalog:",
     "@dxos/async": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/context": "workspace:*",
@@ -75,6 +76,7 @@
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/random-access-storage": "workspace:*",
+    "@dxos/rpc": "workspace:*",
     "@dxos/sql-sqlite": "workspace:*",
     "@dxos/teleport": "workspace:*",
     "@dxos/teleport-extension-automerge-replicator": "workspace:*",
