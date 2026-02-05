@@ -3,15 +3,21 @@
 //
 
 import * as Schema from 'effect/Schema';
+import { SpaceId } from '@dxos/keys';
 
 export const FeedCursor = Schema.String.pipe(Schema.brand('@dxos/feed/FeedCursor'));
 export type FeedCursor = Schema.Schema.Type<typeof FeedCursor>;
 
 export const Block = Schema.Struct({
   /**
-   * Only set on query.
+   * Appears on blocks returned from query.
    */
   feedId: Schema.UndefinedOr(Schema.String),
+
+  /**
+   * Appears on blocks returned from query.
+   */
+  feedNamespace: Schema.UndefinedOr(Schema.String),
 
   actorId: Schema.String,
   sequence: Schema.Number,
@@ -38,8 +44,7 @@ export interface Block extends Schema.Schema.Type<typeof Block> {}
 export const QueryRequest = Schema.Struct({
   requestId: Schema.optional(Schema.String),
 
-  // TODO(dmaretskyi): Make required.
-  spaceId: Schema.optional(Schema.String),
+  spaceId: SpaceId,
 
   query: Schema.Union(
     Schema.Struct({
@@ -61,10 +66,18 @@ export const QueryRequest = Schema.Struct({
 
   /**
    * Get changes following this position.
+   * Returned blocks have strictly greater position than this.
    *
    * Must not be used with `cursor`.
    */
   position: Schema.optional(Schema.Number),
+
+  /**
+   * Only return blocks that are not positionned.
+   *
+   * Must not be used with `cursor` or `position`.
+   */
+  unpositionedOnly: Schema.optional(Schema.Boolean),
 
   limit: Schema.optional(Schema.Number),
 });
@@ -96,8 +109,6 @@ export const AppendRequest = Schema.Struct({
   requestId: Schema.optional(Schema.String),
 
   spaceId: Schema.String,
-  namespace: Schema.String,
-  feedId: Schema.String,
 
   blocks: Schema.Array(Block),
 });
@@ -108,3 +119,11 @@ export const AppendResponse = Schema.Struct({
   positions: Schema.Array(Schema.Number),
 });
 export interface AppendResponse extends Schema.Schema.Type<typeof AppendResponse> {}
+
+export const WellKnownNamespaces = {
+  data: 'data',
+  trace: 'trace',
+} as const;
+
+export const isWellKnownNamespace = (namespace: string) =>
+  Object.values(WellKnownNamespaces).includes(namespace as any);

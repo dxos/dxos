@@ -40,9 +40,12 @@
   ],
   "dependencies": {
     "@dxos/async": "workspace:*",
+    "@dxos/context": "workspace:*",
+    "@dxos/effect": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/sql-sqlite": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/sql": "catalog:",
     "@effect/sql-sqlite-node": "catalog:",
