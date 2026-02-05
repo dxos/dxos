@@ -28,7 +28,7 @@ export default defineFunction({
     ),
   }),
   services: [AiContextService],
-  handler: Effect.fnUntraced(function* ({ data }) {
+  handler: Effect.fnUntraced(function* ({ data: _data }) {
     const { binder } = yield* AiContextService;
 
     const initiative = binder
@@ -41,8 +41,8 @@ export default defineFunction({
 
     return {
       spec: yield* initiative.spec.pipe(Database.load).pipe(Effect.map((_) => _.content)),
-      plan: yield* (initiative.plan?.pipe(Database.load).pipe(Effect.map((_) => _.content)) ??
-        Effect.succeed('No plan found.')),
+      plan: yield* initiative.plan?.pipe(Database.load).pipe(Effect.map((_) => _.content)) ??
+        Effect.succeed('No plan found.'),
       artifacts: yield* Effect.forEach(initiative.artifacts, (artifact) =>
         Effect.gen(function* () {
           return {
