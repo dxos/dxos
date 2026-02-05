@@ -140,6 +140,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          lfs: true
 
       - name: Install Linux dependencies
         if: matrix.os == 'depot-ubuntu-24.04-4'
@@ -247,6 +250,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          lfs: true
 
       - uses: tecolicom/actions-use-homebrew-tools@v1
         with:
