@@ -131,6 +131,13 @@ export const ProtocolMessage = Schema.Union(
   Schema.TaggedStruct('Error', {
     message: Schema.String,
   }),
+).pipe(
+  Schema.extend(
+    Schema.Struct({
+      senderPeerId: Schema.String,
+      recipientPeerId: Schema.String,
+    }),
+  ),
 );
 export type ProtocolMessage = Schema.Schema.Type<typeof ProtocolMessage>;
 

@@ -340,7 +340,7 @@ export class FeedStore {
 
         const feedPrivateId = yield* this._ensureFeed(request.spaceId, block.feedId, block.feedNamespace);
 
-        let nextPos = null;
+        let positionToInsert: number | null = null;
         if (this._options.assignPositions) {
           const maxPosResult = yield* sql<{ maxPos: number | null }>`
                   SELECT MAX(position) as maxPos 
@@ -348,8 +348,10 @@ export class FeedStore {
                   JOIN feeds ON blocks.feedPrivateId = feeds.feedPrivateId
                   WHERE feeds.spaceId = ${request.spaceId}
               `;
-          nextPos = (maxPosResult[0]?.maxPos ?? -1) + 1;
-          positions.push(nextPos);
+          positionToInsert = (maxPosResult[0]?.maxPos ?? -1) + 1;
+          positions.push(positionToInsert);
+        } else if (block.position != null) {
+          positionToInsert = block.position;
         }
 
         yield* sql`
@@ -357,7 +359,7 @@ export class FeedStore {
                     feedPrivateId, position, sequence, actorId, 
                     predSequence, predActorId, timestamp, data
                 ) VALUES (
-                    ${feedPrivateId}, ${nextPos}, ${block.sequence}, ${block.actorId},
+                    ${feedPrivateId}, ${positionToInsert}, ${block.sequence}, ${block.actorId},
                     ${block.predSequence}, ${block.predActorId}, ${block.timestamp}, ${block.data}
                 ) ON CONFLICT DO NOTHING
             `;
