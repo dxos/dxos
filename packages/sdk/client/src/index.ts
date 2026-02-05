@@ -39,6 +39,7 @@ export {
 // For some reason the * re-export from ./client gets removed by TSC. Looks like a compiler bug.
 export { Client } from './client';
 export * from './client';
+export * from './edge';
 export * from './services';
 export * from './util';
 export * from './version';
