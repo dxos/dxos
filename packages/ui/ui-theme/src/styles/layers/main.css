@@ -102,7 +102,7 @@
    * Main Mobile app.
    */
   .dx-main-mobile-layout {
-    @apply absolute inset-0 overflow-hidden;
+    @apply absolute inset-0 overflow-hidden flex flex-col;
     padding-block-start: max(0.25rem, env(safe-area-inset-top));
     padding-block-end: max(0.25rem, env(safe-area-inset-bottom));
   }

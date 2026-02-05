@@ -55,7 +55,6 @@ export const Main = () => {
   return (
     <NaturalMain.Content
       classNames={mx(
-        'dx-main-mobile-layout',
         showNavBar ? 'grid grid-rows-[min-content_1fr_min-content]' : 'grid grid-rows-[min-content_1fr]',
         'bg-toolbarSurface',
       )}
