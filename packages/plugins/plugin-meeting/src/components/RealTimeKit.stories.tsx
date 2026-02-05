@@ -93,7 +93,7 @@ const Story = () => {
 const meta = {
   title: 'plugins/plugin-meeting/RealTimeKit',
   component: Story,
-  decorators: [withTheme, withLayout({ container: 'column' })],
+  decorators: [withTheme, withLayout({ layout: 'column' })],
 } satisfies Meta<typeof Story>;
 
 export default meta;
