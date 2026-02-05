@@ -5,7 +5,8 @@
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { asyncTimeout } from '@dxos/async';
-import { ObjectStructure, Reference } from '@dxos/echo-protocol';
+import { ObjectStructure } from '@dxos/echo-protocol';
+import { DXN } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { openAndClose } from '@dxos/test-utils';
@@ -16,18 +17,16 @@ import { type ObjectSnapshot } from './types';
 
 describe('Indexer', () => {
   const setup = async () => {
-    const schemaURI = '@example.org/schema/Contact';
+    const schemaURI = 'example.org/schema/Contact';
 
     const objects: ObjectStructure[] = [
       ObjectStructure.makeObject({
-        // TODO(dmaretskyi): Fix references
-        type: Reference.localObjectReference(schemaURI).toDXN().toString(),
+        type: DXN.fromTypename(schemaURI).toString(),
         keys: [],
         data: { name: 'John' },
       }),
       ObjectStructure.makeObject({
-        // TODO(dmaretskyi): Fix references
-        type: Reference.localObjectReference('@example.org/schema/Document').toDXN().toString(),
+        type: DXN.fromTypename('example.org/schema/Document').toString(),
         keys: [],
         data: { title: 'first document' },
       }),

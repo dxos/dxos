@@ -2,12 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useMemo, useRef } from 'react';
+import { RegistryContext } from '@effect-atom/atom-react';
+import React, { useContext, useMemo, useRef } from 'react';
 
 import { Filter, Obj } from '@dxos/echo';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { useQuery, useSchema } from '@dxos/react-client/echo';
-import { Card } from '@dxos/react-ui-stack';
+import { Card } from '@dxos/react-ui-mosaic';
 import {
   Table as TableComponent,
   type TableController,
@@ -25,6 +26,7 @@ export type TableCardProps = {
 };
 
 export const TableCard = ({ role, object }: TableCardProps) => {
+  const registry = useContext(RegistryContext);
   const tableRef = useRef<TableController>(null);
 
   const db = Obj.getDatabase(object);
@@ -42,7 +44,7 @@ export const TableCard = ({ role, object }: TableCardProps) => {
     [],
   );
 
-  const projection = useProjectionModel(schema, object);
+  const projection = useProjectionModel(schema, object, registry);
   const model = useTableModel({
     object,
     projection,
@@ -51,10 +53,10 @@ export const TableCard = ({ role, object }: TableCardProps) => {
     onCellUpdate: (cell) => tableRef.current?.update?.(cell),
   });
 
-  const presentation = useMemo(() => (model ? new TablePresentation(model) : undefined), [model]);
+  const presentation = useMemo(() => (model ? new TablePresentation(registry, model) : undefined), [registry, model]);
 
   return (
-    <Card.SurfaceRoot role={role}>
+    <Card.Root role={role}>
       <TableComponent.Root role={role}>
         <TableComponent.Main
           key={Obj.getDXN(object).toString()}
@@ -64,7 +66,7 @@ export const TableCard = ({ role, object }: TableCardProps) => {
           schema={schema}
         />
       </TableComponent.Root>
-    </Card.SurfaceRoot>
+    </Card.Root>
   );
 };
 

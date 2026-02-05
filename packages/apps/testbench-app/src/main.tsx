@@ -13,8 +13,8 @@ import { log } from '@dxos/log';
 import { initializeAppObservability } from '@dxos/observability';
 import { type Client, ClientProvider, Config, Defaults } from '@dxos/react-client';
 import { type ThemeMode, ThemeProvider } from '@dxos/react-ui';
-import { defaultTx } from '@dxos/react-ui-theme';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
+import { defaultTx } from '@dxos/ui-theme';
 
 import { AppContainer, Error, Main } from './components';
 import { SyncBench } from './components/SyncBench';
@@ -85,8 +85,8 @@ const main = async () => {
   log.config({ filter: config.get('runtime.client.log.filter'), prefix: config.get('runtime.client.log.prefix') });
 
   const handleInitialized = async (client: Client) => {
-    const searchParams = new URLSearchParams(location.search);
-    const deviceInvitationCode = searchParams.get('deviceInvitationCode');
+    const searchProps = new URLSearchParams(location.search);
+    const deviceInvitationCode = searchProps.get('deviceInvitationCode');
     const identity = client.halo.identity.get();
     if (!identity && !deviceInvitationCode) {
       await client.halo.createIdentity({ displayName: 'Testbench User' });

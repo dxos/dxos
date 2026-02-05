@@ -57,9 +57,6 @@
       "path": "../../core/echo/echo-generator"
     },
     {
-      "path": "../../core/echo/live-object"
-    },
-    {
       "path": "../../core/protocols"
     },
     {
@@ -93,7 +90,10 @@
       "path": "../../ui/react-ui-table"
     },
     {
-      "path": "../../ui/react-ui-theme"
+      "path": "../../ui/ui-editor"
+    },
+    {
+      "path": "../../ui/ui-theme"
     }
   ]
 }

@@ -6,8 +6,9 @@ import { Atom, Registry } from '@effect-atom/atom-react';
 import * as Option from 'effect/Option';
 import { assert, describe, expect, onTestFinished, test } from 'vitest';
 
-import { Graph, ROOT_ID, ROOT_TYPE, getGraph } from './graph';
-import { type Node } from './node';
+import * as Graph from './graph';
+import * as GraphBuilder from './graph-builder';
+import * as Node from './node';
 
 const exampleId = (id: number) => `dx:test:${id}`;
 const EXAMPLE_ID = exampleId(1);
@@ -16,18 +17,18 @@ const EXAMPLE_TYPE = 'dxos.org/type/example';
 describe('Graph', () => {
   test('getGraph', () => {
     const registry = Registry.make();
-    const graph = new Graph({ registry });
-    const root = registry.get(graph.node(ROOT_ID));
+    const graph = Graph.make({ registry });
+    const root = registry.get(graph.node(Node.RootId));
     assert.ok(Option.isSome(root));
-    expect(root.value.id).toEqual(ROOT_ID);
-    expect(root.value.type).toEqual(ROOT_TYPE);
-    expect(getGraph(root.value)).toEqual(graph);
+    expect(root.value.id).toEqual(Node.RootId);
+    expect(root.value.type).toEqual(Node.RootType);
+    expect(Graph.getGraph(root.value)).toEqual(graph);
   });
 
   test('add node', () => {
     const registry = Registry.make();
-    const graph = new Graph({ registry });
-    graph.addNode({ id: EXAMPLE_ID, type: EXAMPLE_TYPE });
+    const graph = Graph.make({ registry });
+    Graph.addNode(graph, { id: EXAMPLE_ID, type: EXAMPLE_TYPE });
     const node = registry.get(graph.node(EXAMPLE_ID));
     assert.ok(Option.isSome(node));
     expect(node.value.id).toEqual(EXAMPLE_ID);
@@ -36,9 +37,20 @@ describe('Graph', () => {
     expect(node.value.properties).toEqual({});
   });
 
+  test('add node curried', () => {
+    const registry = Registry.make();
+    const graph = Graph.make({ registry });
+    const result = graph.pipe(Graph.addNode({ id: EXAMPLE_ID, type: EXAMPLE_TYPE }));
+    expect(result).toEqual(graph);
+    const node = registry.get(graph.node(EXAMPLE_ID));
+    assert.ok(Option.isSome(node));
+    expect(node.value.id).toEqual(EXAMPLE_ID);
+    expect(node.value.type).toEqual(EXAMPLE_TYPE);
+  });
+
   test('add nodes updates existing nodes', () => {
     const registry = Registry.make();
-    const graph = new Graph({ registry });
+    const graph = Graph.make({ registry });
     const nodeKey = graph.node(EXAMPLE_ID);
 
     let count = 0;
@@ -53,7 +65,7 @@ describe('Graph', () => {
     expect(registry.get(nodeKey)).toEqual(Option.none());
     expect(count).toEqual(1);
 
-    graph.addNode({ id: EXAMPLE_ID, type: EXAMPLE_TYPE });
+    Graph.addNode(graph, { id: EXAMPLE_ID, type: EXAMPLE_TYPE });
     const node = registry.get(nodeKey);
     assert.ok(Option.isSome(node));
     expect(node.value.id).toEqual(EXAMPLE_ID);
@@ -62,13 +74,13 @@ describe('Graph', () => {
     expect(node.value.properties).toEqual({});
     expect(count).toEqual(2);
 
-    graph.addNode({ id: EXAMPLE_ID, type: EXAMPLE_TYPE });
+    Graph.addNode(graph, { id: EXAMPLE_ID, type: EXAMPLE_TYPE });
     expect(count).toEqual(2);
   });
 
   test('remove node', () => {
     const registry = Registry.make();
-    const graph = new Graph({ registry });
+    const graph = Graph.make({ registry });
 
     {
       const node = registry.get(graph.node(EXAMPLE_ID));
@@ -76,39 +88,49 @@ describe('Graph', () => {
     }
 
     {
-      graph.addNode({ id: EXAMPLE_ID, type: EXAMPLE_TYPE });
+      Graph.addNode(graph, { id: EXAMPLE_ID, type: EXAMPLE_TYPE });
       const node = registry.get(graph.node(EXAMPLE_ID));
       expect(Option.isSome(node)).toEqual(true);
     }
 
     {
-      graph.removeNode(EXAMPLE_ID);
+      Graph.removeNode(graph, EXAMPLE_ID);
       const node = registry.get(graph.node(EXAMPLE_ID));
       expect(Option.isNone(node)).toEqual(true);
     }
   });
 
-  test('onNodeChanged', () => {
-    const graph = new Graph();
+  test('remove node curried', () => {
+    const registry = Registry.make();
+    const graph = Graph.make({ registry });
+    Graph.addNode(graph, { id: EXAMPLE_ID, type: EXAMPLE_TYPE });
+    const result = graph.pipe(Graph.removeNode(EXAMPLE_ID));
+    expect(result).toEqual(graph);
+    const node = registry.get(graph.node(EXAMPLE_ID));
+    assert.ok(Option.isNone(node));
+  });
 
-    let node: Option.Option<Node> = Option.none();
+  test('onNodeChanged', () => {
+    const graph = Graph.make();
+
+    let node: Option.Option<Node.Node> = Option.none();
     graph.onNodeChanged.on(({ node: newNode }) => {
       node = newNode;
     });
 
-    graph.addNode({ id: EXAMPLE_ID, type: EXAMPLE_TYPE });
+    Graph.addNode(graph, { id: EXAMPLE_ID, type: EXAMPLE_TYPE });
     assert.ok(Option.isSome(node));
     expect(node.value.id).toEqual(EXAMPLE_ID);
     expect(node.value.type).toEqual(EXAMPLE_TYPE);
 
-    graph.removeNode(EXAMPLE_ID);
+    Graph.removeNode(graph, EXAMPLE_ID);
     expect(node.pipe(Option.getOrNull)).toEqual(null);
   });
 
   test('add edge', () => {
     const registry = Registry.make();
-    const graph = new Graph({ registry });
-    graph.addEdge({ source: exampleId(1), target: exampleId(2) });
+    const graph = Graph.make({ registry });
+    Graph.addEdge(graph, { source: exampleId(1), target: exampleId(2) });
     const edges = registry.get(graph.edges(exampleId(1)));
     expect(edges.inbound).toEqual([]);
     expect(edges.outbound).toEqual([exampleId(2)]);
@@ -116,9 +138,9 @@ describe('Graph', () => {
 
   test('add edges is idempotent', () => {
     const registry = Registry.make();
-    const graph = new Graph({ registry });
-    graph.addEdge({ source: exampleId(1), target: exampleId(2) });
-    graph.addEdge({ source: exampleId(1), target: exampleId(2) });
+    const graph = Graph.make({ registry });
+    Graph.addEdge(graph, { source: exampleId(1), target: exampleId(2) });
+    Graph.addEdge(graph, { source: exampleId(1), target: exampleId(2) });
     const edges = registry.get(graph.edges(exampleId(1)));
     expect(edges.inbound).toEqual([]);
     expect(edges.outbound).toEqual([exampleId(2)]);
@@ -126,18 +148,18 @@ describe('Graph', () => {
 
   test('sort edges', () => {
     const registry = Registry.make();
-    const graph = new Graph({ registry });
+    const graph = Graph.make({ registry });
 
     {
-      graph.addEdge({ source: exampleId(1), target: exampleId(2) });
-      graph.addEdge({ source: exampleId(1), target: exampleId(3) });
-      graph.addEdge({ source: exampleId(1), target: exampleId(4) });
+      Graph.addEdge(graph, { source: exampleId(1), target: exampleId(2) });
+      Graph.addEdge(graph, { source: exampleId(1), target: exampleId(3) });
+      Graph.addEdge(graph, { source: exampleId(1), target: exampleId(4) });
       const edges = registry.get(graph.edges(exampleId(1)));
       expect(edges.outbound).toEqual([exampleId(2), exampleId(3), exampleId(4)]);
     }
 
     {
-      graph.sortEdges(exampleId(1), 'outbound', [exampleId(3), exampleId(2)]);
+      Graph.sortEdges(graph, exampleId(1), 'outbound', [exampleId(3), exampleId(2)]);
       const edges = registry.get(graph.edges(exampleId(1)));
       expect(edges.outbound).toEqual([exampleId(3), exampleId(2), exampleId(4)]);
     }
@@ -145,29 +167,42 @@ describe('Graph', () => {
 
   test('remove edge', () => {
     const registry = Registry.make();
-    const graph = new Graph({ registry });
+    const graph = Graph.make({ registry });
 
     {
-      graph.addEdge({ source: exampleId(1), target: exampleId(2) });
+      Graph.addEdge(graph, { source: exampleId(1), target: exampleId(2) });
       const edges = registry.get(graph.edges(exampleId(1)));
       expect(edges.inbound).toEqual([]);
       expect(edges.outbound).toEqual([exampleId(2)]);
     }
 
     {
-      graph.removeEdge({ source: exampleId(1), target: exampleId(2) });
+      Graph.removeEdge(graph, { source: exampleId(1), target: exampleId(2) });
       const edges = registry.get(graph.edges(exampleId(1)));
       expect(edges.inbound).toEqual([]);
       expect(edges.outbound).toEqual([]);
     }
   });
 
+  test('remove edge curried', () => {
+    const registry = Registry.make();
+    const graph = Graph.make({ registry });
+    Graph.addNode(graph, { id: exampleId(1), type: EXAMPLE_TYPE });
+    Graph.addNode(graph, { id: exampleId(2), type: EXAMPLE_TYPE });
+    Graph.addEdge(graph, { source: exampleId(1), target: exampleId(2) });
+    const result = graph.pipe(Graph.removeEdge({ source: exampleId(1), target: exampleId(2) }));
+    expect(result).toEqual(graph);
+    const edges = registry.get(graph.edges(exampleId(1)));
+    expect(edges.inbound).toEqual([]);
+    expect(edges.outbound).toEqual([]);
+  });
+
   test('get connections', () => {
     const registry = Registry.make();
-    const graph = new Graph({ registry });
-    graph.addNode({ id: exampleId(1), type: EXAMPLE_TYPE });
-    graph.addNode({ id: exampleId(2), type: EXAMPLE_TYPE });
-    graph.addEdge({ source: exampleId(1), target: exampleId(2) });
+    const graph = Graph.make({ registry });
+    Graph.addNode(graph, { id: exampleId(1), type: EXAMPLE_TYPE });
+    Graph.addNode(graph, { id: exampleId(2), type: EXAMPLE_TYPE });
+    Graph.addEdge(graph, { source: exampleId(1), target: exampleId(2) });
     const nodes = registry.get(graph.connections(exampleId(1)));
     expect(nodes).has.length(1);
     expect(nodes[0].id).toEqual(exampleId(2));
@@ -175,24 +210,24 @@ describe('Graph', () => {
 
   test('can subscribe to a node before it exists', async () => {
     const registry = Registry.make();
-    const graph = new Graph({ registry });
+    const graph = Graph.make({ registry });
     const nodeKey = graph.node(exampleId(1));
 
-    let node: Option.Option<Node> = Option.none();
+    let node: Option.Option<Node.Node> = Option.none();
     const cancel = registry.subscribe(nodeKey, (n) => {
       node = n;
     });
     onTestFinished(() => cancel());
 
     expect(node).toEqual(Option.none());
-    graph.addNode({ id: exampleId(1), type: EXAMPLE_TYPE });
+    Graph.addNode(graph, { id: exampleId(1), type: EXAMPLE_TYPE });
     assert.ok(Option.isSome(node));
     expect(node.value.id).toEqual(exampleId(1));
   });
 
   test('connections updates', () => {
     const registry = Registry.make();
-    const graph = new Graph({ registry });
+    const graph = Graph.make({ registry });
     assert.strictEqual(graph.connections(exampleId(1)), graph.connections(exampleId(1)));
     const childrenKey = graph.connections(exampleId(1));
 
@@ -202,9 +237,11 @@ describe('Graph', () => {
     });
     onTestFinished(() => cancel());
 
-    graph.addNode({ id: exampleId(1), type: EXAMPLE_TYPE });
-    graph.addNode({ id: exampleId(2), type: EXAMPLE_TYPE });
-    graph.addEdge({ source: exampleId(1), target: exampleId(2) });
+    graph.pipe(
+      Graph.addNode({ id: exampleId(1), type: EXAMPLE_TYPE }),
+      Graph.addNode({ id: exampleId(2), type: EXAMPLE_TYPE }),
+      Graph.addEdge({ source: exampleId(1), target: exampleId(2) }),
+    );
 
     expect(count).toEqual(0);
     const children = registry.get(childrenKey);
@@ -213,55 +250,57 @@ describe('Graph', () => {
     expect(count).toEqual(1);
 
     // Updating an existing node fires an update.
-    graph.addNode({ id: exampleId(2), type: EXAMPLE_TYPE, data: 'updated' });
+    Graph.addNode(graph, { id: exampleId(2), type: EXAMPLE_TYPE, data: 'updated' });
     expect(count).toEqual(2);
 
     // Adding a node with no changes does not fire an update.
-    graph.addNode({ id: exampleId(2), type: EXAMPLE_TYPE, data: 'updated' });
+    Graph.addNode(graph, { id: exampleId(2), type: EXAMPLE_TYPE, data: 'updated' });
     expect(count).toEqual(2);
 
     // Adding an unconnected node does not fire an update.
-    graph.addNode({ id: exampleId(3), type: EXAMPLE_TYPE });
+    Graph.addNode(graph, { id: exampleId(3), type: EXAMPLE_TYPE });
     expect(count).toEqual(2);
 
     // Connecting a node fires an update.
-    graph.addEdge({ source: exampleId(1), target: exampleId(3) });
+    Graph.addEdge(graph, { source: exampleId(1), target: exampleId(3) });
     expect(count).toEqual(3);
 
     // Adding an edge connected to nothing fires an update.
     // TODO(wittjosiah): Is there a way to avoid this?
-    graph.addEdge({ source: exampleId(1), target: exampleId(4) });
+    Graph.addEdge(graph, { source: exampleId(1), target: exampleId(4) });
     expect(count).toEqual(4);
 
     // Adding a node to an existing edge fires an update.
-    graph.addNode({ id: exampleId(4), type: EXAMPLE_TYPE });
+    Graph.addNode(graph, { id: exampleId(4), type: EXAMPLE_TYPE });
     expect(count).toEqual(5);
 
     // Batching the edge and node updates fires a single update.
     Atom.batch(() => {
-      graph.addEdge({ source: exampleId(1), target: exampleId(6) });
-      graph.addNode({ id: exampleId(6), type: EXAMPLE_TYPE });
+      graph.pipe(
+        Graph.addEdge({ source: exampleId(1), target: exampleId(6) }),
+        Graph.addNode({ id: exampleId(6), type: EXAMPLE_TYPE }),
+      );
     });
     expect(count).toEqual(6);
   });
 
   test('toJSON', () => {
-    const graph = new Graph();
+    const graph = Graph.make();
 
-    graph.addNode({
-      id: ROOT_ID,
-      type: ROOT_TYPE,
+    Graph.addNode(graph, {
+      id: Node.RootId,
+      type: Node.RootType,
       nodes: [
         { id: 'test1', type: 'test' },
         { id: 'test2', type: 'test' },
       ],
     });
-    graph.addEdge({ source: 'test1', target: 'test2' });
+    Graph.addEdge(graph, { source: 'test1', target: 'test2' });
 
-    const json = graph.toJSON();
+    const json = Graph.toJSON(graph);
     expect(json).to.deep.equal({
-      id: ROOT_ID,
-      type: ROOT_TYPE,
+      id: Node.RootId,
+      type: Node.RootType,
       nodes: [
         { id: 'test1', type: 'test', nodes: [{ id: 'test2', type: 'test' }] },
         { id: 'test2', type: 'test' },
@@ -271,17 +310,17 @@ describe('Graph', () => {
 
   test('subscribe to json', () => {
     const registry = Registry.make();
-    const graph = new Graph({ registry });
+    const graph = Graph.make({ registry });
 
-    graph.addNode({
-      id: ROOT_ID,
-      type: ROOT_TYPE,
+    Graph.addNode(graph, {
+      id: Node.RootId,
+      type: Node.RootType,
       nodes: [
         { id: 'test1', type: 'test' },
         { id: 'test2', type: 'test' },
       ],
     });
-    graph.addEdge({ source: 'test1', target: 'test2' });
+    Graph.addEdge(graph, { source: 'test1', target: 'test2' });
 
     let json: any;
     const cancel = registry.subscribe(graph.json(), (_) => {
@@ -291,19 +330,19 @@ describe('Graph', () => {
 
     registry.get(graph.json());
     expect(json).to.deep.equal({
-      id: ROOT_ID,
-      type: ROOT_TYPE,
+      id: Node.RootId,
+      type: Node.RootType,
       nodes: [
         { id: 'test1', type: 'test', nodes: [{ id: 'test2', type: 'test' }] },
         { id: 'test2', type: 'test' },
       ],
     });
 
-    graph.addNode({ id: 'test3', type: 'test' });
-    graph.addEdge({ source: 'root', target: 'test3' });
+    Graph.addNode(graph, { id: 'test3', type: 'test' });
+    Graph.addEdge(graph, { source: 'root', target: 'test3' });
     expect(json).to.deep.equal({
-      id: ROOT_ID,
-      type: ROOT_TYPE,
+      id: Node.RootId,
+      type: Node.RootType,
       nodes: [
         { id: 'test1', type: 'test', nodes: [{ id: 'test2', type: 'test' }] },
         { id: 'test2', type: 'test' },
@@ -313,35 +352,50 @@ describe('Graph', () => {
   });
 
   test('get path', () => {
-    const graph = new Graph();
-    graph.addNode({
-      id: ROOT_ID,
-      type: ROOT_TYPE,
+    const graph = Graph.make();
+    Graph.addNode(graph, {
+      id: Node.RootId,
+      type: Node.RootType,
       nodes: [
         { id: exampleId(1), type: EXAMPLE_TYPE },
         { id: exampleId(2), type: EXAMPLE_TYPE },
       ],
     });
-    graph.addEdge({ source: exampleId(1), target: exampleId(2) });
+    Graph.addEdge(graph, { source: exampleId(1), target: exampleId(2) });
 
-    expect(graph.getPath({ target: exampleId(2) }).pipe(Option.getOrNull)).to.deep.equal([
+    expect(Graph.getPath(graph, { target: exampleId(2) }).pipe(Option.getOrNull)).to.deep.equal([
       'root',
       exampleId(1),
       exampleId(2),
     ]);
-    expect(graph.getPath({ source: exampleId(1), target: exampleId(2) }).pipe(Option.getOrNull)).to.deep.equal([
+    expect(Graph.getPath(graph, { source: exampleId(1), target: exampleId(2) }).pipe(Option.getOrNull)).to.deep.equal([
       exampleId(1),
       exampleId(2),
     ]);
-    expect(graph.getPath({ source: exampleId(2), target: exampleId(1) }).pipe(Option.getOrNull)).to.be.null;
+    expect(Graph.getPath(graph, { source: exampleId(2), target: exampleId(1) }).pipe(Option.getOrNull)).to.be.null;
+  });
+
+  test('get path curried', () => {
+    const graph = Graph.make();
+    Graph.addNode(graph, {
+      id: Node.RootId,
+      type: Node.RootType,
+      nodes: [
+        { id: exampleId(1), type: EXAMPLE_TYPE },
+        { id: exampleId(2), type: EXAMPLE_TYPE },
+      ],
+    });
+    Graph.addEdge(graph, { source: exampleId(1), target: exampleId(2) });
+    const path = graph.pipe(Graph.getPath({ target: exampleId(2) }));
+    expect(path.pipe(Option.getOrNull)).to.deep.equal(['root', exampleId(1), exampleId(2)]);
   });
 
   describe('traverse', () => {
     test('can be traversed', () => {
-      const graph = new Graph();
-      graph.addNode({
-        id: ROOT_ID,
-        type: ROOT_TYPE,
+      const graph = Graph.make();
+      Graph.addNode(graph, {
+        id: Node.RootId,
+        type: Node.RootType,
         nodes: [
           { id: 'test1', type: 'test' },
           { id: 'test2', type: 'test' },
@@ -349,7 +403,7 @@ describe('Graph', () => {
       });
 
       const nodes: string[] = [];
-      graph.traverse({
+      Graph.traverse(graph, {
         visitor: (node) => {
           nodes.push(node.id);
         },
@@ -358,19 +412,19 @@ describe('Graph', () => {
     });
 
     test('traversal breaks cycles', () => {
-      const graph = new Graph();
-      graph.addNode({
-        id: ROOT_ID,
-        type: ROOT_TYPE,
+      const graph = Graph.make();
+      Graph.addNode(graph, {
+        id: Node.RootId,
+        type: Node.RootType,
         nodes: [
           { id: 'test1', type: 'test' },
           { id: 'test2', type: 'test' },
         ],
       });
-      graph.addEdge({ source: 'test1', target: 'root' });
+      Graph.addEdge(graph, { source: 'test1', target: 'root' });
 
       const nodes: string[] = [];
-      graph.traverse({
+      Graph.traverse(graph, {
         visitor: (node) => {
           nodes.push(node.id);
         },
@@ -379,10 +433,10 @@ describe('Graph', () => {
     });
 
     test('traversal can be started from any node', () => {
-      const graph = new Graph();
-      graph.addNode({
-        id: ROOT_ID,
-        type: ROOT_TYPE,
+      const graph = Graph.make();
+      Graph.addNode(graph, {
+        id: Node.RootId,
+        type: Node.RootType,
         nodes: [
           {
             id: 'test1',
@@ -393,7 +447,7 @@ describe('Graph', () => {
       });
 
       const nodes: string[] = [];
-      graph.traverse({
+      Graph.traverse(graph, {
         source: 'test2',
         visitor: (node) => {
           nodes.push(node.id);
@@ -403,10 +457,10 @@ describe('Graph', () => {
     });
 
     test('traversal can follow inbound edges', () => {
-      const graph = new Graph();
-      graph.addNode({
-        id: ROOT_ID,
-        type: ROOT_TYPE,
+      const graph = Graph.make();
+      Graph.addNode(graph, {
+        id: Node.RootId,
+        type: Node.RootType,
         nodes: [
           {
             id: 'test1',
@@ -417,7 +471,7 @@ describe('Graph', () => {
       });
 
       const nodes: string[] = [];
-      graph.traverse({
+      Graph.traverse(graph, {
         source: 'test2',
         relation: 'inbound',
         visitor: (node) => {
@@ -428,10 +482,10 @@ describe('Graph', () => {
     });
 
     test('traversal can be terminated early', () => {
-      const graph = new Graph();
-      graph.addNode({
-        id: ROOT_ID,
-        type: ROOT_TYPE,
+      const graph = Graph.make();
+      Graph.addNode(graph, {
+        id: Node.RootId,
+        type: Node.RootType,
         nodes: [
           { id: 'test1', type: 'test' },
           { id: 'test2', type: 'test' },
@@ -439,7 +493,7 @@ describe('Graph', () => {
       });
 
       const nodes: string[] = [];
-      graph.traverse({
+      Graph.traverse(graph, {
         visitor: (node) => {
           if (nodes.length === 2) {
             return false;
@@ -450,5 +504,144 @@ describe('Graph', () => {
       });
       expect(nodes).to.deep.equal(['root', 'test1']);
     });
+
+    test('traverse curried', () => {
+      const graph = Graph.make();
+      Graph.addNode(graph, {
+        id: Node.RootId,
+        type: Node.RootType,
+        nodes: [{ id: 'test1', type: 'test' }],
+      });
+      Graph.addNode(graph, { id: 'test2', type: 'test' });
+      Graph.addEdge(graph, { source: 'test1', target: 'test2' });
+      const nodes: string[] = [];
+      graph.pipe(
+        Graph.traverse({
+          source: Node.RootId,
+          visitor: (node, _path) => {
+            nodes.push(node.id);
+          },
+        }),
+      );
+      expect(nodes).to.deep.equal(['root', 'test1', 'test2']);
+    });
+  });
+
+  test('add nodes curried', () => {
+    const registry = Registry.make();
+    const graph = Graph.make({ registry });
+    const result = graph.pipe(
+      Graph.addNodes([
+        { id: exampleId(1), type: EXAMPLE_TYPE },
+        { id: exampleId(2), type: EXAMPLE_TYPE },
+      ]),
+    );
+    expect(result).toEqual(graph);
+    const node1 = registry.get(graph.node(exampleId(1)));
+    const node2 = registry.get(graph.node(exampleId(2)));
+    assert.ok(Option.isSome(node1));
+    assert.ok(Option.isSome(node2));
+    expect(node1.value.id).toEqual(exampleId(1));
+    expect(node2.value.id).toEqual(exampleId(2));
+  });
+
+  test('add edges curried', () => {
+    const registry = Registry.make();
+    const graph = Graph.make({ registry });
+    Graph.addNode(graph, { id: exampleId(1), type: EXAMPLE_TYPE });
+    Graph.addNode(graph, { id: exampleId(2), type: EXAMPLE_TYPE });
+    Graph.addNode(graph, { id: exampleId(3), type: EXAMPLE_TYPE });
+    const result = graph.pipe(
+      Graph.addEdges([
+        { source: exampleId(1), target: exampleId(2) },
+        { source: exampleId(1), target: exampleId(3) },
+      ]),
+    );
+    expect(result).toEqual(graph);
+    const edges = registry.get(graph.edges(exampleId(1)));
+    expect(edges.outbound).to.have.length(2);
+    expect(edges.outbound).to.include(exampleId(2));
+    expect(edges.outbound).to.include(exampleId(3));
+  });
+
+  test('remove nodes curried', () => {
+    const registry = Registry.make();
+    const graph = Graph.make({ registry });
+    Graph.addNode(graph, { id: exampleId(1), type: EXAMPLE_TYPE });
+    Graph.addNode(graph, { id: exampleId(2), type: EXAMPLE_TYPE });
+    const result = graph.pipe(Graph.removeNodes([exampleId(1), exampleId(2)]));
+    expect(result).toEqual(graph);
+    const node1 = registry.get(graph.node(exampleId(1)));
+    const node2 = registry.get(graph.node(exampleId(2)));
+    assert.ok(Option.isNone(node1));
+    assert.ok(Option.isNone(node2));
+  });
+
+  test('remove edges curried', () => {
+    const registry = Registry.make();
+    const graph = Graph.make({ registry });
+    Graph.addNode(graph, { id: exampleId(1), type: EXAMPLE_TYPE });
+    Graph.addNode(graph, { id: exampleId(2), type: EXAMPLE_TYPE });
+    Graph.addNode(graph, { id: exampleId(3), type: EXAMPLE_TYPE });
+    Graph.addEdge(graph, { source: exampleId(1), target: exampleId(2) });
+    Graph.addEdge(graph, { source: exampleId(1), target: exampleId(3) });
+    const result = graph.pipe(
+      Graph.removeEdges([
+        { source: exampleId(1), target: exampleId(2) },
+        { source: exampleId(1), target: exampleId(3) },
+      ]),
+    );
+    expect(result).toEqual(graph);
+    const edges = registry.get(graph.edges(exampleId(1)));
+    expect(edges.outbound).to.have.length(0);
+  });
+
+  test('expand curried', async () => {
+    const registry = Registry.make();
+    const builder = GraphBuilder.make({ registry });
+    const graph = builder.graph;
+    let expandCalled = false;
+    GraphBuilder.addExtension(
+      builder,
+      GraphBuilder.createExtensionRaw({
+        id: 'test',
+        connector: () => {
+          expandCalled = true;
+          return Atom.make([]);
+        },
+      }),
+    );
+    await graph.pipe(Graph.expand(Node.RootId));
+    expect(expandCalled).to.be.true;
+  });
+
+  test('initialize curried', async () => {
+    const registry = Registry.make();
+    const builder = GraphBuilder.make({ registry });
+    const graph = builder.graph;
+    let initializeCalled = false;
+    GraphBuilder.addExtension(
+      builder,
+      GraphBuilder.createExtensionRaw({
+        id: 'test',
+        resolver: () => {
+          initializeCalled = true;
+          return Atom.make({ id: EXAMPLE_ID, type: EXAMPLE_TYPE });
+        },
+      }),
+    );
+    await graph.pipe(Graph.initialize(EXAMPLE_ID));
+    expect(initializeCalled).to.be.true;
+  });
+
+  test('waitForPath curried', async () => {
+    const graph = Graph.make();
+    Graph.addNode(graph, {
+      id: Node.RootId,
+      type: Node.RootType,
+      nodes: [{ id: exampleId(1), type: EXAMPLE_TYPE }],
+    });
+    const path = await graph.pipe(Graph.waitForPath({ target: exampleId(1) }, { timeout: 1000 }));
+    expect(path).to.deep.equal(['root', exampleId(1)]);
   });
 });

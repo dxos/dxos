@@ -57,7 +57,7 @@ const DefaultStory = ({ source }: TemplateEditorProps & { source: string }) => {
 
   return (
     <TemplateEditor
-      classNames='bg-baseSurface max-is-prose is-full'
+      classNames='bg-baseSurface is-full max-is-proseMaxWidth'
       id={blueprint.id}
       template={blueprint.instructions}
     />
@@ -70,7 +70,7 @@ const meta = {
   render: DefaultStory,
   decorators: [
     withTheme,
-    withLayout({ container: 'column' }),
+    withLayout({ layout: 'column' }),
     withClientProvider({
       types: [Blueprint.Blueprint],
       createIdentity: true,

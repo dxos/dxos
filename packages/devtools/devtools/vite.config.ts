@@ -13,7 +13,7 @@ import TopLevelAwaitPlugin from 'vite-plugin-top-level-await';
 import WasmPlugin from 'vite-plugin-wasm';
 
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
-import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
+import { ThemePlugin } from '@dxos/ui-theme/plugin';
 
 import { createConfig as createTestConfig } from '../../../vitest.base.config';
 
@@ -72,13 +72,7 @@ export default defineConfig({
     }),
     TopLevelAwaitPlugin(),
     WasmPlugin(),
-    react({
-      tsDecorators: true,
-      plugins: [
-        // https://github.com/XantreDev/preact-signals/tree/main/packages/react#how-parser-plugins-works
-        ['@preact-signals/safe-react/swc', { mode: 'all' }],
-      ],
-    }),
+    react({ tsDecorators: true }),
     VitePWA({
       // TODO(wittjosiah): Remove once this has been released.
       selfDestroying: true,

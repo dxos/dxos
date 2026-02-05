@@ -4,6 +4,10 @@
   "description": "Map plugin with solid web components",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
   "license": "MIT",
   "author": "DXOS.org",
   "sideEffects": true,
@@ -27,6 +31,7 @@
     "@dxos/app-framework": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-solid": "workspace:*",
+    "@dxos/operation": "workspace:*",
     "@dxos/plugin-map": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/solid-ui-geo": "workspace:*",

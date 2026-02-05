@@ -27,8 +27,8 @@ import {
   type ValidationProps as ValidationPrimitiveProps,
   useInputContext,
 } from '@dxos/react-input';
-import { mx } from '@dxos/react-ui-theme';
-import { type ClassNameValue, type Density, type Elevation, type Size } from '@dxos/react-ui-types';
+import { mx } from '@dxos/ui-theme';
+import { type ClassNameValue, type Density, type Elevation, type Size } from '@dxos/ui-types';
 
 import { useDensityContext, useElevationContext, useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';

@@ -6,8 +6,8 @@ import * as Array from 'effect/Array';
 import React from 'react';
 
 import { IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
 import { type Actor } from '@dxos/types';
+import { mx } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
 
@@ -30,7 +30,7 @@ export const ActorComponent = ({ actor, classNames }: ThemedClassName<{ actor: A
   );
 };
 
-export const ActorList = ({ classNames, actors }: ThemedClassName<{ actors: Actor.Actor[] }>) => {
+export const ActorList = ({ classNames, actors }: ThemedClassName<{ actors: readonly Actor.Actor[] }>) => {
   return (
     <div role='none' className={mx('flex flex-col is-full', classNames)}>
       {/* TODO(wittjosiah): Accordion to show all. */}

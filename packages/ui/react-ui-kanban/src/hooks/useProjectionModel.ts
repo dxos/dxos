@@ -2,21 +2,38 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useMemo } from 'react';
+import { type Registry } from '@effect-atom/atom-react';
+import { useState } from 'react';
 
 import { Type } from '@dxos/echo';
-import { ProjectionModel } from '@dxos/schema';
+import { useAsyncEffect } from '@dxos/react-ui';
+import { ProjectionModel, createEchoChangeCallback } from '@dxos/schema';
 
 import { type Kanban } from '../types';
 
 export const useProjectionModel = <S extends Type.Entity.Any>(
   schema: S | undefined,
   kanban: Kanban.Kanban | undefined,
-) =>
-  useMemo(() => {
-    if (schema && kanban?.view.target?.projection) {
-      const projection = new ProjectionModel(Type.toJsonSchema(schema), kanban.view.target.projection);
+  registry: Registry.Registry,
+) => {
+  const [projection, setProjection] = useState<ProjectionModel | undefined>();
+
+  useAsyncEffect(async () => {
+    if (schema && kanban) {
+      const view = await kanban.view.load();
+      // For mutable schemas (EchoSchema), use the live jsonSchema reference for reactivity.
+      // For immutable schemas, create a snapshot.
+      const jsonSchema = Type.isMutable(schema) ? schema.jsonSchema : Type.toJsonSchema(schema);
+
+      // Always use createEchoChangeCallback since the view is ECHO-backed.
+      // Pass schema only when mutable to allow schema mutations.
+      const change = createEchoChangeCallback(view, Type.isMutable(schema) ? schema : undefined);
+
+      const projection = new ProjectionModel({ registry, view, baseSchema: jsonSchema, change });
       projection.normalizeView();
-      return projection;
+      setProjection(projection);
     }
-  }, [schema, kanban?.view.target?.projection]);
+  }, [schema, kanban, registry]);
+
+  return projection;
+};

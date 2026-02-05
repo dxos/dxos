@@ -18,7 +18,7 @@ import { Popover } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { MarkdownStream } from '@dxos/react-ui-components';
 import { EditorPreviewProvider, useEditorPreview } from '@dxos/react-ui-editor';
-import { Card } from '@dxos/react-ui-stack';
+import { Card } from '@dxos/react-ui-mosaic';
 import { render } from '@dxos/storybook-utils';
 import { type Message, Organization, Person } from '@dxos/types';
 
@@ -56,7 +56,7 @@ const DefaultStory = ({ generator = [], delay = 0, wait, ...props }: StoryProps)
           }
         }
         setDone(true);
-      }).pipe(Effect.provide(Layer.mergeAll(Database.Service.layer(space.db), ContextQueueService.layer(queue)))),
+      }).pipe(Effect.provide(Layer.mergeAll(Database.layer(space.db), ContextQueueService.layer(queue)))),
     );
 
     return () => {
@@ -83,10 +83,10 @@ const PreviewCard = () => {
     <Popover.Portal>
       <Popover.Content onOpenAutoFocus={(event) => event.preventDefault()}>
         <Popover.Viewport>
-          <Card.SurfaceRoot role='card--popover'>
+          <Card.Root>
             <Card.Heading>{target?.label}</Card.Heading>
             {target && <Card.Text classNames='truncate line-clamp-3'>{target.text}</Card.Text>}
-          </Card.SurfaceRoot>
+          </Card.Root>
         </Popover.Viewport>
         <Popover.Arrow />
       </Popover.Content>
@@ -100,7 +100,7 @@ const meta = {
   render: render(DefaultStory),
   decorators: [
     withTheme,
-    withLayout({ container: 'column' }),
+    withLayout({ layout: 'column' }),
     withClientProvider({
       createIdentity: true,
       createSpace: true,

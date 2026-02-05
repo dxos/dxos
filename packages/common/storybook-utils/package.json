@@ -4,6 +4,10 @@
   "description": "Utilities for DXOS UI Storybooks.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
   "license": "MIT",
   "author": "DXOS.org",
   "sideEffects": true,
@@ -25,18 +29,17 @@
     "src"
   ],
   "dependencies": {
-    "@dxos/echo-signals": "workspace:*",
     "@dxos/lit-theme-editor": "workspace:*",
     "@dxos/lit-ui": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/react-ui-dnd": "workspace:*",
-    "@radix-ui/react-use-controllable-state": "catalog:",
+    "@effect-atom/atom-react": "catalog:",
     "lodash.defaultsdeep": "catalog:",
-    "storybook": "10.1.10"
+    "storybook": "10.2.0"
   },
   "devDependencies": {
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-theme": "workspace:*",
+    "@dxos/ui-theme": "workspace:*",
     "@types/lodash.defaultsdeep": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
@@ -45,7 +48,7 @@
   },
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-theme": "workspace:*",
+    "@dxos/ui-theme": "workspace:*",
     "react": "catalog:",
     "react-dom": "catalog:"
   },

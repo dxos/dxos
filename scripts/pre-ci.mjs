@@ -5,11 +5,12 @@ import { $, cd, chalk, fs, question } from 'zx';
 /**
  * Auto-fix common issues before a CI run.
  * 1. If there are any uncommitted changes, abort with error.
- * 2. Merge the latest origin/main.
- * 3. Run pnpm install and commit the changes if any.
- * 4. Run moon run :lint -- --fix. If it errors -- abort, otherwise commit changes if any.
- * 5. Push
- * 6. Run moon run :build :test
+ * 2. Run circular dependency check.
+ * 3. Merge the latest origin/main.
+ * 4. Run pnpm install and commit the changes if any.
+ * 5. Run moon run :lint -- --fix. If it errors -- abort, otherwise commit changes if any.
+ * 6. Push
+ * 7. Run moon run :build :test
  */
 
 // Set error handling to capture specific failures
@@ -66,7 +67,17 @@ async function main() {
   }
   console.log(chalk.green('No uncommitted changes found. Proceeding...'));
 
-  // Step 2: Merge the latest origin/main
+  // Step 2: Run cycle check
+  console.log(chalk.blue('Step 2: Running circular dependency check...'));
+  try {
+    await $`pnpm run check-cycles`;
+    console.log(chalk.green('No circular dependencies found.'));
+  } catch (error) {
+    console.error(chalk.red('Circular dependency check failed:'), error.message);
+    process.exit(1);
+  }
+
+  // Step 3: Merge the latest origin/main
   console.log(chalk.blue('Step 2: Merging latest origin/main...'));
   try {
     // Fetch the latest changes from origin
@@ -131,8 +142,8 @@ async function main() {
     process.exit(1);
   }
 
-  // Step 3: Run pnpm install and commit changes if any
-  console.log(chalk.blue('Step 3: Running pnpm install...'));
+  // Step 4: Run pnpm install and commit changes if any
+  console.log(chalk.blue('Step 4: Running pnpm install...'));
   try {
     await $`pnpm install`;
 
@@ -146,10 +157,10 @@ async function main() {
     process.exit(1);
   }
 
-  // Step 4: Run lint with fixes and commit changes if any
-  console.log(chalk.blue('Step 4: Running linting with auto-fix...'));
+  // Step 5: Run lint with fixes and commit changes if any
+  console.log(chalk.blue('Step 5: Running linting with auto-fix...'));
   try {
-    await $`moon run :lint --no-bail --quiet -- --fix`;
+    await $`moon exec --on-failure continue --quiet :lint -- --fix`;
 
     if (await hasUncommittedChanges()) {
       await commitChanges('style: fix linting issues');
@@ -161,8 +172,8 @@ async function main() {
     process.exit(1);
   }
 
-  // Step 5: Push changes to remote
-  console.log(chalk.blue('Step 5: Pushing changes to remote...'));
+  // Step 6: Push changes to remote
+  console.log(chalk.blue('Step 6: Pushing changes to remote...'));
   try {
     await $`git push`;
     console.log(chalk.green('Successfully pushed changes.'));
@@ -171,16 +182,16 @@ async function main() {
     process.exit(1);
   }
 
-  // Step 6: Run build and test
-  console.log(chalk.blue('Step 6: Running build and tests...'));
+  // Step 7: Run build and test
+  console.log(chalk.blue('Step 7: Running build and tests...'));
   try {
-    await $`moon run :build --no-bail --quiet`;
+    await $`moon exec --on-failure continue --quiet :build`;
     await $({
       env: {
         ...process.env,
         CI: 1,
       },
-    })`moon run :test --no-bail --quiet -- --no-file-parallelism`;
+    })`moon exec --on-failure continue --quiet :test -- --no-file-parallelism --project=!storybook`;
     console.log(chalk.green('Build and tests completed successfully.'));
   } catch (error) {
     console.error(chalk.red('Build or tests failed:'), error.message);

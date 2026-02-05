@@ -3,52 +3,27 @@
 //
 
 import { type Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
-import { Atom } from '@effect-atom/atom-react';
-import * as Function from 'effect/Function';
-import type * as Schema from 'effect/Schema';
+import * as Effect from 'effect/Effect';
 
-import { LayoutAction, type PromiseIntentDispatcher, chain, createIntent } from '@dxos/app-framework';
-import { type Database, type Entity, Filter, Obj, Query, type QueryResult, Ref, Type } from '@dxos/echo';
-import { EXPANDO_TYPENAME } from '@dxos/echo/internal';
+import { type CapabilityManager, Common } from '@dxos/app-framework';
+import { type Space, SpaceState, isSpace } from '@dxos/client/echo';
+import { type Database, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { Migrations } from '@dxos/migrations';
-import {
-  ACTION_GROUP_TYPE,
-  ACTION_TYPE,
-  type ActionData,
-  type InvokeParams,
-  type Node,
-  type NodeArg,
-  type ReadableGraph,
-  isGraphNode,
-} from '@dxos/plugin-graph';
-import { type Space, SpaceState, isSpace } from '@dxos/react-client/echo';
-import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention';
+import { Operation } from '@dxos/operation';
+import { Graph, Node } from '@dxos/plugin-graph';
+import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention/types';
 import { type TreeData } from '@dxos/react-ui-list';
-import { Collection } from '@dxos/schema';
+import { Collection, Expando } from '@dxos/schema';
 import { createFilename } from '@dxos/util';
 
 import { meta } from './meta';
-import { SPACE_TYPE, SpaceAction } from './types';
+import { SPACE_TYPE, SpaceOperation } from './types';
 
 export const SPACES = `${meta.id}-spaces`;
 export const COMPOSER_SPACE_LOCK = `${meta.id}/lock`;
 // TODO(wittjosiah): Remove.
 export const SHARED = 'shared-spaces';
-
-/**
- * Convert a query result to an Atom value of the objects.
- */
-export const atomFromQuery = <T extends Entity.Unknown>(query: QueryResult.QueryResult<T>): Atom.Atom<T[]> => {
-  return Atom.make((get) => {
-    const unsubscribe = query.subscribe((result) => {
-      get.setSelf(result.results);
-    });
-
-    get.addFinalizer(() => unsubscribe());
-    return query.results;
-  });
-};
 
 // TODO(wittjosiah): Factor out? Expose via capability?
 export const getSpaceDisplayName = (
@@ -77,11 +52,7 @@ const getCollectionGraphNodePartials = ({
     acceptPersistenceClass: new Set(['echo']),
     acceptPersistenceKey: new Set([db.spaceId]),
     role: 'branch',
-    onRearrangeChildren: (nextOrder: unknown[]) => {
-      // Change on disk.
-      collection.objects = nextOrder.filter(Obj.isObject).map(Ref.make);
-    },
-    onTransferStart: (child: Node<Obj.Any>, index?: number) => {
+    onTransferStart: (child: Node.Node<Obj.Unknown>, index?: number) => {
       // TODO(wittjosiah): Support transfer between spaces.
       // const childSpace = getSpace(child.data);
       // if (space && childSpace && !childSpace.key.equals(space.key)) {
@@ -100,22 +71,26 @@ const getCollectionGraphNodePartials = ({
 
       // Add child to destination collection.
       // TODO(dmaretskyi): Compare by id.
-      if (!collection.objects.find((object) => object.target === child.data)) {
-        if (typeof index !== 'undefined') {
-          collection.objects.splice(index, 0, Ref.make(child.data));
-        } else {
-          collection.objects.push(Ref.make(child.data));
+      Obj.change(collection, (c) => {
+        if (!c.objects.find((object) => object.target === child.data)) {
+          if (typeof index !== 'undefined') {
+            c.objects.splice(index, 0, Ref.make(child.data));
+          } else {
+            c.objects.push(Ref.make(child.data));
+          }
         }
-      }
+      });
 
       // }
     },
-    onTransferEnd: (child: Node<Obj.Any>, destination: Node) => {
+    onTransferEnd: (child: Node.Node<Obj.Unknown>, destination: Node.Node) => {
       // Remove child from origin collection.
-      const index = collection.objects.findIndex((object) => object.target === child.data);
-      if (index > -1) {
-        collection.objects.splice(index, 1);
-      }
+      Obj.change(collection, (c) => {
+        const index = c.objects.findIndex((object) => object.target === child.data);
+        if (index > -1) {
+          c.objects.splice(index, 1);
+        }
+      });
 
       // TODO(wittjosiah): Support transfer between spaces.
       // const childSpace = getSpace(child.data);
@@ -126,15 +101,17 @@ const getCollectionGraphNodePartials = ({
       //   childSpace.db.remove(child.data);
       // }
     },
-    onCopy: async (child: Node<Obj.Any>, index?: number) => {
+    onCopy: async (child: Node.Node<Obj.Unknown>, index?: number) => {
       // Create clone of child and add to destination space.
       const newObject = await cloneObject(child.data, resolve, db);
       db.add(newObject);
-      if (typeof index !== 'undefined') {
-        collection.objects.splice(index, 0, Ref.make(newObject));
-      } else {
-        collection.objects.push(Ref.make(newObject));
-      }
+      Obj.change(collection, (c) => {
+        if (typeof index !== 'undefined') {
+          c.objects.splice(index, 0, Ref.make(newObject));
+        } else {
+          c.objects.push(Ref.make(newObject));
+        }
+      });
     },
   };
 };
@@ -181,12 +158,19 @@ export const constructSpaceNode = ({
   personal,
   namesCache,
   resolve,
+  graph,
+  spacesOrder,
 }: {
   space: Space;
   navigable?: boolean;
   personal?: boolean;
   namesCache?: Record<string, string>;
   resolve: (typename: string) => Record<string, any>;
+  /** Graph for sorting edges on rearrange. */
+  graph?: Graph.ExpandableGraph;
+  // TODO(wittjosiah): Should be Type.Expando but it doesn't work with the AtomQuery result type.
+  /** Spaces order object for persisting workspace order. */
+  spacesOrder?: Obj.Any;
 }) => {
   const hasPendingMigration = checkPendingMigration(space);
   const collection =
@@ -195,6 +179,24 @@ export const constructSpaceNode = ({
     space.state.get() === SpaceState.SPACE_READY && Obj.instanceOf(Collection.Collection, collection)
       ? getCollectionGraphNodePartials({ collection, db: space.db, resolve })
       : {};
+
+  const onRearrange =
+    graph && spacesOrder
+      ? (nextOrder: Space[]) => {
+          // NOTE: This is needed to ensure order is updated by next animation frame.
+          Graph.sortEdges(
+            graph,
+            Node.RootId,
+            'outbound',
+            nextOrder.map(({ id }) => id),
+          );
+
+          // Persist order to database.
+          Obj.change(spacesOrder, (mutableOrder: any) => {
+            mutableOrder.order = nextOrder.map(({ id }) => id);
+          });
+        }
+      : undefined;
 
   return {
     id: space.id,
@@ -212,7 +214,9 @@ export const constructSpaceNode = ({
           : undefined,
       iconHue: space.state.get() === SpaceState.SPACE_READY && space.properties.iconHue,
       disabled: !navigable || space.state.get() !== SpaceState.SPACE_READY || hasPendingMigration,
+      disposition: 'workspace',
       testId: 'spacePlugin.space',
+      onRearrange,
       canDrop: (source: TreeData) => {
         // TODO(wittjosiah): Find a way to only allow space as source for rearranging.
         return Obj.isObject(source.item.data) || isSpace(source.item.data);
@@ -269,27 +273,23 @@ export const constructSpaceNode = ({
 
 export const constructSpaceActions = ({
   space,
-  dispatch,
   personal,
   migrating,
 }: {
   space: Space;
-  dispatch: PromiseIntentDispatcher;
   personal?: boolean;
   migrating?: boolean;
 }) => {
   const state = space.state.get();
   const hasPendingMigration = checkPendingMigration(space);
   const getId = (id: string) => `${id}/${space.id}`;
-  const actions: NodeArg<ActionData>[] = [];
+  const actions: Node.NodeArg<Node.ActionData<Operation.Service>>[] = [];
 
   if (hasPendingMigration) {
     actions.push({
-      id: getId(SpaceAction.Migrate._tag),
-      type: ACTION_GROUP_TYPE,
-      data: async () => {
-        await dispatch(createIntent(SpaceAction.Migrate, { space }));
-      },
+      id: getId(SpaceOperation.Migrate.meta.key),
+      type: Node.ActionGroupType,
+      data: () => Operation.invoke(SpaceOperation.Migrate, { space }),
       properties: {
         label: ['migrate space label', { ns: meta.id }],
         icon: 'ph--database--regular',
@@ -302,11 +302,9 @@ export const constructSpaceActions = ({
   if (state === SpaceState.SPACE_READY && !hasPendingMigration) {
     actions.push(
       {
-        id: getId(SpaceAction.OpenCreateObject._tag),
-        type: ACTION_TYPE,
-        data: async () => {
-          await dispatch(createIntent(SpaceAction.OpenCreateObject, { target: space.db }));
-        },
+        id: getId(SpaceOperation.OpenCreateObject.meta.key),
+        type: Node.ActionType,
+        data: () => Operation.invoke(SpaceOperation.OpenCreateObject, { target: space.db }),
         properties: {
           label: ['create object in space label', { ns: meta.id }],
           icon: 'ph--plus--regular',
@@ -315,11 +313,9 @@ export const constructSpaceActions = ({
         },
       },
       {
-        id: getId(SpaceAction.Rename._tag),
-        type: ACTION_TYPE,
-        data: async (params?: InvokeParams) => {
-          await dispatch(createIntent(SpaceAction.Rename, { space, caller: params?.caller }));
-        },
+        id: getId(SpaceOperation.Rename.meta.key),
+        type: Node.ActionType,
+        data: (params?: Node.InvokeProps) => Operation.invoke(SpaceOperation.Rename, { space, caller: params?.caller }),
         properties: {
           label: ['rename space label', { ns: meta.id }],
           icon: 'ph--pencil-simple-line--regular',
@@ -335,13 +331,7 @@ export const constructSpaceActions = ({
   return actions;
 };
 
-export const createStaticSchemaNode = ({
-  schema,
-  space,
-}: {
-  schema: Schema.Schema.AnyNoContext;
-  space: Space;
-}): Node => {
+export const createStaticSchemaNode = ({ schema, space }: { schema: Type.Entity.Any; space: Space }): Node.Node => {
   return {
     id: `${space.id}/${Type.getTypename(schema)}`,
     type: `${meta.id}/static-schema`,
@@ -361,29 +351,24 @@ export const createStaticSchemaNode = ({
 export const createStaticSchemaActions = ({
   schema,
   space,
-  dispatch,
   deletable,
 }: {
   schema: Type.Obj.Any;
   space: Space;
-  dispatch: PromiseIntentDispatcher;
   deletable: boolean;
 }) => {
   const getId = (id: string) => `${space.id}/${Type.getTypename(schema)}/${id}`;
 
-  const actions: NodeArg<ActionData>[] = [
+  const actions: Node.NodeArg<Node.ActionData<Operation.Service>>[] = [
     {
-      id: getId(SpaceAction.AddObject._tag),
-      type: ACTION_TYPE,
-      data: async () => {
-        await dispatch(
-          createIntent(SpaceAction.OpenCreateObject, {
-            target: space.db,
-            views: true,
-            initialFormValues: { typename: Type.getTypename(schema) },
-          }),
-        );
-      },
+      id: getId(SpaceOperation.AddObject.meta.key),
+      type: Node.ActionType,
+      data: () =>
+        Operation.invoke(SpaceOperation.OpenCreateObject, {
+          target: space.db,
+          views: true,
+          initialFormValues: { typename: Type.getTypename(schema) },
+        }),
       properties: {
         label: ['add view to schema label', { ns: meta.id }],
         icon: 'ph--plus--regular',
@@ -392,11 +377,9 @@ export const createStaticSchemaActions = ({
       },
     },
     {
-      id: getId(SpaceAction.RenameObject._tag),
-      type: ACTION_TYPE,
-      data: async (params?: InvokeParams) => {
-        throw new Error('Not implemented');
-      },
+      id: getId(SpaceOperation.RenameObject.meta.key),
+      type: Node.ActionType,
+      data: () => Effect.fail(new Error('Not implemented')),
       properties: {
         label: ['rename object label', { ns: Type.getTypename(Type.PersistentType) }],
         icon: 'ph--pencil-simple-line--regular',
@@ -406,16 +389,19 @@ export const createStaticSchemaActions = ({
       },
     },
     {
-      id: getId(SpaceAction.RemoveObjects._tag),
-      type: ACTION_TYPE,
-      data: async () => {
-        const index = space.properties.staticRecords.findIndex(
-          (typename: string) => typename === Type.getTypename(schema),
-        );
-        if (index > -1) {
-          space.properties.staticRecords.splice(index, 1);
-        }
-      },
+      id: getId(SpaceOperation.RemoveObjects.meta.key),
+      type: Node.ActionType,
+      data: () =>
+        Effect.sync(() => {
+          const index = space.properties.staticRecords.findIndex(
+            (typename: string) => typename === Type.getTypename(schema),
+          );
+          if (index > -1) {
+            Obj.change(space.properties, (p) => {
+              p.staticRecords.splice(index, 1);
+            });
+          }
+        }),
       properties: {
         label: ['delete object label', { ns: Type.getTypename(Type.PersistentType) }],
         icon: 'ph--trash--regular',
@@ -425,22 +411,19 @@ export const createStaticSchemaActions = ({
       },
     },
     {
-      id: getId(SpaceAction.Snapshot._tag),
-      type: ACTION_TYPE,
-      data: async () => {
-        const result = await dispatch(
-          createIntent(SpaceAction.Snapshot, {
-            db: space.db,
-            query: Query.select(Filter.type(schema)).ast,
-          }),
-        );
-        if (result.data?.snapshot) {
-          await downloadBlob(
-            result.data.snapshot,
-            createFilename({ parts: [space.id, Type.getTypename(schema)], ext: 'json' }),
+      id: getId(SpaceOperation.Snapshot.meta.key),
+      type: Node.ActionType,
+      data: Effect.fnUntraced(function* () {
+        const result = yield* Operation.invoke(SpaceOperation.Snapshot, {
+          db: space.db,
+          query: Query.select(Filter.type(schema)).ast,
+        });
+        if (result.snapshot) {
+          yield* Effect.tryPromise(() =>
+            downloadBlob(result.snapshot, createFilename({ parts: [space.id, Type.getTypename(schema)], ext: 'json' })),
           );
         }
-      },
+      }),
       properties: {
         label: ['snapshot by schema label', { ns: meta.id }],
         icon: 'ph--camera--regular',
@@ -460,14 +443,17 @@ export const createObjectNode = ({
   navigable = false,
   managedCollectionChild = false,
   resolve,
+  parentCollection,
 }: {
   db: Database.Database;
-  object: Obj.Any;
+  object: Obj.Unknown;
   disposition?: string;
   droppable?: boolean;
   navigable?: boolean;
   managedCollectionChild?: boolean;
   resolve: (typename: string) => Record<string, any>;
+  /** Parent collection for rearranging objects. */
+  parentCollection?: Collection.Collection;
 }) => {
   const type = Obj.getTypename(object);
   if (!type) {
@@ -511,6 +497,13 @@ export const createObjectNode = ({
       persistenceKey: db.spaceId,
       selectable,
       managedCollectionChild,
+      onRearrange: parentCollection
+        ? (nextOrder: unknown[]) => {
+            Obj.change(parentCollection, (c) => {
+              c.objects = nextOrder.filter(Obj.isObject).map(Ref.make);
+            });
+          }
+        : undefined,
       blockInstruction: (source: TreeData, instruction: Instruction) => {
         if (source.item.properties.managedCollectionChild) {
           // TODO(wittjosiah): Support reordering system collections.
@@ -525,7 +518,7 @@ export const createObjectNode = ({
         return managedCollectionChild;
       },
       canDrop: (source: TreeData) => {
-        return droppable && isGraphNode(source.item) && Obj.isObject(source.item.data);
+        return droppable && Node.isGraphNode(source.item) && Obj.isObject(source.item.data);
       },
       ...partials,
     },
@@ -535,15 +528,15 @@ export const createObjectNode = ({
 export const constructObjectActions = ({
   object,
   graph,
-  dispatch,
   resolve,
+  capabilities,
   deletable = true,
   navigable = false,
 }: {
-  object: Obj.Any;
-  graph: ReadableGraph;
-  dispatch: PromiseIntentDispatcher;
+  object: Obj.Unknown;
+  graph: Graph.ReadableGraph;
   resolve: (typename: string) => Record<string, any>;
+  capabilities: CapabilityManager.CapabilityManager;
   deletable?: boolean;
   navigable?: boolean;
 }) => {
@@ -556,18 +549,16 @@ export const constructObjectActions = ({
 
   const managedCollection = Obj.instanceOf(Collection.Managed, object) ? object : undefined;
   const metadata = managedCollection ? resolve(managedCollection.key) : {};
-  const createObjectIntent = metadata.createObjectIntent;
+  const createObject = metadata.createObject;
   const inputSchema = metadata.inputSchema;
 
-  const actions: NodeArg<ActionData>[] = [
+  const actions: Node.NodeArg<Node.ActionData<Operation.Service>>[] = [
     ...(Obj.instanceOf(Collection.Collection, object)
       ? [
           {
-            id: getId(SpaceAction.OpenCreateObject._tag),
-            type: ACTION_TYPE,
-            data: async () => {
-              await dispatch(createIntent(SpaceAction.OpenCreateObject, { target: object }));
-            },
+            id: getId(SpaceOperation.OpenCreateObject.meta.key),
+            type: Node.ActionType,
+            data: () => Operation.invoke(SpaceOperation.OpenCreateObject, { target: object }),
             properties: {
               label: ['create object in collection label', { ns: meta.id }],
               icon: 'ph--plus--regular',
@@ -580,17 +571,14 @@ export const constructObjectActions = ({
     ...(Obj.instanceOf(Type.PersistentType, object)
       ? [
           {
-            id: getId(SpaceAction.AddObject._tag),
-            type: ACTION_TYPE,
-            data: async () => {
-              await dispatch(
-                createIntent(SpaceAction.OpenCreateObject, {
-                  target: db,
-                  views: true,
-                  initialFormValues: { typename: object.typename },
-                }),
-              );
-            },
+            id: getId(SpaceOperation.AddObject.meta.key),
+            type: Node.ActionType,
+            data: () =>
+              Operation.invoke(SpaceOperation.OpenCreateObject, {
+                target: db,
+                views: true,
+                initialFormValues: { typename: object.typename },
+              }),
             properties: {
               label: ['add view to schema label', { ns: meta.id }],
               icon: 'ph--plus--regular',
@@ -599,22 +587,19 @@ export const constructObjectActions = ({
             },
           },
           {
-            id: getId(SpaceAction.Snapshot._tag),
-            type: ACTION_TYPE,
-            data: async () => {
-              const result = await dispatch(
-                createIntent(SpaceAction.Snapshot, {
-                  db,
-                  query: Query.select(Filter.type(Type.toEffectSchema(object.jsonSchema))).ast,
-                }),
-              );
-              if (result.data?.snapshot) {
-                await downloadBlob(
-                  result.data.snapshot,
-                  createFilename({ parts: [db.spaceId, object.typename], ext: 'json' }),
+            id: getId(SpaceOperation.Snapshot.meta.key),
+            type: Node.ActionType,
+            data: Effect.fnUntraced(function* () {
+              const result = yield* Operation.invoke(SpaceOperation.Snapshot, {
+                db,
+                query: Query.select(Filter.type(Type.toEffectSchema(object.jsonSchema))).ast,
+              });
+              if (result.snapshot) {
+                yield* Effect.promise(() =>
+                  downloadBlob(result.snapshot, createFilename({ parts: [db.spaceId, object.typename], ext: 'json' })),
                 );
               }
-            },
+            }),
             properties: {
               label: ['snapshot by schema label', { ns: meta.id }],
               icon: 'ph--camera--regular',
@@ -623,29 +608,33 @@ export const constructObjectActions = ({
           },
         ]
       : []),
-    ...(createObjectIntent
+    ...(createObject
       ? [
           {
-            id: getId(SpaceAction.OpenCreateObject._tag),
-            type: ACTION_TYPE,
-            data: async () => {
+            id: getId(SpaceOperation.OpenCreateObject.meta.key),
+            type: Node.ActionType,
+            data: Effect.fnUntraced(function* () {
               if (inputSchema) {
-                await dispatch(
-                  createIntent(SpaceAction.OpenCreateObject, {
-                    target: db,
-                    typename: managedCollection ? managedCollection.key : undefined,
-                  }),
-                );
+                yield* Operation.invoke(SpaceOperation.OpenCreateObject, {
+                  target: db,
+                  typename: managedCollection ? managedCollection.key : undefined,
+                });
               } else {
-                await dispatch(
-                  Function.pipe(
-                    createObjectIntent({}, { db }),
-                    chain(SpaceAction.AddObject, { target: db, hidden: true }),
-                    chain(LayoutAction.Open, { part: 'main' }),
-                  ),
-                );
+                const createdObject = yield* createObject({}, { db, capabilities }) as Effect.Effect<
+                  Obj.Unknown,
+                  Error,
+                  never
+                >;
+                const addResult = yield* Operation.invoke(SpaceOperation.AddObject, {
+                  target: db,
+                  hidden: true,
+                  object: createdObject,
+                });
+                if (addResult.id) {
+                  yield* Operation.invoke(Common.LayoutOperation.Open, { subject: [addResult.id] });
+                }
               }
-            },
+            }),
             properties: {
               label: ['create object in system collection label', { ns: meta.id }],
               icon: 'ph--plus--regular',
@@ -659,11 +648,10 @@ export const constructObjectActions = ({
       ? []
       : [
           {
-            id: getId(SpaceAction.RenameObject._tag),
-            type: ACTION_TYPE,
-            data: async (params?: InvokeParams) => {
-              await dispatch(createIntent(SpaceAction.RenameObject, { object, caller: params?.caller }));
-            },
+            id: getId(SpaceOperation.RenameObject.meta.key),
+            type: Node.ActionType,
+            data: (params?: Node.InvokeProps) =>
+              Operation.invoke(SpaceOperation.RenameObject, { object, caller: params?.caller }),
             properties: {
               label: ['rename object label', { ns: typename }],
               icon: 'ph--pencil-simple-line--regular',
@@ -676,14 +664,15 @@ export const constructObjectActions = ({
             },
           },
           {
-            id: getId(SpaceAction.RemoveObjects._tag),
-            type: ACTION_TYPE,
-            data: async () => {
-              const collection = graph
-                .getConnections(Obj.getDXN(object).toString(), 'inbound')
-                .find(({ data }) => Obj.instanceOf(Collection.Collection, data))?.data;
-              await dispatch(createIntent(SpaceAction.RemoveObjects, { objects: [object], target: collection }));
-            },
+            id: getId(SpaceOperation.RemoveObjects.meta.key),
+            type: Node.ActionType,
+            data: Effect.fnUntraced(function* () {
+              const collection = Graph.getConnections(graph, Obj.getDXN(object).toString(), 'inbound').find(
+                (node: Node.Node): node is Node.Node<Collection.Collection> =>
+                  Obj.instanceOf(Collection.Collection, node.data),
+              )?.data;
+              yield* Operation.invoke(SpaceOperation.RemoveObjects, { objects: [object], target: collection });
+            }),
             properties: {
               label: ['delete object label', { ns: typename }],
               icon: 'ph--trash--regular',
@@ -702,11 +691,12 @@ export const constructObjectActions = ({
       ? [
           {
             id: getId('copy-link'),
-            type: ACTION_TYPE,
-            data: async () => {
-              const url = `${window.location.origin}/${db.spaceId}/${Obj.getDXN(object).toString()}`;
-              await navigator.clipboard.writeText(url);
-            },
+            type: Node.ActionType,
+            data: () =>
+              Effect.promise(async () => {
+                const url = `${window.location.origin}/${db.spaceId}/${Obj.getDXN(object).toString()}`;
+                await navigator.clipboard.writeText(url);
+              }),
             properties: {
               label: ['copy link label', { ns: meta.id }],
               icon: 'ph--link--regular',
@@ -718,13 +708,9 @@ export const constructObjectActions = ({
       : []),
     // TODO(wittjosiah): Factor out and apply to all nodes.
     {
-      id: getId(LayoutAction.Expose._tag),
-      type: ACTION_TYPE,
-      data: async () => {
-        await dispatch(
-          createIntent(LayoutAction.Expose, { part: 'navigation', subject: Obj.getDXN(object).toString() }),
-        );
-      },
+      id: getId(Common.LayoutOperation.Expose.meta.key),
+      type: Node.ActionType,
+      data: () => Operation.invoke(Common.LayoutOperation.Expose, { subject: Obj.getDXN(object).toString() }),
       properties: {
         label: ['expose object label', { ns: meta.id }],
         icon: 'ph--eye--regular',
@@ -755,9 +741,9 @@ const downloadBlob = async (blob: Blob, filename: string) => {
  * @deprecated This is a temporary solution.
  */
 export const getNestedObjects = async (
-  object: Obj.Any,
+  object: Obj.Unknown,
   resolve: (typename: string) => Record<string, any>,
-): Promise<Obj.Any[]> => {
+): Promise<Obj.Unknown[]> => {
   const type = Obj.getTypename(object);
   if (!type) {
     return [];
@@ -769,7 +755,7 @@ export const getNestedObjects = async (
     return [];
   }
 
-  const objects: Obj.Any[] = await loadReferences(object);
+  const objects: Obj.Unknown[] = await loadReferences(object);
   const nested = await Promise.all(objects.map((object) => getNestedObjects(object, resolve)));
   return [...objects, ...nested.flat()];
 };
@@ -779,12 +765,12 @@ export const getNestedObjects = async (
  */
 // TODO(burdon): Remove.
 export const cloneObject = async (
-  object: Obj.Any,
+  object: Obj.Unknown,
   resolve: (typename: string) => Record<string, any>,
   newDb: Database.Database,
-): Promise<Obj.Any> => {
+): Promise<Obj.Unknown> => {
   const schema = Obj.getSchema(object);
-  const typename = schema ? (Type.getTypename(schema) ?? EXPANDO_TYPENAME) : EXPANDO_TYPENAME;
+  const typename = schema ? (Type.getTypename(schema) ?? Expando.Expando.typename) : Expando.Expando.typename;
   const metadata = resolve(typename);
   const serializer = metadata.serializer;
   invariant(serializer, `No serializer for type: ${typename}`);

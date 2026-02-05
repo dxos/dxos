@@ -7,7 +7,7 @@ import React, { forwardRef, useMemo } from 'react';
 import { type AnyProperties } from '@dxos/echo/internal';
 import { type SchemaProperty } from '@dxos/effect';
 import { type ThemedClassName } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 import { isTruthy } from '@dxos/util';
 
 import { type FormHandlerProps } from '../../hooks';

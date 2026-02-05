@@ -2,10 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
+import { useAtomValue } from '@effect-atom/atom-react';
 import React from 'react';
 
 import { useAppGraph, useCapability } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
+import { Node, useActionRunner } from '@dxos/plugin-graph';
 import { useActions, useNode } from '@dxos/plugin-graph';
 import {
   Icon,
@@ -16,10 +18,10 @@ import {
   toLocalizedString,
   useTranslation,
 } from '@dxos/react-ui';
-import { groupHoverControlItemWithTransition, mx } from '@dxos/react-ui-theme';
+import { groupHoverControlItemWithTransition, mx } from '@dxos/ui-theme';
 
-import { ThreadCapabilities } from '../../capabilities';
 import { meta } from '../../meta';
+import { ThreadCapabilities } from '../../types';
 import { type Channel } from '../../types';
 
 export type ToolbarProps = ThemedClassName<{
@@ -42,14 +44,18 @@ export const Toolbar = ({
 }: ToolbarProps) => {
   const { t } = useTranslation(meta.id);
   const { graph } = useAppGraph();
+  const runAction = useActionRunner();
   const call = useCapability(ThreadCapabilities.CallManager);
+  const media = useAtomValue(call.mediaAtom);
+  const joined = useAtomValue(call.joinedAtom);
+  const raisedHand = useAtomValue(call.raisedHandAtom);
 
   // Channel app graph node.
   const node = useNode(graph, channel && Obj.getDXN(channel).toString());
   const actions = useActions(graph, node?.id).filter((action) => action.properties.disposition === 'toolbar');
 
   // Screen sharing.
-  const isScreensharing = call.media.screenshareTrack !== undefined;
+  const isScreensharing = media.screenshareTrack !== undefined;
   const canSharescreen =
     typeof navigator.mediaDevices !== 'undefined' && navigator.mediaDevices.getDisplayMedia !== undefined;
 
@@ -58,7 +64,7 @@ export const Toolbar = ({
     <div className={mx('z-20 flex justify-center m-8', autoHideControls && groupHoverControlItemWithTransition)}>
       <NaturalToolbar.Root classNames={['p-2 bg-modalSurface rounded-md shadow-md', classNames]}>
         <ToggleButton
-          active={call.media.audioEnabled}
+          active={media.audioEnabled}
           state={{
             on: {
               icon: 'ph--microphone--regular',
@@ -70,12 +76,12 @@ export const Toolbar = ({
               icon: 'ph--microphone-slash--duotone',
               label: t('mic on'),
               onClick: () => call.turnAudioOn(),
-              classNames: [call.joined && 'bg-callAlert'],
+              classNames: [joined && 'bg-callAlert'],
             },
           }}
         />
         <ToggleButton
-          active={call.media.videoEnabled}
+          active={media.videoEnabled}
           state={{
             on: {
               icon: 'ph--video-camera--regular',
@@ -97,7 +103,7 @@ export const Toolbar = ({
           </div>
         )) || <NaturalToolbar.Separator variant='gap' />}
 
-        {call.joined && (
+        {joined && (
           <>
             <ToggleButton
               disabled={!canSharescreen}
@@ -117,25 +123,27 @@ export const Toolbar = ({
             />
 
             {/* Companion actions. */}
-            {actions.map((action) => (
-              <IconButton
-                key={action.id}
-                {...defaultButtonProps}
-                icon={action.properties.icon}
-                label={toLocalizedString(action.properties.label, t)}
-                classNames={action.properties.classNames}
-                onClick={() => action.data({ node })}
-              />
-            ))}
+            {actions
+              .filter((action): action is Node.Action => Node.isAction(action))
+              .map((action) => (
+                <IconButton
+                  key={action.id}
+                  {...defaultButtonProps}
+                  icon={action.properties.icon}
+                  label={toLocalizedString(action.properties.label, t)}
+                  classNames={action.properties.classNames}
+                  onClick={() => node && void runAction(action, { parent: node })}
+                />
+              ))}
 
             <ToggleButton
-              active={call.raisedHand}
+              active={raisedHand}
               state={{
                 on: {
                   icon: 'ph--hand-waving--regular',
                   label: t('lower hand'),
                   onClick: () => call.setRaisedHand(false),
-                  classNames: [call.joined && 'bg-callAlert'],
+                  classNames: [joined && 'bg-callAlert'],
                 },
                 off: {
                   icon: 'ph--hand-palm--duotone',
@@ -146,7 +154,7 @@ export const Toolbar = ({
             />
           </>
         )}
-        {call.joined ? (
+        {joined ? (
           <IconButton variant='destructive' icon='ph--phone-x--regular' label={t('leave call')} onClick={onLeave} />
         ) : (
           <IconButton variant='primary' icon='ph--phone-incoming--regular' label={t('join call')} onClick={onJoin} />

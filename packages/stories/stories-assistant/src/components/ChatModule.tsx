@@ -16,7 +16,7 @@ import {
 } from '@dxos/plugin-assistant';
 import { useQuery } from '@dxos/react-client/echo';
 import { IconButton, Popover, Toolbar } from '@dxos/react-ui';
-import { StackItem } from '@dxos/react-ui-stack';
+import { Layout } from '@dxos/react-ui-mosaic';
 
 import { ExecutionGraphModule } from './ExecutionGraphModule';
 import { type ComponentProps } from './types';
@@ -37,7 +37,7 @@ export const ChatModule = ({ space }: ComponentProps) => {
   }
 
   return (
-    <StackItem.Content toolbar>
+    <Layout.Main toolbar>
       <Chat.Root chat={chat} processor={processor}>
         <Chat.Toolbar />
         <Chat.Viewport classNames='relative container-max-width'>
@@ -62,6 +62,6 @@ export const ChatModule = ({ space }: ComponentProps) => {
           </div>
         </Chat.Viewport>
       </Chat.Root>
-    </StackItem.Content>
+    </Layout.Main>
   );
 };

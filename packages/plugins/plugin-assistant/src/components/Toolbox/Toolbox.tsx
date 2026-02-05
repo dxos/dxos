@@ -10,7 +10,7 @@ import { Function } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { Filter, useQuery } from '@dxos/react-client/echo';
 import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
 import { type AiChatProcessor } from '../../processor';
@@ -129,7 +129,7 @@ export const ToolboxContainer = ({ classNames, db, processor }: ToolboxContainer
   return (
     <Toolbox
       classNames={classNames}
-      blueprints={processor?.context.blueprints.value}
+      blueprints={processor?.context.getBlueprints()}
       services={serviceTools}
       functions={functions}
     />

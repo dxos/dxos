@@ -20,6 +20,7 @@ import {
 } from '@dxos/protocols/proto/dxos/echo/query';
 
 import { queryToDataServiceRequest } from './adapter';
+import { copyUint8Array } from './utils';
 
 export class QueryServiceImpl implements QueryServiceProto {
   private _queryCount = 0;
@@ -41,7 +42,7 @@ export class QueryServiceImpl implements QueryServiceProto {
         try {
           this._queryCount++;
           log.info('begin query', { spaceId });
-          const queryResponse = await this._dataService.queryDocuments(
+          using queryResponse = await this._dataService.queryDocuments(
             this._executionContext,
             queryToDataServiceRequest(query),
           );
@@ -53,8 +54,11 @@ export class QueryServiceImpl implements QueryServiceProto {
                 spaceId,
                 spaceKey: PublicKey.ZERO,
                 documentId: object.document.documentId,
-                rank: 0,
-                documentAutomerge: object.document.data,
+                // Rank 1 for predicate matches where ranking is not determined.
+                rank: 1,
+                // Copy returned object to avoid hanging RPC stub.
+                // See https://developers.cloudflare.com/workers/runtime-apis/rpc/lifecycle/
+                documentAutomerge: copyUint8Array(object.document.data),
               }),
             ),
           } satisfies QueryResponse;

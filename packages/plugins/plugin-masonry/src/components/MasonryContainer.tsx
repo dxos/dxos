@@ -2,34 +2,41 @@
 // Copyright 2025 DXOS.org
 //
 
+import type * as Schema from 'effect/Schema';
 import React, { useEffect, useState } from 'react';
 
+import { Common } from '@dxos/app-framework';
 import { Surface, useCapabilities } from '@dxos/app-framework/react';
-import { Filter, Obj, Type } from '@dxos/echo';
-import { type TypedObject } from '@dxos/echo/internal';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import { Filter, Obj, type Ref, Type } from '@dxos/echo';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
-import { useQuery } from '@dxos/react-client/echo';
+import { useObject, useQuery } from '@dxos/react-client/echo';
 import { Masonry as MasonryComponent } from '@dxos/react-ui-masonry';
-import { getTypenameFromQuery } from '@dxos/schema';
+import { Card } from '@dxos/react-ui-mosaic';
+import { type View, getTypenameFromQuery } from '@dxos/schema';
 
-import { type Masonry } from '../types';
-
-const Item = ({ data }: { data: any }) => {
-  return <Surface role='card' limit={1} data={{ subject: data }} />;
+export type MasonryContainerProps = {
+  view: View.View;
+  role?: string;
 };
 
-export const MasonryContainer = ({ object, role }: { object: Masonry.Masonry; role?: string }) => {
-  const schemas = useCapabilities(ClientCapabilities.Schema);
-  const db = Obj.getDatabase(object);
-  const typename = object.view.target?.query ? getTypenameFromQuery(object.view.target.query.ast) : undefined;
+export const MasonryContainer = ({
+  view: viewOrRef,
+  role,
+}: {
+  view: View.View | Ref.Ref<View.View>;
+  role?: string;
+}) => {
+  const [view] = useObject(viewOrRef);
+  const schemas = useCapabilities(Common.Capability.Schema);
+  const db = view && Obj.getDatabase(view);
+  const typename = view?.query ? getTypenameFromQuery(view.query.ast) : undefined;
 
-  const [cardSchema, setCardSchema] = useState<TypedObject<any, any>>();
+  const [cardSchema, setCardSchema] = useState<Schema.Schema.AnyNoContext>();
 
   useEffect(() => {
     const staticSchema = schemas.flat().find((schema) => Type.getTypename(schema) === typename);
     if (staticSchema) {
-      setCardSchema(() => staticSchema as TypedObject<any, any>);
+      setCardSchema(() => staticSchema);
     }
     if (!staticSchema && typename && db) {
       const query = db.schemaRegistry.query({ typename });
@@ -55,5 +62,18 @@ export const MasonryContainer = ({ object, role }: { object: Masonry.Masonry; ro
       render={Item as any}
       classNames='is-full max-is-full bs-full max-bs-full overflow-y-auto p-4'
     />
+  );
+};
+
+const Item = ({ data }: { data: any }) => {
+  return (
+    <Card.Root>
+      <Card.Toolbar>
+        <span />
+        <Card.Title>{Obj.getLabel(data)}</Card.Title>
+        <Card.Menu />
+      </Card.Toolbar>
+      <Surface role='card--content' limit={1} data={{ subject: data }} />
+    </Card.Root>
   );
 };

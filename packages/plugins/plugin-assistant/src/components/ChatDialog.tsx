@@ -4,15 +4,14 @@
 
 import React, { useCallback, useState } from 'react';
 
-import { Capabilities } from '@dxos/app-framework';
-import { useCapability } from '@dxos/app-framework/react';
+import { useAtomCapability } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { ChatDialog as NaturalChatDialog } from '@dxos/react-ui-chat';
 
 import { useBlueprintRegistry, useChatProcessor, useChatServices, useOnline, usePresets } from '../hooks';
 import { meta } from '../meta';
-import { type Assistant } from '../types';
+import { type Assistant, AssistantCapabilities } from '../types';
 
 import { Chat, type ChatRootProps } from './Chat';
 
@@ -24,7 +23,7 @@ export const ChatDialog = ({ chat }: ChatDialogProps) => {
   const { t } = useTranslation(meta.id);
 
   const db = chat && Obj.getDatabase(chat);
-  const settings = useCapability(Capabilities.SettingsStore).getStore<Assistant.Settings>(meta.id)?.value;
+  const settings = useAtomCapability(AssistantCapabilities.Settings);
   const services = useChatServices({ id: db?.spaceId, chat });
   const [online, setOnline] = useOnline();
   const { preset, ...chatProps } = usePresets(online);

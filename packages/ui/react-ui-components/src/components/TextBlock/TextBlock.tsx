@@ -5,7 +5,7 @@
 import React, { useEffect, useState } from 'react';
 
 import { type ThemedClassName, useDynamicRef } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 export type TextBlockProps = ThemedClassName<{
   text: string;

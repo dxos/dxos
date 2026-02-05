@@ -71,7 +71,7 @@ export type DataSpaceCallbacks = {
   beforeClose?: () => Promise<void>;
 };
 
-export type DataSpaceParams = {
+export type DataSpaceProps = {
   initialState: SpaceState;
   inner: Space;
   metadataStore: MetadataStore;
@@ -135,7 +135,7 @@ export class DataSpace {
 
   public metrics: SpaceProto.Metrics = {};
 
-  constructor(params: DataSpaceParams) {
+  constructor(params: DataSpaceProps) {
     this._inner = params.inner;
     this._inner.stateUpdate.on(this._ctx, () => this.stateUpdate.emit());
 

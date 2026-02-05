@@ -17,11 +17,11 @@ import React, {
 } from 'react';
 
 import { ListItem, type ThemedClassName, useId } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { useStackDropForElements } from '../../hooks';
-import { type StackContextValue } from '../defs';
 import { StackContext } from '../StackContext';
+import { type StackContextValue } from '../types';
 
 export type Orientation = 'horizontal' | 'vertical';
 
@@ -195,6 +195,7 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
                 scrollIntoViewAndFocus(adjacentItem, closestStackOrientation);
               }
             }
+
             if (perpendicularDelta !== 0) {
               if (ancestorStack && ancestorOrientation !== closestStackOrientation) {
                 const siblingStacks = Array.from(

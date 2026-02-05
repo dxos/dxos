@@ -4,10 +4,12 @@
 
 import React, { useCallback, useRef, useState } from 'react';
 
-import { LayoutAction, createIntent } from '@dxos/app-framework';
-import { useIntentDispatcher } from '@dxos/app-framework/react';
+import { Common } from '@dxos/app-framework';
+import { useOperationInvoker } from '@dxos/app-framework/react';
 import { type Space } from '@dxos/client/echo';
+import { Obj } from '@dxos/echo';
 import { Button, Input, Popover, useTranslation } from '@dxos/react-ui';
+import { osTranslations } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
 
@@ -17,17 +19,14 @@ export const SpaceRenamePopover = ({ space }: { space: Space }) => {
   const { t } = useTranslation(meta.id);
   const doneButton = useRef<HTMLButtonElement>(null);
   const [name, setName] = useState(space.properties.name ?? '');
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const { invokePromise } = useOperationInvoker();
 
   const handleDone = useCallback(() => {
-    space.properties.name = name;
-    void dispatch(
-      createIntent(LayoutAction.UpdatePopover, {
-        part: 'popover',
-        options: { variant: 'react', anchorId: '', state: false },
-      }),
-    );
-  }, [space, name]);
+    Obj.change(space.properties, (p) => {
+      p.name = name;
+    });
+    void invokePromise(Common.LayoutOperation.UpdatePopover, { anchorId: '', state: false });
+  }, [space, name, invokePromise]);
 
   // TODO(thure): Why does the input value need to be uncontrolled to work?
   return (
@@ -47,7 +46,7 @@ export const SpaceRenamePopover = ({ space }: { space: Space }) => {
       </div>
       <Popover.Close asChild>
         <Button ref={doneButton} classNames='self-stretch' onClick={handleDone}>
-          {t('done label', { ns: 'os' })}
+          {t('done label', { ns: osTranslations })}
         </Button>
       </Popover.Close>
     </div>

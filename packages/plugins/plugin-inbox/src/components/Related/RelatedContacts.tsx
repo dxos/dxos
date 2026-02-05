@@ -4,9 +4,8 @@
 
 import React from 'react';
 
-import { Avatar, Button, Icon, useTranslation } from '@dxos/react-ui';
-import { Card, cardText } from '@dxos/react-ui-stack';
-import { mx } from '@dxos/react-ui-theme';
+import { useTranslation } from '@dxos/react-ui';
+import { Card } from '@dxos/react-ui-mosaic';
 import { type Person } from '@dxos/types';
 
 import { meta } from '../../meta';
@@ -24,23 +23,16 @@ export const RelatedContacts = ({ contacts, onContactClick }: RelatedContactsPro
 
   return (
     <>
-      <h3 className={mx(cardText, 'text-xs text-description uppercase font-medium')}>{t('related contacts title')}</h3>
-      <Card.Chrome>
-        {contacts.map((contact) => (
-          <Avatar.Root key={contact.id}>
-            <Button classNames='gap-2 mbe-1 last:mbe-0' onClick={() => onContactClick?.(contact)}>
-              <Avatar.Content
-                hue='neutral'
-                fallback={contact.fullName}
-                imgSrc={contact.image}
-                icon={'ph--user--regular'}
-              />
-              <Avatar.Label classNames='min-is-0 flex-1 truncate'>{contact.fullName}</Avatar.Label>
-              <Icon icon='ph--arrow-right--regular' />
-            </Button>
-          </Avatar.Root>
-        ))}
-      </Card.Chrome>
+      <Card.Heading variant='subtitle'>{t('related contacts title')}</Card.Heading>
+      {contacts.map((contact) => (
+        <Card.Action
+          key={contact.id}
+          onClick={() => onContactClick?.(contact)}
+          label={contact.fullName || contact.emails?.[0].value || contact.id}
+          icon='ph--user--regular'
+          actionIcon='ph--arrow-right--regular'
+        />
+      ))}
     </>
   );
 };

@@ -24,7 +24,7 @@ import {
 import { type Blueprint } from '@dxos/blueprints';
 import { todo } from '@dxos/debug';
 import { Obj } from '@dxos/echo';
-import { TracingService } from '@dxos/functions';
+import { type FunctionInvocationService, TracingService } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
 
@@ -39,16 +39,17 @@ export type AiSessionRunRequirements =
   | LanguageModel.LanguageModel
   | ToolExecutionService
   | ToolResolverService
-  | TracingService;
+  | TracingService
+  | FunctionInvocationService;
 
 export type AiSessionOptions = {};
 
-export type AiSessionRunParams<Tools extends Record<string, Tool.Any>> = {
+export type AiSessionRunProps<Tools extends Record<string, Tool.Any>> = {
   prompt: string;
   // TODO(wittjosiah): Rename to systemPrompt.
   system?: string;
   history?: Message.Message[];
-  objects?: Obj.Any[];
+  objects?: Obj.Unknown[];
   blueprints?: readonly Blueprint.Blueprint[];
   toolkit?: Toolkit.WithHandler<Tools>;
   observer?: GenerationObserver<Tools>;
@@ -97,7 +98,7 @@ export class AiSession {
     blueprints = [],
     toolkit,
     observer = GenerationObserver.noop(),
-  }: AiSessionRunParams<Tools>): Effect.Effect<Message.Message[], AiSessionRunError, AiSessionRunRequirements> =>
+  }: AiSessionRunProps<Tools>): Effect.Effect<Message.Message[], AiSessionRunError, AiSessionRunRequirements> =>
     Effect.gen(this, function* () {
       this._started = Date.now();
       this._history = [...history];
@@ -116,7 +117,9 @@ export class AiSession {
       const promptMessage = yield* submitMessage(yield* formatUserPrompt({ prompt, history }));
 
       // Generate system and prompt messages.
-      const system = yield* formatSystemPrompt({ system: systemTemplate, blueprints, objects });
+      const system = yield* formatSystemPrompt({ system: systemTemplate, blueprints, objects }).pipe(Effect.orDie);
+
+      // log('system', { prompt: system });
 
       // Tool call loop.
       do {
@@ -147,6 +150,8 @@ export class AiSession {
           Stream.runCollect,
           Effect.map(Chunk.toArray),
         );
+
+        // log('blocks', { blocks });
 
         // Create the response message.
         const response = yield* submitMessage(
@@ -204,7 +209,7 @@ export class AiSession {
   // TODO(burdon): Implement or remove.
   async runStructured<S extends Schema.Schema.AnyNoContext>(
     _schema: S,
-    _options: AiSessionRunParams<any>,
+    _options: AiSessionRunProps<any>,
   ): Promise<Schema.Schema.Type<S>> {
     return todo();
     // const parser = structuredOutputParser(schema);

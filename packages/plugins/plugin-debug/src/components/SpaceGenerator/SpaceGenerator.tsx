@@ -4,7 +4,7 @@
 
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { useIntentDispatcher } from '@dxos/app-framework/react';
+import { useOperationInvoker } from '@dxos/app-framework/react';
 import { ComputeGraph } from '@dxos/conductor';
 import { Filter, Obj, type Type } from '@dxos/echo';
 import { Markdown } from '@dxos/plugin-markdown/types';
@@ -23,11 +23,11 @@ import { SchemaTable } from './SchemaTable';
 
 export type SpaceGeneratorProps = {
   space: Space;
-  onCreateObjects?: (objects: Obj.Any[]) => void;
+  onCreateObjects?: (objects: Obj.Unknown[]) => void;
 };
 
 export const SpaceGenerator = ({ space, onCreateObjects }: SpaceGeneratorProps) => {
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const { invokePromise } = useOperationInvoker();
   const client = useClient();
   const staticTypes = [Markdown.Document, Diagram.Diagram, Sheet.Sheet, ComputeGraph]; // TODO(burdon): Make extensible.
   const recordTypes: Type.Obj.Any[] = [Organization.Organization, Person.Person, Task.Task];
@@ -43,17 +43,17 @@ export const SpaceGenerator = ({ space, onCreateObjects }: SpaceGeneratorProps) 
   // Create type generators.
   const typeMap = useMemo(() => {
     const recordGenerators = new Map<string, ObjectGenerator<any>>(
-      recordTypes.map((type) => [type.typename, createGenerator(client, dispatch, type)]),
+      recordTypes.map((type) => [type.typename, createGenerator(client, invokePromise, type)]),
     );
 
     return new Map([...staticGenerators, ...presets.items, ...recordGenerators]);
-  }, [client, recordTypes]);
+  }, [client, recordTypes, invokePromise]);
 
   // Query space to get info.
   const updateInfo = async () => {
     // Create schema map.
     const echoSchema = await space.db.schemaRegistry.query().run();
-    const staticSchema = space.db.graph.schemaRegistry.schemas;
+    const staticSchema = await space.db.graph.schemaRegistry.query().run();
 
     // Create object map.
     const objects = await space.db.query(Filter.everything()).run();
@@ -64,6 +64,7 @@ export const SpaceGenerator = ({ space, onCreateObjects }: SpaceGeneratorProps) 
           const count = map[type] ?? 0;
           map[type] = count + 1;
         }
+
         return map;
       }, {}),
     );

@@ -5,20 +5,14 @@
 import type * as Schema from 'effect/Schema';
 
 import { ObjectId } from '@dxos/keys';
-import {
-  type Live,
-  UntypedReactiveHandler,
-  createProxy,
-  defineHiddenProperty,
-  isValidProxyTarget,
-} from '@dxos/live-object';
 
 import { getTypeAnnotation } from '../annotations';
-import { Expando } from '../entities';
-import { attachTypedJsonSerializer } from '../object';
 import { type AnyProperties, KindId, MetaId, type ObjectMeta, ObjectMetaSchema } from '../types';
 
-import { TypedReactiveHandler, prepareTypedTarget } from './typed-handler';
+import { defineHiddenProperty } from './define-hidden-property';
+import { attachTypedJsonSerializer } from './json-serializer';
+import { createProxy, getProxyTarget, isValidProxyTarget } from './proxy-utils';
+import { TypedReactiveHandler, prepareTypedTarget, setMetaOwner } from './typed-handler';
 
 /**
  *
@@ -28,64 +22,53 @@ export type MakeObjectProps<T extends AnyProperties> = Omit<T, 'id' | KindId>;
 
 /**
  * Creates a reactive object from a plain Javascript object.
- * Optionally provides a TS-effect schema.
+ * Requires a TS-effect schema.
  */
 // TODO(burdon): Make internal
 // TODO(dmaretskyi): Deep mutability.
 // TODO(dmaretskyi): Invert generics (generic over schema) to have better error messages.
 // TODO(dmaretskyi): Could mutate original object making it unusable.
 export const makeObject: {
-  <T extends AnyProperties>(obj: T): Live<T>;
   <T extends AnyProperties>(
     schema: Schema.Schema<T, any, never>,
     obj: NoInfer<MakeObjectProps<T>>,
     meta?: ObjectMeta,
-  ): Live<T>;
-} = <T extends AnyProperties>(
-  objOrSchema: Schema.Schema<T, any> | T,
-  obj?: MakeObjectProps<T>,
-  meta?: ObjectMeta,
-): Live<T> => {
-  // TODO(dmaretskyi): Remove Expando special case.
-  if (obj && (objOrSchema as any) !== Expando) {
-    return createReactiveObject<T>({ ...obj } as T, meta, objOrSchema as Schema.Schema<T, any>);
-  } else if (obj && (objOrSchema as any) === Expando) {
-    return createReactiveObject<T>({ ...obj } as T, meta, undefined, { expando: true });
-  } else {
-    return createReactiveObject<T>(objOrSchema as T, meta);
-  }
+  ): T;
+} = <T extends AnyProperties>(schema: Schema.Schema<T, any>, obj: MakeObjectProps<T>, meta?: ObjectMeta): T => {
+  return createReactiveObject<T>({ ...obj } as T, meta, schema);
 };
 
-const createReactiveObject = <T extends AnyProperties>(
-  obj: T,
-  meta?: ObjectMeta,
-  schema?: Schema.Schema<T>,
-  options?: { expando?: boolean },
-): Live<T> => {
+const createReactiveObject = <T extends AnyProperties>(obj: T, meta?: ObjectMeta, schema?: Schema.Schema<T>): T => {
   if (!isValidProxyTarget(obj)) {
     throw new Error('Value cannot be made into a reactive object.');
   }
 
-  if (schema) {
-    const annotation = getTypeAnnotation(schema);
-    const shouldGenerateId = options?.expando || !!annotation;
-    if (shouldGenerateId) {
-      setIdOnTarget(obj);
-    }
-    if (annotation) {
-      defineHiddenProperty(obj, KindId, annotation.kind);
-    }
-    initMeta(obj, meta);
-    prepareTypedTarget(obj, schema);
-    attachTypedJsonSerializer(obj);
-    return createProxy<T>(obj, TypedReactiveHandler.instance);
-  } else {
-    if (options?.expando) {
-      setIdOnTarget(obj);
-    }
-    initMeta(obj, meta);
-    return createProxy<T>(obj, UntypedReactiveHandler.instance);
+  if (!schema) {
+    throw new Error('Schema is required for reactive objects. Use Atom for untyped reactive state.');
   }
+
+  const annotation = getTypeAnnotation(schema);
+  if (annotation) {
+    setIdOnTarget(obj);
+    defineHiddenProperty(obj, KindId, annotation.kind);
+  }
+  initMeta(obj, meta);
+  prepareTypedTarget(obj, schema);
+  attachTypedJsonSerializer(obj);
+  const proxy = createProxy<T>(obj, TypedReactiveHandler.instance);
+
+  // Set meta's owner to the main object so meta mutations respect the parent's change context.
+  // For non-database objects using TypedReactiveHandler, this links the meta to the main object's
+  // change context. For database objects, meta is handled by EchoReactiveHandler.getMeta().
+  const metaProxy = (obj as any)[MetaId];
+  if (metaProxy) {
+    const metaTarget = getProxyTarget(metaProxy);
+    if (metaTarget) {
+      setMetaOwner(metaTarget, obj);
+    }
+  }
+
+  return proxy;
 };
 
 /**

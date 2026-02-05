@@ -4,20 +4,14 @@
 
 import React, { forwardRef, useMemo, useState } from 'react';
 
-import { LayoutAction, createIntent } from '@dxos/app-framework';
-import { useAppGraph, useIntentDispatcher } from '@dxos/app-framework/react';
-import { type ActionLike, isAction, isActionGroup } from '@dxos/app-graph';
+import { Common } from '@dxos/app-framework';
+import { useAppGraph, useOperationInvoker } from '@dxos/app-framework/react';
 import { Keyboard, keySymbols } from '@dxos/keyboard';
+import { Graph, Node, useActionRunner } from '@dxos/plugin-graph';
 import { useActions } from '@dxos/plugin-graph';
-import { Button, Dialog, Icon, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { SearchList } from '@dxos/react-ui-searchlist';
-import {
-  cardDialogContent,
-  cardDialogHeader,
-  cardDialogPaddedOverflow,
-  cardDialogSearchListRoot,
-} from '@dxos/react-ui-stack';
-import { descriptionText, mx } from '@dxos/react-ui-theme';
+import { Button, Dialog, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { SearchList, useSearchListResults } from '@dxos/react-ui-searchlist';
+import { osTranslations } from '@dxos/ui-theme';
 import { getHostPlatform } from '@dxos/util';
 
 import { KEY_BINDING, meta } from '../../meta';
@@ -30,7 +24,8 @@ export type CommandsDialogContentProps = {
 export const CommandsDialogContent = forwardRef<HTMLDivElement, CommandsDialogContentProps>(
   ({ selected: initial }, forwardedRef) => {
     const { t } = useTranslation(meta.id);
-    const { dispatchPromise: dispatch } = useIntentDispatcher();
+    const { invokeSync } = useOperationInvoker();
+    const runAction = useActionRunner();
     const { graph } = useAppGraph();
     const [selected, setSelected] = useState<string | undefined>(initial);
 
@@ -40,11 +35,11 @@ export const CommandsDialogContent = forwardRef<HTMLDivElement, CommandsDialogCo
       // TODO(burdon): Get from navtree (not keyboard).
       const current = Keyboard.singleton.getCurrentContext();
       const actionMap = new Set<string>();
-      const actions: ActionLike[] = [];
-      graph.traverse({
+      const actions: Node.ActionLike[] = [];
+      Graph.traverse(graph, {
         visitor: (node, path) => {
           if (
-            (isAction(node) || isActionGroup(node)) &&
+            (Node.isAction(node) || Node.isActionGroup(node)) &&
             !actionMap.has(node.id) &&
             current.startsWith(path.slice(0, -1).join('/'))
           ) {
@@ -65,63 +60,67 @@ export const CommandsDialogContent = forwardRef<HTMLDivElement, CommandsDialogCo
 
     const group = allActions.find(({ id }) => id === selected);
     const groupActions = useActions(graph, group?.id);
-    const actions = isActionGroup(group) ? groupActions : allActions;
+    const actions = Node.isActionGroup(group) ? groupActions : allActions;
+
+    const { results, handleSearch } = useSearchListResults({
+      items: actions,
+      extract: (action) => toLocalizedString(action.properties.label, t),
+    });
 
     return (
-      <Dialog.Content classNames={cardDialogContent} ref={forwardedRef}>
-        <Dialog.Title classNames={cardDialogHeader}>{t('commands dialog title', { ns: meta.id })}</Dialog.Title>
+      <Dialog.Content ref={forwardedRef}>
+        <Dialog.Title>{t('commands dialog title', { ns: meta.id })}</Dialog.Title>
+        <SearchList.Root onSearch={handleSearch}>
+          <div aria-label={t('command list input placeholder')} role='combobox' aria-expanded='true'>
+            <SearchList.Input placeholder={t('command list input placeholder')} />
+            <SearchList.Content>
+              <SearchList.Viewport>
+                {results.map((action) => {
+                  const shortcut =
+                    typeof action.properties.keyBinding === 'string'
+                      ? action.properties.keyBinding
+                      : action.properties.keyBinding?.[getHostPlatform()];
 
-        <SearchList.Root label={t('command list input placeholder')} classNames={cardDialogSearchListRoot}>
-          <SearchList.Input placeholder={t('command list input placeholder')} />
-          <SearchList.Content classNames={cardDialogPaddedOverflow}>
-            {actions?.map((action) => {
-              const label = toLocalizedString(action.properties.label, t);
-              const shortcut =
-                typeof action.properties.keyBinding === 'string'
-                  ? action.properties.keyBinding
-                  : action.properties.keyBinding?.[getHostPlatform()];
-              return (
-                <SearchList.Item
-                  value={label}
-                  key={action.id}
-                  onSelect={() => {
-                    if (action.properties.disabled) {
-                      return;
-                    }
+                  return (
+                    <SearchList.Item
+                      value={action.id}
+                      key={action.id}
+                      label={toLocalizedString(action.properties.label, t)}
+                      icon={action.properties.icon}
+                      suffix={shortcut ? keySymbols(shortcut).join('') : undefined}
+                      onSelect={() => {
+                        if (action.properties.disabled) {
+                          return;
+                        }
 
-                    if (isActionGroup(action)) {
-                      setSelected(action.id);
-                      return;
-                    }
+                        if (Node.isActionGroup(action)) {
+                          setSelected(action.id);
+                          return;
+                        }
 
-                    void dispatch(
-                      createIntent(LayoutAction.UpdateDialog, {
-                        part: 'dialog',
-                        options: { state: false },
-                      }),
-                    );
-                    setTimeout(() => {
-                      const node = graph.getConnections(group?.id ?? action.id, 'inbound')[0];
-                      void (node && isAction(action) && action.data({ parent: node, caller: KEY_BINDING }));
-                    });
-                  }}
-                  classNames='flex items-center gap-2'
-                  disabled={action.properties.disabled}
-                  {...(action.properties?.testId && {
-                    'data-testid': action.properties.testId,
-                  })}
-                >
-                  <Icon icon={action.properties.icon} size={4} />
-                  <span className='grow truncate'>{label}</span>
-                  {shortcut && <span className={mx('shrink-0', descriptionText)}>{keySymbols(shortcut).join('')}</span>}
-                </SearchList.Item>
-              );
-            })}
-          </SearchList.Content>
+                        invokeSync(Common.LayoutOperation.UpdateDialog, { state: false });
+                        setTimeout(() => {
+                          const node = Graph.getConnections(graph, group?.id ?? action.id, 'inbound')[0];
+                          if (node && Node.isAction(action)) {
+                            void runAction(action, { parent: node, caller: KEY_BINDING });
+                          }
+                        });
+                      }}
+                      classNames='flex items-center gap-2'
+                      disabled={action.properties.disabled}
+                      {...(action.properties?.testId && {
+                        'data-testid': action.properties.testId,
+                      })}
+                    />
+                  );
+                })}
+              </SearchList.Viewport>
+            </SearchList.Content>
+          </div>
         </SearchList.Root>
         <div role='none' className='pli-cardSpacingInline pbe-cardSpacingBlock'>
           <Dialog.Close asChild>
-            <Button classNames='is-full'>{t('close label', { ns: 'os' })}</Button>
+            <Button classNames='is-full'>{t('close label', { ns: osTranslations })}</Button>
           </Dialog.Close>
         </div>
       </Dialog.Content>

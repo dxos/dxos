@@ -42,7 +42,7 @@ const DefaultStory = () => {
 const meta = {
   title: 'ui/react-ui-list/Accordion',
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ container: 'column' })],
+  decorators: [withTheme, withLayout({ layout: 'column' })],
 } satisfies Meta<typeof Accordion>;
 
 export default meta;

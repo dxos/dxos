@@ -2,27 +2,30 @@
 // Copyright 2024 DXOS.org
 //
 
+import { RegistryContext } from '@effect-atom/atom-react';
 import * as Array from 'effect/Array';
 import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
-import React, { forwardRef, useCallback, useImperativeHandle, useMemo, useState } from 'react';
+import React, { forwardRef, useCallback, useContext, useImperativeHandle, useMemo, useState } from 'react';
 
-import { Filter, Format, Query, QueryAST, type SchemaRegistry } from '@dxos/echo';
+import { Filter, Format, Obj, Query, QueryAST, type SchemaRegistry } from '@dxos/echo';
 import { EchoSchema, type JsonProp, isMutable, toJsonSchema } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
+import { useObject } from '@dxos/react-client/echo';
 import { Callout, IconButton, Input, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { QueryForm, type QueryFormProps } from '@dxos/react-ui-components';
 import { List } from '@dxos/react-ui-list';
-import { mx, subtleHover } from '@dxos/react-ui-theme';
 import {
   FieldSchema,
   type FieldType,
   ProjectionModel,
   VIEW_FIELD_LIMIT,
   type View,
+  createEchoChangeCallback,
   getTypenameFromQuery,
 } from '@dxos/schema';
+import { mx, osTranslations, subtleHover } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations';
 import { FieldEditor } from '../FieldEditor';
@@ -70,13 +73,28 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
     },
     forwardedRef,
   ) => {
+    const atomRegistry = useContext(RegistryContext);
     const schemaReadonly = !isMutable(schema);
     const { t } = useTranslation(translationKey);
+
     const projectionModel = useMemo(() => {
       // Use reactive and mutable version of json schema when schema is mutable.
       const jsonSchema = schema instanceof EchoSchema ? schema.jsonSchema : toJsonSchema(schema);
-      return new ProjectionModel(jsonSchema, view.projection);
-    }, [schema, JSON.stringify(view.projection)]);
+
+      // Always use createEchoChangeCallback since the view is ECHO-backed.
+      // Pass schema only when mutable to allow schema mutations.
+      const change = createEchoChangeCallback(view, schema instanceof EchoSchema ? schema : undefined);
+
+      const model = new ProjectionModel({
+        registry: atomRegistry,
+        view,
+        baseSchema: jsonSchema,
+        change,
+      });
+
+      return model;
+    }, [atomRegistry, schema, view]);
+
     useImperativeHandle(forwardedRef, () => projectionModel, [projectionModel]);
     const [expandedField, setExpandedField] = useState<FieldType['id']>();
 
@@ -128,7 +146,7 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
       invariant(!readonly);
       const field = projectionModel.createFieldProjection();
       setExpandedField(field.id);
-    }, [schema, projectionModel, readonly]);
+    }, [projectionModel, readonly]);
 
     const handleUpdate = useCallback(
       (values: any) => {
@@ -196,13 +214,31 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
 type FieldListProps = Pick<ViewEditorProps, 'schema' | 'view' | 'registry' | 'readonly' | 'showHeading' | 'onDelete'>;
 
 const FieldList = ({ schema, view, registry, readonly, showHeading = false, onDelete }: FieldListProps) => {
+  const atomRegistry = useContext(RegistryContext);
   const schemaReadonly = !isMutable(schema);
   const { t } = useTranslation(translationKey);
+
+  // Subscribe to view changes for reactivity.
+  const [viewSnapshot] = useObject(view);
+
   const projectionModel = useMemo(() => {
     // Use reactive and mutable version of json schema when schema is mutable.
     const jsonSchema = schema instanceof EchoSchema ? schema.jsonSchema : toJsonSchema(schema);
-    return new ProjectionModel(jsonSchema, view.projection);
-  }, [schema, JSON.stringify(view.projection)]);
+
+    // Always use createEchoChangeCallback since the view is ECHO-backed.
+    // Pass schema only when mutable to allow schema mutations.
+    const change = createEchoChangeCallback(view, schema instanceof EchoSchema ? schema : undefined);
+
+    const model = new ProjectionModel({
+      registry: atomRegistry,
+      view,
+      baseSchema: jsonSchema,
+      change,
+    });
+
+    return model;
+  }, [atomRegistry, schema, view]);
+
   const [expandedField, setExpandedField] = useState<FieldType['id']>();
 
   const handleToggleField = useCallback(
@@ -227,13 +263,15 @@ const FieldList = ({ schema, view, registry, readonly, showHeading = false, onDe
   const handleMove = useCallback(
     (fromIndex: number, toIndex: number) => {
       invariant(!readonly);
-      // NOTE(ZaymonFC): Using arrayMove here causes a race condition with the kanban model.
-      const fields = [...view.projection.fields];
-      const [moved] = fields.splice(fromIndex, 1);
-      fields.splice(toIndex, 0, moved);
-      view.projection.fields = fields;
+      Obj.change(view, (v) => {
+        // NOTE(ZaymonFC): Using arrayMove here causes a race condition with the kanban model.
+        const fields = [...v.projection.fields];
+        const [moved] = fields.splice(fromIndex, 1);
+        fields.splice(toIndex, 0, moved);
+        v.projection.fields = fields;
+      });
     },
-    [view.projection.fields, readonly],
+    [view, readonly],
   );
 
   const handleClose = useCallback(() => setExpandedField(undefined), []);
@@ -254,9 +292,13 @@ const FieldList = ({ schema, view, registry, readonly, showHeading = false, onDe
     [projectionModel],
   );
 
+  if (!viewSnapshot) {
+    return null;
+  }
+
   return (
     <List.Root<FieldType>
-      items={view.projection.fields}
+      items={viewSnapshot.projection.fields as FieldType[]}
       isItem={Schema.is(FieldSchema)}
       getId={(field) => field.id}
       onMove={readonly ? undefined : handleMove}
@@ -285,7 +327,7 @@ const FieldList = ({ schema, view, registry, readonly, showHeading = false, onDe
                       data-testid={hidden ? 'show-field-button' : 'hide-field-button'}
                       icon={hidden ? 'ph--eye-closed--regular' : 'ph--eye--regular'}
                       autoHide={false}
-                      disabled={readonly || (!hidden && projectionModel.fields.length <= 1)}
+                      disabled={readonly || (!hidden && projectionModel.getFields().length <= 1)}
                       onClick={() => (hidden ? handleShow(field.path) : handleHide(field.id))}
                     />
                     {!readonly && (
@@ -293,14 +335,14 @@ const FieldList = ({ schema, view, registry, readonly, showHeading = false, onDe
                         <List.ItemDeleteButton
                           label={t('delete field label')}
                           autoHide={false}
-                          disabled={readonly || schemaReadonly || view.projection.fields.length <= 1}
+                          disabled={readonly || schemaReadonly || viewSnapshot.projection.fields.length <= 1}
                           onClick={() => handleDelete(field.id)}
                           data-testid='field.delete'
                         />
                         <IconButton
                           iconOnly
                           variant='ghost'
-                          label={t('toggle expand label', { ns: 'os' })}
+                          label={t('toggle expand label', { ns: osTranslations })}
                           icon={expandedField === field.id ? 'ph--caret-down--regular' : 'ph--caret-right--regular'}
                           onClick={() => handleToggleField(field)}
                           data-testid='field.toggle'

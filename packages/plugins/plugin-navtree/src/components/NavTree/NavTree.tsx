@@ -19,18 +19,8 @@ export type NavTreeProps = Pick<TreeProps<NavTreeItemGraphNode>, 'id' | 'root'> 
 export const NavTree = forwardRef<HTMLDivElement, NavTreeProps>(({ id, root, ...props }, forwardedRef) => {
   const { tab, useItems, onBack } = useNavTreeContext();
   const topLevelActions = useItems(root, { disposition: 'menu', sort: true });
-  const topLevelCollections = useItems(root, { disposition: 'collection' });
   const topLevelWorkspaces = useItems(root, { disposition: 'workspace' });
-  const topLevelNavigation = useItems(root, { disposition: 'navigation' });
-  const l0Items = useMemo(
-    () => [
-      // prettier-ignore
-      ...topLevelCollections,
-      ...topLevelWorkspaces,
-      ...topLevelNavigation,
-    ],
-    [topLevelCollections, topLevelWorkspaces, topLevelNavigation],
-  );
+  const l0Items = topLevelWorkspaces;
   const pinnedItems = useItems(root, { disposition: 'pin-end', sort: true });
   const userAccountItem = useItems(root, { disposition: 'user-account' })[0];
   const topLevelItems = useMemo(

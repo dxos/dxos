@@ -32,7 +32,6 @@ describe('Echo reactive proxy', () => {
 
     return {
       objectsHaveId: true,
-      allowObjectAssignments: false,
       beforeAllCb: async () => {
         await builder.open();
         ({ db } = await builder.createDatabase());
@@ -41,12 +40,12 @@ describe('Echo reactive proxy', () => {
         await builder.close();
       },
       createObjectFn: async (props = {}) => {
-        const object = Obj.make(schema as any, props) as TestSchema.Example;
-        if (schema && !db.graph.schemaRegistry.hasSchema(schema)) {
+        const object = Obj.make(schema, props as any) as TestSchema.Example;
+        if (!db.graph.schemaRegistry.hasSchema(schema)) {
           await db.graph.schemaRegistry.register([schema]);
         }
 
-        return db.add(object as any) as TestSchema.Example;
+        return db.add(object) as TestSchema.Example;
       },
     };
   });

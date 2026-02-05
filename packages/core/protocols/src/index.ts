@@ -10,7 +10,6 @@ export * from './errors/index.js';
 export * from './indexing.js';
 export * from './messenger.js';
 export * from './profile-archive.js';
-export * from './query.js';
 export * from './queue.js';
 export * from './space-archive.js';
 export * from './storage.js';

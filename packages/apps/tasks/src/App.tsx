@@ -23,9 +23,9 @@ import { TaskList } from './TaskList';
 import { Task } from './types';
 
 export const TaskListContainer = () => {
-  const { spaceParam } = useParams<{ spaceParam: string }>();
+  const { spaceProp } = useParams<{ spaceProp: string }>();
 
-  const { spaceId } = parseId(spaceParam);
+  const { spaceId } = parseId(spaceProp);
   const space = useSpace(spaceId);
   const tasks = useQuery(space?.db, Query.select(Filter.type(Task)));
   const shell = useShell();
@@ -55,7 +55,7 @@ export const TaskListContainer = () => {
 export const Home = () => {
   const space = useSpace();
   const shell = useShell();
-  const [search, setSearchParams] = useSearchParams();
+  const [search, setSearchProps] = useSearchParams();
   const invitationCode = search.get('spaceInvitationCode');
   const deviceInvitationCode = search.get('deviceInvitationCode');
   const navigate = useNavigate();
@@ -64,12 +64,12 @@ export const Home = () => {
     if (deviceInvitationCode) {
       // TODO(???): desired API for joining a device.
       // shell.joinDevice({ invitationCode: deviceInvitationCode });
-      setSearchParams((p) => {
+      setSearchProps((p) => {
         p.delete('deviceInvitationCode');
         return p;
       });
     } else if (invitationCode) {
-      setSearchParams((p) => {
+      setSearchProps((p) => {
         p.delete('spaceInvitationCode');
         return p;
       });
@@ -87,7 +87,7 @@ export const Home = () => {
 
 const router = createBrowserRouter([
   {
-    path: '/space/:spaceParam',
+    path: '/space/:spaceProp',
     element: <TaskListContainer />,
   },
   {
@@ -113,8 +113,8 @@ export const App = () => {
       shell='./shell.html'
       types={[Task]}
       onInitialized={async (client) => {
-        const searchParams = new URLSearchParams(location.search);
-        if (!client.halo.identity.get() && !searchParams.has('deviceInvitationCode')) {
+        const searchProps = new URLSearchParams(location.search);
+        if (!client.halo.identity.get() && !searchProps.has('deviceInvitationCode')) {
           await client.halo.createIdentity();
         }
       }}

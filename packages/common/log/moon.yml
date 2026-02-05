@@ -1,4 +1,4 @@
-type: library
+layer: library
 language: typescript
 tags:
   - ts-build
@@ -8,3 +8,7 @@ tasks:
   compile:
     args:
       - '--entryPoint=src/index.ts'
+      - '--entryPoint=src/platform/browser/index.ts'
+      - '--entryPoint=src/platform/node/index.ts'
+      - '--entryPoint=src/processors/console-stub.ts'
+      - '--entryPoint=src/processors/console-processor.ts'

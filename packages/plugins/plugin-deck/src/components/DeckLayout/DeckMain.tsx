@@ -2,20 +2,17 @@
 // Copyright 2023 DXOS.org
 //
 
-import { untracked } from '@preact/signals-core';
 import React, { Fragment, type UIEvent, useCallback, useEffect, useMemo, useRef } from 'react';
 
-import { Capabilities, LayoutAction, createIntent } from '@dxos/app-framework';
-import { useCapability, useIntentDispatcher, usePluginManager } from '@dxos/app-framework/react';
+import { Common } from '@dxos/app-framework';
+import { useAtomCapability, useOperationInvoker, usePluginManager } from '@dxos/app-framework/react';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
-import { Main, type MainProps, useMediaQuery, useOnTransition } from '@dxos/react-ui';
+import { Main, type MainContentProps, useMediaQuery, useOnTransition } from '@dxos/react-ui';
 import { DEFAULT_HORIZONTAL_SIZE, Stack, StackContext } from '@dxos/react-ui-stack';
-import { mainPaddingTransitions, mx } from '@dxos/react-ui-theme';
+import { mainPaddingTransitions, mx } from '@dxos/ui-theme';
 
-import { DeckCapabilities } from '../../capabilities';
-import { useBreakpoints, useHoistStatusbar } from '../../hooks';
-import { meta } from '../../meta';
-import { type DeckSettingsProps, getMode } from '../../types';
+import { useBreakpoints, useDeckState, useHoistStatusbar } from '../../hooks';
+import { DeckCapabilities, getMode } from '../../types';
 import { calculateOverscroll, layoutAppliesTopbar } from '../../util';
 import { fixedComplementarySidebarToggleStyles, fixedSidebarToggleStyles } from '../fragments';
 import { Plank } from '../Plank';
@@ -26,10 +23,10 @@ import { StatusBar } from './StatusBar';
 import { Topbar } from './Topbar';
 
 export const DeckMain = () => {
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
-  const settings = useCapability(Capabilities.SettingsStore).getStore<DeckSettingsProps>(meta.id)?.value;
-  const context = useCapability(DeckCapabilities.MutableDeckState);
-  const { sidebarState, complementarySidebarState, complementarySidebarPanel, deck } = context;
+  const { invokeSync } = useOperationInvoker();
+  const settings = useAtomCapability(DeckCapabilities.Settings);
+  const { state, deck, updateState } = useDeckState();
+  const { sidebarState, complementarySidebarState, complementarySidebarPanel } = state;
   const { active, activeCompanions, fullscreen, solo, plankSizing } = deck;
   const layoutMode = getMode(deck);
   const breakpoint = useBreakpoints();
@@ -43,10 +40,8 @@ export const DeckMain = () => {
   // Ensure the first plank is attended when the deck is first rendered.
   useEffect(() => {
     // NOTE: Not `useAttended` so that the layout component is not re-rendered when the attended list changes.
-    const attended = untracked(() => {
-      const attention = pluginManager.context.getCapability(AttentionCapabilities.Attention);
-      return attention.current;
-    });
+    const attention = pluginManager.capabilities.get(AttentionCapabilities.Attention);
+    const attended = attention.getCurrent();
     const firstId = solo ?? active[0];
     if (attended.length === 0 && firstId) {
       // TODO(wittjosiah): Focusing the type button is a workaround.
@@ -60,31 +55,26 @@ export const DeckMain = () => {
   const [isNotMobile] = useMediaQuery('md');
   const shouldRevert = useRef(false);
   useEffect(() => {
-    if (!isNotMobile && getMode(deck) === 'deck') {
+    if (!isNotMobile && layoutMode === 'deck') {
       // NOTE: Not `useAttended` so that the layout component is not re-rendered when the attended list changes.
-      const attended = untracked(() => {
-        const attention = pluginManager.context.getCapability(AttentionCapabilities.Attention);
-        return attention.current;
-      });
+      const attention = pluginManager.capabilities.get(AttentionCapabilities.Attention);
+      const attended = attention.getCurrent();
 
       shouldRevert.current = true;
-      void dispatch(
-        createIntent(LayoutAction.SetLayoutMode, { part: 'mode', subject: attended[0], options: { mode: 'solo' } }),
-      );
-    } else if (isNotMobile && getMode(deck) === 'solo' && shouldRevert.current) {
-      void dispatch(createIntent(LayoutAction.SetLayoutMode, { part: 'mode', options: { revert: true } }));
+      invokeSync(Common.LayoutOperation.SetLayoutMode, { subject: attended[0], mode: 'solo' });
+    } else if (isNotMobile && layoutMode === 'solo' && shouldRevert.current) {
+      invokeSync(Common.LayoutOperation.SetLayoutMode, { revert: true });
     }
-  }, [isNotMobile, deck, dispatch]);
+    // NOTE: Using `layoutMode` instead of `deck` to avoid infinite loops caused by object reference changes.
+  }, [isNotMobile, layoutMode, invokeSync]);
 
   // When deck is disabled in settings, set to solo mode if the current layout mode is deck.
-  // TODO(thure): Applying this as an effect should be avoided over emitting the intent only when the setting changes.
+  // TODO(thure): Applying this as an effect should be avoided over emitting the operation only when the setting changes.
   useEffect(() => {
     if (!settings?.enableDeck && layoutMode === 'deck') {
-      void dispatch(
-        createIntent(LayoutAction.SetLayoutMode, { part: 'mode', subject: active[0], options: { mode: 'solo' } }),
-      );
+      invokeSync(Common.LayoutOperation.SetLayoutMode, { subject: active[0], mode: 'solo' });
     }
-  }, [settings?.enableDeck, dispatch, active, layoutMode]);
+  }, [settings?.enableDeck, invokeSync, active, layoutMode]);
 
   /**
    * Clear scroll restoration state if the window is resized.
@@ -146,12 +136,26 @@ export const DeckMain = () => {
     );
   }, [active, activeCompanions]);
 
+  const handleNavigationSidebarStateChange = useCallback(
+    (next: typeof sidebarState) => {
+      updateState((s) => ({ ...s, sidebarState: next }));
+    },
+    [updateState],
+  );
+
+  const handleComplementarySidebarStateChange = useCallback(
+    (next: typeof complementarySidebarState) => {
+      updateState((s) => ({ ...s, complementarySidebarState: next }));
+    },
+    [updateState],
+  );
+
   return (
     <Main.Root
-      navigationSidebarState={fullscreen ? 'closed' : context.sidebarState}
-      complementarySidebarState={fullscreen ? 'closed' : context.complementarySidebarState}
-      onNavigationSidebarStateChange={(next) => (context.sidebarState = next)}
-      onComplementarySidebarStateChange={(next) => (context.complementarySidebarState = next)}
+      navigationSidebarState={fullscreen ? 'closed' : sidebarState}
+      complementarySidebarState={fullscreen ? 'closed' : complementarySidebarState}
+      onNavigationSidebarStateChange={handleNavigationSidebarStateChange}
+      onComplementarySidebarStateChange={handleComplementarySidebarStateChange}
     >
       {/* Left sidebar. */}
       <Sidebar />
@@ -192,7 +196,7 @@ export const DeckMain = () => {
                     : '0',
               '--dx-main-contentFirstWidth': `${plankSizing[active[0] ?? 'never'] ?? DEFAULT_HORIZONTAL_SIZE}rem`,
               '--dx-main-contentLastWidth': `${plankSizing[active[(active.length ?? 1) - 1] ?? 'never'] ?? DEFAULT_HORIZONTAL_SIZE}rem`,
-            } as MainProps['style']
+            } as MainContentProps['style']
           }
         >
           {/* Deck mode. */}
@@ -233,6 +237,7 @@ export const DeckMain = () => {
               ))}
             </Stack>
           </div>
+
           {/* Solo mode. */}
           <div
             role='none'

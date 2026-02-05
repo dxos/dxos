@@ -83,10 +83,13 @@ export const AiServiceTestingPreset = (preset: 'direct' | 'edge-local' | 'edge-r
  * AiService for testing.
  * Refer to {@link MemoizedAiService} documentation for details on how memoization works.
  */
-export const TestAiService = ({ disableMemoization = false }: { disableMemoization?: boolean } = {}) => {
+export const TestAiService = ({
+  disableMemoization = false,
+  preset = 'direct',
+}: { disableMemoization?: boolean; preset?: 'direct' | 'edge-local' | 'edge-remote' } = {}) => {
   if (disableMemoization) {
-    return AiServiceTestingPreset('direct');
+    return AiServiceTestingPreset(preset);
   } else {
-    return MemoizedAiService.layerTest().pipe(Layer.provide(AiServiceTestingPreset('direct')));
+    return MemoizedAiService.layerTest().pipe(Layer.provide(AiServiceTestingPreset(preset)));
   }
 };

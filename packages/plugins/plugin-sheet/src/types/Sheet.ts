@@ -44,33 +44,24 @@ export const Sheet = Schema.Struct({
   name: Schema.optional(Schema.String),
 
   // Sparse map of cells referenced by index.
-  cells: Schema.Record({ key: Schema.String, value: Schema.mutable(CellValue) }).pipe(
-    Schema.mutable,
-    FormInputAnnotation.set(false),
-  ),
+  cells: Schema.Record({ key: Schema.String, value: CellValue }).pipe(FormInputAnnotation.set(false)),
 
   // Ordered row indices.
-  rows: Schema.Array(Schema.String).pipe(Schema.mutable, FormInputAnnotation.set(false)),
+  rows: Schema.Array(Schema.String).pipe(FormInputAnnotation.set(false)),
 
   // Ordered column indices.
-  columns: Schema.Array(Schema.String).pipe(Schema.mutable, FormInputAnnotation.set(false)),
+  columns: Schema.Array(Schema.String).pipe(FormInputAnnotation.set(false)),
 
   // Row metadata referenced by index.
-  rowMeta: Schema.Record({ key: Schema.String, value: Schema.mutable(RowColumnMeta) }).pipe(
-    Schema.mutable,
-    FormInputAnnotation.set(false),
-  ),
+  rowMeta: Schema.Record({ key: Schema.String, value: RowColumnMeta }).pipe(FormInputAnnotation.set(false)),
 
   // Column metadata referenced by index.
-  columnMeta: Schema.Record({ key: Schema.String, value: Schema.mutable(RowColumnMeta) }).pipe(
-    Schema.mutable,
-    FormInputAnnotation.set(false),
-  ),
+  columnMeta: Schema.Record({ key: Schema.String, value: RowColumnMeta }).pipe(FormInputAnnotation.set(false)),
 
   // Cell formatting referenced by indexed range.
-  ranges: Schema.Array(Range).pipe(Schema.mutable, FormInputAnnotation.set(false)),
+  ranges: Schema.Array(Range).pipe(FormInputAnnotation.set(false)),
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/Sheet',
     version: '0.1.0',
   }),
@@ -86,18 +77,21 @@ export type SheetProps = {
 export const make = ({ name, cells = {}, ...size }: SheetProps = {}) => {
   const sheet = Obj.make(Sheet, { name, cells: {}, rows: [], columns: [], rowMeta: {}, columnMeta: {}, ranges: [] });
 
-  initialize(sheet, size);
+  // Initialize and set cells within Obj.change to satisfy change context requirements.
+  Obj.change(sheet, (s) => {
+    initialize(s, size);
 
-  if (cells) {
-    Object.entries(cells).forEach(([key, { value }]) => {
-      const idx = addressToIndex(sheet, addressFromA1Notation(key));
-      if (isFormula(value)) {
-        value = mapFormulaRefsToIndices(sheet, value);
-      }
+    if (cells) {
+      Object.entries(cells).forEach(([key, { value }]) => {
+        const idx = addressToIndex(s, addressFromA1Notation(key));
+        if (isFormula(value)) {
+          value = mapFormulaRefsToIndices(s, value);
+        }
 
-      sheet.cells[idx] = { value };
-    });
-  }
+        s.cells[idx] = { value };
+      });
+    }
+  });
 
   return sheet;
 };

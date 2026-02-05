@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { type Script } from '@dxos/functions';
-import { StackItem } from '@dxos/react-ui-stack';
+import { Layout } from '@dxos/react-ui-mosaic';
 
 import { useDeployState, useToolbarState } from '../../hooks';
 
@@ -16,12 +16,12 @@ export type TestContainerProps = {
   script: Script.Script;
 };
 
-export const TestContainer = ({ script }: TestContainerProps) => {
+export const TestContainer = ({ role, script }: TestContainerProps) => {
   const state = useToolbarState();
   useDeployState({ state, script });
   return (
-    <StackItem.Content>
-      <TestPanel functionUrl={state.functionUrl} />
-    </StackItem.Content>
+    <Layout.Main role={role}>
+      <TestPanel functionUrl={state.value.functionUrl} />
+    </Layout.Main>
   );
 };

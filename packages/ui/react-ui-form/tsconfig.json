@@ -48,12 +48,6 @@
       "path": "../../core/echo/echo-react"
     },
     {
-      "path": "../../core/echo/echo-signals"
-    },
-    {
-      "path": "../../core/echo/live-object"
-    },
-    {
       "path": "../../sdk/react-client"
     },
     {
@@ -78,6 +72,9 @@
       "path": "../react-ui-list"
     },
     {
+      "path": "../react-ui-mosaic"
+    },
+    {
       "path": "../react-ui-pickers"
     },
     {
@@ -90,10 +87,10 @@
       "path": "../react-ui-syntax-highlighter"
     },
     {
-      "path": "../react-ui-theme"
+      "path": "../ui-theme"
     },
     {
-      "path": "../react-ui-types"
+      "path": "../ui-types"
     }
   ]
 }

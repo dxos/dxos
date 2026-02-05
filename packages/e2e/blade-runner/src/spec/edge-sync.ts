@@ -11,7 +11,7 @@ import { type IndexConfig, IndexKind } from '@dxos/protocols/proto/dxos/echo/ind
 
 import { TraceReader } from '../analysys/traces';
 import { type SchedulerEnvImpl } from '../env';
-import { type Platform, type ReplicantsSummary, type TestParams, type TestPlan } from '../plan';
+import { type Platform, type ReplicantsSummary, type TestPlan, type TestProps } from '../plan';
 import { EdgeReplicant } from '../replicants/edge-replicant';
 
 export type EdgeTestSpec = {
@@ -88,7 +88,7 @@ export class EdgeSync implements TestPlan<EdgeTestSpec, EdgeSyncResult> {
     };
   }
 
-  async run(env: SchedulerEnvImpl<EdgeTestSpec>, params: TestParams<EdgeTestSpec>): Promise<EdgeSyncResult> {
+  async run(env: SchedulerEnvImpl<EdgeTestSpec>, params: TestProps<EdgeTestSpec>): Promise<EdgeSyncResult> {
     //
     // Config.
     //
@@ -169,7 +169,7 @@ export class EdgeSync implements TestPlan<EdgeTestSpec, EdgeSyncResult> {
     return { allCombinedReplicationTime, functionUploadTime, objectsCreationTime };
   }
 
-  async analyze(params: TestParams<EdgeTestSpec>, summary: ReplicantsSummary, result: EdgeSyncResult) {
+  async analyze(params: TestProps<EdgeTestSpec>, summary: ReplicantsSummary, result: EdgeSyncResult) {
     const reader = new TraceReader();
     await reader.addFile(path.join(params.outDir, 'perfetto.json'));
     const traces = reader.getTraces('collection-sync-automerge-replicator');

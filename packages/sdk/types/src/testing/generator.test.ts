@@ -4,8 +4,7 @@
 
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { Query } from '@dxos/echo';
-import { type EchoDatabase } from '@dxos/echo-db';
+import { type Database, Query } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
@@ -21,7 +20,7 @@ const generator: ValueGenerator = {
   ...faker,
 } as any as ValueGenerator;
 
-const queryObjects = async (db: EchoDatabase, specs: TypeSpec[]) => {
+const queryObjects = async (db: Database.Database, specs: TypeSpec[]) => {
   for (const { type, count } of specs) {
     const objects = await db.query(Query.type(type)).run();
     expect(objects).to.have.length(count);

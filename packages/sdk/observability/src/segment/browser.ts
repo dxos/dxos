@@ -39,7 +39,7 @@ export class SegmentTelemetry extends AbstractSegmentTelemetry {
 
   page(options: PageOptions): void {
     try {
-      const props = this.createPageProps(options);
+      const props = this.createPageParams(options);
       (window as any).analytics?.page(props.category, props.name, props.properties);
     } catch (err) {
       log.catch('failed to track page', err);
@@ -48,7 +48,7 @@ export class SegmentTelemetry extends AbstractSegmentTelemetry {
 
   track(options: TrackOptions): void {
     try {
-      const props = this.createTrackProps(options);
+      const props = this.createTrackParams(options);
       (window as any).analytics?.track(props.event, props.properties);
     } catch (err) {
       log.catch('failed to track event', err);

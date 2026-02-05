@@ -13,7 +13,7 @@ export type UseContextObjectsProps = {
 };
 
 export type UseContextObjects = {
-  objects: Obj.Any[];
+  objects: Obj.Unknown[];
   onUpdateObject: (dxn: DXN, checked: boolean) => Promise<void>;
 };
 
@@ -40,7 +40,7 @@ export const useContextObjects = ({ db, context }: UseContextObjectsProps): UseC
   );
 
   return {
-    objects: context?.objects.value ?? [],
+    objects: context?.getObjects() ?? [],
     onUpdateObject: handleUpdateObject,
   };
 };

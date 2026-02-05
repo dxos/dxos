@@ -17,7 +17,7 @@ import React, {
   useState,
 } from 'react';
 
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 const weights = new Map<IconWeight, ReactElement>([
   [

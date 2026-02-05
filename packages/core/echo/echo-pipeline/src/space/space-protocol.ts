@@ -12,7 +12,7 @@ import {
   type SwarmConnection,
   type SwarmNetworkManager,
   type WireProtocol,
-  type WireProtocolParams,
+  type WireProtocolProps,
   type WireProtocolProvider,
 } from '@dxos/network-manager';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
@@ -176,16 +176,16 @@ export class SpaceProtocol {
   }
 
   private _createProtocolProvider(credentials: Uint8Array | undefined): WireProtocolProvider {
-    return (wireParams) => {
+    return (wireProps) => {
       const session = new SpaceProtocolSession({
-        wireParams,
+        wireProps,
         swarmIdentity: this._swarmIdentity,
         onSessionAuth: this._onSessionAuth,
         onAuthFailure: this._onAuthFailure,
         blobSync: this.blobSync,
         disableP2pReplication: this._disableP2pReplication,
       });
-      this._sessions.set(wireParams.remotePeerId, session);
+      this._sessions.set(wireProps.remotePeerId, session);
 
       for (const feed of this._feeds) {
         session.replicator.addFeed(feed);
@@ -196,8 +196,8 @@ export class SpaceProtocol {
   }
 }
 
-export type SpaceProtocolSessionParams = {
-  wireParams: WireProtocolParams;
+export type SpaceProtocolSessionProps = {
+  wireProps: WireProtocolProps;
   swarmIdentity: SwarmIdentity;
 
   blobSync: BlobSync;
@@ -225,7 +225,7 @@ export enum AuthStatus {
  */
 export class SpaceProtocolSession implements WireProtocol {
   @logInfo
-  private readonly _wireParams: WireProtocolParams;
+  private readonly _wireProps: WireProtocolProps;
 
   private readonly _disableP2pReplication: boolean;
 
@@ -252,20 +252,20 @@ export class SpaceProtocolSession implements WireProtocol {
 
   // TODO(dmaretskyi): Allow to pass in extra extensions.
   constructor({
-    wireParams,
+    wireProps,
     swarmIdentity,
     onSessionAuth,
     onAuthFailure,
     blobSync,
     disableP2pReplication,
-  }: SpaceProtocolSessionParams) {
-    this._wireParams = wireParams;
+  }: SpaceProtocolSessionProps) {
+    this._wireProps = wireProps;
     this._swarmIdentity = swarmIdentity;
     this._onSessionAuth = onSessionAuth;
     this._onAuthFailure = onAuthFailure;
     this._blobSync = blobSync;
 
-    this._teleport = new Teleport(wireParams);
+    this._teleport = new Teleport(wireProps);
 
     this._disableP2pReplication = disableP2pReplication ?? false;
   }

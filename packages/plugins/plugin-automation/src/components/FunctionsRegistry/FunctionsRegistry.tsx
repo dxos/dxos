@@ -14,7 +14,7 @@ import { useAsyncEffect } from '@dxos/react-ui';
 import { IconButton, useTranslation } from '@dxos/react-ui';
 import { controlItemClasses } from '@dxos/react-ui-form';
 import { List } from '@dxos/react-ui-list';
-import { ghostHover, mx } from '@dxos/react-ui-theme';
+import { ghostHover, mx } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
 

@@ -3,24 +3,31 @@
 //
 
 import type { AutomergeUrl } from '@automerge/automerge-repo';
-import type * as Schema from 'effect/Schema';
+import * as Reactivity from '@effect/experimental/Reactivity';
+import type * as SqlClient from '@effect/sql/SqlClient';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+import * as ManagedRuntime from 'effect/ManagedRuntime';
 import isEqual from 'lodash.isequal';
 
 import { waitForCondition } from '@dxos/async';
 import { type Context, Resource } from '@dxos/context';
+import { type Obj, type Type } from '@dxos/echo';
+import { TestSchema } from '@dxos/echo/testing';
 import { EchoHost, type EchoHostIndexingConfig } from '@dxos/echo-pipeline';
 import { createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
 import { createTestLevel } from '@dxos/kv-store/testing';
+import { layerMemory } from '@dxos/sql-sqlite/platform';
+import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
+import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 import { range } from '@dxos/util';
 
 import { EchoClient } from '../client';
-import { type AnyLiveObject } from '../echo-handler';
 import { type EchoDatabase } from '../proxy-db';
 import { Filter, Query } from '../query';
-import { MockQueueService } from '../queue';
 
 type OpenDatabaseOptions = {
   client?: EchoClient;
@@ -30,8 +37,14 @@ type OpenDatabaseOptions = {
 
 type PeerOptions = {
   indexing?: Partial<EchoHostIndexingConfig>;
-  types?: Schema.Schema.AnyNoContext[];
+  types?: Type.Entity.Any[];
+  assignQueuePositions?: boolean;
+
   kv?: LevelDB;
+  runtime?: ManagedRuntime.ManagedRuntime<
+    SqlClient.SqlClient | SqlExport.SqlExport | SqlTransaction.SqlTransaction,
+    never
+  >;
 };
 
 export class EchoTestBuilder extends Resource {
@@ -73,24 +86,47 @@ export class EchoTestBuilder extends Resource {
 export class EchoTestPeer extends Resource {
   private readonly _kv: LevelDB;
   private readonly _indexing: Partial<EchoHostIndexingConfig>;
-  private readonly _types: Schema.Schema.AnyNoContext[];
+  private readonly _types: Type.Entity.Any[];
+  private readonly _assignQueuePositions?: boolean;
   private readonly _clients = new Set<EchoClient>();
-  private _queuesService = new MockQueueService();
   private _echoHost!: EchoHost;
   private _echoClient!: EchoClient;
   private _lastDatabaseSpaceKey?: PublicKey = undefined;
   private _lastDatabaseRootUrl?: string = undefined;
 
-  constructor({ kv = createTestLevel(), indexing = {}, types }: PeerOptions) {
+  private _foreignRuntime: boolean;
+  private _managedRuntime!: ManagedRuntime.ManagedRuntime<
+    SqlClient.SqlClient | SqlExport.SqlExport | SqlTransaction.SqlTransaction,
+    never
+  >;
+
+  constructor({ kv = createTestLevel(), indexing = {}, types, assignQueuePositions, runtime }: PeerOptions) {
     super();
     this._kv = kv;
     this._indexing = indexing;
-    this._types = types ?? [];
-    this._initEcho();
+    // Include Expando as default type for tests that use Obj.make(TestSchema.Expando, ...).
+    this._types = [TestSchema.Expando, ...(types ?? [])];
+    this._assignQueuePositions = assignQueuePositions;
+
+    this._foreignRuntime = !!runtime;
+    if (runtime) {
+      this._managedRuntime = runtime;
+    }
   }
 
   private _initEcho(): void {
-    this._echoHost = new EchoHost({ kv: this._kv, indexing: this._indexing });
+    if (!this._foreignRuntime) {
+      this._managedRuntime = ManagedRuntime.make(
+        SqlTransaction.layer.pipe(Layer.provideMerge(Layer.merge(layerMemory, Reactivity.layer))).pipe(Layer.orDie),
+      );
+    }
+    this._echoHost = new EchoHost({
+      kv: this._kv,
+      indexing: this._indexing,
+      runtime: this._managedRuntime.runtimeEffect,
+      localQueues: true,
+      assignQueuePositions: this._assignQueuePositions,
+    });
     this._clients.delete(this._echoClient);
     this._echoClient = new EchoClient();
     this._clients.add(this._echoClient);
@@ -107,10 +143,11 @@ export class EchoTestPeer extends Resource {
 
   protected override async _open(ctx: Context): Promise<void> {
     await this._kv.open();
+    this._initEcho();
     this._echoClient.connectToService({
       dataService: this._echoHost.dataService,
       queryService: this._echoHost.queryService,
-      queueService: this._queuesService,
+      queueService: this._echoHost.queuesService,
     });
     await this._echoHost.open(ctx);
     await this._echoClient.open(ctx);
@@ -123,6 +160,9 @@ export class EchoTestPeer extends Resource {
     }
     await this._echoHost.close(ctx);
     await this._kv.close();
+    if (!this._foreignRuntime) {
+      await this._managedRuntime.dispose();
+    }
   }
 
   /**
@@ -130,7 +170,6 @@ export class EchoTestPeer extends Resource {
    */
   async reload(): Promise<void> {
     await this.close();
-    this._initEcho();
     await this.open();
   }
 
@@ -185,6 +224,15 @@ export class EchoTestPeer extends Resource {
       preloadSchemaOnOpen,
     });
   }
+
+  async exportSqliteDatabase(): Promise<Uint8Array> {
+    return await this._managedRuntime.runPromise(
+      Effect.gen(function* () {
+        const sql = yield* SqlExport.SqlExport;
+        return yield* sql.export;
+      }),
+    );
+  }
 }
 
 export const createDataAssertion = ({
@@ -192,7 +240,7 @@ export const createDataAssertion = ({
   onlyObject = true,
   numObjects = 1,
 }: { referenceEquality?: boolean; onlyObject?: boolean; numObjects?: number } = {}) => {
-  let seedObjects: AnyLiveObject<any>[];
+  let seedObjects: Obj.Any[];
   const findSeedObject = async (db: EchoDatabase) => {
     const objects = await db.query(Query.select(Filter.everything())).run();
     const received = seedObjects.map((seedObject) => objects.find((object) => object.id === seedObject.id));

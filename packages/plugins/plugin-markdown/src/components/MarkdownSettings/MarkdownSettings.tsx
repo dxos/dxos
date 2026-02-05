@@ -5,13 +5,18 @@
 import React from 'react';
 
 import { Input, Select, useTranslation } from '@dxos/react-ui';
-import { type EditorInputMode, EditorInputModes, type EditorViewMode, EditorViewModes } from '@dxos/react-ui-editor';
 import { ControlGroup, ControlItemInput, ControlPage, ControlSection } from '@dxos/react-ui-form';
+import { type EditorInputMode, EditorInputModes, type EditorViewMode, EditorViewModes } from '@dxos/ui-editor';
 
 import { meta } from '../../meta';
 import { type Markdown } from '../../types';
 
-export const MarkdownSettings = ({ settings }: { settings: Markdown.Settings }) => {
+export type MarkdownSettingsComponentProps = {
+  settings: Markdown.Settings;
+  onSettingsChange: (fn: (current: Markdown.Settings) => Markdown.Settings) => void;
+};
+
+export const MarkdownSettings = ({ settings, onSettingsChange }: MarkdownSettingsComponentProps) => {
   const { t } = useTranslation(meta.id);
 
   // TODO(wittjosiah): Add skill test confirmation for entering vim mode.
@@ -23,7 +28,7 @@ export const MarkdownSettings = ({ settings }: { settings: Markdown.Settings }) 
             <Select.Root
               value={settings.defaultViewMode}
               onValueChange={(value) => {
-                settings.defaultViewMode = value as EditorViewMode;
+                onSettingsChange((s) => ({ ...s, defaultViewMode: value as EditorViewMode }));
               }}
             >
               <Select.TriggerButton />
@@ -46,7 +51,7 @@ export const MarkdownSettings = ({ settings }: { settings: Markdown.Settings }) 
             <Select.Root
               value={settings.editorInputMode ?? 'default'}
               onValueChange={(value) => {
-                settings.editorInputMode = value as EditorInputMode;
+                onSettingsChange((s) => ({ ...s, editorInputMode: value as EditorInputMode }));
               }}
             >
               <Select.TriggerButton placeholder={t('select editor input mode placeholder')} />
@@ -66,29 +71,38 @@ export const MarkdownSettings = ({ settings }: { settings: Markdown.Settings }) 
           </ControlItemInput>
 
           <ControlItemInput title={t('settings toolbar label')}>
-            <Input.Switch checked={settings.toolbar} onCheckedChange={(checked) => (settings.toolbar = !!checked)} />
+            <Input.Switch
+              checked={settings.toolbar}
+              onCheckedChange={(checked) => onSettingsChange((s) => ({ ...s, toolbar: !!checked }))}
+            />
           </ControlItemInput>
 
           <ControlItemInput title={t('settings numbered headings label')}>
             <Input.Switch
               checked={settings.numberedHeadings}
-              onCheckedChange={(checked) => (settings.numberedHeadings = !!checked)}
+              onCheckedChange={(checked) => onSettingsChange((s) => ({ ...s, numberedHeadings: !!checked }))}
             />
           </ControlItemInput>
 
           <ControlItemInput title={t('settings folding label')}>
-            <Input.Switch checked={settings.folding} onCheckedChange={(checked) => (settings.folding = !!checked)} />
+            <Input.Switch
+              checked={settings.folding}
+              onCheckedChange={(checked) => onSettingsChange((s) => ({ ...s, folding: !!checked }))}
+            />
           </ControlItemInput>
 
           <ControlItemInput title={t('settings experimental label')}>
             <Input.Switch
               checked={settings.experimental}
-              onCheckedChange={(checked) => (settings.experimental = !!checked)}
+              onCheckedChange={(checked) => onSettingsChange((s) => ({ ...s, experimental: !!checked }))}
             />
           </ControlItemInput>
 
           <ControlItemInput title={t('settings debug label')}>
-            <Input.Switch checked={settings.debug} onCheckedChange={(checked) => (settings.debug = !!checked)} />
+            <Input.Switch
+              checked={settings.debug}
+              onCheckedChange={(checked) => onSettingsChange((s) => ({ ...s, debug: !!checked }))}
+            />
           </ControlItemInput>
 
           {settings.debug && (
@@ -96,7 +110,7 @@ export const MarkdownSettings = ({ settings }: { settings: Markdown.Settings }) 
               <Input.TextArea
                 rows={5}
                 value={settings.typewriter}
-                onChange={({ target: { value } }) => (settings.typewriter = value)}
+                onChange={({ target: { value } }) => onSettingsChange((s) => ({ ...s, typewriter: value }))}
                 placeholder={t('settings debug placeholder')}
               />
             </ControlItemInput>

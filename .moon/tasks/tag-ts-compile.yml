@@ -4,7 +4,6 @@ tasks:
     command: pnpm exec dx-build
     deps:
       - dx-build:compile
-      - ^:compile
       - ^:build
     inputs:
       - /tsconfig.base.json
@@ -14,3 +13,6 @@ tasks:
       - dist/
     options:
       timeout: 60
+
+inheritedBy:
+  tags: ts-compile

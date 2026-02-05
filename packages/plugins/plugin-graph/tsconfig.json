@@ -23,10 +23,16 @@
       "path": "../../common/debug"
     },
     {
+      "path": "../../common/effect"
+    },
+    {
       "path": "../../common/storybook-utils"
     },
     {
       "path": "../../common/util"
+    },
+    {
+      "path": "../../core/operation"
     },
     {
       "path": "../../sdk/app-framework"

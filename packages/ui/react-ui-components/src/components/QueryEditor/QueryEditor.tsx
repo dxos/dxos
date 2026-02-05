@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Prec } from '@codemirror/state';
+import { type Extension, Prec } from '@codemirror/state';
 import React, { forwardRef, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { type ThemedClassName, setRef, useThemeContext, useTranslation } from '@dxos/react-ui';
@@ -12,14 +12,11 @@ import {
   type EditorController,
   EditorMenuProvider,
   type EditorMenuProviderProps,
-  type Extension,
   type UseEditorMenuProps,
-  createBasicExtensions,
   createMenuGroup,
-  createThemeExtensions,
-  keymap,
   useEditorMenu,
 } from '@dxos/react-ui-editor';
+import { createBasicExtensions, createThemeExtensions, keymap } from '@dxos/ui-editor';
 
 import { translationKey } from '../../translations';
 
@@ -38,8 +35,10 @@ export type QueryEditorProps = ThemedClassName<
  */
 export const QueryEditor = forwardRef<EditorController, QueryEditorProps>(
   ({ db, tags, value, readonly, numItems = 8, ...props }, forwardedRef) => {
+    const { t } = useTranslation(translationKey);
+
     const [controller, setController] = useState<EditorController | null>(null);
-    // TODO(burdon): This is suspicious.
+    // TODO(burdon): This is suspicious; use other hooks.
     useEffect(() => {
       setRef(forwardedRef, controller);
     }, [controller]);
@@ -57,11 +56,10 @@ export const QueryEditor = forwardRef<EditorController, QueryEditorProps>(
       getMenu,
     });
 
-    const { t } = useTranslation(translationKey);
     const { themeMode } = useThemeContext();
     const extensions = useMemo<Extension[]>(
       () => [
-        createBasicExtensions({ readOnly: readonly, lineWrapping: false, placeholder: t('query placeholder') }),
+        createBasicExtensions({ readOnly: readonly, lineWrapping: false, placeholder: t('query editor placeholder') }),
         createThemeExtensions({ themeMode, slots: { scroll: { className: 'scrollbar-none' } } }),
         query({ tags }),
         extension,

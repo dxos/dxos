@@ -31,7 +31,7 @@ export class ComputeGraphModel extends GraphModel.AbstractGraphModel<
   private readonly _root: ComputeGraph;
 
   constructor(root: ComputeGraph) {
-    super(root.graph as Graph.Graph<ComputeNode, ComputeEdge>);
+    super(root.graph as Graph.Graph<ComputeNode, ComputeEdge>, (fn) => Obj.change(root, fn));
     this._root = root;
   }
 

@@ -23,7 +23,7 @@ import React, { type PropsWithChildren, useCallback, useContext, useEffect } fro
 
 import { log } from '@dxos/log';
 import { type ThemedClassName, useThemeContext } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { EditorContext } from '../../hooks';
 import { type CanvasGraphModel, type Polygon } from '../../types';
@@ -40,10 +40,10 @@ export type GraphCanvasProps = ThemedClassName<PropsWithChildren> & {
   map?: boolean;
 };
 
-const GraphCanvasInner = ({ classNames, children, graph: graphParam, grid, map }: GraphCanvasProps) => {
+const GraphCanvasInner = ({ classNames, children, graph: graphProp, grid, map }: GraphCanvasProps) => {
   const { themeMode } = useThemeContext();
   const context = useContext(EditorContext);
-  const graph = graphParam ?? context?.graph;
+  const graph = graphProp ?? context?.graph;
 
   // Map graph nodes to React Flow nodes.
   const [nodes, setNodes, handleNodesChange] = useNodesState<Node<Polygon>>([]);

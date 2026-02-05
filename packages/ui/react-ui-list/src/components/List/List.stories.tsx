@@ -2,31 +2,43 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Atom, RegistryContext, useAtomValue } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
-import React from 'react';
+import React, { useContext, useMemo } from 'react';
 
-import { live } from '@dxos/live-object';
 import { withTheme } from '@dxos/react-ui/testing';
-import { ghostHover, mx } from '@dxos/react-ui-theme';
+import { withRegistry } from '@dxos/storybook-utils';
+import { ghostHover, mx } from '@dxos/ui-theme';
 import { arrayMove } from '@dxos/util';
 
 import { List, type ListRootProps } from './List';
-import { TestItemSchema, type TestItemType, createList } from './testing';
+import { TestItemSchema, type TestItemType, type TestList, createList } from './testing';
 
 // TODO(burdon): var-icon-size.
 const grid = 'grid grid-cols-[32px_1fr_32px] min-bs-[2rem] rounded';
 
-const DefaultStory = ({ items = [], ...props }: ListRootProps<TestItemType>) => {
+const DefaultStory = (props: Omit<ListRootProps<TestItemType>, 'items'>) => {
+  const registry = useContext(RegistryContext);
+  const listAtom = useMemo(() => Atom.make<TestList>(createList(100)).pipe(Atom.keepAlive), []);
+  const list = useAtomValue(listAtom);
+  const items = list.items;
+
   const handleSelect = (item: TestItemType) => {
     console.log('select', item);
   };
   const handleDelete = (item: TestItemType) => {
-    const idx = items.findIndex((i) => i.id === item.id);
-    items.splice(idx, 1);
+    const prev = registry.get(listAtom);
+    registry.set(listAtom, {
+      ...prev,
+      items: prev.items.filter((i) => i.id !== item.id),
+    });
   };
   const handleMove = (from: number, to: number) => {
-    arrayMove(items, from, to);
+    const prev = registry.get(listAtom);
+    const newItems = [...prev.items];
+    arrayMove(newItems, from, to);
+    registry.set(listAtom, { ...prev, items: newItems });
   };
 
   return (
@@ -69,7 +81,11 @@ const DefaultStory = ({ items = [], ...props }: ListRootProps<TestItemType>) => 
   );
 };
 
-const SimpleStory = ({ items = [], ...props }: ListRootProps<TestItemType>) => {
+const SimpleStory = (props: Omit<ListRootProps<TestItemType>, 'items'>) => {
+  const listAtom = useMemo(() => Atom.make<TestList>(createList(100)).pipe(Atom.keepAlive), []);
+  const list = useAtomValue(listAtom);
+  const items = list.items;
+
   return (
     <List.Root<TestItemType> dragPreview items={items} {...props}>
       {({ items }) => (
@@ -87,12 +103,10 @@ const SimpleStory = ({ items = [], ...props }: ListRootProps<TestItemType>) => {
   );
 };
 
-const list = live(createList(100));
-
 const meta = {
   title: 'ui/react-ui-list/List',
   component: List.Root,
-  decorators: [withTheme],
+  decorators: [withTheme, withRegistry],
   parameters: {
     layout: 'fullscreen',
   },
@@ -103,7 +117,6 @@ export default meta;
 export const Default: StoryObj<typeof DefaultStory> = {
   render: DefaultStory,
   args: {
-    items: list.items,
     isItem: Schema.is(TestItemSchema),
   },
 };
@@ -111,7 +124,6 @@ export const Default: StoryObj<typeof DefaultStory> = {
 export const Simple: StoryObj<typeof SimpleStory> = {
   render: SimpleStory,
   args: {
-    items: list.items,
     isItem: Schema.is(TestItemSchema),
   },
 };

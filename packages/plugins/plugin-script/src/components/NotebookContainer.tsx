@@ -2,25 +2,26 @@
 // Copyright 2025 DXOS.org
 //
 
+import { RegistryContext } from '@effect-atom/atom-react';
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
-import React, { useCallback, useMemo, useState } from 'react';
+import type * as Types from 'effect/Types';
+import React, { useCallback, useContext, useMemo, useState } from 'react';
 
+import { type SurfaceComponentProps } from '@dxos/app-framework/react';
 import { Agent } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
-import { type FunctionDefinition, FunctionInvocationService } from '@dxos/functions';
-import { InvocationTracer } from '@dxos/functions-runtime';
-import { TracingServiceExt } from '@dxos/functions-runtime';
+import { type FunctionDefinition, FunctionInvocationService, TracingService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { useComputeRuntimeCallback } from '@dxos/plugin-automation';
 import { Graph } from '@dxos/plugin-explorer/types';
 import { DropdownMenu, IconButton, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
-import { StackItem } from '@dxos/react-ui-stack';
+import { Layout } from '@dxos/react-ui-mosaic';
 import { Text, View } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
@@ -35,20 +36,18 @@ const INCLUDE_BLUEPRINTS = ['dxos.org/blueprint/assistant', 'dxos.org/blueprint/
 
 // TODO(burdon): Support calling named deployed functions (as with sheet).
 
-export type NotebookContainerProps = {
-  role?: string;
-  notebook?: Notebook.Notebook;
-} & Pick<TypescriptEditorProps, 'env'>;
+export type NotebookContainerProps = SurfaceComponentProps<Notebook.Notebook, Pick<TypescriptEditorProps, 'env'>>;
 
-export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => {
+export const NotebookContainer = ({ role, subject: notebook, env }: NotebookContainerProps) => {
   const { t } = useTranslation(meta.id);
+  const registry = useContext(RegistryContext);
   const db = notebook && Obj.getDatabase(notebook);
   const attendableId = notebook ? Obj.getDXN(notebook).toString() : '';
   const { hasAttention } = useAttention(attendableId);
 
   // TODO(burdon): Consolidate execution and state (with graph).
   //  Generalize ComputeGraph evaluation function (using effects).
-  const graph = useMemo(() => notebook && new ComputeGraph(notebook), [notebook]);
+  const graph = useMemo(() => notebook && new ComputeGraph(notebook, registry), [notebook, registry]);
 
   const [queryValues, setQueryValues] = useState<Record<string, any>>({});
   const handleExecQueries = useCallback(async () => {
@@ -65,11 +64,18 @@ export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => 
             const graph = cell.graph?.target;
             if (!graph) {
               const { view } = await View.makeFromDatabase({ db });
-              const graph = Graph.make({ query: { ast }, view });
-              cell.graph = Ref.make(graph);
-              cell.name = name;
+              const newGraph = Graph.make({ query: { ast }, view });
+              Obj.change(notebook!, (n) => {
+                const c = n.cells.find((c) => c.id === cell.id);
+                if (c) {
+                  c.graph = Ref.make(newGraph);
+                  c.name = name;
+                }
+              });
             } else {
-              graph.query.ast = ast;
+              Obj.change(graph, (g) => {
+                g.query.ast = ast as Obj.Mutable<typeof ast>;
+              });
             }
           }
         }
@@ -100,7 +106,7 @@ export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => 
       for (const prompt of prompts) {
         yield* runPrompt({
           prompt,
-          input: { ...queryValues, ...graph.valuesByName.value },
+          input: { ...queryValues, ...graph.getValuesByName() },
           onResult: (result) =>
             setPromptResults((prev) => ({
               ...prev,
@@ -126,10 +132,12 @@ export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => 
       const from = notebook.cells.findIndex((cell) => cell.id === source.id);
       const to = notebook.cells.findIndex((cell) => cell.id === target.id);
       if (from != null && to != null) {
-        const cell = notebook.cells.splice(from, 1)[0];
-        if (cell) {
-          notebook.cells.splice(to, 0, cell);
-        }
+        Obj.change(notebook, (n) => {
+          const cell = n.cells.splice(from, 1)[0];
+          if (cell) {
+            n.cells.splice(to, 0, cell);
+          }
+        });
       }
     },
     [notebook],
@@ -138,7 +146,7 @@ export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => 
   const handleCellInsert = useCallback<NonNullable<NotebookStackProps['onCellInsert']>>(
     async (type, after) => {
       invariant(notebook);
-      const cell: Notebook.Cell = { id: crypto.randomUUID(), type };
+      const cell: Types.Mutable<Notebook.Cell> = { id: crypto.randomUUID(), type };
       switch (type) {
         case 'markdown':
         case 'script':
@@ -160,7 +168,9 @@ export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => 
       }
 
       const idx = after ? notebook.cells.findIndex((cell) => cell.id === after) : notebook.cells.length;
-      notebook.cells.splice(idx, 0, cell);
+      Obj.change(notebook, (n) => {
+        n.cells.splice(idx, 0, cell);
+      });
     },
     [db, notebook],
   );
@@ -170,14 +180,16 @@ export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => 
       invariant(notebook);
       const idx = notebook.cells.findIndex((cell) => cell.id === id);
       if (idx !== -1) {
-        notebook.cells.splice(idx, 1);
+        Obj.change(notebook, (n) => {
+          n.cells.splice(idx, 1);
+        });
       }
     },
     [notebook],
   );
 
   return (
-    <StackItem.Content toolbar>
+    <Layout.Main role={role} toolbar>
       <Toolbar.Root disabled={!hasAttention} textBlockWidth>
         <DropdownMenu.Root>
           <DropdownMenu.Trigger asChild>
@@ -206,7 +218,7 @@ export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => 
           onCellDelete={handleCellDelete}
         />
       </div>
-    </StackItem.Content>
+    </Layout.Main>
   );
 };
 
@@ -226,7 +238,7 @@ const runPrompt = Effect.fn(function* ({
     prompt,
     input,
   };
-  const tracer = yield* InvocationTracer;
+  const tracer = yield* TracingService;
   const trace = yield* tracer.traceInvocationStart({
     target: undefined,
     payload: {
@@ -236,7 +248,7 @@ const runPrompt = Effect.fn(function* ({
 
   // Invoke the function.
   const result = yield* FunctionInvocationService.invokeFunction(Agent.prompt, inputData).pipe(
-    Effect.provide(TracingServiceExt.layerQueue(trace.invocationTraceQueue)),
+    Effect.provide(trace.invocationTraceQueue ? TracingService.layerInvocation(trace) : TracingService.layerNoop),
     Effect.exit,
   );
 

@@ -32,12 +32,18 @@ export class GraphAdapter implements GraphData {
       data: node.data,
     }));
 
-    this._links = graph.edges.map((edge: Graph.Edge.Any) => ({
-      type: edge.type,
-      source: edge.source,
-      target: edge.target,
-      data: edge.data,
-    }));
+    // Build a set of node IDs for efficient lookup.
+    const nodeIds = new Set(this._nodes.map((node) => node.id));
+
+    // Filter out edges where source or target node doesn't exist.
+    this._links = graph.edges
+      .filter((edge: Graph.Edge.Any) => nodeIds.has(edge.source) && nodeIds.has(edge.target))
+      .map((edge: Graph.Edge.Any) => ({
+        type: edge.type,
+        source: edge.source,
+        target: edge.target,
+        data: edge.data,
+      }));
   }
 
   get nodes() {

@@ -5,8 +5,8 @@
 import React from 'react';
 
 import { List, ListItem, type ThemedClassName } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
 import { type Event } from '@dxos/types';
+import { mx } from '@dxos/ui-theme';
 
 import { ActorList, DateComponent } from '../common';
 

@@ -41,6 +41,9 @@
       "path": "../../common/debug"
     },
     {
+      "path": "../../common/effect"
+    },
+    {
       "path": "../../common/invariant"
     },
     {
@@ -68,13 +71,10 @@
       "path": "../../core/echo/echo-db"
     },
     {
-      "path": "../../core/echo/echo-signals"
-    },
-    {
-      "path": "../../core/echo/live-object"
-    },
-    {
       "path": "../../core/mesh/rpc-tunnel"
+    },
+    {
+      "path": "../../core/operation"
     },
     {
       "path": "../../core/protocols"
@@ -185,6 +185,9 @@
       "path": "../../plugins/plugin-sheet"
     },
     {
+      "path": "../../plugins/plugin-simple-layout"
+    },
+    {
       "path": "../../plugins/plugin-sketch"
     },
     {
@@ -275,7 +278,7 @@
       "path": "../../ui/react-ui-table"
     },
     {
-      "path": "../../ui/react-ui-theme"
+      "path": "../../ui/ui-theme"
     }
   ]
 }

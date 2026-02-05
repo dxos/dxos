@@ -12,10 +12,9 @@ import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 
+import { CommandConfig } from '@dxos/cli-util';
 import { ConfigService } from '@dxos/client';
 import { withRetry } from '@dxos/edge-client';
-
-import { CommandConfig } from '../../../../services';
 
 export const list = Command.make(
   'list',

@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import { Agent, EntityExtraction, ResearchBlueprint } from '@dxos/assistant-toolkit';
 import { Prompt } from '@dxos/blueprints';
 import { type ComputeGraphModel, NODE_INPUT } from '@dxos/conductor';
-import { DXN, Filter, Key, Obj, Query, Ref, Tag, Type } from '@dxos/echo';
+import { DXN, Filter, Key, Obj, Query, type QueryAST, Ref, Tag, Type } from '@dxos/echo';
 import { Trigger, serializeFunction } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { gmail } from '@dxos/plugin-inbox';
@@ -79,7 +79,9 @@ export const generator = () => ({
 
           const tag = space.db.add(Tag.make({ label: 'Investor' }));
           const tagDxn = Obj.getDXN(tag).toString();
-          Obj.getMeta(doc).tags = [tagDxn];
+          Obj.change(doc, (d) => {
+            Obj.getMeta(d).tags = [tagDxn];
+          });
 
           // space.db.add(
           //   Relation.make(HasSubject, {
@@ -311,7 +313,7 @@ export const generator = () => ({
             'subscription',
             (triggerSpec) =>
               (triggerSpec.query = {
-                ast: Query.select(Filter.typename('dxos.org/type/Chess')).ast,
+                ast: Query.select(Filter.typename('dxos.org/type/Chess')).ast as Obj.Mutable<QueryAST.Query>,
               }),
             'type',
           );
@@ -710,7 +712,7 @@ export const generator = () => ({
 const createQueueSinkPreset = <SpecType extends Trigger.Kind>(
   space: Space,
   triggerKind: SpecType,
-  initSpec: (spec: Extract<Trigger.Spec, { kind: SpecType }>) => void,
+  initSpec: (spec: Obj.Mutable<Extract<Trigger.Spec, { kind: SpecType }>>) => void,
   triggerOutputName: string,
 ) => {
   const canvasModel = CanvasGraphModel.create<ComputeShape>();
@@ -758,13 +760,16 @@ const createQueueSinkPreset = <SpecType extends Trigger.Kind>(
     functionTrigger = triggerShape.functionTrigger!.target!;
     const triggerSpec = functionTrigger.spec;
     invariant(triggerSpec && triggerSpec.kind === triggerKind, 'No trigger spec.');
-    initSpec(triggerSpec as any);
+    Obj.change(functionTrigger, (ft) => {
+      initSpec(ft.spec as any);
+    });
   });
 
   const computeModel = createComputeGraph(canvasModel);
 
   const templateComputeNode = computeModel.nodes.find((n) => n.id === template.node);
   invariant(templateComputeNode, 'Template compute node was not created.');
+  // NOTE: These are plain object mutations during model construction, not ECHO object mutations.
   templateComputeNode.value = ['{', '  "@type": "{{type}}",', '  "id": "@{{changeId}}"', '}'].join('\n');
   templateComputeNode.inputSchema = Type.toJsonSchema(Schema.Struct({ type: Schema.String, changeId: Schema.String }));
   attachTrigger(functionTrigger, computeModel);
@@ -804,9 +809,11 @@ const setupQueue = (
 
 const attachTrigger = (functionTrigger: Trigger.Trigger | undefined, computeModel: ComputeGraphModel) => {
   invariant(functionTrigger);
-  functionTrigger.function = Ref.make(computeModel.root);
   const inputNode = computeModel.nodes.find((node) => node.type === NODE_INPUT)!;
-  functionTrigger.inputNodeId = inputNode.id;
+  Obj.change(functionTrigger, (t) => {
+    t.function = Ref.make(computeModel.root);
+    t.inputNodeId = inputNode.id;
+  });
 };
 
 type RawPositionInput = {

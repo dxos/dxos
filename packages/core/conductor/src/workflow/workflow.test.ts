@@ -29,7 +29,7 @@ import {
   synchronizedComputeFunction,
 } from '../types';
 
-import { WorkflowLoader, type WorkflowLoaderParams } from './loader';
+import { WorkflowLoader, type WorkflowLoaderProps } from './loader';
 
 const TestLayer = Layer.mergeAll(ComputeEventLogger.layerFromTracing).pipe(
   Layer.provideMerge(FunctionInvocationServiceLayerTest()),
@@ -237,7 +237,7 @@ describe('workflow', () => {
     }
   };
 
-  const createResolver = (...params: TestWorkflowGraph[]): WorkflowLoaderParams => {
+  const createResolver = (...params: TestWorkflowGraph[]): WorkflowLoaderProps => {
     return {
       nodeResolver: async (node: ComputeNode) => {
         const transform = params.flatMap((v) => v.compute).find((v) => v[0].toString() === node.type)?.[1];

@@ -62,7 +62,7 @@ describe('AssistantToolkit', () => {
       function* (_) {
         const { db } = yield* Database.Service;
         const queue = yield* QueueService.createQueue<Message.Message | ContextBinding>();
-        const conversation = yield* acquireReleaseResource(() => new AiConversation(queue));
+        const conversation = yield* acquireReleaseResource(() => new AiConversation({ queue }));
         const observer = GenerationObserver.fromPrinter(new ConsolePrinter());
 
         yield* Effect.promise(() =>
@@ -71,7 +71,7 @@ describe('AssistantToolkit', () => {
           }),
         );
 
-        const organization = yield* Database.Service.add(
+        const organization = yield* Database.add(
           Obj.make(Organization.Organization, {
             name: 'Cyberdyne Systems',
             website: 'https://cyberdyne.com',
@@ -83,8 +83,8 @@ describe('AssistantToolkit', () => {
           observer,
         });
 
-        expect(conversation.context.blueprints.value).toEqual([blueprint]);
-        expect(conversation.context.objects.value).toEqual([organization]);
+        expect(conversation.context.getBlueprints()).toEqual([blueprint]);
+        expect(conversation.context.getObjects()).toEqual([organization]);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

@@ -9,7 +9,7 @@ import { Surface } from '@dxos/app-framework/react';
 import { DropdownMenu, Icon, IconButton, useTranslation } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { StackItem } from '@dxos/react-ui-stack';
-import { getSize, mx, textBlockWidth } from '@dxos/react-ui-theme';
+import { getSize, mx, textBlockWidth } from '@dxos/ui-theme';
 
 import { meta } from '../meta';
 import { type StackSectionItem } from '../types';

@@ -12,7 +12,7 @@ import { defineConfig, searchForWorkspaceRoot } from 'vite';
 import WasmPlugin from 'vite-plugin-wasm';
 
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
-import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
+import { ThemePlugin } from '@dxos/ui-theme/plugin';
 import tsconfigPaths from 'vite-tsconfig-paths';
 import { UserConfig } from 'vitest/config';
 
@@ -38,9 +38,9 @@ export default defineConfig(
         https:
           process.env.HTTPS === 'true'
             ? {
-                key: '../../../key.pem',
-                cert: '../../../cert.pem',
-              }
+              key: '../../../key.pem',
+              cert: '../../../cert.pem',
+            }
             : undefined,
         fs: {
           strict: false,
@@ -78,7 +78,7 @@ export default defineConfig(
             manualChunks: {
               react: ['react', 'react-dom', 'react-router-dom'],
               dxos: ['@dxos/react-client'],
-              ui: ['@dxos/react-ui', '@dxos/react-ui-theme'],
+              ui: ['@dxos/react-ui', '@dxos/ui-theme'],
               editor: ['@dxos/react-ui-editor'],
             },
           },
@@ -90,20 +90,19 @@ export default defineConfig(
           WasmPlugin(),
           sourceMaps(),
           env.command === 'serve' &&
-            PluginImportSource({
-              exclude: [
-                '**/node_modules/**',
-                '**/common/random-access-storage/**',
-                '**/common/lock-file/**',
-                '**/mesh/network-manager/**',
-                '**/mesh/teleport/**',
-                '**/sdk/config/**',
-                '**/sdk/client-services/**',
-                '**/sdk/observability/**',
-                // TODO(dmaretskyi): Decorators break in lit.
-                '**/ui/lit-*/**',
-              ],
-            }),
+          PluginImportSource({
+            exclude: [
+              '@dxos/random-access-storage',
+              '@dxos/lock-file',
+              '@dxos/network-manager',
+              '@dxos/teleport',
+              '@dxos/config',
+              '@dxos/client-services',
+              '@dxos/observability',
+              // TODO(dmaretskyi): Decorators break in lit.
+              '@dxos/lit-*',
+            ],
+          }),
         ],
       },
       plugins: [
@@ -111,20 +110,19 @@ export default defineConfig(
 
         // Building from dist when creating a prod bundle.
         env.command === 'serve' &&
-          PluginImportSource({
-            exclude: [
-              '**/node_modules/**',
-              '**/common/random-access-storage/**',
-              '**/common/lock-file/**',
-              '**/mesh/network-manager/**',
-              '**/mesh/teleport/**',
-              '**/sdk/config/**',
-              '**/sdk/client-services/**',
-              '**/sdk/observability/**',
-              // TODO(dmaretskyi): Decorators break in lit.
-              '**/ui/lit-*/**',
-            ],
-          }),
+        PluginImportSource({
+          exclude: [
+            '@dxos/random-access-storage',
+            '@dxos/lock-file',
+            '@dxos/network-manager',
+            '@dxos/teleport',
+            '@dxos/config',
+            '@dxos/client-services',
+            '@dxos/observability',
+            // TODO(dmaretskyi): Decorators break in lit.
+            '@dxos/lit-*',
+          ],
+        }),
 
         ConfigPlugin({
           root: dirname,
@@ -169,8 +167,6 @@ export default defineConfig(
                 ],
               },
             ],
-            // https://github.com/XantreDev/preact-signals/tree/main/packages/react#how-parser-plugins-works
-            ['@preact-signals/safe-react/swc', { mode: 'all' }],
           ],
         }),
         // https://docs.sentry.io/platforms/javascript/sourcemaps/uploading/vite

@@ -5,9 +5,9 @@
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useState } from 'react';
 
-import { createIntent } from '@dxos/app-framework';
-import { useIntentDispatcher } from '@dxos/app-framework/react';
+import { useOperationInvoker } from '@dxos/app-framework/react';
 import { DXN, Filter, Obj, Query, type QueryAST, Tag, Type } from '@dxos/echo';
+import { type Mutable } from '@dxos/echo/internal';
 import { useClient } from '@dxos/react-client';
 import { getSpace, useQuery } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
@@ -16,12 +16,12 @@ import { View } from '@dxos/schema';
 
 import { resolveSchemaWithRegistry } from '../helpers';
 import { useTypeOptions } from '../hooks';
-import { SpaceAction } from '../types';
+import { SpaceOperation } from '../types';
 
 export type ViewEditorProps = { view: View.View };
 
 export const ViewEditor = ({ view }: ViewEditorProps) => {
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const { invokePromise } = useOperationInvoker();
   const client = useClient();
   const space = getSpace(view);
   const [schema, setSchema] = useState<Schema.Schema.AnyNoContext>(() => Schema.Struct({}));
@@ -54,7 +54,9 @@ export const ViewEditor = ({ view }: ViewEditorProps) => {
 
       const queue = target && DXN.tryParse(target) ? target : undefined;
       const query = queue ? Query.fromAst(newQuery).options({ queues: [queue] }) : Query.fromAst(newQuery);
-      view.query.ast = query.ast;
+      Obj.change(view, (v) => {
+        v.query.ast = query.ast as Mutable<typeof query.ast>;
+      });
       const newSchema = await resolveSchemaWithRegistry(space.db.schemaRegistry, query.ast);
       if (!newSchema) {
         return;
@@ -64,7 +66,9 @@ export const ViewEditor = ({ view }: ViewEditorProps) => {
         query,
         jsonSchema: Type.toJsonSchema(newSchema),
       });
-      view.projection = Obj.getSnapshot(newView).projection;
+      Obj.change(view, (v) => {
+        v.projection = Obj.getSnapshot(newView).projection as Mutable<typeof v.projection>;
+      });
 
       setSchema(() => newSchema);
     },
@@ -73,9 +77,9 @@ export const ViewEditor = ({ view }: ViewEditorProps) => {
 
   const handleDelete = useCallback(
     (fieldId: string) => {
-      void dispatch(createIntent(SpaceAction.DeleteField, { view, fieldId }));
+      void invokePromise(SpaceOperation.DeleteField, { view, fieldId });
     },
-    [dispatch, view],
+    [invokePromise, view],
   );
 
   if (!space || !schema) {

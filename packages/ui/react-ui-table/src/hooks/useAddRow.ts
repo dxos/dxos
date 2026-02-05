@@ -2,16 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import type * as Schema from 'effect/Schema';
 import { useCallback } from 'react';
 
-import { type Database, Obj } from '@dxos/echo';
+import { type Database, Obj, type Type } from '@dxos/echo';
 
 import { type InsertRowResult } from '../model';
 
-export type UseAddRowParams = {
+export type UseAddRowProps = {
   db?: Database.Database;
-  schema?: Schema.Schema.AnyNoContext;
+  schema?: Type.Obj.Any;
 };
 
 /**
@@ -19,7 +18,7 @@ export type UseAddRowParams = {
  * Returns a callback that attempts to create an object and returns boolean success/failure.
  * Can accept optional data to create objects with specific content (used for committing draft rows).
  */
-export const useAddRow = ({ db, schema }: UseAddRowParams) => {
+export const useAddRow = ({ db, schema }: UseAddRowProps) => {
   return useCallback(
     (data?: any): InsertRowResult => {
       if (db && schema) {

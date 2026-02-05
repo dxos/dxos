@@ -3,39 +3,34 @@
 //
 
 import { type Meta } from '@storybook/react-vite';
+import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import React, { type FC, useEffect, useMemo, useState } from 'react';
 
-import { Capabilities, IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
-import { useCapability, useIntentDispatcher } from '@dxos/app-framework/react';
+import { useAtomCapability, useCapability } from '@dxos/app-framework/react';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj, Ref, Type } from '@dxos/echo';
 import { createDocAccessor, toCursorRange } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { ClientPlugin } from '@dxos/plugin-client';
-import { GraphPlugin } from '@dxos/plugin-graph';
 import { PreviewPlugin } from '@dxos/plugin-preview';
-import { SpacePlugin } from '@dxos/plugin-space';
-import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
-import { ThemePlugin } from '@dxos/plugin-theme';
+import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { faker } from '@dxos/random';
 import { useQueue, useSpace } from '@dxos/react-client/echo';
 import { IconButton, Toolbar } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
-import { type EditorSelection, type Range, useTextEditor } from '@dxos/react-ui-editor';
-import { StackItem } from '@dxos/react-ui-stack';
-import { defaultTx } from '@dxos/react-ui-theme';
+import { useTextEditor } from '@dxos/react-ui-editor';
+import { Layout } from '@dxos/react-ui-mosaic';
 import { render } from '@dxos/storybook-utils';
 import { Message } from '@dxos/types';
+import { type EditorSelection, type Range } from '@dxos/ui-editor';
 
-import { MarkdownCapabilities } from '../capabilities';
 import { MarkdownPlugin } from '../MarkdownPlugin';
-import { meta } from '../meta';
 import { translations } from '../translations';
-import { Markdown } from '../types';
+import { Markdown, MarkdownCapabilities } from '../types';
 
 import { MarkdownContainer } from './MarkdownContainer';
 
@@ -51,16 +46,15 @@ const TestItem = Schema.Struct({
     description: 'Product description',
   }),
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/Test',
     version: '0.1.0',
   }),
 );
 
 const TestChat: FC<{ doc: Markdown.Document; content: string }> = ({ doc, content }) => {
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
   const { parentRef } = useTextEditor({ initialValue: content });
-  const { editorState } = useCapability(MarkdownCapabilities.State);
+  const editorState = useCapability(MarkdownCapabilities.EditorState);
 
   const space = useSpace();
   const queueDxn = useMemo(() => space && space.queues.create().dxn, [space]);
@@ -96,7 +90,7 @@ const TestChat: FC<{ doc: Markdown.Document; content: string }> = ({ doc, conten
 
     // void dispatch(
     //   createIntent(CollaborationActions.InsertContent, {
-    //     target: doc as any as Type.Expando,
+    //     target: doc as any as TestSchema.Expando,
     //     object: Ref.fromDXN(new DXN(DXN.kind.QUEUE, [...queue.dxn.parts, message.id])),
     //     at: cursor,
     //     label: 'Proposal',
@@ -105,20 +99,20 @@ const TestChat: FC<{ doc: Markdown.Document; content: string }> = ({ doc, conten
   };
 
   return (
-    <StackItem.Content toolbar>
+    <Layout.Main toolbar>
       <Toolbar.Root>
         <IconButton icon='ph--plus--regular' disabled={!queue} label='Insert' onClick={handleInsert} />
       </Toolbar.Root>
       <div ref={parentRef} className='p-4' />
-    </StackItem.Content>
+    </Layout.Main>
   );
 };
 
 const DefaultStory = ({ document, chat }: { document: string; chat: string }) => {
   const space = useSpace();
   const [doc, setDoc] = useState<Markdown.Document>();
-  const settings = useCapability(Capabilities.SettingsStore).getStore<Markdown.Settings>(meta.id)!.value;
-  const { editorState } = useCapability(MarkdownCapabilities.State);
+  const settings = useAtomCapability(MarkdownCapabilities.Settings);
+  const editorState = useCapability(MarkdownCapabilities.EditorState);
 
   useEffect(() => {
     if (!space) {
@@ -148,10 +142,9 @@ const DefaultStory = ({ document, chat }: { document: string; chat: string }) =>
     return null;
   }
 
-  // TODO(burdon): Layout issue.
   return (
     <div className='grid grid-cols-2 bs-full overflow-hidden'>
-      <MarkdownContainer id={doc.id} object={doc} settings={settings} editorStateStore={editorState} />
+      <MarkdownContainer id={doc.id} subject={doc} settings={settings} editorStateStore={editorState} />
       <TestChat doc={doc} content={chat} />
     </div>
   );
@@ -164,22 +157,18 @@ const storybook: Meta<typeof DefaultStory> = {
     withTheme,
     withPluginManager({
       plugins: [
+        ...corePlugins(),
+        StorybookPlugin({}),
         ClientPlugin({
           types: [Markdown.Document, TestItem],
-          onClientInitialized: async ({ client }) => {
-            await client.halo.createIdentity();
-          },
+          onClientInitialized: ({ client }) =>
+            Effect.gen(function* () {
+              yield* Effect.promise(() => client.halo.createIdentity());
+            }),
         }),
-        SpacePlugin({}),
-        GraphPlugin(),
-        IntentPlugin(),
-        SettingsPlugin(),
 
-        // UI
-        ThemePlugin({ tx: defaultTx }),
         MarkdownPlugin(),
         PreviewPlugin(),
-        StorybookLayoutPlugin({}),
       ],
     }),
   ],

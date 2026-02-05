@@ -47,6 +47,9 @@
       "path": "../../common/random-access-storage"
     },
     {
+      "path": "../../common/sql-sqlite"
+    },
+    {
       "path": "../../common/test-utils"
     },
     {
@@ -72,9 +75,6 @@
     },
     {
       "path": "../../core/echo/indexing"
-    },
-    {
-      "path": "../../core/echo/live-object"
     },
     {
       "path": "../../core/halo/credentials"

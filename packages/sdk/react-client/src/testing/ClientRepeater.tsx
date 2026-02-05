@@ -2,12 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { type FC, useEffect, useRef, useState } from 'react';
+import React, { type FC, useRef, useState } from 'react';
 
 import { Client } from '@dxos/client';
 import { TestBuilder, performInvitation } from '@dxos/client/testing';
-import { type TypedObject } from '@dxos/echo/internal';
-import { registerSignalsRuntime } from '@dxos/echo-signals/react';
+import { type Type } from '@dxos/echo';
 import { faker } from '@dxos/random';
 import { useAsyncEffect } from '@dxos/react-hooks';
 
@@ -27,7 +26,7 @@ export type ClientRepeaterProps<P extends ClientRepeatedComponentProps> = {
   controls?: FC<ClientRepeaterControlsProps>;
   count?: number;
   clients?: Client[];
-  types?: TypedObject[];
+  types?: Type.Obj.Any[];
   args?: Omit<P, 'id' | 'count'>;
 } & Pick<WithClientProviderProps, 'createIdentity' | 'createSpace' | 'onCreateSpace'>;
 
@@ -51,9 +50,6 @@ export const ClientRepeater = <P extends ClientRepeatedComponentProps>(props: Cl
     createSpace,
     onCreateSpace,
   } = props;
-  useEffect(() => {
-    registerSignalsRuntime();
-  }, []);
 
   const [clients, setClients] = useState(props.clients ?? []);
   const [spaceId, setSpaceId] = useState<SpaceId>();

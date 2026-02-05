@@ -12,14 +12,14 @@ import { log } from '@dxos/log';
 
 import { waitForPidDeletion, waitForPidFileBeingFilledWithInfo } from './utils';
 
-export type ProcessInfo = WatchDogParams & {
+export type ProcessInfo = WatchDogProps & {
   pid?: number;
   started?: number;
   restarts?: number;
   running?: boolean;
 };
 
-export type WatchDogParams = {
+export type WatchDogProps = {
   profile?: string; // Human readable process identifier
   pidFile: string; // Path to PID file
 
@@ -56,7 +56,7 @@ export class WatchDog {
   private _child?: ChildProcessWithoutNullStreams;
   private _restarts = 0;
 
-  constructor(private readonly _params: WatchDogParams) {}
+  constructor(private readonly _params: WatchDogProps) {}
 
   @synchronized
   async start(): Promise<void> {

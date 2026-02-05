@@ -3,21 +3,16 @@
 //
 
 import { type EditorView } from '@codemirror/view';
-import type * as Schema from 'effect/Schema';
 import React, { type ReactNode, forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 
-import { Obj, Type } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
+import { TestSchema } from '@dxos/echo/testing';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { useMergeRefs, useThemeContext } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
-import { mx } from '@dxos/react-ui-theme';
-import { isNonNullable } from '@dxos/util';
-
-import { type EditorController, createEditorController } from '../../components';
-import { editorSlots } from '../../defaults';
 import {
   type DebugNode,
   type ThemeExtensionsOptions,
@@ -26,7 +21,12 @@ import {
   createThemeExtensions,
   debugTree,
   decorateMarkdown,
-} from '../../extensions';
+  editorSlots,
+} from '@dxos/ui-editor';
+import { mx } from '@dxos/ui-theme';
+import { isNonNullable } from '@dxos/util';
+
+import { type EditorController, createEditorController } from '../../components';
 import { type UseTextEditorProps, useTextEditor } from '../../hooks';
 
 // Type definitions.
@@ -39,8 +39,7 @@ export type StoryProps = Pick<UseTextEditorProps, 'id' | 'scrollTo' | 'selection
     debug?: DebugMode;
     debugCustom?: (view: EditorView) => ReactNode;
     text?: string;
-    // TODO(wittjosiah): Find a simpler way to define this type.
-    object?: Obj.Obj<Schema.Schema.Type<typeof Type.Expando>>;
+    object?: Obj.Obj<TestSchema.Expando>;
     readOnly?: boolean;
     placeholder?: string;
     lineNumbers?: boolean;
@@ -49,17 +48,17 @@ export type StoryProps = Pick<UseTextEditorProps, 'id' | 'scrollTo' | 'selection
   };
 
 export const EditorStory = forwardRef<EditorController, StoryProps>(
-  ({ debug, debugCustom, text, extensions: extensionsParam, ...props }, forwardedRef) => {
+  ({ debug, debugCustom, text, extensions: extensionsProp, ...props }, forwardedRef) => {
     const controllerRef = useRef<EditorController>(null);
     const mergedRef = useMergeRefs([controllerRef, forwardedRef]);
 
     const attentionAttrs = useAttentionAttributes('test-panel');
     const [tree, setTree] = useState<DebugNode>();
-    const [object] = useState(Obj.make(Type.Expando, { content: text ?? '' }));
+    const [object] = useState(Obj.make(TestSchema.Expando, { content: text ?? '' }));
 
     const extensions = useMemo(
-      () => (debug ? [extensionsParam, debugTree(setTree)].filter(isNonNullable) : extensionsParam),
-      [debug, extensionsParam],
+      () => (debug ? [extensionsProp, debugTree(setTree)].filter(isNonNullable) : extensionsProp),
+      [debug, extensionsProp],
     );
 
     const view = controllerRef.current?.view;
@@ -88,10 +87,8 @@ export const EditorStory = forwardRef<EditorController, StoryProps>(
 
 /**
  * Default story component.
- * @deprecated
  */
-// TODO(burdon): Replace with <Editor.Root>
-export const EditorComponent = forwardRef<EditorController, StoryProps>(
+const EditorComponent = forwardRef<EditorController, StoryProps>(
   (
     {
       id = defaultId,

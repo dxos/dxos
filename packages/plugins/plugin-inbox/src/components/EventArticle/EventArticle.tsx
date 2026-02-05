@@ -4,24 +4,27 @@
 
 import React, { useCallback } from 'react';
 
-import { createIntent } from '@dxos/app-framework';
-import { Surface, type SurfaceComponentProps, useIntentDispatcher } from '@dxos/app-framework/react';
+import { Surface, type SurfaceComponentProps, useOperationInvoker } from '@dxos/app-framework/react';
 import { Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { StackItem } from '@dxos/react-ui-stack';
+import { Layout } from '@dxos/react-ui-mosaic';
 import { Text } from '@dxos/schema';
 import { Event as EventType } from '@dxos/types';
 
 import { useShadowObject } from '../../hooks';
-import { type Calendar, InboxAction } from '../../types';
+import { type Calendar, InboxOperation } from '../../types';
 
 import { Event, type EventHeaderProps } from './Event';
 
-export const EventArticle = ({
-  subject,
-  calendar,
-}: SurfaceComponentProps<EventType.Event> & { calendar: Calendar.Calendar }) => {
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
+export type EventArticleProps = SurfaceComponentProps<
+  EventType.Event,
+  {
+    calendar: Calendar.Calendar;
+  }
+>;
+
+export const EventArticle = ({ role, subject, calendar }: EventArticleProps) => {
+  const { invokePromise } = useOperationInvoker();
   const id = Obj.getDXN(subject).toString();
   const db = Obj.getDatabase(calendar);
   const [shadowedEvent, createShadowEvent] = useShadowObject(db, subject, EventType.Event);
@@ -32,21 +35,23 @@ export const EventArticle = ({
     const event = createShadowEvent();
     const notes = await event.notes?.load();
     if (!notes) {
-      event.notes = Ref.make(Text.make());
+      Obj.change(event, (e) => {
+        e.notes = Ref.make(Text.make());
+      });
     }
   }, [id, subject, db, shadowedEvent]);
 
   const handleContactCreate = useCallback<NonNullable<EventHeaderProps['onContactCreate']>>(
     (actor) => {
       if (db && actor) {
-        void dispatch(createIntent(InboxAction.ExtractContact, { db, actor }));
+        void invokePromise(InboxOperation.ExtractContact, { db, actor });
       }
     },
-    [db, dispatch],
+    [db, invokePromise],
   );
 
   return (
-    <StackItem.Content toolbar>
+    <Layout.Main role={role} toolbar>
       <Event.Root event={subject}>
         <Event.Toolbar onNoteCreate={handleNoteCreate} />
         <Event.Viewport>
@@ -56,6 +61,6 @@ export const EventArticle = ({
           {notes && <Surface role='section' data={{ id, subject: notes }} limit={1} />}
         </Event.Viewport>
       </Event.Root>
-    </StackItem.Content>
+    </Layout.Main>
   );
 };

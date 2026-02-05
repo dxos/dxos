@@ -26,10 +26,10 @@ const createMockQueue = (): Queue =>
 describe('AiContextBinder', () => {
   it('should handle bind with Ref', async () => {
     const queue = createMockQueue();
-    const binder = new AiContextBinder(queue);
+    const binder = new AiContextBinder({ queue });
 
     const TestSchema = Schema.Struct({}).pipe(
-      Type.Obj({
+      Type.object({
         typename: 'dxos.org/type/Example',
         version: '0.1.0',
       }),

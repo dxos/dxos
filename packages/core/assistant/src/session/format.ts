@@ -2,14 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Array from 'effect/Array';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 
 import { Template } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';
-import { Database } from '@dxos/echo';
 import { ObjectVersion } from '@dxos/echo-db';
 import { type ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -19,7 +17,7 @@ import { trim } from '@dxos/util';
 import { AiAssistantError } from '../errors';
 
 import { ArtifactDiffResolver } from './artifact-diff';
-import { type AiSessionRunError, type AiSessionRunParams } from './session';
+import { type AiSessionRunError, type AiSessionRunProps } from './session';
 
 /**
  * Formats the system prompt.
@@ -29,20 +27,20 @@ export const formatSystemPrompt = ({
   system,
   blueprints = [],
   objects = [],
-}: Pick<AiSessionRunParams<any>, 'system' | 'blueprints' | 'objects'>) =>
+}: Pick<AiSessionRunProps<any>, 'system' | 'blueprints' | 'objects'>) =>
   Effect.gen(function* () {
     const blueprintDefs = yield* Function.pipe(
       blueprints,
       Effect.forEach((blueprint) => Effect.succeed(blueprint.instructions)),
-      Effect.flatMap(Effect.forEach((template) => Database.Service.loadOption(template.source))),
-      Effect.map(Array.filter(Option.isSome)),
-      Effect.map(
-        Array.map(
-          (template) => trim`
+      Effect.flatMap(
+        Effect.forEach((template) =>
+          Effect.gen(function* () {
+            return trim`
             <blueprint>
-              ${Template.process(template.value.content)}
+              ${yield* Template.processTemplate(template)}
             </blueprint>
-          `,
+          `;
+          }),
         ),
       ),
       Effect.map((blueprints) =>
@@ -77,7 +75,7 @@ export const formatSystemPrompt = ({
 export const formatUserPrompt = ({
   prompt,
   history = [],
-}: Pick<AiSessionRunParams<any>, 'prompt' | 'history'>): Effect.Effect<Message.Message, AiSessionRunError> =>
+}: Pick<AiSessionRunProps<any>, 'prompt' | 'history'>): Effect.Effect<Message.Message, AiSessionRunError> =>
   Effect.gen(function* () {
     const blocks: ContentBlock.Any[] = [];
 

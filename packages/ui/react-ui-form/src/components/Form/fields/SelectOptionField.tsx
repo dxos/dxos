@@ -9,7 +9,7 @@ import { PublicKey } from '@dxos/keys';
 import { type ChromaticPalette, IconButton, Input, Tag, useTranslation } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';
 import { HuePicker } from '@dxos/react-ui-pickers';
-import { hues, subtleHover } from '@dxos/react-ui-theme';
+import { hues, osTranslations, subtleHover } from '@dxos/ui-theme';
 
 import { translationKey } from '../../../translations';
 import { type FormFieldComponentProps, FormFieldLabel } from '../FormFieldComponent';
@@ -146,7 +146,7 @@ export const SelectOptionField = ({
                         <IconButton
                           iconOnly
                           variant='ghost'
-                          label={t(selected === item.id ? 'collapse label' : 'expand label', { ns: 'os' })}
+                          label={t(selected === item.id ? 'collapse label' : 'expand label', { ns: osTranslations })}
                           icon={selected === item.id ? 'ph--caret-down--regular' : 'ph--caret-right--regular'}
                           onClick={() => handleClick(item.id)}
                         />

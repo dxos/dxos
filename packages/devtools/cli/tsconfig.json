@@ -26,6 +26,9 @@
       "path": "../../common/effect"
     },
     {
+      "path": "../../common/effect-atom-solid"
+    },
+    {
       "path": "../../common/errors"
     },
     {
@@ -77,7 +80,13 @@
       "path": "../../plugins/plugin-assistant"
     },
     {
+      "path": "../../plugins/plugin-automation"
+    },
+    {
       "path": "../../plugins/plugin-chess"
+    },
+    {
+      "path": "../../plugins/plugin-client"
     },
     {
       "path": "../../plugins/plugin-inbox"
@@ -92,7 +101,16 @@
       "path": "../../plugins/plugin-markdown"
     },
     {
+      "path": "../../plugins/plugin-observability"
+    },
+    {
+      "path": "../../plugins/plugin-registry"
+    },
+    {
       "path": "../../plugins/plugin-script"
+    },
+    {
+      "path": "../../plugins/plugin-space"
     },
     {
       "path": "../../plugins/plugin-table"
@@ -101,7 +119,13 @@
       "path": "../../plugins/plugin-thread"
     },
     {
+      "path": "../../plugins/plugin-token-manager"
+    },
+    {
       "path": "../../plugins/plugin-transcription"
+    },
+    {
+      "path": "../../sdk/app-framework"
     },
     {
       "path": "../../sdk/client"
@@ -120,6 +144,9 @@
     },
     {
       "path": "../../sdk/types"
+    },
+    {
+      "path": "../cli-util"
     }
   ]
 }

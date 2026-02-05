@@ -20,7 +20,12 @@ const LLM_PROVIDER_LABELS = {
   lmstudio: 'LM Studio',
 } as const;
 
-export const AssistantSettings = ({ settings }: { settings: Assistant.Settings }) => {
+export type AssistantSettingsComponentProps = {
+  settings: Assistant.Settings;
+  onSettingsChange: (fn: (current: Assistant.Settings) => Assistant.Settings) => void;
+};
+
+export const AssistantSettings = ({ settings, onSettingsChange }: AssistantSettingsComponentProps) => {
   const { t } = useTranslation(meta.id);
 
   return (
@@ -30,7 +35,7 @@ export const AssistantSettings = ({ settings }: { settings: Assistant.Settings }
           <ControlItemInput title={t('settings custom prompts label')}>
             <Input.Switch
               checked={!!settings.customPrompts}
-              onCheckedChange={(checked) => (settings.customPrompts = checked)}
+              onCheckedChange={(checked) => onSettingsChange((s) => ({ ...s, customPrompts: checked }))}
             />
           </ControlItemInput>
 
@@ -38,7 +43,10 @@ export const AssistantSettings = ({ settings }: { settings: Assistant.Settings }
             <Select.Root
               value={settings.llmProvider ?? 'edge'}
               onValueChange={(value) => {
-                settings.llmProvider = value === DEFAULT_VALUE ? undefined : (value as any);
+                onSettingsChange((s) => ({
+                  ...s,
+                  llmProvider: value === DEFAULT_VALUE ? undefined : (value as any),
+                }));
               }}
             >
               <Select.TriggerButton placeholder={t('settings llm provider label')} />
@@ -62,7 +70,7 @@ export const AssistantSettings = ({ settings }: { settings: Assistant.Settings }
             <Select.Root
               value={settings.edgeModel ?? DEFAULT_VALUE}
               onValueChange={(value) => {
-                settings.edgeModel = value === DEFAULT_VALUE ? undefined : value;
+                onSettingsChange((s) => ({ ...s, edgeModel: value === DEFAULT_VALUE ? undefined : value }));
               }}
             >
               <Select.TriggerButton placeholder={t('settings default llm model label')} />
@@ -86,7 +94,7 @@ export const AssistantSettings = ({ settings }: { settings: Assistant.Settings }
             <Select.Root
               value={settings.ollamaModel ?? DEFAULT_VALUE}
               onValueChange={(value) => {
-                settings.ollamaModel = value === DEFAULT_VALUE ? undefined : value;
+                onSettingsChange((s) => ({ ...s, ollamaModel: value === DEFAULT_VALUE ? undefined : value }));
               }}
             >
               <Select.TriggerButton placeholder={t('settings default llm model label')} />

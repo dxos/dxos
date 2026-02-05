@@ -10,7 +10,12 @@ import { ControlPage } from '@dxos/react-ui-form';
 import { meta } from '../meta';
 import type { ThreadSettingsProps } from '../types';
 
-export const ThreadSettings = ({ settings: _settings }: { settings: ThreadSettingsProps }) => {
+export type ThreadSettingsComponentProps = {
+  settings: ThreadSettingsProps;
+  onSettingsChange: (fn: (current: ThreadSettingsProps) => ThreadSettingsProps) => void;
+};
+
+export const ThreadSettings = ({ settings: _settings }: ThreadSettingsComponentProps) => {
   const { t: _t } = useTranslation(meta.id);
   return <ControlPage></ControlPage>;
 };

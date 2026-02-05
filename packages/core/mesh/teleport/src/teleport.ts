@@ -15,7 +15,7 @@ import { RpcClosedError, TimeoutError } from '@dxos/protocols';
 import { ControlExtension } from './control-extension';
 import { type CreateChannelOpts, Muxer, type MuxerStats, type RpcPort } from './muxing';
 
-export type TeleportParams = {
+export type TeleportProps = {
   initiator: boolean;
   localPeerId: PublicKey;
   remotePeerId: PublicKey;
@@ -59,7 +59,7 @@ export class Teleport {
     return this._open;
   }
 
-  constructor({ initiator, localPeerId, remotePeerId, ...rest }: TeleportParams) {
+  constructor({ initiator, localPeerId, remotePeerId, ...rest }: TeleportProps) {
     invariant(typeof initiator === 'boolean');
     invariant(PublicKey.isPublicKey(localPeerId));
     invariant(PublicKey.isPublicKey(remotePeerId));

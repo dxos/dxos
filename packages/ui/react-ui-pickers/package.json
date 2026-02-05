@@ -4,6 +4,10 @@
   "description": "A collection of picker components.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
   "license": "MIT",
   "author": "DXOS.org",
   "type": "module",
@@ -13,11 +17,21 @@
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
+    },
+    "./icons": {
+      "source": "./src/components/IconPicker/icons.ts",
+      "types": "./dist/types/src/components/IconPicker/icons.d.ts",
+      "browser": "./dist/lib/browser/components/IconPicker/icons.mjs",
+      "node": "./dist/lib/node-esm/components/IconPicker/icons.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
-    "*": {}
+    "*": {
+      "icons": [
+        "./dist/types/src/components/IconPicker/icons.d.ts"
+      ]
+    }
   },
   "files": [
     "dist",
@@ -25,18 +39,17 @@
   ],
   "dependencies": {
     "@dxos/log": "workspace:*",
-    "@dxos/react-ui-types": "workspace:*",
+    "@dxos/ui-types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@emoji-mart/data": "catalog:",
     "@emoji-mart/react": "catalog:",
-    "@preact-signals/safe-react": "catalog:",
     "@radix-ui/react-use-controllable-state": "catalog:",
     "react-resize-detector": "catalog:"
   },
   "devDependencies": {
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
+    "@dxos/ui-theme": "workspace:*",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "react": "catalog:",
@@ -45,7 +58,7 @@
   },
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-theme": "workspace:*",
+    "@dxos/ui-theme": "workspace:*",
     "react": "catalog:",
     "react-dom": "catalog:"
   },

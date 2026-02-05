@@ -4,7 +4,7 @@
 
 import React, { type PropsWithChildren } from 'react';
 
-import { Capabilities } from '../common';
+import * as Common from '../common';
 import { topologicalSort } from '../helpers';
 
 import { type UseAppOptions } from './useApp';
@@ -12,17 +12,18 @@ import { useCapabilities } from './useCapabilities';
 import { LoadingState, useLoading } from './useLoading';
 
 export type AppProps = Pick<UseAppOptions, 'placeholder' | 'debounce'> & {
-  state: { ready: boolean; error: unknown };
+  ready: boolean;
+  error: unknown;
 };
 
-export const App = ({ placeholder: Placeholder, state, debounce }: AppProps) => {
-  const reactContexts = useCapabilities(Capabilities.ReactContext);
-  const reactRoots = useCapabilities(Capabilities.ReactRoot);
-  const stage = useLoading(state, debounce);
+export const App = ({ placeholder: Placeholder, ready, error, debounce }: AppProps) => {
+  const reactContexts = useCapabilities(Common.Capability.ReactContext);
+  const reactRoots = useCapabilities(Common.Capability.ReactRoot);
+  const stage = useLoading(ready, debounce);
 
-  if (state.error) {
+  if (error) {
     // This triggers the error boundary to provide UI feedback for the startup error.
-    throw state.error;
+    throw error;
   }
 
   // TODO(wittjosiah): Consider using Suspense instead.
@@ -44,7 +45,7 @@ export const App = ({ placeholder: Placeholder, state, debounce }: AppProps) => 
   );
 };
 
-const composeContexts = (contexts: Capabilities.ReactContext[]) => {
+const composeContexts = (contexts: Common.Capability.ReactContext[]) => {
   if (contexts.length === 0) {
     return ({ children }: PropsWithChildren) => <>{children}</>;
   }

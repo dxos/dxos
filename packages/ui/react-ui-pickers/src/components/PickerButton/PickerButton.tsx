@@ -25,8 +25,8 @@ export const PickerButton = ({
   Component,
   disabled,
   classNames,
-  defaultValue: defaultValueParam,
-  value: valueParam,
+  defaultValue: defaultValueProp,
+  value: valueProp,
   values,
   label,
   icon,
@@ -36,12 +36,12 @@ export const PickerButton = ({
   iconSize = 5,
 }: PickerButtonProps) => {
   const [value, setValue] = useControllableState<string>({
-    prop: valueParam,
-    defaultProp: defaultValueParam,
+    prop: valueProp,
+    defaultProp: defaultValueProp,
     onChange,
   });
   // TODO(burdon): useControllableState doesn't update the prop when the value is changed. Replace it.
-  useEffect(() => setValue(valueParam), [valueParam]);
+  useEffect(() => setValue(valueProp), [valueProp]);
 
   const [open, setOpen] = useState<boolean>(false);
   const TriggerRoot = rootVariant === 'toolbar-button' ? Toolbar.Button : Button;

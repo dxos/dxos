@@ -4,7 +4,7 @@
 
 import { useMemo } from 'react';
 
-import { Capabilities } from '@dxos/app-framework';
+import { Common } from '@dxos/app-framework';
 import { useCapabilities } from '@dxos/app-framework/react';
 import { type Space } from '@dxos/client/echo';
 import { Filter, Obj } from '@dxos/echo';
@@ -14,7 +14,7 @@ import { type ReferencesProvider } from '@dxos/react-ui-chat';
  * Resolve references to objects in the space.
  */
 export const useReferencesProvider = (space?: Space): ReferencesProvider | undefined => {
-  const blueprints = useCapabilities(Capabilities.BlueprintDefinition);
+  const blueprints = useCapabilities(Common.Capability.BlueprintDefinition);
 
   return useMemo<ReferencesProvider | undefined>((): ReferencesProvider | undefined => {
     if (!space) {
@@ -40,7 +40,7 @@ export const useReferencesProvider = (space?: Space): ReferencesProvider | undef
             // })
             .filter((object) => stringMatch(query, Obj.getLabel(object as any) ?? ''))
             // TODO(dmaretskyi): `Type.getDXN` (at the point of writing) didn't work here as it was schema-only.
-            .filter((object) => !!Obj.getDXN(object as Obj.Any))
+            .filter((object) => !!Obj.getDXN(object as Obj.Unknown))
             .map((object) => ({
               uri: Obj.getDXN(object as any).toString(),
               label: Obj.getLabel(object as any) ?? '',

@@ -44,15 +44,15 @@ import { ComplexSet, bufferToArray, defaultMap, isNonNullable, range } from '@dx
 import { type CollectionState, CollectionSynchronizer, diffCollectionState } from './collection-synchronizer';
 import { type EchoDataMonitor } from './echo-data-monitor';
 import { EchoNetworkAdapter, isEchoPeerMetadata } from './echo-network-adapter';
-import { type EchoReplicator, type RemoteDocumentExistenceCheckParams } from './echo-replicator';
+import { type EchoReplicator, type RemoteDocumentExistenceCheckProps } from './echo-replicator';
 import { HeadsStore } from './heads-store';
-import { type BeforeSaveParams, LevelDBStorageAdapter } from './leveldb-storage-adapter';
+import { type BeforeSaveProps, LevelDBStorageAdapter } from './leveldb-storage-adapter';
 
 export type PeerIdProvider = () => string | undefined;
 
 export type RootDocumentSpaceKeyProvider = (documentId: string) => PublicKey | undefined;
 
-export type AutomergeHostParams = {
+export type AutomergeHostProps = {
   db: LevelDB;
   indexMetadataStore: IndexMetadataStore;
   dataMonitor?: EchoDataMonitor;
@@ -176,7 +176,7 @@ export class AutomergeHost extends Resource {
     dataMonitor,
     peerIdProvider,
     getSpaceKeyByRootDocumentId,
-  }: AutomergeHostParams) {
+  }: AutomergeHostProps) {
     super();
     this._db = db;
     this._storage = new LevelDBStorageAdapter({
@@ -360,7 +360,7 @@ export class AutomergeHost extends Resource {
   /**
    * Create new persisted document.
    */
-  createDoc<T>(initialValue?: T | Doc<T> | Uint8Array, opts?: CreateDocOptions): DocHandle<T> {
+  async createDoc<T>(initialValue?: T | Doc<T> | Uint8Array, opts?: CreateDocOptions): Promise<DocHandle<T>> {
     invariant(this.isOpen, 'AutomergeHost is not open');
     if (opts?.preserveHistory) {
       if (initialValue instanceof Uint8Array) {
@@ -384,10 +384,10 @@ export class AutomergeHost extends Resource {
       if (opts?.documentId) {
         throw new Error('Cannot prefil document id when not importing an existing doc');
       }
-      const handle = this._repo.create(initialValue);
+      const handle = await this._repo.create2<T>(initialValue);
       this._createdDocuments.add(handle.documentId);
       this._sharePolicyChangedTask!.schedule();
-      return handle as DocHandle<T>;
+      return handle;
     }
   }
 
@@ -441,31 +441,8 @@ export class AutomergeHost extends Resource {
   }
 
   private readonly _shareConfig = {
-    // Called on `repo.find`.
     access: async (peerId: PeerId, documentId: DocumentId): Promise<boolean> => {
       return true;
-      if (
-        !this._createdDocuments.has(documentId) &&
-        !this._documentsToSync.has(documentId) &&
-        !this._documentsToRequest.has(documentId)
-      ) {
-        const peerMetadata = this._repo.peerMetadataByPeerId[peerId];
-        if (isEchoPeerMetadata(peerMetadata) && this._documentsRequested.get(peerId)?.has(documentId)) {
-          return true; // Allow access if the peer has requested the document.
-        }
-
-        // Skip advertising documents that don't need to be synced.
-        log('skip access', { peerId, documentId });
-        return false;
-      }
-
-      const peerMetadata = this._repo.peerMetadataByPeerId[peerId];
-      if (isEchoPeerMetadata(peerMetadata)) {
-        // TODO(dmaretskyi): We need to document the `shouldAdvertise` method better so that it's clear that it's also called for access.
-        return this._echoNetworkAdapter.shouldAdvertise(peerId, { documentId });
-      }
-
-      return false;
     },
 
     // TODO(dmaretskyi): Share based on HALO permissions and space affinity.
@@ -498,7 +475,7 @@ export class AutomergeHost extends Resource {
     },
   };
 
-  private async _beforeSave({ path, batch }: BeforeSaveParams): Promise<void> {
+  private async _beforeSave({ path, batch }: BeforeSaveProps): Promise<void> {
     const handle = this._repo.handles[path[0] as DocumentId];
     if (!handle || !handle.isReady()) {
       return;
@@ -560,7 +537,7 @@ export class AutomergeHost extends Resource {
     return this._repo.peers;
   }
 
-  private async _isDocumentInRemoteCollection(params: RemoteDocumentExistenceCheckParams): Promise<boolean> {
+  private async _isDocumentInRemoteCollection(params: RemoteDocumentExistenceCheckProps): Promise<boolean> {
     for (const collectionId of this._collectionSynchronizer.getRegisteredCollectionIds()) {
       const remoteCollections = this._collectionSynchronizer.getRemoteCollectionStates(collectionId);
       const remotePeerDocs = remoteCollections.get(params.peerId as PeerId)?.documents;
@@ -636,6 +613,13 @@ export class AutomergeHost extends Resource {
       }
     }
     return result;
+  }
+
+  /**
+   * Iterate over all document heads stored on disk.
+   */
+  listDocumentHeads(): AsyncGenerator<{ documentId: DocumentId; heads: Heads }> {
+    return this._headsStore.iterateAll();
   }
 
   //

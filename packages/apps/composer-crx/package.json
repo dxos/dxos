@@ -4,6 +4,10 @@
   "private": true,
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
   "license": "MIT",
   "author": "DXOS.org",
   "type": "module",
@@ -43,8 +47,8 @@
     "@crxjs/vite-plugin": "catalog:",
     "@dxos/config": "workspace:*",
     "@dxos/esbuild-plugins": "workspace:*",
-    "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
+    "@dxos/ui-theme": "workspace:*",
     "@dxos/vite-plugin-icons": "workspace:*",
     "@sentry/vite-plugin": "catalog:",
     "@types/chrome": "catalog:",

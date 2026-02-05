@@ -4,7 +4,7 @@
 
 import React, { useEffect, useState } from 'react';
 
-import { Capabilities } from '@dxos/app-framework';
+import { Common } from '@dxos/app-framework';
 import { useCapabilities } from '@dxos/app-framework/react';
 import { type ConfigProto, SaveConfig, Storage, defs } from '@dxos/config';
 import { log } from '@dxos/log';
@@ -26,14 +26,19 @@ const StorageAdapters = {
   idb: defs.Runtime.Client.Storage.StorageDriver.IDB,
 } as const;
 
-export const DebugSettings = ({ settings }: { settings: DebugSettingsProps }) => {
+export type DebugSettingsComponentProps = {
+  settings: DebugSettingsProps;
+  onSettingsChange: (fn: (current: DebugSettingsProps) => DebugSettingsProps) => void;
+};
+
+export const DebugSettings = ({ settings, onSettingsChange }: DebugSettingsComponentProps) => {
   const { t } = useTranslation(meta.id);
   const [toast, setToast] = useState<Toast>();
   const client = useClient();
   const download = useFileDownload();
   // TODO(mykola): Get updates from other places that change Config.
   const [storageConfig, setStorageConfig] = useState<ConfigProto>({});
-  const [upload] = useCapabilities(Capabilities.FileUploader);
+  const [upload] = useCapabilities(Common.Capability.FileUploader);
 
   useEffect(() => {
     void Storage().then((config) => setStorageConfig(config));
@@ -98,7 +103,7 @@ export const DebugSettings = ({ settings }: { settings: DebugSettingsProps }) =>
           <ControlItemInput title={t('settings wireframe')}>
             <Input.Switch
               checked={settings.wireframe}
-              onCheckedChange={(checked) => (settings.wireframe = !!checked)}
+              onCheckedChange={(checked) => onSettingsChange((s) => ({ ...s, wireframe: !!checked }))}
             />
           </ControlItemInput>
           <ControlItemInput title={t('settings download diagnostics')}>

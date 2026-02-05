@@ -7,10 +7,9 @@ import type * as FileSystem from '@effect/platform/FileSystem';
 import * as Effect from 'effect/Effect';
 import { type Message } from 'esbuild';
 
+import { CommandConfig } from '@dxos/cli-util';
 import { BaseError } from '@dxos/errors';
 import { bundleFunction } from '@dxos/functions-runtime/native';
-
-import { CommandConfig } from '../../../services';
 
 type BundleOptions = {
   entryPoint: string;

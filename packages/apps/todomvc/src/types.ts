@@ -11,7 +11,7 @@ export const Todo = Schema.Struct({
   title: Schema.String,
   completed: Schema.Boolean,
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'example.com/type/Todo',
     version: '0.1.0',
   }),
@@ -21,7 +21,7 @@ export type Todo = Schema.Schema.Type<typeof Todo>;
 export const TodoList = Schema.Struct({
   todos: Schema.Array(Type.Ref(Todo)),
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'example.com/type/TodoList',
     version: '0.1.0',
   }),
@@ -30,6 +30,8 @@ export type TodoList = Schema.Schema.Type<typeof TodoList>;
 
 export const createTodoList = (space: Space): TodoList => {
   const list = space.db.add(Obj.make(TodoList, { todos: [] }));
-  space.properties[TodoList.typename] = Ref.make(list);
+  Obj.change(space.properties, (props: any) => {
+    props[TodoList.typename] = Ref.make(list);
+  });
   return list;
 };

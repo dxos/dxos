@@ -8,6 +8,7 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as GlobalValue from 'effect/GlobalValue';
 import * as Option from 'effect/Option';
+import * as Runtime from 'effect/Runtime';
 import type * as Tracer from 'effect/Tracer';
 
 const spanSymbol = Symbol.for('effect/SpanAnnotation');
@@ -21,6 +22,10 @@ const locationRegex = /\((.*)\)/g;
  * Unwraps error proxy.
  */
 const prettyErrorStack = (error: any, appendStacks: string[] = []): any => {
+  if (typeof error !== 'object' || error === null) {
+    return error;
+  }
+
   const span = error[spanSymbol];
 
   const lines = typeof error.stack === 'string' ? error.stack.split('\n') : [];
@@ -118,9 +123,10 @@ export const causeToError = (cause: Cause.Cause<any>): Error => {
     const errors = [...Chunk.toArray(Cause.failures(cause)), ...Chunk.toArray(Cause.defects(cause))];
 
     const getStackFrames = (): string[] => {
-      const o: { stack: string } = {} as any;
+      // Bun requies the target object for `captureStackTrace` to be an Error.
+      const o = new Error();
       Error.captureStackTrace(o, getStackFrames);
-      return o.stack.split('\n').slice(1);
+      return o.stack!.split('\n').slice(1);
     };
 
     const stackFrames = getStackFrames();
@@ -171,6 +177,15 @@ export const runAndForwardErrors = async <A, E>(
   options?: { signal?: AbortSignal },
 ): Promise<A> => {
   const exit = await Effect.runPromiseExit(effect, options);
+  return unwrapExit(exit);
+};
+
+export const runInRuntime = async <A, E, R>(
+  runtime: Runtime.Runtime<R>,
+  effect: Effect.Effect<A, E, R>,
+  options?: { signal?: AbortSignal },
+): Promise<A> => {
+  const exit = await Runtime.runPromiseExit(runtime, effect, options);
   return unwrapExit(exit);
 };
 

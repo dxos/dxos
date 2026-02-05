@@ -51,10 +51,13 @@
       "path": "../../core/echo/echo-db"
     },
     {
-      "path": "../../core/echo/live-object"
+      "path": "../../core/echo/echo-react"
     },
     {
       "path": "../../core/functions"
+    },
+    {
+      "path": "../../core/operation"
     },
     {
       "path": "../../sdk/app-framework"
@@ -75,13 +78,16 @@
       "path": "../../ui/react-ui-gameboard"
     },
     {
+      "path": "../../ui/react-ui-mosaic"
+    },
+    {
       "path": "../../ui/react-ui-sfx"
     },
     {
       "path": "../../ui/react-ui-stack"
     },
     {
-      "path": "../../ui/react-ui-theme"
+      "path": "../../ui/ui-theme"
     },
     {
       "path": "../plugin-client"

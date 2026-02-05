@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
-import { Capabilities, IntentPlugin, contributes, createSurface } from '@dxos/app-framework';
+import { Capability, Common, OperationPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
@@ -45,7 +45,7 @@ const DefaultStory = () => {
   }
 
   return (
-    <main className='is-full max-is-prose mli-auto bs-dvh overflow-hidden'>
+    <main className='is-full max-is-proseMaxWidth mli-auto bs-full overflow-hidden'>
       <ChatContainer space={space} thread={channel.defaultThread.target} />
     </main>
   );
@@ -58,11 +58,11 @@ const meta = {
   decorators: [
     withTheme,
     withPluginManager({
-      plugins: [IntentPlugin()],
+      plugins: [OperationPlugin()],
       capabilities: [
-        contributes(
-          Capabilities.ReactSurface,
-          createSurface({
+        Capability.contributes(
+          Common.Capability.ReactSurface,
+          Common.createSurface({
             id: 'test',
             role: 'card',
             component: ({ role }) => <span>{JSON.stringify({ role })}</span>,

@@ -8,7 +8,7 @@ import React, { memo, useEffect, useRef, useState } from 'react';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type ThemedClassName } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { useGameboardContext } from './Gameboard';
 import { type Location, isPiece } from './types';

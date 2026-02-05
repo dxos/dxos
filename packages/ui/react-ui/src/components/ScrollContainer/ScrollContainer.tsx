@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useState } from '@preact-signals/safe-react/react';
 import { createContext } from '@radix-ui/react-context';
 import React, {
   type HTMLAttributes,
@@ -13,13 +12,14 @@ import React, {
   useImperativeHandle,
   useMemo,
   useRef,
+  useState,
 } from 'react';
 
 // TODO(burdon): Move these deps to @dxos/dom-util.
 import { addEventListener, combine } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { useForwardedRef } from '@dxos/react-hooks';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { type ThemedClassName } from '../../util';
 import { IconButton } from '../Button';

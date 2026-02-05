@@ -6,8 +6,8 @@ import { Octokit } from '@octokit/core';
 import React, { type ChangeEvent, useCallback, useState } from 'react';
 
 import { ToolId } from '@dxos/ai';
-import { SettingsAction, createIntent } from '@dxos/app-framework';
-import { useIntentDispatcher } from '@dxos/app-framework/react';
+import { SettingsOperation } from '@dxos/app-framework';
+import { useOperationInvoker } from '@dxos/app-framework/react';
 import { Blueprint, Template } from '@dxos/blueprints';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { Function, type Script, getUserFunctionIdInMetadata } from '@dxos/functions';
@@ -44,7 +44,9 @@ export const ScriptProperties = ({ object }: ScriptObjectSettingsProps) => {
         placeholder={t('description placeholder')}
         value={object.description ?? ''}
         onChange={(event) => {
-          object.description = event.target.value;
+          Obj.change(object, (o) => {
+            o.description = event.target.value;
+          });
         }}
       />
     </Input.Root>
@@ -79,11 +81,15 @@ const BlueprintEditor = ({ object }: ScriptObjectSettingsProps) => {
     try {
       if (existingBlueprint) {
         const text = await existingBlueprint.instructions.source.load();
-        text.content = instructions;
+        Obj.change(text, (t) => {
+          t.content = instructions;
+        });
         if (fn?.key) {
           const toolId = ToolId.make(fn.key);
           if (!existingBlueprint.tools?.includes(toolId)) {
-            existingBlueprint.tools = [...(existingBlueprint.tools ?? []), toolId];
+            Obj.change(existingBlueprint, (b) => {
+              b.tools = [...(b.tools ?? []), toolId];
+            });
           }
         }
       } else if (fn?.key) {
@@ -161,7 +167,9 @@ const Binding = ({ object }: ScriptObjectSettingsProps) => {
   );
 
   const handleBindingBlur = useCallback(() => {
-    fn.binding = binding;
+    Obj.change(fn, (f) => {
+      f.binding = binding;
+    });
   }, [fn, binding]);
 
   if (!fn || !functionUrl) {
@@ -180,7 +188,9 @@ const Binding = ({ object }: ScriptObjectSettingsProps) => {
               disabled
               value={functionUrl}
               onChange={(event) => {
-                fn.name = event.target.value;
+                Obj.change(fn, (f) => {
+                  f.name = event.target.value;
+                });
               }}
             />
             <Clipboard.IconButton value={functionUrl} />
@@ -205,7 +215,7 @@ const Binding = ({ object }: ScriptObjectSettingsProps) => {
 // TODO(burdon): Move to separate tab?
 const Publishing = ({ object }: ScriptObjectSettingsProps) => {
   const { t } = useTranslation(meta.id);
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const { invokePromise } = useOperationInvoker();
   const db = Obj.getDatabase(object);
   const [githubToken] = useQuery(db, Filter.type(AccessToken.AccessToken, { source: 'github.com' }));
   const gistKey = Obj.getMeta(object).keys.find(({ source }) => source === 'github.com');
@@ -233,12 +243,10 @@ const Publishing = ({ object }: ScriptObjectSettingsProps) => {
 
   const handleOpenTokenManager = useCallback(
     () =>
-      dispatch(
-        createIntent(SettingsAction.Open, {
-          plugin: 'dxos.org/plugin/token-manager',
-        }),
-      ),
-    [],
+      invokePromise(SettingsOperation.Open, {
+        plugin: 'dxos.org/plugin/token-manager',
+      }),
+    [invokePromise],
   );
 
   const [publishing, setPublishing] = useState(false);
@@ -264,8 +272,11 @@ const Publishing = ({ object }: ScriptObjectSettingsProps) => {
           public: true,
           files,
         });
-        if (response.data.id) {
-          meta.keys.push({ source: 'github.com', id: response.data.id });
+        const gistId = response.data.id;
+        if (gistId) {
+          Obj.change(object, (obj) => {
+            Obj.getMeta(obj).keys.push({ source: 'github.com', id: gistId });
+          });
         }
       }
     } finally {

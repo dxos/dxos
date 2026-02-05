@@ -8,7 +8,7 @@ import { ForeignKey } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { type Comparator, intersection } from '@dxos/util';
 
-import { type AnyProperties, type WithMeta } from './base';
+import { type AnyProperties } from './base';
 
 /**
  * Property name for meta when object is serialized to JSON.
@@ -25,20 +25,19 @@ export const MetaId = Symbol.for('@dxos/echo/Meta');
 //
 
 // TODO(dmaretskyi): Rename to ObjectMeta
-export const ObjectMetaSchema = Schema.mutable(
-  Schema.Struct({
-    keys: Schema.mutable(Schema.Array(ForeignKey)),
+export const ObjectMetaSchema = Schema.Struct({
+  keys: Schema.Array(ForeignKey),
 
-    /**
-     * A set of tags.
-     * Tags are arbitrary application-defined strings.
-     * ECHO makes no assumptions about the tag structure.
-     */
-    // TODO(dmaretskyi): Has to be optional for compatibility with old data.
-    // Defaulting to an empty array is possible but requires a bit more work.
-    tags: Schema.optional(Schema.mutable(Schema.Array(Schema.String))),
-  }),
-);
+  /**
+   * A set of tags.
+   * Tags are arbitrary application-defined strings.
+   * ECHO makes no assumptions about the tag structure.
+   */
+  // TODO(dmaretskyi): Has to be optional for compatibility with old data.
+  // Defaulting to an empty array is possible but requires a bit more work.
+  tags: Schema.optional(Schema.Array(Schema.String)),
+});
+
 export type ObjectMeta = Schema.Schema.Type<typeof ObjectMetaSchema>;
 
 /*
@@ -52,16 +51,6 @@ export const getMeta = (obj: AnyProperties): ObjectMeta => {
   const metadata = (obj as any)[MetaId];
   invariant(metadata, 'ObjectMeta not found.');
   return metadata;
-};
-
-/**
- * Utility to split meta property from raw object.
- * @deprecated Bad API.
- */
-export const splitMeta = <T>(object: T & WithMeta): { object: T; meta?: ObjectMeta } => {
-  const meta = object[ATTR_META];
-  delete object[ATTR_META];
-  return { meta, object };
 };
 
 //

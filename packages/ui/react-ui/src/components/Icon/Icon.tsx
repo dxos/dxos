@@ -5,7 +5,7 @@
 import { type Primitive } from '@radix-ui/react-primitive';
 import React, { type ComponentPropsWithRef, forwardRef, memo } from 'react';
 
-import { type Size } from '@dxos/react-ui-types';
+import { type Size } from '@dxos/ui-types';
 
 import { useIconHref, useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';

@@ -4,7 +4,7 @@
 
 import { useContext } from 'react';
 
-import { type Elevation } from '@dxos/react-ui-types';
+import { type Elevation } from '@dxos/ui-types';
 
 import { ElevationContext } from '../components';
 

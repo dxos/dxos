@@ -50,6 +50,8 @@ const buildPromises = platforms.map(async ({ target, platform, arch, ext }) => {
     entrypoints: ['./src/bin.ts'],
     target: 'bun',
     plugins: [solidPlugin],
+    // TODO(wittjosiah): These aren't used by any cli plugins so why is this needed?
+    external: ['@dxos/react-ui-*'],
     compile: {
       target,
       outfile,
@@ -156,6 +158,7 @@ const mainPackage = {
   description: sourcePackage.description,
   homepage: sourcePackage.homepage,
   bugs: sourcePackage.bugs,
+  repository: sourcePackage.repository,
   license: sourcePackage.license,
   author: sourcePackage.author,
   type: 'commonjs',

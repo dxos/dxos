@@ -3,10 +3,10 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { SERVICES_CONFIG } from '@dxos/ai/testing';
-import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Agent } from '@dxos/assistant-toolkit';
 import { Filter } from '@dxos/echo';
@@ -16,7 +16,7 @@ import { AutomationPlugin } from '@dxos/plugin-automation';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { ExplorerPlugin } from '@dxos/plugin-explorer';
 import { Markdown, MarkdownPlugin } from '@dxos/plugin-markdown';
-import { SpacePlugin } from '@dxos/plugin-space';
+import { corePlugins } from '@dxos/plugin-testing';
 import { Config, useClient } from '@dxos/react-client';
 import { useQuery } from '@dxos/react-client/echo';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -28,20 +28,21 @@ import { Notebook } from '../types';
 
 import { NotebookContainer } from './NotebookContainer';
 
-const meta = {
+const meta: Meta<typeof NotebookContainer> = {
   title: 'plugins/plugin-script/NotebookContainer',
   component: NotebookContainer,
   render: (args) => {
     const client = useClient();
     const space = client.spaces.default;
     const notebooks = useQuery(space?.db, Filter.type(Notebook.Notebook));
-    return <NotebookContainer {...args} notebook={notebooks[0]} />;
+    return <NotebookContainer {...args} subject={notebooks[0]} />;
   },
   decorators: [
     withTheme,
-    withLayout({ container: 'column', classNames: 'is-prose' }),
+    withLayout({ layout: 'column', classNames: 'is-proseMaxWidth' }),
     withPluginManager({
       plugins: [
+        ...corePlugins(),
         ClientPlugin({
           // TODO(wittjosiah): ComputeRuntime requires edge to be configured or it will throw.
           config: new Config({
@@ -50,20 +51,18 @@ const meta = {
             },
           }),
           types: [...DataTypes, Notebook.Notebook, Function.Function, Markdown.Document],
-          onClientInitialized: async ({ client }) => {
-            await client.halo.createIdentity();
-            await client.spaces.waitUntilReady();
-            const space = client.spaces.default;
-            await space.waitUntilReady();
+          onClientInitialized: ({ client }) =>
+            Effect.gen(function* () {
+              yield* Effect.promise(() => client.halo.createIdentity());
+              yield* Effect.promise(() => client.spaces.waitUntilReady());
+              const space = client.spaces.default;
+              yield* Effect.promise(() => space.waitUntilReady());
 
-            space.db.add(createNotebook());
-            space.db.add(Markdown.make({ content: '# Hello World' }));
-            space.db.add(serializeFunction(Agent.prompt));
-          },
+              space.db.add(createNotebook());
+              space.db.add(Markdown.make({ content: '# Hello World' }));
+              space.db.add(serializeFunction(Agent.prompt));
+            }),
         }),
-        SpacePlugin({}),
-        SettingsPlugin(),
-        IntentPlugin(),
         AssistantPlugin(),
         AutomationPlugin(),
         ExplorerPlugin(),
@@ -74,10 +73,15 @@ const meta = {
   parameters: {
     translations,
   },
-} satisfies Meta<typeof NotebookContainer>;
+};
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {};
+export const Default: Story = {
+  args: {
+    role: 'article',
+    subject: undefined as any,
+  },
+};

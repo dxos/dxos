@@ -12,7 +12,8 @@ import React, { useEffect, useState } from 'react';
 import { scheduleTaskInterval } from '@dxos/async';
 import { Invitation, InvitationEncoder } from '@dxos/client/invitations';
 import { Context } from '@dxos/context';
-import { Filter, Obj, Type } from '@dxos/echo';
+import { Filter, Obj } from '@dxos/echo';
+import { TestSchema } from '@dxos/echo/testing';
 import { useClient, useConfig } from '@dxos/react-client';
 import { type SpaceId, type SpaceSyncState } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
@@ -47,13 +48,13 @@ export const SyncBench = () => {
   const [syncState, setSyncState] = useState<SpaceSyncState>();
   useEffect(() => {
     const ctx = new Context();
-    space?.db.subscribeToSyncState(ctx, (state) => {
+    space?.internal.db.subscribeToSyncState(ctx, (state) => {
       setSyncState(structuredClone(state));
     });
     scheduleTaskInterval(
       ctx,
       async () => {
-        setSyncState(structuredClone(await space?.db.getSyncState()));
+        setSyncState(structuredClone(await space?.internal.db.getSyncState()));
       },
       1000,
     );
@@ -63,7 +64,7 @@ export const SyncBench = () => {
     };
   }, [space]);
   const refreshSyncState = async () => {
-    setSyncState(structuredClone(await space?.db.getSyncState()));
+    setSyncState(structuredClone(await space?.internal.db.getSyncState()));
   };
 
   const handleInvite = async () => {
@@ -100,7 +101,7 @@ export const SyncBench = () => {
     }
     for (let i = 0; i < count; i++) {
       space.db.add(
-        Obj.make(Type.Expando, {
+        Obj.make(TestSchema.Expando, {
           data: crypto.randomUUID(),
         }),
       );

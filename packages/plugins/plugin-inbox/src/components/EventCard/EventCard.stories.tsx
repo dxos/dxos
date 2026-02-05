@@ -3,12 +3,14 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React from 'react';
+import React, { useMemo } from 'react';
 
+import { type SurfaceComponentProps } from '@dxos/app-framework/react';
+import { Obj } from '@dxos/echo';
 import { faker } from '@dxos/random';
 import { withTheme } from '@dxos/react-ui/testing';
-import { Card } from '@dxos/react-ui-stack';
-import { IntrinsicCardContainer } from '@dxos/storybook-utils';
+import { Card } from '@dxos/react-ui-mosaic';
+import { IntrinsicCardContainer } from '@dxos/react-ui-mosaic/testing';
 import { Event } from '@dxos/types';
 
 import { EventCard } from './EventCard';
@@ -19,7 +21,13 @@ const createMockEvent = (): Event.Event =>
   Event.make({
     startDate: new Date(Date.now() + 24 * 60 * 60 * 1_000).toISOString(),
     endDate: new Date(Date.now() + 24 * 60 * 60 * 2_000).toISOString(),
+    title: faker.lorem.sentence(3),
+    description: faker.lorem.sentences(2),
     attendees: [
+      {
+        name: faker.person.fullName(),
+        email: faker.internet.email(),
+      },
       {
         name: faker.person.fullName(),
         email: faker.internet.email(),
@@ -31,23 +39,30 @@ const createMockEvent = (): Event.Event =>
     },
   });
 
+// TODO(wittjosiah): ECHO objects don't work when passed via Storybook args.
+const EventCardStory = ({ role }: Pick<SurfaceComponentProps<Event.Event>, 'role'>) => {
+  const subject = useMemo(() => createMockEvent(), []);
+  return (
+    <IntrinsicCardContainer>
+      <Card.Root>
+        <Card.Toolbar>
+          <Card.DragHandle />
+          <Card.Title>{Obj.getLabel(subject)}</Card.Title>
+        </Card.Toolbar>
+        <EventCard role={role} subject={subject} />
+      </Card.Root>
+    </IntrinsicCardContainer>
+  );
+};
+
 const meta = {
   title: 'plugins/plugin-inbox/EventCard',
-  component: EventCard,
-  render: (args) => {
-    return (
-      <IntrinsicCardContainer>
-        <Card.StaticRoot>
-          <EventCard {...args} />
-        </Card.StaticRoot>
-      </IntrinsicCardContainer>
-    );
-  },
+  component: EventCardStory,
   decorators: [withTheme],
   parameters: {
-    layout: 'fullscreen',
+    layout: 'centered',
   },
-} satisfies Meta<typeof EventCard>;
+} satisfies Meta<typeof EventCardStory>;
 
 export default meta;
 
@@ -56,6 +71,5 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   args: {
     role: 'card--intrinsic',
-    subject: createMockEvent(),
   },
 };

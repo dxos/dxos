@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 export const shortcutKey = mx(
   'inline-flex min-is-[24px] bs-[24px] pli-0.5 justify-center items-center text-xs',

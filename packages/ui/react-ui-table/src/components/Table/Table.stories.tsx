@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import React, { useCallback } from 'react';
 
 import { Annotation, type Database, Format, Obj, type QueryAST, Type } from '@dxos/echo';
-import { PropertyMetaAnnotationId } from '@dxos/echo/internal';
+import { type Mutable, PropertyMetaAnnotationId } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { faker } from '@dxos/random';
 import { PublicKey } from '@dxos/react-client';
@@ -17,6 +17,7 @@ import { ViewEditor, translations as formTranslations } from '@dxos/react-ui-for
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { View, getSchemaFromPropertyDefinitions, getTypenameFromQuery } from '@dxos/schema';
 import { TestSchema, createObjectFactory } from '@dxos/schema/testing';
+import { withRegistry } from '@dxos/storybook-utils';
 
 import { useTestTableModel } from '../../testing';
 import { translations } from '../../translations';
@@ -50,7 +51,7 @@ const Example = Schema.Struct({
     title: 'Parent',
   }),
 }).pipe(
-  Type.Obj({ typename: `example.com/type/${PublicKey.random().truncate()}`, version: '0.1.0' }),
+  Type.object({ typename: `example.com/type/${PublicKey.random().truncate()}`, version: '0.1.0' }),
   Annotation.LabelAnnotation.set(['name']),
 );
 interface Example extends Schema.Schema.Type<typeof Example> {}
@@ -72,7 +73,9 @@ const StoryViewEditor = ({
       invariant(Type.isMutable(schema));
       schema.updateTypename(getTypenameFromQuery(newQuery));
       invariant(view);
-      view.query.ast = newQuery;
+      Obj.change(view, (v) => {
+        v.query.ast = newQuery as Mutable<typeof newQuery>;
+      });
     },
     [schema, view],
   );
@@ -141,6 +144,7 @@ const meta = {
   render: DefaultStory,
   decorators: [
     withTheme,
+    withRegistry,
     withClientProvider({
       types: [View.View, Table.Table],
       createIdentity: true,
@@ -149,10 +153,12 @@ const meta = {
         const [schema] = await space.db.schemaRegistry.register([Example]);
         const { view, jsonSchema } = await View.makeFromDatabase({ db: space.db, typename: schema.typename });
         const table = Table.make({ view, jsonSchema });
-        view.projection.fields = [
-          view.projection.fields.find((field: any) => field.path === 'name')!,
-          ...view.projection.fields.filter((field: any) => field.path !== 'name'),
-        ];
+        Obj.change(view, (v) => {
+          v.projection.fields = [
+            v.projection.fields.find((field) => field.path === 'name')!,
+            ...v.projection.fields.filter((field) => field.path !== 'name'),
+          ];
+        });
 
         space.db.add(table);
 
@@ -223,7 +229,7 @@ const ContactWithArrayOfEmails = Schema.Struct({
     ),
   ),
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/ContactWithArrayOfEmails',
     version: '0.1.0',
   }),

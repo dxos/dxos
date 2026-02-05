@@ -2,23 +2,22 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Signal, useSignal } from '@preact/signals-react';
 import { createContext } from '@radix-ui/react-context';
-import React, { type PropsWithChildren, useMemo } from 'react';
+import React, { type PropsWithChildren, useMemo, useState } from 'react';
 
 import { type DXN } from '@dxos/echo';
 import { Icon, type ThemedClassName, useThemeContext } from '@dxos/react-ui';
+import { useTextEditor } from '@dxos/react-ui-editor';
+import { MenuProvider, ToolbarMenu } from '@dxos/react-ui-menu';
+import { type Actor, type Message as MessageType } from '@dxos/types';
 import {
   createBasicExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
   decorateMarkdown,
   preview,
-  useTextEditor,
-} from '@dxos/react-ui-editor';
-import { MenuProvider, ToolbarMenu } from '@dxos/react-ui-menu';
-import { mx } from '@dxos/react-ui-theme';
-import { type Actor, type Message as MessageType } from '@dxos/types';
+} from '@dxos/ui-editor';
+import { mx } from '@dxos/ui-theme';
 
 import { formatDateTime } from '../../util';
 import { UserIconButton } from '../common';
@@ -32,9 +31,13 @@ import { type ViewMode, useMessageToolbarActions } from './useToolbar';
 // TODO(burdon): Create pattern for 1-up.
 type MessageContextValue = {
   attendableId?: string;
-  viewMode: Signal<ViewMode>;
+  viewMode: ViewMode;
+  setViewMode: (mode: ViewMode) => void;
   message: MessageType.Message;
-  sender: Signal<DXN | undefined>;
+  sender: DXN | undefined;
+  onReply?: () => void;
+  onReplyAll?: () => void;
+  onForward?: () => void;
 };
 
 const [MessageContextProvider, useMessageContext] = createContext<MessageContextValue>('Message');
@@ -43,13 +46,29 @@ const [MessageContextProvider, useMessageContext] = createContext<MessageContext
 // Root
 //
 
-type MessageRootProps = PropsWithChildren<Omit<MessageContextValue, 'viewMode'> & { viewMode?: ViewMode }>;
+type MessageRootProps = PropsWithChildren<
+  Omit<MessageContextValue, 'viewMode' | 'setViewMode'> & { viewMode?: ViewMode }
+>;
 
-const MessageRoot = ({ children, viewMode: viewModeParam = 'plain', ...props }: MessageRootProps) => {
-  const viewMode = useSignal(viewModeParam);
+const MessageRoot = ({
+  children,
+  viewMode: viewModeProp = 'plain',
+  onReply,
+  onReplyAll,
+  onForward,
+  ...props
+}: MessageRootProps) => {
+  const [viewMode, setViewMode] = useState(viewModeProp);
 
   return (
-    <MessageContextProvider viewMode={viewMode} {...props}>
+    <MessageContextProvider
+      viewMode={viewMode}
+      setViewMode={setViewMode}
+      onReply={onReply}
+      onReplyAll={onReplyAll}
+      onForward={onForward}
+      {...props}
+    >
       {children}
     </MessageContextProvider>
   );
@@ -64,8 +83,10 @@ MessageRoot.displayName = 'Message.Root';
 type MessageToolbarProps = ThemedClassName<{}>;
 
 export const MessageToolbar = ({ classNames }: MessageToolbarProps) => {
-  const { attendableId, viewMode } = useMessageContext(MessageToolbar.displayName);
-  const actions = useMessageToolbarActions({ viewMode });
+  const { attendableId, viewMode, setViewMode, onReply, onReplyAll, onForward } = useMessageContext(
+    MessageToolbar.displayName,
+  );
+  const actions = useMessageToolbarActions({ viewMode, setViewMode, onReply, onReplyAll, onForward });
 
   return (
     <MenuProvider {...actions} attendableId={attendableId}>
@@ -127,7 +148,11 @@ const MessageHeader = ({ onContactCreate }: MessageHeaderProps) => {
       {/* TODO(burdon): List other To/CC/BCC. */}
       <div role='none'>
         <div role='none' className='grid grid-cols-[2rem_1fr] gap-1 items-center'>
-          <UserIconButton value={sender.value} onContactCreate={() => onContactCreate?.(message.sender)} />
+          <UserIconButton
+            title={message.sender.name}
+            value={sender}
+            onContactCreate={() => onContactCreate?.(message.sender)}
+          />
           <h3 className='truncate text-primaryText'>{message.sender.name || message.sender.email}</h3>
         </div>
       </div>
@@ -151,7 +176,7 @@ const MessageContent = ({ classNames }: MessageContentProps) => {
   // Otherwise show enriched content (second block).
   const content = useMemo(() => {
     const textBlocks = message.blocks.filter((block) => 'text' in block);
-    if (viewMode.value === 'plain-only' || viewMode.value === 'plain') {
+    if (viewMode === 'plain-only' || viewMode === 'plain') {
       return textBlocks[0]?.text || '';
     }
 

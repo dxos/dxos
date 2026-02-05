@@ -98,6 +98,12 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
     // Nothing to do.
   }
 
+  public hasSchema(schema: Type.Entity.Any): boolean {
+    const schemaId = schema instanceof Type.RuntimeType ? schema.id : getObjectIdFromSchema(schema);
+    return schemaId != null && this.getSchemaById(schemaId) != null;
+  }
+
+  // TODO(burdon): Refactor: this is too complex and untestable.
   query<Q extends Types.NoExcessProperties<SchemaRegistry.Query, Q>>(
     _query?: Q & SchemaRegistry.Query,
   ): QueryResult.QueryResult<SchemaRegistry.ExtractQueryResult<Q>> {
@@ -108,7 +114,7 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
     type Entry =
       | {
           source: 'runtime';
-          schema: Schema.Schema.AnyNoContext;
+          schema: Type.Entity.Any;
         }
       | {
           source: 'database';
@@ -283,11 +289,6 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
     return results;
   }
 
-  public hasSchema(schema: Type.Entity.Any): boolean {
-    const schemaId = schema instanceof Type.RuntimeType ? schema.id : getObjectIdFromSchema(schema);
-    return schemaId != null && this.getSchemaById(schemaId) != null;
-  }
-
   /**
    * @deprecated Use `query` instead.
    */
@@ -361,8 +362,9 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
   }
 
   // TODO(dmaretskyi): Figure out how to migrate the usages to the async `register` method.
-  private _addSchema(schema: Type.Entity.Any): Type.RuntimeType {
+  private _addSchema(schema: Schema.Schema.AnyNoContext): Type.RuntimeType {
     if (schema instanceof Type.RuntimeType) {
+      // The snapshot preserves typename/version in annotations.
       schema = schema.snapshot.annotations({
         [TypeIdentifierAnnotationId]: undefined,
       });

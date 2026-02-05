@@ -5,8 +5,8 @@
 import { HighlightStyle, StreamLanguage, syntaxHighlighting } from '@codemirror/language';
 import { type Extension } from '@codemirror/state';
 
-import { tags } from '@dxos/react-ui-editor';
-import { mx } from '@dxos/react-ui-theme';
+import { tags } from '@dxos/ui-editor';
+import { mx } from '@dxos/ui-theme';
 
 /**
  * https://github.com/codemirror/stream-parser/blob/main/test/test-stream-parser.ts

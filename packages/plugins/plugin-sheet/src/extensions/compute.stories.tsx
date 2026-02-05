@@ -5,21 +5,21 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useMemo } from 'react';
 
-import { IntentPlugin } from '@dxos/app-framework';
+import { OperationPlugin, RuntimePlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { PublicKey } from '@dxos/keys';
 import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { useThemeContext } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
+import { useTextEditor } from '@dxos/react-ui-editor';
 import {
   createBasicExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
   decorateMarkdown,
   documentId,
-  useTextEditor,
-} from '@dxos/react-ui-editor';
+} from '@dxos/ui-editor';
 import { isNonNullable } from '@dxos/util';
 
 import { GridSheet, SheetProvider, useComputeGraph } from '../components';
@@ -73,7 +73,12 @@ const Grid = () => {
   const model = useSheetModel(graph, sheet);
   useEffect(() => {
     if (model) {
-      model.setValues({ A1: { value: 100 }, A2: { value: 200 }, A3: { value: 300 }, A5: { value: '=SUM(A1:A3)' } });
+      model.setValues({
+        A1: { value: 100 },
+        A2: { value: 200 },
+        A3: { value: 300 },
+        A5: { value: '=SUM(A1:A3)' },
+      });
     }
   }, [model]);
 
@@ -103,9 +108,13 @@ const meta = {
   title: 'plugins/plugin-sheet/extensions',
   decorators: [
     withTheme,
-    withClientProvider({ types: [Sheet.Sheet], createIdentity: true, createSpace: true }),
+    withClientProvider({
+      types: [Sheet.Sheet],
+      createIdentity: true,
+      createSpace: true,
+    }),
     // TODO(wittjosiah): Try to write story which does not depend on plugin manager.
-    withPluginManager({ plugins: [IntentPlugin()] }),
+    withPluginManager({ plugins: [OperationPlugin(), RuntimePlugin()] }),
     withComputeGraphDecorator(),
   ],
   parameters: {

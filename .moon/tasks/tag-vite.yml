@@ -17,6 +17,7 @@ tasks:
       - $DX_MINIFY
       - $DX_PWA
       - $DX_SENTRY_DESTINATION
+      - $DX_SHARED_WORKER
       - $DX_TELEMETRY_API_KEY
       - $LOG_FILTER
       - $LOG_PREFIX
@@ -36,3 +37,6 @@ tasks:
     deps:
       - bundle
     preset: server
+
+inheritedBy:
+  tags: vite

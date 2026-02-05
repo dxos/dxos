@@ -4,8 +4,8 @@
 
 import { DEFAULT_INPUT, DEFAULT_OUTPUT } from '@dxos/conductor';
 import { Obj } from '@dxos/echo';
+import { isProxy } from '@dxos/echo/internal';
 import { type Graph, GraphModel } from '@dxos/graph';
-import { isLiveObject } from '@dxos/live-object';
 import { type MakeOptional } from '@dxos/util';
 
 import { type Connection, type Shape } from './schema';
@@ -17,7 +17,7 @@ export class CanvasGraphModel<S extends Shape = Shape> extends GraphModel.Abstra
   CanvasGraphBuilder<S>
 > {
   static create<S extends Shape>(graph?: Partial<Graph.Any>): CanvasGraphModel<S> {
-    if (isLiveObject(graph) as any) {
+    if (isProxy(graph) as any) {
       return new CanvasGraphModel<S>(graph as Graph.Graph<S, Connection>);
     }
 

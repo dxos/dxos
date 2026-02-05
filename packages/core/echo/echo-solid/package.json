@@ -4,9 +4,13 @@
   "description": "Solid.js integration for ECHO.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
   "license": "MIT",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "exports": {
     ".": {
@@ -28,6 +32,7 @@
     "@dxos/echo": "workspace:*",
     "@dxos/echo-atom": "workspace:*",
     "@dxos/effect-atom-solid": "workspace:*",
+    "@effect-atom/atom": "catalog:",
     "@solid-primitives/utils": "catalog:"
   },
   "devDependencies": {

@@ -51,7 +51,7 @@ const meta = {
       </>
     );
   },
-  decorators: [withTheme, withLayout({ container: 'column' })],
+  decorators: [withTheme, withLayout({ layout: 'column' })],
   parameters: {
     translations,
   },

@@ -2,14 +2,23 @@
 // Copyright 2025 DXOS.org
 //
 
-import { computed, untracked } from '@preact/signals-core';
+import { Atom, Registry } from '@effect-atom/atom-react';
 import * as Schema from 'effect/Schema';
 
-import { Format } from '@dxos/echo';
-import { type JsonProp, type JsonSchemaType, TypeEnum, formatToType, typeToFormat } from '@dxos/echo/internal';
+import { Format, Obj } from '@dxos/echo';
+import {
+  type EchoSchema,
+  type JsonProp,
+  type JsonSchemaType,
+  type Mutable,
+  TypeEnum,
+  formatToType,
+  typeToFormat,
+} from '@dxos/echo/internal';
 import { createSchemaReference, getSchemaReference } from '@dxos/echo/internal';
+import { getSnapshot } from '@dxos/echo/internal';
+import { AtomObj } from '@dxos/echo-atom';
 import { invariant } from '@dxos/invariant';
-import { type Live, getSnapshot } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { omit, pick } from '@dxos/util';
 
@@ -30,23 +39,184 @@ export type FieldProjection = {
 };
 
 /**
+ * Callback type for wrapping mutations in Obj.change().
+ * Contains separate callbacks for projection and schema mutations
+ * since Obj.change() cannot be nested.
+ * Note: Callbacks return void because Obj.change() returns void.
+ * Uses Mutable<T> to allow mutations within the callbacks since schemas are readonly by default.
+ */
+export type ProjectionChangeCallback = {
+  /** Callback to wrap projection mutations. */
+  projection: (mutate: (mutableProjection: Mutable<View.Projection>) => void) => void;
+  /** Callback to wrap schema mutations. */
+  schema: (mutate: (mutableSchema: Mutable<JsonSchemaType>) => void) => void;
+};
+
+/**
+ * Creates a change callback for ECHO-backed View and EchoSchema objects.
+ * Use this when the view is stored in the ECHO database.
+ *
+ * Note: Type assertions are needed because:
+ * 1. PersistentSchema's type doesn't include [KindId] but runtime value does
+ * 2. Inside Obj.change, the mutable object has different type constraints
+ *
+ * @param view - The ECHO-backed view object.
+ * @param schema - Optional EchoSchema. If not provided, schema mutations will throw.
+ */
+export const createEchoChangeCallback = (view: View.View, schema?: EchoSchema): ProjectionChangeCallback => ({
+  // Inside Obj.change, v is Mutable<View.View>, so v.projection is already mutable.
+  projection: (mutate) => Obj.change(view, (v) => mutate(v.projection as Mutable<View.Projection>)),
+  schema: schema
+    ? (mutate) => Obj.change(schema.persistentSchema as unknown as Obj.Unknown, (s: any) => mutate(s.jsonSchema))
+    : () => {
+        throw new Error('Schema is not mutable');
+      },
+});
+
+/**
+ * Creates a change callback that directly mutates objects without wrapping.
+ * Use this for plain JavaScript objects (tests, non-ECHO scenarios).
+ * Cast to mutable types since these are non-ECHO objects that can be directly mutated.
+ */
+export const createDirectChangeCallback = (
+  projection: View.Projection,
+  schema: JsonSchemaType,
+): ProjectionChangeCallback => ({
+  projection: (mutate) => mutate(projection as Mutable<View.Projection>),
+  schema: (mutate) => mutate(schema as Mutable<JsonSchemaType>),
+});
+
+/**
+ * Props for creating a ProjectionModel.
+ */
+export type ProjectionModelProps = {
+  /** Registry for atom management. Optional - if not provided, atoms won't be created. */
+  registry?: Registry.Registry;
+  /** The View object (for subscriptions). */
+  view: View.View;
+  /** The base JSON schema of the data being projected. */
+  baseSchema: JsonSchemaType;
+  /**
+   * Callbacks to wrap mutations in Obj.change().
+   * Use createEchoChangeCallback() for ECHO-backed objects or createDirectChangeCallback() for plain objects.
+   */
+  change: ProjectionChangeCallback;
+};
+
+/**
  * Wrapper for Projection that manages Field and Format updates.
+ * Exposes atoms for reactive access.
  */
 export class ProjectionModel {
   private readonly _encode = Schema.encodeSync(PropertySchema);
   private readonly _decode = Schema.decodeSync(PropertySchema, {});
 
-  private _visibleFields = computed(() => this._projection.fields.filter((field) => field.visible !== false));
-  private _hiddenFields = computed(() => this._projection.fields.filter((field) => field.visible === false));
-  private _fieldProjections = computed(() => this._projection.fields.map((field) => this.getFieldProjection(field.id)));
-  private _hiddenProperties = computed(() => this._hiddenFields.value.map((field) => field.path as string) ?? []);
+  private readonly _registry: Registry.Registry;
+  private readonly _view: View.View;
+  private readonly _baseSchema: JsonSchemaType;
+  private readonly _change: ProjectionChangeCallback;
 
-  // TOOD(burdon): Take an instance of S.S.AnyNoContext and derive the JsonSchemaType (and watch for reactivity)?
-  constructor(
-    // TODO(burdon): Pass in boolean readonly?
-    private readonly _baseSchema: Live<JsonSchemaType>,
-    private readonly _projection: Live<View.Projection>,
-  ) {}
+  // Internal atoms.
+  private readonly _viewAtom: Atom.Atom<Obj.Snapshot<View.View>>;
+  private readonly _projectionAtom: Atom.Atom<View.Projection>;
+  private readonly _fieldsAtom: Atom.Atom<readonly FieldType[]>;
+  private readonly _hiddenFieldsAtom: Atom.Atom<readonly FieldType[]>;
+  private readonly _allFieldsAtom: Atom.Atom<readonly FieldType[]>;
+
+  constructor({ registry = Registry.make(), view, baseSchema, change }: ProjectionModelProps) {
+    this._registry = registry;
+    this._view = view;
+    this._baseSchema = baseSchema;
+    this._change = change;
+
+    this._viewAtom = AtomObj.make(this._view);
+
+    // Derived atom that extracts projection from the view snapshot.
+    this._projectionAtom = Atom.make((get) => {
+      const view = get(this._viewAtom);
+      return view.projection;
+    });
+
+    // Derived atoms for filtered fields.
+    this._fieldsAtom = Atom.make((get) => {
+      const projection = get(this._projectionAtom);
+      return projection.fields.filter((field) => field.visible !== false);
+    });
+
+    this._hiddenFieldsAtom = Atom.make((get) => {
+      const projection = get(this._projectionAtom);
+      return projection.fields.filter((field) => field.visible === false);
+    });
+
+    this._allFieldsAtom = Atom.make((get) => {
+      const projection = get(this._projectionAtom);
+      return projection.fields;
+    });
+  }
+
+  //
+  // Atom getters for reactive access
+  //
+
+  /**
+   * Atom for the visible fields in the projection.
+   */
+  get fields(): Atom.Atom<readonly FieldType[]> {
+    return this._fieldsAtom;
+  }
+
+  /**
+   * Atom for the hidden fields in the projection.
+   */
+  get hiddenFields(): Atom.Atom<readonly FieldType[]> {
+    return this._hiddenFieldsAtom;
+  }
+
+  /**
+   * Atom for all fields in the projection (both visible and hidden).
+   */
+  get allFields(): Atom.Atom<readonly FieldType[]> {
+    return this._allFieldsAtom;
+  }
+
+  /**
+   * Atom for the core projection data type.
+   */
+  get projection(): Atom.Atom<View.Projection> {
+    return this._projectionAtom;
+  }
+
+  //
+  // Synchronous getters for imperative access
+  //
+
+  /**
+   * Gets the current visible fields array.
+   */
+  getFields(): readonly FieldType[] {
+    return this._registry.get(this._fieldsAtom);
+  }
+
+  /**
+   * Gets the current hidden fields array.
+   */
+  getHiddenFields(): readonly FieldType[] {
+    return this._registry.get(this._hiddenFieldsAtom);
+  }
+
+  /**
+   * Gets the current all fields array.
+   */
+  getAllFields(): readonly FieldType[] {
+    return this._registry.get(this._allFieldsAtom);
+  }
+
+  /**
+   * Gets the current projection value.
+   */
+  getProjection(): View.Projection {
+    return this._registry.get(this._projectionAtom);
+  }
 
   /**
    * The base schema of the data being projected.
@@ -56,55 +226,26 @@ export class ProjectionModel {
   }
 
   /**
-   * The core projection data type.
-   */
-  get data(): Live<View.Projection> {
-    return this._projection;
-  }
-
-  /**
-   * The visible fields in the projection.
-   * @reactive
-   */
-  get fields() {
-    return this._visibleFields.value;
-  }
-
-  /**
-   * The hidden fields in the projection.
-   * @reactive
-   */
-  get hiddenFields() {
-    return this._hiddenFields.value;
-  }
-
-  /**
-   * All fields in the projection (both visible and hidden).
-   * @reactive
-   */
-  get allFields() {
-    return this._projection.fields;
-  }
-
-  /**
    * Construct a new property.
    */
   createFieldProjection(): FieldType {
-    invariant(this._projection.fields.length < VIEW_FIELD_LIMIT, `Field limit reached: ${VIEW_FIELD_LIMIT}`);
+    invariant(this._view.projection.fields.length < VIEW_FIELD_LIMIT, `Field limit reached: ${VIEW_FIELD_LIMIT}`);
 
     const field: FieldType = {
       id: createFieldId(),
-      path: createUniqueProperty(this._projection),
+      path: createUniqueProperty(this._view.projection),
       visible: true,
     };
 
     log('createFieldProjection', { field });
-    this._projection.fields.push(field);
+    this._change.projection((projection) => {
+      projection.fields.push(field);
+    });
     return field;
   }
 
   getFieldId(path: string): string | undefined {
-    return this._projection.fields.find((field) => field.path === path)?.id;
+    return this._view.projection.fields.find((field) => field.path === path)?.id;
   }
 
   /**
@@ -112,7 +253,7 @@ export class ProjectionModel {
    */
   getFieldProjection(fieldId: string): FieldProjection {
     invariant(this._baseSchema.properties);
-    const field = this._projection.fields.find((field) => field.id === fieldId);
+    const field = this._view.projection.fields.find((field) => field.id === fieldId);
     invariant(field, `invalid field: ${fieldId}`);
     invariant(field.path.indexOf('.') === -1);
 
@@ -167,7 +308,7 @@ export class ProjectionModel {
    */
   tryGetFieldProjection(fieldId: string): FieldProjection | undefined {
     invariant(this._baseSchema.properties);
-    const field = this._projection.fields.find((field) => field.id === fieldId);
+    const field = this._view.projection.fields.find((field) => field.id === fieldId);
     if (!field) {
       return undefined;
     }
@@ -176,28 +317,26 @@ export class ProjectionModel {
   }
 
   /**
-   * Get all field projections
-   * @reactive
+   * Get all field projections.
    */
   getFieldProjections(): FieldProjection[] {
-    return this._fieldProjections.value;
+    return this._view.projection.fields.map((field) => this.getFieldProjection(field.id));
   }
 
   /**
    * Identifies schema properties not visible in the current view projection.
    * @returns Schema property names that aren't mapped to any view field path, returned as an alphabetically sorted string array.
-   * @reactive
    */
   getHiddenProperties(): string[] {
-    return this._hiddenProperties.value;
+    return this.getHiddenFields().map((field) => field.path as string) ?? [];
   }
 
   /**
    * Hides a field from the view by setting its visible flag to false.
    */
   hideFieldProjection(fieldId: string): void {
-    untracked(() => {
-      const field = this._projection.fields.find((field) => field.id === fieldId);
+    this._change.projection((projection) => {
+      const field = projection.fields.find((field) => field.id === fieldId);
       if (field) {
         field.visible = false;
       }
@@ -205,15 +344,15 @@ export class ProjectionModel {
   }
 
   showFieldProjection(property: JsonProp): void {
-    untracked(() => {
-      invariant(this._baseSchema.properties);
-      invariant(property in this._baseSchema.properties);
+    invariant(this._baseSchema.properties);
+    invariant(property in this._baseSchema.properties);
 
-      const existingField = this._projection.fields.find((field) => field.path === property);
+    this._change.projection((projection) => {
+      const existingField = projection.fields.find((field) => field.path === property);
       if (existingField) {
         existingField.visible = true;
       } else {
-        this._projection.fields.unshift({
+        projection.fields.unshift({
           id: createFieldId(),
           path: property,
           visible: true,
@@ -230,115 +369,137 @@ export class ProjectionModel {
   setFieldProjection({ field, props }: Partial<FieldProjection>, index?: number): void {
     log('setFieldProjection', { field, props, index });
 
-    untracked(() => {
-      const sourcePropertyName = field?.path;
-      const targetPropertyName = props?.property;
-      const hasSourceAndTarget = !!sourcePropertyName && !!targetPropertyName;
-      const isRename = hasSourceAndTarget && sourcePropertyName !== targetPropertyName;
+    const sourcePropertyName = field?.path;
+    const targetPropertyName = props?.property;
+    const hasSourceAndTarget = !!sourcePropertyName && !!targetPropertyName;
+    const isRename = hasSourceAndTarget && sourcePropertyName !== targetPropertyName;
 
-      if (targetPropertyName) {
-        const existingField = this._projection.fields.find((field) => field.path === targetPropertyName);
-        if (existingField && existingField.visible === false) {
-          existingField.visible = true;
+    // Update projection fields.
+    if (field || targetPropertyName) {
+      this._change.projection((projection) => {
+        if (targetPropertyName) {
+          const existingField = projection.fields.find((f) => f.path === targetPropertyName);
+          if (existingField && existingField.visible === false) {
+            existingField.visible = true;
+          }
         }
-      }
 
-      // TODO(burdon): Set field if does not exist.
-      if (field) {
-        const propsValues = props ? (pick(props, ['referencePath']) as Partial<FieldType>) : undefined;
-        const clonedField: FieldType = { ...field, ...propsValues };
-        const fieldIndex = this._projection.fields.findIndex((field) => field.path === sourcePropertyName);
-        if (fieldIndex === -1) {
-          invariant(this._projection.fields.length < VIEW_FIELD_LIMIT, `Field limit reached: ${VIEW_FIELD_LIMIT}`);
-          if (index !== undefined && index >= 0 && index <= this._projection.fields.length) {
-            this._projection.fields.splice(index, 0, clonedField);
+        // TODO(burdon): Set field if does not exist.
+        if (field) {
+          const propsValues = props ? (pick(props, ['referencePath']) as Partial<FieldType>) : undefined;
+          const clonedField: FieldType = { ...field, ...propsValues };
+          const fieldIndex = projection.fields.findIndex((f) => f.path === sourcePropertyName);
+          if (fieldIndex === -1) {
+            invariant(projection.fields.length < VIEW_FIELD_LIMIT, `Field limit reached: ${VIEW_FIELD_LIMIT}`);
+            if (index !== undefined && index >= 0 && index <= projection.fields.length) {
+              projection.fields.splice(index, 0, clonedField);
+            } else {
+              projection.fields.push(clonedField);
+            }
           } else {
-            this._projection.fields.push(clonedField);
+            Object.assign(
+              projection.fields[fieldIndex],
+              clonedField,
+              isRename ? { path: targetPropertyName } : undefined,
+            );
           }
-        } else {
-          Object.assign(this.allFields[fieldIndex], clonedField, isRename ? { path: targetPropertyName } : undefined);
+        }
+      });
+    }
+
+    // Update schema properties.
+    if (props) {
+      let { property, type, format, referenceSchema, options, ...rest }: Partial<PropertyType> = this._encode(
+        omit(props, ['referencePath']),
+      );
+      invariant(property);
+      invariant(format);
+
+      const jsonProperty: Mutable<JsonSchemaType> = {};
+
+      if (referenceSchema) {
+        Object.assign(jsonProperty, createSchemaReference(referenceSchema));
+        return;
+      } else if (format) {
+        type = formatToType[format];
+      }
+
+      if (options) {
+        if (format === Format.TypeFormat.SingleSelect) {
+          makeSingleSelectAnnotations(jsonProperty, options);
+        }
+
+        if (format === Format.TypeFormat.MultiSelect) {
+          makeMultiSelectAnnotations(jsonProperty, options);
         }
       }
 
-      if (props) {
-        let { property, type, format, referenceSchema, options, ...rest }: Partial<PropertyType> = this._encode(
-          omit(props, ['referencePath']),
-        );
-        invariant(property);
-        invariant(format);
-
-        const jsonProperty: JsonSchemaType = {};
-
-        if (referenceSchema) {
-          Object.assign(jsonProperty, createSchemaReference(referenceSchema));
-          return;
-        } else if (format) {
-          type = formatToType[format];
-        }
-
-        if (options) {
-          if (format === Format.TypeFormat.SingleSelect) {
-            makeSingleSelectAnnotations(jsonProperty, options);
-          }
-
-          if (format === Format.TypeFormat.MultiSelect) {
-            makeMultiSelectAnnotations(jsonProperty, options);
-          }
-        }
-
-        invariant(type !== TypeEnum.Ref);
-        this._baseSchema.properties ??= {};
-        this._baseSchema.properties[property] = { type, format, ...jsonProperty, ...rest };
+      invariant(type !== TypeEnum.Ref);
+      this._change.schema((baseSchema) => {
+        baseSchema.properties ??= {};
+        // Type assertion needed: Property values from the readonly schema may contain
+        // readonly nested types, but we're in a mutation context.
+        baseSchema.properties[property!] = {
+          type,
+          format,
+          ...jsonProperty,
+          ...rest,
+        } as Mutable<JsonSchemaType>;
         if (isRename) {
-          delete this._baseSchema.properties[sourcePropertyName!];
+          delete baseSchema.properties[sourcePropertyName!];
 
           // Update propertyOrder array if it exists
-          if (this._baseSchema.propertyOrder) {
-            const orderIndex = this._baseSchema.propertyOrder.indexOf(sourcePropertyName!);
+          if (baseSchema.propertyOrder) {
+            const orderIndex = baseSchema.propertyOrder.indexOf(sourcePropertyName!);
             if (orderIndex !== -1) {
-              this._baseSchema.propertyOrder[orderIndex] = property;
+              baseSchema.propertyOrder[orderIndex] = property!;
             }
           }
 
           // Update required array if it exists
-          if (this._baseSchema.required) {
-            const requiredIndex = this._baseSchema.required.indexOf(sourcePropertyName!);
+          if (baseSchema.required) {
+            const requiredIndex = baseSchema.required.indexOf(sourcePropertyName!);
             if (requiredIndex !== -1) {
-              this._baseSchema.required[requiredIndex] = property;
+              baseSchema.required[requiredIndex] = property!;
             }
           }
         }
-      }
-    });
+      });
+    }
   }
 
   /**
    * Delete a field from the view and return the deleted projection for potential undo.
    */
   deleteFieldProjection(fieldId: string): { deleted: FieldProjection; index: number } {
-    return untracked(() => {
-      // NOTE(ZaymonFC): We need to clone this because the underlying object is going to be modified.
-      const current = this.getFieldProjection(fieldId);
-      invariant(current, `Field projection not found for fieldId: ${fieldId}`);
+    // NOTE(ZaymonFC): We need to clone this because the underlying object is going to be modified.
+    const current = this.getFieldProjection(fieldId);
+    invariant(current, `Field projection not found for fieldId: ${fieldId}`);
 
-      const snapshot = getSnapshot(current);
+    const snapshot = getSnapshot(current);
 
-      // Delete field.
-      const fieldIndex = this._projection.fields.findIndex((field) => field.id === fieldId);
-      if (fieldIndex !== -1) {
-        this._projection.fields.splice(fieldIndex, 1);
+    // Calculate field index before deleting (Obj.change returns void, so we can't get return values from the callback).
+    const fieldIndex = this._view.projection.fields.findIndex((field) => field.id === fieldId);
+
+    // Delete field from projection.
+    this._change.projection((projection) => {
+      const idx = projection.fields.findIndex((field) => field.id === fieldId);
+      if (idx !== -1) {
+        projection.fields.splice(idx, 1);
       }
-
-      // Delete property.
-      invariant(this._baseSchema.properties, 'Schema properties must exist');
-      invariant(snapshot.field.path, 'Field path must exist');
-      delete this._baseSchema.properties[snapshot.field.path];
-
-      // check that it's actually gone
-      invariant(!this._baseSchema.properties[snapshot.field.path], 'Field path still exists');
-
-      return { deleted: snapshot, index: fieldIndex };
     });
+
+    // Delete property from schema.
+    this._change.schema((baseSchema) => {
+      invariant(baseSchema.properties, 'Schema properties must exist');
+      invariant(snapshot.field.path, 'Field path must exist');
+      delete baseSchema.properties[snapshot.field.path];
+
+      // Check that it's actually gone.
+      invariant(!baseSchema.properties[snapshot.field.path], 'Field path still exists');
+    });
+
+    return { deleted: snapshot, index: fieldIndex };
   }
 
   /**
@@ -347,26 +508,26 @@ export class ProjectionModel {
    * 2. Adding missing schema properties as hidden fields
    */
   normalizeView(): void {
-    untracked(() => {
-      // Get all properties from the schema.
-      const schemaProperties = new Set(Object.keys(this._baseSchema.properties ?? {}));
+    // Get all properties from the schema.
+    const schemaProperties = new Set(Object.keys(this._baseSchema.properties ?? {}));
 
+    this._change.projection((projection) => {
       // 1. Remove fields that don't exist in schema anymore.
-      for (let i = this._projection.fields.length - 1; i >= 0; i--) {
-        const field = this.allFields[i];
+      for (let i = projection.fields.length - 1; i >= 0; i--) {
+        const field = projection.fields[i];
         if (!schemaProperties.has(field.path)) {
-          this._projection.fields.splice(i, 1);
+          projection.fields.splice(i, 1);
         }
       }
 
       // 2. Find schema properties not represented in any field.
-      const fieldPaths = new Set(this._projection.fields.map((field) => field.path));
+      const fieldPaths = new Set(projection.fields.map((field) => field.path));
 
       // 3. Add missing schema properties as hidden fields (excluding 'id').
       for (const prop of schemaProperties) {
         if (prop !== 'id' && !fieldPaths.has(prop as JsonProp)) {
           // Add new hidden field.
-          this._projection.fields.push({
+          projection.fields.push({
             id: createFieldId(),
             path: prop as JsonProp,
             visible: false,

@@ -23,10 +23,10 @@ import { createIdFromSpaceKey } from '../common/space-id';
 
 import {
   type EchoReplicator,
-  type RemoteDocumentExistenceCheckParams,
+  type RemoteDocumentExistenceCheckProps,
   type ReplicatorConnection,
-  type ShouldAdvertiseParams,
-  type ShouldSyncCollectionParams,
+  type ShouldAdvertiseProps,
+  type ShouldSyncCollectionProps,
 } from './echo-replicator';
 import {
   type CollectionQueryMessage,
@@ -43,9 +43,9 @@ export interface NetworkDataMonitor {
   recordMessageSendingFailed(message: Message): void;
 }
 
-export type EchoNetworkAdapterParams = {
+export type EchoNetworkAdapterProps = {
   getContainingSpaceForDocument: (documentId: string) => Promise<PublicKey | null>;
-  isDocumentInRemoteCollection: (params: RemoteDocumentExistenceCheckParams) => Promise<boolean>;
+  isDocumentInRemoteCollection: (params: RemoteDocumentExistenceCheckProps) => Promise<boolean>;
   onCollectionStateQueried: (collectionId: string, peerId: PeerId) => void;
   onCollectionStateReceived: (collectionId: string, peerId: PeerId, state: unknown) => void;
   monitor?: NetworkDataMonitor;
@@ -74,7 +74,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
 
   public readonly documentRequested = new Event<{ documentId: DocumentId; peerId: PeerId }>();
 
-  constructor(private readonly _params: EchoNetworkAdapterParams) {
+  constructor(private readonly _params: EchoNetworkAdapterProps) {
     super();
   }
 
@@ -164,7 +164,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
     this._replicators.delete(replicator);
   }
 
-  async shouldAdvertise(peerId: PeerId, params: ShouldAdvertiseParams): Promise<boolean> {
+  async shouldAdvertise(peerId: PeerId, params: ShouldAdvertiseProps): Promise<boolean> {
     const connection = this._connections.get(peerId);
     if (!connection) {
       return false;
@@ -173,7 +173,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
     return connection.connection.shouldAdvertise(params);
   }
 
-  shouldSyncCollection(peerId: PeerId, params: ShouldSyncCollectionParams): boolean {
+  shouldSyncCollection(peerId: PeerId, params: ShouldSyncCollectionProps): boolean {
     const connection = this._connections.get(peerId);
     if (!connection) {
       return false;

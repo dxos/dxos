@@ -2,13 +2,18 @@
 // Copyright 2025 DXOS.org
 //
 
-import { afterEach, beforeEach, describe, expect, test } from 'vitest';
+import * as Reactivity from '@effect/experimental/Reactivity';
+import * as Layer from 'effect/Layer';
+import * as ManagedRuntime from 'effect/ManagedRuntime';
+import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
 import { Event } from '@dxos/async';
-import { Filter, Obj, Query, type Ref, Relation, Type } from '@dxos/echo';
+import { Entity, Filter, Obj, Query, type Ref, Relation, Type } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { DXN, SpaceId } from '@dxos/keys';
 import { KEY_QUEUE_POSITION } from '@dxos/protocols';
+import { layerMemory } from '@dxos/sql-sqlite/platform';
+import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 
 import { type Queue } from '../queue';
 
@@ -28,7 +33,7 @@ describe('queues', () => {
     const db = await peer.createDatabase();
     const queues = peer.client.constructQueueFactory(db.spaceId);
     const obj = db.add(
-      Obj.make(Type.Expando, {
+      Obj.make(TestSchema.Expando, {
         // TODO(dmaretskyi): Support Ref.make
         queue: Type.Ref.fromDXN(queues.create().dxn) as Ref.Ref<Queue>,
       }),
@@ -39,7 +44,7 @@ describe('queues', () => {
     expect(await obj.queue.load()).toBeDefined();
   });
 
-  test('Obj.getDXN on queue objects returns absolute dxn', async () => {
+  test('Entity.getDXN on queue objects returns absolute dxn', async () => {
     await using peer = await builder.createPeer({ types: [TestSchema.Person] });
     const db = await peer.createDatabase();
     const queues = peer.client.constructQueueFactory(db.spaceId);
@@ -47,7 +52,7 @@ describe('queues', () => {
 
     await queue.append([Obj.make(TestSchema.Person, { name: 'john' })]);
     const obj = queue.objects[0];
-    expect(Obj.getDXN(obj)?.toString()).toEqual(queue.dxn.extend([obj.id]).toString());
+    expect(Entity.getDXN(obj)?.toString()).toEqual(queue.dxn.extend([obj.id]).toString());
   });
 
   test('create and resolve an object from a queue', async () => {
@@ -79,7 +84,7 @@ describe('queues', () => {
   });
 
   test('objects in queues have positions', async () => {
-    await using peer = await builder.createPeer({ types: [TestSchema.Person] });
+    await using peer = await builder.createPeer({ types: [TestSchema.Person], assignQueuePositions: true });
     const spaceId = SpaceId.random();
     const queues = peer.client.constructQueueFactory(spaceId);
     const queue = queues.create();
@@ -91,16 +96,18 @@ describe('queues', () => {
     ]);
 
     {
-      const [obj1, obj2] = await queue.queryObjects();
-      expect(Obj.getKeys(obj1, KEY_QUEUE_POSITION).at(0)?.id).toEqual('0');
-      expect(Obj.getKeys(obj2, KEY_QUEUE_POSITION).at(0)?.id).toEqual('1');
+      const objects = await queue.query(Filter.everything()).run();
+      expect(objects).toHaveLength(2);
+      expect(Entity.getKeys(objects[0], KEY_QUEUE_POSITION).at(0)?.id).toEqual('0');
+      expect(Entity.getKeys(objects[1], KEY_QUEUE_POSITION).at(0)?.id).toEqual('1');
     }
 
     {
       await queue.refresh();
-      const [obj1, obj2] = queue.objects;
-      expect(Obj.getKeys(obj1, KEY_QUEUE_POSITION).at(0)?.id).toEqual('0');
-      expect(Obj.getKeys(obj2, KEY_QUEUE_POSITION).at(0)?.id).toEqual('1');
+      const objects = queue.objects;
+      expect(objects).toHaveLength(2);
+      expect(Entity.getKeys(objects[0], KEY_QUEUE_POSITION).at(0)?.id).toEqual('0');
+      expect(Entity.getKeys(objects[1], KEY_QUEUE_POSITION).at(0)?.id).toEqual('1');
     }
   });
 
@@ -237,6 +244,27 @@ describe('queues', () => {
       expect(result[0].name).toEqual('jane');
     });
 
+    test('one shot query by id', async ({ expect }) => {
+      await using peer = await builder.createPeer({
+        types: [TestSchema.Person],
+      });
+      const spaceId = SpaceId.random();
+      const queues = peer.client.constructQueueFactory(spaceId);
+      const queue = queues.create();
+
+      const john = Obj.make(TestSchema.Person, { name: 'john' });
+      const jane = Obj.make(TestSchema.Person, { name: 'jane' });
+      const alice = Obj.make(TestSchema.Person, { name: 'alice' });
+
+      await queue.append([john, jane, alice]);
+
+      // Query by specific ID.
+      const result = await queue.query(Query.select(Filter.id(jane.id))).run();
+      expect(result).toHaveLength(1);
+      expect(result[0].id).toEqual(jane.id);
+      expect((result[0] as TestSchema.Person).name).toEqual('jane');
+    });
+
     test('subscription query gets initial result', async ({ expect }) => {
       await using peer = await builder.createPeer({
         types: [TestSchema.Person],
@@ -297,6 +325,39 @@ describe('queues', () => {
       expect(query.results).toHaveLength(2);
       expect(query.results.map((obj) => obj.name).sort()).toEqual(['jane', 'john']);
       sub();
+    });
+  });
+
+  describe('Durability', () => {
+    test('queue objects survive reload', async ({ expect }) => {
+      const runtime = ManagedRuntime.make(
+        SqlTransaction.layer.pipe(Layer.provideMerge(Layer.merge(layerMemory, Reactivity.layer))).pipe(Layer.orDie),
+      );
+      onTestFinished(() => runtime.dispose());
+
+      await using peer = await builder.createPeer({
+        types: [TestSchema.Person],
+        runtime,
+      });
+      const spaceId = SpaceId.random();
+      const queues = peer.client.constructQueueFactory(spaceId);
+      const queue = queues.create();
+
+      await queue.append([
+        Obj.make(TestSchema.Person, {
+          name: 'john',
+        }),
+      ]);
+
+      await peer.reload();
+
+      const queues2 = peer.client.constructQueueFactory(spaceId);
+      const objects2 = await queues2.get(queue.dxn).query(Filter.everything()).run();
+
+      expect(objects2).toHaveLength(1);
+      expect(objects2[0].name).toEqual('john');
+
+      await peer.close();
     });
   });
 });

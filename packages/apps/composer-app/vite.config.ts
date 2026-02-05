@@ -18,7 +18,7 @@ import solid from 'vite-plugin-solid';
 import wasm from 'vite-plugin-wasm';
 
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
-import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
+import { ThemePlugin } from '@dxos/ui-theme/plugin';
 import { isNonNullable } from '@dxos/util';
 import { IconsPlugin } from '@dxos/vite-plugin-icons';
 
@@ -37,7 +37,25 @@ const dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(file
 
 // Shared plugins for worker that are using in prod build.
 // In dev vite uses root plugins for both worker and page.
-const sharedPlugins = (env: ConfigEnv): PluginOption[] => [wasm(), sourcemaps()];
+const sharedPlugins = (env: ConfigEnv): PluginOption[] => [
+  // Building from dist when creating a prod bundle.
+  env.command === 'serve' &&
+    importSource({
+      exclude: [
+        '@dxos/random-access-storage',
+        '@dxos/lock-file',
+        '@dxos/network-manager',
+        '@dxos/teleport',
+        '@dxos/config',
+        '@dxos/client-services',
+        '@dxos/observability',
+        // TODO(dmaretskyi): Decorators break in lit.
+        '@dxos/lit-*',
+      ],
+    }),
+  wasm(),
+  sourcemaps(),
+];
 
 /**
  * https://vitejs.dev/config
@@ -89,6 +107,9 @@ export default defineConfig((env) => ({
       },
     },
   },
+  optimizeDeps: {
+    exclude: ['@dxos/wa-sqlite'],
+  },
   resolve: {
     alias: {
       ['node-fetch']: 'isomorphic-fetch',
@@ -105,6 +126,8 @@ export default defineConfig((env) => ({
       '@dxos/web-context-solid': path.resolve(rootDir, 'packages/common/web-context-solid/src'),
       '@dxos/effect-atom-solid': path.resolve(rootDir, 'packages/common/effect-atom-solid/src'),
       '@dxos/echo-solid': path.resolve(rootDir, 'packages/core/echo/echo-solid/src'),
+      // Worker entry point for OPFS SQLite.
+      '@dxos/client/opfs-worker': path.resolve(rootDir, 'packages/sdk/client/src/worker/opfs-worker.ts'),
     },
   },
   worker: {
@@ -132,23 +155,6 @@ export default defineConfig((env) => ({
     isTrue(process.env.DX_INSPECT) && inspect(),
 
     env.command === 'serve' && devtoolsJson(),
-
-    // Building from dist when creating a prod bundle.
-    env.command === 'serve' &&
-      importSource({
-        exclude: [
-          '**/node_modules/**',
-          '**/common/random-access-storage/**',
-          '**/common/lock-file/**',
-          '**/mesh/network-manager/**',
-          '**/mesh/teleport/**',
-          '**/sdk/config/**',
-          '**/sdk/client-services/**',
-          '**/sdk/observability/**',
-          // TODO(dmaretskyi): Decorators break in lit.
-          '**/ui/lit-*/**',
-        ],
-      }),
 
     // Solid JSX transform for Solid packages.
     // Must be placed before React plugin to process Solid files first.
@@ -204,13 +210,6 @@ export default defineConfig((env) => ({
             ],
           },
         ],
-        // https://github.com/XantreDev/preact-signals/tree/main/packages/react#how-parser-plugins-works
-        [
-          '@preact-signals/safe-react/swc',
-          {
-            mode: 'all',
-          },
-        ],
       ],
     }),
 
@@ -228,8 +227,6 @@ export default defineConfig((env) => ({
         '@dxos/client-services',
         '@dxos/config',
         '@dxos/echo',
-        '@dxos/echo-signals',
-        '@dxos/live-object',
         '@dxos/react-client',
         '@dxos/react-client/devtools',
         '@dxos/react-client/echo',

@@ -13,8 +13,8 @@ import type {
   EchoReplicator,
   EchoReplicatorContext,
   ReplicatorConnection,
-  ShouldAdvertiseParams,
-  ShouldSyncCollectionParams,
+  ShouldAdvertiseProps,
+  ShouldSyncCollectionProps,
 } from '../automerge';
 
 export type TestReplicatorNetworkOptions = {
@@ -115,13 +115,13 @@ export class TestReplicationNetwork extends Resource {
   }
 }
 
-type TestReplicatorParams = {
+type TestReplicatorProps = {
   onConnect: () => Promise<void>;
   onDisconnect: () => Promise<void>;
 };
 
 export class TestReplicator implements EchoReplicator {
-  constructor(private readonly _params: TestReplicatorParams) {}
+  constructor(private readonly _params: TestReplicatorProps) {}
 
   public connected = false;
   public context: EchoReplicatorContext | undefined = undefined;
@@ -167,11 +167,11 @@ export class TestReplicatorConnection implements ReplicatorConnection {
     return false;
   }
 
-  async shouldAdvertise(_params: ShouldAdvertiseParams): Promise<boolean> {
+  async shouldAdvertise(_params: ShouldAdvertiseProps): Promise<boolean> {
     return true;
   }
 
-  shouldSyncCollection(_params: ShouldSyncCollectionParams): boolean {
+  shouldSyncCollection(_params: ShouldSyncCollectionProps): boolean {
     return true;
   }
 }

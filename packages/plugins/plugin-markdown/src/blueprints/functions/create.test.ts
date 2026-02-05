@@ -71,9 +71,9 @@ describe('create', () => {
           content,
         });
 
-        const doc = yield* Database.Service.resolve(DXN.parse(result.id), Markdown.Document);
+        const doc = yield* Database.resolve(DXN.parse(result.id), Markdown.Document);
         expect(doc.name).toBe(name);
-        const text = yield* Database.Service.load(doc.content);
+        const text = yield* Database.load(doc.content);
         expect(text.content).toBe(content);
       },
       WithProperties,
@@ -87,10 +87,10 @@ describe('create', () => {
     Effect.fnUntraced(
       function* (_) {
         const queue = yield* QueueService.createQueue<Message.Message | ContextBinding>();
-        const conversation = yield* acquireReleaseResource(() => new AiConversation(queue));
+        const conversation = yield* acquireReleaseResource(() => new AiConversation({ queue }));
 
-        yield* Database.Service.flush({ indexes: true });
-        const markdownBlueprint = yield* Database.Service.add(Obj.clone(MarkdownBlueprint.make()));
+        yield* Database.flush({ indexes: true });
+        const markdownBlueprint = yield* Database.add(Obj.clone(MarkdownBlueprint.make()));
         yield* Effect.promise(() =>
           conversation.context.bind({
             blueprints: [Ref.make(markdownBlueprint)],
@@ -103,7 +103,7 @@ describe('create', () => {
           prompt: `Create a document with a cookie recipe.`,
         });
         {
-          const docs = yield* Database.Service.runQuery(Query.type(Markdown.Document));
+          const docs = yield* Database.runQuery(Query.type(Markdown.Document));
           if (docs.length !== 1) {
             throw new Error(`Expected 1 document; got ${docs.length}: ${docs.map((_) => _.name)}`);
           }
@@ -112,7 +112,7 @@ describe('create', () => {
           invariant(Obj.instanceOf(Markdown.Document, doc));
           console.log({
             name: doc.name,
-            content: yield* Database.Service.load(doc.content).pipe(Effect.map((_) => _.content)),
+            content: yield* Database.load(doc.content).pipe(Effect.map((_) => _.content)),
           });
         }
       },

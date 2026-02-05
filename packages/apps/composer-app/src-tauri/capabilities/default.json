@@ -3,10 +3,12 @@
   "identifier": "default",
   "description": "enables the default permissions",
   "windows": [
-    "main"
+    "main",
+    "popover"
   ],
   "permissions": [
     "core:default",
+    "core:window:allow-start-dragging",
     "os:default",
     "process:default",
     {

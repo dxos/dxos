@@ -5,8 +5,8 @@
 import { type DXN } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { type MarkdownStreamController } from '@dxos/react-ui-components';
-import { type StateDispatch, type XmlWidgetStateManager } from '@dxos/react-ui-editor';
 import { type ContentBlock, type Message } from '@dxos/types';
+import { type StateDispatch, type XmlWidgetStateManager } from '@dxos/ui-editor';
 
 /**
  * Update document.
@@ -87,7 +87,13 @@ export class MessageSyncer {
 
       const content = buffer.join('');
       this._model.view?.dispatch({
-        changes: [{ from: 0, to: this._model.view?.state.doc.length ?? 0, insert: content }],
+        changes: [
+          {
+            from: 0,
+            to: this._model.view?.state.doc.length ?? 0,
+            insert: content,
+          },
+        ],
         selection: { anchor: content.length },
       });
 

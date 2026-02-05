@@ -6,7 +6,7 @@ import { Chess as ChessJS } from 'chess.js';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { Database, Type } from '@dxos/echo';
+import { Database, Obj, Type } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
 import { Chess } from '@dxos/plugin-chess/types';
 
@@ -34,7 +34,7 @@ export default defineFunction({
   services: [Database.Service],
 
   handler: Effect.fnUntraced(function* ({ data: { game, player = 'black' } }) {
-    const loadedGame = yield* Database.Service.load(game);
+    const loadedGame = yield* Database.load(game);
     const chess = new ChessJS();
     chess.loadPgn(loadedGame.pgn ?? '');
     if (chess.turn() !== (player === 'white' ? 'w' : 'b')) {
@@ -49,8 +49,10 @@ export default defineFunction({
 
     chess.move(move.san);
     const newPgn = chess.pgn();
-    loadedGame.pgn = newPgn;
-    yield* Database.Service.flush();
+    Obj.change(loadedGame, (g) => {
+      g.pgn = newPgn;
+    });
+    yield* Database.flush();
     return { state: chess.ascii() };
   }),
 });

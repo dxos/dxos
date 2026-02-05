@@ -36,14 +36,14 @@ import { Identity } from './identity';
 const DEVICE_PRESENCE_ANNOUNCE_INTERVAL = 10_000;
 const DEVICE_PRESENCE_OFFLINE_TIMEOUT = 20_000;
 
-interface ConstructSpaceParams {
+interface ConstructSpaceProps {
   spaceRecord: SpaceMetadata;
   swarmIdentity: SwarmIdentity;
   identityKey: PublicKey;
   gossip: Gossip;
 }
 
-export type JoinIdentityParams = {
+export type JoinIdentityProps = {
   identityKey: PublicKey;
   deviceKey: PublicKey;
   haloSpaceKey: PublicKey;
@@ -67,7 +67,7 @@ export type CreateIdentityOptions = {
   deviceProfile?: DeviceProfileDocument;
 };
 
-export type IdentityManagerParams = {
+export type IdentityManagerProps = {
   metadataStore: MetadataStore;
   keyring: Keyring;
   feedStore: FeedStore<FeedMessage>;
@@ -95,7 +95,7 @@ export class IdentityManager {
   private _identity?: Identity;
 
   // TODO(dmaretskyi): Perhaps this should take/generate the peerKey outside of an initialized identity.
-  constructor(params: IdentityManagerParams) {
+  constructor(params: IdentityManagerProps) {
     this._metadataStore = params.metadataStore;
     this._keyring = params.keyring;
     this._feedStore = params.feedStore;
@@ -240,7 +240,7 @@ export class IdentityManager {
   /**
    * Prepare an identity object as the first step of acceptIdentity flow.
    */
-  async prepareIdentity(params: JoinIdentityParams) {
+  async prepareIdentity(params: JoinIdentityProps) {
     log('accepting identity', { params });
     invariant(!this._identity, 'Identity already exists.');
 
@@ -395,7 +395,7 @@ export class IdentityManager {
     return identity;
   }
 
-  private async _constructSpace({ spaceRecord, swarmIdentity, identityKey, gossip }: ConstructSpaceParams) {
+  private async _constructSpace({ spaceRecord, swarmIdentity, identityKey, gossip }: ConstructSpaceProps) {
     return this._spaceManager.constructSpace({
       metadata: {
         key: spaceRecord.key,

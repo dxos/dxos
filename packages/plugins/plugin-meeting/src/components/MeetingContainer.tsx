@@ -4,22 +4,20 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { createIntent } from '@dxos/app-framework';
-import { Surface, useIntentDispatcher } from '@dxos/app-framework/react';
+import { Surface, type SurfaceComponentProps, useOperationInvoker } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
 import { IconButton, useTranslation } from '@dxos/react-ui';
+import { Layout } from '@dxos/react-ui-mosaic';
 import { Stack, StackItem } from '@dxos/react-ui-stack';
 
 import { meta } from '../meta';
-import { type Meeting, MeetingAction } from '../types';
+import { type Meeting, MeetingOperation } from '../types';
 
-export type MeetingContainerProps = {
-  meeting: Meeting.Meeting;
-};
+export type MeetingContainerProps = SurfaceComponentProps<Meeting.Meeting>;
 
-export const MeetingContainer = ({ meeting }: MeetingContainerProps) => {
+export const MeetingContainer = ({ role, subject: meeting }: MeetingContainerProps) => {
   const { t } = useTranslation(meta.id);
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const { invokePromise } = useOperationInvoker();
   const notes = meeting.notes?.target;
   const summary = meeting.summary?.target;
   const notesData = useMemo(() => ({ id: Obj.getDXN(meeting).toString(), subject: notes }), [notes]);
@@ -34,15 +32,15 @@ export const MeetingContainer = ({ meeting }: MeetingContainerProps) => {
   );
 
   const handleGenerateSummary = useCallback(async () => {
-    await dispatch(createIntent(MeetingAction.Summarize, { meeting }));
-  }, [dispatch, meeting]);
+    await invokePromise(MeetingOperation.Summarize, { meeting });
+  }, [invokePromise, meeting]);
 
   if (!notes || !summary) {
     return null;
   }
 
   return (
-    <StackItem.Content>
+    <Layout.Main role={role}>
       <Stack orientation='vertical' size='contain' rail>
         <StackItem.Root item={notes} role='section'>
           <StackItem.Heading>
@@ -86,7 +84,7 @@ export const MeetingContainer = ({ meeting }: MeetingContainerProps) => {
           </StackItem.Content>
         </StackItem.Root>
       </Stack>
-    </StackItem.Content>
+    </Layout.Main>
   );
 };
 

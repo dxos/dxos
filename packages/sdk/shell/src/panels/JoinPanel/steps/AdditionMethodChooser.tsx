@@ -7,6 +7,7 @@ import React from 'react';
 import { Icon, useTranslation } from '@dxos/react-ui';
 
 import { CompoundButton, StepHeading } from '../../../components';
+import { translationKey } from '../../../translations';
 import { type JoinStepProps } from '../JoinPanelProps';
 
 export type AdditionMethodChooserProps = JoinStepProps;
@@ -15,7 +16,7 @@ export const AdditionMethodChooser = (viewStateProps: AdditionMethodChooserProps
   const disabled = !viewStateProps.active;
   const { send } = viewStateProps;
 
-  const { t } = useTranslation('os');
+  const { t } = useTranslation(translationKey);
 
   const sharedButtonProps = {
     disabled,

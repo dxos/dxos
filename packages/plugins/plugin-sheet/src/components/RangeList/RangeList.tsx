@@ -6,9 +6,10 @@ import * as Schema from 'effect/Schema';
 import React, { useCallback } from 'react';
 
 import { rangeToA1Notation } from '@dxos/compute';
+import { Obj } from '@dxos/echo';
 import { Callout, useTranslation } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';
-import { ghostHover } from '@dxos/react-ui-theme';
+import { ghostHover } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
 import { rangeFromIndex } from '../../types';
@@ -25,7 +26,9 @@ export const RangeList = ({ sheet }: RangeListProps) => {
   const handleDeleteRange = useCallback(
     (range: Sheet.Range) => {
       const index = sheet.ranges.findIndex((sheetRange) => sheetRange === range);
-      sheet.ranges.splice(index, 1);
+      Obj.change(sheet, (s) => {
+        s.ranges.splice(index, 1);
+      });
     },
     [sheet],
   );

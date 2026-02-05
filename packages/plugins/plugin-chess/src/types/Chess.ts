@@ -22,7 +22,7 @@ export const Game = Schema.Struct({
         description: 'DID of black player',
       }),
     ),
-  }).pipe(Schema.mutable, FormInputAnnotation.set(false), Schema.optional),
+  }).pipe(FormInputAnnotation.set(false), Schema.optional),
   pgn: Schema.String.annotations({
     description: 'Portable Game Notation.',
   }).pipe(FormInputAnnotation.set(false), Schema.optional),
@@ -30,7 +30,7 @@ export const Game = Schema.Struct({
     description: 'Forsyth-Edwards Notation.',
   }).pipe(FormInputAnnotation.set(false), Schema.optional),
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/Chess',
     version: '0.2.0',
   }),

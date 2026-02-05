@@ -1,4 +1,4 @@
-type: library
+layer: library
 language: typescript
 tags:
   - ts-build
@@ -9,7 +9,6 @@ tasks:
   compile:
     args:
       - '--entryPoint=src/index.ts'
-      - '--preactSignalTracking'
     deps:
       - gen-pieces
   gen-pieces:

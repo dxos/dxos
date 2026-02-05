@@ -2,25 +2,21 @@
 // Copyright 2023 DXOS.org
 //
 
-import './mailbox.css';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Effect from 'effect/Effect';
 import React, { useMemo, useState } from 'react';
 
-import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/react';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
-import { SpacePlugin } from '@dxos/plugin-space';
-import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
-import { ThemePlugin } from '@dxos/plugin-theme';
+import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { Filter, useDatabase, useQuery } from '@dxos/react-client/echo';
 import { withTheme } from '@dxos/react-ui/testing';
 import { useAttentionAttributes, useSelected } from '@dxos/react-ui-attention';
 import { withAttention } from '@dxos/react-ui-attention/testing';
-import { defaultTx } from '@dxos/react-ui-theme';
+import { withMosaic } from '@dxos/react-ui-mosaic/testing';
 import { render } from '@dxos/storybook-utils';
 import { Message, Person } from '@dxos/types';
 
@@ -65,7 +61,7 @@ const meta = {
   title: 'plugins/plugin-inbox/Mailbox',
   component: MailboxComponent as any,
   render: DefaultStory,
-  decorators: [withTheme, withAttention],
+  decorators: [withTheme, withAttention(), withMosaic()],
   parameters: {
     layout: 'fullscreen',
   },
@@ -82,25 +78,22 @@ export const WithCompanion: Story = {
   decorators: [
     withPluginManager({
       plugins: [
+        ...corePlugins(),
         ClientPlugin({
           types: [Mailbox.Mailbox, Message.Message, Person.Person],
-          onClientInitialized: async ({ client }) => {
-            await client.halo.createIdentity();
-            await client.spaces.waitUntilReady();
-            await client.spaces.default.waitUntilReady();
-            // TODO(wittjosiah): Share message builder with transcription stories. Factor out to @dxos/schema/testing.
-            await initializeMailbox(client.spaces.default);
-          },
+          onClientInitialized: ({ client }) =>
+            Effect.gen(function* () {
+              yield* Effect.promise(() => client.halo.createIdentity());
+              yield* Effect.promise(() => client.spaces.waitUntilReady());
+              yield* Effect.promise(() => client.spaces.default.waitUntilReady());
+              // TODO(wittjosiah): Share message builder with transcription stories. Factor out to @dxos/schema/testing.
+              yield* Effect.promise(() => initializeMailbox(client.spaces.default));
+            }),
         }),
-        SpacePlugin({}),
-        IntentPlugin(),
-        SettingsPlugin(),
 
-        // UI
-        ThemePlugin({ tx: defaultTx }),
-        PreviewPlugin(),
+        StorybookPlugin({}),
         InboxPlugin(),
-        StorybookLayoutPlugin({}),
+        PreviewPlugin(),
       ],
     }),
   ],

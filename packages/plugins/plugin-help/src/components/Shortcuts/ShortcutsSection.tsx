@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { descriptionText } from '@dxos/react-ui-theme';
+import { descriptionText } from '@dxos/ui-theme';
 
 import { ShortcutsList } from './ShortcutsList';
 

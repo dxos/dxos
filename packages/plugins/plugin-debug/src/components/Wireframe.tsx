@@ -9,11 +9,11 @@ import { Obj } from '@dxos/echo';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 // TODO(burdon): Create generic container with wireframe mode.
 export type WireframeProps = ThemedClassName<{
-  object: Obj.Any;
+  object: Obj.Unknown;
   label?: string;
 }>;
 

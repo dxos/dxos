@@ -23,7 +23,7 @@ import {
 
 import { Workflow } from './workflow';
 
-export type WorkflowLoaderParams = {
+export type WorkflowLoaderProps = {
   nodeResolver: (node: ComputeNode) => Promise<Executable>;
   graphLoader: (graphId: DXN) => Promise<ComputeGraph>;
 };
@@ -35,7 +35,7 @@ export class WorkflowLoader {
   private readonly _nodeResolver: (node: ComputeNode) => Promise<Executable>;
   private readonly _graphLoader: (graphId: DXN) => Promise<ComputeGraph>;
 
-  constructor(params: WorkflowLoaderParams) {
+  constructor(params: WorkflowLoaderProps) {
     this._nodeResolver = params.nodeResolver;
     this._graphLoader = params.graphLoader;
   }

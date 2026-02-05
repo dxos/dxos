@@ -41,9 +41,9 @@ type TooltipScopedProps<P = {}> = P & { __scopeTooltip?: Scope };
 const [createTooltipContext, createTooltipScope] = createContextScope('Tooltip', [createPopperScope]);
 const usePopperScope = createPopperScope();
 
-/* -------------------------------------------------------------------------------------------------
- * Tooltip
- * ----------------------------------------------------------------------------------------------- */
+//
+// Tooltip
+//
 
 const DEFAULT_DELAY_DURATION = 700;
 const TOOLTIP_OPEN = 'tooltip.open';
@@ -93,7 +93,7 @@ const TooltipProvider: FC<TooltipProviderProps> = (props: TooltipScopedProps<Too
   const {
     __scopeTooltip,
     children,
-    open: openParam,
+    open: openProp,
     defaultOpen = false,
     onOpenChange,
     disableHoverableContent = false,
@@ -140,7 +140,7 @@ const TooltipProvider: FC<TooltipProviderProps> = (props: TooltipScopedProps<Too
     [skipDelayDuration, onOpenChange],
   );
   const [open = false, setOpen] = useControllableState({
-    prop: openParam,
+    prop: openProp,
     defaultProp: defaultOpen,
     onChange: handleOpenChange,
   });
@@ -228,9 +228,9 @@ const TooltipProvider: FC<TooltipProviderProps> = (props: TooltipScopedProps<Too
 
 TooltipProvider.displayName = TOOLTIP_NAME;
 
-/* -------------------------------------------------------------------------------------------------
- * TooltipVirtualTrigger
- * ----------------------------------------------------------------------------------------------- */
+//
+// TooltipVirtualTrigger
+//
 
 const TooltipVirtualTrigger = ({
   virtualRef,
@@ -240,9 +240,9 @@ const TooltipVirtualTrigger = ({
   return <PopperPrimitive.Anchor asChild {...popperScope} virtualRef={virtualRef} />;
 };
 
-/* -------------------------------------------------------------------------------------------------
- * TooltipTrigger
- * ----------------------------------------------------------------------------------------------- */
+//
+// TooltipTrigger
+//
 
 const TRIGGER_NAME = 'TooltipTrigger';
 
@@ -322,9 +322,9 @@ const TooltipTrigger = forwardRef<TooltipTriggerElement, TooltipTriggerProps>(
 
 TooltipTrigger.displayName = TRIGGER_NAME;
 
-/* -------------------------------------------------------------------------------------------------
- * TooltipPortal
- * ----------------------------------------------------------------------------------------------- */
+//
+// TooltipPortal
+//
 
 const PORTAL_NAME = 'TooltipPortal';
 
@@ -363,9 +363,9 @@ const TooltipPortal: FC<TooltipPortalProps> = (props: TooltipScopedProps<Tooltip
 
 TooltipPortal.displayName = PORTAL_NAME;
 
-/* -------------------------------------------------------------------------------------------------
- * TooltipContent
- * ----------------------------------------------------------------------------------------------- */
+//
+// TooltipContent
+//
 
 const CONTENT_NAME = 'TooltipContent';
 
@@ -574,9 +574,9 @@ const TooltipContentImpl = forwardRef<TooltipContentImplElement, TooltipContentI
 
 TooltipContent.displayName = CONTENT_NAME;
 
-/* -------------------------------------------------------------------------------------------------
- * TooltipArrow
- * ----------------------------------------------------------------------------------------------- */
+//
+// TooltipArrow
+//
 
 const ARROW_NAME = 'TooltipArrow';
 
@@ -598,8 +598,6 @@ const TooltipArrow = forwardRef<TooltipArrowElement, TooltipArrowProps>(
 );
 
 TooltipArrow.displayName = ARROW_NAME;
-
-/* ----------------------------------------------------------------------------------------------- */
 
 type TooltipSide = NonNullable<TooltipContentProps['side']>;
 
@@ -754,6 +752,10 @@ const getHullPresorted = <P extends Point>(points: Readonly<Array<P>>): Array<P>
     return upperHull.concat(lowerHull);
   }
 };
+
+//
+// Tooltip
+//
 
 export const Tooltip = {
   Provider: TooltipProvider,

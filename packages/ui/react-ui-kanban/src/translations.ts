@@ -4,7 +4,7 @@
 
 import { type Resource } from '@dxos/react-ui';
 
-export const translationKey = 'react-ui-kanban';
+export const translationKey = '@dxos/react-ui-kanban';
 
 export const translations = [
   {
@@ -16,6 +16,7 @@ export const translations = [
         'remove card label': 'Remove card',
         'remove empty column label': 'Remove empty column',
         'column drag handle label': 'Drag to rearrange',
+        'action menu label': 'Action menu',
       },
     },
   },

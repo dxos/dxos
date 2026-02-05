@@ -2,8 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type Registry } from '@effect-atom/atom-react';
+
 import { Filter, type JsonSchema, Obj, Order, Query, type QueryAST, Ref, Type } from '@dxos/echo';
-import { ProjectionModel, type SchemaPropertyDefinition, View, getSchemaFromPropertyDefinitions } from '@dxos/schema';
+import {
+  ProjectionModel,
+  type SchemaPropertyDefinition,
+  View,
+  createDirectChangeCallback,
+  getSchemaFromPropertyDefinitions,
+} from '@dxos/schema';
 
 import { Table } from '../types';
 
@@ -44,9 +52,11 @@ export const getBaseSchema = ({
 };
 
 export const makeDynamicTable = ({
+  registry,
   jsonSchema,
   properties,
 }: {
+  registry: Registry.Registry;
   jsonSchema: JsonSchema.JsonSchema;
   properties?: TablePropertyDefinition[];
 }): { projection: ProjectionModel; object: Table.Table } => {
@@ -57,9 +67,15 @@ export const makeDynamicTable = ({
   });
   const object = Obj.make(Table.Table, { view: Ref.make(view), sizes: {} });
 
-  const projection = new ProjectionModel(jsonSchema, view.projection);
+  // Use direct change callback for in-memory objects (non-ECHO backed).
+  const projection = new ProjectionModel({
+    registry,
+    view,
+    baseSchema: jsonSchema,
+    change: createDirectChangeCallback(view.projection, jsonSchema),
+  });
   projection.normalizeView();
-  if (properties && projection.fields) {
+  if (properties && projection.getFields()) {
     setProperties(view, projection, object, properties);
   }
 
@@ -73,10 +89,12 @@ const setProperties = (
   properties: TablePropertyDefinition[],
 ) => {
   for (const property of properties) {
-    const field = projection.fields.find((field) => field.path === property.name);
+    const field = projection.getFields().find((field) => field.path === property.name);
     if (field) {
       if (property.size !== undefined) {
-        table.sizes[field.path] = property.size;
+        Obj.change(table, (t) => {
+          t.sizes[field.path] = property.size!;
+        });
       }
 
       if (property.title !== undefined) {
@@ -92,7 +110,10 @@ const setProperties = (
         const currentQuery = Query.fromAst(Obj.getSnapshot(view).query.ast);
         // Use any type parameter since we're working with dynamic field paths
         const newQuery = currentQuery.orderBy(Order.property<any>(field.path as string, property.sort));
-        view.query.ast = newQuery.ast;
+        Obj.change(view, (v) => {
+          // Type assertion needed because Query AST types have some variance issues.
+          v.query.ast = newQuery.ast as typeof v.query.ast;
+        });
       }
     }
   }

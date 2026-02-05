@@ -8,6 +8,7 @@
     ]
   },
   "exclude": [
+    "*.stories.tsx",
     "vite.config.ts"
   ],
   "include": [
@@ -62,10 +63,10 @@
       "path": "../../core/echo/echo-generator"
     },
     {
-      "path": "../../core/echo/live-object"
+      "path": "../../core/functions"
     },
     {
-      "path": "../../core/functions"
+      "path": "../../core/operation"
     },
     {
       "path": "../../sdk/app-framework"
@@ -86,7 +87,7 @@
       "path": "../../ui/lit-grid"
     },
     {
-      "path": "../../ui/primitives/react-hooks"
+      "path": "../../ui/react-primitives/react-hooks"
     },
     {
       "path": "../../ui/react-ui"
@@ -110,16 +111,22 @@
       "path": "../../ui/react-ui-menu"
     },
     {
+      "path": "../../ui/react-ui-mosaic"
+    },
+    {
       "path": "../../ui/react-ui-stack"
     },
     {
       "path": "../../ui/react-ui-syntax-highlighter"
     },
     {
-      "path": "../../ui/react-ui-theme"
+      "path": "../../ui/ui-editor"
     },
     {
-      "path": "../../ui/react-ui-types"
+      "path": "../../ui/ui-theme"
+    },
+    {
+      "path": "../../ui/ui-types"
     },
     {
       "path": "../plugin-attention"
@@ -147,6 +154,9 @@
     },
     {
       "path": "../plugin-stack"
+    },
+    {
+      "path": "../plugin-testing"
     },
     {
       "path": "../plugin-thread"

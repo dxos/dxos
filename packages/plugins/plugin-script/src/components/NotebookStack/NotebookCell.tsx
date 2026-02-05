@@ -5,23 +5,22 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework/react';
-import { type Database } from '@dxos/echo';
+import { type Database, Obj } from '@dxos/echo';
 import { createDocAccessor } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { TemplateEditor } from '@dxos/plugin-assistant';
 import { useThemeContext, useTranslation } from '@dxos/react-ui';
 import { QueryEditor, type QueryEditorProps } from '@dxos/react-ui-components';
+import { EditorContent, type EditorContentProps } from '@dxos/react-ui-editor';
 import {
   type BasicExtensionsOptions,
-  EditorContent,
-  type EditorContentProps,
   createBasicExtensions,
   createDataExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
   decorateMarkdown,
-} from '@dxos/react-ui-editor';
-import { mx } from '@dxos/react-ui-theme';
+} from '@dxos/ui-editor';
+import { mx } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 
 import { meta } from '../../meta';
@@ -62,7 +61,9 @@ export const NotebookCell = ({ db, graph, dragging, cell, promptResults, env }: 
   const handleQueryChange = useCallback<NonNullable<QueryEditorProps['onChange']>>(
     (value: string) => {
       invariant(cell.source?.target);
-      cell.source.target.content = value;
+      Obj.change(cell.source.target, (s) => {
+        s.content = value;
+      });
     },
     [cell],
   );
@@ -151,7 +152,7 @@ export const NotebookCell = ({ db, graph, dragging, cell, promptResults, env }: 
 };
 
 const NotebookCellValue = ({ cell, graph }: NotebookCellProps) => {
-  const name = graph?.expressions.value[cell.id]?.name;
+  const name = graph?.getExpressions()[cell.id]?.name;
   const value = graph?.getValue(cell.id);
   if (value == null) {
     return null;
@@ -160,7 +161,7 @@ const NotebookCellValue = ({ cell, graph }: NotebookCellProps) => {
   return (
     <div
       className={mx(
-        'flex is-full bg-groupSurface border-t border-subduedSeparator text-description font-mono',
+        'flex is-full bg-groupSurface border-bs border-subduedSeparator text-description font-mono',
         valueStyles,
       )}
     >
@@ -186,14 +187,14 @@ const NotebookPromptResult = ({ cell, promptResults }: NotebookCellProps) => {
   }
 
   return (
-    <div className={mx('flex is-full bg-groupSurface text-description border-t border-subduedSeparator', valueStyles)}>
+    <div className={mx('flex is-full bg-groupSurface text-description border-bs border-subduedSeparator', valueStyles)}>
       <NotebookTextEditor readOnly value={value} />
     </div>
   );
 };
 
 const NotebookTextEditor = ({
-  extensions: extensionsParam,
+  extensions: extensionsProp,
   readOnly,
   ...props
 }: EditorContentProps & Pick<BasicExtensionsOptions, 'readOnly'>) => {
@@ -208,9 +209,9 @@ const NotebookTextEditor = ({
       createThemeExtensions({ themeMode, syntaxHighlighting: true }),
       createMarkdownExtensions(),
       decorateMarkdown(),
-      extensionsParam,
+      extensionsProp,
     ].filter(isNonNullable);
-  }, [extensionsParam]);
+  }, [extensionsProp]);
 
   return <EditorContent {...props} extensions={extensions} selectionEnd />;
 };

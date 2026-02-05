@@ -7,7 +7,7 @@ import React, { memo, useCallback } from 'react';
 
 import { raise } from '@dxos/debug';
 import { log } from '@dxos/log';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { useEditorContext } from '../../hooks';
 import { type Polygon } from '../../types';

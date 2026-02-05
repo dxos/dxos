@@ -6,14 +6,14 @@ import '@dxos/lit-ui/dx-tag-picker.pcss';
 
 import React, { useCallback, useMemo } from 'react';
 
-import { type Database, type Entity, Filter, Obj, Ref, type Type } from '@dxos/echo';
+import { type Database, Entity, Filter, Ref, type Type } from '@dxos/echo';
 import { ReferenceAnnotationId, type ReferenceAnnotationValue } from '@dxos/echo/internal';
 import { useQuery, useSchema as useSchema$ } from '@dxos/echo-react';
 import { findAnnotation } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 import { DxAnchor } from '@dxos/lit-ui/react';
 import { Button, Icon, Input, useTranslation } from '@dxos/react-ui';
-import { descriptionText, mx } from '@dxos/react-ui-theme';
+import { descriptionText, mx } from '@dxos/ui-theme';
 
 import { translationKey } from '../../../translations';
 import { ObjectPicker, type ObjectPickerContentProps, type RefOption } from '../../ObjectPicker';
@@ -27,8 +27,8 @@ const isRefSnapshot = (val: any): val is { '/': string } => {
 
 const defaultGetOptions: NonNullable<RefFieldProps['getOptions']> = (results) =>
   results.map((result) => {
-    const id = Obj.getDXN(result).toString();
-    const label = Obj.getLabel(result);
+    const id = Entity.getDXN(result).toString();
+    const label = Entity.getLabel(result);
     return { id, label: label ?? id };
   });
 
@@ -159,17 +159,19 @@ export const RefField = (props: RefFieldProps) => {
                 </Button>
               )}
             </ObjectPicker.Trigger>
-            <ObjectPicker.Content
-              classNames='popover-card-width'
-              options={options}
-              selectedIds={selectedIds}
-              createSchema={createSchema && omitId(createSchema)}
-              createOptionLabel={createOptionLabel}
-              createOptionIcon={createOptionIcon}
-              createInitialValuePath={createInitialValuePath}
-              onCreate={handleCreate}
-              onSelect={handleSelect}
-            />
+            <ObjectPicker.Portal>
+              <ObjectPicker.Content
+                classNames='popover-card-width'
+                options={options}
+                selectedIds={selectedIds}
+                createSchema={createSchema && omitId(createSchema)}
+                createOptionLabel={createOptionLabel}
+                createOptionIcon={createOptionIcon}
+                createInitialValuePath={createInitialValuePath}
+                onCreate={handleCreate}
+                onSelect={handleSelect}
+              />
+            </ObjectPicker.Portal>
           </ObjectPicker.Root>
         )}
       </div>

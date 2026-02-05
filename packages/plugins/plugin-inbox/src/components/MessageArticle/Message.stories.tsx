@@ -2,20 +2,28 @@
 // Copyright 2023 DXOS.org
 //
 
-import { signal } from '@preact/signals-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React from 'react';
+import React, { useMemo } from 'react';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Message as MessageType } from '@dxos/types';
 
 import { translations } from '../../translations';
 
-import { Message, type MessageRootProps } from './Message';
+import { Message } from './Message';
 
-const DefaultStory = (props: MessageRootProps) => {
+// TODO(wittjosiah): ECHO objects don't work when passed via Storybook args.
+const DefaultStory = () => {
+  const message = useMemo(
+    () =>
+      MessageType.make({
+        sender: { name: 'John Doe', email: 'john@doe.com' },
+        blocks: [{ _tag: 'text', text: 'Hello world!' }],
+      }),
+    [],
+  );
   return (
-    <Message.Root {...props}>
+    <Message.Root message={message} sender={undefined}>
       <Message.Toolbar />
       <Message.Viewport>
         <Message.Header />
@@ -27,9 +35,8 @@ const DefaultStory = (props: MessageRootProps) => {
 
 const meta = {
   title: 'plugins/plugin-inbox/Message',
-  component: Message.Root,
-  render: DefaultStory,
-  decorators: [withTheme, withLayout({ container: 'column' })],
+  component: DefaultStory,
+  decorators: [withTheme, withLayout({ layout: 'column' })],
   parameters: {
     layout: 'fullscreen',
     translations,
@@ -40,12 +47,4 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {
-  args: {
-    message: MessageType.make({
-      sender: { name: 'John Doe', email: 'john@doe.com' },
-      blocks: [{ _tag: 'text', text: 'Hello world!' }],
-    }),
-    sender: signal(undefined),
-  },
-};
+export const Default: Story = {};

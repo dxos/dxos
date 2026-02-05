@@ -2,10 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useSignalEffect } from '@preact/signals-react';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Capabilities } from '@dxos/app-framework';
+import { Common } from '@dxos/app-framework';
 import { useCapabilities } from '@dxos/app-framework/react';
 import { type AiContextBinder } from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
@@ -18,7 +17,7 @@ import { distinctBy } from '@dxos/util';
  */
 // TODO(burdon): Reconcile with eventual public registry.
 export const useBlueprintRegistry = () => {
-  const blueprints = useCapabilities(Capabilities.BlueprintDefinition);
+  const blueprints = useCapabilities(Common.Capability.BlueprintDefinition);
   return useMemo(() => new Blueprint.Registry(blueprints), [blueprints]);
 };
 
@@ -44,10 +43,23 @@ export const useBlueprints = ({
 export const useActiveBlueprints = ({ context }: { context?: AiContextBinder }) => {
   const [active, setActive] = useState<Map<string, Blueprint.Blueprint>>(new Map());
 
-  useSignalEffect(() => {
-    const blueprints = context?.blueprints.value ?? [];
-    setActive(new Map(blueprints.map((blueprint) => [blueprint.key, blueprint])));
-  });
+  useEffect(() => {
+    if (!context) {
+      setActive(new Map());
+      return;
+    }
+
+    const updateActive = () => {
+      const blueprints = context.getBlueprints();
+      setActive(new Map(blueprints.map((blueprint) => [blueprint.key, blueprint])));
+    };
+
+    // Set initial value.
+    updateActive();
+
+    // Subscribe to changes.
+    return context.subscribeBlueprints(updateActive);
+  }, [context]);
 
   return active;
 };

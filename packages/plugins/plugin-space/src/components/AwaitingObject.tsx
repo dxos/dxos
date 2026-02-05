@@ -4,22 +4,23 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 
-import { LayoutAction, createIntent } from '@dxos/app-framework';
-import { useIntentDispatcher, useLayout } from '@dxos/app-framework/react';
+import { Common } from '@dxos/app-framework';
+import { useLayout, useOperationInvoker } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
 import { useClient } from '@dxos/react-client';
 import { Filter, useQuery } from '@dxos/react-client/echo';
 import { Button, Icon, Toast, useTranslation } from '@dxos/react-ui';
+import { osTranslations } from '@dxos/ui-theme';
 
 import { meta } from '../meta';
-import { SpaceAction } from '../types';
+import { SpaceOperation } from '../types';
 
 const WAIT_FOR_OBJECT_TIMEOUT = 3 * 60 * 1_000;
 const TOAST_TIMEOUT = 4 * 60 * 1_000;
 
 export const AwaitingObject = ({ id }: { id: string }) => {
   const { t } = useTranslation(meta.id);
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const { invokePromise } = useOperationInvoker();
   const [open, setOpen] = useState(true);
   const [waiting, setWaiting] = useState(true);
   const [found, setFound] = useState(false);
@@ -47,14 +48,14 @@ export const AwaitingObject = ({ id }: { id: string }) => {
   }, [id, objects, layout]);
 
   const handleClose = useCallback(
-    async () => dispatch(createIntent(SpaceAction.WaitForObject, { id: undefined })),
-    [dispatch],
+    async () => invokePromise(SpaceOperation.WaitForObject, { id: undefined }),
+    [invokePromise],
   );
 
   const handleNavigate = useCallback(() => {
-    void dispatch(createIntent(LayoutAction.Open, { part: 'main', subject: [id] }));
+    void invokePromise(Common.LayoutOperation.Open, { subject: [id] });
     void handleClose();
-  }, [id, handleClose, dispatch]);
+  }, [id, handleClose, invokePromise]);
 
   return (
     <Toast.Root open={open} duration={TOAST_TIMEOUT} onOpenChange={setOpen}>
@@ -96,12 +97,14 @@ export const AwaitingObject = ({ id }: { id: string }) => {
               </Button>
             </Toast.Action>
             <Toast.Close asChild>
-              <Button onClick={handleClose}>{t('close label', { ns: 'appkit' })}</Button>
+              <Button onClick={handleClose}>{t('close label', { ns: osTranslations })}</Button>
             </Toast.Close>
           </>
         ) : (
           <Toast.Close asChild>
-            <Button onClick={handleClose}>{t(waiting ? 'close label' : 'confirm label', { ns: 'appkit' })}</Button>
+            <Button onClick={handleClose}>
+              {t(waiting ? 'close label' : 'confirm label', { ns: osTranslations })}
+            </Button>
           </Toast.Close>
         )}
       </Toast.Actions>

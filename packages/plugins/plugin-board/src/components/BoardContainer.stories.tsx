@@ -3,21 +3,18 @@
 //
 
 import { type StoryObj } from '@storybook/react-vite';
+import * as Effect from 'effect/Effect';
 import React, { useEffect, useState } from 'react';
 
-import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
-import { SpacePlugin } from '@dxos/plugin-space';
-import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
-import { ThemePlugin } from '@dxos/plugin-theme';
+import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { faker } from '@dxos/random';
 import { Filter, Ref, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { withTheme } from '@dxos/react-ui/testing';
 import { translations as stackTranslations } from '@dxos/react-ui-stack';
-import { defaultTx } from '@dxos/react-ui-theme';
 import { Organization, Person } from '@dxos/types';
 
 import { translations } from '../translations';
@@ -64,7 +61,7 @@ const DefaultStory = () => {
     return null;
   }
 
-  return <BoardContainer role='board' board={board} />;
+  return <BoardContainer role='board' subject={board} />;
 };
 
 //
@@ -78,37 +75,36 @@ const meta = {
     withTheme,
     withPluginManager({
       plugins: [
+        ...corePlugins(),
         ClientPlugin({
           types: [Organization.Organization, Person.Person, Board.Board],
-          onClientInitialized: async ({ client }) => {
-            await client.halo.createIdentity();
-            const space = await client.spaces.create();
-            await space.waitUntilReady();
-            const board = space.db.add(createBoard());
+          onClientInitialized: ({ client }) =>
+            Effect.gen(function* () {
+              yield* Effect.promise(() => client.halo.createIdentity());
+              const space = yield* Effect.promise(() => client.spaces.create());
+              yield* Effect.promise(() => space.waitUntilReady());
+              const board = space.db.add(createBoard());
 
-            // Add some sample items
-            Array.from({ length: 10 }).map(() => {
-              const org = createOrg();
-              space.db.add(org);
-              board.items.push(Ref.make(org));
-              board.layout.cells[org.id] = {
-                x: Math.floor(Math.random() * 5) - 2,
-                y: Math.floor(Math.random() * 5) - 2,
-                width: 1,
-                height: 1,
-              };
-              return org;
-            });
-          },
+              Obj.change(board, (b) => {
+                // Add some sample items
+                Array.from({ length: 10 }).map(() => {
+                  const org = createOrg();
+                  space.db.add(org);
+                  b.items.push(Ref.make(org));
+                  b.layout.cells[org.id] = {
+                    x: Math.floor(Math.random() * 5) - 2,
+                    y: Math.floor(Math.random() * 5) - 2,
+                    width: 1,
+                    height: 1,
+                  };
+                  return org;
+                });
+              });
+            }),
         }),
-        SpacePlugin({}),
-        IntentPlugin(),
-        SettingsPlugin(),
 
-        // UI
-        ThemePlugin({ tx: defaultTx }),
+        StorybookPlugin({}),
         PreviewPlugin(),
-        StorybookLayoutPlugin({}),
       ],
     }),
   ],

@@ -8,11 +8,12 @@ import React, { useMemo, useState } from 'react';
 import { Client } from '@dxos/client';
 import { defaultFunctions } from '@dxos/compute';
 import { getRegisteredFunctionNames } from '@dxos/compute/testing';
+import { Obj } from '@dxos/echo';
 import { createDocAccessor } from '@dxos/echo-db';
 import { useAsyncEffect } from '@dxos/react-hooks';
 import { withTheme } from '@dxos/react-ui/testing';
-import { automerge } from '@dxos/react-ui-editor';
 import { CellEditor, type CellEditorProps } from '@dxos/react-ui-grid';
+import { automerge } from '@dxos/ui-editor';
 
 import { sheetExtension } from '../../extensions';
 import { Sheet } from '../../types';
@@ -37,8 +38,10 @@ const AutomergeStory = ({ value, ...props }: CellEditorProps) => {
     const space = await client.spaces.create();
 
     const sheet = Sheet.make();
-    sheet.name = 'Test';
-    sheet.cells[cell] = { value };
+    Obj.change(sheet, (s) => {
+      s.name = 'Test';
+      s.cells[cell] = { value };
+    });
     space.db.add(sheet);
     setObject(sheet);
   }, [value]);

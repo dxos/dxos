@@ -2,12 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { batch, effect } from '@preact/signals-core';
-
 import { type CleanupFn } from '@dxos/async';
-import { type Space } from '@dxos/client-protocol';
-import { type Entity, Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
-import { type Queue } from '@dxos/echo-db';
+import { type Database, type Entity, Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
+import { type Queue, type QueueImpl } from '@dxos/echo-db';
 import { type Graph, GraphModel } from '@dxos/graph';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -22,7 +19,7 @@ import { visitValues } from '@dxos/util';
 
 export type SpaceGraphNode = Graph.Node.Node<{
   label: string;
-  object?: Obj.Any;
+  object?: Obj.Unknown;
 }>;
 
 // TODO(burdon): Differentiate between refs and relations.
@@ -36,8 +33,8 @@ const truncate = (id: string) => `${id.slice(0, 4)}…${id.slice(-4)}`;
 
 export type SpaceGraphModelOptions = {
   showSchema?: boolean;
-  onCreateNode?: (node: SpaceGraphNode, object: Obj.Any) => void;
-  onCreateEdge?: (edge: SpaceGraphEdge, relation: Relation.Any) => void;
+  onCreateNode?: (node: SpaceGraphNode, object: Obj.Unknown) => void;
+  onCreateEdge?: (edge: SpaceGraphEdge, relation: Relation.Unknown) => void;
 };
 
 /**
@@ -46,8 +43,7 @@ export type SpaceGraphModelOptions = {
 export class SpaceGraphModel extends GraphModel.ReactiveGraphModel<SpaceGraphNode, SpaceGraphEdge> {
   private _options?: SpaceGraphModelOptions;
   private _filter?: Filter.Any;
-
-  private _space?: Space;
+  private _db?: Database.Database;
   private _queue?: Queue;
   private _schema?: Type.RuntimeType[];
   private _objects?: Entity.Unknown[];
@@ -62,7 +58,7 @@ export class SpaceGraphModel extends GraphModel.ReactiveGraphModel<SpaceGraphNod
   }
 
   override copy(graph?: Partial<Graph.Graph<SpaceGraphNode, SpaceGraphEdge>>): SpaceGraphModel {
-    return new SpaceGraphModel(graph);
+    return new SpaceGraphModel(this.registry, graph);
   }
 
   get objects(): Entity.Unknown[] {
@@ -74,7 +70,7 @@ export class SpaceGraphModel extends GraphModel.ReactiveGraphModel<SpaceGraphNod
   }
 
   isOpen() {
-    return this._space !== undefined;
+    return this._db !== undefined;
   }
 
   setOptions(options?: SpaceGraphModelOptions): this {
@@ -89,38 +85,40 @@ export class SpaceGraphModel extends GraphModel.ReactiveGraphModel<SpaceGraphNod
   setFilter(filter?: Filter.Any): this {
     this._filter = filter;
     if (this.isOpen()) {
-      this._subscribe();
+      this._subscribeObjects();
     }
 
     return this;
   }
 
-  async open(space: Space, queue?: Queue): Promise<this> {
-    log('open', { space, queue });
+  async open(db: Database.Database, queue?: Queue): Promise<this> {
+    log('open', { db, queue });
     if (this.isOpen()) {
       await this.close();
     }
 
-    this._space = space;
+    this._db = db;
     this._queue = queue;
-    const schemaaQuery = space.db.schemaRegistry.query({});
-    const schemas = await schemaaQuery.run();
 
-    const onSchemaUpdate = ({ results }: { results: Type.RuntimeType[] }) => (this._schema = results);
-    this._schemaSubscription = schemaaQuery.subscribe(onSchemaUpdate);
-    onSchemaUpdate({ results: schemas });
-    this._subscribe();
+    const schemaaQuery = db.schemaRegistry.query({});
+    this._schemaSubscription = schemaaQuery.subscribe(
+      ({ results }: { results: Type.RuntimeType[] }) => (this._schema = results),
+      { fire: true },
+    );
+
+    this._subscribeObjects();
 
     return this;
   }
 
   async close(): Promise<this> {
     log('close');
+
     this._schemaSubscription?.();
     this._schemaSubscription = undefined;
     this._objectSubscription?.();
     this._objectSubscription = undefined;
-    this._space = undefined;
+    this._db = undefined;
 
     return this;
   }
@@ -132,23 +130,21 @@ export class SpaceGraphModel extends GraphModel.ReactiveGraphModel<SpaceGraphNod
     clearTimeout(this._timeout);
     this._timeout = setTimeout(() => {
       if (this.isOpen()) {
-        batch(() => {
-          try {
-            this._update();
-          } catch (error) {
-            log.catch(error);
-          }
-        });
+        try {
+          this._update();
+        } catch (err) {
+          log.catch(err);
+        }
       }
     });
   }
 
-  private _subscribe() {
+  private _subscribeObjects() {
     this._objectSubscription?.();
     this._queueSubscription?.();
 
-    invariant(this._space);
-    this._objectSubscription = this._space.db.query(Query.select(this._filter ?? defaultFilter)).subscribe(
+    invariant(this._db);
+    this._objectSubscription = this._db.query(Query.select(this._filter ?? defaultFilter)).subscribe(
       (query) => {
         log('update', { objects: query.results.length });
         this._objects = [...query.results];
@@ -158,19 +154,30 @@ export class SpaceGraphModel extends GraphModel.ReactiveGraphModel<SpaceGraphNod
     );
 
     if (this._queue) {
-      const clearEffect = effect(() => {
-        const items = this._queue?.objects;
+      // Cast to QueueImpl to access updated event and getObjectsSync().
+      const queueImpl = this._queue as QueueImpl;
+
+      // Subscribe to queue updates via Event.
+      const unsubscribeUpdated = queueImpl.updated.on(() => {
+        const items = queueImpl.getObjectsSync();
         if (items) {
           this._queueItems = [...items];
         }
         this.invalidate();
       });
+
+      // Initialize with current items.
+      const initialItems = queueImpl.getObjectsSync();
+      if (initialItems) {
+        this._queueItems = [...initialItems];
+      }
+
       const pollingTask = setInterval(() => {
         void this._queue?.refresh();
       }, 1000);
 
       this._queueSubscription = () => {
-        clearEffect();
+        unsubscribeUpdated();
         clearInterval(pollingTask);
       };
     }
@@ -187,19 +194,13 @@ export class SpaceGraphModel extends GraphModel.ReactiveGraphModel<SpaceGraphNod
     // TOOD(burdon): Merge edges also?
     const currentNodes: SpaceGraphNode[] = [...this._graph.nodes] as SpaceGraphNode[];
 
-    // TOOD(burdon): Causes D3 graph to reset since live? Batch preact changes?
-    this.clear();
+    // Build new graph state locally, then set it all at once.
+    const newNodes: SpaceGraphNode[] = [];
+    const newEdges: SpaceGraphEdge[] = [];
 
     // Schema nodes.
     if (this._options?.showSchema) {
-      const schemas = [
-        // Database Schema.
-        ...(this._schema ?? []),
-        // Runtime schema.
-        ...(this._space?.db.graph.schemaRegistry.schemas ?? []),
-      ];
-
-      schemas.forEach((schema) => {
+      this._schema?.forEach((schema) => {
         const typename = Type.getDXN(schema)?.typename;
         if (typename) {
           let node = currentNodes.find((node) => node.id === typename);
@@ -213,7 +214,7 @@ export class SpaceGraphModel extends GraphModel.ReactiveGraphModel<SpaceGraphNod
             };
           }
 
-          this._graph.nodes.push(node);
+          newNodes.push(node);
         }
       });
     }
@@ -231,7 +232,7 @@ export class SpaceGraphModel extends GraphModel.ReactiveGraphModel<SpaceGraphNod
 
       // Relations.
       if (Relation.isRelation(object)) {
-        const edge = this.addEdge({
+        const edge: SpaceGraphEdge = {
           id: object.id,
           type: 'relation',
           source: Relation.getSourceDXN(object).asEchoDXN()!.echoId,
@@ -239,8 +240,9 @@ export class SpaceGraphModel extends GraphModel.ReactiveGraphModel<SpaceGraphNod
           data: {
             object,
           },
-        });
+        };
 
+        newEdges.push(edge);
         this._options?.onCreateEdge?.(edge, object);
       } else if (Obj.isObject(object)) {
         const typename = Obj.getTypename(object);
@@ -259,17 +261,17 @@ export class SpaceGraphModel extends GraphModel.ReactiveGraphModel<SpaceGraphNod
             this._options?.onCreateNode?.(node, object);
           }
 
-          this._graph.nodes.push(node);
+          newNodes.push(node);
 
           // Link to schema.
           if (this._options?.showSchema) {
-            const schemaNode = this._graph.nodes.find(
+            const schemaNode = newNodes.find(
               (node) => node.type === 'schema' && node.data.object && Obj.getTypename(node.data.object) === typename,
             );
             if (!schemaNode) {
               log.warn('schema node not found', { typename });
             } else {
-              this.addEdge({
+              newEdges.push({
                 id: `${object.id}-${schemaNode.id}`,
                 type: 'schema',
                 source: object.id,
@@ -281,14 +283,14 @@ export class SpaceGraphModel extends GraphModel.ReactiveGraphModel<SpaceGraphNod
             }
           }
 
-          // Link ot refs.
+          // Link to refs.
           const refs = getOutgoingReferences(object);
           for (const ref of refs) {
             if (!Obj.isObject(ref.target)) {
               continue;
             }
 
-            this.addEdge({
+            newEdges.push({
               id: `${object.id}-${ref.dxn.toString()}`,
               type: 'ref',
               source: object.id,
@@ -301,11 +303,14 @@ export class SpaceGraphModel extends GraphModel.ReactiveGraphModel<SpaceGraphNod
         }
       }
     });
+
+    // Set the entire graph at once to trigger a single notification.
+    this.setGraph({ nodes: newNodes, edges: newEdges });
   }
 }
 
-const getOutgoingReferences = (object: Obj.Any): Ref.Any[] => {
-  const refs: Ref.Any[] = [];
+const getOutgoingReferences = (object: Obj.Unknown): Ref.Unknown[] => {
+  const refs: Ref.Unknown[] = [];
   const go = (value: unknown) => {
     if (Ref.isRef(value)) {
       refs.push(value);

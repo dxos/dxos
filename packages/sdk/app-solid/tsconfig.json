@@ -21,6 +21,9 @@
       "path": "../../common/web-context-solid"
     },
     {
+      "path": "../../core/operation"
+    },
+    {
       "path": "../app-framework"
     }
   ]

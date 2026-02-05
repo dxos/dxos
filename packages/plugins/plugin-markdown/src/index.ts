@@ -2,8 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-export { MarkdownCapabilities } from './capabilities';
-export { MarkdownEvents } from './events';
+export { MarkdownCapabilities, MarkdownEvents } from './types';
 
 export * from './meta';
 export * from './types';

@@ -5,7 +5,7 @@
 import { type EditorView } from '@codemirror/view';
 import { useCallback, useMemo, useRef } from 'react';
 
-import { Domino, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { toLocalizedString, useTranslation } from '@dxos/react-ui';
 import {
   type EditorMenuGroup,
   type UseEditorMenuProps,
@@ -13,6 +13,7 @@ import {
   formattingCommands,
   linkSlashCommands,
 } from '@dxos/react-ui-editor';
+import { Domino } from '@dxos/ui';
 
 import { meta } from '../meta';
 
@@ -52,18 +53,14 @@ export const useEditorMenuOptions = ({
     const trigger = onLinkQuery ? ['/', '@'] : ['/'];
     const placeholder = {
       delay: 3_000,
-      content: () =>
-        Domino.of('div')
-          .children(
-            Domino.of('span').text('Press'),
-            ...trigger.map((text) =>
-              Domino.of('span')
-                .classNames('mx-1 pli-1.5 pt-[1px] pb-[2px] border border-separator rounded-sm')
-                .text(text),
-            ),
-            Domino.of('span').text('for commands.'),
-          )
-          .build(),
+      content: () => {
+        const pressEl = Domino.of('span').text('Press');
+        const triggerEls = trigger.map((text) =>
+          Domino.of('span').classNames('mx-1 pli-1.5 pt-[1px] pb-[2px] border border-separator rounded-sm').text(text),
+        );
+        const forCommandsEl = Domino.of('span').text('for commands.');
+        return Domino.of('div').children(pressEl, ...triggerEls, forCommandsEl).root;
+      },
     };
 
     return { viewRef, getMenu, trigger, placeholder };

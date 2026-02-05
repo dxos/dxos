@@ -5,18 +5,17 @@
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useState } from 'react';
 
-import { createIntent } from '@dxos/app-framework';
-import { useIntentDispatcher } from '@dxos/app-framework/react';
+import { useOperationInvoker } from '@dxos/app-framework/react';
 import { type Database, Filter, Obj } from '@dxos/echo';
-import { SpaceAction } from '@dxos/plugin-space/types';
+import { SpaceOperation } from '@dxos/plugin-space/types';
 import { useQuery } from '@dxos/react-client/echo';
 import { Separator, useTranslation } from '@dxos/react-ui';
 import { ControlItem, ControlPage, ControlSection, Form, controlItemClasses } from '@dxos/react-ui-form';
-import { StackItem } from '@dxos/react-ui-stack';
+import { Layout } from '@dxos/react-ui-mosaic';
 import { AccessToken } from '@dxos/types';
 
 import { meta } from '../meta';
-import { TokenManagerAction } from '../types';
+import { TokenManagerOperation } from '../types';
 
 import { NewTokenSelector } from './NewTokenSelector';
 import { TokenManager } from './TokenManager';
@@ -32,7 +31,7 @@ type TokenForm = Schema.Schema.Type<typeof FormSchema>;
 
 export const TokensContainer = ({ db }: { db: Database.Database }) => {
   const { t } = useTranslation(meta.id);
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const { invokePromise } = useOperationInvoker();
   const [adding, setAdding] = useState(false);
   const tokens = useQuery(db, Filter.type(AccessToken.AccessToken));
 
@@ -41,20 +40,17 @@ export const TokensContainer = ({ db }: { db: Database.Database }) => {
 
   const handleAddAccessToken = useCallback(
     async (token: AccessToken.AccessToken) => {
-      // TODO(ZaymonFC): Is there a more ergonomic way to do this intent chain?
-      const result = await dispatch(
-        createIntent(SpaceAction.AddObject, {
-          object: token,
-          target: db,
-          hidden: true,
-        }),
-      );
+      const result = await invokePromise(SpaceOperation.AddObject, {
+        object: token,
+        target: db,
+        hidden: true,
+      });
 
       if (Obj.instanceOf(AccessToken.AccessToken, result.data?.object)) {
-        void dispatch(createIntent(TokenManagerAction.AccessTokenCreated, { accessToken: result.data?.object }));
+        void invokePromise(TokenManagerOperation.AccessTokenCreated, { accessToken: result.data?.object });
       }
     },
-    [db, dispatch],
+    [db, invokePromise],
   );
 
   const handleAdd = useCallback(
@@ -69,7 +65,7 @@ export const TokensContainer = ({ db }: { db: Database.Database }) => {
   const handleDelete = useCallback((token: AccessToken.AccessToken) => db.remove(token), [db]);
 
   return (
-    <StackItem.Content scrollable>
+    <Layout.Container scrollable>
       <ControlPage>
         <ControlSection
           title={t('integrations verbose label', { ns: meta.id })}
@@ -95,6 +91,6 @@ export const TokensContainer = ({ db }: { db: Database.Database }) => {
           )}
         </ControlSection>
       </ControlPage>
-    </StackItem.Content>
+    </Layout.Container>
   );
 };

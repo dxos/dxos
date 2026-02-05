@@ -4,12 +4,13 @@
 
 import { useKeyboard } from '@opentui/solid';
 import * as Effect from 'effect/Effect';
-import { For, Match, Switch, createEffect, createSignal, onCleanup, useContext } from 'solid-js';
+import { For, Match, Switch, createEffect, createMemo, createSignal, useContext } from 'solid-js';
 
 import { type ModelName } from '@dxos/ai';
 import { type AiConversation, GenerationObserver } from '@dxos/assistant';
 import { type Blueprint } from '@dxos/blueprints';
 import { type Database, Filter, Obj } from '@dxos/echo';
+import { useAtomValue } from '@dxos/effect-atom-solid';
 import { log } from '@dxos/log';
 import { Assistant } from '@dxos/plugin-assistant/types';
 import { isTruthy } from '@dxos/util';
@@ -47,8 +48,17 @@ export const Chat = (props: ChatProps) => {
   // Conversation state.
   const chatMessages = useChatMessages();
   const infoMessages = useChatMessages();
-  const [blueprints, setBlueprints] = createSignal<Blueprint.Blueprint[]>([]);
-  const [objects, setObjects] = createSignal<Obj.Any[]>([]);
+
+  // Subscribe to context atoms.
+  const contextBlueprints = useAtomValue(() => props.conversation.context.blueprints);
+  const objects = useAtomValue(() => props.conversation.context.objects);
+
+  // Transform blueprints to full blueprint definitions from registry.
+  const blueprints = createMemo(() =>
+    contextBlueprints()
+      .map((blueprint) => blueprintRegistry.getByKey(blueprint.key))
+      .filter(isTruthy),
+  );
 
   createEffect(() => {
     // Monitor conversation change.
@@ -58,25 +68,6 @@ export const Chat = (props: ChatProps) => {
     // TODO(burdon): List conversations.
     chatMessages.setMessages({ data: [] });
     infoMessages.setMessages({ data: [] });
-  });
-
-  createEffect(() => {
-    // Bridge Preact signals to Solid signals.
-    const onUpdate = () => {
-      setBlueprints(
-        props.conversation.context.blueprints.value
-          .map((blueprint) => blueprintRegistry.getByKey(blueprint.key))
-          .filter(isTruthy),
-      );
-      setObjects(props.conversation.context.objects.value);
-    };
-
-    const unsubscribeBlueprints = props.conversation.context.blueprints.subscribe(onUpdate);
-    const unsubscribeObjects = props.conversation.context.objects.subscribe(onUpdate);
-    onCleanup(() => {
-      unsubscribeBlueprints();
-      unsubscribeObjects();
-    });
   });
 
   // TODO(burdon): Factor out key handling, hints, and dialogs.
@@ -175,7 +166,7 @@ export const Chat = (props: ChatProps) => {
           </Match>
           <Match when={popup() === 'blueprints'}>
             <BlueprintPicker
-              selected={props.conversation.context.blueprints.value.map((blueprint) => blueprint.key)}
+              selected={props.conversation.context.getBlueprints().map((blueprint) => blueprint.key)}
               onSave={(blueprints) => {
                 props.onChatCreate?.({ blueprints });
                 setPopup(undefined);
@@ -228,7 +219,7 @@ const Blueprints = (props: { blueprints: Blueprint.Blueprint[] }) => {
   );
 };
 
-const Artifacts = (props: { objects: Obj.Any[] }) => {
+const Artifacts = (props: { objects: Obj.Unknown[] }) => {
   return (
     <box flexDirection='column' flexShrink={0}>
       {props.objects.length > 0 && <text style={{ fg: theme.text.primary }}>Artifacts</text>}

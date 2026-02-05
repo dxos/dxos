@@ -12,7 +12,7 @@ import { ${name} } from './${name}';
 const meta: Meta<typeof ${name}> = {
   title: 'components/${name}',
   component: ${name},
-  decorators: [withTheme, withLayout({ container: 'column' })],
+  decorators: [withTheme, withLayout({ layout: 'column' })],
   parameters: {
     layout: 'fullscreen',
   },

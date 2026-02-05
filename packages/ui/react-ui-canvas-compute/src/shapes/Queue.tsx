@@ -8,7 +8,7 @@ import React, { Fragment } from 'react';
 import { DEFAULT_OUTPUT, QueueInput, QueueOutput } from '@dxos/conductor';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { type ShapeComponentProps, type ShapeDef } from '@dxos/react-ui-canvas-editor';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { useComputeNodeState } from '../hooks';
 

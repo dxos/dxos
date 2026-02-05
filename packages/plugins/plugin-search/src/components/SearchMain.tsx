@@ -2,58 +2,82 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 
-import { useClient } from '@dxos/react-client';
+import { Surface } from '@dxos/app-framework/react';
+import { Entity, Query } from '@dxos/echo';
 import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
-import { useTranslation } from '@dxos/react-ui';
-import { StackItem } from '@dxos/react-ui-stack';
-import { mx } from '@dxos/react-ui-theme';
+import { Toolbar, useTranslation } from '@dxos/react-ui';
+import { Card, Mosaic, type StackTileComponent } from '@dxos/react-ui-mosaic';
+import { Layout } from '@dxos/react-ui-mosaic';
+import { SearchList } from '@dxos/react-ui-searchlist';
+import { Text } from '@dxos/schema';
 
 import { useGlobalSearch, useGlobalSearchResults, useWebSearch } from '../hooks';
 import { meta } from '../meta';
-
-import { Searchbar } from './Searchbar';
-import { SearchResults } from './SearchResults';
+import { type SearchResult } from '../types';
 
 export const SearchMain = ({ space }: { space?: Space }) => {
   const { t } = useTranslation(meta.id);
-  const client = useClient();
   const { setMatch } = useGlobalSearch();
   const [query, setQuery] = useState<string>();
   // TODO(burdon): Option to search across spaces.
-  const allSpaces = false;
-  const objects = useQuery(allSpaces ? client.spaces : space?.db, Filter.everything());
+  const objects = useQuery(
+    space?.db,
+    query === undefined
+      ? Query.select(Filter.nothing())
+      : // TODO(dmaretskyi): Final version would walk the ancestry of the object until we find a non-system type.
+        Query.all(
+          Query.select(Filter.text(query, { type: 'full-text' })).select(Filter.not(Filter.type(Text.Text))),
+          Query.select(Filter.text(query, { type: 'full-text' }))
+            .select(Filter.type(Text.Text))
+            .referencedBy('dxos.org/type/Document', 'content'),
+        ),
+  );
+
   const results = useGlobalSearchResults(objects);
+  const { results: webResults } = useWebSearch({ query });
+  const allResults = useMemo(
+    () => [...results, ...webResults].filter(({ object }) => object && Entity.getLabel(object)),
+    [results, webResults],
+  );
 
-  const { runSearch, results: webResults } = useWebSearch({ query });
-
-  // TODO(burdon): Activate and/or filter current main (set context).
-  const [selected, setSelected] = useState<string>();
-  const handleSelect = (id: string) => {
-    setSelected((selected) => (selected === id ? undefined : id));
-  };
-
-  const allResults = [...results, ...webResults];
+  const handleSearch = useCallback(
+    (text: string) => {
+      setQuery(text);
+      setMatch?.(text);
+    },
+    [setMatch],
+  );
 
   return (
-    <StackItem.Content toolbar>
-      <Searchbar
-        classNames='pli-2'
-        placeholder={t('search placeholder')}
-        delay={300}
-        onChange={(text) => {
-          setQuery(text);
-          setMatch?.(text);
-        }}
-        onSubmit={runSearch}
-      />
+    <Layout.Main toolbar>
+      <SearchList.Root onSearch={handleSearch}>
+        <Toolbar.Root>
+          <SearchList.Input placeholder={t('search placeholder')} />
+        </Toolbar.Root>
+        <SearchList.Content>
+          <Mosaic.Container asChild>
+            <Mosaic.Viewport>
+              <Mosaic.Stack items={allResults} getId={(result) => result.object!.id} Tile={SearchResultTile} />
+            </Mosaic.Viewport>
+          </Mosaic.Container>
+          {allResults.length === 0 && <SearchList.Empty>{t('empty results message')}</SearchList.Empty>}
+        </SearchList.Content>
+      </SearchList.Root>
+    </Layout.Main>
+  );
+};
 
-      {allResults.length > 0 && (
-        <div className={mx('flex flex-col bs-full overflow-hidden')}>
-          <SearchResults items={allResults} selected={selected} onSelect={handleSelect} />
-        </div>
-      )}
-    </StackItem.Content>
+const SearchResultTile: StackTileComponent<SearchResult> = ({ data }) => {
+  return (
+    <Card.Root key={data.id}>
+      <Card.Toolbar>
+        <Card.DragHandle />
+        <Card.Title>{data.label ?? (data.object && Entity.getLabel(data.object))}</Card.Title>
+        <Card.Menu />
+      </Card.Toolbar>
+      <Surface role='card--content' data={{ subject: data.object }} limit={1} />
+    </Card.Root>
   );
 };

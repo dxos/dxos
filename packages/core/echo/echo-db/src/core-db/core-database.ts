@@ -20,18 +20,13 @@ import { Stream } from '@dxos/codec-protobuf/stream';
 import { Context, ContextDisposedError } from '@dxos/context';
 import { raise } from '@dxos/debug';
 import { type Database, Ref } from '@dxos/echo';
-import {
-  type DatabaseDirectory,
-  type ObjectStructure,
-  Reference,
-  type SpaceState,
-  encodeReference,
-} from '@dxos/echo-protocol';
-import { compositeRuntime } from '@dxos/echo-signals/runtime';
+import { batchEvents } from '@dxos/echo/internal';
+import { type DatabaseDirectory, EncodedReference, type ObjectStructure, type SpaceState } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { type ObjectId } from '@dxos/keys';
 import { type DXN, type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { RpcClosedError } from '@dxos/protocols';
 import type { QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 import type { DataService, SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
 import { trace } from '@dxos/tracing';
@@ -51,7 +46,7 @@ import { getInlineAndLinkChanges } from './util';
 
 export type InitRootProxyFn = (core: ObjectCore) => void;
 
-export type CoreDatabaseParams = {
+export type CoreDatabaseProps = {
   graph: HypergraphImpl;
   dataService: DataService;
   queryService: QueryService;
@@ -117,7 +112,10 @@ export class CoreDatabase {
 
   readonly saveStateChanged: ReadOnlyEvent<SaveStateChangedEvent>;
 
-  constructor({ graph, dataService, queryService, spaceId, spaceKey }: CoreDatabaseParams) {
+  /** Fires when service connection is re-established after a leader change. */
+  private readonly _reconnected = new Event<void>();
+
+  constructor({ graph, dataService, queryService, spaceId, spaceKey }: CoreDatabaseProps) {
     this._hypergraph = graph;
     this._dataService = dataService;
     this._queryService = queryService;
@@ -219,7 +217,8 @@ export class CoreDatabase {
   @synchronized
   async updateSpaceState(spaceState: SpaceState): Promise<void> {
     invariant(this._ctx, 'Must be open');
-    if (spaceState.rootUrl === this._automergeDocLoader.getSpaceRootDocHandle().url) {
+    const currentRootUrl = this._automergeDocLoader.getSpaceRootDocHandle().url;
+    if (spaceState.rootUrl === currentRootUrl) {
       return;
     }
     this._unsubscribeFromHandles();
@@ -500,7 +499,7 @@ export class CoreDatabase {
    * Intended way to change the type of the object (for schema migrations).
    * Any concurrent changes made by other peers will be overwritten.
    */
-  async atomicReplaceObject(id: ObjectId, params: AtomicReplaceObjectParams): Promise<void> {
+  async atomicReplaceObject(id: ObjectId, params: AtomicReplaceObjectProps): Promise<void> {
     const { data, type } = params;
 
     const core = await this.loadObjectCoreById(id);
@@ -523,18 +522,26 @@ export class CoreDatabase {
     };
 
     if (type !== undefined) {
-      newStruct.system!.type = encodeReference(Reference.fromDXN(type));
+      newStruct.system!.type = EncodedReference.fromDXN(type);
     }
 
     core.setDecoded([], newStruct);
   }
 
+  // TODO(wittjosiah): Handle RpcClosedError and TimeoutError during reconnection gracefully.
   async flush({ disk = true, indexes = false, updates = false }: Database.FlushOptions = {}): Promise<void> {
     log('flush', { disk, indexes, updates });
+    // Wait for pending document creations to complete before flushing.
+    await this._automergeDocLoader.waitForPendingCreations();
     if (disk) {
       await this._repoProxy.flush();
       await this._dataService.flush(
-        { documentIds: this._automergeDocLoader.getAllHandles().map((handle) => handle.documentId) },
+        {
+          documentIds: this._automergeDocLoader
+            .getAllHandles()
+            .map((handle) => handle.documentId)
+            .filter((id): id is DocumentId => id != null),
+        },
         { timeout: RPC_TIMEOUT },
       );
     }
@@ -554,7 +561,7 @@ export class CoreDatabase {
   async getDocumentHeads(): Promise<SpaceDocumentHeads> {
     const root = this._automergeDocLoader.getSpaceRootDocHandle();
     const doc = root.doc();
-    if (!doc) {
+    if (!doc || root.documentId == null) {
       return { heads: {} };
     }
 
@@ -605,6 +612,7 @@ export class CoreDatabase {
     const root = this._automergeDocLoader.getSpaceRootDocHandle();
     const doc = root.doc();
     invariant(doc);
+    invariant(root.documentId, 'Space root document must have documentId');
 
     await this._dataService.reIndexHeads(
       {
@@ -632,19 +640,46 @@ export class CoreDatabase {
   }
 
   subscribeToSyncState(ctx: Context, callback: (state: SpaceSyncState) => void): CleanupFn {
-    const stream = this._dataService.subscribeSpaceSyncState({ spaceId: this.spaceId }, { timeout: RPC_TIMEOUT });
-    stream.subscribe(
-      (data) => {
-        void runInContextAsync(ctx, () => callback(data));
-      },
-      (err) => {
-        if (err) {
-          ctx.raise(err);
-        }
-      },
-    );
-    ctx.onDispose(() => stream.close());
-    return () => stream.close();
+    let currentStream: ReturnType<DataService['subscribeSpaceSyncState']> | undefined;
+
+    const setupStream = () => {
+      currentStream = this._dataService.subscribeSpaceSyncState({ spaceId: this.spaceId }, { timeout: RPC_TIMEOUT });
+      currentStream.subscribe(
+        (data) => {
+          void runInContextAsync(ctx, () => callback(data));
+        },
+        (err) => {
+          if (err instanceof RpcClosedError) {
+            // Wait for reconnection and re-establish the stream.
+            this._reconnected.once(ctx, () => setupStream());
+          } else if (err) {
+            ctx.raise(err);
+          }
+        },
+      );
+    };
+
+    setupStream();
+    ctx.onDispose(() => currentStream?.close());
+    return () => currentStream?.close();
+  }
+
+  /**
+   * Update service references after reconnection.
+   */
+  _updateServices({ dataService, queryService }: { dataService: DataService; queryService: QueryService }): void {
+    (this as any)._dataService = dataService;
+    (this as any)._queryService = queryService;
+    this._repoProxy._updateDataService(dataService);
+  }
+
+  /**
+   * Handle reconnection to re-establish RPC streams.
+   */
+  async _onReconnect(): Promise<void> {
+    log('re-establishing database streams');
+    await this._repoProxy._onReconnect();
+    this._reconnected.emit();
   }
 
   getLoadedDocumentHandles(): DocHandleProxy<any>[] {
@@ -655,25 +690,31 @@ export class CoreDatabase {
     spaceRootDocHandle: DocHandleProxy<DatabaseDirectory>,
     objectsToLoad: string[],
   ): Promise<void> {
+    const spaceRootUrl = spaceRootDocHandle.url;
+    if (spaceRootUrl == null) {
+      log.warn('space root document has no url');
+      return;
+    }
+
     const spaceRootDoc: DatabaseDirectory = spaceRootDocHandle.doc();
     const inlinedObjectIds = new Set(Object.keys(spaceRootDoc.objects ?? {}));
     const linkedObjectIds = new Map(Object.entries(spaceRootDoc.links ?? {}).map(([k, v]) => [k, v.toString()]));
 
     const objectsToRebind = new Map<string, { handle: DocHandleProxy<DatabaseDirectory>; objectIds: string[] }>();
-    objectsToRebind.set(spaceRootDocHandle.url, { handle: spaceRootDocHandle, objectIds: [] });
+    objectsToRebind.set(spaceRootUrl, { handle: spaceRootDocHandle, objectIds: [] });
 
     const objectsToRemove: string[] = [];
     const objectsToCreate = [...inlinedObjectIds.values()].filter((oid) => !this._objects.has(oid));
 
     for (const object of this._objects.values()) {
       if (inlinedObjectIds.has(object.id)) {
-        if (spaceRootDocHandle.url === object.docHandle?.url) {
+        if (object.docHandle?.url != null && object.docHandle.url === spaceRootUrl) {
           continue;
         }
-        objectsToRebind.get(spaceRootDocHandle.url)!.objectIds.push(object.id);
+        objectsToRebind.get(spaceRootUrl)!.objectIds.push(object.id);
       } else if (linkedObjectIds.has(object.id)) {
         const newObjectDocUrl = linkedObjectIds.get(object.id)!;
-        if (newObjectDocUrl === object.docHandle?.url) {
+        if (object.docHandle?.url != null && object.docHandle.url === newObjectDocUrl) {
           continue;
         }
         const existing = objectsToRebind.get(newObjectDocUrl.toString());
@@ -709,7 +750,7 @@ export class CoreDatabase {
       return;
     }
 
-    compositeRuntime.batch(() => {
+    batchEvents(() => {
       for (const id of itemsUpdated) {
         const objCore = this._objects.get(id);
         if (objCore) {
@@ -739,7 +780,11 @@ export class CoreDatabase {
       const objectCore = this._objects.get(updatedObject);
       if (!objectCore) {
         createdObjectIds.push(updatedObject);
-      } else if (objectCore?.docHandle && objectCore.docHandle.url !== event.handle.url) {
+      } else if (
+        objectCore.docHandle?.url != null &&
+        event.handle.url != null &&
+        objectCore.docHandle.url !== event.handle.url
+      ) {
         log.verbose('object bound to incorrect document, going to rebind', {
           updatedObject,
           documentUrl: objectCore.docHandle.url,
@@ -879,7 +924,7 @@ export class CoreDatabase {
     this._objectsForNextUpdate.clear();
     this._objectsForNextDbUpdate.clear();
 
-    compositeRuntime.batch(() => {
+    batchEvents(() => {
       if (allDbUpdates.size > 0) {
         this._updateEvent.emit({
           spaceId: this.spaceId,
@@ -950,7 +995,7 @@ export type GetObjectCoreByIdOptions = {
   load?: boolean;
 };
 
-export type AtomicReplaceObjectParams = {
+export type AtomicReplaceObjectProps = {
   /**
    * Update data.
    * NOTE: This is not merged with the existing data.

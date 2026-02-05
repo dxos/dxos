@@ -50,7 +50,7 @@ export type CallState = {
   tracks?: UserState['tracks'];
 };
 
-export type CallSwarmSynchronizerParams = { networkService: NetworkService };
+export type CallSwarmSynchronizerProps = { networkService: NetworkService };
 
 /**
  * Period for peer to reconnect to the call swarm gracefully if connection was lost abruptly.
@@ -76,7 +76,7 @@ export class CallSwarmSynchronizer extends Resource {
 
   private _sendStateTask?: DeferredTask = undefined;
 
-  constructor({ networkService }: CallSwarmSynchronizerParams) {
+  constructor({ networkService }: CallSwarmSynchronizerProps) {
     super();
     this._networkService = networkService;
   }

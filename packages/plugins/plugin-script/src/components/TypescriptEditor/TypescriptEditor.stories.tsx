@@ -9,9 +9,9 @@ import { createDocAccessor } from '@dxos/echo-db';
 import { createObject } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { createDataExtensions } from '@dxos/react-ui-editor';
-import { StackItem } from '@dxos/react-ui-stack';
+import { Layout } from '@dxos/react-ui-mosaic';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
+import { createDataExtensions } from '@dxos/ui-editor';
 import { trim } from '@dxos/util';
 
 import { TypescriptEditor, type TypescriptEditorProps } from './TypescriptEditor';
@@ -35,7 +35,12 @@ const DefaultStory = (props: TypescriptEditorProps) => {
   // );
 
   const extensions = useMemo(
-    () => [createDataExtensions({ id: object.id, text: createDocAccessor(object, ['content']) })],
+    () => [
+      createDataExtensions({
+        id: object.id,
+        text: createDocAccessor(object, ['content']),
+      }),
+    ],
     [],
   );
 
@@ -61,16 +66,16 @@ const DefaultStory = (props: TypescriptEditorProps) => {
   }, [object]);
 
   return (
-    <StackItem.Content toolbar>
+    <Layout.Main toolbar>
       {/* <ScriptToolbar script={script} state={{}} /> */}
       <Toolbar.Root>
         <Toolbar.Button onClick={handleRun}>Run</Toolbar.Button>
       </Toolbar.Root>
       <div role='none' className='grid grid-rows-[1fr_min-content] bs-full overflow-hidden text-sm'>
         <TypescriptEditor {...props} initialValue={object.content} extensions={extensions} />
-        <Json data={result} classNames='shrink-0 p-2 border-t border-subduedSeparator' />
+        <Json data={result} classNames='shrink-0 p-2 border-bs border-subduedSeparator' />
       </div>
-    </StackItem.Content>
+    </Layout.Main>
   );
 };
 
@@ -78,7 +83,7 @@ const meta = {
   title: 'plugins/plugin-script/TypescriptEditor',
   component: TypescriptEditor,
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ container: 'column', classNames: 'is-prose' })],
+  decorators: [withTheme, withLayout({ layout: 'column', classNames: 'is-proseMaxWidth' })],
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

@@ -2,10 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom-react';
+import { Atom, useAtomValue } from '@effect-atom/atom-react';
 import React, { type ChangeEvent, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { useCapabilities, useCapability } from '@dxos/app-framework/react';
+import { type SurfaceComponentProps, useCapabilities, useCapability } from '@dxos/app-framework/react';
 import { Context } from '@dxos/context';
 import { failUndefined } from '@dxos/debug';
 import { Obj } from '@dxos/echo';
@@ -19,30 +19,32 @@ import { MenuProvider, ToolbarMenu, createMenuAction, createMenuItemGroup, useMe
 import { useSoundEffect } from '@dxos/react-ui-sfx';
 import { StackItem } from '@dxos/react-ui-stack';
 
-import { ThreadCapabilities } from '../capabilities';
 import { meta } from '../meta';
+import { ThreadCapabilities } from '../types';
 import { type Channel } from '../types';
 
 import { Call } from './Call';
 import ChatContainer from './ChatContainer';
 
-// TODO(burdon): Create Radix style layout.
-
-export type ChannelContainerProps = {
-  channel?: Channel.Channel;
-  roomId?: string;
-  role?: string;
-  fullscreen?: boolean;
-};
+export type ChannelContainerProps = SurfaceComponentProps<
+  Channel.Channel | undefined,
+  {
+    roomId?: string;
+    fullscreen?: boolean;
+  }
+>;
 
 /**
  * Renders a call when active, otherwise renders the channel chat.
  */
-export const ChannelContainer = ({ channel, roomId: _roomId, role, fullscreen }: ChannelContainerProps) => {
+// TODO(burdon): Create Radix style layout.
+export const ChannelContainer = ({ role, subject: channel, roomId: roomIdProp, fullscreen }: ChannelContainerProps) => {
   const space = getSpace(channel);
   const callManager = useCapability(ThreadCapabilities.CallManager);
+  const joined = useAtomValue(callManager.joinedAtom);
+  const currentRoomId = useAtomValue(callManager.roomIdAtom);
   const attendableId = channel ? Obj.getDXN(channel).toString() : undefined;
-  const roomId = _roomId ?? attendableId ?? failUndefined();
+  const roomId = roomIdProp ?? attendableId ?? failUndefined();
   const identity = useIdentity();
   const isNamed = !!identity?.profile?.displayName;
   const joinSound = useSoundEffect('JoinCall');
@@ -83,7 +85,7 @@ export const ChannelContainer = ({ channel, roomId: _roomId, role, fullscreen }:
       return;
     }
 
-    if (callManager.joined) {
+    if (joined) {
       await callManager.leave();
     }
 
@@ -96,7 +98,7 @@ export const ChannelContainer = ({ channel, roomId: _roomId, role, fullscreen }:
       // TODO(burdon): Error sound.
       log.catch(err);
     }
-  }, [extensions, channel, roomId]);
+  }, [extensions, channel, roomId, joined]);
 
   /**
    * Leave the call.
@@ -115,7 +117,7 @@ export const ChannelContainer = ({ channel, roomId: _roomId, role, fullscreen }:
     }
   }, [extensions, roomId]);
 
-  const isJoined = callManager.joined && callManager.roomId === roomId;
+  const isJoined = joined && currentRoomId === roomId;
 
   return (
     <StackItem.Content classNames={isJoined && 'bs-full'} toolbar={!isJoined}>

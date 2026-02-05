@@ -10,7 +10,7 @@ import { defaultMap, range } from '@dxos/util';
 
 import { BORDER_COLORS, type LogReader, type SerializedLogEntry, getReader, renderPNG, showPNG } from '../analysys';
 import { type SchedulerEnvImpl } from '../env';
-import { type ReplicantsSummary, type TestParams, type TestPlan } from '../plan';
+import { type ReplicantsSummary, type TestPlan, type TestProps } from '../plan';
 import { TransportReplicant } from '../replicants/transport-replicant';
 import { TestBuilder as SignalTestBuilder } from '../test-builder';
 
@@ -56,7 +56,7 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec> {
     };
   }
 
-  async run(env: SchedulerEnvImpl<TransportTestSpec>, params: TestParams<TransportTestSpec>): Promise<void> {
+  async run(env: SchedulerEnvImpl<TransportTestSpec>, params: TestProps<TransportTestSpec>): Promise<void> {
     const signal = await this.signalBuilder.createSignalServer(0, params.outDir, params.spec.signalArguments, (err) => {
       log.error('error in signal server', { err });
       this.onError?.(err);
@@ -96,7 +96,7 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec> {
     );
   }
 
-  async analyze(params: TestParams<TransportTestSpec>, results: ReplicantsSummary): Promise<any> {
+  async analyze(params: TestProps<TransportTestSpec>, results: ReplicantsSummary): Promise<any> {
     await this.signalBuilder.destroy();
 
     const muxerStats = new Map<string, SerializedLogEntry<TeleportStatsLog>[]>();

@@ -4,16 +4,19 @@
 
 import '@dxos-theme';
 
+import * as Effect from 'effect/Effect';
+import * as Match from 'effect/Match';
 import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { useApp } from '@dxos/app-framework/react';
-import { registerSignalsRuntime } from '@dxos/echo-signals';
+import { runAndForwardErrors } from '@dxos/effect';
 import { LogLevel, log } from '@dxos/log';
 import { getObservabilityGroup, initializeAppObservability, isObservabilityDisabled } from '@dxos/observability';
 import { ThemeProvider, Tooltip } from '@dxos/react-ui';
-import { defaultTx } from '@dxos/react-ui-theme';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
+import { defaultTx } from '@dxos/ui-theme';
+import { getHostPlatform, isMobile as isMobile$, isTauri as isTauri$ } from '@dxos/util';
 
 import { Placeholder, ResetDialog } from './components';
 import { setupConfig } from './config';
@@ -37,8 +40,6 @@ const main = async () => {
   }
 
   TRACE_PROCESSOR.setInstanceTag('app');
-
-  registerSignalsRuntime();
 
   const { defs, SaveConfig } = await import('@dxos/config');
   const { createClientServices } = await import('@dxos/react-client');
@@ -77,19 +78,69 @@ const main = async () => {
   const observabilityDisabled = await isObservabilityDisabled(APP_KEY);
   const observabilityGroup = await getObservabilityGroup(APP_KEY);
 
-  const disableSharedWorker = config.values.runtime?.app?.env?.DX_HOST;
-  const services = await createClientServices(
-    config,
-    disableSharedWorker
-      ? undefined
-      : () =>
-          new SharedWorker(new URL('./shared-worker', import.meta.url), {
-            type: 'module',
-            name: 'dxos-client-worker',
-          }),
-    observabilityGroup,
-    !observabilityDisabled,
+  const isTauri = isTauri$();
+  if (isTauri) {
+    const platform = getHostPlatform();
+    document.body.setAttribute('data-platform', platform);
+  }
+
+  // Detect if this is the popover window in Tauri.
+  const isPopover = await Match.value(isTauri).pipe(
+    Match.when(
+      true,
+      Effect.fnUntraced(function* () {
+        const { getCurrentWindow } = yield* Effect.promise(() => import('@tauri-apps/api/window'));
+        const tauriWindow = getCurrentWindow();
+        return tauriWindow.label === 'popover';
+      }),
+    ),
+    Match.when(false, () => Effect.succeed(false)),
+    Match.exhaustive,
+    runAndForwardErrors,
   );
+
+  // Detect mobile operating systems (phones only, not tablets).
+  const isMobile = await Match.value(isTauri).pipe(
+    Match.when(
+      true,
+      Effect.fnUntraced(function* () {
+        const { type: osType } = yield* Effect.promise(() => import('@tauri-apps/plugin-os'));
+        const platform = osType();
+        return platform === 'android' || platform === 'ios';
+      }),
+    ),
+    Match.when(false, () => Effect.sync(() => isTrue(config.values.runtime?.app?.env?.DX_MOBILE) || isMobile$())),
+    Match.exhaustive,
+    runAndForwardErrors,
+  );
+
+  // Use single-client mode on mobile Tauri apps where SharedWorker crashes on WKWebView.
+  const useSingleClientMode = isTauri && isMobile;
+
+  const useLocalServices = config.values.runtime?.app?.env?.DX_HOST;
+  const useSharedWorker = config.values.runtime?.app?.env?.DX_SHARED_WORKER;
+  const services = await createClientServices(config, {
+    createWorker:
+      useLocalServices || !useSharedWorker
+        ? undefined
+        : () =>
+            new SharedWorker(new URL('./shared-worker', import.meta.url), {
+              type: 'module',
+              name: 'dxos-client-worker',
+            }),
+    createDedicatedWorker:
+      useLocalServices || useSharedWorker
+        ? undefined
+        : () =>
+            new Worker(new URL('@dxos/client/dedicated-worker', import.meta.url), {
+              type: 'module',
+              name: 'dxos-client-worker',
+            }),
+    createOpfsWorker: () => new Worker(new URL('@dxos/client/opfs-worker', import.meta.url), { type: 'module' }),
+    singleClientMode: useSingleClientMode,
+    observabilityGroup,
+    signalTelemetryEnabled: !observabilityDisabled,
+  });
 
   const conf: PluginConfig = {
     appKey: APP_KEY,
@@ -99,7 +150,9 @@ const main = async () => {
 
     isDev: !['production', 'staging'].includes(config.values.runtime?.app?.env?.DX_ENVIRONMENT),
     isPwa: !isFalse(config.values.runtime?.app?.env?.DX_PWA),
-    isTauri: !!(globalThis as any).__TAURI__,
+    isTauri,
+    isPopover,
+    isMobile,
     isLabs: isTrue(config.values.runtime?.app?.env?.DX_LABS),
     isStrict: !isFalse(config.values.runtime?.app?.env?.DX_STRICT),
   };

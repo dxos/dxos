@@ -7,9 +7,9 @@ import * as Schema from 'effect/Schema';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { DXN, Filter, Obj, Query, type QueryAST, Tag, Type } from '@dxos/echo';
-import { type EchoSchema, Format } from '@dxos/echo/internal';
+import { type EchoSchema, Format, type Mutable } from '@dxos/echo/internal';
 import { useQuery } from '@dxos/react-client/echo';
-import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
+import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 import { type ProjectionModel, View, getTypenameFromQuery } from '@dxos/schema';
@@ -38,7 +38,7 @@ export type ViewEditorDebugObjects = {
 type StoryProps = Pick<ViewEditorProps, 'readonly' | 'mode'>;
 
 const DefaultStory = (props: StoryProps) => {
-  const { space } = useClientProvider();
+  const { space } = useClientStory();
   const [schema, setSchema] = useState<EchoSchema>();
   const [view, setView] = useState<View.View>();
   const projectionRef = useRef<ProjectionModel>(null);
@@ -52,7 +52,7 @@ const DefaultStory = (props: StoryProps) => {
         email: Format.Email,
         salary: Format.Currency(),
       }).pipe(
-        Type.Obj({
+        Type.object({
           typename: 'example.com/type/Test',
           version: '0.1.0',
         }),
@@ -63,7 +63,7 @@ const DefaultStory = (props: StoryProps) => {
         description: Schema.String,
         completed: Schema.Boolean,
       }).pipe(
-        Type.Obj({
+        Type.object({
           typename: 'example.com/type/Alternate',
           version: '0.1.0',
         }),
@@ -90,7 +90,9 @@ const DefaultStory = (props: StoryProps) => {
       if (props.mode === 'tag') {
         const queue = target && DXN.tryParse(target) ? target : undefined;
         const query = queue ? Query.fromAst(newQuery).options({ queues: [queue] }) : Query.fromAst(newQuery);
-        view.query.ast = query.ast;
+        Obj.change(view, (v) => {
+          v.query.ast = query.ast as Mutable<typeof query.ast>;
+        });
 
         const typename = getTypenameFromQuery(query.ast);
         const [newSchema] = await space.db.schemaRegistry.query({ typename }).run();
@@ -102,10 +104,14 @@ const DefaultStory = (props: StoryProps) => {
           query,
           jsonSchema: newSchema.jsonSchema,
         });
-        view.projection = Obj.getSnapshot(newView).projection;
+        Obj.change(view, (v) => {
+          v.projection = Obj.getSnapshot(newView).projection as Mutable<typeof v.projection>;
+        });
         setSchema(() => newSchema);
       } else {
-        view.query.ast = newQuery;
+        Obj.change(view, (v) => {
+          v.query.ast = newQuery as Mutable<typeof newQuery>;
+        });
         schema.updateTypename(getTypenameFromQuery(newQuery));
       }
     },

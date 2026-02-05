@@ -10,11 +10,9 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
+import { CommandConfig, print } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
 import { createEdgeClient, getDeployedFunctions, invokeFunction } from '@dxos/functions-runtime/edge';
-
-import { CommandConfig } from '../../services';
-import { print } from '../../util';
 
 import { printInvokeResult } from './util';
 

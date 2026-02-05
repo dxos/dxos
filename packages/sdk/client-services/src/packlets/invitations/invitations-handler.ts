@@ -16,7 +16,7 @@ import { type AdmissionKeypair, Invitation } from '@dxos/protocols/proto/dxos/cl
 import { type DeviceProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { AuthenticationResponse, type IntroductionResponse } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { InvitationOptions } from '@dxos/protocols/proto/dxos/halo/invitations';
-import { type ExtensionContext, type TeleportExtension, type TeleportParams } from '@dxos/teleport';
+import { type ExtensionContext, type TeleportExtension, type TeleportProps } from '@dxos/teleport';
 import { trace as _trace } from '@dxos/tracing';
 import { ComplexSet } from '@dxos/util';
 
@@ -31,8 +31,8 @@ const metrics = _trace.metrics;
 
 const MAX_DELEGATED_INVITATION_HOST_TRIES = 3;
 
-export type InvitationConnectionParams = {
-  teleport: Partial<TeleportParams>;
+export type InvitationConnectionProps = {
+  teleport: Partial<TeleportProps>;
   edgeInvitations?: EdgeInvitationConfig;
 };
 
@@ -71,7 +71,7 @@ export class InvitationsHandler {
   constructor(
     private readonly _networkManager: SwarmNetworkManager,
     private readonly _edgeClient?: EdgeHttpClient,
-    private readonly _connectionParams?: InvitationConnectionParams,
+    private readonly _connectionProps?: InvitationConnectionProps,
   ) {}
 
   handleInvitationFlow(
@@ -388,7 +388,7 @@ export class InvitationsHandler {
       return extension;
     };
 
-    const edgeInvitationHandler = new EdgeInvitationHandler(this._connectionParams?.edgeInvitations, this._edgeClient, {
+    const edgeInvitationHandler = new EdgeInvitationHandler(this._connectionProps?.edgeInvitations, this._edgeClient, {
       onInvitationSuccess: async (admissionResponse, admissionRequest) => {
         const result = await protocol.accept(admissionResponse, admissionRequest);
         log.info('admitted by edge', { ...protocol.toJSON() });
@@ -440,7 +440,7 @@ export class InvitationsHandler {
       topic: invitation.swarmKey,
       protocolProvider: createTeleportProtocolFactory(async (teleport) => {
         teleport.addExtension('dxos.halo.invitations', extensionFactory());
-      }, this._connectionParams?.teleport),
+      }, this._connectionProps?.teleport),
       topology: new InvitationTopology(role),
       label,
     });

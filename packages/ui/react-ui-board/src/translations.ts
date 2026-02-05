@@ -4,7 +4,7 @@
 
 import { type Resource } from '@dxos/react-ui';
 
-export const translationKey = 'react-ui-board';
+export const translationKey = '@dxos/react-ui-board';
 
 export const translations = [
   {

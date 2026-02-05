@@ -7,16 +7,18 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, TriggerState, asyncTimeout } from '@dxos/async';
 import { type ClientServicesProvider, type Space, SpaceProperties } from '@dxos/client-protocol';
-import { type Entity, Obj, type QueryResult, Type } from '@dxos/echo';
-import { Expando, Ref } from '@dxos/echo/internal';
-import { type AnyLiveObject, Filter } from '@dxos/echo-db';
+import { type Entity, Obj, type QueryResult } from '@dxos/echo';
+import { Ref } from '@dxos/echo/internal';
+import { TestSchema as TestSchema$ } from '@dxos/echo/testing';
+import { Filter } from '@dxos/echo-db';
 import { type PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { log } from '@dxos/log';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
 
 import { Client } from '../client';
-import { TestBuilder, TestSchema } from '../testing';
+import { TestSchema } from '../testing';
+import { TestBuilder } from '../testing';
 
 describe('Index queries', () => {
   const createObjects = () => ({
@@ -53,9 +55,9 @@ describe('Index queries', () => {
       }),
     ],
     expandos: [
-      Obj.make(Expando, { org: 'DXOS' }), //
-      Obj.make(Expando, { name: 'Mykola' }),
-      Obj.make(Expando, { height: 185 }),
+      Obj.make(TestSchema$.Expando, { org: 'DXOS' }), //
+      Obj.make(TestSchema$.Expando, { name: 'Mykola' }),
+      Obj.make(TestSchema$.Expando, { height: 185 }),
     ],
   });
 
@@ -64,7 +66,7 @@ describe('Index queries', () => {
   const initClient = async (services: ClientServicesProvider) => {
     const client = new Client({
       services,
-      types: [TestSchema.ContactType, TestSchema.DocumentType, TestSchema.TextV0Type],
+      types: [TestSchema$.Expando, TestSchema.ContactType, TestSchema.DocumentType, TestSchema.TextV0Type],
     });
     await client.initialize();
     return client;
@@ -80,12 +82,11 @@ describe('Index queries', () => {
     return objectsInDataBase;
   };
 
-  // TODO(burdon): Remove AnyLiveObject.
   const matchObjects = async <T extends Entity.Unknown = Entity.Unknown>(
     query: QueryResult.QueryResult<T>,
-    objects: AnyLiveObject<any>[],
+    objects: Entity.Unknown[],
   ) => {
-    const receivedIndexedObject = new Trigger<AnyLiveObject<any>[]>();
+    const receivedIndexedObject = new Trigger<T[]>();
     const unsubscribe = query.subscribe(
       (query) => {
         const indexResults = query.entries;
@@ -304,7 +305,7 @@ describe('Index queries', () => {
     const { expandos } = createObjects();
 
     await addObjects(space, expandos);
-    const query = space.db.query(Filter.type(Type.Expando));
+    const query = space.db.query(Filter.type(TestSchema$.Expando));
     await matchObjects(query, expandos);
   });
 

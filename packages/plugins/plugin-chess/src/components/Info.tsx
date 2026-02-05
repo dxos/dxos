@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { useAtomValue } from '@effect-atom/atom-react';
 import React, { type JSX, type PropsWithChildren, useEffect, useMemo, useRef } from 'react';
 
 import { generateName } from '@dxos/display-name';
@@ -9,7 +10,7 @@ import { Obj } from '@dxos/echo';
 import { type SpaceMember, useMembers } from '@dxos/react-client/echo';
 import { Icon, IconButton, Select, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { type Player, useGameboardContext } from '@dxos/react-ui-gameboard';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { meta } from '../meta';
 
@@ -48,7 +49,9 @@ export const Info = ({ classNames, orientation = 'white', onOrientationChange, o
         <PlayerSelector
           value={model.object.players?.[orientation === 'white' ? 'black' : 'white']}
           onValueChange={(value) => {
-            model.object.players![orientation === 'white' ? 'black' : 'white'] = value;
+            Obj.change(model.object, (obj) => {
+              obj.players![orientation === 'white' ? 'black' : 'white'] = value;
+            });
           }}
           members={members}
         />
@@ -75,7 +78,9 @@ export const Info = ({ classNames, orientation = 'white', onOrientationChange, o
         <PlayerSelector
           value={model.object.players?.[orientation]}
           onValueChange={(value) => {
-            model.object.players![orientation] = value;
+            Obj.change(model.object, (obj) => {
+              obj.players![orientation] = value;
+            });
           }}
           members={members}
         />
@@ -99,6 +104,7 @@ type HistoryProps = ThemedClassName<{
 
 const History = ({ classNames, model, min, max, onSelect }: HistoryProps) => {
   const { t } = useTranslation(meta.id);
+  const moveIndex = useAtomValue(model.moveIndex);
   const label = model.game.isGameOver()
     ? model.game.isCheckmate()
       ? t('game.checkmate label')
@@ -132,11 +138,11 @@ const History = ({ classNames, model, min, max, onSelect }: HistoryProps) => {
   }, [history.length]);
 
   useEffect(() => {
-    const div = scrollerRef.current?.querySelector(`[data-index="${model.moveIndex.value - 1}"]`);
+    const div = scrollerRef.current?.querySelector(`[data-index="${moveIndex - 1}"]`);
     scrollerRef.current?.classList.add('scrollbar-none');
     div?.scrollIntoView({ behavior: 'smooth' });
     scrollerRef.current?.classList.remove('scrollbar-none');
-  }, [model.moveIndex.value]);
+  }, [moveIndex]);
 
   return (
     <div
@@ -153,7 +159,7 @@ const History = ({ classNames, model, min, max, onSelect }: HistoryProps) => {
           {a && (
             <div
               data-index={a.index}
-              className={mx('pis-2 cursor-pointer', a.index === model.moveIndex.value - 1 && 'bg-primary-500')}
+              className={mx('pis-2 cursor-pointer', a.index === moveIndex - 1 && 'bg-primary-500')}
               onClick={() => onSelect?.(a.index + 1)}
             >
               {a.move}
@@ -162,7 +168,7 @@ const History = ({ classNames, model, min, max, onSelect }: HistoryProps) => {
           {b && (
             <div
               data-index={b.index}
-              className={mx('pis-2 cursor-pointer', b.index === model.moveIndex.value - 1 && 'bg-primary-500')}
+              className={mx('pis-2 cursor-pointer', b.index === moveIndex - 1 && 'bg-primary-500')}
               onClick={() => onSelect?.(b.index + 1)}
             >
               {b.move}

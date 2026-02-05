@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useState } from 'react';
 
 import { type Obj, Tag } from '@dxos/echo';
-import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
+import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/react-ui/testing';
 import { render } from '@dxos/storybook-utils';
 import { Project } from '@dxos/types';
@@ -16,13 +16,13 @@ import { translations } from '../../translations';
 import { BaseObjectSettings } from './BaseObjectSettings';
 
 const DefaultStory = () => {
-  const { space } = useClientProvider();
-  const [object, setObject] = useState<Obj.Any>();
+  const { space } = useClientStory();
+  const [object, setObject] = useState<Obj.Unknown>();
 
   useEffect(() => {
     if (space && !object) {
       const object = space.db.add(Project.make());
-      setObject(object as Obj.Any);
+      setObject(object);
     }
   }, [space, object]);
 

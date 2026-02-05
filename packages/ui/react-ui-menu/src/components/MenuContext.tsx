@@ -18,6 +18,7 @@ const [MenuContextProvider, useMenu] = createMenuContext<MenuContextValue>(MENU_
 export const menuContextDefaults: MenuContextValue = {
   iconSize: 5,
   useGroupItems: () => null,
+  onAction: undefined,
 };
 
 const useMenuScope = createMenuScope();
@@ -29,10 +30,19 @@ const MenuProvider = ({
   useGroupItems = menuContextDefaults.useGroupItems,
   iconSize = menuContextDefaults.iconSize,
   attendableId,
+  alwaysActive,
+  onAction,
 }: MenuProviderProps) => {
   const { scope } = useMenuScope(undefined);
   return (
-    <MenuContextProvider useGroupItems={useGroupItems} iconSize={iconSize} attendableId={attendableId} scope={scope}>
+    <MenuContextProvider
+      useGroupItems={useGroupItems}
+      iconSize={iconSize}
+      attendableId={attendableId}
+      alwaysActive={alwaysActive}
+      onAction={onAction}
+      scope={scope}
+    >
       {children}
     </MenuContextProvider>
   );

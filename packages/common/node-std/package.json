@@ -4,26 +4,67 @@
   "description": "Simple wrapper for browser replacements of node stdlib modules within the DXOS codebase.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
   "license": "MIT",
   "author": "DXOS.org",
   "sideEffects": true,
   "type": "module",
   "exports": {
     "./_/config": {
-      "import": "./dist/lib/browser/_/config.mjs",
-      "require": "./dist/lib/node-esm/_/config.mjs"
+      "browser": "./dist/lib/browser/_/config.mjs",
+      "node": "./dist/lib/browser/_/config.mjs"
     },
-    "./assert": "./dist/lib/browser/assert.mjs",
-    "./buffer": "./dist/lib/browser/buffer.mjs",
-    "./crypto": "./dist/lib/browser/crypto.mjs",
-    "./events": "./dist/lib/browser/events.mjs",
-    "./fs": "./dist/lib/browser/fs.mjs",
-    "./fs/promises": "./dist/lib/browser/fs/promises.mjs",
-    "./globals": "./dist/lib/browser/globals.mjs",
-    "./inject-globals": "./dist/lib/browser/inject-globals.mjs",
-    "./path": "./dist/lib/browser/path.mjs",
-    "./stream": "./dist/lib/browser/stream.mjs",
-    "./util": "./dist/lib/browser/util.mjs"
+    "./assert": {
+      "browser": "./dist/lib/browser/assert.mjs",
+      "node": "./src/node/assert.js"
+    },
+    "./buffer": {
+      "browser": "./dist/lib/browser/buffer.mjs",
+      "node": "./src/node/buffer.js"
+    },
+    "./crypto": {
+      "browser": "./dist/lib/browser/crypto.mjs",
+      "node": "./src/node/crypto.js"
+    },
+    "./events": {
+      "browser": "./dist/lib/browser/events.mjs",
+      "node": "./src/node/events.js"
+    },
+    "./fs": {
+      "browser": "./dist/lib/browser/fs.mjs",
+      "node": "./src/node/fs.js"
+    },
+    "./fs/promises": {
+      "browser": "./dist/lib/browser/fs/promises.mjs",
+      "node": "./src/node/fs/promises.js"
+    },
+    "./globals": {
+      "browser": "./dist/lib/browser/globals.mjs",
+      "node": "./src/node/globals.js"
+    },
+    "./inject-globals": {
+      "browser": "./dist/lib/browser/inject-globals.mjs",
+      "node": "./src/node/inject-globals.js"
+    },
+    "./path": {
+      "browser": "./dist/lib/browser/path.mjs",
+      "node": "./src/node/path.js"
+    },
+    "./process": {
+      "browser": "./dist/lib/browser/process.mjs",
+      "node": "./src/node/process.js"
+    },
+    "./stream": {
+      "browser": "./dist/lib/browser/stream.mjs",
+      "node": "./src/node/stream.js"
+    },
+    "./util": {
+      "browser": "./dist/lib/browser/util.mjs",
+      "node": "./src/node/util.js"
+    }
   },
   "typesVersions": {
     "*": {
@@ -34,6 +75,7 @@
   },
   "files": [
     "dist",
+    "src/node",
     "types"
   ],
   "dependencies": {

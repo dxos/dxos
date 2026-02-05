@@ -16,7 +16,7 @@ import {
   getCredentialAssertion,
 } from '@dxos/credentials';
 import { Type } from '@dxos/echo';
-import { getTypeReference } from '@dxos/echo/internal';
+import { getSchemaDXN } from '@dxos/echo/internal';
 import {
   AuthStatus,
   CredentialServerExtension,
@@ -33,10 +33,10 @@ import {
 } from '@dxos/echo-pipeline';
 import {
   type DatabaseDirectory,
+  EncodedReference,
   type ObjectStructure,
   SpaceDocVersion,
   createIdFromSpaceKey,
-  encodeReference,
 } from '@dxos/echo-protocol';
 import type { EdgeConnection, EdgeHttpClient } from '@dxos/edge-client';
 import { type FeedStore, writeMessages } from '@dxos/feed-store';
@@ -104,7 +104,7 @@ export type AdmitMemberOptions = {
   delegationCredentialId?: PublicKey;
 };
 
-export type DataSpaceManagerParams = {
+export type DataSpaceManagerProps = {
   spaceManager: SpaceManager;
   metadataStore: MetadataStore;
   keyring: Keyring;
@@ -116,15 +116,20 @@ export type DataSpaceManagerParams = {
   edgeHttpClient?: EdgeHttpClient;
   meshReplicator?: MeshEchoReplicator;
   echoEdgeReplicator?: EchoEdgeReplicator;
-  runtimeParams?: DataSpaceManagerRuntimeParams;
+  runtimeProps?: DataSpaceManagerRuntimeProps;
   edgeFeatures?: Runtime.Client.EdgeFeatures;
 };
 
-export type DataSpaceManagerRuntimeParams = {
+export type DataSpaceManagerRuntimeProps = {
   spaceMemberPresenceAnnounceInterval?: number;
   spaceMemberPresenceOfflineTimeout?: number;
   activeEdgeNotarizationPollingInterval?: number;
   disableP2pReplication?: boolean;
+  /**
+   * If true, spaces that were previously SPACE_ACTIVE will be automatically activated on startup.
+   * This is used in dedicated worker mode to restore space state after leader changeover.
+   */
+  autoActivateSpaces?: boolean;
 };
 
 export type CreateSpaceOptions = {
@@ -152,9 +157,9 @@ export class DataSpaceManager extends Resource {
   private readonly _edgeFeatures?: Runtime.Client.EdgeFeatures = undefined;
   private readonly _meshReplicator?: MeshEchoReplicator = undefined;
   private readonly _echoEdgeReplicator?: EchoEdgeReplicator = undefined;
-  private readonly _runtimeParams?: DataSpaceManagerRuntimeParams = undefined;
+  private readonly _runtimeProps?: DataSpaceManagerRuntimeProps = undefined;
 
-  constructor(params: DataSpaceManagerParams) {
+  constructor(params: DataSpaceManagerProps) {
     super();
 
     this._spaceManager = params.spaceManager;
@@ -169,7 +174,7 @@ export class DataSpaceManager extends Resource {
     this._edgeFeatures = params.edgeFeatures;
     this._echoEdgeReplicator = params.echoEdgeReplicator;
     this._edgeHttpClient = params.edgeHttpClient;
-    this._runtimeParams = params.runtimeParams;
+    this._runtimeProps = params.runtimeProps;
 
     trace.diagnostic({
       id: 'spaces',
@@ -217,14 +222,27 @@ export class DataSpaceManager extends Resource {
     log.trace('dxos.echo.data-space-manager.open', Trace.begin({ id: this._instanceId }));
     log('metadata loaded', { spaces: this._metadataStore.spaces.length });
 
+    const spacesToActivate: DataSpace[] = [];
     await forEachAsync(this._metadataStore.spaces, async (spaceMetadata) => {
       try {
         log('load space', { spaceMetadata });
-        await this._constructSpace(spaceMetadata);
+        const space = await this._constructSpace(spaceMetadata);
+        // Track spaces that were previously active for auto-activation (used in dedicated worker mode).
+        if (this._runtimeProps?.autoActivateSpaces && spaceMetadata.state === SpaceState.SPACE_ACTIVE) {
+          spacesToActivate.push(space);
+        }
       } catch (err) {
         log.error('Error loading space', { spaceMetadata, err });
       }
     });
+
+    // Auto-activate spaces that were previously active (used in dedicated worker mode after leader changeover).
+    for (const space of spacesToActivate) {
+      log('auto-activating space', { spaceKey: space.key });
+      space.activate().catch((err) => {
+        log.error('Error auto-activating space', { spaceKey: space.key, err });
+      });
+    }
 
     this.updated.emit();
 
@@ -365,7 +383,7 @@ export class DataSpaceManager extends Resource {
     // TODO(dmaretskyi): Better API for low-level data access.
     const properties: ObjectStructure = {
       system: {
-        type: encodeReference(getTypeReference(SpaceProperties)!),
+        type: EncodedReference.fromDXN(getSchemaDXN(SpaceProperties)!),
       },
       data: {
         [DEFAULT_SPACE_KEY]: this._signingContext.identityKey.toHex(),
@@ -501,8 +519,8 @@ export class DataSpaceManager extends Resource {
       localPeerId: this._signingContext.deviceKey,
     });
     const presence = new Presence({
-      announceInterval: this._runtimeParams?.spaceMemberPresenceAnnounceInterval ?? PRESENCE_ANNOUNCE_INTERVAL,
-      offlineTimeout: this._runtimeParams?.spaceMemberPresenceOfflineTimeout ?? PRESENCE_OFFLINE_TIMEOUT,
+      announceInterval: this._runtimeProps?.spaceMemberPresenceAnnounceInterval ?? PRESENCE_ANNOUNCE_INTERVAL,
+      offlineTimeout: this._runtimeProps?.spaceMemberPresenceOfflineTimeout ?? PRESENCE_OFFLINE_TIMEOUT,
       identityKey: this._signingContext.identityKey,
       gossip,
     });
@@ -588,7 +606,7 @@ export class DataSpaceManager extends Resource {
       edgeConnection: this._edgeConnection,
       edgeHttpClient: this._edgeHttpClient,
       edgeFeatures: this._edgeFeatures,
-      activeEdgeNotarizationPollingInterval: this._runtimeParams?.activeEdgeNotarizationPollingInterval,
+      activeEdgeNotarizationPollingInterval: this._runtimeProps?.activeEdgeNotarizationPollingInterval,
     });
     dataSpace.postOpen.append(async () => {
       const setting = dataSpace.getEdgeReplicationSetting();

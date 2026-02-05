@@ -8,6 +8,7 @@ import { log } from '@dxos/log';
 import { useTranslation } from '@dxos/react-ui';
 
 import { Action, Actions, Input, StepHeading } from '../../../components';
+import { translationKey } from '../../../translations';
 import { type JoinPanelProps, type JoinStepProps } from '../JoinPanelProps';
 
 export interface InvitationInputProps extends JoinStepProps, Pick<JoinPanelProps, 'onExit' | 'exitActionParent'> {
@@ -18,8 +19,8 @@ export interface InvitationInputProps extends JoinStepProps, Pick<JoinPanelProps
 
 const invitationCodeFromUrl = (text: string) => {
   try {
-    const searchParams = new URLSearchParams(text.substring(text.lastIndexOf('?')));
-    const invitation = searchParams.get('spaceInvitationCode') ?? searchParams.get('deviceInvitationCode');
+    const searchProps = new URLSearchParams(text.substring(text.lastIndexOf('?')));
+    const invitation = searchProps.get('spaceInvitationCode') ?? searchProps.get('deviceInvitationCode');
     return invitation ?? text;
   } catch (err) {
     log.catch(err);
@@ -31,7 +32,7 @@ export const InvitationInput = (props: InvitationInputProps) => {
   const { Kind, active, send, unredeemedCode, onExit, exitActionParent, onDone, doneActionParent, succeededKeys } =
     props;
   const disabled = !active;
-  const { t } = useTranslation('os');
+  const { t } = useTranslation(translationKey);
 
   const [inputValue, setInputValue] = useState(unredeemedCode ?? '');
 

@@ -4,8 +4,8 @@
 
 import React, { useEffect, useMemo } from 'react';
 
-import { LayoutAction, createIntent } from '@dxos/app-framework';
-import { useIntentDispatcher } from '@dxos/app-framework/react';
+import { Common } from '@dxos/app-framework';
+import { useOperationInvoker } from '@dxos/app-framework/react';
 import { getSpace } from '@dxos/react-client/echo';
 import { Button, Dialog, IconButton, useTranslation } from '@dxos/react-ui';
 import { type AccessToken } from '@dxos/types';
@@ -33,53 +33,33 @@ export const DeploymentDialog = ({ accessToken, scriptTemplates }: DeploymentDia
   // TODO(ZaymonFC): Thinking further. All of this should get moved to intents to run async in the background.
   //   Deployment shouldn't be tied to the lifecycle of the dialogue component.
   const { handleCreateAndDeployScripts, status } = useCreateAndDeployScriptTemplates(space, scriptTemplates);
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const { invokePromise } = useOperationInvoker();
 
   useEffect(() => {
     if (status === 'success') {
       // TODO(ZaymonFC): We can probably re-use this toast for normal script deployment.
-      void dispatch(
-        createIntent(LayoutAction.AddToast, {
-          part: 'toast',
-          subject: {
-            id: `${meta.id}/deployment-success`,
-            icon: 'ph--check--regular',
-            duration: Infinity,
-            title: ['script deployment toast label', { ns: meta.id, count: scriptTemplates.length }],
-            description: ['script deployment toast description', { ns: meta.id, count: scriptTemplates.length }],
-            closeLabel: ['script deployment toast close label', { ns: meta.id, count: scriptTemplates.length }],
-          },
-        }),
-      );
-      void dispatch(
-        createIntent(LayoutAction.UpdateDialog, {
-          part: 'dialog',
-          options: { state: false },
-        }),
-      );
+      void invokePromise(Common.LayoutOperation.AddToast, {
+        id: `${meta.id}/deployment-success`,
+        icon: 'ph--check--regular',
+        duration: Infinity,
+        title: ['script deployment toast label', { ns: meta.id, count: scriptTemplates.length }],
+        description: ['script deployment toast description', { ns: meta.id, count: scriptTemplates.length }],
+        closeLabel: ['script deployment toast close label', { ns: meta.id, count: scriptTemplates.length }],
+      });
+      void invokePromise(Common.LayoutOperation.UpdateDialog, { state: false });
     }
     if (status === 'error') {
-      void dispatch(
-        createIntent(LayoutAction.UpdateDialog, {
-          part: 'dialog',
-          options: { state: false },
-        }),
-      );
-      void dispatch(
-        createIntent(LayoutAction.AddToast, {
-          part: 'toast',
-          subject: {
-            id: `${meta.id}/deployment-error`,
-            icon: 'ph--warning--regular',
-            duration: Infinity,
-            title: ['script deployment error toast label', { ns: meta.id, count: scriptTemplates.length }],
-            description: ['script deployment error toast description', { ns: meta.id, count: scriptTemplates.length }],
-            closeLabel: ['script deployment error toast close label', { ns: meta.id, count: scriptTemplates.length }],
-          },
-        }),
-      );
+      void invokePromise(Common.LayoutOperation.UpdateDialog, { state: false });
+      void invokePromise(Common.LayoutOperation.AddToast, {
+        id: `${meta.id}/deployment-error`,
+        icon: 'ph--warning--regular',
+        duration: Infinity,
+        title: ['script deployment error toast label', { ns: meta.id, count: scriptTemplates.length }],
+        description: ['script deployment error toast description', { ns: meta.id, count: scriptTemplates.length }],
+        closeLabel: ['script deployment error toast close label', { ns: meta.id, count: scriptTemplates.length }],
+      });
     }
-  }, [status, dispatch]);
+  }, [status, invokePromise]);
 
   return (
     <Dialog.Content>

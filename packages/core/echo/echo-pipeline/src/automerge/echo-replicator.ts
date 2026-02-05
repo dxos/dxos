@@ -36,7 +36,7 @@ export interface EchoReplicatorContext {
   /**
    * Returns false if collection sync hasn't happened yet.
    */
-  isDocumentInRemoteCollection(params: RemoteDocumentExistenceCheckParams): Promise<boolean>;
+  isDocumentInRemoteCollection(params: RemoteDocumentExistenceCheckProps): Promise<boolean>;
 
   onConnectionOpen(connection: ReplicatorConnection): void;
   onConnectionClosed(connection: ReplicatorConnection): void;
@@ -63,12 +63,12 @@ export interface ReplicatorConnection {
    * @returns true if the document should be advertised to this peer.
    * The remote peer can still request the document by its id bypassing this check.
    */
-  shouldAdvertise(params: ShouldAdvertiseParams): Promise<boolean>;
+  shouldAdvertise(params: ShouldAdvertiseProps): Promise<boolean>;
 
   /**
    * @returns true if the collection should be synced to this peer.
    */
-  shouldSyncCollection(params: ShouldSyncCollectionParams): boolean;
+  shouldSyncCollection(params: ShouldSyncCollectionProps): boolean;
 
   /**
    * Batch syncing considered enabled if ReplicatorConnection implements `pushBatch` and `pullBatch` methods.
@@ -88,15 +88,15 @@ export interface ReplicatorConnection {
   pullBundle?(docHeads: Record<DocumentId, Heads>): Promise<Record<DocumentId, Uint8Array>>;
 }
 
-export type ShouldAdvertiseParams = {
+export type ShouldAdvertiseProps = {
   documentId: string;
 };
 
-export type ShouldSyncCollectionParams = {
+export type ShouldSyncCollectionProps = {
   collectionId: string;
 };
 
-export type RemoteDocumentExistenceCheckParams = {
+export type RemoteDocumentExistenceCheckProps = {
   peerId: string;
   documentId: string;
 };

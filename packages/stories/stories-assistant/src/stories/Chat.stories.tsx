@@ -8,8 +8,8 @@ import React, { type FC, useCallback } from 'react';
 
 import { ToolId } from '@dxos/ai';
 import { EXA_API_KEY } from '@dxos/ai/testing';
-import { Capabilities } from '@dxos/app-framework';
-import { Surface, useCapabilities } from '@dxos/app-framework/react';
+import { Common } from '@dxos/app-framework';
+import { Surface, useCapabilities, useCapability } from '@dxos/app-framework/react';
 import { AiContextBinder } from '@dxos/assistant';
 import { Agent, LinearBlueprint, ResearchBlueprint, ResearchDataTypes, ResearchGraph } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt, Template } from '@dxos/blueprints';
@@ -36,7 +36,7 @@ import { ThreadPlugin } from '@dxos/plugin-thread';
 import { TokenManagerPlugin } from '@dxos/plugin-token-manager';
 import { TranscriptionPlugin } from '@dxos/plugin-transcription';
 import { useQuery, useSpace } from '@dxos/react-client/echo';
-import { useAsyncEffect, useSignalsMemo } from '@dxos/react-ui';
+import { useAsyncEffect } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 import { Stack, StackItem } from '@dxos/react-ui-stack';
 import { Table } from '@dxos/react-ui-table/types';
@@ -65,8 +65,8 @@ import {
   type ComponentProps,
   ExecutionGraphModule,
   GraphModule,
+  InboxModule,
   InvocationsModule,
-  MessageModule,
   ProjectModule,
   PromptModule,
   ResearchInputModule,
@@ -97,7 +97,8 @@ type StoryProps = {
 };
 
 const DefaultStory = ({ modules, showContext, blueprints = [] }: StoryProps) => {
-  const blueprintsDefinitions = useCapabilities(Capabilities.BlueprintDefinition);
+  const blueprintsDefinitions = useCapabilities(Common.Capability.BlueprintDefinition);
+  const atomRegistry = useCapability(Common.Capability.AtomRegistry);
 
   const space = useSpace();
   useAsyncEffect(async () => {
@@ -112,17 +113,17 @@ const DefaultStory = ({ modules, showContext, blueprints = [] }: StoryProps) => 
     }
 
     // Add blueprints to context.
-    const registry = new Blueprint.Registry(blueprintsDefinitions);
+    const blueprintRegistry = new Blueprint.Registry(blueprintsDefinitions);
     const blueprintObjects = blueprints
       .map((key) => {
-        const blueprint = registry.getByKey(key);
+        const blueprint = blueprintRegistry.getByKey(key);
         if (blueprint) {
           return space.db.add(Obj.clone(blueprint));
         }
       })
       .filter(isNonNullable);
 
-    const binder = new AiContextBinder(await chat.queue.load());
+    const binder = new AiContextBinder({ queue: await chat.queue.load(), registry: atomRegistry });
     await binder.use((binder) => binder.bind({ blueprints: blueprintObjects.map((blueprint) => Ref.make(blueprint)) }));
   }, [space, blueprints, blueprintsDefinitions]);
 
@@ -132,7 +133,7 @@ const DefaultStory = ({ modules, showContext, blueprints = [] }: StoryProps) => 
 
   const chats = useQuery(space?.db, Filter.type(Assistant.Chat));
   const binder = useContextBinder(chats.at(-1)?.queue.target);
-  const objects = useSignalsMemo(() => binder?.objects.value ?? [], [binder]);
+  const objects = binder?.getObjects() ?? [];
 
   if (!space) {
     return null;
@@ -171,7 +172,7 @@ const DefaultStory = ({ modules, showContext, blueprints = [] }: StoryProps) => 
   );
 };
 
-const StackContainer = ({ objects }: { objects: Obj.Any[] }) => {
+const StackContainer = ({ objects }: { objects: Obj.Unknown[] }) => {
   return (
     <Stack
       orientation='vertical'
@@ -392,7 +393,7 @@ export const WithMail: Story = {
 export const WithGmail: Story = {
   decorators: getDecorators({
     plugins: [InboxPlugin(), TokenManagerPlugin()],
-    config: config.remote,
+    config: config.persistent,
     types: [Mailbox.Mailbox],
     onInit: async ({ space }) => {
       space.db.add(Mailbox.make({ name: 'Mailbox', space }));
@@ -404,7 +405,7 @@ export const WithGmail: Story = {
   }),
   args: {
     showContext: true,
-    modules: [[ChatModule], [MessageModule, TokenManagerModule]],
+    modules: [[ChatModule], [InboxModule], [TokenManagerModule]],
     blueprints: [AssistantBlueprint.Key, 'dxos.org/blueprint/inbox'],
   },
 };
@@ -554,7 +555,8 @@ export const WithResearch: Story = {
     showContext: true,
     modules: [[ChatModule], [GraphModule, ExecutionGraphModule]],
     blueprints: [
-      // AssistantBlueprint.Key, -- too many open-ended tools (querying for tools, querying for schema) confuses the model.
+      // AssistantBlueprint.Key
+      // TODO(burdon): Too many open-ended tools (querying for tools, querying for schema) confuses the model.
       ResearchBlueprint.key,
     ],
   },
@@ -768,8 +770,9 @@ export const WithProject: Story = {
       const tagDxn = Obj.getDXN(tag).toString();
 
       people.slice(0, 4).forEach((person) => {
-        const meta = Obj.getMeta(person);
-        meta.tags = [tagDxn];
+        Obj.change(person, (p) => {
+          Obj.getMeta(p).tags = [tagDxn];
+        });
       });
 
       const mailbox = space.db.add(Mailbox.make({ name: 'Mailbox', space }));
@@ -790,15 +793,17 @@ export const WithProject: Story = {
         }),
       );
       [dxosResearch, blueyardResearch].forEach((research) => {
-        const meta = Obj.getMeta(research);
-        meta.tags = [tagDxn];
+        Obj.change(research, (r) => {
+          Obj.getMeta(r).tags = [tagDxn];
+        });
       });
 
       const dxos = organizations.find((org) => org.name === 'DXOS')!;
       const blueyard = organizations.find((org) => org.name === 'BlueYard')!;
       [dxos, blueyard].forEach((organization) => {
-        const meta = Obj.getMeta(organization);
-        meta.tags = [tagDxn];
+        Obj.change(organization, (org) => {
+          Obj.getMeta(org).tags = [tagDxn];
+        });
       });
       // TODO(wittjosiah): Support relations.
       // space.db.add(

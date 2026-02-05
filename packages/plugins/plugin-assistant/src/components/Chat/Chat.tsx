@@ -19,8 +19,8 @@ import { Input, type ThemedClassName, useDynamicRef, useTranslation } from '@dxo
 import { ChatEditor, type ChatEditorController, type ChatEditorProps } from '@dxos/react-ui-chat';
 import { type MarkdownStreamController } from '@dxos/react-ui-components';
 import { MenuProvider, ToolbarMenu } from '@dxos/react-ui-menu';
-import { mx } from '@dxos/react-ui-theme';
 import { Message } from '@dxos/types';
+import { mx } from '@dxos/ui-theme';
 import { isTruthy } from '@dxos/util';
 
 import { useChatToolbarActions } from '../../hooks';
@@ -398,7 +398,7 @@ ChatPrompt.displayName = 'Chat.Prompt';
 // Toolbar
 //
 
-type ChatToolbarProps = ThemedClassName<{ companionTo?: Obj.Any }>;
+type ChatToolbarProps = ThemedClassName<{ companionTo?: Obj.Unknown }>;
 
 const ChatToolbar = ({ classNames, companionTo }: ChatToolbarProps) => {
   const { chat } = useChatContext(ChatToolbar.displayName);

@@ -4,15 +4,16 @@
 
 import { type EditorView } from '@codemirror/view';
 
-import { type Action, type NodeArg } from '@dxos/app-graph';
+import { type Node } from '@dxos/app-graph';
 import {
-  type MenuActionProperties,
+  type MenuItemGroup,
   type ToolbarMenuActionGroupProperties,
   createMenuAction,
   createMenuItemGroup,
 } from '@dxos/react-ui-menu';
+import { List, addList, removeList } from '@dxos/ui-editor';
+import { type MenuActionProperties } from '@dxos/ui-types';
 
-import { List, addList, removeList } from '../../extensions';
 import { translationKey } from '../../translations';
 
 import { type EditorToolbarState } from './useEditorToolbar';
@@ -28,7 +29,7 @@ export const createLists = (state: EditorToolbarState, getView: () => EditorView
   const listGroupAction = createListGroupAction(value);
   const listActionsMap = createListActions(value, getView);
   return {
-    nodes: [listGroupAction as NodeArg<any>, ...listActionsMap],
+    nodes: [listGroupAction as Node.NodeArg<any>, ...listActionsMap],
     edges: [
       { source: 'root', target: 'list' },
       ...listActionsMap.map(({ id }) => ({ source: listGroupAction.id, target: id })),
@@ -42,14 +43,14 @@ export const createEditorAction = (id: string, props: Partial<MenuActionProperti
   return createMenuAction(id, invoke, {
     label,
     ...rest,
-  }) as Action<MenuActionProperties>;
+  }) as Node.Action<MenuActionProperties>;
 };
 
 export const createEditorActionGroup = (
   id: string,
   props: Omit<ToolbarMenuActionGroupProperties, 'icon'>,
   icon?: string,
-) => {
+): MenuItemGroup<ToolbarMenuActionGroupProperties> => {
   const { label = [`${id} label`, { ns: translationKey }], ...rest } = props;
 
   return createMenuItemGroup(id, {
@@ -57,7 +58,7 @@ export const createEditorActionGroup = (
     icon,
     iconOnly: true,
     ...rest,
-  });
+  }) as MenuItemGroup<ToolbarMenuActionGroupProperties>;
 };
 
 const createListGroupAction = (value: string) =>

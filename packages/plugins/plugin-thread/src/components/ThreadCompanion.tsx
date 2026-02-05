@@ -2,43 +2,61 @@
 // Copyright 2024 DXOS.org
 //
 
+import { useAtomValue } from '@effect-atom/atom-react';
 import React, { useCallback, useMemo } from 'react';
 
-import { Capabilities, CollaborationActions, LayoutAction, createIntent } from '@dxos/app-framework';
-import { useCapabilities, useCapability, useIntentDispatcher } from '@dxos/app-framework/react';
+import { Common } from '@dxos/app-framework';
+import { useCapabilities, useCapability, useOperationInvoker } from '@dxos/app-framework/react';
 import { Filter, Obj, Query, Relation } from '@dxos/echo';
 import { Ref, useQuery } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { useTranslation } from '@dxos/react-ui';
 import { useAttended } from '@dxos/react-ui-attention';
-import { StackItem } from '@dxos/react-ui-stack';
+import { Layout } from '@dxos/react-ui-mosaic';
 import { Tabs } from '@dxos/react-ui-tabs';
-import { mx } from '@dxos/react-ui-theme';
 import { AnchoredTo, Thread } from '@dxos/types';
+import { mx } from '@dxos/ui-theme';
 
-import { ThreadCapabilities } from '../capabilities';
 import { CommentsContainer, type CommentsContainerProps } from '../components';
 import { meta } from '../meta';
-import { ThreadAction } from '../types';
+import { ThreadCapabilities, ThreadOperation, type ViewState } from '../types';
+
+const initialViewState: ViewState = { showResolvedThreads: false };
 
 export const ThreadCompanion = ({ subject }: { subject: any }) => {
   const { t } = useTranslation(meta.id);
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const { invokePromise } = useOperationInvoker();
   const identity = useIdentity();
   const subjectId = Obj.getDXN(subject).toString();
+  const registry = useCapability(Common.Capability.AtomRegistry);
 
-  const { state, getViewState } = useCapability(ThreadCapabilities.MutableState);
+  const stateAtom = useCapability(ThreadCapabilities.State);
+  const viewStoreAtom = useCapability(ThreadCapabilities.ViewState);
+  const state = useAtomValue(stateAtom);
+  const viewStore = useAtomValue(viewStoreAtom);
   const drafts = state.drafts[subjectId];
-  const viewState = useMemo(() => getViewState(subjectId), [getViewState, subjectId]);
+
+  // Get or initialize view state for this subject.
+  const viewState = useMemo(() => {
+    if (!viewStore[subjectId]) {
+      registry.set(viewStoreAtom, { ...viewStore, [subjectId]: { ...initialViewState } });
+      return initialViewState;
+    }
+    return viewStore[subjectId];
+  }, [viewStore, subjectId, registry, viewStoreAtom]);
   const { showResolvedThreads } = viewState;
+
   const onChangeViewState = useCallback(
     (nextValue: string) => {
-      viewState.showResolvedThreads = nextValue === 'all';
+      registry.set(viewStoreAtom, {
+        ...registry.get(viewStoreAtom),
+        [subjectId]: { ...registry.get(viewStoreAtom)[subjectId], showResolvedThreads: nextValue === 'all' },
+      });
     },
-    [viewState],
+    [registry, viewStoreAtom, subjectId],
   );
 
-  const anchorSorts = useCapabilities(Capabilities.AnchorSort);
+  const anchorSorts = useCapabilities(Common.Capability.AnchorSort);
   const sort = useMemo(
     () => anchorSorts.find(({ key }) => key === Obj.getTypename(subject))?.sort,
     [anchorSorts, subject],
@@ -59,68 +77,57 @@ export const ThreadCompanion = ({ subject }: { subject: any }) => {
       const threadId = Obj.getDXN(thread).toString();
 
       if (state.current !== threadId) {
-        state.current = threadId;
+        registry.set(stateAtom, { ...registry.get(stateAtom), current: threadId });
 
         // TODO(wittjosiah): Should this be a thread-specific intent?
         //  The layout doesn't know about threads and this working depends on other plugins conditionally handling it.
         //  This may be overloading this intent or highjacking its intended purpose.
-        void dispatch(
-          createIntent(LayoutAction.ScrollIntoView, {
-            part: 'current',
-            subject: Obj.getDXN(subject).toString(),
-            options: {
-              cursor: anchor.anchor,
-              ref: threadId,
-            },
-          }),
-        );
+        void invokePromise(Common.LayoutOperation.ScrollIntoView, {
+          subject: Obj.getDXN(subject).toString(),
+          cursor: anchor.anchor,
+          ref: threadId,
+        });
       }
     },
-    [state.current, dispatch, subject],
+    [state.current, invokePromise, subject, registry, stateAtom],
   );
 
   const handleComment = useCallback(
     async (anchor: AnchoredTo.AnchoredTo, text: string) => {
-      await dispatch(
-        createIntent(ThreadAction.AddMessage, {
-          anchor,
-          subject,
-          sender: { identityDid: identity?.did },
-          text,
-        }),
-      );
+      await invokePromise(ThreadOperation.AddMessage, {
+        anchor,
+        subject,
+        sender: { identityDid: identity?.did },
+        text,
+      });
 
       const thread = Relation.getSource(anchor) as Thread.Thread;
-      state.current = Obj.getDXN(thread).toString();
+      registry.set(stateAtom, { ...registry.get(stateAtom), current: Obj.getDXN(thread).toString() });
     },
-    [dispatch, identity, subject],
+    [invokePromise, identity, subject, registry, stateAtom],
   );
 
   const handleResolve = useCallback(
     (anchor: AnchoredTo.AnchoredTo) =>
-      dispatch(
-        createIntent(ThreadAction.ToggleResolved, {
-          thread: Relation.getSource(anchor) as Thread.Thread,
-        }),
-      ),
-    [dispatch],
+      invokePromise(ThreadOperation.ToggleResolved, {
+        thread: Relation.getSource(anchor) as Thread.Thread,
+      }),
+    [invokePromise],
   );
 
   const handleThreadDelete = useCallback(
-    (anchor: AnchoredTo.AnchoredTo) => dispatch(createIntent(ThreadAction.Delete, { anchor, subject })),
-    [dispatch, subject],
+    (anchor: AnchoredTo.AnchoredTo) => invokePromise(ThreadOperation.Delete, { anchor, subject }),
+    [invokePromise, subject],
   );
 
   const handleMessageDelete = useCallback(
     (anchor: AnchoredTo.AnchoredTo, messageId: string) =>
-      dispatch(
-        createIntent(ThreadAction.DeleteMessage, {
-          anchor,
-          subject,
-          messageId,
-        }),
-      ),
-    [dispatch, subject],
+      invokePromise(ThreadOperation.DeleteMessage, {
+        anchor,
+        subject,
+        messageId,
+      }),
+    [invokePromise, subject],
   );
 
   const handleAcceptProposal = useCallback<NonNullable<CommentsContainerProps['onAcceptProposal']>>(
@@ -133,16 +140,14 @@ export const ThreadCompanion = ({ subject }: { subject: any }) => {
         return;
       }
 
-      await dispatch(
-        createIntent(CollaborationActions.AcceptProposal, {
-          subject,
-          anchor: anchor.anchor,
-          proposal,
-        }),
-      );
-      await dispatch(createIntent(ThreadAction.ToggleResolved, { thread }));
+      await invokePromise(Common.CollaborationOperation.AcceptProposal, {
+        subject,
+        anchor: anchor.anchor,
+        proposal,
+      });
+      await invokePromise(ThreadOperation.ToggleResolved, { thread });
     },
-    [dispatch, subject],
+    [invokePromise, subject],
   );
 
   const comments = (
@@ -160,7 +165,7 @@ export const ThreadCompanion = ({ subject }: { subject: any }) => {
   );
 
   return (
-    <StackItem.Content toolbar>
+    <Layout.Main toolbar>
       <Tabs.Root
         value={showResolvedThreads ? 'all' : 'unresolved'}
         orientation='horizontal'
@@ -183,6 +188,6 @@ export const ThreadCompanion = ({ subject }: { subject: any }) => {
           <Tabs.Tabpanel value='unresolved'>{!showResolvedThreads && comments}</Tabs.Tabpanel>
         </div>
       </Tabs.Root>
-    </StackItem.Content>
+    </Layout.Main>
   );
 };

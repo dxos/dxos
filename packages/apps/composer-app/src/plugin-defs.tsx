@@ -2,10 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-// NOTE(ZaymonFC): Workaround; see: https://discord.com/channels/837138313172353095/1363955461350621235
-import '@dxos/plugin-inbox/css';
+import * as Effect from 'effect/Effect';
 
-import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
+import { OperationPlugin, type Plugin, RuntimePlugin, SettingsPlugin } from '@dxos/app-framework';
 import { type ClientServicesProvider, type Config } from '@dxos/client';
 import { type Observability } from '@dxos/observability';
 import { AssistantPlugin } from '@dxos/plugin-assistant';
@@ -42,6 +41,7 @@ import { RegistryPlugin } from '@dxos/plugin-registry';
 import { ScriptPlugin } from '@dxos/plugin-script';
 import { SearchPlugin } from '@dxos/plugin-search';
 import { SheetPlugin } from '@dxos/plugin-sheet';
+import { SimpleLayoutPlugin } from '@dxos/plugin-simple-layout';
 import { SketchPlugin } from '@dxos/plugin-sketch';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { StackPlugin } from '@dxos/plugin-stack';
@@ -71,24 +71,29 @@ export type PluginConfig = State & {
   isTauri?: boolean;
   isLabs?: boolean;
   isStrict?: boolean;
+  isPopover?: boolean;
+  isMobile?: boolean;
 };
 
-export const getCore = ({ isPwa, isTauri }: PluginConfig): string[] =>
-  [
+export const getCore = ({ isPwa, isTauri, isPopover, isMobile }: PluginConfig): string[] => {
+  const useSimpleLayout = isPopover || isMobile;
+  return [
     AttentionPlugin.meta.id,
     AutomationPlugin.meta.id,
     ClientPlugin.meta.id,
-    DeckPlugin.meta.id,
+    useSimpleLayout ? SimpleLayoutPlugin.meta.id : DeckPlugin.meta.id,
     FilesPlugin.meta.id,
     GraphPlugin.meta.id,
     HelpPlugin.meta.id,
-    IntentPlugin.meta.id,
-    isTauri && NativePlugin.meta.id,
+    isTauri && !isMobile && NativePlugin.meta.id,
+    OperationPlugin.meta.id,
     NavTreePlugin.meta.id,
     ObservabilityPlugin.meta.id,
     PreviewPlugin.meta.id,
     !isTauri && isPwa && PwaPlugin.meta.id,
     RegistryPlugin.meta.id,
+    RuntimePlugin.meta.id,
+    SearchPlugin.meta.id,
     SettingsPlugin.meta.id,
     SpacePlugin.meta.id,
     StatusBarPlugin.meta.id,
@@ -98,10 +103,12 @@ export const getCore = ({ isPwa, isTauri }: PluginConfig): string[] =>
   ]
     .filter(isTruthy)
     .flat();
+};
 
 export const getDefaults = ({ isDev, isLabs }: PluginConfig): string[] =>
   [
     // Default
+    InboxPlugin.meta.id,
     KanbanPlugin.meta.id,
     MarkdownPlugin.meta.id,
     MasonryPlugin.meta.id,
@@ -126,8 +133,20 @@ export const getDefaults = ({ isDev, isLabs }: PluginConfig): string[] =>
     .filter(isTruthy)
     .flat();
 
-export const getPlugins = ({ appKey, config, services, observability, isDev, isLabs, isPwa, isTauri }: PluginConfig) =>
-  [
+export const getPlugins = ({
+  appKey,
+  config,
+  services,
+  observability,
+  isDev,
+  isLabs,
+  isPwa,
+  isTauri,
+  isPopover,
+  isMobile,
+}: PluginConfig): Plugin.Plugin[] => {
+  const useSimpleLayout = isPopover || isMobile;
+  return [
     AssistantPlugin(),
     AttentionPlugin(),
     AutomationPlugin(),
@@ -140,14 +159,14 @@ export const getPlugins = ({ appKey, config, services, observability, isDev, isL
     }),
     ConductorPlugin(),
     DebugPlugin(),
-    DeckPlugin(),
+    useSimpleLayout ? SimpleLayoutPlugin({ isPopover }) : DeckPlugin(),
     isLabs && ExcalidrawPlugin(),
     ExplorerPlugin(),
     isLabs && FilesPlugin(),
     GraphPlugin(),
     HelpPlugin({ steps }),
     InboxPlugin(),
-    IntentPlugin(),
+    OperationPlugin(),
     KanbanPlugin(),
     MapPlugin(),
     isLabs && MapPluginSolid(),
@@ -155,7 +174,7 @@ export const getPlugins = ({ appKey, config, services, observability, isDev, isL
     MasonryPlugin(),
     MeetingPlugin(),
     MermaidPlugin(),
-    isTauri && NativePlugin(),
+    isTauri && !isMobile && NativePlugin(),
     NavTreePlugin(),
     ObservabilityPlugin({
       namespace: appKey,
@@ -167,8 +186,9 @@ export const getPlugins = ({ appKey, config, services, observability, isDev, isL
     !isTauri && isPwa && PwaPlugin(),
     ProjectPlugin(),
     RegistryPlugin(),
+    RuntimePlugin(),
     ScriptPlugin(),
-    isLabs && SearchPlugin(),
+    SearchPlugin(),
     SettingsPlugin(),
     SheetPlugin(),
     SketchPlugin(),
@@ -191,14 +211,16 @@ export const getPlugins = ({ appKey, config, services, observability, isDev, isL
   ]
     .filter(isTruthy)
     .flat();
-
-const handleReset: ClientPluginOptions['onReset'] = ({ target }) => {
-  localStorage.clear();
-  if (target === 'deviceInvitation') {
-    window.location.assign(new URL('/?deviceInvitationCode=', window.location.origin));
-  } else if (target === 'recoverIdentity') {
-    window.location.assign(new URL('/?recoverIdentity=true', window.location.origin));
-  } else {
-    window.location.pathname = '/';
-  }
 };
+
+const handleReset: ClientPluginOptions['onReset'] = ({ target }) =>
+  Effect.sync(() => {
+    localStorage.clear();
+    if (target === 'deviceInvitation') {
+      window.location.assign(new URL('/?deviceInvitationCode=', window.location.origin));
+    } else if (target === 'recoverIdentity') {
+      window.location.assign(new URL('/?recoverIdentity=true', window.location.origin));
+    } else {
+      window.location.pathname = '/';
+    }
+  });

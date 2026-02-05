@@ -6,40 +6,44 @@ import { type Extension } from '@codemirror/state';
 import { Atom } from '@effect-atom/atom-react';
 import React, { forwardRef, useMemo } from 'react';
 
-import { Capabilities } from '@dxos/app-framework';
-import { useAppGraph, useCapabilities } from '@dxos/app-framework/react';
+import { Common } from '@dxos/app-framework';
+import { type SurfaceComponentProps, useAppGraph, useCapabilities } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
+import { useActionRunner } from '@dxos/plugin-graph';
+import { useObject } from '@dxos/react-client/echo';
 import { type SelectionManager } from '@dxos/react-ui-attention';
-import { StackItem } from '@dxos/react-ui-stack';
+import { Layout } from '@dxos/react-ui-mosaic';
 import { Text } from '@dxos/schema';
 
-import { MarkdownCapabilities } from '../capabilities';
-import { type DocumentType, useLinkQuery } from '../hooks';
-import { Markdown, type MarkdownPluginState } from '../types';
+import { useLinkQuery } from '../hooks';
+import { Markdown, MarkdownCapabilities, type MarkdownPluginState } from '../types';
 
 import { MarkdownEditor, type MarkdownEditorContentProps, type MarkdownEditorRootProps } from './MarkdownEditor';
 
-export type MarkdownContainerProps = {
-  role?: string;
-  object: DocumentType;
-  settings: Markdown.Settings;
-  selectionManager?: SelectionManager;
-} & (Pick<MarkdownEditorRootProps, 'id' | 'viewMode' | 'onViewModeChange'> &
-  Pick<MarkdownEditorContentProps, 'editorStateStore'> &
-  Pick<MarkdownPluginState, 'extensionProviders'>);
+export type MarkdownContainerProps = SurfaceComponentProps<
+  Markdown.Document | Text.Text,
+  {
+    id: string;
+    settings: Markdown.Settings;
+    selectionManager?: SelectionManager;
+  } & Pick<MarkdownEditorRootProps, 'viewMode' | 'onViewModeChange'> &
+    Pick<MarkdownEditorContentProps, 'editorStateStore'> &
+    Pick<MarkdownPluginState, 'extensionProviders'>
+>;
 
 export const MarkdownContainer = forwardRef<HTMLDivElement, MarkdownContainerProps>(
-  ({ id, role, object, settings, extensionProviders, ...props }, forwardedRef) => {
+  ({ role, subject: object, id, settings, extensionProviders, ...props }, forwardedRef) => {
     const db = Obj.isObject(object) ? Obj.getDatabase(object) : undefined;
-    const isDocument = Obj.instanceOf(Markdown.Document, object);
-    const isText = Obj.instanceOf(Text.Text, object);
-    const attendableId = isDocument ? Obj.getDXN(object).toString() : undefined;
+    const attendableId = Obj.instanceOf(Markdown.Document, object) ? Obj.getDXN(object).toString() : undefined;
+    const [docContent] = useObject(Obj.instanceOf(Markdown.Document, object) ? object.content : undefined, 'content');
+    const [textContent] = useObject(Obj.instanceOf(Text.Text, object) ? object : undefined, 'content');
+    const initialValue = docContent ?? textContent;
 
     // Extensions from other plugins.
     // TODO(burdon): Document MarkdownPluginState.extensionProviders
     const otherExtensionProviders = useCapabilities(MarkdownCapabilities.Extensions);
     const extensions = useMemo<Extension[]>(() => {
-      if (!Obj.instanceOf(Markdown.Document, object)) {
+      if (!Obj.instanceOf(Markdown.Document, object) && !Obj.instanceOf(Text.Text, object)) {
         return [];
       }
 
@@ -58,6 +62,7 @@ export const MarkdownContainer = forwardRef<HTMLDivElement, MarkdownContainerPro
 
     // Toolbar actions from app graph.
     const { graph } = useAppGraph();
+    const runAction = useActionRunner();
     const customActions = useMemo(() => {
       return Atom.make((get) => {
         const actions = get(graph.actions(id));
@@ -68,7 +73,7 @@ export const MarkdownContainer = forwardRef<HTMLDivElement, MarkdownContainerPro
     }, [graph]);
 
     // File upload.
-    const [upload] = useCapabilities(Capabilities.FileUploader);
+    const [upload] = useCapabilities(Common.Capability.FileUploader);
     const handleFileUpload = useMemo(() => {
       if (!db || !upload) {
         return undefined;
@@ -81,11 +86,13 @@ export const MarkdownContainer = forwardRef<HTMLDivElement, MarkdownContainerPro
     const handleLinkQuery = useLinkQuery(db);
 
     return (
-      <StackItem.Content toolbar={settings.toolbar} ref={forwardedRef}>
+      <Layout.Main toolbar={settings.toolbar} ref={forwardedRef}>
         <MarkdownEditor.Root
           id={attendableId ?? id}
           object={object}
           extensions={extensions}
+          settings={settings}
+          onAction={runAction}
           onFileUpload={handleFileUpload}
           onLinkQuery={handleLinkQuery}
           {...props}
@@ -93,13 +100,10 @@ export const MarkdownContainer = forwardRef<HTMLDivElement, MarkdownContainerPro
           {settings.toolbar && (
             <MarkdownEditor.Toolbar id={attendableId ?? id} role={role} customActions={customActions} />
           )}
-          <MarkdownEditor.Content
-            initialValue={isDocument ? object.content?.target?.content : isText ? object.content : object.text}
-            scrollPastEnd={role === 'article'}
-          />
+          <MarkdownEditor.Content initialValue={initialValue} scrollPastEnd={role === 'article'} />
           <MarkdownEditor.Blocks />
         </MarkdownEditor.Root>
-      </StackItem.Content>
+      </Layout.Main>
     );
   },
 );

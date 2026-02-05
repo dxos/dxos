@@ -5,17 +5,16 @@
 import * as Schema from 'effect/Schema';
 import { afterEach, assert, beforeEach, describe, expect, test } from 'vitest';
 
-import { Trigger, asyncTimeout } from '@dxos/async';
+import { asyncTimeout } from '@dxos/async';
 import { Obj, Relation, Type } from '@dxos/echo';
-import { Expando, Ref, getTypeAnnotation, getTypeReference, makeObject } from '@dxos/echo/internal';
-import { TestSchema, updateCounter } from '@dxos/echo/testing';
+import { Ref, getSchemaDXN, getTypeAnnotation, makeObject } from '@dxos/echo/internal';
+import { TestSchema } from '@dxos/echo/testing';
 import { MeshEchoReplicator } from '@dxos/echo-pipeline';
 import {
   TestReplicationNetwork,
   brokenAutomergeReplicatorFactory,
   testAutomergeReplicatorFactory,
 } from '@dxos/echo-pipeline/testing';
-import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { DXN, type ObjectId, PublicKey } from '@dxos/keys';
 import { TestBuilder as TeleportTestBuilder, TestPeer as TeleportTestPeer } from '@dxos/teleport/testing';
 import { deferAsync } from '@dxos/util';
@@ -23,8 +22,6 @@ import { deferAsync } from '@dxos/util';
 import { Filter, Query } from '../query';
 
 import { EchoTestBuilder, createDataAssertion } from './echo-test-builder';
-
-registerSignalsRuntime();
 
 describe('Integration tests', () => {
   let builder: EchoTestBuilder;
@@ -146,16 +143,15 @@ describe('Integration tests', () => {
     await dataAssertion.verify(db2);
   });
 
-  // TODO(dmaretskyi): Test Ref.load() too.
   // TODO(dmaretskyi): Test that accessing the ref DXN doesn't load the target.
-  test('references are loaded lazily and receive signal notifications', async () => {
+  test('references are loaded lazily and can be loaded via load()', async () => {
     await using peer = await builder.createPeer();
 
     let outerId: string;
     {
       await using db = await peer.createDatabase();
-      const inner = db.add(Obj.make(Type.Expando, { name: 'inner' }));
-      const outer = db.add(Obj.make(Type.Expando, { inner: Ref.make(inner) }));
+      const inner = db.add(Obj.make(TestSchema.Expando, { name: 'inner' }));
+      const outer = db.add(Obj.make(TestSchema.Expando, { inner: Ref.make(inner) }));
       outerId = outer.id;
       await db.flush();
     }
@@ -164,17 +160,12 @@ describe('Integration tests', () => {
     {
       await using db = await peer.openLastDatabase();
       const outer = (await db.query(Filter.id(outerId)).first()) as any;
-      const loaded = new Trigger();
-      using updates = updateCounter(() => {
-        if (outer.inner.target) {
-          loaded.wake();
-        }
-      });
       expect(outer.inner.target).to.eq(undefined);
 
-      await loaded.wait();
+      // Use explicit load() to load the reference.
+      const loaded = await outer.inner.load();
+      expect(loaded).to.include({ name: 'inner' });
       expect(outer.inner.target).to.include({ name: 'inner' });
-      expect(updates.count).to.eq(1);
     }
   });
 
@@ -187,8 +178,8 @@ describe('Integration tests', () => {
     {
       await using db = await peer.createDatabase(spaceKey);
       rootUrl = db.rootUrl!;
-      const inner = db.add(Obj.make(Type.Expando, { name: 'inner' }));
-      const outer = db.add(Obj.make(Type.Expando, { inner: Ref.make(inner) }));
+      const inner = db.add(Obj.make(TestSchema.Expando, { name: 'inner' }));
+      const outer = db.add(Obj.make(TestSchema.Expando, { inner: Ref.make(inner) }));
       outerId = outer.id;
       await db.flush();
     }
@@ -332,7 +323,7 @@ describe('Integration tests', () => {
 
     await teleportConnections[0].whenOpen(true);
     await using db1 = await peer1.createDatabase(spaceKey);
-    db1.add(Obj.make(Expando, {}));
+    db1.add(Obj.make(TestSchema.Expando, {}));
     await teleportConnections[0].whenOpen(false);
   });
 
@@ -391,7 +382,7 @@ describe('Integration tests', () => {
     await using db2 = await peer2.openDatabase(spaceKey, db1.rootUrl!);
 
     const obj1 = db1.add(
-      Obj.make(Type.Expando, {
+      Obj.make(TestSchema.Expando, {
         content: 'test',
       }),
     );
@@ -458,16 +449,16 @@ describe('Integration tests', () => {
         await using db = await peer.createDatabase(spaceKey);
         rootUrl = db.rootUrl!;
 
-        const TestSchema = Schema.Struct({
+        const LocalTestSchema = Schema.Struct({
           field: Schema.String,
-        }).pipe(Type.Obj({ typename: 'example.com/type/Test', version: '0.1.0' }));
-        const [stored] = await db.schemaRegistry.register([TestSchema]);
+        }).pipe(Type.object({ typename: 'example.com/type/Test', version: '0.1.0' }));
+        const [stored] = await db.schemaRegistry.register([LocalTestSchema]);
         schemaDxn = DXN.fromLocalObjectId(stored.id).toString();
 
         const object = db.add(makeObject(stored, { field: 'test' }));
         expect(Obj.getSchema(object)).to.eq(stored);
 
-        db.add(Obj.make(Type.Expando, { text: 'Expando object' })); // Add Expando object to test filtering
+        db.add(Obj.make(TestSchema.Expando, { text: 'Expando object' })); // Add Expando object to test filtering
         await db.flush({ indexes: true });
       }
 
@@ -517,7 +508,7 @@ describe('Integration tests', () => {
         preloadSchemaOnOpen: false,
       });
       const [schema] = await db.schemaRegistry.register([TestSchema.Person]);
-      typeDXN = getTypeReference(schema)!.toDXN();
+      typeDXN = getSchemaDXN(schema)!;
       db.add(makeObject(schema, { name: 'Bob' }));
       await db.flush({ indexes: true });
     }

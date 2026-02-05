@@ -8,7 +8,7 @@ import remarkGfm from 'remark-gfm';
 
 import { type ThemedClassName } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 export type MarkdownViewerProps = ThemedClassName<
   PropsWithChildren<{

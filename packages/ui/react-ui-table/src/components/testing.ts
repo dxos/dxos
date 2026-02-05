@@ -2,34 +2,59 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Atom } from '@effect-atom/atom-react';
 import * as Schema from 'effect/Schema';
 import { useEffect } from 'react';
 
-import { Format } from '@dxos/echo';
-import { TypeEnum, TypedObject } from '@dxos/echo/internal';
+import { Format, Type } from '@dxos/echo';
+import { TypeEnum } from '@dxos/echo/internal';
 import { setValue } from '@dxos/effect';
-import { live } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 import { type ProjectionModel } from '@dxos/schema';
 
-export const TestSchema = TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
+export const TestSchema = Schema.Struct({
   name: Schema.optional(Schema.String),
   age: Schema.optional(Schema.Number),
   active: Schema.optional(Schema.Boolean),
   netWorth: Schema.optional(Schema.Number),
-});
+}).pipe(
+  Type.object({
+    typename: 'example.com/type/Test',
+    version: '0.1.0',
+  }),
+);
 
-export const createItems = (n: number) => {
-  const { data } = live({
+export type TestItem = {
+  name: string;
+  age: number;
+  active: boolean;
+  netWorth: number;
+};
+
+/**
+ * Creates an Atom containing test items data.
+ */
+export const createItemsAtom = (n: number) => {
+  return Atom.make<{ data: TestItem[] }>({
     data: Array.from({ length: n }, () => ({
       name: faker.person.fullName(),
       age: faker.number.int({ min: 20, max: 70 }),
       active: faker.datatype.boolean(),
       netWorth: faker.number.int(),
     })),
-  });
+  }).pipe(Atom.keepAlive);
+};
 
-  return data;
+/**
+ * Creates plain test items (non-reactive).
+ */
+export const createItems = (n: number): TestItem[] => {
+  return Array.from({ length: n }, () => ({
+    name: faker.person.fullName(),
+    age: faker.number.int({ min: 20, max: 70 }),
+    active: faker.datatype.boolean(),
+    netWorth: faker.number.int(),
+  }));
 };
 
 export type SimulatorProps = {
@@ -60,7 +85,7 @@ export const useSimulator = ({ items, projection, insertInterval, updateInterval
 
     const i = setInterval(() => {
       const rowIdx = Math.floor(Math.random() * items.length);
-      const fields = projection.fields ?? [];
+      const fields = projection.getFields() ?? [];
       const columnIdx = Math.floor(Math.random() * fields.length);
       const field = fields[columnIdx];
       const item = items[rowIdx];
@@ -99,5 +124,5 @@ export const useSimulator = ({ items, projection, insertInterval, updateInterval
     }, updateInterval);
 
     return () => clearInterval(i);
-  }, [items, projection.fields, updateInterval]);
+  }, [items, projection.getFields(), updateInterval]);
 };

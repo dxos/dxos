@@ -7,13 +7,8 @@ import debounce from 'lodash.debounce';
 import React, { useMemo } from 'react';
 
 import { useThemeContext } from '@dxos/react-ui';
-import {
-  EditorView,
-  createBasicExtensions,
-  createThemeExtensions,
-  folding,
-  useTextEditor,
-} from '@dxos/react-ui-editor';
+import { useTextEditor } from '@dxos/react-ui-editor';
+import { EditorView, createBasicExtensions, createThemeExtensions, folding } from '@dxos/ui-editor';
 
 import { themeEditorId } from '../defs';
 import { restore, saveAndRender } from '../util';

@@ -23,11 +23,11 @@ export class GraphHierarchicalProjector<
   protected override onUpdate(graph?: Graph.Any) {
     log('onUpdate', {
       graph: { nodes: graph?.nodes.length, edges: graph?.edges.length },
-      selection: this.selection?.selected.value,
+      selection: this.selection?.getSelectedIds(),
     });
 
     this.mergeData(graph);
-    const selected = this.selection?.selected.value?.[0];
+    const selected = this.selection?.getSelectedIds()[0];
     if (selected) {
       const node = this.layout.graph.nodes.find((node) => node.id === selected);
       if (node) {

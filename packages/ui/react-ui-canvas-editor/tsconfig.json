@@ -42,9 +42,6 @@
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../core/echo/live-object"
-    },
-    {
       "path": "../../sdk/react-client"
     },
     {
@@ -69,7 +66,10 @@
       "path": "../react-ui-syntax-highlighter"
     },
     {
-      "path": "../react-ui-theme"
+      "path": "../ui-editor"
+    },
+    {
+      "path": "../ui-theme"
     }
   ]
 }

@@ -13,7 +13,6 @@ import {
 import * as Schema from 'effect/Schema';
 import React, { type FC, type KeyboardEvent, memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { type HasId } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { TreeItem as NaturalTreeItem, Treegrid } from '@dxos/react-ui';
 import {
@@ -22,7 +21,7 @@ import {
   hoverableControls,
   hoverableFocusedKeyboardControls,
   hoverableFocusedWithinControls,
-} from '@dxos/react-ui-theme';
+} from '@dxos/ui-theme';
 
 import { DEFAULT_INDENTATION, paddingIndentation } from './helpers';
 import { useTree } from './TreeContext';
@@ -43,7 +42,7 @@ export const TreeDataSchema = Schema.Struct({
 export type TreeData = Schema.Schema.Type<typeof TreeDataSchema>;
 export const isTreeData = (data: unknown): data is TreeData => Schema.is(TreeDataSchema)(data);
 
-export type ColumnRenderer<T extends HasId = any> = FC<{
+export type ColumnRenderer<T extends { id: string } = any> = FC<{
   item: T;
   path: string[];
   open: boolean;
@@ -51,7 +50,7 @@ export type ColumnRenderer<T extends HasId = any> = FC<{
   setMenuOpen: (open: boolean) => void;
 }>;
 
-export type TreeItemProps<T extends HasId = any> = {
+export type TreeItemProps<T extends { id: string } = any> = {
   item: T;
   path: string[];
   levelOffset?: number;
@@ -65,7 +64,7 @@ export type TreeItemProps<T extends HasId = any> = {
   onSelect?: (params: { item: T; path: string[]; current: boolean; option: boolean }) => void;
 };
 
-const RawTreeItem = <T extends HasId = any>({
+const RawTreeItem = <T extends { id: string } = any>({
   item,
   path: _path,
   levelOffset = 2,
@@ -86,12 +85,12 @@ const RawTreeItem = <T extends HasId = any>({
   const [instruction, setInstruction] = useState<Instruction | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const { useItems, getProps, isOpen, isCurrent } = useTree();
+  const { useItems, getProps, useIsOpen, useIsCurrent } = useTree();
   const items = useItems(item);
   const { id, parentOf, label, className, headingClassName, icon, iconHue, disabled, testId } = getProps(item, _path);
   const path = useMemo(() => [..._path, id], [_path, id]);
-  const open = isOpen(path, item);
-  const current = isCurrent(path, item);
+  const open = useIsOpen(path, item);
+  const current = useIsCurrent(path, item);
   const level = path.length - levelOffset;
   const isBranch = !!parentOf;
   const mode: ItemMode = last ? 'last-in-group' : open ? 'expanded' : 'standard';

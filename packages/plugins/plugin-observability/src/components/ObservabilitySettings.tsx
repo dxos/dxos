@@ -5,13 +5,12 @@
 import * as Schema from 'effect/Schema';
 import React from 'react';
 
-import { createIntent } from '@dxos/app-framework';
-import { useIntentDispatcher } from '@dxos/app-framework/react';
+import { useOperationInvoker } from '@dxos/app-framework/react';
 import { Input, Message, useTranslation } from '@dxos/react-ui';
 import { ControlGroup, ControlItemInput, ControlPage, ControlSection } from '@dxos/react-ui-form';
 
 import { meta } from '../meta';
-import { ObservabilityAction } from '../types';
+import { ObservabilityOperation } from '../types';
 
 export const ObservabilitySettingsSchema = Schema.mutable(
   Schema.Struct({
@@ -25,9 +24,14 @@ export const ObservabilitySettingsSchema = Schema.mutable(
 
 export type ObservabilitySettingsProps = Schema.Schema.Type<typeof ObservabilitySettingsSchema>;
 
-export const ObservabilitySettings = ({ settings }: { settings: ObservabilitySettingsProps }) => {
+export type ObservabilitySettingsComponentProps = {
+  settings: ObservabilitySettingsProps;
+  onSettingsChange: (fn: (current: ObservabilitySettingsProps) => ObservabilitySettingsProps) => void;
+};
+
+export const ObservabilitySettings = ({ settings }: ObservabilitySettingsComponentProps) => {
   const { t } = useTranslation(meta.id);
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const { invokePromise } = useOperationInvoker();
 
   return (
     <ControlPage>
@@ -39,7 +43,7 @@ export const ObservabilitySettings = ({ settings }: { settings: ObservabilitySet
           <ControlItemInput title={t('observability enabled label')}>
             <Input.Switch
               checked={settings.enabled}
-              onCheckedChange={(checked) => dispatch(createIntent(ObservabilityAction.Toggle, { state: !!checked }))}
+              onCheckedChange={(checked) => invokePromise(ObservabilityOperation.Toggle, { state: !!checked })}
             />
           </ControlItemInput>
         </ControlGroup>

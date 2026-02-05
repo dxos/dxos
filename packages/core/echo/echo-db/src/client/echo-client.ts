@@ -14,17 +14,17 @@ import { HypergraphImpl } from '../hypergraph';
 import { EchoDatabaseImpl } from '../proxy-db';
 import { QueueFactory } from '../queue';
 
-import { IndexQuerySourceProvider, type LoadObjectParams } from './index-query-source-provider';
+import { IndexQuerySourceProvider, type LoadObjectProps } from './index-query-source-provider';
 
-export type EchoClientParams = {};
+export type EchoClientProps = {};
 
-export type ConnectToServiceParams = {
+export type ConnectToServiceProps = {
   dataService: DataService;
   queryService: QueryService;
   queueService?: QueueService;
 };
 
-export type ConstructDatabaseParams = {
+export type ConstructDatabaseProps = {
   spaceId: SpaceId;
 
   /** @deprecated Use spaceId */
@@ -59,6 +59,7 @@ export class EchoClient extends Resource {
 
   // TODO(burdon): This already exists in Hypergraph.
   private readonly _databases = new Map<SpaceId, EchoDatabaseImpl>();
+  private readonly _queues = new Map<SpaceId, QueueFactory>();
 
   private _dataService: DataService | undefined = undefined;
   private _queryService: QueryService | undefined = undefined;
@@ -66,7 +67,7 @@ export class EchoClient extends Resource {
 
   private _indexQuerySourceProvider: IndexQuerySourceProvider | undefined = undefined;
 
-  constructor(_: EchoClientParams = {}) {
+  constructor(_: EchoClientProps = {}) {
     super();
   }
 
@@ -82,7 +83,7 @@ export class EchoClient extends Resource {
    * Connects to the ECHO service.
    * Must be called before open.
    */
-  connectToService({ dataService, queryService, queueService }: ConnectToServiceParams): this {
+  connectToService({ dataService, queryService, queueService }: ConnectToServiceProps): this {
     invariant(this._lifecycleState === LifecycleState.CLOSED);
     this._dataService = dataService;
     this._queryService = queryService;
@@ -94,6 +95,7 @@ export class EchoClient extends Resource {
     invariant(this._lifecycleState === LifecycleState.CLOSED);
     this._dataService = undefined;
     this._queryService = undefined;
+    this._queuesService = undefined;
   }
 
   protected override async _open(ctx: Context): Promise<void> {
@@ -104,6 +106,7 @@ export class EchoClient extends Resource {
       objectLoader: {
         loadObject: this._loadObjectFromDocument.bind(this),
       },
+      graph: this._graph,
     });
     this._graph.registerQuerySourceProvider(this._indexQuerySourceProvider);
   }
@@ -116,7 +119,12 @@ export class EchoClient extends Resource {
       this._graph._unregisterDatabase(db.spaceId);
       await db.close();
     }
+    for (const [spaceId, queueFactory] of this._queues.entries()) {
+      this._graph._unregisterQueueFactory(spaceId);
+      await queueFactory.close();
+    }
     this._databases.clear();
+    this._queues.clear();
   }
 
   // TODO(dmaretskyi): Make async?
@@ -126,7 +134,7 @@ export class EchoClient extends Resource {
     reactiveSchemaQuery,
     preloadSchemaOnOpen,
     spaceKey,
-  }: ConstructDatabaseParams): EchoDatabaseImpl {
+  }: ConstructDatabaseProps): EchoDatabaseImpl {
     invariant(this._lifecycleState === LifecycleState.OPEN);
     invariant(!this._databases.has(spaceId), 'Database already exists.');
     const db = new EchoDatabaseImpl({
@@ -145,7 +153,9 @@ export class EchoClient extends Resource {
 
   constructQueueFactory(spaceId: SpaceId): QueueFactory {
     const queueFactory = new QueueFactory(spaceId, this._graph);
+    this._queues.set(spaceId, queueFactory);
     this._graph._registerQueueFactory(spaceId, queueFactory);
+    this._queues.set(spaceId, queueFactory);
     if (this._queuesService) {
       queueFactory.setService(this._queuesService);
     }
@@ -153,7 +163,62 @@ export class EchoClient extends Resource {
     return queueFactory;
   }
 
-  private async _loadObjectFromDocument({ spaceId, objectId, documentId }: LoadObjectParams) {
+  /**
+   * Update service references after reconnection.
+   * Must be called before _notifyReconnect.
+   */
+  _updateServices({
+    dataService,
+    queryService,
+    queueService,
+  }: {
+    dataService: DataService;
+    queryService: QueryService;
+    queueService?: QueueService;
+  }): void {
+    log('updating service references');
+    this._dataService = dataService;
+    this._queryService = queryService;
+    this._queuesService = queueService;
+
+    // Update IndexQuerySourceProvider with new service.
+    if (this._indexQuerySourceProvider) {
+      this._graph.unregisterQuerySourceProvider(this._indexQuerySourceProvider);
+      this._indexQuerySourceProvider = new IndexQuerySourceProvider({
+        service: this._queryService,
+        objectLoader: {
+          loadObject: this._loadObjectFromDocument.bind(this),
+        },
+        graph: this._graph,
+      });
+      this._graph.registerQuerySourceProvider(this._indexQuerySourceProvider);
+    }
+
+    // Update all databases with new services.
+    for (const db of this._databases.values()) {
+      db._updateServices({ dataService, queryService });
+    }
+
+    // Update all queue factories with new service.
+    if (queueService) {
+      for (const queueFactory of this._queues.values()) {
+        queueFactory.setService(queueService);
+      }
+    }
+  }
+
+  /**
+   * Notify all databases that the service connection has been re-established.
+   * Called after a dedicated worker leader change.
+   */
+  async _notifyReconnect(): Promise<void> {
+    log('notifying databases of reconnection');
+    for (const db of this._databases.values()) {
+      await db._onReconnect();
+    }
+  }
+
+  private async _loadObjectFromDocument({ spaceId, objectId, documentId }: LoadObjectProps) {
     const db = this._databases.get(spaceId);
     if (!db) {
       return undefined;
@@ -170,7 +235,7 @@ export class EchoClient extends Resource {
       throw err;
     }
 
-    const objectDocId = db._coreDatabase._automergeDocLoader.getObjectDocumentId(objectId);
+    const objectDocId = db.coreDatabase._automergeDocLoader.getObjectDocumentId(objectId);
     if (objectDocId !== documentId) {
       log("documentIds don't match", { objectId, expected: documentId, actual: objectDocId ?? null });
       return undefined;

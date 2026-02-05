@@ -2,14 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type RefObject, useCallback, useMemo, useRef } from 'react';
+import { RegistryContext } from '@effect-atom/atom-react';
+import { type RefObject, useCallback, useContext, useMemo, useRef } from 'react';
 
 import { type Database, type Type } from '@dxos/echo';
 import { isMutable } from '@dxos/echo/internal';
-import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { faker } from '@dxos/random';
 import { Filter, useQuery, useSchema } from '@dxos/react-client/echo';
-import { useClientProvider } from '@dxos/react-client/testing';
+import { useClientStory } from '@dxos/react-client/testing';
+import { useGlobalFilteredObjects } from '@dxos/react-ui-searchlist';
 import { type ProjectionModel, getTypenameFromQuery } from '@dxos/schema';
 
 import { type TableController } from '../components';
@@ -19,7 +20,7 @@ import { Table } from '../types';
 
 faker.seed(0); // NOTE(ZaymonFC): Required for smoke tests.
 
-export type TestTableModel<T extends Type.Entity.Any = Type.Entity.Any> = {
+export type TestTableModel<T extends Type.Obj.Any = Type.Obj.Any> = {
   schema: T | undefined;
   table: Table.Table | undefined;
   projection: ProjectionModel | undefined;
@@ -37,15 +38,16 @@ export type TestTableModel<T extends Type.Entity.Any = Type.Entity.Any> = {
  * Custom hook to create and manage a test table model for storybook demonstrations.
  * Provides table data, schema, and handlers for table operations.
  */
-export const useTestTableModel = <T extends Type.Entity.Any = Type.Entity.Any>(): TestTableModel<T> => {
-  const { space } = useClientProvider();
+export const useTestTableModel = <T extends Type.Obj.Any = Type.Obj.Any>(): TestTableModel<T> => {
+  const registry = useContext(RegistryContext);
+  const { space } = useClientStory();
   const db = space?.db;
 
   const tables = useQuery(space?.db, Filter.type(Table.Table));
   const table = tables.at(0);
   const typename = table?.view.target?.query ? getTypenameFromQuery(table.view.target.query.ast) : undefined;
   const schema = useSchema<T>(space?.db, typename);
-  const projection = useProjectionModel(schema, table);
+  const projection = useProjectionModel(schema, table, registry);
 
   const features = useMemo(
     () => ({
@@ -111,9 +113,9 @@ export const useTestTableModel = <T extends Type.Entity.Any = Type.Entity.Any>()
 
   const presentation = useMemo(() => {
     if (model) {
-      return new TablePresentation(model);
+      return new TablePresentation(registry, model);
     }
-  }, [model]);
+  }, [registry, model]);
 
   return {
     schema,

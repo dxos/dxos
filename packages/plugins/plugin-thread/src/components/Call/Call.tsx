@@ -2,13 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
+import { useAtomValue } from '@effect-atom/atom-react';
 import React, { type FC, type PropsWithChildren } from 'react';
 
 import { useCapability } from '@dxos/app-framework/react';
 import { type ThemedClassName } from '@dxos/react-ui';
 
-import { ThreadCapabilities } from '../../capabilities';
 import { useDebugMode } from '../../hooks';
+import { ThreadCapabilities } from '../../types';
 import { AudioStream } from '../Media';
 import { ParticipantGrid } from '../Participant';
 
@@ -34,8 +35,9 @@ type CallAudioProps = {};
 
 const CallAudio: FC<CallAudioProps> = () => {
   const call = useCapability(ThreadCapabilities.CallManager);
+  const audioTracksToPlay = useAtomValue(call.audioTracksToPlayAtom);
 
-  return <AudioStream tracks={call.audioTracksToPlay} />;
+  return <AudioStream tracks={audioTracksToPlay} />;
 };
 
 CallAudio.displayName = 'CallAudio';
@@ -51,10 +53,12 @@ type CallGridProps = {
 const CallGrid: FC<CallGridProps> = ({ fullscreen }) => {
   const debug = useDebugMode();
   const call = useCapability(ThreadCapabilities.CallManager);
+  const self = useAtomValue(call.selfAtom);
+  const users = useAtomValue(call.usersAtom);
 
   return (
     <div className='grid grow p-4 dark:bg-neutral-900'>
-      <ParticipantGrid self={call.self} users={call.users} debug={debug} fullscreen={fullscreen} />
+      <ParticipantGrid self={self} users={users} debug={debug} fullscreen={fullscreen} />
     </div>
   );
 };

@@ -9,19 +9,18 @@ import React from 'react';
 
 import { log } from '@dxos/log';
 import { withTheme } from '@dxos/react-ui/testing';
-
 import {
   InputModeExtensions,
   decorateMarkdown,
   folding,
   image,
+  join,
   listener,
   mention,
   selectionState,
   staticCompletion,
   typeahead,
-} from '../extensions';
-import { str } from '../util';
+} from '@dxos/ui-editor';
 
 import {
   EditorStory,
@@ -96,7 +95,7 @@ export const NoExtensions: Story = {
 export const Vim: Story = {
   render: () => (
     <EditorStory
-      text={str('# Vim Mode', '', 'The distant future. The year 2000.', '', content.paragraphs)}
+      text={join('# Vim Mode', '', 'The distant future. The year 2000.', '', content.paragraphs)}
       extensions={[defaultExtensions, InputModeExtensions.vim]}
     />
   ),
@@ -109,7 +108,7 @@ export const Vim: Story = {
 export const Listener: Story = {
   render: () => (
     <EditorStory
-      text={str('# Listener', '', content.footer)}
+      text={join('# Listener', '', content.footer)}
       extensions={[
         listener({
           onFocus: ({ focusing }) => {
@@ -139,7 +138,7 @@ export const Folding: Story = {
 export const Scrolling: Story = {
   render: () => (
     <EditorStory
-      text={str('# Large Document', '', longText)}
+      text={join('# Large Document', '', longText)}
       extensions={selectionState({
         setState: (id, state) => global.set(id, state),
         getState: (id) => global.get(id),
@@ -150,7 +149,7 @@ export const Scrolling: Story = {
 
 export const ScrollingWithImages: Story = {
   render: () => (
-    <EditorStory text={str('# Large Document', '', largeWithImages)} extensions={[decorateMarkdown(), image()]} />
+    <EditorStory text={join('# Large Document', '', largeWithImages)} extensions={[decorateMarkdown(), image()]} />
   ),
 };
 
@@ -158,7 +157,7 @@ export const ScrollTo: Story = {
   render: () => {
     // NOTE: Selection won't appear if text is reformatted.
     const word = 'Scroll to here...';
-    const text = str('# Scroll To', longText, '', word, '', longText);
+    const text = join('# Scroll To', longText, '', word, '', longText);
     const idx = text.indexOf(word);
     return (
       <EditorStory
@@ -190,7 +189,7 @@ const completions = ['hello world!', 'dxos.org'];
 export const Typeahead: Story = {
   render: () => (
     <EditorStory
-      text={str('# Typeahead', '')}
+      text={join('# Typeahead', '')}
       extensions={[
         typeahead({
           onComplete: staticCompletion(completions, { minLength: 2 }),
@@ -207,7 +206,7 @@ export const Typeahead: Story = {
 export const Mention: Story = {
   render: () => (
     <EditorStory
-      text={str('# Mention', '', 'Type @...', content.footer)}
+      text={join('# Mention', '', 'Type @...', content.footer)}
       extensions={[
         mention({
           onSearch: (text) => names.filter((name) => name.toLowerCase().startsWith(text.toLowerCase())),
@@ -224,7 +223,7 @@ export const Mention: Story = {
 export const Search: Story = {
   render: () => (
     <EditorStory
-      text={str('# Search', text)}
+      text={join('# Search', text)}
       extensions={defaultExtensions}
       onReady={(view) => openSearchPanel(view)}
     />

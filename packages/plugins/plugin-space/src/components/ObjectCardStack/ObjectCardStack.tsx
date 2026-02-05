@@ -8,7 +8,9 @@ import { Obj } from '@dxos/echo';
 import { Filter, useQuery, useSchema } from '@dxos/react-client/echo';
 import { Callout, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useSelected } from '@dxos/react-ui-attention';
-import { Card, CardStack, StackItem } from '@dxos/react-ui-stack';
+import { Card } from '@dxos/react-ui-mosaic';
+import { Layout } from '@dxos/react-ui-mosaic';
+import { CardStack, StackItem } from '@dxos/react-ui-stack';
 import { type View, getTypenameFromQuery } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
@@ -17,8 +19,8 @@ import { meta } from '../../meta';
 import { ObjectForm } from './ObjectForm';
 
 export type ObjectCardStackProps = {
-  objectId: string;
   view: View.View;
+  objectId: string;
 };
 
 export const ObjectCardStack = forwardRef<HTMLDivElement, ObjectCardStackProps>(({ objectId, view }, forwardedRef) => {
@@ -36,7 +38,7 @@ export const ObjectCardStack = forwardRef<HTMLDivElement, ObjectCardStackProps>(
   }
 
   return (
-    <StackItem.Content toolbar ref={forwardedRef}>
+    <Layout.Main toolbar ref={forwardedRef}>
       <Toolbar.Root></Toolbar.Root>
       <CardStack.Root asChild>
         <CardStack.Content>
@@ -51,15 +53,15 @@ export const ObjectCardStack = forwardRef<HTMLDivElement, ObjectCardStackProps>(
             {selectedObjects.map((object) => (
               <CardStack.Item key={object.id} asChild>
                 <StackItem.Root item={object}>
-                  <Card.StaticRoot>
+                  <Card.Root>
                     <ObjectForm object={object} schema={schema} />
-                  </Card.StaticRoot>
+                  </Card.Root>
                 </StackItem.Root>
               </CardStack.Item>
             ))}
           </CardStack.Stack>
         </CardStack.Content>
       </CardStack.Root>
-    </StackItem.Content>
+    </Layout.Main>
   );
 });

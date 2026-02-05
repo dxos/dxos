@@ -5,7 +5,7 @@
 import React, { type JSX, type PropsWithChildren } from 'react';
 
 import { Icon } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 export type PanelProps = {
   className?: string; // TODO(burdon): Change to ThemedClassName.

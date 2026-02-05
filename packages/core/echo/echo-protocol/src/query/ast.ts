@@ -212,7 +212,11 @@ export const QueryReferenceTraversalClause: Schema.Schema<QueryReferenceTraversa
 const QueryIncomingReferencesClause_ = Schema.Struct({
   type: Schema.Literal('incoming-references'),
   anchor: Schema.suspend(() => Query),
-  property: Schema.String,
+  /**
+   * Property path where the reference is located.
+   * If null, matches references from any property.
+   */
+  property: Schema.NullOr(Schema.String),
   typename: TypenameSpecifier,
 });
 
@@ -286,6 +290,12 @@ const Order_ = Schema.Union(
     property: Schema.String,
     direction: OrderDirection,
   }),
+  Schema.Struct({
+    // Order by relevance rank (for FTS/vector search results).
+    // Default direction is 'desc' (higher rank = better match first).
+    kind: Schema.Literal('rank'),
+    direction: OrderDirection,
+  }),
 );
 
 export type Order = Schema.Schema.Type<typeof Order_>;
@@ -316,6 +326,18 @@ const QueryOptionsClause_ = Schema.Struct({
 export interface QueryOptionsClause extends Schema.Schema.Type<typeof QueryOptionsClause_> {}
 export const QueryOptionsClause: Schema.Schema<QueryOptionsClause> = QueryOptionsClause_;
 
+/**
+ * Limit the number of results.
+ */
+const QueryLimitClause_ = Schema.Struct({
+  type: Schema.Literal('limit'),
+  query: Schema.suspend(() => Query),
+  limit: Schema.Number,
+});
+
+export interface QueryLimitClause extends Schema.Schema.Type<typeof QueryLimitClause_> {}
+export const QueryLimitClause: Schema.Schema<QueryLimitClause> = QueryLimitClause_;
+
 const Query_ = Schema.Union(
   QuerySelectClause,
   QueryFilterClause,
@@ -327,6 +349,7 @@ const Query_ = Schema.Union(
   QuerySetDifferenceClause,
   QueryOrderClause,
   QueryOptionsClause,
+  QueryLimitClause,
 ).annotations({ identifier: 'dxos.org/schema/Query' });
 
 export type Query = Schema.Schema.Type<typeof Query_>;
@@ -339,6 +362,11 @@ export const QueryOptions = Schema.Struct({
    * NOTE: Spaces and queues are unioned together if both are specified.
    */
   spaceIds: Schema.optional(Schema.Array(Schema.String)),
+
+  /**
+   * If true, the nested select statements will select from all queues in the spaces specified by `spaceIds`.
+   */
+  allQueuesFromSpaces: Schema.optional(Schema.Boolean),
 
   /**
    * The nested select statemets will select from the given queues.
@@ -371,6 +399,7 @@ export const visit = (query: Query, visitor: (node: Query) => void) => {
       visit(exclude, visitor);
     }),
     Match.when({ type: 'order' }, ({ query }) => visit(query, visitor)),
+    Match.when({ type: 'limit' }, ({ query }) => visit(query, visitor)),
     Match.when({ type: 'select' }, () => {}),
     Match.exhaustive,
   );
@@ -390,6 +419,7 @@ export const fold = <T>(query: Query, reducer: (node: Query) => T): T[] => {
       fold(source, reducer).concat(fold(exclude, reducer)),
     ),
     Match.when({ type: 'order' }, ({ query }) => fold(query, reducer)),
+    Match.when({ type: 'limit' }, ({ query }) => fold(query, reducer)),
     Match.when({ type: 'select' }, () => []),
     Match.exhaustive,
   );

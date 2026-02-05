@@ -10,7 +10,7 @@ import { type AiToolNotFoundError, ToolExecutionService, ToolResolverService } f
 import { type Blueprint } from '@dxos/blueprints';
 import { isTruthy } from '@dxos/util';
 
-export type CreateToolkitParams = {
+export type CreateToolkitProps = {
   toolkit?: Toolkit.Any;
   blueprints?: readonly Blueprint.Blueprint[];
 };
@@ -19,9 +19,9 @@ export type CreateToolkitParams = {
  * Build a combined toolkit from the blueprint tools and the provided toolkit.
  */
 export const createToolkit = ({
-  toolkit: toolkitParam,
+  toolkit: toolkitProp,
   blueprints = [],
-}: CreateToolkitParams): Effect.Effect<
+}: CreateToolkitProps): Effect.Effect<
   Toolkit.WithHandler<any>,
   AiToolNotFoundError,
   ToolResolverService | ToolExecutionService | Tool.HandlersFor<any>
@@ -30,7 +30,7 @@ export const createToolkit = ({
     const blueprintToolkit = yield* ToolResolverService.resolveToolkit(blueprints.flatMap(({ tools }) => tools));
     const blueprintToolHandler = yield* blueprintToolkit.toContext(ToolExecutionService.handlersFor(blueprintToolkit));
 
-    const toolkit = Toolkit.merge(...[toolkitParam, blueprintToolkit].filter(isTruthy));
+    const toolkit = Toolkit.merge(...[toolkitProp, blueprintToolkit].filter(isTruthy));
     return yield* toolkit.pipe(Effect.provide(blueprintToolHandler)) as any as Effect.Effect<
       Toolkit.WithHandler<any>,
       never,

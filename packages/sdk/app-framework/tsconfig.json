@@ -24,9 +24,6 @@
       "path": "../../common/keys"
     },
     {
-      "path": "../../common/local-storage"
-    },
-    {
       "path": "../../common/log"
     },
     {
@@ -34,6 +31,9 @@
     },
     {
       "path": "../../common/storybook-utils"
+    },
+    {
+      "path": "../../common/test-utils"
     },
     {
       "path": "../../common/util"
@@ -57,16 +57,16 @@
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../core/echo/echo-signals"
-    },
-    {
-      "path": "../../core/echo/live-object"
+      "path": "../../core/echo/echo-db"
     },
     {
       "path": "../../core/functions"
     },
     {
-      "path": "../../ui/primitives/react-hooks"
+      "path": "../../core/operation"
+    },
+    {
+      "path": "../../ui/react-primitives/react-hooks"
     },
     {
       "path": "../../ui/react-ui"
@@ -75,7 +75,7 @@
       "path": "../../ui/react-ui-syntax-highlighter"
     },
     {
-      "path": "../../ui/react-ui-theme"
+      "path": "../../ui/ui-theme"
     },
     {
       "path": "../app-graph"

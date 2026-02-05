@@ -44,7 +44,7 @@ import {
   createTopology,
 } from './topology';
 
-export type ValidateParams = {
+export type ValidateProps = {
   graph: ComputeGraphModel;
   inputNodeId: string;
   outputNodeId: string;
@@ -69,7 +69,7 @@ export const validate = async ({
   inputNodeId,
   outputNodeId,
   computeMetaResolver,
-}: ValidateParams): Promise<ValidateResult> => {
+}: ValidateProps): Promise<ValidateResult> => {
   const executor = new GraphExecutor({ computeMetaResolver });
   await executor.load(graph);
   return {
@@ -83,7 +83,7 @@ export const validate = async ({
 
 export type ComputeResolver = (node: ComputeNode) => Promise<Executable>;
 
-export type CompileParams = {
+export type CompileProps = {
   graph: ComputeGraphModel;
 
   /**
@@ -116,7 +116,7 @@ export const compile = async ({
   inputNodeId,
   outputNodeId,
   computeResolver,
-}: CompileParams): Promise<CompileResult> => {
+}: CompileProps): Promise<CompileResult> => {
   const executor = new GraphExecutor({ computeNodeResolver: computeResolver });
   await executor.load(graph);
 
@@ -166,7 +166,7 @@ const formatDiagnostics = (diagnostic: GraphDiagnostic[]): string => {
     .join('\n');
 };
 
-export const compileOrThrow = async (params: CompileParams): Promise<Executable> => {
+export const compileOrThrow = async (params: CompileProps): Promise<Executable> => {
   const result = await compile(params);
   if (result.diagnostics.length) {
     throw new Error(`Graph compilation failed:\n${formatDiagnostics(result.diagnostics)}`);
@@ -175,7 +175,7 @@ export const compileOrThrow = async (params: CompileParams): Promise<Executable>
   return result.executable;
 };
 
-type GraphExecutorParams = {
+type GraphExecutorProps = {
   computeMetaResolver?: (node: ComputeNode) => Promise<ComputeNodeMeta>;
   computeNodeResolver?: (node: ComputeNode) => Promise<Executable>;
 };
@@ -199,7 +199,7 @@ export class GraphExecutor {
 
   private _topology?: Topology = undefined;
 
-  constructor({ computeMetaResolver, computeNodeResolver }: GraphExecutorParams) {
+  constructor({ computeMetaResolver, computeNodeResolver }: GraphExecutorProps) {
     this._computeNodeResolver = computeNodeResolver ?? (() => raise(new Error('Compute node resolver not provided')));
     this._computeMetaResolver =
       computeMetaResolver ??

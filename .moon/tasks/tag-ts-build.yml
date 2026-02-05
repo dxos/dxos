@@ -7,6 +7,8 @@ tasks:
       - ^:build
       - ^:compile
       - compile
+      # TODO(burdon): Add root moon.yml?
+      # - root:checkPackageCycles
     inputs:
       - /tsconfig.base.json
       - tsconfig.json
@@ -28,3 +30,6 @@ tasks:
       - dist/lib/
     options:
       timeout: 10
+
+inheritedBy:
+  tags: ts-build

@@ -7,7 +7,7 @@ import { dirname, join, relative } from 'path';
 
 import { parseFullyQualifiedName } from '../namespaces';
 
-export type GeneratePackageExportsParams = {
+export type GeneratePackageExportsProps = {
   /**
    * Root directory of the project.
    * Example: packages/core/protocols
@@ -24,7 +24,7 @@ export type GeneratePackageExportsParams = {
 
 const HEADER = '/**\n * @generated\n */\n';
 
-export const generatePackageExports = ({ packageRoot, exportFrom, namespaces }: GeneratePackageExportsParams) => {
+export const generatePackageExports = ({ packageRoot, exportFrom, namespaces }: GeneratePackageExportsProps) => {
   // TODO(dmaretskyi): Move to config.
   const prefix = 'proto';
 

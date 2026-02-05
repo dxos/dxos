@@ -8,15 +8,16 @@ import * as Array from 'effect/Array';
 import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
+import * as Layer from 'effect/Layer';
 import * as Predicate from 'effect/Predicate';
 import * as Ref from 'effect/Ref';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 
 import { ArtifactId } from '@dxos/assistant';
-import { DXN } from '@dxos/echo';
+import { DXN, Obj } from '@dxos/echo';
 import { Database } from '@dxos/echo';
-import { QueueService, defineFunction } from '@dxos/functions';
+import { CredentialsService, QueueService, defineFunction } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { type Event } from '@dxos/types';
 
@@ -24,6 +25,7 @@ import { type Event } from '@dxos/types';
 import * as Calendar from '../../../types/Calendar';
 import { GoogleCalendar } from '../../apis';
 import * as InboxResolver from '../../inbox-resolver';
+import { GoogleCredentials } from '../../services/google-credentials';
 
 import { mapEvent } from './mapper';
 
@@ -32,6 +34,7 @@ export default defineFunction({
   name: 'Sync Google Calendar',
   description:
     'Sync events from Google Calendar. The initial sync uses startTime ordering for specified number of days. Subsequent syncs use updatedMin to catch all changes.',
+  // TODO(wittjosiah): Change calendarId to Type.Ref(Calendar.Calendar) to match mailbox sync pattern.
   inputSchema: Schema.Struct({
     calendarId: ArtifactId,
     googleCalendarId: Schema.optional(Schema.String),
@@ -55,7 +58,7 @@ export default defineFunction({
         pageSize,
       });
 
-      const calendar = yield* Database.Service.resolve(DXN.parse(calendarId), Calendar.Calendar);
+      const calendar = yield* Database.resolve(DXN.parse(calendarId), Calendar.Calendar);
       const queue = yield* QueueService.getQueue<Event.Event>(calendar.queue.dxn);
 
       // State management for sync process.
@@ -89,7 +92,9 @@ export default defineFunction({
       // Update the calendar's last synced update timestamp.
       const lastUpdate = yield* Ref.get(latestUpdate);
       if (lastUpdate) {
-        calendar.lastSyncedUpdate = lastUpdate;
+        Obj.change(calendar, (c) => {
+          c.lastSyncedUpdate = lastUpdate;
+        });
         log('updated lastSyncedUpdate', { lastUpdate });
       }
 
@@ -109,7 +114,36 @@ export default defineFunction({
       return {
         newEvents: queueEvents.length,
       };
-    }).pipe(Effect.provide(FetchHttpClient.layer), Effect.provide(InboxResolver.Live)),
+    }).pipe(
+      // TODO(wittjosiah): Use GoogleCredentials.fromCalendarRef once input schema accepts Type.Ref.
+      Effect.provide(
+        Layer.mergeAll(
+          FetchHttpClient.layer,
+          InboxResolver.Live,
+          Layer.effect(
+            GoogleCredentials,
+            Effect.gen(function* () {
+              const calendar = yield* Database.resolve(DXN.parse(calendarId), Calendar.Calendar);
+              // Pre-load token at effect creation time.
+              let cachedToken: string | undefined;
+              if (calendar.accessToken) {
+                const accessToken = yield* Database.load(calendar.accessToken);
+                if (accessToken?.token) {
+                  log('using calendar-specific access token', { note: accessToken.note });
+                  cachedToken = accessToken.token;
+                }
+              }
+              return {
+                get: () =>
+                  cachedToken
+                    ? Effect.succeed(cachedToken)
+                    : Effect.map(CredentialsService.getCredential({ service: 'google.com' }), (c) => c.apiKey!),
+              };
+            }),
+          ),
+        ),
+      ),
+    ),
 });
 
 type BaseSyncProps<T = unknown> = {

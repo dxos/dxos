@@ -5,10 +5,10 @@
 import { Event } from '@dxos/async';
 import { type Stream } from '@dxos/codec-protobuf/stream';
 import { Context } from '@dxos/context';
-import { type Obj, type QueryResult } from '@dxos/echo';
+import { type Hypergraph, Obj, type QueryResult } from '@dxos/echo';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
-import { SpaceId } from '@dxos/keys';
+import { DXN, type ObjectId, type QueueSubspaceTag, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { RpcClosedError } from '@dxos/protocols';
 import {
@@ -19,43 +19,45 @@ import {
 } from '@dxos/protocols/proto/dxos/echo/query';
 import { isNonNullable } from '@dxos/util';
 
-import { getObjectCore } from '../echo-handler';
 import { OBJECT_DIAGNOSTICS, type QuerySourceProvider } from '../hypergraph';
 import { type QuerySource, getTargetSpacesForQuery } from '../query';
 
-export type LoadObjectParams = {
+export type LoadObjectProps = {
   spaceId: SpaceId;
   objectId: string;
-  documentId: string;
+  documentId: string | undefined;
 };
 
 export interface ObjectLoader {
-  loadObject(params: LoadObjectParams): Promise<Obj.Obj<any> | undefined>;
+  loadObject(params: LoadObjectProps): Promise<Obj.Obj<any> | undefined>;
 }
 
-export type IndexQueryProviderParams = {
+export type IndexQueryProviderProps = {
   service: QueryService;
   objectLoader: ObjectLoader;
+  graph: Hypergraph.Hypergraph;
 };
 
 const QUERY_SERVICE_TIMEOUT = 20_000;
 
 export class IndexQuerySourceProvider implements QuerySourceProvider {
   // TODO(burdon): OK for options, but not params. Pass separately and type readonly here.
-  constructor(private readonly _params: IndexQueryProviderParams) {}
+  constructor(private readonly _params: IndexQueryProviderProps) {}
 
   // TODO(burdon): Rename createQuerySource
   create(): QuerySource {
     return new IndexQuerySource({
       service: this._params.service,
       objectLoader: this._params.objectLoader,
+      graph: this._params.graph,
     });
   }
 }
 
-export type IndexQuerySourceParams = {
+export type IndexQuerySourceProps = {
   service: QueryService;
   objectLoader: ObjectLoader;
+  graph: Hypergraph.Hypergraph;
 };
 
 /**
@@ -67,12 +69,16 @@ export class IndexQuerySource implements QuerySource {
   private _query?: QueryAST.Query = undefined;
   private _results?: QueryResult.EntityEntry[] = [];
   private _stream?: Stream<QueryResponse>;
+  private _open = false;
 
-  constructor(private readonly _params: IndexQuerySourceParams) {}
+  constructor(private readonly _params: IndexQuerySourceProps) {}
 
-  open(): void {}
+  open(): void {
+    this._open = true;
+  }
 
   close(): void {
+    this._open = false;
     this._results = undefined;
     this._closeStream();
   }
@@ -94,6 +100,13 @@ export class IndexQuerySource implements QuerySource {
     this._closeStream();
     this._results = [];
     this.changed.emit();
+
+    // Don't start a reactive remote query until the query context is started (calls `open()`).
+    // This prevents `.query(...).run()` from accidentally triggering a REACTIVE query in addition to the ONE_SHOT query.
+    if (!this._open) {
+      return;
+    }
+
     this._queryIndex(query, QueryReactivity.REACTIVE, (results) => {
       this._results = results;
       this.changed.emit();
@@ -208,6 +221,31 @@ export class IndexQuerySource implements QuerySource {
     }
 
     invariant(SpaceId.isValid(result.spaceId), 'Invalid spaceId');
+
+    // For queue items, hydrate using Obj.fromJSON with ref resolver.
+    if (result.queueId && result.documentJson) {
+      const json = JSON.parse(result.documentJson);
+      const queueDxn = DXN.fromQueue(
+        (result.queueNamespace ?? 'data') as QueueSubspaceTag,
+        result.spaceId as SpaceId,
+        result.queueId as ObjectId,
+      );
+      const refResolver = this._params.graph.createRefResolver({
+        context: { space: result.spaceId as SpaceId, queue: queueDxn },
+      });
+      const object = await Obj.fromJSON(json, {
+        refResolver,
+        dxn: queueDxn.extend([result.id as ObjectId]),
+      });
+      const queryResult: QueryResult.EntityEntry = {
+        id: result.id,
+        result: object,
+        match: { rank: result.rank },
+        resolution: { source: 'index', time: Date.now() - queryStartTimestamp },
+      };
+      return queryResult;
+    }
+
     const object = await this._params.objectLoader.loadObject({
       spaceId: result.spaceId,
       objectId: result.id,
@@ -221,7 +259,6 @@ export class IndexQuerySource implements QuerySource {
       return null;
     }
 
-    const core = getObjectCore(object);
     const queryResult: QueryResult.EntityEntry = {
       id: object.id,
       result: object,

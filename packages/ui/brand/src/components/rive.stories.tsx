@@ -9,8 +9,8 @@ import React, { useEffect } from 'react';
 import { log } from '@dxos/log';
 import { useAsyncState } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
-import { mx } from '@dxos/react-ui-theme';
 import { render } from '@dxos/storybook-utils';
+import { mx } from '@dxos/ui-theme';
 
 const useFlash = (rive: Rive | null, name: string, delay: number, period: number) => {
   useEffect(() => {
@@ -72,7 +72,7 @@ const DefaultStory = () => {
         <div
           className={mx(
             'z-2 absolute inset-0 flex items-center is-[720px] m-auto p-2',
-            'text-white text-[60px] leading-tight text-center font-thin _border _border-red-500',
+            'text-white text-[60px] leading-tight text-center font-thin',
           )}
         >
           The new standard for building collaborative local-first software.

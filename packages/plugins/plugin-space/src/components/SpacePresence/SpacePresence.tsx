@@ -5,7 +5,7 @@
 import * as Option from 'effect/Option';
 import React, { forwardRef, useCallback, useEffect, useState } from 'react';
 
-import { useAppGraph, useCapability } from '@dxos/app-framework/react';
+import { useAppGraph, useAtomCapability } from '@dxos/app-framework/react';
 import { generateName } from '@dxos/display-name';
 import { type Key, Obj } from '@dxos/echo';
 import { PublicKey } from '@dxos/react-client';
@@ -27,10 +27,9 @@ import {
 import { AttentionGlyph, type AttentionGlyphProps, useAttended, useAttention } from '@dxos/react-ui-attention';
 import { ComplexMap, keyToFallback } from '@dxos/util';
 
-import { SpaceCapabilities } from '../../capabilities';
 import { usePath } from '../../hooks';
 import { meta } from '../../meta';
-import { type ObjectViewerProps } from '../../types';
+import { type ObjectViewerProps, SpaceCapabilities } from '../../types';
 
 // TODO(thure): Get/derive these values from protocol
 const REFRESH_INTERVAL = 5000;
@@ -43,13 +42,12 @@ const noViewers = new ComplexMap<PublicKey, ObjectViewerProps>(PublicKey.hash);
 const getName = (identity: Identity) => identity.profile?.displayName ?? generateName(identity.identityKey.toHex());
 
 export type SpacePresenceProps = {
-  object: Obj.Any;
+  object: Obj.Unknown;
   spaceId?: Key.SpaceId;
 };
 
 export const SpacePresence = ({ object, spaceId }: SpacePresenceProps) => {
-  // TODO(wittjosiah): Doesn't need to be mutable but readonly type messes with ComplexMap.
-  const spaceState = useCapability(SpaceCapabilities.MutableState);
+  const ephemeral = useAtomCapability(SpaceCapabilities.EphemeralState);
   const identity = useIdentity();
   const db = Obj.getDatabase(object);
   const space = useSpace(spaceId ?? db?.spaceId);
@@ -71,11 +69,11 @@ export const SpacePresence = ({ object, spaceId }: SpacePresenceProps) => {
 
   // TODO(thure): Could it be a smell to return early when there are interactions with `deepSignal` later, since it
   //  prevents reactivity?
-  if (!identity || !spaceState || !space) {
+  if (!identity || !ephemeral || !space) {
     return null;
   }
 
-  const currentObjectViewers = spaceState.viewersByObject[Obj.getDXN(object).toString()] ?? noViewers;
+  const currentObjectViewers = ephemeral.viewersByObject[Obj.getDXN(object).toString()] ?? noViewers;
 
   const membersForObject = spaceMembers
     .filter((member) => memberOnline(member) && memberIsNotSelf(member))

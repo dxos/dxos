@@ -2,14 +2,18 @@
 // Copyright 2024 DXOS.org
 //
 
-import { effect } from '@preact/signals-core';
+import { Atom, type Registry } from '@effect-atom/atom-react';
 
 import { inspectCustom } from '@dxos/debug';
 import { failedInvariant, invariant } from '@dxos/invariant';
-import { type Live, live } from '@dxos/live-object';
 import { type MakeOptional, isTruthy, removeBy } from '@dxos/util';
 
 import * as Graph from './Graph';
+
+/**
+ * Optional function to wrap mutations (e.g., for ECHO objects that require Obj.change).
+ */
+export type GraphChangeFunction = (fn: () => void) => void;
 
 /**
  * Readonly Graph wrapper.
@@ -19,15 +23,23 @@ export class ReadonlyGraphModel<
   Edge extends Graph.Edge.Any = Graph.Edge.Any,
 > {
   protected readonly _graph: Graph.Graph<Node, Edge>;
+  /**
+   * Optional function to wrap mutations.
+   * When set, all graph mutations are wrapped in this function.
+   */
+  protected readonly _change?: GraphChangeFunction;
 
   /**
    * NOTE: Pass in simple Graph or Live.
+   * @param graph - The graph data.
+   * @param change - Optional function to wrap mutations (e.g., Obj.change for ECHO objects).
    */
-  constructor(graph?: Graph.Graph<Node, Edge>) {
+  constructor(graph?: Graph.Graph<Node, Edge>, change?: GraphChangeFunction) {
     this._graph = graph ?? {
       nodes: [],
       edges: [],
     };
+    this._change = change;
   }
 
   [inspectCustom]() {
@@ -132,9 +144,23 @@ export abstract class AbstractGraphModel<
    */
   abstract copy(graph?: Partial<Graph.Graph<Node, Edge>>): Model;
 
+  /**
+   * Execute a mutation on the graph.
+   * If a change function is set, wraps the mutation in it.
+   */
+  protected _mutate(fn: (graph: Graph.Graph<Node, Edge>) => void): void {
+    if (this._change != null) {
+      this._change(() => fn(this._graph));
+    } else {
+      fn(this._graph);
+    }
+  }
+
   clear(): this {
-    this._graph.nodes.length = 0;
-    this._graph.edges.length = 0;
+    this._mutate((graph) => {
+      graph.nodes.length = 0;
+      graph.edges.length = 0;
+    });
     return this;
   }
 
@@ -155,7 +181,9 @@ export abstract class AbstractGraphModel<
   addNode(node: Node): Node {
     invariant(node.id, 'ID is required');
     invariant(!this.findNode(node.id), `node already exists: ${node.id}`);
-    this._graph.nodes.push(node);
+    this._mutate((graph) => {
+      graph.nodes.push(node);
+    });
     return node;
   }
 
@@ -171,7 +199,9 @@ export abstract class AbstractGraphModel<
       edge = { id: Graph.createEdgeId(edge), ...edge };
     }
     invariant(!this.findNode(edge.id!));
-    this._graph.edges.push(edge as Edge);
+    this._mutate((graph) => {
+      graph.edges.push(edge as Edge);
+    });
     return edge as Edge;
   }
 
@@ -180,9 +210,13 @@ export abstract class AbstractGraphModel<
   }
 
   removeNode(id: string): Model {
-    const edges = removeBy<Edge>(this._graph.edges as Edge[], (edge) => edge.source === id || edge.target === id);
-    const nodes = removeBy<Node>(this._graph.nodes as Node[], (node) => node.id === id);
-    return this.copy({ nodes, edges });
+    let removedEdges: Edge[] = [];
+    let removedNodes: Node[] = [];
+    this._mutate((graph) => {
+      removedEdges = removeBy<Edge>(graph.edges as Edge[], (edge) => edge.source === id || edge.target === id);
+      removedNodes = removeBy<Node>(graph.nodes as Node[], (node) => node.id === id);
+    });
+    return this.copy({ nodes: removedNodes, edges: removedEdges });
   }
 
   removeNodes(ids: string[]): Model {
@@ -191,8 +225,11 @@ export abstract class AbstractGraphModel<
   }
 
   removeEdge(id: string): Model {
-    const edges = removeBy<Edge>(this._graph.edges as Edge[], (edge) => edge.id === id);
-    return this.copy({ nodes: [], edges });
+    let removedEdges: Edge[] = [];
+    this._mutate((graph) => {
+      removedEdges = removeBy<Edge>(graph.edges as Edge[], (edge) => edge.id === id);
+    });
+    return this.copy({ nodes: [], edges: removedEdges });
   }
 
   removeEdges(ids: string[]): Model {
@@ -262,46 +299,142 @@ export class GraphModel<
 }
 
 export type Subscription = <Node extends Graph.Node.Any = Graph.Node.Any, Edge extends Graph.Edge.Any = Graph.Edge.Any>(
-  model: GraphModel<Node, Edge>,
-  graph: Live<Graph.Graph<Node, Edge>>,
+  model: ReactiveGraphModel<Node, Edge>,
+  graph: Graph.Graph<Node, Edge>,
 ) => void;
 
 /**
- * Subscription.
- * NOTE: Requires `registerSignalsRuntime` to be called.
+ * Basic reactive model using Effect Atoms.
  */
-export const subscribe = (model: GraphModel, cb: Subscription, fire = false) => {
-  if (fire) {
-    cb(model, model.graph);
-  }
-
-  return effect(() => {
-    cb(model, model.graph); // TODO(burdon): This won't work unless model.graph is reactive.
-  });
-};
-
-/**
- * Basic reactive model.
- */
+// NOTE: Unlike Preact Signals' `live()` which uses proxies for transparent reactivity,
+// Effect Atom requires explicit `registry.set()` calls. All mutation methods must be
+// overridden to update the atom immutably rather than mutating `_graph` directly.
 export class ReactiveGraphModel<
   Node extends Graph.Node.Any = Graph.Node.Any,
   Edge extends Graph.Edge.Any = Graph.Edge.Any,
 > extends GraphModel<Node, Edge> {
-  constructor(graph?: Partial<Graph.Graph<Node, Edge>>) {
-    super(
-      live({
-        nodes: graph?.nodes ?? [],
-        edges: graph?.edges ?? [],
-      }),
-    );
+  private readonly _graphAtom: Atom.Writable<Graph.Graph<Node, Edge>>;
+
+  constructor(
+    private readonly _registry: Registry.Registry,
+    graph?: Partial<Graph.Graph<Node, Edge>>,
+  ) {
+    const initialGraph: Graph.Graph<Node, Edge> = {
+      nodes: (graph?.nodes ?? []) as Node[],
+      edges: (graph?.edges ?? []) as Edge[],
+    };
+    super(initialGraph);
+    this._graphAtom = Atom.make<Graph.Graph<Node, Edge>>(initialGraph);
+  }
+
+  get registry(): Registry.Registry {
+    return this._registry;
+  }
+
+  /**
+   * Get the graph atom for reactive subscriptions.
+   */
+  get graphAtom(): Atom.Writable<Graph.Graph<Node, Edge>> {
+    return this._graphAtom;
+  }
+
+  override get graph(): Graph.Graph<Node, Edge> {
+    return this._registry.get(this._graphAtom);
+  }
+
+  override get nodes(): Node[] {
+    return this.graph.nodes;
+  }
+
+  override get edges(): Edge[] {
+    return this.graph.edges;
   }
 
   override copy(graph?: Partial<Graph.Graph<Node, Edge>>): ReactiveGraphModel<Node, Edge> {
-    return new ReactiveGraphModel<Node, Edge>(graph);
+    return new ReactiveGraphModel<Node, Edge>(this._registry, graph);
   }
 
+  override clear(): this {
+    this._registry.set(this._graphAtom, {
+      nodes: [],
+      edges: [],
+    });
+    return this;
+  }
+
+  /**
+   * Set the entire graph at once, triggering a single notification.
+   */
+  setGraph(graph: Graph.Graph<Node, Edge>): this {
+    this._registry.set(this._graphAtom, graph);
+    return this;
+  }
+
+  override addNode(node: Node): Node {
+    invariant(node.id, 'ID is required');
+    invariant(!this.findNode(node.id), `node already exists: ${node.id}`);
+    const current = this._registry.get(this._graphAtom);
+    this._registry.set(this._graphAtom, {
+      ...current,
+      nodes: [...current.nodes, node],
+    });
+    return node;
+  }
+
+  override addEdge(edge: MakeOptional<Edge, 'id'>): Edge {
+    invariant(edge.source);
+    invariant(edge.target);
+    if (!edge.id) {
+      edge = { id: Graph.createEdgeId(edge), ...edge };
+    }
+    invariant(!this.findNode(edge.id!));
+    const current = this._registry.get(this._graphAtom);
+    this._registry.set(this._graphAtom, {
+      ...current,
+      edges: [...current.edges, edge as Edge],
+    });
+    return edge as Edge;
+  }
+
+  override removeNode(id: string): ReactiveGraphModel<Node, Edge> {
+    const current = this._registry.get(this._graphAtom);
+    const removedEdges = current.edges.filter((edge) => edge.source === id || edge.target === id);
+    const removedNodes = current.nodes.filter((node) => node.id === id);
+
+    this._registry.set(this._graphAtom, {
+      nodes: current.nodes.filter((node) => node.id !== id),
+      edges: current.edges.filter((edge) => edge.source !== id && edge.target !== id),
+    });
+
+    return this.copy({ nodes: removedNodes, edges: removedEdges });
+  }
+
+  override removeEdge(id: string): ReactiveGraphModel<Node, Edge> {
+    const current = this._registry.get(this._graphAtom);
+    const removedEdges = current.edges.filter((edge) => edge.id === id);
+
+    this._registry.set(this._graphAtom, {
+      ...current,
+      edges: current.edges.filter((edge) => edge.id !== id),
+    });
+
+    return this.copy({ nodes: [], edges: removedEdges });
+  }
+
+  /**
+   * Subscribe to graph changes.
+   */
   subscribe(cb: Subscription, fire = false): () => void {
-    return subscribe(this, cb, fire);
+    if (fire) {
+      cb(this, this.graph);
+    }
+
+    // Prime the atom by reading before subscribing to avoid double-fire on first mutation.
+    this._registry.get(this._graphAtom);
+
+    return this._registry.subscribe(this._graphAtom, () => {
+      cb(this, this.graph);
+    });
   }
 }
 

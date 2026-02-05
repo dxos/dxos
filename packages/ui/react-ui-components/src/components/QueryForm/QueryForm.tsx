@@ -8,7 +8,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { Filter, Obj, Query, type QueryAST, type Tag } from '@dxos/echo';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { useTranslation } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations';
 

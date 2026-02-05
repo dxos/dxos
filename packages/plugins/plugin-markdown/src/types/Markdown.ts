@@ -6,8 +6,8 @@ import * as Schema from 'effect/Schema';
 
 import { Obj, Ref, Type } from '@dxos/echo';
 import { DescriptionAnnotation, FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
-import { EditorInputMode, EditorViewMode } from '@dxos/react-ui-editor/types';
 import { Text } from '@dxos/schema';
+import { EditorInputMode, EditorViewMode } from '@dxos/ui-editor/types';
 
 /**
  * Document Item type.
@@ -18,7 +18,7 @@ export const Document = Schema.Struct({
   fallbackName: Schema.String.pipe(FormInputAnnotation.set(false), Schema.optional),
   content: Type.Ref(Text.Text).pipe(FormInputAnnotation.set(false)),
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/Document',
     version: '0.1.0',
   }),

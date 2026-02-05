@@ -7,7 +7,6 @@ import type * as Schema from 'effect/Schema';
 import { raise } from '@dxos/debug';
 import { assertArgument, failedInvariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
-import { defineHiddenProperty } from '@dxos/live-object';
 
 import { getSchemaDXN, getTypeAnnotation, setTypename } from '../annotations';
 import {
@@ -18,6 +17,7 @@ import {
   assertObjectModel,
   getObjectDXN,
 } from '../entities';
+import { defineHiddenProperty } from '../proxy';
 import { EntityKind, KindId, MetaId, setSchema } from '../types';
 
 import { attachedTypedObjectInspector } from './inspect';
@@ -41,7 +41,7 @@ export type CreateObjectProps<T> = T extends { id: string } ? Omit<T, 'id' | Kin
  * const Contact = Schema.Struct({
  *   name: Schema.String,
  *   email: Schema.String,
- * }).pipe(Type.Obj({
+ * }).pipe(Type.object({
  *   typename: 'example.com/type/Person',
  *   version: '0.1.0',
  * }))

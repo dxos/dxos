@@ -6,11 +6,11 @@ import type { State as AmState } from '@automerge/automerge';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { type DXN, Filter, Format, Obj, Query, Type } from '@dxos/echo';
-import { type AnyLiveObject, checkoutVersion, getEditHistory } from '@dxos/echo-db';
+import { checkoutVersion, getEditHistory } from '@dxos/echo-db';
 import { type Space, useQuery } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
 import { DynamicTable, type TableFeatures } from '@dxos/react-ui-table';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { ObjectViewer, PanelContainer, Placeholder, Searchbar } from '../../../components';
 import { DataSpaceSelector } from '../../../containers';
@@ -23,7 +23,7 @@ const textFilter = (text?: string) => {
 
   // TODO(burdon): Structured query (e.g., "type:Text").
   const matcher = new RegExp(text, 'i');
-  return (item: AnyLiveObject<any>) => {
+  return (item: Obj.Any) => {
     let match = false;
     match ||= !!Obj.getTypename(item)?.match(matcher);
     match ||= !!String((item as any).title ?? '').match(matcher);
@@ -53,7 +53,7 @@ export const ObjectsPanel = (props: { space?: Space }) => {
   // TODO(burdon): Sort by type?
   const items = useQuery(space?.db, Query.select(Filter.everything()).options({ deleted: 'include' }));
   const [filter, setFilter] = useState('');
-  const [selected, setSelected] = useState<AnyLiveObject<any>>();
+  const [selected, setSelected] = useState<Obj.Any>();
   const [selectedVersion, setSelectedVersion] = useState<HistoryRow | null>(null);
   const [selectedVersionObject, setSelectedVersionObject] = useState<any | null>(null);
 
@@ -68,7 +68,7 @@ export const ObjectsPanel = (props: { space?: Space }) => {
     }
   };
 
-  const objectSelect = (object: AnyLiveObject<any>) => {
+  const objectSelect = (object: Obj.Any) => {
     setSelectedVersionObject(null);
     setSelected(object);
   };

@@ -8,7 +8,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vite';
 
-import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
+import { ThemePlugin } from '@dxos/ui-theme/plugin';
 
 import { createConfig as createTestConfig } from '../../../vitest.base.config';
 
@@ -52,11 +52,10 @@ export default defineConfig({
       content: [
         path.resolve(dirname, './src/**/*.{js,ts,jsx,tsx}'),
         path.resolve(dirname, './node_modules/@dxos/react-ui/dist/**/*.mjs'),
-        path.resolve(dirname, './node_modules/@dxos/react-ui-theme/dist/**/*.mjs'),
+        path.resolve(dirname, './node_modules/@dxos/ui-theme/dist/**/*.mjs'),
       ],
     }),
-    // https://github.com/preactjs/signals/issues/269
-    ReactPlugin({ jsxRuntime: 'classic' }),
+    ReactPlugin(),
     // https://www.bundle-buddy.com/rollup
     {
       name: 'bundle-buddy',

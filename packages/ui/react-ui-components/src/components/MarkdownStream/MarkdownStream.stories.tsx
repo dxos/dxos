@@ -12,8 +12,8 @@ import { PublicKey } from '@dxos/keys';
 import { faker } from '@dxos/random';
 import { Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { type XmlWidgetRegistry } from '@dxos/react-ui-editor';
-import { mx } from '@dxos/react-ui-theme';
+import { type XmlWidgetRegistry } from '@dxos/ui-editor';
+import { mx } from '@dxos/ui-theme';
 import { keyToFallback } from '@dxos/util';
 
 import { MarkdownStream, type MarkdownStreamController, type MarkdownStreamProps } from './MarkdownStream';
@@ -104,7 +104,7 @@ const DefaultStory = ({ content = '', streamOptions = defaultStreamOptions, ...p
 const meta = {
   title: 'ui/react-ui-markdown/MarkdownStream',
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ container: 'column' })],
+  decorators: [withTheme, withLayout({ layout: 'column' })],
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

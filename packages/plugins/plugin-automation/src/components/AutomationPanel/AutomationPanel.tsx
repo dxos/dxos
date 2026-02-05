@@ -17,8 +17,8 @@ import { type Space, useQuery } from '@dxos/react-client/echo';
 import { Clipboard, IconButton, Input, Separator, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { ControlItem, controlItemClasses } from '@dxos/react-ui-form';
 import { List } from '@dxos/react-ui-list';
-import { ghostHover, mx } from '@dxos/react-ui-theme';
 import { Project } from '@dxos/types';
+import { ghostHover, mx } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 
 import { meta } from '../../meta';
@@ -28,7 +28,7 @@ const grid = 'grid grid-cols-[40px_1fr_32px_32px] min-bs-[2.5rem]';
 
 export type AutomationPanelProps = ThemedClassName<{
   space: Space;
-  object?: Obj.Any;
+  object?: Obj.Unknown;
   initialTrigger?: Trigger.Trigger;
   onDone?: () => void;
 }>;
@@ -130,7 +130,11 @@ export const AutomationPanel = ({ classNames, space, object, initialTrigger, onD
                     <Input.Root>
                       <Input.Switch
                         checked={trigger.enabled}
-                        onCheckedChange={(checked) => (trigger.enabled = checked)}
+                        onCheckedChange={(checked) =>
+                          Obj.change(trigger, (t) => {
+                            t.enabled = checked;
+                          })
+                        }
                       />
                     </Input.Root>
 
@@ -233,7 +237,7 @@ const projectMatch = (project: Project.Project) => {
   };
 };
 
-const triggerMatch = Match.type<Obj.Any>().pipe(
+const triggerMatch = Match.type<Obj.Unknown>().pipe(
   Match.withReturnType<(trigger: Trigger.Trigger) => boolean>(),
   Match.when(
     (obj) => Obj.instanceOf(Script.Script, obj),

@@ -4,13 +4,13 @@
 
 import { next as A } from '@automerge/automerge';
 
-import { type AnyProperties } from '@dxos/echo/internal';
+import { type Obj } from '@dxos/echo';
+import { isProxy } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
-import { isLiveObject } from '@dxos/live-object';
 import { get } from '@dxos/util';
 
 import { type DocAccessor, type KeyPath, isValidKeyPath } from './core-db';
-import { type AnyLiveObject, createDocAccessor } from './echo-handler';
+import { createDocAccessor } from './echo-handler';
 
 // TODO(burdon): Handle assoc to associate with a previous character.
 export const toCursor = (accessor: DocAccessor, pos: number, assoc = 0): A.Cursor => {
@@ -86,12 +86,8 @@ export const getRangeFromCursor = (accessor: DocAccessor, cursor: string) => {
  * @param newText - The new text value.
  * @returns The updated object.
  */
-export const updateText = <T extends AnyProperties>(
-  obj: AnyLiveObject<T>,
-  path: KeyPath,
-  newText: string,
-): AnyLiveObject<T> => {
-  invariant(isLiveObject(obj));
+export const updateText = <T extends Obj.Unknown>(obj: T, path: KeyPath, newText: string): T => {
+  invariant(isProxy(obj));
   invariant(path === undefined || isValidKeyPath(path));
   const accessor = createDocAccessor(obj, path);
   accessor.handle.change((doc) => {

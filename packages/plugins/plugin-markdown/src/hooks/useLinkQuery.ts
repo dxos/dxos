@@ -5,12 +5,13 @@
 import * as Option from 'effect/Option';
 import { useCallback, useMemo } from 'react';
 
-import { Capabilities } from '@dxos/app-framework';
+import { Common } from '@dxos/app-framework';
 import { usePluginManager } from '@dxos/app-framework/react';
 import { type Database, Filter, Obj, Query, Type } from '@dxos/echo';
 import { EntityKind, SystemTypeAnnotation, getTypeAnnotation } from '@dxos/echo/internal';
 import { toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { type EditorMenuGroup, type EditorMenuItem, insertAtCursor, insertAtLineStart } from '@dxos/react-ui-editor';
+import { type EditorMenuGroup, type EditorMenuItem } from '@dxos/react-ui-editor';
+import { insertAtCursor, insertAtLineStart } from '@dxos/ui-editor';
 
 export const useLinkQuery = (db: Database.Database | undefined) => {
   const { t } = useTranslation();
@@ -18,7 +19,7 @@ export const useLinkQuery = (db: Database.Database | undefined) => {
   const manager = usePluginManager();
   const resolve = useCallback(
     (typename: string) =>
-      manager.context.getCapabilities(Capabilities.Metadata).find(({ id }) => id === typename)?.metadata ?? {},
+      manager.capabilities.getAll(Common.Capability.Metadata).find(({ id }) => id === typename)?.metadata ?? {},
     [manager],
   );
 
@@ -38,7 +39,7 @@ export const useLinkQuery = (db: Database.Database | undefined) => {
       const name = query?.startsWith('@') ? query.slice(1).toLowerCase() : (query?.toLowerCase() ?? '');
       const results = await db?.query(Query.select(filter)).run();
 
-      // TODO(wittjosiah): Use `Obj.Any` type.
+      // TODO(wittjosiah): Use `Obj.Unknown` type.
       const getLabel = (object: any) => {
         const label = Obj.getLabel(object);
         if (label) {

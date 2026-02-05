@@ -2,17 +2,19 @@
 // Copyright 2024 DXOS.org
 //
 
+import { useAtomValue } from '@effect-atom/atom-react';
 import React from 'react';
 
 import { useCapability } from '@dxos/app-framework/react';
 
-import { ThreadCapabilities } from '../capabilities';
+import { ThreadCapabilities } from '../types';
 
 import { ChannelContainer } from './ChannelContainer';
 
 export const CallSidebar = () => {
   const call = useCapability(ThreadCapabilities.CallManager);
-  return <ChannelContainer roomId={call.roomId} />;
+  const roomId = useAtomValue(call.roomIdAtom);
+  return <ChannelContainer subject={undefined} roomId={roomId} />;
 };
 
 export default CallSidebar;

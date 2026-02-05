@@ -4,50 +4,76 @@
 
 import * as Schema from 'effect/Schema';
 
+import { Capability } from '@dxos/app-framework';
 import { Database } from '@dxos/echo';
-import { Actor } from '@dxos/types';
+import { Operation } from '@dxos/operation';
+import { SpaceSchema } from '@dxos/react-client/echo';
+import { Collection } from '@dxos/schema';
+import { Actor, Message } from '@dxos/types';
 
 import { meta } from '../meta';
 
-import * as Calendar from './Calendar';
 import * as Mailbox from './Mailbox';
 
-export namespace InboxAction {
-  const INBOX_ACTION = `${meta.id}/action`;
+const INBOX_OPERATION = `${meta.id}/operation`;
 
-  export class CreateMailbox extends Schema.TaggedClass<CreateMailbox>()(`${INBOX_ACTION}/create-mailbox`, {
-    input: Schema.Struct({
-      db: Database.Database,
-      name: Schema.optional(Schema.String),
-    }),
-    output: Schema.Struct({
-      object: Mailbox.Mailbox,
-    }),
-  }) {}
+export namespace InboxOperation {
+  export const OnCreateSpace = Operation.make({
+    meta: { key: `${INBOX_OPERATION}/on-create-space`, name: 'On Create Space' },
+    services: [Capability.Service],
+    schema: {
+      input: Schema.Struct({
+        space: SpaceSchema,
+        rootCollection: Collection.Collection,
+        isDefault: Schema.optional(Schema.Boolean),
+      }),
+      output: Schema.Void,
+    },
+  });
 
-  export class CreateCalendar extends Schema.TaggedClass<CreateCalendar>()(`${INBOX_ACTION}/create-calendar`, {
-    input: Schema.Struct({
-      db: Database.Database,
-      name: Schema.optional(Schema.String),
-    }),
-    output: Schema.Struct({
-      object: Calendar.Calendar,
-    }),
-  }) {}
+  export const ExtractContact = Operation.make({
+    meta: { key: `${INBOX_OPERATION}/extract-contact`, name: 'Extract Contact' },
+    services: [Capability.Service],
+    schema: {
+      input: Schema.Struct({
+        db: Database.Database,
+        actor: Actor.Actor,
+      }),
+      output: Schema.Void,
+    },
+  });
 
-  export class ExtractContact extends Schema.TaggedClass<ExtractContact>()(`${INBOX_ACTION}/extract-contact`, {
-    input: Schema.Struct({
-      db: Database.Database,
-      actor: Actor.Actor,
-    }),
-    output: Schema.Void,
-  }) {}
+  // TODO(wittjosiah): This appears to be unused.
+  export const RunAssistant = Operation.make({
+    meta: { key: `${INBOX_OPERATION}/run-assistant`, name: 'Run Inbox Assistant' },
+    services: [Capability.Service],
+    schema: {
+      input: Schema.Struct({
+        mailbox: Mailbox.Mailbox,
+      }),
+      output: Schema.Void,
+    },
+  });
 
-  export class RunAssistant extends Schema.TaggedClass<RunAssistant>()(`${INBOX_ACTION}/run-assistant`, {
-    input: Schema.Struct({
-      // TODO(dmaretskyi): Consider making this a ref so it is serializable.
-      mailbox: Mailbox.Mailbox,
-    }),
-    output: Schema.Void,
-  }) {}
+  export const ComposeEmailMode = Schema.Literal('compose', 'reply', 'reply-all', 'forward');
+  export type ComposeEmailMode = Schema.Schema.Type<typeof ComposeEmailMode>;
+
+  export const OpenComposeEmailInputStruct = Schema.Struct({
+    mode: Schema.optional(ComposeEmailMode),
+    originalMessage: Schema.optional(Message.Message),
+    subject: Schema.optional(Schema.String),
+    body: Schema.optional(Schema.String),
+  });
+
+  export const OpenComposeEmailInput = Schema.UndefinedOr(OpenComposeEmailInputStruct);
+  export type OpenComposeEmailInput = Schema.Schema.Type<typeof OpenComposeEmailInputStruct>;
+
+  export const OpenComposeEmail = Operation.make({
+    meta: { key: `${INBOX_OPERATION}/open-compose-email`, name: 'Open Compose Email' },
+    services: [Capability.Service],
+    schema: {
+      input: OpenComposeEmailInput,
+      output: Schema.Void,
+    },
+  });
 }

@@ -13,6 +13,9 @@ runs:
 
     # TODO(wittjosiah): Install moon in docker image?
     - uses: moonrepo/setup-toolchain@v0
+      with:
+        # IMPORTANT: Keep in-sync with .prototools
+        moon-version: '2.0.0-rc.2'
 
     - name: Log out debug info
       run: |
@@ -26,13 +29,18 @@ runs:
       run: echo "pnpm-store=$(pnpm store path)" >> $GITHUB_OUTPUT
       shell: bash
 
+    - name: Get Node version
+      id: node-version
+      run: echo "version=$(node --version)" >> $GITHUB_OUTPUT
+      shell: bash
+
     - name: Cache pnpm store
       uses: actions/cache@v4
       with:
         path: ${{ steps.pnpm-store.outputs.pnpm-store }}
-        key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+        key: ${{ runner.os }}-node-${{ steps.node-version.outputs.version }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
         restore-keys: |
-          ${{ runner.os }}-pnpm-store-
+          ${{ runner.os }}-node-${{ steps.node-version.outputs.version }}-pnpm-store-
 
     - name: Install dependencies
       run: |

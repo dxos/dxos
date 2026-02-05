@@ -2,14 +2,13 @@
 // Copyright 2022 DXOS.org
 //
 
-import { effect } from '@preact/signals-core';
 import React, { type JSX, type Ref, forwardRef, useEffect, useImperativeHandle, useMemo, useRef } from 'react';
 
 import { combine } from '@dxos/async';
 import { type Graph as Graph$, type GraphModel } from '@dxos/graph';
 import { log } from '@dxos/log';
 import { type ThemedClassName } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import {
   GraphForceProjector,
@@ -96,10 +95,18 @@ const GraphInner = <Node extends Graph$.Node.Any = any, Edge extends Graph$.Edge
 
   // Subscriptions.
   useEffect(() => {
+    projector.updateData(model?.graph);
+
+    // Subscribe to model changes if reactive model.
+    const unsubscribeModel =
+      model && 'subscribe' in model
+        ? (model as GraphModel.ReactiveGraphModel).subscribe(() => {
+            projector.updateData(model?.graph);
+          })
+        : undefined;
+
     return combine(
-      effect(() => {
-        projector.updateData(model?.graph);
-      }),
+      unsubscribeModel,
       projector.updated.on(({ layout }) => {
         try {
           renderer.render(layout);

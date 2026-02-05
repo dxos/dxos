@@ -5,8 +5,7 @@
 import React, { type Dispatch, type SetStateAction, useCallback, useMemo, useState } from 'react';
 import { QR } from 'react-qr-rounded';
 
-import { createIntent } from '@dxos/app-framework';
-import { useIntentDispatcher } from '@dxos/app-framework/react';
+import { useOperationInvoker } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { useConfig } from '@dxos/react-client';
@@ -14,7 +13,7 @@ import { type Space, useSpaceInvitations } from '@dxos/react-client/echo';
 import { type CancellableInvitationObservable, Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 import { Button, Clipboard, Icon, Input, useId, useTranslation } from '@dxos/react-ui';
 import { ControlFrame, ControlFrameItem, ControlItemInput, ControlPage, ControlSection } from '@dxos/react-ui-form';
-import { StackItem } from '@dxos/react-ui-stack';
+import { Layout } from '@dxos/react-ui-mosaic';
 import { Collection } from '@dxos/schema';
 import {
   type ActionMenuItem,
@@ -25,11 +24,12 @@ import {
   InvitationList,
   SpaceMemberList,
   Viewport,
+  translationKey as shellTranslationKey,
 } from '@dxos/shell/react';
 import { hexToEmoji } from '@dxos/util';
 
 import { meta } from '../../meta';
-import { SpaceAction } from '../../types';
+import { SpaceOperation } from '../../types';
 import { COMPOSER_SPACE_LOCK } from '../../util';
 
 // TODO(wittjosiah): Copied from Shell.
@@ -51,7 +51,7 @@ export type MembersContainerProps = {
 export const MembersContainer = ({ space, createInvitationUrl }: MembersContainerProps) => {
   const { t } = useTranslation(meta.id);
   const config = useConfig();
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const { invokePromise } = useOperationInvoker();
   const invitations = useSpaceInvitations(space.key);
   const visibleInvitations = invitations?.filter(
     (invitation) => ![Invitation.State.CANCELLED].includes(invitation.get().state),
@@ -69,57 +69,55 @@ export const MembersContainer = ({ space, createInvitationUrl }: MembersContaine
 
   const locked = space.properties[COMPOSER_SPACE_LOCK];
   const handleChangeLocked = useCallback(() => {
-    space.properties[COMPOSER_SPACE_LOCK] = !locked;
+    Obj.change(space.properties, (p) => {
+      p[COMPOSER_SPACE_LOCK] = !locked;
+    });
   }, [locked, space]);
 
   const inviteActions = useMemo(
     (): Record<string, ActionMenuItem> => ({
       inviteOne: {
-        label: t('invite one label', { ns: 'os' }),
-        description: t('invite one description', { ns: 'os' }),
+        label: t('invite one label', { ns: shellTranslationKey }),
+        description: t('invite one description', { ns: shellTranslationKey }),
         icon: 'ph--user-plus--regular',
         testId: 'membersContainer.inviteOne',
         onClick: async () => {
-          const { data: invitation } = await dispatch(
-            createIntent(SpaceAction.Share, {
-              space,
-              type: Invitation.Type.INTERACTIVE,
-              authMethod: Invitation.AuthMethod.SHARED_SECRET,
-              multiUse: false,
-              target: target && Obj.getDXN(target).toString(),
-            }),
-          );
+          const { data: invitation } = await invokePromise(SpaceOperation.Share, {
+            space,
+            type: Invitation.Type.INTERACTIVE,
+            authMethod: Invitation.AuthMethod.SHARED_SECRET,
+            multiUse: false,
+            target: target && Obj.getDXN(target).toString(),
+          });
           if (invitation && config.values.runtime?.app?.env?.DX_ENVIRONMENT !== 'production') {
-            const subscription: ZenObservable.Subscription = invitation.subscribe((invitation) =>
-              handleInvitationEvent(invitation, subscription),
+            const subscription: ZenObservable.Subscription = (invitation as CancellableInvitationObservable).subscribe(
+              (invitation: Invitation) => handleInvitationEvent(invitation, subscription),
             );
           }
         },
       },
       inviteMany: {
-        label: t('invite many label', { ns: 'os' }),
-        description: t('invite many description', { ns: 'os' }),
+        label: t('invite many label', { ns: shellTranslationKey }),
+        description: t('invite many description', { ns: shellTranslationKey }),
         icon: 'ph--users-three--regular',
         testId: 'membersContainer.inviteMany',
         onClick: async () => {
-          const { data: invitation } = await dispatch(
-            createIntent(SpaceAction.Share, {
-              space,
-              type: Invitation.Type.DELEGATED,
-              authMethod: Invitation.AuthMethod.KNOWN_PUBLIC_KEY,
-              multiUse: true,
-              target: target && Obj.getDXN(target).toString(),
-            }),
-          );
+          const { data: invitation } = await invokePromise(SpaceOperation.Share, {
+            space,
+            type: Invitation.Type.DELEGATED,
+            authMethod: Invitation.AuthMethod.KNOWN_PUBLIC_KEY,
+            multiUse: true,
+            target: target && Obj.getDXN(target).toString(),
+          });
           if (invitation && config.values.runtime?.app?.env?.DX_ENVIRONMENT !== 'production') {
-            const subscription: ZenObservable.Subscription = invitation.subscribe((invitation) =>
-              handleInvitationEvent(invitation, subscription),
+            const subscription: ZenObservable.Subscription = (invitation as CancellableInvitationObservable).subscribe(
+              (invitation: Invitation) => handleInvitationEvent(invitation, subscription),
             );
           }
         },
       },
     }),
-    [t, space, target],
+    [t, space, target, invokePromise],
   );
 
   const [selectedInvitation, setSelectedInvitation] = useState<CancellableInvitationObservable | null>(null);
@@ -132,7 +130,7 @@ export const MembersContainer = ({ space, createInvitationUrl }: MembersContaine
 
   return (
     <Clipboard.Provider>
-      <StackItem.Content scrollable>
+      <Layout.Container scrollable>
         <ControlPage>
           <ControlSection title={t('members verbose label')} description={t('members description')}>
             <ControlFrame>
@@ -176,7 +174,7 @@ export const MembersContainer = ({ space, createInvitationUrl }: MembersContaine
             </div>
           </ControlSection>
         </ControlPage>
-      </StackItem.Content>
+      </Layout.Container>
     </Clipboard.Provider>
   );
 };
@@ -227,7 +225,7 @@ const InvitationSection = ({
 };
 
 const InvitationQR = ({ id, url, onCancel }: { id: string; url: string; onCancel?: () => void }) => {
-  const { t } = useTranslation('os');
+  const { t } = useTranslation(shellTranslationKey);
   const qrLabel = useId('members-container__qr-code');
   const emoji = hexToEmoji(id);
   return (
@@ -262,7 +260,7 @@ const InvitationQR = ({ id, url, onCancel }: { id: string; url: string; onCancel
 };
 
 const InvitationAuthCode = ({ id, code, onCancel }: { id: string; code: string; onCancel?: () => void }) => {
-  const { t } = useTranslation('os');
+  const { t } = useTranslation(shellTranslationKey);
   const emoji = hexToEmoji(id);
 
   return (

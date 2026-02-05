@@ -8,14 +8,14 @@ import type { DocumentId } from '@automerge/automerge-repo';
 import { headsEncoding } from '@dxos/indexing';
 import type { BatchLevel, SublevelDB } from '@dxos/kv-store';
 
-export type HeadsStoreParams = {
+export type HeadsStoreProps = {
   db: SublevelDB;
 };
 
 export class HeadsStore {
   private readonly _db: SublevelDB;
 
-  constructor({ db }: HeadsStoreParams) {
+  constructor({ db }: HeadsStoreProps) {
     this._db = db;
   }
 
@@ -33,5 +33,17 @@ export class HeadsStore {
       keyEncoding: 'utf8',
       valueEncoding: headsEncoding,
     });
+  }
+
+  /**
+   * Iterate over all document IDs and their heads.
+   */
+  async *iterateAll(): AsyncGenerator<{ documentId: DocumentId; heads: Heads }> {
+    for await (const [documentId, heads] of this._db.iterator<DocumentId, Heads>({
+      keyEncoding: 'utf8',
+      valueEncoding: headsEncoding,
+    })) {
+      yield { documentId, heads };
+    }
   }
 }

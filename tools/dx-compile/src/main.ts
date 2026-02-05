@@ -36,8 +36,8 @@ export interface EsbuildExecutorOptions {
   moduleFormat: Format[];
   sourcemap: boolean;
   watch: boolean;
-  preactSignalTracking: boolean;
   verbose: boolean;
+  mainFields: string[];
 }
 
 export default async (options: EsbuildExecutorOptions): Promise<{ success: boolean }> => {
@@ -123,11 +123,6 @@ export default async (options: EsbuildExecutorOptions): Promise<{ success: boole
                   ],
                 },
               ];
-
-              if (options.preactSignalTracking) {
-                // https://github.com/XantreDev/preact-signals/tree/main/packages/react#how-parser-plugins-works
-                yield ['@preact-signals/safe-react/swc', { mode: 'all' }];
-              }
             })(),
           ],
         },
@@ -146,7 +141,11 @@ export default async (options: EsbuildExecutorOptions): Promise<{ success: boole
             ? [{ platform: 'node', format: 'cjs', slug: 'node-cjs', replaceRequire: false }]
             : []),
         ]
-      : [{ platform: 'browser', format: 'esm', slug: 'browser', replaceRequire: true }];
+      : platform === 'browser'
+        ? [{ platform: 'browser', format: 'esm', slug: 'browser', replaceRequire: true }]
+        : platform === 'neutral'
+          ? [{ platform: 'neutral', format: 'esm', slug: 'neutral', replaceRequire: true }]
+          : [];
   });
 
   const errors = await Promise.all(
@@ -182,6 +181,7 @@ export default async (options: EsbuildExecutorOptions): Promise<{ success: boole
         banner: {
           js: format === 'esm' && platform === 'node' ? CREATE_REQUIRE_BANNER : '',
         },
+        mainFields: options.mainFields,
         define:
           format === 'cjs'
             ? {

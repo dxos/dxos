@@ -12,11 +12,7 @@ import { invariant } from '@dxos/invariant';
 import { faker } from '@dxos/random';
 import { Popover } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
-import { Card } from '@dxos/react-ui-stack';
-import { hoverableControlItem, hoverableControlItemTransition, hoverableControls } from '@dxos/react-ui-theme';
-import { trim } from '@dxos/util';
-
-import { type EditorController, EditorPreviewProvider, useEditorPreview } from '../components';
+import { Card } from '@dxos/react-ui-mosaic';
 import {
   type PreviewBlock,
   type PreviewLinkRef,
@@ -24,7 +20,11 @@ import {
   getLinkRef,
   image,
   preview,
-} from '../extensions';
+} from '@dxos/ui-editor';
+import { hoverableControls } from '@dxos/ui-theme';
+import { isTruthy, trim } from '@dxos/util';
+
+import { type EditorController, EditorPreviewProvider, useEditorPreview } from '../components';
 
 import { EditorStory } from './components';
 
@@ -51,14 +51,25 @@ const useRefTarget = (link: PreviewLinkRef): PreviewLinkTarget | undefined => {
 
 const PreviewCard = () => {
   const { target } = useEditorPreview('PreviewCard');
+
   return (
     <Popover.Portal>
       <Popover.Content onOpenAutoFocus={(event) => event.preventDefault()}>
-        <Popover.Viewport>
-          <Card.SurfaceRoot role='card--popover'>
-            <Card.Heading>{target?.label}</Card.Heading>
-            {target && <Card.Text classNames='line-clamp-3'>{target.text}</Card.Text>}
-          </Card.SurfaceRoot>
+        <Popover.Viewport classNames='popover-card-width'>
+          <Card.Root border={false}>
+            <Card.Toolbar>
+              <Card.Icon toolbar icon='ph--file-text--regular' />
+              <Card.Title>{target?.label}</Card.Title>
+              <Popover.Close asChild>
+                <Card.Close />
+              </Popover.Close>
+            </Card.Toolbar>
+            {target && (
+              <Card.Row>
+                <Card.Text variant='description'>{target.text}</Card.Text>
+              </Card.Row>
+            )}
+          </Card.Root>
         </Popover.Viewport>
         <Popover.Arrow />
       </Popover.Content>
@@ -133,40 +144,35 @@ const PreviewBlockComponent = ({ link, el, view }: { link: PreviewLinkRef; el: H
   }, [handleAction, link, target]);
 
   return createPortal(
-    <Card.StaticRoot classNames={hoverableControls}>
-      <div className='flex items-start'>
-        {!view?.state.readOnly && (
-          <Card.Toolbar classNames='is-min p-[--dx-cardSpacingInline]'>
-            {(link.suggest && (
-              <>
-                <Card.ToolbarIconButton label='Discard' icon='ph--x--regular' onClick={handleDelete} />
-                {target && (
-                  <Card.ToolbarIconButton
-                    classNames='bg-successSurface text-successSurfaceText'
-                    label='Apply'
-                    icon='ph--check--regular'
-                    onClick={handleInsert}
-                  />
-                )}
-              </>
-            )) || (
-              <Card.ToolbarIconButton
-                iconOnly
-                label='Delete'
-                icon='ph--x--regular'
-                classNames={[hoverableControlItem, hoverableControlItemTransition]}
-                onClick={handleDelete}
-              />
-            )}
-          </Card.Toolbar>
-        )}
-        <Card.Heading classNames='grow order-first mie-0'>
-          {/* <span className='text-xs text-subdued mie-2'>Prompt</span> */}
-          {link.label}
-        </Card.Heading>
-      </div>
-      {target && <Card.Text classNames='line-clamp-3 mbs-0'>{target.text}</Card.Text>}
-    </Card.StaticRoot>,
+    <Card.Root classNames={hoverableControls}>
+      {!view?.state.readOnly && (
+        <Card.Toolbar>
+          <Card.Icon toolbar icon='ph--bookmark--regular' />
+          <Card.Title>{link.label}</Card.Title>
+          <Card.Menu
+            items={[
+              {
+                id: 'delete',
+                label: link.suggest ? 'Discard' : 'Delete',
+                icon: 'ph--x--regular',
+                onClick: handleDelete,
+              },
+              target && {
+                id: 'apply',
+                label: 'Apply',
+                icon: 'ph--check--regular',
+                onClick: handleInsert,
+              },
+            ].filter(isTruthy)}
+          />
+        </Card.Toolbar>
+      )}
+      {target && (
+        <Card.Row>
+          <Card.Text className='text-description'>{target.text}</Card.Text>
+        </Card.Row>
+      )}
+    </Card.Root>,
     el,
   );
 };
@@ -218,7 +224,6 @@ export const Default: Story = {
     }, []);
 
     // TODO(burdon): Migrate to Editor.Root.
-    // TODO(burdon): Ranges must be sorted error (decorate.enter).
     return (
       <EditorPreviewProvider onLookup={handlePreviewLookup}>
         <EditorStory ref={setController} text={text} extensions={extensions} />

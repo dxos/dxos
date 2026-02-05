@@ -7,10 +7,9 @@ import * as Ansi from '@effect/printer-ansi/Ansi';
 import * as Effect from 'effect/Effect';
 import * as Match from 'effect/Match';
 
+import { FormBuilder } from '@dxos/cli-util';
 import { Database, Filter } from '@dxos/echo';
 import { Function } from '@dxos/functions';
-
-import { FormBuilder } from '../../util';
 
 export type FunctionStatus = 'not imported' | 'up-to-date' | 'update available';
 
@@ -88,7 +87,7 @@ export const printInvokeResult = (result: unknown) => {
  */
 export const selectDeployedFunction = Effect.fn(function* (fns: Function.Function[]) {
   // Query database for existing functions to determine status
-  const dbFunctions = yield* Database.Service.runQuery(Filter.type(Function.Function));
+  const dbFunctions = yield* Database.runQuery(Filter.type(Function.Function));
 
   // Filter out functions that are already up-to-date
   const importableFunctions = fns.filter((fn) => {

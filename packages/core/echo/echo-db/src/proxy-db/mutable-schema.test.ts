@@ -13,14 +13,14 @@ import {
   type TypeAnnotation,
   TypeAnnotationId,
   TypeIdentifierAnnotationId,
-  getTypeReference,
+  getSchemaDXN,
 } from '@dxos/echo/internal';
 
 import { Filter } from '../query';
 import { EchoTestBuilder } from '../testing';
 
 const TestEmpty = Schema.Struct({}).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'example.com/type/Empty',
     version: '0.1.0',
   }),
@@ -30,9 +30,9 @@ interface TestEmpty extends Schema.Schema.Type<typeof TestEmpty> {}
 
 const TestWithRefs = Schema.Struct({
   schema: Schema.optional(Ref(EchoSchema)),
-  schemaArray: Schema.optional(Schema.mutable(Schema.Array(Ref(EchoSchema)))),
+  schemaArray: Schema.optional(Schema.Array(Ref(EchoSchema))),
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'example.com/type/Test',
     version: '0.1.0',
   }),
@@ -56,10 +56,12 @@ describe('EchoSchema', () => {
     const instanceWithSchemaRef = db.add(Obj.make(TestWithRefs, {}));
     const GeneratedSchema = Schema.Struct({
       field: Schema.String,
-    }).pipe(Type.Obj({ typename: 'example.com/type/Test', version: '0.1.0' }));
+    }).pipe(Type.object({ typename: 'example.com/type/Test', version: '0.1.0' }));
 
     const [schema] = await db.schemaRegistry.register([GeneratedSchema]);
-    instanceWithSchemaRef.schema = Ref.make(schema);
+    Obj.change(instanceWithSchemaRef, (o) => {
+      o.schema = Ref.make(schema);
+    });
     const schemaWithId = GeneratedSchema.annotations({
       [TypeAnnotationId]: {
         kind: EntityKind.Object,
@@ -79,7 +81,7 @@ describe('EchoSchema', () => {
     const { db } = await setupTest();
     const GeneratedSchema = Schema.Struct({
       field: Schema.String,
-    }).pipe(Type.Obj({ typename: 'example.com/type/Test', version: '0.1.0' }));
+    }).pipe(Type.object({ typename: 'example.com/type/Test', version: '0.1.0' }));
     const [schema] = await db.schemaRegistry.register([GeneratedSchema]);
     const instanceWithSchemaRef = db.add(Obj.make(TestWithRefs, { schema: Ref.make(schema) }));
     expect(instanceWithSchemaRef.schema!.target!.typename).to.eq(GeneratedSchema.typename);
@@ -90,9 +92,11 @@ describe('EchoSchema', () => {
     const instanceWithSchemaRef = db.add(Obj.make(TestWithRefs, { schemaArray: [] }));
     const GeneratedSchema = Schema.Struct({
       field: Schema.String,
-    }).pipe(Type.Obj({ typename: 'example.com/type/Test', version: '0.1.0' }));
+    }).pipe(Type.object({ typename: 'example.com/type/Test', version: '0.1.0' }));
     const [schema] = await db.schemaRegistry.register([GeneratedSchema]);
-    instanceWithSchemaRef.schemaArray!.push(Ref.make(schema));
+    Obj.change(instanceWithSchemaRef, (o) => {
+      o.schemaArray!.push(Ref.make(schema));
+    });
     expect(instanceWithSchemaRef.schemaArray![0].target!.typename).to.eq(GeneratedSchema.typename);
   });
 
@@ -101,10 +105,16 @@ describe('EchoSchema', () => {
     const [schema] = await db.schemaRegistry.register([TestEmpty]);
     const object = Obj.make(schema, {});
     schema.addFields({ field1: Schema.String });
-    object.field1 = 'works';
-    object.field1 = undefined;
+    Obj.change(object, (o) => {
+      o.field1 = 'works';
+    });
+    Obj.change(object, (o) => {
+      o.field1 = undefined;
+    });
     expect(() => {
-      object.field1 = 42;
+      Obj.change(object, (o) => {
+        o.field1 = 42;
+      });
     }).to.throw();
 
     // TODO(burdon): Re-enable validation?
@@ -121,17 +131,17 @@ describe('EchoSchema', () => {
     expect(queried[0].id).to.eq(object.id);
   });
 
-  test('getTypeReference', async () => {
+  test('getSchemaDXN', async () => {
     const { db } = await setupTest();
     const [schema] = await db.schemaRegistry.register([TestEmpty]);
-    expect(getTypeReference(schema)?.objectId).to.eq(schema.id);
+    expect(getSchemaDXN(schema)?.asEchoDXN()?.echoId).to.eq(schema.id);
   });
 
-  test('getTypeReference on schema with updated typename', async () => {
+  test('getSchemaDXN on schema with updated typename', async () => {
     const { db } = await setupTest();
     const [schema] = await db.schemaRegistry.register([TestEmpty]);
     schema.updateTypename('example.com/type/Updated');
-    expect(getTypeReference(schema)?.objectId).to.eq(schema.id);
+    expect(getSchemaDXN(schema)?.asEchoDXN()?.echoId).to.eq(schema.id);
   });
 
   test('mutable schema refs', async () => {
@@ -139,12 +149,12 @@ describe('EchoSchema', () => {
 
     const OrgSchema = Schema.Struct({
       name: Schema.optional(Schema.String),
-    }).pipe(Type.Obj({ typename: 'example.com/type/org', version: '0.1.0' }));
+    }).pipe(Type.object({ typename: 'example.com/type/org', version: '0.1.0' }));
 
     const ContactSchema = Schema.Struct({
       name: Schema.optional(Schema.String),
       org: Schema.optional(Ref(OrgSchema)),
-    }).pipe(Type.Obj({ typename: 'example.com/type/contact', version: '0.1.0' }));
+    }).pipe(Type.object({ typename: 'example.com/type/contact', version: '0.1.0' }));
 
     const [orgSchema] = await db.schemaRegistry.register([OrgSchema]);
     const [contactSchema] = await db.schemaRegistry.register([ContactSchema]);

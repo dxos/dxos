@@ -2,12 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities } from '@dxos/app-framework';
+import { type Accessor } from 'solid-js';
+
+import { Common } from '@dxos/app-framework';
 
 import { useCapability } from './useCapabilities';
 
-export const useIntentDispatcher = () => useCapability(Capabilities.IntentDispatcher);
+export const useOperationInvoker = (): Accessor<Common.Capability.OperationInvoker> =>
+  useCapability(Common.Capability.OperationInvoker);
 
-export const useAppGraph = () => useCapability(Capabilities.AppGraph);
+export const useAppGraph = (): Accessor<Common.Capability.AppGraph> => useCapability(Common.Capability.AppGraph);
 
-export const useLayout = () => useCapability(Capabilities.Layout);
+export const useLayout = () => useCapability(Common.Capability.Layout);

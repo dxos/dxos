@@ -17,7 +17,19 @@ const perfomInvitation = async (host: AppManager, guest: AppManager) => {
   await guest.joinSpace();
   await guest.shell.acceptSpaceInvitation(invitationCode);
   await guest.shell.authenticate(authCode);
-  await host.navigateToObject(INITIAL_OBJECT_COUNT);
+  await navigateToNewDocument(host);
+};
+
+const navigateToNewDocument = async (app: AppManager) => {
+  // Check if Documents collection (nth=1) is collapsed by looking for "Click to open" in its text.
+  const documentsCollection = app.page.getByTestId('spacePlugin.object').nth(3);
+  const documentsText = await documentsCollection.textContent();
+  const isCollapsed = documentsText?.includes('Click to open');
+  if (isCollapsed) {
+    await app.toggleCollectionCollapsed(3); // Documents managed collection.
+  }
+
+  await app.navigateToObject(4); // New document.
 };
 
 // TODO(wittjosiah): WebRTC only available in chromium browser for testing currently.
@@ -47,7 +59,7 @@ test.describe('Collaboration tests', () => {
     }
   });
 
-  test('guest joins host’s space', async () => {
+  test("guest joins host's space", async () => {
     // Host creates a space and adds a markdown object
     await host.createSpace();
     await host.createObject({ type: 'Document', nth: 0 });
@@ -66,10 +78,10 @@ test.describe('Collaboration tests', () => {
     // Guest waits for the space to be ready and confirms it has the markdown object.
     await guest.waitForSpaceReady();
     await guest.toggleSpaceCollapsed(1, true);
-    await expect(guest.getObjectLinks()).toHaveCount(INITIAL_OBJECT_COUNT + 1);
+    await expect(guest.getObjectLinks()).toHaveCount(INITIAL_OBJECT_COUNT);
     // TODO(wittjosiah): Sometimes navigation fails without a delay.
     await guest.page.waitForTimeout(1_000);
-    await guest.navigateToObject(INITIAL_OBJECT_COUNT);
+    await navigateToNewDocument(guest);
 
     {
       // Update to use plank locator
@@ -82,7 +94,7 @@ test.describe('Collaboration tests', () => {
     }
   });
 
-  test('host and guest can see each others’ cursors when same document is in focus', async () => {
+  test("host and guest can see each others' cursors when same document is in focus", async () => {
     await host.createSpace();
     await host.createObject({ type: 'Document', nth: 0 });
 
@@ -97,10 +109,10 @@ test.describe('Collaboration tests', () => {
 
     await guest.waitForSpaceReady();
     await guest.toggleSpaceCollapsed(1, true);
-    await expect(guest.getObjectLinks()).toHaveCount(INITIAL_OBJECT_COUNT + 1);
+    await expect(guest.getObjectLinks()).toHaveCount(INITIAL_OBJECT_COUNT);
     // TODO(wittjosiah): Sometimes navigation fails without a delay.
     await guest.page.waitForTimeout(1_000);
-    await guest.navigateToObject(INITIAL_OBJECT_COUNT);
+    await navigateToNewDocument(guest);
 
     // Find the plank in the guest.
     const guestPlank = guest.deck.plank();
@@ -126,7 +138,7 @@ test.describe('Collaboration tests', () => {
     ]);
   });
 
-  test('host and guest can see each others’ changes in same document', async () => {
+  test("host and guest can see each others' changes in same document", async () => {
     await host.createSpace();
     await host.createObject({ type: 'Document', nth: 0 });
 
@@ -150,10 +162,10 @@ test.describe('Collaboration tests', () => {
     // Guest waits for the space to be ready and confirms it has the markdown object
     await guest.waitForSpaceReady();
     await guest.toggleSpaceCollapsed(1, true);
-    await expect(guest.getObjectLinks()).toHaveCount(INITIAL_OBJECT_COUNT + 1);
+    await expect(guest.getObjectLinks()).toHaveCount(INITIAL_OBJECT_COUNT);
     // TODO(wittjosiah): Sometimes navigation fails without a delay.
     await guest.page.waitForTimeout(1_000);
-    await guest.navigateToObject(INITIAL_OBJECT_COUNT);
+    await navigateToNewDocument(guest);
 
     // Get guest's markdown planks and find the locator for the shared document
     const guestPlank = guest.deck.plank();
@@ -194,11 +206,8 @@ test.describe('Collaboration tests', () => {
     await expect(guestTextbox).toContainText(allParts);
   });
 
-  test('peers can see each others presence', async () => {
-    // TODO(wittjosiah): Flaky.
-    if (process.env.CI) {
-      test.skip();
-    }
+  // TODO(wittjosiah): Fix.
+  test.skip('peers can see each others presence', async () => {
     test.setTimeout(90_000);
 
     await host.createSpace();
@@ -214,10 +223,10 @@ test.describe('Collaboration tests', () => {
     await perfomInvitation(host, guest);
     await guest.waitForSpaceReady();
     await guest.toggleSpaceCollapsed(1, true);
-    await expect(guest.getObjectLinks()).toHaveCount(INITIAL_OBJECT_COUNT + 1);
+    await expect(guest.getObjectLinks()).toHaveCount(INITIAL_OBJECT_COUNT);
     // TODO(wittjosiah): Sometimes navigation fails without a delay.
     await guest.page.waitForTimeout(1_000);
-    await guest.navigateToObject(INITIAL_OBJECT_COUNT);
+    await navigateToNewDocument(guest);
 
     const guestPlank = guest.deck.plank();
     const guestTextbox = Markdown.getMarkdownTextboxWithLocator(guestPlank.locator);

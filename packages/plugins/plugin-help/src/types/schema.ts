@@ -6,12 +6,13 @@ import * as Schema from 'effect/Schema';
 import { type Context, createContext } from 'react';
 import { type Step as BaseStep } from 'react-joyride';
 
-import { type PluginContext } from '@dxos/app-framework';
+import { Capability, type CapabilityManager } from '@dxos/app-framework';
+import { Operation } from '@dxos/operation';
 
 import { meta } from '../meta';
 
 export type Step = BaseStep & {
-  before?: (context: PluginContext) => void;
+  before?: (capabilities: CapabilityManager.CapabilityManager) => void;
 };
 
 export type HelpContextType = {
@@ -32,9 +33,12 @@ export const HelpContext: Context<HelpContextType> = createContext<HelpContextTy
   stop: () => {},
 });
 
-export namespace HelpAction {
-  export class Start extends Schema.TaggedClass<Start>()(`${meta.id}/action/start`, {
-    input: Schema.Void,
-    output: Schema.Void,
-  }) {}
+const HELP_OPERATION = `${meta.id}/operation`;
+
+export namespace HelpOperation {
+  export const Start = Operation.make({
+    meta: { key: `${HELP_OPERATION}/start`, name: 'Start Help' },
+    services: [Capability.Service],
+    schema: { input: Schema.Void, output: Schema.Void },
+  });
 }

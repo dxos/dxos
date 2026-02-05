@@ -5,7 +5,10 @@
   "description": "A decentralized alternative to the commercial cloud for privacy preserving software.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
-  "repository": "github:dxos/dxos",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
   "license": "MIT",
   "author": "info@dxos.org",
   "sideEffects": false,
@@ -22,7 +25,7 @@
     "killorphans": "./scripts/killorphans",
     "knip": "knip",
     "lint": "moon run :lint -- --fix",
-    "lint-changed": "moon :lint --affected --remote -- --fix",
+    "lint-changed": "moon run :lint --affected remote -- --fix",
     "lockfile": "vite-node scripts/lockfile.ts",
     "moonx": "./scripts/moonx",
     "pkg-inspect": "./scripts/pkg-inspect.mjs",
@@ -61,7 +64,6 @@
     "@octokit/rest": "catalog:",
     "@phosphor-icons/core": "catalog:",
     "@playwright/test": "catalog:",
-    "@preact-signals/safe-react": "catalog:",
     "@rollup/plugin-inject": "catalog:",
     "@rushstack/eslint-patch": "catalog:",
     "@swc/core": "catalog:",
@@ -113,7 +115,7 @@
     "eslint-plugin-prettier": "catalog:",
     "eslint-plugin-react": "catalog:",
     "eslint-plugin-sort-exports": "catalog:",
-    "eslint-plugin-storybook": "10.1.10",
+    "eslint-plugin-storybook": "catalog:",
     "eslint-plugin-unused-imports": "catalog:",
     "execa": "catalog:",
     "extensionless": "catalog:",
@@ -144,7 +146,7 @@
     "rollup-plugin-sourcemaps": "catalog:",
     "semver": "catalog:",
     "serve": "catalog:",
-    "storybook": "10.1.10",
+    "storybook": "catalog:",
     "ts-morph": "catalog:",
     "tsdown": "catalog:",
     "tsx": "catalog:",
@@ -169,7 +171,7 @@
     "yargs": "catalog:",
     "zx": "catalog:"
   },
-  "packageManager": "pnpm@10.13.1",
+  "packageManager": "pnpm@10.28.0",
   "engines": {
     "node": "^24.0.0"
   },
@@ -180,6 +182,7 @@
       "@parcel/watcher",
       "@sentry/cli",
       "@swc/core",
+      "better-sqlite3",
       "canvas",
       "cbor-extract",
       "classic-level",
@@ -202,7 +205,9 @@
       "yarn"
     ],
     "overrides": {
-      "@automerge/automerge": "3.2.1",
+      "typescript": "^5.9.3",
+      "@automerge/automerge": "catalog:",
+      "better-sqlite3": "12.6.0",
       "@lezer/lr": "^1.4.2",
       "@types/node": "22.10.2",
       "@types/react": "~19.2.7",

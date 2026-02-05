@@ -6,7 +6,7 @@ import { createContext } from '@radix-ui/react-context';
 import React, { type JSX, type PropsWithChildren, useEffect, useState } from 'react';
 
 import { Icon, type ThemedClassName, useControlledState } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 const IconBlock = ({ children }: PropsWithChildren) => {
   return <div className='grid bs-[24px] is-[24px] place-items-center'>{children}</div>;
@@ -44,14 +44,14 @@ type RootProps = ThemedClassName<
 
 const Root = ({
   classNames,
-  open: openParam,
+  open: openProp,
   defaultOpen = false,
   shrink = false,
   duration = 250,
   children,
   onChangeOpen,
 }: RootProps) => {
-  const [open, setOpen] = useControlledState<boolean>(openParam ?? defaultOpen);
+  const [open, setOpen] = useControlledState<boolean>(openProp ?? defaultOpen);
   const [expandX, setExpandX] = useState<boolean>(shrink ? open : true);
   const [expandY, setExpandY] = useState<boolean>(open);
 

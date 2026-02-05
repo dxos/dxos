@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-export const translationKey = 'react-ui-geo';
+export const translationKey = '@dxos/react-ui-geo';
 
 export const translations = [
   {

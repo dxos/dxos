@@ -35,10 +35,10 @@ export default defineFunction({
     }),
   }),
   handler: Effect.fn(function* ({ data: { id, operations = [] } }) {
-    const doc = yield* Database.Service.resolve(ArtifactId.toDXN(id), Markdown.Document);
+    const doc = yield* Database.resolve(ArtifactId.toDXN(id), Markdown.Document);
 
     // Create task manager and apply operations if provided.
-    const { content } = yield* Database.Service.load(doc.content);
+    const { content } = yield* Database.load(doc.content);
     const taskManager = new MarkdownTasks(content);
     if (operations.length > 0) {
       taskManager.applyOperations(operations as TaskOperation[]);

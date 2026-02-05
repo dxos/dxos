@@ -2,33 +2,17 @@
 // Copyright 2023 DXOS.org
 //
 
-import * as Schema from 'effect/Schema';
-
 import { type Space } from '@dxos/client-protocol';
-import { Obj } from '@dxos/echo';
-import { type AnyLiveObject, type SpaceSyncState, getDatabaseFromObject } from '@dxos/echo-db';
+import { type SpaceSyncState, getDatabaseFromObject } from '@dxos/echo-db';
 import { type ObjectId, type SpaceId } from '@dxos/keys';
-import { type Live, isLiveObject } from '@dxos/live-object';
 
 import { SpaceProxy } from './space-proxy';
-
-// TODO(dmaretskyi): Move to @dxos/echo/internal.
-export const ReactiveObjectSchema: Schema.Schema<Live<any>> = Schema.Any.pipe(
-  Schema.filter((obj) => isLiveObject(obj)),
-  Schema.annotations({ title: 'Live' }),
-);
-
-// TODO(burdon): Rename (remove "Echo").
-export const EchoObjectSchema: Schema.Schema<AnyLiveObject<any>> = Schema.Any.pipe(
-  Schema.filter((obj) => Obj.isObject(obj)),
-  Schema.annotations({ title: 'EchoObject' }),
-);
 
 /**
  * @param object @deprecated
  */
 // TODO(wittjosiah): This should be `Obj.getSpace` / `Relation.getSpace` / `Ref.getSpace`.
-export const getSpace = (object?: Live<any>): Space | undefined => {
+export const getSpace = (object?: any): Space | undefined => {
   if (!object) {
     return undefined;
   }

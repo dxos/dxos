@@ -22,7 +22,7 @@ import { type ExcludeId, Form, type FormRootProps, omitId } from './Form';
 const Organization = Schema.Struct({
   name: Schema.String.pipe(Schema.minLength(1)).annotations({ title: 'Full name' }),
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'example.com/type/Organization', // TODO(burdon): Change all types to /schema
     version: '0.1.0',
   }),
@@ -64,7 +64,7 @@ const Person = Schema.Struct({
     }),
   ),
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/Person', // TODO(burdon): Change all types to /schema
     version: '0.1.0',
   }),
@@ -80,10 +80,10 @@ type StoryProps<T extends AnyProperties> = {
 const DefaultStory = <T extends AnyProperties = AnyProperties>({
   debug,
   schema,
-  values: valuesParam,
+  values: valuesProp,
   ...props
 }: StoryProps<T>) => {
-  const [values, setValues] = useState<Partial<T>>(valuesParam ?? {});
+  const [values, setValues] = useState<Partial<T>>(valuesProp ?? {});
   const client = useClient();
   const space = client.spaces.default;
 
@@ -94,7 +94,7 @@ const DefaultStory = <T extends AnyProperties = AnyProperties>({
 
   const handleCancel = useCallback<NonNullable<FormRootProps<T>['onCancel']>>(() => {
     log.info('cancel');
-    setValues(valuesParam ?? {});
+    setValues(valuesProp ?? {});
   }, []);
 
   return (

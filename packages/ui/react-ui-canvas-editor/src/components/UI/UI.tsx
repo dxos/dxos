@@ -2,12 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
+import { useAtomValue } from '@effect-atom/atom-react';
 import React from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
 import { FPS, testId } from '@dxos/react-ui-canvas';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { useEditorContext } from '../../hooks';
 import { type TestId } from '../defs';
@@ -24,7 +25,7 @@ export type UIProps = ThemedClassName<{
  */
 export const UI = ({ showTools, showToolbar }: UIProps) => {
   const { debug, registry, dragMonitor, graph, showGrid, snapToGrid, selection, actionHandler } = useEditorContext();
-  const dragging = dragMonitor.state().value;
+  const dragging = useAtomValue(dragMonitor.state);
   const info = {
     debug,
     graph: {
@@ -32,7 +33,7 @@ export const UI = ({ showTools, showToolbar }: UIProps) => {
       edges: graph.edges.length,
     },
     dragging,
-    selected: selection.selected.value,
+    selected: selection.getSelectedIds(),
     showGrid,
     snapToGrid,
   };

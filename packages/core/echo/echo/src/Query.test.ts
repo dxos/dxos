@@ -85,6 +85,34 @@ describe('query api', () => {
       log('TasksForFred', { ast: TasksForFred.ast });
     });
 
+    test('get all objects referencing Fred (any type, specified property)', () => {
+      const fred = Obj.make(TestSchema.Person, { name: 'Fred' });
+      const ObjectsReferencingFred = Query.select(Filter.type(TestSchema.Person, { id: fred.id })).referencedBy(
+        TestSchema.Task,
+      );
+
+      log('query', { ast: ObjectsReferencingFred.ast });
+      Schema.validateSync(QueryAST.Query)(ObjectsReferencingFred.ast);
+      expect(ObjectsReferencingFred.ast).toMatchObject({
+        type: 'incoming-references',
+        property: null,
+        typename: 'dxn:type:example.com/type/Task:0.1.0',
+      });
+    });
+
+    test('get all objects referencing Fred (any type, any property)', () => {
+      const fred = Obj.make(TestSchema.Person, { name: 'Fred' });
+      const AllBacklinks = Query.select(Filter.type(TestSchema.Person, { id: fred.id })).referencedBy();
+
+      log('query', { ast: AllBacklinks.ast });
+      Schema.validateSync(QueryAST.Query)(AllBacklinks.ast);
+      expect(AllBacklinks.ast).toMatchObject({
+        type: 'incoming-references',
+        property: null,
+        typename: null,
+      });
+    });
+
     test('get all tasks for employees of Cyberdyne', () => {
       const TasksForEmployeesOfCyberdyne = Query.select(Filter.type(TestSchema.Organization, { name: 'Cyberdyne' }))
         .targetOf(TestSchema.EmployedBy)
@@ -301,6 +329,97 @@ describe('query api', () => {
       `);
     });
 
+    test('limit results', () => {
+      const query = Query.select(Filter.type(TestSchema.Task)).limit(10);
+      Schema.validateSync(QueryAST.Query)(query.ast);
+      expect(query.ast).toMatchInlineSnapshot(`
+        {
+          "limit": 10,
+          "query": {
+            "filter": {
+              "id": undefined,
+              "props": {},
+              "type": "object",
+              "typename": "dxn:type:example.com/type/Task:0.1.0",
+            },
+            "type": "select",
+          },
+          "type": "limit",
+        }
+      `);
+    });
+
+    test('ordered and limited results', () => {
+      const query = Query.select(Filter.type(TestSchema.Task)).orderBy(Order.property('title', 'asc')).limit(10);
+      Schema.validateSync(QueryAST.Query)(query.ast);
+      expect(query.ast).toMatchInlineSnapshot(`
+        {
+          "limit": 10,
+          "query": {
+            "order": [
+              {
+                "direction": "asc",
+                "kind": "property",
+                "property": "title",
+              },
+            ],
+            "query": {
+              "filter": {
+                "id": undefined,
+                "props": {},
+                "type": "object",
+                "typename": "dxn:type:example.com/type/Task:0.1.0",
+              },
+              "type": "select",
+            },
+            "type": "order",
+          },
+          "type": "limit",
+        }
+      `);
+    });
+
+    test('union of limited queries', () => {
+      const query = Query.all(
+        Query.select(Filter.type(TestSchema.Person)).limit(5),
+        Query.select(Filter.type(TestSchema.Organization)).limit(5),
+      );
+      Schema.validateSync(QueryAST.Query)(query.ast);
+      expect(query.ast).toMatchInlineSnapshot(`
+        {
+          "queries": [
+            {
+              "limit": 5,
+              "query": {
+                "filter": {
+                  "id": undefined,
+                  "props": {},
+                  "type": "object",
+                  "typename": "dxn:type:example.com/type/Person:0.1.0",
+                },
+                "type": "select",
+              },
+              "type": "limit",
+            },
+            {
+              "limit": 5,
+              "query": {
+                "filter": {
+                  "id": undefined,
+                  "props": {},
+                  "type": "object",
+                  "typename": "dxn:type:example.com/type/Organization:0.1.0",
+                },
+                "type": "select",
+              },
+              "type": "limit",
+            },
+          ],
+          "type": "union",
+        }
+      `);
+    });
+
     test.skip('chain', () => {
       // NOTE: Can't support props without type since they can't be inferred.
       // const f1: Filter<Person> = Filter.props({ name: 'Fred' });
@@ -340,7 +459,7 @@ describe('query api', () => {
     test('Filter.or(Filter.typename(...))', () => {
       const filter = Filter.or(Filter.typename('example.com/type/Person'));
       // TODO(dmaretskyi): Give vitest type-tests a try.
-      const _isAssignable: Obj.Any = null as any as Filter.Type<typeof filter>;
+      const _isAssignable: Obj.Unknown = null as any as Filter.Type<typeof filter>;
     });
   });
 });

@@ -7,23 +7,45 @@ import UAParser from 'ua-parser-js';
 import { type ClientServicesProvider } from '@dxos/client-protocol';
 import { type Config } from '@dxos/config';
 
-import { fromHost } from './local-client-services';
+import { type DedeciatedWorkerClientServicesOptions, DedicatedWorkerClientServices } from './dedicated';
+import { SharedWorkerCoordinator, SingleClientCoordinator } from './dedicated';
+import { type LocalClientServicesParams, fromHost } from './local-client-services';
 import { fromSocket } from './socket';
-import { type WorkerClientServicesParams, fromWorker } from './worker-client-services';
+import { type WorkerClientServicesProps, fromWorker } from './worker-client-services';
+
+export type CreateClientServicesOptions = {
+  /** Factory for creating a shared worker. */
+  createWorker?: WorkerClientServicesProps['createWorker'];
+  /** Factory for creating a dedicated worker. */
+  createDedicatedWorker?: DedeciatedWorkerClientServicesOptions['createWorker'];
+  /** Factory for creating an OPFS worker. */
+  createOpfsWorker?: LocalClientServicesParams['createOpfsWorker'];
+  /**
+   * Use single-client mode for the dedicated worker coordinator.
+   * This bypasses SharedWorker which doesn't work on iOS WKWebView.
+   */
+  singleClientMode?: boolean;
+  /** Observability group sent with signaling metadata. */
+  observabilityGroup?: string;
+  /** Enable telemetry metadata sent with signaling requests. */
+  signalTelemetryEnabled?: boolean;
+};
 
 /**
  * Create services from config.
- * @param config
- * @param createWorker
- * @param observabilityGroup - Optional observability group that will be sent with Signaling metadata.
- * @param signalTelemetryEnabled - Optional flag to enable telemetry metadata sent with Signaling requests.
  */
-export const createClientServices = (
+export const createClientServices = async (
   config: Config,
-  createWorker?: WorkerClientServicesParams['createWorker'],
-  observabilityGroup?: string,
-  signalTelemetryEnabled?: boolean,
+  options: CreateClientServicesOptions = {},
 ): Promise<ClientServicesProvider> => {
+  const {
+    createWorker,
+    createDedicatedWorker,
+    singleClientMode,
+    createOpfsWorker,
+    observabilityGroup,
+    signalTelemetryEnabled,
+  } = options;
   const remote = config.values.runtime?.client?.remoteSource;
   if (remote) {
     const url = new URL(remote);
@@ -50,7 +72,21 @@ export const createClientServices = (
     useWorker = typeof SharedWorker !== 'undefined' && parser.getOS().name !== 'iOS';
   }
 
-  return createWorker && useWorker
-    ? fromWorker(config, { createWorker, observabilityGroup, signalTelemetryEnabled })
-    : fromHost(config, {}, observabilityGroup, signalTelemetryEnabled);
+  return createDedicatedWorker
+    ? new DedicatedWorkerClientServices({
+        createWorker: createDedicatedWorker,
+        createCoordinator: () => (singleClientMode ? new SingleClientCoordinator() : new SharedWorkerCoordinator()),
+        config,
+      })
+    : createWorker && useWorker
+      ? fromWorker(config, { createWorker, observabilityGroup, signalTelemetryEnabled })
+      : fromHost(
+          config,
+          {
+            createOpfsWorker,
+            runtimeProps: { enableSqlite: true },
+          },
+          observabilityGroup,
+          signalTelemetryEnabled,
+        );
 };

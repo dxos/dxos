@@ -6,8 +6,10 @@ import React from 'react';
 
 import { type ButtonProps, IconButton, useTranslation } from '@dxos/react-ui';
 
+import { translationKey } from '../../translations';
+
 export const CloseButton = ({ onDone, ...props }: Omit<ButtonProps, 'onClick'> & { onDone?: () => void }) => {
-  const { t } = useTranslation('os');
+  const { t } = useTranslation(translationKey);
   return (
     <IconButton
       icon='ph--x--bold'

@@ -3,6 +3,7 @@
 //
 
 import type * as Toolkit from '@effect/ai/Toolkit';
+import type { Registry } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 
 import { Resource } from '@dxos/context';
@@ -22,11 +23,17 @@ import {
 
 import { AiContextBinder, AiContextService, type ContextBinding } from './context';
 
-export interface AiConversationRunParams {
+export interface AiConversationRunProps {
   prompt: string;
   system?: string;
   observer?: GenerationObserver;
 }
+
+export type AiConversationOptions = {
+  queue: Queue<Message.Message | ContextBinding>;
+  toolkit?: Toolkit.Any;
+  registry?: Registry.Registry;
+};
 
 /**
  * Durable conversation state (initiated by users and agents) backed by a Queue.
@@ -37,14 +44,15 @@ export class AiConversation extends Resource {
    * Blueprints and objects bound to the conversation.
    */
   private readonly _binder: AiContextBinder;
+  private readonly _queue: Queue<Message.Message | ContextBinding>;
+  private readonly _toolkit?: Toolkit.Any;
 
-  public constructor(
-    private readonly _queue: Queue<Message.Message | ContextBinding>,
-    private readonly _toolkit?: Toolkit.Any,
-  ) {
+  public constructor(options: AiConversationOptions) {
     super();
+    this._queue = options.queue;
+    this._toolkit = options.toolkit;
     invariant(this._queue);
-    this._binder = new AiContextBinder(this._queue);
+    this._binder = new AiContextBinder({ queue: this._queue, registry: options.registry });
   }
 
   protected override async _open(): Promise<void> {
@@ -72,23 +80,23 @@ export class AiConversation extends Resource {
    * Creates a new cancelable request effect.
    */
   public createRequest(
-    params: AiConversationRunParams,
+    params: AiConversationRunProps,
   ): Effect.Effect<Message.Message[], AiSessionRunError, AiSessionRunRequirements> {
     const self = this;
     return Effect.gen(function* () {
       const history = yield* Effect.promise(() => self.getHistory());
 
       // Create toolkit.
-      const blueprints = self.context.blueprints.value;
+      const blueprints = self.context.getBlueprints();
       const toolkit = yield* createToolkit({
         toolkit: self._toolkit,
         blueprints,
       });
 
       // Context objects.
-      const objects = self.context.objects.value;
+      const objects = self.context.getObjects();
 
-      log.info('run', {
+      log('run', {
         history: history.length,
         blueprints: blueprints.length,
         tools: Object.keys(toolkit.tools).length,
@@ -103,7 +111,7 @@ export class AiConversation extends Resource {
         }),
       );
 
-      log.info('result', {
+      log('result', {
         messages: messages.length,
         duration: session.duration,
         toolCalls: session.toolCalls,

@@ -2,12 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as Function from 'effect/Function';
 import * as Schema from 'effect/Schema';
 import React, { type ChangeEvent, forwardRef, useCallback, useMemo, useState } from 'react';
 
-import { LayoutAction, chain, createIntent } from '@dxos/app-framework';
-import { useCapabilities, useIntentDispatcher } from '@dxos/app-framework/react';
+import { Common } from '@dxos/app-framework';
+import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/react';
+import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { useClient } from '@dxos/react-client';
@@ -21,12 +21,11 @@ import {
   Form,
   type FormFieldMap,
 } from '@dxos/react-ui-form';
+import { Layout } from '@dxos/react-ui-mosaic';
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
-import { StackItem } from '@dxos/react-ui-stack';
 
-import { SpaceCapabilities } from '../../capabilities';
 import { meta } from '../../meta';
-import { SpaceAction, SpaceForm } from '../../types';
+import { SpaceCapabilities, SpaceForm, SpaceOperation } from '../../types';
 
 const SpaceFormSchema = SpaceForm.pipe(
   Schema.extend(
@@ -44,7 +43,7 @@ export type SpaceSettingsContainerProps = {
 export const SpaceSettingsContainer = forwardRef<HTMLDivElement, SpaceSettingsContainerProps>(
   ({ space }, forwardedRef) => {
     const { t } = useTranslation(meta.id);
-    const { dispatchPromise: dispatch } = useIntentDispatcher();
+    const { invokePromise } = useOperationInvoker();
     const client = useClient();
     const archived = useMulticastObservable(space.state) === SpaceState.SPACE_INACTIVE;
     const [edgeReplication, setEdgeReplication] = useState(
@@ -66,27 +65,29 @@ export const SpaceSettingsContainer = forwardRef<HTMLDivElement, SpaceSettingsCo
     const handleSave = useCallback(
       (properties: Schema.Schema.Type<typeof SpaceFormSchema>) => {
         void toggleEdgeReplication(properties.edgeReplication ?? false);
-        if (properties.name !== space.properties.name) {
-          space.properties.name = properties.name;
-        }
-        if (properties.icon !== space.properties.icon) {
-          space.properties.icon = properties.icon;
-        }
-        if (properties.hue !== space.properties.hue) {
-          space.properties.hue = properties.hue;
+        const nameChanged = properties.name !== space.properties.name;
+        const iconChanged = properties.icon !== space.properties.icon;
+        const hueChanged = properties.hue !== space.properties.hue;
+        if (nameChanged || iconChanged || hueChanged) {
+          Obj.change(space.properties, (p) => {
+            if (nameChanged) {
+              p.name = properties.name;
+            }
+            if (iconChanged) {
+              p.icon = properties.icon;
+            }
+            if (hueChanged) {
+              p.hue = properties.hue;
+            }
+          });
         }
         if (properties.archived && !archived) {
-          void dispatch(
-            Function.pipe(
-              createIntent(SpaceAction.Close, { space }),
-              chain(LayoutAction.SwitchWorkspace, {
-                part: 'workspace',
-                subject: client.spaces.default.id,
-              }),
-            ),
-          );
+          void (async () => {
+            await invokePromise(SpaceOperation.Close, { space });
+            await invokePromise(Common.LayoutOperation.SwitchWorkspace, { subject: client.spaces.default.id });
+          })();
         } else if (!properties.archived && archived) {
-          void dispatch(createIntent(SpaceAction.Open, { space }));
+          void invokePromise(SpaceOperation.Open, { space });
         }
       },
       [space, toggleEdgeReplication, archived],
@@ -187,7 +188,7 @@ export const SpaceSettingsContainer = forwardRef<HTMLDivElement, SpaceSettingsCo
     }, [client, space, repairs]);
 
     return (
-      <StackItem.Content scrollable ref={forwardedRef}>
+      <Layout.Container scrollable ref={forwardedRef}>
         <ControlPage>
           <ControlSection
             title={t('space properties settings verbose label')}
@@ -211,7 +212,7 @@ export const SpaceSettingsContainer = forwardRef<HTMLDivElement, SpaceSettingsCo
             </div>
           </ControlSection>
         </ControlPage>
-      </StackItem.Content>
+      </Layout.Container>
     );
   },
 );

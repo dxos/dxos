@@ -2,22 +2,23 @@
 // Copyright 2025 DXOS.org
 //
 
+import { RegistryContext } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import type * as Schema from 'effect/Schema';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
 import { Obj, Type } from '@dxos/echo';
+import { invariant } from '@dxos/invariant';
 import { type DxGrid } from '@dxos/lit-grid';
 import '@dxos/lit-ui/dx-tag-picker.pcss';
 import { faker } from '@dxos/random';
-import { useClient } from '@dxos/react-client';
-import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
+import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as formTranslations } from '@dxos/react-ui-form';
 import { View } from '@dxos/schema';
 import { type ValueGenerator, createAsyncGenerator } from '@dxos/schema/testing';
+import { withRegistry } from '@dxos/storybook-utils';
 import { Organization, Person } from '@dxos/types';
 
 import { useProjectionModel, useTableModel } from '../../hooks';
@@ -35,7 +36,8 @@ const generator: ValueGenerator = faker as any;
 // TODO(burdon): Reconcile schemas types and utils (see API PR).
 // TODO(burdon): Base type for T (with id); see ECHO API PR?
 const useTestModel = <S extends Type.Obj.Any>(schema: S, count: number) => {
-  const { space } = useClientProvider();
+  const registry = useContext(RegistryContext);
+  const { space } = useClientStory();
   const [object, setObject] = useState<Table.Table>();
 
   const features = useMemo<TableFeatures>(
@@ -54,7 +56,7 @@ const useTestModel = <S extends Type.Obj.Any>(schema: S, count: number) => {
     space.db.add(object);
   }, [space, schema]);
 
-  const projection = useProjectionModel(schema, object);
+  const projection = useProjectionModel(schema, object, registry);
   const model = useTableModel<TableRow>({ object, projection, db: space?.db, features });
 
   useEffect(() => {
@@ -73,21 +75,22 @@ const useTestModel = <S extends Type.Obj.Any>(schema: S, count: number) => {
       return;
     }
 
-    return new TablePresentation(model);
-  }, [model]);
+    return new TablePresentation(registry, model);
+  }, [registry, model]);
 
   return { model, presentation };
 };
 
 const DefaultStory = () => {
-  const client = useClient();
   const { model: orgModel, presentation: orgPresentation } = useTestModel(Organization.Organization, 50);
   const { model: contactModel, presentation: contactPresentation } = useTestModel(Person.Person, 50);
-  const { space } = useClientProvider();
+  const { space } = useClientStory();
 
   const handleCreate = useCallback(
-    (schema: Schema.Schema.AnyNoContext, values: any) => {
-      return client.spaces.default.db.add(Obj.make(schema, values));
+    (schema: Type.Entity.Any, values: any) => {
+      invariant(Type.isObjectSchema(schema));
+      invariant(space);
+      return space.db.add(Obj.make(schema, values));
     },
     [space],
   );
@@ -123,7 +126,8 @@ const meta = {
   render: DefaultStory,
   decorators: [
     withTheme,
-    // TODO(thure): Shouldn’t `layout: 'fullscreen'` below make this unnecessary?
+    withRegistry,
+    // TODO(thure): Shouldn't `layout: 'fullscreen'` below make this unnecessary?
     withLayout({ classNames: 'fixed inset-0' }),
     withClientProvider({
       types: [View.View, Organization.Organization, Person.Person, Table.Table],
@@ -215,9 +219,9 @@ export const Default: Story = {
     const newOrgName = 'Salieri LLC';
     await userEvent.type(newSearchField, newOrgName);
 
-    // Look for an option to select (should be the create new option)
-    const newOption = await body.findAllByRole('option');
-    await expect(newOption[0]).toBeVisible();
+    // Wait for the create option to appear (debounce is 200ms, allow time for render)
+    const createOption = await body.findByRole('option', undefined, { timeout: 500 });
+    await expect(createOption).toBeVisible();
 
     // Press Enter to select/create
     await userEvent.keyboard('{Enter}');
