@@ -343,7 +343,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
    */
   async _loadObjectById(objectId: string, options: LoadObjectOptions = {}): Promise<Entity.Unknown | undefined> {
     const core = await this._coreDatabase.loadObjectCoreById(objectId, options);
-    if (!core || core?.isDeleted()) {
+    if (!core || (core?.isDeleted() && !options.allowDeleted)) {
       return undefined;
     }
 

@@ -2,10 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
+import type * as Tool from '@effect/ai/Tool';
 import type * as Toolkit from '@effect/ai/Toolkit';
 import type { Registry } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 
+import { type ToolExecutionService, type ToolResolverService } from '@dxos/ai';
 import { Resource } from '@dxos/context';
 import { Obj } from '@dxos/echo';
 import { type Queue } from '@dxos/echo-db';
@@ -76,25 +78,32 @@ export class AiConversation extends Resource {
     return queueItems.filter(Obj.instanceOf(Message.Message));
   }
 
+  getTools(): Effect.Effect<Record<string, Tool.Any>, never, ToolExecutionService | ToolResolverService> {
+    return Effect.gen(this, function* () {
+      const blueprints = this.context.getBlueprints();
+      const tookit = yield* createToolkit({ toolkit: this._toolkit, blueprints });
+      return tookit.tools;
+    }).pipe(Effect.orDie);
+  }
+
   /**
    * Creates a new cancelable request effect.
    */
   public createRequest(
     params: AiConversationRunProps,
   ): Effect.Effect<Message.Message[], AiSessionRunError, AiSessionRunRequirements> {
-    const self = this;
-    return Effect.gen(function* () {
-      const history = yield* Effect.promise(() => self.getHistory());
+    return Effect.gen(this, function* () {
+      const history = yield* Effect.promise(() => this.getHistory());
 
       // Create toolkit.
-      const blueprints = self.context.getBlueprints();
+      const blueprints = this.context.getBlueprints();
       const toolkit = yield* createToolkit({
-        toolkit: self._toolkit,
+        toolkit: this._toolkit,
         blueprints,
       });
 
       // Context objects.
-      const objects = self.context.getObjects();
+      const objects = this.context.getObjects();
 
       log('run', {
         history: history.length,
@@ -107,7 +116,7 @@ export class AiConversation extends Resource {
       const session = new AiSession();
       const messages = yield* session.run({ history, blueprints, toolkit, objects, ...params }).pipe(
         Effect.provideService(AiContextService, {
-          binder: self.context,
+          binder: this.context,
         }),
       );
 
@@ -118,7 +127,7 @@ export class AiConversation extends Resource {
       });
 
       // Append to queue.
-      yield* Effect.promise(() => self._queue.append(messages));
+      yield* Effect.promise(() => this._queue.append(messages));
       return messages;
     });
   }

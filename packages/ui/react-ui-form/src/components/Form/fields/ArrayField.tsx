@@ -140,6 +140,9 @@ export const getDefaultValue = (ast?: SchemaAST.AST): any => {
     case 'BooleanKeyword': {
       return false;
     }
+    case 'Suspend': {
+      return getDefaultValue(ast.f());
+    }
     default: {
       if (ast && isNestedType(ast)) {
         return {};

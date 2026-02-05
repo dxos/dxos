@@ -417,7 +417,7 @@ describe('Query', () => {
     }
   });
 
-  test('query immediately after delete works', async () => {
+  test('query immediately after delete and indexing works', async () => {
     const kv = createTestLevel();
     const spaceKey = PublicKey.random();
 
@@ -431,6 +431,7 @@ describe('Query', () => {
     const [obj1, obj2] = await createObjects(peer, db, { count: 2 });
 
     db.remove(obj2);
+    await db.flush({ indexes: true });
 
     const queryResult = await db.query(Query.select(Filter.everything())).run();
     expect(queryResult.length).to.eq(1);

@@ -38,9 +38,9 @@ export default defineConfig(
         https:
           process.env.HTTPS === 'true'
             ? {
-              key: '../../../key.pem',
-              cert: '../../../cert.pem',
-            }
+                key: '../../../key.pem',
+                cert: '../../../cert.pem',
+              }
             : undefined,
         fs: {
           strict: false,
@@ -90,6 +90,26 @@ export default defineConfig(
           WasmPlugin(),
           sourceMaps(),
           env.command === 'serve' &&
+            PluginImportSource({
+              exclude: [
+                '@dxos/random-access-storage',
+                '@dxos/lock-file',
+                '@dxos/network-manager',
+                '@dxos/teleport',
+                '@dxos/config',
+                '@dxos/client-services',
+                '@dxos/observability',
+                // TODO(dmaretskyi): Decorators break in lit.
+                '@dxos/lit-*',
+              ],
+            }),
+        ],
+      },
+      plugins: [
+        sourceMaps(),
+
+        // Building from dist when creating a prod bundle.
+        env.command === 'serve' &&
           PluginImportSource({
             exclude: [
               '@dxos/random-access-storage',
@@ -103,26 +123,6 @@ export default defineConfig(
               '@dxos/lit-*',
             ],
           }),
-        ],
-      },
-      plugins: [
-        sourceMaps(),
-
-        // Building from dist when creating a prod bundle.
-        env.command === 'serve' &&
-        PluginImportSource({
-          exclude: [
-            '@dxos/random-access-storage',
-            '@dxos/lock-file',
-            '@dxos/network-manager',
-            '@dxos/teleport',
-            '@dxos/config',
-            '@dxos/client-services',
-            '@dxos/observability',
-            // TODO(dmaretskyi): Decorators break in lit.
-            '@dxos/lit-*',
-          ],
-        }),
 
         ConfigPlugin({
           root: dirname,
@@ -147,6 +147,14 @@ export default defineConfig(
                     include_args: false,
                     include_call_site: true,
                     include_scope: true,
+                  },
+                  {
+                    name: 'dbg',
+                    package: '@dxos/log',
+                    param_index: 1,
+                    include_args: true,
+                    include_call_site: false,
+                    include_scope: false,
                   },
                   {
                     name: 'invariant',

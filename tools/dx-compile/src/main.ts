@@ -105,6 +105,14 @@ export default async (options: EsbuildExecutorOptions): Promise<{ success: boole
                       include_scope: true,
                     },
                     {
+                      name: 'dbg',
+                      package: '@dxos/log',
+                      param_index: 1,
+                      include_args: true,
+                      include_call_site: false,
+                      include_scope: false,
+                    },
+                    {
                       name: 'invariant',
                       package: '@dxos/invariant',
                       param_index: 2,

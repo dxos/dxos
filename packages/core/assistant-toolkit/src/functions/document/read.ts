@@ -5,26 +5,28 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { ArtifactId } from '@dxos/assistant';
-import { Database } from '@dxos/echo';
+import { Database, Type } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
 import { Markdown } from '@dxos/plugin-markdown/types';
 
 export default defineFunction({
   key: 'dxos.org/function/markdown/read',
   name: 'Read markdown document',
-  description: 'Read markdown document.',
+  description:
+    'Read markdown document. Note that result is a snapshot in time, and might have changed since the document was last read.',
   inputSchema: Schema.Struct({
-    id: ArtifactId.annotations({
-      description: 'The ID of the document to read.',
+    document: Type.Ref(Markdown.Document).annotations({
+      description: 'The document to read.',
     }),
   }),
   outputSchema: Schema.Struct({
     content: Schema.String,
   }),
-  handler: Effect.fn(function* ({ data: { id } }) {
-    const doc = yield* Database.resolve(ArtifactId.toDXN(id), Markdown.Document);
-    const { content } = yield* Database.load(doc.content);
+  handler: Effect.fn(function* ({ data: { document } }) {
+    const { content } = yield* document.pipe(
+      Database.load,
+      Effect.flatMap((doc) => doc.content.pipe(Database.load)),
+    );
     return { content };
   }),
 });

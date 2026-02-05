@@ -25,14 +25,6 @@
       "node": "./dist/lib/node-esm/testing/index.mjs"
     }
   },
-  "types": "dist/types/src/index.d.ts",
-  "typesVersions": {
-    "*": {
-      "testing": [
-        "./dist/types/src/testing/index.d.ts"
-      ]
-    }
-  },
   "files": [
     "dist",
     "src"

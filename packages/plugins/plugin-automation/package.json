@@ -84,6 +84,7 @@
     "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@effect-atom/atom": "catalog:",
     "@effect/ai": "catalog:",
     "@effect/cli": "catalog:",
     "@effect/platform-browser": "catalog:",

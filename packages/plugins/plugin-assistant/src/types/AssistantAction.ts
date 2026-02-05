@@ -5,14 +5,13 @@
 import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
+import { Chat } from '@dxos/assistant-toolkit';
 import { SpaceSchema } from '@dxos/client/echo';
 import { Database, Type } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 import { Collection } from '@dxos/schema';
 
 import { meta } from '../meta';
-
-import { Chat } from './Assistant';
 
 // Operations
 const ASSISTANT_OPERATION = `${meta.id}/operation`;
@@ -41,7 +40,7 @@ export namespace AssistantOperation {
         addToSpace: Schema.optional(Schema.Boolean),
       }),
       output: Schema.Struct({
-        object: Chat,
+        object: Chat.Chat,
       }),
     },
   });
@@ -51,7 +50,7 @@ export namespace AssistantOperation {
     services: [Capability.Service],
     schema: {
       input: Schema.Struct({
-        chat: Chat,
+        chat: Chat.Chat,
       }),
       output: Schema.Void,
     },
@@ -63,7 +62,7 @@ export namespace AssistantOperation {
     schema: {
       input: Schema.Struct({
         companionTo: Type.Obj,
-        chat: Chat.pipe(Schema.optional),
+        chat: Chat.Chat.pipe(Schema.optional),
       }),
       output: Schema.Void,
     },

@@ -5,13 +5,12 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
+import { Chat } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { Obj, Ref, Type } from '@dxos/echo';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 import { type Space } from '@dxos/react-client/echo';
 import { Collection } from '@dxos/schema';
-
-import { Assistant } from '../../types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -32,10 +31,10 @@ const ensureSystemCollections = async (space: Space) => {
 
   const objects = await Promise.all(rootCollection.objects.map((ref) => ref.load()));
   const chats = objects.find(
-    (object) => Obj.instanceOf(Collection.Managed, object) && object.key === Assistant.Chat.typename,
+    (object) => Obj.instanceOf(Collection.Managed, object) && object.key === Chat.Chat.typename,
   );
   if (!chats) {
-    const chatsCollectionRef = Ref.make(Collection.makeManaged({ key: Assistant.Chat.typename }));
+    const chatsCollectionRef = Ref.make(Collection.makeManaged({ key: Chat.Chat.typename }));
     Obj.change(rootCollection, (c) => {
       c.objects.push(chatsCollectionRef);
     });

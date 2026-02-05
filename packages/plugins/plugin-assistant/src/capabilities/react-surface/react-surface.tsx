@@ -7,6 +7,7 @@ import React from 'react';
 
 import { Capability, Common } from '@dxos/app-framework';
 import { useSettingsState } from '@dxos/app-framework/react';
+import { Chat, Initiative } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { getSpace } from '@dxos/client/echo';
 import { Sequence } from '@dxos/conductor';
@@ -20,10 +21,12 @@ import {
   ChatCompanion,
   ChatContainer,
   ChatDialog,
+  InitiativeContainer,
   PromptArticle,
+  TriggerStatus,
 } from '../../components';
 import { ASSISTANT_DIALOG, meta } from '../../meta';
-import { Assistant } from '../../types';
+import { type Assistant } from '../../types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -41,17 +44,24 @@ export default Capability.makeModule(() =>
       Common.createSurface({
         id: `${meta.id}/chat`,
         role: 'article',
-        filter: (data): data is { subject: Assistant.Chat; variant: undefined } =>
-          Obj.instanceOf(Assistant.Chat, data.subject) && data.variant !== 'assistant-chat',
+        filter: (data): data is { subject: Chat.Chat; variant: undefined } =>
+          Obj.instanceOf(Chat.Chat, data.subject) && data.variant !== 'assistant-chat',
         component: ({ data, role, ref }) => <ChatContainer role={role} subject={data.subject} ref={ref} />,
+      }),
+      Common.createSurface({
+        id: `${meta.id}/initiative`,
+        role: 'article',
+        filter: (data): data is { subject: Initiative.Initiative } =>
+          Obj.instanceOf(Initiative.Initiative, data.subject),
+        component: ({ data, role }) => <InitiativeContainer role={role} initiative={data.subject} />,
       }),
       // TODO(wittjosiah): This is flashing when chat changes.
       Common.createSurface({
         id: `${meta.id}/companion-chat`,
         role: 'article',
-        filter: (data): data is { companionTo: Obj.Unknown; subject: Assistant.Chat | 'assistant-chat' } =>
+        filter: (data): data is { companionTo: Obj.Unknown; subject: Chat.Chat | 'assistant-chat' } =>
           Obj.isObject(data.companionTo) &&
-          (Obj.instanceOf(Assistant.Chat, data.subject) || data.subject === 'assistant-chat'),
+          (Obj.instanceOf(Chat.Chat, data.subject) || data.subject === 'assistant-chat'),
         component: ({ data, role, ref }) => <ChatCompanion role={role} data={data} ref={ref} />,
       }),
       Common.createSurface({
@@ -87,8 +97,13 @@ export default Capability.makeModule(() =>
       Common.createSurface({
         id: ASSISTANT_DIALOG,
         role: 'dialog',
-        filter: (data): data is { props: { chat: Assistant.Chat } } => data.component === ASSISTANT_DIALOG,
+        filter: (data): data is { props: { chat: Chat.Chat } } => data.component === ASSISTANT_DIALOG,
         component: ({ data }) => <ChatDialog {...data.props} />,
+      }),
+      Common.createSurface({
+        id: `${meta.id}/status`,
+        role: 'status',
+        component: () => <TriggerStatus />,
       }),
     ]),
   ),
