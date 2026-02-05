@@ -23,3 +23,6 @@ tasks:
       - $DX_IPDATA_API_KEY
       - $DX_SHARED_WORKER
       - $PLAYWRIGHT_BROWSER
+
+inheritedBy:
+  tags: e2e

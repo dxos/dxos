@@ -33,6 +33,6 @@ export default defineFunction({
   }),
   outputSchema: Chess.Game,
   handler: Effect.fn(function* ({ data: { name, pgn, fen } }) {
-    return yield* Database.Service.add(Chess.make({ name, pgn, fen }));
+    return yield* Database.add(Chess.make({ name, pgn, fen }));
   }),
 });

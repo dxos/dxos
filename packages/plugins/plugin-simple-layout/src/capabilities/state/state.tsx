@@ -17,6 +17,8 @@ const defaultState: SimpleLayoutState = {
   previousWorkspace: Node.RootId,
   history: [],
   isPopover: false,
+  companionVariant: undefined,
+  drawerState: 'closed',
 };
 
 export type SimpleLayoutStateOptions = {

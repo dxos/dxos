@@ -9,33 +9,6 @@ import { Graph, Node } from '@dxos/app-graph';
 
 import { type MenuItem, type MenuItemGroup } from '../types';
 
-const edgesArrayToRecord = (edges: Graph.Edge[]): Record<string, Graph.Edges> => {
-  return Object.fromEntries(
-    Object.entries(
-      edges.reduce((acc: Record<string, { inbound: string[]; outbound: string[] }>, { source, target }) => {
-        if (!acc[source]) {
-          acc[source] = { inbound: [], outbound: [] };
-        }
-        if (!acc[target]) {
-          acc[target] = { inbound: [], outbound: [] };
-        }
-
-        const sourceEdges = acc[source];
-        if (!sourceEdges.outbound.includes(target)) {
-          sourceEdges.outbound.push(target);
-        }
-
-        const targetEdges = acc[target];
-        if (!targetEdges.inbound.includes(source)) {
-          targetEdges.inbound.push(source);
-        }
-
-        return acc;
-      }, {}),
-    ),
-  );
-};
-
 export type ActionGraphNodes = Node.NodeArg<any>[];
 export type ActionGraphEdges = Graph.Edge[];
 export type ActionGraphProps = {
@@ -51,24 +24,15 @@ export const useMenuActions = (props: Atom.Atom<ActionGraphProps>): MenuActions 
   const registry = useContext(RegistryContext);
   const menuGraphProps = useAtomValue(props);
 
-  // Create graph once, then update it when props change.
-  const graphRef = useRef<Graph.WritableGraph | null>(null);
-  if (!graphRef.current) {
-    graphRef.current = Graph.make({
-      registry,
-      nodes: menuGraphProps.nodes as Node.Node[],
-      edges: edgesArrayToRecord(menuGraphProps.edges),
-    });
+  // Create a new graph whenever props change to preserve correct order.
+  // (Graph.addEdges appends rather than replaces, which breaks ordering on updates.)
+  const graphRef = useRef<{ graph: Graph.WritableGraph; props: ActionGraphProps } | null>(null);
+  if (!graphRef.current || graphRef.current.props !== menuGraphProps) {
+    const newGraph = Graph.make({ registry });
+    newGraph.pipe(Graph.addNodes(menuGraphProps.nodes as Node.NodeArg<any>[]), Graph.addEdges(menuGraphProps.edges));
+    graphRef.current = { graph: newGraph, props: menuGraphProps };
   }
-  const graph = graphRef.current;
-
-  // Update graph nodes synchronously when props change (before render completes).
-  // Using a ref to track the previous value to detect changes.
-  const prevPropsRef = useRef(menuGraphProps);
-  if (prevPropsRef.current !== menuGraphProps) {
-    prevPropsRef.current = menuGraphProps;
-    graph.pipe(Graph.addNodes(menuGraphProps.nodes), Graph.addEdges(menuGraphProps.edges));
-  }
+  const graph = graphRef.current.graph;
 
   const useGroupItems = useCallback(
     (sourceNode?: MenuItemGroup) => {

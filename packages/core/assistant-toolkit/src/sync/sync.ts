@@ -42,7 +42,7 @@ export const syncObjects: (
 
       const schema = Obj.getSchema(obj) ?? failedInvariant('No schema.');
       const foreignId = Obj.getKeys(obj, foreignKeyId)[0]?.id ?? failedInvariant('No foreign key.');
-      const [existing] = yield* Database.Service.runQuery(
+      const [existing] = yield* Database.runQuery(
         Query.select(Filter.foreignKeys(schema, [{ source: foreignKeyId, id: foreignId }])),
       );
       log('sync object', {
@@ -51,7 +51,7 @@ export const syncObjects: (
         existing: existing ? Obj.getDXN(existing) : undefined,
       });
       if (!existing) {
-        yield* Database.Service.add(obj);
+        yield* Database.add(obj);
         return obj;
       } else {
         copyObjectData(existing, obj);

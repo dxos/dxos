@@ -32,8 +32,8 @@ export default defineFunction({
     newMessageDXN: Schema.String,
   }),
   handler: Effect.fn(function* ({ data: { subject, to, body, replyTo } }) {
-    const replyToMessage = !replyTo ? undefined : yield* Database.Service.load(replyTo);
-    const message = yield* Database.Service.add(
+    const replyToMessage = !replyTo ? undefined : yield* Database.load(replyTo);
+    const message = yield* Database.add(
       Obj.make(Message.Message, {
         [Obj.Meta]: {
           tags: ['dxos.org/plugin-inbox/draft'],

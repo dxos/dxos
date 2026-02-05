@@ -50,7 +50,7 @@ describe('Entity extraction', () => {
     'call a function to generate a research report',
     Effect.fnUntraced(
       function* (_) {
-        const email = yield* Database.Service.add(
+        const email = yield* Database.add(
           Obj.make(Message.Message, {
             [Obj.Meta]: {
               tags: ['important'],
@@ -76,7 +76,7 @@ describe('Entity extraction', () => {
             ],
           }),
         );
-        yield* Database.Service.flush({ indexes: true });
+        yield* Database.flush({ indexes: true });
         const result = yield* FunctionInvocationService.invokeFunction(entityExtraction, {
           source: email,
         });

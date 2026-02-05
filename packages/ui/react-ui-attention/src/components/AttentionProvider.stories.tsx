@@ -35,7 +35,7 @@ const Story = () => {
 const meta = {
   title: 'ui/react-ui-attention/AttentionProvider',
   render: Story,
-  decorators: [withTheme, withAttention],
+  decorators: [withTheme, withAttention()],
 } satisfies Meta;
 
 export default meta;

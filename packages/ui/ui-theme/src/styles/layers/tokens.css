@@ -16,6 +16,7 @@
     --statusbar-size: theme(spacing.8);
     --nav-sidebar-size: 22.5rem;
     --complementary-sidebar-size: 25rem;
+    --drawer-size: 50dvh;
     /* NOTE(thure): 74px (rather than rem) is intentional in order to match the size of macOS windowing controls. */
     --l0-size: 74px;
     --l0-avatar-size: 3rem;

@@ -37,6 +37,7 @@ export interface EsbuildExecutorOptions {
   sourcemap: boolean;
   watch: boolean;
   verbose: boolean;
+  mainFields: string[];
 }
 
 export default async (options: EsbuildExecutorOptions): Promise<{ success: boolean }> => {
@@ -104,6 +105,14 @@ export default async (options: EsbuildExecutorOptions): Promise<{ success: boole
                       include_scope: true,
                     },
                     {
+                      name: 'dbg',
+                      package: '@dxos/log',
+                      param_index: 1,
+                      include_args: true,
+                      include_call_site: false,
+                      include_scope: false,
+                    },
+                    {
                       name: 'invariant',
                       package: '@dxos/invariant',
                       param_index: 2,
@@ -140,7 +149,11 @@ export default async (options: EsbuildExecutorOptions): Promise<{ success: boole
             ? [{ platform: 'node', format: 'cjs', slug: 'node-cjs', replaceRequire: false }]
             : []),
         ]
-      : [{ platform: 'browser', format: 'esm', slug: 'browser', replaceRequire: true }];
+      : platform === 'browser'
+        ? [{ platform: 'browser', format: 'esm', slug: 'browser', replaceRequire: true }]
+        : platform === 'neutral'
+          ? [{ platform: 'neutral', format: 'esm', slug: 'neutral', replaceRequire: true }]
+          : [];
   });
 
   const errors = await Promise.all(
@@ -176,6 +189,7 @@ export default async (options: EsbuildExecutorOptions): Promise<{ success: boole
         banner: {
           js: format === 'esm' && platform === 'node' ? CREATE_REQUIRE_BANNER : '',
         },
+        mainFields: options.mainFields,
         define:
           format === 'cjs'
             ? {

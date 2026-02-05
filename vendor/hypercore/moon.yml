@@ -1,5 +1,5 @@
 id: vendor-hypercore
-type: library
+layer: library
 language: typescript
 tags:
   - vendor

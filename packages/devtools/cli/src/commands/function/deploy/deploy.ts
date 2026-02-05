@@ -99,7 +99,7 @@ export const deploy = Command.make(
       functionObject = existingObject.value;
       Function.setFrom(functionObject, func);
     } else if (Option.isSome(space)) {
-      functionObject = yield* Database.Service.add(func);
+      functionObject = yield* Database.add(func);
     } else {
       functionObject = func;
     }

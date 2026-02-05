@@ -9,15 +9,14 @@ import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
 import { ArtifactId, GenericToolkit } from '@dxos/assistant';
-import { AssistantToolkit, SystemToolkit, WebSearchToolkit } from '@dxos/assistant-toolkit';
+import { AssistantToolkit, Chat, SystemToolkit, WebSearchToolkit } from '@dxos/assistant-toolkit';
 import { Blueprint } from '@dxos/blueprints';
 import { Tag, type Type } from '@dxos/echo';
 import { type FunctionDefinition } from '@dxos/functions';
 import { blueprints as AssistantBlueprints, functions as AssistantFunctions } from '@dxos/plugin-assistant/blueprints';
-import { Assistant } from '@dxos/plugin-assistant/types';
 import { ChessBlueprint } from '@dxos/plugin-chess/blueprints';
 import { Chess } from '@dxos/plugin-chess/types';
-import { CalendarBlueprint, InboxBlueprint } from '@dxos/plugin-inbox/blueprints';
+import { CalendarBlueprint, InboxBlueprint, InboxSendBlueprint } from '@dxos/plugin-inbox/blueprints';
 import { Calendar, Mailbox } from '@dxos/plugin-inbox/types';
 import { KanbanBlueprint } from '@dxos/plugin-kanban/blueprints';
 import { MapBlueprint } from '@dxos/plugin-map/blueprints';
@@ -49,6 +48,7 @@ export const blueprintRegistry = new Blueprint.Registry([
   CalendarBlueprint.make(),
   ChessBlueprint.make(),
   InboxBlueprint.make(),
+  InboxSendBlueprint.make(),
   KanbanBlueprint.make(),
   MapBlueprint.make(),
   MarkdownBlueprint.make(),
@@ -69,6 +69,7 @@ export const functions: FunctionDefinition.Any[] = [
   ...CalendarBlueprint.functions,
   ...ChessBlueprint.functions,
   ...InboxBlueprint.functions,
+  ...InboxSendBlueprint.functions,
   ...KanbanBlueprint.functions,
   ...MapBlueprint.functions,
   ...MarkdownBlueprint.functions,
@@ -108,7 +109,7 @@ export const toolkits: GenericToolkit.GenericToolkit[] = [
 export const types: Type.Entity.Any[] = [
   // NOTE: Types referenced by blueprints above need to be added here.
   DataTypes,
-  [Assistant.Chat],
+  [Chat.Chat],
   [Chess.Game],
   [Markdown.Document],
   [Mailbox.Mailbox, Calendar.Calendar],

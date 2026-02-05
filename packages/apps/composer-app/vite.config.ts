@@ -42,16 +42,15 @@ const sharedPlugins = (env: ConfigEnv): PluginOption[] => [
   env.command === 'serve' &&
     importSource({
       exclude: [
-        '**/node_modules/**',
-        '**/common/random-access-storage/**',
-        '**/common/lock-file/**',
-        '**/mesh/network-manager/**',
-        '**/mesh/teleport/**',
-        '**/sdk/config/**',
-        '**/sdk/client-services/**',
-        '**/sdk/observability/**',
+        '@dxos/random-access-storage',
+        '@dxos/lock-file',
+        '@dxos/network-manager',
+        '@dxos/teleport',
+        '@dxos/config',
+        '@dxos/client-services',
+        '@dxos/observability',
         // TODO(dmaretskyi): Decorators break in lit.
-        '**/ui/lit-*/**',
+        '@dxos/lit-*',
       ],
     }),
   wasm(),
@@ -191,6 +190,14 @@ export default defineConfig((env) => ({
                 include_args: false,
                 include_call_site: true,
                 include_scope: true,
+              },
+              {
+                name: 'dbg',
+                package: '@dxos/log',
+                param_index: 1,
+                include_args: true,
+                include_call_site: false,
+                include_scope: false,
               },
               {
                 name: 'invariant',

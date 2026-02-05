@@ -85,13 +85,13 @@ export const handler = Effect.fn(function* ({
 
   // Create objects
   for (let i = 0; i < objects; i++) {
-    yield* Database.Service.add(Obj.make(TestSchema.Expando, { type, title: faker.lorem.word() }));
-    yield* Database.Service.flush({ indexes: true });
+    yield* Database.add(Obj.make(TestSchema.Expando, { type, title: faker.lorem.word() }));
+    yield* Database.flush({ indexes: true });
     yield* pause(interval, jitter);
   }
 
   // Query objects and mutate them
-  const queriedObjects = yield* Database.Service.runQuery(Filter.type(TestSchema.Expando, { type }));
+  const queriedObjects = yield* Database.runQuery(Filter.type(TestSchema.Expando, { type }));
 
   if (queriedObjects.length > 0) {
     for (let i = 0; i < mutations; i++) {
@@ -99,16 +99,16 @@ export const handler = Effect.fn(function* ({
       Obj.change(object, (o) => {
         o.title = faker.lorem.word();
       });
-      yield* Database.Service.flush({ indexes: true });
+      yield* Database.flush({ indexes: true });
       yield* pause(interval, jitter);
 
       // Create epoch if specified
       if (epochValue && i % epochValue === 0 && i > 0) {
-        const spaceIdValue = yield* Database.Service.spaceId;
+        const spaceIdValue = yield* Database.spaceId;
         const space = yield* getSpace(spaceIdValue);
         if (space) {
           yield* Effect.tryPromise(() => space.internal.createEpoch());
-          yield* Database.Service.flush({ indexes: true });
+          yield* Database.flush({ indexes: true });
         }
       }
     }

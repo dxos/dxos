@@ -1,4 +1,4 @@
-type: application
+layer: application
 language: typescript
 tags:
   - ts-build
@@ -33,7 +33,7 @@ tasks:
     command: ./dxnext
     deps:
       - ^:compile
-    local: true
+    preset: server
   publish:
     command: bun
     args:
@@ -43,4 +43,4 @@ tasks:
     inputs:
       - scripts/publish.ts
       - dist/**/*
-    local: true
+    preset: server

@@ -8,3 +8,4 @@ export { default as LinearBlueprint } from './linear';
 export { default as PlanningBlueprint } from './planning';
 export { default as ResearchBlueprint } from './research';
 export { default as WebSearchBlueprint, WebSearchToolkit } from './websearch';
+export { default as MarkdownBlueprint } from './markdown';

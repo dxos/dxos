@@ -10,6 +10,7 @@ import React, { useMemo, useState } from 'react';
 
 import { Filter, Obj, Tag } from '@dxos/echo';
 import { Function, Script, Trigger } from '@dxos/functions';
+import { KEY_QUEUE_CURSOR } from '@dxos/functions-runtime';
 import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
 import { useTypeOptions } from '@dxos/plugin-space';
 import { type Client, useClient } from '@dxos/react-client';
@@ -93,6 +94,13 @@ export const AutomationPanel = ({ classNames, space, object, initialTrigger, onD
     await functionsServiceClient.forceRunCronTrigger(space.id, trigger.id);
   };
 
+  const handleResetCursor = async (trigger: Trigger.Trigger) => {
+    Obj.change(trigger, (t) => {
+      Obj.deleteKeys(t, KEY_QUEUE_CURSOR);
+    });
+    await space.db.flush({ indexes: true });
+  };
+
   if (trigger) {
     return (
       <ControlItem title={t('trigger editor title')}>
@@ -121,6 +129,8 @@ export const AutomationPanel = ({ classNames, space, object, initialTrigger, onD
             <div role='list' className='flex flex-col is-full'>
               {filteredTriggers?.map((trigger) => {
                 const copyAction = getCopyAction(client, trigger);
+                const cursor = Obj.getKeys(trigger, KEY_QUEUE_CURSOR).at(0)?.id;
+
                 return (
                   <List.Item<Trigger.Trigger>
                     key={trigger.id}
@@ -144,6 +154,7 @@ export const AutomationPanel = ({ classNames, space, object, initialTrigger, onD
                         onClick={() => handleSelect(trigger)}
                       >
                         {getFunctionName(functions, trigger) ?? '∅'}
+                        {cursor && <div className='text-xs text-description truncate ml-4'>Position: {cursor}</div>}
                       </List.ItemTitle>
 
                       {/* TODO: a better way to expose copy action */}
@@ -155,13 +166,24 @@ export const AutomationPanel = ({ classNames, space, object, initialTrigger, onD
                       )}
                     </div>
 
-                    <List.ItemButton
-                      autoHide={false}
-                      disabled={!trigger.enabled || trigger.spec?.kind !== 'timer'}
-                      icon='ph--play--regular'
-                      label='Force run'
-                      onClick={() => handleForceRunTrigger(trigger)}
-                    />
+                    {trigger.spec?.kind === 'timer' && (
+                      <List.ItemButton
+                        autoHide={false}
+                        disabled={!trigger.enabled || trigger.spec?.kind !== 'timer'}
+                        icon='ph--play--regular'
+                        label='Force run'
+                        onClick={() => handleForceRunTrigger(trigger)}
+                      />
+                    )}
+                    {trigger.spec?.kind === 'queue' && (
+                      <List.ItemButton
+                        autoHide={false}
+                        disabled={!cursor}
+                        icon='ph--arrow-clockwise--regular'
+                        label='Reset cursor'
+                        onClick={() => handleResetCursor(trigger)}
+                      />
+                    )}
 
                     <List.ItemDeleteButton onClick={() => handleDelete(trigger)} />
                   </List.Item>

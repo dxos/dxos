@@ -30,8 +30,8 @@ export const remove = Command.make(
         onSome: (id) => Effect.succeed(id),
       });
       const dxn = DXN.fromLocalObjectId(triggerId);
-      const trigger = yield* Database.Service.resolve(dxn, Trigger.Trigger);
-      yield* Database.Service.remove(trigger);
+      const trigger = yield* Database.resolve(dxn, Trigger.Trigger);
+      yield* Database.remove(trigger);
       if (json) {
         yield* Console.log(JSON.stringify({ id: trigger.id, removed: true }, null, 2));
       } else {

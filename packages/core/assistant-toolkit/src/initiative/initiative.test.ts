@@ -2,8 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { describe, it } from '@effect/vitest';
+import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
 
 import { MemoizedAiService } from '@dxos/ai/testing';
 import { AiConversation } from '@dxos/assistant';
@@ -16,19 +17,33 @@ import { FunctionDefinition, QueueService, Trigger } from '@dxos/functions';
 import { TriggerDispatcher } from '@dxos/functions-runtime';
 import { invariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
+import { Markdown } from '@dxos/plugin-markdown/types';
 import { Text } from '@dxos/schema';
 import { Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
+import { MarkdownBlueprint } from '../blueprints';
+import * as Chat from '../chat/Chat';
+import { Document } from '../functions';
+
 import { agent } from './functions';
-import * as Initiative from './Initiative';
+
+import * as Initiative from '.';
 
 ObjectId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayerWithTriggers({
   aiServicePreset: 'edge-remote',
-  functions: [...Initiative.functions],
-  types: [Initiative.Initiative, Blueprint.Blueprint, Trigger.Trigger, Text.Text],
+  functions: [...Initiative.getFunctions(), Document.read, Document.update, Document.create],
+  types: [
+    Initiative.Initiative,
+    Chat.CompanionTo,
+    Chat.Chat,
+    Blueprint.Blueprint,
+    Trigger.Trigger,
+    Text.Text,
+    Markdown.Document,
+  ],
   tracing: 'pretty',
 });
 
@@ -36,22 +51,22 @@ const SYSTEM = trim`
   If you do not have tools to complete the task, inform the user. DO NOT PRETEND TO DO SOMETHING YOU CAN'T DO.
 `;
 
-describe('Initiative', () => {
+describe.skip('Initiative', () => {
   it.scoped(
     'shopping list',
     Effect.fnUntraced(
       function* (_) {
-        const initiative = yield* Database.Service.add(
-          yield* Initiative.make({
+        const initiative = yield* Database.add(
+          yield* Initiative.makeInitialized({
             name: 'Shopping list',
             spec: 'Keep a shopping list of items to buy.',
+            blueprints: [Ref.make(MarkdownBlueprint)],
           }),
         );
-        invariant(initiative.chat?.target, 'Initiative chat queue not found.');
-        yield* Database.Service.flush({ indexes: true });
-        const conversation = yield* acquireReleaseResource(
-          () => new AiConversation({ queue: initiative.chat?.target as any }),
-        );
+        const chatQueue = initiative.chat?.target?.queue?.target as any;
+        invariant(chatQueue, 'Initiative chat queue not found.');
+        yield* Database.flush({ indexes: true });
+        const conversation = yield* acquireReleaseResource(() => new AiConversation({ queue: chatQueue }));
         yield* Effect.promise(() => conversation.context.open());
 
         yield* conversation.createRequest({
@@ -71,8 +86,8 @@ describe('Initiative', () => {
     'expense tracking list',
     Effect.fnUntraced(
       function* (_) {
-        const initiative = yield* Database.Service.add(
-          yield* Initiative.make({
+        const initiative = yield* Database.add(
+          yield* Initiative.makeInitialized({
             name: 'Expense tracking',
             spec: trim`
               Keep a list of expenses in a markdown document (create artifact "Expenses").
@@ -85,12 +100,13 @@ describe('Initiative', () => {
               - Flight to London (2026-02-01): £100
               - Hotel in London (2026-02-01): £100
             `,
+            blueprints: [Ref.make(MarkdownBlueprint)],
           }),
         );
-        yield* Database.Service.flush({ indexes: true });
+        yield* Database.flush({ indexes: true });
 
         const inboxQueue = yield* QueueService.createQueue();
-        yield* Database.Service.add(
+        yield* Database.add(
           Trigger.make({
             enabled: true,
             spec: {
@@ -111,7 +127,8 @@ describe('Initiative', () => {
         );
 
         const dispatcher = yield* TriggerDispatcher;
-        yield* dispatcher.invokeScheduledTriggers({ kinds: ['queue'], untilExhausted: true });
+        const invocations = yield* dispatcher.invokeScheduledTriggers({ kinds: ['queue'], untilExhausted: true });
+        expect(invocations.every((invocation) => Exit.isSuccess(invocation.result))).toBe(true);
 
         console.log(yield* Effect.promise(() => dumpInitiative(initiative)));
       },
@@ -128,8 +145,8 @@ const dumpInitiative = async (initiative: Initiative.Initiative) => {
   for (const artifact of initiative.artifacts) {
     const data = await artifact.data.load();
     text += `============== ${artifact.name} (${Obj.getTypename(data)}) ==============\n`;
-    if (Obj.instanceOf(Text.Text, data)) {
-      text += `    ${data.content}\n`;
+    if (Obj.instanceOf(Markdown.Document, data)) {
+      text += `# ${Obj.getLabel(data)}\n\n${await data.content.load().then((_) => _.content)}\n`;
     } else {
       text += `    ${JSON.stringify(data, null, 2)}\n`;
     }

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { forwardRef, useCallback, useMemo, useRef } from 'react';
+import React, { forwardRef, useCallback, useMemo, useRef, useState } from 'react';
 
 import { DxAvatar } from '@dxos/lit-ui/react';
 import { Card, Focus, Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
@@ -84,6 +84,7 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ classNames, 
     if (!labels || !Array.isArray(message.properties?.labels)) {
       return [];
     }
+
     return message.properties.labels
       .filter((labelId: string) => !GoogleMail.isSystemLabel(labelId))
       .map((labelId: string) => ({
@@ -94,27 +95,24 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ classNames, 
       .filter((item) => item.label);
   }, [labels, message.properties?.labels]);
 
+  // TODO(burdon): Reconcile with MessageCard.
   return (
     <Mosaic.Tile asChild id={message.id} data={data} location={location}>
       <Focus.Group asChild>
         <Card.Root onClick={handleClick} ref={setRef}>
-          <Card.Toolbar density='coarse'>
-            <button
-              type='button'
-              className='grid place-items-center opacity-70 hover:opacity-100 transition-opacity dx-focus-ring rounded'
-              onClick={handleAvatarClick}
-            >
-              <DxAvatar hue={hue} hueVariant='surface' variant='square' size={10} fallback={from} />
-            </button>
-            <Card.Title classNames='flex items-center gap-2'>
-              <span className='grow truncate font-medium'>{from}</span>
+          <Card.Toolbar>
+            <Card.IconBlock onClick={handleAvatarClick}>
+              <DxAvatar hue={hue} hueVariant='surface' variant='square' size={7} fallback={from} />
+            </Card.IconBlock>
+            <Card.Title classNames='flex items-center gap-3'>
+              <span className='grow truncate font-medium'>{subject}</span>
               <span className='text-xs text-description whitespace-nowrap shrink-0'>{date}</span>
             </Card.Title>
             <Card.Menu />
           </Card.Toolbar>
           <Card.Content>
             <Card.Row>
-              <Card.Heading>{subject}</Card.Heading>
+              <Card.Text>{from}</Card.Text>
             </Card.Row>
             {snippet && (
               <Card.Row>
@@ -152,7 +150,7 @@ MessageTile.displayName = 'MessageTile';
  * Card-based mailbox component using mosaic layout.
  */
 export const Mailbox = ({ messages, labels, currentMessageId, onAction }: MailboxProps) => {
-  const viewportRef = useRef<HTMLElement | null>(null);
+  const [viewport, setViewport] = useState<HTMLElement | null>(null);
 
   // Transform messages into tile data.
   const items = useMemo(
@@ -169,11 +167,13 @@ export const Mailbox = ({ messages, labels, currentMessageId, onAction }: Mailbo
   // TODO(wittjosiah): This needs Selction.Group in addition to Focus.Group.
   return (
     <Focus.Group asChild>
-      <Mosaic.Container asChild withFocus autoScroll={viewportRef.current}>
-        <Mosaic.Viewport padding viewportRef={viewportRef}>
-          <Mosaic.Stack items={items} getId={(item) => item.message.id} Tile={MessageTile} draggable={false} />
+      <Mosaic.Container asChild withFocus autoScroll={viewport}>
+        <Mosaic.Viewport padding viewportRef={setViewport}>
+          <Mosaic.Stack items={items} getId={(item) => item.message.id} draggable={false} Tile={MessageTile} />
         </Mosaic.Viewport>
       </Mosaic.Container>
     </Focus.Group>
   );
 };
+
+Mailbox.displayName = 'Mailbox';

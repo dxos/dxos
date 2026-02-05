@@ -46,9 +46,9 @@ export const Default = {
     );
 
     const parentRef = useRef(null);
-    const viewportRef = useRef<HTMLElement>(null);
+    const [viewport, setViewport] = useState<HTMLElement | null>(null);
     const virtualizer = useVirtualizer({
-      getScrollElement: () => viewportRef.current,
+      getScrollElement: () => viewport,
       estimateSize: () => 40,
       count: items.length,
       gap: 8,
@@ -63,7 +63,7 @@ export const Default = {
     return (
       <div className='flex flex-col bs-full'>
         <ScrollToolbar items={items} index={index} setIndex={setIndex} />
-        <Mosaic.Viewport axis='vertical' padding viewportRef={viewportRef} ref={parentRef}>
+        <Mosaic.Viewport axis='vertical' padding viewportRef={setViewport} ref={parentRef}>
           <div
             role='none'
             style={{

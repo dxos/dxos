@@ -297,7 +297,7 @@ export default Capability.makeModule(
               object,
               target: Database.isDatabase(target) ? undefined : target,
               hidden: input.hidden,
-            }).pipe(Effect.provide(Database.Service.layer(db)));
+            }).pipe(Effect.provide(Database.layer(db)));
 
             yield* Operation.schedule(ObservabilityOperation.SendEvent, {
               name: 'space.object.add',

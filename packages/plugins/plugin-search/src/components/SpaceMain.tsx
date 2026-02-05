@@ -14,6 +14,7 @@ import { Card, Mosaic, type StackTileComponent } from '@dxos/react-ui-mosaic';
 import { Layout } from '@dxos/react-ui-mosaic';
 import { SearchList } from '@dxos/react-ui-searchlist';
 import { Text } from '@dxos/schema';
+import { getStyles } from '@dxos/ui-theme';
 
 import { meta } from '../meta';
 
@@ -50,6 +51,8 @@ const NodeTile: StackTileComponent<Node.Node> = ({ data: node }) => {
 
   const label = toLocalizedString(node.properties.label, t);
   const icon = node.properties.icon ?? 'ph--placeholder--regular';
+  const iconHue = node.properties.iconHue;
+  const styles = iconHue ? getStyles(iconHue) : undefined;
 
   const handleClick = () => {
     if (Node.isAction(node)) {
@@ -67,7 +70,7 @@ const NodeTile: StackTileComponent<Node.Node> = ({ data: node }) => {
   return (
     <Card.Root fullWidth>
       <Card.Toolbar>
-        <Card.ToolbarIconButton variant='ghost' label={label} icon={icon} iconOnly />
+        <Card.ToolbarIconButton variant='ghost' label={label} icon={icon} iconOnly iconClassNames={styles?.icon} />
         <Card.Title onClick={handleClick}>{label}</Card.Title>
         <Card.Menu />
       </Card.Toolbar>

@@ -5,6 +5,7 @@
 import type * as PlatformError from '@effect/platform/Error';
 import * as FileSystem from '@effect/platform/FileSystem';
 import * as BunKeyValueStore from '@effect/platform-bun/BunKeyValueStore';
+import { Registry } from '@effect-atom/atom';
 import type * as ConfigError from 'effect/ConfigError';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
@@ -72,7 +73,7 @@ export const triggerRuntimeLayer = ({
   return Layer.unwrapEffect(
     Effect.gen(function* () {
       // Load functions from the database
-      const functionObjects = yield* Database.Service.runQuery(Query.type(Function.Function));
+      const functionObjects = yield* Database.runQuery(Query.type(Function.Function));
       const dbFunctions = functionObjects.map((fn) => FunctionDefinition.deserialize(fn));
 
       // Merge database functions with blueprint functions
@@ -87,6 +88,7 @@ export const triggerRuntimeLayer = ({
       // Add trigger-specific services on top
       // Note: Tool services use the merged toolkit, matching how ChatProcessor.execute() does it
       return TriggerDispatcher.layer({ timeControl: 'natural', livePollInterval }).pipe(
+        Layer.provide(Registry.layer),
         Layer.provideMerge(triggerStateStoreLayer),
         Layer.provideMerge(TracingService.layerNoop),
         Layer.provideMerge(makeToolResolverFromFunctions(functions, toolkit.toolkit)),

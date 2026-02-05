@@ -55,5 +55,5 @@ export const processTemplate = (
 
     log('processTemplate', { variables });
 
-    return process((yield* Database.Service.load(template.source)).content, variables);
+    return process((yield* Database.load(template.source)).content, variables);
   });

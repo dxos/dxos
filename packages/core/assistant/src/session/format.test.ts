@@ -26,7 +26,7 @@ const organizationListFunction = defineFunction({
   inputSchema: Schema.Struct({}),
   outputSchema: Schema.Array(Schema.String),
   handler: Effect.fnUntraced(function* () {
-    const organizations = yield* Database.Service.runQuery(Query.type(Organization.Organization));
+    const organizations = yield* Database.runQuery(Query.type(Organization.Organization));
     return organizations.map((organization) => organization.name);
   }),
 });

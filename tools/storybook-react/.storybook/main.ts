@@ -154,16 +154,15 @@ export const createConfig = ({
 
           importSource({
             exclude: [
-              '**/node_modules/**',
-              '**/common/random-access-storage/**',
-              '**/common/lock-file/**',
-              '**/mesh/network-manager/**',
-              '**/mesh/teleport/**',
-              '**/sdk/config/**',
-              '**/sdk/client-services/**',
-              '**/sdk/observability/**',
+              '@dxos/random-access-storage',
+              '@dxos/lock-file',
+              '@dxos/network-manager',
+              '@dxos/teleport',
+              '@dxos/config',
+              '@dxos/client-services',
+              '@dxos/observability',
               // TODO(dmaretskyi): Decorators break in lit.
-              '**/ui/lit-*/**',
+              '@dxos/lit-*',
             ],
           }),
 

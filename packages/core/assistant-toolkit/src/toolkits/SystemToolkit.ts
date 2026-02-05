@@ -226,7 +226,7 @@ export const layer = (): Layer.Layer<Tool.Handler<any>, never, never> =>
     }),
 
     ['query' as const]: Effect.fnUntraced(function* ({ typename }) {
-      const objects = yield* Database.Service.runQuery(Filter.typename(typename));
+      const objects = yield* Database.runQuery(Filter.typename(typename));
       return objects;
     }),
 
@@ -244,13 +244,13 @@ export const layer = (): Layer.Layer<Tool.Handler<any>, never, never> =>
 
     ['object-delete' as const]: Effect.fnUntraced(function* ({ id }) {
       const { db } = yield* Database.Service;
-      const object = yield* Database.Service.resolve(DXN.parse(id));
+      const object = yield* Database.resolve(DXN.parse(id));
       db.remove(object);
       return object;
     }),
 
     ['object-update' as const]: Effect.fnUntraced(function* ({ id, properties }) {
-      const object = yield* Database.Service.resolve(DXN.parse(id));
+      const object = yield* Database.resolve(DXN.parse(id));
       Entity.change(object as Entity.Any, (obj) => {
         for (const [key, value] of Object.entries(properties)) {
           obj[key] = value;
@@ -266,8 +266,8 @@ export const layer = (): Layer.Layer<Tool.Handler<any>, never, never> =>
       );
       invariant(Type.isRelationSchema(schema), 'Schema is not a relation schema');
 
-      const sourceObj = yield* Database.Service.resolve(DXN.parse(source));
-      const targetObj = yield* Database.Service.resolve(DXN.parse(target));
+      const sourceObj = yield* Database.resolve(DXN.parse(source));
+      const targetObj = yield* Database.resolve(DXN.parse(target));
       const relation = db.add(
         Relation.make(schema, {
           [Relation.Source]: sourceObj,
@@ -280,19 +280,19 @@ export const layer = (): Layer.Layer<Tool.Handler<any>, never, never> =>
 
     ['relation-delete' as const]: Effect.fnUntraced(function* ({ id }) {
       const { db } = yield* Database.Service;
-      const relation = yield* Database.Service.resolve(DXN.parse(id));
+      const relation = yield* Database.resolve(DXN.parse(id));
       db.remove(relation);
       return relation;
     }),
 
     ['tag-add' as const]: Effect.fnUntraced(function* ({ tagId, objectId }) {
-      const object = yield* Database.Service.resolve(DXN.parse(objectId));
+      const object = yield* Database.resolve(DXN.parse(objectId));
       Entity.change(object, (obj) => Entity.addTag(obj, DXN.parse(tagId).toString()));
       return object;
     }),
 
     ['tag-remove' as const]: Effect.fnUntraced(function* ({ tagId, objectId }) {
-      const object = yield* Database.Service.resolve(DXN.parse(objectId));
+      const object = yield* Database.resolve(DXN.parse(objectId));
       Entity.change(object, (obj) => Entity.removeTag(obj, DXN.parse(tagId).toString()));
       return object;
     }),

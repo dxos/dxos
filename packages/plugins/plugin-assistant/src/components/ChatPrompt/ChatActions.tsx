@@ -50,6 +50,14 @@ export const ChatActions = ({ classNames, children, microphone, recording, proce
           onTouchEnd={() => onEvent?.({ type: 'record-stop' })}
         />
       )}
+
+      <IconButton
+        variant='ghost'
+        icon='ph--wrench--regular'
+        iconOnly
+        label={t('debug button')}
+        onClick={() => onEvent?.({ type: 'toggle-debug' })}
+      />
     </div>
   );
 };

@@ -65,7 +65,11 @@ export const computeDiffsWithCursors = <T>(accessor: DocAccessor<T>, diffs: read
     .filter(isNonNullable);
 };
 
-export const applyDiffs = <T>(accessor: DocAccessor<T>, diffs: readonly string[]): string => {
+export const applyDiffs = <T>(
+  accessor: DocAccessor<T>,
+  diffs: readonly string[],
+  { errorOnNotFound = false }: { errorOnNotFound?: boolean } = {},
+): string => {
   for (const diff of reduceDiffs(diffs)) {
     accessor.handle.change((doc: Doc<T>) => {
       const text = DocAccessor.getValue<string>(accessor);
@@ -75,7 +79,11 @@ export const applyDiffs = <T>(accessor: DocAccessor<T>, diffs: readonly string[]
         // NOTE: This only replaces the first match.
         A.splice(doc, accessor.path as A.Prop[], idx, diff.match.length, diff.replace);
       } else {
-        log.warn('diff not found', diff);
+        if (errorOnNotFound) {
+          throw new Error(`Diff not found: ${diff.match}`);
+        } else {
+          log.warn('diff not found', diff);
+        }
       }
     });
   }

@@ -3,6 +3,7 @@
 //
 
 import * as BrowserKeyValueStore from '@effect/platform-browser/BrowserKeyValueStore';
+import { Registry } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
@@ -74,11 +75,14 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
         const toolkit = mergedToolkit.toolkit;
         const toolkitLayer = mergedToolkit.layer;
 
+        const registry = this.#capabilities.get(Common.Capability.AtomRegistry);
+
         const space = client.spaces.get(spaceId);
         invariant(space, `Invalid space: ${spaceId}`);
         yield* Effect.promise(() => space.waitUntilReady());
 
         return Layer.mergeAll(TriggerDispatcher.layer({ timeControl: 'natural' })).pipe(
+          Layer.provideMerge(Layer.succeed(Registry.AtomRegistry, registry)),
           Layer.provideMerge(
             Layer.mergeAll(
               TracingServiceLive,
@@ -99,7 +103,7 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
               ),
               Layer.provideMerge(aiServiceLayer),
               Layer.provideMerge(CredentialsService.layerFromDatabase()),
-              Layer.provideMerge(space ? Database.Service.layer(space.db) : Database.Service.notAvailable),
+              Layer.provideMerge(space ? Database.layer(space.db) : Database.notAvailable),
               Layer.provideMerge(space ? QueueService.layer(space.queues) : QueueService.notAvailable),
             ),
           ),
@@ -115,7 +119,7 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
 
 const TracingServiceLive = Layer.unwrapEffect(
   Effect.gen(function* () {
-    const objects = yield* Database.Service.runQuery(Query.type(SpaceProperties));
+    const objects = yield* Database.runQuery(Query.type(SpaceProperties));
     const [properties] = objects;
     invariant(properties);
     // TODO(burdon): Check ref target has loaded?

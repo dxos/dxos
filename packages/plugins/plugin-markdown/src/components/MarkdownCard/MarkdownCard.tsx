@@ -24,15 +24,17 @@ export const MarkdownCard = ({ subject }: MarkdownCardProps) => {
   return (
     <Card.Content>
       {snippet && (
-        <div className='max-h-[300px] overflow-hidden'>
+        <Card.Row className='max-h-[300px] overflow-hidden'>
           <MarkdownEditor.Root id={subject.id} viewMode='readonly'>
             <MarkdownEditor.Content initialValue={snippet} slots={{}} classNames='!bg-transparent' />
           </MarkdownEditor.Root>
-        </div>
+        </Card.Row>
       )}
-      <Card.Text classNames='text-xs text-description'>
-        {info.words} {t('words label', { count: info.words })}
-      </Card.Text>
+      <Card.Row>
+        <Card.Text classNames='text-xs text-description'>
+          {info.words} {t('words label', { count: info.words })}
+        </Card.Text>
+      </Card.Row>
     </Card.Content>
   );
 };
