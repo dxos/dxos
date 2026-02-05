@@ -113,15 +113,14 @@ export default Capability.makeModule(
             const currentChatDxn = DXN.tryParse(currentChatState);
             const currentChatRef = currentChatDxn ? db?.makeRef(currentChatDxn) : undefined;
             const currentChat = currentChatRef ? get(AtomObj.make(currentChatRef as Ref.Ref<Obj.Unknown>)) : undefined;
-            if (!Obj.isObject(currentChat)) {
-              return [];
-            }
 
+            // Return the resolved chat object, or fall back to 'assistant-chat' string if it can't be resolved.
+            // This ensures the companion remains visible even during transient states.
             return [
               {
                 id: [Obj.getDXN(object).toString(), 'assistant-chat'].join(ATTENDABLE_PATH_SEPARATOR),
                 type: PLANK_COMPANION_TYPE,
-                data: currentChat,
+                data: Obj.isObject(currentChat) ? currentChat : 'assistant-chat',
                 properties: {
                   label: ['assistant chat label', { ns: meta.id }],
                   icon: 'ph--sparkle--regular',
