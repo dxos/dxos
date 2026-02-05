@@ -183,14 +183,14 @@ const InitiativeForm = ({ initiative }: { initiative: Initiative.Initiative }) =
       Effect.gen(function* () {
         const queue = yield* QueueService.createQueue();
         const contextBinder = new AiContextBinder({ queue });
-        const initiativeBlueprint = yield* Database.Service.add(Obj.clone(Initiative.makeBlueprint(), { deep: true }));
+        const initiativeBlueprint = yield* Database.add(Obj.clone(Initiative.makeBlueprint(), { deep: true }));
         yield* Effect.promise(() =>
           contextBinder.bind({
             blueprints: [Ref.make(initiativeBlueprint)],
             objects: [Ref.make(initiative)],
           }),
         );
-        const chat = yield* Database.Service.add(
+        const chat = yield* Database.add(
           Chat.make({
             queue: Ref.fromDXN(queue.dxn),
           }),
@@ -198,7 +198,7 @@ const InitiativeForm = ({ initiative }: { initiative: Initiative.Initiative }) =
         Obj.change(initiative, (initiative) => {
           initiative.chat = Ref.make(chat);
         });
-        yield* Database.Service.add(
+        yield* Database.add(
           Relation.make(Chat.CompanionTo, {
             [Relation.Source]: chat,
             [Relation.Target]: initiative,

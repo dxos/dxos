@@ -94,7 +94,7 @@ export const ChatCompanion = forwardRef<HTMLDivElement, ChatCompanionProps>(
       if (!initialSetupDoneRef.current) {
         // Query for existing companion chats linked to this object.
         const existingChats = await space.db
-          .query(Query.select(Filter.id(companionTo.id)).targetOf(Assistant.CompanionTo).source())
+          .query(Query.select(Filter.id(companionTo.id)).targetOf(Chat.CompanionTo).source())
           .run();
 
         initialSetupDoneRef.current = true;
