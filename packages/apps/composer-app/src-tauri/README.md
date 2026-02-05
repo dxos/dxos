@@ -26,5 +26,5 @@ moon run composer-app:tauri-ios
 With the iOS Simulator:
 
 ```bash
-moon run composer-app:tauri-ios -- "iPhone 17"
+moon run composer-app:tauri-ios -- "iPhone 17 Pro"
 ```

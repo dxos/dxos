@@ -54,12 +54,10 @@ export const Main = () => {
 
   return (
     <NaturalMain.Content
-      bounce
       classNames={mx(
-        'dx-mobile', // TODO(burdon): Replace with updated density system (for side padding).
-        'grid bs-full pbs-[max(0.25rem,env(safe-area-inset-top))] pbe-[max(0.25rem,env(safe-area-inset-bottom))] overflow-hidden',
+        'dx-main-mobile-layout',
+        showNavBar ? 'grid grid-rows-[min-content_1fr_min-content]' : 'grid grid-rows-[min-content_1fr]',
         'bg-toolbarSurface',
-        showNavBar ? 'grid-rows-[min-content_1fr_min-content]' : 'grid-rows-[min-content_1fr]',
       )}
       {...attentionAttrs}
     >
