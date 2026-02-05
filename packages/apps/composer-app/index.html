@@ -62,10 +62,13 @@
         }
       }
       /* Ensure body and root cover full viewport including safe areas */
-      body, #root {
+      body {
         min-height: 100dvh;
         min-height: -webkit-fill-available;
         overflow: hidden;
+      }
+      #root {
+        display: contents;
       }
     </style>
 

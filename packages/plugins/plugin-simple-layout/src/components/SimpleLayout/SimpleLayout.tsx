@@ -26,7 +26,7 @@ export const SimpleLayout = () => {
   );
 
   return (
-    <Mosaic.Root classNames='dx-main-mobile-layout border-[8xp] border-red-500'>
+    <Mosaic.Root classNames='dx-main-mobile-layout border-[8px] border-red-500'>
       <PopoverRoot>
         <NaturalMain.Root drawerState={state.drawerState ?? 'closed'} onDrawerStateChange={handleDrawerStateChange}>
           <Main />

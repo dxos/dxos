@@ -55,8 +55,8 @@ export const Main = () => {
   return (
     <NaturalMain.Content
       classNames={mx(
-        showNavBar ? 'grid grid-rows-[min-content_1fr_min-content]' : 'grid grid-rows-[min-content_1fr]',
-        'bg-toolbarSurface',
+        'grid bs-full overflow-hidden bg-toolbarSurface',
+        showNavBar ? 'grid-rows-[min-content_1fr_min-content]' : 'grid-rows-[min-content_1fr]',
       )}
       {...attentionAttrs}
     >

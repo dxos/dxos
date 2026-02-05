@@ -1,4 +1,39 @@
 @layer utilities {
+  /**
+   * Main Web app.
+   */
+  .dx-main-bounce-layout {
+    @apply fixed overflow-auto overscroll-auto;
+    @apply duration-200 ease-in-out-symmetric;
+    transition-property: inset-block-end, padding-inline-start, padding-inline-end, scroll-padding-start, scroll-padding-end;
+    inset-inline-start: 0;
+    inset-inline-end: 0;
+    inset-block-start: 0;
+    inset-block-end: 0;
+    z-index: 0;
+
+    &[data-drawer-state='expanded'] {
+      inset-block-end: var(--drawer-size);
+    }
+
+    &[data-drawer-state='full'] {
+      inset-block-end: var(--visual-viewport-height, 100dvh);
+      pointer-events: none;
+    }
+  }
+
+  /**
+   * Main Mobile app.
+   */
+  .dx-main-mobile-layout {
+    @apply absolute inset-0 overflow-hidden flex flex-col;
+    padding-block-start: max(0.25rem, env(safe-area-inset-top));
+    padding-block-end: max(0.25rem, env(safe-area-inset-bottom));
+  }
+
+  /**
+   * Main content padding.
+   */
   .dx-main-content-padding {
     @apply pis-0 scroll-ps-0 pie-0 scroll-pe-0;
 
@@ -32,11 +67,15 @@
     }
   }
 
+  /** TODO(burdon): Reconcile with dx-main-bounce-layout */
   .dx-main-content-padding-transitions {
-    transition-property: padding-inline-start, padding-inline-end, scroll-padding-start, scroll-padding-end;
     @apply duration-200 ease-in-out-symmetric;
+    transition-property: padding-inline-start, padding-inline-end, scroll-padding-start, scroll-padding-end;
   }
 
+  /**
+   *
+   */
   .dx-main-intrinsic-size {
     @apply is-[calc(100dvw)-2*var(--main-spacing)] transition-[inline-size] ease-in-out-symmetric duration-200;
 
@@ -73,38 +112,6 @@
         );
       }
     }
-  }
-
-  /**
-   * Main Web app.
-   */
-  .dx-main-bounce-layout {
-    @apply fixed overflow-auto overscroll-auto;
-    @apply duration-200 ease-in-out-symmetric;
-    transition-property: inset-block-end, padding-inline-start, padding-inline-end, scroll-padding-start, scroll-padding-end;
-    inset-inline-start: 0;
-    inset-inline-end: 0;
-    inset-block-start: 0;
-    inset-block-end: 0;
-    z-index: 0;
-
-    &[data-drawer-state='expanded'] {
-      inset-block-end: var(--drawer-size);
-    }
-
-    &[data-drawer-state='full'] {
-      inset-block-end: var(--visual-viewport-height, 100dvh);
-      pointer-events: none;
-    }
-  }
-
-  /**
-   * Main Mobile app.
-   */
-  .dx-main-mobile-layout {
-    @apply absolute inset-0 overflow-hidden flex flex-col;
-    padding-block-start: max(0.25rem, env(safe-area-inset-top));
-    padding-block-end: max(0.25rem, env(safe-area-inset-bottom));
   }
 }
 
