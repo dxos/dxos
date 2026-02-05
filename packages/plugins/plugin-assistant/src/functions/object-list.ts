@@ -35,10 +35,10 @@ export default defineFunction({
   }),
   handler: Effect.fn(function* ({ data: { typename } }) {
     // TODO(wittjosiah): Typename query is not working for dynamic schemas.
-    const [schema] = yield* Database.Service.runSchemaQuery({ typename });
+    const [schema] = yield* Database.runSchemaQuery({ typename });
     const filter = schema ? Filter.type(schema) : Filter.typename(typename);
 
-    const objects = yield* Database.Service.runQuery(Query.select(filter));
+    const objects = yield* Database.runQuery(Query.select(filter));
     const results = objects.map((object) => ({
       dxn: Obj.getDXN(object).toString(),
       label: Obj.getLabel(object),

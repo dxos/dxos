@@ -42,6 +42,7 @@
     "@radix-ui/react-context": "catalog:"
   },
   "devDependencies": {
+    "@dxos/app-graph": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-preview": "workspace:*",
     "@dxos/plugin-search": "workspace:*",

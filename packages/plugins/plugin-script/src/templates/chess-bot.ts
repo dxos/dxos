@@ -34,7 +34,7 @@ export default defineFunction({
   services: [Database.Service],
 
   handler: Effect.fnUntraced(function* ({ data: { game, player = 'black' } }) {
-    const loadedGame = yield* Database.Service.load(game);
+    const loadedGame = yield* Database.load(game);
     const chess = new ChessJS();
     chess.loadPgn(loadedGame.pgn ?? '');
     if (chess.turn() !== (player === 'white' ? 'w' : 'b')) {
@@ -52,7 +52,7 @@ export default defineFunction({
     Obj.change(loadedGame, (g) => {
       g.pgn = newPgn;
     });
-    yield* Database.Service.flush();
+    yield* Database.flush();
     return { state: chess.ascii() };
   }),
 });

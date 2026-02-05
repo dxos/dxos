@@ -103,7 +103,7 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
               ),
               Layer.provideMerge(aiServiceLayer),
               Layer.provideMerge(CredentialsService.layerFromDatabase()),
-              Layer.provideMerge(space ? Database.Service.layer(space.db) : Database.Service.notAvailable),
+              Layer.provideMerge(space ? Database.layer(space.db) : Database.notAvailable),
               Layer.provideMerge(space ? QueueService.layer(space.queues) : QueueService.notAvailable),
             ),
           ),
@@ -119,7 +119,7 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
 
 const TracingServiceLive = Layer.unwrapEffect(
   Effect.gen(function* () {
-    const objects = yield* Database.Service.runQuery(Query.type(SpaceProperties));
+    const objects = yield* Database.runQuery(Query.type(SpaceProperties));
     const [properties] = objects;
     invariant(properties);
     // TODO(burdon): Check ref target has loaded?

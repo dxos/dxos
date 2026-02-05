@@ -46,7 +46,7 @@ export default defineFunction({
         Effect.gen(function* () {
           return {
             name: artifact.name,
-            type: Obj.getTypename(yield* Database.Service.load(artifact.data)),
+            type: Obj.getTypename(yield* Database.load(artifact.data)),
             dxn: artifact.data.dxn.toString(),
           };
         }),

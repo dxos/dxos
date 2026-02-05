@@ -103,10 +103,10 @@ describe('Initiative', () => {
             blueprints: [Ref.make(MarkdownBlueprint)],
           }),
         );
-        yield* Database.Service.flush({ indexes: true });
+        yield* Database.flush({ indexes: true });
 
         const inboxQueue = yield* QueueService.createQueue();
-        yield* Database.Service.add(
+        yield* Database.add(
           Trigger.make({
             enabled: true,
             spec: {

@@ -117,7 +117,7 @@ const getLatestUpdateTimestamp: (
   teamId: string,
   dataType: Type.Obj.Any,
 ) => Effect.Effect<string, never, Database.Service> = Effect.fnUntraced(function* (teamId, dataType) {
-  const existingTasks = yield* Database.Service.runQuery(
+  const existingTasks = yield* Database.runQuery(
     Query.type(dataType).select(Filter.foreignKeys(dataType, [{ source: LINEAR_TEAM_ID_KEY, id: teamId }])),
   );
   return Function.pipe(

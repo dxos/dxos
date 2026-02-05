@@ -184,7 +184,7 @@ const createBunServerProvider = (): OAuthServerProvider => ({
 export const performOAuthFlow = Effect.fn(function* (preset: OAuthPreset, accessToken: AccessToken.AccessToken) {
   const client = yield* ClientService;
   const edgeClient = createEdgeClient(client);
-  const spaceId = yield* Database.Service.spaceId;
+  const spaceId = yield* Database.spaceId;
 
   yield* performOAuthFlowShared(preset, accessToken, edgeClient, spaceId, createBunServerProvider(), openBrowser);
 });

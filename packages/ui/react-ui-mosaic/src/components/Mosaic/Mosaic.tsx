@@ -338,7 +338,7 @@ const Root = forwardRef<HTMLDivElement, RootProps>(({ classNames, children, asCh
       dragging={dragging}
     >
       <Root
-        className={mx('group overflow-hidden', classNames)}
+        className={mx('group', classNames)}
         {...{
           [`data-${ROOT_DEBUG_ATTR}`]: debug,
         }}

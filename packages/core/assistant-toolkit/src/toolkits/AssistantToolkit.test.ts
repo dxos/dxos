@@ -71,7 +71,7 @@ describe('AssistantToolkit', () => {
           }),
         );
 
-        const organization = yield* Database.Service.add(
+        const organization = yield* Database.add(
           Obj.make(Organization.Organization, {
             name: 'Cyberdyne Systems',
             website: 'https://cyberdyne.com',

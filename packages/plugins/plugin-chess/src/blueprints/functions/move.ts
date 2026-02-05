@@ -31,7 +31,7 @@ export default defineFunction({
     }),
   }),
   handler: Effect.fn(function* ({ data: { id, move } }) {
-    const object = yield* Database.Service.resolve(ArtifactId.toDXN(id), Chess.Game);
+    const object = yield* Database.resolve(ArtifactId.toDXN(id), Chess.Game);
     const chess = new ChessJS();
     if (object.pgn) {
       chess.loadPgn(object.pgn);

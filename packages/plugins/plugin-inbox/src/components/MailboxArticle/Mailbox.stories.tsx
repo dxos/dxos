@@ -61,7 +61,7 @@ const meta = {
   title: 'plugins/plugin-inbox/Mailbox',
   component: MailboxComponent as any,
   render: DefaultStory,
-  decorators: [withTheme, withAttention, withMosaic()],
+  decorators: [withTheme, withAttention(), withMosaic()],
   parameters: {
     layout: 'fullscreen',
   },

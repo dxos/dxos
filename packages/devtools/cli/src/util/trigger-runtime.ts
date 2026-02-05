@@ -73,7 +73,7 @@ export const triggerRuntimeLayer = ({
   return Layer.unwrapEffect(
     Effect.gen(function* () {
       // Load functions from the database
-      const functionObjects = yield* Database.Service.runQuery(Query.type(Function.Function));
+      const functionObjects = yield* Database.runQuery(Query.type(Function.Function));
       const dbFunctions = functionObjects.map((fn) => FunctionDefinition.deserialize(fn));
 
       // Merge database functions with blueprint functions

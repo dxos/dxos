@@ -200,13 +200,16 @@
     }
 
     &[data-state='expanded'] {
-      block-size: var(--drawer-size);
-      inset-block-end: max(0px, env(safe-area-inset-bottom));
+      block-size: calc(var(--drawer-size) + env(safe-area-inset-bottom));
+      inset-block-end: 0;
+      padding-block-end: env(safe-area-inset-bottom);
     }
 
     &[data-state='full'] {
-      block-size: var(--visual-viewport-height, 100dvh);
-      inset-block-end: max(0px, env(safe-area-inset-bottom));
+      inset-block-start: 0;
+      inset-block-end: 0;
+      padding-block-start: max(0.5rem, env(safe-area-inset-top));
+      padding-block-end: env(safe-area-inset-bottom);
     }
   }
 

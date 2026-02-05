@@ -60,22 +60,21 @@ const WorkspaceTile: StackTileComponent<Node.Node> = ({ data }) => {
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
   const { selectedValue, registerItem, unregisterItem } = useSearchListItem();
-  const ref = useRef<HTMLDivElement>(null);
+  const name = toLocalizedString(data.properties.label, t);
+  const isSelected = selectedValue === data.id;
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  useLoadDescendents(data.id);
 
   const handleSelect = useCallback(
     () => invokePromise(Common.LayoutOperation.SwitchWorkspace, { subject: data.id }),
     [invokePromise, data.id],
   );
 
-  useLoadDescendents(data.id);
-
-  const name = toLocalizedString(data.properties.label, t);
-  const isSelected = selectedValue === data.id;
-
   // Register this workspace with the search context.
   useEffect(() => {
-    if (ref.current) {
-      registerItem(data.id, ref.current, handleSelect);
+    if (cardRef.current) {
+      registerItem(data.id, cardRef.current, handleSelect);
     }
 
     return () => unregisterItem(data.id);
@@ -83,20 +82,20 @@ const WorkspaceTile: StackTileComponent<Node.Node> = ({ data }) => {
 
   // Scroll into view when selected.
   useEffect(() => {
-    if (isSelected && ref.current) {
-      ref.current.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    if (isSelected && cardRef.current) {
+      cardRef.current.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
     }
   }, [isSelected]);
 
   return (
     <Card.Root
-      ref={ref}
       role='button'
       fullWidth
       tabIndex={-1} // TODO(burdon): Use Mosaic.Focus.
       data-selected={isSelected}
       classNames={mx('dx-focus-ring', isSelected && 'bg-hoverOverlay')}
       onClick={handleSelect}
+      ref={cardRef}
     >
       <Card.Toolbar density='coarse'>
         <Avatar.Root>

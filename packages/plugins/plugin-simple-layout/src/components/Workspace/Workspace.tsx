@@ -20,9 +20,10 @@ export type WorkspaceProps = {
 };
 
 /**
- *
+ * Displays the contents of a workspace disposition graph node as a searchable list.
+ * Shows direct children of the workspace with icons and labels,
+ * allowing users to filter via search and navigate by selecting an item.
  */
-// TODO(burdon): Rename or motivate name in comment.
 export const Workspace = ({ id }: WorkspaceProps) => {
   const { t } = useTranslation(meta.id);
   const { graph } = useAppGraph();

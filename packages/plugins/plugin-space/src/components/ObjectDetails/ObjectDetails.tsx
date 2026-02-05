@@ -18,7 +18,7 @@ export const ObjectDetails = forwardRef<HTMLDivElement, ObjectDetailsProps>(
     const data = useMemo(() => ({ subject: object }), [object]);
 
     return (
-      <Layout.Main role={role} ref={forwardedRef}>
+      <Layout.Main toolbar role={role} ref={forwardedRef}>
         <Toolbar.Root />
         <BaseObjectSettings object={object}>
           <Surface role='base-object-settings' data={data} />

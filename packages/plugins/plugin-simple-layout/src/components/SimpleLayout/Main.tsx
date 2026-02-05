@@ -7,9 +7,10 @@ import React, { useMemo } from 'react';
 import { Surface, useAppGraph } from '@dxos/app-framework/react';
 import { useNode } from '@dxos/plugin-graph';
 import { Main as NaturalMain, useSidebars } from '@dxos/react-ui';
+import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { mx } from '@dxos/ui-theme';
 
-import { useSimpleLayoutState } from '../../hooks';
+import { useBannerProps, useNavbarActions, useSimpleLayoutState } from '../../hooks';
 import { ContentError } from '../ContentError';
 import { ContentLoading } from '../ContentLoading';
 import { useLoadDescendents } from '../hooks';
@@ -24,8 +25,9 @@ const MAIN_NAME = 'SimpleLayout.Main';
  */
 export const Main = () => {
   const { state } = useSimpleLayoutState();
-  const { graph } = useAppGraph();
   const id = state.active ?? state.workspace;
+  const attentionAttrs = useAttentionAttributes(id);
+  const { graph } = useAppGraph();
   const node = useNode(graph, id);
 
   // Ensures that children are loaded so that they are available to navigate to.
@@ -47,24 +49,25 @@ export const Main = () => {
   const { drawerState } = useSidebars(MAIN_NAME);
   const showNavBar = !state.isPopover && drawerState === 'closed';
 
+  const bannerProps = useBannerProps(graph);
+  const { actions, onAction } = useNavbarActions();
+
   return (
     <NaturalMain.Content
       bounce
-      classNames={mx('bs-full', 'pbs-[env(safe-area-inset-top)] pbe-[env(safe-area-inset-bottom)]')}
+      classNames={mx(
+        'dx-mobile', // TODO(burdon): Replace with updated density system (for side padding).
+        'grid bs-full pbs-[max(0.25rem,env(safe-area-inset-top))] pbe-[max(0.25rem,env(safe-area-inset-bottom))] overflow-hidden',
+        'bg-toolbarSurface',
+        showNavBar ? 'grid-rows-[min-content_1fr_min-content]' : 'grid-rows-[min-content_1fr]',
+      )}
+      {...attentionAttrs}
     >
-      <div
-        role='none'
-        className={mx(
-          'grid bs-full overflow-hidden',
-          showNavBar ? 'grid-rows-[min-content_1fr_min-content]' : 'grid-rows-[min-content_1fr]',
-        )}
-      >
-        <Banner classNames='border-be border-separator' node={node} />
-        <article className='bs-full overflow-hidden'>
-          <Surface key={id} role='article' data={data} limit={1} fallback={ContentError} placeholder={placeholder} />
-        </article>
-        {showNavBar && <NavBar classNames='border-bs border-separator' activeId={id} />}
-      </div>
+      <Banner {...bannerProps} />
+      <article className='bs-full overflow-hidden bg-baseSurface'>
+        <Surface key={id} role='article' data={data} limit={1} fallback={ContentError} placeholder={placeholder} />
+      </article>
+      {showNavBar && <NavBar classNames='border-bs border-separator' actions={actions} onAction={onAction} />}
     </NaturalMain.Content>
   );
 };
