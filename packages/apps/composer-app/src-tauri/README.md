@@ -5,17 +5,26 @@
 Mobile layout:
 
 ```bash
-DX_MOBILE=1 moon composer-app:serve
+DX_MOBILE=1 moon run composer-app:serve
 ```
 
 Desktop app:
 
 ```bash
-moon composer-app:tauri-dev
+moon run composer-app:tauri-dev
 ```
 
-iOS app:
+## iOS
+
+- XCode > Settings > Components (Get latest iOS)
+- https://inspect.dev
 
 ```bash
-moon composer-app:tauri-ios
+moon run composer-app:tauri-ios
+```
+
+With the iOS Simulator:
+
+```bash
+moon run composer-app:tauri-ios -- "iPhone 17"
 ```

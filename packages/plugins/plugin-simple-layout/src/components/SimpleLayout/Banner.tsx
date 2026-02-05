@@ -58,11 +58,7 @@ export const Banner = ({
   const AnchorRoot = popoverAnchorId ? Popover.Anchor : Fragment;
 
   return (
-    <Toolbar.Root
-      role='banner'
-      density='coarse'
-      classNames={mx('grid grid-cols-[var(--rail-size)_1fr_var(--rail-size)]', classNames)}
-    >
+    <Toolbar.Root role='banner' classNames={mx('grid grid-cols-[var(--rail-size)_1fr_var(--rail-size)]', classNames)}>
       {showBackButton ? (
         <IconButton variant='ghost' icon='ph--caret-left--regular' iconOnly label={t('back label')} onClick={onBack} />
       ) : (
