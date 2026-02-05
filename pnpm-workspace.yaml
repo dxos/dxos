@@ -556,7 +556,7 @@ catalog:
   plotly.js-dist-min: ^2.25.1
   postcss: ^8.4.41
   postcss-import: ^16.1.0
-  preact: ^10.26.9
+  preact: ^10.26.10
   prettier: ^3.6.2
   prettier-plugin-packagejson: ^2.5.19
   protobufjs: ^7.2.5

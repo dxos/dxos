@@ -1552,8 +1552,8 @@ catalogs:
       specifier: ^16.1.0
       version: 16.1.0
     preact:
-      specifier: ^10.26.9
-      version: 10.26.9
+      specifier: ^10.26.10
+      version: 10.28.3
     prettier:
       specifier: ^3.6.2
       version: 3.6.2
@@ -9870,7 +9870,7 @@ importers:
         version: 3.19.11
       preact:
         specifier: 'catalog:'
-        version: 10.26.9
+        version: 10.28.3
       react:
         specifier: ~19.2.3
         version: 19.2.3
@@ -34436,6 +34436,9 @@ packages:
   preact@10.26.9:
     resolution: {integrity: sha512-SSjF9vcnF27mJK1XyFMNJzFd5u3pQiATFqoaDy03XuN00u4ziveVVEGt5RKJrDR8MHE/wJo9Nnad56RLzS2RMA==}
 
+  preact@10.28.3:
+    resolution: {integrity: sha512-tCmoRkPQLpBeWzpmbhryairGnhW9tKV6c6gr/w+RhoRoKEJwsjzipwp//1oCpGPOchvSLaAPlpcJi9MwMmoPyA==}
+
   prebuild-install@7.1.3:
     resolution: {integrity: sha512-8Mf2cbV7x1cXPUILADGI3wuhfqWvtiLA1iclTDbFRZkgRQS0NqsPZphna9V+HyTEadheuPmjaJMsbzKQFOzLug==}
     engines: {node: '>=10'}
@@ -57019,6 +57022,8 @@ snapshots:
   potpack@1.0.2: {}
 
   preact@10.26.9: {}
+
+  preact@10.28.3: {}
 
   prebuild-install@7.1.3:
     dependencies:
