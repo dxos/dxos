@@ -205,10 +205,11 @@ jobs:
         if: ${{ steps.extract_branch.outputs.branch == 'main' }}
         run: moon run :bundle
 
-      # Clear Vite dep cache so Storybook dev server does a fresh optimizeDeps run.
+      # Clear Storybook Vite cache in every package so Storybook dev server does a fresh optimizeDeps run.
       # Avoids 504 Outdated Optimize Dep when graph differs from bundle step.
+      # Storybook puts cache under node_modules/.cache/storybook/<hash>/sb-vite per package.
       - name: Clear Storybook Vite cache
-        run: rm -rf node_modules/.vite-storybook
+        run: find . -type d -path '*/node_modules/.cache/storybook' -prune -print0 | xargs -0 rm -rf
 
       - name: Test Affected
         if: ${{ steps.extract_branch.outputs.branch != 'main' }}

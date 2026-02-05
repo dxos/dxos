@@ -141,8 +141,6 @@ export const createConfig = ({
         optimizeDeps: {
           exclude: ['@dxos/wa-sqlite'],
         },
-        // Isolate Storybook's Vite cache so it isn't shared with bundle or other Vite runs (reduces 504 Outdated Optimize Dep risk in CI).
-        cacheDir: join(rootDir, 'node_modules/.vite-storybook'),
         worker: {
           format: 'es',
           plugins: () => [wasm()],
