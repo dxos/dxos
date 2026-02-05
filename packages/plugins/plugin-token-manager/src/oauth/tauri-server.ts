@@ -9,13 +9,13 @@ import { type OAuthFlowResult } from '@dxos/protocols';
 import { OAUTH_TIMEOUT_MS, type OAuthInitiator, type OAuthServer, type OAuthServerProvider } from './oauth-flow';
 
 /**
- * Opens a URL in the system's default browser using Tauri shell.
+ * Opens a URL in the system's default browser using @tauri-apps/plugin-opener.
  */
 export const openTauriBrowser = (url: string): Effect.Effect<void, Error> =>
   Effect.tryPromise({
     try: async () => {
-      const { open } = await import('@tauri-apps/plugin-shell');
-      return open(url);
+      const { openUrl } = await import('@tauri-apps/plugin-opener');
+      await openUrl(url);
     },
     catch: (error) => new Error(`Failed to open browser: ${error}`),
   });

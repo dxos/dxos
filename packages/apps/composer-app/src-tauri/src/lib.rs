@@ -31,6 +31,7 @@ pub fn run() {
     let builder = {
         let builder = builder
             .plugin(tauri_plugin_os::init())
+            .plugin(tauri_plugin_opener::init())
             .plugin(tauri_plugin_shell::init())
             .plugin(tauri_plugin_deep_link::init());
 
