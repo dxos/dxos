@@ -11,3 +11,6 @@ tasks:
       - '@group(sources)'
     options:
       timeout: 60
+
+inheritedBy:
+  tags: typecheck

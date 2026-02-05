@@ -3,6 +3,7 @@
 //
 
 import * as BrowserKeyValueStore from '@effect/platform-browser/BrowserKeyValueStore';
+import { Registry } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
@@ -74,11 +75,14 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
         const toolkit = mergedToolkit.toolkit;
         const toolkitLayer = mergedToolkit.layer;
 
+        const registry = this.#capabilities.get(Common.Capability.AtomRegistry);
+
         const space = client.spaces.get(spaceId);
         invariant(space, `Invalid space: ${spaceId}`);
         yield* Effect.promise(() => space.waitUntilReady());
 
         return Layer.mergeAll(TriggerDispatcher.layer({ timeControl: 'natural' })).pipe(
+          Layer.provideMerge(Layer.succeed(Registry.AtomRegistry, registry)),
           Layer.provideMerge(
             Layer.mergeAll(
               TracingServiceLive,

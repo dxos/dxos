@@ -12,6 +12,7 @@ import { Blueprint } from '@dxos/blueprints';
 import { Resource } from '@dxos/context';
 import { DXN, Obj, Query, type Ref, Type } from '@dxos/echo';
 import { type Queue } from '@dxos/echo-db';
+import { assertArgument } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ComplexSet, isTruthy } from '@dxos/util';
 
@@ -74,6 +75,7 @@ export class AiContextBinder extends Resource {
 
   constructor(options: AiContextBinderOptions) {
     super();
+    assertArgument(options.queue, 'options.queue', 'Queue is required');
     this._queue = options.queue;
     this._registry = options.registry ?? Registry.make();
   }
@@ -295,6 +297,7 @@ export class AiContextBinder extends Resource {
   }
 }
 
+// TODO(dmaretskyi): Change to Conversation.Service. Add ability to run prompts.
 export class AiContextService extends Context.Tag('@dxos/assistant/AiContextService')<
   AiContextService,
   {

@@ -11,3 +11,6 @@ tasks:
       - .storybook/*
       - static/*
     preset: server
+
+inheritedBy:
+  tags: storybook

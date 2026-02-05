@@ -165,8 +165,10 @@ const useSidebars = (consumerName: string) => {
   const {
     navigationSidebarState,
     setNavigationSidebarState,
+
     complementarySidebarState,
     setComplementarySidebarState,
+
     drawerState,
     setDrawerState,
   } = useMainContext(consumerName);

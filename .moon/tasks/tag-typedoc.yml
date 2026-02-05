@@ -11,3 +11,6 @@ tasks:
       - '@group(production)'
     outputs:
       - typedoc
+
+inheritedBy:
+  tags: typedoc

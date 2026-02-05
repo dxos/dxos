@@ -90,6 +90,7 @@
     "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@effect-atom/atom": "catalog:",
     "@effect/platform": "catalog:",
     "effect": "catalog:",
     "esbuild": "catalog:",

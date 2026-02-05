@@ -7,6 +7,7 @@ import type * as Runtime from 'effect/Runtime';
 import { useContext, useMemo, useState } from 'react';
 
 import { AiConversation } from '@dxos/assistant';
+import { type Chat } from '@dxos/assistant-toolkit';
 import { type Blueprint } from '@dxos/blueprints';
 import { log } from '@dxos/log';
 import { type Queue, type Space } from '@dxos/react-client/echo';
@@ -17,7 +18,7 @@ import { type Assistant } from '../types';
 
 export type UseChatProcessorProps = {
   space?: Space;
-  chat?: Assistant.Chat;
+  chat?: Chat.Chat;
   preset?: AiServicePreset;
   services?: () => Promise<Runtime.Runtime<AiChatServices>>;
   blueprintRegistry?: Blueprint.Registry;

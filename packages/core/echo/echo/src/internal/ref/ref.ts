@@ -5,6 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import * as ParseResult from 'effect/ParseResult';
+import * as Pipeable from 'effect/Pipeable';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 import type * as Types from 'effect/Types';
@@ -130,7 +131,7 @@ export const Ref: RefFn = <S extends Schema.Schema.Any>(schema: S): RefSchema<Sc
  * Represents materialized reference to a target.
  * This is the data type for the fields marked as ref.
  */
-export interface Ref<T> {
+export interface Ref<T> extends Pipeable.Pipeable {
   /**
    * Target object DXN.
    */
@@ -473,6 +474,11 @@ export class RefImpl<T> implements Ref<T> {
    */
   _getSavedTarget(): T | undefined {
     return this.#target;
+  }
+
+  pipe() {
+    // eslint-disable-next-line prefer-rest-params
+    return Pipeable.pipeArguments(this, arguments);
   }
 }
 

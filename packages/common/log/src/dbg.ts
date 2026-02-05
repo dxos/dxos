@@ -1,4 +1,8 @@
-import { CallMetadata } from './meta';
+//
+// Copyright 2026 DXOS.org
+//
+
+import { type CallMetadata } from './meta';
 
 /**
  * Debug-log value to console.

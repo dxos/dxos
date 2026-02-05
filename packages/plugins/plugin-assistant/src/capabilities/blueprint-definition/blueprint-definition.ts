@@ -10,6 +10,7 @@ import {
   Discord,
   DiscordBlueprint,
   EntityExtraction,
+  Initiative,
   Linear,
   LinearBlueprint,
   Research,
@@ -24,6 +25,8 @@ export const createBlueprint: () => Blueprint.Blueprint = AssistantBlueprint.mak
 export { AssistantBlueprint };
 
 export type BlueprintCapabilities = [
+  Capability.Capability<typeof Common.Capability.Functions>,
+  Capability.Capability<typeof Common.Capability.BlueprintDefinition>,
   Capability.Capability<typeof Common.Capability.Functions>,
   Capability.Capability<typeof Common.Capability.BlueprintDefinition>,
   Capability.Capability<typeof Common.Capability.Functions>,
@@ -56,5 +59,8 @@ export default Capability.makeModule<[], BlueprintCapabilities>(() =>
     // TODO(burdon): Factor out.
     Capability.contributes(Common.Capability.Functions, [Linear.sync]),
     Capability.contributes(Common.Capability.BlueprintDefinition, LinearBlueprint),
+
+    Capability.contributes(Common.Capability.Functions, Initiative.getFunctions()),
+    Capability.contributes(Common.Capability.BlueprintDefinition, Initiative.makeBlueprint()),
   ]),
 );

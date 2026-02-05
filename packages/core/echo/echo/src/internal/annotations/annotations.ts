@@ -15,7 +15,7 @@ import { type Primitive } from '@dxos/util';
 
 import { type AnyProperties, EntityKind, TypeId, getSchema } from '../types';
 
-import { createAnnotationHelper } from './util';
+import { type AnnotationHelper, createAnnotationHelper } from './util';
 
 /**
  * @internal
@@ -458,3 +458,29 @@ export type GeneratorAnnotationValue =
     };
 
 export const GeneratorAnnotation = createAnnotationHelper<GeneratorAnnotationValue>(GeneratorAnnotationId);
+
+interface MakeAnnoationsProps<T> {
+  id: string;
+  schema: Schema.Schema<T, any, never>;
+}
+
+export const makeUserAnnotation = <T>(props: MakeAnnoationsProps<T>): AnnotationHelper<T> => {
+  assertArgument(
+    /[a-zA-Z0-9]+\.[a-zA-Z.]+\/[a-zA-Z/]+/.test(props.id),
+    'id',
+    'Annotation id must be in the FQN format (dxos.org/annotation/Example).',
+  );
+
+  const getFromAst = (ast: SchemaAST.AST) =>
+    SchemaAST.getAnnotation<PropertyMetaAnnotation>(PropertyMetaAnnotationId)(ast).pipe(
+      Option.map((meta) => meta[props.id] as unknown),
+      Option.map(Schema.decodeUnknownSync(props.schema)),
+    );
+
+  return {
+    get: (schema) => getFromAst(schema.ast),
+    getFromAst: (ast) => getFromAst(ast),
+    set: (value) =>
+      PropertyMeta(props.id, Schema.encodeSync(props.schema)(value)) as <S extends Schema.Schema.Any>(schema: S) => S,
+  };
+};

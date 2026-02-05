@@ -38,6 +38,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
         with:
+          fetch-depth: 0
           lfs: true
       # TODO: read secrets directly from 1p?
       - name: Set environment variables from secrets, env files. Also set DX_ENVIRONMENT and BRANCH

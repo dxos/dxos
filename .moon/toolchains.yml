@@ -1,0 +1,13 @@
+# https://moonrepo.dev/docs/config/toolchain
+
+javascript:
+  packageManager: pnpm
+
+node: {}
+
+pnpm: {}
+
+typescript:
+  rootOptionsConfigFileName: 'tsconfig.base.json'
+  syncProjectReferences: false
+  syncProjectReferencesToPaths: false
