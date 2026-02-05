@@ -67,7 +67,7 @@ describe('Buf protobuf service', () => {
       },
       handlers: {
         TestService: {
-          testCall: async (req): Promise<TestRpcResponse> => {
+          testCall: async (_req): Promise<TestRpcResponse> => {
             const handlerFn = async (): Promise<never> => {
               await sleep(5);
               throw new Error('TestError');
@@ -485,7 +485,7 @@ describe('Buf protobuf service', () => {
       },
       handlers: {
         TestService: {
-          testCall: async (req) => {
+          testCall: async (_req) => {
             await sleep(10);
             return create(TestRpcResponseSchema, { data: 'responseData' });
           },
