@@ -11,7 +11,7 @@ import {
   mergeBranch,
   triggerCursorFix,
 } from '../utils/github';
-import { getKeepCleanPRs, setKeepCleanPRs } from '../utils/storage';
+import { getCachedPRs, getKeepCleanPRs, setCachedPRs, setKeepCleanPRs } from '../utils/storage';
 
 interface UseGitHubOptions {
   token: string | null;
@@ -28,10 +28,14 @@ export const useGitHub = ({
   anthropicApiKey,
   refreshInterval,
 }: UseGitHubOptions) => {
-  const [prs, setPRs] = useState<PRWithDetails[]>([]);
+  // Initialize from cache if available
+  const cached = getCachedPRs();
+  const [prs, setPRs] = useState<PRWithDetails[]>(cached?.prs ?? []);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(
+    cached?.timestamp ? new Date(cached.timestamp) : null,
+  );
   const keepCleanPRsRef = useRef<Set<number>>(getKeepCleanPRs());
 
   const fetchData = useCallback(async () => {
@@ -56,6 +60,7 @@ export const useGitHub = ({
       );
 
       setPRs(prsWithDetails);
+      setCachedPRs(prsWithDetails);
       setLastUpdated(new Date());
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch PRs');
@@ -87,9 +92,13 @@ export const useGitHub = ({
           comments,
         );
 
-        setPRs((prev) =>
-          prev.map((p) => (p.number === prNumber ? { ...p, aiSummary: summary } : p)),
-        );
+        setPRs((prev) => {
+          const updated = prev.map((p) =>
+            p.number === prNumber ? { ...p, aiSummary: summary } : p,
+          );
+          setCachedPRs(updated);
+          return updated;
+        });
       } catch (err) {
         console.error('Failed to generate summary:', err);
       }
@@ -155,9 +164,13 @@ export const useGitHub = ({
       keepCleanPRsRef.current = newKeepClean;
       setKeepCleanPRs(newKeepClean);
 
-      setPRs((prev) =>
-        prev.map((p) => (p.number === prNumber ? { ...p, keepClean: enable } : p)),
-      );
+      setPRs((prev) => {
+        const updated = prev.map((p) =>
+          p.number === prNumber ? { ...p, keepClean: enable } : p,
+        );
+        setCachedPRs(updated);
+        return updated;
+      });
     },
     [token, owner, repo],
   );
