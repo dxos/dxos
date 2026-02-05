@@ -45,14 +45,16 @@ export default Capability.makeModule(
       }),
       OperationResolver.make({
         operation: AssistantOperation.CreateChat,
-        handler: Effect.fnUntraced(function* ({ db, name }) {
+        handler: Effect.fnUntraced(function* ({ db, name, addToSpace = true }) {
           const registry = yield* Capability.get(Common.Capability.AtomRegistry);
           const client = yield* Capability.get(ClientCapabilities.Client);
           const space = client.spaces.get(db.spaceId);
           invariant(space, 'Space not found');
           const queue = space.queues.create();
           const chat = Assistant.make({ name, queue: Ref.fromDXN(queue.dxn) });
-          space.db.add(chat);
+          if (addToSpace) {
+            space.db.add(chat);
+          }
 
           // TODO(wittjosiah): This should be a space-level setting.
           // TODO(burdon): Clone when activated. Copy-on-write for template.

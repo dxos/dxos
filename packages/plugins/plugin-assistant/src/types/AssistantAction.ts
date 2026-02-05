@@ -37,6 +37,8 @@ export namespace AssistantOperation {
       input: Schema.Struct({
         db: Database.Database,
         name: Schema.optional(Schema.String),
+        /** If false, chat is created in-memory only and not added to space. Defaults to true. */
+        addToSpace: Schema.optional(Schema.Boolean),
       }),
       output: Schema.Struct({
         object: Chat,
