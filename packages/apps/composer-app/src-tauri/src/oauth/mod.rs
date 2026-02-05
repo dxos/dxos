@@ -129,21 +129,16 @@ pub async fn initiate_oauth_flow(
 
     // Build headers with the correct Origin.
     let mut headers = HeaderMap::new();
-    headers.insert(
-        CONTENT_TYPE,
-        HeaderValue::from_static("application/json"),
-    );
+    headers.insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
     headers.insert(
         ORIGIN,
-        HeaderValue::from_str(&redirect_origin)
-            .map_err(|e| format!("Invalid origin: {}", e))?,
+        HeaderValue::from_str(&redirect_origin).map_err(|e| format!("Invalid origin: {}", e))?,
     );
 
     if let Some(auth) = auth_header {
         headers.insert(
             AUTHORIZATION,
-            HeaderValue::from_str(&auth)
-                .map_err(|e| format!("Invalid auth header: {}", e))?,
+            HeaderValue::from_str(&auth).map_err(|e| format!("Invalid auth header: {}", e))?,
         );
     }
 

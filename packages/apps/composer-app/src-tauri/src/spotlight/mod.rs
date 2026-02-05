@@ -81,14 +81,12 @@ pub fn hide_spotlight(app: AppHandle) -> Result<(), String> {
 
 /// Toggle the spotlight panel visibility.
 pub fn toggle_spotlight(app: &AppHandle, config: &SpotlightConfig) -> Result<(), String> {
-    let panel = app
-        .get_webview_panel(SpotlightConfig::LABEL)
-        .or_else(|_| {
-            // Panel doesn't exist yet, create it.
-            init_spotlight(app, config)?;
-            app.get_webview_panel(SpotlightConfig::LABEL)
-                .map_err(|e| format!("Panel not found after init: {e:?}"))
-        })?;
+    let panel = app.get_webview_panel(SpotlightConfig::LABEL).or_else(|_| {
+        // Panel doesn't exist yet, create it.
+        init_spotlight(app, config)?;
+        app.get_webview_panel(SpotlightConfig::LABEL)
+            .map_err(|e| format!("Panel not found after init: {e:?}"))
+    })?;
 
     if panel.is_visible() {
         log::debug!("Toggling spotlight: hiding");

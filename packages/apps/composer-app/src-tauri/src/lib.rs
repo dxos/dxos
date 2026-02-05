@@ -1,12 +1,12 @@
 //! Composer Tauri application entry point.
 
-mod oauth;
-#[cfg(desktop)]
-mod window_state;
 #[cfg(target_os = "macos")]
 mod menubar;
+mod oauth;
 #[cfg(target_os = "macos")]
 mod spotlight;
+#[cfg(desktop)]
+mod window_state;
 
 use oauth::OAuthServerState;
 use tauri::Manager;
@@ -15,7 +15,7 @@ use window_state::WindowState;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    let builder = tauri::Builder::default();
+    let builder = tauri::Builder::default().plugin(tauri_plugin_haptics::init());
 
     // Only include updater plugin for non-mobile targets.
     #[cfg(not(any(target_os = "android", target_os = "ios")))]

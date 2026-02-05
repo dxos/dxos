@@ -70,16 +70,14 @@ impl WindowState {
 /// This saves the window state whenever it's moved or resized.
 pub fn setup_window_state_tracking<R: Runtime>(window: &WebviewWindow<R>) {
     let window_clone = window.clone();
-    window.on_window_event(move |event| {
-        match event {
-            tauri::WindowEvent::Resized(_) | tauri::WindowEvent::Moved(_) => {
-                if let Some(state) = WindowState::from_window(&window_clone) {
-                    if let Err(e) = state.save(&window_clone.app_handle()) {
-                        log::warn!("Failed to save window state: {}", e);
-                    }
+    window.on_window_event(move |event| match event {
+        tauri::WindowEvent::Resized(_) | tauri::WindowEvent::Moved(_) => {
+            if let Some(state) = WindowState::from_window(&window_clone) {
+                if let Err(e) = state.save(&window_clone.app_handle()) {
+                    log::warn!("Failed to save window state: {}", e);
                 }
             }
-            _ => {}
         }
+        _ => {}
     });
 }
