@@ -10,6 +10,9 @@
       "path": "packages/apps/composer-crx/tsconfig.json"
     },
     {
+      "path": "packages/apps/pr-dashboard/tsconfig.json"
+    },
+    {
       "path": "packages/apps/testbench-app/tsconfig.json"
     },
     {

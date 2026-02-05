@@ -35,6 +35,11 @@
         },
         {
           "type": "json",
+          "path": "packages/apps/pr-dashboard/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/apps/testbench-app/package.json",
           "jsonpath": "$.version"
         },

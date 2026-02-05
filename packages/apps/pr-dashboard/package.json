@@ -1,0 +1,42 @@
+{
+  "name": "@dxos/pr-dashboard",
+  "version": "0.1.0",
+  "private": true,
+  "description": "PR Dashboard - A GitHub PR monitoring tool",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "MIT",
+  "author": "info@dxos.org",
+  "type": "module",
+  "scripts": {
+    "build": "tsc --noEmit && vite build",
+    "deploy": "wrangler pages deploy dist",
+    "dev": "vite",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@octokit/rest": "catalog:",
+    "@phosphor-icons/react": "catalog:",
+    "@radix-ui/react-checkbox": "catalog:",
+    "@radix-ui/react-switch": "catalog:",
+    "@radix-ui/react-tooltip": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "@vitejs/plugin-react-swc": "catalog:",
+    "autoprefixer": "catalog:",
+    "postcss": "catalog:",
+    "tailwindcss": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "wrangler": "catalog:"
+  }
+}
