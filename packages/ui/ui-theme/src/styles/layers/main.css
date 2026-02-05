@@ -78,7 +78,7 @@
   .dx-main-bounce-layout {
     @apply fixed overflow-auto overscroll-auto;
     @apply duration-200 ease-in-out-symmetric;
-    transition-property: inset-block-end;
+    transition-property: inset-block-end, padding-inline-start, padding-inline-end, scroll-padding-start, scroll-padding-end;
     inset-inline-start: 0;
     inset-inline-end: 0;
     inset-block-start: 0;
