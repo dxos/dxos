@@ -4,9 +4,9 @@
 
 import React from 'react';
 
-import { useCapability } from '@dxos/app-framework';
+import { Mosaic } from '@dxos/react-ui-mosaic';
 
-import { DeckCapabilities } from '../../capabilities';
+import { useDeckState } from '../../hooks';
 
 import { ActiveNode } from './ActiveNode';
 import { DeckMain } from './DeckMain';
@@ -17,16 +17,18 @@ import { Toaster, type ToasterProps } from './Toast';
 export type DeckLayoutProps = Pick<ToasterProps, 'onDismissToast'>;
 
 export const DeckLayout = ({ onDismissToast }: DeckLayoutProps) => {
-  const context = useCapability(DeckCapabilities.MutableDeckState);
-  const { toasts } = context;
+  const { state } = useDeckState();
+  const { toasts } = state;
 
   return (
-    <PopoverRoot>
-      <ActiveNode />
-      <DeckMain />
-      <PopoverContent />
-      <Dialog />
-      <Toaster toasts={toasts} onDismissToast={onDismissToast} />
-    </PopoverRoot>
+    <Mosaic.Root>
+      <PopoverRoot>
+        <ActiveNode />
+        <DeckMain />
+        <PopoverContent />
+        <Dialog />
+        <Toaster toasts={toasts} onDismissToast={onDismissToast} />
+      </PopoverRoot>
+    </Mosaic.Root>
   );
 };

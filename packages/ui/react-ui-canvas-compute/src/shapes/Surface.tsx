@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import React from 'react';
 
-import { Surface } from '@dxos/app-framework';
+import { Surface } from '@dxos/app-framework/react';
 import { DEFAULT_INPUT } from '@dxos/conductor';
 import { type ShapeComponentProps, type ShapeDef } from '@dxos/react-ui-canvas-editor';
 import { createAnchorMap } from '@dxos/react-ui-canvas-editor';
@@ -27,7 +27,11 @@ export type SurfaceShape = Schema.Schema.Type<typeof SurfaceShape>;
 export type CreateSurfaceProps = CreateShapeProps<SurfaceShape>;
 
 export const createSurface = (props: CreateSurfaceProps) =>
-  createShape<SurfaceShape>({ type: 'surface', size: { width: 384, height: 384 }, ...props });
+  createShape<SurfaceShape>({
+    type: 'surface',
+    size: { width: 384, height: 384 },
+    ...props,
+  });
 
 export const SurfaceComponent = ({ shape }: ShapeComponentProps<SurfaceShape>) => {
   const { runtime } = useComputeNodeState(shape);

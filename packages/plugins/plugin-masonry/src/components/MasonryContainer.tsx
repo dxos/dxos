@@ -2,41 +2,44 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useEffect, useMemo, useState } from 'react';
+import type * as Schema from 'effect/Schema';
+import React, { useEffect, useState } from 'react';
 
-import { Surface } from '@dxos/app-framework';
-import { Filter, Type } from '@dxos/echo';
-import { EchoSchema, type TypedObject } from '@dxos/echo/internal';
+import { Common } from '@dxos/app-framework';
+import { Surface, useCapabilities } from '@dxos/app-framework/react';
+import { Filter, Obj, type Ref, Type } from '@dxos/echo';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
-import { useClient } from '@dxos/react-client';
-import { getSpace, useQuery } from '@dxos/react-client/echo';
-import { Masonry } from '@dxos/react-ui-masonry';
-import { type DataType, ProjectionModel, getTypenameFromQuery } from '@dxos/schema';
+import { useObject, useQuery } from '@dxos/react-client/echo';
+import { Masonry as MasonryComponent } from '@dxos/react-ui-masonry';
+import { Card } from '@dxos/react-ui-mosaic';
+import { type View, getTypenameFromQuery } from '@dxos/schema';
 
-const Item = ({ data }: { data: any }) => {
-  return <Surface role='card' limit={1} data={{ subject: data }} />;
+export type MasonryContainerProps = {
+  view: View.View;
+  role?: string;
 };
 
-export const MasonryContainer = ({ view, role }: { view: DataType.View; role: string }) => {
-  const client = useClient();
-  const space = getSpace(view);
-  const typename = view.query ? getTypenameFromQuery(view.query.ast) : undefined;
+export const MasonryContainer = ({
+  view: viewOrRef,
+  role,
+}: {
+  view: View.View | Ref.Ref<View.View>;
+  role?: string;
+}) => {
+  const [view] = useObject(viewOrRef);
+  const schemas = useCapabilities(Common.Capability.Schema);
+  const db = view && Obj.getDatabase(view);
+  const typename = view?.query ? getTypenameFromQuery(view.query.ast) : undefined;
 
-  const [cardSchema, setCardSchema] = useState<TypedObject<any, any>>();
-  const [projection, setProjection] = useState<ProjectionModel>();
-
-  const jsonSchema = useMemo(() => {
-    if (!cardSchema) return undefined;
-    return cardSchema instanceof EchoSchema ? cardSchema.jsonSchema : Type.toJsonSchema(cardSchema);
-  }, [cardSchema]);
+  const [cardSchema, setCardSchema] = useState<Schema.Schema.AnyNoContext>();
 
   useEffect(() => {
-    const staticSchema = client.graph.schemaRegistry.schemas.find((schema) => Type.getTypename(schema) === typename);
+    const staticSchema = schemas.flat().find((schema) => Type.getTypename(schema) === typename);
     if (staticSchema) {
-      setCardSchema(() => staticSchema as TypedObject<any, any>);
+      setCardSchema(() => staticSchema);
     }
-    if (!staticSchema && typename && space) {
-      const query = space.db.schemaRegistry.query({ typename });
+    if (!staticSchema && typename && db) {
+      const query = db.schemaRegistry.query({ typename });
       const unsubscribe = query.subscribe(
         () => {
           const [schema] = query.results;
@@ -48,22 +51,29 @@ export const MasonryContainer = ({ view, role }: { view: DataType.View; role: st
       );
       return unsubscribe;
     }
-  }, [typename, space]);
+  }, [schemas, typename, db]);
 
-  useEffect(() => {
-    if (jsonSchema) {
-      setProjection(new ProjectionModel(jsonSchema, view.projection));
-    }
-  }, [view.projection, JSON.stringify(jsonSchema)]);
-
-  const objects = useQuery(space, cardSchema ? Filter.type(cardSchema) : Filter.nothing());
+  const objects = useQuery(db, cardSchema ? Filter.type(cardSchema) : Filter.nothing());
   const filteredObjects = useGlobalFilteredObjects(objects);
 
   return (
-    <Masonry.Root
+    <MasonryComponent.Root
       items={filteredObjects}
       render={Item as any}
       classNames='is-full max-is-full bs-full max-bs-full overflow-y-auto p-4'
     />
+  );
+};
+
+const Item = ({ data }: { data: any }) => {
+  return (
+    <Card.Root>
+      <Card.Toolbar>
+        <span />
+        <Card.Title>{Obj.getLabel(data)}</Card.Title>
+        <Card.Menu />
+      </Card.Toolbar>
+      <Surface role='card--content' limit={1} data={{ subject: data }} />
+    </Card.Root>
   );
 };

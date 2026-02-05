@@ -4,9 +4,13 @@
   "description": "ECHO database.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
   "license": "MIT",
   "author": "info@dxos.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "exports": {
     ".": {
@@ -43,8 +47,8 @@
     "src"
   ],
   "dependencies": {
-    "@automerge/automerge": "3.1.2",
-    "@automerge/automerge-repo": "2.3.1",
+    "@automerge/automerge": "catalog:",
+    "@automerge/automerge-repo": "catalog:",
     "@dxos/async": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/context": "workspace:*",
@@ -54,9 +58,12 @@
     "@dxos/echo": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
     "@dxos/edge-client": "workspace:*",
+    "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
+    "@dxos/feed": "workspace:*",
     "@dxos/feed-store": "workspace:*",
     "@dxos/hypercore": "workspace:*",
+    "@dxos/index-core": "workspace:*",
     "@dxos/indexing": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keyring": "workspace:*",
@@ -68,6 +75,7 @@
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/random-access-storage": "workspace:*",
+    "@dxos/sql-sqlite": "workspace:*",
     "@dxos/teleport": "workspace:*",
     "@dxos/teleport-extension-automerge-replicator": "workspace:*",
     "@dxos/teleport-extension-gossip": "workspace:*",
@@ -77,16 +85,18 @@
     "@dxos/tracing": "workspace:*",
     "@dxos/typings": "workspace:*",
     "@dxos/util": "workspace:*",
-    "crc-32": "^1.2.2",
-    "effect": "3.18.3",
-    "level-transcoder": "^1.0.1",
-    "lodash.isequal": "^4.5.0"
+    "@effect/sql": "catalog:",
+    "@effect/sql-sqlite-node": "catalog:",
+    "crc-32": "catalog:",
+    "effect": "catalog:",
+    "level-transcoder": "catalog:",
+    "lodash.isequal": "catalog:"
   },
   "devDependencies": {
     "@dxos/test-utils": "workspace:*",
-    "@types/lodash.isequal": "^4.5.0",
-    "fast-check": "^3.19.0",
-    "get-port-please": "^3.1.1"
+    "@types/lodash.isequal": "catalog:",
+    "fast-check": "catalog:",
+    "get-port-please": "catalog:"
   },
   "publishConfig": {
     "access": "public"

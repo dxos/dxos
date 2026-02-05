@@ -9,8 +9,8 @@ import React, { useEffect } from 'react';
 import { log } from '@dxos/log';
 import { useAsyncState } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
-import { mx } from '@dxos/react-ui-theme';
 import { render } from '@dxos/storybook-utils';
+import { mx } from '@dxos/ui-theme';
 
 const useFlash = (rive: Rive | null, name: string, delay: number, period: number) => {
   useEffect(() => {
@@ -62,17 +62,17 @@ const DefaultStory = () => {
   return (
     <>
       <Component buffer={buffer} />
-      <div className='flex absolute left-0 right-0 top-[120px] h-[320px] align-center'>
+      <div className='flex absolute left-0 right-0 top-[120px] bs-[320px] align-center'>
         <div
-          className='z-1 absolute inset-0 w-[800px] m-auto'
+          className='z-1 absolute inset-0 is-[800px] m-auto'
           style={{
             background: 'radial-gradient(ellipse 200% 100% at center, rgba(0, 0, 0, 1), rgba(0, 0, 0, 0) 50%)',
           }}
         />
         <div
           className={mx(
-            'z-2 absolute inset-0 flex items-center w-[720px] m-auto p-2',
-            'text-white text-[60px] leading-tight text-center font-thin _border _border-red-500',
+            'z-2 absolute inset-0 flex items-center is-[720px] m-auto p-2',
+            'text-white text-[60px] leading-tight text-center font-thin',
           )}
         >
           The new standard for building collaborative local-first software.

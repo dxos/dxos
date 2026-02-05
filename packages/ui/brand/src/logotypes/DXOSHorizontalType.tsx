@@ -4,7 +4,7 @@
 
 import React, { type FC } from 'react';
 
-const defaultSize = 'w-[256px] h-[128px]';
+const defaultSize = 'is-[256px] bs-[128px]';
 
 export const DXOSHorizontalType: FC<{ className?: string }> = ({ className = defaultSize }) => {
   return (

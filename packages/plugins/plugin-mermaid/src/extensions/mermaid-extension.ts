@@ -145,11 +145,15 @@ class MermaidWidget extends WidgetType {
     super();
   }
 
-  override eq(other: this): boolean {
+  override eq(other: this) {
     return this._source === other._source;
   }
 
-  override toDOM(view: EditorView): HTMLDivElement {
+  override ignoreEvent(ev: Event) {
+    return !/^mouse/.test(ev.type);
+  }
+
+  override toDOM(view: EditorView) {
     const div = document.createElement('div');
     div.className = 'cm-mermaid';
 
@@ -207,9 +211,5 @@ class MermaidWidget extends WidgetType {
       this._error = String(err);
       this._svg = undefined;
     }
-  }
-
-  override ignoreEvent(e: Event): boolean {
-    return !/^mouse/.test(e.type);
   }
 }

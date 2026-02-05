@@ -15,13 +15,13 @@
       "path": "../../common/debug"
     },
     {
+      "path": "../../common/effect"
+    },
+    {
       "path": "../../common/invariant"
     },
     {
       "path": "../../common/keys"
-    },
-    {
-      "path": "../../common/local-storage"
     },
     {
       "path": "../../common/log"
@@ -33,10 +33,22 @@
       "path": "../../common/storybook-utils"
     },
     {
+      "path": "../../common/test-utils"
+    },
+    {
       "path": "../../common/util"
     },
     {
+      "path": "../../common/web-context"
+    },
+    {
+      "path": "../../common/web-context-react"
+    },
+    {
       "path": "../../core/ai"
+    },
+    {
+      "path": "../../core/assistant"
     },
     {
       "path": "../../core/blueprints"
@@ -45,22 +57,25 @@
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../core/echo/echo-signals"
-    },
-    {
-      "path": "../../core/echo/live-object"
+      "path": "../../core/echo/echo-db"
     },
     {
       "path": "../../core/functions"
     },
     {
-      "path": "../../ui/primitives/react-hooks"
+      "path": "../../core/operation"
+    },
+    {
+      "path": "../../ui/react-primitives/react-hooks"
     },
     {
       "path": "../../ui/react-ui"
     },
     {
       "path": "../../ui/react-ui-syntax-highlighter"
+    },
+    {
+      "path": "../../ui/ui-theme"
     },
     {
       "path": "../app-graph"
@@ -70,6 +85,9 @@
     },
     {
       "path": "../schema"
+    },
+    {
+      "path": "../types"
     }
   ]
 }

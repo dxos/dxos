@@ -83,7 +83,7 @@ export type PropertiesSlots = {
 
 export const defaultSlots: PropertiesSlots = {
   key: {
-    className: 'px-4 align-baseline text-neutral-500 overflow-hidden w-40 text-sm',
+    className: 'pli-4 align-baseline text-neutral-500 overflow-hidden is-40 text-sm',
   },
 };
 

@@ -1,0 +1,41 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import * as Effect from 'effect/Effect';
+
+import { Capability, Common } from '@dxos/app-framework';
+
+import { DeckCapabilities } from '../../types';
+
+const isSocket = !!(globalThis as any).__args;
+
+// TODO(mjamesderocher): Can we get this directly from Socket?
+const appScheme = 'composer://';
+
+// TODO(mjamesderocher): Factor out as part of NavigationPlugin.
+const checkAppScheme = (url: string) => {
+  const iframe = document.createElement('iframe');
+  iframe.style.display = 'none';
+  document.body.appendChild(iframe);
+
+  iframe.src = url + window.location.pathname.replace(/^\/+/, '') + window.location.search;
+
+  const timer = setTimeout(() => {
+    document.body.removeChild(iframe);
+  }, 3000);
+
+  window.addEventListener('pagehide', (event) => {
+    clearTimeout(timer);
+    document.body.removeChild(iframe);
+  });
+};
+
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const settings = yield* Common.Capability.getAtomValue(DeckCapabilities.Settings);
+    if (!isSocket && settings?.enableNativeRedirect) {
+      checkAppScheme(appScheme);
+    }
+  }),
+);

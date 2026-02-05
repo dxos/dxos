@@ -31,7 +31,7 @@ import {
   type ThemedClassName,
   useTranslation,
 } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { mx, osTranslations } from '@dxos/ui-theme';
 
 import { useListContext } from './ListRoot';
 
@@ -195,7 +195,7 @@ export const ListItemDeleteButton = ({
   Omit<IconButtonProps, 'icon' | 'label'> & { autoHide?: boolean; label?: string }) => {
   const { state } = useListContext('DELETE_BUTTON');
   const isDisabled = state.type !== 'idle' || disabled;
-  const { t } = useTranslation('os');
+  const { t } = useTranslation(osTranslations);
   return (
     <IconButton
       iconOnly
@@ -232,7 +232,7 @@ export const ListItemButton = ({
 
 export const ListItemDragHandle = ({ disabled }: Pick<IconButtonProps, 'disabled'>) => {
   const { dragHandleRef } = useListItemContext('DRAG_HANDLE');
-  const { t } = useTranslation('os');
+  const { t } = useTranslation(osTranslations);
   return (
     <IconButton
       iconOnly

@@ -12,7 +12,7 @@ import { log } from '@dxos/log';
 import { trim } from '@dxos/util';
 
 // Tool definitions.
-export class TestingToolkit extends Toolkit.make(
+export const TestingToolkit = Toolkit.make(
   Tool.make('Calculator', {
     description: 'Basic calculator tool',
     parameters: {
@@ -38,7 +38,7 @@ export class TestingToolkit extends Toolkit.make(
     }),
     failure: Schema.Never,
   }),
-) {}
+);
 
 // Tool handlers.
 export const testingLayer = TestingToolkit.toLayer({

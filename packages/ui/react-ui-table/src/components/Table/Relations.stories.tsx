@@ -2,25 +2,26 @@
 // Copyright 2025 DXOS.org
 //
 
+import { RegistryContext } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import type * as Schema from 'effect/Schema';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
 import { Obj, Type } from '@dxos/echo';
-import { type JsonSchemaType } from '@dxos/echo/internal';
+import { invariant } from '@dxos/invariant';
 import { type DxGrid } from '@dxos/lit-grid';
 import '@dxos/lit-ui/dx-tag-picker.pcss';
 import { faker } from '@dxos/random';
-import { useClient } from '@dxos/react-client';
-import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
+import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as formTranslations } from '@dxos/react-ui-form';
-import { DataType } from '@dxos/schema';
+import { View } from '@dxos/schema';
 import { type ValueGenerator, createAsyncGenerator } from '@dxos/schema/testing';
+import { withRegistry } from '@dxos/storybook-utils';
+import { Organization, Person } from '@dxos/types';
 
-import { useTableModel } from '../../hooks';
+import { useProjectionModel, useTableModel } from '../../hooks';
 import { type TableFeatures, TablePresentation, type TableRow } from '../../model';
 import { translations } from '../../translations';
 import { Table } from '../../types';
@@ -35,10 +36,9 @@ const generator: ValueGenerator = faker as any;
 // TODO(burdon): Reconcile schemas types and utils (see API PR).
 // TODO(burdon): Base type for T (with id); see ECHO API PR?
 const useTestModel = <S extends Type.Obj.Any>(schema: S, count: number) => {
-  const client = useClient();
-  const { space } = useClientProvider();
-  const [view, setView] = useState<DataType.View>();
-  const [jsonSchema, setJsonSchema] = useState<JsonSchemaType>();
+  const registry = useContext(RegistryContext);
+  const { space } = useClientStory();
+  const [object, setObject] = useState<Table.Table>();
 
   const features = useMemo<TableFeatures>(
     () => ({ schemaEditable: false, dataEditable: true, selection: { enabled: false } }),
@@ -50,18 +50,14 @@ const useTestModel = <S extends Type.Obj.Any>(schema: S, count: number) => {
       return;
     }
 
-    const {
-      jsonSchema,
-      schema: effectSchema,
-      view,
-    } = await Table.makeView({ client, space, typename: Type.getTypename(schema) });
-    setJsonSchema(jsonSchema);
-    setView(view);
-    space.db.add(view);
-    await space.db.schemaRegistry.register([effectSchema]);
-  }, [client, space, schema]);
+    const { view, jsonSchema } = await View.makeFromDatabase({ db: space.db, typename: Type.getTypename(schema) });
+    const object = Table.make({ view, jsonSchema });
+    setObject(object);
+    space.db.add(object);
+  }, [space, schema]);
 
-  const model = useTableModel<TableRow>({ view, schema: jsonSchema, rows: [], features });
+  const projection = useProjectionModel(schema, object, registry);
+  const model = useTableModel<TableRow>({ object, projection, db: space?.db, features });
 
   useEffect(() => {
     if (!model || !space) {
@@ -79,21 +75,22 @@ const useTestModel = <S extends Type.Obj.Any>(schema: S, count: number) => {
       return;
     }
 
-    return new TablePresentation(model);
-  }, [model]);
+    return new TablePresentation(registry, model);
+  }, [registry, model]);
 
   return { model, presentation };
 };
 
 const DefaultStory = () => {
-  const client = useClient();
-  const { model: orgModel, presentation: orgPresentation } = useTestModel(DataType.Organization, 50);
-  const { model: contactModel, presentation: contactPresentation } = useTestModel(DataType.Person, 50);
-  const { space } = useClientProvider();
+  const { model: orgModel, presentation: orgPresentation } = useTestModel(Organization.Organization, 50);
+  const { model: contactModel, presentation: contactPresentation } = useTestModel(Person.Person, 50);
+  const { space } = useClientStory();
 
   const handleCreate = useCallback(
-    (schema: Schema.Schema.AnyNoContext, values: any) => {
-      return client.spaces.default.db.add(Obj.make(schema, values));
+    (schema: Type.Entity.Any, values: any) => {
+      invariant(Type.isObjectSchema(schema));
+      invariant(space);
+      return space.db.add(Obj.make(schema, values));
     },
     [space],
   );
@@ -103,10 +100,9 @@ const DefaultStory = () => {
       <TableComponent.Root>
         <TableComponent.Main
           model={orgModel}
-          schema={DataType.Organization}
+          schema={Organization.Organization}
           presentation={orgPresentation}
           onCreate={handleCreate}
-          client={client}
           ignoreAttention
           testId='relations-0'
         />
@@ -114,10 +110,9 @@ const DefaultStory = () => {
       <TableComponent.Root>
         <TableComponent.Main
           model={contactModel}
-          schema={DataType.Person}
+          schema={Person.Person}
           presentation={contactPresentation}
           onCreate={handleCreate}
-          client={client}
           ignoreAttention
           testId='relations-1'
         />
@@ -131,8 +126,11 @@ const meta = {
   render: DefaultStory,
   decorators: [
     withTheme,
+    withRegistry,
+    // TODO(thure): Shouldn't `layout: 'fullscreen'` below make this unnecessary?
+    withLayout({ classNames: 'fixed inset-0' }),
     withClientProvider({
-      types: [DataType.View, DataType.Organization, DataType.Person, Table.Table],
+      types: [View.View, Organization.Organization, Person.Person, Table.Table],
       createIdentity: true,
       createSpace: true,
     }),
@@ -149,9 +147,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  // TODO(wittjosiah): This test is flaky, especially in CI.
-  //   Most typical failure is `targetCell` returns `null`.
-  _play: async ({ canvasElement }: any) => {
+  play: async ({ canvasElement }: any) => {
     const canvas = within(canvasElement);
     const body = within(document.body);
 
@@ -165,11 +161,8 @@ export const Default: Story = {
     // Scroll to the relations column (column 4) - this mimics the scrollToColumn call
     (secondGrid.closest('dx-grid') as DxGrid).scrollToColumn(4);
 
-    // Wait for scroll to complete
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
     // Find and click the target cell (first row, relations column)
-    const targetCell = secondGrid.querySelector('[data-dx-grid-plane="grid"] [aria-rowindex="0"][aria-colindex="4"]');
+    const targetCell = await within(secondGrid).findByTestId('grid.4.0', undefined, { timeout: 10_000 });
     await expect(targetCell).toBeVisible();
 
     // Click to focus the cell
@@ -185,11 +178,9 @@ export const Default: Story = {
     await userEvent.click(searchField);
 
     // Get the first organization name from the first table to search for
-    const orgCell = firstGrid.querySelector(
-      '[data-dx-grid-plane="grid"] [aria-rowindex="0"][aria-colindex="0"] .dx-grid__cell__content',
-    ) as HTMLElement;
+    const orgCell = await within(firstGrid).findByTestId('grid.0.0', undefined, { timeout: 10_000 });
 
-    const orgName = orgCell.textContent;
+    const orgName = (orgCell.querySelector('.dx-grid__cell__content') as HTMLElement).textContent;
     // Type the first 4 characters to search
     await userEvent.type(searchField, orgName.substring(0, 4));
 
@@ -209,9 +200,7 @@ export const Default: Story = {
 
     // Test object creation (new relations) - equivalent to "new relations work as expected" test
     // Find a different cell to test object creation (second row, relations column)
-    const newTargetCell = secondGrid.querySelector(
-      '[data-dx-grid-plane="grid"] [aria-rowindex="1"][aria-colindex="4"]',
-    );
+    const newTargetCell = await within(secondGrid).findByTestId('grid.4.1', undefined, { timeout: 10_000 });
     await expect(newTargetCell).toBeTruthy();
 
     // Click to focus the cell
@@ -230,9 +219,9 @@ export const Default: Story = {
     const newOrgName = 'Salieri LLC';
     await userEvent.type(newSearchField, newOrgName);
 
-    // Look for an option to select (should be the create new option)
-    const newOption = await body.findAllByRole('option');
-    await expect(newOption[0]).toBeVisible();
+    // Wait for the create option to appear (debounce is 200ms, allow time for render)
+    const createOption = await body.findByRole('option', undefined, { timeout: 500 });
+    await expect(createOption).toBeVisible();
 
     // Press Enter to select/create
     await userEvent.keyboard('{Enter}');

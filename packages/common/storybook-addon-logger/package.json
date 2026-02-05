@@ -4,6 +4,10 @@
   "description": "Storybook addon for logging.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
   "license": "MIT",
   "author": "DXOS.org",
   "sideEffects": true,
@@ -26,17 +30,17 @@
   ],
   "dependencies": {
     "@dxos/log": "workspace:*",
-    "storybook": "^9.1.10"
+    "storybook": "catalog:"
   },
   "devDependencies": {
-    "@types/react": "~19.2.2",
-    "@types/react-dom": "~19.2.1",
-    "react": "~19.2.0",
-    "react-dom": "~19.2.0"
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
   },
   "peerDependencies": {
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react": "catalog:",
+    "react-dom": "catalog:"
   },
   "publishConfig": {
     "access": "public"

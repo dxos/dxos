@@ -5,12 +5,13 @@
 import { yieldOrContinue } from 'main-thread-scheduling';
 import { useEffect, useState } from 'react';
 
-import { DataType } from '@dxos/schema';
+import { type Entity } from '@dxos/echo';
+import { Text } from '@dxos/schema';
 
 // TODO(thure): Deprecate search-sync, move still-relevant utilities elsewhere (here, probably).
 import { mapObjectToTextFields, queryStringToMatch } from './sync';
 
-export const filterObjects = async <T extends Record<string, any>>(
+export const filterObjects = async <T extends Entity.Unknown>(
   objects: T[],
   match?: RegExp,
 ): Promise<Map<T, string[][]>> => {
@@ -18,9 +19,10 @@ export const filterObjects = async <T extends Record<string, any>>(
   if (!match) {
     return result;
   }
+
   await Promise.all(
     objects
-      .filter((object) => !(object instanceof DataType.Text))
+      .filter((object) => !(object instanceof Text.Text))
       .map(async (object) => {
         await yieldOrContinue('interactive');
         const fields = mapObjectToTextFields<T>(object);
@@ -34,10 +36,11 @@ export const filterObjects = async <T extends Record<string, any>>(
           });
       }),
   );
+
   return result;
 };
 
-export const useSearchResults = <T extends Record<string, any>>(
+export const useSearchResults = <T extends Entity.Unknown>(
   queryString?: string,
   objects?: T[],
   delay: number = 400,

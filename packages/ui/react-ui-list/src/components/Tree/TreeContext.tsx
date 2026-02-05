@@ -14,7 +14,7 @@ export type TreeItemDataProps = {
   className?: string;
   headingClassName?: string;
   icon?: string;
-  iconClassName?: string;
+  iconHue?: string;
   disabled?: boolean;
   testId?: string;
 };
@@ -22,8 +22,10 @@ export type TreeItemDataProps = {
 export type TreeContextType<T = any, O = any> = {
   useItems: (parent?: T, options?: O) => T[];
   getProps: (item: T, parent: string[]) => TreeItemDataProps;
-  isOpen: (path: string[], item: T) => boolean;
-  isCurrent: (path: string[], item: T) => boolean;
+  /** Hook that subscribes to and returns the open state for a tree item. */
+  useIsOpen: (path: string[], item: T) => boolean;
+  /** Hook that subscribes to and returns the current state for a tree item. */
+  useIsCurrent: (path: string[], item: T) => boolean;
 };
 
 const TreeContext = createContext<null | TreeContextType>(null);

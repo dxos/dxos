@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 export const soloInlinePadding =
   'pis-[calc(env(safe-area-inset-left)+.25rem)] pie-[calc(env(safe-area-inset-left)+.25rem)]';

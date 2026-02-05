@@ -21,6 +21,9 @@
       "path": "../../common/debug"
     },
     {
+      "path": "../../common/effect"
+    },
+    {
       "path": "../../common/graph"
     },
     {
@@ -48,7 +51,7 @@
       "path": "../../core/assistant"
     },
     {
-      "path": "../../core/assistant-testing"
+      "path": "../../core/assistant-toolkit"
     },
     {
       "path": "../../core/blueprints"
@@ -63,13 +66,10 @@
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../core/echo/echo-signals"
-    },
-    {
-      "path": "../../core/echo/live-object"
-    },
-    {
       "path": "../../core/functions"
+    },
+    {
+      "path": "../../core/functions-runtime"
     },
     {
       "path": "../../core/mesh/edge-client"
@@ -85,6 +85,9 @@
     },
     {
       "path": "../../sdk/schema"
+    },
+    {
+      "path": "../../sdk/types"
     },
     {
       "path": "../react-ui"
@@ -114,7 +117,7 @@
       "path": "../react-ui-syntax-highlighter"
     },
     {
-      "path": "../react-ui-theme"
+      "path": "../ui-theme"
     }
   ]
 }

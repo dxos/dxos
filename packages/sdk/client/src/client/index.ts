@@ -3,3 +3,4 @@
 //
 
 export { Client, type ClientOptions } from './client';
+export * from './client-service';

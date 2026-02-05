@@ -2,21 +2,23 @@
 // Copyright 2025 DXOS.org
 //
 
+import type * as Tool from '@effect/ai/Tool';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 
 import { type AiParser, type ConsolePrinter } from '@dxos/ai';
-import { type DataType } from '@dxos/schema';
+import { type Message } from '@dxos/types';
 
 /**
  * Live observer of the generation process.
  */
-export interface GenerationObserver extends AiParser.ParseResponseCallbacks {
+export interface GenerationObserver<Tools extends Record<string, Tool.Any> = any>
+  extends AiParser.ParseResponseCallbacks<Tools> {
   /**
    * Complete messages fired during the session, both from the model and from the user.
    * This message will contain all message blocks emitted through the `onBlock` callback.
    */
-  onMessage: (message: DataType.Message) => Effect.Effect<void>;
+  onMessage: (message: Message.Message) => Effect.Effect<void>;
 }
 
 export const GenerationObserver = Object.freeze({

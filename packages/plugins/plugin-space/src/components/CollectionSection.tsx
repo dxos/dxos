@@ -4,17 +4,19 @@
 
 import React from 'react';
 
+import { type SurfaceComponentProps } from '@dxos/app-framework/react';
 import { useTranslation } from '@dxos/react-ui';
-import { type DataType } from '@dxos/schema';
+import { type Collection } from '@dxos/schema';
 
 import { meta } from '../meta';
 
-export const CollectionSection = ({ collection }: { collection: DataType.Collection }) => {
+export const CollectionSection = ({ role, subject }: SurfaceComponentProps<Collection.Collection>) => {
   const { t } = useTranslation(meta.id);
+
   // TODO(wittjosiah): Better placeholder.
   return (
-    <div className='min-bs-[3.5rem] grid grid-rows-subgrid grid-cols-subgrid items-center'>
-      <span className='truncate'>{collection.name ?? t('unnamed collection label')}</span>
+    <div role={role} className='min-bs-[3.5rem] grid grid-rows-subgrid grid-cols-subgrid items-center'>
+      <span className='truncate'>{subject.name ?? t('unnamed collection label')}</span>
     </div>
   );
 };

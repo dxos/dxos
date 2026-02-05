@@ -5,11 +5,10 @@
 import * as Schema from 'effect/Schema';
 
 import { ToolId } from '@dxos/ai';
-import { Obj, Type } from '@dxos/echo';
-import { LabelAnnotation } from '@dxos/echo/internal';
+import { Annotation, Obj, Type } from '@dxos/echo';
 import { type FunctionDefinition } from '@dxos/functions';
 
-import { Template } from '../template';
+import * as Template from '../template';
 
 /**
  * Blueprint schema defines the structure for AI assistant blueprints.
@@ -44,7 +43,7 @@ export const Blueprint = Schema.Struct({
    * Instructions that guide the AI assistant's behavior and responses.
    * These are system prompts or guidelines that the AI should follow.
    */
-  instructions: Template.annotations({
+  instructions: Template.Template.annotations({
     description: "Instructions that guide the AI assistant's behavior and responses",
   }),
 
@@ -55,14 +54,12 @@ export const Blueprint = Schema.Struct({
     description: 'Array of tools that the AI assistant can use when this blueprint is active',
   }),
 }).pipe(
-  Type.Obj({
+  Type.object({
     // TODO(burdon): Is this a DXN? Need to create a Format type for these IDs.
     typename: 'dxos.org/type/Blueprint',
     version: '0.1.0',
   }),
-
-  // TODO(burdon): Move to Type.Obj def?
-  LabelAnnotation.set(['name']),
+  Annotation.LabelAnnotation.set(['name']),
 );
 
 /**
@@ -70,11 +67,17 @@ export const Blueprint = Schema.Struct({
  */
 export interface Blueprint extends Schema.Schema.Type<typeof Blueprint> {}
 
+type MakeProps = Pick<Blueprint, 'key' | 'name'> & Partial<Blueprint>;
+
 /**
  * Create a new Blueprint.
  */
-export const make = ({ tools = [], ...props }: Pick<Blueprint, 'key' | 'name' | 'instructions'> & Partial<Blueprint>) =>
-  Obj.make(Blueprint, { tools, ...props });
+export const make = ({ tools = [], instructions = Template.make(), ...props }: MakeProps) =>
+  Obj.make(Blueprint, {
+    tools,
+    instructions,
+    ...props,
+  });
 
 /**
  * Util to create tool definitions for a blueprint.

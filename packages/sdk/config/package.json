@@ -4,10 +4,43 @@
   "description": "Config utilities",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
   "license": "MIT",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
+  "imports": {
+    "#loaders": {
+      "source": {
+        "browser": "./src/loaders/browser.ts",
+        "default": "./src/loaders/index.ts"
+      },
+      "types": "./dist/types/src/loaders/index.d.ts",
+      "browser": "./dist/lib/browser/loaders/browser.mjs",
+      "default": "./dist/lib/node-esm/loaders/index.mjs"
+    },
+    "#savers": {
+      "source": {
+        "browser": "./src/savers/browser.ts",
+        "default": "./src/savers/index.ts"
+      },
+      "types": "./dist/types/src/savers/index.d.ts",
+      "browser": "./dist/lib/browser/savers/browser.mjs",
+      "default": "./dist/lib/node-esm/savers/index.mjs"
+    },
+    "#plugin": {
+      "source": {
+        "browser": "./src/plugin/browser.ts",
+        "default": "./src/plugin/index.ts"
+      },
+      "types": "./dist/types/src/plugin/index.d.ts",
+      "browser": "./dist/lib/browser/plugin/browser.mjs",
+      "default": "./dist/lib/node-esm/plugin/index.mjs"
+    }
+  },
   "exports": {
     ".": {
       "source": "./src/index.ts",
@@ -38,12 +71,6 @@
     }
   },
   "main": "dist/lib/node/index.cjs",
-  "browser": {
-    "./src/loaders/index.ts": "./src/loaders/browser.js",
-    "./src/savers/index.ts": "./src/savers/browser.js",
-    "./src/plugin/index.ts": false,
-    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
-  },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
@@ -66,24 +93,26 @@
     "test-build": "node ./src/testing/build.js"
   },
   "dependencies": {
+    "@dxos/client-protocol": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
-    "boolean": "^3.0.1",
-    "js-yaml": "^4.1.0",
-    "localforage": "^1.10.0",
-    "lodash.defaultsdeep": "^4.6.1",
-    "lodash.ismatch": "^4.4.0",
-    "pkg-up": "^3.1.0"
+    "@effect/platform": "catalog:",
+    "boolean": "catalog:",
+    "effect": "catalog:",
+    "localforage": "catalog:",
+    "lodash.defaultsdeep": "catalog:",
+    "lodash.ismatch": "catalog:",
+    "pkg-up": "catalog:",
+    "yaml": "catalog:"
   },
   "devDependencies": {
-    "@types/js-yaml": "^4.0.5",
-    "@types/lodash.defaultsdeep": "^4.6.6",
-    "@types/lodash.ismatch": "^4.4.9",
-    "webpack": "^5.88.2"
+    "@types/lodash.defaultsdeep": "catalog:",
+    "@types/lodash.ismatch": "catalog:",
+    "webpack": "catalog:"
   },
   "publishConfig": {
     "access": "public"

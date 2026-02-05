@@ -13,9 +13,6 @@
       "path": "../packages/core/echo/echo"
     },
     {
-      "path": "../packages/core/echo/echo-signals"
-    },
-    {
       "path": "../packages/sdk/app-framework"
     },
     {
@@ -29,6 +26,9 @@
     },
     {
       "path": "../packages/sdk/react-client"
+    },
+    {
+      "path": "../packages/sdk/schema"
     }
   ]
 }

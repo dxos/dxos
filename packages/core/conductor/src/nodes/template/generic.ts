@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { log } from '@dxos/log';
 
-import type { ComputeNode } from '../../types/graph';
+import { type ComputeNode } from '../../types';
 
 import { applyObjectTemplate, getObjectTemplateInputSchema } from './json';
 import { applyTextTemplate, getTextTemplateInputSchema } from './text';

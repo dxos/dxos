@@ -5,8 +5,10 @@
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, { type Dispatch, type SetStateAction, forwardRef } from 'react';
 
-import { Button, type ButtonProps, DropdownMenu, Icon, useTranslation } from '@dxos/react-ui';
-import { descriptionText, mx } from '@dxos/react-ui-theme';
+import { Button, type ButtonProps, DropdownMenu, Icon, IconButton, useTranslation } from '@dxos/react-ui';
+import { descriptionText, mx } from '@dxos/ui-theme';
+
+import { translationKey } from '../../translations';
 
 export type LargeButtonProps = ButtonProps & {
   isFull?: boolean;
@@ -59,7 +61,7 @@ export const BifurcatedAction = forwardRef<HTMLButtonElement, BifurcatedActionPr
 
   const activeAction = actions[activeActionKey as string] ?? {};
 
-  const { t } = useTranslation('os');
+  const { t } = useTranslation(translationKey);
 
   return (
     <div role='none' className={mx('mbs-2 flex gap-px items-center', isFull && 'is-full')}>
@@ -76,10 +78,14 @@ export const BifurcatedAction = forwardRef<HTMLButtonElement, BifurcatedActionPr
       </Button>
       <DropdownMenu.Root>
         <DropdownMenu.Trigger asChild>
-          <Button classNames={['bs-11 flex-none rounded-is-none', classNames]} data-testid={dropdownTestId}>
-            <span className='sr-only'>{t('invite options label')}</span>
-            <Icon icon='ph--caret-down--regular' size={4} />
-          </Button>
+          <IconButton
+            icon='ph--caret-down--regular'
+            size={4}
+            label={t('invite options label')}
+            iconOnly
+            classNames={['bs-11 flex-none rounded-is-none', classNames]}
+            data-testid={dropdownTestId}
+          />
         </DropdownMenu.Trigger>
         {/* TODO(thure): Putting `DropdownMenu.Portal` here breaks highlighting and focus. Why? */}
         <DropdownMenu.Portal>

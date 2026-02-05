@@ -8,9 +8,10 @@ import React from 'react';
 import { Obj } from '@dxos/echo';
 import { faker } from '@dxos/random';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Grid, type GridEditing, defaultRowSize } from '@dxos/react-ui-grid';
-import { DataType } from '@dxos/schema';
+import { View } from '@dxos/schema';
+import { Task } from '@dxos/types';
 
 import { useTestTableModel } from '../../testing';
 import { translations } from '../../translations';
@@ -22,17 +23,18 @@ type StoryProps = {
   editing: GridEditing;
 };
 
+// TODO(burdon): Broken layout.
 const DefaultStory = ({ editing }: StoryProps) => {
-  const { model, view } = useTestTableModel();
+  const { model, table } = useTestTableModel();
 
-  if (!model || !view) {
+  if (!model || !table) {
     return <div />;
   }
 
   return (
-    <div className='flex w-[300px] border border-separator' style={{ height: defaultRowSize }}>
+    <div className='border border-separator' style={{ height: defaultRowSize }}>
       <Grid.Root id='test' editing={editing}>
-        <TableCellEditor model={model} schema={DataType.Task} />
+        <TableCellEditor model={model} schema={Task.Task} />
       </Grid.Root>
     </div>
   );
@@ -44,16 +46,18 @@ const meta = {
   render: DefaultStory,
   decorators: [
     withTheme,
+    withLayout({ layout: 'column' }),
     withClientProvider({
-      types: [DataType.View, DataType.Task, Table.Table],
+      types: [View.View, Task.Task, Table.Table],
       createIdentity: true,
       createSpace: true,
-      onCreateSpace: async ({ client, space }) => {
-        const { view } = await Table.makeView({ client, space, typename: DataType.Task.typename });
-        space.db.add(view);
+      onCreateSpace: async ({ space }) => {
+        const { view, jsonSchema } = await View.makeFromDatabase({ db: space.db, typename: Task.Task.typename });
+        const table = Table.make({ view, jsonSchema });
+        space.db.add(table);
         Array.from({ length: 10 }).forEach(() => {
           space.db.add(
-            Obj.make(DataType.Task, {
+            Obj.make(Task.Task, {
               title: faker.person.fullName(),
               status: faker.helpers.arrayElement(['todo', 'in-progress', 'done'] as const),
               description: faker.lorem.sentence(),
@@ -64,8 +68,8 @@ const meta = {
     }),
   ],
   parameters: {
+    layout: 'fullscreen',
     translations,
-    layout: 'centered',
   },
 } satisfies Meta<typeof DefaultStory>;
 

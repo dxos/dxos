@@ -21,10 +21,10 @@
       "path": "../../common/debug"
     },
     {
-      "path": "../../common/keyboard"
+      "path": "../../common/effect"
     },
     {
-      "path": "../../common/local-storage"
+      "path": "../../common/keyboard"
     },
     {
       "path": "../../common/random"
@@ -33,10 +33,13 @@
       "path": "../../common/storybook-utils"
     },
     {
+      "path": "../../common/util"
+    },
+    {
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../core/echo/live-object"
+      "path": "../../core/operation"
     },
     {
       "path": "../../sdk/app-framework"
@@ -51,7 +54,7 @@
       "path": "../../ui/react-ui"
     },
     {
-      "path": "../../ui/react-ui-theme"
+      "path": "../../ui/ui-theme"
     },
     {
       "path": "../plugin-client"
@@ -63,7 +66,7 @@
       "path": "../plugin-space"
     },
     {
-      "path": "../plugin-storybook-layout"
+      "path": "../plugin-testing"
     }
   ]
 }

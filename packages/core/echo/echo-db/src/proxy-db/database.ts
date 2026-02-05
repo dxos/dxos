@@ -7,27 +7,19 @@ import { inspect } from 'node:util';
 import { type CleanupFn, Event, type ReadOnlyEvent, synchronized } from '@dxos/async';
 import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { inspectObject } from '@dxos/debug';
-import { Ref } from '@dxos/echo';
-import { type BaseObject, type HasId, assertObjectModelShape, setRefResolver } from '@dxos/echo/internal';
-import { getSchema, getType } from '@dxos/echo/internal';
+import { Database, type Entity, Obj, type QueryAST, Ref } from '@dxos/echo';
+import { type AnyProperties, assertObjectModel, setRefResolver } from '@dxos/echo/internal';
+import { getProxyTarget, isProxy } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { DXN, type PublicKey, type SpaceId } from '@dxos/keys';
-import { type Live, getProxyTarget, isLiveObject } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { type QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 import { type DataService, type SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
 import { defaultMap } from '@dxos/util';
 
 import type { SaveStateChangedEvent } from '../automerge';
+import { CoreDatabase, type LoadObjectOptions, type ObjectCore } from '../core-db';
 import {
-  CoreDatabase,
-  type FlushOptions,
-  type LoadObjectOptions,
-  type ObjectCore,
-  type ObjectPlacement,
-} from '../core-db';
-import {
-  type AnyLiveObject,
   EchoReactiveHandler,
   type ProxyTarget,
   createObject,
@@ -35,79 +27,33 @@ import {
   initEchoReactiveObjectRootProxy,
   isEchoObject,
 } from '../echo-handler';
-import { type Hypergraph } from '../hypergraph';
-import { Filter, Query, type QueryFn, type QueryOptions } from '../query';
+import { type HypergraphImpl } from '../hypergraph';
+import { Filter, Query } from '../query';
 
-import { EchoSchemaRegistry } from './echo-schema-registry';
-import type { ObjectMigration } from './object-migration';
+import { DatabaseSchemaRegistry } from './database-schema-registry';
+import { type ObjectMigration } from './object-migration';
 
-export type GetObjectByIdOptions = {
-  deleted?: boolean;
-};
-
-export type AddOptions = {
+// TODO(burdon): Remove and progressively push methods to Database.Database.
+export interface EchoDatabase extends Database.Database {
   /**
-   * Where to place the object in the Automerge document tree.
-   * Root document is always loaded with the space.
-   * Linked documents are loaded lazily.
-   * Placing large number of objects in the root document may slow down the initial load.
-   *
-   * @default 'linked-doc'
+   * Get notification about the data being saved to disk.
    */
-  placeIn?: ObjectPlacement;
-};
+  readonly saveStateChanged: ReadOnlyEvent<SaveStateChangedEvent>;
 
-/**
- * Database API.
- */
-// TODO(burdon): Rename (no product name in types).
-export interface EchoDatabase {
-  get graph(): Hypergraph;
-  get schemaRegistry(): EchoSchemaRegistry;
+  /** @deprecated */
+  readonly pendingBatch: ReadOnlyEvent<unknown>;
 
+  /** @deprecated */
+  readonly coreDatabase: CoreDatabase;
+
+  /** @deprecated */
   get spaceKey(): PublicKey;
-  get spaceId(): SpaceId;
 
-  toJSON(): object;
+  // Overrides interface.
+  get schemaRegistry(): DatabaseSchemaRegistry;
 
-  /**
-   * @deprecated Use `ref` instead.
-   */
-  getObjectById<T extends BaseObject = any>(id: string, opts?: GetObjectByIdOptions): Live<T> | undefined;
-
-  /**
-   * Creates a reference to an existing object in the database.
-   *
-   * NOTE: The reference may be dangling if the object is not present in the database.
-   *
-   * ## Difference from `Ref.fromDXN`
-   *
-   * `Ref.fromDXN(dxn)` returns an unhydrated reference. The `.load` and `.target` APIs will not work.
-   * `db.ref(dxn)` is preferable in cases with access to the database.
-   */
-  ref<T extends BaseObject = any>(dxn: DXN): Ref.Ref<T>;
-
-  /**
-   * Query objects.
-   */
-  query: QueryFn;
-
-  /**
-   * Adds object to the database.
-   */
-  // TODO(dmaretskyi): Lock to Obj.Any | Relation.Any.
-  add<T extends BaseObject>(obj: Live<T>, opts?: AddOptions): Live<T & HasId>;
-
-  /**
-   * Removes object from the database.
-   */
-  // TODO(dmaretskyi): Lock to Obj.Any | Relation.Any.
-  remove<T extends BaseObject & HasId>(obj: T): void;
-
-  /**
-   * Wait for all pending changes to be saved to disk.
-   */
-  flush(opts?: FlushOptions): Promise<void>;
+  // Overrides interface.
+  get graph(): HypergraphImpl;
 
   /**
    * Run migrations.
@@ -125,38 +71,20 @@ export interface EchoDatabase {
   subscribeToSyncState(ctx: Context, callback: (state: SpaceSyncState) => void): CleanupFn;
 
   /**
-   * Get notification about the data being saved to disk.
+   * Insert new objects.
+   * @deprecated Use `add` instead.
    */
-  readonly saveStateChanged: ReadOnlyEvent<SaveStateChangedEvent>;
-
-  /**
-   * @deprecated
-   */
-  readonly pendingBatch: ReadOnlyEvent<unknown>;
-
-  /**
-   * @deprecated
-   */
-  readonly coreDatabase: CoreDatabase;
+  insert(data: unknown): Promise<unknown>;
 
   /**
    * Update objects.
    * @deprecated Directly mutate the object.
    */
-  // TODO(burdon): Remove.
   update(filter: Filter.Any, operation: unknown): Promise<void>;
-
-  /**
-   * Insert new objects.
-   * @deprecated Use `add` instead.
-   */
-  // TODO(burdon): Remove.
-  // TODO(dmaretskyi): Support meta.
-  insert(data: unknown): Promise<unknown>;
 }
 
-export type EchoDatabaseParams = {
-  graph: Hypergraph;
+export type EchoDatabaseProps = {
+  graph: HypergraphImpl;
   dataService: DataService;
   queryService: QueryService;
   spaceId: SpaceId;
@@ -178,23 +106,26 @@ export type EchoDatabaseParams = {
  * Implements EchoDatabase interface.
  */
 export class EchoDatabaseImpl extends Resource implements EchoDatabase {
-  private readonly _schemaRegistry: EchoSchemaRegistry;
+  readonly [Database.TypeId]: typeof Database.TypeId = Database.TypeId;
+
   /**
    * @internal
    */
-  _coreDatabase: CoreDatabase;
+  readonly _coreDatabase: CoreDatabase;
 
-  private _rootUrl: string | undefined = undefined;
+  private readonly _schemaRegistry: DatabaseSchemaRegistry;
 
   /**
    * Mapping `object core` -> `root proxy` (User facing proxies).
    * @internal
    */
-  readonly _rootProxies = new Map<ObjectCore, AnyLiveObject<any>>();
+  readonly _rootProxies = new Map<ObjectCore, Entity.Unknown>();
 
   readonly saveStateChanged: ReadOnlyEvent<SaveStateChangedEvent>;
 
-  constructor(params: EchoDatabaseParams) {
+  private _rootUrl: string | undefined = undefined;
+
+  constructor(params: EchoDatabaseProps) {
     super();
 
     this._coreDatabase = new CoreDatabase({
@@ -205,7 +136,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
       spaceKey: params.spaceKey,
     });
 
-    this._schemaRegistry = new EchoSchemaRegistry(this, {
+    this._schemaRegistry = new DatabaseSchemaRegistry(this, {
       reactiveQuery: params.reactiveSchemaQuery,
       preloadSchemaOnOpen: params.preloadSchemaOnOpen,
     });
@@ -236,12 +167,12 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     return this._rootUrl;
   }
 
-  get graph(): Hypergraph {
+  get graph(): HypergraphImpl {
     return this._coreDatabase.graph;
   }
 
-  // TODO(burdon): Rename.
-  get schemaRegistry(): EchoSchemaRegistry {
+  // TODO(burdon): Move into hypergraph.
+  get schemaRegistry(): DatabaseSchemaRegistry {
     return this._schemaRegistry;
   }
 
@@ -250,6 +181,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     if (this._rootUrl !== undefined) {
       await this._coreDatabase.open({ rootUrl: this._rootUrl });
     }
+
     await this._schemaRegistry.open();
   }
 
@@ -273,30 +205,29 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     }
   }
 
-  getObjectById(id: string, { deleted = false } = {}): AnyLiveObject<any> | undefined {
+  // TODO(burdon): Type check.
+  getObjectById<T extends Entity.Unknown = Entity.Any>(id: string, { deleted = false } = {}): T | undefined {
     const core = this._coreDatabase.getObjectCoreById(id);
     if (!core || (core.isDeleted() && !deleted)) {
       return undefined;
     }
 
-    const object = defaultMap(this._rootProxies, core, () => initEchoReactiveObjectRootProxy(core, this));
-    invariant(isLiveObject(object));
-    return object;
+    return defaultMap(this._rootProxies, core, () => initEchoReactiveObjectRootProxy(core, this)) as T;
   }
 
-  ref<T extends BaseObject = any>(dxn: DXN): Ref.Ref<T> {
+  makeRef<T extends AnyProperties = any>(dxn: DXN): Ref.Ref<T> {
     const ref = Ref.fromDXN(dxn);
     setRefResolver(ref, this.graph.createRefResolver({ context: { space: this.spaceId } }));
     return ref;
   }
 
   // Odd way to define methods types from a typedef.
-  declare query: QueryFn;
+  declare query: Database.QueryFn;
   static {
     this.prototype.query = this.prototype._query;
   }
 
-  private _query(query: Query.Any | Filter.Any, options?: QueryOptions) {
+  private _query(query: Query.Any | Filter.Any, options?: Database.QueryOptions & QueryAST.QueryOptions) {
     query = Filter.is(query) ? Query.select(query) : query;
     return this._coreDatabase.graph.query(query, {
       ...options,
@@ -322,10 +253,9 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   /**
    * Add reactive object.
    */
-  // TODO(dmaretskyi): Lock to Obj.Any | Relation.Any.
-  add<T extends BaseObject>(obj: T, opts?: AddOptions): Live<T & HasId> {
+  add<T extends Entity.Unknown = Entity.Unknown>(obj: T, opts?: Database.AddOptions): T {
     if (!isEchoObject(obj)) {
-      const schema = getSchema(obj);
+      const schema = Obj.getSchema(obj);
       if (schema != null) {
         if (!this.schemaRegistry.hasSchema(schema) && !this.graph.schemaRegistry.hasSchema(schema)) {
           throw createSchemaNotRegisteredError(schema);
@@ -334,36 +264,39 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
 
       obj = createObject(obj);
     }
-    assertObjectModelShape(obj);
+    assertObjectModel(obj);
 
     // TODO(burdon): Check if already added to db?
     invariant(isEchoObject(obj));
     this._rootProxies.set(getObjectCore(obj), obj);
 
-    const target = getProxyTarget(obj) as ProxyTarget;
+    const target = getProxyTarget(obj) as ProxyTarget & Entity.Unknown;
     EchoReactiveHandler.instance.setDatabase(target, this);
     EchoReactiveHandler.instance.saveRefs(target);
     this._coreDatabase.addCore(getObjectCore(obj), opts);
-
-    return obj as any;
+    return obj;
   }
 
   /**
    * Remove reactive object.
    */
-  remove<T extends BaseObject>(obj: T): void {
+  remove<T extends Entity.Unknown = Entity.Unknown>(obj: T): void {
     invariant(isEchoObject(obj));
     return this._coreDatabase.removeCore(getObjectCore(obj));
   }
 
-  async flush(opts?: FlushOptions): Promise<void> {
+  async flush(opts?: Database.FlushOptions): Promise<void> {
     await this._coreDatabase.flush(opts);
   }
 
   async runMigrations(migrations: ObjectMigration[]): Promise<void> {
     for (const migration of migrations) {
-      const { objects } = await this._coreDatabase.graph.query(Query.select(Filter.typeDXN(migration.fromType))).run();
-      log.verbose('migrate', { from: migration.fromType, to: migration.toType, objects: objects.length });
+      const objects = await this._coreDatabase.graph.query(Query.select(Filter.typeDXN(migration.fromType))).run();
+      log.verbose('migrate', {
+        from: migration.fromType,
+        to: migration.toType,
+        objects: objects.length,
+      });
       for (const object of objects) {
         const output = await migration.transform(object, { db: this });
 
@@ -374,7 +307,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
           data: output,
           type: migration.toType,
         });
-        const postMigrationType = getType(object);
+        const postMigrationType = Obj.getTypeDXN(object);
         invariant(postMigrationType != null && DXN.equals(postMigrationType, migration.toType));
 
         await migration.onMigration({ before: object, object, db: this });
@@ -392,19 +325,30 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   }
 
   /**
+   * Update service references after reconnection.
+   */
+  _updateServices({ dataService, queryService }: { dataService: DataService; queryService: QueryService }): void {
+    this._coreDatabase._updateServices({ dataService, queryService });
+  }
+
+  /**
+   * Handle reconnection to re-establish RPC streams.
+   */
+  async _onReconnect(): Promise<void> {
+    await this._coreDatabase._onReconnect();
+  }
+
+  /**
    * @internal
    */
-  async _loadObjectById<T extends BaseObject>(
-    objectId: string,
-    options: LoadObjectOptions = {},
-  ): Promise<AnyLiveObject<T> | undefined> {
+  async _loadObjectById(objectId: string, options: LoadObjectOptions = {}): Promise<Entity.Unknown | undefined> {
     const core = await this._coreDatabase.loadObjectCoreById(objectId, options);
     if (!core || core?.isDeleted()) {
       return undefined;
     }
 
     const obj = defaultMap(this._rootProxies, core, () => initEchoReactiveObjectRootProxy(core, this));
-    invariant(isLiveObject(obj));
+    invariant(isProxy(obj));
     return obj;
   }
 

@@ -9,62 +9,78 @@ import { Obj, Ref } from '@dxos/echo';
 import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/react-ui/testing';
-import { DataType } from '@dxos/schema';
-import { render } from '@dxos/storybook-utils';
+import { Text as TextType } from '@dxos/schema';
 
 import { translations } from '../../translations';
-import { JournalEntryType, JournalType, OutlineType, createJournal, createJournalEntry } from '../../types';
+import { Journal, Outline, getDateString } from '../../types';
 
-import { Journal } from './Journal';
+import { Journal as JournalComponent } from './Journal';
+
+// TODO(wittjosiah): ECHO objects don't work when passed via Storybook args.
+const DefaultJournalStory = () => {
+  const space = useSpace();
+  const journal = useMemo(() => {
+    if (space) {
+      return space.db.add(Journal.make());
+    }
+    return undefined;
+  }, [space]);
+  if (journal) {
+    return <JournalComponent journal={journal} />;
+  }
+  return null;
+};
+
+// Create journal with entries at render time (see above comment).
+const JournalsStory = () => {
+  const space = useSpace();
+  const journal = useMemo(() => {
+    if (space) {
+      const dates = [new Date(Date.now() - 5 * 24 * 60 * 60 * 1_000), new Date(2025, 0, 1)];
+      return space.db.add(
+        Obj.make(Journal.Journal, {
+          name: 'Journal 1',
+          entries: dates.reduce(
+            (acc, date) => ({ ...acc, [getDateString(date)]: Ref.make(Journal.makeEntry(date)) }),
+            {},
+          ),
+        }),
+      );
+    }
+    return undefined;
+  }, [space]);
+  if (journal) {
+    return <JournalComponent journal={journal} />;
+  }
+  return null;
+};
 
 const meta = {
   title: 'plugins/plugin-outliner/Journal',
-  component: Journal,
-  render: render(({ journal: _journal }) => {
-    const space = useSpace();
-    // TODO(burdon): Throws:
-    //  Uncaught InvariantViolation: invariant violation: assignFromLocalState [doc] at packages/core/echo/echo-db/src/core-db/object-core.ts:126
-    //  Uncaught Error: Object references must be wrapped with `Ref.make`
-    const journal = useMemo(() => space?.db.add(_journal), [space, _journal]);
-    if (journal) {
-      return <Journal journal={journal} />;
-    }
-  }),
   decorators: [
     withTheme,
     withClientProvider({
       createIdentity: true,
       createSpace: true,
-      types: [DataType.Text, JournalType, JournalEntryType, OutlineType],
+      types: [TextType.Text, Journal.Journal, Journal.JournalEntry, Outline.Outline],
     }),
   ],
   parameters: {
     layout: 'fullscreen',
     translations,
   },
-} satisfies Meta<typeof Journal>;
+} satisfies Meta;
 
 export default meta;
 
-type Story = StoryObj<typeof Journal>;
+type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  args: {
-    journal: createJournal(),
-  },
+  render: () => <DefaultJournalStory />,
 };
 
 export const Jounals: Story = {
-  args: {
-    journal: Obj.make(JournalType, {
-      name: 'Journal 1',
-      entries: [
-        Ref.make(createJournalEntry()),
-        Ref.make(createJournalEntry(new Date(Date.now() - 5 * 24 * 60 * 60 * 1_000))),
-        Ref.make(createJournalEntry(new Date(2025, 0, 1))),
-      ],
-    }),
-  },
+  render: () => <JournalsStory />,
 };
 
 const FocusContainer = ({ id }: { id: string }) => {
@@ -87,10 +103,10 @@ const FocusContainer = ({ id }: { id: string }) => {
   );
 };
 
-export const Test: Story = {
+export const Test: StoryObj = {
   render: () => {
     return (
-      <div className='flex flex-col w-full justify-center items-center gap-2 m-4'>
+      <div className='flex flex-col is-full justify-center items-center gap-2 m-4'>
         <FocusContainer id='test-1' />
         <FocusContainer id='test-2' />
       </div>

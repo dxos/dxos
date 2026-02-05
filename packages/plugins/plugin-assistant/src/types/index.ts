@@ -3,7 +3,9 @@
 //
 
 export * as Assistant from './Assistant';
-export * as AssistantAction from './AssistantAction';
+export { AssistantOperation } from './AssistantAction';
 
+export * from './capabilities';
 export * from './defs';
+export * from './events';
 export * from './service';

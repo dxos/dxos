@@ -2,19 +2,25 @@
 // Copyright 2023 DXOS.org
 //
 
+// TODO(burdon): Move this file to ../automerge.
+// TDOO(burdon): Standardize import * as A.
 import type { ChangeFn, ChangeOptions, Doc, Heads } from '@automerge/automerge';
 
-import { type Reference } from '@dxos/echo-protocol';
+import { type EncodedReference } from '@dxos/echo-protocol';
 import { get } from '@dxos/util';
 
+/**
+ * Values that can be encoded/decoded from Automerge documents.
+ * Uses readonly modifiers so that both mutable and readonly types can be accepted.
+ */
 export type DecodedAutomergePrimaryValue =
   | undefined
   | string
   | number
   | boolean
-  | DecodedAutomergePrimaryValue[]
-  | { [key: string]: DecodedAutomergePrimaryValue }
-  | Reference;
+  | readonly DecodedAutomergePrimaryValue[]
+  | { readonly [key: string]: DecodedAutomergePrimaryValue }
+  | EncodedReference;
 
 //
 // Automerge types.

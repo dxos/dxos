@@ -7,11 +7,11 @@ import React, { forwardRef, useEffect, useMemo, useRef, useState } from 'react';
 import { addEventListener } from '@dxos/async';
 import { LogLevel } from '@dxos/log';
 import { Icon, type ThemedClassName, useDynamicRef, useForwardedRef, useTranslation } from '@dxos/react-ui';
-import { descriptionText, mx } from '@dxos/react-ui-theme';
+import { ScrollContainer, type ScrollController } from '@dxos/react-ui';
+import { descriptionText, mx } from '@dxos/ui-theme';
 import { trim } from '@dxos/util';
 
 import { translationKey } from '../../translations';
-import { ScrollContainer, type ScrollController } from '../ScrollContainer';
 
 export type TimelineOptions = {
   lineHeight: number;
@@ -68,7 +68,7 @@ export const Timeline = forwardRef<ScrollController, TimelineProps>(
   (
     {
       classNames,
-      branches: branchesParam,
+      branches: branchesProp,
       commits = empty,
       showIcon = true,
       compact = false,
@@ -83,8 +83,8 @@ export const Timeline = forwardRef<ScrollController, TimelineProps>(
 
     // Auto-discover branches if not provided.
     const branches = useMemo(() => {
-      if (branchesParam) {
-        return branchesParam;
+      if (branchesProp) {
+        return branchesProp;
       }
 
       return commits.reduce((branches, commit) => {
@@ -94,7 +94,7 @@ export const Timeline = forwardRef<ScrollController, TimelineProps>(
 
         return branches;
       }, [] as string[]);
-    }, [branchesParam, commits]);
+    }, [branchesProp, commits]);
 
     // NOTE: Assumes commits are in topological order.
     const getCommitIndex = (id: string) => commits.findIndex((c) => c.id === id);
@@ -200,7 +200,7 @@ export const Timeline = forwardRef<ScrollController, TimelineProps>(
 
     return (
       <ScrollContainer.Root pin ref={scrollerRef}>
-        <ScrollContainer.Content
+        <ScrollContainer.Viewport
           classNames={['flex flex-col is-full !outline-none', classNames]}
           tabIndex={0}
           ref={containerRef}
@@ -221,7 +221,7 @@ export const Timeline = forwardRef<ScrollController, TimelineProps>(
                   data-index={index}
                   aria-current={current === index}
                   className={mx(
-                    'group flex shrink-0 overflow-hidden pis-3 pie-3 gap-2 items-center',
+                    'group flex shrink-0 overflow-hidden pli-3 gap-2 items-center',
                     // TODO(burdon): Factor out fragment.
                     'aria-[current=true]:bg-activeSurface hover:bg-hoverSurface',
                   )}
@@ -239,7 +239,7 @@ export const Timeline = forwardRef<ScrollController, TimelineProps>(
                     />
                   </div>
                   {showIcon && (
-                    <div className='flex shrink-0 w-6 justify-center'>
+                    <div className='flex shrink-0 is-6 justify-center'>
                       {commit.icon && (
                         <Icon icon={commit.icon} classNames={mx(commit.level && levelColors[commit.level])} size={4} />
                       )}
@@ -252,7 +252,7 @@ export const Timeline = forwardRef<ScrollController, TimelineProps>(
               );
             })
           )}
-        </ScrollContainer.Content>
+        </ScrollContainer.Viewport>
         <ScrollContainer.ScrollDownButton />
       </ScrollContainer.Root>
     );

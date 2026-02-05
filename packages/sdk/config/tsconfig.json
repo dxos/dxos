@@ -27,6 +27,9 @@
     },
     {
       "path": "../../core/protocols"
+    },
+    {
+      "path": "../client-protocol"
     }
   ]
 }

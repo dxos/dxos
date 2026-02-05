@@ -39,7 +39,7 @@ export const ScopeComponent = ({ shape }: ShapeComponentProps<ScopeShape>) => {
   const { getAverage } = useAudioStream(active);
 
   return (
-    <div className='flex w-full justify-center items-center bg-black'>
+    <div className='flex is-full justify-center items-center bg-black'>
       <Chaos active={active} getValue={getAverage} options={{ ...shaderPresets.heptapod, zoom: 1.2 }} />
     </div>
   );

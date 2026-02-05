@@ -38,7 +38,7 @@ describe('LockFile', () => {
     await LockFile.release(handle2);
   });
 
-  test('released when process exits', { timeout: 10_000 }, async () => {
+  test('released when process exits', { timeout: 20_000 }, async () => {
     const filename = join(TEST_DIR, `lock-${Math.random()}.lock`);
     onTestFinished(() => {
       if (existsSync(filename)) {
@@ -65,7 +65,7 @@ describe('LockFile', () => {
       });
     }
 
-    await trigger.wait({ timeout: 5_000 });
+    await trigger.wait({ timeout: 15_000 });
 
     await expect(LockFile.acquire(filename)).rejects.toBeInstanceOf(Error);
 

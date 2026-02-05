@@ -11,12 +11,12 @@ import { createRoot } from 'react-dom/client';
 
 import { type Space } from '@dxos/react-client/echo';
 import { Status, ThemeProvider } from '@dxos/react-ui';
-import { focusField } from '@dxos/react-ui-editor';
-import { defaultTx } from '@dxos/react-ui-theme';
+import { focusField } from '@dxos/ui-editor';
+import { defaultTx } from '@dxos/ui-theme';
 import { type MaybePromise } from '@dxos/util';
 
-import { type WnfsCapabilities } from '../capabilities';
 import { getBlobUrl, getPathFromUrl, loadWnfs } from '../helpers';
+import { type WnfsCapabilities } from '../types';
 
 const WAIT_UNTIL_LOADER = 1500;
 
@@ -165,11 +165,11 @@ class WnfsImageWidget extends WidgetType {
     super();
   }
 
-  override eq(other: this): boolean {
-    return this._wnfsUrl === (other as any as WnfsImageWidget)._wnfsUrl;
+  override eq(other: this) {
+    return this._wnfsUrl === other._wnfsUrl;
   }
 
-  override toDOM(view: EditorView): HTMLDivElement {
+  override toDOM(view: EditorView) {
     if (typeof this._url === 'string') {
       return createImg(view, this._url);
     }

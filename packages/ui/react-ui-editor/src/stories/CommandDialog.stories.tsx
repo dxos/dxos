@@ -5,12 +5,10 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type KeyboardEvent, useState } from 'react';
 
-import { Button, Icon, Input } from '@dxos/react-ui';
+import { type Button, IconButton, Input } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
-import { mx } from '@dxos/react-ui-theme';
-
-import { editorWidth } from '../defaults';
-import { str } from '../testing';
+import { editorWidth, join } from '@dxos/ui-editor';
+import { mx } from '@dxos/ui-theme';
 
 import { EditorStory } from './components';
 
@@ -54,9 +52,14 @@ const CommandDialog = ({ onAction }: { onAction: (action?: any) => void }) => {
             onKeyDown={handleKeyDown}
           />
         </Input.Root>
-        <Button variant='ghost' classNames='pli-0' onClick={() => onAction({ type: 'cancel' })}>
-          <Icon icon='ph--x--regular' size={5} />
-        </Button>
+        <IconButton
+          icon='ph--x--regular'
+          label='Cancel'
+          iconOnly
+          variant='ghost'
+          classNames='pli-0'
+          onClick={() => onAction({ type: 'cancel' })}
+        />
       </div>
     </div>
   );
@@ -64,7 +67,7 @@ const CommandDialog = ({ onAction }: { onAction: (action?: any) => void }) => {
 
 const meta = {
   title: 'ui/react-ui-editor/CommandDialog',
-  render: () => <EditorStory text={str('# Command', '', '')} extensions={[]} />,
+  render: () => <EditorStory text={join('# Command', '', '')} extensions={[]} />,
   decorators: [withTheme],
   parameters: {
     layout: 'fullscreen',

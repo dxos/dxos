@@ -4,7 +4,7 @@
 
 import React, { type FC, useCallback, useMemo } from 'react';
 
-import { FormatEnum } from '@dxos/echo/internal';
+import { Format } from '@dxos/echo/internal';
 import { PublicKey } from '@dxos/keys';
 import { type Space as SpaceProto } from '@dxos/protocols/proto/dxos/client/services';
 import { type SubscribeToSpacesResponse } from '@dxos/protocols/proto/dxos/devtools/host';
@@ -38,10 +38,10 @@ export const PipelineTable: FC<PipelineTableProps> = ({ state, metadata, onSelec
 
   const properties: TablePropertyDefinition[] = useMemo(
     () => [
-      { name: 'feedKey', format: FormatEnum.DID },
+      { name: 'feedKey', format: Format.TypeFormat.DID },
       {
         name: 'type',
-        format: FormatEnum.SingleSelect,
+        format: Format.TypeFormat.SingleSelect,
         size: 80,
         config: {
           options: [
@@ -50,13 +50,13 @@ export const PipelineTable: FC<PipelineTableProps> = ({ state, metadata, onSelec
           ],
         },
       },
-      { name: 'own', format: FormatEnum.Boolean, size: 90 },
-      { name: 'genesis', format: FormatEnum.Boolean, size: 100 },
-      { name: 'start', format: FormatEnum.Number, size: 100 },
-      { name: 'target', format: FormatEnum.Number, size: 100 },
-      { name: 'processed', format: FormatEnum.Number, size: 100 },
-      { name: 'total', format: FormatEnum.Number, size: 100 },
-      { name: 'progress', format: FormatEnum.String, size: 100 },
+      { name: 'own', format: Format.TypeFormat.Boolean, size: 90 },
+      { name: 'genesis', format: Format.TypeFormat.Boolean, size: 100 },
+      { name: 'start', format: Format.TypeFormat.Number, size: 100 },
+      { name: 'target', format: Format.TypeFormat.Number, size: 100 },
+      { name: 'processed', format: Format.TypeFormat.Number, size: 100 },
+      { name: 'total', format: Format.TypeFormat.Number, size: 100 },
+      { name: 'progress', format: Format.TypeFormat.String, size: 100 },
     ],
     [],
   );

@@ -5,8 +5,8 @@
 import React, { type PropsWithChildren, createContext, useCallback, useContext, useState } from 'react';
 
 import { type CellAddress, type CellRange, type CompleteCellRange, type ComputeGraph } from '@dxos/compute';
+import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { fullyQualifiedId } from '@dxos/react-client/echo';
 import {
   Grid,
   type GridContentProps,
@@ -16,7 +16,7 @@ import {
 } from '@dxos/react-ui-grid';
 
 import { type SheetModel, useSheetModel } from '../../model';
-import { type SheetType } from '../../types';
+import { type Sheet } from '../../types';
 
 export type SheetContextValue = {
   id: string;
@@ -56,12 +56,12 @@ export const useSheetContext = (): SheetContextValue => {
 };
 
 const SheetProviderImpl = ({
+  __gridScope,
+  children,
+  ignoreAttention,
   model,
   onInfo,
-  ignoreAttention,
-  children,
-  __gridScope,
-}: GridScopedProps<PropsWithChildren<Pick<SheetContextValue, 'onInfo' | 'model' | 'ignoreAttention'>>>) => {
+}: GridScopedProps<PropsWithChildren<Pick<SheetContextValue, 'ignoreAttention' | 'model' | 'onInfo'>>>) => {
   const { id, editing, setEditing } = useGridContext('SheetProvider', __gridScope);
 
   const [cursor, setCursorInternal] = useState<CellAddress>();
@@ -114,7 +114,7 @@ const SheetProviderImpl = ({
 
 export type SheetProviderProps = {
   graph: ComputeGraph;
-  sheet: SheetType;
+  sheet: Sheet.Sheet;
   readonly?: boolean;
   ignoreAttention?: boolean;
 } & Pick<SheetContextValue, 'onInfo'>;
@@ -130,7 +130,7 @@ export const SheetProvider = ({
   const model = useSheetModel(graph, sheet, { readonly });
 
   return !model ? null : (
-    <Grid.Root id={fullyQualifiedId(sheet)}>
+    <Grid.Root id={Obj.getDXN(sheet).toString()}>
       <SheetProviderImpl model={model} onInfo={onInfo} ignoreAttention={ignoreAttention}>
         {children}
       </SheetProviderImpl>

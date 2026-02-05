@@ -33,9 +33,6 @@
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../core/echo/live-object"
-    },
-    {
       "path": "../../plugins/plugin-preview"
     },
     {
@@ -54,6 +51,9 @@
       "path": "../react-ui-dnd"
     },
     {
+      "path": "../react-ui-mosaic"
+    },
+    {
       "path": "../react-ui-stack"
     },
     {
@@ -63,10 +63,10 @@
       "path": "../react-ui-text-tooltip"
     },
     {
-      "path": "../react-ui-theme"
+      "path": "../ui-theme"
     },
     {
-      "path": "../react-ui-types"
+      "path": "../ui-types"
     }
   ]
 }

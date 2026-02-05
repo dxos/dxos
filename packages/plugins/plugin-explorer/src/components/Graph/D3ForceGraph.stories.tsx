@@ -5,15 +5,18 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
+import { Type } from '@dxos/echo';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
-import { DataType } from '@dxos/schema';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { View } from '@dxos/schema';
 import { type ValueGenerator } from '@dxos/schema/testing';
+import { withRegistry } from '@dxos/storybook-utils';
 import { render } from '@dxos/storybook-utils';
+import { HasRelationship, Organization, Person, Project } from '@dxos/types';
 
 import { useGraphModel } from '../../hooks';
 import { Graph } from '../../types';
@@ -28,19 +31,20 @@ faker.seed(1);
 const DefaultStory = () => {
   const client = useClient();
   const [space, setSpace] = useState<Space>();
-  const [view, setView] = useState<DataType.View>();
+  const [graph, setGraph] = useState<Graph.Graph>();
 
   useAsyncEffect(async () => {
     const space = client.spaces.default;
     void generate(space, generator);
-    const { view } = await Graph.makeView({ client, space, name: 'Test', typename: Graph.Graph.typename });
-    space.db.add(view);
+    const { view } = await View.makeFromDatabase({ db: space.db, typename: Type.getTypename(Graph.Graph) });
+    const graph = Graph.make({ name: 'Test', view });
+    space.db.add(graph);
     setSpace(space);
-    setView(view);
-  }, []);
+    setGraph(graph);
+  }, [client]);
 
   const model = useGraphModel(space);
-  if (!model || !space || !view) {
+  if (!model || !space || !graph) {
     return null;
   }
 
@@ -52,16 +56,18 @@ const meta = {
   component: D3ForceGraph,
   render: render(DefaultStory),
   decorators: [
+    withRegistry,
     withTheme,
+    withLayout(),
     withClientProvider({
       createSpace: true,
       types: [
         Graph.Graph,
-        DataType.View,
-        DataType.Organization,
-        DataType.Project,
-        DataType.Person,
-        DataType.HasRelationship,
+        View.View,
+        Organization.Organization,
+        Project.Project,
+        Person.Person,
+        HasRelationship.HasRelationship,
       ],
     }),
   ],

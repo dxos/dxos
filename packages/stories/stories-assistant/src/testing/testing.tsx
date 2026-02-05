@@ -5,57 +5,32 @@
 import * as Tool from '@effect/ai/Tool';
 import * as Toolkit from '@effect/ai/Toolkit';
 import * as Console from 'effect/Console';
+import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { SERVICES_CONFIG } from '@dxos/ai/testing';
-import {
-  Capabilities,
-  Events,
-  IntentPlugin,
-  LayoutAction,
-  type Plugin,
-  type PluginContext,
-  SettingsPlugin,
-  allOf,
-  contributes,
-  createIntent,
-  createResolver,
-  defineModule,
-  definePlugin,
-} from '@dxos/app-framework';
+import { ActivationEvent, Capability, type CapabilityManager, Common, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { AiContextBinder, ArtifactId } from '@dxos/assistant';
-import {
-  DESIGN_BLUEPRINT,
-  PLANNING_BLUEPRINT,
-  agent,
-  createResearchNote,
-  readDocument,
-  readTasks,
-  research,
-  updateDocument,
-  updateTasks,
-} from '@dxos/assistant-testing';
+import { AiContextBinder, ArtifactId, GenericToolkit } from '@dxos/assistant';
+import { Agent, DesignBlueprint, Document, PlanningBlueprint, Research, Tasks } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { type Space } from '@dxos/client/echo';
 import { Obj, Ref } from '@dxos/echo';
-import { FunctionTrigger, FunctionType, exampleFunctions } from '@dxos/functions';
+import { Example, Function, Trigger } from '@dxos/functions';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { Assistant, AssistantAction, AssistantPlugin } from '@dxos/plugin-assistant';
-import { AttentionPlugin } from '@dxos/plugin-attention';
+import { OperationResolver } from '@dxos/operation';
+import { Assistant, AssistantOperation, AssistantPlugin } from '@dxos/plugin-assistant';
 import { AutomationPlugin } from '@dxos/plugin-automation';
 import { ClientCapabilities, ClientEvents, ClientPlugin } from '@dxos/plugin-client';
 import { type ClientPluginOptions } from '@dxos/plugin-client/types';
-import { DeckAction } from '@dxos/plugin-deck/types';
-import { GraphPlugin } from '@dxos/plugin-graph';
+import { DeckOperation } from '@dxos/plugin-deck/types';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { PreviewPlugin } from '@dxos/plugin-preview';
-import { SpacePlugin } from '@dxos/plugin-space';
-import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
-import { ThemePlugin } from '@dxos/plugin-theme';
+import { StorybookPlugin } from '@dxos/plugin-testing';
+import { corePlugins } from '@dxos/plugin-testing';
 import { type Client, Config } from '@dxos/react-client';
-import { defaultTx } from '@dxos/react-ui-theme';
-import { DataType } from '@dxos/schema';
+import { AccessToken } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 // TODO(burdon): Factor out.
@@ -71,18 +46,22 @@ export const config = {
         storage: {
           persistent: true,
         },
+        enableLocalQueues: true,
       },
       services: SERVICES_CONFIG.REMOTE,
     },
   }),
   local: new Config({
     runtime: {
+      client: {
+        enableLocalQueues: true,
+      },
       services: SERVICES_CONFIG.LOCAL,
     },
   }),
 };
 
-class TestingToolkit extends Toolkit.make(
+const Toolkit$ = Toolkit.make(
   Tool.make('open-item', {
     description: trim`
       Opens an item in the application.
@@ -93,19 +72,22 @@ class TestingToolkit extends Toolkit.make(
     success: Schema.Any,
     failure: Schema.Never,
   }),
-) {
-  static layer = (_context: PluginContext) =>
-    TestingToolkit.toLayer({
+);
+
+namespace TestingToolkit {
+  export const Toolkit = Toolkit$;
+
+  export const createLayer = (_capabilities: CapabilityManager.CapabilityManager) =>
+    Toolkit$.toLayer({
       'open-item': ({ id }) => Console.log('Called open-item', { id }),
     });
 }
 
-type DecoratorsProps = Omit<ClientPluginOptions, 'onClientInitialized' | 'onSpacesReady'> &
-  Pick<StoryPluginOptions, 'onChatCreated'> & {
-    plugins?: Plugin[];
-    accessTokens?: DataType.AccessToken[];
-    onInit?: (props: { client: Client; space: Space }) => Promise<void>;
-  };
+type DecoratorsProps = {
+  plugins?: Plugin.Plugin[];
+  accessTokens?: AccessToken.AccessToken[];
+  onInit?: (props: { client: Client; space: Space }) => Promise<void>;
+} & (Omit<ClientPluginOptions, 'onClientInitialized' | 'onSpacesReady'> & Pick<StoryPluginOptions, 'onChatCreated'>);
 
 /**
  * Create storybook decorators.
@@ -120,62 +102,59 @@ export const getDecorators = ({
 }: DecoratorsProps) => [
   withPluginManager({
     plugins: [
-      // System plugins.
-      AttentionPlugin(),
-      AutomationPlugin(),
-      GraphPlugin(),
-      IntentPlugin(),
-      SettingsPlugin(),
-      SpacePlugin({}),
+      ...corePlugins(),
       ClientPlugin({
         types: [
-          Markdown.Document,
           Assistant.Chat,
           Blueprint.Blueprint,
+          AccessToken.AccessToken,
+          Function.Function,
+          Markdown.Document,
           Prompt.Prompt,
-          DataType.AccessToken,
-          FunctionTrigger,
-          FunctionType,
+          Trigger.Trigger,
           ...types,
         ],
-        onClientInitialized: async ({ client }) => {
-          log('onClientInitialized', { identity: client.halo.identity.get()?.did });
-          // Abort if already initialized.
-          if (client.halo.identity.get()) {
-            return;
-          }
+        onClientInitialized: ({ client }) =>
+          Effect.gen(function* () {
+            log('onClientInitialized', { identity: client.halo.identity.get()?.did });
+            // Abort if already initialized.
+            if (client.halo.identity.get()) {
+              return;
+            }
 
-          await client.halo.createIdentity();
-          await client.spaces.waitUntilReady();
+            yield* Effect.promise(() => client.halo.createIdentity());
+            yield* Effect.promise(() => client.spaces.waitUntilReady());
 
-          const space = client.spaces.default;
-          // TODO(burdon): Should not require this.
-          //  ERROR: invariant violation: Database was not initialized with root object.
-          // TODO(burdon): onSpacesReady is never called.
-          await space.waitUntilReady();
+            const space = client.spaces.default;
+            // TODO(burdon): Should not require this.
+            //  ERROR: invariant violation: Database was not initialized with root object.
+            // TODO(burdon): onSpacesReady is never called.
+            yield* Effect.promise(() => space.waitUntilReady());
 
-          // Add tokens.
-          for (const accessToken of accessTokens) {
-            space.db.add(Obj.clone(accessToken));
-          }
+            // Add tokens.
+            for (const accessToken of accessTokens) {
+              space.db.add(Obj.clone(accessToken));
+            }
 
-          await space.db.flush({ indexes: true });
-          await onInit?.({ client, space });
-          await space.db.flush({ indexes: true });
-        },
+            yield* Effect.promise(() => space.db.flush({ indexes: true }));
+            if (onInit) {
+              yield* Effect.promise(() => onInit({ client, space }));
+            }
+            yield* Effect.promise(() => space.db.flush({ indexes: true }));
+          }),
+        // Directly importing the "@dxos/client/opfs-worker" didn't work.
+        createOpfsWorker: () => new Worker(new URL('./opfs-worker', import.meta.url), { type: 'module' }),
         ...props,
       }),
 
-      // Cards
-      ThemePlugin({ tx: defaultTx }),
-      StorybookLayoutPlugin({}),
-      PreviewPlugin(),
-
       // User plugins.
+      PreviewPlugin(),
+      AutomationPlugin(),
       AssistantPlugin(),
-      StoryPlugin({ onChatCreated }),
 
       // Test-specific.
+      StorybookPlugin({}),
+      StoryPlugin({ onChatCreated }),
       ...plugins,
     ],
   }),
@@ -198,71 +177,78 @@ export const getDecorators = ({
 export const accessTokensFromEnv = (tokens: Record<string, string | undefined>) => {
   return Object.entries(tokens)
     .filter(([, token]) => !!token)
-    .map(([source, token]) => Obj.make(DataType.AccessToken, { source, token: token! }));
+    .map(([source, token]) => Obj.make(AccessToken.AccessToken, { source, token: token! }));
 };
 
 type StoryPluginOptions = {
   onChatCreated?: (props: { space: Space; chat: Assistant.Chat; binder: AiContextBinder }) => Promise<void>;
 };
 
-const StoryPlugin = definePlugin<StoryPluginOptions>(
-  {
-    id: 'example.com/plugin/testing',
-    name: 'Testing',
-  },
-  ({ onChatCreated }) => [
-    defineModule({
-      id: 'example.com/plugin/testing/module/testing',
-      activatesOn: Events.SetupArtifactDefinition,
-      activate: () => [
-        // TODO(burdon): Move into assistnat?
-        contributes(Capabilities.BlueprintDefinition, DESIGN_BLUEPRINT),
-        contributes(Capabilities.BlueprintDefinition, PLANNING_BLUEPRINT),
-        contributes(Capabilities.Functions, [agent]),
-        contributes(Capabilities.Functions, [readDocument, updateDocument]),
-        contributes(Capabilities.Functions, [readTasks, updateTasks]),
-        contributes(Capabilities.Functions, [research, createResearchNote]),
-        contributes(Capabilities.Functions, [exampleFunctions.reply]),
-      ],
+const StoryPlugin = Plugin.define<StoryPluginOptions>({
+  id: 'example.com/plugin/testing',
+  name: 'Testing',
+}).pipe(
+  Plugin.addModule({
+    id: 'example.com/plugin/testing/module/testing',
+    activatesOn: Common.ActivationEvent.SetupArtifactDefinition,
+    activate: () =>
+      Effect.succeed([
+        Capability.contributes(Common.Capability.BlueprintDefinition, DesignBlueprint),
+        Capability.contributes(Common.Capability.BlueprintDefinition, PlanningBlueprint),
+        Capability.contributes(Common.Capability.Functions, [Agent.prompt]),
+        Capability.contributes(Common.Capability.Functions, [Document.read, Document.update]),
+        Capability.contributes(Common.Capability.Functions, [Tasks.read, Tasks.update]),
+        Capability.contributes(Common.Capability.Functions, [Research.create, Research.research]),
+        Capability.contributes(Common.Capability.Functions, [Example.reply]),
+      ]),
+  }),
+  Plugin.addModule({
+    id: 'example.com/plugin/testing/module/toolkit',
+    activatesOn: Common.ActivationEvent.Startup,
+    activate: Effect.fnUntraced(function* () {
+      const capabilities = yield* Capability.Service;
+      return [
+        Capability.contributes(
+          Common.Capability.Toolkit,
+          GenericToolkit.make(TestingToolkit.Toolkit, TestingToolkit.createLayer(capabilities)),
+        ),
+      ];
     }),
-    defineModule({
-      id: 'example.com/plugin/testing/module/toolkit',
-      activatesOn: Events.Startup,
-      activate: (context) => [
-        contributes(Capabilities.Toolkit, TestingToolkit),
-        contributes(Capabilities.ToolkitHandler, TestingToolkit.layer(context)),
-      ],
+  }),
+  Plugin.addModule({
+    id: 'example.com/plugin/testing/module/setup',
+    activatesOn: ActivationEvent.allOf(Common.ActivationEvent.OperationInvokerReady, ClientEvents.SpacesReady),
+    activate: Effect.fnUntraced(function* () {
+      const { invoke } = yield* Capability.get(Common.Capability.OperationInvoker);
+      const client = yield* Capability.get(ClientCapabilities.Client);
+      const space = client.spaces.default;
+
+      // Ensure workspace is set.
+      yield* invoke(Common.LayoutOperation.SwitchWorkspace, { subject: space.id });
+
+      // Create initial chat.
+      yield* invoke(AssistantOperation.CreateChat, { db: space.db });
     }),
-    defineModule({
-      id: 'example.com/plugin/testing/module/setup',
-      activatesOn: allOf(Events.DispatcherReady, ClientEvents.SpacesReady),
-      activate: async (context) => {
-        const client = context.getCapability(ClientCapabilities.Client);
-        const space = client.spaces.default;
-        const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+  }),
+  Plugin.addModule(({ onChatCreated }) => ({
+    id: 'example.com/plugin/testing/module/operation-resolver',
+    activatesOn: Common.ActivationEvent.SetupOperationResolver,
+    activate: Effect.fnUntraced(function* () {
+      const client = yield* Capability.get(ClientCapabilities.Client);
+      return Capability.contributes(Common.Capability.OperationResolver, [
+        OperationResolver.make({
+          operation: DeckOperation.ChangeCompanion,
+          handler: () => Effect.void,
+        }),
+        OperationResolver.make({
+          operation: AssistantOperation.CreateChat,
+          position: 'hoist',
+          handler: ({ db, name }) =>
+            Effect.gen(function* () {
+              const registry = yield* Capability.get(Common.Capability.AtomRegistry);
+              const space = client.spaces.get(db.spaceId);
+              invariant(space, 'Space not found');
 
-        // Ensure workspace is set.
-        await dispatch(createIntent(LayoutAction.SwitchWorkspace, { part: 'workspace', subject: space.id }));
-
-        // Create initial chat.
-        await dispatch(createIntent(AssistantAction.CreateChat, { space }));
-
-        return [];
-      },
-    }),
-    defineModule({
-      id: 'example.com/plugin/testing/module/intent-resolver',
-      activatesOn: Events.SetupIntentResolver,
-      activate: () => [
-        contributes(Capabilities.IntentResolver, [
-          createResolver({
-            intent: DeckAction.ChangeCompanion,
-            resolve: () => ({}),
-          }),
-          createResolver({
-            intent: AssistantAction.CreateChat,
-            position: 'hoist',
-            resolve: async ({ space, name }) => {
               const queue = space.queues.create();
               const traceQueue = space.queues.create();
               const chat = Obj.make(Assistant.Chat, {
@@ -270,23 +256,25 @@ const StoryPlugin = definePlugin<StoryPluginOptions>(
                 queue: Ref.fromDXN(queue.dxn),
                 traceQueue: Ref.fromDXN(traceQueue.dxn),
               });
-              const binder = new AiContextBinder(queue);
+              const binder = new AiContextBinder({ queue, registry });
 
               // Story-specific behaviour to allow chat creation to be extended.
               space.db.add(chat);
-              await space.db.flush({ indexes: true });
+              yield* Effect.tryPromise(() => space.db.flush({ indexes: true }));
 
-              await binder.open();
-              await onChatCreated?.({ space, chat, binder });
-              await binder.close();
+              if (onChatCreated) {
+                yield* Effect.tryPromise(() => binder.open());
+                yield* Effect.tryPromise(() => onChatCreated({ space, chat, binder }));
+                yield* Effect.tryPromise(() => binder.close());
+              }
 
               return {
-                data: { object: chat },
+                object: chat,
               };
-            },
-          }),
-        ]),
-      ],
+            }),
+        }),
+      ]);
     }),
-  ],
+  })),
+  Plugin.make,
 );

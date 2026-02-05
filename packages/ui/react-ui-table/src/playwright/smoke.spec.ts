@@ -71,6 +71,7 @@ test.describe('Table', () => {
     const table = new TableManager(page);
 
     await table.grid.ready();
+    await expect(page.getByRole('gridcell', { name: 'Sapiente.' })).toHaveCount(1);
     await table.deleteRow(0);
     await expect(page.getByRole('gridcell', { name: 'Sapiente.' })).toHaveCount(0);
     await page.close();
@@ -88,7 +89,7 @@ test.describe('Table', () => {
     // Delete action affects all selected rows.
     await table.deleteRow(0);
 
-    await expect(page.getByRole('gridcell', { name: 'Sapiente.' })).toHaveCount(0);
+    await expect(page.getByRole('gridcell', { name: 'Aut.' })).toHaveCount(0);
     await expect(page.getByRole('gridcell', { name: 'Beatae.' })).toHaveCount(0);
     await expect(table.grid.cellsWithinPlane('grid')).toHaveCount(0);
     await page.close();
@@ -130,7 +131,7 @@ test.describe('Table', () => {
     await table.grid.ready();
     const newColumnLabel = 'TEST LABEL';
 
-    await table.addColumn({ label: newColumnLabel, format: 'number' });
+    await table.addColumn({ label: newColumnLabel, format: 'Number' });
 
     await expect(page.getByRole('gridcell', { name: newColumnLabel })).toBeVisible();
     await page.close();
@@ -153,13 +154,14 @@ test.describe('Table', () => {
     // Assert the first two switch checkboxes are checked.
     await expect(page.getByTestId('table-switch').first()).toBeChecked();
     await expect(page.getByTestId('table-switch').nth(1)).toBeChecked();
-    await expect(table.grid.cell(0, 0, 'grid')).toHaveText('Sapiente.');
+    await expect(table.grid.cell(0, 0, 'grid')).toHaveText('Aut.');
     await expect(table.grid.cell(0, 1, 'grid')).toHaveText('Beatae.');
 
     await page.close();
   });
 
-  test('extant relations work as expected', async ({ browser, browserName }) => {
+  // TODO(wittjosiah): Remove? Conflicts with story play function which is run as a unit test anyways.
+  test.skip('extant relations work as expected', async ({ browser, browserName }) => {
     test.skip(browserName === 'webkit');
     test.skip(browserName === 'firefox');
     const { page } = await setupPage(browser, { url: relationsStoryUrl });
@@ -187,7 +189,7 @@ test.describe('Table', () => {
     // Click on the combobox to open options
     await page.getByRole('combobox').click();
     await page.pause();
-    await page.getByPlaceholder('Search...').focus();
+    await page.getByPlaceholder('Search…').focus();
 
     // Type the first few letters of an org name.
     const orgName =
@@ -213,7 +215,8 @@ test.describe('Table', () => {
     await page.close();
   });
 
-  test('new relations work as expected', async ({ browser, browserName }) => {
+  // TODO(wittjosiah): Remove? Conflicts with story play function which is run as a unit test anyways.
+  test.skip('new relations work as expected', async ({ browser, browserName }) => {
     test.skip(browserName === 'webkit');
     test.skip(browserName === 'firefox');
     const { page } = await setupPage(browser, { url: relationsStoryUrl });
@@ -240,7 +243,7 @@ test.describe('Table', () => {
 
     // Click on the combobox to open options
     await page.getByRole('combobox').click();
-    await page.getByPlaceholder('Search...').focus();
+    await page.getByPlaceholder('Search…').focus();
 
     // Type the first few letters of an org name.
     const orgName = 'Sally';
@@ -254,7 +257,7 @@ test.describe('Table', () => {
     await page.pause();
 
     // Click the save button in the popover
-    await page.getByTestId('save-button').click();
+    await page.getByTestId('create-referenced-object-form').getByTestId('save-button').click();
 
     // Assert that the cell element has the org name
     await expect(targetCell).toHaveText(orgName);

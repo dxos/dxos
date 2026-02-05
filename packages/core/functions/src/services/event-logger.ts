@@ -17,12 +17,18 @@ export const ComputeEventPayload = Schema.Union(
   Schema.Struct({
     type: Schema.Literal('begin-compute'),
     nodeId: Schema.String,
-    inputs: Schema.Record({ key: Schema.String, value: Schema.Any }),
+    /**
+     * Names of the inputs begin computed.
+     */
+    inputs: Schema.Array(Schema.String),
   }),
   Schema.Struct({
     type: Schema.Literal('end-compute'),
     nodeId: Schema.String,
-    outputs: Schema.Record({ key: Schema.String, value: Schema.Any }),
+    /**
+     * Names of the outputs computed.
+     */
+    outputs: Schema.Array(Schema.String),
   }),
   Schema.Struct({
     type: Schema.Literal('compute-input'),
@@ -46,7 +52,7 @@ export type ComputeEventPayload = Schema.Schema.Type<typeof ComputeEventPayload>
 
 export const ComputeEvent = Schema.Struct({
   payload: ComputeEventPayload,
-}).pipe(Type.Obj({ typename: 'dxos.org/type/ComputeEvent', version: '0.1.0' }));
+}).pipe(Type.object({ typename: 'dxos.org/type/ComputeEvent', version: '0.1.0' }));
 
 /**
  * Logs event for the compute workflows.
@@ -69,7 +75,7 @@ export class ComputeEventLogger extends Context.Tag('@dxos/functions/ComputeEven
       const tracing = yield* TracingService;
       return {
         log: (event: ComputeEventPayload) => {
-          tracing.write(Obj.make(ComputeEvent, { payload: event }));
+          tracing.write(Obj.make(ComputeEvent, { payload: event }), tracing.getTraceContext());
         },
         nodeId: undefined,
       };

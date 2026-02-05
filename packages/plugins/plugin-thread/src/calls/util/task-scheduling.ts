@@ -27,8 +27,8 @@ export class FIFOScheduler {
 }
 
 // TODO(mykola): Reconcile with @dxos/async task scheduling.
-export class BulkRequestDispatcher<RequestEntryParams, BulkResponse> {
-  #currentBatch: RequestEntryParams[];
+export class BulkRequestDispatcher<RequestEntryProps, BulkResponse> {
+  #currentBatch: RequestEntryProps[];
   #currentBulkResponse: Promise<BulkResponse> | null;
   #batchSizeLimit: number;
 
@@ -43,8 +43,8 @@ export class BulkRequestDispatcher<RequestEntryParams, BulkResponse> {
    * At the event loop iteration end, the accumulated entries will be dispatched as a bulk request.
    */
   doBulkRequest(
-    params: RequestEntryParams,
-    bulkRequestFunc: (bulkCopy: RequestEntryParams[]) => Promise<BulkResponse>,
+    params: RequestEntryProps,
+    bulkRequestFunc: (bulkCopy: RequestEntryProps[]) => Promise<BulkResponse>,
   ): Promise<BulkResponse> {
     if (this.#currentBatch.length >= this.#batchSizeLimit) {
       // If it reaches the batch size limit, we make another bulk request.

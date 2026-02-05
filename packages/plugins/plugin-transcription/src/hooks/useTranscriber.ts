@@ -4,10 +4,10 @@
 
 import { useEffect, useMemo } from 'react';
 
-import { useCapabilities } from '@dxos/app-framework';
+import { useCapabilities } from '@dxos/app-framework/react';
 
-import { TranscriptionCapabilities } from '../capabilities';
 import { type Transcriber } from '../transcriber';
+import { TranscriptionCapabilities } from '../types';
 
 /**
  * Records audio while user is speaking and transcribes it after user is done speaking.
@@ -26,7 +26,12 @@ export const useTranscriber = ({
       return undefined;
     }
 
-    return getTranscriber({ audioStreamTrack, recorderConfig, transcriberConfig, onSegments });
+    return getTranscriber({
+      audioStreamTrack,
+      recorderConfig,
+      transcriberConfig,
+      onSegments,
+    });
   }, [getTranscriber, audioStreamTrack, recorderConfig, transcriberConfig, onSegments]);
 
   useEffect(() => {

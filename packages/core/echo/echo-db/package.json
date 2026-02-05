@@ -4,9 +4,13 @@
   "description": "ECHO database.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
   "license": "MIT",
   "author": "info@dxos.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "exports": {
     ".": {
@@ -35,8 +39,8 @@
     "src"
   ],
   "dependencies": {
-    "@automerge/automerge": "3.1.2",
-    "@automerge/automerge-repo": "2.3.1",
+    "@automerge/automerge": "catalog:",
+    "@automerge/automerge-repo": "catalog:",
     "@dxos/async": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/context": "workspace:*",
@@ -45,28 +49,31 @@
     "@dxos/echo": "workspace:*",
     "@dxos/echo-pipeline": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
-    "@dxos/echo-signals": "workspace:*",
     "@dxos/edge-client": "workspace:*",
+    "@dxos/effect": "workspace:*",
+    "@dxos/feed": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/kv-store": "workspace:*",
-    "@dxos/live-object": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
+    "@dxos/sql-sqlite": "workspace:*",
     "@dxos/teleport": "workspace:*",
     "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
-    "effect": "3.18.3",
-    "eventemitter3": "^5.0.1",
-    "lodash.isequal": "^4.5.0"
+    "@effect/experimental": "catalog:",
+    "@effect/sql": "catalog:",
+    "@effect/sql-sqlite-node": "catalog:",
+    "effect": "catalog:",
+    "eventemitter3": "catalog:",
+    "lodash.isequal": "catalog:"
   },
   "devDependencies": {
     "@dxos/indexing": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/test-utils": "workspace:*",
-    "@preact/signals-core": "^1.12.1",
-    "@types/lodash.isequal": "^4.5.0"
+    "@types/lodash.isequal": "catalog:"
   },
   "publishConfig": {
     "access": "public"

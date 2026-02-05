@@ -6,14 +6,15 @@ import * as Effect from 'effect/Effect';
 import type * as Schema from 'effect/Schema';
 import React, { useCallback, useRef } from 'react';
 
-import { LayoutAction, createIntent, useIntentDispatcher } from '@dxos/app-framework';
-import { Button, Dialog, Icon, useTranslation } from '@dxos/react-ui';
+import { Common } from '@dxos/app-framework';
+import { useOperationInvoker } from '@dxos/app-framework/react';
+import { runAndForwardErrors } from '@dxos/effect';
+import { Dialog, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
-import { cardDialogContent, cardDialogHeader } from '@dxos/react-ui-stack';
 
 import { useInputSurfaceLookup } from '../../hooks';
 import { meta } from '../../meta';
-import { SpaceAction, SpaceForm } from '../../types';
+import { SpaceForm, SpaceOperation } from '../../types';
 
 export const CREATE_SPACE_DIALOG = `${meta.id}/CreateSpaceDialog`;
 
@@ -23,45 +24,49 @@ const initialValues: FormValues = { edgeReplication: true };
 export const CreateSpaceDialog = () => {
   const closeRef = useRef<HTMLButtonElement | null>(null);
   const { t } = useTranslation(meta.id);
-  const { dispatch } = useIntentDispatcher();
+  const { invokePromise } = useOperationInvoker();
 
   const inputSurfaceLookup = useInputSurfaceLookup();
 
   const handleCreateSpace = useCallback(
     async (data: FormValues) => {
       const program = Effect.gen(function* () {
-        const { space } = yield* dispatch(createIntent(SpaceAction.Create, data));
-        yield* dispatch(createIntent(LayoutAction.SwitchWorkspace, { part: 'workspace', subject: space.id }));
-        yield* dispatch(createIntent(LayoutAction.UpdateDialog, { part: 'dialog', options: { state: false } }));
+        const { data: result } = yield* Effect.promise(() => invokePromise(SpaceOperation.Create, data));
+        if (result?.space) {
+          yield* Effect.promise(() =>
+            invokePromise(Common.LayoutOperation.SwitchWorkspace, { subject: result.space.id }),
+          );
+          yield* Effect.promise(() => invokePromise(Common.LayoutOperation.UpdateDialog, { state: false }));
+        }
       });
-      await Effect.runPromise(program);
+      await runAndForwardErrors(program);
     },
-    [dispatch],
+    [invokePromise],
   );
 
   return (
-    // TODO(wittjosiah): The tablist dialog pattern is copied from @dxos/plugin-manager.
-    //  Consider factoring it out to the tabs package.
-    <Dialog.Content classNames={cardDialogContent}>
-      <div role='none' className={cardDialogHeader}>
+    <Dialog.Content>
+      <Dialog.Header>
         <Dialog.Title>{t('create space dialog title')}</Dialog.Title>
         <Dialog.Close asChild>
-          <Button ref={closeRef} density='fine' variant='ghost' autoFocus>
-            <Icon icon='ph--x--regular' size={4} />
-          </Button>
+          <Dialog.CloseIconButton ref={closeRef} />
         </Dialog.Close>
-      </div>
-      <div role='none' className='contents'>
-        <Form
-          testId='create-space-form'
-          autoFocus
-          values={initialValues}
-          schema={SpaceForm}
-          lookupComponent={inputSurfaceLookup}
-          onSave={handleCreateSpace}
-          outerSpacing='scroll-fields'
-        />
-      </div>
+      </Dialog.Header>
+      <Form.Root
+        testId='create-space-form'
+        autoFocus
+        schema={SpaceForm}
+        values={initialValues}
+        fieldProvider={inputSurfaceLookup}
+        onSave={handleCreateSpace}
+      >
+        <Form.Viewport>
+          <Form.Content>
+            <Form.FieldSet />
+            <Form.Submit />
+          </Form.Content>
+        </Form.Viewport>
+      </Form.Root>
     </Dialog.Content>
   );
 };

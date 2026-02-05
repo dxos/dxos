@@ -1,0 +1,30 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import * as Effect from 'effect/Effect';
+import * as Schema from 'effect/Schema';
+
+import { ArtifactId } from '@dxos/assistant';
+import { Database } from '@dxos/echo';
+import { defineFunction } from '@dxos/functions';
+import { Markdown } from '@dxos/plugin-markdown/types';
+
+export default defineFunction({
+  key: 'dxos.org/function/markdown/read',
+  name: 'Read markdown document',
+  description: 'Read markdown document.',
+  inputSchema: Schema.Struct({
+    id: ArtifactId.annotations({
+      description: 'The ID of the document to read.',
+    }),
+  }),
+  outputSchema: Schema.Struct({
+    content: Schema.String,
+  }),
+  handler: Effect.fn(function* ({ data: { id } }) {
+    const doc = yield* Database.resolve(ArtifactId.toDXN(id), Markdown.Document);
+    const { content } = yield* Database.load(doc.content);
+    return { content };
+  }),
+});

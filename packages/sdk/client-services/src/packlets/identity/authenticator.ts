@@ -27,7 +27,7 @@ export const createAuthProvider =
     return Credential.encode(credential);
   };
 
-export type TrustedKeySetAuthVerifierParams = {
+export type TrustedKeySetAuthVerifierProps = {
   // TODO(dmaretskyi): Change to `isTrusted: (key) => bool`.
   trustedKeysProvider: () => ComplexSet<PublicKey>;
   update: Event<void>;
@@ -44,7 +44,7 @@ export type TrustedKeySetAuthVerifierParams = {
 export class TrustedKeySetAuthVerifier {
   private _ctx = new Context();
 
-  constructor(private readonly _params: TrustedKeySetAuthVerifierParams) {}
+  constructor(private readonly _params: TrustedKeySetAuthVerifierProps) {}
 
   async close(): Promise<void> {
     await this._ctx.dispose();

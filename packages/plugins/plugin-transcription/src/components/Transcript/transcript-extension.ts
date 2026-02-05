@@ -8,7 +8,7 @@ import { format } from 'date-fns/format';
 import { intervalToDuration } from 'date-fns/intervalToDuration';
 
 import { type CleanupFn, addEventListener, combine } from '@dxos/async';
-import { type DataType } from '@dxos/schema';
+import { type Message } from '@dxos/types';
 
 import { DocumentAdapter, type SerializationModel } from '../../model';
 
@@ -16,7 +16,7 @@ import { DocumentAdapter, type SerializationModel } from '../../model';
  * Data structure that maps Chunks queue to lines with transcript state.
  */
 export type TranscriptOptions = {
-  model: SerializationModel<DataType.Message>;
+  model: SerializationModel<Message.Message>;
   started?: Date;
 };
 
@@ -131,8 +131,12 @@ export const transcript = ({ model, started }: TranscriptOptions): Extension => 
     ),
 
     EditorView.theme({
+      '.cm-gutters': {
+        backgroundColor: 'var(--dx-baseSurface)',
+      },
       '.cm-timestamp-gutter': {
         width: '6rem',
+        paddingLeft: '0.5rem',
         paddingRight: '1rem',
       },
       '.cm-timestamp-gutter > .cm-gutterElement > div': {
@@ -156,11 +160,11 @@ class TimestampMarker extends GutterMarker {
     super();
   }
 
-  override eq(other: this): boolean {
-    return other._timestamp === this._timestamp;
+  override eq(other: this) {
+    return this._timestamp === other._timestamp;
   }
 
-  override toDOM(view: EditorView): HTMLDivElement {
+  override toDOM(view: EditorView) {
     const el = document.createElement('div');
     el.className = 'text-sm text-subdued hover:bg-hoverSurface cursor-pointer';
     el.textContent = formatTimestamp(this._timestamp, this._started);
@@ -176,7 +180,7 @@ class TimestampMarker extends GutterMarker {
   }
 }
 
-const getStartTime = (started?: Date, message?: DataType.Message): Date | undefined => {
+const getStartTime = (started?: Date, message?: Message.Message): Date | undefined => {
   if (started) {
     return started;
   }

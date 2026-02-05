@@ -5,17 +5,17 @@
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useState } from 'react';
 
-import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
-import { Obj } from '@dxos/echo';
-import { SpaceAction } from '@dxos/plugin-space/types';
-import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
+import { useOperationInvoker } from '@dxos/app-framework/react';
+import { type Database, Filter, Obj } from '@dxos/echo';
+import { SpaceOperation } from '@dxos/plugin-space/types';
+import { useQuery } from '@dxos/react-client/echo';
 import { Separator, useTranslation } from '@dxos/react-ui';
 import { ControlItem, ControlPage, ControlSection, Form, controlItemClasses } from '@dxos/react-ui-form';
-import { StackItem } from '@dxos/react-ui-stack';
-import { DataType } from '@dxos/schema';
+import { Layout } from '@dxos/react-ui-mosaic';
+import { AccessToken } from '@dxos/types';
 
 import { meta } from '../meta';
-import { TokenManagerAction } from '../types';
+import { TokenManagerOperation } from '../types';
 
 import { NewTokenSelector } from './NewTokenSelector';
 import { TokenManager } from './TokenManager';
@@ -26,45 +26,46 @@ const initialValues = {
   token: '',
 };
 
-const FormSchema = DataType.AccessToken.pipe(Schema.omit('id'));
+const FormSchema = AccessToken.AccessToken.pipe(Schema.omit('id'));
 type TokenForm = Schema.Schema.Type<typeof FormSchema>;
 
-export const TokensContainer = ({ space }: { space: Space }) => {
+export const TokensContainer = ({ db }: { db: Database.Database }) => {
   const { t } = useTranslation(meta.id);
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const { invokePromise } = useOperationInvoker();
   const [adding, setAdding] = useState(false);
-  const tokens = useQuery(space, Filter.type(DataType.AccessToken));
+  const tokens = useQuery(db, Filter.type(AccessToken.AccessToken));
 
   const handleNew = useCallback(() => setAdding(true), []);
   const handleCancel = useCallback(() => setAdding(false), []);
 
   const handleAddAccessToken = useCallback(
-    async (token: DataType.AccessToken) => {
-      // TODO(ZaymonFC): Is there a more ergonomic way to do this intent chain?
-      const result = await dispatch(
-        createIntent(SpaceAction.AddObject, { object: token, target: space, hidden: true }),
-      );
+    async (token: AccessToken.AccessToken) => {
+      const result = await invokePromise(SpaceOperation.AddObject, {
+        object: token,
+        target: db,
+        hidden: true,
+      });
 
-      if (Obj.instanceOf(DataType.AccessToken, result.data?.object)) {
-        void dispatch(createIntent(TokenManagerAction.AccessTokenCreated, { accessToken: result.data?.object }));
+      if (Obj.instanceOf(AccessToken.AccessToken, result.data?.object)) {
+        void invokePromise(TokenManagerOperation.AccessTokenCreated, { accessToken: result.data?.object });
       }
     },
-    [space, dispatch],
+    [db, invokePromise],
   );
 
   const handleAdd = useCallback(
     async (form: TokenForm) => {
-      const token = Obj.make(DataType.AccessToken, form);
+      const token = Obj.make(AccessToken.AccessToken, form);
       await handleAddAccessToken(token);
       setAdding(false);
     },
     [handleAddAccessToken],
   );
 
-  const handleDelete = useCallback((token: DataType.AccessToken) => space.db.remove(token), [space]);
+  const handleDelete = useCallback((token: AccessToken.AccessToken) => db.remove(token), [db]);
 
   return (
-    <StackItem.Content scrollable>
+    <Layout.Container scrollable>
       <ControlPage>
         <ControlSection
           title={t('integrations verbose label', { ns: meta.id })}
@@ -72,23 +73,24 @@ export const TokensContainer = ({ space }: { space: Space }) => {
         >
           {adding ? (
             <ControlItem title={t('new integration label')}>
-              <Form
-                outerSpacing={false}
-                schema={FormSchema}
-                values={initialValues}
-                onCancel={handleCancel}
-                onSave={handleAdd}
-              />
+              <Form.Root schema={FormSchema} values={initialValues} onCancel={handleCancel} onSave={handleAdd}>
+                <Form.FieldSet />
+                <Form.Actions />
+              </Form.Root>
             </ControlItem>
           ) : (
             <div role='none' className={controlItemClasses}>
               <TokenManager tokens={tokens} onDelete={handleDelete} />
               {tokens.length > 0 && <Separator classNames='mlb-4' />}
-              <NewTokenSelector space={space} onAddAccessToken={handleAddAccessToken} onCustomToken={handleNew} />
+              <NewTokenSelector
+                spaceId={db.spaceId}
+                onAddAccessToken={handleAddAccessToken}
+                onCustomToken={handleNew}
+              />
             </div>
           )}
         </ControlSection>
       </ControlPage>
-    </StackItem.Content>
+    </Layout.Container>
   );
 };

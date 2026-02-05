@@ -6,10 +6,8 @@ import type { InspectOptionsStylized, inspect as inspectFn } from 'node:util';
 
 import { type CustomInspectFunction, inspectCustom } from '@dxos/debug';
 
-import { type AnyEchoObject } from '../types';
-
-import { ATTR_META, ATTR_TYPE, MetaId } from './model';
-import { getType } from './typename';
+import { getTypeDXN } from '../annotations';
+import { ATTR_META, ATTR_TYPE, type AnyEntity, MetaId } from '../types';
 
 /*
  * @internal
@@ -29,8 +27,8 @@ export const attachedTypedObjectInspector = (obj: any) => {
 };
 
 // NOTE: KEEP as function.
-const typedObjectInspectFunction: CustomInspectFunction<AnyEchoObject> = function (
-  this: AnyEchoObject,
+const typedObjectInspectFunction: CustomInspectFunction<AnyEntity> = function (
+  this: AnyEntity,
   depth: number,
   options: InspectOptionsStylized,
   inspect: typeof inspectFn,
@@ -39,7 +37,7 @@ const typedObjectInspectFunction: CustomInspectFunction<AnyEchoObject> = functio
   return inspect(
     {
       id,
-      [ATTR_TYPE]: getType(this),
+      [ATTR_TYPE]: getTypeDXN(this),
       ...props,
       [ATTR_META]: (this as any)[MetaId], // TODO(dmaretskyi): Couldn't use getMeta since that throw's if the object has no meta.
     },

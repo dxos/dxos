@@ -3,9 +3,13 @@
   "version": "0.8.3",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
   "license": "MIT",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "exports": {
     ".": {
@@ -44,12 +48,12 @@
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/util": "workspace:*",
-    "compress-json": "^2.1.2",
-    "lodash.merge": "^4.6.2",
-    "protobufjs": "^7.2.5"
+    "compress-json": "catalog:",
+    "lodash.merge": "catalog:",
+    "protobufjs": "catalog:"
   },
   "devDependencies": {
-    "@types/lodash.merge": "^4.6.6"
+    "@types/lodash.merge": "catalog:"
   },
   "publishConfig": {
     "access": "public"

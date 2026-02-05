@@ -2,10 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Rx } from '@effect-rx/rx-react';
-import React, { useMemo } from 'react';
+import { Atom, RegistryContext } from '@effect-atom/atom-react';
+import React, { useContext, useEffect, useMemo } from 'react';
 
-import { live } from '@dxos/live-object';
 import { type ThemedClassName } from '@dxos/react-ui';
 import {
   type ActionGraphEdges,
@@ -18,7 +17,6 @@ import {
   createMenuAction,
   useMenuActions,
 } from '@dxos/react-ui-menu';
-import { rxFromSignal } from '@dxos/react-ui-menu';
 
 import { translationKey } from '../../translations';
 
@@ -30,49 +28,60 @@ export type TableToolbarActionType = 'add-row' | 'comment' | 'save-view';
 
 type TableToolbarState = Partial<{ viewDirty: boolean }>;
 
+// TODO(burdon): Radix style layout.
+
 export type TableToolbarProps = ThemedClassName<
   TableToolbarState & {
-    onAdd: () => void;
-    onSave: () => void;
+    onAdd?: () => void;
+    onSave?: () => void;
     attendableId?: string;
-    customActions?: Rx.Rx<ActionGraphProps>;
+    customActions?: Atom.Atom<ActionGraphProps>;
   }
 >;
 
 const createTableToolbarActions = ({
-  state,
+  stateAtom,
   onAdd,
   onSave,
   customActions,
 }: {
-  state: TableToolbarState;
-  onAdd: () => void;
-  onSave: () => void;
-  customActions?: Rx.Rx<ActionGraphProps>;
+  stateAtom: Atom.Atom<TableToolbarState>;
+  onAdd?: () => void;
+  onSave?: () => void;
+  customActions?: Atom.Atom<ActionGraphProps>;
 }) =>
-  Rx.make((get) => {
-    const add = createMenuAction<TableToolbarActionProperties>('add-row', onAdd, {
-      type: 'add-row' as const,
-      icon: 'ph--plus--regular',
-      label: ['add row', { ns: translationKey }],
-      testId: 'table.toolbar.add-row',
-    });
-    const save = createMenuAction<TableToolbarActionProperties>('save-view', onSave, {
-      type: 'save-view' as const,
-      icon: 'ph--floppy-disk--regular',
-      label: ['save view label', { ns: translationKey }],
-      testId: 'table.toolbar.save-view',
-      iconOnly: false,
-      hidden: get(rxFromSignal(() => !state.viewDirty)),
-    });
+  Atom.make((get) => {
+    const nodes: ActionGraphNodes = [];
+    if (onAdd) {
+      const add = createMenuAction<TableToolbarActionProperties>('add-row', onAdd, {
+        type: 'add-row' as const,
+        icon: 'ph--plus--regular',
+        label: ['add row label', { ns: translationKey }],
+        testId: 'table.toolbar.add-row',
+      });
+      nodes.push(add);
+    }
+    if (onSave) {
+      const state = get(stateAtom);
+      const save = createMenuAction<TableToolbarActionProperties>('save-view', onSave, {
+        type: 'save-view' as const,
+        icon: 'ph--floppy-disk--regular',
+        label: ['save view label', { ns: translationKey }],
+        testId: 'table.toolbar.save-view',
+        iconOnly: false,
+        hidden: !state.viewDirty,
+      });
+      nodes.push(save);
+    }
     const gap = createGapSeparator();
-    const nodes: ActionGraphNodes = [add, save, ...gap.nodes];
+    nodes.push(...gap.nodes);
     const edges: ActionGraphEdges = nodes.map(({ id: target }) => ({ source: 'root', target }));
     if (customActions) {
       const custom = get(customActions);
       nodes.push(...custom.nodes);
       edges.push(...custom.edges);
     }
+
     return {
       nodes,
       edges,
@@ -87,10 +96,17 @@ export const TableToolbar = ({
   onSave,
   customActions,
 }: TableToolbarProps) => {
-  const state = useMemo(() => live<TableToolbarState>({ viewDirty }), []);
+  const registry = useContext(RegistryContext);
+  const stateAtom = useMemo(() => Atom.make<TableToolbarState>({ viewDirty }), []);
+
+  // Update state.viewDirty when the prop changes.
+  useEffect(() => {
+    registry.set(stateAtom, { viewDirty });
+  }, [registry, stateAtom, viewDirty]);
+
   const actionsCreator = useMemo(
-    () => createTableToolbarActions({ state, onAdd, onSave, customActions }),
-    [state, onAdd, onSave, customActions],
+    () => createTableToolbarActions({ stateAtom, onAdd, onSave, customActions }),
+    [stateAtom, onAdd, onSave, customActions],
   );
   const menu = useMenuActions(actionsCreator);
 

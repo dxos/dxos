@@ -36,9 +36,6 @@
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../core/echo/live-object"
-    },
-    {
       "path": "../../sdk/react-client"
     },
     {
@@ -63,10 +60,13 @@
       "path": "../react-ui-text-tooltip"
     },
     {
-      "path": "../react-ui-theme"
+      "path": "../ui-editor"
     },
     {
-      "path": "../react-ui-types"
+      "path": "../ui-theme"
+    },
+    {
+      "path": "../ui-types"
     }
   ]
 }

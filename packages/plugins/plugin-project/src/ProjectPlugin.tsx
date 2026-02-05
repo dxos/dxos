@@ -2,65 +2,44 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Capabilities, Events, contributes, createIntent, defineModule, definePlugin } from '@dxos/app-framework';
-import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
-import { SpaceCapabilities } from '@dxos/plugin-space';
-import { defineObjectForm } from '@dxos/plugin-space/types';
-import { DataType } from '@dxos/schema';
+import * as Effect from 'effect/Effect';
 
-import { AppGraphBuilder, IntentResolver, ReactSurface } from './capabilities';
+import { Capability, Common, Plugin } from '@dxos/app-framework';
+import { Operation } from '@dxos/operation';
+import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
+import { type CreateObject } from '@dxos/plugin-space/types';
+import { Project } from '@dxos/types';
+
+import { AppGraphBuilder, OperationResolver, ReactSurface } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
-import { Project } from './types';
+import { ProjectOperation } from './types';
 
-export const ProjectPlugin = definePlugin(meta, () => [
-  defineModule({
-    id: `${meta.id}/module/translations`,
-    activatesOn: Events.SetupTranslations,
-    activate: () => contributes(Capabilities.Translations, translations),
+export const ProjectPlugin = Plugin.define(meta).pipe(
+  Common.Plugin.addTranslationsModule({ translations }),
+  Common.Plugin.addMetadataModule({
+    metadata: {
+      id: Project.Project.typename,
+      metadata: {
+        icon: 'ph--check-square-offset--regular',
+        iconHue: 'purple',
+        createObject: ((props) => Effect.sync(() => Project.make(props))) satisfies CreateObject,
+      },
+    },
   }),
-  defineModule({
-    id: `${meta.id}/module/metadata`,
-    activatesOn: Events.SetupMetadata,
+  Common.Plugin.addSchemaModule({ schema: [Project.Project] }),
+  Plugin.addModule({
+    id: 'on-space-created',
+    activatesOn: SpaceEvents.SpaceCreated,
     activate: () =>
-      contributes(Capabilities.Metadata, {
-        id: DataType.Project.typename,
-        metadata: {
-          icon: 'ph--check-square-offset--regular',
-          iconClassName: 'text-purpleSurfaceText',
-        },
-      }),
-  }),
-  defineModule({
-    id: `${meta.id}/module/object-form`,
-    activatesOn: ClientEvents.SetupSchema,
-    activate: () =>
-      contributes(
-        SpaceCapabilities.ObjectForm,
-        defineObjectForm({
-          objectSchema: DataType.Project,
-          getIntent: (_, options) => createIntent(Project.Create, { space: options.space }),
-        }),
+      Effect.succeed(
+        Capability.contributes(SpaceCapabilities.OnCreateSpace, (params) =>
+          Operation.invoke(ProjectOperation.OnCreateSpace, params),
+        ),
       ),
   }),
-  defineModule({
-    id: `${meta.id}/module/schema`,
-    activatesOn: ClientEvents.SetupSchema,
-    activate: () => contributes(ClientCapabilities.Schema, [DataType.Project]),
-  }),
-  defineModule({
-    id: `${meta.id}/module/react-surface`,
-    activatesOn: Events.SetupReactSurface,
-    activate: ReactSurface,
-  }),
-  defineModule({
-    id: `${meta.id}/module/intent-resolver`,
-    activatesOn: Events.SetupIntentResolver,
-    activate: IntentResolver,
-  }),
-  defineModule({
-    id: `${meta.id}/module/app-graph-builder`,
-    activatesOn: Events.SetupAppGraph,
-    activate: AppGraphBuilder,
-  }),
-]);
+  Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
+  Common.Plugin.addOperationResolverModule({ activate: OperationResolver }),
+  Common.Plugin.addAppGraphModule({ activate: AppGraphBuilder }),
+  Plugin.make,
+);

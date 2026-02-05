@@ -5,7 +5,7 @@
 import React, { type JSX, type PropsWithChildren } from 'react';
 
 import { Icon } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 export type PanelProps = {
   className?: string; // TODO(burdon): Change to ThemedClassName.
@@ -14,8 +14,8 @@ export type PanelProps = {
   title: string;
   info?: JSX.Element;
   padding?: boolean;
+  maxHeight?: number;
   open?: boolean;
-  maxHeight?: boolean;
   onToggle?: (id: string, open: boolean) => void;
 };
 
@@ -29,29 +29,29 @@ export const Panel = ({
   title,
   info,
   padding = true,
+  maxHeight = 240,
   open = true,
-  maxHeight = true,
   onToggle,
 }: PropsWithChildren<PanelProps>) => {
   return (
-    <div className='flex flex-col'>
+    <div className='flex flex-col overflow-hidden'>
       <div
-        className='flex items-center justify-between px-2 text-sm text-fine cursor-pointer'
+        className='flex items-center justify-between pli-2 text-sm text-fine cursor-pointer'
         onClick={() => onToggle?.(id, !open)}
       >
-        <div className='flex items-center gap-2 py-1'>
-          <Icon icon={icon} size={4} />
+        <div className='flex items-center gap-2 plb-1'>
+          <Icon icon={icon} />
           <span className='truncate'>{title}</span>
         </div>
         {info}
       </div>
       {children && (
         <div
+          style={{ maxHeight: open ? (maxHeight ? `${maxHeight}px` : undefined) : 0 }}
           className={mx(
-            'flex w-full overflow-x-hidden overflow-y-scroll transition-max-height',
-            maxHeight && 'max-h-[240px]',
-            !open && 'max-h-0',
-            padding && 'px-2',
+            'flex flex-col is-full transition-all duration-200 ease-in-out',
+            maxHeight ? 'overflow-y-auto' : 'bs-full overflow-hidden',
+            padding && 'pli-2',
             className,
           )}
         >

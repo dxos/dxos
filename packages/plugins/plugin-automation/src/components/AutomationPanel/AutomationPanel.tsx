@@ -3,31 +3,33 @@
 //
 
 import * as Array from 'effect/Array';
-import * as Function from 'effect/Function';
+import * as EFn from 'effect/Function';
 import * as Match from 'effect/Match';
 import * as Schema from 'effect/Schema';
 import React, { useMemo, useState } from 'react';
 
 import { Filter, Obj, Tag } from '@dxos/echo';
-import { FunctionTrigger, FunctionType, ScriptType } from '@dxos/functions';
+import { Function, Script, Trigger } from '@dxos/functions';
+import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
 import { useTypeOptions } from '@dxos/plugin-space';
 import { type Client, useClient } from '@dxos/react-client';
-import { type Space, getSpace, useQuery } from '@dxos/react-client/echo';
+import { type Space, useQuery } from '@dxos/react-client/echo';
 import { Clipboard, IconButton, Input, Separator, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { ControlItem, controlItemClasses } from '@dxos/react-ui-form';
 import { List } from '@dxos/react-ui-list';
-import { ghostHover, mx } from '@dxos/react-ui-theme';
-import { DataType } from '@dxos/schema';
+import { Project } from '@dxos/types';
+import { ghostHover, mx } from '@dxos/ui-theme';
+import { isNonNullable } from '@dxos/util';
 
 import { meta } from '../../meta';
 import { TriggerEditor, type TriggerEditorProps } from '../TriggerEditor';
 
-const grid = 'grid grid-cols-[40px_1fr_32px] min-bs-[2.5rem]';
+const grid = 'grid grid-cols-[40px_1fr_32px_32px] min-bs-[2.5rem]';
 
 export type AutomationPanelProps = ThemedClassName<{
   space: Space;
-  object?: Obj.Any;
-  initialTrigger?: FunctionTrigger;
+  object?: Obj.Unknown;
+  initialTrigger?: Trigger.Trigger;
   onDone?: () => void;
 }>;
 
@@ -35,28 +37,36 @@ export type AutomationPanelProps = ThemedClassName<{
 export const AutomationPanel = ({ classNames, space, object, initialTrigger, onDone }: AutomationPanelProps) => {
   const { t } = useTranslation(meta.id);
   const client = useClient();
-  const functions = useQuery(space, Filter.type(FunctionType));
-  const triggers = useQuery(space, Filter.type(FunctionTrigger));
+  const functionsServiceClient = useMemo(() => FunctionsServiceClient.fromClient(client), [client]);
+  const functions = useQuery(space.db, Filter.type(Function.Function));
+  const triggers = useQuery(space.db, Filter.type(Trigger.Trigger));
   const filteredTriggers = useMemo(() => {
     return object ? triggers.filter(triggerMatch(object)) : triggers;
   }, [object, triggers]);
-  const tags = useQuery(space, Filter.type(Tag.Tag));
-  const types = useTypeOptions({ space, annotation: ['dynamic', 'limited-static', 'object-form'] });
+  const tags = useQuery(space.db, Filter.type(Tag.Tag));
+  const types = useTypeOptions({
+    space,
+    annotation: {
+      location: ['database', 'runtime'],
+      kind: ['user'],
+      registered: ['registered'],
+    },
+  });
 
-  const [trigger, setTrigger] = useState<FunctionTrigger | undefined>(initialTrigger);
-  const [selected, setSelected] = useState<FunctionTrigger>();
+  const [trigger, setTrigger] = useState<Trigger.Trigger | undefined>(initialTrigger);
+  const [selected, setSelected] = useState<Trigger.Trigger>();
 
-  const handleSelect = (trigger: FunctionTrigger) => {
+  const handleSelect = (trigger: Trigger.Trigger) => {
     setTrigger(trigger);
     setSelected(trigger);
   };
 
   const handleAdd = () => {
-    setTrigger(Obj.make(FunctionTrigger, {}));
+    setTrigger(Trigger.make({}));
     setSelected(undefined);
   };
 
-  const handleDelete = (trigger: FunctionTrigger) => {
+  const handleDelete = (trigger: Trigger.Trigger) => {
     space.db.remove(trigger);
     setTrigger(undefined);
     setSelected(undefined);
@@ -66,7 +76,7 @@ export const AutomationPanel = ({ classNames, space, object, initialTrigger, onD
     if (selected) {
       Object.assign(selected, trigger);
     } else {
-      space.db.add(Obj.make(FunctionTrigger, trigger));
+      space.db.add(Trigger.make(trigger));
     }
 
     setTrigger(undefined);
@@ -79,11 +89,15 @@ export const AutomationPanel = ({ classNames, space, object, initialTrigger, onD
     onDone?.();
   };
 
+  const handleForceRunTrigger = async (trigger: Trigger.Trigger) => {
+    await functionsServiceClient.forceRunCronTrigger(space.id, trigger.id);
+  };
+
   if (trigger) {
     return (
       <ControlItem title={t('trigger editor title')}>
         <TriggerEditor
-          space={space}
+          db={space.db}
           trigger={trigger}
           readonlySpec={Boolean(object)}
           tags={tags}
@@ -98,31 +112,35 @@ export const AutomationPanel = ({ classNames, space, object, initialTrigger, onD
   return (
     <div className={mx(controlItemClasses, classNames)}>
       {filteredTriggers.length > 0 && (
-        <List.Root<FunctionTrigger>
+        <List.Root<Trigger.Trigger>
           items={filteredTriggers}
-          isItem={Schema.is(FunctionTrigger)}
+          isItem={Schema.is(Trigger.Trigger)}
           getId={(field) => field.id}
         >
           {({ items: filteredTriggers }) => (
-            <div role='list' className='flex flex-col w-full'>
+            <div role='list' className='flex flex-col is-full'>
               {filteredTriggers?.map((trigger) => {
                 const copyAction = getCopyAction(client, trigger);
                 return (
-                  <List.Item<FunctionTrigger>
+                  <List.Item<Trigger.Trigger>
                     key={trigger.id}
                     item={trigger}
-                    classNames={mx(grid, ghostHover, 'items-center', 'px-2')}
+                    classNames={mx(grid, ghostHover, 'items-center', 'pli-2')}
                   >
                     <Input.Root>
                       <Input.Switch
                         checked={trigger.enabled}
-                        onCheckedChange={(checked) => (trigger.enabled = checked)}
+                        onCheckedChange={(checked) =>
+                          Obj.change(trigger, (t) => {
+                            t.enabled = checked;
+                          })
+                        }
                       />
                     </Input.Root>
 
                     <div className={'flex'}>
                       <List.ItemTitle
-                        classNames='px-1 cursor-pointer w-0 shrink truncate'
+                        classNames='pli-1 cursor-pointer is-0 shrink truncate'
                         onClick={() => handleSelect(trigger)}
                       >
                         {getFunctionName(functions, trigger) ?? '∅'}
@@ -136,6 +154,14 @@ export const AutomationPanel = ({ classNames, space, object, initialTrigger, onD
                         />
                       )}
                     </div>
+
+                    <List.ItemButton
+                      autoHide={false}
+                      disabled={!trigger.enabled || trigger.spec?.kind !== 'timer'}
+                      icon='ph--play--regular'
+                      label='Force run'
+                      onClick={() => handleForceRunTrigger(trigger)}
+                    />
 
                     <List.ItemDeleteButton onClick={() => handleDelete(trigger)} />
                   </List.Item>
@@ -151,9 +177,12 @@ export const AutomationPanel = ({ classNames, space, object, initialTrigger, onD
   );
 };
 
-const getCopyAction = (client: Client, trigger: FunctionTrigger | undefined) => {
+const getCopyAction = (client: Client, trigger: Trigger.Trigger | undefined) => {
   if (trigger?.spec?.kind === 'email') {
-    return { translationKey: 'trigger copy email', contentProvider: () => `${getSpace(trigger)!.id}@dxos.network` };
+    return {
+      translationKey: 'trigger copy email',
+      contentProvider: () => `${Obj.getDatabase(trigger)!.spaceId}@dxos.network`,
+    };
   }
 
   if (trigger?.spec?.kind === 'webhook') {
@@ -163,15 +192,15 @@ const getCopyAction = (client: Client, trigger: FunctionTrigger | undefined) => 
   return undefined;
 };
 
-const getWebhookUrl = (client: Client, trigger: FunctionTrigger) => {
-  const spaceId = getSpace(trigger)!.id;
+const getWebhookUrl = (client: Client, trigger: Trigger.Trigger) => {
+  const spaceId = Obj.getDatabase(trigger)!.spaceId;
   const edgeUrl = new URL(client.config.values.runtime!.services!.edge!.url!);
   const isSecure = edgeUrl.protocol.startsWith('https') || edgeUrl.protocol.startsWith('wss');
   edgeUrl.protocol = isSecure ? 'https' : 'http';
   return new URL(`/webhook/${spaceId}:${trigger.id}`, edgeUrl).toString();
 };
 
-const getFunctionName = (functions: FunctionType[], trigger: FunctionTrigger) => {
+const getFunctionName = (functions: Function.Function[], trigger: Trigger.Trigger) => {
   // TODO(wittjosiah): Truncation should be done in the UI.
   //   Warning that the List component is currently a can of worms.
   const shortId = trigger.function && `${trigger.function.dxn.toString().slice(0, 16)}…`;
@@ -179,25 +208,25 @@ const getFunctionName = (functions: FunctionType[], trigger: FunctionTrigger) =>
   return functionObject?.name ?? shortId;
 };
 
-const scriptMatch = (script: ScriptType) => (trigger: FunctionTrigger) => {
+const scriptMatch = (script: Script.Script) => (trigger: Trigger.Trigger) => {
   const fn = trigger.function?.target;
-  if (!Obj.instanceOf(FunctionType, fn)) {
+  if (!Obj.instanceOf(Function.Function, fn)) {
     return false;
   }
 
   return fn.source?.target === script;
 };
 
-const projectMatch = (project: DataType.Project) => {
-  const viewQueries = Function.pipe(
-    project.collections,
-    Array.map((collection) => collection.target),
-    Array.filter(Schema.is(DataType.View)),
+const projectMatch = (project: Project.Project) => {
+  const viewQueries = EFn.pipe(
+    project.columns,
+    Array.map((column) => column.view.target),
+    Array.filter(isNonNullable),
     Array.map((view) => Obj.getSnapshot(view).query.ast),
     Array.map((ast) => JSON.stringify(ast)),
   );
 
-  return (trigger: FunctionTrigger) => {
+  return (trigger: Trigger.Trigger) => {
     const spec = Obj.getSnapshot(trigger).spec;
     if (spec?.kind !== 'subscription') {
       return false;
@@ -208,14 +237,14 @@ const projectMatch = (project: DataType.Project) => {
   };
 };
 
-const triggerMatch = Match.type<Obj.Any>().pipe(
-  Match.withReturnType<(trigger: FunctionTrigger) => boolean>(),
+const triggerMatch = Match.type<Obj.Unknown>().pipe(
+  Match.withReturnType<(trigger: Trigger.Trigger) => boolean>(),
   Match.when(
-    (obj) => Obj.instanceOf(ScriptType, obj),
+    (obj) => Obj.instanceOf(Script.Script, obj),
     (obj) => scriptMatch(obj),
   ),
   Match.when(
-    (obj) => Obj.instanceOf(DataType.Project, obj),
+    (obj) => Obj.instanceOf(Project.Project, obj),
     (obj) => projectMatch(obj),
   ),
   Match.orElse((_obj) => () => true),

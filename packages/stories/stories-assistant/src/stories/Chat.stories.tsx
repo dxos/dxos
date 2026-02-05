@@ -8,30 +8,22 @@ import React, { type FC, useCallback } from 'react';
 
 import { ToolId } from '@dxos/ai';
 import { EXA_API_KEY } from '@dxos/ai/testing';
-import { Capabilities, Surface, useCapabilities } from '@dxos/app-framework';
+import { Common } from '@dxos/app-framework';
+import { Surface, useCapabilities, useCapability } from '@dxos/app-framework/react';
 import { AiContextBinder } from '@dxos/assistant';
-import {
-  LINEAR_BLUEPRINT,
-  RESEARCH_BLUEPRINT,
-  ResearchDataTypes,
-  ResearchGraph,
-  ResearchOn,
-  agent,
-} from '@dxos/assistant-testing';
+import { Agent, LinearBlueprint, ResearchBlueprint, ResearchDataTypes, ResearchGraph } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt, Template } from '@dxos/blueprints';
 import { Filter, Obj, Query, Ref, Tag, Type } from '@dxos/echo';
-import { FunctionTrigger, ScriptType, exampleFunctions, serializeFunction } from '@dxos/functions';
+import { Example, Script, Trigger, serializeFunction } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { BLUEPRINT_KEY } from '@dxos/plugin-assistant';
-import { useContextBinder } from '@dxos/plugin-assistant';
-import { translations } from '@dxos/plugin-assistant';
+import { AssistantBlueprint, translations, useContextBinder } from '@dxos/plugin-assistant';
 import { Assistant } from '@dxos/plugin-assistant/types';
 import { Board, BoardPlugin } from '@dxos/plugin-board';
 import { Chess, ChessPlugin } from '@dxos/plugin-chess';
-import * as chessFunctions from '@dxos/plugin-chess/functions';
+import { ChessFunctions } from '@dxos/plugin-chess/blueprints';
 import { InboxPlugin } from '@dxos/plugin-inbox';
-import { Mailbox } from '@dxos/plugin-inbox/types';
+import { Calendar, Mailbox } from '@dxos/plugin-inbox/types';
 import { Map, MapPlugin } from '@dxos/plugin-map';
 import { createLocationSchema } from '@dxos/plugin-map/testing';
 import { Markdown, MarkdownPlugin } from '@dxos/plugin-markdown';
@@ -43,35 +35,46 @@ import { TablePlugin } from '@dxos/plugin-table';
 import { ThreadPlugin } from '@dxos/plugin-thread';
 import { TokenManagerPlugin } from '@dxos/plugin-token-manager';
 import { TranscriptionPlugin } from '@dxos/plugin-transcription';
-import { Transcript } from '@dxos/plugin-transcription/types';
-import { useClient } from '@dxos/react-client';
 import { useQuery, useSpace } from '@dxos/react-client/echo';
-import { useAsyncEffect, useSignalsMemo } from '@dxos/react-ui';
+import { useAsyncEffect } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 import { Stack, StackItem } from '@dxos/react-ui-stack';
 import { Table } from '@dxos/react-ui-table/types';
-import { DataType, createView } from '@dxos/schema';
+import { Text, View } from '@dxos/schema';
 import { render } from '@dxos/storybook-utils';
+import {
+  AccessToken,
+  Employer,
+  Event,
+  HasConnection,
+  HasSubject,
+  Message,
+  Organization,
+  Person,
+  Project,
+  Task,
+  Transcript,
+} from '@dxos/types';
 import { isNonNullable, trim } from '@dxos/util';
 
 import {
-  BlueprintContainer,
-  ChatContainer,
-  ChessContainer,
-  CommentsContainer,
+  BlueprintModule,
+  ChatModule,
+  ChessModule,
+  CommentsModule,
   type ComponentProps,
-  ExecutionGraphContainer,
-  GraphContainer,
-  InvocationsContainer,
-  MessageContainer,
-  ProjectContainer,
-  PromptContainer,
-  ResearchInputStack,
-  ResearchOutputStack,
-  ScriptContainer,
-  TasksContainer,
-  TokenManagerContainer,
-  TriggersContainer,
+  ExecutionGraphModule,
+  GraphModule,
+  InboxModule,
+  InvocationsModule,
+  ProjectModule,
+  PromptModule,
+  ResearchInputModule,
+  ResearchOutputModule,
+  ScriptModule,
+  TasksModule,
+  TokenManagerModule,
+  TriggersModule,
 } from '../components';
 import {
   ResearchInputQueue,
@@ -85,61 +88,52 @@ import {
   testTypes,
 } from '../testing';
 
-const panelClassNames = 'bg-baseSurface rounded border border-separator overflow-hidden mbe-[--stack-gap] last:mbe-0';
+const panelClassNames = 'bg-baseSurface rounded-sm border border-separator overflow-hidden';
 
 type StoryProps = {
-  debug?: boolean;
-  deckComponents: (FC<ComponentProps> | 'surfaces')[][];
+  modules: FC<ComponentProps>[][];
+  showContext?: boolean;
   blueprints?: string[];
 };
 
-const DefaultStory = ({ debug = true, deckComponents, blueprints = [] }: StoryProps) => {
-  const client = useClient();
-  const space = useSpace();
+const DefaultStory = ({ modules, showContext, blueprints = [] }: StoryProps) => {
+  const blueprintsDefinitions = useCapabilities(Common.Capability.BlueprintDefinition);
+  const atomRegistry = useCapability(Common.Capability.AtomRegistry);
 
-  const blueprintsDefinitions = useCapabilities(Capabilities.BlueprintDefinition);
+  const space = useSpace();
   useAsyncEffect(async () => {
     if (!space) {
       return;
     }
-    const { objects: chats = [] } = await space.db.query(Filter.type(Assistant.Chat)).run();
+
+    const chats = await space.db.query(Filter.type(Assistant.Chat)).run();
     const chat = chats[0];
     if (!chat) {
       return;
     }
 
     // Add blueprints to context.
-    const binder = new AiContextBinder(await chat.queue.load());
-    const registry = new Blueprint.Registry(blueprintsDefinitions);
+    const blueprintRegistry = new Blueprint.Registry(blueprintsDefinitions);
     const blueprintObjects = blueprints
       .map((key) => {
-        const blueprint = registry.getByKey(key);
+        const blueprint = blueprintRegistry.getByKey(key);
         if (blueprint) {
           return space.db.add(Obj.clone(blueprint));
         }
       })
       .filter(isNonNullable);
-    await binder.bind({ blueprints: blueprintObjects.map((blueprint) => Ref.make(blueprint)) });
+
+    const binder = new AiContextBinder({ queue: await chat.queue.load(), registry: atomRegistry });
+    await binder.use((binder) => binder.bind({ blueprints: blueprintObjects.map((blueprint) => Ref.make(blueprint)) }));
   }, [space, blueprints, blueprintsDefinitions]);
 
   const handleEvent = useCallback<NonNullable<ComponentProps['onEvent']>>((event) => {
     log.info('event', { event });
-    switch (event) {
-      case 'reset': {
-        void client?.reset().then(() => {
-          document.location.reload();
-        });
-        break;
-      }
-    }
   }, []);
 
-  const chats = useQuery(space, Filter.type(Assistant.Chat));
-  const binder = useContextBinder(chats.at(-1));
-  const objects = useSignalsMemo(
-    () => binder?.objects.value.map((ref) => ref.target).filter(isNonNullable) ?? [],
-    [binder],
-  );
+  const chats = useQuery(space?.db, Filter.type(Assistant.Chat));
+  const binder = useContextBinder(chats.at(-1)?.queue.target);
+  const objects = binder?.getObjects() ?? [];
 
   if (!space) {
     return null;
@@ -150,50 +144,48 @@ const DefaultStory = ({ debug = true, deckComponents, blueprints = [] }: StoryPr
       orientation='horizontal'
       size='split'
       rail={false}
-      itemsCount={deckComponents.length}
-      classNames='  absolute inset-0 gap-[--stack-gap]'
+      itemsCount={modules.length + (showContext ? 1 : 0)}
+      classNames='absolute inset-0 gap-[--stack-gap]'
     >
-      {deckComponents.map((plankComponents, i) => {
-        const Components: FC<ComponentProps>[] = plankComponents.filter((item) => item !== 'surfaces');
-        const renderSurfaces = plankComponents.includes('surfaces');
-        let j = 0;
+      {modules.map((Components, i) => {
         return (
-          <StackItem.Root order={i + 1} item={{ id: `${i}` }} key={i}>
+          <StackItem.Root key={i} item={{ id: `${i}` }}>
             <Stack
               orientation='vertical'
+              classNames='gap-[--stack-gap]'
               size={i > 0 ? 'contain' : 'split'}
+              itemsCount={Components.length}
               rail={false}
-              itemsCount={plankComponents.length + (i > 0 ? objects.length : 0)}
             >
-              {Components.map((Component) => {
-                const item = (
-                  <StackItem.Root key={j} order={j + 1} item={{ id: `${i}:${j}` }} classNames={panelClassNames}>
-                    <Component space={space} debug={debug} onEvent={handleEvent} />
-                  </StackItem.Root>
-                );
-                j += 1;
-                return item;
-              })}
-
-              {renderSurfaces &&
-                objects.map((object, index) => {
-                  const k = index + j;
-                  return (
-                    <StackItem.Root key={k} order={k + 1} item={{ id: `${k}` }} classNames={panelClassNames}>
-                      {debug && (
-                        <div role='heading' className='flex gap-2 items-center text-xs justify-center text-subdued'>
-                          <span>{Obj.getTypename(object)}</span>
-                          <span>{object.id}</span>
-                        </div>
-                      )}
-                      <Surface role='section' limit={1} data={{ subject: object }} />
-                    </StackItem.Root>
-                  );
-                })}
+              {Components.map((Component, i) => (
+                <StackItem.Root key={i} item={{ id: `${i}` }} classNames={panelClassNames}>
+                  <Component space={space} onEvent={handleEvent} />
+                </StackItem.Root>
+              ))}
             </Stack>
           </StackItem.Root>
         );
       })}
+
+      {showContext && <StackContainer objects={objects} />}
+    </Stack>
+  );
+};
+
+const StackContainer = ({ objects }: { objects: Obj.Unknown[] }) => {
+  return (
+    <Stack
+      orientation='vertical'
+      classNames='gap-[--stack-gap]'
+      size='contain'
+      rail={false}
+      itemsCount={objects.length}
+    >
+      {objects.map((object) => (
+        <StackItem.Root key={object.id} item={object} classNames={panelClassNames}>
+          <Surface role='section' limit={1} data={{ subject: object }} />
+        </StackItem.Root>
+      ))}
     </Stack>
   );
 };
@@ -203,8 +195,8 @@ const storybook: Meta<typeof DefaultStory> = {
   render: render(DefaultStory),
   decorators: [withTheme],
   parameters: {
+    layout: 'fullscreen',
     translations,
-    controls: { disable: true },
   },
 };
 
@@ -219,11 +211,24 @@ type Story = StoryObj<typeof storybook>;
 const MARKDOWN_DOCUMENT = trim`
   # Hello, world!
 
-  This is a test document that contains Markdown content. Markdown is a lightweight markup language for writing formatted text in plain text form. Its goal is to be easy to read and write in raw form, easy to convert to HTML.
+  This is a test document that contains Markdown content.
+  Markdown is a lightweight markup language for writing formatted text in plain text form.
+  Its goal is to be easy to read and write in raw form, easy to convert to HTML.
 
-  Markdown’s simplicity makes it highly adaptable: it can be written in any text editor, stored in plain .md files, and rendered into HTML, PDF, or other formats with converters. Because of this portability, it’s widely used in software documentation, static site generators, technical blogging, and collaborative platforms like GitHub and Notion. 
+  Markdown’s simplicity makes it highly adaptable: it can be written in any text editor, stored in plain .md files, and rendered into HTML, PDF, or other formats with converters.
+  Because of this portability, it’s widely used in software documentation, static site generators, technical blogging, and collaborative platforms like GitHub and Notion.
 
   Many applications extend the core syntax with extras (e.g., tables, task lists, math notation), but the core idea remains the same—clean, minimal markup that stays readable even without rendering.
+`;
+
+const DXOS_DOCUMENT = trim`
+  # DXOS
+  - ECHO Semantic Graph Database
+  - AI-Native workflows
+  - Privacy preserving P2P sync
+  - Edge computing
+  - Flexible access control
+  - Open and extensible
 `;
 
 const STYLE_GUIDE = trim`
@@ -256,7 +261,7 @@ export const Default: Story = {
     config: config.remote,
   }),
   args: {
-    deckComponents: [[ChatContainer]],
+    modules: [[ChatModule]],
   },
 };
 
@@ -266,7 +271,7 @@ export const WithWebSearch: Story = {
     config: config.remote,
   }),
   args: {
-    deckComponents: [[ChatContainer]],
+    modules: [[ChatModule]],
     blueprints: ['dxos.org/blueprint/web-search'],
   },
 };
@@ -278,26 +283,27 @@ export const WithDocument: Story = {
     config: config.remote, // TODO(burdon): Issue making persistent.
     onInit: async ({ space }) => {
       space.db.add(
-        Markdown.makeDocument({
+        Markdown.make({
           name: 'My Document',
           content: addSpellingMistakes(MARKDOWN_DOCUMENT, 2),
         }),
       );
       space.db.add(
-        Markdown.makeDocument({
+        Markdown.make({
           name: 'Style Guide',
           content: STYLE_GUIDE,
         }),
       );
     },
     onChatCreated: async ({ space, binder }) => {
-      const { objects } = await space.db.query(Filter.type(Markdown.Document)).run();
+      const objects = await space.db.query(Filter.type(Markdown.Document)).run();
       await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
     },
   }),
   args: {
-    deckComponents: [[ChatContainer], ['surfaces', CommentsContainer]],
-    blueprints: [BLUEPRINT_KEY, 'dxos.org/blueprint/markdown'],
+    showContext: true,
+    modules: [[ChatModule], [CommentsModule]],
+    blueprints: [AssistantBlueprint.Key, 'dxos.org/blueprint/markdown', 'dxos.org/blueprint/thread'],
   },
 };
 
@@ -306,15 +312,15 @@ export const WithBlueprints: Story = {
     plugins: [InboxPlugin(), MarkdownPlugin(), TablePlugin()],
     config: config.remote,
     onInit: async ({ space }) => {
-      space.db.add(Markdown.makeDocument({ name: 'Tasks' }));
+      space.db.add(Markdown.make({ name: 'Tasks' }));
     },
     onChatCreated: async ({ space, binder }) => {
-      const { objects } = await space.db.query(Filter.type(Markdown.Document)).run();
+      const objects = await space.db.query(Filter.type(Markdown.Document)).run();
       await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
     },
   }),
   args: {
-    deckComponents: [[ChatContainer], [TasksContainer, BlueprintContainer]],
+    modules: [[ChatModule], [TasksModule, BlueprintModule]],
   },
 };
 
@@ -326,7 +332,7 @@ export const WithChess: Story = {
     onInit: async ({ space }) => {
       // TODO(burdon): Add player DID (for user and assistant).
       space.db.add(
-        Chess.makeGame({
+        Chess.make({
           name: 'Challenge',
           pgn: [
             '1. e4 e5',
@@ -348,13 +354,14 @@ export const WithChess: Story = {
       );
     },
     onChatCreated: async ({ space, binder }) => {
-      const { objects } = await space.db.query(Filter.type(Chess.Game)).run();
+      const objects = await space.db.query(Filter.type(Chess.Game)).run();
       await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
     },
   }),
   args: {
-    deckComponents: [[ChatContainer], ['surfaces']],
-    blueprints: [BLUEPRINT_KEY, 'dxos.org/blueprint/chess'],
+    showContext: true,
+    modules: [[ChatModule]],
+    blueprints: [AssistantBlueprint.Key, 'dxos.org/blueprint/chess'],
   },
 };
 
@@ -366,18 +373,19 @@ export const WithMail: Story = {
     types: [Mailbox.Mailbox],
     onInit: async ({ space }) => {
       const mailbox = space.db.add(Mailbox.make({ name: 'Mailbox', space }));
-      const queue = space.queues.get<DataType.Message>(mailbox.queue.dxn);
+      const queue = space.queues.get<Message.Message>(mailbox.queue.dxn);
       const messages = createTestMailbox();
       await queue.append(messages);
     },
     onChatCreated: async ({ space, binder }) => {
-      const { objects } = await space.db.query(Filter.type(Mailbox.Mailbox)).run();
+      const objects = await space.db.query(Filter.type(Mailbox.Mailbox)).run();
       await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
     },
   }),
   args: {
-    deckComponents: [[ChatContainer], ['surfaces', MessageContainer]],
-    blueprints: [BLUEPRINT_KEY, 'dxos.org/blueprint/inbox', 'dxos.org/blueprint/markdown'],
+    showContext: true,
+    modules: [[ChatModule]],
+    blueprints: [AssistantBlueprint.Key, 'dxos.org/blueprint/inbox', 'dxos.org/blueprint/markdown'],
   },
 };
 
@@ -385,19 +393,41 @@ export const WithMail: Story = {
 export const WithGmail: Story = {
   decorators: getDecorators({
     plugins: [InboxPlugin(), TokenManagerPlugin()],
-    config: config.remote,
+    config: config.persistent,
     types: [Mailbox.Mailbox],
     onInit: async ({ space }) => {
       space.db.add(Mailbox.make({ name: 'Mailbox', space }));
     },
     onChatCreated: async ({ space, binder }) => {
-      const { objects } = await space.db.query(Filter.type(Mailbox.Mailbox)).run();
+      const objects = await space.db.query(Filter.type(Mailbox.Mailbox)).run();
       await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
     },
   }),
   args: {
-    deckComponents: [[ChatContainer], ['surfaces', MessageContainer, TokenManagerContainer]],
-    blueprints: [BLUEPRINT_KEY, 'dxos.org/blueprint/inbox'],
+    showContext: true,
+    modules: [[ChatModule], [InboxModule], [TokenManagerModule]],
+    blueprints: [AssistantBlueprint.Key, 'dxos.org/blueprint/inbox'],
+  },
+};
+
+// Test with prompt: Sync my calendar.
+export const WithCalendar: Story = {
+  decorators: getDecorators({
+    plugins: [InboxPlugin(), TokenManagerPlugin()],
+    config: config.remote,
+    types: [Calendar.Calendar, Event.Event],
+    onInit: async ({ space }) => {
+      space.db.add(Calendar.make({ name: 'Calendar', space }));
+    },
+    onChatCreated: async ({ space, binder }) => {
+      const objects = await space.db.query(Filter.type(Calendar.Calendar)).run();
+      await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
+    },
+  }),
+  args: {
+    showContext: true,
+    modules: [[ChatModule], [TokenManagerModule]],
+    blueprints: [AssistantBlueprint.Key, 'dxos.org/blueprint/calendar'],
   },
 };
 
@@ -406,27 +436,29 @@ export const WithMap: Story = {
   decorators: getDecorators({
     plugins: [MapPlugin(), TablePlugin()],
     config: config.remote,
-    types: [DataType.View, Map.Map, Table.Table],
+    types: [View.View, Map.Map, Table.Table],
     onInit: async ({ space }) => {
       const [schema] = await space.db.schemaRegistry.register([createLocationSchema()]);
-      const { view: tableView } = await Table.makeView({ name: 'Table', space, typename: schema.typename });
-      const { view: mapView } = await Map.makeView({
-        name: 'Map',
-        space,
+      const { view: tableView, jsonSchema } = await View.makeFromDatabase({ db: space.db, typename: schema.typename });
+      const table = Table.make({ name: 'Table', view: tableView, jsonSchema });
+      const { view: mapView } = await View.makeFromDatabase({
+        db: space.db,
         typename: schema.typename,
         pivotFieldName: 'location',
       });
-      space.db.add(tableView);
-      space.db.add(mapView);
+      const map = Map.make({ name: 'Map', view: mapView });
+      space.db.add(table);
+      space.db.add(map);
     },
     onChatCreated: async ({ space, binder }) => {
-      const { objects } = await space.db.query(Filter.type(DataType.View)).run();
+      const objects = await space.db.query(Filter.type(View.View)).run();
       await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
     },
   }),
   args: {
-    deckComponents: [[ChatContainer], ['surfaces']],
-    blueprints: [BLUEPRINT_KEY, 'dxos.org/blueprint/map'],
+    showContext: true,
+    modules: [[ChatModule]],
+    blueprints: [AssistantBlueprint.Key, 'dxos.org/blueprint/map'],
   },
 };
 
@@ -437,45 +469,47 @@ export const WithTrip: Story = {
     types: [Map.Map],
     onInit: async ({ space }) => {
       // TODO(burdon): Table.
-      space.db.add(Map.make({ name: 'Trip' }));
+      const map = Map.make({ name: 'Trip' });
+      space.db.add(map);
       space.db.add(
-        Markdown.makeDocument({
+        Markdown.make({
           name: 'Itinerary',
           content: trim`
-              # Itinerary
+            # Itinerary
 
-              ## Day 1
-              - Visit the Sagrada Familia
-              - Visit the Park Güell
-              - Visit the Casa Batlló
+            ## Day 1
+            - Visit the Sagrada Familia
+            - Visit the Park Güell
+            - Visit the Casa Batlló
 
-              ## Day 2
-              - Visit the Eiffel Tower
-              - Visit the Louvre
-              - Visit the Musée d'Orsay
-            `,
+            ## Day 2
+            - Visit the Eiffel Tower
+            - Visit the Louvre
+            - Visit the Musée d'Orsay
+          `,
         }),
       );
       space.db.add(
-        Markdown.makeDocument({
+        Markdown.make({
           name: 'Barcelona',
           content: trim`
-              # Barcelona
+            # Barcelona
 
-              Barcelona is the capital and most populous city of Catalonia, an autonomous community in northeastern Spain. 
-              It is located on the Mediterranean coast, on the banks of the Llobregat River, in the comarca of the Baix Llobregat. 
-              The city is known for its rich history, vibrant culture, and stunning architecture, including the Sagrada Familia, Park Güell, and Casa Batlló.
-            `,
+            Barcelona is the capital and most populous city of Catalonia, an autonomous community in northeastern Spain.
+            It is located on the Mediterranean coast, on the banks of the Llobregat River, in the comarca of the Baix Llobregat.
+            The city is known for its rich history, vibrant culture, and stunning architecture, including the Sagrada Familia, Park Güell, and Casa Batlló.
+          `,
         }),
       );
     },
     onChatCreated: async ({ space, binder }) => {
-      const { objects } = await space.db.query(Filter.or(Filter.type(Map.Map), Filter.type(Markdown.Document))).run();
+      const objects = await space.db.query(Filter.or(Filter.type(Map.Map), Filter.type(Markdown.Document))).run();
       await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
     },
   }),
   args: {
-    deckComponents: [[ChatContainer], ['surfaces']],
+    showContext: true,
+    modules: [[ChatModule]],
   },
 };
 
@@ -488,26 +522,43 @@ export const WithBoard: Story = {
       space.db.add(Board.makeBoard());
     },
     onChatCreated: async ({ space, binder }) => {
-      const { objects } = await space.db.query(Filter.type(Board.Board)).run();
+      const objects = await space.db.query(Filter.type(Board.Board)).run();
       await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
     },
   }),
   args: {
-    debug: true,
-    deckComponents: [[ChatContainer], ['surfaces']],
+    showContext: true,
+    modules: [[ChatModule]],
   },
 };
 
+/**
+ * PROMPT: "Create a research note for the organization."
+ */
 export const WithResearch: Story = {
   decorators: getDecorators({
     plugins: [MarkdownPlugin(), TablePlugin(), ThreadPlugin()],
     config: config.remote,
     types: [...ResearchDataTypes, ResearchGraph],
-    accessTokens: [Obj.make(DataType.AccessToken, { source: 'exa.ai', token: EXA_API_KEY })],
+    accessTokens: [Obj.make(AccessToken.AccessToken, { source: 'exa.ai', token: EXA_API_KEY })],
+    onInit: async ({ space }) => {
+      space.db.add(Obj.make(Organization.Organization, { name: 'BlueYard Capital' }));
+      space.db.add(Markdown.make({ name: 'DXOS', content: DXOS_DOCUMENT }));
+    },
+    onChatCreated: async ({ space, binder }) => {
+      const organizations = await space.db.query(Filter.type(Organization.Organization)).run();
+      const documents = await space.db.query(Filter.type(Markdown.Document)).run();
+      await binder.bind({ objects: [...organizations, ...documents].map((object) => Ref.make(object)) });
+    },
   }),
   args: {
-    deckComponents: [[ChatContainer], [GraphContainer, ExecutionGraphContainer]],
-    blueprints: [RESEARCH_BLUEPRINT.key],
+    showContext: true,
+    modules: [[ChatModule], [GraphModule, ExecutionGraphModule]],
+    blueprints: [
+      // AssistantBlueprint.Key
+      // TODO(burdon): Too many open-ended tools (querying for tools, querying for schema) confuses the model.
+      ResearchBlueprint.key,
+    ],
   },
 };
 
@@ -520,7 +571,7 @@ export const WithSearch: Story = {
     },
   }),
   args: {
-    deckComponents: [[ChatContainer], [GraphContainer]],
+    modules: [[ChatModule], [GraphModule]],
   },
 };
 
@@ -533,16 +584,17 @@ export const WithTranscription: Story = {
       const queue = space.queues.create();
       const messages = createTestTranscription();
       await queue.append(messages);
-      space.db.add(Transcript.makeTranscript(queue.dxn));
+      space.db.add(Transcript.make(queue.dxn));
     },
     onChatCreated: async ({ space, binder }) => {
-      const { objects } = await space.db.query(Filter.type(Transcript.Transcript)).run();
+      const objects = await space.db.query(Filter.type(Transcript.Transcript)).run();
       await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
     },
   }),
   args: {
-    deckComponents: [[ChatContainer], ['surfaces']],
-    blueprints: [BLUEPRINT_KEY, 'dxos.org/blueprint/transcription'],
+    showContext: true,
+    modules: [[ChatModule]],
+    blueprints: [AssistantBlueprint.Key, 'dxos.org/blueprint/transcription'],
   },
 };
 
@@ -553,14 +605,14 @@ export const WithLinearSync: Story = {
   decorators: getDecorators({
     plugins: [],
     config: config.remote,
-    types: [DataType.Task, DataType.Person, DataType.Project],
+    types: [Task.Task, Person.Person, Project.Project],
     accessTokens: accessTokensFromEnv({
       'linear.app': VITE_LINEAR_API_KEY,
     }),
   }),
   args: {
-    deckComponents: [[ChatContainer], [GraphContainer]],
-    blueprints: [LINEAR_BLUEPRINT.key],
+    modules: [[ChatModule], [GraphModule]],
+    blueprints: [LinearBlueprint.key],
   },
 };
 
@@ -570,19 +622,19 @@ export const WithTriggers: Story = {
     config: config.remote,
     onInit: async ({ space }) => {
       space.db.add(
-        Obj.make(FunctionTrigger, {
-          function: Ref.make(serializeFunction(exampleFunctions.reply)),
+        Trigger.make({
+          function: Ref.make(serializeFunction(Example.reply)),
           enabled: true,
           spec: {
             kind: 'timer',
-            cron: '*/5 * * * * *', // Every 5 seconds
+            cron: '*/5 * * * * *', // Every 5 seconds.
           },
         }),
       );
     },
   }),
   args: {
-    deckComponents: [[ChatContainer], [TriggersContainer, InvocationsContainer]],
+    modules: [[ChatModule], [TriggersModule, InvocationsModule]],
     blueprints: [],
   },
 };
@@ -595,7 +647,7 @@ export const WithChessTrigger: Story = {
     onInit: async ({ space }) => {
       // TODO(burdon): Add player DID (for user and assistant).
       space.db.add(
-        Chess.makeGame({
+        Chess.make({
           name: 'Challenge',
           pgn: [
             '1. e4 e5',
@@ -617,8 +669,8 @@ export const WithChessTrigger: Story = {
       );
 
       space.db.add(
-        Obj.make(FunctionTrigger, {
-          function: Ref.make(serializeFunction(chessFunctions.play)),
+        Trigger.make({
+          function: Ref.make(serializeFunction(ChessFunctions.play)),
           enabled: true,
           spec: {
             kind: 'subscription',
@@ -635,7 +687,7 @@ export const WithChessTrigger: Story = {
     },
   }),
   args: {
-    deckComponents: [[ChessContainer], [TriggersContainer, InvocationsContainer]],
+    modules: [[ChessModule], [TriggersModule, InvocationsModule]],
     blueprints: [],
   },
 };
@@ -645,12 +697,12 @@ export const WithResearchQueue: Story = {
     plugins: [],
     config: config.remote,
     types: [...ResearchDataTypes, ResearchGraph, ResearchInputQueue],
-    accessTokens: [Obj.make(DataType.AccessToken, { source: 'exa.ai', token: EXA_API_KEY })],
+    accessTokens: [Obj.make(AccessToken.AccessToken, { source: 'exa.ai', token: EXA_API_KEY })],
     onInit: async ({ space }) => {
       const researchInputQueue = space.db.add(
         Obj.make(ResearchInputQueue, { queue: Ref.fromDXN(space.queues.create().dxn) }),
       );
-      const orgs = organizations.map(({ id: _, ...org }) => Obj.make(DataType.Organization, org));
+      const orgs = organizations.map(({ id: _, ...org }) => Obj.make(Organization.Organization, org));
       await researchInputQueue.queue.target!.append(orgs);
 
       const researchPrompt = space.db.add(
@@ -664,13 +716,13 @@ export const WithResearchQueue: Story = {
 
           instructions:
             'Research the organization provided as input. Create a research note for it at the end. NOTE: Do mocked reseach (set mockSearch to true).',
-          blueprints: [Ref.make(RESEARCH_BLUEPRINT)],
+          blueprints: [Ref.make(ResearchBlueprint)],
         }),
       );
 
       space.db.add(
-        Obj.make(FunctionTrigger, {
-          function: Ref.make(serializeFunction(agent)),
+        Trigger.make({
+          function: Ref.make(serializeFunction(Agent.prompt)),
           enabled: true,
           spec: {
             kind: 'queue',
@@ -685,11 +737,11 @@ export const WithResearchQueue: Story = {
     },
   }),
   args: {
-    deckComponents: [
-      [ResearchInputStack, ResearchOutputStack],
-      [TriggersContainer, InvocationsContainer, PromptContainer, GraphContainer],
+    modules: [
+      [ResearchInputModule, ResearchOutputModule],
+      [TriggersModule, InvocationsModule, PromptModule, GraphModule],
     ],
-    blueprints: [RESEARCH_BLUEPRINT.key],
+    blueprints: [ResearchBlueprint.key],
   },
 };
 
@@ -697,80 +749,232 @@ export const WithProject: Story = {
   decorators: getDecorators({
     plugins: [InboxPlugin(), MarkdownPlugin(), ProjectPlugin()],
     config: config.remote,
-    accessTokens: [Obj.make(DataType.AccessToken, { source: 'exa.ai', token: EXA_API_KEY })],
+    accessTokens: [Obj.make(AccessToken.AccessToken, { source: 'exa.ai', token: EXA_API_KEY })],
     types: [
       Tag.Tag,
-      DataType.Employer,
-      DataType.HasConnection,
-      DataType.Message,
-      DataType.Organization,
-      DataType.Person,
-      DataType.Project,
-      DataType.View,
+      Employer.Employer,
+      HasConnection.HasConnection,
+      HasSubject.HasSubject,
+      Message.Message,
+      Organization.Organization,
+      Person.Person,
+      Project.Project,
+      View.View,
       Mailbox.Mailbox,
-      ResearchOn,
     ],
     onInit: async ({ space }) => {
       await addTestData(space);
-      const { objects: people } = await space.db.query(Filter.type(DataType.Person)).run();
-      const { objects: organizations } = await space.db.query(Filter.type(DataType.Organization)).run();
+      const people = await space.db.query(Filter.type(Person.Person)).run();
+      const organizations = await space.db.query(Filter.type(Organization.Organization)).run();
       const tag = space.db.add(Tag.make({ label: 'Project' }));
       const tagDxn = Obj.getDXN(tag).toString();
 
       people.slice(0, 4).forEach((person) => {
-        const meta = Obj.getMeta(person);
-        meta.tags = [tagDxn];
+        Obj.change(person, (p) => {
+          Obj.getMeta(p).tags = [tagDxn];
+        });
       });
 
       const mailbox = space.db.add(Mailbox.make({ name: 'Mailbox', space }));
-      const queue = space.queues.get<DataType.Message>(mailbox.queue.dxn);
+      const queue = space.queues.get<Message.Message>(mailbox.queue.dxn);
       const messages = createTestMailbox(people);
       await queue.append(messages);
 
       const dxosResearch = space.db.add(
-        Markdown.makeDocument({
+        Markdown.make({
           name: 'DXOS Research',
           content: 'DXOS builds Composer, an open-source AI-powered malleable application.',
         }),
       );
       const blueyardResearch = space.db.add(
-        Markdown.makeDocument({
-          name: 'Blue Yard Research',
-          content: 'Blue Yard is a venture capital firm that invests in early-stage startups.',
+        Markdown.make({
+          name: 'BlueYard Research',
+          content: 'BlueYard is a venture capital firm that invests in early-stage startups.',
         }),
       );
       [dxosResearch, blueyardResearch].forEach((research) => {
-        const meta = Obj.getMeta(research);
-        meta.tags = [tagDxn];
+        Obj.change(research, (r) => {
+          Obj.getMeta(r).tags = [tagDxn];
+        });
       });
 
       const dxos = organizations.find((org) => org.name === 'DXOS')!;
-      const blueyard = organizations.find((org) => org.name === 'Blue Yard')!;
+      const blueyard = organizations.find((org) => org.name === 'BlueYard')!;
       [dxos, blueyard].forEach((organization) => {
-        const meta = Obj.getMeta(organization);
-        meta.tags = [tagDxn];
+        Obj.change(organization, (org) => {
+          Obj.getMeta(org).tags = [tagDxn];
+        });
       });
       // TODO(wittjosiah): Support relations.
       // space.db.add(
-      //   Relation.make(ResearchOn, {
+      //   Relation.make(HasSubject, {
       //     [Relation.Source]: dxosResearch,
       //     [Relation.Target]: dxos,
       //     completedAt: new Date().toISOString(),
       //   }),
       // );
       // space.db.add(
-      //   Relation.make(ResearchOn, {
+      //   Relation.make(HasSubject, {
       //     [Relation.Source]: blueyardResearch,
       //     [Relation.Target]: blueyard,
       //     completedAt: new Date().toISOString(),
       //   }),
       // );
 
-      const contactsQuery = Query.select(Filter.type(DataType.Person)).select(Filter.tag(tagDxn));
-      const organizationsQuery = Query.select(Filter.type(DataType.Organization)).select(Filter.tag(tagDxn));
+      const contactsQuery = Query.select(Filter.type(Person.Person)).select(Filter.tag(tagDxn));
+      const organizationsQuery = Query.select(Filter.type(Organization.Organization)).select(Filter.tag(tagDxn));
       const notesQuery = Query.select(Filter.type(Markdown.Document)).select(Filter.tag(tagDxn));
 
       const researchPrompt = space.db.add(
+        Prompt.make({
+          name: 'Research',
+          description: 'Research organization',
+          input: Schema.Struct({
+            organization: Schema.Any,
+          }),
+          output: Schema.Any,
+          instructions: trim`
+            Research the organization provided as input.
+            Absolutely, in all cases, create a research note for it at the end.
+            NOTE: Do mocked reseach (set mockSearch to true).
+
+            {{organization}}
+          `,
+          blueprints: [Ref.make(ResearchBlueprint)],
+        }),
+      );
+
+      const researchTrigger = Trigger.make({
+        function: Ref.make(serializeFunction(Agent.prompt)),
+        enabled: true,
+        spec: {
+          kind: 'subscription',
+          query: {
+            ast: organizationsQuery.ast,
+          },
+        },
+        input: {
+          prompt: Ref.make(researchPrompt),
+          input: {
+            organization: '{{event.subject}}',
+          },
+        },
+      });
+      space.db.add(researchTrigger);
+
+      const mailboxView = View.make({
+        query: Query.select(Filter.type(Message.Message))
+          .select(Filter.tag(tagDxn))
+          .options({
+            queues: [mailbox.queue.dxn.toString()],
+          }),
+        jsonSchema: Type.toJsonSchema(Message.Message),
+      });
+      const contactsView = View.make({
+        query: contactsQuery,
+        jsonSchema: Type.toJsonSchema(Person.Person),
+      });
+      const organizationsView = View.make({
+        query: organizationsQuery,
+        jsonSchema: Type.toJsonSchema(Organization.Organization),
+      });
+      const notesView = View.make({
+        query: notesQuery,
+        jsonSchema: Type.toJsonSchema(Markdown.Document),
+      });
+
+      space.db.add(
+        Project.make({
+          name: 'Investor Research',
+          columns: [
+            {
+              name: 'Mailbox',
+              view: Ref.make(mailboxView),
+              order: [],
+            },
+            {
+              name: 'Contacts',
+              view: Ref.make(contactsView),
+              order: [],
+            },
+            {
+              name: 'Organizations',
+              view: Ref.make(organizationsView),
+              order: [],
+            },
+            {
+              name: 'Notes',
+              view: Ref.make(notesView),
+              order: [],
+            },
+          ],
+        }),
+      );
+    },
+  }),
+  args: {
+    modules: [[ProjectModule], [TriggersModule, InvocationsModule]],
+    blueprints: [],
+  },
+};
+
+export const WithScript: Story = {
+  decorators: getDecorators({
+    plugins: [MarkdownPlugin(), ScriptPlugin()],
+    config: config.local,
+    types: [Script.Script, Text.Text],
+    onInit: async ({ client, space }) => {
+      const { identityKey } = client.halo.identity.get()!;
+      await client.halo.writeCredentials([getAccessCredential(identityKey)]);
+
+      const template = templates.find((template) => template.id === 'dxos.org/script/forex-effect');
+      invariant(template, 'Template not found');
+      invariant(template.name, 'Template name not found');
+
+      // Ensure at least one Script exists so the React surface can render.
+      space.db.add(
+        Script.make({
+          name: template.name,
+          description: 'Function to get the exchange rates between two currencies.',
+          changed: true,
+          source: template.source,
+        }),
+      );
+
+      space.db.add(
+        Blueprint.make({
+          key: 'dxos.org/blueprint/forex',
+          name: 'Forex',
+          instructions: Template.make({
+            source: trim`
+              You can get the exchange rate between two currencies.
+            `,
+          }),
+          tools: [ToolId.make('dxos.org/script/forex-effect')],
+        }),
+      );
+
+      await space.db.flush();
+    },
+    onChatCreated: async ({ space, binder }) => {
+      const blueprints = await space.db.query(Query.select(Filter.type(Blueprint.Blueprint))).run();
+      await binder.bind({ blueprints: blueprints.map((blueprint) => Ref.make(blueprint)) });
+    },
+  }),
+  args: {
+    modules: [[ChatModule], [ScriptModule]],
+  },
+};
+
+export const WithPrompt: Story = {
+  decorators: getDecorators({
+    plugins: [MarkdownPlugin()],
+    config: config.remote,
+    types: [Text.Text],
+    onInit: async ({ space }) => {
+      space.db.add(serializeFunction(Agent.prompt));
+
+      space.db.add(
         Prompt.make({
           name: 'Research',
           description: 'Research organization',
@@ -781,115 +985,14 @@ export const WithProject: Story = {
 
           instructions:
             'Research the organization provided as input. Absolutely, in all cases, create a research note for it at the end. NOTE: Do mocked reseach (set mockSearch to true).',
-          blueprints: [Ref.make(RESEARCH_BLUEPRINT)],
-        }),
-      );
-
-      const researchTrigger = Obj.make(FunctionTrigger, {
-        function: Ref.make(serializeFunction(agent)),
-        enabled: true,
-        spec: {
-          kind: 'subscription',
-          query: {
-            ast: organizationsQuery.ast,
-          },
-        },
-        input: {
-          prompt: Ref.make(researchPrompt),
-          input: '{{event.subject}}',
-        },
-      });
-      space.db.add(researchTrigger);
-
-      const mailboxView = createView({
-        name: 'Mailbox',
-        query: Query.select(Filter.type(DataType.Message))
-          .select(Filter.tag(tagDxn))
-          .options({
-            queues: [mailbox.queue.dxn.toString()],
-          }),
-        jsonSchema: Type.toJsonSchema(DataType.Message),
-        presentation: Obj.make(DataType.Collection, { objects: [] }),
-      });
-      const contactsView = createView({
-        name: 'Contacts',
-        query: contactsQuery,
-        jsonSchema: Type.toJsonSchema(DataType.Person),
-        presentation: Obj.make(DataType.Collection, { objects: [] }),
-      });
-      const organizationsView = createView({
-        name: 'Organizations',
-        query: organizationsQuery,
-        jsonSchema: Type.toJsonSchema(DataType.Organization),
-        presentation: Obj.make(DataType.Collection, { objects: [] }),
-      });
-      const notesView = createView({
-        name: 'Notes',
-        query: notesQuery,
-        jsonSchema: Type.toJsonSchema(Markdown.Document),
-        presentation: Obj.make(DataType.Collection, { objects: [] }),
-      });
-
-      space.db.add(
-        DataType.makeProject({
-          name: 'Investor Research',
-          collections: [mailboxView, contactsView, organizationsView, notesView].map((view) => Ref.make(view)),
-        }),
-      );
-    },
-  }),
-  args: {
-    deckComponents: [[ProjectContainer], [TriggersContainer, InvocationsContainer]],
-    blueprints: [],
-  },
-};
-
-export const WithScript: Story = {
-  decorators: getDecorators({
-    plugins: [MarkdownPlugin(), ScriptPlugin()],
-    config: config.local,
-    types: [ScriptType, DataType.Text],
-    onInit: async ({ client, space }) => {
-      const { identityKey } = client.halo.identity.get()!;
-      await client.halo.writeCredentials([getAccessCredential(identityKey)]);
-
-      const template = templates.find((template) => template.id === 'dxos.org/script/forex-effect');
-      invariant(template, 'Template not found');
-      invariant(template.name, 'Template name not found');
-
-      // Ensure at least one Script exists so the React surface can render.
-      const source = Obj.make(DataType.Text, {
-        content: template.source,
-      });
-      space.db.add(
-        Obj.make(ScriptType, {
-          name: template.name,
-          description: 'Function to get the exchange rates between two currencies.',
-          changed: true,
-          source: Ref.make(source),
+          blueprints: [Ref.make(ResearchBlueprint)],
         }),
       );
 
       await space.db.flush();
     },
-    onChatCreated: async ({ space, binder }) => {
-      const bp = space.db.add(
-        Blueprint.make({
-          key: 'dxos.org/blueprint/forex',
-          name: 'Forex',
-          instructions: Template.make({
-            source: trim`
-            You can get the exchange rate between two currencies.
-          `,
-          }),
-          tools: [ToolId.make('dxos.org/script/forex-effect')],
-        }),
-      );
-
-      await binder.bind({ blueprints: [Ref.make(bp)] });
-    },
   }),
   args: {
-    deckComponents: [[ChatContainer], [ScriptContainer]],
+    modules: [[PromptModule], [InvocationsModule]],
   },
 };

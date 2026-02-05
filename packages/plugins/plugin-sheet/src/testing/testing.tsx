@@ -11,15 +11,15 @@ import { type Space } from '@dxos/react-client/echo';
 import { useAsyncState } from '@dxos/react-hooks';
 
 import { ComputeGraphContextProvider } from '../components';
-import { type CreateSheetOptions, createSheet } from '../types';
+import { Sheet } from '../types';
 
-export const useTestSheet = (space?: Space, graph?: ComputeGraph, options?: CreateSheetOptions) => {
+export const useTestSheet = (space?: Space, graph?: ComputeGraph, options?: Sheet.SheetProps) => {
   const [sheet] = useAsyncState(async () => {
     if (!space || !graph) {
       return;
     }
 
-    const sheet = createSheet(options);
+    const sheet = Sheet.make(options);
     space.db.add(sheet);
     return sheet;
   }, [space, graph]);

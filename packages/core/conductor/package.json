@@ -4,6 +4,10 @@
   "description": "Compute graph implementation",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
   "license": "MIT",
   "author": "info@dxos.org",
   "sideEffects": true,
@@ -46,23 +50,25 @@
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
     "@dxos/functions": "workspace:*",
+    "@dxos/functions-runtime": "workspace:*",
     "@dxos/graph": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
-    "@dxos/live-object": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/schema": "workspace:*",
+    "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/ai": "0.29.1",
-    "@effect/experimental": "0.56.0",
-    "@effect/platform": "0.92.1",
-    "@preact/signals-core": "^1.12.1",
-    "chalk": "^4.1.2",
-    "effect": "3.18.3",
-    "jsonpath-plus": "10.2.0"
+    "@effect/ai": "catalog:",
+    "@effect/experimental": "catalog:",
+    "@effect/platform": "catalog:",
+    "chalk": "catalog:",
+    "effect": "catalog:",
+    "jsonpath-plus": "catalog:"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "@dxos/functions-runtime": "workspace:*"
+  },
   "publishConfig": {
     "access": "public"
   }

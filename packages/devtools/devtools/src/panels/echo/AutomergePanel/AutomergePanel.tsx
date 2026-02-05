@@ -4,7 +4,7 @@
 
 import React, { useMemo, useState } from 'react';
 
-import { FormatEnum } from '@dxos/echo/internal';
+import { Format } from '@dxos/echo/internal';
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
@@ -65,16 +65,16 @@ export const AutomergePanel = (props: { space?: Space }) => {
       client.spaces
         .get()
         .find((s) => s.id === space.id)
-        ?.db?.coreDatabase?.getLoadedDocumentHandles()) ??
+        ?.internal.db.coreDatabase?.getLoadedDocumentHandles()) ??
     [];
 
   const [filter, setFilter] = useState('');
 
   const properties = useMemo(
     () => [
-      { name: 'documentId', format: FormatEnum.DID, size: 320 },
-      { name: 'content', format: FormatEnum.String, size: 320 },
-      { name: 'type', format: FormatEnum.String, size: 320 },
+      { name: 'documentId', format: Format.TypeFormat.DID, size: 320 },
+      { name: 'content', format: Format.TypeFormat.String, size: 320 },
+      { name: 'type', format: Format.TypeFormat.String, size: 320 },
     ],
     [],
   );
@@ -84,13 +84,14 @@ export const AutomergePanel = (props: { space?: Space }) => {
       .map((handle) => {
         const doc = handle.doc();
         return {
-          id: handle.documentId,
-          documentId: handle.documentId,
+          id: handle.documentId!,
+          documentId: handle.documentId!,
           content: isSpaceRoot(doc) ? 'space root doc' : getStoredObject(doc)?.id,
-          type: getStoredObjectType({ documentId: handle.documentId, accessor: () => doc, id: handle.documentId }),
+          type: getStoredObjectType({ documentId: handle.documentId!, accessor: () => doc, id: handle.documentId! }),
           accessor: () => doc,
         };
       })
+      .filter((item) => item.id != null)
       .filter(textFilter(filter));
   }, [handles, filter]);
 

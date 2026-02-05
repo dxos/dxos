@@ -37,9 +37,6 @@
       "path": "../../common/keys"
     },
     {
-      "path": "../../common/local-storage"
-    },
-    {
       "path": "../../common/log"
     },
     {
@@ -58,7 +55,7 @@
       "path": "../../core/assistant"
     },
     {
-      "path": "../../core/assistant-testing"
+      "path": "../../core/assistant-toolkit"
     },
     {
       "path": "../../core/blueprints"
@@ -82,13 +79,16 @@
       "path": "../../core/echo/echo-query"
     },
     {
-      "path": "../../core/echo/live-object"
-    },
-    {
       "path": "../../core/functions"
     },
     {
+      "path": "../../core/functions-runtime"
+    },
+    {
       "path": "../../core/mesh/edge-client"
+    },
+    {
+      "path": "../../core/operation"
     },
     {
       "path": "../../core/protocols"
@@ -151,10 +151,10 @@
       "path": "../../plugins/plugin-stack"
     },
     {
-      "path": "../../plugins/plugin-storybook-layout"
+      "path": "../../plugins/plugin-table"
     },
     {
-      "path": "../../plugins/plugin-table"
+      "path": "../../plugins/plugin-testing"
     },
     {
       "path": "../../plugins/plugin-theme"
@@ -188,6 +188,9 @@
     },
     {
       "path": "../../sdk/schema"
+    },
+    {
+      "path": "../../sdk/types"
     },
     {
       "path": "../../ui/lit-ui"
@@ -226,6 +229,9 @@
       "path": "../../ui/react-ui-menu"
     },
     {
+      "path": "../../ui/react-ui-mosaic"
+    },
+    {
       "path": "../../ui/react-ui-searchlist"
     },
     {
@@ -244,7 +250,10 @@
       "path": "../../ui/react-ui-tabs"
     },
     {
-      "path": "../../ui/react-ui-theme"
+      "path": "../../ui/ui-editor"
+    },
+    {
+      "path": "../../ui/ui-theme"
     }
   ]
 }

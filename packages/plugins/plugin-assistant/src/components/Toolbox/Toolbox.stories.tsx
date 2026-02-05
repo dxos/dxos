@@ -3,16 +3,16 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Effect from 'effect/Effect';
 import React from 'react';
 
-import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { capabilities } from '@dxos/assistant-testing';
+import { capabilities } from '@dxos/assistant-toolkit/testing';
 import { ChessPlugin } from '@dxos/plugin-chess';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { MapPlugin } from '@dxos/plugin-map';
-import { SpacePlugin } from '@dxos/plugin-space';
 import { TablePlugin } from '@dxos/plugin-table';
+import { corePlugins } from '@dxos/plugin-testing';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '../../translations';
@@ -20,7 +20,7 @@ import { translations } from '../../translations';
 import { Toolbox, type ToolboxProps } from './Toolbox';
 
 const DefaultStory = (props: ToolboxProps) => {
-  return <Toolbox {...props} classNames='w-[30rem] h-[15rem] rounded-sm border border-separator py-1' />;
+  return <Toolbox {...props} classNames='is-[30rem] bs-[15rem] rounded-sm border border-separator plb-1' />;
 };
 
 const meta = {
@@ -31,14 +31,13 @@ const meta = {
     withTheme,
     withPluginManager({
       plugins: [
+        ...corePlugins(),
         ClientPlugin({
-          onClientInitialized: async ({ client }) => {
-            await client.halo.createIdentity();
-          },
+          onClientInitialized: ({ client }) =>
+            Effect.gen(function* () {
+              yield* Effect.promise(() => client.halo.createIdentity());
+            }),
         }),
-        SpacePlugin({}),
-        SettingsPlugin(),
-        IntentPlugin(),
         ChessPlugin(),
         MapPlugin(),
         TablePlugin(),

@@ -9,8 +9,7 @@ tasks:
   compile:
     args:
       - '--entryPoint=src/index.ts'
-      - '--platform=browser'
-      - '--preactSignalTracking'
+      - '--entryPoint=src/cli/index.ts'
   test:
     inputs:
       - .storybook/*

@@ -18,7 +18,7 @@ import { joinTables } from '@dxos/util';
 
 import { type IdToHeads } from '../types';
 
-export type IndexMetadataStoreParams = {
+export type IndexMetadataStoreProps = {
   db: SublevelDB;
 };
 
@@ -39,7 +39,7 @@ export class IndexMetadataStore {
    */
   private readonly _lastIndexed: SublevelDB;
 
-  constructor({ db }: IndexMetadataStoreParams) {
+  constructor({ db }: IndexMetadataStoreProps) {
     this._lastSeen = db.sublevel('last-seen', { valueEncoding: headsEncoding, keyEncoding: 'utf8' });
     this._lastIndexed = db.sublevel('last-indexed', { valueEncoding: headsEncoding, keyEncoding: 'utf8' });
 

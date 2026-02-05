@@ -4,24 +4,25 @@
 
 import React from 'react';
 
-import { useAppGraph } from '@dxos/app-framework';
+import { type SurfaceComponentProps, useAppGraph } from '@dxos/app-framework/react';
+import { Obj } from '@dxos/echo';
 import { useActions } from '@dxos/plugin-graph';
-import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { useAttention } from '@dxos/react-ui-attention';
-import { StackItem } from '@dxos/react-ui-stack';
+import { Layout, type LayoutFlexProps } from '@dxos/react-ui-mosaic';
 
-import { type DiagramType, type SketchSettingsProps } from '../types';
+import { type Diagram, type SketchSettingsProps } from '../types';
 
 import { Sketch } from './Sketch';
 
-export type SketchContainerProps = {
-  role: string;
-  sketch: DiagramType;
-  settings: SketchSettingsProps;
-};
+export type SketchContainerProps = SurfaceComponentProps<
+  Diagram.Diagram,
+  {
+    settings: SketchSettingsProps;
+  }
+>;
 
-export const SketchContainer = ({ role, sketch, settings }: SketchContainerProps) => {
-  const id = fullyQualifiedId(sketch);
+export const SketchContainer = ({ role, subject: sketch, settings }: SketchContainerProps) => {
+  const id = Obj.getDXN(sketch).toString();
   const { hasAttention } = useAttention(id);
 
   const props = {
@@ -32,11 +33,13 @@ export const SketchContainer = ({ role, sketch, settings }: SketchContainerProps
 
   // TODO(wittjosiah): Genericize tldraw toolbar actions w/ graph.
   const { graph } = useAppGraph();
-  const actions = useActions(graph, fullyQualifiedId(sketch));
-  const handleThreadCreate = actions.find((action) => action.id === `${fullyQualifiedId(sketch)}/comment`)?.data;
+  const actions = useActions(graph, id);
+  const handleThreadCreate = actions.find((action) => action.id === `${id}/comment`)?.data;
+
+  const Root = role === 'section' ? Container : Layout.Main;
 
   return (
-    <StackItem.Content size={role === 'section' ? 'square' : 'intrinsic'}>
+    <Root>
       <Sketch
         // Force instance per sketch object. Otherwise, sketch shares the same instance.
         key={id}
@@ -47,8 +50,10 @@ export const SketchContainer = ({ role, sketch, settings }: SketchContainerProps
         onThreadCreate={handleThreadCreate}
         {...props}
       />
-    </StackItem.Content>
+    </Root>
   );
 };
+
+const Container = (props: LayoutFlexProps) => <Layout.Flex {...props} classNames='aspect-square' />;
 
 export default SketchContainer;

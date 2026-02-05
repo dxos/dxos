@@ -2,13 +2,16 @@
 // Copyright 2020 DXOS.org
 //
 
+import { RegistryContext } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { select } from 'd3';
-import React, { type PropsWithChildren, useEffect, useMemo, useRef } from 'react';
+import React, { type PropsWithChildren, useContext, useEffect, useMemo, useRef } from 'react';
 
 import { combine } from '@dxos/async';
+import { type Graph } from '@dxos/graph';
 import { log } from '@dxos/log';
 import { withTheme } from '@dxos/react-ui/testing';
+import { withRegistry } from '@dxos/storybook-utils';
 
 import { SVG } from '../components';
 import {
@@ -27,7 +30,7 @@ import { TestGraphModel, type TestNode, convertTreeToGraph, createTree } from '.
 import '../../styles/graph.css';
 
 type ComponentProps = PropsWithChildren<{
-  model: TestGraphModel;
+  graph: () => Graph.Graph<TestNode, Graph.Edge.Any>;
   projectorOptions?: GraphForceProjectorOptions;
   count?: number;
   interval?: number;
@@ -36,13 +39,16 @@ type ComponentProps = PropsWithChildren<{
 }>;
 
 const Component = ({
-  model,
+  graph: graphFactory,
   projectorOptions,
   count = 0,
   interval = 200,
   link = false,
   grid: showGrid = false,
 }: ComponentProps) => {
+  const registry = useContext(RegistryContext);
+  const model = useMemo(() => new TestGraphModel(registry, graphFactory()), [registry, graphFactory]);
+
   const context = useSvgContext();
   const graphRef = useRef<SVGGElement>(null);
   const markersRef = useRef<SVGGElement>(null);
@@ -152,7 +158,7 @@ const DefaultStory = ({ children, ...props }: ComponentProps) => {
 const meta = {
   title: 'ui/react-ui-graph/hooks',
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withRegistry, withTheme],
   parameters: {
     layout: 'fullscreen',
   },
@@ -164,7 +170,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    model: new TestGraphModel(convertTreeToGraph(createTree({ depth: 3 }))),
+    graph: () => convertTreeToGraph(createTree({ depth: 3 })),
     grid: true,
     count: 300,
     interval: 20,
@@ -189,7 +195,7 @@ export const Default: Story = {
 
 export const Bullets: Story = {
   args: {
-    model: new TestGraphModel(convertTreeToGraph(createTree({ depth: 4 }))),
+    graph: () => convertTreeToGraph(createTree({ depth: 4 })),
     children: <span>⌘-DRAG to edge or create node; ⌘-CLICK to delete edge.</span>,
     link: true,
     grid: false,

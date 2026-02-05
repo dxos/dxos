@@ -3,11 +3,9 @@
 //
 
 export * from './credentials';
-export * from './database';
+export { ConfiguredCredentialsService, type ServiceCredential } from './credentials';
 export * from './event-logger';
+export { createEventLogger, createDefectLogger } from './event-logger';
 export * from './function-invocation-service';
-export * from './local-function-execution';
 export * from './queues';
-export * from './service-container';
 export * from './tracing';
-export * from './remote-function-execution-service';

@@ -4,6 +4,10 @@
   "description": "ECHO API",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
   "license": "MIT",
   "author": "info@dxos.org",
   "sideEffects": false,
@@ -12,70 +16,102 @@
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "browser": "./dist/lib/browser/index.mjs",
-      "node": "./dist/lib/node-esm/index.mjs"
-    },
-    "./Type": {
-      "source": "./src/Type.ts",
-      "types": "./dist/types/src/Type.d.ts",
-      "browser": "./dist/lib/browser/Type.mjs",
-      "node": "./dist/lib/node-esm/Type.mjs"
-    },
-    "./Obj": {
-      "source": "./src/Obj.ts",
-      "types": "./dist/types/src/Obj.d.ts",
-      "browser": "./dist/lib/browser/Obj.mjs",
-      "node": "./dist/lib/node-esm/Obj.mjs"
-    },
-    "./Relation": {
-      "source": "./src/Relation.ts",
-      "types": "./dist/types/src/Relation.d.ts",
-      "browser": "./dist/lib/browser/Relation.mjs",
-      "node": "./dist/lib/node-esm/Relation.mjs"
-    },
-    "./Ref": {
-      "source": "./src/Ref.ts",
-      "types": "./dist/types/src/Ref.d.ts",
-      "browser": "./dist/lib/browser/Ref.mjs",
-      "node": "./dist/lib/node-esm/Ref.mjs"
+      "default": "./dist/lib/neutral/index.mjs"
     },
     "./internal": {
       "source": "./src/internal/index.ts",
       "types": "./dist/types/src/internal/index.d.ts",
-      "browser": "./dist/lib/browser/internal/index.mjs",
-      "node": "./dist/lib/node-esm/internal/index.mjs"
-    },
-    "./query": {
-      "source": "./src/query/index.ts",
-      "types": "./dist/types/src/query/index.d.ts",
-      "browser": "./dist/lib/browser/query/index.mjs",
-      "node": "./dist/lib/node-esm/query/index.mjs"
+      "default": "./dist/lib/neutral/internal/index.mjs"
     },
     "./testing": {
       "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
-      "browser": "./dist/lib/browser/testing/index.mjs",
-      "node": "./dist/lib/node-esm/testing/index.mjs"
-    }
-  },
-  "types": "dist/types/src/index.d.ts",
-  "typesVersions": {
-    "*": {
-      "Type": [
-        "dist/types/src/Type.d.ts"
-      ],
-      "Obj": [
-        "dist/types/src/Obj.d.ts"
-      ],
-      "Relation": [
-        "dist/types/src/Relation.d.ts"
-      ],
-      "Ref": [
-        "dist/types/src/Ref.d.ts"
-      ],
-      "testing": [
-        "dist/types/src/testing/index.d.ts"
-      ]
+      "default": "./dist/lib/neutral/testing/index.mjs"
+    },
+    "./Annotation": {
+      "source": "./src/Annotation.ts",
+      "types": "./dist/types/src/Annotation.d.ts",
+      "default": "./dist/lib/neutral/Annotation.mjs"
+    },
+    "./Database": {
+      "source": "./src/Database.ts",
+      "types": "./dist/types/src/Database.d.ts",
+      "default": "./dist/lib/neutral/Database.mjs"
+    },
+    "./Entity": {
+      "source": "./src/Entity.ts",
+      "types": "./dist/types/src/Entity.d.ts",
+      "default": "./dist/lib/neutral/Entity.mjs"
+    },
+    "./Err": {
+      "source": "./src/Err.ts",
+      "types": "./dist/types/src/Err.d.ts",
+      "default": "./dist/lib/neutral/Err.mjs"
+    },
+    "./Filter": {
+      "source": "./src/Filter.ts",
+      "types": "./dist/types/src/Filter.d.ts",
+      "default": "./dist/lib/neutral/Filter.mjs"
+    },
+    "./Format": {
+      "source": "./src/Format.ts",
+      "types": "./dist/types/src/Format.d.ts",
+      "default": "./dist/lib/neutral/Format.mjs"
+    },
+    "./JsonSchema": {
+      "source": "./src/JsonSchema.ts",
+      "types": "./dist/types/src/JsonSchema.d.ts",
+      "default": "./dist/lib/neutral/JsonSchema.mjs"
+    },
+    "./Key": {
+      "source": "./src/Key.ts",
+      "types": "./dist/types/src/Key.d.ts",
+      "default": "./dist/lib/neutral/Key.mjs"
+    },
+    "./Obj": {
+      "source": "./src/Obj.ts",
+      "types": "./dist/types/src/Obj.d.ts",
+      "default": "./dist/lib/neutral/Obj.mjs"
+    },
+    "./Order": {
+      "source": "./src/Order.ts",
+      "types": "./dist/types/src/Order.d.ts",
+      "default": "./dist/lib/neutral/Order.mjs"
+    },
+    "./Query": {
+      "source": "./src/Query.ts",
+      "types": "./dist/types/src/Query.d.ts",
+      "default": "./dist/lib/neutral/Query.mjs"
+    },
+    "./QueryResult": {
+      "source": "./src/QueryResult.ts",
+      "types": "./dist/types/src/QueryResult.d.ts",
+      "default": "./dist/lib/neutral/QueryResult.mjs"
+    },
+    "./Ref": {
+      "source": "./src/Ref.ts",
+      "types": "./dist/types/src/Ref.d.ts",
+      "default": "./dist/lib/neutral/Ref.mjs"
+    },
+    "./Relation": {
+      "source": "./src/Relation.ts",
+      "types": "./dist/types/src/Relation.d.ts",
+      "default": "./dist/lib/neutral/Relation.mjs"
+    },
+    "./SchemaRegistry": {
+      "source": "./src/SchemaRegistry.ts",
+      "types": "./dist/types/src/SchemaRegistry.d.ts",
+      "default": "./dist/lib/neutral/SchemaRegistry.mjs"
+    },
+    "./Tag": {
+      "source": "./src/Tag.ts",
+      "types": "./dist/types/src/Tag.d.ts",
+      "default": "./dist/lib/neutral/Tag.mjs"
+    },
+    "./Type": {
+      "source": "./src/Type.ts",
+      "types": "./dist/types/src/Type.d.ts",
+      "default": "./dist/lib/neutral/Type.mjs"
     }
   },
   "files": [
@@ -83,19 +119,19 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/async": "workspace:*",
+    "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
-    "@dxos/echo-signals": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
-    "@dxos/live-object": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
+    "@dxos/protocols": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@preact/signals-core": "^1.12.1",
-    "effect": "3.18.3"
+    "effect": "catalog:"
   },
   "publishConfig": {
     "access": "public"

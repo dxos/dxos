@@ -15,7 +15,7 @@ export type AuthProvider = (nonce: Uint8Array) => Promise<Uint8Array | undefined
 
 export type AuthVerifier = (nonce: Uint8Array, credential: Uint8Array) => Promise<boolean>;
 
-export type AuthExtensionParams = {
+export type AuthExtensionProps = {
   provider: AuthProvider;
   verifier: AuthVerifier;
   onAuthSuccess: () => void;
@@ -29,7 +29,7 @@ export class AuthExtension extends RpcExtension<Services, Services> {
     },
   });
 
-  constructor(private readonly _authParams: AuthExtensionParams) {
+  constructor(private readonly _authProps: AuthExtensionProps) {
     super({
       requested: {
         AuthService: schema.getService('dxos.mesh.teleport.auth.AuthService'),
@@ -46,7 +46,7 @@ export class AuthExtension extends RpcExtension<Services, Services> {
       AuthService: {
         authenticate: async ({ challenge }) => {
           try {
-            const credential = await this._authParams.provider(challenge);
+            const credential = await this._authProps.provider(challenge);
             if (!credential) {
               throw new Error('auth rejected');
             }
@@ -67,13 +67,13 @@ export class AuthExtension extends RpcExtension<Services, Services> {
         const challenge = randomBytes(32);
         const { credential } = await this.rpc.AuthService.authenticate({ challenge });
         invariant(credential?.length > 0, 'invalid credential');
-        const success = await this._authParams.verifier(challenge, credential);
+        const success = await this._authProps.verifier(challenge, credential);
         invariant(success, 'credential not verified');
-        runInContext(this._ctx, () => this._authParams.onAuthSuccess());
+        runInContext(this._ctx, () => this._authProps.onAuthSuccess());
       } catch (err) {
         log('auth failed', err);
         this.close();
-        this._authParams.onAuthFailure();
+        this._authProps.onAuthFailure();
       }
     });
   }

@@ -1,0 +1,100 @@
+//
+// Copyright 2023 DXOS.org
+//
+
+import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Effect from 'effect/Effect';
+import React, { useMemo, useState } from 'react';
+
+import { Surface } from '@dxos/app-framework/react';
+import { withPluginManager } from '@dxos/app-framework/testing';
+import { Obj } from '@dxos/echo';
+import { ClientPlugin } from '@dxos/plugin-client';
+import { PreviewPlugin } from '@dxos/plugin-preview';
+import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { Filter, useDatabase, useQuery } from '@dxos/react-client/echo';
+import { withTheme } from '@dxos/react-ui/testing';
+import { useAttentionAttributes, useSelected } from '@dxos/react-ui-attention';
+import { withAttention } from '@dxos/react-ui-attention/testing';
+import { withMosaic } from '@dxos/react-ui-mosaic/testing';
+import { render } from '@dxos/storybook-utils';
+import { Message, Person } from '@dxos/types';
+
+import { InboxPlugin } from '../../InboxPlugin';
+import { LABELS, createMessages } from '../../testing';
+import { initializeMailbox } from '../../testing';
+import { Mailbox } from '../../types';
+
+import { Mailbox as MailboxComponent } from './Mailbox';
+
+const DefaultStory = () => {
+  const [messages] = useState(() => createMessages(100));
+  return <MailboxComponent id='story' messages={messages} ignoreAttention labels={LABELS} />;
+};
+
+const WithCompanionStory = () => {
+  const db = useDatabase();
+  const [mailbox] = useQuery(db, Filter.type(Mailbox.Mailbox));
+
+  const selected = useSelected(Obj.getDXN(mailbox).toString(), 'single');
+  const message = useQuery(mailbox?.queue.target, selected ? Filter.id(selected) : Filter.nothing())[0];
+
+  const mailboxData = useMemo(() => ({ subject: mailbox }), [mailbox]);
+  const companionData = useMemo(() => ({ subject: message ?? 'message', companionTo: mailbox }), [message, mailbox]);
+
+  // NOTE: Attention required for scrolling.
+  const attentionAttrs = useAttentionAttributes(mailbox ? Obj.getDXN(mailbox).toString() : undefined);
+
+  if (!db || !mailbox) {
+    return null;
+  }
+
+  return (
+    <div {...attentionAttrs} className='bs-full is-full grid grid-cols-2 grid-rows-2 overflow-hidden'>
+      <Surface role='article' data={mailboxData} />
+      <Surface role='article' data={companionData} />
+    </div>
+  );
+};
+
+const meta = {
+  title: 'plugins/plugin-inbox/Mailbox',
+  component: MailboxComponent as any,
+  render: DefaultStory,
+  decorators: [withTheme, withAttention(), withMosaic()],
+  parameters: {
+    layout: 'fullscreen',
+  },
+} satisfies Meta<typeof DefaultStory>;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {};
+
+export const WithCompanion: Story = {
+  render: render(WithCompanionStory),
+  decorators: [
+    withPluginManager({
+      plugins: [
+        ...corePlugins(),
+        ClientPlugin({
+          types: [Mailbox.Mailbox, Message.Message, Person.Person],
+          onClientInitialized: ({ client }) =>
+            Effect.gen(function* () {
+              yield* Effect.promise(() => client.halo.createIdentity());
+              yield* Effect.promise(() => client.spaces.waitUntilReady());
+              yield* Effect.promise(() => client.spaces.default.waitUntilReady());
+              // TODO(wittjosiah): Share message builder with transcription stories. Factor out to @dxos/schema/testing.
+              yield* Effect.promise(() => initializeMailbox(client.spaces.default));
+            }),
+        }),
+
+        StorybookPlugin({}),
+        InboxPlugin(),
+        PreviewPlugin(),
+      ],
+    }),
+  ],
+};

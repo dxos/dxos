@@ -2,13 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import { toEffectSchema } from '@dxos/echo/internal';
+import * as Effect from 'effect/Effect';
+
+import { JsonSchema } from '@dxos/echo';
+import { FunctionDefinition, FunctionInvocationService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { type DXN } from '@dxos/keys';
 
 import { type ComputeResolver, GraphExecutor, compileOrThrow } from '../compiler';
 import { NODE_INPUT, NODE_OUTPUT, type NodeType, inputNode, outputNode, registry } from '../nodes';
-import { executeFunction, resolveFunctionPath } from '../nodes/function';
 import {
   AnyInput,
   AnyOutput,
@@ -21,7 +23,7 @@ import {
 
 import { Workflow } from './workflow';
 
-export type WorkflowLoaderParams = {
+export type WorkflowLoaderProps = {
   nodeResolver: (node: ComputeNode) => Promise<Executable>;
   graphLoader: (graphId: DXN) => Promise<ComputeGraph>;
 };
@@ -33,7 +35,7 @@ export class WorkflowLoader {
   private readonly _nodeResolver: (node: ComputeNode) => Promise<Executable>;
   private readonly _graphLoader: (graphId: DXN) => Promise<ComputeGraph>;
 
-  constructor(params: WorkflowLoaderParams) {
+  constructor(params: WorkflowLoaderProps) {
     this._nodeResolver = params.nodeResolver;
     this._graphLoader = params.graphLoader;
   }
@@ -130,11 +132,15 @@ export class WorkflowLoader {
       return cached;
     }
 
-    const { path } = await resolveFunctionPath(functionRef);
-    const output = node.outputSchema ? toEffectSchema(node.outputSchema) : AnyOutput;
+    const funcionDef = FunctionDefinition.deserialize(await functionRef.load());
+    const output = node.outputSchema ? JsonSchema.toEffectSchema(node.outputSchema) : AnyOutput;
     const result: Executable = {
-      meta: { input: node.inputSchema ? toEffectSchema(node.inputSchema) : AnyInput, output },
-      exec: synchronizedComputeFunction((input) => executeFunction(path, input, output)),
+      meta: { input: node.inputSchema ? JsonSchema.toEffectSchema(node.inputSchema) : AnyInput, output },
+      exec: synchronizedComputeFunction(
+        Effect.fnUntraced(function* (input) {
+          return yield* FunctionInvocationService.invokeFunction(funcionDef, input);
+        }),
+      ),
     };
 
     cache.loadedFunctionsMap.set(cacheKey, result);

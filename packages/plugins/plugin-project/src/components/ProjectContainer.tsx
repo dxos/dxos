@@ -4,51 +4,52 @@
 
 import React, { useCallback } from 'react';
 
-import { Surface, createIntent, useIntentDispatcher } from '@dxos/app-framework';
-import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
-import { fullyQualifiedId } from '@dxos/react-client/echo';
-import { StackItem } from '@dxos/react-ui-stack';
-import { type DataType } from '@dxos/schema';
+import { type SurfaceComponentProps, useOperationInvoker } from '@dxos/app-framework/react';
+import { Surface } from '@dxos/app-framework/react';
+import { Obj } from '@dxos/echo';
+import { ATTENDABLE_PATH_SEPARATOR, DeckOperation } from '@dxos/plugin-deck/types';
+import { useAttention } from '@dxos/react-ui-attention';
+import { Layout } from '@dxos/react-ui-mosaic';
+import { type Project as ProjectType } from '@dxos/types';
 
 import { type ItemProps, Project } from './Project';
+
+export type ProjectContainerProps = SurfaceComponentProps<ProjectType.Project>;
+
+export const ProjectContainer = ({ role, subject: project }: ProjectContainerProps) => {
+  const { invokePromise } = useOperationInvoker();
+  const attendableId = Obj.getDXN(project).toString();
+  const { hasAttention } = useAttention(attendableId);
+
+  const handleColumnAdd = useCallback(
+    () =>
+      invokePromise(DeckOperation.ChangeCompanion, {
+        primary: attendableId,
+        companion: `${attendableId}${ATTENDABLE_PATH_SEPARATOR}settings`,
+      }),
+    [invokePromise, attendableId],
+  );
+
+  return (
+    <Layout.Main role={role} toolbar>
+      <Project.Root Item={ProjectItem} onAddColumn={handleColumnAdd}>
+        <Project.Toolbar disabled={!hasAttention} />
+        <Project.Content project={project} />
+      </Project.Root>
+    </Layout.Main>
+  );
+};
 
 const ProjectItem = ({ item, projectionModel }: ItemProps) => {
   return (
     <Surface
-      role='card--intrinsic'
+      role='card--content'
       data={{
         subject: item,
         projection: projectionModel,
       }}
       limit={1}
     />
-  );
-};
-
-export type ProjectContainerProps = { project: DataType.Project; role: string };
-
-export const ProjectContainer = ({ project }: ProjectContainerProps) => {
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
-  const id = fullyQualifiedId(project);
-
-  const handleAddColumn = useCallback(
-    () =>
-      dispatch(
-        createIntent(DeckAction.ChangeCompanion, {
-          primary: id,
-          companion: `${id}${ATTENDABLE_PATH_SEPARATOR}settings`,
-        }),
-      ),
-    [dispatch, id],
-  );
-
-  return (
-    <StackItem.Content toolbar>
-      <Project.Root Item={ProjectItem} onAddColumn={handleAddColumn}>
-        <Project.Menu />
-        <Project.Content project={project} />
-      </Project.Root>
-    </StackItem.Content>
   );
 };
 

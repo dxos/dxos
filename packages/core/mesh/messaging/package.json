@@ -4,9 +4,13 @@
   "description": "Messaging",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
   "license": "MIT",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "exports": {
     ".": {
@@ -48,8 +52,8 @@
     "@dxos/rpc": "workspace:*",
     "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
-    "isomorphic-ws": "^5.0.0",
-    "ws": "^8.14.2"
+    "isomorphic-ws": "catalog:",
+    "ws": "catalog:"
   },
   "devDependencies": {
     "@dxos/keyring": "workspace:*",

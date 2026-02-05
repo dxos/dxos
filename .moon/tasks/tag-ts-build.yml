@@ -1,12 +1,14 @@
 $schema: https://moonrepo.dev/schemas/tasks.json
 tasks:
   build:
-    command: dx-build
+    command: pnpm exec dx-build
     deps:
       - dx-build:compile
       - ^:build
       - ^:compile
       - compile
+      # TODO(burdon): Add root moon.yml?
+      # - root:checkPackageCycles
     inputs:
       - /tsconfig.base.json
       - tsconfig.json
@@ -16,7 +18,7 @@ tasks:
     options:
       timeout: 60
   compile:
-    command: dx-compile
+    command: pnpm exec dx-compile
     args:
       - --outputPath=dist/lib
     deps:

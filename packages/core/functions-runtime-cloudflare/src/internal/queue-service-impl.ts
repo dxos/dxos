@@ -1,0 +1,69 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import { NotImplementedError, RuntimeServiceError } from '@dxos/errors';
+import { invariant } from '@dxos/invariant';
+import { type QueueService as QueueServiceProto } from '@dxos/protocols';
+import type {
+  DeleteFromQueueRequest,
+  EdgeFunctionEnv,
+  InsertIntoQueueRequest,
+  QueryQueueRequest,
+  QueryResult,
+} from '@dxos/protocols';
+
+export class QueueServiceImpl implements QueueServiceProto {
+  constructor(
+    protected _ctx: EdgeFunctionEnv.ExecutionContext,
+    private readonly _queueService: EdgeFunctionEnv.QueueService,
+  ) {}
+  async queryQueue(request: QueryQueueRequest): Promise<QueryResult> {
+    const { query } = request;
+    const { queueIds, ...filter } = query!;
+    const spaceId = query!.spaceId;
+    const queueId = queueIds?.[0];
+    invariant(request.query.queuesNamespace);
+    try {
+      using result = await this._queueService.query(
+        this._ctx,
+        `dxn:queue:${request.query.queuesNamespace}:${spaceId}:${queueId}`,
+        filter,
+      );
+      return {
+        // Copy returned object to avoid hanging RPC stub
+        // See https://developers.cloudflare.com/workers/runtime-apis/rpc/lifecycle/
+        objects: structuredClone(result.objects),
+        nextCursor: result.nextCursor,
+        prevCursor: result.prevCursor,
+      };
+    } catch (error) {
+      throw RuntimeServiceError.wrap({
+        message: 'Queue query failed.',
+        context: { subspaceTag: request.query.queuesNamespace, spaceId, queueId },
+        ifTypeDiffers: true,
+      })(error);
+    }
+  }
+
+  async insertIntoQueue(request: InsertIntoQueueRequest): Promise<void> {
+    const { subspaceTag, spaceId, queueId, objects } = request;
+    try {
+      await this._queueService.append(this._ctx, `dxn:queue:${subspaceTag}:${spaceId}:${queueId}`, objects ?? []);
+    } catch (error) {
+      throw RuntimeServiceError.wrap({
+        message: 'Queue append failed.',
+        context: { subspaceTag, spaceId, queueId },
+        ifTypeDiffers: true,
+      })(error);
+    }
+  }
+
+  deleteFromQueue(request: DeleteFromQueueRequest): Promise<void> {
+    const { subspaceTag, spaceId, queueId } = request;
+    throw new NotImplementedError({
+      message: 'Deleting from queue is not supported.',
+      context: { subspaceTag, spaceId, queueId },
+    });
+  }
+}

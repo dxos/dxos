@@ -7,32 +7,37 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import { type Filter, Tag } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
-import { useSpaces } from '@dxos/react-client/echo';
-import { withClientProvider } from '@dxos/react-client/testing';
+import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
-import { DataType } from '@dxos/schema';
+import { Employer, Organization, Person, Project } from '@dxos/types';
 
 import { translations } from '../../translations';
 
 import { QueryEditor, type QueryEditorProps } from './QueryEditor';
 
-const tags: Tag.TagMap = {
+// Create tags at render time to avoid Storybook serialization issues with ECHO objects.
+const createTags = (): Tag.Map => ({
   ['tag_1' as const]: Tag.make({ label: 'Important' }),
   ['tag_2' as const]: Tag.make({ label: 'Investor' }),
   ['tag_3' as const]: Tag.make({ label: 'New' }),
-};
+});
 
 const meta = {
   title: 'ui/react-ui-components/QueryEditor',
   component: QueryEditor,
   render: (args: QueryEditorProps) => {
-    const [space] = useSpaces();
+    const { space } = useClientStory();
     const [filter, setFilter] = useState<Filter.Any>();
-    const builder = useMemo(() => new QueryBuilder(tags), []);
-    const handleChange = useCallback<NonNullable<QueryEditorProps['onChange']>>((value) => {
-      setFilter(builder.build(value));
-    }, []);
+    // Create tags and builder at render time to avoid Storybook serialization issues.
+    const tags = useMemo(() => args.tags ?? createTags(), [args.tags]);
+    const builder = useMemo(() => new QueryBuilder(tags), [tags]);
+    const handleChange = useCallback<NonNullable<QueryEditorProps['onChange']>>(
+      (value) => {
+        setFilter(builder.build(value).filter);
+      },
+      [builder],
+    );
 
     return (
       <div role='none' className='flex flex-col gap-2'>
@@ -49,9 +54,9 @@ const meta = {
   },
   decorators: [
     withTheme,
-    withLayout({ container: 'column', classNames: 'p-2', scroll: true }),
+    withLayout({ layout: 'column', classNames: 'p-2', scroll: true }),
     withClientProvider({
-      types: [DataType.Organization, DataType.Person, DataType.Project, DataType.Employer],
+      types: [Organization.Organization, Person.Person, Project.Project, Employer.Employer],
       createIdentity: true,
     }),
   ],
@@ -70,7 +75,6 @@ export const Complex: Story = {
   args: {
     autoFocus: true,
     value: '#important OR type:dxos.org/type/Person AND { title: "DXOS", value: true }',
-    tags,
   },
 };
 
@@ -78,7 +82,6 @@ export const Relation: Story = {
   args: {
     autoFocus: true,
     value: '(type:dxos.org/type/Person -> type:dxos.org/type/Organization)',
-    tags,
   },
 };
 
@@ -86,6 +89,5 @@ export const Tags: Story = {
   args: {
     autoFocus: true,
     value: 'type:dxos.org/type/Person #investor #new',
-    tags,
   },
 };

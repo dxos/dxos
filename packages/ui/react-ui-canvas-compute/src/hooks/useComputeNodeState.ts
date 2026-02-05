@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import { useCallback, useEffect, useState } from 'react';
 
-import type { ComputeMeta, ComputeNode } from '@dxos/conductor';
+import type { ComputeNode, ComputeNodeMeta } from '@dxos/conductor';
 import type { ComputeEventPayload } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 
@@ -16,7 +16,7 @@ import { useComputeContext } from './compute-context';
 
 export type ComputeNodeState = {
   node: ComputeNode;
-  meta: ComputeMeta;
+  meta: ComputeNodeMeta;
   runtime: {
     inputs: Record<string, RuntimeValue>;
     outputs: Record<string, RuntimeValue>;
@@ -33,7 +33,7 @@ export const useComputeNodeState = (shape: ComputeShape): ComputeNodeState => {
   const { controller } = useComputeContext();
   invariant(controller);
 
-  const [meta, setMeta] = useState<ComputeMeta>();
+  const [meta, setMeta] = useState<ComputeNodeMeta>();
   useEffect(() => {
     let disposed = false;
     queueMicrotask(async () => {
@@ -43,6 +43,7 @@ export const useComputeNodeState = (shape: ComputeShape): ComputeNodeState => {
       if (disposed) {
         return;
       }
+
       setMeta(meta);
     });
 

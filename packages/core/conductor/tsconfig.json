@@ -36,6 +36,9 @@
       "path": "../../sdk/schema"
     },
     {
+      "path": "../../sdk/types"
+    },
+    {
       "path": "../ai"
     },
     {
@@ -51,10 +54,10 @@
       "path": "../echo/echo-db"
     },
     {
-      "path": "../echo/live-object"
+      "path": "../functions"
     },
     {
-      "path": "../functions"
+      "path": "../functions-runtime"
     },
     {
       "path": "../mesh/edge-client"

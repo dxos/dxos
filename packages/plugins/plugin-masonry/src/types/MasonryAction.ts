@@ -4,26 +4,18 @@
 
 import * as Schema from 'effect/Schema';
 
-import { SpaceSchema } from '@dxos/react-client/echo';
-import { DataType, TypenameAnnotationId } from '@dxos/schema';
-
-import { meta } from '../meta';
-
-const MASONRY_ACTION = `${meta.id}/action`;
+import { TypeInputOptionsAnnotation } from '@dxos/plugin-space/types';
 
 export const MasonryProps = Schema.Struct({
   name: Schema.optional(Schema.String),
-  typename: Schema.optional(
-    Schema.String.annotations({
-      [TypenameAnnotationId]: ['used-static', 'dynamic'],
-      title: 'Select card record type (leave empty to start fresh)',
+  // TODO(wittjosiah): This should be a query input instead.
+  typename: Schema.String.pipe(
+    Schema.annotations({ title: 'Select card type' }),
+    TypeInputOptionsAnnotation.set({
+      location: ['database', 'runtime'],
+      kind: ['user'],
+      registered: ['registered'],
     }),
+    Schema.optional,
   ),
 });
-
-export class CreateMasonry extends Schema.TaggedClass<CreateMasonry>()(`${MASONRY_ACTION}/create`, {
-  input: Schema.extend(Schema.Struct({ space: SpaceSchema }), MasonryProps),
-  output: Schema.Struct({
-    object: DataType.View,
-  }),
-}) {}

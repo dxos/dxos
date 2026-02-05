@@ -6,14 +6,19 @@ import React from 'react';
 
 import { useClient } from '@dxos/react-client';
 import { Button, Select, useTranslation } from '@dxos/react-ui';
-import { type EditorInputMode, EditorInputModes } from '@dxos/react-ui-editor';
 import { ControlGroup, ControlItemInput, ControlPage, ControlSection } from '@dxos/react-ui-form';
+import { type EditorInputMode, EditorInputModes } from '@dxos/ui-editor';
 
 import { meta } from '../../meta';
 import { type ScriptSettings } from '../../types';
 import { getAccessCredential } from '../../util';
 
-export const ScriptPluginSettings = ({ settings }: { settings: ScriptSettings }) => {
+export type ScriptPluginSettingsComponentProps = {
+  settings: ScriptSettings;
+  onSettingsChange: (fn: (current: ScriptSettings) => ScriptSettings) => void;
+};
+
+export const ScriptPluginSettings = ({ settings, onSettingsChange }: ScriptPluginSettingsComponentProps) => {
   const { t } = useTranslation(meta.id);
   const client = useClient();
 
@@ -36,7 +41,7 @@ export const ScriptPluginSettings = ({ settings }: { settings: ScriptSettings })
             <Select.Root
               value={settings.editorInputMode ?? 'default'}
               onValueChange={(value) => {
-                settings.editorInputMode = value as EditorInputMode;
+                onSettingsChange((s) => ({ ...s, editorInputMode: value as EditorInputMode }));
               }}
             >
               <Select.TriggerButton placeholder={t('select editor input mode placeholder')} />

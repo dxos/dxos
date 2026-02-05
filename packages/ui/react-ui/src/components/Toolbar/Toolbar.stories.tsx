@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { withTheme } from '../../testing';
-import { Toggle } from '../Buttons';
+import { Toggle } from '../Button';
 import { Icon } from '../Icon';
 import { Select } from '../Select';
 
@@ -63,9 +63,7 @@ const DefaultStory = (props: StorybookToolbarProps) => {
       </Toolbar.Button>
       <Toolbar.Separator />
       <Toolbar.Button>Test</Toolbar.Button>
-      <Toolbar.Button>
-        <Icon icon='ph--arrow-clockwise--regular' />
-      </Toolbar.Button>
+      <Toolbar.IconButton icon='ph--arrow-clockwise--regular' label='Refresh' iconOnly />
     </Toolbar.Root>
   );
 };

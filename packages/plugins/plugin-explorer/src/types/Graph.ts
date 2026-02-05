@@ -4,42 +4,59 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Filter, Obj, Query, QueryAST, Type } from '@dxos/echo';
-import { LabelAnnotation, ViewAnnotation } from '@dxos/echo/internal';
-import { type CreateViewFromSpaceProps, createViewFromSpace } from '@dxos/schema';
+import { Filter, Obj, Query, QueryAST, Ref, Type } from '@dxos/echo';
+import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
+import { View, ViewAnnotation } from '@dxos/schema';
 
-export const Graph = Schema.Struct({
+const GraphSchema = Schema.Struct({
   name: Schema.optional(Schema.String),
+
+  view: Type.Ref(View.View).pipe(FormInputAnnotation.set(false)),
+
   query: Schema.Struct({
     raw: Schema.optional(Schema.String),
     ast: QueryAST.Query,
-  }).pipe(Schema.mutable),
+  }).pipe(FormInputAnnotation.set(false)),
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/Graph',
-    version: '0.1.0',
+    version: '0.2.0',
   }),
   LabelAnnotation.set(['name']),
   ViewAnnotation.set(true),
 );
+export interface Graph extends Schema.Schema.Type<typeof GraphSchema> {}
+export const Graph: Type.Obj<Graph> = GraphSchema as any;
 
-export type Graph = Schema.Schema.Type<typeof Graph>;
-
-/**
- * Make a graph object.
- */
-export const make = (
-  props: Obj.MakeProps<typeof Graph> = { query: { raw: '', ast: Query.select(Filter.nothing()).ast } },
-) => Obj.make(Graph, props);
-
-type MakeViewProps = Omit<CreateViewFromSpaceProps, 'presentation'> & {
-  presentation?: Omit<Obj.MakeProps<typeof Graph>, 'name'>;
+type MakeProps = Omit<Partial<Obj.MakeProps<typeof Graph>>, 'view'> & {
+  view: View.View;
 };
 
 /**
  * Make a graph as a view of a data set.
  */
-export const makeView = async ({ presentation, ...props }: MakeViewProps) => {
-  const graph = make(presentation);
-  return createViewFromSpace({ ...props, presentation: graph });
+export const make = ({
+  name,
+  query = { raw: '', ast: Query.select(Filter.nothing()).ast },
+  view,
+}: MakeProps): Graph => {
+  return Obj.make(Graph, { name, view: Ref.make(view), query });
 };
+
+//
+// V1
+//
+
+export const GraphV1 = Schema.Struct({
+  name: Schema.optional(Schema.String),
+  query: Schema.Struct({
+    raw: Schema.optional(Schema.String),
+    ast: QueryAST.Query,
+  }),
+}).pipe(
+  Type.object({
+    typename: 'dxos.org/type/Graph',
+    version: '0.1.0',
+  }),
+  LabelAnnotation.set(['name']),
+);

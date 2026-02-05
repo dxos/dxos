@@ -11,5 +11,5 @@ export const TEST_ID = 'test';
 export type TestProps = IconButtonProps;
 
 export const Test = (props: TestProps) => {
-  return <IconButton size={4} {...props} />;
+  return <IconButton {...props} />;
 };

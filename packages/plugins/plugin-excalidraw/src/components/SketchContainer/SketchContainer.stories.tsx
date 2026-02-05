@@ -5,28 +5,18 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
-import { Obj, Ref } from '@dxos/echo';
-import { CanvasType, DiagramType } from '@dxos/plugin-sketch/types';
+import { createObject } from '@dxos/echo-db';
+import { Diagram } from '@dxos/plugin-sketch/types';
 import { withTheme } from '@dxos/react-ui/testing';
+
+import { EXCALIDRAW_SCHEMA } from '../../types';
 
 import { SketchContainer } from './SketchContainer';
 
-const createSketch = () => {
-  return Obj.make(DiagramType, {
-    canvas: Ref.make(Obj.make(CanvasType, { content: {} })),
-  });
-};
-
 const DefaultStory = () => {
-  const [sketch] = useState<DiagramType>(createSketch());
+  const [sketch] = useState(createObject(Diagram.make({ canvas: { schema: EXCALIDRAW_SCHEMA } })));
 
-  return (
-    <div className='flex flex-col grow overflow-hidden'>
-      <div className='flex grow overflow-hidden'>
-        <SketchContainer sketch={sketch} role='article' settings={{}} />
-      </div>
-    </div>
-  );
+  return <SketchContainer role='article' subject={sketch} settings={{}} />;
 };
 
 const meta = {

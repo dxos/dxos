@@ -8,3 +8,4 @@ export * from './template';
 
 export * from './useCreateAndDeployScriptTemplates';
 export * from './useToolbarState';
+export * from './useCompiler';

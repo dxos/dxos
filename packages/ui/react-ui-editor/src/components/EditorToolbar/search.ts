@@ -5,7 +5,9 @@
 import { openSearchPanel } from '@codemirror/search';
 import { type EditorView } from '@codemirror/view';
 
-import { createEditorAction } from './util';
+import { type Node } from '@dxos/app-graph';
+
+import { createEditorAction } from './actions';
 
 const createSearchAction = (getView: () => EditorView) =>
   createEditorAction(
@@ -17,7 +19,12 @@ const createSearchAction = (getView: () => EditorView) =>
     () => openSearchPanel(getView()),
   );
 
-export const createSearch = (getView: () => EditorView) => ({
+export const createSearch = (
+  getView: () => EditorView,
+): {
+  nodes: Node.NodeArg<any>[];
+  edges: Array<{ source: string; target: string }>;
+} => ({
   nodes: [createSearchAction(getView)],
   edges: [{ source: 'root', target: 'search' }],
 });

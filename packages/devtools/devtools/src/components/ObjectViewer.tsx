@@ -2,10 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type ComponentType, type JSX } from 'react';
+import React, { type ComponentType, type JSX, useCallback } from 'react';
 
 import { DXN } from '@dxos/keys';
-import { Clipboard, Input } from '@dxos/react-ui';
+import { Button, Clipboard, Input } from '@dxos/react-ui';
 import { SyntaxHighlighter, createElement } from '@dxos/react-ui-syntax-highlighter';
 
 export type ObjectViewerProps = {
@@ -62,6 +62,10 @@ export const ObjectViewer = ({ object, id, onNavigate }: ObjectViewerProps) => {
     });
   };
 
+  const handleCopy = useCallback(() => {
+    void navigator.clipboard.writeText(JSON.stringify(object, null, 2));
+  }, [object]);
+
   return (
     <>
       {id && (
@@ -72,6 +76,9 @@ export const ObjectViewer = ({ object, id, onNavigate }: ObjectViewerProps) => {
                 <div role='none' className='flex gap-1'>
                   <Input.TextInput disabled value={id} />
                   <Clipboard.IconButton value={id} />
+                  <Button value={id} onClick={handleCopy}>
+                    Copy JSON
+                  </Button>
                 </div>
               </div>
             </Input.Root>

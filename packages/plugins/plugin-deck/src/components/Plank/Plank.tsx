@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { useFocusFinders } from '@fluentui/react-tabster';
 import React, {
   type KeyboardEvent,
   type PropsWithChildren,
@@ -12,30 +13,27 @@ import React, {
   useRef,
 } from 'react';
 
-import {
-  LayoutAction,
-  Surface,
-  createIntent,
-  useAppGraph,
-  useCapability,
-  useIntentDispatcher,
-} from '@dxos/app-framework';
+import { Common } from '@dxos/app-framework';
+import { Surface, useAppGraph, useOperationInvoker } from '@dxos/app-framework/react';
 import { debounce } from '@dxos/async';
 import { type Node, useNode } from '@dxos/plugin-graph';
 import { ATTENDABLE_PATH_SEPARATOR, useAttentionAttributes } from '@dxos/react-ui-attention';
 import { StackItem, railGridHorizontal } from '@dxos/react-ui-stack';
-import { mainIntrinsicSize, mx } from '@dxos/react-ui-theme';
+import { mainIntrinsicSize, mx } from '@dxos/ui-theme';
 
-import { DeckCapabilities } from '../../capabilities';
-import { useCompanions, useMainSize } from '../../hooks';
+import { useCompanions, useDeckState, useMainSize } from '../../hooks';
 import { parseEntryId } from '../../layout';
-import { DeckAction, type DeckSettingsProps, type LayoutMode, type ResolvedPart } from '../../types';
+import { DeckOperation, type DeckSettingsProps, type LayoutMode, type ResolvedPart } from '../../types';
 
 import { PlankContentError, PlankError } from './PlankError';
 import { PlankHeading } from './PlankHeading';
 import { PlankLoading } from './PlankLoading';
 
 const UNKNOWN_ID = 'unknown_id';
+
+//
+// Plank
+//
 
 export type PlankProps = Pick<PlankComponentProps, 'layoutMode' | 'part' | 'path' | 'order' | 'active' | 'settings'> & {
   id?: string;
@@ -50,10 +48,10 @@ export type PlankProps = Pick<PlankComponentProps, 'layoutMode' | 'part' | 'path
 //  benefits. I think where we anticipate users will definitely want to quickly switch between showing and hiding entire
 //  articles, over the (again probably large) performance benefit that unmounting them would confer, we can mount and
 //  hide them, but I think that scenario in its most unambiguous form is probably rare. You could extrapolate
-//  the scenario to include all “potential” planks such as companions, which we could keep mounted and hidden, but I
-//  don’t think the resulting performance would be acceptable. I think the real issue is “perceived performance” which
+//  the scenario to include all "potential" planks such as companions, which we could keep mounted and hidden, but I
+//  don't think the resulting performance would be acceptable. I think the real issue is "perceived performance" which
 //  has mitigations that are in between mounting and un-mounting since both of those have tradeoffs; we may need one or more
-//  “partially-mounted” experiences, like loading skeletons at the simple end, or screenshots of “sleeping” planks at
+//  "partially-mounted" experiences, like loading skeletons at the simple end, or screenshots of "sleeping" planks at
 //  the advanced end.
 
 /**
@@ -96,12 +94,13 @@ export const Plank = memo(({ id = UNKNOWN_ID, companionId, ...props }: PlankProp
   );
 });
 
-const PlankContainer = ({
-  children,
-  solo,
-  companion,
-  encapsulate,
-}: PropsWithChildren<{ solo: boolean; companion: boolean; encapsulate: boolean }>) => {
+//
+// PlankContainer
+//
+
+type PlankContainerProps = PropsWithChildren<{ solo: boolean; companion: boolean; encapsulate: boolean }>;
+
+const PlankContainer = ({ children, solo, companion, encapsulate }: PlankContainerProps) => {
   const sizeAttrs = useMainSize();
   if (!solo) {
     return children;
@@ -111,10 +110,11 @@ const PlankContainer = ({
   return (
     <div
       role='none'
+      data-popover-collision-boundary={true}
       className={mx(
         'absolute inset-[--main-spacing] grid',
         encapsulate && 'border border-separator rounded overflow-hidden',
-        companion && 'grid-cols-[6fr_4fr]',
+        companion && 'grid-cols-[6fr_4fr]', // TODO(burdon): Resize.
         railGridHorizontal,
         mainIntrinsicSize,
       )}
@@ -125,6 +125,10 @@ const PlankContainer = ({
   );
 };
 
+//
+// PlankComponent
+//
+
 type PlankComponentProps = {
   layoutMode: LayoutMode;
   id: string;
@@ -132,11 +136,10 @@ type PlankComponentProps = {
   path?: string[];
   order?: number;
   active?: string[];
-  // TODO(burdon): Change to role?
   companioned?: 'primary' | 'companion';
-  node?: Node;
-  primary?: Node;
-  companions?: Node[];
+  node?: Node.Node;
+  primary?: Node.Node;
+  companions?: Node.Node[];
   settings?: DeckSettingsProps;
 };
 
@@ -154,8 +157,10 @@ const PlankComponent = memo(
     companions,
     settings,
   }: PlankComponentProps) => {
-    const { dispatchPromise: dispatch } = useIntentDispatcher();
-    const { deck, popoverAnchorId, scrollIntoView } = useCapability(DeckCapabilities.DeckState);
+    const { invokePromise } = useOperationInvoker();
+    const { state, deck } = useDeckState();
+    const { popoverAnchorId, scrollIntoView } = state;
+    const { findFirstFocusable } = useFocusFinders();
     const canResize = layoutMode === 'deck';
 
     const attentionAttrs = useAttentionAttributes(primary?.id ?? id);
@@ -172,15 +177,22 @@ const PlankComponent = memo(
 
     const handleSizeChange = useCallback(
       debounce((nextSize: number) => {
-        return dispatch(createIntent(DeckAction.UpdatePlankSize, { id: sizeKey, size: nextSize }));
+        return invokePromise(DeckOperation.UpdatePlankSize, { id: sizeKey, size: nextSize });
       }, 200),
-      [dispatch, sizeKey],
+      [invokePromise, sizeKey],
     );
 
-    // TODO(thure): Tabster’s focus group should handle moving focus to Main, but something is blocking it.
+    // TODO(thure): Tabster's focus group should handle moving focus to Main, but something is blocking it.
     const handleKeyDown = useCallback((event: KeyboardEvent) => {
-      if (event.target === event.currentTarget && event.key === 'Escape') {
-        rootElement.current?.closest('main')?.focus();
+      if (event.target === event.currentTarget) {
+        switch (event.key) {
+          case 'Escape':
+            rootElement.current?.closest('main')?.focus();
+            break;
+          case 'Enter':
+            rootElement.current && findFirstFocusable(rootElement.current)?.focus();
+            break;
+        }
       }
     }, []);
 
@@ -188,9 +200,9 @@ const PlankComponent = memo(
       if (scrollIntoView === id) {
         layoutMode === 'deck' && rootElement.current?.scrollIntoView({ behavior: 'smooth', inline: 'center' });
         // Clear the scroll into view state once it has been actioned.
-        void dispatch(createIntent(LayoutAction.ScrollIntoView, { part: 'current', subject: undefined }));
+        void invokePromise(Common.LayoutOperation.ScrollIntoView, { subject: undefined });
       }
-    }, [id, scrollIntoView, layoutMode]);
+    }, [id, scrollIntoView, layoutMode, invokePromise]);
 
     const isSolo = layoutMode.startsWith('solo') && part === 'solo';
     const isAttendable =
@@ -216,14 +228,16 @@ const PlankComponent = memo(
     const placeholder = useMemo(() => <PlankLoading />, []);
 
     const Root = part.startsWith('solo') ? 'article' : StackItem.Root;
+    const fullscreen = layoutMode === 'solo--fullscreen';
     const className = mx(
       'attention-surface relative dx-focus-ring-inset-over-all density-coarse',
-      isSolo && mainIntrinsicSize,
-      isSolo && railGridHorizontal,
       isSolo && 'absolute inset-0',
+      isSolo && mainIntrinsicSize,
+      railGridHorizontal,
       part.startsWith('solo') && 'grid',
+      part.startsWith('solo-') && 'grid-rows-subgrid row-span-2 min-is-0',
+      fullscreen && 'grid-rows-1',
       part === 'deck' && (companioned === 'companion' ? '!border-separator border-ie' : '!border-separator border-li'),
-      part.startsWith('solo-') && 'row-span-2 grid-rows-subgrid min-is-0',
       part === 'solo-companion' && '!border-separator border-is',
       settings?.encapsulatedPlanks &&
         !part.startsWith('solo') &&
@@ -234,6 +248,7 @@ const PlankComponent = memo(
       <Root
         ref={rootElement}
         data-testid='deck.plank'
+        data-popover-collision-boundary={true}
         tabIndex={0}
         {...(part.startsWith('solo')
           ? ({ ...sizeAttrs, className } as any)
@@ -250,19 +265,21 @@ const PlankComponent = memo(
       >
         {node ? (
           <>
-            <PlankHeading
-              id={id}
-              part={part.startsWith('solo-') ? 'solo' : part}
-              node={node}
-              layoutMode={layoutMode}
-              deckEnabled={settings?.enableDeck}
-              canIncrementStart={canIncrementStart}
-              canIncrementEnd={canIncrementEnd}
-              popoverAnchorId={popoverAnchorId}
-              primaryId={primary?.id}
-              companioned={companioned}
-              companions={companions}
-            />
+            {!fullscreen && (
+              <PlankHeading
+                id={id}
+                part={part.startsWith('solo-') ? 'solo' : part}
+                node={node}
+                layoutMode={layoutMode}
+                deckEnabled={settings?.enableDeck}
+                canIncrementStart={canIncrementStart}
+                canIncrementEnd={canIncrementEnd}
+                popoverAnchorId={popoverAnchorId}
+                primaryId={primary?.id}
+                companioned={companioned}
+                companions={companions}
+              />
+            )}
             <Surface
               key={node.id}
               role='article'
@@ -275,7 +292,6 @@ const PlankComponent = memo(
         ) : (
           <PlankError id={id} part={part} />
         )}
-
         {canResize && <StackItem.ResizeHandle />}
       </Root>
     );

@@ -16,13 +16,12 @@ export const StackPlugin = {
 export const Stack = {
   getStack: (page: Page) => new StackManager(page.getByTestId('main.stack')),
 
-  createSection: async (page: Page, type: string) => {
+  addSection: async (page: Page, type: string) => {
     // TODO(wittjosiah): This currently helps reduce flakiness with waiting for the button to appear.
     await page.waitForTimeout(100);
-    const dialogTrigger = await page.$('[data-testid="stack.createSection"]');
+    const dialogTrigger = await page.$('[data-testid="stack.addSection"]');
     await dialogTrigger!.click();
-    await page.getByTestId('create-object-form.schema-input').fill(type);
-    await page.keyboard.press('Enter');
+    await page.getByRole('listbox').getByText(type).first().click();
 
     const objectForm = page.getByTestId('create-object-form');
     if (await objectForm.isVisible()) {

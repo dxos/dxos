@@ -6,11 +6,11 @@ import React from 'react';
 
 import { type Obj } from '@dxos/echo';
 import { Clipboard, Input, Toolbar } from '@dxos/react-ui';
-import { StackItem } from '@dxos/react-ui-stack';
+import { Layout } from '@dxos/react-ui-mosaic';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 
 export type DebugObjectPanelProps = {
-  object: Obj.Any;
+  object: Obj.Unknown;
 };
 
 // TODO(burdon): Get schema and traverse references.
@@ -19,7 +19,7 @@ export const DebugObjectPanel = ({ object }: DebugObjectPanelProps) => {
 
   return (
     <Clipboard.Provider>
-      <StackItem.Content toolbar>
+      <Layout.Main toolbar>
         <Toolbar.Root>
           <Input.Root>
             <Input.TextInput disabled value={dxn} />
@@ -27,7 +27,7 @@ export const DebugObjectPanel = ({ object }: DebugObjectPanelProps) => {
           </Input.Root>
         </Toolbar.Root>
         <Json data={object} />
-      </StackItem.Content>
+      </Layout.Main>
     </Clipboard.Provider>
   );
 };

@@ -4,14 +4,14 @@
 
 import React, { useCallback, useState } from 'react';
 
-import { Capabilities, useCapability } from '@dxos/app-framework';
-import { getSpace } from '@dxos/client/echo';
+import { useAtomCapability } from '@dxos/app-framework/react';
+import { Obj } from '@dxos/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { ChatDialog as NaturalChatDialog } from '@dxos/react-ui-chat';
 
 import { useBlueprintRegistry, useChatProcessor, useChatServices, useOnline, usePresets } from '../hooks';
 import { meta } from '../meta';
-import { type Assistant } from '../types';
+import { type Assistant, AssistantCapabilities } from '../types';
 
 import { Chat, type ChatRootProps } from './Chat';
 
@@ -22,13 +22,19 @@ export type ChatDialogProps = {
 export const ChatDialog = ({ chat }: ChatDialogProps) => {
   const { t } = useTranslation(meta.id);
 
-  const space = getSpace(chat);
-  const settings = useCapability(Capabilities.SettingsStore).getStore<Assistant.Settings>(meta.id)?.value;
-  const services = useChatServices({ space, chat });
+  const db = chat && Obj.getDatabase(chat);
+  const settings = useAtomCapability(AssistantCapabilities.Settings);
+  const services = useChatServices({ id: db?.spaceId, chat });
   const [online, setOnline] = useOnline();
   const { preset, ...chatProps } = usePresets(online);
   const blueprintRegistry = useBlueprintRegistry();
-  const processor = useChatProcessor({ chat, preset, services, blueprintRegistry, settings });
+  const processor = useChatProcessor({
+    chat,
+    preset,
+    services,
+    blueprintRegistry,
+    settings,
+  });
 
   // TODO(burdon): Refocus when open.
   const [open, setOpen] = useState(true);

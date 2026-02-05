@@ -17,10 +17,10 @@ import {
   type ProcessHandle,
   type ReplicantBrain,
   type ReplicantClass,
-  type ReplicantParams,
-  type ReplicantRuntimeParams,
+  type ReplicantProps,
+  type ReplicantRuntimeProps,
   type ReplicantsSummary,
-  type TestParams,
+  type TestProps,
   runBrowser,
   runNode,
 } from '../plan';
@@ -69,7 +69,7 @@ export class SchedulerEnvImpl<S> extends Resource implements SchedulerEnv {
 
   constructor(
     private readonly _options: GlobalOptions,
-    public params: TestParams<S>,
+    public params: TestProps<S>,
     private readonly _redisOptions: RedisOptions = { port: REDIS_PORT },
   ) {
     super();
@@ -169,7 +169,7 @@ export class SchedulerEnvImpl<S> extends Resource implements SchedulerEnv {
 
   async spawn<T>(
     replicantClass: ReplicantClass<T>,
-    runtime: ReplicantRuntimeParams = { platform: 'nodejs' },
+    runtime: ReplicantRuntimeProps = { platform: 'nodejs' },
   ): Promise<ReplicantBrain<T>> {
     const replicantId = String(this._currentReplicant++);
     const outDir = path.join(this.params.outDir, String(replicantId));
@@ -205,7 +205,7 @@ export class SchedulerEnvImpl<S> extends Resource implements SchedulerEnv {
 
     await rpcHandle[open]();
 
-    const replicantParams: ReplicantParams = {
+    const replicantProps: ReplicantProps = {
       replicantId,
       outDir,
       logFile: path.join(outDir, AGENT_LOG_FILE),
@@ -223,12 +223,12 @@ export class SchedulerEnvImpl<S> extends Resource implements SchedulerEnv {
     let processHandle: ProcessHandle;
     if (runtime.platform === 'nodejs') {
       processHandle = runNode({
-        replicantParams,
+        replicantProps,
         options: this._options,
       });
     } else {
       processHandle = await runBrowser({
-        replicantParams,
+        replicantProps,
         options: this._options,
       });
     }
@@ -244,7 +244,7 @@ export class SchedulerEnvImpl<S> extends Resource implements SchedulerEnv {
         });
         void rpcHandle[close]().catch((err) => log.catch(err));
       },
-      params: replicantParams,
+      params: replicantProps,
     };
 
     this.replicants.push(replicantHandle);

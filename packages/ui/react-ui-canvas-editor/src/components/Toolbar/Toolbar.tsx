@@ -42,7 +42,7 @@ export const Toolbar = ({ classNames, onAction }: ToolbarProps) => {
       </NaturalToolbar.Button>
       <Select.Root value={layout} onValueChange={(value) => setLayout(value as LayoutKind)}>
         <NaturalToolbar.Button asChild>
-          <Select.TriggerButton variant='ghost' classNames='w-[100px]' />
+          <Select.TriggerButton variant='ghost' classNames='is-[100px]' />
         </NaturalToolbar.Button>
         <Select.Portal>
           <Select.Content>

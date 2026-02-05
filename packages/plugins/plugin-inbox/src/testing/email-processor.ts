@@ -3,8 +3,8 @@
 //
 
 import { raise } from '@dxos/debug';
-import { type DataType } from '@dxos/schema';
-import { type Testing } from '@dxos/schema/testing';
+import { type TestSchema } from '@dxos/schema/testing';
+import { type Message, type Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 type ProcessEmailResult = {
@@ -12,16 +12,16 @@ type ProcessEmailResult = {
   summary: string;
 };
 
-type ProcessEmailParams = {
-  email: DataType.Message;
+type ProcessEmailProps = {
+  email: Message.Message;
   context: {
-    labels: Testing.Label[];
-    documents?: Testing.DocumentType[];
-    contacts?: DataType.Person[];
+    labels: TestSchema.Label[];
+    documents?: TestSchema.DocumentType[];
+    contacts?: Person.Person[];
   };
 };
 
-export const processEmail = async ({ email, context }: ProcessEmailParams): Promise<ProcessEmailResult> => {
+export const processEmail = async ({ email, context }: ProcessEmailProps): Promise<ProcessEmailResult> => {
   const system = trim`
     You are a helpful assistant that processes emails.
     You are given a set of labels and you need to choose one, multiple, or none to apply to the email.
@@ -47,13 +47,13 @@ export const processEmail = async ({ email, context }: ProcessEmailParams): Prom
     ${JSON.stringify([...(context.contacts ?? []), ...(context.documents ?? [])])}
   `;
 
-  const messages: DataType.Message[] = [];
+  const messages: Message.Message[] = [];
   // const messages = await new MixedStreamParser().parse(
   //   await aiClient.execStream({
   //     model: '@anthropic/claude-3-5-sonnet-20241022',
   //     systemPrompt,
   //     history: [
-  //       Obj.make(DataType.Message, {
+  //       Obj.make(Message.Message, {
   //         created: new Date().toISOString(),
   //         sender: { role: 'user' },
   //         blocks: [

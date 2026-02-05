@@ -6,7 +6,7 @@ import React from 'react';
 
 import { Composer } from '@dxos/brand';
 import { Status, ThemeProvider } from '@dxos/react-ui';
-import { defaultTx, mx } from '@dxos/react-ui-theme';
+import { defaultTx, mx } from '@dxos/ui-theme';
 
 export const Placeholder = ({ stage }: { stage: number }) => {
   // This is used to test the error boundary & reset dialog.
@@ -20,7 +20,7 @@ export const Placeholder = ({ stage }: { stage: number }) => {
         <div className='flex flex-col grow justify-center items-center'>
           <Composer
             className={mx(
-              'w-[312px] h-[312px] transition-all duration-500 ease-in-out filter grayscale opacity-0',
+              'is-[312px] bs-[312px] transition-all duration-500 ease-in-out filter grayscale opacity-0',
               stage >= 1 && 'dark:grayscale-0 opacity-20',
               stage >= 2 && 'opacity-0',
             )}

@@ -5,7 +5,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { QR } from 'react-qr-rounded';
 
-import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
+import { useOperationInvoker } from '@dxos/app-framework/react';
 import { log } from '@dxos/log';
 import { useClient, useMulticastObservable } from '@dxos/react-client';
 import { type Device, useDevices } from '@dxos/react-client/halo';
@@ -20,32 +20,34 @@ import {
   ControlPage,
   ControlSection,
 } from '@dxos/react-ui-form';
+import { translationKey } from '@dxos/shell/react';
 import { AuthCode, Centered, DeviceListItem, Emoji, Viewport } from '@dxos/shell/react';
+import { osTranslations } from '@dxos/ui-theme';
 import { hexToEmoji } from '@dxos/util';
 
 import { meta } from '../meta';
-import { ClientAction } from '../types';
+import { ClientOperation } from '../types';
 
 export type DevicesContainerProps = {
   createInvitationUrl?: (invitationCode: string) => string;
 };
 
 export const DevicesContainer = ({ createInvitationUrl }: DevicesContainerProps) => {
-  const { t } = useTranslation('os');
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const { t } = useTranslation(translationKey);
+  const { invokePromise } = useOperationInvoker();
   const devices = useDevices();
   const { swarm: connectionState } = useNetworkStatus();
 
-  const handleResetStorage = useCallback(() => dispatch(createIntent(ClientAction.ResetStorage)), [dispatch]);
+  const handleResetStorage = useCallback(() => invokePromise(ClientOperation.ResetStorage, {}), [invokePromise]);
 
   const handleRecover = useCallback(
-    () => dispatch(createIntent(ClientAction.ResetStorage, { mode: 'recover' })),
-    [dispatch],
+    () => invokePromise(ClientOperation.ResetStorage, { mode: 'recover' }),
+    [invokePromise],
   );
 
   const handleJoinNewIdentity = useCallback(
-    () => dispatch(createIntent(ClientAction.ResetStorage, { mode: 'join new identity' })),
-    [dispatch],
+    () => invokePromise(ClientOperation.ResetStorage, { mode: 'join new identity' }),
+    [invokePromise],
   );
 
   return (
@@ -217,7 +219,7 @@ const InvitationSection = ({
 };
 
 const InvitationQR = ({ id, url, onCancel }: { id: string; url: string; onCancel: () => void }) => {
-  const { t } = useTranslation('os');
+  const { t } = useTranslation(osTranslations);
   const qrLabel = useId('devices-container__qr-code');
   const emoji = hexToEmoji(id);
   return (
@@ -257,7 +259,7 @@ const InvitationQR = ({ id, url, onCancel }: { id: string; url: string; onCancel
 };
 
 const InvitationAuthCode = ({ id, code, onCancel }: { id: string; code: string; onCancel: () => void }) => {
-  const { t } = useTranslation('os');
+  const { t } = useTranslation(osTranslations);
   const emoji = hexToEmoji(id);
 
   return (

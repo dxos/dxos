@@ -4,23 +4,26 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 
-import { LayoutAction, createIntent, useIntentDispatcher, useLayout } from '@dxos/app-framework';
+import { Common } from '@dxos/app-framework';
+import { useLayout, useOperationInvoker } from '@dxos/app-framework/react';
+import { Obj } from '@dxos/echo';
 import { useClient } from '@dxos/react-client';
-import { Filter, fullyQualifiedId, useQuery } from '@dxos/react-client/echo';
+import { Filter, useQuery } from '@dxos/react-client/echo';
 import { Button, Icon, Toast, useTranslation } from '@dxos/react-ui';
+import { osTranslations } from '@dxos/ui-theme';
 
 import { meta } from '../meta';
-import { SpaceAction } from '../types';
+import { SpaceOperation } from '../types';
 
-const WAIT_FOR_OBJECT_TIMEOUT = 180e3; // 3 minutes
-const TOAST_TIMEOUT = 240e3; // 4 minutes
+const WAIT_FOR_OBJECT_TIMEOUT = 3 * 60 * 1_000;
+const TOAST_TIMEOUT = 4 * 60 * 1_000;
 
 export const AwaitingObject = ({ id }: { id: string }) => {
+  const { t } = useTranslation(meta.id);
+  const { invokePromise } = useOperationInvoker();
   const [open, setOpen] = useState(true);
   const [waiting, setWaiting] = useState(true);
   const [found, setFound] = useState(false);
-  const { t } = useTranslation(meta.id);
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
   const layout = useLayout();
 
   const client = useClient();
@@ -31,17 +34,13 @@ export const AwaitingObject = ({ id }: { id: string }) => {
       return;
     }
 
-    const timeout = setTimeout(() => {
-      setWaiting(false);
-    }, WAIT_FOR_OBJECT_TIMEOUT);
-
-    () => clearTimeout(timeout);
+    const timeout = setTimeout(() => setWaiting(false), WAIT_FOR_OBJECT_TIMEOUT);
+    return () => clearTimeout(timeout);
   }, [id]);
 
   useEffect(() => {
-    if (objects.findIndex((object) => fullyQualifiedId(object) === id) > -1) {
+    if (objects.findIndex((object) => Obj.getDXN(object).toString() === id) > -1) {
       setFound(true);
-
       if (layout.active.includes(id)) {
         setOpen(false);
       }
@@ -49,14 +48,14 @@ export const AwaitingObject = ({ id }: { id: string }) => {
   }, [id, objects, layout]);
 
   const handleClose = useCallback(
-    async () => dispatch(createIntent(SpaceAction.WaitForObject, { id: undefined })),
-    [dispatch],
+    async () => invokePromise(SpaceOperation.WaitForObject, { id: undefined }),
+    [invokePromise],
   );
 
   const handleNavigate = useCallback(() => {
-    void dispatch(createIntent(LayoutAction.Open, { part: 'main', subject: [id] }));
+    void invokePromise(Common.LayoutOperation.Open, { subject: [id] });
     void handleClose();
-  }, [id, handleClose, dispatch]);
+  }, [id, handleClose, invokePromise]);
 
   return (
     <Toast.Root open={open} duration={TOAST_TIMEOUT} onOpenChange={setOpen}>
@@ -98,12 +97,14 @@ export const AwaitingObject = ({ id }: { id: string }) => {
               </Button>
             </Toast.Action>
             <Toast.Close asChild>
-              <Button onClick={handleClose}>{t('close label', { ns: 'appkit' })}</Button>
+              <Button onClick={handleClose}>{t('close label', { ns: osTranslations })}</Button>
             </Toast.Close>
           </>
         ) : (
           <Toast.Close asChild>
-            <Button onClick={handleClose}>{t(waiting ? 'close label' : 'confirm label', { ns: 'appkit' })}</Button>
+            <Button onClick={handleClose}>
+              {t(waiting ? 'close label' : 'confirm label', { ns: osTranslations })}
+            </Button>
           </Toast.Close>
         )}
       </Toast.Actions>

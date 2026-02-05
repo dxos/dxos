@@ -15,7 +15,7 @@ const meta = {
   title: 'ui/react-ui-form/ControlSection',
   component: ControlSection,
   render: (args) => (
-    <ControlPage classNames='w-[40rem]'>
+    <ControlPage classNames='is-[40rem]'>
       <ControlSection {...args} />
     </ControlPage>
   ),

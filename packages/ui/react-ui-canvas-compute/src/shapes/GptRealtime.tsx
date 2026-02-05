@@ -143,7 +143,7 @@ export const GptRealtimeComponent = ({ shape }: ShapeComponentProps<GptRealtimeS
   };
 
   return (
-    <div className='flex w-full justify-center items-center'>
+    <div className='flex is-full justify-center items-center'>
       <Icon
         icon={isReady ? 'ph--waveform--regular' : isLive ? 'ph--pulse--regular' : 'ph--play--regular'}
         size={16}

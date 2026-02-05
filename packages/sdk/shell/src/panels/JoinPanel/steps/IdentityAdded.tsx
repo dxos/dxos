@@ -7,10 +7,11 @@ import React, { cloneElement } from 'react';
 import { generateName } from '@dxos/display-name';
 import type { Identity } from '@dxos/react-client/halo';
 import { Avatar, useId, useTranslation } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 import { hexToFallback } from '@dxos/util';
 
 import { Action, Actions, StepHeading } from '../../../components';
+import { translationKey } from '../../../translations';
 import { type JoinPanelMode, type JoinStepProps } from '../JoinPanelProps';
 
 export interface IdentityAddedProps extends JoinStepProps {
@@ -21,7 +22,7 @@ export interface IdentityAddedProps extends JoinStepProps {
 export const IdentityAdded = (props: IdentityAddedProps) => {
   const { mode, addedIdentity, active, send, onDone, doneActionParent } = props;
   const disabled = !active;
-  const { t } = useTranslation('os');
+  const { t } = useTranslation(translationKey);
 
   const addedIdentityHex = addedIdentity?.identityKey.toHex() ?? '0';
   const fallbackValue = hexToFallback(addedIdentityHex);

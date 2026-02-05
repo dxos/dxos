@@ -4,7 +4,8 @@
     "macOS"
   ],
   "windows": [
-    "main"
+    "main",
+    "popover"
   ],
   "permissions": [
     "updater:default"

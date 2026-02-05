@@ -33,7 +33,10 @@
       "path": "../../sdk/schema"
     },
     {
-      "path": "../primitives/react-hooks"
+      "path": "../../sdk/types"
+    },
+    {
+      "path": "../react-primitives/react-hooks"
     },
     {
       "path": "../react-ui"
@@ -42,10 +45,13 @@
       "path": "../react-ui-form"
     },
     {
+      "path": "../react-ui-mosaic"
+    },
+    {
       "path": "../react-ui-stack"
     },
     {
-      "path": "../react-ui-theme"
+      "path": "../ui-theme"
     }
   ]
 }

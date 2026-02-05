@@ -24,7 +24,13 @@
       "path": "../../common/storybook-utils"
     },
     {
+      "path": "../../common/util"
+    },
+    {
       "path": "../../core/echo/echo"
+    },
+    {
+      "path": "../../core/operation"
     },
     {
       "path": "../../sdk/app-framework"
@@ -36,10 +42,13 @@
       "path": "../../ui/react-ui"
     },
     {
+      "path": "../../ui/react-ui-mosaic"
+    },
+    {
       "path": "../../ui/react-ui-stack"
     },
     {
-      "path": "../../ui/react-ui-theme"
+      "path": "../../ui/ui-theme"
     },
     {
       "path": "../plugin-client"

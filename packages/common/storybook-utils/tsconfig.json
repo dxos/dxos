@@ -12,9 +12,6 @@
   ],
   "references": [
     {
-      "path": "../../core/echo/echo-signals"
-    },
-    {
       "path": "../../ui/lit-theme-editor"
     },
     {
@@ -27,7 +24,7 @@
       "path": "../../ui/react-ui-dnd"
     },
     {
-      "path": "../../ui/react-ui-theme"
+      "path": "../../ui/ui-theme"
     },
     {
       "path": "../log"

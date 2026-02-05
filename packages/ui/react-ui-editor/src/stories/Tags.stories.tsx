@@ -3,13 +3,11 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { useThemeContext } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
-import { trim } from '@dxos/util';
-
 import {
   type XmlWidgetRegistry,
   type XmlWidgetState,
@@ -18,14 +16,35 @@ import {
   decorateMarkdown,
   extendedMarkdown,
   xmlTags,
-} from '../extensions';
+} from '@dxos/ui-editor';
+import { safeParseInt, trim } from '@dxos/util';
+
 import { useTextEditor } from '../hooks';
 
 const registry = {
-  // <test/>
+  /**
+   * Custom tag: <test/>
+   */
   ['test' as const]: {
     block: true,
-    Component: () => <div className='p-2 border border-separator rounded'>Test</div>,
+    Component: ({ start = '0' }) => {
+      const [count, setCount] = useState<number>(safeParseInt(start, 0));
+      useEffect(() => {
+        const interval = setInterval(() => {
+          setCount((prev) => {
+            if (prev >= 200) {
+              clearInterval(interval);
+              return prev;
+            }
+
+            return prev + 1;
+          });
+        }, 100);
+        return () => clearInterval(interval);
+      }, []);
+
+      return <div className='p-2 border border-separator rounded'>Test {count}</div>;
+    },
   },
 } satisfies XmlWidgetRegistry;
 
@@ -36,7 +55,7 @@ const DefaultStory = ({ text }: { text?: string }) => {
     initialValue: text,
     extensions: [
       createThemeExtensions({ themeMode }),
-      createBasicExtensions({ lineWrapping: true, readOnly: true }),
+      createBasicExtensions({ lineWrapping: true }),
       decorateMarkdown(),
       extendedMarkdown({ registry }),
       xmlTags({ registry, setWidgets }),
@@ -46,7 +65,7 @@ const DefaultStory = ({ text }: { text?: string }) => {
   return (
     <>
       <div ref={parentRef} className='is-full p-4' />
-      {widgets.map(({ Component, root, id, ...props }) => (
+      {widgets.map(({ id, root, Component, props }) => (
         <div key={id}>{createPortal(<Component {...props} />, root)}</div>
       ))}
     </>
@@ -56,7 +75,11 @@ const DefaultStory = ({ text }: { text?: string }) => {
 const text = trim`
   # Tags
 
-  <test id="123" />
+  React widget below.
+
+  <test id="t-1" />
+
+  <test id="t-2" start="100" />
 
   React widget above.
 `;

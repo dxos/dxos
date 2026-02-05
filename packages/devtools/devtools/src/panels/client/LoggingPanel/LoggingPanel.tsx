@@ -2,14 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { FormatEnum } from '@dxos/echo/internal';
+import { Format } from '@dxos/echo/internal';
 import { levels, parseFilter } from '@dxos/log';
 import { type LogEntry, LogLevel, type QueryLogsRequest } from '@dxos/protocols/proto/dxos/client/services';
 import { useClient } from '@dxos/react-client';
 import { useStream } from '@dxos/react-client/devtools';
-import { Toolbar } from '@dxos/react-ui';
+import { Toolbar, useFileDownload } from '@dxos/react-ui';
 import { type TablePropertyDefinition } from '@dxos/react-ui-table';
 
 import { MasterDetailTable, PanelContainer, Searchbar, Select } from '../../../components';
@@ -32,14 +32,14 @@ export const LoggingPanel = () => {
   const [text, setText] = useState('');
   // TODO(burdon): Store in context.
   const [query, setQuery] = useState<QueryLogsRequest>({});
-  const onSearchChange = (text: string) => {
+  const handleSearchChange = useCallback((text: string) => {
     setText(text);
     if (!text) {
       setQuery({});
     }
 
     setQuery({ filters: parseFilter(text) });
-  };
+  }, []);
 
   // Logs.
   // TODO(wittjosiah): `useStream` probably doesn't make sense here.
@@ -55,10 +55,15 @@ export const LoggingPanel = () => {
 
   const properties: TablePropertyDefinition[] = useMemo(
     () => [
-      { name: 'timestamp', format: FormatEnum.DateTime, sort: 'desc' as const, size: 194 },
+      {
+        name: 'timestamp',
+        format: Format.TypeFormat.DateTime,
+        sort: 'desc' as const,
+        size: 194,
+      },
       {
         name: 'level',
-        format: FormatEnum.SingleSelect,
+        format: Format.TypeFormat.SingleSelect,
         size: 100,
         config: {
           options: [
@@ -71,8 +76,15 @@ export const LoggingPanel = () => {
           ],
         },
       },
-      { name: 'file', format: FormatEnum.String, size: 160 },
-      { name: 'message', format: FormatEnum.String },
+      {
+        name: 'file',
+        format: Format.TypeFormat.String,
+        size: 160,
+      },
+      {
+        name: 'message',
+        format: Format.TypeFormat.String,
+      },
     ],
     [],
   );
@@ -105,14 +117,26 @@ export const LoggingPanel = () => {
     [],
   );
 
+  const fileDownload = useFileDownload();
+  const handleDownload = useCallback(async () => {
+    const payload = {
+      filters: text,
+      logs: logs.map((entry) => entry),
+    };
+    fileDownload(
+      new Blob([JSON.stringify(payload, undefined, 2)], { type: 'text/plain' }),
+      `${new Date().toISOString().replace(/\W/g, '-')}-logs.json`,
+    );
+  }, [logs, text, fileDownload]);
+
   return (
     <PanelContainer
       toolbar={
         <Toolbar.Root>
-          {/* TODO(wittjosiah): Reset selection value when typing manually in the searchbar. */}
-          <Select items={presets} onValueChange={onSearchChange} />
-          <Searchbar placeholder='Filter (e.g., "info", "client:debug")' value={text} onChange={onSearchChange} />
-          <Toolbar.IconButton icon='ph--trash--regular' onClick={() => setLogs([])} label='Clear logs' />
+          <Select items={presets} onValueChange={handleSearchChange} />
+          <Searchbar placeholder='Filter (e.g., "info", "client:debug")' value={text} onChange={handleSearchChange} />
+          <Toolbar.IconButton icon='ph--download--regular' iconOnly onClick={handleDownload} label='Download logs' />
+          <Toolbar.IconButton icon='ph--x--regular' iconOnly onClick={() => setLogs([])} label='Clear logs' />
         </Toolbar.Root>
       }
     >

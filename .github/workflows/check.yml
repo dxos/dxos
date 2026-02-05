@@ -40,7 +40,7 @@ jobs:
   check:
     runs-on: depot-ubuntu-24.04-8
     container:
-      image: ghcr.io/dxos/gh-actions:20.19.5
+      image: ghcr.io/dxos/gh-actions:24.11.1
       credentials:
         username: dxos-bot
         password: ${{ secrets.GITHUB_TOKEN }}
@@ -76,6 +76,9 @@ jobs:
         if: ${{ steps.extract_branch.outputs.branch == 'main' }}
         run: moon run :lint :build
 
+      - name: Check for peer dependency issues
+        run: pnpm install --resolution-only --no-frozen-lockfile
+
       - uses: 'moonrepo/run-report-action@v1'
         if: (success() || failure()) && github.event_name == 'pull_request'
         with:
@@ -84,10 +87,7 @@ jobs:
   test:
     strategy:
       matrix:
-        # TODO(wittjosiah): Test across all LTS versions of node.
-        #  Currently fails on 22 and 24.
-        # node-version: ['20.19.5', '22', '24']
-        node-version: ['20.19.5', '24.4.1'] # TODO(dmaretskyi): Switch to 24.10.0
+        node-version: ['24.11.1']
     runs-on: depot-ubuntu-24.04-8
     container:
       image: ghcr.io/dxos/gh-actions:${{ matrix.node-version }}
@@ -146,7 +146,7 @@ jobs:
           retention-days: 7
 
       - uses: codecov/codecov-action@v5
-        if: ${{ matrix.node-version == '24.4.1' }}
+        if: ${{ matrix.node-version == '24.11.1' }}
         with:
           directory: ./coverage
           fail_ci_if_error: false
@@ -165,7 +165,7 @@ jobs:
     if: ${{ startsWith(github.ref, 'refs/heads/main') || startsWith(github.ref, 'refs/heads/rc-') || startsWith(github.ref, 'refs/heads/hotfix-') || startsWith(github.ref, 'refs/heads/release-please-') || inputs.e2e }}
     runs-on: depot-ubuntu-24.04-8
     container:
-      image: ghcr.io/dxos/gh-actions:24.4.1
+      image: ghcr.io/dxos/gh-actions:24.11.1
       credentials:
         username: dxos-bot
         password: ${{ secrets.GITHUB_TOKEN }}
@@ -207,11 +207,11 @@ jobs:
 
       - name: Test Affected
         if: ${{ steps.extract_branch.outputs.branch != 'main' }}
-        run: moon run :e2e --affected --remote --concurrency=2 -- --browser=all
+        run: PLAYWRIGHT_BROWSER=all moon run :e2e --affected --remote --concurrency=2
 
       - name: Test All
         if: ${{ steps.extract_branch.outputs.branch == 'main' }}
-        run: moon run :e2e --concurrency=2 -- --browser=all
+        run: PLAYWRIGHT_BROWSER=all moon run :e2e --concurrency=2
 
       - uses: 'moonrepo/run-report-action@v1'
         if: (success() || failure()) && github.event_name == 'pull_request'
@@ -220,6 +220,7 @@ jobs:
 
       - name: Upload Traces
         uses: actions/upload-artifact@v4
+        if: ${{ success() || failure() }}
         with:
           name: playwright-report
           path: test-results/playwright

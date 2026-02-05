@@ -5,8 +5,11 @@
 import React from 'react';
 
 import { type ButtonProps, Icon, type IconProps, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { osTranslations } from '@dxos/ui-theme';
 
 import { PickerButton, type PickerButtonProps } from '../PickerButton';
+
+import { iconValues } from './icons';
 
 export type IconPickerProps = {
   disabled?: boolean;
@@ -16,11 +19,11 @@ export type IconPickerProps = {
   onReset?: ButtonProps['onClick'];
 } & Pick<
   PickerButtonProps,
-  'disabled' | 'defaultValue' | 'value' | 'onChange' | 'onReset' | 'rootVariant' | 'iconSize'
+  'disabled' | 'rootVariant' | 'iconSize' | 'defaultValue' | 'value' | 'onChange' | 'onReset'
 >;
 
 export const IconPicker = ({ ...props }: ThemedClassName<IconPickerProps>) => {
-  const { t } = useTranslation('os');
+  const { t } = useTranslation(osTranslations);
 
   return (
     <PickerButton
@@ -33,69 +36,6 @@ export const IconPicker = ({ ...props }: ThemedClassName<IconPickerProps>) => {
   );
 };
 
-const IconPreview = ({ value, iconSize = 5 }: { value: string; iconSize?: IconProps['size'] }) => {
-  return <Icon icon={`ph--${value}--regular`} size={iconSize} />;
+const IconPreview = ({ value, size }: { value: string; size?: IconProps['size'] }) => {
+  return <Icon icon={`ph--${value}--regular`} size={size} />;
 };
-
-/**
- * https://phosphoricons.com
- * NOTE: Select icons that we are unlikely to use for the UI.
- */
-const icons = [
-  'ph--house-line--regular',
-  'ph--planet--regular',
-  'ph--piggy-bank--regular',
-  'ph--snowflake--regular',
-  'ph--virus--regular',
-  'ph--graph--regular',
-  'ph--air-traffic-control--regular',
-  'ph--asterisk--regular',
-  'ph--atom--regular',
-  'ph--basketball--regular',
-  'ph--butterfly--regular',
-  'ph--cactus--regular',
-  'ph--cake--regular',
-  'ph--calendar-dots--regular',
-  'ph--campfire--regular',
-  'ph--command--regular',
-  'ph--confetti--regular',
-  'ph--detective--regular',
-  'ph--disco-ball--regular',
-  'ph--dna--regular',
-  'ph--factory--regular',
-  'ph--flag-banner-fold--regular',
-  'ph--flask--regular',
-  'ph--flower-lotus--regular',
-  'ph--flying-saucer--regular',
-  'ph--game-controller--regular',
-  'ph--gavel--regular',
-  'ph--gift--regular',
-  'ph--guitar--regular',
-  'ph--hamburger--regular',
-  'ph--handshake--regular',
-  'ph--heart--regular',
-  'ph--lightbulb--regular',
-  'ph--lock--regular',
-  'ph--martini--regular',
-  'ph--medal-military--regular',
-  'ph--moped-front--regular',
-  'ph--office-chair--regular',
-  'ph--paint-brush-household--regular',
-  'ph--peace--regular',
-  'ph--person-simple-hike--regular',
-  'ph--piggy-bank--regular',
-  'ph--potted-plant--regular',
-  'ph--radioactive--regular',
-  'ph--rocket-launch--regular',
-  'ph--shield-star--regular',
-  'ph--shopping-cart--regular',
-  'ph--stethoscope--regular',
-  'ph--student--regular',
-  'ph--sun--regular',
-  'ph--tote--regular',
-  'ph--tree--regular',
-  'ph--users-three--regular',
-  'ph--yin-yang--regular',
-];
-
-const iconValues = icons.map((icon) => icon.match(/ph--(.+)--regular/)?.[1] ?? icon);

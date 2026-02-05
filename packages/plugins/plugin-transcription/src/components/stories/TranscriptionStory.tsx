@@ -6,25 +6,21 @@ import '@dxos-theme';
 
 import React, { type Dispatch, type FC, type RefObject, type SetStateAction } from 'react';
 
-import { useSpace } from '@dxos/react-client/echo';
-import { IconButton, Toolbar } from '@dxos/react-ui';
-import { ScrollContainer } from '@dxos/react-ui-components';
-import { type DataType } from '@dxos/schema';
+import { IconButton, ScrollContainer, Toolbar } from '@dxos/react-ui';
+import { type Message } from '@dxos/types';
 
 import { type SerializationModel } from '../../model';
 import { TranscriptView } from '../Transcript';
 
 export const TranscriptionStory: FC<{
-  model: SerializationModel<DataType.Message>;
+  model: SerializationModel<Message.Message>;
   disabled?: boolean;
   running: boolean;
   onRunningChange: Dispatch<SetStateAction<boolean>>;
   audioRef?: RefObject<HTMLAudioElement | null>;
 }> = ({ model, running, onRunningChange, audioRef, disabled }) => {
-  const space = useSpace();
-
   return (
-    <div className='flex flex-col w-[30rem]'>
+    <div className='flex flex-col is-[30rem]'>
       {audioRef && <audio ref={audioRef} autoPlay />}
       <Toolbar.Root>
         <IconButton
@@ -36,9 +32,9 @@ export const TranscriptionStory: FC<{
         />
       </Toolbar.Root>
       <ScrollContainer.Root pin>
-        <ScrollContainer.Content>
-          <TranscriptView space={space} model={model} />
-        </ScrollContainer.Content>
+        <ScrollContainer.Viewport>
+          <TranscriptView model={model} />
+        </ScrollContainer.Viewport>
       </ScrollContainer.Root>
     </div>
   );

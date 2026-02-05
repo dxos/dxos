@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { type LayoutAction } from '@dxos/app-framework';
+import { type Common } from '@dxos/app-framework';
 import {
   Button,
   Icon,
@@ -28,14 +28,14 @@ export const Toast = ({
   closeLabel,
   onAction,
   onOpenChange,
-}: LayoutAction.Toast & Pick<ToastRootProps, 'onOpenChange'>) => {
+}: Common.LayoutOperation.Toast & Pick<ToastRootProps, 'onOpenChange'>) => {
   const { t } = useTranslation(meta.id);
 
   return (
     <NaturalToast.Root data-testid={id} defaultOpen duration={duration} onOpenChange={onOpenChange}>
       <NaturalToast.Body>
         <NaturalToast.Title classNames='items-center'>
-          {icon && <Icon icon={icon} size={5} classNames='inline mr-1' />}
+          {icon && <Icon icon={icon} classNames='inline mr-1' />}
           {title && <span>{toLocalizedString(title, t)}</span>}
         </NaturalToast.Title>
         {description && (
@@ -61,7 +61,7 @@ export const Toast = ({
 };
 
 export type ToasterProps = {
-  toasts?: LayoutAction.Toast[];
+  toasts?: Common.LayoutOperation.Toast[];
   onDismissToast?: (id: string) => void;
 };
 
@@ -72,7 +72,7 @@ export const Toaster = ({ toasts, onDismissToast }: ToasterProps) => {
         <Toast
           {...toast}
           key={toast.id}
-          onOpenChange={(open) => {
+          onOpenChange={(open: boolean) => {
             if (!open) {
               onDismissToast?.(toast.id);
             }

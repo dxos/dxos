@@ -5,7 +5,7 @@
 import type { ActorID } from './common';
 import { type DigestHex, Forest, type Key, type NodeData } from './forest';
 
-export type LLWTreeParams = {
+export type LLWTreeProps = {
   actor: ActorID;
 };
 
@@ -13,7 +13,7 @@ export type LLWTreeParams = {
  * Replicated Key-Value Store with Last-Write-Wins semantics.
  */
 export class LWWTree<T> {
-  static async new<T>(params: LLWTreeParams): Promise<LWWTree<T>> {
+  static async new<T>(params: LLWTreeProps): Promise<LWWTree<T>> {
     const tree = new LWWTree<T>(params);
     tree.#currentRoot = await tree.#forest.createTree([]);
 
@@ -30,7 +30,7 @@ export class LWWTree<T> {
     return this.#currentRoot;
   }
 
-  private constructor(params: LLWTreeParams) {
+  private constructor(params: LLWTreeProps) {
     this.#actor = params.actor;
   }
 

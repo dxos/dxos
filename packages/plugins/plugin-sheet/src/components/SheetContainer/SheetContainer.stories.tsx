@@ -3,20 +3,22 @@
 //
 
 import { type Meta } from '@storybook/react-vite';
+import * as Effect from 'effect/Effect';
 import React from 'react';
 
-import { Capabilities, IntentPlugin, contributes, createResolver } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { GraphPlugin } from '@dxos/plugin-graph';
-import { fullyQualifiedId, useSpace } from '@dxos/react-client/echo';
+import { Obj } from '@dxos/echo';
+import { OperationResolver } from '@dxos/operation';
+import { corePlugins } from '@dxos/plugin-testing';
+import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { AttendableContainer } from '@dxos/react-ui-attention';
-import { withAttention } from '@dxos/react-ui-attention/testing';
 
 import { createTestCells, useTestSheet, withComputeGraphDecorator } from '../../testing';
 import { translations } from '../../translations';
-import { SheetAction, SheetType } from '../../types';
+import { Sheet, SheetOperation } from '../../types';
 import { useComputeGraph } from '../ComputeGraph';
 import { RangeList } from '../RangeList';
 
@@ -27,22 +29,24 @@ const meta = {
   component: SheetContainer,
   decorators: [
     withTheme,
-    withClientProvider({ types: [SheetType], createSpace: true }),
+    withLayout({ layout: 'fullscreen' }),
+    withClientProvider({ types: [Sheet.Sheet], createSpace: true }),
     withComputeGraphDecorator(),
-    withAttention,
     // TODO(wittjosiah): Consider whether we should refactor component so story doesn't need to depend on intents.
     withPluginManager({
-      plugins: [IntentPlugin(), GraphPlugin()],
+      plugins: [...corePlugins()],
       capabilities: [
-        contributes(
-          Capabilities.IntentResolver,
-          createResolver({
-            intent: SheetAction.DropAxis,
-            resolve: ({ model, axis, axisIndex }) => {
-              model[axis === 'col' ? 'dropColumn' : 'dropRow'](axisIndex);
-            },
+        Capability.contributes(Common.Capability.OperationResolver, [
+          OperationResolver.make({
+            operation: SheetOperation.DropAxis,
+            handler: ({ model, axis, axisIndex }) =>
+              Effect.sync(() => {
+                model[axis === 'col' ? 'dropColumn' : 'dropRow'](axisIndex);
+                // Return stub output for story purposes.
+                return { axis, axisIndex, index: 0, axisMeta: null, values: [] };
+              }),
           }),
-        ),
+        ]),
       ],
     }),
   ],
@@ -63,9 +67,28 @@ export const Default = () => {
   }
 
   return (
-    <AttendableContainer id={fullyQualifiedId(sheet)} classNames='contents'>
-      <SheetContainer space={space} sheet={sheet} role='story' ignoreAttention />
+    <AttendableContainer id={Obj.getDXN(sheet).toString()} classNames='contents'>
+      <SheetContainer role='article' space={space} subject={sheet} ignoreAttention />
     </AttendableContainer>
+  );
+};
+
+export const Section = () => {
+  const space = useSpace();
+  const graph = useComputeGraph(space);
+  const sheet = useTestSheet(space, graph, { cells: createTestCells() });
+  if (!sheet || !space) {
+    return null;
+  }
+
+  return (
+    <div className='is-full flex justify-center'>
+      <div className='is-[40rem]'>
+        <AttendableContainer id={Obj.getDXN(sheet).toString()} classNames='contents'>
+          <SheetContainer role='section' space={space} subject={sheet} ignoreAttention />
+        </AttendableContainer>
+      </div>
+    </div>
   );
 };
 
@@ -78,9 +101,9 @@ export const Spec = () => {
   }
 
   return (
-    <AttendableContainer id={fullyQualifiedId(sheet)} classNames='contents'>
-      <div role='none' className='grid grid-rows-[66%_33%] bs-full grid-cols-1'>
-        <SheetContainer space={space} sheet={sheet} role='story' ignoreAttention />
+    <AttendableContainer id={Obj.getDXN(sheet).toString()} classNames='contents'>
+      <div role='none' className='is-full grid grid-cols-[1fr_20rem]'>
+        <SheetContainer role='article' space={space} subject={sheet} ignoreAttention />
         <div role='none' data-testid='grid.range-list'>
           <RangeList sheet={sheet} />
         </div>

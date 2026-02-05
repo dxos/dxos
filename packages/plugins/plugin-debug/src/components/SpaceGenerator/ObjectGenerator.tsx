@@ -2,47 +2,47 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type PromiseIntentDispatcher, createIntent } from '@dxos/app-framework';
+import type * as Schema from 'effect/Schema';
+
 import { addressToA1Notation } from '@dxos/compute';
 import { ComputeGraph, ComputeGraphModel, DEFAULT_OUTPUT, NODE_INPUT, NODE_OUTPUT } from '@dxos/conductor';
-import { DXN, Filter, Key, Obj, Ref, Type } from '@dxos/echo';
-import { type TypedObject } from '@dxos/echo/internal';
+import { DXN, Filter, Key, type Type } from '@dxos/echo';
+import { type OperationInvoker } from '@dxos/operation';
 import { Markdown } from '@dxos/plugin-markdown/types';
-import { createSheet } from '@dxos/plugin-sheet/types';
-import { type CellValue, SheetType } from '@dxos/plugin-sheet/types';
-import { CanvasType, DiagramType } from '@dxos/plugin-sketch/types';
-import { SpaceAction } from '@dxos/plugin-space/types';
+import { Sheet } from '@dxos/plugin-sheet/types';
+import { Diagram } from '@dxos/plugin-sketch/types';
+import { SpaceOperation } from '@dxos/plugin-space/types';
 import { faker } from '@dxos/random';
 import { type Client } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
-import { DataType, getTypenameFromQuery } from '@dxos/schema';
+import { View, getTypenameFromQuery } from '@dxos/schema';
 import { type ValueGenerator, createAsyncGenerator } from '@dxos/schema/testing';
 import { range } from '@dxos/util';
 
 const generator: ValueGenerator = faker as any;
 
-const findViewByTypename = async (views: DataType.View[], typename: string) => {
+const findViewByTypename = async (views: View.View[], typename: string) => {
   return views.find((view) => getTypenameFromQuery(view.query.ast) === typename);
 };
 
-export type ObjectGenerator<T extends Obj.Any> = (space: Space, n: number, cb?: (objects: T[]) => void) => Promise<T[]>;
+export type ObjectGenerator<T> = (space: Space, n: number, cb?: (objects: T[]) => void) => Promise<T[]>;
 
-export const createGenerator = <T extends Obj.Any>(
+export const createGenerator = <S extends Type.Obj.Any>(
   client: Client,
-  dispatch: PromiseIntentDispatcher,
-  schema: TypedObject<T>,
-): ObjectGenerator<T> => {
-  return async (space: Space, n: number): Promise<T[]> => {
+  invokePromise: OperationInvoker.OperationInvoker['invokePromise'],
+  schema: S,
+): ObjectGenerator<Schema.Schema.Type<S>> => {
+  return async (space: Space, n: number): Promise<Schema.Schema.Type<S>[]> => {
     const typename = schema.typename;
 
     // Find or create table and view.
-    const { objects: views } = await space.db.query(Filter.type(DataType.View)).run();
+    const views = await space.db.query(Filter.type(View.View)).run();
     const view = await findViewByTypename(views, typename);
-    const staticSchema = client?.graph.schemaRegistry.schemas.find((schema) => Type.getTypename(schema) === typename);
+    const staticSchema = client?.graph.schemaRegistry.query({ typename }).runSync()[0];
     if (!view && !staticSchema) {
-      await dispatch(createIntent(SpaceAction.AddSchema, { space, schema, show: false }));
+      await invokePromise(SpaceOperation.AddSchema, { db: space.db, schema, show: false });
     } else if (!view && staticSchema) {
-      await dispatch(createIntent(SpaceAction.UseStaticSchema, { space, typename, show: false }));
+      await invokePromise(SpaceOperation.UseStaticSchema, { db: space.db, typename, show: false });
     }
 
     // Create objects.
@@ -57,7 +57,7 @@ export const staticGenerators = new Map<string, ObjectGenerator<any>>([
     async (space, n, cb) => {
       const objects = range(n).map(() => {
         return space.db.add(
-          Markdown.makeDocument({
+          Markdown.make({
             name: faker.commerce.productName(),
             content: faker.lorem.sentences(5),
           }),
@@ -69,17 +69,10 @@ export const staticGenerators = new Map<string, ObjectGenerator<any>>([
     },
   ],
   [
-    DiagramType.typename,
+    Diagram.Diagram.typename,
     async (space, n, cb) => {
       const objects = range(n).map(() => {
-        // TODO(burdon): Generate diagram.
-        const obj = space.db.add(
-          Obj.make(DiagramType, {
-            name: faker.commerce.productName(),
-            canvas: Ref.make(Obj.make(CanvasType, { content: {} })),
-          }),
-        );
-
+        const obj = space.db.add(Diagram.make({ name: faker.commerce.productName() }));
         return obj;
       });
 
@@ -89,10 +82,10 @@ export const staticGenerators = new Map<string, ObjectGenerator<any>>([
   ],
   // TODO(burdon): Create unit tests.
   [
-    SheetType.typename,
+    Sheet.Sheet.typename,
     async (space, n, cb) => {
       const objects = range(n).map(() => {
-        const cells: Record<string, CellValue> = {};
+        const cells: Record<string, Sheet.CellValue> = {};
         const year = new Date().getFullYear();
         const cols = 4;
         const rows = 16;
@@ -114,7 +107,7 @@ export const staticGenerators = new Map<string, ObjectGenerator<any>>([
         // TODO(burdon): Set width.
         // TODO(burdon): Set formatting for columns.
         return space.db.add(
-          createSheet({
+          Sheet.make({
             name: faker.commerce.productName(),
             cells,
           }),

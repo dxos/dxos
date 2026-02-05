@@ -8,33 +8,30 @@ import React from 'react';
 import { Filter } from '@dxos/client/echo';
 import { faker } from '@dxos/random';
 import { useQuery } from '@dxos/react-client/echo';
-import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
+import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/react-ui/testing';
-import { Card, cardNoSpacing, cardSpacing } from '@dxos/react-ui-stack';
-import { mx } from '@dxos/react-ui-theme';
-import { DataType } from '@dxos/schema';
+import { Card } from '@dxos/react-ui-mosaic';
 import { createObjectFactory } from '@dxos/schema/testing';
+import { Organization } from '@dxos/types';
 
 import { Masonry } from './Masonry';
 
-const StoryItem = ({ data: { image, name, description } }: { data: DataType.Organization }) => {
+const StoryItem = ({ data: { image, name, description } }: { data: Organization.Organization }) => {
   return (
-    <Card.StaticRoot>
+    <Card.Root>
       <Card.Poster alt={name!} {...(image ? { image } : { icon: 'ph--building-office--regular' })} />
-      <div role='none' className={mx('flex items-center gap-2', cardSpacing)}>
-        <Card.Heading classNames={cardNoSpacing}>{name}</Card.Heading>
-      </div>
-      {description && <Card.Text classNames='line-clamp-2'>{description}</Card.Text>}
-    </Card.StaticRoot>
+      <Card.Heading>{name}</Card.Heading>
+      {description && <Card.Text variant='description'>{description}</Card.Text>}
+    </Card.Root>
   );
 };
 
 const DefaultStory = () => {
-  const { space } = useClientProvider();
-  const organizations = useQuery(space, Filter.type(DataType.Organization));
+  const { space } = useClientStory();
+  const organizations = useQuery(space?.db, Filter.type(Organization.Organization));
 
   return (
-    <Masonry.Root<DataType.Organization>
+    <Masonry.Root<Organization.Organization>
       items={organizations}
       render={StoryItem}
       classNames='is-full max-is-full bs-full max-bs-full overflow-y-auto p-4'
@@ -47,12 +44,12 @@ const meta = {
   decorators: [
     withTheme,
     withClientProvider({
-      types: [DataType.Organization],
+      types: [Organization.Organization],
       createIdentity: true,
       createSpace: true,
       onCreateSpace: async ({ space }) => {
         const factory = createObjectFactory(space.db, faker as any);
-        await factory([{ type: DataType.Organization, count: 36 }]);
+        await factory([{ type: Organization.Organization, count: 36 }]);
       },
     }),
   ],

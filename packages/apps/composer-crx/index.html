@@ -1,6 +1,9 @@
 <html>
   <head>
     <title>Composer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Poiret+One&display=swap" rel="stylesheet" />
     <style>
       body {
         margin: 0;
@@ -9,7 +12,8 @@
         color: #ccc;
       }
 
-      a, a:visited {
+      a,
+      a:visited {
         color: #ccc;
         text-decoration: none;
       }
@@ -18,19 +22,25 @@
         width: 128px;
         height: 128px;
       }
+
+      .poiret-one-regular {
+        font-family: 'Poiret One', sans-serif;
+        font-weight: 400;
+        font-style: normal;
+      }
     </style>
   </head>
   <body>
-    <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh;">
-      <div style="display: flex; align-items: center;">
+    <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh">
+      <div style="display: flex; align-items: center">
         <img src="assets/img/icon-512.png" class="logo" />
-        <div style="display: flex; flex-direction: column; gap: 8px; font-size: 16px;">
+        <div style="display: flex; flex-direction: column; gap: 8px; font-size: 16px">
           <a href="options.html">Options</a>
           <a href="panel.html">Panel</a>
           <a href="popup.html">Popup</a>
           <a href="sandbox.html">Sandbox</a>
         </div>
-      </div>  
+      </div>
     </div>
   </body>
 </html>

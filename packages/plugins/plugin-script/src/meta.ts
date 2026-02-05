@@ -2,14 +2,18 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type PluginMeta } from '@dxos/app-framework';
+import { type Plugin } from '@dxos/app-framework';
+import { trim } from '@dxos/util';
 
-export const meta: PluginMeta = {
+export const meta: Plugin.Meta = {
   id: 'dxos.org/plugin/script',
   name: 'Scripts',
-  description:
-    'Scripts enable you to deploy custom functions that run on the edge. These functions can be referenced by your AI agent and called inside of cells in any Sheet. Use scripts to interact with API’s or external data inside of Composer.',
+  description: trim`
+    Write and deploy custom JavaScript functions that extend your workspace capabilities.
+    Create AI agent tools, spreadsheet formulas, and automation scripts that integrate seamlessly with other plugins.
+  `,
   icon: 'ph--code--regular',
+  iconHue: 'sky',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-explorer',
   tags: ['labs'],
   screenshots: ['https://dxos.network/plugin-details-scripts-dark.png'],

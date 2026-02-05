@@ -5,7 +5,7 @@
 import React, { useState } from 'react';
 import Joyride, { ACTIONS, EVENTS } from 'react-joyride';
 
-import { useLayout, usePluginManager } from '@dxos/app-framework';
+import { useLayout, usePluginManager } from '@dxos/app-framework/react';
 import { useAsyncEffect } from '@dxos/react-ui';
 
 import { HelpContext, type Step } from '../../types';
@@ -76,7 +76,7 @@ export const WelcomeTour = ({ steps: initialSteps, running: runningProp, onRunni
   const setStepIndex = (index: number) => {
     if (runningProp) {
       const step = steps[index];
-      step?.before?.(manager.context);
+      step?.before?.(manager.capabilities);
     }
     _setStepIndex(index);
   };

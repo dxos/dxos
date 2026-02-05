@@ -8,7 +8,7 @@ import React, { Fragment } from 'react';
 import { DEFAULT_OUTPUT, QueueInput, QueueOutput } from '@dxos/conductor';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { type ShapeComponentProps, type ShapeDef } from '@dxos/react-ui-canvas-editor';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { useComputeNodeState } from '../hooks';
 
@@ -28,7 +28,11 @@ export type QueueShape = Schema.Schema.Type<typeof QueueShape>;
 export type CreateQueueProps = CreateShapeProps<QueueShape>;
 
 export const createQueue = (props: CreateQueueProps) =>
-  createShape<QueueShape>({ type: 'queue', size: { width: 256, height: 512 }, ...props });
+  createShape<QueueShape>({
+    type: 'queue',
+    size: { width: 256, height: 512 },
+    ...props,
+  });
 
 export const QueueComponent = ({ shape }: ShapeComponentProps<QueueShape>) => {
   const { runtime } = useComputeNodeState(shape);
@@ -42,9 +46,9 @@ export const QueueComponent = ({ shape }: ShapeComponentProps<QueueShape>) => {
 
   return (
     <Box shape={shape} status={`${items.length} items`} onAction={handleAction}>
-      <div className='flex flex-col w-full overflow-y-scroll divide-y divide-separator'>
+      <div className='flex flex-col is-full overflow-y-auto divide-y divide-separator'>
         {[...items].map((item, i) => (
-          <QueueItem key={i} classNames='p-1 px-2' item={item} />
+          <QueueItem key={i} classNames='p-1 pli-2' item={item} />
         ))}
       </div>
     </Box>

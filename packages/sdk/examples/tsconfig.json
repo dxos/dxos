@@ -31,12 +31,6 @@
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../core/echo/echo-signals"
-    },
-    {
-      "path": "../../core/echo/live-object"
-    },
-    {
       "path": "../../plugins/plugin-markdown"
     },
     {
@@ -46,7 +40,7 @@
       "path": "../../ui/react-ui-editor"
     },
     {
-      "path": "../../ui/react-ui-theme"
+      "path": "../../ui/ui-theme"
     },
     {
       "path": "../react-client"

@@ -2,14 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type ReadonlySignal, signal } from '@preact/signals-core';
 import chalk from 'chalk';
 
 import { log } from '@dxos/log';
 
 import { type SequenceEvent, type SequenceLogger } from './types';
-
-/* eslint-disable no-console */
 
 // Force chalk colors on for tests.
 chalk.level = 2;
@@ -22,25 +19,6 @@ interface Logger {
 }
 
 const DEFAULT_LOGGER: Logger = { log: log.info };
-
-/**
- * Reactive bufferedlogger.
- */
-export class BufferedLogger implements Logger {
-  private _messages = signal<string[]>([]);
-
-  get messages(): ReadonlySignal<string[]> {
-    return this._messages;
-  }
-
-  clear() {
-    this._messages.value = [];
-  }
-
-  log(message: string) {
-    this._messages.value = [...this._messages.value, message];
-  }
-}
 
 // TODO(burdon): Reconcile with ConsolePrinter.
 export class SequenceLoggerAdapter implements SequenceLogger {

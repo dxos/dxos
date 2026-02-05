@@ -6,8 +6,9 @@ import * as Schema from 'effect/Schema';
 
 import { JsonPath, type JsonProp } from '@dxos/effect';
 
-import { EntityKindSchema } from '../ast';
-import { FormatAnnotation, FormatEnum } from '../formats';
+import { FormatAnnotation, TypeFormat } from '../formats';
+import { type Mutable } from '../proxy';
+import { EntityKindSchema } from '../types';
 
 //
 // JSON Schema
@@ -18,7 +19,7 @@ const SimpleTypes = Schema.Literal('array', 'boolean', 'integer', 'null', 'numbe
 
 const NonNegativeInteger = Schema.Number.pipe(Schema.greaterThanOrEqualTo(0));
 
-const StringArray = Schema.Array(Schema.String).pipe(Schema.mutable);
+const StringArray = Schema.Array(Schema.String);
 
 const JsonSchemaOrBoolean = Schema.Union(
   Schema.suspend(() => JsonSchemaType),
@@ -48,13 +49,13 @@ export const JsonSchemaEchoAnnotations = Schema.Struct({
     Schema.Record({
       key: Schema.String,
       value: Schema.Any,
-    }).pipe(Schema.mutable),
+    }),
   ),
 
   /**
    * @deprecated
    */
-  // TODO(dmaretskyi): We risk old schema not passing validation due to the extra fields. Remove when we are sure this is safe
+  // TODO(dmaretskyi): We risk old schema not passing validation due to the extra fields. Remove when we are sure this is safe.
   type: Schema.optional(
     Schema.Struct({
       typename: Schema.String,
@@ -62,7 +63,7 @@ export const JsonSchemaEchoAnnotations = Schema.Struct({
 
       // Not used.
       schemaId: Schema.optional(Schema.String),
-    }).pipe(Schema.mutable),
+    }),
   ),
 
   /**
@@ -72,9 +73,9 @@ export const JsonSchemaEchoAnnotations = Schema.Struct({
     Schema.Record({
       key: Schema.String,
       value: Schema.Any,
-    }).pipe(Schema.mutable),
+    }),
   ),
-}).pipe(Schema.mutable);
+});
 export type JsonSchemaEchoAnnotations = Schema.Schema.Type<typeof JsonSchemaEchoAnnotations>;
 
 /**
@@ -206,7 +207,7 @@ const _JsonSchemaType = Schema.Struct({
   /**
    * Regex pattern for strings.
    */
-  pattern: Schema.optional(Schema.String.pipe(FormatAnnotation.set(FormatEnum.Regex))),
+  pattern: Schema.optional(Schema.String.pipe(FormatAnnotation.set(TypeFormat.Regex))),
 
   /**
    * Serialized from {@link FormatAnnotationId}.
@@ -257,23 +258,21 @@ const _JsonSchemaType = Schema.Struct({
     Schema.Record({
       key: Schema.String,
       value: Schema.suspend(() => JsonSchemaType),
-    }).pipe(Schema.mutable),
+    }),
   ),
   patternProperties: Schema.optional(
     Schema.Record({
       key: Schema.String,
       value: Schema.suspend(() => JsonSchemaType),
-    }).pipe(Schema.mutable),
+    }),
   ),
   propertyNames: Schema.optional(Schema.suspend(() => JsonSchemaType)),
 
   definitions: Schema.optional(
-    Schema.mutable(
-      Schema.Record({
-        key: Schema.String,
-        value: Schema.suspend(() => JsonSchemaType),
-      }),
-    ),
+    Schema.Record({
+      key: Schema.String,
+      value: Schema.suspend(() => JsonSchemaType),
+    }),
   ),
   dependencies: Schema.optional(
     Schema.Record({
@@ -296,12 +295,10 @@ const _JsonSchemaType = Schema.Struct({
   oneOf: Schema.optional(Schema.Array(Schema.suspend(() => JsonSchemaType))),
   not: Schema.optional(Schema.suspend(() => JsonSchemaType)),
   $defs: Schema.optional(
-    Schema.mutable(
-      Schema.Record({
-        key: Schema.String,
-        value: Schema.suspend(() => JsonSchemaType),
-      }),
-    ),
+    Schema.Record({
+      key: Schema.String,
+      value: Schema.suspend(() => JsonSchemaType),
+    }),
   ),
 
   //
@@ -311,25 +308,23 @@ const _JsonSchemaType = Schema.Struct({
   currency: Schema.optional(Schema.String),
 
   reference: Schema.optional(
-    Schema.mutable(
-      Schema.Struct({
-        schema: Schema.suspend(() => JsonSchemaType),
-        schemaVersion: Schema.optional(Schema.String),
-        schemaObject: Schema.optional(Schema.String),
-      }),
-    ),
+    Schema.Struct({
+      schema: Schema.suspend(() => JsonSchemaType),
+      schemaVersion: Schema.optional(Schema.String),
+      schemaObject: Schema.optional(Schema.String),
+    }),
   ),
 
   /**
    * ECHO-specific annotations.
    */
   // TODO(dmaretskyi): Since we are adding a lot of new extensions to the JSON Schema, it is safer to namespace them here.
-  annotations: Schema.optional(Schema.mutable(JsonSchemaEchoAnnotations)),
+  annotations: Schema.optional(JsonSchemaEchoAnnotations),
 
   /**
    * @deprecated Use `annotations` instead.
    */
-  echo: Schema.optional(Schema.mutable(JsonSchemaEchoAnnotations)),
+  echo: Schema.optional(JsonSchemaEchoAnnotations),
 }).annotations({ identifier: 'jsonSchema', description: 'JSON Schema' });
 
 export const JsonSchemaFields = Object.keys(_JsonSchemaType.fields);
@@ -337,9 +332,10 @@ export const JsonSchemaFields = Object.keys(_JsonSchemaType.fields);
 /**
  * https://json-schema.org/draft-07/schema
  */
-export interface JsonSchemaType extends Schema.Schema.Type<Schema.mutable<typeof _JsonSchemaType>> {}
+// TODO(burdon): Reconcile with @effect/Schema/JSONSchema
+export interface JsonSchemaType extends Schema.Schema.Type<typeof _JsonSchemaType> {}
 
-export const JsonSchemaType: Schema.Schema<JsonSchemaType> = _JsonSchemaType.pipe(Schema.mutable);
+export const JsonSchemaType: Schema.Schema<JsonSchemaType> = _JsonSchemaType;
 
 // TODO(burdon): Factor out JSON schema utils.
 
@@ -348,7 +344,11 @@ export const getSchemaProperty = (schema: JsonSchemaType, property: JsonProp): J
 };
 
 // TODO(burdon): Properties should be ordered.
-export const setSchemaProperty = (schema: JsonSchemaType, property: JsonProp, value: JsonSchemaType) => {
+export const setSchemaProperty = (
+  schema: Mutable<JsonSchemaType>,
+  property: JsonProp,
+  value: Mutable<JsonSchemaType>,
+) => {
   schema.properties ??= {};
   schema.properties[property] = value;
   return schema;

@@ -3,11 +3,17 @@
 //
 
 import { type CleanupFn, Event, Mutex } from '@dxos/async';
+import { type QueryResult, Type } from '@dxos/echo';
 import { log } from '@dxos/log';
 
-import type { SchemaRegistryPreparedQuery } from './schema-registry-api';
+const resultToEntry = <T extends Type.Entity.Any>(result: T): QueryResult.Entry<T> => ({
+  id: Type.getTypename(result),
+  result,
+});
 
+// TODO(wittjosiah): Simplify this interface.
 export interface SchemaRegistryQueryResolver<T> {
+  // TODO(wittjosiah): This looks unused, remove?
   changes: Event<void>;
 
   /**
@@ -27,7 +33,7 @@ export interface SchemaRegistryQueryResolver<T> {
 /**
  * API for the schema queries.
  */
-export class SchemaRegistryPreparedQueryImpl<T> implements SchemaRegistryPreparedQuery<T> {
+export class SchemaRegistryPreparedQueryImpl<T extends Type.Entity.Any> implements QueryResult.QueryResult<T> {
   private readonly _mutex = new Mutex();
   private readonly _changes = new Event<this>();
   private _isReactiveQueryRunning = false;
@@ -45,12 +51,25 @@ export class SchemaRegistryPreparedQueryImpl<T> implements SchemaRegistryPrepare
     return this._resolver.getResultsSync();
   }
 
+  get entries(): QueryResult.Entry<T>[] {
+    return this.results.map((result) => resultToEntry(result));
+  }
+
   run(): Promise<T[]> {
     return this._resolver.getResults();
   }
 
+  async runEntries(): Promise<QueryResult.Entry<T>[]> {
+    const results = await this.run();
+    return results.map((result) => resultToEntry(result));
+  }
+
   runSync(): T[] {
     return this._resolver.getResultsSync();
+  }
+
+  runSyncEntries(): QueryResult.Entry<T>[] {
+    return this.runSync().map((result) => resultToEntry(result));
   }
 
   async first(): Promise<T> {

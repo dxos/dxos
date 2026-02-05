@@ -16,10 +16,10 @@ import {
 } from '@dxos/ai';
 import { type AiAssistantError, AiSession } from '@dxos/assistant';
 import { Type } from '@dxos/echo';
-import { TracingService } from '@dxos/functions';
+import { FunctionInvocationService, TracingService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { Transcript } from '@dxos/plugin-transcription/types';
+import { Transcript } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { type Meeting } from './types';
@@ -60,6 +60,7 @@ export const summarizeTranscript: (content: string) => Effect.Effect<
       ToolResolverService.layerEmpty,
       ToolExecutionService.layerEmpty,
       TracingService.layerNoop,
+      FunctionInvocationService.layerNotAvailable,
     ),
   ),
 );

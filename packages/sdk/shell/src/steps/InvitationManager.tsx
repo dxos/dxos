@@ -7,10 +7,11 @@ import { QR } from 'react-qr-rounded';
 
 import { type InvitationStatus } from '@dxos/react-client/invitations';
 import { Clipboard, Icon, useId, useTranslation } from '@dxos/react-ui';
-import { descriptionText, getSize, mx } from '@dxos/react-ui-theme';
+import { descriptionText, getSize, mx } from '@dxos/ui-theme';
 import { hexToEmoji } from '@dxos/util';
 
 import { Action, Actions, AuthCode, Centered, Emoji, Label, Viewport, type ViewportViewProps } from '../components';
+import { translationKey } from '../translations';
 import { invitationStatusValue } from '../util';
 
 import { type StepProps } from './StepProps';
@@ -37,7 +38,7 @@ export const InvitationManager = ({
   authCode,
   id = '0',
 }: InvitationManagerProps) => {
-  const { t } = useTranslation('os');
+  const { t } = useTranslation(translationKey);
   const qrLabel = useId('invitation-manager__qr-code');
   const statusValue = multiUse ? 0 : (invitationStatusValue.get(status!) ?? 0);
   const showAuthCode = statusValue === 3;

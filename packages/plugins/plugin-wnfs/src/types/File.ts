@@ -1,0 +1,24 @@
+//
+// Copyright 2024 DXOS.org
+//
+
+import * as Schema from 'effect/Schema';
+
+import { Obj, Type } from '@dxos/echo';
+import { FormInputAnnotation } from '@dxos/echo/internal';
+
+export const File = Schema.Struct({
+  name: Schema.String.pipe(Schema.optional),
+  type: Schema.String.pipe(FormInputAnnotation.set(false)),
+  cid: Schema.String.pipe(FormInputAnnotation.set(false)),
+  timestamp: Schema.String.pipe(FormInputAnnotation.set(false), Schema.optional),
+}).pipe(
+  Type.object({
+    typename: 'dxos.org/type/File',
+    version: '0.1.0',
+  }),
+);
+
+export type File = Schema.Schema.Type<typeof File>;
+
+export const make = (props: Obj.MakeProps<typeof File>) => Obj.make(File, props);

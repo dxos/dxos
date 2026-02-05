@@ -4,17 +4,20 @@
 
 import React, { useCallback, useRef, useState } from 'react';
 
-import { IconButton, Toolbar, useTranslation } from '@dxos/react-ui';
+import { type SurfaceComponentProps } from '@dxos/app-framework/react';
+import { Toolbar, useTranslation } from '@dxos/react-ui';
 import { type Player } from '@dxos/react-ui-gameboard';
-import { StackItem } from '@dxos/react-ui-stack';
-import { mx } from '@dxos/react-ui-theme';
+import { Layout } from '@dxos/react-ui-mosaic';
+import { mx } from '@dxos/ui-theme';
 
 import { meta } from '../meta';
 import { type Chess } from '../types';
 
 import { Chessboard, type ChessboardController, type ChessboardInfoProps } from './Chessboard';
 
-export const ChessboardArticle = ({ game, role }: { game: Chess.Game; role?: string }) => {
+export type ChessboardArticleProps = SurfaceComponentProps<Chess.Game>;
+
+export const ChessboardArticle = ({ role, subject: game }: ChessboardArticleProps) => {
   const { t } = useTranslation(meta.id);
   const [orientation, setOrientation] = useState<Player>('white');
   const [open, setOpen] = useState(true);
@@ -26,22 +29,21 @@ export const ChessboardArticle = ({ game, role }: { game: Chess.Game; role?: str
   }, []);
 
   return (
-    <StackItem.Content toolbar>
+    <Layout.Main toolbar classNames='@container'>
       <Chessboard.Root game={game} ref={controller}>
         <Toolbar.Root>
-          <IconButton
-            variant='ghost'
+          <Toolbar.IconButton
             icon='ph--info--regular'
             iconOnly
             label={t('toggle info button')}
-            size={6}
-            classNames={mx('invisible', !open && '@3xl:visible')}
+            disabled={open}
+            classNames={mx('invisible @3xl:visible')}
             onClick={() => setOpen((open) => !open)}
           />
         </Toolbar.Root>
         <div
           className={mx(
-            'grid _grid-rows-[1fr_4rem] bs-full is-full gap-2',
+            'grid bs-full is-full gap-2',
             open && '@3xl:grid-cols-[1fr_320px]',
             role === 'section' && 'aspect-square',
             role === 'section' && open && '@3xl:aspect-auto',
@@ -64,6 +66,6 @@ export const ChessboardArticle = ({ game, role }: { game: Chess.Game; role?: str
           )}
         </div>
       </Chessboard.Root>
-    </StackItem.Content>
+    </Layout.Main>
   );
 };

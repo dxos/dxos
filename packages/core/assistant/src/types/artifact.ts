@@ -2,10 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
+import type * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { type ObjectId } from '@dxos/echo/internal';
-import { DXN, LOCAL_SPACE_TAG, type SpaceId } from '@dxos/keys';
+import { type Err, Type } from '@dxos/echo';
+import { Database } from '@dxos/echo';
+import { EncodedReference } from '@dxos/echo-protocol';
+import { DXN, LOCAL_SPACE_TAG, type ObjectId, type SpaceId } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
 /**
@@ -16,11 +19,18 @@ export const createArtifactElement = (id: ObjectId) => `<artifact id=${id} />`;
 /**
  * A model-friendly way to reference an object.
  * Supports vairous formats that will be normalized to a DXN.
+ *
+ * @deprecated Use `RefFromLLM` instead.
  */
-// TODO(burdon): Rename ObjectReference?
+// TODO(burdon): Rename RefFromLLM? -- yes -dm
 export const ArtifactId: Schema.Schema<string> & {
   toDXN: (reference: ArtifactId, owningSpaceId?: SpaceId) => DXN;
+  resolve: <S extends Type.Entity.Any>(
+    schema: S,
+    ref: ArtifactId,
+  ) => Effect.Effect<Schema.Schema.Type<S>, Err.ObjectNotFoundError, Database.Service>;
 } = class extends Schema.String.annotations({
+  // TODO(dmaretskyi): This section gets overriden.
   description: trim`
     The ID of the referenced object. Formats accepted:
     - DXN (dxn:echo:@:XXXXX). DXNs can be prepended with an @ symbol for compatibility with in-text references.
@@ -47,6 +57,26 @@ export const ArtifactId: Schema.Schema<string> & {
       throw new Error(`Unable to parse object reference: ${reference}`);
     }
   }
+
+  /**
+   * Resolves an artifact ID to an object.
+   */
+  static resolve<S extends Type.Entity.Any>(
+    schema: S,
+    ref: ArtifactId,
+  ): Effect.Effect<Schema.Schema.Type<S>, Err.ObjectNotFoundError, Database.Service> {
+    const dxn = ArtifactId.toDXN(ref);
+    return Database.resolve(dxn, schema);
+  }
 };
 
 export type ArtifactId = Schema.Schema.Type<typeof ArtifactId>;
+
+/**
+ * Schema that decodes ECHO reference object from an LLM-friendly input.
+ */
+export const RefFromLLM = Schema.transform(ArtifactId, Type.Ref(Type.Obj), {
+  decode: (fromA, fromI) => EncodedReference.fromDXN(ArtifactId.toDXN(fromA)),
+  encode: (toI, toA) => EncodedReference.toDXN(toI).toString(),
+  strict: false,
+});

@@ -4,12 +4,13 @@
 
 import { beforeAll, describe, test } from 'vitest';
 
-import { type EchoDatabase } from '@dxos/echo-db';
+import { type Database } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
-import { FunctionExecutor, ServiceContainer } from '@dxos/functions';
+import { FunctionExecutor, ServiceContainer } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
-import { DataType } from '@dxos/schema';
-import { Testing, createTestData } from '@dxos/schema/testing';
+import { TestSchema } from '@dxos/schema/testing';
+import { type Message, Organization, Person } from '@dxos/types';
+import { createTestData } from '@dxos/types/testing';
 import { range } from '@dxos/util';
 
 import { processTranscriptMessage } from '../extraction';
@@ -18,25 +19,25 @@ import { extractionNerFunction } from './extraction-ner-function';
 
 describe.skip('NER EntityExtraction', () => {
   let builder: EchoTestBuilder;
-  let db: EchoDatabase;
+  let db: Database.Database;
   let executor: FunctionExecutor;
   let testData: {
-    transcriptJosiah: DataType.Message[];
-    transcriptWoflram: DataType.Message[];
-    transcriptMessages: DataType.Message[];
-    documents: Testing.DocumentType[];
-    contacts: Record<string, DataType.Person>;
-    organizations: Record<string, DataType.Organization>;
+    transcriptJosiah: Message.Message[];
+    transcriptWoflram: Message.Message[];
+    transcriptMessages: Message.Message[];
+    documents: TestSchema.DocumentType[];
+    contacts: Record<string, Person.Person>;
+    organizations: Record<string, Organization.Organization>;
   };
 
-  const TYPES = [DataType.Organization, DataType.Person, Testing.Contact, Testing.DocumentType];
+  const TYPES = [Organization.Organization, Person.Person, TestSchema.Person, TestSchema.DocumentType];
 
   beforeAll(async () => {
     // TODO(dmaretskyi): Helper to scaffold this from a config.
     builder = await new EchoTestBuilder().open();
     const { db: db1 } = await builder.createDatabase({ indexing: { vector: true } });
     db = db1;
-    db.graph.schemaRegistry.addSchema(TYPES);
+    await db.graph.schemaRegistry.register(TYPES);
     const data = createTestData();
     testData = {
       transcriptJosiah: data.transcriptJosiah,

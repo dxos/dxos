@@ -57,7 +57,7 @@ export class DXN {
   static Schema = Schema.NonEmptyString.pipe(
     Schema.pattern(/^dxn:([^:]+):(?:[^:]+:?)+[^:]$/),
     // TODO(dmaretskyi): To set the format we need to move the annotation IDs out of the echo-schema package.
-    // FormatAnnotation.set(FormatEnum.DXN),
+    // FormatAnnotation.set(TypeFormat.DXN),
     Schema.annotations({
       title: 'DXN',
       description: 'DXN URI',
@@ -140,14 +140,14 @@ export class DXN {
   }
 
   /**
-   * @example `dxn:type:example.com/type/Contact`
+   * @example `dxn:type:example.com/type/Person`
    */
   static fromTypename(typename: string): DXN {
     return new DXN(DXN.kind.TYPE, [typename]);
   }
 
   /**
-   * @example `dxn:type:example.com/type/Contact:0.1.0`
+   * @example `dxn:type:example.com/type/Person:0.1.0`
    */
   // TODO(dmaretskyi): Consider using @ as the version separator.
   static fromTypenameAndVersion(typename: string, version: string): DXN {
@@ -300,7 +300,7 @@ export class DXN {
     }
 
     return {
-      subspaceTag,
+      subspaceTag: subspaceTag as QueueSubspaceTag,
       spaceId: spaceId as SpaceId,
       queueId,
       objectId: objectId as string | undefined,
@@ -338,7 +338,7 @@ export declare namespace DXN {
   };
 
   export type QueueDXN = {
-    subspaceTag: string;
+    subspaceTag: QueueSubspaceTag;
     spaceId: SpaceId;
     queueId: string; // TODO(dmaretskyi): ObjectId.
     objectId?: string; // TODO(dmaretskyi): ObjectId.

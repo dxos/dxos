@@ -2,6 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
+/* eslint-disable no-console */
+
 export enum SnoopLevel {
   DEFAULT = 0,
   VERBOSE = 1,

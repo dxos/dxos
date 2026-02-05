@@ -12,7 +12,7 @@ import SourceMapsPlugin from 'rollup-plugin-sourcemaps';
 import WasmPlugin from 'vite-plugin-wasm';
 
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
-import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
+import { ThemePlugin } from '@dxos/ui-theme/plugin';
 
 import packageJson from './package.json';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
@@ -49,8 +49,7 @@ export default defineConfig({
 
     WasmPlugin(),
 
-    // https://github.com/preactjs/signals/issues/269
-    ReactPlugin({ jsxRuntime: 'classic' }),
+    ReactPlugin(),
 
     ChromeExtensionPlugin({
       manifest: {

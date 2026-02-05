@@ -25,6 +25,7 @@ import {
   type StorageKey,
   interpretAsDocumentId,
 } from '@automerge/automerge-repo';
+import type * as Record from 'effect/Record';
 
 import { DeferredTask, Event, asyncTimeout } from '@dxos/async';
 import { Context, type Lifecycle, Resource, cancelWithContext } from '@dxos/context';
@@ -38,20 +39,20 @@ import { objectPointerCodec } from '@dxos/protocols';
 import { type SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
 import { type DocHeadsList, type FlushRequest } from '@dxos/protocols/proto/dxos/echo/service';
 import { trace } from '@dxos/tracing';
-import { ComplexSet, bufferToArray, isNonNullable, range } from '@dxos/util';
+import { ComplexSet, bufferToArray, defaultMap, isNonNullable, range } from '@dxos/util';
 
 import { type CollectionState, CollectionSynchronizer, diffCollectionState } from './collection-synchronizer';
 import { type EchoDataMonitor } from './echo-data-monitor';
 import { EchoNetworkAdapter, isEchoPeerMetadata } from './echo-network-adapter';
-import { type EchoReplicator, type RemoteDocumentExistenceCheckParams } from './echo-replicator';
+import { type EchoReplicator, type RemoteDocumentExistenceCheckProps } from './echo-replicator';
 import { HeadsStore } from './heads-store';
-import { type BeforeSaveParams, LevelDBStorageAdapter } from './leveldb-storage-adapter';
+import { type BeforeSaveProps, LevelDBStorageAdapter } from './leveldb-storage-adapter';
 
 export type PeerIdProvider = () => string | undefined;
 
 export type RootDocumentSpaceKeyProvider = (documentId: string) => PublicKey | undefined;
 
-export type AutomergeHostParams = {
+export type AutomergeHostProps = {
   db: LevelDB;
   indexMetadataStore: IndexMetadataStore;
   dataMonitor?: EchoDataMonitor;
@@ -65,6 +66,12 @@ export type AutomergeHostParams = {
 
 export type LoadDocOptions = {
   timeout?: number;
+
+  /**
+   * If true, the document will be fetched from the network if it is not found in the local storage.
+   * Setting this to false does not guarantee that the document will not be fetched from the network.
+   */
+  fetchFromNetwork?: boolean;
 };
 
 export type CreateDocOptions = {
@@ -72,6 +79,8 @@ export type CreateDocOptions = {
    * Import the document together with its history.
    */
   preserveHistory?: boolean;
+
+  documentId?: DocumentId;
 };
 
 export const FIND_PARAMS = {
@@ -90,6 +99,11 @@ const BUNDLE_SYNC_CONCURRENCY = 2;
  * If the number of documents to sync is greater than this threshold, we will use bundles.
  */
 const BUNDLE_SYNC_THRESHOLD = 50;
+
+/**
+ * Only announce documents that are known to require sync.
+ */
+const OPTIMIZED_SHARE_POLICY = true;
 
 /**
  * Abstracts over the AutomergeRepo.
@@ -132,7 +146,29 @@ export class AutomergeHost extends Resource {
   public readonly documentsSaved = new Event();
 
   private readonly _headsUpdates = new Map<DocumentId, Heads>();
-  private _onHeadsChangedTask?: DeferredTask | undefined;
+  private _onHeadsChangedTask?: DeferredTask;
+
+  /**
+   * Documents created in this session.
+   */
+  private _createdDocuments = new Set<DocumentId>();
+
+  /**
+   * Documents that need to be synced based on the result of collection-sync.
+   */
+  private _documentsToSync = new Set<DocumentId>();
+
+  /**
+   * Documents that are not avaiale locally that should be requested.
+   */
+  private _documentsToRequest = new Set<DocumentId>();
+
+  /**
+   * Documents requested by remote peers.
+   */
+  private _documentsRequested = new Map<PeerId, Set<DocumentId>>();
+
+  private _sharePolicyChangedTask?: DeferredTask;
 
   constructor({
     db,
@@ -140,7 +176,7 @@ export class AutomergeHost extends Resource {
     dataMonitor,
     peerIdProvider,
     getSpaceKeyByRootDocumentId,
-  }: AutomergeHostParams) {
+  }: AutomergeHostProps) {
     super();
     this._db = db;
     this._storage = new LevelDBStorageAdapter({
@@ -157,6 +193,10 @@ export class AutomergeHost extends Resource {
       onCollectionStateQueried: this._onCollectionStateQueried.bind(this),
       onCollectionStateReceived: this._onCollectionStateReceived.bind(this),
       monitor: dataMonitor,
+    });
+    this._echoNetworkAdapter.documentRequested.on(({ peerId, documentId }) => {
+      defaultMap(this._documentsRequested, peerId, () => new Set()).add(documentId);
+      this._sharePolicyChangedTask!.schedule();
     });
     this._headsStore = new HeadsStore({ db: db.sublevel('heads') });
     this._indexMetadataStore = indexMetadataStore;
@@ -178,7 +218,7 @@ export class AutomergeHost extends Resource {
     // Construct the automerge repo.
     this._repo = new Repo({
       peerId: this._peerId as PeerId,
-      sharePolicy: this._sharePolicy.bind(this),
+      shareConfig: this._shareConfig,
       storage: this._storage,
       network: [
         // Upstream swarm.
@@ -226,6 +266,11 @@ export class AutomergeHost extends Resource {
       );
     });
 
+    this._sharePolicyChangedTask = new DeferredTask(this._ctx, async () => {
+      log('share policy changed');
+      this._repo.shareConfigChanged();
+    });
+
     await this._echoNetworkAdapter.open();
     await this._collectionSynchronizer.open();
     await this._echoNetworkAdapter.open();
@@ -238,13 +283,7 @@ export class AutomergeHost extends Resource {
     await this._echoNetworkAdapter.close();
     this._syncTask = undefined;
     this._onHeadsChangedTask = undefined;
-  }
-
-  /**
-   * @deprecated To be abstracted away.
-   */
-  get repo(): Repo {
-    return this._repo;
+    this._sharePolicyChangedTask = undefined;
   }
 
   get peerId(): PeerId {
@@ -253,6 +292,10 @@ export class AutomergeHost extends Resource {
 
   get loadedDocsCount(): number {
     return Object.keys(this._repo.handles).length;
+  }
+
+  get handles(): Readonly<Record<DocumentId, DocHandle<any>>> {
+    return this._repo.handles;
   }
 
   async addReplicator(replicator: EchoReplicator): Promise<void> {
@@ -276,7 +319,22 @@ export class AutomergeHost extends Resource {
       handle = this._repo.handles[documentId as DocumentId];
     }
     if (!handle) {
-      handle = await this._repo.find(documentId as DocumentId, FIND_PARAMS);
+      if (!opts?.fetchFromNetwork) {
+        handle = await this._repo.find(documentId as DocumentId, FIND_PARAMS);
+      } else {
+        try {
+          handle = await this._repo.find(documentId as DocumentId, {
+            allowableStates: ['ready', 'requesting', 'unavailable'],
+          });
+          if (handle.state === 'requesting' || handle.state === 'unavailable') {
+            this._documentsToRequest.add(handle.documentId);
+            this._sharePolicyChangedTask!.schedule();
+          }
+        } catch (err) {
+          log.error('failed to load document', { documentId, err });
+          throw err;
+        }
+      }
     }
 
     // `whenReady` creates a timeout so we guard it with an if to skip it if the handle is already ready.
@@ -302,11 +360,11 @@ export class AutomergeHost extends Resource {
   /**
    * Create new persisted document.
    */
-  createDoc<T>(initialValue?: T | Doc<T> | Uint8Array, opts?: CreateDocOptions): DocHandle<T> {
+  async createDoc<T>(initialValue?: T | Doc<T> | Uint8Array, opts?: CreateDocOptions): Promise<DocHandle<T>> {
     invariant(this.isOpen, 'AutomergeHost is not open');
     if (opts?.preserveHistory) {
       if (initialValue instanceof Uint8Array) {
-        return this._repo.import(initialValue);
+        return this._repo.import(initialValue, { docId: opts?.documentId });
       }
 
       if (!isAutomerge(initialValue)) {
@@ -314,13 +372,22 @@ export class AutomergeHost extends Resource {
       }
 
       // TODO(dmaretskyi): There's a more efficient way.
-      return this._repo.import(save(initialValue as Doc<T>));
+      const handle = this._repo.import(save(initialValue as Doc<T>), { docId: opts?.documentId });
+      this._createdDocuments.add(handle.documentId);
+      this._sharePolicyChangedTask!.schedule();
+      return handle as DocHandle<T>;
     } else {
       if (initialValue instanceof Uint8Array) {
         throw new Error('Cannot create document from Uint8Array without preserving history');
       }
 
-      return this._repo.create(initialValue);
+      if (opts?.documentId) {
+        throw new Error('Cannot prefil document id when not importing an existing doc');
+      }
+      const handle = await this._repo.create2<T>(initialValue);
+      this._createdDocuments.add(handle.documentId);
+      this._sharePolicyChangedTask!.schedule();
+      return handle;
     }
   }
 
@@ -373,28 +440,42 @@ export class AutomergeHost extends Resource {
     log('done re-indexing heads');
   }
 
-  // TODO(dmaretskyi): Share based on HALO permissions and space affinity.
-  // Hosts, running in the worker, don't share documents unless requested by other peers.
-  // NOTE: If both peers return sharePolicy=false the replication will not happen
-  // https://github.com/automerge/automerge-repo/pull/292
-  private async _sharePolicy(peerId: PeerId, documentId?: DocumentId): Promise<boolean> {
-    if (peerId.startsWith('client-')) {
-      return false; // Only send docs to clients if they are requested.
-    }
+  private readonly _shareConfig = {
+    access: async (peerId: PeerId, documentId: DocumentId): Promise<boolean> => {
+      return true;
+    },
 
-    if (!documentId) {
+    // TODO(dmaretskyi): Share based on HALO permissions and space affinity.
+    // Hosts, running in the worker, don't share documents unless requested by other peers.
+    // NOTE: If both peers return sharePolicy=false the replication will not happen
+    // https://github.com/automerge/automerge-repo/pull/292
+    // Called for all loaded documents so they could be advertised to the sync server.
+    announce: async (peerId: PeerId, documentId?: DocumentId): Promise<boolean> => {
+      if (!documentId) {
+        return false;
+      }
+
+      if (OPTIMIZED_SHARE_POLICY) {
+        if (
+          !this._createdDocuments.has(documentId) &&
+          !this._documentsToSync.has(documentId) &&
+          !this._documentsToRequest.has(documentId)
+        ) {
+          // Skip advertising documents that don't need to be synced.
+          return false;
+        }
+      }
+
+      const peerMetadata = this._repo.peerMetadataByPeerId[peerId];
+      if (isEchoPeerMetadata(peerMetadata)) {
+        return this._echoNetworkAdapter.shouldAdvertise(peerId, { documentId });
+      }
+
       return false;
-    }
+    },
+  };
 
-    const peerMetadata = this.repo.peerMetadataByPeerId[peerId];
-    if (isEchoPeerMetadata(peerMetadata)) {
-      return this._echoNetworkAdapter.shouldAdvertise(peerId, { documentId });
-    }
-
-    return false;
-  }
-
-  private async _beforeSave({ path, batch }: BeforeSaveParams): Promise<void> {
+  private async _beforeSave({ path, batch }: BeforeSaveProps): Promise<void> {
     const handle = this._repo.handles[path[0] as DocumentId];
     if (!handle || !handle.isReady()) {
       return;
@@ -456,7 +537,7 @@ export class AutomergeHost extends Resource {
     return this._repo.peers;
   }
 
-  private async _isDocumentInRemoteCollection(params: RemoteDocumentExistenceCheckParams): Promise<boolean> {
+  private async _isDocumentInRemoteCollection(params: RemoteDocumentExistenceCheckProps): Promise<boolean> {
     for (const collectionId of this._collectionSynchronizer.getRegisteredCollectionIds()) {
       const remoteCollections = this._collectionSynchronizer.getRemoteCollectionStates(collectionId);
       const remotePeerDocs = remoteCollections.get(params.peerId as PeerId)?.documents;
@@ -532,6 +613,13 @@ export class AutomergeHost extends Resource {
       }
     }
     return result;
+  }
+
+  /**
+   * Iterate over all document heads stored on disk.
+   */
+  listDocumentHeads(): AsyncGenerator<{ documentId: DocumentId; heads: Heads }> {
+    return this._headsStore.iterateAll();
   }
 
   //
@@ -688,12 +776,14 @@ export class AutomergeHost extends Resource {
 
     // Load the documents so they will start syncing.
     for (const documentId of toReplicateWithoutBatching) {
+      // Unless we track the document in "to sync" list, it will not be advertised.
+      this._documentsToSync!.add(documentId);
       this._repo.findWithProgress(documentId);
     }
+    this._sharePolicyChangedTask!.schedule();
   }
 
   // TODO(mykola): Add retries of batches https://gist.github.com/mykola-vrmchk/fde270259e9209fcbf1331e5abbf12cf
-  // TODO(mykola): Use effect to retry batches.
   private async _pushInBundles(
     peerId: PeerId,
     documentIds: DocumentId[],
@@ -799,10 +889,13 @@ export class AutomergeHost extends Resource {
 
     for (const collectionId of this._collectionSynchronizer.getRegisteredCollectionIds()) {
       const state = this._collectionSynchronizer.getLocalCollectionState(collectionId);
+      if (!state) {
+        continue;
+      }
       let newState: CollectionState | undefined;
 
       for (const [documentId, heads] of docHeads) {
-        if (state?.documents[documentId]) {
+        if (documentId in state.documents) {
           if (!newState) {
             newState = structuredClone(state);
           }

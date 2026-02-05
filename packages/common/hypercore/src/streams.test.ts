@@ -2,7 +2,7 @@
 // Copyright 2019 DXOS.org
 //
 
-import util from 'node:util';
+import { promisify } from 'node:util';
 
 import { Writable } from 'streamx';
 import { describe, test } from 'vitest';
@@ -35,7 +35,7 @@ describe('Streams', () => {
     );
 
     {
-      const append = util.promisify(core.append.bind(core));
+      const append = promisify(core.append.bind(core));
       for (const i of Array.from(Array(numBlocks)).keys()) {
         await append(`message-${i}`);
       }
@@ -71,7 +71,7 @@ describe('Streams', () => {
     }
     await closed();
 
-    const close = util.promisify(core.close.bind(core));
+    const close = promisify(core.close.bind(core));
     await close();
   });
 });

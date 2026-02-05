@@ -4,11 +4,11 @@
 
 import React, { type FC } from 'react';
 
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 import { Unit } from '@dxos/util';
 
 const SLOW_TIME = 250;
 
 export const Duration: FC<{ duration: number }> = ({ duration }) => (
-  <span className={mx(duration > SLOW_TIME && 'text-red-500')}>{Unit.Duration(duration)}</span>
+  <span className={mx(duration > SLOW_TIME && 'text-red-500')}>{String(Unit.Duration(duration))}</span>
 );

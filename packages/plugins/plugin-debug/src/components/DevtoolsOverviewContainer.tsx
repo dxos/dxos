@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Surface } from '@dxos/app-framework';
+import { Surface } from '@dxos/app-framework/react';
 import { StatsPanel, useStats } from '@dxos/devtools';
 
 export const DevtoolsOverviewContainer = () => {

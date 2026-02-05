@@ -31,6 +31,7 @@ import React, {
   forwardRef,
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from 'react';
@@ -40,9 +41,9 @@ import { useElevationContext, useThemeContext } from '../../hooks';
 import { useSafeCollisionPadding } from '../../hooks/useSafeCollisionPadding';
 import { type ThemedClassName } from '../../util';
 
-/* -------------------------------------------------------------------------------------------------
- * Popover
- * ----------------------------------------------------------------------------------------------- */
+//
+// Context
+//
 
 const POPOVER_NAME = 'Popover';
 
@@ -63,6 +64,10 @@ type PopoverContextValue = {
 };
 
 const [PopoverProvider, usePopoverContext] = createPopoverContext<PopoverContextValue>(POPOVER_NAME);
+
+//
+// PopoverRoot
+//
 
 interface PopoverRootProps {
   children?: ReactNode;
@@ -105,9 +110,9 @@ const PopoverRoot: FC<PopoverRootProps> = (props: ScopedProps<PopoverRootProps>)
 
 PopoverRoot.displayName = POPOVER_NAME;
 
-/* -------------------------------------------------------------------------------------------------
- * PopoverAnchor
- * ----------------------------------------------------------------------------------------------- */
+//
+// PopoverAnchor
+//
 
 const ANCHOR_NAME = 'PopoverAnchor';
 
@@ -133,9 +138,9 @@ const PopoverAnchor = forwardRef<PopoverAnchorElement, PopoverAnchorProps>(
 
 PopoverAnchor.displayName = ANCHOR_NAME;
 
-/* -------------------------------------------------------------------------------------------------
- * PopoverTrigger
- * ----------------------------------------------------------------------------------------------- */
+//
+// PopoverTrigger
+//
 
 const TRIGGER_NAME = 'PopoverTrigger';
 
@@ -175,9 +180,9 @@ const PopoverTrigger = forwardRef<PopoverTriggerElement, PopoverTriggerProps>(
 
 PopoverTrigger.displayName = TRIGGER_NAME;
 
-/* -------------------------------------------------------------------------------------------------
- * PopoverVirtualTrigger
- * ----------------------------------------------------------------------------------------------- */
+//
+// PopoverVirtualTrigger
+//
 
 const VIRTUAL_TRIGGER_NAME = 'PopoverVirtualTrigger';
 
@@ -199,9 +204,9 @@ const PopoverVirtualTrigger = (props: ScopedProps<PopoverVirtualTriggerProps>) =
 
 PopoverVirtualTrigger.displayName = VIRTUAL_TRIGGER_NAME;
 
-/* -------------------------------------------------------------------------------------------------
- * PopoverPortal
- * ----------------------------------------------------------------------------------------------- */
+//
+// PopoverPortal
+//
 
 const PORTAL_NAME = 'PopoverPortal';
 
@@ -240,9 +245,9 @@ const PopoverPortal: FC<PopoverPortalProps> = (props: ScopedProps<PopoverPortalP
 
 PopoverPortal.displayName = PORTAL_NAME;
 
-/* -------------------------------------------------------------------------------------------------
- * PopoverContent
- * ----------------------------------------------------------------------------------------------- */
+//
+// PopoverContent
+//
 
 const CONTENT_NAME = 'PopoverContent';
 
@@ -273,8 +278,6 @@ const PopoverContent = forwardRef<PopoverContentTypeElement, PopoverContentProps
 );
 
 PopoverContent.displayName = CONTENT_NAME;
-
-/* ----------------------------------------------------------------------------------------------- */
 
 type PopoverContentTypeElement = PopoverContentImplElement;
 export interface PopoverContentTypeProps
@@ -390,8 +393,6 @@ const PopoverContentNonModal = forwardRef<PopoverContentTypeElement, PopoverCont
   },
 );
 
-/* ----------------------------------------------------------------------------------------------- */
-
 type PopoverContentImplElement = ElementRef<typeof PopperPrimitive.Content>;
 type FocusScopeProps = ComponentPropsWithoutRef<typeof FocusScope>;
 type DismissableLayerProps = ComponentPropsWithoutRef<typeof DismissableLayer>;
@@ -432,6 +433,7 @@ const PopoverContentImpl = forwardRef<PopoverContentImplElement, PopoverContentI
       onFocusOutside,
       onInteractOutside,
       collisionPadding = 8,
+      collisionBoundary,
       classNames,
       ...contentProps
     } = props;
@@ -443,6 +445,20 @@ const PopoverContentImpl = forwardRef<PopoverContentImplElement, PopoverContentI
 
     // Make sure the whole tree has focus guards as our `Popover` may be the last element in the DOM (because of the `Portal`)
     useFocusGuards();
+
+    // Check for the closest annotated collision boundary in the DOM tree.
+    const computedCollisionBoundary = useMemo(() => {
+      const closestBoundary = context.triggerRef.current?.closest(
+        '[data-popover-collision-boundary]',
+      ) as HTMLElement | null;
+      return closestBoundary
+        ? Array.isArray(collisionBoundary)
+          ? [closestBoundary, ...collisionBoundary]
+          : collisionBoundary
+            ? [closestBoundary, collisionBoundary]
+            : [closestBoundary]
+        : collisionBoundary;
+    }, [context.open, collisionBoundary, context.triggerRef.current]);
 
     return (
       <FocusScope
@@ -468,6 +484,7 @@ const PopoverContentImpl = forwardRef<PopoverContentImplElement, PopoverContentI
             {...popperScope}
             {...contentProps}
             collisionPadding={safeCollisionPadding}
+            collisionBoundary={computedCollisionBoundary}
             className={tx('popover.content', 'popover', { elevation }, classNames)}
             ref={forwardedRef}
             style={{
@@ -488,9 +505,9 @@ const PopoverContentImpl = forwardRef<PopoverContentImplElement, PopoverContentI
   },
 );
 
-/* -------------------------------------------------------------------------------------------------
- * PopoverClose
- * ----------------------------------------------------------------------------------------------- */
+//
+// PopoverClose
+//
 
 const CLOSE_NAME = 'PopoverClose';
 
@@ -514,9 +531,9 @@ const PopoverClose = forwardRef<PopoverCloseElement, PopoverCloseProps>(
 
 PopoverClose.displayName = CLOSE_NAME;
 
-/* -------------------------------------------------------------------------------------------------
- * PopoverArrow
- * ----------------------------------------------------------------------------------------------- */
+//
+// PopoverArrow
+//
 
 const ARROW_NAME = 'PopoverArrow';
 
@@ -542,9 +559,9 @@ const PopoverArrow = forwardRef<PopoverArrowElement, PopoverArrowProps>(
 
 PopoverArrow.displayName = ARROW_NAME;
 
-/* -------------------------------------------------------------------------------------------------
- * PopoverViewport
- * ----------------------------------------------------------------------------------------------- */
+//
+// PopoverViewport
+//
 
 type PopoverViewportProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.div>> & {
   asChild?: boolean;
@@ -568,11 +585,13 @@ const PopoverViewport = forwardRef<HTMLDivElement, PopoverViewportProps>(
   },
 );
 
-/* ----------------------------------------------------------------------------------------------- */
-
 const getState = (open: boolean) => (open ? 'open' : 'closed');
 
 type PopoverContentInteractOutsideEvent = Parameters<NonNullable<PopoverContentProps['onInteractOutside']>>[0];
+
+//
+// Popver
+//
 
 export const Popover = {
   Root: PopoverRoot,

@@ -1,12 +1,11 @@
+import { type Database } from '@dxos/echo';
+import { type Project } from '@dxos/types';
 //
 // Copyright 2025 DXOS.org
 //
 
-import { type Space } from '@dxos/react-client/echo';
-import { type DataType } from '@dxos/schema';
+import { createResearchProject } from './research';
 
-import { orgResearchTemplate } from './org-research';
-
-export const templates: Record<string, (space: Space) => Promise<DataType.Project>> = {
-  'org-research': orgResearchTemplate,
+export const templates: Record<string, (db: Database.Database) => Promise<Project.Project | null>> = {
+  'org-research': createResearchProject,
 };

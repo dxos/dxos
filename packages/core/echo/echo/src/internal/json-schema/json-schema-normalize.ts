@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+import type * as Types from 'effect/Types';
+
 import { JsonSchemaFields, type JsonSchemaType } from './json-schema-type';
 
 /**
@@ -9,12 +11,12 @@ import { JsonSchemaFields, type JsonSchemaType } from './json-schema-type';
  * Note: the input type does not necessarily match the {@link JsonSchemaType} type.
  */
 export const normalizeSchema = (schema: JsonSchemaType): JsonSchemaType => {
-  const copy = structuredClone(schema);
+  const copy = structuredClone(schema) as Types.DeepMutable<JsonSchemaType>;
   go(copy);
   return copy;
 };
 
-const go = (schema: JsonSchemaType) => {
+const go = (schema: Types.DeepMutable<JsonSchemaType>) => {
   if (typeof schema !== 'object' || schema === null) {
     return;
   }

@@ -5,12 +5,13 @@
 import React from 'react';
 
 import { type KeyBinding, Keyboard } from '@dxos/keyboard';
-import { Button, Icon, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { IconButton, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { osTranslations } from '@dxos/ui-theme';
 
 import { Key } from './Key';
 
 const Shortcut = ({ binding }: { binding: KeyBinding }) => {
-  const { t } = useTranslation('os');
+  const { t } = useTranslation(osTranslations);
   return (
     <div role='none' className='flex items-center gap-2 whitespace-nowrap'>
       <Key binding={binding.shortcut} />
@@ -26,14 +27,21 @@ export const ShortcutsHints = ({ onClose }: { onClose?: () => void }) => {
   const hints = bindings.filter((binding) => defaults.includes(binding.shortcut));
 
   return (
-    <div role='none' className='flex overflow-hidden px-2 gap-4'>
+    <div role='none' className='flex overflow-hidden pli-2 gap-4'>
       {hints.map((binding) => (
         <Shortcut key={binding.shortcut} binding={binding} />
       ))}
       {onClose && (
-        <Button variant='ghost' classNames='p-0 cursor-pointer' onClick={onClose}>
-          <Icon icon='ph--x--regular' size={4} />
-        </Button>
+        <IconButton
+          icon='ph--x--regular'
+          size={4}
+          label='Close'
+          iconOnly
+          noTooltip
+          variant='ghost'
+          classNames='p-0 cursor-pointer'
+          onClick={onClose}
+        />
       )}
     </div>
   );

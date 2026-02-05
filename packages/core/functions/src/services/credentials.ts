@@ -11,9 +11,8 @@ import * as Layer from 'effect/Layer';
 import * as Redacted from 'effect/Redacted';
 
 import { Query } from '@dxos/echo';
-import { DataType } from '@dxos/schema';
-
-import { DatabaseService } from './database';
+import { Database } from '@dxos/echo';
+import { AccessToken } from '@dxos/types';
 
 export type CredentialQuery = {
   service?: string;
@@ -61,7 +60,12 @@ export class CredentialsService extends Context.Tag('@dxos/functions/Credentials
   static configuredLayer = (credentials: ServiceCredential[]) =>
     Layer.succeed(CredentialsService, new ConfiguredCredentialsService(credentials));
 
-  static layerConfig = (credentials: { service: string; apiKey: Config.Config<Redacted.Redacted<string>> }[]) =>
+  static layerConfig = (
+    credentials: {
+      service: string;
+      apiKey: Config.Config<Redacted.Redacted<string>>;
+    }[],
+  ) =>
     Layer.effect(
       CredentialsService,
       Effect.gen(function* () {
@@ -78,20 +82,34 @@ export class CredentialsService extends Context.Tag('@dxos/functions/Credentials
       }),
     );
 
-  static layerFromDatabase = () =>
+  static layerFromDatabase = ({ caching = false }: { caching?: boolean } = {}) =>
     Layer.effect(
       CredentialsService,
       Effect.gen(function* () {
-        const dbService = yield* DatabaseService;
+        const dbService = yield* Database.Service;
+        const cache = new Map<string, ServiceCredential[]>();
+
         const queryCredentials = async (query: CredentialQuery): Promise<ServiceCredential[]> => {
-          const { objects: accessTokens } = await dbService.db.query(Query.type(DataType.AccessToken)).run();
-          return accessTokens
+          const cacheKey = JSON.stringify(query);
+          if (caching && cache.has(cacheKey)) {
+            return cache.get(cacheKey)!;
+          }
+
+          const accessTokens = await dbService.db.query(Query.type(AccessToken.AccessToken)).run();
+          const credentials = accessTokens
             .filter((accessToken) => accessToken.source === query.service)
             .map((accessToken) => ({
               service: accessToken.source,
               apiKey: accessToken.token,
             }));
+
+          if (caching) {
+            cache.set(cacheKey, credentials);
+          }
+
+          return credentials;
         };
+
         return {
           getCredential: async (query) => {
             const credentials = await queryCredentials(query);
@@ -132,13 +150,10 @@ export class ConfiguredCredentialsService implements Context.Tag.Service<Credent
 }
 
 /**
- * Maps the request to include the API key from the credential.
+ * Maps the request to include the given token in the Authorization header.
  */
-export const withAuthorization = (query: CredentialQuery, kind?: 'Bearer' | 'Basic') =>
-  HttpClient.mapRequestEffect(
-    Effect.fnUntraced(function* (request) {
-      const key = yield* CredentialsService.getApiKey(query).pipe(Effect.map(Redacted.value));
-      const authorization = kind ? `${kind} ${key}` : key;
-      return HttpClientRequest.setHeader(request, 'Authorization', authorization);
-    }),
-  );
+export const withAuthorization = (token: string, kind?: 'Bearer' | 'Basic') =>
+  HttpClient.mapRequest((request) => {
+    const authorization = kind ? `${kind} ${token}` : token;
+    return HttpClientRequest.setHeader(request, 'Authorization', authorization);
+  });

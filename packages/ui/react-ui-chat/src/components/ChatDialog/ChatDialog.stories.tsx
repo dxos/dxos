@@ -42,7 +42,7 @@ const meta = {
               </div>
             ))}
           </ChatDialog.Content>
-          <ChatDialog.Footer classNames='px-2 items-center'>
+          <ChatDialog.Footer classNames='pli-2 items-center'>
             <Input.Root>
               <Input.TextInput classNames='border-none' placeholder='Test' />
             </Input.Root>
@@ -51,7 +51,7 @@ const meta = {
       </>
     );
   },
-  decorators: [withTheme, withLayout({ container: 'column' })],
+  decorators: [withTheme, withLayout({ layout: 'column' })],
   parameters: {
     translations,
   },

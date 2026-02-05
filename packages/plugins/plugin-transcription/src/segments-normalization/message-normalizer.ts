@@ -6,24 +6,22 @@
 // Copyright 2025 DXOS.org
 //
 
-import { effect } from '@preact/signals-core';
-
 import { DeferredTask, asyncTimeout } from '@dxos/async';
 import { LifecycleState, Resource } from '@dxos/context';
 import { type Queue } from '@dxos/echo-db';
-import { type FunctionExecutor } from '@dxos/functions';
+import { type FunctionExecutor } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
-import { type DataType } from '@dxos/schema';
+import { type Message } from '@dxos/types';
 
-import { type MessageWithRangeId, sentenceNormalization } from './normalization';
+import { type MessageWithRangeId, type NormalizationOutput, sentenceNormalization } from './normalization';
 import { getActorId } from './utils';
 
 const PROCESSING_TIMEOUT = 20_000; // ms
 const MAX_RANGE_ID_COUNT = 10;
 
-export type SegmentsNormalizerParams = {
+export type SegmentsNormalizerProps = {
   functionExecutor: FunctionExecutor;
-  queue: Queue<DataType.Message>;
+  queue: Queue<Message.Message>;
   startingCursor: QueueCursor;
 };
 
@@ -36,13 +34,13 @@ export type QueueCursor = {
 // TODO(mykola): .
 export class MessageNormalizer extends Resource {
   private readonly _functionExecutor: FunctionExecutor;
-  private _queue: Queue<DataType.Message>;
+  private _queue: Queue<Message.Message>;
   private _cursor: QueueCursor;
   private _messagesToProcess: MessageWithRangeId[] = [];
   private _normalizationTask?: DeferredTask;
   private _lastProcessedMessageIds?: string[];
 
-  constructor({ functionExecutor, queue, startingCursor }: SegmentsNormalizerParams) {
+  constructor({ functionExecutor, queue, startingCursor }: SegmentsNormalizerProps) {
     super();
     this._functionExecutor = functionExecutor;
     this._queue = queue;
@@ -51,7 +49,8 @@ export class MessageNormalizer extends Resource {
 
   protected override async _open(): Promise<void> {
     this._normalizationTask = new DeferredTask(this._ctx, () => this._processMessages());
-    const unsubscribe = effect(() => {
+
+    const updateMessages = () => {
       if (this._lifecycleState !== LifecycleState.OPEN) {
         return;
       }
@@ -62,8 +61,14 @@ export class MessageNormalizer extends Resource {
       });
 
       this._normalizationTask!.schedule();
-    });
-    this._ctx.onDispose(() => unsubscribe());
+    };
+
+    // Initial update.
+    updateMessages();
+
+    // Subscribe to queue changes.
+    const unsubscribe = this._queue.subscribe(updateMessages);
+    this._ctx.onDispose(unsubscribe);
   }
 
   // Need to unpack strings from blocks from messages run them through the function and then pack them back into blocks into messages.
@@ -81,7 +86,7 @@ export class MessageNormalizer extends Resource {
 
     try {
       // TODO(mykola): Executor should support timeout.
-      const response = await asyncTimeout(
+      const response: NormalizationOutput = await asyncTimeout(
         this._functionExecutor.invoke(sentenceNormalization, { messages }),
         PROCESSING_TIMEOUT,
       );

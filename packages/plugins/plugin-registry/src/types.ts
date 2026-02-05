@@ -11,3 +11,7 @@ export const RegistrySettingsSchema = Schema.mutable(
 );
 
 export type RegistrySettings = Schema.Schema.Type<typeof RegistrySettingsSchema>;
+
+export const RegistryTagType = Schema.Literal('new', 'beta', 'labs', 'popular', 'featured', 'experimental');
+
+export type RegistryTagType = Schema.Schema.Type<typeof RegistryTagType>;

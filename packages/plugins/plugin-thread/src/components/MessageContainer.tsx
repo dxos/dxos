@@ -5,16 +5,19 @@
 import { EditorView } from '@codemirror/view';
 import React, { forwardRef, useCallback, useEffect, useRef, useState } from 'react';
 
-import { Surface } from '@dxos/app-framework';
-import { type Obj, Ref, type Type } from '@dxos/echo';
+import { Surface } from '@dxos/app-framework/react';
+import { type Obj, Ref } from '@dxos/echo';
+import { useObject } from '@dxos/echo-react';
 import { PublicKey } from '@dxos/react-client';
 import { type SpaceMember } from '@dxos/react-client/echo';
 import { type Identity, useIdentity } from '@dxos/react-client/halo';
 import { IconButton, useOnTransition, useThemeContext, useTranslation } from '@dxos/react-ui';
-import { createBasicExtensions, createThemeExtensions, useTextEditor } from '@dxos/react-ui-editor';
-import { hoverableControlItem, hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/react-ui-theme';
+import { useTextEditor } from '@dxos/react-ui-editor';
+import { Card } from '@dxos/react-ui-mosaic';
 import { MessageHeading, MessageRoot } from '@dxos/react-ui-thread';
-import { type DataType } from '@dxos/schema';
+import { type ContentBlock, type Message } from '@dxos/types';
+import { createBasicExtensions, createThemeExtensions } from '@dxos/ui-editor';
+import { hoverableControlItem, hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/ui-theme';
 
 import { useOnEditAnalytics } from '../hooks';
 import { meta } from '../meta';
@@ -26,7 +29,7 @@ export const buttonGroupClassNames = 'flex flex-row items-center gap-0.5 pie-2';
 export const buttonClassNames = '!p-1 transition-opacity';
 
 export type MessageContainerProps = {
-  message: DataType.Message;
+  message: Obj.Obj<Message.Message> | Ref.Ref<Obj.Obj<Message.Message>>;
   members: SpaceMember[];
   editable?: boolean;
   onDelete?: (id: string) => void;
@@ -34,29 +37,54 @@ export type MessageContainerProps = {
 };
 
 export const MessageContainer = ({
-  message,
+  message: messageOrRef,
   members,
   editable = false,
   onDelete,
   onAcceptProposal,
 }: MessageContainerProps) => {
   const { t } = useTranslation(meta.id);
+  const [message, updateMessage] = useObject(messageOrRef);
+  const identity = useIdentity();
+  const [editing, setEditing] = useState(false);
+
+  const textBlockIndex = message?.blocks.findIndex((block) => block._tag === 'text') ?? -1;
+
+  const handleEdit = useCallback(() => setEditing((editing) => !editing), []);
+  const handleDelete = useCallback(() => message && onDelete?.(message.id), [message, onDelete]);
+  const handleAcceptProposal = useCallback(
+    () => message && onAcceptProposal?.(message.id),
+    [message, onAcceptProposal],
+  );
+  const handleTextBlockChange = useCallback(
+    (newText: string) => {
+      updateMessage((m) => {
+        const targetBlock = m.blocks[textBlockIndex];
+        if (targetBlock && targetBlock._tag === 'text') {
+          targetBlock.text = newText;
+        }
+      });
+    },
+    [updateMessage, textBlockIndex],
+  );
+
+  const textBlock =
+    message && textBlockIndex !== -1 ? (message.blocks[textBlockIndex] as ContentBlock.Text) : undefined;
+  useOnEditAnalytics(message, textBlock, !!editing);
+
+  if (!message) {
+    return null;
+  }
+
   const senderIdentity = members.find(
     (member) =>
       (message.sender.identityDid && member.identity.did === message.sender.identityDid) ||
       (message.sender.identityKey && PublicKey.equals(member.identity.identityKey, message.sender.identityKey)),
   )?.identity;
   const messageMetadata = getMessageMetadata(message.id, senderIdentity);
-  const userIsAuthor = useIdentity()?.did === messageMetadata.authorId;
-  const [editing, setEditing] = useState(false);
-  const handleEdit = useCallback(() => setEditing((editing) => !editing), []);
-  const handleDelete = useCallback(() => onDelete?.(message.id), [message, onDelete]);
-  const handleAcceptProposal = useCallback(() => onAcceptProposal?.(message.id), [message, onAcceptProposal]);
-  const textBlock = message.blocks.find((block) => block._tag === 'text');
+  const userIsAuthor = identity?.did === messageMetadata.authorId;
   const proposalBlock = message.blocks.find((block) => block._tag === 'proposal');
   const references = message.blocks.filter((block) => block._tag === 'reference').map((block) => block.reference);
-
-  useOnEditAnalytics(message, textBlock, !!editing);
 
   return (
     <MessageRoot {...messageMetadata} classNames={[hoverableControls, hoverableFocusedWithinControls]}>
@@ -98,16 +126,18 @@ export const MessageContainer = ({
           )}
         </div>
       </MessageHeading>
-      {textBlock && <TextboxBlock block={textBlock} isAuthor={userIsAuthor} editing={editing} />}
+      {textBlock && (
+        <TextboxBlock block={textBlock} isAuthor={userIsAuthor} editing={editing} onSave={handleTextBlockChange} />
+      )}
       {proposalBlock && <ProposalBlock block={proposalBlock} />}
       {Ref.Array.targets(references).map((reference, index) => (
-        <MessagePart key={index} part={reference} />
+        <MessagePart key={index} part={reference as Obj.Unknown} />
       ))}
     </MessageRoot>
   );
 };
 
-const MessagePart = ({ part }: { part: Type.Expando }) => {
+const MessagePart = ({ part }: { part: Obj.Unknown }) => {
   return <MessageBlockObjectTile subject={part} />;
 };
 
@@ -115,11 +145,13 @@ const TextboxBlock = ({
   block,
   isAuthor,
   editing,
+  onSave,
 }: {
-  block: DataType.MessageBlock.Text;
+  block: ContentBlock.Text;
   editing?: boolean;
   isAuthor?: boolean;
   identity?: Identity;
+  onSave?: (newText: string) => void;
 }) => {
   const { themeMode } = useThemeContext();
   const inMemoryContentRef = useRef(block.text);
@@ -129,8 +161,8 @@ const TextboxBlock = ({
   }, []);
 
   const saveDocumentChange = useCallback(() => {
-    block.text = inMemoryContentRef.current;
-  }, [block]);
+    onSave?.(inMemoryContentRef.current);
+  }, [onSave]);
 
   useOnTransition(editing, true, false, saveDocumentChange);
 
@@ -158,7 +190,7 @@ const TextboxBlock = ({
   return <div role='none' ref={parentRef} className='mie-4' {...focusAttributes} />;
 };
 
-const ProposalBlock = ({ block }: { block: DataType.MessageBlock.Proposal }) => {
+const ProposalBlock = ({ block }: { block: ContentBlock.Proposal }) => {
   return (
     <div role='none' className='mie-4 italic'>
       {block.text}
@@ -166,7 +198,7 @@ const ProposalBlock = ({ block }: { block: DataType.MessageBlock.Proposal }) => 
   );
 };
 
-const MessageBlockObjectTile = forwardRef<HTMLDivElement, { subject: Obj.Any }>(({ subject }, forwardedRef) => {
+const MessageBlockObjectTile = forwardRef<HTMLDivElement, { subject: Obj.Unknown }>(({ subject }, forwardedRef) => {
   // TODO(burdon): Use annotation to get title.
   let title = (subject as any).name ?? (subject as any).title ?? (subject as any).type ?? 'Object';
   if (typeof title !== 'string') {
@@ -174,12 +206,11 @@ const MessageBlockObjectTile = forwardRef<HTMLDivElement, { subject: Obj.Any }>(
   }
 
   return (
-    <div
-      role='group'
-      className={mx('grid col-span-3 py-1 pr-4', hoverableControls, hoverableFocusedWithinControls)}
+    <Card.Root
+      className={mx('grid col-span-3 plb-1 pr-4', hoverableControls, hoverableFocusedWithinControls)}
       ref={forwardedRef}
     >
-      <Surface role='card' limit={1} data={{ subject }} fallback={title} />
-    </div>
+      <Surface role='card-content' limit={1} data={{ subject }} fallback={title} />
+    </Card.Root>
   );
 });

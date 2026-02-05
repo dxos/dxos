@@ -5,12 +5,12 @@
 import { type Resource } from '@dxos/react-ui';
 
 import { meta } from './meta';
-import { DiagramType } from './types';
+import { Diagram } from './types';
 
 export const translations = [
   {
     'en-US': {
-      [DiagramType.typename]: {
+      [Diagram.Diagram.typename]: {
         'typename label': 'Sketch',
         'typename label_zero': 'Sketches',
         'typename label_one': 'Sketch',
@@ -18,6 +18,7 @@ export const translations = [
         'object name placeholder': 'New sketch',
         'rename object label': 'Rename sketch',
         'delete object label': 'Delete sketch',
+        'object deleted label': 'Sketch deleted',
       },
       [meta.id]: {
         'plugin name': 'Sketch',

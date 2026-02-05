@@ -7,10 +7,22 @@ import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
+import { type ModelName } from './defs';
 import { AiModelNotAvailableError } from './errors';
-import { type ModelName } from './model';
+
+export type ServiceMetadata = {
+  name: string;
+};
 
 export interface Service {
+  /**
+   * Service metadata.
+   */
+  readonly metadata?: ServiceMetadata;
+
+  /**
+   * Maps model name ont a LanguageModel layer.
+   */
   readonly model: (model: ModelName) => Layer.Layer<LanguageModel.LanguageModel, AiModelNotAvailableError, never>;
 }
 

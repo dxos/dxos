@@ -7,7 +7,7 @@ import { cleanup, fireEvent, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, test } from 'vitest';
 
 import { EchoSchema, isInstanceOf } from '@dxos/echo/internal';
-import { DataType, ProjectionModel } from '@dxos/schema';
+import { ProjectionModel, View } from '@dxos/schema';
 
 import { VIEW_EDITOR_DEBUG_SYMBOL } from '../testing';
 
@@ -20,7 +20,7 @@ const getViewEditorDebugObjects = (): ViewEditorDebugObjects => {
   const debugObjects = (window as any)[VIEW_EDITOR_DEBUG_SYMBOL] as ViewEditorDebugObjects;
   expect(debugObjects).toBeDefined();
   expect(debugObjects.schema).toBeInstanceOf(EchoSchema);
-  expect(isInstanceOf(DataType.View, debugObjects.view)).toBeTruthy();
+  expect(isInstanceOf(View.View, debugObjects.view)).toBeTruthy();
   expect(debugObjects.projection).toBeInstanceOf(ProjectionModel);
   return debugObjects;
 };
@@ -54,7 +54,7 @@ describe('ViewEditor', () => {
     const nameField = screen.getByText('name');
     fireEvent.click(nameField);
 
-    const fieldInput = screen.getByPlaceholderText('Field name.');
+    const fieldInput = screen.getByPlaceholderText('Property name');
     fireEvent.change(fieldInput, { target: { value: 'new_property' } });
 
     fireEvent.click(screen.getByTestId('save-button'));
@@ -93,8 +93,12 @@ describe('ViewEditor', () => {
     const addButton = screen.getByText('Add property');
     fireEvent.click(addButton);
 
+    // Open the last field.
+    const buttons = screen.getAllByTestId('field.toggle');
+    fireEvent.click(buttons.at(-1)!);
+
     // Fill out the property field.
-    const fieldInput = screen.getByPlaceholderText('Field name.');
+    const fieldInput = screen.getByPlaceholderText('Property name');
     fireEvent.change(fieldInput, { target: { value: 'added_property' } });
 
     // Click the format combo box and select the first option.

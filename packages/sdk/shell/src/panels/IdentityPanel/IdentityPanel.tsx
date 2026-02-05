@@ -12,13 +12,14 @@ import { type Identity, useDevices, useHaloInvitations, useIdentity } from '@dxo
 import { useInvitationStatus } from '@dxos/react-client/invitations';
 import { type CancellableInvitationObservable } from '@dxos/react-client/invitations';
 import { ConnectionState, useNetworkStatus } from '@dxos/react-client/mesh';
-import { Avatar, Clipboard, Icon, Input, Toolbar, Tooltip, useId, useTranslation } from '@dxos/react-ui';
+import { Avatar, Clipboard, Input, Toolbar, useId, useTranslation } from '@dxos/react-ui';
 import { EmojiPickerToolbarButton, HuePicker } from '@dxos/react-ui-pickers';
-import { errorText } from '@dxos/react-ui-theme';
+import { errorText } from '@dxos/ui-theme';
 import { hexToEmoji, hexToHue, keyToFallback } from '@dxos/util';
 
 import { CloseButton, Heading, Viewport } from '../../components';
 import { ConfirmReset, InvitationManager } from '../../steps';
+import { translationKey } from '../../translations';
 
 import { useIdentityMachine } from './identityMachine';
 import {
@@ -48,7 +49,7 @@ const IdentityHeading = ({
   onManageCredentials,
 }: IdentityPanelHeadingProps) => {
   const fallbackValue = keyToFallback(identity.identityKey);
-  const { t } = useTranslation('os');
+  const { t } = useTranslation(translationKey);
   const [displayName, setDisplayNameDirectly] = useState(identity.profile?.displayName ?? '');
   const [emoji, setEmojiDirectly] = useState<string>(getEmojiValue(identity));
   const [hue, setHueDirectly] = useState<string | undefined>(getHueValue(identity));
@@ -56,7 +57,11 @@ const IdentityHeading = ({
   const updateDisplayName = useMemo(
     () =>
       debounce(
-        (nextDisplayName: string) => onUpdateProfile?.({ ...identity.profile, displayName: nextDisplayName }),
+        (nextDisplayName: string) =>
+          onUpdateProfile?.({
+            ...identity.profile,
+            displayName: nextDisplayName,
+          }),
         3_000,
       ),
     [onUpdateProfile, identity.profile],
@@ -69,12 +74,18 @@ const IdentityHeading = ({
 
   const setEmoji = (nextEmoji: string) => {
     setEmojiDirectly(nextEmoji);
-    void onUpdateProfile?.({ ...identity.profile, data: { ...identity.profile?.data, emoji: nextEmoji } });
+    void onUpdateProfile?.({
+      ...identity.profile,
+      data: { ...identity.profile?.data, emoji: nextEmoji },
+    });
   };
 
   const setHue = (nextHue: string | undefined) => {
     setHueDirectly(nextHue);
-    void onUpdateProfile?.({ ...identity.profile, data: { ...identity.profile?.data, hue: nextHue } });
+    void onUpdateProfile?.({
+      ...identity.profile,
+      data: { ...identity.profile?.data, hue: nextHue },
+    });
   };
 
   const isConnected = connectionState === ConnectionState.ONLINE;
@@ -82,7 +93,7 @@ const IdentityHeading = ({
   return (
     <Heading titleId={titleId} title={title} corner={<CloseButton onDone={onDone} />}>
       <Avatar.Root>
-        <Toolbar.Root classNames='flex justify-center'>
+        <Toolbar.Root classNames='justify-center'>
           <Avatar.Content
             size={16}
             variant='circle'
@@ -109,7 +120,7 @@ const IdentityHeading = ({
           />
         </Input.Root>
 
-        <Toolbar.Root classNames='flex justify-center items-center gap-1 pt-3'>
+        <Toolbar.Root classNames='justify-center pt-3'>
           <EmojiPickerToolbarButton emoji={emoji} onChangeEmoji={setEmoji} classNames='bs-[--rail-action]' />
           <HuePicker
             value={hue}
@@ -125,22 +136,23 @@ const IdentityHeading = ({
             value={identity.did}
           />
           {onManageCredentials && (
-            <Tooltip.Trigger asChild content={t('manage credentials label')} side='bottom'>
-              <Toolbar.Button classNames='bs-[--rail-action]' onClick={onManageCredentials}>
-                <span className='sr-only'>{t('manage credentials label')}</span>
-                <Icon icon='ph--identification-card--regular' size={5} />
-              </Toolbar.Button>
-            </Tooltip.Trigger>
+            <Toolbar.IconButton
+              icon='ph--identification-card--regular'
+              label={t('manage credentials label')}
+              iconOnly
+              tooltipSide='bottom'
+              classNames='bs-[--rail-action]'
+              onClick={onManageCredentials}
+            />
           )}
-          <Tooltip.Trigger asChild content={t(isConnected ? 'disconnect label' : 'connect label')} side='bottom'>
-            <Toolbar.Button
-              classNames={['bs-[--rail-action]', !isConnected && errorText]}
-              onClick={() => onChangeConnectionState?.(isConnected ? ConnectionState.OFFLINE : ConnectionState.ONLINE)}
-            >
-              <span className='sr-only'>{t(isConnected ? 'disconnect label' : 'connect label')}</span>
-              <Icon icon={isConnected ? 'ph--plugs-connected--regular' : 'ph--plugs--regular'} size={5} />
-            </Toolbar.Button>
-          </Tooltip.Trigger>
+          <Toolbar.IconButton
+            icon={isConnected ? 'ph--plugs-connected--regular' : 'ph--plugs--regular'}
+            label={t(isConnected ? 'disconnect label' : 'connect label')}
+            iconOnly
+            tooltipSide='bottom'
+            classNames={['bs-[--rail-action]', !isConnected && errorText]}
+            onClick={() => onChangeConnectionState?.(isConnected ? ConnectionState.OFFLINE : ConnectionState.ONLINE)}
+          />
         </Toolbar.Root>
       </Avatar.Root>
     </Heading>
@@ -164,7 +176,7 @@ export const IdentityPanelImpl = (props: IdentityPanelImplProps) => {
     onManageCredentials,
     ...rest
   } = props;
-  const { t } = useTranslation('os');
+  const { t } = useTranslation(translationKey);
   const title = useMemo(() => {
     switch (activeView) {
       case 'device invitation manager':
@@ -244,7 +256,9 @@ export const IdentityPanelImpl = (props: IdentityPanelImplProps) => {
 const IdentityPanelWithInvitationImpl = ({
   invitation,
   ...props
-}: IdentityPanelImplProps & { invitation: CancellableInvitationObservable }) => {
+}: IdentityPanelImplProps & {
+  invitation: CancellableInvitationObservable;
+}) => {
   const invitationStatus = useInvitationStatus(invitation);
   return <IdentityPanelImpl {...props} {...invitationStatus} />;
 };

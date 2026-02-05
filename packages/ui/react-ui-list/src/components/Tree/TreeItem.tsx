@@ -13,7 +13,6 @@ import {
 import * as Schema from 'effect/Schema';
 import React, { type FC, type KeyboardEvent, memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { type HasId } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { TreeItem as NaturalTreeItem, Treegrid } from '@dxos/react-ui';
 import {
@@ -22,7 +21,7 @@ import {
   hoverableControls,
   hoverableFocusedKeyboardControls,
   hoverableFocusedWithinControls,
-} from '@dxos/react-ui-theme';
+} from '@dxos/ui-theme';
 
 import { DEFAULT_INDENTATION, paddingIndentation } from './helpers';
 import { useTree } from './TreeContext';
@@ -43,7 +42,7 @@ export const TreeDataSchema = Schema.Struct({
 export type TreeData = Schema.Schema.Type<typeof TreeDataSchema>;
 export const isTreeData = (data: unknown): data is TreeData => Schema.is(TreeDataSchema)(data);
 
-export type ColumnRenderer<T extends HasId = any> = FC<{
+export type ColumnRenderer<T extends { id: string } = any> = FC<{
   item: T;
   path: string[];
   open: boolean;
@@ -51,26 +50,28 @@ export type ColumnRenderer<T extends HasId = any> = FC<{
   setMenuOpen: (open: boolean) => void;
 }>;
 
-export type TreeItemProps<T extends HasId = any> = {
+export type TreeItemProps<T extends { id: string } = any> = {
   item: T;
   path: string[];
   levelOffset?: number;
   last: boolean;
   draggable?: boolean;
   renderColumns?: ColumnRenderer<T>;
+  blockInstruction?: (params: { instruction: Instruction; source: TreeData; target: TreeData }) => boolean;
   canDrop?: (params: { source: TreeData; target: TreeData }) => boolean;
   canSelect?: (params: { item: T; path: string[] }) => boolean;
   onOpenChange?: (params: { item: T; path: string[]; open: boolean }) => void;
   onSelect?: (params: { item: T; path: string[]; current: boolean; option: boolean }) => void;
 };
 
-const RawTreeItem = <T extends HasId = any>({
+const RawTreeItem = <T extends { id: string } = any>({
   item,
   path: _path,
   levelOffset = 2,
   last,
   draggable: _draggable,
   renderColumns: Columns,
+  blockInstruction,
   canDrop,
   canSelect,
   onOpenChange,
@@ -84,15 +85,12 @@ const RawTreeItem = <T extends HasId = any>({
   const [instruction, setInstruction] = useState<Instruction | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const { useItems, getProps, isOpen, isCurrent } = useTree();
+  const { useItems, getProps, useIsOpen, useIsCurrent } = useTree();
   const items = useItems(item);
-  const { id, parentOf, label, className, headingClassName, icon, iconClassName, disabled, testId } = getProps(
-    item,
-    _path,
-  );
+  const { id, parentOf, label, className, headingClassName, icon, iconHue, disabled, testId } = getProps(item, _path);
   const path = useMemo(() => [..._path, id], [_path, id]);
-  const open = isOpen(path, item);
-  const current = isCurrent(path, item);
+  const open = useIsOpen(path, item);
+  const current = useIsCurrent(path, item);
   const level = path.length - levelOffset;
   const isBranch = !!parentOf;
   const mode: ItemMode = last ? 'last-in-group' : open ? 'expanded' : 'standard';
@@ -152,7 +150,11 @@ const RawTreeItem = <T extends HasId = any>({
         },
         getIsSticky: () => true,
         onDrag: ({ self, source }) => {
-          const instruction = extractInstruction(self.data);
+          const desired = extractInstruction(self.data);
+          const block =
+            desired && blockInstruction?.({ instruction: desired, source: source.data as TreeData, target: data });
+          const instruction: Instruction | null =
+            block && desired.type !== 'instruction-blocked' ? { type: 'instruction-blocked', desired } : desired;
 
           if (source.data.id !== id) {
             if (instruction?.type === 'make-child' && isBranch && !open && !cancelExpandRef.current) {
@@ -183,7 +185,7 @@ const RawTreeItem = <T extends HasId = any>({
         },
       }),
     );
-  }, [_draggable, item, id, mode, path, open, canDrop]);
+  }, [_draggable, item, id, mode, path, open, blockInstruction, canDrop]);
 
   // Cancel expand on unmount.
   useEffect(() => () => cancelExpand(), [cancelExpand]);
@@ -239,7 +241,7 @@ const RawTreeItem = <T extends HasId = any>({
           ghostFocusWithin,
           className,
         ]}
-        data-itemid={id}
+        data-object-id={id}
         data-testid={testId}
         // NOTE(thure): This is intentionally an empty string to for descendents to select by in the CSS
         //   without alerting the user (except for in the correct link element). See also:
@@ -264,7 +266,7 @@ const RawTreeItem = <T extends HasId = any>({
               label={label}
               className={headingClassName}
               icon={icon}
-              iconClassName={iconClassName}
+              iconHue={iconHue}
               onSelect={handleSelect}
               ref={buttonRef}
             />
@@ -282,6 +284,7 @@ const RawTreeItem = <T extends HasId = any>({
             last={index === items.length - 1}
             draggable={_draggable}
             renderColumns={Columns}
+            blockInstruction={blockInstruction}
             canDrop={canDrop}
             canSelect={canSelect}
             onOpenChange={onOpenChange}

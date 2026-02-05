@@ -12,14 +12,15 @@ import { getDeep } from '@dxos/util';
 
 import { ObjectCore } from '../core-db';
 
-import { getObjectCore, isEchoObject } from './echo-handler';
+import { getObjectCore } from './echo-handler';
+import { isEchoObject } from './echo-object-utils';
 
 /**
  * Returns the edit history of an ECHO object.
  * NOTE: This is the history of the automerge document containing the echo object.
  */
 // TODO(burdon): Also Relation?
-export const getEditHistory = (object: Obj.Any): State<any>[] => {
+export const getEditHistory = (object: Obj.Unknown): State<any>[] => {
   assertArgument(isEchoObject(object), 'expected ECHO object stored in the database');
 
   const objectCore = getObjectCore(object);
@@ -33,7 +34,7 @@ export const getEditHistory = (object: Obj.Any): State<any>[] => {
  */
 // TODO(burdon): Also Relation?
 // TODO(dmaretskyi): Hydrate the object
-export const checkoutVersion = (object: Obj.Any, version: Heads): unknown => {
+export const checkoutVersion = (object: Obj.Unknown, version: Heads): unknown => {
   assertArgument(isEchoObject(object), 'object', 'expected ECHO object stored in the database');
   assertArgument(Array.isArray(version), 'version', 'expected automerge heads array');
 

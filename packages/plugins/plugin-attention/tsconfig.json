@@ -21,16 +21,22 @@
       "path": "../../common/keyboard"
     },
     {
+      "path": "../../common/util"
+    },
+    {
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../core/echo/echo-signals"
+      "path": "../../core/operation"
     },
     {
       "path": "../../sdk/app-framework"
     },
     {
       "path": "../../ui/react-ui-attention"
+    },
+    {
+      "path": "../plugin-graph"
     }
   ]
 }

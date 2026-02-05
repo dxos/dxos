@@ -17,7 +17,6 @@ tasks:
     args:
       - '--entryPoint=src/react.ts'
       - '--entryPoint=src/testing/index.ts'
-      - '--preactSignalTracking'
   test:
     inputs:
       - .storybook/*

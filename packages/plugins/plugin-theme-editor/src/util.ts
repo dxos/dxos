@@ -5,7 +5,7 @@
 import { renderTokenSet } from '@ch-ui/tokens';
 
 import { log } from '@dxos/log';
-import { userDefaultTokenSet } from '@dxos/react-ui-theme';
+import { userDefaultTokenSet } from '@dxos/ui-theme';
 
 import { themeEditorId } from './defs';
 

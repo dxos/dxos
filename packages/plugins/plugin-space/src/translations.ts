@@ -3,9 +3,9 @@
 //
 
 import { Type } from '@dxos/echo';
-import { StoredSchema } from '@dxos/echo/internal';
 import { type Resource } from '@dxos/react-ui';
-import { DataType } from '@dxos/schema';
+import { Collection } from '@dxos/schema';
+import { Event, Message, Organization, Person, Project, Task } from '@dxos/types';
 
 import { meta } from './meta';
 
@@ -13,7 +13,7 @@ import { meta } from './meta';
 export const translations = [
   {
     'en-US': {
-      [DataType.Collection.typename]: {
+      [Collection.Collection.typename]: {
         'typename label': 'Collection',
         'typename label_zero': 'Collections',
         'typename label_one': 'Collection',
@@ -21,63 +21,54 @@ export const translations = [
         'object name placeholder': 'New collection',
         'rename object label': 'Rename collection',
         'delete object label': 'Delete collection',
+        'object deleted label': 'Collection deleted',
       },
-      [Type.getTypename(DataType.QueryCollection)]: {
-        'typename label': 'Smart Collection',
-        'typename label_zero': 'Smart Collections',
-        'typename label_one': 'Smart Collection',
-        'typename label_other': 'Smart Collections',
-        'object name placeholder': 'New smart collection',
-        'rename object label': 'Rename smart collection',
-        'delete object label': 'Delete smart collection',
+      [Type.getTypename(Type.PersistentType)]: {
+        'typename label': 'Type',
+        'typename label_zero': 'Types',
+        'typename label_one': 'Type',
+        'typename label_other': 'Types',
+        'object name placeholder': 'New type',
+        'rename object label': 'Rename type',
+        'delete object label': 'Delete type',
+        'object deleted label': 'Type deleted',
       },
-      [StoredSchema.typename]: {
-        'typename label': 'Record',
-        'typename label_zero': 'Records',
-        'typename label_one': 'Record',
-        'typename label_other': 'Records',
-        'object name placeholder': 'New record type',
-        'rename object label': 'Rename record type',
-        'delete object label': 'Delete record type',
-      },
-      [Type.getTypename(DataType.View)]: {
-        'typename label': 'View',
-        'typename label_zero': 'Views',
-        'typename label_one': 'View',
-        'typename label_other': 'Views',
-        'object name placeholder': 'New view',
-        'rename object label': 'Rename view',
-        'delete object label': 'Delete view',
-      },
-      [DataType.Event.typename]: {
+      [Event.Event.typename]: {
         'typename label': 'Event',
         'typename label_zero': 'Events',
         'typename label_one': 'Event',
         'typename label_other': 'Events',
         'object name placeholder': 'New event',
       },
-      [DataType.Organization.typename]: {
+      [Message.Message.typename]: {
+        'typename label': 'Message',
+        'typename label_zero': 'Messages',
+        'typename label_one': 'Message',
+        'typename label_other': 'Messages',
+        'object name placeholder': 'New message',
+      },
+      [Organization.Organization.typename]: {
         'typename label': 'Organization',
         'typename label_zero': 'Organizations',
         'typename label_one': 'Organization',
         'typename label_other': 'Organizations',
         'object name placeholder': 'New organization',
       },
-      [DataType.Person.typename]: {
+      [Person.Person.typename]: {
         'typename label': 'Person',
         'typename label_zero': 'People',
         'typename label_one': 'Person',
         'typename label_other': 'People',
         'object name placeholder': 'New person',
       },
-      [Type.getTypename(DataType.Project)]: {
+      [Project.Project.typename]: {
         'typename label': 'Project',
         'typename label_zero': 'Projects',
         'typename label_one': 'Project',
         'typename label_other': 'Projects',
         'object name placeholder': 'New project',
       },
-      [DataType.Task.typename]: {
+      [Task.Task.typename]: {
         'typename label': 'Task',
         'typename label_zero': 'Tasks',
         'typename label_one': 'Task',
@@ -99,7 +90,7 @@ export const translations = [
         'rename space label': 'Rename space',
         'active space label': 'Active space:',
         'space name label': 'Space name',
-        'object name label': 'Item name',
+        'object name label': 'Object name',
         'close space label': 'Close space',
         'open space label': 'Open space',
         'export data label': 'Export data',
@@ -117,32 +108,31 @@ export const translations = [
         'spaces label': 'Spaces',
         'space settings label': 'Spaces',
         'space settings description':
-          'Each space has its own settings you can configure, where you can adjust its properties, membership, integrations, and other items specific to that space.',
+          'Each space has its own settings you can configure, where you can adjust its properties, membership, integrations, and other objects specific to that space.',
         'show hidden spaces label': 'Show archived spaces',
         'save files to directory label': 'Save files to disk',
         'select path label': 'Select path',
+        'snapshot by schema label': 'Snapshot of objects',
         'rename collection label': 'Rename collection',
-        'rename object label': 'Rename item',
-        'duplicate object label': 'Duplicate item',
-        'delete collection label': 'Delete collection',
-        'delete object label': 'Delete item',
-        'collection deleted label': 'Collection deleted',
-        'object deleted label': 'Item deleted',
-        'objects deleted label': 'Items deleted',
-        'go to object label': 'Open item',
+        'rename object label': 'Rename object',
+        'duplicate object label': 'Duplicate object',
+        'object deleted label': 'Object deleted',
+        'objects deleted label': 'Objects deleted',
+        'go to object label': 'Open object',
         'found object label': 'Ready.',
-        'found object description': 'The requested item is now available.',
+        'found object description': 'The requested object is now available.',
         'waiting for object label': 'Loading…',
-        'waiting for object description': 'The requested item is still being synchronized.',
+        'waiting for object description': 'The requested object is still being synchronized.',
         'object not found label': 'Nothing found.',
         'object not found description':
-          'The requested item has not been found yet. Ensure there are enough peers online in the space with an updated copy.',
-        'missing object message': 'Item not available.',
+          'The requested object has not been found yet. Ensure there are enough peers online in the space with an updated copy.',
+        'missing object message': 'Object not available.',
         'missing object description':
-          'The requested item has not been found yet. Ensure there are enough peers online in the space with an updated copy.',
+          'The requested object has not been found yet. Ensure there are enough peers online in the space with an updated copy.',
         'create object in space label': 'Add to space',
         'create object in collection label': 'Add to collection',
-        'create object in smart collection label': 'Add to smart collection',
+        'create object in system collection label': 'Add to system collection',
+        'add view to schema label': 'Add view to type',
         'space members label': 'Space members',
         'active space members heading': 'Online ({{count}})',
         'inactive space members heading': 'Offline ({{count}})',
@@ -160,10 +150,10 @@ export const translations = [
         'location label': 'Located in',
         'space limit label': 'Space Limit Reached',
         'space limit description':
-          'This space has reached the maximum number of items for the beta. This limit includes deleted items currently, but those can be permanently removed with the cleanup action.',
+          'This space has reached the maximum number of objects for the beta. This limit includes deleted objects currently, but those can be permanently removed with the cleanup action.',
         'space limit close label': 'Close',
         'remove deleted objects label': 'Cleanup',
-        'remove deleted objects alt': 'Permanently remove deleted items to free up space.',
+        'remove deleted objects alt': 'Permanently remove deleted objects to free up space.',
         'copy link label': 'Copy link',
         'default on space create label': 'On space create',
         'sync status title': 'Sync status',
@@ -180,11 +170,11 @@ export const translations = [
         'remote synced label': 'Synced with peers',
         'syncing label': 'Space syncing',
         'show all label': 'Show all',
-        'no sync status label': 'No space with missing items.',
+        'no sync status label': 'No space with missing objects.',
         'create space dialog title': 'Create Space',
         'create object dialog title': 'Create {{object}}',
         'space input placeholder': 'Select space',
-        'schema input placeholder': 'Select item type',
+        'schema input placeholder': 'Select type',
         'creating object type label': 'Type',
         'creating in space label': 'Location',
         'creating in collection label': 'In Collection',
@@ -195,7 +185,7 @@ export const translations = [
         'foreign keys': 'Foreign Keys',
         'add key': 'Add Key',
         'open space settings label': 'Open settings',
-        'related objects label': 'Related',
+        'related objects label': 'Related Objects',
 
         'row details no selection label': 'No objects selected',
         'companion selected objects label': 'Selected',
@@ -217,10 +207,10 @@ export const translations = [
         'space settings properties label': 'General settings',
         'space properties settings verbose label': 'Manage space properties',
         'space properties settings description': 'You can configure how this space is displayed in the app here.',
-        'space settings schema label': 'Record types',
-        'schema verbose label': 'Manage record types',
-        'schema description': 'You can manage all of the record types stored within this space here.',
-        'no schemas found message': 'No record types found',
+        'space settings schema label': 'Types',
+        'schema verbose label': 'Manage types',
+        'schema description': 'You can manage all of the types stored within this space here.',
+        'no schemas found message': 'No types found',
         'display name input placeholder': 'Space name',
         'display name description': 'Name of the space as it appears in the app.',
         'icon description': 'Icon used to represent the space in the app.',
@@ -232,12 +222,24 @@ export const translations = [
         'archive space label': 'Archive',
         'unarchive space label': 'Unarchive',
 
+        'space controls title': 'Space Controls',
+        'space controls description': 'Advanced controls for this space.',
+        'backup space title': 'Backup Space',
+        'backup space description':
+          'Download a backup of the space. Contains all data in the space in an unencrypted format.',
+        'download backup label': 'Download backup',
+        'repair space title': 'Repair Space',
+        'repair space description': 'Run repair operations on the space.',
+        'repair space label': 'Run repairs',
+
         'sync edge connected label': 'Edge connected',
         'sync edge disconnected label': 'Edge disconnected',
         'sync no connection label': 'No connection to edge service',
         'sync latency label': 'Latency',
         'sync upload label': 'Upload',
         'sync download label': 'Download',
+
+        'search placeholder': 'Search…',
       },
     },
   },

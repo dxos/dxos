@@ -4,25 +4,26 @@
   "description": "Provides a common interface for app and platform observability",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
   "license": "MIT",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "exports": {
     ".": {
-      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
     },
     "./segment": {
-      "source": "./src/segment/index.ts",
       "types": "./dist/types/src/segment/index.d.ts",
       "browser": "./dist/lib/browser/segment/index.mjs",
       "node": "./dist/lib/node-esm/segment/index.mjs"
     },
     "./sentry": {
-      "source": "./src/sentry/index.ts",
       "types": "./dist/types/src/sentry/index.d.ts",
       "browser": "./dist/lib/browser/sentry/index.mjs",
       "node": "./dist/lib/node-esm/sentry/index.mjs"
@@ -31,8 +32,8 @@
   "browser": {
     "./src/segment/node.ts": "./src/segment/browser.ts",
     "./src/sentry/node.ts": "./src/sentry/browser.ts",
-    "./testing/testkit/index.ts": "./testing/testkit/browser.ts",
-    "./src/otel/traces.ts": "./src/otel/traces-browser.ts"
+    "./src/otel/traces.ts": "./src/otel/traces-browser.ts",
+    "./src/testing/testkit/index.ts": "./src/testing/testkit/browser.ts"
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
@@ -64,34 +65,34 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@opentelemetry/api": "^1.9.0",
-    "@opentelemetry/api-logs": "^0.203.0",
-    "@opentelemetry/auto-instrumentations-web": "^0.51.0",
-    "@opentelemetry/exporter-logs-otlp-http": "^0.203.0",
-    "@opentelemetry/exporter-metrics-otlp-http": "^0.203.0",
-    "@opentelemetry/exporter-trace-otlp-http": "^0.203.0",
-    "@opentelemetry/instrumentation": "^0.203.0",
-    "@opentelemetry/resources": "^2.1.0",
-    "@opentelemetry/sdk-logs": "^0.203.0",
-    "@opentelemetry/sdk-metrics": "^2.1.0",
-    "@opentelemetry/sdk-trace-base": "^2.1.0",
-    "@opentelemetry/sdk-trace-web": "^2.1.0",
-    "@opentelemetry/semantic-conventions": "^1.37.0",
-    "@segment/analytics-node": "^2.1.0",
-    "@segment/snippet": "^4.15.3",
-    "@sentry/browser": "^8.8.0",
-    "@sentry/node": "^8.8.0",
-    "debug": "^4.3.4",
-    "js-yaml": "^4.1.0",
-    "localforage": "^1.10.0",
-    "uuid": "^9.0.0"
+    "@opentelemetry/api": "catalog:",
+    "@opentelemetry/api-logs": "catalog:",
+    "@opentelemetry/auto-instrumentations-web": "catalog:",
+    "@opentelemetry/exporter-logs-otlp-http": "catalog:",
+    "@opentelemetry/exporter-metrics-otlp-http": "catalog:",
+    "@opentelemetry/exporter-trace-otlp-http": "catalog:",
+    "@opentelemetry/instrumentation": "catalog:",
+    "@opentelemetry/resources": "catalog:",
+    "@opentelemetry/sdk-logs": "catalog:",
+    "@opentelemetry/sdk-metrics": "catalog:",
+    "@opentelemetry/sdk-trace-base": "catalog:",
+    "@opentelemetry/sdk-trace-web": "catalog:",
+    "@opentelemetry/semantic-conventions": "catalog:",
+    "@segment/analytics-node": "catalog:",
+    "@segment/snippet": "catalog:",
+    "@sentry/browser": "catalog:",
+    "@sentry/node": "catalog:",
+    "debug": "catalog:",
+    "js-yaml": "catalog:",
+    "localforage": "catalog:",
+    "uuid": "catalog:"
   },
   "devDependencies": {
-    "@sentry/types": "^8.8.0",
-    "@types/debug": "^4.1.10",
-    "@types/js-yaml": "^4.0.5",
-    "sentry-testkit": "^5.0.5",
-    "zone.js": ">=0.11.4 <0.12.0-0 || >=0.13.0 <0.14.0-0 || >=0.14.0 <0.15.0-0"
+    "@sentry/types": "catalog:",
+    "@types/debug": "catalog:",
+    "@types/js-yaml": "catalog:",
+    "sentry-testkit": "catalog:",
+    "zone.js": "catalog:"
   },
   "publishConfig": {
     "access": "public"

@@ -19,6 +19,7 @@ import {
   type DocHandle,
   type DocumentId,
   type HandleState,
+  type Message,
   type PeerId,
   Repo,
   type SharePolicy,
@@ -32,6 +33,7 @@ import { asyncTimeout, sleep } from '@dxos/async';
 import { randomBytes } from '@dxos/crypto';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
+import { log } from '@dxos/log';
 import { TestBuilder as TeleportBuilder, TestPeer as TeleportPeer } from '@dxos/teleport/testing';
 import { openAndClose } from '@dxos/test-utils';
 import { isNonNullable, range } from '@dxos/util';
@@ -160,32 +162,6 @@ describe('AutomergeRepo', () => {
       });
 
       expect((await asyncTimeout(client.find<any>(handle.url), 1000))!.doc().text).to.equal(text);
-    });
-
-    test('share policy gets enabled afterwards', async () => {
-      let sharePolicy = false;
-
-      const { repos, adapters } = await createHostClientRepoTopology({
-        sharePolicy: async () => sharePolicy,
-      });
-      const [host, client] = repos;
-      await connectAdapters(adapters);
-
-      const handle = host.create();
-      const text = 'Hello world';
-      handle.change((doc: any) => {
-        doc.text = text;
-      });
-
-      {
-        await client.find(handle.url, { allowableStates: ['unavailable'] });
-      }
-
-      sharePolicy = true;
-
-      {
-        await client.find(handle.url, { allowableStates: ['unavailable'] });
-      }
     });
 
     test('two documents and share policy switching', async () => {
@@ -510,6 +486,139 @@ describe('AutomergeRepo', () => {
       await asyncTimeout(handleB.whenReady(), 1000);
       expect(handleB.doc()!.text).to.equal(text);
     });
+
+    test('retry share config', async () => {
+      let announce = false;
+
+      const { repos, adapters } = await createRepoTopology({
+        peers: ['A', 'B'],
+        connections: [['A', 'B']],
+        options: {
+          shareConfig: {
+            access: async () => true,
+            announce: async () => announce,
+          },
+        },
+        onMessage: (message) => {
+          console.log(`${message.senderId} -> ${message.targetId}: ${message.type} ${message.documentId ?? ''}`);
+        },
+      });
+      const [repoA, repoB] = repos;
+      await connectAdapters(adapters);
+      console.log({ peersA: repoA.peers, peersB: repoB.peers });
+
+      const docA = repoA.create({ text: 'Hello world' });
+
+      const docB = await repoB.find(docA.url, { allowableStates: ['ready', 'unavailable'] });
+      expect(docB.state).to.equal('unavailable');
+      log.info('unavailable');
+
+      announce = true;
+      repoB.shareConfigChanged();
+      await docB.whenReady();
+    });
+  });
+
+  describe('create2 tests', () => {
+    test('basic document creation', async () => {
+      const repo = new Repo({ network: [] });
+
+      const handle = await repo.create2<{ text: string }>();
+      expect(handle.doc()).to.deep.equal({});
+
+      handle.change((doc: any) => {
+        doc.text = 'Hello World';
+      });
+
+      expect(handle.doc()?.text).to.equal('Hello World');
+    });
+
+    test('document mutation', async () => {
+      const repo = new Repo({ network: [] });
+
+      const handle = await repo.create2<{ counter: number }>({ counter: 0 });
+
+      for (let i = 1; i <= 10; i++) {
+        handle.change((doc: any) => {
+          doc.counter = i;
+        });
+      }
+
+      expect(handle.doc()?.counter).to.equal(10);
+    });
+
+    test('import document and mutate', async () => {
+      const repo = new Repo({ network: [] });
+
+      const original = await repo.create2<{ text: string }>({ text: 'original' });
+      const blob = A.save(original.doc()!);
+
+      const imported = repo.import<{ text: string }>(blob);
+      expect(imported.doc()?.text).to.equal('original');
+
+      imported.change((doc: any) => {
+        doc.text = 'mutated';
+      });
+      expect(imported.doc()?.text).to.equal('mutated');
+    });
+
+    test('reload document with flush', async () => {
+      const path = createTmpPath();
+      const text = 'Hello World!';
+      let url: AutomergeUrl;
+
+      {
+        const level = createTestLevel(path);
+        const storage = await createLevelAdapter(level);
+        const repo = new Repo({ network: [], storage });
+        const handle = await repo.create2<{ text: string }>();
+        url = handle.url;
+        handle.change((doc: any) => {
+          doc.text = text;
+        });
+        await repo.flush([handle.documentId]);
+        await level.close();
+      }
+
+      {
+        const level = createTestLevel(path);
+        const storage = await createLevelAdapter(level);
+        const repo = new Repo({ network: [], storage });
+        const handle = await repo.find<{ text: string }>(url);
+        await handle.whenReady();
+        expect(handle.doc()?.text).to.equal(text);
+        await level.close();
+      }
+    });
+
+    test('reload document without flush', async () => {
+      const path = createTmpPath();
+      const text = 'Hello World!';
+      let url: AutomergeUrl;
+
+      {
+        const level = createTestLevel(path);
+        const storage = await createLevelAdapter(level);
+        const repo = new Repo({ network: [], storage });
+        const handle = await repo.create2<{ text: string }>();
+        url = handle.url;
+        handle.change((doc: any) => {
+          doc.text = text;
+        });
+        // No explicit flush - rely on auto-save.
+        await sleep(200);
+        await level.close();
+      }
+
+      {
+        const level = createTestLevel(path);
+        const storage = await createLevelAdapter(level);
+        const repo = new Repo({ network: [], storage });
+        const handle = await repo.find<{ text: string }>(url);
+        await handle.whenReady();
+        expect(handle.doc()?.text).to.equal(text);
+      }
+    });
   });
 
   describe('teleport', () => {
@@ -730,8 +839,7 @@ describe('AutomergeRepo', () => {
     });
   });
 
-  const createLevelAdapter = async () => {
-    const level = createTestLevel();
+  const createLevelAdapter = async (level = createTestLevel()) => {
     const storage = new LevelDBStorageAdapter({ db: level.sublevel('automerge') });
     await openAndClose(level, storage);
     return storage;
@@ -753,19 +861,23 @@ describe('AutomergeRepo', () => {
   };
 });
 
+type ShareConfig = Exclude<ConstructorParameters<typeof Repo>[0], undefined>['shareConfig'];
+
 type ConnectedRepoOptions = {
   storages?: StorageAdapterInterface[];
   connectionStateProvider?: TestConnectionStateProvider;
   sharePolicy?: SharePolicy;
+  shareConfig?: ShareConfig;
 };
 
 const createRepoTopology = async <Peers extends string[], Peer extends string = Peers[number]>(args: {
   peers: Peers;
   connections: [Peer, Peer][];
   options?: ConnectedRepoOptions;
+  onMessage?: (message: Message) => void;
 }) => {
   const adapters = args.connections.map(
-    () => TestAdapter.createPair(args.options?.connectionStateProvider) as [TestAdapter, TestAdapter],
+    () => TestAdapter.createPair(args.options?.connectionStateProvider, args.onMessage) as [TestAdapter, TestAdapter],
   );
   const repos = args.peers.map((peerId, peerIndex) => {
     const network = adapters
@@ -781,7 +893,8 @@ const createRepoTopology = async <Peers extends string[], Peer extends string = 
       peerId: peerId as PeerId,
       storage: args.options?.storages?.[peerIndex],
       network,
-      sharePolicy: args.options?.sharePolicy ?? (async () => true),
+      sharePolicy: (args.options?.sharePolicy ?? args.options?.shareConfig) ? undefined : async () => true,
+      shareConfig: args.options?.shareConfig,
     });
   });
   return { repos, adapters };
@@ -867,3 +980,7 @@ const connectPeers = async (
 };
 
 type TeleportTestPeer = { repo: Repo; meshAdapter: MeshEchoReplicator; teleport: TeleportPeer };
+
+export const createTmpPath = (): string => {
+  return `/tmp/dxos-${PublicKey.random().toHex()}`;
+};

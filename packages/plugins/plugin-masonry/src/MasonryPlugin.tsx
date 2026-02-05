@@ -2,61 +2,36 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, Events, contributes, createIntent, defineModule, definePlugin } from '@dxos/app-framework';
-import { ClientEvents } from '@dxos/plugin-client';
-import { SpaceCapabilities } from '@dxos/plugin-space';
-import { defineObjectForm } from '@dxos/plugin-space/types';
+import * as Effect from 'effect/Effect';
 
-import { IntentResolver, ReactSurface } from './capabilities';
+import { Common, Plugin } from '@dxos/app-framework';
+import { Type } from '@dxos/echo';
+import { type CreateObject } from '@dxos/plugin-space/types';
+import { View } from '@dxos/schema';
+
+import { ReactSurface } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
 import { Masonry, MasonryAction } from './types';
 
-export const MasonryPlugin = definePlugin(meta, () => [
-  defineModule({
-    id: `${meta.id}/module/translations`,
-    activatesOn: Events.SetupTranslations,
-    activate: () => contributes(Capabilities.Translations, translations),
+export const MasonryPlugin = Plugin.define(meta).pipe(
+  Common.Plugin.addTranslationsModule({ translations }),
+  Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
+  Common.Plugin.addMetadataModule({
+    metadata: {
+      id: Type.getTypename(Masonry.Masonry),
+      metadata: {
+        icon: 'ph--wall--regular',
+        iconHue: 'green',
+        inputSchema: MasonryAction.MasonryProps,
+        createObject: ((props, { db }) =>
+          Effect.promise(async () => {
+            const { view } = await View.makeFromDatabase({ db, typename: props.typename });
+            return Masonry.make({ name: props.name, view });
+          })) satisfies CreateObject,
+      },
+    },
   }),
-  defineModule({
-    id: `${meta.id}/module/react-surface`,
-    activatesOn: Events.SetupReactSurface,
-    activate: ReactSurface,
-  }),
-  defineModule({
-    id: `${meta.id}/module/metadata`,
-    activatesOn: Events.SetupMetadata,
-    activate: () =>
-      contributes(Capabilities.Metadata, {
-        id: Masonry.Masonry.typename,
-        metadata: {
-          icon: 'ph--wall--regular',
-          iconClassName: 'text-greenSurfaceText',
-        },
-      }),
-  }),
-  defineModule({
-    id: `${meta.id}/module/object-form`,
-    activatesOn: ClientEvents.SetupSchema,
-    activate: () =>
-      contributes(
-        SpaceCapabilities.ObjectForm,
-        defineObjectForm({
-          objectSchema: Masonry.Masonry,
-          formSchema: MasonryAction.MasonryProps,
-          hidden: true,
-          getIntent: (props, options) => createIntent(MasonryAction.CreateMasonry, { ...props, space: options.space }),
-        }),
-      ),
-  }),
-  defineModule({
-    id: `${meta.id}/module/react-surface`,
-    activatesOn: Events.SetupReactSurface,
-    activate: ReactSurface,
-  }),
-  defineModule({
-    id: `${meta.id}/module/intent-resolver`,
-    activatesOn: Events.SetupIntentResolver,
-    activate: IntentResolver,
-  }),
-]);
+  Common.Plugin.addSchemaModule({ schema: [Masonry.Masonry] }),
+  Plugin.make,
+);

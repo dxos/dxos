@@ -2,8 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { next as A } from '@automerge/automerge';
+import { next as A, type Heads } from '@automerge/automerge';
 import type { DocumentId, PeerId } from '@automerge/automerge-repo';
+import * as Array from 'effect/Array';
+import * as Record from 'effect/Record';
 
 import { Event, asyncReturn, scheduleTask, scheduleTaskInterval } from '@dxos/async';
 import { type Context, Resource } from '@dxos/context';
@@ -13,9 +15,9 @@ import { defaultMap } from '@dxos/util';
 
 const MIN_QUERY_INTERVAL = 5_000;
 
-const POLL_INTERVAL = 30_000;
+const POLL_INTERVAL = 10_000;
 
-export type CollectionSynchronizerParams = {
+export type CollectionSynchronizerProps = {
   sendCollectionState: (collectionId: string, peerId: PeerId, state: CollectionState) => void;
   queryCollectionState: (collectionId: string, peerId: PeerId) => void;
   shouldSyncCollection: (collectionId: string, peerId: PeerId) => boolean;
@@ -26,9 +28,9 @@ export type CollectionSynchronizerParams = {
  */
 @trace.resource()
 export class CollectionSynchronizer extends Resource {
-  private readonly _sendCollectionState: CollectionSynchronizerParams['sendCollectionState'];
-  private readonly _queryCollectionState: CollectionSynchronizerParams['queryCollectionState'];
-  private readonly _shouldSyncCollection: CollectionSynchronizerParams['shouldSyncCollection'];
+  private readonly _sendCollectionState: CollectionSynchronizerProps['sendCollectionState'];
+  private readonly _queryCollectionState: CollectionSynchronizerProps['queryCollectionState'];
+  private readonly _shouldSyncCollection: CollectionSynchronizerProps['shouldSyncCollection'];
 
   /**
    * CollectionId -> State.
@@ -40,7 +42,7 @@ export class CollectionSynchronizer extends Resource {
 
   public readonly remoteStateUpdated = new Event<{ collectionId: string; peerId: PeerId; newDocsAppeared: boolean }>();
 
-  constructor(params: CollectionSynchronizerParams) {
+  constructor(params: CollectionSynchronizerProps) {
     super();
     this._sendCollectionState = params.sendCollectionState;
     this._queryCollectionState = params.queryCollectionState;
@@ -75,6 +77,10 @@ export class CollectionSynchronizer extends Resource {
 
     log('setLocalCollectionState', { collectionId, state });
     this._getOrCreatePerCollectionState(collectionId).localState = state;
+
+    for (const peerId of this._connectedPeers) {
+      this._diffCollectionState(collectionId, peerId);
+    }
 
     queueMicrotask(async () => {
       if (!this._ctx.disposed && this._activeCollections.has(collectionId)) {
@@ -117,6 +123,7 @@ export class CollectionSynchronizer extends Resource {
    * Callback when a connection to a peer is established.
    */
   onConnectionOpen(peerId: PeerId): void {
+    log('onConnectionOpen', { peerId });
     const spanId = getSpanName(peerId);
     trace.spanStart({
       id: spanId,
@@ -146,6 +153,8 @@ export class CollectionSynchronizer extends Resource {
    * Callback when a connection to a peer is closed.
    */
   onConnectionClosed(peerId: PeerId): void {
+    log('onConnectionClosed', { peerId });
+
     this._connectedPeers.delete(peerId);
 
     for (const perCollectionState of this._perCollectionStates.values()) {
@@ -171,8 +180,20 @@ export class CollectionSynchronizer extends Resource {
     log('onRemoteStateReceived', { collectionId, peerId, state });
     validateCollectionState(state);
     const perCollectionState = this._getOrCreatePerCollectionState(collectionId);
-    const existingState = perCollectionState.remoteStates.get(peerId) ?? { documents: {} };
-    const diff = diffCollectionState(existingState, state);
+    perCollectionState.remoteStates.set(peerId, state);
+    this._diffCollectionState(collectionId, peerId);
+  }
+
+  private _diffCollectionState(collectionId: string, peerId: PeerId) {
+    const perCollectionState = this._getOrCreatePerCollectionState(collectionId);
+    const remoteState = perCollectionState.remoteStates.get(peerId);
+    if (!remoteState) {
+      return;
+    }
+
+    log('diffCollectionState', { collectionId, peerId });
+    const localState = perCollectionState.localState ?? { documents: {} };
+    const diff = diffCollectionState(localState, remoteState);
     const spanId = getSpanName(peerId);
     if (diff.different.length === 0) {
       trace.spanEnd(spanId);
@@ -186,9 +207,20 @@ export class CollectionSynchronizer extends Resource {
         attributes: { peerId },
       });
     }
-    if (diff.missingOnLocal.length > 0 || diff.different.length > 0) {
-      perCollectionState.remoteStates.set(peerId, state);
-      this.remoteStateUpdated.emit({ peerId, collectionId, newDocsAppeared: diff.missingOnLocal.length > 0 });
+    log('diff', {
+      localState: localState.documents,
+      remoteState: remoteState.documents,
+      missingOnLocal: diff.missingOnLocal,
+      missingOnRemote: diff.missingOnRemote,
+      different: diff.different,
+    });
+    if (diff.missingOnLocal.length > 0 || diff.different.length > 0 || diff.missingOnRemote.length > 0) {
+      log('emit remote state update');
+      this.remoteStateUpdated.emit({
+        peerId,
+        collectionId,
+        newDocsAppeared: diff.missingOnLocal.length > 0,
+      });
     }
   }
 
@@ -223,7 +255,7 @@ export type CollectionState = {
   /**
    * DocumentId -> Heads.
    */
-  documents: Record<string, string[]>;
+  documents: Record<DocumentId, Heads>;
 };
 
 export type CollectionStateDiff = {
@@ -233,18 +265,21 @@ export type CollectionStateDiff = {
 };
 
 export const diffCollectionState = (local: CollectionState, remote: CollectionState): CollectionStateDiff => {
-  const allDocuments = new Set<DocumentId>([...Object.keys(local.documents), ...Object.keys(remote.documents)] as any);
+  const localDocuments = Record.filter(local.documents, (heads) => heads.length > 0);
+  const remoteDocuments = Record.filter(remote.documents, (heads) => heads.length > 0);
+  // NOTE: Using `Array.union` is slow.
+  const allDocuments = [...new Set([...Record.keys(localDocuments), ...Record.keys(remoteDocuments)])] as DocumentId[];
 
   const missingOnRemote: DocumentId[] = [];
   const missingOnLocal: DocumentId[] = [];
   const different: DocumentId[] = [];
   for (const documentId of allDocuments) {
-    if (!local.documents[documentId] || local.documents[documentId].length === 0) {
-      missingOnLocal.push(documentId as DocumentId);
-    } else if (!remote.documents[documentId] || remote.documents[documentId].length === 0) {
-      missingOnRemote.push(documentId as DocumentId);
+    if (!localDocuments[documentId]) {
+      missingOnLocal.push(documentId);
+    } else if (!remoteDocuments[documentId]) {
+      missingOnRemote.push(documentId);
     } else if (!A.equals(local.documents[documentId], remote.documents[documentId])) {
-      different.push(documentId as DocumentId);
+      different.push(documentId);
     }
   }
 

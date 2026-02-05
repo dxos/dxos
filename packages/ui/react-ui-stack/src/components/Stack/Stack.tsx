@@ -7,6 +7,7 @@ import React, {
   type CSSProperties,
   Children,
   type ComponentPropsWithRef,
+  type FocusEvent,
   type KeyboardEvent,
   forwardRef,
   useCallback,
@@ -16,13 +17,14 @@ import React, {
 } from 'react';
 
 import { ListItem, type ThemedClassName, useId } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { useStackDropForElements } from '../../hooks';
-import { type StackContextValue } from '../defs';
 import { StackContext } from '../StackContext';
+import { type StackContextValue } from '../types';
 
 export type Orientation = 'horizontal' | 'vertical';
+
 /**
  * Size is how Stack and its StackItems coordinate the dimensions of the items with the available space.
  * - `intrinsic` signals to Stack and its StackItems to occupy their intrinsic size
@@ -31,14 +33,6 @@ export type Orientation = 'horizontal' | 'vertical';
  *   - `split` divides the Stack’s available space among the StackItems
  */
 export type Size = 'intrinsic' | 'contain' | 'split';
-
-export type StackProps = Omit<ThemedClassName<ComponentPropsWithRef<'div'>>, 'aria-orientation'> &
-  Partial<StackContextValue> & {
-    itemsCount?: number;
-    getDropElement?: (stackElement: HTMLDivElement) => HTMLDivElement;
-    separatorOnScroll?: number;
-    circularFocus?: boolean;
-  };
 
 export const railGridHorizontal = 'grid-rows-[[rail-start]_var(--rail-size)_[content-start]_1fr_[content-end]]';
 export const railGridVertical = 'grid-cols-[[rail-start]_var(--rail-size)_[content-start]_1fr_[content-end]]';
@@ -61,6 +55,14 @@ const scrollIntoViewAndFocus = (el: HTMLElement, orientation: StackProps['orient
   return el.focus();
 };
 
+export type StackProps = Omit<ThemedClassName<ComponentPropsWithRef<'div'>>, 'aria-orientation'> &
+  Partial<StackContextValue> & {
+    itemsCount?: number;
+    getDropElement?: (stackElement: HTMLDivElement) => HTMLDivElement;
+    separatorOnScroll?: number;
+    circularFocus?: boolean;
+  };
+
 export const Stack = forwardRef<HTMLDivElement, StackProps>(
   (
     {
@@ -68,7 +70,7 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
       classNames,
       style,
       orientation = 'vertical',
-      rail = true,
+      rail = true, // TODO(burdon): Change default to false.
       size = 'intrinsic',
       onRearrange,
       itemsCount = Children.count(children),
@@ -121,7 +123,7 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
      * Handles blur events to track the last focused item within this stack.
      */
     const handleBlur = useCallback(
-      (event: React.FocusEvent<HTMLDivElement>) => {
+      (event: FocusEvent<HTMLDivElement>) => {
         if (event.target) {
           const target = event.target as HTMLElement;
           const closestStackItem = target.closest(`[data-dx-item-id]`) as HTMLElement | null;
@@ -135,9 +137,9 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
     );
 
     /**
-     * Handles moving focus using the arrow keys. Focus is only handled by the nearest stack; if the arrow key matches the
-     * orientation, focus cycles between items, otherwise focus is passed to an adjacent stack item; or, if there is no
-     * such stack item, focus is passed to the adjacent empty stack if one can be found.
+     * Handles moving focus using the arrow keys. Focus is only handled by the nearest stack;
+     * if the arrow key matches the orientation, focus cycles between items, otherwise focus is passed to an adjacent stack item;
+     * or, if there is no such stack item, focus is passed to the adjacent empty stack if one can be found.
      */
     const handleKeyDown = useCallback(
       (event: KeyboardEvent<HTMLDivElement>) => {
@@ -193,6 +195,7 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
                 scrollIntoViewAndFocus(adjacentItem, closestStackOrientation);
               }
             }
+
             if (perpendicularDelta !== 0) {
               if (ancestorStack && ancestorOrientation !== closestStackOrientation) {
                 const siblingStacks = Array.from(
@@ -241,12 +244,10 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
                       closestStackOrientation === 'vertical' ? ownedItemRect.top : ownedItemRect.left;
 
                     let closestDistance = Infinity;
-
                     for (const item of adjacentStackItems) {
                       const itemRect = item.getBoundingClientRect();
                       const itemPosition = closestStackOrientation === 'vertical' ? itemRect.top : itemRect.left;
                       const distance = Math.abs(itemPosition - targetPosition);
-
                       if (distance < closestDistance) {
                         closestDistance = distance;
                         closestItem = item;
@@ -294,6 +295,7 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
       if (!rail) {
         return orientation === 'horizontal' ? 'grid-rows-1 pli-[--stack-gap]' : 'grid-cols-1 plb-[--stack-gap]';
       }
+
       if (orientation === 'horizontal') {
         return railGridHorizontal;
       } else {

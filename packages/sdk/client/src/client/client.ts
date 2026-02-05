@@ -4,8 +4,6 @@
 
 import { inspect } from 'node:util';
 
-import type * as Schema from 'effect/Schema';
-
 import { Event, MulticastObservable, Trigger, synchronized } from '@dxos/async';
 import {
   type ClientServices,
@@ -13,22 +11,30 @@ import {
   DEFAULT_CLIENT_CHANNEL,
   type Echo,
   type Halo,
-  PropertiesType,
   STATUS_TIMEOUT,
+  SpaceProperties,
   clientServiceBundle,
 } from '@dxos/client-protocol';
 import { type Stream } from '@dxos/codec-protobuf/stream';
 import { Config, SaveConfig } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { raise } from '@dxos/debug';
-import { getTypename } from '@dxos/echo/internal';
-import { EchoClient, type Hypergraph, type QueueService, QueueServiceImpl } from '@dxos/echo-db';
+import { type Hypergraph, Type } from '@dxos/echo';
+import { EchoClient, QueueServiceImpl } from '@dxos/echo-db';
 import { MockQueueService } from '@dxos/echo-db';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { ApiError, trace as Trace } from '@dxos/protocols';
+import { type QueueService } from '@dxos/protocols';
+import {
+  ApiError,
+  AuthorizationError,
+  InvalidConfigError,
+  RemoteServiceConnectionError,
+  RemoteServiceConnectionTimeout,
+  trace as Trace,
+} from '@dxos/protocols';
 import { type QueryStatusResponse, SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { type ProtoRpcPeer, createProtoRpcPeer } from '@dxos/rpc';
 import { createIFramePort } from '@dxos/rpc-tunnel';
@@ -51,11 +57,14 @@ export type ClientOptions = {
   /** Custom services provider. */
   services?: MaybePromise<ClientServicesProvider>;
   /** ECHO schema. */
-  types?: Schema.Schema.AnyNoContext[];
+  types?: Type.Entity.Any[];
   /** Shell path. */
   shell?: string;
   /** Create client worker. */
   createWorker?: () => SharedWorker;
+
+  /** When running in the host mode, a factory to create the worker for OPFS sqlite database. */
+  createOpfsWorker?: () => Worker;
 };
 
 /**
@@ -132,9 +141,12 @@ export class Client {
       log.config({ filter, prefix });
     }
 
-    this._echoClient.graph.schemaRegistry.addSchema([PropertiesType]);
-    if (options.types) {
-      this.addTypes(options.types);
+    // TODO(wittjosiah): This is ill-advised.
+    //   However, it seems to work okay for now since the runtime registry operates synchronously despite the interface.
+    //   Moving this to `initialize` causes issues with re-initialization.
+    void this._echoClient.graph.schemaRegistry.register([SpaceProperties]);
+    if (this._options.types) {
+      void this.addTypes(this._options.types);
     }
   }
 
@@ -221,10 +233,9 @@ export class Client {
   }
 
   /**
-   * @deprecated Temporary.
+   * ECHO graph.
    */
-  // TODO(dmaretskyi): What should we use instead?
-  get graph(): Hypergraph {
+  get graph(): Hypergraph.Hypergraph {
     return this._echoClient.graph;
   }
 
@@ -241,8 +252,8 @@ export class Client {
    * Add schema types to the client.
    */
   // TODO(burdon): Check if already registered (and remove downstream checks).
-  addTypes(types: Schema.Schema.AnyNoContext[]): this {
-    log('addTypes', { schema: types.map((type) => getTypename(type)) });
+  async addTypes(types: Type.Entity.Any[]) {
+    log('addTypes', { schema: types.map((type) => Type.getTypename(type)) });
 
     // TODO(dmaretskyi): Uncomment after release.
     // if (!this._initialized) {
@@ -251,10 +262,8 @@ export class Client {
 
     const exists = types.filter((type) => !this._echoClient.graph.schemaRegistry.hasSchema(type));
     if (exists.length > 0) {
-      this._echoClient.graph.schemaRegistry.addSchema(exists);
+      await this._echoClient.graph.schemaRegistry.register(exists);
     }
-
-    return this;
   }
 
   /**
@@ -342,9 +351,9 @@ export class Client {
    * Required before using the Client instance.
    */
   @synchronized
-  async initialize(): Promise<void> {
+  async initialize(): Promise<Client> {
     if (this._initialized) {
-      return;
+      return this;
     }
 
     log.trace('dxos.sdk.client.open', Trace.begin({ id: this._instanceId }));
@@ -353,7 +362,11 @@ export class Client {
     this._ctx = new Context();
     this._config = this._options.config ?? new Config();
     // NOTE: Must currently match the host.
-    this._services = await (this._options.services ?? createClientServices(this._config, this._options.createWorker));
+    this._services = await (this._options.services ??
+      createClientServices(this._config, {
+        createWorker: this._options.createWorker,
+        createOpfsWorker: this._options.createOpfsWorker,
+      }));
     this._iframeManager = this._options.shell
       ? new IFrameManager({ source: new URL(this._options.shell, window.location.origin) })
       : undefined;
@@ -369,6 +382,7 @@ export class Client {
 
     this._initialized = true;
     log.trace('dxos.sdk.client.open', Trace.end({ id: this._instanceId }));
+    return this;
   }
 
   private async _open(): Promise<void> {
@@ -382,7 +396,13 @@ export class Client {
     const trigger = new Trigger<Error | undefined>();
     this._services.closed?.on(async (error) => {
       log('terminated', { resetting: this._resetting });
-      if (error instanceof ApiError) {
+      if (
+        error instanceof ApiError ||
+        error instanceof InvalidConfigError ||
+        error instanceof AuthorizationError ||
+        error instanceof RemoteServiceConnectionError ||
+        error instanceof RemoteServiceConnectionTimeout
+      ) {
         log.error('fatal', { error });
         trigger.wake(error);
       }
@@ -395,10 +415,17 @@ export class Client {
     await this._services.open();
 
     const edgeUrl = this._config!.get('runtime.services.edge.url');
-    if (edgeUrl) {
+    const useLocalFirstQueues = this._config!.get('runtime.client.enableLocalQueues');
+    if (useLocalFirstQueues) {
+      log.verbose('running with local-first queues');
+      invariant(this._services.services.QueueService, 'QueueService not available.');
+      this._queuesService = this._services.services.QueueService;
+    } else if (edgeUrl) {
+      log.verbose('running with edge queues');
       this._edgeClient = new EdgeHttpClient(edgeUrl);
       this._queuesService = new QueueServiceImpl(this._edgeClient);
     } else {
+      log.verbose('running with mock queues');
       this._queuesService = new MockQueueService();
     }
 
@@ -498,6 +525,10 @@ export class Client {
     this._initialized = false;
   }
 
+  async [Symbol.asyncDispose]() {
+    await this.destroy();
+  }
+
   private async _close(): Promise<void> {
     log('closing...');
     this._statusTimeout && clearTimeout(this._statusTimeout);
@@ -527,7 +558,7 @@ export class Client {
   @synchronized
   async reset(): Promise<void> {
     if (!this._initialized) {
-      throw new ApiError('Client not open.');
+      throw new ApiError({ message: 'Client not open.' });
     }
 
     log('resetting...');

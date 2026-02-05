@@ -12,26 +12,21 @@ import * as Schema from 'effect/Schema';
 import { AiService } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { AiConversation, makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
-import { TestHelpers, acquireReleaseResource } from '@dxos/effect';
-import {
-  ComputeEventLogger,
-  CredentialsService,
-  FunctionInvocationService,
-  QueueService,
-  TracingService,
-} from '@dxos/functions';
-import { TestDatabaseLayer } from '@dxos/functions/testing';
-import { type DataType } from '@dxos/schema';
+import { acquireReleaseResource } from '@dxos/effect';
+import { TestHelpers } from '@dxos/effect/testing';
+import { CredentialsService, QueueService, TracingService } from '@dxos/functions';
+import { FunctionInvocationServiceLayerTestMocked, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
+import { type Message } from '@dxos/types';
 
 import { AiChatProcessor, type AiChatServices } from './processor';
 
-class TestToolkit extends Toolkit.make(
+const TestToolkit = Toolkit.make(
   Tool.make('random', {
     description: 'Random number generator',
     parameters: {},
     success: Schema.Number,
   }),
-) {}
+);
 
 // TODO(burdon): Create minimal toolkit.
 const toolkit = Toolkit.merge(TestToolkit) as Toolkit.Toolkit<any>;
@@ -45,10 +40,7 @@ const TestServicesLayer = Layer.mergeAll(
     // types: [],
   }),
   // CredentialsService.configuredLayer([{ service: 'exa.ai', apiKey: EXA_API_KEY }]),
-  FunctionInvocationService.layerTestMocked({ functions: [] }).pipe(
-    Layer.provideMerge(ComputeEventLogger.layerFromTracing),
-    Layer.provideMerge(TracingService.layerNoop),
-  ),
+  FunctionInvocationServiceLayerTestMocked({ functions: [] }).pipe(Layer.provideMerge(TracingService.layerNoop)),
 );
 
 const TestLayer: Layer.Layer<AiChatServices, never, never> = Layer.mergeAll(
@@ -56,7 +48,6 @@ const TestLayer: Layer.Layer<AiChatServices, never, never> = Layer.mergeAll(
   makeToolResolverFromFunctions([], toolkit),
   makeToolExecutionServiceFromFunctions(toolkit, toolkit.toLayer({}) as any),
   CredentialsService.layerFromDatabase(),
-  ComputeEventLogger.layerFromTracing,
 ).pipe(Layer.provideMerge(TestServicesLayer), Layer.orDie);
 
 // TODO(burdon): Create actual test with mock LLM.
@@ -66,8 +57,8 @@ describe('Chat processor', () => {
     Effect.fn(
       function* ({ expect }) {
         const services = yield* Effect.runtime<AiChatServices>();
-        const queue = yield* QueueService.createQueue<DataType.Message>();
-        const conversation = yield* acquireReleaseResource(() => new AiConversation(queue));
+        const queue = yield* QueueService.createQueue<Message.Message>();
+        const conversation = yield* acquireReleaseResource(() => new AiConversation({ queue }));
         const processor = new AiChatProcessor(conversation, async () => services);
         const result = yield* Effect.promise(() => processor.request({ message: 'Hello' }));
         void processor.cancel();

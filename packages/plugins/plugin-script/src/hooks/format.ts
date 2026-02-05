@@ -6,7 +6,8 @@ import { format } from 'prettier';
 import prettierPluginEstree from 'prettier/plugins/estree';
 import prettierPluginTypescript from 'prettier/plugins/typescript';
 
-import { type ScriptType } from '@dxos/functions';
+import { Obj } from '@dxos/echo';
+import { type Script } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { createMenuAction } from '@dxos/react-ui-menu';
 
@@ -14,7 +15,7 @@ import { meta } from '../meta';
 
 export type FormatActionProperties = { type: 'format' };
 
-export const createFormat = (script: ScriptType) => {
+export const createFormat = (script: Script.Script) => {
   const formatAction = createMenuAction(
     'format',
     async () => {
@@ -23,11 +24,14 @@ export const createFormat = (script: ScriptType) => {
       }
 
       try {
-        script.source.target!.content = await format(script.source.target!.content, {
+        const formatted = await format(script.source.target!.content, {
           parser: 'typescript',
           plugins: [prettierPluginEstree, prettierPluginTypescript],
           semi: true,
           singleQuote: true,
+        });
+        Obj.change(script.source.target!, (s) => {
+          s.content = formatted;
         });
       } catch (err: any) {
         // TODO(wittjosiah): Show error in UI.

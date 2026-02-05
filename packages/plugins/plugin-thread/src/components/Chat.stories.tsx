@@ -5,9 +5,8 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
-import { Capabilities, IntentPlugin, contributes, createSurface } from '@dxos/app-framework';
+import { Capability, Common, OperationPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Obj, Ref } from '@dxos/echo';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
@@ -15,12 +14,12 @@ import { useIdentity } from '@dxos/react-client/halo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
-import { Thread } from '@dxos/react-ui-thread';
-import { DataType } from '@dxos/schema';
+import { Thread as ThreadComponent } from '@dxos/react-ui-thread';
 import { render } from '@dxos/storybook-utils';
+import { Message, Thread } from '@dxos/types';
 
 import { translations } from '../translations';
-import { ChannelType, ThreadType } from '../types';
+import { Channel } from '../types';
 
 import { ChatContainer } from './ChatContainer';
 
@@ -30,17 +29,12 @@ const DefaultStory = () => {
   const client = useClient();
   const identity = useIdentity();
   const [space, setSpace] = useState<Space>();
-  const [channel, setChannel] = useState<ChannelType | null>();
+  const [channel, setChannel] = useState<Channel.Channel | null>();
 
   useAsyncEffect(async () => {
     if (identity) {
       const space = await client.spaces.create();
-      const channel = space.db.add(
-        Obj.make(ChannelType, {
-          defaultThread: Ref.make(Obj.make(ThreadType, { messages: [], status: 'active' })),
-          threads: [],
-        }),
-      );
+      const channel = space.db.add(Channel.make());
       setSpace(space);
       setChannel(channel);
     }
@@ -51,7 +45,7 @@ const DefaultStory = () => {
   }
 
   return (
-    <main className='is-full max-is-prose mli-auto bs-dvh overflow-hidden'>
+    <main className='is-full max-is-proseMaxWidth mli-auto bs-full overflow-hidden'>
       <ChatContainer space={space} thread={channel.defaultThread.target} />
     </main>
   );
@@ -59,16 +53,16 @@ const DefaultStory = () => {
 
 const meta = {
   title: 'plugins/plugin-thread/Chat',
-  component: Thread.Root as any,
+  component: ThreadComponent.Root as any,
   render: render(DefaultStory),
   decorators: [
     withTheme,
     withPluginManager({
-      plugins: [IntentPlugin()],
+      plugins: [OperationPlugin()],
       capabilities: [
-        contributes(
-          Capabilities.ReactSurface,
-          createSurface({
+        Capability.contributes(
+          Common.Capability.ReactSurface,
+          Common.createSurface({
             id: 'test',
             role: 'card',
             component: ({ role }) => <span>{JSON.stringify({ role })}</span>,
@@ -76,7 +70,7 @@ const meta = {
         ),
       ],
     }),
-    withClientProvider({ createSpace: true, types: [ThreadType, ChannelType, DataType.Message] }),
+    withClientProvider({ createSpace: true, types: [Thread.Thread, Channel.Channel, Message.Message] }),
   ],
   parameters: {
     layout: 'fullscreen',

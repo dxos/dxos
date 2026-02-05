@@ -38,9 +38,6 @@
     },
     {
       "path": "../../core/protocols"
-    },
-    {
-      "path": "../config"
     }
   ]
 }

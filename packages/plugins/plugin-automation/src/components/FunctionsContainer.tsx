@@ -11,6 +11,7 @@ import { ControlPage, ControlSection } from '@dxos/react-ui-form';
 import { meta } from '../meta';
 
 import { FunctionsPanel } from './FunctionsPanel';
+import { FunctionsRegistry } from './FunctionsRegistry';
 
 export const FunctionsContainer = ({ space }: { space: Space }) => {
   const { t } = useTranslation(meta.id);
@@ -21,6 +22,12 @@ export const FunctionsContainer = ({ space }: { space: Space }) => {
         description={t('functions description', { ns: meta.id })}
       >
         <FunctionsPanel space={space} />
+      </ControlSection>
+      <ControlSection
+        title={t('functions registry verbose label', { ns: meta.id })}
+        description={t('functions registry description', { ns: meta.id })}
+      >
+        <FunctionsRegistry space={space} />
       </ControlSection>
     </ControlPage>
   );

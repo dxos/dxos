@@ -4,14 +4,14 @@
 
 import { addressToA1Notation } from '@dxos/compute';
 
-import { type CellValue, type SheetType, createSheet } from '../types';
+import { Sheet } from '../types';
 
 // TODO(burdon): Create testing endpoint.
 // TODO(burdon): Move to react-ui-sheet.
-export const createTestGrid = ({ cols = 4, rows = 10 }: { cols: number; rows: number }): SheetType => {
+export const createTestGrid = ({ cols = 4, rows = 10 }: { cols: number; rows: number }): Sheet.Sheet => {
   const year = new Date().getFullYear();
 
-  const cells: Record<string, CellValue> = {};
+  const cells: Record<string, Sheet.CellValue> = {};
   for (let col = 1; col <= cols; col++) {
     for (let row = 1; row <= 10; row++) {
       const cell = addressToA1Notation({ col, row });
@@ -27,7 +27,7 @@ export const createTestGrid = ({ cols = 4, rows = 10 }: { cols: number; rows: nu
     }
   }
 
-  const sheet = createSheet({
+  const sheet = Sheet.make({
     name: 'Test',
     cells,
   });

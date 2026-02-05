@@ -2,18 +2,16 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Rx } from '@effect-rx/rx-react';
-import React, { type PropsWithChildren, useMemo } from 'react';
+import { Atom, type Registry, RegistryContext } from '@effect-atom/atom-react';
+import React, { type PropsWithChildren, useContext, useMemo } from 'react';
 
-import { useAppGraph } from '@dxos/app-framework';
+import { useAppGraph } from '@dxos/app-framework/react';
 import { type CompleteCellRange } from '@dxos/compute';
-import { type ThemedClassName } from '@dxos/react-ui';
 import {
   type ActionGraphProps,
   MenuProvider,
   ToolbarMenu,
   createGapSeparator,
-  rxFromSignal,
   useMenuActions,
 } from '@dxos/react-ui-menu';
 
@@ -22,23 +20,28 @@ import { useSheetContext } from '../SheetContext';
 
 import { createAlign, useAlignState } from './align';
 import { createStyle, useStyleState } from './style';
-import { type ToolbarState, useToolbarState } from './useToolbarState';
+import { type ToolbarStateAtom, useToolbarState } from './useToolbarState';
 
-//
-// Root
-//
+type ToolbarActionsContext = {
+  model: SheetModel;
+  stateAtom: ToolbarStateAtom;
+  registry: Registry.Registry;
+  cursorFallbackRange?: CompleteCellRange;
+  customActions?: Atom.Atom<ActionGraphProps>;
+};
 
-export type SheetToolbarProps = ThemedClassName<PropsWithChildren<{ id: string }>>;
-
-const createToolbarActions = (
-  model: SheetModel,
-  state: ToolbarState,
-  cursorFallbackRange?: CompleteCellRange,
-  customActions?: Rx.Rx<ActionGraphProps>,
-): Rx.Rx<ActionGraphProps> => {
-  return Rx.make((get) => {
-    const align = get(rxFromSignal(() => createAlign(model, state, cursorFallbackRange)));
-    const style = get(rxFromSignal(() => createStyle(model, state, cursorFallbackRange)));
+const createToolbarActions = ({
+  model,
+  stateAtom,
+  registry,
+  cursorFallbackRange,
+  customActions,
+}: ToolbarActionsContext): Atom.Atom<ActionGraphProps> => {
+  return Atom.make((get) => {
+    const state = get(stateAtom);
+    const context = { model, state, stateAtom, registry, cursorFallbackRange };
+    const align = createAlign(context);
+    const style = createStyle(context);
     const gap = createGapSeparator();
 
     const graph: ActionGraphProps = {
@@ -56,30 +59,36 @@ const createToolbarActions = (
   });
 };
 
-export const SheetToolbar = ({ id, classNames }: SheetToolbarProps) => {
+export type SheetToolbarProps = PropsWithChildren<{ id: string }>;
+
+export const SheetToolbar = ({ id }: SheetToolbarProps) => {
   const { model, cursorFallbackRange } = useSheetContext();
-  const state = useToolbarState({});
-  useAlignState(state);
-  useStyleState(state);
+  const stateAtom = useToolbarState({});
+  const registry = useContext(RegistryContext);
+  useAlignState(stateAtom);
+  useStyleState(stateAtom);
 
   const { graph } = useAppGraph();
   const customActions = useMemo(() => {
-    return Rx.make((get) => {
+    return Atom.make((get) => {
       const actions = get(graph.actions(id));
       const nodes = actions.filter((action) => action.properties.disposition === 'toolbar');
-      return { nodes, edges: nodes.map((node) => ({ source: 'root', target: node.id })) };
+      return {
+        nodes,
+        edges: nodes.map((node) => ({ source: 'root', target: node.id })),
+      };
     });
-  }, [graph]);
+  }, [graph, id]);
 
   const actionsCreator = useMemo(
-    () => createToolbarActions(model, state, cursorFallbackRange, customActions),
-    [model, state, cursorFallbackRange, customActions],
+    () => createToolbarActions({ model, stateAtom, registry, cursorFallbackRange, customActions }),
+    [model, stateAtom, registry, cursorFallbackRange, customActions],
   );
   const menu = useMenuActions(actionsCreator);
 
   return (
     <MenuProvider {...menu} attendableId={id}>
-      <ToolbarMenu classNames={classNames} />
+      <ToolbarMenu />
     </MenuProvider>
   );
 };

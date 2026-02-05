@@ -20,8 +20,8 @@ if ! git rev-parse --git-dir > /dev/null 2>&1; then
     exit 1
 fi
 
-# Get the git directory
-GIT_DIR=$(git rev-parse --git-dir)
+# Get the git directory (absolute path)
+GIT_DIR=$(cd "$(git rev-parse --git-dir)" && pwd)
 echo "Git directory: $GIT_DIR"
 
 # Find the .git directory in the path
@@ -36,6 +36,9 @@ else
     # We're in the main repository, use the standard pattern
     REPO_BASE=$(dirname "$GIT_DIR")
     PARENT_DIR=$(dirname "$REPO_BASE")
+    echo "GIT_DIR=$GIT_DIR"
+    echo "REPO_BASE=$REPO_BASE"
+    echo "PARENT_DIR=$PARENT_DIR"
     WORKTREES_BASE="$PARENT_DIR/$(basename "$REPO_BASE").worktrees"
 fi
 

@@ -4,13 +4,13 @@
 
 import React, { type ComponentType, type JSX, useMemo, useState } from 'react';
 
-import { FormatEnum } from '@dxos/echo/internal';
+import { Format } from '@dxos/echo/internal';
 import { DXN } from '@dxos/keys';
 import { useQueue } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
 import { SyntaxHighlighter, createElement } from '@dxos/react-ui-syntax-highlighter';
 import { DynamicTable, type TableFeatures, type TablePropertyDefinition } from '@dxos/react-ui-table';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { PanelContainer, Searchbar } from '../../../components';
 // import { DataSpaceSelector } from '../../../containers';
@@ -26,8 +26,8 @@ export const QueuesPanel = () => {
 
   const properties: TablePropertyDefinition[] = useMemo(
     () => [
-      { name: 'id', format: FormatEnum.DID, size: 320 },
-      { name: 'type', format: FormatEnum.JSON, title: 'type' },
+      { name: 'id', format: Format.TypeFormat.DID, size: 320 },
+      { name: 'type', format: Format.TypeFormat.JSON, title: 'type' },
     ],
     [],
   );

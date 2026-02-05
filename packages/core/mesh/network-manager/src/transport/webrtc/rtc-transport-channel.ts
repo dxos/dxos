@@ -71,7 +71,7 @@ export class RtcTransportChannel extends Resource implements Transport {
           const error =
             err instanceof Error
               ? err
-              : new ConnectivityError(`Failed to create a channel: ${JSON.stringify(err?.message)}`);
+              : new ConnectivityError({ message: `Failed to create a channel: ${JSON.stringify(err?.message)}` });
           this.errors.raise(error);
         } else {
           log.verbose('connection establishment failed after transport was closed', { err });

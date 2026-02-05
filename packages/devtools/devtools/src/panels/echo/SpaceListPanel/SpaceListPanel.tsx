@@ -4,7 +4,8 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { FormatEnum } from '@dxos/echo/internal';
+import { Obj } from '@dxos/echo';
+import { Format } from '@dxos/echo/internal';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
@@ -12,6 +13,7 @@ import { useClient } from '@dxos/react-client';
 import { useSpaces } from '@dxos/react-client/echo';
 import { useFileDownload } from '@dxos/react-ui';
 import { DynamicTable, type TableFeatures, type TablePropertyDefinition } from '@dxos/react-ui-table';
+import { createFilename } from '@dxos/util';
 
 import { PanelContainer } from '../../../components';
 import { useDevtoolsDispatch } from '../../../hooks';
@@ -28,6 +30,12 @@ type SpaceData = {
   isOpen: boolean;
 };
 
+const rowActions = [
+  { id: 'toggleOpen', label: 'Toggle space open closed' },
+  { id: 'snapshot', label: 'Download space snapshot' },
+  { id: 'archive', label: 'Download space archive' },
+];
+
 export const SpaceListPanel = ({ onSelect }: { onSelect?: (space: SpaceData | undefined) => void }) => {
   const client = useClient();
   const spaces = useSpaces({ all: true });
@@ -43,15 +51,8 @@ export const SpaceListPanel = ({ onSelect }: { onSelect?: (space: SpaceData | un
         objects: -1, // TODO(dmaretskyi): Fix this.
         members: space.members.get().length,
         startup: open && ready ? ready.getTime() - open.getTime() : -1,
+        isDefault: client.spaces.default === space,
         isOpen: space.isOpen,
-        _original: {
-          key: space.key,
-          name: space.isOpen ? space.properties.name : undefined,
-          objects: -1,
-          members: space.members.get().length,
-          startup: open && ready ? ready.getTime() - open.getTime() : -1,
-          isOpen: space.isOpen,
-        },
       };
     });
   }, [spaces]);
@@ -71,8 +72,8 @@ export const SpaceListPanel = ({ onSelect }: { onSelect?: (space: SpaceData | un
   );
 
   const handleToggleOpen = useCallback(
-    async (spaceKey: PublicKey) => {
-      const space = spaces.find((space) => space.key.equals(spaceKey))!;
+    async (spaceId: string) => {
+      const space = spaces.find((space) => space.id === spaceId)!;
       if (space.isOpen) {
         await space.close();
       } else {
@@ -82,21 +83,19 @@ export const SpaceListPanel = ({ onSelect }: { onSelect?: (space: SpaceData | un
     [spaces],
   );
 
-  const handleBackup = useCallback(
-    async (spaceKey: PublicKey) => {
-      const space = spaces.find((space) => space.key.equals(spaceKey))!;
+  const handleSnapshot = useCallback(
+    async (spaceId: string) => {
+      const space = spaces.find((space) => space.id === spaceId)!;
       await space.waitUntilReady();
       const backupBlob = await exportData(space);
-      const filename = space.properties.name?.replace(/\W/g, '_') || space.key.toHex();
-
-      download(backupBlob, `${filename}.json`);
+      download(backupBlob, createFilename({ parts: [space.id], ext: 'json' }));
     },
     [download, spaces],
   );
 
   const handleArchive = useCallback(
-    async (spaceKey: PublicKey) => {
-      const space = spaces.find((space) => space.key.equals(spaceKey))!;
+    async (spaceId: string) => {
+      const space = spaces.find((space) => space.id === spaceId)!;
       const archive = await space.internal.export();
       download(new Blob([archive.contents as Uint8Array<ArrayBuffer>]), archive.filename);
     },
@@ -116,7 +115,9 @@ export const SpaceListPanel = ({ onSelect }: { onSelect?: (space: SpaceData | un
             const space = await client.spaces.create();
             await space.waitUntilReady();
             await importData(space, backup);
-            space.properties.name = space.properties.name + ' - IMPORTED';
+            Obj.change(space.properties, (p) => {
+              p.name = p.name + ' - IMPORTED';
+            });
           } else if (backup.type === 'application/x-tar') {
             const archive = {
               filename: backup.name,
@@ -134,7 +135,9 @@ export const SpaceListPanel = ({ onSelect }: { onSelect?: (space: SpaceData | un
           const space = await client.spaces.create();
           await space.waitUntilReady();
           await importData(space, backup);
-          space.properties.name = space.properties.name + ' - IMPORTED';
+          Obj.change(space.properties, (p) => {
+            p.name = p.name + ' - IMPORTED';
+          });
         }
       } catch (err) {
         log.catch(err);
@@ -145,24 +148,25 @@ export const SpaceListPanel = ({ onSelect }: { onSelect?: (space: SpaceData | un
 
   const properties: TablePropertyDefinition[] = useMemo(
     () => [
-      { name: 'id', format: FormatEnum.DID },
-      { name: 'name', format: FormatEnum.String },
-      { name: 'objects', format: FormatEnum.Number, size: 120 },
-      { name: 'members', format: FormatEnum.Number, size: 120 },
-      { name: 'startup', format: FormatEnum.Number, size: 120 },
-      { name: 'isOpen', format: FormatEnum.Boolean, title: 'open?', size: 120 },
+      { name: 'id', format: Format.TypeFormat.DID },
+      { name: 'name', format: Format.TypeFormat.String },
+      { name: 'objects', format: Format.TypeFormat.Number, size: 120 },
+      { name: 'members', format: Format.TypeFormat.Number, size: 120 },
+      { name: 'startup', format: Format.TypeFormat.Number, size: 120 },
+      { name: 'isDefault', format: Format.TypeFormat.Boolean, title: 'default?', size: 120 },
+      { name: 'isOpen', format: Format.TypeFormat.Boolean, title: 'open?', size: 120 },
     ],
     [],
   );
 
   const handleRowAction = (actionId: string, item: any) => {
-    const spaceKey = item._original.key;
+    const spaceId = item.id;
     if (actionId === 'toggleOpen') {
-      void handleToggleOpen(spaceKey);
-    } else if (actionId === 'backup') {
-      void handleBackup(spaceKey);
+      void handleToggleOpen(spaceId);
+    } else if (actionId === 'snapshot') {
+      void handleSnapshot(spaceId);
     } else if (actionId === 'archive') {
-      void handleArchive(spaceKey);
+      void handleArchive(spaceId);
     }
   };
 
@@ -175,11 +179,7 @@ export const SpaceListPanel = ({ onSelect }: { onSelect?: (space: SpaceData | un
         properties={properties}
         rows={rows}
         features={features}
-        rowActions={[
-          { id: 'toggleOpen', label: 'Toggle space open closed' },
-          { id: 'backup', label: 'Download space backup' },
-          { id: 'archive', label: 'Download space archive' },
-        ]}
+        rowActions={rowActions}
         onRowClick={handleRowClicked}
         onRowAction={handleRowAction}
       />

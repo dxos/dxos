@@ -7,7 +7,7 @@ import { trim } from '@dxos/util';
 /**
  * Evaluate the script (with dependencies as arguments).
  */
-export const evalScript = (code: string, deps: Record<string, any> = {}) => {
+export const evalScript = async (code: string, deps: Record<string, any> = {}) => {
   // Create a sandboxed environment that blocks access to window and document.
   const sandbox = {
     ...deps,

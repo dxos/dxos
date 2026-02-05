@@ -4,9 +4,16 @@
   "description": "A component for editing the user tokens layer of dxos-theme.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
   "license": "MIT",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": [
+    "*.css",
+    "*.pcss"
+  ],
   "type": "module",
   "exports": {
     ".": {
@@ -24,13 +31,13 @@
     "dist"
   ],
   "dependencies": {
-    "@ch-ui/colors": "1.2.0",
-    "@ch-ui/tokens": "2.4.0",
+    "@ch-ui/colors": "catalog:",
+    "@ch-ui/tokens": "catalog:",
     "@dxos/lit-ui": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/react-hooks": "workspace:*",
-    "@dxos/react-ui-theme": "workspace:*",
-    "lit": "^3.3.1"
+    "@dxos/ui-theme": "workspace:*",
+    "lit": "catalog:"
   },
   "devDependencies": {
     "@dxos/test-utils": "workspace:*"

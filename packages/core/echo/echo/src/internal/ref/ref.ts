@@ -7,22 +7,24 @@ import * as Option from 'effect/Option';
 import * as ParseResult from 'effect/ParseResult';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
+import type * as Types from 'effect/Types';
 
-import { type EncodedReference, Reference } from '@dxos/echo-protocol';
-import { compositeRuntime } from '@dxos/echo-signals/runtime';
+import { Event } from '@dxos/async';
+import { type CustomInspectFunction, inspectCustom } from '@dxos/debug';
+import { EncodedReference } from '@dxos/echo-protocol';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN, ObjectId } from '@dxos/keys';
 
-import { ReferenceAnnotationId, getSchemaDXN, getTypeAnnotation, getTypeIdentifierAnnotation } from '../ast';
+import * as Database from '../../Database';
+import { ReferenceAnnotationId, getSchemaDXN, getTypeAnnotation, getTypeIdentifierAnnotation } from '../annotations';
 import { type JsonSchemaType } from '../json-schema';
-import type { BaseObject, WithId } from '../types';
+import type { AnyEntity, AnyProperties } from '../types';
 
 /**
  * The `$id` and `$ref` fields for an ECHO reference schema.
  */
 export const JSON_SCHEMA_ECHO_REF_ID = '/schemas/echo/ref';
 
-// TODO(burdon): Define return type.
 export const getSchemaReference = (property: JsonSchemaType): { typename: string } | undefined => {
   const { $id, reference: { schema: { $ref } = {} } = {} } = property;
   if ($id === JSON_SCHEMA_ECHO_REF_ID && $ref) {
@@ -30,7 +32,7 @@ export const getSchemaReference = (property: JsonSchemaType): { typename: string
   }
 };
 
-export const createSchemaReference = (typename: string): JsonSchemaType => {
+export const createSchemaReference = (typename: string): Types.DeepMutable<JsonSchemaType> => {
   return {
     $id: JSON_SCHEMA_ECHO_REF_ID,
     reference: {
@@ -71,16 +73,18 @@ export const RefTypeId: unique symbol = Symbol('@dxos/echo/internal/Ref');
 /**
  * Reference Schema.
  */
-export interface Ref$<T extends WithId> extends Schema.SchemaClass<Ref<T>, EncodedReference> {}
+export interface RefSchema<T extends AnyEntity> extends Schema.SchemaClass<Ref<T>, EncodedReference> {}
 
-// Type of the `Ref` function and extra methods attached to it.
+/**
+ * Type of the `Ref` function and extra methods attached to it.
+ */
 export interface RefFn {
-  <S extends Schema.Schema.Any>(schema: S): Ref$<Schema.Schema.Type<S>>;
+  <S extends Schema.Schema.Any>(schema: S): RefSchema<Schema.Schema.Type<S>>;
 
   /**
    * @returns True if the object is a reference.
    */
-  isRef: (obj: any) => obj is Ref<any>;
+  isRef: (obj: unknown) => obj is Ref<any>;
 
   /**
    * @returns True if the reference points to the given object id.
@@ -90,7 +94,7 @@ export interface RefFn {
   /**
    * @returns True if the schema is a reference schema.
    */
-  isRefSchema: (schema: Schema.Schema<any, any>) => schema is Ref$<any>;
+  isRefSchema: (schema: Schema.Schema<any, any>) => schema is RefSchema<any>;
 
   /**
    * @returns True if the schema AST is a reference schema.
@@ -100,31 +104,26 @@ export interface RefFn {
   /**
    * Constructs a reference that points to the given object.
    */
-  // TODO(burdon): Tighten type of T?
-  make: <T extends WithId>(object: T) => Ref<T>;
+  // TODO(burdon): Narrow to Obj.Unknown?
+  make: <T extends AnyEntity>(object: T) => Ref<T>;
 
   /**
    * Constructs a reference that points to the object specified by the provided DXN.
    */
   fromDXN: (dxn: DXN) => Ref<any>;
 }
+
 /**
  * Schema builder for references.
  */
-export const Ref: RefFn = <S extends Schema.Schema.Any>(schema: S): Ref$<Schema.Schema.Type<S>> => {
+export const Ref: RefFn = <S extends Schema.Schema.Any>(schema: S): RefSchema<Schema.Schema.Type<S>> => {
   assertArgument(Schema.isSchema(schema), 'schema', 'Must call with an instance of effect-schema');
-
   const annotation = getTypeAnnotation(schema);
   if (annotation == null) {
     throw new Error('Reference target must be an ECHO schema.');
   }
 
-  return createEchoReferenceSchema(
-    getTypeIdentifierAnnotation(schema),
-    annotation.typename,
-    annotation.version,
-    getSchemaExpectedName(schema.ast),
-  );
+  return createEchoReferenceSchema(getTypeIdentifierAnnotation(schema), annotation.typename, annotation.version);
 };
 
 /**
@@ -138,11 +137,14 @@ export interface Ref<T> {
   get dxn(): DXN;
 
   /**
+   * Returns true if the reference has a target available (inlined or resolver set).
+   */
+  get isAvailable(): boolean;
+
+  /**
    * @returns The reference target.
    * May return `undefined` if the object is not loaded in the working set.
    * Accessing this property, even if it returns `undefined` will trigger the object to be loaded to the working set.
-   *
-   * @reactive Supports signal subscriptions.
    */
   get target(): T | undefined;
 
@@ -156,6 +158,7 @@ export interface Ref<T> {
   /**
    * @returns Promise that will resolves with the target object or undefined if the object is not loaded locally.
    */
+
   tryLoad(): Promise<T | undefined>;
 
   /**
@@ -201,7 +204,7 @@ Ref.isRef = (obj: any): obj is Ref<any> => {
 
 Ref.hasObjectId = (id: ObjectId) => (ref: Ref<any>) => ref.dxn.isLocalObjectId() && ref.dxn.parts[1] === id;
 
-Ref.isRefSchema = (schema: Schema.Schema<any, any>): schema is Ref$<any> => {
+Ref.isRefSchema = (schema: Schema.Schema<any, any>): schema is RefSchema<any> => {
   return Ref.isRefSchemaAST(schema.ast);
 };
 
@@ -209,7 +212,7 @@ Ref.isRefSchemaAST = (ast: SchemaAST.AST): boolean => {
   return SchemaAST.getAnnotation(ast, ReferenceAnnotationId).pipe(Option.isSome);
 };
 
-Ref.make = <T extends BaseObject>(obj: T): Ref<T> => {
+Ref.make = <T extends AnyProperties>(obj: T): Ref<T> => {
   if (typeof obj !== 'object' || obj === null) {
     throw new TypeError('Expected: ECHO object.');
   }
@@ -217,7 +220,7 @@ Ref.make = <T extends BaseObject>(obj: T): Ref<T> => {
   // TODO(dmaretskyi): Extract to `getObjectDXN` function.
   const id = obj.id;
   invariant(ObjectId.isValid(id), 'Invalid object ID');
-  const dxn = Reference.localObjectReference(id).toDXN();
+  const dxn = DXN.fromLocalObjectId(id);
   return new RefImpl(dxn, obj);
 };
 
@@ -242,7 +245,6 @@ export const createEchoReferenceSchema = (
   echoId: string | undefined,
   typename: string | undefined,
   version: string | undefined,
-  schemaName?: string,
 ): Schema.SchemaClass<Ref<any>, EncodedReference> => {
   if (!echoId && !typename) {
     throw new TypeError('Either echoId or typename must be provided.');
@@ -261,25 +263,39 @@ export const createEchoReferenceSchema = (
     [],
     {
       encode: () => {
-        return (value) => {
-          return Effect.succeed({
-            '/': (value as Ref<any>).dxn.toString(),
+        return (value) =>
+          Effect.gen(function* () {
+            if (Ref.isRef(value)) {
+              return EncodedReference.fromDXN((value as Ref<any>).dxn);
+            } else if (EncodedReference.isEncodedReference(value)) {
+              return value;
+            }
+            throw new Error('Invalid reference');
           });
-        };
       },
       decode: () => {
-        return (value) => {
-          // TODO(dmaretskyi): This branch seems to be taken by Schema.is
-          if (Ref.isRef(value)) {
-            return Effect.succeed(value);
-          }
+        return (value) =>
+          Effect.gen(function* () {
+            const dbService = yield* Effect.serviceOption(Database.Service);
 
-          if (typeof value !== 'object' || value == null || typeof (value as any)['/'] !== 'string') {
-            return Effect.fail(new ParseResult.Unexpected(value, 'reference'));
-          }
+            // TODO(dmaretskyi): This branch seems to be taken by Schema.is
+            if (Ref.isRef(value)) {
+              if (Option.isSome(dbService)) {
+                return dbService.value.db.makeRef(value.dxn);
+              } else {
+                return value;
+              }
+            }
 
-          return Effect.succeed(Ref.fromDXN(DXN.parse((value as any)['/'])));
-        };
+            if (!EncodedReference.isEncodedReference(value)) {
+              return yield* Effect.fail(new ParseResult.Unexpected(value, 'reference'));
+            }
+            if (Option.isSome(dbService)) {
+              return dbService.value.db.makeRef(EncodedReference.toDXN(value));
+            } else {
+              return Ref.fromDXN(EncodedReference.toDXN(value));
+            }
+          });
       },
     },
     {
@@ -315,12 +331,12 @@ export interface RefResolver {
    * @param load If true the resolver should attempt to load the object from disk.
    * @param onLoad Callback to call when the object is loaded.
    */
-  resolveSync(dxn: DXN, load: boolean, onLoad?: () => void): BaseObject | undefined;
+  resolveSync(dxn: DXN, load: boolean, onLoad?: () => void): AnyProperties | undefined;
 
   /**
    * Resolver ref asynchronously.
    */
-  resolve(dxn: DXN): Promise<BaseObject | undefined>;
+  resolve(dxn: DXN): Promise<AnyProperties | undefined>;
 
   // TODO(dmaretskyi): Combine with `resolve`.
   resolveSchema(dxn: DXN): Promise<Schema.Schema.AnyNoContext | undefined>;
@@ -329,7 +345,7 @@ export interface RefResolver {
 export class RefImpl<T> implements Ref<T> {
   #dxn: DXN;
   #resolver?: RefResolver = undefined;
-  #signal = compositeRuntime.createSignal();
+  #resolved = new Event<void>();
 
   /**
    * Target is set when the reference is created from a specific object.
@@ -341,7 +357,7 @@ export class RefImpl<T> implements Ref<T> {
    * Callback to issue a reactive notification when object is resolved.
    */
   #resolverCallback = () => {
-    this.#signal.notifyWrite();
+    this.#resolved.emit();
   };
 
   constructor(dxn: DXN, target?: T) {
@@ -359,8 +375,14 @@ export class RefImpl<T> implements Ref<T> {
   /**
    * @inheritdoc
    */
+  get isAvailable(): boolean {
+    return this.#target !== undefined || this.#resolver !== undefined;
+  }
+
+  /**
+   * @inheritdoc
+   */
   get target(): T | undefined {
-    this.#signal.notifyRead();
     if (this.#target) {
       return this.#target;
     }
@@ -388,6 +410,9 @@ export class RefImpl<T> implements Ref<T> {
    * @inheritdoc
    */
   async tryLoad(): Promise<T | undefined> {
+    if (this.#target) {
+      return this.#target;
+    }
     invariant(this.#resolver, 'Resolver is not set');
     return (await this.#resolver.resolve(this.#dxn)) as T | undefined;
   }
@@ -428,10 +453,15 @@ export class RefImpl<T> implements Ref<T> {
     return `Ref(${this.#dxn.toString()})`;
   }
 
+  [inspectCustom]: CustomInspectFunction = (depth, options, inspect) => {
+    return this.toString();
+  };
+
   [RefTypeId] = refVariance;
 
   /**
    * Internal method to set the resolver.
+   *
    * @internal
    */
   _setResolver(resolver: RefResolver): void {
@@ -439,8 +469,6 @@ export class RefImpl<T> implements Ref<T> {
   }
 
   /**
-   * Internal method to get the saved target.
-   * Not the same as `target` which is resolved from the resolver.
    * @internal
    */
   _getSavedTarget(): T | undefined {
@@ -459,7 +487,7 @@ export const setRefResolver = (ref: Ref<any>, resolver: RefResolver) => {
 /**
  * Internal API for getting the saved target on a reference.
  */
-export const getRefSavedTarget = (ref: Ref<any>): BaseObject | undefined => {
+export const getRefSavedTarget = (ref: Ref<any>): AnyProperties | undefined => {
   invariant(ref instanceof RefImpl, 'Ref is not an instance of RefImpl');
   return ref._getSavedTarget();
 };
@@ -482,10 +510,10 @@ export const refFromEncodedReference = (encodedReference: EncodedReference, reso
 };
 
 export class StaticRefResolver implements RefResolver {
-  public objects = new Map<ObjectId, BaseObject>();
+  public objects = new Map<ObjectId, AnyProperties>();
   public schemas = new Map<DXN.String, Schema.Schema.AnyNoContext>();
 
-  addObject(obj: BaseObject): this {
+  addObject(obj: AnyProperties): this {
     this.objects.set(obj.id, obj);
     return this;
   }
@@ -497,7 +525,7 @@ export class StaticRefResolver implements RefResolver {
     return this;
   }
 
-  resolveSync(dxn: DXN, _load: boolean, _onLoad?: () => void): BaseObject | undefined {
+  resolveSync(dxn: DXN, _load: boolean, _onLoad?: () => void): AnyProperties | undefined {
     const id = dxn?.asEchoDXN()?.echoId;
     if (id == null) {
       return undefined;
@@ -506,7 +534,7 @@ export class StaticRefResolver implements RefResolver {
     return this.objects.get(id);
   }
 
-  async resolve(dxn: DXN): Promise<BaseObject | undefined> {
+  async resolve(dxn: DXN): Promise<AnyProperties | undefined> {
     const id = dxn?.asEchoDXN()?.echoId;
     if (id == null) {
       return undefined;

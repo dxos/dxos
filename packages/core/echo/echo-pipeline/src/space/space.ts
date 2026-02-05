@@ -24,7 +24,7 @@ import { type SpaceProtocol } from './space-protocol';
 // TODO(burdon): Factor out?
 type FeedProvider = (feedKey: PublicKey, opts?: FeedOptions) => Promise<FeedWrapper<FeedMessage>>;
 
-export type SpaceParams = {
+export type SpaceProps = {
   id: SpaceId;
   spaceKey: PublicKey;
   protocol: SpaceProtocol;
@@ -40,7 +40,7 @@ export type SpaceParams = {
   onMemberRolesChanged: (member: MemberInfo[]) => Promise<void>;
 };
 
-export type CreatePipelineParams = {
+export type CreatePipelineProps = {
   start: Timeframe;
   // designation: AdmittedFeed.Designation;
 };
@@ -68,7 +68,7 @@ export class Space extends Resource {
   private _controlFeed?: FeedWrapper<FeedMessage>;
   private _dataFeed?: FeedWrapper<FeedMessage>;
 
-  constructor(params: SpaceParams) {
+  constructor(params: SpaceProps) {
     super();
     invariant(params.spaceKey && params.feedProvider);
     this._id = params.id;

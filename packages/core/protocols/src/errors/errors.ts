@@ -2,208 +2,142 @@
 // Copyright 2021 DXOS.org
 //
 
+import { BaseError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 
 import type { ObjectId } from '../types.js';
 
-import { ApiError, BaseError, DatabaseError, SystemError } from './base-errors.js';
 import { registerError, registerErrorMessageContext, registerErrorNoArgs } from './helpers.js';
 
 /**
  * Thrown when request was terminated because the RPC endpoint has been closed.
  */
-export class RpcClosedError extends SystemError {
-  constructor() {
-    super('RPC_CLOSED', 'Request was terminated because the RPC endpoint is closed.');
-  }
-}
+export class RpcClosedError extends BaseError.extend(
+  'RpcClosedError',
+  'Request was terminated because the RPC endpoint is closed.',
+) {}
 
-registerErrorNoArgs('RPC_CLOSED', RpcClosedError);
+registerErrorNoArgs('RpcClosedError', RpcClosedError);
 
 /**
  * Thrown when `request` is called when RPC has not been opened.
  */
-export class RpcNotOpenError extends SystemError {
-  constructor() {
-    super('RPC_NOT_OPEN', 'RPC has not been opened.');
-  }
-}
+export class RpcNotOpenError extends BaseError.extend('RpcNotOpenError', 'RPC has not been opened.') {}
 
-registerErrorNoArgs('RPC_NOT_OPEN', RpcNotOpenError);
+registerErrorNoArgs('RpcNotOpenError', RpcNotOpenError);
 
-export class CancelledError extends SystemError {
-  constructor(message?: string, context?: Record<string, any>) {
-    super('CANCELLED', message, context);
-  }
-}
+export class CancelledError extends BaseError.extend('CancelledError') {}
 
-registerErrorMessageContext('CANCELLED', CancelledError);
+registerErrorMessageContext('CancelledError', CancelledError);
 
-export class InvalidConfigError extends ApiError {
-  constructor(message?: string, context?: Record<string, any>) {
-    super('INVALID_CONFIG', message, context);
-  }
-}
+export class InvalidConfigError extends BaseError.extend('InvalidConfigError') {}
 
-registerErrorMessageContext('INVALID_CONFIG', InvalidConfigError);
+registerErrorMessageContext('InvalidConfigError', InvalidConfigError);
 
 /**
  * Explicit failure to connect with remote client services.
  */
-export class RemoteServiceConnectionError extends ApiError {
-  constructor(message?: string, context?: Record<string, any>) {
-    super('REMOTE_SERVICE_CONNECTION_ERROR', message, context);
-  }
-}
+export class RemoteServiceConnectionError extends BaseError.extend('RemoteServiceConnectionError') {}
 
-registerErrorMessageContext('REMOTE_SERVICE_CONNECTION_ERROR', RemoteServiceConnectionError);
+registerErrorMessageContext('RemoteServiceConnectionError', RemoteServiceConnectionError);
 
 /**
  * Failed to open a connection to remote client services.
  */
-export class RemoteServiceConnectionTimeout extends ApiError {
-  constructor(message?: string, context?: Record<string, any>) {
-    super('REMOTE_SERVICE_CONNECTION_TIMEOUT', message, context);
-  }
-}
+export class RemoteServiceConnectionTimeout extends BaseError.extend('RemoteServiceConnectionTimeout') {}
 
-registerErrorMessageContext('REMOTE_SERVICE_CONNECTION_TIMEOUT', RemoteServiceConnectionTimeout);
+registerErrorMessageContext('RemoteServiceConnectionTimeout', RemoteServiceConnectionTimeout);
 
-export class DataCorruptionError extends SystemError {
-  constructor(message?: string, context?: Record<string, any>) {
-    super('DATA_CORRUPTION', message, context);
-  }
-}
+export class DataCorruptionError extends BaseError.extend('DataCorruptionError') {}
 
-registerErrorMessageContext('DATA_CORRUPTION', DataCorruptionError);
+registerErrorMessageContext('DataCorruptionError', DataCorruptionError);
 
-export class InvalidInvitationExtensionRoleError extends SystemError {
-  constructor(message?: string, context?: Record<string, any>) {
-    super('INVALID_INVITATION_EXTENSION_ROLE', message, context);
-  }
-}
+export class InvalidInvitationExtensionRoleError extends BaseError.extend('InvalidInvitationExtensionRoleError') {}
 
-registerErrorMessageContext('INVALID_INVITATION_EXTENSION_ROLE', InvalidInvitationExtensionRoleError);
+registerErrorMessageContext('InvalidInvitationExtensionRoleError', InvalidInvitationExtensionRoleError);
 
-export class IdentityNotInitializedError extends DatabaseError {
-  constructor(message?: string, context?: Record<string, any>) {
-    super('IDENTITY_NOT_INITIALIZED', message, context);
-  }
-}
+export class IdentityNotInitializedError extends BaseError.extend('IdentityNotInitializedError') {}
 
-registerErrorMessageContext('IDENTITY_NOT_INITIALIZED', IdentityNotInitializedError);
+registerErrorMessageContext('IdentityNotInitializedError', IdentityNotInitializedError);
 
-export class InvalidInvitationError extends DatabaseError {
-  constructor(message?: string, context?: Record<string, any>) {
-    super('INVALID_INVITATION', message, context);
-  }
-}
+export class InvalidInvitationError extends BaseError.extend('InvalidInvitationError') {}
 
-registerErrorMessageContext('INVALID_INVITATION', InvalidInvitationError);
+registerErrorMessageContext('InvalidInvitationError', InvalidInvitationError);
 
-export class AlreadyJoinedError extends DatabaseError {
-  constructor(message?: string, context?: Record<string, any>) {
-    super('ALREADY_JOINED', message, context);
-  }
-}
+export class AlreadyJoinedError extends BaseError.extend('AlreadyJoinedError') {}
 
-registerErrorMessageContext('ALREADY_JOINED', AlreadyJoinedError);
+registerErrorMessageContext('AlreadyJoinedError', AlreadyJoinedError);
 
-export class ConnectionResetError extends BaseError {
-  constructor(message?: string, context?: any) {
-    super('CONNECTION_RESET', message, context);
-  }
-}
+export class ConnectionResetError extends BaseError.extend('ConnectionResetError') {}
 
-registerErrorMessageContext('CONNECTION_RESET', ConnectionResetError);
+registerErrorMessageContext('ConnectionResetError', ConnectionResetError);
 
-export class TimeoutError extends BaseError {
-  constructor(message?: string, context?: any) {
-    super('TIMEOUT', message, context);
-  }
-}
+export class TimeoutError extends BaseError.extend('TimeoutError') {}
 
-registerErrorMessageContext('TIMEOUT', TimeoutError);
+registerErrorMessageContext('TimeoutError', TimeoutError);
 
 // General protocol error.
-export class ProtocolError extends BaseError {
-  constructor(message?: string, context?: any) {
-    super('PROTOCOL_ERROR', message, context);
-  }
-}
+export class ProtocolError extends BaseError.extend('ProtocolError') {}
 
-registerErrorMessageContext('PROTOCOL_ERROR', ProtocolError);
+registerErrorMessageContext(ProtocolError.name, ProtocolError);
 
 // General connectivity errors.
-export class ConnectivityError extends BaseError {
-  constructor(message?: string, context?: any) {
-    super('CONNECTIVITY_ERROR', message, context);
-  }
-}
+export class ConnectivityError extends BaseError.extend('ConnectivityError') {}
 
-registerErrorMessageContext('CONNECTIVITY_ERROR', ConnectivityError);
+registerErrorMessageContext('ConnectivityError', ConnectivityError);
 
-export class RateLimitExceededError extends BaseError {
-  constructor(message?: string, context?: any) {
-    super('RATE_LIMIT_EXCEEDED', message, context);
-  }
-}
+export class RateLimitExceededError extends BaseError.extend('RateLimitExceededError') {}
 
-registerErrorMessageContext('RATE_LIMIT_EXCEEDED', RateLimitExceededError);
+registerErrorMessageContext('RateLimitExceededError', RateLimitExceededError);
 
 // TODO(nf): Rename? the protocol isn't what's unknown...
-export class UnknownProtocolError extends BaseError {
-  constructor(message?: string, innerError?: Error) {
-    super('UNKNOWN_PROTOCOL_ERROR', message, innerError);
-  }
-}
+export class UnknownProtocolError extends BaseError.extend('UnknownProtocolError') {}
 
-registerErrorMessageContext('UNKNOWN_PROTOCOL_ERROR', UnknownProtocolError);
+registerError(UnknownProtocolError.name, (message, context) => new UnknownProtocolError({ message, context }));
 
-export class InvalidStorageVersionError extends DatabaseError {
+export class InvalidStorageVersionError extends BaseError.extend(
+  'InvalidStorageVersionError',
+  'Invalid storage version.',
+) {
   constructor(expected: number, actual: number) {
-    super('INVALID_STORAGE_VERSION', 'Invalid storage version.', { expected, actual });
+    super({ context: { expected, actual } });
   }
 }
 
-registerError('INVALID_STORAGE_VERSION', (_, context) => {
+registerError('InvalidStorageVersionError', (_, context) => {
   return new InvalidStorageVersionError(context.expected ?? NaN, context.actual ?? NaN);
 });
 
-export class SpaceNotFoundError extends DatabaseError {
+export class SpaceNotFoundError extends BaseError.extend('SpaceNotFoundError', 'Space not found.') {
   constructor(spaceKey: PublicKey) {
-    super('SPACE_NOT_FOUND', 'Space not found.', { spaceKey });
+    super({ context: { spaceKey } });
   }
 }
 
-registerError('SPACE_NOT_FOUND', (_, context) => {
+registerError('SpaceNotFoundError', (_, context) => {
   return new SpaceNotFoundError(PublicKey.safeFrom(context.spaceKey) ?? PublicKey.from('00'));
 });
 
-export class EntityNotFoundError extends DatabaseError {
+export class EntityNotFoundError extends BaseError.extend('EntityNotFoundError', 'Item not found.') {
   constructor(entityId: ObjectId) {
-    super('ITEM_NOT_FOUND', 'Item not found.', { entityId });
+    super({ context: { entityId } });
   }
 }
 
-registerError('ITEM_NOT_FOUND', (_, context) => {
+registerError('EntityNotFoundError', (_, context) => {
   return new EntityNotFoundError(context.entityId);
 });
 
-export class UnknownModelError extends DatabaseError {
+export class UnknownModelError extends BaseError.extend('UnknownModelError', 'Unknown model.') {
   constructor(model: string) {
-    super('UNKNOWN_MODEL', 'Unknown model.', { model });
+    super({ context: { model } });
   }
 }
 
-registerError('UNKNOWN_MODEL', (_, context) => {
+registerError('UnknownModelError', (_, context) => {
   return new UnknownModelError(context.model);
 });
 
-export class AuthorizationError extends ApiError {
-  constructor(message?: string, context?: any) {
-    super('AUTHORIZATION_ERROR', message, context);
-  }
-}
+export class AuthorizationError extends BaseError.extend('AuthorizationError') {}
 
-registerErrorMessageContext('AUTHORIZATION_ERROR', AuthorizationError);
+registerErrorMessageContext('AuthorizationError', AuthorizationError);

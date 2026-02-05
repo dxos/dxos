@@ -5,7 +5,9 @@
 import React from 'react';
 
 import { Avatar, Button, Icon, IconButton, Link, Tooltip, Trans, useTranslation } from '@dxos/react-ui';
-import { descriptionText, getSize, mx, valenceColorText } from '@dxos/react-ui-theme';
+import { descriptionText, getSize, mx, valenceColorText } from '@dxos/ui-theme';
+
+import { translationKey } from '../translations';
 
 import { type AgentFormProps } from './DeviceList';
 
@@ -16,7 +18,7 @@ export const AgentConfig = ({
   onAgentCreate,
   onAgentRefresh,
 }: Omit<AgentFormProps, 'agentHostingEnabled'>) => {
-  const { t } = useTranslation('os');
+  const { t } = useTranslation(translationKey);
   return (
     <div role='none' className='p-1'>
       <h2 className={mx(descriptionText, 'text-center mbs-2')}>{t('agent heading')}</h2>
@@ -57,13 +59,12 @@ export const AgentConfig = ({
             {agentStatus === 'created' && (
               <Tooltip.Trigger asChild content={t('destroy agent label')} side='bottom'>
                 <IconButton
-                  iconOnly
                   variant='ghost'
                   classNames='pli-0 is-[--rail-action] bs-[--rail-action]'
                   data-testid='agent.destroy'
                   label={t('destroy agent label')}
                   icon='ph--power--regular'
-                  size={5}
+                  iconOnly
                   onClick={onAgentDestroy}
                 />
               </Tooltip.Trigger>

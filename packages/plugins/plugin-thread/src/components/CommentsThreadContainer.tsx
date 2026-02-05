@@ -4,32 +4,36 @@
 
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
-import { Ref, Relation } from '@dxos/echo';
-import { fullyQualifiedId, getSpace, useMembers } from '@dxos/react-client/echo';
+import { Obj, Relation } from '@dxos/echo';
+import { useObject } from '@dxos/echo-react';
+import { getSpace, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { IconButton, Tag, Tooltip, useThemeContext, useTranslation } from '@dxos/react-ui';
-import { createBasicExtensions, createThemeExtensions, listener } from '@dxos/react-ui-editor';
-import { hoverableControlItem, hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/react-ui-theme';
-import { MessageTextbox, type MessageTextboxProps, Thread, type ThreadRootProps } from '@dxos/react-ui-thread';
-import { type AnchoredTo } from '@dxos/schema';
-import { isNonNullable } from '@dxos/util';
+import {
+  MessageTextbox,
+  type MessageTextboxProps,
+  Thread as ThreadComponent,
+  type ThreadRootProps,
+} from '@dxos/react-ui-thread';
+import { type AnchoredTo, type Thread } from '@dxos/types';
+import { createBasicExtensions, createThemeExtensions, listener } from '@dxos/ui-editor';
+import { hoverableControlItem, hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/ui-theme';
 
 import { useStatus } from '../hooks';
 import { meta } from '../meta';
-import { type ThreadType } from '../types';
 import { getMessageMetadata } from '../util';
 
 import { command } from './command-extension';
 import { MessageContainer, buttonClassNames, buttonGroupClassNames } from './MessageContainer';
 
 export type CommentsThreadContainerProps = {
-  anchor: AnchoredTo;
-  onAttend?: (anchor: AnchoredTo) => void;
-  onComment?: (anchor: AnchoredTo, message: string) => void;
-  onResolve?: (anchor: AnchoredTo) => void;
-  onMessageDelete?: (anchor: AnchoredTo, messageId: string) => void;
-  onThreadDelete?: (anchor: AnchoredTo) => void;
-  onAcceptProposal?: (anchor: AnchoredTo, messageId: string) => void;
+  anchor: AnchoredTo.AnchoredTo;
+  onAttend?: (anchor: AnchoredTo.AnchoredTo) => void;
+  onComment?: (anchor: AnchoredTo.AnchoredTo, message: string) => void;
+  onResolve?: (anchor: AnchoredTo.AnchoredTo) => void;
+  onMessageDelete?: (anchor: AnchoredTo.AnchoredTo, messageId: string) => void;
+  onThreadDelete?: (anchor: AnchoredTo.AnchoredTo) => void;
+  onAcceptProposal?: (anchor: AnchoredTo.AnchoredTo, messageId: string) => void;
 } & Pick<ThreadRootProps, 'current'>;
 
 export const CommentsThreadContainer = ({
@@ -42,29 +46,30 @@ export const CommentsThreadContainer = ({
   onThreadDelete,
   onAcceptProposal,
 }: CommentsThreadContainerProps) => {
+  const { themeMode } = useThemeContext();
   const { t } = useTranslation(meta.id);
   const identity = useIdentity()!;
   const space = getSpace(anchor);
-  const members = useMembers(space?.key);
+  const members = useMembers(space?.id);
   const detached = !anchor.anchor;
-  const thread = Relation.getSource(anchor) as ThreadType;
-  const activity = useStatus(space, fullyQualifiedId(thread));
+  const thread = Relation.getSource(anchor) as Thread.Thread;
+  const [messages] = useObject(thread, 'messages');
+  const activity = useStatus(space, Obj.getDXN(thread).toString());
   const threadScrollRef = useRef<HTMLDivElement | null>(null);
-  const { themeMode } = useThemeContext();
 
-  const textboxMetadata = getMessageMetadata(fullyQualifiedId(thread), identity);
+  const textboxMetadata = getMessageMetadata(Obj.getDXN(thread).toString(), identity);
+
   // TODO(wittjosiah): This is a hack to reset the editor after a message is sent.
-  const [_count, _setCount] = useState(0);
-  const rerenderEditor = () => _setCount((count) => count + 1);
+  const [state, setState] = useState({});
   const messageRef = useRef('');
   const extensions = useMemo(
     () => [
       createBasicExtensions({ placeholder: t('message placeholder') }),
       createThemeExtensions({ themeMode }),
-      listener({ onChange: (text) => (messageRef.current = text) }),
+      listener({ onChange: ({ text }) => (messageRef.current = text) }),
       command,
     ],
-    [_count],
+    [state],
   );
 
   // TODO(thure): Factor out.
@@ -85,14 +90,14 @@ export const CommentsThreadContainer = ({
     onComment?.(anchor, messageRef.current);
     messageRef.current = '';
     scrollToEnd('instant');
-    rerenderEditor();
+    setState({});
 
     return true;
   }, [anchor, identity]);
 
   return (
-    <Thread.Root
-      id={fullyQualifiedId(thread)}
+    <ThreadComponent.Root
+      id={Obj.getDXN(thread).toString()}
       classNames='pbs-2 border-be border-subduedSeparator last:border-none'
       current={current}
       onClickCapture={handleAttend}
@@ -108,10 +113,10 @@ export const CommentsThreadContainer = ({
       >
         {detached ? (
           <Tooltip.Trigger asChild content={t('detached thread label')} side='top'>
-            <Thread.Header detached>{thread.name}</Thread.Header>
+            <ThreadComponent.Header detached>{thread.name}</ThreadComponent.Header>
           </Tooltip.Trigger>
         ) : (
-          <Thread.Header>{thread.name}</Thread.Header>
+          <ThreadComponent.Header>{thread.name}</ThreadComponent.Header>
         )}
         <div role='none' className={buttonGroupClassNames}>
           {thread.status === 'staged' && <Tag palette='neutral'>{t('draft button')}</Tag>}
@@ -140,12 +145,11 @@ export const CommentsThreadContainer = ({
         </div>
       </div>
 
-      {/** TODO(dmaretskyi): How's `thread.messages` undefined? */}
-      {Ref.Array.targets(thread.messages?.filter(isNonNullable) ?? []).map((message) => (
+      {messages?.map((ref) => (
         <MessageContainer
-          key={message.id}
+          key={ref.dxn.toString()}
           editable
-          message={message}
+          message={ref}
           members={members}
           onDelete={handleMessageDelete}
           onAcceptProposal={handleAcceptProposal}
@@ -160,10 +164,10 @@ export const CommentsThreadContainer = ({
       */}
       <MessageTextbox extensions={extensions} onSend={handleComment} {...textboxMetadata} />
 
-      <Thread.Status activity={activity}>{t('activity message')}</Thread.Status>
+      <ThreadComponent.Status activity={activity}>{t('activity message')}</ThreadComponent.Status>
 
       {/* NOTE(thure): This can’t also be the `overflow-anchor` because `ScrollArea` injects an interceding node that contains this necessary ref’d element. */}
       <div role='none' className='bs-px -mbs-px' ref={threadScrollRef} />
-    </Thread.Root>
+    </ThreadComponent.Root>
   );
 };

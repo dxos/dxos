@@ -5,20 +5,23 @@
 import { type Resource } from '@dxos/react-ui';
 
 import { meta } from './meta';
-import { FileType } from './types';
+import { WnfsFile } from './types';
 
 export const translations = [
   {
     'en-US': {
-      [FileType.typename]: {
+      [WnfsFile.File.typename]: {
         'typename label': 'File',
+        'typename label_zero': 'Files',
+        'typename label_one': 'File',
+        'typename label_other': 'Files',
         'object name placeholder': 'New file',
         'rename object label': 'Rename file',
         'delete object label': 'Delete file',
+        'object deleted label': 'File deleted',
       },
       [meta.id]: {
         'plugin name': 'Files',
-        'delete object label': 'Delete',
         'file input placeholder': 'Drop a file here, or click to select a file',
       },
     },

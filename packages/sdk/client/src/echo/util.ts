@@ -2,32 +2,17 @@
 // Copyright 2023 DXOS.org
 //
 
-import * as Schema from 'effect/Schema';
-
 import { type Space } from '@dxos/client-protocol';
-import { Obj, type Type } from '@dxos/echo';
-import { type AnyLiveObject, type SpaceSyncState, getDatabaseFromObject } from '@dxos/echo-db';
-import { invariant } from '@dxos/invariant';
-import { type Live, isLiveObject } from '@dxos/live-object';
+import { type SpaceSyncState, getDatabaseFromObject } from '@dxos/echo-db';
+import { type ObjectId, type SpaceId } from '@dxos/keys';
 
 import { SpaceProxy } from './space-proxy';
-
-// TODO(dmaretskyi): Move to @dxos/echo/internal.
-export const ReactiveObjectSchema: Schema.Schema<Live<any>> = Schema.Any.pipe(
-  Schema.filter((obj) => isLiveObject(obj)),
-  Schema.annotations({ title: 'Live' }),
-);
-
-export const EchoObjectSchema: Schema.Schema<AnyLiveObject<any>> = Schema.Any.pipe(
-  Schema.filter((obj) => Obj.isObject(obj)),
-  Schema.annotations({ title: 'EchoObject' }),
-);
 
 /**
  * @param object @deprecated
  */
 // TODO(wittjosiah): This should be `Obj.getSpace` / `Relation.getSpace` / `Ref.getSpace`.
-export const getSpace = (object?: Live<any>): Space | undefined => {
+export const getSpace = (object?: any): Space | undefined => {
   if (!object) {
     return undefined;
   }
@@ -44,47 +29,27 @@ export const getSpace = (object?: Live<any>): Space | undefined => {
   return undefined;
 };
 
-/**
- * Fully qualified id of a reactive object is a combination of the space id and the object id.
- * @returns Fully qualified id of a reactive object.
- * @deprecated Prefer DXNs.
- */
-export const fullyQualifiedId = (object: Live<any>): string => {
-  const space = getSpace(object);
-  return space ? `${space.id}:${object.id}` : object.id;
-};
-
-/**
- * @deprecated Use `parseId` instead.
- */
-export const parseFullyQualifiedId = (id: string): [string, string] => {
-  const [spaceId, objectId] = id.split(':');
-  invariant(objectId, 'invalid id');
-  return [spaceId, objectId];
-};
-
 // TODO(burdon): Don't export.
 export const SPACE_ID_LENGTH = 33;
 export const OBJECT_ID_LENGTH = 26;
 export const FQ_ID_LENGTH = SPACE_ID_LENGTH + OBJECT_ID_LENGTH + 1;
 
-// TODO(burdon): Move to @dxos/keys.
-export const parseId = (id?: string): { spaceId?: Type.SpaceId; objectId?: Type.ObjectId } => {
+export const parseId = (id?: string): { spaceId?: SpaceId; objectId?: ObjectId } => {
   if (!id) {
     return {};
   } else if (id.length === SPACE_ID_LENGTH) {
     return {
-      spaceId: id as Type.SpaceId,
+      spaceId: id as SpaceId,
     };
   } else if (id.length === OBJECT_ID_LENGTH) {
     return {
-      objectId: id as Type.ObjectId,
+      objectId: id as ObjectId,
     };
   } else if (id.length === FQ_ID_LENGTH && id.indexOf(':') === SPACE_ID_LENGTH) {
     const [spaceId, objectId] = id.split(':');
     return {
-      spaceId: spaceId as Type.SpaceId,
-      objectId: objectId as Type.ObjectId,
+      spaceId: spaceId as SpaceId,
+      objectId: objectId as ObjectId,
     };
   } else {
     return {};
@@ -99,7 +64,7 @@ export type Progress = { count: number; total: number };
 
 export type PeerSyncState = Omit<SpaceSyncState.PeerState, 'peerId'>;
 
-export type SpaceSyncStateMap = Record<Type.SpaceId, PeerSyncState>;
+export type SpaceSyncStateMap = Record<SpaceId, PeerSyncState>;
 
 export const createEmptyEdgeSyncState = (): PeerSyncState => ({
   missingOnLocal: 0,

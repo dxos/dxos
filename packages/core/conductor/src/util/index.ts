@@ -3,4 +3,5 @@
 //
 
 export * from './ast';
+export * from './graphviz';
 export * from './stream';

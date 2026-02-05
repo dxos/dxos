@@ -2,61 +2,36 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Capabilities, Events, contributes, createIntent, defineModule, definePlugin } from '@dxos/app-framework';
-import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
-import { SpaceCapabilities } from '@dxos/plugin-space';
-import { defineObjectForm } from '@dxos/plugin-space/types';
+import * as Effect from 'effect/Effect';
 
-import { IntentResolver, ReactSurface } from './capabilities';
+import { Common, Plugin } from '@dxos/app-framework';
+import { Type } from '@dxos/echo';
+import { type CreateObject } from '@dxos/plugin-space/types';
+import { View } from '@dxos/schema';
+
+import { ReactSurface } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
 import { ExplorerAction, Graph } from './types';
 
-export const ExplorerPlugin = definePlugin(meta, () => [
-  defineModule({
-    id: `${meta.id}/module/translations`,
-    activatesOn: Events.SetupTranslations,
-    activate: () => contributes(Capabilities.Translations, translations),
+export const ExplorerPlugin = Plugin.define(meta).pipe(
+  Common.Plugin.addTranslationsModule({ translations }),
+  Common.Plugin.addMetadataModule({
+    metadata: {
+      id: Type.getTypename(Graph.Graph),
+      metadata: {
+        icon: 'ph--graph--regular',
+        iconHue: 'green',
+        inputSchema: ExplorerAction.GraphProps,
+        createObject: ((props, { db }) =>
+          Effect.promise(async () => {
+            const { view } = await View.makeFromDatabase({ db, typename: props.typename });
+            return Graph.make({ name: props.name, view });
+          })) satisfies CreateObject,
+      },
+    },
   }),
-  defineModule({
-    id: `${meta.id}/module/metadata`,
-    activatesOn: Events.SetupMetadata,
-    activate: () =>
-      contributes(Capabilities.Metadata, {
-        id: Graph.Graph.typename,
-        metadata: {
-          icon: 'ph--graph--regular',
-          iconClassName: 'text-greenSurfaceText',
-        },
-      }),
-  }),
-  defineModule({
-    id: `${meta.id}/module/object-form`,
-    activatesOn: ClientEvents.SetupSchema,
-    activate: () =>
-      contributes(
-        SpaceCapabilities.ObjectForm,
-        defineObjectForm({
-          objectSchema: Graph.Graph,
-          formSchema: ExplorerAction.GraphProps,
-          hidden: true,
-          getIntent: (props, options) => createIntent(ExplorerAction.CreateGraph, { ...props, space: options.space }),
-        }),
-      ),
-  }),
-  defineModule({
-    id: `${meta.id}/module/schema`,
-    activatesOn: ClientEvents.SetupSchema,
-    activate: () => contributes(ClientCapabilities.Schema, [Graph.Graph]),
-  }),
-  defineModule({
-    id: `${meta.id}/module/react-surface`,
-    activatesOn: Events.SetupReactSurface,
-    activate: ReactSurface,
-  }),
-  defineModule({
-    id: `${meta.id}/module/intent-resolver`,
-    activatesOn: Events.SetupIntentResolver,
-    activate: IntentResolver,
-  }),
-]);
+  Common.Plugin.addSchemaModule({ schema: [Graph.Graph] }),
+  Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
+  Plugin.make,
+);

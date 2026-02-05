@@ -11,7 +11,7 @@ import { createPortal } from 'react-dom';
 import { invariant } from '@dxos/invariant';
 import { Icon, type ThemedClassName } from '@dxos/react-ui';
 import { type Dimension, type Point, useCanvasContext } from '@dxos/react-ui-canvas';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { getInputPoint, pointSubtract } from '../layout';
 
@@ -83,7 +83,7 @@ const DragElement = forwardRef<HTMLDivElement, DragElementProps>(({ classNames, 
       ref={forwardedRef}
       style={{ ...style, ...size, boxSizing: 'border-box' }}
       className={mx(
-        'absolute flex items-center justify-center border border-primary-500 rounded-md text-4xl',
+        'absolute flex items-center justify-center border border-primary-500 rounded-sm text-4xl',
         classNames,
       )}
     >

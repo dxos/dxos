@@ -5,7 +5,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-import yaml from 'js-yaml';
+import { parse } from 'yaml';
 
 import { log } from '@dxos/log';
 import { type Config as ConfigProto } from '@dxos/protocols/proto/dxos/config';
@@ -19,7 +19,7 @@ const DEFAULT_BASE_PATH = path.resolve(process.cwd(), 'config');
 
 const maybeLoadFile = (file: string): any => {
   try {
-    return yaml.load(fs.readFileSync(file, { encoding: 'utf8' }));
+    return parse(fs.readFileSync(file, { encoding: 'utf8' }));
   } catch (err: any) {
     // Ignored.
   }

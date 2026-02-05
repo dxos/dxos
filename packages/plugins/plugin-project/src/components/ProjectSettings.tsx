@@ -6,26 +6,28 @@ import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { DXN, Filter, Obj, Query, type QueryAST, Ref, Tag, Type } from '@dxos/echo';
+import { type Mutable } from '@dxos/echo/internal';
 import { useTypeOptions } from '@dxos/plugin-space';
-import { useClient } from '@dxos/react-client';
+import { resolveSchemaWithRegistry } from '@dxos/plugin-space';
 import { getSpace, useQuery } from '@dxos/react-client/echo';
 import { IconButton, type ThemedClassName, useAsyncEffect, useTranslation } from '@dxos/react-ui';
-import { ViewEditor } from '@dxos/react-ui-form';
+import { Form, ViewEditor } from '@dxos/react-ui-form';
 import { List } from '@dxos/react-ui-list';
-import { cardChrome, cardText } from '@dxos/react-ui-stack';
-import { inputTextLabel, mx, subtleHover } from '@dxos/react-ui-theme';
-import { DataType, type ProjectionModel, createView } from '@dxos/schema';
+import { type ProjectionModel, View } from '@dxos/schema';
+import { Project, Task } from '@dxos/types';
+import { inputTextLabel, mx, osTranslations, subtleHover } from '@dxos/ui-theme';
 import { arrayMove } from '@dxos/util';
 
-import { resolveSchemaWithClientAndSpace } from '../helpers';
 import { meta } from '../meta';
 
 const listGrid = 'grid grid-cols-[min-content_1fr_min-content_min-content_min-content]';
 const listItemGrid = 'grid grid-cols-subgrid col-span-5';
 
+const ColumnFormSchema = Project.Column.pipe(Schema.mutable, Schema.pick('name'));
+
 // TODO(burdon): Standardize Object/Plugin settings.
 export type ProjectObjectSettingsProps = ThemedClassName<{
-  project: DataType.Project;
+  project: Project.Project;
 }>;
 
 /**
@@ -33,30 +35,42 @@ export type ProjectObjectSettingsProps = ThemedClassName<{
  */
 export const ProjectObjectSettings = ({ classNames, project }: ProjectObjectSettingsProps) => {
   const { t } = useTranslation(meta.id);
-  const client = useClient();
   const space = getSpace(project);
-  const views = project.collections.map((ref) => ref.target).filter((object) => Obj.instanceOf(DataType.View, object));
-  const [expandedId, setExpandedId] = useState<DataType.View['id']>();
-  const view = useMemo(() => views.find((view) => view.id === expandedId), [views, expandedId]);
+  const [expandedId, setExpandedId] = useState<string>();
+  const column = useMemo(
+    () => project.columns.find((column) => column.view.dxn.toString() === expandedId),
+    [project.columns, expandedId],
+  );
+  const view = column?.view.target;
   const [schema, setSchema] = useState<Schema.Schema.AnyNoContext>(() => Schema.Struct({}));
   const projectionRef = useRef<ProjectionModel>(null);
-  const tags = useQuery(space, Filter.type(Tag.Tag));
-  const types = useTypeOptions({ space, annotation: ['dynamic', 'limited-static', 'object-form'] });
+  const tags = useQuery(space?.db, Filter.type(Tag.Tag));
+  const types = useTypeOptions({
+    space,
+    annotation: {
+      location: ['database', 'runtime'],
+      kind: ['user'],
+      registered: ['registered', 'unregistered'],
+    },
+  });
 
   useAsyncEffect(async () => {
     if (!view?.query || !space) {
       return;
     }
 
-    const foundSchema = await resolveSchemaWithClientAndSpace(client, space, view.query.ast);
+    const foundSchema = await resolveSchemaWithRegistry(space.db.schemaRegistry, view.query.ast);
     if (foundSchema && foundSchema !== schema) {
       setSchema(() => foundSchema);
     }
-  }, [client, space, view, schema]);
+  }, [space, view, schema]);
 
   const handleMove = useCallback(
-    (fromIndex: number, toIndex: number) => arrayMove(project.collections, fromIndex, toIndex),
-    [project.collections],
+    (fromIndex: number, toIndex: number) =>
+      Obj.change(project, (p) => {
+        arrayMove(p.columns, fromIndex, toIndex);
+      }),
+    [project],
   );
 
   const handleQueryChanged = useCallback(
@@ -67,93 +81,129 @@ export const ProjectObjectSettings = ({ classNames, project }: ProjectObjectSett
 
       const queue = target && DXN.tryParse(target) ? target : undefined;
       const query = queue ? Query.fromAst(newQuery).options({ queues: [queue] }) : Query.fromAst(newQuery);
-      view.query.ast = query.ast;
-      const newSchema = await resolveSchemaWithClientAndSpace(client, space, query.ast);
+      Obj.change(view, (v) => {
+        v.query.ast = query.ast as Mutable<typeof query.ast>;
+      });
+      const newSchema = await resolveSchemaWithRegistry(space.db.schemaRegistry, query.ast);
       if (!newSchema) {
         return;
       }
 
-      const newView = createView({
+      const newView = View.make({
         query,
         jsonSchema: Type.toJsonSchema(newSchema),
-        presentation: Obj.make(Type.Expando, {}),
       });
-      view.projection = Obj.getSnapshot(newView).projection;
+      Obj.change(view, (v) => {
+        v.projection = Obj.getSnapshot(newView).projection as Mutable<typeof v.projection>;
+      });
 
       setSchema(() => newSchema);
     },
     [view, schema],
   );
 
-  const handleToggleField = useCallback((view: DataType.View) => {
-    setExpandedId((prevExpandedId) => (prevExpandedId === view.id ? undefined : view.id));
+  const handleToggleField = useCallback((column: Project.Column) => {
+    setExpandedId((prevExpandedId) =>
+      prevExpandedId === column.view.dxn.toString() ? undefined : column.view.dxn.toString(),
+    );
   }, []);
 
   const handleDelete = useCallback(
-    (view: DataType.View) => {
-      if (view.id === expandedId) {
+    async (column: Project.Column) => {
+      if (column.view.dxn.toString() === expandedId) {
         setExpandedId(undefined);
       }
 
-      const index = project.collections.findIndex((ref) => ref.target === view);
-      project.collections.splice(index, 1);
-      space?.db.remove(view);
+      const index = project.columns.findIndex((l) => l === column);
+      const viewToRemove = await column.view.load();
+      Obj.change(project, (p) => {
+        p.columns.splice(index, 1);
+      });
+      space?.db.remove(viewToRemove);
     },
-    [expandedId, project.collections, space],
+    [expandedId, project.columns, space],
   );
 
   const handleAdd = useCallback(() => {
-    const view = createView({
-      query: Query.select(Filter.type(DataType.Task)),
-      jsonSchema: Type.toJsonSchema(DataType.Task),
-      presentation: Obj.make(DataType.Collection, { objects: [] }),
+    const newView = View.make({
+      query: Query.select(Filter.type(Task.Task)),
+      jsonSchema: Type.toJsonSchema(Task.Task),
     });
-    project.collections.push(Ref.make(view));
-    setExpandedId(view.id);
+    Obj.change(project, (p) => {
+      p.columns.push({
+        name: 'Tasks',
+        // Type assertion needed due to QueryAST type variance.
+        view: Ref.make(newView) as (typeof p.columns)[number]['view'],
+        order: [],
+      });
+    });
+    setExpandedId(newView.id);
   }, [project]);
+
+  const handleColumnSave = useCallback(
+    (values: Schema.Schema.Type<typeof ColumnFormSchema>) => {
+      if (column) {
+        const columnIndex = project.columns.findIndex((c) => c === column);
+        Obj.change(project, (project) => {
+          project.columns[columnIndex].name = values.name;
+        });
+      }
+    },
+    [column, project],
+  );
 
   return (
     <div role='none' className={mx('plb-cardSpacingBlock overflow-y-auto', classNames)}>
-      <h2 className={mx(inputTextLabel, cardText)}>{t('views label')}</h2>
+      <h2 className={mx(inputTextLabel)}>{t('views label')}</h2>
 
-      <List.Root<DataType.View>
-        items={views}
-        isItem={Schema.is(DataType.View)}
-        getId={(view) => view.id}
+      <List.Root<Project.Column>
+        items={project.columns}
+        isItem={Schema.is(Project.Column)}
+        getId={(column) => column.view.dxn.toString()}
         onMove={handleMove}
       >
-        {({ items: views }) => (
+        {({ items: columns }) => (
           <>
-            <div role='list' className={mx(listGrid, cardChrome)}>
-              {views.map((view) => (
-                <List.Item<DataType.View>
-                  key={view.id}
-                  item={view}
+            <div role='list' className={mx(listGrid)}>
+              {columns.map((column) => (
+                <List.Item<Project.Column>
+                  key={column.view.dxn.toString()}
+                  item={column}
                   classNames={listItemGrid}
-                  aria-expanded={expandedId === view.id}
+                  aria-expanded={expandedId === column.view.dxn.toString()}
                 >
                   <div role='none' className={mx(subtleHover, listItemGrid, 'rounded-sm cursor-pointer min-bs-10')}>
                     <List.ItemDragHandle />
-                    <List.ItemTitle onClick={() => handleToggleField(view)}>{view.name}</List.ItemTitle>
+                    <List.ItemTitle onClick={() => handleToggleField(column)}>{column.name}</List.ItemTitle>
                     <List.ItemDeleteButton
                       label={t('delete view label')}
                       autoHide={false}
-                      onClick={() => handleDelete(view)}
+                      onClick={() => handleDelete(column)}
                       data-testid='view.delete'
                     />
                     <IconButton
                       iconOnly
                       variant='ghost'
-                      label={t('toggle expand label', { ns: 'os' })}
-                      icon={expandedId === view.id ? 'ph--caret-down--regular' : 'ph--caret-right--regular'}
-                      onClick={() => handleToggleField(view)}
+                      label={t('toggle expand label', { ns: osTranslations })}
+                      icon={
+                        expandedId === column.view.dxn.toString()
+                          ? 'ph--caret-down--regular'
+                          : 'ph--caret-right--regular'
+                      }
+                      onClick={() => handleToggleField(column)}
                     />
                   </div>
-                  {expandedId === view.id && view && (
-                    <div role='none' className='col-span-5 mbs-1 mbe-1 border border-separator rounded-md'>
+                  {expandedId === column.view.dxn.toString() && view && (
+                    <div role='none' className='col-span-5 mlb-2 border border-separator rounded-md'>
+                      <Form.Root schema={ColumnFormSchema} values={column} autoSave onSave={handleColumnSave}>
+                        <Form.Content>
+                          <Form.FieldSet />
+                        </Form.Content>
+                      </Form.Root>
                       <ViewEditor
                         ref={projectionRef}
-                        mode='query'
+                        mode='tag'
+                        readonly
                         schema={schema}
                         view={view}
                         registry={space?.db.schemaRegistry}

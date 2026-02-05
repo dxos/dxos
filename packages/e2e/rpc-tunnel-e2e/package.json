@@ -4,6 +4,10 @@
   "private": true,
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
   "license": "MIT",
   "author": "DXOS.org",
   "sideEffects": true,
@@ -20,15 +24,15 @@
     "@dxos/react-hooks": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "@dxos/rpc-tunnel": "workspace:*",
-    "react": "~19.2.0",
-    "react-dom": "~19.2.0",
-    "react-json-tree": "^0.18.0"
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "react-json-tree": "catalog:"
   },
   "devDependencies": {
-    "@babel/core": "^7.18.13",
+    "@babel/core": "catalog:",
     "@dxos/test-utils": "workspace:*",
-    "@types/react": "~19.2.2",
-    "@types/react-dom": "~19.2.1",
-    "vite": "7.1.9"
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "vite": "catalog:"
   }
 }

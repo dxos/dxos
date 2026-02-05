@@ -4,27 +4,23 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { Surface } from '@dxos/app-framework';
-import { Query, Ref } from '@dxos/echo';
-import { QueryBuilder } from '@dxos/echo-query';
+import { Surface } from '@dxos/app-framework/react';
+import { type Database, Obj } from '@dxos/echo';
+import { createDocAccessor } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
-import { useChatProcessor, useChatServices } from '@dxos/plugin-assistant';
-import { Chat } from '@dxos/plugin-assistant';
-import { Graph } from '@dxos/plugin-explorer/types';
-import { createDocAccessor } from '@dxos/react-client/echo';
-import { type Space } from '@dxos/react-client/echo';
-import { useAsyncEffect, useThemeContext, useTranslation } from '@dxos/react-ui';
+import { TemplateEditor } from '@dxos/plugin-assistant';
+import { useThemeContext, useTranslation } from '@dxos/react-ui';
 import { QueryEditor, type QueryEditorProps } from '@dxos/react-ui-components';
+import { EditorContent, type EditorContentProps } from '@dxos/react-ui-editor';
 import {
-  Editor,
-  type EditorProps,
+  type BasicExtensionsOptions,
   createBasicExtensions,
   createDataExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
   decorateMarkdown,
-} from '@dxos/react-ui-editor';
-import { mx } from '@dxos/react-ui-theme';
+} from '@dxos/ui-editor';
+import { mx } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 
 import { meta } from '../../meta';
@@ -38,86 +34,57 @@ const editorStyles = 'p-2 pis-3';
 const valueStyles = 'p-1 pis-3';
 
 export type NotebookCellProps = {
-  space?: Space;
+  db?: Database.Database;
   graph?: ComputeGraph;
   dragging?: boolean;
   cell: Notebook.Cell;
+  promptResults?: Record<string, string>;
 } & (Pick<NotebookMenuProps, 'onCellInsert' | 'onCellDelete'> & Pick<TypescriptEditorProps, 'env'>);
 
-// TODO(burdon): Display errors.
-export const NotebookCell = ({ space, graph, dragging, cell, env }: NotebookCellProps) => {
+// TODO(burdon): Show evaluation errors.
+export const NotebookCell = ({ db, graph, dragging, cell, promptResults, env }: NotebookCellProps) => {
   const { t } = useTranslation(meta.id);
 
-  //
-  // Common.
-  //
   const extensions = useMemo(() => {
-    return cell.script?.target
-      ? [createDataExtensions({ id: cell.id, text: createDocAccessor(cell.script.target, ['content']) })].filter(
-          isNonNullable,
-        )
+    return cell.source?.target
+      ? [
+          createDataExtensions({
+            id: cell.id,
+            text: createDocAccessor(cell.source.target, ['content']),
+          }),
+        ].filter(isNonNullable)
       : [];
-  }, [cell.script?.target]);
+  }, [cell.source?.target]);
 
-  //
-  // Query.
-  //
-  const view = cell.view?.target;
-  const builder = useMemo(() => new QueryBuilder(), []);
-  useAsyncEffect(async () => {
-    if (!space || !cell.script?.target) {
-      return;
-    }
-
-    if (cell.type === 'query') {
-      const query = cell.script.target.content;
-      const filter = builder.build(query);
-      if (filter) {
-        const ast = Query.select(filter).ast;
-        const view = cell.view?.target;
-        if (!view) {
-          const graph = Graph.make({ query: { ast } });
-          const { view } = await Graph.makeView({ space, presentation: graph });
-          cell.view = Ref.make(view);
-        } else {
-          view.query.ast = ast;
-        }
-      }
-    }
-  }, [space, builder, cell, cell.script?.target?.content]);
+  const explorerGraph = cell.graph?.target;
 
   const handleQueryChange = useCallback<NonNullable<QueryEditorProps['onChange']>>(
     (value: string) => {
-      invariant(cell.script?.target);
-      cell.script.target.content = value;
+      invariant(cell.source?.target);
+      Obj.change(cell.source.target, (s) => {
+        s.content = value;
+      });
     },
     [cell],
   );
 
-  //
-  // Prompt.
-  // TODO(burdon): Add values to context or system message (via blueprint?).
-  //
-  const services = useChatServices({ space, chat: cell.chat?.target });
-  const processor = useChatProcessor({ chat: cell.chat?.target, services });
-
   switch (cell.type) {
     case 'markdown':
-      if (!cell.script?.target) {
+      if (!cell.source?.target) {
         return null;
       }
 
       return (
-        <MarkdownEditor
+        <NotebookTextEditor
           id={cell.id}
           classNames={editorStyles}
-          initialValue={cell.script.target.content}
+          initialValue={cell.source.target.content}
           extensions={extensions}
         />
       );
 
     case 'script':
-      if (!cell.script?.target) {
+      if (!cell.source?.target) {
         return null;
       }
 
@@ -127,7 +94,7 @@ export const NotebookCell = ({ space, graph, dragging, cell, env }: NotebookCell
             id={cell.id}
             role='section'
             classNames={editorStyles}
-            initialValue={cell.script.target.content}
+            initialValue={cell.source.target.content}
             extensions={extensions}
             env={env}
             options={{
@@ -141,33 +108,42 @@ export const NotebookCell = ({ space, graph, dragging, cell, env }: NotebookCell
       );
 
     case 'query':
-      if (!cell.script?.target) {
+      if (!cell.source?.target) {
         return null;
       }
 
+      // TODO(burdon): Remove app-framework deps (via render prop).
       return (
-        <div className={mx('bs-full overflow-hidden grid', view && !dragging && 'grid-rows-[min-content_1fr]')}>
+        <div
+          className={mx('bs-full overflow-hidden grid', explorerGraph && !dragging && 'grid-rows-[min-content_1fr]')}
+        >
           <QueryEditor
             id={cell.id}
-            classNames={[editorStyles, 'border-b border-subduedSeparator']}
-            db={space?.db}
-            value={cell.script.target.content}
+            classNames={[editorStyles, 'border-be border-subduedSeparator']}
+            db={db}
+            value={cell.source.target.content}
             onChange={handleQueryChange}
           />
-          {view && !dragging && <Surface role='section' limit={1} data={{ subject: view }} />}
+          {explorerGraph && !dragging && <Surface role='section' limit={1} data={{ subject: explorerGraph }} />}
         </div>
       );
 
+    // TODO(burdon): Use streaming response from Chat.
     case 'prompt':
-      if (!cell.chat?.target || !processor) {
+      if (!cell.prompt?.target) {
         return null;
       }
 
       return (
-        <Chat.Root chat={cell.chat.target} processor={processor}>
-          <Chat.Thread overscroll={0} />
-          <Chat.Prompt settings={false} classNames='p-2 border-t border-subduedSeparator' />
-        </Chat.Root>
+        <>
+          <TemplateEditor
+            id={cell.id}
+            template={cell.prompt.target.instructions}
+            lineNumbers={false}
+            classNames={editorStyles}
+          />
+          <NotebookPromptResult cell={cell} promptResults={promptResults} />
+        </>
       );
 
     default:
@@ -176,8 +152,8 @@ export const NotebookCell = ({ space, graph, dragging, cell, env }: NotebookCell
 };
 
 const NotebookCellValue = ({ cell, graph }: NotebookCellProps) => {
-  const name = graph?.expressions.value[cell.id]?.name;
-  const value = graph?.values.value[cell.id];
+  const name = graph?.getExpressions()[cell.id]?.name;
+  const value = graph?.getValue(cell.id);
   if (value == null) {
     return null;
   }
@@ -185,7 +161,7 @@ const NotebookCellValue = ({ cell, graph }: NotebookCellProps) => {
   return (
     <div
       className={mx(
-        'flex is-full bg-groupSurface border-t border-subduedSeparator text-description font-mono',
+        'flex is-full bg-groupSurface border-bs border-subduedSeparator text-description font-mono',
         valueStyles,
       )}
     >
@@ -200,18 +176,42 @@ const NotebookCellValue = ({ cell, graph }: NotebookCellProps) => {
   );
 };
 
-const MarkdownEditor = ({ extensions: extensionsParam, ...props }: EditorProps) => {
+const NotebookPromptResult = ({ cell, promptResults }: NotebookCellProps) => {
+  if (!cell.prompt) {
+    return null;
+  }
+
+  const value = promptResults?.[cell.prompt.dxn.toString()];
+  if (value == null) {
+    return null;
+  }
+
+  return (
+    <div className={mx('flex is-full bg-groupSurface text-description border-bs border-subduedSeparator', valueStyles)}>
+      <NotebookTextEditor readOnly value={value} />
+    </div>
+  );
+};
+
+const NotebookTextEditor = ({
+  extensions: extensionsProp,
+  readOnly,
+  ...props
+}: EditorContentProps & Pick<BasicExtensionsOptions, 'readOnly'>) => {
   const { t } = useTranslation(meta.id);
   const { themeMode } = useThemeContext();
   const extensions = useMemo(() => {
     return [
-      createBasicExtensions({ placeholder: t('notebook markdown placeholder') }),
+      createBasicExtensions({
+        placeholder: t('notebook markdown placeholder'),
+        readOnly,
+      }),
       createThemeExtensions({ themeMode, syntaxHighlighting: true }),
       createMarkdownExtensions(),
       decorateMarkdown(),
-      extensionsParam,
+      extensionsProp,
     ].filter(isNonNullable);
-  }, [extensionsParam]);
+  }, [extensionsProp]);
 
-  return <Editor {...props} extensions={extensions} moveToEnd />;
+  return <EditorContent {...props} extensions={extensions} selectionEnd />;
 };

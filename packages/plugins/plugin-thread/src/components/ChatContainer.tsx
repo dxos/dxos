@@ -5,25 +5,24 @@
 import React, { useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { Obj, Ref } from '@dxos/echo';
-import { type Space, fullyQualifiedId, useMembers } from '@dxos/react-client/echo';
+import { type Space, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { Icon, ScrollArea, useThemeContext, useTranslation } from '@dxos/react-ui';
-import { createBasicExtensions, createThemeExtensions, listener } from '@dxos/react-ui-editor';
+import { Icon, ScrollArea, type ThemedClassName, useThemeContext, useTranslation } from '@dxos/react-ui';
 import { StackItem } from '@dxos/react-ui-stack';
-import { mx } from '@dxos/react-ui-theme';
 import {
   MessageTextbox,
   type MessageTextboxProps,
-  Thread,
+  Thread as ThreadComponent,
   type ThreadRootProps,
   threadLayout,
 } from '@dxos/react-ui-thread';
-import { DataType } from '@dxos/schema';
+import { Message, type Thread } from '@dxos/types';
+import { createBasicExtensions, createThemeExtensions, listener } from '@dxos/ui-editor';
+import { mx } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 
 import { useStatus } from '../hooks';
 import { meta } from '../meta';
-import { type ThreadType } from '../types';
 import { getMessageMetadata } from '../util';
 
 import { command } from './command-extension';
@@ -41,18 +40,27 @@ export const ChatHeading = ({ attendableId }: { attendableId?: string }) => {
   );
 };
 
-export type ChatContainerProps = {
-  space: Space;
-  thread: ThreadType;
-  context?: Obj.Any;
-  autoFocusTextbox?: boolean;
-} & Pick<ThreadRootProps, 'current'>;
+export type ChatContainerProps = ThemedClassName<
+  {
+    space: Space;
+    thread: Thread.Thread;
+    context?: Obj.Unknown;
+    autoFocusTextbox?: boolean;
+  } & Pick<ThreadRootProps, 'current'>
+>;
 
-export const ChatContainer = ({ space, thread, context, current, autoFocusTextbox }: ChatContainerProps) => {
+export const ChatContainer = ({
+  classNames,
+  space,
+  thread,
+  context,
+  current,
+  autoFocusTextbox,
+}: ChatContainerProps) => {
   const { t } = useTranslation(meta.id);
-  const id = fullyQualifiedId(thread);
+  const id = Obj.getDXN(thread).toString();
   const identity = useIdentity()!;
-  const members = useMembers(space?.key);
+  const members = useMembers(space?.id);
   const activity = useStatus(space, id);
   // TODO(wittjosiah): This is a hack to reset the editor after a message is sent.
   const [_count, _setCount] = useState(0);
@@ -67,7 +75,7 @@ export const ChatContainer = ({ space, thread, context, current, autoFocusTextbo
     () => [
       createBasicExtensions({ placeholder: t('message placeholder') }),
       createThemeExtensions({ themeMode }),
-      listener({ onChange: (text) => (messageRef.current = text) }),
+      listener({ onChange: ({ text }) => (messageRef.current = text) }),
       command,
     ],
     [themeMode, _count],
@@ -90,16 +98,18 @@ export const ChatContainer = ({ space, thread, context, current, autoFocusTextbo
       return false;
     }
 
-    thread.messages.push(
-      Ref.make(
-        Obj.make(DataType.Message, {
-          created: new Date().toISOString(),
-          sender: { identityDid: identity.did },
-          blocks: [{ _tag: 'text', text: messageRef.current }],
-          properties: context ? { context: Ref.make(context) } : undefined,
-        }),
-      ),
-    );
+    Obj.change(thread, (t) => {
+      t.messages.push(
+        Ref.make(
+          Obj.make(Message.Message, {
+            created: new Date().toISOString(),
+            sender: { identityDid: identity.did },
+            blocks: [{ _tag: 'text', text: messageRef.current }],
+            properties: context ? { context: Ref.make(context) } : undefined,
+          }),
+        ),
+      );
+    });
 
     messageRef.current = '';
     setAutoFocus(true);
@@ -109,12 +119,13 @@ export const ChatContainer = ({ space, thread, context, current, autoFocusTextbo
   };
 
   return (
-    <Thread.Root
+    <ThreadComponent.Root
       current={current}
       id={id}
       classNames={[
-        'bs-full is-full max-is-prose mli-auto grid-rows-[1fr_min-content_min-content] overflow-hidden',
+        'bs-full grid-rows-[1fr_min-content_min-content] overflow-hidden',
         'transition-[padding-block-end] [[data-sidebar-inline-start-state=open]_&]:lg:pbe-0',
+        classNames,
       ]}
     >
       <ScrollArea.Root classNames='col-span-2'>
@@ -129,16 +140,15 @@ export const ChatContainer = ({ space, thread, context, current, autoFocusTextbo
           </div>
           {/* NOTE(thure): This can’t also be the `overflow-anchor` because `ScrollArea` injects an interceding node that contains this necessary ref’d element. */}
           <div role='none' className='bs-px -mbs-px' ref={threadScrollRef} />
-          <ScrollArea.Scrollbar>
-            <ScrollArea.Thumb />
-          </ScrollArea.Scrollbar>
         </ScrollArea.Viewport>
+        <ScrollArea.Scrollbar>
+          <ScrollArea.Thumb />
+        </ScrollArea.Scrollbar>
       </ScrollArea.Root>
 
       <MessageTextbox extensions={extensions} autoFocus={autoFocus} onSend={handleCreate} {...textboxMetadata} />
-
-      <Thread.Status activity={activity}>{t('activity message')}</Thread.Status>
-    </Thread.Root>
+      <ThreadComponent.Status activity={activity}>{t('activity message')}</ThreadComponent.Status>
+    </ThreadComponent.Root>
   );
 };
 

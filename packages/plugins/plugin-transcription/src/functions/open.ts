@@ -7,11 +7,11 @@ import * as Schema from 'effect/Schema';
 
 import { ArtifactId } from '@dxos/assistant';
 import { Obj } from '@dxos/echo';
-import { DatabaseService, QueueService, defineFunction } from '@dxos/functions';
-import { DataType } from '@dxos/schema';
+import { Database } from '@dxos/echo';
+import { QueueService, defineFunction } from '@dxos/functions';
+import { Message, Transcript } from '@dxos/types';
 
-import { renderByline } from '../components';
-import { Transcript } from '../types';
+import { renderByline } from '../util';
 
 export default defineFunction({
   key: 'dxos.org/function/transcription/open',
@@ -26,12 +26,12 @@ export default defineFunction({
     content: Schema.String,
   }),
   handler: Effect.fn(function* ({ data: { id } }) {
-    const transcript = yield* DatabaseService.resolve(ArtifactId.toDXN(id), Transcript.Transcript);
+    const transcript = yield* Database.resolve(ArtifactId.toDXN(id), Transcript.Transcript);
     const { dxn } = yield* Effect.promise(() => transcript.queue.load());
     const queue = yield* QueueService.getQueue(dxn);
     yield* Effect.promise(() => queue?.queryObjects());
     const content = queue?.objects
-      .filter((message) => Obj.instanceOf(DataType.Message, message))
+      .filter((message) => Obj.instanceOf(Message.Message, message))
       .flatMap((message, index) => renderByline([])(message, index))
       .join('\n\n');
     return { content };

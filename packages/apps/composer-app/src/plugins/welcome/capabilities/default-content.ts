@@ -2,69 +2,68 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, LayoutAction, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
-import { Filter, Query } from '@dxos/echo';
-import { SPACES, SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
+import * as Effect from 'effect/Effect';
 
-import { INITIAL_CONTENT, INITIAL_DOC_TITLE } from '../../../constants';
+import { Capability, Common, Plugin } from '@dxos/app-framework';
+import { Operation } from '@dxos/operation';
+import { Graph, Node } from '@dxos/plugin-graph';
+import { SpaceEvents } from '@dxos/plugin-space';
+import { SpaceCapabilities } from '@dxos/plugin-space/types';
 
-export default async (context: PluginContext) => {
-  const { Obj, Ref } = await import('@dxos/echo');
-  const { fullyQualifiedId } = await import('@dxos/react-client/echo');
-  const { ClientCapabilities } = await import('@dxos/plugin-client');
-  const { Markdown } = await import('@dxos/plugin-markdown/types');
-  const { DataType } = await import('@dxos/schema');
+import README_CONTENT from '../content/README.md?raw';
 
-  const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
-  const { graph } = context.getCapability(Capabilities.AppGraph);
-  const client = context.getCapability(ClientCapabilities.Client);
+const SPACE_ICON = 'house-line';
 
-  const space = client.spaces.default;
-  space.properties.icon = 'house-line';
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const { Obj, Ref, Type } = yield* Effect.tryPromise(() => import('@dxos/echo'));
+    const { ClientCapabilities } = yield* Effect.tryPromise(() => import('@dxos/plugin-client'));
+    const { Markdown } = yield* Effect.tryPromise(() => import('@dxos/plugin-markdown/types'));
+    const { Collection } = yield* Effect.tryPromise(() => import('@dxos/schema'));
 
-  const readme = Markdown.makeDocument({
-    name: INITIAL_DOC_TITLE,
-    content: INITIAL_CONTENT.join('\n\n'),
-  });
+    const operationInvoker = yield* Capability.get(Common.Capability.OperationInvoker);
+    const { invoke, schedule } = operationInvoker;
+    const { graph } = yield* Capability.get(Common.Capability.AppGraph);
+    const client = yield* Capability.get(ClientCapabilities.Client);
 
-  const defaultSpaceCollection = space.properties[DataType.Collection.typename].target;
+    const space = client.spaces.default;
+    Obj.change(space.properties, (p) => {
+      p.icon = SPACE_ICON;
+    });
+    const defaultSpaceCollection = space.properties[Collection.Collection.typename].target;
 
-  defaultSpaceCollection?.objects.push(Ref.make(readme));
-  defaultSpaceCollection?.objects.push(
-    Ref.make(
-      Obj.make(DataType.QueryCollection, {
-        // NOTE: This is specifically Filter.typename due to current limitations in query collection parsing.
-        query: Query.select(Filter.typename(DataType.StoredSchema.typename)).ast,
-      }),
-    ),
-  );
+    if (defaultSpaceCollection) {
+      const typesCollectionRef = Ref.make(Collection.makeManaged({ key: Type.getTypename(Type.PersistentType) }));
+      Obj.change(defaultSpaceCollection, (c) => {
+        c.objects.push(typesCollectionRef);
+      });
+    }
 
-  await context.activatePromise(SpaceEvents.SpaceCreated);
-  const onCreateSpaceCallbacks = context.getCapabilities(SpaceCapabilities.onCreateSpace);
-  await Promise.all(
-    onCreateSpaceCallbacks
-      .map((onCreateSpace) => onCreateSpace({ space: space, rootCollection: defaultSpaceCollection }))
-      .map((intent) => dispatch(intent)),
-  );
+    yield* Plugin.activate(SpaceEvents.SpaceCreated);
+    const onCreateSpaceCallbacks = yield* Capability.getAll(SpaceCapabilities.OnCreateSpace);
+    yield* Effect.all(
+      onCreateSpaceCallbacks.map((onCreateSpace) =>
+        onCreateSpace({ space: space, isDefault: true, rootCollection: defaultSpaceCollection }).pipe(
+          Effect.provideService(Operation.Service, operationInvoker),
+        ),
+      ),
+    );
 
-  // Ensure the default content is in the graph and connected.
-  // This will allow the expose action to work before the navtree renders for the first time.
-  graph.expand(SPACES);
-  graph.expand(space.id);
+    const readme = Markdown.make({
+      name: 'README',
+      content: README_CONTENT,
+    });
+    space.db.add(readme);
 
-  await dispatch(
-    createIntent(LayoutAction.SwitchWorkspace, {
-      part: 'workspace',
-      subject: space.id,
-    }),
-  );
-  await dispatch(
-    createIntent(LayoutAction.SetLayoutMode, {
-      part: 'mode',
-      subject: fullyQualifiedId(readme),
-      options: { mode: 'solo' },
-    }),
-  );
+    // Ensure the default content is in the graph and connected.
+    // This will allow the expose action to work before the navtree renders for the first time.
+    graph.pipe(Graph.expand(Node.RootId), Graph.expand(space.id));
 
-  return contributes(Capabilities.Null, null);
-};
+    yield* invoke(Common.LayoutOperation.SwitchWorkspace, { subject: space.id });
+    yield* invoke(Common.LayoutOperation.SetLayoutMode, {
+      mode: 'solo',
+      subject: Obj.getDXN(readme).toString(),
+    });
+    yield* schedule(Common.LayoutOperation.Expose, { subject: Obj.getDXN(readme).toString() });
+  }),
+);

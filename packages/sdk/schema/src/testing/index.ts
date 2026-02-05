@@ -3,6 +3,5 @@
 //
 
 export * from './data';
+export * from './deprecated';
 export * from './generator';
-export * from './test-data';
-export * from './types';

@@ -121,13 +121,17 @@ export const GlobeControl = ({
   useDrag(controller, {
     onUpdate: () => setMoved(true),
   });
-  const [running, setRunning] = useTour(controller, selectedPoints?.length ? selectedPoints : features.points, {
+
+  // TODO(burdon): Redo.
+  const [active, setActive] = useState(false);
+  const [_, setRunning] = useTour(controller, selectedPoints?.length ? selectedPoints : features.points, {
+    running: active,
     loop: true,
     styles,
     autoRotate: !moved,
   });
 
-  useEffect(() => setRunning(!!selectedPoints?.length), [running, selectedPoints?.length]);
+  useEffect(() => setActive(!!selectedPoints?.length), [selectedPoints?.length]);
 
   const handleAction: ControlProps['onAction'] = (action) => {
     switch (action) {

@@ -25,6 +25,9 @@
       "path": "../../common/display-name"
     },
     {
+      "path": "../../common/effect"
+    },
+    {
       "path": "../../common/graph"
     },
     {
@@ -73,10 +76,10 @@
       "path": "../../core/echo/echo-protocol"
     },
     {
-      "path": "../../core/echo/live-object"
+      "path": "../../core/functions"
     },
     {
-      "path": "../../core/functions"
+      "path": "../../core/functions-runtime"
     },
     {
       "path": "../../core/mesh/edge-client"
@@ -112,7 +115,7 @@
       "path": "../../sdk/schema"
     },
     {
-      "path": "../../ui/primitives/react-hooks"
+      "path": "../../ui/react-primitives/react-hooks"
     },
     {
       "path": "../../ui/react-ui"
@@ -133,7 +136,7 @@
       "path": "../../ui/react-ui-tabs"
     },
     {
-      "path": "../../ui/react-ui-theme"
+      "path": "../../ui/ui-theme"
     }
   ]
 }

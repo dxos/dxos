@@ -4,7 +4,7 @@
 
 import React, { type FC, type HTMLAttributes, useState } from 'react';
 
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 // TODO(burdon): Copied form devtools.
 
@@ -72,7 +72,7 @@ const Scalar: FC<{ value: any }> = ({ value }) => {
 
 const Box: FC<HTMLAttributes<HTMLDivElement>> = ({ children, className, ...props }) => {
   return (
-    <div className={mx('flex px-2 border border-l-0 font-mono truncate', className)} {...props}>
+    <div className={mx('flex pli-2 border border-l-0 font-mono truncate', className)} {...props}>
       {children}
     </div>
   );

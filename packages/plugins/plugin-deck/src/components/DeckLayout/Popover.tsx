@@ -3,12 +3,14 @@
 //
 
 import { createContext } from '@radix-ui/react-context';
-import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { type PropsWithChildren, useCallback, useEffect, useRef, useState } from 'react';
 
-import { Surface, useCapability } from '@dxos/app-framework';
-import { Popover, type PopoverContentInteractOutsideEvent } from '@dxos/react-ui';
+import { Surface } from '@dxos/app-framework/react';
+import { Popover, type PopoverContentInteractOutsideEvent, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Card } from '@dxos/react-ui-mosaic';
 
-import { DeckCapabilities } from '../../capabilities';
+import { useDeckState } from '../../hooks';
+import { meta } from '../../meta';
 
 export type DeckPopoverRootProps = PropsWithChildren<{}>;
 
@@ -21,32 +23,32 @@ type DeckPopoverContextValue = {
 const [DeckPopoverProvider, useDeckPopoverContext] = createContext<DeckPopoverContextValue>('DeckPopover');
 
 export const PopoverRoot = ({ children }: DeckPopoverRootProps) => {
-  const layout = useCapability(DeckCapabilities.MutableDeckState);
+  const { state } = useDeckState();
   const virtualRef = useRef<HTMLButtonElement | null>(null);
   const [virtualIter, setVirtualIter] = useState(0);
   const [open, setOpen] = useState(false);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
   // TODO(thure): This is a workaround for the race condition between displaying a Popover and either rendering
-  //  the anchor further down the tree or measuring the virtual trigger’s client rect.
+  //  the anchor further down the tree or measuring the virtual trigger's client rect.
   useEffect(() => {
     setOpen(false);
-    if (layout.popoverOpen) {
+    if (state.popoverOpen) {
       if (debounceRef.current) {
         clearTimeout(debounceRef.current);
       }
-      if (layout.popoverAnchor && virtualRef.current !== layout.popoverAnchor) {
-        virtualRef.current = layout.popoverAnchor ?? null;
+      if (state.popoverAnchor && virtualRef.current !== state.popoverAnchor) {
+        virtualRef.current = state.popoverAnchor ?? null;
         setVirtualIter((iter) => iter + 1);
       }
       debounceRef.current = setTimeout(() => setOpen(true), DEBOUNCE_DELAY);
     }
-  }, [layout.popoverOpen, layout.popoverAnchorId, layout.popoverAnchor, layout.popoverContent]);
+  }, [state.popoverOpen, state.popoverAnchorId, state.popoverAnchor, state.popoverContent]);
 
   return (
     <DeckPopoverProvider setOpen={setOpen}>
       <Popover.Root modal={false} open={open}>
-        {layout.popoverAnchor && <Popover.VirtualTrigger key={virtualIter} virtualRef={virtualRef} />}
+        {state.popoverAnchor && <Popover.VirtualTrigger key={virtualIter} virtualRef={virtualRef} />}
         {children}
       </Popover.Root>
     </DeckPopoverProvider>
@@ -54,10 +56,22 @@ export const PopoverRoot = ({ children }: DeckPopoverRootProps) => {
 };
 
 export const PopoverContent = () => {
-  const layout = useCapability(DeckCapabilities.MutableDeckState);
+  const { t } = useTranslation(meta.id);
+  const { state, updateEphemeral } = useDeckState();
   const { setOpen } = useDeckPopoverContext('PopoverContent');
 
-  const handleClose = useCallback(
+  const handleClose = useCallback(() => {
+    setOpen(false);
+    updateEphemeral((state) => ({
+      ...state,
+      popoverOpen: false,
+      popoverAnchor: undefined,
+      popoverAnchorId: undefined,
+      popoverSide: undefined,
+    }));
+  }, [updateEphemeral]);
+
+  const handleInteractOutside = useCallback(
     (event: KeyboardEvent | PopoverContentInteractOutsideEvent) => {
       if (
         // TODO(thure): CodeMirror should not focus itself when it updates.
@@ -66,36 +80,34 @@ export const PopoverContent = () => {
       ) {
         event.preventDefault();
       } else {
-        setOpen(false);
-        layout.popoverOpen = false;
-        layout.popoverAnchor = undefined;
-        layout.popoverAnchorId = undefined;
-        layout.popoverSide = undefined;
+        handleClose();
       }
     },
-    [setOpen],
+    [handleClose],
   );
-
-  const collisionBoundaries: HTMLElement[] = useMemo(() => {
-    const closest = layout.popoverAnchor?.closest('[data-popover-collision-boundary]') as
-      | HTMLElement
-      | null
-      | undefined;
-    return closest ? [closest] : [];
-  }, [layout.popoverAnchor]);
 
   return (
     <Popover.Portal>
       <Popover.Content
-        side={layout.popoverSide}
-        onInteractOutside={handleClose}
-        onEscapeKeyDown={handleClose}
-        collisionBoundary={collisionBoundaries}
+        side={state.popoverSide}
         sticky='always'
         hideWhenDetached
+        onInteractOutside={handleInteractOutside}
+        onEscapeKeyDown={handleInteractOutside}
       >
         <Popover.Viewport>
-          <Surface role='card--popover' data={layout.popoverContent} limit={1} />
+          {state.popoverKind === 'card' && (
+            <Card.Root>
+              <Card.Toolbar>
+                {/* TODO(wittjosiah): Cleaner way to handle no drag handle in toolbar? */}
+                <span />
+                {state.popoverTitle ? <Card.Title>{toLocalizedString(state.popoverTitle, t)}</Card.Title> : <span />}
+                <Card.Close onClick={handleClose} />
+              </Card.Toolbar>
+              <Surface role='card--content' data={state.popoverContent} limit={1} />
+            </Card.Root>
+          )}
+          {state.popoverKind === 'base' && <Surface role='popover' data={state.popoverContent} limit={1} />}
         </Popover.Viewport>
         <Popover.Arrow />
       </Popover.Content>

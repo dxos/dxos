@@ -10,10 +10,11 @@ import { expect, fn, userEvent, within } from 'storybook/test';
 import { Obj } from '@dxos/echo';
 import { faker } from '@dxos/random';
 import { Filter, useQuery } from '@dxos/react-client/echo';
-import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
+import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { Button } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
-import { DataType } from '@dxos/schema';
+import { Person } from '@dxos/types';
+import { osTranslations } from '@dxos/ui-theme';
 
 import { translations } from '../../translations';
 
@@ -22,19 +23,19 @@ import { ObjectPicker } from './ObjectPicker';
 faker.seed(1);
 
 const createPerson = () =>
-  Obj.make(DataType.Person, {
+  Obj.make(Person.Person, {
     fullName: faker.person.fullName(),
   });
 
 const omitId = Schema.omit<any, any, ['id']>('id');
-const personSchema = omitId(DataType.Person);
+const personSchema = omitId(Person.Person);
 
 // Mock functions for testing
 const mockHandleSelect = fn();
 const mockHandleCreate = fn();
 
 const DefaultStory = () => {
-  const { space } = useClientProvider();
+  const { space } = useClientStory();
   const [isOpen, setIsOpen] = useState(false);
 
   // Create sample Person objects
@@ -48,7 +49,7 @@ const DefaultStory = () => {
   }, [space]);
 
   // Get all objects in the space (similar to BoardContainer)
-  const allObjects = useQuery(space, Filter.everything());
+  const allObjects = useQuery(space?.db, Filter.everything());
 
   // Map objects to options format expected by ObjectPicker
   const options = useMemo(
@@ -65,7 +66,7 @@ const DefaultStory = () => {
     (values: any) => {
       console.log('[on create]', values);
       if (!space) return;
-      const newPerson = space.db.add(Obj.make(DataType.Person, values));
+      const newPerson = space.db.add(Obj.make(Person.Person, values));
       mockHandleCreate(values);
       return newPerson;
     },
@@ -73,22 +74,22 @@ const DefaultStory = () => {
   );
 
   return (
-    <div className='p-4'>
+    <div role='none' className='flex is-96'>
       <ObjectPicker.Root open={isOpen} onOpenChange={setIsOpen}>
         <ObjectPicker.Trigger asChild>
-          <Button variant='primary' data-testid='trigger'>
+          <Button variant='primary' data-testid='trigger' classNames='is-full'>
             Select Person
           </Button>
         </ObjectPicker.Trigger>
         <ObjectPicker.Content
+          classNames='popover-card-width'
           options={options}
-          onSelect={mockHandleSelect}
           createSchema={personSchema}
-          createOptionLabel={['create new person label', { ns: 'os' }]}
+          createOptionLabel={['create new person label', { ns: osTranslations }]}
           createOptionIcon='ph--user-plus--regular'
           createInitialValuePath='fullName'
           onCreate={handleCreateCallback}
-          classNames='popover-card-width'
+          onSelect={mockHandleSelect}
         />
       </ObjectPicker.Root>
     </div>
@@ -101,7 +102,7 @@ const meta = {
   decorators: [
     withTheme,
     withClientProvider({
-      types: [DataType.Person],
+      types: [Person.Person],
       createIdentity: true,
       createSpace: true,
     }),
@@ -202,6 +203,12 @@ export const WithTest: Story = {
     // Check that clicking the save button calls onCreate with expected values.
     await expect(mockHandleCreate).toHaveBeenCalledWith({
       fullName: unrelatedTerm,
+      addresses: [],
+      phoneNumbers: [],
+      emails: [],
+      identities: [],
+      urls: [],
+      fields: [],
     });
   },
 };

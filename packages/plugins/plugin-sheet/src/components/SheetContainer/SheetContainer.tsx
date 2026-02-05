@@ -2,39 +2,47 @@
 // Copyright 2023 DXOS.org
 //
 
-import React from 'react';
+import React, { Fragment } from 'react';
 
-import { type Space, fullyQualifiedId } from '@dxos/react-client/echo';
-import { StackItem } from '@dxos/react-ui-stack';
+import { type SurfaceComponentProps } from '@dxos/app-framework/react';
+import { Obj } from '@dxos/echo';
+import { type Space } from '@dxos/react-client/echo';
+import { Layout, type LayoutFlexProps } from '@dxos/react-ui-mosaic';
 
-import { type SheetType } from '../../types';
+import { type Sheet } from '../../types';
 import { useComputeGraph } from '../ComputeGraph';
 import { FunctionEditor } from '../FunctionEditor';
 import { GridSheet } from '../GridSheet';
 import { SheetProvider } from '../SheetContext';
 import { SheetToolbar } from '../SheetToolbar';
 
-export type SheetContainerProps = {
-  space: Space;
-  sheet: SheetType;
-  role?: string;
-  ignoreAttention?: boolean;
-};
+export type SheetContainerProps = SurfaceComponentProps<
+  Sheet.Sheet,
+  {
+    space: Space;
+    ignoreAttention?: boolean;
+  }
+>;
 
-export const SheetContainer = ({ space, sheet, role, ignoreAttention }: SheetContainerProps) => {
+export const SheetContainer = ({ role, subject: sheet, space, ignoreAttention }: SheetContainerProps) => {
   const graph = useComputeGraph(space);
+  if (!graph) {
+    return null;
+  }
 
-  return graph ? (
+  const Root = role === 'section' ? Container : Fragment;
+
+  return (
     <SheetProvider sheet={sheet} graph={graph} ignoreAttention={ignoreAttention}>
-      <StackItem.Content
-        toolbar
-        statusbar
-        classNames={[role === 'section' && 'aspect-video', role === 'story' && 'bs-full']}
-      >
-        <SheetToolbar id={fullyQualifiedId(sheet)} />
-        <GridSheet />
-        <FunctionEditor />
-      </StackItem.Content>
+      <Root>
+        <Layout.Main toolbar statusbar>
+          <SheetToolbar id={Obj.getDXN(sheet).toString()} />
+          <GridSheet />
+          <FunctionEditor />
+        </Layout.Main>
+      </Root>
     </SheetProvider>
-  ) : null;
+  );
 };
+
+const Container = (props: LayoutFlexProps) => <Layout.Flex {...props} classNames='aspect-square' />;

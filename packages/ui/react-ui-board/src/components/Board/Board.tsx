@@ -21,8 +21,15 @@ import React, {
 import { useResizeDetector } from 'react-resize-detector';
 
 import { invariant } from '@dxos/invariant';
-import { IconButton, type ThemedClassName, Toolbar, usePx, useTranslation } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import {
+  IconButton,
+  type ThemedClassName,
+  Toolbar,
+  type ToolbarRootProps,
+  usePx,
+  useTranslation,
+} from '@dxos/react-ui';
+import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations';
 
@@ -32,13 +39,9 @@ import { type BoardGeometry, type Rect, getBoardBounds, getBoardRect, getCenter 
 import { type BoardLayout, type Position, type Size } from './types';
 
 // TODO(burdon): Infinite canvas: hierarchical zoom.
-// TODO(burdon): Center when has focus; key nav.
-// TODO(burdon): Drag to select/create.
 // TODO(burdon): Drag handles to resize.
 // TODO(burdon): Synthetic scrollbars.
 // TODO(burdon): Prevent browser nav when scrolling to edge.
-// TODO(burdon): Does scrollbar thin work?
-// TODO(burdon): Drag edges to resize.
 
 interface BoardController {
   /** Center the board on the given cell or position. */
@@ -83,7 +86,6 @@ const BoardRoot = forwardRef<BoardController, BoardRootProps>(
   ) => {
     const remInPx = usePx(1);
     const gridInPx = useMemo(() => {
-      console.log('[px update]', remInPx);
       return {
         size: { width: grid.size.width * remInPx, height: grid.size.height * remInPx },
         gap: grid.gap * remInPx,
@@ -326,7 +328,6 @@ const BoardDropTarget = ({ position, rect, onAddClick }: BoardDropTargetProps) =
         // TODO(burdon): Make this pluggable so that the container can provide a menu trigger.
         <IconButton
           icon='ph--plus--regular'
-          size={5}
           iconOnly
           label={t('button add')}
           classNames='aspect-square opacity-0 transition-opacity duration-300 group-hover/cell:opacity-100'
@@ -341,14 +342,15 @@ const BoardDropTarget = ({ position, rect, onAddClick }: BoardDropTargetProps) =
 // Controls
 //
 
-type BoardToolbarProps = ThemedClassName;
+type BoardToolbarProps = ThemedClassName<ToolbarRootProps>;
 
-const BoardToolbar = ({ classNames }: BoardToolbarProps) => {
+const BoardToolbar = (props: BoardToolbarProps) => {
   const { t } = useTranslation(translationKey);
   const { readonly, zoom, controller, onAdd } = useBoardContext(BoardToolbar.displayName);
 
+  // TODO(burdon): Convert to MenuProvider.
   return (
-    <Toolbar.Root classNames={classNames}>
+    <Toolbar.Root {...props}>
       <Toolbar.IconButton
         icon='ph--crosshair--regular'
         iconOnly
@@ -395,8 +397,8 @@ export type {
   BoardViewportProps,
   BoardContentProps,
   BoardBackdropProps,
-  BoardToolbarProps,
   BoardCellProps,
+  BoardToolbarProps,
   BoardController,
 };
 

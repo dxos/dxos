@@ -14,13 +14,13 @@ import { TEST_ID, Test } from './Test';
 /**
  * Storybook sanity test.
  */
-const meta = {
+const meta: Meta<typeof Test> = {
   title: 'common/storybook-utils/Test',
   component: Test,
   render: (args) => <Test {...{ 'data-testid': TEST_ID }} {...args} />,
   decorators: [withTheme],
   tags: ['test'],
-} satisfies Meta<typeof Test>;
+};
 
 export default meta;
 

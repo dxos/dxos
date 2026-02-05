@@ -11,7 +11,7 @@ import { withClientProvider } from '@dxos/react-client/testing';
 import { Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
-import { DataType } from '@dxos/schema';
+import { Employer, Organization, Person, Project } from '@dxos/types';
 
 import { translations } from '../../translations';
 
@@ -19,10 +19,10 @@ import { QueryForm, type QueryFormProps } from './QueryForm';
 
 const types = [
   // TODO(burdon): Get label from annotation.
-  { value: Type.getTypename(DataType.Organization), label: 'Organization' },
-  { value: Type.getTypename(DataType.Person), label: 'Person' },
-  { value: Type.getTypename(DataType.Project), label: 'Project' },
-  { value: Type.getTypename(DataType.Employer), label: 'Employer' },
+  { value: Organization.Organization.typename, label: 'Organization' },
+  { value: Person.Person.typename, label: 'Person' },
+  { value: Type.getTypename(Project.Project), label: 'Project' },
+  { value: Employer.Employer.typename, label: 'Employer' },
 ];
 
 const tags = Tag.createTagList({
@@ -39,7 +39,7 @@ const meta = {
 
     return (
       <div>
-        <Toolbar.Root classNames='border-b border-subduedSeparator'>
+        <Toolbar.Root classNames='border-be border-subduedSeparator'>
           <QueryForm {...args} onChange={setQuery} />
         </Toolbar.Root>
 
@@ -49,9 +49,9 @@ const meta = {
   },
   decorators: [
     withTheme,
-    withLayout({ container: 'column' }),
+    withLayout({ layout: 'column' }),
     withClientProvider({
-      types: [DataType.Organization, DataType.Person, DataType.Project, DataType.Employer],
+      types: [Organization.Organization, Person.Person, Project.Project, Employer.Employer],
       createIdentity: true,
     }),
   ],

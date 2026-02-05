@@ -1,24 +1,24 @@
 {
   "name": "dxos-example-template",
+  "version": "0.8.3",
   "private": true,
-  "version": "0.0.0",
   "scripts": {
-    "dev": "vite",
     "build": "tsc && vite build",
+    "dev": "vite",
     "preview": "vite preview"
   },
   "dependencies": {
-    "@dxos/react-ui": "latest",
-    "@dxos/react-ui-theme": "latest",
-    "@dxos/react-ui-types": "latest",
-    "@dxos/react-client": "latest",
     "@dxos/echo": "latest",
+    "@dxos/react-client": "latest",
+    "@dxos/react-ui": "latest",
+    "@dxos/ui-theme": "latest",
+    "@dxos/ui-types": "latest",
     "react": "~19.2.0",
     "react-dom": "~19.2.0"
   },
   "devDependencies": {
     "@types/react": "~19.2.2",
-    "@types/react-dom": "~19.2.1",
+    "@types/react-dom": "~19.2.2",
     "@vitejs/plugin-react": "^5.0.0",
     "noise-protocol": "3.0.1",
     "vite": "7.1.9"

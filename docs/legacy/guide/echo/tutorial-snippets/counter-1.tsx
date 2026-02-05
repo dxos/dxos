@@ -4,7 +4,8 @@
 
 import React from 'react';
 
-import { useSpaces, useQuery } from '@dxos/react-client/echo';
+import { Filter, Type, useSpaces, useQuery } from '@dxos/react-client/echo';
+import { TestSchema } from '@dxos/echo/testing';
 import { useIdentity } from '@dxos/react-client/halo';
 
 export const Counter = () => {
@@ -12,16 +13,6 @@ export const Counter = () => {
   useIdentity();
   // Get the first available space, created with the identity.
   const [space] = useSpaces();
-
-  const [counter] = useQuery(space, { type: 'counter' });
-
-  return (
-    <div>
-      {counter && (
-        <div className='text-center'>
-          Clicked {counter.values.length ?? 0} times.
-        </div>
-      )}
-    </div>
-  );
+  const [counter] = useQuery(space, Filter.type(TestSchema.Expando));
+  return <div>{counter && <div className='text-center'>Clicked {counter.values.length ?? 0} times.</div>}</div>;
 };

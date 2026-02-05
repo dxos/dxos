@@ -3,7 +3,6 @@
 //
 
 import { type PublicKey } from '@dxos/keys';
-import type { ApiError } from '@dxos/protocols';
 import type { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import type { DeviceProfileDocument, ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import type {
@@ -26,7 +25,7 @@ export interface InvitationProtocol {
   // Host
   //
 
-  checkCanInviteNewMembers(): ApiError | undefined;
+  checkCanInviteNewMembers(): Error | undefined;
 
   /**
    * Protocol-specific information to include in the invitation.
@@ -58,7 +57,7 @@ export interface InvitationProtocol {
    *
    * For example, the guest may already be a member of the space.
    */
-  checkInvitation(invitation: Partial<Invitation>): ApiError | undefined;
+  checkInvitation(invitation: Partial<Invitation>): Error | undefined;
 
   /**
    * Get profile information to send to the host to identify the guest.

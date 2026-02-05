@@ -9,7 +9,7 @@ import { type Space, type SpaceId } from '@dxos/client/echo';
 import { DeviceType } from '@dxos/client/halo';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
-import { Icon, IconButton, Toolbar } from '@dxos/react-ui';
+import { IconButton, Toolbar } from '@dxos/react-ui';
 
 import { PanelContainer } from '../../../components';
 import { DataSpaceSelector } from '../../../containers';
@@ -68,15 +68,12 @@ export const TestingPanel = ({ onSpaceCreate, onScriptPluginOpen }: TestingPanel
       toolbar={
         <Toolbar.Root>
           <DataSpaceSelector />
-          <Toolbar.Button onClick={handleSpaceCreate}>
-            <Icon icon='ph--plus--regular' />
-            Create Space
-          </Toolbar.Button>
+          <Toolbar.IconButton icon='ph--plus--regular' label='Create Space' onClick={handleSpaceCreate} />
         </Toolbar.Root>
       }
     >
       <IconButton icon='ph--code--regular' label='Open Script Plugin' onClick={handleScriptPluginOpen} />
-      <div className='border-t border-separator'>{space && <SyncStateInfo space={space} />}</div>
+      <div className='border-bs border-separator'>{space && <SyncStateInfo space={space} />}</div>
     </PanelContainer>
   );
 };

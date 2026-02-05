@@ -2,13 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
-import { effect } from '@preact/signals-core';
 import * as Effect from 'effect/Effect';
 import * as SchemaAST from 'effect/SchemaAST';
 
 import { Filter } from '@dxos/client/echo';
-import { toEffectSchema } from '@dxos/echo/internal';
-import { ComputeEventLogger, FunctionInvocationService, FunctionType, TracingService } from '@dxos/functions';
+import { JsonSchema, Obj } from '@dxos/echo';
+import { Function, FunctionInvocationService, TracingService } from '@dxos/functions';
 import { FunctionDefinition } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { isNonNullable } from '@dxos/util';
@@ -36,22 +35,20 @@ export class EdgeFunctionPlugin extends AsyncFunctionPlugin {
           return new CellError(ErrorType.REF, 'Missing space');
         }
 
-        const {
-          objects: [fn],
-        } = await space.db.query(Filter.type(FunctionType, { binding })).run();
+        const [fn] = await space.db.query(Filter.type(Function.Function, { binding })).run();
         if (!fn) {
           log.info('Function not found', { binding });
           return new CellError(ErrorType.REF, 'Function not found');
         }
 
         if (subscribe) {
-          const unsubscribe = effect(() => {
+          const unsubscribe = Obj.subscribe(fn, () => {
             log('function changed', { fn });
-            const _ = fn?.version;
-
             // TODO(wittjosiah): `ttl` should be 0 to force a recalculation when a new version is deployed.
             //  This needs a ttl to prevent a binding change from causing the function not to be found.
-            this.runAsyncFunction(ast, state, handler(false), { ttl: FUNCTION_TTL });
+            this.runAsyncFunction(ast, state, handler(false), {
+              ttl: FUNCTION_TTL,
+            });
           });
 
           this.context.createSubscription(ast.procedureName, unsubscribe);
@@ -62,7 +59,7 @@ export class EdgeFunctionPlugin extends AsyncFunctionPlugin {
         // If input schema exists, construct an object from args using the schema props order, otherwise pass { args }.
         let input: any;
         if (fn.inputSchema) {
-          const schema = toEffectSchema(fn.inputSchema);
+          const schema = JsonSchema.toEffectSchema(fn.inputSchema);
           const props = SchemaAST.getPropertySignatures(schema.ast);
           input = {} as any;
           props.forEach(({ name }, index) => {
@@ -74,12 +71,14 @@ export class EdgeFunctionPlugin extends AsyncFunctionPlugin {
         const result = runtime.runPromise(
           Effect.gen(function* () {
             return yield* FunctionInvocationService.invokeFunction(functionDef, input);
-          }).pipe(Effect.provide(ComputeEventLogger.layerFromTracing), Effect.provide(TracingService.layerNoop)),
+          }).pipe(Effect.provide(TracingService.layerNoop)),
         );
         return result as any;
       };
 
-    return this.runAsyncFunction(ast, state, handler(true), { ttl: FUNCTION_TTL });
+    return this.runAsyncFunction(ast, state, handler(true), {
+      ttl: FUNCTION_TTL,
+    });
   }
 }
 

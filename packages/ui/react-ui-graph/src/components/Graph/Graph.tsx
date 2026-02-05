@@ -2,14 +2,13 @@
 // Copyright 2022 DXOS.org
 //
 
-import { effect } from '@preact/signals-core';
 import React, { type JSX, type Ref, forwardRef, useEffect, useImperativeHandle, useMemo, useRef } from 'react';
 
 import { combine } from '@dxos/async';
-import { type BaseGraphEdge, type BaseGraphNode, type GraphModel } from '@dxos/graph';
+import { type Graph as Graph$, type GraphModel } from '@dxos/graph';
 import { log } from '@dxos/log';
 import { type ThemedClassName } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import {
   GraphForceProjector,
@@ -27,9 +26,9 @@ export type GraphController = {
   findNode: (id: string) => SVGGElement | null;
 };
 
-export type GraphProps<Node extends BaseGraphNode = any, Edge extends BaseGraphEdge = any> = ThemedClassName<
+export type GraphProps<Node extends Graph$.Node.Any = any, Edge extends Graph$.Edge.Any = any> = ThemedClassName<
   Pick<GraphRendererOptions<Node>, 'labels' | 'subgraphs' | 'attributes'> & {
-    model?: GraphModel<Node, Edge>; // TODO(burdon): ReactiveGraphModel
+    model?: GraphModel.GraphModel<Node, Edge>; // TODO(burdon): ReactiveGraphModel
     projector?: GraphProjector<Node>;
     renderer?: GraphRenderer<Node>;
     drag?: boolean;
@@ -39,7 +38,7 @@ export type GraphProps<Node extends BaseGraphNode = any, Edge extends BaseGraphE
   }
 >;
 
-export const GraphInner = <Node extends BaseGraphNode = any, Edge extends BaseGraphEdge = any>(
+const GraphInner = <Node extends Graph$.Node.Any = any, Edge extends Graph$.Edge.Any = any>(
   {
     classNames,
     model,
@@ -96,10 +95,18 @@ export const GraphInner = <Node extends BaseGraphNode = any, Edge extends BaseGr
 
   // Subscriptions.
   useEffect(() => {
+    projector.updateData(model?.graph);
+
+    // Subscribe to model changes if reactive model.
+    const unsubscribeModel =
+      model && 'subscribe' in model
+        ? (model as GraphModel.ReactiveGraphModel).subscribe(() => {
+            projector.updateData(model?.graph);
+          })
+        : undefined;
+
     return combine(
-      effect(() => {
-        projector.updateData(model?.graph);
-      }),
+      unsubscribeModel,
       projector.updated.on(({ layout }) => {
         try {
           renderer.render(layout);
@@ -125,6 +132,6 @@ export const GraphInner = <Node extends BaseGraphNode = any, Edge extends BaseGr
 /**
  * SVG Graph.
  */
-export const Graph = forwardRef(GraphInner) as <Node extends BaseGraphNode = any, Edge extends BaseGraphEdge = any>(
+export const Graph = forwardRef(GraphInner) as <Node extends Graph$.Node.Any = any, Edge extends Graph$.Edge.Any = any>(
   props: GraphProps<Node, Edge> & { ref?: Ref<GraphController> },
 ) => JSX.Element;

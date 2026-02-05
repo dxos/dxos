@@ -41,7 +41,7 @@ const TestCell = ({ item, ...props }: ResponsiveGridItemProps<TestItem>) => {
       {item.type === 'image' && <img className='aspect-video object-contain' src={item.imageUrl} />}
       {item.type === 'video' && (
         <video
-          className='w-full aspect-video object-cover rounded-md'
+          className='is-full aspect-video object-cover rounded-md'
           src={item.videoUrl}
           playsInline
           autoPlay

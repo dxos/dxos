@@ -8,7 +8,6 @@ import React, { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Devtools, StatsPanel, useStats } from '@dxos/devtools';
 import { Obj, Type } from '@dxos/echo';
-import { type Live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { type PublicKey, useClient } from '@dxos/react-client';
 import { Query, type Space, useQuery, useSpaces } from '@dxos/react-client/echo';
@@ -59,7 +58,7 @@ export const Main = () => {
   );
 
   const getSchema = (type: string | undefined) => typeMap.get(type ?? Item.typename) ?? Item;
-  const objectsOfSchema = useQuery(space, Query.type(getSchema(type)));
+  const objectsOfSchema = useQuery(space?.db, Query.type(getSchema(type)));
   const objects = useMemo(
     () => objectsOfSchema.filter((object) => match(filter, object.content)),
     [objectsOfSchema, filter],
@@ -87,7 +86,7 @@ export const Main = () => {
 
     // TODO(burdon): Migrate generator from DebugPlugin.
     Array.from({ length: n }).forEach(() => {
-      let object: Live<any>;
+      let object: Obj.Unknown;
       switch (type) {
         case Document.typename: {
           object = Obj.make(Document, {
@@ -220,19 +219,19 @@ export const Main = () => {
           {view === 'list' && <ItemList objects={objects} onDelete={handleObjectDelete} />}
           {view === 'debug' && <ItemList debug objects={objects} onDelete={handleObjectDelete} />}
         </div>
-        <div className='flex h-[32px] p-2 items-center relative text-xs'>
+        <div className='flex bs-[32px] p-2 items-center relative text-xs'>
           <div>{objects.length} objects</div>
           <div className='grow' />
           <StatusBar flushing={flushing} showStats={showStats} onShowStats={(show) => setShowStats(show)} />
           {showStats && (
-            <div className='z-20 absolute right-0 bottom-[32px] w-[450px] border-l border-t border-neutral-500 dark:border-neutral-800'>
+            <div className='z-20 absolute right-0 bottom-[32px] is-[450px] border-l border-bs border-neutral-500 dark:border-neutral-800'>
               <StatsPanel stats={stats} onRefresh={refreshStats} />
             </div>
           )}
         </div>
       </div>
       {showDevTools && (
-        <div className='flex flex-col w-[120rem] h-full bg-white dark:bg-black'>
+        <div className='flex flex-col is-[120rem] bs-full bg-white dark:bg-black'>
           <Suspense fallback={<></>}>
             <Devtools noRouter />
           </Suspense>

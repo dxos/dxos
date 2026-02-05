@@ -3,29 +3,30 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 import type * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { Obj, type Type } from '@dxos/echo';
+import { type Database, Obj, Ref, Type } from '@dxos/echo';
 import {
-  type BaseObject,
-  FormatEnum,
+  type AnyProperties,
   GeneratorAnnotationId,
   type GeneratorAnnotationValue,
   type JsonSchemaType,
-  Ref,
-  type TypedObject,
   getSchemaReference,
-  getTypename,
 } from '@dxos/echo/internal';
-import { type AnyLiveObject, type EchoDatabase, Filter, Query } from '@dxos/echo-db';
-import { findAnnotation } from '@dxos/effect';
+import { Filter, Query } from '@dxos/echo-db';
+import {
+  type SchemaProperty,
+  findAnnotation,
+  getProperties,
+  isArrayType,
+  isNestedType,
+  runAndForwardErrors,
+} from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { type Live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { getDeep } from '@dxos/util';
-
-import { type SchemaProperty, getSchemaProperties } from '../properties';
 
 /**
  * Decouples from faker.
@@ -35,8 +36,14 @@ export type ValueGenerator<T = any> = Record<string, () => T>;
 const randomBoolean = (p = 0.5) => Math.random() <= p;
 const randomElement = <T>(elements: T[]): T => elements[Math.floor(Math.random() * elements.length)];
 
+/**
+ * Type that has typename and version properties (created with Type.Obj).
+ * @deprecated Use Type.Obj.Any instead.
+ */
+export type TypedSchema = Type.Obj.Any;
+
 export type TypeSpec = {
-  type: TypedObject;
+  type: Type.Obj.Any;
   count: number;
 };
 
@@ -44,13 +51,13 @@ export type TypeSpec = {
  * Create sets of objects.
  */
 export const createObjectFactory =
-  (db: EchoDatabase, generator: ValueGenerator) =>
-  async (specs: TypeSpec[]): Promise<Live<any>[]> => {
-    const result: Live<any>[] = [];
+  (db: Database.Database, generator: ValueGenerator) =>
+  async (specs: TypeSpec[]): Promise<any[]> => {
+    const result: any[] = [];
     for (const { type, count } of specs) {
       try {
         const pipeline = createObjectPipeline(generator, type, { db });
-        const objects = await Effect.runPromise(createArrayPipeline(count, pipeline));
+        const objects = await runAndForwardErrors(createArrayPipeline(count, pipeline));
         result.push(...objects);
         // NOTE: Flush so that available to other generators as refs.
         await db.flush();
@@ -65,17 +72,13 @@ export const createObjectFactory =
 /**
  * Set properties based on generator annotation.
  */
-export const createProps = <S extends Schema.Schema.AnyNoContext>(
-  generator: ValueGenerator,
-  schema: S,
-  force = false,
-) => {
-  return (
-    data: Type.Properties<Schema.Schema.Type<S>> = {} as Type.Properties<Schema.Schema.Type<S>>,
-  ): Type.Properties<Schema.Schema.Type<S>> => {
-    return getSchemaProperties<S>(schema.ast).reduce<Type.Properties<Schema.Schema.Type<S>>>((obj, property) => {
-      if ((obj as any)[property.name] === undefined) {
-        (obj as any)[property.name] = createValue(generator, schema, property, force);
+export const createProps = <S extends Type.Obj.Any>(generator: ValueGenerator, schema: S, force = false) => {
+  type T = Schema.Schema.Type<S>;
+  return (data: Type.Properties<T> = {} as Type.Properties<T>): Type.Properties<T> => {
+    return getProperties(schema.ast).reduce<Type.Properties<T>>((obj, property) => {
+      const name = property.name.toString();
+      if ((obj as any)[name] === undefined && name !== 'id') {
+        (obj as any)[name] = createValue(generator, schema, property, force);
       }
 
       return obj;
@@ -86,25 +89,26 @@ export const createProps = <S extends Schema.Schema.AnyNoContext>(
 /**
  * Generate value for property.
  */
-const createValue = <T extends BaseObject>(
+const createValue = <S extends Type.Obj.Any>(
   generator: ValueGenerator,
-  schema: Schema.Schema<T>,
-  property: SchemaProperty<T>,
+  schema: S,
+  property: SchemaProperty,
   force = false,
 ): any | undefined => {
-  if (property.defaultValue !== undefined) {
-    return structuredClone(property.defaultValue);
+  const defaultValue = SchemaAST.getDefaultAnnotation(property.type);
+  if (Option.isSome(defaultValue)) {
+    return structuredClone(defaultValue.value);
   }
 
   // Generator value from annotation.
-  const annotation = findAnnotation<GeneratorAnnotationValue>(property.ast, GeneratorAnnotationId);
+  const annotation = findAnnotation<GeneratorAnnotationValue>(property.type, GeneratorAnnotationId);
   if (annotation) {
     const {
       generator: generatorName,
       probability = 0.5,
       args = [],
     } = typeof annotation === 'string' ? { generator: annotation } : annotation;
-    if (!property.optional || force || randomBoolean(probability)) {
+    if (!property.isOptional || force || randomBoolean(probability)) {
       const fn = getDeep<(...args: any[]) => any>(generator, generatorName.split('.'));
       if (!fn) {
         log.warn('unknown generator', { generatorName });
@@ -115,18 +119,14 @@ const createValue = <T extends BaseObject>(
   }
 
   // TODO(dmaretskyi): Support generating nested objects here; or generator via type.
-  if (!property.optional) {
-    if (property.array) {
+  if (!property.isOptional) {
+    if (isArrayType(property.type)) {
       return [];
+    } else if (isNestedType(property.type)) {
+      return {};
     } else {
-      switch (property.type) {
-        case 'object':
-          return {};
-        default: {
-          const prop = [getTypename(schema), property.name].filter(Boolean).join('.');
-          throw new Error(`Required property: ${prop}:${property.type}`);
-        }
-      }
+      const prop = [Type.getTypename(schema), property.name.toString()].filter(Boolean).join('.');
+      throw new Error(`Required property: ${prop}:${property.type._tag}`);
     }
   }
 };
@@ -134,55 +134,68 @@ const createValue = <T extends BaseObject>(
 /**
  * Set references.
  */
-export const createReferences = <T extends BaseObject>(schema: Schema.Schema<T>, db: EchoDatabase) => {
+export const createReferences = <S extends Type.Obj.Any>(schema: S, db: Database.Database) => {
+  type T = Schema.Schema.Type<S>;
   return async (obj: T): Promise<T> => {
-    for (const property of getSchemaProperties<T>(schema.ast)) {
-      if (!property.optional || randomBoolean()) {
-        if (property.format === FormatEnum.Ref) {
-          const jsonSchema = findAnnotation<JsonSchemaType>(property.ast, SchemaAST.JSONSchemaAnnotationId);
+    // Collect all references to set.
+    const refsToSet: Array<{ name: PropertyKey; ref: any }> = [];
+
+    for (const property of getProperties(schema.ast)) {
+      if (!property.isOptional || randomBoolean()) {
+        if (Ref.isRefType(property.type)) {
+          const jsonSchema = findAnnotation<JsonSchemaType>(property.type, SchemaAST.JSONSchemaAnnotationId);
           if (jsonSchema) {
             const { typename } = getSchemaReference(jsonSchema) ?? {};
             invariant(typename);
             // TODO(burdon): Filter.typename doesn't currently work for mutable objects.
-            const { objects: allObjects } = await db.query(Query.select(Filter.everything())).run();
-            const objects = allObjects.filter((obj) => getTypename(obj) === typename);
+            const allObjects = await db.query(Query.select(Filter.everything())).run();
+            const objects = allObjects.filter((obj) => Obj.getTypename(obj) === typename);
             if (objects.length) {
               const object = randomElement(objects);
-              (obj as any)[property.name] = Ref.make(object);
+              refsToSet.push({ name: property.name, ref: Ref.make(object) });
             }
           }
         }
       }
     }
 
+    // Set all references within a change context.
+    if (refsToSet.length > 0) {
+      Obj.change(obj as any, (mutableObj: any) => {
+        for (const { name, ref } of refsToSet) {
+          mutableObj[name] = ref;
+        }
+      });
+    }
+
     return obj;
   };
 };
 
-export const createReactiveObject = <S extends Schema.Schema.AnyNoContext>(type: S) => {
+export const createReactiveObject = <S extends Type.Obj.Any>(type: S) => {
   return (data: Type.Properties<Schema.Schema.Type<S>>) => Obj.make<S>(type, data);
 };
 
-export const addToDatabase = (db: EchoDatabase) => {
+export const addToDatabase = (db: Database.Database) => {
   // TODO(dmaretskyi): Fix DB types.
-  return <T extends BaseObject>(obj: Live<T>): AnyLiveObject<T> => db.add(obj as any) as any;
+  return <T extends AnyProperties>(obj: T): Obj.Obj<T> => db.add(obj as any) as any;
 };
 
 export const logObject = (message: string) => (obj: any) => log.info(message, { obj });
 
-export const createObjectArray = <T extends BaseObject>(n: number): Type.Properties<T>[] =>
+export const createObjectArray = <T extends AnyProperties>(n: number): Type.Properties<T>[] =>
   Array.from({ length: n }, () => ({}) as Type.Properties<T>);
 
-export const createArrayPipeline = <T extends BaseObject>(
+export const createArrayPipeline = <T extends AnyProperties>(
   n: number,
-  pipeline: (obj: Type.Properties<T>) => Effect.Effect<Live<T>, never, never>,
+  pipeline: (obj: Type.Properties<T>) => Effect.Effect<T, never, never>,
 ) => {
   return Effect.forEach(createObjectArray<T>(n), pipeline);
 };
 
 export type CreateOptions = {
   /** Database for references. */
-  db?: EchoDatabase;
+  db?: Database.Database;
 
   /** If true, set all optional properties, otherwise randomly set them. */
   force?: boolean;
@@ -191,14 +204,15 @@ export type CreateOptions = {
 /**
  * Create an object creation pipeline.
  */
-export const createObjectPipeline = <T extends BaseObject>(
+export const createObjectPipeline = <S extends Type.Obj.Any>(
   generator: ValueGenerator,
-  type: Schema.Schema<T>,
+  type: S,
   { db, force }: CreateOptions,
-): ((obj: Type.Properties<T>) => Effect.Effect<Live<T>, never, never>) => {
+): ((obj: Type.Properties<Schema.Schema.Type<S>>) => Effect.Effect<Schema.Schema.Type<S>, never, never>) => {
+  type T = Schema.Schema.Type<S>;
   if (!db) {
     return (obj: Type.Properties<T>) => {
-      const pipeline: Effect.Effect<Live<T>> = Effect.gen(function* () {
+      const pipeline: Effect.Effect<T> = Effect.gen(function* () {
         const withProps = createProps(generator, type, force)(obj);
         return createReactiveObject(type)(withProps);
       });
@@ -207,7 +221,7 @@ export const createObjectPipeline = <T extends BaseObject>(
     };
   } else {
     return (obj: Type.Properties<T>) => {
-      const pipeline: Effect.Effect<AnyLiveObject<any>, never, never> = Effect.gen(function* () {
+      const pipeline: Effect.Effect<Obj.Obj<any>, never, never> = Effect.gen(function* () {
         const withProps = createProps(generator, type, force)(obj);
         const liveObj = createReactiveObject(type)(withProps);
         const withRefs = yield* Effect.promise(() => createReferences(type, db)(liveObj));
@@ -219,19 +233,23 @@ export const createObjectPipeline = <T extends BaseObject>(
   }
 };
 
-export type ObjectGenerator<T extends BaseObject> = {
-  createObject: () => Live<T>;
-  createObjects: (n: number) => Live<T>[];
+export type ObjectGenerator<T extends AnyProperties> = {
+  createObject: () => T;
+  createObjects: (n: number) => T[];
 };
 
 // TODO(ZaymonFC): Sync generator doesn't work with db; createReferences is async and can't be invoked with `Effect.runSync`.
 // TODO(dmaretskyi): Expose effect API instead of pairs of sync/async APIs.
-export const createGenerator = <S extends Schema.Schema.AnyNoContext>(
+export const createGenerator = <S extends Type.Obj.Any>(
   generator: ValueGenerator,
   type: S,
   options: Omit<CreateOptions, 'db'> = {},
 ): ObjectGenerator<Schema.Schema.Type<S>> => {
-  const pipeline = createObjectPipeline(generator, type, options);
+  const pipeline = createObjectPipeline(
+    generator,
+    type as Type.Obj.Any & Schema.Schema<Schema.Schema.Type<S>>,
+    options,
+  );
 
   return {
     createObject: () => Effect.runSync(pipeline({} as Type.Properties<Schema.Schema.Type<S>>)),
@@ -239,20 +257,21 @@ export const createGenerator = <S extends Schema.Schema.AnyNoContext>(
   };
 };
 
-export type AsyncObjectGenerator<T extends BaseObject> = {
-  createObject: () => Promise<Live<T>>;
-  createObjects: (n: number) => Promise<Live<T>[]>;
+export type AsyncObjectGenerator<T> = {
+  createObject: () => Promise<T>;
+  createObjects: (n: number) => Promise<T[]>;
 };
 
-export const createAsyncGenerator = <T extends BaseObject>(
+export const createAsyncGenerator = <S extends Type.Obj.Any>(
   generator: ValueGenerator,
-  type: Schema.Schema<T>,
+  type: S,
   options: CreateOptions = {},
-): AsyncObjectGenerator<T> => {
+): AsyncObjectGenerator<Schema.Schema.Type<S>> => {
+  type T = Schema.Schema.Type<S>;
   const pipeline = createObjectPipeline(generator, type, options);
 
   return {
-    createObject: () => Effect.runPromise(pipeline({} as Type.Properties<T>)),
-    createObjects: (n: number) => Effect.runPromise(createArrayPipeline(n, pipeline)),
+    createObject: () => runAndForwardErrors(pipeline({} as Type.Properties<T>)),
+    createObjects: (n: number) => runAndForwardErrors(createArrayPipeline(n, pipeline)),
   };
 };

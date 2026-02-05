@@ -2,21 +2,20 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type EchoDatabase } from '@dxos/client/echo';
-import { type Tag, Type } from '@dxos/echo';
+import { type Database, type Tag, Type } from '@dxos/echo';
 import { QueryDSL } from '@dxos/echo-query';
 import { type GetMenuContext } from '@dxos/react-ui-editor';
 
 export type CompletionOptions = {
-  db?: EchoDatabase;
-  tags?: Tag.TagMap;
+  db?: Database.Database;
+  tags?: Tag.Map;
 };
 
 export const completions = ({ db, tags }: CompletionOptions) => {
   const parser = QueryDSL.Parser.configure({ strict: false });
   return ({ state, pos }: GetMenuContext): string[] => {
     const tree = parser.parse(state.sliceDoc());
-    const node = tree.cursorAt(pos, -1).node;
+    const { node } = tree.cursorAt(pos, -1);
 
     switch (node.parent?.type.id) {
       case QueryDSL.Node.TypeFilter: {
@@ -28,7 +27,7 @@ export const completions = ({ db, tags }: CompletionOptions) => {
         }
 
         if (range) {
-          const schema = db?.graph.schemaRegistry.schemas ?? [];
+          const schema = db?.graph.schemaRegistry.query({ location: ['runtime'] }).runSync() ?? [];
           return schema.map((schema) => Type.getTypename(schema));
         }
 

@@ -7,7 +7,7 @@ import React, { useCallback, useEffect, useRef } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
 import { type ThemedClassName } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 export type SineProps = ThemedClassName;
 
@@ -82,7 +82,7 @@ export const Sine = ({ classNames }: SineProps) => {
 
   return (
     <div ref={ref} className={mx(classNames)}>
-      <svg ref={svgRef} className='w-full h-full' viewBox={`${-width / 2} ${-height / 2} ${width} ${height}`} />
+      <svg ref={svgRef} className='is-full bs-full' viewBox={`${-width / 2} ${-height / 2} ${width} ${height}`} />
     </div>
   );
 };

@@ -2,18 +2,18 @@
 // Copyright 2022 DXOS.org
 //
 
-import { crx as ChromeExtensionPlugin } from '@crxjs/vite-plugin';
-import ReactPlugin from '@vitejs/plugin-react';
+import { crx } from '@crxjs/vite-plugin';
+import react from '@vitejs/plugin-react';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import SourceMapsPlugin from 'rollup-plugin-sourcemaps';
+import sourcemaps from 'rollup-plugin-sourcemaps';
 import { defineConfig, searchForWorkspaceRoot } from 'vite';
-import TopLevelAwaitPlugin from 'vite-plugin-top-level-await';
-import WasmPlugin from 'vite-plugin-wasm';
+import topLevelAwait from 'vite-plugin-top-level-await';
+import wasm from 'vite-plugin-wasm';
 
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
-import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
+import { ThemePlugin } from '@dxos/ui-theme/plugin';
 import { IconsPlugin } from '@dxos/vite-plugin-icons';
 
 // import { createConfig as createTestConfig } from '../../../vitest.base.config';
@@ -47,14 +47,18 @@ export default defineConfig({
   resolve: {
     alias: {
       'node-fetch': 'isomorphic-fetch',
+      // Stub out codec-protobuf to disable eval, which contradicts the MV3 CSP.
+      // '@dxos/codec-protobuf': path.resolve(dirname, 'src/codec-protobuf.stub.ts'),
     },
   },
   worker: {
     format: 'es',
-    plugins: () => [TopLevelAwaitPlugin(), WasmPlugin(), SourceMapsPlugin()],
+    plugins: () => [sourcemaps(), topLevelAwait(), wasm()],
   },
   plugins: [
-    SourceMapsPlugin(),
+    sourcemaps(),
+
+    // DXOS plugins.
     ConfigPlugin({
       root: dirname,
     }),
@@ -77,14 +81,16 @@ export default defineConfig({
       ],
     }),
 
-    WasmPlugin(),
+    // TODO(burdon): Document.
+    wasm(),
 
     // https://github.com/preactjs/signals/issues/269
-    ReactPlugin({ jsxRuntime: 'classic' }),
+    react({
+      jsxRuntime: 'classic',
+    }),
 
     // https://crxjs.dev/vite-plugin
-    // TODO(burdon): HMR works if installing from ./dist (via `p serve`) but styles don't work.
-    ChromeExtensionPlugin({
+    crx({
       manifest: {
         manifest_version: 3,
         version: packageJson.version,
@@ -93,14 +99,17 @@ export default defineConfig({
         short_name: 'Composer',
         description: 'Composer browser extension.',
         icons: {
-          '48': 'assets/img/icon-dxos-48.png',
-          '128': 'assets/img/icon-dxos-128.png',
+          '48': 'assets/img/icon-48.png',
+          '128': 'assets/img/icon-128.png',
         },
+        // NOTE: Rename file to break cache.
         action: {
-          default_icon: 'assets/img/icon-dxos-48.png',
+          default_icon: 'assets/img/icon-48.png',
           default_title: 'Composer',
           default_popup: 'popup.html',
         },
+        permissions: ['contextMenus', 'activeTab', 'scripting', 'storage', 'notifications'],
+        host_permissions: ['<all_urls>'],
         content_security_policy: {
           extension_pages: "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'",
         },
@@ -127,10 +136,10 @@ export default defineConfig({
       buildEnd() {
         const deps: { source: string; target: string }[] = [];
         for (const id of this.getModuleIds()) {
-          const m = this.getModuleInfo(id);
-          if (m != null && !m.isExternal) {
-            for (const target of m.importedIds) {
-              deps.push({ source: m.id, target });
+          const module = this.getModuleInfo(id);
+          if (module != null && !module.isExternal) {
+            for (const target of module.importedIds) {
+              deps.push({ source: module.id, target });
             }
           }
         }
@@ -143,6 +152,7 @@ export default defineConfig({
       },
     },
   ],
+
   // TODO(wittjosiah): Tests failing.
   // ...createTestConfig({ dirname, node: true, storybook: true }),
 });

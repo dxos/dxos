@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { FormatEnum } from '@dxos/echo/internal';
+import { Format } from '@dxos/echo/internal';
 import { levels } from '@dxos/log';
 import { type LogEntry } from '@dxos/protocols/proto/dxos/client/services';
 import { DynamicTable, type TablePropertyDefinition } from '@dxos/react-ui-table';
@@ -24,10 +24,10 @@ const levelOptions = [
 export const LogTable = ({ logs = [] }: { logs: LogEntry[] }) => {
   const properties: TablePropertyDefinition[] = useMemo(
     () => [
-      { name: 'timestamp', format: FormatEnum.DateTime, sort: 'desc' as const, size: 194 },
-      { name: 'level', format: FormatEnum.SingleSelect, config: { options: levelOptions }, size: 80 },
-      { name: 'file', format: FormatEnum.String, size: 160 },
-      { name: 'message', format: FormatEnum.String },
+      { name: 'timestamp', format: Format.TypeFormat.DateTime, sort: 'desc' as const, size: 194 },
+      { name: 'level', format: Format.TypeFormat.SingleSelect, config: { options: levelOptions }, size: 80 },
+      { name: 'file', format: Format.TypeFormat.String, size: 160 },
+      { name: 'message', format: Format.TypeFormat.String },
     ],
     [],
   );

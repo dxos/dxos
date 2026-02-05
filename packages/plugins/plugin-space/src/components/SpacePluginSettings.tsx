@@ -4,21 +4,26 @@
 
 import React from 'react';
 
-import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
+import { useOperationInvoker } from '@dxos/app-framework/react';
 import { useClient } from '@dxos/react-client';
 import { useSpaces } from '@dxos/react-client/echo';
 import { IconButton, Input, List, ListItem, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { ControlGroup, ControlItemInput, ControlPage, ControlSection, controlItemClasses } from '@dxos/react-ui-form';
 
 import { meta } from '../meta';
-import { SpaceAction, type SpaceSettingsProps } from '../types';
+import { SpaceOperation, type SpaceSettingsProps } from '../types';
 import { getSpaceDisplayName } from '../util';
 
-export const SpacePluginSettings = ({ settings }: { settings: SpaceSettingsProps }) => {
+export type SpacePluginSettingsComponentProps = {
+  settings: SpaceSettingsProps;
+  onSettingsChange: (fn: (current: SpaceSettingsProps) => SpaceSettingsProps) => void;
+};
+
+export const SpacePluginSettings = ({ settings, onSettingsChange }: SpacePluginSettingsComponentProps) => {
   const { t } = useTranslation(meta.id);
   const client = useClient();
   const spaces = useSpaces({ all: settings.showHidden });
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const { invokePromise } = useOperationInvoker();
 
   return (
     <ControlPage>
@@ -27,7 +32,7 @@ export const SpacePluginSettings = ({ settings }: { settings: SpaceSettingsProps
           <ControlItemInput title={t('show hidden spaces label')}>
             <Input.Switch
               checked={settings.showHidden}
-              onCheckedChange={(checked) => (settings.showHidden = !!checked)}
+              onCheckedChange={(checked) => onSettingsChange((s) => ({ ...s, showHidden: !!checked }))}
             />
           </ControlItemInput>
         </ControlGroup>
@@ -36,11 +41,16 @@ export const SpacePluginSettings = ({ settings }: { settings: SpaceSettingsProps
             <ListItem.Root key={space.id} classNames='is-full items-center'>
               {/* TODO(burdon): Should auto center and truncate; NOTE truncate doesn't work with flex grow. */}
               <ListItem.Heading classNames='grow truncate !min-bs-0'>
-                {toLocalizedString(getSpaceDisplayName(space, { personal: space === client.spaces.default }), t)}
+                {toLocalizedString(
+                  getSpaceDisplayName(space, {
+                    personal: space === client.spaces.default,
+                  }),
+                  t,
+                )}
               </ListItem.Heading>
               <IconButton
                 icon='ph--faders--regular'
-                onClick={() => dispatch(createIntent(SpaceAction.OpenSettings, { space }))}
+                onClick={() => invokePromise(SpaceOperation.OpenSettings, { space })}
                 label={t('open space settings label')}
               />
             </ListItem.Root>

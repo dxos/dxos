@@ -5,28 +5,28 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type FC, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Expando } from '@dxos/echo/internal';
-import { live } from '@dxos/echo/internal';
-import { createDocAccessor, createObject } from '@dxos/echo-db';
+import { Obj } from '@dxos/echo';
+import { TestSchema } from '@dxos/echo/testing';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
-import { Button, Icon, useThemeContext } from '@dxos/react-ui';
+import { Icon, IconButton, useThemeContext } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
+import { useTextEditor } from '@dxos/react-ui-editor';
 import {
   type Comment,
   type CommentsOptions,
+  type EditorView,
   type Range,
-  automerge,
   comments,
   createBasicExtensions,
   createThemeExtensions,
+  documentId,
   listener,
   scrollThreadIntoView,
-  useComments,
-  useTextEditor,
-} from '@dxos/react-ui-editor';
-import { hoverableControls, hoverableFocusedWithinControls } from '@dxos/react-ui-theme';
+  setComments,
+} from '@dxos/ui-editor';
+import { hoverableControls, hoverableFocusedWithinControls } from '@dxos/ui-theme';
 
 import { MessageBody, MessageHeading, MessageRoot, MessageTextbox } from '../Message';
 import { type MessageEntity } from '../testing';
@@ -38,13 +38,31 @@ faker.seed(101);
 
 const authorId = PublicKey.random().toHex();
 
+/**
+ * @deprecated This hook will be removed in future versions. Use the new comment sync extension instead.
+ * Update comments state field.
+ */
+const useComments = (view: EditorView | null | undefined, id: string, comments?: Comment[]) => {
+  useEffect(() => {
+    if (view) {
+      // Check same document.
+      // NOTE: Hook might be called before editor state is updated.
+      if (id === view.state.facet(documentId)) {
+        view.dispatch({
+          effects: setComments.of({ id, comments: comments ?? [] }),
+        });
+      }
+    }
+  });
+};
+
 //
 // Editor
 //
 
 const Editor: FC<{
   id?: string;
-  item: Expando;
+  initialValue: string;
   comments: Comment[];
   selected?: string;
   onCreateComment: CommentsOptions['onCreate'];
@@ -53,7 +71,7 @@ const Editor: FC<{
   onSelectComment: CommentsOptions['onSelect'];
 }> = ({
   id = 'test',
-  item,
+  initialValue,
   selected: selectedValue,
   comments: commentRanges,
   onCreateComment,
@@ -67,11 +85,10 @@ const Editor: FC<{
   const { parentRef, view } = useTextEditor(
     () => ({
       id,
-      initialValue: item.content,
+      initialValue: initialValue,
       extensions: [
         createBasicExtensions(),
         createThemeExtensions({ themeMode }),
-        automerge(createDocAccessor(item, ['content'])),
         comments({
           id,
           onCreate: onCreateComment,
@@ -81,7 +98,7 @@ const Editor: FC<{
         }),
       ],
     }),
-    [id, item, themeMode],
+    [id, initialValue, themeMode],
   );
   useComments(view, id, commentRanges);
   useEffect(() => {
@@ -114,19 +131,21 @@ const StoryThread: FC<{
   onSelect: () => void;
   onResolve: () => void;
 }> = ({ thread, selected, onSelect, onResolve }) => {
-  const containerRef = useRef<HTMLDivElement>(null);
   const { themeMode } = useThemeContext();
+  const containerRef = useRef<HTMLDivElement>(null);
+
   // TODO(wittjosiah): This is a hack to reset the editor after a message is sent.
-  const [_count, _setCount] = useState(0);
-  const rerenderEditor = () => _setCount((count) => count + 1);
+  const [state, setState] = useState({});
   const messageRef = useRef('');
   const extensions = useMemo(
     () => [
       createBasicExtensions({ placeholder: 'Enter comment' }),
       createThemeExtensions({ themeMode }),
-      listener({ onChange: (text) => (messageRef.current = text) }),
+      listener({
+        onChange: ({ text }) => (messageRef.current = text),
+      }),
     ],
-    [themeMode, _count],
+    [themeMode, state],
   );
 
   const [autoFocus, setAutoFocus] = useState(false);
@@ -142,7 +161,7 @@ const StoryThread: FC<{
 
   const handleCreateMessage = () => {
     if (messageRef.current?.length) {
-      const message = live(Expando, {
+      const message = Obj.make(TestSchema.Expando, {
         timestamp: new Date().toISOString(),
         sender: { identityKey: authorId },
         text: messageRef.current,
@@ -151,7 +170,7 @@ const StoryThread: FC<{
 
       messageRef.current = '';
       setAutoFocus(true);
-      rerenderEditor();
+      setState({});
     }
   };
 
@@ -185,20 +204,27 @@ const StoryThread: FC<{
           onSend={handleCreateMessage}
         />
         <Thread.Status />
-        <Button variant='ghost' classNames='px-1' title='Resolve' onClick={onResolve}>
-          <Icon icon='ph--check--regular' />
-        </Button>
+        <IconButton
+          variant='ghost'
+          icon='ph--check--regular'
+          iconOnly
+          classNames='pli-1'
+          label='Resolve'
+          onClick={onResolve}
+        />
       </div>
     </Thread.Root>
   );
 };
 
-const Sidebar: FC<{
+type SidebarProps = {
   threads: StoryCommentThread[];
   selected?: string;
   onSelect: (thread: string) => void;
   onResolve: (thread: string) => void;
-}> = ({ threads, selected, onSelect, onResolve }) => {
+};
+
+const Sidebar = ({ threads, selected, onSelect, onResolve }: SidebarProps) => {
   // Sort by y-position.
   const sortedThreads = useMemo(() => {
     const sorted = [...threads];
@@ -232,7 +258,7 @@ type StoryProps = {
 };
 
 const DefaultStory = ({ text, autoCreate }: StoryProps) => {
-  const [item] = useState(createObject(live(Expando, { content: text ?? '' })));
+  const [item] = useState(() => Obj.make(TestSchema.Expando, { content: text ?? '' }));
   const [threads, setThreads] = useState<StoryCommentThread[]>([]);
   const [selected, setSelected] = useState<string>();
 
@@ -326,7 +352,7 @@ const DefaultStory = ({ text, autoCreate }: StoryProps) => {
     <main className='fixed inset-0 grid grid-cols-[1fr_24rem]'>
       <div role='none' className='max-bs-full overflow-y-auto p-4'>
         <Editor
-          item={item}
+          initialValue={item.content}
           selected={selected}
           comments={comments}
           onCreateComment={handleCreateComment}

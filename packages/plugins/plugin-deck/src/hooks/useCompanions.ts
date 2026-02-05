@@ -4,7 +4,7 @@
 
 import { useMemo } from 'react';
 
-import { useAppGraph } from '@dxos/app-framework';
+import { useAppGraph } from '@dxos/app-framework/react';
 import { useConnections } from '@dxos/plugin-graph';
 import { byPosition } from '@dxos/util';
 

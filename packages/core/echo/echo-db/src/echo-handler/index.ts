@@ -3,18 +3,12 @@
 //
 
 export * from './clone';
-export {
-  createObject,
-  EchoReactiveHandler,
-  getObjectCore,
-  initEchoReactiveObjectRootProxy,
-  isEchoObject,
-  type AnyLiveObject,
-} from './echo-handler';
-export { type ProxyTarget } from './echo-proxy-target';
+export * from './doc-accessor';
+export { createObject, EchoReactiveHandler, getObjectCore, initEchoReactiveObjectRootProxy } from './echo-handler';
+export { isEchoObject } from './echo-object-utils';
 export * from './edit-history';
-export * from './relations';
+export { type ProxyTarget } from './echo-proxy-target';
+export * from './errors';
+export * from './subscription';
 export * from './util';
 export * from './version';
-export * from './subscription';
-export * from './doc-accessor';

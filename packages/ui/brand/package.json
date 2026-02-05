@@ -4,9 +4,13 @@
   "description": "DXOS brand assets.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
   "license": "MIT",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "exports": {
     ".": {
@@ -25,25 +29,25 @@
     "src"
   ],
   "dependencies": {
-    "d3": "^7.9.0"
+    "d3": "catalog:"
   },
   "devDependencies": {
     "@dxos/log": "workspace:*",
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
-    "@fontsource/k2d": "^5.0.18",
-    "@phosphor-icons/react": "^2.1.10",
-    "@rive-app/react-canvas": "^4.14.0",
-    "@types/d3": "^7.4.3",
-    "react": "~19.2.0",
-    "react-dom": "~19.2.0"
+    "@dxos/ui-theme": "workspace:*",
+    "@fontsource/k2d": "catalog:",
+    "@phosphor-icons/react": "catalog:",
+    "@rive-app/react-canvas": "catalog:",
+    "@types/d3": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
   },
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-theme": "workspace:*",
-    "@phosphor-icons/react": "^2.1.5",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "@dxos/ui-theme": "workspace:*",
+    "@phosphor-icons/react": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
   }
 }

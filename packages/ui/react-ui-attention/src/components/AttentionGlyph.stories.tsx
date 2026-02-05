@@ -76,7 +76,7 @@ export const Syncing: Story = {
     });
 
     return (
-      <div className='flex flex-col p-2 w-[200px]'>
+      <div className='flex flex-col p-2 is-[200px]'>
         <Button onClick={handleChangeAttended}>Change attended</Button>
         {Array.from(spaces.entries()).map(([space, sync]) => (
           <div key={space} className='flex items-center'>

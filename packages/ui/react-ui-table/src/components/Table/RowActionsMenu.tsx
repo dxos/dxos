@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { useAtomValue } from '@effect-atom/atom-react';
 import React from 'react';
 
 import { DropdownMenu, toLocalizedString, useTranslation } from '@dxos/react-ui';
@@ -13,8 +14,8 @@ type RowActionsMenuProps = { model: TableModel; modals: ModalController };
 
 export const RowActionsMenu = ({ model, modals }: RowActionsMenuProps) => {
   const { t } = useTranslation(translationKey);
-  const hasSelection = model.selection.hasSelection.value;
-  const state = modals.state.value;
+  const hasSelection = model.selection.hasSelection;
+  const state = useAtomValue(modals.state);
   if (state?.type !== 'row') {
     return null;
   }
@@ -23,24 +24,32 @@ export const RowActionsMenu = ({ model, modals }: RowActionsMenuProps) => {
       <DropdownMenu.VirtualTrigger virtualRef={modals.trigger} />
       <DropdownMenu.Content>
         <DropdownMenu.Viewport>
+          {/* Custom actions */}
+          {model.rowActions?.length > 0 && (
+            <>
+              <DropdownMenu.Group>
+                {model.rowActions?.map((action) => (
+                  <DropdownMenu.Item
+                    key={action.id}
+                    data-testid={`row-action-${action.id}`}
+                    onClick={() => {
+                      modals.close();
+                      model.handleRowAction(action.id, state.rowIndex);
+                    }}
+                  >
+                    {toLocalizedString(action.label, t)}
+                  </DropdownMenu.Item>
+                ))}
+              </DropdownMenu.Group>
+              <DropdownMenu.Separator />
+            </>
+          )}
+          {/* Default actions */}
           {model.features.dataEditable !== false && (
             <DropdownMenu.Item data-testid='row-menu-delete' onClick={() => model.deleteRow(state.rowIndex)}>
               {t(hasSelection ? 'bulk delete row label' : 'delete row label')}
             </DropdownMenu.Item>
           )}
-          {/* Custom actions */}
-          {model.rowActions?.map((action) => (
-            <DropdownMenu.Item
-              key={action.id}
-              data-testid={`row-action-${action.id}`}
-              onClick={() => {
-                modals.close();
-                model.handleRowAction(action.id, state.rowIndex);
-              }}
-            >
-              {toLocalizedString(action.label, t)}
-            </DropdownMenu.Item>
-          ))}
         </DropdownMenu.Viewport>
         <DropdownMenu.Arrow />
       </DropdownMenu.Content>

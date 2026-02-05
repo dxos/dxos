@@ -1,6 +1,6 @@
 # @dxos/conductor
 
-ECHO database.
+Compute graph compiler.
 
 ## Installation
 
@@ -8,31 +8,28 @@ ECHO database.
 pnpm i @dxos/conductor
 ```
 
-## DXOS Resources
+## Design
 
-- [Website](https://dxos.org)
-- [Developer Documentation](https://docs.dxos.org)
-- Talk to us on [Discord](https://dxos.org/discord)
+Conductor is a compute graph compiler that transforms declarative graph definitions into executable Effect-based functions.
 
-# ECHO Schema
+### Core Architecture
 
-- ECHO Schema is a lightweight runtime type system to define objects independently of their storage (e.g., native file system, browser storage, ECHO)
-- All objects are associated with a schema definition.
-- Schemas are defined by EffectTS.
-- Schemas may be statically defined by code, or be runtime mutable.
-- Each space maintains a schema registry.
-- Schema definitions are versioned with semvar semantics.
-  - Objects created with a schema version lower than the current major/minor version must be migrated.
-  - Non-migrated objects are not visible to queries unless explicitly requested.
-- Schema definitions are serializable via JSON schema.
-- Properties may include strong and weak references to other objects.
-  - Strong references define an owning relationship indicating that referenced objects should be deleted (or migrated) when the parent object is deleted.
-- Objects include the following metadata:
-  - Schema name (immutable)
-  - Schema version: updated during schema migration
-  - Version
-  - Creation time (immutable)
-  - Last mutation time
+**Graph Model** - Persistent compute graphs (`ComputeGraph`) consist of:
+- **Nodes** (`ComputeNode`) - Processing units with typed inputs/outputs, supporting constants, templates, functions, AI operations, database queries, and control flow.
+- **Edges** (`ComputeEdge`) - Typed connections between node outputs and inputs with property-level routing.
+
+**Compilation Pipeline**:
+1. **Topology Creation** - Validates graph structure, resolves node metadata, builds input/output connections, and collects diagnostics.
+2. **Graph Execution** - `GraphExecutor` implements pull-based lazy evaluation with caching, resolving node computations on-demand as outputs are requested.
+
+**Value Propagation** - `ValueBag` represents node inputs/outputs as independent Effect computations per property, enabling:
+- Asynchronous resolution of individual properties.
+- Control flow via `NotExecuted` markers for conditional branches.
+- Schema validation at property boundaries.
+
+**Node Registry** - Extensible catalog of built-in node types including system nodes (input/output), data sources (constants, templates, queues), transformations (functions, JSON operations), AI operations (GPT), control flow (if/switch), and outputs (text, surfaces).
+
+**Effect Integration** - Nodes execute as Effect computations with access to services (AI, database, credentials, tracing) and proper error handling through typed error channels.
 
 ## Contributions
 

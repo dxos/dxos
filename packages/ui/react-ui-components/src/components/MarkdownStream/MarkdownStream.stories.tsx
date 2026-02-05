@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+// TODO(burdon): Document why this is required.
 import '@dxos/lit-ui';
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
@@ -11,13 +12,13 @@ import { PublicKey } from '@dxos/keys';
 import { faker } from '@dxos/random';
 import { Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { type XmlWidgetRegistry } from '@dxos/react-ui-editor';
-import { mx } from '@dxos/react-ui-theme';
+import { type XmlWidgetRegistry } from '@dxos/ui-editor';
+import { mx } from '@dxos/ui-theme';
 import { keyToFallback } from '@dxos/util';
 
 import { MarkdownStream, type MarkdownStreamController, type MarkdownStreamProps } from './MarkdownStream';
 import { type TextStreamOptions, textStream } from './testing';
-import doc from './testing/doc.md?raw';
+import TEXT from './testing/text.md?raw';
 import { SuggestionWidget } from './widgets';
 
 // TODO(burdon): Get user hue from identity.
@@ -101,9 +102,9 @@ const DefaultStory = ({ content = '', streamOptions = defaultStreamOptions, ...p
 };
 
 const meta = {
-  title: 'ui/react-ui-components/MarkdownStream',
+  title: 'ui/react-ui-markdown/MarkdownStream',
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ container: 'column' })],
+  decorators: [withTheme, withLayout({ layout: 'column' })],
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;
@@ -112,9 +113,9 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    content: doc,
-    fadeIn: true,
-    cursor: true,
+    content: TEXT,
     registry: testRegistry,
+    fadeIn: true,
+    cursor: false,
   },
 };

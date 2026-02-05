@@ -53,7 +53,7 @@ const DefaultStory = ({ blocks, interval = 0 }: { blocks: string[]; interval?: n
 const meta = {
   title: 'ui/react-ui-components/TextBlock',
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ container: 'column' })],
+  decorators: [withTheme, withLayout({ layout: 'column' })],
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

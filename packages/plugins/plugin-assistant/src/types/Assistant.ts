@@ -4,8 +4,8 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Obj, Ref, Type } from '@dxos/echo';
-import { LabelAnnotation } from '@dxos/echo/internal';
+import { Obj, Type } from '@dxos/echo';
+import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { Queue } from '@dxos/echo-db';
 
 import { LLM_PROVIDERS } from './defs';
@@ -14,13 +14,12 @@ import { LLM_PROVIDERS } from './defs';
  * AI chat.
  */
 export const Chat = Schema.Struct({
-  id: Type.ObjectId,
-  name: Schema.optional(Schema.String),
-  queue: Type.Ref(Queue),
+  name: Schema.String.pipe(Schema.optional),
+  queue: Type.Ref(Queue).pipe(FormInputAnnotation.set(false)),
   // TODO(dmaretskyi): Eventually this and the message queue will be the same.
-  traceQueue: Schema.optional(Type.Ref(Queue)),
+  traceQueue: Type.Ref(Queue).pipe(FormInputAnnotation.set(false), Schema.optional),
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/assistant/Chat',
     version: '0.2.0',
   }),
@@ -29,20 +28,19 @@ export const Chat = Schema.Struct({
 
 export interface Chat extends Schema.Schema.Type<typeof Chat> {}
 
-export const makeChat = ({ name, queue }: { name?: string; queue: Queue }) =>
-  Obj.make(Chat, { name, queue: Ref.fromDXN(queue.dxn) });
+export const make = (props: Obj.MakeProps<typeof Chat>) => Obj.make(Chat, props);
 
 /**
  * Relation between a Chat and companion objects (e.g., artifacts).
  */
 export const CompanionTo = Schema.Struct({
-  id: Type.ObjectId,
+  id: Obj.ID,
 }).pipe(
-  Type.Relation({
+  Type.relation({
     typename: 'dxos.org/relation/assistant/CompanionTo',
     version: '0.1.0',
     source: Chat,
-    target: Type.Expando,
+    target: Type.Obj,
   }),
 );
 

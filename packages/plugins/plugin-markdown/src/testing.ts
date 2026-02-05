@@ -1,0 +1,27 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import * as Toolkit from '@effect/ai/Toolkit';
+import * as Effect from 'effect/Effect';
+
+import { SpaceProperties } from '@dxos/client-protocol';
+import { Obj, Ref } from '@dxos/echo';
+import { Database } from '@dxos/echo';
+import { Collection } from '@dxos/schema';
+
+// TODO(wittjosiah): Factor out.
+export const WithProperties = <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E, R | Database.Service> =>
+  Effect.zipRight(
+    Effect.gen(function* () {
+      // TODO(wittjosiah): Remove cast.
+      yield* Database.add(
+        Obj.make(SpaceProperties, {
+          [Collection.Collection.typename]: Ref.make(Collection.make()),
+        }) as any,
+      );
+    }),
+    effect,
+  );
+
+export const testToolkit = Toolkit.empty as Toolkit.Toolkit<any>;

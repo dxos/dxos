@@ -4,24 +4,21 @@
 
 import React, { useState } from 'react';
 
-import { useCapability } from '@dxos/app-framework';
+import { type SurfaceComponentProps, useCapability } from '@dxos/app-framework/react';
 import { invariant } from '@dxos/invariant';
 import { getSpace } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
-import { StackItem } from '@dxos/react-ui-stack';
+import { Layout } from '@dxos/react-ui-mosaic';
 
-import { WnfsCapabilities } from '../capabilities';
 import { filePath, getBlobUrl, loadWnfs, wnfsUrl } from '../helpers';
-import { type FileType } from '../types';
+import { WnfsCapabilities } from '../types';
+import { type WnfsFile } from '../types';
 
 import { FilePreview } from './FilePreview';
 
-export type FileContainerProps = {
-  role: string;
-  file: FileType;
-};
+export type FileContainerProps = SurfaceComponentProps<WnfsFile.File>;
 
-export const FileContainer = ({ file }: FileContainerProps) => {
+export const FileContainer = ({ role, subject: file }: FileContainerProps) => {
   const blockstore = useCapability(WnfsCapabilities.Blockstore);
   const instances = useCapability(WnfsCapabilities.Instances);
   const [blobUrl, setBlobUrl] = useState<string>();
@@ -29,9 +26,19 @@ export const FileContainer = ({ file }: FileContainerProps) => {
   useAsyncEffect(async () => {
     const space = getSpace(file);
     invariant(space);
-    const { directory, forest } = await loadWnfs({ blockstore, instances, space });
+    const { directory, forest } = await loadWnfs({
+      blockstore,
+      instances,
+      space,
+    });
     const path = filePath(file.cid.toString(), space);
-    const url = await getBlobUrl({ wnfsUrl: wnfsUrl(path), blockstore, directory, forest, type: file.type });
+    const url = await getBlobUrl({
+      wnfsUrl: wnfsUrl(path),
+      blockstore,
+      directory,
+      forest,
+      type: file.type,
+    });
     setBlobUrl(url);
   }, [file]);
 
@@ -40,9 +47,9 @@ export const FileContainer = ({ file }: FileContainerProps) => {
   }
 
   return (
-    <StackItem.Content>
+    <Layout.Main role={role}>
       <FilePreview type={file.type} url={blobUrl} />
-    </StackItem.Content>
+    </Layout.Main>
   );
 };
 

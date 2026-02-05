@@ -8,6 +8,7 @@ import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import { afterEach, beforeEach, describe, it } from 'vitest';
 
+import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
 import { HttpConfig, withLogging, withRetry, withRetryConfig } from './http-client';
@@ -36,7 +37,7 @@ describe('HttpClient', () => {
         withRetry(HttpClient.get(server.url)),
         Effect.provide(FetchHttpClient.layer),
         Effect.withSpan('EdgeHttpClient'),
-        Effect.runPromise,
+        runAndForwardErrors,
       );
       expect(result).toMatchObject({ success: true, data: { value: 100 } });
     }
@@ -49,7 +50,7 @@ describe('HttpClient', () => {
         Effect.provide(FetchHttpClient.layer),
         Effect.provide(HttpConfig.default), // TODO(burdon): Swap out to mock.
         Effect.withSpan('EdgeHttpClient'), // TODO(burdon): OTEL.
-        Effect.runPromise,
+        runAndForwardErrors,
       );
       expect(result).toMatchObject({ success: true, data: { value: 100 } });
     }

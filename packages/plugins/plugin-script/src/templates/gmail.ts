@@ -175,8 +175,7 @@ const parseFromHeader = (value: string): { name?: string; email: string } | unde
 // TODO(wittjosiah): These schemas should be imported from @dxos/schema.
 //
 
-const ActorRoles = ['user', 'assistant'] as const;
-const ActorRole = S.Literal(...ActorRoles);
+const ActorRole = S.Literal('user', 'assistant');
 type ActorRole = S.Schema.Type<typeof ActorRole>;
 
 const ActorSchema = S.Struct({

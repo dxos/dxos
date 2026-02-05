@@ -3,30 +3,65 @@
 //
 
 import type * as Schema from 'effect/Schema';
-import React, { Fragment, useEffect } from 'react';
+import React, { Fragment, useCallback, useEffect } from 'react';
 
 import { type Template } from '@dxos/blueprints';
+import { type Obj } from '@dxos/echo';
 import { Input, Select, useTranslation } from '@dxos/react-ui';
-import { attentionSurface, groupBorder, mx } from '@dxos/react-ui-theme';
+import { attentionSurface, groupBorder, mx } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 
 import { meta } from '../../meta';
 
 import { TemplateEditor } from './TemplateEditor';
 
+/**
+ * Callback type for mutating template within a parent object's Obj.change context.
+ */
+export type TemplateChangeCallback = (mutate: (template: Obj.Mutable<Template.Template>) => void) => void;
+
 export type TemplateFormProps = {
   id: string;
   template: Template.Template;
   schema?: Schema.Schema<any, any, any>;
   commandEditable?: boolean;
+  /**
+   * Callback to mutate the template. Should wrap mutations in parent's Obj.change.
+   * If not provided, the component is read-only.
+   */
+  onChange?: TemplateChangeCallback;
 };
 
-export const TemplateForm = ({ id, template, commandEditable = true }: TemplateFormProps) => {
+export const TemplateForm = ({ id, template, commandEditable = true, onChange }: TemplateFormProps) => {
   const { t } = useTranslation(meta.id);
-  usePromptInputs(template);
+  usePromptInputs(template, onChange);
+
+  const handleInputKindChange = useCallback(
+    (inputName: string, kind: Template.InputKind) => {
+      onChange?.((t) => {
+        const input = t.inputs?.find((i) => i?.name === inputName);
+        if (input) {
+          input.kind = kind;
+        }
+      });
+    },
+    [onChange],
+  );
+
+  const handleInputDefaultChange = useCallback(
+    (inputName: string, value: string) => {
+      onChange?.((t) => {
+        const input = t.inputs?.find((i) => i?.name === inputName);
+        if (input) {
+          input.default = value;
+        }
+      });
+    },
+    [onChange],
+  );
 
   return (
-    <div className={mx('flex flex-col w-full overflow-hidden gap-4', groupBorder)}>
+    <div className={mx('flex flex-col is-full overflow-hidden gap-4', groupBorder)}>
       {/* {commandEditable && (
         <div className='flex items-center pl-4'>
           <span className='text-neutral-500'>/</span>
@@ -36,7 +71,9 @@ export const TemplateForm = ({ id, template, commandEditable = true }: TemplateF
               classNames='is-full bg-transparent m-2'
               value={template.command ?? ''}
               onChange={(event) => {
-                template.command = event.target.value.replace(/\w/g, '');
+                onChange?.((t) => {
+                  t.command = event.target.value.replace(/\w/g, '');
+                });
               }}
             />
           </Input.Root>
@@ -54,9 +91,7 @@ export const TemplateForm = ({ id, template, commandEditable = true }: TemplateF
               <Input.Root>
                 <Select.Root
                   value={input.kind}
-                  onValueChange={(kind) => {
-                    input.kind = kind as Template.InputKind;
-                  }}
+                  onValueChange={(kind) => handleInputKindChange(input.name, kind as Template.InputKind)}
                 >
                   <Select.TriggerButton placeholder='Type' classNames='is-full' />
                   <Select.Portal>
@@ -82,9 +117,7 @@ export const TemplateForm = ({ id, template, commandEditable = true }: TemplateF
                         placeholder={t('command placeholder')}
                         classNames='is-full bg-transparent'
                         value={input.default ?? ''}
-                        onChange={(event) => {
-                          input.default = event.target.value;
-                        }}
+                        onChange={(event) => handleInputDefaultChange(input.name, event.target.value)}
                       />
                     </Input.Root>
                   </div>
@@ -136,12 +169,13 @@ const inputs: { kind: Template.InputKind; label: string }[] = [
 
 export const NAME_REGEXP = /\{\{([\w-]+)\}\}/;
 
-const usePromptInputs = (template: Template.Template) => {
+const usePromptInputs = (template: Template.Template, onChange?: TemplateChangeCallback) => {
   useEffect(() => {
-    const text = template.source ?? '';
-    if (!template.inputs) {
-      template.inputs = []; // TODO(burdon): Required?
+    if (!onChange) {
+      return;
     }
+
+    const text = template.source ?? '';
 
     const regex = new RegExp(NAME_REGEXP, 'g');
     const variables = new Set<string>([...(text.target?.content.matchAll(regex) ?? [])].map((m) => m[1]));
@@ -161,19 +195,32 @@ const usePromptInputs = (template: Template.Template) => {
 
     // Match or create new inputs.
     const values = unclaimed.values();
-    missing.forEach((name) => {
-      const next = values.next().value;
-      if (next) {
-        next.name = name;
-      } else {
-        template.inputs?.push({ name });
+    onChange((t) => {
+      if (!t.inputs) {
+        t.inputs = [];
+      }
+
+      missing.forEach((name) => {
+        const next = values.next().value;
+        if (next) {
+          // Find the input in the mutable draft and update it.
+          const inputIndex = t.inputs!.findIndex((i) => i?.name === next.name);
+          if (inputIndex !== -1) {
+            t.inputs![inputIndex].name = name;
+          }
+        } else {
+          t.inputs!.push({ name });
+        }
+      });
+
+      // Remove unclaimed (deleted) inputs.
+      // TODO(burdon): If user types incorrect name value, it will be deleted. Garbage collect?
+      for (const input of values) {
+        const inputIndex = t.inputs!.findIndex((i) => i?.name === input.name);
+        if (inputIndex !== -1) {
+          t.inputs!.splice(inputIndex, 1);
+        }
       }
     });
-
-    // Remove unclaimed (deleted) inputs.
-    // TODO(burdon): If user types incorrect name value, it will be deleted. Garbage collect?
-    for (const input of values) {
-      template.inputs.splice(template.inputs.indexOf(input), 1);
-    }
-  }, [template.source]);
+  }, [template.source, onChange]);
 };

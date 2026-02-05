@@ -4,9 +4,13 @@
   "description": "Network Manager",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
   "license": "MIT",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "imports": {
     "#node-datachannel": {
@@ -26,6 +30,15 @@
       "node": "./dist/lib/node-esm/transport/tcp/index.mjs",
       "import": "./dist/lib/browser/transport/tcp/index.mjs",
       "require": "./dist/lib/node-esm/transport/tcp/index.mjs"
+    },
+    "#tcp-transport-impl": {
+      "source": {
+        "browser": "./src/transport/tcp/tcp-transport.browser.ts",
+        "default": "./src/transport/tcp/tcp-transport.ts"
+      },
+      "types": "./dist/types/src/transport/tcp/tcp-transport.d.ts",
+      "browser": "./dist/lib/browser/transport/tcp/tcp-transport.browser.mjs",
+      "default": "./dist/lib/node-esm/transport/tcp/tcp-transport.mjs"
     }
   },
   "exports": {
@@ -47,9 +60,6 @@
       "browser": "./dist/lib/browser/transport/tcp/index.mjs",
       "node": "./dist/lib/node-esm/transport/tcp/index.mjs"
     }
-  },
-  "browser": {
-    "./src/transport/tcp/tcp-transport.ts": "./src/transport/tcp/tcp-transport.browser.ts"
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
@@ -84,13 +94,13 @@
     "@dxos/teleport": "workspace:*",
     "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
-    "node-datachannel": "^0.30.0"
+    "node-datachannel": "catalog:"
   },
   "devDependencies": {
     "@dxos/edge-client": "workspace:*",
     "@dxos/keyring": "workspace:*",
     "@dxos/signal": "workspace:*",
-    "fetch-mock": "^11.0.0"
+    "fetch-mock": "catalog:"
   },
   "publishConfig": {
     "access": "public"

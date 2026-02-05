@@ -2,124 +2,245 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useEffect, useRef } from 'react';
+import React, {
+  type Ref,
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 
-import { type ThemedClassName, useDynamicRef, useStateWithRef } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { type ClassNameValue, type ThemedClassName } from '@dxos/react-ui';
+import { mx } from '@dxos/ui-theme';
 
 const emptyLines: string[] = [];
 
-// TODO(burdon): Factor out?
+// TODO(burdon): Factor out? Effect literal.
 export type Size = 'sm' | 'md' | 'lg';
 export const sizes: Size[] = ['sm', 'md', 'lg'];
 
-const sizeClassNames: Record<Size, { height: number; className: string }> = {
-  sm: { height: 20, className: 'h-[20px] text-sm' },
-  md: { height: 24, className: 'h-[24px]' },
-  lg: { height: 28, className: 'h-[28px] text-lg' },
-};
-
-export type TextCrawlProps = ThemedClassName<{
-  size?: Size;
-  index?: number;
-  lines?: string[];
+export type TextCrawlProps = {
+  /** Auto-advance after `minDuration`. */
   autoAdvance?: boolean;
-  cyclic?: boolean;
-  transition?: number;
+  /** Start at the last line. */
+  greedy?: boolean;
+  /** Minimum time after update before scrolling. */
   minDuration?: number;
-}>;
+} & Pick<TextRibbonProps, 'classNames' | 'textClassNames' | 'size' | 'lines' | 'index' | 'cyclic' | 'transition'>;
 
 /**
- * Single line of text that scrolls.
+ * Scrolling text lines.
  */
 export const TextCrawl = ({
-  classNames,
-  size = 'md',
-  index: indexParam = -1,
-  lines = emptyLines,
-  cyclic,
   autoAdvance = false,
-  transition = 250,
+  greedy = false,
   minDuration = 1_000,
+  size = 'md',
+  lines = emptyLines,
+  index: indexProp,
+  cyclic,
+  transition = 500,
+  ...props
 }: TextCrawlProps) => {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const linesLength = useDynamicRef(lines.length);
-  const lastRoll = useRef(Date.now());
-  const [index, setIndex, indexRef] = useStateWithRef(indexParam);
+  const [index, setIndex] = useState(greedy ? lines.length - 1 : 0);
 
-  // Index.
-  useEffect(() => {
-    setIndex(indexParam);
-  }, [indexParam]);
+  // Control ribbon.
+  const controllerRef = useRef<TextRibbonController>(null);
+  const setPosition = useCallback<TextRibbonController['setPosition']>((index, animate = false) => {
+    controllerRef.current?.setPosition(index, animate);
+  }, []);
 
-  // Auto-advance.
+  // Determine if reset.
+  const prevLinesRef = useRef<string[]>(lines);
+  const wasReset = useMemo(() => {
+    const prevLines = prevLinesRef.current;
+    const wasReset =
+      lines.length < prevLines.length || prevLines.length === 0 || !prevLines.every((line, i) => line === lines[i]);
+    prevLinesRef.current = lines;
+    return wasReset;
+  }, [lines]);
+
+  // Starting index.
   useEffect(() => {
-    if (lines.length < indexRef.current) {
-      setIndex(0);
+    setPosition(index, false);
+  }, []);
+
+  // Controlled.
+  useEffect(() => {
+    if (indexProp === undefined || indexProp === index) {
+      return;
     }
 
+    const next = Math.max(0, Math.min(indexProp, lines.length - 1));
+    setIndex(next);
+    setPosition(next, true);
+  }, [indexProp, index]);
+
+  // Uncontrolled.
+  useEffect(() => {
+    if (indexProp !== undefined) {
+      return;
+    }
+
+    let i: NodeJS.Timeout;
+    setPosition(index, index !== 0 && !wasReset);
+    if (cyclic && index >= lines.length) {
+      i = setTimeout(() => {
+        setIndex(0);
+        setPosition(0, false);
+      }, transition);
+    }
+
+    return () => {
+      clearTimeout(i);
+    };
+  }, [wasReset, lines, index, indexProp, cyclic]);
+
+  // Auto-advance.
+  const lastUpdatedRef = useRef(Date.now());
+  useEffect(() => {
     if (!autoAdvance) {
-      setIndex(indexParam === -1 ? lines.length - 1 : indexParam);
       return;
     }
 
     const next = () => {
       setIndex((prev) => {
-        if (prev >= linesLength.current! - 1) {
-          return cyclic ? 0 : prev;
+        const next = Math.min(prev + 1, lines.length);
+        if (next >= lines.length) {
+          if (cyclic) {
+            return next;
+          } else {
+            clearInterval(i);
+            return prev;
+          }
         }
 
-        lastRoll.current = Date.now();
-        return prev + 1;
+        return next;
       });
     };
 
-    let i: NodeJS.Timeout | undefined = undefined;
-    if (Date.now() - lastRoll.current > minDuration) {
-      clearInterval(i);
-      next();
-    }
-
-    i = setInterval(next, minDuration);
-    return () => clearInterval(i);
-  }, [lines.length, cyclic, autoAdvance, minDuration]);
-
-  const { className, height } = sizeClassNames[size];
-  useEffect(() => {
-    if (containerRef.current) {
-      let i = index;
-      if (cyclic && index === 0) {
-        i = lines.length;
-        setTimeout(() => {
-          // Jump back to start.
-          if (containerRef.current) {
-            containerRef.current.style.transition = 'transform 0ms';
-            containerRef.current.style.transform = 'translateY(0px)';
-          }
-        }, transition);
+    if (wasReset) {
+      setIndex(greedy ? lines.length - 1 : 0);
+    } else {
+      const now = Date.now();
+      const wasVisible = now - lastUpdatedRef.current >= minDuration;
+      lastUpdatedRef.current = now;
+      if (wasVisible) {
+        next();
       }
-
-      containerRef.current.style.transition = `transform ${transition}ms cubic-bezier(0.25, 1.25, 0.5, 1)`;
-      containerRef.current.style.transform = `translateY(-${i * height}px)`;
     }
-  }, [height, index]);
+
+    const i = setInterval(next, minDuration);
+    return () => clearInterval(i);
+  }, [lines, wasReset, indexProp, autoAdvance, greedy, minDuration, cyclic, transition]);
 
   return (
-    <div className={mx('relative overflow-hidden', classNames)}>
-      <div ref={containerRef} className={mx(className)}>
-        <div className='flex flex-col'>
+    <TextRibbon
+      ref={controllerRef}
+      size={size}
+      lines={lines}
+      index={index}
+      cyclic={cyclic}
+      transition={transition}
+      {...props}
+    />
+  );
+};
+
+//
+// Ribbon
+//
+
+const sizeClassNames: Record<Size, { lineHeight: number; className: string }> = {
+  sm: { lineHeight: 20, className: 'h-[20px] text-sm' },
+  md: { lineHeight: 24, className: 'h-[24px]' },
+  lg: { lineHeight: 28, className: 'h-[28px] text-lg' },
+};
+
+export interface TextRibbonController {
+  setPosition: (index: number, animate?: boolean) => void;
+}
+
+export type TextRibbonProps = ThemedClassName<{
+  textClassNames?: ClassNameValue;
+  size?: Size;
+  lines?: string[];
+  index?: number;
+  cyclic?: boolean;
+  transition?: number;
+}>;
+
+export const TextRibbon = forwardRef<TextRibbonController, TextRibbonProps>(
+  (
+    {
+      classNames,
+      textClassNames,
+      size = 'md',
+      lines = emptyLines,
+      index = 0,
+      cyclic,
+      transition = 500,
+    }: TextRibbonProps,
+    forwardedRef: Ref<TextRibbonController>,
+  ) => {
+    const { className, lineHeight } = sizeClassNames[size];
+    const containerRef = useRef<HTMLDivElement>(null);
+
+    const setPosition = useCallback<TextRibbonController['setPosition']>(
+      (index, animate = false) => {
+        if (containerRef.current) {
+          containerRef.current.style.transition = animate ? `transform ${transition}ms ease-in-out` : 'transform 0ms';
+          containerRef.current.style.transform = `translateY(-${index * lineHeight}px)`;
+        }
+      },
+      [lineHeight, transition],
+    );
+
+    // Controller.
+    useImperativeHandle(forwardedRef, () => ({ setPosition }), [setPosition]);
+
+    return (
+      <div role='none' className={mx('relative overflow-hidden', classNames, className)}>
+        <div role='none' ref={containerRef} className={mx('flex flex-col')}>
           {lines.map((line, i) => (
-            <div key={i} className={mx('flex items-center', className)}>
-              <span className='truncate'>{line}</span>
-            </div>
+            <Line
+              key={i}
+              line={lines[i]}
+              active={index === i || (i === 0 && index === lines.length)}
+              transition={transition}
+              classNames={[className, textClassNames]}
+            />
           ))}
           {cyclic && (
-            <div className={mx('flex items-center', className)}>
-              <span className='truncate'>{lines[0]}</span>
-            </div>
+            <Line
+              line={lines[0]}
+              active={index === lines.length || index === 0}
+              transition={transition}
+              classNames={[className, textClassNames]}
+            />
           )}
         </div>
       </div>
+    );
+  },
+);
+
+const Line = ({
+  classNames,
+  line,
+  active,
+  transition,
+}: ThemedClassName<{ line: string; active: boolean; transition: number }>) => {
+  return (
+    <div
+      role='none'
+      style={{ transitionDuration: `${transition / 3}ms` }}
+      className={mx('flex items-center truncate transition-opacity', active ? 'opacity-100' : 'opacity-50', classNames)}
+    >
+      {line}
     </div>
   );
 };

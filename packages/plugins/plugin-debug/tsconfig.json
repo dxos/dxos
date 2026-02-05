@@ -24,13 +24,13 @@
       "path": "../../common/context"
     },
     {
+      "path": "../../common/effect"
+    },
+    {
       "path": "../../common/invariant"
     },
     {
       "path": "../../common/keys"
-    },
-    {
-      "path": "../../common/local-storage"
     },
     {
       "path": "../../common/log"
@@ -45,7 +45,7 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../core/assistant-testing"
+      "path": "../../core/assistant-toolkit"
     },
     {
       "path": "../../core/blueprints"
@@ -66,10 +66,10 @@
       "path": "../../core/echo/echo-pipeline"
     },
     {
-      "path": "../../core/echo/live-object"
+      "path": "../../core/functions"
     },
     {
-      "path": "../../core/functions"
+      "path": "../../core/operation"
     },
     {
       "path": "../../core/protocols"
@@ -93,7 +93,10 @@
       "path": "../../sdk/schema"
     },
     {
-      "path": "../../ui/primitives/react-hooks"
+      "path": "../../sdk/types"
+    },
+    {
+      "path": "../../ui/react-primitives/react-hooks"
     },
     {
       "path": "../../ui/react-ui"
@@ -114,6 +117,9 @@
       "path": "../../ui/react-ui-kanban"
     },
     {
+      "path": "../../ui/react-ui-mosaic"
+    },
+    {
       "path": "../../ui/react-ui-stack"
     },
     {
@@ -123,7 +129,7 @@
       "path": "../../ui/react-ui-table"
     },
     {
-      "path": "../../ui/react-ui-theme"
+      "path": "../../ui/ui-theme"
     },
     {
       "path": "../plugin-client"
