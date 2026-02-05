@@ -211,7 +211,7 @@ jobs:
 
       - name: Test Affected
         if: ${{ steps.extract_branch.outputs.branch != 'main' }}
-        run: PLAYWRIGHT_BROWSER=all moon run plugin-sheet:e2e --affected --remote --concurrency=1
+        run: PLAYWRIGHT_BROWSER=all moon run :e2e --affected --remote --concurrency=1
 
       - name: Test All
         if: ${{ steps.extract_branch.outputs.branch == 'main' }}
