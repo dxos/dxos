@@ -18,6 +18,7 @@ describe('Invitations', () => {
   let manager: InvitationsTestManager;
 
   afterEach(() => {
+    manager?.dispose();
     cleanup();
   });
 

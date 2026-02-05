@@ -88,7 +88,9 @@ export const Todos = () => {
 
     // Remove the objects from the database (no subscribers left).
     const completedTodos = loadedTodos.filter((todo) => todo.completed);
-    completedTodos.forEach((item) => space?.db.remove(item));
+    completedTodos.forEach((item) => {
+      space?.db.remove(item);
+    });
   };
 
   const activeTodoCount = allTodos.reduce((acc, todo) => {

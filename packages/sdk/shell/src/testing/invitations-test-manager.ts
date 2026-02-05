@@ -3,8 +3,9 @@
 //
 
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 
-import { Trigger, sleep } from '@dxos/async';
+import { Trigger } from '@dxos/async';
 import { type LogProcessor, log } from '@dxos/log';
 
 export type PanelType = number | 'identity' | 'devices' | 'spaces' | 'join';
@@ -17,6 +18,17 @@ export class InvitationsTestManager {
   private _invitationCodeTrigger = new Trigger<string>();
   private _authCodeTrigger = new Trigger<string>();
   private _removeProcessor?: () => void;
+
+  /**
+   * Remove the log processor and reset triggers. Call in test teardown to prevent
+   * processor accumulation and leakage across tests.
+   */
+  dispose(): void {
+    this._removeProcessor?.();
+    this._removeProcessor = undefined;
+    this._invitationCodeTrigger = new Trigger<string>();
+    this._authCodeTrigger = new Trigger<string>();
+  }
 
   /**
    * Start capturing log output for invitation codes.
@@ -242,8 +254,9 @@ export class InvitationsTestManager {
       });
       const items = peer.getAllByTestId('space-list-item');
       fireEvent.click(items[panel]);
-      // TODO(wittjosiah): Wait for panel state to update after clicking space list item.
-      await sleep(500);
+      await waitFor(() => {
+        peer.getByTestId('space-members-list');
+      });
       return;
     }
 
@@ -298,7 +311,7 @@ export class InvitationsTestManager {
     }
 
     // Wait for invitation code from log capture.
-    return this._invitationCodeTrigger.wait({ timeout: 10000 });
+    return this._invitationCodeTrigger.wait({ timeout: options?.timeout * 2 ?? 10000 });
   }
 
   /**
@@ -352,17 +365,13 @@ export class InvitationsTestManager {
     const peer = this.peer(id);
     const testIdPrefix = type === 'device' ? 'halo' : 'space';
 
+    const user = userEvent.setup();
     const input = peer.getByTestId(`${testIdPrefix}-auth-code-input`);
     const button = peer.getByTestId(`${testIdPrefix}-invitation-authenticator-next`);
 
-    fireEvent.change(input, { target: { value: authCode } });
-
-    // TODO(wittjosiah): The InvitationAuthenticator component uses local React state (useState) for the auth code.
-    //   fireEvent.change triggers setAuthCode but React state updates are async. Without this delay, the click
-    //   handler would use the stale state value. Consider using userEvent from @testing-library/user-event instead.
-    await sleep(50);
-
-    fireEvent.click(button);
+    await user.clear(input);
+    await user.type(input, authCode);
+    await user.click(button);
   }
 
   /**
