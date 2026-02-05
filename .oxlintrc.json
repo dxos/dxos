@@ -1,0 +1,115 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["unicorn", "typescript", "oxc", "react", "vitest"],
+  "categories": {
+    "correctness": "warn"
+  },
+  "rules": {
+    // Disable type-aware TypeScript rules - keeping these in ESLint.
+    // These rules require --type-aware flag to work properly.
+    "typescript/await-thenable": "off",
+    "typescript/no-array-delete": "off",
+    "typescript/no-base-to-string": "off",
+    "typescript/no-duplicate-type-constituents": "off",
+    "typescript/no-floating-promises": "off",
+    "typescript/no-for-in-array": "off",
+    "typescript/no-implied-eval": "off",
+    "typescript/no-meaningless-void-operator": "off",
+    "typescript/no-misused-spread": "off",
+    "typescript/no-redundant-type-constituents": "off",
+    "typescript/no-unsafe-unary-minus": "off",
+    "typescript/require-array-sort-compare": "off",
+    "typescript/restrict-template-expressions": "off",
+    "typescript/unbound-method": "off",
+
+    // Disable jest rules - we use vitest.
+    "jest/expect-expect": "off",
+    "jest/no-conditional-expect": "off",
+    "jest/no-disabled-tests": "off",
+    "jest/no-export": "off",
+    "jest/no-focused-tests": "off",
+    "jest/no-standalone-expect": "off",
+    "jest/require-to-throw-message": "off",
+    "jest/valid-describe-callback": "off",
+    "jest/valid-expect": "off",
+    "jest/valid-title": "off",
+
+    // Rules that conflict with project style or are handled elsewhere.
+    "no-console": "off",
+    "require-yield": "off",
+    "no-empty": "off",
+    "no-constant-binary-expression": "off",
+    "no-unsafe-optional-chaining": "off",
+    "no-dupe-else-if": "off",
+    "no-unused-vars": "off",
+    "no-unused-expressions": "off",
+    "typescript/no-this-alias": "off",
+    "unicorn/no-empty-file": "off",
+
+    // React hooks rules - these can be noisy, handled by eslint-plugin-react.
+    "react-hooks/exhaustive-deps": "off"
+  },
+  "settings": {
+    "react": {
+      "formComponents": [],
+      "linkComponents": [],
+      "version": "19"
+    },
+    "vitest": {
+      "typecheck": false
+    }
+  },
+  "env": {
+    "builtin": true,
+    "browser": true,
+    "node": true
+  },
+  "globals": {},
+  "ignorePatterns": [
+    "**/dist/**",
+    "**/out/**",
+    "**/gen/**",
+    "**/__swc_snapshots__/**",
+    "packages/core/protocols/proto/**",
+    "packages/sdk/client/src/version.ts",
+    "packages/sdk/client-services/src/version.ts",
+    "packages/devtools/cli/src/version.ts",
+    "packages/ui/react-ui-calendar/orig/**",
+    "**/eslint.config.mjs",
+    "**/eslint.config.cjs",
+    "**/.eslintrc.js",
+    "**/.eslintrc.cjs",
+    "**/playwright.config.ts",
+    "**/vite.config.ts",
+    "**/vitest.config.ts",
+    "**/vitest.*.config.ts",
+    "**/webpack.config.js",
+    "**/tailwind.config.js",
+    "**/postcss.config.cjs",
+    "**/tailwind.ts",
+    "**/esbuild-server.config.js",
+    "**/.storybook/main.mts",
+    "**/.storybook/preview.mts",
+    "**/node_modules/**",
+    "docs/content/**",
+    "**/typedoc/assets/**",
+    "packages/plugins/plugin-assistant/deprecated/**",
+    "**/*.tpl",
+    "**/bin/**",
+    "**/scripts/**",
+    "**/vendor/**",
+    "packages/apps/composer-app/src/functions/_worker.ts",
+    "packages/common/esbuild-plugins/polyfills/**",
+    "packages/common/node-std/**",
+    "packages/core/mesh/signal/testing/setup.js",
+    "packages/core/mesh/network-manager/module-stub.mjs",
+    "packages/sdk/config/src/testing/**",
+    "packages/sdk/shell/react-i18next.d.ts",
+    "packages/ui/react-ui-geo/data/**",
+    "packages/ui/solid-ui-geo/data/**",
+    "tools/dx-tools/**",
+    "tools/esbuild/cli.js",
+    "tools/storybook-react/.storybook/stub.mjs",
+    "packages/common/typings/**"
+  ]
+}
