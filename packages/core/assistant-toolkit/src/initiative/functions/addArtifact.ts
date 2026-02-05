@@ -26,7 +26,7 @@ export default defineFunction({
   outputSchema: Schema.Void,
   services: [AiContextService],
   handler: Effect.fnUntraced(function* ({ data }) {
-    if (!(yield* Database.Service.load(data.artifact))) {
+    if (!(yield* Database.load(data.artifact))) {
       throw new Error('Artifact not found.');
     }
 

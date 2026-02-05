@@ -40,9 +40,9 @@ export default defineFunction({
     }
 
     return {
-      spec: yield* initiative.spec.pipe(Database.Service.load).pipe(Effect.map((_) => _.content)),
-      plan: yield* initiative.plan?.pipe(Database.Service.load).pipe(Effect.map((_) => _.content)) ??
-        Effect.succeed('No plan found.'),
+      spec: yield* initiative.spec.pipe(Database.load).pipe(Effect.map((_) => _.content)),
+      plan: yield* (initiative.plan?.pipe(Database.load).pipe(Effect.map((_) => _.content)) ??
+        Effect.succeed('No plan found.')),
       artifacts: yield* Effect.forEach(initiative.artifacts, (artifact) =>
         Effect.gen(function* () {
           return {

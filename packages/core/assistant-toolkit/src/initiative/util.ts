@@ -33,23 +33,23 @@ export const makeInitialized = (
       artifacts: props.artifacts ?? [],
       subscriptions: props.subscriptions ?? [],
     });
-    yield* Database.Service.add(initiative);
+    yield* Database.add(initiative);
     const queue = yield* QueueService.createQueue<Message.Message | ContextBinding>();
     const contextBinder = new AiContextBinder({ queue });
     // TODO(dmaretskyi): Blueprint registry.
-    const initiativeBlueprint = yield* Database.Service.add(Obj.clone(makeBlueprint(), { deep: true }));
+    const initiativeBlueprint = yield* Database.add(Obj.clone(makeBlueprint(), { deep: true }));
     yield* Effect.promise(() =>
       contextBinder.bind({
         blueprints: [Ref.make(initiativeBlueprint), ...(props.blueprints ?? [])],
         objects: [Ref.make(initiative), ...(props.contextObjects ?? [])],
       }),
     );
-    const chat = yield* Database.Service.add(
+    const chat = yield* Database.add(
       Chat.make({
         queue: Ref.fromDXN(queue.dxn),
       }),
     );
-    yield* Database.Service.add(
+    yield* Database.add(
       Relation.make(Chat.CompanionTo, {
         [Relation.Source]: chat,
         [Relation.Target]: initiative,

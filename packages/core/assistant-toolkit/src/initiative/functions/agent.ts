@@ -29,12 +29,12 @@ export default defineFunction({
   services: [AiContextService],
   handler: Effect.fnUntraced(
     function* ({ data }) {
-      const initiative = yield* Database.Service.load(data.initiative);
+      const initiative = yield* Database.load(data.initiative);
       invariant(Obj.instanceOf(Initiative.Initiative, initiative));
       invariant(initiative.chat, 'Initiative has no chat.');
       const chatQueue = yield* initiative.chat.pipe(
-        Database.Service.load,
-        Effect.flatMap((chat) => Database.Service.load(chat.queue)),
+        Database.load,
+        Effect.flatMap((chat) => Database.load(chat.queue)),
       );
       invariant(chatQueue, 'Initiative chat queue not found.');
       const conversation = yield* acquireReleaseResource(

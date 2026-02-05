@@ -23,7 +23,7 @@ export default defineFunction({
   }),
   outputSchema: Schema.Void,
   handler: Effect.fn(function* ({ data: { name, content } }) {
-    const doc = yield* Database.Service.add(Markdown.make({ name, content }));
+    const doc = yield* Database.add(Markdown.make({ name, content }));
     return { document: Ref.make(doc) };
   }),
 });

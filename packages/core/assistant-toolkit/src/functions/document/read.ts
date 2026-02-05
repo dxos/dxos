@@ -24,8 +24,8 @@ export default defineFunction({
   }),
   handler: Effect.fn(function* ({ data: { document } }) {
     const { content } = yield* document.pipe(
-      Database.Service.load,
-      Effect.flatMap((doc) => doc.content.pipe(Database.Service.load)),
+      Database.load,
+      Effect.flatMap((doc) => doc.content.pipe(Database.load)),
     );
     return { content };
   }),
