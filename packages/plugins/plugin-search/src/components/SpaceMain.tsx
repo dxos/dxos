@@ -128,7 +128,7 @@ const useSpaceItems = (space: Space) => {
   // Determine if query is empty (show default view).
   const isQueryEmpty = !query?.trim();
 
-  // Filter children to those which are objects or actions with disposition 'item'.
+  // Filter children to those which are objects, actions with disposition 'item', or alternate-tree nodes.
   const filteredChildren = useMemo(
     () =>
       children.filter((node) => {
@@ -137,7 +137,11 @@ const useSpaceItems = (space: Space) => {
           return true;
         }
         // Include actions with disposition 'item'.
-        return Node.isAction(node) && node.properties.disposition === 'item';
+        if (Node.isAction(node) && node.properties.disposition === 'item') {
+          return true;
+        }
+        // Include alternate-tree disposition nodes (e.g. Settings).
+        return node.properties.disposition === 'alternate-tree';
       }),
     [children],
   );
