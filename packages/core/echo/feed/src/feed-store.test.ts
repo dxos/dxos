@@ -5,16 +5,23 @@
 import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 
 import { ObjectId, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { SqlTransaction } from '@dxos/sql-sqlite';
 
 import { FeedStore } from './feed-store';
 import { Block, WellKnownNamespaces } from './protocol';
 
-const TestLayer = SqliteClient.layer({
+const SqliteLayer = SqliteClient.layer({
   filename: ':memory:',
 });
+
+// Compose layers: SqliteLayer provides SqlClient, and we also need SqlTransaction.
+// SqlTransaction.layer requires SqlClient, so we provide SqliteLayer to it.
+const TransactionLayer = SqlTransaction.layer.pipe(Layer.provide(SqliteLayer));
+const TestLayer = Layer.merge(SqliteLayer, TransactionLayer);
 
 // ActorIds.
 const ALICE = 'alice';

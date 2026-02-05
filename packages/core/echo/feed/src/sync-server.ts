@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+import type * as SqlClient from '@effect/sql/SqlClient';
+import type { SqlTransaction } from '@dxos/sql-sqlite';
 import * as Effect from 'effect/Effect';
 import type { FeedStore } from './feed-store';
 import type {
@@ -16,7 +18,7 @@ export type SyncServerOptions = {
   peerId: string;
   feedStore: FeedStore;
   /** Send a protocol message to a client. Receives full message (recipient is set by server). Returns Effect. */
-  sendMessage: (message: ProtocolMessage) => Effect.Effect<void, unknown, unknown>;
+  sendMessage: (message: ProtocolMessage) => Effect.Effect<void, unknown, never>;
 };
 
 /**
@@ -26,7 +28,7 @@ export type SyncServerOptions = {
 export class SyncServer {
   readonly #peerId: string;
   readonly #feedStore: FeedStore;
-  readonly #sendMessage: (message: ProtocolMessage) => Effect.Effect<void, unknown, unknown>;
+  readonly #sendMessage: (message: ProtocolMessage) => Effect.Effect<void, unknown, never>;
 
   constructor(options: SyncServerOptions) {
     this.#peerId = options.peerId;
@@ -37,27 +39,28 @@ export class SyncServer {
   /**
    * Receive a message from a client. Handles QueryRequest and AppendRequest; sends response via sendMessage with correct peer ids.
    */
-  handleMessage(message: ProtocolMessage): Effect.Effect<void, unknown, unknown> {
+  handleMessage(message: ProtocolMessage): Effect.Effect<void, unknown, SqlClient.SqlClient | SqlTransaction.SqlTransaction> {
     const self = this;
     const recipientPeerId = message.senderPeerId;
-    const withPeerIds = (payload: Omit<ProtocolMessage, 'senderPeerId' | 'recipientPeerId'>) => ({
-      ...payload,
-      senderPeerId: self.#peerId,
-      recipientPeerId,
-    });
+    const withPeerIds = (payload: Omit<ProtocolMessage, 'senderPeerId' | 'recipientPeerId'>): ProtocolMessage =>
+      ({
+        ...payload,
+        senderPeerId: self.#peerId,
+        recipientPeerId,
+      }) as ProtocolMessage;
     switch (message._tag) {
       case 'QueryRequest': {
         const req = message as QueryRequest;
         return Effect.gen(function* () {
           const response: QueryResponse = yield* self.#feedStore.query(req);
           yield* self.#sendMessage(withPeerIds({ _tag: 'QueryResponse', ...response }));
-        }).pipe(
+        }        ).pipe(
           Effect.catchAll((err: unknown) =>
             self.#sendMessage(
               withPeerIds({
                 _tag: 'Error',
                 message: err instanceof Error ? err.message : String(err),
-              }),
+              } as Omit<ProtocolMessage, 'senderPeerId' | 'recipientPeerId'>),
             ),
           ),
         );
@@ -73,7 +76,7 @@ export class SyncServer {
               withPeerIds({
                 _tag: 'Error',
                 message: err instanceof Error ? err.message : String(err),
-              }),
+              } as Omit<ProtocolMessage, 'senderPeerId' | 'recipientPeerId'>),
             ),
           ),
         );

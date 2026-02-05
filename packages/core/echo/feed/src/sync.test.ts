@@ -7,6 +7,7 @@ import { describe, expect, it, test } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
+import { SqlTransaction } from '@dxos/sql-sqlite';
 import { layerMemory } from '@dxos/sql-sqlite/platform';
 import { Array } from 'effect';
 
@@ -33,7 +34,10 @@ const LOG_SQL = false;
 class Peer extends Resource {
   readonly #peerId: string;
   #feedStore: FeedStore;
-  #runtime: ManagedRuntime.ManagedRuntime<SqlClient.SqlClient | SqlExport.SqlExport, never>;
+  #runtime: ManagedRuntime.ManagedRuntime<
+    SqlClient.SqlClient | SqlExport.SqlExport | SqlTransaction.SqlTransaction,
+    never
+  >;
   #client?: SyncClient;
   #server?: SyncServer;
 
@@ -46,16 +50,16 @@ class Peer extends Resource {
     isServer: boolean;
     actorId: string;
     serverPeerId?: string;
-    sendMessage: (msg: ProtocolMessage) => Effect.Effect<void, unknown, unknown>;
+    sendMessage: (msg: ProtocolMessage) => Effect.Effect<void, unknown, never>;
   }) {
     super();
     this.#peerId = actorId;
     this.#feedStore = new FeedStore({ localActorId: actorId, assignPositions: isServer });
-    this.#runtime = ManagedRuntime.make(
-      layerMemory
-        .pipe(Layer.provide(LOG_SQL ? Statement.setTransformer(loggingTransformer) : Layer.empty))
-        .pipe(Layer.orDie),
+    const baseLayer = layerMemory.pipe(
+      Layer.provide(LOG_SQL ? Statement.setTransformer(loggingTransformer) : Layer.empty),
     );
+    const transactionLayer = SqlTransaction.layer.pipe(Layer.provide(baseLayer));
+    this.#runtime = ManagedRuntime.make(Layer.merge(baseLayer, transactionLayer).pipe(Layer.orDie));
     if (isServer) {
       this.#server = new SyncServer({
         peerId: actorId,
@@ -190,7 +194,7 @@ class TestBuilder extends Resource {
   }
 
   /** Route a message to the peer identified by recipientPeerId. Runs the recipient's handleMessage with that peer's runtime. */
-  #routeMessage(msg: ProtocolMessage): Effect.Effect<void, unknown, unknown> {
+  #routeMessage(msg: ProtocolMessage): Effect.Effect<void, unknown, never> {
     const peer = this.#peers.find((p) => p.peerId === msg.recipientPeerId);
     if (peer == null) {
       return Effect.die(new Error(`Peer not found: ${msg.recipientPeerId}`));

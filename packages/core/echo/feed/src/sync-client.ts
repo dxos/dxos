@@ -2,7 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
+import type * as SqlClient from '@effect/sql/SqlClient';
 import type { SpaceId } from '@dxos/keys';
+import type { SqlTransaction } from '@dxos/sql-sqlite';
 import { Array } from 'effect';
 import * as Deferred from 'effect/Deferred';
 import * as Effect from 'effect/Effect';
@@ -16,7 +18,7 @@ export type SyncClientOptions = {
   serverPeerId: string;
   feedStore: FeedStore;
   /** Send a protocol message to the server. Returns Effect. */
-  sendMessage: (message: ProtocolMessage) => Effect.Effect<void, unknown, unknown>;
+  sendMessage: (message: ProtocolMessage) => Effect.Effect<void, unknown, never>;
 };
 
 /**
@@ -29,7 +31,7 @@ export class SyncClient {
   readonly #peerId: string;
   readonly #serverPeerId: string;
   readonly #feedStore: FeedStore;
-  readonly #sendMessage: (message: ProtocolMessage) => Effect.Effect<void, unknown, unknown>;
+  readonly #sendMessage: (message: ProtocolMessage) => Effect.Effect<void, unknown, never>;
   readonly #handlers = new Map<string, Deferred.Deferred<ProtocolMessage, Error>>();
 
   constructor(options: SyncClientOptions) {
@@ -46,7 +48,7 @@ export class SyncClient {
       ...payload,
       senderPeerId: this.#peerId,
       recipientPeerId: this.#serverPeerId,
-    };
+    } as ProtocolMessage;
   }
 
   /**
@@ -68,7 +70,7 @@ export class SyncClient {
     spaceId: SpaceId;
     feedNamespace: string;
     limit?: number;
-  }): Effect.Effect<{ done: boolean }, unknown, unknown> {
+  }): Effect.Effect<{ done: boolean }, unknown, SqlClient.SqlClient | SqlTransaction.SqlTransaction> {
     const self = this;
     return Effect.gen(function* () {
       const maxPosition = yield* self.#feedStore.getMaxPosition({
@@ -103,7 +105,7 @@ export class SyncClient {
     spaceId: SpaceId;
     feedNamespace: string;
     limit?: number;
-  }): Effect.Effect<{ done: boolean }, unknown, unknown> {
+  }): Effect.Effect<{ done: boolean }, unknown, SqlClient.SqlClient | SqlTransaction.SqlTransaction> {
     const self = this;
     return Effect.gen(function* () {
       const unpositioned = yield* self.#feedStore.query({
