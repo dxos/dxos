@@ -3,9 +3,9 @@
 //
 
 import { type DocumentId } from '@automerge/automerge-repo';
-
-import { create, type Message } from '@bufbuild/protobuf';
+import { create } from '@bufbuild/protobuf';
 import { type Empty, EmptySchema } from '@bufbuild/protobuf/wkt';
+
 import { UpdateScheduler } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf/stream';
 import { invariant } from '@dxos/invariant';
@@ -13,24 +13,25 @@ import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import {
   type BatchedDocumentUpdates,
+  BatchedDocumentUpdatesSchema,
   type CreateDocumentRequest,
   type CreateDocumentResponse,
+  CreateDocumentResponseSchema,
+  DocHeadsListSchema,
   type FlushRequest,
   type GetDocumentHeadsRequest,
   type GetDocumentHeadsResponse,
+  GetDocumentHeadsResponseSchema,
   type GetSpaceSyncStateRequest,
   type ReIndexHeadsRequest,
   type SpaceSyncState,
+  SpaceSyncStateSchema,
   type SubscribeRequest,
   type UpdateRequest,
   type UpdateSubscriptionRequest,
   type WaitUntilHeadsReplicatedRequest,
-  BatchedDocumentUpdatesSchema,
-  CreateDocumentResponseSchema,
-  GetDocumentHeadsResponseSchema,
-  SpaceSyncStateSchema,
-  DocHeadsListSchema,
 } from '@dxos/protocols/buf/dxos/echo/service_pb';
+import { type DataService } from '@dxos/protocols/buf/dxos/echo/service_pb';
 import { type BufRpcHandlers } from '@dxos/rpc';
 
 import { type AutomergeHost, deriveCollectionIdFromSpaceId } from '../automerge';
@@ -39,7 +40,6 @@ import { DocumentsSynchronizer } from './documents-synchronizer';
 import { type SpaceStateManager } from './space-state-manager';
 
 // Import the DataService type from buf.
-import { DataService } from '@dxos/protocols/buf/dxos/echo/service_pb';
 
 export type BufDataServiceProps = {
   automergeHost: AutomergeHost;
@@ -73,12 +73,14 @@ export class BufDataServiceImpl implements BufRpcHandlers<typeof DataService> {
         automergeHost: this._automergeHost,
         sendUpdates: (updates) => {
           // Convert to buf message format.
-          next(create(BatchedDocumentUpdatesSchema, {
-            updates: updates.updates?.map((u) => ({
-              documentId: u.documentId,
-              mutation: u.mutation,
-            })),
-          }));
+          next(
+            create(BatchedDocumentUpdatesSchema, {
+              updates: updates.updates?.map((u) => ({
+                documentId: u.documentId,
+                mutation: u.mutation,
+              })),
+            }),
+          );
         },
       });
       synchronizer
@@ -117,10 +119,12 @@ export class BufDataServiceImpl implements BufRpcHandlers<typeof DataService> {
     const synchronizer = this._subscriptions.get(request.subscriptionId);
     invariant(synchronizer, 'Subscription not found');
 
-    await synchronizer.update(request.updates.map((u) => ({
-      documentId: u.documentId,
-      mutation: u.mutation,
-    })));
+    await synchronizer.update(
+      request.updates.map((u) => ({
+        documentId: u.documentId,
+        mutation: u.mutation,
+      })),
+    );
     return create(EmptySchema);
   }
 
@@ -165,7 +169,7 @@ export class BufDataServiceImpl implements BufRpcHandlers<typeof DataService> {
   }
 
   subscribeSpaceSyncState(request: GetSpaceSyncStateRequest): Stream<SpaceSyncState> {
-    return new Stream<SpaceSyncState>(({ ctx, next, ready }) => {
+    return new Stream<SpaceSyncState>(({ ctx, next, ready: _ready }) => {
       const spaceId = request.spaceId;
       invariant(SpaceId.isValid(spaceId));
 
@@ -183,18 +187,20 @@ export class BufDataServiceImpl implements BufRpcHandlers<typeof DataService> {
         const state = collectionId ? await this._automergeHost.getCollectionSyncState(collectionId) : { peers: [] };
         const peers = state.peers ?? [];
 
-        next(create(SpaceSyncStateSchema, {
-          peers: peers.map((p) => ({
-            peerId: p.peerId,
-            missingOnRemote: p.missingOnRemote,
-            missingOnLocal: p.missingOnLocal,
-            differentDocuments: p.differentDocuments,
-            localDocumentCount: p.localDocumentCount,
-            remoteDocumentCount: p.remoteDocumentCount,
-            totalDocumentCount: p.totalDocumentCount,
-            unsyncedDocumentCount: p.unsyncedDocumentCount,
-          })),
-        }));
+        next(
+          create(SpaceSyncStateSchema, {
+            peers: peers.map((p) => ({
+              peerId: p.peerId,
+              missingOnRemote: p.missingOnRemote,
+              missingOnLocal: p.missingOnLocal,
+              differentDocuments: p.differentDocuments,
+              localDocumentCount: p.localDocumentCount,
+              remoteDocumentCount: p.remoteDocumentCount,
+              totalDocumentCount: p.totalDocumentCount,
+              unsyncedDocumentCount: p.unsyncedDocumentCount,
+            })),
+          }),
+        );
       });
 
       this._automergeHost.collectionStateUpdated.on(ctx, (e) => {

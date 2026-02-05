@@ -4,11 +4,11 @@
 
 import { getHeads } from '@automerge/automerge';
 import { type DocHandle, type DocumentId } from '@automerge/automerge-repo';
+import { create } from '@bufbuild/protobuf';
+import { type Empty, EmptySchema } from '@bufbuild/protobuf/wkt';
 import type * as SqlClient from '@effect/sql/SqlClient';
 import * as Schema from 'effect/Schema';
 
-import { create, type Message } from '@bufbuild/protobuf';
-import { type Empty, EmptySchema } from '@bufbuild/protobuf/wkt';
 import { DeferredTask, scheduleMicroTask, synchronized } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf/stream';
 import { Context, Resource } from '@dxos/context';
@@ -19,16 +19,13 @@ import { type IndexEngine } from '@dxos/index-core';
 import { type IdToHeads, type Indexer, type ObjectSnapshot } from '@dxos/indexing';
 import { log } from '@dxos/log';
 import { objectPointerCodec } from '@dxos/protocols';
-import {
-  type IndexConfig,
-  IndexKind_Kind,
-} from '@dxos/protocols/buf/dxos/echo/indexing_pb';
+import { type IndexConfig, IndexKind_Kind } from '@dxos/protocols/buf/dxos/echo/indexing_pb';
 import {
   type QueryRequest,
   type QueryResponse,
   QueryResponseSchema,
   QueryResultSchema,
-  QueryService,
+  type QueryService,
 } from '@dxos/protocols/buf/dxos/echo/query_pb';
 import { type QueryResult as ProtobufJsQueryResult } from '@dxos/protocols/proto/dxos/echo/query';
 import { type BufRpcHandlers } from '@dxos/rpc';

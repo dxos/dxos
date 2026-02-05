@@ -2,16 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type GenService, type GenServiceMethods } from '@bufbuild/protobuf/codegenv2';
-import { DataService as BufDataService } from '@dxos/protocols/buf/dxos/echo/service_pb';
-import { QueryService as BufQueryService } from '@dxos/protocols/buf/dxos/echo/query_pb';
 import { QueueService as BufQueueService } from '@dxos/protocols/buf/dxos/client/queue_pb';
-import {
-  type BufServiceBundle,
-  type BufRpcClient,
-  type BufRpcHandlers,
-  createBufServiceBundle,
-} from '@dxos/rpc';
+import { QueryService as BufQueryService } from '@dxos/protocols/buf/dxos/echo/query_pb';
+import { DataService as BufDataService } from '@dxos/protocols/buf/dxos/echo/service_pb';
+import { type BufRpcClient, type BufRpcHandlers, createBufServiceBundle } from '@dxos/rpc';
 
 // Re-export buf service types.
 export { DataService as BufDataService } from '@dxos/protocols/buf/dxos/echo/service_pb';
