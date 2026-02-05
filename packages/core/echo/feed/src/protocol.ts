@@ -87,6 +87,7 @@ export interface QueryRequest extends Schema.Schema.Type<typeof QueryRequest> {}
 export const QueryResponse = Schema.Struct({
   requestId: Schema.optional(Schema.String),
   nextCursor: FeedCursor,
+  hasMore: Schema.Boolean,
   blocks: Schema.Array(Block),
 });
 export interface QueryResponse extends Schema.Schema.Type<typeof QueryResponse> {}
@@ -119,6 +120,19 @@ export const AppendResponse = Schema.Struct({
   positions: Schema.Array(Schema.Number),
 });
 export interface AppendResponse extends Schema.Schema.Type<typeof AppendResponse> {}
+
+export const ProtocolMessage = Schema.Union(
+  Schema.TaggedStruct('QueryRequest', QueryRequest.fields),
+  Schema.TaggedStruct('QueryResponse', QueryResponse.fields),
+  Schema.TaggedStruct('SubscribeRequest', SubscribeRequest.fields),
+  Schema.TaggedStruct('SubscribeResponse', SubscribeResponse.fields),
+  Schema.TaggedStruct('AppendRequest', AppendRequest.fields),
+  Schema.TaggedStruct('AppendResponse', AppendResponse.fields),
+  Schema.TaggedStruct('Error', {
+    message: Schema.String,
+  }),
+);
+export type ProtocolMessage = Schema.Schema.Type<typeof ProtocolMessage>;
 
 export const WellKnownNamespaces = {
   data: 'data',

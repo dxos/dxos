@@ -48,7 +48,7 @@ Cache max position - if append throughput is critical
 Fix appendLocal batching - obvious inefficiency
 Verify prepared statement caching - foundational performance
 
-
+FeedPosition is per feed namespace, not per space -- update spec, important!
 
 */
 
@@ -211,7 +211,7 @@ export class FeedStore {
         }
 
         if (feedIds !== undefined && feedIds.length === 0) {
-          return { requestId: request.requestId, blocks: [], nextCursor: encodeCursor(validCursorToken, -1) };
+          return { requestId: request.requestId, blocks: [], nextCursor: encodeCursor(validCursorToken, -1), hasMore: false };
         }
 
         // Fetch Blocks
@@ -240,14 +240,18 @@ export class FeedStore {
           ? sql`ORDER BY blocks.insertionId ASC`
           : sql`ORDER BY blocks.position ASC NULLS LAST`;
 
+        const requestLimit = request.limit;
+        const queryLimit = requestLimit != null ? requestLimit + 1 : undefined;
         const rows = yield* sql<Block>`
             ${query}
             ${filter}
             ${orderBy}
-            ${request.limit ? sql`LIMIT ${request.limit}` : sql``}
+            ${queryLimit != null ? sql`LIMIT ${queryLimit}` : sql``}
         `;
 
-        const blocks = rows.map((row) => ({
+        const hasMore = requestLimit != null && rows.length > requestLimit;
+        const slice = hasMore ? rows.slice(0, requestLimit) : rows;
+        const blocks = slice.map((row) => ({
           ...row,
           // Have to clone buffer otherwise we get empty Uint8Array.
           data: new Uint8Array(row.data),
@@ -261,7 +265,7 @@ export class FeedStore {
           }
         }
 
-        return { requestId: request.requestId, blocks, nextCursor } satisfies QueryResponse;
+        return { requestId: request.requestId, blocks, nextCursor, hasMore } satisfies QueryResponse;
       }),
   );
 

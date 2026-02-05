@@ -10,7 +10,7 @@ import { ObjectId, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { FeedStore } from './feed-store';
-import { Block } from './protocol';
+import { Block, WellKnownNamespaces } from './protocol';
 
 const TestLayer = SqliteClient.layer({
   filename: ':memory:',
@@ -31,7 +31,8 @@ describe('Feed V2', () => {
 
       // Append
       const block: Block = {
-        feedId: undefined,
+        feedId,
+        feedNamespace: WellKnownNamespaces.data,
         actorId: feedId,
         sequence: 123, // Author sequence provided by peer
         predActorId: null,
@@ -41,7 +42,11 @@ describe('Feed V2', () => {
         data: new Uint8Array([1, 2, 3]),
       };
 
-      const appendRes = yield* feed.append({ requestId: 'req-1', blocks: [block], spaceId, feedId, namespace: 'data' });
+      const appendRes = yield* feed.append({
+        requestId: 'req-1',
+        blocks: [block],
+        spaceId,
+      });
       expect(appendRes.positions.length).toBe(1);
       expect(appendRes.positions[0]).toBeDefined();
       expect(appendRes.requestId).toBe('req-1');
@@ -59,14 +64,15 @@ describe('Feed V2', () => {
     Effect.gen(function* () {
       const spaceId = SpaceId.random();
       const feedId = ObjectId.random();
-      const namespace = 'data';
+      const feedNamespace = WellKnownNamespaces.data;
 
       const feed = new FeedStore({ localActorId: ALICE, assignPositions: true });
       yield* feed.migrate();
 
       // Append with namespace
       const block = Block.make({
-        feedId: undefined,
+        feedId,
+        feedNamespace,
         actorId: ALICE,
         sequence: 1,
         predActorId: null,
@@ -76,7 +82,7 @@ describe('Feed V2', () => {
         data: new Uint8Array([1]),
       });
 
-      yield* feed.append({ requestId: 'req-ns', blocks: [block], namespace, spaceId, feedId });
+      yield* feed.append({ requestId: 'req-ns', blocks: [block], spaceId });
 
       // Verify directly from DB (white-box test) to ensure schema is correct
       const sql = yield* SqliteClient.SqliteClient;
@@ -84,7 +90,7 @@ describe('Feed V2', () => {
         SELECT feedNamespace FROM feeds WHERE spaceId = ${spaceId} AND feedId = ${feedId}
       `;
       expect(rows.length).toBeGreaterThan(0);
-      expect(rows[0].feedNamespace).toBe(namespace);
+      expect(rows[0].feedNamespace).toBe(feedNamespace);
     }).pipe(Effect.provide(TestLayer)),
   );
 
@@ -101,7 +107,8 @@ describe('Feed V2', () => {
         requestId: 'req-1',
         blocks: [
           Block.make({
-            feedId: undefined,
+            feedId,
+            feedNamespace: WellKnownNamespaces.data,
             actorId: feedId,
             sequence: 1,
             predActorId: null,
@@ -112,8 +119,6 @@ describe('Feed V2', () => {
           }),
         ],
         spaceId,
-        feedId,
-        namespace: 'data',
       });
 
       // Subscribe
@@ -144,7 +149,7 @@ describe('Feed V2', () => {
         {
           spaceId,
           feedId: 'feed-1',
-          feedNamespace: 'default',
+          feedNamespace: WellKnownNamespaces.data,
           data: new Uint8Array([1]),
         },
       ]);
@@ -153,7 +158,7 @@ describe('Feed V2', () => {
         {
           spaceId,
           feedId: 'feed-2',
-          feedNamespace: 'default',
+          feedNamespace: WellKnownNamespaces.data,
           data: new Uint8Array([2]),
         },
       ]);
@@ -190,7 +195,7 @@ describe('Feed V2', () => {
         {
           spaceId,
           feedId: 'feed-1',
-          feedNamespace: 'default',
+          feedNamespace: WellKnownNamespaces.data,
           data: new Uint8Array([1]),
         },
       ]);
@@ -198,7 +203,7 @@ describe('Feed V2', () => {
         {
           spaceId,
           feedId: 'feed-2',
-          feedNamespace: 'default',
+          feedNamespace: WellKnownNamespaces.data,
           data: new Uint8Array([2]),
         },
       ]);
@@ -206,7 +211,7 @@ describe('Feed V2', () => {
         {
           spaceId,
           feedId: 'feed-1',
-          feedNamespace: 'default',
+          feedNamespace: WellKnownNamespaces.data,
           data: new Uint8Array([3]),
         },
       ]);
@@ -296,7 +301,7 @@ describe('Feed V2', () => {
         {
           spaceId,
           feedId,
-          feedNamespace: 'data',
+          feedNamespace: WellKnownNamespaces.data,
           data: new Uint8Array([1]),
         },
       ]);
@@ -329,7 +334,7 @@ describe('Feed V2', () => {
         {
           spaceId,
           feedId,
-          feedNamespace: 'data',
+          feedNamespace: WellKnownNamespaces.data,
           data: new Uint8Array([1]),
         },
       ]);
@@ -345,7 +350,7 @@ describe('Feed V2', () => {
         {
           spaceId,
           feedId,
-          feedNamespace: 'data',
+          feedNamespace: WellKnownNamespaces.data,
           data: new Uint8Array([2]),
         },
       ]);
