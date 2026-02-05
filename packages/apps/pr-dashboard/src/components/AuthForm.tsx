@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { StoredSettings } from '../utils/storage';
+import { getGitHubToken, type StoredSettings } from '../utils/storage';
 
 interface AuthFormProps {
   onSubmit: (token: string, settings: StoredSettings) => void;
@@ -7,7 +7,7 @@ interface AuthFormProps {
 }
 
 export const AuthForm = ({ onSubmit, initialSettings }: AuthFormProps) => {
-  const [token, setToken] = useState('');
+  const [token, setToken] = useState(getGitHubToken() || '');
   const [owner, setOwner] = useState(initialSettings?.owner || 'dxos');
   const [repo, setRepo] = useState(initialSettings?.repo || 'dxos');
   const [anthropicApiKey, setAnthropicApiKey] = useState(initialSettings?.anthropicApiKey || '');
