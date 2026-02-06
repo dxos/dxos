@@ -9,7 +9,7 @@
       -->
     <meta
       name="viewport"
-      content="width=device-width,initial-scale=1,user-scalable=no,interactive-widget=resizes-content,viewport-fit=cover"
+      content="width=device-width,initial-scale=1.0,user-scalable=no,interactive-widget=resizes-content,viewport-fit=cover"
     />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="mobile-web-app-capable" content="yes" />
@@ -64,17 +64,8 @@
         -webkit-overflow-scrolling: touch;
       }
       body {
-        /* position: fixed; */
-        /* overflow: hidden; */
-        /* overscroll-behavior: none; */
         height: 100vh;
-        /* width: 100%; */
-        /* min-height: 100dvh; */
-        /* min-height: -webkit-fill-available; */
       }
-      /* #root {
-        height: 100vh;
-      } */
     </style>
 
     <script strategy="beforeInteractive">
@@ -89,10 +80,5 @@
   <body>
     <div id="root" class="contents"></div>
     <script type="module" src="/src/main.tsx"></script>
-    <!-- <style>
-      :root {
-        --safe-area-bottom: env(safe-area-inset-bottom);
-      }
-    </style> -->
   </body>
 </html>
