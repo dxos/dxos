@@ -30,12 +30,10 @@ import type * as Record from 'effect/Record';
 import { DeferredTask, Event, asyncTimeout } from '@dxos/async';
 import { Context, type Lifecycle, Resource, cancelWithContext } from '@dxos/context';
 import { type CollectionId, DatabaseDirectory } from '@dxos/echo-protocol';
-import { type IndexMetadataStore } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
 import { log } from '@dxos/log';
-import { objectPointerCodec } from '@dxos/protocols';
 import { type SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
 import { type DocHeadsList, type FlushRequest } from '@dxos/protocols/proto/dxos/echo/service';
 import { trace } from '@dxos/tracing';
@@ -54,7 +52,6 @@ export type RootDocumentSpaceKeyProvider = (documentId: string) => PublicKey | u
 
 export type AutomergeHostProps = {
   db: LevelDB;
-  indexMetadataStore: IndexMetadataStore;
   dataMonitor?: EchoDataMonitor;
 
   /**
@@ -111,7 +108,6 @@ const OPTIMIZED_SHARE_POLICY = true;
 @trace.resource()
 export class AutomergeHost extends Resource {
   private readonly _db: LevelDB;
-  private readonly _indexMetadataStore: IndexMetadataStore;
   private readonly _echoNetworkAdapter: EchoNetworkAdapter;
 
   private readonly _collectionSynchronizer = new CollectionSynchronizer({
@@ -172,7 +168,6 @@ export class AutomergeHost extends Resource {
 
   constructor({
     db,
-    indexMetadataStore,
     dataMonitor,
     peerIdProvider,
     getSpaceKeyByRootDocumentId,
@@ -199,7 +194,6 @@ export class AutomergeHost extends Resource {
       this._sharePolicyChangedTask!.schedule();
     });
     this._headsStore = new HeadsStore({ db: db.sublevel('heads') });
-    this._indexMetadataStore = indexMetadataStore;
     this._peerIdProvider = peerIdProvider;
     this._getSpaceKeyByRootDocumentId = getSpaceKeyByRootDocumentId;
   }
@@ -487,14 +481,6 @@ export class AutomergeHost extends Resource {
 
     const heads = getHeads(doc);
     this._headsStore.setHeads(handle.documentId, heads, batch);
-
-    const spaceKey = DatabaseDirectory.getSpaceKey(doc) ?? undefined;
-    const objectIds = Object.keys(doc.objects ?? {});
-    const encodedIds = objectIds.map((objectId) =>
-      objectPointerCodec.encode({ documentId: handle.documentId, objectId, spaceKey }),
-    );
-    const idToLastHash = new Map(encodedIds.map((id) => [id, heads]));
-    this._indexMetadataStore.markDirty(idToLastHash, batch);
   }
 
   private _shouldSyncCollection(collectionId: string, peerId: PeerId): boolean {
@@ -514,7 +500,6 @@ export class AutomergeHost extends Resource {
       return undefined;
     }
 
-    this._indexMetadataStore.notifyMarkedDirty();
     const documentId = path[0] as DocumentId;
     const handle = this._repo.handles[documentId];
     if (!handle || !handle.isReady()) {

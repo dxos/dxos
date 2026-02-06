@@ -2,8 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import { getHeads } from '@automerge/automerge';
-import { type DocHandle, type DocumentId } from '@automerge/automerge-repo';
 import type * as SqlClient from '@effect/sql/SqlClient';
 import * as Schema from 'effect/Schema';
 
@@ -11,13 +9,10 @@ import { DeferredTask, scheduleMicroTask, synchronized } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf/stream';
 import { Context, Resource } from '@dxos/context';
 import { raise } from '@dxos/debug';
-import { DatabaseDirectory, QueryAST } from '@dxos/echo-protocol';
+import { QueryAST } from '@dxos/echo-protocol';
 import { type RuntimeProvider } from '@dxos/effect';
 import { type IndexEngine } from '@dxos/index-core';
-import { type IdToHeads, type Indexer, type ObjectSnapshot } from '@dxos/indexing';
 import { log } from '@dxos/log';
-import { objectPointerCodec } from '@dxos/protocols';
-import { type IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
 import {
   type QueryRequest,
   type QueryResponse,
@@ -32,9 +27,8 @@ import { QueryExecutor } from '../query';
 import type { SpaceStateManager } from './space-state-manager';
 
 export type QueryServiceProps = {
-  indexer: Indexer;
-  indexer2?: IndexEngine;
-  runtime?: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
+  indexEngine: IndexEngine;
+  runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
   automergeHost: AutomergeHost;
   spaceStateManager: SpaceStateManager;
 };
@@ -86,8 +80,6 @@ export class QueryServiceImpl extends Resource implements QueryService {
   }
 
   override async _open(): Promise<void> {
-    this._params.indexer.updated.on(this._ctx, () => this.invalidateQueries());
-
     this._updateQueries = new DeferredTask(this._ctx, this._executeQueries.bind(this));
   }
 
@@ -97,18 +89,8 @@ export class QueryServiceImpl extends Resource implements QueryService {
     await Promise.all(Array.from(this._queries).map((query) => query.close()));
   }
 
-  async setConfig(config: IndexConfig): Promise<void> {
-    await this._params.indexer.setConfig(config);
-  }
-
   execQuery(request: QueryRequest): Stream<QueryResponse> {
     return new Stream<QueryResponse>(({ next, close, ctx }) => {
-      if (this._params.indexer.config?.enabled !== true) {
-        log.error('indexer is disabled', { config: this._params.indexer.config });
-        close();
-        return;
-      }
-
       const queryEntry = this._createQuery(ctx, request, next, close, close);
       scheduleMicroTask(ctx, async () => {
         await queryEntry.executor.open();
@@ -117,26 +99,6 @@ export class QueryServiceImpl extends Resource implements QueryService {
       });
       return queryEntry.close;
     });
-  }
-
-  /**
-   * Re-index all loaded documents.
-   */
-  async reindex(): Promise<void> {
-    log('Reindexing all documents...');
-    const iterator = createDocumentsIterator(this._params.automergeHost);
-    const ids: IdToHeads = new Map();
-    for await (const documents of iterator()) {
-      for (const { id, heads } of documents) {
-        ids.set(id, heads);
-      }
-      if (ids.size % 100 === 0) {
-        log('Collected documents...', { count: ids.size });
-      }
-    }
-
-    log('Marking all documents as dirty...', { count: ids.size });
-    await this._params.indexer.reindex(ids);
   }
 
   /**
@@ -159,8 +121,7 @@ export class QueryServiceImpl extends Resource implements QueryService {
     const parsedQuery = QueryAST.Query.pipe(Schema.decodeUnknownSync)(JSON.parse(request.query));
     const queryEntry: ActiveQuery = {
       executor: new QueryExecutor({
-        indexer: this._params.indexer,
-        indexer2: this._params.indexer2,
+        indexEngine: this._params.indexEngine,
         runtime: this._params.runtime,
         automergeHost: this._params.automergeHost,
         queryId: request.queryId ?? raise(new Error('query id required')),
@@ -215,67 +176,3 @@ export class QueryServiceImpl extends Resource implements QueryService {
     log.verbose('executed queries', { count, duration: performance.now() - begin });
   }
 }
-
-/**
- * Factory for `getAllDocuments` iterator.
- */
-// TODO(dmaretskyi): Get roots from echo-host.
-const createDocumentsIterator = (automergeHost: AutomergeHost) =>
-  /**
-   * Recursively get all object data blobs from loaded documents from Automerge Repo.
-   */
-  // TODO(mykola): Unload automerge handles after usage.
-  async function* getAllDocuments(): AsyncGenerator<ObjectSnapshot[], void, void> {
-    /** visited automerge handles */
-    const visited = new Set<string>();
-
-    async function* getObjectsFromHandle(handle: DocHandle<DatabaseDirectory>): AsyncGenerator<ObjectSnapshot[]> {
-      if (visited.has(handle.documentId) || !handle.isReady()) {
-        return;
-      }
-
-      const doc = handle.doc()!;
-      const spaceKey = DatabaseDirectory.getSpaceKey(doc) ?? undefined;
-      if (doc.objects) {
-        yield Object.entries(doc.objects as { [key: string]: any }).map(([objectId, object]) => {
-          return {
-            id: objectPointerCodec.encode({ documentId: handle.documentId, objectId, spaceKey }),
-            object,
-            heads: getHeads(doc),
-          };
-        });
-      }
-
-      if (doc.links) {
-        for (const id of Object.values(doc.links as { [echoId: string]: string })) {
-          const urlString = id.toString();
-          if (visited.has(urlString)) {
-            continue;
-          }
-          const linkHandle = await automergeHost.loadDoc<DatabaseDirectory>(
-            Context.default(),
-            urlString as DocumentId,
-            {
-              fetchFromNetwork: true,
-            },
-          );
-          for await (const result of getObjectsFromHandle(linkHandle)) {
-            yield result;
-          }
-        }
-      }
-
-      visited.add(handle.documentId);
-    }
-
-    // TODO(mykola): Use list of roots instead of iterating over all handles.
-    for (const handle of Object.values(automergeHost.handles)) {
-      if (visited.has(handle.documentId)) {
-        continue;
-      }
-      for await (const result of getObjectsFromHandle(handle)) {
-        yield result;
-      }
-      visited.add(handle.documentId);
-    }
-  };
