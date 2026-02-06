@@ -224,6 +224,7 @@ catalog:
   '@tauri-apps/plugin-process': ^2.3.0
   '@tauri-apps/plugin-shell': ^2.3.1
   '@tauri-apps/plugin-updater': ^2.9.0
+  tauri-plugin-web-auth-api: ^1.0.0
   '@testing-library/dom': ^10.4.1
   '@testing-library/jest-dom': ^6.9.1
   '@testing-library/react': ^16.3.0

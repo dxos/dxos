@@ -37,24 +37,31 @@ export default {
     // }
 
     // iOS Universal Links verification.
+    // OAuth uses custom scheme (composer://) via ASWebAuthenticationSession, so exclude /redirect/oauth.
     if (url.pathname === '/.well-known/apple-app-site-association') {
       return Response.json(
         {
           applinks: {
             apps: [],
-            details: [{ appID: `${env.APPLE_TEAM_ID}.org.dxos.composer`, paths: ['/redirect/*'] }],
+            details: [
+              {
+                appID: `${env.APPLE_TEAM_ID}.org.dxos.composer`,
+                paths: ['/*'],
+                exclude: ['/redirect/oauth*'],
+              },
+            ],
           },
         },
         { headers: { 'Cache-Control': 'public, max-age=3600' } },
       );
     }
 
-    // OAuth redirect - return 404 (App Links intercept before reaching here).
+    // OAuth redirect - fallback bridge from HTTPS to custom scheme.
+    // Primary flow: Edge redirects directly to composer:// when nativeAppRedirect=true.
+    // This fallback handles the case where Edge doesn't support nativeAppRedirect yet.
     if (url.pathname.startsWith('/redirect/oauth')) {
-      return new Response('This URL is handled by the Composer mobile app.', {
-        status: 404,
-        headers: { 'Content-Type': 'text/plain' },
-      });
+      const customSchemeUrl = `composer://oauth/callback${url.search}`;
+      return Response.redirect(customSchemeUrl, 302);
     }
 
     // Everything else redirects to composer.space.

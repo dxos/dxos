@@ -62,8 +62,12 @@
         {
           "scheme": ["https"],
           "host": "composer.dxos.org",
-          "pathPrefix": ["/redirect"],
+          "pathPrefix": ["/"],
           "appLink": true
+        },
+        {
+          "scheme": ["composer"],
+          "host": "oauth"
         }
       ],
       "desktop": {

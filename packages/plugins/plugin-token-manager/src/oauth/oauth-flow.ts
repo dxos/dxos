@@ -76,6 +76,8 @@ export type OAuthInitiateParams = {
   accessTokenId: string;
   redirectOrigin: string;
   authHeader?: string;
+  /** If true, Edge returns a 302 redirect to composer:// instead of JavaScript. Used for mobile. */
+  nativeAppRedirect?: boolean;
 };
 
 /**

@@ -112,6 +112,7 @@ export const createTauriOAuthInitiator = (): OAuthInitiator => ({
           accessTokenId: params.accessTokenId,
           redirectOrigin: params.redirectOrigin,
           authHeader: params.authHeader,
+          nativeAppRedirect: params.nativeAppRedirect,
         });
       },
       catch: (error) => new Error(`Failed to initiate OAuth flow: ${error}`),

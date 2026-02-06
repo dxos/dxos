@@ -70,7 +70,8 @@
     "@tauri-apps/plugin-deep-link": "catalog:",
     "@tauri-apps/plugin-opener": "catalog:",
     "@tauri-apps/plugin-os": "catalog:",
-    "get-port-please": "catalog:"
+    "get-port-please": "catalog:",
+    "tauri-plugin-web-auth-api": "catalog:"
   },
   "devDependencies": {
     "@dxos/echo-generator": "workspace:*",
