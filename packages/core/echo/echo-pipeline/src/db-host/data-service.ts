@@ -16,7 +16,7 @@ import {
   type BatchedDocumentUpdates as BufBatchedDocumentUpdates,
   type CreateDocumentRequest as BufCreateDocumentRequest,
   type CreateDocumentResponse as BufCreateDocumentResponse,
-  type DataService as BufDataService,
+  DataService as BufDataService,
   type FlushRequest as BufFlushRequest,
   type GetDocumentHeadsRequest as BufGetDocumentHeadsRequest,
   type GetDocumentHeadsResponse as BufGetDocumentHeadsResponse,
@@ -56,7 +56,7 @@ import { DocumentsSynchronizer } from './documents-synchronizer';
 import { type SpaceStateManager } from './space-state-manager';
 
 // Re-export buf service type for consumers.
-export { DataService as BufDataService } from '@dxos/protocols/buf/dxos/echo/service_pb';
+export { BufDataService };
 
 export type DataServiceProps = {
   automergeHost: AutomergeHost;

@@ -22,7 +22,7 @@ import { type IndexConfig as BufIndexConfig, IndexKind_Kind } from '@dxos/protoc
 import {
   type QueryRequest as BufQueryRequest,
   type QueryResponse as BufQueryResponse,
-  type QueryService as BufQueryService,
+  QueryService as BufQueryService,
   QueryResponseSchema,
   QueryResultSchema,
 } from '@dxos/protocols/buf/dxos/echo/query_pb';
@@ -42,7 +42,7 @@ import { QueryExecutor } from '../query';
 import type { SpaceStateManager } from './space-state-manager';
 
 // Re-export buf service type for consumers.
-export { QueryService as BufQueryService } from '@dxos/protocols/buf/dxos/echo/query_pb';
+export { BufQueryService };
 
 export type QueryServiceProps = {
   indexer: Indexer;
