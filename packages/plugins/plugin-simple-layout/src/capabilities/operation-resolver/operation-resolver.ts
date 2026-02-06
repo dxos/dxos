@@ -144,26 +144,28 @@ export default Capability.makeModule(
         operation: Common.LayoutOperation.Open,
         handler: Effect.fnUntraced(function* (input) {
           const id = input.subject[0];
-          const { variant } = parseEntryId(id);
+          const { id: primaryId, variant } = parseEntryId(id);
+          const state = getState();
 
-          if (variant) {
-            // It's a companion - store the variant preference and open drawer.
-            updateState((state) => ({
-              ...state,
+          // Only treat as companion when opening a variant of the current workspace/active (e.g. object~comments).
+          // IDs like settings~spaceId are alternate-tree nodes and should navigate main content, not open the drawer.
+          // TODO(wittjosiah): Factor out the change-companion operation from deck to a common layout operation.
+          const isCompanionOfCurrent = variant && (primaryId === state.workspace || primaryId === state.active);
+
+          if (isCompanionOfCurrent) {
+            updateState((s) => ({
+              ...s,
               companionVariant: variant,
-              // Open drawer if closed, otherwise preserve current state (expanded/full).
-              drawerState: state.drawerState === 'closed' || !state.drawerState ? 'expanded' : state.drawerState,
+              drawerState: s.drawerState === 'closed' || !s.drawerState ? 'expanded' : s.drawerState,
             }));
           } else {
-            // Regular navigation - update active and history.
-            updateState((state) => {
-              // Push current active to history if it exists.
-              const newHistory = state.active ? [...state.history, state.active] : state.history;
-              // Limit history length to prevent memory issues.
+            // Regular navigation - update active and history (use full id for alternate-tree nodes).
+            updateState((s) => {
+              const newHistory = s.active ? [...s.history, s.active] : s.history;
               const trimmedHistory =
                 newHistory.length > MAX_HISTORY_LENGTH ? newHistory.slice(-MAX_HISTORY_LENGTH) : newHistory;
               return {
-                ...state,
+                ...s,
                 active: id,
                 history: trimmedHistory,
               };

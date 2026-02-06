@@ -27,11 +27,17 @@ pub fn run() {
     #[cfg(target_os = "macos")]
     let builder = builder.plugin(tauri_nspanel::init());
 
+    // Initialize web-auth plugin for mobile (ASWebAuthenticationSession on iOS, Custom Tabs on Android).
+    #[cfg(mobile)]
+    let builder = builder.plugin(tauri_plugin_web_auth::init());
+
     // Configure plugins and spotlight shortcut.
     let builder = {
         let builder = builder
             .plugin(tauri_plugin_os::init())
-            .plugin(tauri_plugin_shell::init());
+            .plugin(tauri_plugin_opener::init())
+            .plugin(tauri_plugin_shell::init())
+            .plugin(tauri_plugin_deep_link::init());
 
         // Spotlight panel and global shortcut are macOS-only.
         #[cfg(target_os = "macos")]

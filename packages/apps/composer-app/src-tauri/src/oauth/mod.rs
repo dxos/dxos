@@ -30,6 +30,8 @@ struct InitiateOAuthRequest {
     scopes: Vec<String>,
     space_id: String,
     access_token_id: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    native_app_redirect: Option<bool>,
 }
 
 /// Response from Edge for OAuth initiation.
@@ -122,6 +124,7 @@ pub async fn initiate_oauth_flow(
     access_token_id: String,
     redirect_origin: String,
     auth_header: Option<String>,
+    native_app_redirect: Option<bool>,
 ) -> Result<String, String> {
     let client = reqwest::Client::new();
 
@@ -152,6 +155,7 @@ pub async fn initiate_oauth_flow(
         scopes,
         space_id,
         access_token_id,
+        native_app_redirect,
     };
 
     let response = client

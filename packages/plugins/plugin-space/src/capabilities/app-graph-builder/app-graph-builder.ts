@@ -20,7 +20,7 @@ import { isNonNullable } from '@dxos/util';
 
 import { getActiveSpace } from '../../hooks';
 import { meta } from '../../meta';
-import { SPACE_TYPE, SpaceCapabilities, SpaceOperation } from '../../types';
+import { SPACE_TYPE, SpaceCapabilities, SpaceOperation, type SpacePluginOptions } from '../../types';
 import {
   SHARED,
   constructObjectActions,
@@ -36,7 +36,8 @@ const whenSpace = (node: Node.Node): Option.Option<Space> =>
   node.type === SPACE_TYPE && isSpace(node.data) ? Option.some(node.data) : Option.none();
 
 export default Capability.makeModule(
-  Effect.fnUntraced(function* () {
+  Effect.fnUntraced(function* (props?: SpacePluginOptions) {
+    const { shareableLinkOrigin = window.location.origin } = props ?? {};
     const capabilities = yield* Capability.Service;
 
     // TODO(wittjosiah): Using `get` and being reactive seems to cause a bug with Atom where disposed atoms are accessed.
@@ -552,6 +553,7 @@ export default Capability.makeModule(
               capabilities,
               deletable,
               navigable: ephemeralState.navigableCollections,
+              shareableLinkOrigin,
             }),
           );
         },
