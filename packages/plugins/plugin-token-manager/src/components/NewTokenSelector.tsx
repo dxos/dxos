@@ -127,34 +127,33 @@ export const NewTokenSelector = ({ spaceId, onAddAccessToken, onCustomToken }: N
 
     if (isTauri()) {
       // Tauri path: Check if mobile platform.
+      const oauthEffect = Effect.gen(function* () {
+        const isMobile = yield* isMobilePlatform();
+        if (isMobile) {
+          yield* performMobileOAuthFlow({
+            preset,
+            accessToken: token,
+            edgeClient,
+            spaceId,
+          });
+        } else {
+          yield* performOAuthFlow(
+            preset,
+            token,
+            edgeClient,
+            spaceId,
+            createTauriServerProvider(),
+            openTauriBrowser,
+            createTauriOAuthInitiator(),
+          );
+        }
+      });
       await runAndForwardErrors(
-        Effect.gen(function* () {
-          const isMobile = yield* isMobilePlatform().pipe(Effect.catchAll(() => Effect.succeed(false)));
-
-          if (isMobile) {
-            // Mobile path: Use App Links / Universal Links for OAuth callback.
-            yield* performMobileOAuthFlow({
-              preset,
-              accessToken: token,
-              edgeClient,
-              spaceId,
-            });
-          } else {
-            // Desktop path: Use localhost server for OAuth callback.
-            yield* performOAuthFlow(
-              preset,
-              token,
-              edgeClient,
-              spaceId,
-              createTauriServerProvider(),
-              openTauriBrowser,
-              createTauriOAuthInitiator(),
-            );
-          }
-
-          yield* enrichGoogleTokenWithEmail(token);
-          onAddAccessToken(token);
-        }).pipe(Effect.catchAll((error) => Effect.sync(() => log.catch(error)))),
+        oauthEffect.pipe(
+          Effect.tap(() => enrichGoogleTokenWithEmail(token)),
+          Effect.tap(() => onAddAccessToken(token)),
+          Effect.catchAll((error) => Effect.sync(() => log.catch(error))),
+        ),
       );
     } else {
       // Web path: Use window.open + postMessage approach.

@@ -24,7 +24,10 @@
         }
       ]
     },
-    "opener:default","opener:allow-open-url","opener:allow-default-urls","shell:allow-open",
+    "opener:default",
+    "opener:allow-open-url",
+    "opener:allow-default-urls",
+    "shell:allow-open",
     "web-auth:default",
     "web-auth:allow-authenticate"
   ]

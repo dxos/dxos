@@ -2,4 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-export { default as AppGraphBuilder } from './app-graph-builder';
+import { Capability } from '@dxos/app-framework';
+
+export const AppGraphBuilder = Capability.lazy('AppGraphBuilder', () => import('./app-graph-builder'));

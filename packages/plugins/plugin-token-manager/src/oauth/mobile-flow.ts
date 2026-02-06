@@ -11,6 +11,7 @@ import { type AccessToken } from '@dxos/types';
 
 import { type OAuthPreset } from '../defs';
 
+import { getEdgeAuthHeader } from './edge-auth-header';
 import { MOBILE_OAUTH_ORIGIN } from './mobile-deep-link';
 import { type OAuthInitiator } from './oauth-flow';
 import { createTauriOAuthInitiator } from './tauri-server';
@@ -49,11 +50,7 @@ export const performMobileOAuthFlow = ({
   oauthInitiator = createTauriOAuthInitiator(),
 }: MobileOAuthParams): Effect.Effect<void, Error> =>
   Effect.gen(function* () {
-    // Get auth header if available.
-    let authHeader: string | undefined;
-    if ((edgeClient as any)['_authHeader']) {
-      authHeader = (edgeClient as any)['_authHeader'];
-    }
+    const authHeader = getEdgeAuthHeader(edgeClient);
 
     // Initiate OAuth flow with mobile origin.
     // Edge will redirect directly to composer://oauth/callback after OAuth completes.
@@ -116,7 +113,7 @@ export const performMobileOAuthFlow = ({
 /**
  * Checks if the current platform is mobile (iOS or Android).
  */
-export const isMobilePlatform = (): Effect.Effect<boolean, Error> =>
+export const isMobilePlatform = (): Effect.Effect<boolean, never> =>
   Effect.tryPromise({
     try: async () => {
       const { platform } = await import('@tauri-apps/plugin-os');
@@ -124,4 +121,4 @@ export const isMobilePlatform = (): Effect.Effect<boolean, Error> =>
       return os === 'ios' || os === 'android';
     },
     catch: (error) => new Error(`Failed to detect platform: ${error}`),
-  });
+  }).pipe(Effect.catchAll(() => Effect.succeed(false)));
