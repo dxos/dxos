@@ -3,20 +3,20 @@
 //
 
 import { type DocumentId } from '@automerge/automerge-repo';
-import { create } from '@bufbuild/protobuf';
-import { type Empty, EmptySchema } from '@bufbuild/protobuf/wkt';
 
 import { UpdateScheduler } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf/stream';
 import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { type Empty, EmptySchema, create } from '@dxos/protocols/buf';
 import {
   type BatchedDocumentUpdates,
   BatchedDocumentUpdatesSchema,
   type CreateDocumentRequest,
   type CreateDocumentResponse,
   CreateDocumentResponseSchema,
+  type DataService,
   DocHeadsListSchema,
   type FlushRequest,
   type GetDocumentHeadsRequest,
@@ -31,15 +31,12 @@ import {
   type UpdateSubscriptionRequest,
   type WaitUntilHeadsReplicatedRequest,
 } from '@dxos/protocols/buf/dxos/echo/service_pb';
-import { type DataService } from '@dxos/protocols/buf/dxos/echo/service_pb';
 import { type BufRpcHandlers } from '@dxos/rpc';
 
 import { type AutomergeHost, deriveCollectionIdFromSpaceId } from '../automerge';
 
 import { DocumentsSynchronizer } from './documents-synchronizer';
 import { type SpaceStateManager } from './space-state-manager';
-
-// Import the DataService type from buf.
 
 export type BufDataServiceProps = {
   automergeHost: AutomergeHost;

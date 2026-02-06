@@ -4821,9 +4821,6 @@ importers:
       '@automerge/automerge-repo':
         specifier: 'catalog:'
         version: 2.5.1(patch_hash=be766431e3a6459feb58222ae46cd90e3ad69b2350653ea95d8707259278baa8)
-      '@bufbuild/protobuf':
-        specifier: 'catalog:'
-        version: 2.11.0
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
@@ -13644,9 +13641,6 @@ importers:
 
   packages/sdk/client-protocol:
     dependencies:
-      '@bufbuild/protobuf':
-        specifier: 'catalog:'
-        version: 2.11.0
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async

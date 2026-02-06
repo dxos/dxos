@@ -4,8 +4,6 @@
 
 import { getHeads } from '@automerge/automerge';
 import { type DocHandle, type DocumentId } from '@automerge/automerge-repo';
-import { create } from '@bufbuild/protobuf';
-import { type Empty, EmptySchema } from '@bufbuild/protobuf/wkt';
 import type * as SqlClient from '@effect/sql/SqlClient';
 import * as Schema from 'effect/Schema';
 
@@ -19,6 +17,7 @@ import { type IndexEngine } from '@dxos/index-core';
 import { type IdToHeads, type Indexer, type ObjectSnapshot } from '@dxos/indexing';
 import { log } from '@dxos/log';
 import { objectPointerCodec } from '@dxos/protocols';
+import { type Empty, EmptySchema, create } from '@dxos/protocols/buf';
 import { type IndexConfig, IndexKind_Kind } from '@dxos/protocols/buf/dxos/echo/indexing_pb';
 import {
   type QueryRequest,
