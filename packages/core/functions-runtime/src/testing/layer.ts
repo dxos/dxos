@@ -85,6 +85,8 @@ export const TestDatabaseLayer = ({ types, spaceKey, storagePath, onInit }: Test
           const rootUrl = (testMetadata as any).rootUrl;
           db = yield* Effect.promise(() => peer.openDatabase(key, rootUrl));
           queues = peer.client.constructQueueFactory(db.spaceId);
+          // Rebuild index after reopening since in-memory SQLite is recreated.
+          yield* Effect.promise(() => db!.flush({ indexes: true }));
         }
       } else {
         db = yield* Effect.promise(() => peer.createDatabase(key));
