@@ -13,8 +13,7 @@ import { type OAuthPreset } from '../defs';
 
 import { getEdgeAuthHeader } from './edge-auth-header';
 import { MOBILE_OAUTH_ORIGIN } from './mobile-deep-link';
-import { type OAuthInitiator } from './oauth-flow';
-import { createTauriOAuthInitiator } from './tauri-server';
+import { createFetchOAuthInitiator, type OAuthInitiator } from './oauth-flow';
 
 /** Custom URL scheme for OAuth callback on mobile. */
 const CALLBACK_SCHEME = 'composer';
@@ -47,7 +46,7 @@ export const performMobileOAuthFlow = ({
   accessToken,
   edgeClient,
   spaceId,
-  oauthInitiator = createTauriOAuthInitiator(),
+  oauthInitiator = createFetchOAuthInitiator(),
 }: MobileOAuthParams): Effect.Effect<void, Error> =>
   Effect.gen(function* () {
     const authHeader = getEdgeAuthHeader(edgeClient);
