@@ -106,6 +106,7 @@ dependencies = [
  "tauri-build",
  "tauri-nspanel",
  "tauri-plugin-global-shortcut",
+ "tauri-plugin-haptics",
  "tauri-plugin-log",
  "tauri-plugin-os",
  "tauri-plugin-process",
@@ -4253,6 +4254,20 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "424af23c7e88d05e4a1a6fc2c7be077912f8c76bd7900fd50aa2b7cbf5a2c405"
 dependencies = [
  "global-hotkey",
+ "log",
+ "serde",
+ "serde_json",
+ "tauri",
+ "tauri-plugin",
+ "thiserror 2.0.12",
+]
+
+[[package]]
+name = "tauri-plugin-haptics"
+version = "2.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "01b167d598ada05c599f4460595108c8d1aa636030a97d19796c1bcda97d881d"
+dependencies = [
  "log",
  "serde",
  "serde_json",

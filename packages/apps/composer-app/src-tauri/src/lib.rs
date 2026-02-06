@@ -27,6 +27,10 @@ pub fn run() {
     #[cfg(target_os = "macos")]
     let builder = builder.plugin(tauri_nspanel::init());
 
+    // Initialize haptics plugin for mobile platforms.
+    #[cfg(any(target_os = "android", target_os = "ios"))]
+    let builder = builder.plugin(tauri_plugin_haptics::init());
+
     // Configure plugins and spotlight shortcut.
     let builder = {
         let builder = builder
