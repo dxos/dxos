@@ -27,7 +27,7 @@ import {
   type CreateDocOptions,
   EchoDataMonitor,
   type EchoDataStats,
-  type EchoReplicator,
+  type AutomergeReplicator,
   type LoadDocOptions,
   type PeerIdProvider,
   type RootDocumentSpaceKeyProvider,
@@ -375,14 +375,14 @@ export class EchoHost extends Resource {
   /**
    * Install data replicator.
    */
-  async addReplicator(replicator: EchoReplicator): Promise<void> {
+  async addReplicator(replicator: AutomergeReplicator): Promise<void> {
     await this._automergeHost.addReplicator(replicator);
   }
 
   /**
    * Remove data replicator.
    */
-  async removeReplicator(replicator: EchoReplicator): Promise<void> {
+  async removeReplicator(replicator: AutomergeReplicator): Promise<void> {
     await this._automergeHost.removeReplicator(replicator);
   }
 

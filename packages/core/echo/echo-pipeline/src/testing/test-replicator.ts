@@ -10,9 +10,9 @@ import type { AutomergeProtocolMessage } from '@dxos/protocols';
 import { AutomergeReplicator, type AutomergeReplicatorFactory } from '@dxos/teleport-extension-automerge-replicator';
 
 import type {
-  EchoReplicator,
-  EchoReplicatorContext,
-  ReplicatorConnection,
+  AutomergeReplicator,
+  AutomergeReplicatorContext,
+  AutomergeReplicatorConnection,
   ShouldAdvertiseProps,
   ShouldSyncCollectionProps,
 } from '../automerge';
@@ -120,14 +120,14 @@ type TestReplicatorProps = {
   onDisconnect: () => Promise<void>;
 };
 
-export class TestReplicator implements EchoReplicator {
+export class TestReplicator implements AutomergeReplicator {
   constructor(private readonly _params: TestReplicatorProps) {}
 
   public connected = false;
-  public context: EchoReplicatorContext | undefined = undefined;
+  public context: AutomergeReplicatorContext | undefined = undefined;
   public connections = new Set<TestReplicatorConnection>();
 
-  async connect(context: EchoReplicatorContext): Promise<void> {
+  async connect(context: AutomergeReplicatorContext): Promise<void> {
     log('connect', { peerId: context.peerId });
     this.context = context;
     this.connected = true;
@@ -153,7 +153,7 @@ export class TestReplicator implements EchoReplicator {
   }
 }
 
-export class TestReplicatorConnection implements ReplicatorConnection {
+export class TestReplicatorConnection implements AutomergeReplicatorConnection {
   public otherSide: TestReplicatorConnection | undefined = undefined;
   public owningReplicator: TestReplicator | undefined = undefined;
 

@@ -14,7 +14,11 @@ import { ComplexSet, defaultMap } from '@dxos/util';
 
 import { createIdFromSpaceKey } from '../common/space-id';
 
-import { type EchoReplicator, type EchoReplicatorContext, type ShouldAdvertiseProps } from './echo-replicator';
+import {
+  type AutomergeReplicator,
+  type AutomergeReplicatorContext,
+  type ShouldAdvertiseProps,
+} from './echo-replicator';
 import { MeshReplicatorConnection } from './mesh-echo-replicator-connection';
 import { getSpaceIdFromCollectionId } from './space-collection';
 
@@ -23,7 +27,7 @@ import { getSpaceIdFromCollectionId } from './space-collection';
 /**
  * Used to replicate with other peers over the network.
  */
-export class MeshEchoReplicator implements EchoReplicator {
+export class MeshEchoReplicator implements AutomergeReplicator {
   /**
    * We might have multiple connections open with a peer (one per space), but there'll be only one enabled
    * connection at any given moment, because there's a single repo for all the spaces.
@@ -41,9 +45,9 @@ export class MeshEchoReplicator implements EchoReplicator {
    */
   private readonly _authorizedDevices = new Map<SpaceId, ComplexSet<PublicKey>>();
 
-  private _context: EchoReplicatorContext | null = null;
+  private _context: AutomergeReplicatorContext | null = null;
 
-  async connect(context: EchoReplicatorContext): Promise<void> {
+  async connect(context: AutomergeReplicatorContext): Promise<void> {
     this._context = context;
   }
 
