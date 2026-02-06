@@ -320,11 +320,6 @@
         },
         {
           "type": "json",
-          "path": "packages/core/echo/indexing/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/core/functions/package.json",
           "jsonpath": "$.version"
         },

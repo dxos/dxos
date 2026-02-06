@@ -116,9 +116,6 @@
     },
     {
       "path": "../index-core"
-    },
-    {
-      "path": "../indexing"
     }
   ]
 }
