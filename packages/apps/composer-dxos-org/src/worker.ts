@@ -2,6 +2,21 @@
 // Copyright 2026 DXOS.org
 //
 
+/**
+ * Temporary Cloudflare Worker for composer.dxos.org.
+ *
+ * This worker serves iOS/Android app verification files (AASA, assetlinks.json) and
+ * redirects all other requests to composer.space.
+ *
+ * TODO(wittjosiah): Consolidate into composer-app worker.
+ *   This is a temporary separate deployment. The long-term solution is to:
+ *   1. Add this logic to packages/apps/composer-app/src/functions/_worker.ts
+ *   2. Check request hostname to route composer.dxos.org vs composer.space
+ *   3. Add composer.dxos.org as a custom domain in Cloudflare Pages
+ *   4. Delete this package (packages/apps/composer-dxos-org)
+ *   This consolidation is blocked until we can deploy to composer.space production.
+ */
+
 export interface Env {
   APPLE_TEAM_ID: string;
   // ANDROID_SHA256_FINGERPRINTS: string; // JSON array - uncomment when enabling Android support
