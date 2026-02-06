@@ -77,12 +77,14 @@ export const QueryRequest = Schema.Struct({
    *
    * Must not be used with `position`.
    */
-  cursor: Schema.optional(FeedCursor) /**
+  cursor: Schema.optional(FeedCursor),
+
+  /**
    * Get changes following this position.
    * Returned blocks have strictly greater position than this.
    *
    * Must not be used with `cursor`.
-   */,
+   */
   position: Schema.optional(Schema.Number),
 
   /**
