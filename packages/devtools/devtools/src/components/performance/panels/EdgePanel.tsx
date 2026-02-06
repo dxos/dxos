@@ -23,7 +23,7 @@ export const EdgePanel = ({ edge, ...props }: CustomPanelProps<{ edge?: QueryEdg
 
   const [edgeStatus, setEdgeStatus] = useState<EdgeStatus | undefined>();
   const handleRefresh = async () => {
-    const status = await client.edge.getStatus();
+    const status = await client.edge.http.getStatus();
     setEdgeStatus(status);
   };
 
@@ -35,7 +35,7 @@ export const EdgePanel = ({ edge, ...props }: CustomPanelProps<{ edge?: QueryEdg
     const ctx = new Context();
     scheduleTask(ctx, async () => {
       await asyncTimeout(client.spaces.waitUntilReady(), IDENTITY_WAIT_TIMEOUT);
-      client.edge.setIdentity(createEdgeIdentity(client));
+      client.edge.http.setIdentity(createEdgeIdentity(client));
       await handleRefresh();
     });
 
