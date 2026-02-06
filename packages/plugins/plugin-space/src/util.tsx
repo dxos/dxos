@@ -532,11 +532,13 @@ export const constructObjectActions = ({
   capabilities,
   deletable = true,
   navigable = false,
+  shareableLinkOrigin,
 }: {
   object: Obj.Unknown;
   graph: Graph.ReadableGraph;
   resolve: (typename: string) => Record<string, any>;
   capabilities: CapabilityManager.CapabilityManager;
+  shareableLinkOrigin: string;
   deletable?: boolean;
   navigable?: boolean;
 }) => {
@@ -694,7 +696,7 @@ export const constructObjectActions = ({
             type: Node.ActionType,
             data: () =>
               Effect.promise(async () => {
-                const url = `${window.location.origin}/${db.spaceId}/${Obj.getDXN(object).toString()}`;
+                const url = `${shareableLinkOrigin}/${db.spaceId}/${Obj.getDXN(object).toString()}`;
                 await navigator.clipboard.writeText(url);
               }),
             properties: {

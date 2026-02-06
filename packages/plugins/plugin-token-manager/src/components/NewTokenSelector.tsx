@@ -21,7 +21,14 @@ import { isTauri } from '@dxos/util';
 
 import { OAUTH_PRESETS, type OAuthPreset } from '../defs';
 import { meta } from '../meta';
-import { createTauriOAuthInitiator, createTauriServerProvider, openTauriBrowser, performOAuthFlow } from '../oauth';
+import {
+  createTauriOAuthInitiator,
+  createTauriServerProvider,
+  isMobilePlatform,
+  openTauriBrowser,
+  performMobileOAuthFlow,
+  performOAuthFlow,
+} from '../oauth';
 
 const GoogleUserInfo = Schema.Struct({
   email: Schema.optional(Schema.String),
@@ -119,18 +126,30 @@ export const NewTokenSelector = ({ spaceId, onAddAccessToken, onCustomToken }: N
     tokenMap.set(token.id, token);
 
     if (isTauri()) {
-      // Tauri path: Use shared OAuth flow with Tauri implementations.
-      // Uses Rust to make HTTP request to Edge (bypasses browser Origin header restrictions).
+      // Tauri path: Check if mobile platform.
+      const oauthEffect = Effect.gen(function* () {
+        const isMobile = yield* isMobilePlatform();
+        if (isMobile) {
+          yield* performMobileOAuthFlow({
+            preset,
+            accessToken: token,
+            edgeClient,
+            spaceId,
+          });
+        } else {
+          yield* performOAuthFlow(
+            preset,
+            token,
+            edgeClient,
+            spaceId,
+            createTauriServerProvider(),
+            openTauriBrowser,
+            createTauriOAuthInitiator(),
+          );
+        }
+      });
       await runAndForwardErrors(
-        performOAuthFlow(
-          preset,
-          token,
-          edgeClient,
-          spaceId,
-          createTauriServerProvider(),
-          openTauriBrowser,
-          createTauriOAuthInitiator(),
-        ).pipe(
+        oauthEffect.pipe(
           Effect.tap(() => enrichGoogleTokenWithEmail(token)),
           Effect.tap(() => onAddAccessToken(token)),
           Effect.catchAll((error) => Effect.sync(() => log.catch(error))),

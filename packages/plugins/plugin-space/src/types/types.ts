@@ -25,12 +25,19 @@ export const SPACE_TYPE = 'dxos.org/type/Space';
 
 export type SpacePluginOptions = {
   /**
-   * Base URL for the invitation link.
+   * Origin used for shareable links (object copy-link and invitation base).
+   * Defaults to window.location.origin.
    */
-  invitationUrl?: string;
+  shareableLinkOrigin?: string;
 
   /**
-   * Query parameter for the invitation code.
+   * Path appended to shareableLinkOrigin to form the invitation base URL.
+   * Defaults to '/'.
+   */
+  invitationPath?: string;
+
+  /**
+   * Query parameter name for the invitation code.
    */
   invitationProp?: string;
 

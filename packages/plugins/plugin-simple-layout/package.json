@@ -39,7 +39,8 @@
     "@dxos/util": "workspace:*",
     "@effect-atom/atom": "catalog:",
     "@effect-atom/atom-react": "catalog:",
-    "@radix-ui/react-context": "catalog:"
+    "@radix-ui/react-context": "catalog:",
+    "@tauri-apps/plugin-deep-link": "catalog:"
   },
   "devDependencies": {
     "@dxos/app-graph": "workspace:*",

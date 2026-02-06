@@ -16,6 +16,8 @@ import { type AccessToken } from '@dxos/types';
 
 import { type OAuthPreset } from '../defs';
 
+import { getEdgeAuthHeader } from './edge-auth-header';
+
 export const OAUTH_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes.
 
 /**
@@ -76,6 +78,8 @@ export type OAuthInitiateParams = {
   accessTokenId: string;
   redirectOrigin: string;
   authHeader?: string;
+  /** If true, Edge returns a 302 redirect to composer:// instead of JavaScript. Used for mobile. */
+  nativeAppRedirect?: boolean;
 };
 
 /**
@@ -161,11 +165,7 @@ export const performOAuthFlow = Effect.fn(function* (
   const initiator = oauthInitiator ?? createDefaultOAuthInitiator(edgeClient);
 
   yield* Effect.gen(function* () {
-    // Get auth header if needed.
-    let authHeader: string | undefined;
-    if ((edgeClient as any)['_authHeader']) {
-      authHeader = (edgeClient as any)['_authHeader'];
-    }
+    const authHeader = getEdgeAuthHeader(edgeClient);
 
     // Initiate OAuth flow.
     const authUrl = yield* initiator.initiate({
