@@ -1,0 +1,13 @@
+{
+  "identifier": "ios-capability",
+  "platforms": [
+    "iOS"
+  ],
+  "windows": [
+    "main"
+  ],
+  "permissions": [
+    "web-auth:default",
+    "web-auth:allow-authenticate"
+  ]
+}

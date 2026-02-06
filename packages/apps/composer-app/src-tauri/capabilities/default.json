@@ -27,8 +27,6 @@
     "opener:default",
     "opener:allow-open-url",
     "opener:allow-default-urls",
-    "shell:allow-open",
-    "web-auth:default",
-    "web-auth:allow-authenticate"
+    "shell:allow-open"
   ]
 }
