@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 
 import { DeferredTask, scheduleMicroTask, synchronized } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf/stream';
-import { Context, Resource } from '@dxos/context';
+import { type Context, Resource } from '@dxos/context';
 import { raise } from '@dxos/debug';
 import { QueryAST } from '@dxos/echo-protocol';
 import { type RuntimeProvider } from '@dxos/effect';

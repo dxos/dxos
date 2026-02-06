@@ -166,12 +166,7 @@ export class AutomergeHost extends Resource {
 
   private _sharePolicyChangedTask?: DeferredTask;
 
-  constructor({
-    db,
-    dataMonitor,
-    peerIdProvider,
-    getSpaceKeyByRootDocumentId,
-  }: AutomergeHostProps) {
+  constructor({ db, dataMonitor, peerIdProvider, getSpaceKeyByRootDocumentId }: AutomergeHostProps) {
     super();
     this._db = db;
     this._storage = new LevelDBStorageAdapter({
