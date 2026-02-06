@@ -42,46 +42,11 @@ export default Capability.makeModule(
       }
     };
 
-    /**
-     * Handle navigation events (initial load and popstate).
-     */
-    const handleNavigation = () => {
-      handlePathNavigation(window.location.pathname);
-    };
-
-    // TODO(wittjosiah): Instead of hardcoding redirect paths, we should either:
-    //   1. Validate that the workspace exists in the graph before navigating.
-    //   2. Implement more structured routing with explicit route definitions.
-    /**
-     * Check if a path is a special redirect path that shouldn't be navigated to.
-     * These paths are handled by other systems (e.g., OAuth).
-     */
-    const isRedirectPath = (pathname: string): boolean => {
-      return pathname.startsWith('/redirect/');
-    };
-
-    /**
-     * Handle deep link URL from Tauri.
-     * Parses the URL and navigates to the path (unless it's a redirect path).
-     */
-    const handleDeepLink = (urlString: string) => {
-      log.info('[UrlHandler] Deep link received', { url: urlString });
-      try {
-        const url = new URL(urlString);
-        // Skip redirect paths - they're handled by other systems (e.g., OAuth).
-        if (isRedirectPath(url.pathname)) {
-          log.info('[UrlHandler] Skipping redirect path (handled elsewhere)', { pathname: url.pathname });
-          return;
-        }
-        handlePathNavigation(url.pathname);
-      } catch (error) {
-        log.warn('[UrlHandler] Failed to parse deep link URL', { urlString, error });
-      }
-    };
+    const onNavigation = handleNavigation(handlePathNavigation);
 
     // Handle initial URL and listen for browser navigation.
-    yield* Effect.sync(() => handleNavigation());
-    window.addEventListener('popstate', handleNavigation);
+    yield* Effect.sync(() => onNavigation());
+    window.addEventListener('popstate', onNavigation);
 
     // Set up deep link listener for mobile Tauri.
     let unlistenDeepLink: (() => void) | undefined;
@@ -95,7 +60,7 @@ export default Capability.makeModule(
           if (launchUrls && launchUrls.length > 0) {
             log.info('[UrlHandler] App launched with deep links', { urls: launchUrls });
             for (const url of launchUrls) {
-              handleDeepLink(url);
+              handleDeepLink(url, handlePathNavigation);
             }
           }
 
@@ -103,7 +68,7 @@ export default Capability.makeModule(
           unlistenDeepLink = await onOpenUrl((urls) => {
             log.info('[UrlHandler] Deep links received', { urls });
             for (const url of urls) {
-              handleDeepLink(url);
+              handleDeepLink(url, handlePathNavigation);
             }
           });
 
@@ -129,14 +94,7 @@ export default Capability.makeModule(
           lastWorkspace = workspace;
           lastActive = active;
 
-          // Build path: root is represented as /, other workspaces as /{workspace}.
-          let path: string;
-          if (workspace === Node.RootId) {
-            path = active ? `/${Node.RootId}/${active}` : '/';
-          } else {
-            path = active ? `/${workspace}/${active}` : `/${workspace}`;
-          }
-
+          const path = pathFromState(workspace, active);
           if (window.location.pathname !== path) {
             history.pushState(null, '', `${path}${window.location.search}`);
           }
@@ -146,10 +104,56 @@ export default Capability.makeModule(
 
     return Capability.contributes(Common.Capability.Null, null, () =>
       Effect.sync(() => {
-        window.removeEventListener('popstate', handleNavigation);
+        window.removeEventListener('popstate', onNavigation);
         unsubscribe();
         unlistenDeepLink?.();
       }),
     );
   }),
 );
+
+// TODO(wittjosiah): Instead of hardcoding redirect paths, we should either:
+//   1. Validate that the workspace exists in the graph before navigating.
+//   2. Implement more structured routing with explicit route definitions.
+/**
+ * Check if a path is a special redirect path that shouldn't be navigated to.
+ * These paths are handled by other systems (e.g., OAuth).
+ */
+const isRedirectPath = (pathname: string): boolean => pathname.startsWith('/redirect/');
+
+/**
+ * Build pathname from layout state. Root workspace is / or /root/{active}.
+ */
+const pathFromState = (workspace: string, active: string | undefined): string =>
+  workspace === Node.RootId
+    ? active
+      ? `/${Node.RootId}/${active}`
+      : '/'
+    : active
+      ? `/${workspace}/${active}`
+      : `/${workspace}`;
+
+/**
+ * Returns a handler for navigation events (initial load and popstate) that navigates to current pathname.
+ */
+const handleNavigation =
+  (navigate: (pathname: string) => void): (() => void) =>
+  () =>
+    navigate(window.location.pathname);
+
+/**
+ * Handle deep link URL from Tauri. Parses the URL and calls navigate unless it's a redirect path.
+ */
+const handleDeepLink = (urlString: string, navigate: (pathname: string) => void): void => {
+  log.info('[UrlHandler] Deep link received', { url: urlString });
+  try {
+    const url = new URL(urlString);
+    if (isRedirectPath(url.pathname)) {
+      log.info('[UrlHandler] Skipping redirect path (handled elsewhere)', { pathname: url.pathname });
+      return;
+    }
+    navigate(url.pathname);
+  } catch (error) {
+    log.warn('[UrlHandler] Failed to parse deep link URL', { urlString, error });
+  }
+};

@@ -10,7 +10,6 @@ import { invariant } from '@dxos/invariant';
 import { DeckCapabilities, type DeckStateProps, defaultDeck } from '../../types';
 
 // TODO(wittjosiah): Cleanup the url handling. May justify introducing routing capabilities.
-// TODO(wittjosiah): Support Tauri native deep links (e.g., composer.dxos.org/workspace/123 opens workspace in native app).
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const { invokeSync } = yield* Capability.get(Common.Capability.OperationInvoker);
