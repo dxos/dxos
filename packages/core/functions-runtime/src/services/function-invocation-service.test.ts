@@ -19,7 +19,6 @@ const TestLayer = Layer.mergeAll(AiService.model('@anthropic/claude-opus-4-0')).
   Layer.provideMerge(
     Layer.mergeAll(
       TestDatabaseLayer({
-        indexing: { vector: true },
         types: [],
       }),
       FunctionInvocationServiceLayer,

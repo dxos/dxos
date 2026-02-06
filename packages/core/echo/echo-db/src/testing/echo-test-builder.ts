@@ -14,7 +14,7 @@ import { waitForCondition } from '@dxos/async';
 import { type Context, Resource } from '@dxos/context';
 import { type Obj, type Type } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
-import { EchoHost, type EchoHostIndexingConfig } from '@dxos/echo-pipeline';
+import { EchoHost } from '@dxos/echo-pipeline';
 import { createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -36,7 +36,6 @@ type OpenDatabaseOptions = {
 };
 
 type PeerOptions = {
-  indexing?: Partial<EchoHostIndexingConfig>;
   types?: Type.Entity.Any[];
   assignQueuePositions?: boolean;
 
@@ -85,7 +84,6 @@ export class EchoTestBuilder extends Resource {
 
 export class EchoTestPeer extends Resource {
   private readonly _kv: LevelDB;
-  private readonly _indexing: Partial<EchoHostIndexingConfig>;
   private readonly _types: Type.Entity.Any[];
   private readonly _assignQueuePositions?: boolean;
   private readonly _clients = new Set<EchoClient>();
@@ -100,10 +98,9 @@ export class EchoTestPeer extends Resource {
     never
   >;
 
-  constructor({ kv = createTestLevel(), indexing = {}, types, assignQueuePositions, runtime }: PeerOptions) {
+  constructor({ kv = createTestLevel(), types, assignQueuePositions, runtime }: PeerOptions) {
     super();
     this._kv = kv;
-    this._indexing = indexing;
     // Include Expando as default type for tests that use Obj.make(TestSchema.Expando, ...).
     this._types = [TestSchema.Expando, ...(types ?? [])];
     this._assignQueuePositions = assignQueuePositions;
@@ -122,7 +119,6 @@ export class EchoTestPeer extends Resource {
     }
     this._echoHost = new EchoHost({
       kv: this._kv,
-      indexing: this._indexing,
       runtime: this._managedRuntime.runtimeEffect,
       localQueues: true,
       assignQueuePositions: this._assignQueuePositions,

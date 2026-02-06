@@ -50,7 +50,6 @@ const TestLayer = Layer.mergeAll(
       TestAiService(),
       TestDatabaseLayer({
         spaceKey: 'fixed',
-        indexing: { vector: true },
         types: [SpaceProperties, Collection.Collection, Blueprint.Blueprint, Markdown.Document, HasSubject.HasSubject],
       }),
       CredentialsService.configuredLayer([]),
