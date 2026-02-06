@@ -8,7 +8,6 @@ export type * from './echo';
 export type * from './halo';
 export * from './invitations';
 export * from './service';
-export * from './service-buf';
 export type * from './shell';
 export * from './space';
 export * from './timeouts';
