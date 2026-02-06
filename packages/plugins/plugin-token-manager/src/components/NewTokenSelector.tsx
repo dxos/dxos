@@ -12,6 +12,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 
 import { type Key, Obj } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
+import { withAuthorization } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { type OAuthFlowResult } from '@dxos/protocols';
 import { useEdgeClient } from '@dxos/react-edge-client';
@@ -30,6 +31,7 @@ import {
   performOAuthFlow,
 } from '../oauth';
 
+/** Response from Google OAuth2 userinfo endpoint. */
 const GoogleUserInfo = Schema.Struct({
   email: Schema.optional(Schema.String),
 });
@@ -43,9 +45,15 @@ const enrichGoogleTokenWithEmail = (token: AccessToken.AccessToken) =>
       return;
     }
 
+    const httpClient = yield* HttpClient.HttpClient.pipe(Effect.map(withAuthorization(token.token, 'Bearer')));
+
+    // TODO(wittjosiah): Without this, executing the request results in CORS errors when traced.
+    //  Is this an issue on Google's side or is it a bug in `@effect/platform`?
+    //  https://github.com/Effect-TS/effect/issues/4568
+    const httpClientWithTracerDisabled = httpClient.pipe(HttpClient.withTracerDisabledWhen(() => true));
+
     const userInfo = yield* HttpClientRequest.get('https://www.googleapis.com/oauth2/v3/userinfo').pipe(
-      HttpClientRequest.setHeader('Authorization', `Bearer ${token.token}`),
-      HttpClient.execute,
+      httpClientWithTracerDisabled.execute,
       Effect.flatMap(HttpClientResponse.schemaBodyJson(GoogleUserInfo)),
       Effect.scoped,
     );
