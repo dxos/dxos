@@ -12,7 +12,7 @@ tasks:
     deps:
       - compile-node
   compile-node:
-    command: dx-compile
+    command: pnpm exec dx-compile
     args:
       - '--entryPoint=src/config/tailwind.ts'
       - '--entryPoint=src/plugins/esbuild-plugin.ts'
@@ -30,5 +30,8 @@ tasks:
     outputs:
       - dist/plugin/
   test:
+    deps:
+      - compile-node
     inputs:
       - .storybook/*
+      - /tools/storybook-react/.storybook/main.ts

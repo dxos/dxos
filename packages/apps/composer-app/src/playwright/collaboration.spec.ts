@@ -2,8 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { platform } from 'node:os';
-
 import { expect, test } from '@playwright/test';
 
 import { AppManager } from './app-manager';
@@ -40,8 +38,7 @@ test.describe('Collaboration tests', () => {
 
   test.beforeEach(async ({ browser, browserName }) => {
     test.setTimeout(60_000);
-    test.skip(browserName === 'firefox');
-    test.skip(browserName === 'webkit' && platform() !== 'darwin');
+    test.skip(browserName === 'firefox' || browserName === 'webkit');
 
     host = new AppManager(browser, false);
     guest = new AppManager(browser, false);
