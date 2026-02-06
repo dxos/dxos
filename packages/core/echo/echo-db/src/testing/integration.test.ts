@@ -104,6 +104,8 @@ describe('Integration tests', () => {
 
     await peer.reload();
     await using db2 = await peer.openLastDatabase();
+    // Rebuild index after reload since in-memory SQLite is recreated.
+    await db2.flush({ indexes: true });
     const objects = await db2.query(Query.select(Filter.type(TestSchema.Person))).run();
     expect(objects.length).to.eq(NUM_OBJECTS);
   });
