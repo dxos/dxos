@@ -31,8 +31,8 @@ import { bufferToArray, setDeep } from '@dxos/util';
 
 import {
   type AutomergeReplicator,
-  type AutomergeReplicatorContext,
   type AutomergeReplicatorConnection,
+  type AutomergeReplicatorContext,
   type ShouldAdvertiseProps,
   type ShouldSyncCollectionProps,
   getSpaceIdFromCollectionId,

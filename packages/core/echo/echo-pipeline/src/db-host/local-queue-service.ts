@@ -13,7 +13,6 @@ import { type FeedStore } from '@dxos/feed';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
 import { QueueProtocol } from '@dxos/protocols';
-import type { SqlTransaction } from '@dxos/sql-sqlite';
 import {
   type DeleteFromQueueRequest,
   type InsertIntoQueueRequest,
@@ -21,6 +20,7 @@ import {
   type QueueQueryResult,
   type QueueService,
 } from '@dxos/protocols/proto/dxos/client/services';
+import type { SqlTransaction } from '@dxos/sql-sqlite';
 
 /**
  * Writes queue data to a local FeedStore.
@@ -29,7 +29,10 @@ export class LocalQueueServiceImpl implements QueueService {
   #runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransaction.SqlTransaction>;
   #feedStore: FeedStore;
 
-  constructor(runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransaction.SqlTransaction>, feedStore: FeedStore) {
+  constructor(
+    runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransaction.SqlTransaction>,
+    feedStore: FeedStore,
+  ) {
     this.#runtime = runtime;
     this.#feedStore = feedStore;
   }
@@ -78,7 +81,9 @@ export class LocalQueueServiceImpl implements QueueService {
         const messages = objects!.map((obj) => {
           const data = structuredClone(obj);
           if (data[ATTR_META]?.keys?.find((key: ForeignKey) => key.source === QueueProtocol.KEY_QUEUE_POSITION)) {
-            data[ATTR_META].keys = data[ATTR_META].keys.filter((key: ForeignKey) => key.source !== QueueProtocol.KEY_QUEUE_POSITION);
+            data[ATTR_META].keys = data[ATTR_META].keys.filter(
+              (key: ForeignKey) => key.source !== QueueProtocol.KEY_QUEUE_POSITION,
+            );
           }
 
           return {

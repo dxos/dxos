@@ -24,10 +24,10 @@ import { trace } from '@dxos/tracing';
 
 import {
   AutomergeHost,
+  type AutomergeReplicator,
   type CreateDocOptions,
   EchoDataMonitor,
   type EchoDataStats,
-  type AutomergeReplicator,
   type LoadDocOptions,
   type PeerIdProvider,
   type RootDocumentSpaceKeyProvider,

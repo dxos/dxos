@@ -3,9 +3,11 @@
 //
 
 import type * as SqlClient from '@effect/sql/SqlClient';
-import type { SqlTransaction } from '@dxos/sql-sqlite';
 import * as Effect from 'effect/Effect';
-import { QueueProtocol } from '@dxos/protocols';
+
+import { type QueueProtocol } from '@dxos/protocols';
+import type { SqlTransaction } from '@dxos/sql-sqlite';
+
 import type { FeedStore } from './feed-store';
 
 type AppendRequest = QueueProtocol.AppendRequest;
@@ -39,7 +41,9 @@ export class SyncServer {
   /**
    * Receive a message from a client. Handles QueryRequest and AppendRequest; sends response via sendMessage with correct peer ids.
    */
-  handleMessage(message: ProtocolMessage): Effect.Effect<void, unknown, SqlClient.SqlClient | SqlTransaction.SqlTransaction> {
+  handleMessage(
+    message: ProtocolMessage,
+  ): Effect.Effect<void, unknown, SqlClient.SqlClient | SqlTransaction.SqlTransaction> {
     const self = this;
     const recipientPeerId = message.senderPeerId;
     const withPeerIds = (payload: Omit<ProtocolMessage, 'senderPeerId' | 'recipientPeerId'>): ProtocolMessage =>
@@ -54,7 +58,7 @@ export class SyncServer {
         return Effect.gen(function* () {
           const response: QueryResponse = yield* self.#feedStore.query(req);
           yield* self.#sendMessage(withPeerIds({ _tag: 'QueryResponse', ...response }));
-        }        ).pipe(
+        }).pipe(
           Effect.catchAll((err: unknown) =>
             self.#sendMessage(
               withPeerIds({

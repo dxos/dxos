@@ -16,7 +16,7 @@ import { createBuf } from '@dxos/protocols/buf';
 import type { Peer } from '@dxos/protocols/proto/dxos/edge/messenger';
 import { openAndClose } from '@dxos/test-utils';
 
-import type { AutomergeReplicatorContext, AutomergeReplicatorConnection } from '../automerge';
+import type { AutomergeReplicatorConnection, AutomergeReplicatorContext } from '../automerge';
 
 import { EchoEdgeReplicator } from './echo-edge-replicator';
 

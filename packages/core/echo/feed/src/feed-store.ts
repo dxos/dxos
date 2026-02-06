@@ -5,12 +5,12 @@
 import * as SqlClient from '@effect/sql/SqlClient';
 import type * as SqlError from '@effect/sql/SqlError';
 import * as Effect from 'effect/Effect';
-import { SpaceId } from '@dxos/keys';
-import { SqlTransaction } from '@dxos/sql-sqlite';
 
 import { Event } from '@dxos/async';
-
+import { assertArgument } from '@dxos/invariant';
+import { type SpaceId } from '@dxos/keys';
 import { QueueProtocol } from '@dxos/protocols';
+import { SqlTransaction } from '@dxos/sql-sqlite';
 
 type AppendRequest = QueueProtocol.AppendRequest;
 type AppendResponse = QueueProtocol.AppendResponse;
@@ -22,7 +22,6 @@ type QueryRequest = QueueProtocol.QueryRequest;
 type QueryResponse = QueueProtocol.QueryResponse;
 type SubscribeRequest = QueueProtocol.SubscribeRequest;
 type SubscribeResponse = QueueProtocol.SubscribeResponse;
-import { assertArgument } from '@dxos/invariant';
 
 export interface FeedStoreOptions {
   /**
@@ -196,7 +195,12 @@ export class FeedStore {
         }
 
         if (feedIds !== undefined && feedIds.length === 0) {
-          return { requestId: request.requestId, blocks: [], nextCursor: encodeCursor(validCursorToken, -1), hasMore: false };
+          return {
+            requestId: request.requestId,
+            blocks: [],
+            nextCursor: encodeCursor(validCursorToken, -1),
+            hasMore: false,
+          };
         }
 
         // Fetch Blocks

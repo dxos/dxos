@@ -34,7 +34,7 @@ import {
   type JoinSpaceResponseBody,
   type ObjectId,
   type PostNotarizationRequestBody,
-  QueueProtocol,
+  type QueueProtocol,
   type RecoverIdentityRequest,
   type RecoverIdentityResponseBody,
   type UploadFunctionRequest,

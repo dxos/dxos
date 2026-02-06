@@ -3,12 +3,14 @@
 //
 
 import type * as SqlClient from '@effect/sql/SqlClient';
-import type { SpaceId } from '@dxos/keys';
-import type { SqlTransaction } from '@dxos/sql-sqlite';
-import { Array } from 'effect';
+import * as Array from 'effect/Array';
 import * as Deferred from 'effect/Deferred';
 import * as Effect from 'effect/Effect';
-import { QueueProtocol } from '@dxos/protocols';
+
+import type { SpaceId } from '@dxos/keys';
+import { type QueueProtocol } from '@dxos/protocols';
+import type { SqlTransaction } from '@dxos/sql-sqlite';
+
 import type { FeedStore } from './feed-store';
 
 type AppendRequest = QueueProtocol.AppendRequest;

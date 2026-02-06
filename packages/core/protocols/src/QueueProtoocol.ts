@@ -14,6 +14,7 @@ export {
 export const KEY_QUEUE_POSITION = 'dxos.org/key/queue-position';
 
 import * as Schema from 'effect/Schema';
+
 import { SpaceId } from '@dxos/keys';
 
 export const FeedCursor = Schema.String.pipe(Schema.brand('@dxos/feed/FeedCursor'));
@@ -76,12 +77,12 @@ export const QueryRequest = Schema.Struct({
    *
    * Must not be used with `position`.
    */
-  cursor: Schema.optional(FeedCursor),  /**
+  cursor: Schema.optional(FeedCursor) /**
    * Get changes following this position.
    * Returned blocks have strictly greater position than this.
    *
    * Must not be used with `cursor`.
-   */
+   */,
   position: Schema.optional(Schema.Number),
 
   /**

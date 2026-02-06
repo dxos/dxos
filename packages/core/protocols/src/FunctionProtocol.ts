@@ -7,7 +7,7 @@ import type * as QueryProto from '@dxos/protocols/proto/dxos/echo/query';
 import type * as DataProto from '@dxos/protocols/proto/dxos/echo/service';
 
 import { type EdgeFunctionEnv } from './edge';
-import * as QueueProtocol from './QueueProtoocol';
+import type * as QueueProtocol from './QueueProtoocol';
 
 //
 // Function protocol definition

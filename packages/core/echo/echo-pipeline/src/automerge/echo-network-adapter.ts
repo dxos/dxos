@@ -23,8 +23,8 @@ import { createIdFromSpaceKey } from '../common/space-id';
 
 import {
   type AutomergeReplicator,
-  type RemoteDocumentExistenceCheckProps,
   type AutomergeReplicatorConnection,
+  type RemoteDocumentExistenceCheckProps,
   type ShouldAdvertiseProps,
   type ShouldSyncCollectionProps,
 } from './echo-replicator';

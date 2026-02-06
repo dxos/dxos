@@ -3,18 +3,20 @@
 //
 
 import type * as SqlClient from '@effect/sql/SqlClient';
-import { describe, expect, it, test } from '@effect/vitest';
+import { describe, expect, test } from '@effect/vitest';
+import * as Array from 'effect/Array';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
-import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
-import { SqlTransaction } from '@dxos/sql-sqlite';
-import { layerMemory } from '@dxos/sql-sqlite/platform';
-import { Array } from 'effect';
 
+import { Resource } from '@dxos/context';
 import { RuntimeProvider } from '@dxos/effect';
 import { ObjectId, SpaceId } from '@dxos/keys';
-
 import { QueueProtocol } from '@dxos/protocols';
+import { SqlTransaction } from '@dxos/sql-sqlite';
+import { layerMemory } from '@dxos/sql-sqlite/platform';
+import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
+
 import { FeedStore } from './feed-store';
 import { SyncClient } from './sync-client';
 import { SyncServer } from './sync-server';
@@ -24,10 +26,9 @@ const WellKnownNamespaces = QueueProtocol.WellKnownNamespaces;
 type AppendRequest = QueueProtocol.AppendRequest;
 type Block = QueueProtocol.Block;
 type QueryRequest = QueueProtocol.QueryRequest;
-import { Layer } from 'effect';
-import { Resource } from '@dxos/context';
 import { range } from '@dxos/util';
-import { Statement } from '@effect/sql';
+
+import * as Statement from '@effect/sql/Statement';
 
 const LOG_SQL = false;
 
@@ -93,7 +94,7 @@ class Peer extends Resource {
 
   get syncServer() {
     return this.#server;
-  } 
+  }
 
   protected override async _open(): Promise<void> {
     await this.#feedStore.migrate().pipe(RuntimeProvider.runPromise(this.#runtime.runtimeEffect));
@@ -146,13 +147,15 @@ class TestBuilder extends Resource {
     super();
     this.#spaceId = spaceId;
     this.#feedNamespace = feedNamespace;
-    this.#peers = Array.makeBy(numPeers, (i) =>
-      new Peer({
-        isServer: i === 0,
-        actorId: `peer-${i}`,
-        serverPeerId: i === 0 ? undefined : 'peer-0',
-        sendMessage: (msg) => this.#routeMessage(msg),
-      }),
+    this.#peers = Array.makeBy(
+      numPeers,
+      (i) =>
+        new Peer({
+          isServer: i === 0,
+          actorId: `peer-${i}`,
+          serverPeerId: i === 0 ? undefined : 'peer-0',
+          sendMessage: (msg) => this.#routeMessage(msg),
+        }),
     );
   }
 
@@ -207,9 +210,7 @@ class TestBuilder extends Resource {
     if (handleEffect == null) {
       return Effect.die(new Error(`Peer has no handler: ${msg.recipientPeerId}`));
     }
-    return Effect.promise(() =>
-      RuntimeProvider.runPromise(peer.runtime.runtimeEffect)(handleEffect),
-    );
+    return Effect.promise(() => RuntimeProvider.runPromise(peer.runtime.runtimeEffect)(handleEffect));
   }
 }
 

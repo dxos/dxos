@@ -4,7 +4,7 @@
 
 import { NotImplementedError, RuntimeServiceError } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
-import { type QueueProtocol, type EdgeFunctionEnv } from '@dxos/protocols';
+import { type EdgeFunctionEnv, type QueueProtocol } from '@dxos/protocols';
 
 export class QueueServiceImpl implements QueueProtocol.QueueService {
   constructor(

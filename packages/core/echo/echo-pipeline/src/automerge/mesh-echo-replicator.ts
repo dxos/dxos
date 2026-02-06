@@ -6,7 +6,7 @@ import type { CollectionId } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import * as TeleportAutomergeReplicator from '@dxos/teleport-extension-automerge-replicator';
+import type * as TeleportAutomergeReplicator from '@dxos/teleport-extension-automerge-replicator';
 import { ComplexSet, defaultMap } from '@dxos/util';
 
 import { createIdFromSpaceKey } from '../common/space-id';

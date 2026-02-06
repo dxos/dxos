@@ -11,8 +11,8 @@ import * as TeleportAutomergeReplicator from '@dxos/teleport-extension-automerge
 
 import type {
   AutomergeReplicator,
-  AutomergeReplicatorContext,
   AutomergeReplicatorConnection,
+  AutomergeReplicatorContext,
   ShouldAdvertiseProps,
   ShouldSyncCollectionProps,
 } from '../automerge';

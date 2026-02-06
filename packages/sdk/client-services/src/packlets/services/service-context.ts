@@ -28,6 +28,7 @@ import { log } from '@dxos/log';
 import { type SignalManager } from '@dxos/messaging';
 import { type SwarmNetworkManager } from '@dxos/network-manager';
 import { InvalidStorageVersionError, STORAGE_VERSION, trace } from '@dxos/protocols';
+import { QueueProtocol } from '@dxos/protocols';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
@@ -55,8 +56,8 @@ import {
   SpaceInvitationProtocol,
 } from '../invitations';
 import { DataSpaceManager, type DataSpaceManagerRuntimeProps, type SigningContext } from '../spaces';
+
 import { QueueSyncer } from './queue-syncer';
-import { QueueProtocol } from '@dxos/protocols';
 
 export type ServiceContextRuntimeProps = Pick<
   IdentityManagerProps,

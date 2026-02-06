@@ -9,9 +9,9 @@ import * as Layer from 'effect/Layer';
 
 import { ObjectId, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { QueueProtocol } from '@dxos/protocols';
 import { SqlTransaction } from '@dxos/sql-sqlite';
 
-import { QueueProtocol } from '@dxos/protocols';
 import { FeedStore } from './feed-store';
 
 const Block = QueueProtocol.Block;

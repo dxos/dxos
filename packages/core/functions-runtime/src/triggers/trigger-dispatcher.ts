@@ -32,7 +32,7 @@ import {
 import { Function, Trigger, type TriggerEvent } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { QueueProtocol, type ObjectId } from '@dxos/protocols';
+import { type ObjectId, QueueProtocol } from '@dxos/protocols';
 
 import { createInvocationPayload } from './input-builder';
 import { type TriggerState, TriggerStateStore } from './trigger-state-store';

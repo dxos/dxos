@@ -1,21 +1,23 @@
-import { Resource } from '@dxos/context';
-import { FeedStore, SyncClient } from '@dxos/feed';
-import { type QueueProtocol } from '@dxos/protocols';
-import { EdgeConnection, MessageSchema } from '@dxos/edge-client';
-import { Effect } from 'effect';
-import { createBuf } from '@dxos/protocols/buf';
+//
+// Copyright 2026 DXOS.org
+//
+
+import type * as SqlClient from '@effect/sql/SqlClient';
 import { Encoder, decode as cborXdecode } from 'cbor-x';
-import { bufferToArray } from '@dxos/util';
-import { EdgeService } from '@dxos/protocols';
-import { type SpaceId } from '@dxos/keys';
-import {
-  type Message as RouterMessage,
-  MessageSchema as RouterMessageSchema,
-} from '@dxos/protocols/buf/dxos/edge/messenger_pb';
+import * as Effect from 'effect/Effect';
+
 import { AsyncTask, scheduleTask } from '@dxos/async';
+import { Resource } from '@dxos/context';
+import { type EdgeConnection, MessageSchema } from '@dxos/edge-client';
 import { RuntimeProvider } from '@dxos/effect';
-import type { SqlClient } from '@effect/sql';
+import { type FeedStore, SyncClient } from '@dxos/feed';
+import { type SpaceId } from '@dxos/keys';
+import { type QueueProtocol } from '@dxos/protocols';
+import { EdgeService } from '@dxos/protocols';
+import { createBuf } from '@dxos/protocols/buf';
+import { type Message as RouterMessage } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import type { SqlTransaction } from '@dxos/sql-sqlite';
+import { bufferToArray } from '@dxos/util';
 
 const encoder = new Encoder({ tagUint8Array: false, useRecords: false });
 
