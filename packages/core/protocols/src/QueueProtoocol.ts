@@ -2,13 +2,23 @@
 // Copyright 2026 DXOS.org
 //
 
+export {
+  type QueueService,
+  type QueueQuery,
+  type QueueQueryResult as QueryResult,
+  type QueryQueueRequest,
+  type InsertIntoQueueRequest,
+  type DeleteFromQueueRequest,
+} from './proto/gen/dxos/client/services.js';
+
+export const KEY_QUEUE_POSITION = 'dxos.org/key/queue-position';
+
 import * as Schema from 'effect/Schema';
 import { SpaceId } from '@dxos/keys';
 
-// TODO(dmaretskyi): Move this all to procotols.
-
 export const FeedCursor = Schema.String.pipe(Schema.brand('@dxos/feed/FeedCursor'));
 export type FeedCursor = Schema.Schema.Type<typeof FeedCursor>;
+(FeedCursor as any).make = (value: string): FeedCursor => value as FeedCursor;
 
 export const Block = Schema.Struct({
   /**
@@ -37,6 +47,8 @@ export const Block = Schema.Struct({
   insertionId: Schema.optional(Schema.Number),
 });
 export interface Block extends Schema.Schema.Type<typeof Block> {}
+(Block as any).make = (input: Partial<Block> & Pick<Block, 'actorId' | 'sequence' | 'timestamp' | 'data'>): Block =>
+  Schema.decodeUnknownSync(Block)(input);
 
 //
 // RPC Schemas
@@ -64,9 +76,7 @@ export const QueryRequest = Schema.Struct({
    *
    * Must not be used with `position`.
    */
-  cursor: Schema.optional(FeedCursor),
-
-  /**
+  cursor: Schema.optional(FeedCursor),  /**
    * Get changes following this position.
    * Returned blocks have strictly greater position than this.
    *

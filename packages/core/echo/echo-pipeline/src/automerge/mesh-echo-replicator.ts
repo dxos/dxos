@@ -6,10 +6,7 @@ import type { CollectionId } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import {
-  type AutomergeReplicator,
-  type AutomergeReplicatorFactory,
-} from '@dxos/teleport-extension-automerge-replicator';
+import * as TeleportAutomergeReplicator from '@dxos/teleport-extension-automerge-replicator';
 import { ComplexSet, defaultMap } from '@dxos/util';
 
 import { createIdFromSpaceKey } from '../common/space-id';
@@ -68,7 +65,9 @@ export class MeshEchoReplicator implements AutomergeReplicator {
     this._context = null;
   }
 
-  createExtension(extensionFactory?: AutomergeReplicatorFactory): AutomergeReplicator {
+  createExtension(
+    extensionFactory?: TeleportAutomergeReplicator.AutomergeReplicatorFactory,
+  ): TeleportAutomergeReplicator.AutomergeReplicator {
     invariant(this._context);
 
     const connection: MeshReplicatorConnection = new MeshReplicatorConnection({

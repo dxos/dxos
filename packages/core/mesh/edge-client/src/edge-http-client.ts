@@ -34,8 +34,7 @@ import {
   type JoinSpaceResponseBody,
   type ObjectId,
   type PostNotarizationRequestBody,
-  type QueryResult,
-  type QueueQuery,
+  QueueProtocol,
   type RecoverIdentityRequest,
   type RecoverIdentityResponseBody,
   type UploadFunctionRequest,
@@ -209,9 +208,9 @@ export class EdgeHttpClient {
   public async queryQueue(
     subspaceTag: string,
     spaceId: SpaceId,
-    query: QueueQuery,
+    query: QueueProtocol.QueueQuery,
     args?: EdgeHttpGetArgs,
-  ): Promise<QueryResult> {
+  ): Promise<QueueProtocol.QueryResult> {
     const queueId = query.queueIds?.[0];
     invariant(queueId, 'queueId required');
     return this._call(

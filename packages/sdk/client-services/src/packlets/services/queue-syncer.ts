@@ -1,5 +1,6 @@
 import { Resource } from '@dxos/context';
-import { FeedStore, SyncClient, type ProtocolMessage } from '@dxos/feed';
+import { FeedStore, SyncClient } from '@dxos/feed';
+import { type QueueProtocol } from '@dxos/protocols';
 import { EdgeConnection, MessageSchema } from '@dxos/edge-client';
 import { Effect } from 'effect';
 import { createBuf } from '@dxos/protocols/buf';
@@ -97,7 +98,7 @@ export class QueueSyncer extends Resource {
         if (service !== EdgeService.QUEUE_REPLICATOR) {
           return;
         }
-        const payload = cborXdecode(msg.payload!.value) as ProtocolMessage;
+        const payload = cborXdecode(msg.payload!.value) as QueueProtocol.ProtocolMessage;
         this.#syncClient.handleMessage(payload);
       }),
     );
@@ -130,7 +131,7 @@ export class QueueSyncer extends Resource {
     this.#lastFullPoll = Date.now();
   }
 
-  #sendMessage(message: ProtocolMessage): Effect.Effect<void, unknown, never> {
+  #sendMessage(message: QueueProtocol.ProtocolMessage): Effect.Effect<void, unknown, never> {
     return Effect.gen(this, function* () {
       const encoded = encoder.encode(message);
       this.#edgeClient.send(
@@ -146,7 +147,7 @@ export class QueueSyncer extends Resource {
     });
   }
 
-  #getTargetServiceId(message: ProtocolMessage): string {
+  #getTargetServiceId(message: QueueProtocol.ProtocolMessage): string {
     // TODO(dmaretskyi): Perhaps in the future we will want to include the queue namespace here as well.
     //                   This would require putting it at the top level of the message.
     //                   For now, we let the edge router handle it.

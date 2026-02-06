@@ -11,8 +11,12 @@ import { ObjectId, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { SqlTransaction } from '@dxos/sql-sqlite';
 
+import { QueueProtocol } from '@dxos/protocols';
 import { FeedStore } from './feed-store';
-import { Block, WellKnownNamespaces } from './protocol';
+
+const Block = QueueProtocol.Block;
+type Block = QueueProtocol.Block;
+const WellKnownNamespaces = QueueProtocol.WellKnownNamespaces;
 
 const SqliteLayer = SqliteClient.layer({
   filename: ':memory:',

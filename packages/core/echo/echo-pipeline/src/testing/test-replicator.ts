@@ -7,7 +7,7 @@ import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import type { AutomergeProtocolMessage } from '@dxos/protocols';
-import { AutomergeReplicator, type AutomergeReplicatorFactory } from '@dxos/teleport-extension-automerge-replicator';
+import * as TeleportAutomergeReplicator from '@dxos/teleport-extension-automerge-replicator';
 
 import type {
   AutomergeReplicator,
@@ -176,8 +176,8 @@ export class TestReplicatorConnection implements AutomergeReplicatorConnection {
   }
 }
 
-export const testAutomergeReplicatorFactory: AutomergeReplicatorFactory = (params) => {
-  return new AutomergeReplicator(
+export const testAutomergeReplicatorFactory: TeleportAutomergeReplicator.AutomergeReplicatorFactory = (params) => {
+  return new TeleportAutomergeReplicator.AutomergeReplicator(
     {
       ...params[0],
       sendSyncRetryPolicy: {
@@ -190,7 +190,7 @@ export const testAutomergeReplicatorFactory: AutomergeReplicatorFactory = (param
   );
 };
 
-export const brokenAutomergeReplicatorFactory: AutomergeReplicatorFactory = (params) => {
+export const brokenAutomergeReplicatorFactory: TeleportAutomergeReplicator.AutomergeReplicatorFactory = (params) => {
   params[1]!.onSyncMessage = () => {
     throw new Error();
   };

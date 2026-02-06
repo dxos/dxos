@@ -10,17 +10,18 @@ import { SqlTransaction } from '@dxos/sql-sqlite';
 
 import { Event } from '@dxos/async';
 
-import {
-  type AppendRequest,
-  type AppendResponse,
-  type Block,
-  FeedCursor,
-  isWellKnownNamespace,
-  type QueryRequest,
-  type QueryResponse,
-  type SubscribeRequest,
-  type SubscribeResponse,
-} from './protocol';
+import { QueueProtocol } from '@dxos/protocols';
+
+type AppendRequest = QueueProtocol.AppendRequest;
+type AppendResponse = QueueProtocol.AppendResponse;
+type Block = QueueProtocol.Block;
+const FeedCursor = QueueProtocol.FeedCursor;
+type FeedCursor = QueueProtocol.FeedCursor;
+const isWellKnownNamespace = QueueProtocol.isWellKnownNamespace;
+type QueryRequest = QueueProtocol.QueryRequest;
+type QueryResponse = QueueProtocol.QueryResponse;
+type SubscribeRequest = QueueProtocol.SubscribeRequest;
+type SubscribeResponse = QueueProtocol.SubscribeResponse;
 import { assertArgument } from '@dxos/invariant';
 
 export interface FeedStoreOptions {

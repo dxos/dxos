@@ -14,16 +14,16 @@ import { Array } from 'effect';
 import { RuntimeProvider } from '@dxos/effect';
 import { ObjectId, SpaceId } from '@dxos/keys';
 
+import { QueueProtocol } from '@dxos/protocols';
 import { FeedStore } from './feed-store';
 import { SyncClient } from './sync-client';
 import { SyncServer } from './sync-server';
-import {
-  type ProtocolMessage,
-  WellKnownNamespaces,
-  type AppendRequest,
-  type Block,
-  type QueryRequest,
-} from './protocol';
+
+type ProtocolMessage = QueueProtocol.ProtocolMessage;
+const WellKnownNamespaces = QueueProtocol.WellKnownNamespaces;
+type AppendRequest = QueueProtocol.AppendRequest;
+type Block = QueueProtocol.Block;
+type QueryRequest = QueueProtocol.QueryRequest;
 import { Layer } from 'effect';
 import { Resource } from '@dxos/context';
 import { range } from '@dxos/util';
@@ -69,7 +69,6 @@ class Peer extends Resource {
     } else {
       this.#client = new SyncClient({
         peerId: actorId,
-        serverPeerId: serverPeerId!,
         feedStore: this.#feedStore,
         sendMessage,
       });

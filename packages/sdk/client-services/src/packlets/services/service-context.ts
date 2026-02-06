@@ -56,7 +56,7 @@ import {
 } from '../invitations';
 import { DataSpaceManager, type DataSpaceManagerRuntimeProps, type SigningContext } from '../spaces';
 import { QueueSyncer } from './queue-syncer';
-import { WellKnownNamespaces } from '@dxos/feed';
+import { QueueProtocol } from '@dxos/protocols';
 
 export type ServiceContextRuntimeProps = Pick<
   IdentityManagerProps,
@@ -217,7 +217,7 @@ export class ServiceContext extends Resource {
         edgeClient: this._edgeConnection,
         peerId: this.identityManager.identity?.deviceKey?.toHex() ?? '',
         getSpaceIds: () => this.echoHost!.spaceIds,
-        syncNamespace: WellKnownNamespaces.data,
+        syncNamespace: QueueProtocol.WellKnownNamespaces.data,
       });
     }
   }

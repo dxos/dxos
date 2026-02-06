@@ -26,7 +26,7 @@ import { EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type QueueService } from '@dxos/protocols';
+import { type QueueProtocol } from '@dxos/protocols';
 import {
   ApiError,
   AuthorizationError,
@@ -116,7 +116,7 @@ export class Client {
   private _shellManager?: ShellManager;
   private _shellClientProxy?: ProtoRpcPeer<ClientServices>;
   private _edgeClient?: EdgeHttpClient = undefined;
-  private _queuesService?: QueueService = undefined;
+  private _queuesService?: QueueProtocol.QueueService = undefined;
 
   constructor(options: ClientOptions = {}) {
     if (

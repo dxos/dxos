@@ -5,13 +5,13 @@
 import type * as SqlClient from '@effect/sql/SqlClient';
 import type { SqlTransaction } from '@dxos/sql-sqlite';
 import * as Effect from 'effect/Effect';
+import { QueueProtocol } from '@dxos/protocols';
 import type { FeedStore } from './feed-store';
-import type {
-  AppendRequest,
-  ProtocolMessage,
-  QueryRequest,
-  QueryResponse,
-} from './protocol';
+
+type AppendRequest = QueueProtocol.AppendRequest;
+type ProtocolMessage = QueueProtocol.ProtocolMessage;
+type QueryRequest = QueueProtocol.QueryRequest;
+type QueryResponse = QueueProtocol.QueryResponse;
 
 export type SyncServerOptions = {
   /** This server's peer id. Set as senderPeerId on all replies. */

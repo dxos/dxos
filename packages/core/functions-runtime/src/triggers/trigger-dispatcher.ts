@@ -32,7 +32,7 @@ import {
 import { Function, Trigger, type TriggerEvent } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { KEY_QUEUE_POSITION, type ObjectId } from '@dxos/protocols';
+import { QueueProtocol, type ObjectId } from '@dxos/protocols';
 
 import { createInvocationPayload } from './input-builder';
 import { type TriggerState, TriggerStateStore } from './trigger-state-store';
@@ -416,7 +416,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
               // TODO(dmaretskyi): Include cursor & limit in the query.
               const objects = yield* Effect.promise(() => queue.queryObjects());
               for (const object of objects) {
-                const objectPos = Entity.getKeys(object, KEY_QUEUE_POSITION).at(0)?.id;
+                const objectPos = Entity.getKeys(object, QueueProtocol.KEY_QUEUE_POSITION).at(0)?.id;
                 // TODO(dmaretskyi): Extract methods for managing queue position.
                 if (!objectPos || (cursor && parseInt(cursor) >= parseInt(objectPos))) {
                   continue;

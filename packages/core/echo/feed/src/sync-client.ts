@@ -8,8 +8,14 @@ import type { SqlTransaction } from '@dxos/sql-sqlite';
 import { Array } from 'effect';
 import * as Deferred from 'effect/Deferred';
 import * as Effect from 'effect/Effect';
+import { QueueProtocol } from '@dxos/protocols';
 import type { FeedStore } from './feed-store';
-import type { AppendRequest, AppendResponse, ProtocolMessage, QueryRequest, QueryResponse } from './protocol';
+
+type AppendRequest = QueueProtocol.AppendRequest;
+type AppendResponse = QueueProtocol.AppendResponse;
+type ProtocolMessage = QueueProtocol.ProtocolMessage;
+type QueryRequest = QueueProtocol.QueryRequest;
+type QueryResponse = QueueProtocol.QueryResponse;
 
 export type SyncClientOptions = {
   /** This client's peer id. Set as senderPeerId on all requests. */

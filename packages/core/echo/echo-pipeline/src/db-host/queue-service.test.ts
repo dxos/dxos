@@ -6,23 +6,27 @@ import type * as SqlClient from '@effect/sql/SqlClient';
 import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 
 import { RuntimeProvider } from '@dxos/effect';
 import { FeedStore } from '@dxos/feed';
 import { ObjectId, SpaceId } from '@dxos/keys';
+import { SqlTransaction } from '@dxos/sql-sqlite';
 
 import { LocalQueueServiceImpl } from './local-queue-service';
 
-const TestLayer = SqliteClient.layer({
+const SqliteLayer = SqliteClient.layer({
   filename: ':memory:',
 });
+const TransactionLayer = SqlTransaction.layer.pipe(Layer.provide(SqliteLayer));
+const TestLayer = Layer.merge(SqliteLayer, TransactionLayer);
 
 describe('LocalQueueServiceImpl', () => {
   it.effect('should insert and query items', () =>
     Effect.gen(function* () {
       const sql = yield* SqliteClient.SqliteClient;
       const feedStore = new FeedStore({ localActorId: 'actor-id', assignPositions: true });
-      const runtime = yield* RuntimeProvider.currentRuntime<SqlClient.SqlClient>();
+      const runtime = yield* RuntimeProvider.currentRuntime<SqlClient.SqlClient | SqlTransaction.SqlTransaction>();
       const service = new LocalQueueServiceImpl(runtime, feedStore);
       yield* feedStore.migrate();
 
