@@ -1,6 +1,30 @@
 {
-  "author": "DXOS.org",
+  "name": "@dxos/plugin-simple-layout",
+  "version": "0.8.3",
+  "description": "Simple layout plugin for minimal UI contexts like popover windows.",
+  "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "MIT",
+  "author": "DXOS.org",
+  "sideEffects": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "browser": "./dist/lib/browser/index.mjs",
+      "node": "./dist/lib/node-esm/index.mjs",
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
     "@dxos/async": "workspace:*",
@@ -19,7 +43,6 @@
     "@radix-ui/react-context": "catalog:",
     "@tauri-apps/plugin-haptics": "catalog:"
   },
-  "description": "Simple layout plugin for minimal UI contexts like popover windows.",
   "devDependencies": {
     "@dxos/app-graph": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
@@ -38,21 +61,6 @@
     "react-dom": "catalog:",
     "vite": "catalog:"
   },
-  "exports": {
-    ".": {
-      "browser": "./dist/lib/browser/index.mjs",
-      "node": "./dist/lib/node-esm/index.mjs",
-      "source": "./src/index.ts",
-      "types": "./dist/types/src/index.d.ts"
-    }
-  },
-  "files": [
-    "dist",
-    "src"
-  ],
-  "homepage": "https://dxos.org",
-  "license": "MIT",
-  "name": "@dxos/plugin-simple-layout",
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
@@ -62,13 +70,5 @@
   },
   "publishConfig": {
     "access": "public"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/dxos/dxos"
-  },
-  "sideEffects": true,
-  "type": "module",
-  "types": "dist/types/src/index.d.ts",
-  "version": "0.8.3"
+  }
 }

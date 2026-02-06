@@ -4,6 +4,7 @@
 
 import { useEffect, useState } from 'react';
 
+import { addEventListener } from '@dxos/async';
 import { log } from '@dxos/log';
 
 /**
@@ -21,12 +22,44 @@ export const useIOSKeyboard = () => {
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
 
+  // Prevent auto-scroll when input is focused.
+  // TODO(burdon): Scroll focused element into view.
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    return () => {
+      addEventListener(
+        document,
+        'focus',
+        (ev: FocusEvent) => {
+          const target = ev.target as HTMLElement;
+          if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
+            // Prevent default focus behavior.
+            ev.preventDefault();
+
+            // Manually focus without scroll.
+            target.focus({ preventScroll: true });
+
+            // Lock current scroll position.
+            const scrollY = window.scrollY;
+            const scrollX = window.scrollX;
+            requestAnimationFrame(() => {
+              window.scrollTo(scrollX, scrollY);
+            });
+          }
+        },
+        true,
+      );
+    };
+  }, []);
+
   useEffect(() => {
     const updateState = (height: number, open: boolean) => {
       setKeyboardHeight(height);
       setIsOpen(open);
 
-      console.log(window.innerHeight, height, window.innerHeight - height);
       document.documentElement.style.setProperty('--vvh', `${window.innerHeight - height}px`);
       document.documentElement.style.setProperty('--kb-height', `${height}px`);
       document.documentElement.style.setProperty('--kb-open', open ? '1' : '0');
