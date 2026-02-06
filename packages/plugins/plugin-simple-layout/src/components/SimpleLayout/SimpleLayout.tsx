@@ -4,6 +4,7 @@
 
 import React, { type PropsWithChildren, useCallback, useEffect } from 'react';
 
+import { addEventListener } from '@dxos/async';
 import { type DrawerState, Input, Main as NaturalMain } from '@dxos/react-ui';
 import { Mosaic } from '@dxos/react-ui-mosaic';
 import { mx } from '@dxos/ui-theme';
@@ -61,6 +62,9 @@ const MobileContainer = ({ children }: PropsWithChildren) => {
   // Hook handles keyboard detection and sets CSS custom properties.
   useIOSKeyboard();
 
+  // TODO(burdon): Drawer.
+
+  // TODO(burdon): Scroll focused element into view.
   // Prevent auto-scroll when input is focused.
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -85,9 +89,8 @@ const MobileContainer = ({ children }: PropsWithChildren) => {
       }
     };
 
-    document.addEventListener('focus', preventAutoScroll, true);
     return () => {
-      document.removeEventListener('focus', preventAutoScroll, true);
+      addEventListener(document, 'focus', preventAutoScroll, true);
     };
   }, []);
 
