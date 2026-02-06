@@ -55,6 +55,8 @@ import {
   SpaceInvitationProtocol,
 } from '../invitations';
 import { DataSpaceManager, type DataSpaceManagerRuntimeProps, type SigningContext } from '../spaces';
+import { QueueSyncer } from './queue-syncer';
+import { WellKnownNamespaces } from '@dxos/feed';
 
 export type ServiceContextRuntimeProps = Pick<
   IdentityManagerProps,
@@ -90,6 +92,7 @@ export class ServiceContext extends Resource {
   public readonly echoHost: EchoHost;
   private readonly _meshReplicator?: MeshEchoReplicator = undefined;
   private readonly _echoEdgeReplicator?: EchoEdgeReplicator = undefined;
+  private readonly _queueSyncer?: QueueSyncer = undefined;
 
   // Initialized after identity is initialized.
   public dataSpaceManager?: DataSpaceManager;
@@ -206,6 +209,17 @@ export class ServiceContext extends Resource {
         edgeHttpClient: this._edgeHttpClient,
       });
     }
+
+    if (this.echoHost.feedStore && this._edgeConnection) {
+      this._queueSyncer = new QueueSyncer({
+        runtime: this._runtime,
+        feedStore: this.echoHost.feedStore,
+        edgeClient: this._edgeConnection,
+        peerId: this.identityManager.identity?.deviceKey?.toHex() ?? '',
+        getSpaceIds: () => this.echoHost!.spaceIds,
+        syncNamespace: WellKnownNamespaces.data,
+      });
+    }
   }
 
   @Trace.span()
@@ -240,6 +254,8 @@ export class ServiceContext extends Resource {
       await this._initialize(ctx);
     }
 
+    await this._queueSyncer?.open();
+
     const loadedInvitations = await this.invitationsManager.loadPersistentInvitations();
     log('loaded persistent invitations', { count: loadedInvitations.invitations?.length });
 
@@ -249,6 +265,9 @@ export class ServiceContext extends Resource {
 
   protected override async _close(ctx: Context): Promise<void> {
     log('closing...');
+
+    await this._queueSyncer?.close();
+
     if (this._deviceSpaceSync && this.identityManager.identity) {
       await this.identityManager.identity.space.spaceState.removeCredentialProcessor(this._deviceSpaceSync);
     }

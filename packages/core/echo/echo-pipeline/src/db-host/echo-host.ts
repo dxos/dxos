@@ -232,6 +232,10 @@ export class EchoHost extends Resource {
     });
   }
 
+  get spaceIds(): SpaceId[] {
+    return this._spaceStateManager.spaceIds;
+  }
+
   get queryService(): QueryServiceImpl {
     return this._queryService;
   }
@@ -246,6 +250,10 @@ export class EchoHost extends Resource {
 
   get roots(): ReadonlyMap<DocumentId, DatabaseRoot> {
     return this._spaceStateManager.roots;
+  }
+
+  get feedStore(): FeedStore | undefined {
+    return this._feedStore;
   }
 
   /**

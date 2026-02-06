@@ -5,6 +5,8 @@
 import * as Schema from 'effect/Schema';
 import { SpaceId } from '@dxos/keys';
 
+// TODO(dmaretskyi): Move this all to procotols.
+
 export const FeedCursor = Schema.String.pipe(Schema.brand('@dxos/feed/FeedCursor'));
 export type FeedCursor = Schema.Schema.Type<typeof FeedCursor>;
 
@@ -134,8 +136,11 @@ export const ProtocolMessage = Schema.Union(
 ).pipe(
   Schema.extend(
     Schema.Struct({
-      senderPeerId: Schema.String,
-      recipientPeerId: Schema.String,
+      senderPeerId: Schema.UndefinedOr(Schema.String),
+      /**
+       * Could be undefined if the recipient could be assumed from the context.
+       */
+      recipientPeerId: Schema.UndefinedOr(Schema.String),
     }),
   ),
 );

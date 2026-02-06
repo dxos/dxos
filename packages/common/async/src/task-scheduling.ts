@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { type Context, ContextDisposedError } from '@dxos/context';
+import { Context, ContextDisposedError } from '@dxos/context';
 import { StackTrace } from '@dxos/debug';
 import { type MaybePromise } from '@dxos/util';
 
@@ -98,17 +98,17 @@ export class AsyncTask {
    * Context of the resource that owns the task.
    * When the context is disposed, the task is cancelled and cannot be scheduled again.
    */
-  // TODO(dmaretskyi): We don't really need to pass ctx in here, since close will also signal dispose.
-  open(ctx: Context): void {
-    this.#ctx = ctx;
+  open(): void {
+    this.#ctx = new Context();
   }
 
   /**
    * Closes the task and waits for it to finish if it is running.
    */
   async close(): Promise<void> {
-    this.#ctx = undefined;
+    await this.#ctx?.dispose();
     await this.join();
+    this.#ctx = undefined;
   }
 
   [Symbol.asyncDispose](): Promise<void> {
@@ -118,6 +118,7 @@ export class AsyncTask {
   /**
    * Schedule the task to run asynchronously.
    */
+  // TODO(dmaretskyi): Add scheduleAt. Where the earlier time will override the later one.
   schedule(): void {
     if (!this.#ctx || this.#ctx.disposed) {
       throw new Error('AsyncTask not open');

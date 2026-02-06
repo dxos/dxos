@@ -13731,6 +13731,9 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
+      '@dxos/feed':
+        specifier: workspace:*
+        version: link:../../core/echo/feed
       '@dxos/feed-store':
         specifier: workspace:*
         version: link:../../common/feed-store

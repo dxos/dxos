@@ -14,8 +14,6 @@ import type { AppendRequest, AppendResponse, ProtocolMessage, QueryRequest, Quer
 export type SyncClientOptions = {
   /** This client's peer id. Set as senderPeerId on all requests. */
   peerId: string;
-  /** Server peer id. Set as recipientPeerId on all requests. */
-  serverPeerId: string;
   feedStore: FeedStore;
   /** Send a protocol message to the server. Returns Effect. */
   sendMessage: (message: ProtocolMessage) => Effect.Effect<void, unknown, never>;
@@ -29,25 +27,21 @@ export type SyncClientOptions = {
  */
 export class SyncClient {
   readonly #peerId: string;
-  readonly #serverPeerId: string;
   readonly #feedStore: FeedStore;
   readonly #sendMessage: (message: ProtocolMessage) => Effect.Effect<void, unknown, never>;
   readonly #handlers = new Map<string, Deferred.Deferred<ProtocolMessage, Error>>();
 
   constructor(options: SyncClientOptions) {
     this.#peerId = options.peerId;
-    this.#serverPeerId = options.serverPeerId;
     this.#feedStore = options.feedStore;
     this.#sendMessage = options.sendMessage;
   }
 
-  #withPeerIds(
-    payload: Omit<ProtocolMessage, 'senderPeerId' | 'recipientPeerId'>,
-  ): ProtocolMessage {
+  #withPeerIds(payload: Omit<ProtocolMessage, 'senderPeerId' | 'recipientPeerId'>): ProtocolMessage {
     return {
       ...payload,
       senderPeerId: this.#peerId,
-      recipientPeerId: this.#serverPeerId,
+      recipientPeerId: undefined,
     } as ProtocolMessage;
   }
 
