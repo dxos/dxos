@@ -2,12 +2,11 @@
 // Copyright 2021 DXOS.org
 //
 
-import { create } from '@bufbuild/protobuf';
-import { EmptySchema } from '@bufbuild/protobuf/wkt';
 import { describe, expect, test } from 'vitest';
 
 import { latch, sleep } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf/stream';
+import { EmptySchema, create } from '@dxos/protocols/buf';
 import {
   PingReponseSchema,
   PingRequestSchema,

@@ -2,12 +2,19 @@
 // Copyright 2021 DXOS.org
 //
 
-import type { DescMessage, DescMethod, DescService } from '@bufbuild/protobuf';
-import { type Message, type MessageShape, fromBinary, toBinary } from '@bufbuild/protobuf';
-import type { GenService, GenServiceMethods } from '@bufbuild/protobuf/codegenv2';
-
 import { Stream } from '@dxos/codec-protobuf/stream';
 import { invariant } from '@dxos/invariant';
+import {
+  type DescMessage,
+  type DescMethod,
+  type DescService,
+  type GenService,
+  type GenServiceMethods,
+  type Message,
+  type MessageShape,
+  fromBinary,
+  toBinary,
+} from '@dxos/protocols/buf';
 import { getAsyncProviderValue } from '@dxos/util';
 
 import { RpcPeer, type RpcPeerOptions } from './rpc';
