@@ -104,7 +104,8 @@
   "optionalDependencies": {
     "@dxos/react-ui": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
-    "@testing-library/react": "catalog:"
+    "@testing-library/react": "catalog:",
+    "@testing-library/user-event": "catalog:"
   },
   "publishConfig": {
     "access": "public"

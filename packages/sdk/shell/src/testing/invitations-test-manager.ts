@@ -310,8 +310,9 @@ export class InvitationsTestManager {
       fireEvent.click(peer.getByTestId('devices-panel.create-invitation'));
     }
 
-    // Wait for invitation code from log capture.
-    return this._invitationCodeTrigger.wait({ timeout: options?.timeout * 2 ?? 10000 });
+    // Wait for invitation code from log capture (1s longer than options timeout, or 5s default).
+    const timeout = options?.timeout != null ? options.timeout + 1000 : 5000;
+    return this._invitationCodeTrigger.wait({ timeout });
   }
 
   /**
