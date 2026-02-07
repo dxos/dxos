@@ -22,6 +22,8 @@ type QueryResponse = QueueProtocol.QueryResponse;
 export type SyncClientOptions = {
   /** This client's peer id. Set as senderPeerId on all requests. */
   peerId: string;
+  /** The server's peer id. Set as recipientPeerId on all requests. */
+  serverPeerId?: string;
   feedStore: FeedStore;
   /** Send a protocol message to the server. Returns Effect. */
   sendMessage: (message: ProtocolMessage) => Effect.Effect<void, unknown, never>;
@@ -35,12 +37,14 @@ export type SyncClientOptions = {
  */
 export class SyncClient {
   readonly #peerId: string;
+  readonly #serverPeerId: string | undefined;
   readonly #feedStore: FeedStore;
   readonly #sendMessage: (message: ProtocolMessage) => Effect.Effect<void, unknown, never>;
   readonly #handlers = new Map<string, Deferred.Deferred<ProtocolMessage, Error>>();
 
   constructor(options: SyncClientOptions) {
     this.#peerId = options.peerId;
+    this.#serverPeerId = options.serverPeerId;
     this.#feedStore = options.feedStore;
     this.#sendMessage = options.sendMessage;
   }
@@ -49,7 +53,7 @@ export class SyncClient {
     return {
       ...payload,
       senderPeerId: this.#peerId,
-      recipientPeerId: undefined,
+      recipientPeerId: this.#serverPeerId,
     } as ProtocolMessage;
   }
 
@@ -75,7 +79,7 @@ export class SyncClient {
   }): Effect.Effect<{ done: boolean }, unknown, SqlClient.SqlClient | SqlTransaction.SqlTransaction> {
     const self = this;
     return Effect.gen(function* () {
-      const maxPosition = yield* self.#feedStore.getMaxPosition({
+      const lastPulledPosition = yield* self.#feedStore.getSyncState({
         spaceId: opts.spaceId,
         feedNamespace: opts.feedNamespace,
       });
@@ -86,7 +90,7 @@ export class SyncClient {
         requestId,
         spaceId: opts.spaceId,
         query: { feedNamespace: opts.feedNamespace },
-        position: maxPosition,
+        position: lastPulledPosition,
         limit: opts.limit,
       };
       yield* self.#sendMessage(self.#withPeerIds({ _tag: 'QueryRequest', ...request }));
@@ -99,6 +103,18 @@ export class SyncClient {
         spaceId: opts.spaceId,
         blocks: response.blocks,
       });
+
+      // Update sync state with the max position from the pulled batch.
+      const maxPulledPosition = response.blocks.reduce(
+        (max, block) => (block.position != null && block.position > max ? block.position : max),
+        lastPulledPosition,
+      );
+      yield* self.#feedStore.setSyncState({
+        spaceId: opts.spaceId,
+        feedNamespace: opts.feedNamespace,
+        lastPulledPosition: maxPulledPosition,
+      });
+
       return { done: false };
     });
   }

@@ -19,7 +19,6 @@ import { SpaceId } from '@dxos/keys';
 
 export const FeedCursor = Schema.String.pipe(Schema.brand('@dxos/feed/FeedCursor'));
 export type FeedCursor = Schema.Schema.Type<typeof FeedCursor>;
-(FeedCursor as any).make = (value: string): FeedCursor => value as FeedCursor;
 
 export const Block = Schema.Struct({
   /**
@@ -48,8 +47,6 @@ export const Block = Schema.Struct({
   insertionId: Schema.optional(Schema.Number),
 });
 export interface Block extends Schema.Schema.Type<typeof Block> {}
-(Block as any).make = (input: Partial<Block> & Pick<Block, 'actorId' | 'sequence' | 'timestamp' | 'data'>): Block =>
-  Schema.decodeUnknownSync(Block)(input);
 
 //
 // RPC Schemas

@@ -70,6 +70,7 @@ class Peer extends Resource {
     } else {
       this.#client = new SyncClient({
         peerId: actorId,
+        serverPeerId: serverPeerId!,
         feedStore: this.#feedStore,
         sendMessage,
       });
@@ -111,9 +112,9 @@ class Peer extends Resource {
     }).pipe(RuntimeProvider.runPromise(this.#runtime.runtimeEffect));
   }
 
-  getMaxPosition({ spaceId, feedNamespace }: { spaceId: SpaceId; feedNamespace: string }) {
+  getSyncState({ spaceId, feedNamespace }: { spaceId: SpaceId; feedNamespace: string }) {
     return this.#feedStore
-      .getMaxPosition({ spaceId, feedNamespace })
+      .getSyncState({ spaceId, feedNamespace })
       .pipe(RuntimeProvider.runPromise(this.#runtime.runtimeEffect));
   }
 

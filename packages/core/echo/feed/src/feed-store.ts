@@ -85,6 +85,14 @@ export class FeedStore {
           spaceId TEXT PRIMARY KEY,
           token TEXT NOT NULL
       )`;
+
+    // Sync State Table
+    yield* sql`CREATE TABLE IF NOT EXISTS sync_state (
+          spaceId TEXT NOT NULL,
+          feedNamespace TEXT NOT NULL,
+          lastPulledPosition INTEGER NOT NULL DEFAULT -1,
+          PRIMARY KEY (spaceId, feedNamespace)
+      )`;
   });
 
   private _ensureFeed = Effect.fn('Feed.ensureFeed')(
@@ -291,23 +299,37 @@ export class FeedStore {
   );
 
   /**
-   * Max position for all feeds in the given space and namespace.
-   * Note that if some feeds had gaps, this will skip them.
-   * Normally this situation is not possible if replication is done for the entire namespace linearly and the set of namespaces synced does not change.
+   * Get the last pulled position for the given space and namespace.
+   * Returns -1 if no sync state exists yet.
    */
-  getMaxPosition = (opts: {
+  getSyncState = (opts: {
     spaceId: SpaceId;
     feedNamespace: string;
   }): Effect.Effect<number, SqlError.SqlError, SqlClient.SqlClient> =>
     Effect.gen(this, function* () {
       const sql = yield* SqlClient.SqlClient;
-      const rows = yield* sql<{ maxPos: number | null }>`
-        SELECT MAX(position) as maxPos 
-        FROM blocks 
-        JOIN feeds ON blocks.feedPrivateId = feeds.feedPrivateId
-        WHERE feeds.spaceId = ${opts.spaceId} AND feeds.feedNamespace = ${opts.feedNamespace}
+      const rows = yield* sql<{ lastPulledPosition: number }>`
+        SELECT lastPulledPosition FROM sync_state
+        WHERE spaceId = ${opts.spaceId} AND feedNamespace = ${opts.feedNamespace}
       `;
-      return rows[0]?.maxPos ?? -1;
+      return rows[0]?.lastPulledPosition ?? -1;
+    });
+
+  /**
+   * Update the last pulled position for the given space and namespace.
+   */
+  setSyncState = (opts: {
+    spaceId: SpaceId;
+    feedNamespace: string;
+    lastPulledPosition: number;
+  }): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> =>
+    Effect.gen(this, function* () {
+      const sql = yield* SqlClient.SqlClient;
+      yield* sql`
+        INSERT INTO sync_state (spaceId, feedNamespace, lastPulledPosition)
+        VALUES (${opts.spaceId}, ${opts.feedNamespace}, ${opts.lastPulledPosition})
+        ON CONFLICT (spaceId, feedNamespace) DO UPDATE SET lastPulledPosition = ${opts.lastPulledPosition}
+      `;
     });
 
   append = (
