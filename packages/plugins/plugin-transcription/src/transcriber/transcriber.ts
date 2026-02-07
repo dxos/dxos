@@ -4,7 +4,7 @@
 
 import { WaveFile } from 'wavefile';
 
-import { DeferredTask, Trigger } from '@dxos/async';
+import { AsyncJob, Trigger } from '@dxos/async';
 import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
@@ -89,7 +89,7 @@ export class Transcriber extends Resource {
   private readonly _onSegments: TranscriberProps['onSegments'];
 
   private _recording = false;
-  private _transcribeTask?: DeferredTask = undefined;
+  private _transcribeTask?: AsyncJob = undefined;
 
   constructor({ config, recorder, onSegments }: TranscriberProps) {
     super();
@@ -102,13 +102,15 @@ export class Transcriber extends Resource {
     log.info('opening');
     this._recorder.setOnChunk((chunk) => this._saveAudioChunk(chunk));
     await this._recorder.start();
-    this._transcribeTask = new DeferredTask(ctx, async () => this._transcribe());
+    this._transcribeTask = new AsyncJob(async () => this._transcribe());
+    this._transcribeTask.open(ctx);
     this._openTrigger.wake();
   }
 
   protected override async _close(): Promise<void> {
     log.info('closing');
     this._recording = false;
+    await this._transcribeTask?.close();
     this._transcribeTask = undefined;
     await this._recorder.stop();
   }

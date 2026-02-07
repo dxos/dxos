@@ -13,6 +13,7 @@ import { Trigger } from './trigger';
  * A task that can be scheduled to run in the next event loop iteration.
  * Could be triggered multiple times, but only runs once.
  * If a new task is triggered while a previous one is running, the next run would occur immediately after the current run has finished.
+ * @deprecated Use AsyncJob instead.
  */
 // TODO(dmaretskyi): Consider calling `join` on context dispose.
 // TODO(burdon): Add throttling support.
@@ -77,8 +78,13 @@ export class DeferredTask {
   }
 }
 
-// TODO(dmaretskyi): Protyping this an alternative API to DeferredTask.
-export class AsyncTask {
+/**
+ * A job that can be scheduled to run in the next event loop iteration.
+ * Could be triggered multiple times, but only runs once.
+ * If a new job is triggered while a previous one is running, the next run would occur immediately after the current run has finished.
+ * Must be opened and closed, where close will wait for current execution to complete, ensuring there are no runaway jobs.
+ */
+export class AsyncJob {
   #callback: () => Promise<void>;
   #ctx?: Context = undefined;
 
@@ -95,8 +101,8 @@ export class AsyncTask {
   }
 
   /**
-   * Context of the resource that owns the task.
-   * When the context is disposed, the task is cancelled and cannot be scheduled again.
+   * Context of the resource that owns the job.
+   * When the context is disposed, the job is cancelled and cannot be scheduled again.
    */
   // TODO(dmaretskyi): We don't really need to pass ctx in here, since close will also signal dispose.
   open(ctx: Context): void {
@@ -104,9 +110,10 @@ export class AsyncTask {
   }
 
   /**
-   * Closes the task and waits for it to finish if it is running.
+   * Closes the job and waits for it to finish if it is running.
    */
   async close(): Promise<void> {
+    void this.#ctx?.dispose();
     this.#ctx = undefined;
     await this.join();
   }
@@ -116,11 +123,11 @@ export class AsyncTask {
   }
 
   /**
-   * Schedule the task to run asynchronously.
+   * Schedule the job to run asynchronously.
    */
   schedule(): void {
     if (!this.#ctx || this.#ctx.disposed) {
-      throw new Error('AsyncTask not open');
+      throw new Error('AsyncJob not open');
     }
 
     if (this.#scheduled) {
@@ -128,19 +135,19 @@ export class AsyncTask {
     }
 
     scheduleTask(this.#ctx, async () => {
-      // The previous task might still be running, so we need to wait for it to finish.
+      // The previous job might still be running, so we need to wait for it to finish.
       await this.#currentTask; // Can't be rejected.
 
       if (!this.#ctx || this.#ctx.disposed) {
         return;
       }
 
-      // Reset the flag. New tasks can now be scheduled. They would wait for the callback to finish.
+      // Reset the flag. New jobs can now be scheduled. They would wait for the callback to finish.
       this.#scheduled = false;
       const completionTrigger = this.#nextTask;
       this.#nextTask = new Trigger(); // Re-create the trigger as opposed to resetting it since there might be listeners waiting for it.
 
-      // Store the promise so that new tasks could wait for this one to finish.
+      // Store the promise so that new jobs could wait for this one to finish.
       this.#currentTask = runInContextAsync(this.#ctx, () => this.#callback()).then(() => {
         completionTrigger.wake();
       });
@@ -150,7 +157,7 @@ export class AsyncTask {
   }
 
   /**
-   * Schedule the task to run and wait for it to finish.
+   * Schedule the job to run and wait for it to finish.
    */
   async runBlocking(): Promise<void> {
     if (this.#ctx?.disposed) {
@@ -162,13 +169,18 @@ export class AsyncTask {
   }
 
   /**
-   * Waits for the current task to finish if it is running.
-   * Does not schedule a new task.
+   * Waits for the current job to finish if it is running.
+   * Does not schedule a new job.
    */
   async join(): Promise<void> {
     await this.#currentTask;
   }
 }
+
+/**
+ * @deprecated Use AsyncJob instead.
+ */
+export const AsyncTask = AsyncJob;
 
 export const runInContext = (ctx: Context, fn: () => void) => {
   try {

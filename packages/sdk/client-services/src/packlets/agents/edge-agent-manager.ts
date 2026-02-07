@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { DeferredTask, Event, scheduleTask, synchronized } from '@dxos/async';
+import { AsyncJob, Event, scheduleTask, synchronized } from '@dxos/async';
 import { Resource } from '@dxos/context';
 import { type EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
@@ -30,7 +30,7 @@ export class EdgeAgentManager extends Resource {
 
   private _lastKnownDeviceCount = 0;
 
-  private _fetchAgentStatusTask: DeferredTask | undefined;
+  private _fetchAgentStatusTask: AsyncJob | undefined;
 
   constructor(
     private readonly _edgeFeatures: Runtime.Client.EdgeFeatures | undefined,
@@ -91,9 +91,10 @@ export class EdgeAgentManager extends Resource {
     }
 
     this._lastKnownDeviceCount = this._identity.authorizedDeviceKeys.size;
-    this._fetchAgentStatusTask = new DeferredTask(this._ctx, async () => {
+    this._fetchAgentStatusTask = new AsyncJob(async () => {
       await this._fetchAgentStatus();
     });
+    this._fetchAgentStatusTask.open(this._ctx);
     this._fetchAgentStatusTask.schedule();
 
     this._dataSpaceManager.updated.on(this._ctx, () => {
@@ -113,6 +114,7 @@ export class EdgeAgentManager extends Resource {
   }
 
   protected override async _close(): Promise<void> {
+    await this._fetchAgentStatusTask?.close();
     this._fetchAgentStatusTask = undefined;
     this._lastKnownDeviceCount = 0;
   }

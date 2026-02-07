@@ -27,7 +27,7 @@ import {
 } from '@automerge/automerge-repo';
 import type * as Record from 'effect/Record';
 
-import { DeferredTask, Event, asyncTimeout } from '@dxos/async';
+import { AsyncJob, Event, asyncTimeout } from '@dxos/async';
 import { Context, type Lifecycle, Resource, cancelWithContext } from '@dxos/context';
 import { type CollectionId, DatabaseDirectory } from '@dxos/echo-protocol';
 import { type IndexMetadataStore } from '@dxos/indexing';
@@ -124,7 +124,7 @@ export class AutomergeHost extends Resource {
   private _storage!: StorageAdapterInterface & Lifecycle;
   private readonly _headsStore: HeadsStore;
 
-  private _syncTask: DeferredTask | undefined = undefined;
+  private _syncTask: AsyncJob | undefined = undefined;
   /**
    * Cache of collections that would be synced on next sync task run.
    */
@@ -146,7 +146,7 @@ export class AutomergeHost extends Resource {
   public readonly documentsSaved = new Event();
 
   private readonly _headsUpdates = new Map<DocumentId, Heads>();
-  private _onHeadsChangedTask?: DeferredTask;
+  private _onHeadsChangedTask?: AsyncJob;
 
   /**
    * Documents created in this session.
@@ -168,7 +168,7 @@ export class AutomergeHost extends Resource {
    */
   private _documentsRequested = new Map<PeerId, Set<DocumentId>>();
 
-  private _sharePolicyChangedTask?: DeferredTask;
+  private _sharePolicyChangedTask?: AsyncJob;
 
   constructor({
     db,
@@ -207,11 +207,12 @@ export class AutomergeHost extends Resource {
   protected override async _open(): Promise<void> {
     this._peerId = `host-${this._peerIdProvider?.() ?? PublicKey.random().toHex()}` as PeerId;
 
-    this._onHeadsChangedTask = new DeferredTask(this._ctx, async () => {
+    this._onHeadsChangedTask = new AsyncJob(async () => {
       const docHeads = Array.from(this._headsUpdates.entries());
       this._headsUpdates.clear();
       this._onHeadsChanged(docHeads);
     });
+    this._onHeadsChangedTask.open(this._ctx);
 
     await this._storage.open?.();
 
@@ -250,7 +251,7 @@ export class AutomergeHost extends Resource {
       }
     });
 
-    this._syncTask = new DeferredTask(this._ctx, async () => {
+    this._syncTask = new AsyncJob(async () => {
       const collectionToSync = Array.from(this._collectionsToSync.values());
       if (collectionToSync.length === 0) {
         return;
@@ -265,11 +266,13 @@ export class AutomergeHost extends Resource {
         }),
       );
     });
+    this._syncTask.open(this._ctx);
 
-    this._sharePolicyChangedTask = new DeferredTask(this._ctx, async () => {
+    this._sharePolicyChangedTask = new AsyncJob(async () => {
       log('share policy changed');
       this._repo.shareConfigChanged();
     });
+    this._sharePolicyChangedTask.open(this._ctx);
 
     await this._echoNetworkAdapter.open();
     await this._collectionSynchronizer.open();
@@ -281,6 +284,9 @@ export class AutomergeHost extends Resource {
     await this._collectionSynchronizer.close();
     await this._storage.close?.();
     await this._echoNetworkAdapter.close();
+    await this._syncTask?.close();
+    await this._onHeadsChangedTask?.close();
+    await this._sharePolicyChangedTask?.close();
     this._syncTask = undefined;
     this._onHeadsChangedTask = undefined;
     this._sharePolicyChangedTask = undefined;

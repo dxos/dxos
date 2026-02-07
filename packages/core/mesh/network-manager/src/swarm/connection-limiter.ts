@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DeferredTask } from '@dxos/async';
+import { AsyncJob } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -29,7 +29,7 @@ export class ConnectionLimiter {
     PublicKey.hash,
   );
 
-  resolveWaitingPromises = new DeferredTask(this._ctx, async () => {
+  resolveWaitingPromises = new AsyncJob(async () => {
     Array.from(this._waitingPromises.values())
       .slice(0, this._maxConcurrentInitConnections)
       .forEach(({ resolve }) => {
@@ -39,6 +39,7 @@ export class ConnectionLimiter {
 
   constructor({ maxConcurrentInitConnections = MAX_CONCURRENT_INITIATING_CONNECTIONS }: ConnectionLimiterOptions = {}) {
     this._maxConcurrentInitConnections = maxConcurrentInitConnections;
+    this.resolveWaitingPromises.open(this._ctx);
   }
 
   /**

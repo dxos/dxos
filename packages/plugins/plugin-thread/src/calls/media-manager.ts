@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { DeferredTask, Event, sleep, synchronized } from '@dxos/async';
+import { AsyncJob, Event, sleep, synchronized } from '@dxos/async';
 import { type Context, Resource, cancelWithContext } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -69,8 +69,8 @@ export class MediaManager extends Resource {
   private _trackToReconcile: EncodedTrackName[] = [];
   private _blackCanvasStreamTrack?: MediaStreamTrack = undefined;
   private _inaudibleAudioStreamTrack?: MediaStreamTrack = undefined;
-  private _pushTracksTask?: DeferredTask = undefined;
-  private _pullTracksTask?: DeferredTask = undefined;
+  private _pushTracksTask?: AsyncJob = undefined;
+  private _pullTracksTask?: AsyncJob = undefined;
 
   get isSpeaking() {
     return this._speakingMonitor?.isSpeaking;
@@ -99,12 +99,14 @@ export class MediaManager extends Resource {
       this._state.audioTrack = this._inaudibleAudioStreamTrack;
     }
 
-    this._pushTracksTask = new DeferredTask(this._ctx, async () => {
+    this._pushTracksTask = new AsyncJob(async () => {
       await this._pushTracks();
     });
-    this._pullTracksTask = new DeferredTask(this._ctx, async () => {
+    this._pushTracksTask.open(this._ctx);
+    this._pullTracksTask = new AsyncJob(async () => {
       await this._reconcilePulledMedia();
     });
+    this._pullTracksTask.open(this._ctx);
   }
 
   protected override async _close(): Promise<void> {
@@ -113,6 +115,8 @@ export class MediaManager extends Resource {
     this._state.audioTrack?.stop();
     this._state.videoTrack?.stop();
     this._state.screenshareTrack?.stop();
+    await this._pushTracksTask?.close();
+    await this._pullTracksTask?.close();
     this._pushTracksTask = undefined;
     this._pullTracksTask = undefined;
   }

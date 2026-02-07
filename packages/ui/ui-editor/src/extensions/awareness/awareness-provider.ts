@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { DeferredTask, Event, sleep } from '@dxos/async';
+import { AsyncJob, Event, sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -41,7 +41,7 @@ export class SpaceAwarenessProvider implements AwarenessProvider {
   private readonly _info: AwarenessInfo;
 
   private _ctx?: Context;
-  private _postTask?: DeferredTask;
+  private _postTask?: AsyncJob;
   private _localState?: AwarenessState;
 
   public readonly remoteStateChange = new Event<void>();
@@ -55,7 +55,7 @@ export class SpaceAwarenessProvider implements AwarenessProvider {
 
   open(): void {
     this._ctx = new Context();
-    this._postTask = new DeferredTask(this._ctx, async () => {
+    this._postTask = new AsyncJob(async () => {
       if (this._localState) {
         await this._messenger.postMessage(this._channel, {
           kind: 'post',
@@ -67,6 +67,7 @@ export class SpaceAwarenessProvider implements AwarenessProvider {
         await sleep(DEBOUNCE_INTERVAL);
       }
     });
+    this._postTask.open(this._ctx);
 
     this._ctx.onDispose(
       this._messenger.listen(this._channel, (message: GossipMessage) => {
@@ -93,6 +94,7 @@ export class SpaceAwarenessProvider implements AwarenessProvider {
   }
 
   close(): void {
+    void this._postTask?.close();
     void this._ctx?.dispose();
     this._ctx = undefined;
     this._postTask = undefined;

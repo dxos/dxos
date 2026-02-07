@@ -6,7 +6,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { DeferredTask, asyncTimeout } from '@dxos/async';
+import { AsyncJob, asyncTimeout } from '@dxos/async';
 import { LifecycleState, Resource } from '@dxos/context';
 import { type Queue } from '@dxos/echo-db';
 import { type FunctionExecutor } from '@dxos/functions-runtime';
@@ -37,7 +37,7 @@ export class MessageNormalizer extends Resource {
   private _queue: Queue<Message.Message>;
   private _cursor: QueueCursor;
   private _messagesToProcess: MessageWithRangeId[] = [];
-  private _normalizationTask?: DeferredTask;
+  private _normalizationTask?: AsyncJob;
   private _lastProcessedMessageIds?: string[];
 
   constructor({ functionExecutor, queue, startingCursor }: SegmentsNormalizerProps) {
@@ -48,7 +48,8 @@ export class MessageNormalizer extends Resource {
   }
 
   protected override async _open(): Promise<void> {
-    this._normalizationTask = new DeferredTask(this._ctx, () => this._processMessages());
+    this._normalizationTask = new AsyncJob(() => this._processMessages());
+    this._normalizationTask.open(this._ctx);
 
     const updateMessages = () => {
       if (this._lifecycleState !== LifecycleState.OPEN) {
@@ -68,7 +69,10 @@ export class MessageNormalizer extends Resource {
 
     // Subscribe to queue changes.
     const unsubscribe = this._queue.subscribe(updateMessages);
-    this._ctx.onDispose(unsubscribe);
+    this._ctx.onDispose(() => {
+      unsubscribe();
+      void this._normalizationTask?.close();
+    });
   }
 
   // Need to unpack strings from blocks from messages run them through the function and then pack them back into blocks into messages.

@@ -4,7 +4,7 @@
 
 import isEqual from 'lodash.isequal';
 
-import { DeferredTask, Event, sleepWithContext, synchronized } from '@dxos/async';
+import { AsyncJob, Event, sleepWithContext, synchronized } from '@dxos/async';
 import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { type LevelDB } from '@dxos/kv-store';
@@ -66,7 +66,7 @@ export class Indexer extends Resource {
 
   private _indexConfig?: IndexConfig;
   private _lastRunFinishedAt = 0;
-  private _run!: DeferredTask;
+  private _run!: AsyncJob;
 
   constructor({
     db,
@@ -127,7 +127,7 @@ export class Indexer extends Resource {
 
     // Needs to be re-created because context changes.
     // TODO(dmaretskyi): Find a way to express this better for resources.
-    this._run = new DeferredTask(this._ctx, async () => {
+    this._run = new AsyncJob(async () => {
       try {
         if (this._lifecycleState !== LifecycleState.OPEN || this._indexConfig?.enabled !== true) {
           return;
@@ -146,6 +146,7 @@ export class Indexer extends Resource {
         this._lastRunFinishedAt = Date.now();
       }
     });
+    this._run.open(this._ctx);
 
     // Load indexes from disk.
     await this._loadIndexes();
@@ -157,7 +158,7 @@ export class Indexer extends Resource {
   }
 
   protected override async _close(ctx: Context): Promise<void> {
-    await this._run.join();
+    await this._run.close();
     await this._engine.close(ctx);
   }
 

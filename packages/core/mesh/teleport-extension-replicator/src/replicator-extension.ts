@@ -6,7 +6,7 @@ import { type Duplex } from 'node:stream';
 
 import type { ProtocolStream } from 'hypercore-protocol';
 
-import { DeferredTask, asyncTimeout, synchronized } from '@dxos/async';
+import { AsyncJob, asyncTimeout, synchronized } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { failUndefined } from '@dxos/debug';
 import { type FeedWrapper } from '@dxos/feed-store';
@@ -44,7 +44,7 @@ export class ReplicatorExtension implements TeleportExtension {
     upload: false,
   };
 
-  private readonly _updateTask = new DeferredTask(this._ctx, async () => {
+  private readonly _updateTask = new AsyncJob(async () => {
     try {
       if (this._extensionContext!.initiator === false) {
         await this._rpc!.rpc.ReplicatorService.updateFeeds({
@@ -96,6 +96,8 @@ export class ReplicatorExtension implements TeleportExtension {
     this._extensionContext = context;
     log('open');
 
+    this._updateTask.open(this._ctx);
+
     this._rpc = createProtoRpcPeer<ServiceBundle, ServiceBundle>({
       requested: {
         ReplicatorService: schema.getService('dxos.mesh.teleport.replicator.ReplicatorService'),
@@ -140,6 +142,7 @@ export class ReplicatorExtension implements TeleportExtension {
 
   async onClose(err?: Error | undefined): Promise<void> {
     log('close', { err });
+    await this._updateTask.close();
     await this._ctx.dispose();
     await this._rpc?.close();
     for (const feedKey of this._streams.keys()) {
@@ -150,6 +153,7 @@ export class ReplicatorExtension implements TeleportExtension {
   async onAbort(err?: Error | undefined): Promise<void> {
     log('abort', { err });
 
+    await this._updateTask.close();
     await this._ctx.dispose();
     await this._rpc?.abort();
     for (const feedKey of this._streams.keys()) {
