@@ -24,6 +24,7 @@ import { WithProperties } from '../../testing';
 import * as MarkdownBlueprint from '../markdown-blueprint';
 
 import update from './update';
+import { trim } from '@dxos/util';
 
 ObjectId.dangerouslyDisableRandomness();
 
@@ -46,7 +47,7 @@ describe('update', () => {
 
         yield* FunctionInvocationService.invokeFunction(update, {
           id: doc.id,
-          diffs: ['- Founders', '+ # Founders'],
+          edits: [{ oldString: 'Founders', newString: '# Founders' }],
         });
 
         const updatedDoc = yield* Database.resolve(Obj.getDXN(doc), Markdown.Document);
@@ -101,6 +102,108 @@ describe('update', () => {
             name: doc.name,
             content: yield* Database.load(doc.content).pipe(Effect.map((_) => _.content)),
           });
+        }
+      },
+      WithProperties,
+      Effect.provide(AiConversationService.layerNewQueue().pipe(Layer.provideMerge(TestLayer))),
+      TestHelpers.provideTestContext,
+    ),
+    MemoizedAiService.isGenerationEnabled() ? 240_000 : 30_000,
+  );
+
+  it.scoped(
+    'update existing document',
+    Effect.fnUntraced(
+      function* (_) {
+        const document = yield* Database.add(
+          Markdown.make({
+            name: 'Cookie Recipe',
+            content: trim`
+                Ingredients: 
+                  - 2 cups of ???
+                  - 1 cup of sugar
+                  - 1 cup of butter
+                  - 1 cup of eggs
+          `,
+          }),
+        );
+        const markdownBlueprint = yield* Database.add(Obj.clone(MarkdownBlueprint.make()));
+        yield* AiContextService.bindContext({
+          blueprints: [Ref.make(markdownBlueprint)],
+          objects: [Ref.make(document)],
+        });
+
+        yield* AiConversationService.run({
+          prompt: 'Add the missing ingredient (its flour).',
+        });
+
+        {
+          const docs = yield* Database.runQuery(Query.type(Markdown.Document));
+          if (docs.length !== 1) {
+            throw new Error(`Expected 1 document; got ${docs.length}: ${docs.map((_) => _.name)}`);
+          }
+
+          const doc = docs[0];
+          invariant(Obj.instanceOf(Markdown.Document, doc));
+          const content = yield* Database.load(doc.content).pipe(Effect.map((_) => _.content));
+          console.log({
+            name: doc.name,
+            content: yield* Database.load(doc.content).pipe(Effect.map((_) => _.content)),
+          });
+          expect(content.toLowerCase()).toContain('flour');
+        }
+      },
+      WithProperties,
+      Effect.provide(AiConversationService.layerNewQueue().pipe(Layer.provideMerge(TestLayer))),
+      TestHelpers.provideTestContext,
+    ),
+    MemoizedAiService.isGenerationEnabled() ? 240_000 : 30_000,
+  );
+
+  it.scoped(
+    'add lines to document one by one',
+    Effect.fnUntraced(
+      function* (_) {
+        const document = yield* Database.add(
+          Markdown.make({
+            name: 'Shopping list',
+            content: trim`
+              # Shopping list
+            `,
+          }),
+        );
+        const markdownBlueprint = yield* Database.add(Obj.clone(MarkdownBlueprint.make()));
+        yield* AiContextService.bindContext({
+          blueprints: [Ref.make(markdownBlueprint)],
+          objects: [Ref.make(document)],
+        });
+
+        yield* AiConversationService.run({
+          prompt: 'Add milk to the shopping list.',
+        });
+        yield* AiConversationService.run({
+          prompt: 'Add bread to the shopping list.',
+        });
+        yield* AiConversationService.run({
+          prompt: 'Add eggs to the shopping list.',
+        });
+
+        {
+          const docs = yield* Database.runQuery(Query.type(Markdown.Document));
+          if (docs.length !== 1) {
+            throw new Error(`Expected 1 document; got ${docs.length}: ${docs.map((_) => _.name)}`);
+          }
+
+          const doc = docs[0];
+          invariant(Obj.instanceOf(Markdown.Document, doc));
+          const content = yield* Database.load(doc.content).pipe(Effect.map((_) => _.content));
+          console.log({
+            name: doc.name,
+            content: yield* Database.load(doc.content).pipe(Effect.map((_) => _.content)),
+          });
+          expect(content.toLowerCase()).toContain('milk');
+          expect(content.toLowerCase()).toContain('bread');
+          expect(content.toLowerCase()).toContain('eggs');
         }
       },
       WithProperties,
