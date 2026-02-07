@@ -5,9 +5,9 @@
 import { BaseError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 
-import type { ObjectId } from '../types.js';
+import type { ObjectId } from '../types.ts';
 
-import { registerError, registerErrorMessageContext, registerErrorNoArgs } from './helpers.js';
+import { registerError, registerErrorMessageContext, registerErrorNoArgs } from './helpers.ts';
 
 /**
  * Thrown when request was terminated because the RPC endpoint has been closed.
