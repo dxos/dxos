@@ -58,6 +58,8 @@ import { isTruthy } from '@dxos/util';
 import { steps } from './help';
 import { WelcomePlugin } from './plugins';
 
+const APP_LINK_ORIGIN = 'https://composer.dxos.org';
+
 export type State = {
   appKey: string;
   config: Config;
@@ -194,6 +196,7 @@ export const getPlugins = ({
     SketchPlugin(),
     SpacePlugin({
       observability: true,
+      shareableLinkOrigin: isTauri ? APP_LINK_ORIGIN : window.location.origin,
     }),
     StackPlugin(),
     StatusBarPlugin(),

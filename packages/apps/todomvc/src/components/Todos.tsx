@@ -45,9 +45,11 @@ export const Todos = () => {
     event.preventDefault();
 
     const title = inputRef.current?.value.trim();
-    if (title && listSnapshot) {
+    if (title && listSnapshot && space) {
+      const todo = Obj.make(Todo, { title, completed: false });
+      space.db.add(todo);
       updateList((l) => {
-        l.todos.push(Ref.make(Obj.make(Todo, { title, completed: false })));
+        l.todos.push(Ref.make(todo));
       });
       inputRef.current!.value = '';
     }
@@ -71,17 +73,23 @@ export const Todos = () => {
     if (!listSnapshot) return;
     // Load all todos and find completed ones.
     const loadedTodos = await Promise.all(todoRefs.map((ref) => ref.load()));
-    const completedTodos = loadedTodos.filter((todo) => todo.completed);
+    // Build set of ref DXNs to remove.
+    const completedRefDxns = new Set<string>();
+    for (let i = 0; i < todoRefs.length; i++) {
+      if (loadedTodos[i]?.completed) completedRefDxns.add(todoRefs[i].dxn.toString());
+    }
 
-    // Build set of completed DXNs for efficient lookup.
-    const completedDxns = new Set(completedTodos.map((todo) => Obj.getDXN(todo).toString()));
-
-    // Remove completed todos from database.
-    completedTodos.forEach((item) => space?.db.remove(item));
-
-    // Remove completed refs from the list.
+    // Remove completed refs from the list (splice from end so indices stay valid).
     updateList((l) => {
-      l.todos = l.todos.filter((ref) => !completedDxns.has(ref.dxn.toString()));
+      for (let i = l.todos.length - 1; i >= 0; i--) {
+        if (completedRefDxns.has(l.todos[i].dxn.toString())) l.todos.splice(i, 1);
+      }
+    });
+
+    // Remove the objects from the database (no subscribers left).
+    const completedTodos = loadedTodos.filter((todo) => todo.completed);
+    completedTodos.forEach((item) => {
+      space?.db.remove(item);
     });
   };
 
@@ -117,7 +125,13 @@ export const Todos = () => {
                 onSave={() => setEditing(undefined)}
                 onCancel={() => setEditing(undefined)}
                 onDestroy={async () => {
-                  space?.db.remove(await ref.load());
+                  const todo = await ref.load();
+                  const dxn = ref.dxn.toString();
+                  updateList((l) => {
+                    const idx = l.todos.findIndex((r) => r.dxn.toString() === dxn);
+                    if (idx !== -1) l.todos.splice(idx, 1);
+                  });
+                  space?.db.remove(todo);
                 }}
               />
             ))}

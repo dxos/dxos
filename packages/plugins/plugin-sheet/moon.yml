@@ -13,6 +13,10 @@ tasks:
       - '--entryPoint=src/types/index.ts'
       - '--platform=browser'
       - '--platform=node'
+  e2e:
+    inputs:
+      - /tools/storybook-react/.storybook/main.ts
   test:
     inputs:
       - .storybook/*
+      - /tools/storybook-react/.storybook/main.ts

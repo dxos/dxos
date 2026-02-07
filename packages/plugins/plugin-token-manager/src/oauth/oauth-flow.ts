@@ -16,6 +16,8 @@ import { type AccessToken } from '@dxos/types';
 
 import { type OAuthPreset } from '../defs';
 
+import { getEdgeAuthHeader } from './edge-auth-header';
+
 export const OAUTH_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes.
 
 /**
@@ -76,6 +78,8 @@ export type OAuthInitiateParams = {
   accessTokenId: string;
   redirectOrigin: string;
   authHeader?: string;
+  /** If true, Edge returns a 302 redirect to composer:// instead of JavaScript. Used for mobile. */
+  nativeAppRedirect?: boolean;
 };
 
 /**
@@ -91,10 +95,11 @@ export type OAuthInitiator = {
 };
 
 /**
- * Default OAuth initiator that uses browser fetch.
- * Note: This may not work correctly in environments where Origin header cannot be set (e.g., Tauri).
+ * OAuth initiator that uses browser fetch.
+ * Use on mobile (where Tauri commands are not registered) or when Origin can be set from JS.
+ * Note: May not work where Origin header cannot be set (e.g., Tauri desktop with localhost redirect).
  */
-const createDefaultOAuthInitiator = (edgeClient: EdgeHttpClient): OAuthInitiator => ({
+export const createFetchOAuthInitiator = (): OAuthInitiator => ({
   initiate: (params) =>
     Effect.gen(function* () {
       const initiateUrl = new URL('/oauth/initiate', params.edgeUrl).toString();
@@ -108,16 +113,21 @@ const createDefaultOAuthInitiator = (edgeClient: EdgeHttpClient): OAuthInitiator
         headers['Authorization'] = params.authHeader;
       }
 
+      const bodyPayload: Record<string, unknown> = {
+        provider: params.provider,
+        scopes: params.scopes,
+        spaceId: params.spaceId,
+        accessTokenId: params.accessTokenId,
+      };
+      if (params.nativeAppRedirect !== undefined) {
+        bodyPayload.nativeAppRedirect = params.nativeAppRedirect;
+      }
+
       // Make POST request using Effect Platform HTTP client.
       const httpClient = yield* HttpClient.HttpClient;
       const response = yield* HttpClientRequest.post(initiateUrl).pipe(
         HttpClientRequest.setHeaders(headers),
-        HttpClientRequest.bodyJson({
-          provider: params.provider,
-          scopes: params.scopes,
-          spaceId: params.spaceId,
-          accessTokenId: params.accessTokenId,
-        }),
+        HttpClientRequest.bodyJson(bodyPayload),
         Effect.flatMap((req) => httpClient.execute(req)),
       );
 
@@ -158,14 +168,10 @@ export const performOAuthFlow = Effect.fn(function* (
   const origin = `http://localhost:${server.port}`;
 
   // Use provided initiator or default.
-  const initiator = oauthInitiator ?? createDefaultOAuthInitiator(edgeClient);
+  const initiator = oauthInitiator ?? createFetchOAuthInitiator();
 
   yield* Effect.gen(function* () {
-    // Get auth header if needed.
-    let authHeader: string | undefined;
-    if ((edgeClient as any)['_authHeader']) {
-      authHeader = (edgeClient as any)['_authHeader'];
-    }
+    const authHeader = getEdgeAuthHeader(edgeClient);
 
     // Initiate OAuth flow.
     const authUrl = yield* initiator.initiate({
