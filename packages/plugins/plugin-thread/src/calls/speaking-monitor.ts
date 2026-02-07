@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { DeferredTask, Event, sleep } from '@dxos/async';
+import { AsyncJob, Event, sleep } from '@dxos/async';
 import { Resource } from '@dxos/context';
 
 import { monitorAudioLevel } from './util';
@@ -24,7 +24,7 @@ export class SpeakingMonitor extends Resource {
    */
   private _isSpeaking = false;
   private _lastEventTime = 0;
-  private _deferredUpdate?: DeferredTask | undefined;
+  private _deferredUpdate?: AsyncJob | undefined;
 
   constructor(private readonly _mediaStreamTrack: MediaStreamTrack) {
     super();
@@ -35,7 +35,8 @@ export class SpeakingMonitor extends Resource {
   }
 
   protected override async _open(): Promise<void> {
-    this._deferredUpdate = new DeferredTask(this._ctx, async () => this._emitSpeakingChanged());
+    this._deferredUpdate = new AsyncJob(async () => this._emitSpeakingChanged());
+    this._deferredUpdate.open(this._ctx);
 
     let timeout: NodeJS.Timeout | undefined;
     const cleanup = monitorAudioLevel({

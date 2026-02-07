@@ -7,7 +7,7 @@ import { warnAfterTimeout } from '@dxos/debug';
 import { log } from '@dxos/log';
 
 import { synchronized } from './mutex';
-import { DeferredTask } from './task-scheduling';
+import { AsyncJob } from './task-scheduling';
 import { sleep } from './timeout';
 
 const INIT_RESTART_DELAY = 100;
@@ -48,7 +48,7 @@ export class PersistentLifecycle<T> extends Resource {
   private readonly _maxRestartDelay: number;
 
   private _currentState: T | undefined = undefined;
-  private _restartTask?: DeferredTask = undefined;
+  private _restartTask?: AsyncJob = undefined;
   private _restartAfter = 0;
 
   constructor({ start, stop, onRestart, maxRestartDelay = DEFAULT_MAX_RESTART_DELAY }: PersistentLifecycleProps<T>) {
@@ -65,7 +65,7 @@ export class PersistentLifecycle<T> extends Resource {
 
   @synchronized
   protected override async _open(): Promise<void> {
-    this._restartTask = new DeferredTask(this._ctx, async () => {
+    this._restartTask = new AsyncJob(async () => {
       try {
         await this._restart();
       } catch (err) {
@@ -73,6 +73,7 @@ export class PersistentLifecycle<T> extends Resource {
         this._restartTask?.schedule();
       }
     });
+    this._restartTask.open(this._ctx);
 
     this._currentState = await this._start().catch((err) => {
       log.warn('Start failed', { err });
@@ -82,7 +83,7 @@ export class PersistentLifecycle<T> extends Resource {
   }
 
   protected override async _close(): Promise<void> {
-    await this._restartTask?.join();
+    await this._restartTask?.close();
     await this._stopCurrentState();
     this._restartTask = undefined;
   }

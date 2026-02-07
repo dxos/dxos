@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DeferredTask, Event, TimeoutError, Trigger, scheduleMicroTask, scheduleTask, sleep } from '@dxos/async';
+import { AsyncJob, Event, TimeoutError, Trigger, scheduleMicroTask, scheduleTask, sleep } from '@dxos/async';
 import { type Context, Resource, rejectOnDispose } from '@dxos/context';
 import { type CredentialProcessor, verifyCredential } from '@dxos/credentials';
 import { type EdgeHttpClient } from '@dxos/edge-client';
@@ -198,7 +198,7 @@ export class NotarizationPlugin extends Resource implements CredentialProcessor 
     const peersTried = new Set<NotarizationTeleportExtension>();
 
     // Repeatable task that tries to notarize credentials with one of the available peers.
-    const notarizeTask = new DeferredTask(ctx, async () => {
+    const notarizeTask = new AsyncJob(async () => {
       try {
         if (this._extensions.size === 0) {
           return; // No peers to try.
@@ -228,6 +228,8 @@ export class NotarizationPlugin extends Resource implements CredentialProcessor 
         notarizeTask.schedule(); // retry immediately with next peer
       }
     });
+    notarizeTask.open(ctx);
+    ctx.onDispose(() => notarizeTask.close());
 
     notarizeTask.schedule();
     this._extensionOpened.on(ctx, () => notarizeTask.schedule());

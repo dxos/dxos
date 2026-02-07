@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { DeferredTask, Event, Trigger, scheduleTask, scheduleTaskInterval, sleep } from '@dxos/async';
+import { AsyncJob, Event, Trigger, scheduleTask, scheduleTaskInterval, sleep } from '@dxos/async';
 import { type Context, Resource, cancelWithContext } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -49,8 +49,8 @@ export class SignalClient extends Resource implements SignalClientMethods {
   private _connectionCtx?: Context;
   private _client?: SignalRPCClient;
 
-  private _reconcileTask?: DeferredTask;
-  private _reconnectTask?: DeferredTask;
+  private _reconcileTask?: AsyncJob;
+  private _reconnectTask?: AsyncJob;
 
   /**
    * Number of milliseconds after which the connection will be attempted again in case of error.
@@ -101,7 +101,7 @@ export class SignalClient extends Resource implements SignalClientMethods {
     }
     this._setState(SignalState.CONNECTING);
 
-    this._reconcileTask = new DeferredTask(this._ctx, async () => {
+    this._reconcileTask = new AsyncJob(async () => {
       try {
         await cancelWithContext(this._connectionCtx!, this._clientReady.wait({ timeout: 5_000 }));
         invariant(this._state === SignalState.CONNECTED, 'Not connected to Signal Server');
@@ -114,6 +114,7 @@ export class SignalClient extends Resource implements SignalClientMethods {
         throw err;
       }
     });
+    this._reconcileTask.open(this._ctx);
 
     // Reconcile subscriptions periodically.
     scheduleTaskInterval(
@@ -126,7 +127,7 @@ export class SignalClient extends Resource implements SignalClientMethods {
       RECONCILE_INTERVAL,
     );
 
-    this._reconnectTask = new DeferredTask(this._ctx, async () => {
+    this._reconnectTask = new AsyncJob(async () => {
       try {
         await this._reconnect();
         this._monitor.recordReconnect({ success: true });
@@ -135,6 +136,7 @@ export class SignalClient extends Resource implements SignalClientMethods {
         throw err;
       }
     });
+    this._reconnectTask.open(this._ctx);
 
     this._createClient();
     log.trace('dxos.mesh.signal-client.open', trace.end({ id: this._instanceId }));
@@ -158,6 +160,8 @@ export class SignalClient extends Resource implements SignalClientMethods {
     }
 
     this._setState(SignalState.CLOSED);
+    await this._reconcileTask?.close();
+    await this._reconnectTask?.close();
     await this._safeResetClient();
 
     log('closed');

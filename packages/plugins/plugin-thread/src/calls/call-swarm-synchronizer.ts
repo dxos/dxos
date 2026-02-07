@@ -4,7 +4,7 @@
 
 import md5Hex from 'md5-hex';
 
-import { DeferredTask, Event, scheduleTaskInterval, synchronized } from '@dxos/async';
+import { AsyncJob, Event, scheduleTaskInterval, synchronized } from '@dxos/async';
 import { type Identity } from '@dxos/client/halo';
 import { Context, Resource } from '@dxos/context';
 import { generateName } from '@dxos/display-name';
@@ -66,7 +66,7 @@ export class CallSwarmSynchronizer extends Resource {
   private readonly _state: CallState = { activities: {} };
   private readonly _networkService: NetworkService;
   private _lastSwarmEvent?: SwarmResponse = undefined;
-  private _reconcileSwarmStateTask?: DeferredTask = undefined;
+  private _reconcileSwarmStateTask?: AsyncJob = undefined;
 
   private _identityKey?: string = undefined;
   private _deviceKey?: string = undefined;
@@ -74,7 +74,7 @@ export class CallSwarmSynchronizer extends Resource {
 
   private _swarmCtx?: Context = undefined;
 
-  private _sendStateTask?: DeferredTask = undefined;
+  private _sendStateTask?: AsyncJob = undefined;
 
   constructor({ networkService }: CallSwarmSynchronizerProps) {
     super();
@@ -157,16 +157,20 @@ export class CallSwarmSynchronizer extends Resource {
   }
 
   protected override async _open(): Promise<void> {
-    this._sendStateTask = new DeferredTask(this._ctx, async () => {
+    this._sendStateTask = new AsyncJob(async () => {
       await this._sendState();
     });
+    this._sendStateTask.open(this._ctx);
 
-    this._reconcileSwarmStateTask = new DeferredTask(this._ctx, async () => {
+    this._reconcileSwarmStateTask = new AsyncJob(async () => {
       await this._reconcileSwarmState();
     });
+    this._reconcileSwarmStateTask.open(this._ctx);
   }
 
   protected override async _close(): Promise<void> {
+    await this._sendStateTask?.close();
+    await this._reconcileSwarmStateTask?.close();
     this._sendStateTask = undefined;
     this._reconcileSwarmStateTask = undefined;
   }

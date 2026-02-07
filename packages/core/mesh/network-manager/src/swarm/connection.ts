@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { DeferredTask, Event, Trigger, scheduleTask, scheduleTaskInterval, sleep, synchronized } from '@dxos/async';
+import { AsyncJob, Event, Trigger, scheduleTask, scheduleTaskInterval, sleep, synchronized } from '@dxos/async';
 import { Context, ContextDisposedError, cancelWithContext } from '@dxos/context';
 import { ErrorStream } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
@@ -117,7 +117,7 @@ export class Connection {
 
   public readonly transportStats = new Event<TransportStats>();
 
-  private readonly _signalSendTask = new DeferredTask(this._ctx, async () => {
+  private readonly _signalSendTask = new AsyncJob(async () => {
     await this._flushSignalBuffer();
   });
 
@@ -174,6 +174,7 @@ export class Connection {
       initiator: this.initiator,
     });
 
+    this._signalSendTask.open(this._ctx);
     this._changeState(ConnectionState.CONNECTING);
 
     // TODO(dmaretskyi): Initialize only after the transport has established connection.
@@ -276,6 +277,7 @@ export class Connection {
       this.closeReason = err?.message;
     }
 
+    await this._signalSendTask.close();
     await this._ctx.dispose();
 
     log('aborting...', { peerId: this.localInfo, err });
@@ -322,6 +324,7 @@ export class Connection {
     this._changeState(ConnectionState.CLOSING);
 
     await this.connectedTimeoutContext.dispose();
+    await this._signalSendTask.close();
     await this._ctx.dispose();
 
     let abortProtocol = false;
