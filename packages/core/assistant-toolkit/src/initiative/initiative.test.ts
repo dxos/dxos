@@ -17,12 +17,12 @@ import { FunctionDefinition, QueueService, Trigger } from '@dxos/functions';
 import { TriggerDispatcher } from '@dxos/functions-runtime';
 import { invariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
+import { MarkdownBlueprint } from '@dxos/plugin-markdown/blueprints';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { Text } from '@dxos/schema';
 import { Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { MarkdownBlueprint } from '@dxos/plugin-markdown/blueprints';
 import * as Chat from '../chat/Chat';
 import { Document } from '../functions';
 

@@ -46,3 +46,7 @@ DX_EDGE_ECHO_REPLICATOR:
 DX_EDGE_FEED_REPLICATOR:
   path: runtime.client.edgeFeatures.feedReplicator
   type: boolean
+
+DX_LOCAL_QUEUES:
+  path: runtime.client.edgeFeatures.localQueues
+  type: boolean
