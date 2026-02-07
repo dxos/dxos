@@ -41,6 +41,10 @@ import {
   type UploadFunctionRequest,
   type UploadFunctionResponseBody,
 } from '@dxos/protocols';
+import {
+  type QueryRequest as QueryRequestProto,
+  type QueryResponse as QueryResponseProto,
+} from '@dxos/protocols/proto/dxos/echo/query';
 import { createUrl } from '@dxos/util';
 
 import { type EdgeIdentity, handleAuthChallenge } from './edge-identity';
@@ -360,6 +364,21 @@ export class EdgeHttpClient {
     return this._call(new URL(`/test/functions/${spaceId}/triggers/crons/${triggerId}/run`, this.baseUrl), {
       method: 'POST',
     });
+  }
+
+  //
+  // Query
+  //
+
+  /**
+   * Execute a QueryAST query against a space.
+   */
+  public async execQuery(
+    spaceId: SpaceId,
+    body: QueryRequestProto,
+    args?: EdgeHttpGetArgs,
+  ): Promise<QueryResponseProto> {
+    return this._call(new URL(`/spaces/${spaceId}/exec-query`, this.baseUrl), { ...args, body, method: 'POST' });
   }
 
   //
