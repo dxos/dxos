@@ -169,7 +169,10 @@ const createStructFieldsFromSchema = (schema: Schema.Schema<any, any>): Record<s
  */
 const mapSchemaTypeForLLM = (ast: SchemaAST.AST): SchemaAST.AST => {
   if (Type.Ref.isRefSchemaAST(ast)) {
-    return RefFromLLM.ast;
+    const description = ast.annotations.description
+      ? ast.annotations.description + '\n' + RefFromLLM.ast.annotations.description
+      : (RefFromLLM.ast.annotations.description as string);
+    return RefFromLLM.annotations({ description }).ast;
   }
 
   return ast;
