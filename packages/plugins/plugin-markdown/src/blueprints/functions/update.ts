@@ -6,9 +6,8 @@ import { next as A, type Doc } from '@automerge/automerge';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { ArtifactId } from '@dxos/assistant';
-import { Database } from '@dxos/echo';
-import { createDocAccessor, DocAccessor } from '@dxos/echo-db';
+import { Database, Type } from '@dxos/echo';
+import { DocAccessor, createDocAccessor } from '@dxos/echo-db';
 import { defineFunction } from '@dxos/functions';
 import { trim } from '@dxos/util';
 
@@ -34,7 +33,7 @@ export default defineFunction({
     Applies a set of edits to the markdown document.
   `,
   inputSchema: Schema.Struct({
-    id: ArtifactId.annotations({
+    doc: Type.Ref(Markdown.Document).annotations({
       description: 'The ID of the markdown document.',
     }),
     edits: Schema.Array(Edit).annotations({
@@ -44,9 +43,12 @@ export default defineFunction({
   outputSchema: Schema.Struct({
     newContent: Schema.String,
   }),
-  handler: Effect.fn(function* ({ data: { id, edits } }) {
-    const object = yield* Database.resolve(ArtifactId.toDXN(id), Markdown.Document);
-    const content = yield* Effect.promise(() => object.content.load());
+  handler: Effect.fn(function* ({ data: { doc, edits } }) {
+    const content = yield* doc.pipe(
+      Database.load,
+      Effect.map((_) => _.content),
+      Effect.flatMap(Database.load),
+    );
     const accessor = createDocAccessor(content, ['content']);
 
     for (const edit of edits) {

@@ -6,32 +6,21 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { AiService, ConsolePrinter } from '@dxos/ai';
-import { MemoizedAiService, TestAiService } from '@dxos/ai/testing';
-import {
-  AiContextService,
-  AiConversation,
-  AiConversationService,
-  type ContextBinding,
-  GenerationObserver,
-  makeToolExecutionServiceFromFunctions,
-  makeToolResolverFromFunctions,
-} from '@dxos/assistant';
+import { MemoizedAiService } from '@dxos/ai/testing';
+import { AiContextService, AiConversationService } from '@dxos/assistant';
+import { AssistantTestLayer } from '@dxos/assistant/testing';
 import { Blueprint } from '@dxos/blueprints';
 import { SpaceProperties } from '@dxos/client-protocol';
 import { DXN, Database, Obj, Query, Ref } from '@dxos/echo';
-import { acquireReleaseResource } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
-import { CredentialsService, FunctionInvocationService, QueueService, TracingService } from '@dxos/functions';
-import { FunctionInvocationServiceLayerTest, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
+import { FunctionInvocationService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { Collection } from '@dxos/schema';
-import { HasSubject, type Message } from '@dxos/types';
-import { AssistantTestLayer } from '@dxos/assistant/testing';
+import { HasSubject } from '@dxos/types';
 
-import { WithProperties, testToolkit } from '../../testing';
+import { WithProperties } from '../../testing';
 import * as MarkdownBlueprint from '../markdown-blueprint';
 
 import create from './create';

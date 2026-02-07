@@ -19,12 +19,12 @@ import { ObjectId } from '@dxos/keys';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { Collection } from '@dxos/schema';
 import { HasSubject } from '@dxos/types';
+import { trim } from '@dxos/util';
 
 import { WithProperties } from '../../testing';
 import * as MarkdownBlueprint from '../markdown-blueprint';
 
 import update from './update';
-import { trim } from '@dxos/util';
 
 ObjectId.dangerouslyDisableRandomness();
 
@@ -46,7 +46,7 @@ describe('update', () => {
         yield* Database.add(doc);
 
         yield* FunctionInvocationService.invokeFunction(update, {
-          id: doc.id,
+          doc: Ref.make(doc),
           edits: [{ oldString: 'Founders', newString: '# Founders' }],
         });
 
