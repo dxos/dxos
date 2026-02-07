@@ -26,6 +26,7 @@ const Edit = Schema.Struct({
 });
 
 // TODO(wittjosiah): Reconcile with ThreadAction.AddProposal.
+// Based on opencode's MutilEdit tool: https://deepwiki.com/search/how-does-text-edit-tool-work_a159bc76-5401-424e-b29f-f087d1ea4f78
 export default defineFunction({
   key: 'dxos.org/function/markdown/update',
   name: 'Update',

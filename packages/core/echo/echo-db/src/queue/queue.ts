@@ -34,7 +34,6 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
 
   public readonly updated = new Event();
 
-  // TODO(dmaretskyi): This task occasionally fails with "The database connection is not open" error in tests -- some issue with teardown ordering.
   private readonly _refreshTask = new DeferredTask(this._ctx, async () => {
     const thisRefreshId = ++this._refreshId;
     let changed = false;
@@ -79,7 +78,11 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
         log.info('queue refresh', { changed, objects: objects?.length ?? 0, refreshId: thisRefreshId });
       this._objects = decodedObjects as T[];
     } catch (err) {
-      log.catch(err);
+      // TODO(dmaretskyi): This task occasionally fails with "The database connection is not open" error in tests -- some issue with teardown ordering.
+      //                   We should find the root cause and fix it instead of muting the error.
+      if (!isSqliteNotOpenError(err)) {
+        log.catch(err);
+      }
       this._error = err as Error;
     } finally {
       this._isLoading = false;
@@ -340,3 +343,5 @@ const objectSetChanged = (before: Entity.Unknown[], after: Entity.Unknown[]) => 
   // TODO(dmaretskyi):  We might want to compare the objects data.
   return before.some((item, index) => item.id !== after[index].id);
 };
+
+const isSqliteNotOpenError = (err: any) => err.cause?.message?.includes('The database connection is not open');
