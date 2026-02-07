@@ -48,5 +48,5 @@ DX_EDGE_FEED_REPLICATOR:
   type: boolean
 
 DX_LOCAL_QUEUES:
-  path: runtime.client.edgeFeatures.localQueues
+  path: runtime.client.localQueues
   type: boolean
