@@ -8,9 +8,10 @@ import { Context } from '@dxos/context';
 import { type Hypergraph } from '@dxos/echo';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { SpaceId } from '@dxos/keys';
-import { QueryReactivity, type QueryRequest, type QueryService } from '@dxos/protocols/proto/dxos/echo/query';
+import { QueryReactivity, type QueryRequest } from '@dxos/protocols/proto/dxos/echo/query';
 
 import { IndexQuerySource } from './index-query-source-provider';
+import { type EchoQueryService } from '../service-types';
 
 // Mock graph - only used for queue items which are not tested here.
 const mockGraph = {} as Hypergraph.Hypergraph;
@@ -44,7 +45,7 @@ describe('IndexQuerySource', () => {
           close: async () => {},
         } as any;
       },
-    } as unknown as QueryService;
+    } as unknown as EchoQueryService;
 
     const source = new IndexQuerySource({
       service,
@@ -82,7 +83,7 @@ describe('IndexQuerySource', () => {
           close: async () => {},
         } as any;
       },
-    } as unknown as QueryService;
+    } as unknown as EchoQueryService;
 
     const source = new IndexQuerySource({
       service,
