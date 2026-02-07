@@ -27,12 +27,15 @@ import { type ObjectId } from '@dxos/keys';
 import { type DXN, type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { RpcClosedError } from '@dxos/protocols';
-import type { QueryService } from '@dxos/protocols/proto/dxos/echo/query';
-import type { DataService, SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
 import { trace } from '@dxos/tracing';
 import { chunkArray, deepMapValues, defaultMap } from '@dxos/util';
 
 import { type ChangeEvent, type DocHandleProxy, RepoProxy, type SaveStateChangedEvent } from '../automerge';
+import {
+  type EchoDataService,
+  type EchoQueryService,
+  type ServiceSpaceSyncState,
+} from '../service-types';
 import { type HypergraphImpl } from '../hypergraph';
 
 import {
@@ -48,8 +51,8 @@ export type InitRootProxyFn = (core: ObjectCore) => void;
 
 export type CoreDatabaseProps = {
   graph: HypergraphImpl;
-  dataService: DataService;
-  queryService: QueryService;
+  dataService: EchoDataService;
+  queryService: EchoQueryService;
   spaceId: SpaceId;
   spaceKey: PublicKey;
 };
@@ -82,8 +85,8 @@ export class CoreDatabase {
   private readonly _spaceKey: PublicKey;
   private readonly _spaceId: SpaceId;
   private readonly _hypergraph: HypergraphImpl;
-  private readonly _dataService: DataService;
-  private readonly _queryService: QueryService;
+  private readonly _dataService: EchoDataService;
+  private readonly _queryService: EchoQueryService;
   private readonly _repoProxy: RepoProxy;
   private readonly _objects = new Map<string, ObjectCore>();
 
@@ -547,7 +550,7 @@ export class CoreDatabase {
     }
 
     if (indexes) {
-      await this._dataService.updateIndexes(undefined, { timeout: 0 });
+      await this._dataService.updateIndexes({ timeout: 0 });
     }
 
     if (updates) {
@@ -575,8 +578,10 @@ export class CoreDatabase {
     );
 
     const heads: Record<string, string[]> = {};
-    for (const state of headsStates.heads.entries ?? []) {
-      heads[state.documentId] = state.heads ?? [];
+    for (const state of headsStates.heads?.entries ?? []) {
+      if (state.documentId) {
+        heads[state.documentId] = state.heads ?? [];
+      }
     }
 
     heads[root.documentId] = getHeads(doc);
@@ -629,21 +634,21 @@ export class CoreDatabase {
    * @deprecated Use `flush({ indexes: true })`.
    */
   async updateIndexes(): Promise<void> {
-    await this._dataService.updateIndexes(undefined, { timeout: 0 });
+    await this._dataService.updateIndexes({ timeout: 0 });
   }
 
-  async getSyncState(): Promise<SpaceSyncState> {
+  async getSyncState(): Promise<ServiceSpaceSyncState> {
     const value = await Stream.first(
-      this._dataService.subscribeSpaceSyncState({ spaceId: this.spaceId }, { timeout: RPC_TIMEOUT }),
+      this._dataService.subscribeSpaceSyncState({ spaceId: this.spaceId }),
     );
     return value ?? raise(new Error('Failed to get sync state'));
   }
 
-  subscribeToSyncState(ctx: Context, callback: (state: SpaceSyncState) => void): CleanupFn {
-    let currentStream: ReturnType<DataService['subscribeSpaceSyncState']> | undefined;
+  subscribeToSyncState(ctx: Context, callback: (state: ServiceSpaceSyncState) => void): CleanupFn {
+    let currentStream: ReturnType<EchoDataService['subscribeSpaceSyncState']> | undefined;
 
     const setupStream = () => {
-      currentStream = this._dataService.subscribeSpaceSyncState({ spaceId: this.spaceId }, { timeout: RPC_TIMEOUT });
+      currentStream = this._dataService.subscribeSpaceSyncState({ spaceId: this.spaceId });
       currentStream.subscribe(
         (data) => {
           void runInContextAsync(ctx, () => callback(data));
@@ -667,7 +672,7 @@ export class CoreDatabase {
   /**
    * Update service references after reconnection.
    */
-  _updateServices({ dataService, queryService }: { dataService: DataService; queryService: QueryService }): void {
+  _updateServices({ dataService, queryService }: { dataService: EchoDataService; queryService: EchoQueryService }): void {
     (this as any)._dataService = dataService;
     (this as any)._queryService = queryService;
     this._repoProxy._updateDataService(dataService);

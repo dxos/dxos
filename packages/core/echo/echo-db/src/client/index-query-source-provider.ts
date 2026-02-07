@@ -11,16 +11,12 @@ import { invariant } from '@dxos/invariant';
 import { DXN, type ObjectId, type QueueSubspaceTag, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { RpcClosedError } from '@dxos/protocols';
-import {
-  QueryReactivity,
-  type QueryResponse,
-  type QueryService,
-  type QueryResult as RemoteQueryResult,
-} from '@dxos/protocols/proto/dxos/echo/query';
+import { QueryReactivity } from '@dxos/protocols/proto/dxos/echo/query';
 import { isNonNullable } from '@dxos/util';
 
 import { OBJECT_DIAGNOSTICS, type QuerySourceProvider } from '../hypergraph';
 import { type QuerySource, getTargetSpacesForQuery } from '../query';
+import { type EchoQueryService, type ServiceQueryResponse, type ServiceQueryResult } from '../service-types';
 
 export type LoadObjectProps = {
   spaceId: SpaceId;
@@ -33,7 +29,7 @@ export interface ObjectLoader {
 }
 
 export type IndexQueryProviderProps = {
-  service: QueryService;
+  service: EchoQueryService;
   objectLoader: ObjectLoader;
   graph: Hypergraph.Hypergraph;
 };
@@ -55,7 +51,7 @@ export class IndexQuerySourceProvider implements QuerySourceProvider {
 }
 
 export type IndexQuerySourceProps = {
-  service: QueryService;
+  service: EchoQueryService;
   objectLoader: ObjectLoader;
   graph: Hypergraph.Hypergraph;
 };
@@ -68,7 +64,7 @@ export class IndexQuerySource implements QuerySource {
 
   private _query?: QueryAST.Query = undefined;
   private _results?: QueryResult.EntityEntry[] = [];
-  private _stream?: Stream<QueryResponse>;
+  private _stream?: Stream<ServiceQueryResponse>;
   private _open = false;
 
   constructor(private readonly _params: IndexQuerySourceProps) {}
@@ -209,7 +205,7 @@ export class IndexQuerySource implements QuerySource {
   private async _filterMapResult(
     ctx: Context,
     queryStartTimestamp: number,
-    result: RemoteQueryResult,
+    result: ServiceQueryResult,
   ): Promise<QueryResult.EntityEntry | null> {
     if (!OBJECT_DIAGNOSTICS.has(result.id)) {
       OBJECT_DIAGNOSTICS.set(result.id, {

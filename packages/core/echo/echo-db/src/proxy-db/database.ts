@@ -13,8 +13,7 @@ import { getProxyTarget, isProxy } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { DXN, type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type QueryService } from '@dxos/protocols/proto/dxos/echo/query';
-import { type DataService, type SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
+import { type EchoDataService, type EchoQueryService, type ServiceSpaceSyncState } from '../service-types';
 import { defaultMap } from '@dxos/util';
 
 import type { SaveStateChangedEvent } from '../automerge';
@@ -63,12 +62,12 @@ export interface EchoDatabase extends Database.Database {
   /**
    * Get the current sync state.
    */
-  getSyncState(): Promise<SpaceSyncState>;
+  getSyncState(): Promise<ServiceSpaceSyncState>;
 
   /**
    * Get notification about the sync progress with other peers.
    */
-  subscribeToSyncState(ctx: Context, callback: (state: SpaceSyncState) => void): CleanupFn;
+  subscribeToSyncState(ctx: Context, callback: (state: ServiceSpaceSyncState) => void): CleanupFn;
 
   /**
    * Insert new objects.
@@ -85,8 +84,8 @@ export interface EchoDatabase extends Database.Database {
 
 export type EchoDatabaseProps = {
   graph: HypergraphImpl;
-  dataService: DataService;
-  queryService: QueryService;
+  dataService: EchoDataService;
+  queryService: EchoQueryService;
   spaceId: SpaceId;
 
   /**
@@ -316,18 +315,18 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     await this.flush();
   }
 
-  getSyncState(): Promise<SpaceSyncState> {
+  getSyncState(): Promise<ServiceSpaceSyncState> {
     return this._coreDatabase.getSyncState();
   }
 
-  subscribeToSyncState(ctx: Context, callback: (state: SpaceSyncState) => void): CleanupFn {
+  subscribeToSyncState(ctx: Context, callback: (state: ServiceSpaceSyncState) => void): CleanupFn {
     return this._coreDatabase.subscribeToSyncState(ctx, callback);
   }
 
   /**
    * Update service references after reconnection.
    */
-  _updateServices({ dataService, queryService }: { dataService: DataService; queryService: QueryService }): void {
+  _updateServices({ dataService, queryService }: { dataService: EchoDataService; queryService: EchoQueryService }): void {
     this._coreDatabase._updateServices({ dataService, queryService });
   }
 
