@@ -80,6 +80,9 @@
       "path": "../../core/echo/echo-protocol"
     },
     {
+      "path": "../../core/echo/feed"
+    },
+    {
       "path": "../../core/echo/indexing"
     },
     {

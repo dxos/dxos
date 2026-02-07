@@ -11,7 +11,7 @@ import { defineHiddenProperty } from '@dxos/echo/internal';
 import { assertArgument, failedInvariant } from '@dxos/invariant';
 import { type DXN, type ObjectId, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type QueueService } from '@dxos/protocols';
+import { type QueueProtocol } from '@dxos/protocols';
 
 import { Filter, Query, QueryResultImpl } from '../query';
 
@@ -106,7 +106,7 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
   private _querying = false;
 
   constructor(
-    private readonly _service: QueueService,
+    private readonly _service: QueueProtocol.QueueService,
     private readonly _refResolver: Ref.Resolver,
     private readonly _dxn: DXN,
   ) {

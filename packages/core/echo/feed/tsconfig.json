@@ -10,6 +10,12 @@
       "path": "../../../common/async"
     },
     {
+      "path": "../../../common/context"
+    },
+    {
+      "path": "../../../common/effect"
+    },
+    {
       "path": "../../../common/invariant"
     },
     {
@@ -19,7 +25,13 @@
       "path": "../../../common/log"
     },
     {
+      "path": "../../../common/sql-sqlite"
+    },
+    {
       "path": "../../../common/util"
+    },
+    {
+      "path": "../../protocols"
     }
   ]
 }

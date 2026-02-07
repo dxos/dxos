@@ -256,3 +256,10 @@ All timestamps (e.g., `insertionTimestamp`) are Unix timestamps in milliseconds.
   ]
 }
 ```
+
+### TODOs
+
+- [ ] Move definitions to protocols package.
+- [ ] Sync protocol only works if each namespace is synced separately.
+- [ ] Update code to generate position per (spaceId x feedNamespace) pair -- this is essential for sharding queues on edge.
+

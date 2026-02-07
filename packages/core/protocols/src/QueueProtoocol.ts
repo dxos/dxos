@@ -2,16 +2,35 @@
 // Copyright 2026 DXOS.org
 //
 
+export {
+  type QueueService,
+  type QueueQuery,
+  type QueueQueryResult as QueryResult,
+  type QueryQueueRequest,
+  type InsertIntoQueueRequest,
+  type DeleteFromQueueRequest,
+} from './proto/gen/dxos/client/services.js';
+
+export const KEY_QUEUE_POSITION = 'dxos.org/key/queue-position';
+
 import * as Schema from 'effect/Schema';
+
+import { SpaceId } from '@dxos/keys';
 
 export const FeedCursor = Schema.String.pipe(Schema.brand('@dxos/feed/FeedCursor'));
 export type FeedCursor = Schema.Schema.Type<typeof FeedCursor>;
+(FeedCursor as any).make = (value: string): FeedCursor => value as FeedCursor;
 
 export const Block = Schema.Struct({
   /**
-   * Only set on query.
+   * Appears on blocks returned from query.
    */
   feedId: Schema.UndefinedOr(Schema.String),
+
+  /**
+   * Appears on blocks returned from query.
+   */
+  feedNamespace: Schema.UndefinedOr(Schema.String),
 
   actorId: Schema.String,
   sequence: Schema.Number,
@@ -29,6 +48,8 @@ export const Block = Schema.Struct({
   insertionId: Schema.optional(Schema.Number),
 });
 export interface Block extends Schema.Schema.Type<typeof Block> {}
+(Block as any).make = (input: Partial<Block> & Pick<Block, 'actorId' | 'sequence' | 'timestamp' | 'data'>): Block =>
+  Schema.decodeUnknownSync(Block)(input);
 
 //
 // RPC Schemas
@@ -38,8 +59,7 @@ export interface Block extends Schema.Schema.Type<typeof Block> {}
 export const QueryRequest = Schema.Struct({
   requestId: Schema.optional(Schema.String),
 
-  // TODO(dmaretskyi): Make required.
-  spaceId: Schema.optional(Schema.String),
+  spaceId: SpaceId,
 
   query: Schema.Union(
     Schema.Struct({
@@ -57,14 +77,20 @@ export const QueryRequest = Schema.Struct({
    *
    * Must not be used with `position`.
    */
-  cursor: Schema.optional(FeedCursor),
-
-  /**
+  cursor: Schema.optional(FeedCursor) /**
    * Get changes following this position.
+   * Returned blocks have strictly greater position than this.
    *
    * Must not be used with `cursor`.
-   */
+   */,
   position: Schema.optional(Schema.Number),
+
+  /**
+   * Only return blocks that are not positionned.
+   *
+   * Must not be used with `cursor` or `position`.
+   */
+  unpositionedOnly: Schema.optional(Schema.Boolean),
 
   limit: Schema.optional(Schema.Number),
 });
@@ -74,6 +100,7 @@ export interface QueryRequest extends Schema.Schema.Type<typeof QueryRequest> {}
 export const QueryResponse = Schema.Struct({
   requestId: Schema.optional(Schema.String),
   nextCursor: FeedCursor,
+  hasMore: Schema.Boolean,
   blocks: Schema.Array(Block),
 });
 export interface QueryResponse extends Schema.Schema.Type<typeof QueryResponse> {}
@@ -96,8 +123,6 @@ export const AppendRequest = Schema.Struct({
   requestId: Schema.optional(Schema.String),
 
   spaceId: Schema.String,
-  namespace: Schema.String,
-  feedId: Schema.String,
 
   blocks: Schema.Array(Block),
 });
@@ -108,3 +133,34 @@ export const AppendResponse = Schema.Struct({
   positions: Schema.Array(Schema.Number),
 });
 export interface AppendResponse extends Schema.Schema.Type<typeof AppendResponse> {}
+
+export const ProtocolMessage = Schema.Union(
+  Schema.TaggedStruct('QueryRequest', QueryRequest.fields),
+  Schema.TaggedStruct('QueryResponse', QueryResponse.fields),
+  Schema.TaggedStruct('SubscribeRequest', SubscribeRequest.fields),
+  Schema.TaggedStruct('SubscribeResponse', SubscribeResponse.fields),
+  Schema.TaggedStruct('AppendRequest', AppendRequest.fields),
+  Schema.TaggedStruct('AppendResponse', AppendResponse.fields),
+  Schema.TaggedStruct('Error', {
+    message: Schema.String,
+  }),
+).pipe(
+  Schema.extend(
+    Schema.Struct({
+      senderPeerId: Schema.UndefinedOr(Schema.String),
+      /**
+       * Could be undefined if the recipient could be assumed from the context.
+       */
+      recipientPeerId: Schema.UndefinedOr(Schema.String),
+    }),
+  ),
+);
+export type ProtocolMessage = Schema.Schema.Type<typeof ProtocolMessage>;
+
+export const WellKnownNamespaces = {
+  data: 'data',
+  trace: 'trace',
+} as const;
+
+export const isWellKnownNamespace = (namespace: string) =>
+  Object.values(WellKnownNamespaces).includes(namespace as any);

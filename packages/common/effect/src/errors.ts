@@ -31,7 +31,10 @@ const prettyErrorStack = (error: any, appendStacks: string[] = []): any => {
   const lines = typeof error.stack === 'string' ? error.stack.split('\n') : [];
   const out = [];
 
-  let atStack = false;
+  // Very hacky way to remove effect runtime internal stack frames.
+  let atStack = false,
+    inCore = false,
+    passedScheduler = false;
   for (let i = 0; i < lines.length; i++) {
     if (!atStack && !lines[i].startsWith('    at ')) {
       out.push(lines[i]);
@@ -49,6 +52,26 @@ const prettyErrorStack = (error: any, appendStacks: string[] = []): any => {
     if (lines[i].includes('effect_internal_function')) {
       break;
     }
+
+    const filename = lines[i].match(/\/([a-zA-Z0-9_\-.]+):\d+:\d+\)$/)?.[1];
+
+    if (!inCore && ['core-effect.ts'].includes(filename)) {
+      inCore = true;
+    }
+
+    if (inCore && !passedScheduler && ['Scheduler.ts'].includes(filename)) {
+      passedScheduler = true;
+      continue;
+    }
+
+    if (passedScheduler && !['Schduler.ts'].includes(filename)) {
+      inCore = false;
+    }
+
+    if (inCore) {
+      continue;
+    }
+
     out.push(
       lines[i]
         .replace(/at .*effect_instruction_i.*\((.*)\)/, 'at $1')
@@ -125,7 +148,7 @@ export const causeToError = (cause: Cause.Cause<any>): Error => {
     const getStackFrames = (): string[] => {
       // Bun requies the target object for `captureStackTrace` to be an Error.
       const o = new Error();
-      Error.captureStackTrace(o, getStackFrames);
+      Error.captureStackTrace(o, causeToError);
       return o.stack!.split('\n').slice(1);
     };
 
@@ -150,7 +173,7 @@ export const causeToError = (cause: Cause.Cause<any>): Error => {
  *
  * @throws AggregateError if there are multiple errors.
  */
-export const throwCause = (cause: Cause.Cause<any>): never => {
+export const throwCause = (cause: Cause.Cause<any>, { stackTip }: { stackTip?: Function } = {}): never => {
   throw causeToError(cause);
 };
 
@@ -180,13 +203,39 @@ export const runAndForwardErrors = async <A, E>(
   return unwrapExit(exit);
 };
 
-export const runInRuntime = async <A, E, R>(
-  runtime: Runtime.Runtime<R>,
-  effect: Effect.Effect<A, E, R>,
-  options?: { signal?: AbortSignal },
-): Promise<A> => {
-  const exit = await Runtime.runPromiseExit(runtime, effect, options);
-  return unwrapExit(exit);
+/**
+ * Runs the embedded effect asynchronously and throws any failures and defects as errors.
+ */
+export const runInRuntime: {
+  <R>(
+    runtime: Runtime.Runtime<R>,
+  ): <A, E>(effect: Effect.Effect<A, E, R>, options?: { signal?: AbortSignal } | undefined) => Promise<A>;
+  <R, A, E>(
+    runtime: Runtime.Runtime<R>,
+    effect: Effect.Effect<A, E, R>,
+    options?: { signal?: AbortSignal } | undefined,
+  ): Promise<A>;
+} = (...args: any[]): any => {
+  if (args.length === 1) {
+    const [runtime] = args as [Runtime.Runtime<any>];
+    return async (
+      effect: Effect.Effect<any, any, any>,
+      options?: { signal?: AbortSignal } | undefined,
+    ): Promise<any> => {
+      const exit = await Runtime.runPromiseExit(runtime, effect, options);
+      return unwrapExit(exit);
+    };
+  } else {
+    const [runtime, effect, options] = args as [
+      Runtime.Runtime<any>,
+      Effect.Effect<any, any, any>,
+      { signal?: AbortSignal } | undefined,
+    ];
+    return (async () => {
+      const exit = await Runtime.runPromiseExit(runtime, effect, options);
+      return unwrapExit(exit);
+    })();
+  }
 };
 
 /**

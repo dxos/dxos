@@ -44,7 +44,7 @@ import { ComplexSet, bufferToArray, defaultMap, isNonNullable, range } from '@dx
 import { type CollectionState, CollectionSynchronizer, diffCollectionState } from './collection-synchronizer';
 import { type EchoDataMonitor } from './echo-data-monitor';
 import { EchoNetworkAdapter, isEchoPeerMetadata } from './echo-network-adapter';
-import { type EchoReplicator, type RemoteDocumentExistenceCheckProps } from './echo-replicator';
+import { type AutomergeReplicator, type RemoteDocumentExistenceCheckProps } from './echo-replicator';
 import { HeadsStore } from './heads-store';
 import { type BeforeSaveProps, LevelDBStorageAdapter } from './leveldb-storage-adapter';
 
@@ -298,12 +298,12 @@ export class AutomergeHost extends Resource {
     return this._repo.handles;
   }
 
-  async addReplicator(replicator: EchoReplicator): Promise<void> {
+  async addReplicator(replicator: AutomergeReplicator): Promise<void> {
     invariant(this.isOpen, 'AutomergeHost is not open');
     await this._echoNetworkAdapter.addReplicator(replicator);
   }
 
-  async removeReplicator(replicator: EchoReplicator): Promise<void> {
+  async removeReplicator(replicator: AutomergeReplicator): Promise<void> {
     invariant(this.isOpen, 'AutomergeHost is not open');
     await this._echoNetworkAdapter.removeReplicator(replicator);
   }

@@ -13,6 +13,7 @@ import { SpaceId } from '@dxos/keys';
 export enum EdgeService {
   AUTOMERGE_REPLICATOR = 'automerge-replicator',
   FEED_REPLICATOR = 'feed-replicator',
+  QUEUE_REPLICATOR = 'queue-replicator',
   SWARM = 'swarm',
   SIGNAL = 'signal',
   STATUS = 'status',

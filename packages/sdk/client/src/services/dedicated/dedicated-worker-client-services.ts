@@ -78,7 +78,7 @@ export class DedicatedWorkerClientServices extends Resource implements ClientSer
   override async _open(): Promise<void> {
     this.#coordinator = await this.#createCoordinator();
     this.#watchLeader();
-    this.#connectTask.open(this._ctx);
+    this.#connectTask.open();
     await this.#connectTask.runBlocking();
     await this.#initialConnection.wait();
   }
