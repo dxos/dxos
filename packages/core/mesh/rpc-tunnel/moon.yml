@@ -7,3 +7,4 @@ tasks:
   compile:
     args:
       - '--entryPoint=src/index.ts'
+      - '--platform=neutral'

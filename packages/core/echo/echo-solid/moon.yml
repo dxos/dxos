@@ -8,6 +8,7 @@ tasks:
   compile:
     args:
       - '--entryPoint=src/index.ts'
+      - '--platform=neutral'
   # TODO(wittjosiah): Get working with vitest.base.config.ts.
   test:
     options:
