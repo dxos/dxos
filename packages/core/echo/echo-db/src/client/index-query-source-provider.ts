@@ -11,16 +11,12 @@ import { invariant } from '@dxos/invariant';
 import { DXN, type ObjectId, type QueueSubspaceTag, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { RpcClosedError } from '@dxos/protocols';
-import {
-  QueryReactivity,
-  type QueryResponse,
-  type QueryService,
-  type QueryResult as RemoteQueryResult,
-} from '@dxos/protocols/proto/dxos/echo/query';
+import { QueryReactivity } from '@dxos/protocols/proto/dxos/echo/query';
 import { isNonNullable } from '@dxos/util';
 
 import { OBJECT_DIAGNOSTICS, type QuerySourceProvider } from '../hypergraph';
 import { type QuerySource, getTargetSpacesForQuery } from '../query';
+import { type EchoQueryService, type ServiceQueryResponse, type ServiceQueryResult } from '../service-types';
 
 export type LoadObjectProps = {
   spaceId: SpaceId;
@@ -33,7 +29,7 @@ export interface ObjectLoader {
 }
 
 export type IndexQueryProviderProps = {
-  service: QueryService;
+  service: EchoQueryService;
   objectLoader: ObjectLoader;
   graph: Hypergraph.Hypergraph;
 };
@@ -55,7 +51,7 @@ export class IndexQuerySourceProvider implements QuerySourceProvider {
 }
 
 export type IndexQuerySourceProps = {
-  service: QueryService;
+  service: EchoQueryService;
   objectLoader: ObjectLoader;
   graph: Hypergraph.Hypergraph;
 };
@@ -68,7 +64,7 @@ export class IndexQuerySource implements QuerySource {
 
   private _query?: QueryAST.Query = undefined;
   private _results?: QueryResult.EntityEntry[] = [];
-  private _stream?: Stream<QueryResponse>;
+  private _stream?: Stream<ServiceQueryResponse>;
   private _open = false;
 
   constructor(private readonly _params: IndexQuerySourceProps) {}
@@ -147,7 +143,7 @@ export class IndexQuerySource implements QuerySource {
           const targetSpaces = getTargetSpacesForQuery(query);
           if (targetSpaces.length > 0) {
             invariant(
-              response.results?.every((r) => targetSpaces.includes(SpaceId.make(r.spaceId))),
+              response.results?.every((r) => r.spaceId && targetSpaces.includes(SpaceId.make(r.spaceId))),
               'Result spaceId mismatch',
             );
           }
@@ -209,46 +205,51 @@ export class IndexQuerySource implements QuerySource {
   private async _filterMapResult(
     ctx: Context,
     queryStartTimestamp: number,
-    result: RemoteQueryResult,
+    result: ServiceQueryResult,
   ): Promise<QueryResult.EntityEntry | null> {
-    if (!OBJECT_DIAGNOSTICS.has(result.id)) {
-      OBJECT_DIAGNOSTICS.set(result.id, {
-        objectId: result.id,
-        spaceId: result.spaceId,
+    const { id, spaceId } = result;
+    if (!id || !spaceId) {
+      return null;
+    }
+
+    if (!OBJECT_DIAGNOSTICS.has(id)) {
+      OBJECT_DIAGNOSTICS.set(id, {
+        objectId: id,
+        spaceId,
         loadReason: 'query',
         query: JSON.stringify(this._query ?? null),
       });
     }
 
-    invariant(SpaceId.isValid(result.spaceId), 'Invalid spaceId');
+    invariant(SpaceId.isValid(spaceId), 'Invalid spaceId');
 
     // For queue items, hydrate using Obj.fromJSON with ref resolver.
     if (result.queueId && result.documentJson) {
       const json = JSON.parse(result.documentJson);
       const queueDxn = DXN.fromQueue(
         (result.queueNamespace ?? 'data') as QueueSubspaceTag,
-        result.spaceId as SpaceId,
+        spaceId as SpaceId,
         result.queueId as ObjectId,
       );
       const refResolver = this._params.graph.createRefResolver({
-        context: { space: result.spaceId as SpaceId, queue: queueDxn },
+        context: { space: spaceId as SpaceId, queue: queueDxn },
       });
       const object = await Obj.fromJSON(json, {
         refResolver,
-        dxn: queueDxn.extend([result.id as ObjectId]),
+        dxn: queueDxn.extend([id as ObjectId]),
       });
       const queryResult: QueryResult.EntityEntry = {
-        id: result.id,
+        id,
         result: object,
-        match: { rank: result.rank },
+        match: { rank: result.rank ?? 1 },
         resolution: { source: 'index', time: Date.now() - queryStartTimestamp },
       };
       return queryResult;
     }
 
     const object = await this._params.objectLoader.loadObject({
-      spaceId: result.spaceId,
-      objectId: result.id,
+      spaceId,
+      objectId: id,
       documentId: result.documentId,
     });
     if (!object) {
@@ -262,7 +263,7 @@ export class IndexQuerySource implements QuerySource {
     const queryResult: QueryResult.EntityEntry = {
       id: object.id,
       result: object,
-      match: { rank: result.rank },
+      match: { rank: result.rank ?? 1 },
       resolution: { source: 'index', time: Date.now() - queryStartTimestamp },
     };
     return queryResult;

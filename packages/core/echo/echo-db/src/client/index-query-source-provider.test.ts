@@ -8,7 +8,9 @@ import { Context } from '@dxos/context';
 import { type Hypergraph } from '@dxos/echo';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { SpaceId } from '@dxos/keys';
-import { QueryReactivity, type QueryRequest, type QueryService } from '@dxos/protocols/proto/dxos/echo/query';
+import { QueryReactivity, type QueryRequest } from '@dxos/protocols/proto/dxos/echo/query';
+
+import { type EchoQueryService } from '../service-types';
 
 import { IndexQuerySource } from './index-query-source-provider';
 
@@ -44,7 +46,7 @@ describe('IndexQuerySource', () => {
           close: async () => {},
         } as any;
       },
-    } as unknown as QueryService;
+    } as unknown as EchoQueryService;
 
     const source = new IndexQuerySource({
       service,
@@ -82,7 +84,7 @@ describe('IndexQuerySource', () => {
           close: async () => {},
         } as any;
       },
-    } as unknown as QueryService;
+    } as unknown as EchoQueryService;
 
     const source = new IndexQuerySource({
       service,
