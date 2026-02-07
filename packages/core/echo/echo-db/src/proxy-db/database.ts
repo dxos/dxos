@@ -13,7 +13,6 @@ import { getProxyTarget, isProxy } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { DXN, type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type EchoDataService, type EchoQueryService, type ServiceSpaceSyncState } from '../service-types';
 import { defaultMap } from '@dxos/util';
 
 import type { SaveStateChangedEvent } from '../automerge';
@@ -28,6 +27,7 @@ import {
 } from '../echo-handler';
 import { type HypergraphImpl } from '../hypergraph';
 import { Filter, Query } from '../query';
+import { type EchoDataService, type EchoQueryService, type ServiceSpaceSyncState } from '../service-types';
 
 import { DatabaseSchemaRegistry } from './database-schema-registry';
 import { type ObjectMigration } from './object-migration';
@@ -326,7 +326,13 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   /**
    * Update service references after reconnection.
    */
-  _updateServices({ dataService, queryService }: { dataService: EchoDataService; queryService: EchoQueryService }): void {
+  _updateServices({
+    dataService,
+    queryService,
+  }: {
+    dataService: EchoDataService;
+    queryService: EchoQueryService;
+  }): void {
     this._coreDatabase._updateServices({ dataService, queryService });
   }
 

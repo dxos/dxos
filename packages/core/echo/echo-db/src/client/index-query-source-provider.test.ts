@@ -10,8 +10,9 @@ import { type QueryAST } from '@dxos/echo-protocol';
 import { SpaceId } from '@dxos/keys';
 import { QueryReactivity, type QueryRequest } from '@dxos/protocols/proto/dxos/echo/query';
 
-import { IndexQuerySource } from './index-query-source-provider';
 import { type EchoQueryService } from '../service-types';
+
+import { IndexQuerySource } from './index-query-source-provider';
 
 // Mock graph - only used for queue items which are not tested here.
 const mockGraph = {} as Hypergraph.Hypergraph;

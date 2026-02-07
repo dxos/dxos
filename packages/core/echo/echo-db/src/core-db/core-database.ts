@@ -31,12 +31,8 @@ import { trace } from '@dxos/tracing';
 import { chunkArray, deepMapValues, defaultMap } from '@dxos/util';
 
 import { type ChangeEvent, type DocHandleProxy, RepoProxy, type SaveStateChangedEvent } from '../automerge';
-import {
-  type EchoDataService,
-  type EchoQueryService,
-  type ServiceSpaceSyncState,
-} from '../service-types';
 import { type HypergraphImpl } from '../hypergraph';
+import { type EchoDataService, type EchoQueryService, type ServiceSpaceSyncState } from '../service-types';
 
 import {
   type AutomergeDocumentLoader,
@@ -638,9 +634,7 @@ export class CoreDatabase {
   }
 
   async getSyncState(): Promise<ServiceSpaceSyncState> {
-    const value = await Stream.first(
-      this._dataService.subscribeSpaceSyncState({ spaceId: this.spaceId }),
-    );
+    const value = await Stream.first(this._dataService.subscribeSpaceSyncState({ spaceId: this.spaceId }));
     return value ?? raise(new Error('Failed to get sync state'));
   }
 
@@ -672,7 +666,13 @@ export class CoreDatabase {
   /**
    * Update service references after reconnection.
    */
-  _updateServices({ dataService, queryService }: { dataService: EchoDataService; queryService: EchoQueryService }): void {
+  _updateServices({
+    dataService,
+    queryService,
+  }: {
+    dataService: EchoDataService;
+    queryService: EchoQueryService;
+  }): void {
     (this as any)._dataService = dataService;
     (this as any)._queryService = queryService;
     this._repoProxy._updateDataService(dataService);

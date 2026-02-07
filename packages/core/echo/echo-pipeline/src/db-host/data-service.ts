@@ -11,8 +11,8 @@ import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type Empty, EmptySchema, create } from '@dxos/protocols/buf';
 import {
-  BatchedDocumentUpdatesSchema,
   type BatchedDocumentUpdates,
+  BatchedDocumentUpdatesSchema,
   type CreateDocumentRequest,
   type CreateDocumentResponse,
   CreateDocumentResponseSchema,
