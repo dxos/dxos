@@ -3,7 +3,7 @@
 //
 
 import type { QueryAST } from '@dxos/echo-protocol';
-import type { EscapedPropPath } from '@dxos/indexing';
+import type { EscapedPropPath } from '@dxos/index-core';
 import type { DXN, ObjectId, SpaceId } from '@dxos/keys';
 
 export namespace QueryPlan {

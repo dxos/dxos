@@ -166,10 +166,6 @@ export class ServiceContext extends Resource {
       kv: this.level,
       peerIdProvider: () => this.identityManager.identity?.deviceKey?.toHex(),
       getSpaceKeyByRootDocumentId: (documentId) => this.spaceManager.findSpaceByRootDocumentId(documentId)?.key,
-      indexing: {
-        vector: this._runtimeProps?.enableVectorIndexing,
-        sqlIndex: this._runtimeProps?.enableSqlite,
-      },
       runtime: this._runtime,
       localQueues: this._runtimeProps?.enableLocalQueues,
     });

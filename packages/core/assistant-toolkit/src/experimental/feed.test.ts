@@ -33,7 +33,6 @@ const TestLayer = Layer.mergeAll(
     Layer.mergeAll(
       AiServiceTestingPreset('direct'),
       TestDatabaseLayer({
-        indexing: { vector: true },
         types: [],
         storagePath: testStoragePath({ name: 'feed-test' }),
       }),
