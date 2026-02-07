@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { ObjectPointerVersion, objectPointerCodec } from './indexing.js';
+import { ObjectPointerVersion, objectPointerCodec } from './indexing.ts';
 
 describe('Indexing object pointer codec', () => {
   test('getVersion', async () => {
