@@ -32,8 +32,8 @@ export const SimpleLayout = () => {
         <MobileLayout.Header>
           <div className='p-1 border'>HEADER</div>
         </MobileLayout.Header>
-        <MobileLayout.Main>
-          <div className='flex flex-col'>
+        <MobileLayout.Main classNames='border'>
+          <div role='none' className='flex flex-col'>
             {Array.from({ length: 20 }).map((_, i) => (
               <div key={i} className='p-1'>
                 <Input.Root>

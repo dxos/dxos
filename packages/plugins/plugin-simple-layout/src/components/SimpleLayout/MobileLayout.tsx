@@ -4,15 +4,10 @@
 
 import React, { type PropsWithChildren, forwardRef } from 'react';
 
+import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { useIOSKeyboard } from '../../hooks';
-
-//
-// Root
-//
-
-type RootProps = PropsWithChildren;
 
 /**
  * Mobile container that handles iOS keyboard layout adjustments.
@@ -29,7 +24,15 @@ type RootProps = PropsWithChildren;
  * NOTE: By default when an input is selected on iOS the Input Accessory View is shown above the keyboard.
  * This can be disabled by setting the `inputAccessoryView` property to `false`.
  */
+
+//
+// Root
+//
+
+type RootProps = PropsWithChildren;
+
 const Root = forwardRef<HTMLDivElement, RootProps>(({ children, ...props }, forwardedRef) => {
+  // TODO(burdon): ios-only.
   // Hook handles keyboard detection and sets CSS custom properties.
   useIOSKeyboard();
 
@@ -37,13 +40,13 @@ const Root = forwardRef<HTMLDivElement, RootProps>(({ children, ...props }, forw
     <div
       {...props}
       className={mx(
-        // Fixed positioning to fill viewport - hook handles body locking.
+        // Fixed positioning to fill viewport (hook handles body locking).
         'fixed top-0 left-0 right-0 overflow-hidden',
         'flex flex-col',
       )}
       style={{
-        height: 'calc(100vh - var(--kb-height, 0px))',
-        transition: 'height 300ms ease-out',
+        blockSize: 'calc(100vh - var(--kb-height, 0px))',
+        transition: 'block-size 300ms ease-out',
       }}
       ref={forwardedRef}
     >
@@ -51,6 +54,8 @@ const Root = forwardRef<HTMLDivElement, RootProps>(({ children, ...props }, forw
     </div>
   );
 });
+
+Root.displayName = 'MobileLayout.Root';
 
 //
 // Header
@@ -73,9 +78,13 @@ const Header = forwardRef<HTMLDivElement, HeaderPorps>(({ children, ...props }, 
   );
 });
 
+Header.displayName = 'MobileLayout.Header';
+
 //
 // Footer
 //
+
+const MAX_BLOCK_SIZE = 200;
 
 type FooterProps = PropsWithChildren;
 
@@ -87,8 +96,8 @@ const Footer = forwardRef<HTMLDivElement, FooterProps>(({ children, ...props }, 
       style={{
         // Smoothly collapse footer when keyboard opens.
         transition: 'max-block-size opacity 300ms ease-out',
-        maxBlockSize: 'calc((1 - var(--kb-open, 0)) * 200px)',
-        paddingBottom: 'calc((1 - var(--kb-open, 0)) * env(safe-area-inset-bottom))',
+        maxBlockSize: `calc((1 - var(--kb-open, 0)) * ${MAX_BLOCK_SIZE}px)`,
+        paddingBottom: `calc((1 - var(--kb-open, 0)) * env(safe-area-inset-bottom))`,
         opacity: 'calc(1 - var(--kb-open, 0))',
       }}
       ref={forwardedRef}
@@ -98,17 +107,26 @@ const Footer = forwardRef<HTMLDivElement, FooterProps>(({ children, ...props }, 
   );
 });
 
+Footer.displayName = 'MobileLayout.Footer';
+
 //
 // Main
 //
 
-type MainProps = PropsWithChildren;
+type MainProps = ThemedClassName<PropsWithChildren>;
 
-const Main = ({ children }: MainProps) => {
-  return <main className='flex flex-col bs-full min-bs-0 overflow-y-auto border'>{children}</main>;
+const Main = ({ children, classNames }: MainProps) => {
+  return <main className={mx('flex flex-col bs-full min-bs-0 overflow-y-auto', classNames)}>{children}</main>;
 };
 
+Main.displayName = 'MobileLayout.Main';
+
+//
+// Mobile
+//
+
 // TODO(burdon): Drawer.
+// TODO(burdon): Mobile/Desktop variance?
 
 export const MobileLayout = {
   Root,
