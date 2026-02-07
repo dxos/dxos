@@ -15,6 +15,8 @@ import { type Queue } from '@dxos/echo-db';
 import { assertArgument } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ComplexSet, isTruthy } from '@dxos/util';
+import { Effect } from 'effect';
+import { never } from 'effect/Channel';
 
 /**
  * Thread message that binds or unbinds contextual objects to a conversation.
@@ -297,10 +299,15 @@ export class AiContextBinder extends Resource {
   }
 }
 
-// TODO(dmaretskyi): Change to Conversation.Service. Add ability to run prompts.
 export class AiContextService extends Context.Tag('@dxos/assistant/AiContextService')<
   AiContextService,
   {
     binder: AiContextBinder;
   }
->() {}
+>() {
+  static bindContext = ({ blueprints, objects }: BindingProps): Effect.Effect<void, never, AiContextService> =>
+    Effect.gen(function* () {
+      const { binder } = yield* AiContextService;
+      yield* Effect.promise(() => binder.bind({ blueprints, objects }));
+    });
+}

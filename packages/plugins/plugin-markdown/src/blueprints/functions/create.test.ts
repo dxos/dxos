@@ -9,7 +9,9 @@ import * as Layer from 'effect/Layer';
 import { AiService, ConsolePrinter } from '@dxos/ai';
 import { MemoizedAiService, TestAiService } from '@dxos/ai/testing';
 import {
+  AiContextService,
   AiConversation,
+  AiConversationService,
   type ContextBinding,
   GenerationObserver,
   makeToolExecutionServiceFromFunctions,
@@ -27,6 +29,7 @@ import { ObjectId } from '@dxos/keys';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { Collection } from '@dxos/schema';
 import { HasSubject, type Message } from '@dxos/types';
+import { AssistantTestLayer } from '@dxos/assistant/testing';
 
 import { WithProperties, testToolkit } from '../../testing';
 import * as MarkdownBlueprint from '../markdown-blueprint';
@@ -35,29 +38,11 @@ import create from './create';
 
 ObjectId.dangerouslyDisableRandomness();
 
-const TestLayer = Layer.mergeAll(
-  AiService.model('@anthropic/claude-opus-4-0'),
-  makeToolResolverFromFunctions(MarkdownBlueprint.functions, testToolkit),
-  makeToolExecutionServiceFromFunctions(testToolkit, testToolkit.toLayer({}) as any),
-).pipe(
-  Layer.provideMerge(
-    FunctionInvocationServiceLayerTest({
-      functions: MarkdownBlueprint.functions,
-    }),
-  ),
-  Layer.provideMerge(
-    Layer.mergeAll(
-      TestAiService(),
-      TestDatabaseLayer({
-        spaceKey: 'fixed',
-        indexing: { vector: true },
-        types: [SpaceProperties, Collection.Collection, Blueprint.Blueprint, Markdown.Document, HasSubject.HasSubject],
-      }),
-      CredentialsService.configuredLayer([]),
-      TracingService.layerNoop,
-    ),
-  ),
-);
+const TestLayer = AssistantTestLayer({
+  functions: [...MarkdownBlueprint.functions],
+  types: [SpaceProperties, Collection.Collection, Blueprint.Blueprint, Markdown.Document, HasSubject.HasSubject],
+  tracing: 'pretty',
+});
 
 describe('create', () => {
   it.effect(
@@ -86,22 +71,15 @@ describe('create', () => {
     'create a markdown document',
     Effect.fnUntraced(
       function* (_) {
-        const queue = yield* QueueService.createQueue<Message.Message | ContextBinding>();
-        const conversation = yield* acquireReleaseResource(() => new AiConversation({ queue }));
-
-        yield* Database.flush({ indexes: true });
         const markdownBlueprint = yield* Database.add(Obj.clone(MarkdownBlueprint.make()));
-        yield* Effect.promise(() =>
-          conversation.context.bind({
-            blueprints: [Ref.make(markdownBlueprint)],
-          }),
-        );
+        yield* AiContextService.bindContext({
+          blueprints: [Ref.make(markdownBlueprint)],
+        });
 
-        const observer = GenerationObserver.fromPrinter(new ConsolePrinter());
-        yield* conversation.createRequest({
-          observer,
+        yield* AiConversationService.run({
           prompt: `Create a document with a cookie recipe.`,
         });
+
         {
           const docs = yield* Database.runQuery(Query.type(Markdown.Document));
           if (docs.length !== 1) {
@@ -117,7 +95,7 @@ describe('create', () => {
         }
       },
       WithProperties,
-      Effect.provide(TestLayer),
+      Effect.provide(AiConversationService.layerNewQueue().pipe(Layer.provideMerge(TestLayer))),
       TestHelpers.provideTestContext,
     ),
     MemoizedAiService.isGenerationEnabled() ? 240_000 : 30_000,
