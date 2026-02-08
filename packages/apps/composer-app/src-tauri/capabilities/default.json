@@ -9,6 +9,7 @@
   "permissions": [
     "core:default",
     "core:window:allow-start-dragging",
+    "deep-link:default",
     "os:default",
     "process:default",
     {
@@ -23,6 +24,9 @@
         }
       ]
     },
+    "opener:default",
+    "opener:allow-open-url",
+    "opener:allow-default-urls",
     "shell:allow-open"
   ]
 }

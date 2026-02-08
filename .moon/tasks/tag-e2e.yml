@@ -15,12 +15,14 @@ tasks:
     inputs:
       - src/playwright/playwright.config.ts
       - '@group(sources)'
+      - $CI
       - $CONFIG_DYNAMIC
       - $DX_ENVIRONMENT
       - $DX_HOST
       - $DX_HUB_URL
       - $DX_IPDATA_API_KEY
       - $DX_SHARED_WORKER
+      - $PLAYWRIGHT_BROWSER
 
 inheritedBy:
   tags: e2e

@@ -1,27 +1,6 @@
 {
-  "name": "@dxos/composer-app",
-  "version": "0.8.3",
-  "private": true,
-  "description": "DXOS Composer application.",
-  "homepage": "https://dxos.org",
-  "bugs": "https://github.com/dxos/dxos/issues",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/dxos/dxos"
-  },
-  "license": "MIT",
   "author": "DXOS.org",
-  "sideEffects": true,
-  "type": "module",
-  "scripts": {
-    "build:functions": "esbuild ./src/functions/_worker.ts --bundle --format=esm --outfile=./out/composer/_worker.js",
-    "copy:assets": "mkdir -p ./public/assets/plugin-sketch && cp -R node_modules/@dxos/plugin-sketch/dist/assets/* ./public/assets/plugin-sketch",
-    "demo": "vite-node ./playwright/demos/grid.ts",
-    "icons": "npm run icons:cp && npm run icons:pwa && npm run icons:mstile",
-    "icons:": "sips -z 150 150 ./assets/icon-1024x1024.png --out ./public/mstile-icon-150x150.png",
-    "icons:cp": "cp ./assets/favicon.svg ./public/icon.svg",
-    "icons:pwa": "pwa-asset-generator --icon-only --favicon --index=index.html ./public/icon.svg ./public"
-  },
+  "bugs": "https://github.com/dxos/dxos/issues",
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
     "@dxos/brand": "workspace:*",
@@ -95,6 +74,7 @@
     "@dxos/util": "workspace:*",
     "@fontsource/poiret-one": "catalog:",
     "@tauri-apps/api": "catalog:",
+    "@tauri-apps/plugin-deep-link": "catalog:",
     "@tauri-apps/plugin-haptics": "catalog:",
     "@tauri-apps/plugin-os": "catalog:",
     "effect": "catalog:",
@@ -106,6 +86,7 @@
     "react-joyride": "catalog:",
     "solid-js": "catalog:"
   },
+  "description": "DXOS Composer application.",
   "devDependencies": {
     "@babel/core": "catalog:",
     "@cloudflare/workers-types": "catalog:",
@@ -143,7 +124,27 @@
     "vite-plugin-wasm": "catalog:",
     "workbox-window": "catalog:"
   },
+  "homepage": "https://dxos.org",
+  "license": "MIT",
+  "name": "@dxos/composer-app",
   "peerDependencies": {
     "@babel/core": "catalog:"
-  }
+  },
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "scripts": {
+    "build:functions": "esbuild ./src/functions/_worker.ts --bundle --format=esm --outfile=./out/composer/_worker.js",
+    "copy:assets": "mkdir -p ./public/assets/plugin-sketch && cp -R node_modules/@dxos/plugin-sketch/dist/assets/* ./public/assets/plugin-sketch",
+    "demo": "vite-node ./playwright/demos/grid.ts",
+    "icons": "npm run icons:cp && npm run icons:pwa && npm run icons:mstile",
+    "icons:": "sips -z 150 150 ./assets/icon-1024x1024.png --out ./public/mstile-icon-150x150.png",
+    "icons:cp": "cp ./assets/favicon.svg ./public/icon.svg",
+    "icons:pwa": "pwa-asset-generator --icon-only --favicon --index=index.html ./public/icon.svg ./public"
+  },
+  "sideEffects": true,
+  "type": "module",
+  "version": "0.8.3"
 }
