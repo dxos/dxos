@@ -19,44 +19,40 @@ moon run composer-app:tauri-dev
 - XCode > Settings > Components (Get latest iOS)
 - https://inspect.dev
 
-### iOS Simulator
+### iOS Deployment (Simulator or Physical Device)
 
-Default (will auto-detect or boot a simulator):
+The `ios-deploy.sh` script handles both simulator and physical device deployment intelligently:
+
+**Default (simulator - iPhone 17 Pro):**
 
 ```bash
-moon run composer-app:tauri-ios
+./scripts/ios-deploy.sh
 ```
 
-With specific simulator:
+**Specific simulator:**
 
 ```bash
-./scripts/ios-sim.sh "iPhone 17 Pro"
+./scripts/ios-deploy.sh "iPhone 16 Pro"
 ```
 
-Or directly:
+**Physical device (requires device to be connected):**
 
 ```bash
-moon run composer-app:tauri-ios -- "iPhone 17 Pro"
+./scripts/ios-deploy.sh "burdon-iphone"
 ```
 
-### Physical Device (USB)
+The script automatically detects whether the device name refers to a physical device or simulator.
 
-Auto-detect first connected device:
+**Notes:**
+- Physical device deployment requires Apple Developer provisioning profiles
+- Enable Developer Mode on device: Settings > Privacy & Security > Developer Mode > ON
+- Tauri CLI prioritizes physical devices, so disconnect them to use simulators
+- When physical devices are connected, you must explicitly specify the device name
 
-```bash
-./scripts/ios-device.sh
-```
-
-Or specify device name:
-
-```bash
-./scripts/ios-device.sh "burdon-iphone"
-```
-
-Or directly:
+**Direct moon command (no device management):**
 
 ```bash
-moon run composer-app:tauri-ios -- "burdon-iphone"
+moon run composer-app:tauri-ios -- "device-name"
 ```
 
 ## Tools
