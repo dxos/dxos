@@ -2,12 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useCallback } from 'react';
+import React from 'react';
 
-import { type DrawerState, Main as NaturalMain } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-ui';
 import { Mosaic } from '@dxos/react-ui-mosaic';
 
-import { useSimpleLayoutState } from '../../hooks';
+import { meta } from '../../meta';
 import { Dialog } from '../Dialog';
 import { PopoverContent, PopoverRoot } from '../Popover';
 
@@ -17,28 +17,22 @@ import { MobileLayout } from './MobileLayout';
 
 // TODO(burdon): Mobile/Desktop variance?
 export const SimpleLayout = () => {
-  const { state, updateState } = useSimpleLayoutState();
-
-  // Sync all drawer state changes to state.
-  const handleDrawerStateChange = useCallback(
-    (nextState: DrawerState) => {
-      updateState((state) => ({ ...state, drawerState: nextState }));
-    },
-    [updateState],
-  );
+  const { t } = useTranslation(meta.id);
 
   return (
     <Mosaic.Root classNames='contents'>
-      <NaturalMain.Root drawerState={state.drawerState ?? 'closed'} onDrawerStateChange={handleDrawerStateChange}>
-        <MobileLayout.Root>
-          <PopoverRoot>
+      <MobileLayout.Root>
+        <PopoverRoot>
+          <MobileLayout.Main>
             <Main />
+          </MobileLayout.Main>
+          <MobileLayout.Drawer label={t('drawer label')}>
             <Drawer />
-            <Dialog />
-            <PopoverContent />
-          </PopoverRoot>
-        </MobileLayout.Root>
-      </NaturalMain.Root>
+          </MobileLayout.Drawer>
+          <Dialog />
+          <PopoverContent />
+        </PopoverRoot>
+      </MobileLayout.Root>
     </Mosaic.Root>
   );
 };

@@ -6,7 +6,6 @@ import React, { useMemo } from 'react';
 
 import { Surface, useAppGraph } from '@dxos/app-framework/react';
 import { useNode } from '@dxos/plugin-graph';
-import { Main as NaturalMain, useSidebars } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { mx } from '@dxos/ui-theme';
 
@@ -16,7 +15,7 @@ import { ContentLoading } from '../ContentLoading';
 import { useLoadDescendents } from '../hooks';
 
 import { Banner } from './Banner';
-import { MobileLayout } from './MobileLayout';
+import { MobileLayout, useMobileLayout } from './MobileLayout';
 import { NavBar } from './NavBar';
 
 const MAIN_NAME = 'SimpleLayout.Main';
@@ -30,6 +29,7 @@ export const Main = () => {
   const attentionAttrs = useAttentionAttributes(id);
   const { graph } = useAppGraph();
   const node = useNode(graph, id);
+  const { drawerState } = useMobileLayout('SimpleLayout.Main');
 
   // Ensures that children are loaded so that they are available to navigate to.
   useLoadDescendents(id);
@@ -47,15 +47,14 @@ export const Main = () => {
     );
   }, [id, node, node?.data, node?.properties, state.popoverAnchorId]);
 
-  const { drawerState } = useSidebars(MAIN_NAME);
   const showNavBar = !state.isPopover && drawerState === 'closed';
 
   const bannerProps = useBannerProps(graph);
   const { actions, onAction } = useNavbarActions();
 
   return (
-    <NaturalMain.Content
-      classNames={mx(
+    <div
+      className={mx(
         'bs-full grid',
         showNavBar ? 'grid-rows-[min-content_1fr_min-content]' : 'grid-rows-[min-content_1fr]',
         'bg-toolbarSurface border',
@@ -71,7 +70,7 @@ export const Main = () => {
           <NavBar classNames='border-bs border-subduedSeparator' actions={actions} onAction={onAction} />
         </MobileLayout.Footer>
       )}
-    </NaturalMain.Content>
+    </div>
   );
 };
 

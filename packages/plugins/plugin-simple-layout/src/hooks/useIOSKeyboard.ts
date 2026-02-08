@@ -8,8 +8,8 @@ import { addEventListener, combine } from '@dxos/async';
 import { log } from '@dxos/log';
 
 export type IOSKeyboard = {
-  isOpen: boolean;
-  keyboardHeight: number;
+  open: boolean;
+  height: number;
 };
 
 /**
@@ -41,9 +41,10 @@ export type IOSKeyboard = {
  * On iOS (Tauri), listens for 'keyboard' CustomEvents dispatched by the native KeyboardObserver.swift.
  * Falls back to VisualViewport API on other platforms.
  */
+// TODO(burdon): Move into MobileLayout.
 export const useIOSKeyboard = (): IOSKeyboard => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [keyboardHeight, setKeyboardHeight] = useState(0);
+  const [open, setOpen] = useState(false);
+  const [height, setHeight] = useState(0);
 
   // Detect keybaord state.
   useEffect(() => {
@@ -56,8 +57,8 @@ export const useIOSKeyboard = (): IOSKeyboard => {
     const initialHeight = viewport.height ?? window.innerHeight;
 
     const updateState = (keyboardHeight: number, open: boolean) => {
-      setIsOpen(open);
-      setKeyboardHeight(keyboardHeight);
+      setOpen(open);
+      setHeight(keyboardHeight);
 
       const vvh = window.innerHeight - keyboardHeight;
       document.documentElement.style.setProperty('--vvh', `${vvh}px`);
@@ -117,5 +118,5 @@ export const useIOSKeyboard = (): IOSKeyboard => {
     );
   }, []);
 
-  return { isOpen, keyboardHeight };
+  return { open, height };
 };
