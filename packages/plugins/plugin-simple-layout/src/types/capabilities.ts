@@ -7,7 +7,6 @@ import { type Atom } from '@effect-atom/atom-react';
 import { Capability } from '@dxos/app-framework';
 import { type Label } from '@dxos/react-ui';
 
-import { type DrawerState } from '../components';
 import { meta } from '../meta';
 
 // TODO(wittjosiah): Handle toasts.
@@ -32,9 +31,10 @@ export type SimpleLayoutState = {
   popoverTitle?: Label;
   popoverContent?: any;
 
-  workspace: string;
   previousWorkspace: string;
+  workspace: string;
   active?: string;
+
   /** Stack of previously active item IDs for back navigation. */
   history: string[];
 
@@ -43,8 +43,6 @@ export type SimpleLayoutState = {
 
   /** Variant of the companion to display in the drawer (e.g., "comments", "assistant-chat"). */
   companionVariant?: string;
-  /** State of the companion drawer. */
-  drawerState?: DrawerState;
 };
 
 export const SimpleLayoutState = Capability.make<Atom.Writable<SimpleLayoutState>>(`${meta.id}/state`);

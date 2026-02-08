@@ -13,6 +13,7 @@ import React, {
   useState,
 } from 'react';
 
+import { log } from '@dxos/log';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
@@ -80,6 +81,8 @@ const Root = forwardRef<HTMLDivElement, RootProps>(
       },
       [onDrawerStateChange],
     );
+
+    log.info('MobileLayout', { keyboardOpen, drawerState });
 
     return (
       <ContextProvider keyboardOpen={keyboardOpen} drawerState={drawerState} setDrawerState={setDrawerState}>

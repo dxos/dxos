@@ -151,21 +151,20 @@ export default Capability.makeModule(
           // IDs like settings~spaceId are alternate-tree nodes and should navigate main content, not open the drawer.
           // TODO(wittjosiah): Factor out the change-companion operation from deck to a common layout operation.
           const isCompanionOfCurrent = variant && (primaryId === state.workspace || primaryId === state.active);
-
           if (isCompanionOfCurrent) {
-            updateState((s) => ({
-              ...s,
+            updateState((state) => ({
+              ...state,
               companionVariant: variant,
-              drawerState: s.drawerState === 'closed' || !s.drawerState ? 'expanded' : s.drawerState,
+              // drawerState: state.drawerState === 'closed' || !state.drawerState ? 'expanded' : state.drawerState,
             }));
           } else {
             // Regular navigation - update active and history (use full id for alternate-tree nodes).
-            updateState((s) => {
-              const newHistory = s.active ? [...s.history, s.active] : s.history;
+            updateState((state) => {
+              const newHistory = state.active ? [...state.history, state.active] : state.history;
               const trimmedHistory =
                 newHistory.length > MAX_HISTORY_LENGTH ? newHistory.slice(-MAX_HISTORY_LENGTH) : newHistory;
               return {
-                ...s,
+                ...state,
                 active: id,
                 history: trimmedHistory,
               };

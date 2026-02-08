@@ -24,11 +24,11 @@ const DRAWER_NAME = 'SimpleLayout.Drawer';
  */
 export const Drawer = () => {
   const { t } = useTranslation(meta.id);
-  const { state: layoutState, updateState } = useSimpleLayoutState();
   const { graph } = useAppGraph();
-  const { drawerState: state, setDrawerState } = useMobileLayout('SimpleLayout.Drawer');
+  const { state: layoutState, updateState } = useSimpleLayoutState();
+  const { drawerState, setDrawerState } = useMobileLayout('SimpleLayout.Drawer');
 
-  const isFullyExpanded = state === 'expanded';
+  const isFullyExpanded = drawerState === 'expanded';
 
   const placeholder = useMemo(() => <ContentLoading />, []);
 
@@ -59,14 +59,15 @@ export const Drawer = () => {
     (companion: Node.Node) => {
       const [, companionVariant] = companion.id.split(ATTENDABLE_PATH_SEPARATOR);
       updateState((state) => ({ ...state, companionVariant }));
+      setDrawerState('open');
     },
-    [updateState],
+    [updateState, setDrawerState],
   );
 
   // Handle expand/collapse toggle.
   const handleToggleExpand = useCallback(() => {
-    setDrawerState(state === 'expanded' ? 'open' : 'expanded');
-  }, [state, setDrawerState]);
+    setDrawerState(drawerState === 'expanded' ? 'open' : 'expanded');
+  }, [drawerState, setDrawerState]);
 
   // Handle close.
   const handleClose = useCallback(() => {
