@@ -19,7 +19,7 @@ type Schema<T> = Schema$.Schema<T, any, never>;
  * Serializable definition of an Operation.
  * Contains schema and metadata, but no runtime logic.
  */
-export interface Definition<I, O> extends Pipeable.Pipeable {
+export interface Definition<I, O, R = never> extends Pipeable.Pipeable {
   readonly schema: {
     readonly input: Schema<I>;
     readonly output: Schema<O>;
@@ -51,7 +51,7 @@ export interface Definition<I, O> extends Pipeable.Pipeable {
    * Effect services required by this operation.
    * These services will be automatically provided to the handler at invocation time.
    */
-  readonly services?: readonly Context.Tag<any, any>[];
+  readonly services?: readonly Context.Tag<R, any>[];
 }
 
 /**
@@ -87,7 +87,11 @@ export declare namespace Definition {
 /**
  * Runtime handler for an Operation.
  */
-export type Handler<I, O, E = Error, R = never> = (input: I) => Effect.Effect<O, E, R>;
+export type Handler<I, O, E = any, R = never> = (input: I) => Effect.Effect<O, E, R>;
+
+export interface Implementation<I, O, R> extends Definition<I, O, R> {
+  handler: Handler<I, O, any, R>;
+}
 
 /**
  * Props for creating an Operation definition.
