@@ -58,7 +58,7 @@ export const Main = () => {
       classNames={mx(
         'bs-full grid',
         showNavBar ? 'grid-rows-[min-content_1fr_min-content]' : 'grid-rows-[min-content_1fr]',
-        'bg-toolbarSurface',
+        'bg-toolbarSurface border',
       )}
       {...attentionAttrs}
     >
@@ -68,7 +68,7 @@ export const Main = () => {
       </article>
       {showNavBar && (
         <MobileLayout.Footer>
-          <NavBar classNames='border-bs border-separator' actions={actions} onAction={onAction} />
+          <NavBar classNames='border-bs border-subduedSeparator' actions={actions} onAction={onAction} />
         </MobileLayout.Footer>
       )}
     </NaturalMain.Content>

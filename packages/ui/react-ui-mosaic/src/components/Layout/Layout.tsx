@@ -37,8 +37,10 @@ const Main = forwardRef<HTMLDivElement, MainProps>(
         style={style}
         className={mx(
           'bs-full is-full grid grid-cols-[100%] overflow-hidden',
-          toolbar &&
-            '[.dx-main-mobile-layout_&>.dx-toolbar]:pli-3 [&>.dx-toolbar]:relative [&>.dx-toolbar]:border-be [&>.dx-toolbar]:border-subduedSeparator',
+          toolbar && [
+            '[.dx-main-mobile-layout_&>.dx-toolbar]:pli-3 [&>.dx-toolbar]:relative',
+            '[&>.dx-toolbar]:border-be [&>.dx-toolbar]:border-subduedSeparator',
+          ],
           classNames,
         )}
       >

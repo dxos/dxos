@@ -70,7 +70,7 @@ After running `tauri ios init`, run the setup script to install iOS extensions:
 ./scripts/ios-init.sh
 ```
 
-## Register iOS Device and Certificat Signing
+## Register iOS Device and Certificate Signing
 
 1. Wait for Xcode to fully load the project
 2. In the left sidebar, click on the app project (top item with blue icon)

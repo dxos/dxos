@@ -78,7 +78,7 @@ const Footer = forwardRef<HTMLDivElement, FooterProps>(({ children, ...props }, 
       className={mx('shrink-0 overflow-hidden')}
       style={{
         // Smoothly collapse footer when keyboard opens.
-        transition: 'max-block-size opacity 300ms ease-out',
+        transition: 'max-block-size,opacity 300ms ease-out',
         maxBlockSize: `calc((1 - var(--kb-open, 0)) * ${MAX_BLOCK_SIZE}px)`,
         opacity: 'calc(1 - var(--kb-open, 0))',
       }}
