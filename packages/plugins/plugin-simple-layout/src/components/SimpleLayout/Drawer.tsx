@@ -52,22 +52,22 @@ export const Drawer = () => {
   const handleTabClick = useCallback(
     (companion: Node.Node) => {
       const [, companionVariant] = companion.id.split(ATTENDABLE_PATH_SEPARATOR);
-      updateState((s) => ({ ...s, companionVariant }));
+      updateState((state) => ({ ...state, companionVariant }));
     },
     [updateState],
   );
 
   // Handle expand/collapse toggle.
   const handleToggleExpand = useCallback(() => {
-    updateState((s) => ({
-      ...s,
-      drawerState: s.drawerState === 'full' ? 'expanded' : 'full',
+    updateState((state) => ({
+      ...state,
+      drawerState: state.drawerState === 'full' ? 'expanded' : 'full',
     }));
   }, [updateState]);
 
   // Handle close.
   const handleClose = useCallback(() => {
-    updateState((s) => ({ ...s, drawerState: 'closed' }));
+    updateState((state) => ({ ...state, drawerState: 'closed' }));
   }, [updateState]);
 
   const drawerState = state.drawerState ?? 'closed';
@@ -105,7 +105,6 @@ export const Drawer = () => {
         />
         <Toolbar.IconButton icon='ph--x--regular' iconOnly label={t('close drawer label')} onClick={handleClose} />
       </Toolbar.Root>
-      {/* TODO(burdon): Fix containment. */}
       <Surface role='article' data={data} limit={1} fallback={ContentError} placeholder={placeholder} />
     </NaturalMain.Drawer>
   );

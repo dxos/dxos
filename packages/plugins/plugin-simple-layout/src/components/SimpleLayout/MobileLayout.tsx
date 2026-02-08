@@ -22,18 +22,16 @@ const Root = forwardRef<HTMLDivElement, RootProps>(({ children, ...props }, forw
   return (
     <div
       {...props}
+      role='none'
       style={{
         transition: 'block-size 250ms ease-out',
         blockSize: 'calc(100vh - var(--kb-height, 0px))',
       }}
-      className={mx(
-        // Fixed positioning to fill viewport (hook handles body locking).
-        'fixed top-0 left-0 right-0 flex flex-col overflow-hidden',
-        'bg-toolbarSurface',
-      )}
+      className='fixed top-0 left-0 right-0 flex flex-col overflow-hidden bg-toolbarSurface'
       ref={forwardedRef}
     >
       <div
+        role='none'
         style={{
           paddingTop: 'env(safe-area-inset-top)',
           paddingBottom: `calc((1 - var(--kb-open, 0)) * env(safe-area-inset-bottom))`,
