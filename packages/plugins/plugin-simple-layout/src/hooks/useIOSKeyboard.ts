@@ -28,7 +28,7 @@ export type IOSKeyboard = {
  * - Viewport: 874 (entire screen)
  * - SafeArea: 96 (62+34)
  * - Main:     778
- * - Keyboard: 413
+ * - Keyboard: 413 (incl. Input Accessory View)
  *
  * CSS Variables set on document.documentElement:
  * --vvh: Visual viewport height (use as container height).

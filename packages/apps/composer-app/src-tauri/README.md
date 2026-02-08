@@ -70,6 +70,15 @@ After running `tauri ios init`, run the setup script to install iOS extensions:
 ./scripts/ios-init.sh
 ```
 
+This copies:
+- `KeyboardObserver.swift` - Emits keyboard show/hide events to the webview
+- `KeyboardSetup.m` - Auto-initializes observer and disables Input Accessory View using Obj-C `+load`
+
+The observer dispatches `keyboard` CustomEvents to `window` with details:
+```typescript
+{ type: 'show' | 'hide', height: number, duration: number }
+```
+
 ## Register iOS Device and Certificate Signing
 
 1. Wait for Xcode to fully load the project
@@ -78,3 +87,11 @@ After running `tauri ios init`, run the setup script to install iOS extensions:
 4. Click the Signing & Capabilities tab
 5. Check the box "Automatically manage signing"
 6. In the Team dropdown, select your team (should show "Braneframe, Inc." or similar)
+
+## Logs
+
+XCode > Window > Devices and Simulators (⌘⇧2) > [device] > Open Console
+
+```bash
+log stream --predicate 'process == "Composer"' --level debug
+```

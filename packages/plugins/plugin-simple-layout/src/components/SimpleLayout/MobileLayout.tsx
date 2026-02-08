@@ -4,12 +4,9 @@
 
 import React, { type PropsWithChildren, forwardRef } from 'react';
 
-import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { useIOSKeyboard } from '../../hooks';
-
-// TODO(burdon): Integrate into react-ui Main.
 
 //
 // Root
@@ -52,18 +49,6 @@ const Root = forwardRef<HTMLDivElement, RootProps>(({ children, ...props }, forw
 Root.displayName = 'MobileLayout.Root';
 
 //
-// Main
-//
-
-type MainProps = ThemedClassName<PropsWithChildren>;
-
-const Main = ({ children, classNames }: MainProps) => {
-  return <main className={mx('flex flex-col bs-full min-bs-0 overflow-y-auto', classNames)}>{children}</main>;
-};
-
-Main.displayName = 'MobileLayout.Main';
-
-//
 // Footer
 //
 
@@ -97,8 +82,7 @@ Footer.displayName = 'MobileLayout.Footer';
 
 export const MobileLayout = {
   Root,
-  Main,
   Footer,
 };
 
-export type { RootProps, MainProps, FooterProps };
+export type { RootProps, FooterProps };

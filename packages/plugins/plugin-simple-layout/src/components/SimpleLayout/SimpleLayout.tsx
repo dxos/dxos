@@ -28,17 +28,17 @@ export const SimpleLayout = () => {
   );
 
   return (
-    <Mosaic.Root asChild>
-      <MobileLayout.Root>
-        <NaturalMain.Root drawerState={state.drawerState ?? 'closed'} onDrawerStateChange={handleDrawerStateChange}>
+    <Mosaic.Root classNames='contents'>
+      <NaturalMain.Root drawerState={state.drawerState ?? 'closed'} onDrawerStateChange={handleDrawerStateChange}>
+        <MobileLayout.Root>
           <PopoverRoot>
             <Main />
             <Drawer />
             <Dialog />
             <PopoverContent />
           </PopoverRoot>
-        </NaturalMain.Root>
-      </MobileLayout.Root>
+        </MobileLayout.Root>
+      </NaturalMain.Root>
     </Mosaic.Root>
   );
 };

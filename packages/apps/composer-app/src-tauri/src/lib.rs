@@ -36,6 +36,9 @@ pub fn run() {
         .plugin(tauri_plugin_haptics::init())
         .plugin(tauri_plugin_web_auth::init());
 
+    // NOTE: iOS keyboard handling is done via KeyboardPlugin.swift which uses UIApplication.didBecomeActiveNotification
+    // to find the WKWebView and initialize the KeyboardObserver. No Rust registration needed.
+
     // Configure plugins and spotlight shortcut.
     let builder = {
         let builder = builder

@@ -18,7 +18,11 @@ fi
 
 echo "Copying iOS extensions to $IOS_SOURCES..."
 
-# Copy keyboard observer for native keyboard height detection.
-cp "$SRC_TAURI/ios/KeyboardObserver.swift" "$IOS_SOURCES/"
+# Copy keyboard handler (pure Obj-C, auto-initializes via +load).
+cp "$SRC_TAURI/ios/KeyboardHandler.m" "$IOS_SOURCES/"
+
+# Regenerate Xcode project to include new files.
+echo "Regenerating Xcode project..."
+(cd "$SRC_TAURI/gen/apple" && xcodegen)
 
 echo "Done. iOS extensions installed."
