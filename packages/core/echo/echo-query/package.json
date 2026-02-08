@@ -19,8 +19,7 @@
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "browser": "./dist/lib/browser/index.mjs",
-      "node": "./dist/lib/node-esm/index.mjs"
+      "default": "./dist/lib/neutral/index.mjs"
     },
     "./api.d.ts": "./dist/query-lite/index.d.ts"
   },

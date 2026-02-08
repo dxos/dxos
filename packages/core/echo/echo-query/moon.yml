@@ -11,6 +11,7 @@ tasks:
     args:
       - '--entryPoint=src/index.ts'
       - '--injectGlobals'
+      - '--platform=neutral'
   prebuild:
     deps:
       - echo-query:prebuild-lezer

@@ -10,3 +10,4 @@ tasks:
       - '--entryPoint=src/index.ts'
       - '--entryPoint=src/resolvers/index.ts'
       - '--entryPoint=src/testing/index.ts'
+      - '--platform=neutral'
