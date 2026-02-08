@@ -5,6 +5,7 @@
 import { Atom, Registry } from '@effect-atom/atom-react';
 import * as EArray from 'effect/Array';
 import * as Context from 'effect/Context';
+import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Schema from 'effect/Schema';
 
@@ -297,10 +298,15 @@ export class AiContextBinder extends Resource {
   }
 }
 
-// TODO(dmaretskyi): Change to Conversation.Service. Add ability to run prompts.
 export class AiContextService extends Context.Tag('@dxos/assistant/AiContextService')<
   AiContextService,
   {
     binder: AiContextBinder;
   }
->() {}
+>() {
+  static bindContext = ({ blueprints, objects }: BindingProps): Effect.Effect<void, never, AiContextService> =>
+    Effect.gen(function* () {
+      const { binder } = yield* AiContextService;
+      yield* Effect.promise(() => binder.bind({ blueprints, objects }));
+    });
+}
