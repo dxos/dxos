@@ -37,7 +37,7 @@
 
     /* Constrain content height when drawer is expanded. */
     &[data-drawer-state='expanded'] {
-      max-block-size: calc(100dvh - var(--drawer-size));
+      max-block-size: calc(100dh - var(--drawer-size));
     }
 
     /* Hide content when drawer is full. */
