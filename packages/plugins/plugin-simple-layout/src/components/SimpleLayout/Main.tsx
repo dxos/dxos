@@ -16,6 +16,7 @@ import { ContentLoading } from '../ContentLoading';
 import { useLoadDescendents } from '../hooks';
 
 import { Banner } from './Banner';
+import { MobileLayout } from './MobileLayout';
 import { NavBar } from './NavBar';
 
 const MAIN_NAME = 'SimpleLayout.Main';
@@ -54,12 +55,10 @@ export const Main = () => {
 
   return (
     <NaturalMain.Content
-      bounce
       classNames={mx(
-        'dx-mobile', // TODO(burdon): Replace with updated density system (for side padding).
-        'grid bs-full pbs-[max(0.25rem,env(safe-area-inset-top))] pbe-[max(0.25rem,env(safe-area-inset-bottom))] overflow-hidden',
-        'bg-toolbarSurface',
+        'bs-full grid',
         showNavBar ? 'grid-rows-[min-content_1fr_min-content]' : 'grid-rows-[min-content_1fr]',
+        'bg-toolbarSurface border',
       )}
       {...attentionAttrs}
     >
@@ -67,7 +66,11 @@ export const Main = () => {
       <article className='bs-full overflow-hidden bg-baseSurface'>
         <Surface key={id} role='article' data={data} limit={1} fallback={ContentError} placeholder={placeholder} />
       </article>
-      {showNavBar && <NavBar classNames='border-bs border-separator' actions={actions} onAction={onAction} />}
+      {showNavBar && (
+        <MobileLayout.Footer>
+          <NavBar classNames='border-bs border-subduedSeparator' actions={actions} onAction={onAction} />
+        </MobileLayout.Footer>
+      )}
     </NaturalMain.Content>
   );
 };

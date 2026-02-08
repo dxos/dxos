@@ -13,27 +13,31 @@ import { PopoverContent, PopoverRoot } from '../Popover';
 
 import { Drawer } from './Drawer';
 import { Main } from './Main';
+import { MobileLayout } from './MobileLayout';
 
+// TODO(burdon): Mobile/Desktop variance?
 export const SimpleLayout = () => {
   const { state, updateState } = useSimpleLayoutState();
 
+  // Sync all drawer state changes to state.
   const handleDrawerStateChange = useCallback(
     (nextState: DrawerState) => {
-      // Sync all drawer state changes to state.
       updateState((state) => ({ ...state, drawerState: nextState }));
     },
     [updateState],
   );
 
   return (
-    <Mosaic.Root asChild>
+    <Mosaic.Root classNames='contents'>
       <NaturalMain.Root drawerState={state.drawerState ?? 'closed'} onDrawerStateChange={handleDrawerStateChange}>
-        <PopoverRoot>
-          <Main />
-          <Drawer />
-          <Dialog />
-          <PopoverContent />
-        </PopoverRoot>
+        <MobileLayout.Root>
+          <PopoverRoot>
+            <Main />
+            <Drawer />
+            <Dialog />
+            <PopoverContent />
+          </PopoverRoot>
+        </MobileLayout.Root>
       </NaturalMain.Root>
     </Mosaic.Root>
   );
