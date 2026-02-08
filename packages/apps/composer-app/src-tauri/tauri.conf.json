@@ -42,7 +42,9 @@
     "externalBin": [
       "sidecar/ollama"
     ],
-    "iOS": {},
+    "iOS": {
+      "developmentTeam": "9428WC5MR8"
+    },
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
@@ -53,52 +55,15 @@
     "macOS": {
       "entitlements": "./Entitlements.plist"
     },
-<<<<<<< HEAD
     "targets": "all"
-||||||| 7076bea8b9
-    "iOS": {},
-    "createUpdaterArtifacts": true,
-    "externalBin": ["sidecar/ollama"]
-=======
-    "iOS": {
-      "developmentTeam": "9428WC5MR8"
-    },
-    "createUpdaterArtifacts": true,
-    "externalBin": ["sidecar/ollama"]
->>>>>>> origin/main
   },
   "identifier": "org.dxos.composer",
   "plugins": {
     "updater": {
-<<<<<<< HEAD
       "endpoints": [
         "https://cdn.crabnebula.app/update/dxos/composer/{{target}}-{{arch}}/{{current_version}}"
       ],
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEY2QjhEODU3Rjk5RDhENzAKUldSd2paMzVWOWk0OWxrYVlEVmFnYnFvY2JHekpNTXkxaWpKaGRJSEFmQ1N5SzZwUG93R204RWcK"
-||||||| 7076bea8b9
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEY2QjhEODU3Rjk5RDhENzAKUldSd2paMzVWOWk0OWxrYVlEVmFnYnFvY2JHekpNTXkxaWpKaGRJSEFmQ1N5SzZwUG93R204RWcK",
-      "endpoints": ["https://cdn.crabnebula.app/update/dxos/composer/{{target}}-{{arch}}/{{current_version}}"]
-=======
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEY2QjhEODU3Rjk5RDhENzAKUldSd2paMzVWOWk0OWxrYVlEVmFnYnFvY2JHekpNTXkxaWpKaGRJSEFmQ1N5SzZwUG93R204RWcK",
-      "endpoints": ["https://cdn.crabnebula.app/update/dxos/composer/{{target}}-{{arch}}/{{current_version}}"]
-    },
-    "deep-link": {
-      "mobile": [
-        {
-          "scheme": ["https"],
-          "host": "composer.dxos.org",
-          "pathPrefix": ["/"],
-          "appLink": true
-        },
-        {
-          "scheme": ["composer"],
-          "host": "oauth"
-        }
-      ],
-      "desktop": {
-        "schemes": ["composer"]
-      }
->>>>>>> origin/main
     }
   },
   "productName": "Composer",

@@ -16,6 +16,7 @@ import { ContentLoading } from '../ContentLoading';
 import { useLoadDescendents } from '../hooks';
 
 import { Banner } from './Banner';
+import { MobileLayout } from './MobileLayout';
 import { NavBar } from './NavBar';
 
 const MAIN_NAME = 'SimpleLayout.Main';
@@ -65,7 +66,11 @@ export const Main = () => {
       <article className='bs-full overflow-hidden bg-baseSurface'>
         <Surface key={id} role='article' data={data} limit={1} fallback={ContentError} placeholder={placeholder} />
       </article>
-      {showNavBar && <NavBar classNames='border-bs border-separator' actions={actions} onAction={onAction} />}
+      {showNavBar && (
+        <MobileLayout.Footer>
+          <NavBar classNames='border-bs border-separator' actions={actions} onAction={onAction} />
+        </MobileLayout.Footer>
+      )}
     </NaturalMain.Content>
   );
 };
