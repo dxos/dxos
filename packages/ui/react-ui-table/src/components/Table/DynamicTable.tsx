@@ -3,10 +3,11 @@
 //
 
 import { RegistryContext } from '@effect-atom/atom-react';
+import type * as Types from 'effect/Types';
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
 import { type Type } from '@dxos/echo';
-import { type JsonSchemaType } from '@dxos/echo/internal';
+import { type JsonSchema } from '@dxos/echo';
 import { type ThemedClassName, useDefaultValue } from '@dxos/react-ui';
 import { type ProjectionModel } from '@dxos/schema';
 import { mx } from '@dxos/ui-theme';
@@ -23,7 +24,7 @@ export type DynamicTableProps<T extends Type.Entity.Any = Type.Entity.Any> = The
   name?: string; // TODO(burdon): Remove?
   rows: any[];
   properties?: TablePropertyDefinition[];
-  jsonSchema?: JsonSchemaType;
+  jsonSchema?: Types.DeepMutable<JsonSchema.JsonSchema>;
   features?: Partial<TableFeatures>;
   rowActions?: TableRowAction[];
   onRowClick?: (row: any) => void;
