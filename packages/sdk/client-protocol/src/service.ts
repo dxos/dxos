@@ -3,11 +3,12 @@
 //
 
 import { type Event } from '@dxos/async';
-import { type QueueService } from '@dxos/protocols';
-import { QueueService as BufQueueService } from '@dxos/protocols/buf/dxos/client/queue_pb';
-import { QueryService as BufQueryService } from '@dxos/protocols/buf/dxos/echo/query_pb';
-import { DataService as BufDataService } from '@dxos/protocols/buf/dxos/echo/service_pb';
-import { schema } from '@dxos/protocols/proto';
+import { type Client, type Halo, type Mesh, type QueueService } from '@dxos/protocols';
+import * as ClientQueuePb from '@dxos/protocols/buf/dxos/client/queue_pb';
+import * as ClientServicesPb from '@dxos/protocols/buf/dxos/client/services_pb';
+import * as EchoQueryPb from '@dxos/protocols/buf/dxos/echo/query_pb';
+import * as EchoServicePb from '@dxos/protocols/buf/dxos/echo/service_pb';
+import { Rpc, Echo } from '@dxos/protocols';
 import type {
   ContactsService,
   DevicesService,
@@ -25,114 +26,40 @@ import type { DataService } from '@dxos/protocols/proto/dxos/echo/service';
 import type { AppService, ShellService, WorkerService } from '@dxos/protocols/proto/dxos/iframe';
 import type { BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import type { TracingService } from '@dxos/protocols/proto/dxos/tracing';
-import {
-  type BufRpcClient,
-  type BufRpcHandlers,
-  type ServiceBundle,
-  createBufServiceBundle,
-  createServiceBundle,
-} from '@dxos/rpc';
+import { type ServiceBundle, createBufServiceBundle, createServiceBundle } from '@dxos/rpc';
+import * as DevtoolsHostPb from '@dxos/protocols/buf/dxos/devtools/host_pb';
+import * as TracingPb from '@dxos/protocols/buf/dxos/tracing_pb';
+import * as ClientLoggingPb from '@dxos/protocols/buf/dxos/client/logging_pb';
+import * as MeshBridgePb from '@dxos/protocols/buf/dxos/mesh/bridge_pb';
+import * as IframePb from '@dxos/protocols/buf/dxos/iframe_pb';
 
 export { type QueueService } from '@dxos/protocols';
-
-//
-// Buf service re-exports.
-//
-export { DataService as BufDataService } from '@dxos/protocols/buf/dxos/echo/service_pb';
-export { QueryService as BufQueryService } from '@dxos/protocols/buf/dxos/echo/query_pb';
-export { QueueService as BufQueueService } from '@dxos/protocols/buf/dxos/client/queue_pb';
-
-// Re-export buf message types.
-export type {
-  SubscribeRequest as BufSubscribeRequest,
-  BatchedDocumentUpdates as BufBatchedDocumentUpdates,
-  UpdateSubscriptionRequest as BufUpdateSubscriptionRequest,
-  CreateDocumentRequest as BufCreateDocumentRequest,
-  CreateDocumentResponse as BufCreateDocumentResponse,
-  UpdateRequest as BufUpdateRequest,
-  FlushRequest as BufFlushRequest,
-  DocumentUpdate as BufDocumentUpdate,
-  GetDocumentHeadsRequest as BufGetDocumentHeadsRequest,
-  GetDocumentHeadsResponse as BufGetDocumentHeadsResponse,
-  WaitUntilHeadsReplicatedRequest as BufWaitUntilHeadsReplicatedRequest,
-  ReIndexHeadsRequest as BufReIndexHeadsRequest,
-  GetSpaceSyncStateRequest as BufGetSpaceSyncStateRequest,
-  SpaceSyncState as BufSpaceSyncState,
-  DocHeadsList as BufDocHeadsList,
-} from '@dxos/protocols/buf/dxos/echo/service_pb';
-
-export {
-  SubscribeRequestSchema as BufSubscribeRequestSchema,
-  BatchedDocumentUpdatesSchema as BufBatchedDocumentUpdatesSchema,
-  UpdateSubscriptionRequestSchema as BufUpdateSubscriptionRequestSchema,
-  CreateDocumentRequestSchema as BufCreateDocumentRequestSchema,
-  CreateDocumentResponseSchema as BufCreateDocumentResponseSchema,
-  UpdateRequestSchema as BufUpdateRequestSchema,
-  FlushRequestSchema as BufFlushRequestSchema,
-  DocumentUpdateSchema as BufDocumentUpdateSchema,
-  GetDocumentHeadsRequestSchema as BufGetDocumentHeadsRequestSchema,
-  GetDocumentHeadsResponseSchema as BufGetDocumentHeadsResponseSchema,
-  WaitUntilHeadsReplicatedRequestSchema as BufWaitUntilHeadsReplicatedRequestSchema,
-  ReIndexHeadsRequestSchema as BufReIndexHeadsRequestSchema,
-  GetSpaceSyncStateRequestSchema as BufGetSpaceSyncStateRequestSchema,
-  SpaceSyncStateSchema as BufSpaceSyncStateSchema,
-  DocHeadsListSchema as BufDocHeadsListSchema,
-} from '@dxos/protocols/buf/dxos/echo/service_pb';
-
-export type {
-  QueryRequest as BufQueryRequest,
-  QueryResponse as BufQueryResponse,
-  QueryResult as BufQueryResult,
-} from '@dxos/protocols/buf/dxos/echo/query_pb';
-
-export {
-  QueryRequestSchema as BufQueryRequestSchema,
-  QueryResponseSchema as BufQueryResponseSchema,
-  QueryResultSchema as BufQueryResultSchema,
-  QueryReactivity as BufQueryReactivity,
-} from '@dxos/protocols/buf/dxos/echo/query_pb';
-
-export type {
-  QueueQuery as BufQueueQuery,
-  QueueQueryResult as BufQueueQueryResult,
-  QueryQueueRequest as BufQueryQueueRequest,
-  InsertIntoQueueRequest as BufInsertIntoQueueRequest,
-  DeleteFromQueueRequest as BufDeleteFromQueueRequest,
-} from '@dxos/protocols/buf/dxos/client/queue_pb';
-
-export {
-  QueueQuerySchema as BufQueueQuerySchema,
-  QueueQueryResultSchema as BufQueueQueryResultSchema,
-  QueryQueueRequestSchema as BufQueryQueueRequestSchema,
-  InsertIntoQueueRequestSchema as BufInsertIntoQueueRequestSchema,
-  DeleteFromQueueRequestSchema as BufDeleteFromQueueRequestSchema,
-} from '@dxos/protocols/buf/dxos/client/queue_pb';
 
 //
 // NOTE: Should contain client/proxy dependencies only.
 //
 
 export type ClientServices = {
-  SystemService: SystemService;
-  NetworkService: NetworkService;
-  LoggingService: LoggingService;
+  SystemService: Client.SystemService;
+  NetworkService: Client.NetworkService;
+  LoggingService: Client.LoggingService;
 
-  IdentityService: IdentityService;
-  InvitationsService: InvitationsService;
-  DevicesService: DevicesService;
-  SpacesService: SpacesService;
+  IdentityService: Halo.IdentityService;
+  InvitationsService: Halo.InvitationsService;
+  DevicesService: Halo.DevicesService;
+  SpacesService: Client.SpacesService;
 
-  DataService: DataService;
-  QueryService: QueryService;
-  QueueService: QueueService;
+  DataService: Echo.DataService;
+  QueryService: Echo.QueryService;
+  QueueService: Echo.QueueService;
 
-  ContactsService: ContactsService;
-  EdgeAgentService: EdgeAgentService;
+  ContactsService: Client.ContactsService;
+  EdgeAgentService: Client.EdgeAgentService;
 
   // TODO(burdon): Deprecated.
-  DevtoolsHost: DevtoolsHost;
+  DevtoolsHost: Client.DevtoolsHost;
 
-  TracingService: TracingService;
+  TracingService: Client.TracingService;
 };
 
 /**
@@ -169,94 +96,54 @@ export interface ClientServicesProvider {
 /**
  * Services supported by host.
  */
-export const clientServiceBundle = createServiceBundle<ClientServices>({
-  SystemService: schema.getService('dxos.client.services.SystemService'),
-  NetworkService: schema.getService('dxos.client.services.NetworkService'),
-  LoggingService: schema.getService('dxos.client.services.LoggingService'),
+export const clientServiceBundle = createBufServiceBundle({
+  SystemService: ClientServicesPb.SystemService,
+  NetworkService: ClientServicesPb.NetworkService,
+  LoggingService: ClientLoggingPb.LoggingService,
 
-  IdentityService: schema.getService('dxos.client.services.IdentityService'),
-  QueryService: schema.getService('dxos.echo.query.QueryService'),
-  InvitationsService: schema.getService('dxos.client.services.InvitationsService'),
-  DevicesService: schema.getService('dxos.client.services.DevicesService'),
-  SpacesService: schema.getService('dxos.client.services.SpacesService'),
-  DataService: schema.getService('dxos.echo.service.DataService'),
-  ContactsService: schema.getService('dxos.client.services.ContactsService'),
-  EdgeAgentService: schema.getService('dxos.client.services.EdgeAgentService'),
-  QueueService: schema.getService('dxos.client.services.QueueService'),
+  IdentityService: ClientServicesPb.IdentityService,
+  QueryService: EchoQueryPb.QueryService,
+  InvitationsService: ClientServicesPb.InvitationsService,
+  DevicesService: ClientServicesPb.DevicesService,
+  SpacesService: ClientServicesPb.SpacesService,
+  DataService: EchoServicePb.DataService,
+  ContactsService: ClientServicesPb.ContactsService,
+  EdgeAgentService: ClientServicesPb.EdgeAgentService,
+  QueueService: ClientQueuePb.QueueService,
 
   // TODO(burdon): Deprecated.
-  DevtoolsHost: schema.getService('dxos.devtools.host.DevtoolsHost'),
-  TracingService: schema.getService('dxos.tracing.TracingService'),
+  DevtoolsHost: DevtoolsHostPb.DevtoolsHost,
+  TracingService: TracingPb.TracingService,
 });
 
 export type IframeServiceBundle = {
-  BridgeService: BridgeService;
+  BridgeService: Mesh.BridgeService;
 };
 
-export const iframeServiceBundle: ServiceBundle<IframeServiceBundle> = {
-  BridgeService: schema.getService('dxos.mesh.bridge.BridgeService'),
-};
-
-export type WorkerServiceBundle = {
-  WorkerService: WorkerService;
-};
-
-export const workerServiceBundle: ServiceBundle<WorkerServiceBundle> = {
-  WorkerService: schema.getService('dxos.iframe.WorkerService'),
-};
-
-export type AppServiceBundle = {
-  AppService: AppService;
-};
-
-export const appServiceBundle: ServiceBundle<AppServiceBundle> = {
-  AppService: schema.getService('dxos.iframe.AppService'),
-};
-
-export type ShellServiceBundle = {
-  ShellService: ShellService;
-};
-
-export const shellServiceBundle: ServiceBundle<ShellServiceBundle> = {
-  ShellService: schema.getService('dxos.iframe.ShellService'),
-};
-
-//
-// Buf service types and bundles.
-//
-
-/**
- * ECHO services using buf types.
- */
-export type BufEchoServices = {
-  DataService: typeof BufDataService;
-  QueryService: typeof BufQueryService;
-  QueueService: typeof BufQueueService;
-};
-
-/**
- * Service bundle for ECHO buf services.
- */
-export const bufEchoServiceBundle = createBufServiceBundle<BufEchoServices>({
-  DataService: BufDataService,
-  QueryService: BufQueryService,
-  QueueService: BufQueueService,
+export const iframeServiceBundle = createBufServiceBundle({
+  BridgeService: MeshBridgePb.BridgeService,
 });
 
-/**
- * Client type for ECHO buf services.
- */
-export type BufEchoServicesClient = {
-  DataService: BufRpcClient<typeof BufDataService>;
-  QueryService: BufRpcClient<typeof BufQueryService>;
-  QueueService: BufRpcClient<typeof BufQueueService>;
+export type WorkerServiceBundle = {
+  WorkerService: Client.WorkerService;
 };
 
-/**
- * Handler type for ECHO buf services.
- */
-export type BufEchoServicesHandlers = {
-  DataService: BufRpcHandlers<typeof BufDataService>;
-  QueryService: BufRpcHandlers<typeof BufQueryService>;
-  QueueService: BufRpcHandlers<typeof BufQueueService>;
+export const workerServiceBundle = createBufServiceBundle({
+  WorkerService: IframePb.WorkerService,
+});
+
+export type AppServiceBundle = {
+  AppService: Client.AppService;
 };
+
+export const appServiceBundle = createBufServiceBundle({
+  AppService: IframePb.AppService,
+});
+
+export type ShellServiceBundle = {
+  ShellService: Client.ShellService;
+};
+
+export const shellServiceBundle = createBufServiceBundle({
+  ShellService: IframePb.ShellService,
+});
