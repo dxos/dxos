@@ -11,12 +11,18 @@ import { defineHiddenProperty } from '@dxos/echo/internal';
 import { assertArgument, failedInvariant } from '@dxos/invariant';
 import { type DXN, type ObjectId, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type QueueService } from '@dxos/protocols';
 
 import { Filter, Query, QueryResultImpl } from '../query';
 
 import { QueueQueryContext } from './queue-query-context';
 import type { Queue } from './types';
+import { type Echo } from '@dxos/protocols';
+import {
+  DeleteFromQueueRequestSchema,
+  InsertIntoQueueRequestSchema,
+  QueryQueueRequestSchema,
+} from '@dxos/protocols/buf/dxos/client/queue_pb';
+import { create } from '@dxos/protocols/buf';
 
 const TRACE_QUEUE_LOAD = false;
 
@@ -40,13 +46,15 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
     try {
       TRACE_QUEUE_LOAD &&
         log.info('queue refresh begin', { currentObjects: this._objects.length, refreshId: thisRefreshId });
-      const { objects } = await this._service.queryQueue({
-        query: {
-          queuesNamespace: this._subspaceTag,
-          spaceId: this._spaceId,
-          queueIds: [this._queueId],
-        },
-      });
+      const { objects } = await this._service.queryQueue(
+        create(QueryQueueRequestSchema, {
+          query: {
+            queuesNamespace: this._subspaceTag,
+            spaceId: this._spaceId,
+            queueIds: [this._queueId],
+          },
+        }),
+      );
       TRACE_QUEUE_LOAD && log.info('items fetched', { refreshId: thisRefreshId, count: objects?.length ?? 0 });
       if (thisRefreshId !== this._refreshId) {
         return;
@@ -109,7 +117,7 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
   private _querying = false;
 
   constructor(
-    private readonly _service: QueueService,
+    private readonly _service: Echo.QueueService,
     private readonly _refResolver: Ref.Resolver,
     private readonly _dxn: DXN,
   ) {
@@ -185,12 +193,14 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
 
     try {
       for (let i = 0; i < json.length; i += QUEUE_APPEND_BATCH_SIZE) {
-        await this._service.insertIntoQueue({
-          subspaceTag: this._subspaceTag,
-          spaceId: this._spaceId,
-          queueId: this._queueId,
-          objects: json.slice(i, i + QUEUE_APPEND_BATCH_SIZE) as any,
-        });
+        await this._service.insertIntoQueue(
+          create(InsertIntoQueueRequestSchema, {
+            subspaceTag: this._subspaceTag,
+            spaceId: this._spaceId,
+            queueId: this._queueId,
+            objects: json.slice(i, i + QUEUE_APPEND_BATCH_SIZE) as any,
+          }),
+        );
       }
     } catch (err) {
       log.catch(err);
@@ -209,12 +219,14 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
     this.updated.emit();
 
     try {
-      await this._service.deleteFromQueue({
-        subspaceTag: this._subspaceTag,
-        spaceId: this._spaceId,
-        queueId: this._queueId,
-        objectIds: ids,
-      });
+      await this._service.deleteFromQueue(
+        create(DeleteFromQueueRequestSchema, {
+          subspaceTag: this._subspaceTag,
+          spaceId: this._spaceId,
+          queueId: this._queueId,
+          objectIds: ids,
+        }),
+      );
     } catch (err) {
       this._error = err as Error;
       this.updated.emit();
@@ -253,13 +265,15 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
   }
 
   async fetchObjectsJSON(): Promise<ObjectJSON[]> {
-    const { objects } = await this._service.queryQueue({
-      query: {
-        queuesNamespace: this._subspaceTag,
-        spaceId: this._spaceId,
-        queueIds: [this._queueId],
-      },
-    });
+    const { objects } = await this._service.queryQueue(
+      create(QueryQueueRequestSchema, {
+        query: {
+          queuesNamespace: this._subspaceTag,
+          spaceId: this._spaceId,
+          queueIds: [this._queueId],
+        },
+      }),
+    );
     return objects as ObjectJSON[];
   }
 
