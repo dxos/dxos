@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Effect } from 'effect';
+import type * as Effect from 'effect/Effect';
 
 export * from './extensions';
 
@@ -73,7 +73,7 @@ export type Attributes = Record<string, string | number | boolean | undefined>;
  * Implementation of an observability extension API.
  */
 export type Extension = {
-  initialize?(): Effect.Effect<void>;
+  initialize?(): Effect.Effect<void, Error>;
   close?(): Effect.Effect<void>;
   enable?(): Effect.Effect<void>;
   disable?(): Effect.Effect<void>;

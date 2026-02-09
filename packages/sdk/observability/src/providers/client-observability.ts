@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Effect } from 'effect';
+import * as Effect from 'effect/Effect';
 
 import { Event, scheduleTaskInterval } from '@dxos/async';
 import { type Client, type ClientServices } from '@dxos/client';

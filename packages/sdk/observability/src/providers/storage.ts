@@ -2,7 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Duration, Effect, Fiber, Schedule } from 'effect';
+import * as Duration from 'effect/Duration';
+import * as Effect from 'effect/Effect';
+import * as Fiber from 'effect/Fiber';
+import * as Schedule from 'effect/Schedule';
 
 import { type DataProvider } from '../observability';
 

@@ -2,7 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Array, Effect, pipe } from 'effect';
+import * as Array from 'effect/Array';
+import * as Effect from 'effect/Effect';
+import * as Function from 'effect/Function';
 
 import { type CleanupFn, SubscriptionList } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
@@ -28,7 +30,7 @@ export * from './storage';
 /**
  * Provider of observability data.
  */
-export type DataProvider = (observability: Observability) => Effect.Effect<CleanupFn | void>;
+export type DataProvider = (observability: Observability) => Effect.Effect<CleanupFn | void, Error>;
 
 /**
  * Extensible observability provider.
@@ -40,7 +42,7 @@ export interface Observability {
   enable(): Effect.Effect<void>;
   disable(): Effect.Effect<void>;
   flush(): Effect.Effect<void>;
-  addDataProvider(dataProvider: DataProvider): Effect.Effect<void>;
+  addDataProvider(dataProvider: DataProvider): Effect.Effect<void, Error>;
   identify(distinctId: string, attributes?: Attributes, setOnceAttributes?: Attributes): void;
   alias(distinctId: string, previousId?: string): void;
   setTags(tags: Attributes, kind?: Kind): void;
@@ -135,7 +137,7 @@ class ObservabilityImpl implements Observability {
   /**
    * Adds a data provider and initializes it.
    */
-  addDataProvider(dataProvider: DataProvider): Effect.Effect<void> {
+  addDataProvider(dataProvider: DataProvider): Effect.Effect<void, Error> {
     return Effect.gen(this, function* () {
       this._dataProviders.push(dataProvider);
       const cleanup = yield* dataProvider(this);
@@ -227,7 +229,7 @@ class ObservabilityImpl implements Observability {
   }
 
   private _getExtensions<T extends Kind>(kind: T): Extract<ExtensionApi, { kind: T }>[] {
-    return pipe(
+    return Function.pipe(
       this._extensions,
       Array.flatMap((extension) => extension.apis),
       Array.filter((api): api is Extract<ExtensionApi, { kind: T }> => api.kind === kind),

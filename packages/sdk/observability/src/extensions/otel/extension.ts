@@ -4,7 +4,8 @@
 
 import { defaultResource, resourceFromAttributes } from '@opentelemetry/resources';
 import { ATTR_SERVICE_NAME, ATTR_SERVICE_VERSION } from '@opentelemetry/semantic-conventions';
-import { Effect, Ref } from 'effect';
+import * as Effect from 'effect/Effect';
+import * as Ref from 'effect/Ref';
 
 import { type Config } from '@dxos/config';
 import { LogLevel, log } from '@dxos/log';
@@ -61,7 +62,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
   const unparsedHeaders = isNode()
     ? (process.env.DX_OTEL_HEADERS ?? _headers ?? buildSecrets.OTEL_HEADERS)
     : config.values.runtime?.app?.env?.DX_OTEL_HEADERS;
-  const headers = parseHeaders(unparsedHeaders);
+  const headers = unparsedHeaders ? parseHeaders(unparsedHeaders) : undefined;
 
   if (!endpoint || !headers) {
     log.warn('Missing OTEL_ENDPOINT or OTEL_HEADERS');
