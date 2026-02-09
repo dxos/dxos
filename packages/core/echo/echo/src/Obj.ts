@@ -135,7 +135,7 @@ type Props<T = any> = {
 export type MakeProps<S extends Schema.Schema.AnyNoContext> = {
   id?: ObjectId;
   [Meta]?: Partial<ObjectMeta>;
-  [Parent]?: any;
+  [Parent]?: Unknown;
 } & NoInfer<Props<Schema.Schema.Type<S>>>;
 
 /**
@@ -543,10 +543,10 @@ export const setDescription = (entity: Mutable<Unknown>, description: string): v
  */
 export const Parent: unique symbol = ParentId as any;
 
-export const getParent = (entity: Any): Any | undefined => {
+export const getParent = (entity: Unknown | Snapshot): Unknown | undefined => {
   assertArgument(isObject(entity), 'Expected an object');
   assumeType<InternalObjectProps>(entity);
-  return entity[ParentId] as Any;
+  return entity[ParentId] as Unknown | undefined;
 };
 
 export const setParent = (entity: Entity.Unknown, parent: Any | undefined) => {
