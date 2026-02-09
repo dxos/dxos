@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 import React from 'react';
 
 import { AppendInput } from '@dxos/conductor';

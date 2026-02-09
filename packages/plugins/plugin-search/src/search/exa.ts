@@ -4,11 +4,13 @@
 
 // ISSUE(burdon): deprecated types: MixedStreamParser => effect
 
-import { Option, Schema, SchemaAST } from 'effect';
+import * as Option from 'effect/Option';
+import * as Schema from 'effect/Schema';
+import * as SchemaAST from 'effect/SchemaAST';
 
-import { Key, Obj } from '@dxos/echo';
+import { type Entity, Key, Obj, type Type } from '@dxos/echo';
+import { ReferenceAnnotationId } from '@dxos/echo/internal';
 import { isEncodedReference } from '@dxos/echo-protocol';
-import { ReferenceAnnotationId } from '@dxos/echo-schema';
 import { mapAst } from '@dxos/effect';
 import { deepMapValues, trim } from '@dxos/util';
 
@@ -29,9 +31,10 @@ export type SearchResult<T = unknown> = {
   };
 };
 
+/** @deprecated Use MixedStreamParser */
 export const search = async <Schema extends Schema.Schema.AnyNoContext>(
   options: SearchOptions<Schema>,
-): Promise<SearchResult<Schema.Schema.Type<Schema>>> => {
+): Promise<SearchResult<Entity.Unknown>> => {
   throw new Error('Not implemented');
   // assertArgument(options.query || options.context, "query or context", "query or context is required");
   // let contextSearchTerms: readonly string[] = [];
@@ -61,7 +64,7 @@ export const search = async <Schema extends Schema.Schema.AnyNoContext>(
   //   model: '@anthropic/claude-3-5-haiku-20241022',
   //   systemPrompt,
   //   history: [
-  //     Obj.make(DataType.Message, {
+  //     Obj.make(Message.Message, {
   //       created: new Date().toISOString(),
   //       sender: { role: 'user' },
   //       blocks: context.results.map(
@@ -157,7 +160,7 @@ const DATA_EXTRACTION_INSTRUCTIONS = trim`
 //       Prefer own names of people, companies, and projects, technologies, and other entities.
 //     `,
 //     history: [
-//       Obj.make(DataType.Message, {
+//       Obj.make(Message.Message, {
 //         created: new Date().toISOString(),
 //         sender: { role: 'user' },
 //         blocks: [
@@ -178,7 +181,7 @@ const DATA_EXTRACTION_INSTRUCTIONS = trim`
 //   return terms;
 // };
 
-const sanitizeObjects = (entries: { data: any; schema: Schema.Schema.AnyNoContext }[]) => {
+const sanitizeObjects = (entries: { data: any; schema: Type.Obj.Any }[]) => {
   const idMap = new Map<string, string>();
 
   return entries

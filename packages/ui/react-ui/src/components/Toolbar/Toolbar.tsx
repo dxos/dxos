@@ -4,7 +4,9 @@
 
 import type { ToggleGroupItemProps as ToggleGroupItemPrimitiveProps } from '@radix-ui/react-toggle-group';
 import * as ToolbarPrimitive from '@radix-ui/react-toolbar';
-import React, { forwardRef } from 'react';
+import React, { Fragment, forwardRef } from 'react';
+
+import { type ToolbarStyleProps } from '@dxos/ui-theme';
 
 import { useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
@@ -18,23 +20,40 @@ import {
   Toggle,
   type ToggleGroupItemProps,
   type ToggleProps,
-} from '../Buttons';
+} from '../Button';
 import { Link, type LinkProps } from '../Link';
 import { Separator, type SeparatorProps } from '../Separator';
 
-type ToolbarRootProps = ThemedClassName<ToolbarPrimitive.ToolbarProps> & { layoutManaged?: boolean };
+type ToolbarRootProps = ThemedClassName<
+  ToolbarPrimitive.ToolbarProps &
+    ToolbarStyleProps & {
+      textBlockWidth?: boolean;
+    }
+>;
 
+// TODO(burdon): Implement asChild property.
 const ToolbarRoot = forwardRef<HTMLDivElement, ToolbarRootProps>(
-  ({ classNames, children, layoutManaged, ...props }, forwardedRef) => {
+  (
+    { classNames, children, density, disabled, layoutManaged, textBlockWidth: textBlockWidthProp, ...props },
+    forwardedRef,
+  ) => {
     const { tx } = useThemeContext();
+    const InnerRoot = textBlockWidthProp ? 'div' : Fragment;
+    const innerRootProps = textBlockWidthProp
+      ? {
+          role: 'none',
+          className: tx('toolbar.inner', 'toolbar', { layoutManaged }, classNames),
+        }
+      : {};
+
     return (
       <ToolbarPrimitive.Root
         {...props}
         data-arrow-keys={props.orientation === 'vertical' ? 'up down' : 'left right'}
-        className={tx('toolbar.root', 'toolbar', { layoutManaged }, classNames)}
+        className={tx('toolbar.root', 'toolbar', { density, disabled, layoutManaged }, classNames)}
         ref={forwardedRef}
       >
-        {children}
+        <InnerRoot {...innerRootProps}>{children}</InnerRoot>
       </ToolbarPrimitive.Root>
     );
   },
@@ -55,7 +74,7 @@ type ToolbarIconButtonProps = IconButtonProps;
 const ToolbarIconButton = forwardRef<HTMLButtonElement, ToolbarIconButtonProps>((props, forwardedRef) => {
   return (
     <ToolbarPrimitive.Button asChild>
-      <IconButton {...props} ref={forwardedRef} />
+      <IconButton {...props} noTooltip ref={forwardedRef} />
     </ToolbarPrimitive.Button>
   );
 });
@@ -114,7 +133,18 @@ const ToolbarToggleGroupIconItem = forwardRef<HTMLButtonElement, ToolbarToggleGr
   ({ variant, density, elevation, classNames, icon, label, iconOnly, ...props }, forwardedRef) => {
     return (
       <ToolbarPrimitive.ToolbarToggleItem {...props} asChild>
-        <IconButton {...{ variant, density, elevation, classNames, icon, label, iconOnly }} ref={forwardedRef} />
+        <IconButton
+          {...{
+            variant,
+            density,
+            elevation,
+            classNames,
+            icon,
+            label,
+            iconOnly,
+          }}
+          ref={forwardedRef}
+        />
       </ToolbarPrimitive.ToolbarToggleItem>
     );
   },

@@ -4,12 +4,12 @@
 
 import { type EditorView } from '@codemirror/view';
 
-import { type NodeArg } from '@dxos/app-graph';
+import { type Node } from '@dxos/app-graph';
 import { type ToolbarMenuActionGroupProperties } from '@dxos/react-ui-menu';
+import { addBlockquote, addCodeblock, insertTable, removeBlockquote, removeCodeblock } from '@dxos/ui-editor';
 
-import { addBlockquote, addCodeblock, insertTable, removeBlockquote, removeCodeblock } from '../../extensions';
-
-import { type EditorToolbarState, createEditorAction, createEditorActionGroup } from './util';
+import { createEditorAction, createEditorActionGroup } from './actions';
+import { type EditorToolbarState } from './useEditorToolbar';
 
 const createBlockGroupAction = (value: string) =>
   createEditorActionGroup('block', {
@@ -50,7 +50,7 @@ export const createBlocks = (state: EditorToolbarState, getView: () => EditorVie
   const blockGroupAction = createBlockGroupAction(value);
   const blockActions = createBlockActions(value, getView, state.blankLine);
   return {
-    nodes: [blockGroupAction as NodeArg<any>, ...blockActions],
+    nodes: [blockGroupAction as Node.NodeArg<any>, ...blockActions],
     edges: [
       { source: 'root', target: 'block' },
       ...blockActions.map(({ id }) => ({ source: blockGroupAction.id, target: id })),

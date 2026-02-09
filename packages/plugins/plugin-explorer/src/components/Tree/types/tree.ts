@@ -2,9 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 
 import { Key, Obj, Type } from '@dxos/echo';
+import { TestSchema } from '@dxos/echo/testing';
 import { invariant } from '@dxos/invariant';
 
 // TODO(burdon): Reconcile with @dxos/graph (i.e., common types).
@@ -13,7 +14,7 @@ export const TreeNodeType = Schema.Struct({
   id: Key.ObjectId,
   children: Schema.mutable(Schema.Array(Key.ObjectId)),
   data: Schema.mutable(Schema.Record({ key: Schema.String, value: Schema.Any })),
-  ref: Schema.optional(Type.Ref(Type.Expando)),
+  ref: Schema.optional(Type.Ref(TestSchema.Expando)),
 }).pipe(Schema.mutable);
 
 export interface TreeNodeType extends Schema.Schema.Type<typeof TreeNodeType> {}
@@ -22,7 +23,7 @@ export const TreeType = Schema.Struct({
   root: Key.ObjectId,
   nodes: Schema.mutable(Schema.Record({ key: Key.ObjectId, value: TreeNodeType })),
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/Tree',
     version: '0.1.0',
   }),
@@ -184,9 +185,11 @@ export class Tree {
   clear(): void {
     const root = this._tree.nodes[this._tree.root];
     root.children.length = 0;
-    this._tree.nodes = {
-      [root.id]: root,
-    };
+    Obj.change(this._tree, (t) => {
+      t.nodes = {
+        [root.id]: root,
+      };
+    });
   }
 
   /**
@@ -198,8 +201,11 @@ export class Tree {
       node = { id, children: [], data: { text: '' } }; // TODO(burdon): Generic.
     }
 
-    this._tree.nodes[node.id] = node;
-    parent.children.splice(index ?? parent.children.length, 0, node.id);
+    const nodeToAdd = node;
+    Obj.change(this._tree, (t) => {
+      t.nodes[nodeToAdd.id] = nodeToAdd;
+      parent.children.splice(index ?? parent.children.length, 0, nodeToAdd.id);
+    });
     return node;
   }
 
@@ -212,10 +218,14 @@ export class Tree {
       return undefined;
     }
 
-    delete this._tree.nodes[node.id];
+    Obj.change(this._tree, (t) => {
+      delete t.nodes[node.id];
+    });
     const idx = parent.children.findIndex((child) => child === id);
     if (idx !== -1) {
-      parent.children.splice(idx, 1);
+      Obj.change(this._tree, () => {
+        parent.children.splice(idx, 1);
+      });
     }
 
     return node;
@@ -232,8 +242,10 @@ export class Tree {
     }
 
     const child = node.children[from];
-    node.children.splice(from, 1);
-    node.children.splice(to, 0, child);
+    Obj.change(this._tree, () => {
+      node.children.splice(from, 1);
+      node.children.splice(to, 0, child);
+    });
     return this.getNode(child);
   }
 
@@ -252,8 +264,10 @@ export class Tree {
     }
 
     const previous = this.getNode(parent.children[idx - 1]);
-    parent.children.splice(idx, 1);
-    previous.children.push(node.id);
+    Obj.change(this._tree, () => {
+      parent.children.splice(idx, 1);
+      previous.children.push(node.id);
+    });
   }
 
   /**
@@ -270,16 +284,23 @@ export class Tree {
       return;
     }
 
-    // Remove node from parent.
+    // Remove node from parent and get following siblings.
     const nodeIdx = parent.children.findIndex((id) => id === node.id);
-    const [_, ...rest] = parent.children.splice(nodeIdx, parent.children.length - nodeIdx);
-    parent.children.splice(nodeIdx, parent.children.length - nodeIdx);
+    let rest: Key.ObjectId[] = [];
+    Obj.change(this._tree, () => {
+      const removed = parent.children.splice(nodeIdx, parent.children.length - nodeIdx);
+      rest = removed.slice(1); // Skip the node itself.
+    });
 
     // Add to ancestor.
     const parentIdx = this.getChildNodes(ancestor).findIndex((n) => n.id === parent.id);
-    ancestor.children.splice(parentIdx + 1, 0, node.id);
+    Obj.change(this._tree, () => {
+      ancestor.children.splice(parentIdx + 1, 0, node.id);
+    });
 
     // Transplant following siblings to current node.
-    node.children.push(...rest);
+    Obj.change(this._tree, () => {
+      node.children.push(...rest);
+    });
   }
 }

@@ -6,8 +6,8 @@ import { execSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
-import yaml from 'js-yaml';
 import pkgUp from 'pkg-up';
+import { parse } from 'yaml';
 
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -40,7 +40,7 @@ export const definitions = ({
       invariant(key);
       let content = {};
       try {
-        content = yaml.load(readFileSync(value, 'utf-8')) as any;
+        content = parse(readFileSync(value, 'utf-8')) as any;
 
         // Map environment variables to config values.
         if (key === '__CONFIG_ENVS__') {

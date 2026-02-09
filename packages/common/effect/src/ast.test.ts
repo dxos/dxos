@@ -2,7 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema, SchemaAST } from 'effect';
+import * as Schema from 'effect/Schema';
+import * as SchemaAST from 'effect/SchemaAST';
 import { describe, test } from 'vitest';
 
 import { invariant } from '@dxos/invariant';
@@ -14,13 +15,12 @@ import {
   getAnnotation,
   getDiscriminatedType,
   getDiscriminatingProps,
-  getSimpleType,
   isArrayType,
+  isDiscriminatedUnion,
   isOption,
-  isSimpleType,
   visit,
 } from './ast';
-import { type JsonPath, type JsonProp } from './jsonPath';
+import { type JsonPath, type JsonProp } from './json-path';
 
 const ZipCode = Schema.String.pipe(
   Schema.pattern(/^\d{5}$/, {
@@ -64,10 +64,9 @@ describe('AST', () => {
 
     const prop = findProperty(TestSchema, 'name' as JsonProp);
     invariant(prop);
-    const node = findNode(prop, isSimpleType);
+    const node = findNode(prop, (node) => node._tag === 'StringKeyword');
     invariant(node);
-    const type = getSimpleType(node);
-    expect(type).to.eq('string');
+    expect(node._tag).to.eq('StringKeyword');
   });
 
   test('findProperty', ({ expect }) => {
@@ -136,7 +135,11 @@ describe('AST', () => {
     });
 
     const props: string[] = [];
-    visit(TestSchema.ast, (_, path) => props.push(path.join('.')));
+    visit(
+      TestSchema.ast,
+      (_, path) => props.push(path.join('.')),
+      (node, path, depth) => depth < 3,
+    );
   });
 
   test('discriminated unions', ({ expect }) => {
@@ -151,7 +154,7 @@ describe('AST', () => {
       expect(isOption(TestUnionSchema.ast)).to.be.false;
       expect(getDiscriminatingProps(TestUnionSchema.ast)).to.deep.eq(['kind']);
 
-      const node = findNode(TestUnionSchema.ast, isSimpleType);
+      const node = findNode(TestUnionSchema.ast, isDiscriminatedUnion);
       expect(node).to.eq(TestUnionSchema.ast);
     }
 

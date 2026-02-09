@@ -46,16 +46,13 @@
       "path": "../../sdk/schema"
     },
     {
+      "path": "../../sdk/types"
+    },
+    {
       "path": "../echo/echo"
     },
     {
       "path": "../echo/echo-db"
-    },
-    {
-      "path": "../echo/echo-schema"
-    },
-    {
-      "path": "../echo/live-object"
     },
     {
       "path": "../protocols"

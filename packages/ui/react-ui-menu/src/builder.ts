@@ -3,9 +3,9 @@
 //
 
 import { invariant } from '@dxos/invariant';
+import type { MenuActionProperties, MenuItemGroupProperties } from '@dxos/ui-types';
 
 import type { ActionGraphProps } from './hooks';
-import type { MenuActionProperties, MenuItemGroupProperties } from './types';
 import { createMenuAction, createMenuItemGroup } from './util';
 
 export interface ActionGroupBuilder {

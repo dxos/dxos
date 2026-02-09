@@ -3,10 +3,12 @@
 //
 
 import { readFile, readdir, rm, writeFile } from 'node:fs/promises';
-import { basename, dirname } from 'node:path';
+import { basename, dirname, join } from 'node:path';
 
 import type * as Swc from '@swc/core';
-import { type Format, type Platform, type Plugin, build } from 'esbuild';
+import * as Array from 'effect/Array';
+import * as Function from 'effect/Function';
+import { type Format, type Platform, type Plugin, build, formatMessages } from 'esbuild';
 import glsl from 'esbuild-plugin-glsl';
 import RawPlugin from 'esbuild-plugin-raw';
 import { yamlPlugin } from 'esbuild-plugin-yaml';
@@ -17,6 +19,7 @@ import { NodeExternalPlugin } from '@dxos/esbuild-plugins';
 import { bundleDepsPlugin } from './bundle-deps-plugin';
 import { esmOutputToCjs } from './esm-output-to-cjs-plugin';
 import { fixRequirePlugin } from './fix-require-plugin';
+import { restrictRelativeImportsPlugin } from './plugin-restrict-relative-imports';
 import { SwcTransformPlugin } from './swc-transform-plugin';
 
 export interface EsbuildExecutorOptions {
@@ -33,8 +36,8 @@ export interface EsbuildExecutorOptions {
   moduleFormat: Format[];
   sourcemap: boolean;
   watch: boolean;
-  preactSignalTracking: boolean;
   verbose: boolean;
+  mainFields: string[];
 }
 
 export default async (options: EsbuildExecutorOptions): Promise<{ success: boolean }> => {
@@ -54,6 +57,17 @@ export default async (options: EsbuildExecutorOptions): Promise<{ success: boole
   }
   const packageJson = JSON.parse(await readFile(packagePath, 'utf-8'));
 
+  let tsConfig: any;
+  try {
+    const tsConfigPath = join(dirname(packagePath), 'tsconfig.json');
+    const content = await readFile(tsConfigPath, 'utf-8');
+    const json = content.replace(/\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, '$1');
+    tsConfig = JSON.parse(json);
+  } catch (err) {
+    tsConfig = { compilerOptions: {} };
+  }
+  const { jsx, jsxImportSource, jsxFactory, jsxFragmentFactory } = tsConfig.compilerOptions || {};
+
   const swcTransformPlugin = new SwcTransformPlugin({
     isVerbose: options.verbose,
     getTranspilerOptions: ({ filePath }) => ({
@@ -64,6 +78,15 @@ export default async (options: EsbuildExecutorOptions): Promise<{ success: boole
         parser: {
           syntax: 'typescript',
           decorators: true,
+          tsx: true,
+        },
+        transform: {
+          react: {
+            runtime: jsxImportSource ? 'automatic' : 'classic',
+            importSource: jsxImportSource,
+            pragma: jsxFactory,
+            pragmaFrag: jsxFragmentFactory,
+          },
         },
         experimental: {
           plugins: [
@@ -80,6 +103,14 @@ export default async (options: EsbuildExecutorOptions): Promise<{ success: boole
                       include_args: false,
                       include_call_site: true,
                       include_scope: true,
+                    },
+                    {
+                      name: 'dbg',
+                      package: '@dxos/log',
+                      param_index: 1,
+                      include_args: true,
+                      include_call_site: false,
+                      include_scope: false,
                     },
                     {
                       name: 'invariant',
@@ -100,15 +131,10 @@ export default async (options: EsbuildExecutorOptions): Promise<{ success: boole
                   ],
                 },
               ];
-
-              if (options.preactSignalTracking) {
-                // https://github.com/XantreDev/preact-signals/tree/main/packages/react#how-parser-plugins-works
-                yield ['@preact-signals/safe-react/swc', { mode: 'all' }];
-              }
             })(),
           ],
         },
-        target: 'es2020',
+        target: 'esnext',
       },
     }),
   });
@@ -123,7 +149,11 @@ export default async (options: EsbuildExecutorOptions): Promise<{ success: boole
             ? [{ platform: 'node', format: 'cjs', slug: 'node-cjs', replaceRequire: false }]
             : []),
         ]
-      : [{ platform: 'browser', format: 'esm', slug: 'browser', replaceRequire: true }];
+      : platform === 'browser'
+        ? [{ platform: 'browser', format: 'esm', slug: 'browser', replaceRequire: true }]
+        : platform === 'neutral'
+          ? [{ platform: 'neutral', format: 'esm', slug: 'neutral', replaceRequire: true }]
+          : [];
   });
 
   const errors = await Promise.all(
@@ -140,6 +170,10 @@ export default async (options: EsbuildExecutorOptions): Promise<{ success: boole
         write: true,
         splitting: true,
         sourcemap: options.sourcemap,
+        jsx: jsx === 'preserve' ? 'preserve' : jsxImportSource ? 'automatic' : undefined,
+        jsxImportSource,
+        jsxFactory,
+        jsxFragment: jsxFragmentFactory,
         metafile: options.metafile,
         bundle: options.bundle,
         // watch: options.watch,
@@ -150,9 +184,12 @@ export default async (options: EsbuildExecutorOptions): Promise<{ success: boole
           // The log transform was generating this warning.
           'this-is-undefined-in-esm': 'info',
         },
+        logLevel: 'silent',
+        absPaths: ['log'],
         banner: {
           js: format === 'esm' && platform === 'node' ? CREATE_REQUIRE_BANNER : '',
         },
+        mainFields: options.mainFields,
         define:
           format === 'cjs'
             ? {
@@ -160,6 +197,9 @@ export default async (options: EsbuildExecutorOptions): Promise<{ success: boole
               }
             : undefined,
         plugins: [
+          restrictRelativeImportsPlugin({
+            allowedDirectory: process.cwd(),
+          }),
           NodeExternalPlugin({
             injectGlobals: options.injectGlobals,
             importGlobals: options.importGlobals,
@@ -207,6 +247,15 @@ export default async (options: EsbuildExecutorOptions): Promise<{ success: boole
       return result.errors;
     }),
   );
+
+  const formatted = await formatMessages(Function.pipe(errors, Array.flatten, Array.dedupe), {
+    kind: 'warning',
+    color: true,
+  });
+  const filtered = formatted.filter((_) => _.trim().length > 0);
+  if (filtered.length > 0) {
+    console.log(filtered.join('\n'));
+  }
 
   if (options.watch) {
     await new Promise(() => {}); // Wait indefinitely.

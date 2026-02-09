@@ -10,7 +10,6 @@ import {
   AutomergePanel,
   ConfigPanel,
   CredentialsPanel,
-  DashboardPanel,
   DeviceListPanel,
   DiagnosticsPanel,
   EdgeDashboardPanel,
@@ -142,15 +141,6 @@ export const useRoutes = () => {
             {
               path: '/mesh/network',
               element: <NetworkPanel />,
-            },
-          ],
-        },
-        {
-          path: '/agent',
-          children: [
-            {
-              path: '/agent/dashboard',
-              element: <DashboardPanel />,
             },
           ],
         },

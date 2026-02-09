@@ -27,10 +27,7 @@
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../core/echo/echo-schema"
-    },
-    {
-      "path": "../../core/echo/live-object"
+      "path": "../../core/operation"
     },
     {
       "path": "../../sdk/app-framework"
@@ -39,7 +36,7 @@
       "path": "../../ui/react-ui"
     },
     {
-      "path": "../../ui/react-ui-theme"
+      "path": "../../ui/ui-theme"
     }
   ]
 }

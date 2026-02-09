@@ -14,6 +14,11 @@ runtime:
     edgeFeatures:
       signaling: true
       echoReplicator: true
+      feedReplicator: true
+      agents: true
+    disableP2pReplication: true
+    log:
+      filter: 'echo-edge-replicator:debug,info'
   services:
     # signaling:
     #   - server: wss://kube.dxos.org/.well-known/dx/signal

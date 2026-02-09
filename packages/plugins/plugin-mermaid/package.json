@@ -4,6 +4,10 @@
   "description": "Mermaid markdown plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
   "license": "MIT",
   "author": "DXOS.org",
   "sideEffects": true,
@@ -24,34 +28,36 @@
     "src"
   ],
   "dependencies": {
-    "@codemirror/language": "^6.11.3",
-    "@codemirror/state": "^6.5.2",
-    "@codemirror/view": "^6.38.4",
+    "@codemirror/language": "catalog:",
+    "@codemirror/state": "catalog:",
+    "@codemirror/view": "catalog:",
     "@dxos/app-framework": "workspace:*",
+    "@dxos/operation": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
-    "@preact-signals/safe-react": "^0.9.0",
-    "mermaid": "^10.9.4"
+    "@dxos/ui-editor": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "mermaid": "catalog:"
   },
   "devDependencies": {
-    "@dxos/echo-schema": "workspace:*",
+    "@dxos/echo": "workspace:*",
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
-    "@types/react": "~19.2.2",
-    "@types/react-dom": "~19.2.1",
-    "effect": "3.18.3",
-    "react": "~19.2.0",
-    "react-dom": "~19.2.0",
-    "vite": "7.1.9"
+    "@dxos/ui-theme": "workspace:*",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "effect": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "vite": "catalog:"
   },
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-theme": "workspace:*",
-    "effect": "^3.13.3",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "@dxos/ui-theme": "workspace:*",
+    "effect": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
   },
   "publishConfig": {
     "access": "public"

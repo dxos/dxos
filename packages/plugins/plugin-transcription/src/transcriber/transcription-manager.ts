@@ -2,14 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import { signal } from '@preact/signals-core';
+import { Atom, type Registry } from '@effect-atom/atom-react';
 
 import { synchronized } from '@dxos/async';
 import { Resource } from '@dxos/context';
 import { Obj } from '@dxos/echo';
 import { type Queue } from '@dxos/echo-db';
 import { type EdgeHttpClient } from '@dxos/react-edge-client';
-import { DataType } from '@dxos/schema';
+import { type ContentBlock, Message } from '@dxos/types';
 
 import { MediaStreamRecorder } from './media-stream-recorder';
 import { Transcriber } from './transcriber';
@@ -30,10 +30,11 @@ const PREFIXED_CHUNKS_AMOUNT = 10;
  */
 const TRANSCRIBE_AFTER_CHUNKS_AMOUNT = 50;
 
-export type TranscriptMessageEnricher = (message: DataType.Message) => Promise<DataType.Message>;
+export type TranscriptMessageEnricher = (message: Message.Message) => Promise<Message.Message>;
 
 export type TranscriptionManagerOptions = {
   edgeClient: EdgeHttpClient;
+  registry: Registry.Registry;
 
   /**
    * Enrich the message before it is written to the transcription queue.
@@ -47,25 +48,30 @@ export type TranscriptionManagerOptions = {
 export class TranscriptionManager extends Resource {
   private readonly _edgeClient: EdgeHttpClient;
   private readonly _messageEnricher?: TranscriptMessageEnricher;
+  private readonly _registry: Registry.Registry;
   private _audioStreamTrack?: MediaStreamTrack = undefined;
   private _identityDid?: string = undefined;
   private _mediaRecorder?: MediaStreamRecorder = undefined;
   private _transcriber?: Transcriber = undefined;
-  private _queue?: Queue<DataType.Message> = undefined;
-  private _enabled = signal(false);
+  private _queue?: Queue<Message.Message> = undefined;
+  private _enabledAtom = Atom.make(false);
 
   constructor(options: TranscriptionManagerOptions) {
     super();
     this._edgeClient = options.edgeClient;
     this._messageEnricher = options.messageEnricher;
+    this._registry = options.registry;
   }
 
-  /** @reactive */
-  get enabled() {
-    return this._enabled.value;
+  get enabled(): Atom.Atom<boolean> {
+    return this._enabledAtom;
   }
 
-  setQueue(queue: Queue<DataType.Message>): this {
+  getEnabled(): boolean {
+    return this._registry.get(this._enabledAtom);
+  }
+
+  setQueue(queue: Queue<Message.Message>): this {
     this._queue = queue;
     return this;
   }
@@ -78,7 +84,7 @@ export class TranscriptionManager extends Resource {
   }
 
   setRecording(recording?: boolean): this {
-    if (!this.isOpen || !this._enabled.value) {
+    if (!this.isOpen || !this.getEnabled()) {
       return this;
     }
 
@@ -91,11 +97,11 @@ export class TranscriptionManager extends Resource {
   }
 
   async setEnabled(enabled: boolean): Promise<void> {
-    if (this._enabled.value === enabled) {
+    if (this.getEnabled() === enabled) {
       return;
     }
 
-    this._enabled.value = enabled ?? false;
+    this._registry.set(this._enabledAtom, enabled ?? false);
     if (enabled) {
       await this._maybeRestartTranscriber();
     } else {
@@ -122,7 +128,7 @@ export class TranscriptionManager extends Resource {
   }
 
   private async _maybeRestartTranscriber(): Promise<void> {
-    if (!this._audioStreamTrack || !this._enabled.value || !this.isOpen) {
+    if (!this._audioStreamTrack || !this.getEnabled() || !this.isOpen) {
       return;
     }
 
@@ -154,12 +160,12 @@ export class TranscriptionManager extends Resource {
     await this._transcriber?.close();
   }
 
-  private async _onSegments(segments: DataType.MessageBlock.Transcript[]): Promise<void> {
+  private async _onSegments(segments: ContentBlock.Transcript[]): Promise<void> {
     if (!this.isOpen || !this._queue) {
       return;
     }
 
-    let block = Obj.make(DataType.Message, {
+    let block = Obj.make(Message.Message, {
       created: new Date().toISOString(),
       blocks: segments,
       sender: { identityDid: this._identityDid },

@@ -17,7 +17,8 @@ import { withTheme } from '@dxos/react-ui/testing';
 import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
 import { type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
 
-import { DataType, DataTypes } from '../common';
+import { TestSchema } from '../testing';
+import { DataTypes } from '../types';
 
 faker.seed(1);
 
@@ -47,7 +48,7 @@ const DefaultStory = () => {
   const handleCreate = async () => {
     await test('create', async () => {
       invariant(space);
-      space.db.add(Obj.make(DataType.Organization, { id: 'dxos', name: 'DXOS', website: 'https://dxos.org' }));
+      space.db.add(Obj.make(TestSchema.Organization, { id: 'dxos', name: 'DXOS', website: 'https://dxos.org' }));
     });
   };
 
@@ -55,7 +56,7 @@ const DefaultStory = () => {
     await test('create-objects', async () => {
       invariant(space);
       const createObjects = createObjectFactory(space.db, generator);
-      await createObjects([{ type: DataType.Organization, count: 1_000 }]);
+      await createObjects([{ type: TestSchema.Organization, count: 1_000 }]);
     });
   };
 
@@ -80,7 +81,7 @@ const DefaultStory = () => {
   };
 
   return (
-    <div className='flex flex-col w-full'>
+    <div className='flex flex-col is-full'>
       <Toolbar.Root>
         <Button onClick={handleReset}>Reset</Button>
         <Button onClick={handleReload}>Reload</Button>
@@ -111,7 +112,7 @@ const meta = {
           },
         },
       }),
-      types: DataTypes,
+      types: [...DataTypes, TestSchema.Organization],
     }),
   ],
   parameters: {

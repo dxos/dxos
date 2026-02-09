@@ -4,7 +4,7 @@
 
 import { inspect } from 'node:util';
 
-import type { ContentBlock, DataType } from '@dxos/schema';
+import { type ContentBlock, type Message } from '@dxos/types';
 
 type Mode = 'text' | 'json';
 
@@ -15,25 +15,32 @@ export type ConsolePrinterOptions = {
   logger?: Logger;
   mode?: Mode;
   tag?: string;
+  /**
+   * Blocks to print.
+   * @default all
+   */
+  allowedBlocks?: ContentBlock.Any['_tag'][];
 };
 
 export class ConsolePrinter {
   logger: Logger;
   mode: Mode;
   tag?: string;
+  allowedBlocks?: ContentBlock.Any['_tag'][];
 
   // eslint-disable-next-line no-console
-  constructor({ logger = console.log, mode = 'text', tag }: ConsolePrinterOptions = {}) {
+  constructor({ logger = console.log, mode = 'text', tag, allowedBlocks }: ConsolePrinterOptions = {}) {
     this.logger = logger;
     this.mode = mode;
     this.tag = tag;
+    this.allowedBlocks = allowedBlocks;
   }
 
   private log(...data: any[]) {
     this.logger(...data);
   }
 
-  printMessage = (message: DataType.Message) => {
+  printMessage = (message: Message.Message) => {
     const prefix = this.tag ? `[${this.tag}] ` : '';
     switch (this.mode) {
       case 'text': {
@@ -52,6 +59,9 @@ export class ConsolePrinter {
   };
 
   printContentBlock = (content: ContentBlock.Any) => {
+    if (this.allowedBlocks && !this.allowedBlocks.includes(content._tag)) {
+      return;
+    }
     const prefix = this.tag ? `[${this.tag}] ` : '';
     switch (this.mode) {
       case 'text': {

@@ -2,27 +2,36 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Effect, Schema } from 'effect';
+import * as Effect from 'effect/Effect';
+import * as Schema from 'effect/Schema';
 import { JSONPath } from 'jsonpath-plus';
 
-import { Filter, Ref, Type } from '@dxos/echo';
+import { Filter, Obj, Ref, Type } from '@dxos/echo';
+import { Database } from '@dxos/echo';
+import { isInstanceOf } from '@dxos/echo/internal';
 import { Queue } from '@dxos/echo-db';
-import { ObjectId, getTypename, isInstanceOf, toEffectSchema } from '@dxos/echo-schema';
-import { DatabaseService, QueueService } from '@dxos/functions';
+import { FunctionDefinition, FunctionInvocationService, QueueService } from '@dxos/functions';
 import { failedInvariant, invariant } from '@dxos/invariant';
-import { DXN } from '@dxos/keys';
-import { live } from '@dxos/live-object';
-import { DataType, getTypenameFromQuery } from '@dxos/schema';
+import { DXN, ObjectId } from '@dxos/keys';
+import { View, getTypenameFromQuery } from '@dxos/schema';
+import { Message } from '@dxos/types';
 import { safeParseJson } from '@dxos/util';
 
 import {
   AnyInput,
   AnyOutput,
+  AppendInput,
+  ConstantOutput,
   DEFAULT_INPUT,
   DEFAULT_OUTPUT,
   DefaultInput,
   type Executable,
+  JsonTransformInput,
   NotExecuted,
+  QueueInput,
+  QueueOutput,
+  ReducerInput,
+  ReducerOutput,
   ValueBag,
   VoidInput,
   VoidOutput,
@@ -30,24 +39,26 @@ import {
   synchronizedComputeFunction,
 } from '../types';
 
-import { executeFunction, resolveFunctionPath } from './function';
 import { gptNode } from './gpt';
 import { NODE_INPUT, NODE_OUTPUT, inputNode, outputNode } from './system';
-import { templateNode } from './template/node';
-import {
-  AppendInput,
-  ConstantOutput,
-  JsonTransformInput,
-  QueueInput,
-  QueueOutput,
-  ReducerInput,
-  ReducerOutput,
-} from './types';
+import { templateNode } from './template';
+
+export const isFalsy = (value: any) =>
+  value === 'false' ||
+  value === 'FALSE' ||
+  value === '0' ||
+  value === false ||
+  value === null ||
+  value === undefined ||
+  (Array.isArray(value) && value.length === 0);
+
+export const isTruthy = (value: any) => !isFalsy(value);
 
 /**
  * To prototype a new compute node, first add a new type and a dummy definition (e.g., VoidInput, VoidOutput).
  */
-// TODO(burdon): Convert to DXNs.
+// TODO(burdon): Extensible? (use dxn: prefix?)
+// TODO(burdon): Add type to node def and create discriminated union.
 export type NodeType =
   | typeof NODE_INPUT
   | typeof NODE_OUTPUT
@@ -79,41 +90,7 @@ export type NodeType =
   | 'text'
   | 'thread';
 
-export const isFalsy = (value: any) =>
-  value === 'false' ||
-  value === 'FALSE' ||
-  value === '0' ||
-  value === false ||
-  value === null ||
-  value === undefined ||
-  (Array.isArray(value) && value.length === 0);
-
-export const isTruthy = (value: any) => !isFalsy(value);
-
-// TODO(dmaretskyi): Separate into definition and implementation.
-/*
-
-const gpt = Executable.define({
-  name: 'gpt',
-  input: Schema.Struct({
-    prompt: Schema.String,
-  }),
-  output: Schema.Struct({
-    text: Schema.String,
-  }),
-})
-
-// All inputs & outputs are computed at the same time.
-const gptImpl1 = Executable.implementSynchronized(gpt, Effect.fnUntraced(function* ({ prompt }) {
-  ...
-}));
-
-// Inputs and outputs are computed independently.
-cosnt gptImpl2 = Executable.implementIndependent(gpt, Effect.fnUntraced(function* (valueBag) {
-  ...
-})
-*/
-
+// TODO(burdon): Extensible?
 export const registry: Record<NodeType, Executable> = {
   //
   // System
@@ -125,6 +102,9 @@ export const registry: Record<NodeType, Executable> = {
   //
   // Inputs
   //
+
+  // TODO(burdon): Template?
+  ['template' as const]: templateNode,
 
   ['audio' as const]: defineComputeNode({
     input: VoidInput,
@@ -146,8 +126,6 @@ export const registry: Record<NodeType, Executable> = {
     input: VoidInput,
     output: Schema.Struct({ [DEFAULT_OUTPUT]: Schema.Boolean }),
   }),
-
-  ['template' as const]: templateNode,
 
   ['rng' as const]: defineComputeNode({
     input: VoidInput,
@@ -201,7 +179,6 @@ export const registry: Record<NodeType, Executable> = {
     exec: synchronizedComputeFunction(({ [DEFAULT_INPUT]: input, expression }) => {
       const json =
         typeof input === 'string' ? safeParseJson(input, {}) : typeof input !== 'object' ? { value: input } : input;
-
       const result = JSONPath({ json, path: expression });
       return Effect.succeed({ [DEFAULT_OUTPUT]: result });
     }),
@@ -221,7 +198,7 @@ export const registry: Record<NodeType, Executable> = {
     input: VoidInput,
     output: Schema.Struct({
       id: ObjectId,
-      messages: Schema.Array(DataType.Message),
+      messages: Schema.Array(Message.Message),
     }),
   }),
 
@@ -232,7 +209,6 @@ export const registry: Record<NodeType, Executable> = {
       Effect.gen(function* () {
         const { queues } = yield* QueueService;
         const messages = yield* Effect.promise(() => queues.get(DXN.parse(id)).queryObjects());
-
         const decoded = Schema.decodeUnknownSync(Schema.Any)(messages);
         return {
           [DEFAULT_OUTPUT]: decoded,
@@ -247,28 +223,27 @@ export const registry: Record<NodeType, Executable> = {
     exec: synchronizedComputeFunction(({ id, items }) =>
       Effect.gen(function* () {
         items = Array.isArray(items) ? items : [items];
-
         const dxn = DXN.parse(id);
         switch (dxn.kind) {
           case DXN.kind.QUEUE: {
-            const mappedItems = items.map((item: any) => ({ ...item, id: item.id ?? ObjectId.random() }));
-
+            const mappedItems = items.map((item: any) => ({
+              ...item,
+              id: item.id ?? ObjectId.random(),
+            }));
             const { queues } = yield* QueueService;
             yield* Effect.promise(() => queues.get(DXN.parse(id)).append(mappedItems));
-
             return {};
           }
+
           case DXN.kind.ECHO: {
             const { echoId, spaceId } = dxn.asEchoDXN() ?? failedInvariant();
-            const { db } = yield* DatabaseService;
+            const { db } = yield* Database.Service;
             if (spaceId != null) {
               invariant(db.spaceId === spaceId, 'Space mismatch');
             }
 
-            const {
-              objects: [container],
-            } = yield* Effect.promise(() => db.query(Filter.ids(echoId)).run());
-            if (isInstanceOf(DataType.View, container)) {
+            const [container] = yield* Effect.promise(() => db.query(Filter.id(echoId)).run());
+            if (isInstanceOf(View.View, container)) {
               const schema = yield* Effect.promise(async () =>
                 db.schemaRegistry
                   .query({
@@ -280,15 +255,16 @@ export const registry: Record<NodeType, Executable> = {
               for (const item of items) {
                 const { id: _id, '@type': _type, ...rest } = item as any;
                 // TODO(dmaretskyi): Forbid type on create.
-                db.add(live(schema, rest));
+                db.add(Obj.make(schema, rest));
               }
               yield* Effect.promise(() => db.flush());
             } else {
-              throw new Error(`Unsupported ECHO container type: ${getTypename(container)}`);
+              throw new Error(`Unsupported ECHO container type: ${Obj.getTypename(container)}`);
             }
 
             return {};
           }
+
           default: {
             throw new Error(`Unsupported DXN: ${dxn.toString()}`);
           }
@@ -317,7 +293,7 @@ export const registry: Record<NodeType, Executable> = {
     input: Schema.Struct({ [DEFAULT_INPUT]: Schema.Boolean }),
     output: Schema.Struct({ [DEFAULT_OUTPUT]: Schema.Boolean }),
     exec: synchronizedComputeFunction(({ [DEFAULT_INPUT]: input }) =>
-      Effect.succeed({ [DEFAULT_OUTPUT]: !isTruthy(input) }),
+      Effect.succeed({ [DEFAULT_OUTPUT]: isFalsy(input) }),
     ),
   }),
 
@@ -327,7 +303,10 @@ export const registry: Record<NodeType, Executable> = {
 
   ['if' as const]: defineComputeNode({
     input: Schema.Struct({ condition: Schema.Boolean, value: Schema.Any }),
-    output: Schema.Struct({ true: Schema.optional(Schema.Any), false: Schema.optional(Schema.Any) }),
+    output: Schema.Struct({
+      true: Schema.optional(Schema.Any),
+      false: Schema.optional(Schema.Any),
+    }),
     exec: (input) =>
       Effect.gen(function* () {
         const { value, condition } = yield* ValueBag.unwrap(input);
@@ -348,10 +327,16 @@ export const registry: Record<NodeType, Executable> = {
 
   // Ternary operator.
   ['if-else' as const]: defineComputeNode({
-    input: Schema.Struct({ condition: Schema.Boolean, true: Schema.Any, false: Schema.Any }),
+    input: Schema.Struct({
+      condition: Schema.Boolean,
+      true: Schema.Any,
+      false: Schema.Any,
+    }),
     output: Schema.Struct({ [DEFAULT_OUTPUT]: Schema.Any }),
     exec: synchronizedComputeFunction(({ condition, true: trueValue, false: falseValue }) =>
-      Effect.succeed({ [DEFAULT_OUTPUT]: isTruthy(condition) ? trueValue : falseValue }),
+      Effect.succeed({
+        [DEFAULT_OUTPUT]: isTruthy(condition) ? trueValue : falseValue,
+      }),
     ),
   }),
 
@@ -368,13 +353,10 @@ export const registry: Record<NodeType, Executable> = {
         if (!node || !functionRef) {
           throw new Error(`Function not specified on ${node?.id}.`);
         }
-        const { path } = yield* Effect.tryPromise({
-          try: () => resolveFunctionPath(functionRef),
-          catch: (e) => e,
-        });
 
-        const outputSchema = node.outputSchema ? toEffectSchema(node.outputSchema) : AnyOutput;
-        return executeFunction(path, input, outputSchema);
+        const func = yield* Database.load(functionRef);
+        const funcDefinition = FunctionDefinition.deserialize(func);
+        return yield* FunctionInvocationService.invokeFunction(funcDefinition, input);
       }),
     ),
   }),
@@ -404,9 +386,10 @@ export const registry: Record<NodeType, Executable> = {
     ),
   }),
 
+  // TODO(burdon): Fix.
   ['text-to-image' as const]: defineComputeNode({
     input: VoidInput,
-    output: VoidOutput, // TODO(burdon): Fix.
+    output: VoidOutput,
     exec: synchronizedComputeFunction(() =>
       Effect.gen(function* () {
         throw new Error('Not implemented');
@@ -414,12 +397,3 @@ export const registry: Record<NodeType, Executable> = {
     ),
   }),
 };
-
-// const textToImageTool: Tool = defineTool('testing', {
-//   name: 'text-to-image',
-//   type: ToolTypes.TextToImage,
-//   options: {
-//     // TODO(burdon): Testing.
-//     // model: '@testing/kitten-in-bubble',
-//   },
-// });

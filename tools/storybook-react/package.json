@@ -1,0 +1,56 @@
+{
+  "name": "@dxos/storybook-react",
+  "version": "0.8.3",
+  "private": true,
+  "description": "Storybook config package for the DXOS monorepo.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "MIT",
+  "author": "DXOS.org",
+  "sideEffects": true,
+  "type": "module",
+  "scripts": {
+    "chromatic": "chromatic --project-token=\"chpt_8565ce3985dc41b\" --storybook-build-dir ./out/storybook",
+    "test": "test-storybook --url http://127.0.0.1:9009"
+  },
+  "devDependencies": {
+    "@dxos/log": "workspace:*",
+    "@dxos/storybook-addon-logger": "workspace:*",
+    "@dxos/storybook-utils": "workspace:*",
+    "@dxos/ui-theme": "workspace:*",
+    "@dxos/vite-plugin-icons": "workspace:*",
+    "@dxos/vite-plugin-import-source": "workspace:*",
+    "@storybook/addon-docs": "catalog:",
+    "@storybook/addon-links": "catalog:",
+    "@storybook/addon-themes": "catalog:",
+    "@storybook/addon-vitest": "catalog:",
+    "@storybook/builder-vite": "catalog:",
+    "@storybook/html-vite": "catalog:",
+    "@storybook/mdx2-csf": "catalog:",
+    "@storybook/react-vite": "catalog:",
+    "@types/lodash.flatten": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "@vitejs/plugin-react": "catalog:",
+    "chromatic": "catalog:",
+    "eslint-plugin-storybook": "catalog:",
+    "lodash.flatten": "catalog:",
+    "playwright": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "storybook": "catalog:",
+    "vite": "catalog:",
+    "vite-plugin-turbosnap": "catalog:"
+  },
+  "peerDependencies": {
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

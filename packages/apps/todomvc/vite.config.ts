@@ -61,13 +61,7 @@ export default defineConfig({
     }),
     TopLevelAwaitPlugin(),
     WasmPlugin(),
-    ReactPlugin({
-      tsDecorators: true,
-      plugins: [
-        // https://github.com/XantreDev/preact-signals/tree/main/packages/react#how-parser-plugins-works
-        ['@preact-signals/safe-react/swc', { mode: 'all' }],
-      ],
-    }),
+    ReactPlugin({ tsDecorators: true }),
     // https://docs.sentry.io/platforms/javascript/sourcemaps/uploading/vite
     // https://www.npmjs.com/package/@sentry/vite-plugin
     sentryVitePlugin({

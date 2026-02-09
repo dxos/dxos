@@ -4,56 +4,65 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
-import { IntentPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { withTheme } from '@dxos/react-ui/testing';
+import { corePlugins } from '@dxos/plugin-testing';
+import { faker } from '@dxos/random';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { type Organization, type Person, type Project, type Task } from '@dxos/types';
 
+import { OrganizationCard, PersonCard, ProjectCard, TaskCard } from '../cards';
 import { translations } from '../translations';
 
-import { Defaultstory, createCards } from './testing';
+import { DefaultStory, createOrganization, createPerson, createProject, createTask } from './testing';
+
+faker.seed(999);
 
 const meta = {
   title: 'plugins/plugin-preview/Card',
-  render: Defaultstory,
+  render: DefaultStory,
   decorators: [
-    withTheme, // TODO(wittjosiah): Try to write story which does not depend on plugin manager.
-    withPluginManager({ plugins: [IntentPlugin()] }),
+    withTheme,
+    withLayout({ layout: 'column', scroll: true }),
+    // TODO(wittjosiah): Try to write story which does not depend on plugin manager.
+    withPluginManager({ plugins: corePlugins() }),
   ],
   parameters: {
-    layout: 'column',
     translations,
+    layout: 'fullscreen',
   },
   tags: ['cards'],
-} satisfies Meta<typeof Defaultstory>;
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
-type Story = StoryObj<typeof meta>;
-
-export const Popover: Story = {
+export const _Person: StoryObj<typeof DefaultStory<Person.Person>> = {
   args: {
-    role: 'card--popover',
-    cards: createCards(),
+    Component: PersonCard,
+    createObject: createPerson,
+    image: true,
   },
 };
 
-export const Intrinsic: Story = {
+export const _Organization: StoryObj<typeof DefaultStory<Organization.Organization>> = {
   args: {
-    role: 'card--intrinsic',
-    cards: createCards(),
+    Component: OrganizationCard,
+    createObject: createOrganization,
+    image: true,
   },
 };
 
-export const Extrinsic: Story = {
+export const _Project: StoryObj<typeof DefaultStory<Project.Project>> = {
   args: {
-    role: 'card--extrinsic',
-    cards: createCards(),
+    Component: ProjectCard,
+    createObject: createProject,
+    image: true,
   },
 };
 
-export const ExtrinsicNoImage: Story = {
+export const _Task: StoryObj<typeof DefaultStory<Task.Task>> = {
   args: {
-    role: 'card--extrinsic',
-    cards: createCards(false),
+    Component: TaskCard,
+    createObject: createTask,
+    image: true,
   },
 };

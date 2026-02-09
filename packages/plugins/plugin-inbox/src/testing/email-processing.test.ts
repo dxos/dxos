@@ -5,7 +5,7 @@
 import { describe, test } from 'vitest';
 
 import { log } from '@dxos/log';
-import { createTestData } from '@dxos/schema/testing';
+import { createTestData } from '@dxos/types/testing';
 
 import { processEmail } from './email-processor';
 

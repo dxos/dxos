@@ -4,9 +4,13 @@
   "description": "Random data generator.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
   "license": "MIT",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "exports": {
     ".": {
@@ -29,7 +33,7 @@
   "dependencies": {
     "@dxos/node-std": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@ngneat/falso": "^7.1.1"
+    "@ngneat/falso": "catalog:"
   },
   "devDependencies": {},
   "publishConfig": {

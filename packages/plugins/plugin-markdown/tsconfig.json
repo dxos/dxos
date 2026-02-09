@@ -25,13 +25,13 @@
       "path": "../../common/debug"
     },
     {
+      "path": "../../common/effect"
+    },
+    {
       "path": "../../common/invariant"
     },
     {
       "path": "../../common/keys"
-    },
-    {
-      "path": "../../common/local-storage"
     },
     {
       "path": "../../common/log"
@@ -61,16 +61,19 @@
       "path": "../../core/echo/echo-db"
     },
     {
-      "path": "../../core/echo/echo-schema"
-    },
-    {
-      "path": "../../core/echo/live-object"
-    },
-    {
       "path": "../../core/functions"
     },
     {
+      "path": "../../core/functions-runtime"
+    },
+    {
+      "path": "../../core/operation"
+    },
+    {
       "path": "../../sdk/app-framework"
+    },
+    {
+      "path": "../../sdk/client-protocol"
     },
     {
       "path": "../../sdk/react-client"
@@ -79,10 +82,13 @@
       "path": "../../sdk/schema"
     },
     {
+      "path": "../../sdk/types"
+    },
+    {
       "path": "../../ui/lit-ui"
     },
     {
-      "path": "../../ui/primitives/react-hooks"
+      "path": "../../ui/react-primitives/react-hooks"
     },
     {
       "path": "../../ui/react-ui"
@@ -97,10 +103,22 @@
       "path": "../../ui/react-ui-form"
     },
     {
+      "path": "../../ui/react-ui-menu"
+    },
+    {
+      "path": "../../ui/react-ui-mosaic"
+    },
+    {
       "path": "../../ui/react-ui-stack"
     },
     {
-      "path": "../../ui/react-ui-theme"
+      "path": "../../ui/ui"
+    },
+    {
+      "path": "../../ui/ui-editor"
+    },
+    {
+      "path": "../../ui/ui-theme"
     },
     {
       "path": "../plugin-attention"
@@ -121,7 +139,7 @@
       "path": "../plugin-space"
     },
     {
-      "path": "../plugin-storybook-layout"
+      "path": "../plugin-testing"
     },
     {
       "path": "../plugin-theme"

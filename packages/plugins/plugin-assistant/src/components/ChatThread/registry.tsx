@@ -5,17 +5,17 @@
 import React from 'react';
 
 import { log } from '@dxos/log';
+import { ToggleContainer } from '@dxos/react-ui-components';
 import {
   PromptWidget,
   ReferenceWidget,
   SelectWidget,
   SuggestionWidget,
   SummaryWidget,
-  ToggleContainer,
 } from '@dxos/react-ui-components';
-import { type XmlWidgetProps, type XmlWidgetRegistry, getXmlTextChild } from '@dxos/react-ui-editor';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
-import { ContentBlock, type DataType } from '@dxos/schema';
+import { ContentBlock, type Message } from '@dxos/types';
+import { type XmlWidgetProps, type XmlWidgetRegistry, getXmlTextChild } from '@dxos/ui-editor';
 
 import { ToolBlock } from '../ToolBlock';
 
@@ -42,22 +42,22 @@ export const componentRegistry: XmlWidgetRegistry = {
 
   ['prompt' as const]: {
     block: true,
-    factory: (props) => {
-      const text = getXmlTextChild(props.children);
+    factory: ({ children }) => {
+      const text = getXmlTextChild(children);
       return text ? new PromptWidget(text) : null;
     },
   },
   ['reference' as const]: {
     block: false,
-    factory: (props) => {
-      const text = getXmlTextChild(props.children);
-      return text && props.ref ? new ReferenceWidget(text, props.ref) : null;
+    factory: ({ children, ref }) => {
+      const text = getXmlTextChild(children);
+      return text && ref ? new ReferenceWidget(text, ref) : null;
     },
   },
   ['select' as const]: {
     block: true,
-    factory: (props) => {
-      const options = props.children
+    factory: ({ children }) => {
+      const options = children
         ?.map((option: any) => option._tag === 'option' && getXmlTextChild(option.children))
         .filter(Boolean);
       return options?.length ? new SelectWidget(options) : null;
@@ -65,15 +65,15 @@ export const componentRegistry: XmlWidgetRegistry = {
   },
   ['suggestion' as const]: {
     block: true,
-    factory: (props) => {
-      const text = getXmlTextChild(props.children);
+    factory: ({ children }) => {
+      const text = getXmlTextChild(children);
       return text ? new SuggestionWidget(text) : null;
     },
   },
   ['summary' as const]: {
     block: true,
-    factory: (props) => {
-      const text = getXmlTextChild(props.children);
+    factory: ({ children }) => {
+      const text = getXmlTextChild(children);
       return text ? new SummaryWidget(text) : null;
     },
   },
@@ -110,10 +110,10 @@ export const componentRegistry: XmlWidgetRegistry = {
  */
 export const blockToMarkdown: BlockRenderer = (
   context: MessageThreadContext,
-  message: DataType.Message,
+  message: Message.Message,
   block: ContentBlock.Any,
 ) => {
-  let str = _blockToMarkdown(context, message, block);
+  let str = blockToMarkdownImpl(context, message, block);
   if (str && !block.pending) {
     return (str += '\n');
   }
@@ -121,12 +121,12 @@ export const blockToMarkdown: BlockRenderer = (
   return str;
 };
 
-const _blockToMarkdown = (context: MessageThreadContext, message: DataType.Message, block: ContentBlock.Any) => {
+const blockToMarkdownImpl = (context: MessageThreadContext, message: Message.Message, block: ContentBlock.Any) => {
   log('blockToMarkdown', { block: JSON.stringify(block) });
   switch (block._tag) {
     case 'text': {
       if (message.sender.role === 'user') {
-        return `\n<prompt>${block.text}</prompt>\n`;
+        return `<prompt>${block.text}</prompt>`;
       } else {
         const text = block.text.trim();
         if (text.length > 0) {
@@ -135,7 +135,10 @@ const _blockToMarkdown = (context: MessageThreadContext, message: DataType.Messa
       }
       break;
     }
-
+    case 'reference': {
+      const dxn = block.reference.dxn;
+      return `<reference ref="${dxn.toString()}">${context.getObjectLabel(dxn)}</reference>`;
+    }
     case 'suggestion': {
       if (block.pending) {
         return;
@@ -146,38 +149,25 @@ const _blockToMarkdown = (context: MessageThreadContext, message: DataType.Messa
       if (block.pending || block.options.length === 0) {
         return;
       }
-
       return `<select>${block.options.map((option) => `<option>${option}</option>`).join('')}</select>`;
     }
-
-    // TODO(burdon): Need label.
-    case 'reference': {
-      return `<reference ref="${block.reference.dxn.toString()}">Ref</reference>`;
-    }
-
-    // case 'toolkit': {
-    //   return `<toolkit />`;
-    // }
-
     case 'toolCall': {
-      context.updateWidget(block.toolCallId, {
+      context.updateWidget<{ blocks: ContentBlock.Any[] }>(block.toolCallId, {
         blocks: [block],
       });
       return `<toolCall id="${block.toolCallId}" />`;
     }
     case 'toolResult': {
-      context.updateWidget(block.toolCallId, ({ blocks = [] }: { blocks: ContentBlock.Any[] }) => ({
+      context.updateWidget<{ blocks: ContentBlock.Any[] }>(block.toolCallId, ({ blocks = [] }) => ({
         blocks: [...blocks, block],
       }));
       break;
     }
-
     case 'summary': {
       return `<summary>${ContentBlock.createSummaryMessage(block)}</summary>`;
     }
-
-    // TODO(burdon): Need stable ID.
     default: {
+      // TODO(burdon): Needs stable ID.
       return `<json id="${message.id}">\n${JSON.stringify(block)}\n</json>`;
     }
   }

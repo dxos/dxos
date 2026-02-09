@@ -21,7 +21,7 @@
       "path": "../../common/async"
     },
     {
-      "path": "../../common/local-storage"
+      "path": "../../common/effect"
     },
     {
       "path": "../../common/log"
@@ -36,13 +36,7 @@
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../core/echo/echo-schema"
-    },
-    {
-      "path": "../../core/echo/echo-signals"
-    },
-    {
-      "path": "../../core/echo/live-object"
+      "path": "../../core/operation"
     },
     {
       "path": "../../sdk/app-framework"
@@ -57,10 +51,16 @@
       "path": "../../ui/react-ui-form"
     },
     {
+      "path": "../../ui/react-ui-mosaic"
+    },
+    {
       "path": "../../ui/react-ui-stack"
     },
     {
-      "path": "../../ui/react-ui-theme"
+      "path": "../../ui/ui-editor"
+    },
+    {
+      "path": "../../ui/ui-theme"
     },
     {
       "path": "../plugin-attention"

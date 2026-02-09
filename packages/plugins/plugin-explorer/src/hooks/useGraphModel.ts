@@ -2,7 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { useEffect, useState } from 'react';
+import { RegistryContext } from '@effect-atom/atom-react';
+import { useContext, useEffect, useState } from 'react';
 
 import { type Filter, type Queue, type Space } from '@dxos/client/echo';
 import { SpaceGraphModel, type SpaceGraphModelOptions } from '@dxos/schema';
@@ -14,6 +15,7 @@ export const useGraphModel = (
   options?: SpaceGraphModelOptions,
   queue?: Queue,
 ): SpaceGraphModel | undefined => {
+  const registry = useContext(RegistryContext);
   const [model, setModel] = useState<SpaceGraphModel | undefined>(undefined);
   useEffect(() => {
     if (!space) {
@@ -24,13 +26,13 @@ export const useGraphModel = (
 
     // TODO(burdon): Does this need to be a dependency?
     if (!model || model.queue !== queue) {
-      const model = new SpaceGraphModel().setFilter(filter).setOptions(options);
-      void model.open(space, queue);
+      const model = new SpaceGraphModel(registry).setFilter(filter).setOptions(options);
+      void model.open(space.db, queue);
       setModel(model);
     } else {
       model.setFilter(filter).setOptions(options);
     }
-  }, [space, filter, options, queue]);
+  }, [space, filter, options, queue, registry]);
 
   return model;
 };

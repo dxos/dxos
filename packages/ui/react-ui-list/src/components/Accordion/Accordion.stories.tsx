@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { faker } from '@dxos/random';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { Accordion } from './Accordion';
 
@@ -22,9 +22,9 @@ const items: TestItem[] = Array.from({ length: 10 }, (_, i) => ({
 
 const DefaultStory = () => {
   return (
-    <Accordion.Root<TestItem> items={items} classNames='w-[40rem]'>
+    <Accordion.Root<TestItem> items={items} classNames='is-[40rem]'>
       {({ items }) => (
-        <div className='flex flex-col w-full border-y border-separator divide-y divide-separator'>
+        <div className='flex flex-col is-full border-y border-separator divide-y divide-separator'>
           {items.map((item) => (
             <Accordion.Item key={item.id} item={item} classNames='border-x border-separator'>
               <Accordion.ItemHeader>{item.name}</Accordion.ItemHeader>
@@ -42,10 +42,7 @@ const DefaultStory = () => {
 const meta = {
   title: 'ui/react-ui-list/Accordion',
   render: DefaultStory,
-  decorators: [withTheme],
-  parameters: {
-    layout: 'column',
-  },
+  decorators: [withTheme, withLayout({ layout: 'column' })],
 } satisfies Meta<typeof Accordion>;
 
 export default meta;

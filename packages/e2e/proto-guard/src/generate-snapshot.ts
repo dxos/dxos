@@ -5,13 +5,14 @@
 import { rmSync } from 'node:fs';
 import path, { join } from 'node:path';
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 
 import { Client } from '@dxos/client';
-import { Expando, live } from '@dxos/client/echo';
-import { Ref, TypedObject } from '@dxos/echo-schema';
+import { Obj, Type } from '@dxos/echo';
+import { Ref } from '@dxos/echo/internal';
+import { TestSchema } from '@dxos/echo/testing';
 import { log } from '@dxos/log';
 import { STORAGE_VERSION } from '@dxos/protocols';
 import { CreateEpochRequest } from '@dxos/protocols/proto/dxos/client/services';
@@ -69,7 +70,7 @@ const main = async () => {
     // Init client.
     client = new Client({ config: createConfig({ dataRoot: path.join(baseDir, snapshot.dataRoot) }) });
     await client.initialize();
-    client.addTypes([Todo]);
+    await client.addTypes([Todo]);
     await client.halo.createIdentity();
     await client.spaces.waitUntilReady();
   }
@@ -82,24 +83,23 @@ const main = async () => {
     await space.waitUntilReady();
 
     space.db.add(
-      // TODO(dmaretskyi): Change to Obj.make.
-      live({
+      Obj.make(TestSchema.Expando, {
         value: 100,
         string: 'hello world!',
         array: ['one', 'two', 'three'],
-      }) as any,
+      }),
     );
     await space.db.flush();
 
     // Generate epoch.
-    const promise = space.db.coreDatabase.rootChanged.waitForCount(1);
+    const promise = space.internal.db.coreDatabase.rootChanged.waitForCount(1);
     await space.internal.createEpoch({ migration: CreateEpochRequest.Migration.PRUNE_AUTOMERGE_ROOT_HISTORY });
     await promise;
     await space.db.flush();
 
-    const expando = space.db.add(live(Expando, { value: [1, 2, 3] }));
+    const expando = space.db.add(Obj.make(TestSchema.Expando, { value: [1, 2, 3] }));
     const todo = space.db.add(
-      live(Todo, {
+      Obj.make(Todo, {
         name: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
       }),
     );
@@ -115,13 +115,18 @@ const main = async () => {
     // Create dynamic schema.
 
     // TODO(burdon): Should just be example.org/type/Test
-    class TestType extends TypedObject({ typename: 'example.org/type/TestType', version: '0.1.0' })({}) {}
+    const TestType = Schema.Struct({}).pipe(
+      Type.object({
+        typename: 'example.org/type/TestType',
+        version: '0.1.0',
+      }),
+    );
     const [dynamicSchema] = await space.db.schemaRegistry.register([TestType]);
-    client.addTypes([TestType]);
-    const object = space.db.add(live(dynamicSchema, {}));
+    await client.addTypes([TestType]);
+    const object = space.db.add(Obj.make(dynamicSchema, {}));
     dynamicSchema.addFields({ name: Schema.String, todo: Ref(Todo) });
     object.name = 'Test';
-    object.todo = live(Todo, { name: 'Test todo' });
+    object.todo = Obj.make(Todo, { name: 'Test todo' });
     await space.db.flush();
 
     // space.db.add(live(Expando, { crossSpaceReference: obj, explanation: 'this tests cross-space references' }));

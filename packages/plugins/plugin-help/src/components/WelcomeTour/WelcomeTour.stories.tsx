@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
+import { StorybookPlugin } from '@dxos/plugin-testing';
 import { faker } from '@dxos/random';
 import { Button, Icon } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
@@ -23,8 +23,8 @@ const App = () => {
   };
 
   return (
-    <div className='flex flex-col h-full p-4 space-y-8'>
-      <div className='flex items-center gap-2 py-2'>
+    <div className='flex flex-col bs-full p-4 space-y-8'>
+      <div className='flex items-center gap-2 plb-2'>
         <Button data-joyride='basic/1' onClick={() => start()}>
           Start
         </Button>
@@ -32,7 +32,7 @@ const App = () => {
         <div>{String(running)}</div>
       </div>
       <div>
-        <ul className='p-2 border border-blue-500 rounded-md' data-joyride='basic/2'>
+        <ul className='p-2 border border-primary-500 rounded-md' data-joyride='basic/2'>
           {items.map((item, i) => (
             <li key={i} className='flex items-center gap-2'>
               <Icon icon='ph--circle--regular' />
@@ -41,13 +41,13 @@ const App = () => {
           ))}
         </ul>
       </div>
-      <div className='flex items-center gap-2 py-2'>
+      <div className='flex items-center gap-2 plb-2'>
         <Button data-joyride='basic/3' onClick={handleAdd}>
           Add
         </Button>
       </div>
       <div className='flex grow' />
-      <div className='flex items-center py-2'>
+      <div className='flex items-center plb-2'>
         <div className='grow' />
         <Icon icon='ph--circle--regular' data-joyride='basic/4' />
         <Icon icon='ph--circle--regular' />
@@ -108,8 +108,12 @@ const meta = {
   title: 'plugins/plugin-help/WelcomeTour',
   component: WelcomeTour,
   render: DefaultStory,
-  // TODO(wittjosiah): Try to write story which does not depend on plugin manager.
-  decorators: [withTheme, withPluginManager({ plugins: [StorybookLayoutPlugin({})] })],
+  decorators: [
+    withTheme,
+    withPluginManager({
+      plugins: [StorybookPlugin({})],
+    }),
+  ],
 } satisfies Meta<typeof WelcomeTour>;
 
 export default meta;

@@ -5,10 +5,10 @@
 import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
 import React, { type ComponentPropsWithRef, type ComponentPropsWithoutRef, forwardRef } from 'react';
 
-// TODO(burdon): Remove dep.
 import { Avatar, type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { type UseTextEditorProps, keymap, listener, useTextEditor } from '@dxos/react-ui-editor';
-import { focusRing, mx } from '@dxos/react-ui-theme';
+import { type UseTextEditorProps, useTextEditor } from '@dxos/react-ui-editor';
+import { keymap, listener } from '@dxos/ui-editor';
+import { focusRing, mx } from '@dxos/ui-theme';
 import { hexToEmoji, hexToHue, isTruthy } from '@dxos/util';
 
 import { translationKey } from '../translations';
@@ -149,7 +149,7 @@ export const MessageTextbox = ({
       extensions: [
         keymap.of(keyBindings({ onSend, onClear })),
         listener({
-          onFocus: (focusing) => {
+          onFocus: ({ focusing }) => {
             if (focusing) {
               onEditorFocus?.();
             }

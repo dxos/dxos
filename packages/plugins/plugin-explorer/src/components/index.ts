@@ -2,11 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { lazy } from 'react';
-
-export const ExplorerContainer = lazy(() => import('./ExplorerContainer'));
+import { type ComponentType, lazy } from 'react';
 
 export * from './Chart';
 export * from './Globe';
 export * from './Graph';
 export * from './Tree';
+
+export const ExplorerContainer: ComponentType<any> = lazy(() => import('./ExplorerContainer'));

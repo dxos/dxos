@@ -40,6 +40,11 @@ export interface AutomergeDocumentLoader {
   onObjectBoundToDocument(handle: DocHandleProxy<DatabaseDirectory>, objectId: string): void;
 
   /**
+   * Wait for all pending document creations to complete.
+   */
+  waitForPendingCreations(): Promise<void>;
+
+  /**
    * @returns objectIds for which we had document handles or were loading one.
    */
   clearHandleReferences(): string[];
@@ -69,6 +74,12 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
   private readonly _currentlyLoadingObjects = new ComplexSet<{ url: AutomergeUrl; objectId: string }>(
     ({ url, objectId }) => `${url}:${objectId}`,
   );
+
+  /**
+   * Tracks pending document creation promises.
+   * Used by flush() to wait for all documents to be created.
+   */
+  private readonly _pendingDocumentCreations = new Map<string, Promise<void>>();
 
   public readonly onObjectDocumentLoaded = new Event<ObjectDocumentLoaded>();
 
@@ -176,12 +187,34 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
       version: SpaceDocVersion.CURRENT,
       access: { spaceKey: this._spaceKey.toHex() },
     });
+    const creationPromise = spaceDocHandle
+      .whenReady()
+      .then(() => {
+        if (this._spaceRootDocHandle == null) {
+          log.warn('space root document handle is not available, skipping object binding', { objectId });
+          return;
+        }
+        const url = spaceDocHandle.url;
+        if (url == null) {
+          log.warn('document has no url after whenReady, skipping object binding', { objectId });
+          return;
+        }
+        this._spaceRootDocHandle.change((newDoc: DatabaseDirectory) => {
+          newDoc.links ??= {};
+          newDoc.links[objectId] = new A.RawString(url);
+        });
+      })
+      .finally(() => {
+        this._pendingDocumentCreations.delete(objectId);
+      });
+    this._pendingDocumentCreations.set(objectId, creationPromise);
     this.onObjectBoundToDocument(spaceDocHandle, objectId);
-    this._spaceRootDocHandle.change((newDoc: DatabaseDirectory) => {
-      newDoc.links ??= {};
-      newDoc.links[objectId] = new A.RawString(spaceDocHandle.url);
-    });
+
     return spaceDocHandle;
+  }
+
+  public async waitForPendingCreations(): Promise<void> {
+    await Promise.all([...this._pendingDocumentCreations.values()]);
   }
 
   public onObjectBoundToDocument(handle: DocHandleProxy<DatabaseDirectory>, objectId: string): void {
@@ -209,7 +242,8 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
       const automergeUrl = automergeUrlData.toString();
       const logMeta = { objectId, automergeUrl };
       const objectDocumentHandle = this._objectDocumentHandles.get(objectId);
-      if (objectDocumentHandle != null && objectDocumentHandle.url !== automergeUrl) {
+      // Skip if object is already bound to a different document.
+      if (objectDocumentHandle?.url != null && objectDocumentHandle.url !== automergeUrl) {
         log.warn('object already inlined in a different document, ignoring the link', {
           ...logMeta,
           actualDocumentUrl: objectDocumentHandle.url,
@@ -244,9 +278,10 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
   }
 
   private async _loadHandleForObject(handle: DocHandleProxy<DatabaseDirectory>, objectId: string): Promise<void> {
+    invariant(handle.url, 'Document URL is not available');
     try {
       if (this._currentlyLoadingObjects.has({ url: handle.url, objectId })) {
-        log.warn('document is already loading', { objectId });
+        log.verbose('document is already loading', { objectId });
         return;
       }
       this._currentlyLoadingObjects.add({ url: handle.url, objectId });
@@ -255,11 +290,11 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
 
       const logMeta = { objectId, docUrl: handle.url };
       if (this.onObjectDocumentLoaded.listenerCount() === 0) {
-        log.info('document loaded after all listeners were removed', logMeta);
+        log('document loaded after all listeners were removed', logMeta);
         return;
       }
       const objectDocHandle = this._objectDocumentHandles.get(objectId);
-      if (objectDocHandle?.url !== handle.url) {
+      if (objectDocHandle?.url != null && objectDocHandle.url !== handle.url) {
         log.warn('object was rebound while a document was loading, discarding handle', logMeta);
         return;
       }

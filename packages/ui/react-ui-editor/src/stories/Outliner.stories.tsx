@@ -2,16 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type EditorView } from '@codemirror/view';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useMemo, useRef } from 'react';
+import React, { useMemo, useState } from 'react';
 
 import { withTheme } from '@dxos/react-ui/testing';
 import { withAttention } from '@dxos/react-ui-attention/testing';
+import { deleteItem, hashtag, join, listItemToString, outliner, treeFacet } from '@dxos/ui-editor';
 
-import { type CommandMenuGroup, type CommandMenuItem, CommandMenuProvider } from '../components';
-import { deleteItem, hashtag, listItemToString, outliner, treeFacet } from '../extensions';
-import { str } from '../testing';
+import { type EditorController, type EditorMenuGroup, EditorMenuProvider } from '../components';
 
 import { EditorStory } from './components';
 
@@ -20,9 +18,10 @@ type StoryProps = {
 };
 
 const DefaultStory = ({ text }: StoryProps) => {
-  const viewRef = useRef<EditorView>(null);
+  const [controller, setController] = useState<EditorController | null>(null);
 
-  const commandGroups: CommandMenuGroup[] = useMemo(
+  const extensions = useMemo(() => [outliner(), hashtag()], []);
+  const commandGroups: EditorMenuGroup[] = useMemo(
     () => [
       {
         id: 'outliner-actions',
@@ -30,7 +29,7 @@ const DefaultStory = ({ text }: StoryProps) => {
           {
             id: 'delete-row',
             label: 'Delete',
-            onSelect: (view: EditorView) => {
+            onSelect: ({ view }) => {
               deleteItem(view);
             },
           },
@@ -41,19 +40,19 @@ const DefaultStory = ({ text }: StoryProps) => {
   );
 
   return (
-    <CommandMenuProvider
+    <EditorMenuProvider
+      view={controller?.view}
       groups={commandGroups}
-      onSelect={(item: CommandMenuItem) => {
-        if (viewRef.current && item.onSelect) {
-          return item.onSelect(viewRef.current, viewRef.current.state.selection.main.head);
+      onSelect={({ view, item }) => {
+        if (item.onSelect) {
+          return item.onSelect({ view, head: view.state.selection.main.head });
         }
       }}
     >
       <EditorStory
-        ref={viewRef}
+        ref={setController}
         text={text}
-        extensions={[outliner(), hashtag()]}
-        placeholder=''
+        extensions={extensions}
         debug='raw+tree'
         debugCustom={(view) => {
           const tree = view.state.facet(treeFacet);
@@ -62,14 +61,14 @@ const DefaultStory = ({ text }: StoryProps) => {
           return <pre className='p-1 overflow-auto text-xs text-green-800 dark:text-green-200'>{lines.join('\n')}</pre>;
         }}
       />
-    </CommandMenuProvider>
+    </EditorMenuProvider>
   );
 };
 
 const meta = {
   title: 'ui/react-ui-editor/Outliner',
   render: DefaultStory,
-  decorators: [withTheme, withAttention],
+  decorators: [withTheme, withAttention()],
   parameters: {
     layout: 'fullscreen',
   },
@@ -85,7 +84,7 @@ export const Empty: Story = {
 
 export const Basic: Story = {
   args: {
-    text: str(
+    text: join(
       //
       '- [ ] A',
       '- [ ] B',
@@ -100,7 +99,7 @@ export const Basic: Story = {
 
 export const Nested: Story = {
   args: {
-    text: str(
+    text: join(
       //
       '- [ ] A',
       '  - [ ] B',
@@ -115,7 +114,7 @@ export const Nested: Story = {
 
 export const Continuation: Story = {
   args: {
-    text: str(
+    text: join(
       //
       '- [ ] A',
       '- [ ] B',

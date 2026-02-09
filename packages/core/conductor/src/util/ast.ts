@@ -2,10 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Array, Option, Predicate, Schema, SchemaAST } from 'effect';
+import * as Array from 'effect/Array';
+import * as Option from 'effect/Option';
+import * as Predicate from 'effect/Predicate';
+import * as Schema from 'effect/Schema';
+import * as SchemaAST from 'effect/SchemaAST';
 
 /**
- *
  * @param schema
  * @param property
  */

@@ -2,7 +2,7 @@
 // Copyright 2019 DXOS.org
 //
 
-import util from 'node:util';
+import { promisify } from 'node:util';
 
 import { describe, test } from 'vitest';
 
@@ -23,7 +23,7 @@ describe('AsyncIterator', () => {
 
     // Write.
     {
-      const append = util.promisify(core.append.bind(core));
+      const append = promisify(core.append.bind(core));
       for (let i = 0; i < numBlocks; i++) {
         await append(`test-${i}`);
       }
@@ -52,7 +52,7 @@ describe('AsyncIterator', () => {
 
             log('received', { data: String(value) });
             inc();
-          } catch (err) {
+          } catch {
             end();
             break;
           }

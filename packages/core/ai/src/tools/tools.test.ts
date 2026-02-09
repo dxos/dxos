@@ -2,9 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Tool, Toolkit } from '@effect/ai';
+import * as Tool from '@effect/ai/Tool';
+import * as Toolkit from '@effect/ai/Toolkit';
 import { describe, it } from '@effect/vitest';
-import { Effect, Layer, Schema } from 'effect';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+import * as Schema from 'effect/Schema';
 
 import { log } from '@dxos/log';
 
@@ -48,13 +51,13 @@ const TestToolExecutionService = Layer.sync(ToolExecutionService, () => ({
     } as any),
 }));
 
-class UserToolkit extends Toolkit.make(
+const UserToolkit = Toolkit.make(
   Tool.make('test/age', {
     description: 'Gets the age of the user',
     parameters: {},
     success: Schema.Number,
   }),
-) {}
+);
 
 const userToolkitLayer = UserToolkit.toLayer({
   'test/age': Effect.fn(function* () {
@@ -91,6 +94,6 @@ describe('ToolResolverService', () => {
 const callTool = <Tools extends Record<string, Tool.Any>, Name extends keyof Tools>(
   toolkit: Toolkit.Toolkit<Tools>,
   toolName: Name,
-  toolParams: Tool.Parameters<Tools[Name]> extends never ? unknown : Tool.Parameters<Tools[Name]>,
+  toolProps: Tool.Parameters<Tools[Name]> extends never ? unknown : Tool.Parameters<Tools[Name]>,
 ): Effect.Effect<Tool.Success<Tools[Name]>, Tool.Failure<Tools[Name]>, Tool.Requirements<Tools[Name]>> =>
-  toolkit.pipe(Effect.flatMap((h: any) => h.handle(toolName, toolParams) as Effect.Effect<any, any, any>));
+  toolkit.pipe(Effect.flatMap((h: any) => h.handle(toolName, toolProps) as Effect.Effect<any, any, any>));

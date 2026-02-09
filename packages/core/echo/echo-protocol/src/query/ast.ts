@@ -2,14 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Match, Schema } from 'effect';
+import * as Match from 'effect/Match';
+import * as Schema from 'effect/Schema';
 
 import { DXN, ObjectId } from '@dxos/keys';
 
 import { ForeignKey } from '../foreign-key';
 
 const TypenameSpecifier = Schema.Union(DXN.Schema, Schema.Null).annotations({
-  description: 'DXN or null. Null means any type will match',
+  description: 'DXN or null; null matches any type',
 });
 
 // NOTE: This pattern with 3 definitions per schema is need to make the types opaque, and circular references in AST to not cause compiler errors.
@@ -74,7 +75,9 @@ const FilterContains_ = Schema.Struct({
   type: Schema.Literal('contains'),
   value: Schema.Any,
 });
+
 export interface FilterContains extends Schema.Schema.Type<typeof FilterContains_> {}
+
 /**
  * Predicate for an array property to contain the provided value.
  * Nested objects are matched using strict structural matching.
@@ -88,6 +91,7 @@ const FilterTag_ = Schema.Struct({
   type: Schema.Literal('tag'),
   tag: Schema.String, // TODO(burdon): Make OR-collection?
 });
+
 export interface FilterTag extends Schema.Schema.Type<typeof FilterTag_> {}
 export const FilterTag: Schema.Schema<FilterTag> = FilterTag_;
 
@@ -99,6 +103,7 @@ const FilterRange_ = Schema.Struct({
   from: Schema.Any,
   to: Schema.Any,
 });
+
 export interface FilterRange extends Schema.Schema.Type<typeof FilterRange_> {}
 export const FilterRange: Schema.Schema<FilterRange> = FilterRange_;
 
@@ -110,6 +115,7 @@ const FilterTextSearch_ = Schema.Struct({
   text: Schema.String,
   searchKind: Schema.optional(Schema.Literal('full-text', 'vector')),
 });
+
 export interface FilterTextSearch extends Schema.Schema.Type<typeof FilterTextSearch_> {}
 export const FilterTextSearch: Schema.Schema<FilterTextSearch> = FilterTextSearch_;
 
@@ -120,6 +126,7 @@ const FilterNot_ = Schema.Struct({
   type: Schema.Literal('not'),
   filter: Schema.suspend(() => Filter),
 });
+
 export interface FilterNot extends Schema.Schema.Type<typeof FilterNot_> {}
 export const FilterNot: Schema.Schema<FilterNot> = FilterNot_;
 
@@ -130,6 +137,7 @@ const FilterAnd_ = Schema.Struct({
   type: Schema.Literal('and'),
   filters: Schema.Array(Schema.suspend(() => Filter)),
 });
+
 export interface FilterAnd extends Schema.Schema.Type<typeof FilterAnd_> {}
 export const FilterAnd: Schema.Schema<FilterAnd> = FilterAnd_;
 
@@ -140,6 +148,7 @@ const FilterOr_ = Schema.Struct({
   type: Schema.Literal('or'),
   filters: Schema.Array(Schema.suspend(() => Filter)),
 });
+
 export interface FilterOr extends Schema.Schema.Type<typeof FilterOr_> {}
 export const FilterOr: Schema.Schema<FilterOr> = FilterOr_;
 
@@ -158,6 +167,7 @@ export const Filter = Schema.Union(
   FilterAnd,
   FilterOr,
 ).annotations({ identifier: 'dxos.org/schema/Filter' });
+
 export type Filter = Schema.Schema.Type<typeof Filter>;
 
 /**
@@ -167,6 +177,7 @@ const QuerySelectClause_ = Schema.Struct({
   type: Schema.Literal('select'),
   filter: Schema.suspend(() => Filter),
 });
+
 export interface QuerySelectClause extends Schema.Schema.Type<typeof QuerySelectClause_> {}
 export const QuerySelectClause: Schema.Schema<QuerySelectClause> = QuerySelectClause_;
 
@@ -178,6 +189,7 @@ const QueryFilterClause_ = Schema.Struct({
   selection: Schema.suspend(() => Query),
   filter: Schema.suspend(() => Filter),
 });
+
 export interface QueryFilterClause extends Schema.Schema.Type<typeof QueryFilterClause_> {}
 export const QueryFilterClause: Schema.Schema<QueryFilterClause> = QueryFilterClause_;
 
@@ -189,6 +201,7 @@ const QueryReferenceTraversalClause_ = Schema.Struct({
   anchor: Schema.suspend(() => Query),
   property: Schema.String, // TODO(dmaretskyi): Change to EscapedPropPath.
 });
+
 export interface QueryReferenceTraversalClause extends Schema.Schema.Type<typeof QueryReferenceTraversalClause_> {}
 export const QueryReferenceTraversalClause: Schema.Schema<QueryReferenceTraversalClause> =
   QueryReferenceTraversalClause_;
@@ -199,9 +212,14 @@ export const QueryReferenceTraversalClause: Schema.Schema<QueryReferenceTraversa
 const QueryIncomingReferencesClause_ = Schema.Struct({
   type: Schema.Literal('incoming-references'),
   anchor: Schema.suspend(() => Query),
-  property: Schema.String,
+  /**
+   * Property path where the reference is located.
+   * If null, matches references from any property.
+   */
+  property: Schema.NullOr(Schema.String),
   typename: TypenameSpecifier,
 });
+
 export interface QueryIncomingReferencesClause extends Schema.Schema.Type<typeof QueryIncomingReferencesClause_> {}
 export const QueryIncomingReferencesClause: Schema.Schema<QueryIncomingReferencesClause> =
   QueryIncomingReferencesClause_;
@@ -220,6 +238,7 @@ const QueryRelationClause_ = Schema.Struct({
   direction: Schema.Literal('outgoing', 'incoming', 'both'),
   filter: Schema.optional(Schema.suspend(() => Filter)),
 });
+
 export interface QueryRelationClause extends Schema.Schema.Type<typeof QueryRelationClause_> {}
 export const QueryRelationClause: Schema.Schema<QueryRelationClause> = QueryRelationClause_;
 
@@ -231,6 +250,7 @@ const QueryRelationTraversalClause_ = Schema.Struct({
   anchor: Schema.suspend(() => Query),
   direction: Schema.Literal('source', 'target', 'both'),
 });
+
 export interface QueryRelationTraversalClause extends Schema.Schema.Type<typeof QueryRelationTraversalClause_> {}
 export const QueryRelationTraversalClause: Schema.Schema<QueryRelationTraversalClause> = QueryRelationTraversalClause_;
 
@@ -241,6 +261,7 @@ const QueryUnionClause_ = Schema.Struct({
   type: Schema.Literal('union'),
   queries: Schema.Array(Schema.suspend(() => Query)),
 });
+
 export interface QueryUnionClause extends Schema.Schema.Type<typeof QueryUnionClause_> {}
 export const QueryUnionClause: Schema.Schema<QueryUnionClause> = QueryUnionClause_;
 
@@ -252,6 +273,7 @@ const QuerySetDifferenceClause_ = Schema.Struct({
   source: Schema.suspend(() => Query),
   exclude: Schema.suspend(() => Query),
 });
+
 export interface QuerySetDifferenceClause extends Schema.Schema.Type<typeof QuerySetDifferenceClause_> {}
 export const QuerySetDifferenceClause: Schema.Schema<QuerySetDifferenceClause> = QuerySetDifferenceClause_;
 
@@ -268,7 +290,14 @@ const Order_ = Schema.Union(
     property: Schema.String,
     direction: OrderDirection,
   }),
+  Schema.Struct({
+    // Order by relevance rank (for FTS/vector search results).
+    // Default direction is 'desc' (higher rank = better match first).
+    kind: Schema.Literal('rank'),
+    direction: OrderDirection,
+  }),
 );
+
 export type Order = Schema.Schema.Type<typeof Order_>;
 export const Order: Schema.Schema<Order> = Order_;
 
@@ -281,6 +310,7 @@ const QueryOrderClause_ = Schema.Struct({
   query: Schema.suspend(() => Query),
   order: Schema.Array(Order),
 });
+
 export interface QueryOrderClause extends Schema.Schema.Type<typeof QueryOrderClause_> {}
 export const QueryOrderClause: Schema.Schema<QueryOrderClause> = QueryOrderClause_;
 
@@ -292,8 +322,21 @@ const QueryOptionsClause_ = Schema.Struct({
   query: Schema.suspend(() => Query),
   options: Schema.suspend(() => QueryOptions),
 });
+
 export interface QueryOptionsClause extends Schema.Schema.Type<typeof QueryOptionsClause_> {}
 export const QueryOptionsClause: Schema.Schema<QueryOptionsClause> = QueryOptionsClause_;
+
+/**
+ * Limit the number of results.
+ */
+const QueryLimitClause_ = Schema.Struct({
+  type: Schema.Literal('limit'),
+  query: Schema.suspend(() => Query),
+  limit: Schema.Number,
+});
+
+export interface QueryLimitClause extends Schema.Schema.Type<typeof QueryLimitClause_> {}
+export const QueryLimitClause: Schema.Schema<QueryLimitClause> = QueryLimitClause_;
 
 const Query_ = Schema.Union(
   QuerySelectClause,
@@ -306,6 +349,7 @@ const Query_ = Schema.Union(
   QuerySetDifferenceClause,
   QueryOrderClause,
   QueryOptionsClause,
+  QueryLimitClause,
 ).annotations({ identifier: 'dxos.org/schema/Query' });
 
 export type Query = Schema.Schema.Type<typeof Query_>;
@@ -320,6 +364,11 @@ export const QueryOptions = Schema.Struct({
   spaceIds: Schema.optional(Schema.Array(Schema.String)),
 
   /**
+   * If true, the nested select statements will select from all queues in the spaces specified by `spaceIds`.
+   */
+  allQueuesFromSpaces: Schema.optional(Schema.Boolean),
+
+  /**
    * The nested select statemets will select from the given queues.
    *
    * NOTE: Spaces and queues are unioned together if both are specified.
@@ -331,6 +380,7 @@ export const QueryOptions = Schema.Struct({
    */
   deleted: Schema.optional(Schema.Literal('include', 'exclude', 'only')),
 });
+
 export interface QueryOptions extends Schema.Schema.Type<typeof QueryOptions> {}
 
 export const visit = (query: Query, visitor: (node: Query) => void) => {
@@ -349,6 +399,7 @@ export const visit = (query: Query, visitor: (node: Query) => void) => {
       visit(exclude, visitor);
     }),
     Match.when({ type: 'order' }, ({ query }) => visit(query, visitor)),
+    Match.when({ type: 'limit' }, ({ query }) => visit(query, visitor)),
     Match.when({ type: 'select' }, () => {}),
     Match.exhaustive,
   );
@@ -368,6 +419,7 @@ export const fold = <T>(query: Query, reducer: (node: Query) => T): T[] => {
       fold(source, reducer).concat(fold(exclude, reducer)),
     ),
     Match.when({ type: 'order' }, ({ query }) => fold(query, reducer)),
+    Match.when({ type: 'limit' }, ({ query }) => fold(query, reducer)),
     Match.when({ type: 'select' }, () => []),
     Match.exhaustive,
   );

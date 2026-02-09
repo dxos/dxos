@@ -3,6 +3,10 @@
   "version": "0.8.3",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
   "license": "MIT",
   "author": "info@dxos.org",
   "type": "module",
@@ -10,16 +14,15 @@
     ".": {
       "types": "./src/types.d.ts",
       "node": "./src/node.js",
-      "browser": "./src/browser.js",
-      "default": "./src/node.js"
+      "browser": "./src/browser.js"
     }
   },
   "files": [
     "src"
   ],
   "dependencies": {
-    "@jitl/quickjs-wasmfile-release-sync": "^0.31.0",
-    "quickjs-emscripten": "0.31.0"
+    "@jitl/quickjs-wasmfile-release-sync": "catalog:",
+    "quickjs-emscripten": "catalog:"
   },
   "devDependencies": {},
   "publishConfig": {

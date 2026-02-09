@@ -9,7 +9,7 @@ import react from '@vitejs/plugin-react-swc';
  */
 export default defineConfig(async () => ({
   esbuild: {
-    target: 'es2020',
+    target: 'esnext',
   },
   test: {
     environment: 'node',
@@ -49,6 +49,14 @@ export default defineConfig(async () => ({
                 include_args: false,
                 include_call_site: true,
                 include_scope: true,
+              },
+              {
+                name: 'dbg',
+                package: '@dxos/log',
+                param_index: 1,
+                include_args: true,
+                include_call_site: false,
+                include_scope: false,
               },
               {
                 name: 'invariant',

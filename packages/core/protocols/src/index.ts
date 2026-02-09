@@ -2,15 +2,15 @@
 // Copyright 2021 DXOS.org
 //
 
-export * from './automerge.js';
-export * from './edge-error.js';
-export * from './edge.js';
-export * from './errors/index.js';
-export * from './indexing.js';
-export * from './profile-archive.js';
-export * from './query.js';
-export * from './queue.js';
-export * from './space-archive.js';
-export * from './storage.js';
-export * from './tracing.js';
-export type * from './types.js';
+export * from './automerge.ts';
+export * from './edge/index.ts';
+export * from './errors/index.ts';
+export * from './indexing.ts';
+export * from './messenger.ts';
+export * from './profile-archive.ts';
+export * from './queue.ts';
+export * from './space-archive.ts';
+export * from './storage.ts';
+export * from './tracing.ts';
+export type * from './types.ts';
+export * as FunctionProtocol from './FunctionProtocol.ts';

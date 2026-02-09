@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 import { useEffect, useMemo, useState } from 'react';
 
 import { extractionAnthropicFunction, processTranscriptMessage } from '@dxos/assistant/extraction';
@@ -10,14 +10,15 @@ import { scheduleTaskInterval } from '@dxos/async';
 import { Filter, type Queue } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
 import { type Key, Obj, Ref, Type } from '@dxos/echo';
-import { createQueueDXN } from '@dxos/echo-schema';
-import { FunctionExecutor, ServiceContainer } from '@dxos/functions';
+import { createQueueDXN } from '@dxos/echo/internal';
+import { FunctionExecutor, ServiceContainer } from '@dxos/functions-runtime';
 import { IdentityDid } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
 import { type Space, useQueue } from '@dxos/react-client/echo';
-import { DataType } from '@dxos/schema';
-import { Testing, seedTestData } from '@dxos/schema/testing';
+import { TestSchema } from '@dxos/schema/testing';
+import { type ContentBlock, Message, Organization, Person } from '@dxos/types';
+import { seedTestData } from '@dxos/types/testing';
 
 // TODO(burdon): Reconcile with plugin-markdown. Move to @dxos/schema/testing.
 export const TestItem = Schema.Struct({
@@ -30,7 +31,7 @@ export const TestItem = Schema.Struct({
     description: 'Product description',
   }),
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/Test',
     version: '0.1.0',
   }),
@@ -38,7 +39,7 @@ export const TestItem = Schema.Struct({
 
 // TODO(wittjosiah): Make builder generic and reuse for all message types.
 abstract class AbstractMessageBuilder {
-  abstract createMessage(numSegments?: number): Promise<DataType.Message>;
+  abstract createMessage(numSegments?: number): Promise<Message.Message>;
 }
 
 /**
@@ -59,19 +60,24 @@ export class MessageBuilder extends AbstractMessageBuilder {
     super();
   }
 
-  override async createMessage(numSegments = 1): Promise<DataType.Message> {
-    return Obj.make(DataType.Message, {
+  override async createMessage(numSegments = 1): Promise<Message.Message> {
+    return Obj.make(Message.Message, {
       created: this.next().toISOString(),
       sender: faker.helpers.arrayElement(this.users),
       blocks: Array.from({ length: numSegments }).map(() => this.createBlock()),
     });
   }
 
-  createBlock(): DataType.MessageBlock.Transcript {
+  createBlock(): ContentBlock.Transcript {
     let text = faker.lorem.paragraph();
     if (this._space) {
       const label = faker.commerce.productName();
-      const obj = this._space.db.add(Obj.make(TestItem, { title: label, description: faker.lorem.paragraph() }));
+      const obj = this._space.db.add(
+        Obj.make(TestItem, {
+          title: label,
+          description: faker.lorem.paragraph(),
+        }),
+      );
       const dxn = Ref.make(obj).dxn.toString();
       const words = text.split(' ');
       words.splice(Math.floor(Math.random() * words.length), 0, `[${label}](${dxn})`);
@@ -103,7 +109,7 @@ class EntityExtractionMessageBuilder extends AbstractMessageBuilder {
 
   space: Space | undefined;
   currentMessage: number = 0;
-  transcriptMessages: DataType.Message[] = [];
+  transcriptMessages: Message.Message[] = [];
 
   async connect(space: Space): Promise<void> {
     this.space = space;
@@ -111,14 +117,18 @@ class EntityExtractionMessageBuilder extends AbstractMessageBuilder {
     this.transcriptMessages = transcriptMessages;
   }
 
-  override async createMessage(): Promise<DataType.Message> {
+  override async createMessage(): Promise<Message.Message> {
     if (!this.space) {
       throw new Error('Space not connected');
     }
 
-    const { objects } = await this.space.db
+    const objects = await this.space.db
       .query(
-        Filter.or(Filter.type(DataType.Person), Filter.type(DataType.Organization), Filter.type(Testing.DocumentType)),
+        Filter.or(
+          Filter.type(Person.Person),
+          Filter.type(Organization.Organization),
+          Filter.type(TestSchema.DocumentType),
+        ),
       )
       .run();
 
@@ -142,7 +152,7 @@ type UseTestTranscriptionQueue = (
   queueId?: Key.ObjectId,
   running?: boolean,
   interval?: number,
-) => Queue<DataType.Message> | undefined;
+) => Queue<Message.Message> | undefined;
 
 /**
  * Test transcriptionqueue.
@@ -155,7 +165,7 @@ export const useTestTranscriptionQueue: UseTestTranscriptionQueue = (
 ) => {
   // TODO(dmaretskyi): Use space.queues.create() instead.
   const queueDxn = useMemo(() => (space ? createQueueDXN(space.id, queueId) : undefined), [space, queueId]);
-  const queue = useQueue<DataType.Message>(queueDxn);
+  const queue = useQueue<Message.Message>(queueDxn);
   const builder = useMemo(() => new MessageBuilder(space), [space]);
 
   useEffect(() => {
@@ -165,7 +175,7 @@ export const useTestTranscriptionQueue: UseTestTranscriptionQueue = (
 
     const i = setInterval(() => {
       void builder.createMessage(Math.ceil(Math.random() * 3)).then(async (message) => {
-        await queue.append([Obj.make(DataType.Message, message)]);
+        await queue.append([Obj.make(Message.Message, message)]);
       });
     }, interval);
     return () => clearInterval(i);
@@ -186,7 +196,7 @@ export const useTestTranscriptionQueueWithEntityExtraction: UseTestTranscription
 ) => {
   // TODO(dmaretskyi): Use space.queues.create() instead.
   const queueDxn = useMemo(() => (space ? createQueueDXN(space.id, queueId) : undefined), [space, queueId]);
-  const queue = useQueue<DataType.Message>(queueDxn);
+  const queue = useQueue<Message.Message>(queueDxn);
   const [builder] = useState(() => new EntityExtractionMessageBuilder());
 
   useEffect(() => {
@@ -203,7 +213,7 @@ export const useTestTranscriptionQueueWithEntityExtraction: UseTestTranscription
       ctx,
       async () => {
         const message = await builder.createMessage();
-        void queue.append([Obj.make(DataType.Message, message)]);
+        void queue.append([Obj.make(Message.Message, message)]);
       },
       interval,
     );

@@ -2,43 +2,52 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useCallback, useMemo, useRef } from 'react';
+import { RegistryContext } from '@effect-atom/atom-react';
+import { type RefObject, useCallback, useContext, useMemo, useRef } from 'react';
 
-import { isMutable, toJsonSchema } from '@dxos/echo-schema';
-import { useGlobalFilteredObjects } from '@dxos/plugin-search';
+import { type Database, type Type } from '@dxos/echo';
+import { isMutable } from '@dxos/echo/internal';
 import { faker } from '@dxos/random';
-import { useClient } from '@dxos/react-client';
 import { Filter, useQuery, useSchema } from '@dxos/react-client/echo';
-import { useClientProvider } from '@dxos/react-client/testing';
-import { DataType, ProjectionModel, getTypenameFromQuery } from '@dxos/schema';
+import { useClientStory } from '@dxos/react-client/testing';
+import { useGlobalFilteredObjects } from '@dxos/react-ui-searchlist';
+import { type ProjectionModel, getTypenameFromQuery } from '@dxos/schema';
 
 import { type TableController } from '../components';
-import { useAddRow, useTableModel } from '../hooks';
-import { TablePresentation } from '../model';
+import { useAddRow, useProjectionModel, useTableModel } from '../hooks';
+import { type TableModel, TablePresentation } from '../model';
+import { Table } from '../types';
 
 faker.seed(0); // NOTE(ZaymonFC): Required for smoke tests.
+
+export type TestTableModel<T extends Type.Obj.Any = Type.Obj.Any> = {
+  schema: T | undefined;
+  table: Table.Table | undefined;
+  projection: ProjectionModel | undefined;
+  tableRef: RefObject<TableController | null>;
+  model: TableModel | undefined;
+  presentation: TablePresentation | undefined;
+  db: Database.Database | undefined;
+  handleInsertRow: () => void;
+  handleSaveView: () => void;
+  handleDeleteRows: (rowIndex: number, objects: any[]) => void;
+  handleDeleteColumn: (fieldId: string) => void;
+};
 
 /**
  * Custom hook to create and manage a test table model for storybook demonstrations.
  * Provides table data, schema, and handlers for table operations.
  */
-export const useTestTableModel = () => {
-  const client = useClient();
-  const { space } = useClientProvider();
+export const useTestTableModel = <T extends Type.Obj.Any = Type.Obj.Any>(): TestTableModel<T> => {
+  const registry = useContext(RegistryContext);
+  const { space } = useClientStory();
+  const db = space?.db;
 
-  const views = useQuery(space, Filter.type(DataType.View));
-  const view = useMemo(() => views.at(0), [views]);
-  const typename = view?.query ? getTypenameFromQuery(view.query.ast) : undefined;
-  const schema = useSchema(client, space, typename);
-  const jsonSchema = useMemo(() => (schema ? toJsonSchema(schema) : undefined), [schema]);
-
-  const projection = useMemo(() => {
-    if (schema && view?.projection) {
-      const projection = new ProjectionModel(toJsonSchema(schema), view.projection);
-      projection.normalizeView();
-      return projection;
-    }
-  }, [schema, view?.projection]);
+  const tables = useQuery(space?.db, Filter.type(Table.Table));
+  const table = tables.at(0);
+  const typename = table?.view.target?.query ? getTypenameFromQuery(table.view.target.query.ast) : undefined;
+  const schema = useSchema<T>(space?.db, typename);
+  const projection = useProjectionModel(schema, table, registry);
 
   const features = useMemo(
     () => ({
@@ -49,7 +58,7 @@ export const useTestTableModel = () => {
     [schema],
   );
 
-  const objects = useQuery(space, schema ? Filter.type(schema) : Filter.nothing());
+  const objects = useQuery(db, schema ? Filter.type(schema) : Filter.nothing());
   const filteredObjects = useGlobalFilteredObjects(objects);
 
   const tableRef = useRef<TableController>(null);
@@ -61,15 +70,15 @@ export const useTestTableModel = () => {
     tableRef.current?.update?.();
   }, []);
 
-  const addRow = useAddRow({ space, schema });
+  const addRow = useAddRow({ db, schema });
 
   const handleDeleteRows = useCallback(
     (_: number, objects: any[]) => {
       for (const object of objects) {
-        space?.db.remove(object);
+        db?.remove(object);
       }
     },
-    [space],
+    [db],
   );
 
   const handleDeleteColumn = useCallback(
@@ -82,8 +91,7 @@ export const useTestTableModel = () => {
   );
 
   const model = useTableModel({
-    view,
-    schema: jsonSchema,
+    object: table,
     projection,
     features,
     rows: filteredObjects,
@@ -97,7 +105,7 @@ export const useTestTableModel = () => {
   const handleInsertRow = useCallback(() => {
     const insertResult = model?.insertRow();
     tableRef.current?.handleInsertRowResult?.(insertResult);
-  }, [model, tableRef.current]);
+  }, [model]);
 
   const handleSaveView = useCallback(() => {
     model?.saveView();
@@ -105,19 +113,18 @@ export const useTestTableModel = () => {
 
   const presentation = useMemo(() => {
     if (model) {
-      return new TablePresentation(model);
+      return new TablePresentation(registry, model);
     }
-  }, [model]);
+  }, [registry, model]);
 
   return {
     schema,
-    view,
+    table,
     projection,
     tableRef,
     model,
     presentation,
-    space,
-    client,
+    db,
     handleInsertRow,
     handleSaveView,
     handleDeleteRows,

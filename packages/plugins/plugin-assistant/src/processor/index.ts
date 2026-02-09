@@ -4,3 +4,4 @@
 
 export * from './presets';
 export * from './processor';
+export * from './update-name';

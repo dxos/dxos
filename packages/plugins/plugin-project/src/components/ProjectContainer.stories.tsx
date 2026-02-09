@@ -3,27 +3,24 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Effect from 'effect/Effect';
 import React from 'react';
 
-import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Filter, Ref } from '@dxos/client/echo';
-import { Obj, Query, Type } from '@dxos/echo';
-import { AttentionPlugin } from '@dxos/plugin-attention';
+import { Obj, Query, Tag, Type } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { InboxPlugin } from '@dxos/plugin-inbox';
 import { PreviewPlugin } from '@dxos/plugin-preview';
-import { SpacePlugin } from '@dxos/plugin-space';
-import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
-import { ThemePlugin } from '@dxos/plugin-theme';
+import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { faker } from '@dxos/random';
-import { useQuery, useSpace } from '@dxos/react-client/echo';
+import { useDatabase, useQuery } from '@dxos/react-client/echo';
 import { withTheme } from '@dxos/react-ui/testing';
 import { translations as stackTranslations } from '@dxos/react-ui-stack';
 import { Stack } from '@dxos/react-ui-stack';
-import { defaultTx } from '@dxos/react-ui-theme';
-import { DataType, createView } from '@dxos/schema';
+import { Collection, View } from '@dxos/schema';
 import { createObjectFactory } from '@dxos/schema/testing';
+import { Message, Organization, Person, Project, Task } from '@dxos/types';
 
 import { translations } from '../translations';
 
@@ -33,8 +30,8 @@ import { ProjectObjectSettings } from './ProjectSettings';
 faker.seed(0);
 
 const DefaultStory = () => {
-  const space = useSpace();
-  const projects = useQuery(space, Filter.typename(DataType.Project.typename));
+  const db = useDatabase();
+  const projects = useQuery(db, Filter.type(Project.Project));
   const project = projects[0];
 
   if (!project) {
@@ -43,7 +40,7 @@ const DefaultStory = () => {
 
   return (
     <Stack orientation='horizontal' size='split' rail={false} classNames='pli-0'>
-      <ProjectContainer role='article' project={project} />
+      <ProjectContainer role='article' subject={project} />
       <ProjectObjectSettings project={project} classNames='border-is border-separator' />
     </Stack>
   );
@@ -56,148 +53,163 @@ const meta = {
     withTheme,
     withPluginManager({
       plugins: [
+        ...corePlugins(),
+        StorybookPlugin({}),
         ClientPlugin({
           types: [
-            DataType.Project,
-            DataType.View,
-            DataType.Collection,
-            DataType.Organization,
-            DataType.Task,
-            DataType.Person,
-            DataType.Message,
+            Tag.Tag,
+            Project.Project,
+            View.View,
+            Collection.Collection,
+            Organization.Organization,
+            Task.Task,
+            Person.Person,
+            Message.Message,
           ],
-          onClientInitialized: async ({ client }) => {
-            await client.halo.createIdentity();
-            await client.spaces.waitUntilReady();
-            const space = client.spaces.default;
-            await space.waitUntilReady();
+          onClientInitialized: ({ client }) =>
+            Effect.gen(function* () {
+              yield* Effect.promise(() => client.halo.createIdentity());
+              yield* Effect.promise(() => client.spaces.waitUntilReady());
+              const space = client.spaces.default;
+              yield* Effect.promise(() => space.waitUntilReady());
 
-            // Create a project
-            const project = DataType.makeProject({ collections: [] });
+              const tag = space.db.add(Tag.make({ label: 'important', hue: 'green' }));
+              const tagDxn = Obj.getDXN(tag).toString();
 
-            // Create a view for Contacts
-            const personView = createView({
-              name: 'Contacts',
-              query: Query.select(Filter.type(DataType.Person)),
-              queryString: 'Query.select(Filter.type(DataType.Person))',
-              jsonSchema: Type.toJsonSchema(DataType.Person),
-              presentation: project,
-            });
-
-            // Create a view for Organizations
-            const organizationView = createView({
-              name: 'Organizations',
-              query: Query.select(Filter.type(DataType.Organization)),
-              queryString: 'Query.select(Filter.type(DataType.Organization))',
-              jsonSchema: Type.toJsonSchema(DataType.Organization),
-              presentation: project,
-            });
-
-            // Create a view for Tasks
-            const taskView = createView({
-              name: 'Tasks',
-              query: Query.select(Filter.type(DataType.Task)),
-              queryString: 'Query.select(Filter.type(DataType.Task))',
-              jsonSchema: Type.toJsonSchema(DataType.Task),
-              presentation: project,
-            });
-
-            // Create a view for Project-Projects
-            const projectView = createView({
-              name: 'Projects (not the UI component)',
-              query: Query.select(Filter.type(DataType.Project)),
-              queryString: 'Query.select(Filter.type(DataType.Project))',
-              jsonSchema: Type.toJsonSchema(DataType.Project),
-              presentation: project,
-            });
-
-            // Create a view for Messages
-            const messageQueue = space.queues.create();
-            const messageView = createView({
-              name: 'Messages',
-              query: Query.select(Filter.type(DataType.Message)).options({ queues: [messageQueue.dxn.toString()] }),
-              queryString: 'Query.select(Filter.type(DataType.Message))',
-              jsonSchema: Type.toJsonSchema(DataType.Message),
-              presentation: project,
-            });
-
-            // Add views to project collections
-            project.collections.push(Ref.make(personView));
-            project.collections.push(Ref.make(organizationView));
-            project.collections.push(Ref.make(taskView));
-            project.collections.push(Ref.make(projectView));
-            project.collections.push(Ref.make(messageView));
-
-            // Add views and project to space
-            space.db.add(personView);
-            space.db.add(organizationView);
-            space.db.add(taskView);
-            space.db.add(projectView);
-            space.db.add(messageView);
-            space.db.add(project);
-
-            // Generate sample Organizations
-            Array.from({ length: 5 }).forEach(() => {
-              const org = Obj.make(DataType.Organization, {
-                name: faker.company.name(),
-                website: faker.internet.url(),
-                description: faker.lorem.paragraph(),
-                image: faker.image.url(),
+              // Create a view for Contacts.
+              const personView = View.make({
+                query: Query.select(Filter.type(Person.Person)),
+                jsonSchema: Type.toJsonSchema(Person.Person),
               });
-              space.db.add(org);
-            });
 
-            // Generate sample Tasks
-            Array.from({ length: 8 }).forEach(() => {
-              const task = Obj.make(DataType.Task, {
-                title: faker.lorem.sentence(),
-                status: faker.helpers.arrayElement(['todo', 'in-progress', 'done']) as any,
-                priority: faker.helpers.arrayElement(['low', 'medium', 'high']) as any,
+              // Create a view for Organizations.
+              const organizationView = View.make({
+                query: Query.select(Filter.type(Organization.Organization)).select(Filter.tag(tagDxn)),
+                jsonSchema: Type.toJsonSchema(Organization.Organization),
               });
-              space.db.add(task);
-            });
 
-            // Generate sample Contacts
-            const factory = createObjectFactory(space.db, faker as any);
-            await factory([{ type: DataType.Person, count: 12 }]);
-
-            // Generate sample Projects
-            Array.from({ length: 3 }).forEach(() => {
-              const nestedProject = DataType.makeProject({
-                name: faker.commerce.productName(),
-                description: faker.lorem.sentence(),
+              // Create a view for Tasks.
+              const taskView = View.make({
+                query: Query.select(Filter.type(Task.Task)).select(Filter.tag(tagDxn)),
+                jsonSchema: Type.toJsonSchema(Task.Task),
               });
-              space.db.add(nestedProject);
-            });
 
-            // Generate sample Messages
-            const messages = Array.from({ length: 6 }).map(() => {
-              const message = Obj.make(DataType.Message, {
-                created: faker.date.recent().toISOString(),
-                sender: { role: 'user' },
-                blocks: [
+              // Create a view for Project-Projects.
+              const projectView = View.make({
+                query: Query.select(Filter.type(Project.Project)),
+                jsonSchema: Type.toJsonSchema(Project.Project),
+              });
+
+              // Create a view for Messages.
+              const messageQueue = space.queues.create();
+              const messageView = View.make({
+                query: Query.select(Filter.type(Message.Message)).options({
+                  queues: [messageQueue.dxn.toString()],
+                }),
+                jsonSchema: Type.toJsonSchema(Message.Message),
+              });
+
+              // Create project with columns.
+              const project = Project.make({
+                columns: [
                   {
-                    _tag: 'text' as const,
-                    text: faker.lorem.sentences(2),
+                    name: 'Contacts',
+                    view: Ref.make(personView),
+                    order: [],
+                  },
+                  {
+                    name: 'Organizations',
+                    view: Ref.make(organizationView),
+                    order: [],
+                  },
+                  {
+                    name: 'Tasks',
+                    view: Ref.make(taskView),
+                    order: [],
+                  },
+                  {
+                    name: 'Projects',
+                    view: Ref.make(projectView),
+                    order: [],
+                  },
+                  {
+                    name: 'Messages',
+                    view: Ref.make(messageView),
+                    order: [],
                   },
                 ],
               });
-              return message;
-            });
 
-            await messageQueue.append(messages);
-          },
+              // Add project to space.
+              space.db.add(project);
+
+              // Generate sample Organizations
+              Array.from({ length: 5 }).forEach(() => {
+                const org = Obj.make(
+                  Organization.Organization,
+                  {
+                    name: faker.company.name(),
+                    website: faker.internet.url(),
+                    description: faker.lorem.paragraph(),
+                    image: faker.image.url(),
+                  },
+                  {
+                    tags: faker.datatype.boolean() ? [Obj.getDXN(tag).toString()] : [],
+                  },
+                );
+                space.db.add(org);
+              });
+
+              // Generate sample Tasks
+              Array.from({ length: 8 }).forEach(() => {
+                const task = Obj.make(
+                  Task.Task,
+                  {
+                    title: faker.lorem.sentence(),
+                    status: faker.helpers.arrayElement(['todo', 'in-progress', 'done']) as any,
+                    priority: faker.helpers.arrayElement(['low', 'medium', 'high']) as any,
+                  },
+                  {
+                    tags: faker.datatype.boolean() ? [Obj.getDXN(tag).toString()] : [],
+                  },
+                );
+                space.db.add(task);
+              });
+
+              // Generate sample Contacts
+              const factory = createObjectFactory(space.db, faker as any);
+              yield* Effect.promise(() => factory([{ type: Person.Person, count: 12 }]));
+
+              // Generate sample Projects
+              Array.from({ length: 3 }).forEach(() => {
+                const nestedProject = Project.make({
+                  name: faker.commerce.productName(),
+                  description: faker.lorem.sentence(),
+                });
+                space.db.add(nestedProject);
+              });
+
+              // Generate sample Messages
+              const messages = Array.from({ length: 6 }).map(() => {
+                const message = Obj.make(Message.Message, {
+                  created: faker.date.recent().toISOString(),
+                  sender: { role: 'user' },
+                  blocks: [
+                    {
+                      _tag: 'text' as const,
+                      text: faker.lorem.sentences(2),
+                    },
+                  ],
+                });
+                return message;
+              });
+
+              yield* Effect.promise(() => messageQueue.append(messages));
+            }),
         }),
-        SpacePlugin({}),
-        IntentPlugin(),
-        SettingsPlugin(),
 
-        // UI
-        ThemePlugin({ tx: defaultTx }),
-        AttentionPlugin(),
-        PreviewPlugin(),
         InboxPlugin(),
-        StorybookLayoutPlugin({}),
+        PreviewPlugin(),
       ],
     }),
   ],

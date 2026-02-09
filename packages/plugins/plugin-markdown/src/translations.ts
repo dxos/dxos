@@ -18,6 +18,7 @@ export const translations = [
         'object name placeholder': 'New document',
         'rename object label': 'Rename document',
         'delete object label': 'Delete document',
+        'object deleted label': 'Document deleted',
       },
       [meta.id]: {
         'plugin name': 'Editor',
@@ -43,6 +44,9 @@ export const translations = [
         'upload image label': 'Upload image',
         'fallback title': 'Untitled',
         'navigate to document label': 'Open document',
+        'words label_zero': 'words',
+        'words label_one': 'word',
+        'words label_other': 'words',
       },
     },
   },

@@ -6,20 +6,23 @@ import { Octokit } from '@octokit/core';
 import React, { type ChangeEvent, useCallback, useState } from 'react';
 
 import { ToolId } from '@dxos/ai';
-import { SettingsAction, createIntent, useIntentDispatcher } from '@dxos/app-framework';
+import { SettingsOperation } from '@dxos/app-framework';
+import { useOperationInvoker } from '@dxos/app-framework/react';
 import { Blueprint, Template } from '@dxos/blueprints';
-import { FunctionType, type ScriptType, getInvocationUrl, getUserFunctionIdInMetadata } from '@dxos/functions';
+import { Filter, Obj, Ref } from '@dxos/echo';
+import { Function, type Script, getUserFunctionIdInMetadata } from '@dxos/functions';
+import { getInvocationUrl } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
-import { Filter, Ref, getMeta, getSpace, useQuery } from '@dxos/react-client/echo';
+import { useQuery } from '@dxos/react-client/echo';
 import { Button, Clipboard, Input, useAsyncEffect, useControlledState, useTranslation } from '@dxos/react-ui';
-import { DataType } from '@dxos/schema';
+import { AccessToken } from '@dxos/types';
 import { kebabize } from '@dxos/util';
 
 import { meta } from '../../meta';
 
 export type ScriptObjectSettingsProps = {
-  object: ScriptType;
+  object: Script.Script;
 };
 
 export const ScriptObjectSettings = ({ object }: ScriptObjectSettingsProps) => {
@@ -41,7 +44,9 @@ export const ScriptProperties = ({ object }: ScriptObjectSettingsProps) => {
         placeholder={t('description placeholder')}
         value={object.description ?? ''}
         onChange={(event) => {
-          object.description = event.target.value;
+          Obj.change(object, (o) => {
+            o.description = event.target.value;
+          });
         }}
       />
     </Input.Root>
@@ -50,9 +55,9 @@ export const ScriptProperties = ({ object }: ScriptObjectSettingsProps) => {
 
 const BlueprintEditor = ({ object }: ScriptObjectSettingsProps) => {
   const { t } = useTranslation(meta.id);
-  const space = getSpace(object);
-  const [fn] = useQuery(space, Filter.type(FunctionType, { source: Ref.make(object) }));
-  const blueprints = useQuery(space, Filter.type(Blueprint.Blueprint));
+  const db = Obj.getDatabase(object);
+  const [fn] = useQuery(db, Filter.type(Function.Function, { source: Ref.make(object) }));
+  const blueprints = useQuery(db, Filter.type(Blueprint.Blueprint));
 
   const [creating, setCreating] = useState(false);
   const [instructions, setInstructions] = useState<string>(`You can run the script "${object.name ?? 'script'}".`);
@@ -68,7 +73,7 @@ const BlueprintEditor = ({ object }: ScriptObjectSettingsProps) => {
   }, [existingBlueprint]);
 
   const handleSave = useCallback(async () => {
-    if (!space) {
+    if (!db) {
       return;
     }
 
@@ -76,15 +81,19 @@ const BlueprintEditor = ({ object }: ScriptObjectSettingsProps) => {
     try {
       if (existingBlueprint) {
         const text = await existingBlueprint.instructions.source.load();
-        text.content = instructions;
+        Obj.change(text, (t) => {
+          t.content = instructions;
+        });
         if (fn?.key) {
           const toolId = ToolId.make(fn.key);
           if (!existingBlueprint.tools?.includes(toolId)) {
-            existingBlueprint.tools = [...(existingBlueprint.tools ?? []), toolId];
+            Obj.change(existingBlueprint, (b) => {
+              b.tools = [...(b.tools ?? []), toolId];
+            });
           }
         }
       } else if (fn?.key) {
-        space.db.add(
+        db.add(
           Blueprint.make({
             key: blueprintKey,
             name: object.name ?? 'Script',
@@ -95,25 +104,29 @@ const BlueprintEditor = ({ object }: ScriptObjectSettingsProps) => {
           }),
         );
       }
-      await space.db.flush();
+      await db.flush();
     } finally {
       setCreating(false);
     }
-  }, [space, existingBlueprint, fn, blueprintKey, object.name, instructions]);
+  }, [db, existingBlueprint, fn, blueprintKey, object.name, instructions]);
 
   return (
     <div className='flex flex-col gap-4 mlb-cardSpacingBlock'>
       <div>
         <h2>{t('blueprint editor label', { default: 'Blueprint' })}</h2>
         <p className='text-description text-sm'>
-          {t('blueprint editor description', { default: 'Create a blueprint that exposes this script as a tool.' })}
+          {t('blueprint editor description', {
+            default: 'Create a blueprint that exposes this script as a tool.',
+          })}
         </p>
       </div>
       <Input.Root>
         <div role='none' className='flex flex-col gap-1'>
           <Input.Label>{t('blueprint instructions label', { default: 'Instructions' })}</Input.Label>
           <Input.TextArea
-            placeholder={t('blueprint instructions placeholder', { default: 'Describe how this tool should be used.' })}
+            placeholder={t('blueprint instructions placeholder', {
+              default: 'Describe how this tool should be used.',
+            })}
             rows={6}
             value={instructions}
             onChange={(event) => setInstructions(event.target.value)}
@@ -135,14 +148,14 @@ const BlueprintEditor = ({ object }: ScriptObjectSettingsProps) => {
 const Binding = ({ object }: ScriptObjectSettingsProps) => {
   const { t } = useTranslation(meta.id);
   const client = useClient();
-  const space = getSpace(object);
-  const [fn] = useQuery(space, Filter.type(FunctionType, { source: Ref.make(object) }));
+  const db = Obj.getDatabase(object);
+  const [fn] = useQuery(db, Filter.type(Function.Function, { source: Ref.make(object) }));
 
-  const functionId = fn && getUserFunctionIdInMetadata(getMeta(fn));
+  const functionId = fn && getUserFunctionIdInMetadata(Obj.getMeta(fn));
   const functionUrl =
     functionId &&
     getInvocationUrl(functionId, client.config.values.runtime?.services?.edge?.url ?? '', {
-      spaceId: space?.id,
+      spaceId: db?.spaceId,
     });
 
   const [binding, setBinding] = useControlledState(fn?.binding ?? '');
@@ -154,7 +167,9 @@ const Binding = ({ object }: ScriptObjectSettingsProps) => {
   );
 
   const handleBindingBlur = useCallback(() => {
-    fn.binding = binding;
+    Obj.change(fn, (f) => {
+      f.binding = binding;
+    });
   }, [fn, binding]);
 
   if (!fn || !functionUrl) {
@@ -173,7 +188,9 @@ const Binding = ({ object }: ScriptObjectSettingsProps) => {
               disabled
               value={functionUrl}
               onChange={(event) => {
-                fn.name = event.target.value;
+                Obj.change(fn, (f) => {
+                  f.name = event.target.value;
+                });
               }}
             />
             <Clipboard.IconButton value={functionUrl} />
@@ -198,10 +215,10 @@ const Binding = ({ object }: ScriptObjectSettingsProps) => {
 // TODO(burdon): Move to separate tab?
 const Publishing = ({ object }: ScriptObjectSettingsProps) => {
   const { t } = useTranslation(meta.id);
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
-  const space = getSpace(object);
-  const [githubToken] = useQuery(space, Filter.type(DataType.AccessToken, { source: 'github.com' }));
-  const gistKey = getMeta(object).keys.find(({ source }) => source === 'github.com');
+  const { invokePromise } = useOperationInvoker();
+  const db = Obj.getDatabase(object);
+  const [githubToken] = useQuery(db, Filter.type(AccessToken.AccessToken, { source: 'github.com' }));
+  const gistKey = Obj.getMeta(object).keys.find(({ source }) => source === 'github.com');
   const [gistUrl, setGistUrl] = useState<string | undefined>();
 
   useAsyncEffect(async () => {
@@ -225,8 +242,11 @@ const Publishing = ({ object }: ScriptObjectSettingsProps) => {
   }, [githubToken, gistKey]);
 
   const handleOpenTokenManager = useCallback(
-    () => dispatch(createIntent(SettingsAction.Open, { plugin: 'dxos.org/plugin/token-manager' })),
-    [],
+    () =>
+      invokePromise(SettingsOperation.Open, {
+        plugin: 'dxos.org/plugin/token-manager',
+      }),
+    [invokePromise],
   );
 
   const [publishing, setPublishing] = useState(false);
@@ -239,7 +259,7 @@ const Publishing = ({ object }: ScriptObjectSettingsProps) => {
 
     try {
       // TODO(wittjosiah): Factor out to intent.
-      const meta = getMeta(object);
+      const meta = Obj.getMeta(object);
       const githubKey = meta.keys.find(({ source }) => source === 'github.com');
       const gistId = githubKey?.id;
       if (gistId) {
@@ -252,8 +272,11 @@ const Publishing = ({ object }: ScriptObjectSettingsProps) => {
           public: true,
           files,
         });
-        if (response.data.id) {
-          meta.keys.push({ source: 'github.com', id: response.data.id });
+        const gistId = response.data.id;
+        if (gistId) {
+          Obj.change(object, (obj) => {
+            Obj.getMeta(obj).keys.push({ source: 'github.com', id: gistId });
+          });
         }
       }
     } finally {

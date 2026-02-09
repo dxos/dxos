@@ -2,7 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
+
+import { Operation } from '@dxos/operation';
+
+import { Capability } from '../core';
 
 import { meta } from './meta';
 
@@ -22,4 +26,39 @@ export namespace SettingsAction {
     input: Schema.Void,
     output: Schema.Void,
   }) {}
+}
+
+const SETTINGS_OPERATION = `${meta.id}/operation`;
+
+/**
+ * Operations for the Settings plugin.
+ */
+export namespace SettingsOperation {
+  export const Open = Operation.make({
+    meta: {
+      key: `${SETTINGS_OPERATION}/open`,
+      name: 'Open Settings',
+      description: 'Open the settings panel.',
+    },
+    services: [Capability.Service],
+    schema: {
+      input: Schema.Struct({
+        plugin: Schema.optional(Schema.String.annotations({ description: 'The plugin to open settings for.' })),
+      }),
+      output: Schema.Void,
+    },
+  });
+
+  export const OpenPluginRegistry = Operation.make({
+    meta: {
+      key: `${SETTINGS_OPERATION}/open-plugin-registry`,
+      name: 'Open Plugin Registry',
+      description: 'Open the plugin registry.',
+    },
+    services: [Capability.Service],
+    schema: {
+      input: Schema.Void,
+      output: Schema.Void,
+    },
+  });
 }

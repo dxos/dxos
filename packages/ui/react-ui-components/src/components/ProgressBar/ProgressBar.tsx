@@ -2,13 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useEffect } from '@preact-signals/safe-react/react';
 import { AnimatePresence, motion } from 'motion/react';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
 import { type ThemedClassName, useStateWithRef } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 // TODO(burdon): Show predicted nodes faded out.
 // TODO(burdon): Allow controlled index (like TextBlock).
@@ -148,7 +147,7 @@ const Node = ({ state = 'open', selected, classes, options = defaultOptions, onC
               width: width - radius,
             },
           }}
-          className={mx('absolute left-0 border-b border-subduedSeparator box-border', state === 'closed' && 'hidden')}
+          className={mx('absolute left-0 border-be border-subduedSeparator box-border', state === 'closed' && 'hidden')}
         />
         <motion.div
           transition={{

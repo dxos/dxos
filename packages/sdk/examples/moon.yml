@@ -1,4 +1,4 @@
-type: library
+layer: library
 language: typescript
 tags:
   - ts-test
@@ -10,4 +10,5 @@ tasks:
   test:
     inputs:
       - .storybook/*
+      - /tools/storybook-react/.storybook/main.ts
       - vite.config.ts

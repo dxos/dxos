@@ -2,15 +2,16 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ScriptType } from '@dxos/functions';
+import { Script } from '@dxos/functions';
 import { type Resource } from '@dxos/react-ui';
 
 import { meta } from './meta';
+import { Notebook } from './types';
 
 export const translations = [
   {
     'en-US': {
-      [ScriptType.typename]: {
+      [Script.Script.typename]: {
         'typename label': 'Script',
         'typename label_zero': 'Scripts',
         'typename label_one': 'Script',
@@ -18,6 +19,17 @@ export const translations = [
         'object name placeholder': 'New script',
         'rename object label': 'Rename script',
         'delete object label': 'Delete script',
+        'object deleted label': 'Script deleted',
+      },
+      [Notebook.Notebook.typename]: {
+        'typename label': 'Notebook',
+        'typename label_zero': 'Notebooks',
+        'typename label_one': 'Notebook',
+        'typename label_other': 'Notebooks',
+        'object name placeholder': 'New notebook',
+        'rename object label': 'Rename notebook',
+        'delete object label': 'Delete notebook',
+        'object deleted label': 'Notebook deleted',
       },
       [meta.id]: {
         'plugin name': 'Scripts',
@@ -56,7 +68,6 @@ export const translations = [
         'settings editor input mode default label': 'Default',
         'settings editor input mode vim label': 'Vim',
         'settings editor input mode vscode label': 'VS Code',
-        'template select group label': 'Select template',
         'function panel label': 'Debug Function',
         'script test label': 'Test',
         'script logs label': 'Logs',
@@ -81,6 +92,17 @@ export const translations = [
         'script deployment error toast description_other': 'There was an error deploying your scripts.',
         'script deployment error toast close label_one': 'Close',
         'script deployment error toast close label_other': 'Close',
+
+        'notebook cell placeholder': 'Enter script',
+        'notebook cell delete label': 'Delete cell',
+        'notebook cell prompt run label': 'Run',
+        'notebook cell insert markdown label': 'Insert Markdown',
+        'notebook cell insert script label': 'Insert Script',
+        'notebook cell insert prompt label': 'Insert Prompt',
+        'notebook cell insert query label': 'Insert Query',
+        'notebook markdown placeholder': 'Enter Markdown',
+        'notebook prompt placeholder': 'Enter prompt',
+        'notebook cell insert label': 'Insert cell',
       },
     },
   },

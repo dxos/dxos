@@ -2,15 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 
-import { RESEARCH_BLUEPRINT, ResearchOn, agent, entityExtraction } from '@dxos/assistant-testing';
+import { Agent, EntityExtraction, ResearchBlueprint } from '@dxos/assistant-toolkit';
 import { Prompt } from '@dxos/blueprints';
 import { type ComputeGraphModel, NODE_INPUT } from '@dxos/conductor';
-import { DXN, Filter, Key, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
-import { FunctionTrigger, type TriggerKind, type TriggerType, serializeFunction } from '@dxos/functions';
+import { DXN, Filter, Key, Obj, Query, type QueryAST, Ref, Tag, Type } from '@dxos/echo';
+import { Trigger, serializeFunction } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
-import { sync } from '@dxos/plugin-inbox';
+import { gmail } from '@dxos/plugin-inbox';
 import { Mailbox } from '@dxos/plugin-inbox/types';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { type Space } from '@dxos/react-client/echo';
@@ -36,8 +36,9 @@ import {
   pointsToRect,
   rectToPoints,
 } from '@dxos/react-ui-canvas-editor';
-import { DataType, createView } from '@dxos/schema';
-import { range } from '@dxos/util';
+import { View } from '@dxos/schema';
+import { Message, Organization, Person, Project } from '@dxos/types';
+import { range, trim } from '@dxos/util';
 
 import { type ObjectGenerator } from './ObjectGenerator';
 
@@ -49,43 +50,66 @@ export enum PresetName {
   CHAT_GPT = 'chat-gpt-text',
   // EMAIL_WITH_SUMMARY = 'email-gptSummary-table',
   OBJECT_CHANGE_QUEUE = 'objectChange-queue',
-  FOREX_FUNCTION_CALL = 'forex-function-call',
   TIMER_TICK_QUEUE = 'timerTick-queue',
+  FOREX_FUNCTION_CALL = 'forex-function-call',
   DISCORD_MESSAGES = 'discord-messages',
   // KANBAN_QUEUE = 'kanban-queue',
 }
 
 export const generator = () => ({
-  schemas: [CanvasBoardType, FunctionTrigger],
+  schemas: [CanvasBoardType, Trigger.Trigger] as any[],
   types: Object.values(PresetName).map((name) => ({ typename: name })),
   items: [
     [
       PresetName.DXOS_TEAM,
       async (space, n, cb) => {
         const objects = range(n, () => {
-          const org = space.db.add(Obj.make(DataType.Organization, { name: 'DXOS', website: 'https://dxos.org' }));
-
+          const org = space.db.add(
+            Obj.make(Organization.Organization, {
+              name: 'DXOS',
+              website: 'https://dxos.org',
+            }),
+          );
           const doc = space.db.add(
-            Markdown.makeDocument({
+            Markdown.make({
               name: 'DXOS Research',
               content: 'DXOS builds Composer, an open-source AI-powered malleable application.',
             }),
           );
+
+          const tag = space.db.add(Tag.make({ label: 'Investor' }));
+          const tagDxn = Obj.getDXN(tag).toString();
+          Obj.change(doc, (d) => {
+            Obj.getMeta(d).tags = [tagDxn];
+          });
+
+          // space.db.add(
+          //   Relation.make(HasSubject, {
+          //     [Relation.Source]: doc,
+          //     [Relation.Target]: org,
+          //     completedAt: new Date().toISOString(),
+          //   }),
+          // );
+
+          space.db.add(Obj.make(Person.Person, { fullName: 'Rich', organization: Ref.make(org) }, { tags: [tagDxn] }));
           space.db.add(
-            Relation.make(ResearchOn, {
-              [Relation.Source]: doc,
-              [Relation.Target]: org,
-              completedAt: new Date().toISOString(),
+            Obj.make(Person.Person, {
+              fullName: 'Josiah',
+              organization: Ref.make(org),
             }),
           );
-
           space.db.add(
-            Obj.make(DataType.Person, { fullName: 'Rich', jobTitle: 'investor', organization: Ref.make(org) }),
+            Obj.make(Person.Person, {
+              fullName: 'Dima',
+              organization: Ref.make(org),
+            }),
           );
-          space.db.add(Obj.make(DataType.Person, { fullName: 'Josiah', organization: Ref.make(org) }));
-          space.db.add(Obj.make(DataType.Person, { fullName: 'Dima', organization: Ref.make(org) }));
-          space.db.add(Obj.make(DataType.Person, { fullName: 'Mykola', organization: Ref.make(org) }));
-          space.db.add(Obj.make(DataType.Person, { fullName: 'Will', organization: Ref.make(org) }));
+          space.db.add(
+            Obj.make(Person.Person, {
+              fullName: 'Mykola',
+              organization: Ref.make(org),
+            }),
+          );
 
           return doc;
         });
@@ -97,44 +121,42 @@ export const generator = () => ({
       PresetName.ORG_RESEARCH_PROJECT,
       async (space, n, cb) => {
         const mailbox = await space.db.query(Filter.type(Mailbox.Mailbox)).first();
+        const tag = await space.db.query(Filter.type(Tag.Tag, { label: 'Investor' })).first();
+        const tagDxn = Obj.getDXN(tag).toString();
 
         const objects = range(n, () => {
-          // TODO(wittjosiah): Move filter to a tag.
-          const contactsQuery = Query.select(Filter.type(DataType.Person, { jobTitle: 'investor' }));
-          const organizationsQuery = contactsQuery.reference('organization');
-          const notesQuery = organizationsQuery.targetOf(ResearchOn).source();
-          console.log(notesQuery);
+          const contactsQuery = Query.select(Filter.type(Person.Person)).select(Filter.tag(tagDxn));
+          const organizationsQuery = Query.select(Filter.type(Organization.Organization)).select(Filter.tag(tagDxn));
+          const notesQuery = Query.select(Filter.type(Markdown.Document)).select(Filter.tag(tagDxn));
 
-          const contactsQueryString = 'Query.select(Filter.type(DataType.Person, { jobTitle: "investor" }))';
-          const organizationsQueryString = `${contactsQueryString}.reference("organization")`;
-          const notesQueryString = `${organizationsQueryString}.targetOf(ResearchOn).source()`;
+          space.db.add(
+            Trigger.make({
+              enabled: true,
+              spec: {
+                kind: 'timer',
+                cron: '* * * * *', // Every minute.
+              },
+              function: Ref.make(serializeFunction(gmail.sync)),
+              input: {
+                mailboxId: Obj.getDXN(mailbox).toString(),
+              },
+            }),
+          );
 
-          const emailSyncTrigger = Obj.make(FunctionTrigger, {
-            enabled: true,
-            spec: {
-              kind: 'timer',
-              cron: '* * * * *', // Every minute.
-            },
-            function: Ref.make(serializeFunction(sync)),
-            input: {
-              mailboxId: Obj.getDXN(mailbox).toString(),
-            },
-          });
-          space.db.add(emailSyncTrigger);
-
-          const contactExtractionTrigger = Obj.make(FunctionTrigger, {
-            enabled: true,
-            // TODO(wittjosiah): Queue trigger doesn't support matching query of the column.
-            spec: {
-              kind: 'queue',
-              queue: mailbox.queue.dxn.toString(),
-            },
-            function: Ref.make(serializeFunction(entityExtraction)),
-            input: {
-              source: '{{event.item}}',
-            },
-          });
-          space.db.add(contactExtractionTrigger);
+          space.db.add(
+            Trigger.make({
+              enabled: true,
+              // TODO(wittjosiah): Queue trigger doesn't support matching query of the column.
+              spec: {
+                kind: 'queue',
+                queue: mailbox.queue.dxn.toString(),
+              },
+              function: Ref.make(serializeFunction(EntityExtraction.extract)),
+              input: {
+                source: '{{event.item}}',
+              },
+            }),
+          );
 
           const researchPrompt = space.db.add(
             Prompt.make({
@@ -147,70 +169,84 @@ export const generator = () => ({
 
               // TODO(dmaretskyi): This mocks research (returns pre-baked result), the actual research might take compute minutes.
               // Remove the mock prompt to do the actual research.
-              instructions:
-                'Research the organization provided as input. Create a research note for it at the end. NOTE: Do mocked reseach (set mockSearch to true).',
-              blueprints: [Ref.make(RESEARCH_BLUEPRINT)],
+              instructions: trim`
+                Research the organization provided as input.
+                Create a research note for it at the end.
+                NOTE: Do mocked reseach (set mockSearch to true).
+              `,
+              blueprints: [Ref.make(ResearchBlueprint)],
             }),
           );
 
-          const researchTrigger = Obj.make(FunctionTrigger, {
-            enabled: true,
-            spec: {
-              kind: 'subscription',
-              query: {
-                string: organizationsQueryString,
-                ast: organizationsQuery.ast,
+          space.db.add(
+            Trigger.make({
+              enabled: true,
+              spec: {
+                kind: 'subscription',
+                query: {
+                  ast: organizationsQuery.ast,
+                },
               },
-            },
-            function: Ref.make(serializeFunction(agent)),
-            input: {
-              prompt: Ref.make(researchPrompt),
-              input: '{{event.subject}}',
-            },
-          });
-          space.db.add(researchTrigger);
+              function: Ref.make(serializeFunction(Agent.prompt)),
+              input: {
+                prompt: Ref.make(researchPrompt),
+                input: '{{event.subject}}',
+              },
+            }),
+          );
 
-          const mailboxView = createView({
-            name: 'Mailbox',
+          const mailboxView = View.make({
             query: Query.select(
-              Filter.type(DataType.Message, { properties: { labels: Filter.contains('investor') } }),
+              Filter.type(Message.Message, {
+                properties: { labels: Filter.contains('investor') },
+              }),
             ).options({
               queues: [mailbox.queue.dxn.toString()],
             }),
-            queryString:
-              'Query.select(Filter.type(DataType.Message, { properties: { labels: Filter.contains("investor") } }))',
-            jsonSchema: Type.toJsonSchema(DataType.Message),
-            presentation: Obj.make(DataType.Collection, { objects: [] }),
+            jsonSchema: Type.toJsonSchema(Message.Message),
           });
-          const contactsView = createView({
-            name: 'Contacts',
+          const contactsView = View.make({
             query: contactsQuery,
-            queryString: contactsQueryString,
-            jsonSchema: Type.toJsonSchema(DataType.Person),
-            presentation: Obj.make(DataType.Collection, { objects: [] }),
+            jsonSchema: Type.toJsonSchema(Person.Person),
           });
-          const organizationsView = createView({
-            name: 'Organizations',
+          const organizationsView = View.make({
             query: organizationsQuery,
-            queryString: organizationsQueryString,
-            jsonSchema: Type.toJsonSchema(DataType.Organization),
-            presentation: Obj.make(DataType.Collection, { objects: [] }),
+            jsonSchema: Type.toJsonSchema(Organization.Organization),
           });
-          const notesView = createView({
-            name: 'Notes',
+          const notesView = View.make({
             query: notesQuery,
-            queryString: notesQueryString,
             jsonSchema: Type.toJsonSchema(Markdown.Document),
-            presentation: Obj.make(DataType.Collection, { objects: [] }),
           });
 
           return space.db.add(
-            DataType.makeProject({
+            Project.make({
               name: 'Investor Research',
-              collections: [mailboxView, contactsView, organizationsView, notesView].map((view) => Ref.make(view)),
+              columns: [
+                {
+                  name: 'Mailbox',
+                  view: Ref.make(mailboxView),
+                  order: [],
+                },
+                {
+                  name: 'Contacts',
+                  view: Ref.make(contactsView),
+                  order: [],
+                },
+                {
+                  name: 'Organizations',
+                  view: Ref.make(organizationsView),
+                  order: [],
+                },
+                {
+                  name: 'Notes',
+                  view: Ref.make(notesView),
+                  order: [],
+                },
+              ],
             }),
           );
         });
+
         cb?.(objects.flat());
         return objects.flat();
       },
@@ -221,7 +257,7 @@ export const generator = () => ({
         const objects = range(n, () => {
           const canvasModel = CanvasGraphModel.create<ComputeShape>();
 
-          let functionTrigger: FunctionTrigger | undefined;
+          let functionTrigger: Trigger.Trigger | undefined;
           canvasModel.builder.call((builder) => {
             const gpt = canvasModel.createNode(createGpt(position({ x: 0, y: -14 })));
             const triggerShape = createTrigger({
@@ -235,10 +271,24 @@ export const generator = () => ({
             const append = canvasModel.createNode(createAppend(position({ x: 10, y: 6 })));
 
             builder
-              .createEdge({ source: trigger.id, target: gpt.id, input: 'prompt', output: 'bodyText' })
+              .createEdge({
+                source: trigger.id,
+                target: gpt.id,
+                input: 'prompt',
+                output: 'bodyText',
+              })
               .createEdge({ source: gpt.id, target: text.id, output: 'text' })
-              .createEdge({ source: queueId.id, target: append.id, input: 'id' })
-              .createEdge({ source: gpt.id, target: append.id, output: 'messages', input: 'items' });
+              .createEdge({
+                source: queueId.id,
+                target: append.id,
+                input: 'id',
+              })
+              .createEdge({
+                source: gpt.id,
+                target: append.id,
+                output: 'messages',
+                input: 'items',
+              });
 
             functionTrigger = triggerShape.functionTrigger!.target!;
           });
@@ -263,8 +313,7 @@ export const generator = () => ({
             'subscription',
             (triggerSpec) =>
               (triggerSpec.query = {
-                string: 'Query.select(Filter.typename("dxos.org/type/Chess"))',
-                ast: Query.select(Filter.typename('dxos.org/type/Chess')).ast,
+                ast: Query.select(Filter.typename('dxos.org/type/Chess')).ast as Obj.Mutable<QueryAST.Query>,
               }),
             'type',
           );
@@ -377,8 +426,17 @@ export const generator = () => ({
             builder
               .createEdge({ source: chat.id, target: gpt.id, input: 'prompt' })
               .createEdge({ source: gpt.id, target: text.id, output: 'text' })
-              .createEdge({ source: queueId.id, target: append.id, input: 'id' })
-              .createEdge({ source: gpt.id, target: append.id, output: 'messages', input: 'items' });
+              .createEdge({
+                source: queueId.id,
+                target: append.id,
+                input: 'id',
+              })
+              .createEdge({
+                source: gpt.id,
+                target: append.id,
+                output: 'messages',
+                input: 'items',
+              });
           });
 
           const computeModel = createComputeGraph(canvasModel);
@@ -502,9 +560,21 @@ export const generator = () => ({
             const view = canvasModel.createNode(createSurface(position({ x: 12, y: 0 })));
 
             builder
-              .createEdge({ source: sourceCurrency.id, target: converter.id, input: 'from' })
-              .createEdge({ source: targetCurrency.id, target: converter.id, input: 'to' })
-              .createEdge({ source: converter.id, target: view.id, output: 'rate' });
+              .createEdge({
+                source: sourceCurrency.id,
+                target: converter.id,
+                input: 'from',
+              })
+              .createEdge({
+                source: targetCurrency.id,
+                target: converter.id,
+                input: 'to',
+              })
+              .createEdge({
+                source: converter.id,
+                target: view.id,
+                output: 'rate',
+              });
           });
 
           const computeModel = createComputeGraph(canvasModel);
@@ -522,7 +592,7 @@ export const generator = () => ({
         const objects = range(n, () => {
           const canvasModel = CanvasGraphModel.create<ComputeShape>();
 
-          let functionTrigger: FunctionTrigger | undefined;
+          let functionTrigger: Trigger.Trigger | undefined;
           canvasModel.builder.call((builder) => {
             const triggerShape = createTrigger({
               spaceId: space.id,
@@ -532,7 +602,10 @@ export const generator = () => ({
             const trigger = canvasModel.createNode(triggerShape);
             // DXOS dev-null channel.
             const channelId = canvasModel.createNode(
-              createConstant({ value: '1088569858767212554', ...position({ x: -10, y: 0 }) }),
+              createConstant({
+                value: '1088569858767212554',
+                ...position({ x: -10, y: 0 }),
+              }),
             );
             const queueId = canvasModel.createNode(
               createConstant({
@@ -545,11 +618,31 @@ export const generator = () => ({
             const queue = canvasModel.createNode(createQueue(position({ x: 0, y: 12 })));
 
             builder
-              .createEdge({ source: trigger.id, target: converter.id, input: 'tick' })
-              .createEdge({ source: channelId.id, target: converter.id, input: 'channelId' })
-              .createEdge({ source: queueId.id, target: converter.id, input: 'queueId' })
-              .createEdge({ source: converter.id, target: view.id, output: 'newMessages' })
-              .createEdge({ source: queueId.id, target: queue.id, input: 'input' });
+              .createEdge({
+                source: trigger.id,
+                target: converter.id,
+                input: 'tick',
+              })
+              .createEdge({
+                source: channelId.id,
+                target: converter.id,
+                input: 'channelId',
+              })
+              .createEdge({
+                source: queueId.id,
+                target: converter.id,
+                input: 'queueId',
+              })
+              .createEdge({
+                source: converter.id,
+                target: view.id,
+                output: 'newMessages',
+              })
+              .createEdge({
+                source: queueId.id,
+                target: queue.id,
+                input: 'input',
+              });
 
             functionTrigger = triggerShape.functionTrigger!.target!;
           });
@@ -616,10 +709,10 @@ export const generator = () => ({
   ] as [PresetName, ObjectGenerator<any>][],
 });
 
-const createQueueSinkPreset = <SpecType extends TriggerKind>(
+const createQueueSinkPreset = <SpecType extends Trigger.Kind>(
   space: Space,
   triggerKind: SpecType,
-  initSpec: (spec: Extract<TriggerType, { kind: SpecType }>) => void,
+  initSpec: (spec: Obj.Mutable<Extract<Trigger.Spec, { kind: SpecType }>>) => void,
   triggerOutputName: string,
 ) => {
   const canvasModel = CanvasGraphModel.create<ComputeShape>();
@@ -631,7 +724,7 @@ const createQueueSinkPreset = <SpecType extends TriggerKind>(
     }),
   );
 
-  let functionTrigger: FunctionTrigger | undefined;
+  let functionTrigger: Trigger.Trigger | undefined;
   canvasModel.builder.call((builder) => {
     const triggerShape = createTrigger({
       spaceId: space.id,
@@ -652,7 +745,12 @@ const createQueueSinkPreset = <SpecType extends TriggerKind>(
     builder
       .createEdge({ source: queueId.id, target: append.id, input: 'id' })
       .createEdge({ source: template.id, target: append.id, input: 'items' })
-      .createEdge({ source: trigger.id, target: template.id, output: triggerOutputName, input: 'type' })
+      .createEdge({
+        source: trigger.id,
+        target: template.id,
+        output: triggerOutputName,
+        input: 'type',
+      })
       .createEdge({
         source: random.id,
         target: template.id,
@@ -662,13 +760,16 @@ const createQueueSinkPreset = <SpecType extends TriggerKind>(
     functionTrigger = triggerShape.functionTrigger!.target!;
     const triggerSpec = functionTrigger.spec;
     invariant(triggerSpec && triggerSpec.kind === triggerKind, 'No trigger spec.');
-    initSpec(triggerSpec as any);
+    Obj.change(functionTrigger, (ft) => {
+      initSpec(ft.spec as any);
+    });
   });
 
   const computeModel = createComputeGraph(canvasModel);
 
   const templateComputeNode = computeModel.nodes.find((n) => n.id === template.node);
   invariant(templateComputeNode, 'Template compute node was not created.');
+  // NOTE: These are plain object mutations during model construction, not ECHO object mutations.
   templateComputeNode.value = ['{', '  "@type": "{{type}}",', '  "id": "@{{changeId}}"', '}'].join('\n');
   templateComputeNode.inputSchema = Type.toJsonSchema(Schema.Struct({ type: Schema.String, changeId: Schema.String }));
   attachTrigger(functionTrigger, computeModel);
@@ -706,17 +807,27 @@ const setupQueue = (
   return { queue, queueId };
 };
 
-const attachTrigger = (functionTrigger: FunctionTrigger | undefined, computeModel: ComputeGraphModel) => {
+const attachTrigger = (functionTrigger: Trigger.Trigger | undefined, computeModel: ComputeGraphModel) => {
   invariant(functionTrigger);
-  functionTrigger.function = Ref.make(computeModel.root);
   const inputNode = computeModel.nodes.find((node) => node.type === NODE_INPUT)!;
-  functionTrigger.inputNodeId = inputNode.id;
+  Obj.change(functionTrigger, (t) => {
+    t.function = Ref.make(computeModel.root);
+    t.inputNodeId = inputNode.id;
+  });
 };
 
-type RawPositionInput = { centerX: number; centerY: number; width: number; height: number };
+type RawPositionInput = {
+  centerX: number;
+  centerY: number;
+  width: number;
+  height: number;
+};
 
 const rawPosition = (args: RawPositionInput) => {
-  return { center: { x: args.centerX, y: args.centerY }, size: { width: args.width, height: args.height } };
+  return {
+    center: { x: args.centerX, y: args.centerY },
+    size: { width: args.width, height: args.height },
+  };
 };
 
 const position = (rect: { x: number; y: number; width?: number; height?: number }) => {
@@ -724,7 +835,10 @@ const position = (rect: { x: number; y: number; width?: number; height?: number 
   const [center, size] = rectToPoints({ width: 0, height: 0, ...rect });
   const { x, y, width, height } = pointsToRect([pointMultiply(center, snap), pointMultiply(size, snap)]);
   if (width && height) {
-    return { center: { x, y }, size: width && height ? { width, height } : undefined };
+    return {
+      center: { x, y },
+      size: width && height ? { width, height } : undefined,
+    };
   } else {
     return { center: { x, y } };
   }

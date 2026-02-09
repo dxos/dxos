@@ -8,6 +8,7 @@
     ]
   },
   "exclude": [
+    "*.stories.tsx",
     "*.t.ts",
     "vite.config.ts"
   ],
@@ -37,9 +38,6 @@
       "path": "../../common/keys"
     },
     {
-      "path": "../../common/local-storage"
-    },
-    {
       "path": "../../common/log"
     },
     {
@@ -58,7 +56,7 @@
       "path": "../../core/assistant"
     },
     {
-      "path": "../../core/assistant-testing"
+      "path": "../../core/assistant-toolkit"
     },
     {
       "path": "../../core/blueprints"
@@ -73,6 +71,9 @@
       "path": "../../core/echo/echo"
     },
     {
+      "path": "../../core/echo/echo-atom"
+    },
+    {
       "path": "../../core/echo/echo-db"
     },
     {
@@ -82,16 +83,16 @@
       "path": "../../core/echo/echo-query"
     },
     {
-      "path": "../../core/echo/echo-schema"
-    },
-    {
-      "path": "../../core/echo/live-object"
-    },
-    {
       "path": "../../core/functions"
     },
     {
+      "path": "../../core/functions-runtime"
+    },
+    {
       "path": "../../core/mesh/edge-client"
+    },
+    {
+      "path": "../../core/operation"
     },
     {
       "path": "../../core/protocols"
@@ -116,6 +117,9 @@
     },
     {
       "path": "../../sdk/schema"
+    },
+    {
+      "path": "../../sdk/types"
     },
     {
       "path": "../../ui/lit-ui"
@@ -151,7 +155,13 @@
       "path": "../../ui/react-ui-list"
     },
     {
+      "path": "../../ui/react-ui-markdown"
+    },
+    {
       "path": "../../ui/react-ui-menu"
+    },
+    {
+      "path": "../../ui/react-ui-mosaic"
     },
     {
       "path": "../../ui/react-ui-searchlist"
@@ -172,16 +182,19 @@
       "path": "../../ui/react-ui-tabs"
     },
     {
-      "path": "../../ui/react-ui-theme"
+      "path": "../../ui/ui"
+    },
+    {
+      "path": "../../ui/ui-editor"
+    },
+    {
+      "path": "../../ui/ui-theme"
     },
     {
       "path": "../plugin-attention"
     },
     {
       "path": "../plugin-automation"
-    },
-    {
-      "path": "../plugin-board"
     },
     {
       "path": "../plugin-chess"
@@ -193,13 +206,7 @@
       "path": "../plugin-deck"
     },
     {
-      "path": "../plugin-explorer"
-    },
-    {
       "path": "../plugin-graph"
-    },
-    {
-      "path": "../plugin-inbox"
     },
     {
       "path": "../plugin-map"
@@ -208,40 +215,19 @@
       "path": "../plugin-markdown"
     },
     {
-      "path": "../plugin-preview"
-    },
-    {
-      "path": "../plugin-project"
-    },
-    {
-      "path": "../plugin-script"
-    },
-    {
-      "path": "../plugin-sketch"
-    },
-    {
       "path": "../plugin-space"
     },
     {
-      "path": "../plugin-stack"
+      "path": "../plugin-status-bar"
     },
     {
       "path": "../plugin-table"
     },
     {
-      "path": "../plugin-theme"
-    },
-    {
-      "path": "../plugin-thread"
-    },
-    {
-      "path": "../plugin-token-manager"
+      "path": "../plugin-testing"
     },
     {
       "path": "../plugin-transcription"
-    },
-    {
-      "path": "../plugin-wnfs"
     }
   ]
 }

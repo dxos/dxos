@@ -2,14 +2,17 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Tool, Toolkit } from '@effect/ai';
-import { Console, Effect, Schema } from 'effect';
+import * as Tool from '@effect/ai/Tool';
+import * as Toolkit from '@effect/ai/Toolkit';
+import * as Console from 'effect/Console';
+import * as Effect from 'effect/Effect';
+import * as Schema from 'effect/Schema';
 
 import { log } from '@dxos/log';
 import { trim } from '@dxos/util';
 
 // Tool definitions.
-export class TestingToolkit extends Toolkit.make(
+export const TestingToolkit = Toolkit.make(
   Tool.make('Calculator', {
     description: 'Basic calculator tool',
     parameters: {
@@ -35,7 +38,7 @@ export class TestingToolkit extends Toolkit.make(
     }),
     failure: Schema.Never,
   }),
-) {}
+);
 
 // Tool handlers.
 export const testingLayer = TestingToolkit.toLayer({

@@ -2,17 +2,18 @@
 // Copyright 2022 DXOS.org
 //
 
-import { effect } from '@preact/signals-core';
+import { RegistryContext } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { select } from 'd3';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
 import { type Graph, type GraphModel, SelectionModel } from '@dxos/graph';
 import { IconButton, Popover, Toolbar } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
-import { Card } from '@dxos/react-ui-stack';
+import { Card } from '@dxos/react-ui-mosaic';
 import { JsonFilter, SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { getHashStyles, mx } from '@dxos/react-ui-theme';
+import { withRegistry } from '@dxos/storybook-utils';
+import { getHashStyles, mx } from '@dxos/ui-theme';
 
 import { Pulsar } from '../../fx';
 import {
@@ -54,7 +55,7 @@ type StoryProps = GraphProps & {
   grid?: boolean | SVGGridProps;
   inspect?: boolean;
   singleSelect?: boolean;
-  graph: () => Graph;
+  graph: () => Graph.Any;
   projectorType?: ProjectorType;
   projectorOptions?:
     | GraphForceProjectorOptions
@@ -75,9 +76,13 @@ const DefaultStory = ({
 }: StoryProps) => {
   const graphRef = useRef<GraphController | null>(null);
   const context = useRef<SVGContext>(null);
+  const registry = useContext(RegistryContext);
 
   // Models.
-  const [model, setModel] = useState<GraphModel | undefined>(() => new TestGraphModel(_graph?.()));
+  const [model, setModel] = useState<GraphModel.GraphModel | undefined>(() => {
+    const graph = _graph?.();
+    return graph ? new TestGraphModel(registry, graph) : undefined;
+  });
   const selection = useMemo(() => new SelectionModel(singleSelect), [singleSelect]);
 
   // Projector.
@@ -155,8 +160,9 @@ const DefaultStory = ({
   }, [model]);
 
   const handleRegenerate = useCallback(() => {
-    setModel(new TestGraphModel(_graph?.()));
-  }, [_graph]);
+    const graph = _graph?.();
+    setModel(graph ? new TestGraphModel(registry, graph) : undefined);
+  }, [_graph, registry]);
 
   const handleClear = useCallback(() => {
     setModel(undefined);
@@ -180,7 +186,7 @@ const DefaultStory = ({
 
   const active = useMemo(() => new SelectionModel(), []);
   const handlePing = useCallback(() => {
-    for (const id of active.selected.value) {
+    for (const id of active.getSelectedIds()) {
       const node = graphRef.current?.findNode(id);
       if (node) {
         Pulsar.remove(select(node));
@@ -188,7 +194,7 @@ const DefaultStory = ({
     }
 
     active.clear();
-    for (const id of selection.selected.value) {
+    for (const id of selection.getSelectedIds()) {
       const node = graphRef.current?.findNode(id);
       if (node) {
         active.add(id);
@@ -200,7 +206,7 @@ const DefaultStory = ({
 
   return (
     <Popover.Root open={!!popover} onOpenChange={(state) => !state && setPopover(undefined)}>
-      <div className={mx('w-full grid divide-x divide-separator', debug && 'grid-cols-[1fr_30rem]')}>
+      <div className={mx('bs-full is-full grid divide-x divide-separator', debug && 'grid-cols-[1fr_30rem]')}>
         <SVG.Root ref={context}>
           <SVG.Markers />
           {grid && <SVG.Grid {...(typeof grid === 'boolean' ? { axis: grid } : grid)} />}
@@ -254,13 +260,13 @@ const DefaultStory = ({
       <Popover.VirtualTrigger virtualRef={popoverAnchorRef} />
       <Popover.Content onOpenAutoFocus={(event) => event.preventDefault()}>
         <Popover.Viewport>
-          <Card.SurfaceRoot role='card--popover'>
+          <Card.Root>
             <SyntaxHighlighter
               language='json'
               classNames='text-xs mlb-cardSpacingBlock pli-cardSpacingInline bg-transparent'
               code={JSON.stringify(popover, null, 2)}
             />
-          </Card.SurfaceRoot>
+          </Card.Root>
         </Popover.Viewport>
         <Popover.Arrow />
       </Popover.Content>
@@ -281,7 +287,7 @@ const Debug = ({
   onDelete,
   onPing,
 }: {
-  model?: GraphModel;
+  model?: GraphModel.GraphModel;
   selection: SelectionModel;
   projector: ProjectorType;
   onToggleProjector: () => void;
@@ -295,26 +301,24 @@ const Debug = ({
 }) => {
   const [data, setData] = useState({});
   useEffect(() => {
-    effect(() => {
-      setData({
-        projector,
-        selection: selection.toJSON(),
-        model: model?.toJSON(),
-      });
+    setData({
+      projector,
+      selection: selection.toJSON(),
+      model: model?.toJSON(),
     });
   }, [model, selection, projector]);
 
   return (
     <div className='flex flex-col overflow-hidden'>
       <Toolbar.Root>
-        <IconButton onClick={onToggleProjector} size={5} label='Projector' icon='ph--graph--regular' iconOnly />
-        <IconButton onClick={onRefresh} size={5} label='Refresh' icon='ph--arrow-clockwise--regular' iconOnly />
-        <IconButton onClick={onRepaint} size={5} label='Repaint' icon='ph--paint-roller--regular' iconOnly />
-        <IconButton onClick={onRegenerate} size={5} label='Regenerate' icon='ph--arrows-clockwise--regular' iconOnly />
-        <IconButton onClick={onClear} size={5} label='Clear' icon='ph--trash--regular' iconOnly />
-        <IconButton onClick={onAdd} size={5} label='Add' icon='ph--plus--regular' iconOnly />
-        <IconButton onClick={onDelete} size={5} label='Delete' icon='ph--x--regular' iconOnly />
-        <IconButton onClick={onPing} size={5} label='Delete' icon='ph--crosshair-simple--regular' iconOnly />
+        <IconButton onClick={onToggleProjector} label='Projector' icon='ph--graph--regular' iconOnly />
+        <IconButton onClick={onRefresh} label='Refresh' icon='ph--arrow-clockwise--regular' iconOnly />
+        <IconButton onClick={onRepaint} label='Repaint' icon='ph--paint-roller--regular' iconOnly />
+        <IconButton onClick={onRegenerate} label='Regenerate' icon='ph--arrows-clockwise--regular' iconOnly />
+        <IconButton onClick={onClear} label='Clear' icon='ph--trash--regular' iconOnly />
+        <IconButton onClick={onAdd} label='Add' icon='ph--plus--regular' iconOnly />
+        <IconButton onClick={onDelete} label='Delete' icon='ph--x--regular' iconOnly />
+        <IconButton onClick={onPing} label='Delete' icon='ph--crosshair-simple--regular' iconOnly />
       </Toolbar.Root>
       <JsonFilter data={data} classNames='text-sm' />
     </div>
@@ -324,7 +328,7 @@ const Debug = ({
 const meta = {
   title: 'ui/react-ui-graph/Graph',
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withRegistry, withTheme],
   parameters: {
     layout: 'fullscreen',
     controls: { disable: true },

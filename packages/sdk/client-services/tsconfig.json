@@ -26,6 +26,9 @@
       "path": "../../common/debug"
     },
     {
+      "path": "../../common/effect"
+    },
+    {
       "path": "../../common/feed-store"
     },
     {
@@ -50,6 +53,9 @@
       "path": "../../common/random-access-storage"
     },
     {
+      "path": "../../common/sql-sqlite"
+    },
+    {
       "path": "../../common/test-utils"
     },
     {
@@ -62,6 +68,9 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../core/echo/echo"
+    },
+    {
       "path": "../../core/echo/echo-db"
     },
     {
@@ -69,9 +78,6 @@
     },
     {
       "path": "../../core/echo/echo-protocol"
-    },
-    {
-      "path": "../../core/echo/echo-schema"
     },
     {
       "path": "../../core/echo/indexing"

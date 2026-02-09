@@ -2,24 +2,23 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Rx } from '@effect-rx/rx-react';
+import { Atom } from '@effect-atom/atom-react';
 import React, { useMemo } from 'react';
 
-import { type ScriptType } from '@dxos/functions';
-import { fullyQualifiedId } from '@dxos/react-client/echo';
-import { ElevationProvider, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Obj } from '@dxos/echo';
+import { type Script } from '@dxos/functions';
+import { ElevationProvider, useTranslation } from '@dxos/react-ui';
 import {
   type ActionGraphProps,
   MenuProvider,
   ToolbarMenu,
   createGapSeparator,
-  rxFromSignal,
   useMenuActions,
 } from '@dxos/react-ui-menu';
 
 import {
   type CreateDeployOptions,
-  type ScriptToolbarState,
+  type ScriptToolbarStateStore,
   createDeploy,
   createFormat,
   createTemplateSelect,
@@ -27,13 +26,13 @@ import {
 } from '../../hooks';
 import { meta } from '../../meta';
 
-export type ScriptToolbarProps = ThemedClassName<{
+export type ScriptToolbarProps = {
   role?: string;
-  script: ScriptType;
-  state: ScriptToolbarState;
-}>;
+  script: Script.Script;
+  state: ScriptToolbarStateStore;
+};
 
-export const ScriptToolbar = ({ script, role, state, classNames }: ScriptToolbarProps) => {
+export const ScriptToolbar = ({ script, role, state }: ScriptToolbarProps) => {
   const { t } = useTranslation(meta.id);
   const options = useDeployDeps({ script });
   const menu = useMemo(() => createToolbarActions({ state, script, t, ...options }), [state, script, options, t]);
@@ -41,25 +40,23 @@ export const ScriptToolbar = ({ script, role, state, classNames }: ScriptToolbar
 
   return (
     <ElevationProvider elevation={role === 'section' ? 'positioned' : 'base'}>
-      <MenuProvider {...actions} attendableId={fullyQualifiedId(script)}>
-        <ToolbarMenu classNames={classNames} />
+      <MenuProvider {...actions} attendableId={Obj.getDXN(script).toString()}>
+        <ToolbarMenu />
       </MenuProvider>
     </ElevationProvider>
   );
 };
 
-const createToolbarActions = ({ state, script, ...options }: CreateDeployOptions): Rx.Rx<ActionGraphProps> =>
-  Rx.make((get) =>
-    get(
-      rxFromSignal(() => {
-        const templateSelect = createTemplateSelect(script);
-        const format = createFormat(script);
-        const gap = createGapSeparator();
-        const deploy = createDeploy({ state, script, ...options });
-        return {
-          nodes: [...templateSelect.nodes, ...format.nodes, ...gap.nodes, ...deploy.nodes],
-          edges: [...templateSelect.edges, ...format.edges, ...gap.edges, ...deploy.edges],
-        };
-      }),
-    ),
-  );
+const createToolbarActions = ({ state, script, ...options }: CreateDeployOptions): Atom.Atom<ActionGraphProps> =>
+  Atom.make((get) => {
+    // Subscribe to state changes.
+    get(state.atom);
+    const templateSelect = createTemplateSelect(script);
+    const format = createFormat(script);
+    const gap = createGapSeparator();
+    const deploy = createDeploy({ state, script, ...options });
+    return {
+      nodes: [...templateSelect.nodes, ...format.nodes, ...gap.nodes, ...deploy.nodes],
+      edges: [...templateSelect.edges, ...format.edges, ...gap.edges, ...deploy.edges],
+    };
+  });

@@ -25,6 +25,7 @@ export type SharedWorkerConnectionOptions = {
 /**
  * Manages the client connection to the shared worker.
  */
+// TODO(dmaretskyi): Rename WorkerConnection.
 export class SharedWorkerConnection {
   private readonly _id = String(Math.floor(Math.random() * 1000000));
   private readonly _configProvider: SharedWorkerConnectionOptions['config'];
@@ -62,8 +63,9 @@ export class SharedWorkerConnection {
       timeout: 200,
     });
 
+    // TODO(dmaretskyi): Replace with injected locks interface.
     let lockKey: string | undefined;
-    if (typeof navigator !== 'undefined') {
+    if (typeof navigator !== 'undefined' && typeof navigator.locks !== 'undefined') {
       lockKey = this._lockKey(params.origin);
       this._release = new Trigger();
       const ready = new Trigger();
@@ -79,7 +81,7 @@ export class SharedWorkerConnection {
       await this._systemRpc.rpc.WorkerService.start({ lockKey, ...params });
     } catch (err) {
       log.catch(err);
-      throw new RemoteServiceConnectionError('Failed to connect to worker');
+      throw new RemoteServiceConnectionError({ message: 'Failed to connect to worker' });
     }
   }
 

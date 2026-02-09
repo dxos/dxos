@@ -2,7 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Effect, ParseResult, Predicate, Schema, Stream } from 'effect';
+import * as Effect from 'effect/Effect';
+import * as ParseResult from 'effect/ParseResult';
+import * as Predicate from 'effect/Predicate';
+import * as Schema from 'effect/Schema';
+import * as Stream from 'effect/Stream';
 
 const isStream = (value: any): value is Stream.Stream<any> =>
   Predicate.hasProperty(value, Stream.StreamTypeId) && Predicate.isObject(value[Stream.StreamTypeId]);
@@ -24,11 +28,11 @@ export const StreamSchema = <Item extends Schema.Schema.AnyNoContext>(item: Item
     [item],
     {
       // TODO(dmaretskyi): This should be handling encoding/decoding of the stream elements.
-      decode: (itemSchema) => (input, options, ast) =>
+      decode: (_schema) => (input, _options, ast) =>
         isStream(input)
           ? Effect.succeed(input)
           : Effect.fail(new ParseResult.Type(ast, String(input), 'expected a stream')),
-      encode: (itemSchema) => (input, options, ast) =>
+      encode: (_schema) => (input, _options, ast) =>
         isStream(input)
           ? Effect.succeed(input)
           : Effect.fail(new ParseResult.Type(ast, String(input), 'expected a stream')),

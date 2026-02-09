@@ -3,7 +3,11 @@
 //
 
 import { it } from '@effect/vitest';
-import { Cause, Effect, Fiber } from 'effect';
+import * as Cause from 'effect/Cause';
+import * as Effect from 'effect/Effect';
+import * as Fiber from 'effect/Fiber';
+
+import { runAndForwardErrors } from './errors';
 
 const doWork = Effect.fn('doWork')(function* () {
   yield* Effect.sleep('1 minute');
@@ -16,7 +20,7 @@ it.effect.skip(
     function* (_) {
       const resultFiber = yield* doWork().pipe(Effect.fork);
       setTimeout(() => {
-        void Effect.runPromise(Fiber.interrupt(resultFiber));
+        void runAndForwardErrors(Fiber.interrupt(resultFiber));
       }, 2_000);
 
       const result = yield* resultFiber;

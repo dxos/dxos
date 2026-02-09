@@ -4,28 +4,29 @@
   "description": "EDGE Client",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
   "license": "MIT",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "exports": {
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "browser": "./dist/lib/browser/index.mjs",
-      "node": "./dist/lib/node-esm/index.mjs"
+      "default": "./dist/lib/neutral/index.mjs"
     },
     "./muxer": {
       "source": "./src/edge-ws-muxer.ts",
       "types": "./dist/types/src/edge-ws-muxer.d.ts",
-      "browser": "./dist/lib/browser/edge-ws-muxer.mjs",
-      "node": "./dist/lib/node-esm/edge-ws-muxer.mjs"
+      "default": "./dist/lib/neutral/edge-ws-muxer.mjs"
     },
     "./testing": {
       "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
-      "browser": "./dist/lib/browser/testing/index.mjs",
-      "node": "./dist/lib/node-esm/testing/index.mjs"
+      "default": "./dist/lib/neutral/testing/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -47,6 +48,7 @@
     "@dxos/credentials": "workspace:*",
     "@dxos/crypto": "workspace:*",
     "@dxos/debug": "workspace:*",
+    "@dxos/effect": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keyring": "workspace:*",
     "@dxos/keys": "workspace:*",
@@ -54,15 +56,15 @@
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/platform": "^0.92.1",
-    "isomorphic-ws": "^5.0.0",
-    "ws": "^8.14.2"
+    "@effect/platform": "catalog:",
+    "isomorphic-ws": "catalog:",
+    "ws": "catalog:"
   },
   "devDependencies": {
     "@dxos/test-utils": "workspace:*"
   },
   "peerDependencies": {
-    "effect": "^3.13.3"
+    "effect": "catalog:"
   },
   "publishConfig": {
     "access": "public"

@@ -5,12 +5,12 @@
 import { type Resource } from '@dxos/react-ui';
 
 import { meta } from './meta';
-import { JournalType, OutlineType } from './types';
+import { Journal, Outline } from './types';
 
 export const translations = [
   {
     'en-US': {
-      [JournalType.typename]: {
+      [Journal.Journal.typename]: {
         'typename label': 'Journal',
         'typename label_zero': 'Journals',
         'typename label_one': 'Journal',
@@ -18,8 +18,9 @@ export const translations = [
         'object name placeholder': 'New journal',
         'rename object label': 'Rename journal',
         'delete object label': 'Delete journal',
+        'object deleted label': 'Journal deleted',
       },
-      [OutlineType.typename]: {
+      [Outline.Outline.typename]: {
         'typename label': 'Outline',
         'typename label_zero': 'Outlines',
         'typename label_one': 'Outline',
@@ -27,10 +28,12 @@ export const translations = [
         'object name placeholder': 'New outline',
         'rename object label': 'Rename outline',
         'delete object label': 'Delete outline',
+        'object deleted label': 'Outline deleted',
       },
       [meta.id]: {
         'plugin name': 'Outliner',
-        'delete object label': 'Delete item',
+        'delete object label': 'Delete object',
+        'create outline label': 'Create outline',
         'create entry label': 'Create entry',
         'text placeholder': 'Enter text...',
         'menu label': 'Menu',

@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+export * from './capabilities';
 export * as TranscriptAction from './TranscriptAction';
-export * as Transcript from './Transcript';
+export { TranscriptOperation } from './TranscriptAction';
 export * from './types';

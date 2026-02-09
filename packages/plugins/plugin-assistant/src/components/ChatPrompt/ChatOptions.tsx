@@ -6,19 +6,25 @@ import React, { type JSX, useMemo, useState } from 'react';
 
 import { type AiContextBinder } from '@dxos/assistant';
 import { type Blueprint } from '@dxos/blueprints';
-import { Filter, Obj, Type } from '@dxos/echo';
-import { type Space, useQuery } from '@dxos/react-client/echo';
-import { Icon, IconButton, Popover, Select, useTranslation } from '@dxos/react-ui';
-import { Listbox, SearchList } from '@dxos/react-ui-searchlist';
+import { type Database, Filter, Obj, Type } from '@dxos/echo';
+import { useQuery } from '@dxos/react-client/echo';
+import { IconButton, Popover, Select, useTranslation } from '@dxos/react-ui';
+import { Listbox, SearchList, useSearchListResults } from '@dxos/react-ui-searchlist';
 import { Tabs } from '@dxos/react-ui-tabs';
 
-import { useActiveBlueprints, useBlueprintHandlers, useBlueprints, useContextObjects, useItemTypes } from '../../hooks';
+import {
+  useActiveBlueprints,
+  useBlueprintHandlers,
+  useBlueprints,
+  useContextObjects,
+  useFilteredTypes,
+} from '../../hooks';
 import { meta } from '../../meta';
 
 const panelClassNames = 'is-[calc(100dvw-.5rem)] sm:is-max md:is-72 max-is-[--text-content]';
 
 export type ChatOptionsProps = {
-  space: Space;
+  db: Database.Database;
   context: AiContextBinder;
   blueprintRegistry?: Blueprint.Registry;
   presets?: { id: string; label: string }[];
@@ -29,25 +35,20 @@ export type ChatOptionsProps = {
 /**
  * Manages the runtime context for the chat.
  */
-export const ChatOptions = ({
-  space,
-  context,
-  blueprintRegistry,
-  presets,
-  preset,
-  onPresetChange,
-}: ChatOptionsProps) => {
+export const ChatOptions = ({ db, context, blueprintRegistry, presets, preset, onPresetChange }: ChatOptionsProps) => {
   const { t } = useTranslation(meta.id);
 
   return (
-    <div role='none' className='flex gap-0.5'>
+    <div role='none' className='flex p-2'>
       <Popover.Root>
         <Popover.Trigger asChild>
-          <IconButton variant='ghost' icon='ph--plus--regular' iconOnly size={5} label={t('button context objects')} />
+          <IconButton variant='ghost' icon='ph--plus--regular' iconOnly label={t('context objects button')} />
         </Popover.Trigger>
         <Popover.Portal>
           <Popover.Content side='top' classNames={panelClassNames}>
-            <ObjectsPanel space={space} context={context} />
+            <Popover.Viewport>
+              <ObjectsPanel db={db} context={context} />
+            </Popover.Viewport>
             <Popover.Arrow />
           </Popover.Content>
         </Popover.Portal>
@@ -59,30 +60,31 @@ export const ChatOptions = ({
             variant='ghost'
             icon='ph--sliders-horizontal--regular'
             iconOnly
-            size={5}
-            label={t('button context settings')}
+            label={t('context settings button')}
           />
         </Popover.Trigger>
         <Popover.Portal>
           <Popover.Content side='top' classNames={panelClassNames}>
-            <Tabs.Root orientation='horizontal' defaultValue='blueprints' defaultActivePart='list' tabIndex={-1}>
-              <Tabs.Viewport classNames='max-bs-[--radix-popover-content-available-height] grid grid-rows-[1fr_min-content] [&_[cmdk-root]]:contents [&_[role="tabpanel"]]:grid [&_[role="tabpanel"]]:grid-rows-[1fr_min-content] [&_[role="listbox"]]:min-bs-0 [&_[role="listbox"]]:overflow-y-auto [&_[role="tabpanel"]]:min-bs-0 [&_[role="tabpanel"]]:pli-cardSpacingChrome [&_[role="tabpanel"][data-state="active"]]:order-first [&_[role="tabpanel"][data-state="inactive"]]:hidden'>
-                <Tabs.Tabpanel value='blueprints' tabIndex={-1} classNames='dx-focus-ring-inset'>
-                  <BlueprintsPanel blueprintRegistry={blueprintRegistry} space={space} context={context} />
-                </Tabs.Tabpanel>
-                <Tabs.Tabpanel value='model' tabIndex={-1} classNames='dx-focus-ring-inset !pli-0'>
-                  <ModelsPanel presets={presets} preset={preset} onPresetChange={onPresetChange} />
-                </Tabs.Tabpanel>
-                <Tabs.Tablist classNames='sm:overflow-x-hidden justify-center p-[--dx-cardSpacingChrome] border-bs border-subduedSeparator order-last'>
-                  <Tabs.IconTab
-                    value='blueprints'
-                    icon='ph--blueprint--regular'
-                    label={t('blueprints in context title')}
-                  />
-                  <Tabs.IconTab value='model' label={t('chat model title')} icon='ph--cpu--regular' />
-                </Tabs.Tablist>
-              </Tabs.Viewport>
-            </Tabs.Root>
+            <Popover.Viewport>
+              <Tabs.Root orientation='horizontal' defaultValue='blueprints' defaultActivePart='list' tabIndex={-1}>
+                <Tabs.Viewport classNames='max-bs-[--radix-popover-content-available-height] grid grid-rows-[1fr_min-content] [&_[cmdk-root]]:contents [&_[role="tabpanel"]]:grid [&_[role="tabpanel"]]:grid-rows-[1fr_min-content] [&_[role="listbox"]]:min-bs-0 [&_[role="listbox"]]:overflow-y-auto [&_[role="tabpanel"]]:min-bs-0 [&_[role="tabpanel"]]:pli-cardSpacingChrome [&_[role="tabpanel"][data-state="active"]]:order-first [&_[role="tabpanel"][data-state="inactive"]]:hidden'>
+                  <Tabs.Tabpanel value='blueprints' tabIndex={-1} classNames='dx-focus-ring-inset'>
+                    <BlueprintsPanel blueprintRegistry={blueprintRegistry} db={db} context={context} />
+                  </Tabs.Tabpanel>
+                  <Tabs.Tabpanel value='model' tabIndex={-1} classNames='dx-focus-ring-inset !pli-0'>
+                    <ModelsPanel presets={presets} preset={preset} onPresetChange={onPresetChange} />
+                  </Tabs.Tabpanel>
+                  <Tabs.Tablist classNames='sm:overflow-x-hidden justify-center p-[--dx-cardSpacingChrome] border-bs border-subduedSeparator order-last'>
+                    <Tabs.IconTab
+                      value='blueprints'
+                      icon='ph--blueprint--regular'
+                      label={t('blueprints in context title')}
+                    />
+                    <Tabs.IconTab value='model' label={t('chat model title')} icon='ph--cpu--regular' />
+                  </Tabs.Tablist>
+                </Tabs.Viewport>
+              </Tabs.Root>
+            </Popover.Viewport>
             <Popover.Arrow />
           </Popover.Content>
         </Popover.Portal>
@@ -93,32 +95,38 @@ export const ChatOptions = ({
 
 const BlueprintsPanel = ({
   blueprintRegistry,
-  space,
+  db,
   context,
-}: Pick<ChatOptionsProps, 'blueprintRegistry' | 'space' | 'context'>) => {
+}: Pick<ChatOptionsProps, 'blueprintRegistry' | 'db' | 'context'>) => {
   const { t } = useTranslation(meta.id);
 
-  const blueprints = useBlueprints({ blueprintRegistry, space });
+  const blueprints = useBlueprints({ blueprintRegistry, db });
   const activeBlueprints = useActiveBlueprints({ context });
-  const { onUpdateBlueprint } = useBlueprintHandlers({ space, context, blueprintRegistry });
+  const { onUpdateBlueprint } = useBlueprintHandlers({ db, context, blueprintRegistry });
+
+  const { results, handleSearch } = useSearchListResults({
+    items: blueprints,
+    extract: (blueprint) => blueprint.name,
+  });
 
   return (
-    <SearchList.Root>
+    <SearchList.Root onSearch={handleSearch}>
       <SearchList.Content classNames='plb-cardSpacingChrome'>
-        {blueprints.map((blueprint) => {
-          const isActive = activeBlueprints.has(blueprint.key);
-          return (
-            <SearchList.Item
-              classNames='flex items-center overflow-hidden'
-              key={blueprint.key}
-              value={blueprint.name}
-              onSelect={() => onUpdateBlueprint?.(blueprint.key, !isActive)}
-            >
-              <div className='grow truncate'>{blueprint.name}</div>
-              <Icon icon='ph--check--regular' classNames={[!isActive && 'invisible']} />
-            </SearchList.Item>
-          );
-        })}
+        <SearchList.Viewport>
+          {results.map((blueprint) => {
+            const isActive = activeBlueprints.has(blueprint.key);
+            return (
+              <SearchList.Item
+                classNames='flex items-center overflow-hidden'
+                key={blueprint.key}
+                value={blueprint.key}
+                label={blueprint.name}
+                checked={isActive}
+                onSelect={() => onUpdateBlueprint?.(blueprint.key, !isActive)}
+              />
+            );
+          })}
+        </SearchList.Viewport>
       </SearchList.Content>
       <SearchList.Input placeholder={t('search placeholder')} classNames='mbe-cardSpacingChrome' autoFocus />
     </SearchList.Root>
@@ -146,11 +154,11 @@ const ModelsPanel = ({
 
 const ANY = '__any__';
 
-const ObjectsPanel = ({ space, context }: Pick<ChatOptionsProps, 'space' | 'context'>): JSX.Element => {
+const ObjectsPanel = ({ db, context }: Pick<ChatOptionsProps, 'db' | 'context'>): JSX.Element => {
   const { t } = useTranslation(meta.id);
 
   // Item types sorted by label.
-  const types = useItemTypes(space);
+  const types = useFilteredTypes(db);
   const typenames = useMemo(() => {
     const typenames = types.map((type) => {
       const typename = Type.getTypename(type);
@@ -172,31 +180,36 @@ const ObjectsPanel = ({ space, context }: Pick<ChatOptionsProps, 'space' | 'cont
   );
 
   // Context objects.
-  const objects = useQuery(space, typename === ANY ? anyFilter : Filter.typename(typename));
-  const { objects: contextObjects, onUpdateObject } = useContextObjects({ space, context });
+  const objects = useQuery(db, typename === ANY ? anyFilter : Filter.typename(typename));
+  const { objects: contextObjects, onUpdateObject } = useContextObjects({ db, context });
+
+  const { results, handleSearch } = useSearchListResults({
+    items: objects,
+    extract: (object) => Obj.getLabel(object) ?? Obj.getTypename(object) ?? object.id,
+  });
 
   return (
-    <SearchList.Root>
+    <SearchList.Root onSearch={handleSearch}>
       <SearchList.Content classNames='p-cardSpacingChrome [&:has([cmdk-list-sizer]:empty)]:plb-0'>
-        {objects.length ? (
-          objects.map((object) => {
-            const label = Obj.getLabel(object) ?? Obj.getTypename(object) ?? object.id;
-            const isActive = contextObjects.findIndex((obj) => obj.id === object.id) !== -1;
-            return (
-              <SearchList.Item
-                classNames='flex items-center overflow-hidden'
-                key={object.id}
-                value={object.id}
-                onSelect={() => onUpdateObject?.(Obj.getDXN(object), !isActive)}
-              >
-                <div className='grow truncate'>{label}</div>
-                <Icon icon='ph--check--regular' classNames={[!isActive && 'invisible']} />
-              </SearchList.Item>
-            );
-          })
-        ) : (
-          <SearchList.Item>{t('no results')}</SearchList.Item>
-        )}
+        <SearchList.Viewport>
+          {results.length ? (
+            results.map((object) => {
+              const isActive = contextObjects.findIndex((obj) => obj.id === object.id) !== -1;
+              return (
+                <SearchList.Item
+                  classNames='flex items-center overflow-hidden'
+                  key={object.id}
+                  value={object.id}
+                  label={Obj.getLabel(object) ?? Obj.getTypename(object) ?? object.id}
+                  checked={isActive}
+                  onSelect={() => onUpdateObject?.(Obj.getDXN(object), !isActive)}
+                />
+              );
+            })
+          ) : (
+            <SearchList.Item value='__empty__' label={t('no results')} />
+          )}
+        </SearchList.Viewport>
       </SearchList.Content>
 
       <div role='none' className='grid grid-cols-[min-content_1fr] gap-2 pli-cardSpacingChrome mbe-cardSpacingChrome'>

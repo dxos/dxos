@@ -4,54 +4,69 @@
 
 import React, { useMemo } from 'react';
 
-import { type ScriptType } from '@dxos/functions';
-import { createDocAccessor, getSpace } from '@dxos/react-client/echo';
+import { type SurfaceComponentProps } from '@dxos/app-framework/react';
+import { Obj } from '@dxos/echo';
+import { createDocAccessor } from '@dxos/echo-db';
+import { type Script } from '@dxos/functions';
+import { getSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { createDataExtensions, listener, stackItemContentEditorClassNames } from '@dxos/react-ui-editor';
-import { StackItem } from '@dxos/react-ui-stack';
+import { Layout } from '@dxos/react-ui-mosaic';
+import { createDataExtensions, listener, stackItemContentEditorClassNames } from '@dxos/ui-editor';
 
 import { useDeployState, useToolbarState } from '../hooks';
-import { type ScriptSettingsProps } from '../types';
+import { type ScriptSettings } from '../types';
 
 import { ScriptToolbar } from './ScriptToolbar';
 import { TypescriptEditor, type TypescriptEditorProps } from './TypescriptEditor';
 
-export type ScriptEditorProps = {
-  role: string;
-  script: ScriptType;
-  settings?: ScriptSettingsProps;
-} & Pick<TypescriptEditorProps, 'env'>;
+export type ScriptEditorProps = SurfaceComponentProps<
+  Script.Script,
+  {
+    settings?: ScriptSettings;
+  } & Pick<TypescriptEditorProps, 'env'>
+>;
 
-export const ScriptContainer = ({ role, script, settings = { editorInputMode: 'vscode' }, env }: ScriptEditorProps) => {
+export const ScriptContainer = ({
+  role,
+  subject: script,
+  settings = { editorInputMode: 'vscode' },
+  env,
+}: ScriptEditorProps) => {
   const identity = useIdentity();
   const space = getSpace(script);
   const state = useToolbarState();
-  useDeployState({ state, script });
+  useDeployState({ script, state });
 
-  const extensions = useMemo(
-    () =>
-      script.source.target
-        ? [
-            listener({
-              onChange: (text) => {
-                if (script.source.target?.content !== text) {
-                  script.changed = true;
-                }
-              },
-            }),
-            createDataExtensions({
-              id: script.id,
-              text: createDocAccessor(script.source.target, ['content']),
-              space,
-              identity,
-            }),
-          ]
-        : [],
-    [identity, space, script, script.source.target],
-  );
+  const extensions = useMemo(() => {
+    if (!script.source.target) {
+      return [];
+    }
+
+    return [
+      createDataExtensions({
+        id: script.id,
+        text: createDocAccessor(script.source.target, ['content']),
+        messenger: space,
+        identity,
+      }),
+      listener({
+        onChange: ({ text }) => {
+          if (script.source.target?.content !== text) {
+            Obj.change(script, (s) => {
+              s.changed = true;
+            });
+          }
+        },
+      }),
+    ];
+  }, [identity, space, script, script.source.target]);
+
+  if (!extensions.length) {
+    return null;
+  }
 
   return (
-    <StackItem.Content toolbar>
+    <Layout.Main role={role} toolbar>
       <ScriptToolbar state={state} role={role} script={script} />
       <TypescriptEditor
         id={script.id}
@@ -62,7 +77,7 @@ export const ScriptContainer = ({ role, script, settings = { editorInputMode: 'v
         inputMode={settings.editorInputMode}
         toolbar
       />
-    </StackItem.Content>
+    </Layout.Main>
   );
 };
 

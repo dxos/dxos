@@ -6,6 +6,8 @@ import { useCallback } from 'react';
 
 import { type ControlProps, type GlobeController } from '../components';
 
+const ZOOM_FACTOR = 0.1;
+
 export const useGlobeZoomHandler = (controller: GlobeController | null | undefined): ControlProps['onAction'] => {
   return useCallback<ControlProps['onAction']>(
     (event) => {
@@ -15,11 +17,15 @@ export const useGlobeZoomHandler = (controller: GlobeController | null | undefin
 
       switch (event) {
         case 'zoom-in': {
-          controller.setZoom((zoom) => zoom * 1.1);
+          controller.setZoom((zoom) => {
+            return zoom * (1 + ZOOM_FACTOR);
+          });
           break;
         }
         case 'zoom-out': {
-          controller.setZoom((zoom) => zoom * 0.9);
+          controller.setZoom((zoom) => {
+            return zoom * (1 - ZOOM_FACTOR);
+          });
           break;
         }
       }

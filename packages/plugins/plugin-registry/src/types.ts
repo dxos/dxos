@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 
 export const RegistrySettingsSchema = Schema.mutable(
   Schema.Struct({
@@ -11,3 +11,7 @@ export const RegistrySettingsSchema = Schema.mutable(
 );
 
 export type RegistrySettings = Schema.Schema.Type<typeof RegistrySettingsSchema>;
+
+export const RegistryTagType = Schema.Literal('new', 'beta', 'labs', 'popular', 'featured', 'experimental');
+
+export type RegistryTagType = Schema.Schema.Type<typeof RegistryTagType>;

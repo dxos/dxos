@@ -3,12 +3,14 @@
 //
 
 import { AgentStatus } from '@dxos/ai';
-import { Obj, type Ref } from '@dxos/echo';
+import { type Entity, Obj, type Ref } from '@dxos/echo';
 import { MESSAGE_PROPERTY_TOOL_CALL_ID } from '@dxos/functions';
 import { type ObjectId } from '@dxos/keys';
 import { LogLevel } from '@dxos/log';
-import { ContentBlock, DataType } from '@dxos/schema';
+import { ContentBlock, Message } from '@dxos/types';
 import { isNonNullable } from '@dxos/util';
+
+const SKIP_BLOCKS: ContentBlock.Any['_tag'][] = ['text'];
 
 /**
  * Mercurial-style Commit.
@@ -58,13 +60,15 @@ export class ExecutionGraph {
   private _lastCommitByBranch = new Map<string, string>(); // branch -> last commitId
   private _pendingToolResults = new Map<string, string>(); // toolCallId -> toolResultCommitId
 
+  constructor(private readonly _skipBlocks: ContentBlock.Any['_tag'][] = SKIP_BLOCKS) {}
+
   /**
    * Adds events to the graph.
    */
-  addEvents(events: Obj.Any[]) {
+  addEvents(events: Entity.Unknown[]) {
     const sortedEvents = this.sortObjectsByCreated(events);
     for (const event of sortedEvents) {
-      if (Obj.instanceOf(DataType.Message, event)) {
+      if (Obj.instanceOf(Message.Message, event)) {
         this._processMessage(event);
       } else if (Obj.instanceOf(AgentStatus, event)) {
         this._processAgentStatus(event);
@@ -75,12 +79,13 @@ export class ExecutionGraph {
   /**
    * Processes a message event and creates commits for its blocks.
    */
-  private _processMessage(message: DataType.Message) {
+  private _processMessage(message: Message.Message) {
     const messageCommits = messageToCommits(
       message,
       this._lastBlockId,
       this._toolCallCommitIds,
       this._lastCommitByBranch,
+      this._skipBlocks,
     );
     this._commits.push(...messageCommits);
 
@@ -278,15 +283,16 @@ export class ExecutionGraph {
   }
 }
 
-// TODO(burdon): Pass in AiToolProvider.
 /**
  * Creates commits for all blocks in a message.
  */
+// TODO(burdon): Pass in AiToolProvider.
 const messageToCommits = (
-  message: DataType.Message,
+  message: Message.Message,
   lastBlockId?: string,
   toolCallIds?: Map<string, string>,
   lastCommitByBranch?: Map<string, string>,
+  skipBlocks?: ContentBlock.Any['_tag'][],
 ): Commit[] => {
   let previousBlockId: string | undefined = lastBlockId;
 
@@ -294,6 +300,9 @@ const messageToCommits = (
     .map((block, idx) => {
       const branch = getMessageBranch(message);
       const parents = getBlockParents(block, previousBlockId, message, toolCallIds, lastCommitByBranch);
+      if (skipBlocks?.includes(block._tag)) {
+        return null;
+      }
 
       const commit = createBlockCommit(block, message, branch, parents, idx);
       if (commit) {
@@ -311,14 +320,14 @@ const messageToCommits = (
 const getBlockParents = (
   block: ContentBlock.Any,
   previousBlockId: string | undefined,
-  message: DataType.Message,
+  message: Message.Message,
   toolCallIds?: Map<string, string>,
   lastCommitByBranch?: Map<string, string>,
 ): string[] => {
   const parents: string[] = [];
 
   if (block._tag === 'toolResult') {
-    // Tool results have two parents: previous block and last block from tool call branch
+    // Tool results have two parents: previous block and last block from tool call branch.
     if (previousBlockId) {
       parents.push(previousBlockId);
     }
@@ -355,7 +364,7 @@ const getBlockParents = (
  */
 const createBlockCommit = (
   block: ContentBlock.Any,
-  message: DataType.Message,
+  message: Message.Message,
   branch: string,
   parents: string[],
   idx: number,
@@ -472,14 +481,14 @@ const getBranchName = (options: { parentMessage?: ObjectId; toolCallId?: string 
   }
 };
 
-const getMessageBranch = (message: DataType.Message) => {
+const getMessageBranch = (message: Message.Message) => {
   return getBranchName({
     parentMessage: message.parentMessage,
     toolCallId: message.properties?.[MESSAGE_PROPERTY_TOOL_CALL_ID],
   });
 };
 
-const getParentId = (message: DataType.Message) => {
+const getParentId = (message: Message.Message) => {
   if (message.parentMessage && message.properties?.[MESSAGE_PROPERTY_TOOL_CALL_ID]) {
     return getToolCallId(message.parentMessage, message.properties[MESSAGE_PROPERTY_TOOL_CALL_ID]);
   } else {
@@ -487,7 +496,7 @@ const getParentId = (message: DataType.Message) => {
   }
 };
 
-const stringifyRef = (ref: Ref.Any) => {
+const stringifyRef = (ref: Ref.Unknown) => {
   if (ref.target) {
     return stringifyObject(ref.target);
   }
@@ -495,6 +504,6 @@ const stringifyRef = (ref: Ref.Any) => {
   return ref.dxn.asEchoDXN()?.echoId ?? ref.dxn.asQueueDXN()?.objectId ?? '';
 };
 
-const stringifyObject = (obj: Obj.Any) => {
+const stringifyObject = (obj: Obj.Unknown) => {
   return Obj.getLabel(obj) ?? Obj.getTypename(obj) ?? obj.id;
 };

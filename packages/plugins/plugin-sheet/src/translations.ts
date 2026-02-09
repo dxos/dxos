@@ -5,12 +5,12 @@
 import { type Resource } from '@dxos/react-ui';
 
 import { meta } from './meta';
-import { SheetType } from './types';
+import { Sheet } from './types';
 
 export const translations = [
   {
     'en-US': {
-      [SheetType.typename]: {
+      [Sheet.Sheet.typename]: {
         'typename label': 'Sheet',
         'typename label_zero': 'Sheets',
         'typename label_one': 'Sheet',
@@ -18,6 +18,7 @@ export const translations = [
         'object name placeholder': 'New sheet',
         'rename object label': 'Rename sheet',
         'delete object label': 'Delete sheet',
+        'object deleted label': 'Sheet deleted',
       },
       [meta.id]: {
         'plugin name': 'Sheets',

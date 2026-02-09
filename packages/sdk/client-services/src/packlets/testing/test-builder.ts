@@ -2,6 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
+import * as Reactivity from '@effect/experimental/Reactivity';
+import * as Layer from 'effect/Layer';
+import * as ManagedRuntime from 'effect/ManagedRuntime';
+
 import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { CredentialGenerator, createCredentialSignerWithChain } from '@dxos/credentials';
@@ -15,11 +19,13 @@ import { MemorySignalManager, MemorySignalManagerContext, type SignalManager } f
 import { MemoryTransportFactory, SwarmNetworkManager } from '@dxos/network-manager';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { type Storage, StorageType, createStorage } from '@dxos/random-access-storage';
+import { layerMemory as sqliteLayerMemory } from '@dxos/sql-sqlite/platform';
+import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 import { BlobStore } from '@dxos/teleport-extension-object-sync';
 
 import { InvitationsHandler, InvitationsManager, SpaceInvitationProtocol } from '../invitations';
-import { ClientServicesHost, ServiceContext, type ServiceContextRuntimeParams } from '../services';
-import { DataSpaceManager, type DataSpaceManagerRuntimeParams, type SigningContext } from '../spaces';
+import { ClientServicesHost, ServiceContext, type ServiceContextRuntimeProps } from '../services';
+import { DataSpaceManager, type DataSpaceManagerRuntimeProps, type SigningContext } from '../spaces';
 
 //
 // TODO(burdon): Replace with test builder.
@@ -30,6 +36,11 @@ export const createServiceHost = (config: Config, signalManagerContext: MemorySi
     config,
     signalManager: new MemorySignalManager(signalManagerContext),
     transportFactory: MemoryTransportFactory,
+    runtime: ManagedRuntime.make(
+      SqlTransaction.layer
+        .pipe(Layer.provideMerge(sqliteLayerMemory), Layer.provideMerge(Reactivity.layer))
+        .pipe(Layer.orDie),
+    ).runtimeEffect,
   });
 };
 
@@ -39,11 +50,11 @@ export const createServiceContext = async ({
     return new MemorySignalManager(signalContext);
   },
   storage = createStorage({ type: StorageType.RAM }),
-  runtimeParams,
+  runtimeProps,
 }: {
   signalManagerFactory?: () => Promise<SignalManager>;
   storage?: Storage;
-  runtimeParams?: ServiceContextRuntimeParams;
+  runtimeProps?: ServiceContextRuntimeProps;
 } = {}) => {
   const signalManager = await signalManagerFactory();
   const networkManager = new SwarmNetworkManager({
@@ -53,9 +64,15 @@ export const createServiceContext = async ({
   const level = createTestLevel();
   await level.open();
 
-  return new ServiceContext(storage, level, networkManager, signalManager, undefined, undefined, {
-    invitationConnectionDefaultParams: { teleport: { controlHeartbeatInterval: 200 } },
-    ...runtimeParams,
+  const runtime = ManagedRuntime.make(
+    SqlTransaction.layer
+      .pipe(Layer.provideMerge(sqliteLayerMemory), Layer.provideMerge(Reactivity.layer))
+      .pipe(Layer.orDie),
+  ).runtimeEffect;
+
+  return new ServiceContext(storage, level, networkManager, signalManager, undefined, undefined, runtime, {
+    invitationConnectionDefaultProps: { teleport: { controlHeartbeatInterval: 200 } },
+    ...runtimeProps,
   });
 };
 
@@ -95,7 +112,7 @@ export class TestBuilder {
 
 export type TestPeerOpts = {
   dataStore?: StorageType;
-  dataSpaceParams?: DataSpaceManagerRuntimeParams;
+  dataSpaceProps?: DataSpaceManagerRuntimeProps;
 };
 
 export type TestPeerProps = {
@@ -116,6 +133,11 @@ export type TestPeerProps = {
 
 export class TestPeer {
   private _props: TestPeerProps = {};
+  private readonly _runtime = ManagedRuntime.make(
+    SqlTransaction.layer
+      .pipe(Layer.provideMerge(sqliteLayerMemory), Layer.provideMerge(Reactivity.layer))
+      .pipe(Layer.orDie),
+  );
 
   constructor(
     private readonly _signalContext: MemorySignalManagerContext,
@@ -179,7 +201,10 @@ export class TestPeer {
   }
 
   get echoHost() {
-    return (this._props.echoHost ??= new EchoHost({ kv: this.level }));
+    return (this._props.echoHost ??= new EchoHost({
+      kv: this.level,
+      runtime: this._runtime.runtimeEffect,
+    }));
   }
 
   get meshEchoReplicator() {
@@ -198,7 +223,7 @@ export class TestPeer {
       edgeConnection: undefined,
       meshReplicator: this.meshEchoReplicator,
       echoEdgeReplicator: undefined,
-      runtimeParams: this._opts.dataSpaceParams,
+      runtimeProps: this._opts.dataSpaceProps,
     }));
   }
 
@@ -227,6 +252,7 @@ export class TestPeer {
   async destroy(): Promise<void> {
     await this.level.close();
     await this.storage.reset();
+    await this._runtime.dispose();
   }
 }
 

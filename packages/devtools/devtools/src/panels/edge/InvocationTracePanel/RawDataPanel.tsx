@@ -4,19 +4,17 @@
 
 import React, { type ComponentType, type FC, type JSX, useMemo } from 'react';
 
-import { type InvocationSpan, TraceEvent } from '@dxos/functions';
-import { Filter, type Queue, useQuery } from '@dxos/react-client/echo';
+import { type InvocationSpan } from '@dxos/functions-runtime';
+import { type TraceEvent } from '@dxos/functions-runtime';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { SyntaxHighlighter, createElement } from '@dxos/react-ui-syntax-highlighter';
 
 type RawDataPanelProps = {
   span: InvocationSpan;
-  queue?: Queue;
+  objects?: TraceEvent[];
 };
 
-export const RawDataPanel: FC<ThemedClassName<RawDataPanelProps>> = ({ classNames, span, queue }) => {
-  const objects = useQuery(queue, Filter.type(TraceEvent));
-
+export const RawDataPanel: FC<ThemedClassName<RawDataPanelProps>> = ({ classNames, span, objects }) => {
   const combinedData = useMemo(() => {
     return {
       span,

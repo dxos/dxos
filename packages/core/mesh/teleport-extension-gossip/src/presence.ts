@@ -14,7 +14,7 @@ import { ComplexMap } from '@dxos/util';
 
 import { type Gossip } from './gossip';
 
-export type PresenceParams = {
+export type PresenceProps = {
   /**
    * Interval between presence announces.
    */
@@ -50,7 +50,7 @@ export class Presence extends Resource {
 
   // remotePeerId -> PresenceExtension
 
-  constructor(private readonly _params: PresenceParams) {
+  constructor(private readonly _params: PresenceProps) {
     super();
     invariant(
       this._params.announceInterval < this._params.offlineTimeout,

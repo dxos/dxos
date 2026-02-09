@@ -2,8 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+import ChartStreaming from '@robloche/chartjs-plugin-streaming';
 import { Chart, registerables } from 'chart.js';
-import ChartStreaming from 'chartjs-plugin-streaming';
 import React, { createRef, useEffect, useState } from 'react';
 import 'chartjs-adapter-luxon';
 
@@ -124,7 +124,7 @@ export const TimeSeries = (props: CustomPanelProps<{}>) => {
 
   return (
     <Panel {...props} icon='ph--clock-countdown--regular' title='FPS' padding={false}>
-      <div className='relative w-full h-[160px]'>
+      <div className='relative is-full bs-[160px]'>
         <canvas ref={canvasRef} />
       </div>
     </Panel>

@@ -8,9 +8,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vite';
 
-import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
-
-import { createConfig as createTestConfig } from '../../../vitest.base.config';
+import { ThemePlugin } from '@dxos/ui-theme/plugin';
 
 const dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(fileURLToPath(import.meta.url));
 
@@ -33,7 +31,7 @@ export default defineConfig({
         '@dxos/client/mesh',
         '@dxos/client-protocol',
         '@dxos/client-services',
-        '@dxos/echo-schema',
+        '@dxos/echo/internal',
         '@dxos/echo-db',
         '@dxos/protocols',
         '@dxos/react-client',
@@ -52,11 +50,10 @@ export default defineConfig({
       content: [
         path.resolve(dirname, './src/**/*.{js,ts,jsx,tsx}'),
         path.resolve(dirname, './node_modules/@dxos/react-ui/dist/**/*.mjs'),
-        path.resolve(dirname, './node_modules/@dxos/react-ui-theme/dist/**/*.mjs'),
+        path.resolve(dirname, './node_modules/@dxos/ui-theme/dist/**/*.mjs'),
       ],
     }),
-    // https://github.com/preactjs/signals/issues/269
-    ReactPlugin({ jsxRuntime: 'classic' }),
+    ReactPlugin(),
     // https://www.bundle-buddy.com/rollup
     {
       name: 'bundle-buddy',
@@ -79,5 +76,4 @@ export default defineConfig({
       },
     },
   ],
-  ...createTestConfig({ dirname, node: true, storybook: true }),
 });

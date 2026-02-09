@@ -6,7 +6,7 @@
 
 import { spawnSync } from 'node:child_process';
 import { readdir, rm, stat } from 'node:fs/promises';
-import { dirname, join, resolve } from 'node:path';
+import { dirname, join, relative, resolve } from 'node:path';
 
 import ts from 'typescript';
 
@@ -82,7 +82,28 @@ const main = async () => {
 
   // Run tsc after cleaning.
   VERBOSE && console.log('Running tsc...');
-  const tsc = spawnSync(USE_TSGO ? 'tsgo' : 'tsc', [], { stdio: 'inherit' });
+  const tsc = spawnSync(USE_TSGO ? 'tsgo' : 'tsc', [], { encoding: 'utf-8' });
+
+  // Process output to prepend repo root to relative paths.
+  const cwd = process.cwd();
+  const relativePathRegex = /^([a-zA-Z0-9_\-./]+\.[a-zA-Z0-9]+)(\(\d+,\d+\):)/gm;
+
+  const gitRoot = spawnSync('git', ['rev-parse', '--show-toplevel'], { encoding: 'utf-8' }).stdout.trim();
+
+  if (tsc.stdout) {
+    const processedStdout = tsc.stdout.replace(relativePathRegex, (match, filePath, location) => {
+      return `${relative(gitRoot, resolve(cwd, filePath))}${location}`;
+    });
+    process.stdout.write(processedStdout);
+  }
+
+  if (tsc.stderr) {
+    const processedStderr = tsc.stderr.replace(relativePathRegex, (match, filePath, location) => {
+      return `${resolve(cwd, filePath)}${location}`;
+    });
+    process.stderr.write(processedStderr);
+  }
+
   VERBOSE && console.log(`tsc exited with status ${tsc.status}`);
   process.exit(tsc.status ?? 1);
 };

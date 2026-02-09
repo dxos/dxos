@@ -5,9 +5,9 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { IntentPlugin } from '@dxos/app-framework';
+import { OperationPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
+import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '../../translations';
@@ -15,7 +15,7 @@ import { translations } from '../../translations';
 import { SpaceSettingsContainer, type SpaceSettingsContainerProps } from './SpaceSettingsContainer';
 
 const Story = (props: Partial<SpaceSettingsContainerProps>) => {
-  const { space } = useClientProvider();
+  const { space } = useClientStory();
   return (
     <div role='none' className='p-2 border border-primary-500 rounded'>
       <SpaceSettingsContainer {...props} space={space!} />
@@ -31,7 +31,7 @@ const meta = {
     withTheme,
     withClientProvider({ createIdentity: true, createSpace: true }),
     // TODO(wittjosiah): Try to write story which does not depend on plugin manager.
-    withPluginManager({ plugins: [IntentPlugin()] }),
+    withPluginManager({ plugins: [OperationPlugin()] }),
   ],
   parameters: {
     translations,

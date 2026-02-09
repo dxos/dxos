@@ -2,14 +2,18 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type PluginMeta } from '@dxos/app-framework';
+import { type Plugin } from '@dxos/app-framework';
+import { trim } from '@dxos/util';
 
-export const meta: PluginMeta = {
+export const meta: Plugin.Meta = {
   id: 'dxos.org/plugin/meeting',
   name: 'Meetings',
-  description:
-    'The Meeting plugin integrates with the chat plugin to provide meetings notes, transcripts and summaries of calls. It depends on the Transcription plugin to provide realtime transcriptions and feed your meeting discussion to your LLM to provide nuanced context for automated workflows.',
+  description: trim`
+    Comprehensive meeting management tool that captures notes, generates real-time transcriptions, and creates AI-powered summaries.
+    Automatically organize meeting records with timestamps and action items.
+  `,
   icon: 'ph--note--regular',
+  iconHue: 'rose',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-meeting',
   tags: ['labs'],
   // TODO(wittjosiah): Needs new screenshots.

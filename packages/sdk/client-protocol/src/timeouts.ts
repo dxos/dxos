@@ -34,6 +34,11 @@ export const LOAD_PROPERTIES_TIMEOUT = 3_000;
 export const CREATE_SPACE_TIMEOUT = 5_000;
 
 /**
+ * Timeout for creating new spaces.
+ */
+export const IMPORT_SPACE_TIMEOUT = 30_000;
+
+/**
  * Timeout for loading of control feeds.
  */
 export const LOAD_CONTROL_FEEDS_TIMEOUT = 3_000;

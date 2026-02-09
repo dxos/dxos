@@ -1,7 +1,7 @@
 $schema: https://moonrepo.dev/schemas/tasks.json
 tasks:
   build:
-    command: tsc --noEmit
+    command: pnpm exec tsc --noEmit
     deps:
       - ^:build
       - ^:compile
@@ -11,3 +11,6 @@ tasks:
       - '@group(sources)'
     options:
       timeout: 60
+
+inheritedBy:
+  tags: typecheck

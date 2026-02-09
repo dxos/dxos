@@ -2,15 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Obj, type Relation } from '@dxos/echo';
-import { ObjectId } from '@dxos/echo-schema';
-import { compositeRuntime } from '@dxos/echo-signals/runtime';
+import { Event } from '@dxos/async';
+import { type Entity } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { DXN, SpaceId } from '@dxos/keys';
+import { DXN, ObjectId, SpaceId } from '@dxos/keys';
 
 import { type Queue } from './types';
 
-export type MemoryQueueOptions<T extends Obj.Any | Relation.Any> = {
+export type MemoryQueueOptions<T extends Entity.Unknown> = {
   spaceId?: SpaceId;
   queueId?: string;
   dxn?: DXN;
@@ -21,13 +20,8 @@ export type MemoryQueueOptions<T extends Obj.Any | Relation.Any> = {
  * In-memory queue.
  * @deprecated Use the actual queue with a mock service.
  */
-export class MemoryQueue<T extends Obj.Any | Relation.Any> implements Queue<T> {
-  static make<T extends Obj.Any | Relation.Any>({
-    spaceId,
-    queueId,
-    dxn,
-    objects,
-  }: MemoryQueueOptions<T>): MemoryQueue<T> {
+export class MemoryQueue<T extends Entity.Unknown> implements Queue<T> {
+  static make<T extends Entity.Unknown>({ spaceId, queueId, dxn, objects }: MemoryQueueOptions<T>): MemoryQueue<T> {
     if (!dxn) {
       dxn = new DXN(DXN.kind.QUEUE, [spaceId ?? SpaceId.random(), queueId ?? ObjectId.random()]);
     } else {
@@ -42,7 +36,7 @@ export class MemoryQueue<T extends Obj.Any | Relation.Any> implements Queue<T> {
     return queue;
   }
 
-  private readonly _signal = compositeRuntime.createSignal();
+  public readonly updated = new Event();
 
   private _objects: T[] = [];
 
@@ -59,6 +53,10 @@ export class MemoryQueue<T extends Obj.Any | Relation.Any> implements Queue<T> {
     return this._dxn;
   }
 
+  subscribe(callback: () => void): () => void {
+    return this.updated.on(callback);
+  }
+
   get isLoading(): boolean {
     return false;
   }
@@ -68,7 +66,6 @@ export class MemoryQueue<T extends Obj.Any | Relation.Any> implements Queue<T> {
   }
 
   get objects(): T[] {
-    this._signal.notifyRead();
     return [...this._objects];
   }
 
@@ -81,7 +78,7 @@ export class MemoryQueue<T extends Obj.Any | Relation.Any> implements Queue<T> {
    */
   async append(objects: T[]): Promise<void> {
     this._objects = [...this._objects, ...objects];
-    this._signal.notifyWrite();
+    this.updated.emit();
   }
 
   async queryObjects(): Promise<T[]> {
@@ -95,7 +92,7 @@ export class MemoryQueue<T extends Obj.Any | Relation.Any> implements Queue<T> {
   async delete(ids: ObjectId[]): Promise<void> {
     // TODO(dmaretskyi): Restrict types.
     this._objects = this._objects.filter((object) => !ids.includes(object.id));
-    this._signal.notifyWrite();
+    this.updated.emit();
   }
 
   async refresh(): Promise<void> {

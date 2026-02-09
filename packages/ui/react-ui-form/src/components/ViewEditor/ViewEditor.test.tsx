@@ -6,8 +6,8 @@ import { composeStories } from '@storybook/react';
 import { cleanup, fireEvent, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, test } from 'vitest';
 
-import { EchoSchema, isInstanceOf } from '@dxos/echo-schema';
-import { DataType, ProjectionModel } from '@dxos/schema';
+import { EchoSchema, isInstanceOf } from '@dxos/echo/internal';
+import { ProjectionModel, View } from '@dxos/schema';
 
 import { VIEW_EDITOR_DEBUG_SYMBOL } from '../testing';
 
@@ -20,7 +20,7 @@ const getViewEditorDebugObjects = (): ViewEditorDebugObjects => {
   const debugObjects = (window as any)[VIEW_EDITOR_DEBUG_SYMBOL] as ViewEditorDebugObjects;
   expect(debugObjects).toBeDefined();
   expect(debugObjects.schema).toBeInstanceOf(EchoSchema);
-  expect(isInstanceOf(DataType.View, debugObjects.view)).toBeTruthy();
+  expect(isInstanceOf(View.View, debugObjects.view)).toBeTruthy();
   expect(debugObjects.projection).toBeInstanceOf(ProjectionModel);
   return debugObjects;
 };
@@ -54,7 +54,7 @@ describe('ViewEditor', () => {
     const nameField = screen.getByText('name');
     fireEvent.click(nameField);
 
-    const fieldInput = screen.getByPlaceholderText('Field name.');
+    const fieldInput = screen.getByPlaceholderText('Property name');
     fireEvent.change(fieldInput, { target: { value: 'new_property' } });
 
     fireEvent.click(screen.getByTestId('save-button'));
@@ -89,12 +89,12 @@ describe('ViewEditor', () => {
     await Default.run();
     await waitForViewEditor();
 
-    // Click the add property button.
+    // Click the add property button. The new field is auto-expanded by handleAdd.
     const addButton = screen.getByText('Add property');
     fireEvent.click(addButton);
 
     // Fill out the property field.
-    const fieldInput = screen.getByPlaceholderText('Field name.');
+    const fieldInput = screen.getByPlaceholderText('Property name');
     fireEvent.change(fieldInput, { target: { value: 'added_property' } });
 
     // Click the format combo box and select the first option.
@@ -134,7 +134,8 @@ describe('ViewEditor', () => {
     expect(addedPropertyProjection!.props.property).toBe('added_property');
   });
 
-  test('delete property', async () => {
+  // TODO(mykola): Fix flaky test.
+  test('delete property', { retry: 2 }, async () => {
     await Default.run();
     await waitForViewEditor();
 

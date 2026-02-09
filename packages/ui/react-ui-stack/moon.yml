@@ -1,4 +1,4 @@
-type: library
+layer: library
 language: typescript
 tags:
   - e2e
@@ -11,8 +11,10 @@ tasks:
     args:
       - '--entryPoint=src/index.ts'
       - '--entryPoint=src/playwright/index.ts'
-      - '--entryPoint=src/testing/index.ts'
-      - '--preactSignalTracking'
+  e2e:
+    inputs:
+      - /tools/storybook-react/.storybook/main.ts
   test:
     inputs:
       - .storybook/*
+      - /tools/storybook-react/.storybook/main.ts

@@ -2,50 +2,66 @@
 // Copyright 2025 DXOS.org
 //
 
-import React from 'react';
+import React, { forwardRef } from 'react';
 
-import { Capabilities, useCapability } from '@dxos/app-framework';
-import { getSpace } from '@dxos/client/echo';
+import { type SurfaceComponentProps, useAtomCapability } from '@dxos/app-framework/react';
+import { type Space, getSpace } from '@dxos/client/echo';
 import { type Obj } from '@dxos/echo';
-import { StackItem } from '@dxos/react-ui-stack';
+import { Layout } from '@dxos/react-ui-mosaic';
 
 import { useBlueprintRegistry, useChatProcessor, useChatServices, useOnline, usePresets } from '../hooks';
-import { meta } from '../meta';
-import { type Assistant } from '../types';
+import { AssistantCapabilities, type ChatType } from '../types';
 
-import { Chat } from './Chat';
-import { Toolbar } from './Toolbar';
+import { Chat as ChatComponent, type ChatRootProps } from './Chat';
 
-export type ChatContainerProps = {
-  chat: Assistant.Chat;
-  companionTo?: Obj.Any;
-  role?: string;
-};
+export type ChatContainerProps = SurfaceComponentProps<
+  ChatType.Chat | undefined,
+  {
+    space?: Space;
+    companionTo?: Obj.Unknown;
+  } & Pick<ChatRootProps, 'onEvent'>
+>;
 
-export const ChatContainer = ({ chat, companionTo }: ChatContainerProps) => {
-  const space = getSpace(chat);
-  const settings = useCapability(Capabilities.SettingsStore).getStore<Assistant.Settings>(meta.id)?.value;
-  const services = useChatServices({ space, chat });
+export const ChatContainer = forwardRef<HTMLDivElement, ChatContainerProps>((props, forwardedRef) => {
+  const { role, subject: chat, space: spaceProp, companionTo, onEvent } = props;
+  const space = spaceProp ?? getSpace(chat);
+  const settings = useAtomCapability(AssistantCapabilities.Settings);
+  const services = useChatServices({ id: space?.id, chat });
   const [online, setOnline] = useOnline();
   const { preset, ...chatProps } = usePresets(online);
   const blueprintRegistry = useBlueprintRegistry();
-  const processor = useChatProcessor({ chat, preset, services, blueprintRegistry, settings });
+  const processor = useChatProcessor({
+    space,
+    chat,
+    preset,
+    services,
+    blueprintRegistry,
+    settings,
+  });
 
   if (!processor) {
     return null;
   }
 
   return (
-    <StackItem.Content classNames='container-max-width' toolbar={!!companionTo}>
-      {!!companionTo && <Toolbar chat={chat} companionTo={companionTo} />}
-      <Chat.Root chat={chat} processor={processor}>
-        <Chat.Thread />
-        <div className='p-2'>
-          <Chat.Prompt {...chatProps} outline preset={preset?.id} online={online} onOnlineChange={setOnline} />
-        </div>
-      </Chat.Root>
-    </StackItem.Content>
+    <Layout.Main toolbar role={role} ref={forwardedRef}>
+      <ChatComponent.Root db={space?.db} chat={chat} processor={processor} onEvent={onEvent}>
+        <ChatComponent.Toolbar companionTo={companionTo} />
+        <ChatComponent.Viewport classNames='container-max-width'>
+          <ChatComponent.Thread />
+          <div role='none' className='p-4'>
+            <ChatComponent.Prompt
+              {...chatProps}
+              outline
+              preset={preset?.id}
+              online={online}
+              onOnlineChange={setOnline}
+            />
+          </div>
+        </ChatComponent.Viewport>
+      </ChatComponent.Root>
+    </Layout.Main>
   );
-};
+});
 
 export default ChatContainer;

@@ -4,25 +4,23 @@
 
 import React, { useCallback, useMemo, useState } from 'react';
 
+import { type SurfaceComponentProps } from '@dxos/app-framework/react';
 import { type Filter } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { useGlobalSearch } from '@dxos/plugin-search';
 import { getSpace } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
 import { QueryEditor, type QueryEditorProps } from '@dxos/react-ui-components';
-import { StackItem } from '@dxos/react-ui-stack';
+import { Layout } from '@dxos/react-ui-mosaic';
+import { type View } from '@dxos/schema';
 
 import { useGraphModel } from '../hooks';
-import { type ViewType } from '../types';
 
 import { D3ForceGraph } from './Graph';
 
-type ExplorerContainerProps = {
-  role: string;
-  view: ViewType;
-};
+export type ExplorerContainerProps = SurfaceComponentProps<View.View>;
 
-const ExplorerContainer = ({ role, view }: ExplorerContainerProps) => {
+const ExplorerContainer = ({ role, subject: view }: ExplorerContainerProps) => {
   const space = getSpace(view);
   const [filter, setFilter] = useState<Filter.Any>();
   const model = useGraphModel(space, filter);
@@ -30,20 +28,24 @@ const ExplorerContainer = ({ role, view }: ExplorerContainerProps) => {
 
   const builder = useMemo(() => new QueryBuilder(), []);
   const handleChange = useCallback<NonNullable<QueryEditorProps['onChange']>>((value) => {
-    setFilter(builder.build(value));
+    setFilter(builder.build(value).filter);
   }, []);
+
+  const showToolbar = role === 'article';
 
   if (!space || !model) {
     return null;
   }
 
   return (
-    <StackItem.Content toolbar size={role === 'section' ? 'square' : 'intrinsic'}>
-      <Toolbar.Root>
-        <QueryEditor space={space} onChange={handleChange} />
-      </Toolbar.Root>
+    <Layout.Main role={role} toolbar={showToolbar}>
+      {showToolbar && (
+        <Toolbar.Root>
+          <QueryEditor db={space.db} onChange={handleChange} />
+        </Toolbar.Root>
+      )}
       <D3ForceGraph model={model} match={match} />
-    </StackItem.Content>
+    </Layout.Main>
   );
 };
 

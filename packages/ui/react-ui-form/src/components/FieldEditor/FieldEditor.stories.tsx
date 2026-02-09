@@ -5,14 +5,15 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useMemo } from 'react';
 
-import { createEchoSchema } from '@dxos/live-object/testing';
+import { Filter, Query } from '@dxos/echo';
+import { createEchoSchema } from '@dxos/echo/testing';
 import { log } from '@dxos/log';
 import { withTheme } from '@dxos/react-ui/testing';
-import { ProjectionModel } from '@dxos/schema';
-import { TestSchema, testView } from '@dxos/schema/testing';
+import { ProjectionModel, View, createEchoChangeCallback } from '@dxos/schema';
+import { Example } from '@dxos/schema/testing';
 
 import { translations } from '../../translations';
-import { FIELD_EDITOR_DEBUG_SYMBOL, TestLayout, TestPanel } from '../testing';
+import { FIELD_EDITOR_DEBUG_SYMBOL, TestLayout } from '../testing';
 
 import { FieldEditor, type FieldEditorProps } from './FieldEditor';
 
@@ -22,34 +23,57 @@ export type FieldEditorDebugObjects = {
   projection: ProjectionModel;
 };
 
-const DefaultStory = (props: FieldEditorProps) => {
+// TODO(wittjosiah): ECHO objects don't work when passed via Storybook args.
+const useTestProjection = () => {
+  return useMemo(() => {
+    const schema = createEchoSchema(Example);
+    const view = View.make({
+      name: 'Test',
+      query: Query.select(Filter.type(Example)),
+      jsonSchema: schema.jsonSchema,
+    });
+    const projection = new ProjectionModel({
+      view,
+      baseSchema: schema.jsonSchema,
+      change: createEchoChangeCallback(view, schema),
+    });
+    projection.normalizeView();
+    return { view, projection };
+  }, []);
+};
+
+const DefaultStory = () => {
+  const { view, projection } = useTestProjection();
+
   const handleComplete: FieldEditorProps['onSave'] = () => {
-    log.info('onClose', { props });
+    log.info('onClose');
+  };
+
+  const props: FieldEditorProps = {
+    projection,
+    field: view.projection.fields[0],
+    onSave: handleComplete,
   };
 
   // Expose objects on window for test access.
   useEffect(() => {
-    props.projection.normalizeView();
-
     if (typeof window !== 'undefined') {
       (window as any)[FIELD_EDITOR_DEBUG_SYMBOL] = {
         props,
-        projection: props.projection,
+        projection,
       } satisfies FieldEditorDebugObjects;
     }
-  }, [props, props.projection]);
+  }, [props, projection]);
 
   // NOTE(ZaymonFC): This looks awkward but it resolves an infinite parsing issue with sb.
   const json = useMemo(
-    () => JSON.parse(JSON.stringify({ props, projection: props.projection })),
-    [JSON.stringify(props), JSON.stringify(props.projection)],
+    () => JSON.parse(JSON.stringify({ props, projection })),
+    [JSON.stringify(props), JSON.stringify(projection)],
   );
 
   return (
     <TestLayout json={json}>
-      <TestPanel>
-        <FieldEditor {...props} onSave={handleComplete} />
-      </TestPanel>
+      <FieldEditor {...props} />
     </TestLayout>
   );
 };
@@ -62,6 +86,9 @@ const meta = {
   parameters: {
     layout: 'fullscreen',
     translations,
+    controls: {
+      disabled: true,
+    },
   },
 } satisfies Meta<typeof DefaultStory>;
 
@@ -69,10 +96,4 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {
-  args: {
-    projection: new ProjectionModel(createEchoSchema(TestSchema).jsonSchema, testView.projection),
-    field: testView.projection.fields[0],
-  },
-  parameters: { controls: { disabled: true } },
-};
+export const Default: Story = {};

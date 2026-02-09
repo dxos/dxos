@@ -1,0 +1,12 @@
+diff --git a/dist/helpers/throttle.js b/dist/helpers/throttle.js
+index 9e06173daa321bf64c979d9e60477b633008447d..856722d77d7301c247192f146a1fac898711833c 100644
+--- a/dist/helpers/throttle.js
++++ b/dist/helpers/throttle.js
+@@ -32,6 +32,6 @@ export const throttle = (fn, delay) => {
+         timeout = setTimeout(() => {
+             fn(...args);
+             lastCall = Date.now();
+-        }, wait);
++        }, Math.max(0, wait));
+     };
+ };

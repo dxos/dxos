@@ -26,6 +26,12 @@ export type GlobeContextType = {
   setRotation: Dispatch<SetStateAction<Vector>>;
 };
 
+const defaults = {
+  center: { lat: 51, lng: 0 } as LatLngLiteral,
+  zoom: 4,
+} as const;
+
+// TODO(burdon): Replace with radix.
 const GlobeContext = createContext<GlobeContextType>(undefined);
 
 export type GlobeContextProviderProps = PropsWithChildren<
@@ -35,15 +41,15 @@ export type GlobeContextProviderProps = PropsWithChildren<
 export const GlobeContextProvider = ({
   children,
   size,
-  center: _center,
-  zoom: _zoom,
-  translation: _translation,
-  rotation: _rotation,
+  center: centerProp = defaults.center,
+  zoom: zoomProp = defaults.zoom,
+  translation: translationProp,
+  rotation: rotationProp,
 }: GlobeContextProviderProps) => {
-  const [center, setCenter] = useControlledState(_center);
-  const [zoom, setZoom] = useControlledState(_zoom);
-  const [translation, setTranslation] = useControlledState<Point>(_translation);
-  const [rotation, setRotation] = useControlledState<Vector>(_rotation);
+  const [center, setCenter] = useControlledState(centerProp);
+  const [zoom, setZoom] = useControlledState(zoomProp);
+  const [translation, setTranslation] = useControlledState<Point>(translationProp);
+  const [rotation, setRotation] = useControlledState<Vector>(rotationProp);
 
   return (
     <GlobeContext.Provider

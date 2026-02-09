@@ -1,0 +1,37 @@
+layer: library
+language: typescript
+tags:
+  - ts-build
+  - ts-test
+  - pack
+  - storybook
+tasks:
+  compile:
+    args:
+      - '--entryPoint=src/index.ts'
+    deps:
+      - compile-node
+  compile-node:
+    command: pnpm exec dx-compile
+    args:
+      - '--entryPoint=src/config/tailwind.ts'
+      - '--entryPoint=src/plugins/esbuild-plugin.ts'
+      - '--entryPoint=src/plugins/plugin.ts'
+      - '--entryPoint=src/theme.css'
+      - '--outputPath=dist/plugin'
+      - '--moduleFormat=cjs'
+      - '--moduleFormat=esm'
+      - '--platform=node'
+    deps:
+      - ^:compile
+      - dx-compile:compile
+    options:
+      mergeArgs: replace
+    outputs:
+      - dist/plugin/
+  test:
+    deps:
+      - compile-node
+    inputs:
+      - .storybook/*
+      - /tools/storybook-react/.storybook/main.ts

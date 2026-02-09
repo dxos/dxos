@@ -2,14 +2,18 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type PluginMeta } from '@dxos/app-framework';
+import { type Plugin } from '@dxos/app-framework';
+import { trim } from '@dxos/util';
 
-export const meta: PluginMeta = {
+export const meta: Plugin.Meta = {
   id: 'dxos.org/plugin/conductor',
   name: 'Conductor',
-  description:
-    'Conductor allows you to build a node based compute graph that can handle complex workflows inside of Composer. Leverage your collaborative data along with custom scripts to orchestrate agentic workflows that operate in the background.',
+  description: trim`
+    Visual workflow builder using node-based compute graphs to orchestrate complex AI agent pipelines.
+    Connect data sources, transformations, and AI models in a drag-and-drop interface for advanced automation.
+  `,
   icon: 'ph--infinity--regular',
+  iconHue: 'sky',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-conductor',
   tags: ['labs'],
   screenshots: ['https://dxos.network/plugin-details-canvas-dark.png'],

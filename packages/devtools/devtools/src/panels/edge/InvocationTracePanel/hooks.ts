@@ -4,25 +4,21 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Obj } from '@dxos/echo';
-import {
-  FunctionType,
-  InvocationOutcome,
-  type InvocationTraceEvent,
-  ScriptType,
-  createInvocationSpans,
-  getUserFunctionIdInMetadata,
-} from '@dxos/functions';
+import { type Database, Filter, Obj } from '@dxos/echo';
+import { Function, Script, getUserFunctionIdInMetadata } from '@dxos/functions';
+import { InvocationOutcome } from '@dxos/functions-runtime';
+import { type InvocationTraceEvent } from '@dxos/functions-runtime';
+import { createInvocationSpans } from '@dxos/functions-runtime';
 import { type DXN } from '@dxos/keys';
-import { Filter, type Space, getSpace, useQuery, useQueue } from '@dxos/react-client/echo';
+import { useQuery, useQueue } from '@dxos/react-client/echo';
 
 import { getUuidFromDxn } from './utils';
 
 /**
  * Maps invocation target identifiers to readable script names.
  */
-export const useFunctionNameResolver = ({ space }: { space?: Space }) => {
-  const functions = useQuery(space, Filter.type(FunctionType));
+export const useFunctionNameResolver = ({ db }: { db?: Database.Database }) => {
+  const functions = useQuery(db, Filter.type(Function.Function));
 
   return useCallback(
     (invocationTargetId: DXN | undefined) => {
@@ -38,12 +34,12 @@ export const useFunctionNameResolver = ({ space }: { space?: Space }) => {
   );
 };
 
-export const useInvocationTargetsForScript = (target: Obj.Any | undefined) => {
-  const space = Obj.instanceOf(ScriptType, target) ? getSpace(target) : undefined;
-  const functions = useQuery(space, Filter.type(FunctionType));
+export const useInvocationTargetsForScript = (target: Obj.Unknown | undefined) => {
+  const db = Obj.instanceOf(Script.Script, target) ? Obj.getDatabase(target) : undefined;
+  const functions = useQuery(db, Filter.type(Function.Function));
 
   return useMemo(() => {
-    if (!Obj.instanceOf(ScriptType, target)) {
+    if (!Obj.instanceOf(Script.Script, target)) {
       return undefined;
     }
 
@@ -55,9 +51,9 @@ export const useInvocationTargetsForScript = (target: Obj.Any | undefined) => {
   }, [functions, target]);
 };
 
-export const useInvocationSpans = ({ space, target }: { space?: Space; target?: Obj.Any }) => {
+export const useInvocationSpans = ({ queueDxn, target }: { queueDxn?: DXN; target?: Obj.Unknown }) => {
   const functionsForScript = useInvocationTargetsForScript(target);
-  const invocationsQueue = useQueue<InvocationTraceEvent>(space?.properties.invocationTraceQueue?.dxn, {
+  const invocationsQueue = useQueue<InvocationTraceEvent>(queueDxn, {
     pollInterval: 1000,
   });
   const invocationSpans = useMemo(() => createInvocationSpans(invocationsQueue?.objects), [invocationsQueue?.objects]);

@@ -4,7 +4,7 @@
 
 import { type Resource } from '@dxos/react-ui';
 
-export const translationKey = 'react-ui-table';
+export const translationKey = '@dxos/react-ui-table';
 
 export const translations = [
   {
@@ -14,8 +14,8 @@ export const translations = [
         'create object label': 'Create table',
         'table name placeholder': 'Table name',
         'settings title': 'Table settings',
-        'table schema label': 'Record type',
-        'new schema': 'New record type',
+        'table schema label': 'Type',
+        'new schema': 'New type',
         'continue label': 'Continue',
         'create stack section label': 'Create table',
         'add row label': 'Add row',

@@ -8,12 +8,14 @@ import { Trigger } from '@dxos/async';
 import { type Space } from '@dxos/client-protocol';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
+import { Obj } from '@dxos/echo';
+import { TestSchema } from '@dxos/echo/testing';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
 
 import { type Client } from '../client';
-import { Expando, SpaceState, live } from '../echo';
+import { SpaceState } from '../echo';
 import { createInitializedClientsWithContext, performInvitation, waitForSpace } from '../testing';
 
 describe('Lazy Space Loading', () => {
@@ -100,11 +102,12 @@ describe('Lazy Space Loading', () => {
 
   test('replication starts after space gets opened', async () => {
     const [host, guest] = await createInitializedClients(2, { fastPresence: true });
+    await Promise.all([host, guest].map((c) => c.addTypes([TestSchema.Expando])));
     const createdSpace = await host.spaces.create();
     const guestSpace = await inviteMember(createdSpace, guest);
 
     await reload(host);
-    const guestObject = guestSpace.db.add(live(Expando, {}));
+    const guestObject = guestSpace.db.add(Obj.make(TestSchema.Expando, {}));
 
     const hostSpace = findClientSpace(host, createdSpace);
     await openAndWaitReady(hostSpace);
@@ -112,7 +115,9 @@ describe('Lazy Space Loading', () => {
 
     await expect.poll(() => hostSpace.db.getObjectById(guestObject.id)).not.toEqual(undefined);
 
-    guestObject.content = 'foo';
+    Obj.change(guestObject, (o) => {
+      o.content = 'foo';
+    });
 
     await expect.poll(() => hostSpace.db.getObjectById(guestObject.id)?.content).toEqual(guestObject.content);
   });

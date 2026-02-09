@@ -4,9 +4,10 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
+import { expect, within } from 'storybook/test';
 
 import { log } from '@dxos/log';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { render } from '@dxos/storybook-utils';
 
@@ -41,6 +42,7 @@ const meta = {
   title: 'sdk/react-client/withClientProvider',
   render: render(DefaultStory),
   decorators: [withTheme],
+  tags: ['test'],
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;
@@ -63,14 +65,17 @@ export const Default: Story = {
   parameters: {
     layout: 'centered',
   },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const initializedText = await canvas.findByText(/"initialized": true/i, {}, { timeout: 30_000 });
+    await expect(initializedText).toBeVisible();
+  },
 };
 
 export const Multiple: Story = {
-  decorators: [withMultiClientProvider({ ...clientProps, numClients: 3 })],
-  parameters: {
-    layout: {
-      type: 'fullscreen',
-      className: 'grid grid-cols-3',
-    },
-  },
+  decorators: [
+    withTheme,
+    withLayout({ classNames: 'grid grid-cols-3' }),
+    withMultiClientProvider({ ...clientProps, numClients: 3 }),
+  ],
 };

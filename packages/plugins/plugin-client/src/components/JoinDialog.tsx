@@ -4,42 +4,40 @@
 
 import React, { useCallback } from 'react';
 
-import { LayoutAction, createIntent, useIntentDispatcher } from '@dxos/app-framework';
-import { ObservabilityAction } from '@dxos/plugin-observability/types';
+import { Common } from '@dxos/app-framework';
+import { useOperationInvoker } from '@dxos/app-framework/react';
+import { ObservabilityOperation } from '@dxos/plugin-observability/types';
 import { type InvitationResult } from '@dxos/react-client/invitations';
 import { Dialog, useTranslation } from '@dxos/react-ui';
 import { JoinPanel, type JoinPanelProps } from '@dxos/shell/react';
+import { osTranslations } from '@dxos/ui-theme';
 
 import { meta } from '../meta';
-import { ClientAction } from '../types';
-
-export const JOIN_DIALOG = `${meta.id}/JoinDialog`;
+import { ClientOperation } from '../types';
 
 export const JoinDialog = (props: JoinPanelProps) => {
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const { invokePromise } = useOperationInvoker();
   const { t } = useTranslation(meta.id);
 
-  const handleCancelResetStorage = useCallback(() => dispatch(createIntent(ClientAction.ShareIdentity)), [dispatch]);
+  const handleCancelResetStorage = useCallback(() => invokePromise(ClientOperation.ShareIdentity), [invokePromise]);
 
   const handleDone = useCallback(
     async (result: InvitationResult | null) => {
       if (result?.identityKey) {
         await Promise.all([
-          dispatch(createIntent(LayoutAction.UpdateDialog, { part: 'dialog', options: { state: false } })),
-          dispatch(
-            createIntent(ObservabilityAction.SendEvent, {
-              name: props.initialDisposition === 'recover-identity' ? 'identity.recover' : 'identity.join',
-            }),
-          ),
+          invokePromise(Common.LayoutOperation.UpdateDialog, { state: false }),
+          invokePromise(ObservabilityOperation.SendEvent, {
+            name: props.initialDisposition === 'recover-identity' ? 'identity.recover' : 'identity.join',
+          }),
         ]);
       }
     },
-    [dispatch],
+    [invokePromise],
   );
 
   return (
     <Dialog.Content>
-      <Dialog.Title classNames='sr-only'>{t('join space label', { ns: 'os' })}</Dialog.Title>
+      <Dialog.Title classNames='sr-only'>{t('join space label', { ns: osTranslations })}</Dialog.Title>
       <JoinPanel
         mode='halo-only'
         {...props}

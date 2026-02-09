@@ -4,8 +4,8 @@
 
 import { EditorState, type EditorStateConfig, type Text } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
-import { type TabsterTypes, useFocusableGroup } from '@fluentui/react-tabster';
 import {
+  type ComponentPropsWithoutRef,
   type DependencyList,
   type KeyboardEventHandler,
   type RefObject,
@@ -17,10 +17,14 @@ import {
 } from 'react';
 
 import { log } from '@dxos/log';
+import {
+  type EditorSelection,
+  createEditorStateTransaction,
+  debugDispatcher,
+  documentId,
+  modalStateField,
+} from '@dxos/ui-editor';
 import { type MaybeProvider, getProviderValue, isTruthy } from '@dxos/util';
-
-import { type EditorSelection, createEditorStateTransaction, documentId, editorInputMode } from '../extensions';
-import { debugDispatcher } from '../util';
 
 let instanceCount = 0;
 
@@ -34,13 +38,9 @@ export type CursorInfo = {
 };
 
 export type UseTextEditor = {
-  // TODO(burdon): Rename.
   parentRef: RefObject<HTMLDivElement | null>;
   view: EditorView | null;
-  focusAttributes?: TabsterTypes.TabsterDOMAttribute & {
-    tabIndex: 0;
-    onKeyUp: KeyboardEventHandler<HTMLDivElement>;
-  };
+  focusAttributes?: ComponentPropsWithoutRef<'div'>;
 };
 
 export type UseTextEditorProps = Pick<EditorStateConfig, 'extensions'> & {
@@ -50,7 +50,7 @@ export type UseTextEditorProps = Pick<EditorStateConfig, 'extensions'> & {
   autoFocus?: boolean;
   scrollTo?: number;
   selection?: EditorSelection;
-  moveToEndOfLine?: boolean;
+  selectionEnd?: boolean;
   debug?: boolean;
 };
 
@@ -61,7 +61,7 @@ export const useTextEditor = (
   props: MaybeProvider<UseTextEditorProps> = {},
   deps: DependencyList = [],
 ): UseTextEditor => {
-  const { id, doc, initialValue, extensions, autoFocus, scrollTo, selection, moveToEndOfLine, debug } =
+  const { id, doc, initialValue, extensions, autoFocus, scrollTo, selection, selectionEnd, debug } =
     useMemo<UseTextEditorProps>(() => getProviderValue(props), deps ?? []);
 
   // NOTE: Increments by 2 in strict mode.
@@ -79,7 +79,7 @@ export const useTextEditor = (
         if (selection.anchor <= initialValue.length && (selection?.head ?? 0) <= initialValue.length) {
           initialSelection = selection;
         }
-      } else if (moveToEndOfLine && selection === undefined) {
+      } else if (selectionEnd && selection === undefined) {
         const index = initialValue?.indexOf('\n');
         const anchor = !index || index === -1 ? 0 : index;
         initialSelection = { anchor };
@@ -108,7 +108,7 @@ export const useTextEditor = (
       });
 
       // Move to end of line after document loaded (unless selection is specified).
-      if (moveToEndOfLine && !initialSelection) {
+      if (selectionEnd && !initialSelection) {
         const { to } = view.state.doc.lineAt(0);
         if (to) {
           view.dispatch({ selection: { anchor: to } });
@@ -143,23 +143,30 @@ export const useTextEditor = (
     }
   }, [autoFocus, view]);
 
-  const focusableGroupAttrs = useFocusableGroup({
-    tabBehavior: 'limited',
-    ignoreDefaultKeydown: {
-      Escape: view?.state.facet(editorInputMode).noTabster,
-    },
-  });
-
   // Focus editor on Enter (e.g., when tabbing to this component).
-  const handleKeyUp = useCallback<KeyboardEventHandler<HTMLDivElement>>(
+  const handleKeyDown = useCallback<KeyboardEventHandler<HTMLDivElement>>(
     (event) => {
       const { key, target, currentTarget } = event;
-      if (target === currentTarget) {
-        switch (key) {
-          case 'Enter': {
-            view?.focus();
-            break;
+      switch (key) {
+        case 'Escape': {
+          // Check if popover is open.
+          const modal = view?.state.field(modalStateField, false);
+          if (modal) {
+            return;
           }
+
+          // Focus the closest focusable parent.
+          const element = view?.contentDOM.closest('[tabindex="0"]') as HTMLDivElement | null;
+          element?.focus();
+          break;
+        }
+
+        case 'Enter': {
+          event.preventDefault();
+          if (target === currentTarget) {
+            view?.focus();
+          }
+          break;
         }
       }
     },
@@ -171,8 +178,7 @@ export const useTextEditor = (
     view,
     focusAttributes: {
       tabIndex: 0 as const,
-      ...focusableGroupAttrs,
-      onKeyUp: handleKeyUp,
+      onKeyDown: handleKeyDown,
     },
   };
 };

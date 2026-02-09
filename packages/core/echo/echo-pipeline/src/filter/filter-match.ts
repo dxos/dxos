@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { ObjectStructure, type QueryAST, decodeReference, isEncodedReference } from '@dxos/echo-protocol';
-import { ATTR_META, EXPANDO_TYPENAME, type ObjectJSON } from '@dxos/echo-schema';
+import { ATTR_META, type ObjectJSON } from '@dxos/echo/internal';
+import { EncodedReference, ObjectStructure, type QueryAST, isEncodedReference } from '@dxos/echo-protocol';
 import { DXN, type ObjectId, type SpaceId } from '@dxos/keys';
 
 export type MatchedObject = {
@@ -23,11 +23,8 @@ export const filterMatchObject = (filter: QueryAST.Filter, obj: MatchedObject): 
       if (filter.typename !== null) {
         // TODO(dmaretskyi): `system` is missing in some cases.
         if (!obj.doc.system?.type?.['/']) {
-          // Objects with no type are considered to be expando objects.
-          const expectedDXN = DXN.parse(filter.typename).asTypeDXN();
-          if (expectedDXN?.type !== EXPANDO_TYPENAME) {
-            return false;
-          }
+          // Objects with no type are deprecated.
+          return false;
         } else {
           const actualDXN = DXN.parse(obj.doc.system.type['/']);
           const expectedDXN = DXN.parse(filter.typename);
@@ -100,11 +97,8 @@ export const filterMatchObjectJSON = (filter: QueryAST.Filter, obj: ObjectJSON):
       if (filter.typename !== null) {
         // TODO(dmaretskyi): `system` is missing in some cases.
         if (!obj['@type']) {
-          // Objects with no type are considered to be expando objects
-          const expectedDXN = DXN.parse(filter.typename).asTypeDXN();
-          if (expectedDXN?.type !== EXPANDO_TYPENAME) {
-            return false;
-          }
+          // Objects with no type are deprecated.
+          return false;
         } else {
           const actualDXN = DXN.parse(obj['@type']);
           const expectedDXN = DXN.parse(filter.typename);
@@ -151,8 +145,8 @@ export const filterMatchObjectJSON = (filter: QueryAST.Filter, obj: ObjectJSON):
       return tags.some((tag) => tag === filter.tag);
     }
 
+    // TODO: Implement text search.
     case 'text-search': {
-      // TODO: Implement text search
       return false;
     }
 
@@ -219,7 +213,7 @@ export const filterMatchValue = (filter: QueryAST.Filter, value: unknown): boole
             if (!isEncodedReference(value)) {
               return false;
             }
-            return DXN.equals(decodeReference(value).toDXN(), decodeReference(compareValue).toDXN());
+            return DXN.equals(EncodedReference.toDXN(value), EncodedReference.toDXN(compareValue));
           }
           return value === compareValue;
         case 'neq':

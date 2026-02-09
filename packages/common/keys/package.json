@@ -4,6 +4,10 @@
   "description": "Key utils and definitions.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
   "license": "MIT",
   "author": "DXOS.org",
   "sideEffects": false,
@@ -28,12 +32,15 @@
     "@dxos/debug": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/node-std": "workspace:*",
-    "effect": "3.18.3",
-    "ulidx": "^2.3.0"
+    "ulidx": "catalog:"
   },
   "devDependencies": {
-    "base32-decode": "^1.0.0",
-    "base32-encode": "^2.0.0"
+    "base32-decode": "catalog:",
+    "base32-encode": "catalog:",
+    "effect": "catalog:"
+  },
+  "peerDependencies": {
+    "effect": "catalog:"
   },
   "publishConfig": {
     "access": "public"

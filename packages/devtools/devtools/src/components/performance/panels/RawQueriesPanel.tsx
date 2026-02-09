@@ -16,14 +16,14 @@ export const RawQueriesPanel = ({ queries, ...props }: CustomPanelProps<{ querie
       title='Query types'
       info={<span>{keys.length.toLocaleString()}</span>}
     >
-      <table className='table-fixed w-full text-xs font-mono'>
+      <table className='table-fixed is-full text-xs font-mono'>
         <tbody>
           {keys.map((key, i) => (
             <tr key={i}>
               <td className='p-1 overflow-hidden'>
                 <pre className='font-2xs font-thin'>{key}</pre>
               </td>
-              <td className='p-1 w-[80px] text-right'>{queries.get(key)!.toLocaleString()}</td>
+              <td className='p-1 is-[80px] text-right'>{queries.get(key)!.toLocaleString()}</td>
             </tr>
           ))}
         </tbody>

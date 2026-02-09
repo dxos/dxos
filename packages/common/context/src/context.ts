@@ -14,7 +14,7 @@ export type ContextErrorHandler = (error: Error, ctx: Context) => void;
 
 export type DisposeCallback = () => any | Promise<any>;
 
-export type CreateContextParams = {
+export type CreateContextProps = {
   name?: string;
   parent?: Context;
   attributes?: Record<string, any>;
@@ -67,9 +67,11 @@ export class Context {
   #flags: ContextFlags = 0;
   #disposePromise?: Promise<boolean> = undefined;
 
+  #signal: AbortSignal | undefined = undefined;
+
   public maxSafeDisposeCallbacks = MAX_SAFE_DISPOSE_CALLBACKS;
 
-  constructor(params: CreateContextParams = {}, callMeta?: Partial<CallMetadata>) {
+  constructor(params: CreateContextProps = {}, callMeta?: Partial<CallMetadata>) {
     this.#name = getContextName(params, callMeta);
     this.#parent = params.parent;
     this.#attributes = params.attributes ?? {};
@@ -98,6 +100,16 @@ export class Context {
 
   get disposeCallbacksLength() {
     return this.#disposeCallbacks.length;
+  }
+
+  get signal(): AbortSignal {
+    if (this.#signal) {
+      return this.#signal;
+    }
+    const controller = new AbortController();
+    this.#signal = controller.signal;
+    this.onDispose(() => controller.abort());
+    return this.#signal;
   }
 
   /**
@@ -222,7 +234,7 @@ export class Context {
     }
   }
 
-  derive({ onError, attributes }: CreateContextParams = {}): Context {
+  derive({ onError, attributes }: CreateContextProps = {}): Context {
     const newCtx = new Context({
       // TODO(dmaretskyi): Optimize to not require allocating a new closure for every context.
       onError: async (error) => {
@@ -267,7 +279,7 @@ export class Context {
   }
 }
 
-const getContextName = (params: CreateContextParams, callMeta?: Partial<CallMetadata>): string | undefined => {
+const getContextName = (params: CreateContextProps, callMeta?: Partial<CallMetadata>): string | undefined => {
   if (params.name) {
     return params.name;
   }

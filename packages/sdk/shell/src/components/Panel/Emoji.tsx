@@ -4,7 +4,7 @@
 
 import React, { type PropsWithChildren } from 'react';
 
-import { getSize, mx } from '@dxos/react-ui-theme';
+import { getSize, mx } from '@dxos/ui-theme';
 
 export const Emoji = ({ text, className }: { text?: string; className?: string }) => {
   const size = 14;

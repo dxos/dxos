@@ -7,7 +7,7 @@ set -euo pipefail
 
 APPS=(
   "./packages/apps/composer-app"
-  "./tools/storybook"
+  "./tools/storybook-react"
 )
 
 BRANCH=$(git rev-parse --abbrev-ref HEAD)
@@ -59,7 +59,7 @@ for APP_PATH in "${APPS[@]}"; do
   fi
 
   # Don't use the cache when bundling the app for deployment to avoid any caching issues causing bad builds.
-  moon run "$APP:bundle" --updateCache
+  moon run "$APP:bundle" --force
 
   outdir=${APP%-app}
   pnpm exec wrangler pages deploy out/"$outdir" --branch "$BRANCH"

@@ -2,13 +2,18 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type PluginMeta } from '@dxos/app-framework';
+import { type Plugin } from '@dxos/app-framework';
+import { trim } from '@dxos/util';
 
-export const meta: PluginMeta = {
+export const meta: Plugin.Meta = {
   id: 'dxos.org/plugin/assistant',
   name: 'Assistant',
-  description: 'The Assistant plugin allows you to chat with your spaces inside of Composer.',
+  description: trim`
+    Intelligent AI assistant that can analyze and interact with objects across your spaces.
+    Chat naturally to get insights, search content, and perform actions using AI-powered context awareness.
+  `,
   icon: 'ph--atom--regular',
+  iconHue: 'sky',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-assistant',
   tags: ['labs'],
 };

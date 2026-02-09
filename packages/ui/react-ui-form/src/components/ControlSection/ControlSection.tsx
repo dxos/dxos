@@ -13,20 +13,20 @@ import {
   toLocalizedString,
   useTranslation,
 } from '@dxos/react-ui';
-import { StackItem } from '@dxos/react-ui-stack';
-import { mx } from '@dxos/react-ui-theme';
+import { Layout } from '@dxos/react-ui-mosaic';
+import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations';
 
-export type ControlPageProps = ThemedClassName<ComponentPropsWithoutRef<'div'>>;
+export type ControlPageParams = ThemedClassName<ComponentPropsWithoutRef<'div'>>;
 
-export const ControlPage = ({ children, classNames, ...props }: ControlPageProps) => {
+export const ControlPage = ({ children, classNames, ...props }: ControlPageParams) => {
   return (
-    <StackItem.Content scrollable classNames='[--control-spacing:var(--dx-trimMd)]'>
-      <div role='none' className={mx('pli-cardSpacingInline pbe-trimLg', classNames)} {...props}>
+    <Layout.Container scrollable classNames='[--control-spacing:var(--dx-trimMd)]'>
+      <div role='none' className={mx('pli-cardSpacingInline pbe-trimMd', classNames)} {...props}>
         {children}
       </div>
-    </StackItem.Content>
+    </Layout.Container>
   );
 };
 
@@ -48,7 +48,7 @@ export const ControlSectionHeading = ({ title, description }: Omit<ControlSectio
   const { t } = useTranslation(translationKey);
   return (
     <>
-      <h2 className='pli-trimMd container-max-width text-xl mbs-trimLg mbe-trimMd'>{toLocalizedString(title, t)}</h2>
+      <h2 className='pli-trimMd container-max-width text-xl mbs-trimMd mbe-trimMd'>{toLocalizedString(title, t)}</h2>
       {description && (
         <p className='pli-trimMd mlb-trimMd container-max-width text-description'>
           {toLocalizedString(description, t)}

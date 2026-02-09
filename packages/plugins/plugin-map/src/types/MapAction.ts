@@ -2,44 +2,48 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 
-import { SpaceSchema } from '@dxos/react-client/echo';
-import { DataType, TypenameAnnotationId } from '@dxos/schema';
+import { Capability } from '@dxos/app-framework';
+import { Operation } from '@dxos/operation';
+import { TypeInputOptionsAnnotation } from '@dxos/plugin-space/types';
 
 import { meta } from '../meta';
 
-import { Map } from './Map';
 import { LocationAnnotationId } from './types';
 
 export const CreateMap = Schema.Struct({
   name: Schema.optional(Schema.String),
-  typename: Schema.String.annotations({
-    [TypenameAnnotationId]: ['used-static', 'dynamic'],
-    title: 'Select pin record type',
-  }),
-  locationFieldName: Schema.String.annotations({
-    [LocationAnnotationId]: true,
-    title: 'Location property',
-  }),
+  // TODO(wittjosiah): This should be a query input instead.
+  typename: Schema.String.pipe(
+    Schema.annotations({ title: 'Select pin type' }),
+    TypeInputOptionsAnnotation.set({
+      location: ['database', 'runtime'],
+      kind: ['user'],
+      registered: ['registered'],
+    }),
+    Schema.optional,
+  ),
+  locationFieldName: Schema.String.pipe(
+    Schema.annotations({
+      [LocationAnnotationId]: true,
+      title: 'Location property',
+    }),
+    Schema.optional,
+  ),
 });
 
 export type CreateMap = Schema.Schema.Type<typeof CreateMap>;
 
-export class Create extends Schema.TaggedClass<Create>()(`${meta.id}/action/create`, {
-  input: Schema.Struct({
-    space: SpaceSchema,
-  }).pipe(
-    // prettier-ignore
-    Schema.extend(CreateMap),
-    Schema.extend(Map.pipe(Schema.pick('center', 'zoom', 'coordinates'))),
-  ),
-  output: Schema.Struct({
-    object: DataType.View,
-  }),
-}) {}
+const MAP_OPERATION = `${meta.id}/operation`;
 
-export class Toggle extends Schema.TaggedClass<Toggle>()(`${meta.id}/action/toggle`, {
-  input: Schema.Void,
-  output: Schema.Void,
-}) {}
+export namespace MapOperation {
+  export const Toggle = Operation.make({
+    meta: { key: `${MAP_OPERATION}/toggle`, name: 'Toggle Map' },
+    services: [Capability.Service],
+    schema: {
+      input: Schema.Void,
+      output: Schema.Void,
+    },
+  });
+}

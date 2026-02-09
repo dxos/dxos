@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 import React, { type FC } from 'react';
 
 import { type ShapeDef, getAnchorPoints } from '@dxos/react-ui-canvas-editor';
@@ -57,7 +57,7 @@ const defineShape = <S extends GateShape>({
   // Be careful not to name component factories with a capital letter.
   component: () => {
     return (
-      <div className='flex w-full justify-center items-center'>
+      <div className='flex is-full justify-center items-center'>
         <Symbol />
       </div>
     );
@@ -95,7 +95,7 @@ const createSymbol =
     const paths = pathConstructor({ startX, endX, height });
 
     return (
-      <svg viewBox={`0 0 ${width} ${height}`} className='w-full h-full'>
+      <svg viewBox={`0 0 ${width} ${height}`} className='is-full bs-full'>
         {/* Input line. */}
         {getAnchorPoints({ x: 0, y: centerY }, inputs).map(({ x, y }, i) => (
           <line key={i} x1={x} y1={y} x2={startX * 1.3} y2={y} strokeWidth={strokeWidth} className={className} />

@@ -12,19 +12,20 @@ import { tags } from '@lezer/highlight';
 import { type VirtualTypeScriptEnvironment } from '@typescript/vfs';
 import { continueKeymap } from '@valtown/codemirror-continue';
 import { type HoverInfo, tsAutocomplete, tsFacet, tsHover, tsLinter, tsSync } from '@valtown/codemirror-ts';
-import React from 'react';
+import React, { memo } from 'react';
 
-import { Domino, type ThemeMode, type ThemedClassName, useThemeContext } from '@dxos/react-ui';
+import { type ThemeMode, type ThemedClassName, useThemeContext } from '@dxos/react-ui';
+import { type UseTextEditorProps, useTextEditor } from '@dxos/react-ui-editor';
+import { Domino } from '@dxos/ui';
 import {
+  type BasicExtensionsOptions,
   type EditorInputMode,
   InputModeExtensions,
-  type UseTextEditorProps,
   createBasicExtensions,
   createThemeExtensions,
   defaultStyles,
-  useTextEditor,
-} from '@dxos/react-ui-editor';
-import { mx } from '@dxos/react-ui-theme';
+} from '@dxos/ui-editor';
+import { mx } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 
 export type TypescriptEditorProps = ThemedClassName<
@@ -34,72 +35,72 @@ export type TypescriptEditorProps = ThemedClassName<
     inputMode?: EditorInputMode;
     toolbar?: boolean;
     env?: VirtualTypeScriptEnvironment;
+    options?: BasicExtensionsOptions;
   } & Pick<UseTextEditorProps, 'initialValue' | 'extensions' | 'scrollTo' | 'selection'>
 >;
 
-export const TypescriptEditor = ({
-  classNames,
-  id,
-  role = 'article',
-  inputMode = 'vscode',
-  toolbar,
-  env,
-  initialValue,
-  extensions,
-  scrollTo,
-  selection,
-}: TypescriptEditorProps) => {
-  const { themeMode } = useThemeContext();
-  const { parentRef, focusAttributes } = useTextEditor(
-    () => ({
-      id,
-      initialValue,
-      selection,
-      scrollTo,
-      extensions: [
-        extensions,
-        createBasicExtensions({
-          highlightActiveLine: true,
-          indentWithTab: true,
-          lineNumbers: true,
-          lineWrapping: false,
-          monospace: true,
-          scrollPastEnd: role === 'article',
-          search: true,
-        }),
-        createThemeExtensions({ themeMode, syntaxHighlighting: true }),
-        InputModeExtensions[inputMode],
+export const TypescriptEditor = memo(
+  ({
+    classNames,
+    id,
+    role = 'article',
+    inputMode = 'vscode',
+    env,
+    options,
+    initialValue,
+    extensions,
+    scrollTo,
+    selection,
+  }: TypescriptEditorProps) => {
+    const { themeMode } = useThemeContext();
+    const { parentRef, focusAttributes } = useTextEditor(
+      () => ({
+        id,
+        initialValue,
+        selection,
+        scrollTo,
+        extensions: [
+          extensions,
+          createBasicExtensions({
+            highlightActiveLine: true,
+            indentWithTab: true,
+            lineNumbers: true,
+            lineWrapping: false,
+            scrollPastEnd: role !== 'section',
+            search: true,
+            ...options,
+          }),
+          createThemeExtensions({
+            monospace: true,
+            themeMode,
+            syntaxHighlighting: true,
+          }),
 
-        javascript({ typescript: true }),
-        autocompletion({ override: env ? [tsAutocomplete()] : undefined }),
+          InputModeExtensions[inputMode],
+          javascript({ typescript: true }),
+          autocompletion({ override: env ? [tsAutocomplete()] : undefined }),
 
-        // Continues block comments when pressing Enter.
-        Prec.high(keymap.of(continueKeymap)),
-        keymap.of(completionKeymap),
-        keymap.of(lintKeymap),
+          // Continues block comments when pressing Enter.
+          Prec.high(keymap.of(continueKeymap)),
+          keymap.of(completionKeymap),
+          keymap.of(lintKeymap),
 
-        // https://github.com/val-town/codemirror-ts
-        env && [
-          tsFacet.of({ env, path: `/src/${id}.ts` }),
-          tsSync(),
-          tsLinter(),
-          tsHover({ renderTooltip: createTooltipRenderer(themeMode) }),
-        ],
-      ].filter(isNonNullable),
-    }),
-    [id, extensions, themeMode, inputMode, selection, scrollTo],
-  );
+          // https://github.com/val-town/codemirror-ts
+          env && [
+            // TODO(burdon): Fix type.
+            tsFacet.of({ env: env as any, path: `./src/${id}.ts` }),
+            tsSync(),
+            tsLinter(),
+            tsHover({ renderTooltip: createTooltipRenderer(themeMode) }),
+          ],
+        ].filter(isNonNullable),
+      }),
+      [themeMode, id, extensions, inputMode, selection, scrollTo, env],
+    );
 
-  // TODO(brudon): Use react-ui-editor's Editor component.
-  return (
-    <div
-      ref={parentRef}
-      data-toolbar={toolbar ? 'enabled' : 'disabled'}
-      className={mx('overflow-hidden', classNames)}
-      {...focusAttributes}
-    />
-  );
-};
+    return <div ref={parentRef} className={mx(classNames)} {...focusAttributes} />;
+  },
+);
 
 // TODO(burdon): Factor out (react-ui-editor).
 const createTooltipRenderer = (themeMode: ThemeMode) => {
@@ -122,15 +123,14 @@ const createTooltipRenderer = (themeMode: ThemeMode) => {
   };
 
   return (info: HoverInfo) => {
+    const children =
+      info.quickInfo?.displayParts?.map(({ kind, text }) =>
+        Domino.of('span').classNames(classFromKind(kind)).text(text),
+      ) ?? [];
     return {
       dom: Domino.of('div')
         .classNames('xs:max-is-80 max-is-lg p-1 bg-baseSurface rounded border border-separator')
-        .children(
-          ...(info.quickInfo?.displayParts?.map(({ kind, text }) =>
-            Domino.of('span').classNames(classFromKind(kind)).text(text),
-          ) ?? []),
-        )
-        .build(),
+        .children(...children).root,
     };
   };
 };

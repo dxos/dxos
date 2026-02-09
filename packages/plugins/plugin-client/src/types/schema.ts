@@ -2,11 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema } from 'effect';
+import type * as Effect from 'effect/Effect';
+import * as Schema from 'effect/Schema';
 
-import { type PluginContext } from '@dxos/app-framework';
-import { type Client, type ClientOptions, PublicKey } from '@dxos/react-client';
-import { type MaybePromise } from '@dxos/util';
+import { Capability } from '@dxos/app-framework';
+import { type Client, type ClientOptions, PublicKey } from '@dxos/client';
+import { Operation } from '@dxos/operation';
 
 import { meta } from '../meta';
 
@@ -90,6 +91,115 @@ export namespace ClientAction {
   }) {}
 }
 
+const CLIENT_OPERATION = `${meta.id}/operation`;
+
+/**
+ * Operations for the Client plugin.
+ */
+export namespace ClientOperation {
+  const ProfileSchema = Schema.Struct({
+    displayName: Schema.optional(Schema.String),
+    avatarCid: Schema.optional(Schema.String),
+    data: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
+  });
+
+  export const CreateIdentity = Operation.make({
+    meta: { key: `${CLIENT_OPERATION}/create-identity`, name: 'Create Identity' },
+    services: [Capability.Service],
+    schema: {
+      input: ProfileSchema,
+      output: IdentitySchema,
+    },
+  });
+
+  export const JoinIdentity = Operation.make({
+    meta: { key: `${CLIENT_OPERATION}/join-identity`, name: 'Join Identity' },
+    services: [Capability.Service],
+    schema: {
+      input: Schema.Struct({
+        invitationCode: Schema.optional(Schema.String),
+      }),
+      output: Schema.Void,
+    },
+  });
+
+  export const ShareIdentity = Operation.make({
+    meta: { key: `${CLIENT_OPERATION}/share-identity`, name: 'Share Identity' },
+    services: [Capability.Service],
+    schema: {
+      input: Schema.Void,
+      output: Schema.Void,
+    },
+  });
+
+  export const RecoverIdentity = Operation.make({
+    meta: { key: `${CLIENT_OPERATION}/recover-identity`, name: 'Recover Identity' },
+    services: [Capability.Service],
+    schema: {
+      input: Schema.Void,
+      output: Schema.Void,
+    },
+  });
+
+  export const ResetStorage = Operation.make({
+    meta: { key: `${CLIENT_OPERATION}/reset-storage`, name: 'Reset Storage' },
+    services: [Capability.Service],
+    schema: {
+      input: Schema.Struct({
+        mode: Schema.optional(Schema.String),
+      }),
+      output: Schema.Void,
+    },
+  });
+
+  export const CreateAgent = Operation.make({
+    meta: { key: `${CLIENT_OPERATION}/create-agent`, name: 'Create Agent' },
+    services: [Capability.Service],
+    schema: {
+      input: Schema.Void,
+      output: Schema.Void,
+    },
+  });
+
+  export const CreateRecoveryCode = Operation.make({
+    meta: { key: `${CLIENT_OPERATION}/create-recovery-code`, name: 'Create Recovery Code' },
+    services: [Capability.Service],
+    schema: {
+      input: Schema.Void,
+      output: Schema.Void,
+    },
+  });
+
+  export const CreatePasskey = Operation.make({
+    meta: { key: `${CLIENT_OPERATION}/create-passkey`, name: 'Create Passkey' },
+    services: [Capability.Service],
+    schema: {
+      input: Schema.Void,
+      output: Schema.Void,
+    },
+  });
+
+  export const RedeemPasskey = Operation.make({
+    meta: { key: `${CLIENT_OPERATION}/redeem-passkey`, name: 'Redeem Passkey' },
+    services: [Capability.Service],
+    schema: {
+      input: Schema.Void,
+      output: Schema.Void,
+    },
+  });
+
+  export const RedeemToken = Operation.make({
+    meta: { key: `${CLIENT_OPERATION}/redeem-token`, name: 'Redeem Token' },
+    services: [Capability.Service],
+    schema: {
+      input: Schema.Struct({
+        token: Schema.String,
+      }),
+      output: Schema.Void,
+    },
+  });
+}
+
 export type ClientPluginOptions = ClientOptions & {
   /**
    * Base URL for the invitation link.
@@ -99,22 +209,25 @@ export type ClientPluginOptions = ClientOptions & {
   /**
    * Query parameter for the invitation code.
    */
-  invitationParam?: string;
+  invitationProp?: string;
 
   /**
    * Run after the client has been initialized.
+   * Plugin context is provided so capabilities are accessible.
    */
-  onClientInitialized?: (params: { context: PluginContext; client: Client }) => MaybePromise<void>;
+  onClientInitialized?: (params: { client: Client }) => Effect.Effect<void, Error | never, Capability.Service | never>;
 
   /**
    * Called when spaces are ready.
+   * Plugin context is provided so capabilities are accessible.
    */
-  onSpacesReady?: (params: { context: PluginContext; client: Client }) => MaybePromise<void>;
+  onSpacesReady?: (params: { client: Client }) => Effect.Effect<void, Error | never, Capability.Service | never>;
 
   /**
    * Called when the client is reset.
+   * Plugin context is provided so capabilities are accessible.
    */
-  onReset?: (params: { target?: string }) => MaybePromise<void>;
+  onReset?: (params: { target?: string }) => Effect.Effect<void, Error | never, Capability.Service | never>;
 };
 
 export namespace Account {

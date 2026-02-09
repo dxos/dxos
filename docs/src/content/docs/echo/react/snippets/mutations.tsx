@@ -5,22 +5,23 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { Filter, Type } from '@dxos/echo';
+import { Filter, Obj } from '@dxos/echo';
 import { ClientProvider } from '@dxos/react-client';
-import { Expando, live, useQuery, useSpaces } from '@dxos/react-client/echo';
-import { useIdentity } from '@dxos/react-client/halo';
+import { useDatabase, useQuery } from '@dxos/react-client/echo';
+import { Expando } from '@dxos/schema';
 
 export const App = () => {
-  useIdentity();
-  const [space] = useSpaces();
-  const tasks = useQuery(space, Filter.type(Type.Expando, { type: 'task' }));
+  const db = useDatabase();
+  const tasks = useQuery(db, Filter.type(Expando.Expando));
   return (
     <>
       {tasks.map((task) => (
         <div
           key={task.id}
           onClick={() => {
-            task.completed = true;
+            Obj.change(task, (t) => {
+              t.completed = true;
+            });
           }}
         >
           {task.name} - {task.completed}
@@ -29,8 +30,11 @@ export const App = () => {
       <button
         name='add'
         onClick={() => {
-          const task = live(Expando, { type: 'task', name: 'buy milk' });
-          space?.db.add(task);
+          const task = Obj.make(Expando.Expando, {
+            type: 'task',
+            name: 'buy milk',
+          });
+          db?.add(task);
         }}
       >
         Add a task

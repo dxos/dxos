@@ -4,9 +4,13 @@
   "description": "Low-level graph API",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
   "license": "MIT",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "exports": {
     ".": {
@@ -27,21 +31,19 @@
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/debug": "workspace:*",
-    "@dxos/echo-signals": "workspace:*",
     "@dxos/invariant": "workspace:*",
-    "@dxos/live-object": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@preact/signals-core": "^1.12.1",
-    "effect": "3.18.3"
+    "@effect-atom/atom-react": "catalog:"
   },
   "devDependencies": {
+    "@dxos/echo": "workspace:*",
     "@dxos/echo-db": "workspace:*",
-    "@dxos/echo-schema": "workspace:*",
-    "@dxos/random": "workspace:*"
+    "@dxos/random": "workspace:*",
+    "effect": "catalog:"
   },
   "peerDependencies": {
-    "effect": "^3.13.3"
+    "effect": "catalog:"
   },
   "publishConfig": {
     "access": "public"

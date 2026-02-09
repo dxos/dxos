@@ -2,43 +2,49 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Rx } from '@effect-rx/rx-react';
+import { Atom, useAtomValue } from '@effect-atom/atom-react';
 import React, { type ChangeEvent, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { useCapabilities, useCapability } from '@dxos/app-framework';
+import { type SurfaceComponentProps, useCapabilities, useCapability } from '@dxos/app-framework/react';
 import { Context } from '@dxos/context';
 import { failUndefined } from '@dxos/debug';
+import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
-import { fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
+import { getSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { ElevationProvider, Input, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { ElevationProvider, Input, useTranslation } from '@dxos/react-ui';
 import { ControlGroup, ControlGroupButton, ControlItemInput } from '@dxos/react-ui-form';
 import { MenuProvider, ToolbarMenu, createMenuAction, createMenuItemGroup, useMenuActions } from '@dxos/react-ui-menu';
 import { useSoundEffect } from '@dxos/react-ui-sfx';
 import { StackItem } from '@dxos/react-ui-stack';
 
-import { ThreadCapabilities } from '../capabilities';
 import { meta } from '../meta';
-import { type ChannelType } from '../types';
+import { ThreadCapabilities } from '../types';
+import { type Channel } from '../types';
 
 import { Call } from './Call';
 import ChatContainer from './ChatContainer';
 
-export type ChannelContainerProps = {
-  channel?: ChannelType;
-  roomId?: string;
-  role?: string;
-  fullscreen?: boolean;
-};
+export type ChannelContainerProps = SurfaceComponentProps<
+  Channel.Channel | undefined,
+  {
+    roomId?: string;
+    fullscreen?: boolean;
+  }
+>;
 
 /**
  * Renders a call when active, otherwise renders the channel chat.
  */
-export const ChannelContainer = ({ channel, roomId: _roomId, role, fullscreen }: ChannelContainerProps) => {
+// TODO(burdon): Create Radix style layout.
+export const ChannelContainer = ({ role, subject: channel, roomId: roomIdProp, fullscreen }: ChannelContainerProps) => {
   const space = getSpace(channel);
   const callManager = useCapability(ThreadCapabilities.CallManager);
-  const roomId = _roomId ?? (channel ? fullyQualifiedId(channel) : failUndefined());
+  const joined = useAtomValue(callManager.joinedAtom);
+  const currentRoomId = useAtomValue(callManager.roomIdAtom);
+  const attendableId = channel ? Obj.getDXN(channel).toString() : undefined;
+  const roomId = roomIdProp ?? attendableId ?? failUndefined();
   const identity = useIdentity();
   const isNamed = !!identity?.profile?.displayName;
   const joinSound = useSoundEffect('JoinCall');
@@ -79,7 +85,7 @@ export const ChannelContainer = ({ channel, roomId: _roomId, role, fullscreen }:
       return;
     }
 
-    if (callManager.joined) {
+    if (joined) {
       await callManager.leave();
     }
 
@@ -92,7 +98,7 @@ export const ChannelContainer = ({ channel, roomId: _roomId, role, fullscreen }:
       // TODO(burdon): Error sound.
       log.catch(err);
     }
-  }, [extensions, channel, roomId]);
+  }, [extensions, channel, roomId, joined]);
 
   /**
    * Leave the call.
@@ -111,7 +117,7 @@ export const ChannelContainer = ({ channel, roomId: _roomId, role, fullscreen }:
     }
   }, [extensions, roomId]);
 
-  const isJoined = callManager.joined && callManager.roomId === roomId;
+  const isJoined = joined && currentRoomId === roomId;
 
   return (
     <StackItem.Content classNames={isJoined && 'bs-full'} toolbar={!isJoined}>
@@ -124,8 +130,8 @@ export const ChannelContainer = ({ channel, roomId: _roomId, role, fullscreen }:
       )}
       {!isJoined && channel && channel.defaultThread.target && space && (
         <>
-          <ChannelToolbar attendableId={fullyQualifiedId(channel)} role={role} onJoinCall={handleJoin} />
-          <ChatContainer space={space} thread={channel.defaultThread.target} />
+          <ChannelToolbar attendableId={attendableId} role={role} onJoinCall={handleJoin} />
+          <ChatContainer space={space} thread={channel.defaultThread.target} classNames='container-max-width' />
         </>
       )}
     </StackItem.Content>
@@ -161,7 +167,7 @@ const DisplayNameMissing = () => {
 const useChannelToolbarActions = (onJoinCall?: () => void) => {
   const creator = useMemo(
     () =>
-      Rx.make(() => {
+      Atom.make(() => {
         return {
           nodes: [
             createMenuItemGroup('root', {
@@ -182,19 +188,19 @@ const useChannelToolbarActions = (onJoinCall?: () => void) => {
   return useMenuActions(creator);
 };
 
-type ChannelToolbarProps = ThemedClassName<{
+type ChannelToolbarProps = {
   attendableId?: string;
   role?: string;
   onJoinCall?: () => void;
-}>;
+};
 
-const ChannelToolbar = ({ attendableId, role, onJoinCall, classNames }: ChannelToolbarProps) => {
+const ChannelToolbar = ({ attendableId, role, onJoinCall }: ChannelToolbarProps) => {
   const menuProps = useChannelToolbarActions(onJoinCall);
 
   return (
     <ElevationProvider elevation={role === 'section' ? 'positioned' : 'base'}>
       <MenuProvider {...menuProps} attendableId={attendableId}>
-        <ToolbarMenu classNames={classNames} />
+        <ToolbarMenu textBlockWidth />
       </MenuProvider>
     </ElevationProvider>
   );

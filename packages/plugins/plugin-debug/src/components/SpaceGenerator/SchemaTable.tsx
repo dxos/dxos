@@ -19,8 +19,8 @@ export const SchemaTable = ({ types, objects = {}, label, onClick }: SchemaTable
       <h2 className='p-2'>{label}</h2>
       {types.map((type) => (
         <div key={type.typename} className='grid grid-cols-subgrid col-span-3 items-center'>
-          <div className='px-2 text-sm font-mono text-subdued'>{type.typename}</div>
-          <div className='px-2 text-right font-mono'>{objects[type.typename] ?? 0}</div>
+          <div className='pli-2 text-sm font-mono text-subdued'>{type.typename}</div>
+          <div className='pli-2 text-right font-mono'>{objects[type.typename] ?? 0}</div>
           <IconButton
             variant='ghost'
             icon='ph--plus--regular'

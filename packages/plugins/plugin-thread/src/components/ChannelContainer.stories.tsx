@@ -5,29 +5,28 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { contributes } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { ClientCapabilities } from '@dxos/plugin-client';
-import { Query, useQuery, useSpace } from '@dxos/react-client/echo';
-import { withTheme } from '@dxos/react-ui/testing';
-import { DataType } from '@dxos/schema';
+import { Query, useDatabase, useQuery } from '@dxos/react-client/echo';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { render } from '@dxos/storybook-utils';
+import { Message, Thread } from '@dxos/types';
 
 import { createThreadPlugins } from '../testing';
 import { translations } from '../translations';
-import { ChannelType, ThreadType } from '../types';
+import { Channel } from '../types';
 
 import { ChannelContainer, type ChannelContainerProps } from './ChannelContainer';
 
 // TODO(wittjosiah): Channel doesn't render full height.
 const DefaultStory = ({ roomId }: ChannelContainerProps) => {
-  const space = useSpace();
-  const [channel] = useQuery(space, Query.type(ChannelType));
+  const db = useDatabase();
+  const [channel] = useQuery(db, Query.type(Channel.Channel));
   if (!channel) {
     return null;
   }
 
-  return <ChannelContainer channel={channel} roomId={roomId} />;
+  return <ChannelContainer subject={channel} roomId={roomId} />;
 };
 
 const meta = {
@@ -36,13 +35,15 @@ const meta = {
   render: render(DefaultStory),
   decorators: [
     withTheme,
+    withLayout({ layout: 'column' }),
     withPluginManager({
       plugins: [...(await createThreadPlugins())],
-      capabilities: [contributes(ClientCapabilities.Schema, [ChannelType, ThreadType, DataType.Message])],
+      capabilities: [
+        Capability.contributes(Common.Capability.Schema, [Channel.Channel, Thread.Thread, Message.Message]),
+      ],
     }),
   ],
   parameters: {
-    layout: 'column',
     translations,
   },
 } satisfies Meta<typeof ChannelContainer>;
@@ -54,6 +55,7 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   args: {
     // Fixed room for testing.
+    subject: undefined,
     roomId: '04a1d1911703b8e929d0649021a965',
   },
 };

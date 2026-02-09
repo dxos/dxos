@@ -20,19 +20,25 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+  id-token: write  # Required for npm trusted publisher OIDC
+
 jobs:
   publish:
-    runs-on: depot-ubuntu-24.04-4
+    # Must use GitHub-hosted runner for npm provenance (sigstore attestation).
+    runs-on: ubuntu-24.04-4
     container:
-      image: ghcr.io/dxos/gh-actions:20.19.5
+      image: ghcr.io/dxos/gh-actions:24.11.1
       credentials:
         username: dxos-bot
         password: ${{ secrets.GITHUB_TOKEN }}
-    timeout-minutes: 45
+    timeout-minutes: 90
     steps:
       - name: Checkout
         uses: actions/checkout@v5
         with:
+          fetch-depth: 0
           lfs: true
       # TODO: read secrets directly from 1p?
       - name: Set environment variables from secrets, env files. Also set DX_ENVIRONMENT and BRANCH

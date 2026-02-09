@@ -63,7 +63,9 @@ const [createGridContext, createGridScope] = createContextScope(GRID_NAME, []);
 const [GridProvider, useGridContext] = createGridContext<GridContextValue>(GRID_NAME);
 
 type GridRootProps = PropsWithChildren<
-  { id: string } & Partial<{
+  {
+    id: string;
+  } & Partial<{
     editing: GridEditing;
     defaultEditing: GridEditing;
     onEditingChange: (nextEditing: GridEditing) => void;
@@ -71,12 +73,12 @@ type GridRootProps = PropsWithChildren<
 >;
 
 const GridRoot = ({
+  __gridScope,
+  children,
   id,
   editing: propsEditing,
   defaultEditing,
   onEditingChange,
-  children,
-  __gridScope,
 }: GridScopedProps<GridRootProps>) => {
   const [editing = null, setEditing] = useControllableState({
     prop: propsEditing,

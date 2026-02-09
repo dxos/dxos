@@ -34,7 +34,8 @@ test.skip('connect to local CLI', async () => {
   const space = client.spaces.get()[0];
   await space.waitUntilReady();
 
-  const { objects } = space.db.query(Filter.everything());
+  const query = space.db.query(Filter.everything());
+  const objects = query.results;
   // console.log(objects.length);
   expect(objects).to.exist;
 

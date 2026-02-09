@@ -1,8 +1,8 @@
-type: tool
+layer: tool
 language: typescript
 tasks:
   compile:
-    command: vite-node ./src/main.ts
+    command: pnpm exec vite-node ./src/main.ts
     inputs:
       - tsconfig.json
       - '@group(production)'

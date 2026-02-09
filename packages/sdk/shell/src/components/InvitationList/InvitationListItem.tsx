@@ -15,16 +15,17 @@ import {
   type AvatarContentProps,
   Button,
   Clipboard,
-  Icon,
+  IconButton,
   ListItem,
   type ThemedClassName,
   Tooltip,
   useThemeContext,
   useTranslation,
 } from '@dxos/react-ui';
-import { focusRing, getSize, mx } from '@dxos/react-ui-theme';
+import { focusRing, getSize, mx } from '@dxos/ui-theme';
 import { hexToEmoji } from '@dxos/util';
 
+import { translationKey } from '../../translations';
 import { AuthCode } from '../AuthCode';
 
 import { type SharedInvitationListProps } from './InvitationListProps';
@@ -45,7 +46,10 @@ export const InvitationListItem = (props: InvitationListItemProps) => {
   return <InvitationListItemImpl {...props} invitationStatus={invitationStatus} />;
 };
 
-const avatarProps: Pick<AvatarContentProps, 'size' | 'variant'> = { size: 10, variant: 'circle' };
+const avatarProps: Pick<AvatarContentProps, 'size' | 'variant'> = {
+  size: 10,
+  variant: 'circle',
+};
 
 const AvatarStackEffect = ({
   animation,
@@ -65,7 +69,11 @@ const AvatarStackEffect = ({
       >
         <span
           role='none'
-          className={tx('avatar.ring', 'avatar__ring', { ...avatarProps, status, animation })}
+          className={tx('avatar.ring', 'avatar__ring', {
+            ...avatarProps,
+            status,
+            animation,
+          })}
           style={{ animationDelay: '400ms' }}
         />
       </span>
@@ -79,7 +87,11 @@ const AvatarStackEffect = ({
       >
         <span
           role='none'
-          className={tx('avatar.ring', 'avatar__ring', { ...avatarProps, status, animation })}
+          className={tx('avatar.ring', 'avatar__ring', {
+            ...avatarProps,
+            status,
+            animation,
+          })}
           style={{ animationDelay: '200ms' }}
         />
       </span>
@@ -96,7 +108,7 @@ export const InvitationListItemImpl = ({
   reverseEffects,
   ...props
 }: InvitationListItemImplProps) => {
-  const { t } = useTranslation('os');
+  const { t } = useTranslation(translationKey);
   const { cancel, status: invitationStatus, invitationCode, authCode, multiUse, shareable } = propsInvitationStatus;
 
   const isCancellable = !(
@@ -203,20 +215,27 @@ export const InvitationListItemImpl = ({
         <span className='grow'> </span>
       )}
       {isCancellable ? (
-        <Button variant='ghost' classNames='flex gap-1 pli-0' onClick={cancel} data-testid='cancel-invitation'>
-          <span className='sr-only'>{t('cancel invitation label')}</span>
-          <Icon icon='ph--x--regular' size={4} />
-        </Button>
+        <IconButton
+          icon='ph--x--regular'
+          size={4}
+          label={t('cancel invitation label')}
+          iconOnly
+          variant='ghost'
+          classNames='flex gap-1 pli-0'
+          onClick={cancel}
+          data-testid='cancel-invitation'
+        />
       ) : (
-        <Button
+        <IconButton
+          icon='ph--x--regular'
+          size={4}
+          label={t('remove invitation label')}
+          iconOnly
           variant='ghost'
           classNames='flex gap-1 pli-0'
           onClick={handleClickRemove}
           data-testid='remove-invitation'
-        >
-          <span className='sr-only'>{t('remove invitation label')}</span>
-          <Icon icon='ph--x--regular' size={4} />
-        </Button>
+        />
       )}
     </ListItem.Root>
   );

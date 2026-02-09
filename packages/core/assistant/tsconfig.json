@@ -2,7 +2,6 @@
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {},
   "include": [
-    "../assistant-testing/src/functions/testing",
     "bin",
     "src",
     "src/**/*.json"
@@ -45,6 +44,9 @@
       "path": "../../sdk/schema"
     },
     {
+      "path": "../../sdk/types"
+    },
+    {
       "path": "../ai"
     },
     {
@@ -60,13 +62,10 @@
       "path": "../echo/echo-protocol"
     },
     {
-      "path": "../echo/echo-schema"
-    },
-    {
-      "path": "../echo/live-object"
-    },
-    {
       "path": "../functions"
+    },
+    {
+      "path": "../functions-runtime"
     }
   ]
 }

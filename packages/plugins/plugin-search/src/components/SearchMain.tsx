@@ -2,67 +2,82 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type FC, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 
-import { log } from '@dxos/log';
-import { useClient } from '@dxos/react-client';
+import { Surface } from '@dxos/app-framework/react';
+import { Entity, Query } from '@dxos/echo';
 import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
-import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { activeSurface, mx } from '@dxos/react-ui-theme';
+import { Toolbar, useTranslation } from '@dxos/react-ui';
+import { Card, Mosaic, type StackTileComponent } from '@dxos/react-ui-mosaic';
+import { Layout } from '@dxos/react-ui-mosaic';
+import { SearchList } from '@dxos/react-ui-searchlist';
+import { Text } from '@dxos/schema';
 
-import { useGlobalSearch, useGlobalSearchResults } from '../hooks';
-import { useWebSearch } from '../hooks/useWebSearch';
+import { useGlobalSearch, useGlobalSearchResults, useWebSearch } from '../hooks';
 import { meta } from '../meta';
+import { type SearchResult } from '../types';
 
-import { Searchbar } from './Searchbar';
-import { SearchResults } from './SearchResults';
-
-export const SearchMain: FC<ThemedClassName<{ space: Space }>> = ({ classNames, space }) => {
+export const SearchMain = ({ space }: { space?: Space }) => {
   const { t } = useTranslation(meta.id);
-  const client = useClient();
   const { setMatch } = useGlobalSearch();
   const [query, setQuery] = useState<string>();
-  // TODO(burdon): UX to select all spaces.
-  const allSpaces = false;
+  // TODO(burdon): Option to search across spaces.
+  const objects = useQuery(
+    space?.db,
+    query === undefined
+      ? Query.select(Filter.nothing())
+      : // TODO(dmaretskyi): Final version would walk the ancestry of the object until we find a non-system type.
+        Query.all(
+          Query.select(Filter.text(query, { type: 'full-text' })).select(Filter.not(Filter.type(Text.Text))),
+          Query.select(Filter.text(query, { type: 'full-text' }))
+            .select(Filter.type(Text.Text))
+            .referencedBy('dxos.org/type/Document', 'content'),
+        ),
+  );
 
-  // TODO(burdon): Returns ALL objects (e.g., incl. Text objects that are fields of parent objects).
-  const objects = useQuery(allSpaces ? client.spaces : space, Filter.everything());
   const results = useGlobalSearchResults(objects);
+  const { results: webResults } = useWebSearch({ query });
+  const allResults = useMemo(
+    () => [...results, ...webResults].filter(({ object }) => object && Entity.getLabel(object)),
+    [results, webResults],
+  );
 
-  const {
-    runSearch,
-    results: webResults,
-    isLoading,
-  } = useWebSearch({
-    query,
-  });
-
-  const [selected, setSelected] = useState<string>();
-
-  // TODO(burdon): Activate and/or filter current main (set context).
-  const handleSelect = (id: string) => {
-    setSelected((selected) => (selected === id ? undefined : id));
-  };
-
-  const allResults = [...results, ...webResults];
-  log.info('results', { results, webResults });
+  const handleSearch = useCallback(
+    (text: string) => {
+      setQuery(text);
+      setMatch?.(text);
+    },
+    [setMatch],
+  );
 
   return (
-    <div className={mx('flex flex-col grow h-full overflow-hidden', classNames)}>
-      <Searchbar
-        placeholder={t('search placeholder')}
-        onChange={(text) => {
-          setQuery(text);
-          setMatch?.(text);
-        }}
-        onSubmit={runSearch}
-      />
-      {isLoading && <div className={mx('flex flex-col grow overflow-hidden', activeSurface)}>Loading...</div>}
-      {allResults.length > 0 && (
-        <div className={mx('flex flex-col grow overflow-hidden', activeSurface)}>
-          <SearchResults items={allResults} selected={selected} onSelect={handleSelect} />
-        </div>
-      )}
-    </div>
+    <Layout.Main toolbar>
+      <SearchList.Root onSearch={handleSearch}>
+        <Toolbar.Root>
+          <SearchList.Input placeholder={t('search placeholder')} />
+        </Toolbar.Root>
+        <SearchList.Content>
+          <Mosaic.Container asChild>
+            <Mosaic.Viewport>
+              <Mosaic.Stack items={allResults} getId={(result) => result.object!.id} Tile={SearchResultTile} />
+            </Mosaic.Viewport>
+          </Mosaic.Container>
+          {allResults.length === 0 && <SearchList.Empty>{t('empty results message')}</SearchList.Empty>}
+        </SearchList.Content>
+      </SearchList.Root>
+    </Layout.Main>
+  );
+};
+
+const SearchResultTile: StackTileComponent<SearchResult> = ({ data }) => {
+  return (
+    <Card.Root key={data.id}>
+      <Card.Toolbar>
+        <Card.DragHandle />
+        <Card.Title>{data.label ?? (data.object && Entity.getLabel(data.object))}</Card.Title>
+        <Card.Menu />
+      </Card.Toolbar>
+      <Surface role='card--content' data={{ subject: data.object }} limit={1} />
+    </Card.Root>
   );
 };

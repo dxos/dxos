@@ -4,6 +4,10 @@
   "description": "A collection of picker components.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
   "license": "MIT",
   "author": "DXOS.org",
   "type": "module",
@@ -13,11 +17,21 @@
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
+    },
+    "./icons": {
+      "source": "./src/components/IconPicker/icons.ts",
+      "types": "./dist/types/src/components/IconPicker/icons.d.ts",
+      "browser": "./dist/lib/browser/components/IconPicker/icons.mjs",
+      "node": "./dist/lib/node-esm/components/IconPicker/icons.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
-    "*": {}
+    "*": {
+      "icons": [
+        "./dist/types/src/components/IconPicker/icons.d.ts"
+      ]
+    }
   },
   "files": [
     "dist",
@@ -25,29 +39,28 @@
   ],
   "dependencies": {
     "@dxos/log": "workspace:*",
-    "@dxos/react-ui-types": "workspace:*",
+    "@dxos/ui-types": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@emoji-mart/data": "^1.1.2",
-    "@emoji-mart/react": "^1.1.1",
-    "@preact-signals/safe-react": "^0.9.0",
-    "@radix-ui/react-use-controllable-state": "1.1.0",
-    "react-resize-detector": "^11.0.1"
+    "@emoji-mart/data": "catalog:",
+    "@emoji-mart/react": "catalog:",
+    "@radix-ui/react-use-controllable-state": "catalog:",
+    "react-resize-detector": "catalog:"
   },
   "devDependencies": {
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
-    "@types/react": "~19.2.2",
-    "@types/react-dom": "~19.2.1",
-    "react": "~19.2.0",
-    "react-dom": "~19.2.0",
-    "vite": "7.1.9"
+    "@dxos/ui-theme": "workspace:*",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "vite": "catalog:"
   },
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-theme": "workspace:*",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "@dxos/ui-theme": "workspace:*",
+    "react": "catalog:",
+    "react-dom": "catalog:"
   },
   "publishConfig": {
     "access": "public"

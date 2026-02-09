@@ -4,28 +4,34 @@
 
 import { next as A } from '@automerge/automerge';
 import { type AutomergeUrl } from '@automerge/automerge-repo';
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 import Redis from 'ioredis';
 
 import { Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
+import { Obj, Type } from '@dxos/echo';
 import { type EchoDatabaseImpl, Filter, type QueryResult, createDocAccessor } from '@dxos/echo-db';
 import { EchoTestPeer } from '@dxos/echo-db/testing';
 import { TestReplicator, TestReplicatorConnection } from '@dxos/echo-pipeline/testing';
-import { TypedObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
-import { type Live, live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
 
 import { type ReplicantEnv, ReplicantRegistry } from '../env';
 import { DEFAULT_REDIS_OPTIONS, createRedisReadableStream, createRedisWritableStream } from '../redis';
 
-export class Text extends TypedObject({ typename: 'dxos.org/blade-runner/Text', version: '0.1.0' })({
+export const Text = Schema.Struct({
   content: Schema.String,
-}) {}
+}).pipe(
+  Type.object({
+    typename: 'dxos.org/blade-runner/Text',
+    version: '0.1.0',
+  }),
+);
+
+export interface Text extends Schema.Schema.Type<typeof Text> {}
 
 @trace.resource()
 export class EchoReplicant {
@@ -56,7 +62,7 @@ export class EchoReplicant {
   @trace.span()
   async createDatabase({ spaceKey = PublicKey.random().toHex() }: { spaceKey?: string } = {}) {
     this._db = await this._testPeer!.createDatabase(PublicKey.fromHex(spaceKey));
-    this._db.graph.schemaRegistry.addSchema([Text]);
+    await this._db.graph.schemaRegistry.register([Text]);
 
     log.trace('dxos.echo-replicant.createDatabase', { spaceKey });
     return {
@@ -68,7 +74,7 @@ export class EchoReplicant {
   @trace.span()
   async openDatabase({ spaceKey, rootUrl }: { spaceKey: string; rootUrl: AutomergeUrl }) {
     this._db = await this._testPeer!.openDatabase(PublicKey.fromHex(spaceKey), rootUrl);
-    this._db.graph.schemaRegistry.addSchema([Text]);
+    await this._db.graph.schemaRegistry.register([Text]);
 
     log.trace('dxos.echo-replicant.openDatabase', { spaceKey });
     return {
@@ -93,7 +99,7 @@ export class EchoReplicant {
 
     invariant(this._db, 'Database not initialized.');
     for (let objIdx = 0; objIdx < amount; objIdx++) {
-      const doc = live(Text, { content: '' }) satisfies Live<Text>;
+      const doc = Obj.make(Text, { content: '' }) satisfies Text;
       this._db!.add(doc);
       const accessor = createDocAccessor(doc, ['content']);
       for (let mutationIdx = 0; mutationIdx < insertions; mutationIdx++) {
@@ -143,7 +149,7 @@ export class EchoReplicant {
     invariant(this._db, 'Database not initialized.');
     const queried = new Trigger();
 
-    const query = this._db.query(Filter.typename(Text.typename));
+    const query = this._db.query(Filter.type(Text));
     query.subscribe(
       ({ results }) => {
         const ids = new Set<string>();

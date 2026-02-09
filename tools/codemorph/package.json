@@ -5,13 +5,17 @@
   "description": "Large scale code refactoring.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
   "license": "MIT",
   "author": "info@dxos.org",
   "scripts": {
     "codemorph": "vite-node ./src/main.ts"
   },
   "dependencies": {
-    "ts-morph": "^16.0.0"
+    "ts-morph": "catalog:"
   },
   "devDependencies": {}
 }

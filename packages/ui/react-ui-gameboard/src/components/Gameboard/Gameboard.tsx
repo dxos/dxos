@@ -8,13 +8,13 @@ import React, { type PropsWithChildren, forwardRef, useCallback, useEffect, useS
 
 import { log } from '@dxos/log';
 import { type ThemedClassName } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { Piece, type PieceProps } from './Piece';
 import { Square, type SquareProps } from './Square';
 import { type GameboardModel, type Move, type PieceRecord, isLocation, isPiece } from './types';
 
-export type GameboardContextValue<M extends GameboardModel> = {
+export type GameboardContextValue<M extends GameboardModel<any>> = {
   model: M;
   dragging?: boolean; // TODO(burdon): Change to PieceRecord.
   promoting?: PieceRecord;
@@ -23,7 +23,7 @@ export type GameboardContextValue<M extends GameboardModel> = {
 
 const [GameboardContextProvider, useRadixGameboardContext] = createContext<GameboardContextValue<any>>('Gameboard');
 
-const useGameboardContext = <M extends GameboardModel>(consumerName: string): GameboardContextValue<M> => {
+const useGameboardContext = <M extends GameboardModel<any>>(consumerName: string): GameboardContextValue<M> => {
   return useRadixGameboardContext(consumerName);
 };
 
@@ -31,7 +31,7 @@ const useGameboardContext = <M extends GameboardModel>(consumerName: string): Ga
 // Root
 //
 
-type GameboardRootProps<M extends GameboardModel> = PropsWithChildren<{
+type GameboardRootProps<M extends GameboardModel<any>> = PropsWithChildren<{
   model?: M;
   moveNumber?: number;
   onDrop?: (move: Move) => boolean;
@@ -40,11 +40,16 @@ type GameboardRootProps<M extends GameboardModel> = PropsWithChildren<{
 /**
  * Generic board container.
  */
-const GameboardRoot = <M extends GameboardModel>({ children, model, moveNumber, onDrop }: GameboardRootProps<M>) => {
+const GameboardRoot = <M extends GameboardModel<any>>({
+  children,
+  model,
+  moveNumber,
+  onDrop,
+}: GameboardRootProps<M>) => {
   const [dragging, setDragging] = useState(false);
   const [promoting, setPromoting] = useState<PieceRecord | undefined>();
 
-  const handlePromotion = useCallback<GameboardContextValue<M>['onPromotion']>((move) => {
+  const handlePromotion = useCallback<GameboardContextValue<GameboardModel<any>>['onPromotion']>((move) => {
     log('onPromotion', { move });
     setPromoting(undefined);
     onDrop?.(move);

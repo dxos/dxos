@@ -12,11 +12,12 @@ import { defineConfig, searchForWorkspaceRoot } from 'vite';
 import WasmPlugin from 'vite-plugin-wasm';
 
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
-import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
+import { ThemePlugin } from '@dxos/ui-theme/plugin';
 import tsconfigPaths from 'vite-tsconfig-paths';
 import { UserConfig } from 'vitest/config';
 
 import { createConfig as createTestConfig } from '../../../vitest.base.config';
+import PluginImportSource from '@dxos/vite-plugin-import-source';
 
 const dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(fileURLToPath(import.meta.url));
 
@@ -50,6 +51,16 @@ export default defineConfig(
           ],
         },
       },
+      resolve: {
+        alias: {
+          ['node-fetch']: 'isomorphic-fetch',
+          ['node:util']: '@dxos/node-std/util',
+          ['node:path']: '@dxos/node-std/path',
+          ['util']: '@dxos/node-std/util',
+          ['path']: '@dxos/node-std/path',
+          ['tiktoken/lite']: path.resolve(dirname, 'stub.mjs'),
+        },
+      },
       esbuild: {
         keepNames: true,
       },
@@ -67,7 +78,7 @@ export default defineConfig(
             manualChunks: {
               react: ['react', 'react-dom', 'react-router-dom'],
               dxos: ['@dxos/react-client'],
-              ui: ['@dxos/react-ui', '@dxos/react-ui-theme'],
+              ui: ['@dxos/react-ui', '@dxos/ui-theme'],
               editor: ['@dxos/react-ui-editor'],
             },
           },
@@ -75,14 +86,44 @@ export default defineConfig(
       },
       worker: {
         format: 'es',
-        plugins: () => [WasmPlugin(), sourceMaps()],
+        plugins: () => [
+          WasmPlugin(),
+          sourceMaps(),
+          env.command === 'serve' &&
+            PluginImportSource({
+              exclude: [
+                '@dxos/random-access-storage',
+                '@dxos/lock-file',
+                '@dxos/network-manager',
+                '@dxos/teleport',
+                '@dxos/config',
+                '@dxos/client-services',
+                '@dxos/observability',
+                // TODO(dmaretskyi): Decorators break in lit.
+                '@dxos/lit-*',
+              ],
+            }),
+        ],
       },
       plugins: [
         sourceMaps(),
+
+        // Building from dist when creating a prod bundle.
         env.command === 'serve' &&
-          tsconfigPaths({
-            projects: ['../../../tsconfig.paths.json'],
+          PluginImportSource({
+            exclude: [
+              '@dxos/random-access-storage',
+              '@dxos/lock-file',
+              '@dxos/network-manager',
+              '@dxos/teleport',
+              '@dxos/config',
+              '@dxos/client-services',
+              '@dxos/observability',
+              // TODO(dmaretskyi): Decorators break in lit.
+              '@dxos/lit-*',
+            ],
           }),
+
         ConfigPlugin({
           root: dirname,
           env: ['DX_VAULT'],
@@ -108,6 +149,14 @@ export default defineConfig(
                     include_scope: true,
                   },
                   {
+                    name: 'dbg',
+                    package: '@dxos/log',
+                    param_index: 1,
+                    include_args: true,
+                    include_call_site: false,
+                    include_scope: false,
+                  },
+                  {
                     name: 'invariant',
                     package: '@dxos/invariant',
                     param_index: 2,
@@ -126,8 +175,6 @@ export default defineConfig(
                 ],
               },
             ],
-            // https://github.com/XantreDev/preact-signals/tree/main/packages/react#how-parser-plugins-works
-            ['@preact-signals/safe-react/swc', { mode: 'all' }],
           ],
         }),
         // https://docs.sentry.io/platforms/javascript/sourcemaps/uploading/vite

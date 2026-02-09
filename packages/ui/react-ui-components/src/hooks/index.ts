@@ -3,3 +3,4 @@
 //
 
 export * from './useExecutionGraph';
+export * from './useQueryBuilder';

@@ -2,91 +2,74 @@
 // Copyright 2024 DXOS.org
 //
 
-import { pipe } from 'effect';
+import * as Effect from 'effect/Effect';
 
-import {
-  Capabilities,
-  Events,
-  chain,
-  contributes,
-  createIntent,
-  defineModule,
-  definePlugin,
-} from '@dxos/app-framework';
+import { Capability, Common, Plugin } from '@dxos/app-framework';
+import { Operation } from '@dxos/operation';
 import { ClientEvents } from '@dxos/plugin-client';
 import { MarkdownEvents } from '@dxos/plugin-markdown';
-import { SpaceCapabilities } from '@dxos/plugin-space';
-import { defineObjectForm } from '@dxos/plugin-space/types';
+import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
+import { type CreateObject } from '@dxos/plugin-space/types';
 
-import { Blockstore, FileUploader, IntentResolver, Markdown, ReactSurface, WnfsCapabilities } from './capabilities';
+import { Blockstore, FileUploader, Markdown, OperationResolver, ReactSurface } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
-import { FileType, WnfsAction } from './types';
+import { WnfsAction, WnfsCapabilities, WnfsFile, WnfsOperation } from './types';
 
-export const WnfsPlugin = definePlugin(meta, () => [
-  defineModule({
-    id: `${meta.id}/module/blockstore`,
+export const WnfsPlugin = Plugin.define(meta).pipe(
+  Plugin.addModule({
+    id: 'blockstore',
     activatesOn: ClientEvents.ClientReady,
     activate: Blockstore,
   }),
-  defineModule({
-    id: `${meta.id}/module/instances`,
+  Plugin.addModule({
+    id: 'instances',
     activatesOn: ClientEvents.ClientReady,
-    activate: () => {
-      const instances: WnfsCapabilities.Instances = {};
-      return contributes(WnfsCapabilities.Instances, instances);
-    },
-  }),
-  defineModule({
-    id: `${meta.id}/module/translations`,
-    activatesOn: Events.SetupTranslations,
-    activate: () => contributes(Capabilities.Translations, translations),
-  }),
-  defineModule({
-    id: `${meta.id}/module/metadata`,
-    activatesOn: Events.SetupMetadata,
     activate: () =>
-      contributes(Capabilities.Metadata, {
-        id: FileType.typename,
-        metadata: {
-          label: (object: any) => (object instanceof FileType ? object.name : undefined),
-          // TODO(wittjosiah): Would be nice if icon could change based on the type of the file.
-          icon: 'ph--file--regular',
-        },
+      Effect.sync(() => {
+        const instances: WnfsCapabilities.Instances = {};
+        return Capability.contributes(WnfsCapabilities.Instances, instances);
       }),
   }),
-  defineModule({
-    id: `${meta.id}/module/object-form`,
-    activatesOn: ClientEvents.SetupSchema,
+  Common.Plugin.addTranslationsModule({ translations }),
+  Common.Plugin.addMetadataModule({
+    metadata: {
+      id: WnfsFile.File.typename,
+      metadata: {
+        // TODO(wittjosiah): Would be nice if icon could change based on the type of the file.
+        icon: 'ph--file--regular',
+        iconHue: 'teal',
+        inputSchema: WnfsAction.UploadFileSchema,
+        createObject: ((props, { db }) =>
+          Effect.gen(function* () {
+            const { object } = yield* Operation.invoke(WnfsOperation.CreateFile, { ...props, db });
+            return object;
+          })) satisfies CreateObject,
+      },
+    },
+  }),
+  Common.Plugin.addSchemaModule({ schema: [WnfsFile.File] }),
+  Plugin.addModule({
+    id: 'on-space-created',
+    activatesOn: SpaceEvents.SpaceCreated,
     activate: () =>
-      contributes(
-        SpaceCapabilities.ObjectForm,
-        defineObjectForm({
-          objectSchema: FileType,
-          formSchema: WnfsAction.UploadFileSchema,
-          getIntent: (props, options) =>
-            pipe(createIntent(WnfsAction.Upload, { ...props, space: options.space }), chain(WnfsAction.Create, {})),
-        }),
+      Effect.succeed(
+        Capability.contributes(SpaceCapabilities.OnCreateSpace, (params) =>
+          Operation.invoke(WnfsOperation.OnCreateSpace, params),
+        ),
       ),
   }),
-  defineModule({
-    id: `${meta.id}/module/file-uploader`,
+  Plugin.addModule({
+    id: 'file-uploader',
     activatesOn: ClientEvents.ClientReady,
     activate: FileUploader,
   }),
-  defineModule({
-    id: `${meta.id}/module/markdown`,
+  Plugin.addModule({
+    id: 'markdown',
     activatesOn: MarkdownEvents.SetupExtensions,
     activate: Markdown,
   }),
-  defineModule({
-    id: `${meta.id}/module/react-surface`,
-    activatesOn: Events.SetupReactSurface,
-    activate: ReactSurface,
-  }),
-  defineModule({
-    id: `${meta.id}/module/intent-resolver`,
-    activatesOn: Events.SetupIntentResolver,
-    activate: IntentResolver,
-  }),
-]);
+  Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
+  Common.Plugin.addOperationResolverModule({ activate: OperationResolver }),
+  Plugin.make,
+);

@@ -5,6 +5,10 @@
   "description": "Experimental Discord bot.",
   "homepage": "https://github.com/dxos",
   "bugs": "https://github.com/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
   "license": "MIT",
   "author": "DXOS.org",
   "sideEffects": true,
@@ -32,9 +36,9 @@
     "@dxos/config": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
-    "discord.js": "^14.14.1"
+    "discord.js": "catalog:"
   },
   "devDependencies": {
-    "@babel/core": "^7.18.13"
+    "@babel/core": "catalog:"
   }
 }

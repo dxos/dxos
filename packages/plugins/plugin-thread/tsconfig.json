@@ -8,6 +8,7 @@
     ]
   },
   "exclude": [
+    "*.stories.tsx",
     "*.t.ts",
     "vite.config.ts"
   ],
@@ -33,13 +34,13 @@
       "path": "../../common/display-name"
     },
     {
+      "path": "../../common/effect"
+    },
+    {
       "path": "../../common/invariant"
     },
     {
       "path": "../../common/keys"
-    },
-    {
-      "path": "../../common/local-storage"
     },
     {
       "path": "../../common/log"
@@ -57,13 +58,22 @@
       "path": "../../core/assistant"
     },
     {
+      "path": "../../core/blueprints"
+    },
+    {
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../core/echo/echo-schema"
+      "path": "../../core/echo/echo-db"
     },
     {
-      "path": "../../core/echo/live-object"
+      "path": "../../core/echo/echo-react"
+    },
+    {
+      "path": "../../core/functions"
+    },
+    {
+      "path": "../../core/operation"
     },
     {
       "path": "../../core/protocols"
@@ -79,6 +89,9 @@
     },
     {
       "path": "../../sdk/schema"
+    },
+    {
+      "path": "../../sdk/types"
     },
     {
       "path": "../../ui/react-ui"
@@ -99,6 +112,9 @@
       "path": "../../ui/react-ui-menu"
     },
     {
+      "path": "../../ui/react-ui-mosaic"
+    },
+    {
       "path": "../../ui/react-ui-sfx"
     },
     {
@@ -111,10 +127,13 @@
       "path": "../../ui/react-ui-tabs"
     },
     {
-      "path": "../../ui/react-ui-theme"
+      "path": "../../ui/react-ui-thread"
     },
     {
-      "path": "../../ui/react-ui-thread"
+      "path": "../../ui/ui-editor"
+    },
+    {
+      "path": "../../ui/ui-theme"
     },
     {
       "path": "../plugin-attention"
@@ -136,6 +155,9 @@
     },
     {
       "path": "../plugin-space"
+    },
+    {
+      "path": "../plugin-testing"
     },
     {
       "path": "../plugin-theme"

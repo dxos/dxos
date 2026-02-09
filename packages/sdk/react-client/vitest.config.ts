@@ -10,7 +10,7 @@ import { createConfig } from '../../../vitest.base.config';
 export default createConfig({
   dirname: typeof __dirname !== 'undefined' ? __dirname : path.dirname(fileURLToPath(import.meta.url)),
   node: {
-    environment: 'jsdom',
+    environment: 'happy-dom',
     // TODO(dmaretskyi): Enabled because client tests were flaky. Remove when that's not the case.
     retry: 2,
   },

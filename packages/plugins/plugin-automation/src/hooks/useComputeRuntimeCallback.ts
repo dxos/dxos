@@ -2,29 +2,66 @@
 // Copyright 2025 DXOS.org
 //
 
-import type { Effect } from 'effect';
-import { useCallback } from 'react';
+import * as Cause from 'effect/Cause';
+import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
+import { type DependencyList, useCallback } from 'react';
 
-import { useCapability } from '@dxos/app-framework';
-import type { Space } from '@dxos/react-client/echo';
+import { useCapability } from '@dxos/app-framework/react';
+import { type Key } from '@dxos/echo';
+import { type FunctionDefinition, FunctionInvocationService, TracingService } from '@dxos/functions';
+import { log } from '@dxos/log';
 
-import { AutomationCapabilities } from '../capabilities';
+import { AutomationCapabilities } from '../types';
 
 /**
  * Create an effectful function that has access to compute services
  */
+// TODO(burdon): Factor out (figure out cross-plugin capabilities dependencies).
 export const useComputeRuntimeCallback = <T>(
-  space: Space | undefined,
+  id: Key.SpaceId | undefined,
   fn: () => Effect.Effect<T, any, AutomationCapabilities.ComputeServices>,
-  deps?: React.DependencyList,
+  deps?: DependencyList,
 ): (() => Promise<T>) => {
   const computeRuntime = useCapability(AutomationCapabilities.ComputeRuntime);
-  const runtime = space !== undefined ? computeRuntime.getRuntime(space.id) : undefined;
+  const runtime = id !== undefined ? computeRuntime.getRuntime(id) : undefined;
 
   return useCallback(() => {
     if (!runtime) {
       throw new TypeError('Space not provided to useComputeRuntimeCallback');
     }
+
     return runtime.runPromise(fn());
   }, [runtime, ...(deps ?? [])]);
 };
+
+// TODO(wittjosiah): Function invoking should automatically be traced (DX-647).
+export const invokeFunctionWithTracing = <I, O>(functionDef: FunctionDefinition<I, O>, inputData: I) =>
+  Effect.gen(function* () {
+    const tracer = yield* TracingService;
+    const trace = yield* tracer.traceInvocationStart({
+      target: undefined,
+      payload: {
+        data: {},
+      },
+    });
+
+    // Invoke the function.
+    const result = yield* FunctionInvocationService.invokeFunction(functionDef, inputData).pipe(
+      Effect.provide(trace.invocationTraceQueue ? TracingService.layerInvocation(trace) : TracingService.layerNoop),
+      Effect.exit,
+    );
+
+    if (Exit.isFailure(result)) {
+      const error = Cause.prettyErrors(result.cause)[0];
+      log.error(error.message, error.cause ?? error.stack);
+    }
+
+    yield* tracer.traceInvocationEnd({
+      trace,
+      // TODO(dmaretskyi): Might miss errors.
+      exception: Exit.isFailure(result) ? Cause.prettyErrors(result.cause)[0] : undefined,
+    });
+
+    return result;
+  });

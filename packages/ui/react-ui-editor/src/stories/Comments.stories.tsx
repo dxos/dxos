@@ -2,26 +2,25 @@
 // Copyright 2023 DXOS.org
 //
 
-import { effect, useSignal } from '@preact/signals-react';
+import { Atom, RegistryContext } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { type FC } from 'react';
+import React, { type FC, useContext, useMemo } from 'react';
 
 import { keySymbols, parseShortcut } from '@dxos/keyboard';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { withTheme } from '@dxos/react-ui/testing';
+import { withRegistry } from '@dxos/storybook-utils';
+import { type Comment, annotations, comments, createExternalCommentSync } from '@dxos/ui-editor';
 
-import { annotations, comments, createExternalCommentSync } from '../extensions';
-import { str } from '../testing';
-import { type Comment } from '../types';
-import { createRenderer } from '../util';
+import { createRenderer, str } from '../util';
 
 import { EditorStory, content, longText } from './components';
 
 const meta = {
   title: 'ui/react-ui-editor/Comments',
   component: EditorStory,
-  decorators: [withTheme],
+  decorators: [withRegistry, withTheme],
   parameters: {
     layout: 'fullscreen',
   },
@@ -35,52 +34,57 @@ type Story = StoryObj<typeof meta>;
 // Comments
 //
 
+const CommentsStory = () => {
+  const registry = useContext(RegistryContext);
+  const commentsAtom = useMemo(() => Atom.make<Comment[]>([]), []);
+
+  return (
+    <EditorStory
+      text={str('# Comments', '', content.paragraphs, content.footer)}
+      extensions={[
+        createExternalCommentSync(
+          'test',
+          (sink) => registry.subscribe(commentsAtom, () => sink()),
+          () => registry.get(commentsAtom),
+        ),
+        comments({
+          id: 'test',
+          renderTooltip: createRenderer(CommentTooltip),
+          onCreate: ({ cursor }) => {
+            const id = PublicKey.random().toHex();
+            const current = registry.get(commentsAtom);
+            registry.set(commentsAtom, [...current, { id, cursor }]);
+            return id;
+          },
+          onSelect: (state) => {
+            const debug = false;
+            if (debug) {
+              log.info('update', {
+                comments: state.comments.length,
+                active: state.selection.current?.slice(0, 8),
+                closest: state.selection.closest?.slice(0, 8),
+              });
+            }
+          },
+        }),
+      ]}
+    />
+  );
+};
+
 export const Comments: Story = {
-  render: () => {
-    const _comments = useSignal<Comment[]>([]);
-    return (
-      <EditorStory
-        text={str('# Comments', '', content.paragraphs, content.footer)}
-        extensions={[
-          createExternalCommentSync(
-            'test',
-            (sink) => effect(() => sink()),
-            () => _comments.value,
-          ),
-          comments({
-            id: 'test',
-            renderTooltip: createRenderer(CommentTooltip),
-            onCreate: ({ cursor }) => {
-              const id = PublicKey.random().toHex();
-              _comments.value = [..._comments.value, { id, cursor }];
-              return id;
-            },
-            onSelect: (state) => {
-              const debug = false;
-              if (debug) {
-                log.info('update', {
-                  comments: state.comments.length,
-                  active: state.selection.current?.slice(0, 8),
-                  closest: state.selection.closest?.slice(0, 8),
-                });
-              }
-            },
-          }),
-        ]}
-      />
-    );
-  },
+  render: () => <CommentsStory />,
 };
 
 const Key: FC<{ char: string }> = ({ char }) => (
-  <span className='flex justify-center items-center w-[24px] h-[24px] rounded text-xs bg-neutral-200 text-black'>
+  <span className='flex justify-center items-center is-[24px] bs-[24px] rounded text-xs bg-neutral-200 text-black'>
     {char}
   </span>
 );
 
 const CommentTooltip: FC<{ shortcut: string }> = ({ shortcut }) => {
   return (
-    <div className='flex items-center gap-2 px-2 py-2 bg-neutral-700 text-white text-xs rounded'>
+    <div className='flex items-center gap-2 pli-2 plb-2 bg-neutral-700 text-white text-xs rounded'>
       <div>Create comment</div>
       <div className='flex gap-1'>
         {keySymbols(parseShortcut(shortcut)).map((char) => (

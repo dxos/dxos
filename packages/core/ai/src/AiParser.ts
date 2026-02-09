@@ -2,14 +2,20 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Response } from '@effect/ai';
-import { Effect, Function, Option, Predicate, Stream } from 'effect';
+import type * as Response from '@effect/ai/Response';
+import type * as Tool from '@effect/ai/Tool';
+import * as Effect from 'effect/Effect';
+import * as Function from 'effect/Function';
+import * as Option from 'effect/Option';
+import * as Predicate from 'effect/Predicate';
+import * as Stream from 'effect/Stream';
+import type * as Types from 'effect/Types';
 
 import { Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type ContentBlock } from '@dxos/schema';
+import { type ContentBlock } from '@dxos/types';
 
 import { type StreamBlock, StreamTransform } from './parser';
 
@@ -42,7 +48,7 @@ enum ModelTags {
   TOOLKIT = 'toolkit',
 }
 
-export interface ParseResponseCallbacks {
+export interface ParseResponseCallbacks<Tools extends Record<string, Tool.Any> = any> {
   /**
    * Called when the stream begins.
    */
@@ -51,7 +57,7 @@ export interface ParseResponseCallbacks {
   /**
    * Called on every part received from the stream.
    */
-  onPart: (part: Response.StreamPart<any>) => Effect.Effect<void>;
+  onPart: (part: Response.StreamPart<Tools>) => Effect.Effect<void>;
 
   /**
    * Called on every partial or completed content block.
@@ -71,7 +77,7 @@ export interface ParseResponseCallbacks {
   onEnd: (block: ContentBlock.Summary) => Effect.Effect<void>;
 }
 
-export interface ParseResponseOptions extends ParseResponseCallbacks {
+export interface ParseResponseOptions<Tools extends Record<string, Tool.Any>> extends ParseResponseCallbacks<Tools> {
   /**
    * Whether to parse reasoning tags: <cot> and <think>.
    */
@@ -83,14 +89,14 @@ export interface ParseResponseOptions extends ParseResponseCallbacks {
  * Partial blocks are emitted to support streaming to the UI.
  */
 export const parseResponse =
-  ({
+  <Tools extends Record<string, Tool.Any>>({
     parseReasoningTags = false,
     onBegin = Function.constant(Effect.void),
     onPart = Function.constant(Effect.void),
     onBlock = Function.constant(Effect.void),
     onEnd = Function.constant(Effect.void),
-  }: Partial<ParseResponseOptions> = {}) =>
-  <E, R>(input: Stream.Stream<Response.StreamPart<any>, E, R>): Stream.Stream<ContentBlock.Any, E, R> =>
+  }: Partial<ParseResponseOptions<Tools>> = {}) =>
+  <E, R>(input: Stream.Stream<Response.StreamPart<Tools>, E, R>): Stream.Stream<ContentBlock.Any, E, R> =>
     Stream.asyncPush(
       Effect.fnUntraced(function* (emit) {
         const transformer = new StreamTransform();
@@ -98,29 +104,29 @@ export const parseResponse =
 
         /** Stack of open tags. */
         const tagStack: StreamBlock[] = [];
-        const summary: ContentBlock.Summary = {
+        const summary: Types.Mutable<ContentBlock.Summary> = {
           _tag: 'summary',
         };
 
         /** Current partial block used to accumulate content. */
         let current: StreamBlock | undefined;
-        let block: ContentBlock.Any | undefined;
+        let block: Types.Mutable<ContentBlock.Any> | undefined;
         let blocks = 0;
         let parts = 0;
         let toolCalls = 0;
 
-        const emitPartialContentBlock = Effect.fnUntraced(function* (block: ContentBlock.Any) {
-          yield* onBlock({ ...block });
+        const emitPartialContentBlock = Effect.fnUntraced(function* (block: Types.Mutable<ContentBlock.Any>) {
+          yield* onBlock({ ...block } as ContentBlock.Any);
           blocks++;
         });
 
-        const emitFullBlock = Effect.fnUntraced(function* (block: ContentBlock.Any) {
+        const emitFullBlock = Effect.fnUntraced(function* (block: Types.Mutable<ContentBlock.Any>) {
           log('block', { block });
           if (block.pending === false) {
             delete block.pending;
           }
-          yield* onBlock(block);
-          emit.single(block);
+          yield* onBlock(block as ContentBlock.Any);
+          emit.single(block as ContentBlock.Any);
           blocks++;
         });
 
@@ -247,44 +253,38 @@ export const parseResponse =
               }
 
               case 'tool-params-start': {
-                // NOTE: Effect-ai outputs both streamed and parsed tool calls. We ignore the streamed version for now.
-                // invariant(!block);
-                // block = {
-                //   _tag: 'toolCall',
-                //   toolCallId: part.id,
-                //   name: part.name,
-                //   input: '',
-                //   pending: true,
-                //   providerExecuted: part.providerExecuted,
-                // } satisfies ContentBlock.ToolCall;
-                // yield* onBlock(block);
+                invariant(!block);
+                block = {
+                  _tag: 'toolCall',
+                  toolCallId: part.id,
+                  name: part.name,
+                  input: '',
+                  pending: true,
+                  providerExecuted: part.providerExecuted,
+                } satisfies ContentBlock.ToolCall;
+                yield* emitPartialContentBlock(block);
                 break;
               }
 
               case 'tool-params-delta': {
-                // invariant(block?._tag === 'toolCall');
-                // block.input += part.delta;
-                // yield* onBlock(block);
+                invariant(block?._tag === 'toolCall');
+                block.input += part.delta;
+                yield* emitPartialContentBlock(block);
                 break;
               }
 
               case 'tool-params-end': {
-                // invariant(block?._tag === 'toolCall');
-                // block.pending = false;
-                // yield* emitFullBlock(block);
-                // block = undefined;
+                invariant(block?._tag === 'toolCall');
+                block.pending = false;
+                yield* emitFullBlock(block);
+                toolCalls++;
+                block = undefined;
                 break;
               }
 
               case 'tool-call': {
-                yield* emitFullBlock({
-                  _tag: 'toolCall',
-                  toolCallId: part.id,
-                  name: part.name,
-                  input: JSON.stringify(part.params),
-                  providerExecuted: part.providerExecuted,
-                } satisfies ContentBlock.ToolCall);
-                toolCalls++;
+                // NOTE: Tool calls are handled via tool-params-start/delta/end streaming parts.
+                // This event is still emitted by Effect-ai but we ignore it.
                 break;
               }
 
@@ -379,12 +379,12 @@ export const parseResponse =
     );
 
 /**
- * @returns Content block made from stream block.
+ * @returns Mutable content block made from stream block.
  */
 const makeContentBlock = (
   block: StreamBlock,
-  { parseReasoningTags }: Pick<ParseResponseOptions, 'parseReasoningTags'>,
-): ContentBlock.Any | undefined => {
+  { parseReasoningTags }: Pick<ParseResponseOptions<any>, 'parseReasoningTags'>,
+): Types.Mutable<ContentBlock.Any> | undefined => {
   switch (block.type) {
     //
     // Text

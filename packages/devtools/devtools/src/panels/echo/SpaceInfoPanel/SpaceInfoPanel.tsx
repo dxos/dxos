@@ -9,7 +9,7 @@ import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { type Space } from '@dxos/react-client/echo';
 import { useMulticastObservable } from '@dxos/react-hooks';
-import { Icon, Toolbar } from '@dxos/react-ui';
+import { Toolbar } from '@dxos/react-ui';
 
 import { PanelContainer } from '../../../components';
 import { DataSpaceSelector } from '../../../containers';
@@ -58,9 +58,12 @@ export const SpaceInfoPanel: FC<SpaceInfoPanelProps> = (props) => {
     () => (
       <Toolbar.Root>
         {!props.space && <DataSpaceSelector />}
-        <Toolbar.Button onClick={() => forceUpdate({})}>
-          <Icon icon='ph--arrow-clockwise--regular' size={5} />
-        </Toolbar.Button>
+        <Toolbar.IconButton
+          icon='ph--arrow-clockwise--regular'
+          iconOnly
+          label='Refresh'
+          onClick={() => forceUpdate({})}
+        />
         <div className='grow' />
         <Toolbar.Button onClick={toggleActive}>
           {space?.state.get() === SpaceState.SPACE_INACTIVE ? 'Open' : 'Close'}
@@ -86,7 +89,7 @@ export const SpaceInfoPanel: FC<SpaceInfoPanelProps> = (props) => {
           <div className='bs-48'>
             <FeedTable onSelect={props.onSelectFeed} />
           </div>
-          <div className='border-t border-separator'>
+          <div className='border-bs border-separator'>
             <SyncStateInfo space={space} />
           </div>
         </div>

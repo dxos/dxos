@@ -2,9 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { lazy } from 'react';
+import { type ComponentType, lazy } from 'react';
 
-export const MeetingContainer = lazy(() => import('./MeetingContainer'));
-export const MeetingsList = lazy(() => import('./MeetingsList'));
+import { type MeetingsListProps } from './MeetingsList';
 
 export * from './MeetingSettings';
+
+export const MeetingContainer = lazy(() => import('./MeetingContainer'));
+export const MeetingsList = lazy<ComponentType<MeetingsListProps>>(() => import('./MeetingsList'));

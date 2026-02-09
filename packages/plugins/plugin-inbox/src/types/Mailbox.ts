@@ -1,0 +1,80 @@
+//
+// Copyright 2024 DXOS.org
+//
+
+import * as Schema from 'effect/Schema';
+
+import { type Space } from '@dxos/client/echo';
+import { Obj, Ref, Type } from '@dxos/echo';
+import { FormInputAnnotation } from '@dxos/echo/internal';
+import { Queue } from '@dxos/echo-db';
+import { QueueAnnotation } from '@dxos/schema';
+import { AccessToken } from '@dxos/types';
+
+// TODO(burdon): Implement as labels?
+export enum MessageState {
+  NONE = 0,
+  ARCHIVED = 1,
+  DELETED = 2,
+  SPAM = 3,
+}
+
+export const Labels = Schema.Record({
+  key: Schema.String,
+  value: Schema.String,
+});
+
+export type Labels = Schema.Schema.Type<typeof Labels>;
+
+// TODO(burdon): Rename MessageBox? (not email specific).
+export const Mailbox = Schema.Struct({
+  name: Schema.optional(Schema.String),
+  queue: Type.Ref(Queue).pipe(FormInputAnnotation.set(false)),
+  labels: Labels.pipe(FormInputAnnotation.set(false), Schema.optional),
+  // TODO(wittjosiah): Factor out to relation?
+  filters: Schema.Array(
+    Schema.Struct({
+      name: Schema.String,
+      filter: Schema.String,
+    }),
+  ).pipe(FormInputAnnotation.set(false)),
+  accessToken: Schema.optional(
+    Type.Ref(AccessToken.AccessToken).annotations({
+      title: 'Account',
+      description: 'Google account credentials for syncing this mailbox.',
+    }),
+  ),
+}).pipe(
+  Type.object({
+    typename: 'dxos.org/type/Mailbox',
+    version: '0.1.0',
+  }),
+  QueueAnnotation.set(true),
+);
+
+export type Mailbox = Schema.Schema.Type<typeof Mailbox>;
+
+export const CreateMailboxSchema = Schema.Struct({
+  name: Schema.optional(Schema.String.annotations({ title: 'Name' })),
+  accessToken: Schema.optional(
+    Type.Ref(AccessToken.AccessToken).annotations({
+      title: 'Account',
+      description: 'Google account credentials for syncing this mailbox.',
+    }),
+  ),
+});
+
+type MailboxProps = Omit<Obj.MakeProps<typeof Mailbox>, 'queue' | 'filters'> & {
+  space: Space;
+  filters?: { name: string; filter: string }[];
+};
+
+export const make = ({ space, ...props }: MailboxProps) => {
+  const queue = space.queues.create();
+  return Obj.make(Mailbox, {
+    queue: Ref.fromDXN(queue.dxn),
+    labels: {},
+    filters: [],
+    ...props,
+  });
+};

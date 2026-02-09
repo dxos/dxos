@@ -6,13 +6,13 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { waitForCondition } from '@dxos/async';
 import type { Space } from '@dxos/client-protocol';
+import { Obj } from '@dxos/echo';
 import { type PublicKey } from '@dxos/keys';
-import { live } from '@dxos/live-object';
 import { type Contact, Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { range } from '@dxos/util';
 
 import { Client } from '../client';
-import { TestBuilder, TextV0Type, performInvitation, waitForSpace } from '../testing';
+import { TestBuilder, TestSchema, performInvitation, waitForSpace } from '../testing';
 
 describe('ContactBook', () => {
   describe('joinBySpaceKey', () => {
@@ -45,9 +45,9 @@ describe('ContactBook', () => {
       await inviteMember(space1, client2);
       const [contact] = await waitForContactBookSize(client1, 1);
 
-      client1.addTypes([TextV0Type]);
+      await client1.addTypes([TestSchema.TextV0Type]);
       const space2 = await client1.spaces.create();
-      const document = space2.db.add(live(TextV0Type, { content: 'text' }));
+      const document = space2.db.add(Obj.make(TestSchema.TextV0Type, { content: 'text' }));
       await space2.db.flush();
 
       await space2.admitContact(contact);
@@ -55,13 +55,15 @@ describe('ContactBook', () => {
       const guestSpace = await waitForSpace(client2, space2.key, { ready: true });
       await expectDocumentReplicated(guestSpace, document);
 
-      document.content = 'Hello, world!';
+      Obj.change(document, (d) => {
+        d.content = 'Hello, world!';
+      });
       await space2.db.flush();
       await expectDocumentReplicated(guestSpace, document);
     });
   });
 
-  const expectDocumentReplicated = async (space: Space, expected: TextV0Type) => {
+  const expectDocumentReplicated = async (space: Space, expected: TestSchema.TextV0Type) => {
     await waitForCondition({
       condition: () => {
         const actual = space.db.getObjectById(expected.id);

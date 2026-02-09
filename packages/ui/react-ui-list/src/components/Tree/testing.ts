@@ -3,22 +3,23 @@
 //
 
 import { type Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 
-import { type HasId, ObjectId } from '@dxos/echo-schema';
+import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
 
 import { type TreeData } from './TreeItem';
 
-export type TestItem = HasId & {
+export type TestItem = {
+  id: string;
   name: string;
   icon?: string;
   items: TestItem[];
 };
 
 export const TestItemSchema = Schema.Struct({
-  id: ObjectId,
+  id: Obj.ID,
   name: Schema.String,
   icon: Schema.optional(Schema.String),
   items: Schema.mutable(Schema.Array(Schema.suspend((): Schema.Schema<TestItem> => TestItemSchema))),

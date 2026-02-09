@@ -2,14 +2,20 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Capabilities, Events, contributes, createIntent, defineModule, definePlugin } from '@dxos/app-framework';
-import { ResearchGraph, ResearchOn } from '@dxos/assistant-testing';
+import * as Effect from 'effect/Effect';
+
+import { Capability, Common, Plugin } from '@dxos/app-framework';
+import { Chat, Initiative, ResearchGraph } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { Sequence } from '@dxos/conductor';
-import { Type } from '@dxos/echo';
-import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
-import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
-import { defineObjectForm } from '@dxos/plugin-space/types';
+import { Obj, Type } from '@dxos/echo';
+import { type SpaceId } from '@dxos/keys';
+import { Operation } from '@dxos/operation';
+import { AutomationCapabilities } from '@dxos/plugin-automation/types';
+import { ClientEvents } from '@dxos/plugin-client/types';
+import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space/types';
+import { type CreateObject } from '@dxos/plugin-space/types';
+import { HasSubject } from '@dxos/types';
 
 import {
   AiService,
@@ -17,151 +23,142 @@ import {
   AssistantState,
   BlueprintDefinition,
   EdgeModelResolver,
-  IntentResolver,
   LocalModelResolver,
+  OperationResolver,
   ReactSurface,
+  Repair,
   Settings,
   Toolkit,
 } from './capabilities';
-import { AssistantEvents } from './events';
 import { meta } from './meta';
 import { translations } from './translations';
-import { Assistant, AssistantAction, ServiceType } from './types';
+import { AssistantEvents, AssistantOperation } from './types';
 
-export const AssistantPlugin = definePlugin(meta, () => [
-  defineModule({
-    id: `${meta.id}/module/translations`,
-    activatesOn: Events.SetupTranslations,
-    activate: () => contributes(Capabilities.Translations, translations),
-  }),
-  defineModule({
-    id: `${meta.id}/module/settings`,
-    activatesOn: Events.SetupSettings,
-    activate: Settings,
-  }),
-  defineModule({
-    id: `${meta.id}/module/state`,
+export const AssistantPlugin = Plugin.define(meta).pipe(
+  Common.Plugin.addTranslationsModule({ translations }),
+  Common.Plugin.addSettingsModule({ activate: Settings }),
+  Plugin.addModule({
     // TODO(wittjosiah): Does not integrate with settings store.
     //   Should this be a different event?
     //   Should settings store be renamed to be more generic?
-    activatesOn: Events.SetupSettings,
+    activatesOn: Common.ActivationEvent.SetupSettings,
     activate: AssistantState,
   }),
-  defineModule({
-    id: `${meta.id}/module/metadata`,
-    activatesOn: Events.SetupMetadata,
-    activate: () => [
-      contributes(Capabilities.Metadata, {
-        id: Type.getTypename(Assistant.Chat),
+  Common.Plugin.addMetadataModule({
+    metadata: [
+      {
+        id: Type.getTypename(Chat.Chat),
         metadata: {
           icon: 'ph--atom--regular',
+          iconHue: 'sky',
+          createObject: ((props) => Effect.sync(() => Chat.make(props))) satisfies CreateObject,
         },
-      }),
-      contributes(Capabilities.Metadata, {
+      },
+      {
         id: Type.getTypename(Blueprint.Blueprint),
         metadata: {
           icon: 'ph--blueprint--regular',
+          iconHue: 'sky',
+          inputSchema: AssistantOperation.BlueprintForm,
+          createObject: ((props) => Effect.sync(() => Blueprint.make(props))) satisfies CreateObject,
         },
-      }),
-      contributes(Capabilities.Metadata, {
+      },
+      {
+        id: Type.getTypename(Prompt.Prompt),
+        metadata: {
+          icon: 'ph--scroll--regular',
+          iconHue: 'sky',
+          createObject: ((props) => Effect.sync(() => Prompt.make(props))) satisfies CreateObject,
+        },
+      },
+      {
         id: Type.getTypename(Sequence),
         metadata: {
           icon: 'ph--circuitry--regular',
+          iconHue: 'sky',
+          createObject: ((props) => Effect.sync(() => Obj.make(Sequence, props))) satisfies CreateObject,
+          addToCollectionOnCreate: true,
         },
-      }),
+      },
+      {
+        id: Type.getTypename(Initiative.Initiative),
+        metadata: {
+          icon: 'ph--circuitry--regular',
+          iconHue: 'sky',
+          createObject: ((_, { db }) =>
+            Initiative.makeInitialized({
+              name: 'New Initiative',
+              spec: 'Not specified yet',
+            }).pipe(withComputeRuntime(db.spaceId))) satisfies CreateObject,
+          addToCollectionOnCreate: true,
+        },
+      },
     ],
   }),
-  defineModule({
-    id: `${meta.id}/module/object-form`,
-    activatesOn: ClientEvents.SetupSchema,
-    activate: () => [
-      contributes(
-        SpaceCapabilities.ObjectForm,
-        defineObjectForm({
-          objectSchema: Assistant.Chat,
-          getIntent: (_, options) => createIntent(AssistantAction.CreateChat, { space: options.space }),
-        }),
-      ),
-      contributes(
-        SpaceCapabilities.ObjectForm,
-        defineObjectForm({
-          objectSchema: Blueprint.Blueprint,
-          formSchema: AssistantAction.BlueprintForm,
-          getIntent: (props) => createIntent(AssistantAction.CreateBlueprint, props),
-        }),
-      ),
-      contributes(
-        SpaceCapabilities.ObjectForm,
-        defineObjectForm({
-          objectSchema: Sequence,
-          getIntent: () => createIntent(AssistantAction.CreateSequence),
-        }),
-      ),
+  Common.Plugin.addSchemaModule({
+    schema: [
+      Chat.Chat,
+      Chat.CompanionTo,
+      Blueprint.Blueprint,
+      HasSubject.HasSubject,
+      Prompt.Prompt,
+      ResearchGraph,
+      Initiative.Initiative,
+      Sequence,
     ],
   }),
-  defineModule({
-    id: `${meta.id}/module/schema`,
-    activatesOn: ClientEvents.SetupSchema,
-    activate: () =>
-      contributes(ClientCapabilities.Schema, [
-        ServiceType,
-        Assistant.CompanionTo,
-        ResearchGraph,
-        ResearchOn,
-        Prompt.Prompt,
-      ]),
-  }),
-  defineModule({
-    id: `${meta.id}/module/on-space-created`,
+  Plugin.addModule({
+    id: 'on-space-created',
     activatesOn: SpaceEvents.SpaceCreated,
     activate: () =>
-      contributes(SpaceCapabilities.onCreateSpace, ({ rootCollection, space }) =>
-        createIntent(AssistantAction.onCreateSpace, { rootCollection, space }),
+      Effect.succeed(
+        Capability.contributes(SpaceCapabilities.OnCreateSpace, (params) =>
+          Operation.invoke(AssistantOperation.OnCreateSpace, params),
+        ),
       ),
   }),
-  defineModule({
-    id: `${meta.id}/module/app-graph-builder`,
-    activatesOn: Events.SetupAppGraph,
-    activate: AppGraphBuilder,
+  Plugin.addModule({
+    activatesOn: ClientEvents.SpacesReady,
+    activate: Repair,
   }),
-  defineModule({
-    id: `${meta.id}/module/intent-resolver`,
-    activatesOn: Events.SetupIntentResolver,
-    activate: IntentResolver,
-  }),
-  defineModule({
-    id: `${meta.id}/module/react-surface`,
-    activatesOn: Events.SetupReactSurface,
-    // TODO(wittjosiah): Should occur before the chat is loaded when surfaces activation is more granular.
-    activatesBefore: [Events.SetupArtifactDefinition],
+  Common.Plugin.addAppGraphModule({ activate: AppGraphBuilder }),
+  Common.Plugin.addOperationResolverModule({ activate: OperationResolver }),
+  Common.Plugin.addSurfaceModule({
     activate: ReactSurface,
+    activatesBefore: [Common.ActivationEvent.SetupArtifactDefinition],
   }),
-  defineModule({
-    id: `${meta.id}/module/edge-model-resolver`,
+  Plugin.addModule({
     activatesOn: AssistantEvents.SetupAiServiceProviders,
     activate: EdgeModelResolver,
   }),
-  defineModule({
-    id: `${meta.id}/module/local-model-resolver`,
+  Plugin.addModule({
     activatesOn: AssistantEvents.SetupAiServiceProviders,
     activate: LocalModelResolver,
   }),
-  defineModule({
-    id: `${meta.id}/module/ai-service`,
+  Plugin.addModule({
     activatesBefore: [AssistantEvents.SetupAiServiceProviders],
     // TODO(dmaretskyi): This should activate lazily when the AI chat is used.
-    activatesOn: Events.Startup,
+    activatesOn: Common.ActivationEvent.Startup,
     activate: AiService,
   }),
-  defineModule({
-    id: `${meta.id}/module/blueprint`,
-    activatesOn: Events.SetupArtifactDefinition,
-    activate: BlueprintDefinition,
-  }),
-  defineModule({
-    id: `${meta.id}/module/toolkit`,
+  Common.Plugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
+  Plugin.addModule({
     // TODO(wittjosiah): Use a different event.
-    activatesOn: Events.Startup,
+    activatesOn: Common.ActivationEvent.Startup,
     activate: Toolkit,
   }),
-]);
+  Plugin.make,
+);
+
+// TODO(dmaretskyi): Extract to a helper module.
+const withComputeRuntime =
+  (spaceId: SpaceId) =>
+  <A, E, R>(
+    effect: Effect.Effect<A, E, R>,
+  ): Effect.Effect<A, E, Exclude<R, AutomationCapabilities.ComputeServices> | Capability.Service> =>
+    Effect.gen(function* () {
+      // TODO(dmaretskyi): Capability.get has `Error` in the error channel. We should throw those as defects instead.
+      const provider = yield* Capability.get(AutomationCapabilities.ComputeRuntime).pipe(Effect.orDie);
+      const runtime = yield* provider.getRuntime(spaceId).runtimeEffect;
+      return yield* effect.pipe(Effect.provide(runtime));
+    });

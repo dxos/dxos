@@ -18,7 +18,12 @@ import {
 
 const isSocket = !!(globalThis as any).__args;
 
-export const DeckSettings = ({ settings }: { settings: DeckSettingsProps }) => {
+export type DeckSettingsComponentProps = {
+  settings: DeckSettingsProps;
+  onSettingsChange: (fn: (current: DeckSettingsProps) => DeckSettingsProps) => void;
+};
+
+export const DeckSettings = ({ settings, onSettingsChange }: DeckSettingsComponentProps) => {
   const { t } = useTranslation(meta.id);
 
   return (
@@ -28,14 +33,22 @@ export const DeckSettings = ({ settings }: { settings: DeckSettingsProps }) => {
           <ControlItemInput title={t('settings enable deck label')}>
             <Input.Switch
               checked={settings.enableDeck}
-              onCheckedChange={(checked) => (settings.enableDeck = checked)}
+              onCheckedChange={(checked) => onSettingsChange((s) => ({ ...s, enableDeck: checked }))}
+            />
+          </ControlItemInput>
+          <ControlItemInput title={t('settings encapsulated planks label')}>
+            <Input.Switch
+              checked={settings.encapsulatedPlanks ?? false}
+              onCheckedChange={(checked) => onSettingsChange((s) => ({ ...s, encapsulatedPlanks: checked }))}
             />
           </ControlItemInput>
           <ControlItemInput title={t('select new plank positioning label')}>
             <Select.Root
               disabled={!settings.enableDeck}
               value={settings.newPlankPositioning ?? 'start'}
-              onValueChange={(value) => (settings.newPlankPositioning = value as NewPlankPositioning)}
+              onValueChange={(value) =>
+                onSettingsChange((s) => ({ ...s, newPlankPositioning: value as NewPlankPositioning }))
+              }
             >
               <Select.TriggerButton placeholder={t('select new plank positioning placeholder')} />
               <Select.Portal>
@@ -56,7 +69,7 @@ export const DeckSettings = ({ settings }: { settings: DeckSettingsProps }) => {
             <Select.Root
               disabled={!settings.enableDeck}
               value={settings.overscroll ?? 'none'}
-              onValueChange={(value) => (settings.overscroll = value as Overscroll)}
+              onValueChange={(value) => onSettingsChange((s) => ({ ...s, overscroll: value as Overscroll }))}
             >
               <Select.TriggerButton placeholder={t('select overscroll placeholder')} />
               <Select.Portal>
@@ -76,17 +89,20 @@ export const DeckSettings = ({ settings }: { settings: DeckSettingsProps }) => {
           <ControlItemInput title={t('settings enable statusbar label')}>
             <Input.Switch
               checked={settings.enableStatusbar}
-              onCheckedChange={(checked) => (settings.enableStatusbar = checked)}
+              onCheckedChange={(checked) => onSettingsChange((s) => ({ ...s, enableStatusbar: checked }))}
             />
           </ControlItemInput>
           <ControlItemInput title={t('settings show hints label')}>
-            <Input.Switch checked={settings.showHints} onCheckedChange={(checked) => (settings.showHints = checked)} />
+            <Input.Switch
+              checked={settings.showHints}
+              onCheckedChange={(checked) => onSettingsChange((s) => ({ ...s, showHints: checked }))}
+            />
           </ControlItemInput>
           {!isSocket && (
             <ControlItemInput title={t('settings native redirect label')}>
               <Input.Switch
                 checked={settings.enableNativeRedirect}
-                onCheckedChange={(checked) => (settings.enableNativeRedirect = checked)}
+                onCheckedChange={(checked) => onSettingsChange((s) => ({ ...s, enableNativeRedirect: checked }))}
               />
             </ControlItemInput>
           )}

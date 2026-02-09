@@ -2,32 +2,44 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 
 import { EXA_API_KEY } from '@dxos/ai/testing';
 import { Obj } from '@dxos/echo';
-import { type DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { getIconAnnotation } from '@dxos/schema';
-import { Testing } from '@dxos/schema/testing';
+import { TestSchema } from '@dxos/schema/testing';
 
 import { search } from '../search';
 import { type SearchResult } from '../types';
 
 import { getStringProperty } from './sync';
 
-export const useWebSearch = ({ query, context }: { query?: string; context?: string }) => {
+export type UseWebSearchProps = {
+  query?: string;
+  context?: string;
+};
+
+export type UseWebSearch = {
+  update: () => Promise<void>;
+  results: SearchResult[];
+  isLoading: boolean;
+};
+
+/** @deprecated */
+// TODO(burdon): Remove testing deps.
+export const useWebSearch = ({ query, context }: UseWebSearchProps): UseWebSearch => {
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  const runSearch = async () => {
+  const update = useCallback(async () => {
     try {
       setIsLoading(true);
       log.info('Running web search', { query, context });
       const results = await search({
         query,
         context,
-        schema: [Testing.Project, Testing.Organization, Testing.Contact],
+        schema: [TestSchema.Person, TestSchema.Project, TestSchema.Organization], // TODO(burdon): ???
         exaApiKey: EXA_API_KEY,
       });
 
@@ -35,7 +47,6 @@ export const useWebSearch = ({ query, context }: { query?: string; context?: str
         const schema = Obj.getSchema(result);
         return {
           id: result.id,
-          objectType: Obj.getTypename(result) as DXN.String | undefined,
           label: getStringProperty(result, ['name', 'title', 'label']),
           snippet: getStringProperty(result, ['description', 'content', 'website', 'email']),
           object: result,
@@ -47,7 +58,7 @@ export const useWebSearch = ({ query, context }: { query?: string; context?: str
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [query, context]);
 
-  return { runSearch, results, isLoading };
+  return { update, results, isLoading };
 };

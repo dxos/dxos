@@ -26,14 +26,14 @@ export const [ListProvider, useListContext] = createContext<ListContext<any>>(LI
 
 export type ListRendererProps<T extends ListItemRecord> = {
   state: ListContext<T>['state'];
-  items: T[];
+  items: readonly T[];
 };
 
 const defaultGetId = <T extends ListItemRecord>(item: T) => (item as any)?.id;
 
 export type ListRootProps<T extends ListItemRecord> = {
   children?: (props: ListRendererProps<T>) => ReactNode;
-  items?: T[];
+  items?: readonly T[];
   onMove?: (fromIndex: number, toIndex: number) => void;
 } & Pick<ListContext<T>, 'isItem' | 'getId' | 'readonly' | 'dragPreview'>;
 

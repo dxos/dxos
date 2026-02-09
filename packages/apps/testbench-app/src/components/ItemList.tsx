@@ -4,18 +4,13 @@
 
 import React from 'react';
 
-import { createDocAccessor } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';
+import { createDocAccessor } from '@dxos/echo-db';
 import { IconButton, Input, useThemeContext } from '@dxos/react-ui';
-import {
-  automerge,
-  createBasicExtensions,
-  createMarkdownExtensions,
-  createThemeExtensions,
-  useTextEditor,
-} from '@dxos/react-ui-editor';
-import { mx, subtleHover } from '@dxos/react-ui-theme';
+import { useTextEditor } from '@dxos/react-ui-editor';
 import { mapSchemaToFields } from '@dxos/schema';
+import { automerge, createBasicExtensions, createMarkdownExtensions, createThemeExtensions } from '@dxos/ui-editor';
+import { mx, subtleHover } from '@dxos/ui-theme';
 
 const MAX_RENDERED_COUNT = 80;
 
@@ -24,7 +19,7 @@ export type ItemListProps<T> = { objects: T[] } & Pick<ItemProps<T>, 'debug' | '
 export const ItemList = ({ objects, debug, ...props }: ItemListProps<Obj.Any>) => {
   return (
     <div className='flex flex-col grow overflow-hidden'>
-      <div className='flex flex-col overflow-y-scroll pr-2'>
+      <div className='flex flex-col overflow-y-auto pr-2'>
         {objects
           .slice(0, MAX_RENDERED_COUNT)
           .map(
@@ -41,7 +36,7 @@ export const ItemList = ({ objects, debug, ...props }: ItemListProps<Obj.Any>) =
   );
 };
 
-const labelProps = 'shrink-0 w-20 text-right text-primary-500 px-2 py-[2px]';
+const labelProps = 'shrink-0 is-20 text-right text-primary-500 pli-2 plb-[2px]';
 
 export type ItemProps<T> = {
   object: T;
@@ -61,8 +56,8 @@ export const Item = ({ object, onDelete }: ItemProps<Obj.Any>) => {
   const props = mapSchemaToFields(schema);
 
   // TODO(burdon): [API]: Type check?
-  const getValue = (object: Obj.Any, prop: string) => (object as any)[prop];
-  const setValue = (object: Obj.Any, prop: string, value: any) => ((object as any)[prop] = value);
+  const getValue = (object: Obj.Any, prop: string) => object[prop];
+  const setValue = (object: Obj.Any, prop: string, value: any) => Obj.change(object, (obj) => (obj[prop] = value));
 
   return (
     <div className={mx('flex m-1 p-2 border', subtleHover)}>
@@ -73,7 +68,7 @@ export const Item = ({ object, onDelete }: ItemProps<Obj.Any>) => {
             {property === 'id' && (
               <Input.Root>
                 <Input.Label classNames={labelProps}>{property}</Input.Label>
-                <div className='font-mono text-xs py-1'>{getValue(object, property).slice(0, 8)}</div>
+                <div className='font-mono text-xs plb-1'>{getValue(object, property).slice(0, 8)}</div>
               </Input.Root>
             )}
             {type === 'boolean' && (
@@ -107,7 +102,7 @@ const Editor = ({ object, prop }: { object: Obj.Any; prop: string }) => {
   const { themeMode } = useThemeContext();
   const { parentRef } = useTextEditor(() => {
     return {
-      initialValue: (object as any)[prop],
+      initialValue: object[prop],
       extensions: [
         createBasicExtensions(),
         createMarkdownExtensions(),
@@ -125,7 +120,7 @@ export const DebugItem = ({ object, onDelete }: Pick<ItemProps<Obj.Any>, 'object
   const meta = Obj.getMeta(object);
   const deleted = JSON.stringify(object).indexOf('@deleted') !== -1; // TODO(burdon): [API] Missing API.
   return (
-    <div className='flex w-full px-1.5 py-1 text-sm font-thin font-mono'>
+    <div className='flex is-full pli-1.5 plb-1 text-sm font-thin font-mono'>
       <pre className='grow'>{JSON.stringify({ id: object.id.slice(0, 8), deleted, ...meta }, undefined, 2)}</pre>
       <IconButton icon='ph--x--regular' variant='ghost' iconOnly onClick={() => onDelete(object.id)} label='Delete' />
     </div>

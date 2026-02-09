@@ -25,6 +25,9 @@
       "path": "../../common/esbuild-plugins"
     },
     {
+      "path": "../../common/invariant"
+    },
+    {
       "path": "../../common/log"
     },
     {
@@ -61,13 +64,16 @@
       "path": "../../ui/brand"
     },
     {
-      "path": "../../ui/primitives/react-hooks"
+      "path": "../../ui/react-primitives/react-hooks"
     },
     {
       "path": "../../ui/react-ui"
     },
     {
-      "path": "../../ui/react-ui-theme"
+      "path": "../../ui/react-ui-markdown"
+    },
+    {
+      "path": "../../ui/ui-theme"
     }
   ]
 }

@@ -31,7 +31,7 @@ export type ChatEvent =
     }
   | {
       type: 'add';
-      object: Obj.Any;
+      object: Obj.Unknown;
     }
   //
   // UX
@@ -42,6 +42,12 @@ export type ChatEvent =
     }
   | {
       type: 'scroll-to-bottom';
+    }
+  | {
+      type: 'nav-previous';
+    }
+  | {
+      type: 'nav-next';
     }
   | {
       type: 'thread-open';

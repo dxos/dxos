@@ -27,7 +27,7 @@ import { useResizeDetector } from 'react-resize-detector';
 import { type Topology } from 'topojson-specification';
 
 import { type ThemeMode, type ThemedClassName, useDynamicRef, useThemeContext } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import {
   GlobeContextProvider,
@@ -130,6 +130,7 @@ type GlobeRootProps = PropsWithChildren<ThemedClassName<GlobeContextProviderProp
 
 const GlobeRoot = ({ classNames, children, ...props }: GlobeRootProps) => {
   const { ref, width, height } = useResizeDetector<HTMLDivElement>();
+
   return (
     <div ref={ref} className={mx('relative flex grow overflow-hidden', classNames)}>
       <GlobeContextProvider size={{ width, height }} {...props}>
@@ -156,16 +157,16 @@ type GlobeCanvasProps = {
  */
 // TODO(burdon): Move controller to root.
 const GlobeCanvas = forwardRef<GlobeController, GlobeCanvasProps>(
-  ({ projection: _projection, topology, features, styles: _styles }, forwardRef) => {
+  ({ projection: projectionProp, topology, features, styles: stylesProp }, forwardRef) => {
     const { themeMode } = useThemeContext();
-    const styles = useMemo(() => _styles ?? defaultStyles[themeMode], [_styles, themeMode]);
+    const styles = useMemo(() => stylesProp ?? defaultStyles[themeMode], [stylesProp, themeMode]);
 
     // Canvas.
     const [canvas, setCanvas] = useState<HTMLCanvasElement>(null);
     const canvasRef = (canvas: HTMLCanvasElement) => setCanvas(canvas);
 
     // Projection.
-    const projection = useMemo(() => getProjection(_projection), [_projection]);
+    const projection = useMemo(() => getProjection(projectionProp), [projectionProp]);
 
     // Layers.
     // TODO(burdon): Generate on the fly based on what is visible.
@@ -258,7 +259,7 @@ const GlobeDebug = ({ position = 'topleft' }: { position?: ControlPosition }) =>
   return (
     <div
       className={mx(
-        'z-10 absolute w-96 p-2 overflow-hidden border border-green-700 rounded',
+        'z-10 absolute is-96 p-2 overflow-hidden border border-green-700 rounded',
         controlPositions[position],
       )}
     >

@@ -2,11 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type FunctionType, type ScriptType, getInvocationUrl, getUserFunctionIdInMetadata } from '@dxos/functions';
+import { Obj } from '@dxos/echo';
+import { type Function, type Script, getUserFunctionIdInMetadata } from '@dxos/functions';
+import { getInvocationUrl } from '@dxos/functions-runtime';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { getMeta, getSpace } from '@dxos/react-client/echo';
+import { getSpace } from '@dxos/react-client/echo';
 /**
  * Get the function URL for a given script and client configuration
  */
@@ -15,12 +17,12 @@ export const getFunctionUrl = ({
   fn,
   edgeUrl,
 }: {
-  script: ScriptType;
+  script: Script.Script;
   fn: any;
   edgeUrl: string;
 }): string | undefined => {
   const space = getSpace(script);
-  const existingFunctionId = fn && getUserFunctionIdInMetadata(getMeta(fn));
+  const existingFunctionId = fn && getUserFunctionIdInMetadata(Obj.getMeta(fn));
 
   if (!existingFunctionId) {
     return undefined;
@@ -32,36 +34,38 @@ export const getFunctionUrl = ({
 };
 
 export const updateFunctionMetadata = (
-  script: ScriptType,
-  storedFunction: FunctionType,
+  script: Script.Script,
+  storedFunction: Function.Function,
   meta: any,
   functionId: string,
 ) => {
-  if (script.description !== undefined && script.description.trim() !== '') {
-    storedFunction.description = script.description;
-  } else if (meta.description) {
-    storedFunction.description = meta.description;
-  } else {
-    log.verbose('no description in function metadata', { functionId });
-  }
+  Obj.change(storedFunction, (f) => {
+    if (script.description !== undefined && script.description.trim() !== '') {
+      f.description = script.description;
+    } else if (meta.description) {
+      f.description = meta.description;
+    } else {
+      log.verbose('no description in function metadata', { functionId });
+    }
 
-  if (meta.inputSchema) {
-    storedFunction.inputSchema = meta.inputSchema;
-  } else {
-    log.verbose('no input schema in function metadata', { functionId });
-  }
+    if (meta.inputSchema) {
+      f.inputSchema = meta.inputSchema;
+    } else {
+      log.verbose('no input schema in function metadata', { functionId });
+    }
 
-  if (meta.outputSchema) {
-    storedFunction.outputSchema = meta.outputSchema;
-  } else {
-    log.verbose('no output schema in function metadata', { functionId });
-  }
+    if (meta.outputSchema) {
+      f.outputSchema = meta.outputSchema;
+    } else {
+      log.verbose('no output schema in function metadata', { functionId });
+    }
 
-  if (meta.key) {
-    storedFunction.key = meta.key;
-  } else {
-    log.verbose('no key in function metadata', { functionId });
-  }
+    if (meta.key) {
+      f.key = meta.key;
+    } else {
+      log.verbose('no key in function metadata', { functionId });
+    }
+  });
 };
 
 export const getAccessCredential = (identityKey: PublicKey): Credential => {

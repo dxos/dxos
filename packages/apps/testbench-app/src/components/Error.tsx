@@ -42,12 +42,12 @@ export const Error = ({ noJoke }: ErrorProps) => {
           {joke && (
             <div className='flex flex-col opacity-50'>
               <span>
-                <span className='inline-flex w-12 mx-2 justify-end text-sm'>Alice:</span>
+                <span className='inline-flex is-12 mx-2 justify-end text-sm'>Alice:</span>
                 {joke}
               </span>
               {punchline && (
                 <span>
-                  <span className='inline-flex w-12 mx-2 justify-end text-sm'>Bob:</span>
+                  <span className='inline-flex is-12 mx-2 justify-end text-sm'>Bob:</span>
                   {punchline}
                 </span>
               )}
@@ -60,7 +60,7 @@ export const Error = ({ noJoke }: ErrorProps) => {
         <div className='text-blue-500'>{String(error)}</div>
         {stack && (
           <div className='flex overflow-hidden'>
-            <pre className='overflow-x-scroll text-sm opacity-75'>{stack}</pre>
+            <pre className='overflow-x-auto text-sm opacity-75'>{stack}</pre>
           </div>
         )}
       </div>

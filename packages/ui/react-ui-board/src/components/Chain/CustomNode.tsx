@@ -12,7 +12,7 @@ import { type NodeType } from './Chain';
  */
 const CustomNodeComponent = ({ data }: { data: NodeType['data'] }) => {
   return (
-    <div className='w-20 p-2 border border-separator rounded-sm shadow bg-inputSurface'>
+    <div className='is-20 p-2 border border-separator rounded-sm shadow bg-inputSurface'>
       <div className='flex grow justify-center'>{data.label}</div>
 
       <Handle type='target' position={Position.Top} className='border rounded-full' />

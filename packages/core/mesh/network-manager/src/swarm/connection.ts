@@ -185,16 +185,18 @@ export class Connection {
     this._protocol.stream.on('close', () => {
       log('protocol stream closed');
       this._protocolClosed.wake();
-      this.close({ error: new ProtocolError('protocol stream closed') }).catch((err) => this.errors.raise(err));
+      this.close({ error: new ProtocolError({ message: 'protocol stream closed' }) }).catch((err) =>
+        this.errors.raise(err),
+      );
     });
 
     scheduleTask(
       this.connectedTimeoutContext,
       async () => {
         log.info(`timeout waiting ${TRANSPORT_CONNECTION_TIMEOUT / 1000}s for transport to connect, aborting`);
-        await this.abort(new TimeoutError(`${TRANSPORT_CONNECTION_TIMEOUT / 1000}s for transport to connect`)).catch(
-          (err) => this.errors.raise(err),
-        );
+        await this.abort(
+          new TimeoutError({ message: `${TRANSPORT_CONNECTION_TIMEOUT / 1000}s for transport to connect` }),
+        ).catch((err) => this.errors.raise(err));
       },
       TRANSPORT_CONNECTION_TIMEOUT,
     );
@@ -397,7 +399,7 @@ export class Connection {
 
       // If signal fails treat connection as failed
       log.info('signal message failed to deliver', { err });
-      await this.close({ error: new ConnectivityError('signal message failed to deliver', err) });
+      await this.close({ error: new ConnectivityError({ message: 'signal message failed to deliver', cause: err }) });
     }
   }
 

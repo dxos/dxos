@@ -4,7 +4,7 @@
 
 import { WidgetType } from '@codemirror/view';
 
-import { Domino } from '@dxos/react-ui';
+import { Domino } from '@dxos/ui';
 
 /**
  * Simple prompt widget.
@@ -14,17 +14,15 @@ export class PromptWidget extends WidgetType {
     super();
   }
 
+  override eq(other: this) {
+    return this.text === other.text;
+  }
+
   /**
    * NOTE: Container must set var based on user's identity.
    */
-  override toDOM(): HTMLElement {
-    return Domino.of('div')
-      .classNames('flex justify-end')
-      .children(Domino.of('div').classNames('pli-3 plb-2 bg-[--user-fill] rounded-sm').text(this.text))
-      .build();
-  }
-
-  override eq(other: WidgetType): boolean {
-    return other instanceof PromptWidget && other.text === this.text;
+  override toDOM() {
+    const inner = Domino.of('div').classNames('pli-3 plb-1.5 bg-[--user-fill] rounded-sm').text(this.text);
+    return Domino.of('div').classNames('flex justify-end mlb-2').children(inner).root;
   }
 }

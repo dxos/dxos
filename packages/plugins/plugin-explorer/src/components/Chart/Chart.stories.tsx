@@ -6,7 +6,7 @@ import { type Meta } from '@storybook/react-vite';
 import React from 'react';
 
 import { ClientRepeater } from '@dxos/react-client/testing';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import CitiesData from '../../../data/cities.js';
 
@@ -34,7 +34,7 @@ export const Default = () => <ClientRepeater component={Story} />;
 const meta = {
   title: 'plugins/plugin-explorer/Chart',
   component: Chart,
-  decorators: [withTheme],
+  decorators: [withTheme, withLayout()],
   parameters: {
     layout: 'fullscreen',
   },

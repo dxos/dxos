@@ -11,7 +11,7 @@ import {
   type PeerMetadata,
 } from '@automerge/automerge-repo';
 
-import { Trigger, synchronized } from '@dxos/async';
+import { Event, Trigger, synchronized } from '@dxos/async';
 import { LifecycleState } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
@@ -23,10 +23,10 @@ import { createIdFromSpaceKey } from '../common/space-id';
 
 import {
   type EchoReplicator,
-  type RemoteDocumentExistenceCheckParams,
+  type RemoteDocumentExistenceCheckProps,
   type ReplicatorConnection,
-  type ShouldAdvertiseParams,
-  type ShouldSyncCollectionParams,
+  type ShouldAdvertiseProps,
+  type ShouldSyncCollectionProps,
 } from './echo-replicator';
 import {
   type CollectionQueryMessage,
@@ -43,9 +43,9 @@ export interface NetworkDataMonitor {
   recordMessageSendingFailed(message: Message): void;
 }
 
-export type EchoNetworkAdapterParams = {
+export type EchoNetworkAdapterProps = {
   getContainingSpaceForDocument: (documentId: string) => Promise<PublicKey | null>;
-  isDocumentInRemoteCollection: (params: RemoteDocumentExistenceCheckParams) => Promise<boolean>;
+  isDocumentInRemoteCollection: (params: RemoteDocumentExistenceCheckProps) => Promise<boolean>;
   onCollectionStateQueried: (collectionId: string, peerId: PeerId) => void;
   onCollectionStateReceived: (collectionId: string, peerId: PeerId, state: unknown) => void;
   monitor?: NetworkDataMonitor;
@@ -56,6 +56,7 @@ type ConnectionEntry = {
   connection: ReplicatorConnection;
   reader: ReadableStreamDefaultReader<AutomergeProtocolMessage>;
   writer: WritableStreamDefaultWriter<AutomergeProtocolMessage>;
+  requestedDocuments: Set<DocumentId>;
 };
 
 /**
@@ -71,7 +72,9 @@ export class EchoNetworkAdapter extends NetworkAdapter {
   private readonly _connected = new Trigger();
   private readonly _ready = new Trigger();
 
-  constructor(private readonly _params: EchoNetworkAdapterParams) {
+  public readonly documentRequested = new Event<{ documentId: DocumentId; peerId: PeerId }>();
+
+  constructor(private readonly _params: EchoNetworkAdapterProps) {
     super();
   }
 
@@ -161,7 +164,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
     this._replicators.delete(replicator);
   }
 
-  async shouldAdvertise(peerId: PeerId, params: ShouldAdvertiseParams): Promise<boolean> {
+  async shouldAdvertise(peerId: PeerId, params: ShouldAdvertiseProps): Promise<boolean> {
     const connection = this._connections.get(peerId);
     if (!connection) {
       return false;
@@ -170,7 +173,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
     return connection.connection.shouldAdvertise(params);
   }
 
-  shouldSyncCollection(peerId: PeerId, params: ShouldSyncCollectionParams): boolean {
+  shouldSyncCollection(peerId: PeerId, params: ShouldSyncCollectionProps): boolean {
     const connection = this._connections.get(peerId);
     if (!connection) {
       return false;
@@ -265,6 +268,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
       connection,
       reader: connection.readable.getReader(),
       writer: connection.writable.getWriter(),
+      requestedDocuments: new Set(),
     };
 
     this._connections.set(connection.peerId as PeerId, connectionEntry);
@@ -279,7 +283,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
             break;
           }
 
-          this._onMessage(value as Message);
+          this._onMessage(connectionEntry, value as Message);
         }
       } catch (err) {
         if (connectionEntry.isOpen) {
@@ -293,7 +297,15 @@ export class EchoNetworkAdapter extends NetworkAdapter {
     this._params.monitor?.recordPeerConnected(connection.peerId);
   }
 
-  private _onMessage(message: Message): void {
+  private _onMessage(connectionEntry: ConnectionEntry, message: Message): void {
+    const amMessage = message as AutomergeProtocolMessage;
+    if (amMessage.type === 'request') {
+      this.documentRequested.emit({
+        documentId: amMessage.documentId as DocumentId,
+        peerId: connectionEntry.connection.peerId as PeerId,
+      });
+    }
+
     if (isCollectionQueryMessage(message)) {
       this._params.onCollectionStateQueried(message.collectionId, message.senderId);
     } else if (isCollectionStateMessage(message)) {

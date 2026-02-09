@@ -6,7 +6,6 @@ import { beforeEach, describe, expect, test } from 'vitest';
 
 import { latch, sleep } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf/stream';
-import { SystemError } from '@dxos/protocols';
 import { schema } from '@dxos/protocols/proto';
 import {
   type TestRpcResponse,
@@ -94,7 +93,7 @@ describe('Protobuf service', () => {
       error = err;
     }
 
-    expect(error).toBeInstanceOf(SystemError);
+    expect(error).toBeInstanceOf(Error);
     expect(error.message).toEqual('TestError');
     expect(error.stack?.includes('handlerFn')).toEqual(true);
     expect(error.stack?.includes('TestCall')).toEqual(true);

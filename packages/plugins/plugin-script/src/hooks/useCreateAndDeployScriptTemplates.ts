@@ -2,19 +2,18 @@
 // Copyright 2025 DXOS.org
 //
 
-import { pipe } from 'effect/Function';
 import { useCallback, useState } from 'react';
 
-import { chain, createIntent, useIntentDispatcher } from '@dxos/app-framework';
+import { useOperationInvoker } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
-import { ScriptType } from '@dxos/functions';
+import { Script } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
-import { SpaceAction } from '@dxos/plugin-space/types';
+import { SpaceOperation } from '@dxos/plugin-space/types';
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 
 import { type Template } from '../templates';
-import { ScriptAction } from '../types';
+import { ScriptOperation } from '../types';
 import { deployScript } from '../util';
 
 type DeploymentStatus = 'idle' | 'pending' | 'success' | 'error';
@@ -27,7 +26,7 @@ type DeploymentStatus = 'idle' | 'pending' | 'success' | 'error';
  * All creation / deployment operations run concurrently for improved performance.
  */
 export const useCreateAndDeployScriptTemplates = (space: Space | undefined, scriptTemplates: Template[]) => {
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const { invokePromise } = useOperationInvoker();
   const client = useClient();
   const [status, setStatus] = useState<DeploymentStatus>('idle');
   const [error, setError] = useState<Error | undefined>(undefined);
@@ -39,21 +38,20 @@ export const useCreateAndDeployScriptTemplates = (space: Space | undefined, scri
 
     const deploymentResults = await Promise.all(
       scriptTemplates.map(async (template) => {
-        const result = await dispatch(
-          pipe(
-            createIntent(ScriptAction.Create, { space, initialTemplateId: template.id }),
-            chain(SpaceAction.AddObject, { target: space }),
-          ),
-        );
-        invariant(Obj.instanceOf(ScriptType, result.data?.object));
+        const createResult = await invokePromise(ScriptOperation.CreateScript, {
+          db: space.db,
+          initialTemplateId: template.id as any,
+        });
+        invariant(Obj.instanceOf(Script.Script, createResult.data?.object));
+        await invokePromise(SpaceOperation.AddObject, { target: space.db, object: createResult.data.object });
 
-        return deployScript({ space, client, script: result.data.object });
+        return deployScript({ space, client, script: createResult.data.object });
       }),
     );
 
     const hasErrors = deploymentResults.some((result) => !result.success);
     setStatus(hasErrors ? 'error' : 'success');
-  }, [space, dispatch, client, scriptTemplates]);
+  }, [space, invokePromise, client, scriptTemplates]);
 
   // TODO(burdon): Return onCreateAndDeployScripts.
   return { handleCreateAndDeployScripts, status, error };

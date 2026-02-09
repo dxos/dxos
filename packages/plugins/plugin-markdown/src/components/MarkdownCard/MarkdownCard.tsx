@@ -2,74 +2,63 @@
 // Copyright 2025 DXOS.org
 //
 
-import { pipe } from 'effect';
-import React, { useCallback } from 'react';
+import React, { useMemo } from 'react';
 
-import { LayoutAction, chain, createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
-import { type PreviewProps } from '@dxos/plugin-preview';
-import { fullyQualifiedId } from '@dxos/react-client/echo';
-import { Button, Icon, useTranslation } from '@dxos/react-ui';
-import { Card } from '@dxos/react-ui-stack';
-import { DataType } from '@dxos/schema';
+import { useTranslation } from '@dxos/react-ui';
+import { Card } from '@dxos/react-ui-mosaic';
+import { Text } from '@dxos/schema';
 
 import { meta } from '../../meta';
 import { Markdown } from '../../types';
-import { getAbstract, getFallbackName } from '../../util';
+import { getContentSnippet, getFallbackName } from '../../util';
+import { MarkdownEditor } from '../MarkdownEditor';
+
+export type MarkdownCardProps = { subject: Markdown.Document | Text.Text };
+
+export const MarkdownCard = ({ subject }: MarkdownCardProps) => {
+  const { t } = useTranslation(meta.id);
+  const snippet = useMemo(() => getSnippet(subject), [subject]);
+  const info = getInfo(subject);
+
+  return (
+    <Card.Content>
+      {snippet && (
+        <Card.Row className='max-h-[300px] overflow-hidden'>
+          <MarkdownEditor.Root id={subject.id} viewMode='readonly'>
+            <MarkdownEditor.Content initialValue={snippet} slots={{}} classNames='!bg-transparent' />
+          </MarkdownEditor.Root>
+        </Card.Row>
+      )}
+      <Card.Row>
+        <Card.Text classNames='text-xs text-description'>
+          {info.words} {t('words label', { count: info.words })}
+        </Card.Text>
+      </Card.Row>
+    </Card.Content>
+  );
+};
+
+const getInfo = (subject: Markdown.Document | Text.Text) => {
+  const text = (Obj.instanceOf(Markdown.Document, subject) ? subject.content?.target?.content : subject.content) ?? '';
+  return { words: text.split(' ').length };
+};
 
 // TODO(burdon): Factor out.
-const getTitle = (subject: Markdown.Document | DataType.Text, fallback: string) => {
+const getTitle = (subject: Markdown.Document | Text.Text, fallback: string) => {
   if (Obj.instanceOf(Markdown.Document, subject)) {
-    return subject.name ?? subject.fallbackName ?? getFallbackName(subject.content?.target?.content ?? fallback);
-  } else if (Obj.instanceOf(DataType.Text, subject)) {
+    const title = Obj.getLabel(subject);
+    return title ?? getFallbackName(subject.content?.target?.content ?? fallback);
+  } else if (Obj.instanceOf(Text.Text, subject)) {
     return getFallbackName(subject.content);
   }
 };
 
 // TODO(burdon): Factor out.
-const getSnippet = (subject: Markdown.Document | DataType.Text, fallback: string) => {
+const getSnippet = (subject: Markdown.Document | Text.Text, fallback?: string) => {
   if (Obj.instanceOf(Markdown.Document, subject)) {
-    return getAbstract(subject.content?.target?.content ?? fallback);
-  } else if (Obj.instanceOf(DataType.Text, subject)) {
-    return getAbstract(subject.content);
+    return Obj.getDescription(subject) || getContentSnippet(subject.content?.target?.content ?? fallback);
+  } else if (Obj.instanceOf(Text.Text, subject)) {
+    return getContentSnippet(subject.content ?? fallback);
   }
-};
-
-export type MarkdownCardProps = PreviewProps<Markdown.Document | DataType.Text>;
-
-export const MarkdownCard = ({ subject, role }: MarkdownCardProps) => {
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
-  const { t } = useTranslation(meta.id);
-  const snippet = getSnippet(subject, t('fallback abstract'));
-
-  // TODO(wittjosiah): Factor out so this component isn't dependent on the app framework.
-  const handleNavigate = useCallback(
-    () =>
-      dispatch(
-        pipe(
-          createIntent(LayoutAction.UpdatePopover, {
-            part: 'popover',
-            subject: null,
-            options: { state: false, anchorId: '' },
-          }),
-          chain(LayoutAction.Open, { part: 'main', subject: [fullyQualifiedId(subject)] }),
-        ),
-      ),
-    [dispatch, subject],
-  );
-
-  return (
-    <Card.SurfaceRoot role={role}>
-      <Card.Heading>{getTitle(subject, t('fallback title'))}</Card.Heading>
-      {snippet && <Card.Text classNames='line-clamp-3 break-words col-span-2'>{snippet}</Card.Text>}
-      {role === 'card--popover' && (
-        <Card.Chrome>
-          <Button onClick={handleNavigate}>
-            <span className='grow'>{t('navigate to document label')}</span>
-            <Icon icon='ph--arrow-right--regular' />
-          </Button>
-        </Card.Chrome>
-      )}
-    </Card.SurfaceRoot>
-  );
 };

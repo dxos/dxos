@@ -42,14 +42,14 @@ export const diff = <A, B = A>(
   return result;
 };
 
-export const intersection = <A, B = A>(a: A[], b: B[], comparator: Comparator<A, B>): A[] =>
+export const intersection = <A, B = A>(a: readonly A[], b: readonly B[], comparator: Comparator<A, B>): A[] =>
   a.filter((a) => b.find((b) => comparator(a, b)) !== undefined);
 
 /**
  * Returns a new array with only the first instance of each unique item
  * based on a specified property.
  *
- * @typeParam T - The type of items in the input array.
+ * @typeProp T - The type of items in the input array.
  * @param array - The array to filter for distinct items.
  * @param key - The property key to determine uniqueness for each item.
  * @returns A new array with only distinct items based on the specified property.
@@ -129,4 +129,11 @@ export const intersectBy = <T, K>(arrays: T[][], selector: (item: T) => K): T[] 
     const key = selector(item);
     return lookups.every((lookup) => lookup.has(key));
   });
+};
+
+export const coerceArray = <T>(arr: T | T[] | undefined): T[] => {
+  if (arr === undefined) {
+    return [];
+  }
+  return Array.isArray(arr) ? arr : [arr];
 };

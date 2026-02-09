@@ -28,13 +28,10 @@
       "path": "../../../sdk/client"
     },
     {
+      "path": "../echo"
+    },
+    {
       "path": "../echo-db"
-    },
-    {
-      "path": "../echo-schema"
-    },
-    {
-      "path": "../live-object"
     }
   ]
 }

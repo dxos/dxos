@@ -2,14 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type ManagedRuntime } from 'effect';
+import type * as ManagedRuntime from 'effect/ManagedRuntime';
 
 import { Event } from '@dxos/async';
-import { Filter, type Space, fullyQualifiedId } from '@dxos/client/echo';
+import { Filter, type Space } from '@dxos/client/echo';
 import { FQ_ID_LENGTH } from '@dxos/client/echo';
 import { Resource } from '@dxos/context';
-import { getTypename } from '@dxos/echo-schema';
-import { type FunctionInvocationService, FunctionType } from '@dxos/functions';
+import { Obj } from '@dxos/echo';
+import { Function, type FunctionInvocationService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -60,7 +60,7 @@ export class ComputeGraph extends Resource {
   private readonly _nodes = new Map<number, ComputeNode>();
 
   // Cached function objects.
-  private _remoteFunctions: FunctionType[] = [];
+  private _remoteFunctions: Function.Function[] = [];
 
   public readonly update = new Event<{ type: ComputeGraphEvent }>();
 
@@ -106,7 +106,10 @@ export class ComputeGraph extends Resource {
   }
 
   getFunctions(
-    { standard, echo }: { standard?: boolean; echo?: boolean } = { standard: true, echo: true },
+    { standard, echo }: { standard?: boolean; echo?: boolean } = {
+      standard: true,
+      echo: true,
+    },
   ): FunctionDefinition[] {
     return [
       ...(standard
@@ -166,7 +169,7 @@ export class ComputeGraph extends Resource {
 
             for (const obj of objects) {
               if (obj.name === name) {
-                const type = getTypename(obj)!;
+                const type = Obj.getTypename(obj)!;
                 // NOTE: Names must be single quoted.
                 return `'${createSheetName({ type, id: obj.id })}'!`;
               }
@@ -206,7 +209,7 @@ export class ComputeGraph extends Resource {
 
       const fn = this._remoteFunctions.find((fn) => fn.binding === binding);
       if (fn) {
-        const id = fullyQualifiedId(fn);
+        const id = Obj.getDXN(fn).toString();
         return `${id}(${args})`;
       } else {
         return match;
@@ -225,7 +228,7 @@ export class ComputeGraph extends Resource {
         return match;
       }
 
-      const fn = this._remoteFunctions.find((fn) => fullyQualifiedId(fn) === id);
+      const fn = this._remoteFunctions.find((fn) => Obj.getDXN(fn).toString() === id);
       if (fn?.binding) {
         return `${fn.binding}(${args})`;
       } else {
@@ -243,9 +246,9 @@ export class ComputeGraph extends Resource {
   protected override async _open(): Promise<void> {
     if (this._space) {
       // Subscribe to remote function definitions.
-      const query = this._space.db.query(Filter.type(FunctionType));
-      const unsubscribe = query.subscribe(({ objects }) => {
-        this._remoteFunctions = objects.filter(({ binding }) => binding);
+      const query = this._space.db.query(Filter.type(Function.Function));
+      const unsubscribe = query.subscribe(() => {
+        this._remoteFunctions = query.results.filter((fn) => fn.binding);
         this.update.emit({ type: 'functionsUpdated' });
       });
 

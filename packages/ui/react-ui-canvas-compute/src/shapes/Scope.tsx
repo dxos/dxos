@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 import React from 'react';
 
 import { DEFAULT_INPUT } from '@dxos/conductor';
@@ -39,7 +39,7 @@ export const ScopeComponent = ({ shape }: ShapeComponentProps<ScopeShape>) => {
   const { getAverage } = useAudioStream(active);
 
   return (
-    <div className='flex w-full justify-center items-center bg-black'>
+    <div className='flex is-full justify-center items-center bg-black'>
       <Chaos active={active} getValue={getAverage} options={{ ...shaderPresets.heptapod, zoom: 1.2 }} />
     </div>
   );

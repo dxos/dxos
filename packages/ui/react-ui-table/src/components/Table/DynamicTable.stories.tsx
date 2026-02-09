@@ -6,14 +6,14 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { FormatEnum, type JsonSchemaType } from '@dxos/echo-schema';
+import { Format, type JsonSchemaType } from '@dxos/echo/internal';
 import { faker } from '@dxos/random';
-import { useClient } from '@dxos/react-client';
 import { Filter, useQuery, useSchema } from '@dxos/react-client/echo';
-import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
+import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/react-ui/testing';
 import { type SchemaPropertyDefinition } from '@dxos/schema';
-import { Testing } from '@dxos/schema/testing';
+import { TestSchema } from '@dxos/schema/testing';
+import { withRegistry } from '@dxos/storybook-utils';
 
 import { type TableFeatures } from '../../model';
 import { translations } from '../../translations';
@@ -25,8 +25,8 @@ faker.seed(0);
 const useTestPropertiesAndObjects = () => {
   const properties = useMemo<SchemaPropertyDefinition[]>(
     () => [
-      { name: 'name', format: FormatEnum.String },
-      { name: 'age', format: FormatEnum.Number },
+      { name: 'name', format: Format.TypeFormat.String },
+      { name: 'age', format: Format.TypeFormat.Number },
     ],
     [],
   );
@@ -58,7 +58,7 @@ const DynamicTableStory = () => {
 const meta = {
   title: 'ui/react-ui-table/DynamicTable',
   component: DynamicTable,
-  decorators: [withTheme],
+  decorators: [withTheme, withRegistry],
   parameters: {
     layout: 'fullscreen',
     translations,
@@ -130,10 +130,9 @@ export const WithJsonSchema: StoryObj = {
 
 export const WithEchoSchema: StoryObj = {
   render: () => {
-    const client = useClient();
-    const { space } = useClientProvider();
-    const schema = useSchema(client, space, Testing.Contact.typename);
-    const objects = useQuery(space, schema ? Filter.type(schema) : Filter.nothing());
+    const { space } = useClientStory();
+    const schema = useSchema(space?.db, TestSchema.Person.typename);
+    const objects = useQuery(space?.db, schema ? Filter.type(schema) : Filter.nothing());
     if (!schema) {
       return <div>Loading schema...</div>;
     }
@@ -142,13 +141,13 @@ export const WithEchoSchema: StoryObj = {
   },
   decorators: [
     withClientProvider({
-      types: [Testing.Contact],
+      types: [TestSchema.Person],
       createIdentity: true,
       createSpace: true,
       onCreateSpace: async ({ space }) => {
         Array.from({ length: 10 }).forEach(() => {
           space.db.add(
-            Obj.make(Testing.Contact, {
+            Obj.make(TestSchema.Person, {
               name: faker.person.fullName(),
               email: faker.internet.email(),
             }),

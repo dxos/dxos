@@ -2,12 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Blueprint } from '@dxos/blueprints';
+import { Chat } from '@dxos/assistant-toolkit';
+import { Blueprint, Prompt } from '@dxos/blueprints';
 import { Sequence } from '@dxos/conductor';
+import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
 
 import { meta } from './meta';
-import { Assistant } from './types';
 
 // TODO(burdon): Standardize translation names.
 export const translations = [
@@ -22,6 +23,17 @@ export const translations = [
         'object name placeholder': 'New blueprint',
         'rename object label': 'Rename blueprint',
         'delete object label': 'Delete blueprint',
+        'object deleted label': 'Blueprint deleted',
+      },
+      [Type.getTypename(Prompt.Prompt)]: {
+        'typename label': 'Prompt',
+        'typename label_zero': 'Prompts',
+        'typename label_one': 'Prompt',
+        'typename label_other': 'Prompts',
+        'object name placeholder': 'New prompt',
+        'rename object label': 'Rename prompt',
+        'delete object label': 'Delete prompt',
+        'object deleted label': 'Prompt deleted',
       },
       // TODO(burdon): From conductor.
       [Sequence.typename]: {
@@ -32,12 +44,14 @@ export const translations = [
         'object name placeholder': 'New sequence',
         'rename object label': 'Rename sequence',
         'delete object label': 'Delete sequence',
+        'object deleted label': 'Sequence deleted',
       },
-      [Assistant.Chat.typename]: {
+      [Chat.Chat.typename]: {
         'typename label': 'AI Chat',
         'object name placeholder': 'New AI Chat',
         'rename object label': 'Rename AI Chat',
         'delete object label': 'Delete AI Chat',
+        'object deleted label': 'AI Chat deleted',
       },
       // TODO(burdon): Reconcile with react-ui-chat.
       [meta.id]: {
@@ -61,36 +75,35 @@ export const translations = [
         'type filter placeholder': 'Type',
         'any type filter label': 'Any',
         'no blueprint message': 'No active blueprints',
-        'calling tool label': 'Calling tool...',
-        'calling label': 'Calling',
-        'error label': 'Error',
+        'tool call label': 'Calling tool...',
+        'tool result label': 'Success',
+        'tool error label': 'Tool call failed',
 
-        'sequence logs label': 'Logs',
+        'invocations label': 'Invocations',
 
         'assistant dialog title': 'Assistant',
         'open assistant label': 'Open assistant',
+        'reset blueprints label': 'Reset blueprints',
 
         'no tools': 'No tools are configured',
         'no results': 'No results',
 
-        'button retry': 'Retry',
-        'button suggestion': 'Assistant suggestion',
-        'button select option': 'Select option',
-        'button cancel': 'Cancel',
-        'button save': 'Save',
-        'button run': 'Run',
-        'button new thread': 'New Chat',
+        'cancel button': 'Cancel',
+        'save button': 'Save',
+        'new thread button': 'New Chat',
+        'rename thread button': 'Rename Chat',
         'chat history label': 'Chat History',
+        'chat update name label': 'Update AI Chat name',
 
         'toolkit label': 'Toolkit',
         'summary label': 'Summary',
 
         'search placeholder': 'Search...',
         'prompt placeholder': 'Enter question or command...',
-        'button context objects': 'Add to context',
-        'button context settings': 'Chat settings',
-        'button microphone': 'Click to speak',
-        'button cancel processing': 'Stop processing',
+        'context objects button': 'Add to context',
+        'context settings button': 'Chat settings',
+        'microphone button': 'Click to speak',
+        'cancel processing button': 'Stop processing',
         'blueprints in context title': 'Blueprints',
         'objects in context title': 'Content',
         'remove object in context label': 'Remove document',
@@ -101,6 +114,16 @@ export const translations = [
         'settings llm provider label': 'LLM provider',
         'settings edge llm model label': 'Remote language model',
         'settings ollama llm model label': 'Ollama language model',
+
+        // Trigger status
+        'trigger status disabled label': 'Triggers disabled',
+        'trigger status idle label': 'Triggers idle',
+        'trigger status running label': 'Trigger running',
+        'trigger status error label': 'Trigger error',
+        'trigger runtime label': 'Trigger Runtime',
+        'trigger runtime description': 'Enable automatic trigger execution',
+        'trigger last invocation label': 'Last run',
+        'trigger duration label': 'Duration',
       },
     },
   },

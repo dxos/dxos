@@ -2,11 +2,25 @@
 // Copyright 2021 DXOS.org
 //
 
-import { Schema } from 'effect';
 import isEqualWith from 'lodash.isequalwith';
 
-import { Event, MulticastObservable, Trigger, scheduleMicroTask, synchronized } from '@dxos/async';
-import { type ClientServicesProvider, PropertiesType, type Space, type SpaceInternal } from '@dxos/client-protocol';
+import {
+  Event,
+  MulticastObservable,
+  Trigger,
+  asyncTimeout,
+  scheduleMicroTask,
+  scheduleTask,
+  scheduleTaskInterval,
+  synchronized,
+} from '@dxos/async';
+import {
+  type ClientServicesProvider,
+  SPACE_TAG,
+  type Space,
+  type SpaceInternal,
+  SpaceProperties,
+} from '@dxos/client-protocol';
 import { Stream } from '@dxos/codec-protobuf/stream';
 import { Context, cancelWithContext } from '@dxos/context';
 import { type SpecificCredential, checkCredentialType } from '@dxos/credentials';
@@ -18,18 +32,19 @@ import {
   todo,
   warnAfterTimeout,
 } from '@dxos/debug';
+import { type Obj } from '@dxos/echo';
 import {
-  type AnyLiveObject,
   type EchoClient,
   type EchoDatabase,
   type EchoDatabaseImpl,
   Filter,
   type QueueFactory,
+  type SpaceSyncState,
 } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { decodeError } from '@dxos/protocols';
+import { EdgeService, decodeError } from '@dxos/protocols';
 import {
   type Contact,
   CreateEpochRequest,
@@ -41,7 +56,7 @@ import {
   type UpdateMemberRoleRequest,
 } from '@dxos/protocols/proto/dxos/client/services';
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
-import { type EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
+import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import {
   type Credential,
@@ -57,9 +72,10 @@ import { InvitationsProxy } from '../invitations';
 
 const EPOCH_CREATION_TIMEOUT = 60_000;
 
-// TODO(burdon): This should not be used as part of the API (don't export).
 @trace.resource()
 export class SpaceProxy implements Space, CustomInspectable {
+  readonly [SPACE_TAG] = true as const;
+
   private _ctx = new Context();
 
   /**
@@ -112,7 +128,14 @@ export class SpaceProxy implements Space, CustomInspectable {
 
   private _databaseOpen = false;
   private _error: Error | undefined = undefined;
-  private _properties?: AnyLiveObject<any> = undefined;
+  private _properties?: Obj.Obj<SpaceProperties> = undefined;
+
+  /**
+   * When true, the space is waiting for the backend to finish re-initializing after a reconnect.
+   * During this period, state updates that would regress from READY are ignored.
+   * Once the backend reaches READY again, normal processing resumes.
+   */
+  private _awaitingBackendReady = false;
 
   constructor(
     private _clientServices: ClientServicesProvider,
@@ -130,11 +153,18 @@ export class SpaceProxy implements Space, CustomInspectable {
       }),
     );
 
-    this._db = echoClient.constructDatabase({ spaceId: this.id, spaceKey: this.key, owningObject: this });
+    this._db = echoClient.constructDatabase({
+      spaceId: this.id,
+      spaceKey: this.key,
+      owningObject: this,
+    });
     this._queues = echoClient.constructQueueFactory(this.id);
 
     const self = this;
     this._internal = {
+      get db() {
+        return self._db;
+      },
       get data() {
         return self._data;
       },
@@ -144,6 +174,7 @@ export class SpaceProxy implements Space, CustomInspectable {
       removeMember: this._removeMember.bind(this),
       migrate: this._migrate.bind(this),
       setEdgeReplicationPreference: this._setEdgeReplicationPreference.bind(this),
+      syncToEdge: this._syncToEdge.bind(this),
       export: this._export.bind(this),
     };
 
@@ -186,7 +217,7 @@ export class SpaceProxy implements Space, CustomInspectable {
   }
 
   @trace.info({ depth: 2 })
-  get properties(): AnyLiveObject<any> {
+  get properties(): Obj.Obj<SpaceProperties> {
     this._throwIfNotInitialized();
     invariant(this._properties, 'Properties not available');
     return this._properties;
@@ -220,7 +251,6 @@ export class SpaceProxy implements Space, CustomInspectable {
   /**
    * @inheritdoc
    */
-  // TODO(burdon): Remove?
   get internal(): SpaceInternal {
     return this._internal;
   }
@@ -255,12 +285,38 @@ export class SpaceProxy implements Space, CustomInspectable {
   }
 
   /**
+   * Called by SpaceList to notify that a reconnection is starting.
+   * The space will ignore state updates until the backend reaches READY again.
+   * @internal Package-private.
+   */
+  _notifyReconnecting(): void {
+    if (this._initialized && this._data.state === SpaceState.SPACE_READY) {
+      this._awaitingBackendReady = true;
+      log('entering reconnecting state', { key: this.key });
+    }
+  }
+
+  /**
    * Called by EchoProxy to update this space instance.
    * Called once on initial creation.
    * @internal Package-private.
    */
   @synchronized
   async _processSpaceUpdate(space: SpaceData): Promise<void> {
+    // During reconnection, if we're waiting for the backend to re-initialize,
+    // ignore all updates until it reaches READY (or REQUIRES_MIGRATION) again.
+    if (this._awaitingBackendReady) {
+      if (space.state === SpaceState.SPACE_READY || space.state === SpaceState.SPACE_REQUIRES_MIGRATION) {
+        // Backend is ready again, resume normal processing.
+        this._awaitingBackendReady = false;
+        log('backend ready, resuming updates', { key: this.key, state: SpaceState[space.state] });
+      } else {
+        // Still waiting for backend to be ready, ignore this update.
+        log('ignoring update while awaiting backend ready', { key: this.key, ignoredState: SpaceState[space.state] });
+        return;
+      }
+    }
+
     const emitEvent = shouldUpdate(this._data, space);
     const emitPipelineEvent = shouldPipelineUpdate(this._data, space);
     const emitMembersEvent = shouldMembersUpdate(this._data.members, space.members);
@@ -279,6 +335,7 @@ export class SpaceProxy implements Space, CustomInspectable {
       emitMembersEvent,
       isFirstTimeInitializing,
       isReopening,
+      edgeReplication: space.edgeReplication,
     });
 
     this._data = space;
@@ -360,11 +417,13 @@ export class SpaceProxy implements Space, CustomInspectable {
     // TODO(wittjosiah): Transfer subscriptions from cached properties to the new properties object.
     {
       const unsubscribe = this._db
-        .query(Filter.type(PropertiesType), { dataLocation: QueryOptions.DataLocation.LOCAL })
+        .query(Filter.type(SpaceProperties), {
+          dataLocation: QueryOptions.DataLocation.LOCAL,
+        })
         .subscribe(
           (query) => {
-            if (query.objects.length === 1) {
-              this._properties = query.objects[0];
+            if (query.results.length === 1) {
+              this._properties = query.results[0];
               propertiesAvailable.wake();
               this._stateUpdate.emit(this._currentState);
               scheduleMicroTask(this._ctx, () => {
@@ -437,7 +496,10 @@ export class SpaceProxy implements Space, CustomInspectable {
       {
         spaceKey: this.key,
         channel,
-        message: { ...message, '@type': message['@type'] || 'google.protobuf.Struct' },
+        message: {
+          ...message,
+          '@type': message['@type'] || 'google.protobuf.Struct',
+        },
       },
       { timeout: RPC_TIMEOUT },
     );
@@ -504,7 +566,10 @@ export class SpaceProxy implements Space, CustomInspectable {
   private async _createEpoch({
     migration,
     automergeRootUrl,
-  }: { migration?: CreateEpochRequest.Migration; automergeRootUrl?: string } = {}): Promise<void> {
+  }: {
+    migration?: CreateEpochRequest.Migration;
+    automergeRootUrl?: string;
+  } = {}): Promise<void> {
     log('create epoch', { migration, automergeRootUrl });
     const { controlTimeframe: targetTimeframe } = await this._clientServices.services.SpacesService!.createEpoch(
       {
@@ -526,7 +591,10 @@ export class SpaceProxy implements Space, CustomInspectable {
   }
 
   private async _getCredentials(): Promise<Credential[]> {
-    const stream = this._clientServices.services.SpacesService?.queryCredentials({ spaceKey: this.key, noTail: true });
+    const stream = this._clientServices.services.SpacesService?.queryCredentials({
+      spaceKey: this.key,
+      noTail: true,
+    });
     invariant(stream, 'SpacesService not available');
     return await Stream.consumeData(stream);
   }
@@ -559,6 +627,65 @@ export class SpaceProxy implements Space, CustomInspectable {
       },
       { timeout: RPC_TIMEOUT },
     );
+    // TODO(dmaretskyi): Might cause a race-condition if the property is updated multiple times.
+    await asyncTimeout(
+      this._anySpaceUpdate.waitForCondition(() => {
+        return this._data.edgeReplication === setting;
+      }),
+      2_000,
+      'Waiting for the edge replication to be enabled',
+    );
+  }
+
+  private async _syncToEdge(opts?: {
+    timeout?: number;
+    onProgress: (state: SpaceSyncState.PeerState | undefined) => void;
+  }): Promise<void> {
+    await using ctx = Context.default();
+
+    if (this._data.edgeReplication !== EdgeReplicationSetting.ENABLED) {
+      throw new Error('Edge replication is disabled');
+    }
+
+    return await new Promise<void>((resolve, reject) => {
+      scheduleTask(
+        ctx,
+        () => {
+          reject(new Error('Timeout syncing to EDGE'));
+        },
+        opts?.timeout ?? 60_000,
+      );
+
+      const checkSyncState = (syncState: SpaceSyncState) => {
+        const edgePeer = syncState.peers?.find((state) => isEdgePeerId(this.id, state.peerId));
+        if (opts?.onProgress) {
+          opts.onProgress(edgePeer);
+        }
+
+        if (
+          edgePeer &&
+          edgePeer.missingOnRemote === 0 &&
+          edgePeer.missingOnLocal === 0 &&
+          edgePeer.differentDocuments === 0
+        ) {
+          resolve();
+        }
+      };
+
+      ctx.onDispose(this._db.subscribeToSyncState(ctx, checkSyncState));
+      // TODO(dmaretskyi): Still need polling, otherwise this gets stuck.
+      scheduleTaskInterval(
+        ctx,
+        async () => {
+          checkSyncState(await this._db.getSyncState());
+        },
+        1_000,
+      );
+
+      scheduleMicroTask(ctx, async () => {
+        checkSyncState(await this._db.getSyncState());
+      });
+    });
   }
 
   private _throwIfNotInitialized(): void {
@@ -568,7 +695,10 @@ export class SpaceProxy implements Space, CustomInspectable {
   }
 
   private async _export(): Promise<SpaceArchive> {
-    const { archive } = await this._clientServices.services.SpacesService!.exportSpace({ spaceId: this.id });
+    await this._db.flush();
+    const { archive } = await this._clientServices.services.SpacesService!.exportSpace({
+      spaceId: this.id,
+    });
     return archive;
   }
 }
@@ -589,9 +719,5 @@ const shouldMembersUpdate = (prev: SpaceMember[] | undefined, next: SpaceMember[
   return !isEqualWith(prev, next, loadashEqualityFn);
 };
 
-export const isSpace = (object: unknown): object is Space => object instanceof SpaceProxy;
-
-export const SpaceSchema: Schema.Schema<Space> = Schema.Any.pipe(
-  Schema.filter((space) => isSpace(space)),
-  Schema.annotations({ title: 'Space' }),
-);
+const isEdgePeerId = (spaceId: SpaceId, peerId: string) =>
+  peerId.startsWith(`${EdgeService.AUTOMERGE_REPLICATOR}:${spaceId}`);

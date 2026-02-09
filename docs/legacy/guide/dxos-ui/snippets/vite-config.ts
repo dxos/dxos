@@ -5,7 +5,7 @@
 import { resolve } from 'node:path';
 import { defineConfig } from 'vite';
 
-import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
+import { ThemePlugin } from '@dxos/ui-theme/plugin';
 
 export default defineConfig({
   plugins: [

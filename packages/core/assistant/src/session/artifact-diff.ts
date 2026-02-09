@@ -2,10 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Context } from 'effect';
+import * as Context from 'effect/Context';
 
 import { type ObjectVersion } from '@dxos/echo-db';
-import { type ObjectId } from '@dxos/echo-schema';
+import { type ObjectId } from '@dxos/keys';
 
 /**
  * Resolves artifact ids to their versions.

@@ -4,32 +4,30 @@
 
 import React from 'react';
 
-import { fullyQualifiedId, getSpace } from '@dxos/client/echo';
+import { type SurfaceComponentProps } from '@dxos/app-framework/react';
+import { Obj } from '@dxos/echo';
 import { useMembers, useQueue } from '@dxos/react-client/echo';
-import { StackItem } from '@dxos/react-ui-stack';
-import { type DataType } from '@dxos/schema';
+import { Layout } from '@dxos/react-ui-mosaic';
+import { type Message, type Transcript } from '@dxos/types';
 
 import { useQueueModelAdapter } from '../hooks';
-import { type Transcript } from '../types';
+import { renderByline } from '../util';
 
-import { TranscriptView, renderByline } from './Transcript';
+import { TranscriptView } from './Transcript';
 
-export type TranscriptionContainerProps = {
-  role: string;
-  transcript: Transcript.Transcript;
-};
+export type TranscriptionContainerProps = SurfaceComponentProps<Transcript.Transcript>;
 
-export const TranscriptionContainer = ({ transcript }: TranscriptionContainerProps) => {
-  const attendableId = fullyQualifiedId(transcript);
-  const space = getSpace(transcript);
-  const members = useMembers(space?.key).map((member) => member.identity);
-  const queue = useQueue<DataType.Message>(transcript.queue.dxn, { pollInterval: 1_000 });
+export const TranscriptionContainer = ({ role, subject: transcript }: TranscriptionContainerProps) => {
+  const attendableId = Obj.getDXN(transcript).toString();
+  const db = Obj.getDatabase(transcript);
+  const members = useMembers(db?.spaceId).map((member) => member.identity);
+  const queue = useQueue<Message.Message>(transcript.queue.dxn, { pollInterval: 1_000 });
   const model = useQueueModelAdapter(renderByline(members), queue);
 
   return (
-    <StackItem.Content>
-      <TranscriptView attendableId={attendableId} space={space} model={model} transcript={transcript} />
-    </StackItem.Content>
+    <Layout.Main role={role}>
+      <TranscriptView attendableId={attendableId} model={model} transcript={transcript} />
+    </Layout.Main>
   );
 };
 

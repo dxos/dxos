@@ -2,19 +2,22 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Brand, type Schema } from 'effect';
+import type * as Brand from 'effect/Brand';
+import type * as Schema from 'effect/Schema';
 
-import type { CleanupFn } from '@dxos/async';
+import type { CleanupFn, Event } from '@dxos/async';
 import { inspectCustom } from '@dxos/debug';
-import type { SchemaId } from '@dxos/echo-schema';
-import { type GenericSignal, compositeRuntime } from '@dxos/echo-signals/runtime';
+import type { Entity } from '@dxos/echo';
+import type { SchemaId } from '@dxos/echo/internal';
+// eslint-disable-next-line @typescript-eslint/consistent-type-imports
+import { EventId } from '@dxos/echo/internal';
 import { ComplexMap } from '@dxos/util';
 
 import type { KeyPath, ObjectCore } from '../core-db';
 import { type EchoDatabase } from '../proxy-db';
 
 import { type EchoArray } from './echo-array';
-import { type AnyLiveObject, type EchoReactiveHandler } from './echo-handler';
+import { type EchoReactiveHandler } from './echo-handler';
 
 export const symbolPath = Symbol('path');
 export const symbolNamespace = Symbol('namespace');
@@ -60,11 +63,6 @@ export class ObjectInternals {
   database: EchoDatabase | undefined;
 
   /**
-   * Signal for reactive updates to the object.
-   */
-  signal: GenericSignal = compositeRuntime.createSignal();
-
-  /**
    * Caching targets based on key path.
    * Only used for records and arrays.
    */
@@ -74,7 +72,7 @@ export class ObjectInternals {
    * Until object is persisted in the database, the linked object references are stored in this cache.
    * Set only when the object is not bound to a database.
    */
-  linkCache: Map<string, AnyLiveObject<any>> | undefined = new Map<string, AnyLiveObject<any>>();
+  linkCache: Map<string, Entity.Unknown> | undefined = new Map<string, Entity.Unknown>();
 
   subscriptions: CleanupFn[] = [];
 
@@ -123,4 +121,9 @@ export type ProxyTarget = {
    * Used for objects created by `createObject`.
    */
   [SchemaId]?: Schema.Schema.AnyNoContext;
+
+  /**
+   * For modifications.
+   */
+  [EventId]: Event<void>;
 } & ({ [key: keyof any]: any } | EchoArray<any>);

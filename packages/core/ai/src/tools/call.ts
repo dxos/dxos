@@ -2,11 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type AiError, type Tool, type Toolkit } from '@effect/ai';
-import { Effect } from 'effect';
+import type * as AiError from '@effect/ai/AiError';
+import type * as Tool from '@effect/ai/Tool';
+import type * as Toolkit from '@effect/ai/Toolkit';
+import * as Cause from 'effect/Cause';
+import * as Effect from 'effect/Effect';
 
 import { log } from '@dxos/log';
-import { type ContentBlock } from '@dxos/schema';
+import { type ContentBlock } from '@dxos/types';
 import { safeParseJson } from '@dxos/util';
 
 // TODO(burdon): Not Used?
@@ -34,7 +37,6 @@ export const callTool: <Tools extends Record<string, Tool.Any>>(
     log('toolCall', { toolCall: toolCall.name, input });
     const toolResult = yield* toolkit.handle(toolCall.name as any, input as any).pipe(
       Effect.map(
-        // TODO(dmaretskyi): Effect returns ({ result, encodedResult })
         ({ result }) =>
           ({
             _tag: 'toolResult',
@@ -45,18 +47,19 @@ export const callTool: <Tools extends Record<string, Tool.Any>>(
             providerExecuted: false,
           }) satisfies ContentBlock.ToolResult,
       ),
-      Effect.catchAll((error) =>
-        Effect.sync(
-          () =>
-            ({
-              // TODO(dmaretskyi): Effect-ai does not support isError flag.
-              _tag: 'toolResult',
-              toolCallId: toolCall.toolCallId,
-              name: toolCall.name,
-              error: formatError(error as Error),
-              providerExecuted: false,
-            }) satisfies ContentBlock.ToolResult,
-        ),
+      Effect.catchAllCause((cause) =>
+        Effect.sync(() => {
+          const errors = Cause.prettyErrors(cause);
+          log.warn('tool failed', { err: errors[0] });
+          return {
+            // TODO(dmaretskyi): Effect-ai does not support isError flag.
+            _tag: 'toolResult',
+            toolCallId: toolCall.toolCallId,
+            name: toolCall.name,
+            error: formatError(errors[0]),
+            providerExecuted: false,
+          } satisfies ContentBlock.ToolResult;
+        }),
       ),
     );
 
@@ -72,6 +75,9 @@ export const callTool: <Tools extends Record<string, Tool.Any>>(
   },
 );
 
+/**
+ * Formats the error with the cause chain included, but omiting the stack trace.
+ */
 const formatError = (error: Error): string => {
   if (error.cause) {
     return `${String(error)}\ncaused by:\n${formatError(error.cause as Error)}`;

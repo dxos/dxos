@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema, type SchemaAST } from 'effect';
+import * as Schema from 'effect/Schema';
+import type * as SchemaAST from 'effect/SchemaAST';
 import { describe, test } from 'vitest';
 
 import { invariant } from '@dxos/invariant';

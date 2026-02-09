@@ -2,12 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 import React, { useCallback, useRef } from 'react';
 
 import { AnyOutput, FunctionInput } from '@dxos/conductor';
-import { Ref, getSnapshot, isInstanceOf } from '@dxos/echo-schema';
-import { FunctionType, ScriptType } from '@dxos/functions';
+import { Ref, getSnapshot, isInstanceOf } from '@dxos/echo/internal';
+import { Function, Script } from '@dxos/functions';
 import { useClient } from '@dxos/react-client';
 import { Filter, parseId } from '@dxos/react-client/echo';
 import {
@@ -35,7 +35,11 @@ export type FunctionShape = Schema.Schema.Type<typeof FunctionShape>;
 export type CreateFunctionProps = CreateShapeProps<FunctionShape>;
 
 export const createFunction = (props: CreateFunctionProps) =>
-  createShape<FunctionShape>({ type: 'function', size: { width: 256, height: 192 }, ...props });
+  createShape<FunctionShape>({
+    type: 'function',
+    size: { width: 256, height: 192 },
+    ...props,
+  });
 
 //
 // Component
@@ -58,21 +62,19 @@ const TextInputComponent = ({ shape, title, ...props }: TextInputComponentProps)
 
       const space = client.spaces.get(spaceId);
       const object = space?.db.getObjectById(objectId);
-      if (!space || !isInstanceOf(ScriptType, object)) {
+      if (!space || !isInstanceOf(Script.Script, object)) {
         return;
       }
 
-      const {
-        objects: [fn],
-      } = await space.db.query(Filter.type(FunctionType, { source: Ref.make(object) })).run();
+      const [fn] = await space.db.query(Filter.type(Function.Function, { source: Ref.make(object) })).run();
       if (!fn) {
         return;
       }
 
       node.value = value;
       node.function = Ref.make(fn);
-      node.inputSchema = getSnapshot(fn.inputSchema);
-      node.outputSchema = getSnapshot(fn.outputSchema);
+      node.inputSchema = fn.inputSchema ? getSnapshot(fn.inputSchema) : undefined;
+      node.outputSchema = fn.outputSchema ? getSnapshot(fn.outputSchema) : undefined;
     },
     [client, node],
   );

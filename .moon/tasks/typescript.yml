@@ -1,9 +1,12 @@
 $schema: https://moonrepo.dev/schemas/tasks.json
 tasks:
   lint:
-    command: eslint . --format unix --quiet
+    command: pnpm exec eslint . --format unix --quiet
     inputs:
       - /eslint.config.mjs
       # Is this fine:
       - /tools/eslint-plugin-rules/**/*
       - '@group(sources)'
+
+inheritedBy:
+  toolchains: typescript

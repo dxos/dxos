@@ -2,13 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Schema, SchemaAST } from 'effect';
+import type * as Schema from 'effect/Schema';
+import * as SchemaAST from 'effect/SchemaAST';
 
 import { isArrayType } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import { type ComputeGraphModel, type ComputeMeta, type ComputeNode } from '../types';
+import { type ComputeGraphModel, type ComputeNode, type ComputeNodeMeta } from '../types';
 import { pickProperty } from '../util';
 
 /**
@@ -73,7 +74,7 @@ type TopologyNodeOutput = {
 export type TopologyNode = {
   id: string;
   graphNode: ComputeNode; // TODO(burdon): Rename computeNode.
-  meta: ComputeMeta;
+  meta: ComputeNodeMeta;
   inputs: TopologyNodeInput[];
   outputs: TopologyNodeOutput[];
 };
@@ -86,9 +87,9 @@ export type GraphDiagnostic = {
   property?: string;
 };
 
-export type CreateTopologyParams = {
+export type CreateTopologyProps = {
   graph: ComputeGraphModel;
-  computeMetaResolver: (node: ComputeNode) => Promise<ComputeMeta>;
+  computeMetaResolver: (node: ComputeNode) => Promise<ComputeNodeMeta>;
 };
 
 /**
@@ -99,7 +100,7 @@ export type CreateTopologyParams = {
  * @param params.computeMetaResolver - Function that resolves compute metadata for a given node
  * @returns A topology containing nodes with their inputs/outputs and any diagnostics
  */
-export const createTopology = async ({ graph, computeMetaResolver }: CreateTopologyParams): Promise<Topology> => {
+export const createTopology = async ({ graph, computeMetaResolver }: CreateTopologyProps): Promise<Topology> => {
   const topology: Omit<Topology, 'inputSchema' | 'outputSchema'> = {
     nodes: [],
     diagnostics: [],

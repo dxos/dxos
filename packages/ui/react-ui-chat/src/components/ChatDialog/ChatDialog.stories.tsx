@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { Input, Toolbar } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '../../translations';
 
@@ -42,7 +42,7 @@ const meta = {
               </div>
             ))}
           </ChatDialog.Content>
-          <ChatDialog.Footer classNames='px-2 items-center'>
+          <ChatDialog.Footer classNames='pli-2 items-center'>
             <Input.Root>
               <Input.TextInput classNames='border-none' placeholder='Test' />
             </Input.Root>
@@ -51,9 +51,8 @@ const meta = {
       </>
     );
   },
-  decorators: [withTheme],
+  decorators: [withTheme, withLayout({ layout: 'column' })],
   parameters: {
-    layout: 'column',
     translations,
   },
 } satisfies Meta<typeof ChatDialog.Root>;

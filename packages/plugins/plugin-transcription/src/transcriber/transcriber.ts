@@ -7,8 +7,8 @@ import { WaveFile } from 'wavefile';
 import { DeferredTask, Trigger } from '@dxos/async';
 import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { log } from '@dxos/log';
-import { type DataType } from '@dxos/schema';
 import { trace } from '@dxos/tracing';
+import { type ContentBlock } from '@dxos/types';
 
 import { TRANSCRIPTION_URL } from '../types';
 import { mergeFloat64Arrays } from '../util';
@@ -63,14 +63,14 @@ export type TranscribeConfig = {
   prefixBufferChunksAmount: number;
 };
 
-export type TranscriberParams = {
+export type TranscriberProps = {
   config: TranscribeConfig;
   recorder: AudioRecorder;
   /**
    * Callback to handle the transcribed segments, after all segment transformers are applied.
    * @param segments - The transcribed segments.
    */
-  onSegments: (segments: DataType.MessageBlock.Transcript[]) => Promise<void>;
+  onSegments: (segments: ContentBlock.Transcript[]) => Promise<void>;
 };
 
 /**
@@ -86,12 +86,12 @@ export class Transcriber extends Resource {
 
   private readonly _config: TranscribeConfig;
   private readonly _recorder: AudioRecorder;
-  private readonly _onSegments: TranscriberParams['onSegments'];
+  private readonly _onSegments: TranscriberProps['onSegments'];
 
   private _recording = false;
   private _transcribeTask?: DeferredTask = undefined;
 
-  constructor({ config, recorder, onSegments }: TranscriberParams) {
+  constructor({ config, recorder, onSegments }: TranscriberProps) {
     super();
     this._config = config;
     this._recorder = recorder;
@@ -221,7 +221,7 @@ export class Transcriber extends Resource {
     return segments;
   }
 
-  private _alignSegments(segments: WhisperSegment[], originalChunks: AudioChunk[]): DataType.MessageBlock.Transcript[] {
+  private _alignSegments(segments: WhisperSegment[], originalChunks: AudioChunk[]): ContentBlock.Transcript[] {
     // Absolute zero for all relative timestamps in the segments.
     const zeroTimestamp = originalChunks.at(0)!.timestamp;
 

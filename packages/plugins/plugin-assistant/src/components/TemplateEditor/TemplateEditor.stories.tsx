@@ -9,25 +9,35 @@ import { createSystemPrompt } from '@dxos/assistant';
 import { Blueprint, Template } from '@dxos/blueprints';
 import { useClient } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { trim } from '@dxos/util';
 
 import { translations } from '../../translations';
 
 import { TemplateEditor, type TemplateEditorProps } from './TemplateEditor';
 
+const FENCE = '```';
+
 const TEMPLATE = trim`
   {{! System Prompt }}
   
-  You are a machine that is an expert chess player.
+  You are an expert chess player.
   The move history of the current game is: {{history}}.
   If asked to suggest a move explain why it is a good move.
 
   {{#each artifacts}}
-  - {{this}}
+    {{this}}
   {{/each}}
 
+  Reponse in the format: <suggestion>SUGGESTION</suggestion>
+
+  @dxn:queue:data:B6INSIBY3CBEF4M5VZRYBCMAHQMPYK5AJ:01K24XMVHSZHS97SG1VTVQDM5Z:01K24XPK464FSCKVQJAB2H662M
+
   ---
+
+  ${FENCE}ts
+  const x = 100;
+  ${FENCE}
 
   {{input}}
 `;
@@ -47,7 +57,7 @@ const DefaultStory = ({ source }: TemplateEditorProps & { source: string }) => {
 
   return (
     <TemplateEditor
-      classNames='bg-baseSurface max-is-prose is-full'
+      classNames='bg-baseSurface is-full max-is-proseMaxWidth'
       id={blueprint.id}
       template={blueprint.instructions}
     />
@@ -60,6 +70,7 @@ const meta = {
   render: DefaultStory,
   decorators: [
     withTheme,
+    withLayout({ layout: 'column' }),
     withClientProvider({
       types: [Blueprint.Blueprint],
       createIdentity: true,
@@ -67,7 +78,6 @@ const meta = {
     }),
   ],
   parameters: {
-    layout: 'column',
     translations,
   },
 } satisfies Meta<typeof DefaultStory>;

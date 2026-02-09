@@ -2,15 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Type } from '@dxos/echo';
-import { FormatEnum } from '@dxos/echo-schema';
-import { useClient } from '@dxos/react-client';
-import { getSpace, useSchema } from '@dxos/react-client/echo';
-import { type CustomInputMap, Form, SelectInput } from '@dxos/react-ui-form';
-import { type DataType, getTypenameFromQuery } from '@dxos/schema';
+import { Obj, Type } from '@dxos/echo';
+import { Format } from '@dxos/echo/internal';
+import { useSchema } from '@dxos/react-client/echo';
+import { Form, type FormFieldMap, SelectField } from '@dxos/react-ui-form';
+import { getTypenameFromQuery } from '@dxos/schema';
 
 import { type Map } from '../types';
 
@@ -20,22 +19,22 @@ export const MapSettingsSchema = Schema.Struct({
   coordinateColumn: Schema.optional(Schema.String.annotations({ title: 'Coordinate column' })),
 });
 
-type MapViewEditorProps = { view: DataType.View };
+type MapViewEditorProps = { object: Map.Map };
 
-export const MapViewEditor = ({ view }: MapViewEditorProps) => {
-  const client = useClient();
-  const space = getSpace();
-  const map = view.presentation.target as Map.Map | undefined;
-  const typename = view.query ? getTypenameFromQuery(view.query.ast) : undefined;
-  const currentSchema = useSchema(client, space, typename);
+export const MapViewEditor = ({ object }: MapViewEditorProps) => {
+  const db = Obj.getDatabase(object);
+  const view = object?.view?.target;
+  const typename = view?.query ? getTypenameFromQuery(view.query.ast) : undefined;
+  const currentSchema = useSchema(db, typename);
 
-  const [allSchemata, setAllSchemata] = useState<Type.Schema[]>([]);
+  const [allSchemata, setAllSchemata] = useState<Type.RuntimeType[]>([]);
 
   useEffect(() => {
-    if (!space) {
+    if (!db) {
       return;
     }
-    const unsubscribe = space.db.schemaRegistry.query().subscribe(
+
+    const unsubscribe = db.schemaRegistry.query().subscribe(
       (query) => {
         const schemata = query.results;
         setAllSchemata(schemata);
@@ -43,7 +42,7 @@ export const MapViewEditor = ({ view }: MapViewEditorProps) => {
       { fire: true },
     );
     return () => unsubscribe();
-  }, [space]);
+  }, [db]);
 
   const schemaOptions = useMemo(() => {
     const uniqueTypenames = new Set(allSchemata.map((schema) => schema.typename));
@@ -60,7 +59,7 @@ export const MapViewEditor = ({ view }: MapViewEditorProps) => {
     }
 
     const columns = Object.entries(jsonSchema.properties).reduce<string[]>((acc, [key, value]) => {
-      if (typeof value === 'object' && value?.format === FormatEnum.GeoPoint) {
+      if (typeof value === 'object' && value?.format === Format.TypeFormat.GeoPoint) {
         acc.push(key);
       }
       return acc;
@@ -71,39 +70,35 @@ export const MapViewEditor = ({ view }: MapViewEditorProps) => {
 
   const onSave = useCallback(
     (values: Partial<{ coordinateColumn: string }>) => {
-      if (map && values.coordinateColumn) {
-        view.projection.pivotFieldId = values.coordinateColumn;
+      if (view && values.coordinateColumn) {
+        Obj.change(view, (v) => {
+          v.projection.pivotFieldId = values.coordinateColumn;
+        });
       }
     },
-    [map],
-  );
-
-  const initialValues = useMemo(
-    () => ({ coordinateSource: typename, coordinateColumn: view.projection.pivotFieldId }),
     [view],
   );
 
-  const custom: CustomInputMap = useMemo(
+  const initialValues = useMemo(
+    () => ({ coordinateSource: typename, coordinateColumn: view?.projection.pivotFieldId }),
+    [view],
+  );
+
+  const fieldMap = useMemo<FormFieldMap>(
     () => ({
-      coordinateSource: (props) => <SelectInput {...props} options={schemaOptions} />,
-      coordinateColumn: (props) => <SelectInput {...props} options={locationFields} />,
+      coordinateSource: (props) => <SelectField {...props} options={schemaOptions} />,
+      coordinateColumn: (props) => <SelectField {...props} options={locationFields} />,
     }),
     [schemaOptions, locationFields],
   );
 
-  if (!space || !map) {
+  if (!db || !object) {
     return null;
   }
 
   return (
-    <Form
-      schema={MapSettingsSchema}
-      values={initialValues}
-      onSave={onSave}
-      autoSave
-      Custom={custom}
-      outerSpacing='blockStart-0'
-      classNames='pbs-inputSpacingBlock'
-    />
+    <Form.Root schema={MapSettingsSchema} values={initialValues} fieldMap={fieldMap} autoSave onSave={onSave}>
+      <Form.FieldSet />
+    </Form.Root>
   );
 };

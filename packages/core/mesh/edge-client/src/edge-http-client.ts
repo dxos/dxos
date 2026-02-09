@@ -2,11 +2,15 @@
 // Copyright 2024 DXOS.org
 //
 
-import { FetchHttpClient, HttpClient } from '@effect/platform';
-import { Effect, pipe } from 'effect';
+import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
+import * as HttpClient from '@effect/platform/HttpClient';
+import * as Effect from 'effect/Effect';
+import * as Function from 'effect/Function';
 
 import { sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
+import { runAndForwardErrors } from '@dxos/effect';
+import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import {
@@ -16,7 +20,7 @@ import {
   type CreateSpaceResponseBody,
   EdgeAuthChallengeError,
   EdgeCallFailedError,
-  type EdgeHttpResponse,
+  type EdgeFailure,
   type EdgeStatus,
   type ExecuteWorkflowResponseBody,
   type ExportBundleRequest,
@@ -74,13 +78,19 @@ type EdgeHttpRequestArgs = {
   json?: boolean;
 
   /**
-   * Do not expect a standard EDGE JSON response with a `success` field.
+   * Force authentication.
+   * This should be used for requests with large bodies to avoid sending the body twice.
+   * The client will call /auth endpoint to generate the auth header.
    */
-  rawResponse?: boolean;
+  auth?: boolean;
 };
 
-export type EdgeHttpGetArgs = Pick<EdgeHttpRequestArgs, 'context' | 'retry'>;
-export type EdgeHttpPostArgs = Pick<EdgeHttpRequestArgs, 'context' | 'retry' | 'body'>;
+export type EdgeHttpGetArgs = Pick<EdgeHttpRequestArgs, 'context' | 'retry' | 'auth'>;
+export type EdgeHttpPostArgs = Pick<EdgeHttpRequestArgs, 'context' | 'retry' | 'body' | 'auth'>;
+
+export type GetCronTriggersResponse = {
+  cronIds: string[];
+};
 
 export class EdgeHttpClient {
   private readonly _baseUrl: string;
@@ -113,7 +123,7 @@ export class EdgeHttpClient {
   //
 
   public async getStatus(args?: EdgeHttpGetArgs): Promise<EdgeStatus> {
-    return this._call(new URL('/status', this.baseUrl), { ...args, method: 'GET' });
+    return this._call(new URL('/status', this.baseUrl), { ...args, method: 'GET', auth: true });
   }
 
   //
@@ -202,7 +212,8 @@ export class EdgeHttpClient {
     query: QueueQuery,
     args?: EdgeHttpGetArgs,
   ): Promise<QueryResult> {
-    const { queueId } = query;
+    const queueId = query.queueIds?.[0];
+    invariant(queueId, 'queueId required');
     return this._call(
       createUrl(new URL(`/spaces/${subspaceTag}/${spaceId}/queue/${queueId}/query`, this.baseUrl), {
         after: query.after,
@@ -264,6 +275,7 @@ export class EdgeHttpClient {
     formData.append('version', body.version);
     formData.append('ownerPublicKey', body.ownerPublicKey);
     formData.append('entryPoint', body.entryPoint);
+    body.runtime && formData.append('runtime', body.runtime);
     for (const [filename, content] of Object.entries(body.assets)) {
       formData.append(
         'assets',
@@ -314,7 +326,6 @@ export class EdgeHttpClient {
       ...args,
       body: input,
       method: 'POST',
-      rawResponse: true,
     });
   }
 
@@ -339,8 +350,16 @@ export class EdgeHttpClient {
   // Triggers
   //
 
-  public async getCronTriggers(spaceId: SpaceId) {
-    return this._call(new URL(`/test/functions/${spaceId}/triggers/crons`, this.baseUrl), { method: 'GET' });
+  public async getCronTriggers(spaceId: SpaceId): Promise<GetCronTriggersResponse> {
+    return this._call<GetCronTriggersResponse>(new URL(`/test/functions/${spaceId}/triggers/crons`, this.baseUrl), {
+      method: 'GET',
+    });
+  }
+
+  public async forceRunCronTrigger(spaceId: SpaceId, triggerId: ObjectId) {
+    return this._call(new URL(`/test/functions/${spaceId}/triggers/crons/${triggerId}/run`, this.baseUrl), {
+      method: 'POST',
+    });
   }
 
   //
@@ -371,66 +390,74 @@ export class EdgeHttpClient {
   // Internal
   //
 
-  private async _fetch<T>(url: URL, args: EdgeHttpRequestArgs): Promise<T> {
-    return pipe(
+  private async _fetch<T>(url: URL, _args: EdgeHttpRequestArgs): Promise<T> {
+    return Function.pipe(
       HttpClient.get(url),
       withLogging,
       withRetryConfig,
       Effect.provide(FetchHttpClient.layer),
       Effect.provide(HttpConfig.default),
       Effect.withSpan('EdgeHttpClient'),
-      Effect.runPromise,
+      runAndForwardErrors,
     ) as T;
   }
 
   // TODO(burdon): Refactor with effect (see edge-http-client.test.ts).
   private async _call<T>(url: URL, args: EdgeHttpRequestArgs): Promise<T> {
     const shouldRetry = createRetryHandler(args);
-    const requestContext = args.context ?? new Context();
+    const requestContext = args.context ?? Context.default();
     log('fetch', { url, request: args.body });
 
     let handledAuth = false;
+    const tryCount = 1;
     while (true) {
       let processingError: EdgeCallFailedError | undefined = undefined;
-      let retryAfterHeaderValue: number = Number.NaN;
       try {
-        const request = createRequest(args, this._authHeader);
-        const response = await fetch(url, request);
-        retryAfterHeaderValue = Number(response.headers.get('Retry-After'));
-        if (response.ok) {
-          const body = (await response.json()) as EdgeHttpResponse<T>;
-
-          if (args.rawResponse) {
-            return body as any;
+        if (!this._authHeader && args.auth) {
+          const response = await fetch(new URL(`/auth`, this.baseUrl));
+          if (response.status === 401) {
+            this._authHeader = await this._handleUnauthorized(response);
           }
+        }
 
+        const request = createRequest(args, this._authHeader);
+        log('call edge', { url, tryCount, authHeader: !!this._authHeader });
+        const response = await fetch(url, request);
+
+        if (response.ok) {
+          const body = await response.clone().json();
+          invariant(body, 'Expected body to be present');
           if (!('success' in body)) {
             return body;
           }
-
           if (body.success) {
             return body.data;
-          }
-
-          log.warn('unsuccessful edge response', { url, body });
-          if (body.errorData?.type === 'auth_challenge' && typeof body.errorData?.challenge === 'string') {
-            processingError = new EdgeAuthChallengeError(body.errorData.challenge, body.errorData);
-          } else if (body.errorData) {
-            processingError = EdgeCallFailedError.fromUnsuccessfulResponse(response, body);
           }
         } else if (response.status === 401 && !handledAuth) {
           this._authHeader = await this._handleUnauthorized(response);
           handledAuth = true;
           continue;
+        }
+
+        const body: EdgeFailure =
+          response.headers.get('Content-Type') === 'application/json' ? await response.clone().json() : undefined;
+
+        invariant(!body?.success, 'Expected body to not be a failure response or undefined.');
+
+        if (body?.data?.type === 'auth_challenge' && typeof body?.data?.challenge === 'string') {
+          processingError = new EdgeAuthChallengeError(body.data.challenge, body.data);
+        } else if (body?.success === false) {
+          processingError = EdgeCallFailedError.fromUnsuccessfulResponse(response, body);
         } else {
+          invariant(!response.ok, 'Expected response to not be ok.');
           processingError = await EdgeCallFailedError.fromHttpFailure(response);
         }
       } catch (error: any) {
         processingError = EdgeCallFailedError.fromProcessingFailureCause(error);
       }
 
-      if (processingError?.isRetryable && (await shouldRetry(requestContext, retryAfterHeaderValue))) {
-        log('retrying edge request', { url, processingError });
+      if (processingError?.isRetryable && (await shouldRetry(requestContext, processingError.retryAfterMs))) {
+        log.verbose('retrying edge request', { url, processingError });
       } else {
         throw processingError!;
       }
@@ -489,7 +516,7 @@ const createRetryHandler = ({ retry }: EdgeHttpRequestArgs) => {
   const maxRetries = retry.count ?? DEFAULT_MAX_RETRIES_COUNT;
   const baseTimeout = retry.timeout ?? DEFAULT_RETRY_TIMEOUT;
   const jitter = retry.jitter ?? DEFAULT_RETRY_JITTER;
-  return async (ctx: Context, retryAfter: number) => {
+  return async (ctx: Context, retryAfter?: number) => {
     if (++retries > maxRetries || ctx.disposed) {
       return false;
     }

@@ -27,13 +27,10 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../core/echo/echo"
+    },
+    {
       "path": "../../core/echo/echo-db"
-    },
-    {
-      "path": "../../core/echo/echo-schema"
-    },
-    {
-      "path": "../../core/echo/live-object"
     },
     {
       "path": "../react-ui"
@@ -42,7 +39,10 @@
       "path": "../react-ui-editor"
     },
     {
-      "path": "../react-ui-theme"
+      "path": "../ui-editor"
+    },
+    {
+      "path": "../ui-theme"
     }
   ]
 }

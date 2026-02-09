@@ -2,17 +2,19 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Atom, useAtomValue } from '@effect-atom/atom-react';
 import React, { type PropsWithChildren, forwardRef, memo, useEffect, useMemo, useRef, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
 import { type ThemedClassName, useForwardedRef } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
-import { isTruthy } from '@dxos/util';
+import { mx } from '@dxos/ui-theme';
+import { isNonNullable } from '@dxos/util';
 
 import {
   type DOMRectBounds,
   Gameboard,
   type Location,
+  type PieceMap,
   type PieceRecord,
   type Player,
   getRelativeBounds,
@@ -21,6 +23,9 @@ import {
 } from '../Gameboard';
 
 import { type ChessModel, type ChessPiece, ChessPieces, boardStyles, getSquareColor, locationToPos } from './chess';
+
+/** Fallback atom for when model is undefined. */
+const EMPTY_PIECES_ATOM = Atom.make<PieceMap<ChessPiece>>({});
 
 export type ChessboardProps = ThemedClassName<
   PropsWithChildren<{
@@ -40,6 +45,7 @@ const ChessboardComponent = forwardRef<HTMLDivElement, ChessboardProps>(
     const targetRef = useForwardedRef(forwardedRef);
     const { width, height } = useResizeDetector({ targetRef, refreshRate: 200 });
     const { model, promoting, onPromotion } = useGameboardContext<ChessModel>(Chessboard.displayName!);
+    const pieces = useAtomValue(model?.pieces ?? EMPTY_PIECES_ATOM);
 
     // Board squares.
     const squares = useMemo<Location[]>(() => {
@@ -84,7 +90,7 @@ const ChessboardComponent = forwardRef<HTMLDivElement, ChessboardProps>(
         return [];
       }
 
-      return Object.values(model?.pieces.value ?? {})
+      return Object.values(pieces)
         .map((piece) => {
           if (piece.id === promoting?.id) {
             return null;
@@ -93,8 +99,8 @@ const ChessboardComponent = forwardRef<HTMLDivElement, ChessboardProps>(
           const bounds = grid[locationToString(piece.location)];
           return { piece, bounds };
         })
-        .filter(isTruthy);
-    }, [grid, model?.pieces.value, promoting]);
+        .filter(isNonNullable);
+    }, [grid, pieces, promoting]);
 
     return (
       <div ref={targetRef} tabIndex={0} className={mx('relative outline-none', classNames)}>
@@ -134,7 +140,7 @@ const ChessboardComponent = forwardRef<HTMLDivElement, ChessboardProps>(
             piece={promoting}
             onSelect={(piece) => {
               onPromotion({
-                from: Object.values(model.pieces.value).find((p) => p.id === promoting.id)!.location,
+                from: Object.values(pieces).find((p) => p.id === promoting.id)!.location,
                 to: piece.location,
                 piece: promoting.type,
                 promotion: piece.type,

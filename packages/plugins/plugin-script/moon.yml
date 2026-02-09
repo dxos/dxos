@@ -1,4 +1,4 @@
-type: library
+layer: library
 language: typescript
 tags:
   - ts-build
@@ -9,9 +9,21 @@ tasks:
   compile:
     args:
       - '--entryPoint=src/index.ts'
+      - '--entryPoint=src/blueprints/index.ts'
       - '--entryPoint=src/types/index.ts'
       - '--entryPoint=src/templates/index.ts'
-      - '--preactSignalTracking'
   test:
     inputs:
       - .storybook/*
+      - /tools/storybook-react/.storybook/main.ts
+
+  e2e:
+    env:
+      DX_TEST_TAGS: functions-e2e
+    command: vitest run -c vitest.config.ts --reporter=verbose src/e2e/*.test.ts
+    deps:
+      - ^:build
+      - ^:compile
+    inputs:
+      - src/e2e/**
+      - vitest.config.ts

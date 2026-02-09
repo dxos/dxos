@@ -19,10 +19,14 @@ import { invariant } from '@dxos/invariant';
 
 // TODO(dmaretskyi): Consider adding details renderer for when you hover over the reference.
 export type ReferenceData = {
-  uri: string;
+  uri: string; // TODO(burdon): Rename dxn.
   label: string;
 };
 
+/**
+ * @deprecated
+ */
+// TODO(burdon): Remove.
 export interface ReferencesProvider {
   getReferences({ query }: { query: string }): Promise<ReferenceData[]>;
   resolveReference({ uri }: { uri: string }): Promise<ReferenceData | null>;
@@ -45,7 +49,9 @@ export type ReferencesOptions = {
 
 /**
  * Lookup object references.
+ * @deprecated
  */
+// TODO(burdon): Remove.
 export const references = ({ provider, triggerCharacter = '@', debug = false }: ReferencesOptions): Extension => {
   invariant(triggerCharacter.length === 1);
 
@@ -103,7 +109,7 @@ export const references = ({ provider, triggerCharacter = '@', debug = false }: 
     },
     {
       decorations: (v) => v.decorations,
-      provide: (plugin) => [
+      provide: () => [
         EditorView.atomicRanges.of(
           (view): DecorationSet => view.plugin(decorationField)?.decorations ?? RangeSet.empty,
         ),
@@ -158,18 +164,18 @@ class ReferenceWidget extends WidgetType {
     super();
   }
 
-  override toDOM(): HTMLSpanElement {
+  override ignoreEvent() {
+    return true;
+  }
+
+  override eq(other: this) {
+    return this.data.uri === other.data.uri;
+  }
+
+  override toDOM() {
     const span = document.createElement('span');
-    span.textContent = `@ ${this.data.label}`;
+    span.textContent = `@${this.data.label}`;
     span.className = 'cm-reference-pill';
     return span;
-  }
-
-  override eq(other: ReferenceWidget): boolean {
-    return other.data.uri === this.data.uri;
-  }
-
-  override ignoreEvent(): boolean {
-    return true;
   }
 }

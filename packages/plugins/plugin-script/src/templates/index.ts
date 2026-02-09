@@ -2,15 +2,17 @@
 // Copyright 2024 DXOS.org
 //
 
+import anthropic from './anthropic.ts?raw';
 import chat from './chat.ts?raw';
-import chess from './chess.ts?raw';
+import chessBot from './chess-bot.ts?raw';
+import commentary from './commentary.ts?raw';
 import dataGenerator from './data-generator.ts?raw';
 import discord from './discord.ts?raw';
-import echo from './echo.ts?raw';
 import email from './email.ts?raw';
 import forexEffect from './forex-effect.ts?raw';
 import forex from './forex.ts?raw';
 import gmail from './gmail.ts?raw';
+import ping from './ping.ts?raw';
 
 const removeHeader = (str: string) => str.split('\n').slice(4).join('\n');
 
@@ -23,11 +25,11 @@ export type Template = {
   presetId?: string;
 };
 
-export const templates: Template[] = [
+export const templates = [
   {
-    id: 'dxos.org/script/echo',
-    name: 'Echo',
-    source: removeHeader(echo),
+    id: 'dxos.org/script/ping',
+    name: 'Ping',
+    source: removeHeader(ping),
   },
   {
     id: 'dxos.org/script/forex',
@@ -46,10 +48,10 @@ export const templates: Template[] = [
     presetId: 'dxos.org/function/gpt',
   },
   {
-    id: 'dxos.org/script/chess',
-    name: 'Chess',
-    source: removeHeader(chess),
-    presetId: 'dxos.org/function/chess',
+    id: 'dxos.org/script/chess-bot',
+    name: 'Chess Bot',
+    source: removeHeader(chessBot),
+    presetId: 'dxos.org/function/chess-bot',
   },
   {
     id: 'dxos.org/script/email',
@@ -75,4 +77,15 @@ export const templates: Template[] = [
     source: removeHeader(dataGenerator),
     presetId: 'dxos.org/function/data-generator',
   },
-];
+  {
+    id: 'dxos.org/script/anthropic',
+    name: 'Anthropic',
+    source: removeHeader(anthropic),
+  },
+  {
+    id: 'dxos.org/script/commentary',
+    name: 'Commentary',
+    source: removeHeader(commentary),
+    presetId: 'dxos.org/function/chess/commentary',
+  },
+] as const;

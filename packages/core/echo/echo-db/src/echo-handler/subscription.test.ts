@@ -2,14 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-import { effect } from '@preact/signals-core';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { Trigger, sleep } from '@dxos/async';
-import { Expando } from '@dxos/echo-schema';
-import { registerSignalsRuntime } from '@dxos/echo-signals';
-import { type Live, live } from '@dxos/live-object';
-import { log } from '@dxos/log';
+import { Trigger } from '@dxos/async';
+import { Obj } from '@dxos/echo';
+import { TestSchema } from '@dxos/echo/testing';
 
 import { EchoTestBuilder } from '../testing';
 
@@ -28,21 +25,25 @@ describe('create subscription', () => {
 
   test('updates are propagated', async () => {
     const { db } = await builder.createDatabase();
-    const task = createExpando();
+    const task = Obj.make(TestSchema.Expando, {});
     db.add(task);
 
     const counter = createUpdateCounter(task);
 
-    task.title = 'Test title';
+    Obj.change(task, (t) => {
+      t.title = 'Test title';
+    });
     expect(counter.value).to.equal(2);
 
-    task.title = 'Test title revision';
+    Obj.change(task, (t) => {
+      t.title = 'Test title revision';
+    });
     expect(counter.value).to.equal(3);
   });
 
   test('updates are synchronous', async () => {
     const { db } = await builder.createDatabase();
-    const task = createExpando();
+    const task = Obj.make(TestSchema.Expando, {});
     db.add(task);
 
     const actions: string[] = [];
@@ -54,42 +55,18 @@ describe('create subscription', () => {
     expect(actions).to.deep.equal(['update']);
 
     actions.push('before');
-    task.title = 'Test title';
-    actions.push('after');
-
-    // NOTE: This order is required for input components in react to function properly when directly bound to ECHO objects.
-    expect(actions).to.deep.equal(['update', 'before', 'update', 'after']);
-  });
-
-  test('signal updates are synchronous', async () => {
-    registerSignalsRuntime();
-
-    const { db } = await builder.createDatabase();
-    const task = createExpando();
-    db.add(task);
-
-    const actions: string[] = [];
-    const clearEffect = effect(() => {
-      log('effect', { title: task.title });
-      actions.push('update');
+    Obj.change(task, (t) => {
+      t.title = 'Test title';
     });
-    // Initial update caused by changed selection.
-    expect(actions).to.deep.equal(['update']);
-
-    actions.push('before');
-    task.title = 'Test title';
     actions.push('after');
 
-    await sleep(10);
-
-    clearEffect();
     // NOTE: This order is required for input components in react to function properly when directly bound to ECHO objects.
     expect(actions).to.deep.equal(['update', 'before', 'update', 'after']);
   });
 
   test('latest value is available in subscription', async () => {
     const { db } = await builder.createDatabase();
-    const task = createExpando();
+    const task = Obj.make(TestSchema.Expando, {});
     db.add(task);
 
     let counter = 0;
@@ -102,7 +79,9 @@ describe('create subscription', () => {
     });
     selection.update([task]);
 
-    task.title = 'Test title';
+    Obj.change(task, (t) => {
+      t.title = 'Test title';
+    });
     expect(await title.wait()).to.equal('Test title');
   });
 
@@ -113,19 +92,21 @@ describe('create subscription', () => {
 
   test('updates for nested objects', async () => {
     const { db } = await builder.createDatabase();
-    const task = createExpando({ nested: { title: 'Test title' } });
+    const task = Obj.make(TestSchema.Expando, { nested: { title: 'Test title' } });
     db.add(task);
 
     const counter = createUpdateCounter(task);
 
     expect(counter.value).to.equal(1);
-    task.nested.title = 'New title';
+    Obj.change(task, (t) => {
+      t.nested.title = 'New title';
+    });
     expect(counter.value).to.equal(2);
   });
 
   test('updates for deep nested objects', async () => {
     const { db } = await builder.createDatabase();
-    const task = createExpando({
+    const task = Obj.make(TestSchema.Expando, {
       nested: { deep_nested: { title: 'Test title' } },
     });
     db.add(task);
@@ -133,44 +114,52 @@ describe('create subscription', () => {
     const counter = createUpdateCounter(task);
 
     expect(counter.value).to.equal(1);
-    task.nested.deep_nested.title = 'New title';
+    Obj.change(task, (t) => {
+      t.nested.deep_nested.title = 'New title';
+    });
     expect(counter.value).to.equal(2);
   });
 
   test('updates for array objects', async () => {
     const { db } = await builder.createDatabase();
-    const task = createExpando({ array: ['Test value'] });
+    const task = Obj.make(TestSchema.Expando, { array: ['Test value'] });
     db.add(task);
 
     const counter = createUpdateCounter(task);
 
     expect(counter.value).to.equal(1);
-    task.array[0] = 'New value';
+    Obj.change(task, (t) => {
+      t.array[0] = 'New value';
+    });
     expect(counter.value).to.equal(2);
   });
 
   test('updates for automerge array object fields', async () => {
     const { db } = await builder.createDatabase();
-    const task = createExpando({ array: [{ title: 'Test value' }] });
+    const task = Obj.make(TestSchema.Expando, { array: [{ title: 'Test value' }] });
     db.add(task);
 
     const counter = createUpdateCounter(task);
 
     expect(counter.value).to.equal(1);
-    task.array[0].title = 'New value';
+    Obj.change(task, (t) => {
+      t.array[0].title = 'New value';
+    });
     expect(counter.value).to.equal(2);
   });
 
   test('updates for nested automerge array object fields', async () => {
     const { db } = await builder.createDatabase();
     const nestedArrayHolder = { nested_array: [{ title: 'Test value' }] };
-    const task = createExpando({ array: [nestedArrayHolder] });
+    const task = Obj.make(TestSchema.Expando, { array: [nestedArrayHolder] });
     db.add(task);
 
     const counter = createUpdateCounter(task);
 
     expect(counter.value).to.equal(1);
-    task.array[0].nested_array[0].title = 'New value';
+    Obj.change(task, (t) => {
+      t.array[0].nested_array[0].title = 'New value';
+    });
     expect(counter.value).to.equal(2);
   });
 });
@@ -182,8 +171,4 @@ const createUpdateCounter = (object: any) => {
   });
   selection.update([object]);
   return counter;
-};
-
-const createExpando = <T extends Record<string, any>>(props: T = {} as T): Live<Expando> => {
-  return live(Expando, props);
 };

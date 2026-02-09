@@ -2,59 +2,78 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 
-import { SpaceSchema } from '@dxos/client/echo';
-import { DataType } from '@dxos/schema';
+import { Capability } from '@dxos/app-framework';
+import { Database } from '@dxos/echo';
+import { Operation } from '@dxos/operation';
+import { SpaceSchema } from '@dxos/react-client/echo';
+import { Collection } from '@dxos/schema';
+import { Actor, Message } from '@dxos/types';
 
 import { meta } from '../meta';
 
-import { Calendar } from './calendar';
-import { Mailbox } from './mailbox';
+import * as Mailbox from './Mailbox';
 
-export namespace InboxAction {
-  const INBOX_ACTION = `${meta.id}/action`;
+const INBOX_OPERATION = `${meta.id}/operation`;
 
-  export class CreateMailbox extends Schema.TaggedClass<CreateMailbox>()(`${INBOX_ACTION}/create-mailbox`, {
-    input: Schema.Struct({
-      space: SpaceSchema,
-      name: Schema.optional(Schema.String),
-    }),
-    output: Schema.Struct({
-      object: Mailbox,
-    }),
-  }) {}
+export namespace InboxOperation {
+  export const OnCreateSpace = Operation.make({
+    meta: { key: `${INBOX_OPERATION}/on-create-space`, name: 'On Create Space' },
+    services: [Capability.Service],
+    schema: {
+      input: Schema.Struct({
+        space: SpaceSchema,
+        rootCollection: Collection.Collection,
+        isDefault: Schema.optional(Schema.Boolean),
+      }),
+      output: Schema.Void,
+    },
+  });
 
-  export class CreateCalendar extends Schema.TaggedClass<CreateCalendar>()(`${INBOX_ACTION}/create-calendar`, {
-    input: Schema.Struct({
-      name: Schema.optional(Schema.String),
-    }),
-    output: Schema.Struct({
-      object: Calendar,
-    }),
-  }) {}
+  export const ExtractContact = Operation.make({
+    meta: { key: `${INBOX_OPERATION}/extract-contact`, name: 'Extract Contact' },
+    services: [Capability.Service],
+    schema: {
+      input: Schema.Struct({
+        db: Database.Database,
+        actor: Actor.Actor,
+      }),
+      output: Schema.Void,
+    },
+  });
 
-  export class SelectMessage extends Schema.TaggedClass<SelectMessage>()(`${INBOX_ACTION}/select-message`, {
-    input: Schema.Struct({
-      mailboxId: Schema.String,
-      message: Schema.optional(DataType.Message),
-    }),
-    output: Schema.Void,
-  }) {}
+  // TODO(wittjosiah): This appears to be unused.
+  export const RunAssistant = Operation.make({
+    meta: { key: `${INBOX_OPERATION}/run-assistant`, name: 'Run Inbox Assistant' },
+    services: [Capability.Service],
+    schema: {
+      input: Schema.Struct({
+        mailbox: Mailbox.Mailbox,
+      }),
+      output: Schema.Void,
+    },
+  });
 
-  export class ExtractContact extends Schema.TaggedClass<ExtractContact>()(`${INBOX_ACTION}/extract-contact`, {
-    input: Schema.Struct({
-      space: SpaceSchema,
-      message: DataType.Message,
-    }),
-    output: Schema.Void,
-  }) {}
+  export const ComposeEmailMode = Schema.Literal('compose', 'reply', 'reply-all', 'forward');
+  export type ComposeEmailMode = Schema.Schema.Type<typeof ComposeEmailMode>;
 
-  export class RunAssistant extends Schema.TaggedClass<RunAssistant>()(`${INBOX_ACTION}/run-assistant`, {
-    input: Schema.Struct({
-      // TODO(dmaretskyi): Consider making this a ref so it is serializable.
-      mailbox: Mailbox,
-    }),
-    output: Schema.Void,
-  }) {}
+  export const OpenComposeEmailInputStruct = Schema.Struct({
+    mode: Schema.optional(ComposeEmailMode),
+    originalMessage: Schema.optional(Message.Message),
+    subject: Schema.optional(Schema.String),
+    body: Schema.optional(Schema.String),
+  });
+
+  export const OpenComposeEmailInput = Schema.UndefinedOr(OpenComposeEmailInputStruct);
+  export type OpenComposeEmailInput = Schema.Schema.Type<typeof OpenComposeEmailInputStruct>;
+
+  export const OpenComposeEmail = Operation.make({
+    meta: { key: `${INBOX_OPERATION}/open-compose-email`, name: 'Open Compose Email' },
+    services: [Capability.Service],
+    schema: {
+      input: OpenComposeEmailInput,
+      output: Schema.Void,
+    },
+  });
 }

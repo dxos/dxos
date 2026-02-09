@@ -2,20 +2,24 @@
 // Copyright 2020 DXOS.org
 //
 
+import * as Reactivity from '@effect/experimental/Reactivity';
+import * as Layer from 'effect/Layer';
+import * as ManagedRuntime from 'effect/ManagedRuntime';
 import { type ExpectStatic } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 import { type ClientServices } from '@dxos/client-protocol';
-import { ClientServicesHost, type ServiceContextRuntimeParams } from '@dxos/client-services';
+import { ClientServicesHost, type ServiceContextRuntimeProps } from '@dxos/client-services';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { raise } from '@dxos/debug';
 import { Filter } from '@dxos/echo';
-import { Expando } from '@dxos/echo-schema';
+import { Obj } from '@dxos/echo';
+import { type Database } from '@dxos/echo';
+import { TestSchema } from '@dxos/echo/testing';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
-import { live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
 import {
@@ -29,10 +33,18 @@ import { TcpTransportFactory } from '@dxos/network-manager/transport/tcp';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { type Storage } from '@dxos/random-access-storage';
 import { type ProtoRpcPeer, createLinkedPorts, createProtoRpcPeer } from '@dxos/rpc';
+import { layerMemory as sqliteLayerMemory } from '@dxos/sql-sqlite/platform';
+import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 
 import { Client } from '../client';
-import { type EchoDatabase } from '../echo';
-import { ClientServicesProxy, LocalClientServices } from '../services';
+import {
+  ClientServicesProxy,
+  DedicatedWorkerClientServices,
+  LocalClientServices,
+  MemoryWorkerCoordiantor,
+} from '../services';
+
+import { TestWorkerFactory } from './test-worker-factory';
 
 export const testConfigWithLocalSignal = new Config({
   version: 1,
@@ -61,6 +73,8 @@ export class TestBuilder {
   public level?: () => LevelDB;
 
   _transport: TransportKind;
+  private _coordinator?: MemoryWorkerCoordiantor;
+  private _workerFactory?: TestWorkerFactory;
 
   // TODO(burdon): Pass in params as object.
   constructor(
@@ -84,15 +98,23 @@ export class TestBuilder {
   /**
    * Create backend service handlers.
    */
-  createClientServicesHost(runtimeParams?: ServiceContextRuntimeParams): ClientServicesHost {
+  createClientServicesHost(runtimeProps?: ServiceContextRuntimeProps): ClientServicesHost {
+    const runtime = ManagedRuntime.make(
+      SqlTransaction.layer
+        .pipe(Layer.provideMerge(sqliteLayerMemory), Layer.provideMerge(Reactivity.layer))
+        .pipe(Layer.orDie),
+    );
+
     const services = new ClientServicesHost({
       config: this.config,
       storage: this?.storage?.(),
       level: this?.level?.(),
-      runtimeParams,
+      runtimeProps,
+      runtime: runtime.runtimeEffect,
       ...this.networking,
     });
 
+    this._ctx.onDispose(() => runtime.dispose());
     this._ctx.onDispose(() => services.close());
     return services;
   }
@@ -106,11 +128,11 @@ export class TestBuilder {
       config: this.config,
       storage: this?.storage?.(),
       level: this?.level?.(),
-      runtimeParams: {
+      runtimeProps: {
         ...(options?.fastPeerPresenceUpdate
           ? { spaceMemberPresenceAnnounceInterval: 200, spaceMemberPresenceOfflineTimeout: 400 }
           : {}),
-        invitationConnectionDefaultParams: { teleport: { controlHeartbeatInterval: 200 } },
+        invitationConnectionDefaultProps: { teleport: { controlHeartbeatInterval: 200 } },
       },
       ...this.networking,
     });
@@ -134,6 +156,32 @@ export class TestBuilder {
     this._ctx.onDispose(() => server.close());
     this._ctx.onDispose(() => client.destroy());
     return [client, server];
+  }
+
+  /**
+   * Create dedicated worker client services.
+   * All services share the same worker factory and coordinator.
+   */
+  createDedicatedWorkerClientServices(): DedicatedWorkerClientServices {
+    // Shared coordinator for leader election across all services.
+    if (!this._coordinator) {
+      this._coordinator = new MemoryWorkerCoordiantor();
+    }
+
+    // Shared worker factory.
+    if (!this._workerFactory) {
+      this._workerFactory = new TestWorkerFactory(this.config);
+      void this._workerFactory.open();
+      this._ctx.onDispose(() => this._workerFactory!.close());
+    }
+
+    const services = new DedicatedWorkerClientServices({
+      createWorker: () => this._workerFactory!.make(),
+      createCoordinator: () => this._coordinator!,
+    });
+
+    this._ctx.onDispose(() => services.close());
+    return services;
   }
 
   /**
@@ -180,17 +228,17 @@ export class TestBuilder {
 
 export const testSpaceAutomerge = async (
   expect: ExpectStatic,
-  createDb: EchoDatabase,
-  checkDb: EchoDatabase = createDb,
+  createDb: Database.Database,
+  checkDb: Database.Database = createDb,
 ) => {
-  const object = live(Expando, {});
+  const object = Obj.make(TestSchema.Expando, {});
   createDb.add(object);
-  await expect.poll(() => checkDb.query(Filter.ids(object.id)).first({ timeout: 1000 }));
+  await expect.poll(() => checkDb.query(Filter.id(object.id)).first({ timeout: 1000 }));
 
   return { objectId: object.id };
 };
 
-export const syncItemsAutomerge = async (expect: ExpectStatic, db1: EchoDatabase, db2: EchoDatabase) => {
+export const syncItemsAutomerge = async (expect: ExpectStatic, db1: Database.Database, db2: Database.Database) => {
   await testSpaceAutomerge(expect, db1, db2);
   await testSpaceAutomerge(expect, db2, db1);
 };

@@ -2,9 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { AiError } from '@effect/ai';
-import { HttpClientError } from '@effect/platform';
-import { Effect, Schema } from 'effect';
+import * as AiError from '@effect/ai/AiError';
+import * as HttpClientError from '@effect/platform/HttpClientError';
+import * as Effect from 'effect/Effect';
+import * as Schema from 'effect/Schema';
 
 import { AiModelError } from '../errors';
 

@@ -2,21 +2,22 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Array, Effect, Option, pipe } from 'effect';
+import * as Effect from 'effect/Effect';
+import * as Function from 'effect/Function';
+import * as Option from 'effect/Option';
 
 import { Template } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';
 import { ObjectVersion } from '@dxos/echo-db';
-import { type ObjectId } from '@dxos/echo-schema';
-import { DatabaseService } from '@dxos/functions';
+import { type ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type ContentBlock, DataType } from '@dxos/schema';
+import { type ContentBlock, Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { AiAssistantError } from '../errors';
 
 import { ArtifactDiffResolver } from './artifact-diff';
-import { type AiSessionRunParams } from './session';
+import { type AiSessionRunError, type AiSessionRunProps } from './session';
 
 /**
  * Formats the system prompt.
@@ -26,20 +27,20 @@ export const formatSystemPrompt = ({
   system,
   blueprints = [],
   objects = [],
-}: Pick<AiSessionRunParams<any>, 'system' | 'blueprints' | 'objects'>) =>
+}: Pick<AiSessionRunProps<any>, 'system' | 'blueprints' | 'objects'>) =>
   Effect.gen(function* () {
-    const blueprintDefs = yield* pipe(
+    const blueprintDefs = yield* Function.pipe(
       blueprints,
       Effect.forEach((blueprint) => Effect.succeed(blueprint.instructions)),
-      Effect.flatMap(Effect.forEach((template) => DatabaseService.loadOption(template.source))),
-      Effect.map(Array.filter(Option.isSome)),
-      Effect.map(
-        Array.map(
-          (template) => trim`
+      Effect.flatMap(
+        Effect.forEach((template) =>
+          Effect.gen(function* () {
+            return trim`
             <blueprint>
-              ${Template.process(template.value.content)}
+              ${yield* Template.processTemplate(template)}
             </blueprint>
-          `,
+          `;
+          }),
         ),
       ),
       Effect.map((blueprints) =>
@@ -47,7 +48,7 @@ export const formatSystemPrompt = ({
       ),
     );
 
-    const objectDefs = yield* pipe(
+    const objectDefs = yield* Function.pipe(
       objects,
       Effect.forEach((object) =>
         Effect.succeed(trim`
@@ -60,7 +61,7 @@ export const formatSystemPrompt = ({
       Effect.map((objects) => (objects.length > 0 ? ['## Context Objects', ...objects].join('\n\n') : undefined)),
     );
 
-    return yield* pipe(
+    return yield* Function.pipe(
       Effect.succeed([system, blueprintDefs, objectDefs].filter((def): def is string => def !== undefined)),
       Effect.map((parts) => parts.join('\n\n')),
     );
@@ -71,7 +72,10 @@ export const formatSystemPrompt = ({
  */
 // TODO(burdon): Move to AiPreprocessor.
 // TODO(burdon): Convert util below to `Effect.fn` (to preserve stack info)
-export const formatUserPrompt = ({ prompt, history = [] }: Pick<AiSessionRunParams<any>, 'prompt' | 'history'>) =>
+export const formatUserPrompt = ({
+  prompt,
+  history = [],
+}: Pick<AiSessionRunProps<any>, 'prompt' | 'history'>): Effect.Effect<Message.Message, AiSessionRunError> =>
   Effect.gen(function* () {
     const blocks: ContentBlock.Any[] = [];
 
@@ -102,14 +106,14 @@ export const formatUserPrompt = ({ prompt, history = [] }: Pick<AiSessionRunPara
       }
     }
 
-    return Obj.make(DataType.Message, {
+    return Obj.make(Message.Message, {
       created: new Date().toISOString(),
       sender: { role: 'user' },
       blocks: [...blocks, { _tag: 'text', text: prompt }],
     });
   });
 
-const gatherObjectVersions = (messages: DataType.Message[]): Map<ObjectId, ObjectVersion> => {
+const gatherObjectVersions = (messages: Message.Message[]): Map<ObjectId, ObjectVersion> => {
   const artifactIds = new Map<ObjectId, ObjectVersion>();
   for (const message of messages) {
     for (const block of message.blocks) {

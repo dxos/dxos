@@ -13,7 +13,13 @@ import {
   // @ts-ignore
 } from 'https://esm.sh/dfx@0.113.0?deps=effect@3.17.0&bundle=false';
 // @ts-ignore
-import { Config, Effect, Redacted, Ref } from 'https://esm.sh/effect@3.17.0?bundle=false';
+import * as Config from 'https://esm.sh/effect@3.17.0/Config?bundle=false';
+// @ts-ignore
+import * as Effect from 'https://esm.sh/effect@3.17.0/Effect?bundle=false';
+// @ts-ignore
+import * as Redacted from 'https://esm.sh/effect@3.17.0/Redacted?bundle=false';
+// @ts-ignore
+import * as Ref from 'https://esm.sh/effect@3.17.0/Ref?bundle=false';
 
 const MessageSchema = S.Struct({
   id: ObjectId,

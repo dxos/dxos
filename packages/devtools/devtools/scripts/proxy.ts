@@ -27,7 +27,7 @@ const main = async () => {
     }
 
     host = socket;
-    socket.on('message', (data) => {
+    socket.on('message', (data: any) => {
       log('from host', { data });
       if (devtools) {
         devtools.send(data);
@@ -37,7 +37,7 @@ const main = async () => {
 
   const handleDevtools = (socket: WebSocket, request: IncomingMessage) => {
     devtools = socket;
-    socket.on('message', (data) => {
+    socket.on('message', (data: any) => {
       log('from devtools', { data });
       if (host) {
         host.send(data);
@@ -49,7 +49,7 @@ const main = async () => {
     log('Listening...');
   });
 
-  ws.on('connection', (socket, request) => {
+  ws.on('connection', (socket: WebSocket, request: IncomingMessage) => {
     log('connection', { url: request.url });
 
     switch (request.url) {

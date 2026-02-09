@@ -2,18 +2,18 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 import React from 'react';
 
 import { createInputSchema, createOutputSchema } from '@dxos/conductor';
 import { type ShapeComponentProps, type ShapeDef } from '@dxos/react-ui-canvas-editor';
-import { DataType } from '@dxos/schema';
+import { Message } from '@dxos/types';
 
 import { Box, createFunctionAnchors } from './common';
 import { ComputeShape, type CreateShapeProps, createShape } from './defs';
 
-const InputSchema = createInputSchema(DataType.Message);
-const OutputSchema = createOutputSchema(Schema.mutable(Schema.Array(DataType.Message)));
+const InputSchema = createInputSchema(Message.Message);
+const OutputSchema = createOutputSchema(Schema.mutable(Schema.Array(Message.Message)));
 
 export const TableShape = Schema.extend(
   ComputeShape,

@@ -53,9 +53,8 @@ const createStorybookProject = (dirname: string) =>
         provider: 'playwright',
         instances: [{ browser: 'chromium' }],
       },
-      setupFiles: [new URL('./tools/storybook/.storybook/vitest.setup.ts', import.meta.url).pathname],
+      setupFiles: [new URL('./tools/storybook-react/.storybook/vitest.setup.ts', import.meta.url).pathname],
     },
-    optimizeDeps: { include: ['@preact-signals/safe-react/tracking'] },
     plugins: [
       storybookTest({
         configDir: path.join(dirname, '.storybook'),
@@ -73,13 +72,20 @@ type BrowserOptions = {
   browserName: string;
   nodeExternal?: boolean;
   injectGlobals?: boolean;
+  plugins?: Plugin[];
 };
 
-const createBrowserProject = ({ browserName, nodeExternal = false, injectGlobals = true }: BrowserOptions) =>
+const createBrowserProject = ({
+  browserName,
+  nodeExternal = false,
+  injectGlobals = true,
+  plugins = [],
+}: BrowserOptions) =>
   defineProject({
     plugins: [
       nodeStdPlugin(),
       WasmPlugin(),
+      ...plugins,
       // Inspect()
     ],
     optimizeDeps: {
@@ -92,9 +98,10 @@ const createBrowserProject = ({ browserName, nodeExternal = false, injectGlobals
           ...(nodeExternal ? [NodeExternalPlugin({ injectGlobals, nodeStd: true })] : []),
         ],
       },
+      exclude: ['@dxos/wa-sqlite'],
     },
     esbuild: {
-      target: 'es2020',
+      target: 'esnext',
     },
     test: {
       env: {
@@ -104,6 +111,7 @@ const createBrowserProject = ({ browserName, nodeExternal = false, injectGlobals
       include: [
         '**/src/**/*.test.{ts,tsx}',
         '**/test/**/*.test.{ts,tsx}',
+        '!**/src/**/__snapshots__/**',
         '!**/src/**/*.node.test.{ts,tsx}',
         '!**/test/**/*.node.test.{ts,tsx}',
       ],
@@ -138,7 +146,7 @@ type NodeOptions = {
 const createNodeProject = ({ environment = 'node', retry, timeout, setupFiles = [], plugins = [] }: NodeOptions = {}) =>
   defineProject({
     esbuild: {
-      target: 'es2020',
+      target: 'esnext',
     },
     server: {
       fs: {
@@ -153,6 +161,7 @@ const createNodeProject = ({ environment = 'node', retry, timeout, setupFiles = 
       include: [
         '**/src/**/*.test.{ts,tsx}',
         '**/test/**/*.test.{ts,tsx}',
+        '!**/src/**/__snapshots__/**',
         '!**/src/**/*.browser.test.{ts,tsx}',
         '!**/test/**/*.browser.test.{ts,tsx}',
       ],
@@ -168,6 +177,11 @@ const createNodeProject = ({ environment = 'node', retry, timeout, setupFiles = 
       // Add react plugin to enable SWC transfors.
       react({
         tsDecorators: true,
+        useAtYourOwnRisk_mutateSwcOptions: (options) => {
+          // Disable syntax lowering. Prevents perfomance loss due to private properties polyfill.
+          options.jsc ??= {};
+          options.jsc.target = 'esnext';
+        },
         plugins: [
           [
             '@dxos/swc-log-plugin',
@@ -180,6 +194,14 @@ const createNodeProject = ({ environment = 'node', retry, timeout, setupFiles = 
                   include_args: false,
                   include_call_site: true,
                   include_scope: true,
+                },
+                {
+                  name: 'dbg',
+                  package: '@dxos/log',
+                  param_index: 1,
+                  include_args: true,
+                  include_call_site: false,
+                  include_scope: false,
                 },
                 {
                   name: 'invariant',
@@ -233,7 +255,7 @@ const resolveReporterConfig = (cwd: string): ViteUserConfig['test'] => {
 
   return {
     passWithNoTests: true,
-    reporters: ['json', 'verbose'],
+    reporters: ['json', 'default'],
     outputFile: join(resultsDirectory, 'results.json'),
     coverage: {
       enabled: coverageEnabled,
@@ -262,6 +284,7 @@ const normalizeBrowserOptions = (
 
 /**
  * Replaces node built-in modules with their browser equivalents.
+ * Only redirects modules that are actually implemented in @dxos/node-std.
  */
 // TODO(dmaretskyi): Extract.
 function nodeStdPlugin(): Plugin {
@@ -271,7 +294,10 @@ function nodeStdPlugin(): Plugin {
       order: 'pre',
       async handler(source, importer, options) {
         if (source.startsWith('node:')) {
-          return this.resolve('@dxos/node-std/' + source.slice('node:'.length), importer, options);
+          const moduleName = source.slice('node:'.length);
+          if (MODULES.includes(moduleName)) {
+            return this.resolve('@dxos/node-std/' + moduleName, importer, options);
+          }
         }
 
         if (MODULES.includes(source)) {

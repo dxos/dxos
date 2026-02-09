@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-export * from './ThemeProvider';
-export { type Label, isLabel, toLocalizedString, useTranslation } from './TranslationsProvider';
+export { type Label, isLabel, toLocalizedString } from '@dxos/ui-types';
 
-// TODO(burdon): Use `@internal` with barrel exports (rather than picking individual exports?)
+export * from './ThemeProvider';
+export { useTranslation } from './TranslationsProvider';

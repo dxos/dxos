@@ -48,25 +48,16 @@
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../core/echo/echo-db"
-    },
-    {
-      "path": "../../core/echo/echo-schema"
-    },
-    {
-      "path": "../../core/echo/echo-signals"
-    },
-    {
-      "path": "../../core/echo/live-object"
-    },
-    {
-      "path": "../../plugins/plugin-search"
+      "path": "../../core/echo/echo-atom"
     },
     {
       "path": "../../sdk/react-client"
     },
     {
       "path": "../../sdk/schema"
+    },
+    {
+      "path": "../../sdk/types"
     },
     {
       "path": "../lit-grid"
@@ -105,10 +96,10 @@
       "path": "../react-ui-syntax-highlighter"
     },
     {
-      "path": "../react-ui-theme"
+      "path": "../ui-theme"
     },
     {
-      "path": "../react-ui-types"
+      "path": "../ui-types"
     }
   ]
 }

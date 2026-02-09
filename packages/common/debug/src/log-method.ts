@@ -2,6 +2,8 @@
 // Copyright 2021 DXOS.org
 //
 
+/* eslint-disable no-console */
+
 export function logMethod(
   target: any,
   propertyName: string,

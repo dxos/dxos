@@ -2,21 +2,31 @@
 // Copyright 2024 DXOS.org
 //
 
-// NOTE(thure): The following unused imports quell TS2742 (“likely not portable”).
-
-// eslint-disable-next-line unused-imports/no-unused-imports
-import { type CreateScope, type Scope, createContext } from '@radix-ui/react-context';
+import { RegistryContext } from '@effect-atom/atom-react';
+import { createContext } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
-import React, { type ComponentPropsWithRef, type FocusEvent, type PropsWithChildren, forwardRef, useMemo } from 'react';
+import React, {
+  type ComponentPropsWithRef,
+  type FocusEvent,
+  type PropsWithChildren,
+  forwardRef,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 
-import { type ThemedClassName, useDefaultValue } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { log } from '@dxos/log';
+import { useDefaultValue } from '@dxos/react-hooks';
+import { type ThemedClassName } from '@dxos/react-ui';
+import { mx } from '@dxos/ui-theme';
 
-import { ATTENDABLE_PATH_SEPARATOR, type Attention, AttentionManager, getAttendables } from '../attention';
+import { AttentionManager, getAttendables } from '../attention';
+import { ATTENDABLE_PATH_SEPARATOR, type Attention } from '../types';
 
 const ATTENTION_NAME = 'Attention';
-const ATTENABLE_ATTRIBUTE = 'data-attendable-id';
+const ATTENDABLE_ATTRIBUTE = 'data-attendable-id';
 const ATTENTION_SOURCE_ATTRIBUTE = 'data-is-attention-source';
 
 type AttentionContextValue = {
@@ -25,25 +35,60 @@ type AttentionContextValue = {
 };
 
 const [AttentionContextProvider, useAttentionContext] = createContext<AttentionContextValue>(ATTENTION_NAME, {
-  attention: new AttentionManager(),
+  attention: undefined as unknown as AttentionManager,
   path: [],
 });
 
-const UNKNOWN_ATTENDABLE = { hasAttention: false, isAncestor: false, isRelated: false };
+const UNKNOWN_ATTENDABLE = { hasAttention: false, isAncestor: false, isRelated: false } as Attention;
 
 const useAttention = (attendableId?: string): Attention => {
   const { attention, path } = useAttentionContext(ATTENTION_NAME);
-  if (!attendableId) {
-    return UNKNOWN_ATTENDABLE;
-  }
+  const [state, setState] = useState<Attention>(UNKNOWN_ATTENDABLE);
 
-  const current = [...attendableId.split(ATTENDABLE_PATH_SEPARATOR), ...path];
-  return attention.get(current);
+  const key = useMemo(() => {
+    if (!attendableId) {
+      return undefined;
+    }
+    return [...attendableId.split(ATTENDABLE_PATH_SEPARATOR), ...path];
+  }, [attendableId, path]);
+
+  useEffect(() => {
+    if (!key || !attention) {
+      setState(UNKNOWN_ATTENDABLE);
+      return;
+    }
+
+    // Set initial state.
+    setState(attention.get(key));
+
+    // Subscribe to changes.
+    return attention.subscribe(key, (newState) => {
+      setState(newState);
+    });
+  }, [attention, key]);
+
+  return state;
 };
 
 const useAttended = () => {
   const { attention } = useAttentionContext(ATTENTION_NAME);
-  return attention.current;
+  const [current, setCurrent] = useState<readonly string[]>([]);
+
+  useEffect(() => {
+    if (!attention) {
+      return;
+    }
+
+    // Set initial state.
+    setCurrent(attention.getCurrent());
+
+    // Subscribe to changes.
+    return attention.subscribeCurrent((newCurrent) => {
+      setCurrent(newCurrent);
+    });
+  }, [attention]);
+
+  return current;
 };
 
 /**
@@ -53,7 +98,7 @@ const useAttended = () => {
 const useAttentionAttributes = (attendableId?: string) => {
   const { hasAttention } = useAttention(attendableId);
   return useMemo(() => {
-    const attributes: Record<string, string | undefined> = { [ATTENABLE_ATTRIBUTE]: attendableId };
+    const attributes: Record<string, string | undefined> = { [ATTENDABLE_ATTRIBUTE]: attendableId };
     if (hasAttention) {
       attributes[ATTENTION_SOURCE_ATTRIBUTE] = 'true';
     }
@@ -77,10 +122,12 @@ const RootAttentionProvider = ({
     onChange: (nextAttended: string[]) => void;
   }>
 >) => {
-  const attention = useDefaultValue(propsAttention, () => new AttentionManager());
+  const registry = useContext(RegistryContext);
+  const attention = useDefaultValue(propsAttention, () => new AttentionManager(registry));
+
   const handleFocus = (event: FocusEvent) => {
     // NOTE(thure): Use the following to debug focus movement across the app:
-    // console.log('[focus]', event.relatedTarget, event.target);
+    log('focus', { related: event.relatedTarget, target: event.target });
 
     const selector = [
       '[data-attendable-id]',
@@ -88,7 +135,7 @@ const RootAttentionProvider = ({
         (el) => `[id="${el.getAttribute('aria-controls')}"]`,
       ),
     ].join(',');
-    const prev = attention.current;
+    const prev = attention.getCurrent();
     const next = getAttendables(selector, event.target);
     // TODO(wittjosiah): Not allowing empty state means that the attended item is not strictly guaranteed to be in the DOM.
     //   Currently this depends on the deck in order to ensure that when the attended item is removed something else is attended.
@@ -99,49 +146,9 @@ const RootAttentionProvider = ({
     }
   };
 
-  // NOTE(thure): Use the following to debug the macOS package issue #8540:
-
-  // const [startEl, setStartEl] = useState<HTMLElement | null>(null);
-  // const [endEl, setEndEl] = useState<HTMLElement | null>(null);
-  //
-  // const handleEventDebug = useCallback((event: any) => {
-  //   console.log(`[${event.type}]`, event.target, event.currentTarget, [event.clientX, event.clientY]);
-  // }, []);
-  //
-  // const handleStartDebug = useCallback(
-  //   (event: any) => {
-  //     setStartEl(event.target);
-  //     handleEventDebug(event);
-  //   },
-  //   [handleEventDebug],
-  // );
-  //
-  // const handleEndDebug = useCallback(
-  //   (event: any) => {
-  //     setEndEl(event.target);
-  //     handleEventDebug(event);
-  //   },
-  //   [handleEventDebug],
-  // );
-  //
-  // const handleClickDebug = useCallback(
-  //   (event: any) => {
-  //     console.log('[click compare]', startEl, endEl, startEl === endEl);
-  //     handleEventDebug(event);
-  //   },
-  //   [startEl, endEl, handleEventDebug],
-  // );
-
   return (
     <AttentionContextProvider attention={attention} path={[]}>
-      <div
-        role='none'
-        className='contents'
-        onFocusCapture={handleFocus}
-        // onClick={handleClickDebug}
-        // onMouseDown={handleStartDebug}
-        // onMouseUp={handleEndDebug}
-      >
+      <div role='none' className='contents' onFocusCapture={handleFocus}>
         {children}
       </div>
     </AttentionContextProvider>
@@ -196,6 +203,6 @@ export {
   useAttentionAttributes,
   useAttentionPath,
   ATTENTION_NAME,
-  ATTENABLE_ATTRIBUTE,
+  ATTENDABLE_ATTRIBUTE,
   ATTENTION_SOURCE_ATTRIBUTE,
 };

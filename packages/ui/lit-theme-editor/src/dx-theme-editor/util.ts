@@ -4,7 +4,7 @@
 import { type TokenSet, renderTokenSet } from '@ch-ui/tokens';
 
 import { log } from '@dxos/log';
-import { userDefaultTokenSet } from '@dxos/react-ui-theme';
+import { userDefaultTokenSet } from '@dxos/ui-theme';
 
 const storageKey = 'dxos.org/dx-theme-editor/user-tokens';
 

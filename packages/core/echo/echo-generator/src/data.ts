@@ -3,10 +3,11 @@
 //
 
 import { next as A } from '@automerge/automerge';
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 
-import { type Space, createDocAccessor } from '@dxos/client/echo';
-import { EchoObject, Ref } from '@dxos/echo-schema';
+import { type Space } from '@dxos/client/echo';
+import { Ref, Type } from '@dxos/echo';
+import { createDocAccessor } from '@dxos/echo-db';
 import { faker } from '@dxos/random';
 
 import { SpaceObjectGenerator, TestObjectGenerator } from './generator';
@@ -26,7 +27,7 @@ export const Priority = [1, 2, 3, 4, 5];
 export enum TestSchemaType {
   document = 'example.com/type/Document',
   organization = 'example.com/type/Organization',
-  contact = 'example.com/type/Contact',
+  contact = 'example.com/type/Person',
   project = 'example.com/type/Project',
 }
 
@@ -37,21 +38,21 @@ const testSchemas = (): TestSchemaMap<TestSchemaType> => {
   const document = Schema.Struct({
     title: Schema.String.annotations({ description: 'title of the document' }),
     content: Schema.String,
-  }).pipe(EchoObject({ typename: TestSchemaType.document, version: '0.1.0' }));
+  }).pipe(Type.object({ typename: TestSchemaType.document, version: '0.1.0' }));
 
   const organization = Schema.Struct({
     name: Schema.String.annotations({ description: 'name of the company or organization' }),
     website: Schema.optional(Schema.String.annotations({ description: 'public website URL' })),
     description: Schema.String.annotations({ description: 'short summary of the company' }),
-  }).pipe(EchoObject({ typename: TestSchemaType.organization, version: '0.1.0' }));
+  }).pipe(Type.object({ typename: TestSchemaType.organization, version: '0.1.0' }));
 
   const contact = Schema.Struct({
     name: Schema.String.annotations({ description: 'name of the person' }),
     email: Schema.optional(Schema.String),
-    org: Schema.optional(Ref(organization)),
+    org: Schema.optional(Type.Ref(organization)),
     lat: Schema.optional(Schema.Number),
     lng: Schema.optional(Schema.Number),
-  }).pipe(EchoObject({ typename: TestSchemaType.contact, version: '0.1.0' }));
+  }).pipe(Type.object({ typename: TestSchemaType.contact, version: '0.1.0' }));
 
   const project = Schema.Struct({
     name: Schema.String.annotations({ description: 'name of the project' }),
@@ -61,8 +62,8 @@ const testSchemas = (): TestSchemaMap<TestSchemaType> => {
     status: Schema.String,
     priority: Schema.Number,
     active: Schema.Boolean,
-    org: Schema.optional(Ref(organization)),
-  }).pipe(EchoObject({ typename: TestSchemaType.project, version: '0.1.0' }));
+    org: Schema.optional(Type.Ref(organization)),
+  }).pipe(Type.object({ typename: TestSchemaType.project, version: '0.1.0' }));
 
   return {
     [TestSchemaType.document]: document,

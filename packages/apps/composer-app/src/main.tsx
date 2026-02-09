@@ -4,32 +4,34 @@
 
 import '@dxos-theme';
 
+import * as Effect from 'effect/Effect';
+import * as Match from 'effect/Match';
 import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { useApp } from '@dxos/app-framework';
-import { registerSignalsRuntime } from '@dxos/echo-signals';
+import { useApp } from '@dxos/app-framework/react';
+import { runAndForwardErrors } from '@dxos/effect';
 import { LogLevel, log } from '@dxos/log';
 import { Observability } from '@dxos/observability';
 import { ThemeProvider, Tooltip } from '@dxos/react-ui';
-import { defaultTx } from '@dxos/react-ui-theme';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
+import { defaultTx } from '@dxos/ui-theme';
+import { getHostPlatform, isMobile as isMobile$, isTauri as isTauri$ } from '@dxos/util';
 
 import { Placeholder, ResetDialog } from './components';
 import { initializeObservability, setupConfig } from './config';
+import { PARAM_LOG_LEVEL, PARAM_SAFE_MODE, setSafeModeUrl } from './config';
 import { APP_KEY } from './constants';
 import { type PluginConfig, getCore, getDefaults, getPlugins } from './plugin-defs';
 import { translations } from './translations';
 import { defaultStorageIsEmpty, isFalse, isTrue } from './util';
-
-const PARAM_SAFE_MODE = 'safe';
-const PARAM_LOG_LEVEL = 'log';
 
 const main = async () => {
   const url = new URL(window.location.href);
   const safeMode = isTrue(url.searchParams.get(PARAM_SAFE_MODE), false);
   if (safeMode) {
     log.info('SAFE MODE');
+    setSafeModeUrl(false);
   }
   const logLevel = url.searchParams.get(PARAM_LOG_LEVEL) ?? (safeMode ? 'debug' : undefined);
   if (logLevel) {
@@ -38,8 +40,6 @@ const main = async () => {
   }
 
   TRACE_PROCESSOR.setInstanceTag('app');
-
-  registerSignalsRuntime();
 
   const { defs, SaveConfig } = await import('@dxos/config');
   const { createClientServices } = await import('@dxos/react-client');
@@ -59,7 +59,11 @@ const main = async () => {
     // NOTE: Set default for first time users to IDB (works better with automerge CRDTs).
     // Needs to be done before worker is created.
     await SaveConfig({
-      runtime: { client: { storage: { dataStore: defs.Runtime.Client.Storage.StorageDriver.IDB } } },
+      runtime: {
+        client: {
+          storage: { dataStore: defs.Runtime.Client.Storage.StorageDriver.IDB },
+        },
+      },
     });
     config = await setupConfig();
   }
@@ -69,19 +73,69 @@ const main = async () => {
   const observabilityDisabled = await Observability.isObservabilityDisabled(APP_KEY);
   const observabilityGroup = await Observability.getObservabilityGroup(APP_KEY);
 
-  const disableSharedWorker = config.values.runtime?.app?.env?.DX_HOST;
-  const services = await createClientServices(
-    config,
-    disableSharedWorker
-      ? undefined
-      : () =>
-          new SharedWorker(new URL('./shared-worker', import.meta.url), {
-            type: 'module',
-            name: 'dxos-client-worker',
-          }),
-    observabilityGroup,
-    !observabilityDisabled,
+  const isTauri = isTauri$();
+  if (isTauri) {
+    const platform = getHostPlatform();
+    document.body.setAttribute('data-platform', platform);
+  }
+
+  // Detect if this is the popover window in Tauri.
+  const isPopover = await Match.value(isTauri).pipe(
+    Match.when(
+      true,
+      Effect.fnUntraced(function* () {
+        const { getCurrentWindow } = yield* Effect.promise(() => import('@tauri-apps/api/window'));
+        const tauriWindow = getCurrentWindow();
+        return tauriWindow.label === 'popover';
+      }),
+    ),
+    Match.when(false, () => Effect.succeed(false)),
+    Match.exhaustive,
+    runAndForwardErrors,
   );
+
+  // Detect mobile operating systems (phones only, not tablets).
+  const isMobile = await Match.value(isTauri).pipe(
+    Match.when(
+      true,
+      Effect.fnUntraced(function* () {
+        const { type: osType } = yield* Effect.promise(() => import('@tauri-apps/plugin-os'));
+        const platform = osType();
+        return platform === 'android' || platform === 'ios';
+      }),
+    ),
+    Match.when(false, () => Effect.sync(() => isTrue(config.values.runtime?.app?.env?.DX_MOBILE) || isMobile$())),
+    Match.exhaustive,
+    runAndForwardErrors,
+  );
+
+  // Use single-client mode on mobile Tauri apps where SharedWorker crashes on WKWebView.
+  const useSingleClientMode = isTauri && isMobile;
+
+  const useLocalServices = config.values.runtime?.app?.env?.DX_HOST;
+  const useSharedWorker = config.values.runtime?.app?.env?.DX_SHARED_WORKER;
+  const services = await createClientServices(config, {
+    createWorker:
+      useLocalServices || !useSharedWorker
+        ? undefined
+        : () =>
+            new SharedWorker(new URL('./shared-worker', import.meta.url), {
+              type: 'module',
+              name: 'dxos-client-worker',
+            }),
+    createDedicatedWorker:
+      useLocalServices || useSharedWorker
+        ? undefined
+        : () =>
+            new Worker(new URL('@dxos/client/dedicated-worker', import.meta.url), {
+              type: 'module',
+              name: 'dxos-client-worker',
+            }),
+    createOpfsWorker: () => new Worker(new URL('@dxos/client/opfs-worker', import.meta.url), { type: 'module' }),
+    singleClientMode: useSingleClientMode,
+    observabilityGroup,
+    signalTelemetryEnabled: !observabilityDisabled,
+  });
 
   const conf: PluginConfig = {
     appKey: APP_KEY,
@@ -91,7 +145,9 @@ const main = async () => {
 
     isDev: !['production', 'staging'].includes(config.values.runtime?.app?.env?.DX_ENVIRONMENT),
     isPwa: !isFalse(config.values.runtime?.app?.env?.DX_PWA),
-    isTauri: !!(globalThis as any).__TAURI__,
+    isTauri,
+    isPopover,
+    isMobile,
     isLabs: isTrue(config.values.runtime?.app?.env?.DX_LABS),
     isStrict: !isFalse(config.values.runtime?.app?.env?.DX_STRICT),
   };
@@ -103,7 +159,7 @@ const main = async () => {
   const Fallback = ({ error }: { error: Error }) => (
     <ThemeProvider tx={defaultTx} resourceExtensions={translations}>
       <Tooltip.Provider>
-        <ResetDialog error={error} observability={observability} />
+        <ResetDialog isDev={conf.isDev} error={error} observability={observability} />
       </Tooltip.Provider>
     </ThemeProvider>
   );

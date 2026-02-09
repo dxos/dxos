@@ -2,44 +2,84 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useCallback } from 'react';
+import * as Schema from 'effect/Schema';
+import React, { useCallback, useState } from 'react';
 
-import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
-import { Filter, Query, Type } from '@dxos/echo';
-import { invariant } from '@dxos/invariant';
+import { useOperationInvoker } from '@dxos/app-framework/react';
+import { DXN, Filter, Obj, Query, type QueryAST, Tag, Type } from '@dxos/echo';
+import { type Mutable } from '@dxos/echo/internal';
 import { useClient } from '@dxos/react-client';
-import { getSpace, useSchema } from '@dxos/react-client/echo';
+import { getSpace, useQuery } from '@dxos/react-client/echo';
+import { useAsyncEffect } from '@dxos/react-ui';
 import { ViewEditor as NaturalViewEditor } from '@dxos/react-ui-form';
-import { type DataType, getTypenameFromQuery } from '@dxos/schema';
+import { View } from '@dxos/schema';
 
-import { SpaceAction } from '../types';
+import { resolveSchemaWithRegistry } from '../helpers';
+import { useTypeOptions } from '../hooks';
+import { SpaceOperation } from '../types';
 
-type ViewEditorProps = { view: DataType.View };
+export type ViewEditorProps = { view: View.View };
 
 export const ViewEditor = ({ view }: ViewEditorProps) => {
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const { invokePromise } = useOperationInvoker();
   const client = useClient();
   const space = getSpace(view);
-  const typename = view.query ? getTypenameFromQuery(view.query.ast) : undefined;
-  const schema = useSchema(client, space, typename);
+  const [schema, setSchema] = useState<Schema.Schema.AnyNoContext>(() => Schema.Struct({}));
+  const tags = useQuery(space?.db, Filter.type(Tag.Tag));
+  const types = useTypeOptions({
+    space,
+    annotation: {
+      location: ['database', 'runtime'],
+      kind: ['user'],
+      registered: ['registered'],
+    },
+  });
 
-  const handleUpdateQuery = useCallback(
-    (typename: string) => {
-      invariant(schema);
-      invariant(Type.isMutable(schema));
+  useAsyncEffect(async () => {
+    if (!view?.query || !space) {
+      return;
+    }
 
-      const newQuery = Query.select(Filter.typename(typename));
-      view.query.ast = newQuery.ast;
-      schema.updateTypename(typename);
+    const foundSchema = await resolveSchemaWithRegistry(space.db.schemaRegistry, view.query.ast);
+    if (foundSchema && foundSchema !== schema) {
+      setSchema(() => foundSchema);
+    }
+  }, [client, space, view, schema]);
+
+  const handleQueryChanged = useCallback(
+    async (newQuery: QueryAST.Query, target?: string) => {
+      if (!view || !space) {
+        return;
+      }
+
+      const queue = target && DXN.tryParse(target) ? target : undefined;
+      const query = queue ? Query.fromAst(newQuery).options({ queues: [queue] }) : Query.fromAst(newQuery);
+      Obj.change(view, (v) => {
+        v.query.ast = query.ast as Mutable<typeof query.ast>;
+      });
+      const newSchema = await resolveSchemaWithRegistry(space.db.schemaRegistry, query.ast);
+      if (!newSchema) {
+        return;
+      }
+
+      const newView = View.make({
+        query,
+        jsonSchema: Type.toJsonSchema(newSchema),
+      });
+      Obj.change(view, (v) => {
+        v.projection = Obj.getSnapshot(newView).projection as Mutable<typeof v.projection>;
+      });
+
+      setSchema(() => newSchema);
     },
     [view, schema],
   );
 
   const handleDelete = useCallback(
     (fieldId: string) => {
-      void dispatch(createIntent(SpaceAction.DeleteField, { view, fieldId }));
+      void invokePromise(SpaceOperation.DeleteField, { view, fieldId });
     },
-    [dispatch, view],
+    [invokePromise, view],
   );
 
   if (!space || !schema) {
@@ -51,9 +91,11 @@ export const ViewEditor = ({ view }: ViewEditorProps) => {
       registry={space.db.schemaRegistry}
       schema={schema}
       view={view}
-      onQueryChanged={Type.isMutable(schema) ? handleUpdateQuery : undefined}
+      mode='tag'
+      tags={tags}
+      types={types}
+      onQueryChanged={handleQueryChanged}
       onDelete={Type.isMutable(schema) ? handleDelete : undefined}
-      outerSpacing={false}
     />
   );
 };

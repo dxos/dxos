@@ -4,8 +4,8 @@
 
 import React from 'react';
 
-import { Button, Icon } from '@dxos/react-ui';
-import { hoverableControlItem, hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/react-ui-theme';
+import { IconButton } from '@dxos/react-ui';
+import { hoverableControlItem, hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/ui-theme';
 
 import { MessageBody, MessageHeading } from './Message';
 import { type MessageMetadata } from './types';
@@ -25,13 +25,14 @@ export const MessageStoryText = ({ text, onDelete, authorName, timestamp }: Mess
     <>
       <MessageHeading authorName={authorName} timestamp={timestamp}>
         {onDelete && (
-          <Button
+          <IconButton
+            icon='ph--x--regular'
+            iconOnly
+            label='Delete'
             variant='ghost'
             classNames={['p-1.5 min-bs-0 mie-1 items-start transition-opacity', hoverableControlItem]}
             onClick={() => onDelete()}
-          >
-            <Icon icon='ph--x--regular' />
-          </Button>
+          />
         )}
       </MessageHeading>
       <MessageBody>{text}</MessageBody>

@@ -3,20 +3,23 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 
-import { Obj } from '@dxos/echo';
+import { Type } from '@dxos/echo';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { withTheme } from '@dxos/react-ui/testing';
-import { DataType } from '@dxos/schema';
+import { useAsyncEffect } from '@dxos/react-ui';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { View } from '@dxos/schema';
 import { type ValueGenerator } from '@dxos/schema/testing';
+import { withRegistry } from '@dxos/storybook-utils';
 import { render } from '@dxos/storybook-utils';
+import { HasRelationship, Organization, Person, Project } from '@dxos/types';
 
 import { useGraphModel } from '../../hooks';
-import { ViewType } from '../../types';
+import { Graph } from '../../types';
 
 import { ForceGraph } from './ForceGraph';
 import { generate } from './testing';
@@ -28,17 +31,20 @@ faker.seed(1);
 const DefaultStory = () => {
   const client = useClient();
   const [space, setSpace] = useState<Space>();
-  const [view, setView] = useState<ViewType>();
-  useEffect(() => {
+  const [graph, setGraph] = useState<Graph.Graph>();
+
+  useAsyncEffect(async () => {
     const space = client.spaces.default;
     void generate(space, generator);
-    const view = space.db.add(Obj.make(ViewType, { name: '', type: '' }));
+    const { view } = await View.makeFromDatabase({ db: space.db, typename: Type.getTypename(Graph.Graph) });
+    const graph = Graph.make({ name: 'Test', view });
+    space.db.add(graph);
     setSpace(space);
-    setView(view);
-  }, []);
+    setGraph(graph);
+  }, [client]);
 
   const model = useGraphModel(space);
-  if (!model || !space || !view) {
+  if (!model || !space || !graph) {
     return null;
   }
 
@@ -50,10 +56,19 @@ const meta = {
   component: ForceGraph,
   render: render(DefaultStory),
   decorators: [
+    withRegistry,
     withTheme,
+    withLayout(),
     withClientProvider({
       createSpace: true,
-      types: [ViewType, DataType.HasRelationship, DataType.Organization, DataType.Project, DataType.Person],
+      types: [
+        Graph.Graph,
+        View.View,
+        HasRelationship.HasRelationship,
+        Organization.Organization,
+        Project.Project,
+        Person.Person,
+      ],
     }),
   ],
   parameters: {

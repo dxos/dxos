@@ -8,6 +8,7 @@
     ]
   },
   "exclude": [
+    "*.stories.tsx",
     "*.t.ts",
     "vite.config.ts"
   ],
@@ -31,13 +32,13 @@
       "path": "../../common/display-name"
     },
     {
+      "path": "../../common/effect"
+    },
+    {
       "path": "../../common/invariant"
     },
     {
       "path": "../../common/keys"
-    },
-    {
-      "path": "../../common/local-storage"
     },
     {
       "path": "../../common/log"
@@ -70,19 +71,22 @@
       "path": "../../core/echo/echo"
     },
     {
+      "path": "../../core/echo/echo-atom"
+    },
+    {
       "path": "../../core/echo/echo-db"
-    },
-    {
-      "path": "../../core/echo/echo-schema"
-    },
-    {
-      "path": "../../core/echo/live-object"
     },
     {
       "path": "../../core/functions"
     },
     {
+      "path": "../../core/functions-runtime"
+    },
+    {
       "path": "../../core/mesh/edge-client"
+    },
+    {
+      "path": "../../core/operation"
     },
     {
       "path": "../../core/protocols"
@@ -103,6 +107,9 @@
       "path": "../../sdk/schema"
     },
     {
+      "path": "../../sdk/types"
+    },
+    {
       "path": "../../ui/react-ui"
     },
     {
@@ -115,6 +122,9 @@
       "path": "../../ui/react-ui-list"
     },
     {
+      "path": "../../ui/react-ui-mosaic"
+    },
+    {
       "path": "../../ui/react-ui-stack"
     },
     {
@@ -124,7 +134,7 @@
       "path": "../../ui/react-ui-tabs"
     },
     {
-      "path": "../../ui/react-ui-theme"
+      "path": "../../ui/ui-theme"
     },
     {
       "path": "../plugin-assistant"
@@ -146,6 +156,9 @@
     },
     {
       "path": "../plugin-space"
+    },
+    {
+      "path": "../plugin-testing"
     },
     {
       "path": "../plugin-theme"

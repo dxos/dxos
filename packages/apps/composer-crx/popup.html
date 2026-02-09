@@ -1,10 +1,21 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
+    <style>
+      @keyframes popup-fade-in {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+    </style>
     <script async type="module" crossorigin src="src/popup.tsx"></script>
   </head>
-  <body>
+  <!-- Set initial width and height to prevent flashing. -->
+  <body style="margin: 0; padding: 0; overflow: hidden; width: 500px; height: 38px">
     <div id="root"></div>
   </body>
 </html>

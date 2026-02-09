@@ -12,5 +12,5 @@ export type InvocationTracePanelProps = Pick<InvocationTraceContainerProps, 'tar
 
 export const InvocationTracePanel = ({ detailAxis = 'inline', ...props }: InvocationTracePanelProps) => {
   const state = useDevtoolsState();
-  return <InvocationTraceContainer detailAxis={detailAxis} showSpaceSelector space={state.space} {...props} />;
+  return <InvocationTraceContainer detailAxis={detailAxis} showSpaceSelector db={state.space?.db} {...props} />;
 };

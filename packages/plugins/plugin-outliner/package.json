@@ -4,6 +4,10 @@
   "description": "Tree plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
   "license": "MIT",
   "author": "DXOS.org",
   "sideEffects": true,
@@ -35,16 +39,16 @@
     "src"
   ],
   "dependencies": {
-    "@codemirror/state": "^6.5.2",
-    "@codemirror/view": "^6.38.4",
+    "@codemirror/state": "catalog:",
+    "@codemirror/view": "catalog:",
     "@dxos/app-framework": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/echo": "workspace:*",
-    "@dxos/echo-schema": "workspace:*",
+    "@dxos/echo-db": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/invariant": "workspace:*",
-    "@dxos/live-object": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/operation": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-deck": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
@@ -53,36 +57,38 @@
     "@dxos/plugin-stack": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
+    "@dxos/react-ui-calendar": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
+    "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
     "@dxos/schema": "workspace:*",
+    "@dxos/types": "workspace:*",
+    "@dxos/ui-editor": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@preact-signals/safe-react": "^0.9.0",
-    "@preact/signals-core": "^1.12.1",
-    "date-fns": "^3.3.1"
+    "date-fns": "catalog:"
   },
   "devDependencies": {
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
-    "@effect-rx/rx-react": "0.42.4",
-    "@effect/platform": "0.92.1",
-    "@types/react": "~19.2.2",
-    "@types/react-dom": "~19.2.1",
-    "effect": "3.18.3",
-    "react": "~19.2.0",
-    "react-dom": "~19.2.0",
-    "vite": "7.1.9"
+    "@dxos/ui-theme": "workspace:*",
+    "@effect-atom/atom-react": "catalog:",
+    "@effect/platform": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "effect": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "vite": "catalog:"
   },
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-theme": "workspace:*",
-    "@effect-rx/rx-react": "^0.34.1",
-    "@effect/platform": "^0.80.12",
-    "effect": "^3.13.3",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "@dxos/ui-theme": "workspace:*",
+    "@effect-atom/atom-react": "catalog:",
+    "@effect/platform": "catalog:",
+    "effect": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
   },
   "publishConfig": {
     "access": "public"

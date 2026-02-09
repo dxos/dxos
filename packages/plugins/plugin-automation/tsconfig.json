@@ -18,6 +18,9 @@
       "path": "../../common/context"
     },
     {
+      "path": "../../common/effect"
+    },
+    {
       "path": "../../common/invariant"
     },
     {
@@ -48,16 +51,22 @@
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../core/echo/echo-schema"
-    },
-    {
-      "path": "../../core/echo/live-object"
-    },
-    {
       "path": "../../core/functions"
     },
     {
+      "path": "../../core/functions-runtime"
+    },
+    {
+      "path": "../../core/operation"
+    },
+    {
+      "path": "../../devtools/cli-util"
+    },
+    {
       "path": "../../sdk/app-framework"
+    },
+    {
+      "path": "../../sdk/client"
     },
     {
       "path": "../../sdk/react-client"
@@ -66,7 +75,13 @@
       "path": "../../sdk/schema"
     },
     {
+      "path": "../../sdk/types"
+    },
+    {
       "path": "../../ui/react-ui"
+    },
+    {
+      "path": "../../ui/react-ui-components"
     },
     {
       "path": "../../ui/react-ui-editor"
@@ -81,7 +96,7 @@
       "path": "../../ui/react-ui-stack"
     },
     {
-      "path": "../../ui/react-ui-theme"
+      "path": "../../ui/ui-theme"
     },
     {
       "path": "../plugin-client"

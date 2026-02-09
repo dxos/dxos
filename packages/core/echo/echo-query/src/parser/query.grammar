@@ -5,6 +5,7 @@
 @top Query { expression }
 
 expression {
+  Assignment |
   Filter |
   !Not Not expression |
   expression !ImplicitAnd expression |
@@ -12,6 +13,10 @@ expression {
   expression !Or Or expression |
   expression !Relation Relation expression |
   "(" expression ")"
+}
+
+Assignment {
+  Identifier "=" "(" expression ")"
 }
 
 Not { 
@@ -110,7 +115,7 @@ Value {
   space { @whitespace+ }
 
   "{" "}" "[" "]" "(" ")"
-  ":" ","  "."
+  ":" ","  "." "="
 }
 
 @skip { space }
@@ -120,5 +125,6 @@ Value {
   ImplicitAnd @left,
   And @left,
   Or @left,
-  Relation @left
+  Relation @left,
+  Assignment @right
 }

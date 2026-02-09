@@ -1,4 +1,4 @@
-type: library
+layer: library
 language: typescript
 tags:
   - ts-build
@@ -13,12 +13,11 @@ tasks:
       - '--entryPoint=src/types/index.ts'
       - '--platform=browser'
       - '--platform=node'
-      - '--preactSignalTracking'
     deps:
       - prebuild
   prebuild:
     command: bash ./scripts/copy_assets.sh
-    platform: node # enforce that deps are installed
+    toolchains: node # enforce that deps are installed
     inputs:
       - scripts/copy_assets.sh
       - package.json
@@ -28,3 +27,4 @@ tasks:
   test:
     inputs:
       - .storybook/*
+      - /tools/storybook-react/.storybook/main.ts

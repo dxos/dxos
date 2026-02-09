@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 
 import { Type } from '@dxos/echo';
 
@@ -16,7 +16,7 @@ export const Item = Schema.Struct({
   //  TypeError: Method Date.prototype.toString called on incompatible receiver [object Object]
   // due: S.optional(S.Date),
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'example.com/type/Item',
     version: '0.1.0',
   }),
@@ -27,7 +27,7 @@ export const Document = Schema.Struct({
   title: Schema.optional(Schema.String),
   content: Schema.optional(Schema.String),
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'example.com/type/Document',
     version: '0.1.0',
   }),

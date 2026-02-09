@@ -6,7 +6,7 @@ import React from 'react';
 
 import { type PeerSyncState, type SpaceId, type SpaceSyncStateMap } from '@dxos/react-client/echo';
 import { IconButton, type ThemedClassName } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { SpaceRowContainer } from './Space';
 
@@ -24,7 +24,7 @@ export const SyncStatus = ({ classNames, state }: SyncStatusProps) => {
   };
 
   return (
-    <div className={mx('flex flex-col w-full gap-2 text-xs', classNames)}>
+    <div className={mx('flex flex-col is-full gap-2 text-xs', classNames)}>
       <div className='flex items-center gap-2'>
         <IconButton icon='ph--copy--regular' label={'copy raw'} onClick={handleCopyRaw} />
       </div>

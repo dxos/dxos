@@ -3,12 +3,12 @@
 //
 
 import { Obj, Ref } from '@dxos/echo';
+import { getObjectCore } from '@dxos/echo-db';
 import { type TypedObjectSerializer } from '@dxos/plugin-space/types';
-import { getObjectCore } from '@dxos/react-client/echo';
 
-import { CanvasType, DiagramType } from '../types';
+import { Diagram } from '../types';
 
-export const serializer: TypedObjectSerializer<DiagramType> = {
+export const serializer: TypedObjectSerializer<Diagram.Diagram> = {
   serialize: async ({ object }): Promise<string> => {
     const data = await object.canvas?.load();
     const sketch = { name: object.name, data: { ...data } };
@@ -17,8 +17,8 @@ export const serializer: TypedObjectSerializer<DiagramType> = {
 
   deserialize: async ({ content, newId }) => {
     const parsed = JSON.parse(content);
-    const canvas = Obj.make(CanvasType, { content: {} });
-    const diagram = Obj.make(DiagramType, { name: parsed.name, canvas: Ref.make(canvas) });
+    const canvas = Obj.make(Diagram.Canvas, { content: {} });
+    const diagram = Obj.make(Diagram.Diagram, { name: parsed.name, canvas: Ref.make(canvas) });
 
     if (!newId) {
       const core = getObjectCore(diagram);
@@ -33,9 +33,11 @@ export const serializer: TypedObjectSerializer<DiagramType> = {
   },
 };
 
-const setCanvasContent = (object: CanvasType, content: any) => {
-  object.content = {};
-  Object.entries(content).forEach(([key, value]) => {
-    object.content[key] = value;
+const setCanvasContent = (object: Diagram.Canvas, content: any) => {
+  Obj.change(object, (o) => {
+    o.content = {};
+    Object.entries(content).forEach(([key, value]) => {
+      o.content[key] = value;
+    });
   });
 };

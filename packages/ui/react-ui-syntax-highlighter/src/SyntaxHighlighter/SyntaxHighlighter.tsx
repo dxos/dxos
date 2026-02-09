@@ -8,7 +8,7 @@ import NativeSyntaxHighlighter from 'react-syntax-highlighter/dist/esm/prism-asy
 import { coldarkDark as dark, coldarkCold as light } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
 import { type ThemedClassName, useThemeContext } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 const zeroWidthSpace = '\u200b';
 
@@ -36,9 +36,9 @@ export const SyntaxHighlighter = ({
   const { themeMode } = useThemeContext();
 
   return (
-    <div className={mx('flex is-full p-1 overflow-hidden text-baseText', classNames)}>
+    <div className={mx('flex is-full p-1 overflow-hidden', classNames)}>
       <NativeSyntaxHighlighter
-        className='is-full overflow-auto scrollbar-thin'
+        className='!m-0 is-full overflow-auto scrollbar-thin'
         language={languages[language as keyof typeof languages] || language}
         style={themeMode === 'dark' ? dark : light}
         customStyle={{

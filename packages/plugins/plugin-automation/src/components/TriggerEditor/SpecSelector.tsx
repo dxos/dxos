@@ -5,20 +5,20 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { Filter, Query } from '@dxos/echo';
-import { type FunctionTrigger, TriggerKinds, type TriggerType } from '@dxos/functions';
+import { Trigger } from '@dxos/functions';
 import { useTranslation } from '@dxos/react-ui';
-import { type InputProps, SelectInput, useInputProps } from '@dxos/react-ui-form';
+import { type FormFieldComponentProps, SelectField, useFormFieldState } from '@dxos/react-ui-form';
 
 import { meta } from '../../meta';
 
-export type SpecSelectorProps = InputProps;
+export type SpecSelectorProps = FormFieldComponentProps;
 
 export const SpecSelector = (props: SpecSelectorProps) => {
   const { t } = useTranslation(meta.id);
-  const specProps = useInputProps(['spec' satisfies keyof FunctionTrigger]);
+  const specProps = useFormFieldState(SpecSelector.displayName, ['spec' satisfies keyof Trigger.Trigger]);
 
   const handleTypeChange = useCallback(
-    (_type: any, value: string): TriggerType | undefined => {
+    (_type: any, value: string): Trigger.Spec | undefined => {
       const getDefaultTriggerSpec = (kind: string) => {
         switch (kind) {
           case 'timer':
@@ -27,7 +27,6 @@ export const SpecSelector = (props: SpecSelectorProps) => {
             return {
               kind: 'subscription',
               query: {
-                string: 'Query.select(Filter.nothing())',
                 ast: Query.select(Filter.nothing()).ast,
               },
             };
@@ -48,19 +47,21 @@ export const SpecSelector = (props: SpecSelectorProps) => {
       }
 
       // Update the entire spec object, not just the `spec.kind`.
-      specProps.onValueChange('object', defaultSpec);
+      specProps.onValueChange(props.type, defaultSpec);
     },
-    [specProps],
+    [props.type, specProps],
   );
 
   const options = useMemo(
     () =>
-      TriggerKinds.map((kind) => ({
+      Trigger.Kinds.map((kind) => ({
         value: kind,
         label: t(`trigger type ${kind}`),
       })),
     [t],
   );
 
-  return <SelectInput {...props} options={options} onValueChange={handleTypeChange} />;
+  return <SelectField {...props} options={options} onValueChange={handleTypeChange} />;
 };
+
+SpecSelector.displayName = 'Form.SpecSelector';

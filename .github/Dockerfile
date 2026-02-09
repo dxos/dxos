@@ -3,6 +3,7 @@ FROM ubuntu:24.04
 # Install dependencies
 RUN apt-get update \
   && apt-get install -y \
+    build-essential \
     ca-certificates \
     curl \
     git-lfs \
@@ -11,11 +12,13 @@ RUN apt-get update \
     libenchant-2-2 \
     libpng++-dev \
     libxtst-dev \
+    python3 \
     sudo \
+    unzip \
     xz-utils
 
 # Install Node.js from official binary tarball
-ARG NODE_VERSION=20.19.5
+ARG NODE_VERSION=24.11.1
 RUN ARCH=$(uname -m) \
   && if [ "$ARCH" = "x86_64" ]; then ARCH="x64"; elif [ "$ARCH" = "aarch64" ]; then ARCH="arm64"; else echo "Unsupported architecture: $ARCH"; exit 1; fi \
   && curl -fsSL https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-$ARCH.tar.xz -o /tmp/node.tar.xz \
@@ -33,9 +36,20 @@ RUN npm install -g pnpm@10.13.1 \
   # Install playwright native dependencies.
   # NOTE: Keep playwright version in sync with the one in package.json.
   # https://playwright.dev/docs/docker#build-your-own-image
-  && npx -y playwright@1.54.1 install-deps \
+  && npx -y playwright@1.57.0 install-deps \
   # Cleanup apt cache.
   && rm -rf /var/lib/apt/lists/*
+
+# Install Bun.
+# NOTE: Keep bun version in sync with .prototools
+ARG BUN_VERSION=1.3.4
+RUN ARCH=$(uname -m) \
+  && if [ "$ARCH" = "x86_64" ]; then ARCH="x64"; elif [ "$ARCH" = "aarch64" ]; then ARCH="aarch64"; else echo "Unsupported architecture: $ARCH"; exit 1; fi \
+  && curl -fsSL https://github.com/oven-sh/bun/releases/download/bun-v${BUN_VERSION}/bun-linux-$ARCH.zip -o /tmp/bun.zip \
+  && unzip /tmp/bun.zip -d /tmp \
+  && mv /tmp/bun-linux-$ARCH/bun /usr/local/bin/bun \
+  && chmod +x /usr/local/bin/bun \
+  && rm -rf /tmp/bun.zip /tmp/bun-linux-$ARCH
 
 # Create a user with a fixed UID:GID and add to sudo group.
 RUN groupadd -g 1001 runner && \

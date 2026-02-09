@@ -3,7 +3,7 @@
 //
 
 import { intervalToDuration } from 'date-fns/intervalToDuration';
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 import { yieldOrContinue } from 'main-thread-scheduling';
 import React, { type FC, type WheelEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { type OnResizeCallback, useResizeDetector } from 'react-resize-detector';
@@ -19,7 +19,7 @@ import {
   Grid,
   toPlaneCellIndex,
 } from '@dxos/react-ui-grid';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { meta } from '../../../meta';
 
@@ -43,7 +43,7 @@ const TranscriptBlock = Schema.Struct({
   authorHue: Schema.optional(Schema.String), // TOOD(burdon): Remove.
   segments: Schema.Array(TranscriptSegment),
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/TranscriptBlock',
     version: '0.1.0',
   }),

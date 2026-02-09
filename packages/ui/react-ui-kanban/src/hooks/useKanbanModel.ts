@@ -2,37 +2,42 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Schema } from 'effect';
-import { useEffect, useState } from 'react';
+import { RegistryContext } from '@effect-atom/atom-react';
+import { useContext, useEffect, useState } from 'react';
 
-import { type Live } from '@dxos/react-client/echo';
-import { type DataType, type ProjectionModel } from '@dxos/schema';
+import { type ProjectionModel } from '@dxos/schema';
 
-import { type BaseKanbanItem, KanbanModel } from '../model';
+import { type BaseKanbanItem, KanbanModel, createEchoChangeCallback } from '../model';
+import { type Kanban } from '../types';
 
 export type UseKanbanModelProps<T extends BaseKanbanItem = { id: string }> = {
-  view?: DataType.View;
-  schema?: Schema.Schema.AnyNoContext;
+  object?: Kanban.Kanban;
   projection?: ProjectionModel;
-  items?: Live<T>[];
+  items?: T[];
 };
 
 export const useKanbanModel = <T extends BaseKanbanItem = { id: string }>({
-  view,
-  schema,
+  object,
   projection,
   items,
   ...props
 }: UseKanbanModelProps<T>): KanbanModel<T> | undefined => {
+  const registry = useContext(RegistryContext);
   const [model, setModel] = useState<KanbanModel<T>>();
   useEffect(() => {
-    if (!view || !schema || !projection) {
+    if (!object || !projection) {
       return;
     }
 
     let model: KanbanModel<T> | undefined;
     const t = setTimeout(async () => {
-      model = new KanbanModel<T>({ view, schema, projection, ...props });
+      model = new KanbanModel<T>({
+        registry,
+        object,
+        projection,
+        change: createEchoChangeCallback<T>(object),
+        ...props,
+      });
       await model.open();
       setModel(model);
     });
@@ -41,12 +46,13 @@ export const useKanbanModel = <T extends BaseKanbanItem = { id: string }>({
       clearTimeout(t);
       void model?.close();
     };
-  }, [view, schema, projection]);
+    // TODO(ZaymonFC): Is there a better way to get notified about deep changes in the json schema?
+  }, [registry, object, projection]);
 
   // Update data.
   useEffect(() => {
     if (model && items) {
-      model.items = items;
+      model.setItems(items);
     }
   }, [model, items]);
 

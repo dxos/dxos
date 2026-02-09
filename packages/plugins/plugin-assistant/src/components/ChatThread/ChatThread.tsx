@@ -2,22 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, {
-  type CSSProperties,
-  forwardRef,
-  useCallback,
-  useEffect,
-  useImperativeHandle,
-  useMemo,
-  useState,
-} from 'react';
+import React, { type CSSProperties, forwardRef, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { PublicKey } from '@dxos/keys';
 import { type Identity } from '@dxos/react-client/halo';
-import { type ThemedClassName } from '@dxos/react-ui';
+import { type ThemedClassName, useForwardedRef } from '@dxos/react-ui';
 import { MarkdownStream, type MarkdownStreamController, type MarkdownStreamProps } from '@dxos/react-ui-components';
-import { mx } from '@dxos/react-ui-theme';
-import { type DataType } from '@dxos/schema';
+import { type Message } from '@dxos/types';
+import { mx } from '@dxos/ui-theme';
 import { keyToFallback } from '@dxos/util';
 
 import { type ChatEvent } from '../Chat';
@@ -25,26 +17,37 @@ import { type ChatEvent } from '../Chat';
 import { blockToMarkdown, componentRegistry } from './registry';
 import { MessageSyncer } from './sync';
 
-export type ChatThreadController = Pick<MarkdownStreamController, 'setContext' | 'scrollToBottom'>;
-
 export type ChatThreadProps = ThemedClassName<
   {
     identity?: Identity;
-    messages?: DataType.Message[];
+    messages?: Message.Message[];
     error?: Error;
     onEvent?: (event: ChatEvent) => void;
-  } & Pick<MarkdownStreamProps, 'cursor' | 'fadeIn'>
+  } & Pick<MarkdownStreamProps, 'cursor' | 'fadeIn' | 'debug'>
 >;
 
-export const ChatThread = forwardRef<ChatThreadController | null, ChatThreadProps>(
-  ({ classNames, identity, messages = [], error, cursor = false, fadeIn = true, onEvent }, forwardedRef) => {
-    const userHue = useMemo(() => {
-      return identity?.profile?.data?.hue || keyToFallback(identity?.identityKey ?? PublicKey.random()).hue;
-    }, [identity]);
-
-    // Expose controller.
+// TODO(burdon): Memo thread position.
+export const ChatThread = forwardRef<MarkdownStreamController | null, ChatThreadProps>(
+  (
+    { classNames, identity, messages = [], error, cursor = false, fadeIn = true, debug = false, onEvent },
+    forwardedRef,
+  ) => {
+    const controllerRef = useForwardedRef(forwardedRef);
     const [controller, setController] = useState<MarkdownStreamController | null>(null);
-    useImperativeHandle(forwardedRef, () => (controller ? controller : (null as any)), [controller]);
+
+    // Callback ref to capture when MarkdownStream is mounted and trigger re-render.
+    const refCallback = useCallback(
+      (node: MarkdownStreamController | null) => {
+        controllerRef.current = node;
+        setController(node);
+      },
+      [controllerRef],
+    );
+
+    const userHue = useMemo(
+      () => identity?.profile?.data?.hue || keyToFallback(identity?.identityKey ?? PublicKey.random()).hue,
+      [identity],
+    );
 
     // Show error.
     useEffect(() => {
@@ -54,19 +57,18 @@ export const ChatThread = forwardRef<ChatThreadController | null, ChatThreadProp
     // Update document.
     const syncer = useMemo(() => controller && new MessageSyncer(controller, blockToMarkdown), [controller]);
     useEffect(() => {
-      syncer?.sync(messages);
+      const reset = syncer?.append(messages, true);
+      if (reset) {
+        controller?.scrollToBottom('instant');
+      }
     }, [syncer, messages]);
 
-    // Event handler.
+    // Event adapter.
     const handleEvent = useCallback<NonNullable<MarkdownStreamProps['onEvent']>>(
-      (ev) => {
-        switch (ev.type) {
+      ({ type, value }) => {
+        switch (type) {
           case 'submit': {
-            ev.value &&
-              onEvent?.({
-                type: 'submit',
-                text: ev.value,
-              });
+            value && onEvent?.({ type, text: value });
             break;
           }
         }
@@ -76,15 +78,16 @@ export const ChatThread = forwardRef<ChatThreadController | null, ChatThreadProp
 
     return (
       <div
+        role='none'
         className={mx('flex bs-full is-full justify-center overflow-hidden', classNames)}
         style={{ '--user-fill': `var(--dx-${userHue}Fill)` } as CSSProperties}
       >
         <MarkdownStream
-          ref={setController}
-          classNames='bs-full max-is-prose overflow-hidden'
+          ref={refCallback}
           registry={componentRegistry}
           cursor={cursor}
           fadeIn={fadeIn}
+          debug={debug}
           onEvent={handleEvent}
         />
       </div>

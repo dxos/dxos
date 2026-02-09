@@ -1,0 +1,16 @@
+layer: library
+language: typescript
+tags:
+  - ts-build
+  - pack
+  - ts-test
+  - storybook
+tasks:
+  compile:
+    args:
+      - '--entryPoint=src/index.ts'
+      - '--platform=browser'
+  test:
+    inputs:
+      - .storybook/*
+      - /tools/storybook-react/.storybook/main.ts

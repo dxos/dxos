@@ -2,27 +2,28 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 
 import { Obj, Ref, Type } from '@dxos/echo';
-import { LabelAnnotation } from '@dxos/echo-schema';
-import { EditorInputMode, EditorViewMode } from '@dxos/react-ui-editor/types';
-import { DataType, ItemAnnotation } from '@dxos/schema';
+import { DescriptionAnnotation, FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
+import { Text } from '@dxos/schema';
+import { EditorInputMode, EditorViewMode } from '@dxos/ui-editor/types';
 
 /**
  * Document Item type.
  */
 export const Document = Schema.Struct({
   name: Schema.optional(Schema.String),
-  fallbackName: Schema.optional(Schema.String),
-  content: Type.Ref(DataType.Text),
+  description: Schema.optional(Schema.String),
+  fallbackName: Schema.String.pipe(FormInputAnnotation.set(false), Schema.optional),
+  content: Type.Ref(Text.Text).pipe(FormInputAnnotation.set(false)),
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/Document',
     version: '0.1.0',
   }),
   LabelAnnotation.set(['name', 'fallbackName']),
-  ItemAnnotation.set(true),
+  DescriptionAnnotation.set('description'),
 );
 
 export type Document = Schema.Schema.Type<typeof Document>;
@@ -30,11 +31,11 @@ export type Document = Schema.Schema.Type<typeof Document>;
 /**
  * Document factory.
  */
-export const makeDocument = ({
+export const make = ({
   content = '',
   ...props
 }: Partial<{ name: string; fallbackName: string; content: string }> = {}) =>
-  Obj.make(Document, { ...props, content: Ref.make(DataType.makeText(content)) });
+  Obj.make(Document, { ...props, content: Ref.make(Text.make(content)) });
 
 /**
  * Plugin settings.

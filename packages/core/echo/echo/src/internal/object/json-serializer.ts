@@ -1,0 +1,188 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import * as Schema from 'effect/Schema';
+
+import { raise } from '@dxos/debug';
+import { type EncodedReference, ObjectStructure, isEncodedReference } from '@dxos/echo-protocol';
+import { assertArgument, invariant } from '@dxos/invariant';
+import { DXN, ObjectId } from '@dxos/keys';
+import { assumeType, deepMapValues, visitValues } from '@dxos/util';
+
+import type * as Obj from '../../Obj';
+import { getTypeDXN, setTypename } from '../annotations';
+import {
+  ATTR_DELETED,
+  ATTR_RELATION_SOURCE,
+  ATTR_RELATION_TARGET,
+  ATTR_SELF_DXN,
+  type ObjectJSON,
+  RelationSourceDXNId,
+  RelationSourceId,
+  RelationTargetDXNId,
+  RelationTargetId,
+  SelfDXNId,
+  assertObjectModel,
+} from '../entities';
+import { attachTypedJsonSerializer, defineHiddenProperty, typedJsonSerializer } from '../proxy';
+import { Ref, type RefResolver, refFromEncodedReference, setRefResolver } from '../ref';
+import {
+  ATTR_META,
+  ATTR_TYPE,
+  type AnyEntity,
+  EntityKind,
+  KindId,
+  MetaId,
+  ObjectMetaSchema,
+  setSchema,
+} from '../types';
+
+// Re-export for backward compatibility.
+export { attachTypedJsonSerializer };
+
+type DeepReplaceRef<T> =
+  T extends Ref<any>
+    ? EncodedReference
+    : T extends object
+      ? {
+          [K in keyof T]: DeepReplaceRef<T[K]>;
+        }
+      : T;
+
+type SerializedObject<T extends { id: string }> = {
+  [K in keyof T]: DeepReplaceRef<T[K]>;
+} & ObjectJSON;
+
+/**
+ * Converts object to it's JSON representation.
+ */
+export const objectToJSON = <T extends AnyEntity>(obj: T): SerializedObject<T> => {
+  const typename = getTypeDXN(obj)?.toString();
+  invariant(typename && typeof typename === 'string');
+  return typedJsonSerializer.call(obj);
+};
+
+/**
+ * Creates an object from it's json representation.
+ * Performs schema validation.
+ * References and schema will be resolvable if the `refResolver` is provided.
+ * The function need to be async to support resolving the schema as well as the relation endpoints.
+ */
+export const objectFromJSON = async (
+  jsonData: unknown,
+  { refResolver, dxn }: { refResolver?: RefResolver; dxn?: DXN } = {},
+): Promise<AnyEntity> => {
+  assumeType<ObjectJSON>(jsonData);
+  assertArgument(typeof jsonData === 'object' && jsonData !== null, 'jsonData', 'expect object');
+  assertArgument(typeof jsonData[ATTR_TYPE] === 'string', 'jsonData[ATTR_TYPE]', 'expected object to have a type');
+  assertArgument(typeof jsonData.id === 'string', 'jsonData.id', 'expected object to have an id');
+
+  const type = DXN.parse(jsonData[ATTR_TYPE]);
+  const schema = await refResolver?.resolveSchema(type);
+  invariant(schema === undefined || Schema.isSchema(schema));
+
+  let obj: any;
+  if (schema != null) {
+    obj = await schema.pipe(Schema.decodeUnknownPromise)(jsonData);
+    if (refResolver) {
+      setRefResolverOnData(obj, refResolver);
+    }
+  } else {
+    obj = decodeGeneric(jsonData, { refResolver });
+  }
+
+  invariant(ObjectId.isValid(obj.id), 'Invalid object id');
+  setTypename(obj, type);
+  if (schema) {
+    setSchema(obj, schema);
+  }
+
+  const isRelation =
+    typeof jsonData[ATTR_RELATION_SOURCE] === 'string' || typeof jsonData[ATTR_RELATION_TARGET] === 'string';
+  if (isRelation) {
+    const sourceDxn: DXN = DXN.parse(jsonData[ATTR_RELATION_SOURCE] ?? raise(new TypeError('Missing relation source')));
+    const targetDxn: DXN = DXN.parse(jsonData[ATTR_RELATION_TARGET] ?? raise(new TypeError('Missing relation target')));
+
+    const source = (await refResolver?.resolve(sourceDxn)) as AnyEntity | undefined;
+    const target = (await refResolver?.resolve(targetDxn)) as AnyEntity | undefined;
+
+    defineHiddenProperty(obj, KindId, EntityKind.Relation);
+    defineHiddenProperty(obj, RelationSourceDXNId, sourceDxn);
+    defineHiddenProperty(obj, RelationTargetDXNId, targetDxn);
+    defineHiddenProperty(obj, RelationSourceId, source);
+    defineHiddenProperty(obj, RelationTargetId, target);
+  } else {
+    defineHiddenProperty(obj, KindId, EntityKind.Object);
+  }
+
+  if (typeof jsonData[ATTR_META] === 'object') {
+    const meta = await ObjectMetaSchema.pipe(Schema.decodeUnknownPromise)(jsonData[ATTR_META]);
+    invariant(Array.isArray(meta.keys));
+    defineHiddenProperty(obj, MetaId, meta);
+  } else {
+    defineHiddenProperty(obj, MetaId, {
+      keys: [],
+    });
+  }
+
+  if (dxn) {
+    defineHiddenProperty(obj, SelfDXNId, dxn);
+  }
+
+  assertObjectModel(obj);
+  invariant((obj as any)[ATTR_TYPE] === undefined, 'Invalid object model');
+  invariant((obj as any)[ATTR_META] === undefined, 'Invalid object model');
+  invariant((obj as any)[ATTR_DELETED] === undefined, 'Invalid object model');
+  invariant((obj as any)[ATTR_SELF_DXN] === undefined, 'Invalid object model');
+  invariant((obj as any)[ATTR_RELATION_SOURCE] === undefined, 'Invalid object model');
+  invariant((obj as any)[ATTR_RELATION_TARGET] === undefined, 'Invalid object model');
+  return obj;
+};
+
+const decodeGeneric = (jsonData: unknown, options: { refResolver?: RefResolver }) => {
+  const {
+    [ATTR_TYPE]: _type,
+    [ATTR_META]: _meta,
+    [ATTR_DELETED]: _deleted,
+    [ATTR_SELF_DXN]: _selfDxn,
+    [ATTR_RELATION_SOURCE]: _relationSource,
+    [ATTR_RELATION_TARGET]: _relationTarget,
+    ...props
+  } = jsonData as any;
+
+  return deepMapValues(props, (value, visitor) => {
+    if (isEncodedReference(value)) {
+      return refFromEncodedReference(value, options.refResolver);
+    }
+
+    return visitor(value);
+  });
+};
+
+export const setRefResolverOnData = (obj: AnyEntity, refResolver: RefResolver) => {
+  const visitor = (value: unknown) => {
+    if (Ref.isRef(value)) {
+      setRefResolver(value, refResolver);
+    } else {
+      visitValues(value, visitor);
+    }
+  };
+
+  visitor(obj);
+};
+
+/**
+ * Convert ObjectStructure to JSON data for indexing.
+ * Different from {@link objectToJSON} as it takes the internal {@link ObjectStructure} representation directly
+ */
+export const objectStructureToJson = (objectId: string, structure: ObjectStructure): Obj.JSON => {
+  return {
+    ...structure.data,
+    id: objectId,
+    [ATTR_TYPE]: (ObjectStructure.getTypeReference(structure)?.['/'] ?? '') as DXN.String,
+    [ATTR_DELETED]: ObjectStructure.isDeleted(structure),
+    [ATTR_RELATION_SOURCE]: ObjectStructure.getRelationSource(structure)?.['/'] as DXN.String | undefined,
+    [ATTR_RELATION_TARGET]: ObjectStructure.getRelationTarget(structure)?.['/'] as DXN.String | undefined,
+  };
+};

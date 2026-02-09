@@ -4,6 +4,10 @@
   "description": "Lock file .",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
   "license": "MIT",
   "author": "DXOS.org",
   "sideEffects": true,
@@ -26,7 +30,8 @@
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/node-std": "workspace:*",
-    "koffi": "^2.8.0"
+    "koffi": "catalog:",
+    "nan": "catalog:"
   },
   "devDependencies": {},
   "publishConfig": {

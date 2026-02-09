@@ -5,8 +5,8 @@
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Filter, Query } from '@dxos/echo';
-import { Expando, Ref } from '@dxos/echo-schema';
-import { live } from '@dxos/live-object';
+import { Obj, Ref } from '@dxos/echo';
+import { TestSchema } from '@dxos/echo/testing';
 
 import { EchoTestBuilder } from '../testing';
 
@@ -27,7 +27,7 @@ describe('clone', () => {
     const { db: db1 } = await builder.createDatabase();
     const { db: db2 } = await builder.createDatabase();
 
-    const task1 = live(Expando, {
+    const task1 = Obj.make(TestSchema.Expando, {
       title: 'Main task',
       tags: ['red', 'green'],
     });
@@ -50,7 +50,7 @@ describe('clone', () => {
   test('clone to the same database by changing the id', async () => {
     const { db } = await builder.createDatabase();
 
-    const task1 = live(Expando, {
+    const task1 = Obj.make(TestSchema.Expando, {
       title: 'Main task',
       tags: ['red', 'green'],
     });
@@ -70,11 +70,11 @@ describe('clone', () => {
     const { db: db1 } = await builder.createDatabase();
     const { db: db2 } = await builder.createDatabase();
 
-    const task1 = live(Expando, {
+    const task1 = Obj.make(TestSchema.Expando, {
       title: 'Main task',
       tags: ['red', 'green'],
       assignee: Ref.make(
-        live(Expando, {
+        Obj.make(TestSchema.Expando, {
           type: 'Person',
           name: 'John Doe',
         }),
@@ -101,7 +101,7 @@ describe('clone', () => {
     expect(task2.assignee.target?.id).to.equal(task1.assignee.target?.id);
     expect(task2.assignee.target?.name).to.equal(task1.assignee.target?.name);
     expect(
-      (await db2.query(Query.select(Filter.type(Expando, { type: 'Person' }))).run()).objects[0] ===
+      (await db2.query(Query.select(Filter.type(TestSchema.Expando, { type: 'Person' }))).run())[0] ===
         task2.assignee.target,
     ).to.be.true;
   });
@@ -110,28 +110,37 @@ describe('clone', () => {
     const { db: db1 } = await builder.createDatabase();
     const { db: db2 } = await builder.createDatabase();
 
-    const task1 = live(Expando, {
+    // Create the nested object first and add to database.
+    const details1 = Obj.make(TestSchema.Expando, { content: 'Some details' });
+    db1.add(details1);
+
+    // Create parent object with Ref to the nested object.
+    const task1 = Obj.make(TestSchema.Expando, {
       title: 'Main task',
       tags: ['red', 'green'],
-      details: live(Expando, { content: 'Some details' }),
+      details: Ref.make(details1),
     });
     db1.add(task1);
     await db1.flush();
 
-    const task2 = clone(task1, { additional: [task1.details] });
+    // Clone with the referenced object included.
+    const task2 = clone(task1, { additional: [details1] });
+    const details2 = task2.details?.target;
     expect(task2 !== task1).to.be.true;
     expect(task2.id).to.equal(task1.id);
     expect(task2.title).to.equal(task1.title);
     expect([...task2.tags]).to.deep.equal([...task1.tags]);
-    expect(task2.details !== task1.details).to.be.true;
-    expect(task2.details.id).to.equal(task1.details.id);
-    expect(task2.details.text).to.equal(task1.details.text);
+    expect(details2 !== details1).to.be.true;
+    expect(details2?.id).to.equal(details1.id);
+    expect(details2?.content).to.equal(details1.content);
 
     db2.add(task2);
+    db2.add(details2!);
     await db2.flush();
     expect(task2.id).to.equal(task1.id);
-    expect(task2.details !== task1.details).to.be.true;
-    expect(task2.details.id).to.equal(task1.details.id);
-    expect(task2.details.text).to.equal(task1.details.text);
+    const resolvedDetails = task2.details?.target;
+    expect(resolvedDetails !== details1).to.be.true;
+    expect(resolvedDetails?.id).to.equal(details1.id);
+    expect(resolvedDetails?.content).to.equal(details1.content);
   });
 });

@@ -27,7 +27,7 @@ void (async () => {
       .option('sourcemap', { type: 'boolean', default: true, describe: 'Output sourcemaps' })
       .option('watch', { type: 'boolean', default: false, describe: 'Watch mode' })
       .option('alias', { type: 'string', default: '{}', describe: 'Alias imports (JSON string)' })
-      .option('preactSignalTracking', { type: 'boolean', default: false, describe: 'Enable preact signal tracking' })
+      .option('mainFields', { type: 'array', describe: 'Main fields to emit' })
       .help().argv;
 
     // Parse alias JSON string if provided.
@@ -38,6 +38,7 @@ void (async () => {
       console.error('Failed to parse alias JSON:', err);
       process.exit(1);
     }
+
     const options: EsbuildExecutorOptions = {
       bundle: argv.bundle as boolean,
       bundlePackages: argv.bundlePackage as string[],
@@ -52,8 +53,8 @@ void (async () => {
       sourcemap: argv.sourcemap as boolean,
       watch: argv.watch as boolean,
       alias,
-      preactSignalTracking: argv.preactSignalTracking as boolean,
       verbose: argv.verbose as boolean,
+      mainFields: argv.mainFields?.flatMap((field: string) => field.split(',')),
     };
     const result = await main(options);
     process.exit(result.success ? 0 : 1);

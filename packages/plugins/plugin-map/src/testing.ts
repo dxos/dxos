@@ -1,13 +1,14 @@
 //
 // Copyright 2025 DXOS.org
+//
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 
-import { Type } from '@dxos/echo';
+import { Format, Type } from '@dxos/echo';
 
 export const createLocationSchema = () =>
   Schema.Struct({
     name: Schema.optional(Schema.String).annotations({ title: 'Name' }),
     description: Schema.optional(Schema.String).annotations({ title: 'Description' }),
-    location: Schema.optional(Type.Format.GeoPoint).annotations({ title: 'Location' }),
-  }).pipe(Type.Obj({ typename: 'example.com/type/Location', version: '0.1.0' }));
+    location: Schema.optional(Format.GeoPoint).annotations({ title: 'Location' }),
+  }).pipe(Type.object({ typename: 'example.com/type/Location', version: '0.1.0' }));

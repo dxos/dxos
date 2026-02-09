@@ -7,7 +7,7 @@ import React, { forwardRef, useEffect, useRef, useState } from 'react';
 import { log } from '@dxos/log';
 import { Avatar, Icon, Input, type ThemedClassName, Toolbar, useTranslation } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { errorText, mx } from '@dxos/react-ui-theme';
+import { errorText, mx } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
 
@@ -16,7 +16,12 @@ type State = 'pending' | 'responding';
 /**
  * Request or response.
  */
-type Message = { type: 'request' | 'response'; text?: string; data?: any; error?: Error };
+type Message = {
+  type: 'request' | 'response';
+  text?: string;
+  data?: any;
+  error?: Error;
+};
 
 export type TestPanelProps = ThemedClassName<{
   functionUrl?: string;
@@ -61,7 +66,15 @@ export const TestPanel = ({ classNames, functionUrl }: TestPanelProps) => {
     inputRef.current?.focus();
   };
 
-  const handleResponse = ({ text, data, error }: { text?: string; data?: any; error?: Error } = {}) => {
+  const handleResponse = ({
+    text,
+    data,
+    error,
+  }: {
+    text?: string;
+    data?: any;
+    error?: Error;
+  } = {}) => {
     controller.current = null;
     setHistory((history) => [...history, { type: 'response', text, data, error } satisfies Message]);
     setResult('');
@@ -108,7 +121,9 @@ export const TestPanel = ({ classNames, functionUrl }: TestPanelProps) => {
       // Check for error.
       if (!response.ok) {
         const text = await response.text();
-        handleResponse({ error: new Error(text || response.statusText || String(response.status)) });
+        handleResponse({
+          error: new Error(text || response.statusText || String(response.status)),
+        });
         return;
       }
 
@@ -159,11 +174,11 @@ export const TestPanel = ({ classNames, functionUrl }: TestPanelProps) => {
   };
 
   return (
-    <div className={mx('flex flex-col h-full overflow-hidden', classNames)}>
+    <div className={mx('flex flex-col bs-full overflow-hidden', classNames)}>
       {/* TODO(burdon): Replace with Thread. */}
       <MessageThread ref={scrollerRef} state={state} result={result} history={history} />
       {/* TODO(burdon): Replace with Form based on the function's input schema. */}
-      <Toolbar.Root classNames='p-2'>
+      <Toolbar.Root>
         <Input.Root>
           <Input.TextInput
             ref={inputRef}
@@ -174,12 +189,20 @@ export const TestPanel = ({ classNames, functionUrl }: TestPanelProps) => {
             onKeyDown={(ev) => ev.key === 'Enter' && handleRequest(input)}
           />
         </Input.Root>
-        <Toolbar.Button onClick={() => handleRequest(input)}>
-          <Icon icon='ph--play--regular' size={4} />
-        </Toolbar.Button>
-        <Toolbar.Button onClick={() => (state ? handleStop() : handleClear())}>
-          <Icon icon={state ? 'ph--stop--regular' : 'ph--trash--regular'} size={4} />
-        </Toolbar.Button>
+        <Toolbar.IconButton
+          icon='ph--play--regular'
+          size={4}
+          label='Execute'
+          iconOnly
+          onClick={() => handleRequest(input)}
+        />
+        <Toolbar.IconButton
+          icon={state ? 'ph--stop--regular' : 'ph--trash--regular'}
+          size={4}
+          label={state ? 'Stop' : 'Clear'}
+          iconOnly
+          onClick={() => (state ? handleStop() : handleClear())}
+        />
       </Toolbar.Root>
     </div>
   );
@@ -196,7 +219,7 @@ type MessageThreadProps = {
 const MessageThread = forwardRef<HTMLDivElement, MessageThreadProps>(
   ({ state, history, result }: MessageThreadProps, forwardedRef) => {
     return (
-      <div ref={forwardedRef} className='flex flex-col gap-6 h-full p-2 overflow-x-hidden overflow-y-auto'>
+      <div ref={forwardedRef} className='flex flex-col gap-6 bs-full p-2 overflow-x-hidden overflow-y-auto'>
         {history.map((message, i) => (
           <div key={i} className='grid grid-cols-[2rem_1fr_2rem]'>
             <div className='p-1'>{message.type === 'response' && <RobotAvatar />}</div>
@@ -225,7 +248,7 @@ const MessageThread = forwardRef<HTMLDivElement, MessageThreadProps>(
 
 const MessageItem = ({ classNames, message }: ThemedClassName<{ message: Message }>) => {
   const { type, text, data, error } = message;
-  const wrapper = 'p-1 px-2 rounded-md bg-hoverSurface overflow-auto';
+  const wrapper = 'p-1 pli-2 rounded-md bg-hoverSurface overflow-auto';
   return (
     <div className={mx('flex', type === 'request' ? 'ml-[1rem] justify-end' : 'mr-[1rem]', classNames)}>
       {error && <div className={mx(wrapper, 'whitespace-pre', errorText)}>{String(error)}</div>}

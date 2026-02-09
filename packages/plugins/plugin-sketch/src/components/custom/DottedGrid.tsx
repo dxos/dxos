@@ -29,7 +29,7 @@ export const DottedGrid = ({ x, y, z, size }: TLGridProps) => {
   return (
     <svg id={id} className='tl-grid' version='1.1' xmlns='http://www.w3.org/2000/svg'>
       <defs>
-        {GRID_STEPS.map(({ min, mid, step }, i) => {
+        {GRID_STEPS.map(({ min, mid, step }) => {
           const s = step * size * z;
           const xo = 0.5 + x * z;
           const yo = 0.5 + y * z;

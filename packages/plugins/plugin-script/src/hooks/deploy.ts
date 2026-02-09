@@ -4,13 +4,14 @@
 
 import { useEffect, useMemo } from 'react';
 
-import { FunctionType, type ScriptType, getUserFunctionIdInMetadata } from '@dxos/functions';
+import { Obj, Query, Ref } from '@dxos/echo';
+import { Function, type Script, getUserFunctionIdInMetadata } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { type Client, useClient } from '@dxos/react-client';
-import { Query, Ref, type Space, getMeta, getSpace, useQuery } from '@dxos/react-client/echo';
+import { type Space, getSpace, useQuery } from '@dxos/react-client/echo';
 import { type TFunction } from '@dxos/react-ui';
 import { createMenuAction } from '@dxos/react-ui-menu';
-import { errorMessageColors } from '@dxos/react-ui-theme';
+import { errorMessageColors } from '@dxos/ui-theme';
 
 import { meta } from '../meta';
 import { deployScript, getFunctionUrl, isScriptDeployed } from '../util';
@@ -24,10 +25,12 @@ export type DeployState = {
   error: string;
 };
 
+import { type ScriptToolbarStateStore } from './useToolbarState';
+
 export type CreateDeployOptions = {
-  state: Partial<DeployState>;
-  script: ScriptType;
-  fn: FunctionType;
+  state: ScriptToolbarStateStore;
+  script: Script.Script;
+  fn: Function.Function;
   space?: Space;
   existingFunctionId?: string;
   client: Client;
@@ -35,12 +38,14 @@ export type CreateDeployOptions = {
 };
 
 export const createDeploy = ({ state, script, space, fn, client, existingFunctionId, t }: CreateDeployOptions) => {
+  const { value } = state;
+
   // TODO(wittjosiah): Should this be an action?
   const errorItem = createMenuAction('error', () => {}, {
-    label: state.error ?? ['no error label', { ns: meta.id }],
+    label: value.error ?? ['no error label', { ns: meta.id }],
     icon: 'ph--warning-circle--regular',
-    hidden: !state.error,
-    classNames: state.error && errorMessageColors,
+    hidden: !value.error,
+    classNames: value.error && errorMessageColors,
   });
 
   const deployAction = createMenuAction<DeployActionProperties>(
@@ -50,39 +55,39 @@ export const createDeploy = ({ state, script, space, fn, client, existingFunctio
         return;
       }
 
-      state.error = undefined;
-      state.deploying = true;
+      state.set('error', undefined);
+      state.set('deploying', true);
 
       const result = await deployScript({ script, client, space, fn, existingFunctionId });
 
       if (!result.success) {
         log.catch(result.error);
-        state.error = t('upload failed label');
+        state.set('error', t('upload failed label'));
       }
 
-      state.deploying = false;
+      state.set('deploying', false);
     },
     {
       type: 'deploy',
-      label: [state.deploying ? 'publishing label' : 'deploy label', { ns: meta.id }],
-      icon: state.deploying ? 'ph--spinner-gap--regular' : 'ph--cloud-arrow-up--regular',
-      disabled: state.deploying,
-      classNames: state.deploying ? '[&_svg]:animate-spin' : '',
+      label: [value.deploying ? 'publishing label' : 'deploy label', { ns: meta.id }],
+      icon: value.deploying ? 'ph--spinner-gap--regular' : 'ph--cloud-arrow-up--regular',
+      disabled: value.deploying,
+      classNames: value.deploying ? '[&_svg]:animate-spin' : '',
     },
   );
 
   const copyAction = createMenuAction<DeployActionProperties>(
     'copy',
     async () => {
-      if (state.functionUrl) {
-        await navigator.clipboard.writeText(state.functionUrl);
+      if (value.functionUrl) {
+        await navigator.clipboard.writeText(value.functionUrl);
       }
     },
     {
       type: 'copy',
       label: ['copy link label', { ns: meta.id }],
       icon: 'ph--link--regular',
-      disabled: !state.functionUrl,
+      disabled: !value.functionUrl,
     },
   );
 
@@ -96,29 +101,32 @@ export const createDeploy = ({ state, script, space, fn, client, existingFunctio
   };
 };
 
-export const useDeployState = ({ state, script }: { state: Partial<DeployState>; script: ScriptType }) => {
+export const useDeployState = ({ state, script }: { state: ScriptToolbarStateStore; script: Script.Script }) => {
   const { space, client, fn, existingFunctionId } = useDeployDeps({ script });
   useEffect(() => {
     if (!existingFunctionId) {
       return;
     }
 
-    state.functionUrl = getFunctionUrl({
-      script,
-      fn,
-      edgeUrl: client.config.values.runtime?.services?.edge?.url ?? '',
-    });
-  }, [existingFunctionId, space, fn, script, client.config.values.runtime?.services?.edge?.url]);
+    state.set(
+      'functionUrl',
+      getFunctionUrl({
+        script,
+        fn,
+        edgeUrl: client.config.values.runtime?.services?.edge?.url ?? '',
+      }),
+    );
+  }, [existingFunctionId, space, fn, script, client.config.values.runtime?.services?.edge?.url, state]);
 
   useEffect(() => {
-    state.deployed = isScriptDeployed({ script, fn });
-  }, [script.changed, existingFunctionId, fn, script]);
+    state.set('deployed', isScriptDeployed({ script, fn }));
+  }, [script.changed, existingFunctionId, fn, script, state]);
 };
 
-export const useDeployDeps = ({ script }: { script: ScriptType }) => {
+export const useDeployDeps = ({ script }: { script: Script.Script }) => {
   const client = useClient();
   const space = getSpace(script);
-  const [fn] = useQuery(space, Query.type(FunctionType, { source: Ref.make(script) }));
-  const existingFunctionId = useMemo(() => fn && getUserFunctionIdInMetadata(getMeta(fn)), [fn]);
+  const [fn] = useQuery(space?.db, Query.type(Function.Function, { source: Ref.make(script) }));
+  const existingFunctionId = useMemo(() => fn && getUserFunctionIdInMetadata(Obj.getMeta(fn)), [fn]);
   return { client, space, fn, existingFunctionId };
 };

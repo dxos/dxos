@@ -12,13 +12,31 @@ export type MaybePromise<T> = T | Promise<T>;
 
 export type GuardedType<T> = T extends (value: any) => value is infer R ? R : never;
 
-export type DeepReadonly<T> = {
-  readonly [P in keyof T]: T[P] extends Record<string, any>
-    ? DeepReadonly<T[P]>
-    : T[P] extends Array<infer U>
-      ? ReadonlyArray<DeepReadonly<U>>
-      : T[P];
-};
+/**
+ * Removes readonly modifiers from top-level properties of T.
+ * Also converts readonly arrays at the top level to mutable arrays.
+ * For nested properties, mutability depends on the schema definition.
+ */
+export type ToMutable<T> = T extends object
+  ? { -readonly [K in keyof T]: T[K] extends readonly (infer U)[] ? U[] : T[K] }
+  : T;
+
+export type Intersection<Types extends readonly unknown[]> = Types extends [infer First, ...infer Rest]
+  ? First & Intersection<Rest>
+  : unknown;
+
+/**
+ * Recursively makes all properties of T readonly.
+ * Primitives (including branded types like `string & { __brand: true }`) are returned as-is.
+ * Arrays become ReadonlyArrays with deeply readonly elements.
+ */
+export type DeepReadonly<T> = T extends string | number | boolean | bigint | symbol | null | undefined
+  ? T // Primitives (including branded primitives) stay as-is.
+  : T extends Array<infer U>
+    ? ReadonlyArray<DeepReadonly<U>>
+    : T extends object
+      ? { readonly [P in keyof T]: DeepReadonly<T[P]> }
+      : T;
 
 export type DeepWriteable<T> = { -readonly [K in keyof T]: T[K] extends object ? DeepWriteable<T[K]> : T[K] };
 
@@ -48,7 +66,6 @@ export type Falsy = false | 0 | '' | null | undefined;
  * NOTE: To filter by type:
  * items.filter((item: any): item is RangeSet<Decoration> => item instanceof RangeSet)
  */
-// TODO(burdon): Replace with Predicate.isTruthy?
 export const isTruthy = <T>(value: T): value is Exclude<T, Falsy> => !!value;
 export const isNonNullable = <T>(value: T | null | undefined): value is T => value != null;
 
@@ -105,9 +122,19 @@ export const sortKeys = <T extends object>(obj: T): T =>
     }, {} as T);
 
 /**
- * Swap position of element within array.
+ * Move element within array.
  */
-export const arrayMove = <T>(array: T[], from: number, to: number): Array<T> => {
+export const arrayMove = <T>(array: T[], from: number, to: number): T[] => {
   array.splice(to < 0 ? array.length + to : to, 0, array.splice(from, 1)[0]);
   return array;
 };
+
+/**
+ * Swap position of element within array.
+ */
+export function arraySwap<T>(array: T[], from: number, to: number): T[] {
+  const current = array[from];
+  array[from] = array[to];
+  array[to] = current;
+  return array;
+}

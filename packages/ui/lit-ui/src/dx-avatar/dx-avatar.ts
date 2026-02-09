@@ -36,6 +36,7 @@ export type DxAvatarProps = Partial<
   >
 >;
 
+// TODO(burdon): Needs popover.
 @customElement('dx-avatar')
 export class DxAvatar extends LitElement {
   private maskId: string;
@@ -70,7 +71,7 @@ export class DxAvatar extends LitElement {
   hue: string | undefined = undefined;
 
   @property({ type: String })
-  hueVariant: 'fill' | 'surface' = 'fill';
+  hueVariant: 'fill' | 'surface' | 'transparent' = 'fill';
 
   @property({ type: String })
   size: Size = 10;
@@ -112,11 +113,14 @@ export class DxAvatar extends LitElement {
     const r = sizePx / 2 - ringGap - ringWidth;
     const isTextOnly = Boolean(this.fallback && /[0-9a-zA-Z]+/.test(this.fallback));
     const fontScale = (isTextOnly ? 3 : 3.6) * (1 / 1.612);
-    const bg = this.hue
-      ? this.hueVariant === 'surface'
-        ? `var(--dx-${this.hue}Surface)`
-        : `var(--dx-${this.hue === 'neutral' ? 'inputSurface' : `${this.hue}Fill`})`
-      : 'var(--surface-bg)';
+    const bg =
+      this.hueVariant === 'transparent'
+        ? 'transparent'
+        : this.hue
+          ? this.hueVariant === 'surface'
+            ? `var(--dx-${this.hue}Surface)`
+            : `var(--dx-${this.hue === 'neutral' ? 'inputSurface' : `${this.hue}Fill`})`
+          : 'var(--surface-bg)';
     const fg =
       this.hue && this.hueVariant === 'surface' ? `var(--dx-${this.hue}SurfaceText)` : 'var(--dx-accentSurfaceText)';
 
@@ -180,7 +184,8 @@ export class DxAvatar extends LitElement {
                 y=${sizePx / 5}
                 width=${(3 * sizePx) / 5}
                 height=${(3 * sizePx) / 5} />`
-            : svg`
+            : // NOTE: Firefox currently doesn't fully support alignment-baseline.
+              svg`
               <text
                 x="50%"
                 y="50%"
@@ -188,10 +193,11 @@ export class DxAvatar extends LitElement {
                 fill=${fg}
                 text-anchor="middle"
                 alignment-baseline="central"
+                dominant-baseline="middle"
                 font-size=${this.size === 'px' ? '200%' : this.size * fontScale}
                 mask=${`url(#${this.maskId})`}
               >
-                ${/\p{Emoji}/u.test(this.fallback) ? this.fallback : getInitials(this.fallback)}
+                ${/\p{Emoji_Presentation}/u.test(this.fallback) ? this.fallback : getInitials(this.fallback)}
               </text>`
         }
         ${

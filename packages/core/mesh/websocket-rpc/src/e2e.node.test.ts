@@ -24,7 +24,7 @@ describe('e2e', () => {
           requested: {},
           handlers: {
             TestService: {
-              testCall: async (request) => {
+              testCall: async (request: any) => {
                 return {
                   data: request.data,
                 };

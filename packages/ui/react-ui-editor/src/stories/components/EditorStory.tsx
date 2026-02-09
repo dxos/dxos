@@ -3,29 +3,30 @@
 //
 
 import { type EditorView } from '@codemirror/view';
-import React, { type ReactNode, forwardRef, useEffect, useImperativeHandle, useMemo, useState } from 'react';
+import React, { type ReactNode, forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 
-import { Expando } from '@dxos/echo-schema';
+import { Obj } from '@dxos/echo';
+import { TestSchema } from '@dxos/echo/testing';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
-import { live } from '@dxos/live-object';
-import { createDocAccessor, createObject } from '@dxos/react-client/echo';
-import { useForwardedRef, useThemeContext } from '@dxos/react-ui';
+import { log } from '@dxos/log';
+import { useMergeRefs, useThemeContext } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
-import { mx } from '@dxos/react-ui-theme';
-import { isNonNullable } from '@dxos/util';
-
-import { editorGutter, editorSlots } from '../../defaults';
 import {
   type DebugNode,
   type ThemeExtensionsOptions,
   createBasicExtensions,
-  createDataExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
   debugTree,
-} from '../../extensions';
+  decorateMarkdown,
+  editorSlots,
+} from '@dxos/ui-editor';
+import { mx } from '@dxos/ui-theme';
+import { isNonNullable } from '@dxos/util';
+
+import { type EditorController, createEditorController } from '../../components';
 import { type UseTextEditorProps, useTextEditor } from '../../hooks';
 
 // Type definitions.
@@ -38,32 +39,36 @@ export type StoryProps = Pick<UseTextEditorProps, 'id' | 'scrollTo' | 'selection
     debug?: DebugMode;
     debugCustom?: (view: EditorView) => ReactNode;
     text?: string;
-    object?: Expando;
+    object?: Obj.Obj<TestSchema.Expando>;
     readOnly?: boolean;
     placeholder?: string;
     lineNumbers?: boolean;
+    monospace?: boolean;
     onReady?: (view: EditorView) => void;
   };
 
-export const EditorStory = forwardRef<EditorView | null, StoryProps>(
-  ({ debug, debugCustom, text, extensions: _extensions, ...props }, forwardedRef) => {
+export const EditorStory = forwardRef<EditorController, StoryProps>(
+  ({ debug, debugCustom, text, extensions: extensionsProp, ...props }, forwardedRef) => {
+    const controllerRef = useRef<EditorController>(null);
+    const mergedRef = useMergeRefs([controllerRef, forwardedRef]);
+
     const attentionAttrs = useAttentionAttributes('test-panel');
     const [tree, setTree] = useState<DebugNode>();
-    const [object] = useState(createObject(live(Expando, { content: text ?? '' })));
-    const viewRef = useForwardedRef(forwardedRef);
+    const [object] = useState(Obj.make(TestSchema.Expando, { content: text ?? '' }));
+
     const extensions = useMemo(
-      () => (debug ? [_extensions, debugTree(setTree)].filter(isNonNullable) : _extensions),
-      [debug, _extensions],
+      () => (debug ? [extensionsProp, debugTree(setTree)].filter(isNonNullable) : extensionsProp),
+      [debug, extensionsProp],
     );
 
-    const view = viewRef.current;
+    const view = controllerRef.current?.view;
     return (
-      <div className={mx('w-full h-full grid overflow-hidden', debug && 'grid-cols-2 lg:grid-cols-[1fr_600px]')}>
-        <EditorComponent ref={viewRef} object={object} text={text} extensions={extensions} {...props} />
+      <div className={mx('is-full bs-full grid overflow-hidden', debug && 'grid-cols-2 lg:grid-cols-[1fr_600px]')}>
+        <EditorComponent ref={mergedRef} object={object} text={text} extensions={extensions} {...props} />
 
         {debug && (
           <div
-            className='grid h-full auto-rows-fr border-l border-separator divide-y divide-separator overflow-hidden'
+            className='grid bs-full auto-rows-fr border-l border-separator divide-y divide-separator overflow-hidden'
             {...attentionAttrs}
           >
             {view && debugCustom?.(view)}
@@ -83,7 +88,7 @@ export const EditorStory = forwardRef<EditorView | null, StoryProps>(
 /**
  * Default story component.
  */
-export const EditorComponent = forwardRef<EditorView | null, StoryProps>(
+const EditorComponent = forwardRef<EditorController, StoryProps>(
   (
     {
       id = defaultId,
@@ -92,6 +97,7 @@ export const EditorComponent = forwardRef<EditorView | null, StoryProps>(
       readOnly,
       placeholder = 'New document.',
       lineNumbers,
+      monospace,
       scrollTo,
       selection,
       extensions,
@@ -110,18 +116,21 @@ export const EditorComponent = forwardRef<EditorView | null, StoryProps>(
         selection,
         initialValue: text,
         extensions: [
-          createDataExtensions({ id, text: createDocAccessor(object, ['content']) }),
           createBasicExtensions({ readOnly, placeholder, lineNumbers, scrollPastEnd: true, search: true }),
+          createThemeExtensions({ monospace, themeMode, syntaxHighlighting: true, slots }),
           createMarkdownExtensions(),
-          createThemeExtensions({ themeMode, syntaxHighlighting: true, slots }),
-          editorGutter,
+          decorateMarkdown(),
           extensions || [],
         ],
       }),
       [id, object, extensions, themeMode],
     );
 
-    useImperativeHandle<EditorView | null, EditorView | null>(forwardedRef, () => view, [view]);
+    // External controller.
+    useImperativeHandle(forwardedRef, () => {
+      log.info('view updated', { id });
+      return createEditorController(view);
+    }, [id, view]);
 
     useEffect(() => {
       if (view) {

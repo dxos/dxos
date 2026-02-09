@@ -6,16 +6,17 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo, useState } from 'react';
 
 import { Client } from '@dxos/client';
-import { createDocAccessor } from '@dxos/client/echo';
 import { defaultFunctions } from '@dxos/compute';
 import { getRegisteredFunctionNames } from '@dxos/compute/testing';
+import { Obj } from '@dxos/echo';
+import { createDocAccessor } from '@dxos/echo-db';
 import { useAsyncEffect } from '@dxos/react-hooks';
 import { withTheme } from '@dxos/react-ui/testing';
-import { automerge } from '@dxos/react-ui-editor';
 import { CellEditor, type CellEditorProps } from '@dxos/react-ui-grid';
+import { automerge } from '@dxos/ui-editor';
 
 import { sheetExtension } from '../../extensions';
-import { SheetType, createSheet } from '../../types';
+import { Sheet } from '../../types';
 
 const DefaultStory = ({ value, ...props }: CellEditorProps) => {
   const extensions = useMemo(() => {
@@ -29,16 +30,18 @@ const DefaultStory = ({ value, ...props }: CellEditorProps) => {
 
 const AutomergeStory = ({ value, ...props }: CellEditorProps) => {
   const cell = 'A1';
-  const [object, setObject] = useState<SheetType>();
+  const [object, setObject] = useState<Sheet.Sheet>();
   useAsyncEffect(async () => {
-    const client = new Client({ types: [SheetType] });
+    const client = new Client({ types: [Sheet.Sheet] });
     await client.initialize();
     await client.halo.createIdentity();
     const space = await client.spaces.create();
 
-    const sheet = createSheet();
-    sheet.name = 'Test';
-    sheet.cells[cell] = { value };
+    const sheet = Sheet.make();
+    Obj.change(sheet, (s) => {
+      s.name = 'Test';
+      s.cells[cell] = { value };
+    });
     space.db.add(sheet);
     setObject(sheet);
   }, [value]);

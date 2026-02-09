@@ -8,9 +8,8 @@ import { sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { AutomergeHost, DataServiceImpl, SpaceStateManager, createIdFromSpaceKey } from '@dxos/echo-pipeline';
 import { type DatabaseDirectory, SpaceDocVersion } from '@dxos/echo-protocol';
-import { ObjectId } from '@dxos/echo-schema';
 import { IndexMetadataStore } from '@dxos/indexing';
-import { PublicKey, SpaceId } from '@dxos/keys';
+import { ObjectId, PublicKey, SpaceId } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { openAndClose } from '@dxos/test-utils';
 
@@ -36,6 +35,8 @@ describe('AutomergeDocumentLoader', () => {
     const objectId = ObjectId.random();
     const { loader, spaceRootDocHandle } = await setupTest();
     const objectDocHandle = loader.createDocumentForObject(objectId);
+    // Wait for the document to be created before accessing url.
+    await objectDocHandle.whenReady();
     const handle = spaceRootDocHandle.doc();
     expect(objectDocHandle.doc()?.access?.spaceKey).to.eq(SPACE_KEY.toHex());
     expect(handle?.links?.[objectId].toString()).to.eq(objectDocHandle.url);
@@ -45,8 +46,9 @@ describe('AutomergeDocumentLoader', () => {
     const objectId = ObjectId.random();
     const { loader, repo } = await setupTest();
     const handle = repo.create<DatabaseDirectory>();
+    await handle.whenReady();
     const docLoadInfo = waitForDocumentLoad(loader, { objectId, handle });
-    loadLinkedObjects(loader, { [objectId]: handle.url });
+    loadLinkedObjects(loader, { [objectId]: handle.url! });
     await sleep(10);
     expect(docLoadInfo.loaded).to.be.true;
   });
@@ -56,8 +58,9 @@ describe('AutomergeDocumentLoader', () => {
     const { loader, repo } = await setupTest();
     const oldDocHandle = repo.create<DatabaseDirectory>();
     const newDocHandle = repo.create<DatabaseDirectory>();
+    await Promise.all([oldDocHandle.whenReady(), newDocHandle.whenReady()]);
     const docLoadInfo = waitForDocumentLoad(loader, { objectId, handle: oldDocHandle });
-    loadLinkedObjects(loader, { [objectId]: oldDocHandle.url });
+    loadLinkedObjects(loader, { [objectId]: oldDocHandle.url! });
     loader.onObjectBoundToDocument(newDocHandle, objectId);
     await sleep(10);
     expect(docLoadInfo.loaded).to.be.false;
@@ -67,10 +70,12 @@ describe('AutomergeDocumentLoader', () => {
     const objectId = ObjectId.random();
     const { loader, repo } = await setupTest();
     const existingHandle = repo.create<DatabaseDirectory>();
+    await existingHandle.whenReady();
     loader.onObjectBoundToDocument(existingHandle, objectId);
     const newDocHandle = repo.create<DatabaseDirectory>();
+    await newDocHandle.whenReady();
     const docLoadInfo = waitForDocumentLoad(loader, { objectId, handle: newDocHandle });
-    loadLinkedObjects(loader, { [objectId]: existingHandle.url });
+    loadLinkedObjects(loader, { [objectId]: existingHandle.url! });
     await sleep(10);
     expect(docLoadInfo.loaded).to.be.false;
   });
@@ -94,13 +99,15 @@ describe('AutomergeDocumentLoader', () => {
     await openAndClose(repo);
 
     const loader = new AutomergeDocumentLoaderImpl(repo, spaceId, SPACE_KEY);
-    const spaceRootDocHandle = createRootDoc(repo);
+    const spaceRootDocHandle = await createRootDoc(repo);
     await loader.loadSpaceRootDocHandle(ctx, { rootUrl: spaceRootDocHandle.url });
     return { loader, spaceRootDocHandle, repo };
   };
 
-  const createRootDoc = (repo: RepoProxy) => {
-    return repo.create<DatabaseDirectory>({ version: SpaceDocVersion.CURRENT });
+  const createRootDoc = async (repo: RepoProxy) => {
+    const handle = repo.create<DatabaseDirectory>({ version: SpaceDocVersion.CURRENT });
+    await handle.whenReady();
+    return handle;
   };
 
   const loadLinkedObjects = (loader: AutomergeDocumentLoader, links: DatabaseDirectory['links']) => {

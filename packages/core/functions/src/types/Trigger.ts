@@ -1,0 +1,143 @@
+//
+// Copyright 2023 DXOS.org
+//
+
+import * as Schema from 'effect/Schema';
+import * as SchemaAST from 'effect/SchemaAST';
+
+import { Obj, QueryAST, Type } from '@dxos/echo';
+import { OptionsAnnotationId, SystemTypeAnnotation } from '@dxos/echo/internal';
+import { DXN } from '@dxos/keys';
+import { Expando } from '@dxos/schema';
+
+/**
+ * Type discriminator for TriggerType.
+ * Every spec has a type field of type TriggerKind that we can use to understand which type we're working with.
+ * https://www.typescriptlang.org/docs/handbook/2/narrowing.html#discriminated-unions
+ */
+export const Kinds = ['email', 'queue', 'subscription', 'timer', 'webhook'] as const;
+export type Kind = (typeof Kinds)[number];
+
+const kindLiteralAnnotations = { title: 'Kind' };
+
+export const EmailSpec = Schema.Struct({
+  kind: Schema.Literal('email').annotations(kindLiteralAnnotations),
+});
+export type EmailSpec = Schema.Schema.Type<typeof EmailSpec>;
+
+export const QueueSpec = Schema.Struct({
+  kind: Schema.Literal('queue').annotations(kindLiteralAnnotations),
+
+  // TODO(dmaretskyi): Change to a reference.
+  queue: DXN.Schema,
+});
+export type QueueSpec = Schema.Schema.Type<typeof QueueSpec>;
+
+/**
+ * Subscription.
+ */
+export const SubscriptionSpec = Schema.Struct({
+  kind: Schema.Literal('subscription').annotations(kindLiteralAnnotations),
+  query: Schema.Struct({
+    raw: Schema.optional(Schema.String.annotations({ title: 'Query' })),
+    ast: QueryAST.Query,
+  }),
+  options: Schema.optional(
+    Schema.Struct({
+      // Watch changes to object (not just creation).
+      deep: Schema.optional(Schema.Boolean.annotations({ title: 'Nested' })),
+      // Debounce changes (delay in ms).
+      delay: Schema.optional(Schema.Number.annotations({ title: 'Delay' })),
+    }).annotations({ title: 'Options' }),
+  ),
+});
+export type SubscriptionSpec = Schema.Schema.Type<typeof SubscriptionSpec>;
+
+/**
+ * Cron timer.
+ */
+export const TimerSpec = Schema.Struct({
+  kind: Schema.Literal('timer').annotations(kindLiteralAnnotations),
+  cron: Schema.String.annotations({
+    title: 'Cron',
+    [SchemaAST.ExamplesAnnotationId]: ['0 0 * * *'],
+  }),
+});
+export type TimerSpec = Schema.Schema.Type<typeof TimerSpec>;
+
+/**
+ * Webhook.
+ */
+export const WebhookSpec = Schema.Struct({
+  kind: Schema.Literal('webhook').annotations(kindLiteralAnnotations),
+  method: Schema.optional(
+    Schema.String.annotations({
+      title: 'Method',
+      [OptionsAnnotationId]: ['GET', 'POST'],
+    }),
+  ),
+  port: Schema.optional(
+    Schema.Number.annotations({
+      title: 'Port',
+    }),
+  ),
+});
+export type WebhookSpec = Schema.Schema.Type<typeof WebhookSpec>;
+
+/**
+ * Trigger schema.
+ */
+export const Spec = Schema.Union(EmailSpec, QueueSpec, SubscriptionSpec, TimerSpec, WebhookSpec).annotations({
+  title: 'Trigger',
+});
+export type Spec = Schema.Schema.Type<typeof Spec>;
+
+/**
+ * Function trigger.
+ * Function is invoked with the `payload` passed as input data.
+ * The event that triggers the function is available in the function context.
+ */
+const TriggerSchema = Schema.Struct({
+  /**
+   * Function or workflow to invoke.
+   */
+  // TODO(dmaretskyi): Can be a Ref(FunctionType) or Ref(ComputeGraphType).
+  function: Schema.optional(Type.Ref(Expando.Expando).annotations({ title: 'Function' })),
+
+  /**
+   * Only used for workflowSchema.
+   * Specifies the input node in the circuit.
+   * @deprecated Remove and enforce a single input node in all compute graphSchema.
+   */
+  inputNodeId: Schema.optional(Schema.String.annotations({ title: 'Input Node ID' })),
+
+  // TODO(burdon): NO BOOLEAN PROPERTIES (enabld/disabled/paused, etc.)
+  //  Need lint rule; or agent rule to require PR review for "boolean" key word.
+  enabled: Schema.optional(Schema.Boolean.annotations({ title: 'Enabled' })),
+
+  spec: Schema.optional(Spec),
+
+  /**
+   * Passed as the input data to the function.
+   * Must match the function's input schema.
+   *
+   * @example
+   * {
+   *   item: '{{$.trigger.event}}',
+   *   instructions: 'Summarize and perform entity-extraction'
+   *   mailbox: { '/': 'dxn:echo:AAA:ZZZ' }
+   * }
+   */
+  input: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
+}).pipe(
+  Type.object({
+    typename: 'dxos.org/type/Trigger',
+    version: '0.1.0',
+  }),
+  SystemTypeAnnotation.set(true),
+);
+
+export interface Trigger extends Schema.Schema.Type<typeof TriggerSchema> {}
+export const Trigger: Type.Obj<Trigger> = TriggerSchema as any;
+
+export const make = (props: Obj.MakeProps<typeof Trigger>) => Obj.make(Trigger, props);

@@ -10,6 +10,12 @@
   ],
   "references": [
     {
+      "path": "../../../common/async"
+    },
+    {
+      "path": "../../../common/context"
+    },
+    {
       "path": "../../../common/debug"
     },
     {
@@ -34,16 +40,10 @@
       "path": "../../../common/util"
     },
     {
+      "path": "../../protocols"
+    },
+    {
       "path": "../echo-protocol"
-    },
-    {
-      "path": "../echo-schema"
-    },
-    {
-      "path": "../echo-signals"
-    },
-    {
-      "path": "../live-object"
     }
   ]
 }

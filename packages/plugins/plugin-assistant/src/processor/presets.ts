@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 
 import { type ModelName } from '@dxos/ai';
 
@@ -43,7 +43,7 @@ export const AiServicePresets: AiServicePreset[] = [
   },
   {
     provider: 'lm-studio' as const,
-    model: '@mlx-community/llama-3.2-3b-instruct' as const,
+    model: '@meta/llama-3.2-3b-instruct' as const,
   },
   {
     model: 'deepseek-r1:latest' as const,

@@ -2,67 +2,47 @@
 // Copyright 2023 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import { registerSW } from 'virtual:pwa-register';
 
-import {
-  Capabilities,
-  Events,
-  LayoutAction,
-  contributes,
-  createIntent,
-  defineModule,
-  definePlugin,
-} from '@dxos/app-framework';
+import { Capability, Common, Plugin } from '@dxos/app-framework';
 import { log } from '@dxos/log';
 
 import { meta } from './meta';
 import { translations } from './translations';
 
-export const PwaPlugin = definePlugin(meta, () => [
-  defineModule({
-    id: `${meta.id}/module/translations`,
-    activatesOn: Events.SetupTranslations,
-    activate: () => contributes(Capabilities.Translations, translations),
-  }),
-  defineModule({
-    id: `${meta.id}/module/register-pwa`,
-    activatesOn: Events.DispatcherReady,
-    activate: (context) => {
-      const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+export const PwaPlugin = Plugin.define(meta).pipe(
+  Common.Plugin.addTranslationsModule({ translations }),
+  Plugin.addModule({
+    id: 'register-pwa',
+    activatesOn: Common.ActivationEvent.OperationInvokerReady,
+    activate: Effect.fnUntraced(function* () {
+      const { invokeSync } = yield* Capability.get(Common.Capability.OperationInvoker);
 
       const updateSW = registerSW({
-        onNeedRefresh: () =>
-          dispatch?.(
-            createIntent(LayoutAction.AddToast, {
-              part: 'toast',
-              subject: {
-                id: `${meta.id}/need-refresh`,
-                title: ['need refresh label', { ns: meta.id }],
-                description: ['need refresh description', { ns: meta.id }],
-                duration: 4 * 60 * 1000, // 4m
-                actionLabel: ['refresh label', { ns: meta.id }],
-                actionAlt: ['refresh alt', { ns: meta.id }],
-                onAction: () => updateSW(true),
-              },
-            }),
-          ),
-        onOfflineReady: () =>
-          dispatch?.(
-            createIntent(LayoutAction.AddToast, {
-              part: 'toast',
-              subject: {
-                id: `${meta.id}/offline-ready`,
-                title: ['offline ready label', { ns: meta.id }],
-                closeLabel: ['confirm label', { ns: meta.id }],
-              },
-            }),
-          ),
+        onNeedRefresh: () => {
+          invokeSync(Common.LayoutOperation.AddToast, {
+            id: `${meta.id}/need-refresh`,
+            title: ['need refresh label', { ns: meta.id }],
+            description: ['need refresh description', { ns: meta.id }],
+            duration: 4 * 60 * 1000, // 4m
+            actionLabel: ['refresh label', { ns: meta.id }],
+            actionAlt: ['refresh alt', { ns: meta.id }],
+            onAction: () => updateSW(true),
+          });
+        },
+        onOfflineReady: () => {
+          invokeSync(Common.LayoutOperation.AddToast, {
+            id: `${meta.id}/offline-ready`,
+            title: ['offline ready label', { ns: meta.id }],
+            closeLabel: ['confirm label', { ns: meta.id }],
+          });
+        },
         onRegisterError: (err) => {
           log.error(err);
         },
       });
-
-      return contributes(Capabilities.Null, null);
-    },
+    }),
   }),
-]);
+  Plugin.make,
+);

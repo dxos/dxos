@@ -1,0 +1,95 @@
+{
+  "name": "@dxos/react-ui-mosaic",
+  "version": "0.8.3",
+  "description": "Modular UI components.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "MIT",
+  "author": "DXOS.org",
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
+      "browser": "./dist/lib/browser/index.mjs",
+      "node": "./dist/lib/node-esm/index.mjs"
+    },
+    "./testing": {
+      "source": "./src/testing/index.ts",
+      "types": "./dist/types/src/testing/index.d.ts",
+      "browser": "./dist/lib/browser/testing/index.mjs",
+      "node": "./dist/lib/node-esm/testing/index.mjs"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {}
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "vitest-ui": "vitest --ui"
+  },
+  "dependencies": {
+    "@atlaskit/pragmatic-drag-and-drop": "catalog:",
+    "@atlaskit/pragmatic-drag-and-drop-auto-scroll": "catalog:",
+    "@atlaskit/pragmatic-drag-and-drop-hitbox": "catalog:",
+    "@atlaskit/pragmatic-drag-and-drop-react-drop-indicator": "catalog:",
+    "@codemirror/state": "catalog:",
+    "@codemirror/view": "catalog:",
+    "@dxos/async": "workspace:*",
+    "@dxos/echo": "workspace:*",
+    "@dxos/invariant": "workspace:*",
+    "@dxos/keys": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/react-client": "workspace:*",
+    "@dxos/react-ui-dnd": "workspace:*",
+    "@dxos/react-ui-syntax-highlighter": "workspace:*",
+    "@dxos/ui-theme": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "@fluentui/react-tabster": "catalog:",
+    "@radix-ui/react-compose-refs": "catalog:",
+    "@radix-ui/react-context": "catalog:",
+    "@radix-ui/react-primitive": "catalog:",
+    "@radix-ui/react-slot": "catalog:",
+    "@radix-ui/react-use-controllable-state": "catalog:",
+    "@tanstack/react-virtual": "catalog:",
+    "bind-event-listener": "catalog:",
+    "overlayscrollbars": "catalog:",
+    "overlayscrollbars-react": "catalog:"
+  },
+  "devDependencies": {
+    "@dxos/random": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-syntax-highlighter": "workspace:*",
+    "@dxos/schema": "workspace:*",
+    "@dxos/storybook-utils": "workspace:*",
+    "@dxos/test-utils": "workspace:*",
+    "@dxos/types": "workspace:*",
+    "@dxos/ui-theme": "workspace:*",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "effect": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "vite": "catalog:"
+  },
+  "peerDependencies": {
+    "@dxos/random": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/ui-theme": "workspace:*",
+    "effect": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

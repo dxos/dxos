@@ -2,18 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Obj } from '@dxos/echo';
+import { Obj, type Type } from '@dxos/echo';
 
-import {
-  type ApiAuthorization,
-  type BaseServiceRegistry,
-  type ServiceQuery,
-  ServiceType,
-  categoryIcons,
-} from '../types';
+import { type ApiAuthorization, type BaseServiceRegistry, ServiceType, categoryIcons } from '../types';
+
+const ServiceTypeSchema = ServiceType as unknown as Type.Obj.Any;
 
 export class MockServiceRegistry implements BaseServiceRegistry {
-  async queryServices(query?: ServiceQuery): Promise<ServiceType[]> {
+  async queryServices(): Promise<ServiceType[]> {
     return TEST_SERVICES;
   }
 }
@@ -54,7 +50,7 @@ const VISUAL_CROSSING_CREDENTIALS: ApiAuthorization = {
 //  - e.g., https://github.com/konfig-sdks/openapi-examples/blob/main/xkcd/openapi.yaml
 
 const TEST_SERVICES: ServiceType[] = [
-  Obj.make(ServiceType, {
+  Obj.make(ServiceTypeSchema, {
     serviceId: 'amadeus.com/service/FlightSearch',
     name: 'Amadeus Flight Search',
     description: 'Search for local and international flights.',
@@ -68,7 +64,7 @@ const TEST_SERVICES: ServiceType[] = [
     ],
   }),
 
-  Obj.make(ServiceType, {
+  Obj.make(ServiceTypeSchema, {
     serviceId: 'amadeus.com/service/HotelSearch',
     name: 'Amadeus Hotel Search',
     description: 'Search for local and international hotels.',
@@ -82,7 +78,7 @@ const TEST_SERVICES: ServiceType[] = [
     ],
   }),
 
-  Obj.make(ServiceType, {
+  Obj.make(ServiceTypeSchema, {
     serviceId: 'visualcrossing.com/service/Weather',
     name: 'Visual Crossing Weather',
     description: 'Search for global weather forecasts.',
@@ -97,7 +93,7 @@ const TEST_SERVICES: ServiceType[] = [
   }),
 
   // TODO(burdon): Needs auth.
-  Obj.make(ServiceType, {
+  Obj.make(ServiceTypeSchema, {
     serviceId: 'abstractapi.com/service/GeoLocation',
     name: 'Abstract GeoLocation',
     description: 'Get the location of any IP address.',
@@ -115,7 +111,7 @@ const TEST_SERVICES: ServiceType[] = [
   //
 
   ...Array.from({ length: 20 }, (_, i) =>
-    Obj.make(ServiceType, {
+    Obj.make(ServiceTypeSchema, {
       serviceId: `example.com/service/test-${i}`,
       name: `Test ${i}`,
       description: `Test ${i}`,

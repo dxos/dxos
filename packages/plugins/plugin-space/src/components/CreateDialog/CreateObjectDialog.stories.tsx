@@ -5,21 +5,21 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect } from 'react';
 
-import { IntentPlugin } from '@dxos/app-framework';
+import { OperationPlugin, RuntimePlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Filter, Obj, Type } from '@dxos/echo';
-import { useQuery, useSpace } from '@dxos/react-client/echo';
+import { Filter, Obj } from '@dxos/echo';
+import { useDatabase, useQuery } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Dialog } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
-import { DataType } from '@dxos/schema';
+import { Collection } from '@dxos/schema';
 import { translations as shellTranslations } from '@dxos/shell/react';
 
 import { translations } from '../../translations';
 
 import { CreateObjectDialog, type CreateObjectDialogProps } from './CreateObjectDialog';
 
-const Story = (props: CreateObjectDialogProps) => {
+const DefaultStory = (props: CreateObjectDialogProps) => {
   return (
     <Dialog.Root open>
       <Dialog.Overlay blockAlign='start'>
@@ -33,53 +33,59 @@ const Story = (props: CreateObjectDialogProps) => {
 const meta = {
   title: 'plugins/plugin-space/CreateObjectDialog',
   component: CreateObjectDialog,
-  render: Story,
+  render: DefaultStory,
   decorators: [
     withTheme, // TODO(wittjosiah): Try to write story which does not depend on plugin manager.
-    withPluginManager({ plugins: [IntentPlugin()] }),
-    withClientProvider({ createIdentity: true, createSpace: true, types: [DataType.Collection] }),
+    withPluginManager({
+      plugins: [RuntimePlugin(), OperationPlugin()],
+    }),
+    withClientProvider({
+      createIdentity: true,
+      createSpace: true,
+      types: [Collection.Collection],
+    }),
   ],
   parameters: {
     translations: [...translations, ...shellTranslations],
   },
   args: {},
-} satisfies Meta<typeof CreateObjectDialog>;
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
-export const Default: StoryObj<typeof CreateObjectDialog> = {};
+type Story = StoryObj<typeof meta>;
 
-export const Typename: StoryObj<typeof CreateObjectDialog> = {
-  args: { typename: Type.getTypename(DataType.Collection) },
+export const Default: Story = {};
+
+export const Typename: Story = {
+  args: { typename: Collection.Collection.typename },
 };
 
-export const TargetSpace: StoryObj<typeof CreateObjectDialog> = {
+export const TargetSpace: Story = {
   render: (args) => {
-    const space = useSpace();
+    const db = useDatabase();
 
-    if (!space) {
+    if (!db) {
       return <></>;
     }
 
-    return <Story {...args} target={space} />;
+    return <DefaultStory {...args} target={db} />;
   },
 };
 
-export const TargetCollection: StoryObj<typeof CreateObjectDialog> = {
+export const TargetCollection: Story = {
   render: (args) => {
-    const space = useSpace();
-    const [collection] = useQuery(space, Filter.type(DataType.Collection));
+    const db = useDatabase();
+    const [collection] = useQuery(db, Filter.type(Collection.Collection));
 
     useEffect(() => {
-      if (space) {
-        space.db.add(Obj.make(DataType.Collection, { name: 'My Collection', objects: [] }));
-      }
-    }, [space]);
+      db?.add(Obj.make(Collection.Collection, { name: 'My Collection', objects: [] }));
+    }, [db]);
 
     if (!collection) {
       return <></>;
     }
 
-    return <Story {...args} target={collection} />;
+    return <DefaultStory {...args} target={collection} />;
   },
 };

@@ -25,6 +25,9 @@
       "path": "../../../common/debug"
     },
     {
+      "path": "../../../common/effect"
+    },
+    {
       "path": "../../../common/errors"
     },
     {
@@ -50,6 +53,9 @@
     },
     {
       "path": "../../../common/random-access-storage"
+    },
+    {
+      "path": "../../../common/sql-sqlite"
     },
     {
       "path": "../../../common/test-utils"
@@ -106,7 +112,10 @@
       "path": "../echo-protocol"
     },
     {
-      "path": "../echo-schema"
+      "path": "../feed"
+    },
+    {
+      "path": "../index-core"
     },
     {
       "path": "../indexing"

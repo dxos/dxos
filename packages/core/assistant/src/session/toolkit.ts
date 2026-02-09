@@ -2,45 +2,38 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Tool, Toolkit } from '@effect/ai';
-import { type Context, Effect } from 'effect';
+import type * as Tool from '@effect/ai/Tool';
+import * as Toolkit from '@effect/ai/Toolkit';
+import * as Effect from 'effect/Effect';
 
-import { type AiToolNotFoundError, ToolExecutionService, type ToolId, ToolResolverService } from '@dxos/ai';
+import { type AiToolNotFoundError, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { type Blueprint } from '@dxos/blueprints';
 import { isTruthy } from '@dxos/util';
 
-export type ToolkitParams<Tools extends Record<string, Tool.Any>> = {
-  toolkit?: Toolkit.Toolkit<Tools>;
-  toolIds?: ToolId[];
-  blueprints?: Blueprint.Blueprint[];
+export type CreateToolkitProps = {
+  toolkit?: Toolkit.Any;
+  blueprints?: readonly Blueprint.Blueprint[];
 };
 
 /**
  * Build a combined toolkit from the blueprint tools and the provided toolkit.
  */
-export const createToolkit = <Tools extends Record<string, Tool.Any> = {}>({
-  toolkit: toolkitParam,
-  toolIds = [],
+export const createToolkit = ({
+  toolkit: toolkitProp,
   blueprints = [],
-}: ToolkitParams<Tools>): Effect.Effect<
+}: CreateToolkitProps): Effect.Effect<
   Toolkit.WithHandler<any>,
   AiToolNotFoundError,
-  ToolResolverService | ToolExecutionService | Tool.HandlersFor<Tools>
+  ToolResolverService | ToolExecutionService | Tool.HandlersFor<any>
 > =>
   Effect.gen(function* () {
-    const blueprintToolkit = yield* ToolResolverService.resolveToolkit([
-      ...blueprints.flatMap(({ tools }) => tools),
-      ...toolIds,
-    ]);
+    const blueprintToolkit = yield* ToolResolverService.resolveToolkit(blueprints.flatMap(({ tools }) => tools));
+    const blueprintToolHandler = yield* blueprintToolkit.toContext(ToolExecutionService.handlersFor(blueprintToolkit));
 
-    const blueprintToolkitHandler: Context.Context<Tool.HandlersFor<any>> = yield* blueprintToolkit.toContext(
-      ToolExecutionService.handlersFor(blueprintToolkit),
-    );
-
-    const toolkit = Toolkit.merge(...[toolkitParam, blueprintToolkit].filter(isTruthy));
-    return yield* toolkit.pipe(Effect.provide(blueprintToolkitHandler)) as any as Effect.Effect<
+    const toolkit = Toolkit.merge(...[toolkitProp, blueprintToolkit].filter(isTruthy));
+    return yield* toolkit.pipe(Effect.provide(blueprintToolHandler)) as any as Effect.Effect<
       Toolkit.WithHandler<any>,
       never,
-      Tool.HandlersFor<Tools>
+      Tool.HandlersFor<any>
     >;
   });

@@ -4,7 +4,7 @@
 
 import React, { type PropsWithChildren, createContext } from 'react';
 
-import { type Density } from '@dxos/react-ui-types';
+import { type Density } from '@dxos/ui-types';
 
 export interface DensityContextValue {
   density?: Density;

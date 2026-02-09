@@ -2,36 +2,37 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useMemo, useRef } from 'react';
+import { RegistryContext } from '@effect-atom/atom-react';
+import React, { useContext, useMemo, useRef } from 'react';
 
-import { Filter, Type } from '@dxos/echo';
-import { EchoSchema } from '@dxos/echo-schema';
+import { Filter, Obj } from '@dxos/echo';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
-import { useClient } from '@dxos/react-client';
-import { fullyQualifiedId, getSpace, useQuery, useSchema } from '@dxos/react-client/echo';
-import { Card } from '@dxos/react-ui-stack';
+import { useQuery, useSchema } from '@dxos/react-client/echo';
+import { Card } from '@dxos/react-ui-mosaic';
 import {
-  Table,
+  Table as TableComponent,
   type TableController,
   type TableFeatures,
   TablePresentation,
+  useProjectionModel,
   useTableModel,
 } from '@dxos/react-ui-table';
-import { type DataType, getTypenameFromQuery } from '@dxos/schema';
+import { type Table } from '@dxos/react-ui-table/types';
+import { getTypenameFromQuery } from '@dxos/schema';
 
 export type TableCardProps = {
   role: string;
-  view: DataType.View;
+  object: Table.Table;
 };
 
-export const TableCard = ({ role, view }: TableCardProps) => {
+export const TableCard = ({ role, object }: TableCardProps) => {
+  const registry = useContext(RegistryContext);
   const tableRef = useRef<TableController>(null);
 
-  const client = useClient();
-  const space = getSpace(view);
-  const typename = view.query ? getTypenameFromQuery(view.query.ast) : undefined;
-  const schema = useSchema(client, space, typename);
-  const queriedObjects = useQuery(space, schema ? Filter.type(schema) : Filter.nothing());
+  const db = Obj.getDatabase(object);
+  const typename = object.view.target?.query ? getTypenameFromQuery(object.view.target?.query.ast) : undefined;
+  const schema = useSchema(db, typename);
+  const queriedObjects = useQuery(db, schema ? Filter.type(schema) : Filter.nothing());
   const filteredObjects = useGlobalFilteredObjects(queriedObjects);
 
   const features: Partial<TableFeatures> = useMemo(
@@ -43,36 +44,29 @@ export const TableCard = ({ role, view }: TableCardProps) => {
     [],
   );
 
-  const jsonSchema = useMemo(() => {
-    if (schema instanceof EchoSchema) {
-      return schema.jsonSchema;
-    }
-    return schema ? Type.toJsonSchema(schema) : undefined;
-  }, [schema]);
-
+  const projection = useProjectionModel(schema, object, registry);
   const model = useTableModel({
-    view,
-    schema: jsonSchema,
+    object,
+    projection,
     features,
     rows: filteredObjects,
     onCellUpdate: (cell) => tableRef.current?.update?.(cell),
   });
 
-  const presentation = useMemo(() => (model ? new TablePresentation(model) : undefined), [model]);
+  const presentation = useMemo(() => (model ? new TablePresentation(registry, model) : undefined), [registry, model]);
 
   return (
-    <Card.SurfaceRoot role={role}>
-      <Table.Root role={role}>
-        <Table.Main
-          key={fullyQualifiedId(view)}
+    <Card.Root role={role}>
+      <TableComponent.Root role={role}>
+        <TableComponent.Main
+          key={Obj.getDXN(object).toString()}
           ref={tableRef}
-          client={client}
           model={model}
           presentation={presentation}
           schema={schema}
         />
-      </Table.Root>
-    </Card.SurfaceRoot>
+      </TableComponent.Root>
+    </Card.Root>
   );
 };
 

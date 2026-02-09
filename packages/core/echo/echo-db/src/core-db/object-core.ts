@@ -9,18 +9,16 @@ import { type DocHandleChangePayload } from '@automerge/automerge-repo';
 
 import { Event } from '@dxos/async';
 import { inspectCustom } from '@dxos/debug';
+import { EntityKind, type ObjectMeta } from '@dxos/echo/internal';
+import { isProxy } from '@dxos/echo/internal';
 import {
   type DatabaseDirectory,
+  EncodedReference,
   type ObjectStructure,
-  Reference,
-  decodeReference,
-  encodeReference,
   isEncodedReference,
 } from '@dxos/echo-protocol';
-import { EntityKind, ObjectId, type ObjectMeta } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { DXN } from '@dxos/keys';
-import { isLiveObject } from '@dxos/live-object';
+import { DXN, ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { defer, getDeep, setDeep, throwUnhandledError } from '@dxos/util';
 
@@ -38,7 +36,7 @@ export const META_NAMESPACE = 'meta';
 const SYSTEM_NAMESPACE = 'system';
 
 export type ObjectCoreOptions = {
-  type?: Reference;
+  type?: EncodedReference;
   meta?: ObjectMeta;
   immutable?: boolean;
 };
@@ -109,7 +107,9 @@ export class ObjectCore {
   }
 
   bind(options: BindOptions): void {
-    invariant(options.docHandle.isReady());
+    // When loading existing documents, wait for the document to be ready.
+    // When creating new documents (assignFromLocalState), the local doc is immediately usable.
+    invariant(options.assignFromLocalState || options.docHandle.isReady());
     this.database = options.db;
     this.docHandle = options.docHandle;
     this.mountPath = options.path;
@@ -258,7 +258,7 @@ export class ObjectCore {
    * Encode a value to be stored in the Automerge document.
    */
   encode(value: DecodedAutomergePrimaryValue) {
-    if (isLiveObject(value) as boolean) {
+    if (isProxy(value) as boolean) {
       throw new TypeError('Linking is not allowed');
     }
 
@@ -269,9 +269,9 @@ export class ObjectCore {
       return null;
     }
 
-    if (value instanceof Reference) {
-      // TODO(mykola): Delete this once we clean up Reference 'protobuf' protocols types.
-      return encodeReference(value);
+    // EncodedReference values are already in the correct format for storage.
+    if (isEncodedReference(value)) {
+      return value;
     }
     if (Array.isArray(value)) {
       const values: any = value.map((val) => this.encode(val));
@@ -302,9 +302,14 @@ export class ObjectCore {
     if (value instanceof A.RawString) {
       return value.toString();
     }
+    // EncodedReference values are already in the correct format.
+    if (isEncodedReference(value)) {
+      return value;
+    }
     // For some reason references without `@type` are being stored in the document.
-    if (isEncodedReference(value) || maybeReference(value)) {
-      return decodeReference(value);
+    // Convert legacy proto-format references to EncodedReference.
+    if (maybeReference(value)) {
+      return convertLegacyProtoReference(value);
     }
     if (typeof value === 'object') {
       return Object.fromEntries(Object.entries(value).map(([key, value]): [string, any] => [key, this.decode(value)]));
@@ -377,40 +382,42 @@ export class ObjectCore {
     this._setRaw([SYSTEM_NAMESPACE, 'kind'], kind);
   }
 
-  getSource(): Reference | undefined {
-    const res = this.getDecoded([SYSTEM_NAMESPACE, 'source']);
-    invariant(res === undefined || res instanceof Reference);
-    return res;
-  }
-
-  // TODO(dmaretskyi): Just set statically during construction.
-  setSource(ref: Reference): void {
-    this.setDecoded([SYSTEM_NAMESPACE, 'source'], ref);
-  }
-
-  getTarget(): Reference | undefined {
-    const res = this.getDecoded([SYSTEM_NAMESPACE, 'target']);
-    invariant(res === undefined || res instanceof Reference);
-    return res;
-  }
-
-  // TODO(dmaretskyi): Just set statically during construction.
-  setTarget(ref: Reference): void {
-    this.setDecoded([SYSTEM_NAMESPACE, 'target'], ref);
-  }
-
-  getType(): Reference | undefined {
-    const value = this.decode(this._getRaw([SYSTEM_NAMESPACE, 'type']));
-    if (!value) {
+  getSource(): EncodedReference | undefined {
+    const res = this._getRaw([SYSTEM_NAMESPACE, 'source']);
+    if (!res || !isEncodedReference(res)) {
       return undefined;
     }
-
-    invariant(value instanceof Reference);
-    return value;
+    return res;
   }
 
-  setType(reference: Reference): void {
-    this._setRaw([SYSTEM_NAMESPACE, 'type'], this.encode(reference));
+  // TODO(dmaretskyi): Just set statically during construction.
+  setSource(ref: EncodedReference): void {
+    this._setRaw([SYSTEM_NAMESPACE, 'source'], ref);
+  }
+
+  getTarget(): EncodedReference | undefined {
+    const res = this._getRaw([SYSTEM_NAMESPACE, 'target']);
+    if (!res || !isEncodedReference(res)) {
+      return undefined;
+    }
+    return res;
+  }
+
+  // TODO(dmaretskyi): Just set statically during construction.
+  setTarget(ref: EncodedReference): void {
+    this._setRaw([SYSTEM_NAMESPACE, 'target'], ref);
+  }
+
+  getType(): EncodedReference | undefined {
+    const res = this._getRaw([SYSTEM_NAMESPACE, 'type']);
+    if (!res || !isEncodedReference(res)) {
+      return undefined;
+    }
+    return res;
+  }
+
+  setType(ref: EncodedReference): void {
+    this._setRaw([SYSTEM_NAMESPACE, 'type'], ref);
   }
 
   getMeta(): ObjectMeta {
@@ -433,24 +440,27 @@ export class ObjectCore {
   /**
    * DXNs of objects that this object strongly depends on.
    * Strong references are loaded together with the source object.
-   * Currently this is the schema reference and the source and target for relations
+   * Currently this is the schema reference and the source and target for relations.
    */
   getStrongDependencies(): DXN[] {
     const res: DXN[] = [];
 
-    const type = this.getType()?.toDXN();
-    if (type && type.kind === DXN.kind.ECHO) {
-      res.push(type);
+    const typeRef = this.getType();
+    if (typeRef) {
+      const typeDXN = EncodedReference.toDXN(typeRef);
+      if (typeDXN.kind === DXN.kind.ECHO) {
+        res.push(typeDXN);
+      }
     }
 
     if (this.getKind() === EntityKind.Relation) {
-      const source = this.getSource()?.toDXN();
-      if (source) {
-        res.push(source);
+      const sourceRef = this.getSource();
+      if (sourceRef) {
+        res.push(EncodedReference.toDXN(sourceRef));
       }
-      const target = this.getTarget()?.toDXN();
-      if (target) {
-        res.push(target);
+      const targetRef = this.getTarget();
+      if (targetRef) {
+        res.push(EncodedReference.toDXN(targetRef));
       }
     }
 
@@ -477,10 +487,30 @@ export const objectIsUpdated = (objId: string, event: DocHandleChangePayload<Dat
 };
 
 // TODO(burdon): Move to echo-protocol.
-const maybeReference = (value: unknown) =>
+const maybeReference = (value: unknown): value is { objectId: string; protocol?: string; host?: string } =>
   typeof value === 'object' &&
   value !== null &&
   Object.keys(value).length === 3 &&
   'objectId' in value && // TODO(burdon): 'objectId'
   'protocol' in value &&
   'host' in value;
+
+/**
+ * Convert legacy proto-format reference `{ objectId, protocol, host }` to EncodedReference.
+ */
+const convertLegacyProtoReference = (value: {
+  objectId: string;
+  protocol?: string;
+  host?: string;
+}): EncodedReference => {
+  const TYPE_PROTOCOL = 'protobuf';
+  let dxn: DXN;
+  if (value.protocol === TYPE_PROTOCOL) {
+    dxn = new DXN(DXN.kind.TYPE, [value.objectId]);
+  } else if (value.host) {
+    dxn = new DXN(DXN.kind.ECHO, [value.host, value.objectId]);
+  } else {
+    dxn = DXN.fromLocalObjectId(value.objectId);
+  }
+  return EncodedReference.fromDXN(dxn);
+};

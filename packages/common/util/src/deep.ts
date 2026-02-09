@@ -19,6 +19,8 @@ export const setDeep = <T>(obj: any, path: readonly (string | number)[], value: 
   let parent = obj;
   for (const key of path.slice(0, -1)) {
     if (parent[key] === undefined) {
+      // TODO(wittjosiah): This logic is flawed. This shouldn't be used for initializing arrays.
+      //   Prefer `Obj.setValue` for ECHO objects.
       const isArrayIndex = !isNaN(Number(key));
       parent[key] = isArrayIndex ? [] : {};
     }

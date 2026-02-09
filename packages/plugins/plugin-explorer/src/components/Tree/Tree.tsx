@@ -2,7 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useEffect, useRef, useState } from 'react';
+import { RegistryContext } from '@effect-atom/atom-react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 
 import { type Space } from '@dxos/client/echo';
 import { useAsyncState } from '@dxos/react-ui';
@@ -62,7 +63,11 @@ export type TreeComponentProps<N = unknown> = {
 
 // TODO(burdon): Label accessor.
 export const Tree = <N,>({ space, selected, variant = 'tidy', onNodeClick }: TreeComponentProps<N>) => {
-  const [model] = useAsyncState(async () => (space ? new SpaceGraphModel().open(space) : undefined), [space, selected]);
+  const registry = useContext(RegistryContext);
+  const [model] = useAsyncState(
+    async () => (space ? new SpaceGraphModel(registry).open(space.db) : undefined),
+    [space, selected, registry],
+  );
 
   const [tree, setTree] = useState<TreeNode>();
   useEffect(() => {
@@ -100,7 +105,7 @@ export const Tree = <N,>({ space, selected, variant = 'tidy', onNodeClick }: Tre
   }, [context.current, tree]);
 
   return (
-    <div onClick={() => onNodeClick?.()}>
+    <div className='grow' onClick={() => onNodeClick?.()}>
       <SVG.Root ref={context} />
     </div>
   );

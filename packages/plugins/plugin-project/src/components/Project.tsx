@@ -5,16 +5,18 @@
 import { createContext } from '@radix-ui/react-context';
 import React, { type FC } from 'react';
 
-import { Obj } from '@dxos/echo';
-import { Toolbar, useTranslation } from '@dxos/react-ui';
+import { type Obj } from '@dxos/echo';
+import { useObject } from '@dxos/react-client/echo';
+import { Toolbar, type ToolbarRootProps, useTranslation } from '@dxos/react-ui';
 import { Stack } from '@dxos/react-ui-stack';
-import { DataType, type ProjectionModel } from '@dxos/schema';
+import { type ProjectionModel } from '@dxos/schema';
+import { type Project as ProjectType } from '@dxos/types';
 
 import { meta } from '../meta';
 
-import { ViewColumn } from './ViewColumn';
+import { ProjectColumn } from './ProjectColumn';
 
-type ItemProps = { item: Obj.Any; projectionModel?: ProjectionModel };
+type ItemProps = { item: Obj.Unknown; projectionModel?: ProjectionModel };
 
 const itemNoOp = ({ item }: ItemProps) => <span>{item.id}</span>;
 
@@ -45,17 +47,16 @@ ProjectRoot.displayName = PROJECT_ROOT;
 //
 
 type ProjectContentProps = {
-  project: DataType.Project;
+  project: ProjectType.Project;
 };
 
 const ProjectContent = ({ project }: ProjectContentProps) => {
-  // NOTE: This doesn’t encompass column types which the Project schema.
-  const views = project.collections.map((ref) => ref.target).filter((object) => Obj.instanceOf(DataType.View, object));
+  const [columns] = useObject(project, 'columns');
 
   return (
     <Stack orientation='horizontal' size='contain' rail={false}>
-      {views.map((view) => {
-        return <ViewColumn key={view.id} view={view} />;
+      {columns.map((column) => {
+        return <ProjectColumn key={column.view.dxn.toString()} column={column} />;
       })}
     </Stack>
   );
@@ -64,21 +65,21 @@ const ProjectContent = ({ project }: ProjectContentProps) => {
 ProjectContent.displayName = 'Project.Content';
 
 //
-// Menu
+// Toolbar
 //
 
-export const ProjectMenu = () => {
+export const ProjectToolbar = (props: ToolbarRootProps) => {
   const { t } = useTranslation(meta.id);
-  const { onAddColumn } = useProject(ProjectMenu.displayName);
+  const { onAddColumn } = useProject(ProjectToolbar.displayName);
 
   return (
-    <Toolbar.Root>
+    <Toolbar.Root {...props}>
       <Toolbar.IconButton icon='ph--plus--regular' iconOnly label={t('add column label')} onClick={onAddColumn} />
     </Toolbar.Root>
   );
 };
 
-ProjectMenu.displayName = 'Project.Menu';
+ProjectToolbar.displayName = 'Project.Toolbar';
 
 //
 // Project
@@ -87,7 +88,7 @@ ProjectMenu.displayName = 'Project.Menu';
 export const Project = {
   Root: ProjectRoot,
   Content: ProjectContent,
-  Menu: ProjectMenu,
+  Toolbar: ProjectToolbar,
 };
 
 export { useProject };

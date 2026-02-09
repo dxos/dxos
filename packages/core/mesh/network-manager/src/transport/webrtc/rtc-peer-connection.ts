@@ -469,7 +469,7 @@ type IceCandidateErrorDetails = { url: string; errorCode: number; errorText: str
 
 const createIceFailureError = (details: IceCandidateErrorDetails[]) => {
   const candidateErrors = details.map(({ url, errorCode, errorText }) => `${errorCode} ${url}: ${errorText}`);
-  return new ConnectivityError(`ICE failed:\n${candidateErrors.join('\n')}`);
+  return new ConnectivityError({ message: `ICE failed:\n${candidateErrors.join('\n')}` });
 };
 
 type ChannelCreatedCallback = {

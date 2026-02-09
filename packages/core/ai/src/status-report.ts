@@ -2,10 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 
-import { Type } from '@dxos/echo';
-import { GeneratorAnnotation } from '@dxos/echo-schema';
+import { Annotation, Type } from '@dxos/echo';
 import { ObjectId } from '@dxos/keys';
 
 /**
@@ -20,11 +19,11 @@ export const AgentStatus = Schema.Struct({
   toolCallId: Schema.optional(Schema.String),
   created: Schema.String.pipe(
     Schema.annotations({ description: 'ISO date string when the status was sent.' }),
-    GeneratorAnnotation.set('date.iso8601'),
+    Annotation.GeneratorAnnotation.set('date.iso8601'),
   ),
   message: Schema.String,
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/AgentStatus',
     version: '0.1.0',
   }),

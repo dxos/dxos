@@ -2,13 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type NodeArg } from '@dxos/app-graph';
+import { type Node } from '@dxos/app-graph';
 import { type ToolbarMenuActionGroupProperties } from '@dxos/react-ui-menu';
+import { type EditorViewMode } from '@dxos/ui-editor';
 
 import { translationKey } from '../../translations';
-import { type EditorViewMode } from '../../types';
 
-import { type EditorToolbarState, createEditorAction, createEditorActionGroup } from './util';
+import { createEditorAction, createEditorActionGroup } from './actions';
+import { type EditorToolbarState } from './useEditorToolbar';
 
 const createViewModeGroupAction = (value: string) =>
   createEditorActionGroup(
@@ -45,7 +46,7 @@ export const createViewMode = (state: EditorToolbarState, onViewModeChange: (mod
   const viewModeGroupAction = createViewModeGroupAction(value);
   const viewModeActions = createViewModeActions(value, onViewModeChange);
   return {
-    nodes: [viewModeGroupAction as NodeArg<any>, ...viewModeActions],
+    nodes: [viewModeGroupAction as Node.NodeArg<any>, ...viewModeActions],
     edges: [
       { source: 'root', target: 'viewMode' },
       ...viewModeActions.map(({ id }) => ({ source: viewModeGroupAction.id, target: id })),

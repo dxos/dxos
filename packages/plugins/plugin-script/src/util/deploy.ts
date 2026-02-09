@@ -4,29 +4,23 @@
 
 import { type Client } from '@dxos/client';
 import { Obj, Ref } from '@dxos/echo';
-import {
-  FunctionType,
-  type ScriptType,
-  getUserFunctionIdInMetadata,
-  setUserFunctionIdInMetadata,
-} from '@dxos/functions';
-import { Bundler } from '@dxos/functions/bundler';
-import { incrementSemverPatch, uploadWorkerFunction } from '@dxos/functions/edge';
+import { Function, type Script, getUserFunctionIdInMetadata } from '@dxos/functions';
+import { bundleFunction } from '@dxos/functions-runtime/bundler';
+import { FunctionsServiceClient, incrementSemverPatch } from '@dxos/functions-runtime/edge';
 import { log } from '@dxos/log';
+import { FunctionRuntimeKind } from '@dxos/protocols';
 import { type Space } from '@dxos/react-client/echo';
 
-import { updateFunctionMetadata } from './functions';
-
-export const isScriptDeployed = ({ script, fn }: { script: ScriptType; fn: any }): boolean => {
+export const isScriptDeployed = ({ script, fn }: { script: Script.Script; fn: any }): boolean => {
   const existingFunctionId = fn && getUserFunctionIdInMetadata(Obj.getMeta(fn));
   return Boolean(existingFunctionId) && !script.changed;
 };
 
 type DeployScriptProps = {
-  script: ScriptType;
+  script: Script.Script;
   client: Client;
   space: Space;
-  fn?: FunctionType;
+  fn?: Function.Function;
   existingFunctionId?: string;
 };
 
@@ -48,32 +42,30 @@ export const deployScript = async ({
   }
 
   try {
-    const bundler = new Bundler({ platform: 'browser', sandboxedModules: [], remoteModules: {} });
-    const buildResult = await bundler.bundle({ source: script.source!.target!.content });
+    const buildResult = await bundleFunction({
+      source: script.source!.target!.content,
+    });
     if ('error' in buildResult) {
       throw buildResult.error || new Error('Bundle creation failed');
     }
 
-    const { functionId, version, meta } = await uploadWorkerFunction({
-      client,
+    const functionsServiceClient = FunctionsServiceClient.fromClient(client);
+    const newFunction = await functionsServiceClient.deploy({
+      // TODO(dmaretskyi): Space key or identity key.
       ownerPublicKey: space.key,
       version: fn ? incrementSemverPatch(fn.version) : '0.0.1',
       functionId: existingFunctionId,
       entryPoint: buildResult.entryPoint,
-      assets: { [buildResult.entryPoint]: buildResult.asset },
+      assets: buildResult.assets,
+      runtime: FunctionRuntimeKind.enums.WORKER_LOADER,
     });
 
-    if (functionId === undefined || version === undefined) {
-      throw new Error(`Upload didn't return expected data: ${JSON.stringify({ functionId, version })}`);
-    }
+    const storedFunction = createOrUpdateFunctionInSpace(space, fn, script, newFunction);
+    Obj.change(script, (s) => {
+      s.changed = false;
+    });
 
-    const storedFunction = createOrUpdateFunctionInSpace(space, fn, script, functionId, version);
-    script.changed = false;
-    updateFunctionMetadata(script, storedFunction, meta, functionId);
-
-    setUserFunctionIdInMetadata(Obj.getMeta(storedFunction), functionId);
-
-    return { success: true, functionId };
+    return { success: true, functionId: getUserFunctionIdInMetadata(Obj.getMeta(storedFunction)) };
   } catch (err: any) {
     log.catch(err);
     return { success: false, error: err };
@@ -83,7 +75,7 @@ export const deployScript = async ({
 /**
  * Validate inputs for script deployment.
  */
-const validateDeployInputs = (script: ScriptType, space: Space): Error | null => {
+const validateDeployInputs = (script: Script.Script, space: Space): Error | null => {
   if (!script.source || !space) {
     return new Error('Script source or space not available');
   }
@@ -92,19 +84,17 @@ const validateDeployInputs = (script: ScriptType, space: Space): Error | null =>
 
 const createOrUpdateFunctionInSpace = (
   space: Space,
-  fn: FunctionType | undefined,
-  script: ScriptType,
-  functionId: string,
-  version: string,
-): FunctionType => {
+  fn: Function.Function | undefined,
+  script: Script.Script,
+  newFunction: Function.Function,
+): Function.Function => {
   if (fn) {
-    fn.name = script.name ?? 'New Function';
-    fn.version = version;
+    Function.setFrom(fn, newFunction);
     return fn;
   } else {
-    const fn = Obj.make(FunctionType, { name: script.name ?? 'New Function', version, source: Ref.make(script) });
-    space.db.add(fn);
-    setUserFunctionIdInMetadata(Obj.getMeta(fn), functionId);
-    return fn;
+    Obj.change(newFunction, (f) => {
+      f.source = Ref.make(script);
+    });
+    return space.db.add(newFunction);
   }
 };

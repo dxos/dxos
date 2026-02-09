@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 
 export const Point = Schema.Struct({ x: Schema.Number, y: Schema.Number });
 export const Dimension = Schema.Struct({ width: Schema.Number, height: Schema.Number });

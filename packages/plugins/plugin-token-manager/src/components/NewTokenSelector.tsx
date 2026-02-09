@@ -2,55 +2,122 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
+import * as HttpClient from '@effect/platform/HttpClient';
+import * as HttpClientRequest from '@effect/platform/HttpClientRequest';
+import * as HttpClientResponse from '@effect/platform/HttpClientResponse';
+import * as Effect from 'effect/Effect';
+import * as Schema from 'effect/Schema';
 import React, { useCallback, useEffect, useState } from 'react';
 
-import { Obj } from '@dxos/echo';
+import { type Key, Obj } from '@dxos/echo';
+import { runAndForwardErrors } from '@dxos/effect';
+import { withAuthorization } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { type OAuthFlowResult } from '@dxos/protocols';
-import { type Space } from '@dxos/react-client/echo';
 import { useEdgeClient } from '@dxos/react-edge-client';
 import { DropdownMenu, IconButton, useTranslation } from '@dxos/react-ui';
-import { DataType } from '@dxos/schema';
+import { AccessToken } from '@dxos/types';
+import { isTauri } from '@dxos/util';
 
 import { OAUTH_PRESETS, type OAuthPreset } from '../defs';
 import { meta } from '../meta';
+import {
+  createTauriOAuthInitiator,
+  createTauriServerProvider,
+  isMobilePlatform,
+  openTauriBrowser,
+  performMobileOAuthFlow,
+  performOAuthFlow,
+} from '../oauth';
+
+/** Response from Google OAuth2 userinfo endpoint. */
+const GoogleUserInfo = Schema.Struct({
+  email: Schema.optional(Schema.String),
+});
+
+/**
+ * Fetches the Google user's email address using the access token and prepends it to the token's note.
+ */
+const enrichGoogleTokenWithEmail = (token: AccessToken.AccessToken) =>
+  Effect.gen(function* () {
+    if (token.source !== 'google.com' || !token.token) {
+      return;
+    }
+
+    const httpClient = yield* HttpClient.HttpClient.pipe(Effect.map(withAuthorization(token.token, 'Bearer')));
+
+    // TODO(wittjosiah): Without this, executing the request results in CORS errors when traced.
+    //  Is this an issue on Google's side or is it a bug in `@effect/platform`?
+    //  https://github.com/Effect-TS/effect/issues/4568
+    const httpClientWithTracerDisabled = httpClient.pipe(HttpClient.withTracerDisabledWhen(() => true));
+
+    const userInfo = yield* HttpClientRequest.get('https://www.googleapis.com/oauth2/v3/userinfo').pipe(
+      httpClientWithTracerDisabled.execute,
+      Effect.flatMap(HttpClientResponse.schemaBodyJson(GoogleUserInfo)),
+      Effect.scoped,
+    );
+
+    if (userInfo.email) {
+      Obj.change(token, (t) => {
+        t.note = `${userInfo.email} - ${t.note ?? ''}`.trim();
+      });
+    }
+  }).pipe(
+    Effect.provide(FetchHttpClient.layer),
+    Effect.catchAll((error) => Effect.sync(() => log.warn('failed to fetch google user info', { error }))),
+  );
 
 type NewTokenSelectorProps = {
-  space: Space;
-  onAddAccessToken: (token: DataType.AccessToken) => void;
+  spaceId: Key.SpaceId;
+  onAddAccessToken: (token: AccessToken.AccessToken) => void;
   onCustomToken?: () => void;
 };
 
-export const NewTokenSelector = ({ space, onAddAccessToken, onCustomToken }: NewTokenSelectorProps) => {
+export const NewTokenSelector = ({ spaceId, onAddAccessToken, onCustomToken }: NewTokenSelectorProps) => {
   const { t } = useTranslation(meta.id);
   const edgeClient = useEdgeClient();
-  const [tokenMap] = useState(new Map<string, DataType.AccessToken>());
+  const [tokenMap] = useState(new Map<string, AccessToken.AccessToken>());
 
   useEffect(() => {
-    const edgeUrl = new URL(edgeClient.baseUrl);
+    // Only set up postMessage listener for web (non-Tauri) environment.
+    if (isTauri()) {
+      return;
+    }
 
-    const listener = (event: MessageEvent) => {
-      if (event.origin === edgeUrl.origin) {
-        const data = event.data as OAuthFlowResult;
-        if (data.success) {
-          const token = tokenMap.get(data.accessTokenId);
-          if (token) {
-            token.token = data.accessToken;
-            onAddAccessToken(token);
-          } else {
-            log.warn('token object not found', data);
+    const edgeOrigin = new URL(edgeClient.baseUrl).origin;
+    const listener = (event: MessageEvent) =>
+      runAndForwardErrors(
+        Effect.gen(function* () {
+          if (event.origin !== edgeOrigin) {
+            return;
           }
-        } else {
-          log.warn('oauth flow failed', data);
-        }
-      }
-    };
+
+          const data = event.data as OAuthFlowResult;
+          if (!data.success) {
+            log.warn('oauth flow failed', data);
+            return;
+          }
+
+          const token = tokenMap.get(data.accessTokenId);
+          if (!token) {
+            log.warn('token object not found', data);
+            return;
+          }
+
+          Obj.change(token, (t) => {
+            t.token = data.accessToken;
+          });
+          yield* enrichGoogleTokenWithEmail(token);
+          onAddAccessToken(token);
+        }),
+      ).catch(log.catch);
 
     window.addEventListener('message', listener);
     return () => {
       window.removeEventListener('message', listener);
     };
-  }, [tokenMap, space]);
+  }, [tokenMap, edgeClient.baseUrl, onAddAccessToken]);
 
   const createOauthPreset = async (preset?: OAuthPreset) => {
     if (!preset) {
@@ -58,7 +125,7 @@ export const NewTokenSelector = ({ space, onAddAccessToken, onCustomToken }: New
       return;
     }
 
-    const token = Obj.make(DataType.AccessToken, {
+    const token = Obj.make(AccessToken.AccessToken, {
       source: preset.source,
       note: preset.note,
       token: '',
@@ -66,15 +133,48 @@ export const NewTokenSelector = ({ space, onAddAccessToken, onCustomToken }: New
 
     tokenMap.set(token.id, token);
 
-    const { authUrl } = await edgeClient.initiateOAuthFlow({
-      provider: preset.provider,
-      scopes: preset.scopes,
-      spaceId: space.id,
-      accessTokenId: token.id,
-    });
+    if (isTauri()) {
+      // Tauri path: Check if mobile platform.
+      const oauthEffect = Effect.gen(function* () {
+        const isMobile = yield* isMobilePlatform();
+        if (isMobile) {
+          yield* performMobileOAuthFlow({
+            preset,
+            accessToken: token,
+            edgeClient,
+            spaceId,
+          });
+        } else {
+          yield* performOAuthFlow(
+            preset,
+            token,
+            edgeClient,
+            spaceId,
+            createTauriServerProvider(),
+            openTauriBrowser,
+            createTauriOAuthInitiator(),
+          );
+        }
+      });
+      await runAndForwardErrors(
+        oauthEffect.pipe(
+          Effect.tap(() => enrichGoogleTokenWithEmail(token)),
+          Effect.tap(() => onAddAccessToken(token)),
+          Effect.catchAll((error) => Effect.sync(() => log.catch(error))),
+        ),
+      );
+    } else {
+      // Web path: Use window.open + postMessage approach.
+      const { authUrl } = await edgeClient.initiateOAuthFlow({
+        provider: preset.provider,
+        scopes: preset.scopes,
+        spaceId,
+        accessTokenId: token.id,
+      });
 
-    log.info('open', { authUrl });
-    window.open(authUrl, 'oauthPopup', 'width=500,height=600');
+      log.info('open', { authUrl });
+      window.open(authUrl, 'oauthPopup', 'width=500,height=600');
+    }
   };
 
   return (

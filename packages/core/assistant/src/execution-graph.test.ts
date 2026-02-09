@@ -6,14 +6,16 @@ import { describe, expect, it } from '@effect/vitest';
 
 import { AgentStatus } from '@dxos/ai';
 import { Obj } from '@dxos/echo';
-import { ObjectId } from '@dxos/echo-schema';
+import { ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { DataType } from '@dxos/schema';
+import { type ContentBlock, Message } from '@dxos/types';
 
 import { ExecutionGraph } from './execution-graph';
 
-// Helper function to create valid object IDs for testing
+// Helper function to create valid object IDs for testing.
 const createTestId = () => ObjectId.random();
+
+const SKIP_BLOCKS: ContentBlock.Any['_tag'][] = [];
 
 describe('ExecutionGraph', () => {
   describe('basic functionality', () => {
@@ -26,9 +28,9 @@ describe('ExecutionGraph', () => {
     });
 
     it('should add a simple user message', () => {
-      const graph = new ExecutionGraph();
+      const graph = new ExecutionGraph(SKIP_BLOCKS);
       const messageId = createTestId();
-      const message = Obj.make(DataType.Message, {
+      const message = Obj.make(Message.Message, {
         id: messageId,
         created: '2025-01-01T00:00:00Z',
         sender: { role: 'user' },
@@ -56,12 +58,12 @@ describe('ExecutionGraph', () => {
     });
 
     it('should handle basic status & message processing', () => {
-      const graph = new ExecutionGraph();
+      const graph = new ExecutionGraph(SKIP_BLOCKS);
       const status = Obj.make(AgentStatus, {
         created: '2025-01-01T00:00:00Z',
         message: 'Running Research',
       });
-      const message = Obj.make(DataType.Message, {
+      const message = Obj.make(Message.Message, {
         created: '2025-09-29T14:29:37.860Z',
         sender: {
           role: 'user',
@@ -90,9 +92,9 @@ describe('ExecutionGraph', () => {
     });
 
     it('should add an assistant message with text', () => {
-      const graph = new ExecutionGraph();
+      const graph = new ExecutionGraph(SKIP_BLOCKS);
       const messageId = createTestId();
-      const message = Obj.make(DataType.Message, {
+      const message = Obj.make(Message.Message, {
         id: messageId,
         created: '2025-01-01T00:00:00Z',
         sender: { role: 'assistant' },
@@ -120,9 +122,9 @@ describe('ExecutionGraph', () => {
 
   describe('sequential chaining within messages', () => {
     it('should chain blocks within a message', () => {
-      const graph = new ExecutionGraph();
+      const graph = new ExecutionGraph(SKIP_BLOCKS);
       const messageId = createTestId();
-      const message = Obj.make(DataType.Message, {
+      const message = Obj.make(Message.Message, {
         id: messageId,
         created: '2025-01-01T00:00:00Z',
         sender: { role: 'assistant' },
@@ -168,11 +170,11 @@ describe('ExecutionGraph', () => {
     });
 
     it('should chain across multiple messages', () => {
-      const graph = new ExecutionGraph();
+      const graph = new ExecutionGraph(SKIP_BLOCKS);
 
       // First message
       const message1Id = createTestId();
-      const message1 = Obj.make(DataType.Message, {
+      const message1 = Obj.make(Message.Message, {
         id: message1Id,
         created: '2025-01-01T00:00:00Z',
         sender: { role: 'user' },
@@ -182,7 +184,7 @@ describe('ExecutionGraph', () => {
 
       // Second message
       const message2Id = createTestId();
-      const message2 = Obj.make(DataType.Message, {
+      const message2 = Obj.make(Message.Message, {
         id: message2Id,
         created: '2025-01-01T00:01:00Z',
         sender: { role: 'assistant' },
@@ -211,7 +213,7 @@ describe('ExecutionGraph', () => {
 
   describe('tool calls and results', () => {
     it('should handle tool calls and results with proper parent relationships', () => {
-      const graph = new ExecutionGraph();
+      const graph = new ExecutionGraph(SKIP_BLOCKS);
 
       const message1Id = createTestId();
       const message2Id = createTestId();
@@ -219,7 +221,7 @@ describe('ExecutionGraph', () => {
       const toolCallId = 'tool1';
 
       // Assistant message with tool call
-      const toolCallMessage = Obj.make(DataType.Message, {
+      const toolCallMessage = Obj.make(Message.Message, {
         id: message1Id,
         created: '2025-01-01T00:00:00Z',
         sender: { role: 'assistant' },
@@ -240,7 +242,7 @@ describe('ExecutionGraph', () => {
       });
 
       // User message with tool result
-      const toolResultMessage = Obj.make(DataType.Message, {
+      const toolResultMessage = Obj.make(Message.Message, {
         id: message2Id,
         created: '2025-01-01T00:01:00Z',
         sender: { role: 'user' },
@@ -296,7 +298,7 @@ describe('ExecutionGraph', () => {
     });
 
     it('should handle tool errors with proper parent relationships', () => {
-      const graph = new ExecutionGraph();
+      const graph = new ExecutionGraph(SKIP_BLOCKS);
 
       const message1Id = createTestId();
       const message2Id = createTestId();
@@ -304,7 +306,7 @@ describe('ExecutionGraph', () => {
       const toolCallId = 'tool1';
 
       // Assistant message with tool call
-      const toolCallMessage = Obj.make(DataType.Message, {
+      const toolCallMessage = Obj.make(Message.Message, {
         id: message1Id,
         created: '2025-01-01T00:00:00Z',
         sender: { role: 'assistant' },
@@ -321,7 +323,7 @@ describe('ExecutionGraph', () => {
       });
 
       // User message with tool error
-      const toolErrorMessage = Obj.make(DataType.Message, {
+      const toolErrorMessage = Obj.make(Message.Message, {
         id: message2Id,
         created: '2025-01-01T00:01:00Z',
         sender: { role: 'user' },
@@ -373,7 +375,7 @@ describe('ExecutionGraph', () => {
 
   describe('different processing orders', () => {
     it('should handle AgentStatus processed after tool result', () => {
-      const graph = new ExecutionGraph();
+      const graph = new ExecutionGraph(SKIP_BLOCKS);
 
       const message1Id = createTestId();
       const message2Id = createTestId();
@@ -381,7 +383,7 @@ describe('ExecutionGraph', () => {
       const toolCallId = 'tool1';
 
       // Tool call message
-      const toolCallMessage = Obj.make(DataType.Message, {
+      const toolCallMessage = Obj.make(Message.Message, {
         id: message1Id,
         created: '2025-01-01T00:00:00Z',
         sender: { role: 'assistant' },
@@ -398,7 +400,7 @@ describe('ExecutionGraph', () => {
       });
 
       // Tool result message
-      const toolResultMessage = Obj.make(DataType.Message, {
+      const toolResultMessage = Obj.make(Message.Message, {
         id: message2Id,
         created: '2025-01-01T00:01:00Z',
         sender: { role: 'user' },
@@ -432,7 +434,7 @@ describe('ExecutionGraph', () => {
     });
 
     it('should handle AgentStatus processed before tool result', () => {
-      const graph = new ExecutionGraph();
+      const graph = new ExecutionGraph(SKIP_BLOCKS);
 
       const message1Id = createTestId();
       const message2Id = createTestId();
@@ -440,7 +442,7 @@ describe('ExecutionGraph', () => {
       const toolCallId = 'tool1';
 
       // Tool call message
-      const toolCallMessage = Obj.make(DataType.Message, {
+      const toolCallMessage = Obj.make(Message.Message, {
         id: message1Id,
         created: '2025-01-01T00:00:00Z',
         sender: { role: 'assistant' },
@@ -466,7 +468,7 @@ describe('ExecutionGraph', () => {
       });
 
       // Tool result message
-      const toolResultMessage = Obj.make(DataType.Message, {
+      const toolResultMessage = Obj.make(Message.Message, {
         id: message2Id,
         created: '2025-01-01T00:01:00Z',
         sender: { role: 'user' },
@@ -493,7 +495,7 @@ describe('ExecutionGraph', () => {
 
   describe('complex scenarios', () => {
     it('should handle multiple tool calls in sequence', () => {
-      const graph = new ExecutionGraph();
+      const graph = new ExecutionGraph(SKIP_BLOCKS);
 
       const msg1Id = createTestId();
       const msg2Id = createTestId();
@@ -505,7 +507,7 @@ describe('ExecutionGraph', () => {
 
       const events = [
         // User message
-        Obj.make(DataType.Message, {
+        Obj.make(Message.Message, {
           id: msg1Id,
           created: '2025-01-01T00:00:00Z',
           sender: { role: 'user' },
@@ -514,7 +516,7 @@ describe('ExecutionGraph', () => {
         }),
 
         // Assistant with first tool call
-        Obj.make(DataType.Message, {
+        Obj.make(Message.Message, {
           id: msg2Id,
           created: '2025-01-01T00:01:00Z',
           sender: { role: 'assistant' },
@@ -526,7 +528,7 @@ describe('ExecutionGraph', () => {
         }),
 
         // First tool result
-        Obj.make(DataType.Message, {
+        Obj.make(Message.Message, {
           id: msg3Id,
           created: '2025-01-01T00:02:00Z',
           sender: { role: 'user' },
@@ -543,7 +545,7 @@ describe('ExecutionGraph', () => {
         }),
 
         // Assistant with second tool call
-        Obj.make(DataType.Message, {
+        Obj.make(Message.Message, {
           id: msg4Id,
           created: '2025-01-01T00:03:00Z',
           sender: { role: 'assistant' },
@@ -555,7 +557,7 @@ describe('ExecutionGraph', () => {
         }),
 
         // Second tool result
-        Obj.make(DataType.Message, {
+        Obj.make(Message.Message, {
           id: msg5Id,
           created: '2025-01-01T00:04:00Z',
           sender: { role: 'user' },
@@ -605,10 +607,10 @@ describe('ExecutionGraph', () => {
     });
 
     it('should handle mixed block types in a message', () => {
-      const graph = new ExecutionGraph();
+      const graph = new ExecutionGraph(SKIP_BLOCKS);
 
       const messageId = createTestId();
-      const message = Obj.make(DataType.Message, {
+      const message = Obj.make(Message.Message, {
         id: messageId,
         created: '2025-01-01T00:00:00Z',
         sender: { role: 'assistant' },
@@ -642,10 +644,10 @@ describe('ExecutionGraph', () => {
 
   describe('edge cases', () => {
     it('should handle empty text blocks', () => {
-      const graph = new ExecutionGraph();
+      const graph = new ExecutionGraph(SKIP_BLOCKS);
 
       const messageId = createTestId();
-      const message = Obj.make(DataType.Message, {
+      const message = Obj.make(Message.Message, {
         id: messageId,
         created: '2025-01-01T00:00:00Z',
         sender: { role: 'assistant' },
@@ -666,10 +668,10 @@ describe('ExecutionGraph', () => {
     });
 
     it('should handle messages with no blocks', () => {
-      const graph = new ExecutionGraph();
+      const graph = new ExecutionGraph(SKIP_BLOCKS);
 
       const messageId = createTestId();
-      const message = Obj.make(DataType.Message, {
+      const message = Obj.make(Message.Message, {
         id: messageId,
         created: '2025-01-01T00:00:00Z',
         sender: { role: 'assistant' },
@@ -684,7 +686,7 @@ describe('ExecutionGraph', () => {
     });
 
     it('should handle getGraph with lastRequest filter', () => {
-      const graph = new ExecutionGraph();
+      const graph = new ExecutionGraph(SKIP_BLOCKS);
 
       const msg1Id = createTestId();
       const msg2Id = createTestId();
@@ -692,28 +694,28 @@ describe('ExecutionGraph', () => {
       const msg4Id = createTestId();
 
       const events = [
-        Obj.make(DataType.Message, {
+        Obj.make(Message.Message, {
           id: msg1Id,
           created: '2025-01-01T00:00:00Z',
           sender: { role: 'user' },
           blocks: [{ _tag: 'text', text: 'First request' }],
           properties: {},
         }),
-        Obj.make(DataType.Message, {
+        Obj.make(Message.Message, {
           id: msg2Id,
           created: '2025-01-01T00:01:00Z',
           sender: { role: 'assistant' },
           blocks: [{ _tag: 'text', text: 'Response 1' }],
           properties: {},
         }),
-        Obj.make(DataType.Message, {
+        Obj.make(Message.Message, {
           id: msg3Id,
           created: '2025-01-01T00:02:00Z',
           sender: { role: 'user' },
           blocks: [{ _tag: 'text', text: 'Second request' }],
           properties: {},
         }),
-        Obj.make(DataType.Message, {
+        Obj.make(Message.Message, {
           id: msg4Id,
           created: '2025-01-01T00:03:00Z',
           sender: { role: 'assistant' },

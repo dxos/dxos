@@ -28,7 +28,7 @@ export class TestBuilder {
     return Array.from(this._servers.values());
   }
 
-  async createPeer(params: TestAgentParams): Promise<TestPeer> {
+  async createPeer(params: TestAgentProps): Promise<TestPeer> {
     const peer = new TestPeer(params);
     await peer.start();
     this._peers.set(peer.peerId, peer);
@@ -53,7 +53,7 @@ export class TestBuilder {
   }
 }
 
-export type TestAgentParams = {
+export type TestAgentProps = {
   signals: Runtime.Services.Signal[];
   peerId?: PublicKey;
 };
@@ -63,7 +63,7 @@ export class TestPeer {
   public peerId: PublicKey;
   public readonly signalServers: Runtime.Services.Signal[];
   private readonly _ctx = new Context();
-  constructor({ signals, peerId = PublicKey.random() }: TestAgentParams) {
+  constructor({ signals, peerId = PublicKey.random() }: TestAgentProps) {
     this.signalServers = signals;
     this.signalManager = new WebsocketSignalManager(signals);
     this.peerId = peerId;

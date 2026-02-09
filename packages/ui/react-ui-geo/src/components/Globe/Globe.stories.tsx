@@ -214,7 +214,7 @@ const DefaultStory = ({
       <Globe.Zoom onAction={handleAction} />
       <Globe.Action onAction={handleAction} />
       <Globe.Debug />
-      <Globe.Panel position='topright' classNames='w-20 h-20'>
+      <Globe.Panel position='topright' classNames='is-20 bs-20'>
         <Leva />
       </Globe.Panel>
     </Globe.Root>

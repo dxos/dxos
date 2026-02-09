@@ -5,6 +5,7 @@
 import React, { useEffect, useState } from 'react';
 
 import { Icon, Input, Select, Toolbar } from '@dxos/react-ui';
+import { safeParseInt } from '@dxos/util';
 
 export type DataView = 'table' | 'list' | 'debug';
 
@@ -26,13 +27,11 @@ export const DataToolbar = ({ types, onAdd, onTypeChange, onFilterChange, onView
   useEffect(() => onViewChange?.(view), [view]);
 
   return (
-    <Toolbar.Root classNames='p-1'>
-      <Toolbar.Button onClick={() => onAdd(count)} title='Create objects.'>
-        <Icon icon='ph--plus--regular' />
-      </Toolbar.Button>
+    <Toolbar.Root>
+      <Toolbar.IconButton icon='ph--plus--regular' iconOnly label='Create objects' onClick={() => onAdd(count)} />
       <Input.Root>
         <Input.TextInput
-          classNames='max-w-16 text-right'
+          classNames='max-is-16 text-right'
           value={count}
           onChange={(event) => setCount(safeParseInt(event.target.value) ?? count)}
         />
@@ -80,9 +79,4 @@ export const DataToolbar = ({ types, onAdd, onTypeChange, onFilterChange, onView
       )}
     </Toolbar.Root>
   );
-};
-
-const safeParseInt = (str: string): number | undefined => {
-  const value = parseInt(str);
-  return isNaN(value) ? undefined : value;
 };

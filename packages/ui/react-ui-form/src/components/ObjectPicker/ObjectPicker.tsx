@@ -2,26 +2,57 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Schema } from 'effect';
-import React, { type KeyboardEvent, type MouseEvent, forwardRef, useCallback, useMemo, useState } from 'react';
+import type * as Schema from 'effect/Schema';
+import React, { type KeyboardEvent, forwardRef, useCallback, useState } from 'react';
 
-import { Icon, Popover, type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { PopoverCombobox } from '@dxos/react-ui-searchlist';
+import { type Palette, Popover, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Combobox, useSearchListInput, useSearchListResults } from '@dxos/react-ui-searchlist';
 
-import { type QueryTag } from '../../hooks';
 import { translationKey } from '../../translations';
 import { Form } from '../Form';
 
+export type RefOption = {
+  id: string;
+  label: string;
+  hue?: Palette;
+};
+
 export type ObjectPickerContentProps = ThemedClassName<{
-  options: QueryTag[];
+  options: RefOption[];
   selectedIds?: string[];
-  createSchema?: Schema.Schema.AnyNoContext;
   createOptionLabel?: [string, { ns: string }];
   createOptionIcon?: string;
+  createSchema?: Schema.Schema.AnyNoContext;
   createInitialValuePath?: string;
-  onSelect: (id: string) => void;
   onCreate?: (values: any) => void;
+  onSelect: (id: string) => void;
 }>;
+
+const CreateItem = ({
+  createOptionLabel,
+  createOptionIcon,
+  onCreateItemSelect,
+}: {
+  createOptionLabel: [string, { ns: string }];
+  createOptionIcon: string;
+  onCreateItemSelect: (query: string) => void;
+}) => {
+  const { t } = useTranslation(translationKey);
+  const { query } = useSearchListInput();
+
+  return (
+    <Combobox.Item
+      value='__create__'
+      label={t(createOptionLabel[0], { ns: createOptionLabel[1].ns, text: query })}
+      icon={createOptionIcon}
+      classNames='flex items-center gap-2'
+      closeOnSelect={false}
+      onSelect={() => {
+        onCreateItemSelect(query);
+      }}
+    />
+  );
+};
 
 const ObjectPickerContent = forwardRef<HTMLDivElement, ObjectPickerContentProps>(
   (
@@ -39,38 +70,26 @@ const ObjectPickerContent = forwardRef<HTMLDivElement, ObjectPickerContentProps>
     ref,
   ) => {
     const { t } = useTranslation(translationKey);
-
-    const [searchString, setSearchString] = useState('');
     const [showForm, setShowForm] = useState(false);
+    const [formInitialValue, setFormInitialValue] = useState<string>('');
+
+    const { results, handleSearch } = useSearchListResults({
+      items: options,
+    });
 
     const handleFormSave = useCallback(
       (values: any) => {
         onCreate?.(values);
         setShowForm(false);
-        setSearchString('');
+        setFormInitialValue('');
       },
       [onCreate],
     );
 
     const handleFormCancel = useCallback(() => {
       setShowForm(false);
-      setSearchString('');
+      setFormInitialValue('');
     }, []);
-
-    // TODO(thure): The following click and keydown handlers are necessary because `onSelect` is called after the
-    //  Popover is already closed. Augment/refactor CmdK, if possible, to facilitate stopping event default
-    //  and propagation.
-
-    const handleClick = useCallback(
-      (event: MouseEvent) => {
-        if (createSchema && (event.target as HTMLElement).closest('[data-value="__create__"]')) {
-          event.stopPropagation();
-          event.preventDefault();
-          setShowForm(true);
-        }
-      },
-      [createSchema],
-    );
 
     const handleKeyDown = useCallback(
       (event: KeyboardEvent) => {
@@ -83,70 +102,64 @@ const ObjectPickerContent = forwardRef<HTMLDivElement, ObjectPickerContentProps>
         ) {
           event.stopPropagation();
           event.preventDefault();
+          // Get the current query from the input element
+          const input = (event.currentTarget as HTMLElement).querySelector('input[type="text"]') as HTMLInputElement;
+          const currentQuery = input?.value || '';
+          setFormInitialValue(currentQuery);
           setShowForm(true);
         }
       },
       [createSchema],
     );
 
-    const labelById = useMemo(
-      () =>
-        options.reduce((acc: Record<string, string>, option) => {
-          acc[option.id.toLowerCase()] = option.label.toLowerCase();
-          return acc;
-        }, {}),
-      [options],
-    );
-
     return (
-      <PopoverCombobox.Content
-        {...props}
-        ref={ref}
-        filter={(value, search) => (value === '__create__' || labelById[value]?.includes(search.toLowerCase()) ? 1 : 0)}
-        onClickCapture={handleClick}
-        onKeyDownCapture={handleKeyDown}
-      >
+      <Combobox.Content {...props} ref={ref} onSearch={handleSearch} onKeyDownCapture={handleKeyDown}>
         {showForm && createSchema ? (
           <Popover.Viewport>
-            <Form
+            <Form.Root
+              testId='create-referenced-object-form'
               schema={createSchema}
-              values={createInitialValuePath ? { [createInitialValuePath]: searchString } : {}}
+              values={createInitialValuePath ? { [createInitialValuePath]: formInitialValue } : {}}
               onSave={handleFormSave}
               onCancel={handleFormCancel}
-              testId='create-referenced-object-form'
-            />
+            >
+              <Form.Viewport>
+                <Form.Content>
+                  <Form.FieldSet />
+                  <Form.Actions />
+                </Form.Content>
+              </Form.Viewport>
+            </Form.Root>
           </Popover.Viewport>
         ) : (
           <>
-            <PopoverCombobox.Input
-              placeholder={t('ref field combobox input placeholder')}
-              value={searchString}
-              onValueChange={setSearchString}
-              autoFocus
-            />
-            <PopoverCombobox.List>
-              {options.map((option) => (
-                <PopoverCombobox.Item
+            <Combobox.Input placeholder={t('ref field combobox input placeholder')} autoFocus />
+            <Combobox.List>
+              {results.map((option) => (
+                <Combobox.Item
                   key={option.id}
                   value={option.id}
+                  label={option.label}
+                  checked={selectedIds?.includes(option.id)}
                   onSelect={() => onSelect(option.id)}
                   classNames='flex items-center gap-2'
-                >
-                  <span className='grow'>{option.label}</span>
-                  {selectedIds?.includes(option.id) && <Icon icon='ph--check--regular' />}
-                </PopoverCombobox.Item>
+                />
               ))}
-              {searchString.length > 0 && createOptionLabel && createOptionIcon && createSchema && onCreate && (
-                <PopoverCombobox.Item value='__create__' classNames='flex items-center gap-2'>
-                  <Icon icon={createOptionIcon} />
-                  {t(createOptionLabel[0], { ns: createOptionLabel[1].ns, text: searchString })}
-                </PopoverCombobox.Item>
+              {createOptionLabel && createOptionIcon && createSchema && onCreate && (
+                <CreateItem
+                  createOptionLabel={createOptionLabel}
+                  createOptionIcon={createOptionIcon}
+                  onCreateItemSelect={(query: string) => {
+                    setFormInitialValue(query);
+                    setShowForm(true);
+                  }}
+                />
               )}
-            </PopoverCombobox.List>
+            </Combobox.List>
           </>
         )}
-        <PopoverCombobox.Arrow />
-      </PopoverCombobox.Content>
+        <Combobox.Arrow />
+      </Combobox.Content>
     );
   },
 );
@@ -154,8 +167,9 @@ const ObjectPickerContent = forwardRef<HTMLDivElement, ObjectPickerContentProps>
 ObjectPickerContent.displayName = 'ObjectPickerContent';
 
 export const ObjectPicker = {
-  Root: PopoverCombobox.Root,
-  Trigger: PopoverCombobox.Trigger,
-  VirtualTrigger: PopoverCombobox.VirtualTrigger,
+  Root: Combobox.Root,
+  Portal: Combobox.Portal,
+  Trigger: Combobox.Trigger,
+  VirtualTrigger: Combobox.VirtualTrigger,
   Content: ObjectPickerContent,
 };

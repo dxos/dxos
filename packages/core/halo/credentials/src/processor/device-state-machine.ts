@@ -13,7 +13,7 @@ import { getCredentialAssertion, isValidAuthorizedDeviceCredential } from '../cr
 
 import { type CredentialProcessor } from './credential-processor';
 
-export type DeviceStateMachineParams = {
+export type DeviceStateMachineProps = {
   identityKey: PublicKey;
   deviceKey: PublicKey;
   onUpdate?: () => void;
@@ -30,7 +30,7 @@ export class DeviceStateMachine implements CredentialProcessor {
 
   public deviceCredentialChain?: Chain;
 
-  constructor(private readonly _params: DeviceStateMachineParams) {}
+  constructor(private readonly _params: DeviceStateMachineProps) {}
 
   async processCredential(credential: Credential): Promise<void> {
     log('processing credential...', {

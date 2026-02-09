@@ -4,7 +4,7 @@
 
 import { type Resource } from '@dxos/react-ui';
 
-export const translationKey = 'react-ui-board';
+export const translationKey = '@dxos/react-ui-board';
 
 export const translations = [
   {
@@ -12,8 +12,8 @@ export const translations = [
       [translationKey]: {
         'button center': 'Center board',
         'button zoom': 'Toggle zoom',
-        'button add': 'Add item',
-        'button delete': 'Remove item',
+        'button add': 'Add object',
+        'button delete': 'Remove object',
       },
     },
   },

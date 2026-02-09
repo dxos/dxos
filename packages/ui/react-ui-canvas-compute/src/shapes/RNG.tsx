@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 import React, { useEffect, useState } from 'react';
 
 import { DEFAULT_OUTPUT } from '@dxos/conductor';
@@ -27,7 +27,11 @@ export type RandomShape = Schema.Schema.Type<typeof RandomShape>;
 export type CreateRandomProps = CreateShapeProps<RandomShape>;
 
 export const createRandom = (props: CreateRandomProps) =>
-  createShape<RandomShape>({ type: 'rng', size: { width: 64, height: 64 }, ...props });
+  createShape<RandomShape>({
+    type: 'rng',
+    size: { width: 64, height: 64 },
+    ...props,
+  });
 
 const icons = [
   'ph--dice-one--regular',

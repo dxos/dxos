@@ -2,17 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Schema } from 'effect';
 import { useCallback } from 'react';
 
-import { type Space } from '@dxos/client/echo';
-import { Obj } from '@dxos/echo';
+import { type Database, Obj, type Type } from '@dxos/echo';
 
 import { type InsertRowResult } from '../model';
 
-export type UseAddRowParams = {
-  space?: Space;
-  schema?: Schema.Schema.AnyNoContext;
+export type UseAddRowProps = {
+  db?: Database.Database;
+  schema?: Type.Obj.Any;
 };
 
 /**
@@ -20,12 +18,12 @@ export type UseAddRowParams = {
  * Returns a callback that attempts to create an object and returns boolean success/failure.
  * Can accept optional data to create objects with specific content (used for committing draft rows).
  */
-export const useAddRow = ({ space, schema }: UseAddRowParams) => {
+export const useAddRow = ({ db, schema }: UseAddRowProps) => {
   return useCallback(
     (data?: any): InsertRowResult => {
-      if (space && schema) {
+      if (db && schema) {
         try {
-          space.db.add(Obj.make(schema, data ?? {}));
+          db.add(Obj.make(schema, data ?? {}));
           return 'final';
         } catch (error) {
           return 'draft';
@@ -33,6 +31,6 @@ export const useAddRow = ({ space, schema }: UseAddRowParams) => {
       }
       return 'final';
     },
-    [space, schema],
+    [db, schema],
   );
 };

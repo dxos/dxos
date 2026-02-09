@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 import React from 'react';
 
 import { type ShapeComponentProps, type ShapeDef } from '@dxos/react-ui-canvas-editor';

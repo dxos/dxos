@@ -2,23 +2,22 @@
 // Copyright 2025 DXOS.org
 //
 
-import { effect } from '@preact/signals-core';
 import { describe, test } from 'vitest';
 
 import { scheduleTaskInterval } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { Obj } from '@dxos/echo';
+import { createQueueDXN } from '@dxos/echo/internal';
 import { MemoryQueue } from '@dxos/echo-db';
-import { createQueueDXN } from '@dxos/echo-schema';
-import { FunctionExecutor, ServiceContainer } from '@dxos/functions';
+import { FunctionExecutor, ServiceContainer } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
-import { DataType } from '@dxos/schema';
+import { type Actor, Message } from '@dxos/types';
 
 import { MessageNormalizer } from './message-normalizer';
 import { type MessageWithRangeId, sentenceNormalization } from './normalization';
 import { getActorId } from './utils';
 
-const sender: DataType.Actor = {
+const sender: Actor.Actor = {
   identityDid: 'did:key:123',
 };
 
@@ -48,7 +47,7 @@ const messages: MessageWithRangeId[] = [
   // No punctuation.
   'in classical physics objects have well-defined properties such as position speed and momentum',
 ].map((string, index) =>
-  Obj.make(DataType.Message, {
+  Obj.make(Message.Message, {
     created: new Date(Date.now() + 1_000 * index).toISOString(),
     sender,
     blocks: [{ _tag: 'transcript', started: new Date(Date.now() + 1_000 * index).toISOString(), text: string }],
@@ -108,7 +107,7 @@ describe.skip('SentenceNormalization', () => {
   test.only('queue', { timeout: 120_000 }, async () => {
     // Create queue.
     // TODO(dmaretskyi): Use space.queues.create() instead.
-    const queue = new MemoryQueue<DataType.Message>(createQueueDXN());
+    const queue = new MemoryQueue<Message.Message>(createQueueDXN());
     const ctx = new Context();
     let idx = 0;
     scheduleTaskInterval(
@@ -133,10 +132,6 @@ describe.skip('SentenceNormalization', () => {
 
     // Start normalizer.
     await normalizer.open();
-    effect(() => {
-      log.info('normalizer');
-      log.info(JSON.stringify(queue.objects, null, 2));
-    });
 
     await new Promise(() => {});
   });

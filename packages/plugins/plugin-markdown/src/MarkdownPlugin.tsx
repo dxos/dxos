@@ -2,128 +2,98 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, Events, contributes, createIntent, defineModule, definePlugin } from '@dxos/app-framework';
-import { type Obj, Ref } from '@dxos/echo';
-import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
-import { SpaceCapabilities } from '@dxos/plugin-space';
-import { defineObjectForm } from '@dxos/plugin-space/types';
-import { createDocAccessor, getTextInRange } from '@dxos/react-client/echo';
-import { translations as editorTranslations } from '@dxos/react-ui-editor';
-import { DataType } from '@dxos/schema';
+import * as Effect from 'effect/Effect';
 
+import { Capability, Common, Plugin } from '@dxos/app-framework';
+import { type Obj, Ref } from '@dxos/echo';
+import { createDocAccessor, getTextInRange } from '@dxos/echo-db';
+import { Operation } from '@dxos/operation';
+import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
+import { type CreateObject } from '@dxos/plugin-space/types';
+import { translations as editorTranslations } from '@dxos/react-ui-editor';
+import { Text } from '@dxos/schema';
+
+import { MarkdownBlueprint } from './blueprints';
 import {
   AnchorSort,
   AppGraphSerializer,
-  BLUEPRINT_KEY,
   BlueprintDefinition,
-  IntentResolver,
   MarkdownSettings,
   MarkdownState,
+  OperationResolver,
   ReactSurface,
-  Toolkit,
 } from './capabilities';
-import { MarkdownEvents } from './events';
 import { meta } from './meta';
 import { translations } from './translations';
-import { Markdown, MarkdownAction } from './types';
+import { Markdown, MarkdownEvents, MarkdownOperation } from './types';
 import { serializer } from './util';
 
-export const MarkdownPlugin = definePlugin(meta, () => [
-  defineModule({
-    id: `${meta.id}/module/translations`,
-    activatesOn: Events.SetupTranslations,
-    activate: () => contributes(Capabilities.Translations, [...translations, ...editorTranslations]),
-  }),
-  defineModule({
-    id: `${meta.id}/module/settings`,
-    activatesOn: Events.SetupSettings,
+export const MarkdownPlugin = Plugin.define(meta).pipe(
+  Common.Plugin.addTranslationsModule({ translations: [...translations, ...editorTranslations] }),
+  Plugin.addModule({
+    activatesOn: Common.ActivationEvent.SetupSettings,
     activate: MarkdownSettings,
   }),
-  defineModule({
-    id: `${meta.id}/module/state`,
+  Plugin.addModule({
+    id: 'state',
     // TODO(wittjosiah): Does not integrate with settings store.
     //   Should this be a different event?
     //   Should settings store be renamed to be more generic?
-    activatesOn: Events.SetupSettings,
+    activatesOn: Common.ActivationEvent.SetupSettings,
     activate: MarkdownState,
   }),
-  defineModule({
-    id: `${meta.id}/module/metadata`,
-    activatesOn: Events.SetupMetadata,
-    activate: () =>
-      contributes(Capabilities.Metadata, {
-        id: Markdown.Document.typename,
-        metadata: {
-          label: (object: Markdown.Document) => object.name || object.fallbackName,
-          icon: 'ph--text-aa--regular',
-          blueprints: [BLUEPRINT_KEY],
-          graphProps: {
-            managesAutofocus: true,
-          },
-          // TODO(wittjosiah): Move out of metadata.
-          loadReferences: async (doc: Markdown.Document) => await Ref.Array.loadAll<Obj.Any>([doc.content]),
-          serializer,
-          // TODO(wittjosiah): Consider how to do generic comments without these.
-          comments: 'anchored',
-          selectionMode: 'multi-range',
-          getAnchorLabel: (doc: Markdown.Document, anchor: string): string | undefined => {
-            if (doc.content) {
-              const [start, end] = anchor.split(':');
-              return getTextInRange(createDocAccessor(doc.content.target!, ['content']), start, end);
-            }
-          },
+  Common.Plugin.addMetadataModule({
+    metadata: {
+      id: Markdown.Document.typename,
+      metadata: {
+        label: (object: Markdown.Document) => object.name || object.fallbackName,
+        icon: 'ph--text-aa--regular',
+        iconHue: 'indigo',
+        blueprints: [MarkdownBlueprint.Key],
+        graphProps: {
+          managesAutofocus: true,
         },
-      }),
+        // TODO(wittjosiah): Move out of metadata.
+        loadReferences: async (doc: Markdown.Document) => await Ref.Array.loadAll<Obj.Unknown>([doc.content]),
+        serializer,
+        // TODO(wittjosiah): Consider how to do generic comments without these.
+        comments: 'anchored',
+        selectionMode: 'multi-range',
+        getAnchorLabel: (doc: Markdown.Document, anchor: string): string | undefined => {
+          if (doc.content) {
+            const [start, end] = anchor.split(':');
+            return getTextInRange(createDocAccessor(doc.content.target!, ['content']), start, end);
+          }
+        },
+        createObject: ((props) => Effect.sync(() => Markdown.make(props))) satisfies CreateObject,
+      },
+    },
   }),
-  defineModule({
-    id: `${meta.id}/module/object-form`,
-    activatesOn: ClientEvents.SetupSchema,
+  Common.Plugin.addSchemaModule({ schema: [Markdown.Document, Text.Text] }),
+  Plugin.addModule({
+    id: 'on-space-created',
+    activatesOn: SpaceEvents.SpaceCreated,
     activate: () =>
-      contributes(
-        SpaceCapabilities.ObjectForm,
-        defineObjectForm({
-          objectSchema: Markdown.Document,
-          getIntent: () => createIntent(MarkdownAction.Create, {}),
-        }),
+      Effect.succeed(
+        Capability.contributes(SpaceCapabilities.OnCreateSpace, (params) =>
+          Operation.invoke(MarkdownOperation.OnCreateSpace, params),
+        ),
       ),
   }),
-  defineModule({
-    id: `${meta.id}/module/schema`,
-    activatesOn: ClientEvents.SetupSchema,
-    activate: () => contributes(ClientCapabilities.Schema, [DataType.Text]),
-  }),
-  defineModule({
-    id: `${meta.id}/module/react-surface`,
-    activatesOn: Events.SetupReactSurface,
-    // TODO(wittjosiah): Should occur before the editor is loaded when surfaces activation is more granular.
-    activatesBefore: [MarkdownEvents.SetupExtensions],
+  Common.Plugin.addSurfaceModule({
     activate: ReactSurface,
+    activatesBefore: [MarkdownEvents.SetupExtensions],
   }),
-  defineModule({
-    id: `${meta.id}/module/intent-resolver`,
-    activatesOn: Events.SetupIntentResolver,
-    activate: IntentResolver,
-  }),
-  defineModule({
-    id: `${meta.id}/module/app-graph-serializer`,
-    activatesOn: Events.AppGraphReady,
+  Common.Plugin.addOperationResolverModule({ activate: OperationResolver }),
+  Plugin.addModule({
+    activatesOn: Common.ActivationEvent.AppGraphReady,
     activate: AppGraphSerializer,
   }),
-  defineModule({
-    id: `${meta.id}/module/anchor-sort`,
+  Plugin.addModule({
     // TODO(wittjosiah): More relevant event?
-    activatesOn: Events.AppGraphReady,
+    activatesOn: Common.ActivationEvent.AppGraphReady,
     activate: AnchorSort,
   }),
-  defineModule({
-    id: `${meta.id}/module/blueprint`,
-    activatesOn: Events.SetupArtifactDefinition,
-    activate: BlueprintDefinition,
-  }),
-  defineModule({
-    id: `${meta.id}/module/toolkit`,
-    // TODO(wittjosiah): Use a different event.
-    activatesOn: Events.Startup,
-    activate: Toolkit,
-  }),
-]);
+  Common.Plugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
+  Plugin.make,
+);

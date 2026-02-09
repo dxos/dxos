@@ -2,18 +2,29 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 
+import { Database } from '@dxos/echo';
+import { Operation } from '@dxos/operation';
+import { TypeInputOptionsAnnotation } from '@dxos/plugin-space/types';
 import { SpaceSchema } from '@dxos/react-client/echo';
-import { DataType, TypenameAnnotationId } from '@dxos/schema';
+import { Table } from '@dxos/react-ui-table/types';
+import { View } from '@dxos/schema';
 
 import { meta } from '../meta';
 
+// Re-export Table namespace for portable type references
+export { Table };
+
 export const CreateTableSchema = Schema.Struct({
   name: Schema.optional(Schema.String),
+  // TODO(wittjosiah): This should be a query input instead.
   typename: Schema.String.pipe(
-    Schema.annotations({
-      [TypenameAnnotationId]: ['used-static', 'dynamic'],
+    Schema.annotations({ title: 'Select type' }),
+    TypeInputOptionsAnnotation.set({
+      location: ['database', 'runtime'],
+      kind: ['user'],
+      registered: ['registered'],
     }),
     Schema.optional,
   ),
@@ -21,42 +32,55 @@ export const CreateTableSchema = Schema.Struct({
 
 export type CreateTableType = Schema.Schema.Type<typeof CreateTableSchema>;
 
-export namespace TableAction {
-  const TABLE_ACTION = `${meta.id}/action`;
+const TABLE_OPERATION = `${meta.id}/operation`;
 
-  export class onCreateSpace extends Schema.TaggedClass<onCreateSpace>()(`${TABLE_ACTION}/on-space-created`, {
-    input: Schema.Struct({
-      space: SpaceSchema,
-    }),
-    output: Schema.Void,
-  }) {}
-
-  export class OnSchemaAdded extends Schema.TaggedClass<OnSchemaAdded>()(`${TABLE_ACTION}/on-schema-added`, {
-    input: Schema.Struct({
-      space: SpaceSchema,
-      // TODO(wittjosiah): Schema for schema?
-      schema: Schema.Any,
-    }),
-    output: Schema.Void,
-  }) {}
-
-  export class Create extends Schema.TaggedClass<Create>()(`${TABLE_ACTION}/create`, {
-    input: Schema.extend(
-      Schema.Struct({
+export namespace TableOperation {
+  export const OnCreateSpace = Operation.make({
+    meta: { key: `${TABLE_OPERATION}/on-create-space`, name: 'On Create Space' },
+    schema: {
+      input: Schema.Struct({
         space: SpaceSchema,
       }),
-      CreateTableSchema,
-    ),
-    output: Schema.Struct({
-      object: DataType.View,
-    }),
-  }) {}
+      output: Schema.Void,
+    },
+  });
 
-  export class AddRow extends Schema.TaggedClass<AddRow>()(`${TABLE_ACTION}/add-row`, {
-    input: Schema.Struct({
-      view: DataType.View,
-      data: Schema.Any,
-    }),
-    output: Schema.Void,
-  }) {}
+  export const OnSchemaAdded = Operation.make({
+    meta: { key: `${TABLE_OPERATION}/on-schema-added`, name: 'On Schema Added' },
+    schema: {
+      input: Schema.Struct({
+        db: Database.Database,
+        schema: Schema.Any,
+        show: Schema.optional(Schema.Boolean),
+      }),
+      output: Schema.Void,
+    },
+  });
+
+  export const Create = Operation.make({
+    meta: { key: `${TABLE_OPERATION}/create`, name: 'Create Table' },
+    schema: {
+      input: Schema.extend(
+        Schema.Struct({
+          db: Database.Database,
+        }),
+        CreateTableSchema,
+      ),
+      output: Schema.Struct({
+        object: Table.Table,
+      }),
+    },
+  });
+
+  // TODO(wittjosiah): This appears to be unused.
+  export const AddRow = Operation.make({
+    meta: { key: `${TABLE_OPERATION}/add-row`, name: 'Add Row' },
+    schema: {
+      input: Schema.Struct({
+        view: View.View,
+        data: Schema.Any,
+      }),
+      output: Schema.Void,
+    },
+  });
 }

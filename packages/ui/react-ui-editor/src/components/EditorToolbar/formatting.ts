@@ -4,12 +4,12 @@
 
 import { type EditorView } from '@codemirror/view';
 
-import { type NodeArg } from '@dxos/app-graph';
+import { type Node } from '@dxos/app-graph';
 import { type ToolbarMenuActionGroupProperties } from '@dxos/react-ui-menu';
+import { type Formatting, Inline, addLink, removeLink, setStyle } from '@dxos/ui-editor';
 
-import { type Formatting, Inline, addLink, removeLink, setStyle } from '../../extensions';
-
-import { type EditorToolbarState, createEditorAction, createEditorActionGroup } from './util';
+import { createEditorAction, createEditorActionGroup } from './actions';
+import { type EditorToolbarState } from './useEditorToolbar';
 
 const formats = {
   strong: 'ph--text-b--regular',
@@ -56,7 +56,7 @@ export const createFormatting = (state: EditorToolbarState, getView: () => Edito
   const formattingGroupAction = createFormattingGroup(state);
   const formattingActions = createFormattingActions(state, getView);
   return {
-    nodes: [formattingGroupAction as NodeArg<any>, ...formattingActions],
+    nodes: [formattingGroupAction as Node.NodeArg<any>, ...formattingActions],
     edges: [
       { source: 'root', target: 'formatting' },
       ...formattingActions.map(({ id }) => ({ source: formattingGroupAction.id, target: id })),

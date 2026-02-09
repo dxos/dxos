@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 import React, { type ChangeEvent, useCallback, useMemo, useState } from 'react';
 
 import { debounce } from '@dxos/async';
@@ -15,17 +15,29 @@ import {
   ControlPage,
   ControlSection,
   Form,
-  type InputComponent,
+  type FormFieldMap,
+  type FormUpdateMeta,
 } from '@dxos/react-ui-form';
 import { EmojiPickerBlock, HuePicker } from '@dxos/react-ui-pickers';
 import { hexToEmoji, hexToHue } from '@dxos/util';
 
 import { meta } from '../meta';
 
+// TOOD(burdon): Factor out?
+// TODO(wittjosiah): Integrate annotations with translations.
+const UserProfile = Schema.Struct({
+  did: Schema.String.annotations({ title: 'DID' }),
+  displayName: Schema.String.annotations({ title: 'Display name' }),
+  emoji: Schema.String.annotations({ title: 'Avatar' }),
+  hue: Schema.String.annotations({ title: 'Color' }),
+});
+
+type UserProfile = Schema.Schema.Type<typeof UserProfile>;
+
 // TODO(thure): Factor out?
 const getDefaultHueValue = (identity: Identity | null) => hexToHue(identity?.identityKey.toHex() ?? '0');
-const getDefaultEmojiValue = (identity: Identity | null) => hexToEmoji(identity?.identityKey.toHex() ?? '0');
 const getHueValue = (identity: Identity | null) => identity?.profile?.data?.hue || getDefaultHueValue(identity);
+const getDefaultEmojiValue = (identity: Identity | null) => hexToEmoji(identity?.identityKey.toHex() ?? '0');
 const getEmojiValue = (identity: Identity | null) => identity?.profile?.data?.emoji || getDefaultEmojiValue(identity);
 
 export const ProfileContainer = () => {
@@ -39,7 +51,7 @@ export const ProfileContainer = () => {
   const updateProfile = useMemo(
     () =>
       debounce(
-        (profile: Partial<Profile>) =>
+        (profile: Partial<UserProfile>) =>
           client.halo.updateProfile({
             displayName: profile.displayName,
             data: {
@@ -52,11 +64,26 @@ export const ProfileContainer = () => {
     [],
   );
 
-  const handleSave = useCallback(
-    (profile: Profile) => {
-      setDisplayNameDirectly(profile.displayName);
-      setEmojiDirectly(profile.emoji);
-      setHueDirectly(profile.hue);
+  const handleChange = useCallback(
+    (profile: Partial<UserProfile>, meta: FormUpdateMeta<UserProfile>) => {
+      for (const [path, changed] of Object.entries(meta.changed)) {
+        if (changed) {
+          switch (path) {
+            case 'displayName':
+              setDisplayNameDirectly(profile.displayName ?? '');
+              break;
+            case 'emoji':
+              setEmojiDirectly(profile.emoji ?? getDefaultEmojiValue(identity));
+              break;
+            case 'hue':
+              setHueDirectly(profile.hue ?? getDefaultHueValue(identity));
+              break;
+            default:
+              break;
+          }
+        }
+      }
+
       void updateProfile(profile);
     },
     [identity],
@@ -64,22 +91,23 @@ export const ProfileContainer = () => {
 
   const values = useMemo(
     () => ({
+      did: identity?.did,
       displayName,
       emoji,
       hue,
-      did: identity?.did,
     }),
     [identity, displayName, emoji, hue],
   );
 
   // TODO(wittjosiah): Integrate descriptions with the form schema.
-  const customElements: Partial<Record<string, InputComponent>> = useMemo(
+  const fieldMap = useMemo<FormFieldMap>(
     () => ({
       displayName: ({ type, label, getValue, onValueChange }) => {
         const handleChange = useCallback(
           ({ target: { value } }: ChangeEvent<HTMLInputElement>) => onValueChange(type, value),
           [onValueChange, type],
         );
+
         return (
           <ControlItemInput title={label} description={t('display name description')}>
             <Input.TextInput
@@ -97,6 +125,7 @@ export const ProfileContainer = () => {
           () => onValueChange(type, getDefaultEmojiValue(identity)),
           [onValueChange, type],
         );
+
         return (
           <ControlItem title={label} description={t('icon description')}>
             <EmojiPickerBlock
@@ -115,14 +144,12 @@ export const ProfileContainer = () => {
           () => onValueChange(type, getDefaultHueValue(identity)),
           [onValueChange, type],
         );
+
         return (
           <ControlItem title={label} description={t('hue description')}>
-            <HuePicker
-              value={getValue()}
-              onChange={handleChange}
-              onReset={handleHueReset}
-              classNames='[--hue-preview-size:1.5rem] justify-self-end'
-            />
+            <div role='none' className='flex justify-self-end'>
+              <HuePicker value={getValue()} onChange={handleChange} onReset={handleHueReset} />
+            </div>
           </ControlItem>
         );
       },
@@ -145,26 +172,13 @@ export const ProfileContainer = () => {
     <ControlPage>
       <Clipboard.Provider>
         <ControlSection title={t('profile label')} description={t('profile description')}>
-          <Form
-            schema={ProfileSchema}
-            values={values}
-            autoSave
-            onSave={handleSave}
-            Custom={customElements}
-            classNames='container-max-width grid grid-cols-1 md:grid-cols-[1fr_min-content]'
-            outerSpacing={false}
-          />
+          <Form.Root schema={UserProfile} values={values} fieldMap={fieldMap} onValuesChanged={handleChange}>
+            <Form.Content>
+              <Form.FieldSet classNames='container-max-width grid grid-cols-1 md:grid-cols-[1fr_min-content]' />
+            </Form.Content>
+          </Form.Root>
         </ControlSection>
       </Clipboard.Provider>
     </ControlPage>
   );
 };
-
-// TODO(wittjosiah): Integrate annotations with translations.
-const ProfileSchema = Schema.Struct({
-  displayName: Schema.String.annotations({ title: 'Display name' }),
-  emoji: Schema.String.annotations({ title: 'Avatar' }),
-  hue: Schema.String.annotations({ title: 'Color' }),
-  did: Schema.String.annotations({ title: 'DID' }),
-});
-type Profile = Schema.Schema.Type<typeof ProfileSchema>;

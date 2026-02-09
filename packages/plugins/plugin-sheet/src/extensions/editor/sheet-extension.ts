@@ -20,8 +20,8 @@ import { spreadsheet } from 'codemirror-lang-spreadsheet';
 
 import { type FunctionDefinition } from '@dxos/compute';
 import { RANGE_NOTATION } from '@dxos/compute';
-import { singleValueFacet } from '@dxos/react-ui-editor';
-import { mx } from '@dxos/react-ui-theme';
+import { singleValueFacet } from '@dxos/ui-editor';
+import { mx } from '@dxos/ui-theme';
 
 /**
  * https://codemirror.net/examples/styling
@@ -75,7 +75,10 @@ export type SheetExtensionOptions = {
  * https://hyperformula.handsontable.com/guide/key-concepts.html#grammar
  */
 export const sheetExtension = ({ debug, functions = [] }: SheetExtensionOptions): Extension => {
-  const { extension, language } = spreadsheet({ idiom: 'en-US', decimalSeparator: '.' });
+  const { extension, language } = spreadsheet({
+    idiom: 'en-US',
+    decimalSeparator: '.',
+  });
 
   const createCompletion = (name: string) => {
     const { section = 'Custom', description, syntax } = functions.find((value) => value.name === name) ?? {};
@@ -166,7 +169,7 @@ export const sheetExtension = ({ debug, functions = [] }: SheetExtensionOptions)
       icons: false,
       tooltipClass: () =>
         mx(
-          '!-left-[1px] !top-[33px] !-m-0 border !border-t-0 [&>ul]:!min-w-[198px]',
+          '!-left-[1px] !top-[33px] !-m-0 border !border-bs-0 [&>ul]:!min-w-[198px]',
           '[&>ul>li[aria-selected]]:!bg-accentSurface',
           'border-separator',
         ),

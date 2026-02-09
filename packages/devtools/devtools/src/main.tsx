@@ -12,10 +12,12 @@ import { Config, Defaults, Remote, Storage } from '@dxos/react-client';
 import { DevtoolsApp as App } from './app';
 
 const main = async () => {
-  const searchParams = new URLSearchParams(window.location.search);
-  const target = searchParams.get('target') ?? undefined;
+  // TODO(wittjosiah): Restore observability for devtools.
+
+  const searchProps = new URLSearchParams(window.location.search);
+  const target = searchProps.get('target') ?? undefined;
   // TODO(nf): read wsAuthToken from localStorage?
-  const wsAuthToken = searchParams.get('wsAuthToken') ?? undefined;
+  const wsAuthToken = searchProps.get('wsAuthToken') ?? undefined;
   const sources = target ? [Remote(target, wsAuthToken), Defaults()] : [await Storage(), Defaults()];
   const config = new Config(...sources);
 

@@ -18,6 +18,9 @@
   ],
   "references": [
     {
+      "path": "../../common/effect"
+    },
+    {
       "path": "../../common/invariant"
     },
     {
@@ -33,13 +36,16 @@
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../core/echo/echo-schema"
+      "path": "../../core/operation"
     },
     {
-      "path": "../../core/echo/live-object"
+      "path": "../../devtools/cli-util"
     },
     {
       "path": "../../sdk/app-framework"
+    },
+    {
+      "path": "../../sdk/client-protocol"
     },
     {
       "path": "../../ui/react-ui"
@@ -48,10 +54,13 @@
       "path": "../../ui/react-ui-form"
     },
     {
+      "path": "../../ui/react-ui-mosaic"
+    },
+    {
       "path": "../../ui/react-ui-stack"
     },
     {
-      "path": "../../ui/react-ui-theme"
+      "path": "../../ui/ui-theme"
     },
     {
       "path": "../plugin-graph"

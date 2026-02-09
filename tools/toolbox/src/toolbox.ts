@@ -209,7 +209,7 @@ export class Toolbox {
             // TODO(wittjosiah): Move extra files to toolbox config.
             'packages/sdk/client/src/version.ts',
             'packages/sdk/client-services/src/version.ts',
-            'packages/devtools/cli-next/src/version.ts',
+            'packages/devtools/cli/src/version.ts',
             {
               type: 'json',
               path: 'packages/apps/composer-app/src-tauri/tauri.conf.json',
@@ -315,7 +315,14 @@ export class Toolbox {
 
       const commonKeys = pick(this.rootPackage, this.config.package?.commonKeys ?? []);
       // TODO(burdon): Investigate util: https://github.com/JamieMason/syncpack
-      const updated = sortPackageJson(defaultsDeep(packageJson, commonKeys));
+      const merged = defaultsDeep(packageJson, commonKeys);
+
+      // Enforce repository field format for npm provenance.
+      if (this.rootPackage.repository) {
+        merged.repository = this.rootPackage.repository;
+      }
+
+      const updated = sortPackageJson(merged);
       await saveJson(packagePath, updated, this.options.verbose);
     }
   }
@@ -334,6 +341,7 @@ export class Toolbox {
       const projectPath = join(project.path, 'package.json');
       const projectPackage = await loadJson<PackageJson>(projectPath);
       const tsConfigPath = join(project.path, 'tsconfig.json');
+
       if (fs.existsSync(tsConfigPath)) {
         const tsConfigJson = await loadJson<TsConfigJson>(tsConfigPath);
 
@@ -344,7 +352,7 @@ export class Toolbox {
             ...Object.entries(dependencies),
             ...Object.entries(devDependencies),
             ...Object.entries(peerDependencies),
-          ].filter(([_, value]) => value === 'workspace:*'),
+          ].filter(([_, value]) => value === 'workspace:*' || value === 'workspace:'),
         );
 
         const deps = Array.from(depsMap.entries());
@@ -352,7 +360,7 @@ export class Toolbox {
           tsConfigJson.references = [];
         } else {
           tsConfigJson.references = deps.map(([dependencyName]) => {
-            const dependency = this._getProjectByPackageName(dependencyName)!;
+            const dependency = this._getProjectByPackageName(dependencyName);
             const path = relative(project.path, dependency.path);
             return { path };
           });

@@ -2,12 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Prompt } from '@effect/ai';
+import * as Prompt from '@effect/ai/Prompt';
 import { describe, it } from '@effect/vitest';
-import { Effect, Either } from 'effect';
+import * as Effect from 'effect/Effect';
+import * as Either from 'effect/Either';
 
 import { Obj } from '@dxos/echo';
-import { DataType } from '@dxos/schema';
+import { Message } from '@dxos/types';
 import { bufferToArray } from '@dxos/util';
 
 import { preprocessPrompt } from './AiPreprocessor';
@@ -17,7 +18,7 @@ describe('preprocessor', () => {
   it.effect(
     'should preprocess simple user message with text',
     Effect.fn(function* ({ expect }) {
-      const message = Obj.make(DataType.Message, {
+      const message = Obj.make(Message.Message, {
         created: new Date().toISOString(),
         sender: { role: 'user' },
         blocks: [
@@ -41,7 +42,7 @@ describe('preprocessor', () => {
   it.effect(
     'should handle multiple tool results at the start of a message',
     Effect.fn(function* ({ expect }) {
-      const message = Obj.make(DataType.Message, {
+      const message = Obj.make(Message.Message, {
         created: new Date().toISOString(),
         sender: { role: 'tool' },
         blocks: [
@@ -74,6 +75,7 @@ describe('preprocessor', () => {
           id: 'call_1',
           name: 'calculator',
           result: 'Result of tool 1',
+          isFailure: false,
         }),
       );
       expect(toolMessage.content[1]).toEqual(
@@ -81,6 +83,7 @@ describe('preprocessor', () => {
           id: 'call_2',
           name: 'calculator',
           result: 'Result of tool 2',
+          isFailure: false,
         }),
       );
     }),
@@ -89,7 +92,7 @@ describe('preprocessor', () => {
   it.effect(
     'should handle assistant message with tool calls',
     Effect.fn(function* ({ expect }) {
-      const message = Obj.make(DataType.Message, {
+      const message = Obj.make(Message.Message, {
         created: new Date().toISOString(),
         sender: { role: 'assistant' },
         blocks: [
@@ -132,7 +135,7 @@ describe('preprocessor', () => {
   it.effect(
     'should handle assistant message with reasoning',
     Effect.fn(function* ({ expect }) {
-      const message = Obj.make(DataType.Message, {
+      const message = Obj.make(Message.Message, {
         created: new Date().toISOString(),
         sender: { role: 'assistant' },
         blocks: [
@@ -167,7 +170,7 @@ describe('preprocessor', () => {
   it.effect(
     'should handle redacted reasoning',
     Effect.fn(function* ({ expect }) {
-      const message = Obj.make(DataType.Message, {
+      const message = Obj.make(Message.Message, {
         created: new Date().toISOString(),
         sender: { role: 'assistant' },
         blocks: [
@@ -197,7 +200,7 @@ describe('preprocessor', () => {
   it.effect(
     'should handle user message with image (base64)',
     Effect.fn(function* ({ expect }) {
-      const message = Obj.make(DataType.Message, {
+      const message = Obj.make(Message.Message, {
         created: new Date().toISOString(),
         sender: { role: 'user' },
         blocks: [
@@ -228,7 +231,7 @@ describe('preprocessor', () => {
   it.effect(
     'should handle user message with image (URL)',
     Effect.fn(function* ({ expect }) {
-      const message = Obj.make(DataType.Message, {
+      const message = Obj.make(Message.Message, {
         created: new Date().toISOString(),
         sender: { role: 'user' },
         blocks: [
@@ -257,7 +260,7 @@ describe('preprocessor', () => {
   it.effect(
     'should handle user message with file reference',
     Effect.fn(function* ({ expect }) {
-      const message = Obj.make(DataType.Message, {
+      const message = Obj.make(Message.Message, {
         created: new Date().toISOString(),
         sender: { role: 'user' },
         blocks: [
@@ -283,7 +286,7 @@ describe('preprocessor', () => {
   it.effect(
     'should handle user message with transcript',
     Effect.fn(function* ({ expect }) {
-      const message = Obj.make(DataType.Message, {
+      const message = Obj.make(Message.Message, {
         created: new Date().toISOString(),
         sender: { role: 'user' },
         blocks: [
@@ -308,7 +311,7 @@ describe('preprocessor', () => {
   it.effect(
     'should handle assistant message with various block types',
     Effect.fn(function* ({ expect }) {
-      const message = Obj.make(DataType.Message, {
+      const message = Obj.make(Message.Message, {
         created: new Date().toISOString(),
         sender: { role: 'assistant' },
         blocks: [
@@ -361,7 +364,7 @@ describe('preprocessor', () => {
   it.effect(
     'should fail when user message contains invalid blocks',
     Effect.fn(function* ({ expect }) {
-      const message = Obj.make(DataType.Message, {
+      const message = Obj.make(Message.Message, {
         created: new Date().toISOString(),
         sender: { role: 'user' },
         blocks: [
@@ -386,7 +389,7 @@ describe('preprocessor', () => {
   it.effect(
     'handles provider-executed tool results',
     Effect.fn(function* ({ expect }) {
-      const message = Obj.make(DataType.Message, {
+      const message = Obj.make(Message.Message, {
         created: new Date().toISOString(),
         sender: { role: 'assistant' },
         blocks: [
@@ -408,6 +411,7 @@ describe('preprocessor', () => {
           id: 'call_1',
           name: 'test',
           result: 'Testing',
+          isFailure: false,
         }),
       ]);
     }),
@@ -417,12 +421,12 @@ describe('preprocessor', () => {
     'should handle multiple messages',
     Effect.fn(function* ({ expect }) {
       const messages = [
-        Obj.make(DataType.Message, {
+        Obj.make(Message.Message, {
           created: new Date().toISOString(),
           sender: { role: 'user' },
           blocks: [{ _tag: 'text', text: 'Hello' }],
         }),
-        Obj.make(DataType.Message, {
+        Obj.make(Message.Message, {
           created: new Date().toISOString(),
           sender: { role: 'assistant' },
           blocks: [{ _tag: 'text', text: 'Hi there!' }],

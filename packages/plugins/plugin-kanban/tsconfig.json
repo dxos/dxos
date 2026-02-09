@@ -54,10 +54,10 @@
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../core/echo/echo-schema"
+      "path": "../../core/functions"
     },
     {
-      "path": "../../core/functions"
+      "path": "../../core/operation"
     },
     {
       "path": "../../sdk/app-framework"
@@ -69,6 +69,9 @@
       "path": "../../sdk/schema"
     },
     {
+      "path": "../../sdk/types"
+    },
+    {
       "path": "../../ui/react-ui"
     },
     {
@@ -78,13 +81,16 @@
       "path": "../../ui/react-ui-kanban"
     },
     {
+      "path": "../../ui/react-ui-mosaic"
+    },
+    {
       "path": "../../ui/react-ui-stack"
     },
     {
       "path": "../../ui/react-ui-syntax-highlighter"
     },
     {
-      "path": "../../ui/react-ui-theme"
+      "path": "../../ui/ui-theme"
     },
     {
       "path": "../plugin-client"
@@ -100,6 +106,9 @@
     },
     {
       "path": "../plugin-space"
+    },
+    {
+      "path": "../plugin-testing"
     },
     {
       "path": "../plugin-theme"

@@ -1,4 +1,4 @@
-type: library
+layer: library
 language: typescript
 tags:
   - e2e
@@ -13,7 +13,10 @@ tasks:
       - '--entryPoint=src/types/index.ts'
       - '--platform=browser'
       - '--platform=node'
-      - '--preactSignalTracking'
+  e2e:
+    inputs:
+      - /tools/storybook-react/.storybook/main.ts
   test:
     inputs:
       - .storybook/*
+      - /tools/storybook-react/.storybook/main.ts

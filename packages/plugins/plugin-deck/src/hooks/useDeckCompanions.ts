@@ -2,8 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Label, useAppGraph } from '@dxos/app-framework';
-import { type Node, ROOT_ID, useConnections } from '@dxos/plugin-graph';
+import { useAppGraph } from '@dxos/app-framework/react';
+import { Node, type Node as NodeType } from '@dxos/plugin-graph';
+import { useConnections } from '@dxos/plugin-graph';
+import { type Label } from '@dxos/ui-types';
 import { type Position, byPosition } from '@dxos/util';
 
 import { ATTENDABLE_PATH_SEPARATOR, DECK_COMPANION_TYPE } from '../types';
@@ -13,7 +15,7 @@ export const getCompanionId = (id: string) => {
   return companionId ?? 'never';
 };
 
-export type DeckCompanion = Node<
+export type DeckCompanion = NodeType.Node<
   any,
   {
     label: Label;
@@ -27,7 +29,7 @@ export type DeckCompanion = Node<
 
 export const useDeckCompanions = (): DeckCompanion[] => {
   const { graph } = useAppGraph();
-  const connections = useConnections(graph, ROOT_ID);
+  const connections = useConnections(graph, Node.RootId);
   const companions = connections.filter((node) => node.type === DECK_COMPANION_TYPE) as DeckCompanion[];
   return companions.toSorted((a, b) => byPosition(a.properties, b.properties));
 };

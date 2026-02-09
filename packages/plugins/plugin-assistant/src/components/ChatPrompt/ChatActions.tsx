@@ -5,7 +5,7 @@
 import React, { type PropsWithChildren } from 'react';
 
 import { IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
 import { type ChatEvent } from '../Chat';
@@ -29,10 +29,9 @@ export const ChatActions = ({ classNames, children, microphone, recording, proce
       <IconButton
         disabled={!processing}
         variant='ghost'
-        size={5}
         icon='ph--x--regular'
         iconOnly
-        label={t('button cancel processing')}
+        label={t('cancel processing button')}
         onClick={() => onEvent?.({ type: 'cancel' })}
       />
 
@@ -41,17 +40,24 @@ export const ChatActions = ({ classNames, children, microphone, recording, proce
           disabled={!processing}
           classNames={mx(recording && 'bg-primary-500')}
           variant='ghost'
-          size={5}
           icon='ph--microphone--regular'
           iconOnly
           noTooltip
-          label={t('button microphone')}
+          label={t('microphone button')}
           onMouseDown={() => onEvent?.({ type: 'record-start' })}
           onMouseUp={() => onEvent?.({ type: 'record-stop' })}
           onTouchStart={() => onEvent?.({ type: 'record-start' })}
           onTouchEnd={() => onEvent?.({ type: 'record-stop' })}
         />
       )}
+
+      <IconButton
+        variant='ghost'
+        icon='ph--wrench--regular'
+        iconOnly
+        label={t('debug button')}
+        onClick={() => onEvent?.({ type: 'toggle-debug' })}
+      />
     </div>
   );
 };

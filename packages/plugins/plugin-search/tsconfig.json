@@ -12,11 +12,12 @@
     "vite.config.ts"
   ],
   "include": [
-    "src/**/*.ts",
-    "src/**/*.tsx",
-    "src/*.ts"
+    "src"
   ],
   "references": [
+    {
+      "path": "../../common/async"
+    },
     {
       "path": "../../common/debug"
     },
@@ -54,10 +55,10 @@
       "path": "../../core/echo/echo-protocol"
     },
     {
-      "path": "../../core/echo/echo-schema"
+      "path": "../../core/echo/echo-query"
     },
     {
-      "path": "../../core/echo/live-object"
+      "path": "../../core/operation"
     },
     {
       "path": "../../sdk/app-framework"
@@ -69,7 +70,16 @@
       "path": "../../sdk/schema"
     },
     {
+      "path": "../../sdk/types"
+    },
+    {
       "path": "../../ui/react-ui"
+    },
+    {
+      "path": "../../ui/react-ui-components"
+    },
+    {
+      "path": "../../ui/react-ui-mosaic"
     },
     {
       "path": "../../ui/react-ui-searchlist"
@@ -78,7 +88,7 @@
       "path": "../../ui/react-ui-stack"
     },
     {
-      "path": "../../ui/react-ui-theme"
+      "path": "../../ui/ui-theme"
     },
     {
       "path": "../plugin-client"
@@ -90,7 +100,13 @@
       "path": "../plugin-graph"
     },
     {
+      "path": "../plugin-preview"
+    },
+    {
       "path": "../plugin-space"
+    },
+    {
+      "path": "../plugin-testing"
     }
   ]
 }

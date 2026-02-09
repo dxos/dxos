@@ -2,12 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 
 import { ComputeGraph } from '@dxos/conductor';
 import { Type } from '@dxos/echo';
-import { TypedObject } from '@dxos/echo-schema';
-import { FunctionType } from '@dxos/functions';
+import { Function } from '@dxos/functions';
+
+// TODO(burdon): Factor out and reconcile with https://github.com/dxos/dxos/blob/main/packages/plugins/plugin-token-manager/src/defs/presets.ts#L7
 
 const ApiAuthorizationKey = Schema.Struct({
   type: Schema.Literal('api-key'),
@@ -36,7 +37,7 @@ export type ApiAuthorization = Schema.Schema.Type<typeof ApiAuthorization>;
 
 const ServiceInterfaceFunction = Schema.Struct({
   kind: Schema.Literal('function'),
-  fn: Type.Ref(FunctionType),
+  fn: Type.Ref(Function.Function),
 });
 
 const ServiceInterfaceWorkflow = Schema.Struct({
@@ -63,13 +64,16 @@ const ServiceInterfaceApi = Schema.Struct({
   authorization: Schema.optional(ApiAuthorization),
 });
 
-const ServiceInterface = Schema.Union(ServiceInterfaceFunction, ServiceInterfaceWorkflow, ServiceInterfaceApi);
+const ServiceInterface = Schema.Union(
+  // Service types.
+  ServiceInterfaceFunction,
+  ServiceInterfaceWorkflow,
+  ServiceInterfaceApi,
+) as any;
+
 export type ServiceInterface = Schema.Schema.Type<typeof ServiceInterface>;
 
-export class ServiceType extends TypedObject({
-  typename: 'dxos.org/type/ServiceType',
-  version: '0.1.0',
-})({
+export const ServiceType = Schema.Struct({
   serviceId: Schema.String,
   name: Schema.optional(Schema.String),
   description: Schema.optional(Schema.String),
@@ -80,20 +84,27 @@ export class ServiceType extends TypedObject({
    * Entries exposed: functions, workflows, and APIs.
    */
   interfaces: Schema.optional(Schema.Array(ServiceInterface)),
-}) {}
+}).pipe(
+  Type.object({
+    typename: 'dxos.org/type/ServiceType',
+    version: '0.1.0',
+  }),
+);
+
+export interface ServiceType extends Schema.Schema.Type<typeof ServiceType> {}
 
 //
 // Service Registry
 //
 
+export interface BaseServiceRegistry {
+  queryServices(query?: ServiceQuery): Promise<ServiceType[]>;
+}
+
 export type ServiceQuery = {
   name?: string;
   category?: string;
 };
-
-export interface BaseServiceRegistry {
-  queryServices(query?: ServiceQuery): Promise<ServiceType[]>;
-}
 
 export const categoryIcons: Record<string, string> = {
   finance: 'ph--bank--regular',

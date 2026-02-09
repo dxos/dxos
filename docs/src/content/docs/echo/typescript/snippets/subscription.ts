@@ -3,7 +3,8 @@
 //
 
 import { Client } from '@dxos/client';
-import { Filter, Obj, Type } from '@dxos/echo';
+import { Filter, Obj } from '@dxos/echo';
+import { Expando } from '@dxos/schema';
 
 const client = new Client();
 
@@ -15,10 +16,10 @@ async () => {
 
   const space = await client.spaces.create();
 
-  const query = space.db.query(Filter.type(Type.Expando, { type: 'task' }));
+  const query = space.db.query(Filter.type(Expando.Expando, { type: 'task' }));
 
-  const unsubscribeFn = query.subscribe(({ objects }) => {
-    objects.forEach((object) => {
+  const unsubscribeFn = query.subscribe((query) => {
+    query.results.forEach((object) => {
       if (object.type === 'task') {
         // Do something with this task.
       }
@@ -26,12 +27,12 @@ async () => {
   });
 
   try {
-    const taskObject = Obj.make(Type.Expando, {
+    const taskObject = Obj.make(Expando.Expando, {
       type: 'task',
       title: 'buy milk',
     });
     space.db.add(taskObject);
-    const eventObject = Obj.make(Type.Expando, {
+    const eventObject = Obj.make(Expando.Expando, {
       type: 'event',
       title: 'arrived at store',
     });

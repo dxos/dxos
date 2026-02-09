@@ -12,9 +12,10 @@ import { faker } from '@dxos/random';
 import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Button, Toolbar, useAsyncEffect, useInterval } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
-import { type ScrollController, useExecutionGraph } from '@dxos/react-ui-components';
-import { DataType } from '@dxos/schema';
+import { type ScrollController } from '@dxos/react-ui';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { useExecutionGraph } from '@dxos/react-ui-components';
+import { Message } from '@dxos/types';
 
 import { research } from './testing';
 import { type Commit, Timeline } from './Timeline';
@@ -138,10 +139,7 @@ const generateCommit = (
 const meta = {
   title: 'ui/react-ui-components/Timeline',
   component: Timeline,
-  decorators: [withTheme],
-  parameters: {
-    layout: 'column',
-  },
+  decorators: [withTheme, withLayout({ layout: 'column' })],
 } satisfies Meta<typeof Timeline>;
 
 export default meta;
@@ -314,7 +312,7 @@ export const Streaming: Story = {
 //
 
 const toolCalls = [
-  Obj.make(DataType.Message, {
+  Obj.make(Message.Message, {
     created: '2025-09-25T19:51:53.086Z',
     sender: {
       role: 'assistant',
@@ -343,7 +341,7 @@ const toolCalls = [
     ],
     properties: {},
   }),
-  Obj.make(DataType.Message, {
+  Obj.make(Message.Message, {
     created: '2025-09-25T19:51:59.898Z',
     sender: {
       role: 'assistant',
@@ -383,7 +381,7 @@ const testExecutionGraph = [
     created: '2025-09-25T19:51:39.014Z',
     message: 'Running Research',
   }),
-  Obj.make(DataType.Message, {
+  Obj.make(Message.Message, {
     created: '2025-09-25T19:51:39.014Z',
     sender: {
       role: 'user',
@@ -396,7 +394,7 @@ const testExecutionGraph = [
     ],
     properties: {},
   }),
-  Obj.make(DataType.Message, {
+  Obj.make(Message.Message, {
     created: '2025-09-25T19:51:44.250Z',
     sender: {
       role: 'assistant',
@@ -411,7 +409,7 @@ const testExecutionGraph = [
         toolCallId: 'toolu_01Diussd9i7CVjeaq8hc1AbU',
         name: 'dxos_org_function_research',
         input:
-          '{"query":"DXOS organization dxos.org","mockSearch":true,"researchInstructions":"Research DXOS organization, including their mission, products, team, technology stack, and any notable projects or achievements. Focus on understanding what they do and their position in the tech ecosystem."}',
+          '{"query":"DXOS organization dxos.org","mockSearch":true,"instructions":"Research DXOS organization, including their mission, products, team, technology stack, and any notable projects or achievements. Focus on understanding what they do and their position in the tech ecosystem."}',
         providerExecuted: false,
       },
       {
@@ -429,7 +427,7 @@ const testExecutionGraph = [
     ],
     properties: {},
   }),
-  Obj.make(DataType.Message, {
+  Obj.make(Message.Message, {
     created: '2025-09-25T19:51:44.267Z',
     sender: {
       role: 'user',
@@ -453,7 +451,7 @@ const testExecutionGraph = [
     toolCallId: 'toolu_0135wZiFUzdmKpPFzeEXxt6e',
     message: 'Creating research note...',
   }),
-  Obj.make(DataType.Message, {
+  Obj.make(Message.Message, {
     created: '2025-09-25T19:51:53.228Z',
     sender: {
       role: 'user',
@@ -476,7 +474,7 @@ const testExecutionGraph = [
     toolCallId: 'toolu_01XVw86GhNb2Y7piyykdePdQ',
     message: 'Creating research note...',
   }),
-  Obj.make(DataType.Message, {
+  Obj.make(Message.Message, {
     created: '2025-09-25T19:51:59.934Z',
     sender: {
       role: 'user',
@@ -492,7 +490,7 @@ const testExecutionGraph = [
     ],
     properties: {},
   }),
-  Obj.make(DataType.Message, {
+  Obj.make(Message.Message, {
     created: '2025-09-25T19:52:06.559Z',
     sender: {
       role: 'assistant',

@@ -34,7 +34,11 @@ import { InvitationsProxy } from '../invitations';
 export class HaloProxy implements Halo {
   private readonly _instanceId = PublicKey.random().toHex();
 
+  /** Subscriptions for overall lifecycle (reconnected event listener). */
   private readonly _subscriptions = new SubscriptionList();
+  /** Subscriptions for RPC streams that need to be re-established on reconnect. */
+  private readonly _streamSubscriptions = new SubscriptionList();
+
   private readonly _identityChanged = new Event<Identity | null>(); // TODO(burdon): Move into Identity object.
   private readonly _devicesChanged = new Event<Device[]>();
   private readonly _contactsChanged = new Event<Contact[]>();
@@ -112,6 +116,36 @@ export class HaloProxy implements Halo {
     const gotIdentity = this._identityChanged.waitForCount(1);
     // const gotContacts = this._contactsChanged.waitForCount(1);
 
+    // Register reconnection callback to re-establish streams.
+    // This is called before `reconnected` event fires, ensuring streams are ready.
+    this._serviceProvider.onReconnect?.(async () => {
+      log('reconnected, re-establishing streams');
+      await this._setupInvitationProxy();
+      this._setupStreams();
+    });
+
+    // Set up listener for lazy credential stream creation.
+    // This listener persists across reconnects; the stream itself is recreated.
+    this._subscriptions.add(
+      this._identityChanged.on((identity) => {
+        if (identity && !this._haloCredentialStream) {
+          this._setupCredentialStream(identity);
+        }
+      }),
+    );
+
+    await this._setupInvitationProxy();
+    this._setupStreams();
+
+    log.trace('dxos.sdk.halo-proxy.open', Trace.end({ id: this._instanceId }));
+    await Promise.all([gotIdentity]);
+  }
+
+  /**
+   * Set up the invitation proxy. Called on initial open and reconnect.
+   */
+  private async _setupInvitationProxy(): Promise<void> {
+    await this._invitationProxy?.close();
     invariant(this._serviceProvider.services.InvitationsService, 'InvitationsService not available');
     this._invitationProxy = new InvitationsProxy(
       this._serviceProvider.services.InvitationsService,
@@ -121,22 +155,38 @@ export class HaloProxy implements Halo {
       }),
     );
     await this._invitationProxy.open();
+  }
 
-    this._identityChanged.on((identity) => {
-      if (identity && !this._haloCredentialStream) {
-        invariant(this._serviceProvider.services.SpacesService, 'SpacesService not available');
-        this._haloCredentialStream = this._serviceProvider.services.SpacesService.queryCredentials(
-          {
-            spaceKey: identity.spaceKey!,
-          },
-          { timeout: RPC_TIMEOUT },
-        );
-        this._haloCredentialStream.subscribe((data) => {
-          this._credentialsChanged.emit([...this._credentials.get(), data]);
-        });
-        this._subscriptions.add(() => this._haloCredentialStream?.close());
-      }
+  /**
+   * Set up the credential stream for the given identity.
+   */
+  private _setupCredentialStream(identity: Identity): void {
+    invariant(this._serviceProvider.services.SpacesService, 'SpacesService not available');
+    this._haloCredentialStream = this._serviceProvider.services.SpacesService.queryCredentials(
+      {
+        spaceKey: identity.spaceKey!,
+      },
+      { timeout: RPC_TIMEOUT },
+    );
+    this._haloCredentialStream.subscribe((data) => {
+      this._credentialsChanged.emit([...this._credentials.get(), data]);
     });
+    this._streamSubscriptions.add(() => this._haloCredentialStream?.close());
+  }
+
+  /**
+   * Set up RPC streams. Called on initial open and reconnect.
+   */
+  private _setupStreams(): void {
+    // Clear existing streams.
+    this._streamSubscriptions.clear();
+    this._haloCredentialStream = undefined;
+
+    // Re-create credential stream if we have an identity.
+    const currentIdentity = this._identity.get();
+    if (currentIdentity) {
+      this._setupCredentialStream(currentIdentity);
+    }
 
     invariant(this._serviceProvider.services.IdentityService, 'IdentityService not available');
     const identityStream = this._serviceProvider.services.IdentityService.queryIdentity(undefined, {
@@ -151,7 +201,7 @@ export class HaloProxy implements Halo {
         });
       this._identityChanged.emit(data.identity ?? null);
     });
-    this._subscriptions.add(() => identityStream.close());
+    this._streamSubscriptions.add(() => identityStream.close());
 
     const contactsStream = this._serviceProvider.services.ContactsService!.queryContacts(undefined, {
       timeout: RPC_TIMEOUT,
@@ -159,7 +209,7 @@ export class HaloProxy implements Halo {
     contactsStream.subscribe((data) => {
       this._contactsChanged.emit(data.contacts ?? []);
     });
-    this._subscriptions.add(() => contactsStream.close());
+    this._streamSubscriptions.add(() => contactsStream.close());
 
     invariant(this._serviceProvider.services.DevicesService, 'DevicesService not available');
     const devicesStream = this._serviceProvider.services.DevicesService.queryDevices(undefined, {
@@ -175,10 +225,7 @@ export class HaloProxy implements Halo {
         });
       }
     });
-    this._subscriptions.add(() => devicesStream.close());
-
-    log.trace('dxos.sdk.halo-proxy.open', Trace.end({ id: this._instanceId }));
-    await Promise.all([gotIdentity]);
+    this._streamSubscriptions.add(() => devicesStream.close());
   }
 
   /**
@@ -189,6 +236,7 @@ export class HaloProxy implements Halo {
   async _close(): Promise<void> {
     await this._invitationProxy?.close();
     this._invitationProxy = undefined;
+    this._streamSubscriptions.clear();
     this._subscriptions.clear();
     this._identityChanged.emit(null);
     this._devicesChanged.emit([]);
@@ -266,7 +314,7 @@ export class HaloProxy implements Halo {
    */
   share(options?: Partial<Invitation>) {
     if (!this.opened) {
-      throw new ApiError('Client not open.');
+      throw new ApiError({ message: 'Client not open.' });
     }
 
     log('create invitation', { options });
@@ -281,7 +329,7 @@ export class HaloProxy implements Halo {
    */
   join(invitation: Invitation | string, deviceProfile?: DeviceProfileDocument) {
     if (!this.opened) {
-      throw new ApiError('Client not open.');
+      throw new ApiError({ message: 'Client not open.' });
     }
 
     const deviceProfileWithDefaults = {
@@ -297,10 +345,10 @@ export class HaloProxy implements Halo {
   async writeCredentials(credentials: Credential[]): Promise<void> {
     const identity = this._identity.get();
     if (!identity) {
-      throw new ApiError('Identity is not available.');
+      throw new ApiError({ message: 'Identity is not available.' });
     }
     if (!this._serviceProvider.services.SpacesService) {
-      throw new ApiError('SpacesService is not available.');
+      throw new ApiError({ message: 'SpacesService is not available.' });
     }
 
     return this._serviceProvider.services.SpacesService.writeCredentials(
@@ -318,7 +366,7 @@ export class HaloProxy implements Halo {
   // TODO(burdon): Rename createPresentation?
   async presentCredentials({ ids, nonce }: { ids: PublicKey[]; nonce?: Uint8Array }): Promise<Presentation> {
     if (!this._serviceProvider.services.IdentityService) {
-      throw new ApiError('IdentityService is not available.');
+      throw new ApiError({ message: 'IdentityService is not available.' });
     }
     const trigger = new Trigger<Credential[]>();
 
@@ -332,7 +380,7 @@ export class HaloProxy implements Halo {
     const credentials = await asyncTimeout(
       trigger.wait(),
       AUTH_TIMEOUT,
-      new ApiError('Timeout while waiting for credentials.'),
+      new ApiError({ message: 'Timeout while waiting for credentials.' }),
     );
     return this._serviceProvider.services.IdentityService.signPresentation(
       {

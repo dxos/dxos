@@ -30,7 +30,7 @@ test.describe('Basic tests', () => {
   });
 
   test('create identity, space is created by default', async () => {
-    await expect(host.page.getByTestId('spacePlugin.spaces')).toBeVisible();
+    await expect(host.page.getByTestId('spacePlugin.space')).toHaveCount(1);
     const plank = host.deck.plank();
     await expect(Markdown.getMarkdownTextboxWithLocator(plank.locator).first()).toHaveText(/.+/);
   });
@@ -70,7 +70,8 @@ test.describe('Basic tests', () => {
     await expect(host.getSpaceItems()).toHaveCount(1, { timeout: 10_000 });
   });
 
-  test('reset app', async ({ browserName }) => {
+  // TODO(wittjosiah): Remove? The reset button was hidden from the app.
+  test.skip('reset app', async ({ browserName }) => {
     // TODO(wittjosiah): This test seems to be flaky in webkit.
     if (browserName === 'webkit') {
       test.skip();

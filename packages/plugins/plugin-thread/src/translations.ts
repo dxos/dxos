@@ -2,15 +2,16 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
 
 import { meta } from './meta';
-import { ChannelType } from './types';
+import { Channel } from './types';
 
 export const translations = [
   {
     'en-US': {
-      [ChannelType.typename]: {
+      [Type.getTypename(Channel.Channel)]: {
         'typename label': 'Channel',
         'typename label_zero': 'Channels',
         'typename label_one': 'Channel',
@@ -18,6 +19,7 @@ export const translations = [
         'object name placeholder': 'New channel',
         'rename object label': 'Rename channel',
         'delete object label': 'Delete channel',
+        'object deleted label': 'Channel deleted',
       },
       [meta.id]: {
         'plugin name': 'Chat',
@@ -49,6 +51,7 @@ export const translations = [
         'comments label': 'Comments',
         'show all label': 'All comments',
         'show unresolved label': 'Unresolved comments',
+        'add comment label': 'Add comment',
 
         'channel companion label': 'Channel',
         'call panel label': 'Active Call',
@@ -59,7 +62,7 @@ export const translations = [
         'set display name label': 'Continue',
 
         'call tab label': 'Call',
-        'meeting status title': 'Meeting',
+        'meeting status title': 'Calls',
         'share meeting link label': 'Share meeting',
         'show webrtc stats title': 'WebRTC Stats',
         'show calls history title': 'Service History',

@@ -5,35 +5,45 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
-import { Filter, Obj, Ref } from '@dxos/echo';
-import { FunctionTrigger, FunctionType } from '@dxos/functions';
+import { Filter, Obj, Ref, Tag, Type } from '@dxos/echo';
+import { Function, Trigger } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { faker } from '@dxos/random';
-import { useSpaces } from '@dxos/react-client/echo';
-import { ContactType, withClientProvider } from '@dxos/react-client/testing';
+import { useQuery } from '@dxos/react-client/echo';
+import { TestSchema, useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { translations as formTranslations } from '@dxos/react-ui-form';
+import { Employer, Organization, Person, Project } from '@dxos/types';
 
 import { functions } from '../../testing';
 import { translations } from '../../translations';
 
 import { TriggerEditor, type TriggerEditorProps } from './TriggerEditor';
 
+const types = [
+  // TODO(burdon): Get label from annotation.
+  { value: Organization.Organization.typename, label: 'Organization' },
+  { value: Person.Person.typename, label: 'Person' },
+  { value: Type.getTypename(Project.Project), label: 'Project' },
+  { value: Employer.Employer.typename, label: 'Employer' },
+];
+
 const DefaultStory = (props: Partial<TriggerEditorProps>) => {
-  const spaces = useSpaces();
-  const space = spaces[1];
-  const [trigger, setTrigger] = useState<FunctionTrigger>();
+  const { space } = useClientStory();
+  const [trigger, setTrigger] = useState<Trigger.Trigger>();
+  const tags = useQuery(space?.db, Filter.type(Tag.Tag));
 
   useAsyncEffect(async () => {
     if (!space) {
       return;
     }
 
-    const result = await space.db.query(Filter.type(FunctionType)).run();
-    const fn = result.objects.find((fn) => fn.name === 'example.com/function/forex');
+    const functions = await space.db.query(Filter.type(Function.Function)).run();
+    const fn = functions.find((fn) => fn.name === 'example.com/function/forex');
     invariant(fn);
     const trigger = space.db.add(
-      Obj.make(FunctionTrigger, {
+      Trigger.make({
         function: Ref.make(fn),
         spec: { kind: 'webhook' },
         input: {
@@ -50,9 +60,14 @@ const DefaultStory = (props: Partial<TriggerEditorProps>) => {
   }
 
   return (
-    <div role='none' className='w-[32rem] bs-fit border border-separator rounded-sm'>
-      <TriggerEditor space={space} trigger={trigger} onSave={(values) => console.log('on save', values)} {...props} />
-    </div>
+    <TriggerEditor
+      db={space.db}
+      trigger={trigger}
+      types={types}
+      tags={tags}
+      onSave={(values) => console.log('on save', values)}
+      {...props}
+    />
   );
 };
 
@@ -62,17 +77,26 @@ const meta = {
   render: DefaultStory,
   decorators: [
     withTheme,
+    withLayout({ layout: 'column' }),
     withClientProvider({
       createIdentity: true,
       createSpace: true,
-      types: [FunctionType, FunctionTrigger, ContactType],
+      types: [Tag.Tag, Function.Function, Trigger.Trigger, TestSchema.ContactType],
       onCreateSpace: ({ space }) => {
-        for (const fn of functions) {
-          space.db.add(Obj.make(FunctionType, fn));
-        }
+        // Tags.
+        ['Important', 'Investor', 'New'].forEach((label) => {
+          space.db.add(Tag.make({ label }));
+        });
+
+        // Functions.
+        functions.forEach((fn) => {
+          space.db.add(Function.make(fn));
+        });
+
+        // Objects.
         Array.from({ length: 10 }).map(() => {
           return space.db.add(
-            Obj.make(ContactType, {
+            Obj.make(TestSchema.ContactType, {
               name: faker.person.fullName(),
               identifiers: [],
             }),
@@ -82,8 +106,8 @@ const meta = {
     }),
   ],
   parameters: {
-    layout: 'column',
-    translations,
+    layout: 'fullscreen',
+    translations: [...formTranslations, ...translations],
   },
 } satisfies Meta<typeof DefaultStory>;
 

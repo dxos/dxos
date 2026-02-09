@@ -2,17 +2,18 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 
 import { asyncTimeout } from '@dxos/async';
-import { Expando } from '@dxos/echo-schema';
-import { type FunctionDefinition, type FunctionExecutor } from '@dxos/functions';
+import { Type } from '@dxos/echo';
+import { type FunctionDefinition } from '@dxos/functions';
+import { type FunctionExecutor } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
-import { DataType } from '@dxos/schema';
+import { Message } from '@dxos/types';
 
 export const ExtractionInput = Schema.Struct({
-  message: DataType.Message,
-  objects: Schema.optional(Schema.Array(Expando)),
+  message: Message.Message,
+  objects: Schema.optional(Schema.Array(Type.Obj)),
   options: Schema.optional(
     Schema.Struct({
       timeout: Schema.optional(Schema.Number),
@@ -23,12 +24,12 @@ export const ExtractionInput = Schema.Struct({
 export interface ExtractionInput extends Schema.Schema.Type<typeof ExtractionInput> {}
 
 export const ExtractionOutput = Schema.Struct({
-  message: DataType.Message,
+  message: Message.Message,
   timeElapsed: Schema.Number,
 });
 export interface ExtractionOutput extends Schema.Schema.Type<typeof ExtractionOutput> {}
 
-export type ProcessTranscriptMessageParams = {
+export type ProcessTranscriptMessageProps = {
   input: ExtractionInput;
   function: FunctionDefinition<ExtractionInput, ExtractionOutput>;
   executor: FunctionExecutor;
@@ -54,7 +55,7 @@ export type ExtractionFunction = FunctionDefinition<ExtractionInput, ExtractionO
  * Extract entities from the transcript message and add them to the message.
  */
 // TODO(dmaretskyi): Move context to a vector search index.
-export const processTranscriptMessage = async (params: ProcessTranscriptMessageParams): Promise<ExtractionOutput> => {
+export const processTranscriptMessage = async (params: ProcessTranscriptMessageProps): Promise<ExtractionOutput> => {
   try {
     if (params.options?.timeout && params.options.timeout > 0) {
       return await asyncTimeout(params.executor.invoke(params.function, params.input), params.options.timeout);

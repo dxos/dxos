@@ -5,7 +5,7 @@
 import importSource from '@dxos/vite-plugin-import-source';
 import { sentryVitePlugin } from '@sentry/vite-plugin';
 import react from '@vitejs/plugin-react-swc';
-import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import sourcemaps from 'rollup-plugin-sourcemaps';
@@ -14,10 +14,11 @@ import { defineConfig, searchForWorkspaceRoot, type ConfigEnv, type Plugin, type
 import devtoolsJson from 'vite-plugin-devtools-json';
 import inspect from 'vite-plugin-inspect';
 import { VitePWA } from 'vite-plugin-pwa';
+import solid from 'vite-plugin-solid';
 import wasm from 'vite-plugin-wasm';
 
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
-import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
+import { ThemePlugin } from '@dxos/ui-theme/plugin';
 import { isNonNullable } from '@dxos/util';
 import { IconsPlugin } from '@dxos/vite-plugin-icons';
 
@@ -36,7 +37,25 @@ const dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(file
 
 // Shared plugins for worker that are using in prod build.
 // In dev vite uses root plugins for both worker and page.
-const sharedPlugins = (env: ConfigEnv): PluginOption[] => [wasm(), sourcemaps()];
+const sharedPlugins = (env: ConfigEnv): PluginOption[] => [
+  // Building from dist when creating a prod bundle.
+  env.command === 'serve' &&
+    importSource({
+      exclude: [
+        '@dxos/random-access-storage',
+        '@dxos/lock-file',
+        '@dxos/network-manager',
+        '@dxos/teleport',
+        '@dxos/config',
+        '@dxos/client-services',
+        '@dxos/observability',
+        // TODO(dmaretskyi): Decorators break in lit.
+        '@dxos/lit-*',
+      ],
+    }),
+  wasm(),
+  sourcemaps(),
+];
 
 /**
  * https://vitejs.dev/config
@@ -69,7 +88,8 @@ export default defineConfig((env) => ({
     outDir: 'out/composer',
     sourcemap: true,
     minify: !isFalse(process.env.DX_MINIFY),
-    target: ['chrome89', 'edge89', 'firefox89', 'safari15'],
+    // Target modern browsers for better performance and smaller bundle sizes.
+    target: ['chrome108', 'edge107', 'firefox104', 'safari16'],
     rollupOptions: {
       // NOTE: Set cache to `false` to help debug flaky builds.
       // cache: false,
@@ -87,11 +107,27 @@ export default defineConfig((env) => ({
       },
     },
   },
+  optimizeDeps: {
+    exclude: ['@dxos/wa-sqlite'],
+  },
   resolve: {
     alias: {
-      'node-fetch': 'isomorphic-fetch',
-      'node:util': '@dxos/node-std/util',
-      'tiktoken/lite': path.resolve(dirname, 'stub.mjs'),
+      ['node-fetch']: 'isomorphic-fetch',
+      ['node:util']: '@dxos/node-std/util',
+      ['node:path']: '@dxos/node-std/path',
+      ['util']: '@dxos/node-std/util',
+      ['path']: '@dxos/node-std/path',
+      ['tiktoken/lite']: path.resolve(dirname, 'stub.mjs'),
+      // TODO(wittjosiah): Remove this once we have a better solution.
+      // NOTE: This is a workaround to fix "dual package hazard" where dist output and local sources
+      //   might resolve differently, resulting in two distinct module instances.
+      '@dxos/solid-ui-geo': path.resolve(rootDir, 'packages/ui/solid-ui-geo/src'),
+      '@dxos/plugin-map-solid': path.resolve(rootDir, 'packages/plugins/plugin-map-solid/src'),
+      '@dxos/web-context-solid': path.resolve(rootDir, 'packages/common/web-context-solid/src'),
+      '@dxos/effect-atom-solid': path.resolve(rootDir, 'packages/common/effect-atom-solid/src'),
+      '@dxos/echo-solid': path.resolve(rootDir, 'packages/core/echo/echo-solid/src'),
+      // Worker entry point for OPFS SQLite.
+      '@dxos/client/opfs-worker': path.resolve(rootDir, 'packages/sdk/client/src/worker/opfs-worker.ts'),
     },
   },
   worker: {
@@ -102,31 +138,46 @@ export default defineConfig((env) => ({
   plugins: [
     ...sharedPlugins(env),
 
+    // Handle .md?raw imports.
+    {
+      name: 'raw-md-loader',
+      load(id) {
+        if (id.endsWith('.md?raw')) {
+          const filePath = id.replace(/\?raw$/, '');
+          const content = readFileSync(filePath, 'utf-8');
+          return `export default ${JSON.stringify(content)}`;
+        }
+      },
+    },
+
     // https://github.com/antfu-collective/vite-plugin-inspect#readme
     // Open: http://localhost:5173/__inspect
     isTrue(process.env.DX_INSPECT) && inspect(),
 
     env.command === 'serve' && devtoolsJson(),
 
-    // Building from dist when creating a prod bundle.
-    env.command === 'serve' &&
-      importSource({
-        exclude: [
-          '**/node_modules/**',
-          '**/common/random-access-storage/**',
-          '**/common/lock-file/**',
-          '**/mesh/network-manager/**',
-          '**/mesh/teleport/**',
-          '**/sdk/config/**',
-          '**/sdk/client-services/**',
-          '**/sdk/observability/**',
-          // TODO(dmaretskyi): Decorators break in lit.
-          '**/ui/lit-*/**',
-        ],
-      }),
+    // Solid JSX transform for Solid packages.
+    // Must be placed before React plugin to process Solid files first.
+    solid({
+      include: [
+        '**/solid-ui-geo/**',
+        '**/plugin-map-solid/**',
+        '**/effect-atom-solid/**',
+        '**/web-context-solid/**',
+        '**/echo-solid/**',
+        '**/node_modules/solid-js/**',
+        '**/node_modules/solid-element/**',
+        '**/node_modules/@solid-primitives/**',
+      ],
+    }),
 
     react({
       tsDecorators: true,
+      useAtYourOwnRisk_mutateSwcOptions: (options) => {
+        // Disable syntax lowering. Prevents perfomance loss due to private properties polyfill.
+        options.jsc ??= {};
+        options.jsc.target = 'esnext';
+      },
       plugins: [
         [
           '@dxos/swc-log-plugin',
@@ -139,6 +190,14 @@ export default defineConfig((env) => ({
                 include_args: false,
                 include_call_site: true,
                 include_scope: true,
+              },
+              {
+                name: 'dbg',
+                package: '@dxos/log',
+                param_index: 1,
+                include_args: true,
+                include_call_site: false,
+                include_scope: false,
               },
               {
                 name: 'invariant',
@@ -159,13 +218,6 @@ export default defineConfig((env) => ({
             ],
           },
         ],
-        // https://github.com/XantreDev/preact-signals/tree/main/packages/react#how-parser-plugins-works
-        [
-          '@preact-signals/safe-react/swc',
-          {
-            mode: 'all',
-          },
-        ],
       ],
     }),
 
@@ -183,8 +235,6 @@ export default defineConfig((env) => ({
         '@dxos/client-services',
         '@dxos/config',
         '@dxos/echo',
-        '@dxos/echo-signals',
-        '@dxos/live-object',
         '@dxos/react-client',
         '@dxos/react-client/devtools',
         '@dxos/react-client/echo',
@@ -367,6 +417,10 @@ function importMapPlugin(options: { modules: string[] }): Plugin[] {
     {
       name: 'import-map:get-chunk-ref-ids',
       async buildStart() {
+        if (this.environment.mode === 'dev') {
+          return;
+        }
+
         for (const m of options.modules) {
           const resolved = await this.resolve(m);
           if (resolved) {

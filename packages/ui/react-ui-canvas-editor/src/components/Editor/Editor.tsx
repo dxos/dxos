@@ -2,11 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
+import { RegistryContext } from '@effect-atom/atom-react';
 import React, {
   type ForwardedRef,
   type PropsWithChildren,
   forwardRef,
   useCallback,
+  useContext,
   useEffect,
   useImperativeHandle,
   useMemo,
@@ -17,7 +19,7 @@ import React, {
 import { SelectionModel } from '@dxos/graph';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { testId } from '@dxos/react-ui-canvas';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { type ActionHandler } from '../../actions';
 import { DragMonitor, type EditingState, EditorContext, type EditorContextType, type EditorOptions } from '../../hooks';
@@ -62,38 +64,38 @@ type EditorRootProps<S extends Shape = Shape> = ThemedClassName<
   >
 >;
 
-const EditorRootWithType = <S extends Shape = Shape>(
+const RootInner = <S extends Shape = Shape>(
   {
     children,
     classNames,
     id,
-    options: _options = defaultEditorOptions,
-    debug: _debug = false,
-    showGrid: _showGrid = false,
-    snapToGrid: _snapToGrid = false,
-    graph: _graph,
+    options: optionsProp = defaultEditorOptions,
+    debug: debugProp = false,
+    showGrid: showGridProp = false,
+    snapToGrid: snapToGridProp = false,
+    graph: graphProp,
     graphMonitor,
-    selection: _selection,
-    registry: _registry,
-    layout: _layout,
+    selection: selectionProp,
+    registry: registryProp,
+    layout: layoutProp,
     autoZoom,
   }: EditorRootProps<S>,
   forwardedRef: ForwardedRef<EditorController>,
 ) => {
-  const options = useMemo(() => Object.assign({}, defaultEditorOptions, _options), [_options]);
+  const options = useMemo(() => Object.assign({}, defaultEditorOptions, optionsProp), [optionsProp]);
 
   // External state.
-  const graph = useMemo<CanvasGraphModel<S>>(() => _graph ?? CanvasGraphModel.create(), [_graph]);
+  const graph = useMemo<CanvasGraphModel<S>>(() => graphProp ?? CanvasGraphModel.create(), [graphProp]);
   const clipboard = useMemo(() => CanvasGraphModel.create(), []);
-  const selection = useMemo(() => _selection ?? new SelectionModel(), [_selection]);
-  const registry = useMemo(() => _registry ?? new ShapeRegistry(defaultShapes), [_registry]);
-  const layout = useMemo(() => _layout ?? new ShapeLayout(registry), [_layout, registry]);
+  const selection = useMemo(() => selectionProp ?? new SelectionModel(), [selectionProp]);
+  const registry = useMemo(() => registryProp ?? new ShapeRegistry(defaultShapes), [registryProp]);
+  const layout = useMemo(() => layoutProp ?? new ShapeLayout(registry), [layoutProp, registry]);
 
   // Canvas state.
-  const [debug, setDebug] = useState(_debug);
+  const [debug, setDebug] = useState(debugProp);
   const [gridSize, setGridSize] = useState({ width: options.gridSize, height: options.gridSize });
-  const [showGrid, setShowGrid] = useState(_showGrid);
-  const [snapToGrid, setSnapToGrid] = useState(_snapToGrid);
+  const [showGrid, setShowGrid] = useState(showGridProp);
+  const [snapToGrid, setSnapToGrid] = useState(snapToGridProp);
 
   // Repaint.
   const [, forceUpdate] = useState({});
@@ -102,9 +104,12 @@ const EditorRootWithType = <S extends Shape = Shape>(
   // Canvas layout.
   const overlayRef = useRef<SVGSVGElement>(null);
 
+  // Atom registry for reactive state.
+  const atomRegistry = useContext(RegistryContext);
+
   // Editor state.
   const [ready, setReady] = useState(!autoZoom);
-  const [dragMonitor] = useState(() => new DragMonitor());
+  const [dragMonitor] = useState(() => new DragMonitor(atomRegistry));
   const [editing, setEditing] = useState<EditingState<any>>();
 
   // Actions.
@@ -170,12 +175,12 @@ const EditorRootWithType = <S extends Shape = Shape>(
       <div
         {...testId<TestId>('dx-editor')}
         tabIndex={0}
+        style={{ contain: 'layout' }}
         className={mx(
-          'relative w-full h-full overflow-hidden',
-          ready ? 'transition-opacity delay-[1s] duration-[1s] opacity-100' : 'opacity-0',
+          'relative is-full bs-full overflow-hidden',
+          ready ? 'transition-opacity delay-[0.5s] duration-[0.5s] opacity-100' : 'opacity-0',
           classNames,
         )}
-        style={{ contain: 'layout' }}
       >
         {children}
       </div>
@@ -183,12 +188,12 @@ const EditorRootWithType = <S extends Shape = Shape>(
   );
 };
 
-export const EditorRoot = forwardRef(EditorRootWithType) as <S extends Shape>(
+export const Root = forwardRef(RootInner) as <S extends Shape>(
   props: EditorRootProps<S> & { ref?: ForwardedRef<EditorController> },
-) => ReturnType<typeof EditorRootWithType>;
+) => ReturnType<typeof RootInner>;
 
 export const Editor = {
-  Root: EditorRoot,
+  Root,
   Canvas,
   UI,
 };

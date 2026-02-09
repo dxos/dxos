@@ -42,10 +42,10 @@
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../core/echo/echo-schema"
+      "path": "../../core/echo/echo-db"
     },
     {
-      "path": "../../core/echo/live-object"
+      "path": "../../core/operation"
     },
     {
       "path": "../../sdk/app-framework"
@@ -57,19 +57,31 @@
       "path": "../../sdk/schema"
     },
     {
+      "path": "../../sdk/types"
+    },
+    {
       "path": "../../ui/react-ui"
     },
     {
       "path": "../../ui/react-ui-attention"
     },
     {
+      "path": "../../ui/react-ui-calendar"
+    },
+    {
       "path": "../../ui/react-ui-editor"
+    },
+    {
+      "path": "../../ui/react-ui-mosaic"
     },
     {
       "path": "../../ui/react-ui-stack"
     },
     {
-      "path": "../../ui/react-ui-theme"
+      "path": "../../ui/ui-editor"
+    },
+    {
+      "path": "../../ui/ui-theme"
     },
     {
       "path": "../plugin-client"

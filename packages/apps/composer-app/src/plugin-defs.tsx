@@ -2,10 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-// NOTE(ZaymonFC): Workaround; see: https://discord.com/channels/837138313172353095/1363955461350621235
-import '@dxos/plugin-inbox/css';
+import * as Effect from 'effect/Effect';
 
-import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
+import { OperationPlugin, type Plugin, RuntimePlugin, SettingsPlugin } from '@dxos/app-framework';
 import { type ClientServicesProvider, type Config } from '@dxos/client';
 import { type Observability } from '@dxos/observability';
 import { AssistantPlugin } from '@dxos/plugin-assistant';
@@ -25,7 +24,9 @@ import { HelpPlugin } from '@dxos/plugin-help';
 import { InboxPlugin } from '@dxos/plugin-inbox';
 import { KanbanPlugin } from '@dxos/plugin-kanban';
 import { MapPlugin } from '@dxos/plugin-map';
+import { MapPlugin as MapPluginSolid } from '@dxos/plugin-map-solid';
 import { MarkdownPlugin } from '@dxos/plugin-markdown';
+import { MasonryPlugin } from '@dxos/plugin-masonry';
 import { MeetingPlugin } from '@dxos/plugin-meeting';
 import { MermaidPlugin } from '@dxos/plugin-mermaid';
 import { NativePlugin } from '@dxos/plugin-native';
@@ -40,6 +41,7 @@ import { RegistryPlugin } from '@dxos/plugin-registry';
 import { ScriptPlugin } from '@dxos/plugin-script';
 import { SearchPlugin } from '@dxos/plugin-search';
 import { SheetPlugin } from '@dxos/plugin-sheet';
+import { SimpleLayoutPlugin } from '@dxos/plugin-simple-layout';
 import { SketchPlugin } from '@dxos/plugin-sketch';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { StackPlugin } from '@dxos/plugin-stack';
@@ -56,6 +58,8 @@ import { isTruthy } from '@dxos/util';
 import { steps } from './help';
 import { WelcomePlugin } from './plugins';
 
+const APP_LINK_ORIGIN = 'https://composer.dxos.org';
+
 export type State = {
   appKey: string;
   config: Config;
@@ -69,24 +73,29 @@ export type PluginConfig = State & {
   isTauri?: boolean;
   isLabs?: boolean;
   isStrict?: boolean;
+  isPopover?: boolean;
+  isMobile?: boolean;
 };
 
-export const getCore = ({ isPwa, isTauri }: PluginConfig): string[] =>
-  [
+export const getCore = ({ isPwa, isTauri, isPopover, isMobile }: PluginConfig): string[] => {
+  const useSimpleLayout = isPopover || isMobile;
+  return [
     AttentionPlugin.meta.id,
     AutomationPlugin.meta.id,
     ClientPlugin.meta.id,
-    DeckPlugin.meta.id,
+    useSimpleLayout ? SimpleLayoutPlugin.meta.id : DeckPlugin.meta.id,
     FilesPlugin.meta.id,
     GraphPlugin.meta.id,
     HelpPlugin.meta.id,
-    IntentPlugin.meta.id,
-    isTauri && NativePlugin.meta.id,
+    isTauri && !isMobile && NativePlugin.meta.id,
+    OperationPlugin.meta.id,
     NavTreePlugin.meta.id,
     ObservabilityPlugin.meta.id,
     PreviewPlugin.meta.id,
     !isTauri && isPwa && PwaPlugin.meta.id,
     RegistryPlugin.meta.id,
+    RuntimePlugin.meta.id,
+    SearchPlugin.meta.id,
     SettingsPlugin.meta.id,
     SpacePlugin.meta.id,
     StatusBarPlugin.meta.id,
@@ -96,12 +105,15 @@ export const getCore = ({ isPwa, isTauri }: PluginConfig): string[] =>
   ]
     .filter(isTruthy)
     .flat();
+};
 
 export const getDefaults = ({ isDev, isLabs }: PluginConfig): string[] =>
   [
     // Default
+    InboxPlugin.meta.id,
     KanbanPlugin.meta.id,
     MarkdownPlugin.meta.id,
+    MasonryPlugin.meta.id,
     SheetPlugin.meta.id,
     SketchPlugin.meta.id,
     TablePlugin.meta.id,
@@ -123,8 +135,20 @@ export const getDefaults = ({ isDev, isLabs }: PluginConfig): string[] =>
     .filter(isTruthy)
     .flat();
 
-export const getPlugins = ({ appKey, config, services, observability, isDev, isLabs, isPwa, isTauri }: PluginConfig) =>
-  [
+export const getPlugins = ({
+  appKey,
+  config,
+  services,
+  observability,
+  isDev,
+  isLabs,
+  isPwa,
+  isTauri,
+  isPopover,
+  isMobile,
+}: PluginConfig): Plugin.Plugin[] => {
+  const useSimpleLayout = isPopover || isMobile;
+  return [
     AssistantPlugin(),
     AttentionPlugin(),
     AutomationPlugin(),
@@ -137,20 +161,22 @@ export const getPlugins = ({ appKey, config, services, observability, isDev, isL
     }),
     ConductorPlugin(),
     DebugPlugin(),
-    DeckPlugin(),
+    useSimpleLayout ? SimpleLayoutPlugin({ isPopover }) : DeckPlugin(),
     isLabs && ExcalidrawPlugin(),
     ExplorerPlugin(),
     isLabs && FilesPlugin(),
     GraphPlugin(),
     HelpPlugin({ steps }),
     InboxPlugin(),
-    IntentPlugin(),
+    OperationPlugin(),
     KanbanPlugin(),
     MapPlugin(),
+    isLabs && MapPluginSolid(),
     MarkdownPlugin(),
+    MasonryPlugin(),
     MeetingPlugin(),
     MermaidPlugin(),
-    isTauri && NativePlugin(),
+    isTauri && !isMobile && NativePlugin(),
     NavTreePlugin(),
     ObservabilityPlugin({
       namespace: appKey,
@@ -162,13 +188,15 @@ export const getPlugins = ({ appKey, config, services, observability, isDev, isL
     !isTauri && isPwa && PwaPlugin(),
     ProjectPlugin(),
     RegistryPlugin(),
+    RuntimePlugin(),
     ScriptPlugin(),
-    isLabs && SearchPlugin(),
+    SearchPlugin(),
     SettingsPlugin(),
     SheetPlugin(),
     SketchPlugin(),
     SpacePlugin({
       observability: true,
+      shareableLinkOrigin: isTauri ? APP_LINK_ORIGIN : window.location.origin,
     }),
     StackPlugin(),
     StatusBarPlugin(),
@@ -186,14 +214,16 @@ export const getPlugins = ({ appKey, config, services, observability, isDev, isL
   ]
     .filter(isTruthy)
     .flat();
-
-const handleReset: ClientPluginOptions['onReset'] = ({ target }) => {
-  localStorage.clear();
-  if (target === 'deviceInvitation') {
-    window.location.assign(new URL('/?deviceInvitationCode=', window.location.origin));
-  } else if (target === 'recoverIdentity') {
-    window.location.assign(new URL('/?recoverIdentity=true', window.location.origin));
-  } else {
-    window.location.pathname = '/';
-  }
 };
+
+const handleReset: ClientPluginOptions['onReset'] = ({ target }) =>
+  Effect.sync(() => {
+    localStorage.clear();
+    if (target === 'deviceInvitation') {
+      window.location.assign(new URL('/?deviceInvitationCode=', window.location.origin));
+    } else if (target === 'recoverIdentity') {
+      window.location.assign(new URL('/?recoverIdentity=true', window.location.origin));
+    } else {
+      window.location.pathname = '/';
+    }
+  });

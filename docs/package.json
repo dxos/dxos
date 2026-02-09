@@ -4,6 +4,10 @@
   "private": true,
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
   "license": "MIT",
   "author": "info@dxos.org",
   "type": "module",
@@ -16,10 +20,10 @@
     "typedoc": "./scripts/collect-typedoc.sh"
   },
   "dependencies": {
-    "@astrojs/starlight": "^0.32.5",
-    "astro": "^5.13.1",
-    "sharp": "^0.32.5",
-    "starlight-links-validator": "^0.14.3"
+    "@astrojs/starlight": "catalog:",
+    "astro": "catalog:",
+    "sharp": "catalog:",
+    "starlight-links-validator": "catalog:"
   },
   "devDependencies": {
     "@dxos/app-framework": "workspace:*",
@@ -27,8 +31,7 @@
     "@dxos/client-protocol": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/echo": "workspace:*",
-    "@dxos/echo-signals": "workspace:*",
     "@dxos/react-client": "workspace:*",
-    "@preact/signals-core": "^1.12.1"
+    "@dxos/schema": "workspace:*"
   }
 }

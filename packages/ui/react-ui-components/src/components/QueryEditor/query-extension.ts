@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type CompletionContext, autocompletion } from '@codemirror/autocomplete';
 import { HighlightStyle, LRLanguage, LanguageSupport, syntaxHighlighting, syntaxTree } from '@codemirror/language';
 import { type EditorState, type Extension, RangeSetBuilder, StateField } from '@codemirror/state';
 import { Decoration, type DecorationSet, EditorView, WidgetType } from '@codemirror/view';
@@ -10,77 +9,26 @@ import { type SyntaxNodeRef } from '@lezer/common';
 import { styleTags, tags as t } from '@lezer/highlight';
 import JSON5 from 'json5';
 
-import { type Space } from '@dxos/client/echo';
-import { type TagMap, Type, findTagByLabel } from '@dxos/echo';
+import { Tag } from '@dxos/echo';
 import { QueryDSL } from '@dxos/echo-query';
-import { Domino } from '@dxos/react-ui';
-import { type TypeaheadContext, focus, focusField, staticCompletion, typeahead } from '@dxos/react-ui-editor';
-import { getHashHue, getStyles } from '@dxos/react-ui-theme';
+import { Domino } from '@dxos/ui';
+import { type CompoetionContext, focus, focusField, staticCompletion, typeahead } from '@dxos/ui-editor';
+import { getHashHue, getStyles, mx } from '@dxos/ui-theme';
 
 export type QueryOptions = {
-  space?: Space; // TODO(burdon): Replace with schema registry lookup to remove Space dep.
-  tags?: TagMap;
+  tags?: Tag.Map;
 };
 
 /**
  * Create a CodeMirror extension for the query language with syntax highlighting.
  */
-export const query = ({ space, tags }: QueryOptions = {}): Extension => {
-  const parser = QueryDSL.Parser.configure({ strict: false });
-
+export const query = ({ tags }: QueryOptions = {}): Extension => {
   return [
     new LanguageSupport(queryLanguage),
     syntaxHighlighting(queryHighlightStyle),
     decorations({ tags }),
-    autocompletion({
-      activateOnTyping: true,
-      override: [
-        async (context: CompletionContext) => {
-          const tree = parser.parse(context.state.sliceDoc());
-          const node = tree.cursorAt(context.pos, -1).node;
-          let range = undefined;
-
-          switch (node.parent?.type.id) {
-            case QueryDSL.Node.TypeFilter: {
-              if (node?.type.id === QueryDSL.Node.Identifier) {
-                range = { from: node.from, to: node.to };
-              } else if (node?.type.name === ':') {
-                range = { from: node.from + 1, to: node.to };
-              }
-
-              if (range) {
-                const schema = space?.db.graph.schemaRegistry.schemas ?? [];
-                return {
-                  ...range,
-                  filter: true,
-                  options: schema.map((schema) => ({ label: Type.getTypename(schema) })),
-                };
-              }
-
-              break;
-            }
-
-            // TODO(burdon): Trigger on #
-            case QueryDSL.Node.TagFilter: {
-              if (tags) {
-                range = { from: node.from + 1, to: node.to };
-                return {
-                  ...range,
-                  filter: true,
-                  options: Object.values(tags).map((tag) => ({ label: tag.label })),
-                };
-              }
-
-              break;
-            }
-          }
-
-          return null;
-        },
-      ],
-    }),
     typeahead({
-      onComplete: ({ line }: TypeaheadContext) => {
+      onComplete: ({ line }: CompoetionContext) => {
         const words = line.split(/\s+/).filter(Boolean);
         if (words.length > 0) {
           // TODO(burdon): Get suggestion from parser.
@@ -114,7 +62,18 @@ const decorations = ({ tags }: QueryOptions): Extension => {
               node.from,
               node.to,
               Decoration.mark({
-                class: 'pis-1 pie-1',
+                class: 'pli-1',
+              }),
+            );
+            break;
+          }
+
+          case '=': {
+            deco.add(
+              node.from,
+              node.to,
+              Decoration.mark({
+                class: 'text-subdued',
               }),
             );
             break;
@@ -144,7 +103,7 @@ const decorations = ({ tags }: QueryOptions): Extension => {
             const tagNode = node.node.getChild(QueryDSL.Node.Tag);
             if (tagNode) {
               const label = state.sliceDoc(tagNode.from + 1, tagNode.to);
-              const tag = findTagByLabel(tags, label);
+              const tag = Tag.findTagByLabel(tags, label);
               const hue = tag?.hue ?? getHashHue(tag?.id ?? label);
               deco.add(
                 node.from,
@@ -206,6 +165,10 @@ const decorations = ({ tags }: QueryOptions): Extension => {
             );
             break;
           }
+
+          // default: {
+          //   console.log(node.type.name);
+          // }
         }
       },
     });
@@ -248,14 +211,10 @@ const lineHeight = '30px';
  * NOTE: The outer container vertically aligns the inner text with content in the outer div.
  */
 const container = (classNames: string, ...children: Domino<HTMLElement>[]) => {
-  return Domino.of('span')
-    .classNames('inline-flex bs-[28px] align-middle')
-    .children(
-      Domino.of('span')
-        .classNames(['inline-flex bs-[26px] border rounded-sm', classNames])
-        .children(...children),
-    )
-    .build();
+  const inner = Domino.of('span')
+    .classNames(mx('inline-flex bs-[26px] border rounded-sm', classNames))
+    .children(...children);
+  return Domino.of('span').classNames('inline-flex bs-[28px] align-middle').children(inner).root;
 };
 
 /**
@@ -278,8 +237,8 @@ class TypeWidget extends WidgetType {
     const label: string = this._identifier.split(/\W/).at(-1)!;
     return container(
       'border-sky-500',
-      Domino.of('span').classNames(['flex items-center pis-1 pie-1 text-black text-xs bg-sky-500']).text('type'),
-      Domino.of('span').classNames(['flex items-center pis-1 pie-1 text-subdued']).text(label),
+      Domino.of('span').classNames(mx('flex items-center pli-1 text-black text-xs bg-sky-500')).text('type'),
+      Domino.of('span').classNames(mx('flex items-center pli-1 text-subdued')).text(label),
     );
   }
 }
@@ -303,9 +262,9 @@ class TagWidget extends WidgetType {
     const { bg, border, surface } = getStyles(this._hue);
     return container(
       border,
-      Domino.of('span').classNames(['flex items-center pis-1 pie-1 text-black text-xs', bg]).text('#'),
+      Domino.of('span').classNames(mx('flex items-center pli-1 text-black text-xs', bg)).text('#'),
       Domino.of('span')
-        .classNames(['flex items-center pis-1 pie-1 text-subdued text-sm rounded-r-[3px]', surface])
+        .classNames(mx('flex items-center pli-1 text-subdued text-sm rounded-r-[3px]', surface))
         .text(this._str),
     );
   }
@@ -335,16 +294,13 @@ class ObjectWidget extends WidgetType {
   override toDOM() {
     return container(
       'border-separator divide-x divide-separator',
-      ...this._entries.map(([key, value]) =>
-        Domino.of('span')
-          .classNames('inline-flex items-stretch')
-          .children(
-            Domino.of('span')
-              .classNames('flex items-center pis-1 pie-1 text-subdued text-xs bg-modalSurface first:rounded-l-[3px]')
-              .text(key),
-            Domino.of('span').classNames('flex items-center pis-1 pie-1 text-subdued').text(value),
-          ),
-      ),
+      ...this._entries.map(([key, value]) => {
+        const keyEl = Domino.of('span')
+          .classNames('flex items-center pli-1 text-subdued text-xs bg-modalSurface first:rounded-l-[3px]')
+          .text(key);
+        const valueEl = Domino.of('span').classNames('flex items-center pli-1 text-subdued').text(value);
+        return Domino.of('span').classNames('inline-flex items-stretch').children(keyEl, valueEl);
+      }),
     );
   }
 }
@@ -362,7 +318,7 @@ class SymbolWidget extends WidgetType {
   }
 
   override toDOM() {
-    return Domino.of('span').text(this._str).build();
+    return Domino.of('span').text(this._str).root;
   }
 }
 

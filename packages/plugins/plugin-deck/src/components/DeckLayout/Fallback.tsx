@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { useTranslation } from '@dxos/react-ui';
-import { errorText, mx } from '@dxos/react-ui-theme';
+import { errorText, mx } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
 
@@ -18,7 +18,7 @@ export const Fallback = () => {
         role='alert'
         className={mx(
           errorText,
-          'border border-error-400/50 rounded-md flex items-center justify-center p-8 font-normal text-lg',
+          'border border-roseFill rounded-md flex items-center justify-center p-8 font-normal text-lg',
         )}
       >
         {t('plugin error message')}

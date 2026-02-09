@@ -64,13 +64,10 @@
       "path": "../echo/echo-db"
     },
     {
-      "path": "../echo/echo-schema"
-    },
-    {
-      "path": "../echo/live-object"
-    },
-    {
       "path": "../functions"
+    },
+    {
+      "path": "../functions-runtime"
     },
     {
       "path": "../protocols"

@@ -1,0 +1,46 @@
+{
+  "name": "@dxos/echo-atom",
+  "version": "0.8.3",
+  "description": "Effect Atom wrappers for ECHO objects with explicit subscriptions.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "MIT",
+  "author": "DXOS.org",
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
+      "default": "./dist/lib/neutral/index.mjs"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {}
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@dxos/echo": "workspace:*",
+    "@dxos/echo-db": "workspace:*",
+    "@dxos/invariant": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "@effect-atom/atom": "catalog:",
+    "lodash.isequal": "catalog:"
+  },
+  "devDependencies": {
+    "@dxos/random": "workspace:*",
+    "@dxos/test-utils": "workspace:*",
+    "@types/lodash.isequal": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 import React, { useEffect, useState } from 'react';
 
 import { DEFAULT_OUTPUT } from '@dxos/conductor';
@@ -36,7 +36,7 @@ export const SwitchComponent = ({ shape }: ShapeComponentProps<SwitchShape>) => 
   }, [value]);
 
   return (
-    <div className='flex w-full justify-center items-center' onClick={(ev) => ev.stopPropagation()}>
+    <div className='flex is-full justify-center items-center' onClick={(ev) => ev.stopPropagation()}>
       <Input.Root>
         <Input.Switch checked={value} onCheckedChange={(value) => setValue(value)} />
       </Input.Root>

@@ -2,8 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Tool, type Toolkit } from '@effect/ai';
-import { Context, Effect, Layer, Record } from 'effect';
+import type * as Tool from '@effect/ai/Tool';
+import type * as Toolkit from '@effect/ai/Toolkit';
+import * as Context from 'effect/Context';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+import * as Record from 'effect/Record';
 
 import { AiToolNotFoundError } from '../errors';
 

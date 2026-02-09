@@ -5,10 +5,10 @@
 import React, { type FC } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 import { BitField, range } from '@dxos/util';
 
-export type BitbarParams = {
+export type BitbarProps = {
   value: Uint8Array;
   length?: number;
   size?: number;
@@ -17,7 +17,7 @@ export type BitbarParams = {
   className?: string;
 };
 
-export const Bitbar: FC<BitbarParams> = ({
+export const Bitbar: FC<BitbarProps> = ({
   value,
   length = value.length * 8,
   size = 16,
@@ -51,7 +51,7 @@ export const Bitbar: FC<BitbarParams> = ({
   };
 
   return (
-    <div ref={ref} className={mx('flex shrink-0 w-full', className)} style={{ minHeight: height }}>
+    <div ref={ref} className={mx('flex shrink-0 is-full', className)} style={{ minHeight: height }}>
       {range(buckets).map((index) => (
         <div key={index} style={{ width: size, marginRight: margin }} className={getColor(index)} />
       ))}

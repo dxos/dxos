@@ -2,7 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Array, Effect, Layer, Option, Schema, pipe } from 'effect';
+import * as Array from 'effect/Array';
+import * as Effect from 'effect/Effect';
+import * as Function from 'effect/Function';
+import * as Layer from 'effect/Layer';
+import * as Option from 'effect/Option';
+import * as Schema from 'effect/Schema';
 
 import { AiService, ConsolePrinter, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { AiSession, GenerationObserver } from '@dxos/assistant';
@@ -38,11 +43,11 @@ export default defineFunction({
         observer: GenerationObserver.fromPrinter(new ConsolePrinter({ tag: 'summarize' })),
       });
 
-      const summary = pipe(
+      const summary = Function.pipe(
         result,
         Array.findLast((msg) => msg.sender.role === 'assistant' && msg.blocks.some((block) => block._tag === 'text')),
         Option.flatMap((msg) =>
-          pipe(
+          Function.pipe(
             msg.blocks,
             Array.findLast((block) => block._tag === 'text'),
             Option.map((block) => block.text),

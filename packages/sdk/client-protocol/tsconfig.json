@@ -31,9 +31,6 @@
       "path": "../../core/echo/echo-db"
     },
     {
-      "path": "../../core/echo/echo-schema"
-    },
-    {
       "path": "../../core/halo/credentials"
     },
     {
@@ -41,9 +38,6 @@
     },
     {
       "path": "../../core/protocols"
-    },
-    {
-      "path": "../config"
     }
   ]
 }

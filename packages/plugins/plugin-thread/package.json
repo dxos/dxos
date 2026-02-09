@@ -4,27 +4,40 @@
   "description": "DXOS Threads Surface plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
   "license": "MIT",
   "author": "DXOS.org",
   "sideEffects": true,
   "type": "module",
   "exports": {
     ".": {
-      "source": "./src/index.ts",
-      "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
-      "node": "./dist/lib/node-esm/index.mjs"
+      "node": "./dist/lib/node-esm/index.mjs",
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts"
+    },
+    "./blueprints": {
+      "browser": "./dist/lib/browser/blueprints/index.mjs",
+      "node": "./dist/lib/node-esm/blueprints/index.mjs",
+      "source": "./src/blueprints/index.ts",
+      "types": "./dist/types/src/blueprints/index.d.ts"
     },
     "./types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
       "browser": "./dist/lib/browser/types/index.mjs",
-      "node": "./dist/lib/node-esm/types/index.mjs"
+      "node": "./dist/lib/node-esm/types/index.mjs",
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts"
     }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
+      "blueprints": [
+        "dist/types/src/blueprints/index.d.ts"
+      ],
       "types": [
         "dist/types/src/types/index.d.ts"
       ]
@@ -35,24 +48,27 @@
     "src"
   ],
   "dependencies": {
-    "@codemirror/language": "^6.11.3",
-    "@codemirror/state": "^6.5.2",
-    "@codemirror/view": "^6.38.4",
+    "@codemirror/language": "catalog:",
+    "@codemirror/state": "catalog:",
+    "@codemirror/view": "catalog:",
     "@dxos/app-framework": "workspace:*",
     "@dxos/assistant": "workspace:*",
     "@dxos/async": "workspace:*",
+    "@dxos/blueprints": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/devtools": "workspace:*",
     "@dxos/display-name": "workspace:*",
     "@dxos/echo": "workspace:*",
-    "@dxos/echo-schema": "workspace:*",
+    "@dxos/echo-db": "workspace:*",
+    "@dxos/echo-react": "workspace:*",
+    "@dxos/effect": "workspace:*",
+    "@dxos/functions": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
-    "@dxos/live-object": "workspace:*",
-    "@dxos/local-storage": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/operation": "workspace:*",
     "@dxos/plugin-attention": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-deck": "workspace:*",
@@ -67,48 +83,52 @@
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
+    "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-sfx": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/react-ui-tabs": "workspace:*",
     "@dxos/react-ui-thread": "workspace:*",
     "@dxos/schema": "workspace:*",
+    "@dxos/types": "workspace:*",
+    "@dxos/ui-editor": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/ai": "0.29.1",
-    "@effect/experimental": "0.56.0",
-    "@peermetrics/webrtc-stats": "5.7.1",
-    "@preact-signals/safe-react": "^0.9.0",
-    "@preact/signals-core": "^1.12.1",
-    "date-fns": "^3.3.1",
-    "extendable-media-recorder": "^9.2.19",
-    "extendable-media-recorder-wav-encoder": "^7.0.123",
-    "md5-hex": "5.0.0",
-    "react-resize-detector": "^11.0.1",
-    "wavefile": "^11.0.0"
+    "@effect-atom/atom": "catalog:",
+    "@effect-atom/atom-react": "catalog:",
+    "@effect/ai": "catalog:",
+    "@effect/experimental": "catalog:",
+    "@peermetrics/webrtc-stats": "catalog:",
+    "date-fns": "catalog:",
+    "extendable-media-recorder": "catalog:",
+    "extendable-media-recorder-wav-encoder": "catalog:",
+    "md5-hex": "catalog:",
+    "react-resize-detector": "catalog:",
+    "wavefile": "catalog:"
   },
   "devDependencies": {
+    "@dxos/plugin-testing": "workspace:*",
     "@dxos/plugin-theme": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
-    "@effect-rx/rx-react": "0.42.4",
-    "@effect/platform": "0.92.1",
-    "@types/react": "~19.2.2",
-    "@types/react-dom": "~19.2.1",
-    "effect": "3.18.3",
-    "react": "~19.2.0",
-    "react-dom": "~19.2.0",
-    "vite": "7.1.9"
+    "@dxos/ui-theme": "workspace:*",
+    "@effect-atom/atom-react": "catalog:",
+    "@effect/platform": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "effect": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "vite": "catalog:"
   },
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-theme": "workspace:*",
-    "@effect-rx/rx-react": "^0.34.1",
-    "@effect/platform": "^0.80.12",
-    "effect": "^3.13.3",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "@dxos/ui-theme": "workspace:*",
+    "@effect-atom/atom-react": "catalog:",
+    "@effect/platform": "catalog:",
+    "effect": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
   },
   "publishConfig": {
     "access": "public"

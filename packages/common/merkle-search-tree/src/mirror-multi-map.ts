@@ -7,7 +7,7 @@ import { arraysEqual } from '@dxos/util';
 import type { ActorID } from './common';
 import { type DigestHex, Forest, type Key, type NodeData } from './forest';
 
-export type MirrorMultiMapParams = {
+export type MirrorMultiMapProps = {
   actor: ActorID;
 };
 
@@ -17,7 +17,7 @@ export type MirrorMultiMapParams = {
  * Actors are expected to eventually converge to the same state.
  */
 export class MirrorMultiMap<T> {
-  static async new<T>(params: MirrorMultiMapParams): Promise<MirrorMultiMap<T>> {
+  static async new<T>(params: MirrorMultiMapProps): Promise<MirrorMultiMap<T>> {
     const tree = new MirrorMultiMap<T>(params);
     tree.#currentRoot = await tree.#forest.createTree([]);
 
@@ -31,7 +31,7 @@ export class MirrorMultiMap<T> {
 
   #remoteStates = new Map<ActorID, SyncState>();
 
-  private constructor(params: MirrorMultiMapParams) {
+  private constructor(params: MirrorMultiMapProps) {
     this.#actor = params.actor;
   }
 

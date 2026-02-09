@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { useAtomValue } from '@effect-atom/atom-react';
 import React from 'react';
 
 import { DropdownMenu, useTranslation } from '@dxos/react-ui';
@@ -9,16 +10,19 @@ import { DropdownMenu, useTranslation } from '@dxos/react-ui';
 import { type ModalController, type TableModel } from '../../model';
 import { translationKey } from '../../translations';
 
-type ColumnActionsMenuProps = { model: TableModel; modals: ModalController };
+export type ColumnActionsMenuProps = {
+  model: TableModel;
+  modals: ModalController;
+};
 
 export const ColumnActionsMenu = ({ model, modals }: ColumnActionsMenuProps) => {
   const { t } = useTranslation(translationKey);
-  const state = modals.state.value;
+  const state = useAtomValue(modals.state);
   if (state?.type !== 'column') {
     return null;
   }
 
-  const currentSort = model.sorting?.sorting;
+  const currentSort = model.getSorting();
   const isCurrentColumnSorted = currentSort?.fieldId === state.fieldId;
 
   return (
@@ -30,7 +34,7 @@ export const ColumnActionsMenu = ({ model, modals }: ColumnActionsMenuProps) => 
             {(!isCurrentColumnSorted || currentSort?.direction === 'asc') && (
               <DropdownMenu.Item
                 data-testid='column-sort-descending'
-                onClick={() => model.sorting?.setSort(state.fieldId, 'desc')}
+                onClick={() => model.setSort(state.fieldId, 'desc')}
               >
                 {t('column action sort descending')}
               </DropdownMenu.Item>
@@ -38,13 +42,13 @@ export const ColumnActionsMenu = ({ model, modals }: ColumnActionsMenuProps) => 
             {(!isCurrentColumnSorted || currentSort?.direction === 'desc') && (
               <DropdownMenu.Item
                 data-testid='column-sort-ascending'
-                onClick={() => model.sorting?.setSort(state.fieldId, 'asc')}
+                onClick={() => model.setSort(state.fieldId, 'asc')}
               >
                 {t('column action sort ascending')}
               </DropdownMenu.Item>
             )}
             {isCurrentColumnSorted && (
-              <DropdownMenu.Item data-testid='column-clear-sort' onClick={() => model.sorting?.clearSort()}>
+              <DropdownMenu.Item data-testid='column-clear-sort' onClick={() => model.clearSort()}>
                 {t('column action clear sorting')}
               </DropdownMenu.Item>
             )}

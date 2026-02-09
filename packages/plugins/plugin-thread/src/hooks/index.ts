@@ -3,8 +3,9 @@
 //
 
 export * from './analytics';
+
+export * from './useBlackCanvasStreamTrack';
 export * from './useDebugMode';
+export * from './useInaudibleAudioStreamTrack';
 export * from './useStatus';
 export * from './useVideoStreamTrack';
-export * from './useInaudibleAudioStreamTrack';
-export * from './useBlackCanvasStreamTrack';

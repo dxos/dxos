@@ -19,7 +19,7 @@ const _runTransform = async (source: string) => {
       experimental: {
         plugins: [[wasmModule, {}]],
       },
-      target: 'es2022',
+      target: 'esnext',
     },
   });
 };

@@ -53,7 +53,7 @@ export async function processFiles(dirname, wasmModule) {
             ],
           ],
         },
-        target: 'es2022',
+        target: 'esnext',
       },
     });
     await mkdir(`${dirname}/outputs`, { recursive: true });

@@ -25,7 +25,7 @@ import { type AsyncCallback, Callback, tracer } from '@dxos/util';
 import { type MetadataStore } from '../metadata';
 import { Pipeline, type PipelineAccessor } from '../pipeline';
 
-export type ControlPipelineParams = {
+export type ControlPipelineProps = {
   spaceKey: PublicKey;
   genesisFeed: FeedWrapper<FeedMessage>;
   feedProvider: (feedKey: PublicKey) => Promise<FeedWrapper<FeedMessage>>;
@@ -70,7 +70,7 @@ export class ControlPipeline {
     await this._saveSnapshot();
   });
 
-  constructor({ spaceKey, genesisFeed, feedProvider, metadataStore }: ControlPipelineParams) {
+  constructor({ spaceKey, genesisFeed, feedProvider, metadataStore }: ControlPipelineProps) {
     this._spaceKey = spaceKey;
     this._metadata = metadataStore;
     this._pipeline = new Pipeline();

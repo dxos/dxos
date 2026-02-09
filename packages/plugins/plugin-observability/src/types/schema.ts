@@ -2,209 +2,77 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 
-import { Type } from '@dxos/echo';
+import { Capability } from '@dxos/app-framework';
+import { Format } from '@dxos/echo';
+import { Operation } from '@dxos/operation';
 
 import { meta } from '../meta';
+import { translations } from '../translations';
 
-const nonEmpty = <S extends Schema.Schema.Any>(field: string) =>
-  Schema.nonEmptyString<S>({ message: () => `Missing field: ${field}` });
-
-const maxLength = <S extends Schema.Schema.Any>(field: string, length: number) =>
-  Schema.maxLength<S>(length, { message: () => `Exceeds max length (${length}): ${field}` });
+const t = translations[0]['en-US'][meta.id];
 
 export const UserFeedback = Schema.Struct({
-  message: Schema.String.pipe(nonEmpty('Feedback'), maxLength('Feedback', 32_768)),
+  message: Format.Text.pipe(
+    Schema.nonEmptyString(),
+    Schema.maxLength(4_096),
+    Schema.annotations({
+      title: t['feedback textarea label'],
+      description: t['feedback textarea placeholder'],
+    }),
+  ),
 });
 
 export type UserFeedback = Schema.Schema.Type<typeof UserFeedback>;
 
-export namespace ObservabilityAction {
-  export class Toggle extends Schema.TaggedClass<Toggle>()(`${meta.id}/action/toggle`, {
-    input: Schema.Struct({
-      state: Schema.optional(Schema.Boolean),
-    }),
-    output: Schema.Boolean,
-  }) {}
+const OBSERVABILITY_OPERATION = `${meta.id}/operation`;
 
-  export class CaptureUserFeedback extends Schema.TaggedClass<CaptureUserFeedback>()(
-    `${meta.id}/action/capture-feedback`,
-    {
+/**
+ * Operations for the Observability plugin.
+ */
+export namespace ObservabilityOperation {
+  export const Toggle = Operation.make({
+    meta: {
+      key: `${OBSERVABILITY_OPERATION}/toggle`,
+      name: 'Toggle Observability',
+      description: 'Toggle observability on or off.',
+    },
+    services: [Capability.Service],
+    schema: {
+      input: Schema.Struct({
+        state: Schema.optional(Schema.Boolean),
+      }),
+      output: Schema.Boolean,
+    },
+  });
+
+  export const CaptureUserFeedback = Operation.make({
+    meta: {
+      key: `${OBSERVABILITY_OPERATION}/capture-feedback`,
+      name: 'Capture User Feedback',
+      description: 'Capture user feedback.',
+    },
+    services: [Capability.Service],
+    schema: {
       input: UserFeedback,
       output: Schema.Void,
     },
-  ) {}
+  });
 
-  /** Base intent for sending events. */
-  export class BaseSendEvent extends Schema.TaggedClass<BaseSendEvent>()(`${meta.id}/action/send-event`, {
-    input: Schema.Struct({
-      name: Schema.String,
-      properties: Schema.optional(Schema.Object),
-    }),
-    output: Schema.Void,
-  }) {}
-
-  /** Intent with strict types for first-party events. */
-  export class SendEvent extends Schema.TaggedClass<SendEvent>()(`${meta.id}/action/send-event`, {
-    // NOTE: Sort alphabetically by name.
-    input: Schema.Union(
-      Schema.Struct({
-        name: Schema.Literal('identity.create'),
+  export const SendEvent = Operation.make({
+    meta: {
+      key: `${OBSERVABILITY_OPERATION}/send-event`,
+      name: 'Send Event',
+      description: 'Send an observability event.',
+    },
+    services: [Capability.Service],
+    schema: {
+      input: Schema.Struct({
+        name: Schema.String.annotations({ description: 'The name of the event.' }),
+        properties: Schema.optional(Schema.Any).annotations({ description: 'Event properties.' }),
       }),
-      Schema.Struct({
-        name: Schema.Literal('identity.join'),
-      }),
-      Schema.Struct({
-        name: Schema.Literal('identity.recover'),
-      }),
-      Schema.Struct({
-        name: Schema.Literal('identity.share'),
-      }),
-      Schema.Struct({
-        name: Schema.Literal('navigation.activate'),
-        properties: Schema.Struct({
-          subjectId: Schema.String,
-          typename: Schema.optional(Schema.String),
-        }),
-      }),
-      Schema.Struct({
-        name: Schema.Literal('plugins.toggle'),
-        properties: Schema.Struct({
-          plugin: Schema.String,
-          enabled: Schema.Boolean,
-        }),
-      }),
-      Schema.Struct({
-        name: Schema.Literal('space.create'),
-        properties: Schema.Struct({
-          spaceId: Type.SpaceId,
-        }),
-      }),
-      Schema.Struct({
-        name: Schema.Literal('space.join'),
-        properties: Schema.Struct({
-          spaceId: Type.SpaceId,
-        }),
-      }),
-      Schema.Struct({
-        name: Schema.Literal('space.limit'),
-        properties: Schema.Struct({
-          spaceId: Type.SpaceId,
-        }),
-      }),
-      Schema.Struct({
-        name: Schema.Literal('space.lock'),
-        properties: Schema.Struct({
-          spaceId: Type.SpaceId,
-        }),
-      }),
-      Schema.Struct({
-        name: Schema.Literal('space.migrate'),
-        properties: Schema.Struct({
-          spaceId: Type.SpaceId,
-          targetVersion: Schema.optional(Schema.String),
-          version: Schema.optional(Schema.String),
-        }),
-      }),
-      Schema.Struct({
-        name: Schema.Literal('space.schema.use'),
-        properties: Schema.Struct({
-          spaceId: Type.SpaceId,
-          typename: Schema.String,
-        }),
-      }),
-      Schema.Struct({
-        name: Schema.Literal('space.schema.add'),
-        properties: Schema.Struct({
-          spaceId: Type.SpaceId,
-          objectId: Schema.String,
-          typename: Schema.String,
-        }),
-      }),
-      Schema.Struct({
-        name: Schema.Literal('space.object.add'),
-        properties: Schema.Struct({
-          spaceId: Type.SpaceId,
-          objectId: Schema.String,
-          typename: Schema.optional(Schema.String),
-        }),
-      }),
-      Schema.Struct({
-        name: Schema.Literal('space.share'),
-        properties: Schema.Struct({
-          spaceId: Type.SpaceId,
-        }),
-      }),
-      Schema.Struct({
-        name: Schema.Literal('space.unlock'),
-        properties: Schema.Struct({
-          spaceId: Type.SpaceId,
-        }),
-      }),
-      Schema.Struct({
-        name: Schema.Literal('threads.create'),
-        properties: Schema.Struct({
-          spaceId: Type.SpaceId,
-          threadId: Schema.String,
-        }),
-      }),
-      Schema.Struct({
-        name: Schema.Literal('threads.delete'),
-        properties: Schema.Struct({
-          spaceId: Type.SpaceId,
-          threadId: Schema.String,
-        }),
-      }),
-      Schema.Struct({
-        name: Schema.Literal('threads.message.add'),
-        properties: Schema.Struct({
-          spaceId: Type.SpaceId,
-          threadId: Schema.String,
-          threadLength: Schema.Number,
-          messageId: Schema.String,
-          messageLength: Schema.Number,
-        }),
-      }),
-      Schema.Struct({
-        name: Schema.Literal('threads.message.delete'),
-        properties: Schema.Struct({
-          spaceId: Type.SpaceId,
-          threadId: Schema.String,
-          messageId: Schema.String,
-        }),
-      }),
-      Schema.Struct({
-        name: Schema.Literal('threads.message.undo-delete'),
-        properties: Schema.Struct({
-          spaceId: Type.SpaceId,
-          threadId: Schema.String,
-          messageId: Schema.String,
-        }),
-      }),
-      Schema.Struct({
-        name: Schema.Literal('threads.message.update'),
-        properties: Schema.Struct({
-          spaceId: Type.SpaceId,
-          messageId: Schema.String,
-          messageLength: Schema.Number,
-        }),
-      }),
-      Schema.Struct({
-        name: Schema.Literal('threads.toggle-resolved'),
-        properties: Schema.Struct({
-          spaceId: Type.SpaceId,
-          threadId: Schema.String,
-        }),
-      }),
-      Schema.Struct({
-        name: Schema.Literal('threads.undo-delete'),
-        properties: Schema.Struct({
-          spaceId: Type.SpaceId,
-          threadId: Schema.String,
-        }),
-      }),
-    ),
-    output: Schema.Void,
-  }) {}
+      output: Schema.Void,
+    },
+  });
 }

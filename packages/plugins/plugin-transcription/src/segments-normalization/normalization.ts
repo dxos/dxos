@@ -5,7 +5,7 @@
 // ISSUE(burdon): defineFunction
 // @ts-nocheck
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 
 import { AiService, DEFAULT_EDGE_MODEL } from '@dxos/ai';
 import { AiSession } from '@dxos/assistant';
@@ -13,13 +13,13 @@ import { Obj } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
 import { ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { DataType } from '@dxos/schema';
+import { Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 const MessageWithRangeId = Schema.extend(
-  DataType.Message,
+  Message.Message,
   Schema.Struct({
-    // TODO(mykola): Move to meta in DataType.Message. Use `DataType.Message` instead.
+    // TODO(mykola): Move to meta in Message. Use `Message.Message` instead.
     rangeId: Schema.optional(Schema.Array(Schema.String)).annotations({
       description: 'The IDs of the messages that contain the sentences.',
     }),
@@ -29,7 +29,7 @@ const MessageWithRangeId = Schema.extend(
 export interface MessageWithRangeId extends Schema.Schema.Type<typeof MessageWithRangeId> {}
 
 export const NormalizationInput = Schema.Struct({
-  // TODO(mykola): Move to meta in DataType.Message. Use `DataType.Message` instead.
+  // TODO(mykola): Move to meta in Message. Use `Message.Message` instead.
   messages: Schema.Array(MessageWithRangeId).annotations({
     description: 'Messages to normalize into sentences.',
   }),
@@ -61,7 +61,7 @@ export const sentenceNormalization = defineFunction<NormalizationInput, Normaliz
       tools: [],
       artifacts: [],
       history: [
-        Obj.make(DataType.Message, {
+        Obj.make(Message.Message, {
           created: new Date().toISOString(),
           sender: {
             role: 'user',
@@ -89,7 +89,7 @@ const prompt = trim`
 
   # Input Format:
     - The input is an array of messages that contain transcription blocks.
-    - Each message is a DataType.Message, as described in the output format.
+    - Each message is a Message.Message, as described in the output format.
 
   # Output Format:
     - You have been provided with the tool that defines the output format; make sure to query it.

@@ -4,8 +4,9 @@
 var __dxlog_file = "input.ts";
 import { type Schema } from 'effect';
 import { raise } from '@dxos/debug';
-import { type EchoDatabase, Filter, type AnyLiveObject } from '@dxos/echo-db';
-import { getSchema, getSchemaTypename, StoredSchema, toJsonSchema } from '@dxos/echo-schema';
+import { type Obj } from '@dxos/echo';
+import { type EchoDatabase, Filter } from '@dxos/echo-db';
+import { getSchema, getSchemaTypename, StoredSchema, toJsonSchema } from '@dxos/echo/internal';
 import { log } from '@dxos/log';
 import type { DataSource, Node, Relationship } from './query-executor';
 import { formatInferredRelationshipLabel, formatNodeLabel, isReference } from './schema';
@@ -56,7 +57,7 @@ export class EchoDataSource implements DataSource {
             ...this._db.graph.schemaRegistry.schemas.filter((schema)=>getSchemaTypename(schema)?.startsWith('example.org'))
         ].filter((schema)=>getSchemaTypename(schema) !== StoredSchema.typename);
     }
-    private _objectToNode(object: AnyLiveObject<any>): Node {
+    private _objectToNode(object: Obj.Any): Node {
         const { id, ...properties } = object;
         return {
             id,
@@ -65,7 +66,7 @@ export class EchoDataSource implements DataSource {
             properties
         };
     }
-    private async _projectRefRelationship(object: AnyLiveObject<any>, prop: string): Promise<Relationship[]> {
+    private async _projectRefRelationship(object: Obj.Any, prop: string): Promise<Relationship[]> {
         if (!object[prop]) {
             return [];
         }

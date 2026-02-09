@@ -4,17 +4,18 @@
 
 import { type Resource } from '@dxos/react-ui';
 
-export const translationKey = 'react-ui-components';
+export const translationKey = '@dxos/react-ui-components';
 
 export const translations = [
   {
     'en-US': {
       [translationKey]: {
-        'scroll-down.button': 'Scroll down',
         'no commits message': 'No events yet',
-        'query placeholder': 'Enter query (e.g., "type:")',
-        'picker select': 'Select',
-        'picker none': 'None',
+
+        'query editor placeholder': 'Enter query (e.g., "#tag", "type")',
+
+        'picker select label': 'Select',
+        'picker none label': 'None',
         'picker type placeholder': 'Type',
         'picker tag placeholder': 'Tag',
       },

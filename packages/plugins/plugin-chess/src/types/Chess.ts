@@ -3,51 +3,43 @@
 //
 
 import { Chess as ChessJS } from 'chess.js';
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 
 import { Obj, Type } from '@dxos/echo';
-import { LabelAnnotation } from '@dxos/echo-schema';
+import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { log } from '@dxos/log';
-import { ItemAnnotation } from '@dxos/schema';
 
 export const Game = Schema.Struct({
   name: Schema.optional(Schema.String),
-  players: Schema.optional(
-    Schema.Struct({
-      white: Schema.optional(
-        Schema.String.annotations({
-          description: 'DID of white player',
-        }),
-      ),
-      black: Schema.optional(
-        Schema.String.annotations({
-          description: 'DID of black player',
-        }),
-      ),
-    }).pipe(Schema.mutable),
-  ),
-  pgn: Schema.optional(
-    Schema.String.annotations({
-      description: 'Portable Game Notation.',
-    }),
-  ),
-  fen: Schema.optional(
-    Schema.String.annotations({
-      description: 'Forsyth-Edwards Notation.',
-    }),
-  ),
+  players: Schema.Struct({
+    white: Schema.optional(
+      Schema.String.annotations({
+        description: 'DID of white player',
+      }),
+    ),
+    black: Schema.optional(
+      Schema.String.annotations({
+        description: 'DID of black player',
+      }),
+    ),
+  }).pipe(FormInputAnnotation.set(false), Schema.optional),
+  pgn: Schema.String.annotations({
+    description: 'Portable Game Notation.',
+  }).pipe(FormInputAnnotation.set(false), Schema.optional),
+  fen: Schema.String.annotations({
+    description: 'Forsyth-Edwards Notation.',
+  }).pipe(FormInputAnnotation.set(false), Schema.optional),
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/Chess',
     version: '0.2.0',
   }),
   LabelAnnotation.set(['name']),
-  ItemAnnotation.set(true),
 );
 
 export interface Game extends Schema.Schema.Type<typeof Game> {}
 
-export const makeGame = ({ name, pgn, fen }: { name?: string; pgn?: string; fen?: string } = {}) => {
+export const make = ({ name, pgn, fen }: { name?: string; pgn?: string; fen?: string } = {}) => {
   const chess = new ChessJS();
   if (pgn) {
     try {
@@ -59,8 +51,8 @@ export const makeGame = ({ name, pgn, fen }: { name?: string; pgn?: string; fen?
 
   return Obj.make(Game, {
     name,
-    players: {},
     pgn,
     fen,
+    players: {},
   });
 };

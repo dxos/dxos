@@ -2,8 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Tool, Toolkit } from '@effect/ai';
-import { Array, Context, Effect, Either, Layer } from 'effect';
+import type * as Tool from '@effect/ai/Tool';
+import * as Toolkit from '@effect/ai/Toolkit';
+import * as Array from 'effect/Array';
+import * as Context from 'effect/Context';
+import * as Effect from 'effect/Effect';
+import * as Either from 'effect/Either';
+import * as Layer from 'effect/Layer';
 
 import { log } from '@dxos/log';
 
@@ -30,7 +35,7 @@ export class ToolResolverService extends Context.Tag('@dxos/ai/ToolResolverServi
     Effect.gen(function* () {
       const tools = yield* Effect.forEach(ids, (id) =>
         ToolResolverService.resolve(id).pipe(
-          Effect.tapErrorTag('AI_TOOL_NOT_FOUND', (error) =>
+          Effect.tapErrorTag('AiToolNotFoundError', (error) =>
             Effect.sync(() => {
               log.warn('Failed to resolve AI tool', { id, error });
               return Effect.void;
@@ -39,6 +44,7 @@ export class ToolResolverService extends Context.Tag('@dxos/ai/ToolResolverServi
           Effect.either,
         ),
       ).pipe(Effect.map(Array.filterMap(Either.getRight)));
+
       return Toolkit.make(...tools);
     });
 }

@@ -3,53 +3,21 @@
 //
 
 export { SpaceId } from '@dxos/keys';
-export { type Echo, type Space, PropertiesType, type PropertiesTypeProps } from '@dxos/client-protocol';
+export { isSpace, type Echo, type Space, SpaceSchema, SpaceProperties } from '@dxos/client-protocol';
+export { compareForeignKeys, createQueueDXN, type ObjectMeta, Ref, RefArray } from '@dxos/echo/internal';
+export { Entity, Relation, Type, Database } from '@dxos/echo';
 export {
-  compareForeignKeys,
-  createQueueDXN,
-  getMeta,
-  getSchema,
-  getType,
-  getTypename,
-  Expando,
-  type ObjectMeta,
-  Ref,
-  RefArray,
-  type TypedObject,
-} from '@dxos/echo-schema';
-export { type Live, live, isLiveObject } from '@dxos/live-object';
-export {
-  DocAccessor,
-  type EchoDatabase,
-  Query,
-  type Queryable,
-  Filter,
-  type Hypergraph,
-  type IDocHandle,
-  ObjectVersion,
-  type ObjectMigration,
-  Queue,
-  type QueryResult,
-  type AnyLiveObject,
-  type Selection,
-  type SubscriptionHandle,
-  createDocAccessor,
   createObject,
   createSubscription,
-  defineObjectMigration,
-  fromCursor,
-  isEchoObject,
-  getObjectCore,
-  getRangeFromCursor,
-  getSource,
-  getTarget,
-  getTextInRange,
   getVersion,
-  loadObjectReferences,
-  toCursor,
-  toCursorRange,
-  updateText,
-  isRelation,
+  type EchoDatabase,
+  Filter,
+  type ObjectMigration,
+  ObjectVersion,
+  Query,
+  Queue,
+  type Selection,
+  type SubscriptionHandle,
 } from '@dxos/echo-db';
 
 // TODO(dmaretskyi): Remove this export.
@@ -62,21 +30,16 @@ export { SpaceMember as HaloSpaceMember } from '@dxos/protocols/proto/dxos/halo/
 export { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 export { type SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
 
+export { importSpace } from './import';
 export {
   createEmptyEdgeSyncState,
-  fullyQualifiedId,
+  parseId,
+  getSpace,
+  getSyncSummary,
   FQ_ID_LENGTH,
   OBJECT_ID_LENGTH,
   SPACE_ID_LENGTH,
-  EchoObjectSchema,
-  ReactiveObjectSchema,
-  getSpace,
-  getSyncSummary,
-  parseFullyQualifiedId,
-  parseId,
   type Progress,
   type PeerSyncState,
   type SpaceSyncStateMap,
 } from './util';
-export { importSpace } from './import';
-export { SpaceSchema, isSpace } from './space-proxy';

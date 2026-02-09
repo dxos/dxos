@@ -14,7 +14,7 @@ import { createWorkerPort } from '@dxos/rpc-tunnel';
 import { trace } from '@dxos/tracing';
 
 import { RPC_TIMEOUT } from '../common';
-import { LOCK_KEY } from '../lock-key';
+import { STORAGE_LOCK_KEY } from '../lock-key';
 
 import { ClientServicesProxy } from './service-proxy';
 import { SharedWorkerConnection } from './shared-worker-connection';
@@ -22,10 +22,10 @@ import { SharedWorkerConnection } from './shared-worker-connection';
 /**
  * Creates services provider connected via worker.
  */
-export const fromWorker = async (config: Config = new Config(), options: Omit<WorkerClientServicesParams, 'config'>) =>
+export const fromWorker = async (config: Config = new Config(), options: Omit<WorkerClientServicesProps, 'config'>) =>
   new WorkerClientServices({ config, ...options });
 
-export type WorkerClientServicesParams = {
+export type WorkerClientServicesProps = {
   config: Config;
   createWorker: () => SharedWorker;
   logFilter?: string;
@@ -60,7 +60,7 @@ export class WorkerClientServices implements ClientServicesProvider {
     logFilter = 'error,warn',
     observabilityGroup,
     signalTelemetryEnabled,
-  }: WorkerClientServicesParams) {
+  }: WorkerClientServicesProps) {
     this._config = config;
     this._createWorker = createWorker;
     this._logFilter = parseFilter(logFilter);
@@ -110,7 +110,7 @@ export class WorkerClientServices implements ClientServicesProvider {
 
     this._services = new ClientServicesProxy(createWorkerPort({ port: appPort }));
     await this._services.open();
-    void navigator.locks.request(LOCK_KEY, () => {
+    void navigator.locks.request(STORAGE_LOCK_KEY, () => {
       log('terminated');
       if (this._isOpen) {
         this.closed.emit(new Error('Shared worker terminated.'));

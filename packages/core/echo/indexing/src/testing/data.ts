@@ -3,8 +3,7 @@
 //
 
 import type { ObjectStructure } from '@dxos/echo-protocol';
-import { ObjectId } from '@dxos/echo-schema';
-import { DXN } from '@dxos/keys';
+import { DXN, ObjectId } from '@dxos/keys';
 
 export const TYPES = {
   document: DXN.fromTypenameAndVersion('example.org/type/Document', '0.1.0').toString(),

@@ -25,6 +25,9 @@
       "path": "../../../common/debug"
     },
     {
+      "path": "../../../common/effect"
+    },
+    {
       "path": "../../../common/invariant"
     },
     {
@@ -41,6 +44,9 @@
     },
     {
       "path": "../../../common/random"
+    },
+    {
+      "path": "../../../common/sql-sqlite"
     },
     {
       "path": "../../../common/test-utils"
@@ -70,16 +76,10 @@
       "path": "../echo-protocol"
     },
     {
-      "path": "../echo-schema"
-    },
-    {
-      "path": "../echo-signals"
+      "path": "../feed"
     },
     {
       "path": "../indexing"
-    },
-    {
-      "path": "../live-object"
     }
   ]
 }

@@ -46,10 +46,10 @@ const createSpaceSaveTracker = (space: Space, cb: (state: 'saved' | 'saving') =>
 
     let hasUnsavedChanges = false;
     let lastFlushPromise: Promise<void> | undefined;
-    space.db.saveStateChanged.on(ctx, ({ unsavedDocuments }) => {
+    space.internal.db.saveStateChanged.on(ctx, ({ unsavedDocuments }) => {
       hasUnsavedChanges = unsavedDocuments.length > 0;
     });
-    space.db.saveStateChanged.debounce(500).on(ctx, () => {
+    space.internal.db.saveStateChanged.debounce(500).on(ctx, () => {
       if (hasUnsavedChanges) {
         lastFlushPromise = undefined;
         cb('saving');

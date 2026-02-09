@@ -176,7 +176,9 @@ export class RtcTransportProxy extends Resource implements Transport {
     } catch (error) {
       const type = signalEvent.payload.payload.data?.type;
       if (type === 'offer' || type === 'answer') {
-        this._raiseIfOpen(new ConnectivityError(`Session establishment failed: ${type} couldn't be sent.`));
+        this._raiseIfOpen(
+          new ConnectivityError({ message: `Session establishment failed: ${type} couldn't be sent.` }),
+        );
       }
     }
   }
@@ -255,11 +257,11 @@ export class RtcTransportProxyFactory implements TransportFactory {
 const decodeError = (err: Error | string) => {
   const message = typeof err === 'string' ? err : err.message;
   if (message.includes('CONNECTION_RESET')) {
-    return new ConnectionResetError(message);
+    return new ConnectionResetError({ message });
   } else if (message.includes('TIMEOUT')) {
-    return new TimeoutError(message);
+    return new TimeoutError({ message });
   } else if (message.includes('CONNECTIVITY_ERROR')) {
-    return new ConnectivityError(message);
+    return new ConnectivityError({ message });
   } else {
     return typeof err === 'string' ? new Error(err) : err;
   }

@@ -2,11 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Response } from '@effect/ai';
+import * as Response from '@effect/ai/Response';
 import { describe, it, vi } from '@effect/vitest';
-import { Chunk, Effect, Function, Stream } from 'effect';
+import * as Chunk from 'effect/Chunk';
+import * as Effect from 'effect/Effect';
+import * as Function from 'effect/Function';
+import * as Stream from 'effect/Stream';
 
-import { type ContentBlock } from '@dxos/schema';
+import { type ContentBlock } from '@dxos/types';
 
 import { parseResponse } from './AiParser';
 
@@ -66,15 +69,7 @@ describe('parser', () => {
     it.effect(
       'text followed by a tool call',
       Effect.fn(function* ({ expect }) {
-        const result = yield* makeInputStream([
-          ...text(['Hello, world!']),
-          Response.makePart('tool-call', {
-            id: '123',
-            name: 'foo',
-            params: { bar: 'baz' },
-            providerExecuted: false,
-          }),
-        ])
+        const result = yield* makeInputStream([...text(['Hello, world!']), ...toolCall('123', 'foo', { bar: 'baz' })])
           .pipe(parseResponse())
           .pipe(Stream.runCollect)
           .pipe(Effect.map(Chunk.toArray));
@@ -100,12 +95,7 @@ describe('parser', () => {
       Effect.fn(function* ({ expect }) {
         const result = yield* makeInputStream([
           ...text(['<status>I am thinking...']),
-          Response.makePart('tool-call', {
-            id: '123',
-            name: 'foo',
-            params: { bar: 'baz' },
-            providerExecuted: false,
-          }),
+          ...toolCall('123', 'foo', { bar: 'baz' }),
         ])
           .pipe(parseResponse())
           .pipe(Stream.runCollect)
@@ -266,12 +256,7 @@ describe('parser', () => {
     const PARTS: Response.StreamPart<any>[] = [
       ...reasoning('My thoughts are...'),
       ...text(['Hello, ', 'world!']),
-      Response.makePart('tool-call', {
-        id: '123',
-        name: 'foo',
-        params: { bar: 'baz' },
-        providerExecuted: false,
-      }),
+      ...toolCall('123', 'foo', { bar: 'baz' }),
     ];
 
     it.effect(
@@ -323,6 +308,22 @@ describe('parser', () => {
                 _tag: 'toolCall',
                 toolCallId: '123',
                 name: 'foo',
+                input: '',
+                pending: true,
+                providerExecuted: false,
+              },
+              {
+                _tag: 'toolCall',
+                toolCallId: '123',
+                name: 'foo',
+                input: '{"bar":"baz"}',
+                pending: true,
+                providerExecuted: false,
+              },
+              {
+                _tag: 'toolCall',
+                toolCallId: '123',
+                name: 'foo',
                 input: '{"bar":"baz"}',
                 providerExecuted: false,
               },
@@ -357,5 +358,13 @@ const reasoning = (text: string): Iterable<Response.StreamPart<any>> => {
     Response.makePart('reasoning-start', { id }),
     Response.makePart('reasoning-delta', { id, delta: text }),
     Response.makePart('reasoning-end', { id }),
+  ];
+};
+
+const toolCall = (id: string, name: string, params: Record<string, unknown>): Iterable<Response.StreamPart<any>> => {
+  return [
+    Response.makePart('tool-params-start', { id, name, providerExecuted: false }),
+    Response.makePart('tool-params-delta', { id, delta: JSON.stringify(params) }),
+    Response.makePart('tool-params-end', { id }),
   ];
 };

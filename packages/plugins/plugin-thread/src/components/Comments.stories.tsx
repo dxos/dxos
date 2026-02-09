@@ -3,22 +3,23 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Effect from 'effect/Effect';
 import React from 'react';
 
-import { IntentPlugin } from '@dxos/app-framework';
+import { OperationPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Obj, Query, Relation, Type } from '@dxos/echo';
+import { Obj, Query, Relation } from '@dxos/echo';
+import { TestSchema } from '@dxos/echo/testing';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { faker } from '@dxos/random';
-import { useQuery, useSpace } from '@dxos/react-client/echo';
+import { useDatabase, useQuery } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { useAsyncEffect } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
-import { AnchoredTo, DataType } from '@dxos/schema';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { render } from '@dxos/storybook-utils';
+import { AnchoredTo, Message, Thread } from '@dxos/types';
 
 import { translations } from '../translations';
-import { ThreadType } from '../types';
 
 import { CommentsContainer } from './CommentsContainer';
 import { createCommentThread, createProposalThread } from './testing';
@@ -27,32 +28,32 @@ faker.seed(1);
 
 const DefaultStory = () => {
   const identity = useIdentity();
-  const space = useSpace();
-  const anchors = useQuery(space, Query.type(AnchoredTo));
+  const db = useDatabase();
+  const anchors = useQuery(db, Query.type(AnchoredTo.AnchoredTo));
 
   useAsyncEffect(async () => {
-    if (identity && space) {
-      const object = space.db.add(Obj.make(Type.Expando, {}));
-      const thread1 = space.db.add(createCommentThread(identity));
-      const thread2 = space.db.add(createProposalThread(identity));
-      space.db.add(
-        Relation.make(AnchoredTo, {
+    if (identity && db) {
+      const object = db.add(Obj.make(TestSchema.Expando, {}));
+      const thread1 = db.add(createCommentThread(identity));
+      const thread2 = db.add(createProposalThread(identity));
+      db.add(
+        Relation.make(AnchoredTo.AnchoredTo, {
           [Relation.Source]: thread1,
           [Relation.Target]: object,
           anchor: 'test',
         }),
       );
-      space.db.add(
-        Relation.make(AnchoredTo, {
+      db.add(
+        Relation.make(AnchoredTo.AnchoredTo, {
           [Relation.Source]: thread2,
           [Relation.Target]: object,
           anchor: 'test',
         }),
       );
     }
-  }, [identity, space]);
+  }, [identity, db]);
 
-  if (!identity || !space || !anchors) {
+  if (!identity || !db || !anchors) {
     return null;
   }
 
@@ -63,25 +64,24 @@ const meta = {
   title: 'plugins/plugin-thread/Comments',
   render: render(DefaultStory),
   decorators: [
-    withTheme, // TODO(wittjosiah): This shouldn't depend on app framework. Should use withClientProvider instead.
-    //   Currently this is required due to useOnEditAnalytics.
+    withTheme,
+    withLayout({ layout: 'column', scroll: true }),
+    // TODO(wittjosiah): This shouldn't depend on app framework (use withClientProvider instead).
+    //  Currently this is required due to useOnEditAnalytics.
     withPluginManager({
       plugins: [
-        IntentPlugin(),
+        OperationPlugin(),
         ClientPlugin({
-          types: [DataType.Message, ThreadType, AnchoredTo],
-          onClientInitialized: async ({ client }) => {
-            await client.halo.createIdentity();
-          },
+          types: [Message.Message, Thread.Thread, AnchoredTo.AnchoredTo],
+          onClientInitialized: ({ client }) =>
+            Effect.gen(function* () {
+              yield* Effect.promise(() => client.halo.createIdentity());
+            }),
         }),
       ],
     }),
   ],
   parameters: {
-    layout: {
-      type: 'column',
-      className: 'overflow-y-scroll',
-    },
     translations,
   },
 } satisfies Meta<typeof DefaultStory>;

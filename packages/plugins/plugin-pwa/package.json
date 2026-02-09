@@ -4,6 +4,10 @@
   "description": "DXOS Surface plugin for PWA registration and update handling.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
   "license": "MIT",
   "author": "DXOS.org",
   "sideEffects": true,
@@ -27,27 +31,28 @@
     "@dxos/app-framework": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/observability": "workspace:*",
-    "@preact-signals/safe-react": "^0.9.0",
-    "effect": "3.18.3"
+    "@dxos/operation": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "effect": "catalog:"
   },
   "devDependencies": {
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
-    "@types/react": "~19.2.2",
-    "@types/react-dom": "~19.2.1",
-    "react": "~19.2.0",
-    "react-dom": "~19.2.0",
-    "vite": "7.1.9",
-    "vite-plugin-pwa": "^1.0.2",
-    "workbox-window": "^7.3.0"
+    "@dxos/ui-theme": "workspace:*",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "vite": "catalog:",
+    "vite-plugin-pwa": "catalog:",
+    "workbox-window": "catalog:"
   },
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-theme": "workspace:*",
-    "effect": "^3.13.3",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "@dxos/ui-theme": "workspace:*",
+    "effect": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
   },
   "publishConfig": {
     "access": "public"
