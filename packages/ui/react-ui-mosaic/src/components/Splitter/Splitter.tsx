@@ -10,11 +10,13 @@ import { mx } from '@dxos/ui-theme';
 
 type ScopedProps<P> = P & { __scopeSplitter?: any };
 
-interface SplitterContextValue {
-  mode: 'upper' | 'lower' | 'both';
+type Mode = 'upper' | 'lower' | 'both';
+
+type SplitterContextValue = {
+  mode: Mode;
   ratio: number;
-  transition: string;
-}
+  transition: number;
+};
 
 const SPLITTER_NAME = 'Splitter';
 
@@ -22,29 +24,26 @@ const [createSplitterContext, createSplitterScope] = createContextScope(SPLITTER
 
 const [SplitterProvider, useSplitterContext] = createSplitterContext<SplitterContextValue>(SPLITTER_NAME);
 
-// TODO(burdon): Consider absolute position to prevent scrolling when upper/lower panels are hidden.
-
 //
 // Root
 //
 
 const ROOT_NAME = 'Splitter.Root';
 
-interface RootProps extends ThemedClassName<ComponentPropsWithoutRef<'div'>> {
-  mode: 'upper' | 'lower' | 'both';
-  ratio?: number;
-  transition?: string;
-}
+type RootProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & Partial<SplitterContextValue>;
 
 const Root = forwardRef<HTMLDivElement, ScopedProps<RootProps>>(
-  ({ __scopeSplitter, classNames, mode, ratio = 0.5, transition = '2000ms', children, ...rootProps }, forwardedRef) => {
+  (
+    { __scopeSplitter, classNames, mode = 'upper', ratio = 0.5, transition = 250, children, ...rootProps },
+    forwardedRef,
+  ) => {
     return (
       <SplitterProvider scope={__scopeSplitter} mode={mode} ratio={ratio} transition={transition}>
         <div
           role='none'
           {...rootProps}
           ref={forwardedRef}
-          className={mx('flex flex-col bs-full overflow-hidden', classNames)}
+          className={mx('relative bs-full overflow-hidden', classNames)}
         >
           {children}
         </div>
@@ -70,27 +69,31 @@ const Panel = forwardRef<HTMLDivElement, ScopedProps<PanelProps>>(
     const context = useSplitterContext(PANEL_NAME, __scopeSplitter);
     const { mode, ratio, transition } = context;
 
-    const height =
-      position === 'upper'
-        ? mode === 'upper'
-          ? '100%'
-          : mode === 'lower'
-            ? '0%'
-            : `${ratio * 100}%`
+    // Calculate position and height based on mode and ratio.
+    const isUpper = position === 'upper';
+    const top = isUpper ? '0%' : mode === 'upper' ? '100%' : mode === 'lower' ? '0%' : `${ratio * 100}%`;
+
+    const height = isUpper
+      ? mode === 'upper'
+        ? '100%'
         : mode === 'lower'
-          ? '100%'
-          : mode === 'upper'
-            ? '0%'
-            : `${(1 - ratio) * 100}%`;
+          ? '0%'
+          : `${ratio * 100}%`
+      : mode === 'lower'
+        ? '100%'
+        : mode === 'upper'
+          ? '0%'
+          : `${(1 - ratio) * 100}%`;
 
     return (
       <div
         {...panelProps}
         ref={forwardedRef}
-        className={mx('flex flex-col bs-full overflow-hidden', classNames)}
+        className={mx('absolute inset-inline-0 flex flex-col overflow-hidden', classNames)}
         style={{
+          top,
           height,
-          transition: `height ${transition}`,
+          transition: `top ${transition}ms, height ${transition}ms ease-out`,
           ...style,
         }}
       >
@@ -113,4 +116,4 @@ const Splitter = {
 
 export { Splitter, createSplitterScope };
 
-export type { RootProps as SplitterRootProps, PanelProps as SplitterPanelProps };
+export type { Mode as SplitterMode, RootProps as SplitterRootProps, PanelProps as SplitterPanelProps };

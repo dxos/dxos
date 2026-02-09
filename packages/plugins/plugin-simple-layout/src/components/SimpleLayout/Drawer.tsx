@@ -15,6 +15,8 @@ import { meta } from '../../meta';
 import { ContentError } from '../ContentError';
 import { ContentLoading } from '../ContentLoading';
 
+import { useMobileLayout } from './MobileLayout';
+
 const DRAWER_NAME = 'SimpleLayout.Drawer';
 
 /**
@@ -24,6 +26,7 @@ export const Drawer = () => {
   const { t } = useTranslation(meta.id);
   const { graph } = useAppGraph();
   const { state: layoutState, updateState } = useSimpleLayoutState();
+  const { keyboardOpen } = useMobileLayout(DRAWER_NAME);
 
   const placeholder = useMemo(() => <ContentLoading />, []);
 
@@ -88,12 +91,14 @@ export const Drawer = () => {
           ))}
         </div>
         <Toolbar.Separator variant='gap' />
-        <Toolbar.IconButton
-          icon={layoutState.drawerState === 'expanded' ? 'ph--arrow-down--regular' : 'ph--arrow-up--regular'}
-          iconOnly
-          label={layoutState.drawerState === 'expanded' ? t('collapse drawer label') : t('expand drawer label')}
-          onClick={handleToggleExpand}
-        />
+        {!keyboardOpen && (
+          <Toolbar.IconButton
+            label={layoutState.drawerState === 'expanded' ? t('collapse drawer label') : t('expand drawer label')}
+            icon={layoutState.drawerState === 'expanded' ? 'ph--arrow-down--regular' : 'ph--arrow-up--regular'}
+            iconOnly
+            onClick={handleToggleExpand}
+          />
+        )}
         <Toolbar.IconButton icon='ph--x--regular' iconOnly label={t('close drawer label')} onClick={handleClose} />
       </Toolbar.Root>
       <Surface role='article' data={data} limit={1} fallback={ContentError} placeholder={placeholder} />

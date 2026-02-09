@@ -6,13 +6,11 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type PropsWithChildren, useEffect, useState } from 'react';
 
 import { addEventListener, combine } from '@dxos/async';
-import { Button, Icon, Input, Toolbar } from '@dxos/react-ui';
+import { Input, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { Layout } from '@dxos/react-ui-mosaic';
+import { Layout, Splitter, type SplitterMode } from '@dxos/react-ui-mosaic';
 
-import { translations } from '../../translations';
-
-import { MobileLayout, useMobileLayout } from './MobileLayout';
+import { MobileLayout, type MobileLayoutProps } from './MobileLayout';
 
 /**
  * Simulate ios keyboard.
@@ -57,36 +55,13 @@ const WithKeyboard = ({ children }: PropsWithChildren) => {
   return <div className='relative h-screen'>{children}</div>;
 };
 
-const Main = () => {
-  const { keyboardOpen, drawerState, setDrawerState } = useMobileLayout('MobileLayout.Main');
-
+const Panel = ({ children, label }: PropsWithChildren<{ label: string }>) => {
   return (
     <Layout.Main toolbar>
       <Toolbar.Root>
-        {drawerState === 'closed' && <Button onClick={() => setDrawerState('open')}>Open</Button>}
+        {label}
         <Toolbar.Separator variant='gap' />
-        {keyboardOpen && (
-          <div className='pli-1'>
-            <Icon icon='ph--keyboard--regular' />
-          </div>
-        )}
-      </Toolbar.Root>
-      <Layout.Flex column classNames='p-1'>
-        <Input.Root>
-          <Input.TextInput />
-        </Input.Root>
-      </Layout.Flex>
-    </Layout.Main>
-  );
-};
-
-const Drawer = () => {
-  const { setDrawerState } = useMobileLayout('MobileLayout.Drawer');
-
-  return (
-    <Layout.Main toolbar>
-      <Toolbar.Root>
-        <Button onClick={() => setDrawerState('closed')}>Close</Button>
+        {children}
       </Toolbar.Root>
       <Layout.Flex column classNames='p-1'>
         <Input.Root>
@@ -98,33 +73,52 @@ const Drawer = () => {
 };
 
 const DefaultStory = () => {
+  const [splitterMode, setSplitterMode] = useState<SplitterMode>('upper');
+  const [keyboardOpen, setKeyboardOpen] = useState(false);
+
+  useEffect(() => {
+    setSplitterMode(splitterMode === 'both' ? 'lower' : splitterMode);
+  }, [keyboardOpen]);
+
   return (
     <WithKeyboard>
-      <MobileLayout.Root>
-        <MobileLayout.Main>
-          <Main />
-        </MobileLayout.Main>
-        <MobileLayout.Drawer>
-          <Drawer />
-        </MobileLayout.Drawer>
-      </MobileLayout.Root>
+      <MobileLayout onKeyboardOpenChange={setKeyboardOpen}>
+        <Splitter.Root mode={splitterMode} ratio={0.5}>
+          <Splitter.Panel position='upper'>
+            <Panel label='Main'>
+              {splitterMode === 'upper' && (
+                <Toolbar.IconButton icon='ph--plus--regular' label='Open' onClick={() => setSplitterMode('both')} />
+              )}
+            </Panel>
+          </Splitter.Panel>
+          <Splitter.Panel position='lower'>
+            <Panel label='Drawer'>
+              <Toolbar.IconButton
+                icon={splitterMode === 'lower' ? 'ph--arrow-down--regular' : 'ph--arrow-up--regular'}
+                label={splitterMode === 'lower' ? 'Collapse' : 'Expand'}
+                onClick={() => setSplitterMode((splitterMode) => (splitterMode === 'both' ? 'lower' : 'both'))}
+              />
+              <Toolbar.IconButton icon='ph--x--regular' label='Close' onClick={() => setSplitterMode('upper')} />
+            </Panel>
+          </Splitter.Panel>
+        </Splitter.Root>
+      </MobileLayout>
     </WithKeyboard>
   );
 };
 
-const meta = {
+const meta: Meta<MobileLayoutProps> = {
   title: 'plugins/plugin-simple-layout/MobileLayout',
-  component: MobileLayout.Root,
+  component: MobileLayout,
   render: DefaultStory,
   decorators: [withTheme, withLayout({ layout: 'column', classNames: 'relative' })],
   parameters: {
     layout: 'fullscreen',
-    translations,
   },
-} satisfies Meta<typeof MobileLayout.Root>;
+};
 
 export default meta;
 
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj<MobileLayoutProps>;
 
 export const Default: Story = {};

@@ -7,8 +7,9 @@ import { type Atom } from '@effect-atom/atom-react';
 import { Capability } from '@dxos/app-framework';
 import { type Label } from '@dxos/react-ui';
 
-import { type DrawerState } from '../components';
 import { meta } from '../meta';
+
+export type DrawerState = 'closed' | 'open' | 'expanded';
 
 // TODO(wittjosiah): Handle toasts.
 export type SimpleLayoutState = {

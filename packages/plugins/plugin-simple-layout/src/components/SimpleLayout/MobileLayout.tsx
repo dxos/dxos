@@ -3,95 +3,59 @@
 //
 
 import { createContext } from '@radix-ui/react-context';
-import React, {
-  type KeyboardEvent,
-  type PropsWithChildren,
-  forwardRef,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from 'react';
+import React, { type PropsWithChildren, forwardRef, useEffect, useState } from 'react';
 
+import { addEventListener, combine } from '@dxos/async';
 import { log } from '@dxos/log';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { useIOSKeyboard } from '../../hooks';
+// TODO(burdon): Move into @dxos/react-ui Main.
+
+const MOBILE_LAYOUT_NAME = 'MobileLayout';
 
 //
 // Context
 //
 
-export type DrawerState = 'open' | 'expanded' | 'closed';
-
-type ContextValue = {
+type MobileLayoutContextValue = {
   keyboardOpen: boolean;
-  drawerState: DrawerState;
-  setDrawerState: (nextState: DrawerState) => void;
 };
 
-const [ContextProvider, useMobileLayout] = createContext<ContextValue>('MobileLayout');
+const [MobileLayoutProvider, useMobileLayout] = createContext<MobileLayoutContextValue>(MOBILE_LAYOUT_NAME);
 
 //
-// Root
+// MobileLayout
 //
 
-type RootProps = PropsWithChildren<{
-  drawerState?: DrawerState;
-  defaultDrawerState?: DrawerState;
-  onDrawerStateChange?: (nextState: DrawerState) => void;
-}>;
+export type MobileLayoutProps = ThemedClassName<
+  PropsWithChildren<{
+    onKeyboardOpenChange?: (nextState: boolean) => void;
+  }>
+>;
 
-const Root = forwardRef<HTMLDivElement, RootProps>(
-  (
-    { children, drawerState: drawerStateProp, defaultDrawerState = 'closed', onDrawerStateChange, ...props },
-    forwardedRef,
-  ) => {
+/**
+ * Mobile layout container that handles iOS keyboard detection and safe area insets.
+ */
+export const MobileLayout = forwardRef<HTMLDivElement, MobileLayoutProps>(
+  ({ classNames, children, onKeyboardOpenChange, ...props }, forwardedRef) => {
     // TODO(burdon): ios-only.
     // Hook handles keyboard detection and sets CSS custom properties.
     const { open: keyboardOpen } = useIOSKeyboard();
-    const prevKeyboardOpen = useRef(keyboardOpen);
-
-    // Sync external state changes.
-    const [drawerState, setDrawerStateInternal] = useState<DrawerState>(drawerStateProp ?? defaultDrawerState);
     useEffect(() => {
-      setDrawerStateInternal(drawerStateProp ?? defaultDrawerState);
-    }, [drawerStateProp, defaultDrawerState]);
-
-    const setDrawerState = useCallback(
-      (nextState: DrawerState) => {
-        setDrawerStateInternal(nextState);
-        onDrawerStateChange?.(nextState);
-      },
-      [onDrawerStateChange],
-    );
-
-    // Auto-transition drawer state based on keyboard visibility.
-    // useEffect(() => {
-    //   if (keyboardOpen && !prevKeyboardOpen.current && drawerState === 'open') {
-    //     setDrawerStateInternal('expanded');
-    //     onDrawerStateChange?.('expanded');
-    //   } else if (!keyboardOpen && prevKeyboardOpen.current && drawerState === 'expanded') {
-    //     setDrawerStateInternal('open');
-    //     onDrawerStateChange?.('open');
-    //   }
-    //   prevKeyboardOpen.current = keyboardOpen;
-    // }, [keyboardOpen, drawerState, onDrawerStateChange]);
-
-    log.info('MobileLayout', { keyboardOpen, drawerState });
+      onKeyboardOpenChange?.(keyboardOpen);
+    }, [keyboardOpen, onKeyboardOpenChange]);
 
     return (
-      <ContextProvider keyboardOpen={keyboardOpen} drawerState={drawerState} setDrawerState={setDrawerState}>
+      <MobileLayoutProvider keyboardOpen={keyboardOpen}>
         <div
           {...props}
           role='none'
-          data-drawer-state={drawerState}
           style={{
             transition: 'block-size 250ms ease-out',
             blockSize: 'calc(100vh - var(--kb-height, 0px))',
           }}
-          className='absolute top-0 left-0 right-0 flex flex-col bg-toolbarSurface'
+          className={mx('absolute top-0 left-0 right-0 flex flex-col bg-toolbarSurface', classNames)}
           ref={forwardedRef}
         >
           <div
@@ -105,138 +69,128 @@ const Root = forwardRef<HTMLDivElement, RootProps>(
             {children}
           </div>
         </div>
-      </ContextProvider>
+      </MobileLayoutProvider>
     );
   },
 );
 
-Root.displayName = 'MobileLayout.Root';
-
-//
-// Main
-//
-
-type MainProps = ThemedClassName<PropsWithChildren>;
-
-const Main = forwardRef<HTMLDivElement, MainProps>(({ classNames, children, ...props }, forwardedRef) => {
-  const { drawerState } = useMobileLayout('MobileLayout.Main');
-
-  return (
-    <div
-      {...props}
-      className={mx('overflow-hidden transition-all duration-300 ease-in-out', classNames)}
-      style={{
-        // When drawer is closed, Main takes full height.
-        // When drawer is open, Main takes 50% height (flex-1 behavior).
-        // When drawer is expanded (keyboard visible), Main shrinks to 0.
-        flexGrow: drawerState === 'closed' ? 1 : drawerState === 'open' ? 1 : 0,
-        flexShrink: 1,
-        flexBasis: drawerState === 'expanded' ? 0 : 'auto',
-        minHeight: 0,
-      }}
-      ref={forwardedRef}
-    >
-      {children}
-    </div>
-  );
-});
-
-Main.displayName = 'MobileLayout.Main';
-
-//
-// Drawer
-//
-
-type DrawerProps = ThemedClassName<
-  PropsWithChildren<{
-    label?: string;
-  }>
->;
-
-const Drawer = forwardRef<HTMLDivElement, DrawerProps>(({ classNames, children, label, ...props }, forwardedRef) => {
-  const { drawerState: state } = useMobileLayout('MobileLayout.Drawer');
-
-  const handleKeyDown = useCallback((event: KeyboardEvent<HTMLDivElement>) => {
-    const focusGroupParent = (event.target as HTMLElement).closest('[data-tabster]');
-    if (event.key === 'Escape' && focusGroupParent) {
-      event.preventDefault();
-      event.stopPropagation();
-      (focusGroupParent as HTMLElement).focus();
-    }
-  }, []);
-
-  return (
-    <div
-      {...props}
-      role='region'
-      aria-label={label}
-      data-state={state}
-      className={mx(
-        'overflow-hidden transition-all duration-300 ease-in-out',
-        'border-bs border-subduedSeparator',
-        'sidebar-surface backdrop-blur-md dark:backdrop-blur-lg',
-        classNames,
-      )}
-      style={{
-        // When drawer is closed, it shrinks to 0.
-        // When drawer is open, takes 50% height (flex-1 splits with Main).
-        // When drawer is expanded (keyboard visible), takes full height.
-        flexGrow: state === 'closed' ? 0 : 1,
-        flexShrink: 1,
-        flexBasis: state === 'closed' ? 0 : 'auto',
-        minHeight: 0,
-        overscrollBehavior: 'contain',
-        touchAction: 'pan-y',
-      }}
-      onKeyDownCapture={handleKeyDown}
-      ref={forwardedRef}
-    >
-      {children}
-    </div>
-  );
-});
-
-Drawer.displayName = 'MobileLayout.Drawer';
-
-//
-// Footer
-//
-
-const MAX_BLOCK_SIZE = 200;
-
-type FooterProps = PropsWithChildren;
-
-const Footer = forwardRef<HTMLDivElement, FooterProps>(({ children, ...props }, forwardedRef) => {
-  return (
-    <footer
-      {...props}
-      className={mx('shrink-0 overflow-hidden')}
-      style={{
-        // Smoothly collapse footer when keyboard opens.
-        transition: 'max-block-size,opacity 300ms ease-out',
-        maxBlockSize: `calc((1 - var(--kb-open, 0)) * ${MAX_BLOCK_SIZE}px)`,
-        opacity: 'calc(1 - var(--kb-open, 0))',
-      }}
-      ref={forwardedRef}
-    >
-      {children}
-    </footer>
-  );
-});
-
-Footer.displayName = 'MobileLayout.Footer';
-
-//
-// Mobile
-//
-
-export const MobileLayout = {
-  Root,
-  Main,
-  Drawer,
-  Footer,
-};
+MobileLayout.displayName = MOBILE_LAYOUT_NAME;
 
 export { useMobileLayout };
 
-export type { RootProps, MainProps, DrawerProps, FooterProps };
+//
+// useIOSKeyboard
+//
+
+type IOSKeyboard = {
+  open: boolean;
+  height: number;
+};
+
+/**
+ * Mobile container that handles iOS keyboard layout adjustments.
+ *
+ * Uses two strategies for keyboard detection:
+ * 1. Tauri iOS: Native keyboard plugin for reliable height/animation events.
+ * 2. Web/PWA: visualViewport API as fallback.
+ *
+ * iPhone (portrait, points)
+ * - Without predictive bar:  ~291 pt
+ * - With predictive bar:     ~335 pt
+ * - With accessory view:     ~380–420 pt
+ *
+ * Example:
+ * - Viewport: 874 (entire screen)
+ * - SafeArea: 96 (62+34)
+ * - Main:     778
+ * - Keyboard: 413 (incl. Input Accessory View)
+ *
+ * CSS Variables set on document.documentElement:
+ * --vvh: Visual viewport height (use as container height).
+ * --kb-height: Keyboard height in pixels.
+ * --kb-open: 1 when keyboard is open, 0 when closed.
+ *
+ * NOTE: By default when an input is selected on iOS the Input Accessory View is shown above the keyboard.
+ * This can be disabled by setting the `inputAccessoryView` property to `false`.
+ *
+ * On iOS (Tauri), listens for 'keyboard' CustomEvents dispatched by the native KeyboardObserver.swift.
+ * Falls back to VisualViewport API on other platforms.
+ */
+const useIOSKeyboard = (): IOSKeyboard => {
+  const [open, setOpen] = useState(false);
+  const [height, setHeight] = useState(0);
+
+  // Detect keybaord state.
+  useEffect(() => {
+    const viewport = window.visualViewport;
+    if (!viewport) {
+      return;
+    }
+
+    // Handler for VisualViewport resize (fallback for non-iOS).
+    const initialHeight = viewport.height ?? window.innerHeight;
+
+    const updateState = (keyboardHeight: number, open: boolean) => {
+      setOpen(open);
+      setHeight(keyboardHeight);
+
+      const vvh = window.innerHeight - keyboardHeight;
+      document.documentElement.style.setProperty('--vvh', `${vvh}px`);
+      document.documentElement.style.setProperty('--kb-height', `${keyboardHeight}px`);
+      document.documentElement.style.setProperty('--kb-open', open ? '1' : '0');
+      log.info('[useIOSKeyboard] viewport size:', {
+        vvh,
+        keyboardHeight,
+        open,
+      });
+    };
+
+    return combine(
+      // Prevent auto-scroll when input is focused.
+      addEventListener(
+        document,
+        'focus',
+        (ev: FocusEvent) => {
+          const target = ev.target as HTMLElement;
+          if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
+            // Prevent default focus behavior.
+            ev.preventDefault();
+
+            // Manually focus without scroll.
+            target.focus({ preventScroll: true });
+
+            // Lock current scroll position.
+            const scrollY = window.scrollY;
+            const scrollX = window.scrollX;
+            requestAnimationFrame(() => {
+              window.scrollTo(scrollX, scrollY);
+            });
+          }
+        },
+        true,
+      ),
+
+      // TODO(burdon): This isn't triggered. Check swift plugin.
+      // Handler for native iOS keyboard events (from KeyboardObserver.swift).
+      addEventListener(
+        window,
+        'keyboard' as any,
+        (event: CustomEvent<{ type: 'show' | 'hide'; height: number; duration: number }>) => {
+          const { type, height } = event.detail;
+          log.info('[useIOSKeyboard] Keyboard event:', { type, height });
+          updateState(height, type === 'show');
+        },
+      ),
+
+      // Lsten for VisualViewport as fallback.
+      addEventListener(viewport, 'resize', () => {
+        const heightDiff = initialHeight - viewport.height;
+        const open = heightDiff > 100;
+        log.info('[useIOSKeyboard] Resize event:', { open, initialHeight, heightDiff });
+        updateState(open ? heightDiff : 0, open);
+      }),
+    );
+  }, []);
+
+  return { open, height };
+};

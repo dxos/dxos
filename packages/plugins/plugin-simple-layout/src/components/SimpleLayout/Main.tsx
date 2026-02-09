@@ -15,7 +15,6 @@ import { ContentLoading } from '../ContentLoading';
 import { useLoadDescendents } from '../hooks';
 
 import { Banner } from './Banner';
-import { MobileLayout, useMobileLayout } from './MobileLayout';
 import { NavBar } from './NavBar';
 
 const MAIN_NAME = 'SimpleLayout.Main';
@@ -29,7 +28,6 @@ export const Main = () => {
   const attentionAttrs = useAttentionAttributes(id);
   const { graph } = useAppGraph();
   const node = useNode(graph, id);
-  const { drawerState } = useMobileLayout('SimpleLayout.Main');
 
   // Ensures that children are loaded so that they are available to navigate to.
   useLoadDescendents(id);
@@ -47,7 +45,7 @@ export const Main = () => {
     );
   }, [id, node, node?.data, node?.properties, state.popoverAnchorId]);
 
-  const showNavBar = !state.isPopover && drawerState === 'closed';
+  const showNavBar = !state.isPopover && state.drawerState === 'closed';
 
   const bannerProps = useBannerProps(graph);
   const { actions, onAction } = useNavbarActions();
@@ -55,9 +53,8 @@ export const Main = () => {
   return (
     <div
       className={mx(
-        'bs-full grid',
+        'bs-full grid bg-toolbarSurface',
         showNavBar ? 'grid-rows-[min-content_1fr_min-content]' : 'grid-rows-[min-content_1fr]',
-        'bg-toolbarSurface border',
       )}
       {...attentionAttrs}
     >
@@ -65,11 +62,7 @@ export const Main = () => {
       <article className='bs-full overflow-hidden bg-baseSurface'>
         <Surface key={id} role='article' data={data} limit={1} fallback={ContentError} placeholder={placeholder} />
       </article>
-      {showNavBar && (
-        <MobileLayout.Footer>
-          <NavBar classNames='border-bs border-subduedSeparator' actions={actions} onAction={onAction} />
-        </MobileLayout.Footer>
-      )}
+      {showNavBar && <NavBar classNames='border-bs border-subduedSeparator' actions={actions} onAction={onAction} />}
     </div>
   );
 };
