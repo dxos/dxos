@@ -172,7 +172,36 @@ export const InvocationTraceContainer = ({
       }
     >
       <div className={mx('bs-full', gridLayout)}>
-        <DynamicTable properties={properties} rows={rows} features={features} onRowClick={handleRowClick} />
+        {/* <DynamicTable properties={properties} rows={rows} features={features} onRowClick={handleRowClick} /> */}
+        <div className='overflow-auto'>
+          <table className='table-fixed min-w-full text-xs border-collapse'>
+            <thead className='sticky top-0 z-10 bg-background'>
+              <tr>
+                <th>ID</th>
+                <th>Target</th>
+                <th>Started</th>
+                <th>Duration</th>
+                <th>Status</th>
+                <th>Queue</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows
+                .toSorted((a, b) => b.time.getTime() - a.time.getTime())
+                .slice(0, 50)
+                .map((row) => (
+                  <tr key={row.id} onClick={() => handleRowClick(row)} className='cursor-pointer'>
+                    <td className='px-2 py-1 whitespace-nowrap border border-separator'>{row.id}</td>
+                    <td className='px-2 py-1 whitespace-nowrap border border-separator'>{row.target}</td>
+                    <td className='px-2 py-1 whitespace-nowrap border border-separator'>{row.time.toLocaleString()}</td>
+                    <td className='px-2 py-1 whitespace-nowrap border border-separator'>{row.duration}</td>
+                    <td className='px-2 py-1 whitespace-nowrap border border-separator'>{row.status}</td>
+                    <td className='px-2 py-1 whitespace-nowrap border border-separator'>{row.queue}</td>
+                  </tr>
+                ))}
+            </tbody>
+          </table>
+        </div>
         {selectedInvocation && <Selected span={selectedInvocation} />}
       </div>
     </PanelContainer>
