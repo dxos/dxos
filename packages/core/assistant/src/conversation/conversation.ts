@@ -5,12 +5,16 @@
 import type * as Tool from '@effect/ai/Tool';
 import type * as Toolkit from '@effect/ai/Toolkit';
 import type { Registry } from '@effect-atom/atom-react';
+import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 
 import { type ToolExecutionService, type ToolResolverService } from '@dxos/ai';
 import { Resource } from '@dxos/context';
 import { Obj } from '@dxos/echo';
 import { type Queue } from '@dxos/echo-db';
+import { acquireReleaseResource } from '@dxos/effect';
+import { QueueService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
@@ -115,9 +119,14 @@ export class AiConversation extends Resource {
       // Process request.
       const session = new AiSession();
       const messages = yield* session.run({ history, blueprints, toolkit, objects, ...params }).pipe(
-        Effect.provideService(AiContextService, {
-          binder: this.context,
-        }),
+        Effect.provide(
+          Layer.mergeAll(
+            Layer.succeed(AiContextService, {
+              binder: this.context,
+            }),
+            Layer.succeed(AiConversationService, this),
+          ),
+        ),
       );
 
       log('result', {
@@ -132,3 +141,63 @@ export class AiConversation extends Resource {
     });
   }
 }
+
+/**
+ * Gives access to the ai conversation.
+ */
+export class AiConversationService extends Context.Tag('@dxos/assistant/AiConversationService')<
+  AiConversationService,
+  AiConversation
+>() {
+  /**
+   * Create a new conversation layer from options.
+   */
+  static layer = (options: AiConversationOptions): Layer.Layer<AiConversationService | AiContextService> =>
+    aiContextFromConversation.pipe(
+      Layer.provideMerge(
+        Layer.scoped(
+          AiConversationService,
+          Effect.gen(function* () {
+            const conversation = yield* acquireReleaseResource(() => new AiConversation(options));
+            return conversation;
+          }),
+        ),
+      ),
+    );
+
+  /**
+   * Create a new conversation with a new queue.
+   */
+  static layerNewQueue = (
+    options?: Omit<AiConversationOptions, 'queue'>,
+  ): Layer.Layer<AiConversationService | AiContextService, never, QueueService> =>
+    Layer.unwrapScoped(
+      Effect.gen(function* () {
+        return AiConversationService.layer({
+          ...options,
+          queue: yield* QueueService.createQueue<Message.Message | ContextBinding>(),
+        });
+      }),
+    );
+
+  /**
+   * Run a prompt in the current conversation.
+   */
+  static run = (
+    params: AiConversationRunProps,
+  ): Effect.Effect<Message.Message[], AiSessionRunError, AiSessionRunRequirements | AiConversationService> =>
+    Effect.gen(function* () {
+      const conversation = yield* AiConversationService;
+      return yield* conversation.createRequest(params);
+    });
+}
+
+const aiContextFromConversation = Layer.effect(
+  AiContextService,
+  Effect.gen(function* () {
+    const conversation = yield* AiConversationService;
+    return {
+      binder: conversation.context,
+    };
+  }),
+);
