@@ -4,6 +4,7 @@
 
 import { next as A } from '@automerge/automerge';
 import { cbor } from '@automerge/automerge-repo';
+import * as Schema from 'effect/Schema';
 
 import { type Halo, type Space } from '@dxos/client-protocol';
 import { type ClientServicesHost, type DataSpace } from '@dxos/client-services';
@@ -15,7 +16,6 @@ import { log } from '@dxos/log';
 import { type RpcPeer, type RpcPort, createBundledRpcServer } from '@dxos/rpc';
 import { type DiagnosticMetadata, TRACE_PROCESSOR, type TraceProcessor } from '@dxos/tracing';
 import { joinTables } from '@dxos/util';
-import * as Schema from 'effect/Schema';
 
 import { type Client } from '../client';
 import { SpaceState } from '../echo';

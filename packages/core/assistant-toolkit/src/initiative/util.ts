@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { AiContextBinder, type ContextBinding } from '@dxos/assistant';
 import { type Blueprint } from '@dxos/blueprints';
 import { Database, Obj, Ref, Relation } from '@dxos/echo';
-import { ObjectNotFoundError } from '@dxos/echo/Err';
+import { type ObjectNotFoundError } from '@dxos/echo/Err';
 import { acquireReleaseResource } from '@dxos/effect';
 import { QueueService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
@@ -15,6 +15,7 @@ import { Text } from '@dxos/schema';
 import type { Message } from '@dxos/types';
 
 import * as Chat from '../chat/Chat';
+
 import { Initiative } from './Initiative';
 
 /**

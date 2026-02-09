@@ -17,7 +17,7 @@ import { type SerializedError } from '@dxos/protocols';
 import { useQuery } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { DynamicTable, type TableFeatures, type TablePropertyDefinition } from '@dxos/react-ui-table';
+import { type TableFeatures, type TablePropertyDefinition } from '@dxos/react-ui-table';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { mx } from '@dxos/ui-theme';
 

@@ -2,7 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { LanguageModel, Prompt } from '@effect/ai';
+import * as LanguageModel from '@effect/ai/LanguageModel';
+import * as Prompt from '@effect/ai/Prompt';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
