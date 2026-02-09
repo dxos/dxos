@@ -50,6 +50,8 @@ export interface Observability {
   errors: Errors;
   events: Events;
   feedback: Feedback;
+  /** True if at least one extension of the given kind reports as available. */
+  isAvailable(kind: Kind): Effect.Effect<boolean>;
   metrics: Metrics;
 }
 
@@ -206,6 +208,22 @@ class ObservabilityImpl implements Observability {
         }
       },
     };
+  }
+
+  isAvailable(kind: Kind): Effect.Effect<boolean> {
+    const apis = this._getExtensions(kind);
+    if (apis.length === 0) {
+      return Effect.succeed(false);
+    }
+    return Effect.gen(this, function* () {
+      for (const api of apis) {
+        const available = yield* api.isAvailable();
+        if (available) {
+          return true;
+        }
+      }
+      return false;
+    });
   }
 
   get metrics(): Metrics {

@@ -290,10 +290,10 @@ describe('Observability', () => {
     it.effect('filters by kind when specified', () =>
       Effect.gen(function* () {
         const errorsExt = createMockExtension({
-          apis: [{ kind: 'errors', captureException: vi.fn() }],
+          apis: [{ kind: 'errors', isAvailable: () => Effect.succeed(true), captureException: vi.fn() }],
         });
         const eventsExt = createMockExtension({
-          apis: [{ kind: 'events', captureEvent: vi.fn() }],
+          apis: [{ kind: 'events', isAvailable: () => Effect.succeed(true), captureEvent: vi.fn() }],
         });
         const obs = yield* Function.pipe(
           Observability.make(),
@@ -315,10 +315,10 @@ describe('Observability', () => {
       Effect.gen(function* () {
         const captureException = vi.fn();
         const errorsExt = createMockExtension({
-          apis: [{ kind: 'errors', captureException }],
+          apis: [{ kind: 'errors', isAvailable: () => Effect.succeed(true), captureException }],
         });
         const eventsExt = createMockExtension({
-          apis: [{ kind: 'events', captureEvent: vi.fn() }],
+          apis: [{ kind: 'events', isAvailable: () => Effect.succeed(true), captureEvent: vi.fn() }],
         });
         const obs = yield* Function.pipe(
           Observability.make(),
@@ -336,10 +336,10 @@ describe('Observability', () => {
       Effect.gen(function* () {
         const captureEvent = vi.fn();
         const eventsExt = createMockExtension({
-          apis: [{ kind: 'events', captureEvent }],
+          apis: [{ kind: 'events', isAvailable: () => Effect.succeed(true), captureEvent }],
         });
         const errorsExt = createMockExtension({
-          apis: [{ kind: 'errors', captureException: vi.fn() }],
+          apis: [{ kind: 'errors', isAvailable: () => Effect.succeed(true), captureException: vi.fn() }],
         });
         const obs = yield* Function.pipe(
           Observability.make(),
@@ -356,7 +356,7 @@ describe('Observability', () => {
       Effect.gen(function* () {
         const captureUserFeedback = vi.fn();
         const feedbackExt = createMockExtension({
-          apis: [{ kind: 'feedback', captureUserFeedback }],
+          apis: [{ kind: 'feedback', isAvailable: () => Effect.succeed(true), captureUserFeedback }],
         });
         const obs = yield* Function.pipe(
           Observability.make(),
@@ -374,7 +374,7 @@ describe('Observability', () => {
         const increment = vi.fn();
         const distribution = vi.fn();
         const metricsExt = createMockExtension({
-          apis: [{ kind: 'metrics', gauge, increment, distribution }],
+          apis: [{ kind: 'metrics', isAvailable: () => Effect.succeed(true), gauge, increment, distribution }],
         });
         const obs = yield* Function.pipe(
           Observability.make(),
@@ -394,7 +394,7 @@ describe('Observability', () => {
       Effect.gen(function* () {
         const captureException = vi.fn();
         const ext = createMockExtension({
-          apis: [{ kind: 'errors', captureException }],
+          apis: [{ kind: 'errors', isAvailable: () => Effect.succeed(true), captureException }],
         });
         const obs = yield* Function.pipe(
           Observability.make(),

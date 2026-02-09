@@ -134,16 +134,17 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
       return Ref.get(enabledRef).pipe(Effect.runSync);
     },
     apis: [
-      logs ? ({ kind: 'logs' } satisfies ExtensionApi) : undefined,
+      logs ? ({ kind: 'logs', isAvailable: () => Effect.succeed(true) } satisfies ExtensionApi) : undefined,
       metrics
         ? ({
             kind: 'metrics',
+            isAvailable: () => Effect.succeed(true),
             gauge: (name, value, tags) => metrics.gauge(name, value, tags),
             increment: (name, value, tags) => metrics.increment(name, value, tags),
             distribution: (name, value, tags) => metrics.distribution(name, value, tags),
           } satisfies ExtensionApi)
         : undefined,
-      traces ? ({ kind: 'traces' } satisfies ExtensionApi) : undefined,
+      traces ? ({ kind: 'traces', isAvailable: () => Effect.succeed(true) } satisfies ExtensionApi) : undefined,
     ].filter(isNonNullable),
   };
 });

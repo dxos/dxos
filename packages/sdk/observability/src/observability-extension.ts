@@ -19,7 +19,15 @@ export * from './extensions';
 export type Kind = 'errors' | 'events' | 'feedback' | 'logs' | 'metrics' | 'traces';
 
 /**
- * Metrics extension API.
+ * Base for every extension API variant. All kinds implement availability the same way.
+ */
+export type ExtensionApiBase<K extends Kind = Kind> = {
+  kind: K;
+  isAvailable(): Effect.Effect<boolean>;
+};
+
+/**
+ * Metrics extension API (kind-specific methods only).
  */
 export type Metrics = {
   gauge(name: string, value: number, tags?: any): void;
@@ -28,35 +36,35 @@ export type Metrics = {
 };
 
 /**
- * Errors extension API.
+ * Errors extension API (kind-specific methods only).
  */
 export type Errors = {
   captureException(error: Error, attributes?: Attributes): void;
 };
 
 /**
- * Events extension API.
+ * Events extension API (kind-specific methods only).
  */
 export type Events = {
   captureEvent(event: string, attributes?: Attributes): void;
 };
 
 /**
- * Feedback extension API.
+ * Feedback extension API (kind-specific methods only).
  */
 export type Feedback = {
   captureUserFeedback(form: FeedbackForm): void;
 };
 
 export type ExtensionApi =
-  | ({ kind: 'errors' } & Errors)
-  | ({ kind: 'events' } & Events)
-  | ({ kind: 'feedback' } & Feedback)
+  | (ExtensionApiBase<'errors'> & Errors)
+  | (ExtensionApiBase<'events'> & Events)
+  | (ExtensionApiBase<'feedback'> & Feedback)
   // TODO(wittjosiah): Direct logs api?
-  | { kind: 'logs' }
-  | ({ kind: 'metrics' } & Metrics)
+  | ExtensionApiBase<'logs'>
+  | (ExtensionApiBase<'metrics'> & Metrics)
   // TODO(wittjosiah): Direct traces api?
-  | { kind: 'traces' };
+  | ExtensionApiBase<'traces'>;
 
 /**
  * Feedback form to be captured by the feedback extension.

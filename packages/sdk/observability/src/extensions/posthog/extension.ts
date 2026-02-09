@@ -29,6 +29,24 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
     return stubExtension;
   }
 
+  let feedbackSurveyAvailable: boolean | null = null;
+
+  const checkFeedbackSurveyAvailable = (): Effect.Effect<boolean> =>
+    feedbackSurveyId
+      ? Effect.promise(() => {
+          if (feedbackSurveyAvailable !== null) {
+            return Promise.resolve(feedbackSurveyAvailable);
+          }
+          return new Promise<boolean>((resolve) => {
+            posthog.getSurveys((surveys) => {
+              const found = surveys.some((s) => s.id === feedbackSurveyId);
+              feedbackSurveyAvailable = found;
+              resolve(found);
+            });
+          });
+        })
+      : Effect.succeed(false);
+
   return {
     initialize: Effect.fn(function* () {
       // https://posthog.com/docs/libraries/js/config
@@ -66,12 +84,14 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
     apis: [
       {
         kind: 'events',
+        isAvailable: () => Effect.succeed(true),
         captureEvent: (event, attributes) => {
           posthog.capture(event, attributes);
         },
       },
       {
         kind: 'errors',
+        isAvailable: () => Effect.succeed(true),
         captureException: (error, attributes) => {
           posthog.captureException(error, attributes);
         },
@@ -100,6 +120,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
             });
           });
         },
+        isAvailable: checkFeedbackSurveyAvailable,
       },
     ],
   };

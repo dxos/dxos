@@ -2,19 +2,38 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useCallback } from 'react';
+import * as Effect from 'effect/Effect';
+import React, { useCallback, useState } from 'react';
 
 import { Common } from '@dxos/app-framework';
-import { useOperationInvoker } from '@dxos/app-framework/react';
+import { useCapability, useOperationInvoker } from '@dxos/app-framework/react';
+import { runAndForwardErrors } from '@dxos/effect';
+import { useAsyncEffect } from '@dxos/react-ui';
 import { osTranslations } from '@dxos/ui-theme';
 
 import { meta } from '../meta';
-import { ObservabilityOperation, type UserFeedback } from '../types';
+import { ObservabilityCapabilities, ObservabilityOperation, type UserFeedback } from '../types';
 
 import { FeedbackForm } from './FeedbackForm';
 
 export const HelpContainer = () => {
   const { invokePromise } = useOperationInvoker();
+  const observability = useCapability(ObservabilityCapabilities.Observability);
+  const [feedbackAvailable, setFeedbackAvailable] = useState(true);
+
+  useAsyncEffect(
+    async (controller) => {
+      const available = await observability.isAvailable('feedback').pipe(
+        Effect.catchAll(() => Effect.succeed(false)),
+        Effect.catchAllDefect(() => Effect.succeed(false)),
+        runAndForwardErrors,
+      );
+      if (!controller.signal.aborted) {
+        setFeedbackAvailable(available);
+      }
+    },
+    [observability],
+  );
 
   const handleSave = useCallback(
     async (values: UserFeedback) => {
@@ -32,5 +51,5 @@ export const HelpContainer = () => {
     [invokePromise],
   );
 
-  return <FeedbackForm onSave={handleSave} />;
+  return <FeedbackForm onSave={handleSave} disabled={!feedbackAvailable} />;
 };
