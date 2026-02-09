@@ -155,7 +155,7 @@ export default Capability.makeModule(
             updateState((state) => ({
               ...state,
               companionVariant: variant,
-              drawerState: state.drawerState === 'closed' || !state.drawerState ? 'expanded' : state.drawerState,
+              drawerState: state.drawerState === 'closed' || !state.drawerState ? 'open' : state.drawerState,
             }));
           } else {
             // Regular navigation - update active and history (use full id for alternate-tree nodes).

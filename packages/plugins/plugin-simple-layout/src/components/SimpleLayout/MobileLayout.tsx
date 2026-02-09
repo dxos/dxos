@@ -45,34 +45,19 @@ type RootProps = PropsWithChildren<{
 
 const Root = forwardRef<HTMLDivElement, RootProps>(
   (
-    { children, drawerState: propsDrawerState, defaultDrawerState = 'closed', onDrawerStateChange, ...props },
+    { children, drawerState: drawerStateProp, defaultDrawerState = 'closed', onDrawerStateChange, ...props },
     forwardedRef,
   ) => {
     // TODO(burdon): ios-only.
     // Hook handles keyboard detection and sets CSS custom properties.
     const { open: keyboardOpen } = useIOSKeyboard();
-
-    const [drawerState, setDrawerStateInternal] = useState<DrawerState>(propsDrawerState ?? defaultDrawerState);
     const prevKeyboardOpen = useRef(keyboardOpen);
 
-    // Sync external state changes
+    // Sync external state changes.
+    const [drawerState, setDrawerStateInternal] = useState<DrawerState>(drawerStateProp ?? defaultDrawerState);
     useEffect(() => {
-      if (propsDrawerState !== undefined) {
-        setDrawerStateInternal(propsDrawerState);
-      }
-    }, [propsDrawerState]);
-
-    // Auto-transition drawer state based on keyboard visibility.
-    useEffect(() => {
-      if (keyboardOpen && !prevKeyboardOpen.current && drawerState === 'open') {
-        setDrawerStateInternal('expanded');
-        onDrawerStateChange?.('expanded');
-      } else if (!keyboardOpen && prevKeyboardOpen.current && drawerState === 'expanded') {
-        setDrawerStateInternal('open');
-        onDrawerStateChange?.('open');
-      }
-      prevKeyboardOpen.current = keyboardOpen;
-    }, [keyboardOpen, drawerState, onDrawerStateChange]);
+      setDrawerStateInternal(drawerStateProp ?? defaultDrawerState);
+    }, [drawerStateProp, defaultDrawerState]);
 
     const setDrawerState = useCallback(
       (nextState: DrawerState) => {
@@ -81,6 +66,18 @@ const Root = forwardRef<HTMLDivElement, RootProps>(
       },
       [onDrawerStateChange],
     );
+
+    // Auto-transition drawer state based on keyboard visibility.
+    // useEffect(() => {
+    //   if (keyboardOpen && !prevKeyboardOpen.current && drawerState === 'open') {
+    //     setDrawerStateInternal('expanded');
+    //     onDrawerStateChange?.('expanded');
+    //   } else if (!keyboardOpen && prevKeyboardOpen.current && drawerState === 'expanded') {
+    //     setDrawerStateInternal('open');
+    //     onDrawerStateChange?.('open');
+    //   }
+    //   prevKeyboardOpen.current = keyboardOpen;
+    // }, [keyboardOpen, drawerState, onDrawerStateChange]);
 
     log.info('MobileLayout', { keyboardOpen, drawerState });
 

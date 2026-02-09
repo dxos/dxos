@@ -15,8 +15,6 @@ import { meta } from '../../meta';
 import { ContentError } from '../ContentError';
 import { ContentLoading } from '../ContentLoading';
 
-import { useMobileLayout } from './MobileLayout';
-
 const DRAWER_NAME = 'SimpleLayout.Drawer';
 
 /**
@@ -26,9 +24,6 @@ export const Drawer = () => {
   const { t } = useTranslation(meta.id);
   const { graph } = useAppGraph();
   const { state: layoutState, updateState } = useSimpleLayoutState();
-  const { drawerState, setDrawerState } = useMobileLayout('SimpleLayout.Drawer');
-
-  const isFullyExpanded = drawerState === 'expanded';
 
   const placeholder = useMemo(() => <ContentLoading />, []);
 
@@ -58,21 +53,20 @@ export const Drawer = () => {
   const handleTabClick = useCallback(
     (companion: Node.Node) => {
       const [, companionVariant] = companion.id.split(ATTENDABLE_PATH_SEPARATOR);
-      updateState((state) => ({ ...state, companionVariant }));
-      setDrawerState('open');
+      updateState((state) => ({ ...state, companionVariant, drawerState: 'open' }));
     },
-    [updateState, setDrawerState],
+    [updateState],
   );
 
   // Handle expand/collapse toggle.
   const handleToggleExpand = useCallback(() => {
-    setDrawerState(drawerState === 'expanded' ? 'open' : 'expanded');
-  }, [drawerState, setDrawerState]);
+    updateState((state) => ({ ...state, drawerState: layoutState.drawerState === 'expanded' ? 'open' : 'expanded' }));
+  }, [updateState, layoutState.drawerState]);
 
   // Handle close.
   const handleClose = useCallback(() => {
-    setDrawerState('closed');
-  }, [setDrawerState]);
+    updateState((state) => ({ ...state, drawerState: 'closed' }));
+  }, [updateState]);
 
   return (
     <Layout.Main toolbar>
@@ -95,9 +89,9 @@ export const Drawer = () => {
         </div>
         <Toolbar.Separator variant='gap' />
         <Toolbar.IconButton
-          icon={isFullyExpanded ? 'ph--arrow-down--regular' : 'ph--arrow-up--regular'}
+          icon={layoutState.drawerState === 'expanded' ? 'ph--arrow-down--regular' : 'ph--arrow-up--regular'}
           iconOnly
-          label={isFullyExpanded ? t('collapse drawer label') : t('expand drawer label')}
+          label={layoutState.drawerState === 'expanded' ? t('collapse drawer label') : t('expand drawer label')}
           onClick={handleToggleExpand}
         />
         <Toolbar.IconButton icon='ph--x--regular' iconOnly label={t('close drawer label')} onClick={handleClose} />
