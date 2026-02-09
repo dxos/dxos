@@ -5,9 +5,10 @@
 import * as Schema from 'effect/Schema';
 
 import { Type } from '@dxos/echo';
-import { Text } from '@dxos/schema';
+import { QueueAnnotation, Text } from '@dxos/schema';
 
 import * as Chat from '../chat/Chat';
+import { Queue } from '@dxos/echo-db';
 
 /**
  * Initiative schema definition.
@@ -26,6 +27,12 @@ export const Initiative = Schema.Struct({
     }),
   ),
 
+  /**
+   * Incomnig queue that the agent processes.
+   */
+  // NOTE: Named `queue` to conform to subscribable schema (see QueueAnnotation).
+  queue: Schema.optional(Type.Ref(Queue)),
+
   // TODO(dmaretskyi): Multiple chats.
   chat: Schema.optional(Type.Ref(Chat.Chat)),
 
@@ -37,6 +44,8 @@ export const Initiative = Schema.Struct({
   // TODO(dmaretskyi): Turn into an array of objects when form-data
   subscriptions: Schema.Array(Type.Ref(Type.Obj)),
 
+  useQualifyingAgent: Schema.optional(Schema.Boolean),
+
   newChatOnEveryEvent: Schema.optional(Schema.Boolean),
 
   // TODO(dmaretskyi): input queue?
@@ -45,5 +54,6 @@ export const Initiative = Schema.Struct({
     typename: 'dxos.org/type/Initiative',
     version: '0.1.0',
   }),
+  QueueAnnotation.set(true),
 );
 export interface Initiative extends Schema.Schema.Type<typeof Initiative> {}

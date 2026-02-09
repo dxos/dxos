@@ -11,13 +11,13 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { Surface, useCapability } from '@dxos/app-framework/react';
 import { AiContextBinder } from '@dxos/assistant';
 import { Chat, Initiative } from '@dxos/assistant-toolkit';
-import { DXN, Database, Filter, Obj, Ref, Relation } from '@dxos/echo';
+import { DXN, Database, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import { type JsonPath, splitJsonPath } from '@dxos/echo/internal';
 import { AtomObj, AtomRef } from '@dxos/echo-atom';
 import { FunctionDefinition, QueueService, Trigger } from '@dxos/functions';
 import { AutomationCapabilities } from '@dxos/plugin-automation/types';
 import { MarkdownEditor } from '@dxos/plugin-markdown';
-import { useObject } from '@dxos/react-client/echo';
+import { useObject, useQuery } from '@dxos/react-client/echo';
 import { Button, ButtonGroup, IconButton, Input, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldMap, omitId } from '@dxos/react-ui-form';
 import { StackItem } from '@dxos/react-ui-stack';
@@ -25,6 +25,7 @@ import { type Text } from '@dxos/schema';
 import { Blueprint } from '@dxos/blueprints';
 import { Data } from 'effect/Schema';
 import { acquireReleaseResource } from '@dxos/effect';
+import * as Option from 'effect/Option';
 
 export type InitiativeContainerProps = {
   role?: string;
@@ -183,12 +184,43 @@ const InitiativeForm = ({ initiative }: { initiative: Initiative.Initiative }) =
     const runtime = computeRuntime.getRuntime(Obj.getDatabase(initiative)!.spaceId);
 
     await runtime.runPromise(Initiative.resetChatHistory(initiative));
-  }, [initiative]);
+
+    if (!initiative.queue) {
+      await runtime.runPromise(
+        Effect.gen(function* () {
+          const queue = yield* QueueService.createQueue();
+          Obj.change(initiative, (initiative) => {
+            initiative.queue = Ref.fromDXN(queue.dxn);
+          });
+        }),
+      );
+    }
+  }, [initiative, computeRuntime]);
+
+  const inputQueue = useAtomValue(
+    AtomObj.make(initiative).pipe((_) =>
+      Atom.make((get) =>
+        Option.fromNullable(get(_).queue).pipe(Option.map(AtomRef.make), Option.map(get), Option.getOrUndefined),
+      ),
+    ),
+  );
+
+  const inputQueueItems = useQuery(inputQueue, Query.select(Filter.everything()));
 
   // TODO(dmaretskyi): Form breaks if we provide the echo object directly.
   const spreadValue = useMemo(() => ({ ...initiative }), [initiative]);
   return (
-    <>
+    <div className='flex flex-col gap-2'>
+      <ButtonGroup classNames='h-10'>
+        <Button onClick={handleResetHistory}>Reset History</Button>
+      </ButtonGroup>
+      <h3 className='mb-2'>Input Queue</h3>
+      <div className='border border-subduedSeparator rounded-md p-2 h-64 overflow-y-auto'>
+        {inputQueueItems.map((item) => (
+          <Surface key={item.id} role='section' data={{ subject: item }} limit={1} />
+        ))}
+        {inputQueueItems.length === 0 && <div className='text-subdued'>No items in queue</div>}
+      </div>
       <Form.Root
         schema={omitId(Initiative.Initiative)}
         onValuesChanged={handleChange as any}
@@ -197,11 +229,8 @@ const InitiativeForm = ({ initiative }: { initiative: Initiative.Initiative }) =
         fieldMap={fieldMap}
       >
         <Form.FieldSet />
-        <ButtonGroup>
-          <Button onClick={handleResetHistory}>Reset History</Button>
-        </ButtonGroup>
       </Form.Root>
-    </>
+    </div>
   );
 };
 
@@ -236,7 +265,7 @@ const syncTriggers = async (initiative: Initiative.Initiative) => {
     const target = Obj.getKeys(trigger, INITIATIVE_TRIGGER_TARGET_EXTENSION_KEY).at(0)?.id;
 
     const exists = initiative.subscriptions.find((subscription) => subscription.dxn.toString() === target);
-    if (!exists) {
+    if (!exists && !(initiative.useQualifyingAgent && target === Obj.getDXN(initiative)?.toString())) {
       db.remove(trigger);
     }
   }
@@ -270,13 +299,45 @@ const syncTriggers = async (initiative: Initiative.Initiative) => {
           kind: 'queue',
           queue: target.queue.dxn.toString(),
         },
-        function: Ref.make(FunctionDefinition.serialize(Initiative.agent)),
+        function: Ref.make(
+          FunctionDefinition.serialize(initiative.useQualifyingAgent ? Initiative.qualifier : Initiative.agent),
+        ),
         input: {
           initiative: Ref.make(initiative),
           event: '{{event}}',
         },
       }),
     );
+  }
+
+  if (initiative.useQualifyingAgent) {
+    const qualifierTrigger = triggers.find((trigger) =>
+      Obj.getKeys(trigger, INITIATIVE_TRIGGER_TARGET_EXTENSION_KEY).some(
+        (key) => key.id === Obj.getDXN(initiative)?.toString(),
+      ),
+    );
+    if (!qualifierTrigger && initiative.queue) {
+      db.add(
+        Trigger.make({
+          [Obj.Meta]: {
+            keys: [
+              { source: INITIATIVE_TRIGGER_EXTENSION_KEY, id: initiative.id },
+              { source: INITIATIVE_TRIGGER_TARGET_EXTENSION_KEY, id: Obj.getDXN(initiative)?.toString() ?? '' },
+            ],
+          },
+          function: Ref.make(FunctionDefinition.serialize(Initiative.agent)),
+          enabled: true,
+          spec: {
+            kind: 'queue',
+            queue: initiative.queue.dxn.toString(),
+          },
+          input: {
+            initiative: Ref.make(initiative),
+            event: '{{event}}',
+          },
+        }),
+      );
+    }
   }
 
   await db.flush({ indexes: true });

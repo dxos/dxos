@@ -57,8 +57,12 @@ export const makeInitialized = (
         [Relation.Target]: initiative,
       }),
     );
+
+    const inputQueue = yield* QueueService.createQueue();
+
     Obj.change(initiative, (initiative) => {
       initiative.chat = Ref.make(chat);
+      initiative.queue = Ref.fromDXN(inputQueue.dxn);
     });
 
     return initiative;

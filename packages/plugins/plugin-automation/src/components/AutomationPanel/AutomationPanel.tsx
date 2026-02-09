@@ -24,6 +24,8 @@ import { isNonNullable } from '@dxos/util';
 
 import { meta } from '../../meta';
 import { TriggerEditor, type TriggerEditorProps } from '../TriggerEditor';
+import { Atom, useAtomValue } from '@effect-atom/atom-react';
+import { AtomObj } from '@dxos/echo-atom';
 
 const grid = 'grid grid-cols-[40px_1fr_32px_32px] min-bs-[2.5rem]';
 
@@ -127,68 +129,17 @@ export const AutomationPanel = ({ classNames, space, object, initialTrigger, onD
         >
           {({ items: filteredTriggers }) => (
             <div role='list' className='flex flex-col is-full'>
-              {filteredTriggers?.map((trigger) => {
-                const copyAction = getCopyAction(client, trigger);
-                const cursor = Obj.getKeys(trigger, KEY_QUEUE_CURSOR).at(0)?.id;
-
-                return (
-                  <List.Item<Trigger.Trigger>
-                    key={trigger.id}
-                    item={trigger}
-                    classNames={mx(grid, ghostHover, 'items-center', 'pli-2')}
-                  >
-                    <Input.Root>
-                      <Input.Switch
-                        checked={trigger.enabled}
-                        onCheckedChange={(checked) =>
-                          Obj.change(trigger, (t) => {
-                            t.enabled = checked;
-                          })
-                        }
-                      />
-                    </Input.Root>
-
-                    <div className={'flex'}>
-                      <List.ItemTitle
-                        classNames='pli-1 cursor-pointer is-0 shrink truncate'
-                        onClick={() => handleSelect(trigger)}
-                      >
-                        {getFunctionName(functions, trigger) ?? '∅'}
-                        {cursor && <div className='text-xs text-description truncate ml-4'>Position: {cursor}</div>}
-                      </List.ItemTitle>
-
-                      {/* TODO: a better way to expose copy action */}
-                      {copyAction && (
-                        <Clipboard.IconButton
-                          label={t(copyAction.translationKey)}
-                          value={copyAction.contentProvider()}
-                        />
-                      )}
-                    </div>
-
-                    {trigger.spec?.kind === 'timer' && (
-                      <List.ItemButton
-                        autoHide={false}
-                        disabled={!trigger.enabled || trigger.spec?.kind !== 'timer'}
-                        icon='ph--play--regular'
-                        label='Force run'
-                        onClick={() => handleForceRunTrigger(trigger)}
-                      />
-                    )}
-                    {trigger.spec?.kind === 'queue' && (
-                      <List.ItemButton
-                        autoHide={false}
-                        disabled={!cursor}
-                        icon='ph--arrow-clockwise--regular'
-                        label='Reset cursor'
-                        onClick={() => handleResetCursor(trigger)}
-                      />
-                    )}
-
-                    <List.ItemDeleteButton onClick={() => handleDelete(trigger)} />
-                  </List.Item>
-                );
-              })}
+              {filteredTriggers?.map((trigger) => (
+                <TriggerListItem
+                  key={trigger.id}
+                  trigger={trigger}
+                  functions={functions}
+                  handleSelect={handleSelect}
+                  handleForceRunTrigger={handleForceRunTrigger}
+                  handleResetCursor={handleResetCursor}
+                  handleDelete={handleDelete}
+                />
+              ))}
             </div>
           )}
         </List.Root>
@@ -196,6 +147,81 @@ export const AutomationPanel = ({ classNames, space, object, initialTrigger, onD
       {filteredTriggers.length > 0 && <Separator classNames='mlb-4' />}
       <IconButton icon='ph--plus--regular' label={t('new trigger label')} onClick={handleAdd} />
     </div>
+  );
+};
+
+const TriggerListItem = ({
+  trigger,
+  functions,
+  handleSelect,
+  handleForceRunTrigger,
+  handleResetCursor,
+  handleDelete,
+}: {
+  trigger: Trigger.Trigger;
+  functions: Function.Function[];
+  handleSelect: (trigger: Trigger.Trigger) => void;
+  handleForceRunTrigger: (trigger: Trigger.Trigger) => void;
+  handleResetCursor: (trigger: Trigger.Trigger) => void;
+  handleDelete: (trigger: Trigger.Trigger) => void;
+}) => {
+  const client = useClient();
+  const copyAction = getCopyAction(client, trigger);
+  const cursor = useAtomValue(
+    AtomObj.make(trigger).pipe((_) => Atom.make((get) => Obj.getKeys(get(_), KEY_QUEUE_CURSOR).at(0)?.id)),
+  );
+  const { t } = useTranslation(meta.id);
+
+  return (
+    <List.Item<Trigger.Trigger>
+      key={trigger.id}
+      item={trigger}
+      classNames={mx(grid, ghostHover, 'items-center', 'pli-2')}
+    >
+      <Input.Root>
+        <Input.Switch
+          checked={trigger.enabled}
+          onCheckedChange={(checked) =>
+            Obj.change(trigger, (t) => {
+              t.enabled = checked;
+            })
+          }
+        />
+      </Input.Root>
+
+      <div className={'flex'}>
+        <List.ItemTitle classNames='pli-1 cursor-pointer is-0 shrink truncate' onClick={() => handleSelect(trigger)}>
+          {getFunctionName(functions, trigger) ?? '∅'}
+          {cursor && <div className='text-xs text-description truncate ml-4'>Position: {cursor}</div>}
+        </List.ItemTitle>
+
+        {/* TODO: a better way to expose copy action */}
+        {copyAction && (
+          <Clipboard.IconButton label={t(copyAction.translationKey)} value={copyAction.contentProvider()} />
+        )}
+      </div>
+
+      {trigger.spec?.kind === 'timer' && (
+        <List.ItemButton
+          autoHide={false}
+          disabled={!trigger.enabled || trigger.spec?.kind !== 'timer'}
+          icon='ph--play--regular'
+          label='Force run'
+          onClick={() => handleForceRunTrigger(trigger)}
+        />
+      )}
+      {trigger.spec?.kind === 'queue' && (
+        <List.ItemButton
+          autoHide={false}
+          disabled={!cursor}
+          icon='ph--arrow-clockwise--regular'
+          label='Reset cursor'
+          onClick={() => handleResetCursor(trigger)}
+        />
+      )}
+
+      <List.ItemDeleteButton onClick={() => handleDelete(trigger)} />
+    </List.Item>
   );
 };
 
