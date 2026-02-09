@@ -7,7 +7,7 @@ import React, { forwardRef, useCallback, useMemo } from 'react';
 
 import { Capability, Common } from '@dxos/app-framework';
 import {
-  SurfaceCardRole,
+  type SurfaceComponentProps,
   useAtomCapability,
   useAtomCapabilityState,
   useCapability,
@@ -21,7 +21,6 @@ import { type EditorViewMode } from '@dxos/ui-editor';
 import { MarkdownCard, MarkdownContainer, type MarkdownContainerProps, MarkdownSettings } from '../../components';
 import { meta } from '../../meta';
 import { Markdown, MarkdownCapabilities } from '../../types';
-import { isEditorModel } from '../../util';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -44,15 +43,6 @@ export default Capability.makeModule(() =>
           return <Container id={data.id} subject={data.subject} role={role} />;
         },
       }),
-      // TODO(burdon): Remove this variant and conform to Text.
-      Common.createSurface({
-        id: `${meta.id}/surface/editor`,
-        role: ['article', 'section'],
-        filter: (data): data is { subject: { id: string; text: string } } => isEditorModel(data.subject),
-        component: ({ data, role }) => {
-          return <Container id={data.subject.id} subject={data.subject} role={role} />;
-        },
-      }),
       Common.createSurface({
         id: `${meta.id}/surface/plugin-settings`,
         role: 'article',
@@ -65,10 +55,10 @@ export default Capability.makeModule(() =>
       }),
       Common.createSurface({
         id: `${meta.id}/surface/preview`,
-        role: SurfaceCardRole.literals as any,
+        role: 'card--content',
         filter: (data): data is { subject: Markdown.Document | Text.Text } =>
           Obj.instanceOf(Markdown.Document, data.subject) || Obj.instanceOf(Text.Text, data.subject),
-        component: ({ data, role, ref }) => <MarkdownCard {...data} role={role as SurfaceCardRole} ref={ref} />,
+        component: ({ data }) => <MarkdownCard {...data} />,
       }),
     ]),
   ),
@@ -77,8 +67,7 @@ export default Capability.makeModule(() =>
 /**
  * Common wrapper.
  */
-// TOOD(burdon): Use common type def.
-const Container = forwardRef<HTMLDivElement, { id: string; subject: MarkdownContainerProps['object']; role: string }>(
+const Container = forwardRef<HTMLDivElement, SurfaceComponentProps<Markdown.Document | Text.Text, { id: string }>>(
   ({ id, subject, role }, forwardedRef) => {
     const selectionManager = useCapability(AttentionCapabilities.Selection);
     const settings = useAtomCapability(MarkdownCapabilities.Settings);
@@ -95,9 +84,9 @@ const Container = forwardRef<HTMLDivElement, { id: string; subject: MarkdownCont
 
     return (
       <MarkdownContainer
-        id={id}
-        object={subject}
         role={role}
+        subject={subject}
+        id={id}
         settings={settings}
         selectionManager={selectionManager}
         extensionProviders={extensionProviders}

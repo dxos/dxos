@@ -46,9 +46,9 @@ export interface Query<T> {
   reference<K extends RefPropKey<T>>(
     key: K,
   ): Query<
-    T[K] extends Ref.Any
+    T[K] extends Ref.Unknown
       ? Ref.Target<T[K]>
-      : T[K] extends Ref.Any | undefined
+      : T[K] extends Ref.Unknown | undefined
         ? Ref.Target<Exclude<T[K], undefined>>
         : never
   >;

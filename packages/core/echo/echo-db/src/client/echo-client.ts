@@ -155,7 +155,6 @@ export class EchoClient extends Resource {
     const queueFactory = new QueueFactory(spaceId, this._graph);
     this._queues.set(spaceId, queueFactory);
     this._graph._registerQueueFactory(spaceId, queueFactory);
-    this._queues.set(spaceId, queueFactory);
     if (this._queuesService) {
       queueFactory.setService(this._queuesService);
     }
@@ -241,6 +240,6 @@ export class EchoClient extends Resource {
       return undefined;
     }
 
-    return db._loadObjectById(objectId);
+    return db._loadObjectById(objectId, { allowDeleted: true });
   }
 }

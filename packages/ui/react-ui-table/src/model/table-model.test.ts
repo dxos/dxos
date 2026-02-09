@@ -120,7 +120,7 @@ const Test = Schema.Struct({
   title: Schema.String,
   completed: Schema.Boolean,
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'example.com/type/Test',
     version: '0.1.0',
   }),
@@ -137,7 +137,7 @@ const createTableModel = (registry: Registry.Registry, props: Partial<TableModel
     registry,
     view,
     baseSchema: schema.jsonSchema,
-    change: createDirectChangeCallback(view.projection, schema.jsonSchema),
+    change: createDirectChangeCallback(view.projection, Type.toJsonSchema(schema)),
   });
   projection.normalizeView();
   return new TableModel({

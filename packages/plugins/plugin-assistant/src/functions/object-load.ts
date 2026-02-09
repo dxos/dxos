@@ -8,7 +8,7 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import { ArtifactId } from '@dxos/assistant';
-import { Obj } from '@dxos/echo';
+import { Entity } from '@dxos/echo';
 import { Database } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
 
@@ -31,10 +31,10 @@ export default defineFunction({
     object: Schema.Any,
   }),
   handler: Effect.fn(function* ({ data: { id, typename } }) {
-    const object = yield* Database.Service.resolve(ArtifactId.toDXN(id));
+    const object = yield* Database.resolve(ArtifactId.toDXN(id));
     return yield* Function.pipe(
       Option.fromNullable(object),
-      Option.flatMap((object) => (Obj.getTypename(object) === typename ? Option.some(object) : Option.none())),
+      Option.flatMap((object) => (Entity.getTypename(object) === typename ? Option.some(object) : Option.none())),
       Option.match({
         onNone: () => Effect.fail('Object not found.'),
         onSome: (object) => {

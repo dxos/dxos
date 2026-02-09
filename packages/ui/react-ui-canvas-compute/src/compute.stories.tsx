@@ -191,7 +191,7 @@ const meta = {
   render: DefaultStory,
   decorators: [
     withTheme,
-    withAttention,
+    withAttention(),
     withClientProvider({ createIdentity: true, createSpace: true }),
     withPluginManager({ capabilities }),
   ],

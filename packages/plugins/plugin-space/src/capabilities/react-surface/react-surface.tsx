@@ -86,19 +86,19 @@ export default Capability.makeModule(
         ),
       }),
       Common.createSurface({
-        id: `${meta.id}/record-article`,
-        role: 'article',
-        position: 'fallback',
-        filter: (data): data is { subject: Obj.Any } => Obj.isObject(data.subject),
-        component: ({ data }) => <RecordArticle subject={data.subject} />,
-      }),
-      Common.createSurface({
         id: `${meta.id}/collection-fallback`,
         role: 'article',
         position: 'fallback',
-        filter: (data): data is { subject: Collection.Collection } =>
-          Obj.instanceOf(Collection.Collection, data.subject),
+        filter: (data): data is { subject: Collection.Collection | Collection.Managed } =>
+          Obj.instanceOf(Collection.Collection, data.subject) || Obj.instanceOf(Collection.Managed, data.subject),
         component: ({ data }) => <CollectionArticle subject={data.subject} />,
+      }),
+      Common.createSurface({
+        id: `${meta.id}/record-article`,
+        role: 'article',
+        position: 'fallback',
+        filter: (data): data is { subject: Obj.Unknown } => Obj.isObject(data.subject),
+        component: ({ data }) => <RecordArticle subject={data.subject} />,
       }),
       Common.createSurface({
         id: `${meta.id}/plugin-settings`,
@@ -113,9 +113,9 @@ export default Capability.makeModule(
       Common.createSurface({
         id: `${meta.id}/companion/object-settings`,
         role: 'article',
-        filter: (data): data is { companionTo: Obj.Any } =>
+        filter: (data): data is { companionTo: Obj.Unknown } =>
           Obj.isObject(data.companionTo) && data.subject === 'settings',
-        component: ({ ref, data, role }) => <ObjectDetails object={data.companionTo} role={role} ref={ref} />,
+        component: ({ ref, data, role }) => <ObjectDetails subject={data.companionTo} role={role} ref={ref} />,
       }),
       Common.createSurface({
         id: `${meta.id}/space-settings-properties`,
@@ -300,27 +300,27 @@ export default Capability.makeModule(
       }),
       Common.createSurface({
         id: SPACE_RENAME_POPOVER,
-        role: 'card--popover',
+        role: 'popover',
         filter: (data): data is { props: Space } => data.component === SPACE_RENAME_POPOVER && isSpace(data.props),
         component: ({ data }) => <SpaceRenamePopover space={data.props} />,
       }),
       Common.createSurface({
         id: OBJECT_RENAME_POPOVER,
-        role: 'card--popover',
-        filter: (data): data is { props: Obj.Any } =>
+        role: 'popover',
+        filter: (data): data is { props: Obj.Unknown } =>
           data.component === OBJECT_RENAME_POPOVER && Obj.isObject(data.props),
         component: ({ data }) => <ObjectRenamePopover object={data.props} />,
       }),
       Common.createSurface({
         id: `${meta.id}/menu-footer`,
         role: 'menu-footer',
-        filter: (data): data is { subject: Obj.Any } => Obj.isObject(data.subject),
+        filter: (data): data is { subject: Obj.Unknown } => Obj.isObject(data.subject),
         component: ({ data }) => <MenuFooter object={data.subject} />,
       }),
       Common.createSurface({
         id: `${meta.id}/navtree-presence`,
         role: 'navtree-item-end',
-        filter: (data): data is { id: string; subject: Obj.Any; open?: boolean } =>
+        filter: (data): data is { id: string; subject: Obj.Unknown; open?: boolean } =>
           typeof data.id === 'string' && Obj.isObject(data.subject),
         component: ({ data }) => {
           const ephemeral = useAtomCapability(SpaceCapabilities.EphemeralState);
@@ -346,7 +346,7 @@ export default Capability.makeModule(
         id: `${meta.id}/navbar-presence`,
         role: 'navbar-end',
         position: 'hoist',
-        filter: (data): data is { subject: Space | Obj.Any } => isSpace(data.subject) || Obj.isObject(data.subject),
+        filter: (data): data is { subject: Space | Obj.Unknown } => isSpace(data.subject) || Obj.isObject(data.subject),
         component: ({ data }) => {
           const space = isSpace(data.subject) ? data.subject : getSpace(data.subject);
           const object = isSpace(data.subject)

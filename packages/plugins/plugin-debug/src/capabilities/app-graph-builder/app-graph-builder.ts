@@ -5,6 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability, Common } from '@dxos/app-framework';
+import { Obj } from '@dxos/echo';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ATTENDABLE_PATH_SEPARATOR, DECK_COMPANION_TYPE, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
@@ -26,8 +27,9 @@ export default Capability.makeModule(
         connector: (node, get) =>
           Effect.gen(function* () {
             const client = yield* Capability.get(ClientCapabilities.Client);
-            const layout = get(yield* Capability.get(Common.Capability.Layout));
-            const { spaceId } = parseId(layout.workspace);
+            const layoutAtom = get(yield* Capability.atom(Common.Capability.Layout))[0];
+            const layout = layoutAtom ? get(layoutAtom) : undefined;
+            const { spaceId } = parseId(layout?.workspace);
             const space = spaceId ? client.spaces.get(spaceId) : undefined;
             const [graph] = get(yield* Capability.atom(Common.Capability.AppGraph));
 
@@ -376,10 +378,10 @@ export default Capability.makeModule(
       GraphBuilder.createExtension({
         id: `${meta.id}/debug-object`,
         match: NodeMatcher.whenEchoObject,
-        connector: (node) =>
+        connector: (object) =>
           Effect.succeed([
             {
-              id: [node.id, 'debug'].join(ATTENDABLE_PATH_SEPARATOR),
+              id: [Obj.getDXN(object).toString(), 'debug'].join(ATTENDABLE_PATH_SEPARATOR),
               type: PLANK_COMPANION_TYPE,
               data: 'debug',
               properties: {

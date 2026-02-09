@@ -245,7 +245,7 @@ const createLocalExecutionContext = (space: Space): Layer.Layer<RuntimeServices>
   return new ServiceContainer()
     .setServices({
       eventLogger: createEventLogger(LogLevel.INFO),
-      database: Database.Service.make(space.db),
+      database: Database.makeService(space.db),
       queues: QueueService.make(space.queues, undefined),
       functionCallService: RemoteFunctionExecutionService.mock(),
     })

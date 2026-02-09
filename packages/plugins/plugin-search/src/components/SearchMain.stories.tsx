@@ -11,11 +11,11 @@ import { Obj } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
-import { SpacePlugin } from '@dxos/plugin-space';
 import { corePlugins } from '@dxos/plugin-testing';
 import { faker } from '@dxos/random';
 import { useSpaces } from '@dxos/react-client/echo';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { withMosaic } from '@dxos/react-ui-mosaic/testing';
 
 import { SearchContextProvider } from '../hooks';
 import { translations } from '../translations';
@@ -45,6 +45,7 @@ const meta = {
   decorators: [
     withTheme,
     withLayout({ layout: 'column' }),
+    withMosaic(),
     withSearchContext(),
     withPluginManager({
       plugins: [
@@ -72,8 +73,6 @@ const meta = {
               space.db.add(Obj.make(TestSchema.Organization, { name: 'Composer Project' }));
             }),
         }),
-        ...corePlugins(),
-        SpacePlugin({}),
         PreviewPlugin(),
       ],
     }),

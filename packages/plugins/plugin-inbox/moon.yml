@@ -1,4 +1,4 @@
-type: library
+layer: library
 language: typescript
 tags:
   - ts-build
@@ -15,9 +15,10 @@ tasks:
   test:
     inputs:
       - .storybook/*
+      - /tools/storybook-react/.storybook/main.ts
 
   deploy-functions:
-    command: |
+    script: |
       $workspaceRoot/scripts/dx --profile main function deploy --runtime worker-loader $workspaceRoot/packages/plugins/plugin-inbox/src/functions/google/gmail/sync.ts && \
       $workspaceRoot/scripts/dx --profile main function deploy --runtime worker-loader $workspaceRoot/packages/plugins/plugin-inbox/src/functions/classify.ts
-    local: true
+    preset: server

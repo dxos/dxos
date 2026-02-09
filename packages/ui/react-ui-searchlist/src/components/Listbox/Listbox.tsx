@@ -11,8 +11,6 @@ import React, { type ComponentPropsWithRef, forwardRef, useCallback, useEffect, 
 import { Icon, type IconProps, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { searchListItem } from '../SearchList';
-
 const commandItem = 'flex items-center overflow-hidden';
 
 const LISTBOX_NAME = 'Listbox';
@@ -137,7 +135,12 @@ const ListboxOption = forwardRef<HTMLLIElement, ListboxOptionProps>(
           {...rootProps}
           aria-selected={isSelected}
           tabIndex={0}
-          className={mx('dx-focus-ring', commandItem, searchListItem, classNames)}
+          className={mx(
+            'dx-focus-ring',
+            'plb-1 pli-2 rounded-sm select-none cursor-pointer data-[selected=true]:bg-hoverOverlay hover:bg-hoverOverlay',
+            commandItem,
+            classNames,
+          )}
           onClick={handleSelect}
           onKeyDown={({ key }) => {
             if (['Enter', ' '].includes(key)) {

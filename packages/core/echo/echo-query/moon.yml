@@ -1,4 +1,4 @@
-type: library
+layer: library
 language: typescript
 tags:
   - ts-build
@@ -11,19 +11,20 @@ tasks:
     args:
       - '--entryPoint=src/index.ts'
       - '--injectGlobals'
+      - '--platform=neutral'
   prebuild:
     deps:
       - echo-query:prebuild-lezer
       - echo-query:prebuild-query-lite
   prebuild-lezer:
-    command: lezer-generator --typeScript ./src/parser/query.grammar -o ./src/parser/gen/query.ts
+    command: pnpm exec lezer-generator --typeScript ./src/parser/query.grammar -o ./src/parser/gen/query.ts
     inputs:
       - src/parser/query.grammar
     outputs:
       - src/parser/gen/query.terms.ts
       - src/parser/gen/query.ts
   prebuild-query-lite:
-    command: tsdown --logLevel error
+    command: pnpm exec tsdown --logLevel error
     deps:
       - ^:compile
     inputs:

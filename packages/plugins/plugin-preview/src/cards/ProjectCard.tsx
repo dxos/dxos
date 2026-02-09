@@ -4,21 +4,19 @@
 
 import React from 'react';
 
+import { type SurfaceComponentProps } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
 import { Card } from '@dxos/react-ui-mosaic';
 import { type Project } from '@dxos/types';
 
-import { CardHeader } from '../components';
-import { type CardPreviewProps } from '../types';
-
-export const ProjectCard = ({ subject, role, db }: CardPreviewProps<Project.Project>) => {
+export const ProjectCard = ({ subject }: SurfaceComponentProps<Project.Project>) => {
   const { name, image, description } = subject;
 
   return (
-    <Card.SurfaceRoot id={subject.id} role={role}>
+    <Card.Content>
       {image && <Card.Poster image={image} alt={Obj.getLabel(subject) ?? ''} aspect='auto' />}
-      <CardHeader label={name} subject={subject} db={db} />
-      {description && <Card.Text classNames='line-clamp-2'>{description}</Card.Text>}
-    </Card.SurfaceRoot>
+      {/* <CardHeader label={name} subject={subject} db={db} /> */}
+      {description && <Card.Text variant='description'>{description}</Card.Text>}
+    </Card.Content>
   );
 };

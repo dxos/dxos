@@ -8,7 +8,7 @@ import type * as SchemaAST from 'effect/SchemaAST';
 import React, { type PropsWithChildren, useEffect, useMemo, useRef } from 'react';
 
 import { type AnyProperties } from '@dxos/echo/internal';
-import { createJsonPath, getValue as getValue$, setValue as setValue$ } from '@dxos/effect';
+import { createJsonPath, getValue as getValue$ } from '@dxos/effect';
 import { IconButton, type IconButtonProps, ScrollArea, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
@@ -20,6 +20,7 @@ import {
   useKeyHandler,
 } from '../../hooks';
 import { translationKey } from '../../translations';
+import { setValueEchoAware } from '../../util';
 
 import { FormFieldLabel, type FormFieldLabelProps, type FormFieldStateProps } from './FormFieldComponent';
 import {
@@ -93,7 +94,7 @@ const useFormValues: {
 
   useEffect(() => {
     if (!value && defaultValue) {
-      setValue$(values, jsonPath, defaultValue());
+      setValueEchoAware(values, jsonPath, defaultValue());
     }
   }, [value, defaultValue]);
 

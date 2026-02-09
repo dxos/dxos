@@ -6,7 +6,7 @@ import { Atom } from '@effect-atom/atom-react';
 import React, { useMemo, useState } from 'react';
 
 import { MenuProvider, ToolbarMenu, createGapSeparator, createMenuAction, useMenuActions } from '@dxos/react-ui-menu';
-import { StackItem } from '@dxos/react-ui-stack';
+import { Layout } from '@dxos/react-ui-mosaic';
 
 import { themeEditorId } from '../defs';
 import { meta } from '../meta';
@@ -47,11 +47,11 @@ export const ThemeEditor = () => {
   const menu = useMenuActions(creator);
 
   return (
-    <StackItem.Content toolbar>
+    <Layout.Main toolbar>
       <MenuProvider {...menu} attendableId={themeEditorId}>
         <ToolbarMenu />
       </MenuProvider>
       <JsonEditor key={`${themeEditorId}/${key}`} />
-    </StackItem.Content>
+    </Layout.Main>
   );
 };

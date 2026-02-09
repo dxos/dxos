@@ -4,6 +4,7 @@
 
 import type { AutomergeUrl, DocumentId } from '@automerge/automerge-repo';
 import type * as SqlClient from '@effect/sql/SqlClient';
+import type * as Effect from 'effect/Effect';
 import * as Match from 'effect/Match';
 import * as Runtime from 'effect/Runtime';
 
@@ -19,7 +20,7 @@ import {
   isEncodedReference,
 } from '@dxos/echo-protocol';
 import { RuntimeProvider, runAndForwardErrors, unwrapExit } from '@dxos/effect';
-import { type IndexEngine } from '@dxos/index-core';
+import { type IndexEngine, type ObjectMeta, type ReverseRef } from '@dxos/index-core';
 import { EscapedPropPath, type FindResult, type Indexer } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
 import { DXN, type ObjectId, PublicKey, type SpaceId } from '@dxos/keys';
@@ -265,10 +266,6 @@ export class QueryExecutor extends Resource {
     return this._trace;
   }
 
-  protected override async _open(ctx: Context): Promise<void> {}
-
-  protected override async _close(ctx: Context): Promise<void> {}
-
   getResults(): QueryResult[] {
     return this._lastResultSet.map(
       (item): QueryResult => ({
@@ -319,7 +316,6 @@ export class QueryExecutor extends Resource {
 
   private async _execPlan(plan: QueryPlan.Plan, workingSet: QueryItem[]): Promise<StepExecutionResult> {
     const trace = ExecutionTrace.makeEmpty();
-    const begin = performance.now();
     for (const step of plan.steps) {
       if (this._ctx.disposed) {
         throw new ContextDisposedError();
@@ -391,24 +387,42 @@ export class QueryExecutor extends Resource {
 
     switch (step.selector._tag) {
       case 'WildcardSelector': {
-        const beginIndexQuery = performance.now();
-        const indexHits = await this._indexer.execQuery({
-          typenames: [],
-          inverted: false,
-        });
-        trace.indexHits = +indexHits.length;
-        trace.indexQueryTime += performance.now() - beginIndexQuery;
+        if (this._supportsSqlIndexing()) {
+          const beginIndexQuery = performance.now();
+          const metas = await this._queryAllFromSqlIndex(step.spaces);
+          trace.indexHits = metas.length;
+          trace.indexQueryTime += performance.now() - beginIndexQuery;
 
-        if (this._ctx.disposed) {
-          return { workingSet, trace };
+          if (this._ctx.disposed) {
+            return { workingSet, trace };
+          }
+
+          const documentLoadStart = performance.now();
+          const results = await this._loadDocumentsAfterSqlQuery(metas);
+          trace.documentsLoaded += results.length;
+          trace.documentLoadTime += performance.now() - documentLoadStart;
+
+          workingSet.push(...results.filter(isNonNullable));
+        } else {
+          const beginIndexQuery = performance.now();
+          const indexHits = await this._indexer.execQuery({
+            typenames: [],
+            inverted: false,
+          });
+          trace.indexHits = +indexHits.length;
+          trace.indexQueryTime += performance.now() - beginIndexQuery;
+
+          if (this._ctx.disposed) {
+            return { workingSet, trace };
+          }
+
+          const documentLoadStart = performance.now();
+          const results = await this._loadDocumentsAfterIndexQuery(indexHits);
+          trace.documentsLoaded += results.length;
+          trace.documentLoadTime += performance.now() - documentLoadStart;
+
+          workingSet.push(...results.filter(isNonNullable).filter((item) => step.spaces.includes(item.spaceId)));
         }
-
-        const documentLoadStart = performance.now();
-        const results = await this._loadDocumentsAfterIndexQuery(indexHits);
-        trace.documentsLoaded += results.length;
-        trace.documentLoadTime += performance.now() - documentLoadStart;
-
-        workingSet.push(...results.filter(isNonNullable).filter((item) => step.spaces.includes(item.spaceId)));
         trace.objectCount = workingSet.length;
 
         break;
@@ -429,24 +443,42 @@ export class QueryExecutor extends Resource {
       }
 
       case 'TypeSelector': {
-        const beginIndexQuery = performance.now();
-        const indexHits = await this._indexer.execQuery({
-          typenames: step.selector.typename,
-          inverted: step.selector.inverted,
-        });
-        trace.indexHits = +indexHits.length;
-        trace.indexQueryTime += performance.now() - beginIndexQuery;
+        if (this._supportsSqlIndexing()) {
+          const beginIndexQuery = performance.now();
+          const metas = await this._queryTypesFromSqlIndex(step.spaces, step.selector.typename, step.selector.inverted);
+          trace.indexHits = metas.length;
+          trace.indexQueryTime += performance.now() - beginIndexQuery;
 
-        if (this._ctx.disposed) {
-          return { workingSet, trace };
+          if (this._ctx.disposed) {
+            return { workingSet, trace };
+          }
+
+          const documentLoadStart = performance.now();
+          const results = await this._loadDocumentsAfterSqlQuery(metas);
+          trace.documentsLoaded += results.length;
+          trace.documentLoadTime += performance.now() - documentLoadStart;
+
+          workingSet.push(...results.filter(isNonNullable));
+        } else {
+          const beginIndexQuery = performance.now();
+          const indexHits = await this._indexer.execQuery({
+            typenames: step.selector.typename,
+            inverted: step.selector.inverted,
+          });
+          trace.indexHits = +indexHits.length;
+          trace.indexQueryTime += performance.now() - beginIndexQuery;
+
+          if (this._ctx.disposed) {
+            return { workingSet, trace };
+          }
+
+          const documentLoadStart = performance.now();
+          const results = await this._loadDocumentsAfterIndexQuery(indexHits);
+          trace.documentsLoaded += results.length;
+          trace.documentLoadTime += performance.now() - documentLoadStart;
+
+          workingSet.push(...results.filter(isNonNullable).filter((item) => step.spaces.includes(item.spaceId)));
         }
-
-        const documentLoadStart = performance.now();
-        const results = await this._loadDocumentsAfterIndexQuery(indexHits);
-        trace.documentsLoaded += results.length;
-        trace.documentLoadTime += performance.now() - documentLoadStart;
-
-        workingSet.push(...results.filter(isNonNullable).filter((item) => step.spaces.includes(item.spaceId)));
         trace.objectCount = workingSet.length;
 
         break;
@@ -455,25 +487,23 @@ export class QueryExecutor extends Resource {
       case 'TextSelector': {
         // TODO(dmaretskyi): type + FTS queries would be very common so we should support those, maybe chunk the fts index.
         // TODO(dmaretskyi): nice to have matched text snippets/highlighting.
-        if (step.selector.searchKind === 'full-text' && this._indexer2 && this._runtime) {
+        if (step.selector.searchKind === 'full-text' && this._supportsSqlIndexing()) {
           // Use indexer2 for full-text search.
           const beginIndexQuery = performance.now();
-          const runtime = await runAndForwardErrors(this._runtime);
+          invariant(this._indexer2, 'SQL indexer is required.');
           invariant(step.spaces.length <= 1, 'Multiple spaces are not supported for full-text search');
           // Extract queue IDs from DXN strings.
           const queueIds =
             step.queues.length > 0
               ? (step.queues.map((dxnStr) => DXN.parse(dxnStr).asQueueDXN()?.queueId).filter(Boolean) as ObjectId[])
               : null;
-          const textResults = await unwrapExit(
-            await this._indexer2
-              .queryText({
-                query: step.selector.text,
-                spaceId: step.spaces,
-                includeAllQueues: step.allQueuesFromSpaces,
-                queueIds,
-              })
-              .pipe(Runtime.runPromiseExit(runtime)),
+          const textResults = await this._runInRuntime(
+            this._indexer2.queryText({
+              query: step.selector.text,
+              spaceId: step.spaces,
+              includeAllQueues: step.allQueuesFromSpaces,
+              queueIds,
+            }),
           );
           trace.indexHits = textResults.length;
           trace.indexQueryTime += performance.now() - beginIndexQuery;
@@ -495,10 +525,8 @@ export class QueryExecutor extends Resource {
           // Load queue items from indexed snapshots.
           let queueItems: QueryItem[] = [];
           if (queueResults.length > 0) {
-            const snapshots = await unwrapExit(
-              await this._indexer2
-                .querySnapshotsJSON(queueResults.map((r) => r.recordId))
-                .pipe(Runtime.runPromiseExit(runtime)),
+            const snapshots = await this._runInRuntime(
+              this._indexer2.querySnapshotsJSON(queueResults.map((r) => r.recordId)),
             );
             const snapshotMap = new Map(snapshots.map((s) => [s.recordId, s.snapshot]));
             queueItems = queueResults
@@ -597,6 +625,7 @@ export class QueryExecutor extends Resource {
       } else if (item.data) {
         return filterMatchObjectJSON(step.filter, item.data);
       } else {
+        return false;
       }
     });
 
@@ -678,24 +707,39 @@ export class QueryExecutor extends Resource {
             break;
           }
           case 'incoming': {
-            const indexHits = await this._indexer.execQuery({
-              typenames: [],
-              inverted: false,
-              graph: {
-                kind: 'inbound-reference',
-                property: step.traversal.property,
-                anchors: workingSet.map((item) => item.objectId),
-              },
-            });
-            trace.indexHits += indexHits.length;
+            if (this._supportsSqlIndexing()) {
+              const beginIndexQuery = performance.now();
+              const metas = await this._queryIncomingReferencesFromSqlIndex(workingSet, step.traversal.property);
+              trace.indexHits += metas.length;
+              trace.indexQueryTime += performance.now() - beginIndexQuery;
 
-            const documentLoadStart = performance.now();
-            const results = await this._loadDocumentsAfterIndexQuery(indexHits);
-            trace.documentsLoaded += results.length;
-            trace.documentLoadTime += performance.now() - documentLoadStart;
+              const documentLoadStart = performance.now();
+              const results = await this._loadDocumentsAfterSqlQuery(metas);
+              trace.documentsLoaded += results.length;
+              trace.documentLoadTime += performance.now() - documentLoadStart;
 
-            newWorkingSet.push(...results.filter(isNonNullable));
-            trace.objectCount = newWorkingSet.length;
+              newWorkingSet.push(...results.filter(isNonNullable));
+              trace.objectCount = newWorkingSet.length;
+            } else {
+              const indexHits = await this._indexer.execQuery({
+                typenames: [],
+                inverted: false,
+                graph: {
+                  kind: 'inbound-reference',
+                  property: step.traversal.property,
+                  anchors: workingSet.map((item) => item.objectId),
+                },
+              });
+              trace.indexHits += indexHits.length;
+
+              const documentLoadStart = performance.now();
+              const results = await this._loadDocumentsAfterIndexQuery(indexHits);
+              trace.documentsLoaded += results.length;
+              trace.documentLoadTime += performance.now() - documentLoadStart;
+
+              newWorkingSet.push(...results.filter(isNonNullable));
+              trace.objectCount = newWorkingSet.length;
+            }
 
             break;
           }
@@ -738,25 +782,43 @@ export class QueryExecutor extends Resource {
 
           case 'source-to-relation':
           case 'target-to-relation': {
-            const indexHits = await this._indexer.execQuery({
-              typenames: [],
-              inverted: false,
-              graph: {
-                kind: step.traversal.direction === 'source-to-relation' ? 'relation-source' : 'relation-target',
-                anchors: workingSet.map((item) => item.objectId),
-                property: null,
-              },
-            });
+            if (this._supportsSqlIndexing()) {
+              const beginIndexQuery = performance.now();
+              const metas = await this._queryRelationsFromSqlIndex(
+                workingSet,
+                step.traversal.direction === 'source-to-relation' ? 'source' : 'target',
+              );
+              trace.indexHits += metas.length;
+              trace.indexQueryTime += performance.now() - beginIndexQuery;
 
-            trace.indexHits += indexHits.length;
+              const documentLoadStart = performance.now();
+              const results = await this._loadDocumentsAfterSqlQuery(metas);
+              trace.documentsLoaded += results.length;
+              trace.documentLoadTime += performance.now() - documentLoadStart;
 
-            const documentLoadStart = performance.now();
-            const results = await this._loadDocumentsAfterIndexQuery(indexHits);
-            trace.documentsLoaded += results.length;
-            trace.documentLoadTime += performance.now() - documentLoadStart;
+              newWorkingSet.push(...results.filter(isNonNullable));
+              trace.objectCount = newWorkingSet.length;
+            } else {
+              const indexHits = await this._indexer.execQuery({
+                typenames: [],
+                inverted: false,
+                graph: {
+                  kind: step.traversal.direction === 'source-to-relation' ? 'relation-source' : 'relation-target',
+                  anchors: workingSet.map((item) => item.objectId),
+                  property: null,
+                },
+              });
 
-            newWorkingSet.push(...results.filter(isNonNullable));
-            trace.objectCount = newWorkingSet.length;
+              trace.indexHits += indexHits.length;
+
+              const documentLoadStart = performance.now();
+              const results = await this._loadDocumentsAfterIndexQuery(indexHits);
+              trace.documentsLoaded += results.length;
+              trace.documentLoadTime += performance.now() - documentLoadStart;
+
+              newWorkingSet.push(...results.filter(isNonNullable));
+              trace.objectCount = newWorkingSet.length;
+            }
 
             break;
           }
@@ -1014,6 +1076,205 @@ export class QueryExecutor extends Resource {
         return this._loadFromIndexHit(hit);
       }),
     );
+  }
+
+  private _supportsSqlIndexing(): boolean {
+    return !!this._indexer2 && !!this._runtime;
+  }
+
+  private async _runInRuntime<T>(effect: Effect.Effect<T, unknown, SqlClient.SqlClient>): Promise<T> {
+    const runtimeProvider = this._runtime;
+    invariant(runtimeProvider, 'SQL runtime is required.');
+    const runtime = await runAndForwardErrors(runtimeProvider);
+    return await unwrapExit(await effect.pipe(Runtime.runPromiseExit(runtime)));
+  }
+
+  private async _queryAllFromSqlIndex(spaceIds: readonly SpaceId[]): Promise<readonly ObjectMeta[]> {
+    invariant(this._indexer2, 'SQL indexer is required.');
+    return await this._runInRuntime(this._indexer2.queryAll({ spaceIds }));
+  }
+
+  private async _queryTypesFromSqlIndex(
+    spaceIds: readonly SpaceId[],
+    typeDxns: readonly string[],
+    inverted: boolean,
+  ): Promise<readonly ObjectMeta[]> {
+    invariant(this._indexer2, 'SQL indexer is required.');
+    return await this._runInRuntime(this._indexer2.queryTypes({ spaceIds, typeDxns, inverted }));
+  }
+
+  private async _queryIncomingReferencesFromSqlIndex(
+    workingSet: QueryItem[],
+    property: EscapedPropPath | null,
+  ): Promise<readonly ObjectMeta[]> {
+    const anchorDxns = workingSet.map((item) => DXN.fromLocalObjectId(item.objectId).toString());
+    invariant(this._indexer2, 'SQL indexer is required.');
+    const rows: readonly ReverseRef[] = (
+      await Promise.all(
+        anchorDxns.map((targetDxn) => this._runInRuntime(this._indexer2!.queryReverseRef({ targetDxn }))),
+      )
+    ).flat();
+
+    const recordIds = rows
+      .filter((row) => {
+        if (property === null) {
+          return true;
+        }
+
+        const queryPath = EscapedPropPath.unescape(property);
+        const rowPath = EscapedPropPath.unescape(row.propPath);
+        return QueryExecutor._matchesReferencePropertyPath(rowPath, queryPath);
+      })
+      .map((row) => row.recordId);
+
+    const uniqueRecordIds = Array.from(new Set<number>(recordIds));
+    return await this._runInRuntime(this._indexer2.lookupByRecordIds(uniqueRecordIds));
+  }
+
+  /**
+   * Matches a reverse-reference row path against a query property path.
+   * Allows numeric segments in the row path (array indices) that are not present in the query.
+   *
+   * Examples:
+   * - query: ['assignee'] matches row: ['assignee'] and ['assignee', '0'].
+   * - query: ['items', 'assignee'] matches row: ['items', '0', 'assignee'].
+   * - query: ['a', 'b'] does NOT match row: ['a'].
+   * - query: ['a'] does NOT match row: ['a', 'b'].
+   */
+  private static _matchesReferencePropertyPath(rowPath: readonly string[], queryPath: readonly string[]): boolean {
+    const isNumericSegment = (segment: string) => /^[0-9]+$/.test(segment);
+
+    let i = 0; // queryPath index.
+    let j = 0; // rowPath index.
+
+    while (i < queryPath.length && j < rowPath.length) {
+      if (rowPath[j] === queryPath[i]) {
+        i++;
+        j++;
+        continue;
+      }
+
+      // Row may contain array indices that aren't present in the query path.
+      if (isNumericSegment(rowPath[j])) {
+        j++;
+        continue;
+      }
+
+      return false;
+    }
+
+    // Must consume full query path.
+    if (i !== queryPath.length) {
+      return false;
+    }
+
+    // Any remaining row segments must be numeric (array indices).
+    for (; j < rowPath.length; j++) {
+      if (!isNumericSegment(rowPath[j])) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  private async _queryRelationsFromSqlIndex(
+    workingSet: QueryItem[],
+    endpoint: 'source' | 'target',
+  ): Promise<readonly ObjectMeta[]> {
+    invariant(this._indexer2, 'SQL indexer is required.');
+    const anchorDxns = workingSet.map((item) => DXN.fromLocalObjectId(item.objectId).toString());
+    return await this._runInRuntime(this._indexer2.queryRelations({ endpoint, anchorDxns }));
+  }
+
+  private async _loadDocumentsAfterSqlQuery(metas: readonly ObjectMeta[]): Promise<(QueryItem | null)[]> {
+    const snapshotMap = await this._loadQueueSnapshotMap(metas);
+    return await Promise.all(
+      metas.map(async (meta) => {
+        // Branch 1: Document-backed object.
+        if (meta.documentId) {
+          return this._loadFromAutomerge(meta);
+        }
+
+        // Branch 2: Queue-backed object.
+        if (meta.queueId) {
+          return this._loadFromQueue(meta, snapshotMap);
+        }
+
+        return null;
+      }),
+    );
+  }
+
+  private async _loadQueueSnapshotMap(metas: readonly ObjectMeta[]): Promise<Map<number, unknown>> {
+    const queueMetas = metas.filter((meta) => !meta.documentId && !!meta.queueId);
+    if (queueMetas.length === 0) {
+      return new Map();
+    }
+
+    invariant(this._indexer2, 'SQL indexer is required.');
+    const snapshots = await this._runInRuntime(
+      this._indexer2.querySnapshotsJSON(queueMetas.map((meta) => meta.recordId)),
+    );
+    return new Map(snapshots.map((s) => [s.recordId, s.snapshot]));
+  }
+
+  /**
+   * Loads a queue-backed object from an indexed snapshot (by `recordId`).
+   * Returns `null` when the snapshot is missing or is not a JSON object.
+   */
+  private _loadFromQueue(meta: ObjectMeta, snapshotMap: Map<number, unknown>): QueryItem | null {
+    const snapshot = snapshotMap.get(meta.recordId);
+    if (!snapshot || typeof snapshot !== 'object') {
+      return null;
+    }
+
+    return {
+      objectId: meta.objectId as ObjectId,
+      spaceId: meta.spaceId as SpaceId,
+      queueId: meta.queueId as ObjectId,
+      queueNamespace: 'data',
+      documentId: null,
+      doc: null,
+      data: snapshot as Obj.JSON,
+      rank: 1,
+    };
+  }
+
+  /**
+   * Loads a document-backed object from an Automerge `DatabaseDirectory`.
+   * Returns `null` if the document can't be loaded, the inline object isn't present, or if the meta does not have a
+   * document id (e.g. queue-backed objects).
+   */
+  private async _loadFromAutomerge(meta: ObjectMeta): Promise<QueryItem | null> {
+    if (!meta.documentId) {
+      return null;
+    }
+    const handle = await this._automergeHost.loadDoc<DatabaseDirectory>(
+      Context.default(),
+      meta.documentId as DocumentId,
+      {
+        fetchFromNetwork: true,
+      },
+    );
+    const doc = handle.doc();
+    if (!doc) {
+      return null;
+    }
+    const object = DatabaseDirectory.getInlineObject(doc, meta.objectId);
+    if (!object) {
+      return null;
+    }
+    return {
+      objectId: meta.objectId,
+      documentId: meta.documentId as DocumentId,
+      spaceId: meta.spaceId as SpaceId,
+      queueId: null,
+      queueNamespace: null,
+      doc: object,
+      data: null,
+      rank: 1,
+    };
   }
 
   /**

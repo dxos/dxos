@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capability, Common } from '@dxos/app-framework';
 import { AiContextBinder, AiConversation } from '@dxos/assistant';
-import { Agent } from '@dxos/assistant-toolkit';
+import { Agent, Chat } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { type Queue } from '@dxos/client/echo';
 import { Filter, Obj, Ref, Type } from '@dxos/echo';
@@ -19,7 +19,7 @@ import { Collection } from '@dxos/schema';
 import { type Message } from '@dxos/types';
 
 import { type AiChatServices, updateName } from '../../processor';
-import { Assistant, AssistantCapabilities, AssistantOperation } from '../../types';
+import { AssistantCapabilities, AssistantOperation } from '../../types';
 import { AssistantBlueprint, createBlueprint } from '../blueprint-definition/blueprint-definition';
 
 export default Capability.makeModule(
@@ -28,7 +28,7 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: AssistantOperation.OnCreateSpace,
         handler: Effect.fnUntraced(function* ({ space, rootCollection }) {
-          const chatCollection = Collection.makeManaged({ key: Assistant.Chat.typename });
+          const chatCollection = Collection.makeManaged({ key: Chat.Chat.typename });
           const blueprintCollection = Collection.makeManaged({ key: Blueprint.Blueprint.typename });
           const promptCollection = Collection.makeManaged({ key: Type.getTypename(Prompt.Prompt) });
           Obj.change(rootCollection, (c) => {
@@ -45,14 +45,16 @@ export default Capability.makeModule(
       }),
       OperationResolver.make({
         operation: AssistantOperation.CreateChat,
-        handler: Effect.fnUntraced(function* ({ db, name }) {
+        handler: Effect.fnUntraced(function* ({ db, name, addToSpace = true }) {
           const registry = yield* Capability.get(Common.Capability.AtomRegistry);
           const client = yield* Capability.get(ClientCapabilities.Client);
           const space = client.spaces.get(db.spaceId);
           invariant(space, 'Space not found');
           const queue = space.queues.create();
-          const chat = Assistant.make({ name, queue: Ref.fromDXN(queue.dxn) });
-          space.db.add(chat);
+          const chat = Chat.make({ name, queue: Ref.fromDXN(queue.dxn) });
+          if (addToSpace) {
+            space.db.add(chat);
+          }
 
           // TODO(wittjosiah): This should be a space-level setting.
           // TODO(burdon): Clone when activated. Copy-on-write for template.

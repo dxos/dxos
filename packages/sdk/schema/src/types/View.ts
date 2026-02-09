@@ -8,6 +8,7 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 import * as String from 'effect/String';
+import type * as Types from 'effect/Types';
 
 import {
   type Database,
@@ -25,6 +26,7 @@ import {
   FormInputAnnotation,
   JsonSchemaType,
   LabelAnnotation,
+  type Mutable,
   ReferenceAnnotationId,
   type ReferenceAnnotationValue,
   SystemTypeAnnotation,
@@ -44,7 +46,7 @@ import {
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 
-import { FieldSchema, ProjectionModel, createDirectChangeCallback } from '../projection';
+import { FieldSchema, type ProjectionChangeCallback, ProjectionModel } from '../projection';
 import { createDefaultSchema, getSchema } from '../util';
 
 export const Projection = Schema.Struct({
@@ -57,14 +59,14 @@ export const Projection = Schema.Struct({
    * UX metadata associated with displayed fields (in table, form, etc.)
    */
   // TODO(wittjosiah): Should this just be an array of JsonPath?
-  fields: Schema.Array(FieldSchema).pipe(Schema.mutable),
+  fields: Schema.Array(FieldSchema),
 
   /**
    * The id for the field used to pivot the view.
    * E.g., the field to use for kanban columns or the field to use for map coordinates.
    */
   pivotFieldId: Schema.String.pipe(Schema.optional),
-}).pipe(Schema.mutable);
+});
 
 export type Projection = Schema.Schema.Type<typeof Projection>;
 
@@ -72,7 +74,7 @@ export type Projection = Schema.Schema.Type<typeof Projection>;
  * Views are generated or user-defined projections of a schema's properties.
  * They are used to configure the visual representation of the data.
  */
-export const ViewSchema = Schema.Struct({
+const ViewSchema = Schema.Struct({
   /**
    * Query used to retrieve data.
    * Can be a user-provided query grammar string or a query AST.
@@ -80,14 +82,14 @@ export const ViewSchema = Schema.Struct({
   query: Schema.Struct({
     raw: Schema.optional(Schema.String),
     ast: QueryAST.Query,
-  }).pipe(Schema.mutable),
+  }),
 
   /**
    * Projection of the data returned from the query.
    */
   projection: Projection,
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/View',
     version: '0.5.0',
   }),
@@ -95,9 +97,16 @@ export const ViewSchema = Schema.Struct({
 );
 
 export interface View extends Schema.Schema.Type<typeof ViewSchema> {}
-export interface ViewEncoded extends Schema.Schema.Encoded<typeof ViewSchema> {}
-// TODO(wittjosiah): Should be Type.obj<...> or equivalent.
-export const View: Schema.Schema<View, ViewEncoded> = ViewSchema;
+
+/**
+ * View instance type.
+ */
+// NOTE: This interface is explicitly defined rather than derived from the schema to avoid
+//   TypeScript "cannot be named" portability errors. The schema contains QueryAST.Query which
+//   references internal @dxos/echo-protocol module paths. Without this explicit interface,
+//   any schema using Type.Ref(View) would inherit the non-portable type and fail to compile.
+// TODO(wittjosiah): Find a better solution that doesn't require manually keeping the interface in sync.
+export const View: Type.Obj<View> = ViewSchema as any;
 
 type MakeProps = {
   name?: string;
@@ -121,10 +130,16 @@ export const make = ({ query, queryRaw, jsonSchema, overrideSchema, fields, pivo
     },
   });
 
+  // Create change callback that wraps mutations in Obj.change.
+  const changeCallback: ProjectionChangeCallback = {
+    projection: (mutate) => Obj.change(view, (v) => mutate(v.projection as Mutable<Projection>)),
+    schema: (mutate) => mutate(jsonSchema as Types.DeepMutable<JsonSchema.JsonSchema>),
+  };
+
   const projection = new ProjectionModel({
     view,
     baseSchema: jsonSchema,
-    change: createDirectChangeCallback(view.projection, jsonSchema),
+    change: changeCallback,
   });
   projection.normalizeView();
   const schema = toEffectSchema(jsonSchema);
@@ -147,17 +162,21 @@ export const make = ({ query, queryRaw, jsonSchema, overrideSchema, fields, pivo
 
   // Sort fields to match the order in the params.
   if (fields) {
-    view.projection.fields.sort((a, b) => {
-      const indexA = fields.indexOf(a.path);
-      const indexB = fields.indexOf(b.path);
-      return indexA - indexB;
+    Obj.change(view, (v) => {
+      (v.projection.fields as Mutable<Projection>['fields']).sort((a, b) => {
+        const indexA = fields.indexOf(a.path);
+        const indexB = fields.indexOf(b.path);
+        return indexA - indexB;
+      });
     });
   }
 
   if (pivotFieldName) {
     const fieldId = projection.getFieldId(pivotFieldName);
     if (fieldId) {
-      view.projection.pivotFieldId = fieldId;
+      Obj.change(view, (v) => {
+        v.projection.pivotFieldId = fieldId;
+      });
     }
   }
 
@@ -190,10 +209,16 @@ export const makeWithReferences = async ({
     pivotFieldName,
   });
 
+  // Create change callback that wraps mutations in Obj.change.
+  const changeCallback: ProjectionChangeCallback = {
+    projection: (mutate) => Obj.change(view, (v) => mutate(v.projection as Mutable<Projection>)),
+    schema: (mutate) => mutate(jsonSchema as Types.DeepMutable<JsonSchema.JsonSchema>),
+  };
+
   const projection = new ProjectionModel({
     view,
     baseSchema: jsonSchema,
-    change: createDirectChangeCallback(view.projection, jsonSchema),
+    change: changeCallback,
   });
   const schema = toEffectSchema(jsonSchema);
   const properties = getProperties(schema.ast);
@@ -280,6 +305,7 @@ export const makeFromDatabase = async ({
   const schema = await db.schemaRegistry.query({ typename, location: ['database', 'runtime'] }).firstOrUndefined();
   const jsonSchema = schema && JsonSchema.toJsonSchema(schema);
   invariant(jsonSchema, `Schema not found: ${typename}`);
+  invariant(schema && Type.isObjectSchema(schema), `Schema is not an object schema: ${typename}`);
 
   Array.from({ length: createInitial }).forEach(() => {
     db.add(Obj.make(schema, {}));
@@ -300,7 +326,7 @@ export const makeFromDatabase = async ({
 // V4
 //
 
-export const ViewSchemaV4 = Schema.Struct({
+const ViewSchemaV4 = Schema.Struct({
   name: Schema.optional(
     Schema.String.annotations({
       title: 'Name',
@@ -310,16 +336,15 @@ export const ViewSchemaV4 = Schema.Struct({
   query: Schema.Struct({
     raw: Schema.optional(Schema.String),
     ast: QueryAST.Query,
-  }).pipe(Schema.mutable, FormInputAnnotation.set(false)),
+  }).pipe(FormInputAnnotation.set(false)),
   projection: Projection.pipe(FormInputAnnotation.set(false)),
-  presentation: Type.Ref(Obj.Any).pipe(FormInputAnnotation.set(false)),
+  presentation: Type.Ref(Type.Obj).pipe(FormInputAnnotation.set(false)),
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/View',
     version: '0.4.0',
   }),
   LabelAnnotation.set(['name']),
 );
 export interface ViewV4 extends Schema.Schema.Type<typeof ViewSchemaV4> {}
-export interface ViewEncodedV4 extends Schema.Schema.Encoded<typeof ViewSchemaV4> {}
-export const ViewV4: Schema.Schema<ViewV4, ViewEncodedV4> = ViewSchemaV4;
+export const ViewV4: Type.Obj<ViewV4> = ViewSchemaV4 as any;

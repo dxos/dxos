@@ -25,7 +25,7 @@ export type FieldEditorProps = {
   projection: ProjectionModel;
   field: FieldType;
   registry?: SchemaRegistry.SchemaRegistry;
-  view?: Obj.Any;
+  view?: Obj.Unknown;
   onSave: () => void;
   onCancel?: () => void;
 } & Pick<FormRootProps<any>, 'readonly'>;

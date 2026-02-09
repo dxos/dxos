@@ -4,19 +4,17 @@
 
 import { type Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
 import * as Effect from 'effect/Effect';
-import type * as Schema from 'effect/Schema';
 
 import { type CapabilityManager, Common } from '@dxos/app-framework';
 import { type Space, SpaceState, isSpace } from '@dxos/client/echo';
 import { type Database, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
-import { EXPANDO_TYPENAME } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { Migrations } from '@dxos/migrations';
 import { Operation } from '@dxos/operation';
 import { Graph, Node } from '@dxos/plugin-graph';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention/types';
 import { type TreeData } from '@dxos/react-ui-list';
-import { Collection } from '@dxos/schema';
+import { Collection, Expando } from '@dxos/schema';
 import { createFilename } from '@dxos/util';
 
 import { meta } from './meta';
@@ -54,13 +52,7 @@ const getCollectionGraphNodePartials = ({
     acceptPersistenceClass: new Set(['echo']),
     acceptPersistenceKey: new Set([db.spaceId]),
     role: 'branch',
-    onRearrangeChildren: (nextOrder: unknown[]) => {
-      // Change on disk.
-      Obj.change(collection, (c) => {
-        c.objects = nextOrder.filter(Obj.isObject).map(Ref.make);
-      });
-    },
-    onTransferStart: (child: Node.Node<Obj.Any>, index?: number) => {
+    onTransferStart: (child: Node.Node<Obj.Unknown>, index?: number) => {
       // TODO(wittjosiah): Support transfer between spaces.
       // const childSpace = getSpace(child.data);
       // if (space && childSpace && !childSpace.key.equals(space.key)) {
@@ -91,7 +83,7 @@ const getCollectionGraphNodePartials = ({
 
       // }
     },
-    onTransferEnd: (child: Node.Node<Obj.Any>, destination: Node.Node) => {
+    onTransferEnd: (child: Node.Node<Obj.Unknown>, destination: Node.Node) => {
       // Remove child from origin collection.
       Obj.change(collection, (c) => {
         const index = c.objects.findIndex((object) => object.target === child.data);
@@ -109,7 +101,7 @@ const getCollectionGraphNodePartials = ({
       //   childSpace.db.remove(child.data);
       // }
     },
-    onCopy: async (child: Node.Node<Obj.Any>, index?: number) => {
+    onCopy: async (child: Node.Node<Obj.Unknown>, index?: number) => {
       // Create clone of child and add to destination space.
       const newObject = await cloneObject(child.data, resolve, db);
       db.add(newObject);
@@ -166,12 +158,19 @@ export const constructSpaceNode = ({
   personal,
   namesCache,
   resolve,
+  graph,
+  spacesOrder,
 }: {
   space: Space;
   navigable?: boolean;
   personal?: boolean;
   namesCache?: Record<string, string>;
   resolve: (typename: string) => Record<string, any>;
+  /** Graph for sorting edges on rearrange. */
+  graph?: Graph.ExpandableGraph;
+  // TODO(wittjosiah): Should be Type.Expando but it doesn't work with the AtomQuery result type.
+  /** Spaces order object for persisting workspace order. */
+  spacesOrder?: Obj.Any;
 }) => {
   const hasPendingMigration = checkPendingMigration(space);
   const collection =
@@ -180,6 +179,24 @@ export const constructSpaceNode = ({
     space.state.get() === SpaceState.SPACE_READY && Obj.instanceOf(Collection.Collection, collection)
       ? getCollectionGraphNodePartials({ collection, db: space.db, resolve })
       : {};
+
+  const onRearrange =
+    graph && spacesOrder
+      ? (nextOrder: Space[]) => {
+          // NOTE: This is needed to ensure order is updated by next animation frame.
+          Graph.sortEdges(
+            graph,
+            Node.RootId,
+            'outbound',
+            nextOrder.map(({ id }) => id),
+          );
+
+          // Persist order to database.
+          Obj.change(spacesOrder, (mutableOrder: any) => {
+            mutableOrder.order = nextOrder.map(({ id }) => id);
+          });
+        }
+      : undefined;
 
   return {
     id: space.id,
@@ -197,7 +214,9 @@ export const constructSpaceNode = ({
           : undefined,
       iconHue: space.state.get() === SpaceState.SPACE_READY && space.properties.iconHue,
       disabled: !navigable || space.state.get() !== SpaceState.SPACE_READY || hasPendingMigration,
+      disposition: 'workspace',
       testId: 'spacePlugin.space',
+      onRearrange,
       canDrop: (source: TreeData) => {
         // TODO(wittjosiah): Find a way to only allow space as source for rearranging.
         return Obj.isObject(source.item.data) || isSpace(source.item.data);
@@ -312,13 +331,7 @@ export const constructSpaceActions = ({
   return actions;
 };
 
-export const createStaticSchemaNode = ({
-  schema,
-  space,
-}: {
-  schema: Schema.Schema.AnyNoContext;
-  space: Space;
-}): Node.Node => {
+export const createStaticSchemaNode = ({ schema, space }: { schema: Type.Entity.Any; space: Space }): Node.Node => {
   return {
     id: `${space.id}/${Type.getTypename(schema)}`,
     type: `${meta.id}/static-schema`,
@@ -430,14 +443,17 @@ export const createObjectNode = ({
   navigable = false,
   managedCollectionChild = false,
   resolve,
+  parentCollection,
 }: {
   db: Database.Database;
-  object: Obj.Any;
+  object: Obj.Unknown;
   disposition?: string;
   droppable?: boolean;
   navigable?: boolean;
   managedCollectionChild?: boolean;
   resolve: (typename: string) => Record<string, any>;
+  /** Parent collection for rearranging objects. */
+  parentCollection?: Collection.Collection;
 }) => {
   const type = Obj.getTypename(object);
   if (!type) {
@@ -481,6 +497,13 @@ export const createObjectNode = ({
       persistenceKey: db.spaceId,
       selectable,
       managedCollectionChild,
+      onRearrange: parentCollection
+        ? (nextOrder: unknown[]) => {
+            Obj.change(parentCollection, (c) => {
+              c.objects = nextOrder.filter(Obj.isObject).map(Ref.make);
+            });
+          }
+        : undefined,
       blockInstruction: (source: TreeData, instruction: Instruction) => {
         if (source.item.properties.managedCollectionChild) {
           // TODO(wittjosiah): Support reordering system collections.
@@ -509,11 +532,13 @@ export const constructObjectActions = ({
   capabilities,
   deletable = true,
   navigable = false,
+  shareableLinkOrigin,
 }: {
-  object: Obj.Any;
+  object: Obj.Unknown;
   graph: Graph.ReadableGraph;
   resolve: (typename: string) => Record<string, any>;
   capabilities: CapabilityManager.CapabilityManager;
+  shareableLinkOrigin: string;
   deletable?: boolean;
   navigable?: boolean;
 }) => {
@@ -598,7 +623,7 @@ export const constructObjectActions = ({
                 });
               } else {
                 const createdObject = yield* createObject({}, { db, capabilities }) as Effect.Effect<
-                  Obj.Any,
+                  Obj.Unknown,
                   Error,
                   never
                 >;
@@ -671,7 +696,7 @@ export const constructObjectActions = ({
             type: Node.ActionType,
             data: () =>
               Effect.promise(async () => {
-                const url = `${window.location.origin}/${db.spaceId}/${Obj.getDXN(object).toString()}`;
+                const url = `${shareableLinkOrigin}/${db.spaceId}/${Obj.getDXN(object).toString()}`;
                 await navigator.clipboard.writeText(url);
               }),
             properties: {
@@ -718,9 +743,9 @@ const downloadBlob = async (blob: Blob, filename: string) => {
  * @deprecated This is a temporary solution.
  */
 export const getNestedObjects = async (
-  object: Obj.Any,
+  object: Obj.Unknown,
   resolve: (typename: string) => Record<string, any>,
-): Promise<Obj.Any[]> => {
+): Promise<Obj.Unknown[]> => {
   const type = Obj.getTypename(object);
   if (!type) {
     return [];
@@ -732,7 +757,7 @@ export const getNestedObjects = async (
     return [];
   }
 
-  const objects: Obj.Any[] = await loadReferences(object);
+  const objects: Obj.Unknown[] = await loadReferences(object);
   const nested = await Promise.all(objects.map((object) => getNestedObjects(object, resolve)));
   return [...objects, ...nested.flat()];
 };
@@ -742,12 +767,12 @@ export const getNestedObjects = async (
  */
 // TODO(burdon): Remove.
 export const cloneObject = async (
-  object: Obj.Any,
+  object: Obj.Unknown,
   resolve: (typename: string) => Record<string, any>,
   newDb: Database.Database,
-): Promise<Obj.Any> => {
+): Promise<Obj.Unknown> => {
   const schema = Obj.getSchema(object);
-  const typename = schema ? (Type.getTypename(schema) ?? EXPANDO_TYPENAME) : EXPANDO_TYPENAME;
+  const typename = schema ? (Type.getTypename(schema) ?? Expando.Expando.typename) : Expando.Expando.typename;
   const metadata = resolve(typename);
   const serializer = metadata.serializer;
   invariant(serializer, `No serializer for type: ${typename}`);

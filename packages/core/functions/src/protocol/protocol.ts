@@ -149,7 +149,7 @@ class FunctionContext extends Resource {
   createLayer(): Layer.Layer<FunctionServices> {
     assertState(this._lifecycleState === LifecycleState.OPEN, 'FunctionContext is not open');
 
-    const dbLayer = this.db ? Database.Service.layer(this.db) : Database.Service.notAvailable;
+    const dbLayer = this.db ? Database.layer(this.db) : Database.notAvailable;
     const queuesLayer = this.queues ? QueueService.layer(this.queues) : QueueService.notAvailable;
     const credentials = dbLayer
       ? CredentialsService.layerFromDatabase({ caching: true }).pipe(Layer.provide(dbLayer))
@@ -185,6 +185,7 @@ class FunctionContext extends Resource {
 
 const MockedFunctionInvocationService = Layer.succeed(FunctionInvocationService, {
   invokeFunction: () => Effect.die('Calling functions from functions is not implemented yet.'),
+  resolveFunction: () => Effect.die('Not implemented.'),
 });
 
 const decodeRefsFromSchema = (ast: SchemaAST.AST, value: unknown, db: EchoDatabaseImpl): unknown => {

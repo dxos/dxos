@@ -17,14 +17,14 @@ export const acquireReleaseResource = <T extends Lifecycle>(
     Effect.gen(function* () {
       const resource = getResource();
       yield* Effect.promise(async () => {
-        resource.open?.();
+        await resource.open?.();
         return undefined;
       });
       return resource;
     }),
     (resource) =>
       Effect.promise(async () => {
-        resource.close?.();
+        await resource.close?.();
         return undefined;
       }),
   );

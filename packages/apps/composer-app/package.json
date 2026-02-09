@@ -5,7 +5,10 @@
   "description": "DXOS Composer application.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
-  "repository": "github:dxos/dxos",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
   "license": "MIT",
   "author": "DXOS.org",
   "sideEffects": true,
@@ -92,6 +95,7 @@
     "@dxos/util": "workspace:*",
     "@fontsource/poiret-one": "catalog:",
     "@tauri-apps/api": "catalog:",
+    "@tauri-apps/plugin-deep-link": "catalog:",
     "@tauri-apps/plugin-os": "catalog:",
     "effect": "catalog:",
     "isomorphic-fetch": "catalog:",

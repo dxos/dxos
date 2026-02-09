@@ -42,6 +42,9 @@
       "path": "../../core/echo/echo-generator"
     },
     {
+      "path": "../../core/functions"
+    },
+    {
       "path": "../../core/functions-runtime"
     },
     {
@@ -79,6 +82,9 @@
     },
     {
       "path": "../../ui/react-ui-form"
+    },
+    {
+      "path": "../../ui/react-ui-mosaic"
     },
     {
       "path": "../../ui/react-ui-stack"

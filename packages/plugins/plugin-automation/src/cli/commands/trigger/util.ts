@@ -12,7 +12,7 @@ import type * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
 import { FormBuilder } from '@dxos/cli-util';
-import { Annotation, Database, type Entity, Filter, Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, Database, Entity, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { getProperties } from '@dxos/effect';
 import { Function, Trigger } from '@dxos/functions';
 import { QueueAnnotation } from '@dxos/schema';
@@ -34,7 +34,7 @@ export const getTriggerRemoteStatus = (trigger: Trigger.Trigger, remoteCronIds: 
  * Pretty prints a trigger with ANSI colors.
  */
 export const printTrigger = Effect.fn(function* (trigger: Trigger.Trigger, remoteStatus?: TriggerRemoteStatus) {
-  const fn = trigger.function && (yield* Database.Service.load(trigger.function));
+  const fn = trigger.function && (yield* Database.load(trigger.function));
 
   return FormBuilder.make({
     title: trigger.id,
@@ -239,16 +239,16 @@ export const promptForSchemaInput = Effect.fn(function* (
         inputObj[key] = templateStr === '' && defaultValue !== undefined ? defaultValue : templateStr;
       } else {
         const annotation = Annotation.ReferenceAnnotation.getFromAst(propType).pipe(Option.getOrThrow);
-        const objects = yield* Database.Service.runQuery(Filter.typename(annotation.typename));
+        const objects = yield* Database.runQuery(Filter.typename(annotation.typename));
         if (objects.length === 0) {
           inputObj[key] = undefined;
         } else {
           const selected = yield* Prompt.select({
             message: `Select ${info.key}:`,
             choices: objects.map((obj: Entity.Any) => ({
-              title: Obj.getLabel(obj) ?? obj.id,
+              title: Entity.getLabel(obj) ?? obj.id,
               value: Ref.make(obj),
-              description: Obj.getDescription(obj),
+              description: Entity.getDescription(obj),
             })),
           });
           inputObj[key] = selected;
@@ -272,7 +272,7 @@ export const promptForSchemaInput = Effect.fn(function* (
  * Queries the database for functions and prompts the user to select one.
  */
 export const selectFunction = Effect.fn(function* () {
-  const functions = yield* Database.Service.runQuery(Filter.type(Function.Function));
+  const functions = yield* Database.runQuery(Filter.type(Function.Function));
 
   if (functions.length === 0) {
     return yield* Effect.fail(new Error('No functions available'));
@@ -296,7 +296,7 @@ export const selectFunction = Effect.fn(function* () {
  * Queries the database for triggers and prompts the user to select one.
  */
 export const selectTrigger = Effect.fn(function* (kind?: Trigger.Kind) {
-  const triggers = yield* Database.Service.runQuery(Filter.type(Trigger.Trigger));
+  const triggers = yield* Database.runQuery(Filter.type(Trigger.Trigger));
   const filteredTriggers = kind ? triggers.filter((trigger) => trigger.spec?.kind === kind) : triggers;
 
   if (filteredTriggers.length === 0) {
@@ -306,7 +306,7 @@ export const selectTrigger = Effect.fn(function* (kind?: Trigger.Kind) {
   const choices = yield* Effect.all(
     filteredTriggers.map((trigger) =>
       Effect.gen(function* () {
-        const fn = trigger.function ? yield* Database.Service.load(trigger.function) : undefined;
+        const fn = trigger.function ? yield* Database.load(trigger.function) : undefined;
         const functionName = fn && Obj.instanceOf(Function.Function, fn) ? (fn.name ?? fn.key ?? fn.id) : undefined;
         const title = functionName ?? trigger.id;
         const description = `${trigger.enabled ? 'enabled' : 'disabled'} - ${trigger.spec?.kind ?? 'unknown'}`;
@@ -335,7 +335,7 @@ export const selectTrigger = Effect.fn(function* (kind?: Trigger.Kind) {
  */
 export const selectQueue = Effect.fn(function* () {
   // Query schema registry for schemas with QueueAnnotation
-  const schemas = yield* Database.Service.runSchemaQuery({ location: ['database', 'runtime'] });
+  const schemas = yield* Database.runSchemaQuery({ location: ['database', 'runtime'] });
 
   // Filter schemas that have QueueAnnotation
   const queueSchemas = schemas.filter((schema) => {
@@ -354,7 +354,7 @@ export const selectQueue = Effect.fn(function* () {
   for (const schema of queueSchemas) {
     yield* Effect.gen(function* () {
       const typename = Type.getTypename(schema);
-      const objects = yield* Database.Service.runQuery(Filter.type(typename));
+      const objects = yield* Database.runQuery(Filter.type(typename));
 
       for (const obj of objects) {
         // Access the queue property (which is a Ref<Queue>)

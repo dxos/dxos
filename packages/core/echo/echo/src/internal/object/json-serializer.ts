@@ -31,7 +31,7 @@ import {
   ATTR_META,
   ATTR_PARENT,
   ATTR_TYPE,
-  type AnyEchoObject,
+  type AnyEntity,
   EntityKind,
   KindId,
   MetaId,
@@ -59,7 +59,7 @@ type SerializedObject<T extends { id: string }> = {
 /**
  * Converts object to it's JSON representation.
  */
-export const objectToJSON = <T extends AnyEchoObject>(obj: T): SerializedObject<T> => {
+export const objectToJSON = <T extends AnyEntity>(obj: T): SerializedObject<T> => {
   const typename = getTypeDXN(obj)?.toString();
   invariant(typename && typeof typename === 'string');
   return typedJsonSerializer.call(obj);
@@ -74,7 +74,7 @@ export const objectToJSON = <T extends AnyEchoObject>(obj: T): SerializedObject<
 export const objectFromJSON = async (
   jsonData: unknown,
   { refResolver, dxn }: { refResolver?: RefResolver; dxn?: DXN } = {},
-): Promise<AnyEchoObject> => {
+): Promise<AnyEntity> => {
   assumeType<ObjectJSON>(jsonData);
   assertArgument(typeof jsonData === 'object' && jsonData !== null, 'jsonData', 'expect object');
   assertArgument(typeof jsonData[ATTR_TYPE] === 'string', 'jsonData[ATTR_TYPE]', 'expected object to have a type');
@@ -106,8 +106,8 @@ export const objectFromJSON = async (
     const sourceDxn: DXN = DXN.parse(jsonData[ATTR_RELATION_SOURCE] ?? raise(new TypeError('Missing relation source')));
     const targetDxn: DXN = DXN.parse(jsonData[ATTR_RELATION_TARGET] ?? raise(new TypeError('Missing relation target')));
 
-    const source = (await refResolver?.resolve(sourceDxn)) as AnyEchoObject | undefined;
-    const target = (await refResolver?.resolve(targetDxn)) as AnyEchoObject | undefined;
+    const source = (await refResolver?.resolve(sourceDxn)) as AnyEntity | undefined;
+    const target = (await refResolver?.resolve(targetDxn)) as AnyEntity | undefined;
 
     defineHiddenProperty(obj, KindId, EntityKind.Relation);
     defineHiddenProperty(obj, RelationSourceDXNId, sourceDxn);
@@ -168,7 +168,7 @@ const decodeGeneric = (jsonData: unknown, options: { refResolver?: RefResolver }
   });
 };
 
-export const setRefResolverOnData = (obj: AnyEchoObject, refResolver: RefResolver) => {
+export const setRefResolverOnData = (obj: AnyEntity, refResolver: RefResolver) => {
   const visitor = (value: unknown) => {
     if (Ref.isRef(value)) {
       setRefResolver(value, refResolver);

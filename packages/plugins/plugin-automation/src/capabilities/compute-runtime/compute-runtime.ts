@@ -3,6 +3,7 @@
 //
 
 import * as BrowserKeyValueStore from '@effect/platform-browser/BrowserKeyValueStore';
+import { Registry } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
@@ -16,11 +17,11 @@ import { CredentialsService, QueueService } from '@dxos/functions';
 import {
   FunctionImplementationResolver,
   FunctionInvocationServiceLayerWithLocalLoopbackExecutor,
-  InvocationTracer,
   RemoteFunctionExecutionService,
+  TracingServiceExt,
   TriggerDispatcher,
+  TriggerStateStore,
 } from '@dxos/functions-runtime';
-import { TriggerStateStore } from '@dxos/functions-runtime';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
@@ -74,14 +75,17 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
         const toolkit = mergedToolkit.toolkit;
         const toolkitLayer = mergedToolkit.layer;
 
+        const registry = this.#capabilities.get(Common.Capability.AtomRegistry);
+
         const space = client.spaces.get(spaceId);
         invariant(space, `Invalid space: ${spaceId}`);
         yield* Effect.promise(() => space.waitUntilReady());
 
         return Layer.mergeAll(TriggerDispatcher.layer({ timeControl: 'natural' })).pipe(
+          Layer.provideMerge(Layer.succeed(Registry.AtomRegistry, registry)),
           Layer.provideMerge(
             Layer.mergeAll(
-              InvocationTracerLive,
+              TracingServiceLive,
               TriggerStateStore.layerKv.pipe(Layer.provide(BrowserKeyValueStore.layerLocalStorage)),
               makeToolResolverFromFunctions(functions, toolkit),
               makeToolExecutionServiceFromFunctions(toolkit, toolkitLayer),
@@ -99,7 +103,7 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
               ),
               Layer.provideMerge(aiServiceLayer),
               Layer.provideMerge(CredentialsService.layerFromDatabase()),
-              Layer.provideMerge(space ? Database.Service.layer(space.db) : Database.Service.notAvailable),
+              Layer.provideMerge(space ? Database.layer(space.db) : Database.notAvailable),
               Layer.provideMerge(space ? QueueService.layer(space.queues) : QueueService.notAvailable),
             ),
           ),
@@ -113,9 +117,9 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
   }
 }
 
-const InvocationTracerLive = Layer.unwrapEffect(
+const TracingServiceLive = Layer.unwrapEffect(
   Effect.gen(function* () {
-    const objects = yield* Database.Service.runQuery(Query.type(SpaceProperties));
+    const objects = yield* Database.runQuery(Query.type(SpaceProperties));
     const [properties] = objects;
     invariant(properties);
     // TODO(burdon): Check ref target has loaded?
@@ -128,6 +132,6 @@ const InvocationTracerLive = Layer.unwrapEffect(
 
     const queue = properties.invocationTraceQueue.target;
     invariant(queue);
-    return InvocationTracer.layerLive({ invocationTraceQueue: queue });
+    return TracingServiceExt.layerInvocationsQueue({ invocationTraceQueue: queue });
   }),
 );

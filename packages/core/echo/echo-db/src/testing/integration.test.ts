@@ -7,7 +7,7 @@ import { afterEach, assert, beforeEach, describe, expect, test } from 'vitest';
 
 import { asyncTimeout } from '@dxos/async';
 import { Obj, Relation, Type } from '@dxos/echo';
-import { Expando, Ref, getSchemaDXN, getTypeAnnotation, makeObject } from '@dxos/echo/internal';
+import { Ref, getSchemaDXN, getTypeAnnotation, makeObject } from '@dxos/echo/internal';
 import { TestSchema } from '@dxos/echo/testing';
 import { MeshEchoReplicator } from '@dxos/echo-pipeline';
 import {
@@ -150,8 +150,8 @@ describe('Integration tests', () => {
     let outerId: string;
     {
       await using db = await peer.createDatabase();
-      const inner = db.add(Obj.make(Type.Expando, { name: 'inner' }));
-      const outer = db.add(Obj.make(Type.Expando, { inner: Ref.make(inner) }));
+      const inner = db.add(Obj.make(TestSchema.Expando, { name: 'inner' }));
+      const outer = db.add(Obj.make(TestSchema.Expando, { inner: Ref.make(inner) }));
       outerId = outer.id;
       await db.flush();
     }
@@ -178,8 +178,8 @@ describe('Integration tests', () => {
     {
       await using db = await peer.createDatabase(spaceKey);
       rootUrl = db.rootUrl!;
-      const inner = db.add(Obj.make(Type.Expando, { name: 'inner' }));
-      const outer = db.add(Obj.make(Type.Expando, { inner: Ref.make(inner) }));
+      const inner = db.add(Obj.make(TestSchema.Expando, { name: 'inner' }));
+      const outer = db.add(Obj.make(TestSchema.Expando, { inner: Ref.make(inner) }));
       outerId = outer.id;
       await db.flush();
     }
@@ -323,7 +323,7 @@ describe('Integration tests', () => {
 
     await teleportConnections[0].whenOpen(true);
     await using db1 = await peer1.createDatabase(spaceKey);
-    db1.add(Obj.make(Expando, {}));
+    db1.add(Obj.make(TestSchema.Expando, {}));
     await teleportConnections[0].whenOpen(false);
   });
 
@@ -382,7 +382,7 @@ describe('Integration tests', () => {
     await using db2 = await peer2.openDatabase(spaceKey, db1.rootUrl!);
 
     const obj1 = db1.add(
-      Obj.make(Type.Expando, {
+      Obj.make(TestSchema.Expando, {
         content: 'test',
       }),
     );
@@ -449,16 +449,16 @@ describe('Integration tests', () => {
         await using db = await peer.createDatabase(spaceKey);
         rootUrl = db.rootUrl!;
 
-        const TestSchema = Schema.Struct({
+        const LocalTestSchema = Schema.Struct({
           field: Schema.String,
-        }).pipe(Type.Obj({ typename: 'example.com/type/Test', version: '0.1.0' }));
-        const [stored] = await db.schemaRegistry.register([TestSchema]);
+        }).pipe(Type.object({ typename: 'example.com/type/Test', version: '0.1.0' }));
+        const [stored] = await db.schemaRegistry.register([LocalTestSchema]);
         schemaDxn = DXN.fromLocalObjectId(stored.id).toString();
 
         const object = db.add(makeObject(stored, { field: 'test' }));
         expect(Obj.getSchema(object)).to.eq(stored);
 
-        db.add(Obj.make(Type.Expando, { text: 'Expando object' })); // Add Expando object to test filtering
+        db.add(Obj.make(TestSchema.Expando, { text: 'Expando object' })); // Add Expando object to test filtering
         await db.flush({ indexes: true });
       }
 
@@ -522,6 +522,46 @@ describe('Integration tests', () => {
       const [obj] = await db.query(Query.select(Filter.typeDXN(typeDXN))).run();
       expect(Obj.getSchema(obj)).toBeDefined();
       expect(Type.getTypename(Obj.getSchema(obj)!)).toEqual(TestSchema.Person.typename);
+    }
+  });
+
+  test('deleted objects remain deleted after reload', async () => {
+    await using peer = await builder.createPeer({
+      types: [TestSchema.Person],
+    });
+
+    {
+      await using db = await peer.createDatabase();
+      const person = db.add(Obj.make(TestSchema.Person, { name: 'Alice' }));
+      await db.flush({ indexes: true });
+
+      // Verify object exists before deletion.
+      const beforeDelete = await db.query(Filter.type(TestSchema.Person)).run();
+      expect(beforeDelete.length).to.eq(1);
+
+      // Delete the object.
+      db.remove(person);
+      await db.flush({ indexes: true });
+
+      // Verify object is deleted before reload.
+      const afterDelete = await db.query(Filter.type(TestSchema.Person)).run();
+      expect(afterDelete.length).to.eq(0);
+    }
+
+    await peer.reload();
+
+    {
+      await using db = await peer.openLastDatabase();
+
+      // Verify object is still not returned in normal queries.
+      const objects = await db.query(Filter.type(TestSchema.Person)).run();
+      expect(objects.length).to.eq(0);
+
+      // Verify object appears in deleted-only query.
+      const deletedObjects = await db.query(Query.select(Filter.type(TestSchema.Person)), { deleted: 'only' }).run();
+      expect(deletedObjects.length).to.eq(1);
+      expect(deletedObjects[0].name).to.eq('Alice');
+      expect(Obj.isDeleted(deletedObjects[0])).to.be.true;
     }
   });
 });

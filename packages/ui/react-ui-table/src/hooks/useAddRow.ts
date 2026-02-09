@@ -2,16 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import type * as Schema from 'effect/Schema';
 import { useCallback } from 'react';
 
-import { type Database, Obj } from '@dxos/echo';
+import { type Database, Obj, type Type } from '@dxos/echo';
 
 import { type InsertRowResult } from '../model';
 
 export type UseAddRowProps = {
   db?: Database.Database;
-  schema?: Schema.Schema.AnyNoContext;
+  schema?: Type.Obj.Any;
 };
 
 /**

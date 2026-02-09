@@ -4,7 +4,6 @@
 
 import { Event } from '@dxos/async';
 import { Resource } from '@dxos/context';
-import { EXPANDO_TYPENAME } from '@dxos/echo/internal';
 import { EncodedReference, type ObjectStructure } from '@dxos/echo-protocol';
 import { DXN, PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -70,7 +69,7 @@ export class IndexSchema extends Resource implements Index {
     // TODO(burdon): Handle inversion.
     if (filter.inverted) {
       return Array.from(this._index.entries())
-        .filter(([key]) => !filter.typenames.includes(key ?? EXPANDO_TYPENAME) === false)
+        .filter(([key]) => key !== null && filter.typenames.includes(key))
         .flatMap(([, value]) => Array.from(value))
         .map((id) => ({ id, rank: 1 }));
     }
@@ -83,14 +82,7 @@ export class IndexSchema extends Resource implements Index {
 
     const results: FindResult[] = [];
     for (const typename of filter.typenames) {
-      if (
-        typename === EXPANDO_TYPENAME ||
-        (DXN.isDXNString(typename) && DXN.parse(typename).asTypeDXN()?.type === EXPANDO_TYPENAME)
-      ) {
-        // Look for Expando objects under both null (legacy) and EXPANDO_TYPENAME (new).
-        results.push(...Array.from(this._index.get(null) ?? []).map((id) => ({ id, rank: 1 })));
-        results.push(...Array.from(this._index.get(EXPANDO_TYPENAME) ?? []).map((id) => ({ id, rank: 1 })));
-      } else if (DXN.isDXNString(typename)) {
+      if (DXN.isDXNString(typename)) {
         const dxn = DXN.parse(typename);
         if (dxn.isLocalObjectId()) {
           const objectId = dxn.parts[1];

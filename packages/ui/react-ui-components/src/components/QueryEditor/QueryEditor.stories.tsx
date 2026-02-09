@@ -16,11 +16,12 @@ import { translations } from '../../translations';
 
 import { QueryEditor, type QueryEditorProps } from './QueryEditor';
 
-const tags: Tag.Map = {
+// Create tags at render time to avoid Storybook serialization issues with ECHO objects.
+const createTags = (): Tag.Map => ({
   ['tag_1' as const]: Tag.make({ label: 'Important' }),
   ['tag_2' as const]: Tag.make({ label: 'Investor' }),
   ['tag_3' as const]: Tag.make({ label: 'New' }),
-};
+});
 
 const meta = {
   title: 'ui/react-ui-components/QueryEditor',
@@ -28,10 +29,15 @@ const meta = {
   render: (args: QueryEditorProps) => {
     const { space } = useClientStory();
     const [filter, setFilter] = useState<Filter.Any>();
-    const builder = useMemo(() => new QueryBuilder(tags), []);
-    const handleChange = useCallback<NonNullable<QueryEditorProps['onChange']>>((value) => {
-      setFilter(builder.build(value).filter);
-    }, []);
+    // Create tags and builder at render time to avoid Storybook serialization issues.
+    const tags = useMemo(() => args.tags ?? createTags(), [args.tags]);
+    const builder = useMemo(() => new QueryBuilder(tags), [tags]);
+    const handleChange = useCallback<NonNullable<QueryEditorProps['onChange']>>(
+      (value) => {
+        setFilter(builder.build(value).filter);
+      },
+      [builder],
+    );
 
     return (
       <div role='none' className='flex flex-col gap-2'>
@@ -69,7 +75,6 @@ export const Complex: Story = {
   args: {
     autoFocus: true,
     value: '#important OR type:dxos.org/type/Person AND { title: "DXOS", value: true }',
-    tags,
   },
 };
 
@@ -77,7 +82,6 @@ export const Relation: Story = {
   args: {
     autoFocus: true,
     value: '(type:dxos.org/type/Person -> type:dxos.org/type/Organization)',
-    tags,
   },
 };
 
@@ -85,6 +89,5 @@ export const Tags: Story = {
   args: {
     autoFocus: true,
     value: 'type:dxos.org/type/Person #investor #new',
-    tags,
   },
 };

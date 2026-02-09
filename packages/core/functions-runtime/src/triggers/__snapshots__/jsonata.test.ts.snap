@@ -29,7 +29,7 @@ exports[`jsonata > evaluates expression with trigger event > input templating 1`
       "@meta": {
         "keys": [],
       },
-      "@type": "dxn:type:dxos.org/type/Expando:0.1.0",
+      "@type": "dxn:type:example.com/type/Expando:0.1.0",
       "id": "01KD35WMWTEEE1WQQPYEGD1X2B",
       "name": "DXOS",
     },

@@ -4,24 +4,21 @@
 
 import React, { forwardRef, useMemo } from 'react';
 
-import { Surface } from '@dxos/app-framework/react';
+import { Surface, type SurfaceComponentProps } from '@dxos/app-framework/react';
 import { type Obj } from '@dxos/echo';
 import { Toolbar } from '@dxos/react-ui';
-import { StackItem } from '@dxos/react-ui-stack';
+import { Layout } from '@dxos/react-ui-mosaic';
 
 import { BaseObjectSettings } from './BaseObjectSettings';
 
-export type ObjectDetailsProps = {
-  object: Obj.Any;
-  role: string;
-};
+export type ObjectDetailsProps = SurfaceComponentProps<Obj.Unknown>;
 
 export const ObjectDetails = forwardRef<HTMLDivElement, ObjectDetailsProps>(
-  ({ object }: ObjectDetailsProps, forwardedRef) => {
+  ({ role, subject: object }, forwardedRef) => {
     const data = useMemo(() => ({ subject: object }), [object]);
 
     return (
-      <StackItem.Content ref={forwardedRef} toolbar>
+      <Layout.Main toolbar role={role} ref={forwardedRef}>
         <Toolbar.Root />
         <BaseObjectSettings object={object}>
           <Surface role='base-object-settings' data={data} />
@@ -29,7 +26,7 @@ export const ObjectDetails = forwardRef<HTMLDivElement, ObjectDetailsProps>(
           {/* TODO(wittjosiah): Remove (or add as surface)? */}
           {/* <AdvancedObjectSettings object={object} /> */}
         </BaseObjectSettings>
-      </StackItem.Content>
+      </Layout.Main>
     );
   },
 );

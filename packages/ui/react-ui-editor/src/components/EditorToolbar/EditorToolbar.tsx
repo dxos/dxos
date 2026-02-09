@@ -55,7 +55,6 @@ export type EditorToolbarProps = ThemedClassName<
   } & (EditorToolbarActionGraphProps & EditorToolbarFeatureFlags)
 >;
 
-// TODO(burdon): Remove role dependency.
 export const EditorToolbar = memo(({ classNames, role, attendableId, onAction, ...props }: EditorToolbarProps) => {
   const menuProps = useEditorToolbarActionGraph(props);
 

@@ -19,15 +19,16 @@ export const Script = Schema.Struct({
   changed: Schema.Boolean.pipe(FormInputAnnotation.set(false), Schema.optional),
   source: Type.Ref(Text.Text).pipe(FormInputAnnotation.set(false)),
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/Script',
     version: '0.1.0',
   }),
   Annotation.LabelAnnotation.set(['name']),
 );
+
 export interface Script extends Schema.Schema.Type<typeof Script> {}
 
 type Props = Omit<Obj.MakeProps<typeof Script>, 'source'> & { source?: string };
 
-export const make = ({ source = '', ...props }: Props = {}) =>
+export const make = ({ source = '', ...props }: Props = {}): Script =>
   Obj.make(Script, { ...props, source: Ref.make(Text.make(source)) });

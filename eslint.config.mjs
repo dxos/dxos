@@ -26,6 +26,7 @@ export default tseslint.config(
       // Build Artifacts
       '**/dist',
       '**/out',
+      '**/storybook-static',
       '**/gen/*',
       '**/__swc_snapshots__',
       'packages/core/protocols/proto/**/*',

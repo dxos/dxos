@@ -4,17 +4,19 @@
 
 import * as Effect from 'effect/Effect';
 
-import { ActivationEvent, Common, Plugin } from '@dxos/app-framework';
+import { ActivationEvent, Capability, Common, Plugin } from '@dxos/app-framework';
+import { Operation } from '@dxos/operation';
 import { AutomationEvents } from '@dxos/plugin-automation';
 import { ClientEvents } from '@dxos/plugin-client';
 import { MarkdownEvents } from '@dxos/plugin-markdown';
+import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
 import { type CreateObject } from '@dxos/plugin-space/types';
 
 import { AnchorSort, ComputeGraphRegistry, Markdown, OperationResolver, ReactSurface } from './capabilities';
 import { meta } from './meta';
 import { serializer } from './serializer';
 import { translations } from './translations';
-import { Sheet } from './types';
+import { Sheet, SheetOperation } from './types';
 
 export const SheetPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
@@ -32,11 +34,20 @@ export const SheetPlugin = Plugin.define(meta).pipe(
         serializer,
         comments: 'anchored',
         createObject: ((props) => Effect.sync(() => Sheet.make(props))) satisfies CreateObject,
-        addToCollectionOnCreate: true,
       },
     },
   }),
   Common.Plugin.addSchemaModule({ schema: [Sheet.Sheet] }),
+  Plugin.addModule({
+    id: 'on-space-created',
+    activatesOn: SpaceEvents.SpaceCreated,
+    activate: () =>
+      Effect.succeed(
+        Capability.contributes(SpaceCapabilities.OnCreateSpace, (params) =>
+          Operation.invoke(SheetOperation.OnCreateSpace, params),
+        ),
+      ),
+  }),
   Plugin.addModule({
     activatesOn: MarkdownEvents.SetupExtensions,
     activate: Markdown,

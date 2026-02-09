@@ -7,13 +7,12 @@ import type * as Schema from 'effect/Schema';
 import { ObjectId } from '@dxos/keys';
 
 import { getTypeAnnotation } from '../annotations';
-import { Expando } from '../entities';
 import { type AnyProperties, KindId, MetaId, type ObjectMeta, ObjectMetaSchema, ParentId } from '../types';
 
 import { defineHiddenProperty } from './define-hidden-property';
 import { attachTypedJsonSerializer } from './json-serializer';
-import { createProxy, isValidProxyTarget } from './proxy-utils';
-import { TypedReactiveHandler, prepareTypedTarget } from './typed-handler';
+import { createProxy, getProxyTarget, isValidProxyTarget } from './proxy-utils';
+import { TypedReactiveHandler, prepareTypedTarget, setMetaOwner } from './typed-handler';
 
 /**
  *
@@ -23,46 +22,29 @@ export type MakeObjectProps<T extends AnyProperties> = Omit<T, 'id' | KindId>;
 
 /**
  * Creates a reactive object from a plain Javascript object.
- * Optionally provides a TS-effect schema.
+ * Requires a TS-effect schema.
  */
 // TODO(burdon): Make internal
 // TODO(dmaretskyi): Deep mutability.
 // TODO(dmaretskyi): Invert generics (generic over schema) to have better error messages.
 // TODO(dmaretskyi): Could mutate original object making it unusable.
 export const makeObject: {
-  <T extends AnyProperties>(obj: T): T;
   <T extends AnyProperties>(
     schema: Schema.Schema<T, any, never>,
     obj: NoInfer<MakeObjectProps<T>>,
     meta?: ObjectMeta,
   ): T;
-} = <T extends AnyProperties>(
-  objOrSchema: Schema.Schema<T, any> | T,
-  obj?: MakeObjectProps<T>,
-  meta?: ObjectMeta,
-): T => {
-  // TODO(dmaretskyi): Remove Expando special case.
-  if (obj && (objOrSchema as any) !== Expando) {
-    // Use Object.assign to copy symbol properties (like ParentId) that spread operator doesn't copy.
-    return createReactiveObject<T>(Object.assign({}, obj) as T, meta, objOrSchema as Schema.Schema<T, any>);
-  } else if (obj && (objOrSchema as any) === Expando) {
-    return createReactiveObject<T>(Object.assign({}, obj) as T, meta, undefined, { expando: true });
-  } else {
-    return createReactiveObject<T>(objOrSchema as T, meta);
-  }
+} = <T extends AnyProperties>(schema: Schema.Schema<T, any>, obj: MakeObjectProps<T>, meta?: ObjectMeta): T => {
+  // Use Object.assign to copy symbol properties (like ParentId) that spread operator doesn't copy.
+  return createReactiveObject<T>(Object.assign({}, obj) as T, meta, schema);
 };
 
-const createReactiveObject = <T extends AnyProperties>(
-  obj: T,
-  meta?: ObjectMeta,
-  schema?: Schema.Schema<T>,
-  options?: { expando?: boolean },
-): T => {
+const createReactiveObject = <T extends AnyProperties>(obj: T, meta?: ObjectMeta, schema?: Schema.Schema<T>): T => {
   if (!isValidProxyTarget(obj)) {
     throw new Error('Value cannot be made into a reactive object.');
   }
 
-  if (!schema && !options?.expando) {
+  if (!schema) {
     throw new Error('Schema is required for reactive objects. Use Atom for untyped reactive state.');
   }
 
@@ -72,26 +54,31 @@ const createReactiveObject = <T extends AnyProperties>(
     delete (obj as any)[ParentId];
   }
 
-  // Use Expando schema if the expando option is set but no schema provided.
-  const effectiveSchema = schema ?? (options?.expando ? (Expando as unknown as Schema.Schema<T>) : undefined);
-
-  const annotation = effectiveSchema ? getTypeAnnotation(effectiveSchema) : undefined;
-  const shouldGenerateId = options?.expando || !!annotation;
-  if (shouldGenerateId) {
-    setIdOnTarget(obj);
-  }
+  const annotation = getTypeAnnotation(schema);
   if (annotation) {
+    setIdOnTarget(obj);
     defineHiddenProperty(obj, KindId, annotation.kind);
   }
   initMeta(obj, meta);
   if (parent !== undefined) {
     defineHiddenProperty(obj, ParentId, parent);
   }
-  if (effectiveSchema) {
-    prepareTypedTarget(obj, effectiveSchema);
-    attachTypedJsonSerializer(obj);
+  prepareTypedTarget(obj, schema);
+  attachTypedJsonSerializer(obj);
+  const proxy = createProxy<T>(obj, TypedReactiveHandler.instance);
+
+  // Set meta's owner to the main object so meta mutations respect the parent's change context.
+  // For non-database objects using TypedReactiveHandler, this links the meta to the main object's
+  // change context. For database objects, meta is handled by EchoReactiveHandler.getMeta().
+  const metaProxy = (obj as any)[MetaId];
+  if (metaProxy) {
+    const metaTarget = getProxyTarget(metaProxy);
+    if (metaTarget) {
+      setMetaOwner(metaTarget, obj);
+    }
   }
-  return createProxy<T>(obj, TypedReactiveHandler.instance);
+
+  return proxy;
 };
 
 /**

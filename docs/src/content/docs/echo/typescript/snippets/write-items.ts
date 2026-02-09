@@ -3,7 +3,8 @@
 //
 
 import { Client } from '@dxos/client';
-import { Filter, Type } from '@dxos/echo';
+import { Filter, Obj } from '@dxos/echo';
+import { Expando } from '@dxos/schema';
 
 const client = new Client();
 await client.initialize();
@@ -21,9 +22,11 @@ const space = spaces[0];
 
 // Grab an object.
 const result = await space.db
-  .query(Filter.type(Type.Expando, { type: 'task' }))
+  .query(Filter.type(Expando.Expando, { type: 'task' }))
   .run();
 const object = result[0];
 
-// Mutate the object directly.
-object.completed = true;
+// Mutate the object using Obj.change.
+Obj.change(object, (o) => {
+  o.completed = true;
+});

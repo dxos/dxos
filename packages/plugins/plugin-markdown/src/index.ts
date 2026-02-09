@@ -9,3 +9,5 @@ export * from './types';
 export * from './util';
 
 export * from './MarkdownPlugin';
+
+export { MarkdownEditor } from './components/MarkdownEditor';

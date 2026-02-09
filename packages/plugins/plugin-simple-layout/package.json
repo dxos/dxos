@@ -4,6 +4,10 @@
   "description": "Simple layout plugin for minimal UI contexts like popover windows.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
   "license": "MIT",
   "author": "DXOS.org",
   "sideEffects": true,
@@ -35,9 +39,11 @@
     "@dxos/util": "workspace:*",
     "@effect-atom/atom": "catalog:",
     "@effect-atom/atom-react": "catalog:",
-    "@radix-ui/react-context": "catalog:"
+    "@radix-ui/react-context": "catalog:",
+    "@tauri-apps/plugin-deep-link": "catalog:"
   },
   "devDependencies": {
+    "@dxos/app-graph": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-preview": "workspace:*",
     "@dxos/plugin-search": "workspace:*",

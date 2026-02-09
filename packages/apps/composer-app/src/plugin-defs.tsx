@@ -2,9 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-// NOTE(ZaymonFC): Workaround; see: https://discord.com/channels/837138313172353095/1363955461350621235
-import '@dxos/plugin-inbox/css';
-
 import * as Effect from 'effect/Effect';
 
 import { OperationPlugin, type Plugin, RuntimePlugin, SettingsPlugin } from '@dxos/app-framework';
@@ -61,6 +58,8 @@ import { isTruthy } from '@dxos/util';
 import { steps } from './help';
 import { WelcomePlugin } from './plugins';
 
+const APP_LINK_ORIGIN = 'https://composer.dxos.org';
+
 export type State = {
   appKey: string;
   config: Config;
@@ -88,7 +87,7 @@ export const getCore = ({ isPwa, isTauri, isPopover, isMobile }: PluginConfig): 
     FilesPlugin.meta.id,
     GraphPlugin.meta.id,
     HelpPlugin.meta.id,
-    isTauri && NativePlugin.meta.id,
+    isTauri && !isMobile && NativePlugin.meta.id,
     OperationPlugin.meta.id,
     NavTreePlugin.meta.id,
     ObservabilityPlugin.meta.id,
@@ -111,6 +110,7 @@ export const getCore = ({ isPwa, isTauri, isPopover, isMobile }: PluginConfig): 
 export const getDefaults = ({ isDev, isLabs }: PluginConfig): string[] =>
   [
     // Default
+    InboxPlugin.meta.id,
     KanbanPlugin.meta.id,
     MarkdownPlugin.meta.id,
     MasonryPlugin.meta.id,
@@ -176,7 +176,7 @@ export const getPlugins = ({
     MasonryPlugin(),
     MeetingPlugin(),
     MermaidPlugin(),
-    isTauri && NativePlugin(),
+    isTauri && !isMobile && NativePlugin(),
     NavTreePlugin(),
     ObservabilityPlugin({
       namespace: appKey,
@@ -196,6 +196,7 @@ export const getPlugins = ({
     SketchPlugin(),
     SpacePlugin({
       observability: true,
+      shareableLinkOrigin: isTauri ? APP_LINK_ORIGIN : window.location.origin,
     }),
     StackPlugin(),
     StatusBarPlugin(),

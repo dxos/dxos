@@ -33,7 +33,7 @@ export default defineFunction({
     ),
   }),
   handler: Effect.fn(function* ({ data: { query } }) {
-    const objects = yield* Database.Service.runQuery(
+    const objects = yield* Database.runQuery(
       Query.select(Filter.text(query, { type: 'full-text' })).options({ allQueuesFromSpaces: true }),
     );
     const results = objects.map((object) => ({

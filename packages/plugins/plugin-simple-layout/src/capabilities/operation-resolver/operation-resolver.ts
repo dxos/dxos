@@ -6,8 +6,18 @@ import * as Effect from 'effect/Effect';
 
 import { Capability, Common } from '@dxos/app-framework';
 import { Operation, OperationResolver } from '@dxos/operation';
+import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention';
 
 import { type SimpleLayoutState, SimpleLayoutState as SimpleLayoutStateCapability } from '../../types';
+
+/** Maximum number of items to keep in navigation history. */
+const MAX_HISTORY_LENGTH = 50;
+
+/** Parse entry ID to extract primary ID and variant. */
+const parseEntryId = (entryId: string) => {
+  const [id, variant] = entryId.split(ATTENDABLE_PATH_SEPARATOR);
+  return { id, variant };
+};
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -21,6 +31,15 @@ export default Capability.makeModule(
 
     return Capability.contributes(Common.Capability.OperationResolver, [
       //
+      // SetLayoutMode
+      //
+      // TODO(burdon): No-op for to fix startup bug?
+      OperationResolver.make({
+        operation: Common.LayoutOperation.SetLayoutMode,
+        handler: Effect.fnUntraced(function* () {}),
+      }),
+
+      //
       // UpdateSidebar - No-op for simple layout.
       //
       OperationResolver.make({
@@ -29,11 +48,18 @@ export default Capability.makeModule(
       }),
 
       //
-      // UpdateComplementary - No-op for simple layout.
+      // UpdateComplementary - Controls companion drawer.
       //
       OperationResolver.make({
         operation: Common.LayoutOperation.UpdateComplementary,
-        handler: () => Effect.void,
+        handler: Effect.fnUntraced(function* (input) {
+          if (input.state === 'closed') {
+            updateState((state) => ({
+              ...state,
+              drawerState: 'closed',
+            }));
+          }
+        }),
       }),
 
       //
@@ -63,6 +89,8 @@ export default Capability.makeModule(
           updateState((state) => ({
             ...state,
             popoverOpen: input.state ?? Boolean(input.subject),
+            popoverKind: input.kind ?? 'base',
+            popoverTitle: input.kind === 'card' ? input.title : undefined,
             popoverContent:
               typeof input.subject === 'string'
                 ? { component: input.subject, props: input.props }
@@ -90,6 +118,8 @@ export default Capability.makeModule(
             previousWorkspace: !state.workspace.startsWith('!') ? state.workspace : state.previousWorkspace,
             workspace: input.subject,
             active: undefined,
+            // Clear history when switching workspaces.
+            history: [],
           }));
         }),
       }),
@@ -113,10 +143,34 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: Common.LayoutOperation.Open,
         handler: Effect.fnUntraced(function* (input) {
-          updateState((state) => ({
-            ...state,
-            active: input.subject[0],
-          }));
+          const id = input.subject[0];
+          const { id: primaryId, variant } = parseEntryId(id);
+          const state = getState();
+
+          // Only treat as companion when opening a variant of the current workspace/active (e.g. object~comments).
+          // IDs like settings~spaceId are alternate-tree nodes and should navigate main content, not open the drawer.
+          // TODO(wittjosiah): Factor out the change-companion operation from deck to a common layout operation.
+          const isCompanionOfCurrent = variant && (primaryId === state.workspace || primaryId === state.active);
+
+          if (isCompanionOfCurrent) {
+            updateState((s) => ({
+              ...s,
+              companionVariant: variant,
+              drawerState: s.drawerState === 'closed' || !s.drawerState ? 'expanded' : s.drawerState,
+            }));
+          } else {
+            // Regular navigation - update active and history (use full id for alternate-tree nodes).
+            updateState((s) => {
+              const newHistory = s.active ? [...s.history, s.active] : s.history;
+              const trimmedHistory =
+                newHistory.length > MAX_HISTORY_LENGTH ? newHistory.slice(-MAX_HISTORY_LENGTH) : newHistory;
+              return {
+                ...s,
+                active: id,
+                history: trimmedHistory,
+              };
+            });
+          }
         }),
       }),
 
@@ -126,10 +180,23 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: Common.LayoutOperation.Close,
         handler: Effect.fnUntraced(function* () {
-          updateState((state) => ({
-            ...state,
-            active: undefined,
-          }));
+          updateState((state) => {
+            // Pop from history if available.
+            if (state.history.length > 0) {
+              const newHistory = [...state.history];
+              const previousActive = newHistory.pop();
+              return {
+                ...state,
+                active: previousActive,
+                history: newHistory,
+              };
+            }
+            // No history, just clear active.
+            return {
+              ...state,
+              active: undefined,
+            };
+          });
         }),
       }),
 

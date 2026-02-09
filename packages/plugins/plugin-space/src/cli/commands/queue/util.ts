@@ -3,13 +3,13 @@
 //
 
 import { FormBuilder } from '@dxos/cli-util';
-import { type Entity, Obj } from '@dxos/echo';
+import { Entity } from '@dxos/echo';
 
 /**
  * Pretty prints a queue object with ANSI colors.
  */
 export const printQueueObject = (obj: Entity.Any) => {
-  const typename = Obj.getTypename(obj) ?? '<unknown>';
+  const typename = Entity.getTypename(obj) ?? '<unknown>';
 
   return FormBuilder.make({ title: typename }).pipe(
     FormBuilder.set('id', obj.id),

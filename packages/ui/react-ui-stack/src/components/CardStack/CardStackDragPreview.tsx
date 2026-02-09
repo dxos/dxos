@@ -50,7 +50,7 @@ const CardStackDragPreviewContent = ({
 };
 
 const CardStackDragPreviewFooter = ({ children }: PropsWithChildren<{}>) => {
-  return <div className='p-2 border-t border-separator'>{children}</div>;
+  return <div className='p-2 border-bs border-separator'>{children}</div>;
 };
 
 export const CardStackDragPreview = {

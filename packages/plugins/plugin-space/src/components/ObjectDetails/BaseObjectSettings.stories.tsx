@@ -17,12 +17,12 @@ import { BaseObjectSettings } from './BaseObjectSettings';
 
 const DefaultStory = () => {
   const { space } = useClientStory();
-  const [object, setObject] = useState<Obj.Any>();
+  const [object, setObject] = useState<Obj.Unknown>();
 
   useEffect(() => {
     if (space && !object) {
       const object = space.db.add(Project.make());
-      setObject(object as Obj.Any);
+      setObject(object);
     }
   }, [space, object]);
 

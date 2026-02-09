@@ -4,15 +4,17 @@
 
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
+import * as Either from 'effect/Either';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
-import { Database } from '@dxos/echo';
+import { Database, Query } from '@dxos/echo';
+import { Function } from '@dxos/functions';
 import {
   CredentialsService,
   type FunctionContext,
-  type FunctionDefinition,
+  FunctionDefinition,
   FunctionError,
   FunctionInvocationService,
   FunctionNotFoundError,
@@ -26,8 +28,9 @@ export class LocalFunctionExecutionService extends Context.Tag('@dxos/functions/
   LocalFunctionExecutionService,
   {
     // TODO(dmaretskyi): This should take function id instead of the definition object.
-    // TODO(dmaretskyi): Services should be satisfied from environment rather then bubbled up.
     invokeFunction<I, O>(functionDef: FunctionDefinition<I, O>, input: I): Effect.Effect<O, never, InvocationServices>;
+
+    resolveFunction(key: string): Effect.Effect<FunctionDefinition.Any, FunctionNotFoundError>;
   }
 >() {
   static layerLive = Layer.effect(
@@ -57,6 +60,21 @@ export class LocalFunctionExecutionService extends Context.Tag('@dxos/functions/
             Effect.provideService(QueueService, queues),
             Effect.provideService(FunctionInvocationService, functionInvocationService),
           ),
+        resolveFunction: (key: string) =>
+          Effect.gen(function* () {
+            const [dbFunction] = yield* Database.runQuery(Query.type(Function.Function, { key }));
+            const functionDef = dbFunction ? FunctionDefinition.deserialize(dbFunction) : null;
+            if (functionDef) {
+              return functionDef;
+            }
+
+            const resolved = yield* resolver.resolveByKey(key).pipe(Effect.either);
+            if (Either.isRight(resolved)) {
+              return resolved.right;
+            }
+
+            return yield* Effect.fail(new FunctionNotFoundError(key));
+          }).pipe(Effect.provideService(Database.Service, database)),
       };
     }),
   );
@@ -126,6 +144,8 @@ export class FunctionImplementationResolver extends Context.Tag('@dxos/functions
     resolveFunctionImplementation<I, O>(
       functionDef: FunctionDefinition<I, O, FunctionServices>,
     ): Effect.Effect<FunctionDefinition<I, O, FunctionServices>, FunctionNotFoundError>;
+
+    resolveByKey(key: string): Effect.Effect<FunctionDefinition.Any, FunctionNotFoundError>;
   }
 >() {
   static layerTest = ({ functions }: { functions: readonly FunctionDefinition.Any[] }) =>
@@ -137,5 +157,14 @@ export class FunctionImplementationResolver extends Context.Tag('@dxos/functions
         }
         return Effect.succeed(resolved);
       },
+
+      resolveByKey: (key: string) =>
+        Effect.gen(function* () {
+          const resolved = functions.find((_) => _.key === key);
+          if (!resolved) {
+            return yield* Effect.fail(new FunctionNotFoundError(key));
+          }
+          return resolved;
+        }),
     });
 }

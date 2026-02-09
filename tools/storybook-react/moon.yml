@@ -1,4 +1,4 @@
-type: tool
+layer: tool
 language: typescript
 tasks:
   #
@@ -14,6 +14,7 @@ tasks:
       - '#ts-compile:compile'
     inputs:
       - .storybook/*
+      - /tools/storybook-react/.storybook/main.ts
       - static/*
       - $NODE_OPTIONS
     outputs:
@@ -28,6 +29,7 @@ tasks:
       - ^:compile
     inputs:
       - .storybook/*
+      - /tools/storybook-react/.storybook/main.ts
       - static/*
     preset: server
   # TODO(wittjosiah): No inputs or deps to avoid moon re-building things when running e2e tests.

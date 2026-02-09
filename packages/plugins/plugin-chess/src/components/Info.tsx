@@ -49,7 +49,9 @@ export const Info = ({ classNames, orientation = 'white', onOrientationChange, o
         <PlayerSelector
           value={model.object.players?.[orientation === 'white' ? 'black' : 'white']}
           onValueChange={(value) => {
-            model.object.players![orientation === 'white' ? 'black' : 'white'] = value;
+            Obj.change(model.object, (obj) => {
+              obj.players![orientation === 'white' ? 'black' : 'white'] = value;
+            });
           }}
           members={members}
         />
@@ -76,7 +78,9 @@ export const Info = ({ classNames, orientation = 'white', onOrientationChange, o
         <PlayerSelector
           value={model.object.players?.[orientation]}
           onValueChange={(value) => {
-            model.object.players![orientation] = value;
+            Obj.change(model.object, (obj) => {
+              obj.players![orientation] = value;
+            });
           }}
           members={members}
         />

@@ -58,7 +58,8 @@ export const lengthsFacet = {
       noLine: { fine: ['focusOffset'] },
       hairLine: { fine: ['modalLine', 'landmarkLine', 'positionedLine', 'gridGap', 'gridFocusIndicatorWidth'] },
       thickLine: { fine: ['focusLine'], gridFocusStack: ['gridFocusIndicatorWidth'] },
-      trimXs: { fine: ['cardSpacingChrome', 'labelSpacingBlock', 'inputSpacingBlock'] }, // TODO(burdon): Remove need for this.
+      // TODO(burdon): Remove.
+      trimXs: { fine: ['cardSpacingChrome', 'labelSpacingBlock', 'inputSpacingBlock'] },
       trimSm: { fine: ['cardSpacingInline', 'cardSpacingBlock', 'cardSpacingGap'] },
       trimMd: { coarse: ['cardSpacingInline', 'cardSpacingBlock', 'cardSpacingGap'] },
       inputFine: { fine: ['iconButtonPadding'] },
@@ -86,12 +87,12 @@ export const maxSizesFacet = {
     namespace: 'dx-',
     conditions: { root: [':root'] },
     sememes: {
-      prose: { root: ['size', 50] },
-      containerMaxWidth: { root: ['size', 50] },
-      popoverMaxWidth: { root: ['size', cardDefaultInlineSize] },
-      cardDefaultWidth: { root: ['size', cardDefaultInlineSize] },
-      cardMinWidth: { root: ['size', cardMinInlineSize] },
-      cardMaxWidth: { root: ['size', cardMaxInlineSize] },
+      'prose-max-width': { root: ['size', 50] },
+      'container-max-width': { root: ['size', 50] },
+      'popover-max-width': { root: ['size', cardDefaultInlineSize] },
+      'card-default-width': { root: ['size', cardDefaultInlineSize] },
+      'card-min-width': { root: ['size', cardMinInlineSize] },
+      'card-max-width': { root: ['size', cardMaxInlineSize] },
     },
   },
 } satisfies Facet;

@@ -24,7 +24,7 @@ import {
 import { type Blueprint } from '@dxos/blueprints';
 import { todo } from '@dxos/debug';
 import { Obj } from '@dxos/echo';
-import { TracingService } from '@dxos/functions';
+import { type FunctionInvocationService, TracingService } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
 
@@ -39,7 +39,8 @@ export type AiSessionRunRequirements =
   | LanguageModel.LanguageModel
   | ToolExecutionService
   | ToolResolverService
-  | TracingService;
+  | TracingService
+  | FunctionInvocationService;
 
 export type AiSessionOptions = {};
 
@@ -48,7 +49,7 @@ export type AiSessionRunProps<Tools extends Record<string, Tool.Any>> = {
   // TODO(wittjosiah): Rename to systemPrompt.
   system?: string;
   history?: Message.Message[];
-  objects?: Obj.Any[];
+  objects?: Obj.Unknown[];
   blueprints?: readonly Blueprint.Blueprint[];
   toolkit?: Toolkit.WithHandler<Tools>;
   observer?: GenerationObserver<Tools>;
@@ -116,7 +117,9 @@ export class AiSession {
       const promptMessage = yield* submitMessage(yield* formatUserPrompt({ prompt, history }));
 
       // Generate system and prompt messages.
-      const system = yield* formatSystemPrompt({ system: systemTemplate, blueprints, objects });
+      const system = yield* formatSystemPrompt({ system: systemTemplate, blueprints, objects }).pipe(Effect.orDie);
+
+      // log('system', { prompt: system });
 
       // Tool call loop.
       do {
@@ -148,7 +151,7 @@ export class AiSession {
           Effect.map(Chunk.toArray),
         );
 
-        log.info('blocks', { blocks });
+        // log('blocks', { blocks });
 
         // Create the response message.
         const response = yield* submitMessage(

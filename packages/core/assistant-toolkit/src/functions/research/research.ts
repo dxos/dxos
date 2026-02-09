@@ -21,7 +21,7 @@ import {
   makeToolResolverFromFunctions,
 } from '@dxos/assistant';
 import { Template } from '@dxos/blueprints';
-import { type DXN, Obj } from '@dxos/echo';
+import { type DXN, Entity, Obj } from '@dxos/echo';
 import { Database } from '@dxos/echo';
 import { TracingService, defineFunction } from '@dxos/functions';
 import { FunctionInvocationServiceLayerTestMocked } from '@dxos/functions-runtime/testing';
@@ -85,7 +85,7 @@ export default defineFunction({
   handler: Effect.fnUntraced(
     function* ({ data: { query, instructions, mockSearch = false, entityExtraction = false } }) {
       if (mockSearch) {
-        const mockPerson = yield* Database.Service.add(
+        const mockPerson = yield* Database.add(
           Obj.make(Person.Person, {
             preferredName: 'John Doe',
             emails: [{ value: 'john.doe@example.com' }],
@@ -102,7 +102,7 @@ export default defineFunction({
         };
       }
 
-      yield* Database.Service.flush({ indexes: true });
+      yield* Database.flush({ indexes: true });
       yield* TracingService.emitStatus({ message: 'Starting research...' });
 
       const NativeWebSearch = Toolkit.make(AnthropicTool.WebSearch_20250305({}));
@@ -136,8 +136,8 @@ export default defineFunction({
         observer: GenerationObserver.fromPrinter(new ConsolePrinter({ tag: 'research' })),
       });
 
-      const objects = yield* Effect.forEach(objectDXNs, (dxn) => Database.Service.resolve(dxn)).pipe(
-        Effect.map(Array.map((obj) => Obj.toJSON(obj))),
+      const objects = yield* Effect.forEach(objectDXNs, (dxn) => Database.resolve(dxn)).pipe(
+        Effect.map(Array.map((obj) => Entity.toJSON(obj))),
       );
 
       return {

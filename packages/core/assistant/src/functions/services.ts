@@ -42,12 +42,14 @@ export const makeToolResolverFromFunctions = (
       return {
         resolve: (id): Effect.Effect<Tool.Any, AiToolNotFoundError> =>
           Effect.gen(function* () {
+            // TODO(dmaretskyi): Use FunctionInvocationService.resolveFunction().
+
             const tool = toolkit.tools[id];
             if (tool) {
               return tool;
             }
 
-            const [dbFunction] = yield* Database.Service.runQuery(Query.type(Function.Function, { key: id }));
+            const [dbFunction] = yield* Database.runQuery(Query.type(Function.Function, { key: id }));
 
             const functionDef = dbFunction
               ? FunctionDefinition.deserialize(dbFunction)
@@ -167,7 +169,10 @@ const createStructFieldsFromSchema = (schema: Schema.Schema<any, any>): Record<s
  */
 const mapSchemaTypeForLLM = (ast: SchemaAST.AST): SchemaAST.AST => {
   if (Type.Ref.isRefSchemaAST(ast)) {
-    return RefFromLLM.ast;
+    const description = ast.annotations.description
+      ? ast.annotations.description + '\n' + RefFromLLM.ast.annotations.description
+      : (RefFromLLM.ast.annotations.description as string);
+    return RefFromLLM.annotations({ description }).ast;
   }
 
   return ast;

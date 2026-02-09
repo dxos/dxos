@@ -33,6 +33,7 @@ import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type Credential, type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type Storage } from '@dxos/random-access-storage';
+import type * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 import { BlobStore } from '@dxos/teleport-extension-object-sync';
 import { trace as Trace } from '@dxos/tracing';
 import { safeInstanceof } from '@dxos/util';
@@ -63,7 +64,7 @@ export type ServiceContextRuntimeProps = Pick<
     invitationConnectionDefaultProps?: InvitationConnectionProps;
     disableP2pReplication?: boolean;
     enableVectorIndexing?: boolean;
-    enableFullTextIndexing?: boolean;
+    enableSqlite?: boolean;
     enableLocalQueues?: boolean;
   };
 /**
@@ -110,7 +111,7 @@ export class ServiceContext extends Resource {
     public readonly signalManager: SignalManager,
     private readonly _edgeConnection: EdgeConnection | undefined,
     private readonly _edgeHttpClient: EdgeHttpClient | undefined,
-    private readonly _runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>,
+    private readonly _runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransaction.SqlTransaction>,
     public readonly _runtimeProps?: ServiceContextRuntimeProps,
     private readonly _edgeFeatures?: Runtime.Client.EdgeFeatures,
   ) {
@@ -167,7 +168,7 @@ export class ServiceContext extends Resource {
       getSpaceKeyByRootDocumentId: (documentId) => this.spaceManager.findSpaceByRootDocumentId(documentId)?.key,
       indexing: {
         vector: this._runtimeProps?.enableVectorIndexing,
-        fullText: this._runtimeProps?.enableFullTextIndexing,
+        sqlIndex: this._runtimeProps?.enableSqlite,
       },
       runtime: this._runtime,
       localQueues: this._runtimeProps?.enableLocalQueues,

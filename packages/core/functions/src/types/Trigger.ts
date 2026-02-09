@@ -8,6 +8,7 @@ import * as SchemaAST from 'effect/SchemaAST';
 import { Obj, QueryAST, Type } from '@dxos/echo';
 import { OptionsAnnotationId, SystemTypeAnnotation } from '@dxos/echo/internal';
 import { DXN } from '@dxos/keys';
+import { Expando } from '@dxos/schema';
 
 /**
  * Type discriminator for TriggerType.
@@ -21,7 +22,7 @@ const kindLiteralAnnotations = { title: 'Kind' };
 
 export const EmailSpec = Schema.Struct({
   kind: Schema.Literal('email').annotations(kindLiteralAnnotations),
-}).pipe(Schema.mutable);
+});
 export type EmailSpec = Schema.Schema.Type<typeof EmailSpec>;
 
 export const QueueSpec = Schema.Struct({
@@ -29,7 +30,7 @@ export const QueueSpec = Schema.Struct({
 
   // TODO(dmaretskyi): Change to a reference.
   queue: DXN.Schema,
-}).pipe(Schema.mutable);
+});
 export type QueueSpec = Schema.Schema.Type<typeof QueueSpec>;
 
 /**
@@ -40,7 +41,7 @@ export const SubscriptionSpec = Schema.Struct({
   query: Schema.Struct({
     raw: Schema.optional(Schema.String.annotations({ title: 'Query' })),
     ast: QueryAST.Query,
-  }).pipe(Schema.mutable),
+  }),
   options: Schema.optional(
     Schema.Struct({
       // Watch changes to object (not just creation).
@@ -49,7 +50,7 @@ export const SubscriptionSpec = Schema.Struct({
       delay: Schema.optional(Schema.Number.annotations({ title: 'Delay' })),
     }).annotations({ title: 'Options' }),
   ),
-}).pipe(Schema.mutable);
+});
 export type SubscriptionSpec = Schema.Schema.Type<typeof SubscriptionSpec>;
 
 /**
@@ -61,7 +62,7 @@ export const TimerSpec = Schema.Struct({
     title: 'Cron',
     [SchemaAST.ExamplesAnnotationId]: ['0 0 * * *'],
   }),
-}).pipe(Schema.mutable);
+});
 export type TimerSpec = Schema.Schema.Type<typeof TimerSpec>;
 
 /**
@@ -80,7 +81,7 @@ export const WebhookSpec = Schema.Struct({
       title: 'Port',
     }),
   ),
-}).pipe(Schema.mutable);
+});
 export type WebhookSpec = Schema.Schema.Type<typeof WebhookSpec>;
 
 /**
@@ -96,12 +97,12 @@ export type Spec = Schema.Schema.Type<typeof Spec>;
  * Function is invoked with the `payload` passed as input data.
  * The event that triggers the function is available in the function context.
  */
-const Trigger_ = Schema.Struct({
+const TriggerSchema = Schema.Struct({
   /**
    * Function or workflow to invoke.
    */
   // TODO(dmaretskyi): Can be a Ref(FunctionType) or Ref(ComputeGraphType).
-  function: Schema.optional(Type.Ref(Type.Expando).annotations({ title: 'Function' })),
+  function: Schema.optional(Type.Ref(Expando.Expando).annotations({ title: 'Function' })),
 
   /**
    * Only used for workflowSchema.
@@ -127,17 +128,16 @@ const Trigger_ = Schema.Struct({
    *   mailbox: { '/': 'dxn:echo:AAA:ZZZ' }
    * }
    */
-  input: Schema.optional(Schema.mutable(Schema.Record({ key: Schema.String, value: Schema.Any }))),
+  input: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/Trigger',
     version: '0.1.0',
   }),
   SystemTypeAnnotation.set(true),
 );
 
-export interface Trigger extends Schema.Schema.Type<typeof Trigger_> {}
-export interface TriggerEncoded extends Schema.Schema.Encoded<typeof Trigger_> {}
-export const Trigger: Schema.Schema<Trigger, TriggerEncoded> = Trigger_;
+export interface Trigger extends Schema.Schema.Type<typeof TriggerSchema> {}
+export const Trigger: Type.Obj<Trigger> = TriggerSchema as any;
 
 export const make = (props: Obj.MakeProps<typeof Trigger>) => Obj.make(Trigger, props);

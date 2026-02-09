@@ -37,3 +37,6 @@ tasks:
     deps:
       - bundle
     preset: server
+
+inheritedBy:
+  tags: vite

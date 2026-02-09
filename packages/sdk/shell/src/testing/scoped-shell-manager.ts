@@ -6,6 +6,7 @@ import type { FrameLocator, Locator, Page } from '@playwright/test';
 
 type Scope = Locator | FrameLocator | Page;
 
+/** @deprecated */
 export class ScopedShellManager {
   page!: Page;
 

@@ -7,6 +7,7 @@ import type * as Schema from 'effect/Schema';
 
 import type { CleanupFn, Event } from '@dxos/async';
 import { inspectCustom } from '@dxos/debug';
+import type { Entity } from '@dxos/echo';
 import type { SchemaId } from '@dxos/echo/internal';
 // eslint-disable-next-line @typescript-eslint/consistent-type-imports
 import { EventId } from '@dxos/echo/internal';
@@ -16,7 +17,7 @@ import type { KeyPath, ObjectCore } from '../core-db';
 import { type EchoDatabase } from '../proxy-db';
 
 import { type EchoArray } from './echo-array';
-import { type AnyLiveObject, type EchoReactiveHandler } from './echo-handler';
+import { type EchoReactiveHandler } from './echo-handler';
 
 export const symbolPath = Symbol('path');
 export const symbolNamespace = Symbol('namespace');
@@ -71,7 +72,7 @@ export class ObjectInternals {
    * Until object is persisted in the database, the linked object references are stored in this cache.
    * Set only when the object is not bound to a database.
    */
-  linkCache: Map<string, AnyLiveObject<any>> | undefined = new Map<string, AnyLiveObject<any>>();
+  linkCache: Map<string, Entity.Unknown> | undefined = new Map<string, Entity.Unknown>();
 
   subscriptions: CleanupFn[] = [];
 

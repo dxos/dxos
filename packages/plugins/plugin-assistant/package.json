@@ -4,6 +4,10 @@
   "description": "Assistant plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
   "license": "MIT",
   "author": "DXOS.org",
   "sideEffects": true,
@@ -88,7 +92,9 @@
     "@dxos/plugin-deck": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-map": "workspace:*",
+    "@dxos/plugin-markdown": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
+    "@dxos/plugin-status-bar": "workspace:*",
     "@dxos/plugin-table": "workspace:*",
     "@dxos/plugin-transcription": "workspace:*",
     "@dxos/protocols": "workspace:*",

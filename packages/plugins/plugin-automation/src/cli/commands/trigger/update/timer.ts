@@ -37,7 +37,7 @@ export const timer = Command.make(
         onSome: (id) => Effect.succeed(id),
       });
       const dxn = DXN.fromLocalObjectId(triggerId);
-      const trigger = yield* Database.Service.resolve(dxn, Trigger.Trigger);
+      const trigger = yield* Database.resolve(dxn, Trigger.Trigger);
       if (!trigger.spec || trigger.spec?.kind !== 'timer') {
         return yield* Effect.fail(new Error(`Invalid trigger type: ${trigger.spec?.kind}`));
       }
@@ -45,7 +45,7 @@ export const timer = Command.make(
       const currentFn = yield* updateFunction(trigger, options.functionId);
       yield* updateCron(trigger, options.cron);
       yield* updateInput(trigger, currentFn, options.input);
-      trigger.enabled = yield* updateEnabled(trigger, options.id, options.enabled);
+      yield* updateEnabled(trigger, options.id, options.enabled);
 
       if (json) {
         yield* Console.log(JSON.stringify(trigger, null, 2));
@@ -68,7 +68,7 @@ export const timer = Command.make(
  */
 const updateFunction = Effect.fn(function* (trigger: Trigger.Trigger, functionIdOption: Option.Option<string>) {
   let currentFn: Function.Function | undefined = trigger.function
-    ? yield* Database.Service.load(trigger.function) as any
+    ? yield* Database.load(trigger.function) as any
     : undefined;
   if (currentFn && !Obj.instanceOf(Function.Function, currentFn)) {
     currentFn = undefined;
@@ -87,13 +87,15 @@ const updateFunction = Effect.fn(function* (trigger: Trigger.Trigger, functionId
       onNone: () => selectFunction(),
       onSome: (id) => Effect.succeed(id),
     });
-    const functions = yield* Database.Service.runQuery(Filter.type(Function.Function));
+    const functions = yield* Database.runQuery(Filter.type(Function.Function));
     const foundFn = functions.find((fn) => fn.id === functionId);
     if (!foundFn || !Obj.instanceOf(Function.Function, foundFn)) {
       return yield* Effect.fail(new Error(`Function not found: ${functionId}`));
     }
+    Obj.change(trigger, (mutableTrigger) => {
+      mutableTrigger.function = Ref.make(foundFn);
+    });
     currentFn = foundFn;
-    trigger.function = Ref.make(currentFn);
   }
 
   if (!currentFn) {
@@ -126,9 +128,11 @@ const updateCron = Effect.fn(function* (trigger: Trigger.Trigger, cronOption: Op
         }).pipe(Prompt.run),
       onSome: (value) => Effect.succeed(value),
     });
-    if (trigger.spec?.kind === 'timer') {
-      trigger.spec.cron = cron;
-    }
+    Obj.change(trigger, (mutableTrigger) => {
+      if (mutableTrigger.spec?.kind === 'timer') {
+        mutableTrigger.spec.cron = cron;
+      }
+    });
   }
 });
 
@@ -160,7 +164,9 @@ const updateInput = Effect.fn(function* (
         promptForSchemaInput(fn.inputSchema ? Type.toEffectSchema(fn.inputSchema) : undefined, currentInput),
       onSome: (value) => Effect.succeed(value as Record<string, any>),
     });
-    trigger.input = inputObj as any;
+    Obj.change(trigger, (mutableTrigger) => {
+      mutableTrigger.input = inputObj;
+    });
   }
 });
 
@@ -173,12 +179,15 @@ const updateEnabled = Effect.fn(function* (
   idOption: Option.Option<string>,
   enabled: boolean,
 ) {
-  return yield* Option.match(idOption, {
+  const enabledValue = yield* Option.match(idOption, {
     onNone: () =>
       Prompt.confirm({
         message: 'Enable the trigger?',
         initial: trigger.enabled,
       }).pipe(Prompt.run),
     onSome: () => Effect.succeed(enabled),
+  });
+  Obj.change(trigger, (mutableTrigger) => {
+    mutableTrigger.enabled = enabledValue;
   });
 });
