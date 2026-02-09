@@ -576,6 +576,9 @@ catalogs:
     '@tauri-apps/plugin-deep-link':
       specifier: ^2.2.0
       version: 2.4.7
+    '@tauri-apps/plugin-haptics':
+      specifier: ^2.3.2
+      version: 2.3.2
     '@tauri-apps/plugin-opener':
       specifier: ^2.5.3
       version: 2.5.3
@@ -2653,6 +2656,9 @@ importers:
       '@tauri-apps/plugin-deep-link':
         specifier: 'catalog:'
         version: 2.4.7
+      '@tauri-apps/plugin-haptics':
+        specifier: 'catalog:'
+        version: 2.3.2
       '@tauri-apps/plugin-os':
         specifier: 'catalog:'
         version: 2.3.1
@@ -11534,6 +11540,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../common/async
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -11576,6 +11585,9 @@ importers:
       '@tauri-apps/plugin-deep-link':
         specifier: 'catalog:'
         version: 2.4.7
+      '@tauri-apps/plugin-haptics':
+        specifier: 'catalog:'
+        version: 2.3.2
     devDependencies:
       '@dxos/app-graph':
         specifier: workspace:*
@@ -26409,6 +26421,9 @@ packages:
 
   '@tauri-apps/plugin-deep-link@2.4.7':
     resolution: {integrity: sha512-K0FQlLM6BoV7Ws2xfkh+Tnwi5VZVdkI4Vw/3AGLSf0Xvu2y86AMBzd9w/SpzKhw9ai2B6ES8di/OoGDCExkOzg==}
+
+  '@tauri-apps/plugin-haptics@2.3.2':
+    resolution: {integrity: sha512-TqvBR5JoPodDQWPXsNymmyqp37dOpunZOdVVbx5xOAxki7rVwiCMvoEPdtJQNIrU+dQDfkQYZ2oDBVOu4hf+ig==}
 
   '@tauri-apps/plugin-opener@2.5.3':
     resolution: {integrity: sha512-CCcUltXMOfUEArbf3db3kCE7Ggy1ExBEBl51Ko2ODJ6GDYHRp1nSNlQm5uNCFY5k7/ufaK5Ib3Du/Zir19IYQQ==}
@@ -46868,6 +46883,10 @@ snapshots:
       '@tauri-apps/cli-win32-x64-msvc': 2.8.4
 
   '@tauri-apps/plugin-deep-link@2.4.7':
+    dependencies:
+      '@tauri-apps/api': 2.10.1
+
+  '@tauri-apps/plugin-haptics@2.3.2':
     dependencies:
       '@tauri-apps/api': 2.10.1
 
