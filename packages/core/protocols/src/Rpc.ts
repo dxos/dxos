@@ -6,6 +6,7 @@ import {
   type MessageShape,
 } from '@bufbuild/protobuf';
 import { type GenService, type GenServiceMethods } from '@bufbuild/protobuf/codegenv2';
+
 import type { Stream } from '@dxos/codec-protobuf/stream';
 
 /**

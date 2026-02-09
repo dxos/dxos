@@ -1,9 +1,10 @@
-import type * as Rpc from './Rpc.ts';
 import * as ClientServicesPb from '@dxos/protocols/buf/dxos/client/services_pb';
 import * as ClientLoggingPb from '@dxos/protocols/buf/dxos/client/logging_pb';
 import * as DevtoolsHostPb from '@dxos/protocols/buf/dxos/devtools/host_pb';
 import * as TracingPb from '@dxos/protocols/buf/dxos/tracing_pb';
 import * as IframePb from '@dxos/protocols/buf/dxos/iframe_pb';
+
+import type * as Rpc from './Rpc.ts';
 
 export interface SpacesService extends Rpc.BufRpcHandlers<typeof ClientServicesPb.SpacesService> {}
 
@@ -18,8 +19,6 @@ export interface TracingService extends Rpc.BufRpcHandlers<typeof TracingPb.Trac
 export interface DevtoolsHost extends Rpc.BufRpcHandlers<typeof DevtoolsHostPb.DevtoolsHost> {}
 
 export interface ContactsService extends Rpc.BufRpcHandlers<typeof ClientServicesPb.ContactsService> {}
-
-export interface NetworkService extends Rpc.BufRpcHandlers<typeof ClientServicesPb.NetworkService> {}
 
 export interface LoggingService extends Rpc.BufRpcHandlers<typeof ClientLoggingPb.LoggingService> {}
 
