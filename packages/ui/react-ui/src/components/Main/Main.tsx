@@ -83,7 +83,6 @@ const useLandmarkMover = (propsOnKeyDown: ComponentPropsWithoutRef<'div'>['onKey
   };
 };
 
-
 //
 // Context
 //
@@ -342,7 +341,6 @@ const MainComplementarySidebar = forwardRef<HTMLDivElement, MainComplementarySid
 
 MainComplementarySidebar.displayName = COMPLEMENTARY_SIDEBAR_NAME;
 
-
 //
 // Content
 //
@@ -421,10 +419,4 @@ export const Main = {
 
 export { useMainContext, useSidebars, useLandmarkMover };
 
-export type {
-  MainRootProps,
-  MainContentProps,
-  MainOverlayProps,
-  MainNavigationSidebarProps,
-  SidebarState,
-};
+export type { MainRootProps, MainContentProps, MainOverlayProps, MainNavigationSidebarProps, SidebarState };

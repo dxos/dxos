@@ -37,7 +37,6 @@ const ComplementarySidebarToggle = ({ close }: { close?: boolean }) => {
   );
 };
 
-
 const DefaultStory = (_args: StoryMainArgs) => {
   return (
     <Main.Root defaultComplementarySidebarState='closed' defaultNavigationSidebarState='closed'>

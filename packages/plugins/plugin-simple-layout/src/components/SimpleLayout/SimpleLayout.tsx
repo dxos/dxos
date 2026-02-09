@@ -33,7 +33,7 @@ export const SimpleLayout = () => {
 
   return (
     <Mosaic.Root classNames='contents'>
-      <MobileLayout onKeyboardOpenChange={(state) => setKeyboardOpen(state)}>
+      <MobileLayout classNames='bg-toolbarSurface' onKeyboardOpenChange={(state) => setKeyboardOpen(state)}>
         <PopoverRoot>
           <Splitter.Root mode={splitterMode} ratio={0.5}>
             <Splitter.Panel position='upper'>

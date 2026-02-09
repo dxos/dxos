@@ -30,6 +30,7 @@ const [MobileLayoutProvider, useMobileLayout] = createContext<MobileLayoutContex
 
 export type MobileLayoutProps = ThemedClassName<
   PropsWithChildren<{
+    transition?: number;
     onKeyboardOpenChange?: (nextState: boolean) => void;
   }>
 >;
@@ -37,14 +38,16 @@ export type MobileLayoutProps = ThemedClassName<
 /**
  * Mobile layout container that handles iOS keyboard detection and safe area insets.
  */
+// TODO(burdon): Should this be ios-only?
 export const MobileLayout = forwardRef<HTMLDivElement, MobileLayoutProps>(
-  ({ classNames, children, onKeyboardOpenChange, ...props }, forwardedRef) => {
-    // TODO(burdon): ios-only.
-    // Hook handles keyboard detection and sets CSS custom properties.
+  ({ classNames, children, transition = 250, onKeyboardOpenChange, ...props }, forwardedRef) => {
+    // Handles keyboard detection and sets CSS custom properties.
     const { open: keyboardOpen } = useIOSKeyboard();
     useEffect(() => {
       onKeyboardOpenChange?.(keyboardOpen);
     }, [keyboardOpen, onKeyboardOpenChange]);
+
+    useLockBodyScroll(keyboardOpen);
 
     return (
       <MobileLayoutProvider keyboardOpen={keyboardOpen}>
@@ -52,10 +55,10 @@ export const MobileLayout = forwardRef<HTMLDivElement, MobileLayoutProps>(
           {...props}
           role='none'
           style={{
-            transition: 'block-size 250ms ease-out',
+            transition: `block-size ${transition}ms ease-out`,
             blockSize: 'calc(100vh - var(--kb-height, 0px))',
           }}
-          className={mx('absolute top-0 left-0 right-0 flex flex-col bg-toolbarSurface', classNames)}
+          className={mx('absolute top-0 left-0 right-0 flex flex-col', classNames)}
           ref={forwardedRef}
         >
           <div
@@ -77,6 +80,40 @@ export const MobileLayout = forwardRef<HTMLDivElement, MobileLayoutProps>(
 MobileLayout.displayName = MOBILE_LAYOUT_NAME;
 
 export { useMobileLayout };
+
+/**
+ * Prevent iOS Safari viewport scroll when enabled.
+ * Setting overflow:hidden doesn't work on iOS, so we must preventDefault on touchmove events.
+ * Only allows scrolling if the target is within a scrollable container.
+ */
+const useLockBodyScroll = (enabled: boolean) => {
+  useEffect(() => {
+    if (!enabled) {
+      return;
+    }
+
+    const isScrollableElement = (el: HTMLElement | null): boolean => {
+      while (el && el !== document.body) {
+        const style = getComputedStyle(el);
+        const overflowY = style.overflowY;
+        if ((overflowY === 'auto' || overflowY === 'scroll') && el.scrollHeight > el.clientHeight) {
+          return true;
+        }
+        el = el.parentElement;
+      }
+      return false;
+    };
+
+    const preventScroll = (event: TouchEvent) => {
+      const target = event.target as HTMLElement;
+      if (!isScrollableElement(target)) {
+        event.preventDefault();
+      }
+    };
+
+    return addEventListener(document, 'touchmove', preventScroll as EventListener, { passive: false });
+  }, [enabled]);
+};
 
 //
 // useIOSKeyboard
