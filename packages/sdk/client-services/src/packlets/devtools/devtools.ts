@@ -5,17 +5,21 @@
 import { Event as AsyncEvent } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf/stream';
 import { type Config } from '@dxos/config';
+import { type Client, create } from '@dxos/protocols';
 import {
   type ClearSnapshotsRequest,
-  type DevtoolsHost, // TODO(burdon): Rename DevtoolsService
   type EnableDebugLoggingRequest,
   type EnableDebugLoggingResponse,
   type Event,
+  EventSchema,
   type GetBlobsResponse,
+  GetBlobsResponseSchema,
   type GetConfigResponse,
+  GetConfigResponseSchema,
   type GetNetworkPeersRequest,
   type GetNetworkPeersResponse,
   type GetSnapshotsResponse,
+  GetSnapshotsResponseSchema,
   type GetSpaceSnapshotRequest,
   type GetSpaceSnapshotResponse,
   type ResetStorageRequest,
@@ -23,6 +27,7 @@ import {
   type SaveSpaceSnapshotResponse,
   type SignalResponse,
   type StorageInfo,
+  StorageInfoSchema,
   type SubscribeToCredentialMessagesRequest,
   type SubscribeToCredentialMessagesResponse,
   type SubscribeToFeedBlocksRequest,
@@ -39,7 +44,7 @@ import {
   type SubscribeToSpacesRequest,
   type SubscribeToSpacesResponse,
   type SubscribeToSwarmInfoResponse,
-} from '@dxos/protocols/proto/dxos/devtools/host';
+} from '@dxos/protocols/buf/dxos/devtools/host_pb';
 
 import { type ServiceContext } from '../services';
 
@@ -62,19 +67,19 @@ export type DevtoolsServiceProps = {
 /**
  * @deprecated
  */
-export class DevtoolsServiceImpl implements DevtoolsHost {
+export class DevtoolsServiceImpl implements Client.DevtoolsHost {
   constructor(private readonly params: DevtoolsServiceProps) {}
 
-  events(_request: void): Stream<Event> {
+  events(): Stream<Event> {
     return new Stream<Event>(({ next }) => {
       this.params.events.ready.on(() => {
-        next({ ready: {} });
+        next(create(EventSchema, { ready: {} }));
       });
     });
   }
 
-  async getConfig(_request: void): Promise<GetConfigResponse> {
-    return { config: JSON.stringify(this.params.config.values) }; // 😨
+  async getConfig(): Promise<GetConfigResponse> {
+    return create(GetConfigResponseSchema, { config: JSON.stringify(this.params.config.values) }); // 😨
   }
 
   async getStorageInfo(): Promise<StorageInfo> {
@@ -82,27 +87,27 @@ export class DevtoolsServiceImpl implements DevtoolsHost {
 
     const navigatorInfo = typeof navigator === 'object' ? await navigator.storage.estimate() : undefined;
 
-    return {
-      type: this.params.context.storage.type,
-      storageUsage: storageUsage.used,
-      originUsage: navigatorInfo?.usage ?? 0,
-      usageQuota: navigatorInfo?.quota ?? 0,
-    };
+    return create(StorageInfoSchema, {
+      type: this.params.context.storage.type as any,
+      storageUsage: BigInt(storageUsage.used),
+      originUsage: BigInt(navigatorInfo?.usage ?? 0),
+      usageQuota: BigInt(navigatorInfo?.quota ?? 0),
+    });
   }
 
   async getBlobs(): Promise<GetBlobsResponse> {
-    return {
-      blobs: await this.params.context.blobStore.list(),
-    };
+    return create(GetBlobsResponseSchema, {
+      blobs: (await this.params.context.blobStore.list()) as any,
+    });
   }
 
   async getSnapshots(): Promise<GetSnapshotsResponse> {
-    return {
+    return create(GetSnapshotsResponseSchema, {
       snapshots: [],
-    };
+    });
   }
 
-  resetStorage(_request: ResetStorageRequest): Promise<void> {
+  resetStorage(_request: ResetStorageRequest): Promise<never> {
     throw new Error();
   }
 
@@ -115,7 +120,7 @@ export class DevtoolsServiceImpl implements DevtoolsHost {
   }
 
   subscribeToKeyringKeys(_request: SubscribeToKeyringKeysRequest): Stream<SubscribeToKeyringKeysResponse> {
-    return subscribeToKeyringKeys({ keyring: this.params.context.keyring });
+    return subscribeToKeyringKeys({ keyring: this.params.context.keyring }) as any;
   }
 
   subscribeToCredentialMessages(
@@ -125,7 +130,7 @@ export class DevtoolsServiceImpl implements DevtoolsHost {
   }
 
   subscribeToSpaces(_request: SubscribeToSpacesRequest): Stream<SubscribeToSpacesResponse> {
-    return subscribeToSpaces(this.params.context, _request);
+    return subscribeToSpaces(this.params.context, _request as any) as any;
   }
 
   subscribeToItems(_request: SubscribeToItemsRequest): Stream<SubscribeToItemsResponse> {
@@ -133,11 +138,11 @@ export class DevtoolsServiceImpl implements DevtoolsHost {
   }
 
   subscribeToFeeds(_request: SubscribeToFeedsRequest): Stream<SubscribeToFeedsResponse> {
-    return subscribeToFeeds(this.params.context, _request);
+    return subscribeToFeeds(this.params.context, _request as any) as any;
   }
 
   subscribeToFeedBlocks(_request: SubscribeToFeedBlocksRequest): Stream<SubscribeToFeedBlocksResponse> {
-    return subscribeToFeedBlocks({ feedStore: this.params.context.feedStore }, _request);
+    return subscribeToFeedBlocks({ feedStore: this.params.context.feedStore }, _request as any) as any;
   }
 
   getSpaceSnapshot(_request: GetSpaceSnapshotRequest): Promise<GetSpaceSnapshotResponse> {
@@ -148,7 +153,7 @@ export class DevtoolsServiceImpl implements DevtoolsHost {
     throw new Error();
   }
 
-  clearSnapshots(_request: ClearSnapshotsRequest): Promise<void> {
+  clearSnapshots(_request: ClearSnapshotsRequest): Promise<never> {
     throw new Error();
   }
 
@@ -156,23 +161,23 @@ export class DevtoolsServiceImpl implements DevtoolsHost {
     throw new Error();
   }
 
-  subscribeToNetworkTopics(_request: void): Stream<SubscribeToNetworkTopicsResponse> {
+  subscribeToNetworkTopics(): Stream<SubscribeToNetworkTopicsResponse> {
     throw new Error();
   }
 
-  subscribeToSignalStatus(_request: void): Stream<SubscribeToSignalStatusResponse> {
-    return subscribeToNetworkStatus({ signalManager: this.params.context.signalManager });
+  subscribeToSignalStatus(): Stream<SubscribeToSignalStatusResponse> {
+    return subscribeToNetworkStatus({ signalManager: this.params.context.signalManager }) as any;
   }
 
   subscribeToSignal(): Stream<SignalResponse> {
-    return subscribeToSignal({ signalManager: this.params.context.signalManager });
+    return subscribeToSignal({ signalManager: this.params.context.signalManager }) as any;
   }
 
   subscribeToSwarmInfo(): Stream<SubscribeToSwarmInfoResponse> {
-    return subscribeToSwarmInfo({ networkManager: this.params.context.networkManager });
+    return subscribeToSwarmInfo({ networkManager: this.params.context.networkManager }) as any;
   }
 
   subscribeToMetadata(): Stream<SubscribeToMetadataResponse> {
-    return subscribeToMetadata({ context: this.params.context });
+    return subscribeToMetadata({ context: this.params.context }) as any;
   }
 }
