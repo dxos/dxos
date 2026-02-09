@@ -3,7 +3,7 @@
 //
 
 import { Event } from '@dxos/async';
-import { type ClientServices, type ClientServicesProvider, clientServiceBundle } from '@dxos/client-protocol';
+import { type ClientServicesProvider, clientServiceBundle } from '@dxos/client-protocol';
 import { log } from '@dxos/log';
 import { ApiError } from '@dxos/protocols';
 import type { WebsocketRpcClient } from '@dxos/websocket-rpc';
@@ -13,7 +13,7 @@ import type { WebsocketRpcClient } from '@dxos/websocket-rpc';
  */
 export const fromSocket = async (url: string, authenticationToken?: string): Promise<ClientServicesProvider> => {
   const closed = new Event<Error | undefined>();
-  let dxRpcClient!: WebsocketRpcClient<ClientServices, {}>;
+  let dxRpcClient!: WebsocketRpcClient<typeof clientServiceBundle, {}>;
 
   return {
     get closed() {
@@ -25,7 +25,7 @@ export const fromSocket = async (url: string, authenticationToken?: string): Pro
     },
 
     get services() {
-      return dxRpcClient.rpc;
+      return dxRpcClient.rpc as any;
     },
 
     open: async () => {
@@ -34,8 +34,6 @@ export const fromSocket = async (url: string, authenticationToken?: string): Pro
         url,
         authenticationToken,
         requested: clientServiceBundle,
-        exposed: {},
-        handlers: {},
       });
 
       dxRpcClient.error.on(async (error) => {

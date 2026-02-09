@@ -9,7 +9,6 @@ import { Config } from '@dxos/config';
 import type { PublicKey } from '@dxos/keys';
 import { type CallMetadata, type LogFilter, log, parseFilter } from '@dxos/log';
 import { type LogEntry, LogLevel } from '@dxos/protocols/proto/dxos/client/services';
-import { type ServiceBundle } from '@dxos/rpc';
 import { createWorkerPort } from '@dxos/rpc-tunnel';
 import { trace } from '@dxos/tracing';
 
@@ -68,7 +67,7 @@ export class WorkerClientServices implements ClientServicesProvider {
     this._signalTelemetryEnabled = signalTelemetryEnabled ?? false;
   }
 
-  get descriptors(): ServiceBundle<ClientServices> {
+  get descriptors() {
     return clientServiceBundle;
   }
 
