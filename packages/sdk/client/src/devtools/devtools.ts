@@ -15,6 +15,7 @@ import { log } from '@dxos/log';
 import { type RpcPeer, type RpcPort, createBundledRpcServer } from '@dxos/rpc';
 import { type DiagnosticMetadata, TRACE_PROCESSOR, type TraceProcessor } from '@dxos/tracing';
 import { joinTables } from '@dxos/util';
+import * as Schema from 'effect/Schema';
 
 import { type Client } from '../client';
 import { SpaceState } from '../echo';
@@ -80,6 +81,7 @@ export interface DevtoolsHook {
   Ref: typeof Ref;
   Query: typeof Query;
   Filter: typeof Filter;
+  Schema: typeof Schema;
 
   getMeta: typeof getMeta;
 }
@@ -175,6 +177,7 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
     Relation,
     Query,
     Filter,
+    Schema,
     getMeta,
   };
 
