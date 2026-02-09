@@ -101,6 +101,13 @@ export class AsyncJob {
   }
 
   /**
+   * Returns true if the job is open (has a context and it's not disposed).
+   */
+  get isOpen(): boolean {
+    return this.#ctx !== undefined && !this.#ctx.disposed;
+  }
+
+  /**
    * Context of the resource that owns the job.
    * When the context is disposed, the job is cancelled and cannot be scheduled again.
    */

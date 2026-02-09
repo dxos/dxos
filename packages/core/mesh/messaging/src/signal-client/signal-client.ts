@@ -182,7 +182,9 @@ export class SignalClient extends Resource implements SignalClientMethods {
     log('joining', { topic: args.topic, peerId: args.peer.peerKey });
     this._monitor.recordJoin();
     this.localState.join({ topic: args.topic, peerId: PublicKey.from(args.peer.peerKey) });
-    this._reconcileTask.schedule();
+    if (this._reconcileTask.isOpen) {
+      this._reconcileTask.schedule();
+    }
   }
 
   async leave(args: LeaveRequest): Promise<void> {
@@ -213,7 +215,9 @@ export class SignalClient extends Resource implements SignalClientMethods {
     invariant(peer.peerKey, 'Peer key required');
     log('subscribing to messages', { peer });
     this.localState.subscribeMessages(PublicKey.from(peer.peerKey));
-    this._reconcileTask.schedule();
+    if (this._reconcileTask.isOpen) {
+      this._reconcileTask.schedule();
+    }
   }
 
   async unsubscribeMessages(peer: PeerInfo): Promise<void> {
@@ -223,7 +227,9 @@ export class SignalClient extends Resource implements SignalClientMethods {
   }
 
   private _scheduleReconcileAfterError(): void {
-    scheduleTask(this._ctx, () => this._reconcileTask.schedule(), ERROR_RECONCILE_DELAY);
+    if (this._reconcileTask.isOpen) {
+      scheduleTask(this._ctx, () => this._reconcileTask.schedule(), ERROR_RECONCILE_DELAY);
+    }
   }
 
   private _createClient(): void {
