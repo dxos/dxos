@@ -47,9 +47,10 @@ export const reduceDiffs = (diffs: readonly string[]): Diff[] => {
         }
         return acc;
       }
+      default: {
+        throw new Error(`Invalid diff format: each line must start with "- " or "+ ", got: ${JSON.stringify(diff)}`);
+      }
     }
-
-    return acc;
   }, []);
 };
 
