@@ -6,13 +6,16 @@ import React, { useCallback, useMemo } from 'react';
 
 import { Surface, useAppGraph } from '@dxos/app-framework/react';
 import { type Node, useNode } from '@dxos/plugin-graph';
-import { IconButton, Main as NaturalMain, Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { IconButton, Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention';
+import { Layout } from '@dxos/react-ui-mosaic';
 
 import { useCompanions, useSimpleLayoutState } from '../../hooks';
 import { meta } from '../../meta';
 import { ContentError } from '../ContentError';
 import { ContentLoading } from '../ContentLoading';
+
+import { useMobileLayout } from './MobileLayout';
 
 const DRAWER_NAME = 'SimpleLayout.Drawer';
 
@@ -21,15 +24,16 @@ const DRAWER_NAME = 'SimpleLayout.Drawer';
  */
 export const Drawer = () => {
   const { t } = useTranslation(meta.id);
-  const { state, updateState } = useSimpleLayoutState();
   const { graph } = useAppGraph();
+  const { state: layoutState, updateState } = useSimpleLayoutState();
+  const { keyboardOpen } = useMobileLayout(DRAWER_NAME);
 
   const placeholder = useMemo(() => <ContentLoading />, []);
 
   // Get all companions for the current active (primary) item.
-  const activeId = state.active ?? state.workspace;
+  const activeId = layoutState.active ?? layoutState.workspace;
   const companions = useCompanions(activeId);
-  const { companionId, variant } = useSelectedCompanion(companions, state.companionVariant);
+  const { companionId, variant } = useSelectedCompanion(companions, layoutState.companionVariant);
 
   // Get node for the selected companion.
   const node = useNode(graph, companionId);
@@ -52,33 +56,23 @@ export const Drawer = () => {
   const handleTabClick = useCallback(
     (companion: Node.Node) => {
       const [, companionVariant] = companion.id.split(ATTENDABLE_PATH_SEPARATOR);
-      updateState((s) => ({ ...s, companionVariant }));
+      updateState((state) => ({ ...state, companionVariant, drawerState: 'open' }));
     },
     [updateState],
   );
 
   // Handle expand/collapse toggle.
   const handleToggleExpand = useCallback(() => {
-    updateState((s) => ({
-      ...s,
-      drawerState: s.drawerState === 'full' ? 'expanded' : 'full',
-    }));
-  }, [updateState]);
+    updateState((state) => ({ ...state, drawerState: layoutState.drawerState === 'expanded' ? 'open' : 'expanded' }));
+  }, [updateState, layoutState.drawerState]);
 
   // Handle close.
   const handleClose = useCallback(() => {
-    updateState((s) => ({ ...s, drawerState: 'closed' }));
+    updateState((state) => ({ ...state, drawerState: 'closed' }));
   }, [updateState]);
 
-  const drawerState = state.drawerState ?? 'closed';
-  if (drawerState === 'closed') {
-    return null;
-  }
-
-  const isFullyExpanded = drawerState === 'full';
-
   return (
-    <NaturalMain.Drawer label={t('drawer label')}>
+    <Layout.Main toolbar>
       <Toolbar.Root>
         {/* TODO(thure): IMPORTANT: This is a tablist; it should be implemented as such. */}
         <div role='tablist' className='flex-1 min-is-0 overflow-x-auto scrollbar-none flex gap-1'>
@@ -97,17 +91,18 @@ export const Drawer = () => {
           ))}
         </div>
         <Toolbar.Separator variant='gap' />
-        <Toolbar.IconButton
-          icon={isFullyExpanded ? 'ph--arrow-down--regular' : 'ph--arrow-up--regular'}
-          iconOnly
-          label={isFullyExpanded ? t('collapse drawer label') : t('expand drawer label')}
-          onClick={handleToggleExpand}
-        />
+        {!keyboardOpen && (
+          <Toolbar.IconButton
+            label={layoutState.drawerState === 'expanded' ? t('collapse drawer label') : t('expand drawer label')}
+            icon={layoutState.drawerState === 'expanded' ? 'ph--arrow-down--regular' : 'ph--arrow-up--regular'}
+            iconOnly
+            onClick={handleToggleExpand}
+          />
+        )}
         <Toolbar.IconButton icon='ph--x--regular' iconOnly label={t('close drawer label')} onClick={handleClose} />
       </Toolbar.Root>
-      {/* TODO(burdon): Fix containment. */}
       <Surface role='article' data={data} limit={1} fallback={ContentError} placeholder={placeholder} />
-    </NaturalMain.Drawer>
+    </Layout.Main>
   );
 };
 

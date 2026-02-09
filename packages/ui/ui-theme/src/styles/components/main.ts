@@ -25,14 +25,10 @@ export const mainContent: ComponentFunction<MainStyleProps> = ({ bounce }, ...et
 export const mainSidebar: ComponentFunction<MainStyleProps> = (_, ...etc) =>
   mx('dx-main-sidebar', 'dx-focus-ring-inset-over-all', ...etc);
 
-export const mainDrawer: ComponentFunction<MainStyleProps> = (_, ...etc) =>
-  mx('dx-main-drawer', 'dx-focus-ring-inset-over-all', ...etc);
-
 export const mainOverlay: ComponentFunction<MainStyleProps> = (_, ...etc) => mx('dx-main-overlay', ...etc);
 
 export const mainTheme = {
   content: mainContent,
   sidebar: mainSidebar,
-  drawer: mainDrawer,
   overlay: mainOverlay,
 };

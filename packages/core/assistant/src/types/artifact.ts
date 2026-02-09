@@ -21,7 +21,7 @@ export const createArtifactElement = (id: ObjectId) => `<artifact id=${id} />`;
  * A model-friendly way to reference an object.
  * Supports vairous formats that will be normalized to a DXN.
  *
- * @deprecated Use `RefFromLLM` instead.
+ * @deprecated Use `Type.Ref(XXX)` instead.
  */
 export const ArtifactId: Schema.Schema<string> & {
   toDXN: (reference: ArtifactId, owningSpaceId?: SpaceId) => DXN;
@@ -84,4 +84,6 @@ export const RefFromLLM = Schema.transform(ArtifactId, Type.Ref(Type.Obj), {
   decode: (fromA, fromI) => EncodedReference.fromDXN(ArtifactId.toDXN(fromA)),
   encode: (toI, toA) => EncodedReference.toDXN(toI).toString(),
   strict: false,
+}).annotations({
+  description: ArtifactId.ast.annotations.description as string,
 });

@@ -16,14 +16,12 @@
     ".": {
       "types": "./dist/types/src/index.d.ts",
       "source": "./src/index.ts",
-      "browser": "./dist/lib/browser/index.mjs",
-      "node": "./dist/lib/node-esm/index.mjs"
+      "default": "./dist/lib/neutral/index.mjs"
     },
     "./testing": {
       "types": "./dist/types/src/testing/index.d.ts",
       "source": "./src/testing/index.ts",
-      "browser": "./dist/lib/browser/testing/index.mjs",
-      "node": "./dist/lib/node-esm/testing/index.mjs"
+      "default": "./dist/lib/neutral/testing/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

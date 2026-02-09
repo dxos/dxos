@@ -6,7 +6,6 @@ import React, { useMemo } from 'react';
 
 import { Surface, useAppGraph } from '@dxos/app-framework/react';
 import { useNode } from '@dxos/plugin-graph';
-import { Main as NaturalMain, useSidebars } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { mx } from '@dxos/ui-theme';
 
@@ -46,19 +45,15 @@ export const Main = () => {
     );
   }, [id, node, node?.data, node?.properties, state.popoverAnchorId]);
 
-  const { drawerState } = useSidebars(MAIN_NAME);
-  const showNavBar = !state.isPopover && drawerState === 'closed';
+  const showNavBar = !state.isPopover && state.drawerState === 'closed';
 
   const bannerProps = useBannerProps(graph);
   const { actions, onAction } = useNavbarActions();
 
   return (
-    <NaturalMain.Content
-      bounce
-      classNames={mx(
-        'dx-mobile', // TODO(burdon): Replace with updated density system (for side padding).
-        'grid bs-full pbs-[max(0.25rem,env(safe-area-inset-top))] pbe-[max(0.25rem,env(safe-area-inset-bottom))] overflow-hidden',
-        'bg-toolbarSurface',
+    <div
+      className={mx(
+        'bs-full grid bg-toolbarSurface',
         showNavBar ? 'grid-rows-[min-content_1fr_min-content]' : 'grid-rows-[min-content_1fr]',
       )}
       {...attentionAttrs}
@@ -67,8 +62,8 @@ export const Main = () => {
       <article className='bs-full overflow-hidden bg-baseSurface'>
         <Surface key={id} role='article' data={data} limit={1} fallback={ContentError} placeholder={placeholder} />
       </article>
-      {showNavBar && <NavBar classNames='border-bs border-separator' actions={actions} onAction={onAction} />}
-    </NaturalMain.Content>
+      {showNavBar && <NavBar classNames='border-bs border-subduedSeparator' actions={actions} onAction={onAction} />}
+    </div>
   );
 };
 

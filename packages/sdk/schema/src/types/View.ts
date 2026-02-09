@@ -8,6 +8,7 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 import * as String from 'effect/String';
+import type * as Types from 'effect/Types';
 
 import {
   type Database,
@@ -132,7 +133,7 @@ export const make = ({ query, queryRaw, jsonSchema, overrideSchema, fields, pivo
   // Create change callback that wraps mutations in Obj.change.
   const changeCallback: ProjectionChangeCallback = {
     projection: (mutate) => Obj.change(view, (v) => mutate(v.projection as Mutable<Projection>)),
-    schema: (mutate) => mutate(jsonSchema as Mutable<JsonSchemaType>),
+    schema: (mutate) => mutate(jsonSchema as Types.DeepMutable<JsonSchema.JsonSchema>),
   };
 
   const projection = new ProjectionModel({
@@ -211,7 +212,7 @@ export const makeWithReferences = async ({
   // Create change callback that wraps mutations in Obj.change.
   const changeCallback: ProjectionChangeCallback = {
     projection: (mutate) => Obj.change(view, (v) => mutate(v.projection as Mutable<Projection>)),
-    schema: (mutate) => mutate(jsonSchema as Mutable<JsonSchemaType>),
+    schema: (mutate) => mutate(jsonSchema as Types.DeepMutable<JsonSchema.JsonSchema>),
   };
 
   const projection = new ProjectionModel({

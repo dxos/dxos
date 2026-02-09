@@ -4,5 +4,6 @@
 
 export * from './Banner';
 export * from './Main';
+export * from './MobileLayout';
 export * from './NavBar';
 export * from './SimpleLayout';

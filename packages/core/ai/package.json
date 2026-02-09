@@ -19,20 +19,17 @@
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "browser": "./dist/lib/browser/index.mjs",
-      "node": "./dist/lib/node-esm/index.mjs"
+      "default": "./dist/lib/neutral/index.mjs"
     },
     "./resolvers": {
       "source": "./src/resolvers/index.ts",
       "types": "./dist/types/src/resolvers/index.d.ts",
-      "browser": "./dist/lib/browser/resolvers/index.mjs",
-      "node": "./dist/lib/node-esm/resolvers/index.mjs"
+      "default": "./dist/lib/neutral/resolvers/index.mjs"
     },
     "./testing": {
       "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
-      "browser": "./dist/lib/browser/testing/index.mjs",
-      "node": "./dist/lib/node-esm/testing/index.mjs"
+      "default": "./dist/lib/neutral/testing/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

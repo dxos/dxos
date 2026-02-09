@@ -11,3 +11,4 @@ tasks:
       - '--entryPoint=src/testing/index.ts'
       - '--injectGlobals'
       - '--bundlePackage=varint'
+      - '--platform=neutral'

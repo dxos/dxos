@@ -24,10 +24,12 @@ export const StackItemContent = forwardRef<HTMLDivElement, StackItemContentProps
     const style = useMemo(
       () => ({
         gridTemplateRows: [
-          ...(toolbar ? [role === 'section' ? 'calc(var(--toolbar-size) - 1px)' : 'var(--toolbar-size)'] : []),
+          toolbar && role === 'section' ? 'calc(var(--toolbar-size) - 1px)' : 'var(--toolbar-size)',
           '1fr',
-          ...(statusbar ? ['var(--statusbar-size)'] : []),
-        ].join(' '),
+          statusbar && 'var(--statusbar-size)',
+        ]
+          .filter(Boolean)
+          .join(' '),
       }),
       [toolbar, statusbar],
     );
@@ -40,8 +42,8 @@ export const StackItemContent = forwardRef<HTMLDivElement, StackItemContentProps
         className={mx(
           'group grid grid-cols-[100%] density-coarse',
           stackItemSize === 'contain' && 'min-bs-0 overflow-hidden',
-          role === 'section' &&
-            toolbar &&
+          toolbar &&
+            role === 'section' &&
             '[&_.dx-toolbar]:sticky [&_.dx-toolbar]:z-[1] [&_.dx-toolbar]:block-start-0 [&_.dx-toolbar]:-mbe-px [&_.dx-toolbar]:min-is-0',
           toolbar && '[&>.dx-toolbar]:relative [&>.dx-toolbar]:border-be [&>.dx-toolbar]:border-subduedSeparator',
           classNames,

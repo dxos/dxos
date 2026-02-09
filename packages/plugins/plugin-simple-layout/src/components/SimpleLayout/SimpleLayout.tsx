@@ -2,10 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useCallback } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
-import { type DrawerState, Main as NaturalMain } from '@dxos/react-ui';
-import { Mosaic } from '@dxos/react-ui-mosaic';
+import { Mosaic, Splitter, type SplitterMode } from '@dxos/react-ui-mosaic';
 
 import { useSimpleLayoutState } from '../../hooks';
 import { Dialog } from '../Dialog';
@@ -13,28 +12,41 @@ import { PopoverContent, PopoverRoot } from '../Popover';
 
 import { Drawer } from './Drawer';
 import { Main } from './Main';
+import { MobileLayout } from './MobileLayout';
 
+// TODO(burdon): Mobile/Desktop variance?
 export const SimpleLayout = () => {
-  const { state, updateState } = useSimpleLayoutState();
-
-  const handleDrawerStateChange = useCallback(
-    (nextState: DrawerState) => {
-      // Sync all drawer state changes to state.
-      updateState((state) => ({ ...state, drawerState: nextState }));
-    },
-    [updateState],
-  );
+  const { state } = useSimpleLayoutState();
+  const [keyboardOpen, setKeyboardOpen] = useState(false);
+  const [splitterMode, setSplitterMode] = useState<SplitterMode>('upper');
+  const drawerRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (keyboardOpen) {
+      // Determine which panel has focus and expand that one.
+      const activeElement = document.activeElement;
+      const drawerHasFocus = drawerRef.current?.contains(activeElement);
+      setSplitterMode(drawerHasFocus ? 'lower' : 'upper');
+    } else {
+      setSplitterMode(state.drawerState === 'closed' ? 'upper' : state.drawerState === 'open' ? 'both' : 'lower');
+    }
+  }, [state.drawerState, keyboardOpen]);
 
   return (
-    <Mosaic.Root asChild>
-      <NaturalMain.Root drawerState={state.drawerState ?? 'closed'} onDrawerStateChange={handleDrawerStateChange}>
+    <Mosaic.Root classNames='contents'>
+      <MobileLayout classNames='bg-toolbarSurface' onKeyboardOpenChange={(state) => setKeyboardOpen(state)}>
         <PopoverRoot>
-          <Main />
-          <Drawer />
+          <Splitter.Root mode={splitterMode} ratio={0.5}>
+            <Splitter.Panel position='upper'>
+              <Main />
+            </Splitter.Panel>
+            <Splitter.Panel position='lower' ref={drawerRef}>
+              <Drawer />
+            </Splitter.Panel>
+          </Splitter.Root>
           <Dialog />
           <PopoverContent />
         </PopoverRoot>
-      </NaturalMain.Root>
+      </MobileLayout>
     </Mosaic.Root>
   );
 };

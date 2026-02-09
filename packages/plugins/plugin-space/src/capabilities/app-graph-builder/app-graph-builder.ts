@@ -366,7 +366,7 @@ export default Capability.makeModule(
           const client = get(capabilities.atom(ClientCapabilities.Client)).at(0);
           const space = getSpace(collection);
           const schema = client?.graph.schemaRegistry
-            .query({ typename: collection.key, location: ['runtime'] })
+            .query({ typename: collection.key, location: ['runtime'], includeSystem: true })
             .runSync()[0];
           if (!space || !schema) {
             return Effect.succeed([]);

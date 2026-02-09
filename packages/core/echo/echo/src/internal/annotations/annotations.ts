@@ -464,6 +464,7 @@ interface MakeAnnoationsProps<T> {
   schema: Schema.Schema<T, any, never>;
 }
 
+// TODO(wittjosiah): Comment.
 export const makeUserAnnotation = <T>(props: MakeAnnoationsProps<T>): AnnotationHelper<T> => {
   assertArgument(
     /[a-zA-Z0-9]+\.[a-zA-Z.]+\/[a-zA-Z/]+/.test(props.id),

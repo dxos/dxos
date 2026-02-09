@@ -7,10 +7,9 @@ import React from 'react';
 
 import { withLayout, withTheme } from '../../testing';
 import { IconButton } from '../Button';
-import { Input } from '../Input';
 import { Toolbar } from '../Toolbar';
 
-import { Main, useDynamicDrawer, useSidebars } from './Main';
+import { Main, useSidebars } from './Main';
 
 type StoryMainArgs = {};
 
@@ -35,29 +34,6 @@ const ComplementarySidebarToggle = ({ close }: { close?: boolean }) => {
       label='Toggle complementary sidebar'
       onClick={toggleComplementarySidebar}
     />
-  );
-};
-
-const DrawerToggle = ({ close }: { close?: boolean }) => {
-  const { toggleDrawer } = useSidebars('StoryMain__DrawerToggle');
-  return (
-    <IconButton
-      icon={close ? 'ph--caret-down--regular' : 'ph--caret-up--regular'}
-      iconOnly
-      label='Toggle drawer'
-      onClick={toggleDrawer}
-    />
-  );
-};
-
-const DrawerState = () => {
-  const { drawerState } = useSidebars('StoryMain__DrawerStateDisplay');
-  return (
-    <div className='flex items-center gap-2'>
-      <span>Drawer</span>
-      <span>({drawerState})</span>
-      <span>[{window.innerHeight}]</span>
-    </div>
   );
 };
 
@@ -108,67 +84,5 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  args: {},
-};
-
-const DrawerStory = (_args: StoryMainArgs) => {
-  return (
-    <Main.Root>
-      <Main.Overlay />
-      <DrawerStoryInner />
-    </Main.Root>
-  );
-};
-
-const DrawerStoryInner = () => {
-  useDynamicDrawer('DrawerStoryInner');
-
-  return (
-    <>
-      <Main.Content classNames='flex flex-col is-full overflow-hidden'>
-        <Toolbar.Root classNames='pli-2'>
-          <h1>Main Content</h1>
-          <Toolbar.Separator variant='gap' classNames='grow' />
-          <DrawerToggle />
-        </Toolbar.Root>
-        <div className='flex flex-col bs-full overflow-y-auto p-2'>
-          <p className='text-sm text-description'>
-            The drawer is mutually exclusive with sidebars and is intended for mobile apps.
-          </p>
-          <div className='plb-2 space-y-2'>
-            {Array.from({ length: 50 }).map((_, i) => (
-              <p key={i}>Line {i + 1}</p>
-            ))}
-          </div>
-        </div>
-      </Main.Content>
-      <Main.Drawer label='Drawer' classNames='grid grid-rows-[min-content_1fr_min-content]'>
-        <Toolbar.Root classNames='pli-2'>
-          <DrawerState />
-          <Toolbar.Separator variant='gap' classNames='grow' />
-          <DrawerToggle close />
-        </Toolbar.Root>
-        <div className='p-2 overflow-y-auto'>
-          <p className='text-sm text-description'>
-            On mobile devices, the drawer automatically switches to fullscreenwhen the keyboard appears.
-          </p>
-          <div className='plb-2 space-y-2'>
-            {Array.from({ length: 50 }).map((_, i) => (
-              <p key={i}>Line {i + 1}</p>
-            ))}
-          </div>
-        </div>
-        <div className='p-2 border-bs border-separator'>
-          <Input.Root>
-            <Input.TextInput autoFocus placeholder='Search' />
-          </Input.Root>
-        </div>
-      </Main.Drawer>
-    </>
-  );
-};
-
-export const WithDrawer: Story = {
-  render: DrawerStory,
   args: {},
 };
