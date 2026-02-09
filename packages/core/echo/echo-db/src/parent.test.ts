@@ -9,6 +9,7 @@ import { TestSchema } from '@dxos/echo/testing';
 import { PublicKey } from '@dxos/keys';
 
 import { EchoTestBuilder } from './testing/echo-test-builder';
+import { invariant } from '@dxos/invariant';
 
 describe('Parent Hierarchy', () => {
   let builder: EchoTestBuilder;
@@ -87,11 +88,7 @@ describe('Parent Hierarchy', () => {
     }
   });
 
-  // TODO(dmaretskyi): This test hangs because query().first() doesn't properly trigger
-  // strong dependency loading for parents. The query waits indefinitely for dependencies
-  // to be satisfied. Needs investigation into how strong dependencies should be loaded
-  // during query execution.
-  test.skip('recursive loading of parents', async () => {
+  test('recursive loading of parents', { timeout: 1000 }, async () => {
     // Grandparent -> Parent -> Child
     // Loading Child should load Parent and Grandparent due to strong dependencies.
     const [spaceKey] = PublicKey.randomSequence();
@@ -102,37 +99,30 @@ describe('Parent Hierarchy', () => {
     {
       await using db = await peer.createDatabase(spaceKey);
       const gp = db.add(Obj.make(TestSchema.Person, { name: 'Grandparent' }));
-      const p = db.add(Obj.make(TestSchema.Person, { name: 'Parent' }));
-      const c = db.add(Obj.make(TestSchema.Person, { name: 'Child' }));
-
-      Obj.setParent(p, gp);
-      Obj.setParent(c, p);
+      const p = db.add(Obj.make(TestSchema.Person, { [Obj.Parent]: gp, name: 'Parent' }));
+      const c = db.add(Obj.make(TestSchema.Person, { [Obj.Parent]: p, name: 'Child' }));
 
       childId = c.id;
-      await db.flush();
+      await db.flush({ indexes: true });
     }
 
     await peer.reload();
 
     {
       await using db = await peer.openLastDatabase();
-      // We query ONLY for the child.
-      // The database loader should pull in strong dependencies (parents).
-      // Note: In Automerge, typically the whole doc is loaded, or at least chunks.
-      // Using EchoTestBuilder with shared instance might already meet this, but let's verify availability.
 
-      // If we use `getObjectById` it might require them to be loaded.
-      // Query should load the matched object.
-      const child = (await db.query(Filter.id(childId)).first()) as any;
+      const child = await db.query(Filter.id(childId)).first();
       expect(child).toBeDefined();
 
       const p = Obj.getParent(child);
       expect(p).toBeDefined();
-      expect((p as any).name).to.eq('Parent'); // Access properties to ensure loaded
+      invariant(Obj.instanceOf(TestSchema.Person, p));
+      expect(p.name).to.eq('Parent');
 
-      const gp = Obj.getParent(p as any);
+      const gp = Obj.getParent(p);
       expect(gp).toBeDefined();
-      expect((gp as any).name).to.eq('Grandparent');
+      invariant(Obj.instanceOf(TestSchema.Person, gp));
+      expect(gp.name).to.eq('Grandparent');
     }
   });
 

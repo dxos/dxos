@@ -25,7 +25,7 @@ import { type DatabaseDirectory, EncodedReference, type ObjectStructure, type Sp
 import { invariant } from '@dxos/invariant';
 import { type ObjectId } from '@dxos/keys';
 import { type DXN, type PublicKey, type SpaceId } from '@dxos/keys';
-import { log } from '@dxos/log';
+import { dbg, log } from '@dxos/log';
 import { RpcClosedError } from '@dxos/protocols';
 import type { QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 import type { DataService, SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
@@ -821,10 +821,23 @@ export class CoreDatabase {
         }
       }
     }
-    for (const dep of this._strongDepsIndex.get(objectId) ?? []) {
-      const core = this._objects.get(dep);
-      if (core && this._areDepsSatisfied(core)) {
-        this._scheduleThrottledUpdate([core.id]);
+    const queue = [objectId],
+      seen = new Set<string>();
+    while (queue.length > 0) {
+      const id = queue.shift()!;
+      if (seen.has(id)) {
+        continue;
+      }
+      seen.add(id);
+
+      if (this._objects.has(id)) {
+        for (const dep of this._strongDepsIndex.get(id) ?? []) {
+          queue.push(dep);
+          const core = this._objects.get(dep);
+          if (core && this._areDepsSatisfied(core)) {
+            this._scheduleThrottledUpdate([core.id]);
+          }
+        }
       }
     }
   }
