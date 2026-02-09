@@ -9,9 +9,9 @@ export * from './extensions';
 /**
  * Kind of observability extension.
  *
- * - errors: Error tracking (e.g., Sentry, PostHog)
- * - events: Product usage event tracking (e.g., Segment, PostHog)
- * - feedback: User feedback submission (e.g., Sentry, PostHog)
+ * - errors: Error tracking (e.g., PostHog)
+ * - events: Product usage event tracking (e.g., PostHog)
+ * - feedback: User feedback submission (e.g., PostHog)
  * - logs: Structured logging (e.g., OTEL)
  * - metrics: Metric data (e.g., OTEL)
  * - traces: Distributed tracing (e.g., OTEL)

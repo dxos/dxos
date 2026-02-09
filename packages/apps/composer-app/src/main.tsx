@@ -65,7 +65,6 @@ const main = async () => {
   }
 
   // Intentionally do not await; i.e., don't block app startup for telemetry.
-  // The namespace has to match the value passed to sentryVitePlugin in vite.config.ts for sourcemaps to work.
   const observability = initializeObservability(config);
   const observabilityDisabled = await Observability.isObservabilityDisabled(APP_KEY);
   const observabilityGroup = await Observability.getObservabilityGroup(APP_KEY);

@@ -29,8 +29,6 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
     return stubExtension;
   }
 
-  log.runtimeConfig.processors.push(logProcessor);
-
   return {
     initialize: Effect.fn(function* () {
       // https://posthog.com/docs/libraries/js/config
@@ -39,6 +37,13 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
         mask_all_text: true,
         ...posthogConfig,
       });
+      log.runtimeConfig.processors.push(logProcessor);
+    }),
+    close: Effect.fn(function* () {
+      const index = log.runtimeConfig.processors.indexOf(logProcessor);
+      if (index !== -1) {
+        log.runtimeConfig.processors.splice(index, 1);
+      }
     }),
     enable: Effect.fn(function* () {
       posthog.opt_in_capturing();
@@ -65,7 +70,6 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
           posthog.capture(event, attributes);
         },
       },
-      // TODO(wittjosiah): Add log processor to capture errors from logger. See sentry-log-processor.
       {
         kind: 'errors',
         captureException: (error, attributes) => {

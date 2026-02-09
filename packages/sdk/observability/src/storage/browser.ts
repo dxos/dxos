@@ -14,6 +14,9 @@ export const showObservabilityBanner = () => {
   throw new Error('Not implemented');
 };
 
+/**
+ * @param namespace - localForage key prefix used to scope the observability state in browser storage.
+ */
 export const isObservabilityDisabled = async (namespace: string): Promise<boolean> => {
   try {
     return (await localForage.getItem(`${namespace}:${OBSERVABILITY_DISABLED_KEY}`)) === 'true';
@@ -23,6 +26,9 @@ export const isObservabilityDisabled = async (namespace: string): Promise<boolea
   }
 };
 
+/**
+ * @param namespace - localForage key prefix used to scope the observability state in browser storage.
+ */
 export const storeObservabilityDisabled = async (namespace: string, value: boolean) => {
   try {
     await localForage.setItem(`${namespace}:${OBSERVABILITY_DISABLED_KEY}`, String(value));
@@ -31,6 +37,9 @@ export const storeObservabilityDisabled = async (namespace: string, value: boole
   }
 };
 
+/**
+ * @param namespace - localForage key prefix used to scope the observability state in browser storage.
+ */
 export const getObservabilityGroup = async (namespace: string): Promise<string | undefined> => {
   try {
     return (await localForage.getItem(`${namespace}:${OBSERVABILITY_GROUP_KEY}`)) ?? undefined;
@@ -39,6 +48,9 @@ export const getObservabilityGroup = async (namespace: string): Promise<string |
   }
 };
 
+/**
+ * @param namespace - localForage key prefix used to scope the observability state in browser storage.
+ */
 export const storeObservabilityGroup = async (namespace: string, value: string) => {
   try {
     await localForage.setItem(`${namespace}:${OBSERVABILITY_GROUP_KEY}`, value);

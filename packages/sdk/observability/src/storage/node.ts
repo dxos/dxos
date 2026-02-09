@@ -26,22 +26,34 @@ export const showObservabilityBanner = async (configDir: string, bannercb: (inpu
   await writeFile(path, '', 'utf-8');
 };
 
+/**
+ * @param configDir - Filesystem path to the directory containing the `observability.yml` state file.
+ */
 export const isObservabilityDisabled = async (configDir: string): Promise<boolean> => {
   const observabilityState = await getObservabilityState(configDir);
   return observabilityState.disabled;
 };
 
+/**
+ * @param configDir - Filesystem path to the directory containing the `observability.yml` state file.
+ */
 export const storeObservabilityDisabled = async (configDir: string, value: boolean) => {
   const observabilityState = await getObservabilityState(configDir);
   observabilityState.disabled = value;
   await writeFile(join(configDir, 'observability.yml'), yaml.dump(observabilityState), 'utf-8');
 };
 
+/**
+ * @param configDir - Filesystem path to the directory containing the `observability.yml` state file.
+ */
 export const getObservabilityGroup = async (configDir: string): Promise<string | undefined> => {
   const observabilityState = await getObservabilityState(configDir);
   return observabilityState.group;
 };
 
+/**
+ * @param configDir - Filesystem path to the directory containing the `observability.yml` state file.
+ */
 export const storeObservabilityGroup = async (configDir: string, value: string) => {
   const observabilityState = await getObservabilityState(configDir);
   observabilityState.group = value;
