@@ -51,6 +51,12 @@ export type WorkerRuntimeOptions = {
   automaticallyConnectWebrtc?: boolean;
 
   enableSqlite?: boolean;
+
+  /**
+   * Optional SQLite layer for Effect. Defaults to LocalSqliteOpfsLayer.
+   * For testing in Node.js, use `sqliteLayerMemory` from `@dxos/sql-sqlite/platform`.
+   */
+  sqliteLayer?: Layer.Layer<SqlClient.SqlClient | SqlExport.SqlExport, unknown>;
 };
 
 /**
@@ -88,6 +94,7 @@ export class WorkerRuntime {
     onStop,
     automaticallyConnectWebrtc = true,
     enableSqlite,
+    sqliteLayer,
   }: WorkerRuntimeOptions) {
     this._configProvider = configProvider;
     this._acquireLock = acquireLock;
@@ -96,7 +103,7 @@ export class WorkerRuntime {
     this._channel = channel;
     this._runtime = ManagedRuntime.make(
       SqlTransaction.layer
-        .pipe(Layer.provideMerge(LocalSqliteOpfsLayer), Layer.provideMerge(Reactivity.layer))
+        .pipe(Layer.provideMerge(sqliteLayer ?? LocalSqliteOpfsLayer), Layer.provideMerge(Reactivity.layer))
         .pipe(Layer.orDie),
     );
     this._clientServices = new ClientServicesHost({
