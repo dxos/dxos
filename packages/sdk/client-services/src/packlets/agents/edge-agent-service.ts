@@ -4,18 +4,20 @@
 
 import { Stream } from '@dxos/codec-protobuf/stream';
 import { type EdgeConnection } from '@dxos/edge-client';
-import { EdgeAgentStatus } from '@dxos/protocols';
+import { type Client, create, EmptySchema, type Empty, EdgeAgentStatus } from '@dxos/protocols';
 import {
-  type EdgeAgentService,
-  EdgeStatus,
-  QueryAgentStatusResponse,
+  EdgeStatus_ConnectionState,
+  QueryAgentStatusResponse_AgentStatus,
+  type QueryAgentStatusResponse,
+  QueryAgentStatusResponseSchema,
   type QueryEdgeStatusResponse,
-} from '@dxos/protocols/proto/dxos/client/services';
+  QueryEdgeStatusResponseSchema,
+} from '@dxos/protocols/buf/dxos/client/services_pb';
 
 import { type EdgeAgentManager } from './edge-agent-manager';
 
 // TODO(wittjosiah): This service is not currently exposed on the client api, it must be called directly.
-export class EdgeAgentServiceImpl implements EdgeAgentService {
+export class EdgeAgentServiceImpl implements Client.EdgeAgentService {
   constructor(
     private readonly _agentManagerProvider: () => Promise<EdgeAgentManager>,
     private readonly _edgeConnection?: EdgeConnection,
@@ -25,17 +27,19 @@ export class EdgeAgentServiceImpl implements EdgeAgentService {
   queryEdgeStatus(): Stream<QueryEdgeStatusResponse> {
     return new Stream(({ ctx, next }) => {
       const update = () => {
-        next({
-          status: this._edgeConnection?.status ?? {
-            state: EdgeStatus.ConnectionState.NOT_CONNECTED,
-            rtt: 0,
-            uptime: 0,
-            rateBytesUp: 0,
-            rateBytesDown: 0,
-            messagesSent: 0,
-            messagesReceived: 0,
-          },
-        });
+        next(
+          create(QueryEdgeStatusResponseSchema, {
+            status: this._edgeConnection?.status ?? {
+              state: EdgeStatus_ConnectionState.NOT_CONNECTED,
+              rtt: 0,
+              uptime: 0,
+              rateBytesUp: 0,
+              rateBytesDown: 0,
+              messagesSent: 0,
+              messagesReceived: 0,
+            },
+          }),
+        );
       };
 
       this._edgeConnection?.statusChanged.on(ctx, update);
@@ -43,32 +47,33 @@ export class EdgeAgentServiceImpl implements EdgeAgentService {
     });
   }
 
-  async createAgent(): Promise<void> {
-    return (await this._agentManagerProvider()).createAgent();
+  async createAgent(): Promise<Empty> {
+    await (await this._agentManagerProvider()).createAgent();
+    return create(EmptySchema);
   }
 
   queryAgentStatus(): Stream<QueryAgentStatusResponse> {
     return new Stream(({ ctx, next }) => {
-      next({ status: QueryAgentStatusResponse.AgentStatus.UNKNOWN });
+      next(create(QueryAgentStatusResponseSchema, { status: QueryAgentStatusResponse_AgentStatus.UNKNOWN }));
       void this._agentManagerProvider().then((agentManager) => {
-        next({ status: mapStatus(agentManager.agentStatus) });
+        next(create(QueryAgentStatusResponseSchema, { status: mapStatus(agentManager.agentStatus) }));
         agentManager.agentStatusChanged.on(ctx, (newStatus) => {
-          next({ status: mapStatus(newStatus) });
+          next(create(QueryAgentStatusResponseSchema, { status: mapStatus(newStatus) }));
         });
       });
     });
   }
 }
 
-const mapStatus = (agentStatus: EdgeAgentStatus | undefined): QueryAgentStatusResponse.AgentStatus => {
+const mapStatus = (agentStatus: EdgeAgentStatus | undefined): QueryAgentStatusResponse_AgentStatus => {
   switch (agentStatus) {
     case EdgeAgentStatus.ACTIVE:
-      return QueryAgentStatusResponse.AgentStatus.ACTIVE;
+      return QueryAgentStatusResponse_AgentStatus.ACTIVE;
     case EdgeAgentStatus.INACTIVE:
-      return QueryAgentStatusResponse.AgentStatus.INACTIVE;
+      return QueryAgentStatusResponse_AgentStatus.INACTIVE;
     case EdgeAgentStatus.NOT_FOUND:
-      return QueryAgentStatusResponse.AgentStatus.NOT_FOUND;
+      return QueryAgentStatusResponse_AgentStatus.NOT_FOUND;
     case undefined:
-      return QueryAgentStatusResponse.AgentStatus.UNKNOWN;
+      return QueryAgentStatusResponse_AgentStatus.UNKNOWN;
   }
 };
