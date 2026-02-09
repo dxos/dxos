@@ -6,14 +6,15 @@ import { ATTR_META, type ObjectJSON } from '@dxos/echo/internal';
 import type { EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import type { ObjectId, SpaceId } from '@dxos/keys';
-import { type Echo, type Empty, EmptySchema, KEY_QUEUE_POSITION, create } from '@dxos/protocols';
-import type {
-  DeleteFromQueueRequest,
-  InsertIntoQueueRequest,
-  QueryQueueRequest,
-  QueueQueryResult,
+import { type Echo, KEY_QUEUE_POSITION } from '@dxos/protocols';
+import { create, EmptySchema, type Empty } from '@dxos/protocols/buf';
+import {
+  type DeleteFromQueueRequest,
+  type InsertIntoQueueRequest,
+  type QueryQueueRequest,
+  type QueueQueryResult,
+  QueueQueryResultSchema,
 } from '@dxos/protocols/buf/dxos/client/queue_pb';
-import { QueueQueryResultSchema } from '@dxos/protocols/buf/dxos/client/queue_pb';
 import { ComplexMap } from '@dxos/util';
 
 /**

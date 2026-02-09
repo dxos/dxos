@@ -9,7 +9,8 @@ import { createCredential, signPresentation } from '@dxos/credentials';
 import { invariant } from '@dxos/invariant';
 import { type Keyring } from '@dxos/keyring';
 import { log } from '@dxos/log';
-import { type Halo, create } from '@dxos/protocols';
+import { type Halo } from '@dxos/protocols';
+import { create } from '@dxos/protocols/buf';
 import {
   type CreateIdentityRequest,
   type CreateRecoveryCredentialRequest,

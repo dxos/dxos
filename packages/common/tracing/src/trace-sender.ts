@@ -3,7 +3,8 @@
 //
 
 import { Stream } from '@dxos/codec-protobuf/stream';
-import { type Client, create } from '@dxos/protocols';
+import { type Client } from '@dxos/protocols';
+import { create } from '@dxos/protocols/buf';
 import { type LogEntry } from '@dxos/protocols/buf/dxos/client/logging_pb';
 import { type StreamTraceEvent, StreamTraceEventSchema } from '@dxos/protocols/buf/dxos/tracing_pb';
 

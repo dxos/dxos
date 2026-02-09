@@ -12,7 +12,8 @@ import {
   getContextFromEntry,
   log,
 } from '@dxos/log';
-import { type Client, create } from '@dxos/protocols';
+import { type Client } from '@dxos/protocols';
+import { create } from '@dxos/protocols/buf';
 import {
   type ControlMetricsRequest,
   type ControlMetricsResponse,

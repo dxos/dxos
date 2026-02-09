@@ -5,7 +5,8 @@
 import { type Event } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf/stream';
 import { type Config } from '@dxos/config';
-import { type Client, type Empty, EmptySchema, create } from '@dxos/protocols';
+import { type Client } from '@dxos/protocols';
+import { create, EmptySchema, type Empty } from '@dxos/protocols/buf';
 import {
   type GetDiagnosticsRequest,
   GetDiagnosticsRequest_KEY_OPTION,

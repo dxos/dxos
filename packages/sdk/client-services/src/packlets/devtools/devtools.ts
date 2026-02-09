@@ -5,7 +5,8 @@
 import { Event as AsyncEvent } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf/stream';
 import { type Config } from '@dxos/config';
-import { type Client, create } from '@dxos/protocols';
+import { type Client } from '@dxos/protocols';
+import { create } from '@dxos/protocols/buf';
 import {
   type ClearSnapshotsRequest,
   type EnableDebugLoggingRequest,

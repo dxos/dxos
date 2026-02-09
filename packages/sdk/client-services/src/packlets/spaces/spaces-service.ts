@@ -22,13 +22,11 @@ import {
   ApiError,
   AuthorizationError,
   type Client,
-  type Empty,
-  EmptySchema,
   IdentityNotInitializedError,
   SpaceNotFoundError,
-  create,
   encodeError,
 } from '@dxos/protocols';
+import { create, EmptySchema, type Empty } from '@dxos/protocols/buf';
 import {
   type AdmitContactRequest,
   type ContactAdmission,

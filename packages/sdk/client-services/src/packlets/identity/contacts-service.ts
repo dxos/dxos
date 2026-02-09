@@ -7,7 +7,8 @@ import { Stream } from '@dxos/codec-protobuf/stream';
 import { type MemberInfo } from '@dxos/credentials';
 import { type SpaceManager } from '@dxos/echo-pipeline';
 import { PublicKey } from '@dxos/keys';
-import { type Client, create } from '@dxos/protocols';
+import { type Client } from '@dxos/protocols';
+import { create } from '@dxos/protocols/buf';
 import {
   type Contact,
   type ContactBook,

@@ -6,7 +6,8 @@ import { SubscriptionList } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf/stream';
 import { type EdgeConnection } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
-import { type Halo, create } from '@dxos/protocols';
+import { type Halo } from '@dxos/protocols';
+import { create } from '@dxos/protocols/buf';
 import {
   type Device,
   DeviceKind,
