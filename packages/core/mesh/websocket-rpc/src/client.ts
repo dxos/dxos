@@ -6,18 +6,25 @@ import WebSocket from 'isomorphic-ws';
 
 import { Event, Trigger } from '@dxos/async';
 import { log, logInfo } from '@dxos/log';
-import { type ProtoRpcPeer, type ProtoRpcPeerOptions, createProtoRpcPeer } from '@dxos/rpc';
+import { type BufProtoRpcPeer, type BufProtoRpcPeerOptions, createBufProtoRpcPeer } from '@dxos/rpc';
+import { type GenService, type GenServiceMethods } from '@bufbuild/protobuf/codegenv2';
 
 import { WebSocketWithTokenAuth } from './token-auth';
 
-export type WebsocketRpcClientProps<C, S> = {
+export type WebsocketRpcClientProps<
+  C extends Record<string, GenService<GenServiceMethods>>,
+  S extends Record<string, GenService<GenServiceMethods>>,
+> = {
   url: string;
   authenticationToken?: string;
-} & Pick<ProtoRpcPeerOptions<C, S>, 'requested' | 'exposed' | 'handlers' | 'noHandshake'>;
+} & Pick<BufProtoRpcPeerOptions<C, S>, 'requested' | 'exposed' | 'handlers' | 'noHandshake'>;
 
-export class WebsocketRpcClient<C, S> {
+export class WebsocketRpcClient<
+  C extends Record<string, GenService<GenServiceMethods>>,
+  S extends Record<string, GenService<GenServiceMethods>>,
+> {
   private _socket?: WebSocket;
-  private _rpc?: ProtoRpcPeer<C>;
+  private _rpc?: BufProtoRpcPeer<C>;
   private readonly _connectTrigger = new Trigger();
 
   readonly connected = new Event();
@@ -25,7 +32,7 @@ export class WebsocketRpcClient<C, S> {
   readonly error = new Event<Error>();
 
   constructor(private readonly _params: WebsocketRpcClientProps<C, S>) {
-    this._rpc = createProtoRpcPeer({
+    this._rpc = createBufProtoRpcPeer({
       requested: this._params.requested,
       exposed: this._params.exposed,
       handlers: this._params.handlers,

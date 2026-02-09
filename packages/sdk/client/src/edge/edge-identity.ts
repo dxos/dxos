@@ -3,6 +3,7 @@
 //
 
 import { type EdgeIdentity } from '@dxos/edge-client';
+import { EMPTY } from '@dxos/protocols/buf';
 
 import { type Client } from '../client';
 import { RPC_TIMEOUT } from '../common';
@@ -18,7 +19,7 @@ export const createEdgeIdentity = (client: Client): EdgeIdentity => {
     peerKey: device.deviceKey.toHex(),
     presentCredentials: async ({ challenge }) => {
       const identityService = client.services.services.IdentityService!;
-      const authCredential = await identityService.createAuthCredential();
+      const authCredential = await identityService.createAuthCredential(EMPTY);
       return identityService.signPresentation(
         {
           presentation: { credentials: [authCredential] },

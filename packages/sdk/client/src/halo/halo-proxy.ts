@@ -12,6 +12,7 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ApiError, trace as Trace } from '@dxos/protocols';
+import { EMPTY } from '@dxos/protocols/buf';
 import {
   type Contact,
   type Device,
@@ -189,7 +190,7 @@ export class HaloProxy implements Halo {
     }
 
     invariant(this._serviceProvider.services.IdentityService, 'IdentityService not available');
-    const identityStream = this._serviceProvider.services.IdentityService.queryIdentity(undefined, {
+    const identityStream = this._serviceProvider.services.IdentityService.queryIdentity(EMPTY, {
       timeout: RPC_TIMEOUT,
     });
     identityStream.subscribe((data) => {
@@ -203,7 +204,7 @@ export class HaloProxy implements Halo {
     });
     this._streamSubscriptions.add(() => identityStream.close());
 
-    const contactsStream = this._serviceProvider.services.ContactsService!.queryContacts(undefined, {
+    const contactsStream = this._serviceProvider.services.ContactsService!.queryContacts(EMPTY, {
       timeout: RPC_TIMEOUT,
     });
     contactsStream.subscribe((data) => {
@@ -212,7 +213,7 @@ export class HaloProxy implements Halo {
     this._streamSubscriptions.add(() => contactsStream.close());
 
     invariant(this._serviceProvider.services.DevicesService, 'DevicesService not available');
-    const devicesStream = this._serviceProvider.services.DevicesService.queryDevices(undefined, {
+    const devicesStream = this._serviceProvider.services.DevicesService.queryDevices(EMPTY, {
       timeout: RPC_TIMEOUT,
     });
     devicesStream.subscribe((data) => {

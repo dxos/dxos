@@ -83,7 +83,7 @@ const createBufClient = <S extends GenService<GenServiceMethods>>(
 /**
  * Handler implementation for a buf service.
  */
-class BufServiceHandler<S extends GenService<GenServiceMethods>> implements BufServiceBackend {
+export class BufServiceHandler<S extends GenService<GenServiceMethods>> implements BufServiceBackend {
   constructor(
     private readonly _service: S & DescService,
     private readonly _handlers: Rpc.BufServiceProvider<Rpc.BufRpcHandlers<S>>,
