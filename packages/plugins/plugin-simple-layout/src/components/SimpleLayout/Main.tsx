@@ -15,6 +15,7 @@ import { ContentLoading } from '../ContentLoading';
 import { useLoadDescendents } from '../hooks';
 
 import { Banner } from './Banner';
+import { useMobileLayout } from './MobileLayout';
 import { NavBar } from './NavBar';
 
 const MAIN_NAME = 'SimpleLayout.Main';
@@ -26,6 +27,7 @@ export const Main = () => {
   const { state } = useSimpleLayoutState();
   const id = state.active ?? state.workspace;
   const attentionAttrs = useAttentionAttributes(id);
+  const { keyboardOpen } = useMobileLayout(MAIN_NAME);
   const { graph } = useAppGraph();
   const node = useNode(graph, id);
 
@@ -62,7 +64,9 @@ export const Main = () => {
       <article className='bs-full overflow-hidden bg-baseSurface'>
         <Surface key={id} role='article' data={data} limit={1} fallback={ContentError} placeholder={placeholder} />
       </article>
-      {showNavBar && <NavBar classNames='border-bs border-subduedSeparator' actions={actions} onAction={onAction} />}
+      {showNavBar && !keyboardOpen && (
+        <NavBar classNames='border-bs border-subduedSeparator' actions={actions} onAction={onAction} />
+      )}
     </div>
   );
 };
