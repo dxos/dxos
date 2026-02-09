@@ -79,10 +79,6 @@ export default Capability.makeModule(
       });
     }
 
-    return Capability.contributes(ObservabilityCapabilities.Observability, observability, () =>
-      Effect.tryPromise(async () => {
-        await Effect.runPromise(observability.close());
-      }),
-    );
+    return Capability.contributes(ObservabilityCapabilities.Observability, observability, () => observability.close());
   }),
 );

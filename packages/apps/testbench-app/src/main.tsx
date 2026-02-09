@@ -12,7 +12,7 @@ import { RouterProvider, createBrowserRouter } from 'react-router-dom';
 import { log } from '@dxos/log';
 // TODO(wittjosiah): Restore observability for testbench.
 // import { initializeAppObservability } from '@dxos/observability';
-import { type Client, ClientProvider, Config, Defaults } from '@dxos/react-client';
+import { type Client, ClientProvider } from '@dxos/react-client';
 import { type ThemeMode, ThemeProvider } from '@dxos/react-ui';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
 import { defaultTx } from '@dxos/ui-theme';

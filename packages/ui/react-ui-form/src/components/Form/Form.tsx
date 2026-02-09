@@ -273,9 +273,7 @@ FormActions.displayName = 'Form.Actions';
 // Submit
 //
 
-type FormSubmitProps = ThemedClassName<
-  Partial<Pick<IconButtonProps, 'icon' | 'label' | 'disabled'>>
->;
+type FormSubmitProps = ThemedClassName<Partial<Pick<IconButtonProps, 'icon' | 'label' | 'disabled'>>>;
 
 const FormSubmit = ({ classNames, label, icon, disabled }: FormSubmitProps) => {
   const { t } = useTranslation(translationKey);

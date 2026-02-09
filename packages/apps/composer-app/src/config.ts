@@ -2,7 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Effect, pipe } from 'effect';
+import * as Effect from 'effect/Effect';
+import * as Function from 'effect/Function';
 
 import { DXOS_VERSION, Remote } from '@dxos/client';
 import { Config, Defaults, Envs, Local, Storage } from '@dxos/config';
@@ -32,7 +33,7 @@ export const setupConfig = async () => {
 };
 
 export const initializeObservability = async (config: Config) =>
-  pipe(
+  Function.pipe(
     Observability.make(),
     Observability.addExtension(
       ObservabilityExtension.Otel.extensions({
