@@ -224,9 +224,7 @@ const FieldList = ({ schema, view, registry, readonly, showHeading = false, onDe
 
   const handleToggleField = useCallback(
     (field: FieldType) => {
-      setExpandedField((prevExpandedFieldId) =>
-        prevExpandedFieldId === field.id ? undefined : field.id,
-      );
+      setExpandedField((prevExpandedFieldId) => (prevExpandedFieldId === field.id ? undefined : field.id));
     },
     [readonly],
   );
