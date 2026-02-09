@@ -3,35 +3,17 @@
 //
 
 import { type Event } from '@dxos/async';
-import { type Client, type Halo, type Mesh, type QueueService } from '@dxos/protocols';
+import { type Client, type Halo, type Mesh, Rpc, Echo } from '@dxos/protocols';
+import * as ClientLoggingPb from '@dxos/protocols/buf/dxos/client/logging_pb';
 import * as ClientQueuePb from '@dxos/protocols/buf/dxos/client/queue_pb';
 import * as ClientServicesPb from '@dxos/protocols/buf/dxos/client/services_pb';
+import * as DevtoolsHostPb from '@dxos/protocols/buf/dxos/devtools/host_pb';
 import * as EchoQueryPb from '@dxos/protocols/buf/dxos/echo/query_pb';
 import * as EchoServicePb from '@dxos/protocols/buf/dxos/echo/service_pb';
-import { Rpc, Echo } from '@dxos/protocols';
-import type {
-  ContactsService,
-  DevicesService,
-  EdgeAgentService,
-  IdentityService,
-  InvitationsService,
-  LoggingService,
-  NetworkService,
-  SpacesService,
-  SystemService,
-} from '@dxos/protocols/proto/dxos/client/services';
-import type { DevtoolsHost } from '@dxos/protocols/proto/dxos/devtools/host';
-import type { QueryService } from '@dxos/protocols/proto/dxos/echo/query';
-import type { DataService } from '@dxos/protocols/proto/dxos/echo/service';
-import type { AppService, ShellService, WorkerService } from '@dxos/protocols/proto/dxos/iframe';
-import type { BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
-import type { TracingService } from '@dxos/protocols/proto/dxos/tracing';
-import { type ServiceBundle, createBufServiceBundle, createServiceBundle } from '@dxos/rpc';
-import * as DevtoolsHostPb from '@dxos/protocols/buf/dxos/devtools/host_pb';
-import * as TracingPb from '@dxos/protocols/buf/dxos/tracing_pb';
-import * as ClientLoggingPb from '@dxos/protocols/buf/dxos/client/logging_pb';
-import * as MeshBridgePb from '@dxos/protocols/buf/dxos/mesh/bridge_pb';
 import * as IframePb from '@dxos/protocols/buf/dxos/iframe_pb';
+import * as MeshBridgePb from '@dxos/protocols/buf/dxos/mesh/bridge_pb';
+import * as TracingPb from '@dxos/protocols/buf/dxos/tracing_pb';
+import { createBufServiceBundle } from '@dxos/rpc';
 
 export { type QueueService } from '@dxos/protocols';
 
@@ -85,7 +67,7 @@ export interface ClientServicesProvider {
    */
   onReconnect?: (callback: () => Promise<void>) => void;
 
-  descriptors: ServiceBundle<ClientServices>;
+  descriptors: typeof clientServiceBundle;
   services: Partial<ClientServices>;
 
   // TODO(burdon): Should take context from parent?
