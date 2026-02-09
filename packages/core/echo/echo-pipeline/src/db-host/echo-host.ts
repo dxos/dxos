@@ -392,6 +392,11 @@ export class EchoHost extends Resource {
     } else {
       this._indexesUpToDate = true;
     }
+
+    // Invalidate queries after index update completes so queries can see newly indexed data.
+    if (totalUpdated > 0) {
+      this._queryService.invalidateQueries();
+    }
   };
 }
 
