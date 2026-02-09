@@ -12,7 +12,7 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type Echo, RpcClosedError } from '@dxos/protocols';
-import { create } from '@dxos/protocols/buf';
+import { create, type JsonObject } from '@dxos/protocols/buf';
 import * as EchoServicePb from '@dxos/protocols/buf/dxos/echo/service_pb';
 import { trace } from '@dxos/tracing';
 
@@ -285,7 +285,8 @@ export class RepoProxy extends Resource {
         .createDocument(
           create(EchoServicePb.CreateDocumentRequestSchema, {
             spaceId: this._spaceId,
-            initialValue: initialValue as any,
+            // buf maps google.protobuf.Struct to JsonObject. The generic T is a JSON-like structure.
+            initialValue: initialValue as JsonObject,
           }),
           { timeout: RPC_TIMEOUT },
         )

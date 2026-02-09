@@ -17,6 +17,8 @@ export {
   type DescMessage,
   type DescMethod,
   type DescService,
+  type JsonObject,
+  type JsonValue,
   type Message,
   type MessageShape,
 } from '@bufbuild/protobuf';
