@@ -32,6 +32,7 @@ import { failedInvariant, invariant } from '@dxos/invariant';
 import { PublicKey, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ApiError, trace as Trace } from '@dxos/protocols';
+import { EMPTY } from '@dxos/protocols/buf';
 import {
   Invitation,
   type Space as SerializedSpace,
@@ -172,7 +173,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     let isFirstDataAfterReconnect = isReconnect;
 
     invariant(this._serviceProvider.services.SpacesService, 'SpacesService is not available.');
-    const spacesStream = this._serviceProvider.services.SpacesService.querySpaces(undefined, { timeout: RPC_TIMEOUT });
+    const spacesStream = this._serviceProvider.services.SpacesService.querySpaces(EMPTY, { timeout: RPC_TIMEOUT });
     spacesStream.subscribe((data) => {
       let emitUpdate = false;
       const newSpaces = this.get() as SpaceProxy[];
@@ -343,7 +344,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     invariant(this._serviceProvider.services.SpacesService, 'SpacesService is not available.');
     const traceId = PublicKey.random().toHex();
     log.trace('dxos.sdk.echo-proxy.create-space', Trace.begin({ id: traceId }));
-    const space = await this._serviceProvider.services.SpacesService.createSpace(undefined, { timeout: RPC_TIMEOUT });
+    const space = await this._serviceProvider.services.SpacesService.createSpace(EMPTY, { timeout: RPC_TIMEOUT });
 
     await this._spaceCreated.waitForCondition(() => {
       return this.get().some(({ key }) => key.equals(space.spaceKey));

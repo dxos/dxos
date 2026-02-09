@@ -10,10 +10,10 @@ import {
   type SignalManager,
   WebsocketSignalManager,
 } from '@dxos/messaging';
-import { schema } from '@dxos/protocols/proto';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { type Runtime } from '@dxos/protocols/proto/dxos/config';
-import { type ProtoRpcPeer, createLinkedPorts, createProtoRpcPeer } from '@dxos/rpc';
+import * as MeshBridgePb from '@dxos/protocols/buf/dxos/mesh/bridge_pb';
+import { type BufProtoRpcPeer, createLinkedPorts, createBufProtoRpcPeer, createBufServiceBundle } from '@dxos/rpc';
 import { ComplexMap } from '@dxos/util';
 
 import { TcpTransportFactory } from '#tcp-transport';
@@ -80,8 +80,8 @@ export class TestPeer {
    */
   readonly _networkManager: SwarmNetworkManager;
 
-  private _proxy?: ProtoRpcPeer<any>;
-  private _service?: ProtoRpcPeer<any>;
+  private _proxy?: BufProtoRpcPeer<any>;
+  private _service?: BufProtoRpcPeer<any>;
 
   constructor(
     private readonly testBuilder: TestBuilder,
@@ -113,28 +113,21 @@ export class TestPeer {
           {
             // Simulates bridge to shared worker.
             const [proxyPort, servicePort] = createLinkedPorts();
-
-            this._proxy = createProtoRpcPeer({
-              port: proxyPort,
-              requested: {
-                BridgeService: schema.getService('dxos.mesh.bridge.BridgeService'),
-              },
-              noHandshake: true,
-              encodingOptions: {
-                preserveAny: true,
-              },
+            const bridgeBundle = createBufServiceBundle({
+              BridgeService: MeshBridgePb.BridgeService,
             });
 
-            this._service = createProtoRpcPeer({
+            this._proxy = createBufProtoRpcPeer({
+              port: proxyPort,
+              requested: bridgeBundle,
+              noHandshake: true,
+            });
+
+            this._service = createBufProtoRpcPeer({
               port: servicePort,
-              exposed: {
-                BridgeService: schema.getService('dxos.mesh.bridge.BridgeService'),
-              },
+              exposed: bridgeBundle,
               handlers: { BridgeService: new RtcTransportService() },
               noHandshake: true,
-              encodingOptions: {
-                preserveAny: true,
-              },
             });
 
             transportFactory = new RtcTransportProxyFactory().setBridgeService(this._proxy.rpc.BridgeService);

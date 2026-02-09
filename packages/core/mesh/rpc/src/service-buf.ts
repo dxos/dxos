@@ -5,6 +5,7 @@
 import { Stream } from '@dxos/codec-protobuf/stream';
 import { invariant } from '@dxos/invariant';
 import {
+  create,
   type DescMessage,
   type DescMethod,
   type DescService,
@@ -44,7 +45,8 @@ const createBufClient = <S extends GenService<GenServiceMethods>>(
 
     if (methodKind === 'server_streaming') {
       client[methodName] = (request: Message, options?: Rpc.BufRequestOptions): Stream<Message> => {
-        const encoded = toBinary(input, request);
+        const normalizedRequest = create(input, request as Record<string, unknown>);
+        const encoded = toBinary(input, normalizedRequest);
         const stream = backend.callStream(
           rpcMethodName,
           {
@@ -58,7 +60,8 @@ const createBufClient = <S extends GenService<GenServiceMethods>>(
     } else {
       // unary
       client[methodName] = async (request: Message, options?: Rpc.BufRequestOptions): Promise<Message> => {
-        const encoded = toBinary(input, request);
+        const normalizedRequest = create(input, request as Record<string, unknown>);
+        const encoded = toBinary(input, normalizedRequest);
         const response = await backend.call(
           rpcMethodName,
           {
@@ -83,7 +86,7 @@ const createBufClient = <S extends GenService<GenServiceMethods>>(
 /**
  * Handler implementation for a buf service.
  */
-class BufServiceHandler<S extends GenService<GenServiceMethods>> implements BufServiceBackend {
+export class BufServiceHandler<S extends GenService<GenServiceMethods>> implements BufServiceBackend {
   constructor(
     private readonly _service: S & DescService,
     private readonly _handlers: Rpc.BufServiceProvider<Rpc.BufRpcHandlers<S>>,
@@ -105,7 +108,9 @@ class BufServiceHandler<S extends GenService<GenServiceMethods>> implements BufS
     const requestDecoded = fromBinary(input, request.value);
     const handler = await this._getHandler(mappedMethodName);
     const response = await handler(requestDecoded, options);
-    const responseEncoded = toBinary(output, response as Message);
+    // Normalize the response to a proper buf message before serialization.
+    const normalizedResponse = create(output, response as Record<string, unknown>);
+    const responseEncoded = toBinary(output, normalizedResponse);
 
     return {
       value: responseEncoded,
@@ -135,10 +140,14 @@ class BufServiceHandler<S extends GenService<GenServiceMethods>> implements BufS
 
     return Stream.map(
       responseStream,
-      (data): Rpc.BufAny => ({
-        value: toBinary(output, data),
-        type_url: output.typeName,
-      }),
+      (data): Rpc.BufAny => {
+        // Normalize the response to a proper buf message before serialization.
+        const normalizedData = create(output, data as Record<string, unknown>);
+        return {
+          value: toBinary(output, normalizedData),
+          type_url: output.typeName,
+        };
+      },
     );
   }
 

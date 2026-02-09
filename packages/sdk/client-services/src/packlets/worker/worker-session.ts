@@ -11,8 +11,8 @@ import {
 } from '@dxos/client-protocol';
 import { invariant } from '@dxos/invariant';
 import { log, logInfo } from '@dxos/log';
-import { type BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
-import { type ProtoRpcPeer, type RpcPort, createProtoRpcPeer } from '@dxos/rpc';
+import { type Mesh } from '@dxos/protocols';
+import { type BufProtoRpcPeer, type RpcPort, createBufProtoRpcPeer } from '@dxos/rpc';
 import { Callback, type MaybePromise } from '@dxos/util';
 
 import { ClientRpcServer, type ClientRpcServerProps, type ClientServicesHost } from '../services';
@@ -32,7 +32,7 @@ export type WorkerSessionProps = {
 export class WorkerSession {
   private readonly _clientRpc: ClientRpcServer;
   private readonly _shellClientRpc?: ClientRpcServer;
-  private readonly _iframeRpc: ProtoRpcPeer<IframeServiceBundle>;
+  private readonly _iframeRpc: BufProtoRpcPeer<typeof iframeServiceBundle>;
   private readonly _startTrigger = new Trigger();
   private readonly _serviceHost: ClientServicesHost;
 
@@ -48,7 +48,7 @@ export class WorkerSession {
   @logInfo
   public lockKey?: string;
 
-  public bridgeService?: BridgeService;
+  public bridgeService?: Mesh.BridgeService;
 
   constructor({ serviceHost, systemPort, appPort, shellPort, readySignal }: WorkerSessionProps) {
     invariant(serviceHost);
@@ -87,7 +87,7 @@ export class WorkerSession {
         })
       : undefined;
 
-    this._iframeRpc = createProtoRpcPeer({
+    this._iframeRpc = createBufProtoRpcPeer({
       requested: iframeServiceBundle,
       exposed: workerServiceBundle,
       handlers: {

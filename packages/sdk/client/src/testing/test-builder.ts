@@ -32,7 +32,7 @@ import {
 import { TcpTransportFactory } from '@dxos/network-manager/transport/tcp';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { type Storage } from '@dxos/random-access-storage';
-import { type ProtoRpcPeer, createLinkedPorts, createProtoRpcPeer } from '@dxos/rpc';
+import { type BufProtoRpcPeer, createLinkedPorts, createBufProtoRpcPeer } from '@dxos/rpc';
 import { layerMemory as sqliteLayerMemory } from '@dxos/sql-sqlite/platform';
 import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 
@@ -144,10 +144,10 @@ export class TestBuilder {
   /**
    * Create client/server.
    */
-  createClientServer(host: ClientServicesHost = this.createClientServicesHost()): [Client, ProtoRpcPeer<{}>] {
+  createClientServer(host: ClientServicesHost = this.createClientServicesHost()): [Client, BufProtoRpcPeer<{}>] {
     const [proxyPort, hostPort] = createLinkedPorts();
     const client = new Client({ config: this.config, services: new ClientServicesProxy(proxyPort) });
-    const server = createProtoRpcPeer({
+    const server = createBufProtoRpcPeer({
       exposed: host.descriptors,
       handlers: host.services as ClientServices,
       port: hostPort,

@@ -9,9 +9,11 @@ import { type ClientServices } from '@dxos/client-protocol';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
-import { schema } from '@dxos/protocols/proto';
-import { type SystemService, SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
-import { createLinkedPorts, createProtoRpcPeer, createServiceBundle } from '@dxos/rpc';
+import { type Client } from '@dxos/protocols';
+import { EMPTY } from '@dxos/protocols/buf';
+import * as ClientServicesPb from '@dxos/protocols/buf/dxos/client/services_pb';
+import { SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
+import { createLinkedPorts, createBufProtoRpcPeer, createBufServiceBundle } from '@dxos/rpc';
 
 import { SystemServiceImpl } from '../system';
 import { createServiceContext } from '../testing';
@@ -21,11 +23,11 @@ import { ServiceRegistry } from './service-registry';
 // TODO(burdon): Create TestService (that doesn't require peers).
 
 type TestServices = {
-  SystemService: SystemService;
+  SystemService: Client.SystemService;
 };
 
-const serviceBundle = createServiceBundle<TestServices>({
-  SystemService: schema.getService('dxos.client.services.SystemService'),
+const serviceBundle = createBufServiceBundle({
+  SystemService: ClientServicesPb.SystemService,
 });
 
 describe('service registry', () => {
@@ -34,7 +36,7 @@ describe('service registry', () => {
     const serviceContext = await createServiceContext();
     await serviceContext.open(new Context());
 
-    const serviceRegistry = new ServiceRegistry(serviceBundle, {
+    const serviceRegistry = new ServiceRegistry<TestServices, typeof serviceBundle>(serviceBundle, {
       SystemService: new SystemServiceImpl({
         config: () => new Config({ runtime: { client: { remoteSource } } }),
         getCurrentStatus: () => SystemStatus.ACTIVE,
@@ -47,14 +49,12 @@ describe('service registry', () => {
 
     const [proxyPort, serverPort] = createLinkedPorts();
 
-    const proxy = createProtoRpcPeer({
+    const proxy = createBufProtoRpcPeer({
       requested: serviceRegistry.descriptors,
-      exposed: {},
-      handlers: {},
       port: proxyPort,
     });
 
-    const server = createProtoRpcPeer({
+    const server = createBufProtoRpcPeer({
       exposed: serviceRegistry.descriptors,
       handlers: serviceRegistry.services as ClientServices,
       port: serverPort,
@@ -65,7 +65,7 @@ describe('service registry', () => {
     log('open');
 
     {
-      const config = await proxy.rpc.SystemService.getConfig();
+      const config = await proxy.rpc.SystemService.getConfig(EMPTY);
       expect(config.runtime?.client?.remoteSource).to.equal(remoteSource);
     }
 

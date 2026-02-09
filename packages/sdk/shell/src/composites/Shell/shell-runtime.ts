@@ -12,7 +12,7 @@ import {
   type LayoutRequest,
   ShellLayout,
 } from '@dxos/protocols/proto/dxos/iframe';
-import { type ProtoRpcPeer, type RpcPort, createProtoRpcPeer } from '@dxos/rpc';
+import { type BufProtoRpcPeer, type RpcPort, createBufProtoRpcPeer } from '@dxos/rpc';
 
 /**
  * Endpoint that handles shell services.
@@ -21,7 +21,7 @@ export class ShellRuntimeImpl implements ShellRuntime {
   readonly layoutUpdate = new Event<LayoutRequest>();
   readonly invitationUrlUpdate = new Event<InvitationUrlRequest>();
 
-  private _appRpc?: ProtoRpcPeer<AppServiceBundle>;
+  private _appRpc?: BufProtoRpcPeer<typeof appServiceBundle>;
   private _layout = ShellLayout.DEFAULT;
   private _spaceKey?: PublicKey;
   private _spaceId?: string;
@@ -86,7 +86,7 @@ export class ShellRuntimeImpl implements ShellRuntime {
   }
 
   async open(): Promise<void> {
-    this._appRpc = createProtoRpcPeer({
+    this._appRpc = createBufProtoRpcPeer({
       requested: appServiceBundle,
       exposed: shellServiceBundle,
       handlers: {
