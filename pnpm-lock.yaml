@@ -12669,6 +12669,9 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
+      '@dxos/functions':
+        specifier: workspace:*
+        version: link:../../core/functions
       '@dxos/functions-runtime':
         specifier: workspace:*
         version: link:../../core/functions-runtime

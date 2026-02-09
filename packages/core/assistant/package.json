@@ -16,20 +16,17 @@
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "browser": "./dist/lib/browser/index.mjs",
-      "node": "./dist/lib/node-esm/index.mjs"
+      "default": "./dist/lib/neutral/index.mjs"
     },
     "./extraction": {
       "source": "./src/extraction/index.ts",
       "types": "./dist/types/src/extraction/index.d.ts",
-      "browser": "./dist/lib/browser/extraction/index.mjs",
-      "node": "./dist/lib/node-esm/extraction/index.mjs"
+      "default": "./dist/lib/neutral/extraction/index.mjs"
     },
     "./testing": {
       "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
-      "browser": "./dist/lib/browser/testing/index.mjs",
-      "node": "./dist/lib/node-esm/testing/index.mjs"
+      "default": "./dist/lib/neutral/testing/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
