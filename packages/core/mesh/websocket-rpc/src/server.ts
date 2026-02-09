@@ -7,8 +7,8 @@ import { type Socket } from 'node:net';
 
 import WebSocket from 'isomorphic-ws';
 
-import { type GenService, type GenServiceMethods } from '@bufbuild/protobuf/codegenv2';
 import { log } from '@dxos/log';
+import { type GenService, type GenServiceMethods } from '@dxos/protocols/buf';
 import { type BufProtoRpcPeer, type BufProtoRpcPeerOptions, createBufProtoRpcPeer } from '@dxos/rpc';
 
 export type ConnectionInfo = {

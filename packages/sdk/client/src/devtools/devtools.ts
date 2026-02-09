@@ -5,14 +5,14 @@
 import { next as A } from '@automerge/automerge';
 import { cbor } from '@automerge/automerge-repo';
 
-import { type Halo, type Space } from '@dxos/client-protocol';
+import { type ClientServices, type Halo, type Space } from '@dxos/client-protocol';
 import { type ClientServicesHost, type DataSpace } from '@dxos/client-services';
 import { exposeModule, importModule } from '@dxos/debug';
 import { Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
 import { PublicKey } from '@dxos/keys';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type RpcPeer, type RpcPort, createBundledRpcServer } from '@dxos/rpc';
+import { type BufProtoRpcPeer, type RpcPort, createBufProtoRpcPeer } from '@dxos/rpc';
 import { type DiagnosticMetadata, TRACE_PROCESSOR, type TraceProcessor } from '@dxos/tracing';
 import { joinTables } from '@dxos/util';
 
@@ -90,7 +90,7 @@ export type MountOptions = {
 };
 
 export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
-  let server: RpcPeer;
+  let server: BufProtoRpcPeer<{}>;
   let diagnostics: DiagnosticMetadata[] = [];
 
   const hook: DevtoolsHook = {
@@ -111,9 +111,9 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
       }
 
       log('Opening devtools client RPC server...');
-      server = createBundledRpcServer({
-        services: client.services.descriptors,
-        handlers: client.services.services,
+      server = createBufProtoRpcPeer({
+        exposed: client.services.descriptors,
+        handlers: client.services.services as ClientServices,
         port,
       });
 

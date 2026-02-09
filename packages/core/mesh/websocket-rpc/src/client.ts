@@ -6,8 +6,9 @@ import WebSocket from 'isomorphic-ws';
 
 import { Event, Trigger } from '@dxos/async';
 import { log, logInfo } from '@dxos/log';
+import { Rpc } from '@dxos/protocols';
+import { type GenService, type GenServiceMethods } from '@dxos/protocols/buf';
 import { type BufProtoRpcPeer, type BufProtoRpcPeerOptions, createBufProtoRpcPeer } from '@dxos/rpc';
-import { type GenService, type GenServiceMethods } from '@bufbuild/protobuf/codegenv2';
 
 import { WebSocketWithTokenAuth } from './token-auth';
 
@@ -103,7 +104,7 @@ export class WebsocketRpcClient<
     this._socket?.close();
   }
 
-  get rpc() {
+  get rpc(): { [K in keyof C]: Rpc.BufRpcClient<C[K]> } {
     return this._rpc!.rpc;
   }
 }
