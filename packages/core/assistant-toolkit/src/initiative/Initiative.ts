@@ -37,6 +37,8 @@ export const Initiative = Schema.Struct({
   // TODO(dmaretskyi): Turn into an array of objects when form-data
   subscriptions: Schema.Array(Type.Ref(Type.Obj)),
 
+  newChatOnEveryEvent: Schema.optional(Schema.Boolean),
+
   // TODO(dmaretskyi): input queue?
 }).pipe(
   Type.object({

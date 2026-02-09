@@ -22,6 +22,9 @@ import { Button, ButtonGroup, IconButton, Input, toLocalizedString, useTranslati
 import { Form, type FormFieldMap, omitId } from '@dxos/react-ui-form';
 import { StackItem } from '@dxos/react-ui-stack';
 import { type Text } from '@dxos/schema';
+import { Blueprint } from '@dxos/blueprints';
+import { Data } from 'effect/Schema';
+import { acquireReleaseResource } from '@dxos/effect';
 
 export type InitiativeContainerProps = {
   role?: string;
@@ -179,33 +182,7 @@ const InitiativeForm = ({ initiative }: { initiative: Initiative.Initiative }) =
   const handleResetHistory = useCallback(async () => {
     const runtime = computeRuntime.getRuntime(Obj.getDatabase(initiative)!.spaceId);
 
-    await runtime.runPromise(
-      Effect.gen(function* () {
-        const queue = yield* QueueService.createQueue();
-        const contextBinder = new AiContextBinder({ queue });
-        const initiativeBlueprint = yield* Database.add(Obj.clone(Initiative.makeBlueprint(), { deep: true }));
-        yield* Effect.promise(() =>
-          contextBinder.bind({
-            blueprints: [Ref.make(initiativeBlueprint)],
-            objects: [Ref.make(initiative)],
-          }),
-        );
-        const chat = yield* Database.add(
-          Chat.make({
-            queue: Ref.fromDXN(queue.dxn),
-          }),
-        );
-        Obj.change(initiative, (initiative) => {
-          initiative.chat = Ref.make(chat);
-        });
-        yield* Database.add(
-          Relation.make(Chat.CompanionTo, {
-            [Relation.Source]: chat,
-            [Relation.Target]: initiative,
-          }),
-        );
-      }),
-    );
+    await runtime.runPromise(Initiative.resetChatHistory(initiative));
   }, [initiative]);
 
   // TODO(dmaretskyi): Form breaks if we provide the echo object directly.
