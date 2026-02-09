@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as E from 'effect/Effect';
+import * as Effect from 'effect/Effect';
 
 import { Capability, Common } from '@dxos/app-framework';
 import { Observability } from '@dxos/observability';
@@ -13,7 +13,7 @@ import { meta } from '../../meta';
 import { ObservabilityCapabilities, ObservabilityOperation } from '../../types';
 
 export default Capability.makeModule(
-  E.fnUntraced(function* (props?: { namespace: string }) {
+  Effect.fnUntraced(function* (props?: { namespace: string }) {
     const { namespace } = props!;
     const capabilities = yield* Capability.Service;
 
@@ -23,7 +23,7 @@ export default Capability.makeModule(
       //
       OperationResolver.make({
         operation: ObservabilityOperation.Toggle,
-        handler: E.fnUntraced(function* (input) {
+        handler: Effect.fnUntraced(function* (input) {
           const observability = yield* Capability.get(ObservabilityCapabilities.Observability);
           const registry = capabilities.get(Common.Capability.AtomRegistry);
           const allSettings = capabilities.getAll(Common.Capability.Settings);
@@ -43,7 +43,7 @@ export default Capability.makeModule(
           } else {
             yield* observability.disable();
           }
-          yield* E.promise(() => Observability.storeObservabilityDisabled(namespace, !newEnabled));
+          yield* Effect.promise(() => Observability.storeObservabilityDisabled(namespace, !newEnabled));
           return newEnabled;
         }),
       }),
@@ -53,7 +53,7 @@ export default Capability.makeModule(
       //
       OperationResolver.make({
         operation: ObservabilityOperation.SendEvent,
-        handler: E.fnUntraced(function* (input) {
+        handler: Effect.fnUntraced(function* (input) {
           // NOTE: This is to ensure that events fired before observability is ready are still sent.
           const observability = yield* Capability.waitFor(ObservabilityCapabilities.Observability);
           const properties = input.properties ?? {};
@@ -66,7 +66,7 @@ export default Capability.makeModule(
       //
       OperationResolver.make({
         operation: ObservabilityOperation.CaptureUserFeedback,
-        handler: E.fnUntraced(function* (input) {
+        handler: Effect.fnUntraced(function* (input) {
           const observability = yield* Capability.get(ObservabilityCapabilities.Observability);
           observability.feedback.captureUserFeedback({ message: input.message });
         }),
