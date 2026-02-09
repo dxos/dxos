@@ -96,7 +96,6 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
     }, [atomRegistry, schema, view]);
 
     useImperativeHandle(forwardedRef, () => projectionModel, [projectionModel]);
-    const [expandedField, setExpandedField] = useState<FieldType['id']>();
 
     const queueTarget = Match.value(view.query.ast).pipe(
       Match.when({ type: 'options' }, ({ options }) => {
@@ -141,13 +140,6 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
       [mode, types, tags],
     );
 
-    // TODO(burdon): Check if mutable.
-    const handleAdd = useCallback(() => {
-      invariant(!readonly);
-      const field = projectionModel.createFieldProjection();
-      setExpandedField(field.id);
-    }, [projectionModel, readonly]);
-
     const handleUpdate = useCallback(
       (values: any) => {
         requestAnimationFrame(() => {
@@ -161,13 +153,9 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
     const handleDelete = useCallback(
       (fieldId: string) => {
         invariant(!readonly);
-        if (fieldId === expandedField) {
-          setExpandedField(undefined);
-        }
-
         onDelete?.(fieldId);
       },
-      [expandedField, onDelete, readonly],
+      [onDelete, readonly],
     );
 
     return (
@@ -193,19 +181,6 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
             onDelete={handleDelete}
           />
         </Form.Root>
-
-        {!readonly && !expandedField && (
-          <div role='none' className='mlb-cardSpacingBlock'>
-            <IconButton
-              icon='ph--plus--regular'
-              label={t('add property button label')}
-              onClick={readonly ? undefined : handleAdd}
-              // TODO(burdon): Show field limit in ux (not tooltip).
-              disabled={view.projection.fields.length >= VIEW_FIELD_LIMIT}
-              classNames='is-full'
-            />
-          </div>
-        )}
       </div>
     );
   },
@@ -241,9 +216,17 @@ const FieldList = ({ schema, view, registry, readonly, showHeading = false, onDe
 
   const [expandedField, setExpandedField] = useState<FieldType['id']>();
 
+  const handleAdd = useCallback(() => {
+    invariant(!readonly);
+    const field = projectionModel.createFieldProjection();
+    setExpandedField(field.id);
+  }, [projectionModel, readonly]);
+
   const handleToggleField = useCallback(
     (field: FieldType) => {
-      setExpandedField((prevExpandedFieldId) => (prevExpandedFieldId === field.id ? undefined : field.id));
+      setExpandedField((prevExpandedFieldId) =>
+        prevExpandedFieldId === field.id ? undefined : field.id,
+      );
     },
     [readonly],
   );
@@ -365,6 +348,17 @@ const FieldList = ({ schema, view, registry, readonly, showHeading = false, onDe
               );
             })}
           </div>
+          {!readonly && !expandedField && (
+            <div role='none' className='mlb-cardSpacingBlock'>
+              <IconButton
+                icon='ph--plus--regular'
+                label={t('add property button label')}
+                onClick={handleAdd}
+                disabled={viewSnapshot.projection.fields.length >= VIEW_FIELD_LIMIT}
+                classNames='is-full'
+              />
+            </div>
+          )}
         </>
       )}
     </List.Root>
