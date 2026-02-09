@@ -60,15 +60,18 @@ export const Banner = ({
   return (
     <Toolbar.Root
       role='banner'
-      density='coarse'
-      classNames={mx('grid grid-cols-[var(--rail-size)_1fr_var(--rail-size)]', classNames)}
+      classNames={mx(
+        'grid grid-cols-[var(--rail-size)_1fr_var(--rail-size)] bs-[var(--rail-action)] items-center',
+        'density-fine',
+        classNames,
+      )}
     >
       {showBackButton ? (
         <IconButton variant='ghost' icon='ph--caret-left--regular' iconOnly label={t('back label')} onClick={onBack} />
       ) : (
         <div />
       )}
-      <h1 className='text-center truncate text-lg font-thin uppercase'>{displayTitle}</h1>
+      <h1 className='text-center truncate font-thin uppercase'>{displayTitle}</h1>
       {hasActions ? (
         <AnchorRoot>
           <MenuProvider {...menu} onAction={onAction}>
