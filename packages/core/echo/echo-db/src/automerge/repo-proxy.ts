@@ -11,48 +11,15 @@ import { LifecycleState, Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { RpcClosedError } from '@dxos/protocols';
+import { RpcClosedError, type Echo } from '@dxos/protocols';
 import { trace } from '@dxos/tracing';
 
 import { DocHandleProxy } from './doc-handle-proxy';
+import * as EchoServicePb from '@dxos/protocols/buf/dxos/echo/service_pb';
+import { create } from '@dxos/protocols/buf';
 
 const MAX_UPDATE_FREQ = 10; // [updates/sec]
 const RPC_TIMEOUT = 30_000;
-
-/**
- * Document update type for RepoProxy.
- */
-export interface RepoProxyDocumentUpdate {
-  documentId: string;
-  mutation?: Uint8Array;
-}
-
-/**
- * Batched document updates type for RepoProxy.
- */
-export interface RepoProxyBatchedUpdates {
-  updates?: RepoProxyDocumentUpdate[];
-}
-
-/**
- * Interface for the data service methods needed by RepoProxy.
- * Compatible with both protobuf.js and buf-based DataService implementations.
- */
-export interface RepoProxyDataService {
-  subscribe(request: { subscriptionId: string; spaceId: string }): Stream<RepoProxyBatchedUpdates>;
-  updateSubscription(
-    request: { subscriptionId: string; addIds?: string[]; removeIds?: string[] },
-    options?: { timeout?: number },
-  ): Promise<unknown>;
-  createDocument(
-    request: { spaceId: string; initialValue?: unknown },
-    options?: { timeout?: number },
-  ): Promise<{ documentId: string }>;
-  update(
-    request: { subscriptionId: string; updates?: Array<{ documentId: string; mutation?: Uint8Array }> },
-    options?: { timeout?: number },
-  ): Promise<unknown>;
-}
 
 /**
  * A proxy (thin client) to the Automerge Repo.
@@ -66,7 +33,7 @@ export class RepoProxy extends Resource {
   /**
    * Subscription id which is used inside the DataService to identify the Client.
    */
-  private _subscription?: Stream<RepoProxyBatchedUpdates> = undefined;
+  private _subscription?: Stream<EchoServicePb.BatchedDocumentUpdates> = undefined;
 
   private readonly _pendingCreations = new Map<string, Promise<void>>();
 
@@ -102,7 +69,7 @@ export class RepoProxy extends Resource {
   readonly saveStateChanged = new Event<SaveStateChangedEvent>();
 
   constructor(
-    private _dataService: RepoProxyDataService,
+    private _dataService: Echo.DataService,
     private readonly _spaceId: SpaceId,
   ) {
     super();
@@ -143,10 +110,12 @@ export class RepoProxy extends Resource {
 
   protected override async _open(): Promise<void> {
     // TODO(dmaretskyi): Set proper space id.
-    this._subscription = this._dataService.subscribe({
-      subscriptionId: this._subscriptionId,
-      spaceId: this._spaceId,
-    });
+    this._subscription = this._dataService.subscribe(
+      create(EchoServicePb.SubscribeRequestSchema, {
+        subscriptionId: this._subscriptionId,
+        spaceId: this._spaceId,
+      }),
+    );
     this._sendUpdatesJob = new UpdateScheduler(this._ctx, async () => this._sendUpdates(), {
       maxFrequency: MAX_UPDATE_FREQ,
     });
@@ -168,7 +137,7 @@ export class RepoProxy extends Resource {
   /**
    * Update the data service reference after reconnection.
    */
-  _updateDataService(dataService: RepoProxyDataService): void {
+  _updateDataService(dataService: Echo.DataService): void {
     this._dataService = dataService;
   }
 
@@ -197,10 +166,12 @@ export class RepoProxy extends Resource {
     await this._subscription?.close();
 
     // Create new subscription and wait for it to be ready before calling updateSubscription.
-    this._subscription = this._dataService.subscribe({
-      subscriptionId: this._subscriptionId,
-      spaceId: this._spaceId,
-    });
+    this._subscription = this._dataService.subscribe(
+      create(EchoServicePb.SubscribeRequestSchema, {
+        subscriptionId: this._subscriptionId,
+        spaceId: this._spaceId,
+      }),
+    );
 
     // Wait for the subscription stream to be ready (services-side registration complete).
     await this._subscription.waitUntilReady();
@@ -211,11 +182,11 @@ export class RepoProxy extends Resource {
     const documentIds = Object.keys(this._handles);
     if (documentIds.length > 0) {
       await this._dataService.updateSubscription(
-        {
+        create(EchoServicePb.UpdateSubscriptionRequestSchema, {
           subscriptionId: this._subscriptionId,
           addIds: documentIds,
           removeIds: [],
-        },
+        }),
         { timeout: RPC_TIMEOUT },
       );
     }
@@ -312,10 +283,10 @@ export class RepoProxy extends Resource {
       handle._internalId,
       this._dataService
         .createDocument(
-          {
+          create(EchoServicePb.CreateDocumentRequestSchema, {
             spaceId: this._spaceId,
             initialValue: initialValue as any,
-          },
+          }),
           { timeout: RPC_TIMEOUT },
         )
         .then((response) => {
@@ -338,7 +309,7 @@ export class RepoProxy extends Resource {
     return handle;
   }
 
-  private _receiveUpdate({ updates }: RepoProxyBatchedUpdates): void {
+  private _receiveUpdate({ updates }: EchoServicePb.BatchedDocumentUpdates): void {
     if (!updates || updates.length === 0) {
       return;
     }
@@ -381,22 +352,22 @@ export class RepoProxy extends Resource {
 
     try {
       await this._dataService.updateSubscription(
-        {
+        create(EchoServicePb.UpdateSubscriptionRequestSchema, {
           subscriptionId: this._subscriptionId,
-          addIds,
-          removeIds,
-        },
+          addIds: addIds.map((id) => id as string),
+          removeIds: removeIds.map((id) => id as string),
+        }),
         { timeout: RPC_TIMEOUT },
       );
 
-      const updates: RepoProxyDocumentUpdate[] = [];
+      const updates: EchoServicePb.DocumentUpdate[] = [];
       const addMutations = (documentIds: DocumentId[]) => {
         for (const documentId of documentIds) {
           const handle = this._handles[documentId];
           invariant(handle, `No handle found for documentId ${documentId}`);
           const mutation = handle._getPendingChanges();
           if (mutation) {
-            updates.push({ documentId, mutation });
+            updates.push(create(EchoServicePb.DocumentUpdateSchema, { documentId, mutation }));
           }
         }
       };
@@ -404,10 +375,12 @@ export class RepoProxy extends Resource {
 
       if (updates.length > 0) {
         await this._dataService.update(
-          {
+          create(EchoServicePb.UpdateRequestSchema, {
             subscriptionId: this._subscriptionId,
-            updates,
-          },
+            updates: updates.map((update) =>
+              create(EchoServicePb.DocumentUpdateSchema, { documentId: update.documentId, mutation: update.mutation }),
+            ),
+          }),
           { timeout: RPC_TIMEOUT },
         );
         if (this._lifecycleState === LifecycleState.CLOSED) {

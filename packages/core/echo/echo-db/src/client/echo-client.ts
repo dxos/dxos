@@ -6,20 +6,19 @@ import { type Context, ContextDisposedError, LifecycleState, Resource } from '@d
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type QueueService } from '@dxos/protocols';
+import { type Echo, type QueueService } from '@dxos/protocols';
 
 import { HypergraphImpl } from '../hypergraph';
 import { EchoDatabaseImpl } from '../proxy-db';
 import { QueueFactory } from '../queue';
-import { type EchoDataService, type EchoQueryService } from '../service-types';
 
 import { IndexQuerySourceProvider, type LoadObjectProps } from './index-query-source-provider';
 
 export type EchoClientProps = {};
 
 export type ConnectToServiceProps = {
-  dataService: EchoDataService;
-  queryService: EchoQueryService;
+  dataService: Echo.DataService;
+  queryService: Echo.QueryService;
   queueService?: QueueService;
 };
 
@@ -60,8 +59,8 @@ export class EchoClient extends Resource {
   private readonly _databases = new Map<SpaceId, EchoDatabaseImpl>();
   private readonly _queues = new Map<SpaceId, QueueFactory>();
 
-  private _dataService: EchoDataService | undefined = undefined;
-  private _queryService: EchoQueryService | undefined = undefined;
+  private _dataService: Echo.DataService | undefined = undefined;
+  private _queryService: Echo.QueryService | undefined = undefined;
   private _queuesService: QueueService | undefined = undefined;
 
   private _indexQuerySourceProvider: IndexQuerySourceProvider | undefined = undefined;
@@ -170,8 +169,8 @@ export class EchoClient extends Resource {
     queryService,
     queueService,
   }: {
-    dataService: EchoDataService;
-    queryService: EchoQueryService;
+    dataService: Echo.DataService;
+    queryService: Echo.QueryService;
     queueService?: QueueService;
   }): void {
     log('updating service references');

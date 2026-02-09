@@ -26,11 +26,12 @@ import {
   isEchoObject,
 } from '../echo-handler';
 import { type HypergraphImpl } from '../hypergraph';
+import * as EchoServicePb from '@dxos/protocols/buf/dxos/echo/service_pb';
 import { Filter, Query } from '../query';
-import { type EchoDataService, type EchoQueryService, type ServiceSpaceSyncState } from '../service-types';
 
 import { DatabaseSchemaRegistry } from './database-schema-registry';
 import { type ObjectMigration } from './object-migration';
+import type { Echo } from '@dxos/protocols';
 
 // TODO(burdon): Remove and progressively push methods to Database.Database.
 export interface EchoDatabase extends Database.Database {
@@ -62,12 +63,12 @@ export interface EchoDatabase extends Database.Database {
   /**
    * Get the current sync state.
    */
-  getSyncState(): Promise<ServiceSpaceSyncState>;
+  getSyncState(): Promise<EchoServicePb.SpaceSyncState>;
 
   /**
    * Get notification about the sync progress with other peers.
    */
-  subscribeToSyncState(ctx: Context, callback: (state: ServiceSpaceSyncState) => void): CleanupFn;
+  subscribeToSyncState(ctx: Context, callback: (state: EchoServicePb.SpaceSyncState) => void): CleanupFn;
 
   /**
    * Insert new objects.
@@ -84,8 +85,8 @@ export interface EchoDatabase extends Database.Database {
 
 export type EchoDatabaseProps = {
   graph: HypergraphImpl;
-  dataService: EchoDataService;
-  queryService: EchoQueryService;
+  dataService: Echo.DataService;
+  queryService: Echo.QueryService;
   spaceId: SpaceId;
 
   /**
@@ -315,11 +316,11 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     await this.flush();
   }
 
-  getSyncState(): Promise<ServiceSpaceSyncState> {
+  getSyncState(): Promise<EchoServicePb.SpaceSyncState> {
     return this._coreDatabase.getSyncState();
   }
 
-  subscribeToSyncState(ctx: Context, callback: (state: ServiceSpaceSyncState) => void): CleanupFn {
+  subscribeToSyncState(ctx: Context, callback: (state: EchoServicePb.SpaceSyncState) => void): CleanupFn {
     return this._coreDatabase.subscribeToSyncState(ctx, callback);
   }
 
@@ -330,8 +331,8 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     dataService,
     queryService,
   }: {
-    dataService: EchoDataService;
-    queryService: EchoQueryService;
+    dataService: Echo.DataService;
+    queryService: Echo.QueryService;
   }): void {
     this._coreDatabase._updateServices({ dataService, queryService });
   }

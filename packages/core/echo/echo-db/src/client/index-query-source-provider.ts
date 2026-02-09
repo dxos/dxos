@@ -10,13 +10,14 @@ import { type QueryAST } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { DXN, type ObjectId, type QueueSubspaceTag, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { RpcClosedError } from '@dxos/protocols';
+import { RpcClosedError, type Echo } from '@dxos/protocols';
 import { QueryReactivity } from '@dxos/protocols/proto/dxos/echo/query';
+import * as QueryPb from '@dxos/protocols/buf/dxos/echo/query_pb';
 import { isNonNullable } from '@dxos/util';
 
 import { OBJECT_DIAGNOSTICS, type QuerySourceProvider } from '../hypergraph';
 import { type QuerySource, getTargetSpacesForQuery } from '../query';
-import { type EchoQueryService, type ServiceQueryResponse, type ServiceQueryResult } from '../service-types';
+import { create } from '@dxos/protocols/buf';
 
 export type LoadObjectProps = {
   spaceId: SpaceId;
@@ -29,7 +30,7 @@ export interface ObjectLoader {
 }
 
 export type IndexQueryProviderProps = {
-  service: EchoQueryService;
+  service: Echo.QueryService;
   objectLoader: ObjectLoader;
   graph: Hypergraph.Hypergraph;
 };
@@ -51,7 +52,7 @@ export class IndexQuerySourceProvider implements QuerySourceProvider {
 }
 
 export type IndexQuerySourceProps = {
-  service: EchoQueryService;
+  service: Echo.QueryService;
   objectLoader: ObjectLoader;
   graph: Hypergraph.Hypergraph;
 };
@@ -64,7 +65,7 @@ export class IndexQuerySource implements QuerySource {
 
   private _query?: QueryAST.Query = undefined;
   private _results?: QueryResult.EntityEntry[] = [];
-  private _stream?: Stream<ServiceQueryResponse>;
+  private _stream?: Stream<QueryPb.QueryResponse>;
   private _open = false;
 
   constructor(private readonly _params: IndexQuerySourceProps) {}
@@ -122,11 +123,11 @@ export class IndexQuerySource implements QuerySource {
     let currentCtx: Context;
 
     const stream = this._params.service.execQuery(
-      {
+      create(QueryPb.QueryRequestSchema, {
         query: JSON.stringify(query),
         queryId: String(queryId),
         reactivity: queryType,
-      },
+      }),
       { timeout: QUERY_SERVICE_TIMEOUT },
     );
 
@@ -205,7 +206,7 @@ export class IndexQuerySource implements QuerySource {
   private async _filterMapResult(
     ctx: Context,
     queryStartTimestamp: number,
-    result: ServiceQueryResult,
+    result: QueryPb.QueryResult,
   ): Promise<QueryResult.EntityEntry | null> {
     const { id, spaceId } = result;
     if (!id || !spaceId) {

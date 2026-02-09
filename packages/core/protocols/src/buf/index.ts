@@ -2,6 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
+import { EmptySchema } from '@bufbuild/protobuf/wkt';
+
 export * as buf from '@bufbuild/protobuf';
 export * as bufWkt from '@bufbuild/protobuf/wkt';
 export * as bufCodegen from '@bufbuild/protobuf/codegenv2';
@@ -22,3 +25,5 @@ export { type GenService, type GenServiceMethods } from '@bufbuild/protobuf/code
 
 /** @deprecated Use `create` instead. */
 export { create as createBuf } from '@bufbuild/protobuf';
+
+export const EMPTY = create(EmptySchema);

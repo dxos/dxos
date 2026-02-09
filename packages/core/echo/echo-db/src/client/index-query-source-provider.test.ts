@@ -10,7 +10,7 @@ import { type QueryAST } from '@dxos/echo-protocol';
 import { SpaceId } from '@dxos/keys';
 import { QueryReactivity, type QueryRequest } from '@dxos/protocols/proto/dxos/echo/query';
 
-import { type EchoQueryService } from '../service-types';
+import { type Echo } from '@dxos/protocols';
 
 import { IndexQuerySource } from './index-query-source-provider';
 
@@ -46,7 +46,7 @@ describe('IndexQuerySource', () => {
           close: async () => {},
         } as any;
       },
-    } as unknown as EchoQueryService;
+    } as unknown as Echo.QueryService;
 
     const source = new IndexQuerySource({
       service,
@@ -84,7 +84,7 @@ describe('IndexQuerySource', () => {
           close: async () => {},
         } as any;
       },
-    } as unknown as EchoQueryService;
+    } as unknown as Echo.QueryService;
 
     const source = new IndexQuerySource({
       service,

@@ -146,8 +146,8 @@ export class EchoTestPeer extends Resource {
     this._initEcho();
     // Type assertions needed because buf implementations are structurally compatible.
     this._echoClient.connectToService({
-      dataService: this._echoHost.dataService as any,
-      queryService: this._echoHost.queryService as any,
+      dataService: this._echoHost.dataService,
+      queryService: this._echoHost.queryService,
       queueService: this._echoHost.queuesService,
     });
     await this._echoHost.open(ctx);
@@ -180,8 +180,8 @@ export class EchoTestPeer extends Resource {
     this._clients.add(client);
     // Type assertions needed because buf implementations are structurally compatible.
     client.connectToService({
-      dataService: this._echoHost.dataService as any,
-      queryService: this._echoHost.queryService as any,
+      dataService: this._echoHost.dataService,
+      queryService: this._echoHost.queryService,
     });
     await client.open();
     return client;

@@ -31,12 +31,12 @@ import {
   type UpdateSubscriptionRequest,
   type WaitUntilHeadsReplicatedRequest,
 } from '@dxos/protocols/buf/dxos/echo/service_pb';
-import { type BufRpcHandlers } from '@dxos/rpc';
 
 import { type AutomergeHost, deriveCollectionIdFromSpaceId } from '../automerge';
 
 import { DocumentsSynchronizer } from './documents-synchronizer';
 import { type SpaceStateManager } from './space-state-manager';
+import type { Echo } from '@dxos/protocols';
 
 // Re-export buf service type for consumers.
 export { DataService };
@@ -51,7 +51,7 @@ export type DataServiceProps = {
  * Data sync between client and services.
  */
 // TODO(burdon): Move to client-services.
-export class DataServiceImpl implements BufRpcHandlers<typeof DataService> {
+export class DataServiceImpl implements Echo.DataService {
   /**
    * Map of subscriptions.
    * subscriptionId -> DocumentsSynchronizer

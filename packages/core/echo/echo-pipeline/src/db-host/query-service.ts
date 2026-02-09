@@ -26,9 +26,9 @@ import {
   QueryResultSchema,
   QueryService,
 } from '@dxos/protocols/buf/dxos/echo/query_pb';
-import { type BufRpcHandlers } from '@dxos/rpc';
 import { trace } from '@dxos/tracing';
 
+import type { Echo } from '@dxos/protocols';
 import { type AutomergeHost } from '../automerge';
 import { QueryExecutor } from '../query';
 
@@ -67,7 +67,7 @@ type ActiveQuery = {
 };
 
 @trace.resource()
-export class QueryServiceImpl extends Resource implements BufRpcHandlers<typeof QueryService> {
+export class QueryServiceImpl extends Resource implements Echo.QueryService {
   // TODO(dmaretskyi): We need to implement query deduping. Idle composer has 80 queries with only 10 being unique.
   private readonly _queries = new Set<ActiveQuery>();
 
