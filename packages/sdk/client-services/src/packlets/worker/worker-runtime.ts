@@ -230,7 +230,7 @@ export class WorkerRuntime {
    */
   connectWebrtcBridge(session: WorkerSession | undefined): void {
     this._sessionForNetworking = session;
-    this._transportFactory.setBridgeService(session?.bridgeService as any);
+    this._transportFactory.setBridgeService(session?.bridgeService);
   }
 
   /**

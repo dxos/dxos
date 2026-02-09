@@ -11,8 +11,8 @@ import { ErrorStream } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { ConnectionResetError, ConnectivityError, TimeoutError } from '@dxos/protocols';
-import { type BridgeEvent, type BridgeService, ConnectionState } from '@dxos/protocols/proto/dxos/mesh/bridge';
+import { ConnectionResetError, ConnectivityError, TimeoutError, type Mesh } from '@dxos/protocols';
+import { type BridgeEvent, ConnectionState } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { type Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 import { arrayToBuffer } from '@dxos/util';
 
@@ -23,7 +23,7 @@ const CLOSE_RPC_TIMEOUT = 3000;
 const RESP_MIN_THRESHOLD = 500;
 
 export type RtcTransportProxyOptions = TransportOptions & {
-  bridgeService: BridgeService;
+  bridgeService: Mesh.BridgeService;
 };
 
 export class RtcTransportProxy extends Resource implements Transport {
@@ -228,14 +228,14 @@ export class RtcTransportProxy extends Resource implements Transport {
 }
 
 export class RtcTransportProxyFactory implements TransportFactory {
-  private _bridgeService: BridgeService | undefined;
+  private _bridgeService: Mesh.BridgeService | undefined;
   private _connections = new Set<RtcTransportProxy>();
 
   /**
    * Sets the current BridgeService to be used to open connections.
    * Calling this method will close any existing connections.
    */
-  setBridgeService(bridgeService: BridgeService | undefined): this {
+  setBridgeService(bridgeService: Mesh.BridgeService | undefined): this {
     this._bridgeService = bridgeService;
     for (const connection of this._connections) {
       connection.forceClose();
