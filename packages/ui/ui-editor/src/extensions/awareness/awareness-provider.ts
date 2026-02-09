@@ -41,7 +41,7 @@ export class SpaceAwarenessProvider implements AwarenessProvider {
   private readonly _info: AwarenessInfo;
 
   private _ctx?: Context;
-  private _postTask?: AsyncJob;
+  private readonly _postTask: AsyncJob;
   private _localState?: AwarenessState;
 
   public readonly remoteStateChange = new Event<void>();
@@ -51,10 +51,7 @@ export class SpaceAwarenessProvider implements AwarenessProvider {
     this._channel = channel;
     this._peerId = peerId;
     this._info = info;
-  }
 
-  open(): void {
-    this._ctx = new Context();
     this._postTask = new AsyncJob(async () => {
       if (this._localState) {
         await this._messenger.postMessage(this._channel, {
@@ -67,6 +64,10 @@ export class SpaceAwarenessProvider implements AwarenessProvider {
         await sleep(DEBOUNCE_INTERVAL);
       }
     });
+  }
+
+  open(): void {
+    this._ctx = new Context();
     this._postTask.open(this._ctx);
 
     this._ctx.onDispose(
@@ -94,10 +95,9 @@ export class SpaceAwarenessProvider implements AwarenessProvider {
   }
 
   close(): void {
-    void this._postTask?.close();
+    void this._postTask.close();
     void this._ctx?.dispose();
     this._ctx = undefined;
-    this._postTask = undefined;
   }
 
   getRemoteStates(): AwarenessState[] {

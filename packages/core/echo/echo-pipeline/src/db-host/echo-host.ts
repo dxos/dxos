@@ -105,7 +105,7 @@ export class EchoHost extends Resource {
   private readonly _feedStore?: FeedStore;
   private readonly _queueDataSource?: QueueDataSource;
 
-  private _updateIndexes!: AsyncJob;
+  private readonly _updateIndexes: AsyncJob;
 
   private _queuesService: QueueService;
 
@@ -202,6 +202,8 @@ export class EchoHost extends Resource {
       },
     });
 
+    this._updateIndexes = new AsyncJob(this._runUpdateIndexes);
+
     trace.diagnostic({
       id: 'database-roots',
       name: 'Database Roots',
@@ -273,7 +275,6 @@ export class EchoHost extends Resource {
 
     if (this._indexConfig.sqlIndex) {
       await RuntimeProvider.runPromise(this._runtime)(this._indexer2.migrate());
-      this._updateIndexes = new AsyncJob(this._runUpdateIndexes);
       this._updateIndexes.open(this._ctx);
     }
 
@@ -301,6 +302,7 @@ export class EchoHost extends Resource {
     await this._queryService.close(ctx);
     await this._spaceStateManager.close(ctx);
     await this._indexer.close(ctx);
+    await this._updateIndexes.close();
     await this._automergeHost.close();
   }
 

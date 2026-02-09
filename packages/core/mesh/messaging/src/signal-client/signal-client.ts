@@ -49,8 +49,8 @@ export class SignalClient extends Resource implements SignalClientMethods {
   private _connectionCtx?: Context;
   private _client?: SignalRPCClient;
 
-  private _reconcileTask?: AsyncJob;
-  private _reconnectTask?: AsyncJob;
+  private readonly _reconcileTask: AsyncJob;
+  private readonly _reconnectTask: AsyncJob;
 
   /**
    * Number of milliseconds after which the connection will be attempted again in case of error.
@@ -91,15 +91,6 @@ export class SignalClient extends Resource implements SignalClientMethods {
       },
       async (event) => this.swarmEvent.emit(event),
     );
-  }
-
-  protected override async _open(): Promise<void> {
-    log.trace('dxos.mesh.signal-client.open', trace.begin({ id: this._instanceId }));
-
-    if ([SignalState.CONNECTED, SignalState.CONNECTING].includes(this._state)) {
-      return;
-    }
-    this._setState(SignalState.CONNECTING);
 
     this._reconcileTask = new AsyncJob(async () => {
       try {
@@ -114,18 +105,6 @@ export class SignalClient extends Resource implements SignalClientMethods {
         throw err;
       }
     });
-    this._reconcileTask.open(this._ctx);
-
-    // Reconcile subscriptions periodically.
-    scheduleTaskInterval(
-      this._ctx,
-      async () => {
-        if (this._state === SignalState.CONNECTED) {
-          this._reconcileTask!.schedule();
-        }
-      },
-      RECONCILE_INTERVAL,
-    );
 
     this._reconnectTask = new AsyncJob(async () => {
       try {
@@ -136,7 +115,29 @@ export class SignalClient extends Resource implements SignalClientMethods {
         throw err;
       }
     });
+  }
+
+  protected override async _open(): Promise<void> {
+    log.trace('dxos.mesh.signal-client.open', trace.begin({ id: this._instanceId }));
+
+    if ([SignalState.CONNECTED, SignalState.CONNECTING].includes(this._state)) {
+      return;
+    }
+    this._setState(SignalState.CONNECTING);
+
+    this._reconcileTask.open(this._ctx);
     this._reconnectTask.open(this._ctx);
+
+    // Reconcile subscriptions periodically.
+    scheduleTaskInterval(
+      this._ctx,
+      async () => {
+        if (this._state === SignalState.CONNECTED) {
+          this._reconcileTask.schedule();
+        }
+      },
+      RECONCILE_INTERVAL,
+    );
 
     this._createClient();
     log.trace('dxos.mesh.signal-client.open', trace.end({ id: this._instanceId }));
@@ -160,8 +161,8 @@ export class SignalClient extends Resource implements SignalClientMethods {
     }
 
     this._setState(SignalState.CLOSED);
-    await this._reconcileTask?.close();
-    await this._reconnectTask?.close();
+    await this._reconcileTask.close();
+    await this._reconnectTask.close();
     await this._safeResetClient();
 
     log('closed');
@@ -181,7 +182,7 @@ export class SignalClient extends Resource implements SignalClientMethods {
     log('joining', { topic: args.topic, peerId: args.peer.peerKey });
     this._monitor.recordJoin();
     this.localState.join({ topic: args.topic, peerId: PublicKey.from(args.peer.peerKey) });
-    this._reconcileTask?.schedule();
+    this._reconcileTask.schedule();
   }
 
   async leave(args: LeaveRequest): Promise<void> {
@@ -212,7 +213,7 @@ export class SignalClient extends Resource implements SignalClientMethods {
     invariant(peer.peerKey, 'Peer key required');
     log('subscribing to messages', { peer });
     this.localState.subscribeMessages(PublicKey.from(peer.peerKey));
-    this._reconcileTask?.schedule();
+    this._reconcileTask.schedule();
   }
 
   async unsubscribeMessages(peer: PeerInfo): Promise<void> {
@@ -222,7 +223,7 @@ export class SignalClient extends Resource implements SignalClientMethods {
   }
 
   private _scheduleReconcileAfterError(): void {
-    scheduleTask(this._ctx, () => this._reconcileTask!.schedule(), ERROR_RECONCILE_DELAY);
+    scheduleTask(this._ctx, () => this._reconcileTask.schedule(), ERROR_RECONCILE_DELAY);
   }
 
   private _createClient(): void {
@@ -305,7 +306,7 @@ export class SignalClient extends Resource implements SignalClientMethods {
     this._reconnectAfter = DEFAULT_RECONNECT_TIMEOUT;
     this._setState(SignalState.CONNECTED);
     this._clientReady.wake();
-    this._reconcileTask!.schedule();
+    this._reconcileTask.schedule();
   }
 
   private _onDisconnected(options?: { error: Error }): void {
@@ -319,7 +320,7 @@ export class SignalClient extends Resource implements SignalClientMethods {
     } else {
       this._setState(SignalState.DISCONNECTED);
     }
-    this._reconnectTask!.schedule();
+    this._reconnectTask.schedule();
   }
 
   private _setState(newState: SignalState): void {

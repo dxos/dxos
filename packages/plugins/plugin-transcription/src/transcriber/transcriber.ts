@@ -89,20 +89,20 @@ export class Transcriber extends Resource {
   private readonly _onSegments: TranscriberProps['onSegments'];
 
   private _recording = false;
-  private _transcribeTask?: AsyncJob = undefined;
+  private readonly _transcribeTask: AsyncJob;
 
   constructor({ config, recorder, onSegments }: TranscriberProps) {
     super();
     this._config = config;
     this._recorder = recorder;
     this._onSegments = onSegments;
+    this._transcribeTask = new AsyncJob(async () => this._transcribe());
   }
 
   protected override async _open(ctx: Context): Promise<void> {
     log.info('opening');
     this._recorder.setOnChunk((chunk) => this._saveAudioChunk(chunk));
     await this._recorder.start();
-    this._transcribeTask = new AsyncJob(async () => this._transcribe());
     this._transcribeTask.open(ctx);
     this._openTrigger.wake();
   }
@@ -110,8 +110,7 @@ export class Transcriber extends Resource {
   protected override async _close(): Promise<void> {
     log.info('closing');
     this._recording = false;
-    await this._transcribeTask?.close();
-    this._transcribeTask = undefined;
+    await this._transcribeTask.close();
     await this._recorder.stop();
   }
 
@@ -130,7 +129,7 @@ export class Transcriber extends Resource {
     }
 
     this._recording = false;
-    this._transcribeTask?.schedule();
+    this._transcribeTask.schedule();
     log.info('stopped');
   }
 
@@ -141,12 +140,12 @@ export class Transcriber extends Resource {
     // Clean the buffer if the user is not speaking and the transcription task is not scheduled.
     if (
       !this._recording &&
-      (!this._transcribeTask || !this._transcribeTask.scheduled) &&
+      !this._transcribeTask.scheduled &&
       this._audioChunks.length >= this._config.prefixBufferChunksAmount
     ) {
       this._audioChunks = this._dropOldChunks();
     } else if (this._audioChunks.length >= this._config.transcribeAfterChunksAmount && this._recording) {
-      this._transcribeTask?.schedule();
+      this._transcribeTask.schedule();
     }
   }
 

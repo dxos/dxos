@@ -64,11 +64,13 @@ export class QueryServiceImpl extends Resource implements QueryService {
   // TODO(dmaretskyi): We need to implement query deduping. Idle composer has 80 queries with only 10 being unique.
   private readonly _queries = new Set<ActiveQuery>();
 
-  private _updateQueries!: AsyncJob;
+  private readonly _updateQueries: AsyncJob;
 
   // TODO(burdon): OK for options, but not params. Pass separately and type readonly here.
   constructor(private readonly _params: QueryServiceProps) {
     super();
+
+    this._updateQueries = new AsyncJob(this._executeQueries.bind(this));
 
     trace.diagnostic({
       id: 'active-queries',
@@ -87,8 +89,6 @@ export class QueryServiceImpl extends Resource implements QueryService {
 
   override async _open(): Promise<void> {
     this._params.indexer.updated.on(this._ctx, () => this.invalidateQueries());
-
-    this._updateQueries = new AsyncJob(this._executeQueries.bind(this));
     this._updateQueries.open(this._ctx);
   }
 

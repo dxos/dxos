@@ -24,10 +24,11 @@ export class SpeakingMonitor extends Resource {
    */
   private _isSpeaking = false;
   private _lastEventTime = 0;
-  private _deferredUpdate?: AsyncJob | undefined;
+  private readonly _deferredUpdate: AsyncJob;
 
   constructor(private readonly _mediaStreamTrack: MediaStreamTrack) {
     super();
+    this._deferredUpdate = new AsyncJob(async () => this._emitSpeakingChanged());
   }
 
   get isSpeaking(): boolean {
@@ -35,7 +36,6 @@ export class SpeakingMonitor extends Resource {
   }
 
   protected override async _open(): Promise<void> {
-    this._deferredUpdate = new AsyncJob(async () => this._emitSpeakingChanged());
     this._deferredUpdate.open(this._ctx);
 
     let timeout: NodeJS.Timeout | undefined;
@@ -53,14 +53,14 @@ export class SpeakingMonitor extends Resource {
           timeout = undefined;
           if (!this._isSpeaking) {
             this._isSpeaking = true;
-            this._deferredUpdate?.schedule();
+            this._deferredUpdate.schedule();
           }
         } else if (timeout === undefined) {
           // User is not speaking and timeout is not set.
           timeout = setTimeout(() => {
             this._isSpeaking = false;
             timeout = undefined;
-            this._deferredUpdate?.schedule();
+            this._deferredUpdate.schedule();
           }, NOT_SPEAKING_AFTER);
         }
       },
@@ -69,6 +69,10 @@ export class SpeakingMonitor extends Resource {
       cleanup();
       clearTimeout(timeout);
     });
+  }
+
+  protected override async _close(): Promise<void> {
+    await this._deferredUpdate.close();
   }
 
   /**

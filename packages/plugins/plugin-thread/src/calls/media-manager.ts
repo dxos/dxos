@@ -69,8 +69,18 @@ export class MediaManager extends Resource {
   private _trackToReconcile: EncodedTrackName[] = [];
   private _blackCanvasStreamTrack?: MediaStreamTrack = undefined;
   private _inaudibleAudioStreamTrack?: MediaStreamTrack = undefined;
-  private _pushTracksTask?: AsyncJob = undefined;
-  private _pullTracksTask?: AsyncJob = undefined;
+  private readonly _pushTracksTask: AsyncJob;
+  private readonly _pullTracksTask: AsyncJob;
+
+  constructor() {
+    super();
+    this._pushTracksTask = new AsyncJob(async () => {
+      await this._pushTracks();
+    });
+    this._pullTracksTask = new AsyncJob(async () => {
+      await this._reconcilePulledMedia();
+    });
+  }
 
   get isSpeaking() {
     return this._speakingMonitor?.isSpeaking;
@@ -99,13 +109,7 @@ export class MediaManager extends Resource {
       this._state.audioTrack = this._inaudibleAudioStreamTrack;
     }
 
-    this._pushTracksTask = new AsyncJob(async () => {
-      await this._pushTracks();
-    });
     this._pushTracksTask.open(this._ctx);
-    this._pullTracksTask = new AsyncJob(async () => {
-      await this._reconcilePulledMedia();
-    });
     this._pullTracksTask.open(this._ctx);
   }
 
@@ -115,17 +119,15 @@ export class MediaManager extends Resource {
     this._state.audioTrack?.stop();
     this._state.videoTrack?.stop();
     this._state.screenshareTrack?.stop();
-    await this._pushTracksTask?.close();
-    await this._pullTracksTask?.close();
-    this._pushTracksTask = undefined;
-    this._pullTracksTask = undefined;
+    await this._pushTracksTask.close();
+    await this._pullTracksTask.close();
   }
 
   @synchronized
   async join(serviceConfig: CallsServiceConfig): Promise<void> {
     this._state.peer = new CallsServicePeer(serviceConfig);
     await this._state.peer!.open();
-    this._pushTracksTask!.schedule();
+    this._pushTracksTask.schedule();
   }
 
   @synchronized
@@ -149,7 +151,7 @@ export class MediaManager extends Resource {
 
     this._state.videoEnabled = true;
     this.stateUpdated.emit(this._state);
-    this._pushTracksTask!.schedule();
+    this._pushTracksTask.schedule();
   }
 
   async turnVideoOff(): Promise<void> {
@@ -162,7 +164,7 @@ export class MediaManager extends Resource {
 
     this._state.videoEnabled = false;
     this.stateUpdated.emit(this._state);
-    this._pushTracksTask!.schedule();
+    this._pushTracksTask.schedule();
   }
 
   // TODO(mykola): Change to `setAudioEnabled(enabled: boolean)`.
@@ -176,7 +178,7 @@ export class MediaManager extends Resource {
       sampleRate: 16_000,
     });
     this.stateUpdated.emit(this._state);
-    this._pushTracksTask!.schedule();
+    this._pushTracksTask.schedule();
     this._speakingMonitor = new SpeakingMonitor(this._state.audioTrack!);
     this._speakingMonitor.speakingChanged.on(this._ctx, () => this.stateUpdated.emit(this._state));
     void this._speakingMonitor.open();
@@ -194,7 +196,7 @@ export class MediaManager extends Resource {
       this._state.audioTrack = undefined;
     }
     this.stateUpdated.emit(this._state);
-    this._pushTracksTask!.schedule();
+    this._pushTracksTask.schedule();
   }
 
   async turnScreenshareOn(): Promise<void> {
@@ -203,7 +205,7 @@ export class MediaManager extends Resource {
     this._state.screenshareTrack = ms.getVideoTracks()[0];
     this._state.screenshareEnabled = true;
     this.stateUpdated.emit(this._state);
-    this._pushTracksTask!.schedule();
+    this._pushTracksTask.schedule();
   }
 
   async turnScreenshareOff(): Promise<void> {
@@ -211,7 +213,7 @@ export class MediaManager extends Resource {
     this._state.screenshareTrack?.stop();
     this._state.screenshareTrack = undefined;
     this.stateUpdated.emit(this._state);
-    this._pushTracksTask!.schedule();
+    this._pushTracksTask.schedule();
   }
 
   /**
@@ -226,7 +228,7 @@ export class MediaManager extends Resource {
     }
 
     this._trackToReconcile = tracks;
-    this._pullTracksTask!.schedule();
+    this._pullTracksTask.schedule();
   }
 
   private async _reconcilePulledMedia(): Promise<void> {

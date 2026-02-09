@@ -48,7 +48,7 @@ export class PersistentLifecycle<T> extends Resource {
   private readonly _maxRestartDelay: number;
 
   private _currentState: T | undefined = undefined;
-  private _restartTask?: AsyncJob = undefined;
+  private readonly _restartTask: AsyncJob;
   private _restartAfter = 0;
 
   constructor({ start, stop, onRestart, maxRestartDelay = DEFAULT_MAX_RESTART_DELAY }: PersistentLifecycleProps<T>) {
@@ -57,6 +57,15 @@ export class PersistentLifecycle<T> extends Resource {
     this._stop = stop;
     this._onRestart = onRestart;
     this._maxRestartDelay = maxRestartDelay;
+
+    this._restartTask = new AsyncJob(async () => {
+      try {
+        await this._restart();
+      } catch (err) {
+        log.warn('Restart failed', { err });
+        this._restartTask.schedule();
+      }
+    });
   }
 
   get state() {
@@ -65,27 +74,18 @@ export class PersistentLifecycle<T> extends Resource {
 
   @synchronized
   protected override async _open(): Promise<void> {
-    this._restartTask = new AsyncJob(async () => {
-      try {
-        await this._restart();
-      } catch (err) {
-        log.warn('Restart failed', { err });
-        this._restartTask?.schedule();
-      }
-    });
     this._restartTask.open(this._ctx);
 
     this._currentState = await this._start().catch((err) => {
       log.warn('Start failed', { err });
-      this._restartTask?.schedule();
+      this._restartTask.schedule();
       return undefined;
     });
   }
 
   protected override async _close(): Promise<void> {
-    await this._restartTask?.close();
+    await this._restartTask.close();
     await this._stopCurrentState();
-    this._restartTask = undefined;
   }
 
   private async _restart(): Promise<void> {

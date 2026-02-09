@@ -66,7 +66,7 @@ export class CallSwarmSynchronizer extends Resource {
   private readonly _state: CallState = { activities: {} };
   private readonly _networkService: NetworkService;
   private _lastSwarmEvent?: SwarmResponse = undefined;
-  private _reconcileSwarmStateTask?: AsyncJob = undefined;
+  private readonly _reconcileSwarmStateTask: AsyncJob;
 
   private _identityKey?: string = undefined;
   private _deviceKey?: string = undefined;
@@ -74,11 +74,19 @@ export class CallSwarmSynchronizer extends Resource {
 
   private _swarmCtx?: Context = undefined;
 
-  private _sendStateTask?: AsyncJob = undefined;
+  private readonly _sendStateTask: AsyncJob;
 
   constructor({ networkService }: CallSwarmSynchronizerProps) {
     super();
     this._networkService = networkService;
+
+    this._sendStateTask = new AsyncJob(async () => {
+      await this._sendState();
+    });
+
+    this._reconcileSwarmStateTask = new AsyncJob(async () => {
+      await this._reconcileSwarmState();
+    });
   }
 
   /**
@@ -157,22 +165,13 @@ export class CallSwarmSynchronizer extends Resource {
   }
 
   protected override async _open(): Promise<void> {
-    this._sendStateTask = new AsyncJob(async () => {
-      await this._sendState();
-    });
     this._sendStateTask.open(this._ctx);
-
-    this._reconcileSwarmStateTask = new AsyncJob(async () => {
-      await this._reconcileSwarmState();
-    });
     this._reconcileSwarmStateTask.open(this._ctx);
   }
 
   protected override async _close(): Promise<void> {
-    await this._sendStateTask?.close();
-    await this._reconcileSwarmStateTask?.close();
-    this._sendStateTask = undefined;
-    this._reconcileSwarmStateTask = undefined;
+    await this._sendStateTask.close();
+    await this._reconcileSwarmStateTask.close();
   }
 
   @synchronized
@@ -230,7 +229,7 @@ export class CallSwarmSynchronizer extends Resource {
   private _notifyAndSchedule(): void {
     this.stateUpdated.emit(this._state);
     if (this._state.joined) {
-      this._sendStateTask?.schedule();
+      this._sendStateTask.schedule();
     }
   }
 
@@ -269,7 +268,7 @@ export class CallSwarmSynchronizer extends Resource {
     }
 
     this._lastSwarmEvent = swarmEvent;
-    this._reconcileSwarmStateTask!.schedule();
+    this._reconcileSwarmStateTask.schedule();
   }
 
   private async _reconcileSwarmState(): Promise<void> {

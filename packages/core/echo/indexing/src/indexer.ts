@@ -66,7 +66,7 @@ export class Indexer extends Resource {
 
   private _indexConfig?: IndexConfig;
   private _lastRunFinishedAt = 0;
-  private _run!: AsyncJob;
+  private readonly _run: AsyncJob;
 
   constructor({
     db,
@@ -90,6 +90,26 @@ export class Indexer extends Resource {
       documentLoader: {
         loadDocuments,
       },
+    });
+
+    this._run = new AsyncJob(async () => {
+      try {
+        if (this._lifecycleState !== LifecycleState.OPEN || this._indexConfig?.enabled !== true) {
+          return;
+        }
+
+        const cooldownMs = this._lastRunFinishedAt + this._indexCooldownTime - Date.now();
+        if (cooldownMs > 0) {
+          await sleepWithContext(this._ctx, cooldownMs);
+        }
+
+        if (this._engine.newIndexCount > 0) {
+          await this._promoteNewIndexes();
+        }
+        await this._indexUpdatedObjects();
+      } finally {
+        this._lastRunFinishedAt = Date.now();
+      }
     });
   }
 
@@ -124,28 +144,6 @@ export class Indexer extends Resource {
     }
 
     await this._engine.open(ctx);
-
-    // Needs to be re-created because context changes.
-    // TODO(dmaretskyi): Find a way to express this better for resources.
-    this._run = new AsyncJob(async () => {
-      try {
-        if (this._lifecycleState !== LifecycleState.OPEN || this._indexConfig?.enabled !== true) {
-          return;
-        }
-
-        const cooldownMs = this._lastRunFinishedAt + this._indexCooldownTime - Date.now();
-        if (cooldownMs > 0) {
-          await sleepWithContext(this._ctx, cooldownMs);
-        }
-
-        if (this._engine.newIndexCount > 0) {
-          await this._promoteNewIndexes();
-        }
-        await this._indexUpdatedObjects();
-      } finally {
-        this._lastRunFinishedAt = Date.now();
-      }
-    });
     this._run.open(this._ctx);
 
     // Load indexes from disk.
