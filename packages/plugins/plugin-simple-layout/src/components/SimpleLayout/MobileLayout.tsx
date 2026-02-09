@@ -129,9 +129,9 @@ const Main = forwardRef<HTMLDivElement, MainProps>(({ classNames, children, ...p
       {...props}
       className={mx('overflow-hidden transition-all duration-300 ease-in-out', classNames)}
       style={{
-        // When drawer is closed, Main takes full height
-        // When drawer is open, Main takes 50% height (flex-1 behavior)
-        // When drawer is expanded (keyboard visible), Main shrinks to 0
+        // When drawer is closed, Main takes full height.
+        // When drawer is open, Main takes 50% height (flex-1 behavior).
+        // When drawer is expanded (keyboard visible), Main shrinks to 0.
         flexGrow: drawerState === 'closed' ? 1 : drawerState === 'open' ? 1 : 0,
         flexShrink: 1,
         flexBasis: drawerState === 'expanded' ? 0 : 'auto',

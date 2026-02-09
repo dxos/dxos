@@ -7,12 +7,17 @@ import { type Atom } from '@effect-atom/atom-react';
 import { Capability } from '@dxos/app-framework';
 import { type Label } from '@dxos/react-ui';
 
+import { type DrawerState } from '../components';
 import { meta } from '../meta';
 
 // TODO(wittjosiah): Handle toasts.
 export type SimpleLayoutState = {
   /** Data to be passed to the main content Surface. */
   content?: any;
+
+  previousWorkspace: string;
+  workspace: string;
+  active?: string;
 
   dialogOpen: boolean;
   dialogType?: 'default' | 'alert';
@@ -31,9 +36,8 @@ export type SimpleLayoutState = {
   popoverTitle?: Label;
   popoverContent?: any;
 
-  previousWorkspace: string;
-  workspace: string;
-  active?: string;
+  /** Bottom drawer state. */
+  drawerState: DrawerState;
 
   /** Stack of previously active item IDs for back navigation. */
   history: string[];

@@ -18,7 +18,7 @@ const defaultState: SimpleLayoutState = {
   history: [],
   isPopover: false,
   companionVariant: undefined,
-  // drawerState: 'closed',
+  drawerState: 'closed',
 };
 
 export type SimpleLayoutStateOptions = {
