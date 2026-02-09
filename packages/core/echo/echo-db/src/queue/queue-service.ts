@@ -6,20 +6,20 @@ import { ATTR_META, type ObjectJSON } from '@dxos/echo/internal';
 import type { EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import type { ObjectId, SpaceId } from '@dxos/keys';
-import { KEY_QUEUE_POSITION } from '@dxos/protocols';
+import { type Echo, type Empty, create, EmptySchema, KEY_QUEUE_POSITION } from '@dxos/protocols';
 import type {
   DeleteFromQueueRequest,
   InsertIntoQueueRequest,
   QueryQueueRequest,
   QueueQueryResult,
-  QueueService,
-} from '@dxos/protocols/proto/dxos/client/services';
+} from '@dxos/protocols/buf/dxos/client/queue_pb';
+import { QueueQueryResultSchema } from '@dxos/protocols/buf/dxos/client/queue_pb';
 import { ComplexMap } from '@dxos/util';
 
 /**
  * Backed by Edge.
  */
-export class QueueServiceImpl implements QueueService {
+export class QueueServiceImpl implements Echo.QueueService {
   constructor(private readonly _client: EdgeHttpClient) {}
 
   async queryQueue(request: QueryQueueRequest): Promise<QueueQueryResult> {
@@ -27,34 +27,36 @@ export class QueueServiceImpl implements QueueService {
     const result = await this._client.queryQueue(
       request.query.queuesNamespace,
       request.query.spaceId as SpaceId,
-      request.query,
+      request.query as any,
     );
     return result as any as QueueQueryResult;
   }
 
-  insertIntoQueue(request: InsertIntoQueueRequest): Promise<void> {
-    return this._client.insertIntoQueue(
+  async insertIntoQueue(request: InsertIntoQueueRequest): Promise<Empty> {
+    await this._client.insertIntoQueue(
       request.subspaceTag!,
       request.spaceId as SpaceId,
       request.queueId as ObjectId,
-      request.objects!,
+      request.objects as any,
     );
+    return create(EmptySchema);
   }
 
-  deleteFromQueue(request: DeleteFromQueueRequest): Promise<void> {
-    return this._client.deleteFromQueue(
+  async deleteFromQueue(request: DeleteFromQueueRequest): Promise<Empty> {
+    await this._client.deleteFromQueue(
       request.subspaceTag!,
       request.spaceId as SpaceId,
       request.queueId as ObjectId,
       request.objectIds as ObjectId[],
     );
+    return create(EmptySchema);
   }
 }
 
 /**
  * Mock implementation for testing.
  */
-export class MockQueueService implements QueueService {
+export class MockQueueService implements Echo.QueueService {
   private _queues = new ComplexMap<[subspaceTag: string, spaceId: SpaceId, queueId: ObjectId], unknown[]>(
     ([subspaceTag, spaceId, queueId]) => `${subspaceTag}:${spaceId}:${queueId}`,
   );
@@ -62,16 +64,19 @@ export class MockQueueService implements QueueService {
   async queryQueue(request: QueryQueueRequest): Promise<QueueQueryResult> {
     const { query } = request;
     const objects =
-      this._queues.get([request.query.queuesNamespace!, query!.spaceId as SpaceId, query!.queueIds![0] as ObjectId]) ??
-      [];
-    return {
+      this._queues.get([
+        request.query!.queuesNamespace!,
+        query!.spaceId as SpaceId,
+        query!.queueIds![0] as ObjectId,
+      ]) ?? [];
+    return create(QueueQueryResultSchema, {
       objects: objects as any,
       nextCursor: '',
       prevCursor: '',
-    };
+    });
   }
 
-  async insertIntoQueue(request: InsertIntoQueueRequest): Promise<void> {
+  async insertIntoQueue(request: InsertIntoQueueRequest): Promise<Empty> {
     const { subspaceTag, spaceId, queueId, objects } = request;
     const key: [string, SpaceId, ObjectId] = [subspaceTag!, spaceId as SpaceId, queueId as ObjectId];
     const array = this._queues.get(key) ?? [];
@@ -80,9 +85,10 @@ export class MockQueueService implements QueueService {
       setQueuePosition(obj as ObjectJSON, array.length);
       array.push(obj);
     }
+    return create(EmptySchema);
   }
 
-  async deleteFromQueue(request: DeleteFromQueueRequest): Promise<void> {
+  async deleteFromQueue(request: DeleteFromQueueRequest): Promise<Empty> {
     const { subspaceTag, spaceId, queueId, objectIds } = request;
     const key: [string, SpaceId, ObjectId] = [subspaceTag!, spaceId as SpaceId, queueId as ObjectId];
     const existing = this._queues.get(key) ?? [];
@@ -90,6 +96,7 @@ export class MockQueueService implements QueueService {
       key,
       existing.filter((obj: any) => !objectIds!.includes(obj.id)),
     );
+    return create(EmptySchema);
   }
 }
 
