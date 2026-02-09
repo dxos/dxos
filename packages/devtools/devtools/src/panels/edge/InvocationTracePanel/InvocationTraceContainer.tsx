@@ -190,7 +190,20 @@ export const InvocationTraceContainer = ({
                 .toSorted((a, b) => b.time.getTime() - a.time.getTime())
                 .slice(0, 50)
                 .map((row) => (
-                  <tr key={row.id} onClick={() => handleRowClick(row)} className='cursor-pointer'>
+                  <tr
+                    key={row.id}
+                    role='button'
+                    tabIndex={0}
+                    aria-selected={selectedId === row.id}
+                    onClick={() => handleRowClick(row)}
+                    onKeyDown={(e: React.KeyboardEvent<HTMLTableRowElement>) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        handleRowClick(row);
+                      }
+                    }}
+                    className='cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-accent'
+                  >
                     <td className='px-2 py-1 whitespace-nowrap border border-separator'>{row.id}</td>
                     <td className='px-2 py-1 whitespace-nowrap border border-separator'>{row.target}</td>
                     <td className='px-2 py-1 whitespace-nowrap border border-separator'>{row.time.toLocaleString()}</td>

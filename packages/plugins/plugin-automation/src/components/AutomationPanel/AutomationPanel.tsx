@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Atom, useAtomValue } from '@effect-atom/atom-react';
 import * as Array from 'effect/Array';
 import * as EFn from 'effect/Function';
 import * as Match from 'effect/Match';
@@ -9,6 +10,7 @@ import * as Schema from 'effect/Schema';
 import React, { useMemo, useState } from 'react';
 
 import { Filter, Obj, Tag } from '@dxos/echo';
+import { AtomObj } from '@dxos/echo-atom';
 import { Function, Script, Trigger } from '@dxos/functions';
 import { KEY_QUEUE_CURSOR } from '@dxos/functions-runtime';
 import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
@@ -24,8 +26,6 @@ import { isNonNullable } from '@dxos/util';
 
 import { meta } from '../../meta';
 import { TriggerEditor, type TriggerEditorProps } from '../TriggerEditor';
-import { Atom, useAtomValue } from '@effect-atom/atom-react';
-import { AtomObj } from '@dxos/echo-atom';
 
 const grid = 'grid grid-cols-[40px_1fr_32px_32px] min-bs-[2.5rem]';
 

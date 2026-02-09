@@ -5,10 +5,10 @@
 import * as Schema from 'effect/Schema';
 
 import { Type } from '@dxos/echo';
+import { Queue } from '@dxos/echo-db';
 import { QueueAnnotation, Text } from '@dxos/schema';
 
 import * as Chat from '../chat/Chat';
-import { Queue } from '@dxos/echo-db';
 
 /**
  * Initiative schema definition.
@@ -28,7 +28,7 @@ export const Initiative = Schema.Struct({
   ),
 
   /**
-   * Incomnig queue that the agent processes.
+   * Incoming queue that the agent processes.
    */
   // NOTE: Named `queue` to conform to subscribable schema (see QueueAnnotation).
   queue: Schema.optional(Type.Ref(Queue)),

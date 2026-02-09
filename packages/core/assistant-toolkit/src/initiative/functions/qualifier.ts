@@ -2,23 +2,17 @@
 // Copyright 2026 DXOS.org
 //
 
+import { LanguageModel, Prompt } from '@effect/ai';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
-import { AiContextService, AiConversation, AiConversationService, type ContextBinding } from '@dxos/assistant';
 import { Database, Obj, Ref, Type } from '@dxos/echo';
-import { Queue } from '@dxos/echo-db';
-import { acquireReleaseResource } from '@dxos/effect';
 import { TriggerEvent, defineFunction } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
-import { type Message } from '@dxos/types';
+import { trim } from '@dxos/util';
 
 import * as Initiative from '../Initiative';
-import { resetChatHistory } from '../util';
-import { LanguageModel } from '@effect/ai';
-import { Prompt } from '@effect/ai';
-import { trim } from '@dxos/util';
 
 export default defineFunction({
   key: 'dxos.org/function/initiative/qualifier',
@@ -37,7 +31,7 @@ export default defineFunction({
       invariant(Obj.instanceOf(Initiative.Initiative, initiative));
       invariant(initiative.chat, 'Initiative has no chat.');
 
-      const { id, name, plan, spec, queue } = yield* Database.load(data.initiative);
+      const { id, name, plan, spec, queue } = initiative;
       if (!queue) {
         throw new Error('Initiative has no queue.');
       }
@@ -57,7 +51,7 @@ export default defineFunction({
               You are a qualifying agent that determines if the event is relevant to the initiative.
               Respond with true if the event is relevant to the initiative, false otherwise.
               If you are not sure, return true.
-              The quailified events will be forwarded to the larger agent that will process them.
+              The qualified events will be forwarded to the larger agent that will process them.
               <initiative>
                 ${JSON.stringify(
                   {

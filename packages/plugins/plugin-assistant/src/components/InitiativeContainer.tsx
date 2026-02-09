@@ -5,15 +5,19 @@
 import { Atom, useAtomValue } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 import * as Match from 'effect/Match';
+import * as Option from 'effect/Option';
 import type * as Record from 'effect/Record';
+import { Data } from 'effect/Schema';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { Surface, useCapability } from '@dxos/app-framework/react';
 import { AiContextBinder } from '@dxos/assistant';
 import { Chat, Initiative } from '@dxos/assistant-toolkit';
+import { Blueprint } from '@dxos/blueprints';
 import { DXN, Database, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import { type JsonPath, splitJsonPath } from '@dxos/echo/internal';
 import { AtomObj, AtomRef } from '@dxos/echo-atom';
+import { acquireReleaseResource } from '@dxos/effect';
 import { FunctionDefinition, QueueService, Trigger } from '@dxos/functions';
 import { AutomationCapabilities } from '@dxos/plugin-automation/types';
 import { MarkdownEditor } from '@dxos/plugin-markdown';
@@ -22,10 +26,6 @@ import { Button, ButtonGroup, IconButton, Input, toLocalizedString, useTranslati
 import { Form, type FormFieldMap, omitId } from '@dxos/react-ui-form';
 import { StackItem } from '@dxos/react-ui-stack';
 import { type Text } from '@dxos/schema';
-import { Blueprint } from '@dxos/blueprints';
-import { Data } from 'effect/Schema';
-import { acquireReleaseResource } from '@dxos/effect';
-import * as Option from 'effect/Option';
 
 export type InitiativeContainerProps = {
   role?: string;
