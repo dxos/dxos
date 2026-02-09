@@ -6,25 +6,29 @@ import { SubscriptionList } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf/stream';
 import { type EdgeConnection } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
+import { type Halo, create } from '@dxos/protocols';
 import {
-  Device,
+  type Device,
+  Device_PresenceState,
   DeviceKind,
-  type DevicesService,
-  EdgeStatus,
+  DeviceSchema,
+  EdgeStatus_ConnectionState,
   type QueryDevicesResponse,
-} from '@dxos/protocols/proto/dxos/client/services';
-import { type DeviceProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
+  QueryDevicesResponseSchema,
+} from '@dxos/protocols/buf/dxos/client/services_pb';
+import { type DeviceProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 import { type IdentityManager } from '../identity';
 
-export class DevicesServiceImpl implements DevicesService {
+export class DevicesServiceImpl implements Halo.DevicesService {
   constructor(
     private readonly _identityManager: IdentityManager,
     private readonly _edgeConnection?: EdgeConnection,
   ) {}
 
   async updateDevice(profile: DeviceProfileDocument): Promise<Device> {
-    return this._identityManager.updateDeviceProfile(profile);
+    const result = await this._identityManager.updateDeviceProfile(profile as any);
+    return create(DeviceSchema, result as any);
   }
 
   queryDevices(): Stream<QueryDevicesResponse> {
@@ -32,35 +36,37 @@ export class DevicesServiceImpl implements DevicesService {
       const update = () => {
         const deviceKeys = this._identityManager.identity?.authorizedDeviceKeys;
         if (!deviceKeys) {
-          next({ devices: [] });
+          next(create(QueryDevicesResponseSchema, { devices: [] }));
         } else {
           invariant(this._identityManager.identity?.presence, 'presence not present');
           const peers = this._identityManager.identity.presence.getPeersOnline();
-          next({
-            devices: Array.from(deviceKeys.entries()).map(([key, profile]) => {
-              const isMe = this._identityManager.identity?.deviceKey.equals(key);
-              let presence;
-              if (isMe) {
-                presence = Device.PresenceState.ONLINE;
-              } else if (profile.os?.toUpperCase() === 'EDGE') {
-                presence =
-                  this._edgeConnection?.status.state === EdgeStatus.ConnectionState.CONNECTED
-                    ? Device.PresenceState.ONLINE
-                    : Device.PresenceState.OFFLINE;
-              } else {
-                presence = peers.some((peer) => peer.identityKey.equals(key))
-                  ? Device.PresenceState.ONLINE
-                  : Device.PresenceState.OFFLINE;
-              }
+          next(
+            create(QueryDevicesResponseSchema, {
+              devices: Array.from(deviceKeys.entries()).map(([key, profile]) => {
+                const isMe = this._identityManager.identity?.deviceKey.equals(key);
+                let presence;
+                if (isMe) {
+                  presence = Device_PresenceState.ONLINE;
+                } else if (profile.os?.toUpperCase() === 'EDGE') {
+                  presence =
+                    this._edgeConnection?.status.state === EdgeStatus_ConnectionState.CONNECTED
+                      ? Device_PresenceState.ONLINE
+                      : Device_PresenceState.OFFLINE;
+                } else {
+                  presence = peers.some((peer) => peer.identityKey.equals(key))
+                    ? Device_PresenceState.ONLINE
+                    : Device_PresenceState.OFFLINE;
+                }
 
-              return {
-                deviceKey: key,
-                kind: this._identityManager.identity?.deviceKey.equals(key) ? DeviceKind.CURRENT : DeviceKind.TRUSTED,
-                profile,
-                presence,
-              };
+                return create(DeviceSchema, {
+                  deviceKey: key as any,
+                  kind: this._identityManager.identity?.deviceKey.equals(key) ? DeviceKind.CURRENT : DeviceKind.TRUSTED,
+                  profile: profile as any,
+                  presence,
+                });
+              }),
             }),
-          });
+          );
         }
       };
 
