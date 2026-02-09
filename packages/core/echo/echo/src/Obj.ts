@@ -407,7 +407,8 @@ export const getTypename = (entity: Unknown | Snapshot): string | undefined => g
  * Get the database the object belongs to.
  * Accepts both reactive objects and snapshots.
  */
-export const getDatabase = (entity: Unknown | Snapshot): Database.Database | undefined => getDatabase$(entity);
+export const getDatabase = (entity: Entity.Unknown | Entity.Snapshot): Database.Database | undefined =>
+  getDatabase$(entity);
 
 //
 // Meta

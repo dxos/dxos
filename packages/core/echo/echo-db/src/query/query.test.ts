@@ -822,9 +822,9 @@ describe('Query', () => {
 
     test('traverse to parent', async () => {
       // Create parent-child hierarchy.
-      const parent = db.add(Obj.make(Type.Expando, { name: 'Parent' }));
+      const parent = db.add(Obj.make(TestSchema.Expando, { name: 'Parent' }));
       const child = db.add(
-        Obj.make(Type.Expando, {
+        Obj.make(TestSchema.Expando, {
           [Obj.Parent]: parent,
           name: 'Child',
         }),
@@ -839,15 +839,15 @@ describe('Query', () => {
 
     test('traverse to children', async () => {
       // Create parent-child hierarchy.
-      const parent = db.add(Obj.make(Type.Expando, { name: 'Parent' }));
+      const parent = db.add(Obj.make(TestSchema.Expando, { name: 'Parent' }));
       const child1 = db.add(
-        Obj.make(Type.Expando, {
+        Obj.make(TestSchema.Expando, {
           [Obj.Parent]: parent,
           name: 'Child 1',
         }),
       );
       const child2 = db.add(
-        Obj.make(Type.Expando, {
+        Obj.make(TestSchema.Expando, {
           [Obj.Parent]: parent,
           name: 'Child 2',
         }),
@@ -865,15 +865,15 @@ describe('Query', () => {
 
     test('traverse parent-child hierarchy with multiple levels', async () => {
       // Create grandparent -> parent -> child hierarchy.
-      const grandparent = db.add(Obj.make(Type.Expando, { name: 'Grandparent' }));
+      const grandparent = db.add(Obj.make(TestSchema.Expando, { name: 'Grandparent' }));
       const parent = db.add(
-        Obj.make(Type.Expando, {
+        Obj.make(TestSchema.Expando, {
           [Obj.Parent]: grandparent,
           name: 'Parent',
         }),
       );
       const child = db.add(
-        Obj.make(Type.Expando, {
+        Obj.make(TestSchema.Expando, {
           [Obj.Parent]: parent,
           name: 'Child',
         }),

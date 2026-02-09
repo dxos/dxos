@@ -130,7 +130,7 @@ export const objectFromJSON = async (
 
   if (jsonData[ATTR_PARENT]) {
     const parentDxn = DXN.parse(jsonData[ATTR_PARENT]);
-    const parent = (await refResolver?.resolve(parentDxn)) as AnyEchoObject | undefined;
+    const parent = (await refResolver?.resolve(parentDxn)) as Obj.Unknown | undefined;
     defineHiddenProperty(obj, ParentId, parent);
   }
 
