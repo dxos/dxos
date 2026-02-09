@@ -32,7 +32,7 @@ import {
 import { TcpTransportFactory } from '@dxos/network-manager/transport/tcp';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { type Storage } from '@dxos/random-access-storage';
-import { type BufProtoRpcPeer, createLinkedPorts, createBufProtoRpcPeer } from '@dxos/rpc';
+import { type BufProtoRpcPeer, createBufProtoRpcPeer, createLinkedPorts } from '@dxos/rpc';
 import { layerMemory as sqliteLayerMemory } from '@dxos/sql-sqlite/platform';
 import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 

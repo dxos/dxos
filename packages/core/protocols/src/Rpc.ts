@@ -1,10 +1,8 @@
-import {
-  type DescMessage,
-  type DescMethod,
-  type DescService,
-  type Message,
-  type MessageShape,
-} from '@bufbuild/protobuf';
+//
+// Copyright 2026 DXOS.org
+//
+
+import { type DescMessage, type MessageShape } from '@bufbuild/protobuf';
 import { type GenService, type GenServiceMethods } from '@bufbuild/protobuf/codegenv2';
 
 import type { Stream } from '@dxos/codec-protobuf/stream';

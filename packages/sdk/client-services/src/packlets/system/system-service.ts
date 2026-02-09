@@ -5,18 +5,18 @@
 import { type Event } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf/stream';
 import { type Config } from '@dxos/config';
-import { type Client, create, EmptySchema, type Empty } from '@dxos/protocols';
+import { type Client, type Empty, EmptySchema, create } from '@dxos/protocols';
 import {
-  GetDiagnosticsRequest_KEY_OPTION,
-  GetDiagnosticsResponseSchema,
   type GetDiagnosticsRequest,
+  GetDiagnosticsRequest_KEY_OPTION,
   type GetDiagnosticsResponse,
+  GetDiagnosticsResponseSchema,
   type Platform,
   PlatformSchema,
   type QueryStatusRequest,
   type QueryStatusResponse,
   QueryStatusResponseSchema,
-  SystemStatus,
+  type SystemStatus,
   type UpdateStatusRequest,
 } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { type Config as ConfigProto, ConfigSchema } from '@dxos/protocols/buf/dxos/config_pb';

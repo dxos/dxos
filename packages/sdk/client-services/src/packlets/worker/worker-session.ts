@@ -3,12 +3,7 @@
 //
 
 import { Trigger, asyncTimeout } from '@dxos/async';
-import {
-  type IframeServiceBundle,
-  PROXY_CONNECTION_TIMEOUT,
-  iframeServiceBundle,
-  workerServiceBundle,
-} from '@dxos/client-protocol';
+import { PROXY_CONNECTION_TIMEOUT, iframeServiceBundle, workerServiceBundle } from '@dxos/client-protocol';
 import { invariant } from '@dxos/invariant';
 import { log, logInfo } from '@dxos/log';
 import { type Mesh } from '@dxos/protocols';

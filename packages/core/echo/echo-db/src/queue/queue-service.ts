@@ -6,7 +6,7 @@ import { ATTR_META, type ObjectJSON } from '@dxos/echo/internal';
 import type { EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import type { ObjectId, SpaceId } from '@dxos/keys';
-import { type Echo, type Empty, create, EmptySchema, KEY_QUEUE_POSITION } from '@dxos/protocols';
+import { type Echo, type Empty, EmptySchema, KEY_QUEUE_POSITION, create } from '@dxos/protocols';
 import type {
   DeleteFromQueueRequest,
   InsertIntoQueueRequest,
@@ -64,11 +64,8 @@ export class MockQueueService implements Echo.QueueService {
   async queryQueue(request: QueryQueueRequest): Promise<QueueQueryResult> {
     const { query } = request;
     const objects =
-      this._queues.get([
-        request.query!.queuesNamespace!,
-        query!.spaceId as SpaceId,
-        query!.queueIds![0] as ObjectId,
-      ]) ?? [];
+      this._queues.get([request.query!.queuesNamespace!, query!.spaceId as SpaceId, query!.queueIds![0] as ObjectId]) ??
+      [];
     return create(QueueQueryResultSchema, {
       objects: objects as any,
       nextCursor: '',

@@ -3,7 +3,7 @@
 //
 
 import { type Event } from '@dxos/async';
-import { type Client, type Halo, type Mesh, Rpc, Echo } from '@dxos/protocols';
+import { type Client, type Echo, type Halo, type Mesh } from '@dxos/protocols';
 import * as ClientLoggingPb from '@dxos/protocols/buf/dxos/client/logging_pb';
 import * as ClientQueuePb from '@dxos/protocols/buf/dxos/client/queue_pb';
 import * as ClientServicesPb from '@dxos/protocols/buf/dxos/client/services_pb';

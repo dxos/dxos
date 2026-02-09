@@ -4,12 +4,12 @@
 
 import { Stream } from '@dxos/codec-protobuf/stream';
 import { type EdgeConnection } from '@dxos/edge-client';
-import { type Client, create, EmptySchema, type Empty, EdgeAgentStatus } from '@dxos/protocols';
+import { type Client, EdgeAgentStatus, type Empty, EmptySchema, create } from '@dxos/protocols';
 import {
   EdgeStatus_ConnectionState,
-  QueryAgentStatusResponse_AgentStatus,
   type QueryAgentStatusResponse,
   QueryAgentStatusResponseSchema,
+  QueryAgentStatusResponse_AgentStatus,
   type QueryEdgeStatusResponse,
   QueryEdgeStatusResponseSchema,
 } from '@dxos/protocols/buf/dxos/client/services_pb';

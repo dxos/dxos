@@ -10,14 +10,14 @@ import { type QueryAST } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { DXN, type ObjectId, type QueueSubspaceTag, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { RpcClosedError, type Echo } from '@dxos/protocols';
-import { QueryReactivity } from '@dxos/protocols/proto/dxos/echo/query';
+import { type Echo, RpcClosedError } from '@dxos/protocols';
+import { create } from '@dxos/protocols/buf';
 import * as QueryPb from '@dxos/protocols/buf/dxos/echo/query_pb';
+import { QueryReactivity } from '@dxos/protocols/proto/dxos/echo/query';
 import { isNonNullable } from '@dxos/util';
 
 import { OBJECT_DIAGNOSTICS, type QuerySourceProvider } from '../hypergraph';
 import { type QuerySource, getTargetSpacesForQuery } from '../query';
-import { create } from '@dxos/protocols/buf';
 
 export type LoadObjectProps = {
   spaceId: SpaceId;

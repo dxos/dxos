@@ -11,7 +11,7 @@ import { ErrorStream } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { type Mesh } from '@dxos/protocols';
 import * as MeshBridgePb from '@dxos/protocols/buf/dxos/mesh/bridge_pb';
-import { type RpcPort, createLinkedPorts, createBufProtoRpcPeer, createBufServiceBundle } from '@dxos/rpc';
+import { type RpcPort, createBufProtoRpcPeer, createBufServiceBundle, createLinkedPorts } from '@dxos/rpc';
 
 import { type Transport, type TransportFactory, type TransportOptions, type TransportStats } from '../transport';
 

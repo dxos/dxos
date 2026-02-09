@@ -1,8 +1,12 @@
-import * as ClientServicesPb from '@dxos/protocols/buf/dxos/client/services_pb';
-import * as ClientLoggingPb from '@dxos/protocols/buf/dxos/client/logging_pb';
-import * as DevtoolsHostPb from '@dxos/protocols/buf/dxos/devtools/host_pb';
-import * as TracingPb from '@dxos/protocols/buf/dxos/tracing_pb';
-import * as IframePb from '@dxos/protocols/buf/dxos/iframe_pb';
+//
+// Copyright 2026 DXOS.org
+//
+
+import type * as ClientLoggingPb from '@dxos/protocols/buf/dxos/client/logging_pb';
+import type * as ClientServicesPb from '@dxos/protocols/buf/dxos/client/services_pb';
+import type * as DevtoolsHostPb from '@dxos/protocols/buf/dxos/devtools/host_pb';
+import type * as IframePb from '@dxos/protocols/buf/dxos/iframe_pb';
+import type * as TracingPb from '@dxos/protocols/buf/dxos/tracing_pb';
 
 import type * as Rpc from './Rpc.ts';
 

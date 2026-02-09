@@ -2,8 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import { type GenService, type GenServiceMethods } from '@dxos/protocols/buf';
 import { type Rpc } from '@dxos/protocols';
+import { type GenService, type GenServiceMethods } from '@dxos/protocols/buf';
 
 /**
  * Registry of operational services.

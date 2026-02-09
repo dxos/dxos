@@ -8,9 +8,8 @@ import { Context } from '@dxos/context';
 import { type Hypergraph } from '@dxos/echo';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { SpaceId } from '@dxos/keys';
-import { QueryReactivity, type QueryRequest } from '@dxos/protocols/proto/dxos/echo/query';
-
 import { type Echo } from '@dxos/protocols';
+import { QueryReactivity, type QueryRequest } from '@dxos/protocols/proto/dxos/echo/query';
 
 import { IndexQuerySource } from './index-query-source-provider';
 

@@ -10,10 +10,10 @@ import {
   type SignalManager,
   WebsocketSignalManager,
 } from '@dxos/messaging';
+import * as MeshBridgePb from '@dxos/protocols/buf/dxos/mesh/bridge_pb';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { type Runtime } from '@dxos/protocols/proto/dxos/config';
-import * as MeshBridgePb from '@dxos/protocols/buf/dxos/mesh/bridge_pb';
-import { type BufProtoRpcPeer, createLinkedPorts, createBufProtoRpcPeer, createBufServiceBundle } from '@dxos/rpc';
+import { type BufProtoRpcPeer, createBufProtoRpcPeer, createBufServiceBundle, createLinkedPorts } from '@dxos/rpc';
 import { ComplexMap } from '@dxos/util';
 
 import { TcpTransportFactory } from '#tcp-transport';

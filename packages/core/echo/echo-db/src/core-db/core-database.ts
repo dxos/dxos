@@ -26,10 +26,11 @@ import { invariant } from '@dxos/invariant';
 import { type ObjectId } from '@dxos/keys';
 import { type DXN, type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { RpcClosedError, type Echo } from '@dxos/protocols';
+import { type Echo, RpcClosedError } from '@dxos/protocols';
+import { EMPTY, create } from '@dxos/protocols/buf';
+import * as EchoServicePb from '@dxos/protocols/buf/dxos/echo/service_pb';
 import { trace } from '@dxos/tracing';
 import { chunkArray, deepMapValues, defaultMap } from '@dxos/util';
-import * as EchoServicePb from '@dxos/protocols/buf/dxos/echo/service_pb';
 
 import { type ChangeEvent, type DocHandleProxy, RepoProxy, type SaveStateChangedEvent } from '../automerge';
 import { type HypergraphImpl } from '../hypergraph';
@@ -42,7 +43,6 @@ import {
 } from './automerge-doc-loader';
 import { ObjectCore } from './object-core';
 import { getInlineAndLinkChanges } from './util';
-import { create, EMPTY } from '@dxos/protocols/buf';
 
 export type InitRootProxyFn = (core: ObjectCore) => void;
 

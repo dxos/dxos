@@ -13,6 +13,8 @@ import { getProxyTarget, isProxy } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { DXN, type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
+import type { Echo } from '@dxos/protocols';
+import type * as EchoServicePb from '@dxos/protocols/buf/dxos/echo/service_pb';
 import { defaultMap } from '@dxos/util';
 
 import type { SaveStateChangedEvent } from '../automerge';
@@ -26,12 +28,10 @@ import {
   isEchoObject,
 } from '../echo-handler';
 import { type HypergraphImpl } from '../hypergraph';
-import * as EchoServicePb from '@dxos/protocols/buf/dxos/echo/service_pb';
 import { Filter, Query } from '../query';
 
 import { DatabaseSchemaRegistry } from './database-schema-registry';
 import { type ObjectMigration } from './object-migration';
-import type { Echo } from '@dxos/protocols';
 
 // TODO(burdon): Remove and progressively push methods to Database.Database.
 export interface EchoDatabase extends Database.Database {

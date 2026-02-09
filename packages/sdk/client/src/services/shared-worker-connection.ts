@@ -3,7 +3,7 @@
 //
 
 import { Trigger } from '@dxos/async';
-import { type WorkerServiceBundle, iframeServiceBundle, workerServiceBundle } from '@dxos/client-protocol';
+import { iframeServiceBundle, workerServiceBundle } from '@dxos/client-protocol';
 import { type Config } from '@dxos/config';
 import { log } from '@dxos/log';
 import { createIceProvider } from '@dxos/network-manager';

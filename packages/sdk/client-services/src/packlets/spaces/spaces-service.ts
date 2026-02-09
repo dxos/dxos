@@ -22,11 +22,11 @@ import {
   ApiError,
   AuthorizationError,
   type Client,
-  create,
-  EmptySchema,
   type Empty,
+  EmptySchema,
   IdentityNotInitializedError,
   SpaceNotFoundError,
+  create,
   encodeError,
 } from '@dxos/protocols';
 import {
@@ -222,7 +222,9 @@ export class SpacesServiceImpl implements Client.SpacesService {
 
   queryCredentials(request: QueryCredentialsRequest): Stream<Credential> {
     return new Stream(({ ctx, next, close }) => {
-      const space = this._spaceManager.spaces.get(request.spaceKey as any) ?? raise(new SpaceNotFoundError(request.spaceKey as any));
+      const space =
+        this._spaceManager.spaces.get(request.spaceKey as any) ??
+        raise(new SpaceNotFoundError(request.spaceKey as any));
 
       const processor: CredentialProcessor = {
         processCredential: async (credential) => {
@@ -340,7 +342,7 @@ export class SpacesServiceImpl implements Client.SpacesService {
       id: space.id,
       spaceKey: space.key as any,
       state: space.state,
-      error: space.error ? encodeError(space.error) as any : undefined,
+      error: space.error ? (encodeError(space.error) as any) : undefined,
       pipeline: {
         currentEpoch: space.automergeSpaceState.lastEpoch as any,
         appliedEpoch: space.automergeSpaceState.lastEpoch as any,

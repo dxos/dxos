@@ -3,12 +3,7 @@
 //
 
 import { Event } from '@dxos/async';
-import {
-  DEFAULT_SHELL_CHANNEL,
-  type ShellServiceBundle,
-  appServiceBundle,
-  shellServiceBundle,
-} from '@dxos/client-protocol';
+import { DEFAULT_SHELL_CHANNEL, appServiceBundle, shellServiceBundle } from '@dxos/client-protocol';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import {

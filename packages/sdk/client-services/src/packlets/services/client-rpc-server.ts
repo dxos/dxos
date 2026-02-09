@@ -4,9 +4,9 @@
 
 import { type ClientServices } from '@dxos/client-protocol';
 import { Stream } from '@dxos/codec-protobuf';
-import { type DescService, type GenService, type GenServiceMethods } from '@dxos/protocols/buf';
-import { type Rpc } from '@dxos/protocols';
 import { raise } from '@dxos/debug';
+import { type Rpc } from '@dxos/protocols';
+import { type DescService, type GenService, type GenServiceMethods } from '@dxos/protocols/buf';
 import { BufServiceHandler, RpcPeer, type RpcPeerOptions, parseMethodName } from '@dxos/rpc';
 import { MapCounter, trace } from '@dxos/tracing';
 import { type MaybePromise } from '@dxos/util';

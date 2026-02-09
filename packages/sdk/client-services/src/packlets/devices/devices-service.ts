@@ -9,9 +9,9 @@ import { invariant } from '@dxos/invariant';
 import { type Halo, create } from '@dxos/protocols';
 import {
   type Device,
-  Device_PresenceState,
   DeviceKind,
   DeviceSchema,
+  Device_PresenceState,
   EdgeStatus_ConnectionState,
   type QueryDevicesResponse,
   QueryDevicesResponseSchema,

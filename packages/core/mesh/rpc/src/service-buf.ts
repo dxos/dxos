@@ -4,20 +4,18 @@
 
 import { Stream } from '@dxos/codec-protobuf/stream';
 import { invariant } from '@dxos/invariant';
+import { type Rpc } from '@dxos/protocols';
 import {
-  create,
-  type DescMessage,
   type DescMethod,
   type DescService,
   type GenService,
   type GenServiceMethods,
   type Message,
-  type MessageShape,
+  create,
   fromBinary,
   toBinary,
 } from '@dxos/protocols/buf';
 import { getAsyncProviderValue } from '@dxos/util';
-import { Rpc } from '@dxos/protocols';
 
 import { RpcPeer, type RpcPeerOptions } from './rpc';
 
@@ -138,17 +136,14 @@ export class BufServiceHandler<S extends GenService<GenServiceMethods>> implemen
       handlerPromise.then((handler) => handler(requestDecoded, options) as Stream<Message>),
     );
 
-    return Stream.map(
-      responseStream,
-      (data): Rpc.BufAny => {
-        // Normalize the response to a proper buf message before serialization.
-        const normalizedData = create(output, data as Record<string, unknown>);
-        return {
-          value: toBinary(output, normalizedData),
-          type_url: output.typeName,
-        };
-      },
-    );
+    return Stream.map(responseStream, (data): Rpc.BufAny => {
+      // Normalize the response to a proper buf message before serialization.
+      const normalizedData = create(output, data as Record<string, unknown>);
+      return {
+        value: toBinary(output, normalizedData),
+        type_url: output.typeName,
+      };
+    });
   }
 
   private async _getHandler(

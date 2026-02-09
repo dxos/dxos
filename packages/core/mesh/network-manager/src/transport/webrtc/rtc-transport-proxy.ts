@@ -11,7 +11,7 @@ import { ErrorStream } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { ConnectionResetError, ConnectivityError, TimeoutError, type Mesh } from '@dxos/protocols';
+import { ConnectionResetError, ConnectivityError, type Mesh, TimeoutError } from '@dxos/protocols';
 import { type BridgeEvent, ConnectionState } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { type Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 import { arrayToBuffer } from '@dxos/util';

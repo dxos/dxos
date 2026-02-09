@@ -11,18 +11,18 @@ import { defineHiddenProperty } from '@dxos/echo/internal';
 import { assertArgument, failedInvariant } from '@dxos/invariant';
 import { type DXN, type ObjectId, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-
-import { Filter, Query, QueryResultImpl } from '../query';
-
-import { QueueQueryContext } from './queue-query-context';
-import type { Queue } from './types';
 import { type Echo } from '@dxos/protocols';
+import { create } from '@dxos/protocols/buf';
 import {
   DeleteFromQueueRequestSchema,
   InsertIntoQueueRequestSchema,
   QueryQueueRequestSchema,
 } from '@dxos/protocols/buf/dxos/client/queue_pb';
-import { create } from '@dxos/protocols/buf';
+
+import { Filter, Query, QueryResultImpl } from '../query';
+
+import { QueueQueryContext } from './queue-query-context';
+import type { Queue } from './types';
 
 const TRACE_QUEUE_LOAD = false;
 

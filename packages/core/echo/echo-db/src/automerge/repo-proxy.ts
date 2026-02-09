@@ -11,12 +11,12 @@ import { LifecycleState, Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { RpcClosedError, type Echo } from '@dxos/protocols';
+import { type Echo, RpcClosedError } from '@dxos/protocols';
+import { create } from '@dxos/protocols/buf';
+import * as EchoServicePb from '@dxos/protocols/buf/dxos/echo/service_pb';
 import { trace } from '@dxos/tracing';
 
 import { DocHandleProxy } from './doc-handle-proxy';
-import * as EchoServicePb from '@dxos/protocols/buf/dxos/echo/service_pb';
-import { create } from '@dxos/protocols/buf';
 
 const MAX_UPDATE_FREQ = 10; // [updates/sec]
 const RPC_TIMEOUT = 30_000;

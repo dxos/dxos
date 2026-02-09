@@ -3,16 +3,16 @@
 //
 
 import { Stream } from '@dxos/codec-protobuf/stream';
-import { type Halo, create, EmptySchema, type Empty } from '@dxos/protocols';
+import { type Empty, EmptySchema, type Halo, create } from '@dxos/protocols';
 import {
   type AcceptInvitationRequest,
   type AuthenticationRequest,
   type CancelInvitationRequest,
   type Invitation,
   type QueryInvitationsResponse,
+  QueryInvitationsResponseSchema,
   QueryInvitationsResponse_Action,
   QueryInvitationsResponse_Type,
-  QueryInvitationsResponseSchema,
 } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { trace } from '@dxos/tracing';
 

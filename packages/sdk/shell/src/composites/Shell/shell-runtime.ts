@@ -3,7 +3,7 @@
 //
 
 import { Event } from '@dxos/async';
-import { type AppServiceBundle, type ShellRuntime, appServiceBundle, shellServiceBundle } from '@dxos/client-protocol';
+import { type ShellRuntime, appServiceBundle, shellServiceBundle } from '@dxos/client-protocol';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import {

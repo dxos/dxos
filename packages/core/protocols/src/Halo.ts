@@ -1,5 +1,8 @@
-import * as IdentityPb from '@dxos/protocols/buf/dxos/client/services_pb';
-import * as InvitationsPb from '@dxos/protocols/buf/dxos/halo/invitations_pb';
+//
+// Copyright 2026 DXOS.org
+//
+
+import type * as IdentityPb from '@dxos/protocols/buf/dxos/client/services_pb';
 
 import type * as Rpc from './Rpc.ts';
 

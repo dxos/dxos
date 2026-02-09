@@ -17,6 +17,7 @@ import { type IndexEngine } from '@dxos/index-core';
 import { type IdToHeads, type Indexer, type ObjectSnapshot } from '@dxos/indexing';
 import { log } from '@dxos/log';
 import { objectPointerCodec } from '@dxos/protocols';
+import type { Echo } from '@dxos/protocols';
 import { type Empty, EmptySchema, create } from '@dxos/protocols/buf';
 import { type IndexConfig, IndexKind_Kind } from '@dxos/protocols/buf/dxos/echo/indexing_pb';
 import {
@@ -28,7 +29,6 @@ import {
 } from '@dxos/protocols/buf/dxos/echo/query_pb';
 import { trace } from '@dxos/tracing';
 
-import type { Echo } from '@dxos/protocols';
 import { type AutomergeHost } from '../automerge';
 import { QueryExecutor } from '../query';
 
