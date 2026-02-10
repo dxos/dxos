@@ -11,8 +11,10 @@ import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention';
 import { type ActionGraphProps } from '@dxos/react-ui-menu';
 import { byPosition } from '@dxos/util';
 
+import { type SimpleLayoutState } from '../types';
+
 // TODO(wittjosiah): Factor out to shared location with plugin-deck.
-const PLANK_COMPANION_TYPE = 'dxos.org/plugin/deck/plank-companion';
+export const PLANK_COMPANION_TYPE = 'dxos.org/plugin/deck/plank-companion';
 
 export type CompanionActionsConfig = {
   /** Prefix for companion action IDs (e.g. 'navbar' or 'drawer') */
@@ -20,16 +22,17 @@ export type CompanionActionsConfig = {
   /** Optional: highlight companion with this variant */
   selectedVariant?: string;
   /** invokeSync function for dispatching operations */
-  invokeSync: (operation: any, args: any) => void;
+  invokeSync: Common.Capability.OperationInvoker['invokeSync'];
 };
 
 /**
  * Creates action graph nodes and edges for companion actions.
  * Shared logic between useNavbarActions and useDrawerActions.
  */
+// TODO(burdon): Use builder pattern.
 export const createCompanionActions = (
-  graph: any, // AppGraph from useAppGraph
-  stateAtom: Atom.Atom<any>,
+  graph: Common.Capability.AppGraph['graph'],
+  stateAtom: Atom.Atom<SimpleLayoutState>,
   get: (atom: Atom.Atom<any>) => any,
   config: CompanionActionsConfig,
 ): Pick<ActionGraphProps, 'nodes' | 'edges'> => {
@@ -49,6 +52,7 @@ export const createCompanionActions = (
   const edges: ActionGraphProps['edges'] = [];
 
   // Add companion actions.
+  // TODO(burdon): Cap at 6 items.
   companions.forEach((companion: Node.Node) => {
     // Extract variant for highlighting if needed.
     const [, companionVariant] = companion.id.split(ATTENDABLE_PATH_SEPARATOR);

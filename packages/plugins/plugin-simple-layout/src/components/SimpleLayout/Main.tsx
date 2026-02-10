@@ -9,13 +9,13 @@ import { useNode } from '@dxos/plugin-graph';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { mx } from '@dxos/ui-theme';
 
-import { useBannerProps, useNavbarActions, useSimpleLayoutState } from '../../hooks';
+import { useAppBarProps, useNavbarActions, useSimpleLayoutState } from '../../hooks';
 import { ContentError } from '../ContentError';
 import { ContentLoading } from '../ContentLoading';
 import { useLoadDescendents } from '../hooks';
 import { useMobileLayout } from '../MobileLayout/MobileLayout';
 
-import { Banner } from './Banner';
+import { AppBar } from './AppBar';
 import { NavBar } from './NavBar';
 
 const MAIN_NAME = 'SimpleLayout.Main';
@@ -35,7 +35,7 @@ export const Main = () => {
   useLoadDescendents(id);
 
   const { graph } = useAppGraph();
-  const bannerProps = useBannerProps(graph);
+  const appBarProps = useAppBarProps(graph);
   const node = useNode(graph, id);
   const data = useMemo(() => {
     return (
@@ -59,7 +59,7 @@ export const Main = () => {
       )}
       {...attentionAttrs}
     >
-      <Banner {...bannerProps} />
+      <AppBar {...appBarProps} />
       <article className='bs-full overflow-hidden bg-baseSurface'>
         <Surface key={id} role='article' data={data} limit={1} fallback={ContentError} placeholder={placeholder} />
       </article>

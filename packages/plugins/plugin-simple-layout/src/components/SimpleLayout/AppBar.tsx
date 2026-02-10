@@ -17,9 +17,9 @@ import { mx, osTranslations } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
 
-const BANNER_NAME = 'SimpleLayout.Banner';
+const APP_BAR_NAME = 'SimpleLayout.AppBar';
 
-export type BannerProps = ThemedClassName<{
+export type AppBarProps = ThemedClassName<{
   /** Title/label to display in the banner. */
   title?: string;
   /** Action graph atom for the dropdown menu. */
@@ -35,9 +35,9 @@ export type BannerProps = ThemedClassName<{
 }>;
 
 /**
- * Presentational banner component that renders a title, optional back button, and actions dropdown.
+ * AppBar component that renders a title, optional back button, and actions dropdown.
  */
-export const Banner = ({
+export const AppBar = ({
   classNames,
   title,
   actions,
@@ -45,7 +45,7 @@ export const Banner = ({
   popoverAnchorId,
   onAction,
   onBack,
-}: BannerProps) => {
+}: AppBarProps) => {
   const { t } = useTranslation(meta.id);
   const menu = useMenuActions(actions);
   const actionsValue = useAtomValue(actions);
@@ -94,4 +94,4 @@ export const Banner = ({
   );
 };
 
-Banner.displayName = BANNER_NAME;
+AppBar.displayName = APP_BAR_NAME;
