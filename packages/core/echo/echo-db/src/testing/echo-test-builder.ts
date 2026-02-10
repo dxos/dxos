@@ -4,9 +4,13 @@
 
 import type { AutomergeUrl } from '@automerge/automerge-repo';
 import * as Reactivity from '@effect/experimental/Reactivity';
+import * as Reactivity from '@effect/experimental/Reactivity';
 import type * as SqlClient from '@effect/sql/SqlClient';
+import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Layer from 'effect/Layer';
+import * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 import isEqual from 'lodash.isequal';
 
@@ -18,10 +22,13 @@ import { EchoHost } from '@dxos/echo-pipeline';
 import { createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
+import { PublicKey } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
 import { createTestLevel } from '@dxos/kv-store/testing';
-import { layerMemory } from '@dxos/sql-sqlite/platform';
+import { layerMemory, sqlExportLayer } from '@dxos/sql-sqlite/platform';
+import { sqlExportLayer } from '@dxos/sql-sqlite/platform';
 import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
+import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 import { range } from '@dxos/util';
 
@@ -40,10 +47,11 @@ type PeerOptions = {
   assignQueuePositions?: boolean;
 
   kv?: LevelDB;
-  runtime?: ManagedRuntime.ManagedRuntime<
-    SqlClient.SqlClient | SqlExport.SqlExport | SqlTransaction.SqlTransaction,
-    never
-  >;
+  /**
+   * Path to SQLite database file for persistent indexing in Node/Bun.
+   * If not provided, a new in-memory runtime will be created.
+   */
+  sqlitePath?: string;
 };
 
 export class EchoTestBuilder extends Resource {
@@ -92,27 +100,34 @@ export class EchoTestPeer extends Resource {
   private _lastDatabaseSpaceKey?: PublicKey = undefined;
   private _lastDatabaseRootUrl?: string = undefined;
 
-  private _foreignRuntime: boolean;
+  private _sqlitePath?: string;
   private _managedRuntime!: ManagedRuntime.ManagedRuntime<
     SqlClient.SqlClient | SqlExport.SqlExport | SqlTransaction.SqlTransaction,
     never
   >;
 
-  constructor({ kv = createTestLevel(), types, assignQueuePositions, runtime }: PeerOptions) {
+  constructor({ kv = createTestLevel(), types, assignQueuePositions, sqlitePath }: PeerOptions) {
     super();
     this._kv = kv;
     // Include Expando as default type for tests that use Obj.make(TestSchema.Expando, ...).
     this._types = [TestSchema.Expando, ...(types ?? [])];
     this._assignQueuePositions = assignQueuePositions;
 
-    this._foreignRuntime = !!runtime;
-    if (runtime) {
-      this._managedRuntime = runtime;
-    }
+    this._sqlitePath = sqlitePath;
   }
 
   private _initEcho(): void {
-    if (!this._foreignRuntime) {
+    if (this._sqlitePath) {
+      this._managedRuntime = ManagedRuntime.make(
+        SqlTransaction.layer
+          .pipe(
+            Layer.provideMerge(sqlExportLayer.pipe()),
+            Layer.provideMerge(SqliteClient.layer({ filename: this._sqlitePath })),
+            Layer.provideMerge(Reactivity.layer),
+          )
+          .pipe(Layer.orDie),
+      );
+    } else {
       this._managedRuntime = ManagedRuntime.make(
         SqlTransaction.layer.pipe(Layer.provideMerge(Layer.merge(layerMemory, Reactivity.layer))).pipe(Layer.orDie),
       );
@@ -156,9 +171,7 @@ export class EchoTestPeer extends Resource {
     }
     await this._echoHost.close(ctx);
     await this._kv.close();
-    if (!this._foreignRuntime) {
-      await this._managedRuntime.dispose();
-    }
+    await this._managedRuntime.dispose();
   }
 
   /**
