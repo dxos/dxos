@@ -45,7 +45,7 @@ export class AgentClientServiceProvider implements ClientServicesProvider {
   }
 
   get services() {
-    return this._client!.rpc as any;
+    return this._client!.rpc;
   }
 
   async open(): Promise<void> {

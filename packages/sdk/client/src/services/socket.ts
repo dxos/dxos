@@ -25,7 +25,7 @@ export const fromSocket = async (url: string, authenticationToken?: string): Pro
     },
 
     get services() {
-      return dxRpcClient.rpc as any;
+      return dxRpcClient.rpc;
     },
 
     open: async () => {

@@ -41,7 +41,7 @@ export class ClientServicesProxy implements ClientServicesProvider {
 
   get services(): Partial<ClientServices> {
     invariant(this._proxy, 'Client services not open');
-    return this._proxy.rpc as unknown as Partial<ClientServices>;
+    return this._proxy.rpc;
   }
 
   async open(): Promise<void> {

@@ -105,3 +105,11 @@ export type BufServiceBundle<Services extends Record<string, GenService<GenServi
 export type BufServiceHandlers<Services extends Record<string, GenService<GenServiceMethods>>> = {
   [K in keyof Services]: BufServiceProvider<BufRpcHandlers<Services[K]>>;
 };
+
+/**
+ * Extracts the client interface type from a buf service bundle.
+ * Used to derive strongly-typed client services from a bundle definition.
+ */
+export type BufRpcClientServices<Bundle extends Record<string, GenService<GenServiceMethods>>> = {
+  [K in keyof Bundle]: BufRpcClient<Bundle[K]>;
+};

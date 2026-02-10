@@ -3,7 +3,7 @@
 //
 
 import { type Event } from '@dxos/async';
-import { type Client, type Echo, type Halo, type Mesh } from '@dxos/protocols';
+import { type Client, type Mesh, type Rpc } from '@dxos/protocols';
 import * as ClientLoggingPb from '@dxos/protocols/buf/dxos/client/logging_pb';
 import * as ClientQueuePb from '@dxos/protocols/buf/dxos/client/queue_pb';
 import * as ClientServicesPb from '@dxos/protocols/buf/dxos/client/services_pb';
@@ -21,28 +21,34 @@ export { type QueueService } from '@dxos/protocols';
 // NOTE: Should contain client/proxy dependencies only.
 //
 
-export type ClientServices = {
-  SystemService: Client.SystemService;
-  NetworkService: Client.NetworkService;
-  LoggingService: Client.LoggingService;
+/**
+ * Services supported by host.
+ */
+export const clientServiceBundle = createBufServiceBundle({
+  SystemService: ClientServicesPb.SystemService,
+  NetworkService: ClientServicesPb.NetworkService,
+  LoggingService: ClientLoggingPb.LoggingService,
 
-  IdentityService: Halo.IdentityService;
-  InvitationsService: Halo.InvitationsService;
-  DevicesService: Halo.DevicesService;
-  SpacesService: Client.SpacesService;
-
-  DataService: Echo.DataService;
-  QueryService: Echo.QueryService;
-  QueueService: Echo.QueueService;
-
-  ContactsService: Client.ContactsService;
-  EdgeAgentService: Client.EdgeAgentService;
+  IdentityService: ClientServicesPb.IdentityService,
+  QueryService: EchoQueryPb.QueryService,
+  InvitationsService: ClientServicesPb.InvitationsService,
+  DevicesService: ClientServicesPb.DevicesService,
+  SpacesService: ClientServicesPb.SpacesService,
+  DataService: EchoServicePb.DataService,
+  ContactsService: ClientServicesPb.ContactsService,
+  EdgeAgentService: ClientServicesPb.EdgeAgentService,
+  QueueService: ClientQueuePb.QueueService,
 
   // TODO(burdon): Deprecated.
-  DevtoolsHost: Client.DevtoolsHost;
+  DevtoolsHost: DevtoolsHostPb.DevtoolsHost,
+  TracingService: TracingPb.TracingService,
+});
 
-  TracingService: Client.TracingService;
-};
+/**
+ * Client services type derived from the service bundle.
+ * This represents the client-side RPC interface for all services.
+ */
+export type ClientServices = Rpc.BufRpcClientServices<typeof clientServiceBundle>;
 
 /**
  * Provide access to client services definitions and service handler.
@@ -74,29 +80,6 @@ export interface ClientServicesProvider {
   open(): Promise<unknown>;
   close(): Promise<unknown>;
 }
-
-/**
- * Services supported by host.
- */
-export const clientServiceBundle = createBufServiceBundle({
-  SystemService: ClientServicesPb.SystemService,
-  NetworkService: ClientServicesPb.NetworkService,
-  LoggingService: ClientLoggingPb.LoggingService,
-
-  IdentityService: ClientServicesPb.IdentityService,
-  QueryService: EchoQueryPb.QueryService,
-  InvitationsService: ClientServicesPb.InvitationsService,
-  DevicesService: ClientServicesPb.DevicesService,
-  SpacesService: ClientServicesPb.SpacesService,
-  DataService: EchoServicePb.DataService,
-  ContactsService: ClientServicesPb.ContactsService,
-  EdgeAgentService: ClientServicesPb.EdgeAgentService,
-  QueueService: ClientQueuePb.QueueService,
-
-  // TODO(burdon): Deprecated.
-  DevtoolsHost: DevtoolsHostPb.DevtoolsHost,
-  TracingService: TracingPb.TracingService,
-});
 
 export type IframeServiceBundle = {
   BridgeService: Mesh.BridgeService;
