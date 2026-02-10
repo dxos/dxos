@@ -57,11 +57,14 @@ describe.runIf(TestHelpers.tagEnabled('flaky'))('Initiative', () => {
     Effect.fnUntraced(
       function* (_) {
         const initiative = yield* Database.add(
-          yield* Initiative.makeInitialized({
-            name: 'Shopping list',
-            spec: 'Keep a shopping list of items to buy.',
-            blueprints: [Ref.make(MarkdownBlueprint.make())],
-          }),
+          yield* Initiative.makeInitialized(
+            {
+              name: 'Shopping list',
+              spec: 'Keep a shopping list of items to buy.',
+              blueprints: [Ref.make(MarkdownBlueprint.make())],
+            },
+            Initiative.makeBlueprint(),
+          ),
         );
         const chatQueue = initiative.chat?.target?.queue?.target as any;
         invariant(chatQueue, 'Initiative chat queue not found.');
@@ -87,21 +90,24 @@ describe.runIf(TestHelpers.tagEnabled('flaky'))('Initiative', () => {
     Effect.fnUntraced(
       function* (_) {
         const initiative = yield* Database.add(
-          yield* Initiative.makeInitialized({
-            name: 'Expense tracking',
-            spec: trim`
-              Keep a list of expenses in a markdown document (create artifact "Expenses").
-              Process incoming emails, add the relevant ones to the list.
+          yield* Initiative.makeInitialized(
+            {
+              name: 'Expense tracking',
+              spec: trim`
+                Keep a list of expenses in a markdown document (create artifact "Expenses").
+                Process incoming emails, add the relevant ones to the list.
 
-              Format:
+                Format:
 
-              ## Expences
+                ## Expences
 
-              - Flight to London (2026-02-01): £100
-              - Hotel in London (2026-02-01): £100
-            `,
-            blueprints: [Ref.make(MarkdownBlueprint.make())],
-          }),
+                - Flight to London (2026-02-01): £100
+                - Hotel in London (2026-02-01): £100
+              `,
+              blueprints: [Ref.make(MarkdownBlueprint.make())],
+            },
+            Initiative.makeBlueprint(),
+          ),
         );
         yield* Database.flush({ indexes: true });
 
