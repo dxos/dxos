@@ -41,11 +41,11 @@ const StorybookProjectItem = ({ item, projectionModel }: ItemProps) => {
 
 const DefaultStory = () => {
   const { space } = useClientStory();
-  const projects = useQuery(space?.db, Filter.type(Pipeline.Pipeline));
-  const project = projects[0];
+  const pipelines = useQuery(space?.db, Filter.type(Pipeline.Pipeline));
+  const pipeline = pipelines[0];
 
   const handleAddColumn = useCallback(() => {
-    if (!space || !project) {
+    if (!space || !pipeline) {
       return;
     }
 
@@ -56,7 +56,7 @@ const DefaultStory = () => {
       fields: ['fullName'],
     });
 
-    Obj.change(project, (p) => {
+    Obj.change(pipeline, (p) => {
       p.columns.push({
         name: 'New Contacts',
         view: Ref.make(view) as (typeof p.columns)[number]['view'],
@@ -65,27 +65,27 @@ const DefaultStory = () => {
     });
 
     return Ref.make(view);
-  }, [space, project]);
+  }, [space, pipeline]);
 
-  if (!project) {
+  if (!pipeline) {
     return <p>Loading…</p>;
   }
 
   return (
     <PipelineComponent.Root Item={StorybookProjectItem} onAddColumn={handleAddColumn}>
-      <PipelineComponent.Content project={project} />
+      <PipelineComponent.Content pipeline={pipeline} />
     </PipelineComponent.Root>
   );
 };
 
 const MutationsStory = () => {
   const { space } = useClientStory();
-  const projects = useQuery(space?.db, Filter.type(Pipeline.Pipeline));
+  const pipelines = useQuery(space?.db, Filter.type(Pipeline.Pipeline));
   const contacts = useQuery(space?.db, Filter.type(Person.Person));
-  const project = projects[0];
+  const pipeline = pipelines[0];
 
   const handleAddColumn = useCallback(() => {
-    if (!space || !project) {
+    if (!space || !pipeline) {
       return;
     }
 
@@ -96,7 +96,7 @@ const MutationsStory = () => {
       fields: ['fullName'],
     });
 
-    Obj.change(project, (p) => {
+    Obj.change(pipeline, (p) => {
       p.columns.push({
         name: 'New Contacts',
         view: Ref.make(view) as (typeof p.columns)[number]['view'],
@@ -105,10 +105,10 @@ const MutationsStory = () => {
     });
 
     return view;
-  }, [space, project]);
+  }, [space, pipeline]);
 
   useEffect(() => {
-    if (!space || !project) {
+    if (!space || !pipeline) {
       return;
     }
 
@@ -134,15 +134,15 @@ const MutationsStory = () => {
     }, 3_000);
 
     return () => clearInterval(interval);
-  }, [space, project, contacts]);
+  }, [space, pipeline, contacts]);
 
-  if (!project) {
+  if (!pipeline) {
     return <p>Loading…</p>;
   }
 
   return (
     <PipelineComponent.Root Item={StorybookProjectItem} onAddColumn={handleAddColumn}>
-      <PipelineComponent.Content project={project} />
+      <PipelineComponent.Content pipeline={pipeline} />
     </PipelineComponent.Root>
   );
 };
@@ -165,18 +165,18 @@ const meta = {
           fields: ['fullName'],
         });
 
-        // Create a project with columns.
-        const project = Pipeline.make({
-          columns: [
-            {
-              name: 'Contacts',
-              view: Ref.make(view),
-              order: [],
-            },
-          ],
-        });
-
-        space.db.add(project);
+        // Create a pipeline with columns.
+        space.db.add(
+          Pipeline.make({
+            columns: [
+              {
+                name: 'Contacts',
+                view: Ref.make(view),
+                order: [],
+              },
+            ],
+          }),
+        );
 
         // Generate random contacts.
         const factory = createObjectFactory(space.db, faker as any);

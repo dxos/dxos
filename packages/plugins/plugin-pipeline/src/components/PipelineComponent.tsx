@@ -16,7 +16,10 @@ import { meta } from '../meta';
 
 import { PipelineColumn } from './PipelineColumn';
 
-type ItemProps = { item: Obj.Unknown; projectionModel?: ProjectionModel };
+type ItemProps = {
+  item: Obj.Unknown;
+  projectionModel?: ProjectionModel;
+};
 
 const itemNoOp = ({ item }: ItemProps) => <span>{item.id}</span>;
 
@@ -47,11 +50,11 @@ PipelineRoot.displayName = PIPELINE_ROOT;
 //
 
 type PipelineContentProps = {
-  project: PipelineType.Pipeline;
+  pipeline: PipelineType.Pipeline;
 };
 
-const PipelineContent = ({ project }: PipelineContentProps) => {
-  const [columns] = useObject(project, 'columns');
+const PipelineContent = ({ pipeline }: PipelineContentProps) => {
+  const [columns] = useObject(pipeline, 'columns');
 
   return (
     <Stack orientation='horizontal' size='contain' rail={false}>

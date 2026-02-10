@@ -18,50 +18,15 @@ import { meta } from '../meta';
 
 import { type ItemProps, usePipeline } from './PipelineComponent';
 
+//
+// PipelineColumn
+//
+
+const PIPELINE_COLUMN_NAME = 'PipelineColumn';
+
 export type PipelineColumnProps = {
   column: Pipeline.Column;
 };
-
-//
-// ItemTile
-//
-
-const ITEM_TILE_NAME = 'ItemTile';
-
-type ItemTileProps = Pick<MosaicTileProps<Obj.Unknown>, 'classNames' | 'location' | 'data' | 'debug'> & {
-  itemProps: ItemProps;
-};
-
-const ItemTile = forwardRef<HTMLDivElement, ItemTileProps>(
-  ({ classNames, data, location, debug, itemProps }, forwardedRef) => {
-    const rootRef = useRef<HTMLDivElement>(null);
-    const composedRef = useComposedRefs<HTMLDivElement>(rootRef, forwardedRef);
-    const { Item } = usePipeline(ITEM_TILE_NAME);
-
-    return (
-      <Mosaic.Tile asChild id={data.id} data={data} location={location} debug={debug}>
-        <Focus.Group asChild>
-          <Card.Root classNames={classNames} onClick={() => rootRef.current?.focus()} ref={composedRef}>
-            <Card.Toolbar>
-              <Card.DragHandle />
-              <Card.Title>{Obj.getLabel(data)}</Card.Title>
-              <Card.Menu />
-            </Card.Toolbar>
-            <Card.Content>
-              <Item {...itemProps} />
-            </Card.Content>
-          </Card.Root>
-        </Focus.Group>
-      </Mosaic.Tile>
-    );
-  },
-);
-
-ItemTile.displayName = ITEM_TILE_NAME;
-
-//
-// ProjectColumn
-//
 
 // TODO(thure): Duplicates a lot of the same boilerplate as Kanban columns; is there an opportunity to DRY these out?
 // TODO(wittjosiah): Support column DnD reordering.
@@ -72,7 +37,7 @@ export const PipelineColumn = ({ column }: PipelineColumnProps) => {
   const [viewSnapshot] = useObject(column.view);
   const view = column.view.target;
   const space = getSpace(view);
-  const { Item } = usePipeline(PipelineColumn.displayName);
+  const { Item } = usePipeline(PIPELINE_COLUMN_NAME);
   const [schema, setSchema] = useState<Schema.Schema.AnyNoContext>();
   const query = useMemo(() => {
     if (!view) {
@@ -137,4 +102,41 @@ export const PipelineColumn = ({ column }: PipelineColumnProps) => {
   );
 };
 
-PipelineColumn.displayName = 'Pipeline.Column';
+PipelineColumn.displayName = PIPELINE_COLUMN_NAME;
+
+//
+// ItemTile
+//
+
+const ITEM_TILE_NAME = 'ItemTile';
+
+type ItemTileProps = Pick<MosaicTileProps<Obj.Unknown>, 'classNames' | 'location' | 'data' | 'debug'> & {
+  itemProps: ItemProps;
+};
+
+const ItemTile = forwardRef<HTMLDivElement, ItemTileProps>(
+  ({ classNames, data, location, debug, itemProps }, forwardedRef) => {
+    const rootRef = useRef<HTMLDivElement>(null);
+    const composedRef = useComposedRefs<HTMLDivElement>(rootRef, forwardedRef);
+    const { Item } = usePipeline(ITEM_TILE_NAME);
+
+    return (
+      <Mosaic.Tile asChild id={data.id} data={data} location={location} debug={debug}>
+        <Focus.Group asChild>
+          <Card.Root classNames={classNames} onClick={() => rootRef.current?.focus()} ref={composedRef}>
+            <Card.Toolbar>
+              <Card.DragHandle />
+              <Card.Title>{Obj.getLabel(data)}</Card.Title>
+              <Card.Menu />
+            </Card.Toolbar>
+            <Card.Content>
+              <Item {...itemProps} />
+            </Card.Content>
+          </Card.Root>
+        </Focus.Group>
+      </Mosaic.Tile>
+    );
+  },
+);
+
+ItemTile.displayName = ITEM_TILE_NAME;

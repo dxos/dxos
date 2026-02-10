@@ -16,9 +16,9 @@ import { type ItemProps, PipelineComponent } from './PipelineComponent';
 
 export type PipelineContainerProps = SurfaceComponentProps<PipelineType.Pipeline>;
 
-export const PipelineContainer = ({ role, subject: project }: PipelineContainerProps) => {
+export const PipelineContainer = ({ role, subject: pipeline }: PipelineContainerProps) => {
   const { invokePromise } = useOperationInvoker();
-  const attendableId = Obj.getDXN(project).toString();
+  const attendableId = Obj.getDXN(pipeline).toString();
   const { hasAttention } = useAttention(attendableId);
 
   const handleColumnAdd = useCallback(
@@ -34,7 +34,7 @@ export const PipelineContainer = ({ role, subject: project }: PipelineContainerP
     <Layout.Main role={role} toolbar>
       <PipelineComponent.Root Item={PipelineItem} onAddColumn={handleColumnAdd}>
         <PipelineComponent.Toolbar disabled={!hasAttention} />
-        <PipelineComponent.Content project={project} />
+        <PipelineComponent.Content pipeline={pipeline} />
       </PipelineComponent.Root>
     </Layout.Main>
   );

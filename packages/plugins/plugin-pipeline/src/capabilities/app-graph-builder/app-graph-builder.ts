@@ -17,8 +17,8 @@ export default Capability.makeModule(
       GraphBuilder.createTypeExtension({
         id: `${meta.id}/triggers`,
         type: Pipeline.Pipeline,
-        connector: (project, get) => {
-          const nodeId = project.id;
+        connector: (pipeline, get) => {
+          const nodeId = pipeline.id;
           return Effect.succeed([
             {
               id: [nodeId, 'invocations'].join(ATTENDABLE_PATH_SEPARATOR),

@@ -27,19 +27,19 @@ const ColumnFormSchema = Pipeline.Column.pipe(Schema.mutable, Schema.pick('name'
 
 // TODO(burdon): Standardize Object/Plugin settings.
 export type PipelineObjectSettingsProps = ThemedClassName<{
-  project: Pipeline.Pipeline;
+  pipeline: Pipeline.Pipeline;
 }>;
 
 /**
- * Supports editing the project view.
+ * Supports editing the pipeline view.
  */
-export const PipelineObjectSettings = ({ classNames, project }: PipelineObjectSettingsProps) => {
+export const PipelineObjectSettings = ({ classNames, pipeline }: PipelineObjectSettingsProps) => {
   const { t } = useTranslation(meta.id);
-  const space = getSpace(project);
+  const space = getSpace(pipeline);
   const [expandedId, setExpandedId] = useState<string>();
   const column = useMemo(
-    () => project.columns.find((column) => column.view.dxn.toString() === expandedId),
-    [project.columns, expandedId],
+    () => pipeline.columns.find((column) => column.view.dxn.toString() === expandedId),
+    [pipeline.columns, expandedId],
   );
   const view = column?.view.target;
   const [schema, setSchema] = useState<Schema.Schema.AnyNoContext>(() => Schema.Struct({}));
@@ -67,10 +67,10 @@ export const PipelineObjectSettings = ({ classNames, project }: PipelineObjectSe
 
   const handleMove = useCallback(
     (fromIndex: number, toIndex: number) =>
-      Obj.change(project, (p) => {
+      Obj.change(pipeline, (p) => {
         arrayMove(p.columns, fromIndex, toIndex);
       }),
-    [project],
+    [pipeline],
   );
 
   const handleQueryChanged = useCallback(
@@ -114,14 +114,14 @@ export const PipelineObjectSettings = ({ classNames, project }: PipelineObjectSe
         setExpandedId(undefined);
       }
 
-      const index = project.columns.findIndex((l) => l === column);
+      const index = pipeline.columns.findIndex((l) => l === column);
       const viewToRemove = await column.view.load();
-      Obj.change(project, (p) => {
+      Obj.change(pipeline, (p) => {
         p.columns.splice(index, 1);
       });
       space?.db.remove(viewToRemove);
     },
-    [expandedId, project.columns, space],
+    [expandedId, pipeline.columns, space],
   );
 
   const handleAdd = useCallback(() => {
@@ -129,7 +129,7 @@ export const PipelineObjectSettings = ({ classNames, project }: PipelineObjectSe
       query: Query.select(Filter.type(Task.Task)),
       jsonSchema: Type.toJsonSchema(Task.Task),
     });
-    Obj.change(project, (p) => {
+    Obj.change(pipeline, (p) => {
       p.columns.push({
         name: 'Tasks',
         // Type assertion needed due to QueryAST type variance.
@@ -138,18 +138,18 @@ export const PipelineObjectSettings = ({ classNames, project }: PipelineObjectSe
       });
     });
     setExpandedId(newView.id);
-  }, [project]);
+  }, [pipeline]);
 
   const handleColumnSave = useCallback(
     (values: Schema.Schema.Type<typeof ColumnFormSchema>) => {
       if (column) {
-        const columnIndex = project.columns.findIndex((c) => c === column);
-        Obj.change(project, (project) => {
-          project.columns[columnIndex].name = values.name;
+        const columnIndex = pipeline.columns.findIndex((c) => c === column);
+        Obj.change(pipeline, (p) => {
+          p.columns[columnIndex].name = values.name;
         });
       }
     },
-    [column, project],
+    [column, pipeline],
   );
 
   return (
@@ -157,7 +157,7 @@ export const PipelineObjectSettings = ({ classNames, project }: PipelineObjectSe
       <h2 className={mx(inputTextLabel)}>{t('views label')}</h2>
 
       <List.Root<Pipeline.Column>
-        items={project.columns}
+        items={pipeline.columns}
         isItem={Schema.is(Pipeline.Column)}
         getId={(column) => column.view.dxn.toString()}
         onMove={handleMove}

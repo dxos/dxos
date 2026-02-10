@@ -31,17 +31,17 @@ faker.seed(0);
 
 const DefaultStory = () => {
   const db = useDatabase();
-  const projects = useQuery(db, Filter.type(Pipeline.Pipeline));
-  const project = projects[0];
+  const pipelines = useQuery(db, Filter.type(Pipeline.Pipeline));
+  const pipeline = pipelines[0];
 
-  if (!project) {
+  if (!pipeline) {
     return <p>Loading…</p>;
   }
 
   return (
     <Stack orientation='horizontal' size='split' rail={false} classNames='pli-0'>
-      <PipelineContainer role='article' subject={project} />
-      <PipelineObjectSettings project={project} classNames='border-is border-separator' />
+      <PipelineContainer role='article' subject={pipeline} />
+      <PipelineObjectSettings pipeline={pipeline} classNames='border-is border-separator' />
     </Stack>
   );
 };
@@ -109,8 +109,8 @@ const meta = {
                 jsonSchema: Type.toJsonSchema(Message.Message),
               });
 
-              // Create project with columns.
-              const project = Pipeline.make({
+              // Create pipline with columns.
+              const pipeline = Pipeline.make({
                 columns: [
                   {
                     name: 'Contacts',
@@ -140,8 +140,8 @@ const meta = {
                 ],
               });
 
-              // Add project to space.
-              space.db.add(project);
+              // Add pipeline to space.
+              space.db.add(pipeline);
 
               // Generate sample Organizations
               Array.from({ length: 5 }).forEach(() => {

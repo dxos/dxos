@@ -42,7 +42,7 @@ export default Capability.makeModule(() =>
         id: `${meta.id}/object-settings`,
         role: 'object-settings',
         filter: (data): data is { subject: Pipeline.Pipeline } => Obj.instanceOf(Pipeline.Pipeline, data.subject),
-        component: ({ data }) => <PipelineObjectSettings project={data.subject} />,
+        component: ({ data }) => <PipelineObjectSettings pipeline={data.subject} />,
       }),
     ]),
   ),
