@@ -9,9 +9,10 @@ import * as Runtime from 'effect/Runtime';
 
 import { Context, ContextDisposedError, LifecycleState, Resource } from '@dxos/context';
 import type { Obj } from '@dxos/echo';
-import { ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET } from '@dxos/echo/internal';
+import { ATTR_PARENT, ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET } from '@dxos/echo/internal';
 import {
   DatabaseDirectory,
+  EncodedReference,
   type ObjectPropPath,
   ObjectStructure,
   type QueryAST,
@@ -78,6 +79,10 @@ type QueryItem = {
 };
 
 const QueryItem = Object.freeze({
+  /**
+   * Checks if the item is deleted.
+   * Only applies to this item, not its parents.
+   */
   isDeleted: (item: QueryItem) => {
     if (item.doc) {
       return ObjectStructure.isDeleted(item.doc);
@@ -98,9 +103,19 @@ const QueryItem = Object.freeze({
     }
   },
 
-  getRelationSource: (item: QueryItem): DXN.String => {
+  getParent: (item: QueryItem): DXN.String | undefined => {
     if (item.doc) {
-      return ObjectStructure.getRelationSource(item.doc)?.['/'] as DXN.String;
+      return ObjectStructure.getParent(item.doc)?.['/'] as DXN.String | undefined;
+    } else if (item.data) {
+      return item.data[ATTR_PARENT] as DXN.String;
+    } else {
+      throw new Error('Invalid query item');
+    }
+  },
+
+  getRelationSource: (item: QueryItem): DXN.String | undefined => {
+    if (item.doc) {
+      return ObjectStructure.getRelationSource(item.doc)?.['/'] as DXN.String | undefined;
     } else if (item.data) {
       return item.data[ATTR_RELATION_SOURCE] as DXN.String;
     } else {
@@ -108,9 +123,9 @@ const QueryItem = Object.freeze({
     }
   },
 
-  getRelationTarget: (item: QueryItem): DXN.String => {
+  getRelationTarget: (item: QueryItem): DXN.String | undefined => {
     if (item.doc) {
-      return ObjectStructure.getRelationTarget(item.doc)?.['/'] as DXN.String;
+      return ObjectStructure.getRelationTarget(item.doc)?.['/'] as DXN.String | undefined;
     } else if (item.data) {
       return item.data[ATTR_RELATION_TARGET] as DXN.String;
     } else {
@@ -203,6 +218,8 @@ type StepExecutionResult = {
 
 const TRACE_QUERY_EXECUTION = false;
 
+const MAX_DEPTH_FOR_DELETION_TRACING = 10;
+
 /**
  * Executes query plans against the IndexEngine and AutomergeHost.
  *
@@ -281,7 +298,7 @@ export class QueryExecutor extends Resource {
     const { workingSet, trace } = await this._execPlan(this._plan, []);
     this._lastResultSet = workingSet;
     trace.name = 'Root';
-    trace.details = JSON.stringify({ id: this._id });
+    trace.details = JSON.stringify({ id: this._id, query: prettyQuery(this._query) });
     this._trace = trace;
 
     const changed =
@@ -569,8 +586,20 @@ export class QueryExecutor extends Resource {
     workingSet: QueryItem[],
   ): Promise<StepExecutionResult> {
     const expected = step.mode === 'only-deleted';
+
+    const deletedState = workingSet.map((item) => QueryItem.isDeleted(item));
+    await Promise.all(
+      workingSet.map(async (item, index) => {
+        if (deletedState[index]) {
+          return;
+        }
+        deletedState[index] ||= await this._getTransitiveDeletionState(item, MAX_DEPTH_FOR_DELETION_TRACING);
+      }),
+    );
+
+    const result = workingSet.filter((item, index) => deletedState[index] === expected);
+
     // TODO(dmaretskyi): How do we handle items with parents and cascade deletions? -- perhaps we forbid queue items from having parents -- i.e. queue is their parent.
-    const result = workingSet.filter((item) => QueryItem.isDeleted(item) === expected);
     return {
       workingSet: result,
       trace: {
@@ -659,6 +688,9 @@ export class QueryExecutor extends Resource {
                   step.traversal.direction === 'relation-to-source'
                     ? QueryItem.getRelationSource(item)
                     : QueryItem.getRelationTarget(item);
+                if (!dxn) {
+                  return null;
+                }
                 try {
                   return {
                     ref: DXN.parse(dxn),
@@ -701,6 +733,85 @@ export class QueryExecutor extends Resource {
             newWorkingSet.push(...results.filter(isNonNullable));
             trace.objectCount = newWorkingSet.length;
 
+            break;
+          }
+        }
+        break;
+      }
+      case 'HierarchyTraversal': {
+        switch (step.traversal.direction) {
+          case 'to-parent': {
+            // Traverse from child to parent using the parent reference in the document.
+            const refs = workingSet
+              .map((item) => {
+                if (!item.doc) {
+                  return null; // TODO(dmaretskyi): Queue items not supported here.
+                }
+                const ref = ObjectStructure.getParent(item.doc);
+                if (!EncodedReference.isEncodedReference(ref)) {
+                  return null;
+                }
+                try {
+                  return {
+                    ref: DXN.parse(ref['/']),
+                    spaceId: item.spaceId,
+                  };
+                } catch {
+                  log.warn('invalid parent reference', { ref: ref['/'] });
+                  return null;
+                }
+              })
+              .filter(isNonNullable);
+
+            const beginLoad = performance.now();
+            const items = await Promise.all(
+              refs.map(({ ref, spaceId }) => this._loadFromDXN(ref, { sourceSpaceId: spaceId })),
+            );
+            trace.documentLoadTime += performance.now() - beginLoad;
+
+            newWorkingSet.push(...items.filter(isNonNullable));
+            trace.objectCount = newWorkingSet.length;
+            break;
+          }
+
+          case 'to-children': {
+            // Traverse from parent to children using the SQL index.
+            // Group working set by spaceId.
+            const bySpace = new Map<SpaceId, ObjectId[]>();
+            for (const item of workingSet) {
+              const existing = bySpace.get(item.spaceId);
+              if (existing) {
+                existing.push(item.objectId);
+              } else {
+                bySpace.set(item.spaceId, [item.objectId]);
+              }
+            }
+
+            // Query children for each space.
+            const allChildren: { spaceId: SpaceId; objectId: ObjectId }[] = [];
+            for (const [spaceId, parentIds] of bySpace) {
+              const children = await this._runInRuntime(
+                this._indexEngine.queryChildren({ spaceId: [spaceId], parentIds }),
+              );
+
+              for (const child of children) {
+                allChildren.push({ spaceId, objectId: child.objectId as ObjectId });
+              }
+            }
+
+            trace.indexHits += allChildren.length;
+
+            const documentLoadStart = performance.now();
+            const results = await Promise.all(
+              allChildren.map(({ spaceId, objectId }) =>
+                this._loadFromDXN(DXN.fromLocalObjectId(objectId), { sourceSpaceId: spaceId }),
+              ),
+            );
+            trace.documentsLoaded += results.filter(isNonNullable).length;
+            trace.documentLoadTime += performance.now() - documentLoadStart;
+
+            newWorkingSet.push(...results.filter(isNonNullable));
+            trace.objectCount = newWorkingSet.length;
             break;
           }
         }
@@ -1120,4 +1231,146 @@ export class QueryExecutor extends Resource {
       rank: 1,
     };
   }
+
+  private async _getTransitiveDeletionState(item: QueryItem, remainingDepth: number): Promise<boolean> {
+    const strongDeps = [
+      QueryItem.getParent(item),
+      QueryItem.getRelationSource(item),
+      QueryItem.getRelationTarget(item),
+    ].filter((x) => x !== undefined);
+
+    if (strongDeps.length === 0) {
+      return false;
+    }
+
+    // TODO(dmaretskyi): This could be optimized to bail early if any of the dependencies are deleted.
+    const strongDepStates = await Promise.all(
+      strongDeps.map(async (dxn) => {
+        const dep = await this._loadFromDXN(DXN.parse(dxn), { sourceSpaceId: item.spaceId });
+        if (!dep) {
+          return false;
+        }
+        if (QueryItem.isDeleted(dep)) {
+          return true;
+        }
+        if (remainingDepth > 0) {
+          return this._getTransitiveDeletionState(dep, remainingDepth - 1);
+        }
+        return false;
+      }),
+    );
+
+    return strongDepStates.some((x) => x);
+  }
 }
+
+const prettyFilter = (filter: QueryAST.Filter): string => {
+  switch (filter.type) {
+    case 'object': {
+      const parts: string[] = [];
+      if (filter.typename !== null) {
+        parts.push(String(filter.typename));
+      }
+      if (filter.id !== undefined && filter.id.length > 0) {
+        parts.push(`id: [${filter.id.join(', ')}]`);
+      }
+      const propEntries = Object.entries(filter.props);
+      if (propEntries.length > 0) {
+        const propsStr = propEntries.map(([k, v]) => `${k}: ${prettyFilter(v)}`).join(', ');
+        parts.push(`{ ${propsStr} }`);
+      }
+      if (filter.foreignKeys !== undefined && filter.foreignKeys.length > 0) {
+        parts.push(`foreignKeys: [${filter.foreignKeys.map((fk) => JSON.stringify(fk)).join(', ')}]`);
+      }
+      return parts.length > 0 ? `Filter.type(${parts.join(', ')})` : 'Filter.everything()';
+    }
+    case 'compare':
+      return `Filter.${filter.operator}(${JSON.stringify(filter.value)})`;
+    case 'in':
+      return `Filter.in([${filter.values.map((v) => JSON.stringify(v)).join(', ')}])`;
+    case 'contains':
+      return `Filter.contains(${JSON.stringify(filter.value)})`;
+    case 'tag':
+      return `Filter.tag(${JSON.stringify(filter.tag)})`;
+    case 'range':
+      return `Filter.range(${JSON.stringify(filter.from)}, ${JSON.stringify(filter.to)})`;
+    case 'text-search':
+      return filter.searchKind
+        ? `Filter.textSearch(${JSON.stringify(filter.text)}, ${JSON.stringify(filter.searchKind)})`
+        : `Filter.textSearch(${JSON.stringify(filter.text)})`;
+    case 'not':
+      return `Filter.not(${prettyFilter(filter.filter)})`;
+    case 'and':
+      return `Filter.and(${filter.filters.map(prettyFilter).join(', ')})`;
+    case 'or':
+      return `Filter.or(${filter.filters.map(prettyFilter).join(', ')})`;
+  }
+};
+
+const prettyQuery = (query: QueryAST.Query): string => {
+  switch (query.type) {
+    case 'select':
+      return `Query.select(${prettyFilter(query.filter)})`;
+    case 'filter':
+      return `${prettyQuery(query.selection)}.select(${prettyFilter(query.filter)})`;
+    case 'reference-traversal':
+      return `${prettyQuery(query.anchor)}.reference(${JSON.stringify(query.property)})`;
+    case 'incoming-references': {
+      const args: string[] = [];
+      if (query.typename !== null) {
+        args.push(String(query.typename));
+      }
+      if (query.property !== null) {
+        args.push(JSON.stringify(query.property));
+      }
+      return `${prettyQuery(query.anchor)}.referencedBy(${args.join(', ')})`;
+    }
+    case 'relation': {
+      const method =
+        query.direction === 'outgoing' ? 'sourceOf' : query.direction === 'incoming' ? 'targetOf' : 'relationOf';
+      const filterStr = query.filter !== undefined ? prettyFilter(query.filter) : '';
+      return `${prettyQuery(query.anchor)}.${method}(${filterStr})`;
+    }
+    case 'relation-traversal':
+      return `${prettyQuery(query.anchor)}.${query.direction}()`;
+    case 'hierarchy-traversal':
+      return query.direction === 'to-parent'
+        ? `${prettyQuery(query.anchor)}.parent()`
+        : `${prettyQuery(query.anchor)}.children()`;
+    case 'union':
+      return `Query.all(${query.queries.map(prettyQuery).join(', ')})`;
+    case 'set-difference':
+      return `Query.without(${prettyQuery(query.source)}, ${prettyQuery(query.exclude)})`;
+    case 'order': {
+      const orders = query.order.map((o) => {
+        if (o.kind === 'natural') {
+          return 'Order.natural()';
+        } else if (o.kind === 'rank') {
+          return `Order.rank(${JSON.stringify(o.direction)})`;
+        } else {
+          return `Order.property(${JSON.stringify(o.property)}, ${JSON.stringify(o.direction)})`;
+        }
+      });
+      return `${prettyQuery(query.query)}.orderBy(${orders.join(', ')})`;
+    }
+    case 'options': {
+      const opts = query.options;
+      const parts: string[] = [];
+      if (opts.spaceIds !== undefined) {
+        parts.push(`spaceIds: [${opts.spaceIds.map((s) => JSON.stringify(s)).join(', ')}]`);
+      }
+      if (opts.queues !== undefined) {
+        parts.push(`queues: [${opts.queues.map(String).join(', ')}]`);
+      }
+      if (opts.deleted !== undefined) {
+        parts.push(`deleted: ${JSON.stringify(opts.deleted)}`);
+      }
+      if (opts.allQueuesFromSpaces !== undefined) {
+        parts.push(`allQueuesFromSpaces: ${opts.allQueuesFromSpaces}`);
+      }
+      return `${prettyQuery(query.query)}.options({ ${parts.join(', ')} })`;
+    }
+    case 'limit':
+      return `${prettyQuery(query.query)}.limit(${query.limit})`;
+  }
+};

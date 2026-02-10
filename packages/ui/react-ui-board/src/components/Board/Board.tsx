@@ -153,12 +153,14 @@ BoardRoot.displayName = 'Board.Root';
 // Container
 //
 
+const BOARD_CONTAINER_NAME = 'Board.Container';
+
 type BoardContainerProps = ThemedClassName<PropsWithChildren>;
 
 const BoardContainer = ({ classNames, children }: BoardContainerProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const { width, height } = useResizeDetector({ targetRef: containerRef });
-  const { bounds, grid, center } = useBoardContext(BoardContainer.displayName);
+  const { bounds, grid, center } = useBoardContext(BOARD_CONTAINER_NAME);
 
   const [mounted, setMounted] = useState(false);
 
@@ -203,16 +205,18 @@ const BoardContainer = ({ classNames, children }: BoardContainerProps) => {
   );
 };
 
-BoardContainer.displayName = 'Board.Container';
+BoardContainer.displayName = BOARD_CONTAINER_NAME;
 
 //
 // Viewport
 //
 
+const BOARD_VIEWPORT_NAME = 'Board.Viewport';
+
 type BoardViewportProps = ThemedClassName<PropsWithChildren>;
 
 const BoardViewport = ({ classNames, children }: BoardViewportProps) => {
-  const { bounds, zoom } = useBoardContext(BoardViewport.displayName);
+  const { bounds, zoom } = useBoardContext(BOARD_VIEWPORT_NAME);
   return (
     <div
       className={mx(
@@ -231,11 +235,13 @@ const BoardViewport = ({ classNames, children }: BoardViewportProps) => {
   );
 };
 
-BoardViewport.displayName = 'Board.Viewport';
+BoardViewport.displayName = BOARD_VIEWPORT_NAME;
 
 //
 // Content
 //
+
+const BOARD_CONTENT_NAME = 'Board.Content';
 
 type BoardContentProps = ThemedClassName<ComponentPropsWithoutRef<'div'>>;
 
@@ -247,16 +253,18 @@ const BoardContent = ({ classNames, children, ...props }: BoardContentProps) => 
   );
 };
 
-BoardContent.displayName = 'Board.Content';
+BoardContent.displayName = BOARD_CONTENT_NAME;
 
 //
 // Backdrop
 //
 
+const BOARD_BACKDROP_NAME = 'Board.Backdrop';
+
 type BoardBackdropProps = {};
 
 const BoardBackdrop = (props: BoardBackdropProps) => {
-  const { grid: board, layout, onAdd } = useBoardContext(BoardBackdrop.displayName);
+  const { grid: board, layout, onAdd } = useBoardContext(BOARD_BACKDROP_NAME);
 
   const cells = useMemo(() => {
     const cells: { position: Position; rect: Rect }[] = [];
@@ -283,7 +291,7 @@ const BoardBackdrop = (props: BoardBackdropProps) => {
   );
 };
 
-BoardBackdrop.displayName = 'Board.Backdrop';
+BoardBackdrop.displayName = BOARD_BACKDROP_NAME;
 
 type BoardDropTargetProps = {
   position: Position;
@@ -342,11 +350,13 @@ const BoardDropTarget = ({ position, rect, onAddClick }: BoardDropTargetProps) =
 // Controls
 //
 
+const BOARD_TOOLBAR_NAME = 'Board.Controls';
+
 type BoardToolbarProps = ThemedClassName<ToolbarRootProps>;
 
 const BoardToolbar = (props: BoardToolbarProps) => {
   const { t } = useTranslation(translationKey);
-  const { readonly, zoom, controller, onAdd } = useBoardContext(BoardToolbar.displayName);
+  const { readonly, zoom, controller, onAdd } = useBoardContext(BOARD_TOOLBAR_NAME);
 
   // TODO(burdon): Convert to MenuProvider.
   return (
@@ -375,7 +385,7 @@ const BoardToolbar = (props: BoardToolbarProps) => {
   );
 };
 
-BoardToolbar.displayName = 'Board.Controls';
+BoardToolbar.displayName = BOARD_TOOLBAR_NAME;
 
 //
 // Board

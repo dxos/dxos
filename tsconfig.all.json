@@ -355,13 +355,13 @@
       "path": "packages/plugins/plugin-outliner/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-pipeline/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-presenter/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-preview/tsconfig.json"
-    },
-    {
-      "path": "packages/plugins/plugin-project/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-pwa/tsconfig.json"

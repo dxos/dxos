@@ -37,7 +37,7 @@ import {
   rectToPoints,
 } from '@dxos/react-ui-canvas-editor';
 import { View } from '@dxos/schema';
-import { Message, Organization, Person, Project } from '@dxos/types';
+import { Message, Organization, Person, Pipeline } from '@dxos/types';
 import { range, trim } from '@dxos/util';
 
 import { type ObjectGenerator } from './ObjectGenerator';
@@ -219,7 +219,7 @@ export const generator = () => ({
           });
 
           return space.db.add(
-            Project.make({
+            Pipeline.make({
               name: 'Investor Research',
               columns: [
                 {
