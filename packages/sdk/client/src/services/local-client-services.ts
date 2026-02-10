@@ -22,7 +22,7 @@ import { log } from '@dxos/log';
 import { type SignalManager } from '@dxos/messaging';
 import { type SwarmNetworkManagerOptions, type TransportFactory, createIceProvider } from '@dxos/network-manager';
 import { type ServiceBundle } from '@dxos/rpc';
-import { layerMemory, sqlExportLayer } from '@dxos/sql-sqlite/platform';
+import { layerFile, layerMemory, sqlExportLayer } from '@dxos/sql-sqlite/platform';
 import type * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 import * as SqliteClient from '@dxos/sql-sqlite/SqliteClient';
 import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
@@ -185,8 +185,6 @@ export class LocalClientServices implements ClientServicesProvider {
       sqliteLayer = SqliteClient.layer({ worker: Effect.succeed(this._opfsWorker) });
     } else if (this._sqlitePath) {
       // Node/Bun: use file-based SQLite for persistent indexing.
-      // Dynamic import to avoid bundling better-sqlite3 in browser builds.
-      const { layerFile } = await import('@dxos/sql-sqlite/platform');
       sqliteLayer = layerFile(this._sqlitePath);
     } else {
       // Fallback to in-memory SQLite (indexes lost on restart).
