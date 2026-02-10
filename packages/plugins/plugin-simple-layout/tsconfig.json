@@ -5,6 +5,9 @@
   ],
   "references": [
     {
+      "path": "../../common/async"
+    },
+    {
       "path": "../../common/log"
     },
     {
