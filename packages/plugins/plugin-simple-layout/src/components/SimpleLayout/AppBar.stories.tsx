@@ -42,19 +42,9 @@ type StoryProps = Omit<AppBarProps, 'actions'> & {
   actions: ActionGraphProps;
 };
 
-const DefaultStory = ({ title, showBackButton, onBack, onAction, actions: actionsProp }: StoryProps) => {
+const DefaultStory = ({ actions: actionsProp, ...props }: StoryProps) => {
   const actions = useMemo(() => Atom.make(actionsProp).pipe(Atom.keepAlive), [actionsProp]);
-
-  return (
-    <AppBar
-      classNames='border-be border-separator'
-      title={title}
-      showBackButton={showBackButton}
-      onBack={onBack}
-      actions={actions}
-      onAction={onAction}
-    />
-  );
+  return <AppBar {...props} actions={actions} />;
 };
 
 const meta = {
@@ -138,6 +128,5 @@ export const NoActions: Story = {
 export const Empty: Story = {
   args: {
     actions: buildEmptyActions(),
-    onAction: (action) => console.log('Action:', action.id),
   },
 };
