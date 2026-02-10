@@ -173,8 +173,8 @@ export class EchoHost extends Resource {
     this._queryService = new QueryServiceImpl({
       automergeHost: this._automergeHost,
       indexer: this._indexer,
-      indexer2: this._indexer2,
-      runtime: this._runtime,
+      indexer2: this._indexConfig.sqlIndex ? this._indexer2 : undefined,
+      runtime: this._indexConfig.sqlIndex ? this._runtime : undefined,
       spaceStateManager: this._spaceStateManager,
     });
 
@@ -183,9 +183,11 @@ export class EchoHost extends Resource {
       spaceStateManager: this._spaceStateManager,
       updateIndexes: async () => {
         await this._indexer.updateIndexes();
-        do {
-          await this._updateIndexes.runBlocking();
-        } while (!this._indexesUpToDate);
+        if (this._indexConfig.sqlIndex) {
+          do {
+            await this._updateIndexes.runBlocking();
+          } while (!this._indexesUpToDate);
+        }
       },
     });
 
@@ -263,12 +265,16 @@ export class EchoHost extends Resource {
       await RuntimeProvider.runPromise(this._runtime)(this._feedStore.migrate());
       this._feedStore.onNewBlocks.on(this._ctx, () => {
         this._queryService.invalidateQueries();
-        this._updateIndexes.schedule();
+        if (this._indexConfig.sqlIndex) {
+          this._updateIndexes.schedule();
+        }
       });
     }
 
-    await RuntimeProvider.runPromise(this._runtime)(this._indexer2.migrate());
-    this._updateIndexes = new DeferredTask(this._ctx, this._runUpdateIndexes);
+    if (this._indexConfig.sqlIndex) {
+      await RuntimeProvider.runPromise(this._runtime)(this._indexer2.migrate());
+      this._updateIndexes = new DeferredTask(this._ctx, this._runUpdateIndexes);
+    }
 
     this._spaceStateManager.spaceDocumentListUpdated.on(this._ctx, (e) => {
       if (e.previousRootId) {
@@ -281,13 +287,16 @@ export class EchoHost extends Resource {
     });
     this._automergeHost.documentsSaved.on(this._ctx, () => {
       this._queryService.invalidateQueries();
-      this._updateIndexes.schedule();
+      if (this._indexConfig.sqlIndex) {
+        this._updateIndexes.schedule();
+      }
     });
-    this._updateIndexes.schedule();
+    if (this._indexConfig.sqlIndex) {
+      this._updateIndexes.schedule();
+    }
   }
 
   protected override async _close(ctx: Context): Promise<void> {
-    await this._updateIndexes.join();
     await this._queryService.close(ctx);
     await this._spaceStateManager.close(ctx);
     await this._indexer.close(ctx);

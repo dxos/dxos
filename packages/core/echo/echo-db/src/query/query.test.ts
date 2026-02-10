@@ -583,6 +583,7 @@ describe('Query', () => {
     beforeEach(async () => {
       peer = await builder.createPeer({
         types: [TestSchema.Person, TestSchema.HasManager, TestSchema.Task],
+        indexing: { sqlIndex: true }, // Needed for parent->child traversal.
       });
       db = await peer.createDatabase();
 

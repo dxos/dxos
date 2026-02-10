@@ -12,6 +12,7 @@ import { DXN, type ObjectId, type SpaceId } from '@dxos/keys';
 
 import type { IndexerObject } from './interface';
 import type { Index } from './interface';
+import { dbg } from '@dxos/log';
 
 const _escapeLikePrefix = (prefix: string) => {
   // Escape LIKE metacharacters in the *literal* prefix (we still append a wildcard for the version suffix).
@@ -65,7 +66,7 @@ export class ObjectMetaIndex implements Index {
     yield* sql`CREATE INDEX IF NOT EXISTS idx_object_index_parent ON objectMeta(spaceId, parent)`;
   });
 
-  query = Effect.fn('ObjectMetaIndex.queryType')(
+  query = Effect.fn('ObjectMetaIndex.query')(
     (
       query: Pick<ObjectMeta, 'spaceId' | 'typeDxn'>,
     ): Effect.Effect<readonly ObjectMeta[], SqlError.SqlError, SqlClient.SqlClient> =>
