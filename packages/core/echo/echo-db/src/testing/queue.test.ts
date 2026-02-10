@@ -2,22 +2,18 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Reactivity from '@effect/experimental/Reactivity';
-import * as Layer from 'effect/Layer';
-import * as ManagedRuntime from 'effect/ManagedRuntime';
-import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Event } from '@dxos/async';
 import { Entity, Filter, Obj, Query, type Ref, Relation, Type } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { DXN, SpaceId } from '@dxos/keys';
 import { KEY_QUEUE_POSITION } from '@dxos/protocols';
-import { layerMemory } from '@dxos/sql-sqlite/platform';
-import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 
 import { type Queue } from '../queue';
 
 import { EchoTestBuilder } from './echo-test-builder';
+import { createTmpPath } from './utils';
 
 describe('queues', () => {
   let builder: EchoTestBuilder;
@@ -330,14 +326,9 @@ describe('queues', () => {
 
   describe('Durability', () => {
     test('queue objects survive reload', async ({ expect }) => {
-      const runtime = ManagedRuntime.make(
-        SqlTransaction.layer.pipe(Layer.provideMerge(Layer.merge(layerMemory, Reactivity.layer))).pipe(Layer.orDie),
-      );
-      onTestFinished(() => runtime.dispose());
-
       await using peer = await builder.createPeer({
         types: [TestSchema.Person],
-        runtime,
+        sqlitePath: createTmpPath(),
       });
       const spaceId = SpaceId.random();
       const queues = peer.client.constructQueueFactory(spaceId);
