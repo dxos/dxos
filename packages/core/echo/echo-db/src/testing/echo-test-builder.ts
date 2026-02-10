@@ -4,13 +4,9 @@
 
 import type { AutomergeUrl } from '@automerge/automerge-repo';
 import * as Reactivity from '@effect/experimental/Reactivity';
-import * as Reactivity from '@effect/experimental/Reactivity';
 import type * as SqlClient from '@effect/sql/SqlClient';
-import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import * as Layer from 'effect/Layer';
-import * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 import isEqual from 'lodash.isequal';
 
@@ -22,13 +18,10 @@ import { EchoHost } from '@dxos/echo-pipeline';
 import { createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
-import { PublicKey } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
 import { createTestLevel } from '@dxos/kv-store/testing';
-import { layerMemory, sqlExportLayer } from '@dxos/sql-sqlite/platform';
-import { sqlExportLayer } from '@dxos/sql-sqlite/platform';
+import { layerFile, layerMemory, sqlExportLayer } from '@dxos/sql-sqlite/platform';
 import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
-import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 import { range } from '@dxos/util';
 
@@ -121,8 +114,8 @@ export class EchoTestPeer extends Resource {
       this._managedRuntime = ManagedRuntime.make(
         SqlTransaction.layer
           .pipe(
-            Layer.provideMerge(sqlExportLayer.pipe()),
-            Layer.provideMerge(SqliteClient.layer({ filename: this._sqlitePath })),
+            Layer.provideMerge(sqlExportLayer),
+            Layer.provideMerge(layerFile(this._sqlitePath)),
             Layer.provideMerge(Reactivity.layer),
           )
           .pipe(Layer.orDie),
