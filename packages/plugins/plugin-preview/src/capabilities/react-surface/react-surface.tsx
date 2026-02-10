@@ -10,7 +10,7 @@ import { Surface } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
 import { Card } from '@dxos/react-ui-mosaic';
 import { type ProjectionModel } from '@dxos/schema';
-import { Organization, Person, Project, Task } from '@dxos/types';
+import { Organization, Person, Pipeline, Task } from '@dxos/types';
 
 import { FormCard, OrganizationCard, PersonCard, ProjectCard, TaskCard } from '../../cards';
 import { meta } from '../../meta';
@@ -46,7 +46,7 @@ export default Capability.makeModule(() =>
         id: `${meta.id}/schema-popover--project`,
         role: 'card--content',
         position: 'hoist',
-        filter: (data): data is { subject: Project.Project } => Obj.instanceOf(Project.Project, data.subject),
+        filter: (data): data is { subject: Pipeline.Pipeline } => Obj.instanceOf(Pipeline.Pipeline, data.subject),
         component: ({ data, role }) => {
           return <ProjectCard role={role} subject={data.subject} />;
         },

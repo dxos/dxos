@@ -12,19 +12,21 @@ import { Filter, getSpace, isSpace, useObject, useQuery } from '@dxos/react-clie
 import { useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { Card, Focus, Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import { ProjectionModel, createEchoChangeCallback } from '@dxos/schema';
-import { type Project } from '@dxos/types';
+import { type Pipeline } from '@dxos/types';
 
 import { meta } from '../meta';
 
-import { type ItemProps, useProject } from './Project';
+import { type ItemProps, usePipeline } from './PipelineComponent';
 
-export type ProjectColumnProps = {
-  column: Project.Column;
+export type PipelineColumnProps = {
+  column: Pipeline.Column;
 };
 
 //
 // ItemTile
 //
+
+const ITEM_TILE_NAME = 'ItemTile';
 
 type ItemTileProps = Pick<MosaicTileProps<Obj.Unknown>, 'classNames' | 'location' | 'data' | 'debug'> & {
   itemProps: ItemProps;
@@ -34,7 +36,7 @@ const ItemTile = forwardRef<HTMLDivElement, ItemTileProps>(
   ({ classNames, data, location, debug, itemProps }, forwardedRef) => {
     const rootRef = useRef<HTMLDivElement>(null);
     const composedRef = useComposedRefs<HTMLDivElement>(rootRef, forwardedRef);
-    const { Item } = useProject('ItemTile');
+    const { Item } = usePipeline(ITEM_TILE_NAME);
 
     return (
       <Mosaic.Tile asChild id={data.id} data={data} location={location} debug={debug}>
@@ -55,7 +57,7 @@ const ItemTile = forwardRef<HTMLDivElement, ItemTileProps>(
   },
 );
 
-ItemTile.displayName = 'ItemTile';
+ItemTile.displayName = ITEM_TILE_NAME;
 
 //
 // ProjectColumn
@@ -64,13 +66,13 @@ ItemTile.displayName = 'ItemTile';
 // TODO(thure): Duplicates a lot of the same boilerplate as Kanban columns; is there an opportunity to DRY these out?
 // TODO(wittjosiah): Support column DnD reordering.
 // TODO(wittjosiah): Support item DnD reordering (ordering needs to be stored on the view presentation collection).
-export const ProjectColumn = ({ column }: ProjectColumnProps) => {
+export const PipelineColumn = ({ column }: PipelineColumnProps) => {
   const { t } = useTranslation(meta.id);
   // Subscribe to the view target for reactivity.
   const [viewSnapshot] = useObject(column.view);
   const view = column.view.target;
   const space = getSpace(view);
-  const { Item } = useProject('ViewColumn');
+  const { Item } = usePipeline(PipelineColumn.displayName);
   const [schema, setSchema] = useState<Schema.Schema.AnyNoContext>();
   const query = useMemo(() => {
     if (!view) {
@@ -134,3 +136,5 @@ export const ProjectColumn = ({ column }: ProjectColumnProps) => {
     </Focus.Group>
   );
 };
+
+PipelineColumn.displayName = 'Pipeline.Column';

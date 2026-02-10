@@ -23,7 +23,7 @@ import {
   HasSubject,
   Organization,
   Person,
-  Project,
+  Pipeline,
   Task,
 } from '@dxos/types';
 
@@ -133,7 +133,7 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
       HasSubject.HasSubject,
       Organization.Organization,
       Person.Person,
-      Project.Project,
+      Pipeline.Pipeline,
       Tag.Tag,
       Task.Task,
     ],

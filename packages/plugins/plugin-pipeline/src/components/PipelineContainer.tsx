@@ -10,13 +10,13 @@ import { Obj } from '@dxos/echo';
 import { ATTENDABLE_PATH_SEPARATOR, DeckOperation } from '@dxos/plugin-deck/types';
 import { useAttention } from '@dxos/react-ui-attention';
 import { Layout } from '@dxos/react-ui-mosaic';
-import { type Project as ProjectType } from '@dxos/types';
+import { type Pipeline as PipelineType } from '@dxos/types';
 
-import { type ItemProps, Project } from './Project';
+import { type ItemProps, PipelineComponent } from './PipelineComponent';
 
-export type ProjectContainerProps = SurfaceComponentProps<ProjectType.Project>;
+export type PipelineContainerProps = SurfaceComponentProps<PipelineType.Pipeline>;
 
-export const ProjectContainer = ({ role, subject: project }: ProjectContainerProps) => {
+export const PipelineContainer = ({ role, subject: project }: PipelineContainerProps) => {
   const { invokePromise } = useOperationInvoker();
   const attendableId = Obj.getDXN(project).toString();
   const { hasAttention } = useAttention(attendableId);
@@ -32,15 +32,15 @@ export const ProjectContainer = ({ role, subject: project }: ProjectContainerPro
 
   return (
     <Layout.Main role={role} toolbar>
-      <Project.Root Item={ProjectItem} onAddColumn={handleColumnAdd}>
-        <Project.Toolbar disabled={!hasAttention} />
-        <Project.Content project={project} />
-      </Project.Root>
+      <PipelineComponent.Root Item={PipelineItem} onAddColumn={handleColumnAdd}>
+        <PipelineComponent.Toolbar disabled={!hasAttention} />
+        <PipelineComponent.Content project={project} />
+      </PipelineComponent.Root>
     </Layout.Main>
   );
 };
 
-const ProjectItem = ({ item, projectionModel }: ItemProps) => {
+const PipelineItem = ({ item, projectionModel }: ItemProps) => {
   return (
     <Surface
       role='card--content'
@@ -53,4 +53,4 @@ const ProjectItem = ({ item, projectionModel }: ItemProps) => {
   );
 };
 
-export default ProjectContainer;
+export default PipelineContainer;

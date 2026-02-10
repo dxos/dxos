@@ -20,7 +20,7 @@ import { type Space, useQuery } from '@dxos/react-client/echo';
 import { Clipboard, IconButton, Input, Separator, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { ControlItem, controlItemClasses } from '@dxos/react-ui-form';
 import { List } from '@dxos/react-ui-list';
-import { Project } from '@dxos/types';
+import { Pipeline } from '@dxos/types';
 import { ghostHover, mx } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 
@@ -265,7 +265,7 @@ const scriptMatch = (script: Script.Script) => (trigger: Trigger.Trigger) => {
   return fn.source?.target === script;
 };
 
-const projectMatch = (project: Project.Project) => {
+const projectMatch = (project: Pipeline.Pipeline) => {
   const viewQueries = EFn.pipe(
     project.columns,
     Array.map((column) => column.view.target),
@@ -292,7 +292,7 @@ const triggerMatch = Match.type<Obj.Unknown>().pipe(
     (obj) => scriptMatch(obj),
   ),
   Match.when(
-    (obj) => Obj.instanceOf(Project.Project, obj),
+    (obj) => Obj.instanceOf(Pipeline.Pipeline, obj),
     (obj) => projectMatch(obj),
   ),
   Match.orElse((_obj) => () => true),

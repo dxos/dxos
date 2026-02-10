@@ -14,7 +14,7 @@ import { IconButton, type ThemedClassName, useAsyncEffect, useTranslation } from
 import { Form, ViewEditor } from '@dxos/react-ui-form';
 import { List } from '@dxos/react-ui-list';
 import { type ProjectionModel, View } from '@dxos/schema';
-import { Project, Task } from '@dxos/types';
+import { Pipeline, Task } from '@dxos/types';
 import { inputTextLabel, mx, osTranslations, subtleHover } from '@dxos/ui-theme';
 import { arrayMove } from '@dxos/util';
 
@@ -23,17 +23,17 @@ import { meta } from '../meta';
 const listGrid = 'grid grid-cols-[min-content_1fr_min-content_min-content_min-content]';
 const listItemGrid = 'grid grid-cols-subgrid col-span-5';
 
-const ColumnFormSchema = Project.Column.pipe(Schema.mutable, Schema.pick('name'));
+const ColumnFormSchema = Pipeline.Column.pipe(Schema.mutable, Schema.pick('name'));
 
 // TODO(burdon): Standardize Object/Plugin settings.
-export type ProjectObjectSettingsProps = ThemedClassName<{
-  project: Project.Project;
+export type PipelineObjectSettingsProps = ThemedClassName<{
+  project: Pipeline.Pipeline;
 }>;
 
 /**
  * Supports editing the project view.
  */
-export const ProjectObjectSettings = ({ classNames, project }: ProjectObjectSettingsProps) => {
+export const PipelineObjectSettings = ({ classNames, project }: PipelineObjectSettingsProps) => {
   const { t } = useTranslation(meta.id);
   const space = getSpace(project);
   const [expandedId, setExpandedId] = useState<string>();
@@ -102,14 +102,14 @@ export const ProjectObjectSettings = ({ classNames, project }: ProjectObjectSett
     [view, schema],
   );
 
-  const handleToggleField = useCallback((column: Project.Column) => {
+  const handleToggleField = useCallback((column: Pipeline.Column) => {
     setExpandedId((prevExpandedId) =>
       prevExpandedId === column.view.dxn.toString() ? undefined : column.view.dxn.toString(),
     );
   }, []);
 
   const handleDelete = useCallback(
-    async (column: Project.Column) => {
+    async (column: Pipeline.Column) => {
       if (column.view.dxn.toString() === expandedId) {
         setExpandedId(undefined);
       }
@@ -156,9 +156,9 @@ export const ProjectObjectSettings = ({ classNames, project }: ProjectObjectSett
     <div role='none' className={mx('plb-cardSpacingBlock overflow-y-auto', classNames)}>
       <h2 className={mx(inputTextLabel)}>{t('views label')}</h2>
 
-      <List.Root<Project.Column>
+      <List.Root<Pipeline.Column>
         items={project.columns}
-        isItem={Schema.is(Project.Column)}
+        isItem={Schema.is(Pipeline.Column)}
         getId={(column) => column.view.dxn.toString()}
         onMove={handleMove}
       >
@@ -166,7 +166,7 @@ export const ProjectObjectSettings = ({ classNames, project }: ProjectObjectSett
           <>
             <div role='list' className={mx(listGrid)}>
               {columns.map((column) => (
-                <List.Item<Project.Column>
+                <List.Item<Pipeline.Column>
                   key={column.view.dxn.toString()}
                   item={column}
                   classNames={listItemGrid}
@@ -227,4 +227,4 @@ export const ProjectObjectSettings = ({ classNames, project }: ProjectObjectSett
   );
 };
 
-export default ProjectObjectSettings;
+export default PipelineObjectSettings;

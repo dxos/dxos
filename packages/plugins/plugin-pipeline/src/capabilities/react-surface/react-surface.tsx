@@ -9,9 +9,9 @@ import { Capability, Common } from '@dxos/app-framework';
 import { InvocationTraceContainer } from '@dxos/devtools';
 import { Obj } from '@dxos/echo';
 import { Layout } from '@dxos/react-ui-mosaic';
-import { Project } from '@dxos/types';
+import { Pipeline } from '@dxos/types';
 
-import { ProjectContainer, ProjectObjectSettings } from '../../components';
+import { PipelineContainer, PipelineObjectSettings } from '../../components';
 import { meta } from '../../meta';
 
 export default Capability.makeModule(() =>
@@ -20,14 +20,14 @@ export default Capability.makeModule(() =>
       Common.createSurface({
         id: meta.id,
         role: 'article',
-        filter: (data): data is { subject: Project.Project } => Obj.instanceOf(Project.Project, data.subject),
-        component: ({ data, role }) => <ProjectContainer role={role} subject={data.subject} />,
+        filter: (data): data is { subject: Pipeline.Pipeline } => Obj.instanceOf(Pipeline.Pipeline, data.subject),
+        component: ({ data, role }) => <PipelineContainer role={role} subject={data.subject} />,
       }),
       Common.createSurface({
         id: `${meta.id}/companion/invocations`,
         role: 'article',
-        filter: (data): data is { companionTo: Project.Project } =>
-          Obj.instanceOf(Project.Project, data.companionTo) && data.subject === 'invocations',
+        filter: (data): data is { companionTo: Pipeline.Pipeline } =>
+          Obj.instanceOf(Pipeline.Pipeline, data.companionTo) && data.subject === 'invocations',
         component: ({ data, role }) => {
           const db = Obj.getDatabase(data.companionTo);
           // TODO(wittjosiah): Filter the invocations to those relevant to the project.
@@ -41,8 +41,8 @@ export default Capability.makeModule(() =>
       Common.createSurface({
         id: `${meta.id}/object-settings`,
         role: 'object-settings',
-        filter: (data): data is { subject: Project.Project } => Obj.instanceOf(Project.Project, data.subject),
-        component: ({ data }) => <ProjectObjectSettings project={data.subject} />,
+        filter: (data): data is { subject: Pipeline.Pipeline } => Obj.instanceOf(Pipeline.Pipeline, data.subject),
+        component: ({ data }) => <PipelineObjectSettings project={data.subject} />,
       }),
     ]),
   ),

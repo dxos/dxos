@@ -10,17 +10,17 @@ import { useObject } from '@dxos/react-client/echo';
 import { Toolbar, type ToolbarRootProps, useTranslation } from '@dxos/react-ui';
 import { Stack } from '@dxos/react-ui-stack';
 import { type ProjectionModel } from '@dxos/schema';
-import { type Project as ProjectType } from '@dxos/types';
+import { type Pipeline as PipelineType } from '@dxos/types';
 
 import { meta } from '../meta';
 
-import { ProjectColumn } from './ProjectColumn';
+import { PipelineColumn } from './PipelineColumn';
 
 type ItemProps = { item: Obj.Unknown; projectionModel?: ProjectionModel };
 
 const itemNoOp = ({ item }: ItemProps) => <span>{item.id}</span>;
 
-type ProjectContextValue = {
+type PipelineContextValue = {
   Item: FC<ItemProps>;
   // TODO(wittjosiah): Support adding items.
   //   If the created item doesn't match the current query, it will not be visible.
@@ -32,45 +32,45 @@ type ProjectContextValue = {
 // Root
 //
 
-type ProjectRootProps = ProjectContextValue;
+type PipelineRootProps = PipelineContextValue;
 
-const PROJECT_ROOT = 'Project.Root';
+const PIPELINE_ROOT = 'Pipeline.Root';
 
-const [ProjectRoot, useProject] = createContext<ProjectContextValue>(PROJECT_ROOT, {
+const [PipelineRoot, usePipeline] = createContext<PipelineContextValue>(PIPELINE_ROOT, {
   Item: itemNoOp,
 });
 
-ProjectRoot.displayName = PROJECT_ROOT;
+PipelineRoot.displayName = PIPELINE_ROOT;
 
 //
 // Content
 //
 
-type ProjectContentProps = {
-  project: ProjectType.Project;
+type PipelineContentProps = {
+  project: PipelineType.Pipeline;
 };
 
-const ProjectContent = ({ project }: ProjectContentProps) => {
+const PipelineContent = ({ project }: PipelineContentProps) => {
   const [columns] = useObject(project, 'columns');
 
   return (
     <Stack orientation='horizontal' size='contain' rail={false}>
       {columns.map((column) => {
-        return <ProjectColumn key={column.view.dxn.toString()} column={column} />;
+        return <PipelineColumn key={column.view.dxn.toString()} column={column} />;
       })}
     </Stack>
   );
 };
 
-ProjectContent.displayName = 'Project.Content';
+PipelineContent.displayName = 'Pipeline.Content';
 
 //
 // Toolbar
 //
 
-export const ProjectToolbar = (props: ToolbarRootProps) => {
+export const PipelineToolbar = (props: ToolbarRootProps) => {
   const { t } = useTranslation(meta.id);
-  const { onAddColumn } = useProject(ProjectToolbar.displayName);
+  const { onAddColumn } = usePipeline(PipelineToolbar.displayName);
 
   return (
     <Toolbar.Root {...props}>
@@ -79,18 +79,18 @@ export const ProjectToolbar = (props: ToolbarRootProps) => {
   );
 };
 
-ProjectToolbar.displayName = 'Project.Toolbar';
+PipelineToolbar.displayName = 'Pipeline.Toolbar';
 
 //
 // Project
 //
 
-export const Project = {
-  Root: ProjectRoot,
-  Content: ProjectContent,
-  Toolbar: ProjectToolbar,
+export const PipelineComponent = {
+  Root: PipelineRoot,
+  Content: PipelineContent,
+  Toolbar: PipelineToolbar,
 };
 
-export { useProject };
+export { usePipeline };
 
-export type { ItemProps, ProjectContextValue, ProjectRootProps };
+export type { ItemProps, PipelineContextValue, PipelineRootProps };

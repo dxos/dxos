@@ -15,11 +15,11 @@ import { Form, omitId } from '@dxos/react-ui-form';
 import { withMosaic } from '@dxos/react-ui-mosaic/testing';
 import { Collection, View } from '@dxos/schema';
 import { createObjectFactory } from '@dxos/schema/testing';
-import { Person, Project } from '@dxos/types';
+import { Person, Pipeline } from '@dxos/types';
 
 import { translations } from '../translations';
 
-import { type ItemProps, Project as ProjectComponent } from './Project';
+import { type ItemProps, PipelineComponent as PipelineComponent } from './PipelineComponent';
 
 const StorybookProjectItem = ({ item, projectionModel }: ItemProps) => {
   if (Obj.instanceOf(Person.Person, item)) {
@@ -41,7 +41,7 @@ const StorybookProjectItem = ({ item, projectionModel }: ItemProps) => {
 
 const DefaultStory = () => {
   const { space } = useClientStory();
-  const projects = useQuery(space?.db, Filter.type(Project.Project));
+  const projects = useQuery(space?.db, Filter.type(Pipeline.Pipeline));
   const project = projects[0];
 
   const handleAddColumn = useCallback(() => {
@@ -72,15 +72,15 @@ const DefaultStory = () => {
   }
 
   return (
-    <ProjectComponent.Root Item={StorybookProjectItem} onAddColumn={handleAddColumn}>
-      <ProjectComponent.Content project={project} />
-    </ProjectComponent.Root>
+    <PipelineComponent.Root Item={StorybookProjectItem} onAddColumn={handleAddColumn}>
+      <PipelineComponent.Content project={project} />
+    </PipelineComponent.Root>
   );
 };
 
 const MutationsStory = () => {
   const { space } = useClientStory();
-  const projects = useQuery(space?.db, Filter.type(Project.Project));
+  const projects = useQuery(space?.db, Filter.type(Pipeline.Pipeline));
   const contacts = useQuery(space?.db, Filter.type(Person.Person));
   const project = projects[0];
 
@@ -141,19 +141,19 @@ const MutationsStory = () => {
   }
 
   return (
-    <ProjectComponent.Root Item={StorybookProjectItem} onAddColumn={handleAddColumn}>
-      <ProjectComponent.Content project={project} />
-    </ProjectComponent.Root>
+    <PipelineComponent.Root Item={StorybookProjectItem} onAddColumn={handleAddColumn}>
+      <PipelineComponent.Content project={project} />
+    </PipelineComponent.Root>
   );
 };
 
 const meta = {
-  title: 'plugins/plugin-project/Project',
+  title: 'plugins/plugin-pipeline/PipelineComponent',
   decorators: [
     withTheme,
     withMosaic(),
     withClientProvider({
-      types: [Project.Project, View.View, Collection.Collection, Person.Person],
+      types: [Pipeline.Pipeline, View.View, Collection.Collection, Person.Person],
       createIdentity: true,
       createSpace: true,
       onCreateSpace: async ({ space }) => {
@@ -166,7 +166,7 @@ const meta = {
         });
 
         // Create a project with columns.
-        const project = Project.make({
+        const project = Pipeline.make({
           columns: [
             {
               name: 'Contacts',
@@ -188,7 +188,7 @@ const meta = {
     layout: 'fullscreen',
     translations,
   },
-} satisfies Meta<typeof Project>;
+} satisfies Meta<typeof PipelineComponent>;
 
 export default meta;
 

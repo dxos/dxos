@@ -20,18 +20,18 @@ import { translations as stackTranslations } from '@dxos/react-ui-stack';
 import { Stack } from '@dxos/react-ui-stack';
 import { Collection, View } from '@dxos/schema';
 import { createObjectFactory } from '@dxos/schema/testing';
-import { Message, Organization, Person, Project, Task } from '@dxos/types';
+import { Message, Organization, Person, Pipeline, Task } from '@dxos/types';
 
 import { translations } from '../translations';
 
-import { ProjectContainer } from './ProjectContainer';
-import { ProjectObjectSettings } from './ProjectSettings';
+import { PipelineContainer } from './PipelineContainer';
+import { PipelineObjectSettings } from './PipelineSettings';
 
 faker.seed(0);
 
 const DefaultStory = () => {
   const db = useDatabase();
-  const projects = useQuery(db, Filter.type(Project.Project));
+  const projects = useQuery(db, Filter.type(Pipeline.Pipeline));
   const project = projects[0];
 
   if (!project) {
@@ -40,14 +40,14 @@ const DefaultStory = () => {
 
   return (
     <Stack orientation='horizontal' size='split' rail={false} classNames='pli-0'>
-      <ProjectContainer role='article' subject={project} />
-      <ProjectObjectSettings project={project} classNames='border-is border-separator' />
+      <PipelineContainer role='article' subject={project} />
+      <PipelineObjectSettings project={project} classNames='border-is border-separator' />
     </Stack>
   );
 };
 
 const meta = {
-  title: 'plugins/plugin-project/ProjectContainer',
+  title: 'plugins/plugin-pipeline/PipelineContainer',
   render: DefaultStory,
   decorators: [
     withTheme,
@@ -58,7 +58,7 @@ const meta = {
         ClientPlugin({
           types: [
             Tag.Tag,
-            Project.Project,
+            Pipeline.Pipeline,
             View.View,
             Collection.Collection,
             Organization.Organization,
@@ -96,8 +96,8 @@ const meta = {
 
               // Create a view for Project-Projects.
               const projectView = View.make({
-                query: Query.select(Filter.type(Project.Project)),
-                jsonSchema: Type.toJsonSchema(Project.Project),
+                query: Query.select(Filter.type(Pipeline.Pipeline)),
+                jsonSchema: Type.toJsonSchema(Pipeline.Pipeline),
               });
 
               // Create a view for Messages.
@@ -110,7 +110,7 @@ const meta = {
               });
 
               // Create project with columns.
-              const project = Project.make({
+              const project = Pipeline.make({
                 columns: [
                   {
                     name: 'Contacts',
@@ -182,7 +182,7 @@ const meta = {
 
               // Generate sample Projects
               Array.from({ length: 3 }).forEach(() => {
-                const nestedProject = Project.make({
+                const nestedProject = Pipeline.make({
                   name: faker.commerce.productName(),
                   description: faker.lorem.sentence(),
                 });
@@ -217,7 +217,7 @@ const meta = {
     layout: 'fullscreen',
     translations: [...translations, ...stackTranslations],
   },
-} satisfies Meta<typeof ProjectContainer>;
+} satisfies Meta<typeof PipelineContainer>;
 
 export default meta;
 
