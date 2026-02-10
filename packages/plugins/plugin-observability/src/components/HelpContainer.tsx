@@ -20,7 +20,7 @@ import { FeedbackForm } from './FeedbackForm';
 export const HelpContainer = () => {
   const { invokePromise } = useOperationInvoker();
   const observability = useCapability(ObservabilityCapabilities.Observability);
-  const [feedbackAvailable, setFeedbackAvailable] = useState(true);
+  const [feedbackAvailable, setFeedbackAvailable] = useState(false);
 
   useAsyncEffect(
     async (controller) => {
