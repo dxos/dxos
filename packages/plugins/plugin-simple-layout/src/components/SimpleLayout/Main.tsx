@@ -28,14 +28,15 @@ export const Main = () => {
   const id = state.active ?? state.workspace;
   const attentionAttrs = useAttentionAttributes(id);
   const { keyboardOpen } = useMobileLayout(MAIN_NAME);
-  const { graph } = useAppGraph();
-  const node = useNode(graph, id);
+  const placeholder = useMemo(() => <ContentLoading />, []);
+  const { actions, onAction } = useNavbarActions();
 
   // Ensures that children are loaded so that they are available to navigate to.
   useLoadDescendents(id);
 
-  const placeholder = useMemo(() => <ContentLoading />, []);
-
+  const { graph } = useAppGraph();
+  const bannerProps = useBannerProps(graph);
+  const node = useNode(graph, id);
   const data = useMemo(() => {
     return (
       node && {
@@ -47,13 +48,11 @@ export const Main = () => {
     );
   }, [id, node, node?.data, node?.properties, state.popoverAnchorId]);
 
-  const showNavBar = !state.isPopover && state.drawerState === 'closed';
-
-  const bannerProps = useBannerProps(graph);
-  const { actions, onAction } = useNavbarActions();
+  const showNavBar = !keyboardOpen && !state.isPopover && state.drawerState === 'closed';
 
   return (
     <div
+      role='none'
       className={mx(
         'bs-full grid bg-toolbarSurface',
         showNavBar ? 'grid-rows-[min-content_1fr_min-content]' : 'grid-rows-[min-content_1fr]',
@@ -64,9 +63,7 @@ export const Main = () => {
       <article className='bs-full overflow-hidden bg-baseSurface'>
         <Surface key={id} role='article' data={data} limit={1} fallback={ContentError} placeholder={placeholder} />
       </article>
-      {showNavBar && !keyboardOpen && (
-        <NavBar classNames='border-bs border-subduedSeparator' actions={actions} onAction={onAction} />
-      )}
+      {showNavBar && <NavBar classNames='border-bs border-subduedSeparator' actions={actions} onAction={onAction} />}
     </div>
   );
 };
