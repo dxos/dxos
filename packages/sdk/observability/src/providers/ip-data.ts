@@ -61,6 +61,7 @@ const getIPData = Effect.fn(function* (config: Config) {
   }
 });
 
+/** Fetches IP geolocation data and sets city/region/country tags on the observability instance. */
 export const provider =
   (config: Config): DataProvider =>
   (observability) =>
@@ -80,7 +81,7 @@ export const provider =
     }).pipe(
       Effect.provide(FetchHttpClient.layer),
       Effect.catchAll((err) =>
-        Effect.gen(function* () {
+        Effect.sync(() => {
           log.catch(err);
         }),
       ),

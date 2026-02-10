@@ -6,7 +6,6 @@ import posthog from 'posthog-js';
 
 import { InvariantViolation } from '@dxos/invariant';
 import { type LogConfig, type LogEntry, LogLevel, type LogProcessor, shouldLog } from '@dxos/log';
-import { getDebugName } from '@dxos/util';
 
 export const logProcessor: LogProcessor = (config: LogConfig, entry: LogEntry) => {
   // Don't forward logs from remote sessions.
@@ -30,36 +29,16 @@ export const logProcessor: LogProcessor = (config: LogConfig, entry: LogEntry) =
       additionalProperties.service_host_issue = true;
       additionalProperties.service_host_session = entry.meta.S?.hostSessionId;
     }
-    if (!Number.isNaN(entry.meta.S?.uptimeSeconds)) {
-      additionalProperties.uptime_seconds = entry.meta.S?.uptimeSeconds;
+    if (entry.meta.S?.uptimeSeconds != null) {
+      additionalProperties.uptime_seconds = entry.meta.S.uptimeSeconds;
     }
   }
 
   if (capturedError instanceof InvariantViolation) {
     additionalProperties.invariant_violation = true;
   }
-  const isMessageDifferentFromStackTrace = capturedError == null;
-  if (isMessageDifferentFromStackTrace) {
-    additionalProperties.message = formatMessage(entry);
-  }
 
   posthog.captureException(capturedError, additionalProperties);
-};
-
-const formatMessage = (entry: LogEntry): string => {
-  const message = entry.message ?? (entry.error ? (entry.error.message ?? String(entry.error)) : '');
-
-  let scopePrefix: string | undefined;
-  if (entry.meta?.S) {
-    const scope = entry.meta?.S;
-    scopePrefix = scope.name || getDebugName(scope);
-  }
-  if (scopePrefix == null) {
-    return message;
-  }
-
-  const workerPrefix = entry.meta?.S?.hostSessionId ? '[worker] ' : '';
-  return `${workerPrefix}${scopePrefix} ${message}`;
 };
 
 const getRelativeFilename = (filename: string) => {

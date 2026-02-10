@@ -15,6 +15,7 @@ import { logProcessor } from './log-processor';
 
 export type ExtensionsOptions = { config: Config; posthog?: Partial<PostHogConfig> };
 
+/** Create a PostHog-backed observability extension for events, errors, and feedback. */
 export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension> = Effect.fn(function* ({
   config,
   posthog: posthogConfig,
@@ -48,27 +49,25 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
       : Effect.succeed(false);
 
   return {
-    initialize: Effect.fn(function* () {
-      // https://posthog.com/docs/libraries/js/config
-      posthog.init(apiKey, {
-        api_host,
-        mask_all_text: true,
-        ...posthogConfig,
-      });
-      log.runtimeConfig.processors.push(logProcessor);
-    }),
-    close: Effect.fn(function* () {
-      const index = log.runtimeConfig.processors.indexOf(logProcessor);
-      if (index !== -1) {
-        log.runtimeConfig.processors.splice(index, 1);
-      }
-    }),
-    enable: Effect.fn(function* () {
-      posthog.opt_in_capturing();
-    }),
-    disable: Effect.fn(function* () {
-      posthog.opt_out_capturing();
-    }),
+    initialize: () =>
+      Effect.sync(() => {
+        // https://posthog.com/docs/libraries/js/config
+        posthog.init(apiKey, {
+          api_host,
+          mask_all_text: true,
+          ...posthogConfig,
+        });
+        log.runtimeConfig.processors.push(logProcessor);
+      }),
+    close: () =>
+      Effect.sync(() => {
+        const index = log.runtimeConfig.processors.indexOf(logProcessor);
+        if (index !== -1) {
+          log.runtimeConfig.processors.splice(index, 1);
+        }
+      }),
+    enable: () => Effect.sync(() => posthog.opt_in_capturing()),
+    disable: () => Effect.sync(() => posthog.opt_out_capturing()),
     identify: (distinctId, attributes, setOnceAttributes) => {
       posthog.identify(distinctId, attributes, setOnceAttributes);
     },
@@ -102,21 +101,17 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
         captureUserFeedback: (form) => {
           posthog.getSurveys((surveys) => {
             const survey = surveys.find((survey) => survey.id === feedbackSurveyId);
-            if (!survey) {
-              log.error('Missing feedback survey', { feedbackSurveyId });
+            if (!survey || survey.questions.length === 0) {
+              log.error('Missing feedback survey or survey has no questions', { feedbackSurveyId });
               return;
             }
 
             // https://posthog.com/docs/surveys/implementing-custom-surveys
+            const question = survey.questions[0];
             posthog.capture('survey sent', {
               $survey_id: survey.id,
-              $survey_questions: [
-                {
-                  id: survey.questions[0].id,
-                  question: survey.questions[0].question,
-                },
-              ],
-              [`$survey_response_${survey.questions[0].id}`]: form.message,
+              $survey_questions: [{ id: question.id, question: question.question }],
+              [`$survey_response_${question.id}`]: form.message,
             });
           });
         },

@@ -16,6 +16,7 @@ import { ObservabilityCapabilities, ObservabilityOperation, type UserFeedback } 
 
 import { FeedbackForm } from './FeedbackForm';
 
+/** Renders the feedback form, disabling it when the feedback survey is unavailable. */
 export const HelpContainer = () => {
   const { invokePromise } = useOperationInvoker();
   const observability = useCapability(ObservabilityCapabilities.Observability);

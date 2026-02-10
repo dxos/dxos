@@ -10,8 +10,9 @@ import { log } from '@dxos/log';
 const OBSERVABILITY_DISABLED_KEY = 'observability-disabled';
 const OBSERVABILITY_GROUP_KEY = 'observability-group';
 
+/** No-op in browser contexts. */
 export const showObservabilityBanner = () => {
-  throw new Error('Not implemented');
+  log.warn('showObservabilityBanner is not supported in browser contexts.');
 };
 
 /**

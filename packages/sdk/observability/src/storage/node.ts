@@ -37,6 +37,8 @@ export const isObservabilityDisabled = async (configDir: string): Promise<boolea
 /**
  * @param configDir - Filesystem path to the directory containing the `observability.yml` state file.
  */
+// NOTE: read-modify-write is not atomic; concurrent callers could overwrite each other.
+// Acceptable here because writes are infrequent and triggered by explicit user action.
 export const storeObservabilityDisabled = async (configDir: string, value: boolean) => {
   const observabilityState = await getObservabilityState(configDir);
   observabilityState.disabled = value;

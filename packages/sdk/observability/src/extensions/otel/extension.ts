@@ -5,6 +5,8 @@
 import { defaultResource, resourceFromAttributes } from '@opentelemetry/resources';
 import { ATTR_SERVICE_NAME, ATTR_SERVICE_VERSION } from '@opentelemetry/semantic-conventions';
 import * as Effect from 'effect/Effect';
+import * as Match from 'effect/Match';
+import * as Option from 'effect/Option';
 import * as Ref from 'effect/Ref';
 
 import { type Config } from '@dxos/config';
@@ -33,6 +35,7 @@ export type ExtensionsOptions = {
   traces?: boolean;
 };
 
+/** Create an OTEL-backed observability extension for logs, metrics, and/or traces. */
 export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension> = Effect.fn(function* ({
   serviceName,
   serviceVersion,
@@ -59,10 +62,15 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
   const endpoint = isNode()
     ? (process.env.DX_OTEL_ENDPOINT ?? _endpoint ?? buildSecrets.OTEL_ENDPOINT)
     : config.values.runtime?.app?.env?.DX_OTEL_ENDPOINT;
-  const unparsedHeaders = isNode()
-    ? (process.env.DX_OTEL_HEADERS ?? _headers ?? buildSecrets.OTEL_HEADERS)
-    : config.values.runtime?.app?.env?.DX_OTEL_HEADERS;
-  const headers = unparsedHeaders ? parseHeaders(unparsedHeaders) : undefined;
+  const headers =
+    _headers ??
+    Match.value(isNode()).pipe(
+      Match.when(true, () => Option.fromNullable(process.env.DX_OTEL_HEADERS ?? buildSecrets.OTEL_HEADERS)),
+      Match.when(false, () => Option.fromNullable(config.values.runtime?.app?.env?.DX_OTEL_HEADERS)),
+      Match.exhaustive,
+      Option.map((raw) => parseHeaders(raw)),
+      Option.getOrElse(() => undefined),
+    );
 
   if (!endpoint || !headers) {
     log.warn('Missing OTEL_ENDPOINT or OTEL_HEADERS');
@@ -107,14 +115,15 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
     : undefined;
 
   return {
-    initialize: Effect.fn(function* () {
-      if (logs) {
-        log.runtimeConfig.processors.push(logs.logProcessor);
-      }
-      if (traces) {
-        traces.start();
-      }
-    }),
+    initialize: () =>
+      Effect.sync(() => {
+        if (logs) {
+          log.runtimeConfig.processors.push(logs.logProcessor);
+        }
+        if (traces) {
+          traces.start();
+        }
+      }),
     enable: Effect.fn(function* () {
       yield* Effect.promise(() => storeObservabilityDisabled(serviceName, false));
       yield* Ref.update(enabledRef, () => true);
@@ -123,8 +132,16 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
       yield* Effect.promise(() => storeObservabilityDisabled(serviceName, true));
       yield* Ref.update(enabledRef, () => false);
     }),
-    close: () => Effect.promise(async () => logs?.close()),
-    flush: () => Effect.promise(async () => logs?.flush()),
+    close: () =>
+      Effect.promise(async () => {
+        await logs?.close();
+        await metrics?.close();
+      }),
+    flush: () =>
+      Effect.promise(async () => {
+        await logs?.flush();
+        await metrics?.flush();
+      }),
     setTags: (incomingTags) => {
       for (const [key, value] of Object.entries(incomingTags)) {
         tags.set(key, value);

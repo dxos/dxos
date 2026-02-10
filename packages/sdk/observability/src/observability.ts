@@ -77,6 +77,7 @@ class ObservabilityImpl implements Observability {
       const cleanups = yield* Effect.all(this._dataProviders.map((provider) => provider(this)));
       this._subscriptions.add(...cleanups.filter((cleanup) => cleanup !== undefined));
     }).pipe(
+      // If any extension or data provider fails, reset _initialized so callers can retry.
       Effect.catchAll((error) => {
         log.catch(error);
         this._initialized = false;
@@ -93,6 +94,7 @@ class ObservabilityImpl implements Observability {
           yield* extension.close();
         }
       }
+      this._initialized = false;
     });
   }
 
@@ -163,7 +165,7 @@ class ObservabilityImpl implements Observability {
 
   setTags(tags: Attributes, kind?: Kind): void {
     for (const extension of this._extensions) {
-      if (kind && extension.apis.some((api) => api.kind !== kind)) {
+      if (kind && !extension.apis.some((api) => api.kind === kind)) {
         continue;
       }
 

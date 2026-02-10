@@ -69,7 +69,7 @@ const main = async () => {
   }
 
   // Intentionally do not await; i.e., don't block app startup for telemetry.
-  const observability = initializeObservability(config);
+  const observability = initializeObservability(config).catch((err) => log.catch(err));
   const observabilityDisabled = await Observability.isObservabilityDisabled(APP_KEY);
   const observabilityGroup = await Observability.getObservabilityGroup(APP_KEY);
 

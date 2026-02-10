@@ -30,9 +30,9 @@ export type ExtensionApiBase<K extends Kind = Kind> = {
  * Metrics extension API (kind-specific methods only).
  */
 export type Metrics = {
-  gauge(name: string, value: number, tags?: any): void;
-  increment(name: string, value?: number, tags?: any): void;
-  distribution(name: string, value: number, tags?: any): void;
+  gauge(name: string, value: number, tags?: Attributes): void;
+  increment(name: string, value?: number, tags?: Attributes): void;
+  distribution(name: string, value: number, tags?: Attributes): void;
 };
 
 /**

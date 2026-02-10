@@ -24,9 +24,10 @@ const RUNTIME_METRICS_MIN_INTERVAL = 1000 * 60 * 10; // 10 minutes
 //  - Identifier can then be reset by user.
 //  - Identifier can be synced via HALO to allow for correlation of events bewteen devices.
 //  - Identifier should also be stored outside of HALO such that it is available immediately on startup.
+/** Subscribes to identity and device changes and sets observability tags accordingly. */
 export const identityProvider = (clientServices: Partial<ClientServices>): DataProvider =>
   Effect.fn(function* (observability) {
-    // TODO(wittjosiah): Currently cannot unsubscribe from this subscription.
+    // TODO(wittjosiah): RPC subscribe returns void; cleanup requires upstream API change.
     clientServices.IdentityService!.queryIdentity().subscribe((idqr) => {
       if (!idqr?.identity?.did) {
         return;
@@ -36,7 +37,7 @@ export const identityProvider = (clientServices: Partial<ClientServices>): DataP
       observability.setTags({ did: idqr.identity.did });
     });
 
-    // TODO(wittjosiah): Currently cannot unsubscribe from this subscription.
+    // TODO(wittjosiah): RPC subscribe returns void; cleanup requires upstream API change.
     clientServices.DevicesService!.queryDevices().subscribe((dqr) => {
       if (!dqr?.devices || dqr.devices.length === 0) {
         return;
@@ -54,6 +55,7 @@ export const identityProvider = (clientServices: Partial<ClientServices>): DataP
     });
   });
 
+/** Periodically publishes network connection and buffer metrics. */
 export const networkMetricsProvider = (clientServices: Partial<ClientServices>): DataProvider =>
   Effect.fn(function* (observability) {
     const ctx = new Context();
@@ -113,6 +115,7 @@ export const networkMetricsProvider = (clientServices: Partial<ClientServices>):
     };
   });
 
+/** Periodically publishes platform and heap memory metrics. */
 export const runtimeMetricsProvider = (clientServices: Partial<ClientServices>): DataProvider =>
   Effect.fn(function* (observability) {
     const ctx = new Context();
@@ -156,6 +159,7 @@ export const runtimeMetricsProvider = (clientServices: Partial<ClientServices>):
     };
   });
 
+/** Periodically publishes space membership, object count, and pipeline progress metrics. */
 export const spacesMetricsProvider = (client: Client): DataProvider =>
   Effect.fn(function* (observability) {
     const ctx = new Context();
@@ -198,7 +202,7 @@ export const spacesMetricsProvider = (client: Client): DataProvider =>
       },
     });
 
-    scheduleTaskInterval(ctx, async () => updateSpaceMetrics.emit(), NETWORK_METRICS_MIN_INTERVAL);
+    scheduleTaskInterval(ctx, async () => updateSpaceMetrics.emit(), SPACE_METRICS_MIN_INTERVAL);
 
     return async () => {
       await ctx.dispose();

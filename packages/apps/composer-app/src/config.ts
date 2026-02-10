@@ -32,6 +32,7 @@ export const setupConfig = async () => {
   return new Config(...sources);
 };
 
+/** Initialize observability extensions and data providers for Composer. */
 export const initializeObservability = async (config: Config) =>
   Function.pipe(
     Observability.make(),
