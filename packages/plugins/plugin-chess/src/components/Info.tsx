@@ -16,6 +16,8 @@ import { meta } from '../meta';
 
 import { type ExtendedChessModel } from './Chessboard';
 
+const INFO_NAME = 'Chessboard.Info';
+
 export type InfoProps = ThemedClassName<
   {
     orientation?: Player;
@@ -26,7 +28,7 @@ export type InfoProps = ThemedClassName<
 
 export const Info = ({ classNames, orientation = 'white', onOrientationChange, onClose, ...props }: InfoProps) => {
   const { t } = useTranslation(meta.id);
-  const { model } = useGameboardContext<ExtendedChessModel>(Info.displayName);
+  const { model } = useGameboardContext<ExtendedChessModel>(INFO_NAME);
   const db = Obj.getDatabase(model.object);
   const members = useMembers(db?.spaceId);
 
@@ -89,7 +91,7 @@ export const Info = ({ classNames, orientation = 'white', onOrientationChange, o
   );
 };
 
-Info.displayName = 'Chessboard.Info';
+Info.displayName = INFO_NAME;
 
 //
 // History

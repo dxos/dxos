@@ -22,7 +22,7 @@ import {
 import { Obj } from '@dxos/echo';
 import { Database } from '@dxos/echo';
 import { QueueService, TracingService, defineFunction } from '@dxos/functions';
-import { Message, Organization, Person, Project } from '@dxos/types';
+import { Message, Organization, Person, Pipeline } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { Mailbox } from '../types';
@@ -74,7 +74,7 @@ export default defineFunction({
 
       const GraphWriterToolkit = makeGraphWriterToolkit({
         // TODO(wittjosiah): Anthropic does not support GeoPoint schema currently, causing legacy schemas to be needed.
-        schema: [Person.LegacyPerson, Project.Project, Organization.LegacyOrganization],
+        schema: [Person.LegacyPerson, Pipeline.Pipeline, Organization.LegacyOrganization],
       });
       const GraphWriterHandler = makeGraphWriterHandler(GraphWriterToolkit);
 

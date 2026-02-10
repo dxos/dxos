@@ -22,10 +22,12 @@ export type SquareProps = ThemedClassName<{
   label?: string;
 }>;
 
+const SQUARE_NAME = 'Square';
+
 export const Square = memo(({ location, bounds, label, classNames }: SquareProps) => {
   const ref = useRef<HTMLDivElement>(null);
   const [state, setState] = useState<HoveredState>('idle');
-  const { model } = useGameboardContext(Square.displayName!);
+  const { model } = useGameboardContext(SQUARE_NAME);
 
   useEffect(() => {
     const el = ref.current;
@@ -71,4 +73,4 @@ export const Square = memo(({ location, bounds, label, classNames }: SquareProps
   );
 });
 
-Square.displayName = 'Square';
+Square.displayName = SQUARE_NAME;

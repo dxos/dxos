@@ -15,7 +15,7 @@ import { withTheme } from '@dxos/react-ui/testing';
 import { QueryEditor, type QueryEditorProps, useQueryBuilder } from '@dxos/react-ui-components';
 import { type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
 import { render } from '@dxos/storybook-utils';
-import { Employer, Organization, Person, Project } from '@dxos/types';
+import { Employer, Organization, Person, Pipeline } from '@dxos/types';
 
 // TODO(burdon): Move.
 
@@ -65,14 +65,14 @@ const meta: Meta<typeof QueryEditor> = {
   decorators: [
     withTheme,
     withClientProvider({
-      types: [Organization.Organization, Person.Person, Project.Project, Employer.Employer],
+      types: [Organization.Organization, Person.Person, Pipeline.Pipeline, Employer.Employer],
       createIdentity: true,
       onCreateIdentity: async ({ client }) => {
         const space = client.spaces.default;
         const createObjects = createObjectFactory(space.db, generator);
         const objects = await createObjects([
           { type: Organization.Organization, count: 30 },
-          { type: Project.Project, count: 20 },
+          { type: Pipeline.Pipeline, count: 20 },
           { type: Person.Person, count: 50 },
         ]);
         objects.forEach((obj) => {

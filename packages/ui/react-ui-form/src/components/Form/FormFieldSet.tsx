@@ -42,9 +42,11 @@ export type FormFieldSetProps<T extends AnyProperties> = ThemedClassName<
     >
 >;
 
+const FORM_FIELDSET_NAME = 'Form.FieldSet';
+
 export const FormFieldSet = forwardRef<HTMLDivElement, FormFieldSetProps<any>>(
   ({ classNames, label, schema, readonly, path, exclude, sort, projection, layout, ...props }, forwardRef) => {
-    const values = useFormValues(FormFieldSet.displayName!, path);
+    const values = useFormValues(FORM_FIELDSET_NAME, path);
 
     // TODO(burdon): Updates on every value change.
     //  Remove values dep if can remove from getSchemaProperties.
@@ -122,4 +124,4 @@ export const FormFieldSet = forwardRef<HTMLDivElement, FormFieldSetProps<any>>(
   },
 );
 
-FormFieldSet.displayName = 'Form.Fields';
+FormFieldSet.displayName = FORM_FIELDSET_NAME;

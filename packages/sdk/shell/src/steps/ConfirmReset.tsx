@@ -68,7 +68,7 @@ export const ConfirmResetImpl = ({
     mode === 'join new identity' ? 'join-new-identity' : mode === 'recover' ? 'recover' : 'reset-storage';
   return (
     <>
-      <div role='none' className='grow flex flex-col gap-2 justify-center'>
+      <div role='none' className='flex flex-col gap-2 justify-center'>
         <Message.Root valence='error'>
           <Message.Title>{t('sign out chooser title')}</Message.Title>
           <Message.Content>{t('sign out chooser message')}</Message.Content>

@@ -11,7 +11,7 @@ import type * as Schema$ from 'effect/Schema';
 import type { FC, PropsWithChildren } from 'react';
 
 import type { AiModelResolver as AiModelResolver$, AiService as AiService$ } from '@dxos/ai';
-import type { BuilderExtensions, GraphBuilder } from '@dxos/app-graph';
+import type { BuilderExtensions, Graph, GraphBuilder } from '@dxos/app-graph';
 import type { GenericToolkit } from '@dxos/assistant';
 import type { Blueprint } from '@dxos/blueprints';
 import type { Database, Type } from '@dxos/echo';
@@ -115,7 +115,7 @@ export namespace Capability {
   export const Translations = Capability$.make<Readonly<Resource[]>>('dxos.org/app-framework/capability/translations');
 
   export type AppGraph = Readonly<{
-    graph: GraphBuilder.GraphBuilder['graph'];
+    graph: Graph.ExpandableGraph;
     explore: typeof GraphBuilder.explore;
   }>;
 

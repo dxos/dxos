@@ -620,17 +620,17 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-pipeline/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-presenter/package.json",
           "jsonpath": "$.version"
         },
         {
           "type": "json",
           "path": "packages/plugins/plugin-preview/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/plugins/plugin-project/package.json",
           "jsonpath": "$.version"
         },
         {

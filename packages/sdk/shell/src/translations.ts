@@ -116,7 +116,7 @@ export const translations = [
           'WARNING: To join an existing device all data on this device will be deleted. Type {{confirmationValue}} to continue.',
         'failed to reset identity message': 'Failed to reset identity.',
         'confirmation value': 'RESET',
-        'confirmation placeholder': 'Enter {{confirmationValue}} to continue.',
+        'confirmation placeholder': 'Type {{confirmationValue}} to continue.',
         'sign out chooser title': 'Danger zone',
         'sign out chooser message': 'Proceeding with the action below will erase all data on this device.',
         'join new identity label': 'Join an existing identity',

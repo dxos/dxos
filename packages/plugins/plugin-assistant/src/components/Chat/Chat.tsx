@@ -160,6 +160,8 @@ ChatRoot.displayName = 'Chat.Root';
 // Viewport
 //
 
+const CHAT_VIEWPORT_NAME = 'Chat.Viewport';
+
 type ChatViewportProps = ThemedClassName<PropsWithChildren>;
 
 const ChatViewport = ({ classNames, children }: ChatViewportProps) => {
@@ -170,14 +172,18 @@ const ChatViewport = ({ classNames, children }: ChatViewportProps) => {
   );
 };
 
+ChatViewport.displayName = CHAT_VIEWPORT_NAME;
+
 //
 // Thread
 //
 
+const CHAT_THREAD_NAME = 'Chat.Thread';
+
 type ChatThreadProps = Omit<NaturalChatThreadProps, 'identity' | 'messages' | 'tools'>;
 
 const ChatThread = (props: ChatThreadProps) => {
-  const { debug, event, messages, processor } = useChatContext(ChatThread.displayName);
+  const { debug, event, messages, processor } = useChatContext(CHAT_THREAD_NAME);
   const identity = useIdentity();
   const error = useAtomValue(processor.error).pipe(Option.getOrUndefined);
 
@@ -223,11 +229,13 @@ const ChatThread = (props: ChatThreadProps) => {
   );
 };
 
-ChatThread.displayName = 'Chat.Thread';
+ChatThread.displayName = CHAT_THREAD_NAME;
 
 //
 // Prompt
 //
+
+const CHAT_PROMPT_NAME = 'Chat.Prompt';
 
 type ChatPromptProps = ThemedClassName<
   {
@@ -255,7 +263,7 @@ const ChatPrompt = ({
   onOnlineChange,
 }: ChatPromptProps) => {
   const { t } = useTranslation(meta.id);
-  const { db, processor, event } = useChatContext(ChatPrompt.displayName);
+  const { db, processor, event } = useChatContext(CHAT_PROMPT_NAME);
 
   const error = useAtomValue(processor.error).pipe(Option.getOrUndefined);
   const streaming = useAtomValue(processor.streaming);
@@ -409,16 +417,18 @@ const ChatPrompt = ({
   );
 };
 
-ChatPrompt.displayName = 'Chat.Prompt';
+ChatPrompt.displayName = CHAT_PROMPT_NAME;
 
 //
 // Toolbar
 //
 
+const CHAT_TOOLBAR_NAME = 'Chat.Toolbar';
+
 type ChatToolbarProps = ThemedClassName<{ companionTo?: Obj.Unknown }>;
 
 const ChatToolbar = ({ classNames, companionTo }: ChatToolbarProps) => {
-  const { chat } = useChatContext(ChatToolbar.displayName);
+  const { chat } = useChatContext(CHAT_TOOLBAR_NAME);
   const menu = useChatToolbarActions({ chat, companionTo });
 
   return (
@@ -431,7 +441,7 @@ const ChatToolbar = ({ classNames, companionTo }: ChatToolbarProps) => {
   );
 };
 
-ChatToolbar.displayName = 'Chat.Toolbar';
+ChatToolbar.displayName = CHAT_TOOLBAR_NAME;
 
 //
 // Chat

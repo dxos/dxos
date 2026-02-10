@@ -3,6 +3,7 @@
 //
 
 import { type Resource } from '@dxos/react-ui';
+import { translations as editorTranslations } from '@dxos/react-ui-editor';
 
 import { meta } from './meta';
 import { Markdown } from './types';
@@ -50,4 +51,5 @@ export const translations = [
       },
     },
   },
+  ...editorTranslations,
 ] as const satisfies Resource[];

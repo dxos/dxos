@@ -11,6 +11,7 @@ mod spotlight;
 
 #[cfg(desktop)]
 use oauth::OAuthServerState;
+#[cfg(desktop)]
 use tauri::Manager;
 #[cfg(desktop)]
 use window_state::WindowState;

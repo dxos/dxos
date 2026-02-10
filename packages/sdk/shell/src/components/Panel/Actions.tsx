@@ -28,4 +28,5 @@ const Actions = forwardRef<HTMLDivElement, ActionsProps>(({ classNames, children
 });
 
 export { Actions };
+
 export type { ActionsProps };

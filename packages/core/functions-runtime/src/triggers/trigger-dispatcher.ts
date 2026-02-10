@@ -422,23 +422,26 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
                   continue;
                 }
 
-                invocations.push(
-                  yield* this.invokeTrigger({
-                    trigger,
-                    event: {
-                      queue: spec.queue,
-                      item: object,
-                      cursor: objectPos,
-                    } satisfies TriggerEvent.QueueEvent,
-                  }),
-                );
-
-                // Update trigger cursor.
-                Obj.change(trigger, (trigger) => {
-                  Obj.deleteKeys(trigger, KEY_QUEUE_CURSOR);
-                  Obj.getMeta(trigger).keys.push({ source: KEY_QUEUE_CURSOR, id: objectPos });
+                const invocation = yield* this.invokeTrigger({
+                  trigger,
+                  event: {
+                    queue: spec.queue,
+                    item: object,
+                    cursor: objectPos,
+                  } satisfies TriggerEvent.QueueEvent,
                 });
-                yield* Database.flush();
+                invocations.push(invocation);
+
+                // Update trigger cursor only if the invocation was successful.
+                if (Exit.isSuccess(invocation.result)) {
+                  Obj.change(trigger, (trigger) => {
+                    Obj.deleteKeys(trigger, KEY_QUEUE_CURSOR);
+                    Obj.getMeta(trigger).keys.push({ source: KEY_QUEUE_CURSOR, id: objectPos });
+                  });
+                  yield* Database.flush();
+                } else {
+                  break;
+                }
 
                 // We only invoke one trigger for each queue at a time.
                 if (!untilExhausted) {

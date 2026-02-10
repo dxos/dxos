@@ -17,7 +17,7 @@ import { type SerializedError } from '@dxos/protocols';
 import { useQuery } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { DynamicTable, type TableFeatures, type TablePropertyDefinition } from '@dxos/react-ui-table';
+import { type TableFeatures, type TablePropertyDefinition } from '@dxos/react-ui-table';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { mx } from '@dxos/ui-theme';
 
@@ -172,7 +172,49 @@ export const InvocationTraceContainer = ({
       }
     >
       <div className={mx('bs-full', gridLayout)}>
-        <DynamicTable properties={properties} rows={rows} features={features} onRowClick={handleRowClick} />
+        {/* <DynamicTable properties={properties} rows={rows} features={features} onRowClick={handleRowClick} /> */}
+        <div className='overflow-auto'>
+          <table className='table-fixed min-w-full text-xs border-collapse'>
+            <thead className='sticky top-0 z-10 bg-background'>
+              <tr>
+                <th>ID</th>
+                <th>Target</th>
+                <th>Started</th>
+                <th>Duration</th>
+                <th>Status</th>
+                <th>Queue</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows
+                .toSorted((a, b) => b.time.getTime() - a.time.getTime())
+                .slice(0, 50)
+                .map((row) => (
+                  <tr
+                    key={row.id}
+                    role='button'
+                    tabIndex={0}
+                    aria-selected={selectedId === row.id}
+                    onClick={() => handleRowClick(row)}
+                    onKeyDown={(e: React.KeyboardEvent<HTMLTableRowElement>) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        handleRowClick(row);
+                      }
+                    }}
+                    className='cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-accent'
+                  >
+                    <td className='px-2 py-1 whitespace-nowrap border border-separator'>{row.id}</td>
+                    <td className='px-2 py-1 whitespace-nowrap border border-separator'>{row.target}</td>
+                    <td className='px-2 py-1 whitespace-nowrap border border-separator'>{row.time.toLocaleString()}</td>
+                    <td className='px-2 py-1 whitespace-nowrap border border-separator'>{row.duration}</td>
+                    <td className='px-2 py-1 whitespace-nowrap border border-separator'>{row.status}</td>
+                    <td className='px-2 py-1 whitespace-nowrap border border-separator'>{row.queue}</td>
+                  </tr>
+                ))}
+            </tbody>
+          </table>
+        </div>
         {selectedInvocation && <Selected span={selectedInvocation} />}
       </div>
     </PanelContainer>

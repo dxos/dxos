@@ -13,7 +13,7 @@ import { Filter, Obj, Query, Ref, type Type } from '@dxos/echo';
 import { Database } from '@dxos/echo';
 import { CredentialsService, defineFunction, withAuthorization } from '@dxos/functions';
 import { log } from '@dxos/log';
-import { Person, Project, Task } from '@dxos/types';
+import { Person, Pipeline, Task } from '@dxos/types';
 
 import { syncObjects } from '../../sync';
 import { graphqlRequestBody } from '../../util';
@@ -172,7 +172,7 @@ const mapLinearIssue = (issue: LinearIssue, { teamId }: { teamId: string }): Tas
     project: !issue.project
       ? undefined
       : Ref.make(
-          Project.make({
+          Pipeline.make({
             [Obj.Meta]: {
               keys: [
                 {

@@ -26,8 +26,10 @@ export type PieceProps = ThemedClassName<{
   onClick?: () => void;
 }>;
 
+const PIECE_NAME = 'Piece';
+
 export const Piece = memo(({ classNames, Component, piece, bounds, label, onClick }: PieceProps) => {
-  const { model, dragging: isDragging, promoting } = useGameboardContext(Piece.displayName!);
+  const { model, dragging: isDragging, promoting } = useGameboardContext(PIECE_NAME);
   const promotingRef = useDynamicRef(promoting);
   const [dragging, setDragging] = useState(false);
   const [preview, setPreview] = useState<HTMLElement>();
@@ -134,4 +136,4 @@ export const Piece = memo(({ classNames, Component, piece, bounds, label, onClic
   );
 });
 
-Piece.displayName = 'Piece';
+Piece.displayName = PIECE_NAME;

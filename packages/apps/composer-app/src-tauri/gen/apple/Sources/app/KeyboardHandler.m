@@ -18,10 +18,10 @@ static BOOL _initialized = NO;
 
 + (void)load {
     NSLog(@"[KeyboardHandler] +load");
-
+    
     // Disable Input Accessory View immediately.
     [self disableInputAccessoryView];
-
+    
     // Watch for app to become active to find the webview.
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(appDidBecomeActive:)
@@ -31,9 +31,9 @@ static BOOL _initialized = NO;
 
 + (void)appDidBecomeActive:(NSNotification *)notification {
     if (_initialized) return;
-
+    
     NSLog(@"[KeyboardHandler] appDidBecomeActive");
-
+    
     // Delay slightly to let the webview initialize.
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
         [self findAndSetupWebView];
@@ -42,7 +42,7 @@ static BOOL _initialized = NO;
 
 + (void)findAndSetupWebView {
     UIWindow *keyWindow = nil;
-
+    
     for (UIScene *scene in UIApplication.sharedApplication.connectedScenes) {
         if ([scene isKindOfClass:[UIWindowScene class]]) {
             UIWindowScene *windowScene = (UIWindowScene *)scene;
@@ -55,7 +55,7 @@ static BOOL _initialized = NO;
         }
         if (keyWindow) break;
     }
-
+    
     if (!keyWindow) {
         NSLog(@"[KeyboardHandler] No key window found, retrying...");
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
@@ -63,7 +63,7 @@ static BOOL _initialized = NO;
         });
         return;
     }
-
+    
     WKWebView *webView = [self findWKWebViewInView:keyWindow];
     if (!webView) {
         NSLog(@"[KeyboardHandler] WKWebView not found, retrying...");
@@ -72,17 +72,17 @@ static BOOL _initialized = NO;
         });
         return;
     }
-
+    
     _webView = webView;
     _initialized = YES;
     NSLog(@"[KeyboardHandler] WKWebView found, setting up keyboard observers");
-
+    
     // Register for keyboard notifications.
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(keyboardWillShow:)
                                                  name:UIKeyboardWillShowNotification
                                                object:nil];
-
+    
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(keyboardWillHide:)
                                                  name:UIKeyboardWillHideNotification

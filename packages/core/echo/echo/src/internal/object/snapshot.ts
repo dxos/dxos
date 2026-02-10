@@ -56,8 +56,18 @@ export const getSnapshot = <T extends object>(obj: T): T => {
     copySymbolProperty(source, snapshot, TypeId);
     copySymbolProperty(source, snapshot, SchemaId);
 
-    // Metadata symbol.
-    copySymbolProperty(source, snapshot, MetaId);
+    // Metadata symbol. -- deep clone to ensure immutability.
+    if (MetaId in source) {
+      Object.defineProperty(snapshot, MetaId, {
+        value: {
+          keys: [...(source[MetaId]?.keys ?? [])],
+          tags: [...(source[MetaId]?.tags ?? [])],
+        },
+        writable: false,
+        enumerable: false,
+        configurable: false,
+      });
+    }
 
     // Relation endpoint symbols.
     copySymbolProperty(source, snapshot, RelationSourceDXNId);

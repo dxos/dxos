@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Atom, useAtomValue } from '@effect-atom/atom-react';
 import * as Array from 'effect/Array';
 import * as EFn from 'effect/Function';
 import * as Match from 'effect/Match';
@@ -9,6 +10,7 @@ import * as Schema from 'effect/Schema';
 import React, { useMemo, useState } from 'react';
 
 import { Filter, Obj, Tag } from '@dxos/echo';
+import { AtomObj } from '@dxos/echo-atom';
 import { Function, Script, Trigger } from '@dxos/functions';
 import { KEY_QUEUE_CURSOR } from '@dxos/functions-runtime';
 import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
@@ -18,7 +20,7 @@ import { type Space, useQuery } from '@dxos/react-client/echo';
 import { Clipboard, IconButton, Input, Separator, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { ControlItem, controlItemClasses } from '@dxos/react-ui-form';
 import { List } from '@dxos/react-ui-list';
-import { Project } from '@dxos/types';
+import { Pipeline } from '@dxos/types';
 import { ghostHover, mx } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 
@@ -127,68 +129,17 @@ export const AutomationPanel = ({ classNames, space, object, initialTrigger, onD
         >
           {({ items: filteredTriggers }) => (
             <div role='list' className='flex flex-col is-full'>
-              {filteredTriggers?.map((trigger) => {
-                const copyAction = getCopyAction(client, trigger);
-                const cursor = Obj.getKeys(trigger, KEY_QUEUE_CURSOR).at(0)?.id;
-
-                return (
-                  <List.Item<Trigger.Trigger>
-                    key={trigger.id}
-                    item={trigger}
-                    classNames={mx(grid, ghostHover, 'items-center', 'pli-2')}
-                  >
-                    <Input.Root>
-                      <Input.Switch
-                        checked={trigger.enabled}
-                        onCheckedChange={(checked) =>
-                          Obj.change(trigger, (t) => {
-                            t.enabled = checked;
-                          })
-                        }
-                      />
-                    </Input.Root>
-
-                    <div className={'flex'}>
-                      <List.ItemTitle
-                        classNames='pli-1 cursor-pointer is-0 shrink truncate'
-                        onClick={() => handleSelect(trigger)}
-                      >
-                        {getFunctionName(functions, trigger) ?? '∅'}
-                        {cursor && <div className='text-xs text-description truncate ml-4'>Position: {cursor}</div>}
-                      </List.ItemTitle>
-
-                      {/* TODO: a better way to expose copy action */}
-                      {copyAction && (
-                        <Clipboard.IconButton
-                          label={t(copyAction.translationKey)}
-                          value={copyAction.contentProvider()}
-                        />
-                      )}
-                    </div>
-
-                    {trigger.spec?.kind === 'timer' && (
-                      <List.ItemButton
-                        autoHide={false}
-                        disabled={!trigger.enabled || trigger.spec?.kind !== 'timer'}
-                        icon='ph--play--regular'
-                        label='Force run'
-                        onClick={() => handleForceRunTrigger(trigger)}
-                      />
-                    )}
-                    {trigger.spec?.kind === 'queue' && (
-                      <List.ItemButton
-                        autoHide={false}
-                        disabled={!cursor}
-                        icon='ph--arrow-clockwise--regular'
-                        label='Reset cursor'
-                        onClick={() => handleResetCursor(trigger)}
-                      />
-                    )}
-
-                    <List.ItemDeleteButton onClick={() => handleDelete(trigger)} />
-                  </List.Item>
-                );
-              })}
+              {filteredTriggers?.map((trigger) => (
+                <TriggerListItem
+                  key={trigger.id}
+                  trigger={trigger}
+                  functions={functions}
+                  handleSelect={handleSelect}
+                  handleForceRunTrigger={handleForceRunTrigger}
+                  handleResetCursor={handleResetCursor}
+                  handleDelete={handleDelete}
+                />
+              ))}
             </div>
           )}
         </List.Root>
@@ -196,6 +147,81 @@ export const AutomationPanel = ({ classNames, space, object, initialTrigger, onD
       {filteredTriggers.length > 0 && <Separator classNames='mlb-4' />}
       <IconButton icon='ph--plus--regular' label={t('new trigger label')} onClick={handleAdd} />
     </div>
+  );
+};
+
+const TriggerListItem = ({
+  trigger,
+  functions,
+  handleSelect,
+  handleForceRunTrigger,
+  handleResetCursor,
+  handleDelete,
+}: {
+  trigger: Trigger.Trigger;
+  functions: Function.Function[];
+  handleSelect: (trigger: Trigger.Trigger) => void;
+  handleForceRunTrigger: (trigger: Trigger.Trigger) => void;
+  handleResetCursor: (trigger: Trigger.Trigger) => void;
+  handleDelete: (trigger: Trigger.Trigger) => void;
+}) => {
+  const client = useClient();
+  const copyAction = getCopyAction(client, trigger);
+  const cursor = useAtomValue(
+    AtomObj.make(trigger).pipe((_) => Atom.make((get) => Obj.getKeys(get(_), KEY_QUEUE_CURSOR).at(0)?.id)),
+  );
+  const { t } = useTranslation(meta.id);
+
+  return (
+    <List.Item<Trigger.Trigger>
+      key={trigger.id}
+      item={trigger}
+      classNames={mx(grid, ghostHover, 'items-center', 'pli-2')}
+    >
+      <Input.Root>
+        <Input.Switch
+          checked={trigger.enabled}
+          onCheckedChange={(checked) =>
+            Obj.change(trigger, (t) => {
+              t.enabled = checked;
+            })
+          }
+        />
+      </Input.Root>
+
+      <div className={'flex'}>
+        <List.ItemTitle classNames='pli-1 cursor-pointer is-0 shrink truncate' onClick={() => handleSelect(trigger)}>
+          {getFunctionName(functions, trigger) ?? '∅'}
+          {cursor && <div className='text-xs text-description truncate ml-4'>Position: {cursor}</div>}
+        </List.ItemTitle>
+
+        {/* TODO: a better way to expose copy action */}
+        {copyAction && (
+          <Clipboard.IconButton label={t(copyAction.translationKey)} value={copyAction.contentProvider()} />
+        )}
+      </div>
+
+      {trigger.spec?.kind === 'timer' && (
+        <List.ItemButton
+          autoHide={false}
+          disabled={!trigger.enabled || trigger.spec?.kind !== 'timer'}
+          icon='ph--play--regular'
+          label='Force run'
+          onClick={() => handleForceRunTrigger(trigger)}
+        />
+      )}
+      {trigger.spec?.kind === 'queue' && (
+        <List.ItemButton
+          autoHide={false}
+          disabled={!cursor}
+          icon='ph--arrow-clockwise--regular'
+          label='Reset cursor'
+          onClick={() => handleResetCursor(trigger)}
+        />
+      )}
+
+      <List.ItemDeleteButton onClick={() => handleDelete(trigger)} />
+    </List.Item>
   );
 };
 
@@ -239,7 +265,7 @@ const scriptMatch = (script: Script.Script) => (trigger: Trigger.Trigger) => {
   return fn.source?.target === script;
 };
 
-const projectMatch = (project: Project.Project) => {
+const projectMatch = (project: Pipeline.Pipeline) => {
   const viewQueries = EFn.pipe(
     project.columns,
     Array.map((column) => column.view.target),
@@ -266,7 +292,7 @@ const triggerMatch = Match.type<Obj.Unknown>().pipe(
     (obj) => scriptMatch(obj),
   ),
   Match.when(
-    (obj) => Obj.instanceOf(Project.Project, obj),
+    (obj) => Obj.instanceOf(Pipeline.Pipeline, obj),
     (obj) => projectMatch(obj),
   ),
   Match.orElse((_obj) => () => true),

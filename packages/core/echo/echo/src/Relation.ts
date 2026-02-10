@@ -29,6 +29,7 @@ import {
   MetaId,
   type Mutable,
   type ObjectMeta,
+  ParentId,
   RelationSourceDXNId,
   RelationSourceId,
   RelationTargetDXNId,
@@ -133,7 +134,7 @@ export type MakeProps<S extends Type.Relation.Any> = RelationMakeProps<Schema.Sc
  * Creates new relation.
  * @param schema - Relation schema.
  * @param props - Relation properties. Endpoints are passed as [Relation.Source] and [Relation.Target] keys.
- * @param meta - Relation metadata.
+ * @param meta - Relation metadata. (deprecated; use [Obj.Meta] instead)
  * @returns
  */
 // NOTE: Writing the definition this way (with generic over schema) makes typescript perfer to infer the type from the first param (this schema) rather than the second param (the props).
@@ -144,6 +145,7 @@ export const make = <S extends Type.Relation.Any>(
   meta?: ObjectMeta,
 ): Schema.Schema.Type<S> & Entity.OfKind<typeof Entity.Kind.Relation> => {
   assertArgument(getTypeAnnotation(schema)?.kind === EntityKind.Relation, 'schema', 'Expected a relation schema');
+  assertArgument(props[ParentId] === undefined, 'props', 'Parent is not allowed for relations');
 
   if (props[MetaId] != null) {
     meta = props[MetaId] as any;

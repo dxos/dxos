@@ -33,9 +33,9 @@ import { NativePlugin } from '@dxos/plugin-native';
 import { NavTreePlugin } from '@dxos/plugin-navtree';
 import { ObservabilityPlugin } from '@dxos/plugin-observability';
 import { OutlinerPlugin } from '@dxos/plugin-outliner';
+import { PipelinePlugin } from '@dxos/plugin-pipeline';
 import { PresenterPlugin } from '@dxos/plugin-presenter';
 import { PreviewPlugin } from '@dxos/plugin-preview';
-import { ProjectPlugin } from '@dxos/plugin-project';
 import { PwaPlugin } from '@dxos/plugin-pwa';
 import { RegistryPlugin } from '@dxos/plugin-registry';
 import { ScriptPlugin } from '@dxos/plugin-script';
@@ -126,7 +126,7 @@ export const getDefaults = ({ isDev, isLabs }: PluginConfig): string[] =>
     // Labs
     (isDev || isLabs) && [
       AssistantPlugin.meta.id,
-      ProjectPlugin.meta.id,
+      PipelinePlugin.meta.id,
       MeetingPlugin.meta.id,
       OutlinerPlugin.meta.id,
       TranscriptionPlugin.meta.id,
@@ -186,7 +186,7 @@ export const getPlugins = ({
     PresenterPlugin(),
     PreviewPlugin(),
     !isTauri && isPwa && PwaPlugin(),
-    ProjectPlugin(),
+    PipelinePlugin(),
     RegistryPlugin(),
     RuntimePlugin(),
     ScriptPlugin(),

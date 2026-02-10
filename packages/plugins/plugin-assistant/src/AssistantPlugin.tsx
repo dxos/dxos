@@ -86,10 +86,13 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
           icon: 'ph--circuitry--regular',
           iconHue: 'sky',
           createObject: ((_, { db }) =>
-            Initiative.makeInitialized({
-              name: 'New Initiative',
-              spec: 'Not specified yet',
-            }).pipe(withComputeRuntime(db.spaceId))) satisfies CreateObject,
+            Initiative.makeInitialized(
+              {
+                name: 'New Initiative',
+                spec: 'Not specified yet',
+              },
+              Initiative.makeBlueprint(),
+            ).pipe(withComputeRuntime(db.spaceId))) satisfies CreateObject,
           addToCollectionOnCreate: true,
         },
       },

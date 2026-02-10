@@ -27,8 +27,8 @@ import { Calendar, Mailbox } from '@dxos/plugin-inbox/types';
 import { Map, MapPlugin } from '@dxos/plugin-map';
 import { createLocationSchema } from '@dxos/plugin-map/testing';
 import { Markdown, MarkdownPlugin } from '@dxos/plugin-markdown';
+import { PipelinePlugin } from '@dxos/plugin-pipeline';
 import { PreviewPlugin } from '@dxos/plugin-preview';
-import { ProjectPlugin } from '@dxos/plugin-project';
 import { ScriptPlugin, getAccessCredential } from '@dxos/plugin-script';
 import { templates } from '@dxos/plugin-script/templates';
 import { TablePlugin } from '@dxos/plugin-table';
@@ -51,7 +51,7 @@ import {
   Message,
   Organization,
   Person,
-  Project,
+  Pipeline,
   Task,
   Transcript,
 } from '@dxos/types';
@@ -605,7 +605,7 @@ export const WithLinearSync: Story = {
   decorators: getDecorators({
     plugins: [],
     config: config.remote,
-    types: [Task.Task, Person.Person, Project.Project],
+    types: [Task.Task, Person.Person, Pipeline.Pipeline],
     accessTokens: accessTokensFromEnv({
       'linear.app': VITE_LINEAR_API_KEY,
     }),
@@ -747,7 +747,7 @@ export const WithResearchQueue: Story = {
 
 export const WithProject: Story = {
   decorators: getDecorators({
-    plugins: [InboxPlugin(), MarkdownPlugin(), ProjectPlugin()],
+    plugins: [InboxPlugin(), MarkdownPlugin(), PipelinePlugin()],
     config: config.remote,
     accessTokens: [Obj.make(AccessToken.AccessToken, { source: 'exa.ai', token: EXA_API_KEY })],
     types: [
@@ -758,7 +758,7 @@ export const WithProject: Story = {
       Message.Message,
       Organization.Organization,
       Person.Person,
-      Project.Project,
+      Pipeline.Pipeline,
       View.View,
       Mailbox.Mailbox,
     ],
@@ -884,7 +884,7 @@ export const WithProject: Story = {
       });
 
       space.db.add(
-        Project.make({
+        Pipeline.make({
           name: 'Investor Research',
           columns: [
             {

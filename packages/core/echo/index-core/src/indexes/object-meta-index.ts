@@ -7,8 +7,8 @@ import type * as SqlError from '@effect/sql/SqlError';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { ATTR_DELETED, ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET, ATTR_TYPE } from '@dxos/echo/internal';
-import { DXN } from '@dxos/keys';
+import { ATTR_DELETED, ATTR_PARENT, ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET, ATTR_TYPE } from '@dxos/echo/internal';
+import { DXN, type ObjectId, type SpaceId } from '@dxos/keys';
 
 import type { IndexerObject } from './interface';
 import type { Index } from './interface';
@@ -33,6 +33,8 @@ export const ObjectMeta = Schema.Struct({
   deleted: Schema.Boolean,
   source: Schema.NullOr(Schema.String),
   target: Schema.NullOr(Schema.String),
+  /** Parent object id (nullable). */
+  parent: Schema.NullOr(Schema.String),
   /** Monotonically increasing sequence number assigned on insert/update for tracking indexing order. */
   version: Schema.Number,
 });
@@ -53,15 +55,17 @@ export class ObjectMetaIndex implements Index {
       deleted INTEGER NOT NULL,
       source TEXT,
       target TEXT,
+      parent TEXT,
       version INTEGER NOT NULL
     )`;
 
     yield* sql`CREATE INDEX IF NOT EXISTS idx_object_index_objectId ON objectMeta(spaceId, objectId)`;
     yield* sql`CREATE INDEX IF NOT EXISTS idx_object_index_typeDxn ON objectMeta(spaceId, typeDxn)`;
     yield* sql`CREATE INDEX IF NOT EXISTS idx_object_index_version ON objectMeta(version)`;
+    yield* sql`CREATE INDEX IF NOT EXISTS idx_object_index_parent ON objectMeta(spaceId, parent)`;
   });
 
-  query = Effect.fn('ObjectMetaIndex.queryType')(
+  query = Effect.fn('ObjectMetaIndex.query')(
     (
       query: Pick<ObjectMeta, 'spaceId' | 'typeDxn'>,
     ): Effect.Effect<readonly ObjectMeta[], SqlError.SqlError, SqlClient.SqlClient> =>
@@ -216,6 +220,8 @@ export class ObjectMetaIndex implements Index {
               // Relations.
               const source = entityKind === 'relation' ? (castData[ATTR_RELATION_SOURCE] ?? null) : null;
               const target = entityKind === 'relation' ? (castData[ATTR_RELATION_TARGET] ?? null) : null;
+              // Parent (nullable).
+              const parent = castData[ATTR_PARENT] ?? null;
 
               if (existing.length > 0) {
                 yield* sql`
@@ -225,18 +231,19 @@ export class ObjectMetaIndex implements Index {
                     typeDxn = ${typeDxn},
                     deleted = ${deleted},
                     source = ${source},
-                    target = ${target}
+                    target = ${target},
+                    parent = ${parent}
                   WHERE recordId = ${existing[0].recordId}
                 `;
               } else {
                 yield* sql`
                   INSERT INTO objectMeta (
                     objectId, queueId, spaceId, documentId, 
-                    entityKind, typeDxn, deleted, source, target, version
+                    entityKind, typeDxn, deleted, source, target, parent, version
                   ) VALUES (
                     ${objectId}, ${queueId ?? ''}, ${spaceId}, ${documentId ?? ''}, 
                     ${entityKind}, ${typeDxn}, ${deleted}, 
-                    ${source}, ${target}, ${version}
+                    ${source}, ${target}, ${parent}, ${version}
                   )
                 `;
               }
@@ -274,7 +281,7 @@ export class ObjectMetaIndex implements Index {
 
           if (result.length === 0) {
             // TODO(mykola): Handle this case gracefully.
-            yield* Effect.die(
+            return yield* Effect.die(
               new Error(`Object not found in ObjectMetaIndex: ${spaceId}/${documentId ?? queueId}/${objectId}`),
             );
           }
@@ -295,6 +302,30 @@ export class ObjectMetaIndex implements Index {
 
         const sql = yield* SqlClient.SqlClient;
         const rows = yield* sql<ObjectMeta>`SELECT * FROM objectMeta WHERE ${sql.in('recordId', recordIds)}`;
+
+        return rows.map((row) => ({
+          ...row,
+          deleted: !!row.deleted,
+        }));
+      }),
+  );
+
+  /**
+   * Query children by parent object ids.
+   */
+  queryChildren = Effect.fn('ObjectMetaIndex.queryChildren')(
+    (query: {
+      spaceId: SpaceId[];
+      parentIds: ObjectId[];
+    }): Effect.Effect<readonly ObjectMeta[], SqlError.SqlError, SqlClient.SqlClient> =>
+      Effect.gen(function* () {
+        if (query.parentIds.length === 0) {
+          return [];
+        }
+
+        const sql = yield* SqlClient.SqlClient;
+        const rows =
+          yield* sql<ObjectMeta>`SELECT * FROM objectMeta WHERE spaceId IN ${sql.in(query.spaceId)} AND parent IN ${sql.in(query.parentIds.map((id) => DXN.fromLocalObjectId(id).toString()))}`;
 
         return rows.map((row) => ({
           ...row,

@@ -80,12 +80,13 @@ MessageRoot.displayName = 'Message.Root';
 // Toolbar
 //
 
+const MESSAGE_TOOLBAR_NAME = 'Message.Toolbar';
+
 type MessageToolbarProps = ThemedClassName<{}>;
 
 export const MessageToolbar = ({ classNames }: MessageToolbarProps) => {
-  const { attendableId, viewMode, setViewMode, onReply, onReplyAll, onForward } = useMessageContext(
-    MessageToolbar.displayName,
-  );
+  const { attendableId, viewMode, setViewMode, onReply, onReplyAll, onForward } =
+    useMessageContext(MESSAGE_TOOLBAR_NAME);
   const actions = useMessageToolbarActions({ viewMode, setViewMode, onReply, onReplyAll, onForward });
 
   return (
@@ -95,11 +96,13 @@ export const MessageToolbar = ({ classNames }: MessageToolbarProps) => {
   );
 };
 
-MessageToolbar.displayName = 'Message.Toolbar';
+MessageToolbar.displayName = MESSAGE_TOOLBAR_NAME;
 
 //
 // Viewport
 //
+
+const MESSAGE_VIEWPORT_NAME = 'Message.Viewport';
 
 type MessageViewportProps = ThemedClassName<PropsWithChildren<{ role?: string }>>;
 
@@ -118,18 +121,20 @@ const MessageViewport = ({ classNames, children, role }: MessageViewportProps) =
   );
 };
 
-MessageViewport.displayName = 'Message.Viewport';
+MessageViewport.displayName = MESSAGE_VIEWPORT_NAME;
 
 //
 // Header
 //
+
+const MESSAGE_HEADER_NAME = 'Message.Header';
 
 type MessageHeaderProps = ThemedClassName<{
   onContactCreate?: (actor: Actor.Actor) => void;
 }>;
 
 const MessageHeader = ({ onContactCreate }: MessageHeaderProps) => {
-  const { message, sender } = useMessageContext(MessageHeader.displayName);
+  const { message, sender } = useMessageContext(MESSAGE_HEADER_NAME);
 
   return (
     <div role='none' className='p-1 flex flex-col gap-2 border-be border-subduedSeparator'>
@@ -160,16 +165,18 @@ const MessageHeader = ({ onContactCreate }: MessageHeaderProps) => {
   );
 };
 
-MessageHeader.displayName = 'Message.Header';
+MessageHeader.displayName = MESSAGE_HEADER_NAME;
 
 //
 // Content
 //
 
+const MESSAGE_CONTENT_NAME = 'Message.Content';
+
 type MessageContentProps = ThemedClassName<{}>;
 
 const MessageContent = ({ classNames }: MessageContentProps) => {
-  const { message, viewMode } = useMessageContext(MessageContent.displayName);
+  const { message, viewMode } = useMessageContext(MESSAGE_CONTENT_NAME);
   const { themeMode } = useThemeContext();
 
   // If we're in plain-only mode or plain view, show the first block.
@@ -207,7 +214,7 @@ const MessageContent = ({ classNames }: MessageContentProps) => {
   );
 };
 
-MessageContent.displayName = 'Message.Content';
+MessageContent.displayName = MESSAGE_CONTENT_NAME;
 
 //
 // Message

@@ -31,8 +31,10 @@ export const useContainerDebug = (debug?: boolean): UseContainerDebug => {
   }, [debug, debugRef]);
 };
 
+const CONTAINER_INFO_NAME = 'ContainerInfo';
+
 const ContainerInfo = forwardRef<HTMLDivElement, ThemedClassName>(({ classNames }, forwardedRef) => {
-  const { id, state, activeLocation, scrolling } = useMosaicContainer(ContainerInfo.displayName!);
+  const { id, state, activeLocation, scrolling } = useMosaicContainer(CONTAINER_INFO_NAME);
   const counter = useRef(0);
   return (
     <Json
@@ -43,4 +45,4 @@ const ContainerInfo = forwardRef<HTMLDivElement, ThemedClassName>(({ classNames 
   );
 });
 
-ContainerInfo.displayName = 'ContainerInfo';
+ContainerInfo.displayName = CONTAINER_INFO_NAME;

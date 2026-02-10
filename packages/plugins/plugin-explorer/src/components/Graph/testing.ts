@@ -5,14 +5,14 @@
 import { type Space } from '@dxos/client/echo';
 import { type Obj, Query, Relation } from '@dxos/echo';
 import { type TypeSpec, type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
-import { HasRelationship, Organization, Person, Project } from '@dxos/types';
+import { HasRelationship, Organization, Person, Pipeline } from '@dxos/types';
 import { range } from '@dxos/util';
 
 const getObject = (objects: Obj.Unknown[]) => objects[Math.floor(Math.random() * objects.length)];
 
 const defaultTypes: TypeSpec[] = [
   { type: Organization.Organization, count: 5 },
-  { type: Project.Project, count: 5 },
+  { type: Pipeline.Pipeline, count: 5 },
   { type: Person.Person, count: 10 },
 ];
 

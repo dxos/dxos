@@ -112,7 +112,7 @@ export namespace TestSchema {
     }),
   );
 
-  export type Project = Schema.Schema.Type<typeof Project>;
+  export type Pipeline = Schema.Schema.Type<typeof Project>;
 
   //
   // Message

@@ -255,6 +255,23 @@ export interface QueryRelationTraversalClause extends Schema.Schema.Type<typeof 
 export const QueryRelationTraversalClause: Schema.Schema<QueryRelationTraversalClause> = QueryRelationTraversalClause_;
 
 /**
+ * Traverse parent-child hierarchy.
+ */
+const QueryHierarchyTraversalClause_ = Schema.Struct({
+  type: Schema.Literal('hierarchy-traversal'),
+  anchor: Schema.suspend(() => Query),
+  /**
+   * to-parent: traverse from child to parent.
+   * to-children: traverse from parent to children.
+   */
+  direction: Schema.Literal('to-parent', 'to-children'),
+});
+
+export interface QueryHierarchyTraversalClause extends Schema.Schema.Type<typeof QueryHierarchyTraversalClause_> {}
+export const QueryHierarchyTraversalClause: Schema.Schema<QueryHierarchyTraversalClause> =
+  QueryHierarchyTraversalClause_;
+
+/**
  * Union of multiple queries.
  */
 const QueryUnionClause_ = Schema.Struct({
@@ -345,6 +362,7 @@ const Query_ = Schema.Union(
   QueryIncomingReferencesClause,
   QueryRelationClause,
   QueryRelationTraversalClause,
+  QueryHierarchyTraversalClause,
   QueryUnionClause,
   QuerySetDifferenceClause,
   QueryOrderClause,
@@ -393,6 +411,7 @@ export const visit = (query: Query, visitor: (node: Query) => void) => {
     Match.when({ type: 'relation' }, ({ anchor }) => visit(anchor, visitor)),
     Match.when({ type: 'options' }, ({ query }) => visit(query, visitor)),
     Match.when({ type: 'relation-traversal' }, ({ anchor }) => visit(anchor, visitor)),
+    Match.when({ type: 'hierarchy-traversal' }, ({ anchor }) => visit(anchor, visitor)),
     Match.when({ type: 'union' }, ({ queries }) => queries.forEach((q) => visit(q, visitor))),
     Match.when({ type: 'set-difference' }, ({ source, exclude }) => {
       visit(source, visitor);
@@ -414,6 +433,7 @@ export const fold = <T>(query: Query, reducer: (node: Query) => T): T[] => {
     Match.when({ type: 'relation' }, ({ anchor }) => fold(anchor, reducer)),
     Match.when({ type: 'options' }, ({ query }) => fold(query, reducer)),
     Match.when({ type: 'relation-traversal' }, ({ anchor }) => fold(anchor, reducer)),
+    Match.when({ type: 'hierarchy-traversal' }, ({ anchor }) => fold(anchor, reducer)),
     Match.when({ type: 'union' }, ({ queries }) => queries.flatMap((q) => fold(q, reducer))),
     Match.when({ type: 'set-difference' }, ({ source, exclude }) =>
       fold(source, reducer).concat(fold(exclude, reducer)),

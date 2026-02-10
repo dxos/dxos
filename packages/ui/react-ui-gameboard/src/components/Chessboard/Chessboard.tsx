@@ -40,11 +40,13 @@ export type ChessboardProps = ThemedClassName<
 /**
  * Chessboard layout.
  */
+const CHESSBOARD_NAME = 'Chessboard';
+
 const ChessboardComponent = forwardRef<HTMLDivElement, ChessboardProps>(
   ({ classNames, orientation, showLabels, debug, rows = 8, cols = 8 }, forwardedRef) => {
     const targetRef = useForwardedRef(forwardedRef);
     const { width, height } = useResizeDetector({ targetRef, refreshRate: 200 });
-    const { model, promoting, onPromotion } = useGameboardContext<ChessModel>(Chessboard.displayName!);
+    const { model, promoting, onPromotion } = useGameboardContext<ChessModel>(CHESSBOARD_NAME);
     const pieces = useAtomValue(model?.pieces ?? EMPTY_PIECES_ATOM);
 
     // Board squares.
@@ -153,7 +155,7 @@ const ChessboardComponent = forwardRef<HTMLDivElement, ChessboardProps>(
   },
 );
 
-ChessboardComponent.displayName = 'Chessboard';
+ChessboardComponent.displayName = CHESSBOARD_NAME;
 
 export const Chessboard = memo(ChessboardComponent);
 

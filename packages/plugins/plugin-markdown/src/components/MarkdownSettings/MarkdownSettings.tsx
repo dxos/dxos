@@ -37,7 +37,7 @@ export const MarkdownSettings = ({ settings, onSettingsChange }: MarkdownSetting
                   <Select.Viewport>
                     {EditorViewModes.map((mode) => (
                       <Select.Option key={mode} value={mode}>
-                        {t(`${mode} mode label`, { ns: 'react-ui-editor' })}
+                        {t(`${mode} mode label`, { ns: '@dxos/react-ui-editor' })}
                       </Select.Option>
                     ))}
                   </Select.Viewport>

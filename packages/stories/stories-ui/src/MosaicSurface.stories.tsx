@@ -16,7 +16,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Focus, Mosaic } from '@dxos/react-ui-mosaic';
 import { Board, TestColumn, TestItem } from '@dxos/react-ui-mosaic/testing';
 import { type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
-import { Organization, Person, Project } from '@dxos/types';
+import { Organization, Person, Pipeline } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
 const generator = faker as any as ValueGenerator;
@@ -86,7 +86,7 @@ const meta = {
         ...corePlugins(),
         StorybookPlugin({}),
         ClientPlugin({
-          types: [TestColumn, TestItem, Organization.Organization, Person.Person, Project.Project],
+          types: [TestColumn, TestItem, Organization.Organization, Person.Person, Pipeline.Pipeline],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               yield* Effect.promise(() => client.halo.createIdentity());
@@ -99,7 +99,7 @@ const meta = {
                 factory([
                   { type: Organization.Organization, count: 20 },
                   { type: Person.Person, count: 30 },
-                  { type: Project.Project, count: 10 },
+                  { type: Pipeline.Pipeline, count: 10 },
                 ]),
               );
             }),

@@ -4,7 +4,7 @@
 
 import { type Type } from '@dxos/echo';
 import { Text } from '@dxos/schema';
-import { Event, HasConnection, HasRelationship, LegacyOrganization, LegacyPerson, Project, Task } from '@dxos/types';
+import { Event, HasConnection, HasRelationship, LegacyOrganization, LegacyPerson, Pipeline, Task } from '@dxos/types';
 
 /**
  * Data types for research.
@@ -20,7 +20,7 @@ export const ResearchDataTypes: Type.Entity.Any[] = [
   // TODO(wittjosiah): Until views (e.g., Table) support relations this needs to be expressed via organization ref.
   // Employer.Employer,
   LegacyPerson,
-  Project.Project,
+  Pipeline.Pipeline,
   HasRelationship.HasRelationship,
   HasConnection.HasConnection,
 ];

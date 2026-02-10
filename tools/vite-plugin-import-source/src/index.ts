@@ -100,10 +100,8 @@ const PluginImportSource = ({
       // Strip query params (e.g., ?v=123).
       const filePath = id.split('?')[0];
 
-      if (isMatch(filePath)) {
-        this.addWatchFile(filePath);
-        verbose && console.log(`[watch] ${filePath}`);
-      }
+      this.addWatchFile(filePath);
+      verbose && console.log(`[watch] ${filePath}`);
 
       // Return null to let Vite load the file normally.
       return null;

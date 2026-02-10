@@ -124,10 +124,17 @@ const [RootContextProvider, useRootContext] = createContext<RootContextValue>('M
 // Root
 //
 
+const ROOT_NAME = 'Mosaic.Root';
+
 // State attribute: [&:has(>_[data-mosaic-debug=true])]
 const ROOT_DEBUG_ATTR = 'mosaic-debug';
 
-type RootProps = ThemedClassName<PropsWithChildren<{ asChild?: boolean; debug?: boolean }>>;
+type RootProps = ThemedClassName<
+  PropsWithChildren<{
+    asChild?: boolean;
+    debug?: boolean;
+  }>
+>;
 
 const Root = forwardRef<HTMLDivElement, RootProps>(({ classNames, children, asChild, debug }, forwardedRef) => {
   const rootRef = useRef<HTMLDivElement>(null);
@@ -350,9 +357,13 @@ const Root = forwardRef<HTMLDivElement, RootProps>(({ classNames, children, asCh
   );
 });
 
+Root.displayName = ROOT_NAME;
+
 //
 // Container
 //
+
+const CONTAINER_NAME = 'Mosaic.Container';
 
 type ContainerState = { type: 'idle' } | { type: 'active'; bounds?: DOMRect };
 
@@ -422,7 +433,7 @@ const Container = forwardRef<HTMLDivElement, ContainerProps>(
     );
 
     // State.
-    const { dragging } = useRootContext(Container.displayName!);
+    const { dragging } = useRootContext(CONTAINER_NAME);
     const [state, setState] = useState<ContainerState>({ type: 'idle' });
     const [activeLocation, setActiveLocation] = useState<LocationType | undefined>();
     const [scrolling, setScrolling] = useState(false);
@@ -593,11 +604,13 @@ const Container = forwardRef<HTMLDivElement, ContainerProps>(
   },
 );
 
-Container.displayName = 'MosaicContainer';
+Container.displayName = CONTAINER_NAME;
 
 //
 // Tile
 //
+
+const TILE_NAME = 'Mosaic.Tile';
 
 /** Must implement value equivalence. */
 type LocationType = string | number;
@@ -651,13 +664,7 @@ const Tile = forwardRef<HTMLDivElement, TileProps>(
     const Root = asChild ? Slot : Primitive.div;
 
     // State.
-    const {
-      id: containerId,
-      eventHandler,
-      axis,
-      scrolling,
-      setActiveLocation,
-    } = useContainerContext(Tile.displayName!);
+    const { id: containerId, eventHandler, axis, scrolling, setActiveLocation } = useContainerContext(TILE_NAME);
     const [state, setState] = useState<TileState>({ type: 'idle' });
 
     const allowedEdges = useMemo<Edge[]>(
@@ -792,11 +799,13 @@ const Tile = forwardRef<HTMLDivElement, TileProps>(
   },
 );
 
-Tile.displayName = 'MosaicTile';
+Tile.displayName = TILE_NAME;
 
 //
 // Placeholder
 //
+
+const PLACEHOLDER_NAME = 'Mosaic.Placeholder';
 
 // Axis: data-[mosaic-placeholder-axis=vertical]
 const PLACEHOLDER_AXIS_ATTR = 'mosaic-placeholder-axis';
@@ -827,8 +836,7 @@ const Placeholder = <Location extends LocationType = LocationType>({
     scrolling,
     activeLocation,
     setActiveLocation,
-  } = useContainerContext(Placeholder.displayName!);
-
+  } = useContainerContext(PLACEHOLDER_NAME);
   const data = useMemo<MosaicPlaceholderData<Location>>(
     () =>
       ({
@@ -879,23 +887,25 @@ const Placeholder = <Location extends LocationType = LocationType>({
   );
 };
 
-Placeholder.displayName = 'MosaicPlaceholder';
+Placeholder.displayName = PLACEHOLDER_NAME;
 
 //
 // DropIndicator
 // TODO(burdon): Support DropIndicator or Placeholder variants.
 //
 
+const DROP_INDICATOR_NAME = 'Mosaic.DropIndicator';
+
 type DropIndicatorProps = Omit<NativeDropIndicatorProps, 'edge'>;
 
 const DropIndicator = (props: DropIndicatorProps) => {
-  const { state } = useTileContext(DropIndicator.displayName!);
+  const { state } = useTileContext(DROP_INDICATOR_NAME);
   return state.type === 'target' && state.closestEdge ? (
     <NativeDropIndicator {...props} edge={state.closestEdge} />
   ) : null;
 };
 
-DropIndicator.displayName = 'MosaicDropIndicator';
+DropIndicator.displayName = DROP_INDICATOR_NAME;
 
 //
 // Mosaic

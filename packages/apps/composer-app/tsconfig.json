@@ -161,13 +161,13 @@
       "path": "../../plugins/plugin-outliner"
     },
     {
+      "path": "../../plugins/plugin-pipeline"
+    },
+    {
       "path": "../../plugins/plugin-presenter"
     },
     {
       "path": "../../plugins/plugin-preview"
-    },
-    {
-      "path": "../../plugins/plugin-project"
     },
     {
       "path": "../../plugins/plugin-pwa"

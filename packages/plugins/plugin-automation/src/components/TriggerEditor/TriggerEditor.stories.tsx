@@ -14,7 +14,7 @@ import { TestSchema, useClientStory, withClientProvider } from '@dxos/react-clie
 import { useAsyncEffect } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as formTranslations } from '@dxos/react-ui-form';
-import { Employer, Organization, Person, Project } from '@dxos/types';
+import { Employer, Organization, Person, Pipeline } from '@dxos/types';
 
 import { functions } from '../../testing';
 import { translations } from '../../translations';
@@ -25,7 +25,7 @@ const types = [
   // TODO(burdon): Get label from annotation.
   { value: Organization.Organization.typename, label: 'Organization' },
   { value: Person.Person.typename, label: 'Person' },
-  { value: Type.getTypename(Project.Project), label: 'Project' },
+  { value: Type.getTypename(Pipeline.Pipeline), label: 'Project' },
   { value: Employer.Employer.typename, label: 'Employer' },
 ];
 

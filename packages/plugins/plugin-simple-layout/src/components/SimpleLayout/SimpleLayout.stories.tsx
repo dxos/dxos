@@ -12,7 +12,7 @@ import { SearchPlugin } from '@dxos/plugin-search';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { SpaceOperation } from '@dxos/plugin-space/types';
 import { corePlugins } from '@dxos/plugin-testing';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as searchTranslation } from '@dxos/react-ui-searchlist';
 import { Collection } from '@dxos/schema';
 
@@ -96,9 +96,17 @@ type Story = StoryObj<typeof meta>;
  * `moon run storybook-react:serve dev -H 0.0.0.0`
  */
 export const Default: Story = {
-  decorators: [withTheme, createPluginManager({ isPopover: false })],
+  decorators: [
+    withTheme,
+    withLayout({ layout: 'column', classNames: 'relative' }),
+    createPluginManager({ isPopover: false }),
+  ],
 };
 
 export const Popover: Story = {
-  decorators: [withTheme, createPluginManager({ isPopover: true })],
+  decorators: [
+    withTheme,
+    withLayout({ layout: 'column', classNames: 'relative' }),
+    createPluginManager({ isPopover: true }),
+  ],
 };

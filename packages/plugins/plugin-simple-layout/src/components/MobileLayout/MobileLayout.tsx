@@ -13,6 +13,8 @@ import { mx } from '@dxos/ui-theme';
 // TODO(burdon): Move into @dxos/react-ui?
 
 const MOBILE_LAYOUT_NAME = 'MobileLayout';
+const MOBILE_LAYOUT_ROOT_NAME = 'MobileLayout.Root';
+const MOBILE_LAYOUT_PANEL_NAME = 'MobileLayout.Panel';
 
 //
 // Context
@@ -25,26 +27,22 @@ type MobileLayoutContextValue = {
 const [MobileLayoutProvider, useMobileLayout] = createContext<MobileLayoutContextValue>(MOBILE_LAYOUT_NAME);
 
 //
-// MobileLayout
+// Root
 //
 
-export type MobileLayoutProps = ThemedClassName<
+type MobileLayoutRootProps = ThemedClassName<
   PropsWithChildren<{
-    safe?: { top: boolean; bottom: boolean };
     transition?: number;
     onKeyboardOpenChange?: (nextState: boolean) => void;
   }>
 >;
 
 /**
- * Mobile layout container that handles iOS keyboard detection and safe area insets.
+ * Mobile layout root container that handles iOS keyboard detection.
  */
 // TODO(burdon): Should this be ios-only?
-export const MobileLayout = forwardRef<HTMLDivElement, MobileLayoutProps>(
-  (
-    { classNames, children, safe = { top: true, bottom: true }, transition = 250, onKeyboardOpenChange, ...props },
-    forwardedRef,
-  ) => {
+const MobileLayoutRoot = forwardRef<HTMLDivElement, MobileLayoutRootProps>(
+  ({ classNames, children, transition = 250, onKeyboardOpenChange, ...props }, forwardedRef) => {
     const { open: keyboardOpen } = useIOSKeyboard();
     useEffect(() => onKeyboardOpenChange?.(keyboardOpen), [onKeyboardOpenChange, keyboardOpen]);
     useLockBodyScroll(keyboardOpen);
@@ -61,25 +59,64 @@ export const MobileLayout = forwardRef<HTMLDivElement, MobileLayoutProps>(
           className={mx('absolute top-0 left-0 right-0 flex flex-col', classNames)}
           ref={forwardedRef}
         >
-          <div
-            role='none'
-            style={{
-              paddingTop: safe.top ? 'env(safe-area-inset-top)' : undefined,
-              paddingBottom: safe.bottom ? `calc((1 - var(--kb-open, 0)) * env(safe-area-inset-bottom))` : undefined,
-            }}
-            className='relative bs-full flex flex-col overflow-hidden'
-          >
-            {children}
-          </div>
+          {children}
         </div>
       </MobileLayoutProvider>
     );
   },
 );
 
-MobileLayout.displayName = MOBILE_LAYOUT_NAME;
+MobileLayoutRoot.displayName = MOBILE_LAYOUT_ROOT_NAME;
+
+//
+// Panel
+//
+
+type MobileLayoutPanelProps = ThemedClassName<
+  PropsWithChildren<{
+    safe?: {
+      top: boolean;
+      bottom: boolean;
+    };
+  }>
+>;
+
+/**
+ * Mobile layout panel that applies safe area insets.
+ */
+const MobileLayoutPanel = forwardRef<HTMLDivElement, MobileLayoutPanelProps>(
+  ({ classNames, children, safe, ...props }, forwardedRef) => {
+    return (
+      <div
+        {...props}
+        role='none'
+        style={{
+          paddingTop: safe?.top ? 'env(safe-area-inset-top)' : undefined,
+          paddingBottom: safe?.bottom ? `calc((1 - var(--kb-open, 0)) * env(safe-area-inset-bottom))` : undefined,
+        }}
+        className={mx('relative bs-full flex flex-col overflow-hidden', classNames)}
+        ref={forwardedRef}
+      >
+        {children}
+      </div>
+    );
+  },
+);
+
+MobileLayoutPanel.displayName = MOBILE_LAYOUT_PANEL_NAME;
+
+//
+// Exports
+//
+
+export const MobileLayout = {
+  Root: MobileLayoutRoot,
+  Panel: MobileLayoutPanel,
+};
 
 export { useMobileLayout };
+
+export type { MobileLayoutRootProps, MobileLayoutPanelProps };
 
 /**
  * Prevent iOS Safari viewport scroll when enabled.
@@ -92,28 +129,57 @@ const useLockBodyScroll = (enabled: boolean) => {
       return;
     }
 
-    const isScrollableElement = (el: HTMLElement | null): boolean => {
+    let touchStartX = 0;
+    let touchStartY = 0;
+
+    const isScrollableInDirection = (el: HTMLElement | null, axis: 'x' | 'y'): boolean => {
       while (el && el !== document.body) {
         const style = getComputedStyle(el);
-        const overflowY = style.overflowY;
-        if ((overflowY === 'auto' || overflowY === 'scroll') && el.scrollHeight > el.clientHeight) {
-          return true;
+        if (axis === 'y') {
+          const overflowY = style.overflowY;
+          if ((overflowY === 'auto' || overflowY === 'scroll') && el.scrollHeight > el.clientHeight) {
+            return true;
+          }
+        } else {
+          const overflowX = style.overflowX;
+          if ((overflowX === 'auto' || overflowX === 'scroll') && el.scrollWidth > el.clientWidth) {
+            return true;
+          }
         }
         el = el.parentElement;
       }
+
       return false;
     };
 
-    const preventScroll = (event: TouchEvent) => {
+    const handleTouchStart = (event: TouchEvent) => {
+      const touch = event.touches[0];
+      touchStartX = touch.clientX;
+      touchStartY = touch.clientY;
+    };
+
+    const handleTouchMove = (event: TouchEvent) => {
+      const touch = event.touches[0];
+      const dx = Math.abs(touch.clientX - touchStartX);
+      const dy = Math.abs(touch.clientY - touchStartY);
+      const axis = dx > dy ? 'x' : 'y';
+
       const target = event.target as HTMLElement;
-      if (!isScrollableElement(target)) {
+      if (!isScrollableInDirection(target, axis)) {
         event.preventDefault();
       }
     };
 
-    return addEventListener(document, 'touchmove', preventScroll as EventListener, { passive: false });
+    return combine(
+      addEventListener(document, 'touchstart', handleTouchStart as EventListener, { passive: true }),
+      addEventListener(document, 'touchmove', handleTouchMove as EventListener, { passive: false }),
+    );
   }, [enabled]);
 };
+
+//
+// Hooks
+//
 
 type IOSKeyboard = {
   open: boolean;

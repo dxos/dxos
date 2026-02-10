@@ -153,11 +153,13 @@ Root.displayName = 'ScrollContainer.Root';
 // Viewport
 //
 
+const VIEWPORT_NAME = 'ScrollContainer.Viewport';
+
 type ViewportProps = ThemedClassName<PropsWithChildren<Omit<HTMLAttributes<HTMLDivElement>, 'className'>>>;
 
 const Viewport = forwardRef<HTMLDivElement, ViewportProps>(({ classNames, children, ...props }, forwardedRef) => {
   const contentRef = useForwardedRef(forwardedRef);
-  const { pinned, scrollToBottom } = useScrollContainerContext(Viewport.displayName!);
+  const { pinned, scrollToBottom } = useScrollContainerContext(VIEWPORT_NAME);
 
   useEffect(() => {
     if (!pinned || !contentRef.current) {
@@ -180,16 +182,18 @@ const Viewport = forwardRef<HTMLDivElement, ViewportProps>(({ classNames, childr
   );
 });
 
-Viewport.displayName = 'ScrollContainer.Viewport';
+Viewport.displayName = VIEWPORT_NAME;
 
 //
 // ScrollDownButton
 //
 
+const SCROLL_DOWN_BUTTON_NAME = 'ScrollContainer.ScrollDownButton';
+
 type ScrollDownButtonProps = ThemedClassName;
 
 const ScrollDownButton = ({ classNames }: ScrollDownButtonProps) => {
-  const { pinned, scrollToBottom } = useScrollContainerContext(ScrollDownButton.displayName!);
+  const { pinned, scrollToBottom } = useScrollContainerContext(SCROLL_DOWN_BUTTON_NAME);
 
   return (
     <div
@@ -212,7 +216,7 @@ const ScrollDownButton = ({ classNames }: ScrollDownButtonProps) => {
   );
 };
 
-ScrollDownButton.displayName = 'ScrollContainer.ScrollDownButton';
+ScrollDownButton.displayName = SCROLL_DOWN_BUTTON_NAME;
 
 //
 // ScrollContainer
