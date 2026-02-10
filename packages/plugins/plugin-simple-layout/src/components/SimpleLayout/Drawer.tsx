@@ -15,7 +15,7 @@ import { meta } from '../../meta';
 import { ContentError } from '../ContentError';
 import { ContentLoading } from '../ContentLoading';
 
-import { useMobileLayout } from './MobileLayout';
+import { useMobileLayout } from '../MobileLayout/MobileLayout';
 
 const DRAWER_NAME = 'SimpleLayout.Drawer';
 

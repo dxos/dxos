@@ -15,7 +15,7 @@ import { ContentLoading } from '../ContentLoading';
 import { useLoadDescendents } from '../hooks';
 
 import { Banner } from './Banner';
-import { useMobileLayout } from './MobileLayout';
+import { useMobileLayout } from '../MobileLayout/MobileLayout';
 import { NavBar } from './NavBar';
 
 const MAIN_NAME = 'SimpleLayout.Main';
