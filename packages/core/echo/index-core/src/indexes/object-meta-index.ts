@@ -12,7 +12,6 @@ import { DXN, type ObjectId, type SpaceId } from '@dxos/keys';
 
 import type { IndexerObject } from './interface';
 import type { Index } from './interface';
-import { dbg } from '@dxos/log';
 
 const _escapeLikePrefix = (prefix: string) => {
   // Escape LIKE metacharacters in the *literal* prefix (we still append a wildcard for the version suffix).
