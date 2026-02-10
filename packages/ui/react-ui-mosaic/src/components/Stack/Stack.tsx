@@ -36,13 +36,15 @@ type StackProps<TData = any> = SlottableClassName<
  * Linear layout of Mosaic tiles.
  * NOTE: This is a low-level component and should be wrapped by a scrollable container.
  */
+const STACK_NAME = 'Stack';
+
 const StackInner = forwardRef<HTMLDivElement, StackProps>(
   (
     { className, classNames, role = 'list', axis = 'vertical', draggable = true, items, getId, Tile, debug, ...props },
     forwardedRef,
   ) => {
     invariant(Tile);
-    const { id, dragging } = useMosaicContainer(StackInner.displayName!);
+    const { id, dragging } = useMosaicContainer(STACK_NAME);
     const visibleItems = useVisibleItems({ id, items, dragging: dragging?.source.data, getId });
 
     return (
@@ -70,13 +72,15 @@ const StackInner = forwardRef<HTMLDivElement, StackProps>(
   },
 );
 
-StackInner.displayName = 'Stack';
+StackInner.displayName = STACK_NAME;
 
 const Stack = StackInner as <TData = any>(props: StackProps<TData> & { ref?: Ref<HTMLDivElement> }) => ReactElement;
 
 //
 // VirtualStack
 //
+
+const VIRTUAL_STACK_NAME = 'VirtualStackInner';
 
 type VirtualStackProps<TData = any> = StackProps<TData> &
   Pick<
@@ -104,7 +108,7 @@ const VirtualStackInner = forwardRef<HTMLDivElement, VirtualStackProps>(
     forwardedRef,
   ) => {
     invariant(Tile);
-    const { id, dragging } = useMosaicContainer(VirtualStackInner.displayName!);
+    const { id, dragging } = useMosaicContainer(VIRTUAL_STACK_NAME);
     const visibleItems = useVisibleItems({ id, items, dragging: dragging?.source.data, getId });
     const virtualizer = useVirtualizer({
       count: visibleItems.length * 2 + 1,
@@ -176,7 +180,7 @@ const VirtualStackInner = forwardRef<HTMLDivElement, VirtualStackProps>(
   },
 );
 
-VirtualStackInner.displayName = 'VirtualStackInner';
+VirtualStackInner.displayName = VIRTUAL_STACK_NAME;
 
 const VirtualStack = VirtualStackInner as <TData = any>(
   props: VirtualStackProps<TData> & { ref?: Ref<HTMLDivElement> },
