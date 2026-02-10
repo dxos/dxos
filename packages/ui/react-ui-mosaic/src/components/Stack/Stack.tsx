@@ -22,6 +22,8 @@ import { mosaicStyles } from '../Mosaic';
 
 type StackTileComponent<TData = any> = FC<MosaicTileProps<TData>>;
 
+const STACK_NAME = 'Stack';
+
 type StackProps<TData = any> = SlottableClassName<
   {
     Tile: StackTileComponent<TData>;
@@ -31,8 +33,6 @@ type StackProps<TData = any> = SlottableClassName<
     items?: TData[];
   } & Pick<MosaicTileProps<TData>, 'draggable' | 'debug'>
 >;
-
-const STACK_NAME = 'Stack';
 
 /**
  * Linear layout of Mosaic tiles.

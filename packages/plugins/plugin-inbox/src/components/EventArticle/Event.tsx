@@ -32,13 +32,15 @@ const [EventContextProvider, useEventContext] = createContext<EventContextValue>
 // Root
 //
 
+const EVENT_ROOT_NAME = 'Event.Root';
+
 type EventRootProps = PropsWithChildren<EventContextValue>;
 
 const EventRoot = ({ children, ...props }: EventRootProps) => {
   return <EventContextProvider {...props}>{children}</EventContextProvider>;
 };
 
-EventRoot.displayName = 'Event.Root';
+EventRoot.displayName = EVENT_ROOT_NAME;
 
 //
 // Toolbar
