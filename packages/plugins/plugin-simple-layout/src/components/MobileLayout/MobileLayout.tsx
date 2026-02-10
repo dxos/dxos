@@ -10,7 +10,7 @@ import { log } from '@dxos/log';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-// TODO(burdon): Move into @dxos/react-ui Main.
+// TODO(burdon): Move into @dxos/react-ui?
 
 const MOBILE_LAYOUT_NAME = 'MobileLayout';
 
@@ -30,6 +30,7 @@ const [MobileLayoutProvider, useMobileLayout] = createContext<MobileLayoutContex
 
 export type MobileLayoutProps = ThemedClassName<
   PropsWithChildren<{
+    safe?: { top: boolean; bottom: boolean };
     transition?: number;
     onKeyboardOpenChange?: (nextState: boolean) => void;
   }>
@@ -40,13 +41,12 @@ export type MobileLayoutProps = ThemedClassName<
  */
 // TODO(burdon): Should this be ios-only?
 export const MobileLayout = forwardRef<HTMLDivElement, MobileLayoutProps>(
-  ({ classNames, children, transition = 250, onKeyboardOpenChange, ...props }, forwardedRef) => {
-    // Handles keyboard detection and sets CSS custom properties.
+  (
+    { classNames, children, safe = { top: true, bottom: true }, transition = 250, onKeyboardOpenChange, ...props },
+    forwardedRef,
+  ) => {
     const { open: keyboardOpen } = useIOSKeyboard();
-    useEffect(() => {
-      onKeyboardOpenChange?.(keyboardOpen);
-    }, [keyboardOpen, onKeyboardOpenChange]);
-
+    useEffect(() => onKeyboardOpenChange?.(keyboardOpen), [onKeyboardOpenChange, keyboardOpen]);
     useLockBodyScroll(keyboardOpen);
 
     return (
@@ -64,8 +64,8 @@ export const MobileLayout = forwardRef<HTMLDivElement, MobileLayoutProps>(
           <div
             role='none'
             style={{
-              paddingTop: 'env(safe-area-inset-top)',
-              paddingBottom: `calc((1 - var(--kb-open, 0)) * env(safe-area-inset-bottom))`,
+              paddingTop: safe.top ? 'env(safe-area-inset-top)' : undefined,
+              paddingBottom: safe.bottom ? `calc((1 - var(--kb-open, 0)) * env(safe-area-inset-bottom))` : undefined,
             }}
             className='relative bs-full flex flex-col overflow-hidden'
           >
@@ -115,10 +115,6 @@ const useLockBodyScroll = (enabled: boolean) => {
   }, [enabled]);
 };
 
-//
-// useIOSKeyboard
-//
-
 type IOSKeyboard = {
   open: boolean;
   height: number;
@@ -167,19 +163,15 @@ const useIOSKeyboard = (): IOSKeyboard => {
     // Handler for VisualViewport resize (fallback for non-iOS).
     const initialHeight = viewport.height ?? window.innerHeight;
 
-    const updateState = (keyboardHeight: number, open: boolean) => {
-      setOpen(open);
+    const updateState = (keyboardHeight: number, keyboardOpen: boolean) => {
+      setOpen(keyboardOpen);
       setHeight(keyboardHeight);
 
       const vvh = window.innerHeight - keyboardHeight;
       document.documentElement.style.setProperty('--vvh', `${vvh}px`);
       document.documentElement.style.setProperty('--kb-height', `${keyboardHeight}px`);
-      document.documentElement.style.setProperty('--kb-open', open ? '1' : '0');
-      log.info('[useIOSKeyboard] viewport size:', {
-        vvh,
-        keyboardHeight,
-        open,
-      });
+      document.documentElement.style.setProperty('--kb-open', keyboardOpen ? '1' : '0');
+      log.info('viewport size', { vvh, keyboardHeight, keyboardOpen });
     };
 
     return combine(
@@ -197,8 +189,8 @@ const useIOSKeyboard = (): IOSKeyboard => {
             target.focus({ preventScroll: true });
 
             // Lock current scroll position.
-            const scrollY = window.scrollY;
             const scrollX = window.scrollX;
+            const scrollY = window.scrollY;
             requestAnimationFrame(() => {
               window.scrollTo(scrollX, scrollY);
             });
@@ -214,7 +206,7 @@ const useIOSKeyboard = (): IOSKeyboard => {
         'keyboard' as any,
         (event: CustomEvent<{ type: 'show' | 'hide'; height: number; duration: number }>) => {
           const { type, height } = event.detail;
-          log.info('[useIOSKeyboard] Keyboard event:', { type, height });
+          log.info('keyboard event', { type, height });
           updateState(height, type === 'show');
         },
       ),
@@ -223,7 +215,7 @@ const useIOSKeyboard = (): IOSKeyboard => {
       addEventListener(viewport, 'resize', () => {
         const heightDiff = initialHeight - viewport.height;
         const open = heightDiff > 100;
-        log.info('[useIOSKeyboard] Resize event:', { open, initialHeight, heightDiff });
+        log.info('resize event', { open, initialHeight, heightDiff });
         updateState(open ? heightDiff : 0, open);
       }),
     );
