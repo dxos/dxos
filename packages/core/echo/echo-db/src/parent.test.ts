@@ -6,10 +6,10 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Filter, Obj } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 
 import { EchoTestBuilder } from './testing/echo-test-builder';
-import { invariant } from '@dxos/invariant';
 
 describe('Parent Hierarchy', () => {
   let builder: EchoTestBuilder;
