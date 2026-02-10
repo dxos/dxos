@@ -228,7 +228,7 @@ export class CallSwarmSynchronizer extends Resource {
    */
   private _notifyAndSchedule(): void {
     this.stateUpdated.emit(this._state);
-    if (this._state.joined) {
+    if (this._state.joined && this._sendStateTask.isOpen) {
       this._sendStateTask.schedule();
     }
   }
@@ -268,7 +268,9 @@ export class CallSwarmSynchronizer extends Resource {
     }
 
     this._lastSwarmEvent = swarmEvent;
-    this._reconcileSwarmStateTask.schedule();
+    if (this._reconcileSwarmStateTask.isOpen) {
+      this._reconcileSwarmStateTask.schedule();
+    }
   }
 
   private async _reconcileSwarmState(): Promise<void> {
@@ -319,7 +321,11 @@ export class CallSwarmSynchronizer extends Resource {
     if (peers.some((peer) => peer.connectionState !== ConnectionState.CONNECTED)) {
       scheduleTaskInterval(
         this._ctx,
-        async () => this._reconcileSwarmStateTask!.schedule(),
+        async () => {
+          if (this._reconcileSwarmStateTask.isOpen) {
+            this._reconcileSwarmStateTask.schedule();
+          }
+        },
         Math.min(DISCONNECTED_ABRUPT_TIMEOUT / 2, 1000),
       );
     }

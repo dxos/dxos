@@ -145,19 +145,20 @@ export class AsyncJob {
       // The previous job might still be running, so we need to wait for it to finish.
       await this.#currentTask; // Can't be rejected.
 
+      // Reset the flag and capture the trigger before any early exit.
+      const completionTrigger = this.#nextTask;
+      this.#nextTask = new Trigger(); // Re-create the trigger as opposed to resetting it since there might be listeners waiting for it.
+      this.#scheduled = false;
+
       if (!this.#ctx || this.#ctx.disposed) {
+        completionTrigger.wake();
         return;
       }
 
-      // Reset the flag. New jobs can now be scheduled. They would wait for the callback to finish.
-      this.#scheduled = false;
-      const completionTrigger = this.#nextTask;
-      this.#nextTask = new Trigger(); // Re-create the trigger as opposed to resetting it since there might be listeners waiting for it.
-
       // Store the promise so that new jobs could wait for this one to finish.
-      this.#currentTask = runInContextAsync(this.#ctx, () => this.#callback()).then(() => {
-        completionTrigger.wake();
-      });
+      this.#currentTask = runInContextAsync(this.#ctx, () => this.#callback()).finally(() =>
+        completionTrigger.wake(),
+      );
     });
 
     this.#scheduled = true;
