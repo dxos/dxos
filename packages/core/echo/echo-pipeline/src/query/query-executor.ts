@@ -221,7 +221,7 @@ type StepExecutionResult = {
   trace: ExecutionTrace;
 };
 
-const TRACE_QUERY_EXECUTION = true;
+const TRACE_QUERY_EXECUTION = false;
 
 const MAX_DEPTH_FOR_DELETION_TRACING = 10;
 
@@ -671,8 +671,6 @@ export class QueryExecutor extends Resource {
         deletedState[index] ||= await this._getTransitiveDeletionState(item, MAX_DEPTH_FOR_DELETION_TRACING);
       }),
     );
-
-    dbg(deletedState);
 
     const result = workingSet.filter((item, index) => deletedState[index] === expected);
 
@@ -1419,13 +1417,11 @@ export class QueryExecutor extends Resource {
   }
 
   private async _getTransitiveDeletionState(item: QueryItem, remainingDepth: number): Promise<boolean> {
-    dbg(item.objectId);
     const strongDeps = [
       QueryItem.getParent(item),
       QueryItem.getRelationSource(item),
       QueryItem.getRelationTarget(item),
     ].filter((x) => x !== undefined);
-    dbg(strongDeps);
 
     if (strongDeps.length === 0) {
       return false;
@@ -1438,8 +1434,6 @@ export class QueryExecutor extends Resource {
         if (!dep) {
           return false;
         }
-        dbg(dep.objectId);
-        dbg(QueryItem.isDeleted(dep));
         if (QueryItem.isDeleted(dep)) {
           return true;
         }
@@ -1449,7 +1443,6 @@ export class QueryExecutor extends Resource {
         return false;
       }),
     );
-    dbg(strongDepStates);
 
     return strongDepStates.some((x) => x);
   }
