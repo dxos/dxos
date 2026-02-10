@@ -4,5 +4,7 @@
 
 export * from './useBannerProps';
 export * from './useCompanions';
+export * from './actions';
+export * from './useDrawerActions';
 export * from './useNavbarActions';
 export * from './useSimpleLayoutState';
