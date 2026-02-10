@@ -13,9 +13,9 @@ import { useBannerProps, useNavbarActions, useSimpleLayoutState } from '../../ho
 import { ContentError } from '../ContentError';
 import { ContentLoading } from '../ContentLoading';
 import { useLoadDescendents } from '../hooks';
+import { useMobileLayout } from '../MobileLayout/MobileLayout';
 
 import { Banner } from './Banner';
-import { useMobileLayout } from '../MobileLayout/MobileLayout';
 import { NavBar } from './NavBar';
 
 const MAIN_NAME = 'SimpleLayout.Main';
