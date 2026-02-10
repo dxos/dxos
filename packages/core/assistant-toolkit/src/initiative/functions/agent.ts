@@ -15,6 +15,7 @@ import { invariant } from '@dxos/invariant';
 import { type Message } from '@dxos/types';
 
 import * as Initiative from '../Initiative';
+import { resetChatHistory } from '../util';
 
 export default defineFunction({
   key: 'dxos.org/function/initiative/agent',
@@ -32,6 +33,11 @@ export default defineFunction({
       const initiative = yield* Database.load(data.initiative);
       invariant(Obj.instanceOf(Initiative.Initiative, initiative));
       invariant(initiative.chat, 'Initiative has no chat.');
+
+      if (initiative.newChatOnEveryEvent) {
+        yield* resetChatHistory(initiative);
+      }
+
       const chatQueue = yield* initiative.chat.pipe(
         Database.load,
         Effect.flatMap((chat) => Database.load(chat.queue)),
@@ -64,7 +70,6 @@ export default defineFunction({
         })
         .pipe(Effect.retry({ times: 2 }));
     },
-
     Effect.scoped,
     Effect.provide(AiService.model('@anthropic/claude-sonnet-4-5')),
   ) as any, // TODO(dmaretskyi): Services don't align -- need to refactor how functions are defined.
