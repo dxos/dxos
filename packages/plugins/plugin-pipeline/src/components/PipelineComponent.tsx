@@ -49,6 +49,8 @@ PipelineRoot.displayName = PIPELINE_ROOT;
 // Content
 //
 
+const PIPELINE_CONTENT_NAME = 'Pipeline.Content';
+
 type PipelineContentProps = {
   pipeline: PipelineType.Pipeline;
 };
@@ -65,15 +67,17 @@ const PipelineContent = ({ pipeline }: PipelineContentProps) => {
   );
 };
 
-PipelineContent.displayName = 'Pipeline.Content';
+PipelineContent.displayName = PIPELINE_CONTENT_NAME;
 
 //
 // Toolbar
 //
 
+const PIPELINE_TOOLBAR_NAME = 'Pipeline.Toolbar';
+
 export const PipelineToolbar = (props: ToolbarRootProps) => {
   const { t } = useTranslation(meta.id);
-  const { onAddColumn } = usePipeline(PipelineToolbar.displayName);
+  const { onAddColumn } = usePipeline(PIPELINE_TOOLBAR_NAME);
 
   return (
     <Toolbar.Root {...props}>
@@ -82,7 +86,7 @@ export const PipelineToolbar = (props: ToolbarRootProps) => {
   );
 };
 
-PipelineToolbar.displayName = 'Pipeline.Toolbar';
+PipelineToolbar.displayName = PIPELINE_TOOLBAR_NAME;
 
 //
 // Project

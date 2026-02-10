@@ -124,7 +124,7 @@ const [RootContextProvider, useRootContext] = createContext<RootContextValue>('M
 // Root
 //
 
-const ROOT_NAME = 'MosaicContainer';
+const ROOT_NAME = 'Mosaic.Root';
 
 // State attribute: [&:has(>_[data-mosaic-debug=true])]
 const ROOT_DEBUG_ATTR = 'mosaic-debug';
@@ -363,7 +363,7 @@ Root.displayName = ROOT_NAME;
 // Container
 //
 
-const CONTAINER_NAME = 'MosaicContainer';
+const CONTAINER_NAME = 'Mosaic.Container';
 
 type ContainerState = { type: 'idle' } | { type: 'active'; bounds?: DOMRect };
 
@@ -610,7 +610,7 @@ Container.displayName = CONTAINER_NAME;
 // Tile
 //
 
-const TILE_NAME = 'MosaicTile';
+const TILE_NAME = 'Mosaic.Tile';
 
 /** Must implement value equivalence. */
 type LocationType = string | number;
@@ -805,7 +805,7 @@ Tile.displayName = TILE_NAME;
 // Placeholder
 //
 
-const PLACEHOLDER_NAME = 'MosaicPlaceholder';
+const PLACEHOLDER_NAME = 'Mosaic.Placeholder';
 
 // Axis: data-[mosaic-placeholder-axis=vertical]
 const PLACEHOLDER_AXIS_ATTR = 'mosaic-placeholder-axis';
@@ -894,7 +894,7 @@ Placeholder.displayName = PLACEHOLDER_NAME;
 // TODO(burdon): Support DropIndicator or Placeholder variants.
 //
 
-const DROP_INDICATOR_NAME = 'MosaicDropIndicator';
+const DROP_INDICATOR_NAME = 'Mosaic.DropIndicator';
 
 type DropIndicatorProps = Omit<NativeDropIndicatorProps, 'edge'>;
 

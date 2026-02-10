@@ -32,12 +32,12 @@ type StackProps<TData = any> = SlottableClassName<
   } & Pick<MosaicTileProps<TData>, 'draggable' | 'debug'>
 >;
 
+const STACK_NAME = 'Stack';
+
 /**
  * Linear layout of Mosaic tiles.
  * NOTE: This is a low-level component and should be wrapped by a scrollable container.
  */
-const STACK_NAME = 'Stack';
-
 const StackInner = forwardRef<HTMLDivElement, StackProps>(
   (
     { className, classNames, role = 'list', axis = 'vertical', draggable = true, items, getId, Tile, debug, ...props },

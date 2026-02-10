@@ -6,6 +6,19 @@ const vscode = require('vscode');
 const fs = require('fs');
 const path = require('path');
 
+function uppercase(str) {
+  return str
+    .replace(/([a-z])([A-Z])/g, '$1_$2')
+    .replace(/([A-Z]+)([A-Z][a-z])/g, '$1_$2')
+    .toUpperCase();
+}
+
+function replaceVariables(template, name) {
+  return template
+    .replace(/\$\{NAME\}/g, uppercase(name))
+    .replace(/\$\{name\}/g, name);
+}
+
 async function activate(context) {
   const command = vscode.commands.registerCommand('fileTemplates.newFromTemplate', async (uri) => {
     // Load templates.
@@ -35,7 +48,9 @@ async function activate(context) {
     // Load template file content and replace ${name}.
     const templatePath = path.join(templatesDir, chosen);
     const template = fs.readFileSync(templatePath, 'utf8');
-    const content = template.replace(/\$\{name\}/g, name);
+
+    // Replace variables.
+    const content = replaceVariables(template, name);
 
     // Strip .tpl → "Component.stories.tsx"
     const basename = path.basename(chosen);

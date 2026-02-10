@@ -44,10 +44,12 @@ EventRoot.displayName = 'Event.Root';
 // Toolbar
 //
 
+const EVENT_TOOLBAR_NAME = 'Event.Toolbar';
+
 type EventToolbarProps = ThemedClassName<UseEventToolbarActionsProps>;
 
 const EventToolbar = ({ classNames, ...props }: EventToolbarProps) => {
-  const { attendableId } = useEventContext(EventToolbar.displayName);
+  const { attendableId } = useEventContext(EVENT_TOOLBAR_NAME);
   const actions = useEventToolbarActions(props);
 
   return (
@@ -57,11 +59,13 @@ const EventToolbar = ({ classNames, ...props }: EventToolbarProps) => {
   );
 };
 
-EventToolbar.displayName = 'Event.Toolbar';
+EventToolbar.displayName = EVENT_TOOLBAR_NAME;
 
 //
 // Viewport
 //
+
+const EVENT_VIEWPORT_NAME = 'Event.Viewport';
 
 type EventViewportProps = ThemedClassName<PropsWithChildren<{}>>;
 
@@ -69,11 +73,13 @@ const EventViewport = ({ classNames, children }: EventViewportProps) => {
   return <div className={mx(classNames)}>{children}</div>;
 };
 
-EventViewport.displayName = 'Event.Viewport';
+EventViewport.displayName = EVENT_VIEWPORT_NAME;
 
 //
 // Header
 //
+
+const EVENT_HEADER_NAME = 'Event.Header';
 
 type EventHeaderProps = {
   db?: Database.Database;
@@ -82,7 +88,7 @@ type EventHeaderProps = {
 
 const EventHeader = ({ db, onContactCreate }: EventHeaderProps) => {
   const { t } = useTranslation(meta.id);
-  const { event } = useEventContext(EventHeader.displayName);
+  const { event } = useEventContext(EVENT_HEADER_NAME);
 
   return (
     <div role='none' className='p-1 flex flex-col gap-2 border-be border-subduedSeparator'>
@@ -113,16 +119,18 @@ const EventHeader = ({ db, onContactCreate }: EventHeaderProps) => {
   );
 };
 
-EventHeader.displayName = 'Event.Header';
+EventHeader.displayName = EVENT_HEADER_NAME;
 
 //
 // Content
 //
 
+const EVENT_CONTENT_NAME = 'Event.Content';
+
 type EventContentProps = ThemedClassName<{}>;
 
 const EventContent = ({ classNames }: EventContentProps) => {
-  const { event } = useEventContext(EventContent.displayName);
+  const { event } = useEventContext(EVENT_CONTENT_NAME);
 
   return event.description ? (
     <div role='none' className={mx('p-3', classNames)}>
@@ -131,7 +139,7 @@ const EventContent = ({ classNames }: EventContentProps) => {
   ) : null;
 };
 
-EventContent.displayName = 'Event.Content';
+EventContent.displayName = EVENT_CONTENT_NAME;
 
 //
 // Event
