@@ -6,7 +6,7 @@ import type * as SqlClient from '@effect/sql/SqlClient';
 import type * as SqlError from '@effect/sql/SqlError';
 import * as Effect from 'effect/Effect';
 
-import type { SpaceId } from '@dxos/keys';
+import type { ObjectId, SpaceId } from '@dxos/keys';
 import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 
 import { type IndexCursor, IndexTracker } from './index-tracker';
@@ -111,6 +111,16 @@ export class IndexEngine {
     return this.#objectMetaIndex.query(query);
   }
 
+  /**
+   * Query children by parent object ids.
+   */
+  queryChildren(query: {
+    spaceId: SpaceId[];
+    parentIds: ObjectId[];
+  }): Effect.Effect<readonly ObjectMeta[], SqlError.SqlError, SqlClient.SqlClient> {
+    return this.#objectMetaIndex.queryChildren(query);
+  }
+
   queryTypes(query: {
     spaceIds: readonly SpaceId[];
     typeDxns: readonly ObjectMeta['typeDxn'][];
@@ -118,14 +128,12 @@ export class IndexEngine {
   }): Effect.Effect<readonly ObjectMeta[], SqlError.SqlError, SqlClient.SqlClient> {
     return this.#objectMetaIndex.queryTypes(query);
   }
-
   queryRelations(query: {
     endpoint: 'source' | 'target';
     anchorDxns: readonly string[];
   }): Effect.Effect<readonly ObjectMeta[], SqlError.SqlError, SqlClient.SqlClient> {
     return this.#objectMetaIndex.queryRelations(query);
   }
-
   lookupByRecordIds(recordIds: number[]): Effect.Effect<readonly ObjectMeta[], SqlError.SqlError, SqlClient.SqlClient> {
     return this.#objectMetaIndex.lookupByRecordIds(recordIds);
   }
@@ -218,6 +226,6 @@ export class IndexEngine {
           return { updated: objects.length, done: false };
         }),
       );
-    }).pipe(Effect.withSpan('IndexEngine.#updateDependentIndex'));
+    }).pipe(Effect.withSpan('IndexEngine.#update'));
   }
 }
