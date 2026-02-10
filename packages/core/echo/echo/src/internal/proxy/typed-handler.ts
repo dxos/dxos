@@ -321,6 +321,10 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
   ): { echoRoot: object; preparedValue: any } {
     const echoRoot = getEchoRoot(target);
 
+    if (prop === ParentId) {
+      return { echoRoot, preparedValue: value }; // Short-circuit for parent assignment.
+    }
+
     // Check for cycles before assignment.
     if (isValidProxyTarget(value) || isProxy(value)) {
       if (wouldCreateCycle(echoRoot, value)) {
