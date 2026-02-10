@@ -24,7 +24,7 @@ import { type IndexEngine, type ObjectMeta, type ReverseRef } from '@dxos/index-
 import { EscapedPropPath, type FindResult, type Indexer } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
 import { DXN, type ObjectId, PublicKey, type SpaceId } from '@dxos/keys';
-import { dbg, log } from '@dxos/log';
+import { log } from '@dxos/log';
 import { objectPointerCodec } from '@dxos/protocols';
 import { type QueryReactivity, type QueryResult } from '@dxos/protocols/proto/dxos/echo/query';
 import { getDeep, isNonNullable } from '@dxos/util';
