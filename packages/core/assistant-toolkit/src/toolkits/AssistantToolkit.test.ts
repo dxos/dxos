@@ -6,8 +6,6 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { waitForCondition } from '@dxos/async';
-
 import { AiService, ConsolePrinter } from '@dxos/ai';
 import { MemoizedAiService, TestAiService } from '@dxos/ai/testing';
 import {
@@ -17,6 +15,7 @@ import {
   makeToolExecutionServiceFromFunctions,
   makeToolResolverFromFunctions,
 } from '@dxos/assistant';
+import { waitForCondition } from '@dxos/async';
 import { Blueprint, Template } from '@dxos/blueprints';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
