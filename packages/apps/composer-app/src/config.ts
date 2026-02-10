@@ -4,10 +4,12 @@
 
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
+import * as Match from 'effect/Match';
 
 import { DXOS_VERSION, Remote } from '@dxos/client';
 import { Config, Defaults, Envs, Local, Storage } from '@dxos/config';
 import { Observability, ObservabilityExtension, ObservabilityProvider } from '@dxos/observability';
+import { getHostPlatform } from '@dxos/util';
 
 export const PARAM_SAFE_MODE = 'safe';
 export const PARAM_LOG_LEVEL = 'log';
@@ -32,8 +34,25 @@ export const setupConfig = async () => {
   return new Config(...sources);
 };
 
+/** Data provider that sets app and OS platform tags for PostHog and OTEL. */
+const platformProvider = (isTauri: boolean): Observability.DataProvider =>
+  Effect.fn(function* (observability) {
+    const osPlatform = yield* Match.value(isTauri).pipe(
+      Match.when(
+        true,
+        Effect.fnUntraced(function* () {
+          const { platform: tauriPlatform } = yield* Effect.promise(() => import('@tauri-apps/plugin-os'));
+          return tauriPlatform();
+        }),
+      ),
+      Match.when(false, () => Effect.succeed(getHostPlatform())),
+      Match.exhaustive,
+    );
+    observability.setTags({ appPlatform: isTauri ? 'tauri' : 'web', osPlatform });
+  });
+
 /** Initialize observability extensions and data providers for Composer. */
-export const initializeObservability = async (config: Config) =>
+export const initializeObservability = async (config: Config, isTauri: boolean) =>
   Function.pipe(
     Observability.make(),
     Observability.addExtension(
@@ -45,9 +64,16 @@ export const initializeObservability = async (config: Config) =>
         config,
       }),
     ),
-    Observability.addExtension(ObservabilityExtension.PostHog.extensions({ config })),
+    Observability.addExtension(
+      ObservabilityExtension.PostHog.extensions({
+        config,
+        release: DXOS_VERSION,
+        environment: config.values.runtime?.app?.env?.DX_ENVIRONMENT ?? 'unknown',
+      }),
+    ),
     Observability.addDataProvider(ObservabilityProvider.IPData.provider(config)),
     Observability.addDataProvider(ObservabilityProvider.Storage.provider),
+    Observability.addDataProvider(platformProvider(isTauri)),
     Observability.initialize,
     Effect.runPromise,
   );

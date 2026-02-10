@@ -13,11 +13,20 @@ import { stubExtension } from '../stub';
 
 import { logProcessor } from './log-processor';
 
-export type ExtensionsOptions = { config: Config; posthog?: Partial<PostHogConfig> };
+export type ExtensionsOptions = {
+  config: Config;
+  /** Release identifier, e.g. `composer@0.8.3`. */
+  release?: string;
+  /** Deployment environment, e.g. `production` or `staging`. */
+  environment?: string;
+  posthog?: Partial<PostHogConfig>;
+};
 
 /** Create a PostHog-backed observability extension for events, errors, and feedback. */
 export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension> = Effect.fn(function* ({
   config,
+  release,
+  environment,
   posthog: posthogConfig,
 }) {
   const { default: posthog } = yield* Effect.promise(() => import('posthog-js'));
@@ -26,7 +35,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
   const feedbackSurveyId = config.get('runtime.app.env.DX_POSTHOG_FEEDBACK_SURVEY_ID');
 
   if (!apiKey || !api_host) {
-    log.warn('Missing POSTHOG_API_KEY or POSTHOG_API_HOST');
+    log.info('Missing POSTHOG_API_KEY or POSTHOG_API_HOST');
     return stubExtension;
   }
 
@@ -55,8 +64,15 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
         posthog.init(apiKey, {
           api_host,
           mask_all_text: true,
+          capture_exceptions: true,
           ...posthogConfig,
         });
+        if (release || environment) {
+          posthog.register({
+            ...(release ? { release } : {}),
+            ...(environment ? { environment } : {}),
+          });
+        }
         log.runtimeConfig.processors.push(logProcessor);
       }),
     close: () =>

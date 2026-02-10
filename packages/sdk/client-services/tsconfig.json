@@ -1,6 +1,7 @@
 {
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
+    "lib": ["DOM", "ESNext", "WebWorker"],
     "types": [
       "@dxos/typings",
       "node"

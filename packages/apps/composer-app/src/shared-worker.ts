@@ -17,7 +17,7 @@ onconnect = async (event) => {
   // Don't block on observability setup.
   void setupConfig()
     .then(async (config) => {
-      const observability = await initializeObservability(config);
+      const observability = await initializeObservability(config, false);
       const host = await getWorkerServiceHost();
       await observability
         .addDataProvider(ObservabilityProvider.Client.identityProvider(host.services))

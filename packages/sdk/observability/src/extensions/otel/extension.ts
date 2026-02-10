@@ -18,8 +18,6 @@ import { type Extension, type ExtensionApi } from '../../observability-extension
 import { isObservabilityDisabled, storeObservabilityDisabled } from '../../storage';
 import { stubExtension } from '../stub';
 
-// TODO(wittjosiah): Environment & release version attributes.
-
 export type ExtensionsOptions = {
   /** For the OTEL, the name of the entity for which signals (metrics or trace) are collected. */
   serviceName: string;
@@ -48,8 +46,8 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
   //   - logs should be cached locally in a circular buffer
   //   - logs should be flushed to the server if user opts to include them in a bug report
   logs: logsEnabled = false,
-  metrics: metricsEnabled = true,
-  traces: tracesEnabled = true,
+  metrics: metricsEnabled = false,
+  traces: tracesEnabled = false,
 }) {
   const { OtelLogs } = yield* Effect.promise(() => import('./logs'));
   const { OtelMetrics } = yield* Effect.promise(() => import('./metrics'));
@@ -73,7 +71,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
     );
 
   if (!endpoint || !headers) {
-    log.warn('Missing OTEL_ENDPOINT or OTEL_HEADERS');
+    log.info('Missing OTEL_ENDPOINT or OTEL_HEADERS');
     return stubExtension;
   }
 
