@@ -444,28 +444,26 @@ export class ObjectCore {
     this._setRaw([META_NAMESPACE], this.encode(meta));
   }
 
-  isDeleted(): boolean {
+  isDeleted(remainingDepth: number = 10): boolean {
     const value = this._getRaw([SYSTEM_NAMESPACE, 'deleted']);
     const ownDeleted = typeof value === 'boolean' ? value : false;
     if (ownDeleted) {
       return true;
     }
 
-    if (this.database) {
+    if (this.database && remainingDepth > 0) {
       const parentRef = this.getParent();
       if (parentRef) {
-        // TODO(dmaretskyi): Support cross-space parents?
         // Checks if the reference is pointing to an object in the same space.
-        // TODO(dmaretskyi): This logic is brittle and should be unified with how references are handled elsewhere.
         const parentDXN = EncodedReference.toDXN(parentRef);
         const echoDXN = parentDXN.asEchoDXN();
-        if (echoDXN && (echoDXN.spaceId === undefined || echoDXN.spaceId === this.database.spaceKey.toHex())) {
+        if (echoDXN && (echoDXN.spaceId === undefined || echoDXN.spaceId === this.database.spaceId)) {
           const parentId = echoDXN.echoId;
           // NOTE: We can't use `loadObjectCoreById` here because it might be async and we need a sync check.
           // If the parent is not loaded, we assume it's not deleted for now, or should we assume deleted?
           // Given strong dependencies, the parent SHOULD be loaded if the child is loaded.
           const parent = this.database.getObjectCoreById(parentId);
-          if (parent && parent.isDeleted()) {
+          if (parent && parent.isDeleted(remainingDepth - 1)) {
             return true;
           }
         }

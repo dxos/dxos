@@ -587,27 +587,6 @@ export const toJSON = (entity: Unknown | Snapshot): JSON => toJSON$(entity);
 export const fromJSON: (json: unknown, options?: { refResolver?: Ref.Resolver; dxn?: DXN }) => Promise<Unknown> =
   objectFromJSON as any;
 
-export const setDeleted = (entity: Entity.Unknown, value: boolean) => {
-  if (value === false && isObject(entity)) {
-    const parent = getParent(entity);
-    // TODO(dmaretskyi): This is broken because getParent returns undefined if the parent is deleted.
-    if (parent && isDeleted(parent)) {
-      throw new Error('Cannot restore object when parent is deleted.');
-    }
-  }
-
-  // TODO(dmaretskyi): What kind of AI slop is this?
-  const db = getDatabase(entity) as any;
-  // Try coreDatabase first (EchoDatabase), then fallback to direct method (CoreDatabase).
-  const coreDatabase = db?.coreDatabase ?? db;
-  if (coreDatabase && typeof coreDatabase.getObjectCoreById === 'function') {
-    const core = coreDatabase.getObjectCoreById(entity.id);
-    if (core) {
-      core.setDeleted(value);
-    }
-  }
-};
-
 /**
  * Comparator function type for sorting objects.
  * Accepts both reactive objects and snapshots.

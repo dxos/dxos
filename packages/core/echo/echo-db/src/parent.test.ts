@@ -134,17 +134,13 @@ describe('Parent Hierarchy', () => {
     const child = db.add(Obj.make(TestSchema.Person, { name: 'Child' }));
     Obj.setParent(child, parent);
 
-    Obj.setDeleted(parent, true);
+    db.remove(parent);
     expect(Obj.isDeleted(child)).toEqual(true);
 
-    expect(() => Obj.setDeleted(child, false)).toThrow();
+    expect(() => db.add(child)).toThrow();
   });
 
-  // TODO(dmaretskyi): This test fails because after reloading, the parent object may not be
-  // loaded when the query filters objects by `isDeleted()`. The cascade check in `isDeleted()`
-  // returns false if the parent ObjectCore isn't loaded yet (getObjectCoreById returns undefined).
-  // Need to ensure strong dependencies (parents) are loaded synchronously before isDeleted check.
-  test.skip('deleted parent implies deleted child', async () => {
+  test('deleted parent implies deleted child', async () => {
     const [spaceKey] = PublicKey.randomSequence();
     await using peer = await builder.createPeer({ types: [TestSchema.Person] });
 
@@ -153,43 +149,23 @@ describe('Parent Hierarchy', () => {
     {
       await using db = await peer.createDatabase(spaceKey);
       const parent = db.add(Obj.make(TestSchema.Person, { name: 'Parent' }));
-      const child = db.add(Obj.make(TestSchema.Person, { name: 'Child' }));
-
-      Obj.setParent(child, parent);
+      const child = db.add(Obj.make(TestSchema.Person, { [Obj.Parent]: parent, name: 'Child' }));
       childId = child.id;
-
-      await db.flush();
 
       // Delete parent.
       db.remove(parent);
       expect(Obj.isDeleted(parent)).to.be.true;
-
-      // Child should be effectively deleted.
       expect(Obj.isDeleted(child)).to.be.true;
+
+      await db.flush({ indexes: true });
     }
 
     await peer.reload();
 
     {
       await using db = await peer.openLastDatabase();
-      const child = (await db.query(Filter.id(childId)).first()) as any;
-      // Ideally query shouldn't return deleted objects unless requested.
-      // But if we get it by ID?
-      // Wait, db.query filters deleted by default?
-      // Let's check Obj.isDeleted explicitly.
-
-      // Query explicitly including deleted?
-      // Or getObjectById?
-
-      // If query returns it, we check isDeleted.
-      // Actually standard query filters out deleted objects.
-      // So verify it's NOT in result.
       const queryResult = await db.query(Filter.id(childId)).run();
       expect(queryResult.length).to.eq(0);
-
-      // Get by ID including deleted?
-      // getObjectById might return undefined if deleted?
-      // Depends on implementation.
     }
   });
 });
