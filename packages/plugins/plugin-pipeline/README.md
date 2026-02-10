@@ -1,4 +1,4 @@
-# @dxos/plugin-project
+# @dxos/plugin-pipeline
 
 ## DXOS Resources
 

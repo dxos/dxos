@@ -8,17 +8,17 @@ import { Capability, Common } from '@dxos/app-framework';
 import { Obj, Ref, Type } from '@dxos/echo';
 import { OperationResolver } from '@dxos/operation';
 import { Collection } from '@dxos/schema';
-import { Project } from '@dxos/types';
+import { Pipeline } from '@dxos/types';
 
-import { ProjectOperation } from '../../types';
+import { PipelineOperation } from '../../types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Common.Capability.OperationResolver, [
       OperationResolver.make({
-        operation: ProjectOperation.OnCreateSpace,
+        operation: PipelineOperation.OnCreateSpace,
         handler: Effect.fnUntraced(function* ({ rootCollection }) {
-          const collection = Collection.makeManaged({ key: Type.getTypename(Project.Project) });
+          const collection = Collection.makeManaged({ key: Type.getTypename(Pipeline.Pipeline) });
           Obj.change(rootCollection, (c) => {
             c.objects.push(Ref.make(collection));
           });

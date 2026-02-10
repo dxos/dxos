@@ -1,5 +1,5 @@
 import { type Resource } from '@dxos/react-ui';
-import { Project } from '@dxos/types';
+import { Pipeline } from '@dxos/types';
 //
 // Copyright 2023 DXOS.org
 //
@@ -9,7 +9,7 @@ import { meta } from './meta';
 export const translations = [
   {
     'en-US': {
-      [Project.Project.typename]: {
+      [Pipeline.Pipeline.typename]: {
         'typename label': 'Project',
         'typename label_zero': 'Projects',
         'typename label_one': 'Project',
