@@ -10,3 +10,11 @@
 - [ ] Card context (menu).
 - [ ] Stack:
   - [ ] Enable/disable DND (add/remove placeholders)
+
+## Ontology
+- [ ] List of views/channels
+ - [ ] Cards
+ - [ ] Settings (sync, triggers, status, etc.)
+- [ ] Hyperlinked cards
+ - [ ] Containers (nav)
+- [ ] Search

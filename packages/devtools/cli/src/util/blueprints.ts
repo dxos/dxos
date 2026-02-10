@@ -36,7 +36,7 @@ import {
   HasSubject,
   Organization,
   Person,
-  Project,
+  Pipeline,
   Task,
 } from '@dxos/types';
 
@@ -115,7 +115,7 @@ export const types: Type.Entity.Any[] = [
   [Mailbox.Mailbox, Calendar.Calendar],
   [Blueprint.Blueprint],
   [Tag.Tag],
-  [Event.Event, Organization.Organization, Person.Person, Project.Project, Task.Task],
+  [Event.Event, Organization.Organization, Person.Person, Pipeline.Pipeline, Task.Task],
   [
     AnchoredTo.AnchoredTo,
     Employer.Employer,

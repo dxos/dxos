@@ -129,26 +129,51 @@ const useLockBodyScroll = (enabled: boolean) => {
       return;
     }
 
-    const isScrollableElement = (el: HTMLElement | null): boolean => {
+    let touchStartX = 0;
+    let touchStartY = 0;
+
+    const isScrollableInDirection = (el: HTMLElement | null, axis: 'x' | 'y'): boolean => {
       while (el && el !== document.body) {
         const style = getComputedStyle(el);
-        const overflowY = style.overflowY;
-        if ((overflowY === 'auto' || overflowY === 'scroll') && el.scrollHeight > el.clientHeight) {
-          return true;
+        if (axis === 'y') {
+          const overflowY = style.overflowY;
+          if ((overflowY === 'auto' || overflowY === 'scroll') && el.scrollHeight > el.clientHeight) {
+            return true;
+          }
+        } else {
+          const overflowX = style.overflowX;
+          if ((overflowX === 'auto' || overflowX === 'scroll') && el.scrollWidth > el.clientWidth) {
+            return true;
+          }
         }
         el = el.parentElement;
       }
+
       return false;
     };
 
-    const preventScroll = (event: TouchEvent) => {
+    const handleTouchStart = (event: TouchEvent) => {
+      const touch = event.touches[0];
+      touchStartX = touch.clientX;
+      touchStartY = touch.clientY;
+    };
+
+    const handleTouchMove = (event: TouchEvent) => {
+      const touch = event.touches[0];
+      const dx = Math.abs(touch.clientX - touchStartX);
+      const dy = Math.abs(touch.clientY - touchStartY);
+      const axis = dx > dy ? 'x' : 'y';
+
       const target = event.target as HTMLElement;
-      if (!isScrollableElement(target)) {
+      if (!isScrollableInDirection(target, axis)) {
         event.preventDefault();
       }
     };
 
-    return addEventListener(document, 'touchmove', preventScroll as EventListener, { passive: false });
+    return combine(
+      addEventListener(document, 'touchstart', handleTouchStart as EventListener, { passive: true }),
+      addEventListener(document, 'touchmove', handleTouchMove as EventListener, { passive: false }),
+    );
   }, [enabled]);
 };
 

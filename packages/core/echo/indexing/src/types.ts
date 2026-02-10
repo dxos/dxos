@@ -33,7 +33,7 @@ export type IndexQuery = {
     /**
      * Relation kind.
      */
-    kind: 'inbound-reference' | 'relation-source' | 'relation-target';
+    kind: 'inbound-reference' | 'relation-source' | 'relation-target' | 'children';
 
     /**
      * anchor objects to search from.

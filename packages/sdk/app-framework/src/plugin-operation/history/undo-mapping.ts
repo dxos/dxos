@@ -95,7 +95,7 @@ export interface UndoMappingProps<
  *     thread: output.thread,
  *     anchor: output.anchor,
  *   }),
- *   message: ['thread deleted label', { ns: 'plugin-thread' }],
+ *   message: ['thread deleted label', { ns: '@dxos/plugin-thread' }],
  * });
  *
  * // Dynamic message based on input/output
@@ -106,7 +106,7 @@ export interface UndoMappingProps<
  *   message: (input, _output) =>
  *     input.objects.length === 1
  *       ? ['object deleted label', { ns: getTypename(input.objects[0]) }]
- *       : ['objects deleted label', { ns: 'plugin-space' }],
+ *       : ['objects deleted label', { ns: '@dxos/plugin-space' }],
  * });
  * ```
  */

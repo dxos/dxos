@@ -10,16 +10,16 @@ import { Obj, Query, Type } from '@dxos/echo';
 import { faker } from '@dxos/random';
 import { useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Form, omitId } from '@dxos/react-ui-form';
 import { withMosaic } from '@dxos/react-ui-mosaic/testing';
 import { Collection, View } from '@dxos/schema';
 import { createObjectFactory } from '@dxos/schema/testing';
-import { Person, Project } from '@dxos/types';
+import { Person, Pipeline } from '@dxos/types';
 
 import { translations } from '../translations';
 
-import { type ItemProps, Project as ProjectComponent } from './Project';
+import { type ItemProps, PipelineComponent as PipelineComponent } from './PipelineComponent';
 
 const StorybookProjectItem = ({ item, projectionModel }: ItemProps) => {
   if (Obj.instanceOf(Person.Person, item)) {
@@ -41,11 +41,11 @@ const StorybookProjectItem = ({ item, projectionModel }: ItemProps) => {
 
 const DefaultStory = () => {
   const { space } = useClientStory();
-  const projects = useQuery(space?.db, Filter.type(Project.Project));
-  const project = projects[0];
+  const pipelines = useQuery(space?.db, Filter.type(Pipeline.Pipeline));
+  const pipeline = pipelines[0];
 
   const handleAddColumn = useCallback(() => {
-    if (!space || !project) {
+    if (!space || !pipeline) {
       return;
     }
 
@@ -56,7 +56,7 @@ const DefaultStory = () => {
       fields: ['fullName'],
     });
 
-    Obj.change(project, (p) => {
+    Obj.change(pipeline, (p) => {
       p.columns.push({
         name: 'New Contacts',
         view: Ref.make(view) as (typeof p.columns)[number]['view'],
@@ -65,27 +65,27 @@ const DefaultStory = () => {
     });
 
     return Ref.make(view);
-  }, [space, project]);
+  }, [space, pipeline]);
 
-  if (!project) {
+  if (!pipeline) {
     return <p>Loading…</p>;
   }
 
   return (
-    <ProjectComponent.Root Item={StorybookProjectItem} onAddColumn={handleAddColumn}>
-      <ProjectComponent.Content project={project} />
-    </ProjectComponent.Root>
+    <PipelineComponent.Root Item={StorybookProjectItem} onAddColumn={handleAddColumn}>
+      <PipelineComponent.Content pipeline={pipeline} />
+    </PipelineComponent.Root>
   );
 };
 
 const MutationsStory = () => {
   const { space } = useClientStory();
-  const projects = useQuery(space?.db, Filter.type(Project.Project));
+  const pipelines = useQuery(space?.db, Filter.type(Pipeline.Pipeline));
   const contacts = useQuery(space?.db, Filter.type(Person.Person));
-  const project = projects[0];
+  const pipeline = pipelines[0];
 
   const handleAddColumn = useCallback(() => {
-    if (!space || !project) {
+    if (!space || !pipeline) {
       return;
     }
 
@@ -96,7 +96,7 @@ const MutationsStory = () => {
       fields: ['fullName'],
     });
 
-    Obj.change(project, (p) => {
+    Obj.change(pipeline, (p) => {
       p.columns.push({
         name: 'New Contacts',
         view: Ref.make(view) as (typeof p.columns)[number]['view'],
@@ -105,10 +105,10 @@ const MutationsStory = () => {
     });
 
     return view;
-  }, [space, project]);
+  }, [space, pipeline]);
 
   useEffect(() => {
-    if (!space || !project) {
+    if (!space || !pipeline) {
       return;
     }
 
@@ -134,26 +134,27 @@ const MutationsStory = () => {
     }, 3_000);
 
     return () => clearInterval(interval);
-  }, [space, project, contacts]);
+  }, [space, pipeline, contacts]);
 
-  if (!project) {
+  if (!pipeline) {
     return <p>Loading…</p>;
   }
 
   return (
-    <ProjectComponent.Root Item={StorybookProjectItem} onAddColumn={handleAddColumn}>
-      <ProjectComponent.Content project={project} />
-    </ProjectComponent.Root>
+    <PipelineComponent.Root Item={StorybookProjectItem} onAddColumn={handleAddColumn}>
+      <PipelineComponent.Content pipeline={pipeline} />
+    </PipelineComponent.Root>
   );
 };
 
 const meta = {
-  title: 'plugins/plugin-project/Project',
+  title: 'plugins/plugin-pipeline/PipelineComponent',
   decorators: [
     withTheme,
+    withLayout({ layout: 'column' }),
     withMosaic(),
     withClientProvider({
-      types: [Project.Project, View.View, Collection.Collection, Person.Person],
+      types: [Pipeline.Pipeline, View.View, Collection.Collection, Person.Person],
       createIdentity: true,
       createSpace: true,
       onCreateSpace: async ({ space }) => {
@@ -165,18 +166,18 @@ const meta = {
           fields: ['fullName'],
         });
 
-        // Create a project with columns.
-        const project = Project.make({
-          columns: [
-            {
-              name: 'Contacts',
-              view: Ref.make(view),
-              order: [],
-            },
-          ],
-        });
-
-        space.db.add(project);
+        // Create a pipeline with columns.
+        space.db.add(
+          Pipeline.make({
+            columns: [
+              {
+                name: 'Contacts',
+                view: Ref.make(view),
+                order: [],
+              },
+            ],
+          }),
+        );
 
         // Generate random contacts.
         const factory = createObjectFactory(space.db, faker as any);
@@ -188,7 +189,7 @@ const meta = {
     layout: 'fullscreen',
     translations,
   },
-} satisfies Meta<typeof Project>;
+} satisfies Meta<typeof PipelineComponent>;
 
 export default meta;
 
