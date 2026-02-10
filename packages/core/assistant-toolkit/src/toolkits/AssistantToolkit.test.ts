@@ -6,6 +6,8 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
+import { waitForCondition } from '@dxos/async';
+
 import { AiService, ConsolePrinter } from '@dxos/ai';
 import { MemoizedAiService, TestAiService } from '@dxos/ai/testing';
 import {
@@ -81,6 +83,13 @@ describe('AssistantToolkit', () => {
           prompt: `Add to context: ${JSON.stringify(organization)}`,
           observer,
         });
+
+        yield* Effect.promise(() =>
+          waitForCondition({
+            condition: () =>
+              conversation.context.getBlueprints().length > 0 && conversation.context.getObjects().length > 0,
+          }),
+        );
 
         expect(conversation.context.getBlueprints()).toEqual([blueprint]);
         expect(conversation.context.getObjects()).toEqual([organization]);
