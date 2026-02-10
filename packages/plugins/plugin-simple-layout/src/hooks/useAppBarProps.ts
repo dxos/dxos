@@ -12,15 +12,15 @@ import { Graph, Node, useActionRunner, useNode } from '@dxos/plugin-graph';
 import { toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { type ActionGraphProps } from '@dxos/react-ui-menu';
 
-import { type BannerProps } from '../components';
+import { type AppBarProps } from '../components';
 import { meta } from '../meta';
 import { SimpleLayoutState as SimpleLayoutStateCapability } from '../types';
 
 /**
- * Hook that computes all Banner props from the app graph.
- * Derives activeId from state atom. Returns props ready to spread into the Banner component.
+ * Hook that computes all AppBar props from the app graph.
+ * Derives activeId from state atom. Returns props ready to spread into the AppBar component.
  */
-export const useBannerProps = (graph: Graph.ReadableGraph): Omit<BannerProps, 'classNames'> => {
+export const useAppBarProps = (graph: Graph.ReadableGraph): Omit<AppBarProps, 'classNames'> => {
   const { t } = useTranslation(meta.id);
   const stateAtom = useCapability(SimpleLayoutStateCapability);
   const state = useAtomValue(stateAtom);

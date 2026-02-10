@@ -7,13 +7,13 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 import { type Mock, expect, fn, screen, userEvent, within } from 'storybook/test';
 
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type ActionGraphProps, createMenuAction } from '@dxos/react-ui-menu';
 import { withRegistry } from '@dxos/storybook-utils';
 
 import { translations } from '../../translations';
 
-import { Banner } from './Banner';
+import { AppBar, type AppBarProps } from './AppBar';
 
 const buildEmptyActions = (): ActionGraphProps => ({ nodes: [], edges: [] });
 
@@ -38,42 +38,38 @@ const buildDefaultActions = (): ActionGraphProps => {
   return result;
 };
 
+type StoryProps = Omit<AppBarProps, 'actions'> & {
+  actions: ActionGraphProps;
+};
+
+const DefaultStory = ({ actions: actionsProp, ...props }: StoryProps) => {
+  const actions = useMemo(() => Atom.make(actionsProp).pipe(Atom.keepAlive), [actionsProp]);
+  return <AppBar {...props} actions={actions} />;
+};
+
 const meta = {
-  title: 'plugins/plugin-simple-layout/Banner',
-  component: Banner,
-  decorators: [withTheme, withRegistry],
+  title: 'plugins/plugin-simple-layout/AppBar',
+  render: DefaultStory,
+  decorators: [withTheme, withLayout({ layout: 'column', classNames: 'relative' }), withRegistry],
   parameters: {
     layout: 'fullscreen',
     translations,
   },
-} satisfies Meta<typeof Banner>;
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
-type Story = StoryObj<typeof meta>;
-
-const DefaultStory = ({ onBack, onAction }: { onBack: () => void; onAction: (action: { id: string }) => void }) => {
-  const actions = useMemo(() => Atom.make(buildDefaultActions()).pipe(Atom.keepAlive), []);
-
-  return (
-    <Banner
-      classNames='border-be border-separator'
-      title='Document Title'
-      showBackButton
-      onBack={onBack}
-      actions={actions}
-      onAction={onAction}
-    />
-  );
-};
+type Story = StoryObj<StoryProps>;
 
 export const Default: Story = {
   tags: ['test'],
   args: {
+    actions: buildDefaultActions(),
+    title: 'Document Title',
+    showBackButton: true,
     onBack: fn(),
     onAction: fn(),
-  } as any,
-  render: (args: any) => <DefaultStory onBack={args.onBack} onAction={args.onAction} />,
+  },
   play: async ({ args, canvasElement }) => {
     const canvas = within(canvasElement);
 
@@ -100,79 +96,37 @@ export const Default: Story = {
   },
 };
 
-const NoBackButtonStory = () => {
-  const actions = useMemo(() => Atom.make(buildDefaultActions()).pipe(Atom.keepAlive), []);
-
-  return (
-    <Banner
-      classNames='border-be border-separator'
-      title='Home'
-      showBackButton={false}
-      actions={actions}
-      onAction={(action) => console.log('Action:', action.id)}
-    />
-  );
-};
-
 export const NoBackButton: Story = {
-  args: {} as any,
-  render: () => <NoBackButtonStory />,
-};
-
-const NoActionsStory = () => {
-  const actions = useMemo(() => Atom.make(buildEmptyActions()).pipe(Atom.keepAlive), []);
-
-  return (
-    <Banner
-      classNames='border-be border-separator'
-      title='Empty Document'
-      showBackButton
-      onBack={() => console.log('Back clicked')}
-      actions={actions}
-      onAction={(action) => console.log('Action:', action.id)}
-    />
-  );
-};
-
-export const NoActions: Story = {
-  args: {} as any,
-  render: () => <NoActionsStory />,
-};
-
-const LongTitleStory = () => {
-  const actions = useMemo(() => Atom.make(buildDefaultActions()).pipe(Atom.keepAlive), []);
-
-  return (
-    <Banner
-      classNames='border-be border-separator'
-      title='This is a very long document title that should be truncated when it exceeds the available space'
-      showBackButton
-      onBack={() => console.log('Back clicked')}
-      actions={actions}
-      onAction={(action) => console.log('Action:', action.id)}
-    />
-  );
+  args: {
+    actions: buildDefaultActions(),
+    title: 'Home',
+    showBackButton: false,
+    onAction: (action) => console.log('Action:', action.id),
+  },
 };
 
 export const LongTitle: Story = {
-  args: {} as any,
-  render: () => <LongTitleStory />,
+  args: {
+    actions: buildDefaultActions(),
+    title: 'This is a very long document title that should be truncated when it exceeds the available space',
+    showBackButton: true,
+    onBack: () => console.log('Back clicked'),
+    onAction: (action) => console.log('Action:', action.id),
+  },
 };
 
-const EmptyStory = () => {
-  const actions = useMemo(() => Atom.make(buildEmptyActions()).pipe(Atom.keepAlive), []);
-
-  return (
-    <Banner
-      classNames='border-be border-separator'
-      actions={actions}
-      onAction={(action) => console.log('Action:', action.id)}
-    />
-  );
+export const NoActions: Story = {
+  args: {
+    actions: buildEmptyActions(),
+    title: 'Empty Document',
+    showBackButton: true,
+    onBack: () => console.log('Back clicked'),
+    onAction: (action) => console.log('Action:', action.id),
+  },
 };
 
-/** Shows the fallback title when no title is provided. */
 export const Empty: Story = {
-  args: {} as any,
-  render: () => <EmptyStory />,
+  args: {
+    actions: buildEmptyActions(),
+  },
 };

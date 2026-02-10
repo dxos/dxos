@@ -10,7 +10,7 @@ import { Input, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Layout, Splitter, type SplitterMode } from '@dxos/react-ui-mosaic';
 
-import { MobileLayout, type MobileLayoutProps } from './MobileLayout';
+import { MobileLayout, type MobileLayoutRootProps } from './MobileLayout';
 
 /**
  * Simulate ios keyboard.
@@ -52,7 +52,7 @@ const WithKeyboard = ({ children }: PropsWithChildren) => {
     );
   }, [keyboardOpen]);
 
-  return <div className='relative h-screen'>{children}</div>;
+  return <div className='h-screen relative'>{children}</div>;
 };
 
 const Panel = ({ children, label }: PropsWithChildren<{ label: string }>) => {
@@ -82,34 +82,36 @@ const DefaultStory = () => {
 
   return (
     <WithKeyboard>
-      <MobileLayout onKeyboardOpenChange={setKeyboardOpen}>
-        <Splitter.Root mode={splitterMode} ratio={0.5}>
-          <Splitter.Panel position='upper'>
-            <Panel label='Main'>
-              {splitterMode === 'upper' && (
-                <Toolbar.IconButton icon='ph--plus--regular' label='Open' onClick={() => setSplitterMode('both')} />
-              )}
-            </Panel>
-          </Splitter.Panel>
-          <Splitter.Panel position='lower'>
-            <Panel label='Drawer'>
-              <Toolbar.IconButton
-                icon={splitterMode === 'lower' ? 'ph--arrow-down--regular' : 'ph--arrow-up--regular'}
-                label={splitterMode === 'lower' ? 'Collapse' : 'Expand'}
-                onClick={() => setSplitterMode((splitterMode) => (splitterMode === 'both' ? 'lower' : 'both'))}
-              />
-              <Toolbar.IconButton icon='ph--x--regular' label='Close' onClick={() => setSplitterMode('upper')} />
-            </Panel>
-          </Splitter.Panel>
-        </Splitter.Root>
-      </MobileLayout>
+      <MobileLayout.Root onKeyboardOpenChange={setKeyboardOpen}>
+        <MobileLayout.Panel safe={{ top: true, bottom: splitterMode === 'upper' }}>
+          <Splitter.Root mode={splitterMode} ratio={0.5}>
+            <Splitter.Panel position='upper'>
+              <Panel label='Main'>
+                {splitterMode === 'upper' && (
+                  <Toolbar.IconButton icon='ph--plus--regular' label='Open' onClick={() => setSplitterMode('both')} />
+                )}
+              </Panel>
+            </Splitter.Panel>
+            <Splitter.Panel position='lower'>
+              <Panel label='Drawer'>
+                <Toolbar.IconButton
+                  icon={splitterMode === 'lower' ? 'ph--arrow-down--regular' : 'ph--arrow-up--regular'}
+                  label={splitterMode === 'lower' ? 'Collapse' : 'Expand'}
+                  onClick={() => setSplitterMode((splitterMode) => (splitterMode === 'both' ? 'lower' : 'both'))}
+                />
+                <Toolbar.IconButton icon='ph--x--regular' label='Close' onClick={() => setSplitterMode('upper')} />
+              </Panel>
+            </Splitter.Panel>
+          </Splitter.Root>
+        </MobileLayout.Panel>
+      </MobileLayout.Root>
     </WithKeyboard>
   );
 };
 
-const meta: Meta<MobileLayoutProps> = {
+const meta: Meta<MobileLayoutRootProps> = {
   title: 'plugins/plugin-simple-layout/MobileLayout',
-  component: MobileLayout,
+  component: MobileLayout.Root,
   render: DefaultStory,
   decorators: [withTheme, withLayout({ layout: 'column', classNames: 'relative' })],
   parameters: {
@@ -119,6 +121,6 @@ const meta: Meta<MobileLayoutProps> = {
 
 export default meta;
 
-type Story = StoryObj<MobileLayoutProps>;
+type Story = StoryObj<MobileLayoutRootProps>;
 
 export const Default: Story = {};

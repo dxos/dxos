@@ -34,24 +34,25 @@ export const SimpleLayout = () => {
 
   return (
     <Mosaic.Root classNames='contents'>
-      <MobileLayout
+      <MobileLayout.Root
         classNames='bg-toolbarSurface'
-        safe={{ top: true, bottom: splitterMode === 'upper' }}
-        onKeyboardOpenChange={(state) => setKeyboardOpen(state)}
+        onKeyboardOpenChange={(keyboardOpen: boolean) => setKeyboardOpen(keyboardOpen)}
       >
-        <PopoverRoot>
-          <Splitter.Root mode={splitterMode} ratio={0.6}>
-            <Splitter.Panel position='upper'>
-              <Main />
-            </Splitter.Panel>
-            <Splitter.Panel position='lower' ref={drawerRef}>
-              <Drawer />
-            </Splitter.Panel>
-          </Splitter.Root>
-          <Dialog />
-          <PopoverContent />
-        </PopoverRoot>
-      </MobileLayout>
+        <MobileLayout.Panel safe={{ top: true, bottom: splitterMode === 'upper' }}>
+          <PopoverRoot>
+            <Splitter.Root mode={splitterMode} ratio={0.6}>
+              <Splitter.Panel position='upper'>
+                <Main />
+              </Splitter.Panel>
+              <Splitter.Panel position='lower' ref={drawerRef}>
+                <Drawer />
+              </Splitter.Panel>
+            </Splitter.Root>
+            <Dialog />
+            <PopoverContent />
+          </PopoverRoot>
+        </MobileLayout.Panel>
+      </MobileLayout.Root>
     </Mosaic.Root>
   );
 };
