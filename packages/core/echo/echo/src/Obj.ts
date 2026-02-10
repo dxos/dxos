@@ -544,13 +544,24 @@ export const setDescription = (entity: Mutable<Unknown>, description: string): v
  */
 export const Parent: unique symbol = ParentId as any;
 
+/**
+ * Get the parent of an object.
+ * The parent is always loaded together with the object.
+ * Only objects are allowed to have a parent
+ * @returns The parent object, or undefined if the object has no parent.
+ */
 export const getParent = (entity: Unknown | Snapshot): Unknown | undefined => {
   assertArgument(isObject(entity), 'Expected an object');
   assumeType<InternalObjectProps>(entity);
   return entity[ParentId] as Unknown | undefined;
 };
 
-export const setParent = (entity: Entity.Unknown, parent: Any | undefined) => {
+/**
+ * Sets the parent of an object.
+ * If a parent (or any transitive parent) is deleted, the object will be deleted.
+ * Only objects are allowed to have a parent.
+ */
+export const setParent = (entity: Unknown, parent: Any | undefined) => {
   assertArgument(isObject(entity), 'Expected an object');
   assertArgument(parent === undefined || isObject(parent), 'Expected an object');
   assumeType<InternalObjectProps>(entity);
