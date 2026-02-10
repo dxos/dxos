@@ -28,6 +28,7 @@ import {
   OBJECT_RENAME_POPOVER,
   SPACE_RENAME_POPOVER,
 } from '../../constants';
+import { meta } from '../../meta';
 import { SpaceEvents } from '../../types';
 import { SpaceCapabilities, SpaceOperation } from '../../types';
 import { COMPOSER_SPACE_LOCK, cloneObject, getNestedObjects } from '../../util';
@@ -57,7 +58,7 @@ export default Capability.makeModule(
             props: output.props,
             index: output.index,
           }),
-          message: ['field deleted label', { ns: 'dxos.org/plugin/space' }],
+          message: ['field deleted label', { ns: meta.id }],
         }),
         UndoMapping.make({
           operation: SpaceOperation.RemoveObjects,
@@ -72,8 +73,8 @@ export default Capability.makeModule(
           message: (input, _output) => {
             const ns = Obj.getTypename(input.objects[0]);
             return ns && input.objects.length === 1
-              ? ['object deleted label', { ns }]
-              : ['objects deleted label', { ns: 'plugin-space' }];
+              ? ['object deleted label', { ns: meta.id }]
+              : ['objects deleted label', { ns: meta.id }];
           },
         }),
       ]),

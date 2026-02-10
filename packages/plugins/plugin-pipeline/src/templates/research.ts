@@ -8,7 +8,10 @@ import { Markdown } from '@dxos/plugin-markdown/types';
 import { View } from '@dxos/schema';
 import { Message, Organization, Person, Pipeline } from '@dxos/types';
 
-export const createResearchProject = async (db: Database.Database, name?: string): Promise<Pipeline.Pipeline | null> => {
+export const createResearchProject = async (
+  db: Database.Database,
+  name?: string,
+): Promise<Pipeline.Pipeline | null> => {
   const mailboxes = await db.query(Filter.type(Mailbox.Mailbox)).run();
   if (!mailboxes.length) {
     return null;

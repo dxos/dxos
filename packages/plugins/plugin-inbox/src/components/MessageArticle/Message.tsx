@@ -85,9 +85,8 @@ const MESSAGE_TOOLBAR_NAME = 'Message.Toolbar';
 type MessageToolbarProps = ThemedClassName<{}>;
 
 export const MessageToolbar = ({ classNames }: MessageToolbarProps) => {
-  const { attendableId, viewMode, setViewMode, onReply, onReplyAll, onForward } = useMessageContext(
-    MESSAGE_TOOLBAR_NAME,
-  );
+  const { attendableId, viewMode, setViewMode, onReply, onReplyAll, onForward } =
+    useMessageContext(MESSAGE_TOOLBAR_NAME);
   const actions = useMessageToolbarActions({ viewMode, setViewMode, onReply, onReplyAll, onForward });
 
   return (
