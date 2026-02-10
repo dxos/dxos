@@ -19,6 +19,7 @@ export const SimpleLayout = () => {
   const { state } = useSimpleLayoutState();
   const [keyboardOpen, setKeyboardOpen] = useState(false);
   const [splitterMode, setSplitterMode] = useState<SplitterMode>('upper');
+
   const drawerRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (keyboardOpen) {
