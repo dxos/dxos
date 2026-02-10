@@ -333,37 +333,4 @@ export class ObjectMetaIndex implements Index {
         }));
       }),
   );
-
-  /**
-   * Query parent by object id.
-   */
-  queryParent = Effect.fn('ObjectMetaIndex.queryParent')(
-    (query: {
-      spaceId: string;
-      objectId: string;
-    }): Effect.Effect<ObjectMeta | null, SqlError.SqlError, SqlClient.SqlClient> =>
-      Effect.gen(function* () {
-        const sql = yield* SqlClient.SqlClient;
-
-        // First get the object to find its parent id.
-        const objects =
-          yield* sql<ObjectMeta>`SELECT * FROM objectMeta WHERE spaceId = ${query.spaceId} AND objectId = ${query.objectId} LIMIT 1`;
-        if (objects.length === 0 || objects[0].parent === null) {
-          return null;
-        }
-
-        // Then get the parent object.
-        const parentId = objects[0].parent;
-        const parents =
-          yield* sql<ObjectMeta>`SELECT * FROM objectMeta WHERE spaceId = ${query.spaceId} AND objectId = ${parentId} LIMIT 1`;
-        if (parents.length === 0) {
-          return null;
-        }
-
-        return {
-          ...parents[0],
-          deleted: !!parents[0].deleted,
-        };
-      }),
-  );
 }

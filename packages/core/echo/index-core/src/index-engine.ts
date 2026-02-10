@@ -120,15 +120,7 @@ export class IndexEngine {
   }): Effect.Effect<readonly ObjectMeta[], SqlError.SqlError, SqlClient.SqlClient> {
     return this.#objectMetaIndex.queryChildren(query);
   }
-  /**
-   * Query parent by object id.
-   */
-  queryParent(query: {
-    spaceId: string;
-    objectId: string;
-  }): Effect.Effect<ObjectMeta | null, SqlError.SqlError, SqlClient.SqlClient> {
-    return this.#objectMetaIndex.queryParent(query);
-  }
+
   queryTypes(query: {
     spaceIds: readonly SpaceId[];
     typeDxns: readonly ObjectMeta['typeDxn'][];
