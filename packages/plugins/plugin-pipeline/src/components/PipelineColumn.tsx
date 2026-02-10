@@ -68,6 +68,7 @@ export const PipelineColumn = ({ column }: PipelineColumnProps) => {
     if (!schema || !view) {
       return undefined;
     }
+
     // For mutable schemas (EchoSchema), use the live jsonSchema reference for reactivity.
     const jsonSchema = Type.isMutable(schema) ? schema.jsonSchema : Type.toJsonSchema(schema);
     const change = createEchoChangeCallback(view, Type.isMutable(schema) ? schema : undefined);
@@ -86,7 +87,7 @@ export const PipelineColumn = ({ column }: PipelineColumnProps) => {
 
   return (
     <Focus.Group asChild>
-      <div className='grid bs-full card-default-width overflow-hidden bg-deckSurface grid-rows-[min-content_1fr] density-fine border border-separator rounded-md'>
+      <div className='grid bs-full card-default-width overflow-hidden grid-rows-[min-content_1fr] density-fine border border-separator rounded-md bg-deckSurface'>
         <Card.Toolbar>
           <Card.DragHandle />
           <Card.Title>{column.name ?? t('untitled view title')}</Card.Title>
@@ -123,7 +124,7 @@ const ItemTile = forwardRef<HTMLDivElement, ItemTileProps>(
     return (
       <Mosaic.Tile asChild id={data.id} data={data} location={location} debug={debug}>
         <Focus.Group asChild>
-          <Card.Root classNames={classNames} onClick={() => rootRef.current?.focus()} ref={composedRef}>
+          <Card.Root classNames={classNames} ref={composedRef}>
             <Card.Toolbar>
               <Card.DragHandle />
               <Card.Title>{Obj.getLabel(data)}</Card.Title>
