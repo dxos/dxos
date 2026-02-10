@@ -66,23 +66,32 @@ class ObservabilityImpl implements Observability {
       return Effect.succeed(undefined);
     }
 
+    const initializedExtensions: Extension[] = [];
+
     return Effect.gen(this, function* () {
-      this._initialized = true;
       for (const extension of this._extensions) {
         if (extension.initialize) {
           yield* extension.initialize();
         }
+        initializedExtensions.push(extension);
       }
 
       const cleanups = yield* Effect.all(this._dataProviders.map((provider) => provider(this)));
       this._subscriptions.add(...cleanups.filter((cleanup) => cleanup !== undefined));
+      this._initialized = true;
     }).pipe(
-      // If any extension or data provider fails, reset _initialized so callers can retry.
-      Effect.catchAll((error) => {
-        log.catch(error);
-        this._initialized = false;
-        return Effect.succeed(undefined);
-      }),
+      Effect.catchAll((error) =>
+        Effect.gen(this, function* () {
+          log.catch(error);
+          // Roll back already-initialized extensions.
+          for (const extension of initializedExtensions) {
+            if (extension.close) {
+              yield* extension.close().pipe(Effect.catchAll(() => Effect.succeed(undefined)));
+            }
+          }
+          this._subscriptions.clear();
+        }),
+      ),
     );
   }
 
