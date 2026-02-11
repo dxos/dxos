@@ -18,13 +18,28 @@ if [ ! -d "$IOS_SOURCES" ]; then
   exit 1
 fi
 
+#
+# Generate icons
+#
+
+echo "Generating icons..."
+
+pnpm tauri icon assets/icon-1024.png
+
+#
+# Extensions
+#
+
 echo "Copying iOS extensions to $IOS_SOURCES..."
 
 # Copy keyboard handler (pure Obj-C, auto-initializes via +load).
 cp "$SRC_TAURI/ios/KeyboardHandler.m" "$IOS_SOURCES/"
 
+#
 # Regenerate Xcode project to include new files.
+#
+
 echo "Regenerating Xcode project..."
 (cd "$SRC_TAURI/gen/apple" && xcodegen)
 
-echo "Done. iOS extensions installed."
+echo "Done."
