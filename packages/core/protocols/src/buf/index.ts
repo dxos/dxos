@@ -22,7 +22,7 @@ export {
   type Message,
   type MessageShape,
 } from '@bufbuild/protobuf';
-export { type Empty, EmptySchema, timestampFromDate, type Timestamp } from '@bufbuild/protobuf/wkt';
+export { type Empty, EmptySchema, timestampFromDate, timestampMs, type Timestamp } from '@bufbuild/protobuf/wkt';
 export { type GenService, type GenServiceMethods } from '@bufbuild/protobuf/codegenv2';
 
 /** @deprecated Use `create` instead. */

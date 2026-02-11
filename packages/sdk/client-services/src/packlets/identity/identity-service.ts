@@ -135,13 +135,13 @@ export class IdentityServiceImpl extends Resource implements Halo.IdentityServic
   async signPresentation(request: SignPresentationRequest): Promise<Presentation> {
     invariant(this._identityManager.identity, 'Identity not initialized.');
 
-    return (await signPresentation({
-      presentation: request.presentation as any,
+    return signPresentation({
+      presentation: request.presentation!,
       signer: this._keyring,
       signerKey: this._identityManager.identity.deviceKey,
       chain: this._identityManager.identity.deviceCredentialChain,
       nonce: request.nonce,
-    })) as any;
+    });
   }
 
   async createAuthCredential(): Promise<Credential> {

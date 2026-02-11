@@ -35,7 +35,7 @@ export class NetworkServiceImpl implements Client.NetworkService {
         next(
           create(NetworkStatusSchema, {
             swarm: this.networkManager.connectionState,
-            connectionInfo: this.networkManager.connectionLog?.swarms as any,
+            connectionInfo: this.networkManager.connectionLog?.swarms,
             signaling: this.signalManager.getStatus?.().map(({ host, state }) => ({ server: host, state })),
           }),
         );
