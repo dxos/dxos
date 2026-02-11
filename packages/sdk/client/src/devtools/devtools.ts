@@ -5,7 +5,7 @@
 import { next as A } from '@automerge/automerge';
 import { cbor } from '@automerge/automerge-repo';
 
-import { type ClientServices, type Halo, type Space } from '@dxos/client-protocol';
+import { type Halo, type Space } from '@dxos/client-protocol';
 import { type ClientServicesHost, type DataSpace } from '@dxos/client-services';
 import { exposeModule, importModule } from '@dxos/debug';
 import { Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';

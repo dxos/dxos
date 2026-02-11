@@ -34,9 +34,6 @@ import { QueryExecutor } from '../query';
 
 import type { SpaceStateManager } from './space-state-manager';
 
-// Re-export buf service type for consumers.
-export { QueryService };
-
 export type QueryServiceProps = {
   indexer: Indexer;
   indexer2?: IndexEngine;

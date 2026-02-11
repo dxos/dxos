@@ -12,7 +12,7 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type Echo, RpcClosedError } from '@dxos/protocols';
-import { create, type JsonObject } from '@dxos/protocols/buf';
+import { type JsonObject, create } from '@dxos/protocols/buf';
 import * as EchoServicePb from '@dxos/protocols/buf/dxos/echo/service_pb';
 import { trace } from '@dxos/tracing';
 
