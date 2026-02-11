@@ -108,9 +108,8 @@ export class EchoTestPeer extends Resource {
     SqlClient.SqlClient | SqlExport.SqlExport | SqlTransaction.SqlTransaction,
     never
   > {
-    
     if (this._persistentRuntime == null) {
-      this._persistentRuntime = ManagedRuntime.make(Layer.merge(layerMemory, Reactivity.layer).pipe(Layer.orDie));
+      this._persistentRuntime = ManagedRuntime.make(layerMemory.pipe(Layer.orDie));
     }
 
     // Keep the same SQLite-backed services across peer reloads by reading them from the
