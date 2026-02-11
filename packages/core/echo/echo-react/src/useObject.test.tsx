@@ -273,11 +273,14 @@ describe('useObject', () => {
   });
 
   test('snapshot is referentially stable across re-renders for ref', ({ expect }) => {
-    const org: TestSchema.Organization = createObject(
-      Obj.make(TestSchema.Organization, { name: 'DXOS' }),
-    );
+    const org: TestSchema.Organization = createObject(Obj.make(TestSchema.Organization, { name: 'DXOS' }));
     const person: TestSchema.Person = createObject(
-      Obj.make(TestSchema.Person, { name: 'Test', username: 'test', email: 'test@example.com', employer: Ref.make(org) }),
+      Obj.make(TestSchema.Person, {
+        name: 'Test',
+        username: 'test',
+        email: 'test@example.com',
+        employer: Ref.make(org),
+      }),
     );
     const registry = Registry.make();
     const wrapper = createWrapper(registry);
