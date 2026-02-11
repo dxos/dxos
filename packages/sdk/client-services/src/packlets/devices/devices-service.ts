@@ -18,6 +18,7 @@ import {
   QueryDevicesResponseSchema,
 } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { type DeviceProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { PublicKeySchema } from '@dxos/protocols/buf/dxos/keys_pb';
 
 import { type IdentityManager } from '../identity';
 
@@ -28,8 +29,12 @@ export class DevicesServiceImpl implements Halo.DevicesService {
   ) {}
 
   async updateDevice(profile: DeviceProfileDocument): Promise<Device> {
-    const result = await this._identityManager.updateDeviceProfile(profile as any);
-    return create(DeviceSchema, result as any);
+    const result = await this._identityManager.updateDeviceProfile(profile);
+    return create(DeviceSchema, {
+      deviceKey: create(PublicKeySchema, { data: result.deviceKey.asUint8Array() }),
+      kind: DeviceKind.CURRENT,
+      profile: result.profile,
+    });
   }
 
   queryDevices(): Stream<QueryDevicesResponse> {
@@ -60,9 +65,9 @@ export class DevicesServiceImpl implements Halo.DevicesService {
                 }
 
                 return create(DeviceSchema, {
-                  deviceKey: key as any,
+                  deviceKey: create(PublicKeySchema, { data: key.asUint8Array() }),
                   kind: this._identityManager.identity?.deviceKey.equals(key) ? DeviceKind.CURRENT : DeviceKind.TRUSTED,
-                  profile: profile as any,
+                  profile,
                   presence,
                 });
               }),

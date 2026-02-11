@@ -57,7 +57,7 @@ export class IdentityServiceImpl extends Resource implements Halo.IdentityServic
   }
 
   async createIdentity(request: CreateIdentityRequest): Promise<IdentityProto> {
-    await this._createIdentity({ profile: request.profile as any, deviceProfile: request.deviceProfile as any });
+    await this._createIdentity({ profile: request.profile, deviceProfile: request.deviceProfile });
     const dataSpaceManager = this._dataSpaceManagerProvider();
     await this._createDefaultSpace(dataSpaceManager);
     return this._getIdentity()!;
@@ -98,30 +98,34 @@ export class IdentityServiceImpl extends Resource implements Halo.IdentityServic
 
   async updateProfile(profile: ProfileDocument): Promise<IdentityProto> {
     invariant(this._identityManager.identity, 'Identity not initialized.');
-    await this._identityManager.updateProfile(profile as any);
-    await this._onProfileUpdate?.(this._identityManager.identity.profileDocument as any);
+    await this._identityManager.updateProfile(profile);
+    await this._onProfileUpdate?.(this._identityManager.identity.profileDocument);
     return this._getIdentity()!;
   }
 
   async createRecoveryCredential(request: CreateRecoveryCredentialRequest): Promise<CreateRecoveryCredentialResponse> {
-    const result = await this._recoveryManager.createRecoveryCredential(request as any);
-    return create(CreateRecoveryCredentialResponseSchema, result as any);
+    const result = await this._recoveryManager.createRecoveryCredential(request);
+    return create(CreateRecoveryCredentialResponseSchema, result);
   }
 
   async requestRecoveryChallenge(): Promise<RequestRecoveryChallengeResponse> {
     const result = await this._recoveryManager.requestRecoveryChallenge();
-    return create(RequestRecoveryChallengeResponseSchema, result as any);
+    return create(RequestRecoveryChallengeResponseSchema, result);
   }
 
   async recoverIdentity(request: RecoverIdentityRequest): Promise<IdentityProto> {
-    if (request.recoveryCode) {
-      await this._recoveryManager.recoverIdentity({ recoveryCode: request.recoveryCode });
-    } else if (request.external) {
-      await this._recoveryManager.recoverIdentityWithExternalSignature(request.external as any);
-    } else if (request.token) {
-      await this._recoveryManager.recoverIdentityWithToken({ token: request.token });
-    } else {
-      throw new Error('Invalid request.');
+    switch (request.request.case) {
+      case 'recoveryCode':
+        await this._recoveryManager.recoverIdentity({ recoveryCode: request.request.value });
+        break;
+      case 'external':
+        await this._recoveryManager.recoverIdentityWithExternalSignature(request.request.value);
+        break;
+      case 'token':
+        await this._recoveryManager.recoverIdentityWithToken({ token: request.request.value });
+        break;
+      default:
+        throw new Error('Invalid request.');
     }
 
     return this._getIdentity()!;

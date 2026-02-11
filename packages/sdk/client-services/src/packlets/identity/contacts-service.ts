@@ -15,6 +15,7 @@ import {
   ContactBookSchema,
   ContactSchema,
 } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { PublicKeySchema } from '@dxos/protocols/buf/dxos/keys_pb';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
 import { type DataSpaceManager } from '../spaces';
@@ -42,15 +43,15 @@ export class ContactsServiceImpl implements Client.ContactsService {
         }
         const existing = acc.get(memberInfo.key);
         if (existing != null) {
-          existing.profile ??= memberInfo.profile as any;
-          existing.commonSpaces?.push(spaceKey as any);
+          existing.profile ??= memberInfo.profile;
+          existing.commonSpaces?.push(create(PublicKeySchema, { data: spaceKey.asUint8Array() }));
         } else {
           acc.set(
             memberInfo.key,
             create(ContactSchema, {
-              identityKey: memberInfo.key as any,
-              profile: memberInfo.profile as any,
-              commonSpaces: [spaceKey as any],
+              identityKey: create(PublicKeySchema, { data: memberInfo.key.asUint8Array() }),
+              profile: memberInfo.profile,
+              commonSpaces: [create(PublicKeySchema, { data: spaceKey.asUint8Array() })],
             }),
           );
         }
