@@ -139,11 +139,11 @@ export class DevtoolsServiceImpl implements Client.DevtoolsHost {
   }
 
   subscribeToFeeds(_request: SubscribeToFeedsRequest): Stream<SubscribeToFeedsResponse> {
-    return subscribeToFeeds(this.params.context, _request as any) as any;
+    return subscribeToFeeds(this.params.context, _request);
   }
 
   subscribeToFeedBlocks(_request: SubscribeToFeedBlocksRequest): Stream<SubscribeToFeedBlocksResponse> {
-    return subscribeToFeedBlocks({ feedStore: this.params.context.feedStore }, _request as any) as any;
+    return subscribeToFeedBlocks({ feedStore: this.params.context.feedStore }, _request);
   }
 
   getSpaceSnapshot(_request: GetSpaceSnapshotRequest): Promise<GetSpaceSnapshotResponse> {
