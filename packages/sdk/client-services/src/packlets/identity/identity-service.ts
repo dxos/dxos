@@ -24,9 +24,9 @@ import {
   type RequestRecoveryChallengeResponse,
   RequestRecoveryChallengeResponseSchema,
   type SignPresentationRequest,
-  SpaceState,
 } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { type Credential, type Presentation, type ProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { PublicKeySchema } from '@dxos/protocols/buf/dxos/keys_pb';
 import { safeAwaitAll } from '@dxos/util';
 
 import { type DataSpaceManager } from '../spaces';
@@ -86,9 +86,13 @@ export class IdentityServiceImpl extends Resource implements Halo.IdentityServic
 
     return create(IdentitySchema, {
       did: this._identityManager.identity.did,
-      identityKey: this._identityManager.identity.identityKey as any,
-      spaceKey: this._identityManager.identity.space.key as any,
-      profile: this._identityManager.identity.profileDocument as any,
+      identityKey: create(PublicKeySchema, {
+        data: this._identityManager.identity.identityKey.asUint8Array(),
+      }),
+      spaceKey: create(PublicKeySchema, {
+        data: this._identityManager.identity.space.key.asUint8Array(),
+      }),
+      profile: this._identityManager.identity.profileDocument,
     });
   }
 
