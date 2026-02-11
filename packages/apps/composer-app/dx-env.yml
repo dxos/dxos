@@ -22,6 +22,18 @@ DX_OTEL_HEADERS:
   path: runtime.app.env.DX_OTEL_HEADERS
   type: string
 
+DX_POSTHOG_API_KEY:
+  path: runtime.app.env.DX_POSTHOG_API_KEY
+  type: string
+
+DX_POSTHOG_API_HOST:
+  path: runtime.app.env.DX_POSTHOG_API_HOST
+  type: string
+
+DX_POSTHOG_FEEDBACK_SURVEY_ID:
+  path: runtime.app.env.DX_POSTHOG_FEEDBACK_SURVEY_ID
+  type: string
+
 DX_EDGE_BASE_URL:
   path: runtime.services.edge.url
   type: string

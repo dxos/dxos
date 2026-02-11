@@ -53,8 +53,9 @@ for APP_PATH in "${APPS[@]}"; do
   APP=$(basename "$APP_PATH")
   if [[ $APP == *-app ]]; then
     set +e
-    eval "export DX_SENTRY_DESTINATION=$""${PACKAGE_ENV}"_SENTRY_DESTINATION""
-    eval "export DX_TELEMETRY_API_KEY=$""${PACKAGE_ENV}"_SEGMENT_API_KEY""
+    eval "export DX_POSTHOG_API_KEY=$""${PACKAGE_ENV}"_POSTHOG_API_KEY""
+    eval "export DX_POSTHOG_API_HOST=$""${PACKAGE_ENV}"_POSTHOG_API_HOST""
+    eval "export DX_POSTHOG_FEEDBACK_SURVEY_ID=$""${PACKAGE_ENV}"_POSTHOG_FEEDBACK_SURVEY_ID""
     export LOG_FILTER="error"
   fi
 

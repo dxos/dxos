@@ -3,7 +3,6 @@
 //
 
 import importSource from '@dxos/vite-plugin-import-source';
-import { sentryVitePlugin } from '@sentry/vite-plugin';
 import react from '@vitejs/plugin-react-swc';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
@@ -290,21 +289,6 @@ export default defineConfig((env) => ({
             purpose: 'maskable',
           },
         ],
-      },
-    }),
-
-    // https://docs.sentry.io/platforms/javascript/sourcemaps/uploading/vite
-    // https://www.npmjs.com/package/@sentry/vite-plugin
-    sentryVitePlugin({
-      org: 'dxos',
-      project: 'composer-app',
-      sourcemaps: {
-        assets: './packages/apps/composer-app/out/composer/**',
-      },
-      authToken: process.env.SENTRY_RELEASE_AUTH_TOKEN,
-      disable: process.env.DX_ENVIRONMENT !== 'production',
-      release: {
-        name: `${APP_KEY}@${process.env.npm_package_version}`,
       },
     }),
 

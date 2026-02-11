@@ -9,7 +9,6 @@ import { ChessPlugin } from '@dxos/plugin-chess/cli';
 import { ClientPlugin } from '@dxos/plugin-client/cli';
 import { InboxPlugin } from '@dxos/plugin-inbox/cli';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/cli';
-import { ObservabilityPlugin } from '@dxos/plugin-observability/cli';
 import { RegistryPlugin } from '@dxos/plugin-registry/cli';
 import { SpacePlugin } from '@dxos/plugin-space/cli';
 import { TokenManagerPlugin } from '@dxos/plugin-token-manager/cli';
@@ -24,7 +23,6 @@ export type PluginConfig = {
 export const getCore = (): string[] => [
   AutomationPlugin.meta.id,
   ClientPlugin.meta.id,
-  ObservabilityPlugin.meta.id,
   OperationPlugin.meta.id,
   RegistryPlugin.meta.id,
   SpacePlugin.meta.id,
@@ -39,7 +37,6 @@ export const getPlugins = ({ config }: PluginConfig): Plugin.Plugin[] => [
   ClientPlugin({ config }),
   InboxPlugin(),
   MarkdownPlugin(),
-  ObservabilityPlugin(),
   OperationPlugin(),
   RegistryPlugin(),
   SpacePlugin({}),
