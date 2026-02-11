@@ -48,7 +48,8 @@ const TestLayer = AssistantTestLayerWithTriggers({
 });
 
 const SYSTEM = trim`
-  If you do not have tools to complete the task, inform the user. DO NOT PRETEND TO DO SOMETHING YOU CAN'T DO.
+  If you do not have tools to complete the task, inform the user.
+  DO NOT PRETEND TO DO SOMETHING YOU CAN'T DO.
 `;
 
 describe.runIf(TestHelpers.tagEnabled('flaky'))('Initiative', () => {
