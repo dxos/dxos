@@ -284,7 +284,7 @@ describe('Echo Atom - Referential Equality', () => {
     expect(registry.get(atom1)).toBe('Updated');
   });
 
-  test('AtomObj.make returns same atom instance for different ref instances with same DXN', () => {
+  test('AtomObj.make returns same atom instance for different ref instances with same DXN', ({ expect }) => {
     const org = createObject(Obj.make(TestSchema.Organization, { name: 'DXOS' }));
     const person = createObject(
       Obj.make(TestSchema.Person, {
