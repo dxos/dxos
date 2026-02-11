@@ -3,6 +3,7 @@
 //
 
 import { Atom, useAtomValue } from '@effect-atom/atom-react';
+import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import { useCallback, useMemo } from 'react';
 
@@ -45,10 +46,29 @@ export const useAppBarProps = (graph: Graph.ReadableGraph): Omit<AppBarProps, 'c
         const filtered = allActions.filter((action) =>
           ['list-item', 'list-item-primary', 'heading-list-item'].includes(action.properties.disposition),
         );
-        return {
-          nodes: filtered as ActionGraphProps['nodes'],
-          edges: filtered.map((action) => ({ source: 'root', target: action.id })),
-        };
+        const nodes: ActionGraphProps['nodes'] = filtered as ActionGraphProps['nodes'];
+        const edges: ActionGraphProps['edges'] = filtered.map((action) => ({ source: 'root', target: action.id }));
+
+        // Add alternate-tree action (e.g. Settings) from the workspace node.
+        const workspaceConnections = state.workspace ? get(graph.connections(state.workspace)) : [];
+        const alternateTreeNode = workspaceConnections.find(
+          (node: Node.Node) => node.properties.disposition === 'alternate-tree',
+        );
+        if (alternateTreeNode && activeId !== alternateTreeNode.id) {
+          const settingsAction = {
+            id: `appbar-settings-${alternateTreeNode.id}`,
+            type: Node.ActionType,
+            data: () => Effect.sync(() => invokeSync(Common.LayoutOperation.Open, { subject: [alternateTreeNode.id] })),
+            properties: {
+              label: alternateTreeNode.properties.label ?? alternateTreeNode.id,
+              icon: alternateTreeNode.properties.icon ?? 'ph--placeholder--regular',
+            },
+          };
+          nodes.push(settingsAction);
+          edges.push({ source: 'root', target: settingsAction.id });
+        }
+
+        return { nodes, edges };
       }),
     [graph, stateAtom],
   );
