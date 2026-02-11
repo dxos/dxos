@@ -149,14 +149,14 @@ export class IdentityServiceImpl extends Resource implements Halo.IdentityServic
 
     invariant(identity, 'Identity not initialized.');
 
-    return (await createCredential({
+    return createCredential({
       assertion: { '@type': 'dxos.halo.credentials.Auth' },
       issuer: identity.identityKey,
       subject: identity.identityKey,
       chain: identity.deviceCredentialChain,
       signingKey: identity.deviceKey,
       signer: this._keyring,
-    })) as any;
+    });
   }
 
   private async _fixIdentityWithoutDefaultSpace(identity: Identity): Promise<void> {

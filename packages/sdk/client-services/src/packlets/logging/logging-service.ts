@@ -78,7 +78,7 @@ export class LoggingServiceImpl implements Client.LoggingService {
           values: [
             getNumericalValues('dxos.echo.pipeline.control'),
             getNumericalValues('dxos.echo.pipeline.data'),
-          ].filter(Boolean) as any,
+          ],
         });
 
         next(

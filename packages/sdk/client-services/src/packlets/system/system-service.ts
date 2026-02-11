@@ -60,8 +60,13 @@ export class SystemServiceImpl implements Client.SystemService {
   }
 
   async getConfig(): Promise<ConfigProto> {
-    const values = (await this._config?.())?.values ?? {};
-    return create(ConfigSchema, values as any);
+    const config = await this._config?.();
+    // Config values from @dxos/config are compatible with buf Config schema.
+    return create(ConfigSchema, {
+      version: config?.values.version,
+      package: config?.values.package,
+      runtime: config?.values.runtime,
+    });
   }
 
   /**
