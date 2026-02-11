@@ -129,9 +129,12 @@ const useAutoScroll = () => {
       document,
       'focus',
       (event: FocusEvent) => {
-        // TODO(burdon): Check content editable.
         const target = event.target as HTMLElement;
-        if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'DIV') {
+        if (
+          target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          (target.tagName === 'DIV' && target.isContentEditable)
+        ) {
           // Prevent default focus behavior.
           event.preventDefault();
 
@@ -145,7 +148,8 @@ const useAutoScroll = () => {
             window.scrollTo(scrollX, scrollY);
           });
 
-          // TODO(burdon): Scroll to position in parent.
+          // TODO(burdon): Scroll to position in parent; this may need to be via an intent,
+          //  since it may be plugin-specific (e.g., codemirror document.)
         }
       },
       // Important: focus events don't bubble, so capture phase is required.
