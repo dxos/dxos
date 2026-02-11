@@ -98,6 +98,7 @@ class ObservabilityImpl implements Observability {
   close(): Effect.Effect<void> {
     return Effect.gen(this, function* () {
       this._subscriptions.clear();
+      this._dataProviders.length = 0;
       for (const extension of this._extensions) {
         if (extension.close) {
           yield* extension.close();

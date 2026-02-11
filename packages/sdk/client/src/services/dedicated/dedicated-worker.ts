@@ -39,7 +39,7 @@ export const runDedicatedWorker = (options: RunDedicatedWorkerOptions = {}): voi
         case 'init': {
           owningClientId = message.ownerClientId ?? message.clientId;
           const config = new Config(message.config ?? {});
-          log('worker init with config', { config: message.config });
+          log('worker init with config', { keys: Object.keys(message.config ?? {}) });
           // TODO(wittjosiah): OPFS doesn't work in Playwright's WebKit (works in real Safari).
           //   https://github.com/microsoft/playwright/issues/18235
           //   Test if OPFS is actually available before enabling SQLite.
@@ -100,6 +100,9 @@ export const runDedicatedWorker = (options: RunDedicatedWorkerOptions = {}): voi
             const session = await runtime.createSession({
               systemPort: createWorkerPort({ port: systemChannel.port2 }),
               appPort: createWorkerPort({ port: appChannel.port2 }),
+              onClose: async () => {
+                tabsProcessed.delete(message.clientId);
+              },
             });
             if (message.clientId === owningClientId) {
               runtime.connectWebrtcBridge(session);

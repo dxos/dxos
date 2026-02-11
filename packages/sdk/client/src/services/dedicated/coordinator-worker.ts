@@ -27,9 +27,9 @@ export const createCoordinatorOnConnect = (): ((ev: MessageEvent<MessageEventIni
           break;
         }
         case 'provide-port': {
-          const port = portsByClient.get(event.data.clientId);
-          if (port) {
-            port.postMessage(event.data, {
+          const clientPort = portsByClient.get(event.data.clientId);
+          if (clientPort) {
+            clientPort.postMessage(event.data, {
               transfer: [event.data.appPort, event.data.systemPort],
             });
           } else {

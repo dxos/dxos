@@ -98,6 +98,14 @@ const convertLevel = (level: LogLevel): SeverityNumber => {
   }
 };
 
+const safeStringify = (value: unknown): string => {
+  try {
+    return JSON.stringify(value);
+  } catch {
+    return '[Circular]';
+  }
+};
+
 // TODO(wittjosiah): Reconcile logging utils w/ EDGE.
 const stringifyValues = (object: object | undefined, keyPrefix?: string, depth: number = 1) => {
   if (!object) {
@@ -111,7 +119,7 @@ const stringifyValues = (object: object | undefined, keyPrefix?: string, depth: 
     const newKey = keyPrefix ? `${keyPrefix}${key}` : key;
     if (typeof value === 'object') {
       if (!value || Array.isArray(value) || depth > FLATTEN_DEPTH) {
-        result[newKey] = JSON.stringify(value);
+        result[newKey] = safeStringify(value);
       } else {
         const flattened = stringifyValues(value, `${newKey}_`, depth + 1);
         for (const [flattenedKey, flattenedValue] of Object.entries(flattened)) {
