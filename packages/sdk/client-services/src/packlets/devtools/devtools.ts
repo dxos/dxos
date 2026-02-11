@@ -121,7 +121,7 @@ export class DevtoolsServiceImpl implements Client.DevtoolsHost {
   }
 
   subscribeToKeyringKeys(_request: SubscribeToKeyringKeysRequest): Stream<SubscribeToKeyringKeysResponse> {
-    return subscribeToKeyringKeys({ keyring: this.params.context.keyring }) as any;
+    return subscribeToKeyringKeys({ keyring: this.params.context.keyring });
   }
 
   subscribeToCredentialMessages(
@@ -167,15 +167,15 @@ export class DevtoolsServiceImpl implements Client.DevtoolsHost {
   }
 
   subscribeToSignalStatus(): Stream<SubscribeToSignalStatusResponse> {
-    return subscribeToNetworkStatus({ signalManager: this.params.context.signalManager }) as any;
+    return subscribeToNetworkStatus({ signalManager: this.params.context.signalManager });
   }
 
   subscribeToSignal(): Stream<SignalResponse> {
-    return subscribeToSignal({ signalManager: this.params.context.signalManager }) as any;
+    return subscribeToSignal({ signalManager: this.params.context.signalManager });
   }
 
   subscribeToSwarmInfo(): Stream<SubscribeToSwarmInfoResponse> {
-    return subscribeToSwarmInfo({ networkManager: this.params.context.networkManager }) as any;
+    return subscribeToSwarmInfo({ networkManager: this.params.context.networkManager });
   }
 
   subscribeToMetadata(): Stream<SubscribeToMetadataResponse> {
