@@ -23,10 +23,11 @@ const FLATTEN_DEPTH = 1;
 export type OtelLogOptions = OtelOptions & {
   logLevel: LogLevel;
   /**
-   * Set `true` to capture logs sent through LoggingService from shared worker.
-   * Better to set to `false` because shared worker is initializing its own logger.
+   * Include logs forwarded from the shared worker via LoggingService.
+   *
+   * @deprecated
    */
-  includeSharedWorkerLogs: boolean;
+  includeSharedWorkerLogs?: boolean;
 };
 
 export class OtelLogs {

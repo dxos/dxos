@@ -11,8 +11,6 @@ import { log } from '@dxos/log';
 import { type Extension } from '../../observability-extension';
 import { stubExtension } from '../stub';
 
-import { logProcessor } from './log-processor';
-
 export type ExtensionsOptions = {
   config: Config;
   /** Release identifier, e.g. `composer@0.8.3`. */
@@ -29,16 +27,21 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
   environment,
   posthog: posthogConfig,
 }) {
-  const { default: posthog } = yield* Effect.promise(() => import('posthog-js'));
+  if (typeof window === 'undefined') {
+    log('PostHog is being stubbed because it is running in a worker.');
+    return stubExtension;
+  }
+
+  const feedbackSurveyId = config.get('runtime.app.env.DX_POSTHOG_FEEDBACK_SURVEY_ID');
   const apiKey = config.get('runtime.app.env.DX_POSTHOG_API_KEY');
   const api_host = config.get('runtime.app.env.DX_POSTHOG_API_HOST');
-  const feedbackSurveyId = config.get('runtime.app.env.DX_POSTHOG_FEEDBACK_SURVEY_ID');
-
   if (!apiKey || !api_host) {
     log.info('Missing POSTHOG_API_KEY or POSTHOG_API_HOST');
     return stubExtension;
   }
 
+  const { default: posthog } = yield* Effect.promise(() => import('posthog-js'));
+  const { logProcessor } = yield* Effect.promise(() => import('./log-processor'));
   let feedbackSurveyAvailable: boolean | null = null;
 
   const checkFeedbackSurveyAvailable = (): Effect.Effect<boolean> =>

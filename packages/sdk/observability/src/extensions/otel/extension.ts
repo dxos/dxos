@@ -29,6 +29,8 @@ export type ExtensionsOptions = {
   endpoint?: string;
   headers?: Record<string, string>;
   logs?: boolean;
+  /** Minimum log level to export. Defaults to INFO (i.e. info, warn, error). */
+  logLevel?: LogLevel;
   metrics?: boolean;
   traces?: boolean;
 };
@@ -46,6 +48,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
   //   - logs should be cached locally in a circular buffer
   //   - logs should be flushed to the server if user opts to include them in a bug report
   logs: logsEnabled = false,
+  logLevel = LogLevel.INFO,
   metrics: metricsEnabled = false,
   traces: tracesEnabled = false,
 }) {
@@ -89,8 +92,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
         headers,
         resource,
         getTags: () => Object.fromEntries(tags),
-        logLevel: LogLevel.VERBOSE,
-        includeSharedWorkerLogs: false,
+        logLevel,
       })
     : undefined;
 
@@ -149,7 +151,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
       return Ref.get(enabledRef).pipe(Effect.runSync);
     },
     apis: [
-      logs ? ({ kind: 'logs', isAvailable: () => Effect.succeed(true) } satisfies ExtensionApi) : undefined,
+      { kind: 'logs', isAvailable: () => Effect.succeed(!!logs) } satisfies ExtensionApi,
       metrics
         ? ({
             kind: 'metrics',

@@ -62,6 +62,7 @@ export const initializeObservability = async (config: Config, isTauri: boolean) 
         serviceVersion: DXOS_VERSION,
         environment: config.values.runtime?.app?.env?.DX_ENVIRONMENT ?? 'unknown',
         config,
+        logs: true,
       }),
     ),
     Observability.addExtension(

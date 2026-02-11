@@ -1,0 +1,53 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import { log } from '@dxos/log';
+
+import type { WorkerCoordinatorMessage } from './types';
+
+const ports = new Set<MessagePort>();
+
+// We need to transfer ports to the correct client since they cannot be cloned.
+const portsByClient = new Map<string, MessagePort>();
+
+/**
+ * Returns the onconnect handler for the coordinator SharedWorker. Exported so apps can use
+ * a custom coordinator entrypoint (e.g. to initialize observability) then attach this handler.
+ */
+export const createCoordinatorOnConnect = (): ((ev: MessageEvent<MessageEventInit>) => void) => {
+  return (ev: MessageEvent<MessageEventInit>) => {
+    const port = (ev as MessageEvent).ports[0];
+    ports.add(port);
+
+    port.onmessage = (event: MessageEvent<WorkerCoordinatorMessage>) => {
+      switch (event.data.type) {
+        case 'request-port': {
+          portsByClient.set(event.data.clientId, port);
+          break;
+        }
+        case 'provide-port': {
+          const port = portsByClient.get(event.data.clientId);
+          if (port) {
+            port.postMessage(event.data, {
+              transfer: [event.data.appPort, event.data.systemPort],
+            });
+          } else {
+            log.error('no port for client', { clientId: event.data.clientId });
+          }
+          return;
+        }
+      }
+      for (const p of ports) {
+        try {
+          p.postMessage(event.data);
+        } catch (err) {
+          log.catch(err);
+          ports.delete(p);
+        }
+      }
+    };
+
+    port.start();
+  };
+};

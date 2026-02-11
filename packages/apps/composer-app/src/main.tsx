@@ -75,7 +75,7 @@ const main = async () => {
   }
 
   // Intentionally do not await; i.e., don't block app startup for telemetry.
-  const observability = initializeObservability(config, isTauri).catch((err) => log.catch(err));
+  const observability = initializeObservability(config, isTauri);
   const observabilityDisabled = await Observability.isObservabilityDisabled(APP_KEY);
   const observabilityGroup = await Observability.getObservabilityGroup(APP_KEY);
 
@@ -127,10 +127,19 @@ const main = async () => {
       useLocalServices || useSharedWorker
         ? undefined
         : () =>
-            new Worker(new URL('@dxos/client/dedicated-worker', import.meta.url), {
+            new Worker(new URL('./dedicated-worker', import.meta.url), {
               type: 'module',
               name: 'dxos-client-worker',
             }),
+    createCoordinatorWorker:
+      useLocalServices || useSharedWorker || useSingleClientMode
+        ? undefined
+        : () =>
+            new SharedWorker(new URL('./coordinator-worker', import.meta.url), {
+              type: 'module',
+              name: 'dxos-coordinator-worker',
+            }),
+    // TODO(wittjosiah): Instrument opfs worker?
     createOpfsWorker: () => new Worker(new URL('@dxos/client/opfs-worker', import.meta.url), { type: 'module' }),
     singleClientMode: useSingleClientMode,
     observabilityGroup,

@@ -18,6 +18,8 @@ export type CreateClientServicesOptions = {
   createWorker?: WorkerClientServicesProps['createWorker'];
   /** Factory for creating a dedicated worker. */
   createDedicatedWorker?: DedeciatedWorkerClientServicesOptions['createWorker'];
+  /** Factory for creating the coordinator SharedWorker (for dedicated worker mode). Use for a custom entrypoint that e.g. initializes observability. */
+  createCoordinatorWorker?: () => SharedWorker;
   /** Factory for creating an OPFS worker. */
   createOpfsWorker?: LocalClientServicesParams['createOpfsWorker'];
   /**
@@ -41,6 +43,7 @@ export const createClientServices = async (
   const {
     createWorker,
     createDedicatedWorker,
+    createCoordinatorWorker,
     singleClientMode,
     createOpfsWorker,
     observabilityGroup,
@@ -75,7 +78,12 @@ export const createClientServices = async (
   return createDedicatedWorker
     ? new DedicatedWorkerClientServices({
         createWorker: createDedicatedWorker,
-        createCoordinator: () => (singleClientMode ? new SingleClientCoordinator() : new SharedWorkerCoordinator()),
+        createCoordinator: () =>
+          singleClientMode
+            ? new SingleClientCoordinator()
+            : createCoordinatorWorker
+              ? new SharedWorkerCoordinator(createCoordinatorWorker)
+              : new SharedWorkerCoordinator(),
         config,
       })
     : createWorker && useWorker
