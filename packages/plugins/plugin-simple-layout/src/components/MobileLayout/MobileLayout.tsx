@@ -44,6 +44,7 @@ type MobileLayoutRootProps = ThemedClassName<
 const MobileLayoutRoot = forwardRef<HTMLDivElement, MobileLayoutRootProps>(
   ({ classNames, children, transition = 250, onKeyboardOpenChange, ...props }, forwardedRef) => {
     const { open: keyboardOpen } = useIOSKeyboard();
+    useAutoScroll();
     useEffect(() => onKeyboardOpenChange?.(keyboardOpen), [onKeyboardOpenChange, keyboardOpen]);
     useLockBodyScroll(keyboardOpen);
 
@@ -119,6 +120,41 @@ export { useMobileLayout };
 export type { MobileLayoutRootProps, MobileLayoutPanelProps };
 
 /**
+ * Prevent auto-scroll when input is focused.
+ */
+const useAutoScroll = () => {
+  useEffect(() => {
+    // Prevent auto-scroll when input is focused.
+    return addEventListener(
+      document,
+      'focus',
+      (ev: FocusEvent) => {
+        // TODO(burdon): Check content editable.
+        const target = ev.target as HTMLElement;
+        if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'DIV') {
+          // Prevent default focus behavior.
+          ev.preventDefault();
+
+          // Manually focus without scroll.
+          target.focus({ preventScroll: true });
+
+          // Lock current scroll position.
+          const scrollX = window.scrollX;
+          const scrollY = window.scrollY;
+          requestAnimationFrame(() => {
+            window.scrollTo(scrollX, scrollY);
+          });
+
+          // TODO(burdon): Scroll to position in parent.
+        }
+      },
+      // Important: focus events don't bubble, so capture phase is required.
+      { capture: true },
+    );
+  }, []);
+};
+
+/**
  * Prevent iOS Safari viewport scroll when enabled.
  * Setting overflow:hidden doesn't work on iOS, so we must preventDefault on touchmove events.
  * Only allows scrolling if the target is within a scrollable container.
@@ -129,28 +165,29 @@ const useLockBodyScroll = (enabled: boolean) => {
       return;
     }
 
-    let touchStartX = 0;
-    let touchStartY = 0;
-
-    const isScrollableInDirection = (el: HTMLElement | null, axis: 'x' | 'y'): boolean => {
+    const isScrollable = (el: HTMLElement | null, axis: 'x' | 'y'): boolean => {
       while (el && el !== document.body) {
         const style = getComputedStyle(el);
         if (axis === 'y') {
-          const overflowY = style.overflowY;
-          if ((overflowY === 'auto' || overflowY === 'scroll') && el.scrollHeight > el.clientHeight) {
+          const overflow = style.overflowY;
+          if ((overflow === 'auto' || overflow === 'scroll') && el.scrollHeight > el.clientHeight) {
             return true;
           }
         } else {
-          const overflowX = style.overflowX;
-          if ((overflowX === 'auto' || overflowX === 'scroll') && el.scrollWidth > el.clientWidth) {
+          const overflow = style.overflowX;
+          if ((overflow === 'auto' || overflow === 'scroll') && el.scrollWidth > el.clientWidth) {
             return true;
           }
         }
+
         el = el.parentElement;
       }
 
       return false;
     };
+
+    let touchStartX = 0;
+    let touchStartY = 0;
 
     return combine(
       // Record initial touch position.
@@ -173,36 +210,12 @@ const useLockBodyScroll = (enabled: boolean) => {
           const touch = event.touches[0];
           const dx = Math.abs(touch.clientX - touchStartX);
           const dy = Math.abs(touch.clientY - touchStartY);
-          const axis = dx > dy ? 'x' : 'y';
-
-          const target = event.target as HTMLElement;
-          if (!isScrollableInDirection(target, axis)) {
+          if (!isScrollable(event.target as HTMLElement, dx > dy ? 'x' : 'y')) {
             event.preventDefault();
           }
         },
         { passive: false },
       ),
-
-      // Prevent auto-scroll when input is focused.
-      addEventListener(document, 'focus', (ev: FocusEvent) => {
-        const target = ev.target as HTMLElement;
-
-        // TODO(burdon): Check content editable.
-        if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'DIV') {
-          // Prevent default focus behavior.
-          ev.preventDefault();
-
-          // Manually focus without scroll.
-          target.focus({ preventScroll: true });
-
-          // Lock current scroll position.
-          const scrollX = window.scrollX;
-          const scrollY = window.scrollY;
-          requestAnimationFrame(() => {
-            window.scrollTo(scrollX, scrollY);
-          });
-        }
-      }),
     );
   }, [enabled]);
 };
@@ -232,7 +245,7 @@ type IOSKeyboard = {
  * - Viewport: 874 (entire screen)
  * - SafeArea: 96 (62+34)
  * - Main:     778
- * - Keyboard: 318, 413 (incl. Input Accessory View)
+ * - Keyboard: 318; 413 (incl. Input Accessory View)
  *
  * CSS Variables set on document.documentElement:
  * --vvh: Visual viewport height (use as container height).
