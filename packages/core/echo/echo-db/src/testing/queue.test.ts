@@ -13,7 +13,6 @@ import { KEY_QUEUE_POSITION } from '@dxos/protocols';
 import { type Queue } from '../queue';
 
 import { EchoTestBuilder } from './echo-test-builder';
-import { createTmpPath } from './utils';
 
 describe('queues', () => {
   let builder: EchoTestBuilder;
@@ -328,7 +327,6 @@ describe('queues', () => {
     test('queue objects survive reload', async ({ expect }) => {
       await using peer = await builder.createPeer({
         types: [TestSchema.Person],
-        sqlitePath: createTmpPath(),
       });
       const spaceId = SpaceId.random();
       const queues = peer.client.constructQueueFactory(spaceId);

@@ -22,7 +22,6 @@ import { deferAsync } from '@dxos/util';
 import { Filter, Query } from '../query';
 
 import { EchoTestBuilder, createDataAssertion } from './echo-test-builder';
-import { createTmpPath } from './utils';
 
 describe('Integration tests', () => {
   let builder: EchoTestBuilder;
@@ -91,13 +90,11 @@ describe('Integration tests', () => {
     await dataAssertion.verify(db2);
   });
 
-  test('reload peer -- index persists with file-based SQLite', { timeout: 20_000 }, async () => {
+  test('reload peer -- index persists across runtime reload', { timeout: 20_000 }, async () => {
     const NUM_OBJECTS = 500;
-    const sqlitePath = `${createTmpPath()}.db`;
 
     await using peer = await builder.createPeer({
       types: [TestSchema.Person],
-      sqlitePath,
     });
 
     await using db = await peer.createDatabase();
@@ -108,7 +105,6 @@ describe('Integration tests', () => {
 
     await peer.reload();
     await using db2 = await peer.openLastDatabase();
-    // With file-based SQLite, indexes persist across reload - no rebuild needed.
     const objects = await db2.query(Query.select(Filter.type(TestSchema.Person))).run();
     expect(objects.length).to.eq(NUM_OBJECTS);
   });
@@ -531,10 +527,8 @@ describe('Integration tests', () => {
   });
 
   test('deleted objects remain deleted after reload', async () => {
-    const sqlitePath = `${createTmpPath()}.db`;
     await using peer = await builder.createPeer({
       types: [TestSchema.Person],
-      sqlitePath,
     });
 
     {

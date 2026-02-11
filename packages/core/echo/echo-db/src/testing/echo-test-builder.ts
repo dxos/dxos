@@ -4,7 +4,8 @@
 
 import type { AutomergeUrl } from '@automerge/automerge-repo';
 import * as Reactivity from '@effect/experimental/Reactivity';
-import type * as SqlClient from '@effect/sql/SqlClient';
+import * as SqlClient from '@effect/sql/SqlClient';
+import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
@@ -20,7 +21,7 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
 import { createTestLevel } from '@dxos/kv-store/testing';
-import { layerFile, layerMemory, sqlExportLayer } from '@dxos/sql-sqlite/platform';
+import { layerMemory } from '@dxos/sql-sqlite/platform';
 import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 import { range } from '@dxos/util';
@@ -40,11 +41,6 @@ type PeerOptions = {
   assignQueuePositions?: boolean;
 
   kv?: LevelDB;
-  /**
-   * Path to SQLite database file for persistent indexing in Node/Bun.
-   * If not provided, a new in-memory runtime will be created.
-   */
-  sqlitePath?: string;
 };
 
 export class EchoTestBuilder extends Resource {
@@ -93,45 +89,61 @@ export class EchoTestPeer extends Resource {
   private _lastDatabaseSpaceKey?: PublicKey = undefined;
   private _lastDatabaseRootUrl?: string = undefined;
 
-  private _sqlitePath?: string;
-  private _managedRuntime!: ManagedRuntime.ManagedRuntime<
+  private _persistentRuntime?: ManagedRuntime.ManagedRuntime<SqlClient.SqlClient | SqlExport.SqlExport, never>;
+  private _managedRuntime?: ManagedRuntime.ManagedRuntime<
     SqlClient.SqlClient | SqlExport.SqlExport | SqlTransaction.SqlTransaction,
     never
   >;
+  private _isReloading = false;
 
-  constructor({ kv = createTestLevel(), types, assignQueuePositions, sqlitePath }: PeerOptions) {
+  constructor({ kv = createTestLevel(), types, assignQueuePositions }: PeerOptions) {
     super();
     this._kv = kv;
     // Include Expando as default type for tests that use Obj.make(TestSchema.Expando, ...).
     this._types = [TestSchema.Expando, ...(types ?? [])];
     this._assignQueuePositions = assignQueuePositions;
+  }
 
-    this._sqlitePath = sqlitePath;
+  private _createManagedRuntime(): ManagedRuntime.ManagedRuntime<
+    SqlClient.SqlClient | SqlExport.SqlExport | SqlTransaction.SqlTransaction,
+    never
+  > {
+    
+    if (this._persistentRuntime == null) {
+      this._persistentRuntime = ManagedRuntime.make(Layer.merge(layerMemory, Reactivity.layer).pipe(Layer.orDie));
+    }
+
+    // Keep the same SQLite-backed services across peer reloads by reading them from the
+    // persistent runtime context, then provide those services into a new runtime that
+    // recreates only the transaction layer.
+    const persistedSqlLayer = Layer.unwrapEffect(
+      this._persistentRuntime.runtimeEffect.pipe(
+        Effect.map((runtime) =>
+          Layer.merge(
+            Layer.succeed(SqlClient.SqlClient, EffectContext.get(runtime.context, SqlClient.SqlClient)),
+            Layer.succeed(SqlExport.SqlExport, EffectContext.get(runtime.context, SqlExport.SqlExport)),
+          ),
+        ),
+      ),
+    );
+
+    return ManagedRuntime.make(
+      SqlTransaction.layer
+        .pipe(Layer.provideMerge(persistedSqlLayer), Layer.provideMerge(Reactivity.layer))
+        .pipe(Layer.orDie),
+    );
   }
 
   private _initEcho(): void {
-    if (this._sqlitePath) {
-      this._managedRuntime = ManagedRuntime.make(
-        SqlTransaction.layer
-          .pipe(
-            Layer.provideMerge(sqlExportLayer),
-            Layer.provideMerge(layerFile(this._sqlitePath)),
-            Layer.provideMerge(Reactivity.layer),
-          )
-          .pipe(Layer.orDie),
-      );
-    } else {
-      this._managedRuntime = ManagedRuntime.make(
-        SqlTransaction.layer.pipe(Layer.provideMerge(Layer.merge(layerMemory, Reactivity.layer))).pipe(Layer.orDie),
-      );
-    }
+    this._managedRuntime = this._createManagedRuntime();
+
     this._echoHost = new EchoHost({
       kv: this._kv,
       runtime: this._managedRuntime.runtimeEffect,
       localQueues: true,
       assignQueuePositions: this._assignQueuePositions,
     });
-    this._clients.delete(this._echoClient);
+    this._clients.clear();
     this._echoClient = new EchoClient();
     this._clients.add(this._echoClient);
     void this._echoClient.graph.schemaRegistry.register(this._types);
@@ -164,15 +176,27 @@ export class EchoTestPeer extends Resource {
     }
     await this._echoHost.close(ctx);
     await this._kv.close();
-    await this._managedRuntime.dispose();
+    if (this._managedRuntime != null) {
+      await this._managedRuntime.dispose();
+      this._managedRuntime = undefined;
+    }
+    if (!this._isReloading && this._persistentRuntime != null) {
+      await this._persistentRuntime.dispose();
+      this._persistentRuntime = undefined;
+    }
   }
 
   /**
    * Simulates a reload of the process by re-creation ECHO.
    */
   async reload(): Promise<void> {
-    await this.close();
-    await this.open();
+    this._isReloading = true;
+    try {
+      await this.close();
+      await this.open();
+    } finally {
+      this._isReloading = false;
+    }
   }
 
   async createClient(): Promise<EchoClient> {
@@ -228,6 +252,7 @@ export class EchoTestPeer extends Resource {
   }
 
   async exportSqliteDatabase(): Promise<Uint8Array> {
+    invariant(this._managedRuntime);
     return await this._managedRuntime.runPromise(
       Effect.gen(function* () {
         const sql = yield* SqlExport.SqlExport;
