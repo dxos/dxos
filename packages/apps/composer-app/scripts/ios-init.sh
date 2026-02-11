@@ -28,3 +28,6 @@ echo "Regenerating Xcode project..."
 (cd "$SRC_TAURI/gen/apple" && xcodegen)
 
 echo "Done. iOS extensions installed."
+
+# Generate icons
+pnpm tauri icon assets/icon-1024.png
