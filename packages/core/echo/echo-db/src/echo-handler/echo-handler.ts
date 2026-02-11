@@ -29,7 +29,6 @@ import {
   type ObjectMetaJSON,
   ObjectMetaSchema,
   ObjectVersionId,
-  ParentId,
   PersistentSchema,
   type ReactiveHandler,
   Ref,
@@ -69,7 +68,7 @@ import {
   isEncodedReference,
 } from '@dxos/echo-protocol';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { DXN, ObjectId } from '@dxos/keys';
+import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { deepMapValues, defaultMap, getDeep, setDeep } from '@dxos/util';
 
@@ -186,8 +185,6 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         case Entity.KindId: {
           return target[symbolInternals].core.getKind();
         }
-        case ParentId:
-          return this._getParent(target);
         case ChangeId: {
           // Return a function that allows mutations within a controlled context.
           // Uses ObjectCore as context key (what mutation checks use), target for events.
@@ -266,17 +263,6 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   // TODO(burdon): arg `receiver` not used.
   set(target: ProxyTarget, prop: string | symbol, value: any, receiver: any): boolean {
     invariant(Array.isArray(target[symbolPath]));
-    if (prop === ParentId) {
-      if (value === undefined) {
-        target[symbolInternals].core.setParent(undefined);
-      } else {
-        const objectId = value.id ?? value;
-        // TODO(dmaretskyi): Validate object is from the same space.
-        invariant(ObjectId.isValid(objectId));
-        target[symbolInternals].core.setParent(EncodedReference.fromDXN(DXN.fromLocalObjectId(objectId)));
-      }
-      return true;
-    }
     invariant(typeof prop === 'string');
 
     // Check readonly enforcement for ECHO objects.
@@ -313,30 +299,6 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       return (schema as any)[SchemaMetaSymbol].typename;
     }
     return this.getTypeDXN(target)?.asEchoDXN()?.echoId ?? this.getTypeDXN(target)?.asTypeDXN()?.type;
-  }
-
-  private _getParent(target: ProxyTarget): any {
-    const parentRef = target[symbolInternals].core.getParent();
-    if (parentRef === undefined) {
-      return undefined;
-    }
-    const parentDXN = EncodedReference.toDXN(parentRef);
-    const database = target[symbolInternals].database;
-    if (database) {
-      // TODO(dmaretskyi): Put refs into proxy cache.
-      return database.graph
-        .createRefResolver({
-          context: {
-            space: database.spaceId,
-          },
-        })
-        .resolveSync(parentDXN, false);
-    } else {
-      invariant(target[symbolInternals].linkCache);
-      const echoId = parentDXN.asEchoDXN()?.echoId;
-      invariant(echoId);
-      return target[symbolInternals].linkCache.get(echoId);
-    }
   }
 
   private _getRelationSource(target: ProxyTarget): any {
@@ -1163,16 +1125,6 @@ const initCore = (core: ObjectCore, target: ProxyTarget) => {
   }
 
   core.initNewObject(linkAllNestedProperties(target));
-
-  // Handle parent reference set via [Obj.Parent] in Obj.make.
-  const parentValue = (target as any)[ParentId];
-  if (parentValue !== undefined) {
-    const parentId = parentValue.id ?? parentValue;
-    if (ObjectId.isValid(parentId)) {
-      core.setParent(EncodedReference.fromDXN(DXN.fromLocalObjectId(parentId)));
-    }
-    delete (target as any)[ParentId];
-  }
 };
 
 /**

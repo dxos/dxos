@@ -27,8 +27,6 @@ import {
   MetaId,
   type Mutable,
   type ObjectMeta,
-  // TODO(dmaretskyi): Export ParentId?
-  ParentId,
   type SnapshotKindId,
   type VersionCompareResult,
   VersionTypeId,
@@ -135,7 +133,6 @@ type Props<T = any> = {
 export type MakeProps<S extends Schema.Schema.AnyNoContext> = {
   id?: ObjectId;
   [Meta]?: Partial<ObjectMeta>;
-  [Parent]?: Unknown;
 } & NoInfer<Props<Schema.Schema.Type<S>>>;
 
 /**
@@ -172,16 +169,8 @@ export const make: {
     delete props[MetaId];
   }
 
-  // Filter undefined values (Object.entries only returns string-keyed properties).
-  const filterUndefined: any = Object.fromEntries(Object.entries(props).filter(([_, v]) => v !== undefined));
-
-  // Copy symbol properties (like ParentId) that Object.entries doesn't include.
-  for (const sym of Object.getOwnPropertySymbols(props)) {
-    const value = (props as any)[sym];
-    if (value !== undefined) {
-      filterUndefined[sym] = value;
-    }
-  }
+  // Filter undefined values.
+  const filterUndefined = Object.fromEntries(Object.entries(props).filter(([_, v]) => v !== undefined));
 
   return makeObject<Schema.Schema.Type<S>>(schema, filterUndefined as any, {
     ...defaultMeta,
@@ -407,8 +396,7 @@ export const getTypename = (entity: Unknown | Snapshot): string | undefined => g
  * Get the database the object belongs to.
  * Accepts both reactive objects and snapshots.
  */
-export const getDatabase = (entity: Entity.Unknown | Entity.Snapshot): Database.Database | undefined =>
-  getDatabase$(entity);
+export const getDatabase = (entity: Unknown | Snapshot): Database.Database | undefined => getDatabase$(entity);
 
 //
 // Meta
@@ -532,43 +520,6 @@ export const getDescription = (entity: Unknown | Snapshot): string | undefined =
 export const setDescription = (entity: Mutable<Unknown>, description: string): void =>
   setDescription$(entity, description);
 
-/**
- * Symbol to set parent when creating objects with `Obj.make`.
- * @example
- * ```ts
- * Obj.make(TestSchema.Person, {
- *   [Obj.Parent]: parentObject,
- *   name: 'John',
- * })
- * ```
- */
-export const Parent: unique symbol = ParentId as any;
-
-/**
- * Get the parent of an object.
- * The parent is always loaded together with the object.
- * Only objects are allowed to have a parent
- * @returns The parent object, or undefined if the object has no parent.
- */
-export const getParent = (entity: Unknown | Snapshot): Unknown | undefined => {
-  assertArgument(isObject(entity), 'Expected an object');
-  assumeType<InternalObjectProps>(entity);
-  return entity[ParentId] as Unknown | undefined;
-};
-
-/**
- * Sets the parent of an object.
- * If a parent (or any transitive parent) is deleted, the object will be deleted.
- * Only objects are allowed to have a parent.
- */
-export const setParent = (entity: Unknown, parent: Any | undefined) => {
-  assertArgument(isObject(entity), 'Expected an object');
-  assertArgument(parent === undefined || isObject(parent), 'Expected an object');
-  assumeType<InternalObjectProps>(entity);
-  assumeType<InternalObjectProps | undefined>(parent);
-  entity[ParentId] = parent;
-};
-
 //
 // JSON
 //
@@ -597,6 +548,10 @@ export const toJSON = (entity: Unknown | Snapshot): JSON => toJSON$(entity);
  */
 export const fromJSON: (json: unknown, options?: { refResolver?: Ref.Resolver; dxn?: DXN }) => Promise<Unknown> =
   objectFromJSON as any;
+
+//
+// Sorting
+//
 
 /**
  * Comparator function type for sorting objects.

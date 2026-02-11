@@ -575,17 +575,14 @@ describe('Query', () => {
   });
 
   describe('Traversal', () => {
-    let peer: EchoTestPeer;
     let db: EchoDatabase;
     let person1: TestSchema.Person;
     let person2: TestSchema.Person;
 
     beforeEach(async () => {
-      peer = await builder.createPeer({
+      ({ db } = await builder.createDatabase({
         types: [TestSchema.Person, TestSchema.HasManager, TestSchema.Task],
-        indexing: { sqlIndex: true }, // Needed for parent->child traversal.
-      });
-      db = await peer.createDatabase();
+      }));
 
       person1 = db.add(Obj.make(TestSchema.Person, { name: 'Alice' }));
       person2 = db.add(Obj.make(TestSchema.Person, { name: 'Bob' }));
@@ -819,87 +816,6 @@ describe('Query', () => {
       const query = Query.without(query1, query2);
       const objects = await db.query(query).run();
       expect(objects).toEqual([person1]);
-    });
-
-    test('traverse to parent', async () => {
-      // Create parent-child hierarchy.
-      const parent = db.add(Obj.make(TestSchema.Expando, { name: 'Parent' }));
-      const child = db.add(
-        Obj.make(TestSchema.Expando, {
-          [Obj.Parent]: parent,
-          name: 'Child',
-        }),
-      );
-      await db.flush({ indexes: true });
-
-      // Query for parent from child.
-      const objects = await db.query(Query.select(Filter.id(child.id)).parent()).run();
-      expect(objects).toHaveLength(1);
-      expect(objects[0]).toMatchObject({ name: 'Parent' });
-    });
-
-    test('traverse to children', async () => {
-      // Create parent-child hierarchy.
-      const parent = db.add(Obj.make(TestSchema.Expando, { name: 'Parent' }));
-      const child1 = db.add(
-        Obj.make(TestSchema.Expando, {
-          [Obj.Parent]: parent,
-          name: 'Child 1',
-        }),
-      );
-      const child2 = db.add(
-        Obj.make(TestSchema.Expando, {
-          [Obj.Parent]: parent,
-          name: 'Child 2',
-        }),
-      );
-      await db.flush({ indexes: true });
-      // writeFileSync('index-core.db', await peer.exportSqliteDatabase());
-      // console.log('exported ./index-core.db');
-
-      // Query for children from parent.
-      const objects = await db.query(Query.select(Filter.id(parent.id)).children()).run();
-      expect(objects).toHaveLength(2);
-      const names = objects.map((o) => o.name).sort();
-      expect(names).toEqual(['Child 1', 'Child 2']);
-    });
-
-    test('traverse parent-child hierarchy with multiple levels', async () => {
-      // Create grandparent -> parent -> child hierarchy.
-      const grandparent = db.add(Obj.make(TestSchema.Expando, { name: 'Grandparent' }));
-      const parent = db.add(
-        Obj.make(TestSchema.Expando, {
-          [Obj.Parent]: grandparent,
-          name: 'Parent',
-        }),
-      );
-      const child = db.add(
-        Obj.make(TestSchema.Expando, {
-          [Obj.Parent]: parent,
-          name: 'Child',
-        }),
-      );
-      await db.flush({ indexes: true });
-
-      // Query for grandparent from child (going through parent).
-      const parents = await db.query(Query.select(Filter.id(child.id)).parent()).run();
-      expect(parents).toHaveLength(1);
-      expect(parents[0]).toMatchObject({ name: 'Parent' });
-
-      // Query for grandparent from parent.
-      const grandparents = await db.query(Query.select(Filter.id(parent.id)).parent()).run();
-      expect(grandparents).toHaveLength(1);
-      expect(grandparents[0]).toMatchObject({ name: 'Grandparent' });
-
-      // Query children of grandparent.
-      const grandparentChildren = await db.query(Query.select(Filter.id(grandparent.id)).children()).run();
-      expect(grandparentChildren).toHaveLength(1);
-      expect(grandparentChildren[0]).toMatchObject({ name: 'Parent' });
-
-      // Query children of parent.
-      const parentChildren = await db.query(Query.select(Filter.id(parent.id)).children()).run();
-      expect(parentChildren).toHaveLength(1);
-      expect(parentChildren[0]).toMatchObject({ name: 'Child' });
     });
   });
 

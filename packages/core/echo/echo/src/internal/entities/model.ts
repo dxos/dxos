@@ -12,13 +12,11 @@ import { assumeType } from '@dxos/util';
 import type * as Database from '../../Database';
 import {
   type ATTR_META,
-  type ATTR_PARENT,
   type ATTR_TYPE,
   EntityKind,
   KindId,
   type MetaId,
   type ObjectMeta,
-  type ParentId,
   type SchemaId,
   TypeId,
   type Version,
@@ -79,7 +77,6 @@ export interface InternalObjectProps {
   readonly [SchemaId]: Schema.Schema.AnyNoContext;
   readonly [TypeId]: DXN;
   readonly [MetaId]?: ObjectMeta;
-  [ParentId]?: InternalObjectProps;
   readonly [ObjectDatabaseId]?: Database.Database;
   readonly [ObjectDeletedId]?: boolean;
   readonly [ObjectVersionId]?: Version;
@@ -104,7 +101,6 @@ export interface ObjectJSON {
   id: string;
   [ATTR_TYPE]: DXN.String;
   [ATTR_SELF_DXN]?: DXN.String;
-  [ATTR_PARENT]?: string; // Encoded reference
   [ATTR_DELETED]?: boolean;
   [ATTR_META]?: ObjectMetaJSON;
   [ATTR_RELATION_SOURCE]?: DXN.String;
