@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Capability, Common } from '@dxos/app-framework';
 import { ATTENDABLE_PATH_SEPARATOR, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { GraphBuilder } from '@dxos/plugin-graph';
-import { Project } from '@dxos/types';
+import { Pipeline } from '@dxos/types';
 
 import { meta } from '../../meta';
 
@@ -16,9 +16,9 @@ export default Capability.makeModule(
     const extensions = yield* Effect.all([
       GraphBuilder.createTypeExtension({
         id: `${meta.id}/triggers`,
-        type: Project.Project,
-        connector: (project, get) => {
-          const nodeId = project.id;
+        type: Pipeline.Pipeline,
+        connector: (pipeline, get) => {
+          const nodeId = pipeline.id;
           return Effect.succeed([
             {
               id: [nodeId, 'invocations'].join(ATTENDABLE_PATH_SEPARATOR),

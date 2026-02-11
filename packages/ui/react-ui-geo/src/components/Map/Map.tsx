@@ -118,11 +118,13 @@ MapRoot.displayName = 'Map.Root';
 // https://react-leaflet.js.org/docs/api-components/#tilelayer
 //
 
+const MAP_TILES_NAME = 'Map.Tiles';
+
 type MapTilesProps = {};
 
 const MapTiles = (_props: MapTilesProps) => {
   const ref = useRef<L.TileLayer>(null);
-  const { onChange } = useMapContext(MapTiles.displayName);
+  const { onChange } = useMapContext(MAP_TILES_NAME);
 
   useMapEvents({
     zoomstart: (ev) => {
@@ -135,7 +137,7 @@ const MapTiles = (_props: MapTilesProps) => {
 
   // NOTE: Need to dynamically update data attribute since TileLayer doesn't update, but
   // Tailwind requires setting the property for static analysis.
-  const { attention } = useMapContext(MapTiles.displayName);
+  const { attention } = useMapContext(MAP_TILES_NAME);
   useEffect(() => {
     if (ref.current) {
       ref.current.getContainer().dataset.attention = attention ? '1' : '0';
@@ -176,7 +178,7 @@ const MapTiles = (_props: MapTilesProps) => {
   );
 };
 
-MapTiles.displayName = 'Map.Tiles';
+MapTiles.displayName = MAP_TILES_NAME;
 
 //
 // Markers

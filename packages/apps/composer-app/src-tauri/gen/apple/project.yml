@@ -12,6 +12,7 @@ settingGroups:
     base:
       PRODUCT_NAME: Composer
       PRODUCT_BUNDLE_IDENTIFIER: org.dxos.composer
+      DEVELOPMENT_TEAM: 9428WC5MR8
 targetTemplates:
   app:
     type: application

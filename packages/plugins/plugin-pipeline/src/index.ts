@@ -3,4 +3,4 @@
 //
 
 export * from './meta';
-export * from './ProjectPlugin';
+export * from './PipelinePlugin';
