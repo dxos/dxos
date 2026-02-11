@@ -13,7 +13,8 @@
     --line-height: 32px;
     --topbar-size: var(--rail-size);
     --toolbar-size: var(--rail-content);
-    --statusbar-size: theme(spacing.8);
+    --statusbar-size: var(--rail-content);
+    /* --statusbar-size: theme(spacing.8); */
     --nav-sidebar-size: 22.5rem;
     --complementary-sidebar-size: 25rem;
     --drawer-size: 50dvh;

@@ -308,7 +308,7 @@ export const constructSpaceActions = ({
         properties: {
           label: ['create object in space label', { ns: meta.id }],
           icon: 'ph--plus--regular',
-          disposition: 'item',
+          disposition: 'list-item-primary',
           testId: 'spacePlugin.createObject',
         },
       },

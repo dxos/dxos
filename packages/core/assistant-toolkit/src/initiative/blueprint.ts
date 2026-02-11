@@ -5,12 +5,12 @@
 import { Blueprint, Template } from '@dxos/blueprints';
 import { trim } from '@dxos/util';
 
-import { addArtifact, agent, getContext } from './functions';
+import { addArtifact, agent, getContext, qualifier } from './functions';
 
 /**
  * Get all initiative functions. This is a function to avoid circular dependency issues.
  */
-export const getFunctions = () => [getContext, addArtifact, agent];
+export const getFunctions = () => [getContext, addArtifact, agent, qualifier];
 
 /**
  * Creates the Initiative blueprint. This is a function to avoid circular dependency issues.

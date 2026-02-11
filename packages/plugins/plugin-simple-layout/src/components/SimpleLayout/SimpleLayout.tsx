@@ -8,17 +8,18 @@ import { Mosaic, Splitter, type SplitterMode } from '@dxos/react-ui-mosaic';
 
 import { useSimpleLayoutState } from '../../hooks';
 import { Dialog } from '../Dialog';
+import { MobileLayout } from '../MobileLayout';
 import { PopoverContent, PopoverRoot } from '../Popover';
 
 import { Drawer } from './Drawer';
 import { Main } from './Main';
-import { MobileLayout } from './MobileLayout';
 
 // TODO(burdon): Mobile/Desktop variance?
 export const SimpleLayout = () => {
   const { state } = useSimpleLayoutState();
   const [keyboardOpen, setKeyboardOpen] = useState(false);
   const [splitterMode, setSplitterMode] = useState<SplitterMode>('upper');
+
   const drawerRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (keyboardOpen) {
@@ -33,20 +34,25 @@ export const SimpleLayout = () => {
 
   return (
     <Mosaic.Root classNames='contents'>
-      <MobileLayout classNames='bg-toolbarSurface' onKeyboardOpenChange={(state) => setKeyboardOpen(state)}>
-        <PopoverRoot>
-          <Splitter.Root mode={splitterMode} ratio={0.5}>
-            <Splitter.Panel position='upper'>
-              <Main />
-            </Splitter.Panel>
-            <Splitter.Panel position='lower' ref={drawerRef}>
-              <Drawer />
-            </Splitter.Panel>
-          </Splitter.Root>
-          <Dialog />
-          <PopoverContent />
-        </PopoverRoot>
-      </MobileLayout>
+      <MobileLayout.Root
+        classNames='bg-toolbarSurface'
+        onKeyboardOpenChange={(keyboardOpen: boolean) => setKeyboardOpen(keyboardOpen)}
+      >
+        <MobileLayout.Panel safe={{ top: true, bottom: splitterMode === 'upper' }}>
+          <PopoverRoot>
+            <Splitter.Root mode={splitterMode} ratio={0.55}>
+              <Splitter.Panel position='upper'>
+                <Main />
+              </Splitter.Panel>
+              <Splitter.Panel position='lower' ref={drawerRef}>
+                <Drawer />
+              </Splitter.Panel>
+            </Splitter.Root>
+            <Dialog />
+            <PopoverContent />
+          </PopoverRoot>
+        </MobileLayout.Panel>
+      </MobileLayout.Root>
     </Mosaic.Root>
   );
 };

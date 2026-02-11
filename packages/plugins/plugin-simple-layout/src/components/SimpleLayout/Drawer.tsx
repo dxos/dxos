@@ -2,20 +2,17 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useCallback, useMemo } from 'react';
+import React, { useMemo } from 'react';
 
 import { Surface, useAppGraph } from '@dxos/app-framework/react';
 import { type Node, useNode } from '@dxos/plugin-graph';
-import { IconButton, Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention';
+import { MenuProvider, ToolbarMenu, useMenuActions } from '@dxos/react-ui-menu';
 import { Layout } from '@dxos/react-ui-mosaic';
 
-import { useCompanions, useSimpleLayoutState } from '../../hooks';
-import { meta } from '../../meta';
+import { useCompanions, useDrawerActions, useSimpleLayoutState } from '../../hooks';
 import { ContentError } from '../ContentError';
 import { ContentLoading } from '../ContentLoading';
-
-import { useMobileLayout } from './MobileLayout';
 
 const DRAWER_NAME = 'SimpleLayout.Drawer';
 
@@ -23,10 +20,8 @@ const DRAWER_NAME = 'SimpleLayout.Drawer';
  * Companion drawer component.
  */
 export const Drawer = () => {
-  const { t } = useTranslation(meta.id);
   const { graph } = useAppGraph();
-  const { state: layoutState, updateState } = useSimpleLayoutState();
-  const { keyboardOpen } = useMobileLayout(DRAWER_NAME);
+  const { state: layoutState } = useSimpleLayoutState();
 
   const placeholder = useMemo(() => <ContentLoading />, []);
 
@@ -52,55 +47,15 @@ export const Drawer = () => {
     );
   }, [companionId, node, parentNode, variant]);
 
-  // Handle tab click to switch companions.
-  const handleTabClick = useCallback(
-    (companion: Node.Node) => {
-      const [, companionVariant] = companion.id.split(ATTENDABLE_PATH_SEPARATOR);
-      updateState((state) => ({ ...state, companionVariant, drawerState: 'open' }));
-    },
-    [updateState],
-  );
-
-  // Handle expand/collapse toggle.
-  const handleToggleExpand = useCallback(() => {
-    updateState((state) => ({ ...state, drawerState: layoutState.drawerState === 'expanded' ? 'open' : 'expanded' }));
-  }, [updateState, layoutState.drawerState]);
-
-  // Handle close.
-  const handleClose = useCallback(() => {
-    updateState((state) => ({ ...state, drawerState: 'closed' }));
-  }, [updateState]);
+  // Get drawer actions (tabs + toolbar buttons).
+  const { actions, onAction } = useDrawerActions(DRAWER_NAME);
+  const menu = useMenuActions(actions);
 
   return (
     <Layout.Main toolbar>
-      <Toolbar.Root>
-        {/* TODO(thure): IMPORTANT: This is a tablist; it should be implemented as such. */}
-        <div role='tablist' className='flex-1 min-is-0 overflow-x-auto scrollbar-none flex gap-1'>
-          {/* TODO(burdon): Factor out in common with NavBar. */}
-          {companions.map((companion) => (
-            <IconButton
-              key={companion.id}
-              role='tab'
-              aria-selected={companionId === companion.id}
-              icon={companion.properties.icon}
-              iconOnly
-              label={toLocalizedString(companion.properties.label, t)}
-              variant={companionId === companion.id ? 'primary' : 'ghost'}
-              onClick={() => handleTabClick(companion)}
-            />
-          ))}
-        </div>
-        <Toolbar.Separator variant='gap' />
-        {!keyboardOpen && (
-          <Toolbar.IconButton
-            label={layoutState.drawerState === 'expanded' ? t('collapse drawer label') : t('expand drawer label')}
-            icon={layoutState.drawerState === 'expanded' ? 'ph--arrow-down--regular' : 'ph--arrow-up--regular'}
-            iconOnly
-            onClick={handleToggleExpand}
-          />
-        )}
-        <Toolbar.IconButton icon='ph--x--regular' iconOnly label={t('close drawer label')} onClick={handleClose} />
-      </Toolbar.Root>
+      <MenuProvider {...menu} onAction={onAction} alwaysActive>
+        <ToolbarMenu density='coarse' />
+      </MenuProvider>
       <Surface role='article' data={data} limit={1} fallback={ContentError} placeholder={placeholder} />
     </Layout.Main>
   );

@@ -2,8 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './Banner';
+export * from './AppBar';
 export * from './Main';
-export * from './MobileLayout';
 export * from './NavBar';
 export * from './SimpleLayout';
