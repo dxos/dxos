@@ -10,7 +10,7 @@ import { AiSession } from '@dxos/assistant';
 import { AssistantTestLayer } from '@dxos/assistant/testing';
 import { TestHelpers } from '@dxos/effect/testing';
 import { log } from '@dxos/log';
-import { Project } from '@dxos/types';
+import { Pipeline } from '@dxos/types';
 
 import { makeGraphWriterHandler, makeGraphWriterToolkit } from './graph';
 
@@ -23,7 +23,7 @@ describe('graph', () => {
   //   const relatedSchemas = await findRelatedSchema(db, Schema.Struct({}));
   // });
 
-  const Toolkit = makeGraphWriterToolkit({ schema: [Project.Project] });
+  const Toolkit = makeGraphWriterToolkit({ schema: [Pipeline.Pipeline] });
   const ToolkitLayer = makeGraphWriterHandler(Toolkit);
 
   it.effect.skip(

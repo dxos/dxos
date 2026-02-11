@@ -7,9 +7,9 @@ import React from 'react';
 import { type SurfaceComponentProps } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
 import { Card } from '@dxos/react-ui-mosaic';
-import { type Project } from '@dxos/types';
+import { type Pipeline } from '@dxos/types';
 
-export const ProjectCard = ({ subject }: SurfaceComponentProps<Project.Project>) => {
+export const ProjectCard = ({ subject }: SurfaceComponentProps<Pipeline.Pipeline>) => {
   const { name, image, description } = subject;
 
   return (

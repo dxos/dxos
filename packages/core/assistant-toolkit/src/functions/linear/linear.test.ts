@@ -22,7 +22,7 @@ import {
   TestDatabaseLayer,
   testStoragePath,
 } from '@dxos/functions-runtime/testing';
-import { Person, Project, Task } from '@dxos/types';
+import { Person, Pipeline, Task } from '@dxos/types';
 
 import { LINEAR_ID_KEY, default as fetchLinearIssues } from './sync-issues';
 
@@ -36,7 +36,7 @@ const TestLayer = Layer.mergeAll(
       AiServiceTestingPreset('direct'),
       TestDatabaseLayer({
         // indexing: { vector: true },
-        types: [Task.Task, Person.Person, Project.Project],
+        types: [Task.Task, Person.Person, Pipeline.Pipeline],
         storagePath: testStoragePath({ name: 'feed-test-13' }),
       }),
       CredentialsService.layerConfig([{ service: 'linear.app', apiKey: Config.redacted('LINEAR_API_KEY') }]),
@@ -64,7 +64,7 @@ describe('Linear', { timeout: 600_000 }, () => {
           count: persons.length,
           people: persons.map((_) => `(${_.id}) ${Obj.getLabel(_)} [${Obj.getKeys(_, LINEAR_ID_KEY)[0]?.id}]`),
         });
-        const projects = yield* Database.runQuery(Query.type(Project.Project));
+        const projects = yield* Database.runQuery(Query.type(Pipeline.Pipeline));
         console.log('projects', {
           count: projects.length,
           projects: projects.map((_) => `(${_.id}) ${Obj.getLabel(_)} [${Obj.getKeys(_, LINEAR_ID_KEY)[0]?.id}]`),

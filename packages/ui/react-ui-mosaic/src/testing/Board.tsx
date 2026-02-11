@@ -255,8 +255,10 @@ Placeholder.displayName = 'Placeholder';
 // Debug
 //
 
+const DEBUG_NAME = 'Debug';
+
 export const Debug = forwardRef<HTMLDivElement, ThemedClassName>(({ classNames }, forwardedRef) => {
-  const { containers, dragging } = useMosaic(Debug.displayName!);
+  const { containers, dragging } = useMosaic(DEBUG_NAME);
   const counter = useRef(0);
   return (
     <Json
@@ -267,7 +269,7 @@ export const Debug = forwardRef<HTMLDivElement, ThemedClassName>(({ classNames }
   );
 });
 
-Debug.displayName = 'Debug';
+Debug.displayName = DEBUG_NAME;
 
 //
 // Board

@@ -4,6 +4,7 @@
 
 import { next as A } from '@automerge/automerge';
 import { cbor } from '@automerge/automerge-repo';
+import * as Schema from 'effect/Schema';
 
 import { type Halo, type Space } from '@dxos/client-protocol';
 import { type ClientServicesHost, type DataSpace } from '@dxos/client-services';
@@ -80,6 +81,7 @@ export interface DevtoolsHook {
   Ref: typeof Ref;
   Query: typeof Query;
   Filter: typeof Filter;
+  Schema: typeof Schema;
 
   getMeta: typeof getMeta;
 }
@@ -175,6 +177,7 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
     Relation,
     Query,
     Filter,
+    Schema,
     getMeta,
   };
 

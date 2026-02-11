@@ -93,12 +93,14 @@ ChatDialogRoot.displayName = 'ChatDialog.Root';
 // Header
 //
 
+const CHAT_DIALOG_HEADER_NAME = 'ChatDialog.Header';
+
 type ChatDialogHeaderProps = ThemedClassName<{
   title?: string;
 }>;
 
 const ChatDialogHeader = ({ classNames, title }: ChatDialogHeaderProps) => {
-  const { expanded, setExpanded } = useChatDialogContext(ChatDialogHeader.displayName);
+  const { expanded, setExpanded } = useChatDialogContext(CHAT_DIALOG_HEADER_NAME);
 
   return (
     <div className={mx('grid grid-cols-[var(--rail-action)_1fr_min-content] items-center overflow-hidden', classNames)}>
@@ -127,16 +129,18 @@ const ChatDialogHeader = ({ classNames, title }: ChatDialogHeaderProps) => {
   );
 };
 
-ChatDialogHeader.displayName = 'ChatDialog.Header';
+ChatDialogHeader.displayName = CHAT_DIALOG_HEADER_NAME;
 
 //
 // Content
 //
 
+const CHAT_DIALOG_CONTENT_NAME = 'ChatDialog.Content';
+
 type ChatDialogContentProps = ThemedClassName<PropsWithChildren>;
 
 const ChatDialogContent = ({ children, classNames }: ChatDialogContentProps) => {
-  const { expanded, size, setSize } = useChatDialogContext(ChatDialogContent.displayName);
+  const { expanded, size, setSize } = useChatDialogContext(CHAT_DIALOG_CONTENT_NAME);
   useEffect(() => {
     setSize(expanded ? 'min-content' : 0);
   }, [expanded]);
@@ -167,11 +171,13 @@ const ChatDialogContent = ({ children, classNames }: ChatDialogContentProps) => 
   );
 };
 
-ChatDialogContent.displayName = 'ChatDialog.Content';
+ChatDialogContent.displayName = CHAT_DIALOG_CONTENT_NAME;
 
 //
 // Footer
 //
+
+const CHAT_DIALOG_FOOTER_NAME = 'ChatDialog.Footer';
 
 type ChatDialogFooterProps = ThemedClassName<PropsWithChildren>;
 
@@ -179,7 +185,7 @@ const ChatDialogFooter = ({ children, classNames }: ChatDialogFooterProps) => {
   return <div className={mx(classNames)}>{children}</div>;
 };
 
-ChatDialogFooter.displayName = 'ChatDialog.Footer';
+ChatDialogFooter.displayName = CHAT_DIALOG_FOOTER_NAME;
 
 //
 // ChatDialog
