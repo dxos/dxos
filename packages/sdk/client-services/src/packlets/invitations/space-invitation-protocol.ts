@@ -13,7 +13,12 @@ import { type Keyring } from '@dxos/keyring';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { AlreadyJoinedError, AuthorizationError, InvalidInvitationError, SpaceNotFoundError } from '@dxos/protocols';
-import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
+import {
+  type Invitation,
+  Invitation_AuthMethod,
+  Invitation_Kind,
+  Invitation_Type,
+} from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { type ProfileDocument, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 import {
   type AdmissionRequest,
@@ -61,7 +66,7 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
     const space = this._spaceManager.spaces.get(this._spaceKey);
     invariant(space);
     return {
-      kind: Invitation.Kind.SPACE,
+      kind: Invitation_Kind.SPACE,
       spaceKey: this._spaceKey,
       spaceId: space.id,
     };
@@ -78,7 +83,7 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
     const spaceMemberCredential = await this._spaceManager.admitMember({
       spaceKey: this._spaceKey,
       identityKey: request.space.identityKey,
-      role: invitation.role ?? SpaceMember.Role.ADMIN,
+      role: invitation.role ?? SpaceMember_Role.ADMIN,
       profile: guestProfile,
       delegationCredentialId: invitation.delegationCredentialId,
     });
@@ -96,7 +101,7 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
     invariant(this._spaceKey);
     const space = this._spaceManager.spaces.get(this._spaceKey);
     invariant(space);
-    if (invitation.authMethod === Invitation.AuthMethod.KNOWN_PUBLIC_KEY) {
+    if (invitation.authMethod === Invitation_AuthMethod.KNOWN_PUBLIC_KEY) {
       invariant(invitation.guestKeypair?.publicKey);
     }
 
@@ -108,11 +113,11 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
         invitationId: invitation.invitationId,
         authMethod: invitation.authMethod,
         swarmKey: invitation.swarmKey,
-        role: invitation.role ?? SpaceMember.Role.ADMIN,
+        role: invitation.role ?? SpaceMember_Role.ADMIN,
         expiresOn: computeExpirationTime(invitation),
         multiUse: invitation.multiUse ?? false,
         guestKey:
-          invitation.authMethod === Invitation.AuthMethod.KNOWN_PUBLIC_KEY
+          invitation.authMethod === Invitation_AuthMethod.KNOWN_PUBLIC_KEY
             ? invitation.guestKeypair!.publicKey
             : undefined,
       },
@@ -125,7 +130,7 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
 
   async cancelDelegation(invitation: Invitation): Promise<void> {
     invariant(this._spaceKey);
-    invariant(invitation.type === Invitation.Type.DELEGATED && invitation.delegationCredentialId);
+    invariant(invitation.type === Invitation_Type.DELEGATED && invitation.delegationCredentialId);
     const space = this._spaceManager.spaces.get(this._spaceKey);
     invariant(space);
 

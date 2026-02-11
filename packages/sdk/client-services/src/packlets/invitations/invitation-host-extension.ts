@@ -10,7 +10,11 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { InvalidInvitationExtensionRoleError, trace } from '@dxos/protocols';
 import { schema } from '@dxos/protocols/proto';
-import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
+import {
+  type Invitation,
+  Invitation_AuthMethod,
+  Invitation_State,
+} from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import {
   type AdmissionRequest,
@@ -36,7 +40,7 @@ type InvitationHostExtensionCallbacks = {
   onOpen: (ctx: Context, extensionCtx: ExtensionContext) => void;
   onError: (error: Error) => void;
 
-  onStateUpdate: (newState: Invitation.State) => void;
+  onStateUpdate: (newState: Invitation_State) => void;
 
   admit: (request: AdmissionRequest) => Promise<AdmissionResponse>;
 };
@@ -114,22 +118,22 @@ export class InvitationHostExtension
           log.trace('dxos.sdk.invitation-handler.host.introduce', trace.begin({ id: traceId }));
 
           const invitation = this._requireActiveInvitation();
-          this._assertInvitationState(Invitation.State.CONNECTED);
+          this._assertInvitationState(Invitation_State.CONNECTED);
           if (invitationId !== invitation?.invitationId) {
             log.warn('incorrect invitationId', { expected: invitation.invitationId, actual: invitationId });
             this._callbacks.onError(new Error('Incorrect invitationId.'));
             scheduleTask(this._ctx, () => this.close());
             // TODO(dmaretskyi): Better error handling.
             return {
-              authMethod: Invitation.AuthMethod.NONE,
+              authMethod: Invitation_AuthMethod.NONE,
             };
           }
 
           log.verbose('guest introduced themselves', { guestProfile: profile });
           this.guestProfile = profile;
-          this._callbacks.onStateUpdate(Invitation.State.READY_FOR_AUTHENTICATION);
+          this._callbacks.onStateUpdate(Invitation_State.READY_FOR_AUTHENTICATION);
           this._challenge =
-            invitation.authMethod === Invitation.AuthMethod.KNOWN_PUBLIC_KEY ? randomBytes(32) : undefined;
+            invitation.authMethod === Invitation_AuthMethod.KNOWN_PUBLIC_KEY ? randomBytes(32) : undefined;
 
           log.trace('dxos.sdk.invitation-handler.host.introduce', trace.end({ id: traceId }));
           return {
@@ -146,16 +150,16 @@ export class InvitationHostExtension
           log.verbose('received authentication request', { authCode: code });
           let status = AuthenticationResponse.Status.OK;
 
-          this._assertInvitationState([Invitation.State.AUTHENTICATING, Invitation.State.READY_FOR_AUTHENTICATION]);
-          this._callbacks.onStateUpdate(Invitation.State.AUTHENTICATING);
+          this._assertInvitationState([Invitation_State.AUTHENTICATING, Invitation_State.READY_FOR_AUTHENTICATION]);
+          this._callbacks.onStateUpdate(Invitation_State.AUTHENTICATING);
 
           switch (invitation.authMethod) {
-            case Invitation.AuthMethod.NONE: {
+            case Invitation_AuthMethod.NONE: {
               log('authentication not required');
               return { status: AuthenticationResponse.Status.OK };
             }
 
-            case Invitation.AuthMethod.SHARED_SECRET: {
+            case Invitation_AuthMethod.SHARED_SECRET: {
               if (invitation.authCode) {
                 if (this.authenticationRetry++ > MAX_OTP_ATTEMPTS) {
                   status = AuthenticationResponse.Status.INVALID_OPT_ATTEMPTS;
@@ -168,7 +172,7 @@ export class InvitationHostExtension
               break;
             }
 
-            case Invitation.AuthMethod.KNOWN_PUBLIC_KEY: {
+            case Invitation_AuthMethod.KNOWN_PUBLIC_KEY: {
               if (!invitation.guestKeypair) {
                 status = AuthenticationResponse.Status.INTERNAL_ERROR;
                 break;
@@ -213,7 +217,7 @@ export class InvitationHostExtension
           try {
             // Check authenticated.
             if (isAuthenticationRequired(invitation)) {
-              this._assertInvitationState(Invitation.State.AUTHENTICATING);
+              this._assertInvitationState(Invitation_State.AUTHENTICATING);
               if (!this.authenticationPassed) {
                 throw new Error('Not authenticated');
               }
@@ -239,7 +243,7 @@ export class InvitationHostExtension
       log.verbose('host acquire lock');
       this._invitationFlowLock = await tryAcquireBeforeContextDisposed(this._ctx, this._invitationFlowMutex);
       log.verbose('host lock acquired');
-      this._callbacks.onStateUpdate(Invitation.State.CONNECTING);
+      this._callbacks.onStateUpdate(Invitation_State.CONNECTING);
       await this.rpc.InvitationHostService.options({ role: InvitationOptions.Role.HOST });
       log.verbose('options sent');
       await cancelWithContext(this._ctx, this._remoteOptionsTrigger.wait({ timeout: OPTIONS_TIMEOUT }));
@@ -253,7 +257,7 @@ export class InvitationHostExtension
           },
         });
       }
-      this._callbacks.onStateUpdate(Invitation.State.CONNECTED);
+      this._callbacks.onStateUpdate(Invitation_State.CONNECTED);
       this._callbacks.onOpen(this._ctx, context);
     } catch (err: any) {
       if (this._invitationFlowLock != null) {
@@ -274,7 +278,7 @@ export class InvitationHostExtension
     return invitation;
   }
 
-  private _assertInvitationState(stateOrMany: Invitation.State | Invitation.State[]): void {
+  private _assertInvitationState(stateOrMany: Invitation_State | Invitation_State[]): void {
     const invitation = this._requireActiveInvitation();
     const validStates = Array.isArray(stateOrMany) ? stateOrMany : [stateOrMany];
     if (!validStates.includes(invitation.state)) {
@@ -304,4 +308,4 @@ export class InvitationHostExtension
 }
 
 export const isAuthenticationRequired = (invitation: Invitation) =>
-  invitation.authMethod !== Invitation.AuthMethod.NONE;
+  invitation.authMethod !== Invitation_AuthMethod.NONE;

@@ -18,9 +18,15 @@ import { log } from '@dxos/log';
 import {
   type AcceptInvitationRequest,
   type AuthenticationRequest,
-  Invitation,
-} from '@dxos/protocols/proto/dxos/client/services';
-import { SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
+  type CancelInvitationRequest,
+} from '@dxos/protocols/buf/dxos/client/services_pb';
+import {
+  type Invitation,
+  Invitation_AuthMethod,
+  Invitation_State,
+  Invitation_Type,
+} from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import { SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 import type { InvitationProtocol } from './invitation-protocol';
 import { type InvitationsHandler, createAdmissionKeypair } from './invitations-handler';
@@ -156,7 +162,7 @@ export class InvitationsManager {
       if (created.get().persistent) {
         await this._metadataStore.removeInvitation(invitationId);
       }
-      if (created.get().type === Invitation.Type.DELEGATED) {
+      if (created.get().type === Invitation_Type.DELEGATED) {
         const handler = this._getHandler(created.get());
         await handler.cancelDelegation(created.get());
       }
@@ -193,22 +199,22 @@ export class InvitationsManager {
   private _createInvitation(protocol: InvitationProtocol, _options?: Partial<Invitation>): Invitation {
     const {
       invitationId = PublicKey.random().toHex(),
-      type = Invitation.Type.INTERACTIVE,
-      authMethod = Invitation.AuthMethod.SHARED_SECRET,
-      state = Invitation.State.INIT,
+      type = Invitation_Type.INTERACTIVE,
+      authMethod = Invitation_AuthMethod.SHARED_SECRET,
+      state = Invitation_State.INIT,
       timeout = INVITATION_TIMEOUT,
       swarmKey = PublicKey.random(),
-      persistent = _options?.authMethod !== Invitation.AuthMethod.KNOWN_PUBLIC_KEY, // default no not storing keypairs
+      persistent = _options?.authMethod !== Invitation_AuthMethod.KNOWN_PUBLIC_KEY, // default no not storing keypairs
       created = new Date(),
       guestKeypair = undefined,
-      role = SpaceMember.Role.ADMIN,
+      role = SpaceMember_Role.ADMIN,
       lifetime = 86400 * 7, // 7 days,
       multiUse = false,
       ...options
     } = _options ?? {};
     const authCode =
       options?.authCode ??
-      (authMethod === Invitation.AuthMethod.SHARED_SECRET ? generatePasscode(AUTHENTICATION_CODE_LENGTH) : undefined);
+      (authMethod === Invitation_AuthMethod.SHARED_SECRET ? generatePasscode(AUTHENTICATION_CODE_LENGTH) : undefined);
 
     return {
       invitationId,
@@ -218,9 +224,9 @@ export class InvitationsManager {
       swarmKey,
       authCode,
       timeout,
-      persistent: persistent && type !== Invitation.Type.DELEGATED, // delegated invitations are persisted in control feed
+      persistent: persistent && type !== Invitation_Type.DELEGATED, // delegated invitations are persisted in control feed
       guestKeypair:
-        guestKeypair ?? (authMethod === Invitation.AuthMethod.KNOWN_PUBLIC_KEY ? createAdmissionKeypair() : undefined),
+        guestKeypair ?? (authMethod === Invitation_AuthMethod.KNOWN_PUBLIC_KEY ? createAdmissionKeypair() : undefined),
       created,
       lifetime,
       role,
@@ -250,7 +256,7 @@ export class InvitationsManager {
       initialInvitation: invitation,
       subscriber: stream.observable,
       onCancel: async () => {
-        stream.next({ ...invitation, state: Invitation.State.CANCELLED });
+        stream.next({ ...invitation, state: Invitation_State.CANCELLED });
         await ctx.dispose();
       },
     });
@@ -272,10 +278,10 @@ export class InvitationsManager {
       onError: (err) => {
         if (err instanceof TimeoutError) {
           log('timeout', { ...handler.toJSON() });
-          stream.next({ ...initialState, state: Invitation.State.TIMEOUT });
+          stream.next({ ...initialState, state: Invitation_State.TIMEOUT });
         } else {
           log.warn('auth failed', err);
-          stream.next({ ...initialState, state: Invitation.State.ERROR });
+          stream.next({ ...initialState, state: Invitation_State.ERROR });
         }
         void ctx.dispose();
       },
@@ -288,7 +294,7 @@ export class InvitationsManager {
       initialInvitation: initialState,
       subscriber: stream.observable,
       onCancel: async () => {
-        stream.next({ ...initialState, state: Invitation.State.CANCELLED });
+        stream.next({ ...initialState, state: Invitation_State.CANCELLED });
         await ctx.dispose();
       },
       onAuthenticate: async (code: string) => {
@@ -304,7 +310,7 @@ export class InvitationsManager {
     changeStream: PushStream<Invitation>,
     invitation: Invitation,
   ): Promise<void> {
-    if (invitation.type === Invitation.Type.DELEGATED && invitation.delegationCredentialId == null) {
+    if (invitation.type === Invitation_Type.DELEGATED && invitation.delegationCredentialId == null) {
       const delegationCredentialId = await handler.delegate(invitation);
       changeStream.next({ ...invitation, delegationCredentialId });
     } else if (invitation.persistent) {

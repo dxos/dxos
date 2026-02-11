@@ -5,7 +5,7 @@
 import { Trigger } from '@dxos/async';
 import { type AuthenticatingInvitation, type CancellableInvitation, InvitationEncoder } from '@dxos/client-protocol';
 import { invariant } from '@dxos/invariant';
-import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
+import { type Invitation, Invitation_State } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { type DeviceProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { ServiceContext } from '../services';
@@ -74,7 +74,7 @@ export const performInvitation = ({
     hostObservable.subscribe(
       async (hostInvitation: Invitation) => {
         switch (hostInvitation.state) {
-          case Invitation.State.CONNECTING: {
+          case Invitation_State.CONNECTING: {
             if (guestConnected) {
               if (wereConnected) {
                 hostComplete.wake({ invitation: hostInvitation });
@@ -91,7 +91,7 @@ export const performInvitation = ({
             guestObservable.subscribe(
               async (guestInvitation: Invitation) => {
                 switch (guestInvitation.state) {
-                  case Invitation.State.CONNECTING: {
+                  case Invitation_State.CONNECTING: {
                     if (hooks?.guest?.onConnecting?.(guestObservable)) {
                       break;
                     }
@@ -99,12 +99,12 @@ export const performInvitation = ({
                     break;
                   }
 
-                  case Invitation.State.CONNECTED: {
+                  case Invitation_State.CONNECTED: {
                     hooks?.guest?.onConnected?.(guestObservable);
                     break;
                   }
 
-                  case Invitation.State.READY_FOR_AUTHENTICATION: {
+                  case Invitation_State.READY_FOR_AUTHENTICATION: {
                     if (hooks?.guest?.onReady?.(guestObservable)) {
                       break;
                     }
@@ -121,12 +121,12 @@ export const performInvitation = ({
                     break;
                   }
 
-                  case Invitation.State.AUTHENTICATING: {
+                  case Invitation_State.AUTHENTICATING: {
                     hooks?.guest?.onAuthenticating?.(guestObservable);
                     break;
                   }
 
-                  case Invitation.State.SUCCESS: {
+                  case Invitation_State.SUCCESS: {
                     if (hooks?.guest?.onSuccess?.(guestObservable)) {
                       break;
                     }
@@ -134,7 +134,7 @@ export const performInvitation = ({
                     break;
                   }
 
-                  case Invitation.State.CANCELLED: {
+                  case Invitation_State.CANCELLED: {
                     if (hooks?.guest?.onCancelled?.(guestObservable)) {
                       break;
                     }
@@ -142,7 +142,7 @@ export const performInvitation = ({
                     break;
                   }
 
-                  case Invitation.State.TIMEOUT: {
+                  case Invitation_State.TIMEOUT: {
                     if (hooks?.guest?.onTimeout?.(guestObservable)) {
                       return;
                     }
@@ -161,13 +161,13 @@ export const performInvitation = ({
             break;
           }
 
-          case Invitation.State.CONNECTED: {
+          case Invitation_State.CONNECTED: {
             wereConnected = true;
             hooks?.host?.onConnected?.(hostObservable);
             break;
           }
 
-          case Invitation.State.READY_FOR_AUTHENTICATION: {
+          case Invitation_State.READY_FOR_AUTHENTICATION: {
             if (hooks?.host?.onReady?.(hostObservable)) {
               break;
             }
@@ -177,12 +177,12 @@ export const performInvitation = ({
             break;
           }
 
-          case Invitation.State.AUTHENTICATING: {
+          case Invitation_State.AUTHENTICATING: {
             hooks?.host?.onAuthenticating?.(hostObservable);
             break;
           }
 
-          case Invitation.State.SUCCESS: {
+          case Invitation_State.SUCCESS: {
             if (hooks?.host?.onSuccess?.(hostObservable)) {
               break;
             }
@@ -190,7 +190,7 @@ export const performInvitation = ({
             break;
           }
 
-          case Invitation.State.CANCELLED: {
+          case Invitation_State.CANCELLED: {
             if (hooks?.host?.onCancelled?.(hostObservable)) {
               break;
             }
@@ -198,7 +198,7 @@ export const performInvitation = ({
             break;
           }
 
-          case Invitation.State.TIMEOUT: {
+          case Invitation_State.TIMEOUT: {
             if (hooks?.host?.onTimeout?.(hostObservable)) {
               break;
             }

@@ -35,29 +35,29 @@ export class InvitationsServiceImpl implements Halo.InvitationsService {
   createInvitation(options: Invitation): Stream<Invitation> {
     return new Stream<Invitation>(({ next, close }) => {
       void this._invitationsManager
-        .createInvitation(options as any)
+        .createInvitation(options)
         .then((invitation) => {
           trace.metrics.increment('dxos.invitation.created');
-          invitation.subscribe((inv) => next(inv as any), close, close);
+          invitation.subscribe((inv) => next(inv), close, close);
         })
         .catch(close);
     });
   }
 
   acceptInvitation(request: AcceptInvitationRequest): Stream<Invitation> {
-    const invitation = this._invitationsManager.acceptInvitation(request as any);
+    const invitation = this._invitationsManager.acceptInvitation(request);
     return new Stream<Invitation>(({ next, close }) => {
-      invitation.subscribe((inv) => next(inv as any), close, close);
+      invitation.subscribe((inv) => next(inv), close, close);
     });
   }
 
   async authenticate(request: AuthenticationRequest): Promise<Empty> {
-    await this._invitationsManager.authenticate(request as any);
+    await this._invitationsManager.authenticate(request);
     return create(EmptySchema);
   }
 
   async cancelInvitation(request: CancelInvitationRequest): Promise<Empty> {
-    await this._invitationsManager.cancelInvitation(request as any);
+    await this._invitationsManager.cancelInvitation(request);
     return create(EmptySchema);
   }
 
@@ -69,7 +69,7 @@ export class InvitationsServiceImpl implements Halo.InvitationsService {
           create(QueryInvitationsResponseSchema, {
             action: QueryInvitationsResponse_Action.ADDED,
             type: QueryInvitationsResponse_Type.CREATED,
-            invitations: [invitation as any],
+            invitations: [invitation],
           }),
         );
       });
@@ -79,7 +79,7 @@ export class InvitationsServiceImpl implements Halo.InvitationsService {
           create(QueryInvitationsResponseSchema, {
             action: QueryInvitationsResponse_Action.ADDED,
             type: QueryInvitationsResponse_Type.ACCEPTED,
-            invitations: [invitation as any],
+            invitations: [invitation],
           }),
         );
       });
@@ -90,7 +90,7 @@ export class InvitationsServiceImpl implements Halo.InvitationsService {
           create(QueryInvitationsResponseSchema, {
             action: QueryInvitationsResponse_Action.REMOVED,
             type: QueryInvitationsResponse_Type.CREATED,
-            invitations: [invitation as any],
+            invitations: [invitation],
           }),
         );
       });
@@ -100,7 +100,7 @@ export class InvitationsServiceImpl implements Halo.InvitationsService {
           create(QueryInvitationsResponseSchema, {
             action: QueryInvitationsResponse_Action.REMOVED,
             type: QueryInvitationsResponse_Type.ACCEPTED,
-            invitations: [invitation as any],
+            invitations: [invitation],
           }),
         );
       });
@@ -111,7 +111,7 @@ export class InvitationsServiceImpl implements Halo.InvitationsService {
           create(QueryInvitationsResponseSchema, {
             action: QueryInvitationsResponse_Action.SAVED,
             type: QueryInvitationsResponse_Type.CREATED,
-            invitations: [invitation as any],
+            invitations: [invitation],
           }),
         );
       });
@@ -121,7 +121,7 @@ export class InvitationsServiceImpl implements Halo.InvitationsService {
         create(QueryInvitationsResponseSchema, {
           action: QueryInvitationsResponse_Action.ADDED,
           type: QueryInvitationsResponse_Type.CREATED,
-          invitations: this._invitationsManager.getCreatedInvitations() as any,
+          invitations: this._invitationsManager.getCreatedInvitations(),
           existing: true,
         }),
       );
@@ -130,7 +130,7 @@ export class InvitationsServiceImpl implements Halo.InvitationsService {
         create(QueryInvitationsResponseSchema, {
           action: QueryInvitationsResponse_Action.ADDED,
           type: QueryInvitationsResponse_Type.ACCEPTED,
-          invitations: this._invitationsManager.getAcceptedInvitations() as any,
+          invitations: this._invitationsManager.getAcceptedInvitations(),
           existing: true,
         }),
       );
