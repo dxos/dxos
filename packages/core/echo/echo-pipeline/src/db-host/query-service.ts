@@ -25,7 +25,6 @@ import {
   type QueryResponse,
   QueryResponseSchema,
   QueryResultSchema,
-  QueryService,
 } from '@dxos/protocols/buf/dxos/echo/query_pb';
 import { trace } from '@dxos/tracing';
 

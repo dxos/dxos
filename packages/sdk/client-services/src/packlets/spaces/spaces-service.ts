@@ -26,7 +26,7 @@ import {
   SpaceNotFoundError,
   encodeError,
 } from '@dxos/protocols';
-import { create, EmptySchema, type Empty } from '@dxos/protocols/buf';
+import { type Empty, EmptySchema, create } from '@dxos/protocols/buf';
 import {
   type AdmitContactRequest,
   type ContactAdmission,

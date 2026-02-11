@@ -7,7 +7,7 @@ import { type EdgeConnection } from '@dxos/edge-client';
 import { type SignalManager } from '@dxos/messaging';
 import { type SwarmNetworkManager } from '@dxos/network-manager';
 import { type Client } from '@dxos/protocols';
-import { create, EmptySchema, type Empty } from '@dxos/protocols/buf';
+import { type Empty, EmptySchema, create } from '@dxos/protocols/buf';
 import {
   type NetworkStatus,
   NetworkStatusSchema,

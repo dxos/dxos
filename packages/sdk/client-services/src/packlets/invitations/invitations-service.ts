@@ -4,7 +4,7 @@
 
 import { Stream } from '@dxos/codec-protobuf/stream';
 import { type Halo } from '@dxos/protocols';
-import { create, EmptySchema, type Empty } from '@dxos/protocols/buf';
+import { type Empty, EmptySchema, create } from '@dxos/protocols/buf';
 import {
   type AcceptInvitationRequest,
   type AuthenticationRequest,

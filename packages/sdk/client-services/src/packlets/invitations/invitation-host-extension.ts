@@ -9,12 +9,12 @@ import { InvariantViolation, invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { InvalidInvitationExtensionRoleError, trace } from '@dxos/protocols';
-import { schema } from '@dxos/protocols/proto';
 import {
   type Invitation,
   Invitation_AuthMethod,
   Invitation_State,
 } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import { schema } from '@dxos/protocols/proto';
 import { type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import {
   type AdmissionRequest,

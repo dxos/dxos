@@ -17,7 +17,6 @@ import {
   type CreateDocumentRequest,
   type CreateDocumentResponse,
   CreateDocumentResponseSchema,
-  DataService,
   DocHeadsListSchema,
   type FlushRequest,
   type GetDocumentHeadsRequest,

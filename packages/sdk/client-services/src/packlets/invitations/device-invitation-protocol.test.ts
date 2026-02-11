@@ -7,7 +7,7 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 import { chain } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { AlreadyJoinedError } from '@dxos/protocols';
-import { type Invitation, Invitation_Kind } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import { Invitation_Kind } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 
 import { type ServiceContext } from '../services';
 import { createPeers, createServiceContext, performInvitation } from '../testing';

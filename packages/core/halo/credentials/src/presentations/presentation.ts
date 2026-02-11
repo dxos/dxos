@@ -3,13 +3,12 @@
 //
 
 import { type Signer } from '@dxos/crypto';
-import { PublicKey } from '@dxos/keys';
+import { type PublicKey } from '@dxos/keys';
 import { create, timestampFromDate } from '@dxos/protocols/buf';
 import {
   type Chain,
   type Presentation,
   PresentationSchema,
-  type Proof,
   ProofSchema,
 } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { PublicKeySchema } from '@dxos/protocols/buf/dxos/keys_pb';

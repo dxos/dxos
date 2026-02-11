@@ -14,11 +14,11 @@ import {
   type RecoverIdentityRequest as EdgeRecoverIdentityRequest,
   type RecoverIdentityResponseBody,
 } from '@dxos/protocols';
-import { schema } from '@dxos/protocols/proto';
 import {
   type CreateRecoveryCredentialRequest,
   type RecoverIdentityRequest_ExternalSignature,
 } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { schema } from '@dxos/protocols/proto';
 import { Timeframe } from '@dxos/timeframe';
 
 import { type Identity } from './identity';

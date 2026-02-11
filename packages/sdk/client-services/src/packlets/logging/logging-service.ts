@@ -75,10 +75,7 @@ export class LoggingServiceImpl implements Client.LoggingService {
       const update = () => {
         const metrics = create(MetricsSchema, {
           timestamp: new Date(),
-          values: [
-            getNumericalValues('dxos.echo.pipeline.control'),
-            getNumericalValues('dxos.echo.pipeline.data'),
-          ],
+          values: [getNumericalValues('dxos.echo.pipeline.control'), getNumericalValues('dxos.echo.pipeline.data')],
         });
 
         next(

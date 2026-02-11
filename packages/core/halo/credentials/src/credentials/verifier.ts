@@ -4,7 +4,11 @@
 
 import { verifySignature } from '@dxos/crypto';
 import { PublicKey } from '@dxos/keys';
-import { type Chain, type Credential, type PublicKey as BufPublicKey } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import {
+  type PublicKey as BufPublicKey,
+  type Chain,
+  type Credential,
+} from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 import { isValidAuthorizedDeviceCredential } from './assertions';
 import { getCredentialProofPayload } from './signing';

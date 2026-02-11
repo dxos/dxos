@@ -16,16 +16,12 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import {
-  type AcceptInvitationRequest,
-  type AuthenticationRequest,
-  type CancelInvitationRequest,
-} from '@dxos/protocols/buf/dxos/client/services_pb';
-import {
   type Invitation,
   Invitation_AuthMethod,
   Invitation_State,
   Invitation_Type,
 } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import { type AcceptInvitationRequest, type AuthenticationRequest } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 import type { InvitationProtocol } from './invitation-protocol';

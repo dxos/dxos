@@ -7,8 +7,8 @@ import { Context, cancelWithContext } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { InvalidInvitationExtensionRoleError } from '@dxos/protocols';
+import { type Invitation_State } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { schema } from '@dxos/protocols/proto';
-import { type Invitation, type Invitation_State } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { type InvitationHostService, InvitationOptions } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { type ExtensionContext, RpcExtension } from '@dxos/teleport';
 

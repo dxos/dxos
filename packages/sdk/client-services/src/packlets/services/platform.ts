@@ -3,7 +3,7 @@
 //
 
 import { create } from '@dxos/protocols/buf';
-import { type Platform, Platform_Type, PlatformSchema } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { type Platform, PlatformSchema, Platform_Type } from '@dxos/protocols/buf/dxos/client/services_pb';
 
 export const getPlatform = (): Platform => {
   if ((process as any).browser) {

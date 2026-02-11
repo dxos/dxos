@@ -6,12 +6,7 @@ import { Event } from '@dxos/async';
 import { raise } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { create, timestampFromDate, timestampMs } from '@dxos/protocols/buf';
-import {
-  type ConnectionInfo,
-  ConnectionInfoSchema,
-  type SwarmInfo,
-  SwarmInfoSchema,
-} from '@dxos/protocols/buf/dxos/devtools/swarm_pb';
+import { ConnectionInfoSchema, type SwarmInfo, SwarmInfoSchema } from '@dxos/protocols/buf/dxos/devtools/swarm_pb';
 import { PublicKeySchema } from '@dxos/protocols/buf/dxos/keys_pb';
 import { type MuxerStats } from '@dxos/teleport';
 import { ComplexMap } from '@dxos/util';

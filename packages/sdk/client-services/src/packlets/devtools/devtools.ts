@@ -46,7 +46,7 @@ import {
   type SubscribeToSpacesResponse,
   type SubscribeToSwarmInfoResponse,
 } from '@dxos/protocols/buf/dxos/devtools/host_pb';
-import { BlobMetaSchema, BlobMeta_State, type BlobMeta } from '@dxos/protocols/buf/dxos/echo/blob_pb';
+import { type BlobMeta, BlobMetaSchema, BlobMeta_State } from '@dxos/protocols/buf/dxos/echo/blob_pb';
 import { type BlobMeta as ProtobufBlobMeta } from '@dxos/protocols/proto/dxos/echo/blob';
 
 import { type ServiceContext } from '../services';
