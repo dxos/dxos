@@ -6,7 +6,7 @@ import { Event as AsyncEvent } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf/stream';
 import { type Config } from '@dxos/config';
 import { type Client } from '@dxos/protocols';
-import { create } from '@dxos/protocols/buf';
+import { create, timestampFromDate } from '@dxos/protocols/buf';
 import {
   type ClearSnapshotsRequest,
   type EnableDebugLoggingRequest,
@@ -46,6 +46,8 @@ import {
   type SubscribeToSpacesResponse,
   type SubscribeToSwarmInfoResponse,
 } from '@dxos/protocols/buf/dxos/devtools/host_pb';
+import { BlobMetaSchema, BlobMeta_State, type BlobMeta } from '@dxos/protocols/buf/dxos/echo/blob_pb';
+import { type BlobMeta as ProtobufBlobMeta } from '@dxos/protocols/proto/dxos/echo/blob';
 
 import { type ServiceContext } from '../services';
 
@@ -89,17 +91,27 @@ export class DevtoolsServiceImpl implements Client.DevtoolsHost {
     const navigatorInfo = typeof navigator === 'object' ? await navigator.storage.estimate() : undefined;
 
     return create(StorageInfoSchema, {
-      type: this.params.context.storage.type as any,
-      storageUsage: BigInt(storageUsage.used),
-      originUsage: BigInt(navigatorInfo?.usage ?? 0),
-      usageQuota: BigInt(navigatorInfo?.quota ?? 0),
+      type: this.params.context.storage.type,
+      storageUsage: storageUsage.used,
+      originUsage: Number(navigatorInfo?.usage ?? 0),
+      usageQuota: Number(navigatorInfo?.quota ?? 0),
     });
   }
 
   async getBlobs(): Promise<GetBlobsResponse> {
-    return create(GetBlobsResponseSchema, {
-      blobs: (await this.params.context.blobStore.list()) as any,
-    });
+    const protobufBlobs = await this.params.context.blobStore.list();
+    const blobs: BlobMeta[] = protobufBlobs.map((blob: ProtobufBlobMeta) =>
+      create(BlobMetaSchema, {
+        id: blob.id,
+        state: blob.state === 1 ? BlobMeta_State.FULLY_PRESENT : BlobMeta_State.PARTIALLY_PRESENT,
+        length: blob.length,
+        chunkSize: blob.chunkSize,
+        bitfield: blob.bitfield,
+        created: blob.created ? timestampFromDate(blob.created) : undefined,
+        updated: blob.updated ? timestampFromDate(blob.updated) : undefined,
+      }),
+    );
+    return create(GetBlobsResponseSchema, { blobs });
   }
 
   async getSnapshots(): Promise<GetSnapshotsResponse> {
