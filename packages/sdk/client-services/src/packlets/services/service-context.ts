@@ -64,7 +64,6 @@ export type ServiceContextRuntimeProps = Pick<
     invitationConnectionDefaultProps?: InvitationConnectionProps;
     disableP2pReplication?: boolean;
     enableVectorIndexing?: boolean;
-    enableSqlite?: boolean;
     enableLocalQueues?: boolean;
   };
 /**

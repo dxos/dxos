@@ -50,8 +50,6 @@ export type WorkerRuntimeOptions = {
    */
   automaticallyConnectWebrtc?: boolean;
 
-  enableSqlite?: boolean;
-
   /**
    * Optional SQLite layer for Effect. Defaults to LocalSqliteOpfsLayer.
    * For testing in Node.js, use `sqliteLayerMemory` from `@dxos/sql-sqlite/platform`.
@@ -93,7 +91,6 @@ export class WorkerRuntime {
     releaseLock,
     onStop,
     automaticallyConnectWebrtc = true,
-    enableSqlite,
     sqliteLayer,
   }: WorkerRuntimeOptions) {
     this._configProvider = configProvider;
@@ -112,7 +109,6 @@ export class WorkerRuntime {
       },
       runtime: this._runtime.runtimeEffect,
       runtimeProps: {
-        enableSqlite,
         // Auto-activate spaces that were previously active after leader changeover.
         autoActivateSpaces: true,
       },

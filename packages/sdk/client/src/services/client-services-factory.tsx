@@ -88,7 +88,6 @@ export const createClientServices = async (
           {
             createOpfsWorker,
             sqlitePath,
-            runtimeProps: { enableSqlite: true },
           },
           observabilityGroup,
           signalTelemetryEnabled,
