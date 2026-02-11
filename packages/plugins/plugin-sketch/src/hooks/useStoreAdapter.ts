@@ -22,34 +22,37 @@ import { TLDrawStoreAdapter } from './adapter';
 export const useStoreAdapter = (object?: Diagram.Diagram) => {
   const [adapter] = useState(new TLDrawStoreAdapter());
   const [_, forceUpdate] = useState({});
-  useAsyncEffect(async (controller) => {
-    if (!object) {
-      return;
-    }
+  useAsyncEffect(
+    async (controller) => {
+      if (!object) {
+        return;
+      }
 
-    const canvas = await object.canvas.load();
-    if (controller.signal.aborted) {
-      return;
-    }
+      const canvas = await object.canvas.load();
+      if (controller.signal.aborted) {
+        return;
+      }
 
-    if (canvas.schema !== Diagram.TLDRAW_SCHEMA) {
-      log.warn('invalid schema', { schema: canvas.schema });
-      return;
-    }
+      if (canvas.schema !== Diagram.TLDRAW_SCHEMA) {
+        log.warn('invalid schema', { schema: canvas.schema });
+        return;
+      }
 
-    const accessor = createDocAccessor(canvas, ['content']);
-    await adapter.open(accessor);
-    if (controller.signal.aborted) {
-      void adapter.close();
-      return;
-    }
+      const accessor = createDocAccessor(canvas, ['content']);
+      await adapter.open(accessor);
+      if (controller.signal.aborted) {
+        void adapter.close();
+        return;
+      }
 
-    forceUpdate({});
+      forceUpdate({});
 
-    return () => {
-      void adapter.close();
-    };
-  }, [object]);
+      return () => {
+        void adapter.close();
+      };
+    },
+    [object],
+  );
 
   return adapter;
 };
