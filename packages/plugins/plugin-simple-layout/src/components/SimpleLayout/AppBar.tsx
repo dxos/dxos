@@ -60,11 +60,7 @@ export const AppBar = ({
   return (
     <Toolbar.Root
       role='banner'
-      classNames={mx(
-        'grid grid-cols-[var(--rail-size)_1fr_var(--rail-size)] bs-[var(--rail-action)] items-center',
-        'density-fine',
-        classNames,
-      )}
+      classNames={mx('grid grid-cols-[var(--rail-size)_1fr_var(--rail-size)] items-center', 'density-fine', classNames)}
     >
       {showBackButton ? (
         <IconButton variant='ghost' icon='ph--caret-left--regular' iconOnly label={t('back label')} onClick={onBack} />
