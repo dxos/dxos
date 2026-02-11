@@ -8,7 +8,7 @@ import { Type } from '@dxos/echo';
 import { Queue } from '@dxos/echo-db';
 import { QueueAnnotation, Text } from '@dxos/schema';
 
-import { Chat } from '../../chat';
+import { Chat } from '../chat';
 
 export * from './util';
 
@@ -39,8 +39,7 @@ export const Initiative = Schema.Struct({
   chat: Schema.optional(Type.Ref(Chat.Chat)),
 
   /**
-   * Objects to subscribe to.
-   * References to objects with a a canonical queue property.
+   * References to objects with a canonical queue property.
    * Schema must have the QueueAnnotation.
    */
   // TODO(dmaretskyi): Turn into an array of objects when form-data

@@ -14,7 +14,7 @@ import { invariant } from '@dxos/invariant';
 import { Text } from '@dxos/schema';
 import type { Message } from '@dxos/types';
 
-import { Chat } from '../../chat';
+import { Chat } from '../chat';
 
 import { Initiative } from './Initiative';
 
@@ -25,6 +25,7 @@ import { Initiative } from './Initiative';
  * @param blueprint - The blueprint to use for the initiative context.
  * @returns An Effect that yields the initialized Initiative.
  */
+// TODO(burdon): Rename make and move into Initiative.ts?
 export const makeInitialized = (
   props: Omit<Obj.MakeProps<typeof Initiative>, 'spec' | 'plan' | 'artifacts' | 'subscriptions' | 'chat'> &
     Partial<Pick<Obj.MakeProps<typeof Initiative>, 'artifacts' | 'subscriptions'>> & {

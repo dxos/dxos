@@ -5,22 +5,27 @@
 import { Blueprint, Template } from '@dxos/blueprints';
 import { trim } from '@dxos/util';
 
-import { addArtifact, agent, getContext, qualifier } from './functions';
+import { Initiative } from '../../functions';
 
 /**
  * Get all initiative functions. This is a function to avoid circular dependency issues.
  */
-export const getFunctions = () => [getContext, addArtifact, agent, qualifier];
+// TODO(burdon): Remove?
+export const getFunctions = () => [
+  Initiative.getContext,
+  Initiative.addArtifact,
+  Initiative.agent,
+  Initiative.qualifier,
+];
 
 /**
  * Creates the Initiative blueprint. This is a function to avoid circular dependency issues.
  */
-export const makeBlueprint = () =>
-  Blueprint.make({
-    key: 'dxos.org/blueprint/initiative',
-    name: 'Initiative blueprint',
-    instructions: Template.make({
-      source: trim`
+export const blueprint = Blueprint.make({
+  key: 'dxos.org/blueprint/initiative',
+  name: 'Initiative blueprint',
+  instructions: Template.make({
+    source: trim`
         You work on an initiative. Each initiative has a spec - the goal of the initiative.
         The initiative plan shows the current progress of the initiative.
         Initiative has an number of associated artifacts you can read/write.
@@ -46,13 +51,15 @@ export const makeBlueprint = () =>
           </artifacts>
         {{/with}}
       `,
-      inputs: [
-        {
-          name: 'initiative',
-          kind: 'function',
-          function: 'dxos.org/function/initiative/get-context',
-        },
-      ],
-    }),
-    tools: Blueprint.toolDefinitions({ functions: [addArtifact] }),
-  });
+    inputs: [
+      {
+        name: 'initiative',
+        kind: 'function',
+        function: 'dxos.org/function/initiative/get-context',
+      },
+    ],
+  }),
+  tools: Blueprint.toolDefinitions({
+    functions: [Initiative.addArtifact],
+  }),
+});

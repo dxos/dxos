@@ -23,12 +23,11 @@ import { Text } from '@dxos/schema';
 import { Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { Chat } from '../chat';
-import { Document } from '../functions';
+import { Chat } from '../../chat';
+import { Document, Initiative as InitiativeFunctions } from '../../functions';
+import { Initiative } from '../../initiative';
 
-import { getFunctions, makeBlueprint } from './blueprint';
-import { agent } from './functions';
-import { Initiative } from './types';
+import { blueprint, getFunctions } from './initiative-blueprint';
 
 ObjectId.dangerouslyDisableRandomness();
 
@@ -64,7 +63,7 @@ describe.runIf(TestHelpers.tagEnabled('flaky'))('Initiative', () => {
               spec: 'Keep a shopping list of items to buy.',
               blueprints: [Ref.make(MarkdownBlueprint.make())],
             },
-            makeBlueprint(),
+            blueprint,
           ),
         );
         const chatQueue = initiative.chat?.target?.queue?.target as any;
@@ -106,7 +105,7 @@ describe.runIf(TestHelpers.tagEnabled('flaky'))('Initiative', () => {
               `,
               blueprints: [Ref.make(MarkdownBlueprint.make())],
             },
-            makeBlueprint(),
+            blueprint,
           ),
         );
         yield* Database.flush({ indexes: true });
@@ -119,7 +118,7 @@ describe.runIf(TestHelpers.tagEnabled('flaky'))('Initiative', () => {
               kind: 'queue',
               queue: inboxQueue.dxn.toString(),
             },
-            function: Ref.make(FunctionDefinition.serialize(agent)),
+            function: Ref.make(FunctionDefinition.serialize(InitiativeFunctions.agent)),
             input: {
               initiative: Ref.make(initiative),
               event: '{{event}}',

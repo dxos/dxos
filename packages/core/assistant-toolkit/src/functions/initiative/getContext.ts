@@ -9,7 +9,7 @@ import { AiContextService } from '@dxos/assistant';
 import { Database, Obj } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
 
-import { Initiative } from '../types';
+import { Initiative } from '../../initiative';
 
 export default defineFunction({
   key: 'dxos.org/function/initiative/get-context',
