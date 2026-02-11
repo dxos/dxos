@@ -90,9 +90,8 @@ describe('Integration tests', () => {
     await dataAssertion.verify(db2);
   });
 
-  test('reload peer -- index persists across runtime reload', { timeout: 20_000 }, async () => {
+  test('reload peer -- save index before restart', { timeout: 20_000 }, async () => {
     const NUM_OBJECTS = 500;
-
     await using peer = await builder.createPeer({
       types: [TestSchema.Person],
     });
