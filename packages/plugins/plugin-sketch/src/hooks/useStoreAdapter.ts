@@ -2,11 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 import { createDocAccessor } from '@dxos/echo-db';
-import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { useAsyncEffect } from '@dxos/react-ui';
 
 import { Diagram } from '../types';
 
@@ -15,28 +15,26 @@ import { TLDrawStoreAdapter } from './adapter';
 export const useStoreAdapter = (object?: Diagram.Diagram) => {
   const [adapter] = useState(new TLDrawStoreAdapter());
   const [_, forceUpdate] = useState({});
-  useEffect(() => {
-    if (!object || !object.canvas?.target) {
+  useAsyncEffect(async () => {
+    if (!object) {
       return;
     }
 
-    if (object.canvas?.target?.schema !== Diagram.TLDRAW_SCHEMA) {
-      log.warn('invalid schema', { schema: object.canvas.target?.schema });
+    const canvas = await object.canvas.load();
+
+    if (canvas.schema !== Diagram.TLDRAW_SCHEMA) {
+      log.warn('invalid schema', { schema: canvas.schema });
       return;
     }
 
-    const t = setTimeout(async () => {
-      invariant(object.canvas.target);
-      const accessor = createDocAccessor(object.canvas.target, ['content']);
-      await adapter.open(accessor);
-      forceUpdate({});
-    });
+    const accessor = createDocAccessor(canvas, ['content']);
+    await adapter.open(accessor);
+    forceUpdate({});
 
     return () => {
-      clearTimeout(t);
       void adapter.close();
     };
-  }, [object, object?.canvas.target]);
+  }, [object]);
 
   return adapter;
 };

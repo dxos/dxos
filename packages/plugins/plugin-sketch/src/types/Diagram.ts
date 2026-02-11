@@ -44,5 +44,7 @@ export const make = ({ canvas: canvasProps, ...props }: DiagramProps = {}) => {
   return Obj.make(Diagram, { ...props, canvas: Ref.make(canvas) });
 };
 
-export const isDiagram = (object: any, schema: string): object is Diagram =>
-  Schema.is(Diagram)(object) && object.canvas.target?.schema === schema;
+// TODO(wittjosiah): Reconcile canvas schema check with Excalidraw plugin.
+// export const isDiagram = (object: any, schema: string): object is Diagram =>
+//   Schema.is(Diagram)(object) && object.canvas.target?.schema === schema;
+export const isDiagram = (object: any, _schema: string): object is Diagram => Schema.is(Diagram)(object);

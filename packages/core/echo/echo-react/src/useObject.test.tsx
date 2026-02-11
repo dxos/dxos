@@ -8,7 +8,7 @@ import { renderHook, waitFor } from '@testing-library/react';
 import React, { type PropsWithChildren } from 'react';
 import { describe, expect, test } from 'vitest';
 
-import { Obj } from '@dxos/echo';
+import { Obj, Ref } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { createObject } from '@dxos/echo-db';
 
@@ -252,6 +252,45 @@ describe('useObject', () => {
         obj.name = 'Updated';
       });
     }).not.toThrow();
+  });
+
+  test('snapshot is referentially stable across re-renders for object', ({ expect }) => {
+    const obj: TestSchema.Person = createObject(
+      Obj.make(TestSchema.Person, { name: 'Test', username: 'test', email: 'test@example.com' }),
+    );
+    const registry = Registry.make();
+    const wrapper = createWrapper(registry);
+
+    const { result, rerender } = renderHook(() => useObject(obj), { wrapper });
+
+    const [firstSnapshot] = result.current;
+    expect(firstSnapshot).toBeDefined();
+
+    rerender();
+
+    const [secondSnapshot] = result.current;
+    expect(secondSnapshot).toBe(firstSnapshot);
+  });
+
+  test('snapshot is referentially stable across re-renders for ref', ({ expect }) => {
+    const org: TestSchema.Organization = createObject(
+      Obj.make(TestSchema.Organization, { name: 'DXOS' }),
+    );
+    const person: TestSchema.Person = createObject(
+      Obj.make(TestSchema.Person, { name: 'Test', username: 'test', email: 'test@example.com', employer: Ref.make(org) }),
+    );
+    const registry = Registry.make();
+    const wrapper = createWrapper(registry);
+
+    const { result, rerender } = renderHook(() => useObject(person.employer!), { wrapper });
+
+    const [firstSnapshot] = result.current;
+    expect(firstSnapshot).toBeDefined();
+
+    rerender();
+
+    const [secondSnapshot] = result.current;
+    expect(secondSnapshot).toBe(firstSnapshot);
   });
 
   test('transitions from undefined to defined object', async () => {
