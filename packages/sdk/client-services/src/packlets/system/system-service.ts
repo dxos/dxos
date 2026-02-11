@@ -84,8 +84,7 @@ export class SystemServiceImpl implements Client.SystemService {
   }
 
   async getPlatform(): Promise<Platform> {
-    const platform = getPlatform();
-    return create(PlatformSchema, platform as any);
+    return getPlatform();
   }
 
   async updateStatus({ status }: UpdateStatusRequest): Promise<Empty> {
