@@ -98,6 +98,9 @@ export class WorkerRuntime {
     this._releaseLock = releaseLock;
     this._onStop = onStop;
     this._channel = channel;
+    if (sqliteLayer) {
+      log.warn('Using testing SQLite layer');
+    }
     this._runtime = ManagedRuntime.make(
       SqlTransaction.layer
         .pipe(Layer.provideMerge(sqliteLayer ?? LocalSqliteOpfsLayer), Layer.provideMerge(Reactivity.layer))

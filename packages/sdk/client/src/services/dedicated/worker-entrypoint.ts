@@ -8,6 +8,7 @@ import { WorkerRuntime } from '@dxos/client-services';
 import { Config } from '@dxos/config';
 import { log } from '@dxos/log';
 import { createWorkerPort } from '@dxos/rpc-tunnel';
+import { layerMemory } from '@dxos/sql-sqlite/platform';
 
 import { STORAGE_LOCK_KEY } from '../../lock-key';
 
@@ -34,6 +35,21 @@ void navigator.locks.request(STORAGE_LOCK_KEY, async () => {
         owningClientId = message.ownerClientId ?? message.clientId;
         const config = new Config(message.config ?? {});
         log('worker init with config', { config: message.config });
+
+        // TODO(wittjosiah): OPFS doesn't work in Playwright's WebKit (works in real Safari).
+        //   https://github.com/microsoft/playwright/issues/18235
+        //   Test if OPFS is actually available before enabling SQLite.
+        let opfsAvailable = false;
+        try {
+          if (typeof navigator !== 'undefined' && navigator.storage?.getDirectory) {
+            await navigator.storage.getDirectory();
+            opfsAvailable = true;
+          }
+        } catch {
+          // OPFS not available (e.g. Playwright WebKit).
+          opfsAvailable = false;
+        }
+
         runtime = new WorkerRuntime({
           configProvider: async () => config,
           onStop: async () => {
@@ -45,6 +61,7 @@ void navigator.locks.request(STORAGE_LOCK_KEY, async () => {
           acquireLock: async () => {},
           releaseLock: () => {},
           automaticallyConnectWebrtc: false,
+          sqliteLayer: opfsAvailable ? undefined : layerMemory,
         });
         await runtime.start();
         self.postMessage({
