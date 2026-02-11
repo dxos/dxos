@@ -9,7 +9,7 @@ import { Obj, Ref } from '@dxos/echo';
 import { faker } from '@dxos/random';
 import { Card } from '@dxos/react-ui-mosaic';
 import { CardContainer } from '@dxos/react-ui-mosaic/testing';
-import { Organization, Person, Project, Task } from '@dxos/types';
+import { Organization, Person, Pipeline, Task } from '@dxos/types';
 
 export type DefaultStoryProps<T extends Obj.Any> = {
   Component: FC<SurfaceComponentProps<T>>;
@@ -69,8 +69,8 @@ export const createPerson = (): Person.Person => {
   });
 };
 
-export const createProject = (): Project.Project =>
-  Obj.make(Project.Project, {
+export const createProject = (): Pipeline.Pipeline =>
+  Obj.make(Pipeline.Pipeline, {
     name: faker.person.fullName(),
     image: 'https://dxos.network/dxos-logotype-blue.png',
     description: faker.lorem.paragraph(),

@@ -16,7 +16,7 @@ import {
 import { View as _View } from '@dxos/schema';
 
 import * as Person from './Person';
-import * as Project from './Project';
+import * as Pipeline from './Pipeline';
 
 export const Task = Schema.Struct({
   title: Schema.String.pipe(
@@ -78,7 +78,7 @@ export const Task = Schema.Struct({
       }),
     ),
   ),
-  project: Schema.optional(Type.Ref(Project.Project).annotations({ title: 'Project' })),
+  project: Schema.optional(Type.Ref(Pipeline.Pipeline).annotations({ title: 'Project' })),
   // TODO(burdon): Created date metadata.
   // due: Date,
   // TODO(burdon): Generic tags.
