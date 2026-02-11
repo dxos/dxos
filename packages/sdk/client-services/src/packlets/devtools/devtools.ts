@@ -131,7 +131,7 @@ export class DevtoolsServiceImpl implements Client.DevtoolsHost {
   }
 
   subscribeToSpaces(_request: SubscribeToSpacesRequest): Stream<SubscribeToSpacesResponse> {
-    return subscribeToSpaces(this.params.context, _request as any) as any;
+    return subscribeToSpaces(this.params.context, _request);
   }
 
   subscribeToItems(_request: SubscribeToItemsRequest): Stream<SubscribeToItemsResponse> {
