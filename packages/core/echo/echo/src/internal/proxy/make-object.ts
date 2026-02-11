@@ -7,7 +7,7 @@ import type * as Schema from 'effect/Schema';
 import { ObjectId } from '@dxos/keys';
 
 import { getTypeAnnotation } from '../annotations';
-import { type AnyProperties, KindId, MetaId, type ObjectMeta, ObjectMetaSchema, ParentId } from '../types';
+import { type AnyProperties, KindId, MetaId, type ObjectMeta, ObjectMetaSchema } from '../types';
 
 import { defineHiddenProperty } from './define-hidden-property';
 import { attachTypedJsonSerializer } from './json-serializer';
@@ -35,8 +35,7 @@ export const makeObject: {
     meta?: ObjectMeta,
   ): T;
 } = <T extends AnyProperties>(schema: Schema.Schema<T, any>, obj: MakeObjectProps<T>, meta?: ObjectMeta): T => {
-  // Use Object.assign to copy symbol properties (like ParentId) that spread operator doesn't copy.
-  return createReactiveObject<T>(Object.assign({}, obj) as T, meta, schema);
+  return createReactiveObject<T>({ ...obj } as T, meta, schema);
 };
 
 const createReactiveObject = <T extends AnyProperties>(obj: T, meta?: ObjectMeta, schema?: Schema.Schema<T>): T => {
@@ -48,21 +47,12 @@ const createReactiveObject = <T extends AnyProperties>(obj: T, meta?: ObjectMeta
     throw new Error('Schema is required for reactive objects. Use Atom for untyped reactive state.');
   }
 
-  // Extract parent from props (can be set via [Obj.Parent]).
-  const parent = (obj as any)[ParentId];
-  if (parent !== undefined) {
-    delete (obj as any)[ParentId];
-  }
-
   const annotation = getTypeAnnotation(schema);
   if (annotation) {
     setIdOnTarget(obj);
     defineHiddenProperty(obj, KindId, annotation.kind);
   }
   initMeta(obj, meta);
-  if (parent !== undefined) {
-    defineHiddenProperty(obj, ParentId, parent);
-  }
   prepareTypedTarget(obj, schema);
   attachTypedJsonSerializer(obj);
   const proxy = createProxy<T>(obj, TypedReactiveHandler.instance);

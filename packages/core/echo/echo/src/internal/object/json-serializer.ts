@@ -29,14 +29,12 @@ import { attachTypedJsonSerializer, defineHiddenProperty, typedJsonSerializer } 
 import { Ref, type RefResolver, refFromEncodedReference, setRefResolver } from '../ref';
 import {
   ATTR_META,
-  ATTR_PARENT,
   ATTR_TYPE,
   type AnyEntity,
   EntityKind,
   KindId,
   MetaId,
   ObjectMetaSchema,
-  ParentId,
   setSchema,
 } from '../types';
 
@@ -128,12 +126,6 @@ export const objectFromJSON = async (
     });
   }
 
-  if (jsonData[ATTR_PARENT]) {
-    const parentDxn = DXN.parse(jsonData[ATTR_PARENT]);
-    const parent = (await refResolver?.resolve(parentDxn)) as Obj.Unknown | undefined;
-    defineHiddenProperty(obj, ParentId, parent);
-  }
-
   if (dxn) {
     defineHiddenProperty(obj, SelfDXNId, dxn);
   }
@@ -190,7 +182,6 @@ export const objectStructureToJson = (objectId: string, structure: ObjectStructu
     id: objectId,
     [ATTR_TYPE]: (ObjectStructure.getTypeReference(structure)?.['/'] ?? '') as DXN.String,
     [ATTR_DELETED]: ObjectStructure.isDeleted(structure),
-    [ATTR_PARENT]: ObjectStructure.getParent(structure)?.['/'] as DXN.String | undefined,
     [ATTR_RELATION_SOURCE]: ObjectStructure.getRelationSource(structure)?.['/'] as DXN.String | undefined,
     [ATTR_RELATION_TARGET]: ObjectStructure.getRelationTarget(structure)?.['/'] as DXN.String | undefined,
   };
