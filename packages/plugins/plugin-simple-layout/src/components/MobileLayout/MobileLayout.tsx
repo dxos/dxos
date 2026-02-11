@@ -128,12 +128,12 @@ const useAutoScroll = () => {
     return addEventListener(
       document,
       'focus',
-      (ev: FocusEvent) => {
+      (event: FocusEvent) => {
         // TODO(burdon): Check content editable.
-        const target = ev.target as HTMLElement;
+        const target = event.target as HTMLElement;
         if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'DIV') {
           // Prevent default focus behavior.
-          ev.preventDefault();
+          event.preventDefault();
 
           // Manually focus without scroll.
           target.focus({ preventScroll: true });
