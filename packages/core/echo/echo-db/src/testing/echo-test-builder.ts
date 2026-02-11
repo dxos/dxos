@@ -90,7 +90,7 @@ export class EchoTestPeer extends Resource {
   private _lastDatabaseRootUrl?: string = undefined;
 
   private _persistentRuntime?: ManagedRuntime.ManagedRuntime<SqlClient.SqlClient | SqlExport.SqlExport, never>;
-  private _managedRuntime?: ManagedRuntime.ManagedRuntime<
+  private _managedRuntime!: ManagedRuntime.ManagedRuntime<
     SqlClient.SqlClient | SqlExport.SqlExport | SqlTransaction.SqlTransaction,
     never
   >;
@@ -175,10 +175,7 @@ export class EchoTestPeer extends Resource {
     }
     await this._echoHost.close(ctx);
     await this._kv.close();
-    if (this._managedRuntime != null) {
-      await this._managedRuntime.dispose();
-      this._managedRuntime = undefined;
-    }
+    await this._managedRuntime.dispose();
     if (!this._isReloading && this._persistentRuntime != null) {
       await this._persistentRuntime.dispose();
       this._persistentRuntime = undefined;
