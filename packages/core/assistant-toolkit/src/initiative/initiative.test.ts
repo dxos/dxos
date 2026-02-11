@@ -23,18 +23,18 @@ import { Text } from '@dxos/schema';
 import { Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import * as Chat from '../chat/Chat';
+import { Chat } from '../chat';
 import { Document } from '../functions';
 
+import { getFunctions, makeBlueprint } from './blueprint';
 import { agent } from './functions';
-
-import * as Initiative from '.';
+import { Initiative } from './types';
 
 ObjectId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayerWithTriggers({
   aiServicePreset: 'edge-remote',
-  functions: [...Initiative.getFunctions(), Document.read, Document.update, Document.create],
+  functions: [...getFunctions(), Document.read, Document.update, Document.create],
   types: [
     Initiative.Initiative,
     Chat.CompanionTo,
@@ -63,7 +63,7 @@ describe.runIf(TestHelpers.tagEnabled('flaky'))('Initiative', () => {
               spec: 'Keep a shopping list of items to buy.',
               blueprints: [Ref.make(MarkdownBlueprint.make())],
             },
-            Initiative.makeBlueprint(),
+            makeBlueprint(),
           ),
         );
         const chatQueue = initiative.chat?.target?.queue?.target as any;
@@ -99,14 +99,13 @@ describe.runIf(TestHelpers.tagEnabled('flaky'))('Initiative', () => {
 
                 Format:
 
-                ## Expences
-
+                ## Expenses
                 - Flight to London (2026-02-01): £100
                 - Hotel in London (2026-02-01): £100
               `,
               blueprints: [Ref.make(MarkdownBlueprint.make())],
             },
-            Initiative.makeBlueprint(),
+            makeBlueprint(),
           ),
         );
         yield* Database.flush({ indexes: true });

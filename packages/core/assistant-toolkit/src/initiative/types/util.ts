@@ -14,7 +14,7 @@ import { invariant } from '@dxos/invariant';
 import { Text } from '@dxos/schema';
 import type { Message } from '@dxos/types';
 
-import * as Chat from '../chat/Chat';
+import { Chat } from '../../chat';
 
 import { Initiative } from './Initiative';
 
@@ -115,9 +115,11 @@ export const resetChatHistory = (
         queue: Ref.fromDXN(queue.dxn),
       }),
     );
+
     Obj.change(initiative, (initiative) => {
       initiative.chat = Ref.make(chat);
     });
+
     yield* Database.add(
       Relation.make(Chat.CompanionTo, {
         [Relation.Source]: chat,

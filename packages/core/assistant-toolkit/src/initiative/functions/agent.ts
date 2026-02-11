@@ -14,8 +14,7 @@ import { TriggerEvent, defineFunction } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { type Message } from '@dxos/types';
 
-import * as Initiative from '../Initiative';
-import { resetChatHistory } from '../util';
+import { Initiative } from '../types';
 
 export default defineFunction({
   key: 'dxos.org/function/initiative/agent',
@@ -35,7 +34,7 @@ export default defineFunction({
       invariant(initiative.chat, 'Initiative has no chat.');
 
       if (initiative.newChatOnEveryEvent) {
-        yield* resetChatHistory(initiative);
+        yield* Initiative.resetChatHistory(initiative);
       }
 
       const chatQueue = yield* initiative.chat.pipe(

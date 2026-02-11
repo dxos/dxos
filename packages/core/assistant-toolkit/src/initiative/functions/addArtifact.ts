@@ -9,7 +9,7 @@ import { AiContextService } from '@dxos/assistant';
 import { Database, Obj, Type } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
 
-import * as Initiative from '../Initiative';
+import { Initiative } from '../types';
 
 export default defineFunction({
   key: 'dxos.org/function/initiative/add-artifact',

@@ -13,7 +13,7 @@ import { TriggerEvent, defineFunction } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { trim } from '@dxos/util';
 
-import * as Initiative from '../Initiative';
+import { Initiative } from '../types';
 
 export default defineFunction({
   key: 'dxos.org/function/initiative/qualifier',

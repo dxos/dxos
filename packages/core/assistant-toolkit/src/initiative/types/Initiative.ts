@@ -8,7 +8,9 @@ import { Type } from '@dxos/echo';
 import { Queue } from '@dxos/echo-db';
 import { QueueAnnotation, Text } from '@dxos/schema';
 
-import * as Chat from '../chat/Chat';
+import { Chat } from '../../chat';
+
+export * from './util';
 
 /**
  * Initiative schema definition.
@@ -45,7 +47,6 @@ export const Initiative = Schema.Struct({
   subscriptions: Schema.Array(Type.Ref(Type.Obj)),
 
   useQualifyingAgent: Schema.optional(Schema.Boolean),
-
   newChatOnEveryEvent: Schema.optional(Schema.Boolean),
 
   // TODO(dmaretskyi): input queue?
@@ -56,4 +57,5 @@ export const Initiative = Schema.Struct({
   }),
   QueueAnnotation.set(true),
 );
+
 export interface Initiative extends Schema.Schema.Type<typeof Initiative> {}
