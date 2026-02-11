@@ -53,31 +53,31 @@ export class NetworkServiceImpl implements Client.NetworkService {
   }
 
   async joinSwarm(request: JoinRequest): Promise<Empty> {
-    await this.signalManager.join(request as any);
+    await this.signalManager.join(request);
     return create(EmptySchema);
   }
 
   async leaveSwarm(request: LeaveRequest): Promise<Empty> {
-    await this.signalManager.leave(request as any);
+    await this.signalManager.leave(request);
     return create(EmptySchema);
   }
 
   async querySwarm(request: QueryRequest): Promise<SwarmResponse> {
-    return this.signalManager.query(request as any) as any;
+    return this.signalManager.query(request);
   }
 
   subscribeSwarmState(request: SubscribeSwarmStateRequest): Stream<SwarmResponse> {
     return new Stream<SwarmResponse>(({ ctx, next }) => {
       this.signalManager.swarmState?.on(ctx, (state) => {
         if (request.topic?.equals(state.swarmKey)) {
-          next(state as any);
+          next(state);
         }
       });
     });
   }
 
   async sendMessage(message: Message): Promise<Empty> {
-    await this.signalManager.sendMessage(message as any);
+    await this.signalManager.sendMessage(message);
     return create(EmptySchema);
   }
 
@@ -85,7 +85,7 @@ export class NetworkServiceImpl implements Client.NetworkService {
     return new Stream<Message>(({ ctx, next }) => {
       this.signalManager.onMessage.on(ctx, (message) => {
         if (message.recipient.peerKey === peer.peerKey) {
-          next(message as any);
+          next(message);
         }
       });
     });

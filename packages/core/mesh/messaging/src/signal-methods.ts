@@ -4,15 +4,15 @@
 
 import { type Event } from '@dxos/async';
 import { type Lifecycle } from '@dxos/context';
-import { type Peer, type SwarmResponse } from '@dxos/protocols/proto/dxos/edge/messenger';
+import { type Peer, type SwarmResponse } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import {
   type JoinRequest,
   type LeaveRequest,
   type Message,
   type QueryRequest,
   type SwarmEvent,
-} from '@dxos/protocols/proto/dxos/edge/signal';
-import { type SignalState } from '@dxos/protocols/proto/dxos/mesh/signal';
+} from '@dxos/protocols/buf/dxos/edge/signal_pb';
+import { type SignalState } from '@dxos/protocols/buf/dxos/mesh/signal_pb';
 
 export type { Message, SwarmEvent };
 export type PeerInfo = Peer;
