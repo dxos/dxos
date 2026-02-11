@@ -179,6 +179,6 @@ export class DevtoolsServiceImpl implements Client.DevtoolsHost {
   }
 
   subscribeToMetadata(): Stream<SubscribeToMetadataResponse> {
-    return subscribeToMetadata({ context: this.params.context }) as any;
+    return subscribeToMetadata({ context: this.params.context });
   }
 }
