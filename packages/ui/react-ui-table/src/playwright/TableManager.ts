@@ -17,6 +17,7 @@ const TABLE_SELECTORS = {
   },
   columnDelete: 'column-delete',
   rowDelete: 'row-menu-delete',
+  addRow: 'table.toolbar.add-row',
 } as const;
 
 export class TableManager {
@@ -51,6 +52,10 @@ export class TableManager {
   public async sortColumn(index: number, direction: 'ascending' | 'descending'): Promise<void> {
     await this.page.getByTestId(TABLE_SELECTORS.columnSettingsButton).nth(index).click();
     await this.page.getByTestId(TABLE_SELECTORS.columnSort[direction]).click();
+  }
+
+  public async addRow(): Promise<void> {
+    await this.page.getByTestId(TABLE_SELECTORS.addRow).click();
   }
 
   public async addColumn({ label, format }: { label: string; format: string }): Promise<void> {
