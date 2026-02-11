@@ -38,9 +38,6 @@ import { type AutomergeHost, deriveCollectionIdFromSpaceId } from '../automerge'
 import { DocumentsSynchronizer } from './documents-synchronizer';
 import { type SpaceStateManager } from './space-state-manager';
 
-// Re-export buf service type for consumers.
-export { DataService };
-
 export type DataServiceProps = {
   automergeHost: AutomergeHost;
   spaceStateManager: SpaceStateManager;
