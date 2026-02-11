@@ -12,65 +12,32 @@ import { Filter, getSpace, isSpace, useObject, useQuery } from '@dxos/react-clie
 import { useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { Card, Focus, Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import { ProjectionModel, createEchoChangeCallback } from '@dxos/schema';
-import { type Project } from '@dxos/types';
+import { type Pipeline } from '@dxos/types';
 
 import { meta } from '../meta';
 
-import { type ItemProps, useProject } from './Project';
+import { type ItemProps, usePipeline } from './PipelineComponent';
 
-export type ProjectColumnProps = {
-  column: Project.Column;
+//
+// PipelineColumn
+//
+
+const PIPELINE_COLUMN_NAME = 'PipelineColumn';
+
+export type PipelineColumnProps = {
+  column: Pipeline.Column;
 };
-
-//
-// ItemTile
-//
-
-type ItemTileProps = Pick<MosaicTileProps<Obj.Unknown>, 'classNames' | 'location' | 'data' | 'debug'> & {
-  itemProps: ItemProps;
-};
-
-const ItemTile = forwardRef<HTMLDivElement, ItemTileProps>(
-  ({ classNames, data, location, debug, itemProps }, forwardedRef) => {
-    const rootRef = useRef<HTMLDivElement>(null);
-    const composedRef = useComposedRefs<HTMLDivElement>(rootRef, forwardedRef);
-    const { Item } = useProject('ItemTile');
-
-    return (
-      <Mosaic.Tile asChild id={data.id} data={data} location={location} debug={debug}>
-        <Focus.Group asChild>
-          <Card.Root classNames={classNames} onClick={() => rootRef.current?.focus()} ref={composedRef}>
-            <Card.Toolbar>
-              <Card.DragHandle />
-              <Card.Title>{Obj.getLabel(data)}</Card.Title>
-              <Card.Menu />
-            </Card.Toolbar>
-            <Card.Content>
-              <Item {...itemProps} />
-            </Card.Content>
-          </Card.Root>
-        </Focus.Group>
-      </Mosaic.Tile>
-    );
-  },
-);
-
-ItemTile.displayName = 'ItemTile';
-
-//
-// ProjectColumn
-//
 
 // TODO(thure): Duplicates a lot of the same boilerplate as Kanban columns; is there an opportunity to DRY these out?
 // TODO(wittjosiah): Support column DnD reordering.
 // TODO(wittjosiah): Support item DnD reordering (ordering needs to be stored on the view presentation collection).
-export const ProjectColumn = ({ column }: ProjectColumnProps) => {
+export const PipelineColumn = ({ column }: PipelineColumnProps) => {
   const { t } = useTranslation(meta.id);
   // Subscribe to the view target for reactivity.
   const [viewSnapshot] = useObject(column.view);
   const view = column.view.target;
   const space = getSpace(view);
-  const { Item } = useProject('ViewColumn');
+  const { Item } = usePipeline(PIPELINE_COLUMN_NAME);
   const [schema, setSchema] = useState<Schema.Schema.AnyNoContext>();
   const query = useMemo(() => {
     if (!view) {
@@ -101,6 +68,7 @@ export const ProjectColumn = ({ column }: ProjectColumnProps) => {
     if (!schema || !view) {
       return undefined;
     }
+
     // For mutable schemas (EchoSchema), use the live jsonSchema reference for reactivity.
     const jsonSchema = Type.isMutable(schema) ? schema.jsonSchema : Type.toJsonSchema(schema);
     const change = createEchoChangeCallback(view, Type.isMutable(schema) ? schema : undefined);
@@ -119,7 +87,7 @@ export const ProjectColumn = ({ column }: ProjectColumnProps) => {
 
   return (
     <Focus.Group asChild>
-      <div className='grid bs-full card-default-width overflow-hidden bg-deckSurface grid-rows-[min-content_1fr] density-fine border border-separator rounded-md'>
+      <div className='grid bs-full card-default-width overflow-hidden grid-rows-[min-content_1fr] density-fine border border-separator rounded-md bg-deckSurface'>
         <Card.Toolbar>
           <Card.DragHandle />
           <Card.Title>{column.name ?? t('untitled view title')}</Card.Title>
@@ -134,3 +102,42 @@ export const ProjectColumn = ({ column }: ProjectColumnProps) => {
     </Focus.Group>
   );
 };
+
+PipelineColumn.displayName = PIPELINE_COLUMN_NAME;
+
+//
+// ItemTile
+//
+
+const ITEM_TILE_NAME = 'ItemTile';
+
+type ItemTileProps = Pick<MosaicTileProps<Obj.Unknown>, 'classNames' | 'location' | 'data' | 'debug'> & {
+  itemProps: ItemProps;
+};
+
+const ItemTile = forwardRef<HTMLDivElement, ItemTileProps>(
+  ({ classNames, data, location, debug, itemProps }, forwardedRef) => {
+    const rootRef = useRef<HTMLDivElement>(null);
+    const composedRef = useComposedRefs<HTMLDivElement>(rootRef, forwardedRef);
+    const { Item } = usePipeline(ITEM_TILE_NAME);
+
+    return (
+      <Mosaic.Tile asChild id={data.id} data={data} location={location} debug={debug}>
+        <Focus.Group asChild>
+          <Card.Root classNames={classNames} ref={composedRef}>
+            <Card.Toolbar>
+              <Card.DragHandle />
+              <Card.Title>{Obj.getLabel(data)}</Card.Title>
+              <Card.Menu />
+            </Card.Toolbar>
+            <Card.Content>
+              <Item {...itemProps} />
+            </Card.Content>
+          </Card.Root>
+        </Focus.Group>
+      </Mosaic.Tile>
+    );
+  },
+);
+
+ItemTile.displayName = ITEM_TILE_NAME;

@@ -8,33 +8,33 @@ import { Capability, Common, Plugin } from '@dxos/app-framework';
 import { Operation } from '@dxos/operation';
 import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
 import { type CreateObject } from '@dxos/plugin-space/types';
-import { Project } from '@dxos/types';
+import { Pipeline } from '@dxos/types';
 
 import { AppGraphBuilder, OperationResolver, ReactSurface } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
-import { ProjectOperation } from './types';
+import { PipelineOperation } from './types';
 
-export const ProjectPlugin = Plugin.define(meta).pipe(
+export const PipelinePlugin = Plugin.define(meta).pipe(
   Common.Plugin.addTranslationsModule({ translations }),
   Common.Plugin.addMetadataModule({
     metadata: {
-      id: Project.Project.typename,
+      id: Pipeline.Pipeline.typename,
       metadata: {
         icon: 'ph--check-square-offset--regular',
         iconHue: 'purple',
-        createObject: ((props) => Effect.sync(() => Project.make(props))) satisfies CreateObject,
+        createObject: ((props) => Effect.sync(() => Pipeline.make(props))) satisfies CreateObject,
       },
     },
   }),
-  Common.Plugin.addSchemaModule({ schema: [Project.Project] }),
+  Common.Plugin.addSchemaModule({ schema: [Pipeline.Pipeline] }),
   Plugin.addModule({
     id: 'on-space-created',
     activatesOn: SpaceEvents.SpaceCreated,
     activate: () =>
       Effect.succeed(
         Capability.contributes(SpaceCapabilities.OnCreateSpace, (params) =>
-          Operation.invoke(ProjectOperation.OnCreateSpace, params),
+          Operation.invoke(PipelineOperation.OnCreateSpace, params),
         ),
       ),
   }),

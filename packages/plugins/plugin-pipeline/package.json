@@ -1,7 +1,7 @@
 {
-  "name": "@dxos/plugin-project",
+  "name": "@dxos/plugin-pipeline",
   "version": "0.8.3",
-  "description": "Project plugin for Composer",
+  "description": "Pipeline plugin for Composer",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "repository": {

@@ -11,11 +11,11 @@ import { Collection } from '@dxos/schema';
 
 import { meta } from '../meta';
 
-const PROJECT_OPERATION = `${meta.id}/operation`;
+const PIPELINE_OPERATION = `${meta.id}/operation`;
 
-export namespace ProjectOperation {
+export namespace PipelineOperation {
   export const OnCreateSpace = Operation.make({
-    meta: { key: `${PROJECT_OPERATION}/on-create-space`, name: 'On Create Space' },
+    meta: { key: `${PIPELINE_OPERATION}/on-create-space`, name: 'On Create Space' },
     services: [Capability.Service],
     schema: {
       input: Schema.Struct({

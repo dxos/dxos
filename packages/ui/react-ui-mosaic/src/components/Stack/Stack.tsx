@@ -22,6 +22,8 @@ import { mosaicStyles } from '../Mosaic';
 
 type StackTileComponent<TData = any> = FC<MosaicTileProps<TData>>;
 
+const STACK_NAME = 'Stack';
+
 type StackProps<TData = any> = SlottableClassName<
   {
     Tile: StackTileComponent<TData>;
@@ -42,7 +44,7 @@ const StackInner = forwardRef<HTMLDivElement, StackProps>(
     forwardedRef,
   ) => {
     invariant(Tile);
-    const { id, dragging } = useMosaicContainer(StackInner.displayName!);
+    const { id, dragging } = useMosaicContainer(STACK_NAME);
     const visibleItems = useVisibleItems({ id, items, dragging: dragging?.source.data, getId });
 
     return (
@@ -70,13 +72,15 @@ const StackInner = forwardRef<HTMLDivElement, StackProps>(
   },
 );
 
-StackInner.displayName = 'Stack';
+StackInner.displayName = STACK_NAME;
 
 const Stack = StackInner as <TData = any>(props: StackProps<TData> & { ref?: Ref<HTMLDivElement> }) => ReactElement;
 
 //
 // VirtualStack
 //
+
+const VIRTUAL_STACK_NAME = 'VirtualStackInner';
 
 type VirtualStackProps<TData = any> = StackProps<TData> &
   Pick<
@@ -104,7 +108,7 @@ const VirtualStackInner = forwardRef<HTMLDivElement, VirtualStackProps>(
     forwardedRef,
   ) => {
     invariant(Tile);
-    const { id, dragging } = useMosaicContainer(VirtualStackInner.displayName!);
+    const { id, dragging } = useMosaicContainer(VIRTUAL_STACK_NAME);
     const visibleItems = useVisibleItems({ id, items, dragging: dragging?.source.data, getId });
     const virtualizer = useVirtualizer({
       count: visibleItems.length * 2 + 1,
@@ -176,7 +180,7 @@ const VirtualStackInner = forwardRef<HTMLDivElement, VirtualStackProps>(
   },
 );
 
-VirtualStackInner.displayName = 'VirtualStackInner';
+VirtualStackInner.displayName = VIRTUAL_STACK_NAME;
 
 const VirtualStack = VirtualStackInner as <TData = any>(
   props: VirtualStackProps<TData> & { ref?: Ref<HTMLDivElement> },

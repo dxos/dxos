@@ -12,13 +12,17 @@ import { mx } from '@dxos/ui-theme';
 // Context
 //
 
+const ${NAME}_CONTEXT_NAME = '${name}';
+
 type ${name}ContextValue = {};
 
-const [${name}ContextProvider, use${name}Context] = createContext<${name}ContextValue>('${name}');
+const [${name}ContextProvider, use${name}Context] = createContext<${name}ContextValue>(${NAME}_CONTEXT_NAME);
 
 //
 // Root
 //
+
+const ${NAME}_ROOT_NAME = '${name}.Root';
 
 type ${name}RootProps = PropsWithChildren<{}>;
 
@@ -26,33 +30,37 @@ const ${name}Root = ({ children }: ${name}RootProps) => {
   return <${name}ContextProvider>{children}</${name}ContextProvider>;
 };
 
-${name}Root.displayName = '${name}.Root';
+${name}Root.displayName = ${NAME}_ROOT_NAME;
 
 //
 // Viewport
 //
 
+const ${NAME}_VIEWPORT_NAME = '${name}.Viewport';
+
 type ${name}ViewportProps = ThemedClassName<PropsWithChildren<{}>>;
 
 const ${name}Viewport = ({ classNames, children }: ${name}ViewportProps) => {
-  const context = use${name}Context(${name}Viewport.displayName);
+  const context = use${name}Context(${NAME}_VIEWPORT_NAME);
   return <div role='none' className={mx('flex bs-full is-full overflow-y-auto', classNames)}>{children}</div>;
 };
 
-${name}Viewport.displayName = '${name}.Viewport';
+${name}Viewport.displayName = ${NAME}_VIEWPORT_NAME;
 
 //
 // Content
 //
 
+const ${NAME}_CONTENT_NAME = '${name}.Content';
+
 type ${name}ContentProps = ThemedClassName<{}>;
 
 const ${name}Content = ({ classNames }: ${name}ContentProps) => {
-  const context = use${name}Context(${name}Content.displayName);
+  const context = use${name}Context(${NAME}_CONTENT_NAME);
   return <div role='none' className={mx('flex flex-col is-full', classNames)}>{JSON.stringify(context)}</div>;
 };
 
-${name}Content.displayName = '${name}.Content';
+${name}Content.displayName = ${NAME}_CONTENT_NAME;
 
 //
 // ${name}

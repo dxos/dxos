@@ -102,6 +102,8 @@ const Root = ({
 // Header
 //
 
+const HEADER_NAME = 'ToggleContainer.Header';
+
 type HeaderProps = ThemedClassName<
   PropsWithChildren<{
     icon?: JSX.Element;
@@ -110,7 +112,7 @@ type HeaderProps = ThemedClassName<
 >;
 
 const Header = ({ classNames, children, icon }: HeaderProps) => {
-  const { open, setOpen, shrink, duration } = useToggleContainerContext(Header.displayName);
+  const { open, setOpen, shrink, duration } = useToggleContainerContext(HEADER_NAME);
 
   return (
     <div
@@ -131,16 +133,18 @@ const Header = ({ classNames, children, icon }: HeaderProps) => {
   );
 };
 
-Header.displayName = 'ToggleContainer.Header';
+Header.displayName = HEADER_NAME;
 
 //
 // Content
 //
 
+const CONTENT_NAME = 'ToggleContainer.Content';
+
 type ContentProps = ThemedClassName<PropsWithChildren>;
 
 const Content = ({ classNames, children }: ContentProps) => {
-  const { duration, expandX, expandY } = useToggleContainerContext(Content.displayName);
+  const { duration, expandX, expandY } = useToggleContainerContext(CONTENT_NAME);
 
   return (
     <div
@@ -167,7 +171,7 @@ const Content = ({ classNames, children }: ContentProps) => {
   );
 };
 
-Content.displayName = 'ToggleContainer.Content';
+Content.displayName = CONTENT_NAME;
 
 //
 // ToggleContainer
