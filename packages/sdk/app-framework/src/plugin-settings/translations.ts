@@ -12,7 +12,6 @@ export const translations = [
       [meta.id]: {
         'open settings label': 'Open settings',
         'app settings label': 'Settings',
-        'custom plugins label': 'Plugins',
       },
     },
   },

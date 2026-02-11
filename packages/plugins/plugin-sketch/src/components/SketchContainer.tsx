@@ -9,6 +9,7 @@ import { Obj } from '@dxos/echo';
 import { useActions } from '@dxos/plugin-graph';
 import { useAttention } from '@dxos/react-ui-attention';
 import { Layout, type LayoutFlexProps } from '@dxos/react-ui-mosaic';
+import { isTauri } from '@dxos/util';
 
 import { type Diagram, type SketchSettingsProps } from '../types';
 
@@ -45,7 +46,8 @@ export const SketchContainer = ({ role, subject: sketch, settings }: SketchConta
         key={id}
         classNames='attention-surface'
         sketch={sketch}
-        hideUi={!hasAttention}
+        // TODO(wittjosiah): Ensure attention works as expected on the mobile app.
+        hideUi={!hasAttention && !isTauri()}
         settings={settings}
         onThreadCreate={handleThreadCreate}
         {...props}
