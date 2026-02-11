@@ -46,7 +46,8 @@ void navigator.locks.request(STORAGE_LOCK_KEY, async () => {
             opfsAvailable = true;
           }
         } catch {
-          // OPFS not available (e.g. Playwright WebKit).
+          // OPFS not available (e.g., Playwright WebKit).
+          log.warn('OPFS not available, disabling persistent indexing');
           opfsAvailable = false;
         }
 
