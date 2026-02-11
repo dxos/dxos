@@ -134,6 +134,7 @@ const L1PanelHeader = ({ item, path, onBack }: L1PanelProps) => {
             icon={menuActions[0].properties?.icon ?? 'ph--placeholder--regular'}
             iconOnly
             label={toLocalizedString(menuActions[0].properties?.label, t)}
+            data-testid={menuActions[0].properties?.testId}
             onClick={() => onAction(menuActions[0] as Node.Action)}
           />
         )}
@@ -202,6 +203,7 @@ const useL1MenuActions = ({ item, path }: Pick<L1PanelProps, 'item' | 'path'>) =
           ? 'ph--arrow-u-down-left--regular'
           : (alternateTree.properties.icon ?? 'ph--placeholder--regular'),
         disposition: 'list-item',
+        testId: isAlternate ? 'navtree.backToSpace' : 'navtree.spaceSettings',
       },
     } as Node.Action;
   }, [alternateTree, isAlternate, settingsActionId, t]);
