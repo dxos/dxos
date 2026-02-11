@@ -12,11 +12,16 @@ import { UserFeedback } from '../types';
 
 export type FeedbackFormProps = Pick<FormRootProps<UserFeedback>, 'onSave'> & Pick<FormSubmitProps, 'disabled'>;
 
+const defaultValues: UserFeedback = {
+  message: '',
+  includeLogs: true,
+};
+
 export const FeedbackForm = ({ onSave, disabled }: FeedbackFormProps) => {
   const { t } = useTranslation(meta.id);
 
   return (
-    <Form.Root schema={UserFeedback} onSave={onSave}>
+    <Form.Root schema={UserFeedback} defaultValues={defaultValues} onSave={onSave}>
       <Form.Content>
         <Form.FieldSet />
         <Form.Submit icon='ph--paper-plane-tilt--regular' label={t('send feedback label')} disabled={disabled} />
