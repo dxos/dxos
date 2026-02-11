@@ -152,27 +152,57 @@ const useLockBodyScroll = (enabled: boolean) => {
       return false;
     };
 
-    const handleTouchStart = (event: TouchEvent) => {
-      const touch = event.touches[0];
-      touchStartX = touch.clientX;
-      touchStartY = touch.clientY;
-    };
-
-    const handleTouchMove = (event: TouchEvent) => {
-      const touch = event.touches[0];
-      const dx = Math.abs(touch.clientX - touchStartX);
-      const dy = Math.abs(touch.clientY - touchStartY);
-      const axis = dx > dy ? 'x' : 'y';
-
-      const target = event.target as HTMLElement;
-      if (!isScrollableInDirection(target, axis)) {
-        event.preventDefault();
-      }
-    };
-
     return combine(
-      addEventListener(document, 'touchstart', handleTouchStart as EventListener, { passive: true }),
-      addEventListener(document, 'touchmove', handleTouchMove as EventListener, { passive: false }),
+      // Record initial touch position.
+      addEventListener(
+        document,
+        'touchstart',
+        (event: TouchEvent) => {
+          const touch = event.touches[0];
+          touchStartX = touch.clientX;
+          touchStartY = touch.clientY;
+        },
+        { passive: true },
+      ),
+
+      // Prevent scrolling the viewport.
+      addEventListener(
+        document,
+        'touchmove',
+        (event: TouchEvent) => {
+          const touch = event.touches[0];
+          const dx = Math.abs(touch.clientX - touchStartX);
+          const dy = Math.abs(touch.clientY - touchStartY);
+          const axis = dx > dy ? 'x' : 'y';
+
+          const target = event.target as HTMLElement;
+          if (!isScrollableInDirection(target, axis)) {
+            event.preventDefault();
+          }
+        },
+        { passive: false },
+      ),
+
+      // Prevent auto-scroll when input is focused.
+      addEventListener(document, 'focus', (ev: FocusEvent) => {
+        const target = ev.target as HTMLElement;
+
+        // TODO(burdon): Check content editable.
+        if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'DIV') {
+          // Prevent default focus behavior.
+          ev.preventDefault();
+
+          // Manually focus without scroll.
+          target.focus({ preventScroll: true });
+
+          // Lock current scroll position.
+          const scrollX = window.scrollX;
+          const scrollY = window.scrollY;
+          requestAnimationFrame(() => {
+            window.scrollTo(scrollX, scrollY);
+          });
+        }
+      }),
     );
   }, [enabled]);
 };
@@ -202,7 +232,7 @@ type IOSKeyboard = {
  * - Viewport: 874 (entire screen)
  * - SafeArea: 96 (62+34)
  * - Main:     778
- * - Keyboard: 413 (incl. Input Accessory View)
+ * - Keyboard: 318, 413 (incl. Input Accessory View)
  *
  * CSS Variables set on document.documentElement:
  * --vvh: Visual viewport height (use as container height).
@@ -233,39 +263,14 @@ const useIOSKeyboard = (): IOSKeyboard => {
       setOpen(keyboardOpen);
       setHeight(keyboardHeight);
 
-      const vvh = window.innerHeight - keyboardHeight;
+      const vvh = initialHeight - keyboardHeight;
       document.documentElement.style.setProperty('--vvh', `${vvh}px`);
       document.documentElement.style.setProperty('--kb-height', `${keyboardHeight}px`);
       document.documentElement.style.setProperty('--kb-open', keyboardOpen ? '1' : '0');
-      log.info('viewport size', { vvh, keyboardHeight, keyboardOpen });
+      log.info('viewport size', { initialHeight, vvh, keyboardHeight, keyboardOpen });
     };
 
     return combine(
-      // Prevent auto-scroll when input is focused.
-      addEventListener(
-        document,
-        'focus',
-        (ev: FocusEvent) => {
-          const target = ev.target as HTMLElement;
-          if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
-            // Prevent default focus behavior.
-            ev.preventDefault();
-
-            // Manually focus without scroll.
-            target.focus({ preventScroll: true });
-
-            // Lock current scroll position.
-            const scrollX = window.scrollX;
-            const scrollY = window.scrollY;
-            requestAnimationFrame(() => {
-              window.scrollTo(scrollX, scrollY);
-            });
-          }
-        },
-        true,
-      ),
-
-      // TODO(burdon): This isn't triggered. Check swift plugin.
       // Handler for native iOS keyboard events (from KeyboardObserver.swift).
       addEventListener(
         window,
@@ -276,14 +281,6 @@ const useIOSKeyboard = (): IOSKeyboard => {
           updateState(height, type === 'show');
         },
       ),
-
-      // Lsten for VisualViewport as fallback.
-      addEventListener(viewport, 'resize', () => {
-        const heightDiff = initialHeight - viewport.height;
-        const open = heightDiff > 100;
-        log.info('resize event', { open, initialHeight, heightDiff });
-        updateState(open ? heightDiff : 0, open);
-      }),
     );
   }, []);
 

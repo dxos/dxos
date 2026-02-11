@@ -8,7 +8,7 @@ import { mx } from '../../util';
 
 export const sizeWidthMap = new Map<Size, string>([
   [0, 'is-0'],
-  ['px', 'is-px'],
+  ['px', 'is-px'], // 1px
   [0.5, 'is-0.5'],
   [1, 'is-1'],
   [1.5, 'is-1.5'],
@@ -46,7 +46,7 @@ export const sizeWidthMap = new Map<Size, string>([
 
 export const sizeHeightMap = new Map<Size, string>([
   [0, 'bs-0'],
-  ['px', 'bs-px'],
+  ['px', 'bs-px'], // 1px
   [0.5, 'bs-0.5'],
   [1, 'bs-1'],
   [1.5, 'bs-1.5'],

@@ -16,6 +16,7 @@ import {
 import { mx, osTranslations } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
+import { useMobileLayout } from '../MobileLayout';
 
 const APP_BAR_NAME = 'SimpleLayout.AppBar';
 
@@ -50,6 +51,7 @@ export const AppBar = ({
   const menu = useMenuActions(actions);
   const actionsValue = useAtomValue(actions);
   const hasActions = actionsValue.nodes.length > 0;
+  const { keyboardOpen } = useMobileLayout(APP_BAR_NAME);
 
   // Fall back to app name if no title provided.
   const displayTitle = title ?? t('current app name', { ns: osTranslations });
@@ -66,7 +68,9 @@ export const AppBar = ({
         classNames,
       )}
     >
-      {showBackButton ? (
+      {keyboardOpen ? (
+        <IconButton variant='ghost' icon='ph--x--regular' iconOnly label={t('done label')} />
+      ) : showBackButton ? (
         <IconButton variant='ghost' icon='ph--caret-left--regular' iconOnly label={t('back label')} onClick={onBack} />
       ) : (
         <div />
