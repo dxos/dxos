@@ -5,7 +5,8 @@
 import { unrefTimeout } from '@dxos/async';
 import { type Context } from '@dxos/context';
 import { LogLevel, type LogProcessor, getContextFromEntry, log } from '@dxos/log';
-import { type LogEntry } from '@dxos/protocols/proto/dxos/client/services';
+import { create, timestampFromDate, type JsonObject } from '@dxos/protocols/buf';
+import { type LogEntry, LogEntrySchema, LogEntry_MetaSchema } from '@dxos/protocols/buf/dxos/client/logging_pb';
 import { type Error as SerializedError } from '@dxos/protocols/proto/dxos/error';
 import { type Metric, type Resource, type Span } from '@dxos/protocols/proto/dxos/tracing';
 import { getPrototypeSpecificInstanceId } from '@dxos/util';
@@ -343,17 +344,17 @@ export class TraceProcessor {
           context[key] = sanitizeValue(context[key], 0, this);
         }
 
-        const entryToPush: LogEntry = {
+        const entryToPush = create(LogEntrySchema, {
           level: entry.level,
           message: entry.message ?? (entry.error ? (entry.error.message ?? String(entry.error)) : ''),
-          context,
-          timestamp: new Date(),
-          meta: {
+          context: context as JsonObject,
+          timestamp: timestampFromDate(new Date()),
+          meta: create(LogEntry_MetaSchema, {
             file: entry.meta?.F ?? '',
             line: entry.meta?.L ?? 0,
             resourceId: resource.data.id,
-          },
-        };
+          }),
+        });
         this._pushLog(entryToPush);
         break;
       }
