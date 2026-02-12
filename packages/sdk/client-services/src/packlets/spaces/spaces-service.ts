@@ -16,40 +16,47 @@ import { raise } from '@dxos/debug';
 import { type SpaceManager } from '@dxos/echo-pipeline';
 import { writeMessages } from '@dxos/feed-store';
 import { assertArgument, assertState, invariant } from '@dxos/invariant';
-import { SpaceId } from '@dxos/keys';
+import { PublicKey, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import {
   ApiError,
   AuthorizationError,
+  type Client,
   IdentityNotInitializedError,
   SpaceNotFoundError,
   encodeError,
 } from '@dxos/protocols';
+import { type Empty, EmptySchema, create } from '@dxos/protocols/buf';
 import {
   type AdmitContactRequest,
   type ContactAdmission,
   type CreateEpochRequest,
   type CreateEpochResponse,
+  CreateEpochResponseSchema,
   type ExportSpaceRequest,
   type ExportSpaceResponse,
+  ExportSpaceResponseSchema,
   type ImportSpaceRequest,
   type ImportSpaceResponse,
+  ImportSpaceResponseSchema,
   type JoinBySpaceKeyRequest,
   type JoinSpaceResponse,
+  JoinSpaceResponseSchema,
   type PostMessageRequest,
   type QueryCredentialsRequest,
   type QuerySpacesResponse,
+  QuerySpacesResponseSchema,
   type Space,
-  SpaceMember,
+  SpaceMember_PresenceState,
+  SpaceSchema,
   SpaceState,
-  type SpacesService,
   type SubscribeMessagesRequest,
   type UpdateMemberRoleRequest,
   type UpdateSpaceRequest,
   type WriteCredentialsRequest,
-} from '@dxos/protocols/proto/dxos/client/services';
-import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
+} from '@dxos/protocols/buf/dxos/client/services_pb';
+import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { type GossipMessage } from '@dxos/protocols/buf/dxos/mesh/teleport/gossip_pb';
 import { trace } from '@dxos/tracing';
 import { type Provider } from '@dxos/util';
 
@@ -59,7 +66,7 @@ import { SpaceArchiveWriter, extractSpaceArchive } from '../space-export';
 import { type DataSpace } from './data-space';
 import { type DataSpaceManager } from './data-space-manager';
 
-export class SpacesServiceImpl implements SpacesService {
+export class SpacesServiceImpl implements Client.SpacesService {
   constructor(
     private readonly _identityManager: IdentityManager,
     private readonly _spaceManager: SpaceManager,
@@ -74,9 +81,10 @@ export class SpacesServiceImpl implements SpacesService {
     return this._serializeSpace(space);
   }
 
-  async updateSpace({ spaceKey, state, edgeReplication }: UpdateSpaceRequest): Promise<void> {
+  async updateSpace({ spaceKey, state, edgeReplication }: UpdateSpaceRequest): Promise<Empty> {
     const dataSpaceManager = await this._getDataSpaceManager();
-    const space = dataSpaceManager.spaces.get(spaceKey) ?? raise(new SpaceNotFoundError(spaceKey));
+    const spaceKeyPk = PublicKey.from(spaceKey);
+    const space = dataSpaceManager.spaces.get(spaceKeyPk) ?? raise(new SpaceNotFoundError(spaceKeyPk));
 
     if (state) {
       switch (state) {
@@ -93,15 +101,17 @@ export class SpacesServiceImpl implements SpacesService {
     }
 
     if (edgeReplication !== undefined) {
-      await dataSpaceManager.setSpaceEdgeReplicationSetting(spaceKey, edgeReplication);
+      await dataSpaceManager.setSpaceEdgeReplicationSetting(spaceKeyPk, edgeReplication);
     }
+    return create(EmptySchema);
   }
 
-  async updateMemberRole(request: UpdateMemberRoleRequest): Promise<void> {
+  async updateMemberRole(request: UpdateMemberRoleRequest): Promise<Empty> {
     const identity = this._requireIdentity();
-    const space = this._spaceManager.spaces.get(request.spaceKey);
+    const spaceKeyPk = PublicKey.from(request.spaceKey);
+    const space = this._spaceManager.spaces.get(spaceKeyPk);
     if (space == null) {
-      throw new SpaceNotFoundError(request.spaceKey);
+      throw new SpaceNotFoundError(spaceKeyPk);
     }
     if (!space.spaceState.hasMembershipManagementPermission(identity.identityKey)) {
       throw new AuthorizationError({
@@ -112,9 +122,10 @@ export class SpacesServiceImpl implements SpacesService {
         },
       });
     }
+    const memberKeyPk = PublicKey.from(request.memberKey);
     const credentials = await createAdmissionCredentials(
       identity.getIdentityCredentialSigner(),
-      request.memberKey,
+      memberKeyPk,
       space.key,
       space.genesisFeedKey,
       request.newRole,
@@ -124,6 +135,7 @@ export class SpacesServiceImpl implements SpacesService {
     const spaceMemberCredential = credentials[0].credential.credential;
     invariant(getCredentialAssertion(spaceMemberCredential)['@type'] === 'dxos.halo.credentials.SpaceMember');
     await writeMessages(space.controlPipeline.writer, credentials);
+    return create(EmptySchema);
   }
 
   querySpaces(): Stream<QuerySpacesResponse> {
@@ -137,7 +149,7 @@ export class SpacesServiceImpl implements SpacesService {
           );
           log('update', () => ({ ids: spaces.map((space) => space.id) }));
           await this._updateMetrics();
-          next({ spaces });
+          next(create(QuerySpacesResponseSchema, { spaces }));
         },
         { maxFrequency: process.env.NODE_ENV === 'test' ? undefined : 2 },
       );
@@ -189,17 +201,20 @@ export class SpacesServiceImpl implements SpacesService {
     });
   }
 
-  async postMessage({ spaceKey, channel, message }: PostMessageRequest): Promise<void> {
+  async postMessage({ spaceKey, channel, message }: PostMessageRequest): Promise<Empty> {
     const dataSpaceManager = await this._getDataSpaceManager();
-    const space = dataSpaceManager.spaces.get(spaceKey) ?? raise(new SpaceNotFoundError(spaceKey));
+    const spaceKeyPk = PublicKey.from(spaceKey);
+    const space = dataSpaceManager.spaces.get(spaceKeyPk) ?? raise(new SpaceNotFoundError(spaceKeyPk));
     await space.postMessage(getChannelId(channel), message);
+    return create(EmptySchema);
   }
 
   subscribeMessages({ spaceKey, channel }: SubscribeMessagesRequest): Stream<GossipMessage> {
     return new Stream<GossipMessage>(({ ctx, next }) => {
       scheduleTask(ctx, async () => {
         const dataSpaceManager = await this._getDataSpaceManager();
-        const space = dataSpaceManager.spaces.get(spaceKey) ?? raise(new SpaceNotFoundError(spaceKey));
+        const spaceKeyPk = PublicKey.from(spaceKey);
+        const space = dataSpaceManager.spaces.get(spaceKeyPk) ?? raise(new SpaceNotFoundError(spaceKeyPk));
         const handle = space.listen(getChannelId(channel), (message) => {
           next(message);
         });
@@ -208,9 +223,10 @@ export class SpacesServiceImpl implements SpacesService {
     });
   }
 
-  queryCredentials({ spaceKey, noTail }: QueryCredentialsRequest): Stream<Credential> {
+  queryCredentials(request: QueryCredentialsRequest): Stream<Credential> {
     return new Stream(({ ctx, next, close }) => {
-      const space = this._spaceManager.spaces.get(spaceKey) ?? raise(new SpaceNotFoundError(spaceKey));
+      const spaceKeyPk = PublicKey.from(request.spaceKey);
+      const space = this._spaceManager.spaces.get(spaceKeyPk) ?? raise(new SpaceNotFoundError(spaceKeyPk));
 
       const processor: CredentialProcessor = {
         processCredential: async (credential) => {
@@ -220,15 +236,16 @@ export class SpacesServiceImpl implements SpacesService {
       ctx.onDispose(() => space.spaceState.removeCredentialProcessor(processor));
       scheduleTask(ctx, async () => {
         await space.spaceState.addCredentialProcessor(processor);
-        if (noTail) {
+        if (request.noTail) {
           close();
         }
       });
     });
   }
 
-  async writeCredentials({ spaceKey, credentials }: WriteCredentialsRequest): Promise<void> {
-    const space = this._spaceManager.spaces.get(spaceKey) ?? raise(new SpaceNotFoundError(spaceKey));
+  async writeCredentials({ spaceKey, credentials }: WriteCredentialsRequest): Promise<Empty> {
+    const spaceKeyPk = PublicKey.from(spaceKey);
+    const space = this._spaceManager.spaces.get(spaceKeyPk) ?? raise(new SpaceNotFoundError(spaceKeyPk));
     for (const credential of credentials ?? []) {
       if (credential.proof) {
         await space.controlPipeline.writer.write({ credential: { credential } });
@@ -236,35 +253,48 @@ export class SpacesServiceImpl implements SpacesService {
         invariant(!credential.id, 'Id on unsigned credentials is not allowed');
         invariant(this._identityManager.identity, 'Identity is not available');
         const signer = this._identityManager.identity.getIdentityCredentialSigner();
-        invariant(credential.issuer.equals(signer.getIssuer()));
+        const issuerPk = PublicKey.from(credential.issuer);
+        invariant(issuerPk.equals(signer.getIssuer()));
+        const subjectId = credential.subject?.id ? PublicKey.from(credential.subject.id) : undefined;
+        invariant(subjectId, 'Subject ID is required');
         const signedCredential = await signer.createCredential({
-          subject: credential.subject.id,
-          assertion: credential.subject.assertion,
+          subject: subjectId,
+          assertion: credential.subject?.assertion,
         });
         await space.controlPipeline.writer.write({ credential: { credential: signedCredential } });
       }
     }
+    return create(EmptySchema);
   }
 
   async createEpoch({ spaceKey, migration, automergeRootUrl }: CreateEpochRequest): Promise<CreateEpochResponse> {
     const dataSpaceManager = await this._getDataSpaceManager();
-    const space = dataSpaceManager.spaces.get(spaceKey) ?? raise(new SpaceNotFoundError(spaceKey));
+    const spaceKeyPk = PublicKey.from(spaceKey);
+    const space = dataSpaceManager.spaces.get(spaceKeyPk) ?? raise(new SpaceNotFoundError(spaceKeyPk));
     const result = await space.createEpoch({ migration, newAutomergeRoot: automergeRootUrl });
-    return { epochCredential: result?.credential, controlTimeframe: result?.timeframe };
+    return create(CreateEpochResponseSchema, {
+      epochCredential: result?.credential,
+      controlTimeframe: result?.timeframe,
+    });
   }
 
-  async admitContact(request: AdmitContactRequest): Promise<void> {
+  async admitContact(request: AdmitContactRequest): Promise<Empty> {
     const dataSpaceManager = await this._getDataSpaceManager();
+    const spaceKeyPk = PublicKey.from(request.spaceKey);
+    const identityKeyPk = request.contact?.identityKey ? PublicKey.from(request.contact.identityKey) : undefined;
+    invariant(identityKeyPk, 'Contact identity key is required');
     await dataSpaceManager.admitMember({
-      spaceKey: request.spaceKey,
-      identityKey: request.contact.identityKey,
+      spaceKey: spaceKeyPk,
+      identityKey: identityKeyPk,
       role: request.role,
     });
+    return create(EmptySchema);
   }
 
   async joinBySpaceKey({ spaceKey }: JoinBySpaceKeyRequest): Promise<JoinSpaceResponse> {
     const dataSpaceManager = await this._getDataSpaceManager();
-    const credential = await dataSpaceManager.requestSpaceAdmissionCredential(spaceKey);
+    const spaceKeyPk = PublicKey.from(spaceKey);
+    const credential = await dataSpaceManager.requestSpaceAdmissionCredential(spaceKeyPk);
     return this._joinByAdmission({ credential });
   }
 
@@ -284,11 +314,12 @@ export class SpacesServiceImpl implements SpacesService {
     }
 
     const archive = await writer.finish();
-    return { archive };
+    return create(ExportSpaceResponseSchema, { archive });
   }
 
   async importSpace(request: ImportSpaceRequest): Promise<ImportSpaceResponse> {
     const dataSpaceManager = await this._getDataSpaceManager();
+    invariant(request.archive, 'Archive is required');
     const extracted = await extractSpaceArchive(request.archive);
     invariant(extracted.metadata.echo?.currentRootUrl, 'Space archive does not contain a root URL');
     const space = await dataSpaceManager.createSpace({
@@ -296,14 +327,16 @@ export class SpacesServiceImpl implements SpacesService {
       rootUrl: extracted.metadata.echo?.currentRootUrl as AutomergeUrl,
     });
     await this._updateMetrics();
-    return { newSpaceId: space.id };
+    return create(ImportSpaceResponseSchema, { newSpaceId: space.id });
   }
 
   private async _joinByAdmission({ credential }: ContactAdmission): Promise<JoinSpaceResponse> {
+    invariant(credential, 'Credential is required');
     const assertion = getCredentialAssertion(credential);
     invariant(assertion['@type'] === 'dxos.halo.credentials.SpaceMember', 'Invalid credential');
     const myIdentity = this._identityManager.identity;
-    invariant(myIdentity && credential.subject.id.equals(myIdentity.identityKey));
+    const subjectId = credential.subject?.id ? PublicKey.from(credential.subject.id) : undefined;
+    invariant(myIdentity && subjectId?.equals(myIdentity.identityKey));
 
     const dataSpaceManager = await this._getDataSpaceManager();
     let dataSpace = dataSpaceManager.spaces.get(assertion.spaceKey);
@@ -315,20 +348,20 @@ export class SpacesServiceImpl implements SpacesService {
       await myIdentity.controlPipeline.writer.write({ credential: { credential } });
     }
 
-    return { space: await this._serializeSpace(dataSpace) };
+    return create(JoinSpaceResponseSchema, { space: await this._serializeSpace(dataSpace) });
   }
 
   private async _serializeSpace(space: DataSpace): Promise<Space> {
-    return {
+    return create(SpaceSchema, {
       id: space.id,
-      spaceKey: space.key,
+      spaceKey: space.key.toHex(),
       state: space.state,
       error: space.error ? encodeError(space.error) : undefined,
       pipeline: {
         currentEpoch: space.automergeSpaceState.lastEpoch,
         appliedEpoch: space.automergeSpaceState.lastEpoch,
 
-        controlFeeds: space.inner.controlPipeline.state.feeds.map((feed) => feed.key),
+        controlFeeds: space.inner.controlPipeline.state.feeds.map((feed) => feed.key.toHex()),
         currentControlTimeframe: space.inner.controlPipeline.state.timeframe,
         targetControlTimeframe: space.inner.controlPipeline.state.targetTimeframe,
         totalControlTimeframe: space.inner.controlPipeline.state.endTimeframe,
@@ -353,20 +386,20 @@ export class SpacesServiceImpl implements SpacesService {
           return {
             identity: {
               did: await createDidFromIdentityKey(member.key),
-              identityKey: member.key,
+              identityKey: member.key.toHex(),
               profile: member.profile ?? {},
             },
             role: member.role,
-            presence: peers.length > 0 ? SpaceMember.PresenceState.ONLINE : SpaceMember.PresenceState.OFFLINE,
+            presence: peers.length > 0 ? SpaceMember_PresenceState.ONLINE : SpaceMember_PresenceState.OFFLINE,
             peerStates: peers,
           };
         }),
       ),
-      creator: space.inner.spaceState.creator?.key,
+      creator: space.inner.spaceState.creator?.key.toHex(),
       cache: space.cache,
       metrics: space.metrics,
       edgeReplication: space.getEdgeReplicationSetting(),
-    };
+    });
   }
 
   private _requireIdentity() {

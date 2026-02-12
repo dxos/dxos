@@ -5,7 +5,7 @@
 import stableStringify from 'json-stable-stringify';
 
 import { PublicKey } from '@dxos/keys';
-import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { Timeframe } from '@dxos/timeframe';
 import { arrayToBuffer } from '@dxos/util';
 
@@ -23,9 +23,9 @@ export const getCredentialProofPayload = (credential: Credential): Uint8Array =>
     },
   };
   if (copy.parentCredentialIds?.length === 0) {
-    delete copy.parentCredentialIds;
+    delete (copy as { parentCredentialIds?: unknown }).parentCredentialIds;
   }
-  delete copy.id; // ID is not part of the signature payload.
+  delete (copy as { id?: unknown }).id; // ID is not part of the signature payload.
 
   return Buffer.from(canonicalStringify(copy));
 };

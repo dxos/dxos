@@ -8,6 +8,7 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/protocols';
+import { EMPTY } from '@dxos/protocols/buf';
 import { ConnectionState, type NetworkStatus } from '@dxos/protocols/proto/dxos/client/services';
 
 import { RPC_TIMEOUT } from '../common';
@@ -73,7 +74,7 @@ export class MeshProxy {
     this._streamSubscriptions.clear();
 
     invariant(this._serviceProvider.services.NetworkService, 'NetworkService is not available.');
-    const networkStatusStream = this._serviceProvider.services.NetworkService.queryStatus(undefined, {
+    const networkStatusStream = this._serviceProvider.services.NetworkService.queryStatus(EMPTY, {
       timeout: RPC_TIMEOUT,
     });
     networkStatusStream.subscribe((networkStatus: NetworkStatus) => {

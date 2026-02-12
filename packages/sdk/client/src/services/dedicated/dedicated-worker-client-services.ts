@@ -8,7 +8,6 @@ import { Config } from '@dxos/config';
 import { type Context, Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import type { ServiceBundle } from '@dxos/rpc';
 import { createWorkerPort } from '@dxos/rpc-tunnel';
 import type { MaybePromise } from '@dxos/util';
 
@@ -66,7 +65,7 @@ export class DedicatedWorkerClientServices extends Resource implements ClientSer
     this.#config = options.config;
   }
 
-  get descriptors(): ServiceBundle<ClientServices> {
+  get descriptors() {
     return clientServiceBundle;
   }
 

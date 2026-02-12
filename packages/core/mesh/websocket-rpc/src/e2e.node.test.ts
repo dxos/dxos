@@ -4,43 +4,43 @@
 
 import { describe, expect, onTestFinished, test } from 'vitest';
 
-import { schema } from '@dxos/protocols/proto';
-import { type ServiceTypesOf, createServiceBundle } from '@dxos/rpc';
+import { EMPTY, create } from '@dxos/protocols/buf';
+import { TestRpcRequestSchema, TestRpcResponseSchema, TestService } from '@dxos/protocols/buf/example/testing/rpc_pb';
+import { createBufServiceBundle } from '@dxos/rpc';
 
 import { WebsocketRpcClient } from './client';
 import { WebsocketRpcServer } from './server';
 
-const services = createServiceBundle({
-  TestService: schema.getService('example.testing.rpc.TestService'),
+const services = createBufServiceBundle({
+  TestService,
 });
 
 describe('e2e', () => {
   test('roundtrip', async () => {
-    const server = new WebsocketRpcServer<{}, ServiceTypesOf<typeof services>>({
+    const server = new WebsocketRpcServer({
       port: 12342,
       onConnection: async () => {
         return {
           exposed: services,
-          requested: {},
           handlers: {
             TestService: {
-              testCall: async (request: any) => {
-                return {
+              testCall: async (request) => {
+                return create(TestRpcResponseSchema, {
                   data: request.data,
-                };
+                });
               },
-              voidCall: async () => {},
+              voidCall: async () => {
+                return EMPTY;
+              },
             },
           },
         };
       },
     });
 
-    const client = new WebsocketRpcClient<ServiceTypesOf<typeof services>, {}>({
+    const client = new WebsocketRpcClient({
       url: 'ws://localhost:12342',
       requested: services,
-      exposed: {},
-      handlers: {},
     });
 
     await server.open();
@@ -48,7 +48,7 @@ describe('e2e', () => {
     await client.open();
     onTestFinished(() => client.close());
 
-    const response = await client.rpc.TestService.testCall({ data: 'hello' });
+    const response = await client.rpc.TestService.testCall(create(TestRpcRequestSchema, { data: 'hello' }));
     expect(response.data).to.equal('hello');
   });
 });

@@ -4,15 +4,21 @@
 
 import { Stream } from '@dxos/codec-protobuf/stream';
 import { type Space } from '@dxos/echo-pipeline';
+import { PublicKey } from '@dxos/keys';
+import { create } from '@dxos/protocols/buf';
 import {
   type SubscribeToSpacesRequest,
   type SubscribeToSpacesResponse,
-} from '@dxos/protocols/proto/dxos/devtools/host';
+  SubscribeToSpacesResponseSchema,
+  SubscribeToSpacesResponse_SpaceInfoSchema,
+} from '@dxos/protocols/buf/dxos/devtools/host_pb';
+import { PublicKeySchema } from '@dxos/protocols/buf/dxos/keys_pb';
 import { type SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
 
 import { type ServiceContext } from '../services';
 
-export const subscribeToSpaces = (context: ServiceContext, { spaceKeys = [] }: SubscribeToSpacesRequest) => {
+export const subscribeToSpaces = (context: ServiceContext, request: SubscribeToSpacesRequest) => {
+  const spaceKeys = request.spaceKeys?.map((k) => PublicKey.from(k.data));
   return new Stream<SubscribeToSpacesResponse>(({ next }) => {
     let unsubscribe: () => void;
 
@@ -22,22 +28,28 @@ export const subscribeToSpaces = (context: ServiceContext, { spaceKeys = [] }: S
         (space) => !spaceKeys?.length || spaceKeys.some((spaceKey) => spaceKey.equals(space.key)),
       );
 
-      next({
-        spaces: filteredSpaces.map((space): SubscribeToSpacesResponse.SpaceInfo => {
-          const spaceMetadata = context.metadataStore.spaces.find((spaceMetadata: SpaceMetadata) =>
-            spaceMetadata.key.equals(space.key),
-          );
+      next(
+        create(SubscribeToSpacesResponseSchema, {
+          spaces: filteredSpaces.map((space) => {
+            const spaceMetadata = context.metadataStore.spaces.find((spaceMetadata: SpaceMetadata) =>
+              spaceMetadata.key.equals(space.key),
+            );
 
-          return {
-            key: space.key,
-            isOpen: space.isOpen,
-            timeframe: spaceMetadata?.dataTimeframe,
-            genesisFeed: space.genesisFeedKey,
-            controlFeed: space.controlFeedKey!, // TODO(dmaretskyi): Those keys may be missing.
-            dataFeed: space.dataFeedKey!,
-          };
+            return create(SubscribeToSpacesResponse_SpaceInfoSchema, {
+              key: create(PublicKeySchema, { data: space.key.asUint8Array() }),
+              isOpen: space.isOpen,
+              timeframe: spaceMetadata?.dataTimeframe,
+              genesisFeed: create(PublicKeySchema, { data: space.genesisFeedKey.asUint8Array() }),
+              controlFeed: space.controlFeedKey
+                ? create(PublicKeySchema, { data: space.controlFeedKey.asUint8Array() })
+                : undefined,
+              dataFeed: space.dataFeedKey
+                ? create(PublicKeySchema, { data: space.dataFeedKey.asUint8Array() })
+                : undefined,
+            });
+          }),
         }),
-      });
+      );
     };
 
     const timeout = setTimeout(async () => {

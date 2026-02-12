@@ -3,7 +3,7 @@
 //
 
 import { type PublicKey } from '@dxos/keys';
-import type { Invitation } from '@dxos/protocols/proto/dxos/client/services';
+import type { Invitation } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import type { DeviceProfileDocument, ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import type {
   AdmissionRequest,

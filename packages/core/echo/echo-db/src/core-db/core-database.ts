@@ -26,9 +26,9 @@ import { invariant } from '@dxos/invariant';
 import { type ObjectId } from '@dxos/keys';
 import { type DXN, type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { RpcClosedError } from '@dxos/protocols';
-import type { QueryService } from '@dxos/protocols/proto/dxos/echo/query';
-import type { DataService, SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
+import { type Echo, RpcClosedError } from '@dxos/protocols';
+import { EMPTY, create } from '@dxos/protocols/buf';
+import * as EchoServicePb from '@dxos/protocols/buf/dxos/echo/service_pb';
 import { trace } from '@dxos/tracing';
 import { chunkArray, deepMapValues, defaultMap } from '@dxos/util';
 
@@ -48,8 +48,8 @@ export type InitRootProxyFn = (core: ObjectCore) => void;
 
 export type CoreDatabaseProps = {
   graph: HypergraphImpl;
-  dataService: DataService;
-  queryService: QueryService;
+  dataService: Echo.DataService;
+  queryService: Echo.QueryService;
   spaceId: SpaceId;
   spaceKey: PublicKey;
 };
@@ -82,8 +82,8 @@ export class CoreDatabase {
   private readonly _spaceKey: PublicKey;
   private readonly _spaceId: SpaceId;
   private readonly _hypergraph: HypergraphImpl;
-  private readonly _dataService: DataService;
-  private readonly _queryService: QueryService;
+  private readonly _dataService: Echo.DataService;
+  private readonly _queryService: Echo.QueryService;
   private readonly _repoProxy: RepoProxy;
   private readonly _objects = new Map<string, ObjectCore>();
 
@@ -536,18 +536,18 @@ export class CoreDatabase {
     if (disk) {
       await this._repoProxy.flush();
       await this._dataService.flush(
-        {
+        create(EchoServicePb.FlushRequestSchema, {
           documentIds: this._automergeDocLoader
             .getAllHandles()
             .map((handle) => handle.documentId)
             .filter((id): id is DocumentId => id != null),
-        },
+        }),
         { timeout: RPC_TIMEOUT },
       );
     }
 
     if (indexes) {
-      await this._dataService.updateIndexes(undefined, { timeout: 0 });
+      await this._dataService.updateIndexes(EMPTY, { timeout: 0 });
     }
 
     if (updates) {
@@ -566,17 +566,19 @@ export class CoreDatabase {
     }
 
     const headsStates = await this._dataService.getDocumentHeads(
-      {
+      create(EchoServicePb.GetDocumentHeadsRequestSchema, {
         documentIds: Object.values(doc.links ?? {}).map((link) =>
           interpretAsDocumentId(link.toString() as AutomergeUrl),
         ),
-      },
+      }),
       { timeout: RPC_TIMEOUT },
     );
 
     const heads: Record<string, string[]> = {};
-    for (const state of headsStates.heads.entries ?? []) {
-      heads[state.documentId] = state.heads ?? [];
+    for (const state of headsStates.heads?.entries ?? []) {
+      if (state.documentId) {
+        heads[state.documentId] = state.heads ?? [];
+      }
     }
 
     heads[root.documentId] = getHeads(doc);
@@ -596,11 +598,11 @@ export class CoreDatabase {
   // TODO(dmaretskyi): Find a way to ensure client propagation.
   async waitUntilHeadsReplicated(heads: SpaceDocumentHeads): Promise<void> {
     await this._dataService.waitUntilHeadsReplicated(
-      {
+      create(EchoServicePb.WaitUntilHeadsReplicatedRequestSchema, {
         heads: {
           entries: Object.entries(heads.heads).map(([documentId, heads]) => ({ documentId, heads })),
         },
-      },
+      }),
       { timeout: 0 },
     );
   }
@@ -615,12 +617,12 @@ export class CoreDatabase {
     invariant(root.documentId, 'Space root document must have documentId');
 
     await this._dataService.reIndexHeads(
-      {
+      create(EchoServicePb.ReIndexHeadsRequestSchema, {
         documentIds: [
           root.documentId,
           ...Object.values(doc.links ?? {}).map((link) => interpretAsDocumentId(link as AutomergeUrl)),
         ],
-      },
+      }),
       { timeout: 0 },
     );
   }
@@ -629,21 +631,25 @@ export class CoreDatabase {
    * @deprecated Use `flush({ indexes: true })`.
    */
   async updateIndexes(): Promise<void> {
-    await this._dataService.updateIndexes(undefined, { timeout: 0 });
+    await this._dataService.updateIndexes(EMPTY, { timeout: 0 });
   }
 
-  async getSyncState(): Promise<SpaceSyncState> {
+  async getSyncState(): Promise<EchoServicePb.SpaceSyncState> {
     const value = await Stream.first(
-      this._dataService.subscribeSpaceSyncState({ spaceId: this.spaceId }, { timeout: RPC_TIMEOUT }),
+      this._dataService.subscribeSpaceSyncState(
+        create(EchoServicePb.GetSpaceSyncStateRequestSchema, { spaceId: this.spaceId }),
+      ),
     );
     return value ?? raise(new Error('Failed to get sync state'));
   }
 
-  subscribeToSyncState(ctx: Context, callback: (state: SpaceSyncState) => void): CleanupFn {
-    let currentStream: ReturnType<DataService['subscribeSpaceSyncState']> | undefined;
+  subscribeToSyncState(ctx: Context, callback: (state: EchoServicePb.SpaceSyncState) => void): CleanupFn {
+    let currentStream: ReturnType<Echo.DataService['subscribeSpaceSyncState']> | undefined;
 
     const setupStream = () => {
-      currentStream = this._dataService.subscribeSpaceSyncState({ spaceId: this.spaceId }, { timeout: RPC_TIMEOUT });
+      currentStream = this._dataService.subscribeSpaceSyncState(
+        create(EchoServicePb.GetSpaceSyncStateRequestSchema, { spaceId: this.spaceId }),
+      );
       currentStream.subscribe(
         (data) => {
           void runInContextAsync(ctx, () => callback(data));
@@ -667,7 +673,13 @@ export class CoreDatabase {
   /**
    * Update service references after reconnection.
    */
-  _updateServices({ dataService, queryService }: { dataService: DataService; queryService: QueryService }): void {
+  _updateServices({
+    dataService,
+    queryService,
+  }: {
+    dataService: Echo.DataService;
+    queryService: Echo.QueryService;
+  }): void {
     (this as any)._dataService = dataService;
     (this as any)._queryService = queryService;
     this._repoProxy._updateDataService(dataService);

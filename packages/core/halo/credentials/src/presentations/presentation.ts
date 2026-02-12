@@ -4,7 +4,14 @@
 
 import { type Signer } from '@dxos/crypto';
 import { type PublicKey } from '@dxos/keys';
-import { type Chain, type Presentation, type Proof } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { create, timestampFromDate } from '@dxos/protocols/buf';
+import {
+  type Chain,
+  type Presentation,
+  PresentationSchema,
+  ProofSchema,
+} from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { PublicKeySchema } from '@dxos/protocols/buf/dxos/keys_pb';
 
 import { SIGNATURE_TYPE_ED25519 } from '../credentials';
 
@@ -24,13 +31,13 @@ export const signPresentation = async ({
   chain?: Chain;
   nonce?: Uint8Array;
 }): Promise<Presentation> => {
-  const proof: Proof = {
+  const proof = create(ProofSchema, {
     type: SIGNATURE_TYPE_ED25519,
     value: new Uint8Array(),
-    creationDate: new Date(),
-    signer: signerKey,
+    creationDate: timestampFromDate(new Date()),
+    signer: create(PublicKeySchema, { data: signerKey.asUint8Array() }),
     nonce,
-  };
+  });
 
   const signedPayload = getPresentationProofPayload(presentation.credentials ?? [], proof);
   proof.value = await signer.sign(signerKey, signedPayload);
@@ -38,8 +45,8 @@ export const signPresentation = async ({
     proof.chain = chain;
   }
 
-  return {
+  return create(PresentationSchema, {
     credentials: presentation.credentials,
     proofs: [...(presentation.proofs ?? []), proof],
-  };
+  });
 };

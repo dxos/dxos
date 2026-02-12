@@ -3,12 +3,7 @@
 //
 
 import { Event } from '@dxos/async';
-import {
-  DEFAULT_SHELL_CHANNEL,
-  type ShellServiceBundle,
-  appServiceBundle,
-  shellServiceBundle,
-} from '@dxos/client-protocol';
+import { DEFAULT_SHELL_CHANNEL, appServiceBundle, shellServiceBundle } from '@dxos/client-protocol';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import {
@@ -17,7 +12,7 @@ import {
   type LayoutRequest,
   ShellDisplay,
 } from '@dxos/protocols/proto/dxos/iframe';
-import { type ProtoRpcPeer, createProtoRpcPeer } from '@dxos/rpc';
+import { type BufProtoRpcPeer, createBufProtoRpcPeer } from '@dxos/rpc';
 import { createIFramePort } from '@dxos/rpc-tunnel';
 
 import { RPC_TIMEOUT } from '../common';
@@ -41,7 +36,7 @@ const shellStyles = Object.entries({
 export class ShellManager {
   readonly contextUpdate = new Event<AppContextRequest>();
 
-  private _shellRpc?: ProtoRpcPeer<ShellServiceBundle>;
+  private _shellRpc?: BufProtoRpcPeer<typeof shellServiceBundle>;
   private _display = ShellDisplay.NONE;
 
   // prettier-ignore
@@ -104,7 +99,7 @@ export class ShellManager {
       iframe: this._iframeManager.iframe,
     });
 
-    this._shellRpc = createProtoRpcPeer({
+    this._shellRpc = createBufProtoRpcPeer({
       requested: shellServiceBundle,
       exposed: appServiceBundle,
       handlers: {

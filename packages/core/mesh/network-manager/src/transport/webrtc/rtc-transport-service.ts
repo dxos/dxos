@@ -8,9 +8,9 @@ import { Stream } from '@dxos/codec-protobuf/stream';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { type Mesh } from '@dxos/protocols';
 import {
   type BridgeEvent,
-  type BridgeService,
   type CloseRequest,
   type ConnectionRequest,
   ConnectionState,
@@ -35,7 +35,7 @@ type TransportState = {
   writeProcessedCallbacks: (() => void)[];
 };
 
-export class RtcTransportService implements BridgeService {
+export class RtcTransportService implements Mesh.BridgeService {
   private readonly _openTransports = new ComplexMap<PublicKey, TransportState>(PublicKey.hash);
 
   constructor(

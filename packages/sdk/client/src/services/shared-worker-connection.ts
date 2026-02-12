@@ -3,13 +3,14 @@
 //
 
 import { Trigger } from '@dxos/async';
-import { type WorkerServiceBundle, iframeServiceBundle, workerServiceBundle } from '@dxos/client-protocol';
+import { iframeServiceBundle, workerServiceBundle } from '@dxos/client-protocol';
 import { type Config } from '@dxos/config';
 import { log } from '@dxos/log';
 import { createIceProvider } from '@dxos/network-manager';
 import { RemoteServiceConnectionError } from '@dxos/protocols';
-import { type BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
-import { type ProtoRpcPeer, type RpcPort, createProtoRpcPeer } from '@dxos/rpc';
+import { type Mesh } from '@dxos/protocols';
+import { EMPTY } from '@dxos/protocols/buf';
+import { type BufProtoRpcPeer, type RpcPort, createBufProtoRpcPeer } from '@dxos/rpc';
 import { type MaybePromise, type Provider, getAsyncProviderValue } from '@dxos/util';
 
 // NOTE: Keep as RpcPorts to avoid dependency on @dxos/rpc-tunnel so we don't depend on browser-specific apis.
@@ -32,8 +33,8 @@ export class SharedWorkerConnection {
   private readonly _systemPort: RpcPort;
   private _release = new Trigger();
   private _config!: Config;
-  private _transportService!: BridgeService;
-  private _systemRpc!: ProtoRpcPeer<WorkerServiceBundle>;
+  private _transportService!: Mesh.BridgeService;
+  private _systemRpc!: BufProtoRpcPeer<typeof workerServiceBundle>;
 
   constructor({ config, systemPort }: SharedWorkerConnectionOptions) {
     this._configProvider = config;
@@ -51,7 +52,7 @@ export class SharedWorkerConnection {
         createIceProvider(this._config.get('runtime.services.iceProviders')!),
     );
 
-    this._systemRpc = createProtoRpcPeer({
+    this._systemRpc = createBufProtoRpcPeer({
       requested: workerServiceBundle,
       exposed: iframeServiceBundle,
       handlers: {
@@ -88,7 +89,7 @@ export class SharedWorkerConnection {
   async close(): Promise<void> {
     this._release.wake();
     try {
-      await this._systemRpc.rpc.WorkerService.stop();
+      await this._systemRpc.rpc.WorkerService.stop(EMPTY);
     } catch {
       // If this fails, the worker is probably already gone.
     }

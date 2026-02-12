@@ -21,7 +21,6 @@ import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
 import { type SignalManager } from '@dxos/messaging';
 import { type SwarmNetworkManagerOptions, type TransportFactory, createIceProvider } from '@dxos/network-manager';
-import { type ServiceBundle } from '@dxos/rpc';
 import { layerMemory, sqlExportLayer } from '@dxos/sql-sqlite/platform';
 import type * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 import * as SqliteClient from '@dxos/sql-sqlite/SqliteClient';
@@ -146,7 +145,7 @@ export class LocalClientServices implements ClientServicesProvider {
     }
   }
 
-  get descriptors(): ServiceBundle<ClientServices> {
+  get descriptors() {
     return clientServiceBundle;
   }
 
