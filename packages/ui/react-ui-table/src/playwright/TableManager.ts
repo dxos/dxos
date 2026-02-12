@@ -58,10 +58,18 @@ export class TableManager {
     await this.page.getByTestId(TABLE_SELECTORS.addRow).click();
   }
 
-  public async addColumn({ label, format }: { label: string; format: string }): Promise<void> {
+  public async addColumn({
+    label,
+    format,
+  }: {
+    label: string;
+    format?: string;
+  }): Promise<void> {
     await this.page.getByTestId(TABLE_SELECTORS.newColumnButton).click();
-    await this.page.getByRole('combobox').click();
-    await this.page.getByLabel(format).click();
+    if (format) {
+      await this.page.getByRole('combobox').click();
+      await this.page.getByLabel(format).click();
+    }
     await this.page.getByPlaceholder('Property label').click();
     await this.page.getByPlaceholder('Property label').fill(label);
     await this.page.getByRole('button', { name: 'Save' }).click();
