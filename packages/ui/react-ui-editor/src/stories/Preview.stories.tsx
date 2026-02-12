@@ -51,6 +51,10 @@ const useRefTarget = (link: PreviewLinkRef): PreviewLinkTarget | undefined => {
 
 const PreviewCard = () => {
   const { target } = useEditorPreview('PreviewCard');
+  // console.log('target', target);
+  if (!target) {
+    return null;
+  }
 
   return (
     <Popover.Portal>
@@ -59,16 +63,14 @@ const PreviewCard = () => {
           <Card.Root border={false}>
             <Card.Toolbar>
               <Card.Icon toolbar icon='ph--file-text--regular' />
-              <Card.Title>{target?.label}</Card.Title>
+              <Card.Title>{target.label}</Card.Title>
               <Popover.Close asChild>
                 <Card.Close />
               </Popover.Close>
             </Card.Toolbar>
-            {target && (
-              <Card.Row>
-                <Card.Text variant='description'>{target.text}</Card.Text>
-              </Card.Row>
-            )}
+            <Card.Row>
+              <Card.Text variant='description'>{target.text}</Card.Text>
+            </Card.Row>
           </Card.Root>
         </Popover.Viewport>
         <Popover.Arrow />

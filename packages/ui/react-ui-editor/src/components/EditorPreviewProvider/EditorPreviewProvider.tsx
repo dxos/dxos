@@ -32,14 +32,14 @@ export const EditorPreviewProvider = ({ children, onLookup }: EditorPreviewProvi
 
   const handleActivate = useCallback(
     (event: DxAnchorActivate) => {
-      const { refId, label, trigger: dxTrigger } = event;
+      const { refId, label, trigger } = event;
       setValue((value) => ({
         ...value,
         link: { label, ref: refId },
         pending: true,
       }));
 
-      triggerRef.current = dxTrigger;
+      triggerRef.current = trigger;
       queueMicrotask(() => setOpen(true));
       void onLookup?.({ label, ref: refId }).then((target) =>
         setValue((value) => ({
@@ -68,9 +68,7 @@ export const EditorPreviewProvider = ({ children, onLookup }: EditorPreviewProvi
     <EditorPreviewContextProvider pending={value.pending} link={value.link} target={value.target}>
       <Popover.Root open={open} onOpenChange={setOpen}>
         <Popover.VirtualTrigger virtualRef={triggerRef as unknown as RefObject<HTMLButtonElement>} />
-
-        {/* Content */}
-        <div ref={setRoot} role='none' className='contents'>
+        <div role='none' className='contents' ref={setRoot}>
           {children}
         </div>
       </Popover.Root>

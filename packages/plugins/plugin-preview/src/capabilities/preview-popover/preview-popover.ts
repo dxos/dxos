@@ -69,7 +69,7 @@ export default Capability.makeModule(
         customEventOptions,
       );
     } else {
-      log.warn('No default view found');
+      log.warn('no default view found');
     }
 
     return Capability.contributes(Common.Capability.Null, null, () => Effect.sync(() => cleanup?.()));

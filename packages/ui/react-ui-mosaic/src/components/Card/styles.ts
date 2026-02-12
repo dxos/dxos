@@ -5,7 +5,7 @@
 import { type ClassNameValue } from '@dxos/react-ui';
 
 export const styles = {
-  root: 'group/card relative min-bs-[--rail-item] overflow-hidden is-full card-min-width __card-max-width',
+  root: 'group/card relative min-bs-[--rail-item] is-full card-min-width overflow-hidden',
   border:
     'bg-cardSurface border border-separator dark:border-subduedSeparator rounded-sm dx-focus-ring-group-y-indicator',
 
