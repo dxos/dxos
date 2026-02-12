@@ -64,7 +64,7 @@ const prettyErrorStack = (error: any, appendStacks: string[] = []): any => {
       continue;
     }
 
-    if (passedScheduler && !['Schduler.ts'].includes(filename)) {
+    if (passedScheduler && !['Scheduler.ts'].includes(filename)) {
       inCore = false;
     }
 
