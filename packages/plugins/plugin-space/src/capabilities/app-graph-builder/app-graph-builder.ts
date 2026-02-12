@@ -374,14 +374,15 @@ export default Capability.makeModule(
 
           return Effect.succeed(
             get(AtomQuery.make(space.db, Filter.type(schema)))
-              .map((object) =>
-                createObjectNode({
+              .map((object) => {
+                get(AtomObj.make(object));
+                return createObjectNode({
                   object,
                   db: space.db,
                   managedCollectionChild: true,
                   resolve: resolve(get),
-                }),
-              )
+                });
+              })
               .filter(isNonNullable),
           );
         },
