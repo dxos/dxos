@@ -29,13 +29,7 @@ import {
   createText,
   createTrigger,
 } from '@dxos/react-ui-canvas-compute';
-import {
-  CanvasBoardType,
-  CanvasGraphModel,
-  pointMultiply,
-  pointsToRect,
-  rectToPoints,
-} from '@dxos/react-ui-canvas-editor';
+import { CanvasBoard, CanvasGraphModel, pointMultiply, pointsToRect, rectToPoints } from '@dxos/react-ui-canvas-editor';
 import { View } from '@dxos/schema';
 import { Message, Organization, Person, Pipeline } from '@dxos/types';
 import { range, trim } from '@dxos/util';
@@ -57,7 +51,7 @@ export enum PresetName {
 }
 
 export const generator = () => ({
-  schemas: [CanvasBoardType, Trigger.Trigger] as any[],
+  schemas: [CanvasBoard.CanvasBoard, Trigger.Trigger] as any[],
   types: Object.values(PresetName).map((name) => ({ typename: name })),
   items: [
     [
@@ -779,7 +773,7 @@ const createQueueSinkPreset = <SpecType extends Trigger.Kind>(
 
 const addToSpace = (name: string, space: Space, canvas: CanvasGraphModel, compute: ComputeGraphModel) => {
   return space.db.add(
-    Obj.make(CanvasBoardType, {
+    Obj.make(CanvasBoard.CanvasBoard, {
       name,
       computeGraph: Ref.make(compute.root),
       layout: canvas.graph,

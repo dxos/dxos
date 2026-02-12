@@ -21,7 +21,7 @@ export type MasonryContainerProps = {
 
 export const MasonryContainer = ({
   view: viewOrRef,
-  role,
+  role: _role,
 }: {
   view: View.View | Ref.Ref<View.View>;
   role?: string;
