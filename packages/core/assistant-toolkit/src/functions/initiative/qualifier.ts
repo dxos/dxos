@@ -71,10 +71,10 @@ export default defineFunction({
             content: [
               Prompt.makePart('text', {
                 text: trim`
-              <event>
-                ${JSON.stringify(data.event, null, 2)}
-              </event>
-            `,
+                  <event>
+                    ${JSON.stringify(data.event, null, 2)}
+                  </event>
+                `,
               }),
             ],
           }),
@@ -83,7 +83,6 @@ export default defineFunction({
 
       if (isRelevant) {
         const queueTarget = yield* Database.load(queue);
-
         if ('queue' in data.event && data.event.item) {
           const obj = data.event.item;
           yield* Effect.promise(() => queueTarget.append([obj]));

@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import { default as addArtifact$ } from './addArtifact';
+import { default as addArtifact$ } from './add-artifact';
 import { default as agent$ } from './agent';
-import { default as getContext$ } from './getContext';
+import { default as getContext$ } from './get-context';
 import { default as qualifier$ } from './qualifier';
 
 export namespace Initiative {
