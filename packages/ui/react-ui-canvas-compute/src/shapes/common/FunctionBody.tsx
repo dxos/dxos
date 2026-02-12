@@ -8,7 +8,7 @@ import React, { type JSX, useRef, useState } from 'react';
 
 import { VoidInput, VoidOutput } from '@dxos/conductor';
 import { useCanvasContext } from '@dxos/react-ui-canvas';
-import { type Polygon, type Shape } from '@dxos/react-ui-canvas-editor';
+import { type CanvasBoard, type Polygon } from '@dxos/react-ui-canvas-editor';
 import { createAnchors, getParentShapeElement, rowHeight } from '@dxos/react-ui-canvas-editor';
 
 import { Box, type BoxProps, footerHeight, headerHeight } from '../common';
@@ -18,7 +18,7 @@ const bodyPadding = 8;
 const expandedHeight = 200;
 
 export type FunctionBodyProps = {
-  shape: Shape;
+  shape: CanvasBoard.Shape;
   name?: string;
   content?: JSX.Element;
   inputSchema?: Schema.Schema.Any;
