@@ -89,7 +89,7 @@ describe.skip('Sequence', () => {
 
   test.only('research', { timeout: 120_000 }, async () => {
     const builder = await new EchoTestBuilder().open();
-    const { db } = await builder.createDatabase({ indexing: { vector: true }, types: DataTypes });
+    const { db } = await builder.createDatabase({ types: DataTypes });
 
     const [org1] = [
       db.add(

@@ -31,6 +31,8 @@ export type CreateClientServicesOptions = {
   observabilityGroup?: string;
   /** Enable telemetry metadata sent with signaling requests. */
   signalTelemetryEnabled?: boolean;
+  /** Path to SQLite database file for persistent indexing in Node/Bun. */
+  sqlitePath?: LocalClientServicesParams['sqlitePath'];
 };
 
 /**
@@ -48,6 +50,7 @@ export const createClientServices = async (
     createOpfsWorker,
     observabilityGroup,
     signalTelemetryEnabled,
+    sqlitePath,
   } = options;
   const remote = config.values.runtime?.client?.remoteSource;
   if (remote) {
@@ -92,7 +95,7 @@ export const createClientServices = async (
           config,
           {
             createOpfsWorker,
-            runtimeProps: { enableSqlite: true },
+            sqlitePath,
           },
           observabilityGroup,
           signalTelemetryEnabled,

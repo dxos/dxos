@@ -372,9 +372,6 @@ catalogs:
     '@opentui/solid':
       specifier: 0.1.61
       version: 0.1.61
-    '@orama/orama':
-      specifier: ^3.1.7
-      version: 3.1.7
     '@peermetrics/webrtc-stats':
       specifier: 5.7.1
       version: 5.7.1
@@ -4781,9 +4778,6 @@ importers:
         specifier: 'catalog:'
         version: 4.5.0
     devDependencies:
-      '@dxos/indexing':
-        specifier: workspace:*
-        version: link:../indexing
       '@dxos/random':
         specifier: workspace:*
         version: link:../../../common/random
@@ -4881,9 +4875,6 @@ importers:
       '@dxos/index-core':
         specifier: workspace:*
         version: link:../index-core
-      '@dxos/indexing':
-        specifier: workspace:*
-        version: link:../indexing
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant
@@ -5201,82 +5192,6 @@ importers:
       '@effect/sql-sqlite-node':
         specifier: 'catalog:'
         version: 0.49.1(@effect/experimental@0.57.11(@effect/platform@0.93.8(effect@3.19.12))(effect@3.19.12)(ioredis@5.3.2))(@effect/platform@0.93.8(effect@3.19.12))(@effect/sql@0.48.6(@effect/experimental@0.57.11(@effect/platform@0.93.8(effect@3.19.12))(effect@3.19.12)(ioredis@5.3.2))(@effect/platform@0.93.8(effect@3.19.12))(effect@3.19.12))(effect@3.19.12)
-
-  packages/core/echo/indexing:
-    dependencies:
-      '@automerge/automerge':
-        specifier: 3.2.3
-        version: 3.2.3
-      '@dxos/async':
-        specifier: workspace:*
-        version: link:../../../common/async
-      '@dxos/codec-protobuf':
-        specifier: workspace:*
-        version: link:../../../common/codec-protobuf
-      '@dxos/context':
-        specifier: workspace:*
-        version: link:../../../common/context
-      '@dxos/debug':
-        specifier: workspace:*
-        version: link:../../../common/debug
-      '@dxos/echo':
-        specifier: workspace:*
-        version: link:../echo
-      '@dxos/echo-protocol':
-        specifier: workspace:*
-        version: link:../echo-protocol
-      '@dxos/errors':
-        specifier: workspace:*
-        version: link:../../../common/errors
-      '@dxos/invariant':
-        specifier: workspace:*
-        version: link:../../../common/invariant
-      '@dxos/keys':
-        specifier: workspace:*
-        version: link:../../../common/keys
-      '@dxos/kv-store':
-        specifier: workspace:*
-        version: link:../../../common/kv-store
-      '@dxos/log':
-        specifier: workspace:*
-        version: link:../../../common/log
-      '@dxos/node-std':
-        specifier: workspace:*
-        version: link:../../../common/node-std
-      '@dxos/protocols':
-        specifier: workspace:*
-        version: link:../../protocols
-      '@dxos/random-access-storage':
-        specifier: workspace:*
-        version: link:../../../common/random-access-storage
-      '@dxos/tracing':
-        specifier: workspace:*
-        version: link:../../../common/tracing
-      '@dxos/util':
-        specifier: workspace:*
-        version: link:../../../common/util
-      '@orama/orama':
-        specifier: 'catalog:'
-        version: 3.1.7
-      '@xenova/transformers':
-        specifier: 'catalog:'
-        version: 2.17.2
-      effect:
-        specifier: 'catalog:'
-        version: 3.19.12
-      level-transcoder:
-        specifier: 'catalog:'
-        version: 1.0.1
-      lodash.isequal:
-        specifier: 'catalog:'
-        version: 4.5.0
-    devDependencies:
-      '@dxos/test-utils':
-        specifier: workspace:*
-        version: link:../../../common/test-utils
-      '@types/lodash.isequal':
-        specifier: 'catalog:'
-        version: 4.5.6
 
   packages/core/functions:
     dependencies:
@@ -13571,9 +13486,6 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
-      '@dxos/indexing':
-        specifier: workspace:*
-        version: link:../../core/echo/indexing
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -13761,9 +13673,6 @@ importers:
       '@dxos/feed-store':
         specifier: workspace:*
         version: link:../../common/feed-store
-      '@dxos/indexing':
-        specifier: workspace:*
-        version: link:../../core/echo/indexing
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -23263,10 +23172,6 @@ packages:
     resolution: {integrity: sha512-CiZHduIoeABoS0ev+eGeHA/LiRl/SpdL6io4jrwiwFi/rToKtc7YgJ8MWxIgeHScHUbpQnIr1v7jzsGI3DAYvw==}
     peerDependencies:
       solid-js: ^1.9.9
-
-  '@orama/orama@3.1.7':
-    resolution: {integrity: sha512-6yB0117ZjsgNevZw3LP+bkrZa9mU/POPVaXgzMPOBbBc35w2P3R+1vMMhEfC06kYCpd5bf0jodBaTkYQW5TVeQ==}
-    engines: {node: '>= 20.0.0'}
 
   '@oslojs/encoding@1.1.0':
     resolution: {integrity: sha512-70wQhgYmndg4GCPxPPxPGevRKqTIJ2Nh4OkiMWmDAVYsTQ+Ta7Sq+rPevXyXGdzr30/qZBnyOalCszoMxlyldQ==}
@@ -43219,8 +43124,6 @@ snapshots:
       - supports-color
       - typescript
       - web-tree-sitter
-
-  '@orama/orama@3.1.7': {}
 
   '@oslojs/encoding@1.1.0': {}
 

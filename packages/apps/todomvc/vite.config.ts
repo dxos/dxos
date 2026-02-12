@@ -14,6 +14,11 @@ import { ConfigPlugin } from '@dxos/config/vite-plugin';
 // https://vitejs.dev/config
 export default defineConfig({
   root: __dirname,
+  optimizeDeps: {
+    // Avoid prebundling wa-sqlite into .vite/deps where the adjacent wasm file is not emitted.
+    // Keeping it as a normal node_modules module preserves import.meta.url-based wasm resolution.
+    exclude: ['@effect/sql-sqlite-wasm', '@dxos/wa-sqlite'],
+  },
   server: {
     host: true,
     https:

@@ -8,6 +8,7 @@ import { WorkerRuntime } from '@dxos/client-services';
 import { Config } from '@dxos/config';
 import { log } from '@dxos/log';
 import { createWorkerPort } from '@dxos/rpc-tunnel';
+import { layerMemory } from '@dxos/sql-sqlite/platform';
 
 import { STORAGE_LOCK_KEY } from '../../lock-key';
 
@@ -51,7 +52,8 @@ export const runDedicatedWorker = (options: RunDedicatedWorkerOptions = {}): voi
             }
           } catch {
             // OPFS not available (e.g., Playwright WebKit).
-            log.warn('OPFS not available, disabling SQLite');
+            log.warn('OPFS not available, disabling persistent indexing');
+            opfsAvailable = false;
           }
           runtime = new WorkerRuntime({
             configProvider: async () => config,
@@ -65,7 +67,7 @@ export const runDedicatedWorker = (options: RunDedicatedWorkerOptions = {}): voi
             releaseLock: () => {},
             automaticallyConnectWebrtc: false,
             // Only enable SQLite if OPFS is available (fails in Playwright WebKit).
-            enableSqlite: opfsAvailable,
+            sqliteLayer: opfsAvailable ? undefined : layerMemory,
           });
           await options.onBeforeStart?.(config);
           await runtime.start();
