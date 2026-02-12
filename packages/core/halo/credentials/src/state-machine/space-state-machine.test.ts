@@ -6,9 +6,11 @@ import { describe, expect, test } from 'vitest';
 
 import { Keyring } from '@dxos/keyring';
 import { type PublicKey } from '@dxos/keys';
-import { AdmittedFeed, type Chain, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { create } from '@dxos/protocols/buf';
+import { type Credential, ChainSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { AdmittedFeed, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 
-import { createCredential, verifyCredential } from '../credentials';
+import { createCredential, fromBufPublicKey, getCredentialAssertion, verifyCredential } from '../credentials';
 
 import { SpaceStateMachine } from './space-state-machine';
 
@@ -54,7 +56,7 @@ describe('SpaceStateMachine', () => {
       ),
     ).toEqual(true);
 
-    const chain: Chain = {
+    const chain = create(ChainSchema, {
       credential: await createCredential({
         assertion: {
           '@type': 'dxos.halo.credentials.AuthorizedDevice',
@@ -65,7 +67,7 @@ describe('SpaceStateMachine', () => {
         issuer: identity,
         signer: keyring,
       }),
-    };
+    });
 
     expect(
       await spaceState.process(
@@ -155,7 +157,7 @@ describe('SpaceStateMachine', () => {
       ),
     ).toEqual(true);
 
-    const chain: Chain = {
+    const chain = create(ChainSchema, {
       credential: await createCredential({
         assertion: {
           '@type': 'dxos.halo.credentials.AuthorizedDevice',
@@ -166,7 +168,7 @@ describe('SpaceStateMachine', () => {
         issuer: identity,
         signer: keyring,
       }),
-    };
+    });
 
     expect(
       await spaceState.process(
@@ -302,13 +304,13 @@ describe('SpaceStateMachine', () => {
           issuer: identity,
           signingKey: device1,
           // Create the keychain for device1 using credentials from the space.
-          chain: {
+          chain: create(ChainSchema, {
             credential: haloState.credentials.find(
               (c) =>
-                c.subject.assertion['@type'] === 'dxos.halo.credentials.AuthorizedDevice' &&
-                c.subject.id.equals(device1),
+                getCredentialAssertion(c)['@type'] === 'dxos.halo.credentials.AuthorizedDevice' &&
+                fromBufPublicKey(c.subject!.id!)?.equals(device1),
             )!,
-          },
+          }),
           signer: keyring,
         }),
         { sourceFeed: feed },
@@ -329,12 +331,13 @@ describe('SpaceStateMachine', () => {
       subject: feed,
       signingKey: device2,
       // Create the keychain for device2 using credentials from the space.
-      chain: {
+      chain: create(ChainSchema, {
         credential: haloState.credentials.find(
           (c) =>
-            c.subject.assertion['@type'] === 'dxos.halo.credentials.AuthorizedDevice' && c.subject.id.equals(device2),
+            getCredentialAssertion(c)['@type'] === 'dxos.halo.credentials.AuthorizedDevice' &&
+            fromBufPublicKey(c.subject!.id!)?.equals(device2),
         )!,
-      },
+      }),
     });
 
     expect(await verifyCredential(credential)).toEqual({ kind: 'pass' });

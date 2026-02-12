@@ -140,9 +140,9 @@ describe('Client services', () => {
 
     const [{ invitation: hostInvitation }, { invitation: guestInvitation }] = await Promise.all(
       performInvitation({
-        host: client1.halo,
-        guest: client2.halo,
-        options: { authMethod: Invitation.AuthMethod.SHARED_SECRET },
+        host: client1.halo as never,
+        guest: client2.halo as never,
+        options: { authMethod: Invitation.AuthMethod.SHARED_SECRET as never },
       }),
     );
 
@@ -223,9 +223,9 @@ describe('Client services', () => {
 
     const [{ invitation: hostInvitation }, { invitation: guestInvitation }] = await Promise.all(
       performInvitation({
-        host: hostSpace,
-        guest: client2.spaces,
-        options: { authMethod: Invitation.AuthMethod.SHARED_SECRET },
+        host: hostSpace as never,
+        guest: client2.spaces as never,
+        options: { authMethod: Invitation.AuthMethod.SHARED_SECRET as never },
       }),
     );
 
@@ -238,7 +238,7 @@ describe('Client services', () => {
     const trigger = new Trigger<Space>();
     await expect
       .poll(() => {
-        const guestSpace = client2.spaces.get(guestInvitation!.spaceKey!);
+        const guestSpace = client2.spaces.get(guestInvitation!.spaceKey! as never);
         invariant(guestSpace);
         trigger.wake(guestSpace);
         return guestSpace;

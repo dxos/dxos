@@ -178,7 +178,7 @@ export class CallManager extends Resource {
     this._client.config.getOrThrow('runtime.services.edge.url');
     const networkService = this._client.services.services.NetworkService;
     invariant(networkService, 'network service not found');
-    this._swarmSynchronizer = new CallSwarmSynchronizer({ networkService });
+    this._swarmSynchronizer = new CallSwarmSynchronizer({ networkService: networkService as never });
     this._mediaManager = new MediaManager();
   }
 

@@ -55,7 +55,7 @@ export class DevicesServiceImpl implements Halo.DevicesService {
                   presence = Device_PresenceState.ONLINE;
                 } else if (profile.os?.toUpperCase() === 'EDGE') {
                   presence =
-                    this._edgeConnection?.status.state === EdgeStatus_ConnectionState.CONNECTED
+                    (this._edgeConnection?.status.state as never) === EdgeStatus_ConnectionState.CONNECTED
                       ? Device_PresenceState.ONLINE
                       : Device_PresenceState.OFFLINE;
                 } else {

@@ -20,7 +20,8 @@ import {
   SpaceMember,
   type Space as SpaceProto,
 } from '@dxos/protocols/proto/dxos/client/services';
-import { type SubscribeToFeedsResponse } from '@dxos/protocols/proto/dxos/devtools/host';
+import { type QueryDevicesResponse } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { type SubscribeToFeedsResponse, type SubscribeToFeedsResponse_Feed } from '@dxos/protocols/buf/dxos/devtools/host_pb';
 import { type SwarmInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
 import { type Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type Resource, type Span } from '@dxos/protocols/proto/dxos/tracing';
@@ -54,7 +55,7 @@ export type Diagnostics = {
     spaces?: SpaceStats[];
     networkStatus?: NetworkStatus;
     swarms?: SwarmInfo[];
-    feeds?: Partial<SubscribeToFeedsResponse.Feed>[];
+    feeds?: Partial<SubscribeToFeedsResponse_Feed>[];
     metrics?: Metrics;
     storage?: { file: string; count: number }[];
   };
@@ -93,14 +94,14 @@ export const createDiagnostics = async (
 ): Promise<Diagnostics['services']> => {
   const diagnostics: Diagnostics['services'] = {
     created: new Date().toISOString(),
-    platform: getPlatform(),
+    platform: getPlatform() as never,
     client: {
       version: DXOS_VERSION,
       storage: {
         version: STORAGE_VERSION,
       },
     },
-    trace: TRACE_PROCESSOR.getDiagnostics(),
+    trace: TRACE_PROCESSOR.getDiagnostics() as never,
   };
 
   await Promise.all([
@@ -108,9 +109,9 @@ export const createDiagnostics = async (
       // Trace metrics.
       // TODO(burdon): Move here from logging service?
       invariant(clientServices.LoggingService, 'SystemService is not available.');
-      diagnostics.metrics = await getFirstStreamValue(clientServices.LoggingService.queryMetrics({}), {
+      diagnostics.metrics = (await getFirstStreamValue(clientServices.LoggingService.queryMetrics({}), {
         timeout: DEFAULT_TIMEOUT,
-      }).catch(() => undefined);
+      }).catch(() => undefined)) as never;
     })(),
     (async () => {
       diagnostics.storage = await asyncTimeout(getStorageDiagnostics(), DEFAULT_TIMEOUT).catch(() => undefined);
@@ -128,10 +129,10 @@ export const createDiagnostics = async (
 
         // Devices.
         const { devices } =
-          (await getFirstStreamValue(clientServices.DevicesService!.queryDevices(), {
+          ((await getFirstStreamValue(clientServices.DevicesService!.queryDevices(), {
             timeout: DEFAULT_TIMEOUT,
-          }).catch(() => undefined)) ?? {};
-        diagnostics.devices = devices;
+          }).catch(() => undefined)) ?? {}) as Partial<QueryDevicesResponse>;
+        diagnostics.devices = devices as never;
 
         // TODO(dmaretskyi): Add metrics for halo space.
 
@@ -144,9 +145,9 @@ export const createDiagnostics = async (
 
         // Feeds.
         const { feeds = [] } =
-          (await getFirstStreamValue(clientServices.DevtoolsHost!.subscribeToFeeds({}), {
+          ((await getFirstStreamValue(clientServices.DevtoolsHost!.subscribeToFeeds({}), {
             timeout: DEFAULT_TIMEOUT,
-          }).catch(() => undefined)) ?? {};
+          }).catch(() => undefined)) ?? {}) as Partial<SubscribeToFeedsResponse>;
         diagnostics.feeds = feeds.map(({ feedKey, bytes, length }) => ({ feedKey, bytes, length }));
 
         // Signal servers.
@@ -154,11 +155,11 @@ export const createDiagnostics = async (
         const status = await getFirstStreamValue(clientServices.NetworkService!.queryStatus(), {
           timeout: DEFAULT_TIMEOUT,
         }).catch(() => undefined);
-        diagnostics.networkStatus = status;
+        diagnostics.networkStatus = status as never;
 
         // Networking.
 
-        diagnostics.swarms = serviceContext.networkManager.connectionLog?.swarms;
+        diagnostics.swarms = serviceContext.networkManager.connectionLog?.swarms as never;
       }
     },
   ]);
@@ -176,9 +177,9 @@ const getSpaceStats = async (space: DataSpace): Promise<SpaceStats> => {
     epochs: space.inner.spaceState.credentials
       .filter(credentialTypeFilter('dxos.halo.credentials.Epoch'))
       .map((credential) => ({
-        ...credential.subject.assertion,
+        ...(credential.subject.assertion as any),
         id: credential.id,
-      })),
+      })) as never,
 
     members: await Promise.all(
       Array.from(space.inner.spaceState.members.values()).map(async (member) => ({
@@ -199,8 +200,8 @@ const getSpaceStats = async (space: DataSpace): Promise<SpaceStats> => {
 
     pipeline: {
       // TODO(burdon): Pick properties from credentials if needed.
-      currentEpoch: space.automergeSpaceState.lastEpoch,
-      appliedEpoch: space.automergeSpaceState.lastEpoch,
+      currentEpoch: space.automergeSpaceState.lastEpoch as never,
+      appliedEpoch: space.automergeSpaceState.lastEpoch as never,
 
       controlFeeds: space.inner.controlPipeline.state.feeds.map((feed) => feed.key),
       currentControlTimeframe: space.inner.controlPipeline.state.timeframe,

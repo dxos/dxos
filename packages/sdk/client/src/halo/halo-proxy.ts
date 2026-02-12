@@ -15,10 +15,13 @@ import { ApiError, trace as Trace } from '@dxos/protocols';
 import { EMPTY } from '@dxos/protocols/buf';
 import {
   type Contact,
+  type ContactBook,
   type Device,
   DeviceKind,
   type Identity,
   Invitation,
+  type QueryDevicesResponse,
+  type QueryIdentityResponse,
 } from '@dxos/protocols/proto/dxos/client/services';
 import {
   type Credential,
@@ -149,8 +152,8 @@ export class HaloProxy implements Halo {
     await this._invitationProxy?.close();
     invariant(this._serviceProvider.services.InvitationsService, 'InvitationsService not available');
     this._invitationProxy = new InvitationsProxy(
-      this._serviceProvider.services.InvitationsService,
-      this._serviceProvider.services.IdentityService,
+      this._serviceProvider.services.InvitationsService as never,
+      this._serviceProvider.services.IdentityService as never,
       () => ({
         kind: Invitation.Kind.DEVICE,
       }),
@@ -169,7 +172,7 @@ export class HaloProxy implements Halo {
       },
       { timeout: RPC_TIMEOUT },
     );
-    this._haloCredentialStream.subscribe((data) => {
+    this._haloCredentialStream!.subscribe((data) => {
       this._credentialsChanged.emit([...this._credentials.get(), data]);
     });
     this._streamSubscriptions.add(() => this._haloCredentialStream?.close());
@@ -193,7 +196,7 @@ export class HaloProxy implements Halo {
     const identityStream = this._serviceProvider.services.IdentityService.queryIdentity(EMPTY, {
       timeout: RPC_TIMEOUT,
     });
-    identityStream.subscribe((data) => {
+    identityStream.subscribe((data: QueryIdentityResponse) => {
       // Set tracing identity. For early stage debugging.
       data.identity &&
         log.trace('dxos.halo.identity', {
@@ -207,7 +210,7 @@ export class HaloProxy implements Halo {
     const contactsStream = this._serviceProvider.services.ContactsService!.queryContacts(EMPTY, {
       timeout: RPC_TIMEOUT,
     });
-    contactsStream.subscribe((data) => {
+    contactsStream.subscribe((data: ContactBook) => {
       this._contactsChanged.emit(data.contacts ?? []);
     });
     this._streamSubscriptions.add(() => contactsStream.close());
@@ -216,10 +219,10 @@ export class HaloProxy implements Halo {
     const devicesStream = this._serviceProvider.services.DevicesService.queryDevices(EMPTY, {
       timeout: RPC_TIMEOUT,
     });
-    devicesStream.subscribe((data) => {
+    devicesStream.subscribe((data: QueryDevicesResponse) => {
       if (data.devices) {
         this._devicesChanged.emit(data.devices);
-        const current = data.devices.find((device) => device.kind === DeviceKind.CURRENT);
+        const current = data.devices.find((device: Device) => device.kind === DeviceKind.CURRENT);
         log.trace('dxos.halo.device', {
           deviceKey: current?.deviceKey,
           profile: current?.profile,

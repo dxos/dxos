@@ -3,11 +3,11 @@
 //
 
 import { PublicKey } from '@dxos/keys';
-import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type DelegateSpaceInvitation } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { type AsyncCallback, Callback, ComplexMap, ComplexSet } from '@dxos/util';
 
-import { getCredentialAssertion } from '../credentials';
+import { fromBufPublicKey, getCredentialAssertion } from '../credentials';
 
 export interface DelegateInvitationCredential {
   credentialId: PublicKey;
@@ -31,7 +31,7 @@ export class InvitationStateMachine {
   }
 
   async process(credential: Credential): Promise<void> {
-    const credentialId = credential.id;
+    const credentialId = fromBufPublicKey(credential.id);
     if (credentialId == null) {
       return;
     }
@@ -50,17 +50,17 @@ export class InvitationStateMachine {
         break;
       }
       case 'dxos.halo.invitations.DelegateSpaceInvitation': {
-        if (credential.id) {
+        if (credentialId) {
           const isExpired = assertion.expiresOn && assertion.expiresOn.getTime() < Date.now();
-          const wasUsed = this._redeemedInvitationCredentialIds.has(credential.id) && !assertion.multiUse;
-          const wasCancelled = this._cancelledInvitationCredentialIds.has(credential.id);
+          const wasUsed = this._redeemedInvitationCredentialIds.has(credentialId) && !assertion.multiUse;
+          const wasCancelled = this._cancelledInvitationCredentialIds.has(credentialId);
           if (isExpired || wasCancelled || wasUsed) {
             return;
           }
           const invitation: DelegateSpaceInvitation = { ...assertion };
-          this._invitations.set(credential.id, invitation);
+          this._invitations.set(credentialId, invitation);
           await this.onDelegatedInvitation.callIfSet({
-            credentialId: credential.id,
+            credentialId,
             invitation,
           });
         }

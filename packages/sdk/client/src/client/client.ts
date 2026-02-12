@@ -420,7 +420,7 @@ export class Client {
     if (useLocalFirstQueues) {
       log.verbose('running with local-first queues');
       invariant(this._services.services.QueueService, 'QueueService not available.');
-      this._queuesService = this._services.services.QueueService;
+      this._queuesService = this._services.services.QueueService as never;
     } else if (edgeUrl) {
       log.verbose('running with edge queues');
       this._edgeClient = new EdgeHttpClient(edgeUrl);
@@ -431,8 +431,8 @@ export class Client {
     }
 
     this._echoClient.connectToService({
-      dataService: this._services.services.DataService ?? raise(new Error('DataService not available')),
-      queryService: this._services.services.QueryService ?? raise(new Error('QueryService not available')),
+      dataService: (this._services.services.DataService ?? raise(new Error('DataService not available'))) as never,
+      queryService: (this._services.services.QueryService ?? raise(new Error('QueryService not available'))) as never,
       queueService: this._queuesService,
     });
     await this._echoClient.open(this._ctx);
@@ -453,7 +453,7 @@ export class Client {
 
     invariant(this._services.services.SystemService, 'SystemService is not available.');
     this._statusStream = this._services.services.SystemService.queryStatus({ interval: 3_000 });
-    this._statusStream.subscribe(
+    this._statusStream!.subscribe(
       async ({ status }) => {
         this._statusTimeout && clearTimeout(this._statusTimeout);
         trigger.wake(undefined);

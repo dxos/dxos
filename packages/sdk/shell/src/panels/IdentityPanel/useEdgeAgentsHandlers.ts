@@ -8,6 +8,7 @@ import { type CancellableInvitation } from '@dxos/client-protocol';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { QueryAgentStatusResponse } from '@dxos/protocols/proto/dxos/client/services';
+import { type QueryAgentStatusResponse as BufQueryAgentStatusResponse } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { useClient } from '@dxos/react-client';
 import { type Identity } from '@dxos/react-client/halo';
@@ -46,9 +47,9 @@ export const useEdgeAgentHandlers = ({
 
   useEffect(() => {
     const stream = client.services.services.EdgeAgentService?.queryAgentStatus();
-    stream?.subscribe(({ status }) => {
-      setLastReceivedStatus(status);
-      handleStatus(status);
+    stream?.subscribe(({ status }: BufQueryAgentStatusResponse) => {
+      setLastReceivedStatus(status as never);
+      handleStatus(status as never);
     });
     return () => {
       void stream?.close().catch(() => {});

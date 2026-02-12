@@ -7,6 +7,8 @@ import React, { useEffect, useState } from 'react';
 import type { Space } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
 import type { SpaceSyncState } from '@dxos/echo-db';
+import { create } from '@dxos/protocols/buf';
+import { SpaceSyncStateSchema } from '@dxos/protocols/buf/dxos/echo/service_pb';
 
 import { JsonView } from '../../../components';
 
@@ -15,7 +17,7 @@ interface SyncStateInfoProps {
 }
 
 export const SyncStateInfo = ({ space }: SyncStateInfoProps) => {
-  const [syncState, setSyncState] = useState<SpaceSyncState>({});
+  const [syncState, setSyncState] = useState<SpaceSyncState>(create(SpaceSyncStateSchema));
 
   useEffect(() => {
     if (space) {

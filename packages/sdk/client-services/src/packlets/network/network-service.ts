@@ -4,6 +4,7 @@
 
 import { Stream } from '@dxos/codec-protobuf/stream';
 import { type EdgeConnection } from '@dxos/edge-client';
+import { PublicKey } from '@dxos/keys';
 import { type SignalManager } from '@dxos/messaging';
 import { type SwarmNetworkManager } from '@dxos/network-manager';
 import { type Client } from '@dxos/protocols';
@@ -69,7 +70,7 @@ export class NetworkServiceImpl implements Client.NetworkService {
   subscribeSwarmState(request: SubscribeSwarmStateRequest): Stream<SwarmResponse> {
     return new Stream<SwarmResponse>(({ ctx, next }) => {
       this.signalManager.swarmState?.on(ctx, (state) => {
-        if (request.topic?.equals(state.swarmKey)) {
+        if (request.topic?.data && state.swarmKey && PublicKey.from(request.topic.data).toHex() === state.swarmKey) {
           next(state);
         }
       });
@@ -84,7 +85,7 @@ export class NetworkServiceImpl implements Client.NetworkService {
   subscribeMessages(peer: Peer): Stream<Message> {
     return new Stream<Message>(({ ctx, next }) => {
       this.signalManager.onMessage.on(ctx, (message) => {
-        if (message.recipient.peerKey === peer.peerKey) {
+        if (message.recipient?.peerKey === peer.peerKey) {
           next(message);
         }
       });

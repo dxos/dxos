@@ -23,6 +23,8 @@ import {
   createRtcTransportFactory,
 } from '@dxos/network-manager';
 import { trace } from '@dxos/protocols';
+import { create } from '@dxos/protocols/buf';
+import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { type Storage } from '@dxos/random-access-storage';
 import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
@@ -97,7 +99,7 @@ export class ClientServicesHost {
   private _storage?: Storage;
   private _level?: LevelDB;
   private _callbacks?: ClientServicesHostCallbacks;
-  private _devtoolsProxy?: WebsocketRpcClient<{}, ClientServices>;
+  private _devtoolsProxy?: WebsocketRpcClient<any, any>;
   private _edgeConnection?: EdgeConnection = undefined;
   private _edgeHttpClient?: EdgeHttpClient = undefined;
 
@@ -171,11 +173,11 @@ export class ClientServicesHost {
       },
     });
 
-    this.diagnosticsBroadcastHandler = createCollectDiagnosticsBroadcastHandler(this._systemService);
+    this.diagnosticsBroadcastHandler = createCollectDiagnosticsBroadcastHandler(this._systemService as never);
     this._loggingService = new LoggingServiceImpl();
 
     this._serviceRegistry = new ServiceRegistry<ClientServices>(clientServiceBundle, {
-      SystemService: this._systemService,
+      SystemService: this._systemService as never,
       TracingService: this._tracingService,
     });
   }
@@ -192,7 +194,7 @@ export class ClientServicesHost {
     return this._serviceContext;
   }
 
-  get serviceRegistry() {
+  get serviceRegistry(): ServiceRegistry<ClientServices> {
     return this._serviceRegistry;
   }
 
@@ -200,7 +202,7 @@ export class ClientServicesHost {
     return this._serviceRegistry.descriptors;
   }
 
-  get services() {
+  get services(): Partial<ClientServices> {
     return this._serviceRegistry.services;
   }
 
@@ -285,10 +287,10 @@ export class ClientServicesHost {
       transportFactory,
       signalManager,
       peerInfo: this._edgeConnection
-        ? {
+        ? create(PeerSchema, {
             identityKey: this._edgeConnection.identityKey,
             peerKey: this._edgeConnection.peerKey,
-          }
+          })
         : undefined,
     });
 

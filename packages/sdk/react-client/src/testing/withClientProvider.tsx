@@ -160,8 +160,8 @@ export const withMultiClientProvider = ({
           log.info('joining', { index, spaceId: space.id });
           await Promise.all(
             performInvitation({
-              host: space,
-              guest: client.spaces,
+              host: space as never,
+              guest: client.spaces as never,
             }),
           );
         }

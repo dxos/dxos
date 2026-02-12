@@ -10,7 +10,7 @@ import {
   type SubscribeToKeyringKeysResponse,
   SubscribeToKeyringKeysResponseSchema,
 } from '@dxos/protocols/buf/dxos/devtools/host_pb';
-import { PublicKeySchema } from '@dxos/protocols/buf/dxos/keys_pb';
+import { KeyRecordSchema } from '@dxos/protocols/buf/dxos/halo/keyring_pb';
 
 export const subscribeToKeyringKeys = ({ keyring }: { keyring: Keyring }) =>
   new Stream<SubscribeToKeyringKeysResponse>(({ next, ctx }) => {
@@ -18,7 +18,7 @@ export const subscribeToKeyringKeys = ({ keyring }: { keyring: Keyring }) =>
       const keys = await keyring.list();
       next(
         create(SubscribeToKeyringKeysResponseSchema, {
-          keys: keys.map((key) => create(PublicKeySchema, { data: key.asUint8Array() })),
+          keys: keys.map((key) => create(KeyRecordSchema, { publicKey: key.publicKey })),
         }),
       );
     };

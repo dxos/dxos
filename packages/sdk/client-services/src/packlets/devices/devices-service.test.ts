@@ -21,7 +21,7 @@ describe('DevicesService', () => {
   beforeEach(async () => {
     serviceContext = await createServiceContext();
     await serviceContext.open(new Context());
-    devicesService = new DevicesServiceImpl(serviceContext.identityManager);
+    devicesService = new DevicesServiceImpl(serviceContext.identityManager) as never;
   });
 
   afterEach(async () => {

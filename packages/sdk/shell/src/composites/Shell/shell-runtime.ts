@@ -12,6 +12,10 @@ import {
   type LayoutRequest,
   ShellLayout,
 } from '@dxos/protocols/proto/dxos/iframe';
+import {
+  type LayoutRequest as BufLayoutRequest,
+  type InvitationUrlRequest as BufInvitationUrlRequest,
+} from '@dxos/protocols/buf/dxos/iframe_pb';
 import { type BufProtoRpcPeer, type RpcPort, createBufProtoRpcPeer } from '@dxos/rpc';
 
 /**
@@ -91,14 +95,14 @@ export class ShellRuntimeImpl implements ShellRuntime {
       exposed: shellServiceBundle,
       handlers: {
         ShellService: {
-          setLayout: async (request) => {
+          setLayout: async (request: BufLayoutRequest) => {
             this._layout = request.layout;
             this._invitationCode = request.invitationCode;
-            this._spaceKey = request.spaceKey;
+            this._spaceKey = request.spaceKey as never;
             this._spaceId = request.spaceId;
-            this.layoutUpdate.emit(request);
+            this.layoutUpdate.emit(request as never);
           },
-          setInvitationUrl: async (request) => {
+          setInvitationUrl: async (request: BufInvitationUrlRequest) => {
             this._invitationUrl = request.invitationUrl;
             this._deviceInvitationParam = request.deviceInvitationParam;
             this._spaceInvitationParam = request.spaceInvitationParam;

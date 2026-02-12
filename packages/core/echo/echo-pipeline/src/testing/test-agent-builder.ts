@@ -9,6 +9,8 @@ import { type Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
 import { MemoryTransportFactory, SwarmNetworkManager, createRtcTransportFactory } from '@dxos/network-manager';
+import { create } from '@dxos/protocols/buf';
+import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
@@ -135,7 +137,7 @@ export class TestAgent {
     }
 
     this._networkManager = this._networkManagerProvider();
-    this._networkManager.setPeerInfo({ peerKey: this.deviceKey.toHex(), identityKey: this.identityKey.toHex() });
+    this._networkManager.setPeerInfo(create(PeerSchema, { peerKey: this.deviceKey.toHex(), identityKey: this.identityKey.toHex() }));
 
     return this._networkManager;
   }
@@ -254,7 +256,8 @@ export class TestAgent {
 
     for (const credential of credentials) {
       await space.controlPipeline.writer.write({
-        credential: { credential },
+        // buf Credential cast to proto Credential for feed encoding.
+        credential: { credential: credential as never },
       });
     }
   }

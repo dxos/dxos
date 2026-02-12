@@ -4,6 +4,7 @@
 
 import { type Mutex, type MutexGuard } from '@dxos/async';
 import { type Context, ContextDisposedError, cancelWithContext } from '@dxos/context';
+import { timestampMs } from '@dxos/protocols/buf';
 import {
   type Invitation,
   type Invitation_State,
@@ -12,7 +13,7 @@ import {
 
 export const stateToString = (state: Invitation_State): string => {
   const enumValues = Invitation_StateSchema.values;
-  const match = enumValues.find((v) => v.no === state);
+  const match = enumValues.find((v) => v.number === state);
   return match?.name ?? 'unknown';
 };
 
@@ -20,7 +21,8 @@ export const computeExpirationTime = (invitation: Partial<Invitation>): Date | u
   if (!invitation.lifetime) {
     return;
   }
-  return new Date((invitation.created?.getTime() ?? Date.now()) + invitation.lifetime * 1000);
+  const createdMs = invitation.created ? Number(timestampMs(invitation.created)) : Date.now();
+  return new Date(createdMs + invitation.lifetime * 1000);
 };
 
 export const tryAcquireBeforeContextDisposed = async (ctx: Context, mutex: Mutex): Promise<MutexGuard> => {

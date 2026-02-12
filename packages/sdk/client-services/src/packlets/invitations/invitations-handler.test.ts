@@ -240,7 +240,7 @@ describe.skipIf(process.env.CI && !process.env.RUN_FLAKY_TESTS)(
         await hostInvitation(host, invitation);
         const guests = await Promise.all(
           range(5).map(async () => {
-            const guest = await createPeer(invitation.spaceKey);
+            const guest = await createPeer(invitation.spaceKey as never);
             const authCodeInput2 = await acceptInvitation(guest, invitation);
             authCodeInput2.wake(invitation.authCode!);
             return guest;
@@ -321,7 +321,7 @@ describe.skipIf(process.env.CI && !process.env.RUN_FLAKY_TESTS)(
     };
 
     const createNewHost = async (invitation: Invitation): Promise<PeerSetup> => {
-      const newHost = await createPeer(invitation.spaceKey!);
+      const newHost = await createPeer(invitation.spaceKey as never);
       await performAuth(newHost, invitation);
       await sleep(30);
       await hostInvitation(newHost, invitation);
@@ -369,14 +369,14 @@ describe.skipIf(process.env.CI && !process.env.RUN_FLAKY_TESTS)(
         type: Invitation_Type.DELEGATED,
         kind: Invitation_Kind.SPACE,
         authMethod: Invitation_AuthMethod.SHARED_SECRET,
-        spaceKey: setup.spaceKey,
+        spaceKey: setup.spaceKey as never,
         multiUse: false,
         ...options,
       });
       // cancel to avoid interfering with invitations-handler direct invocations
       const invitation = observable.get();
-      await setup.peer.invitationsManager.cancelInvitation(invitation);
-      return { ...invitation, swarmKey: PublicKey.random() };
+      await setup.peer.invitationsManager.cancelInvitation(invitation as never);
+      return { ...invitation, swarmKey: PublicKey.random() as never } as never;
     };
   },
 );

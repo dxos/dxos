@@ -144,7 +144,8 @@ export class EchoHost extends Resource {
         runtime: this._runtime,
         getSpaceIds: () => this._spaceStateManager.spaceIds,
       });
-      this._queuesService = new LocalQueueServiceImpl(runtime, this._feedStore);
+      // LocalQueueServiceImpl uses proto types; buf QueueService is structurally compatible at runtime.
+      this._queuesService = new LocalQueueServiceImpl(runtime, this._feedStore) as unknown as Echo.QueueService;
     } else {
       this._queuesService = new QueueServiceStub();
     }

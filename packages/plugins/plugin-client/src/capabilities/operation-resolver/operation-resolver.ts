@@ -11,6 +11,10 @@ import { invariant } from '@dxos/invariant';
 import { OperationResolver } from '@dxos/operation';
 import { Operation } from '@dxos/operation';
 import { ObservabilityOperation } from '@dxos/plugin-observability/types';
+import {
+  type CreateRecoveryCredentialResponse,
+  type RequestRecoveryChallengeResponse,
+} from '@dxos/protocols/buf/dxos/client/services_pb';
 import { type JoinPanelProps } from '@dxos/shell/react';
 
 import { JOIN_DIALOG, RECOVERY_CODE_DIALOG, RESET_DIALOG } from '../../constants';
@@ -126,9 +130,9 @@ export default Capability.makeModule(
         handler: Effect.fnUntraced(function* () {
           const client = yield* Capability.get(ClientCapabilities.Client);
           invariant(client.services.services.IdentityService, 'IdentityService not available');
-          const { recoveryCode } = yield* Effect.promise(() =>
+          const { recoveryCode } = (yield* Effect.promise(() =>
             client.services.services.IdentityService!.createRecoveryCredential({}),
-          );
+          )) as CreateRecoveryCredentialResponse;
           yield* Operation.invoke(Common.LayoutOperation.UpdateDialog, {
             subject: RECOVERY_CODE_DIALOG,
             blockAlign: 'start',
@@ -196,9 +200,9 @@ export default Capability.makeModule(
         handler: Effect.fnUntraced(function* () {
           const client = yield* Capability.get(ClientCapabilities.Client);
           invariant(client.services.services.IdentityService, 'IdentityService not available');
-          const { deviceKey, controlFeedKey, challenge } = yield* Effect.promise(() =>
+          const { deviceKey, controlFeedKey, challenge } = (yield* Effect.promise(() =>
             client.services.services.IdentityService!.requestRecoveryChallenge(),
-          );
+          )) as RequestRecoveryChallengeResponse;
           const credential = yield* Effect.promise(() =>
             navigator.credentials.get({
               publicKey: {

@@ -5,11 +5,11 @@
 import { Stream } from '@dxos/codec-protobuf/stream';
 import { type Halo } from '@dxos/protocols';
 import { type Empty, EmptySchema, create } from '@dxos/protocols/buf';
+import { type Invitation } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import {
   type AcceptInvitationRequest,
   type AuthenticationRequest,
   type CancelInvitationRequest,
-  type Invitation,
   type QueryInvitationsResponse,
   QueryInvitationsResponseSchema,
   QueryInvitationsResponse_Action,
@@ -38,7 +38,7 @@ export class InvitationsServiceImpl implements Halo.InvitationsService {
         .createInvitation(options)
         .then((invitation) => {
           trace.metrics.increment('dxos.invitation.created');
-          invitation.subscribe((inv) => next(inv), close, close);
+          invitation.subscribe((inv) => next(inv as never), close, close);
         })
         .catch(close);
     });
@@ -47,7 +47,7 @@ export class InvitationsServiceImpl implements Halo.InvitationsService {
   acceptInvitation(request: AcceptInvitationRequest): Stream<Invitation> {
     const invitation = this._invitationsManager.acceptInvitation(request);
     return new Stream<Invitation>(({ next, close }) => {
-      invitation.subscribe((inv) => next(inv), close, close);
+      invitation.subscribe((inv) => next(inv as never), close, close);
     });
   }
 

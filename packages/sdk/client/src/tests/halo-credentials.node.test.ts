@@ -54,7 +54,7 @@ describe('Halo', () => {
         nonce: new Uint8Array([0, 0, 0, 0]),
       });
       expect(presentation.credentials?.length).to.equal(2);
-      expect(await verifyPresentation(presentation)).to.deep.equal({ kind: 'pass' });
+      expect(await verifyPresentation(presentation as never)).to.deep.equal({ kind: 'pass' });
       expect(presentation.proofs![0].nonce).to.deep.equal(nonce);
     }
   });

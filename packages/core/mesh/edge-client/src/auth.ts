@@ -7,7 +7,13 @@ import { type Signer } from '@dxos/crypto';
 import { invariant } from '@dxos/invariant';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
-import { type Chain, type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { create } from '@dxos/protocols/buf';
+import {
+  type Chain,
+  ChainSchema,
+  type Credential,
+  PresentationSchema,
+} from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 import type { EdgeIdentity } from './edge-identity';
 
@@ -20,7 +26,7 @@ export const createDeviceEdgeIdentity = async (signer: Signer, key: PublicKey): 
     peerKey: key.toHex(),
     presentCredentials: async ({ challenge }) => {
       return signPresentation({
-        presentation: {
+        presentation: create(PresentationSchema, {
           credentials: [
             // Verifier requires at least one credential in the presentation to establish the subject.
             await createCredential({
@@ -32,7 +38,7 @@ export const createDeviceEdgeIdentity = async (signer: Signer, key: PublicKey): 
               signer,
             }),
           ],
-        },
+        }),
         signer,
         signerKey: key,
         nonce: challenge,
@@ -74,9 +80,9 @@ export const createChainEdgeIdentity = async (
       // TODO: make chain required after device invitation flow update release
       invariant(chain);
       return signPresentation({
-        presentation: {
+        presentation: create(PresentationSchema, {
           credentials: credentialsToSign,
-        },
+        }),
         signer,
         nonce: challenge,
         signerKey: peerKey,
@@ -113,7 +119,7 @@ export const createTestHaloEdgeIdentity = async (
     subject: deviceKey,
     signer,
   });
-  return createChainEdgeIdentity(signer, identityKey, deviceKey, { credential: deviceAdmission }, [
+  return createChainEdgeIdentity(signer, identityKey, deviceKey, create(ChainSchema, { credential: deviceAdmission }), [
     await createCredential({
       assertion: {
         '@type': 'dxos.halo.credentials.Auth',

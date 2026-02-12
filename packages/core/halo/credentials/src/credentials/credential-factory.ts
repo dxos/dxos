@@ -5,7 +5,7 @@
 import { type Signer, subtleCrypto } from '@dxos/crypto';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
-import { create, timestampFromDate } from '@dxos/protocols/buf';
+import { type bufWkt, create, timestampFromDate } from '@dxos/protocols/buf';
 import {
   type Chain,
   type Credential,
@@ -68,7 +68,8 @@ export const createCredential = async ({
     issuanceDate: timestampFromDate(new Date()),
     subject: {
       id: toBufPublicKey(subject),
-      assertion,
+      // TypedMessage is stored at runtime in the buf Any field (decoded by protobuf.js codec).
+      assertion: assertion as unknown as bufWkt.Any,
     },
     parentCredentialIds: parentCredentialIds?.map(toBufPublicKey),
     proof: create(ProofSchema, {
@@ -132,11 +133,11 @@ export const createCredentialSignerWithChain = (
   chain: Chain,
   signingKey: PublicKey,
 ): CredentialSigner => ({
-  getIssuer: () => chain.credential.issuer,
+  getIssuer: () => PublicKey.from(chain.credential!.issuer!.data),
   createCredential: ({ subject, assertion, nonce, parentCredentialIds }) =>
     createCredential({
       signer,
-      issuer: chain.credential.issuer,
+      issuer: PublicKey.from(chain.credential!.issuer!.data),
       signingKey,
       chain,
       subject,

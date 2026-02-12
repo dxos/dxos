@@ -99,7 +99,7 @@ describe('identity/identity-manager', () => {
 
     const identity = await identityManager.createIdentity();
     expect(identity.profileDocument?.displayName).to.be.undefined;
-    await identityManager.updateProfile({ displayName: 'Example' });
+    await identityManager.updateProfile({ displayName: 'Example' } as never);
     expect(identity.profileDocument?.displayName).to.equal('Example');
   });
 
@@ -111,7 +111,7 @@ describe('identity/identity-manager', () => {
     peer1.networkManager.setPeerInfo({
       peerKey: identity1.deviceKey.toHex(),
       identityKey: identity1.identityKey.toHex(),
-    });
+    } as never);
     await identity1.joinNetwork();
 
     const peer2 = await setupPeer({ signalContext });
@@ -131,7 +131,7 @@ describe('identity/identity-manager', () => {
 
     await identity1.controlPipeline.writer.write({
       credential: {
-        credential,
+        credential: credential as never,
       },
     });
 
@@ -142,12 +142,12 @@ describe('identity/identity-manager', () => {
       haloGenesisFeedKey: identity1.haloGenesisFeedKey,
       controlFeedKey,
       dataFeedKey,
-      authorizedDeviceCredential: credential,
+      authorizedDeviceCredential: credential as never,
     });
     peer2.networkManager.setPeerInfo({
       peerKey: identity2.deviceKey.toHex(),
       identityKey: identity2.identityKey.toHex(),
-    });
+    } as never);
     await identity2.joinNetwork();
 
     // Identity2 is not yet ready at this point. Peer1 needs to admit peer2 device key and feed keys.
@@ -191,7 +191,7 @@ describe('identity/identity-manager', () => {
     expect(deviceProfile).to.exist;
 
     deviceProfile!.label = 'updated profile';
-    await peer.identityManager.updateDeviceProfile(deviceProfile!);
+    await peer.identityManager.updateDeviceProfile(deviceProfile! as never);
 
     expect(identity.authorizedDeviceKeys.get(identity.deviceKey)?.label).to.equal('updated profile');
   });

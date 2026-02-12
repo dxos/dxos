@@ -24,7 +24,7 @@ describe('SpacesService', () => {
     spacesService = new SpacesServiceImpl(serviceContext.identityManager, serviceContext.spaceManager, async () => {
       await serviceContext.initialized.wait();
       return serviceContext.dataSpaceManager!;
-    });
+    }) as never;
   });
 
   afterEach(async () => {

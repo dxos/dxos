@@ -7,6 +7,9 @@ import type { Stream } from '@dxos/codec-protobuf/stream';
 import { type Context, cancelWithContext } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { create, timestampFromDate } from '@dxos/protocols/buf';
+import { MessageSchema, SwarmEventSchema } from '@dxos/protocols/buf/dxos/edge/signal_pb';
+import { PublicKeySchema } from '@dxos/protocols/buf/dxos/keys_pb';
 import {
   type Message as SignalMessage,
   type SwarmEvent as SwarmEventProto,
@@ -114,21 +117,27 @@ export class SignalLocalState {
       swarmStream.subscribe(async (swarmEvent: SwarmEventProto) => {
         if (this._joinedTopics.has({ topic, peerId })) {
           log('swarm event', { swarmEvent });
+          const bufTopic = create(PublicKeySchema, { data: topic.asUint8Array() });
           const event: SwarmEvent = swarmEvent.peerAvailable
-            ? {
-                topic,
-                peerAvailable: {
-                  ...swarmEvent.peerAvailable,
-                  peer: { peerKey: PublicKey.from(swarmEvent.peerAvailable.peer).toHex() },
+            ? create(SwarmEventSchema, {
+                topic: bufTopic,
+                event: {
+                  case: 'peerAvailable',
+                  value: {
+                    peer: { peerKey: PublicKey.from(swarmEvent.peerAvailable.peer).toHex() },
+                    since: timestampFromDate(swarmEvent.peerAvailable.since ?? new Date()),
+                  },
                 },
-              }
-            : {
-                topic,
-                peerLeft: {
-                  ...swarmEvent.peerLeft,
-                  peer: { peerKey: PublicKey.from(swarmEvent.peerLeft!.peer).toHex() },
+              })
+            : create(SwarmEventSchema, {
+                topic: bufTopic,
+                event: {
+                  case: 'peerLeft',
+                  value: {
+                    peer: { peerKey: PublicKey.from(swarmEvent.peerLeft!.peer).toHex() },
+                  },
                 },
-              };
+              });
           await this._onSwarmEvent(event);
         }
       });
@@ -159,11 +168,11 @@ export class SignalLocalState {
       const messageStream = await asyncTimeout(cancelWithContext(ctx, client.receiveMessages(peerId)), 5_000);
       messageStream.subscribe(async (signalMessage: SignalMessage) => {
         if (this._subscribedMessages.has({ peerId })) {
-          const message: Message = {
+          const message: Message = create(MessageSchema, {
             author: { peerKey: PublicKey.from(signalMessage.author).toHex() },
             recipient: { peerKey: PublicKey.from(signalMessage.recipient).toHex() },
-            payload: signalMessage.payload,
-          };
+            payload: signalMessage.payload as never,
+          });
           await this._onMessage(message);
         }
       });

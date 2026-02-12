@@ -9,6 +9,7 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type Mesh } from '@dxos/protocols';
+import { EMPTY } from '@dxos/protocols/buf';
 import {
   type BridgeEvent,
   type CloseRequest,
@@ -20,13 +21,17 @@ import {
   type SignalRequest,
   type StatsRequest,
   type StatsResponse,
-} from '@dxos/protocols/proto/dxos/mesh/bridge';
+} from '@dxos/protocols/buf/dxos/mesh/bridge_pb';
 import { ComplexMap } from '@dxos/util';
+
+import { type PublicKey as BufPublicKey } from '@dxos/protocols/buf/dxos/keys_pb';
 
 import { type IceProvider } from '../../signal';
 import { type Transport, type TransportFactory } from '../transport';
 
 import { createRtcTransportFactory } from './rtc-transport-factory';
+
+const fromBufKey = (key: BufPublicKey): PublicKey => PublicKey.from(key.data);
 
 type TransportState = {
   proxyId: PublicKey;
@@ -49,11 +54,12 @@ export class RtcTransportService implements Mesh.BridgeService {
   }
 
   open(request: ConnectionRequest): Stream<BridgeEvent> {
-    const existingTransport = this._openTransports.get(request.proxyId);
+    const proxyId = fromBufKey(request.proxyId!);
+    const existingTransport = this._openTransports.get(proxyId);
     if (existingTransport) {
       log.error('requesting a new transport bridge for an existing proxy');
       void this._safeCloseTransport(existingTransport);
-      this._openTransports.delete(request.proxyId);
+      this._openTransports.delete(proxyId);
     }
 
     return new Stream<BridgeEvent>(({ ready, next, close }) => {
@@ -66,7 +72,7 @@ export class RtcTransportService implements Mesh.BridgeService {
           callbacks.forEach((cb) => cb());
         },
         write: function (chunk, _, callback) {
-          next({ data: { payload: chunk } });
+          next({ type: { case: 'data', value: { payload: chunk } } } as BridgeEvent);
           callback();
         },
       });
@@ -78,12 +84,13 @@ export class RtcTransportService implements Mesh.BridgeService {
         remotePeerKey: request.remotePeerKey,
         stream: transportStream,
         sendSignal: async (signal) => {
-          next({ signal: { payload: signal } });
+          // Signal types are structurally compatible between proto and buf.
+          next({ type: { case: 'signal', value: { payload: signal } } } as BridgeEvent);
         },
       });
 
       const transportState: TransportState = {
-        proxyId: request.proxyId,
+        proxyId,
         transport,
         connectorStream: transportStream,
         writeProcessedCallbacks: [],
@@ -103,7 +110,7 @@ export class RtcTransportService implements Mesh.BridgeService {
         close();
       });
 
-      this._openTransports.set(request.proxyId, transportState);
+      this._openTransports.set(proxyId, transportState);
 
       transport.open().catch(async (err) => {
         pushNewState(ConnectionState.CLOSED, err);
@@ -119,29 +126,35 @@ export class RtcTransportService implements Mesh.BridgeService {
     });
   }
 
-  async sendSignal({ proxyId, signal }: SignalRequest): Promise<void> {
-    const transport = this._openTransports.get(proxyId);
+  async sendSignal({ proxyId, signal }: SignalRequest) {
+    const key = fromBufKey(proxyId!);
+    const transport = this._openTransports.get(key);
     invariant(transport);
 
-    await transport.transport.onSignal(signal);
+    // Signal types are structurally compatible between buf and proto.
+    await transport.transport.onSignal(signal as never);
+    return EMPTY;
   }
 
   async getDetails({ proxyId }: DetailsRequest): Promise<DetailsResponse> {
-    const transport = this._openTransports.get(proxyId);
+    const key = fromBufKey(proxyId!);
+    const transport = this._openTransports.get(key);
     invariant(transport);
 
-    return { details: await transport.transport.getDetails() };
+    return { details: await transport.transport.getDetails() } as DetailsResponse;
   }
 
   async getStats({ proxyId }: StatsRequest): Promise<StatsResponse> {
-    const transport = this._openTransports.get(proxyId);
+    const key = fromBufKey(proxyId!);
+    const transport = this._openTransports.get(key);
     invariant(transport);
 
-    return { stats: await transport.transport.getStats() };
+    return { stats: await transport.transport.getStats() } as unknown as StatsResponse;
   }
 
-  async sendData({ proxyId, payload }: DataRequest): Promise<void> {
-    const transport = this._openTransports.get(proxyId);
+  async sendData({ proxyId, payload }: DataRequest) {
+    const key = fromBufKey(proxyId!);
+    const transport = this._openTransports.get(key);
     invariant(transport);
 
     const bufferHasSpace = transport.connectorStream.push(payload);
@@ -150,16 +163,19 @@ export class RtcTransportService implements Mesh.BridgeService {
         transport.writeProcessedCallbacks.push(resolve);
       });
     }
+    return EMPTY;
   }
 
-  async close({ proxyId }: CloseRequest): Promise<void> {
-    const transport = this._openTransports.get(proxyId);
+  async close({ proxyId }: CloseRequest) {
+    const key = fromBufKey(proxyId!);
+    const transport = this._openTransports.get(key);
     if (!transport) {
-      return;
+      return EMPTY;
     }
 
-    this._openTransports.delete(proxyId);
+    this._openTransports.delete(key);
     await this._safeCloseTransport(transport);
+    return EMPTY;
   }
 
   private async _safeCloseTransport(transport: TransportState): Promise<void> {
@@ -186,10 +202,13 @@ export class RtcTransportService implements Mesh.BridgeService {
 const createStateUpdater = (next: (event: BridgeEvent) => void) => {
   return (state: ConnectionState, err?: Error) => {
     next({
-      connection: {
-        state,
-        ...(err ? { error: err.message } : undefined),
+      type: {
+        case: 'connection',
+        value: {
+          state,
+          ...(err ? { error: err.message } : undefined),
+        },
       },
-    });
+    } as BridgeEvent);
   };
 };

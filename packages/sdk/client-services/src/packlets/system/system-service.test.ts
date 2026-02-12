@@ -6,12 +6,13 @@ import { beforeEach, describe, expect, test } from 'vitest';
 
 import { Event, Trigger } from '@dxos/async';
 import { Config } from '@dxos/config';
-import { type QueryStatusResponse, type SystemService, SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
+import { type QueryStatusResponse } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
 
 import { SystemServiceImpl } from './system-service';
 
 describe('SystemService', () => {
-  let systemService: SystemService;
+  let systemService: SystemServiceImpl;
   let config: Config;
   let statusUpdate: Event<void>;
   let currentStatus: SystemStatus;
@@ -49,14 +50,14 @@ describe('SystemService', () => {
   });
 
   test('updateStatus triggers callback', async () => {
-    await systemService.updateStatus({ status: SystemStatus.INACTIVE });
+    await systemService.updateStatus({ status: SystemStatus.INACTIVE } as never);
     const result = await updateStatus.wait();
     expect(result).to.equal(SystemStatus.INACTIVE);
   });
 
   test('queryStatus returns initial status', async () => {
     const status = new Trigger<QueryStatusResponse>();
-    systemService.queryStatus({}).subscribe((response) => {
+    systemService.queryStatus({} as never).subscribe((response) => {
       status.wake(response);
     });
     expect(await status.wait()).to.deep.equal({ status: SystemStatus.ACTIVE });
@@ -64,7 +65,7 @@ describe('SystemService', () => {
 
   test('queryStatus streams status changes', async () => {
     const statuses: SystemStatus[] = [];
-    systemService.queryStatus({}).subscribe(({ status }) => {
+    systemService.queryStatus({} as never).subscribe(({ status }) => {
       statuses.push(status);
     });
     changeStatus(SystemStatus.INACTIVE);

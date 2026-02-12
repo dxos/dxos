@@ -43,7 +43,7 @@ export class ContactsServiceImpl implements Client.ContactsService {
         }
         const existing = acc.get(memberInfo.key);
         if (existing != null) {
-          existing.profile ??= memberInfo.profile;
+          existing.profile ??= memberInfo.profile as never;
           existing.commonSpaces?.push(create(PublicKeySchema, { data: spaceKey.asUint8Array() }));
         } else {
           acc.set(

@@ -5,10 +5,11 @@
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type Credential, type ProfileDocument, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { type ProfileDocument, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { ComplexMap } from '@dxos/util';
 
-import { getCredentialAssertion } from '../credentials';
+import { fromBufPublicKey, getCredentialAssertion } from '../credentials';
 import {
   type ChainVertex,
   CredentialGraph,
@@ -60,27 +61,29 @@ export class MemberStateMachine implements CredentialGraphStateHandler<SpaceMemb
    */
   async process(credential: Credential): Promise<void> {
     const assertion = getCredentialAssertion(credential);
+    const subjectId = fromBufPublicKey(credential.subject!.id!)!;
+    const issuer = fromBufPublicKey(credential.issuer!)!;
 
     switch (assertion['@type']) {
       case 'dxos.halo.credentials.SpaceMember': {
         invariant(assertion.spaceKey.equals(this._spaceKey));
-        if (this._ownerKey == null && credential.issuer === this._spaceKey) {
-          this._ownerKey = credential.subject.id;
+        if (this._ownerKey == null && issuer.equals(this._spaceKey)) {
+          this._ownerKey = subjectId;
         }
         if (assertion.profile != null) {
-          this._memberProfiles.set(credential.subject.id, assertion.profile);
+          this._memberProfiles.set(subjectId, assertion.profile);
         }
         await this._hashgraph.addVertex(credential, assertion);
         break;
       }
       case 'dxos.halo.credentials.MemberProfile': {
-        const member = this._hashgraph.getSubjectState(credential.subject.id);
+        const member = this._hashgraph.getSubjectState(subjectId);
         if (member) {
           member.profile = assertion.profile;
         } else {
-          log.warn('Member not found', { id: credential.subject.id });
+          log.warn('Member not found', { id: subjectId });
         }
-        this._memberProfiles.set(credential.subject.id, assertion.profile);
+        this._memberProfiles.set(subjectId, assertion.profile);
         break;
       }
       default:
@@ -89,7 +92,7 @@ export class MemberStateMachine implements CredentialGraphStateHandler<SpaceMemb
   }
 
   public createState(credential: Credential, assertion: SpaceMember): MemberInfo {
-    const memberKey = credential.subject.id;
+    const memberKey = fromBufPublicKey(credential.subject!.id!)!;
     return {
       key: memberKey,
       role: assertion.role,
@@ -100,11 +103,13 @@ export class MemberStateMachine implements CredentialGraphStateHandler<SpaceMemb
   }
 
   public isUpdateAllowed(scope: StateScope<SpaceMember>, credential: Credential, assertion: SpaceMember): boolean {
+    const issuer = fromBufPublicKey(credential.issuer!)!;
+    const subjectId = fromBufPublicKey(credential.subject!.id!)!;
+
     if (assertion.role === SpaceMember.Role.OWNER) {
-      return credential!.issuer.equals(this._spaceKey);
+      return issuer.equals(this._spaceKey);
     }
-    const issuer = credential.issuer;
-    const isChangingOwnRole = issuer.equals(credential.subject.id);
+    const isChangingOwnRole = issuer.equals(subjectId);
     if (isChangingOwnRole) {
       return false;
     }
@@ -123,7 +128,7 @@ export class MemberStateMachine implements CredentialGraphStateHandler<SpaceMemb
     if (update.assertion.role !== SpaceMember.Role.REMOVED && update.assertion.role !== SpaceMember.Role.EDITOR) {
       return [];
     }
-    const memberId = update.credential!.subject.id!;
+    const memberId = fromBufPublicKey(update.credential!.subject!.id!)!;
     return paths.filter((p) => p.forkIssuers.has(memberId));
   }
 
@@ -133,8 +138,8 @@ export class MemberStateMachine implements CredentialGraphStateHandler<SpaceMemb
     scope2: StateScope<SpaceMember>,
     update2: Credential,
   ): Credential | null {
-    const path1IssuerRole = this._getRole(scope1, update1.issuer);
-    const path2IssuerRole = this._getRole(scope2, update2.issuer);
+    const path1IssuerRole = this._getRole(scope1, fromBufPublicKey(update1.issuer!)!);
+    const path2IssuerRole = this._getRole(scope2, fromBufPublicKey(update2.issuer!)!);
     if ((path2IssuerRole === SpaceMember.Role.OWNER) !== (path1IssuerRole === SpaceMember.Role.OWNER)) {
       log('owner decision used to break the tie');
       return path1IssuerRole === SpaceMember.Role.OWNER ? update1 : update2;

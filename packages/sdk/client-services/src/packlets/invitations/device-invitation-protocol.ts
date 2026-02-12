@@ -54,7 +54,7 @@ export class DeviceInvitationProtocol implements InvitationProtocol {
     invariant(request.device);
     const identity = this._getIdentity();
     const credential = await identity.admitDevice(request.device);
-    invariant(getCredentialAssertion(credential)['@type'] === 'dxos.halo.credentials.AuthorizedDevice');
+    invariant(getCredentialAssertion(credential as never)['@type'] === 'dxos.halo.credentials.AuthorizedDevice');
 
     return {
       device: {
@@ -62,7 +62,7 @@ export class DeviceInvitationProtocol implements InvitationProtocol {
         haloSpaceKey: identity.haloSpaceKey,
         genesisFeedKey: identity.haloGenesisFeedKey,
         controlTimeframe: identity.controlPipeline.state.timeframe,
-        credential,
+        credential: credential as never,
       },
     };
   }
@@ -114,10 +114,10 @@ export class DeviceInvitationProtocol implements InvitationProtocol {
       controlFeedKey,
       dataFeedKey,
       controlTimeframe,
-      deviceProfile: profile,
+      deviceProfile: profile as never,
       authorizedDeviceCredential: response.device.credential,
     });
 
-    return { identityKey };
+    return { identityKey: identityKey as never };
   }
 }

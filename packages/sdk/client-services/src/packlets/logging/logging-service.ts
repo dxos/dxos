@@ -13,7 +13,7 @@ import {
   log,
 } from '@dxos/log';
 import { type Client } from '@dxos/protocols';
-import { create } from '@dxos/protocols/buf';
+import { create, timestampFromDate } from '@dxos/protocols/buf';
 import {
   type ControlMetricsRequest,
   type ControlMetricsResponse,
@@ -74,13 +74,13 @@ export class LoggingServiceImpl implements Client.LoggingService {
     return new Stream(({ next }) => {
       const update = () => {
         const metrics = create(MetricsSchema, {
-          timestamp: new Date(),
+          timestamp: timestampFromDate(new Date()),
           values: [getNumericalValues('dxos.echo.pipeline.control'), getNumericalValues('dxos.echo.pipeline.data')],
         });
 
         next(
           create(QueryMetricsResponseSchema, {
-            timestamp: new Date(),
+            timestamp: timestampFromDate(new Date()),
             metrics,
           }),
         );
@@ -119,7 +119,7 @@ export class LoggingServiceImpl implements Client.LoggingService {
           level: entry.level,
           message: entry.message ?? (entry.error ? (entry.error.message ?? String(entry.error)) : ''),
           context: jsonify(getContextFromEntry(entry)),
-          timestamp: new Date(),
+          timestamp: timestampFromDate(new Date()),
           meta: {
             // TODO(dmaretskyi): Fix proto.
             file: entry.meta?.F ?? '',

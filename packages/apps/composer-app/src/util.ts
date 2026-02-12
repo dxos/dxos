@@ -5,6 +5,7 @@
 import { type defs } from '@dxos/config';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { type Credential as BufCredential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type Client } from '@dxos/react-client';
 import { type Credential } from '@dxos/react-client/halo';
 
@@ -54,10 +55,10 @@ export const queryAllCredentials = (client: Client) => {
   return new Promise<Credential[]>((resolve, reject) => {
     const credentials: Credential[] = [];
     stream?.subscribe(
-      (credential) => {
-        credentials.push(credential);
+      (credential: BufCredential) => {
+        credentials.push(credential as never);
       },
-      (err) => {
+      (err: Error) => {
         if (err) {
           reject(err);
         } else {

@@ -3,7 +3,7 @@
 //
 
 import { create } from '@dxos/protocols/buf';
-import { type Platform, PlatformSchema, Platform_Type } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { type Platform, PlatformSchema, Platform_PLATFORM_TYPE } from '@dxos/protocols/buf/dxos/client/services_pb';
 
 export const getPlatform = (): Platform => {
   if ((process as any).browser) {
@@ -11,15 +11,15 @@ export const getPlatform = (): Platform => {
       // Browser.
       const { userAgent } = window.navigator;
       return create(PlatformSchema, {
-        type: Platform_Type.BROWSER,
+        type: Platform_PLATFORM_TYPE.BROWSER,
         userAgent,
-        uptime: BigInt(Math.floor((Date.now() - window.performance.timeOrigin) / 1_000)),
+        uptime: Math.floor((Date.now() - window.performance.timeOrigin) / 1_000),
       });
     } else {
       // Shared worker.
       return create(PlatformSchema, {
-        type: Platform_Type.SHARED_WORKER,
-        uptime: BigInt(Math.floor((Date.now() - performance.timeOrigin) / 1_000)),
+        type: Platform_PLATFORM_TYPE.SHARED_WORKER,
+        uptime: Math.floor((Date.now() - performance.timeOrigin) / 1_000),
       });
     }
   } else {
@@ -27,17 +27,17 @@ export const getPlatform = (): Platform => {
     const { platform, version, arch } = process;
     const memoryUsage = process.memoryUsage();
     return create(PlatformSchema, {
-      type: Platform_Type.NODE,
+      type: Platform_PLATFORM_TYPE.NODE,
       platform,
       arch,
       runtime: version,
-      uptime: BigInt(Math.floor(process.uptime())),
+      uptime: Math.floor(process.uptime()),
       memory: {
-        rss: BigInt(memoryUsage.rss),
-        heapTotal: BigInt(memoryUsage.heapTotal),
-        heapUsed: BigInt(memoryUsage.heapUsed),
-        external: BigInt(memoryUsage.external),
-        arrayBuffers: BigInt(memoryUsage.arrayBuffers),
+        rss: memoryUsage.rss,
+        heapTotal: memoryUsage.heapTotal,
+        heapUsed: memoryUsage.heapUsed,
+        external: memoryUsage.external,
+        arrayBuffers: memoryUsage.arrayBuffers,
       },
     });
   }

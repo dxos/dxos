@@ -152,8 +152,8 @@ export class WorkerRuntime {
       this._ready.wake(undefined);
       log('started');
       setIdentityTags({
-        identityService: this._clientServices.services.IdentityService!,
-        devicesService: this._clientServices.services.DevicesService!,
+        identityService: this._clientServices.services.IdentityService as never,
+        devicesService: this._clientServices.services.DevicesService as never,
         setTag: (k: string, v: string) => {
           this._signalMetadataTags[k] = v;
         },

@@ -116,13 +116,13 @@ export class WorkerClientServices implements ClientServicesProvider {
       }
     });
 
-    this._loggingStream = this._services.services.LoggingService.queryLogs(
+    this._loggingStream = this._services.services.LoggingService!.queryLogs(
       {
         filters: this._logFilter,
       },
       { timeout: RPC_TIMEOUT },
     );
-    this._loggingStream.subscribe((entry) => {
+    this._loggingStream!.subscribe((entry) => {
       switch (entry.level) {
         case LogLevel.DEBUG:
           log.debug(entry.message, entry.context, mapLogMeta(entry.meta));

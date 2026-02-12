@@ -76,7 +76,7 @@ export class DevtoolsServiceImpl implements Client.DevtoolsHost {
   events(): Stream<Event> {
     return new Stream<Event>(({ next }) => {
       this.params.events.ready.on(() => {
-        next(create(EventSchema, { ready: {} }));
+        next(create(EventSchema, { payload: { case: 'ready', value: {} } }));
       });
     });
   }

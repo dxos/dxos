@@ -21,6 +21,7 @@ import {
   Invitation_State,
   Invitation_Type,
 } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import { timestampFromDate } from '@dxos/protocols/buf';
 import { type AcceptInvitationRequest, type AuthenticationRequest } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
@@ -72,9 +73,9 @@ export class InvitationsManager {
     // onComplete is called on cancel, expiration, or redemption of a single-use invitation
     this._onInvitationComplete(observableInvitation, async () => {
       this._createInvitations.delete(observableInvitation.get().invitationId);
-      this.removedCreated.emit(observableInvitation.get());
+      this.removedCreated.emit(observableInvitation.get() as never);
       if (observableInvitation.get().persistent) {
-        await this._safeDeleteInvitation(observableInvitation.get());
+        await this._safeDeleteInvitation(observableInvitation.get() as never);
       }
     });
 
@@ -86,7 +87,7 @@ export class InvitationsManager {
       return observableInvitation;
     }
 
-    this._invitationsHandler.handleInvitationFlow(ctx, stream, handler, observableInvitation.get());
+    this._invitationsHandler.handleInvitationFlow(ctx, stream, handler, observableInvitation.get() as never);
 
     return observableInvitation;
   }
@@ -103,11 +104,11 @@ export class InvitationsManager {
 
       const loadTasks = freshInvitations.map((persistentInvitation) => {
         invariant(!this._createInvitations.get(persistentInvitation.invitationId), 'invitation already exists');
-        return this.createInvitation({ ...persistentInvitation, persistent: false });
+        return this.createInvitation({ ...persistentInvitation, persistent: false } as never);
       });
       const cInvitations = await Promise.all(loadTasks);
 
-      return { invitations: cInvitations.map((invitation) => invitation.get()) };
+      return { invitations: cInvitations.map((invitation) => invitation.get() as never) };
     } catch (err) {
       log.catch(err);
       return { invitations: [] };
@@ -118,6 +119,7 @@ export class InvitationsManager {
   }
 
   acceptInvitation(request: AcceptInvitationRequest): AuthenticatingInvitation {
+    invariant(request.invitation);
     const options = request.invitation;
     const existingInvitation = this._acceptInvitations.get(options.invitationId);
     if (existingInvitation) {
@@ -126,13 +128,13 @@ export class InvitationsManager {
 
     const handler = this._getHandler(options);
     const { ctx, invitation, stream, otpEnteredTrigger } = this._createObservableAcceptingInvitation(handler, options);
-    this._invitationsHandler.acceptInvitation(ctx, stream, handler, options, otpEnteredTrigger, request.deviceProfile);
+    this._invitationsHandler.acceptInvitation(ctx, stream, handler, options, otpEnteredTrigger, request.deviceProfile as never);
     this._acceptInvitations.set(invitation.get().invitationId, invitation);
-    this.invitationAccepted.emit(invitation.get());
+    this.invitationAccepted.emit(invitation.get() as never);
 
     this._onInvitationComplete(invitation, () => {
       this._acceptInvitations.delete(invitation.get().invitationId);
-      this.removedAccepted.emit(invitation.get());
+      this.removedAccepted.emit(invitation.get() as never);
     });
 
     return invitation;
@@ -158,13 +160,13 @@ export class InvitationsManager {
       if (created.get().persistent) {
         await this._metadataStore.removeInvitation(invitationId);
       }
-      if (created.get().type === Invitation_Type.DELEGATED) {
-        const handler = this._getHandler(created.get());
-        await handler.cancelDelegation(created.get());
+      if ((created.get().type as never) === Invitation_Type.DELEGATED) {
+        const handler = this._getHandler(created.get() as never);
+        await handler.cancelDelegation(created.get() as never);
       }
       await created.cancel();
       this._createInvitations.delete(invitationId);
-      this.removedCreated.emit(created.get());
+      this.removedCreated.emit(created.get() as never);
       return;
     }
 
@@ -172,16 +174,16 @@ export class InvitationsManager {
     if (accepted) {
       await accepted.cancel();
       this._acceptInvitations.delete(invitationId);
-      this.removedAccepted.emit(accepted.get());
+      this.removedAccepted.emit(accepted.get() as never);
     }
   }
 
   getCreatedInvitations(): Invitation[] {
-    return [...this._createInvitations.values()].map((i) => i.get());
+    return [...this._createInvitations.values()].map((i) => i.get() as never);
   }
 
   getAcceptedInvitations(): Invitation[] {
-    return [...this._acceptInvitations.values()].map((i) => i.get());
+    return [...this._acceptInvitations.values()].map((i) => i.get() as never);
   }
 
   onPersistentInvitationsLoaded(ctx: Context, callback: () => void): void {
@@ -199,9 +201,9 @@ export class InvitationsManager {
       authMethod = Invitation_AuthMethod.SHARED_SECRET,
       state = Invitation_State.INIT,
       timeout = INVITATION_TIMEOUT,
-      swarmKey = PublicKey.random(),
+      swarmKey = PublicKey.random() as never,
       persistent = _options?.authMethod !== Invitation_AuthMethod.KNOWN_PUBLIC_KEY, // default no not storing keypairs
-      created = new Date(),
+      created = timestampFromDate(new Date()),
       guestKeypair = undefined,
       role = SpaceMember_Role.ADMIN,
       lifetime = 86400 * 7, // 7 days,
@@ -230,7 +232,7 @@ export class InvitationsManager {
       delegationCredentialId: options?.delegationCredentialId,
       ...options,
       ...protocol.getInvitationContext(),
-    } satisfies Invitation;
+    } as Invitation;
   }
 
   private _createObservableInvitation(
@@ -249,8 +251,8 @@ export class InvitationsManager {
       stream.complete();
     });
     const observableInvitation = new CancellableInvitation({
-      initialInvitation: invitation,
-      subscriber: stream.observable,
+      initialInvitation: invitation as never,
+      subscriber: stream.observable as never,
       onCancel: async () => {
         stream.next({ ...invitation, state: Invitation_State.CANCELLED });
         await ctx.dispose();
@@ -287,8 +289,8 @@ export class InvitationsManager {
       stream.complete();
     });
     const invitation = new AuthenticatingInvitation({
-      initialInvitation: initialState,
-      subscriber: stream.observable,
+      initialInvitation: initialState as never,
+      subscriber: stream.observable as never,
       onCancel: async () => {
         stream.next({ ...initialState, state: Invitation_State.CANCELLED });
         await ctx.dispose();
@@ -308,9 +310,9 @@ export class InvitationsManager {
   ): Promise<void> {
     if (invitation.type === Invitation_Type.DELEGATED && invitation.delegationCredentialId == null) {
       const delegationCredentialId = await handler.delegate(invitation);
-      changeStream.next({ ...invitation, delegationCredentialId });
+      changeStream.next({ ...invitation, delegationCredentialId: delegationCredentialId as never });
     } else if (invitation.persistent) {
-      await this._metadataStore.addInvitation(invitation);
+      await this._metadataStore.addInvitation(invitation as never);
       this.saved.emit(invitation);
     }
   }

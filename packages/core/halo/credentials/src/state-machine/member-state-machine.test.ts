@@ -9,7 +9,7 @@ import { PublicKey } from '@dxos/keys';
 import { SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { range } from '@dxos/util';
 
-import { createAdmissionCredentials, createCredentialSignerWithKey } from '../credentials';
+import { createAdmissionCredentials, createCredentialSignerWithKey, fromBufPublicKey } from '../credentials';
 
 import { MemberStateMachine } from './member-state-machine';
 
@@ -538,7 +538,7 @@ describe('MemberStateMachine', () => {
     );
     const credential = feedMessage[0].credential!.credential;
     await stateMachine.process(credential);
-    return feedMessage[0].credential!.credential.id!;
+    return fromBufPublicKey(credential.id!)!;
   };
 
   const remove = async (
@@ -558,7 +558,7 @@ describe('MemberStateMachine', () => {
     );
     const credential = feedMessage[0].credential!.credential;
     await stateMachine.process(credential);
-    return feedMessage[0].credential!.credential.id!;
+    return fromBufPublicKey(credential.id!)!;
   };
 
   const createPeers = (count: number) => Promise.all(range(count).map(() => keyring.createKey()));

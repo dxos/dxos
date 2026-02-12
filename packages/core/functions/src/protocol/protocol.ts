@@ -116,8 +116,8 @@ class FunctionContext extends Resource {
     this.context = context;
     if (context.services.dataService && context.services.queryService) {
       this.client = new EchoClient().connectToService({
-        dataService: context.services.dataService,
-        queryService: context.services.queryService,
+        dataService: context.services.dataService as never,
+        queryService: context.services.queryService as never,
         queueService: context.services.queueService,
       });
     }

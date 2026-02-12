@@ -21,6 +21,7 @@ import { type IdentityDid, PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import { type Chain } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import {
   AdmittedFeed,
   type Credential,
@@ -179,7 +180,7 @@ export class Identity {
     return this.space.genesisFeedKey;
   }
 
-  get deviceCredentialChain() {
+  get deviceCredentialChain(): Chain | undefined {
     return this._deviceStateMachine.deviceCredentialChain;
   }
 
@@ -216,7 +217,7 @@ export class Identity {
       subject: this.identityKey,
       assertion: { '@type': 'dxos.halo.credentials.DefaultSpace', spaceId },
     });
-    const receipt = await this.controlPipeline.writer.write({ credential: { credential } });
+    const receipt = await this.controlPipeline.writer.write({ credential: { credential: credential as never } });
     await this.controlPipeline.state.waitUntilTimeframe(new Timeframe([[receipt.feedKey, receipt.seq]]));
   }
 
@@ -261,10 +262,10 @@ export class Identity {
             designation: AdmittedFeed.Designation.DATA,
           },
         }),
-      ].map((credential): FeedMessage.Payload => ({ credential: { credential } })),
+      ].map((credential): FeedMessage.Payload => ({ credential: { credential: credential as never } })),
     );
 
-    return deviceCredential;
+    return deviceCredential as never;
   }
 
   private _onFeedAdded = async (feed: FeedWrapper<any>) => {

@@ -28,6 +28,9 @@ import { log } from '@dxos/log';
 import { type SignalManager } from '@dxos/messaging';
 import { type SwarmNetworkManager } from '@dxos/network-manager';
 import { InvalidStorageVersionError, STORAGE_VERSION, trace } from '@dxos/protocols';
+import { create } from '@dxos/protocols/buf';
+import { ChainSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
@@ -181,7 +184,7 @@ export class ServiceContext extends Resource {
     );
     this.invitationsManager = new InvitationsManager(
       this.invitations,
-      (invitation) => this.getInvitationHandler(invitation),
+      (invitation) => this.getInvitationHandler(invitation as never),
       this.metadataStore,
     );
 
@@ -358,8 +361,8 @@ export class ServiceContext extends Resource {
     this.initialized.wake();
 
     this._deviceSpaceSync = {
-      processCredential: async (credential: Credential) => {
-        const assertion = getCredentialAssertion(credential);
+      processCredential: async (credential) => {
+        const assertion = getCredentialAssertion(credential as never);
         if (assertion['@type'] !== 'dxos.halo.credentials.SpaceMember') {
           return;
         }
@@ -388,7 +391,7 @@ export class ServiceContext extends Resource {
       },
     };
 
-    await identity.space.spaceState.addCredentialProcessor(this._deviceSpaceSync);
+    await identity.space.spaceState.addCredentialProcessor(this._deviceSpaceSync!);
   }
 
   private async _setNetworkIdentity(params?: { deviceCredential: Credential }): Promise<void> {
@@ -407,7 +410,7 @@ export class ServiceContext extends Resource {
           identity.signer,
           identity.identityKey,
           identity.deviceKey,
-          params?.deviceCredential && { credential: params.deviceCredential },
+          params?.deviceCredential && create(ChainSchema, { credential: params.deviceCredential as never }),
           [], // TODO(dmaretskyi): Service access credentials.
         );
       } else {
@@ -432,9 +435,9 @@ export class ServiceContext extends Resource {
 
     this._edgeConnection?.setIdentity(edgeIdentity);
     this._edgeHttpClient?.setIdentity(edgeIdentity);
-    this.networkManager.setPeerInfo({
+    this.networkManager.setPeerInfo(create(PeerSchema, {
       identityKey: edgeIdentity.identityKey,
       peerKey: edgeIdentity.peerKey,
-    });
+    }));
   }
 }

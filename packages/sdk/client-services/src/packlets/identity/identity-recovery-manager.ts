@@ -68,7 +68,7 @@ export class EdgeIdentityRecoveryManager {
       },
     });
 
-    const receipt = await identity.controlPipeline.writer.write({ credential: { credential } });
+    const receipt = await identity.controlPipeline.writer.write({ credential: { credential: credential as never } });
     await identity.controlPipeline.state.waitUntilTimeframe(new Timeframe([[receipt.feedKey, receipt.seq]]));
 
     return { recoveryCode };

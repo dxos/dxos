@@ -38,7 +38,7 @@ export const subscribeToSpaces = (context: ServiceContext, request: SubscribeToS
             return create(SubscribeToSpacesResponse_SpaceInfoSchema, {
               key: create(PublicKeySchema, { data: space.key.asUint8Array() }),
               isOpen: space.isOpen,
-              timeframe: spaceMetadata?.dataTimeframe,
+              timeframe: spaceMetadata?.dataTimeframe as never,
               genesisFeed: create(PublicKeySchema, { data: space.genesisFeedKey.asUint8Array() }),
               controlFeed: space.controlFeedKey
                 ? create(PublicKeySchema, { data: space.controlFeedKey.asUint8Array() })

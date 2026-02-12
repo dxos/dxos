@@ -30,7 +30,7 @@ export class EdgeAgentServiceImpl implements Client.EdgeAgentService {
       const update = () => {
         next(
           create(QueryEdgeStatusResponseSchema, {
-            status: this._edgeConnection?.status ?? {
+            status: (this._edgeConnection?.status ?? {
               state: EdgeStatus_ConnectionState.NOT_CONNECTED,
               rtt: 0,
               uptime: 0,
@@ -38,7 +38,7 @@ export class EdgeAgentServiceImpl implements Client.EdgeAgentService {
               rateBytesDown: 0,
               messagesSent: 0,
               messagesReceived: 0,
-            },
+            }) as never,
           }),
         );
       };

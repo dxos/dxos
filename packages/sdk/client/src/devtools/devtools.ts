@@ -115,7 +115,7 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
       log('Opening devtools client RPC server...');
       server = createBufProtoRpcPeer({
         exposed: client.services.descriptors,
-        handlers: client.services.services,
+        handlers: client.services.services as never,
         port,
       });
 

@@ -17,7 +17,7 @@ describe('services/ServiceContext', () => {
     await device1.createIdentity();
 
     const device2 = await createOpenServiceContext(networkContext);
-    await Promise.all(performInvitation({ host: device1, guest: device2, options: { kind: Invitation.Kind.DEVICE } }));
+    await Promise.all(performInvitation({ host: device1, guest: device2, options: { kind: Invitation.Kind.DEVICE as never } }));
 
     const space1 = await device1.dataSpaceManager!.createSpace();
     await device2.dataSpaceManager!.waitUntilSpaceReady(space1!.key);
@@ -31,7 +31,7 @@ describe('services/ServiceContext', () => {
     await device1.createIdentity();
 
     const device2 = await createOpenServiceContext(networkContext);
-    await Promise.all(performInvitation({ host: device1, guest: device2, options: { kind: Invitation.Kind.DEVICE } }));
+    await Promise.all(performInvitation({ host: device1, guest: device2, options: { kind: Invitation.Kind.DEVICE as never } }));
 
     const identity2 = await createOpenServiceContext(networkContext);
     await identity2.createIdentity();
@@ -40,7 +40,7 @@ describe('services/ServiceContext', () => {
       performInvitation({
         host: identity2,
         guest: device1,
-        options: { kind: Invitation.Kind.SPACE, spaceKey: space1.key },
+        options: { kind: Invitation.Kind.SPACE as never, spaceKey: space1.key as never },
       }),
     );
 

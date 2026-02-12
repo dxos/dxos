@@ -3,9 +3,11 @@
 //
 
 import { verifySignature } from '@dxos/crypto';
-import { type Presentation, type Proof } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { PublicKey } from '@dxos/keys';
+import { type Presentation, type Proof } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 import { SIGNATURE_TYPE_ED25519, type VerificationResult, verifyChain, verifyCredential } from '../credentials';
+import { fromBufPublicKey } from '../credentials/assertions';
 
 import { getPresentationProofPayload } from './signing';
 
@@ -58,7 +60,9 @@ export const verifyPresentationChain = async (
   proof: Proof,
 ): Promise<VerificationResult> => {
   for (const credential of presentation.credentials ?? []) {
-    if (!credential.issuer.equals(proof.signer)) {
+    const credIssuer = fromBufPublicKey(credential.issuer);
+    const proofSigner = fromBufPublicKey(proof.signer);
+    if (!credIssuer?.equals(proofSigner!)) {
       if (!proof.chain) {
         return {
           kind: 'fail',
@@ -66,7 +70,8 @@ export const verifyPresentationChain = async (
         };
       }
 
-      const chainVerification = await verifyChain(proof.chain, credential.subject.id, proof.signer);
+      const subjectId = fromBufPublicKey(credential.subject!.id!)!;
+      const chainVerification = await verifyChain(proof.chain, subjectId, proofSigner!);
       if (chainVerification.kind === 'fail') {
         return chainVerification;
       }
@@ -92,7 +97,8 @@ export const verifyPresentationSignature = async (
   }
 
   const signData = getPresentationProofPayload(presentation.credentials ?? [], proof);
-  if (!(await verifySignature(proof.signer, signData, proof.value))) {
+  const signerKey = fromBufPublicKey(proof.signer!)!;
+  if (!(await verifySignature(signerKey, signData, proof.value))) {
     return { kind: 'fail', errors: ['Invalid signature'] };
   }
 

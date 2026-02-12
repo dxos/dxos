@@ -9,6 +9,12 @@ import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { LogLevel, log } from '@dxos/log';
 import { ConnectionState } from '@dxos/network-manager';
+import {
+  type NetworkStatus as BufNetworkStatus,
+  type Platform as BufPlatform,
+  type QueryDevicesResponse,
+  type QueryIdentityResponse,
+} from '@dxos/protocols/buf/dxos/client/services_pb';
 import { DeviceKind, type NetworkStatus, Platform } from '@dxos/protocols/proto/dxos/client/services';
 import { isNode } from '@dxos/util';
 
@@ -242,7 +248,7 @@ export class Observability {
   // TODO(wittjosiah): Improve privacy of telemetry identifiers. See `getTelemetryIdentifier`.
   async setIdentityTags(clientServices: Partial<ClientServices>): Promise<void> {
     if (clientServices.IdentityService) {
-      clientServices.IdentityService.queryIdentity().subscribe((idqr) => {
+      clientServices.IdentityService.queryIdentity().subscribe((idqr: QueryIdentityResponse) => {
         if (!idqr?.identity?.did) {
           log('empty response from identity service', { idqr });
           return;
@@ -254,20 +260,20 @@ export class Observability {
     }
 
     if (clientServices.DevicesService) {
-      clientServices.DevicesService.queryDevices().subscribe((dqr) => {
+      clientServices.DevicesService.queryDevices().subscribe((dqr: QueryDevicesResponse) => {
         if (!dqr || !dqr.devices || dqr.devices.length === 0) {
           log('empty response from device service', { device: dqr });
           return;
         }
 
         invariant(dqr, 'empty response from device service');
-        const thisDevice = dqr.devices.find((device) => device.kind === DeviceKind.CURRENT);
+        const thisDevice = dqr.devices.find((device) => device.kind === (DeviceKind.CURRENT as never));
         if (!thisDevice) {
           log('no current device', { device: dqr });
           return;
         }
 
-        this.setTag('deviceKey', thisDevice.deviceKey.truncate());
+        this.setTag('deviceKey', PublicKey.from(thisDevice.deviceKey!.data).truncate());
         if (thisDevice.profile?.label) {
           this.setTag('deviceProfile', thisDevice.profile.label);
         }
@@ -395,8 +401,8 @@ export class Observability {
       });
     });
 
-    clientServices.NetworkService.queryStatus().subscribe((networkStatus) => {
-      this._lastNetworkStatus = networkStatus;
+    clientServices.NetworkService.queryStatus().subscribe((networkStatus: BufNetworkStatus) => {
+      this._lastNetworkStatus = networkStatus as never;
       updateSignalMetrics.emit();
     });
 
@@ -487,14 +493,14 @@ export class Observability {
           }
         }
         client.services.services.SystemService?.getPlatform()
-          .then((platform) => {
+          .then((platform: BufPlatform) => {
             if (platform.memory) {
               this.gauge('dxos.client.services.runtime.rss', platform.memory.rss);
               this.gauge('dxos.client.services.runtime.heapTotal', platform.memory.heapTotal);
               this.gauge('dxos.client.services.runtime.heapUsed', platform.memory.heapUsed);
             }
           })
-          .catch((error) => log('platform error', { error }));
+          .catch((error: Error) => log('platform error', { error }));
       },
       frequency,
     );

@@ -51,12 +51,12 @@ describe('DataSpaceManager', () => {
     // Admit peer2 to space1.
     await writeMessages(
       space1.inner.controlPipeline.writer,
-      await createAdmissionCredentials(
+      (await createAdmissionCredentials(
         peer1.identity.credentialSigner,
         peer2.identity.identityKey,
         space1.key,
         space1.inner.genesisFeedKey,
-      ),
+      )) as never,
     );
 
     // Accept must be called after admission so that the peer can authenticate for notarization.
@@ -121,12 +121,12 @@ describe('DataSpaceManager', () => {
     // Admit peer2 to space1.
     await writeMessages(
       space1.inner.controlPipeline.writer,
-      await createAdmissionCredentials(
+      (await createAdmissionCredentials(
         peer1.identity.credentialSigner,
         peer2.identity.identityKey,
         space1.key,
         space1.inner.genesisFeedKey,
-      ),
+      )) as never,
     );
 
     // Accept must be called after admission so that the peer can authenticate for notarization.

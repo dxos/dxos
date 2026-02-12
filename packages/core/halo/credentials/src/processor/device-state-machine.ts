@@ -6,10 +6,12 @@ import { Trigger } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type Chain, type Credential, type DeviceProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { create } from '@dxos/protocols/buf';
+import { type Chain, ChainSchema, type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { type DeviceProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { ComplexMap } from '@dxos/util';
 
-import { getCredentialAssertion, isValidAuthorizedDeviceCredential } from '../credentials';
+import { fromBufPublicKey, getCredentialAssertion, isValidAuthorizedDeviceCredential } from '../credentials';
 
 import { type CredentialProcessor } from './credential-processor';
 
@@ -41,11 +43,12 @@ export class DeviceStateMachine implements CredentialProcessor {
 
     // Save device keychain credential when processed by the space state machine.
     if (isValidAuthorizedDeviceCredential(credential, this._params.identityKey, this._params.deviceKey)) {
-      this.deviceCredentialChain = { credential };
+      this.deviceCredentialChain = create(ChainSchema, { credential });
       this.deviceChainReady.wake();
     }
 
     const assertion = getCredentialAssertion(credential);
+    const subjectId = fromBufPublicKey(credential.subject!.id!)!;
 
     switch (assertion['@type']) {
       case 'dxos.halo.credentials.AuthorizedDevice': {
@@ -63,16 +66,16 @@ export class DeviceStateMachine implements CredentialProcessor {
       }
 
       case 'dxos.halo.credentials.DeviceProfile': {
-        invariant(this.authorizedDeviceKeys.has(credential.subject.id), 'Device not found.');
+        invariant(this.authorizedDeviceKeys.has(subjectId), 'Device not found.');
 
-        if (assertion && credential.subject.id.equals(this._params.deviceKey)) {
+        if (assertion && subjectId.equals(this._params.deviceKey)) {
           log.trace('dxos.halo.device', {
-            deviceKey: credential.subject.id,
+            deviceKey: subjectId,
             profile: assertion.profile,
           });
         }
 
-        this.authorizedDeviceKeys.set(credential.subject.id, assertion.profile);
+        this.authorizedDeviceKeys.set(subjectId, assertion.profile);
         this._params.onUpdate?.();
         break;
       }

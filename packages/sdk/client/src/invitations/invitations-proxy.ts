@@ -99,7 +99,7 @@ export class InvitationsProxy implements Invitations {
     // TODO(nf): actually needed?
     const initialAcceptedReceived = new Trigger();
 
-    const stream = this._invitationsService.queryInvitations(EMPTY, { timeout: RPC_TIMEOUT });
+    const stream = this._invitationsService.queryInvitations(EMPTY as never, { timeout: RPC_TIMEOUT });
     stream.subscribe(({ action, type, invitations, existing }: QueryInvitationsResponse) => {
       switch (action) {
         case QueryInvitationsResponse.Action.ADDED: {

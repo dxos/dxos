@@ -19,6 +19,7 @@ import {
   Invitation_Kind,
   Invitation_Type,
 } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import { SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import {
   type AdmissionRequest,
@@ -67,7 +68,7 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
     invariant(space);
     return {
       kind: Invitation_Kind.SPACE,
-      spaceKey: this._spaceKey,
+      spaceKey: this._spaceKey as never,
       spaceId: space.id,
     };
   }
@@ -83,9 +84,9 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
     const spaceMemberCredential = await this._spaceManager.admitMember({
       spaceKey: this._spaceKey,
       identityKey: request.space.identityKey,
-      role: invitation.role ?? SpaceMember_Role.ADMIN,
+      role: (invitation.role ?? SpaceMember_Role.ADMIN) as never,
       profile: guestProfile,
-      delegationCredentialId: invitation.delegationCredentialId,
+      delegationCredentialId: invitation.delegationCredentialId as never,
     });
 
     const space = this._spaceManager.spaces.get(this._spaceKey);
@@ -111,21 +112,21 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
       space.key,
       {
         invitationId: invitation.invitationId,
-        authMethod: invitation.authMethod,
-        swarmKey: invitation.swarmKey,
-        role: invitation.role ?? SpaceMember_Role.ADMIN,
+        authMethod: invitation.authMethod as never,
+        swarmKey: invitation.swarmKey as never,
+        role: (invitation.role ?? SpaceMember_Role.ADMIN) as never,
         expiresOn: computeExpirationTime(invitation),
         multiUse: invitation.multiUse ?? false,
         guestKey:
           invitation.authMethod === Invitation_AuthMethod.KNOWN_PUBLIC_KEY
-            ? invitation.guestKeypair!.publicKey
+            ? (invitation.guestKeypair!.publicKey as never)
             : undefined,
       },
     );
 
     invariant(credential.credential);
-    await writeMessages(space.inner.controlPipeline.writer, [credential]);
-    return credential.credential.credential.id!;
+    await writeMessages(space.inner.controlPipeline.writer, [credential as never]);
+    return credential.credential.credential.id! as never;
   }
 
   async cancelDelegation(invitation: Invitation): Promise<void> {
@@ -138,18 +139,18 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
     const credential = await createCancelDelegatedSpaceInvitationCredential(
       this._signingContext.credentialSigner,
       space.key,
-      invitation.delegationCredentialId,
+      invitation.delegationCredentialId as never,
     );
 
     invariant(credential.credential);
-    await writeMessages(space.inner.controlPipeline.writer, [credential]);
+    await writeMessages(space.inner.controlPipeline.writer, [credential as never]);
   }
 
   checkInvitation(invitation: Partial<Invitation>): InvalidInvitationError | AlreadyJoinedError | undefined {
     if (invitation.spaceKey == null) {
       return new InvalidInvitationError({ message: 'No spaceKey was provided for a space invitation.' });
     }
-    if (this._spaceManager.spaces.has(invitation.spaceKey)) {
+    if (this._spaceManager.spaces.has(invitation.spaceKey as never)) {
       return new AlreadyJoinedError({ message: 'Already joined space.' });
     }
   }
@@ -178,7 +179,7 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
   async accept(response: AdmissionResponse): Promise<Partial<Invitation>> {
     invariant(response.space);
     const { credential, controlTimeframe, dataTimeframe } = response.space;
-    const assertion = getCredentialAssertion(credential);
+    const assertion = getCredentialAssertion(credential as never);
     invariant(assertion['@type'] === 'dxos.halo.credentials.SpaceMember', 'Invalid credential');
     invariant(credential.subject.id.equals(this._signingContext.identityKey));
 
@@ -194,8 +195,8 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
       dataTimeframe,
     });
 
-    await this._signingContext.recordCredential(credential);
+    await this._signingContext.recordCredential(credential as never);
 
-    return { spaceKey: assertion.spaceKey };
+    return { spaceKey: assertion.spaceKey as never };
   }
 }

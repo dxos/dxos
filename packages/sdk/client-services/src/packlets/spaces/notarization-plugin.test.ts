@@ -10,7 +10,8 @@ import { MockFeedWriter } from '@dxos/feed-store/testing';
 import { Keyring } from '@dxos/keyring';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { AdmittedFeed, type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { TestBuilder, type TestConnection, TestPeer } from '@dxos/teleport/testing';
 
 import { NotarizationPlugin, type NotarizationPluginProps } from './notarization-plugin';

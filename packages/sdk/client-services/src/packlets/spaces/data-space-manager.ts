@@ -340,7 +340,7 @@ export class DataSpaceManager extends Resource {
 
     const memberCredential = credentials[1];
     invariant(getCredentialAssertion(memberCredential)['@type'] === 'dxos.halo.credentials.SpaceMember');
-    await this._signingContext.recordCredential(memberCredential);
+    await this._signingContext.recordCredential(memberCredential as never);
 
     await space.initializeDataPipeline();
 
@@ -444,7 +444,7 @@ export class DataSpaceManager extends Resource {
     }
 
     // TODO(burdon): Check if already admitted.
-    const credentials: FeedMessage.Payload[] = await createAdmissionCredentials(
+    const credentials = await createAdmissionCredentials(
       this._signingContext.credentialSigner,
       options.identityKey,
       space.key,
@@ -458,10 +458,10 @@ export class DataSpaceManager extends Resource {
     // TODO(dmaretskyi): Refactor.
     invariant(credentials[0].credential);
     const spaceMemberCredential = credentials[0].credential.credential;
-    invariant(getCredentialAssertion(spaceMemberCredential)['@type'] === 'dxos.halo.credentials.SpaceMember');
-    await writeMessages(space.controlPipeline.writer, credentials);
+    invariant(getCredentialAssertion(spaceMemberCredential as never)['@type'] === 'dxos.halo.credentials.SpaceMember');
+    await writeMessages(space.controlPipeline.writer, credentials as never);
 
-    return spaceMemberCredential;
+    return spaceMemberCredential as never;
   }
 
   /**
@@ -715,12 +715,12 @@ export class DataSpaceManager extends Resource {
         authMethod: invitation.authMethod,
         invitationId: invitation.invitationId,
         swarmKey: invitation.swarmKey,
-        guestKeypair: invitation.guestKey ? { publicKey: invitation.guestKey } : undefined,
+        guestKeypair: invitation.guestKey ? ({ publicKey: invitation.guestKey } as never) : undefined,
         lifetime: invitation.expiresOn ? (invitation.expiresOn.getTime() - Date.now()) / 1000 : undefined,
         multiUse: invitation.multiUse,
         delegationCredentialId: credentialId,
         persistent: false,
-      });
+      } as never);
     });
     await Promise.all(tasks);
   }

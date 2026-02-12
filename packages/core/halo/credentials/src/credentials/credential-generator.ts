@@ -4,11 +4,9 @@
 
 import { type Signer } from '@dxos/crypto';
 import { type PublicKey } from '@dxos/keys';
-import { type TypedMessage } from '@dxos/protocols/proto';
-import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import {
   AdmittedFeed,
-  type Credential,
   type DeviceProfileDocument,
   type ProfileDocument,
   SpaceMember,
@@ -183,7 +181,7 @@ export const createDeviceAuthorization = async (
   signer: CredentialSigner,
   identityKey: PublicKey,
   deviceKey: PublicKey,
-): Promise<TypedMessage[]> => {
+): Promise<{ '@type': string; credential: Credential }[]> => {
   const credentials = await Promise.all([
     await signer.createCredential({
       subject: deviceKey,
@@ -221,7 +219,7 @@ export const createAdmissionCredentials = async (
   membershipChainHeads: PublicKey[] = [],
   profile?: ProfileDocument,
   invitationCredentialId?: PublicKey,
-): Promise<FeedMessage.Payload[]> => {
+): Promise<{ credential?: { credential: Credential } }[]> => {
   const credentials = await Promise.all([
     await signer.createCredential({
       subject: identityKey,
@@ -246,7 +244,7 @@ export const createDelegatedSpaceInvitationCredential = async (
   signer: CredentialSigner,
   subject: PublicKey,
   invitation: DelegateSpaceInvitation,
-): Promise<FeedMessage.Payload> => {
+): Promise<{ credential?: { credential: Credential } }> => {
   const credential = await signer.createCredential({
     subject,
     assertion: {
@@ -272,7 +270,7 @@ export const createCancelDelegatedSpaceInvitationCredential = async (
   signer: CredentialSigner,
   subject: PublicKey,
   invitationCredentialId: PublicKey,
-): Promise<FeedMessage.Payload> => {
+): Promise<{ credential?: { credential: Credential } }> => {
   const credential = await signer.createCredential({
     subject,
     assertion: {

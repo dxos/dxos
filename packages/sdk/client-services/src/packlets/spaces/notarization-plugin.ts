@@ -4,7 +4,7 @@
 
 import { DeferredTask, Event, TimeoutError, Trigger, scheduleMicroTask, scheduleTask, sleep } from '@dxos/async';
 import { type Context, Resource, rejectOnDispose } from '@dxos/context';
-import { type CredentialProcessor, verifyCredential } from '@dxos/credentials';
+import { type CredentialProcessor, fromBufPublicKey, verifyCredential } from '@dxos/credentials';
 import { type EdgeHttpClient } from '@dxos/edge-client';
 import { type FeedWriter } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
@@ -14,7 +14,7 @@ import { log, logInfo } from '@dxos/log';
 import { EdgeCallFailedError } from '@dxos/protocols';
 import { schema } from '@dxos/protocols/proto';
 import { type Runtime } from '@dxos/protocols/proto/dxos/config';
-import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type NotarizationService, type NotarizeRequest } from '@dxos/protocols/proto/dxos/mesh/teleport/notarization';
 import { type ExtensionContext, RpcExtension } from '@dxos/teleport';
 import { ComplexMap, ComplexSet, entry } from '@dxos/util';
@@ -170,7 +170,9 @@ export class NotarizationPlugin extends Resource implements CredentialProcessor 
       this._scheduleTimeout(ctx, errors, timeout);
     }
 
-    const allNotarized = Promise.all(credentials.map((credential) => this._waitUntilProcessed(credential.id!)));
+    const allNotarized = Promise.all(
+      credentials.map((credential) => this._waitUntilProcessed(fromBufPublicKey(credential.id)!)),
+    );
 
     this._tryNotarizeCredentialsWithPeers(ctx, credentials, { retryTimeout, successDelay });
 
@@ -216,7 +218,9 @@ export class NotarizationPlugin extends Resource implements CredentialProcessor 
         peersTried.add(peer);
         log('try notarizing', { peer: peer.localPeerId, credentialId: credentials.map((credential) => credential.id) });
         await peer.rpc.NotarizationService.notarize({
-          credentials: credentials.filter((credential) => !this._processedCredentials.has(credential.id!)),
+          credentials: credentials.filter(
+            (credential) => !this._processedCredentials.has(fromBufPublicKey(credential.id)!),
+          ) as never,
         });
         log('success');
 
@@ -240,7 +244,7 @@ export class NotarizationPlugin extends Resource implements CredentialProcessor 
     timeouts: NotarizationTimeouts & { jitter?: number },
   ): void {
     const encodedCredentials = credentials.map((credential) => {
-      const binary = credentialCodec.encode(credential);
+      const binary = credentialCodec.encode(credential as never);
       return Buffer.from(binary).toString('base64');
     });
     scheduleTask(ctx, async () => {
@@ -262,12 +266,13 @@ export class NotarizationPlugin extends Resource implements CredentialProcessor 
    * Called with credentials arriving from the control pipeline.
    */
   async processCredential(credential: Credential): Promise<void> {
-    if (!credential.id) {
+    const credentialId = fromBufPublicKey(credential.id);
+    if (!credentialId) {
       return;
     }
-    this._processCredentialsTriggers.get(credential.id)?.wake();
-    this._processedCredentials.add(credential.id);
-    this._processCredentialsTriggers.delete(credential.id);
+    this._processCredentialsTriggers.get(credentialId)?.wake();
+    this._processedCredentials.add(credentialId);
+    this._processCredentialsTriggers.delete(credentialId);
   }
 
   setWriter(writer: FeedWriter<Credential>): void {
@@ -316,7 +321,7 @@ export class NotarizationPlugin extends Resource implements CredentialProcessor 
 
         const decodedCredentials = credentials.map((credential) => {
           const binary = Buffer.from(credential, 'base64');
-          return credentialCodec.decode(binary);
+          return credentialCodec.decode(binary) as never as Credential;
         });
 
         await this._notarizeCredentials(writer, decodedCredentials);
@@ -342,13 +347,14 @@ export class NotarizationPlugin extends Resource implements CredentialProcessor 
     if (!this._writer) {
       throw new Error(WRITER_NOT_SET_ERROR_CODE);
     }
-    await this._notarizeCredentials(this._writer, request.credentials ?? []);
+    await this._notarizeCredentials(this._writer, (request.credentials ?? []) as never);
   }
 
   private async _notarizeCredentials(writer: FeedWriter<Credential>, credentials: Credential[]): Promise<void> {
     for (const credential of credentials) {
-      invariant(credential.id, 'Credential must have an id');
-      if (this._processedCredentials.has(credential.id)) {
+      const credentialId = fromBufPublicKey(credential.id);
+      invariant(credentialId, 'Credential must have an id');
+      if (this._processedCredentials.has(credentialId)) {
         continue;
       }
       const verificationResult = await verifyCredential(credential);

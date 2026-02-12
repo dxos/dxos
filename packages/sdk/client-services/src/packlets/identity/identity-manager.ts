@@ -183,7 +183,7 @@ export class IdentityManager {
       );
       for (const credential of credentials) {
         await identity.controlPipeline.writer.write({
-          credential: { credential },
+          credential: { credential: credential as never },
         });
       }
     }
@@ -229,7 +229,7 @@ export class IdentityManager {
       architecture: typeof platform.os?.architecture === 'number' ? String(platform.os.architecture) : undefined,
       os: platform.os?.family,
       osVersion: platform.os?.version,
-    };
+    } as never;
   }
 
   /**
@@ -297,7 +297,7 @@ export class IdentityManager {
       },
     });
 
-    const receipt = await this._identity.controlPipeline.writer.write({ credential: { credential } });
+    const receipt = await this._identity.controlPipeline.writer.write({ credential: { credential: credential as never } });
     await this._identity.controlPipeline.state.waitUntilTimeframe(new Timeframe([[receipt.feedKey, receipt.seq]]));
     this.stateUpdate.emit();
     return profile;
@@ -318,14 +318,14 @@ export class IdentityManager {
       },
     });
 
-    const receipt = await this._identity.controlPipeline.writer.write({ credential: { credential } });
+    const receipt = await this._identity.controlPipeline.writer.write({ credential: { credential: credential as never } });
     await this._identity.controlPipeline.state.waitUntilTimeframe(new Timeframe([[receipt.feedKey, receipt.seq]]));
     this.stateUpdate.emit();
     return {
       deviceKey: this._identity.deviceKey,
       kind: DeviceKind.CURRENT,
       presence: Device.PresenceState.ONLINE,
-      profile,
+      profile: profile as never,
     };
   }
 

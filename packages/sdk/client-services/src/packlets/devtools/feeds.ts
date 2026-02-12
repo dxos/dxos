@@ -16,7 +16,7 @@ import {
   type SubscribeToFeedsRequest,
   type SubscribeToFeedsResponse,
   SubscribeToFeedsResponseSchema,
-  SubscribeToFeedsResponse_FeedInfoSchema,
+  SubscribeToFeedsResponse_FeedSchema,
 } from '@dxos/protocols/buf/dxos/devtools/host_pb';
 import { PublicKeySchema } from '@dxos/protocols/buf/dxos/keys_pb';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
@@ -59,10 +59,10 @@ export const subscribeToFeeds = (
       next(
         create(SubscribeToFeedsResponseSchema, {
           feeds: Array.from(feedMap.values()).map(({ feed, owner }) =>
-            create(SubscribeToFeedsResponse_FeedInfoSchema, {
+            create(SubscribeToFeedsResponse_FeedSchema, {
               feedKey: create(PublicKeySchema, { data: feed.key.asUint8Array() }),
               length: feed.properties.length,
-              bytes: BigInt(feed.core.byteLength),
+              bytes: feed.core.byteLength,
               downloaded: feed.core.bitfield?.data.toBuffer() ?? new Uint8Array(),
               owner: owner
                 ? {
@@ -138,7 +138,7 @@ export const subscribeToFeedBlocks = (
 
         next(
           create(SubscribeToFeedBlocksResponseSchema, {
-            blocks: blocks.slice(-maxBlocks),
+            blocks: blocks.slice(-maxBlocks) as never,
           }),
         );
 

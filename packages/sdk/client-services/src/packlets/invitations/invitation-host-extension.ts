@@ -125,7 +125,7 @@ export class InvitationHostExtension
             scheduleTask(this._ctx, () => this.close());
             // TODO(dmaretskyi): Better error handling.
             return {
-              authMethod: Invitation_AuthMethod.NONE,
+              authMethod: Invitation_AuthMethod.NONE as never,
             };
           }
 
@@ -137,7 +137,7 @@ export class InvitationHostExtension
 
           log.trace('dxos.sdk.invitation-handler.host.introduce', trace.end({ id: traceId }));
           return {
-            authMethod: invitation.authMethod,
+            authMethod: invitation.authMethod as never,
             challenge: this._challenge,
           };
         },
@@ -177,12 +177,13 @@ export class InvitationHostExtension
                 status = AuthenticationResponse.Status.INTERNAL_ERROR;
                 break;
               }
+              invariant(invitation.guestKeypair.publicKey);
               const isSignatureValid =
                 this._challenge &&
                 verify(
                   this._challenge,
                   Buffer.from(signedChallenge ?? []),
-                  invitation.guestKeypair.publicKey.asBuffer(),
+                  Buffer.from(invitation.guestKeypair.publicKey.data),
                 );
               if (isSignatureValid) {
                 this.authenticationPassed = true;

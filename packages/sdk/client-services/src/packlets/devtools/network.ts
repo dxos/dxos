@@ -7,7 +7,7 @@ import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { type SignalManager } from '@dxos/messaging';
 import { type SwarmNetworkManager } from '@dxos/network-manager';
-import { create } from '@dxos/protocols/buf';
+import { create, timestampFromDate } from '@dxos/protocols/buf';
 import {
   type GetNetworkPeersRequest,
   type GetNetworkPeersResponse,
@@ -28,7 +28,7 @@ export const subscribeToNetworkStatus = ({ signalManager }: { signalManager: Sig
     const update = () => {
       try {
         const status = signalManager.getStatus?.();
-        next(create(SubscribeToSignalStatusResponseSchema, { servers: status }));
+        next(create(SubscribeToSignalStatusResponseSchema, { servers: status as never }));
       } catch (err: any) {
         close(err);
       }
@@ -44,28 +44,40 @@ export const subscribeToSignal = ({ signalManager }: { signalManager: SignalMana
     signalManager.onMessage.on(ctx, (message) => {
       next(
         create(SignalResponseSchema, {
-          message: {
-            author: PublicKey.from(message.author.peerKey).asUint8Array(),
-            recipient: PublicKey.from(message.recipient.peerKey).asUint8Array(),
-            payload: message.payload,
+          data: {
+            case: 'message',
+            value: {
+              author: PublicKey.from(message.author!.peerKey).asUint8Array(),
+              recipient: PublicKey.from(message.recipient!.peerKey).asUint8Array(),
+              payload: message.payload,
+            },
           },
-          receivedAt: new Date(),
+          receivedAt: timestampFromDate(new Date()),
         }),
       );
     });
     signalManager.swarmEvent.on(ctx, (swarmEvent) => {
+      const swarmEventData =
+        swarmEvent.event.case === 'peerAvailable'
+          ? {
+              peerAvailable: {
+                peer: PublicKey.from(swarmEvent.event.value.peer!.peerKey).asUint8Array(),
+                since: swarmEvent.event.value.since,
+              },
+            }
+          : {
+              peerLeft: {
+                peer: PublicKey.from(swarmEvent.event.value!.peer!.peerKey).asUint8Array(),
+              },
+            };
       next(
         create(SignalResponseSchema, {
-          swarmEvent: swarmEvent.peerAvailable
-            ? {
-                peerAvailable: {
-                  peer: PublicKey.from(swarmEvent.peerAvailable.peer.peerKey).asUint8Array(),
-                  since: swarmEvent.peerAvailable.since,
-                },
-              }
-            : { peerLeft: { peer: PublicKey.from(swarmEvent.peerLeft!.peer.peerKey).asUint8Array() } },
-          topic: swarmEvent.topic.asUint8Array(),
-          receivedAt: new Date(),
+          data: {
+            case: 'swarmEvent',
+            value: swarmEventData as never,
+          },
+          topic: swarmEvent.topic!.data,
+          receivedAt: timestampFromDate(new Date()),
         }),
       );
     });
@@ -98,7 +110,7 @@ export const subscribeToSwarmInfo = ({ networkManager }: { networkManager: Swarm
     const update = () => {
       const info = networkManager.connectionLog?.swarms;
       if (info) {
-        next(create(SubscribeToSwarmInfoResponseSchema, { data: info }));
+        next(create(SubscribeToSwarmInfoResponseSchema, { data: info as never }));
       }
     };
     networkManager.connectionLog?.update.on(update);
@@ -109,14 +121,15 @@ export const getNetworkPeers = (
   { networkManager }: { networkManager: SwarmNetworkManager },
   request: GetNetworkPeersRequest,
 ): GetNetworkPeersResponse => {
-  if (!request.topic?.data) {
+  if (!request.topic?.length) {
     throw new Error('Expected a network topic');
   }
 
-  const map = networkManager.getSwarmMap(PublicKey.from(request.topic.data));
+  const map = networkManager.getSwarmMap(PublicKey.from(request.topic));
   return create(GetNetworkPeersResponseSchema, {
     peers: map?.peers.map((peer) => ({
-      ...peer,
+      id: create(PublicKeySchema, { data: peer.id.asUint8Array() }),
+      state: peer.state,
       connections: peer.connections.map((connection) => connection.asUint8Array()),
     })),
   });

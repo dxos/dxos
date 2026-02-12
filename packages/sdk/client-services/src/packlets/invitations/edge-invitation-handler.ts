@@ -172,7 +172,7 @@ export class EdgeInvitationHandler implements FlowLockHolder {
         if (!privateKey || !publicKey) {
           throw error;
         }
-        const signature = sign(Buffer.from(error.challenge, 'base64'), privateKey);
+        const signature = sign(Buffer.from(error.challenge, 'base64'), Buffer.from(privateKey.data));
         return this._client.joinSpaceByInvitation(spaceId, {
           ...request,
           signature: Buffer.from(signature).toString('base64'),

@@ -35,6 +35,7 @@ import { ApiError, trace as Trace } from '@dxos/protocols';
 import { EMPTY } from '@dxos/protocols/buf';
 import {
   Invitation,
+  type QuerySpacesResponse,
   type Space as SerializedSpace,
   type SpaceArchive,
   SpaceState,
@@ -152,8 +153,8 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     await this._invitationProxy?.close();
     invariant(this._serviceProvider.services.InvitationsService, 'InvitationsService is not available.');
     this._invitationProxy = new InvitationsProxy(
-      this._serviceProvider.services.InvitationsService,
-      this._serviceProvider.services.IdentityService,
+      this._serviceProvider.services.InvitationsService as never,
+      this._serviceProvider.services.IdentityService as never,
       () => ({
         kind: Invitation.Kind.SPACE,
       }),
@@ -174,7 +175,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
 
     invariant(this._serviceProvider.services.SpacesService, 'SpacesService is not available.');
     const spacesStream = this._serviceProvider.services.SpacesService.querySpaces(EMPTY, { timeout: RPC_TIMEOUT });
-    spacesStream.subscribe((data) => {
+    spacesStream.subscribe((data: QuerySpacesResponse) => {
       let emitUpdate = false;
       const newSpaces = this.get() as SpaceProxy[];
 
@@ -230,7 +231,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     const defaultSpaceCredential: Credential | undefined = this._halo.queryCredentials({
       type: 'dxos.halo.credentials.DefaultSpace',
     })[0];
-    const defaultSpaceAssertion = defaultSpaceCredential && getCredentialAssertion(defaultSpaceCredential);
+    const defaultSpaceAssertion = defaultSpaceCredential && getCredentialAssertion(defaultSpaceCredential as never);
     if (defaultSpaceAssertion?.['@type'] !== 'dxos.halo.credentials.DefaultSpace') {
       return false;
     }

@@ -41,6 +41,7 @@ import {
   type QueueFactory,
   type SpaceSyncState,
 } from '@dxos/echo-db';
+import { type SpaceSyncState_PeerState } from '@dxos/protocols/buf/dxos/echo/service_pb';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -145,8 +146,8 @@ export class SpaceProxy implements Space, CustomInspectable {
     log('construct', { key: _data.spaceKey, state: SpaceState[_data.state] });
     invariant(this._clientServices.services.InvitationsService, 'InvitationsService not available');
     this._invitationsProxy = new InvitationsProxy(
-      this._clientServices.services.InvitationsService,
-      this._clientServices.services.IdentityService,
+      this._clientServices.services.InvitationsService as never,
+      this._clientServices.services.IdentityService as never,
       () => ({
         kind: Invitation.Kind.SPACE,
         spaceKey: this.key,
@@ -601,7 +602,9 @@ export class SpaceProxy implements Space, CustomInspectable {
 
   private async _getEpochs(): Promise<SpecificCredential<Epoch>[]> {
     const credentials = await this._getCredentials();
-    return credentials.filter((credential) => checkCredentialType(credential, 'dxos.halo.credentials.Epoch'));
+    return credentials.filter((credential) =>
+      checkCredentialType(credential as never, 'dxos.halo.credentials.Epoch'),
+    ) as never;
   }
 
   private async _migrate(): Promise<void> {
@@ -639,7 +642,7 @@ export class SpaceProxy implements Space, CustomInspectable {
 
   private async _syncToEdge(opts?: {
     timeout?: number;
-    onProgress: (state: SpaceSyncState.PeerState | undefined) => void;
+    onProgress: (state: SpaceSyncState_PeerState | undefined) => void;
   }): Promise<void> {
     await using ctx = Context.default();
 

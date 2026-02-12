@@ -15,6 +15,14 @@ import * as MeshBridgePb from '@dxos/protocols/buf/dxos/mesh/bridge_pb';
 import * as TracingPb from '@dxos/protocols/buf/dxos/tracing_pb';
 import { createBufServiceBundle } from '@dxos/rpc';
 
+// Transitive type imports required for declaration emit (TS2742).
+import type {} from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import type {} from '@dxos/protocols/buf/dxos/config_pb';
+import type {} from '@dxos/protocols/buf/dxos/echo/indexing_pb';
+import type {} from '@dxos/protocols/buf/dxos/edge/signal_pb';
+import type {} from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import type {} from '@dxos/protocols/buf/dxos/mesh/teleport/gossip_pb';
+
 export { type QueueService } from '@dxos/protocols';
 
 //

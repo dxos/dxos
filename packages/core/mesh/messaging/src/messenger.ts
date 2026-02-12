@@ -3,12 +3,13 @@
 //
 
 import { TimeoutError, scheduleExponentialBackoffTaskInterval, scheduleTask, scheduleTaskInterval } from '@dxos/async';
-import { type Any } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { TimeoutError as ProtocolTimeoutError, trace } from '@dxos/protocols';
+import { type bufWkt, create } from '@dxos/protocols/buf';
+import { MessageSchema } from '@dxos/protocols/buf/dxos/edge/signal_pb';
 import { schema } from '@dxos/protocols/proto';
 import { type ReliablePayload } from '@dxos/protocols/proto/dxos/mesh/messaging';
 import { ComplexMap, ComplexSet } from '@dxos/util';
@@ -127,7 +128,7 @@ export class Messenger {
       async () => {
         log('retrying message', { messageId: reliablePayload.messageId });
         sendAttempts++;
-        await this._encodeAndSend({ author, recipient, reliablePayload }).catch((err) =>
+        await this._encodeAndSend({ author: author!, recipient: recipient!, reliablePayload }).catch((err) =>
           log('failed to send message', { err }),
         );
       },
@@ -158,7 +159,7 @@ export class Messenger {
       this._monitor.recordReliableMessage({ sendAttempts, sent: true });
     });
 
-    await this._encodeAndSend({ author, recipient, reliablePayload });
+    await this._encodeAndSend({ author: author!, recipient: recipient!, reliablePayload });
     return promise;
   }
 
@@ -213,18 +214,20 @@ export class Messenger {
     recipient: PeerInfo;
     reliablePayload: ReliablePayload;
   }): Promise<void> {
-    await this._signalManager.sendMessage({
-      author,
-      recipient,
-      payload: {
-        type_url: 'dxos.mesh.messaging.ReliablePayload',
-        value: ReliablePayload.encode(reliablePayload, { preserveAny: true }),
-      },
-    });
+    await this._signalManager.sendMessage(
+      create(MessageSchema, {
+        author,
+        recipient,
+        payload: {
+          typeUrl: 'dxos.mesh.messaging.ReliablePayload',
+          value: ReliablePayload.encode(reliablePayload, { preserveAny: true }),
+        },
+      }),
+    );
   }
 
   private async _handleMessage(message: Message): Promise<void> {
-    switch (message.payload.type_url) {
+    switch (message.payload?.typeUrl) {
       case 'dxos.mesh.messaging.ReliablePayload': {
         await this._handleReliablePayload(message);
         break;
@@ -237,15 +240,15 @@ export class Messenger {
   }
 
   private async _handleReliablePayload({ author, recipient, payload }: Message): Promise<void> {
-    invariant(payload.type_url === 'dxos.mesh.messaging.ReliablePayload');
+    invariant(payload?.typeUrl === 'dxos.mesh.messaging.ReliablePayload');
     const reliablePayload: ReliablePayload = ReliablePayload.decode(payload.value, { preserveAny: true });
 
     log('handling message', { messageId: reliablePayload.messageId });
 
     try {
       await this._sendAcknowledgement({
-        author,
-        recipient,
+        author: author!,
+        recipient: recipient!,
         messageId: reliablePayload.messageId,
       });
     } catch (err) {
@@ -260,15 +263,17 @@ export class Messenger {
 
     this._receivedMessages.add(reliablePayload.messageId!);
 
-    await this._callListeners({
-      author,
-      recipient,
-      payload: reliablePayload.payload,
-    });
+    await this._callListeners(
+      create(MessageSchema, {
+        author,
+        recipient,
+        payload: reliablePayload.payload as never,
+      }),
+    );
   }
 
-  private async _handleAcknowledgement({ payload }: { payload: Any }): Promise<void> {
-    invariant(payload.type_url === 'dxos.mesh.messaging.Acknowledgement');
+  private async _handleAcknowledgement({ payload }: { payload: bufWkt.Any }): Promise<void> {
+    invariant(payload.typeUrl === 'dxos.mesh.messaging.Acknowledgement');
     this._onAckCallbacks.get(Acknowledgement.decode(payload.value).messageId)?.();
   }
 
@@ -283,19 +288,21 @@ export class Messenger {
   }): Promise<void> {
     log('sending ACK', { messageId, from: recipient, to: author });
 
-    await this._signalManager.sendMessage({
-      author: recipient,
-      recipient: author,
-      payload: {
-        type_url: 'dxos.mesh.messaging.Acknowledgement',
-        value: Acknowledgement.encode({ messageId }),
-      },
-    });
+    await this._signalManager.sendMessage(
+      create(MessageSchema, {
+        author: recipient,
+        recipient: author,
+        payload: {
+          typeUrl: 'dxos.mesh.messaging.Acknowledgement',
+          value: Acknowledgement.encode({ messageId }),
+        },
+      }),
+    );
   }
 
   private async _callListeners(message: Message): Promise<void> {
     {
-      invariant(message.recipient.peerKey, 'Peer key is required');
+      invariant(message.recipient?.peerKey, 'Peer key is required');
       const defaultListenerMap = this._defaultListeners.get(message.recipient.peerKey);
       if (defaultListenerMap) {
         for (const listener of defaultListenerMap) {
@@ -306,8 +313,8 @@ export class Messenger {
 
     {
       const listenerMap = this._listeners.get({
-        peerId: message.recipient.peerKey,
-        payloadType: message.payload.type_url,
+        peerId: message.recipient!.peerKey,
+        payloadType: message.payload?.typeUrl ?? '',
       });
       if (listenerMap) {
         for (const listener of listenerMap) {

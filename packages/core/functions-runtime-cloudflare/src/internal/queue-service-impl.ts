@@ -12,6 +12,7 @@ import type {
   QueryQueueRequest,
   QueryResult,
 } from '@dxos/protocols';
+import { type Empty, EMPTY } from '@dxos/protocols/buf';
 
 export class QueueServiceImpl implements QueueServiceProto {
   constructor(
@@ -23,12 +24,12 @@ export class QueueServiceImpl implements QueueServiceProto {
     const { queueIds, ...filter } = query!;
     const spaceId = query!.spaceId;
     const queueId = queueIds?.[0];
-    invariant(request.query.queuesNamespace);
+    invariant(request.query!.queuesNamespace);
     try {
       using result = await this._queueService.query(
         this._ctx,
-        `dxn:queue:${request.query.queuesNamespace}:${spaceId}:${queueId}`,
-        filter,
+        `dxn:queue:${request.query!.queuesNamespace}:${spaceId}:${queueId}`,
+        filter as never,
       );
       return {
         // Copy returned object to avoid hanging RPC stub
@@ -36,17 +37,17 @@ export class QueueServiceImpl implements QueueServiceProto {
         objects: structuredClone(result.objects),
         nextCursor: result.nextCursor,
         prevCursor: result.prevCursor,
-      };
+      } as never;
     } catch (error) {
       throw RuntimeServiceError.wrap({
         message: 'Queue query failed.',
-        context: { subspaceTag: request.query.queuesNamespace, spaceId, queueId },
+        context: { subspaceTag: request.query!.queuesNamespace, spaceId, queueId },
         ifTypeDiffers: true,
       })(error);
     }
   }
 
-  async insertIntoQueue(request: InsertIntoQueueRequest): Promise<void> {
+  async insertIntoQueue(request: InsertIntoQueueRequest): Promise<Empty> {
     const { subspaceTag, spaceId, queueId, objects } = request;
     try {
       await this._queueService.append(this._ctx, `dxn:queue:${subspaceTag}:${spaceId}:${queueId}`, objects ?? []);
@@ -57,9 +58,10 @@ export class QueueServiceImpl implements QueueServiceProto {
         ifTypeDiffers: true,
       })(error);
     }
+    return EMPTY;
   }
 
-  deleteFromQueue(request: DeleteFromQueueRequest): Promise<void> {
+  deleteFromQueue(request: DeleteFromQueueRequest): Promise<Empty> {
     const { subspaceTag, spaceId, queueId } = request;
     throw new NotImplementedError({
       message: 'Deleting from queue is not supported.',

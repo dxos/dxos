@@ -8,9 +8,9 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { RateLimitExceededError, TimeoutError, trace } from '@dxos/protocols';
+import { type SwarmResponse } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
+import { type JoinRequest, type LeaveRequest, type QueryRequest } from '@dxos/protocols/buf/dxos/edge/signal_pb';
 import { type Runtime } from '@dxos/protocols/proto/dxos/config';
-import { type SwarmResponse } from '@dxos/protocols/proto/dxos/edge/messenger';
-import { type JoinRequest, type LeaveRequest, type QueryRequest } from '@dxos/protocols/proto/dxos/edge/signal';
 import { BitField, safeAwaitAll } from '@dxos/util';
 
 import { SignalClient } from '../signal-client';
@@ -105,30 +105,30 @@ export class WebsocketSignalManager extends Resource implements SignalManager {
   }
 
   @synchronized
-  async join({ topic, peer }: JoinRequest): Promise<void> {
-    log('join', { topic, peer });
+  async join(request: JoinRequest): Promise<void> {
+    log('join', { topic: request.topic, peer: request.peer });
     invariant(this._lifecycleState === LifecycleState.OPEN);
-    await this._forEachServer((server) => server.join({ topic, peer }));
+    await this._forEachServer((server) => server.join(request));
   }
 
   @synchronized
-  async leave({ topic, peer }: LeaveRequest): Promise<void> {
-    log('leaving', { topic, peer });
+  async leave(request: LeaveRequest): Promise<void> {
+    log('leaving', { topic: request.topic, peer: request.peer });
     invariant(this._lifecycleState === LifecycleState.OPEN);
-    await this._forEachServer((server) => server.leave({ topic, peer }));
+    await this._forEachServer((server) => server.leave(request));
   }
 
-  async query({ topic }: QueryRequest): Promise<SwarmResponse> {
+  async query(request: QueryRequest): Promise<SwarmResponse> {
     throw new Error('Not implemented');
   }
 
-  async sendMessage({ author, recipient, payload }: Message): Promise<void> {
-    log('signal', { recipient });
+  async sendMessage(message: Message): Promise<void> {
+    log('signal', { recipient: message.recipient });
     invariant(this._lifecycleState === LifecycleState.OPEN);
 
     void this._forEachServer(async (server, serverName, index) => {
       void server
-        .sendMessage({ author, recipient, payload })
+        .sendMessage(message)
         .then(() => this._clearServerFailedFlag(serverName, index))
         .catch((err) => {
           if (err instanceof RateLimitExceededError) {

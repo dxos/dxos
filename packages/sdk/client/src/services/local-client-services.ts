@@ -203,8 +203,8 @@ export class LocalClientServices implements ClientServicesProvider {
     await this._host.open(this._ctx);
     this._isOpen = true;
     setIdentityTags({
-      identityService: this._host.services.IdentityService!,
-      devicesService: this._host.services.DevicesService!,
+      identityService: this._host.services.IdentityService! as never,
+      devicesService: this._host.services.DevicesService! as never,
       setTag: (k: string, v: string) => {
         this.signalMetadataTags[k] = v;
       },

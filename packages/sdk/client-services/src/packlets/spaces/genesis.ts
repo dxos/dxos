@@ -6,6 +6,7 @@ import { createCredential } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
 import { type Space } from '@dxos/echo-pipeline';
 import { type Keyring } from '@dxos/keyring';
+import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { AdmittedFeed, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Timeframe } from '@dxos/timeframe';
 
@@ -16,7 +17,7 @@ export const spaceGenesis = async (
   signingContext: SigningContext,
   space: Space,
   automergeRoot?: string,
-) => {
+): Promise<Credential[]> => {
   // TODO(dmaretskyi): Find a way to reconcile with credential generator.
   const credentials = [
     await createCredential({
@@ -79,7 +80,7 @@ export const spaceGenesis = async (
 
   for (const credential of credentials) {
     await space.controlPipeline.writer.write({
-      credential: { credential },
+      credential: { credential: credential as never },
     });
   }
 

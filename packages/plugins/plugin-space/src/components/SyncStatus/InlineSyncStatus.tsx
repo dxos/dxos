@@ -6,6 +6,7 @@ import * as Option from 'effect/Option';
 import React, { useEffect, useState } from 'react';
 
 import { useAppGraph } from '@dxos/app-framework/react';
+import { type QueryEdgeStatusResponse } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { EdgeStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { useClient } from '@dxos/react-client';
@@ -20,8 +21,8 @@ const useEdgeStatus = (): EdgeStatus.ConnectionState => {
   const [status, setStatus] = useState(EdgeStatus.ConnectionState.NOT_CONNECTED);
   const client = useClient();
   useEffect(() => {
-    client.services.services.EdgeAgentService?.queryEdgeStatus().subscribe(({ status }) => {
-      setStatus(status.state);
+    client.services.services.EdgeAgentService?.queryEdgeStatus().subscribe(({ status }: QueryEdgeStatusResponse) => {
+      setStatus(status!.state as never);
     });
   }, [client]);
 

@@ -104,7 +104,7 @@ export class ShellManager {
       exposed: appServiceBundle,
       handlers: {
         AppService: {
-          setContext: async (request) => {
+          setContext: async (request: AppContextRequest) => {
             log('set context', request);
             if (request.display) {
               this._display = request.display;

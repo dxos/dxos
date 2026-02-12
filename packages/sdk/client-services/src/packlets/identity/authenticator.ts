@@ -24,7 +24,7 @@ export const createAuthProvider =
       nonce,
     });
 
-    return Credential.encode(credential);
+    return Credential.encode(credential as never);
   };
 
 export type TrustedKeySetAuthVerifierProps = {
@@ -55,7 +55,7 @@ export class TrustedKeySetAuthVerifier {
       const credential = Credential.decode(auth);
       log('authenticating...', { credential });
 
-      const result = await verifyCredential(credential);
+      const result = await verifyCredential(credential as never);
       if (result.kind === 'fail') {
         log('Invalid credential', { result });
         return false;

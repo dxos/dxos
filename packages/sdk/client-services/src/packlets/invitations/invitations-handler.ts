@@ -102,7 +102,7 @@ export class InvitationsHandler {
           return ctx.disposed ? null : guardedState.current;
         },
 
-        onStateUpdate: (newState: Invitation.State): Invitation => {
+        onStateUpdate: (newState: Invitation_State): Invitation => {
           if (newState !== Invitation_State.ERROR && newState !== Invitation_State.TIMEOUT) {
             guardedState.set(extension, newState);
           }
@@ -195,7 +195,7 @@ export class InvitationsHandler {
       return extension;
     };
 
-    const expiresOn = getExpirationTime(invitation);
+    const expiresOn = getExpirationTime(invitation as never);
     if (expiresOn) {
       if (expiresOn.getTime() < Date.now()) {
         log.warn('invitation has already expired');
@@ -264,7 +264,7 @@ export class InvitationsHandler {
     let admitted = false;
     const createExtension = (): InvitationGuestExtension => {
       const extension = new InvitationGuestExtension(guardedState.mutex, {
-        onStateUpdate: (newState: Invitation.State) => {
+        onStateUpdate: (newState: Invitation_State) => {
           guardedState.set(extension, newState);
         },
         onOpen: (connectionCtx: Context, extensionCtx: ExtensionContext) => {
@@ -316,7 +316,7 @@ export class InvitationsHandler {
                 ...protocol.toJSON(),
                 authMethod: introductionResponse.authMethod,
               });
-              invitation.authMethod = introductionResponse.authMethod;
+              invitation.authMethod = introductionResponse.authMethod as never;
 
               // 2. Get authentication code.
               if (isAuthenticationRequired(invitation)) {
@@ -441,10 +441,11 @@ export class InvitationsHandler {
     } else if (invitation.kind === Invitation_Kind.DEVICE) {
       label = 'invitation host for device';
     } else {
-      label = `invitation host for space ${invitation.spaceKey?.truncate()}`;
+      label = `invitation host for space ${invitation.spaceKey ? PublicKey.from(invitation.spaceKey.data).truncate() : undefined}`;
     }
+    invariant(invitation.swarmKey);
     const swarmConnection = await this._networkManager.joinSwarm({
-      topic: invitation.swarmKey,
+      topic: PublicKey.from(invitation.swarmKey.data),
       protocolProvider: createTeleportProtocolFactory(async (teleport) => {
         teleport.addExtension('dxos.halo.invitations', extensionFactory());
       }, this._connectionProps?.teleport),
@@ -457,7 +458,7 @@ export class InvitationsHandler {
 
   private async _handleGuestOtpAuth(
     extension: InvitationGuestExtension,
-    setState: (newState: Invitation.State) => void,
+    setState: (newState: Invitation_State) => void,
     authenticated: Trigger<string>,
     options: { timeout: number },
   ): Promise<void> {
@@ -486,7 +487,7 @@ export class InvitationsHandler {
 
   private async _handleGuestKpkAuth(
     extension: InvitationGuestExtension,
-    setState: (newState: Invitation.State) => void,
+    setState: (newState: Invitation_State) => void,
     invitation: Invitation,
     introductionResponse: IntroductionResponse,
   ): Promise<void> {
@@ -497,7 +498,7 @@ export class InvitationsHandler {
       throw new Error('challenge missing in the introduction');
     }
     log('sending authentication request');
-    const signature = sign(Buffer.from(introductionResponse.challenge), invitation.guestKeypair.privateKey);
+    const signature = sign(Buffer.from(introductionResponse.challenge), Buffer.from(invitation.guestKeypair.privateKey!.data));
     const response = await extension.rpc.InvitationHostService.authenticate({
       signedChallenge: signature,
     });
@@ -508,7 +509,7 @@ export class InvitationsHandler {
 }
 
 const checkInvitation = (protocol: InvitationProtocol, invitation: Partial<Invitation>) => {
-  const expiresOn = getExpirationTime(invitation);
+  const expiresOn = getExpirationTime(invitation as never);
   if (expiresOn && expiresOn.getTime() < Date.now()) {
     return new InvalidInvitationError({ message: 'Invitation already expired.' });
   }
@@ -517,5 +518,5 @@ const checkInvitation = (protocol: InvitationProtocol, invitation: Partial<Invit
 
 export const createAdmissionKeypair = (): AdmissionKeypair => {
   const keypair = createKeyPair();
-  return { publicKey: PublicKey.from(keypair.publicKey), privateKey: keypair.secretKey };
+  return { publicKey: PublicKey.from(keypair.publicKey), privateKey: keypair.secretKey } as never;
 };

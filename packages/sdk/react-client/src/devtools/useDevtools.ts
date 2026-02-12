@@ -9,5 +9,5 @@ import { useClient } from '../client';
 
 export const useDevtools = (): DevtoolsHost => {
   const client = useClient();
-  return client.services.services.DevtoolsHost ?? raise(new Error('DevtoolsHost not available.'));
+  return (client.services.services.DevtoolsHost ?? raise(new Error('DevtoolsHost not available.'))) as never;
 };

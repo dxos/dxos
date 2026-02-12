@@ -10,7 +10,9 @@ import {
   type SignalManager,
   WebsocketSignalManager,
 } from '@dxos/messaging';
+import { create } from '@dxos/protocols/buf';
 import * as MeshBridgePb from '@dxos/protocols/buf/dxos/mesh/bridge_pb';
+import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import { type BufProtoRpcPeer, createBufProtoRpcPeer, createBufServiceBundle, createLinkedPorts } from '@dxos/rpc';
@@ -80,7 +82,7 @@ export class TestPeer {
    */
   readonly _networkManager: SwarmNetworkManager;
 
-  private _proxy?: BufProtoRpcPeer<any>;
+  private _proxy?: BufProtoRpcPeer<{ BridgeService: typeof MeshBridgePb.BridgeService }>;
   private _service?: BufProtoRpcPeer<any>;
 
   constructor(
@@ -92,7 +94,7 @@ export class TestPeer {
   ) {
     this._signalManager = this.testBuilder.createSignalManager();
     this._networkManager = this.createNetworkManager(this.transport);
-    this._networkManager.setPeerInfo({ identityKey: peerId.toHex(), peerKey: peerId.toHex() });
+    this._networkManager.setPeerInfo(create(PeerSchema, { identityKey: peerId.toHex(), peerKey: peerId.toHex() }));
   }
 
   // TODO(burdon): Move to TestBuilder.
@@ -213,7 +215,7 @@ export class TestSwarmConnection {
   async join(topology = new FullyConnectedTopology()): Promise<this> {
     await this.peer._networkManager.joinSwarm({
       topic: this.topic,
-      peerInfo: { peerKey: this.peer.peerId.toHex(), identityKey: this.peer.peerId.toHex() },
+      peerInfo: create(PeerSchema, { peerKey: this.peer.peerId.toHex(), identityKey: this.peer.peerId.toHex() }),
       protocolProvider: this.protocol.factory,
       topology,
     });

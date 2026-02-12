@@ -6,7 +6,7 @@ import { type Event } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf/stream';
 import { type Config } from '@dxos/config';
 import { type Client } from '@dxos/protocols';
-import { type Empty, EmptySchema, create } from '@dxos/protocols/buf';
+import { type Empty, EmptySchema, create, timestampFromDate } from '@dxos/protocols/buf';
 import {
   type GetDiagnosticsRequest,
   GetDiagnosticsRequest_KEY_OPTION,
@@ -64,7 +64,7 @@ export class SystemServiceImpl implements Client.SystemService {
     return create(ConfigSchema, {
       version: config?.values.version,
       package: config?.values.package,
-      runtime: config?.values.runtime,
+      runtime: config?.values.runtime as never,
     });
   }
 
@@ -74,7 +74,7 @@ export class SystemServiceImpl implements Client.SystemService {
   async getDiagnostics(request: GetDiagnosticsRequest): Promise<GetDiagnosticsResponse> {
     const diagnostics = await this._getDiagnostics();
     return create(GetDiagnosticsResponseSchema, {
-      timestamp: new Date(),
+      timestamp: timestampFromDate(new Date()),
       diagnostics: JSON.parse(
         JSON.stringify(
           diagnostics,

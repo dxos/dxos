@@ -89,14 +89,14 @@ describe('identity/identity', () => {
       const signer = owner.identity.getIdentityCredentialSigner();
       void owner.identity.controlPipeline.writer.write({
         credential: {
-          credential: await signer.createCredential({
+          credential: (await signer.createCredential({
             subject: secondDevice.deviceKey,
             assertion: {
               '@type': 'dxos.halo.credentials.AuthorizedDevice',
               identityKey: owner.identityKey,
               deviceKey: secondDevice.deviceKey,
             },
-          }),
+          })) as never,
         },
       });
 
@@ -187,7 +187,7 @@ describe('identity/identity', () => {
       networkManager: new SwarmNetworkManager({
         signalManager: new MemorySignalManager(args?.signalContext ?? new MemorySignalManagerContext()),
         transportFactory: MemoryTransportFactory,
-        peerInfo: { identityKey: identityKey.toHex(), peerKey: deviceKey.toHex() },
+        peerInfo: { identityKey: identityKey.toHex(), peerKey: deviceKey.toHex() } as never,
       }),
     });
 
@@ -233,7 +233,7 @@ describe('identity/identity', () => {
 
     for (const credential of credentials) {
       await setup.identity.controlPipeline.writer.write({
-        credential: { credential },
+        credential: { credential: credential as never },
       });
     }
   };

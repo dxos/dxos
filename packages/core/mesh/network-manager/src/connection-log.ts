@@ -90,7 +90,8 @@ export class ConnectionLog {
       (connection.protocol as WireProtocol & { stats: Event<MuxerStats> })?.stats?.on((stats) => {
         connectionInfo.readBufferSize = stats.readBufferSize;
         connectionInfo.writeBufferSize = stats.writeBufferSize;
-        connectionInfo.streams = stats.channels;
+        // StreamStats types are structurally compatible between proto and buf.
+        connectionInfo.streams = stats.channels as never;
         connectionInfo.lastUpdate = timestampFromDate(new Date());
         this.update.emit();
       });

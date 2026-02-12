@@ -12,7 +12,9 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols/proto';
 import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { type AgentManager, InitAuthSequenceResponse } from '@dxos/protocols/proto/dxos/service/agentmanager';
+import { InitAuthSequenceResponse } from '@dxos/protocols/proto/dxos/service/agentmanager';
+import type { AgentManager } from '@dxos/protocols/proto/dxos/service/agentmanager';
+import type { GenService, GenServiceMethods } from '@dxos/protocols/buf';
 import { type WebsocketRpcClient } from '@dxos/websocket-rpc';
 
 export type AgentHostingProvider = {
@@ -62,7 +64,8 @@ export class AgentManagerClient implements AgentHostingProviderClient {
   private readonly _config: AgentHostingProvider;
   private readonly DXRPC_PATH = 'dxrpc';
   private readonly _wsDxrpcUrl: string;
-  private _rpc: WebsocketRpcClient<{ AgentManager: AgentManager }, {}> | undefined;
+  // AgentManager is a proto service, not a buf GenService. Type as Record to satisfy WebsocketRpcClient constraints.
+  private _rpc: WebsocketRpcClient<Record<string, GenService<GenServiceMethods>>, Record<string, GenService<GenServiceMethods>>> | undefined;
   private _rpcState: 'connected' | 'disconnected' = 'disconnected';
   private _authToken: string | null = null;
 
@@ -210,7 +213,7 @@ export class AgentManagerClient implements AgentHostingProviderClient {
     const { WebsocketRpcClient } = await import('@dxos/websocket-rpc');
     this._rpc = new WebsocketRpcClient({
       url: this._wsDxrpcUrl,
-      requested: { AgentManager: schema.getService('dxos.service.agentmanager.AgentManager') },
+      requested: { AgentManager: schema.getService('dxos.service.agentmanager.AgentManager') } as never,
       noHandshake: true,
     });
 
@@ -239,7 +242,7 @@ export class AgentManagerClient implements AgentHostingProviderClient {
     await this._openRpc();
     invariant(this._rpc, 'RPC not initialized');
     const { result, nonce, agentmanagerKey, initAuthResponseReason } =
-      await this._rpc.rpc.AgentManager.initAuthSequence({
+      await (this._rpc.rpc.AgentManager as never as AgentManager).initAuthSequence({
         authToken: agentAuthzCredential ? HUB_SERVICE_ACCESS_MAGIC : this._getComposerBetaCookie(),
       });
 
@@ -264,7 +267,7 @@ export class AgentManagerClient implements AgentHostingProviderClient {
       nonce,
     });
 
-    const { token, credential } = await this._rpc.rpc.AgentManager.authenticate({ presentation });
+    const { token, credential } = await (this._rpc.rpc.AgentManager as never as AgentManager).authenticate({ presentation });
     if (token) {
       this._authToken = token;
       if (!this._validAuthToken()) {

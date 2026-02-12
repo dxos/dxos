@@ -51,7 +51,7 @@ describe('Spaces/member-management', () => {
     await inviteMember(space1, client2, HaloSpaceMember.Role.EDITOR);
     const space2 = getClientSpace(client2, space1);
     await space2.waitUntilReady();
-    const { error } = await performInvitation({ host: space2, guest: client3.spaces })[0];
+    const { error } = await performInvitation({ host: space2 as never, guest: client3.spaces as never })[0];
     expect(error).to.be.instanceof(AuthorizationError);
   });
 
@@ -60,7 +60,7 @@ describe('Spaces/member-management', () => {
     const space1 = await client1.spaces.create();
     await inviteMember(space1, client2, HaloSpaceMember.Role.ADMIN);
     await updateRole(space1, client1, client2, HaloSpaceMember.Role.REMOVED, { waitUpdated: [space1] });
-    const { error } = await performInvitation({ host: space1, guest: client2.spaces })[1];
+    const { error } = await performInvitation({ host: space1 as never, guest: client2.spaces as never })[1];
     expect(error).to.be.instanceof(AlreadyJoinedError);
   });
 
@@ -98,7 +98,7 @@ describe('Spaces/member-management', () => {
     await waitHasStatus([space1, space3], client2, SpaceMember.PresenceState.ONLINE);
 
     // Editors can't invite members.
-    const { error } = await performInvitation({ host: getClientSpace(client2, space1), guest: client3.spaces })[0];
+    const { error } = await performInvitation({ host: getClientSpace(client2, space1) as never, guest: client3.spaces as never })[0];
     expect(error).to.be.instanceof(AuthorizationError);
   });
 
@@ -115,7 +115,7 @@ const inviteMember = async (host: Space, guestOrMany: Client | Client[], role: H
   const guests = Array.isArray(guestOrMany) ? guestOrMany : [guestOrMany];
   for (const guest of guests) {
     const [{ invitation: hostInvitation }] = await Promise.all(
-      performInvitation({ host, guest: guest.spaces, options: { role } }),
+      performInvitation({ host: host as never, guest: guest.spaces as never, options: { role: role as never } }),
     );
     expect(hostInvitation?.state).to.eq(Invitation.State.SUCCESS);
     await waitHasRole(host, guest, role);

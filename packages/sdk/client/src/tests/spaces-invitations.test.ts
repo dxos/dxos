@@ -10,6 +10,12 @@ import { Context } from '@dxos/context';
 import { TestSchema } from '@dxos/echo/testing';
 import { log } from '@dxos/log';
 import { Invitation, QueryInvitationsResponse } from '@dxos/protocols/proto/dxos/client/services';
+import { type Invitation as BufInvitation } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import {
+  type QueryInvitationsResponse as BufQueryInvitationsResponse,
+  QueryInvitationsResponse_Action,
+  QueryInvitationsResponse_Type,
+} from '@dxos/protocols/buf/dxos/client/services_pb';
 
 import { type Client } from '../client';
 import { createInitializedClientsWithContext, testSpaceAutomerge, waitForSpace } from '../testing';
@@ -24,14 +30,14 @@ describe('Spaces/invitations', () => {
     const space1 = await client1.spaces.create();
     log('spaces.create', { key: space1.key });
     const [{ invitation: hostInvitation }, { invitation: guestInvitation }] = await Promise.all(
-      performInvitation({ host: space1, guest: client2.spaces }),
+      performInvitation({ host: space1 as never, guest: client2.spaces as never }),
     );
     expect(guestInvitation?.spaceKey).to.deep.eq(space1.key);
     expect(hostInvitation?.spaceKey).to.deep.eq(guestInvitation?.spaceKey);
     expect(hostInvitation?.state).to.eq(Invitation.State.SUCCESS);
 
     {
-      const space = await waitForSpace(client2, guestInvitation!.spaceKey!, { ready: true });
+      const space = await waitForSpace(client2, guestInvitation!.spaceKey! as never, { ready: true });
       await testSpaceAutomerge(expect, space.db);
     }
   });
@@ -43,7 +49,7 @@ describe('Spaces/invitations', () => {
 
       // Alice invites Bob.
       const space = await alice.spaces.create();
-      const [{ invitation: hostInvitation }] = await Promise.all(performInvitation({ host: space, guest: bob.spaces }));
+      const [{ invitation: hostInvitation }] = await Promise.all(performInvitation({ host: space as never, guest: bob.spaces as never }));
       expect(hostInvitation?.state).to.eq(Invitation.State.SUCCESS);
 
       // Alice creates a delegated invitation.
@@ -73,7 +79,7 @@ describe('Spaces/invitations', () => {
 
       // Alice invites Bob.
       const space = await alice.spaces.create();
-      const [{ invitation: hostInvitation }] = await Promise.all(performInvitation({ host: space, guest: bob.spaces }));
+      const [{ invitation: hostInvitation }] = await Promise.all(performInvitation({ host: space as never, guest: bob.spaces as never }));
       expect(hostInvitation?.state).to.eq(Invitation.State.SUCCESS);
 
       // Alice creates a delegated invitation.
@@ -105,18 +111,18 @@ describe('Spaces/invitations', () => {
     const invitationsEmpty = new Trigger();
     const invitationStream = peer.services.services.InvitationsService!.queryInvitations();
     onTestFinished(() => invitationStream.close());
-    invitationStream.subscribe((msg) => {
-      if (msg.type === QueryInvitationsResponse.Type.ACCEPTED) {
+    invitationStream.subscribe((msg: BufQueryInvitationsResponse) => {
+      if (msg.type === QueryInvitationsResponse_Type.ACCEPTED) {
         return;
       }
-      if (msg.action === QueryInvitationsResponse.Action.ADDED) {
-        msg.invitations?.forEach((inv) => invitationIds.add(inv.invitationId));
+      if (msg.action === QueryInvitationsResponse_Action.ADDED) {
+        msg.invitations?.forEach((inv: BufInvitation) => invitationIds.add(inv.invitationId));
         if (awaitedInvitationId != null && invitationIds.has(awaitedInvitationId)) {
           awaitedInvitationId = null;
           onInvitationAppeared.wake();
         }
-      } else if (msg.action === QueryInvitationsResponse.Action.REMOVED) {
-        msg.invitations?.forEach((inv) => invitationIds.delete(inv.invitationId));
+      } else if (msg.action === QueryInvitationsResponse_Action.REMOVED) {
+        msg.invitations?.forEach((inv: BufInvitation) => invitationIds.delete(inv.invitationId));
         if (invitationIds.size > 0) {
           invitationsEmpty.wake();
         }

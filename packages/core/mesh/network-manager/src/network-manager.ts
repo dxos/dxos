@@ -8,6 +8,9 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Messenger, type PeerInfo, type SignalManager } from '@dxos/messaging';
 import { trace } from '@dxos/protocols';
+import { create } from '@dxos/protocols/buf';
+import { JoinRequestSchema, LeaveRequestSchema } from '@dxos/protocols/buf/dxos/edge/signal_pb';
+import { PublicKeySchema } from '@dxos/protocols/buf/dxos/keys_pb';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { ComplexMap } from '@dxos/util';
 
@@ -88,11 +91,18 @@ export class SwarmNetworkManager {
 
     // Listen for signal manager events.
     this._signalManager = signalManager;
-    this._signalManager.swarmEvent.on((event) => this._swarms.get(event.topic)?.onSwarmEvent(event));
+    this._signalManager.swarmEvent.on((event) => {
+      if (event.topic) {
+        this._swarms.get(PublicKey.from(event.topic.data))?.onSwarmEvent(event);
+      }
+    });
     this._messenger = new Messenger({ signalManager: this._signalManager });
+    const toBufKey = (key: PublicKey) => create(PublicKeySchema, { data: key.asUint8Array() });
     this._signalConnection = {
-      join: (opts) => this._signalManager.join(opts),
-      leave: (opts) => this._signalManager.leave(opts),
+      join: (opts) =>
+        this._signalManager.join(create(JoinRequestSchema, { topic: toBufKey(opts.topic), peer: opts.peer })),
+      leave: (opts) =>
+        this._signalManager.leave(create(LeaveRequestSchema, { topic: toBufKey(opts.topic), peer: opts.peer })),
     };
     this._peerInfo = peerInfo;
 

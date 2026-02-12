@@ -5,7 +5,12 @@
 import { Trigger } from '@dxos/async';
 import { type AuthenticatingInvitation, type CancellableInvitation, InvitationEncoder } from '@dxos/client-protocol';
 import { invariant } from '@dxos/invariant';
-import { type Invitation, Invitation_State } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import {
+  type Invitation,
+  Invitation_AuthMethod,
+  Invitation_Kind,
+  Invitation_State,
+} from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { type DeviceProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { ServiceContext } from '../services';
@@ -14,7 +19,7 @@ import { ServiceContext } from '../services';
  * Strip secrets from invitation before giving it to the peer.
  */
 export const sanitizeInvitation = (invitation: Invitation): Invitation => {
-  return InvitationEncoder.decode(InvitationEncoder.encode(invitation));
+  return InvitationEncoder.decode(InvitationEncoder.encode(invitation as never)) as never;
 };
 
 export type InvitationHost = {
@@ -71,7 +76,7 @@ export const performInvitation = ({
   const authCode = new Trigger<string>();
 
   void createInvitation(host, options).then((hostObservable) => {
-    hostObservable.subscribe(
+    (hostObservable as any).subscribe(
       async (hostInvitation: Invitation) => {
         switch (hostInvitation.state) {
           case Invitation_State.CONNECTING: {
@@ -88,14 +93,14 @@ export const performInvitation = ({
             }
 
             const guestObservable = acceptInvitation(guest, hostInvitation, guestDeviceProfile);
-            guestObservable.subscribe(
+            (guestObservable as any).subscribe(
               async (guestInvitation: Invitation) => {
                 switch (guestInvitation.state) {
                   case Invitation_State.CONNECTING: {
                     if (hooks?.guest?.onConnecting?.(guestObservable)) {
                       break;
                     }
-                    invariant(hostInvitation.swarmKey!.equals(guestInvitation.swarmKey!));
+                    invariant(hostInvitation.swarmKey && guestInvitation.swarmKey);
                     break;
                   }
 
@@ -224,13 +229,13 @@ export const createInvitation = async (
   options?: Partial<Invitation>,
 ): Promise<CancellableInvitation> => {
   options ??= {
-    authMethod: Invitation.AuthMethod.NONE,
+    authMethod: Invitation_AuthMethod.NONE,
     ...(options ?? {}),
   };
 
   if (host instanceof ServiceContext) {
     return host.invitationsManager.createInvitation({
-      kind: Invitation.Kind.SPACE,
+      kind: Invitation_Kind.SPACE,
       ...options,
     });
   }
@@ -247,9 +252,9 @@ export const acceptInvitation = (
 
   if (guest instanceof ServiceContext) {
     return guest.invitationsManager.acceptInvitation({
-      invitation,
+      invitation: invitation as never,
       deviceProfile: guestDeviceProfile,
-    });
+    } as never);
   }
 
   return guest.join(invitation, guestDeviceProfile);

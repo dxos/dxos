@@ -7,7 +7,10 @@ import { describe, expect, test } from 'vitest';
 import { randomBytes } from '@dxos/crypto';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
-import { type Chain, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { create, timestampFromDate } from '@dxos/protocols/buf';
+import { ChainSchema, PresentationSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { PublicKeySchema } from '@dxos/protocols/buf/dxos/keys_pb';
+import { SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { createCredential } from '../credentials';
 
@@ -23,7 +26,7 @@ describe('presentation verifier', () => {
       const issuer = await keyring.createKey();
       const spaceKey = PublicKey.random();
 
-      const chain: Chain = {
+      const chain = create(ChainSchema, {
         credential: await createCredential({
           assertion: {
             '@type': 'dxos.halo.credentials.AuthorizedDevice',
@@ -34,7 +37,7 @@ describe('presentation verifier', () => {
           issuer: identity,
           signer: keyring,
         }),
-      };
+      });
 
       const credential = await createCredential({
         assertion: {
@@ -49,7 +52,7 @@ describe('presentation verifier', () => {
       });
 
       const presentation = await signPresentation({
-        presentation: { credentials: [credential] },
+        presentation: create(PresentationSchema, { credentials: [credential] }),
         signer: keyring,
         signerKey: device,
         chain,
@@ -90,10 +93,10 @@ describe('presentation verifier', () => {
       });
 
       const presentation = await signPresentation({
-        presentation: { credentials: [serviceAccessCredential] },
+        presentation: create(PresentationSchema, { credentials: [serviceAccessCredential] }),
         signer: keyring,
         signerKey: device,
-        chain: { credential: deviceAuthorization },
+        chain: create(ChainSchema, { credential: deviceAuthorization }),
         nonce: randomBytes(32),
       });
 
@@ -107,7 +110,7 @@ describe('presentation verifier', () => {
       const issuer = await keyring.createKey();
       const spaceKey = PublicKey.random();
 
-      const chain: Chain = {
+      const chain = create(ChainSchema, {
         credential: await createCredential({
           assertion: {
             '@type': 'dxos.halo.credentials.AuthorizedDevice',
@@ -119,7 +122,7 @@ describe('presentation verifier', () => {
           signer: keyring,
           parentCredentialIds: [],
         }),
-      };
+      });
 
       const credential = await createCredential({
         assertion: {
@@ -135,7 +138,7 @@ describe('presentation verifier', () => {
       });
 
       const presentation = await signPresentation({
-        presentation: { credentials: [credential] },
+        presentation: create(PresentationSchema, { credentials: [credential] }),
         signer: keyring,
         signerKey: device,
         chain,
@@ -152,7 +155,7 @@ describe('presentation verifier', () => {
       const spaceKey = PublicKey.random();
       const subject = PublicKey.random();
 
-      const chain: Chain = {
+      const chain = create(ChainSchema, {
         credential: await createCredential({
           assertion: {
             '@type': 'dxos.halo.credentials.AuthorizedDevice',
@@ -163,7 +166,7 @@ describe('presentation verifier', () => {
           issuer: identity,
           signer: keyring,
         }),
-      };
+      });
 
       const credential = await createCredential({
         assertion: {
@@ -180,14 +183,15 @@ describe('presentation verifier', () => {
       });
 
       const presentation = await signPresentation({
-        presentation: { credentials: [credential] },
+        presentation: create(PresentationSchema, { credentials: [credential] }),
         signer: keyring,
         signerKey: device,
-        chain: {
-          ...chain,
-          credential: { ...chain.credential, proof: { ...chain.credential.proof, signer: PublicKey.random() } as any },
-        },
-
+        chain: create(ChainSchema, {
+          credential: {
+            ...chain.credential!,
+            proof: { ...chain.credential!.proof!, signer: create(PublicKeySchema, { data: PublicKey.random().asUint8Array() }) },
+          },
+        }),
         nonce: randomBytes(32),
       });
 
@@ -215,7 +219,7 @@ describe('presentation verifier', () => {
       });
 
       const presentation = await signPresentation({
-        presentation: { credentials: [credential] },
+        presentation: create(PresentationSchema, { credentials: [credential] }),
         signer: keyring,
         signerKey: signingKey,
         nonce: randomBytes(32),
@@ -243,14 +247,17 @@ describe('presentation verifier', () => {
       });
 
       const presentation = await signPresentation({
-        presentation: { credentials: [credential] },
+        presentation: create(PresentationSchema, { credentials: [credential] }),
         signer: keyring,
         signerKey: signingKey,
         nonce: randomBytes(32),
       });
 
       expect(
-        await verifyPresentationSignature(presentation, { ...presentation.proofs![0], creationDate: new Date(0) }),
+        await verifyPresentationSignature(presentation, {
+          ...presentation.proofs![0],
+          creationDate: timestampFromDate(new Date(0)),
+        }),
       ).to.deep.contain({
         kind: 'fail',
       });

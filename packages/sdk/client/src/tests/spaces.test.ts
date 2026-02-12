@@ -128,9 +128,9 @@ describe('Spaces', () => {
     const space1 = await client1.spaces.create();
     log('spaces.create', { key: space1.key });
     const [, { invitation: guestInvitation }] = await Promise.all(
-      performInvitation({ host: space1, guest: client2.spaces }),
+      performInvitation({ host: space1 as never, guest: client2.spaces as never }),
     );
-    const space2 = await waitForSpace(client2, guestInvitation!.spaceKey!, {
+    const space2 = await waitForSpace(client2, guestInvitation!.spaceKey! as never, {
       ready: true,
     });
 
@@ -197,7 +197,7 @@ describe('Spaces', () => {
     // log.break();
     // log.info('epoch created', { feedToCheck: feedKey, length: feed1.length })
 
-    await Promise.all(performInvitation({ host: space1, guest: client2.spaces }));
+    await Promise.all(performInvitation({ host: space1 as never, guest: client2.spaces as never }));
 
     await waitForSpace(client2, space1.key, { ready: true });
     const feed2 = services2.host!.context.feedStore.getFeed(feedKey!)!;
@@ -370,7 +370,7 @@ describe('Spaces', () => {
     await hostSpace2.db.flush();
 
     // Grant the access.
-    await Promise.all(performInvitation({ host: hostSpace2, guest: guest.spaces }));
+    await Promise.all(performInvitation({ host: hostSpace2 as never, guest: guest.spaces as never }));
     const guestSpace = await waitForSpace(guest, hostSpace2.key, {
       ready: true,
     });
@@ -501,7 +501,7 @@ describe('Spaces', () => {
     await hostSpace.waitUntilReady();
     const hostRoot = hostSpace.db.add(createObject({ entries: [Ref.make(createObject({ name: 'first' }))] }));
 
-    await Promise.all(performInvitation({ host: hostSpace, guest: guest.spaces }));
+    await Promise.all(performInvitation({ host: hostSpace as never, guest: guest.spaces as never }));
     const guestSpace = await waitForSpace(guest, hostSpace.key, {
       ready: true,
     });
@@ -583,7 +583,7 @@ describe('Spaces', () => {
   };
 
   const inviteMember = async (hostSpace: Space, guest: Client) => {
-    await Promise.all(performInvitation({ host: hostSpace, guest: guest.spaces }));
+    await Promise.all(performInvitation({ host: hostSpace as never, guest: guest.spaces as never }));
     const guestSpace = await waitForSpace(guest, hostSpace.key, {
       ready: true,
     });

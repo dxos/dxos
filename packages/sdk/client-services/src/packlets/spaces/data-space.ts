@@ -239,9 +239,9 @@ export class DataSpace {
     await this._presence.open();
     await this._gossip.open();
     await this._notarizationPlugin.open();
-    await this._inner.spaceState.addCredentialProcessor(this._notarizationPlugin);
+    await this._inner.spaceState.addCredentialProcessor(this._notarizationPlugin as never);
     await this._automergeSpaceState.open();
-    await this._inner.spaceState.addCredentialProcessor(this._automergeSpaceState);
+    await this._inner.spaceState.addCredentialProcessor(this._automergeSpaceState as never);
 
     if (this._edgeFeedReplicator) {
       this.inner.protocol.feedAdded.append(this._onFeedAdded);
@@ -285,9 +285,9 @@ export class DataSpace {
     await this.authVerifier.close();
 
     await this._inner.close();
-    await this._inner.spaceState.removeCredentialProcessor(this._automergeSpaceState);
+    await this._inner.spaceState.removeCredentialProcessor(this._automergeSpaceState as never);
     await this._automergeSpaceState.close();
-    await this._inner.spaceState.removeCredentialProcessor(this._notarizationPlugin);
+    await this._inner.spaceState.removeCredentialProcessor(this._notarizationPlugin as never);
     await this._notarizationPlugin.close();
 
     await this._presence.close();
@@ -393,10 +393,10 @@ export class DataSpace {
       this.notarizationPlugin.setWriter(
         createMappedFeedWriter<Credential, FeedMessage.Payload>(
           (credential) => ({
-            credential: { credential },
+            credential: { credential: credential as never },
           }),
           this._inner.controlPipeline.writer,
-        ),
+        ) as never,
       );
     }
   }
@@ -409,7 +409,7 @@ export class DataSpace {
       await this.inner.setControlFeed(controlFeed);
 
       credentials.push(
-        await this._signingContext.credentialSigner.createCredential({
+        (await this._signingContext.credentialSigner.createCredential({
           subject: controlFeed.key,
           assertion: {
             '@type': 'dxos.halo.credentials.AdmittedFeed',
@@ -418,7 +418,7 @@ export class DataSpace {
             identityKey: this._signingContext.identityKey,
             designation: AdmittedFeed.Designation.CONTROL,
           },
-        }),
+        })) as never,
       );
     }
     if (!this.inner.dataFeedKey) {
@@ -429,7 +429,7 @@ export class DataSpace {
       await this.inner.setDataFeed(dataFeed);
 
       credentials.push(
-        await this._signingContext.credentialSigner.createCredential({
+        (await this._signingContext.credentialSigner.createCredential({
           subject: dataFeed.key,
           assertion: {
             '@type': 'dxos.halo.credentials.AdmittedFeed',
@@ -438,7 +438,7 @@ export class DataSpace {
             identityKey: this._signingContext.identityKey,
             designation: AdmittedFeed.Designation.DATA,
           },
-        }),
+        })) as never,
       );
     }
 
@@ -446,7 +446,7 @@ export class DataSpace {
       try {
         log('will notarize credentials for feed admission', { count: credentials.length });
         // Never times out
-        await this.notarizationPlugin.notarize({ ctx: this._ctx, credentials, timeout: 0 });
+        await this.notarizationPlugin.notarize({ ctx: this._ctx, credentials: credentials as never, timeout: 0 });
 
         log('credentials notarized');
       } catch (err) {
@@ -523,7 +523,7 @@ export class DataSpace {
         profile,
       },
     });
-    await this.inner.controlPipeline.writer.write({ credential: { credential } });
+    await this.inner.controlPipeline.writer.write({ credential: { credential: credential as never } });
   }
 
   async createEpoch(options?: CreateEpochOptions): Promise<CreateEpochResult | null> {
@@ -544,7 +544,7 @@ export class DataSpace {
     });
 
     const epoch: Epoch = {
-      previousId: this._automergeSpaceState.lastEpoch?.id,
+      previousId: this._automergeSpaceState.lastEpoch?.id as never,
       number: (this._automergeSpaceState.lastEpoch?.subject.assertion.number ?? -1) + 1,
       timeframe: this._automergeSpaceState.lastEpoch?.subject.assertion.timeframe ?? new Timeframe(),
       automergeRoot: newRoot ?? this._automergeSpaceState.rootUrl,
@@ -559,7 +559,7 @@ export class DataSpace {
     })) as SpecificCredential<Epoch>;
 
     const receipt = await this.inner.controlPipeline.writer.write({
-      credential: { credential },
+      credential: { credential: credential as never },
     });
 
     const timeframe = new Timeframe([[receipt.feedKey, receipt.seq]]);

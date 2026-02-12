@@ -11,6 +11,7 @@ import { type Keyring } from '@dxos/keyring';
 import { log } from '@dxos/log';
 import { type Halo } from '@dxos/protocols';
 import { create } from '@dxos/protocols/buf';
+import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import {
   type CreateIdentityRequest,
   type CreateRecoveryCredentialRequest,
@@ -99,7 +100,7 @@ export class IdentityServiceImpl extends Resource implements Halo.IdentityServic
   async updateProfile(profile: ProfileDocument): Promise<IdentityProto> {
     invariant(this._identityManager.identity, 'Identity not initialized.');
     await this._identityManager.updateProfile(profile);
-    await this._onProfileUpdate?.(this._identityManager.identity.profileDocument);
+    await this._onProfileUpdate?.(this._identityManager.identity.profileDocument as never);
     return this._getIdentity()!;
   }
 
@@ -110,7 +111,7 @@ export class IdentityServiceImpl extends Resource implements Halo.IdentityServic
 
   async requestRecoveryChallenge(): Promise<RequestRecoveryChallengeResponse> {
     const result = await this._recoveryManager.requestRecoveryChallenge();
-    return create(RequestRecoveryChallengeResponseSchema, result);
+    return create(RequestRecoveryChallengeResponseSchema, result as never);
   }
 
   async recoverIdentity(request: RecoverIdentityRequest): Promise<IdentityProto> {

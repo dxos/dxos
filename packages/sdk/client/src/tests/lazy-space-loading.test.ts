@@ -61,7 +61,7 @@ describe('Lazy Space Loading', () => {
     await reload(client1);
     const space = findClientSpace(client1, createdSpace);
     await openAndWaitReady(space);
-    await Promise.all(performInvitation({ host: space, guest: client2.spaces }));
+    await Promise.all(performInvitation({ host: space as never, guest: client2.spaces as never }));
     await waitForSpace(client2, space.key, { ready: true });
   });
 
@@ -145,7 +145,7 @@ describe('Lazy Space Loading', () => {
 });
 
 const inviteMember = async (space: Space, client: Client) => {
-  await Promise.all(performInvitation({ host: space, guest: client.spaces }));
+  await Promise.all(performInvitation({ host: space as never, guest: client.spaces as never }));
   return waitForSpace(client, space.key, { ready: true });
 };
 

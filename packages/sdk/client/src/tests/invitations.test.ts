@@ -58,15 +58,15 @@ const successfulInvitation = async ({
   await sleep(20);
 
   switch (hostInvitation!.kind) {
-    case Invitation.Kind.SPACE:
+    case Invitation.Kind.SPACE as never:
       expect(guestInvitation!.spaceKey).to.exist;
       expect(hostInvitation!.spaceKey).to.deep.eq(guestInvitation!.spaceKey);
 
-      expect(host.dataSpaceManager!.spaces.get(hostInvitation!.spaceKey!)).to.exist;
-      expect(guest.dataSpaceManager!.spaces.get(guestInvitation!.spaceKey!)).to.exist;
+      expect(host.dataSpaceManager!.spaces.get(hostInvitation!.spaceKey! as never)).to.exist;
+      expect(guest.dataSpaceManager!.spaces.get(guestInvitation!.spaceKey! as never)).to.exist;
       break;
 
-    case Invitation.Kind.DEVICE:
+    case Invitation.Kind.DEVICE as never:
       expect(hostInvitation!.identityKey).not.to.exist;
       expect(guestInvitation!.identityKey).to.deep.eq(host.identityManager.identity!.identityKey);
       expect(guestInvitation!.identityKey).to.deep.eq(guest.identityManager.identity!.identityKey);
@@ -99,7 +99,7 @@ const testSuite = (getProps: () => PerformInvitationProps, getPeers: () => [Serv
     const [hostResult, guestResult] = await Promise.all(
       performInvitation({
         ...params,
-        options: { ...params.options, authMethod: Invitation.AuthMethod.SHARED_SECRET },
+        options: { ...params.options, authMethod: Invitation.AuthMethod.SHARED_SECRET as never },
       }),
     );
 
@@ -113,7 +113,7 @@ const testSuite = (getProps: () => PerformInvitationProps, getPeers: () => [Serv
     const [hostResult, guestResult] = await Promise.all(
       performInvitation({
         ...params,
-        options: { ...params.options, guestKeypair, authMethod: Invitation.AuthMethod.KNOWN_PUBLIC_KEY },
+        options: { ...params.options, guestKeypair, authMethod: Invitation.AuthMethod.KNOWN_PUBLIC_KEY as never },
       }),
     );
 
@@ -130,8 +130,8 @@ const testSuite = (getProps: () => PerformInvitationProps, getPeers: () => [Serv
         ...params,
         options: {
           ...params.options,
-          guestKeypair: invalidKeypair,
-          authMethod: Invitation.AuthMethod.KNOWN_PUBLIC_KEY,
+          guestKeypair: invalidKeypair as never,
+          authMethod: Invitation.AuthMethod.KNOWN_PUBLIC_KEY as never,
         },
       }),
     );
@@ -148,7 +148,7 @@ const testSuite = (getProps: () => PerformInvitationProps, getPeers: () => [Serv
       options: {
         ...params.options,
         guestKeypair: keypair,
-        authMethod: Invitation.AuthMethod.KNOWN_PUBLIC_KEY,
+        authMethod: Invitation.AuthMethod.KNOWN_PUBLIC_KEY as never,
       },
     });
 
@@ -161,7 +161,7 @@ const testSuite = (getProps: () => PerformInvitationProps, getPeers: () => [Serv
     const [hostResult, guestResult] = await Promise.all(
       performInvitation({
         ...params,
-        options: { ...params.options, authMethod: Invitation.AuthMethod.SHARED_SECRET, target: 'example' },
+        options: { ...params.options, authMethod: Invitation.AuthMethod.SHARED_SECRET as never, target: 'example' },
       }),
     );
 
@@ -175,7 +175,7 @@ const testSuite = (getProps: () => PerformInvitationProps, getPeers: () => [Serv
     const [hostResult, guestResult] = await Promise.all(
       performInvitation({
         ...params,
-        options: { ...params.options, authMethod: Invitation.AuthMethod.SHARED_SECRET },
+        options: { ...params.options, authMethod: Invitation.AuthMethod.SHARED_SECRET as never },
         hooks: {
           guest: {
             onReady: (invitation) => {
@@ -203,7 +203,7 @@ const testSuite = (getProps: () => PerformInvitationProps, getPeers: () => [Serv
     const [hostResult, guestResult] = await Promise.all(
       performInvitation({
         ...params,
-        options: { ...params.options, authMethod: Invitation.AuthMethod.SHARED_SECRET },
+        options: { ...params.options, authMethod: Invitation.AuthMethod.SHARED_SECRET as never },
         hooks: {
           guest: {
             onReady: (invitation) => {
@@ -226,7 +226,7 @@ const testSuite = (getProps: () => PerformInvitationProps, getPeers: () => [Serv
     const [hostResult, guestResult] = await Promise.all(
       performInvitation({
         ...params,
-        options: { ...params.options, authMethod: Invitation.AuthMethod.SHARED_SECRET, timeout: 1 },
+        options: { ...params.options, authMethod: Invitation.AuthMethod.SHARED_SECRET as never, timeout: 1 },
       }),
     );
 
@@ -239,7 +239,7 @@ const testSuite = (getProps: () => PerformInvitationProps, getPeers: () => [Serv
     const [hostResult, guestResult] = await Promise.all(
       performInvitation({
         ...params,
-        options: { ...params.options, authMethod: Invitation.AuthMethod.SHARED_SECRET },
+        options: { ...params.options, authMethod: Invitation.AuthMethod.SHARED_SECRET as never },
         hooks: {
           host: {
             onConnected: (invitation) => {
@@ -260,7 +260,7 @@ const testSuite = (getProps: () => PerformInvitationProps, getPeers: () => [Serv
     const [hostResult, guestResult] = await Promise.all(
       performInvitation({
         ...params,
-        options: { ...params.options, authMethod: Invitation.AuthMethod.SHARED_SECRET },
+        options: { ...params.options, authMethod: Invitation.AuthMethod.SHARED_SECRET as never },
         hooks: {
           guest: {
             onConnected: (invitation) => {
@@ -282,7 +282,7 @@ const testSuite = (getProps: () => PerformInvitationProps, getPeers: () => [Serv
     const [hostResult, guestResult] = await Promise.all(
       performInvitation({
         ...params,
-        options: { ...params.options, authMethod: Invitation.AuthMethod.SHARED_SECRET },
+        options: { ...params.options, authMethod: Invitation.AuthMethod.SHARED_SECRET as never },
         codeInputDelay: 200,
         hooks: {
           guest: {
@@ -319,7 +319,7 @@ describe('Invitations', () => {
         () => ({
           host,
           guest,
-          options: { kind: Invitation.Kind.SPACE, spaceKey: space.key },
+          options: { kind: Invitation.Kind.SPACE as never, spaceKey: space.key as never },
         }),
         () => [host, guest],
       );
@@ -337,7 +337,7 @@ describe('Invitations', () => {
       });
 
       testSuite(
-        () => ({ host, guest, options: { kind: Invitation.Kind.DEVICE } }),
+        () => ({ host, guest, options: { kind: Invitation.Kind.DEVICE as never } }),
         () => [host, guest],
       );
     });
@@ -361,7 +361,7 @@ describe('Invitations', () => {
         const { service, metadata } = createInvitationsApi(hostContext);
         hostMetadata = metadata;
         space = await hostContext.dataSpaceManager.createSpace();
-        host = new InvitationsProxy(service, undefined, () => ({
+        host = new InvitationsProxy(service as never, undefined, () => ({
           kind: Invitation.Kind.SPACE,
           spaceKey: space.key,
         }));
@@ -413,10 +413,10 @@ describe('Invitations', () => {
         const space = await hostContext?.dataSpaceManager.createSpace();
         onTestFinished(() => space.close());
 
-        const guest = new InvitationsProxy(guestService, undefined, () => ({ kind: Invitation.Kind.SPACE }));
+        const guest = new InvitationsProxy(guestService as never, undefined, () => ({ kind: Invitation.Kind.SPACE }));
         let persistentInvitationId: string;
         {
-          const tempHost = new InvitationsProxy(hostApi.service, undefined, () => ({
+          const tempHost = new InvitationsProxy(hostApi.service as never, undefined, () => ({
             kind: Invitation.Kind.SPACE,
             spaceKey: space.key,
           }));
@@ -443,7 +443,7 @@ describe('Invitations', () => {
           hostContext,
           hostApi.metadata,
         );
-        const host = new InvitationsProxy(newHostService, undefined, () => ({
+        const host = new InvitationsProxy(newHostService as never, undefined, () => ({
           kind: Invitation.Kind.SPACE,
           spaceKey: space.key,
         }));
@@ -466,7 +466,7 @@ describe('Invitations', () => {
                   async (guestInvitation: Invitation) => {
                     switch (guestInvitation.state) {
                       case Invitation.State.SUCCESS: {
-                        guestComplete.wake({ invitation: guestInvitation });
+                        guestComplete.wake({ invitation: guestInvitation as never });
                         break;
                       }
                     }
@@ -478,7 +478,7 @@ describe('Invitations', () => {
                 break;
               }
               case Invitation.State.SUCCESS: {
-                hostComplete.wake({ invitation: hostInvitation });
+                hostComplete.wake({ invitation: hostInvitation as never });
                 break;
               }
             }
@@ -507,7 +507,7 @@ describe('Invitations', () => {
         onTestFinished(() => space.close());
 
         {
-          const tempHost = new InvitationsProxy(hostApi.service, undefined, () => ({
+          const tempHost = new InvitationsProxy(hostApi.service as never, undefined, () => ({
             kind: Invitation.Kind.SPACE,
             spaceKey: space.key,
             persistent: false,
@@ -533,7 +533,7 @@ describe('Invitations', () => {
         await newHostManager.loadPersistentInvitations();
         expect(hostApi.metadata.getInvitations()).to.have.lengthOf(0);
 
-        const host = new InvitationsProxy(newHostService, undefined, () => ({
+        const host = new InvitationsProxy(newHostService as never, undefined, () => ({
           kind: Invitation.Kind.SPACE,
           spaceKey: space.key,
         }));
@@ -562,17 +562,17 @@ describe('Invitations', () => {
         const { service: guestService } = createInvitationsApi(guestContext);
 
         space = await hostContext.dataSpaceManager.createSpace();
-        host = new InvitationsProxy(hostService, undefined, () => ({
+        host = new InvitationsProxy(hostService as never, undefined, () => ({
           kind: Invitation.Kind.SPACE,
           spaceKey: space.key,
         }));
-        guest = new InvitationsProxy(guestService, undefined, () => ({ kind: Invitation.Kind.SPACE }));
+        guest = new InvitationsProxy(guestService as never, undefined, () => ({ kind: Invitation.Kind.SPACE }));
 
         onTestFinished(() => space.close());
       });
 
       testSuite(
-        () => ({ host, guest }),
+        () => ({ host: host as never, guest: guest as never }),
         () => [hostContext, guestContext],
       );
     });
@@ -593,12 +593,12 @@ describe('Invitations', () => {
         const { service: hostService } = createInvitationsApi(hostContext);
         const { service: guestService } = createInvitationsApi(guestContext);
 
-        host = new InvitationsProxy(hostService, undefined, () => ({ kind: Invitation.Kind.DEVICE }));
-        guest = new InvitationsProxy(guestService, undefined, () => ({ kind: Invitation.Kind.DEVICE }));
+        host = new InvitationsProxy(hostService as never, undefined, () => ({ kind: Invitation.Kind.DEVICE }));
+        guest = new InvitationsProxy(guestService as never, undefined, () => ({ kind: Invitation.Kind.DEVICE }));
       });
 
       testSuite(
-        () => ({ host, guest }),
+        () => ({ host: host as never, guest: guest as never }),
         () => [hostContext, guestContext],
       );
     });
@@ -627,7 +627,7 @@ describe('Invitations', () => {
     });
 
     testSuite(
-      () => ({ host: host.halo, guest: guest.halo }),
+      () => ({ host: host.halo as never, guest: guest.halo as never }),
       () => [(host.services as any).host._serviceContext, (guest.services as any).host._serviceContext],
     );
   });
@@ -657,7 +657,7 @@ describe('Invitations', () => {
     });
 
     testSuite(
-      () => ({ host: space, guest: guest.spaces }),
+      () => ({ host: space as never, guest: guest.spaces as never }),
       () => [(host.services as any).host._serviceContext, (guest.services as any).host._serviceContext],
     );
   });
@@ -685,7 +685,7 @@ const createInvitationsApi = (
 ) => {
   const manager = new InvitationsManager(
     context.invitations,
-    (invitation) => context.getInvitationHandler(invitation),
+    (invitation) => context.getInvitationHandler(invitation as never),
     metadata,
   );
   const service = new InvitationsServiceImpl(manager);

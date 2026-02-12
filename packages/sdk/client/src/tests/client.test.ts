@@ -224,7 +224,7 @@ describe('Client', () => {
       },
       { fire: true },
     );
-    await Promise.all(performInvitation({ host: space1, guest: client2.spaces }));
+    await Promise.all(performInvitation({ host: space1 as never, guest: client2.spaces as never }));
 
     // Create Thread on second client.
     const space2 = client2.spaces.get(spaceKey)!;
