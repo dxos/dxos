@@ -131,10 +131,14 @@ export class AiSession {
           objects: objects?.length ?? 0,
         });
 
-        const prompt = yield* AiPreprocessor.preprocessPrompt([...this._history, ...this._pending], { system });
+        const prompt = yield* AiPreprocessor.preprocessPrompt([...this._history, ...this._pending], {
+          system,
+          cacheControl: 'ephemeral',
+        });
 
         // Execute the stream request.
         // logDump('prompt', Prompt.Prompt.pipe(Schema.encodeSync)(prompt));
+        console.time('streamText');
         const blocks = yield* LanguageModel.streamText({
           prompt,
           toolkit,
@@ -150,6 +154,7 @@ export class AiSession {
           Stream.runCollect,
           Effect.map(Chunk.toArray),
         );
+        console.timeEnd('streamText');
 
         // log('blocks', { blocks });
 

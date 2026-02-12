@@ -27,10 +27,10 @@ import { PromptPreprocessingError as PromptPreprocesorError } from './errors';
  */
 export const preprocessPrompt: (
   messages: Message.Message[],
-  opts?: { system?: string },
+  opts?: { system?: string; cacheControl?: 'no-cache' | 'ephemeral' },
 ) => Effect.Effect<Prompt.Prompt, PromptPreprocesorError, never> = Effect.fn('preprocessPrompt')(function* (
   messages,
-  { system } = {},
+  { system, cacheControl = 'none' } = {},
 ) {
   let prompt = yield* Function.pipe(
     messages,
@@ -81,6 +81,26 @@ export const preprocessPrompt: (
 
   if (system) {
     prompt = Prompt.setSystem(prompt, system);
+  }
+
+  if (cacheControl === 'ephemeral') {
+    prompt = Prompt.fromMessages(
+      prompt.content.map((message, index) =>
+        index !== prompt.content.length - 1
+          ? message
+          : {
+              ...message,
+              options: {
+                anthropic: {
+                  cacheControl: {
+                    ttl: '5m',
+                    type: 'ephemeral',
+                  },
+                },
+              },
+            },
+      ),
+    );
   }
 
   return prompt;

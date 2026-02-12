@@ -28,6 +28,8 @@ interface TestLayerOptions {
    * @default 'noop'
    */
   tracing?: 'noop' | 'console' | 'pretty';
+
+  disableLlmMemoization?: boolean;
 }
 
 export const AssistantTestLayer = ({
@@ -38,6 +40,7 @@ export const AssistantTestLayer = ({
   types = [],
   credentials = [],
   tracing = 'noop',
+  disableLlmMemoization = false,
 }: TestLayerOptions) =>
   Layer.mergeAll(
     AiService.model(model),
@@ -54,7 +57,7 @@ export const AssistantTestLayer = ({
     ),
     Layer.provideMerge(
       Layer.mergeAll(
-        TestAiService({ preset: aiServicePreset }),
+        TestAiService({ preset: aiServicePreset, disableMemoization: disableLlmMemoization }),
         TestDatabaseLayer({
           spaceKey: 'fixed',
           types,
