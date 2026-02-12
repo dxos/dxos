@@ -20,7 +20,7 @@ import { isNonNullable } from '@dxos/util';
 
 import { getActiveSpace } from '../../hooks';
 import { meta } from '../../meta';
-import { SPACE_TYPE, SpaceCapabilities, SpaceOperation } from '../../types';
+import { SPACE_TYPE, SpaceCapabilities, SpaceOperation, type SpacePluginOptions } from '../../types';
 import {
   SHARED,
   constructObjectActions,
@@ -36,7 +36,8 @@ const whenSpace = (node: Node.Node): Option.Option<Space> =>
   node.type === SPACE_TYPE && isSpace(node.data) ? Option.some(node.data) : Option.none();
 
 export default Capability.makeModule(
-  Effect.fnUntraced(function* () {
+  Effect.fnUntraced(function* (props?: SpacePluginOptions) {
+    const { shareableLinkOrigin = window.location.origin } = props ?? {};
     const capabilities = yield* Capability.Service;
 
     // TODO(wittjosiah): Using `get` and being reactive seems to cause a bug with Atom where disposed atoms are accessed.
@@ -365,7 +366,7 @@ export default Capability.makeModule(
           const client = get(capabilities.atom(ClientCapabilities.Client)).at(0);
           const space = getSpace(collection);
           const schema = client?.graph.schemaRegistry
-            .query({ typename: collection.key, location: ['runtime'] })
+            .query({ typename: collection.key, location: ['runtime'], includeSystem: true })
             .runSync()[0];
           if (!space || !schema) {
             return Effect.succeed([]);
@@ -373,14 +374,15 @@ export default Capability.makeModule(
 
           return Effect.succeed(
             get(AtomQuery.make(space.db, Filter.type(schema)))
-              .map((object) =>
-                createObjectNode({
+              .map((object) => {
+                get(AtomObj.make(object));
+                return createObjectNode({
                   object,
                   db: space.db,
                   managedCollectionChild: true,
                   resolve: resolve(get),
-                }),
-              )
+                });
+              })
               .filter(isNonNullable),
           );
         },
@@ -552,6 +554,7 @@ export default Capability.makeModule(
               capabilities,
               deletable,
               navigable: ephemeralState.navigableCollections,
+              shareableLinkOrigin,
             }),
           );
         },

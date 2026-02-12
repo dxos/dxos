@@ -8,7 +8,6 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 import { type DatabaseDirectory, ObjectStructure, SpaceDocVersion } from '@dxos/echo-protocol';
 import { runAndForwardErrors } from '@dxos/effect';
 import { type IndexCursor } from '@dxos/index-core';
-import { IndexMetadataStore } from '@dxos/indexing';
 import { DXN, SpaceId } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
 import { createTestLevel } from '@dxos/kv-store/testing';
@@ -28,7 +27,6 @@ const PERSON_TYPE = DXN.parse('dxn:type:example.com/type/Person:0.1.0').toString
 const setupAutomergeHost = async (level: LevelDB): Promise<AutomergeHost> => {
   const host = new AutomergeHost({
     db: level,
-    indexMetadataStore: new IndexMetadataStore({ db: level.sublevel('index-metadata') }),
   });
   await host.open();
   onTestFinished(async () => {

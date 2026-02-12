@@ -3,13 +3,14 @@
 //
 
 import { type Registry } from '@effect-atom/atom-react';
+import type * as Types from 'effect/Types';
 
 import { Filter, type JsonSchema, Obj, Order, Query, type QueryAST, Ref, Type } from '@dxos/echo';
 import {
   ProjectionModel,
   type SchemaPropertyDefinition,
   View,
-  createDirectChangeCallback,
+  createEchoChangeCallback,
   getSchemaFromPropertyDefinitions,
 } from '@dxos/schema';
 
@@ -37,11 +38,11 @@ export const getBaseSchema = ({
   schema?: Type.Entity.Any;
   typename?: string;
   properties?: TablePropertyDefinition[];
-  jsonSchema?: JsonSchema.JsonSchema;
-}): { typename: string; jsonSchema: JsonSchema.JsonSchema } => {
+  jsonSchema?: Types.DeepMutable<JsonSchema.JsonSchema>;
+}): { typename: string; jsonSchema: Types.DeepMutable<JsonSchema.JsonSchema> } => {
   if (typename && properties) {
     const schema = getSchemaFromPropertyDefinitions(typename, properties);
-    return { typename: schema.typename, jsonSchema: schema.jsonSchema };
+    return { typename: schema.typename, jsonSchema: Type.toJsonSchema(schema) };
   } else if (schema) {
     return { typename: Type.getTypename(schema)!, jsonSchema: Type.toJsonSchema(schema) };
   } else if (typename && jsonSchema) {
@@ -57,7 +58,7 @@ export const makeDynamicTable = ({
   properties,
 }: {
   registry: Registry.Registry;
-  jsonSchema: JsonSchema.JsonSchema;
+  jsonSchema: Types.DeepMutable<JsonSchema.JsonSchema>;
   properties?: TablePropertyDefinition[];
 }): { projection: ProjectionModel; object: Table.Table } => {
   const view = View.make({
@@ -67,12 +68,11 @@ export const makeDynamicTable = ({
   });
   const object = Obj.make(Table.Table, { view: Ref.make(view), sizes: {} });
 
-  // Use direct change callback for in-memory objects (non-ECHO backed).
   const projection = new ProjectionModel({
     registry,
     view,
     baseSchema: jsonSchema,
-    change: createDirectChangeCallback(view.projection, jsonSchema),
+    change: createEchoChangeCallback(view, jsonSchema),
   });
   projection.normalizeView();
   if (properties && projection.getFields()) {

@@ -23,7 +23,7 @@ import {
   HasSubject,
   Organization,
   Person,
-  Project,
+  Pipeline,
   Task,
 } from '@dxos/types';
 
@@ -133,35 +133,53 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
       HasSubject.HasSubject,
       Organization.Organization,
       Person.Person,
-      Project.Project,
+      Pipeline.Pipeline,
       Tag.Tag,
       Task.Task,
     ],
   }),
   Common.Plugin.addReactRootModule({ activate: ReactRoot }),
-  Plugin.addModule(({ invitationUrl = window.location.origin, invitationProp = 'spaceInvitationCode' }) => {
-    const createInvitationUrl = (invitationCode: string) => {
-      const baseUrl = new URL(invitationUrl);
-      baseUrl.searchParams.set(invitationProp, invitationCode);
-      return baseUrl.toString();
-    };
-
-    return {
-      id: Capability.getModuleTag(ReactSurface),
-      activatesOn: Common.ActivationEvent.SetupReactSurface,
-      // TODO(wittjosiah): Should occur before the settings dialog is loaded when surfaces activation is more granular.
-      activatesBefore: [SpaceEvents.SetupSettingsPanel],
-      activate: () => ReactSurface({ createInvitationUrl }),
-    };
-  }),
-  Common.Plugin.addAppGraphModule({ activate: AppGraphBuilder }),
   Plugin.addModule(
-    ({ invitationUrl = window.location.origin, invitationProp = 'spaceInvitationCode', observability = false }) => {
+    ({
+      shareableLinkOrigin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost',
+      invitationPath = '/',
+      invitationProp = 'spaceInvitationCode',
+    }) => {
       const createInvitationUrl = (invitationCode: string) => {
-        const baseUrl = new URL(invitationUrl);
+        const baseUrl = new URL(invitationPath || '/', shareableLinkOrigin);
         baseUrl.searchParams.set(invitationProp, invitationCode);
         return baseUrl.toString();
       };
+
+      return {
+        id: Capability.getModuleTag(ReactSurface),
+        activatesOn: Common.ActivationEvent.SetupReactSurface,
+        // TODO(wittjosiah): Should occur before the settings dialog is loaded when surfaces activation is more granular.
+        activatesBefore: [SpaceEvents.SetupSettingsPanel],
+        activate: () => ReactSurface({ createInvitationUrl }),
+      };
+    },
+  ),
+  Plugin.addModule(
+    ({ shareableLinkOrigin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost' }) => ({
+      id: Capability.getModuleTag(AppGraphBuilder()) ?? 'space-app-graph-builder',
+      activatesOn: Common.ActivationEvent.SetupAppGraph,
+      activate: () => AppGraphBuilder({ shareableLinkOrigin }),
+    }),
+  ),
+  Plugin.addModule(
+    ({
+      shareableLinkOrigin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost',
+      invitationPath = '/',
+      invitationProp = 'spaceInvitationCode',
+      observability = false,
+    }) => {
+      const createInvitationUrl = (invitationCode: string) => {
+        const baseUrl = new URL(invitationPath || '/', shareableLinkOrigin);
+        baseUrl.searchParams.set(invitationProp, invitationCode);
+        return baseUrl.toString();
+      };
+
       return {
         id: Capability.getModuleTag(OperationResolver),
         activatesOn: Common.ActivationEvent.SetupOperationResolver,

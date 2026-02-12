@@ -125,11 +125,13 @@ const Content = ({ classNames, children, role }: ContentProps) => {
 // Board
 //
 
+const BOARD_NAME = 'Chessboard.Board';
+
 type BoardProps = NaturalChessboardProps;
 
 const Board = (props: BoardProps) => {
   const registry = useContext(RegistryContext);
-  const { model } = useGameboardContext<ChessModel>(Board.displayName);
+  const { model } = useGameboardContext<ChessModel>(BOARD_NAME);
 
   // Keyboard navigation.
   const ref = useRef<HTMLDivElement>(null);
@@ -167,7 +169,7 @@ const Board = (props: BoardProps) => {
   return <NaturalChessboard ref={ref} {...props} />;
 };
 
-Board.displayName = 'Chessboard.Board';
+Board.displayName = BOARD_NAME;
 
 //
 // Chessboard

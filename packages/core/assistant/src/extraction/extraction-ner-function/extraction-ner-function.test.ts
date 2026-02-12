@@ -35,7 +35,7 @@ describe.skip('NER EntityExtraction', () => {
   beforeAll(async () => {
     // TODO(dmaretskyi): Helper to scaffold this from a config.
     builder = await new EchoTestBuilder().open();
-    const { db: db1 } = await builder.createDatabase({ indexing: { vector: true } });
+    const { db: db1 } = await builder.createDatabase();
     db = db1;
     await db.graph.schemaRegistry.register(TYPES);
     const data = createTestData();

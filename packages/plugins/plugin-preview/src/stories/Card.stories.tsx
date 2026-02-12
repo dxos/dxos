@@ -8,7 +8,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import { faker } from '@dxos/random';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { type Organization, type Person, type Project, type Task } from '@dxos/types';
+import { type Organization, type Person, type Pipeline, type Task } from '@dxos/types';
 
 import { OrganizationCard, PersonCard, ProjectCard, TaskCard } from '../cards';
 import { translations } from '../translations';
@@ -51,7 +51,7 @@ export const _Organization: StoryObj<typeof DefaultStory<Organization.Organizati
   },
 };
 
-export const _Project: StoryObj<typeof DefaultStory<Project.Project>> = {
+export const _Project: StoryObj<typeof DefaultStory<Pipeline.Pipeline>> = {
   args: {
     Component: ProjectCard,
     createObject: createProject,

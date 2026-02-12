@@ -128,7 +128,7 @@ const useSpaceItems = (space: Space) => {
   // Determine if query is empty (show default view).
   const isQueryEmpty = !query?.trim();
 
-  // Filter children to those which are objects or actions with disposition 'item'.
+  // Filter children to those which are objects, actions with disposition 'item', or alternate-tree nodes.
   const filteredChildren = useMemo(
     () =>
       children.filter((node) => {

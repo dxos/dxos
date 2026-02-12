@@ -3,6 +3,8 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Equal from 'effect/Equal';
+import * as Hash from 'effect/Hash';
 import * as Option from 'effect/Option';
 import * as ParseResult from 'effect/ParseResult';
 import * as Pipeable from 'effect/Pipeable';
@@ -459,6 +461,21 @@ export class RefImpl<T> implements Ref<T> {
   };
 
   [RefTypeId] = refVariance;
+
+  /**
+   * Effect Hash trait. Required for MutableHashMap-based caches (e.g., Atom.family)
+   * to deduplicate Ref instances that point to the same object.
+   * ECHO proxies return new RefImpl instances on every property access,
+   * so without this, each access would create a separate cache entry.
+   */
+  [Hash.symbol](): number {
+    return Hash.hash(this.#dxn.toString());
+  }
+
+  /** Effect Equal trait. See {@link Hash.symbol} for rationale. */
+  [Equal.symbol](that: Equal.Equal): boolean {
+    return that instanceof RefImpl && this.#dxn.toString() === that.dxn.toString();
+  }
 
   /**
    * Internal method to set the resolver.

@@ -35,6 +35,11 @@
         },
         {
           "type": "json",
+          "path": "packages/apps/composer-dxos-org/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/apps/testbench-app/package.json",
           "jsonpath": "$.version"
         },
@@ -316,11 +321,6 @@
         {
           "type": "json",
           "path": "packages/core/echo/index-core/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/core/echo/indexing/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -615,17 +615,17 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-pipeline/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-presenter/package.json",
           "jsonpath": "$.version"
         },
         {
           "type": "json",
           "path": "packages/plugins/plugin-preview/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/plugins/plugin-project/package.json",
           "jsonpath": "$.version"
         },
         {

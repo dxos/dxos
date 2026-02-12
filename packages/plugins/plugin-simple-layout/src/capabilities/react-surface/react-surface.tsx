@@ -16,7 +16,7 @@ type SurfaceData = {
   properties: Record<string, any>;
 };
 
-const ALLOWED_DISPOSITIONS = ['workspace', 'user-account', 'pin-end'];
+const ALLOWED_DISPOSITIONS = ['workspace', 'user-account', 'pin-end', 'alternate-tree'];
 
 export default Capability.makeModule(() =>
   Effect.succeed(

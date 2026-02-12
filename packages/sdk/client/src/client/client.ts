@@ -65,6 +65,9 @@ export type ClientOptions = {
 
   /** When running in the host mode, a factory to create the worker for OPFS sqlite database. */
   createOpfsWorker?: () => Worker;
+
+  /** Path to SQLite database file for persistent indexing in Node/Bun. */
+  sqlitePath?: string;
 };
 
 /**
@@ -366,6 +369,7 @@ export class Client {
       createClientServices(this._config, {
         createWorker: this._options.createWorker,
         createOpfsWorker: this._options.createOpfsWorker,
+        sqlitePath: this._options.sqlitePath,
       }));
     this._iframeManager = this._options.shell
       ? new IFrameManager({ source: new URL(this._options.shell, window.location.origin) })

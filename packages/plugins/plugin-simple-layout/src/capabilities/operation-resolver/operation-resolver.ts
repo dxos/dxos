@@ -144,22 +144,23 @@ export default Capability.makeModule(
         operation: Common.LayoutOperation.Open,
         handler: Effect.fnUntraced(function* (input) {
           const id = input.subject[0];
-          const { variant } = parseEntryId(id);
+          const { id: primaryId, variant } = parseEntryId(id);
+          const state = getState();
 
-          if (variant) {
-            // It's a companion - store the variant preference and open drawer.
+          // Only treat as companion when opening a variant of the current workspace/active (e.g. object~comments).
+          // IDs like settings~spaceId are alternate-tree nodes and should navigate main content, not open the drawer.
+          // TODO(wittjosiah): Factor out the change-companion operation from deck to a common layout operation.
+          const isCompanionOfCurrent = variant && (primaryId === state.workspace || primaryId === state.active);
+          if (isCompanionOfCurrent) {
             updateState((state) => ({
               ...state,
               companionVariant: variant,
-              // Open drawer if closed, otherwise preserve current state (expanded/full).
-              drawerState: state.drawerState === 'closed' || !state.drawerState ? 'expanded' : state.drawerState,
+              drawerState: state.drawerState === 'closed' || !state.drawerState ? 'open' : state.drawerState,
             }));
           } else {
-            // Regular navigation - update active and history.
+            // Regular navigation - update active and history (use full id for alternate-tree nodes).
             updateState((state) => {
-              // Push current active to history if it exists.
               const newHistory = state.active ? [...state.history, state.active] : state.history;
-              // Limit history length to prevent memory issues.
               const trimmedHistory =
                 newHistory.length > MAX_HISTORY_LENGTH ? newHistory.slice(-MAX_HISTORY_LENGTH) : newHistory;
               return {

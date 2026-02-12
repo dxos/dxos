@@ -1,7 +1,6 @@
 layer: library
 language: typescript
 tags:
-  - e2e
   - ts-build
   - ts-test
   - typedoc
@@ -21,3 +20,4 @@ tasks:
   test:
     inputs:
       - .storybook/*
+      - /tools/storybook-react/.storybook/main.ts

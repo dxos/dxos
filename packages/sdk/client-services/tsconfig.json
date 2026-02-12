@@ -83,9 +83,6 @@
       "path": "../../core/echo/feed"
     },
     {
-      "path": "../../core/echo/indexing"
-    },
-    {
       "path": "../../core/halo/credentials"
     },
     {

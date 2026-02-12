@@ -8,7 +8,6 @@ import { sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { AutomergeHost, DataServiceImpl, SpaceStateManager, createIdFromSpaceKey } from '@dxos/echo-pipeline';
 import { type DatabaseDirectory, SpaceDocVersion } from '@dxos/echo-protocol';
-import { IndexMetadataStore } from '@dxos/indexing';
 import { ObjectId, PublicKey, SpaceId } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { openAndClose } from '@dxos/test-utils';
@@ -87,7 +86,6 @@ describe('AutomergeDocumentLoader', () => {
 
     const host = new AutomergeHost({
       db: level,
-      indexMetadataStore: new IndexMetadataStore({ db: level.sublevel('index-metadata') }),
     });
     await openAndClose(host);
     const dataService = new DataServiceImpl({

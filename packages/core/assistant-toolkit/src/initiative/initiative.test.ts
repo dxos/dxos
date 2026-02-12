@@ -17,13 +17,13 @@ import { FunctionDefinition, QueueService, Trigger } from '@dxos/functions';
 import { TriggerDispatcher } from '@dxos/functions-runtime';
 import { invariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
+import { MarkdownBlueprint } from '@dxos/plugin-markdown/blueprints';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { Text } from '@dxos/schema';
 import { Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { MarkdownBlueprint } from '../blueprints';
-import * as Chat from '../chat/Chat';
+import { Chat } from '../chat';
 import { Document } from '../functions';
 
 import { agent } from './functions';
@@ -48,20 +48,24 @@ const TestLayer = AssistantTestLayerWithTriggers({
 });
 
 const SYSTEM = trim`
-  If you do not have tools to complete the task, inform the user. DO NOT PRETEND TO DO SOMETHING YOU CAN'T DO.
+  If you do not have tools to complete the task, inform the user.
+  DO NOT PRETEND TO DO SOMETHING YOU CAN'T DO.
 `;
 
-describe.skip('Initiative', () => {
+describe.runIf(TestHelpers.tagEnabled('flaky'))('Initiative', () => {
   it.scoped(
     'shopping list',
     Effect.fnUntraced(
       function* (_) {
         const initiative = yield* Database.add(
-          yield* Initiative.makeInitialized({
-            name: 'Shopping list',
-            spec: 'Keep a shopping list of items to buy.',
-            blueprints: [Ref.make(MarkdownBlueprint)],
-          }),
+          yield* Initiative.makeInitialized(
+            {
+              name: 'Shopping list',
+              spec: 'Keep a shopping list of items to buy.',
+              blueprints: [Ref.make(MarkdownBlueprint.make())],
+            },
+            Initiative.makeBlueprint(),
+          ),
         );
         const chatQueue = initiative.chat?.target?.queue?.target as any;
         invariant(chatQueue, 'Initiative chat queue not found.');
@@ -87,21 +91,24 @@ describe.skip('Initiative', () => {
     Effect.fnUntraced(
       function* (_) {
         const initiative = yield* Database.add(
-          yield* Initiative.makeInitialized({
-            name: 'Expense tracking',
-            spec: trim`
-              Keep a list of expenses in a markdown document (create artifact "Expenses").
-              Process incoming emails, add the relevant ones to the list.
+          yield* Initiative.makeInitialized(
+            {
+              name: 'Expense tracking',
+              spec: trim`
+                Keep a list of expenses in a markdown document (create artifact "Expenses").
+                Process incoming emails, add the relevant ones to the list.
 
-              Format:
+                Format:
 
-              ## Expences
+                ## Expences
 
-              - Flight to London (2026-02-01): £100
-              - Hotel in London (2026-02-01): £100
-            `,
-            blueprints: [Ref.make(MarkdownBlueprint)],
-          }),
+                - Flight to London (2026-02-01): £100
+                - Hotel in London (2026-02-01): £100
+              `,
+              blueprints: [Ref.make(MarkdownBlueprint.make())],
+            },
+            Initiative.makeBlueprint(),
+          ),
         );
         yield* Database.flush({ indexes: true });
 

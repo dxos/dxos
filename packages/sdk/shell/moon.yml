@@ -1,7 +1,6 @@
 layer: library
 language: typescript
 tags:
-  - e2e
   - ts-build
   - ts-test
   - vite
@@ -20,4 +19,5 @@ tasks:
   test:
     inputs:
       - .storybook/*
+      - /tools/storybook-react/.storybook/main.ts
       - vite.config.ts

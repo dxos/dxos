@@ -3,6 +3,6 @@
 //
 
 export { Initiative } from './Initiative';
-export { makeInitialized } from './util';
+export { makeInitialized, resetChatHistory } from './util';
 export { getFunctions, makeBlueprint } from './blueprint';
 export * from './functions';

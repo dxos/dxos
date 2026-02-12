@@ -67,7 +67,6 @@ export type ServiceContextRuntimeProps = Pick<
     invitationConnectionDefaultProps?: InvitationConnectionProps;
     disableP2pReplication?: boolean;
     enableVectorIndexing?: boolean;
-    enableSqlite?: boolean;
     enableLocalQueues?: boolean;
   };
 /**
@@ -170,10 +169,6 @@ export class ServiceContext extends Resource {
       kv: this.level,
       peerIdProvider: () => this.identityManager.identity?.deviceKey?.toHex(),
       getSpaceKeyByRootDocumentId: (documentId) => this.spaceManager.findSpaceByRootDocumentId(documentId)?.key,
-      indexing: {
-        vector: this._runtimeProps?.enableVectorIndexing,
-        sqlIndex: this._runtimeProps?.enableSqlite,
-      },
       runtime: this._runtime,
       localQueues: this._runtimeProps?.enableLocalQueues,
     });

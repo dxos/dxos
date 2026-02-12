@@ -17,7 +17,7 @@ import {
   HasSubject,
   Organization,
   Person,
-  Project,
+  Pipeline,
   Task,
 } from '@dxos/types';
 
@@ -45,7 +45,7 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
       HasSubject.HasSubject,
       Organization.Organization,
       Person.Person,
-      Project.Project,
+      Pipeline.Pipeline,
       Tag.Tag,
       Task.Task,
     ],
@@ -59,19 +59,25 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
       },
     },
   }),
-  Plugin.addModule(({ invitationUrl = 'http://localhost:5173', invitationProp = 'spaceInvitationCode' }) => {
-    const createInvitationUrl = (invitationCode: string) => {
-      const baseUrl = new URL(invitationUrl);
-      baseUrl.searchParams.set(invitationProp, invitationCode);
-      return baseUrl.toString();
-    };
+  Plugin.addModule(
+    ({
+      shareableLinkOrigin = 'http://localhost:5173',
+      invitationPath = '/',
+      invitationProp = 'spaceInvitationCode',
+    }) => {
+      const createInvitationUrl = (invitationCode: string) => {
+        const baseUrl = new URL(invitationPath || '/', shareableLinkOrigin);
+        baseUrl.searchParams.set(invitationProp, invitationCode);
+        return baseUrl.toString();
+      };
 
-    return {
-      id: Capability.getModuleTag(OperationResolver),
-      activatesOn: Common.ActivationEvent.SetupOperationResolver,
-      activate: () => OperationResolver({ createInvitationUrl, observability: false }),
-    };
-  }),
+      return {
+        id: Capability.getModuleTag(OperationResolver),
+        activatesOn: Common.ActivationEvent.SetupOperationResolver,
+        activate: () => OperationResolver({ createInvitationUrl, observability: false }),
+      };
+    },
+  ),
   Plugin.addModule({
     activatesOn: ClientEvents.IdentityCreated,
     activatesAfter: [SpaceEvents.DefaultSpaceReady],
