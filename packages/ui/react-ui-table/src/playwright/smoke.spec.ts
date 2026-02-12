@@ -160,6 +160,35 @@ test.describe('Table', () => {
     await page.close();
   });
 
+  test('add row and edit cell', async ({ browser, browserName }) => {
+    test.skip(browserName === 'webkit');
+    test.skip(browserName === 'firefox');
+    const { page } = await setupPage(browser, { url: storyUrl });
+    const table = new TableManager(page);
+
+    await table.grid.ready();
+
+    // Click the CTA row at the bottom to add a new row.
+    await table.grid.cell(0, 0, 'frozenRowsEnd').click();
+
+    // All schema fields are optional so the row is added directly to the grid (not as a draft).
+    const newCell = table.grid.cell(0, 10, 'grid');
+    await newCell.waitFor({ state: 'visible' });
+
+    // Focus should already be on the new row; engage edit mode.
+    await page.keyboard.press('Enter');
+    await page.getByTestId('grid.cell-editor').waitFor({ state: 'visible' });
+
+    // Type text and confirm.
+    const cellContent = 'New row content';
+    await page.keyboard.type(cellContent);
+    await page.keyboard.press('Enter');
+
+    // Assert the cell content is saved.
+    await expect(newCell).toHaveText(cellContent);
+    await page.close();
+  });
+
   // TODO(wittjosiah): Remove? Conflicts with story play function which is run as a unit test anyways.
   test.skip('extant relations work as expected', async ({ browser, browserName }) => {
     test.skip(browserName === 'webkit');
