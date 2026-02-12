@@ -58,13 +58,7 @@ export class TableManager {
     await this.page.getByTestId(TABLE_SELECTORS.addRow).click();
   }
 
-  public async addColumn({
-    label,
-    format,
-  }: {
-    label: string;
-    format?: string;
-  }): Promise<void> {
+  public async addColumn({ label, format }: { label: string; format?: string }): Promise<void> {
     await this.page.getByTestId(TABLE_SELECTORS.newColumnButton).click();
     if (format) {
       await this.page.getByRole('combobox').click();
