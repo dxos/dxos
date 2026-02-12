@@ -372,9 +372,6 @@ catalogs:
     '@opentui/solid':
       specifier: 0.1.61
       version: 0.1.61
-    '@orama/orama':
-      specifier: ^3.1.7
-      version: 3.1.7
     '@peermetrics/webrtc-stats':
       specifier: 5.7.1
       version: 5.7.1
@@ -584,7 +581,7 @@ catalogs:
       version: 3.13.18
     '@tauri-apps/api':
       specifier: ^2.8.0
-      version: 2.10.1
+      version: 2.8.0
     '@tauri-apps/cli':
       specifier: ^2.8.4
       version: 2.8.4
@@ -2667,7 +2664,7 @@ importers:
         version: 5.2.8
       '@tauri-apps/api':
         specifier: 'catalog:'
-        version: 2.10.1
+        version: 2.8.0
       '@tauri-apps/plugin-deep-link':
         specifier: 'catalog:'
         version: 2.4.7
@@ -4793,9 +4790,6 @@ importers:
         specifier: 'catalog:'
         version: 4.5.0
     devDependencies:
-      '@dxos/indexing':
-        specifier: workspace:*
-        version: link:../indexing
       '@dxos/random':
         specifier: workspace:*
         version: link:../../../common/random
@@ -4893,9 +4887,6 @@ importers:
       '@dxos/index-core':
         specifier: workspace:*
         version: link:../index-core
-      '@dxos/indexing':
-        specifier: workspace:*
-        version: link:../indexing
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant
@@ -5213,82 +5204,6 @@ importers:
       '@effect/sql-sqlite-node':
         specifier: 'catalog:'
         version: 0.49.1(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/sql@0.48.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
-
-  packages/core/echo/indexing:
-    dependencies:
-      '@automerge/automerge':
-        specifier: 3.2.3
-        version: 3.2.3
-      '@dxos/async':
-        specifier: workspace:*
-        version: link:../../../common/async
-      '@dxos/codec-protobuf':
-        specifier: workspace:*
-        version: link:../../../common/codec-protobuf
-      '@dxos/context':
-        specifier: workspace:*
-        version: link:../../../common/context
-      '@dxos/debug':
-        specifier: workspace:*
-        version: link:../../../common/debug
-      '@dxos/echo':
-        specifier: workspace:*
-        version: link:../echo
-      '@dxos/echo-protocol':
-        specifier: workspace:*
-        version: link:../echo-protocol
-      '@dxos/errors':
-        specifier: workspace:*
-        version: link:../../../common/errors
-      '@dxos/invariant':
-        specifier: workspace:*
-        version: link:../../../common/invariant
-      '@dxos/keys':
-        specifier: workspace:*
-        version: link:../../../common/keys
-      '@dxos/kv-store':
-        specifier: workspace:*
-        version: link:../../../common/kv-store
-      '@dxos/log':
-        specifier: workspace:*
-        version: link:../../../common/log
-      '@dxos/node-std':
-        specifier: workspace:*
-        version: link:../../../common/node-std
-      '@dxos/protocols':
-        specifier: workspace:*
-        version: link:../../protocols
-      '@dxos/random-access-storage':
-        specifier: workspace:*
-        version: link:../../../common/random-access-storage
-      '@dxos/tracing':
-        specifier: workspace:*
-        version: link:../../../common/tracing
-      '@dxos/util':
-        specifier: workspace:*
-        version: link:../../../common/util
-      '@orama/orama':
-        specifier: 'catalog:'
-        version: 3.1.7
-      '@xenova/transformers':
-        specifier: 'catalog:'
-        version: 2.17.2
-      effect:
-        specifier: 'catalog:'
-        version: 3.19.11
-      level-transcoder:
-        specifier: 'catalog:'
-        version: 1.0.1
-      lodash.isequal:
-        specifier: 'catalog:'
-        version: 4.5.0
-    devDependencies:
-      '@dxos/test-utils':
-        specifier: workspace:*
-        version: link:../../../common/test-utils
-      '@types/lodash.isequal':
-        specifier: 'catalog:'
-        version: 4.5.6
 
   packages/core/functions:
     dependencies:
@@ -10027,7 +9942,7 @@ importers:
         version: 0.93.6(effect@3.19.11)
       '@tauri-apps/api':
         specifier: 'catalog:'
-        version: 2.10.1
+        version: 2.8.0
       '@tauri-apps/plugin-os':
         specifier: 'catalog:'
         version: 2.3.1
@@ -12831,7 +12746,7 @@ importers:
         version: 0.86.0(@effect/cluster@0.55.0(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(@effect/sql@0.48.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(@effect/workflow@0.15.2(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11))(effect@3.19.11))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(@effect/sql@0.48.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
       '@tauri-apps/api':
         specifier: 'catalog:'
-        version: 2.10.1
+        version: 2.8.0
       '@tauri-apps/plugin-deep-link':
         specifier: 'catalog:'
         version: 2.4.7
@@ -13586,9 +13501,6 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
-      '@dxos/indexing':
-        specifier: workspace:*
-        version: link:../../core/echo/indexing
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -13776,9 +13688,6 @@ importers:
       '@dxos/feed-store':
         specifier: workspace:*
         version: link:../../common/feed-store
-      '@dxos/indexing':
-        specifier: workspace:*
-        version: link:../../core/echo/indexing
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -23394,10 +23303,6 @@ packages:
     peerDependencies:
       solid-js: ^1.9.9
 
-  '@orama/orama@3.1.7':
-    resolution: {integrity: sha512-6yB0117ZjsgNevZw3LP+bkrZa9mU/POPVaXgzMPOBbBc35w2P3R+1vMMhEfC06kYCpd5bf0jodBaTkYQW5TVeQ==}
-    engines: {node: '>= 20.0.0'}
-
   '@oslojs/encoding@1.1.0':
     resolution: {integrity: sha512-70wQhgYmndg4GCPxPPxPGevRKqTIJ2Nh4OkiMWmDAVYsTQ+Ta7Sq+rPevXyXGdzr30/qZBnyOalCszoMxlyldQ==}
 
@@ -26205,6 +26110,9 @@ packages:
 
   '@tauri-apps/api@2.10.1':
     resolution: {integrity: sha512-hKL/jWf293UDSUN09rR69hrToyIXBb8CjGaWC7gfinvnQrBVvnLr08FeFi38gxtugAVyVcTa5/FD/Xnkb1siBw==}
+
+  '@tauri-apps/api@2.8.0':
+    resolution: {integrity: sha512-ga7zdhbS2GXOMTIZRT0mYjKJtR9fivsXzsyq5U3vjDL0s6DTMwYRm0UHNjzTY5dh4+LSC68Sm/7WEiimbQNYlw==}
 
   '@tauri-apps/cli-darwin-arm64@2.8.4':
     resolution: {integrity: sha512-BKu8HRkYV01SMTa7r4fLx+wjgtRK8Vep7lmBdHDioP6b8XH3q2KgsAyPWfEZaZIkZ2LY4SqqGARaE9oilNe0oA==}
@@ -43564,8 +43472,6 @@ snapshots:
       - typescript
       - web-tree-sitter
 
-  '@orama/orama@3.1.7': {}
-
   '@oslojs/encoding@1.1.0': {}
 
   '@oxc-project/types@0.101.0': {}
@@ -46575,6 +46481,8 @@ snapshots:
 
   '@tauri-apps/api@2.10.1': {}
 
+  '@tauri-apps/api@2.8.0': {}
+
   '@tauri-apps/cli-darwin-arm64@2.8.4':
     optional: true
 
@@ -46632,23 +46540,23 @@ snapshots:
 
   '@tauri-apps/plugin-opener@2.5.3':
     dependencies:
-      '@tauri-apps/api': 2.10.1
+      '@tauri-apps/api': 2.8.0
 
   '@tauri-apps/plugin-os@2.3.1':
     dependencies:
-      '@tauri-apps/api': 2.10.1
+      '@tauri-apps/api': 2.8.0
 
   '@tauri-apps/plugin-process@2.3.0':
     dependencies:
-      '@tauri-apps/api': 2.10.1
+      '@tauri-apps/api': 2.8.0
 
   '@tauri-apps/plugin-shell@2.3.1':
     dependencies:
-      '@tauri-apps/api': 2.10.1
+      '@tauri-apps/api': 2.8.0
 
   '@tauri-apps/plugin-updater@2.9.0':
     dependencies:
-      '@tauri-apps/api': 2.10.1
+      '@tauri-apps/api': 2.8.0
 
   '@testing-library/dom@10.4.1':
     dependencies:
@@ -59476,7 +59384,7 @@ snapshots:
 
   tauri-plugin-web-auth-api@1.0.0:
     dependencies:
-      '@tauri-apps/api': 2.10.1
+      '@tauri-apps/api': 2.8.0
 
   temp-dir@2.0.0: {}
 

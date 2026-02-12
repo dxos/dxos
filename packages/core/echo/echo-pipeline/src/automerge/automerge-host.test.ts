@@ -8,7 +8,6 @@ import { type DocumentId, type Heads, generateAutomergeUrl, parseAutomergeUrl } 
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Context } from '@dxos/context';
-import { IndexMetadataStore } from '@dxos/indexing';
 import { PublicKey } from '@dxos/keys';
 import type { LevelDB } from '@dxos/kv-store';
 import { createTestLevel } from '@dxos/kv-store/testing';
@@ -164,7 +163,6 @@ describe('AutomergeHost', () => {
 const setupAutomergeHost = async ({ level }: { level: LevelDB }) => {
   const host = new AutomergeHost({
     db: level,
-    indexMetadataStore: new IndexMetadataStore({ db: level.sublevel('index-metadata') }),
   });
   await host.open();
   onTestFinished(async () => {
