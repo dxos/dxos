@@ -7,7 +7,7 @@ import { type DocHandle, type DocumentId } from '@automerge/automerge-repo';
 import type * as SqlClient from '@effect/sql/SqlClient';
 import * as Schema from 'effect/Schema';
 
-import { DeferredTask, scheduleMicroTask, synchronized } from '@dxos/async';
+import { AsyncJob, scheduleMicroTask, synchronized } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf/stream';
 import { Context, Resource } from '@dxos/context';
 import { raise } from '@dxos/debug';
@@ -64,11 +64,13 @@ export class QueryServiceImpl extends Resource implements QueryService {
   // TODO(dmaretskyi): We need to implement query deduping. Idle composer has 80 queries with only 10 being unique.
   private readonly _queries = new Set<ActiveQuery>();
 
-  private _updateQueries!: DeferredTask;
+  private readonly _updateQueries: AsyncJob;
 
   // TODO(burdon): OK for options, but not params. Pass separately and type readonly here.
   constructor(private readonly _params: QueryServiceProps) {
     super();
+
+    this._updateQueries = new AsyncJob(this._executeQueries.bind(this));
 
     trace.diagnostic({
       id: 'active-queries',
@@ -87,13 +89,12 @@ export class QueryServiceImpl extends Resource implements QueryService {
 
   override async _open(): Promise<void> {
     this._params.indexer.updated.on(this._ctx, () => this.invalidateQueries());
-
-    this._updateQueries = new DeferredTask(this._ctx, this._executeQueries.bind(this));
+    this._updateQueries.open(this._ctx);
   }
 
   @synchronized
   override async _close(): Promise<void> {
-    await this._updateQueries.join();
+    await this._updateQueries.close();
     await Promise.all(Array.from(this._queries).map((query) => query.close()));
   }
 

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { DeferredTask } from '@dxos/async';
+import { AsyncJob } from '@dxos/async';
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { type Database, Entity, Obj, type Ref } from '@dxos/echo';
@@ -34,7 +34,8 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
 
   public readonly updated = new Event();
 
-  private readonly _refreshTask = new DeferredTask(this._ctx, async () => {
+  // TODO(dmaretskyi): This task occasionally fails with "The database connection is not open" error in tests -- some issue with teardown ordering.
+  private readonly _refreshTask = new AsyncJob(async () => {
     const thisRefreshId = ++this._refreshId;
     let changed = false;
     try {
@@ -117,6 +118,7 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
     this._subspaceTag = subspaceTag ?? failedInvariant();
     this._spaceId = spaceId ?? failedInvariant();
     this._queueId = queueId ?? failedInvariant();
+    this._refreshTask.open(this._ctx);
   }
 
   toJSON() {
@@ -330,8 +332,8 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
   }
 
   async dispose() {
+    await this._refreshTask.close();
     await this._ctx.dispose();
-    await this._refreshTask.join();
   }
 }
 

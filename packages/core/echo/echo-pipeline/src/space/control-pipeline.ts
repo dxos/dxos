@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { DeferredTask, scheduleMicroTask, sleepWithContext, trackLeaks } from '@dxos/async';
+import { AsyncJob, scheduleMicroTask, sleepWithContext, trackLeaks } from '@dxos/async';
 import { Context } from '@dxos/context';
 import {
   type DelegateInvitationCredential,
@@ -65,7 +65,7 @@ export class ControlPipeline {
   @trace.metricsCounter()
   private _mutations = new TimeSeriesCounter();
 
-  private _snapshotTask = new DeferredTask(this._ctx, async () => {
+  private _snapshotTask = new AsyncJob(async () => {
     await sleepWithContext(this._ctx, CONTROL_PIPELINE_SNAPSHOT_DELAY);
     await this._saveSnapshot();
   });
@@ -129,6 +129,7 @@ export class ControlPipeline {
     }
 
     log('starting...');
+    this._snapshotTask.open(this._ctx);
     setTimeout(async () => {
       void this._consumePipeline(new Context());
     });
@@ -215,6 +216,7 @@ export class ControlPipeline {
 
   async stop(): Promise<void> {
     log('stopping...');
+    await this._snapshotTask.close();
     await this._ctx.dispose();
     await this._pipeline.stop();
     await this._saveTargetTimeframe(this._pipeline.state.timeframe);

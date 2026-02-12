@@ -5,7 +5,7 @@
 import { type AnyDocumentId, type AutomergeUrl, type DocHandle, type DocumentId } from '@automerge/automerge-repo';
 import type * as SqlClient from '@effect/sql/SqlClient';
 
-import { DeferredTask, sleep } from '@dxos/async';
+import { AsyncJob, sleep } from '@dxos/async';
 import { Context, LifecycleState, Resource } from '@dxos/context';
 import { todo } from '@dxos/debug';
 import { type DatabaseDirectory, SpaceDocVersion, createIdFromSpaceKey } from '@dxos/echo-protocol';
@@ -105,7 +105,7 @@ export class EchoHost extends Resource {
   private readonly _feedStore?: FeedStore;
   private readonly _queueDataSource?: QueueDataSource;
 
-  private _updateIndexes!: DeferredTask;
+  private readonly _updateIndexes: AsyncJob;
 
   private _queuesService: QueueService;
 
@@ -202,6 +202,8 @@ export class EchoHost extends Resource {
       },
     });
 
+    this._updateIndexes = new AsyncJob(this._runUpdateIndexes);
+
     trace.diagnostic({
       id: 'database-roots',
       name: 'Database Roots',
@@ -273,7 +275,7 @@ export class EchoHost extends Resource {
 
     if (this._indexConfig.sqlIndex) {
       await RuntimeProvider.runPromise(this._runtime)(this._indexer2.migrate());
-      this._updateIndexes = new DeferredTask(this._ctx, this._runUpdateIndexes);
+      this._updateIndexes.open(this._ctx);
     }
 
     this._spaceStateManager.spaceDocumentListUpdated.on(this._ctx, (e) => {
@@ -300,6 +302,7 @@ export class EchoHost extends Resource {
     await this._queryService.close(ctx);
     await this._spaceStateManager.close(ctx);
     await this._indexer.close(ctx);
+    await this._updateIndexes.close();
     await this._automergeHost.close();
   }
 

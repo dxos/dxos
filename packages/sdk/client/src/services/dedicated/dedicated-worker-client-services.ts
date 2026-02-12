@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { AsyncTask, Event, Trigger } from '@dxos/async';
+import { AsyncJob, Event, Trigger } from '@dxos/async';
 import { type ClientServices, type ClientServicesProvider, clientServiceBundle } from '@dxos/client-protocol';
 import { Config } from '@dxos/config';
 import { type Context, Resource } from '@dxos/context';
@@ -123,7 +123,7 @@ export class DedicatedWorkerClientServices extends Resource implements ClientSer
     });
   }
 
-  #connectTask = new AsyncTask(async () => {
+  #connectTask = new AsyncJob(async () => {
     const ctx = this._ctx.derive();
 
     const handleLeaderStopped = async () => {

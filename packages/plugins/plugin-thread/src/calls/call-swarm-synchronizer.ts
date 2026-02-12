@@ -4,7 +4,7 @@
 
 import md5Hex from 'md5-hex';
 
-import { DeferredTask, Event, scheduleTaskInterval, synchronized } from '@dxos/async';
+import { AsyncJob, Event, scheduleTaskInterval, synchronized } from '@dxos/async';
 import { type Identity } from '@dxos/client/halo';
 import { Context, Resource } from '@dxos/context';
 import { generateName } from '@dxos/display-name';
@@ -66,7 +66,7 @@ export class CallSwarmSynchronizer extends Resource {
   private readonly _state: CallState = { activities: {} };
   private readonly _networkService: NetworkService;
   private _lastSwarmEvent?: SwarmResponse = undefined;
-  private _reconcileSwarmStateTask?: DeferredTask = undefined;
+  private readonly _reconcileSwarmStateTask: AsyncJob;
 
   private _identityKey?: string = undefined;
   private _deviceKey?: string = undefined;
@@ -74,11 +74,19 @@ export class CallSwarmSynchronizer extends Resource {
 
   private _swarmCtx?: Context = undefined;
 
-  private _sendStateTask?: DeferredTask = undefined;
+  private readonly _sendStateTask: AsyncJob;
 
   constructor({ networkService }: CallSwarmSynchronizerProps) {
     super();
     this._networkService = networkService;
+
+    this._sendStateTask = new AsyncJob(async () => {
+      await this._sendState();
+    });
+
+    this._reconcileSwarmStateTask = new AsyncJob(async () => {
+      await this._reconcileSwarmState();
+    });
   }
 
   /**
@@ -157,18 +165,13 @@ export class CallSwarmSynchronizer extends Resource {
   }
 
   protected override async _open(): Promise<void> {
-    this._sendStateTask = new DeferredTask(this._ctx, async () => {
-      await this._sendState();
-    });
-
-    this._reconcileSwarmStateTask = new DeferredTask(this._ctx, async () => {
-      await this._reconcileSwarmState();
-    });
+    this._sendStateTask.open(this._ctx);
+    this._reconcileSwarmStateTask.open(this._ctx);
   }
 
   protected override async _close(): Promise<void> {
-    this._sendStateTask = undefined;
-    this._reconcileSwarmStateTask = undefined;
+    await this._sendStateTask.close();
+    await this._reconcileSwarmStateTask.close();
   }
 
   @synchronized
@@ -225,8 +228,8 @@ export class CallSwarmSynchronizer extends Resource {
    */
   private _notifyAndSchedule(): void {
     this.stateUpdated.emit(this._state);
-    if (this._state.joined) {
-      this._sendStateTask?.schedule();
+    if (this._state.joined && this._sendStateTask.isOpen) {
+      this._sendStateTask.schedule();
     }
   }
 
@@ -265,7 +268,9 @@ export class CallSwarmSynchronizer extends Resource {
     }
 
     this._lastSwarmEvent = swarmEvent;
-    this._reconcileSwarmStateTask!.schedule();
+    if (this._reconcileSwarmStateTask.isOpen) {
+      this._reconcileSwarmStateTask.schedule();
+    }
   }
 
   private async _reconcileSwarmState(): Promise<void> {
@@ -316,7 +321,11 @@ export class CallSwarmSynchronizer extends Resource {
     if (peers.some((peer) => peer.connectionState !== ConnectionState.CONNECTED)) {
       scheduleTaskInterval(
         this._ctx,
-        async () => this._reconcileSwarmStateTask!.schedule(),
+        async () => {
+          if (this._reconcileSwarmStateTask.isOpen) {
+            this._reconcileSwarmStateTask.schedule();
+          }
+        },
         Math.min(DISCONNECTED_ABRUPT_TIMEOUT / 2, 1000),
       );
     }

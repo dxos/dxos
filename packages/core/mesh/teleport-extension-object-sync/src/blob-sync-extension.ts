@@ -4,7 +4,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DeferredTask, sleep, synchronized } from '@dxos/async';
+import { AsyncJob, sleep, synchronized } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -37,7 +37,7 @@ export class BlobSyncExtension extends RpcExtension<ServiceBundle, ServiceBundle
   private _lastWantListUpdate = 0;
   private _localWantList: WantList = { blobs: [] };
 
-  private readonly _updateWantList = new DeferredTask(this._ctx, async () => {
+  private readonly _updateWantList = new AsyncJob(async () => {
     // Throttle want list updates.
     if (this._lastWantListUpdate + MIN_WANT_LIST_UPDATE_INTERVAL > Date.now()) {
       await sleep(this._lastWantListUpdate + MIN_WANT_LIST_UPDATE_INTERVAL - Date.now());
@@ -53,7 +53,7 @@ export class BlobSyncExtension extends RpcExtension<ServiceBundle, ServiceBundle
 
   private _currentUploads = 0;
 
-  private readonly _upload = new DeferredTask(this._ctx, async () => {
+  private readonly _upload = new AsyncJob(async () => {
     if (this._currentUploads >= MAX_CONCURRENT_UPLOADS) {
       return;
     }
@@ -106,12 +106,16 @@ export class BlobSyncExtension extends RpcExtension<ServiceBundle, ServiceBundle
 
   override async onOpen(context: ExtensionContext): Promise<void> {
     log('open');
+    this._updateWantList.open(this._ctx);
+    this._upload.open(this._ctx);
     await super.onOpen(context);
     await this._params.onOpen();
   }
 
   override async onClose(err?: Error | undefined): Promise<void> {
     log('close');
+    await this._updateWantList.close();
+    await this._upload.close();
     await this._ctx.dispose();
     await this._params.onClose();
     await super.onClose(err);
@@ -119,6 +123,8 @@ export class BlobSyncExtension extends RpcExtension<ServiceBundle, ServiceBundle
 
   override async onAbort(err?: Error | undefined): Promise<void> {
     log('abort');
+    await this._updateWantList.close();
+    await this._upload.close();
     await this._ctx.dispose();
     await this._params.onAbort();
     await super.onAbort(err);
