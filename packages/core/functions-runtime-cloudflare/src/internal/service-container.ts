@@ -57,7 +57,12 @@ export class ServiceContainer {
 
   async queryQueue(queue: DXN): Promise<QueryResult> {
     const { spaceId } = queue.asQueueDXN() ?? {};
-    using result = (await this._queueService.query({}, queue.toString(), { spaceId: spaceId! } as never)) as any;
+    using result = (await this._queueService.query({}, queue.toString(), { spaceId: spaceId! } as never)) as {
+      objects: unknown[];
+      nextCursor?: string | null;
+      prevCursor?: string | null;
+      [Symbol.dispose](): void;
+    };
     // Copy returned object to avoid hanging RPC stub
     // See https://developers.cloudflare.com/workers/runtime-apis/rpc/lifecycle/
     return {

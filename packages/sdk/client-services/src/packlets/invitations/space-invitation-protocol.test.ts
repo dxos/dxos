@@ -4,7 +4,7 @@
 
 import { describe, expect, onTestFinished, test } from 'vitest';
 
-import { Trigger, chain } from '@dxos/async';
+import { type MulticastObservable, Trigger, chain } from '@dxos/async';
 import { raise } from '@dxos/debug';
 import { AlreadyJoinedError } from '@dxos/protocols';
 import { type Invitation, Invitation_Kind, Invitation_State } from '@dxos/protocols/buf/dxos/client/invitation_pb';
@@ -165,7 +165,7 @@ describe('services/space-invitations-protocol', () => {
 
     const guestTimeout = new Trigger();
     const guestInvitation = await acceptInvitation(guest, invitation as never);
-    (guestInvitation as any).subscribe((invitation: Invitation) => {
+    (guestInvitation as never as MulticastObservable<Invitation>).subscribe((invitation: Invitation) => {
       if (invitation.state === Invitation_State.TIMEOUT) {
         guestTimeout.wake();
       }

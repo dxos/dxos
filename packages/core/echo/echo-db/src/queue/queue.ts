@@ -198,7 +198,7 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
             subspaceTag: this._subspaceTag,
             spaceId: this._spaceId,
             queueId: this._queueId,
-            objects: json.slice(i, i + QUEUE_APPEND_BATCH_SIZE) as any,
+            objects: json.slice(i, i + QUEUE_APPEND_BATCH_SIZE) as never,
           }),
         );
       }

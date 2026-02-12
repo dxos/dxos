@@ -85,10 +85,10 @@ export const createGuardedInvitationState = (
   };
 };
 
-const logStateUpdate = (invitation: Invitation, actor: any, newState: Invitation_State, error?: Error) => {
+const logStateUpdate = (invitation: Invitation, actor: unknown, newState: Invitation_State, error?: Error) => {
   const logContext = {
     invitationId: invitation.invitationId,
-    actor: actor?.constructor.name,
+    actor: actor != null && typeof actor === 'object' ? (actor as { constructor: { name: string } }).constructor?.name : undefined,
     newState: stateToString(newState),
     oldState: stateToString(invitation.state),
     error: error?.message,

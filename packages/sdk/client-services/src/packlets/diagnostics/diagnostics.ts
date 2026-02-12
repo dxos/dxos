@@ -177,7 +177,7 @@ const getSpaceStats = async (space: DataSpace): Promise<SpaceStats> => {
     epochs: space.inner.spaceState.credentials
       .filter(credentialTypeFilter('dxos.halo.credentials.Epoch'))
       .map((credential) => ({
-        ...(credential.subject.assertion as any),
+        ...(credential.subject.assertion as unknown as Record<string, unknown>),
         id: credential.id,
       })) as never,
 

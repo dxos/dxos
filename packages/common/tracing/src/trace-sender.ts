@@ -6,7 +6,14 @@ import { Stream } from '@dxos/codec-protobuf/stream';
 import { type Client } from '@dxos/protocols';
 import { create } from '@dxos/protocols/buf';
 import { type LogEntry } from '@dxos/protocols/buf/dxos/client/logging_pb';
-import { type StreamTraceEvent, StreamTraceEventSchema } from '@dxos/protocols/buf/dxos/tracing_pb';
+import {
+  type StreamTraceEvent,
+  StreamTraceEventSchema,
+  type StreamTraceEvent_LogAdded,
+  type StreamTraceEvent_ResourceAdded,
+  type StreamTraceEvent_ResourceRemoved,
+  type StreamTraceEvent_SpanAdded,
+} from '@dxos/protocols/buf/dxos/tracing_pb';
 
 import { type TraceProcessor, type TraceSubscription } from './trace-processor';
 
@@ -16,23 +23,23 @@ export class TraceSender implements Client.TracingService {
   streamTrace(): Stream<StreamTraceEvent> {
     return new Stream(({ ctx, next }) => {
       const flushEvents = (resources: Set<number> | null, spans: Set<number> | null, logs: LogEntry[] | null) => {
-        const resourceAdded: Array<{ resource: any }> = [];
-        const resourceRemoved: Array<{ id: number }> = [];
-        const spanAdded: Array<{ span: any }> = [];
-        const logAdded: Array<{ log: any }> = [];
+        const resourceAdded: StreamTraceEvent_ResourceAdded[] = [];
+        const resourceRemoved: StreamTraceEvent_ResourceRemoved[] = [];
+        const spanAdded: StreamTraceEvent_SpanAdded[] = [];
+        const logAdded: StreamTraceEvent_LogAdded[] = [];
 
         if (resources) {
           for (const id of resources) {
             const entry = this._traceProcessor.resources.get(id);
             if (entry) {
-              resourceAdded.push({ resource: entry.data });
+              resourceAdded.push({ resource: entry.data } as never);
             } else {
-              resourceRemoved.push({ id });
+              resourceRemoved.push({ id } as never);
             }
           }
         } else {
           for (const entry of this._traceProcessor.resources.values()) {
-            resourceAdded.push({ resource: entry.data });
+            resourceAdded.push({ resource: entry.data } as never);
           }
         }
 
@@ -40,22 +47,22 @@ export class TraceSender implements Client.TracingService {
           for (const id of spans) {
             const span = this._traceProcessor.spans.get(id);
             if (span) {
-              spanAdded.push({ span });
+              spanAdded.push({ span } as never);
             }
           }
         } else {
           for (const span of this._traceProcessor.spans.values()) {
-            spanAdded.push({ span });
+            spanAdded.push({ span } as never);
           }
         }
 
         if (logs) {
           for (const log of logs) {
-            logAdded.push({ log });
+            logAdded.push({ log } as never);
           }
         } else {
           for (const log of this._traceProcessor.logs) {
-            logAdded.push({ log });
+            logAdded.push({ log } as never);
           }
         }
 
@@ -66,7 +73,7 @@ export class TraceSender implements Client.TracingService {
               resourceRemoved,
               spanAdded,
               logAdded,
-            } as any),
+            }),
           );
         }
       };

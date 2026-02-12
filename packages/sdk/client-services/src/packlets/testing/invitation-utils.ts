@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Trigger } from '@dxos/async';
+import { type MulticastObservable, Trigger } from '@dxos/async';
 import { type AuthenticatingInvitation, type CancellableInvitation, InvitationEncoder } from '@dxos/client-protocol';
 import { invariant } from '@dxos/invariant';
 import {
@@ -76,7 +76,7 @@ export const performInvitation = ({
   const authCode = new Trigger<string>();
 
   void createInvitation(host, options).then((hostObservable) => {
-    (hostObservable as any).subscribe(
+    (hostObservable as never as MulticastObservable<Invitation>).subscribe(
       async (hostInvitation: Invitation) => {
         switch (hostInvitation.state) {
           case Invitation_State.CONNECTING: {
@@ -93,7 +93,7 @@ export const performInvitation = ({
             }
 
             const guestObservable = acceptInvitation(guest, hostInvitation, guestDeviceProfile);
-            (guestObservable as any).subscribe(
+            (guestObservable as never as MulticastObservable<Invitation>).subscribe(
               async (guestInvitation: Invitation) => {
                 switch (guestInvitation.state) {
                   case Invitation_State.CONNECTING: {
