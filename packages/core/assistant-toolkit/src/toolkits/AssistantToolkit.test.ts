@@ -15,6 +15,7 @@ import {
   makeToolExecutionServiceFromFunctions,
   makeToolResolverFromFunctions,
 } from '@dxos/assistant';
+import { waitForCondition } from '@dxos/async';
 import { Blueprint, Template } from '@dxos/blueprints';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
@@ -39,7 +40,6 @@ const TestLayer = Layer.mergeAll(
       TestAiService(),
       TestDatabaseLayer({
         spaceKey: 'fixed',
-        indexing: { vector: true },
         types: [Blueprint.Blueprint, Message.Message, Person.Person, Organization.Organization],
       }),
       CredentialsService.configuredLayer([]),
@@ -82,6 +82,13 @@ describe('AssistantToolkit', () => {
           prompt: `Add to context: ${JSON.stringify(organization)}`,
           observer,
         });
+
+        yield* Effect.promise(() =>
+          waitForCondition({
+            condition: () =>
+              conversation.context.getBlueprints().length > 0 && conversation.context.getObjects().length > 0,
+          }),
+        );
 
         expect(conversation.context.getBlueprints()).toEqual([blueprint]);
         expect(conversation.context.getObjects()).toEqual([organization]);

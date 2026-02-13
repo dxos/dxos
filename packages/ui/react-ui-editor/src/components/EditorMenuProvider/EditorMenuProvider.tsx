@@ -78,10 +78,8 @@ export const EditorMenuProvider = ({
       root,
       DX_ANCHOR_ACTIVATE as any,
       (event: DxAnchorActivate) => {
-        const { trigger, refId } = event;
-
-        // If this has a `refId`, then it’s probably a URL or DXN and out of scope for this component.
-        if (!refId) {
+        const { trigger, dxn } = event;
+        if (!dxn) {
           triggerRef.current = trigger as HTMLButtonElement;
           if (onActivate) {
             onActivate({ view: viewRef.current!, trigger: trigger.getAttribute('data-trigger') ?? undefined });

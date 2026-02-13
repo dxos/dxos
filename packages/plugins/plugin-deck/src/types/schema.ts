@@ -90,6 +90,7 @@ export const DeckStateSchema = Schema.Struct({
 }).pipe(Schema.mutable);
 export type DeckStateProps = Schema.Schema.Type<typeof DeckStateSchema>;
 
+// TODO(burdon): Factor out state (in common with other layouts?)
 // Transient/ephemeral plugin state (not persisted).
 export const DeckEphemeralStateSchema = Schema.Struct({
   dialogOpen: Schema.Boolean,
@@ -106,6 +107,8 @@ export const DeckEphemeralStateSchema = Schema.Struct({
   popoverAnchorId: Schema.optional(Schema.String),
   popoverKind: Schema.optional(Schema.Literal('base', 'card')),
   popoverTitle: Schema.optional(Common.Label.annotations({ description: 'The title of the popover.' })),
+  /** Ref of the subject to be passed to the popover Surface. */
+  popoverContentRef: Schema.optional(Schema.String),
   /** Data to be passed to the popover Surface. */
   popoverContent: Schema.optional(Schema.Any),
 

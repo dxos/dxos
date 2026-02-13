@@ -8,6 +8,7 @@ import * as SchemaAST from 'effect/SchemaAST';
 import { invariant } from '@dxos/invariant';
 import { type ObjectId } from '@dxos/keys';
 
+import type * as Type from '../../Type';
 import { type SchemaMeta, SchemaMetaSymbol, type TypeAnnotation, getTypeAnnotation } from '../annotations';
 import { type JsonSchemaType, toEffectSchema, toJsonSchema } from '../json-schema';
 import { type TypedObject, type TypedObjectPrototype, getSnapshot } from '../object';
@@ -304,8 +305,8 @@ export class EchoSchema<A = any, I = any> extends EchoSchemaConstructor() implem
   /**
    * Reference to the underlying persistent schema object.
    */
-  public get persistentSchema(): PersistentSchema {
-    return this._persistentSchema;
+  public get persistentSchema(): Type.PersistentType {
+    return this._persistentSchema as Type.PersistentType;
   }
 
   public getProperties(): SchemaAST.PropertySignature[] {

@@ -3,5 +3,5 @@
 //
 
 export * from './model';
-export * from './schema';
+export * as CanvasBoard from './schema';
 export * from './shapes';

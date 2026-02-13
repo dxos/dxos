@@ -37,7 +37,7 @@ export type MailboxArticleProps = SurfaceComponentProps<
   }
 >;
 
-export const MailboxArticle = ({ role, subject: mailbox, filter: filterProp, attendableId }: MailboxArticleProps) => {
+export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendableId }: MailboxArticleProps) => {
   const { t } = useTranslation(meta.id);
   const id = attendableId ?? Obj.getDXN(mailbox).toString();
   const { invokePromise } = useOperationInvoker();
