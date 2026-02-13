@@ -4,11 +4,14 @@
 
 import { inspect } from 'node:util';
 
-import { type ContentBlock, type Message } from '@dxos/types';
+import type * as Tool from '@effect/ai/Tool';
 import type * as Toolkit from '@effect/ai/Toolkit';
-import { Context, Schema } from 'effect';
+import * as Context from 'effect/Context';
+import * as Schema from 'effect/Schema';
+
+import { type ContentBlock, type Message } from '@dxos/types';
+
 import { ToolFormatter } from '../ToolFormatter';
-import type { Tool } from '@effect/ai';
 
 type Mode = 'text' | 'json';
 
@@ -88,7 +91,7 @@ export class ConsolePrinter {
               }`,
             );
             break;
-          case 'toolCall':
+          case 'toolCall': {
             const formatter = this.#getToolFormmatter(content.name);
             const tool = this.#getTool(content.name);
 
@@ -107,6 +110,7 @@ export class ConsolePrinter {
             }
             this.log(`${prefix}⚙️ [Tool Use] ${content.name} ${payload}`);
             break;
+          }
           case 'toolResult': {
             if (content.error) {
               this.log(`${prefix}⚠️ [Tool Error] ${content.name} ${content.error}`);

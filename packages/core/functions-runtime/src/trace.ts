@@ -319,7 +319,8 @@ interface PrettyConsoleTracerOptions {
 }
 
 class PrettyConsoleTracer implements Context.Tag.Service<TracingService> {
-  #options: PrettyConsoleTracerOptions;
+  // TODO(dmaretskyi): Use options for toolkit-aware tracing.
+  #options: PrettyConsoleTracerOptions; // eslint-disable-line no-unused-private-class-members
 
   constructor(options: PrettyConsoleTracerOptions = {}) {
     this.#options = options;

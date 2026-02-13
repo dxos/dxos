@@ -1,12 +1,17 @@
-import { ObjectId } from '@dxos/keys';
-import { AssistantTestLayer } from '@dxos/assistant/testing';
-import { describe } from 'node:test';
-import { it } from '@effect/vitest';
-import { Effect } from 'effect';
-import { TestHelpers } from '@dxos/effect/testing';
-import { AiSession, GenericToolkit } from '@dxos/assistant';
-import * as WebToolkit from './WebToolkit';
+//
+// Copyright 2026 DXOS.org
+//
+
+import { describe, it } from '@effect/vitest';
+import * as Effect from 'effect/Effect';
+
 import { AiService } from '@dxos/ai';
+import { AiSession, GenericToolkit } from '@dxos/assistant';
+import { AssistantTestLayer } from '@dxos/assistant/testing';
+import { TestHelpers } from '@dxos/effect/testing';
+import { ObjectId } from '@dxos/keys';
+
+import * as WebToolkit from './WebToolkit';
 
 ObjectId.dangerouslyDisableRandomness();
 

@@ -3,15 +3,13 @@
 //
 
 import { AiSession } from '@dxos/assistant';
-import { Effect } from 'effect';
-import { Message } from '@dxos/types';
+import { type Message } from '@dxos/types';
 
 export class PlanningAgent {
-  #session = new AiSession();
+  // TODO(dmaretskyi): Wire up session and history.
+  #session = new AiSession(); // eslint-disable-line no-unused-private-class-members
 
-  #history: Message.Message[] = [];
+  #history: Message.Message[] = []; // eslint-disable-line no-unused-private-class-members
 
-  run(prompt: string) {
-    
-  }
+  run(_prompt: string) {}
 }

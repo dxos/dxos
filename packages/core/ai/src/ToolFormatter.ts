@@ -1,6 +1,11 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import type * as Tool from '@effect/ai/Tool';
 import * as Context from 'effect/Context';
-import * as Tool from '@effect/ai/Tool';
-import type { Schema } from 'effect';
+import type * as Schema from 'effect/Schema';
+
 import { dbg } from '@dxos/log';
 
 export interface FormattingOptions<Tool extends Tool.Any> {

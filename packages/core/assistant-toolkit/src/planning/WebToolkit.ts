@@ -2,13 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Tool from '@effect/ai/Tool';
 import * as Toolkit from '@effect/ai/Toolkit';
 import * as AnthropicTool from '@effect/ai-anthropic/AnthropicTool';
-import * as Schema from 'effect/Schema';
-import * as Tool from '@effect/ai/Tool';
 import * as Effect from 'effect/Effect';
-import { ToolFormatter } from '@dxos/ai';
-import { Struct } from 'effect';
+import * as Schema from 'effect/Schema';
 
 export const WebToolkit = Toolkit.make(
   AnthropicTool.WebSearch_20250305({})

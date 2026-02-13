@@ -138,6 +138,7 @@ export class AiSession {
 
         // Execute the stream request.
         // logDump('prompt', Prompt.Prompt.pipe(Schema.encodeSync)(prompt));
+        // eslint-disable-next-line no-console
         console.time('streamText');
         const blocks = yield* LanguageModel.streamText({
           prompt,
@@ -154,6 +155,7 @@ export class AiSession {
           Stream.runCollect,
           Effect.map(Chunk.toArray),
         );
+        // eslint-disable-next-line no-console
         console.timeEnd('streamText');
 
         // log('blocks', { blocks });
