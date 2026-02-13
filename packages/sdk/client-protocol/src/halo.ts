@@ -4,7 +4,8 @@
 
 import { type MulticastObservable } from '@dxos/async';
 import { type PublicKey } from '@dxos/keys';
-import { type Contact, type Device, type Identity, type Invitation } from '@dxos/protocols/proto/dxos/client/services';
+import { type Invitation } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import { type Contact, type Device, type Identity } from '@dxos/protocols/proto/dxos/client/services';
 import {
   type Credential,
   type DeviceProfileDocument,

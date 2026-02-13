@@ -11,10 +11,10 @@ import { type EchoDatabase, type QueueFactory } from '@dxos/echo-db';
 import { type SpaceSyncState_PeerState } from '@dxos/protocols/buf/dxos/echo/service_pb';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { type Messenger } from '@dxos/protocols';
+import { type Invitation } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import {
   type Contact,
   type CreateEpochRequest,
-  type Invitation,
   type SpaceArchive,
   type Space as SpaceData,
   type SpaceMember,

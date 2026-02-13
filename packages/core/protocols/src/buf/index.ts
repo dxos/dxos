@@ -4,6 +4,8 @@
 
 import { create } from '@bufbuild/protobuf';
 import { EmptySchema } from '@bufbuild/protobuf/wkt';
+import { PublicKey } from '@dxos/keys';
+import * as KeysPb from './proto/gen/dxos/keys_pb';
 
 export * as buf from '@bufbuild/protobuf';
 export * as bufWkt from '@bufbuild/protobuf/wkt';
@@ -22,10 +24,27 @@ export {
   type Message,
   type MessageShape,
 } from '@bufbuild/protobuf';
-export { type Empty, EmptySchema, timestampFromDate, timestampMs, type Timestamp } from '@bufbuild/protobuf/wkt';
+export {
+  type Empty,
+  EmptySchema,
+  timestampDate,
+  timestampFromDate,
+  timestampMs,
+  type Timestamp,
+} from '@bufbuild/protobuf/wkt';
 export { type GenService, type GenServiceMethods } from '@bufbuild/protobuf/codegenv2';
 
 /** @deprecated Use `create` instead. */
 export { create as createBuf } from '@bufbuild/protobuf';
 
 export const EMPTY = create(EmptySchema);
+
+export const encodePublicKey = (publicKey: PublicKey): KeysPb.PublicKey => {
+  return create(KeysPb.PublicKeySchema, {
+    data: publicKey.asUint8Array(),
+  });
+};
+
+export const decodePublicKey = (publicKey: KeysPb.PublicKey): PublicKey => {
+  return new PublicKey(publicKey.data);
+};

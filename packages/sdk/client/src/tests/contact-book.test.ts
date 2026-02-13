@@ -8,7 +8,8 @@ import { waitForCondition } from '@dxos/async';
 import type { Space } from '@dxos/client-protocol';
 import { Obj } from '@dxos/echo';
 import { type PublicKey } from '@dxos/keys';
-import { type Contact, Invitation } from '@dxos/protocols/proto/dxos/client/services';
+import { Invitation_State } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import { type Contact } from '@dxos/protocols/proto/dxos/client/services';
 import { range } from '@dxos/util';
 
 import { Client } from '../client';
@@ -159,7 +160,7 @@ describe('ContactBook', () => {
 
   const inviteMember = async (host: Space, guest: Client) => {
     const [{ invitation: hostInvitation }] = await Promise.all(performInvitation({ host: host as never, guest: guest.spaces as never }));
-    expect(hostInvitation?.state).to.eq(Invitation.State.SUCCESS);
+    expect(hostInvitation?.state).to.eq(Invitation_State.SUCCESS);
   };
 
   const findSpace = (client: Client, spaceKey: PublicKey) => {

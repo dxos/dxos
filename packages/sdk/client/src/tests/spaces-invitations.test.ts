@@ -9,8 +9,12 @@ import { performInvitation } from '@dxos/client-services/testing';
 import { Context } from '@dxos/context';
 import { TestSchema } from '@dxos/echo/testing';
 import { log } from '@dxos/log';
-import { Invitation, QueryInvitationsResponse } from '@dxos/protocols/proto/dxos/client/services';
-import { type Invitation as BufInvitation } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import {
+  type Invitation,
+  Invitation_AuthMethod,
+  Invitation_State,
+  Invitation_Type,
+} from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import {
   type QueryInvitationsResponse as BufQueryInvitationsResponse,
   QueryInvitationsResponse_Action,
@@ -34,7 +38,7 @@ describe('Spaces/invitations', () => {
     );
     expect(guestInvitation?.spaceKey).to.deep.eq(space1.key);
     expect(hostInvitation?.spaceKey).to.deep.eq(guestInvitation?.spaceKey);
-    expect(hostInvitation?.state).to.eq(Invitation.State.SUCCESS);
+    expect(hostInvitation?.state).to.eq(Invitation_State.SUCCESS);
 
     {
       const space = await waitForSpace(client2, guestInvitation!.spaceKey! as never, { ready: true });
@@ -50,13 +54,13 @@ describe('Spaces/invitations', () => {
       // Alice invites Bob.
       const space = await alice.spaces.create();
       const [{ invitation: hostInvitation }] = await Promise.all(performInvitation({ host: space as never, guest: bob.spaces as never }));
-      expect(hostInvitation?.state).to.eq(Invitation.State.SUCCESS);
+      expect(hostInvitation?.state).to.eq(Invitation_State.SUCCESS);
 
       // Alice creates a delegated invitation.
       const bobInvitations = createInvitationTracker(bob);
       const observableInvitation = space.share({
-        type: Invitation.Type.DELEGATED,
-        authMethod: Invitation.AuthMethod.KNOWN_PUBLIC_KEY,
+        type: Invitation_Type.DELEGATED,
+        authMethod: Invitation_AuthMethod.KNOWN_PUBLIC_KEY,
         multiUse: false,
       });
       await bobInvitations.waitForInvitation(observableInvitation.get());
@@ -80,13 +84,13 @@ describe('Spaces/invitations', () => {
       // Alice invites Bob.
       const space = await alice.spaces.create();
       const [{ invitation: hostInvitation }] = await Promise.all(performInvitation({ host: space as never, guest: bob.spaces as never }));
-      expect(hostInvitation?.state).to.eq(Invitation.State.SUCCESS);
+      expect(hostInvitation?.state).to.eq(Invitation_State.SUCCESS);
 
       // Alice creates a delegated invitation.
       const bobInvitations = createInvitationTracker(bob);
       const observableInvitation = space.share({
-        type: Invitation.Type.DELEGATED,
-        authMethod: Invitation.AuthMethod.KNOWN_PUBLIC_KEY,
+        type: Invitation_Type.DELEGATED,
+        authMethod: Invitation_AuthMethod.KNOWN_PUBLIC_KEY,
         multiUse: true,
       });
       await bobInvitations.waitForInvitation(observableInvitation.get());
@@ -116,13 +120,13 @@ describe('Spaces/invitations', () => {
         return;
       }
       if (msg.action === QueryInvitationsResponse_Action.ADDED) {
-        msg.invitations?.forEach((inv: BufInvitation) => invitationIds.add(inv.invitationId));
+        msg.invitations?.forEach((inv: Invitation) => invitationIds.add(inv.invitationId));
         if (awaitedInvitationId != null && invitationIds.has(awaitedInvitationId)) {
           awaitedInvitationId = null;
           onInvitationAppeared.wake();
         }
       } else if (msg.action === QueryInvitationsResponse_Action.REMOVED) {
-        msg.invitations?.forEach((inv: BufInvitation) => invitationIds.delete(inv.invitationId));
+        msg.invitations?.forEach((inv: Invitation) => invitationIds.delete(inv.invitationId));
         if (invitationIds.size > 0) {
           invitationsEmpty.wake();
         }

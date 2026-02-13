@@ -33,8 +33,8 @@ import { PublicKey, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ApiError, trace as Trace } from '@dxos/protocols';
 import { EMPTY } from '@dxos/protocols/buf';
+import { type Invitation, Invitation_Kind } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import {
-  Invitation,
   type QuerySpacesResponse,
   type Space as SerializedSpace,
   type SpaceArchive,
@@ -156,7 +156,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
       this._serviceProvider.services.InvitationsService as never,
       this._serviceProvider.services.IdentityService as never,
       () => ({
-        kind: Invitation.Kind.SPACE,
+        kind: Invitation_Kind.SPACE,
       }),
     );
     await this._invitationProxy.open();
