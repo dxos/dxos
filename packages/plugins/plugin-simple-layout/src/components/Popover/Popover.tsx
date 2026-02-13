@@ -100,8 +100,9 @@ export const PopoverContent = () => {
         onEscapeKeyDown={handleInteractOutside}
       >
         <Popover.Viewport>
+          {state.popoverKind === 'base' && <Surface role='popover' data={state.popoverContent} limit={1} />}
           {state.popoverKind === 'card' && (
-            <Card.Root>
+            <Card.Root border={false} classNames='popover-card-max-width'>
               <Card.Toolbar>
                 {/* TODO(wittjosiah): Cleaner way to handle no drag handle in toolbar? */}
                 <span />
@@ -111,7 +112,6 @@ export const PopoverContent = () => {
               <Surface role='card--content' data={state.popoverContent} limit={1} />
             </Card.Root>
           )}
-          {state.popoverKind === 'base' && <Surface role='popover' data={state.popoverContent} limit={1} />}
         </Popover.Viewport>
         <Popover.Arrow />
       </Popover.Content>

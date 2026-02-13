@@ -112,7 +112,7 @@ type ContentProps = ThemedClassName<PropsWithChildren<{ role?: Role }>>;
 const Content = ({ classNames, children, role }: ContentProps) => {
   return (
     <Gameboard.Content
-      classNames={mx(classNames, role === 'card--popover' && 'size-container popover-square')}
+      classNames={mx(classNames, role === 'card--popover' && 'size-container card-square')}
       grow={!role || role === 'card--extrinsic'}
       contain={!role || role === 'card--extrinsic' || role === 'card--popover'}
     >

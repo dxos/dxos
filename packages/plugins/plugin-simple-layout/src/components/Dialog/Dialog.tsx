@@ -20,7 +20,7 @@ export const Dialog = () => {
     <DialogRoot
       modal={state.dialogBlockAlign !== 'end'}
       open={state.dialogOpen}
-      onOpenChange={(nextOpen) => updateState((s) => ({ ...s, dialogOpen: nextOpen }))}
+      onOpenChange={(nextOpen) => updateState((state) => ({ ...state, dialogOpen: nextOpen }))}
     >
       {state.dialogBlockAlign === 'end' ? (
         <Surface role='dialog' data={state.dialogContent} limit={1} fallback={ContentError} />

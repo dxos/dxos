@@ -145,7 +145,7 @@ export const RefField = (props: RefFieldProps) => {
           !item ? (
             <p className={mx(descriptionText, 'mbe-2')}>{t('empty readonly ref field label')}</p>
           ) : (
-            <DxAnchor key={item.id} refid={item.id} rootclassname='mie-1'>
+            <DxAnchor key={item.id} dxn={item.id} rootclassname='mie-1'>
               {item.label}
             </DxAnchor>
           )

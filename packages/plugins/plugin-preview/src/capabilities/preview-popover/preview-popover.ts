@@ -8,6 +8,7 @@ import { Capability, Common } from '@dxos/app-framework';
 import { addEventListener } from '@dxos/async';
 import { type Client } from '@dxos/client';
 import { type Space, parseId } from '@dxos/client/echo';
+import { Obj } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
@@ -19,10 +20,10 @@ const customEventOptions = { capture: true, passive: false };
 const handlePreviewLookup = async (
   client: Client,
   defaultSpace: Space,
-  { ref, label }: PreviewLinkRef,
+  { dxn, label }: PreviewLinkRef,
 ): Promise<PreviewLinkTarget | null> => {
   try {
-    const object = await defaultSpace.db.makeRef(DXN.parse(ref)).load();
+    const object = await defaultSpace.db.makeRef(DXN.parse(dxn)).load();
     return { label, object };
   } catch {
     return null;
@@ -35,7 +36,15 @@ export default Capability.makeModule(
     const capabilities = yield* Capability.Service;
 
     // TODO(wittjosiah): Factor out lookup handlers to other plugins to make not ECHO-specific.
-    const handleAnchorActivate = async ({ refId, label, trigger, kind, title, side, props }: DxAnchorActivate) => {
+    const handleAnchorActivate = async ({
+      dxn,
+      label,
+      trigger,
+      kind = 'card',
+      title: titleProp,
+      side,
+      props,
+    }: DxAnchorActivate) => {
       const { invokePromise } = capabilities.get(Common.Capability.OperationInvoker);
       const client = capabilities.get(ClientCapabilities.Client);
       const registry = capabilities.get(Common.Capability.AtomRegistry);
@@ -43,12 +52,15 @@ export default Capability.makeModule(
       const layout = registry.get(layoutAtom);
       const { spaceId } = parseId(layout.workspace);
       const space = (spaceId && client.spaces.get(spaceId)) ?? client.spaces.default;
-      const result = await handlePreviewLookup(client, space, { ref: refId, label });
+      const result = await handlePreviewLookup(client, space, { dxn, label });
       if (!result) {
         return;
       }
 
+      const title = titleProp ?? Obj.getLabel(result.object);
+
       await invokePromise(Common.LayoutOperation.UpdatePopover, {
+        subjectRef: dxn,
         subject: result.object,
         state: true,
         variant: 'virtual',
@@ -69,7 +81,7 @@ export default Capability.makeModule(
         customEventOptions,
       );
     } else {
-      log.warn('No default view found');
+      log.warn('no default view found');
     }
 
     return Capability.contributes(Common.Capability.Null, null, () => Effect.sync(() => cleanup?.()));

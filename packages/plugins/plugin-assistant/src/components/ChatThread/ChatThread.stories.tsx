@@ -69,7 +69,7 @@ const DefaultStory = ({ generator = [], delay = 0, wait, ...props }: StoryProps)
   }
 
   return (
-    <EditorPreviewProvider onLookup={async ({ label, ref }) => ({ label, text: ref })}>
+    <EditorPreviewProvider onLookup={async ({ dxn, label }) => ({ label, text: dxn })}>
       <ChatThread {...props} messages={queue?.objects} />
       <PreviewCard />
     </EditorPreviewProvider>

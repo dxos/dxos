@@ -64,6 +64,7 @@ export const translations = [
         'close others label': 'Close other planks',
         'close all label': 'Close all planks',
         'companion plank heading fallback label': 'Related',
+        'open item label': 'Open',
       },
     },
   },

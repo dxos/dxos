@@ -166,12 +166,12 @@ FormRoot.displayName = 'Form.Root';
 
 const FORM_VIEWPORT_NAME = 'Form.Viewport';
 
-type FormViewportProps = ThemedClassName<PropsWithChildren<{}>>;
+type FormViewportProps = PropsWithChildren<{}>;
 
-const FormViewport = ({ classNames, children }: FormViewportProps) => {
+const FormViewport = ({ children }: FormViewportProps) => {
   return (
     <ScrollArea.Root>
-      <ScrollArea.Viewport classNames={['plb-cardSpacingBlock', classNames]}>{children}</ScrollArea.Viewport>
+      <ScrollArea.Viewport>{children}</ScrollArea.Viewport>
       <ScrollArea.Scrollbar orientation='vertical'>
         <ScrollArea.Thumb />
       </ScrollArea.Scrollbar>

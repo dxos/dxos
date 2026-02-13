@@ -29,6 +29,7 @@
 - JSDoc comments for public functions, all comments end with period.
 - React: arrow function components, TailwindCSS for styles, proper event handler types.
 - Remember to remove/update TODOs as you go.
+- Avoid single letter variable names.
 
 ## PR Checklist
 

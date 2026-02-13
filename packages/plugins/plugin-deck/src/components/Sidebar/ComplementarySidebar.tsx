@@ -61,13 +61,13 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
     (event: MouseEvent) => {
       const nextValue = event.currentTarget.getAttribute('data-value') as string;
       if (nextValue === activeId) {
-        updateState((s) => ({
-          ...s,
-          complementarySidebarState: s.complementarySidebarState === 'expanded' ? 'collapsed' : 'expanded',
+        updateState((state) => ({
+          ...state,
+          complementarySidebarState: state.complementarySidebarState === 'expanded' ? 'collapsed' : 'expanded',
         }));
       } else {
         setInternalValue(nextValue);
-        updateState((s) => ({ ...s, complementarySidebarState: 'expanded' }));
+        updateState((state) => ({ ...state, complementarySidebarState: 'expanded' }));
         invokeSync(Common.LayoutOperation.UpdateComplementary, { subject: nextValue });
       }
     },

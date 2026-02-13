@@ -38,12 +38,13 @@ export const tailwindConfig = ({
       {
         // Generates is-card-default-width, is-card-min-width, etc.
         spacing: {
+          'prose-max-width': 'var(--dx-prose-max-width)',
+          'container-max-width': 'var(--dx-container-max-width)',
           'card-default-width': 'var(--dx-card-default-width)',
           'card-min-width': 'var(--dx-card-min-width)',
           'card-max-width': 'var(--dx-card-max-width)',
-          'container-max-width': 'var(--dx-container-max-width)',
-          'popover-max-width': 'var(--dx-popover-max-width)',
-          'prose-max-width': 'var(--dx-prose-max-width)',
+          'card-min-height': 'var(--dx-card-min-height)',
+          'card-max-height': 'var(--dx-card-max-height)',
         },
         backgroundImage: {
           'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',

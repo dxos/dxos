@@ -10,7 +10,7 @@ import { faker } from '@dxos/random';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type Organization, type Person, type Pipeline, type Task } from '@dxos/types';
 
-import { OrganizationCard, PersonCard, ProjectCard, TaskCard } from '../cards';
+import { FormCard, OrganizationCard, PersonCard, ProjectCard, TaskCard } from '../cards';
 import { translations } from '../translations';
 
 import { DefaultStory, createOrganization, createPerson, createProject, createTask } from './testing';
@@ -34,6 +34,14 @@ const meta = {
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;
+
+export const _Form: StoryObj<typeof DefaultStory<Person.Person>> = {
+  args: {
+    Component: FormCard,
+    createObject: createPerson,
+    image: true,
+  },
+};
 
 export const _Person: StoryObj<typeof DefaultStory<Person.Person>> = {
   args: {
