@@ -227,6 +227,29 @@ const SearchListRoot = ({
 SearchListRoot.displayName = 'SearchList.Root';
 
 //
+// Content
+//
+
+type SearchListContentProps = ThemedClassName<PropsWithChildren<{}>>;
+
+const SearchListContent = forwardRef<HTMLDivElement, SearchListContentProps>(
+  ({ classNames, children }, forwardedRef) => {
+    return (
+      <div
+        role='none'
+        // TODO(burdon): Remove p-1 hack.
+        className={mx('flex flex-col gap-2 bs-full is-full min-bs-0 overflow-hidden p-1', classNames)}
+        ref={forwardedRef}
+      >
+        {children}
+      </div>
+    );
+  },
+);
+
+SearchListContent.displayName = 'SearchList.Content';
+
+//
 // Viewport
 //
 
@@ -236,42 +259,16 @@ type SearchListViewportProps = ThemedClassName<PropsWithChildren<{}>>;
  * Scrollable viewport wrapper for Content.
  * Only Content wrapped in Viewport will be scrollable.
  */
-// TODO(burdon): Reconcile with Mosaic.Viewport.
+// TODO(burdon): Reconcile with Mosaic.Viewport (factor out common core?).
 const SearchListViewport = ({ classNames, children }: SearchListViewportProps) => {
   return (
-    <div role='none' className={mx('is-full min-bs-0 grow overflow-y-auto', classNames)}>
+    <div role='listbox' className={mx('bs-full is-full min-bs-0 overflow-y-auto', classNames)}>
       {children}
     </div>
   );
 };
 
 SearchListViewport.displayName = 'SearchList.Viewport';
-
-//
-// Content
-//
-
-type SearchListContentProps = ThemedClassName<PropsWithChildren<{}>>;
-
-/**
- * Container for search results. Does not scroll by default.
- * Wrap in Viewport for scrollable content.
- */
-const SearchListContent = forwardRef<HTMLDivElement, SearchListContentProps>(
-  ({ classNames, children }, forwardedRef) => {
-    return (
-      <div
-        ref={forwardedRef}
-        role='listbox'
-        className={mx('flex flex-col is-full min-bs-0 grow overflow-hidden', classNames)}
-      >
-        {children}
-      </div>
-    );
-  },
-);
-
-SearchListContent.displayName = 'SearchList.Content';
 
 //
 // Input
@@ -381,7 +378,6 @@ const SearchListInput = forwardRef<HTMLInputElement, SearchListInputProps>(
         {...props}
         {...(props.autoFocus && !hasIosKeyboard && { autoFocus: true })}
         type='text'
-        value={query}
         placeholder={placeholder ?? defaultPlaceholder}
         className={tx(
           'input.input',
@@ -394,6 +390,7 @@ const SearchListInput = forwardRef<HTMLInputElement, SearchListInputProps>(
           },
           classNames,
         )}
+        value={query}
         onChange={handleChange}
         onKeyDown={handleKeyDown}
         ref={forwardedRef}
@@ -543,8 +540,8 @@ SearchListGroup.displayName = 'SearchList.Group';
 
 export const SearchList = {
   Root: SearchListRoot,
-  Viewport: SearchListViewport,
   Content: SearchListContent,
+  Viewport: SearchListViewport,
   Input: SearchListInput,
   Item: SearchListItem,
   Empty: SearchListEmpty,
@@ -553,8 +550,8 @@ export const SearchList = {
 
 export type {
   SearchListRootProps,
-  SearchListViewportProps,
   SearchListContentProps,
+  SearchListViewportProps,
   SearchListInputProps,
   SearchListItemProps,
   SearchListEmptyProps,

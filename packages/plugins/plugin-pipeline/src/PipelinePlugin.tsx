@@ -21,7 +21,7 @@ export const PipelinePlugin = Plugin.define(meta).pipe(
     metadata: {
       id: Pipeline.Pipeline.typename,
       metadata: {
-        icon: 'ph--check-square-offset--regular',
+        icon: 'ph--path--regular',
         iconHue: 'purple',
         createObject: ((props) => Effect.sync(() => Pipeline.make(props))) satisfies CreateObject,
       },

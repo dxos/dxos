@@ -164,9 +164,7 @@ const ComboboxContent = forwardRef<HTMLDivElement, ComboboxContentProps>(
         ref={forwardedRef}
       >
         <SearchList.Root onSearch={onSearch} value={value} defaultValue={defaultValue} debounceMs={debounceMs}>
-          <div className='contents density-fine' aria-label={label} role='combobox' aria-expanded='true'>
-            {children}
-          </div>
+          {children}
         </SearchList.Root>
       </Popover.Content>
     );
