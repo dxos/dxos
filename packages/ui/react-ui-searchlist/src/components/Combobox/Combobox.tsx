@@ -25,6 +25,7 @@ import {
   type SearchListInputProps,
   type SearchListItemProps,
   type SearchListRootProps,
+  type SearchListViewportProps,
 } from '../SearchList';
 
 const COMBOBOX_NAME = 'Combobox';
@@ -164,7 +165,7 @@ const ComboboxContent = forwardRef<HTMLDivElement, ComboboxContentProps>(
         ref={forwardedRef}
       >
         <SearchList.Root onSearch={onSearch} value={value} defaultValue={defaultValue} debounceMs={debounceMs}>
-          {children}
+          <SearchList.Content>{children}</SearchList.Content>
         </SearchList.Root>
       </Popover.Content>
     );
@@ -250,13 +251,13 @@ const ComboboxInput = forwardRef<HTMLInputElement, ComboboxInputProps>(({ classN
 // List
 //
 
-type ComboboxListProps = SearchListContentProps;
+type ComboboxListProps = SearchListViewportProps;
 
 const ComboboxList = forwardRef<HTMLDivElement, ComboboxListProps>(({ classNames, ...props }, forwardedRef) => {
   return (
-    <SearchList.Content
+    <SearchList.Viewport
       {...props}
-      classNames={['min-bs-0 overflow-y-auto plb-cardSpacingChrome', classNames]}
+      classNames={['plb-cardSpacingChrome', classNames]}
       ref={forwardedRef}
     />
   );
