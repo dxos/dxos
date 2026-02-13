@@ -20,7 +20,6 @@ import { mx, staticPlaceholderText } from '@dxos/ui-theme';
 
 import {
   SearchList,
-  type SearchListContentProps,
   type SearchListEmptyProps,
   type SearchListInputProps,
   type SearchListItemProps,
@@ -254,13 +253,7 @@ const ComboboxInput = forwardRef<HTMLInputElement, ComboboxInputProps>(({ classN
 type ComboboxListProps = SearchListViewportProps;
 
 const ComboboxList = forwardRef<HTMLDivElement, ComboboxListProps>(({ classNames, ...props }, forwardedRef) => {
-  return (
-    <SearchList.Viewport
-      {...props}
-      classNames={['plb-cardSpacingChrome', classNames]}
-      ref={forwardedRef}
-    />
-  );
+  return <SearchList.Viewport {...props} classNames={['plb-cardSpacingChrome', classNames]} ref={forwardedRef} />;
 });
 
 //
