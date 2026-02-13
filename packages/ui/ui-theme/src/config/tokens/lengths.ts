@@ -66,6 +66,7 @@ export const lengthsFacet = {
       thickLine: { fine: ['focusLine'], gridFocusStack: ['gridFocusIndicatorWidth'] },
       inputFine: { fine: ['iconButtonPadding'] },
       inputCoarse: { coarse: ['iconButtonPadding'] },
+
       // TODO(burdon): Remove?
       trimXs: { fine: ['cardSpacingChrome', 'labelSpacingBlock', 'inputSpacingBlock'] },
       trimSm: { fine: ['cardSpacingInline', 'cardSpacingBlock', 'cardSpacingGap'] },
