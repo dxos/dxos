@@ -66,7 +66,9 @@ export const AssistantTestLayer = ({
         Match.value(tracing).pipe(
           Match.when('noop', () => TracingService.layerNoop),
           Match.when('console', () => TracingServiceExt.layerLogInfo()),
-          Match.when('pretty', () => TracingServiceExt.layerConsolePrettyPrint()),
+          Match.when('pretty', () =>
+            TracingServiceExt.layerConsolePrettyPrint({ toolkit: GenericToolkit.merge(...toolkits).toolkit as any }),
+          ),
           Match.exhaustive,
         ),
       ),

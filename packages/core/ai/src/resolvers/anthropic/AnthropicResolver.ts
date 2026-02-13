@@ -19,7 +19,7 @@ export const make = () =>
     Effect.gen(function* () {
       const thinking = {
         // TODO(dmaretskyi): Switch to adaptive thinking.
-        budget_tokens: 4096,
+        budget_tokens: 1024,
         type: 'enabled',
       } as const;
       return {
