@@ -64,12 +64,12 @@ export const lengthsFacet = {
       noLine: { fine: ['focusOffset'] },
       hairLine: { fine: ['modalLine', 'landmarkLine', 'positionedLine', 'gridGap', 'gridFocusIndicatorWidth'] },
       thickLine: { fine: ['focusLine'], gridFocusStack: ['gridFocusIndicatorWidth'] },
-      // TODO(burdon): Remove.
+      inputFine: { fine: ['iconButtonPadding'] },
+      inputCoarse: { coarse: ['iconButtonPadding'] },
+      // TODO(burdon): Remove?
       trimXs: { fine: ['cardSpacingChrome', 'labelSpacingBlock', 'inputSpacingBlock'] },
       trimSm: { fine: ['cardSpacingInline', 'cardSpacingBlock', 'cardSpacingGap'] },
       trimMd: { coarse: ['cardSpacingInline', 'cardSpacingBlock', 'cardSpacingGap'] },
-      inputFine: { fine: ['iconButtonPadding'] },
-      inputCoarse: { coarse: ['iconButtonPadding'] },
     },
   },
 } satisfies Facet;
