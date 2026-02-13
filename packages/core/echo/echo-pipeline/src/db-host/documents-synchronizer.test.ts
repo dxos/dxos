@@ -7,7 +7,6 @@ import { describe, expect, test } from 'vitest';
 
 import { sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { IndexMetadataStore } from '@dxos/indexing';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { openAndClose } from '@dxos/test-utils';
@@ -22,7 +21,6 @@ describe('DocumentsSynchronizer', () => {
     const kv = createTestLevel();
     const host = new AutomergeHost({
       db: kv,
-      indexMetadataStore: new IndexMetadataStore({ db: kv.sublevel('index-metadata') }),
     });
     await openAndClose(host);
     const synchronizer = new DocumentsSynchronizer({
@@ -57,7 +55,6 @@ describe('DocumentsSynchronizer', () => {
         const kv = createTestLevel(path);
         const host = new AutomergeHost({
           db: kv,
-          indexMetadataStore: new IndexMetadataStore({ db: kv.sublevel('index-metadata') }),
         });
         await openAndClose(host);
         const synchronizer = new DocumentsSynchronizer({
@@ -87,7 +84,6 @@ describe('DocumentsSynchronizer', () => {
         const kv = createTestLevel(path);
         const host = new AutomergeHost({
           db: kv,
-          indexMetadataStore: new IndexMetadataStore({ db: kv.sublevel('index-metadata') }),
         });
         await openAndClose(host);
 

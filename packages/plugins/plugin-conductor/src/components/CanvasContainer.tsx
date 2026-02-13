@@ -8,6 +8,7 @@ import { type SurfaceComponentProps, useCapability } from '@dxos/app-framework/r
 import { ComputeGraphModel } from '@dxos/conductor';
 import { Obj } from '@dxos/echo';
 import { AutomationCapabilities } from '@dxos/plugin-automation';
+import { useObject } from '@dxos/react-client/echo';
 import {
   ComputeContext,
   ComputeGraphController,
@@ -18,7 +19,7 @@ import {
   useGraphMonitor,
 } from '@dxos/react-ui-canvas-compute';
 import {
-  type CanvasBoardType,
+  type CanvasBoard,
   CanvasGraphModel,
   Editor,
   type EditorController,
@@ -27,11 +28,15 @@ import {
 } from '@dxos/react-ui-canvas-editor';
 import { Layout, type LayoutFlexProps } from '@dxos/react-ui-mosaic';
 
-export type CanvasContainerProps = SurfaceComponentProps<CanvasBoardType>;
+export type CanvasContainerProps = SurfaceComponentProps<CanvasBoard.CanvasBoard>;
 
 export const CanvasContainer = ({ role, subject: canvas }: CanvasContainerProps) => {
   const id = Obj.getDXN(canvas as any).toString();
-  const graph = useMemo(() => CanvasGraphModel.create<ComputeShape>(canvas.layout), [canvas.layout]);
+  useObject(canvas);
+  const graph = useMemo(
+    () => CanvasGraphModel.create<ComputeShape>(canvas.layout, (fn) => Obj.change(canvas, fn)),
+    [canvas],
+  );
   const controller = useGraphController(canvas);
   const graphMonitor = useGraphMonitor(controller?.graph);
   const registry = useMemo(() => new ShapeRegistry(computeShapes), []);
@@ -73,9 +78,10 @@ export const CanvasContainer = ({ role, subject: canvas }: CanvasContainerProps)
 
 const Container = (props: LayoutFlexProps) => <Layout.Flex {...props} classNames='aspect-square' />;
 
-const useGraphController = (canvas: CanvasBoardType) => {
+const useGraphController = (canvas: CanvasBoard.CanvasBoard) => {
   const db = Obj.getDatabase(canvas);
   const runtime = useCapability(AutomationCapabilities.ComputeRuntime);
+  const [computeGraph] = useObject(canvas.computeGraph);
   const controller = useMemo(() => {
     if (!canvas.computeGraph?.target || !db) {
       return null;
@@ -83,7 +89,7 @@ const useGraphController = (canvas: CanvasBoardType) => {
     const model = new ComputeGraphModel(canvas.computeGraph?.target);
     const controller = new ComputeGraphController(runtime.getRuntime(db.spaceId), model);
     return controller;
-  }, [canvas.computeGraph?.target, db]);
+  }, [computeGraph, db]);
 
   useEffect(() => {
     if (!controller) {

@@ -62,35 +62,39 @@ export const SpaceSettingsContainer = forwardRef<HTMLDivElement, SpaceSettingsCo
       [space],
     );
 
-    const handleSave = useCallback(
-      (properties: Schema.Schema.Type<typeof SpaceFormSchema>) => {
-        void toggleEdgeReplication(properties.edgeReplication ?? false);
-        const nameChanged = properties.name !== space.properties.name;
-        const iconChanged = properties.icon !== space.properties.icon;
-        const hueChanged = properties.hue !== space.properties.hue;
-        if (nameChanged || iconChanged || hueChanged) {
+    const handleValuesChanged = useCallback(
+      (newValues: Partial<Schema.Schema.Type<typeof SpaceFormSchema>>, meta: { changed?: Record<string, boolean> }) => {
+        const changed = meta.changed ?? {};
+        if (changed['edgeReplication']) {
+          void toggleEdgeReplication(newValues.edgeReplication ?? false);
+        }
+
+        if (changed['name'] || changed['icon'] || changed['hue']) {
           Obj.change(space.properties, (p) => {
-            if (nameChanged) {
-              p.name = properties.name;
+            if (changed['name'] && newValues.name !== undefined) {
+              p.name = newValues.name;
             }
-            if (iconChanged) {
-              p.icon = properties.icon;
+            if (changed['icon']) {
+              p.icon = newValues.icon;
             }
-            if (hueChanged) {
-              p.hue = properties.hue;
+            if (changed['hue']) {
+              p.hue = newValues.hue;
             }
           });
         }
-        if (properties.archived && !archived) {
-          void (async () => {
-            await invokePromise(SpaceOperation.Close, { space });
-            await invokePromise(Common.LayoutOperation.SwitchWorkspace, { subject: client.spaces.default.id });
-          })();
-        } else if (!properties.archived && archived) {
-          void invokePromise(SpaceOperation.Open, { space });
+
+        if (changed['archived']) {
+          if (newValues.archived && !archived) {
+            void invokePromise(SpaceOperation.Close, { space });
+            void invokePromise(Common.LayoutOperation.SwitchWorkspace, {
+              subject: client.spaces.default.id,
+            });
+          } else if (!newValues.archived && archived) {
+            void invokePromise(SpaceOperation.Open, { space });
+          }
         }
       },
-      [space, toggleEdgeReplication, archived],
+      [space, client, archived, invokePromise, toggleEdgeReplication],
     );
 
     const values = useMemo(
@@ -173,7 +177,7 @@ export const SpaceSettingsContainer = forwardRef<HTMLDivElement, SpaceSettingsCo
           );
         },
       }),
-      [t, space],
+      [t, space, client],
     );
 
     const download = useFileDownload();
@@ -196,7 +200,12 @@ export const SpaceSettingsContainer = forwardRef<HTMLDivElement, SpaceSettingsCo
               ns: meta.id,
             })}
           >
-            <Form.Root fieldMap={fieldMap} schema={SpaceFormSchema} values={values} autoSave onSave={handleSave}>
+            <Form.Root
+              fieldMap={fieldMap}
+              schema={SpaceFormSchema}
+              values={values}
+              onValuesChanged={handleValuesChanged}
+            >
               <Form.FieldSet />
             </Form.Root>
           </ControlSection>

@@ -5,7 +5,6 @@
 import type { AutomergeUrl, DocumentId } from '@automerge/automerge-repo';
 import type * as SqlClient from '@effect/sql/SqlClient';
 import type * as Effect from 'effect/Effect';
-import * as Match from 'effect/Match';
 import * as Runtime from 'effect/Runtime';
 
 import { Context, ContextDisposedError, LifecycleState, Resource } from '@dxos/context';
@@ -19,18 +18,15 @@ import {
   type QueryAST,
   isEncodedReference,
 } from '@dxos/echo-protocol';
-import { RuntimeProvider, runAndForwardErrors, unwrapExit } from '@dxos/effect';
-import { type IndexEngine, type ObjectMeta, type ReverseRef } from '@dxos/index-core';
-import { EscapedPropPath, type FindResult, type Indexer } from '@dxos/indexing';
+import { type RuntimeProvider, runAndForwardErrors, unwrapExit } from '@dxos/effect';
+import { EscapedPropPath, type IndexEngine, type ObjectMeta, type ReverseRef } from '@dxos/index-core';
 import { invariant } from '@dxos/invariant';
-import { DXN, type ObjectId, PublicKey, type SpaceId } from '@dxos/keys';
+import { DXN, type ObjectId, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { objectPointerCodec } from '@dxos/protocols';
 import { type QueryReactivity, type QueryResult } from '@dxos/protocols/proto/dxos/echo/query';
 import { getDeep, isNonNullable } from '@dxos/util';
 
 import type { AutomergeHost } from '../automerge';
-import { createIdFromSpaceKey } from '../common';
 import type { SpaceStateManager } from '../db-host';
 import { filterMatchObject, filterMatchObjectJSON } from '../filter';
 
@@ -38,9 +34,8 @@ import type { QueryPlan } from './plan';
 import { QueryPlanner } from './query-planner';
 
 type QueryExecutorOptions = {
-  indexer: Indexer;
-  indexer2?: IndexEngine;
-  runtime?: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
+  indexEngine: IndexEngine;
+  runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
   automergeHost: AutomergeHost;
   spaceStateManager: SpaceStateManager;
 
@@ -226,7 +221,7 @@ const TRACE_QUERY_EXECUTION = false;
 const MAX_DEPTH_FOR_DELETION_TRACING = 10;
 
 /**
- * Executes query plans against the Indexer and AutomergeHost.
+ * Executes query plans against the IndexEngine and AutomergeHost.
  *
  * The QueryExecutor is responsible for:
  * - Executing query plans step by step
@@ -236,9 +231,8 @@ const MAX_DEPTH_FOR_DELETION_TRACING = 10;
  * - Handling different types of query operations (select, filter, traverse, etc.)
  */
 export class QueryExecutor extends Resource {
-  private readonly _indexer: Indexer;
-  private readonly _indexer2?: IndexEngine;
-  private readonly _runtime?: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
+  private readonly _indexEngine: IndexEngine;
+  private readonly _runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
   private readonly _automergeHost: AutomergeHost;
   private readonly _spaceStateManager: SpaceStateManager;
   /**
@@ -256,8 +250,7 @@ export class QueryExecutor extends Resource {
   constructor(options: QueryExecutorOptions) {
     super();
 
-    this._indexer = options.indexer;
-    this._indexer2 = options.indexer2;
+    this._indexEngine = options.indexEngine;
     this._runtime = options.runtime;
     this._automergeHost = options.automergeHost;
     this._spaceStateManager = options.spaceStateManager;
@@ -403,42 +396,21 @@ export class QueryExecutor extends Resource {
 
     switch (step.selector._tag) {
       case 'WildcardSelector': {
-        if (this._supportsSqlIndexing()) {
-          const beginIndexQuery = performance.now();
-          const metas = await this._queryAllFromSqlIndex(step.spaces);
-          trace.indexHits = metas.length;
-          trace.indexQueryTime += performance.now() - beginIndexQuery;
+        const beginIndexQuery = performance.now();
+        const metas = await this._queryAllFromSqlIndex(step.spaces);
+        trace.indexHits = metas.length;
+        trace.indexQueryTime += performance.now() - beginIndexQuery;
 
-          if (this._ctx.disposed) {
-            return { workingSet, trace };
-          }
-
-          const documentLoadStart = performance.now();
-          const results = await this._loadDocumentsAfterSqlQuery(metas);
-          trace.documentsLoaded += results.length;
-          trace.documentLoadTime += performance.now() - documentLoadStart;
-
-          workingSet.push(...results.filter(isNonNullable));
-        } else {
-          const beginIndexQuery = performance.now();
-          const indexHits = await this._indexer.execQuery({
-            typenames: [],
-            inverted: false,
-          });
-          trace.indexHits = +indexHits.length;
-          trace.indexQueryTime += performance.now() - beginIndexQuery;
-
-          if (this._ctx.disposed) {
-            return { workingSet, trace };
-          }
-
-          const documentLoadStart = performance.now();
-          const results = await this._loadDocumentsAfterIndexQuery(indexHits);
-          trace.documentsLoaded += results.length;
-          trace.documentLoadTime += performance.now() - documentLoadStart;
-
-          workingSet.push(...results.filter(isNonNullable).filter((item) => step.spaces.includes(item.spaceId)));
+        if (this._ctx.disposed) {
+          return { workingSet, trace };
         }
+
+        const documentLoadStart = performance.now();
+        const results = await this._loadDocumentsAfterSqlQuery(metas);
+        trace.documentsLoaded += results.length;
+        trace.documentLoadTime += performance.now() - documentLoadStart;
+
+        workingSet.push(...results.filter(isNonNullable));
         trace.objectCount = workingSet.length;
 
         break;
@@ -459,42 +431,21 @@ export class QueryExecutor extends Resource {
       }
 
       case 'TypeSelector': {
-        if (this._supportsSqlIndexing()) {
-          const beginIndexQuery = performance.now();
-          const metas = await this._queryTypesFromSqlIndex(step.spaces, step.selector.typename, step.selector.inverted);
-          trace.indexHits = metas.length;
-          trace.indexQueryTime += performance.now() - beginIndexQuery;
+        const beginIndexQuery = performance.now();
+        const metas = await this._queryTypesFromSqlIndex(step.spaces, step.selector.typename, step.selector.inverted);
+        trace.indexHits = metas.length;
+        trace.indexQueryTime += performance.now() - beginIndexQuery;
 
-          if (this._ctx.disposed) {
-            return { workingSet, trace };
-          }
-
-          const documentLoadStart = performance.now();
-          const results = await this._loadDocumentsAfterSqlQuery(metas);
-          trace.documentsLoaded += results.length;
-          trace.documentLoadTime += performance.now() - documentLoadStart;
-
-          workingSet.push(...results.filter(isNonNullable));
-        } else {
-          const beginIndexQuery = performance.now();
-          const indexHits = await this._indexer.execQuery({
-            typenames: step.selector.typename,
-            inverted: step.selector.inverted,
-          });
-          trace.indexHits = +indexHits.length;
-          trace.indexQueryTime += performance.now() - beginIndexQuery;
-
-          if (this._ctx.disposed) {
-            return { workingSet, trace };
-          }
-
-          const documentLoadStart = performance.now();
-          const results = await this._loadDocumentsAfterIndexQuery(indexHits);
-          trace.documentsLoaded += results.length;
-          trace.documentLoadTime += performance.now() - documentLoadStart;
-
-          workingSet.push(...results.filter(isNonNullable).filter((item) => step.spaces.includes(item.spaceId)));
+        if (this._ctx.disposed) {
+          return { workingSet, trace };
         }
+
+        const documentLoadStart = performance.now();
+        const results = await this._loadDocumentsAfterSqlQuery(metas);
+        trace.documentsLoaded += results.length;
+        trace.documentLoadTime += performance.now() - documentLoadStart;
+
+        workingSet.push(...results.filter(isNonNullable));
         trace.objectCount = workingSet.length;
 
         break;
@@ -503,117 +454,91 @@ export class QueryExecutor extends Resource {
       case 'TextSelector': {
         // TODO(dmaretskyi): type + FTS queries would be very common so we should support those, maybe chunk the fts index.
         // TODO(dmaretskyi): nice to have matched text snippets/highlighting.
-        if (step.selector.searchKind === 'full-text' && this._supportsSqlIndexing()) {
-          // Use indexer2 for full-text search.
-          const beginIndexQuery = performance.now();
-          invariant(this._indexer2, 'SQL indexer is required.');
-          invariant(step.spaces.length <= 1, 'Multiple spaces are not supported for full-text search');
-          // Extract queue IDs from DXN strings.
-          const queueIds =
-            step.queues.length > 0
-              ? (step.queues.map((dxnStr) => DXN.parse(dxnStr).asQueueDXN()?.queueId).filter(Boolean) as ObjectId[])
-              : null;
-          const textResults = await this._runInRuntime(
-            this._indexer2.queryText({
-              query: step.selector.text,
-              spaceId: step.spaces,
-              includeAllQueues: step.allQueuesFromSpaces,
-              queueIds,
-            }),
-          );
-          trace.indexHits = textResults.length;
-          trace.indexQueryTime += performance.now() - beginIndexQuery;
-
-          if (this._ctx.disposed) {
-            return { workingSet, trace };
-          }
-
-          // Load documents from the results.
-          const documentLoadStart = performance.now();
-
-          // Separate queue items from space items.
-          const queueResults = textResults.filter((r) => r.queueId);
-          const spaceResults = textResults.filter((r) => !r.queueId);
-
-          // Build a map from recordId to rank for all FTS results.
-          const rankMap = new Map(textResults.map((r) => [r.recordId, r.rank]));
-
-          // Load queue items from indexed snapshots.
-          let queueItems: QueryItem[] = [];
-          if (queueResults.length > 0) {
-            const snapshots = await this._runInRuntime(
-              this._indexer2.querySnapshotsJSON(queueResults.map((r) => r.recordId)),
-            );
-            const snapshotMap = new Map(snapshots.map((s) => [s.recordId, s.snapshot]));
-            queueItems = queueResults
-              .map((result): QueryItem | null => {
-                const snapshot = snapshotMap.get(result.recordId);
-                if (!snapshot || typeof snapshot !== 'object') {
-                  return null;
-                }
-                return {
-                  objectId: result.objectId as ObjectId,
-                  spaceId: result.spaceId as SpaceId,
-                  queueId: result.queueId as ObjectId,
-                  queueNamespace: 'data',
-                  documentId: null,
-                  doc: null,
-                  data: snapshot as Obj.JSON,
-                  rank: rankMap.get(result.recordId) ?? 1,
-                };
-              })
-              .filter(isNonNullable);
-          }
-
-          // Load space items from documents.
-          const spaceItems = await Promise.all(
-            spaceResults.map(async (result): Promise<QueryItem | null> => {
-              const dxn = DXN.fromLocalObjectId(result.objectId);
-              const item = await this._loadFromDXN(dxn, { sourceSpaceId: result.spaceId as SpaceId });
-              if (item) {
-                // Override the default rank with the FTS rank.
-                item.rank = rankMap.get(result.recordId) ?? 1;
-              }
-              return item;
-            }),
-          );
-
-          const items = [...queueItems, ...spaceItems.filter(isNonNullable)];
-          trace.documentsLoaded += items.length;
-          trace.documentLoadTime += performance.now() - documentLoadStart;
-
-          workingSet.push(...items.filter((item) => step.spaces.includes(item.spaceId)));
-          trace.objectCount = workingSet.length;
-        } else {
-          // Fall back to old indexer for vector search.
-          const beginIndexQuery = performance.now();
-          const indexHits = await this._indexer.execQuery({
-            typenames: [],
-            text: {
-              query: step.selector.text,
-              kind: Match.type<QueryPlan.TextSearchKind>().pipe(
-                Match.withReturnType<'text' | 'vector'>(),
-                Match.when('full-text', () => 'text'),
-                Match.when('vector', () => 'vector'),
-                Match.orElseAbsurd,
-              )(step.selector.searchKind),
-            },
-          });
-          trace.indexHits = +indexHits.length;
-          trace.indexQueryTime += performance.now() - beginIndexQuery;
-
-          if (this._ctx.disposed) {
-            return { workingSet, trace };
-          }
-
-          const documentLoadStart = performance.now();
-          const results = await this._loadDocumentsAfterIndexQuery(indexHits);
-          trace.documentsLoaded += results.length;
-          trace.documentLoadTime += performance.now() - documentLoadStart;
-
-          workingSet.push(...results.filter(isNonNullable).filter((item) => step.spaces.includes(item.spaceId)));
-          trace.objectCount = workingSet.length;
+        if (step.selector.searchKind === 'vector') {
+          // Vector search is not currently supported.
+          log.warn('Vector search is not supported');
+          break;
         }
+
+        // Full-text search using SQLite FTS5.
+        const beginIndexQuery = performance.now();
+        invariant(step.spaces.length <= 1, 'Multiple spaces are not supported for full-text search');
+        // Extract queue IDs from DXN strings.
+        const queueIds =
+          step.queues.length > 0
+            ? (step.queues.map((dxnStr) => DXN.parse(dxnStr).asQueueDXN()?.queueId).filter(Boolean) as ObjectId[])
+            : null;
+        const textResults = await this._runInRuntime(
+          this._indexEngine.queryText({
+            query: step.selector.text,
+            spaceId: step.spaces,
+            includeAllQueues: step.allQueuesFromSpaces,
+            queueIds,
+          }),
+        );
+        trace.indexHits = textResults.length;
+        trace.indexQueryTime += performance.now() - beginIndexQuery;
+
+        if (this._ctx.disposed) {
+          return { workingSet, trace };
+        }
+
+        // Load documents from the results.
+        const documentLoadStart = performance.now();
+
+        // Separate queue items from space items.
+        const queueResults = textResults.filter((r) => r.queueId);
+        const spaceResults = textResults.filter((r) => !r.queueId);
+
+        // Build a map from recordId to rank for all FTS results.
+        const rankMap = new Map(textResults.map((r) => [r.recordId, r.rank]));
+
+        // Load queue items from indexed snapshots.
+        let queueItems: QueryItem[] = [];
+        if (queueResults.length > 0) {
+          const snapshots = await this._runInRuntime(
+            this._indexEngine.querySnapshotsJSON(queueResults.map((r) => r.recordId)),
+          );
+          const snapshotMap = new Map(snapshots.map((s) => [s.recordId, s.snapshot]));
+          queueItems = queueResults
+            .map((result): QueryItem | null => {
+              const snapshot = snapshotMap.get(result.recordId);
+              if (!snapshot || typeof snapshot !== 'object') {
+                return null;
+              }
+              return {
+                objectId: result.objectId as ObjectId,
+                spaceId: result.spaceId as SpaceId,
+                queueId: result.queueId as ObjectId,
+                queueNamespace: 'data',
+                documentId: null,
+                doc: null,
+                data: snapshot as Obj.JSON,
+                rank: rankMap.get(result.recordId) ?? 1,
+              };
+            })
+            .filter(isNonNullable);
+        }
+
+        // Load space items from documents.
+        const spaceItems = await Promise.all(
+          spaceResults.map(async (result): Promise<QueryItem | null> => {
+            const dxn = DXN.fromLocalObjectId(result.objectId);
+            const item = await this._loadFromDXN(dxn, { sourceSpaceId: result.spaceId as SpaceId });
+            if (item) {
+              // Override the default rank with the FTS rank.
+              item.rank = rankMap.get(result.recordId) ?? 1;
+            }
+            return item;
+          }),
+        );
+
+        const items = [...queueItems, ...spaceItems.filter(isNonNullable)];
+        trace.documentsLoaded += items.length;
+        trace.documentLoadTime += performance.now() - documentLoadStart;
+
+        workingSet.push(...items.filter((item) => step.spaces.includes(item.spaceId)));
+        trace.objectCount = workingSet.length;
         break;
       }
 
@@ -735,39 +660,18 @@ export class QueryExecutor extends Resource {
             break;
           }
           case 'incoming': {
-            if (this._supportsSqlIndexing()) {
-              const beginIndexQuery = performance.now();
-              const metas = await this._queryIncomingReferencesFromSqlIndex(workingSet, step.traversal.property);
-              trace.indexHits += metas.length;
-              trace.indexQueryTime += performance.now() - beginIndexQuery;
+            const beginIndexQuery = performance.now();
+            const metas = await this._queryIncomingReferencesFromSqlIndex(workingSet, step.traversal.property);
+            trace.indexHits += metas.length;
+            trace.indexQueryTime += performance.now() - beginIndexQuery;
 
-              const documentLoadStart = performance.now();
-              const results = await this._loadDocumentsAfterSqlQuery(metas);
-              trace.documentsLoaded += results.length;
-              trace.documentLoadTime += performance.now() - documentLoadStart;
+            const documentLoadStart = performance.now();
+            const results = await this._loadDocumentsAfterSqlQuery(metas);
+            trace.documentsLoaded += results.length;
+            trace.documentLoadTime += performance.now() - documentLoadStart;
 
-              newWorkingSet.push(...results.filter(isNonNullable));
-              trace.objectCount = newWorkingSet.length;
-            } else {
-              const indexHits = await this._indexer.execQuery({
-                typenames: [],
-                inverted: false,
-                graph: {
-                  kind: 'inbound-reference',
-                  property: step.traversal.property,
-                  anchors: workingSet.map((item) => item.objectId),
-                },
-              });
-              trace.indexHits += indexHits.length;
-
-              const documentLoadStart = performance.now();
-              const results = await this._loadDocumentsAfterIndexQuery(indexHits);
-              trace.documentsLoaded += results.length;
-              trace.documentLoadTime += performance.now() - documentLoadStart;
-
-              newWorkingSet.push(...results.filter(isNonNullable));
-              trace.objectCount = newWorkingSet.length;
-            }
+            newWorkingSet.push(...results.filter(isNonNullable));
+            trace.objectCount = newWorkingSet.length;
 
             break;
           }
@@ -813,43 +717,21 @@ export class QueryExecutor extends Resource {
 
           case 'source-to-relation':
           case 'target-to-relation': {
-            if (this._supportsSqlIndexing()) {
-              const beginIndexQuery = performance.now();
-              const metas = await this._queryRelationsFromSqlIndex(
-                workingSet,
-                step.traversal.direction === 'source-to-relation' ? 'source' : 'target',
-              );
-              trace.indexHits += metas.length;
-              trace.indexQueryTime += performance.now() - beginIndexQuery;
+            const beginIndexQuery = performance.now();
+            const metas = await this._queryRelationsFromSqlIndex(
+              workingSet,
+              step.traversal.direction === 'source-to-relation' ? 'source' : 'target',
+            );
+            trace.indexHits += metas.length;
+            trace.indexQueryTime += performance.now() - beginIndexQuery;
 
-              const documentLoadStart = performance.now();
-              const results = await this._loadDocumentsAfterSqlQuery(metas);
-              trace.documentsLoaded += results.length;
-              trace.documentLoadTime += performance.now() - documentLoadStart;
+            const documentLoadStart = performance.now();
+            const results = await this._loadDocumentsAfterSqlQuery(metas);
+            trace.documentsLoaded += results.length;
+            trace.documentLoadTime += performance.now() - documentLoadStart;
 
-              newWorkingSet.push(...results.filter(isNonNullable));
-              trace.objectCount = newWorkingSet.length;
-            } else {
-              const indexHits = await this._indexer.execQuery({
-                typenames: [],
-                inverted: false,
-                graph: {
-                  kind: step.traversal.direction === 'source-to-relation' ? 'relation-source' : 'relation-target',
-                  anchors: workingSet.map((item) => item.objectId),
-                  property: null,
-                },
-              });
-
-              trace.indexHits += indexHits.length;
-
-              const documentLoadStart = performance.now();
-              const results = await this._loadDocumentsAfterIndexQuery(indexHits);
-              trace.documentsLoaded += results.length;
-              trace.documentLoadTime += performance.now() - documentLoadStart;
-
-              newWorkingSet.push(...results.filter(isNonNullable));
-              trace.objectCount = newWorkingSet.length;
-            }
+            newWorkingSet.push(...results.filter(isNonNullable));
+            trace.objectCount = newWorkingSet.length;
 
             break;
           }
@@ -893,12 +775,7 @@ export class QueryExecutor extends Resource {
           }
 
           case 'to-children': {
-            // Traverse from parent to children using indexer2 (SQLite-based index).
-            // Return empty result if indexer2 is not available.
-            if (!this._indexer2 || !this._runtime) {
-              break;
-            }
-
+            // Traverse from parent to children using the SQL index.
             // Group working set by spaceId.
             const bySpace = new Map<SpaceId, ObjectId[]>();
             for (const item of workingSet) {
@@ -913,9 +790,9 @@ export class QueryExecutor extends Resource {
             // Query children for each space.
             const allChildren: { spaceId: SpaceId; objectId: ObjectId }[] = [];
             for (const [spaceId, parentIds] of bySpace) {
-              const children = await this._indexer2
-                .queryChildren({ spaceId: [spaceId], parentIds })
-                .pipe(RuntimeProvider.runPromise(this._runtime));
+              const children = await this._runInRuntime(
+                this._indexEngine.queryChildren({ spaceId: [spaceId], parentIds }),
+              );
 
               for (const child of children) {
                 allChildren.push({ spaceId, objectId: child.objectId as ObjectId });
@@ -1101,18 +978,6 @@ export class QueryExecutor extends Resource {
     return String(aValue).localeCompare(String(bValue));
   }
 
-  private async _loadDocumentsAfterIndexQuery(indexHits: FindResult[]): Promise<(QueryItem | null)[]> {
-    return Promise.all(
-      indexHits.map(async (hit): Promise<QueryItem | null> => {
-        return this._loadFromIndexHit(hit);
-      }),
-    );
-  }
-
-  private _supportsSqlIndexing(): boolean {
-    return !!this._indexer2 && !!this._runtime;
-  }
-
   private async _runInRuntime<T>(effect: Effect.Effect<T, unknown, SqlClient.SqlClient>): Promise<T> {
     const runtimeProvider = this._runtime;
     invariant(runtimeProvider, 'SQL runtime is required.');
@@ -1121,8 +986,7 @@ export class QueryExecutor extends Resource {
   }
 
   private async _queryAllFromSqlIndex(spaceIds: readonly SpaceId[]): Promise<readonly ObjectMeta[]> {
-    invariant(this._indexer2, 'SQL indexer is required.');
-    return await this._runInRuntime(this._indexer2.queryAll({ spaceIds }));
+    return await this._runInRuntime(this._indexEngine.queryAll({ spaceIds }));
   }
 
   private async _queryTypesFromSqlIndex(
@@ -1130,8 +994,7 @@ export class QueryExecutor extends Resource {
     typeDxns: readonly string[],
     inverted: boolean,
   ): Promise<readonly ObjectMeta[]> {
-    invariant(this._indexer2, 'SQL indexer is required.');
-    return await this._runInRuntime(this._indexer2.queryTypes({ spaceIds, typeDxns, inverted }));
+    return await this._runInRuntime(this._indexEngine.queryTypes({ spaceIds, typeDxns, inverted }));
   }
 
   private async _queryIncomingReferencesFromSqlIndex(
@@ -1139,10 +1002,9 @@ export class QueryExecutor extends Resource {
     property: EscapedPropPath | null,
   ): Promise<readonly ObjectMeta[]> {
     const anchorDxns = workingSet.map((item) => DXN.fromLocalObjectId(item.objectId).toString());
-    invariant(this._indexer2, 'SQL indexer is required.');
     const rows: readonly ReverseRef[] = (
       await Promise.all(
-        anchorDxns.map((targetDxn) => this._runInRuntime(this._indexer2!.queryReverseRef({ targetDxn }))),
+        anchorDxns.map((targetDxn) => this._runInRuntime(this._indexEngine.queryReverseRef({ targetDxn }))),
       )
     ).flat();
 
@@ -1159,7 +1021,7 @@ export class QueryExecutor extends Resource {
       .map((row) => row.recordId);
 
     const uniqueRecordIds = Array.from(new Set<number>(recordIds));
-    return await this._runInRuntime(this._indexer2.lookupByRecordIds(uniqueRecordIds));
+    return await this._runInRuntime(this._indexEngine.lookupByRecordIds(uniqueRecordIds));
   }
 
   /**
@@ -1213,9 +1075,8 @@ export class QueryExecutor extends Resource {
     workingSet: QueryItem[],
     endpoint: 'source' | 'target',
   ): Promise<readonly ObjectMeta[]> {
-    invariant(this._indexer2, 'SQL indexer is required.');
     const anchorDxns = workingSet.map((item) => DXN.fromLocalObjectId(item.objectId).toString());
-    return await this._runInRuntime(this._indexer2.queryRelations({ endpoint, anchorDxns }));
+    return await this._runInRuntime(this._indexEngine.queryRelations({ endpoint, anchorDxns }));
   }
 
   private async _loadDocumentsAfterSqlQuery(metas: readonly ObjectMeta[]): Promise<(QueryItem | null)[]> {
@@ -1243,9 +1104,8 @@ export class QueryExecutor extends Resource {
       return new Map();
     }
 
-    invariant(this._indexer2, 'SQL indexer is required.');
     const snapshots = await this._runInRuntime(
-      this._indexer2.querySnapshotsJSON(queueMetas.map((meta) => meta.recordId)),
+      this._indexEngine.querySnapshotsJSON(queueMetas.map((meta) => meta.recordId)),
     );
     return new Map(snapshots.map((s) => [s.recordId, s.snapshot]));
   }
@@ -1305,50 +1165,6 @@ export class QueryExecutor extends Resource {
       doc: object,
       data: null,
       rank: 1,
-    };
-  }
-
-  /**
-   * Space key hex -> SpaceId.
-   */
-  private readonly _spaceIdCache = new Map<string, SpaceId>();
-
-  private async _loadFromIndexHit(hit: FindResult): Promise<QueryItem | null> {
-    const { objectId, documentId, spaceKey: spaceKeyInIndex } = objectPointerCodec.decode(hit.id);
-
-    const handle = await this._automergeHost.loadDoc<DatabaseDirectory>(Context.default(), documentId as DocumentId, {
-      fetchFromNetwork: true,
-    });
-    const doc = handle.doc();
-    if (!doc) {
-      return null;
-    }
-
-    const spaceKey = spaceKeyInIndex ?? DatabaseDirectory.getSpaceKey(doc);
-    if (!spaceKey) {
-      return null;
-    }
-
-    let spaceId = this._spaceIdCache.get(spaceKey);
-    if (!spaceId) {
-      spaceId = await createIdFromSpaceKey(PublicKey.from(spaceKey));
-      this._spaceIdCache.set(spaceKey, spaceId);
-    }
-
-    const object = DatabaseDirectory.getInlineObject(doc, objectId);
-    if (!object) {
-      return null;
-    }
-
-    return {
-      objectId,
-      documentId: documentId as DocumentId,
-      spaceId,
-      queueId: null,
-      queueNamespace: null,
-      data: null,
-      doc: object,
-      rank: hit.rank,
     };
   }
 

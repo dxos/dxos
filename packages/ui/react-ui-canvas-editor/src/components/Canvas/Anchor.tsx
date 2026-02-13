@@ -14,7 +14,7 @@ import { mx } from '@dxos/ui-theme';
 
 import { type DragDropPayload, useEditorContext } from '../../hooks';
 import { getBoundsProperties } from '../../layout';
-import { type Polygon, type Shape } from '../../types';
+import { type CanvasBoard, type Polygon } from '../../types';
 import { type Anchor, resizeCursor } from '../anchors';
 import { styles } from '../styles';
 
@@ -22,7 +22,7 @@ export const defaultAnchorSize: Dimension = { width: 8, height: 8 };
 
 export const DATA_ANCHOR_ID = 'data-anchor-id';
 
-export const anchorAttrs = (shape: Shape, anchor: Anchor) => {
+export const anchorAttrs = (shape: CanvasBoard.Shape, anchor: Anchor) => {
   return {
     [DATA_ANCHOR_ID]: `${shape.id}-${anchor.id}`,
   };

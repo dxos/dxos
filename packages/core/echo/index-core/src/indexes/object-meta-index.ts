@@ -59,6 +59,9 @@ export class ObjectMetaIndex implements Index {
       version INTEGER NOT NULL
     )`;
 
+    // Add `parent` column for tables created before it was introduced.
+    yield* Effect.catchAll(sql`ALTER TABLE objectMeta ADD COLUMN parent TEXT`, () => Effect.void);
+
     yield* sql`CREATE INDEX IF NOT EXISTS idx_object_index_objectId ON objectMeta(spaceId, objectId)`;
     yield* sql`CREATE INDEX IF NOT EXISTS idx_object_index_typeDxn ON objectMeta(spaceId, typeDxn)`;
     yield* sql`CREATE INDEX IF NOT EXISTS idx_object_index_version ON objectMeta(version)`;

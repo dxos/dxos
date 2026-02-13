@@ -616,10 +616,10 @@ export default Capability.makeModule(
         OperationResolver.make({
           operation: SpaceOperation.AddSchema,
           handler: Effect.fnUntraced(function* (input) {
-            const db = input.db as any;
-            const schemas = (yield* Effect.promise(() => db.schemaRegistry.register([input.schema]))) as any[];
+            const db = input.db;
+            const schemas = yield* Effect.promise(() => db.schemaRegistry.register([input.schema]));
             const schema = schemas[0];
-            Obj.change(schema.storedSchema, (s) => {
+            Obj.change(schema.persistentSchema, (s) => {
               if (input.name) {
                 s.name = input.name;
               }
@@ -647,7 +647,7 @@ export default Capability.makeModule(
               },
             });
 
-            return { id: schema.id, object: schema.storedSchema, schema };
+            return { id: schema.id, object: schema.persistentSchema, schema };
           }),
         }),
 

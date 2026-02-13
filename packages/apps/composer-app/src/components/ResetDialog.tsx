@@ -16,6 +16,7 @@ import {
   IconButton,
   Message,
   Popover,
+  useMediaQuery,
   useTranslation,
 } from '@dxos/react-ui';
 
@@ -58,6 +59,7 @@ export const ResetDialog = ({
   onOpenChange,
 }: FatalErrorProps) => {
   const { t } = useTranslation('composer'); // TODO(burdon): Const.
+  const [isNotMobile] = useMediaQuery('md');
   const error = propsError && parseError(t, propsError);
   const {
     needRefresh: [needRefresh, _setNeedRefresh],
@@ -168,7 +170,7 @@ export const ResetDialog = ({
             )}
 
             <div role='none' className='flex-grow' />
-            {observabilityPromise && (
+            {observabilityPromise && isNotMobile && (
               <Popover.Root open={feedbackOpen} onOpenChange={setFeedbackOpen}>
                 <Popover.Trigger asChild>
                   <IconButton icon='ph--paper-plane-tilt--regular' label={t('feedback label')} />

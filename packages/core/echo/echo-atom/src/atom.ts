@@ -27,9 +27,9 @@ const objectFamily = Atom.family(<T extends Obj.Unknown>(obj: T): Atom.Atom<Obj.
 });
 
 /**
- * Internal helper to create an atom from a Ref.
- * Handles async loading and subscribes to the target for reactive updates.
- * Uses Atom.family internally - same ref reference returns same atom instance.
+ * Atom family for ECHO refs.
+ * RefImpl implements Effect's Hash/Equal traits using DXN, so different Ref instances
+ * pointing to the same object resolve to the same atom.
  */
 const refFamily = Atom.family(<T extends Obj.Unknown>(ref: Ref.Ref<T>): Atom.Atom<Obj.Snapshot<T> | undefined> => {
   return Atom.make<Obj.Snapshot<T> | undefined>((get) => {
@@ -43,7 +43,9 @@ const refFamily = Atom.family(<T extends Obj.Unknown>(ref: Ref.Ref<T>): Atom.Ato
       return Obj.getSnapshot(target);
     };
 
-    get.addFinalizer(() => unsubscribeTarget?.());
+    get.addFinalizer(() => {
+      unsubscribeTarget?.();
+    });
 
     return loadRefTarget(ref, get, setupTargetSubscription);
   });

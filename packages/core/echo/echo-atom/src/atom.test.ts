@@ -5,7 +5,7 @@
 import * as Registry from '@effect-atom/atom/Registry';
 import { describe, expect, test } from 'vitest';
 
-import { Obj } from '@dxos/echo';
+import { Obj, Ref } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { createObject } from '@dxos/echo-db';
 
@@ -282,5 +282,27 @@ describe('Echo Atom - Referential Equality', () => {
     // The subscription should still work.
     expect(updateCount).toBe(2);
     expect(registry.get(atom1)).toBe('Updated');
+  });
+
+  test('AtomObj.make returns same atom instance for different ref instances with same DXN', ({ expect }) => {
+    const org = createObject(Obj.make(TestSchema.Organization, { name: 'DXOS' }));
+    const person = createObject(
+      Obj.make(TestSchema.Person, {
+        name: 'Test',
+        username: 'test',
+        email: 'test@example.com',
+        employer: Ref.make(org),
+      }),
+    );
+
+    // Each property access returns a new Ref instance from the ECHO proxy.
+    const ref1 = person.employer!;
+    const ref2 = person.employer!;
+    expect(ref1).not.toBe(ref2);
+
+    // Despite being different Ref instances, they should resolve to the same atom.
+    const atom1 = AtomObj.make(ref1);
+    const atom2 = AtomObj.make(ref2);
+    expect(atom1).toBe(atom2);
   });
 });

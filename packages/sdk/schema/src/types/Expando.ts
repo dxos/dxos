@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Obj, Type } from '@dxos/echo';
+import { Annotation, Obj, Type } from '@dxos/echo';
 
 /**
  * Expando object is an object with an arbitrary set of properties.
@@ -14,6 +14,7 @@ export const Expando = Schema.Struct({}, { key: Schema.String, value: Schema.Any
     typename: 'dxos.org/type/Expando',
     version: '0.1.0',
   }),
+  Annotation.SystemTypeAnnotation.set(true),
 );
 
 export interface Expando extends Schema.Schema.Type<typeof Expando> {}

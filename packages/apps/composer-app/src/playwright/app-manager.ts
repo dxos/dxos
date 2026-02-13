@@ -119,9 +119,9 @@ export class AppManager {
   }
 
   async shareSpace(): Promise<void> {
-    await this.page.getByTestId('treeView.alternateTreeButton').click();
+    await this.page.getByTestId('navtree.spaceSettings').click();
     await this.page.getByTestId('spacePlugin.members').getByTestId('treeItem.heading').click();
-    await this.page.getByTestId('treeView.primaryTreeButton').click();
+    await this.page.getByTestId('navtree.backToSpace').click();
   }
 
   async createSpaceInvitation(): Promise<string> {

@@ -103,6 +103,15 @@ const DefaultStory = () => {
   const { db, schema, table, tableRef, model, presentation, handleInsertRow, handleSaveView, handleDeleteColumn } =
     useTestTableModel();
 
+  const handleRowClick = useCallback(
+    (row: any) => {
+      if (model?.getDraftRowCount() === 0 && ['frozenRowsEnd', 'fixedEndStart', 'fixedEndEnd'].includes(row?.plane)) {
+        handleInsertRow();
+      }
+    },
+    [model, handleInsertRow],
+  );
+
   if (!schema || !table?.view.target) {
     return <div />;
   }
@@ -117,6 +126,7 @@ const DefaultStory = () => {
             schema={schema}
             model={model}
             presentation={presentation}
+            onRowClick={handleRowClick}
             ignoreAttention
           />
         </TableComponent.Root>

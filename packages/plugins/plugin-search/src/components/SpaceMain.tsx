@@ -137,11 +137,7 @@ const useSpaceItems = (space: Space) => {
           return true;
         }
         // Include actions with disposition 'item'.
-        if (Node.isAction(node) && node.properties.disposition === 'item') {
-          return true;
-        }
-        // Include alternate-tree disposition nodes (e.g. Settings).
-        return node.properties.disposition === 'alternate-tree';
+        return Node.isAction(node) && node.properties.disposition === 'item';
       }),
     [children],
   );

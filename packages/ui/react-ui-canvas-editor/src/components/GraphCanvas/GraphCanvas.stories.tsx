@@ -9,7 +9,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { withRegistry } from '@dxos/storybook-utils';
 import { render } from '@dxos/storybook-utils';
 
-import { CanvasGraphModel, type Connection, type Polygon } from '../../types';
+import { type CanvasBoard, CanvasGraphModel, type Polygon } from '../../types';
 import { Editor } from '../Editor';
 
 import { GraphCanvas, type GraphCanvasProps } from './GraphCanvas';
@@ -90,7 +90,7 @@ const DefaultStory = (props: GraphCanvasProps) => {
             output: 'c',
             target: 'node-4',
           },
-        ] as Connection[],
+        ] as CanvasBoard.Connection[],
       });
 
       setGraph(model);

@@ -1,0 +1,14 @@
+# CodeRabbit configuration for DXOS
+# https://docs.coderabbit.ai/reference/configuration
+
+reviews:
+  # Apply repo-wide review guidance.
+  path_instructions:
+    - path: '**/*'
+      instructions: |
+        TODOs in this codebase are intentional. We do not expect all TODOs to be
+        completed before merging a PR. Do not comment on TODO or similar
+        markers unless they indicate a larger concern (e.g. security, correctness,
+        architectural risk, or blocking behavior). We use TODOs to document future
+        plans for specific code and to flag open questions about implementation;
+        they are communication and planning markers, not merge blockers.

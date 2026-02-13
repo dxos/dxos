@@ -61,57 +61,14 @@ export default Capability.makeModule(
           ]),
       }),
       GraphBuilder.createExtension({
-        id: `${meta.id}/core-plugins`,
+        id: `${meta.id}/plugins`,
         match: NodeMatcher.whenId(SETTINGS_ID),
-        connector: (node, get) => {
-          const [manager] = get(managerAtom);
-          const allSettings = get(settingsAtom);
-          return Effect.succeed([
-            ...manager
-              .getPlugins()
-              .filter((plugin: Plugin.Plugin) => manager.getCore().includes(plugin.meta.id))
-              .map((plugin: Plugin.Plugin): [Plugin.Meta, Common.Capability.Settings] | null => {
-                const settings = allSettings.find((s) => s.prefix === plugin.meta.id);
-                if (!settings) {
-                  return null;
-                }
-
-                return [plugin.meta, settings];
-              })
-              .filter(isNonNullable)
-              .map(([meta, settings]: [Plugin.Meta, Common.Capability.Settings]) => ({
-                id: `${SETTINGS_KEY}:${meta.id.replaceAll('/', ':')}`,
-                type: 'category',
-                data: settings,
-                properties: {
-                  label: meta.name ?? meta.id,
-                  icon: meta.icon ?? 'ph--circle--regular',
-                },
-              })),
-
-            {
-              id: `${SETTINGS_KEY}:custom-plugins`,
-              type: 'category',
-              properties: {
-                label: ['custom plugins label', { ns: meta.id }],
-                icon: 'ph--squares-four--regular',
-                role: 'branch',
-                disposition: 'collection',
-              },
-            },
-          ]);
-        },
-      }),
-      GraphBuilder.createExtension({
-        id: `${meta.id}/custom-plugins`,
-        match: NodeMatcher.whenId(`${SETTINGS_KEY}:custom-plugins`),
         connector: (node, get) => {
           const [manager] = get(managerAtom);
           const allSettings = get(settingsAtom);
           return Effect.succeed(
             manager
               .getPlugins()
-              .filter((plugin: Plugin.Plugin) => !manager.getCore().includes(plugin.meta.id))
               .map((plugin: Plugin.Plugin): [Plugin.Meta, Common.Capability.Settings] | null => {
                 const settings = allSettings.find((s) => s.prefix === plugin.meta.id);
                 if (!settings) {

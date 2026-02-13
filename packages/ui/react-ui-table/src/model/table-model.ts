@@ -691,7 +691,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
       const currentRow = this._registry.get(this._rows)[row];
       invariant(currentRow, 'Invalid row index');
 
-      const snapshot = getSnapshot(currentRow);
+      const snapshot = { ...getSnapshot(currentRow) };
       setValue(snapshot, field.path, transformedValue);
 
       const schema = Obj.getSchema(currentRow);

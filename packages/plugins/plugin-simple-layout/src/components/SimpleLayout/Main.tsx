@@ -28,14 +28,12 @@ export const Main = () => {
   const id = state.active ?? state.workspace;
   const attentionAttrs = useAttentionAttributes(id);
   const { keyboardOpen } = useMobileLayout(MAIN_NAME);
-  const placeholder = useMemo(() => <ContentLoading />, []);
   const { actions, onAction } = useNavbarActions();
+  const appBarProps = useAppBarProps();
 
-  // Ensures that children are loaded so that they are available to navigate to.
-  useLoadDescendents(id);
+  const placeholder = useMemo(() => <ContentLoading />, []);
 
   const { graph } = useAppGraph();
-  const appBarProps = useAppBarProps(graph);
   const node = useNode(graph, id);
   const data = useMemo(() => {
     return (
@@ -48,14 +46,18 @@ export const Main = () => {
     );
   }, [id, node, node?.data, node?.properties, state.popoverAnchorId]);
 
+  // Ensures that children are loaded so that they are available to navigate to.
+  useLoadDescendents(id);
+
+  // TODO(burdon): BUG: When showing ANY statusbar the size progressively shrinks when the keyboard opens/closes.
   const showNavBar = !keyboardOpen && !state.isPopover && state.drawerState === 'closed';
 
   return (
     <div
       role='none'
       className={mx(
-        'bs-full grid bg-toolbarSurface',
-        showNavBar ? 'grid-rows-[min-content_1fr_min-content]' : 'grid-rows-[min-content_1fr]',
+        'bs-full grid overflow-hidden bg-toolbarSurface',
+        showNavBar ? 'grid-rows-[var(--rail-action)_1fr_var(--toolbar-size)]' : 'grid-rows-[var(--rail-action)_1fr]',
       )}
       {...attentionAttrs}
     >
