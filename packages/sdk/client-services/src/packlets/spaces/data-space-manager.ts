@@ -45,7 +45,9 @@ import { type Keyring } from '@dxos/keyring';
 import { ObjectId, PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { AlreadyJoinedError, trace as Trace } from '@dxos/protocols';
-import { Invitation, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
+import { encodePublicKey } from '@dxos/protocols/buf';
+import { Invitation_Kind, Invitation_Type } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { EdgeReplicationSetting, type SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
@@ -709,16 +711,16 @@ export class DataSpaceManager extends Resource {
   ): Promise<void> {
     const tasks = invitations.map(([credentialId, invitation]) => {
       return this._invitationsManager.createInvitation({
-        type: Invitation.Type.DELEGATED,
-        kind: Invitation.Kind.SPACE,
-        spaceKey: space.key,
-        authMethod: invitation.authMethod,
+        type: Invitation_Type.DELEGATED,
+        kind: Invitation_Kind.SPACE,
+        spaceKey: encodePublicKey(space.key),
+        authMethod: invitation.authMethod as never,
         invitationId: invitation.invitationId,
-        swarmKey: invitation.swarmKey,
+        swarmKey: encodePublicKey(invitation.swarmKey),
         guestKeypair: invitation.guestKey ? ({ publicKey: invitation.guestKey } as never) : undefined,
         lifetime: invitation.expiresOn ? (invitation.expiresOn.getTime() - Date.now()) / 1000 : undefined,
         multiUse: invitation.multiUse,
-        delegationCredentialId: credentialId,
+        delegationCredentialId: encodePublicKey(credentialId),
         persistent: false,
       } as never);
     });

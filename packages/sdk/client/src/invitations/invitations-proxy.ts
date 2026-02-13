@@ -14,7 +14,7 @@ import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { EMPTY } from '@dxos/protocols/buf';
+import { EMPTY, encodePublicKey } from '@dxos/protocols/buf';
 import {
   type Invitation,
   Invitation_AuthMethod,
@@ -182,7 +182,7 @@ export class InvitationsProxy implements Invitations {
       type: Invitation_Type.INTERACTIVE,
       authMethod: Invitation_AuthMethod.SHARED_SECRET,
       state: Invitation_State.INIT,
-      swarmKey: PublicKey.random(),
+      swarmKey: encodePublicKey(PublicKey.random()),
       ...this._getInvitationContext(),
     } as never;
   }

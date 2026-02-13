@@ -17,10 +17,10 @@ import { type LevelDB } from '@dxos/kv-store';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { MemorySignalManager, MemorySignalManagerContext, type SignalManager } from '@dxos/messaging';
 import { MemoryTransportFactory, SwarmNetworkManager } from '@dxos/network-manager';
-import { create } from '@dxos/protocols/buf';
+import { create, decodePublicKey } from '@dxos/protocols/buf';
 import { ChainSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
-import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
+import { Invitation_Kind } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { type Storage, StorageType, createStorage } from '@dxos/random-access-storage';
 import { layerMemory as sqliteLayerMemory } from '@dxos/sql-sqlite/platform';
 import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
@@ -234,8 +234,8 @@ export class TestPeer {
     return (this._props.invitationsManager ??= new InvitationsManager(
       new InvitationsHandler(this.networkManager),
       (invitation) => {
-        if ((invitation.kind as never) === Invitation.Kind.SPACE) {
-          return new SpaceInvitationProtocol(this.dataSpaceManager, this.identity!, this.keyring, invitation.spaceKey as never);
+        if (invitation.kind === Invitation_Kind.SPACE) {
+          return new SpaceInvitationProtocol(this.dataSpaceManager, this.identity!, this.keyring, decodePublicKey(invitation.spaceKey!));
         } else {
           throw new Error('not implemented');
         }

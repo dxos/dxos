@@ -5,6 +5,7 @@
 import { useCallback, useEffect, useMemo, useReducer } from 'react';
 
 import { type PublicKey } from '@dxos/client';
+import { decodePublicKey } from '@dxos/protocols/buf';
 import {
   type AuthenticatingInvitationObservable,
   type CancellableInvitationObservable,
@@ -159,9 +160,9 @@ export const useInvitationStatus = (observable?: CancellableInvitationObservable
             invitation,
             status: invitation.state,
             result: {
-              spaceKey: (invitation.spaceKey as never) || null,
-              identityKey: (invitation.identityKey as never) || null,
-              swarmKey: (invitation.swarmKey as never) || null,
+              spaceKey: invitation.spaceKey ? decodePublicKey(invitation.spaceKey) : null,
+              identityKey: invitation.identityKey ? decodePublicKey(invitation.identityKey) : null,
+              swarmKey: invitation.swarmKey ? decodePublicKey(invitation.swarmKey) : null,
               target: invitation.target || null,
             },
           });

@@ -7,7 +7,14 @@ import React, { type Dispatch, type FC, type SetStateAction, useCallback, useSta
 import { log } from '@dxos/log';
 import { useConfig } from '@dxos/react-client';
 import { useSpaceInvitations } from '@dxos/react-client/echo';
-import { type CancellableInvitationObservable, Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
+import {
+  type CancellableInvitationObservable,
+  type Invitation,
+  Invitation_AuthMethod,
+  Invitation_State,
+  Invitation_Type,
+  InvitationEncoder,
+} from '@dxos/react-client/invitations';
 import { ScrollArea, useTranslation } from '@dxos/react-ui';
 import { descriptionText, mx } from '@dxos/ui-theme';
 
@@ -36,7 +43,7 @@ const activeActionKey = 'dxos:react-shell/space-manager/active-action';
 
 const handleInvitationEvent = (invitation: Invitation, subscription: ZenObservable.Subscription) => {
   const invitationCode = InvitationEncoder.encode(invitation);
-  if (invitation.state === Invitation.State.CONNECTING) {
+  if (invitation.state === Invitation_State.CONNECTING) {
     log.info(JSON.stringify({ invitationCode, authCode: invitation.authCode }));
     subscription.unsubscribe();
   }
@@ -59,8 +66,8 @@ export const SpaceManager = (props: SpaceManagerProps) => {
       testId: 'spaces-panel.invite-one',
       onClick: useCallback(() => {
         const invitation = space.share?.({
-          type: Invitation.Type.INTERACTIVE,
-          authMethod: Invitation.AuthMethod.SHARED_SECRET,
+          type: Invitation_Type.INTERACTIVE,
+          authMethod: Invitation_AuthMethod.SHARED_SECRET,
           multiUse: false,
           target,
         });
@@ -78,8 +85,8 @@ export const SpaceManager = (props: SpaceManagerProps) => {
       testId: 'spaces-panel.invite-many',
       onClick: useCallback(() => {
         const invitation = space.share?.({
-          type: Invitation.Type.DELEGATED,
-          authMethod: Invitation.AuthMethod.KNOWN_PUBLIC_KEY,
+          type: Invitation_Type.DELEGATED,
+          authMethod: Invitation_AuthMethod.KNOWN_PUBLIC_KEY,
           multiUse: true,
           target,
         });
@@ -131,7 +138,7 @@ export const SpaceManagerImpl = (props: SpaceManagerImplProps) => {
 
   const visibleInvitations = showInactiveInvitations
     ? invitations
-    : invitations?.filter((invitation) => ![Invitation.State.CANCELLED].includes(invitation.get().state));
+    : invitations?.filter((invitation) => ![Invitation_State.CANCELLED].includes(invitation.get().state));
 
   return (
     <>

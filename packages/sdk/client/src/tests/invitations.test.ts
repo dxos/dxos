@@ -24,6 +24,7 @@ import { MetadataStore } from '@dxos/echo-pipeline';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { AlreadyJoinedError } from '@dxos/protocols';
+import { decodePublicKey, encodePublicKey } from '@dxos/protocols/buf';
 import {
   type Invitation,
   Invitation_AuthMethod,
@@ -68,8 +69,8 @@ const successfulInvitation = async ({
       expect(guestInvitation!.spaceKey).to.exist;
       expect(hostInvitation!.spaceKey).to.deep.eq(guestInvitation!.spaceKey);
 
-      expect(host.dataSpaceManager!.spaces.get(hostInvitation!.spaceKey! as never)).to.exist;
-      expect(guest.dataSpaceManager!.spaces.get(guestInvitation!.spaceKey! as never)).to.exist;
+      expect(host.dataSpaceManager!.spaces.get(decodePublicKey(hostInvitation!.spaceKey!))).to.exist;
+      expect(guest.dataSpaceManager!.spaces.get(decodePublicKey(guestInvitation!.spaceKey!))).to.exist;
       break;
 
     case Invitation_Kind.DEVICE:
@@ -325,7 +326,7 @@ describe('Invitations', () => {
         () => ({
           host,
           guest,
-          options: { kind: Invitation_Kind.SPACE, spaceKey: space.key as never },
+          options: { kind: Invitation_Kind.SPACE, spaceKey: encodePublicKey(space.key) },
         }),
         () => [host, guest],
       );
@@ -369,7 +370,7 @@ describe('Invitations', () => {
         space = await hostContext.dataSpaceManager.createSpace();
         host = new InvitationsProxy(service as never, undefined, () => ({
           kind: Invitation_Kind.SPACE,
-          spaceKey: space.key as never,
+          spaceKey: encodePublicKey(space.key),
         }));
 
         onTestFinished(() => space.close());
@@ -397,7 +398,7 @@ describe('Invitations', () => {
         expect(invitation.get().state).to.eq(Invitation_State.EXPIRED);
         // TODO: assumes too much about implementation.
         expect(hostMetadata.getInvitations()).to.have.lengthOf(0);
-        const swarmTopic = hostContext.networkManager.topics.find((topic) => topic.equals(invitation.get().swarmKey as never));
+        const swarmTopic = hostContext.networkManager.topics.find((topic) => topic.equals(decodePublicKey(invitation.get().swarmKey!)));
         expect(swarmTopic).to.be.undefined;
       });
     });
@@ -424,7 +425,7 @@ describe('Invitations', () => {
         {
           const tempHost = new InvitationsProxy(hostApi.service as never, undefined, () => ({
             kind: Invitation_Kind.SPACE,
-            spaceKey: space.key as never,
+            spaceKey: encodePublicKey(space.key),
           }));
 
           // ensure the saved event fires
@@ -439,10 +440,10 @@ describe('Invitations', () => {
           persistentInvitationId = persistentInvitation.get().invitationId;
           await savedTrigger.wait();
           await waitForCondition({
-            condition: () => hostContext.networkManager.topics.includes(persistentInvitation.get().swarmKey as never),
+            condition: () => hostContext.networkManager.topics.includes(decodePublicKey(persistentInvitation.get().swarmKey!)),
           });
           // TODO(nf): expose this in API as suspendInvitation()/SuspendableInvitation?
-          await hostContext.networkManager.leaveSwarm(persistentInvitation.get().swarmKey as never);
+          await hostContext.networkManager.leaveSwarm(decodePublicKey(persistentInvitation.get().swarmKey!));
         }
 
         const { service: newHostService, manager: newHostManager } = createInvitationsApi(
@@ -451,7 +452,7 @@ describe('Invitations', () => {
         );
         const host = new InvitationsProxy(newHostService as never, undefined, () => ({
           kind: Invitation_Kind.SPACE,
-          spaceKey: space.key as never,
+          spaceKey: encodePublicKey(space.key),
         }));
 
         const loadedInvitations = await newHostManager.loadPersistentInvitations();
@@ -515,7 +516,7 @@ describe('Invitations', () => {
         {
           const tempHost = new InvitationsProxy(hostApi.service as never, undefined, () => ({
             kind: Invitation_Kind.SPACE,
-            spaceKey: space.key as never,
+            spaceKey: encodePublicKey(space.key),
             persistent: false,
           }));
           // TODO(nf): require calling manually outside of service-host?
@@ -541,7 +542,7 @@ describe('Invitations', () => {
 
         const host = new InvitationsProxy(newHostService as never, undefined, () => ({
           kind: Invitation_Kind.SPACE,
-          spaceKey: space.key as never,
+          spaceKey: encodePublicKey(space.key),
         }));
         await host.open();
 
@@ -570,7 +571,7 @@ describe('Invitations', () => {
         space = await hostContext.dataSpaceManager.createSpace();
         host = new InvitationsProxy(hostService as never, undefined, () => ({
           kind: Invitation_Kind.SPACE,
-          spaceKey: space.key as never,
+          spaceKey: encodePublicKey(space.key),
         }));
         guest = new InvitationsProxy(guestService as never, undefined, () => ({ kind: Invitation_Kind.SPACE }));
 

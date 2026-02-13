@@ -9,7 +9,7 @@ import { Capability, Plugin } from '@dxos/app-framework';
 import { type PublicKey } from '@dxos/client';
 // TODO(wittjosiah): This pulls in full client.
 import { SpaceSchema } from '@dxos/client/echo';
-import { CancellableInvitationObservable, Invitation } from '@dxos/client/invitations';
+import { CancellableInvitationObservable, type Invitation, Invitation_Type, Invitation_AuthMethod } from '@dxos/client/invitations';
 import { Database, type Obj, QueryAST, Type } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 import { Collection, FieldSchema, View } from '@dxos/schema';
@@ -240,8 +240,8 @@ export namespace SpaceOperation {
     schema: {
       input: Schema.Struct({
         space: SpaceSchema,
-        type: Schema.Enums(Invitation.Type),
-        authMethod: Schema.Enums(Invitation.AuthMethod),
+        type: Schema.Enums(Invitation_Type),
+        authMethod: Schema.Enums(Invitation_AuthMethod),
         multiUse: Schema.Boolean,
         target: Schema.optional(Schema.String),
       }),

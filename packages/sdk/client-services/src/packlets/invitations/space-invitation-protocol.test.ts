@@ -7,6 +7,7 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 import { type MulticastObservable, Trigger, chain } from '@dxos/async';
 import { raise } from '@dxos/debug';
 import { AlreadyJoinedError } from '@dxos/protocols';
+import { encodePublicKey, decodePublicKey } from '@dxos/protocols/buf';
 import { type Invitation, Invitation_Kind, Invitation_State } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 
 import { type ServiceContext } from '../services';
@@ -46,7 +47,7 @@ describe('services/space-invitations-protocol', () => {
     const space1 = await host.dataSpaceManager!.createSpace();
     const spaceKey = space1.key;
 
-    await Promise.all(performInvitation({ host, guest, options: { kind: Invitation_Kind.SPACE, spaceKey: spaceKey as never } }));
+    await Promise.all(performInvitation({ host, guest, options: { kind: Invitation_Kind.SPACE, spaceKey: encodePublicKey(spaceKey) } }));
 
     {
       const space1 = host.dataSpaceManager!.spaces.get(spaceKey)!;
@@ -70,7 +71,7 @@ describe('services/space-invitations-protocol', () => {
     const space1 = await host.dataSpaceManager!.createSpace();
     const spaceKey = space1.key;
 
-    await Promise.all(performInvitation({ host, guest, options: { kind: Invitation_Kind.SPACE, spaceKey: spaceKey as never } }));
+    await Promise.all(performInvitation({ host, guest, options: { kind: Invitation_Kind.SPACE, spaceKey: encodePublicKey(spaceKey) } }));
 
     {
       const space1 = host.dataSpaceManager!.spaces.get(spaceKey)!;
@@ -85,7 +86,7 @@ describe('services/space-invitations-protocol', () => {
     const [_, guestResult] = performInvitation({
       host,
       guest,
-      options: { kind: Invitation_Kind.SPACE, spaceKey: spaceKey as never },
+      options: { kind: Invitation_Kind.SPACE, spaceKey: encodePublicKey(spaceKey) },
     });
 
     expect((await guestResult).error).to.be.instanceOf(AlreadyJoinedError);
@@ -102,7 +103,7 @@ describe('services/space-invitations-protocol', () => {
       performInvitation({
         host,
         guest,
-        options: { kind: Invitation_Kind.SPACE, spaceKey: space1.key as never },
+        options: { kind: Invitation_Kind.SPACE, spaceKey: encodePublicKey(space1.key) },
         hooks: {
           guest: {
             onReady: (invitation) => {
@@ -133,8 +134,8 @@ describe('services/space-invitations-protocol', () => {
     expect(invitation1?.spaceKey).to.deep.eq(invitation2?.spaceKey);
 
     {
-      const space1 = host.dataSpaceManager!.spaces.get(invitation1!.spaceKey as never)!;
-      const space2 = guest.dataSpaceManager!.spaces.get(invitation2!.spaceKey as never)!;
+      const space1 = host.dataSpaceManager!.spaces.get(decodePublicKey(invitation1!.spaceKey!))!;
+      const space2 = guest.dataSpaceManager!.spaces.get(decodePublicKey(invitation2!.spaceKey!))!;
       expect(space1).not.to.be.undefined;
       expect(space2).not.to.be.undefined;
 
@@ -157,7 +158,7 @@ describe('services/space-invitations-protocol', () => {
     const space = await host.dataSpaceManager!.createSpace();
     const hostInvitation = await createInvitation(host, {
       kind: Invitation_Kind.SPACE,
-      spaceKey: space.key as never,
+      spaceKey: encodePublicKey(space.key),
       timeout: 100,
     });
     const invitation = hostInvitation.get();
@@ -185,7 +186,7 @@ describe('services/space-invitations-protocol', () => {
     const invitationPromises = performInvitation({
       host,
       guest,
-      options: { kind: Invitation_Kind.SPACE, spaceKey: space1.key as never },
+      options: { kind: Invitation_Kind.SPACE, spaceKey: encodePublicKey(space1.key) },
       hooks: {
         host: {
           onConnecting: (invitation) => {

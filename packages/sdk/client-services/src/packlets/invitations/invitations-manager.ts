@@ -21,7 +21,7 @@ import {
   Invitation_State,
   Invitation_Type,
 } from '@dxos/protocols/buf/dxos/client/invitation_pb';
-import { timestampFromDate } from '@dxos/protocols/buf';
+import { encodePublicKey, timestampFromDate } from '@dxos/protocols/buf';
 import { type AcceptInvitationRequest, type AuthenticationRequest } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
@@ -201,7 +201,7 @@ export class InvitationsManager {
       authMethod = Invitation_AuthMethod.SHARED_SECRET,
       state = Invitation_State.INIT,
       timeout = INVITATION_TIMEOUT,
-      swarmKey = PublicKey.random() as never,
+      swarmKey = encodePublicKey(PublicKey.random()),
       persistent = _options?.authMethod !== Invitation_AuthMethod.KNOWN_PUBLIC_KEY, // default no not storing keypairs
       created = timestampFromDate(new Date()),
       guestKeypair = undefined,
@@ -310,7 +310,7 @@ export class InvitationsManager {
   ): Promise<void> {
     if (invitation.type === Invitation_Type.DELEGATED && invitation.delegationCredentialId == null) {
       const delegationCredentialId = await handler.delegate(invitation);
-      changeStream.next({ ...invitation, delegationCredentialId: delegationCredentialId as never });
+      changeStream.next({ ...invitation, delegationCredentialId: encodePublicKey(delegationCredentialId) });
     } else if (invitation.persistent) {
       await this._metadataStore.addInvitation(invitation as never);
       this.saved.emit(invitation);

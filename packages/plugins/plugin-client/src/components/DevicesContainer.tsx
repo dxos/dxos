@@ -9,7 +9,12 @@ import { useOperationInvoker } from '@dxos/app-framework/react';
 import { log } from '@dxos/log';
 import { useClient, useMulticastObservable } from '@dxos/react-client';
 import { type Device, useDevices } from '@dxos/react-client/halo';
-import { type CancellableInvitationObservable, Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
+import {
+  type CancellableInvitationObservable,
+  type Invitation,
+  Invitation_State,
+  InvitationEncoder,
+} from '@dxos/react-client/invitations';
 import { useNetworkStatus } from '@dxos/react-client/mesh';
 import { Button, Clipboard, Icon, IconButton, List, useId, useTranslation } from '@dxos/react-ui';
 import {
@@ -123,7 +128,7 @@ const DeviceInvitation = (props: Pick<DeviceInvitationProps, 'createInvitationUr
     if (client.config.values.runtime?.app?.env?.DX_ENVIRONMENT !== 'production') {
       const subscription = invitation.subscribe((invitation: Invitation) => {
         const invitationCode = InvitationEncoder.encode(invitation);
-        if (invitation.state === Invitation.State.CONNECTING) {
+        if (invitation.state === Invitation_State.CONNECTING) {
           log.info(JSON.stringify({ invitationCode, authCode: invitation.authCode }));
           subscription.unsubscribe();
         }
@@ -153,7 +158,7 @@ const DeviceInvitationImpl = ({
   const url = createInvitationUrl(InvitationEncoder.encode(invitation));
 
   useEffect(() => {
-    if (invitation.state >= Invitation.State.SUCCESS) {
+    if (invitation.state >= Invitation_State.SUCCESS) {
       onInvitationDone();
     }
   }, [invitation.state]);
@@ -181,9 +186,9 @@ const InvitationSection = ({
   const activeView =
     state < 0
       ? 'init'
-      : state >= Invitation.State.CANCELLED
+      : state >= Invitation_State.CANCELLED
         ? 'complete'
-        : state >= Invitation.State.READY_FOR_AUTHENTICATION && authCode
+        : state >= Invitation_State.READY_FOR_AUTHENTICATION && authCode
           ? 'auth-code'
           : 'qr-code';
   return activeView === 'init' ? (

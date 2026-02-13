@@ -12,6 +12,7 @@ import { Context } from '@dxos/context';
 import { verifyPresentation } from '@dxos/credentials';
 import { type PublicKey } from '@dxos/keys';
 import { MemorySignalManagerContext } from '@dxos/messaging';
+import { decodePublicKey } from '@dxos/protocols/buf';
 import { type Identity } from '@dxos/protocols/proto/dxos/client/services';
 import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type Credential as BufCredential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
@@ -69,7 +70,7 @@ describe('ClientServicesHost', () => {
     const haloSpace = new Trigger<PublicKey>();
     host.services.IdentityService!.queryIdentity()!.subscribe(({ identity }: QueryIdentityResponse) => {
       if (identity?.spaceKey) {
-        haloSpace.wake(identity.spaceKey as never);
+        haloSpace.wake(decodePublicKey(identity.spaceKey));
       }
     });
 
@@ -81,7 +82,7 @@ describe('ClientServicesHost', () => {
     const credentials = host.services.SpacesService!.queryCredentials({ spaceKey: await haloSpace.wait() });
     const queriedCredential = new Trigger<Credential>();
     credentials.subscribe((credential: BufCredential) => {
-      if ((credential.subject!.id as never as PublicKey).equals(testCredential.subject!.id as never)) {
+      if (decodePublicKey(credential.subject!.id!).equals(decodePublicKey(testCredential.subject!.id!))) {
         queriedCredential.wake(credential as never);
       }
     });

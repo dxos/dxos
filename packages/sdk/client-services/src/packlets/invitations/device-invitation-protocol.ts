@@ -7,6 +7,7 @@ import { invariant } from '@dxos/invariant';
 import { type Keyring } from '@dxos/keyring';
 import { type PublicKey } from '@dxos/keys';
 import { AlreadyJoinedError } from '@dxos/protocols';
+import { encodePublicKey } from '@dxos/protocols/buf';
 import { type Invitation, Invitation_Kind } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import type { DeviceProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import {
@@ -118,6 +119,6 @@ export class DeviceInvitationProtocol implements InvitationProtocol {
       authorizedDeviceCredential: response.device.credential,
     });
 
-    return { identityKey: identityKey as never };
+    return { identityKey: encodePublicKey(identityKey) };
   }
 }

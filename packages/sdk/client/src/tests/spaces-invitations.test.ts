@@ -9,6 +9,7 @@ import { performInvitation } from '@dxos/client-services/testing';
 import { Context } from '@dxos/context';
 import { TestSchema } from '@dxos/echo/testing';
 import { log } from '@dxos/log';
+import { decodePublicKey } from '@dxos/protocols/buf';
 import {
   type Invitation,
   Invitation_AuthMethod,
@@ -41,7 +42,7 @@ describe('Spaces/invitations', () => {
     expect(hostInvitation?.state).to.eq(Invitation_State.SUCCESS);
 
     {
-      const space = await waitForSpace(client2, guestInvitation!.spaceKey! as never, { ready: true });
+      const space = await waitForSpace(client2, decodePublicKey(guestInvitation!.spaceKey!), { ready: true });
       await testSpaceAutomerge(expect, space.db);
     }
   });

@@ -13,6 +13,7 @@ import { type Keyring } from '@dxos/keyring';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { AlreadyJoinedError, AuthorizationError, InvalidInvitationError, SpaceNotFoundError } from '@dxos/protocols';
+import { decodePublicKey, encodePublicKey } from '@dxos/protocols/buf';
 import {
   type Invitation,
   Invitation_AuthMethod,
@@ -68,7 +69,7 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
     invariant(space);
     return {
       kind: Invitation_Kind.SPACE,
-      spaceKey: this._spaceKey as never,
+      spaceKey: encodePublicKey(this._spaceKey),
       spaceId: space.id,
     };
   }
@@ -113,7 +114,7 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
       {
         invitationId: invitation.invitationId,
         authMethod: invitation.authMethod as never,
-        swarmKey: invitation.swarmKey as never,
+        swarmKey: decodePublicKey(invitation.swarmKey!),
         role: (invitation.role ?? SpaceMember_Role.ADMIN) as never,
         expiresOn: computeExpirationTime(invitation),
         multiUse: invitation.multiUse ?? false,
@@ -150,7 +151,7 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
     if (invitation.spaceKey == null) {
       return new InvalidInvitationError({ message: 'No spaceKey was provided for a space invitation.' });
     }
-    if (this._spaceManager.spaces.has(invitation.spaceKey as never)) {
+    if (this._spaceManager.spaces.has(decodePublicKey(invitation.spaceKey!))) {
       return new AlreadyJoinedError({ message: 'Already joined space.' });
     }
   }
@@ -197,6 +198,6 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
 
     await this._signingContext.recordCredential(credential as never);
 
-    return { spaceKey: assertion.spaceKey as never };
+    return { spaceKey: encodePublicKey(assertion.spaceKey) };
   }
 }

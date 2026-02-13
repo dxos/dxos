@@ -9,7 +9,7 @@ import { IdentityDid } from '@dxos/keys';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { faker } from '@dxos/random';
 import { PublicKey } from '@dxos/react-client';
-import { Invitation } from '@dxos/react-client/invitations';
+import { Invitation_State } from '@dxos/react-client/invitations';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { StorybookDialog } from '../../components/StorybookDialog';
@@ -78,42 +78,42 @@ const DeviceInvitationManagerWithState = (extraProps: InvitationManagerProps) =>
 );
 
 export const DeviceInvitationManager = () =>
-  DeviceInvitationManagerWithState({ status: Invitation.State.INIT, id: '0' });
+  DeviceInvitationManagerWithState({ status: Invitation_State.INIT, id: '0' });
 
 export const DeviceInvitationManagerConnecting = () =>
   DeviceInvitationManagerWithState({
-    status: Invitation.State.CONNECTING,
+    status: Invitation_State.CONNECTING,
     id: '1',
   });
 
 export const DeviceInvitationManagerConnected = () =>
   DeviceInvitationManagerWithState({
-    status: Invitation.State.CONNECTED,
+    status: Invitation_State.CONNECTED,
     id: '2',
   });
 
 export const DeviceInvitationManagerReady = () =>
   DeviceInvitationManagerWithState({
-    status: Invitation.State.READY_FOR_AUTHENTICATION,
+    status: Invitation_State.READY_FOR_AUTHENTICATION,
     authCode: '123123',
     id: '3',
   });
 
 export const DeviceInvitationManagerAuthenticating = () =>
   DeviceInvitationManagerWithState({
-    status: Invitation.State.AUTHENTICATING,
+    status: Invitation_State.AUTHENTICATING,
     id: '4',
   });
 
 export const DeviceInvitationManagerSuccess = () =>
-  DeviceInvitationManagerWithState({ status: Invitation.State.SUCCESS });
+  DeviceInvitationManagerWithState({ status: Invitation_State.SUCCESS });
 
-export const DeviceInvitationManagerError = () => DeviceInvitationManagerWithState({ status: Invitation.State.ERROR });
+export const DeviceInvitationManagerError = () => DeviceInvitationManagerWithState({ status: Invitation_State.ERROR });
 
 export const DeviceInvitationManagerTimeout = () =>
-  DeviceInvitationManagerWithState({ status: Invitation.State.TIMEOUT });
+  DeviceInvitationManagerWithState({ status: Invitation_State.TIMEOUT });
 
 export const DeviceInvitationManagerCancelled = () =>
   DeviceInvitationManagerWithState({
-    status: Invitation.State.CANCELLED,
+    status: Invitation_State.CANCELLED,
   });

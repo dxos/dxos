@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Invitation } from '@dxos/react-client/invitations';
+import { Invitation_State } from '@dxos/react-client/invitations';
 
 export const inactiveBgColor = 'bg-neutral-100 dark:bg-neutral-600';
 export const activeBgColor = 'bg-primary-500 dark:bg-primary-400';
@@ -22,23 +22,23 @@ export const successStrokeColor = 'stroke-success-300 dark:stroke-primary-400';
 export const errorStrokeColor = 'stroke-error-300 dark:stroke-error-500';
 export const cancelledStrokeColor = 'stroke-warning-300 dark:stroke-warning-500';
 
-export const resolvedStrokeColor = (status: Invitation.State) =>
-  status === Invitation.State.ERROR
+export const resolvedStrokeColor = (status: Invitation_State) =>
+  status === Invitation_State.ERROR
     ? errorStrokeColor
-    : status === Invitation.State.CANCELLED || status === Invitation.State.TIMEOUT
+    : status === Invitation_State.CANCELLED || status === Invitation_State.TIMEOUT
       ? cancelledStrokeColor
       : successStrokeColor;
 
-export const resolvedBgColor = (status: Invitation.State) =>
-  status === Invitation.State.ERROR
+export const resolvedBgColor = (status: Invitation_State) =>
+  status === Invitation_State.ERROR
     ? errorBgColor
-    : status === Invitation.State.CANCELLED || status === Invitation.State.TIMEOUT
+    : status === Invitation_State.CANCELLED || status === Invitation_State.TIMEOUT
       ? cancelledBgColor
       : successBgColor;
 
-export const resolvedTextColor = (status: Invitation.State) =>
-  status === Invitation.State.ERROR
+export const resolvedTextColor = (status: Invitation_State) =>
+  status === Invitation_State.ERROR
     ? errorTextColor
-    : status === Invitation.State.CANCELLED || status === Invitation.State.TIMEOUT
+    : status === Invitation_State.CANCELLED || status === Invitation_State.TIMEOUT
       ? cancelledTextColor
       : successTextColor;

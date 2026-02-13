@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { Invitation } from '@dxos/react-client/invitations';
+import { Invitation_State } from '@dxos/react-client/invitations';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { inviteWithState } from '../../testing/fixtures';
@@ -26,15 +26,15 @@ export const Default = () => {
   return (
     <InvitationList
       invitations={[
-        inviteWithState(Invitation.State.INIT),
-        inviteWithState(Invitation.State.CONNECTING),
-        inviteWithState(Invitation.State.CONNECTED),
-        inviteWithState(Invitation.State.READY_FOR_AUTHENTICATION),
-        inviteWithState(Invitation.State.AUTHENTICATING),
-        inviteWithState(Invitation.State.SUCCESS),
-        inviteWithState(Invitation.State.TIMEOUT),
-        inviteWithState(Invitation.State.ERROR),
-        inviteWithState(Invitation.State.CANCELLED),
+        inviteWithState(Invitation_State.INIT),
+        inviteWithState(Invitation_State.CONNECTING),
+        inviteWithState(Invitation_State.CONNECTED),
+        inviteWithState(Invitation_State.READY_FOR_AUTHENTICATION),
+        inviteWithState(Invitation_State.AUTHENTICATING),
+        inviteWithState(Invitation_State.SUCCESS),
+        inviteWithState(Invitation_State.TIMEOUT),
+        inviteWithState(Invitation_State.ERROR),
+        inviteWithState(Invitation_State.CANCELLED),
       ]}
       send={() => {}}
       createInvitationUrl={(invite) => invite}

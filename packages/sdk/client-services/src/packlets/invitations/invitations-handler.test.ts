@@ -7,6 +7,7 @@ import { beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 import { type PushStream, Trigger, sleep, waitForCondition } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
+import { decodePublicKey, encodePublicKey } from '@dxos/protocols/buf';
 import {
   type Invitation,
   Invitation_AuthMethod,
@@ -240,7 +241,7 @@ describe.skipIf(process.env.CI && !process.env.RUN_FLAKY_TESTS)(
         await hostInvitation(host, invitation);
         const guests = await Promise.all(
           range(5).map(async () => {
-            const guest = await createPeer(invitation.spaceKey as never);
+            const guest = await createPeer(decodePublicKey(invitation.spaceKey!));
             const authCodeInput2 = await acceptInvitation(guest, invitation);
             authCodeInput2.wake(invitation.authCode!);
             return guest;
@@ -321,7 +322,7 @@ describe.skipIf(process.env.CI && !process.env.RUN_FLAKY_TESTS)(
     };
 
     const createNewHost = async (invitation: Invitation): Promise<PeerSetup> => {
-      const newHost = await createPeer(invitation.spaceKey as never);
+      const newHost = await createPeer(decodePublicKey(invitation.spaceKey!));
       await performAuth(newHost, invitation);
       await sleep(30);
       await hostInvitation(newHost, invitation);
@@ -369,14 +370,14 @@ describe.skipIf(process.env.CI && !process.env.RUN_FLAKY_TESTS)(
         type: Invitation_Type.DELEGATED,
         kind: Invitation_Kind.SPACE,
         authMethod: Invitation_AuthMethod.SHARED_SECRET,
-        spaceKey: setup.spaceKey as never,
+        spaceKey: encodePublicKey(setup.spaceKey),
         multiUse: false,
         ...options,
       });
       // cancel to avoid interfering with invitations-handler direct invocations
       const invitation = observable.get();
       await setup.peer.invitationsManager.cancelInvitation(invitation as never);
-      return { ...invitation, swarmKey: PublicKey.random() as never } as never;
+      return { ...invitation, swarmKey: encodePublicKey(PublicKey.random()) } as never;
     };
   },
 );

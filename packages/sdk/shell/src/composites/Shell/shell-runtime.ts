@@ -6,6 +6,7 @@ import { Event } from '@dxos/async';
 import { type ShellRuntime, appServiceBundle, shellServiceBundle } from '@dxos/client-protocol';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
+import { decodePublicKey } from '@dxos/protocols/buf';
 import {
   type AppContextRequest,
   type InvitationUrlRequest,
@@ -98,7 +99,7 @@ export class ShellRuntimeImpl implements ShellRuntime {
           setLayout: async (request: BufLayoutRequest) => {
             this._layout = request.layout;
             this._invitationCode = request.invitationCode;
-            this._spaceKey = request.spaceKey as never;
+            this._spaceKey = request.spaceKey ? decodePublicKey(request.spaceKey) : undefined;
             this._spaceId = request.spaceId;
             this.layoutUpdate.emit(request as never);
           },

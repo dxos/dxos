@@ -10,7 +10,7 @@ import * as Effect from 'effect/Effect';
 import { CommandConfig, copyToClipboard, openBrowser, print } from '@dxos/cli-util';
 import { FormBuilder } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
-import { Invitation, InvitationEncoder, hostInvitation } from '@dxos/client/invitations';
+import { Invitation_AuthMethod, Invitation_State, InvitationEncoder, hostInvitation } from '@dxos/client/invitations';
 
 export const handler = Effect.fn(function* ({
   lifetime,
@@ -26,7 +26,7 @@ export const handler = Effect.fn(function* ({
 
   // Always use persistent and delegated (auth required) due to P2P limitations
   const observable = client.halo.share({
-    authMethod: Invitation.AuthMethod.SHARED_SECRET,
+    authMethod: Invitation_AuthMethod.SHARED_SECRET,
     persistent: true,
     lifetime,
   });
@@ -64,7 +64,7 @@ export const handler = Effect.fn(function* ({
         {
           invitationCode: InvitationEncoder.encode(invitation),
           authCode: invitation.authCode,
-          state: Invitation.State[invitation.state],
+          state: Invitation_State[invitation.state],
         },
         null,
         2,
@@ -74,7 +74,7 @@ export const handler = Effect.fn(function* ({
     const builder = FormBuilder.make({ title: 'HALO Invitation' }).pipe(
       FormBuilder.set('invitationCode', InvitationEncoder.encode(invitation)),
       FormBuilder.set('authCode', invitation.authCode ?? '<none>'),
-      FormBuilder.set('state', Invitation.State[invitation.state]),
+      FormBuilder.set('state', Invitation_State[invitation.state]),
     );
     yield* Console.log(print(FormBuilder.build(builder)));
   }

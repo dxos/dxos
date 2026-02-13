@@ -5,7 +5,12 @@
 import { type FC, type cloneElement } from 'react';
 
 import type { Identity } from '@dxos/react-client/halo';
-import type { AuthenticatingInvitationObservable, Invitation, InvitationResult } from '@dxos/react-client/invitations';
+import type {
+  AuthenticatingInvitationObservable,
+  Invitation_AuthMethod,
+  Invitation_State,
+  InvitationResult,
+} from '@dxos/react-client/invitations';
 
 import { type ConfirmResetProps, type StepProps } from '../../steps';
 import { type FailReason } from '../../types';
@@ -53,12 +58,12 @@ export type JoinPanelImplProps = Pick<
     Space: string;
   }>;
   invitationStates?: Partial<{
-    Halo: Invitation.State;
-    Space: Invitation.State;
+    Halo: Invitation_State;
+    Space: Invitation_State;
   }>;
   invitationAuthMethods?: Partial<{
-    Halo: Invitation.AuthMethod;
-    Space: Invitation.AuthMethod;
+    Halo: Invitation_AuthMethod;
+    Space: Invitation_AuthMethod;
   }>;
   succeededKeys?: Partial<{
     Halo: Set<string>;
