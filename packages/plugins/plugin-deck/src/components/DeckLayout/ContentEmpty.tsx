@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Surface } from '@dxos/app-framework/react';
+import { Surface } from '@dxos/app-framework/ui';
 
 import { useBreakpoints, useDeckState } from '../../hooks';
 import { getMode } from '../../types';
@@ -23,7 +23,7 @@ export const ContentEmpty = () => {
       className='grid place-items-center p-8 relative bg-deckSurface'
       data-testid='layoutPlugin.firstRunMessage'
     >
-      <Surface role='keyshortcuts' />
+      <Surface.Surface role='keyshortcuts' />
       {!topbar && <ToggleSidebarButton variant='default' classNames={fixedSidebarToggleStyles} />}
     </div>
   );

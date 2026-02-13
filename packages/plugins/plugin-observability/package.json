@@ -46,6 +46,7 @@
   ],
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
+    "@dxos/app-toolkit": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/echo": "workspace:*",

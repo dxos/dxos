@@ -5,7 +5,8 @@
 import { useAtomValue } from '@effect-atom/atom-react';
 import React from 'react';
 
-import { useAppGraph, useCapability } from '@dxos/app-framework/react';
+import { useCapability } from '@dxos/app-framework/ui';
+import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { Node, useActionRunner } from '@dxos/plugin-graph';
 import { useActions, useNode } from '@dxos/plugin-graph';

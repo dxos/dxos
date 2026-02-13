@@ -5,7 +5,7 @@
 import { Atom, type Registry, RegistryContext } from '@effect-atom/atom-react';
 import React, { type PropsWithChildren, useContext, useMemo } from 'react';
 
-import { useAppGraph } from '@dxos/app-framework/react';
+import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { type CompleteCellRange } from '@dxos/compute';
 import {
   type ActionGraphProps,

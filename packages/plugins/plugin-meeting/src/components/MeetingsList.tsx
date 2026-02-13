@@ -5,8 +5,8 @@
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo } from 'react';
 
-import { Common } from '@dxos/app-framework';
-import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/react';
+import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
+import { AppCapabilities } from '@dxos/app-toolkit';
 import { Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { SpaceOperation } from '@dxos/plugin-space/types';
@@ -66,7 +66,7 @@ export const MeetingsList = ({ channel }: MeetingsListProps) => {
     return meetings.toSorted((a, b) => new Date(b.created).getTime() - new Date(a.created).getTime());
   }, [meetings]);
 
-  const metadata = useCapabilities(Common.Capability.Metadata);
+  const metadata = useCapabilities(AppCapabilities.Metadata);
   const [meetingMetadata] = useMemo(
     () =>
       metadata

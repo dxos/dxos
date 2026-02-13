@@ -9,7 +9,8 @@ import * as Match from 'effect/Match';
 import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { useApp } from '@dxos/app-framework/react';
+import { useApp } from '@dxos/app-framework/ui';
+import { AppActivationEvents } from '@dxos/app-toolkit';
 import { runAndForwardErrors } from '@dxos/effect';
 import { LogLevel, log } from '@dxos/log';
 import { getObservabilityGroup, initializeAppObservability, isObservabilityDisabled } from '@dxos/observability';
@@ -160,6 +161,7 @@ const main = async () => {
   const plugins = getPlugins(conf);
   const core = getCore(conf);
   const defaults = getDefaults(conf);
+  const setupEvents = [AppActivationEvents.SetupSettings];
 
   const Fallback = ({ error }: { error: Error }) => (
     <ThemeProvider tx={defaultTx} resourceExtensions={translations}>
@@ -176,6 +178,7 @@ const main = async () => {
       plugins,
       core,
       defaults,
+      setupEvents,
       cacheEnabled: true,
       safeMode,
       debounce: 1_000,

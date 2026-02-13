@@ -4,7 +4,7 @@
 
 import React, { useState } from 'react';
 
-import { Surface } from '@dxos/app-framework/react';
+import { Surface } from '@dxos/app-framework/ui';
 import { useConfig } from '@dxos/react-client';
 import { Icon, Popover, useTranslation } from '@dxos/react-ui';
 
@@ -42,7 +42,7 @@ export const StatusBarPanel = () => {
     <>
       <StatusBarActions />
       <span role='separator' className='grow' />
-      <Surface role='status' />
+      <Surface.Surface role='status' />
     </>
   );
 };

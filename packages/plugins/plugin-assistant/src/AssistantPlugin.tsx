@@ -4,7 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common, Plugin } from '@dxos/app-framework';
+import { ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
+import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { Chat, Initiative, ResearchGraph } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { Sequence } from '@dxos/conductor';
@@ -35,16 +36,9 @@ import { translations } from './translations';
 import { AssistantEvents, AssistantOperation } from './types';
 
 export const AssistantPlugin = Plugin.define(meta).pipe(
-  Common.Plugin.addTranslationsModule({ translations }),
-  Common.Plugin.addSettingsModule({ activate: Settings }),
-  Plugin.addModule({
-    // TODO(wittjosiah): Does not integrate with settings store.
-    //   Should this be a different event?
-    //   Should settings store be renamed to be more generic?
-    activatesOn: Common.ActivationEvent.SetupSettings,
-    activate: AssistantState,
-  }),
-  Common.Plugin.addMetadataModule({
+  AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
+  AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
+  AppPlugin.addMetadataModule({
     metadata: [
       {
         id: Type.getTypename(Chat.Chat),
@@ -98,7 +92,8 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
       },
     ],
   }),
-  Common.Plugin.addSchemaModule({
+  AppPlugin.addOperationResolverModule({ activate: OperationResolver }),
+  AppPlugin.addSchemaModule({
     schema: [
       Chat.Chat,
       Chat.CompanionTo,
@@ -109,6 +104,19 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
       Initiative.Initiative,
       Sequence,
     ],
+  }),
+  AppPlugin.addSettingsModule({ activate: Settings }),
+  AppPlugin.addSurfaceModule({
+    activate: ReactSurface,
+    activatesBefore: [AppActivationEvents.SetupArtifactDefinition],
+  }),
+  AppPlugin.addTranslationsModule({ translations }),
+  Plugin.addModule({
+    // TODO(wittjosiah): Does not integrate with settings store.
+    //   Should this be a different event?
+    //   Should settings store be renamed to be more generic?
+    activatesOn: AppActivationEvents.SetupSettings,
+    activate: AssistantState,
   }),
   Plugin.addModule({
     id: 'on-space-created',
@@ -124,12 +132,6 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
     activatesOn: ClientEvents.SpacesReady,
     activate: Repair,
   }),
-  Common.Plugin.addAppGraphModule({ activate: AppGraphBuilder }),
-  Common.Plugin.addOperationResolverModule({ activate: OperationResolver }),
-  Common.Plugin.addSurfaceModule({
-    activate: ReactSurface,
-    activatesBefore: [Common.ActivationEvent.SetupArtifactDefinition],
-  }),
   Plugin.addModule({
     activatesOn: AssistantEvents.SetupAiServiceProviders,
     activate: EdgeModelResolver,
@@ -141,13 +143,12 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
     activatesBefore: [AssistantEvents.SetupAiServiceProviders],
     // TODO(dmaretskyi): This should activate lazily when the AI chat is used.
-    activatesOn: Common.ActivationEvent.Startup,
+    activatesOn: ActivationEvents.Startup,
     activate: AiService,
   }),
-  Common.Plugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
   Plugin.addModule({
     // TODO(wittjosiah): Use a different event.
-    activatesOn: Common.ActivationEvent.Startup,
+    activatesOn: ActivationEvents.Startup,
     activate: Toolkit,
   }),
   Plugin.make,

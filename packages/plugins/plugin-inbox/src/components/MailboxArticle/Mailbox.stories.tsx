@@ -6,8 +6,8 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React, { useMemo, useState } from 'react';
 
-import { Surface } from '@dxos/app-framework/react';
 import { withPluginManager } from '@dxos/app-framework/testing';
+import { Surface } from '@dxos/app-framework/ui';
 import { Obj } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
@@ -51,8 +51,8 @@ const WithCompanionStory = () => {
 
   return (
     <div {...attentionAttrs} className='bs-full is-full grid grid-cols-2 grid-rows-2 overflow-hidden'>
-      <Surface role='article' data={mailboxData} />
-      <Surface role='article' data={companionData} />
+      <Surface.Surface role='article' data={mailboxData} />
+      <Surface.Surface role='article' data={companionData} />
     </div>
   );
 };

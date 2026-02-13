@@ -4,7 +4,7 @@
 
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { type SurfaceComponentProps } from '@dxos/app-framework/react';
+import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { type Filter } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { useGlobalSearch } from '@dxos/plugin-search';

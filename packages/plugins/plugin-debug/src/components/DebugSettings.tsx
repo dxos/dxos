@@ -4,8 +4,8 @@
 
 import React, { useEffect, useState } from 'react';
 
-import { Common } from '@dxos/app-framework';
-import { useCapabilities } from '@dxos/app-framework/react';
+import { useCapabilities } from '@dxos/app-framework/ui';
+import { AppCapabilities } from '@dxos/app-toolkit';
 import { type ConfigProto, SaveConfig, Storage, defs } from '@dxos/config';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
@@ -38,7 +38,7 @@ export const DebugSettings = ({ settings, onSettingsChange }: DebugSettingsCompo
   const download = useFileDownload();
   // TODO(mykola): Get updates from other places that change Config.
   const [storageConfig, setStorageConfig] = useState<ConfigProto>({});
-  const [upload] = useCapabilities(Common.Capability.FileUploader);
+  const [upload] = useCapabilities(AppCapabilities.FileUploader);
 
   useEffect(() => {
     void Storage().then((config) => setStorageConfig(config));

@@ -6,8 +6,9 @@ import { useAtomValue } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 import React, { useCallback, useMemo } from 'react';
 
-import { Common, type Plugin, SettingsOperation } from '@dxos/app-framework';
-import { useCapabilities, useOperationInvoker, usePluginManager } from '@dxos/app-framework/react';
+import { type Plugin } from '@dxos/app-framework';
+import { useCapabilities, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
+import { AppCapabilities, LayoutOperation, SettingsOperation } from '@dxos/app-toolkit';
 import { runAndForwardErrors } from '@dxos/effect';
 import { ObservabilityOperation } from '@dxos/plugin-observability/types';
 import { Layout } from '@dxos/react-ui-mosaic';
@@ -27,7 +28,7 @@ export const RegistryContainer = ({ id, plugins: pluginsProp }: RegistryContaine
   const { invoke, invokePromise } = useOperationInvoker();
   const plugins = useMemo(() => pluginsProp.sort(sortByPluginMeta), [pluginsProp]);
   const enabled = useAtomValue(manager.enabled);
-  const allSettings = useCapabilities(Common.Capability.Settings);
+  const allSettings = useCapabilities(AppCapabilities.Settings);
 
   // TODO(wittjosiah): Factor out to an intent?
   const handleChange = useCallback(
@@ -52,7 +53,7 @@ export const RegistryContainer = ({ id, plugins: pluginsProp }: RegistryContaine
 
   const handleClick = useCallback(
     (pluginId: string) =>
-      invokePromise(Common.LayoutOperation.Open, {
+      invokePromise(LayoutOperation.Open, {
         // TODO(wittjosiah): `/` currently is not supported in ids.
         subject: [pluginId.replaceAll('/', ':')],
         pivotId: id,

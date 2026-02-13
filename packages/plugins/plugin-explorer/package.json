@@ -50,6 +50,7 @@
   "dependencies": {
     "3d-force-graph": "catalog:",
     "@dxos/app-framework": "workspace:*",
+    "@dxos/app-toolkit": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/echo": "workspace:*",

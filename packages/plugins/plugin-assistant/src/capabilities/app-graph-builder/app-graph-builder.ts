@@ -4,7 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
 import { Chat } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { Sequence } from '@dxos/conductor';
@@ -52,18 +53,18 @@ export default Capability.makeModule(
         actions: () =>
           Effect.succeed([
             {
-              id: `${Common.LayoutOperation.UpdateDialog.meta.key}/assistant/open`,
+              id: `${LayoutOperation.UpdateDialog.meta.key}/assistant/open`,
               data: Effect.fnUntraced(function* () {
                 const capabilities = yield* Capability.Service;
                 const client = yield* Capability.get(ClientCapabilities.Client);
-                const operationInvoker = yield* Capability.get(Common.Capability.OperationInvoker);
+                const operationInvoker = yield* Capability.get(Capabilities.OperationInvoker);
                 const space = getActiveSpace(capabilities) ?? client.spaces.default;
                 const chat = yield* Effect.tryPromise(() => getOrCreateChat(operationInvoker.invokePromise, space.db));
                 if (!chat) {
                   return;
                 }
 
-                yield* Operation.invoke(Common.LayoutOperation.UpdateDialog, {
+                yield* Operation.invoke(LayoutOperation.UpdateDialog, {
                   subject: ASSISTANT_DIALOG,
                   state: true,
                   blockAlign: 'end',
@@ -174,7 +175,7 @@ export default Capability.makeModule(
       }),
     ]);
 
-    return Capability.contributes(Common.Capability.AppGraphBuilder, extensions);
+    return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
   }),
 );
 

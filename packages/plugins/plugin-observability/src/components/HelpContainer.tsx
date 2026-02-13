@@ -4,8 +4,8 @@
 
 import React, { useCallback } from 'react';
 
-import { Common } from '@dxos/app-framework';
-import { useOperationInvoker } from '@dxos/app-framework/react';
+import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { LayoutOperation } from '@dxos/app-toolkit';
 import { osTranslations } from '@dxos/ui-theme';
 
 import { meta } from '../meta';
@@ -19,8 +19,8 @@ export const HelpContainer = () => {
   const handleSave = useCallback(
     async (values: UserFeedback) => {
       await invokePromise(ObservabilityOperation.CaptureUserFeedback, values);
-      await invokePromise(Common.LayoutOperation.UpdateComplementary, { state: 'collapsed' });
-      await invokePromise(Common.LayoutOperation.AddToast, {
+      await invokePromise(LayoutOperation.UpdateComplementary, { state: 'collapsed' });
+      await invokePromise(LayoutOperation.AddToast, {
         id: `${meta.id}/feedback-success`,
         icon: 'ph--paper-plane-tilt--regular',
         duration: 3000,

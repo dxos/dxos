@@ -4,7 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/operation';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
@@ -40,12 +41,12 @@ export default Capability.makeModule(
           // };
 
           const closeCurrent = {
-            id: `${Common.LayoutOperation.Close.meta.key}/current`,
+            id: `${LayoutOperation.Close.meta.key}/current`,
             data: Effect.fnUntraced(function* () {
               const attention = yield* Capability.get(AttentionCapabilities.Attention);
               const attended = attention.getCurrent().at(-1);
               if (attended) {
-                yield* Operation.invoke(Common.LayoutOperation.Close, { subject: [attended] });
+                yield* Operation.invoke(LayoutOperation.Close, { subject: [attended] });
               }
             }),
             properties: {
@@ -55,13 +56,13 @@ export default Capability.makeModule(
           };
 
           const closeOthers = {
-            id: `${Common.LayoutOperation.Close.meta.key}/others`,
+            id: `${LayoutOperation.Close.meta.key}/others`,
             data: Effect.fnUntraced(function* () {
               const attention = yield* Capability.get(AttentionCapabilities.Attention);
               const deck = yield* DeckCapabilities.getDeck();
               const attended = attention.getCurrent().at(-1);
               const ids = deck.active.filter((id: string) => id !== attended) ?? [];
-              yield* Operation.invoke(Common.LayoutOperation.Close, { subject: ids });
+              yield* Operation.invoke(LayoutOperation.Close, { subject: ids });
             }),
             properties: {
               label: ['close others label', { ns: meta.id }],
@@ -70,10 +71,10 @@ export default Capability.makeModule(
           };
 
           const closeAll = {
-            id: `${Common.LayoutOperation.Close.meta.key}/all`,
+            id: `${LayoutOperation.Close.meta.key}/all`,
             data: Effect.fnUntraced(function* () {
               const deck = yield* DeckCapabilities.getDeck();
-              yield* Operation.invoke(Common.LayoutOperation.Close, { subject: deck.active });
+              yield* Operation.invoke(LayoutOperation.Close, { subject: deck.active });
             }),
             properties: {
               label: ['close all label', { ns: meta.id }],
@@ -85,9 +86,9 @@ export default Capability.makeModule(
           const deck = state.decks[state.activeDeck];
 
           const toggleSidebar = {
-            id: `${Common.LayoutOperation.UpdateSidebar.meta.key}/nav`,
+            id: `${LayoutOperation.UpdateSidebar.meta.key}/nav`,
             data: Effect.fnUntraced(function* () {
-              yield* Common.Capability.updateAtomValue(DeckCapabilities.State, (s) => ({
+              yield* Capabilities.updateAtomValue(DeckCapabilities.State, (s) => ({
                 ...s,
                 sidebarState: s.sidebarState === 'expanded' ? ('collapsed' as const) : ('expanded' as const),
               }));
@@ -113,6 +114,6 @@ export default Capability.makeModule(
         }),
     });
 
-    return Capability.contributes(Common.Capability.AppGraphBuilder, extensions);
+    return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
   }),
 );

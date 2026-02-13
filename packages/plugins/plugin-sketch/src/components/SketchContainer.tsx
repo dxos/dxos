@@ -4,7 +4,8 @@
 
 import React from 'react';
 
-import { type SurfaceComponentProps, useAppGraph } from '@dxos/app-framework/react';
+import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
+import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { useActions } from '@dxos/plugin-graph';
 import { useAttention } from '@dxos/react-ui-attention';

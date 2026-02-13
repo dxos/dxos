@@ -4,7 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common } from '@dxos/app-framework';
+import { Capability } from '@dxos/app-framework';
+import { AppCapabilities } from '@dxos/app-toolkit';
 import { createKvsStore } from '@dxos/effect';
 
 import { meta } from '../../meta';
@@ -26,7 +27,7 @@ export default Capability.makeModule(() =>
 
     return [
       Capability.contributes(MarkdownCapabilities.Settings, settingsAtom),
-      Capability.contributes(Common.Capability.Settings, {
+      Capability.contributes(AppCapabilities.Settings, {
         prefix: meta.id,
         schema: Markdown.Settings,
         atom: settingsAtom,

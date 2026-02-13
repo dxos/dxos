@@ -4,7 +4,7 @@
 
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/react';
+import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { ComputeGraph } from '@dxos/conductor';
 import { Filter, Obj, type Type } from '@dxos/echo';
 import { Markdown } from '@dxos/plugin-markdown/types';

@@ -24,6 +24,7 @@
   },
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
+    "@dxos/app-toolkit": "workspace:*",
     "@dxos/brand": "workspace:*",
     "@dxos/client-services": "workspace:*",
     "@dxos/config": "workspace:*",
@@ -68,6 +69,7 @@
     "@dxos/plugin-registry": "workspace:*",
     "@dxos/plugin-script": "workspace:*",
     "@dxos/plugin-search": "workspace:*",
+    "@dxos/plugin-settings": "workspace:*",
     "@dxos/plugin-sheet": "workspace:*",
     "@dxos/plugin-simple-layout": "workspace:*",
     "@dxos/plugin-sketch": "workspace:*",

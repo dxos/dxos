@@ -12,13 +12,14 @@ import * as ManagedRuntime from 'effect/ManagedRuntime';
 
 import { type AiModelResolver } from '@dxos/ai';
 import { OllamaResolver } from '@dxos/ai/resolvers';
-import { Capability, Common } from '@dxos/app-framework';
+import { Capability } from '@dxos/app-framework';
+import { AppCapabilities } from '@dxos/app-toolkit';
 import { log } from '@dxos/log';
 
 // NOTE: Running ollama on non-standard port (config Tauri).
 const OLLAMA_HOST = 'http://localhost:21434';
 
-export type OllamaCapabilities = Capability.Capability<typeof Common.Capability.AiModelResolver>;
+export type OllamaCapabilities = Capability.Capability<typeof AppCapabilities.AiModelResolver>;
 
 export default Capability.makeModule<[], OllamaCapabilities>(() =>
   Effect.sync(() => {
@@ -30,7 +31,7 @@ export default Capability.makeModule<[], OllamaCapabilities>(() =>
     );
 
     return Capability.contributes(
-      Common.Capability.AiModelResolver,
+      AppCapabilities.AiModelResolver,
       OllamaSidecarModelResolver.pipe(Layer.provide(sidecarLayer)),
       () => Effect.tryPromise(() => runtime.dispose()),
     );

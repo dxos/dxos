@@ -35,6 +35,7 @@
     "toolbox": "vite-node tools/toolbox/src/main.ts"
   },
   "dependencies": {
+    "@dxos/app-toolkit": "workspace:*",
     "js-yaml": "catalog:",
     "tslib": "catalog:"
   },

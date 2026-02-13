@@ -5,8 +5,8 @@
 import * as Schema from 'effect/Schema';
 import React, { type ChangeEvent, forwardRef, useCallback, useMemo, useState } from 'react';
 
-import { Common } from '@dxos/app-framework';
-import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/react';
+import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
+import { LayoutOperation } from '@dxos/app-toolkit';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
@@ -86,7 +86,7 @@ export const SpaceSettingsContainer = forwardRef<HTMLDivElement, SpaceSettingsCo
         if (changed['archived']) {
           if (newValues.archived && !archived) {
             void invokePromise(SpaceOperation.Close, { space });
-            void invokePromise(Common.LayoutOperation.SwitchWorkspace, {
+            void invokePromise(LayoutOperation.SwitchWorkspace, {
               subject: client.spaces.default.id,
             });
           } else if (!newValues.archived && archived) {

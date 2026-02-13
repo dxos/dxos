@@ -4,14 +4,15 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { LayoutOperation } from '@dxos/app-toolkit';
 import { OperationResolver } from '@dxos/operation';
 
 import { LayoutState, type LayoutStateProps } from '../../types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const registry = yield* Capability.get(Common.Capability.AtomRegistry);
+    const registry = yield* Capability.get(Capabilities.AtomRegistry);
     const stateAtom = yield* Capability.get(LayoutState);
 
     const updateState = (fn: (state: LayoutStateProps) => Partial<LayoutStateProps>) => {
@@ -19,9 +20,9 @@ export default Capability.makeModule(
       registry.set(stateAtom, { ...current, ...fn(current) });
     };
 
-    return Capability.contributes(Common.Capability.OperationResolver, [
+    return Capability.contributes(Capabilities.OperationResolver, [
       OperationResolver.make({
-        operation: Common.LayoutOperation.UpdateSidebar,
+        operation: LayoutOperation.UpdateSidebar,
         handler: Effect.fnUntraced(function* ({ state }) {
           updateState((layout) => {
             const next = state ?? layout.sidebarState;
@@ -33,7 +34,7 @@ export default Capability.makeModule(
         }),
       }),
       OperationResolver.make({
-        operation: Common.LayoutOperation.UpdateComplementary,
+        operation: LayoutOperation.UpdateComplementary,
         handler: Effect.fnUntraced(function* ({ state }) {
           updateState((layout) => {
             const next = state ?? layout.complementarySidebarState;
@@ -45,7 +46,7 @@ export default Capability.makeModule(
         }),
       }),
       OperationResolver.make({
-        operation: Common.LayoutOperation.UpdateDialog,
+        operation: LayoutOperation.UpdateDialog,
         handler: Effect.fnUntraced(function* ({
           subject,
           state,
@@ -66,7 +67,7 @@ export default Capability.makeModule(
         }),
       }),
       OperationResolver.make({
-        operation: Common.LayoutOperation.UpdatePopover,
+        operation: LayoutOperation.UpdatePopover,
         handler: Effect.fnUntraced(function* (input) {
           const { subject, state, side, kind, props } = input;
           updateState(() => {
@@ -88,7 +89,7 @@ export default Capability.makeModule(
         }),
       }),
       OperationResolver.make({
-        operation: Common.LayoutOperation.SwitchWorkspace,
+        operation: LayoutOperation.SwitchWorkspace,
         handler: Effect.fnUntraced(function* ({ subject }) {
           updateState(() => ({ workspace: subject }));
         }),

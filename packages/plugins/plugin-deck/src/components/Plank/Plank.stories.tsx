@@ -5,8 +5,9 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { Capability, Common, Plugin } from '@dxos/app-framework';
+import { Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
+import { AppActivationEvents } from '@dxos/app-toolkit';
 import { corePlugins } from '@dxos/plugin-testing';
 import { withTheme } from '@dxos/react-ui/testing';
 import { Stack } from '@dxos/react-ui-stack';
@@ -20,7 +21,7 @@ import { Plank } from './Plank';
 const TestPlugin = Plugin.define(pluginMeta).pipe(
   Plugin.addModule({
     id: Capability.getModuleTag(DeckState),
-    activatesOn: Common.ActivationEvent.AppGraphReady,
+    activatesOn: AppActivationEvents.AppGraphReady,
     activate: () => DeckState(),
   }),
   Plugin.make,

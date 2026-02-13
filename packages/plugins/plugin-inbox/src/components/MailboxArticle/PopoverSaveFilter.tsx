@@ -4,8 +4,8 @@
 
 import React, { useCallback, useRef, useState } from 'react';
 
-import { Common } from '@dxos/app-framework';
-import { useOperationInvoker } from '@dxos/app-framework/react';
+import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { LayoutOperation } from '@dxos/app-toolkit';
 import { Obj } from '@dxos/echo';
 import { Button, Input, Popover, useTranslation } from '@dxos/react-ui';
 
@@ -22,7 +22,7 @@ export const PopoverSaveFilter = ({ mailbox, filter }: { mailbox: Mailbox.Mailbo
     Obj.change(mailbox, (m) => {
       (m.filters ??= []).push({ name, filter });
     });
-    void invokePromise(Common.LayoutOperation.UpdatePopover, { state: false, anchorId: '' });
+    void invokePromise(LayoutOperation.UpdatePopover, { state: false, anchorId: '' });
   }, [mailbox, name, invokePromise]);
 
   // TODO(thure): Why does the input value need to be uncontrolled to work?

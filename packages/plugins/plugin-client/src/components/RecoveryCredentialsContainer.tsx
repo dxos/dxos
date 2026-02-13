@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/react';
+import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { useCredentials } from '@dxos/react-client/halo';
 import { Icon, IconButton, List, ListItem, Message, useTranslation } from '@dxos/react-ui';
 import { ControlGroup, ControlItem, ControlPage, ControlSection } from '@dxos/react-ui-form';
