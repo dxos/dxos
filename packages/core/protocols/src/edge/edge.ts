@@ -12,7 +12,15 @@ import { SpaceId } from '@dxos/keys';
 // If we would rename it, we need to be careful to not break composer production.
 export enum EdgeService {
   AUTOMERGE_REPLICATOR = 'automerge-replicator',
+  /**
+   * Control feed replicator (hypercore append only logs) for the space.
+   */
+  // TODO(mykola): Remove once we migrate to keyhive for access control.
   FEED_REPLICATOR = 'feed-replicator',
+  /**
+   * Feed replicator (ordered data list) for the space.
+   */
+  // TODO(mykola): Rename to FEED_REPLICATOR when we migrate to keyhive for access control.
   QUEUE_REPLICATOR = 'queue-replicator',
   SWARM = 'swarm',
   SIGNAL = 'signal',

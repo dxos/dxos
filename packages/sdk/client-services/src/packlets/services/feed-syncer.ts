@@ -25,7 +25,7 @@ const DEFAULT_MESSAGE_BLOCKS_LIMIT = 50;
 const DEFAULT_SYNC_CONCURRENCY = 5;
 const DEFAULT_POLLING_INTERVAL = 10_000;
 
-interface QueueSyncerOptions {
+interface FeedSyncerOptions {
   runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransaction.SqlTransaction>;
   feedStore: FeedStore;
   edgeClient: EdgeConnection;
@@ -57,7 +57,7 @@ interface QueueSyncerOptions {
   pollingInterval?: number;
 }
 
-export class QueueSyncer extends Resource {
+export class FeedSyncer extends Resource {
   readonly #syncNamespace: string;
   readonly #messageBlocksLimit: number;
   readonly #syncConcurrency: number;
@@ -73,7 +73,7 @@ export class QueueSyncer extends Resource {
   /** Last time full poll was completed. */
   #lastFullPoll: number | null = null;
 
-  constructor(options: QueueSyncerOptions) {
+  constructor(options: FeedSyncerOptions) {
     super();
     this.#runtime = options.runtime;
     this.#feedStore = options.feedStore;
@@ -136,15 +136,17 @@ export class QueueSyncer extends Resource {
   #sendMessage(message: QueueProtocol.ProtocolMessage): Effect.Effect<void, unknown, never> {
     return Effect.gen(this, function* () {
       const encoded = encoder.encode(message);
-      this.#edgeClient.send(
-        createBuf(MessageSchema, {
-          source: {
-            identityKey: this.#edgeClient.identityKey,
-            peerKey: this.#edgeClient.peerKey,
-          },
-          serviceId: this.#getTargetServiceId(message),
-          payload: { value: bufferToArray(encoded) },
-        }),
+      Effect.tryPromise(async () =>
+        this.#edgeClient.send(
+          createBuf(MessageSchema, {
+            source: {
+              identityKey: this.#edgeClient.identityKey,
+              peerKey: this.#edgeClient.peerKey,
+            },
+            serviceId: this.#getTargetServiceId(message),
+            payload: { value: bufferToArray(encoded) },
+          }),
+        ),
       );
     });
   }
@@ -153,7 +155,7 @@ export class QueueSyncer extends Resource {
     // TODO(dmaretskyi): Perhaps in the future we will want to include the queue namespace here as well.
     //                   This would require putting it at the top level of the message.
     //                   For now, we let the edge router handle it.
-    return `${EdgeService.QUEUE_REPLICATOR}`;
+    return `${EdgeService.QUEUE_REPLICATOR}:${message.spaceId}`;
   }
 
   readonly #pollTask = new AsyncTask(async () =>
