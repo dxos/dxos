@@ -4,8 +4,9 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Common } from '@dxos/app-framework';
-import { useAppGraph, useCapabilities, useOperationInvoker } from '@dxos/app-framework/react';
+import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
+import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
+import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query } from '@dxos/echo';
 import { Graph, Node, useActionRunner, useConnections } from '@dxos/plugin-graph';
 import { type Space, useQuery } from '@dxos/react-client/echo';
@@ -63,7 +64,7 @@ const NodeTile: StackTileComponent<Node.Node> = ({ data: node }) => {
       }
     } else {
       // Navigate to the node.
-      invokeSync(Common.LayoutOperation.Open, { subject: [node.id] });
+      invokeSync(LayoutOperation.Open, { subject: [node.id] });
     }
   };
 
@@ -83,7 +84,7 @@ const NodeTile: StackTileComponent<Node.Node> = ({ data: node }) => {
  */
 // TODO(wittjosiah): Factor out.
 const useMetadataResolver = () => {
-  const allMetadata = useCapabilities(Common.Capability.Metadata);
+  const allMetadata = useCapabilities(AppCapabilities.Metadata);
   return useCallback((typename: string) => allMetadata.find((m) => m.id === typename)?.metadata ?? {}, [allMetadata]);
 };
 

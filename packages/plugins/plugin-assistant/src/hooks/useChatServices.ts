@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import type * as Runtime from 'effect/Runtime';
 import { useMemo } from 'react';
 
-import { useCapability } from '@dxos/app-framework/react';
+import { useCapability } from '@dxos/app-framework/ui';
 import { type Chat } from '@dxos/assistant-toolkit';
 import { type Key } from '@dxos/echo';
 import { TracingService } from '@dxos/functions';

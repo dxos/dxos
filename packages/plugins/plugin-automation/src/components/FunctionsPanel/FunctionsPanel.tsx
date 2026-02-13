@@ -5,8 +5,8 @@
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo } from 'react';
 
-import { Common } from '@dxos/app-framework';
-import { useOperationInvoker } from '@dxos/app-framework/react';
+import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { LayoutOperation } from '@dxos/app-toolkit';
 import { Obj } from '@dxos/echo';
 import { Function, Script } from '@dxos/functions';
 import { SpaceOperation } from '@dxos/plugin-space/types';
@@ -60,7 +60,7 @@ export const FunctionsPanel = ({ space }: FunctionsPanelProps) => {
     (func: Function.Function) => {
       const script = functionToScriptMap[func.id];
       if (script) {
-        void invokePromise(Common.LayoutOperation.Open, { subject: [Obj.getDXN(script).toString()] });
+        void invokePromise(LayoutOperation.Open, { subject: [Obj.getDXN(script).toString()] });
       }
     },
     [functionToScriptMap, invokePromise],

@@ -4,7 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common, SettingsOperation } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { LayoutOperation, SettingsOperation } from '@dxos/app-toolkit';
 import { type Observability, ObservabilityProvider } from '@dxos/observability';
 
 import { meta } from '../../meta';
@@ -18,9 +19,9 @@ export type ClientReadyOptions = {
 export default Capability.makeModule(
   Effect.fnUntraced(function* (props?: ClientReadyOptions) {
     const { observability } = props!;
-    const manager = yield* Capability.get(Common.Capability.PluginManager);
-    const { invokePromise } = yield* Capability.get(Common.Capability.OperationInvoker);
-    const registry = yield* Capability.get(Common.Capability.AtomRegistry);
+    const manager = yield* Capability.get(Capabilities.PluginManager);
+    const { invokePromise } = yield* Capability.get(Capabilities.OperationInvoker);
+    const registry = yield* Capability.get(Capabilities.AtomRegistry);
     const stateAtom = yield* Capability.get(ObservabilityCapabilities.State);
     const client = yield* Capability.get(ClientCapability);
 
@@ -30,7 +31,7 @@ export default Capability.makeModule(
         environment && environment !== 'ci' && !environment.endsWith('.local') && !environment.endsWith('.lan');
       const state = registry.get(stateAtom);
       if (!state.notified && notify) {
-        await invokePromise(Common.LayoutOperation.AddToast, {
+        await invokePromise(LayoutOperation.AddToast, {
           id: `${meta.id}/notice`,
           title: ['observability toast label', { ns: meta.id }],
           description: ['observability toast description', { ns: meta.id }],

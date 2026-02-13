@@ -6,8 +6,8 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Common } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
+import { AppActivationEvents } from '@dxos/app-toolkit';
 import {
   type ExtractionFunction,
   extractionAnthropicFunction,
@@ -228,7 +228,7 @@ const meta = {
         PreviewPlugin(),
         TranscriptionPlugin(),
       ],
-      fireEvents: [Common.ActivationEvent.SetupAppGraph],
+      fireEvents: [AppActivationEvents.SetupAppGraph],
     }),
   ],
 } satisfies Meta<typeof DefaultStory>;

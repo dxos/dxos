@@ -4,7 +4,7 @@
 
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { Surface } from '@dxos/app-framework/react';
+import { Surface } from '@dxos/app-framework/ui';
 import { Entity, Query } from '@dxos/echo';
 import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
 import { Toolbar, useTranslation } from '@dxos/react-ui';
@@ -77,7 +77,7 @@ const SearchResultTile: StackTileComponent<SearchResult> = ({ data }) => {
         <Card.Title>{data.label ?? (data.object && Entity.getLabel(data.object))}</Card.Title>
         <Card.Menu />
       </Card.Toolbar>
-      <Surface role='card--content' data={{ subject: data.object }} limit={1} />
+      <Surface.Surface role='card--content' data={{ subject: data.object }} limit={1} />
     </Card.Root>
   );
 };

@@ -5,7 +5,7 @@
 import * as Predicate from 'effect/Predicate';
 import React, { Fragment } from 'react';
 
-import { type SurfaceComponentProps } from '@dxos/app-framework/react';
+import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { Filter, useQuery, useSchema } from '@dxos/react-client/echo';
 import { useControlledState } from '@dxos/react-ui';

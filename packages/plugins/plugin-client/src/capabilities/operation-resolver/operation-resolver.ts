@@ -4,7 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { LayoutOperation } from '@dxos/app-toolkit';
 import { PublicKey } from '@dxos/client';
 import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
@@ -27,14 +28,14 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* (props?: OperationResolverOptions) {
     const { appName = 'Composer' } = props ?? {};
 
-    return Capability.contributes(Common.Capability.OperationResolver, [
+    return Capability.contributes(Capabilities.OperationResolver, [
       //
       // CreateIdentity
       //
       OperationResolver.make({
         operation: ClientOperation.CreateIdentity,
         handler: Effect.fnUntraced(function* (profile) {
-          const manager = yield* Capability.get(Common.Capability.PluginManager);
+          const manager = yield* Capability.get(Capabilities.PluginManager);
           const client = yield* Capability.get(ClientCapabilities.Client);
           const data = yield* Effect.promise(() => client.halo.createIdentity(profile));
           yield* Effect.promise(() => runAndForwardErrors(manager.activate(ClientEvents.IdentityCreated)));
@@ -49,7 +50,7 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: ClientOperation.JoinIdentity,
         handler: Effect.fnUntraced(function* (data) {
-          yield* Operation.invoke(Common.LayoutOperation.UpdateDialog, {
+          yield* Operation.invoke(LayoutOperation.UpdateDialog, {
             subject: JOIN_DIALOG,
             blockAlign: 'start',
             props: {
@@ -66,8 +67,8 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: ClientOperation.ShareIdentity,
         handler: Effect.fnUntraced(function* () {
-          yield* Operation.invoke(Common.LayoutOperation.SwitchWorkspace, { subject: Account.id });
-          yield* Operation.invoke(Common.LayoutOperation.Open, { subject: [Account.Profile] });
+          yield* Operation.invoke(LayoutOperation.SwitchWorkspace, { subject: Account.id });
+          yield* Operation.invoke(LayoutOperation.Open, { subject: [Account.Profile] });
           yield* Operation.schedule(ObservabilityOperation.SendEvent, { name: 'identity.share' });
         }),
       }),
@@ -78,7 +79,7 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: ClientOperation.RecoverIdentity,
         handler: Effect.fnUntraced(function* () {
-          yield* Operation.invoke(Common.LayoutOperation.UpdateDialog, {
+          yield* Operation.invoke(LayoutOperation.UpdateDialog, {
             subject: JOIN_DIALOG,
             blockAlign: 'start',
             props: {
@@ -94,7 +95,7 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: ClientOperation.ResetStorage,
         handler: Effect.fnUntraced(function* (data) {
-          yield* Operation.invoke(Common.LayoutOperation.UpdateDialog, {
+          yield* Operation.invoke(LayoutOperation.UpdateDialog, {
             subject: RESET_DIALOG,
             blockAlign: 'start',
             props: {
@@ -129,7 +130,7 @@ export default Capability.makeModule(
           const { recoveryCode } = yield* Effect.promise(() =>
             client.services.services.IdentityService!.createRecoveryCredential({}),
           );
-          yield* Operation.invoke(Common.LayoutOperation.UpdateDialog, {
+          yield* Operation.invoke(LayoutOperation.UpdateDialog, {
             subject: RECOVERY_CODE_DIALOG,
             blockAlign: 'start',
             type: 'alert',

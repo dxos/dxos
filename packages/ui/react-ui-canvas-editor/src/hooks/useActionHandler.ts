@@ -14,7 +14,7 @@ import { type TestId } from '../components';
 import { doLayout, fireBullet, getCenter, getRect, rectUnion } from '../layout';
 import { createRectangle } from '../shapes';
 import { createId, itemSize } from '../testing';
-import { type Connection, isPolygon } from '../types';
+import { type CanvasBoard, isPolygon } from '../types';
 
 import { useEditorContext } from './useEditorContext';
 
@@ -193,7 +193,7 @@ export const useActionHandler = () => {
         case 'link': {
           const { connection } = action;
           const id = createId();
-          const edge: Connection = { id, ...connection };
+          const edge: CanvasBoard.Connection = { id, ...connection };
           graph.addEdge(edge);
           graphMonitor?.onLink({ graph, edge });
           selection.setSelected([id]);

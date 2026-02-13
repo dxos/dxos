@@ -4,7 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Common, Plugin } from '@dxos/app-framework';
+import { Plugin } from '@dxos/app-framework';
+import { AppPlugin } from '@dxos/app-toolkit';
 import { type CreateObject } from '@dxos/plugin-space/types';
 import { translations as boardTranslations } from '@dxos/react-ui-board';
 
@@ -14,8 +15,7 @@ import { translations } from './translations';
 import { Board } from './types';
 
 export const BoardPlugin = Plugin.define(meta).pipe(
-  Common.Plugin.addTranslationsModule({ translations: [...translations, ...boardTranslations] }),
-  Common.Plugin.addMetadataModule({
+  AppPlugin.addMetadataModule({
     metadata: {
       id: Board.Board.typename,
       metadata: {
@@ -26,7 +26,8 @@ export const BoardPlugin = Plugin.define(meta).pipe(
       },
     },
   }),
-  Common.Plugin.addSchemaModule({ schema: [Board.Board] }),
-  Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
+  AppPlugin.addSchemaModule({ schema: [Board.Board] }),
+  AppPlugin.addSurfaceModule({ activate: ReactSurface }),
+  AppPlugin.addTranslationsModule({ translations: [...translations, ...boardTranslations] }),
   Plugin.make,
 );

@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/react';
+import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { useClient } from '@dxos/react-client';
 import { useSpaces } from '@dxos/react-client/echo';
 import { IconButton, Input, List, ListItem, toLocalizedString, useTranslation } from '@dxos/react-ui';

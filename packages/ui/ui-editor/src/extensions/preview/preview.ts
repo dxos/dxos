@@ -16,7 +16,7 @@ export type PreviewLinkRef = {
   suggest?: boolean;
   block?: boolean;
   label: string;
-  ref: string;
+  dxn: string;
 };
 
 export type PreviewLinkTarget = {
@@ -119,13 +119,13 @@ export const getLinkRef = (state: EditorState, node: SyntaxNode): PreviewLinkRef
   const mark = node.getChildren('LinkMark');
   const urlNode = node.getChild('URL');
   if (mark && urlNode) {
-    const url = state.sliceDoc(urlNode.from, urlNode.to);
-    if (url.startsWith('dxn:')) {
+    const dxn = state.sliceDoc(urlNode.from, urlNode.to);
+    if (dxn.startsWith('dxn:')) {
       const label = state.sliceDoc(mark[0].to, mark[1].from);
       return {
         block: state.sliceDoc(mark[0].from, mark[0].from + 1) === '!',
         label,
-        ref: url,
+        dxn,
       };
     }
   }
@@ -148,14 +148,14 @@ class PreviewInlineWidget extends WidgetType {
   // }
 
   override eq(other: this) {
-    return this._link.ref === other._link.ref && this._link.label === other._link.label;
+    return this._link.dxn === other._link.dxn && this._link.label === other._link.label;
   }
 
   override toDOM(_view: EditorView) {
     const root = document.createElement('dx-anchor');
     root.classList.add('dx-tag--anchor');
     root.textContent = this._link.label;
-    root.setAttribute('refId', this._link.ref);
+    root.setAttribute('dxn', this._link.dxn);
     return root;
   }
 }
@@ -177,7 +177,7 @@ class PreviewBlockWidget extends WidgetType {
   // }
 
   override eq(other: this) {
-    return this._link.ref === other._link.ref;
+    return this._link.dxn === other._link.dxn;
   }
 
   override toDOM(_view: EditorView) {

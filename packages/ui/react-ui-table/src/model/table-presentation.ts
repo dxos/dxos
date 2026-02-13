@@ -210,7 +210,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
       const targetObj = getValue(obj, field.path)?.target;
       if (targetObj) {
         const dxn = Obj.getDXN(targetObj)?.toString();
-        cell.accessoryHtml = `<div role="none" class="absolute inline-end-0 inset-block-0 p-[--dx-grid-cell-content-padding-block]"><dx-anchor refId=${dxn} class="dx-button is-6 aspect-square min-bs-0" data-dx-grid-action="accessory"><dx-icon icon="ph--link-simple--regular"/></dx-anchor></div>`;
+        cell.accessoryHtml = `<div role="none" class="absolute inline-end-0 inset-block-0 p-[--dx-grid-cell-content-padding-block]"><dx-anchor dxn=${dxn} class="dx-button is-6 aspect-square min-bs-0" data-dx-grid-action="accessory"><dx-icon icon="ph--link-simple--regular"/></dx-anchor></div>`;
       }
     }
 

@@ -4,7 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { ActivationEvent, Capability, Common, Plugin } from '@dxos/app-framework';
+import { ActivationEvent, ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
+import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { type Observability } from '@dxos/observability';
 
 import {
@@ -26,9 +27,12 @@ export type ObservabilityPluginOptions = {
 };
 
 export const ObservabilityPlugin = Plugin.define<ObservabilityPluginOptions>(meta).pipe(
+  AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
+  AppPlugin.addSurfaceModule({ activate: ReactSurface }),
+  AppPlugin.addTranslationsModule({ translations }),
   Plugin.addModule(({ namespace, observability }) => ({
     id: 'observability',
-    activatesOn: Common.ActivationEvent.Startup,
+    activatesOn: ActivationEvents.Startup,
     activate: () =>
       Effect.gen(function* () {
         const obs = yield* Effect.tryPromise(() => observability());
@@ -36,27 +40,24 @@ export const ObservabilityPlugin = Plugin.define<ObservabilityPluginOptions>(met
       }),
   })),
   Plugin.addModule({
-    activatesOn: Common.ActivationEvent.SetupSettings,
+    activatesOn: AppActivationEvents.SetupSettings,
     activate: ObservabilitySettings,
   }),
   Plugin.addModule(({ namespace }) => ({
     id: Capability.getModuleTag(ObservabilityState),
-    activatesOn: Common.ActivationEvent.Startup,
+    activatesOn: ActivationEvents.Startup,
     activatesAfter: [ObservabilityEvents.StateReady],
     activate: () => ObservabilityState({ namespace }),
   })),
-  Common.Plugin.addTranslationsModule({ translations }),
   Plugin.addModule(({ namespace }) => ({
     id: Capability.getModuleTag(OperationResolver),
-    activatesOn: Common.ActivationEvent.SetupOperationResolver,
+    activatesOn: ActivationEvents.SetupOperationResolver,
     activate: () => OperationResolver({ namespace }),
   })),
-  Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
-  Common.Plugin.addAppGraphModule({ activate: AppGraphBuilder }),
   Plugin.addModule(({ namespace, observability }) => ({
     id: Capability.getModuleTag(ClientReady),
     activatesOn: ActivationEvent.allOf(
-      Common.ActivationEvent.OperationInvokerReady,
+      ActivationEvents.OperationInvokerReady,
       ObservabilityEvents.StateReady,
       ClientReadyEvent,
     ),

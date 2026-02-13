@@ -5,8 +5,9 @@
 import { useAtomValue } from '@effect-atom/atom-react';
 import React, { useCallback, useMemo } from 'react';
 
-import { Common } from '@dxos/app-framework';
-import { useCapabilities, useCapability, useOperationInvoker } from '@dxos/app-framework/react';
+import { Capabilities } from '@dxos/app-framework';
+import { useCapabilities, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
+import { AppCapabilities, CollaborationOperation, LayoutOperation } from '@dxos/app-toolkit';
 import { Filter, Obj, Query, Relation } from '@dxos/echo';
 import { Ref, useQuery } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
@@ -28,7 +29,7 @@ export const ThreadCompanion = ({ subject }: { subject: any }) => {
   const { invokePromise } = useOperationInvoker();
   const identity = useIdentity();
   const subjectId = Obj.getDXN(subject).toString();
-  const registry = useCapability(Common.Capability.AtomRegistry);
+  const registry = useCapability(Capabilities.AtomRegistry);
 
   const stateAtom = useCapability(ThreadCapabilities.State);
   const viewStoreAtom = useCapability(ThreadCapabilities.ViewState);
@@ -56,7 +57,7 @@ export const ThreadCompanion = ({ subject }: { subject: any }) => {
     [registry, viewStoreAtom, subjectId],
   );
 
-  const anchorSorts = useCapabilities(Common.Capability.AnchorSort);
+  const anchorSorts = useCapabilities(AppCapabilities.AnchorSort);
   const sort = useMemo(
     () => anchorSorts.find(({ key }) => key === Obj.getTypename(subject))?.sort,
     [anchorSorts, subject],
@@ -82,7 +83,7 @@ export const ThreadCompanion = ({ subject }: { subject: any }) => {
         // TODO(wittjosiah): Should this be a thread-specific intent?
         //  The layout doesn't know about threads and this working depends on other plugins conditionally handling it.
         //  This may be overloading this intent or highjacking its intended purpose.
-        void invokePromise(Common.LayoutOperation.ScrollIntoView, {
+        void invokePromise(LayoutOperation.ScrollIntoView, {
           subject: Obj.getDXN(subject).toString(),
           cursor: anchor.anchor,
           ref: threadId,
@@ -140,7 +141,7 @@ export const ThreadCompanion = ({ subject }: { subject: any }) => {
         return;
       }
 
-      await invokePromise(Common.CollaborationOperation.AcceptProposal, {
+      await invokePromise(CollaborationOperation.AcceptProposal, {
         subject,
         anchor: anchor.anchor,
         proposal,

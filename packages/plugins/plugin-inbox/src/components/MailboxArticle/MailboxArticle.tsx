@@ -5,8 +5,10 @@
 import { Atom, useAtomSet, useAtomValue } from '@effect-atom/atom-react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Common } from '@dxos/app-framework';
-import { type SurfaceComponentProps, useLayout, useOperationInvoker } from '@dxos/app-framework/react';
+import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { LayoutOperation } from '@dxos/app-toolkit';
+import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
+import { useLayout } from '@dxos/app-toolkit/ui';
 import { type Database, Obj, Relation, Tag } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { AttentionOperation } from '@dxos/plugin-attention/types';
@@ -37,7 +39,7 @@ export type MailboxArticleProps = SurfaceComponentProps<
   }
 >;
 
-export const MailboxArticle = ({ role, subject: mailbox, filter: filterProp, attendableId }: MailboxArticleProps) => {
+export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendableId }: MailboxArticleProps) => {
   const { t } = useTranslation(meta.id);
   const id = attendableId ?? Obj.getDXN(mailbox).toString();
   const { invokePromise } = useOperationInvoker();
@@ -129,7 +131,7 @@ export const MailboxArticle = ({ role, subject: mailbox, filter: filterProp, att
           const companionId = `${id}${ATTENDABLE_PATH_SEPARATOR}message`;
           if (layout.mode === 'simple') {
             // Simple layout: navigate to companion as standalone view.
-            void invokePromise(Common.LayoutOperation.Open, {
+            void invokePromise(LayoutOperation.Open, {
               subject: [companionId],
             });
           } else {
@@ -158,7 +160,7 @@ export const MailboxArticle = ({ role, subject: mailbox, filter: filterProp, att
         }
 
         case 'save': {
-          void invokePromise(Common.LayoutOperation.UpdatePopover, {
+          void invokePromise(LayoutOperation.UpdatePopover, {
             subject: POPOVER_SAVE_FILTER,
             state: true,
             variant: 'virtual',

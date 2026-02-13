@@ -4,8 +4,9 @@
 
 import React, { Fragment, type MouseEvent, memo, useCallback, useEffect, useMemo } from 'react';
 
-import { Common } from '@dxos/app-framework';
-import { Surface, useAppGraph, useOperationInvoker } from '@dxos/app-framework/react';
+import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
+import { LayoutOperation } from '@dxos/app-toolkit';
+import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Graph, type Node, useActionRunner } from '@dxos/plugin-graph';
 import { Icon, IconButton, Popover, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { StackItem, type StackItemSigilAction } from '@dxos/react-ui-stack';
@@ -121,9 +122,9 @@ export const PlankHeading = memo(
           return invokePromise(DeckOperation.Adjust, { type: eventType, id });
         } else if (eventType === 'close') {
           if (part === 'complementary') {
-            return invokeSync(Common.LayoutOperation.UpdateComplementary, { state: 'collapsed' });
+            return invokeSync(LayoutOperation.UpdateComplementary, { state: 'collapsed' });
           } else {
-            return invokeSync(Common.LayoutOperation.Close, { subject: [id] });
+            return invokeSync(LayoutOperation.Close, { subject: [id] });
           }
         } else {
           return invokePromise(DeckOperation.Adjust, { type: eventType, id });
@@ -191,7 +192,7 @@ export const PlankHeading = memo(
                   actions={sigilActions}
                   onAction={handleAction}
                 >
-                  <Surface role='menu-footer' data={{ subject: node.data }} />
+                  <Surface.Surface role='menu-footer' data={{ subject: node.data }} />
                 </StackItem.Sigil>
               ) : (
                 <StackItem.SigilButton>
@@ -211,7 +212,7 @@ export const PlankHeading = memo(
             </TextTooltip>
           </>
         )}
-        {node && part !== 'complementary' && <Surface role='navbar-end' data={{ subject: node.data }} />}
+        {node && part !== 'complementary' && <Surface.Surface role='navbar-end' data={{ subject: node.data }} />}
         {companioned === 'companion' ? (
           <PlankCompanionControls primary={primaryId} />
         ) : (

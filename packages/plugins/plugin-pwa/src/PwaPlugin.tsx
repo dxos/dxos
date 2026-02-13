@@ -5,23 +5,24 @@
 import * as Effect from 'effect/Effect';
 import { registerSW } from 'virtual:pwa-register';
 
-import { Capability, Common, Plugin } from '@dxos/app-framework';
+import { ActivationEvents, Capabilities, Capability, Plugin } from '@dxos/app-framework';
+import { AppPlugin, LayoutOperation } from '@dxos/app-toolkit';
 import { log } from '@dxos/log';
 
 import { meta } from './meta';
 import { translations } from './translations';
 
 export const PwaPlugin = Plugin.define(meta).pipe(
-  Common.Plugin.addTranslationsModule({ translations }),
+  AppPlugin.addTranslationsModule({ translations }),
   Plugin.addModule({
     id: 'register-pwa',
-    activatesOn: Common.ActivationEvent.OperationInvokerReady,
+    activatesOn: ActivationEvents.OperationInvokerReady,
     activate: Effect.fnUntraced(function* () {
-      const { invokeSync } = yield* Capability.get(Common.Capability.OperationInvoker);
+      const { invokeSync } = yield* Capability.get(Capabilities.OperationInvoker);
 
       const updateSW = registerSW({
         onNeedRefresh: () => {
-          invokeSync(Common.LayoutOperation.AddToast, {
+          invokeSync(LayoutOperation.AddToast, {
             id: `${meta.id}/need-refresh`,
             title: ['need refresh label', { ns: meta.id }],
             description: ['need refresh description', { ns: meta.id }],
@@ -32,7 +33,7 @@ export const PwaPlugin = Plugin.define(meta).pipe(
           });
         },
         onOfflineReady: () => {
-          invokeSync(Common.LayoutOperation.AddToast, {
+          invokeSync(LayoutOperation.AddToast, {
             id: `${meta.id}/offline-ready`,
             title: ['offline ready label', { ns: meta.id }],
             closeLabel: ['confirm label', { ns: meta.id }],

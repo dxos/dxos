@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
 import { Obj, Ref, Type } from '@dxos/echo';
 import { OperationResolver } from '@dxos/operation';
 import { Collection } from '@dxos/schema';
@@ -13,7 +13,7 @@ import { Journal, Outline, OutlineOperation, OutlinerOperation } from '../../typ
 
 export default Capability.makeModule(() =>
   Effect.succeed(
-    Capability.contributes(Common.Capability.OperationResolver, [
+    Capability.contributes(Capabilities.OperationResolver, [
       OperationResolver.make({
         operation: OutlinerOperation.OnCreateSpace,
         handler: Effect.fnUntraced(function* ({ rootCollection }) {

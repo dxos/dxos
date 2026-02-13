@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/react';
+import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type Database, Filter, Obj } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space/types';
 import { useQuery } from '@dxos/react-client/echo';

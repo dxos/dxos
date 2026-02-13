@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 
-import * as Common from '../common';
+import { ActivationEvents, Capabilities } from '../common';
 import { Capability, Plugin } from '../core';
 
 //
@@ -22,10 +22,10 @@ export default Capability.makeModule(
     const pluginManager = yield* Plugin.Service;
 
     // Trigger setup event so plugins can contribute their layers.
-    yield* Plugin.activate(Common.ActivationEvent.SetupLayer);
+    yield* Plugin.activate(ActivationEvents.SetupLayer);
 
     // Gather all contributed layers.
-    const layers = yield* Capability.getAll(Common.Capability.Layer);
+    const layers = yield* Capability.getAll(Capabilities.Layer);
 
     // Create layers that provide Capability.Service and Plugin.Service.
     const capabilityServiceLayer = Layer.succeed(Capability.Service, capabilityManager);
@@ -46,8 +46,8 @@ export default Capability.makeModule(
           );
 
     // Create the managed runtime from the composed layer.
-    const runtime = ManagedRuntime.make(composedLayer) as Common.Capability.ManagedRuntime;
+    const runtime = ManagedRuntime.make(composedLayer) as Capabilities.ManagedRuntime;
 
-    return Capability.contributes(Common.Capability.ManagedRuntime, runtime);
+    return Capability.contributes(Capabilities.ManagedRuntime, runtime);
   }),
 );

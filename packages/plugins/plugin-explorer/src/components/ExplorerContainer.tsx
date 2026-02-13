@@ -4,11 +4,11 @@
 
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { type SurfaceComponentProps } from '@dxos/app-framework/react';
+import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { type Filter } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { useGlobalSearch } from '@dxos/plugin-search';
-import { getSpace } from '@dxos/react-client/echo';
+import { getSpace, useObject } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
 import { QueryEditor, type QueryEditorProps } from '@dxos/react-ui-components';
 import { Layout } from '@dxos/react-ui-mosaic';
@@ -21,7 +21,8 @@ import { D3ForceGraph } from './Graph';
 export type ExplorerContainerProps = SurfaceComponentProps<View.View>;
 
 const ExplorerContainer = ({ role, subject: view }: ExplorerContainerProps) => {
-  const space = getSpace(view);
+  useObject(view);
+  const space = view && getSpace(view);
   const [filter, setFilter] = useState<Filter.Any>();
   const model = useGraphModel(space, filter);
   const { match } = useGlobalSearch();
