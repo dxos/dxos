@@ -127,19 +127,21 @@ export const CreateObjectDialog = ({
           <Dialog.CloseIconButton ref={closeRef} />
         </Dialog.Close>
       </Dialog.Header>
-      <CreateObjectPanel
-        schemas={userSchemas}
-        spaces={spaces}
-        target={target}
-        views={views}
-        typename={typename}
-        initialFormValues={initialFormValues}
-        defaultSpaceId={client.spaces.default.id}
-        resolve={resolve}
-        onTargetChange={setTarget}
-        onTypenameChange={setTypename}
-        onCreateObject={handleCreateObject}
-      />
+      <Dialog.Body>
+        <CreateObjectPanel
+          schemas={userSchemas}
+          spaces={spaces}
+          target={target}
+          views={views}
+          typename={typename}
+          initialFormValues={initialFormValues}
+          defaultSpaceId={client.spaces.default.id}
+          resolve={resolve}
+          onTargetChange={setTarget}
+          onTypenameChange={setTypename}
+          onCreateObject={handleCreateObject}
+        />
+      </Dialog.Body>
     </Dialog.Content>
   );
 };
