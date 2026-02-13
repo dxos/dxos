@@ -9,19 +9,19 @@ import { Domino } from '@dxos/ui';
 export class ReferenceWidget extends WidgetType {
   constructor(
     private text: string,
-    private refid: string,
+    private dxn: string,
   ) {
     super();
   }
 
   override eq(other: this) {
-    return this.refid === other.refid;
+    return this.dxn === other.dxn;
   }
 
   override toDOM() {
     const anchor = Domino.of('dx-anchor' as any)
       .classNames('dx-tag--anchor')
-      .attributes({ refid: this.refid })
+      .attributes({ dxn: this.dxn })
       .text(this.text);
     return Domino.of('div').classNames('mbs-2 mbe-2').children(anchor).root;
   }

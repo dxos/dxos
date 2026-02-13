@@ -103,14 +103,14 @@ const createStyleActions = ({ model, state, stateAtom, registry, cursorFallbackR
         ) {
           // this value should be unset
           if (index >= 0) {
-            Obj.change(model.sheet, (s) => {
-              s.ranges?.splice(index, 1);
+            Obj.change(model.sheet, (obj) => {
+              obj.ranges?.splice(index, 1);
             });
           }
           registry.set(stateAtom, { ...currentState, [nextRangeEntity.value]: false });
         } else {
-          Obj.change(model.sheet, (s) => {
-            s.ranges?.push(nextRangeEntity);
+          Obj.change(model.sheet, (obj) => {
+            obj.ranges?.push(nextRangeEntity);
           });
           registry.set(stateAtom, { ...currentState, [nextRangeEntity.value]: true });
         }
