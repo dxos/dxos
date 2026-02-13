@@ -89,7 +89,7 @@ export class SyncClient {
       const request: QueryRequest = {
         requestId,
         spaceId: opts.spaceId,
-        query: { feedNamespace: opts.feedNamespace },
+        feedNamespace: opts.feedNamespace,
         position: lastPulledPosition,
         limit: opts.limit,
       };
@@ -101,6 +101,7 @@ export class SyncClient {
       }
       yield* self.#feedStore.append({
         spaceId: opts.spaceId,
+        feedNamespace: opts.feedNamespace,
         blocks: response.blocks,
       });
 
@@ -128,7 +129,7 @@ export class SyncClient {
     return Effect.gen(function* () {
       const unpositioned = yield* self.#feedStore.query({
         spaceId: opts.spaceId,
-        query: { feedNamespace: opts.feedNamespace },
+        feedNamespace: opts.feedNamespace,
         unpositionedOnly: true,
         limit: opts.limit,
       });
@@ -141,6 +142,7 @@ export class SyncClient {
       const request: AppendRequest = {
         requestId,
         spaceId: opts.spaceId,
+        feedNamespace: opts.feedNamespace,
         blocks: unpositioned.blocks,
       };
       yield* self.#sendMessage(self.#withPeerIds({ _tag: 'AppendRequest', ...request }));
@@ -150,7 +152,7 @@ export class SyncClient {
         spaceId: opts.spaceId,
         blocks: Array.zipWith(response.positions, unpositioned.blocks, (position, block) => ({
           feedId: block.feedId,
-          feedNamespace: block.feedNamespace,
+          feedNamespace: opts.feedNamespace,
           actorId: block.actorId,
           sequence: block.sequence,
           position,

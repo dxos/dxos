@@ -29,7 +29,6 @@ const TestLayer = Layer.merge(SqliteLayer, TransactionLayer);
 
 // ActorIds.
 const ALICE = 'alice';
-const BOB = 'bob';
 
 describe('Feed V2', () => {
   it.effect('should append and query blocks via RPC', () =>
@@ -43,7 +42,6 @@ describe('Feed V2', () => {
       // Append
       const block: Block = {
         feedId,
-        feedNamespace: WellKnownNamespaces.data,
         actorId: feedId,
         sequence: 123, // Author sequence provided by peer
         predActorId: null,
@@ -57,13 +55,20 @@ describe('Feed V2', () => {
         requestId: 'req-1',
         blocks: [block],
         spaceId,
+        feedNamespace: WellKnownNamespaces.data,
       });
       expect(appendRes.positions.length).toBe(1);
       expect(appendRes.positions[0]).toBeDefined();
       expect(appendRes.requestId).toBe('req-1');
 
       // Query by feedId
-      const queryRes = yield* feed.query({ requestId: 'req-2', query: { feedIds: [feedId] }, position: -1, spaceId }); // Use position -1 to get everything
+      const queryRes = yield* feed.query({
+        requestId: 'req-2',
+        query: { feedIds: [feedId] },
+        position: -1,
+        spaceId,
+        feedNamespace: WellKnownNamespaces.data,
+      }); // Use position -1 to get everything
       expect(queryRes.blocks.length).toBe(1);
       expect(queryRes.blocks[0].position).toBe(appendRes.positions[0]);
       expect(queryRes.blocks[0].sequence).toBe(123); // Verify Author Sequence is preserved
@@ -83,7 +88,6 @@ describe('Feed V2', () => {
       // Append with namespace
       const block = Block.make({
         feedId,
-        feedNamespace,
         actorId: ALICE,
         sequence: 1,
         predActorId: null,
@@ -93,7 +97,7 @@ describe('Feed V2', () => {
         data: new Uint8Array([1]),
       });
 
-      yield* feed.append({ requestId: 'req-ns', blocks: [block], spaceId });
+      yield* feed.append({ requestId: 'req-ns', blocks: [block], spaceId, feedNamespace });
 
       // Verify directly from DB (white-box test) to ensure schema is correct
       const sql = yield* SqliteClient.SqliteClient;
@@ -119,7 +123,6 @@ describe('Feed V2', () => {
         blocks: [
           Block.make({
             feedId,
-            feedNamespace: WellKnownNamespaces.data,
             actorId: feedId,
             sequence: 1,
             predActorId: null,
@@ -130,6 +133,7 @@ describe('Feed V2', () => {
           }),
         ],
         spaceId,
+        feedNamespace: WellKnownNamespaces.data,
       });
 
       // Subscribe
@@ -141,6 +145,7 @@ describe('Feed V2', () => {
       const queryRes = yield* feed.query({
         requestId: 'req-3',
         spaceId,
+        feedNamespace: WellKnownNamespaces.data,
         query: { subscriptionId: subRes.subscriptionId },
         position: 0,
       });
@@ -177,6 +182,7 @@ describe('Feed V2', () => {
       const result1 = yield* feedStore.query({
         requestId: 'req1',
         spaceId,
+        feedNamespace: WellKnownNamespaces.data,
         query: { feedIds: ['feed-1'] },
         position: -1,
       });
@@ -184,6 +190,7 @@ describe('Feed V2', () => {
       const result2 = yield* feedStore.query({
         requestId: 'req2',
         spaceId,
+        feedNamespace: WellKnownNamespaces.data,
         query: { feedIds: ['feed-2'] },
         position: -1,
       });
@@ -231,12 +238,14 @@ describe('Feed V2', () => {
       const feed1Res = yield* feedStore.query({
         requestId: 'req1',
         spaceId,
+        feedNamespace: WellKnownNamespaces.data,
         query: { feedIds: ['feed-1'] },
         cursor: undefined,
       });
       const feed2Res = yield* feedStore.query({
         requestId: 'req2',
         spaceId,
+        feedNamespace: WellKnownNamespaces.data,
         query: { feedIds: ['feed-2'] },
         cursor: undefined,
       });
@@ -259,6 +268,7 @@ describe('Feed V2', () => {
         .query({
           requestId: 'req-bad',
           spaceId,
+          feedNamespace: WellKnownNamespaces.data,
           query: { feedIds: ['feed-1'] },
           cursor: invalidCursor as any,
         })
@@ -291,6 +301,7 @@ describe('Feed V2', () => {
       const nextRes = yield* feedStore.query({
         requestId: 'req-next',
         spaceId,
+        feedNamespace: WellKnownNamespaces.data,
         query: { feedIds: ['feed-1'] },
         cursor: validCursor as any,
       });
@@ -326,7 +337,12 @@ describe('Feed V2', () => {
       expect(blocks[0].data).toEqual(new Uint8Array([1]));
 
       // Query by feedId
-      const queryRes = yield* feed.query({ query: { feedIds: [feedId] }, position: -1, spaceId }); // Use position '-1' to get everything
+      const queryRes = yield* feed.query({
+        query: { feedIds: [feedId] },
+        position: -1,
+        spaceId,
+        feedNamespace: WellKnownNamespaces.data,
+      }); // Use position '-1' to get everything
       expect(queryRes.blocks.length).toBe(1);
       expect(queryRes.blocks.length).toBe(1);
       expect(queryRes.blocks[0]).toMatchObject({ ...blocks[0], feedId, position: expect.any(Number) });
@@ -349,11 +365,20 @@ describe('Feed V2', () => {
           data: new Uint8Array([1]),
         },
       ]);
-      const query1 = yield* feed.query({ spaceId, query: { feedIds: [feedId] } }); // Use position '-1' to get everything
+      const query1 = yield* feed.query({
+        spaceId,
+        feedNamespace: WellKnownNamespaces.data,
+        query: { feedIds: [feedId] },
+      }); // Use position '-1' to get everything
       log.info('query 1', { blocks: query1.blocks.length, cursor: query1.nextCursor });
       expect(query1.blocks.length).toBe(1);
 
-      const query2 = yield* feed.query({ spaceId, query: { feedIds: [feedId] }, cursor: query1.nextCursor });
+      const query2 = yield* feed.query({
+        spaceId,
+        feedNamespace: WellKnownNamespaces.data,
+        query: { feedIds: [feedId] },
+        cursor: query1.nextCursor,
+      });
       log.info('query 2', { blocks: query2.blocks.length, cursor: query2.nextCursor });
       expect(query2.blocks.length).toBe(0);
 
@@ -365,7 +390,12 @@ describe('Feed V2', () => {
           data: new Uint8Array([2]),
         },
       ]);
-      const query3 = yield* feed.query({ spaceId, query: { feedIds: [feedId] }, cursor: query2.nextCursor });
+      const query3 = yield* feed.query({
+        spaceId,
+        feedNamespace: WellKnownNamespaces.data,
+        query: { feedIds: [feedId] },
+        cursor: query2.nextCursor,
+      });
       log.info('query 3', { blocks: query3.blocks.length, cursor: query3.nextCursor });
       expect(query3.blocks.length).toBe(1);
     }).pipe(Effect.provide(TestLayer)),

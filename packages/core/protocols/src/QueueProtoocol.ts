@@ -26,11 +26,6 @@ export const Block = Schema.Struct({
    */
   feedId: Schema.UndefinedOr(Schema.String),
 
-  /**
-   * Appears on blocks returned from query.
-   */
-  feedNamespace: Schema.UndefinedOr(Schema.String),
-
   actorId: Schema.String,
   sequence: Schema.Number,
   predActorId: Schema.NullOr(Schema.String),
@@ -57,18 +52,19 @@ export const QueryRequest = Schema.Struct({
   requestId: Schema.optional(Schema.String),
 
   spaceId: SpaceId,
+  feedNamespace: Schema.String,
 
-  query: Schema.Union(
-    Schema.Struct({
-      feedIds: Schema.Array(Schema.String),
-    }),
-    Schema.Struct({
-      subscriptionId: Schema.String,
-    }),
-    Schema.Struct({
-      feedNamespace: Schema.optional(Schema.String),
-    }),
+  query: Schema.optional(
+    Schema.Union(
+      Schema.Struct({
+        feedIds: Schema.Array(Schema.String),
+      }),
+      Schema.Struct({
+        subscriptionId: Schema.String,
+      }),
+    ),
   ),
+
   /**
    * Get changes following this cursor (exclusive).
    *
@@ -122,6 +118,7 @@ export const AppendRequest = Schema.Struct({
   requestId: Schema.optional(Schema.String),
 
   spaceId: Schema.String,
+  feedNamespace: Schema.String,
 
   blocks: Schema.Array(Block),
 });

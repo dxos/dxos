@@ -3,6 +3,7 @@
 //
 
 import type * as SqlClient from '@effect/sql/SqlClient';
+import * as Statement from '@effect/sql/Statement';
 import { describe, expect, test } from '@effect/vitest';
 import * as Array from 'effect/Array';
 import * as Effect from 'effect/Effect';
@@ -16,6 +17,7 @@ import { QueueProtocol } from '@dxos/protocols';
 import { SqlTransaction } from '@dxos/sql-sqlite';
 import { layerMemory } from '@dxos/sql-sqlite/platform';
 import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
+import { range } from '@dxos/util';
 
 import { FeedStore } from './feed-store';
 import { SyncClient } from './sync-client';
@@ -24,11 +26,7 @@ import { SyncServer } from './sync-server';
 type ProtocolMessage = QueueProtocol.ProtocolMessage;
 const WellKnownNamespaces = QueueProtocol.WellKnownNamespaces;
 type AppendRequest = QueueProtocol.AppendRequest;
-type Block = QueueProtocol.Block;
 type QueryRequest = QueueProtocol.QueryRequest;
-import { range } from '@dxos/util';
-
-import * as Statement from '@effect/sql/Statement';
 
 const LOG_SQL = false;
 
@@ -241,7 +239,7 @@ describe('Sync', () => {
     const { blocks } = await client.feedStore
       .query({
         spaceId,
-        query: { feedNamespace: WellKnownNamespaces.data },
+        feedNamespace: WellKnownNamespaces.data,
       })
       .pipe(RuntimeProvider.runPromise(client.runtime.runtimeEffect));
     expect(blocks.map((block) => block.data)).toEqual(testBlocks);
@@ -269,7 +267,7 @@ describe('Sync', () => {
     const serverBlocks = await server.feedStore
       .query({
         spaceId,
-        query: { feedNamespace: WellKnownNamespaces.data },
+        feedNamespace: WellKnownNamespaces.data,
       })
       .pipe(RuntimeProvider.runPromise(server.runtime.runtimeEffect));
     expect(serverBlocks.blocks.map((block) => block.data)).toEqual(testBlocks);
@@ -278,7 +276,7 @@ describe('Sync', () => {
     const clientBlocks = await client.feedStore
       .query({
         spaceId,
-        query: { feedNamespace: WellKnownNamespaces.data },
+        feedNamespace: WellKnownNamespaces.data,
       })
       .pipe(RuntimeProvider.runPromise(client.runtime.runtimeEffect));
     expect(clientBlocks.blocks.map((block) => block.position)).toEqual(
@@ -317,7 +315,7 @@ describe('Sync', () => {
     const serverBlocks = await server.feedStore
       .query({
         spaceId,
-        query: { feedNamespace: WellKnownNamespaces.data },
+        feedNamespace: WellKnownNamespaces.data,
       })
       .pipe(RuntimeProvider.runPromise(server.runtime.runtimeEffect));
     expect(serverBlocks.blocks.map((block) => block.data)).toEqual(testBlocks);
@@ -326,7 +324,7 @@ describe('Sync', () => {
     const clientBlocks = await client.feedStore
       .query({
         spaceId,
-        query: { feedNamespace: WellKnownNamespaces.data },
+        feedNamespace: WellKnownNamespaces.data,
       })
       .pipe(RuntimeProvider.runPromise(client.runtime.runtimeEffect));
     expect(clientBlocks.blocks.map((block) => block.position)).toEqual(
@@ -336,7 +334,7 @@ describe('Sync', () => {
 
   test('3-way sync', async () => {
     await using builder = await new TestBuilder({ numPeers: 3, spaceId }).open();
-    const [server, client1, client2] = builder.peers;
+    const [, client1, client2] = builder.peers;
 
     const testBlocks = generateTestBlocks(0, 5);
 
@@ -350,10 +348,10 @@ describe('Sync', () => {
     await builder.pull(client2);
 
     const { blocks: client1Blocks } = await client1.feedStore
-      .query({ spaceId, query: { feedNamespace: WellKnownNamespaces.data } })
+      .query({ spaceId, feedNamespace: WellKnownNamespaces.data })
       .pipe(RuntimeProvider.runPromise(client1.runtime.runtimeEffect));
     const { blocks: client2Blocks } = await client2.feedStore
-      .query({ spaceId, query: { feedNamespace: WellKnownNamespaces.data } })
+      .query({ spaceId, feedNamespace: WellKnownNamespaces.data })
       .pipe(RuntimeProvider.runPromise(client2.runtime.runtimeEffect));
     expect(client1Blocks).toEqual(client2Blocks);
     expect(client1Blocks.every((block) => block.position != null)).toBe(true);
@@ -362,12 +360,10 @@ describe('Sync', () => {
 
 const generateTestBlocks = (start: number, count: number) => range(count, (i) => new Uint8Array([start + i]));
 
-const loggingTransformer: Statement.Statement.Transformer = (stmt, make, _, span) =>
+const loggingTransformer: Statement.Statement.Transformer = (stmt, _make, _, _span) =>
   Effect.sync(() => {
     const [sql, params] = stmt.compile();
-    // eslint-disable-next-line no-console
     console.log(sql.trim());
-    // eslint-disable-next-line no-console
     console.log(params);
     return stmt;
   });

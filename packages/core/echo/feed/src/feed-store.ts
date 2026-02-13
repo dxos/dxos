@@ -180,7 +180,7 @@ export class FeedStore {
         const position = request.position ?? -1;
 
         // Resolve Subscriptions or FeedIds
-        if ('subscriptionId' in request.query) {
+        if (request.query && 'subscriptionId' in request.query) {
           const rows = yield* sql<{ feedPrivateIds: string; expiresAt: number }>`
                 SELECT feedPrivateIds, expiresAt FROM subscriptions WHERE subscriptionId = ${request.query.subscriptionId}
             `;
@@ -196,8 +196,8 @@ export class FeedStore {
               }
             }
           }
-        } else if ('feedIds' in request.query) {
-          feedIds = [...(request.query as any).feedIds];
+        } else if (request.query && 'feedIds' in request.query) {
+          feedIds = [...request.query.feedIds];
         } else {
           feedIds = undefined;
         }
@@ -219,11 +219,7 @@ export class FeedStore {
             WHERE 1=1
             ${feedIds !== undefined ? sql`AND feeds.feedId IN ${sql.in(feedIds)}` : sql``}
             ${request.spaceId ? sql`AND feeds.spaceId = ${request.spaceId}` : sql``}
-            ${
-              'feedNamespace' in request.query && request.query.feedNamespace
-                ? sql`AND feeds.feedNamespace = ${request.query.feedNamespace}`
-                : sql``
-            }
+            ${sql`AND feeds.feedNamespace = ${request.feedNamespace}`}
         `;
 
         // Add filter based on cursor or position
@@ -340,13 +336,14 @@ export class FeedStore {
         return yield* Effect.die(new Error('spaceId required for append'));
       }
 
+      assertArgument(
+        isWellKnownNamespace(request.feedNamespace),
+        'request.feedNamespace',
+        'specified well-known namespace',
+      );
+
       // Validate all blocks upfront.
       for (const block of request.blocks) {
-        assertArgument(
-          block.feedNamespace && isWellKnownNamespace(block.feedNamespace),
-          'block.feedNamespace',
-          'specified well-known namespace',
-        );
         assertArgument(block.feedId, 'block.feedId', 'feedId is required');
       }
 
@@ -356,21 +353,21 @@ export class FeedStore {
         Effect.gen(this, function* () {
           const sql = yield* SqlClient.SqlClient;
 
-          // 1. Collect unique (feedId, feedNamespace) pairs and batch _ensureFeed calls.
-          const feedKeys = new Map<string, { feedId: string; feedNamespace: string }>();
+          // 1. Collect unique feed IDs and batch _ensureFeed calls.
+          const feedKeys = new Map<string, { feedId: string }>();
           for (const block of request.blocks) {
-            const key = `${block.feedId}|${block.feedNamespace}`;
+            const key = block.feedId!;
             if (!feedKeys.has(key)) {
-              feedKeys.set(key, { feedId: block.feedId!, feedNamespace: block.feedNamespace! });
+              feedKeys.set(key, { feedId: block.feedId! });
             }
           }
 
           const feedPrivateIds = new Map<string, number>();
           yield* Effect.forEach(
             [...feedKeys.entries()],
-            ([key, { feedId, feedNamespace }]) =>
+            ([key, { feedId }]) =>
               Effect.gen(this, function* () {
-                const id = yield* this._ensureFeed(request.spaceId!, feedId, feedNamespace);
+                const id = yield* this._ensureFeed(request.spaceId!, feedId, request.feedNamespace);
                 feedPrivateIds.set(key, id);
               }),
             { concurrency: 'unbounded' },
@@ -379,29 +376,26 @@ export class FeedStore {
           // 2. Get max position per namespace ONCE (not per block).
           const maxPositions = new Map<string, number>();
           if (this._options.assignPositions) {
-            const namespaces = new Set(request.blocks.map((b) => b.feedNamespace!));
-            for (const namespace of namespaces) {
-              const maxPosResult = yield* sql<{ maxPos: number | null }>`
-                SELECT MAX(position) as maxPos 
-                FROM blocks 
-                JOIN feeds ON blocks.feedPrivateId = feeds.feedPrivateId
-                WHERE feeds.spaceId = ${request.spaceId} AND feeds.feedNamespace = ${namespace}
-              `;
-              maxPositions.set(namespace, maxPosResult[0]?.maxPos ?? -1);
-            }
+            const maxPosResult = yield* sql<{ maxPos: number | null }>`
+              SELECT MAX(position) as maxPos 
+              FROM blocks 
+              JOIN feeds ON blocks.feedPrivateId = feeds.feedPrivateId
+              WHERE feeds.spaceId = ${request.spaceId} AND feeds.feedNamespace = ${request.feedNamespace}
+            `;
+            maxPositions.set(request.feedNamespace, maxPosResult[0]?.maxPos ?? -1);
           }
 
           // 3. Insert all blocks and compute positions.
           const positions: number[] = [];
           for (const block of request.blocks) {
-            const key = `${block.feedId}|${block.feedNamespace}`;
+            const key = block.feedId!;
             const feedPrivateId = feedPrivateIds.get(key)!;
 
             let positionToInsert: number | null = null;
             if (this._options.assignPositions) {
-              const currentMax = maxPositions.get(block.feedNamespace!)!;
+              const currentMax = maxPositions.get(request.feedNamespace)!;
               positionToInsert = currentMax + 1;
-              maxPositions.set(block.feedNamespace!, positionToInsert); // Increment for next block in same namespace.
+              maxPositions.set(request.feedNamespace, positionToInsert); // Increment for next block in same namespace.
               positions.push(positionToInsert);
             } else if (block.position != null) {
               positionToInsert = block.position;
@@ -435,10 +429,10 @@ export class FeedStore {
         const sql = yield* SqlClient.SqlClient;
 
         // 1. Collect unique feeds and ensure they exist.
-        type FeedKey = string; // `${spaceId}|${feedId}`
+        type FeedKey = string; // `${spaceId}|${feedNamespace}|${feedId}`
         const feedKeys = new Map<FeedKey, { spaceId: string; feedId: string; feedNamespace: string }>();
         for (const msg of messages) {
-          const key = `${msg.spaceId}|${msg.feedId}`;
+          const key = `${msg.spaceId}|${msg.feedNamespace}|${msg.feedId}`;
           if (!feedKeys.has(key)) {
             feedKeys.set(key, { spaceId: msg.spaceId, feedId: msg.feedId, feedNamespace: msg.feedNamespace });
           }
@@ -458,7 +452,7 @@ export class FeedStore {
 
         // 2. Get last sequence for each unique feed (batch query).
         const lastSeqs = new Map<FeedKey, { sequence: number; actorId: string } | null>();
-        for (const [key, { spaceId, feedId }] of feedKeys) {
+        for (const [key] of feedKeys) {
           const feedPrivateId = feedPrivateIds.get(key)!;
           const lastBlockResult = yield* sql<{ sequence: number; actorId: string }>`
             SELECT sequence, actorId FROM blocks 
@@ -473,10 +467,10 @@ export class FeedStore {
         // Track in-flight sequences per feed to handle multiple messages to same feed.
         const currentSeqs = new Map<FeedKey, { sequence: number; actorId: string }>();
         const blocks: Block[] = [];
-        const blocksBySpace = new Map<string, Block[]>();
+        const blocksBySpaceNamespace = new Map<string, { spaceId: string; feedNamespace: string; blocks: Block[] }>();
 
         for (const msg of messages) {
-          const key = `${msg.spaceId}|${msg.feedId}`;
+          const key = `${msg.spaceId}|${msg.feedNamespace}|${msg.feedId}`;
 
           // Determine predecessor: either from in-flight blocks or from DB.
           let sequence: number;
@@ -499,7 +493,6 @@ export class FeedStore {
 
           const block: Block = {
             feedId: msg.feedId,
-            feedNamespace: msg.feedNamespace,
             actorId: this._options.localActorId,
             sequence,
             predActorId,
@@ -514,19 +507,25 @@ export class FeedStore {
           // Update in-flight tracking.
           currentSeqs.set(key, { sequence, actorId: this._options.localActorId });
 
-          // Group by spaceId.
-          if (!blocksBySpace.has(msg.spaceId)) {
-            blocksBySpace.set(msg.spaceId, []);
+          // Group by (spaceId, feedNamespace).
+          const spaceNamespaceKey = `${msg.spaceId}|${msg.feedNamespace}`;
+          if (!blocksBySpaceNamespace.has(spaceNamespaceKey)) {
+            blocksBySpaceNamespace.set(spaceNamespaceKey, {
+              spaceId: msg.spaceId,
+              feedNamespace: msg.feedNamespace,
+              blocks: [],
+            });
           }
-          blocksBySpace.get(msg.spaceId)!.push(block);
+          blocksBySpaceNamespace.get(spaceNamespaceKey)!.blocks.push(block);
         }
 
-        // 4. Call append once per spaceId (batched).
-        for (const [spaceId, spaceBlocks] of blocksBySpace) {
+        // 4. Call append once per (spaceId, namespace) batch.
+        for (const { spaceId, feedNamespace, blocks } of blocksBySpaceNamespace.values()) {
           yield* this.append({
             requestId: 'local-append',
-            blocks: spaceBlocks,
+            blocks,
             spaceId,
+            feedNamespace,
           });
         }
 
@@ -536,7 +535,7 @@ export class FeedStore {
 
   setPosition = (request: {
     spaceId: string;
-    blocks: Pick<Block, 'feedId' | 'feedNamespace' | 'actorId' | 'sequence' | 'position'>[];
+    blocks: (Pick<Block, 'feedId' | 'actorId' | 'sequence' | 'position'> & { feedNamespace: string })[];
   }): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> =>
     Effect.gen(this, function* () {
       const sql = yield* SqlClient.SqlClient;
