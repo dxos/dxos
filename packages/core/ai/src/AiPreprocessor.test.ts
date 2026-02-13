@@ -200,6 +200,30 @@ describe('preprocessor', () => {
   );
 
   it.effect(
+    'should handle reasoning without signature or redacted text',
+    Effect.fn(function* ({ expect }) {
+      const message = Obj.make(Message.Message, {
+        created: new Date().toISOString(),
+        sender: { role: 'assistant' },
+        blocks: [
+          {
+            _tag: 'reasoning',
+            reasoningText: 'Thinking without a signature...',
+          },
+        ],
+      });
+
+      const input = yield* preprocessPrompt([message]);
+      const assistantMessage = input.content[0] as Prompt.AssistantMessage;
+      expect(assistantMessage.content[0]).toEqual(
+        Prompt.makePart('reasoning', {
+          text: 'Thinking without a signature...',
+        }),
+      );
+    }),
+  );
+
+  it.effect(
     'should handle user message with image (base64)',
     Effect.fn(function* ({ expect }) {
       const message = Obj.make(Message.Message, {

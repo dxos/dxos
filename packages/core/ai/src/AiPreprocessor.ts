@@ -189,23 +189,17 @@ const convertAssistantMessagePart: (
         return Prompt.makePart('text', {
           text: block.text,
         });
-      case 'reasoning':
+      case 'reasoning': {
+        const anthropicOptions = block.redactedText
+          ? { type: 'redacted_thinking' as const, redactedData: block.redactedText }
+          : block.signature
+            ? { type: 'thinking' as const, signature: block.signature }
+            : undefined;
         return Prompt.makePart('reasoning', {
           text: block.reasoningText ?? '',
-          options: {
-            anthropic: block.redactedText
-              ? {
-                  type: 'redacted_thinking',
-                  redactedData: block.redactedText,
-                }
-              : {
-                  type: 'thinking',
-                  signature:
-                    block.signature ??
-                    (yield* Effect.fail(new PromptPreprocesorError({ message: 'Invalid reasoning part' }))),
-                },
-          },
+          ...(anthropicOptions ? { options: { anthropic: anthropicOptions } } : {}),
         });
+      }
 
       case 'toolCall':
         return Prompt.makePart('tool-call', {
