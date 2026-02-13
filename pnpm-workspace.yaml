@@ -71,7 +71,7 @@ catalog:
   '@effect/cli': 0.72.1
   '@effect/cluster': 0.55.0
   '@effect/experimental': 0.57.11
-  '@effect/language-service': ^0.62.1
+  '@effect/language-service': ^0.62.5
   '@effect/opentelemetry': ^0.59.2
   '@effect/platform': 0.93.6
   '@effect/platform-browser': 0.73.0
@@ -225,7 +225,6 @@ catalog:
   '@tauri-apps/plugin-process': ^2.3.0
   '@tauri-apps/plugin-shell': ^2.3.1
   '@tauri-apps/plugin-updater': ^2.9.0
-  tauri-plugin-web-auth-api: ^1.0.0
   '@testing-library/dom': ^10.4.1
   '@testing-library/jest-dom': ^6.9.1
   '@testing-library/react': ^16.3.0
@@ -637,6 +636,7 @@ catalog:
   tailwindcss: ~3.4.1
   tailwindcss-logical: ^3.0.0
   tailwindcss-radix: ^2.8.0
+  tauri-plugin-web-auth-api: ^1.0.0
   three: ^0.178.0
   todomvc-app-css: ^2.4.2
   todomvc-common: ^1.0.5

@@ -12,10 +12,12 @@ export const DEFAULT_EDGE_MODELS = [
   '@anthropic/claude-3-5-haiku-latest',
   '@anthropic/claude-3-5-haiku-20241022',
   '@anthropic/claude-3-5-sonnet-20241022',
-  '@anthropic/claude-opus-4-0',
   '@anthropic/claude-haiku-4-5',
   '@anthropic/claude-sonnet-4-0',
   '@anthropic/claude-sonnet-4-5',
+  '@anthropic/claude-opus-4-0',
+  '@anthropic/claude-opus-4-5',
+  '@anthropic/claude-opus-4-6',
 
   // Workers AI.
   // https://developers.cloudflare.com/workers-ai/models
