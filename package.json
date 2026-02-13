@@ -206,6 +206,7 @@
     ],
     "overrides": {
       "@automerge/automerge": "catalog:",
+      "effect": "catalog:",
       "@lezer/lr": "^1.4.2",
       "@types/node": "22.10.2",
       "@types/react": "~19.2.7",

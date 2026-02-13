@@ -63,8 +63,8 @@ catalog:
   '@dxos/cli-linux-x64': 0.8.3
   '@dxos/cli-win32-x64': 0.8.3
   '@dxos/wa-sqlite': ^0.2.1
-  '@effect-atom/atom': ^0.4.13
-  '@effect-atom/atom-react': ^0.4.6
+  '@effect-atom/atom': ^0.5.1
+  '@effect-atom/atom-react': ^0.5.0
   '@effect/ai': 0.33.2
   '@effect/ai-anthropic': 0.23.0
   '@effect/ai-openai': 0.37.2
@@ -87,7 +87,7 @@ catalog:
   '@effect/sql-sqlite-wasm': 0.50.0
   '@effect/typeclass': 0.38.0
   '@effect/vitest': 0.27.0
-  '@effect/wa-sqlite': ^0.2.1
+  '@effect/wa-sqlite': ^0.1.2
   '@effect/workflow': ^0.16.0
   '@emoji-mart/data': ^1.1.2
   '@emoji-mart/react': ^1.1.1
@@ -708,3 +708,7 @@ catalog:
   zx: ^8.8.5
 
 strictPeerDependencies: true
+
+peerDependencyRules:
+  allowedVersions:
+    dfx>@effect/platform: '>=0.93.0'
