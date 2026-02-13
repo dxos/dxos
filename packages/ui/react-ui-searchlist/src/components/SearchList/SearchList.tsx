@@ -253,20 +253,22 @@ SearchListContent.displayName = 'SearchList.Content';
 // Viewport
 //
 
-type SearchListViewportProps = ThemedClassName<PropsWithChildren<{}>>;
+type SearchListViewportProps = ThemedClassName<PropsWithChildren>;
 
 /**
  * Scrollable viewport wrapper for Content.
  * Only Content wrapped in Viewport will be scrollable.
  */
 // TODO(burdon): Reconcile with Mosaic.Viewport (factor out common core?).
-const SearchListViewport = ({ classNames, children }: SearchListViewportProps) => {
-  return (
-    <div role='listbox' className={mx('bs-full is-full min-bs-0 overflow-y-auto', classNames)}>
-      {children}
-    </div>
-  );
-};
+const SearchListViewport = forwardRef<HTMLDivElement, SearchListViewportProps>(
+  ({ classNames, children }, forwardedRef) => {
+    return (
+      <div role='listbox' className={mx('bs-full is-full min-bs-0 overflow-y-auto', classNames)} ref={forwardedRef}>
+        {children}
+      </div>
+    );
+  },
+);
 
 SearchListViewport.displayName = 'SearchList.Viewport';
 
