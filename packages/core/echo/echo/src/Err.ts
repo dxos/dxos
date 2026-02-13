@@ -16,3 +16,5 @@ export class ObjectNotFoundError extends BaseError.extend('ObjectNotFoundError',
     super({ context: { dxn }, ...options });
   }
 }
+
+export class CursorExhaustedError extends BaseError.extend('CursorExhaustedError', 'No more items in feed cursor') {}

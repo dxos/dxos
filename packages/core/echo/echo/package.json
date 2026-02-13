@@ -48,6 +48,11 @@
       "types": "./dist/types/src/Err.d.ts",
       "default": "./dist/lib/neutral/Err.mjs"
     },
+    "./Feed": {
+      "source": "./src/Feed.ts",
+      "types": "./dist/types/src/Feed.d.ts",
+      "default": "./dist/lib/neutral/Feed.mjs"
+    },
     "./Filter": {
       "source": "./src/Filter.ts",
       "types": "./dist/types/src/Filter.d.ts",
