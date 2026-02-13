@@ -205,18 +205,18 @@
       "yarn"
     ],
     "overrides": {
-      "typescript": "^5.9.3",
       "@automerge/automerge": "catalog:",
-      "better-sqlite3": "12.6.0",
       "@lezer/lr": "^1.4.2",
       "@types/node": "22.10.2",
       "@types/react": "~19.2.7",
       "@types/react-dom": "~19.2.3",
+      "better-sqlite3": "12.6.0",
       "ipfs-utils": "9.0.14",
       "micromatch": "^4.0.8",
       "nan": "2.19.0",
       "react": "~19.2.3",
-      "react-dom": "~19.2.3"
+      "react-dom": "~19.2.3",
+      "typescript": "^5.9.3"
     },
     "patchedDependencies": {
       "random-access-idb@1.2.2": "patches/random-access-idb@1.2.2.patch",
