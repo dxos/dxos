@@ -55,6 +55,7 @@ for APP_PATH in "${APPS[@]}"; do
     set +e
     eval "export DX_POSTHOG_API_KEY=$""${PACKAGE_ENV}"_POSTHOG_API_KEY""
     eval "export DX_POSTHOG_API_HOST=$""${PACKAGE_ENV}"_POSTHOG_API_HOST""
+    eval "export DX_POSTHOG_PROJECT_ID=$""${PACKAGE_ENV}"_POSTHOG_PROJECT_ID""
     eval "export DX_POSTHOG_FEEDBACK_SURVEY_ID=$""${PACKAGE_ENV}"_POSTHOG_FEEDBACK_SURVEY_ID""
     export LOG_FILTER="error"
   fi
@@ -63,6 +64,14 @@ for APP_PATH in "${APPS[@]}"; do
   moon run "$APP:bundle" --force
 
   outdir=${APP%-app}
+  if [[ $APP == *-app && -n "${POSTHOG_CLI_API_KEY-}" && -n "${DX_POSTHOG_PROJECT_ID-}" ]]; then
+    BUILD_DIR="$(pwd)/out/$outdir"
+    RELEASE_VERSION=$(jq -r '.version' "$(git rev-parse --show-toplevel)/package.json")
+    POSTHOG_CLI_PROJECT_ID="$DX_POSTHOG_PROJECT_ID" pnpm -w exec posthog-cli sourcemap inject --directory "$BUILD_DIR"
+    POSTHOG_CLI_PROJECT_ID="$DX_POSTHOG_PROJECT_ID" pnpm -w exec posthog-cli sourcemap upload --directory "$BUILD_DIR" \
+      --release-name "$outdir" \
+      --release-version "$RELEASE_VERSION"
+  fi
   pnpm exec wrangler pages deploy out/"$outdir" --branch "$BRANCH"
   wrangler_rc=$?
   set -e

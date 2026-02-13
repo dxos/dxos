@@ -64,6 +64,7 @@
     "@octokit/rest": "catalog:",
     "@phosphor-icons/core": "catalog:",
     "@playwright/test": "catalog:",
+    "@posthog/cli": "catalog:",
     "@rollup/plugin-inject": "catalog:",
     "@rushstack/eslint-patch": "catalog:",
     "@swc/core": "catalog:",
