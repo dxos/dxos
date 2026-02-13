@@ -155,7 +155,7 @@ export class FeedSyncer extends Resource {
     // TODO(dmaretskyi): Perhaps in the future we will want to include the queue namespace here as well.
     //                   This would require putting it at the top level of the message.
     //                   For now, we let the edge router handle it.
-    return QueueProtocol.ServiceIdCodec.encode(message.feedNamespace, message.spaceId as SpaceId);
+    return QueueProtocol.encodeServiceId(message.feedNamespace, message.spaceId as SpaceId);
   }
 
   readonly #pollTask = new AsyncTask(async () =>

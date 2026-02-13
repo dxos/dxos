@@ -164,13 +164,15 @@ export const WellKnownNamespaces = {
 export const isWellKnownNamespace = (namespace: string) =>
   Object.values(WellKnownNamespaces).includes(namespace as any);
 
-export const ServiceIdCodec = {
-  encode: (namespace: string, spaceId: SpaceId) => `${EdgeService.QUEUE_REPLICATOR}:${namespace}:${spaceId}`,
-  decode: (serviceId: string): { namespace: keyof typeof WellKnownNamespaces; spaceId: SpaceId } => {
-    const [service, namespace, spaceId] = serviceId.split(':');
-    invariant(service === EdgeService.QUEUE_REPLICATOR, `Invalid service: ${service}`);
-    invariant(isWellKnownNamespace(namespace), `Invalid namespace: ${namespace}`);
-    invariant(SpaceId.isValid(spaceId), `Invalid spaceId: ${spaceId}`);
-    return { namespace: namespace as keyof typeof WellKnownNamespaces, spaceId };
-  },
+export const encodeServiceId = (namespace: string, spaceId: SpaceId) =>
+  `${EdgeService.QUEUE_REPLICATOR}:${namespace}:${spaceId}`;
+
+export const decodeServiceId = (
+  serviceId: string,
+): { namespace: keyof typeof WellKnownNamespaces; spaceId: SpaceId } => {
+  const [service, namespace, spaceId] = serviceId.split(':');
+  invariant(service === EdgeService.QUEUE_REPLICATOR, `Invalid service: ${service}`);
+  invariant(isWellKnownNamespace(namespace), `Invalid namespace: ${namespace}`);
+  invariant(SpaceId.isValid(spaceId), `Invalid spaceId: ${spaceId}`);
+  return { namespace: namespace as keyof typeof WellKnownNamespaces, spaceId };
 };
