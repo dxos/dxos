@@ -96,18 +96,25 @@ export const PopoverContent = () => {
         onEscapeKeyDown={handleInteractOutside}
       >
         <Popover.Viewport>
+          {/* TODO(burdon): Set/disable column context. */}
+          {state.popoverKind === 'base' && <Surface role='popover' data={state.popoverContent} limit={1} />}
           {state.popoverKind === 'card' && (
-            <Card.Root>
+            <Card.Root border={false} classNames='popover-card-max-width'>
               <Card.Toolbar>
                 {/* TODO(wittjosiah): Cleaner way to handle no drag handle in toolbar? */}
-                <span />
+                <Card.Icon
+                  toolbar
+                  icon='ph--arrow-square-out--regular'
+                  onClick={() => {
+                    // TODO(burdon): Nav (LayoutOperation.Open)
+                  }}
+                />
                 {state.popoverTitle ? <Card.Title>{toLocalizedString(state.popoverTitle, t)}</Card.Title> : <span />}
                 <Card.Close onClick={handleClose} />
               </Card.Toolbar>
               <Surface role='card--content' data={state.popoverContent} limit={1} />
             </Card.Root>
           )}
-          {state.popoverKind === 'base' && <Surface role='popover' data={state.popoverContent} limit={1} />}
         </Popover.Viewport>
         <Popover.Arrow />
       </Popover.Content>

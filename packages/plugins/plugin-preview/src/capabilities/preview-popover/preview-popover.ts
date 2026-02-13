@@ -8,6 +8,7 @@ import { Capability, Common } from '@dxos/app-framework';
 import { addEventListener } from '@dxos/async';
 import { type Client } from '@dxos/client';
 import { type Space, parseId } from '@dxos/client/echo';
+import { Obj } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
@@ -35,7 +36,15 @@ export default Capability.makeModule(
     const capabilities = yield* Capability.Service;
 
     // TODO(wittjosiah): Factor out lookup handlers to other plugins to make not ECHO-specific.
-    const handleAnchorActivate = async ({ refId, label, trigger, kind, title, side, props }: DxAnchorActivate) => {
+    const handleAnchorActivate = async ({
+      refId,
+      label,
+      trigger,
+      kind = 'card',
+      title: titleProp,
+      side,
+      props,
+    }: DxAnchorActivate) => {
       const { invokePromise } = capabilities.get(Common.Capability.OperationInvoker);
       const client = capabilities.get(ClientCapabilities.Client);
       const registry = capabilities.get(Common.Capability.AtomRegistry);
@@ -47,6 +56,8 @@ export default Capability.makeModule(
       if (!result) {
         return;
       }
+
+      const title = titleProp ?? Obj.getLabel(result.object);
 
       await invokePromise(Common.LayoutOperation.UpdatePopover, {
         subject: result.object,

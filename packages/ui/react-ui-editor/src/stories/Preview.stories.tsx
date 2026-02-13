@@ -51,7 +51,6 @@ const useRefTarget = (link: PreviewLinkRef): PreviewLinkTarget | undefined => {
 
 const PreviewCard = () => {
   const { target } = useEditorPreview('PreviewCard');
-  // console.log('target', target);
   if (!target) {
     return null;
   }
