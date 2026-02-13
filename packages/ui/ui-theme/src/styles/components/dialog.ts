@@ -37,6 +37,12 @@ export const dialogContent: ComponentFunction<DialogStyleProps> = ({ inOverlayLa
 export const dialogHeader: ComponentFunction<DialogStyleProps> = (_props, ...etc) =>
   mx('dx-dialog__header flex items-center justify-between', ...etc);
 
+export const dialogBody: ComponentFunction<DialogStyleProps> = (_props, ...etc) =>
+  mx('dx-dialog__body flex flex-col bs-full overflow-hidden', ...etc);
+
+export const dialogActionBar: ComponentFunction<DialogStyleProps> = (_props, ...etc) =>
+  mx('dx-dialog__action-bar flex items-center', ...etc);
+
 export const dialogTitle: ComponentFunction<DialogStyleProps> = ({ srOnly }, ...etc) =>
   mx('dx-dialog__title', srOnly && 'sr-only', ...etc);
 
@@ -47,6 +53,8 @@ export const dialogTheme: Theme<DialogStyleProps> = {
   overlay: dialogOverlay,
   content: dialogContent,
   header: dialogHeader,
+  body: dialogBody,
   title: dialogTitle,
   description: dialogDescription,
+  actionbar: dialogActionBar,
 };
