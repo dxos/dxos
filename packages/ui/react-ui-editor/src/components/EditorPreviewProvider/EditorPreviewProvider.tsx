@@ -32,16 +32,16 @@ export const EditorPreviewProvider = ({ children, onLookup }: EditorPreviewProvi
 
   const handleActivate = useCallback(
     (event: DxAnchorActivate) => {
-      const { refId, label, trigger } = event;
+      const { dxn, label, trigger } = event;
       setValue((value) => ({
         ...value,
-        link: { label, ref: refId },
+        link: { label, dxn },
         pending: true,
       }));
 
       triggerRef.current = trigger;
       queueMicrotask(() => setOpen(true));
-      void onLookup?.({ label, ref: refId }).then((target) =>
+      void onLookup?.({ label, dxn }).then((target) =>
         setValue((value) => ({
           ...value,
           target: target ?? undefined,

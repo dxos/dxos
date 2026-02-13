@@ -104,14 +104,14 @@ export const PopoverContent = () => {
             <Card.Root border={false} classNames='popover-card-max-width'>
               <Card.Toolbar>
                 {/* TODO(wittjosiah): Cleaner way to handle no drag handle in toolbar? */}
-                {state.popoverContentRefId ? (
+                {state.popoverContentRef ? (
                   <Card.ToolbarIconButton
                     icon='ph--arrow-square-out--regular'
                     iconOnly
                     label={t('open item label')}
                     onClick={() => {
                       invokeSync(Common.LayoutOperation.Open, {
-                        subject: [state.popoverContentRefId!],
+                        subject: [state.popoverContentRef!],
                       });
                     }}
                   />

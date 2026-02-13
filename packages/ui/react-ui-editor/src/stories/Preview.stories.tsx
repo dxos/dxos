@@ -28,9 +28,9 @@ import { type EditorController, EditorPreviewProvider, useEditorPreview } from '
 
 import { EditorStory } from './components';
 
-const handlePreviewLookup = async ({ label, ref }: PreviewLinkRef): Promise<PreviewLinkTarget> => {
+const handlePreviewLookup = async ({ dxn, label }: PreviewLinkRef): Promise<PreviewLinkTarget> => {
   // Random text.
-  faker.seed(ref.split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 1));
+  faker.seed(dxn.split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 1));
   const text = Array.from({ length: 2 }, () => faker.lorem.paragraphs()).join('\n\n');
   return {
     label,
@@ -102,7 +102,7 @@ const PreviewBlockComponent = ({ link, el, view }: { link: PreviewLinkRef; el: H
       }
 
       const link = getLinkRef(view.state, node);
-      if (link?.ref !== action.link.ref) {
+      if (link?.dxn !== action.link.dxn) {
         return;
       }
 
@@ -218,7 +218,7 @@ export const Default: Story = {
             setPreviewBlocks((prev) => [...prev, block]);
           },
           removeBlockContainer: (block) => {
-            setPreviewBlocks((prev) => prev.filter(({ link: prevLink }) => prevLink.ref !== block.link.ref));
+            setPreviewBlocks((prev) => prev.filter(({ link: prevLink }) => prevLink.dxn !== block.link.dxn));
           },
         }),
       ];
@@ -231,7 +231,7 @@ export const Default: Story = {
         <PreviewCard />
         {controller?.view &&
           previewBlocks.map(({ link, el }) => (
-            <PreviewBlockComponent key={link.ref} link={link} el={el} view={controller.view!} />
+            <PreviewBlockComponent key={link.dxn} link={link} el={el} view={controller.view!} />
           ))}
       </EditorPreviewProvider>
     );

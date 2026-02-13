@@ -92,7 +92,7 @@ const MarkdownEditorRoot = ({
         setPreviewBlocks((prev) => [...prev, block]);
       },
       removeBlockContainer: ({ link }) => {
-        setPreviewBlocks((prev) => prev.filter(({ link: prevLink }) => prevLink.ref !== link.ref));
+        setPreviewBlocks((prev) => prev.filter(({ link: prevLink }) => prevLink.dxn !== link.dxn));
       },
     }),
     [],
@@ -212,7 +212,7 @@ const MarkdownEditorBlocks = (_props: MarkdownEditorBlocksProps) => {
   return (
     <>
       {previewBlocks.map(({ link, el }) => (
-        <PreviewBlock key={link.ref} link={link} el={el} />
+        <PreviewBlock key={link.dxn} link={link} el={el} />
       ))}
     </>
   );
@@ -222,7 +222,7 @@ MarkdownEditorBlocks.displayName = MARKDOWN_EDITOR_BLOCKS_NAME;
 
 const PreviewBlock = ({ el, link }: PreviewBlock) => {
   const client = useClient();
-  const dxn = DXN.parse(link.ref);
+  const dxn = DXN.parse(link.dxn);
   const subject = client.graph.makeRef(dxn).target;
   const data = useMemo(() => ({ subject }), [subject]);
 

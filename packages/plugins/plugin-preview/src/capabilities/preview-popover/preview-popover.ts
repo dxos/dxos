@@ -20,10 +20,10 @@ const customEventOptions = { capture: true, passive: false };
 const handlePreviewLookup = async (
   client: Client,
   defaultSpace: Space,
-  { ref, label }: PreviewLinkRef,
+  { dxn, label }: PreviewLinkRef,
 ): Promise<PreviewLinkTarget | null> => {
   try {
-    const object = await defaultSpace.db.makeRef(DXN.parse(ref)).load();
+    const object = await defaultSpace.db.makeRef(DXN.parse(dxn)).load();
     return { label, object };
   } catch {
     return null;
@@ -37,7 +37,7 @@ export default Capability.makeModule(
 
     // TODO(wittjosiah): Factor out lookup handlers to other plugins to make not ECHO-specific.
     const handleAnchorActivate = async ({
-      refId,
+      dxn,
       label,
       trigger,
       kind = 'card',
@@ -52,7 +52,7 @@ export default Capability.makeModule(
       const layout = registry.get(layoutAtom);
       const { spaceId } = parseId(layout.workspace);
       const space = (spaceId && client.spaces.get(spaceId)) ?? client.spaces.default;
-      const result = await handlePreviewLookup(client, space, { ref: refId, label });
+      const result = await handlePreviewLookup(client, space, { dxn, label });
       if (!result) {
         return;
       }
@@ -60,7 +60,7 @@ export default Capability.makeModule(
       const title = titleProp ?? Obj.getLabel(result.object);
 
       await invokePromise(Common.LayoutOperation.UpdatePopover, {
-        refId,
+        subjectRef: dxn,
         subject: result.object,
         state: true,
         variant: 'virtual',

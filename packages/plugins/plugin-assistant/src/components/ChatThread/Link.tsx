@@ -19,7 +19,7 @@ export const ObjectLink = ({ space, dxn }: ObjectLinkProps) => {
 
   const title = (ref.target && Entity.getLabel(ref.target)) ?? ref.target?.id ?? ref.dxn.toString();
   return (
-    <DxAnchor rootclassname='dx-tag--anchor' refid={dxn.toString()}>
+    <DxAnchor rootclassname='dx-tag--anchor' dxn={dxn.toString()}>
       {title}
     </DxAnchor>
   );
