@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/react';
+import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { IconButton, Input, Message, useTranslation } from '@dxos/react-ui';
 import { ControlGroup, ControlItemInput, ControlPage, ControlSection } from '@dxos/react-ui-form';
 

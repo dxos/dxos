@@ -4,8 +4,8 @@
 
 import React, { useMemo } from 'react';
 
-import { Surface } from '@dxos/app-framework/react';
-import { type SurfaceComponentProps } from '@dxos/app-framework/react';
+import { Surface } from '@dxos/app-framework/ui';
+import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { type Database, Entity, Filter, Obj, Ref, Relation } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
@@ -30,7 +30,7 @@ export const RecordArticle = ({ role, subject }: SurfaceComponentProps) => {
     <Layout.Main role={role}>
       <div role='none' className={mx('flex flex-col gap-4 p-4 is-full overflow-y-auto')}>
         <div role='none' className={mx('flex is-full card-max-width')}>
-          <Surface role='section' data={data} limit={1} />
+          <Surface.Surface role='section' data={data} limit={1} />
         </div>
 
         {related.length > 0 && (
@@ -57,7 +57,7 @@ const Card = ({ data: subject }: { data: Entity.Unknown }) => {
         <span />
         <MosaicCard.Title>{Entity.getLabel(subject)}</MosaicCard.Title>
       </MosaicCard.Toolbar>
-      <Surface role='card--content' data={data} limit={1} />
+      <Surface.Surface role='card--content' data={data} limit={1} />
     </MosaicCard.Root>
   );
 };

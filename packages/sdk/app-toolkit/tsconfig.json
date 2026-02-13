@@ -1,0 +1,57 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {},
+  "exclude": [
+    "/node_modules/"
+  ],
+  "include": [
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../../common/log"
+    },
+    {
+      "path": "../../common/storybook-utils"
+    },
+    {
+      "path": "../../common/util"
+    },
+    {
+      "path": "../../core/ai"
+    },
+    {
+      "path": "../../core/assistant"
+    },
+    {
+      "path": "../../core/blueprints"
+    },
+    {
+      "path": "../../core/echo/echo"
+    },
+    {
+      "path": "../../core/functions"
+    },
+    {
+      "path": "../../core/operation"
+    },
+    {
+      "path": "../../ui/react-ui"
+    },
+    {
+      "path": "../../ui/react-ui-syntax-highlighter"
+    },
+    {
+      "path": "../../ui/ui-theme"
+    },
+    {
+      "path": "../app-framework"
+    },
+    {
+      "path": "../app-graph"
+    },
+    {
+      "path": "../types"
+    }
+  ]
+}

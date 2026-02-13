@@ -6,7 +6,7 @@ import { Excalidraw, MainMenu } from '@excalidraw/excalidraw';
 import { type ExcalidrawImperativeAPI, type ExcalidrawProps } from '@excalidraw/excalidraw/types';
 import React, { useEffect, useRef, useState } from 'react';
 
-import { type SurfaceComponentProps } from '@dxos/app-framework/react';
+import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { type Diagram } from '@dxos/plugin-sketch/types';
 import { useThemeContext } from '@dxos/react-ui';
 import { Layout, type LayoutFlexProps } from '@dxos/react-ui-mosaic';

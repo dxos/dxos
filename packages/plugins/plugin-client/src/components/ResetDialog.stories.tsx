@@ -7,8 +7,8 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { OperationPlugin } from '@dxos/app-framework';
-import { usePluginManager } from '@dxos/app-framework/react';
 import { withPluginManager } from '@dxos/app-framework/testing';
+import { usePluginManager } from '@dxos/app-framework/ui';
 import { Dialog } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 

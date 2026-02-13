@@ -650,6 +650,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-settings/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-sheet/package.json",
           "jsonpath": "$.version"
         },
@@ -741,6 +746,11 @@
         {
           "type": "json",
           "path": "packages/sdk/app-solid/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/sdk/app-toolkit/package.json",
           "jsonpath": "$.version"
         },
         {

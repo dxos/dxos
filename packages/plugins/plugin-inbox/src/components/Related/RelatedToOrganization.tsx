@@ -7,8 +7,9 @@
 import * as Effect from 'effect/Effect';
 import React, { useCallback } from 'react';
 
-import { Common } from '@dxos/app-framework';
-import { type SurfaceComponentProps, useOperationInvoker } from '@dxos/app-framework/react';
+import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { LayoutOperation } from '@dxos/app-toolkit';
+import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { Filter, Obj } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
 import { AttentionOperation } from '@dxos/plugin-attention/types';
@@ -45,14 +46,10 @@ export const RelatedToOrganization = ({ subject: organization }: SurfaceComponen
     (contact: Person.Person) =>
       Effect.gen(function* () {
         const view = currentSpaceContacts.includes(contact) ? currentSpaceContactTable : defaultSpaceContactTable;
-        yield* Effect.promise(() =>
-          invokePromise(Common.LayoutOperation.UpdatePopover, { state: false, anchorId: '' }),
-        );
+        yield* Effect.promise(() => invokePromise(LayoutOperation.UpdatePopover, { state: false, anchorId: '' }));
         if (view) {
           const id = Obj.getDXN(view).toString();
-          yield* Effect.promise(() =>
-            invokePromise(Common.LayoutOperation.Open, { subject: [id], workspace: db?.spaceId }),
-          );
+          yield* Effect.promise(() => invokePromise(LayoutOperation.Open, { subject: [id], workspace: db?.spaceId }));
           yield* Effect.promise(() =>
             invokePromise(DeckOperation.ChangeCompanion, {
               primary: id,

@@ -5,7 +5,8 @@
 import * as Effect from 'effect/Effect';
 import React from 'react';
 
-import { Capability, Common } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { Surface } from '@dxos/app-framework/ui';
 import { Node } from '@dxos/plugin-graph';
 
 import { Home, Workspace } from '../../components';
@@ -20,14 +21,14 @@ const ALLOWED_DISPOSITIONS = ['workspace', 'user-account', 'pin-end', 'alternate
 
 export default Capability.makeModule(() =>
   Effect.succeed(
-    Capability.contributes(Common.Capability.ReactSurface, [
-      Common.createSurface({
+    Capability.contributes(Capabilities.ReactSurface, [
+      Surface.create({
         id: `${meta.id}/home`,
         role: 'article',
         filter: (data): data is SurfaceData => data.attendableId === Node.RootId,
         component: () => <Home />,
       }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/workspace-article`,
         role: 'article',
         position: 'fallback',

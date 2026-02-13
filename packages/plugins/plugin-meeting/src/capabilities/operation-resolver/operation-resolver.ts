@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
 import { DXN, Obj, Ref, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { Operation, OperationResolver } from '@dxos/operation';
@@ -20,7 +20,7 @@ import { Meeting, MeetingCapabilities, MeetingOperation } from '../../types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contributes(Common.Capability.OperationResolver, [
+    return Capability.contributes(Capabilities.OperationResolver, [
       OperationResolver.make({
         operation: MeetingOperation.OnCreateSpace,
         handler: Effect.fnUntraced(function* ({ isDefault, rootCollection }) {

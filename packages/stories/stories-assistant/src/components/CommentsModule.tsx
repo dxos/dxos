@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { Surface } from '@dxos/app-framework/react';
+import { Surface } from '@dxos/app-framework/ui';
 import { Assistant, useContextBinder } from '@dxos/plugin-assistant';
 import { Filter, useQuery } from '@dxos/react-client/echo';
 
@@ -19,5 +19,5 @@ export const CommentsModule = ({ space }: ComponentProps) => {
     return null;
   }
 
-  return <Surface role='article' data={data} />;
+  return <Surface.Surface role='article' data={data} />;
 };

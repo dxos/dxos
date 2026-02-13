@@ -5,8 +5,9 @@
 import * as Effect from 'effect/Effect';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
-import { Capability, Common } from '@dxos/app-framework';
-import { useOperationInvoker, usePluginManager } from '@dxos/app-framework/react';
+import { Capability } from '@dxos/app-framework';
+import { useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
+import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
 import { Database, Obj, Type } from '@dxos/echo';
 import { EntityKind, getTypeAnnotation } from '@dxos/echo/internal';
 import { runAndForwardErrors } from '@dxos/effect';
@@ -52,7 +53,7 @@ export const CreateObjectDialog = ({
   const resolve = useCallback<NonNullable<CreateObjectPanelProps['resolve']>>(
     (typename) => {
       const metadata = manager.capabilities
-        .getAll(Common.Capability.Metadata)
+        .getAll(AppCapabilities.Metadata)
         .find(({ id }) => id === typename)?.metadata;
       return metadata?.createObject ? (metadata as Metadata) : undefined;
     },
@@ -95,7 +96,7 @@ export const CreateObjectDialog = ({
           const shouldNavigate = _shouldNavigate ?? (() => true);
           if (shouldNavigate(object)) {
             yield* Effect.promise(() =>
-              operationInvoker.invokePromise(Common.LayoutOperation.Open, {
+              operationInvoker.invokePromise(LayoutOperation.Open, {
                 subject: [Obj.getDXN(object).toString()],
               }),
             );

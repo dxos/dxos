@@ -5,8 +5,9 @@
 import * as Option from 'effect/Option';
 import React, { forwardRef, useCallback, useState } from 'react';
 
-import { Common } from '@dxos/app-framework';
-import { useAppGraph, useLayout, useOperationInvoker } from '@dxos/app-framework/react';
+import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { LayoutOperation } from '@dxos/app-toolkit';
+import { useAppGraph, useLayout } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { Graph, type Node } from '@dxos/plugin-graph';
 import { useClient } from '@dxos/react-client';
@@ -63,14 +64,14 @@ export const SearchDialog = ({ pivotId }: SearchDialogProps) => {
 
   const handleSelect = useCallback(
     async (nodeId: string) => {
-      await invokePromise(Common.LayoutOperation.UpdateDialog, { state: false });
+      await invokePromise(LayoutOperation.UpdateDialog, { state: false });
 
       // If node is already present in the active parts, scroll to it and close the dialog.
       const index = layout.active.findIndex((id) => id === nodeId);
       if (index !== -1) {
-        await invokePromise(Common.LayoutOperation.ScrollIntoView, { subject: nodeId });
+        await invokePromise(LayoutOperation.ScrollIntoView, { subject: nodeId });
       } else {
-        await invokePromise(Common.LayoutOperation.Open, {
+        await invokePromise(LayoutOperation.Open, {
           subject: [nodeId],
           pivotId,
           positioning: 'end',

@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { type SurfaceComponentProps } from '@dxos/app-framework/react';
+import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { type Blueprint } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';
 import { Toolbar } from '@dxos/react-ui';

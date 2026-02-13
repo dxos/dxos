@@ -19,23 +19,35 @@
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
     },
+    "./cli": {
+      "source": "./src/cli/index.ts",
+      "types": "./dist/types/src/cli/index.d.ts",
+      "browser": "./dist/lib/browser/cli/index.mjs",
+      "node": "./dist/lib/node-esm/cli/index.mjs"
+    },
     "./ActivationEvent": {
       "source": "./src/core/activation-event.ts",
       "types": "./dist/types/src/activation-event/index.d.ts",
       "browser": "./dist/lib/browser/activation-event/index.mjs",
       "node": "./dist/lib/node-esm/activation-event/index.mjs"
     },
+    "./ActivationEvents": {
+      "source": "./src/common/activation-events.ts",
+      "types": "./dist/types/src/common/activation-events.d.ts",
+      "browser": "./dist/lib/browser/common/activation-events.mjs",
+      "node": "./dist/lib/node-esm/common/activation-events.mjs"
+    },
+    "./Capabilities": {
+      "source": "./src/common/capabilities.ts",
+      "types": "./dist/types/src/common/capabilities.d.ts",
+      "browser": "./dist/lib/browser/common/capabilities.mjs",
+      "node": "./dist/lib/node-esm/common/capabilities.mjs"
+    },
     "./Capability": {
       "source": "./src/core/capability.ts",
       "types": "./dist/types/src/capability/index.d.ts",
       "browser": "./dist/lib/browser/capability/index.mjs",
       "node": "./dist/lib/node-esm/capability/index.mjs"
-    },
-    "./Common": {
-      "source": "./src/common/index.ts",
-      "types": "./dist/types/src/common/index.d.ts",
-      "browser": "./dist/lib/browser/common/index.mjs",
-      "node": "./dist/lib/node-esm/common/index.mjs"
     },
     "./Plugin": {
       "source": "./src/core/plugin.ts",
@@ -49,30 +61,36 @@
       "browser": "./dist/lib/browser/plugin-manager/index.mjs",
       "node": "./dist/lib/node-esm/plugin-manager/index.mjs"
     },
-    "./react": {
-      "source": "./src/react/index.ts",
-      "types": "./dist/types/src/react/index.d.ts",
-      "browser": "./dist/lib/browser/react/index.mjs",
-      "node": "./dist/lib/node-esm/react/index.mjs"
-    },
     "./testing": {
       "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
       "browser": "./dist/lib/browser/testing/index.mjs",
       "node": "./dist/lib/node-esm/testing/index.mjs"
+    },
+    "./ui": {
+      "source": "./src/ui/index.ts",
+      "types": "./dist/types/src/ui/index.d.ts",
+      "browser": "./dist/lib/browser/ui/index.mjs",
+      "node": "./dist/lib/node-esm/ui/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
+      "cli": [
+        "dist/types/src/cli/index.d.ts"
+      ],
       "ActivationEvent": [
         "dist/types/src/activation-event/index.d.ts"
       ],
+      "ActivationEvents": [
+        "dist/types/src/common/activation-events.d.ts"
+      ],
+      "Capabilities": [
+        "dist/types/src/common/capabilities.d.ts"
+      ],
       "Capability": [
         "dist/types/src/capability/index.d.ts"
-      ],
-      "Common": [
-        "dist/types/src/common/index.d.ts"
       ],
       "Plugin": [
         "dist/types/src/plugin/index.d.ts"
@@ -80,11 +98,11 @@
       "PluginManager": [
         "dist/types/src/plugin-manager/index.d.ts"
       ],
-      "react": [
-        "dist/types/src/react/index.d.ts"
-      ],
       "testing": [
         "dist/types/src/testing/index.d.ts"
+      ],
+      "ui": [
+        "dist/types/src/ui/index.d.ts"
       ]
     }
   },
@@ -92,34 +110,23 @@
     "typedoc": "typedoc --out typedoc"
   },
   "dependencies": {
-    "@dxos/ai": "workspace:*",
-    "@dxos/app-graph": "workspace:*",
-    "@dxos/assistant": "workspace:*",
     "@dxos/async": "workspace:*",
-    "@dxos/blueprints": "workspace:*",
-    "@dxos/client-protocol": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/effect": "workspace:*",
-    "@dxos/functions": "workspace:*",
     "@dxos/invariant": "workspace:*",
-    "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/operation": "workspace:*",
     "@dxos/react-hooks": "workspace:*",
-    "@dxos/schema": "workspace:*",
-    "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@dxos/web-context": "workspace:*",
     "@dxos/web-context-react": "workspace:*",
-    "@effect/ai": "catalog:",
     "@effect/cli": "catalog:"
   },
   "devDependencies": {
     "@dxos/echo-db": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/test-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",

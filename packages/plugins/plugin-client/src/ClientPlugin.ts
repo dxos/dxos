@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { ActivationEvent, Capability, Common, Plugin } from '@dxos/app-framework';
+import { ActivationEvent, ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
+import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 
 import {
   AppGraphBuilder,
@@ -19,17 +20,21 @@ import { ClientEvents } from './types';
 import { type ClientPluginOptions } from './types';
 
 export const ClientPlugin = Plugin.define<ClientPluginOptions>(meta).pipe(
+  AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
+  AppPlugin.addOperationResolverModule({ activate: OperationResolver }),
+  AppPlugin.addReactContextModule({ activate: ReactContext }),
+  AppPlugin.addTranslationsModule({ translations }),
   Plugin.addModule((options) => {
     return {
       id: Capability.getModuleTag(Client),
-      activatesOn: ActivationEvent.oneOf(Common.ActivationEvent.Startup, Common.ActivationEvent.SetupAppGraph),
+      activatesOn: ActivationEvent.oneOf(ActivationEvents.Startup, AppActivationEvents.SetupAppGraph),
       activatesAfter: [ClientEvents.ClientReady],
       activate: () => Client(options),
     };
   }),
   Plugin.addModule({
     activatesOn: ClientEvents.ClientReady,
-    activatesBefore: [Common.ActivationEvent.SetupSchema],
+    activatesBefore: [AppActivationEvents.SetupSchema],
     activate: SchemaDefs,
   }),
   Plugin.addModule({
@@ -37,7 +42,6 @@ export const ClientPlugin = Plugin.define<ClientPluginOptions>(meta).pipe(
     activatesBefore: [ClientEvents.SetupMigration],
     activate: Migrations,
   }),
-  Common.Plugin.addReactContextModule({ activate: ReactContext }),
   Plugin.addModule(({ invitationUrl = window.location.origin, invitationProp = 'deviceInvitationCode', onReset }) => {
     const createInvitationUrl = (invitationCode: string) => {
       const baseUrl = new URL(invitationUrl);
@@ -47,12 +51,9 @@ export const ClientPlugin = Plugin.define<ClientPluginOptions>(meta).pipe(
 
     return {
       id: Capability.getModuleTag(ReactSurface),
-      activatesOn: Common.ActivationEvent.SetupReactSurface,
+      activatesOn: ActivationEvents.SetupReactSurface,
       activate: () => ReactSurface({ createInvitationUrl, onReset }),
     };
   }),
-  Common.Plugin.addAppGraphModule({ activate: AppGraphBuilder }),
-  Common.Plugin.addOperationResolverModule({ activate: OperationResolver }),
-  Common.Plugin.addTranslationsModule({ translations }),
   Plugin.make,
 );

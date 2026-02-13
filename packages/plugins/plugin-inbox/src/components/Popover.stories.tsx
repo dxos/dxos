@@ -6,9 +6,9 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React, { useCallback, useRef } from 'react';
 
-import { Common } from '@dxos/app-framework';
-import { useOperationInvoker } from '@dxos/app-framework/react';
 import { withPluginManager } from '@dxos/app-framework/testing';
+import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { LayoutOperation } from '@dxos/app-toolkit';
 import { Filter } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
@@ -28,7 +28,7 @@ const ContactItem = ({ contact }: { contact: Person.Person }) => {
 
   const handleClick = useCallback(
     () =>
-      invokePromise(Common.LayoutOperation.UpdatePopover, {
+      invokePromise(LayoutOperation.UpdatePopover, {
         subject: contact,
         state: true,
         kind: 'card',
@@ -58,7 +58,7 @@ const OrganizationItem = ({ organization }: { organization: Organization.Organiz
 
   const handleClick = useCallback(
     () =>
-      invokePromise(Common.LayoutOperation.UpdatePopover, {
+      invokePromise(LayoutOperation.UpdatePopover, {
         subject: organization,
         state: true,
         kind: 'card',

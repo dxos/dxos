@@ -12,8 +12,8 @@ import React, {
   useState,
 } from 'react';
 
-import { Common } from '@dxos/app-framework';
-import { Surface, useOperationInvoker } from '@dxos/app-framework/react';
+import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
+import { LayoutOperation } from '@dxos/app-toolkit';
 import { IconButton, type Label, Main, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { mx } from '@dxos/ui-theme';
@@ -68,7 +68,7 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
       } else {
         setInternalValue(nextValue);
         updateState((state) => ({ ...state, complementarySidebarState: 'expanded' }));
-        invokeSync(Common.LayoutOperation.UpdateComplementary, { subject: nextValue });
+        invokeSync(LayoutOperation.UpdateComplementary, { subject: nextValue });
       }
     },
     [state.complementarySidebarState, activeId, invokeSync, updateState],
@@ -85,7 +85,7 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
 
   useEffect(() => {
     if (!activeId) {
-      invokeSync(Common.LayoutOperation.UpdateComplementary, { state: 'collapsed' });
+      invokeSync(LayoutOperation.UpdateComplementary, { state: 'collapsed' });
     }
   }, [activeId, invokeSync]);
 
@@ -129,7 +129,7 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
           </Tabs.Tablist>
           {!hoistStatusbar && (
             <div role='none' className='grid grid-cols-1 auto-rows-[--rail-item] p-1 overflow-y-auto'>
-              <Surface role='status-bar--r0-footer' limit={1} />
+              <Surface.Surface role='status-bar--r0-footer' limit={1} />
             </div>
           )}
           <div role='none' className='hidden lg:grid grid-cols-1 auto-rows-[--rail-action] p-1'>
@@ -197,7 +197,7 @@ const ComplementarySidebarPanel = ({ companion, activeId, data, hoistStatusbar }
         </div>
       </div>
       <Wrapper>
-        <Surface
+        <Surface.Surface
           role={`deck-companion--${getCompanionId(companion.id)}`}
           data={data}
           fallback={PlankContentError}
@@ -209,7 +209,7 @@ const ComplementarySidebarPanel = ({ companion, activeId, data, hoistStatusbar }
           role='contentinfo'
           className='flex flex-wrap justify-center items-center border-bs border-subduedSeparator pbs-1 pbe-[max(env(safe-area-inset-bottom),0.25rem)]'
         >
-          <Surface role='status-bar--r1-footer' limit={1} />
+          <Surface.Surface role='status-bar--r1-footer' limit={1} />
         </div>
       )}
     </>

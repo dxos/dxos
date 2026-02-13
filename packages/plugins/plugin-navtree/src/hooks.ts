@@ -5,7 +5,7 @@
 import { type Atom, useAtomValue } from '@effect-atom/atom-react';
 import { useEffect, useMemo } from 'react';
 
-import { useCapability } from '@dxos/app-framework/react';
+import { useCapability } from '@dxos/app-framework/ui';
 import { type Node } from '@dxos/app-graph';
 
 import { useNavTreeContext } from './components';

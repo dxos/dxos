@@ -4,8 +4,8 @@
 
 import React, { useMemo } from 'react';
 
-import { useCapability } from '@dxos/app-framework/react';
-import { useLayout } from '@dxos/app-framework/react';
+import { useCapability } from '@dxos/app-framework/ui';
+import { useLayout } from '@dxos/app-toolkit/ui';
 import { type InvocationsState } from '@dxos/functions-runtime';
 import { useTriggerRuntimeControls } from '@dxos/plugin-automation';
 import { ClientCapabilities } from '@dxos/plugin-client/types';

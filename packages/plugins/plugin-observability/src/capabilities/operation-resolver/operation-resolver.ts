@@ -4,7 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { AppCapabilities } from '@dxos/app-toolkit';
 import { getTelemetryIdentity, storeObservabilityDisabled } from '@dxos/observability';
 import { OperationResolver } from '@dxos/operation';
 
@@ -17,7 +18,7 @@ export default Capability.makeModule(
     const { namespace } = props!;
     const capabilities = yield* Capability.Service;
 
-    return Capability.contributes(Common.Capability.OperationResolver, [
+    return Capability.contributes(Capabilities.OperationResolver, [
       //
       // Toggle
       //
@@ -26,9 +27,9 @@ export default Capability.makeModule(
         handler: Effect.fnUntraced(function* (input) {
           const client = yield* Capability.get(ClientCapability);
           const observability = yield* Capability.get(ObservabilityCapabilities.Observability);
-          const registry = capabilities.get(Common.Capability.AtomRegistry);
-          const allSettings = capabilities.getAll(Common.Capability.Settings);
-          const settingsObj = allSettings.find((s: Common.Capability.Settings) => s.prefix === meta.id);
+          const registry = capabilities.get(Capabilities.AtomRegistry);
+          const allSettings = capabilities.getAll(AppCapabilities.Settings);
+          const settingsObj = allSettings.find((s: AppCapabilities.Settings) => s.prefix === meta.id);
           if (!settingsObj) {
             return false;
           }

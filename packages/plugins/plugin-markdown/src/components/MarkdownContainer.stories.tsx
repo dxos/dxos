@@ -6,9 +6,9 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React, { useMemo } from 'react';
 
-import { Common } from '@dxos/app-framework';
-import { Surface, useOperationInvoker } from '@dxos/app-framework/react';
 import { withPluginManager } from '@dxos/app-framework/testing';
+import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
+import { LayoutOperation } from '@dxos/app-toolkit';
 import { Obj, Query } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
@@ -40,13 +40,13 @@ const DefaultStory = () => {
 
   useAsyncEffect(async () => {
     if (space) {
-      await invokePromise(Common.LayoutOperation.SwitchWorkspace, { subject: space.id });
+      await invokePromise(LayoutOperation.SwitchWorkspace, { subject: space.id });
     }
   }, [space, invokePromise]);
 
   return (
     <div className='contents' {...attentionAttrs}>
-      <Surface role='article' data={data} limit={1} />
+      <Surface.Surface role='article' data={data} limit={1} />
     </div>
   );
 };

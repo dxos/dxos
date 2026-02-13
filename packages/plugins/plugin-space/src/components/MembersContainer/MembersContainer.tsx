@@ -5,7 +5,7 @@
 import React, { type Dispatch, type SetStateAction, useCallback, useMemo, useState } from 'react';
 import { QR } from 'react-qr-rounded';
 
-import { useOperationInvoker } from '@dxos/app-framework/react';
+import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { useConfig } from '@dxos/react-client';
