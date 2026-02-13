@@ -13,6 +13,7 @@ import { Struct } from 'effect';
 export const WebToolkit = Toolkit.make(
   AnthropicTool.WebSearch_20250305({})
     .pipe
+    // TODO(dmaretskyi): Effect bug -- provider-defined tools don't support annotations.
     // ToolFormatter.assign({
     //   debugFormatResult: (result) =>
     //     Array.isArray(result) ? result.map(Struct.pick('title', 'type', 'url', 'page_age')) : result,
