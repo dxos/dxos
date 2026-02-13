@@ -86,8 +86,8 @@ describe('Halo', () => {
 
     await Promise.all(
       performInvitation({
-        host: client1.halo as never,
-        guest: client2.halo as never,
+        host: client1.halo,
+        guest: client2.halo,
         guestDeviceProfile: { label: 'guest-device-label' },
       }),
     );
@@ -130,8 +130,8 @@ describe('Halo', () => {
 
     await Promise.all(
       performInvitation({
-        host: client1.halo as never,
-        guest: client2.halo as never,
+        host: client1.halo,
+        guest: client2.halo,
         guestDeviceProfile: { label: 'guest-device-profile' },
       }),
     );
@@ -161,7 +161,7 @@ describe('Halo', () => {
     onTestFinished(() => client2.destroy());
     await client2.initialize();
 
-    await Promise.all(performInvitation({ host: client1.halo as never, guest: client2.halo as never }));
+    await Promise.all(performInvitation({ host: client1.halo, guest: client2.halo }));
 
     expect(await client1.halo.devices.get()).to.have.lengthOf(2);
 
@@ -194,7 +194,7 @@ describe('Halo', () => {
     onTestFinished(() => client2.destroy());
     await client2.initialize();
 
-    await Promise.all(performInvitation({ host: client1.halo as never, guest: client2.halo as never }));
+    await Promise.all(performInvitation({ host: client1.halo, guest: client2.halo }));
 
     expect(await client1.halo.devices.get()).to.have.lengthOf(2);
     expect(await client2.halo.devices.get()).to.have.lengthOf(2);

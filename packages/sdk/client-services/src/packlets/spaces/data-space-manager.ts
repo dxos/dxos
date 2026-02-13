@@ -460,7 +460,7 @@ export class DataSpaceManager extends Resource {
     // TODO(dmaretskyi): Refactor.
     invariant(credentials[0].credential);
     const spaceMemberCredential = credentials[0].credential.credential;
-    invariant(getCredentialAssertion(spaceMemberCredential as never)['@type'] === 'dxos.halo.credentials.SpaceMember');
+    invariant(getCredentialAssertion(spaceMemberCredential)['@type'] === 'dxos.halo.credentials.SpaceMember');
     await writeMessages(space.controlPipeline.writer, credentials as never);
 
     return spaceMemberCredential as never;
@@ -714,10 +714,10 @@ export class DataSpaceManager extends Resource {
         type: Invitation_Type.DELEGATED,
         kind: Invitation_Kind.SPACE,
         spaceKey: encodePublicKey(space.key),
-        authMethod: invitation.authMethod as never,
+        authMethod: invitation.authMethod,
         invitationId: invitation.invitationId,
         swarmKey: encodePublicKey(invitation.swarmKey),
-        guestKeypair: invitation.guestKey ? ({ publicKey: invitation.guestKey } as never) : undefined,
+        guestKeypair: invitation.guestKey ? { publicKey: invitation.guestKey } : undefined,
         lifetime: invitation.expiresOn ? (invitation.expiresOn.getTime() - Date.now()) / 1000 : undefined,
         multiUse: invitation.multiUse,
         delegationCredentialId: encodePublicKey(credentialId),

@@ -473,7 +473,7 @@ describe('Invitations', () => {
                   async (guestInvitation: Invitation) => {
                     switch (guestInvitation.state) {
                       case Invitation_State.SUCCESS: {
-                        guestComplete.wake({ invitation: guestInvitation as never });
+                        guestComplete.wake({ invitation: guestInvitation });
                         break;
                       }
                     }
@@ -485,7 +485,7 @@ describe('Invitations', () => {
                 break;
               }
               case Invitation_State.SUCCESS: {
-                hostComplete.wake({ invitation: hostInvitation as never });
+                hostComplete.wake({ invitation: hostInvitation });
                 break;
               }
             }
@@ -579,7 +579,7 @@ describe('Invitations', () => {
       });
 
       testSuite(
-        () => ({ host: host as never, guest: guest as never }),
+        () => ({ host, guest }),
         () => [hostContext, guestContext],
       );
     });
@@ -605,7 +605,7 @@ describe('Invitations', () => {
       });
 
       testSuite(
-        () => ({ host: host as never, guest: guest as never }),
+        () => ({ host, guest }),
         () => [hostContext, guestContext],
       );
     });
@@ -634,7 +634,7 @@ describe('Invitations', () => {
     });
 
     testSuite(
-      () => ({ host: host.halo as never, guest: guest.halo as never }),
+      () => ({ host: host.halo, guest: guest.halo }),
       () => [(host.services as any).host._serviceContext, (guest.services as any).host._serviceContext],
     );
   });
@@ -664,7 +664,7 @@ describe('Invitations', () => {
     });
 
     testSuite(
-      () => ({ host: space as never, guest: guest.spaces as never }),
+      () => ({ host: space, guest: guest.spaces }),
       () => [(host.services as any).host._serviceContext, (guest.services as any).host._serviceContext],
     );
   });

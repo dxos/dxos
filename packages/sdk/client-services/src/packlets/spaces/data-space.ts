@@ -239,9 +239,9 @@ export class DataSpace {
     await this._presence.open();
     await this._gossip.open();
     await this._notarizationPlugin.open();
-    await this._inner.spaceState.addCredentialProcessor(this._notarizationPlugin as never);
+    await this._inner.spaceState.addCredentialProcessor(this._notarizationPlugin);
     await this._automergeSpaceState.open();
-    await this._inner.spaceState.addCredentialProcessor(this._automergeSpaceState as never);
+    await this._inner.spaceState.addCredentialProcessor(this._automergeSpaceState);
 
     if (this._edgeFeedReplicator) {
       this.inner.protocol.feedAdded.append(this._onFeedAdded);
@@ -285,9 +285,9 @@ export class DataSpace {
     await this.authVerifier.close();
 
     await this._inner.close();
-    await this._inner.spaceState.removeCredentialProcessor(this._automergeSpaceState as never);
+    await this._inner.spaceState.removeCredentialProcessor(this._automergeSpaceState);
     await this._automergeSpaceState.close();
-    await this._inner.spaceState.removeCredentialProcessor(this._notarizationPlugin as never);
+    await this._inner.spaceState.removeCredentialProcessor(this._notarizationPlugin);
     await this._notarizationPlugin.close();
 
     await this._presence.close();
@@ -393,7 +393,7 @@ export class DataSpace {
       this.notarizationPlugin.setWriter(
         createMappedFeedWriter<Credential, FeedMessage.Payload>(
           (credential) => ({
-            credential: { credential: credential as never },
+            credential: { credential },
           }),
           this._inner.controlPipeline.writer,
         ) as never,

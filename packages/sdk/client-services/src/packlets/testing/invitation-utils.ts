@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type MulticastObservable, Trigger } from '@dxos/async';
+import { Trigger } from '@dxos/async';
 import { type AuthenticatingInvitation, type CancellableInvitation, InvitationEncoder } from '@dxos/client-protocol';
 import { invariant } from '@dxos/invariant';
 import {
@@ -19,7 +19,7 @@ import { ServiceContext } from '../services';
  * Strip secrets from invitation before giving it to the peer.
  */
 export const sanitizeInvitation = (invitation: Invitation): Invitation => {
-  return InvitationEncoder.decode(InvitationEncoder.encode(invitation as never)) as never;
+  return InvitationEncoder.decode(InvitationEncoder.encode(invitation));
 };
 
 export type InvitationHost = {
@@ -76,7 +76,7 @@ export const performInvitation = ({
   const authCode = new Trigger<string>();
 
   void createInvitation(host, options).then((hostObservable) => {
-    (hostObservable as never as MulticastObservable<Invitation>).subscribe(
+    hostObservable.subscribe(
       async (hostInvitation: Invitation) => {
         switch (hostInvitation.state) {
           case Invitation_State.CONNECTING: {
@@ -93,7 +93,7 @@ export const performInvitation = ({
             }
 
             const guestObservable = acceptInvitation(guest, hostInvitation, guestDeviceProfile);
-            (guestObservable as never as MulticastObservable<Invitation>).subscribe(
+            guestObservable.subscribe(
               async (guestInvitation: Invitation) => {
                 switch (guestInvitation.state) {
                   case Invitation_State.CONNECTING: {
@@ -252,7 +252,7 @@ export const acceptInvitation = (
 
   if (guest instanceof ServiceContext) {
     return guest.invitationsManager.acceptInvitation({
-      invitation: invitation as never,
+      invitation,
       deviceProfile: guestDeviceProfile,
     } as never);
   }

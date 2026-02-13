@@ -159,7 +159,7 @@ describe('ContactBook', () => {
   };
 
   const inviteMember = async (host: Space, guest: Client) => {
-    const [{ invitation: hostInvitation }] = await Promise.all(performInvitation({ host: host as never, guest: guest.spaces as never }));
+    const [{ invitation: hostInvitation }] = await Promise.all(performInvitation({ host, guest: guest.spaces }));
     expect(hostInvitation?.state).to.eq(Invitation_State.SUCCESS);
   };
 

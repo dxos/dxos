@@ -112,12 +112,12 @@ export class InvitationsProxy implements Invitations {
         case QueryInvitationsResponse_Action.ADDED: {
           log('remote invitations added', { type, invitations });
           invitations
-            ?.filter((invitation) => this._matchesInvitationContext(invitation as never))
+            ?.filter((invitation) => this._matchesInvitationContext(invitation))
             .filter((invitation) => !this._invitations.has(invitation.invitationId))
             .forEach((invitation) => {
               type === QueryInvitationsResponse_Type.CREATED
-                ? this.share(invitation as never)
-                : this.join(invitation as never);
+                ? this.share(invitation)
+                : this.join(invitation);
             });
           if (existing) {
             type === QueryInvitationsResponse_Type.CREATED
@@ -149,7 +149,7 @@ export class InvitationsProxy implements Invitations {
         }
         case QueryInvitationsResponse_Action.SAVED: {
           log('remote invitations saved', { invitations });
-          this._savedUpdate.emit((invitations ?? []) as never);
+          this._savedUpdate.emit(invitations ?? []);
           break;
         }
       }

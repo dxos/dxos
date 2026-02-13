@@ -35,7 +35,7 @@ describe('Spaces/invitations', () => {
     const space1 = await client1.spaces.create();
     log('spaces.create', { key: space1.key });
     const [{ invitation: hostInvitation }, { invitation: guestInvitation }] = await Promise.all(
-      performInvitation({ host: space1 as never, guest: client2.spaces as never }),
+      performInvitation({ host: space1, guest: client2.spaces }),
     );
     expect(guestInvitation?.spaceKey).to.deep.eq(space1.key);
     expect(hostInvitation?.spaceKey).to.deep.eq(guestInvitation?.spaceKey);
@@ -54,7 +54,7 @@ describe('Spaces/invitations', () => {
 
       // Alice invites Bob.
       const space = await alice.spaces.create();
-      const [{ invitation: hostInvitation }] = await Promise.all(performInvitation({ host: space as never, guest: bob.spaces as never }));
+      const [{ invitation: hostInvitation }] = await Promise.all(performInvitation({ host: space, guest: bob.spaces }));
       expect(hostInvitation?.state).to.eq(Invitation_State.SUCCESS);
 
       // Alice creates a delegated invitation.
@@ -84,7 +84,7 @@ describe('Spaces/invitations', () => {
 
       // Alice invites Bob.
       const space = await alice.spaces.create();
-      const [{ invitation: hostInvitation }] = await Promise.all(performInvitation({ host: space as never, guest: bob.spaces as never }));
+      const [{ invitation: hostInvitation }] = await Promise.all(performInvitation({ host: space, guest: bob.spaces }));
       expect(hostInvitation?.state).to.eq(Invitation_State.SUCCESS);
 
       // Alice creates a delegated invitation.

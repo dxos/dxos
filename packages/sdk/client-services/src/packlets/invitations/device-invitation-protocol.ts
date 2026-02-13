@@ -63,7 +63,7 @@ export class DeviceInvitationProtocol implements InvitationProtocol {
         haloSpaceKey: identity.haloSpaceKey,
         genesisFeedKey: identity.haloGenesisFeedKey,
         controlTimeframe: identity.controlPipeline.state.timeframe,
-        credential: credential as never,
+        credential,
       },
     };
   }

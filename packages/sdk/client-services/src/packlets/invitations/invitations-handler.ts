@@ -195,7 +195,7 @@ export class InvitationsHandler {
       return extension;
     };
 
-    const expiresOn = getExpirationTime(invitation as never);
+    const expiresOn = getExpirationTime(invitation);
     if (expiresOn) {
       if (expiresOn.getTime() < Date.now()) {
         log.warn('invitation has already expired');
@@ -509,7 +509,7 @@ export class InvitationsHandler {
 }
 
 const checkInvitation = (protocol: InvitationProtocol, invitation: Partial<Invitation>) => {
-  const expiresOn = getExpirationTime(invitation as never);
+  const expiresOn = getExpirationTime(invitation);
   if (expiresOn && expiresOn.getTime() < Date.now()) {
     return new InvalidInvitationError({ message: 'Invitation already expired.' });
   }

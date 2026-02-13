@@ -142,8 +142,8 @@ describe('Client services', () => {
 
     const [{ invitation: hostInvitation }, { invitation: guestInvitation }] = await Promise.all(
       performInvitation({
-        host: client1.halo as never,
-        guest: client2.halo as never,
+        host: client1.halo,
+        guest: client2.halo,
         options: { authMethod: Invitation_AuthMethod.SHARED_SECRET },
       }),
     );
@@ -225,8 +225,8 @@ describe('Client services', () => {
 
     const [{ invitation: hostInvitation }, { invitation: guestInvitation }] = await Promise.all(
       performInvitation({
-        host: hostSpace as never,
-        guest: client2.spaces as never,
+        host: hostSpace,
+        guest: client2.spaces,
         options: { authMethod: Invitation_AuthMethod.SHARED_SECRET },
       }),
     );

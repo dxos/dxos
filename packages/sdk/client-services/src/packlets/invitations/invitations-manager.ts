@@ -73,9 +73,9 @@ export class InvitationsManager {
     // onComplete is called on cancel, expiration, or redemption of a single-use invitation
     this._onInvitationComplete(observableInvitation, async () => {
       this._createInvitations.delete(observableInvitation.get().invitationId);
-      this.removedCreated.emit(observableInvitation.get() as never);
+      this.removedCreated.emit(observableInvitation.get());
       if (observableInvitation.get().persistent) {
-        await this._safeDeleteInvitation(observableInvitation.get() as never);
+        await this._safeDeleteInvitation(observableInvitation.get());
       }
     });
 
@@ -87,7 +87,7 @@ export class InvitationsManager {
       return observableInvitation;
     }
 
-    this._invitationsHandler.handleInvitationFlow(ctx, stream, handler, observableInvitation.get() as never);
+    this._invitationsHandler.handleInvitationFlow(ctx, stream, handler, observableInvitation.get());
 
     return observableInvitation;
   }
@@ -108,7 +108,7 @@ export class InvitationsManager {
       });
       const cInvitations = await Promise.all(loadTasks);
 
-      return { invitations: cInvitations.map((invitation) => invitation.get() as never) };
+      return { invitations: cInvitations.map((invitation) => invitation.get()) };
     } catch (err) {
       log.catch(err);
       return { invitations: [] };
@@ -130,11 +130,11 @@ export class InvitationsManager {
     const { ctx, invitation, stream, otpEnteredTrigger } = this._createObservableAcceptingInvitation(handler, options);
     this._invitationsHandler.acceptInvitation(ctx, stream, handler, options, otpEnteredTrigger, request.deviceProfile as never);
     this._acceptInvitations.set(invitation.get().invitationId, invitation);
-    this.invitationAccepted.emit(invitation.get() as never);
+    this.invitationAccepted.emit(invitation.get());
 
     this._onInvitationComplete(invitation, () => {
       this._acceptInvitations.delete(invitation.get().invitationId);
-      this.removedAccepted.emit(invitation.get() as never);
+      this.removedAccepted.emit(invitation.get());
     });
 
     return invitation;
@@ -160,13 +160,13 @@ export class InvitationsManager {
       if (created.get().persistent) {
         await this._metadataStore.removeInvitation(invitationId);
       }
-      if ((created.get().type as never) === Invitation_Type.DELEGATED) {
-        const handler = this._getHandler(created.get() as never);
-        await handler.cancelDelegation(created.get() as never);
+      if (created.get().type === Invitation_Type.DELEGATED) {
+        const handler = this._getHandler(created.get());
+        await handler.cancelDelegation(created.get());
       }
       await created.cancel();
       this._createInvitations.delete(invitationId);
-      this.removedCreated.emit(created.get() as never);
+      this.removedCreated.emit(created.get());
       return;
     }
 
@@ -174,16 +174,16 @@ export class InvitationsManager {
     if (accepted) {
       await accepted.cancel();
       this._acceptInvitations.delete(invitationId);
-      this.removedAccepted.emit(accepted.get() as never);
+      this.removedAccepted.emit(accepted.get());
     }
   }
 
   getCreatedInvitations(): Invitation[] {
-    return [...this._createInvitations.values()].map((i) => i.get() as never);
+    return [...this._createInvitations.values()].map((i) => i.get());
   }
 
   getAcceptedInvitations(): Invitation[] {
-    return [...this._acceptInvitations.values()].map((i) => i.get() as never);
+    return [...this._acceptInvitations.values()].map((i) => i.get());
   }
 
   onPersistentInvitationsLoaded(ctx: Context, callback: () => void): void {
@@ -251,8 +251,8 @@ export class InvitationsManager {
       stream.complete();
     });
     const observableInvitation = new CancellableInvitation({
-      initialInvitation: invitation as never,
-      subscriber: stream.observable as never,
+      initialInvitation: invitation,
+      subscriber: stream.observable,
       onCancel: async () => {
         stream.next({ ...invitation, state: Invitation_State.CANCELLED });
         await ctx.dispose();
@@ -289,8 +289,8 @@ export class InvitationsManager {
       stream.complete();
     });
     const invitation = new AuthenticatingInvitation({
-      initialInvitation: initialState as never,
-      subscriber: stream.observable as never,
+      initialInvitation: initialState,
+      subscriber: stream.observable,
       onCancel: async () => {
         stream.next({ ...initialState, state: Invitation_State.CANCELLED });
         await ctx.dispose();

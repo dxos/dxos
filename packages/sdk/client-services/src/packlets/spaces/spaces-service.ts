@@ -230,7 +230,7 @@ export class SpacesServiceImpl implements Client.SpacesService {
 
       const processor: CredentialProcessor = {
         processCredential: async (credential) => {
-          next(credential as never);
+          next(credential);
         },
       };
       ctx.onDispose(() => space.spaceState.removeCredentialProcessor(processor));
