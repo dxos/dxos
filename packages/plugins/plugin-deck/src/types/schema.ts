@@ -90,6 +90,7 @@ export const DeckStateSchema = Schema.Struct({
 }).pipe(Schema.mutable);
 export type DeckStateProps = Schema.Schema.Type<typeof DeckStateSchema>;
 
+// TODO(burdon): Factor out state (in common with other layouts?)
 // Transient/ephemeral plugin state (not persisted).
 export const DeckEphemeralStateSchema = Schema.Struct({
   dialogOpen: Schema.Boolean,
