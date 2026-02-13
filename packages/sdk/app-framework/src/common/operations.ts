@@ -112,6 +112,7 @@ export namespace LayoutOperation {
   //
 
   const PopoverBaseInput = Schema.Struct({
+    refId: Schema.optional(Schema.String.annotations({ description: 'The id of the subject.' })),
     subject: Schema.optional(
       Schema.Any.annotations({
         description: 'URI of the component to display in the popover or data to pass to the popover.',

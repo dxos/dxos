@@ -60,6 +60,7 @@ export default Capability.makeModule(
       const title = titleProp ?? Obj.getLabel(result.object);
 
       await invokePromise(Common.LayoutOperation.UpdatePopover, {
+        refId,
         subject: result.object,
         state: true,
         variant: 'virtual',
