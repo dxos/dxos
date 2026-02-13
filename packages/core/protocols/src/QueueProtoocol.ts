@@ -15,7 +15,10 @@ export const KEY_QUEUE_POSITION = 'dxos.org/key/queue-position';
 
 import * as Schema from 'effect/Schema';
 
+import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
+
+import { EdgeService } from './edge/edge.js';
 
 export const FeedCursor = Schema.String.pipe(Schema.brand('@dxos/feed/FeedCursor'));
 export type FeedCursor = Schema.Schema.Type<typeof FeedCursor>;
@@ -160,3 +163,14 @@ export const WellKnownNamespaces = {
 
 export const isWellKnownNamespace = (namespace: string) =>
   Object.values(WellKnownNamespaces).includes(namespace as any);
+
+export const ServiceIdCodec = {
+  encode: (namespace: string, spaceId: SpaceId) => `${EdgeService.QUEUE_REPLICATOR}:${namespace}:${spaceId}`,
+  decode: (serviceId: string): { namespace: keyof typeof WellKnownNamespaces; spaceId: SpaceId } => {
+    const [service, namespace, spaceId] = serviceId.split(':');
+    invariant(service === EdgeService.QUEUE_REPLICATOR, `Invalid service: ${service}`);
+    invariant(isWellKnownNamespace(namespace), `Invalid namespace: ${namespace}`);
+    invariant(SpaceId.isValid(spaceId), `Invalid spaceId: ${spaceId}`);
+    return { namespace: namespace as keyof typeof WellKnownNamespaces, spaceId };
+  },
+};
