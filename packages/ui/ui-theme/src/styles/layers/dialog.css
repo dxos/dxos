@@ -67,14 +67,7 @@
     }
   }
 
-  /* .dx-dialog__body {} */
-  /* .dx-dialog__action-bar {} */
-
   .dx-dialog__title {
     @apply shrink-0 text-xl font-medium;
-  }
-
-  .dx-dialog__description {
-    @apply mlb-2;
   }
 }

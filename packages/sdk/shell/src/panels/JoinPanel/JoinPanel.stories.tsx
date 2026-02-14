@@ -2,13 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { type Meta } from '@storybook/react-vite';
 import React from 'react';
 
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { StorybookDialog } from '../../components/StorybookDialog';
-import { ConfirmResetImpl } from '../../steps';
+import { ConfirmReset } from '../../steps';
 import { translations } from '../../translations';
 
 import { JoinPanelImpl } from './JoinPanel';
@@ -25,7 +25,7 @@ const noOpProps: JoinPanelImplProps = {
 
 const JoinDialog = (props: Partial<JoinPanelImplProps>) => (
   <StorybookDialog inOverlayLayout>
-    <JoinPanelImpl {...noOpProps} {...props} IdentityInput={IdentityInputImpl} ConfirmReset={ConfirmResetImpl} />
+    <JoinPanelImpl {...noOpProps} {...props} IdentityInput={IdentityInputImpl} ConfirmReset={ConfirmReset} />
   </StorybookDialog>
 );
 
@@ -42,8 +42,6 @@ const meta = {
 } satisfies Meta<typeof JoinDialog>;
 
 export default meta;
-
-type Story = StoryObj<typeof meta>;
 
 export const AdditionMethodChooser = () => <JoinDialog mode='halo-only' activeView='addition method chooser' />;
 

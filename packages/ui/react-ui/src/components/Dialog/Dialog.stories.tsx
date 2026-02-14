@@ -37,10 +37,14 @@ const DefaultStory = ({ size, title, description, openTrigger, closeTrigger, blo
               </Dialog.Close>
             )}
           </Dialog.Header>
-          <Dialog.Description>{description}</Dialog.Description>
-          <Dialog.Close asChild>
-            <Button variant='primary'>{closeTrigger}</Button>
-          </Dialog.Close>
+          <Dialog.Body>
+            <Dialog.Description>{description}</Dialog.Description>
+          </Dialog.Body>
+          <Dialog.ActionBar>
+            <Dialog.Close asChild>
+              <Button variant='primary'>{closeTrigger}</Button>
+            </Dialog.Close>
+          </Dialog.ActionBar>
         </Dialog.Content>
       </Dialog.Overlay>
     </Dialog.Root>
