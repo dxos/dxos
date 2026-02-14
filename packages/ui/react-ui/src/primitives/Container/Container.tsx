@@ -12,7 +12,6 @@ import { type SlottableProps } from '@dxos/ui-types';
 
 import { useThemeContext } from '../../hooks';
 
-// TODO(burdon): Variant based on root.
 // TODO(burdon): Replace Form, Container, Card spacing.
 // TODO(burdon): Scrolling (reconcile with Mosaic Viewport).
 // TODO(burdon): Reconcile AnchoredOverflow.

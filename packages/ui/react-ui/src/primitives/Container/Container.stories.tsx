@@ -5,9 +5,8 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { withTheme } from '@dxos/react-ui/testing';
-
 import { Input } from '../../components';
+import { withTheme } from '../../testing';
 
 import { Container, type ContainerRootProps } from './Container';
 
@@ -40,15 +39,15 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const XS: Story = {
-  args: {
-    variant: 'xs',
-  },
-};
-
 export const SM: Story = {
   args: {
     variant: 'sm',
+  },
+};
+
+export const MD: Story = {
+  args: {
+    variant: 'md',
   },
 };
 

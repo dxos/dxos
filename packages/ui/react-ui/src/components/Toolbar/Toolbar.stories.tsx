@@ -69,7 +69,7 @@ const DefaultStory = (props: StorybookToolbarProps) => {
 };
 
 const meta = {
-  title: 'ui/react-ui-core/Toolbar',
+  title: 'ui/react-ui-core/components/Toolbar',
   component: Toolbar as any,
   render: DefaultStory,
   decorators: [withTheme],

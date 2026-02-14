@@ -47,7 +47,7 @@ const DefaultStory = ({ title, description, body, openTrigger, cancelTrigger, ac
 };
 
 const meta = {
-  title: 'ui/react-ui-core/AlertDialog',
+  title: 'ui/react-ui-core/components/AlertDialog',
   component: AlertDialog.Root as any,
   render: DefaultStory as any,
   decorators: [withTheme],

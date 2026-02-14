@@ -39,7 +39,7 @@ const DefaultStory = (props: BreadcrumbRootProps) => {
 };
 
 const meta = {
-  title: 'ui/react-ui-core/Breadcrumb',
+  title: 'ui/react-ui-core/components/Breadcrumb',
   component: Breadcrumb.Root as any,
   render: DefaultStory,
   decorators: [withTheme],

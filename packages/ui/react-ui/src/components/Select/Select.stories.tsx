@@ -42,7 +42,7 @@ const DefaultStory = ({ items = [] }: StoryProps) => {
 };
 
 const meta = {
-  title: 'ui/react-ui-core/Select',
+  title: 'ui/react-ui-core/components/Select',
   render: DefaultStory,
   decorators: [withTheme, withLayoutVariants()],
 } satisfies Meta<typeof DefaultStory>;

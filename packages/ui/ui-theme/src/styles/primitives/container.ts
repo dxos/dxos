@@ -8,11 +8,11 @@ import { mx } from '../../util';
 
 /**
  * Padding variants:
- * - xs: Default padding for inputs, forms, etc.
- * - sm: Padding for cards.
+ * - sm: Default padding for inputs, forms, etc.
+ * - md: Padding for cards.
  * - lg: Padding for dialogs.
  */
-export type ColumnPadding = 'xs' | 'sm' | 'lg';
+export type ColumnPadding = 'sm' | 'md' | 'lg';
 
 export type ColumnStyleProps = {
   variant?: ColumnPadding;
@@ -20,8 +20,8 @@ export type ColumnStyleProps = {
 
 // TODO(burdon): Remove these TW types and just define here.
 const padding: Record<ColumnPadding, string> = {
-  xs: 'pli-2',
-  sm: 'pli-3',
+  sm: 'pli-2',
+  md: 'pli-3',
   lg: 'pli-6',
 };
 

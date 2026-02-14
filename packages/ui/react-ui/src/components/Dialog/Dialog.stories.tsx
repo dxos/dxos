@@ -48,7 +48,7 @@ const DefaultStory = ({ size, title, description, openTrigger, closeTrigger, blo
 };
 
 const meta = {
-  title: 'ui/react-ui-core/Dialog',
+  title: 'ui/react-ui-core/components/Dialog',
   component: Dialog as any,
   render: DefaultStory,
   decorators: [withTheme],
