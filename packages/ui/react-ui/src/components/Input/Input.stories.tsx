@@ -98,20 +98,6 @@ export default meta;
 
 type Story = StoryObj<BaseProps & Variant>;
 
-// TODO(burdon): Padding.
-export const Experimental = () => {
-  return (
-    <div className='flex flex-col gap-2 overflow-hidden'>
-      <div>xx</div>
-      <input className='ring-2' />
-      {/* <Input.Root>
-        <Input.Label>Label</Input.Label>
-        <Input.TextInput />
-      </Input.Root> */}
-    </div>
-  );
-};
-
 export const DensityCoarse: Story = {
   args: {
     kind: 'text',

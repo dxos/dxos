@@ -5,8 +5,9 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
+
+import { withLayout, withTheme } from '../../testing';
 
 import { Scrollable, type ScrollableProps } from './Scrollable';
 

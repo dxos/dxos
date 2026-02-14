@@ -7,6 +7,7 @@
  * https://github.com/KingSora/OverlayScrollbars/blob/master/packages/overlayscrollbars/src/styles/scrollbars.scss
  */
 /** TODO(burdon): Tailwind. */
+/** TODO(burdon): Move to theme. */
 .os-theme-dark {
   --os-size: 6px;
   --os-padding-perpendicular: 0px;

@@ -67,8 +67,8 @@ export const lengthsFacet = {
       inputFine: { fine: ['iconButtonPadding'] },
       inputCoarse: { coarse: ['iconButtonPadding'] },
 
-      // TODO(burdon): Remove?
       trimXs: { fine: ['cardSpacingChrome', 'labelSpacingBlock', 'inputSpacingBlock'] },
+      // TODO(burdon): Remove?
       trimSm: { fine: ['cardSpacingInline', 'cardSpacingBlock', 'cardSpacingGap'] },
       trimMd: { coarse: ['cardSpacingInline', 'cardSpacingBlock', 'cardSpacingGap'] },
     },

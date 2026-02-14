@@ -5,16 +5,34 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { withTheme } from '@dxos/react-ui/testing';
 
-import { Container } from './Container';
+import { Input } from '../../components';
 
-const meta: Meta<typeof Container> = {
+import { Container, type ContainerRootProps } from './Container';
+
+const DefaultStory = (props: ContainerRootProps) => {
+  return (
+    <div className='plb-2 is-[20rem] border border-separator rounded-sm'>
+      <Container.Root {...props}>
+        <Container.Column>
+          <Input.Root>
+            <Input.Label>Label</Input.Label>
+            <Input.TextInput />
+          </Input.Root>
+        </Container.Column>
+      </Container.Root>
+    </div>
+  );
+};
+
+const meta: Meta<typeof Container.Root> = {
   title: 'ui/react-ui-core/primitives/Container',
-  component: Container,
-  decorators: [withTheme, withLayout({ layout: 'column' })],
+  component: Container.Root,
+  render: DefaultStory,
+  decorators: [withTheme],
   parameters: {
-    layout: 'fullscreen',
+    layout: 'centered',
   },
 };
 
@@ -22,14 +40,20 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {
+export const XS: Story = {
   args: {
-    children: (
-      <>
-        {Array.from({ length: 10 }).map((_, i) => (
-          <div key={i}>Item {i}</div>
-        ))}
-      </>
-    ),
+    variant: 'xs',
+  },
+};
+
+export const SM: Story = {
+  args: {
+    variant: 'sm',
+  },
+};
+
+export const LG: Story = {
+  args: {
+    variant: 'lg',
   },
 };

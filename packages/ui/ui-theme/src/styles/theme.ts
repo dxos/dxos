@@ -30,9 +30,20 @@ import {
   tooltipTheme,
   treegridTheme,
 } from './components';
+import { containerTheme } from './primitives';
 
 export const defaultTheme: Theme<Record<string, any>> = {
   themeName: () => 'default',
+
+  //
+  // Primitives
+  //
+
+  container: containerTheme,
+
+  //
+  // Components
+  //
 
   anchoredOverflow: anchoredOverflowTheme,
   avatar: avatarTheme,

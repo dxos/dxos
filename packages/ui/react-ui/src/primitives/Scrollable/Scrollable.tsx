@@ -13,9 +13,13 @@ import React, { type RefCallback, forwardRef, useEffect, useImperativeHandle, us
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { type Axis } from '../Mosaic';
+// These are not exported from the pragmatic-drag-and-drop-auto-scroll package.
+export type Axis = 'vertical' | 'horizontal';
+export type AllowedAxis = Axis | 'all';
 
 import 'overlayscrollbars/styles/overlayscrollbars.css';
+
+// TODO(burdon): Move to theme.
 import './scrollable.css';
 
 const defaultOptions: ScrollableProps['options'] = {
