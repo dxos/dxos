@@ -92,7 +92,7 @@ const DefaultStory = () => {
 };
 
 const meta = {
-  title: 'ui/react-ui-core/DropdownMenu',
+  title: 'ui/react-ui-core/components/DropdownMenu',
   component: DropdownMenu.Root,
   render: DefaultStory,
   decorators: [withTheme],

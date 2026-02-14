@@ -7,7 +7,7 @@ import React from 'react';
 
 import { withTheme } from '@dxos/react-ui/testing';
 
-import { StorybookDialog } from '../StorybookDialog';
+import { StorybookDialog } from '../../story-components';
 
 import { Action } from './Action';
 import { Actions } from './Actions';

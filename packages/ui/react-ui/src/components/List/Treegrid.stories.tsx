@@ -144,7 +144,7 @@ const DefaultStory = () => {
 };
 
 const meta = {
-  title: 'ui/react-ui-core/Treegrid',
+  title: 'ui/react-ui-core/components/Treegrid',
   component: Treegrid.Root as any,
   render: DefaultStory,
   decorators: [withTheme],

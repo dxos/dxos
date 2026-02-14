@@ -25,7 +25,7 @@ const DefaultStory = ({ valence, title, body }: StoryProps) => (
 );
 
 const meta = {
-  title: 'ui/react-ui-core/Callout',
+  title: 'ui/react-ui-core/components/Callout',
   component: Callout.Root as any,
   render: DefaultStory,
   decorators: [withTheme],

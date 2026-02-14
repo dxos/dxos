@@ -67,7 +67,7 @@ const DefaultStory = (_args: StoryMainArgs) => {
 };
 
 const meta = {
-  title: 'ui/react-ui-core/Main',
+  title: 'ui/react-ui-core/components/Main',
   component: Main.Root,
   render: DefaultStory,
   decorators: [withTheme, withLayout({ layout: 'fullscreen' })],

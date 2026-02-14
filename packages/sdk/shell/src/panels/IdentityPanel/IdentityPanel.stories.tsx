@@ -12,8 +12,8 @@ import { PublicKey } from '@dxos/react-client';
 import { Invitation } from '@dxos/react-client/invitations';
 import { withTheme } from '@dxos/react-ui/testing';
 
-import { StorybookDialog } from '../../components/StorybookDialog';
 import { InvitationManager, type InvitationManagerProps } from '../../steps';
+import { StorybookDialog } from '../../story-components';
 import { translations } from '../../translations';
 
 import { IdentityPanelImpl } from './IdentityPanel';

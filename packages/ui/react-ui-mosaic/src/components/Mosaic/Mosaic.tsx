@@ -42,17 +42,21 @@ import React, {
 import { createPortal } from 'react-dom';
 
 import { log } from '@dxos/log';
-import { type SlottableClassName, type ThemedClassName } from '@dxos/react-ui';
+import {
+  type AllowedAxis,
+  type Axis,
+  Scrollable,
+  type ScrollableProps,
+  type SlottableClassName,
+  type ThemedClassName,
+} from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 import { isTruthy } from '@dxos/util';
 
 import { useFocus } from '../Focus';
-import { Scrollable, type ScrollableProps } from '../Scrollable';
 import { Stack, type StackProps, VirtualStack } from '../Stack';
 
 import {
-  type AllowedAxis,
-  type Axis,
   type MosaicContainerData,
   type MosaicData,
   type MosaicEventHandler,

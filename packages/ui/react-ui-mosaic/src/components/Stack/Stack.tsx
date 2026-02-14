@@ -6,23 +6,16 @@ import { type ReactVirtualizerOptions, useVirtualizer } from '@tanstack/react-vi
 import React, { type FC, Fragment, type ReactElement, type Ref, forwardRef } from 'react';
 
 import { invariant } from '@dxos/invariant';
-import { type SlottableClassName } from '@dxos/react-ui';
+import { type Axis, type SlottableClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { useVisibleItems } from '../../hooks';
-import {
-  type Axis,
-  type GetId,
-  Mosaic,
-  type MosaicTileProps,
-  type MosiacPlaceholderProps,
-  useMosaicContainer,
-} from '../Mosaic';
+import { type GetId, Mosaic, type MosaicTileProps, type MosiacPlaceholderProps, useMosaicContainer } from '../Mosaic';
 import { mosaicStyles } from '../Mosaic';
 
-type StackTileComponent<TData = any> = FC<MosaicTileProps<TData>>;
-
 const STACK_NAME = 'Stack';
+
+type StackTileComponent<TData = any> = FC<MosaicTileProps<TData>>;
 
 type StackProps<TData = any> = SlottableClassName<
   {

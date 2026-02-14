@@ -38,7 +38,7 @@ const DefaultStory = () => {
 };
 
 const meta = {
-  title: 'ui/react-ui-core/AvatarGroup',
+  title: 'ui/react-ui-core/components/AvatarGroup',
   render: DefaultStory,
   decorators: [withTheme],
 } satisfies Meta<typeof DefaultStory>;

@@ -218,15 +218,15 @@ const DialogDescription: ForwardRefExoticComponent<DialogTitleProps> = forwardRe
 // ActionBar
 //
 
-type DialogActionBarProps = PropsWithChildren;
+type DialogActionBarProps = ThemedClassName<PropsWithChildren>;
 
 const DialogActionBar: ForwardRefExoticComponent<DialogActionBarProps> = forwardRef<
   HTMLDivElement,
   DialogActionBarProps
->(({ children, ...props }, forwardedRef) => {
+>(({ children, classNames, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
   return (
-    <div {...props} className={tx('dialog.action-bar', 'dialog__action-bar')} ref={forwardedRef}>
+    <div {...props} className={tx('dialog.actionbar', 'dialog__actionbar', {}, classNames)} ref={forwardedRef}>
       {children}
     </div>
   );

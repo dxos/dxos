@@ -119,7 +119,6 @@ const PinInput = forwardRef<HTMLInputElement, PinInputProps>(
       elevation: propsElevation,
       segmentClassName: propsSegmentClassName,
       inputClassName,
-      variant,
       ...props
     },
     forwardedRef,

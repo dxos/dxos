@@ -57,6 +57,7 @@ export const InvitationManager = ({
         return 'showing qr';
     }
   }, [statusValue]);
+
   return (
     <>
       <Viewport.Root activeView={activeView} classNames='grow plb-1'>

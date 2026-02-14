@@ -25,7 +25,13 @@ export type ThemedClassName<P = {}> = Omit<P, 'className'> & {
  * For components that are children of Radix-style asChild primitives.
  * `<Root className={mx(<custom>, className, classNames)}>`
  */
-export type SlottableClassName<P = {}> = P & {
+export type SlottableClassName<P = unknown> = P & {
   className?: string;
   classNames?: ClassNameValue;
 };
+
+export type SlottableProps<P = unknown> = SlottableClassName<
+  P & {
+    asChild?: boolean;
+  }
+>;

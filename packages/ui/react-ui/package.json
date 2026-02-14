@@ -86,6 +86,8 @@
     "date-fns": "catalog:",
     "i18next": "catalog:",
     "keyborg": "catalog:",
+    "overlayscrollbars": "catalog:",
+    "overlayscrollbars-react": "catalog:",
     "react-i18next": "catalog:",
     "react-remove-scroll": "catalog:"
   },

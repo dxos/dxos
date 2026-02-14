@@ -34,7 +34,7 @@ const DefaultStory = ({ children }: PropsWithChildren<{}>) => {
 };
 
 const meta = {
-  title: 'ui/react-ui-core/ScrollArea',
+  title: 'ui/react-ui-core/components/ScrollArea',
   component: ScrollArea as any,
   render: DefaultStory,
   decorators: [withTheme, withLayout({ layout: 'fullscreen' })],

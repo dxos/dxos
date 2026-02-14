@@ -113,9 +113,7 @@ export const SearchDialog = ({ pivotId }: SearchDialogProps) => {
         </SearchList.Content>
       </SearchList.Root>
       <Dialog.Close asChild>
-        <Button variant='primary' classNames='mbs-2'>
-          {t('close label', { ns: osTranslations })}
-        </Button>
+        <Button variant='primary'>{t('close label', { ns: osTranslations })}</Button>
       </Dialog.Close>
     </Dialog.Content>
   );

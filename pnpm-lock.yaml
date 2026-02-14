@@ -15467,6 +15467,12 @@ importers:
       keyborg:
         specifier: 'catalog:'
         version: 2.6.0
+      overlayscrollbars:
+        specifier: 'catalog:'
+        version: 2.13.0
+      overlayscrollbars-react:
+        specifier: 'catalog:'
+        version: 0.5.6(overlayscrollbars@2.13.0)(react@19.2.3)
       react-i18next:
         specifier: 'catalog:'
         version: 11.18.6(i18next@21.10.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
@@ -17607,12 +17613,6 @@ importers:
       bind-event-listener:
         specifier: 'catalog:'
         version: 3.0.0
-      overlayscrollbars:
-        specifier: 'catalog:'
-        version: 2.13.0
-      overlayscrollbars-react:
-        specifier: 'catalog:'
-        version: 0.5.6(overlayscrollbars@2.13.0)(react@19.2.3)
     devDependencies:
       '@dxos/random':
         specifier: workspace:*

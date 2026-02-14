@@ -25,7 +25,7 @@ const DefaultStory = (props: ToggleGroupProps) => {
 };
 
 const meta = {
-  title: 'ui/react-ui-core/ToggleGroup',
+  title: 'ui/react-ui-core/components/ToggleGroup',
   component: ToggleGroup,
   render: DefaultStory,
   decorators: [withTheme],

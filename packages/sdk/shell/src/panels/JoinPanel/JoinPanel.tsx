@@ -28,7 +28,6 @@ import {
 export const JoinPanelImpl = (props: JoinPanelImplProps) => {
   const {
     titleId,
-    send,
     activeView,
     failed,
     mode,
@@ -38,6 +37,7 @@ export const JoinPanelImpl = (props: JoinPanelImplProps) => {
     invitationAuthMethods,
     succeededKeys,
     failReasons,
+    send,
     onExit,
     onHaloDone,
     // onSpaceDone,
@@ -290,19 +290,27 @@ export const JoinPanel = ({
         return 'space invitation input';
       case [
         {
-          acceptingSpaceInvitation: { acceptingRedeemedSpaceInvitation: 'connectingSpaceInvitation' },
+          acceptingSpaceInvitation: {
+            acceptingRedeemedSpaceInvitation: 'connectingSpaceInvitation',
+          },
         },
         {
-          acceptingSpaceInvitation: { acceptingRedeemedSpaceInvitation: 'failingSpaceInvitation' },
+          acceptingSpaceInvitation: {
+            acceptingRedeemedSpaceInvitation: 'failingSpaceInvitation',
+          },
         },
       ].some(joinState.matches):
         return 'space invitation rescuer';
       case [
         {
-          acceptingSpaceInvitation: { acceptingRedeemedSpaceInvitation: 'inputtingSpaceVerificationCode' },
+          acceptingSpaceInvitation: {
+            acceptingRedeemedSpaceInvitation: 'inputtingSpaceVerificationCode',
+          },
         },
         {
-          acceptingSpaceInvitation: { acceptingRedeemedSpaceInvitation: 'authenticatingSpaceVerificationCode' },
+          acceptingSpaceInvitation: {
+            acceptingRedeemedSpaceInvitation: 'authenticatingSpaceVerificationCode',
+          },
         },
         {
           acceptingSpaceInvitation: {

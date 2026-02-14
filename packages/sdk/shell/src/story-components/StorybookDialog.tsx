@@ -10,7 +10,9 @@ export type StorybookDialogProps = PropsWithChildren & {
   inOverlayLayout?: boolean;
 };
 
-// TODO(burdon): Move out of components.
+/**
+ * @deprecated
+ */
 export const StorybookDialog = (props: StorybookDialogProps) => {
   const { inOverlayLayout = false } = props;
   const { tx } = useThemeContext();
@@ -20,7 +22,13 @@ export const StorybookDialog = (props: StorybookDialogProps) => {
         <Clipboard.Provider>
           <div
             role='group'
-            className={tx('dialog.content', 'dialog', { inOverlayLayout }, 'p-1', inOverlayLayout ? 'm-4' : '')}
+            className={tx(
+              'dialog.content',
+              'dialog',
+              { inOverlayLayout },
+              'is-[20rem] p-1',
+              inOverlayLayout ? 'm-4' : '',
+            )}
           >
             {props.children}
           </div>
