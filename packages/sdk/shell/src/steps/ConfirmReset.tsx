@@ -51,7 +51,7 @@ export const ConfirmReset = ({ active, mode, onCancel, onConfirm }: ConfirmReset
 
   return (
     <>
-      <div role='none' className='flex flex-col gap-2 justify-center'>
+      <Dialog.Body>
         <Message.Root valence='error'>
           <Message.Title>{t('sign out chooser title')}</Message.Title>
           <Message.Content>{t('sign out chooser message')}</Message.Content>
@@ -77,7 +77,7 @@ export const ConfirmReset = ({ active, mode, onCancel, onConfirm }: ConfirmReset
           placeholder={t('confirmation placeholder', { confirmationValue })}
           onChange={({ target: { value } }) => setInputValue(value)}
         />
-      </div>
+      </Dialog.Body>
       <Dialog.ActionBar classNames='grid grid-cols-2 gap-2'>
         {onCancel && (
           <Action disabled={disabled} onClick={onCancel} data-testid={`${testIdAffix}.reset-identity-cancel`}>

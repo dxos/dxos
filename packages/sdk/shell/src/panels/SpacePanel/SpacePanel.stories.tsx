@@ -11,8 +11,8 @@ import { Invitation } from '@dxos/react-client/invitations';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { InvitationList, InvitationListItemImpl, SpaceMemberListImpl } from '../../components';
-import { StorybookDialog } from '../../components/StorybookDialog';
 import { InvitationManager, type InvitationManagerProps } from '../../steps';
+import { StorybookDialog } from '../../story-components';
 import { inviteWithState } from '../../testing/fixtures';
 
 import { SpacePanelImpl } from './SpacePanel';
