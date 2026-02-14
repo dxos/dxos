@@ -947,9 +947,7 @@ export type {
   TileProps as MosaicTileProps,
   PlaceholderProps as MosiacPlaceholderProps,
   DropIndicatorProps as MosaicDropIndicatorProps,
-
-  // TODO(burdon): Move out of Mosaic namespace?
-  ScrollableProps as MosaicViewportProps,
+  ViewportProps as MosaicViewportProps,
   StackProps as MosaicStackProps,
 };
 

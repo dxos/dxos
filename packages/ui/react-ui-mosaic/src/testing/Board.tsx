@@ -146,7 +146,7 @@ const Column = forwardRef<HTMLDivElement, ColumnProps>(({ classNames, location, 
       <Focus.Group asChild>
         <div
           className={mx(
-            'grid bs-full card-default-width overflow-hidden bg-deckSurface',
+            'grid bs-full is-full md:is-card-default-width overflow-hidden bg-deckSurface',
             debug ? 'grid-rows-[min-content_1fr_20rem]' : 'grid-rows-[min-content_1fr_min-content]',
             classNames,
           )}

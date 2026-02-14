@@ -18,7 +18,7 @@ import { TestItem } from './Board';
 faker.seed(999);
 
 const meta: Meta<typeof Stack> = {
-  title: 'ui/react-ui-mosaic/Virtualizer',
+  title: 'ui/react-ui-mosaic/virtualizer',
   decorators: [withLayout({ layout: 'column' }), withTheme],
   parameters: {
     layout: 'fullscreen',

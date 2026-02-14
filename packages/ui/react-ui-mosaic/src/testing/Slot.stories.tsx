@@ -77,7 +77,7 @@ const TestInner = (props: { className?: string; role?: string }) => (
 );
 
 const meta = {
-  title: 'ui/react-ui-mosaic/Slot',
+  title: 'ui/react-ui-mosaic/slot',
   decorators: [withTheme],
   parameters: {
     layout: 'centered',

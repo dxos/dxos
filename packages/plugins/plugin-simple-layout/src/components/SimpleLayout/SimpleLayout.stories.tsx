@@ -25,13 +25,13 @@ import { translations } from '../../translations';
 import { SimpleLayout } from './SimpleLayout';
 
 const TestPlugin = Plugin.define<SimpleLayoutPluginOptions>(pluginMeta).pipe(
+  AppPlugin.addOperationResolverModule({ activate: OperationResolver }),
   Plugin.addModule(({ isPopover = false }) => ({
     id: Capability.getModuleTag(State),
     activatesOn: ActivationEvents.Startup,
     activatesAfter: [AppActivationEvents.LayoutReady],
     activate: () => State({ initialState: { isPopover } } satisfies SimpleLayoutStateOptions),
   })),
-  AppPlugin.addOperationResolverModule({ activate: OperationResolver }),
   Plugin.addModule({
     id: 'setup',
     activatesOn: ActivationEvents.OperationInvokerReady,
