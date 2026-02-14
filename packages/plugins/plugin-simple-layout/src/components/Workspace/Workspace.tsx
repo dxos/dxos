@@ -4,8 +4,9 @@
 
 import React, { useCallback, useEffect, useRef } from 'react';
 
-import { Common } from '@dxos/app-framework';
-import { useAppGraph, useOperationInvoker } from '@dxos/app-framework/react';
+import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { LayoutOperation } from '@dxos/app-toolkit';
+import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { type Node, useConnections } from '@dxos/plugin-graph';
 import { Avatar, Icon, Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Card, Layout, Mosaic, type StackTileComponent } from '@dxos/react-ui-mosaic';
@@ -67,7 +68,7 @@ const WorkspaceChildTile: StackTileComponent<Node.Node> = ({ data }) => {
   const name = toLocalizedString(data.properties.label, t);
 
   const handleSelect = useCallback(
-    () => invokeSync(Common.LayoutOperation.Open, { subject: [data.id] }),
+    () => invokeSync(LayoutOperation.Open, { subject: [data.id] }),
     [invokeSync, data.id],
   );
 

@@ -8,8 +8,9 @@ import React, { type FC, useCallback } from 'react';
 
 import { ToolId } from '@dxos/ai';
 import { EXA_API_KEY } from '@dxos/ai/testing';
-import { Common } from '@dxos/app-framework';
-import { Surface, useCapabilities, useCapability } from '@dxos/app-framework/react';
+import { Capabilities } from '@dxos/app-framework';
+import { Surface, useCapabilities, useCapability } from '@dxos/app-framework/ui';
+import { AppCapabilities } from '@dxos/app-toolkit';
 import { AiContextBinder } from '@dxos/assistant';
 import { Agent, LinearBlueprint, ResearchBlueprint, ResearchDataTypes, ResearchGraph } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt, Template } from '@dxos/blueprints';
@@ -97,8 +98,8 @@ type StoryProps = {
 };
 
 const DefaultStory = ({ modules, showContext, blueprints = [] }: StoryProps) => {
-  const blueprintsDefinitions = useCapabilities(Common.Capability.BlueprintDefinition);
-  const atomRegistry = useCapability(Common.Capability.AtomRegistry);
+  const blueprintsDefinitions = useCapabilities(AppCapabilities.BlueprintDefinition);
+  const atomRegistry = useCapability(Capabilities.AtomRegistry);
 
   const space = useSpace();
   useAsyncEffect(async () => {
@@ -183,7 +184,7 @@ const StackContainer = ({ objects }: { objects: Obj.Unknown[] }) => {
     >
       {objects.map((object) => (
         <StackItem.Root key={object.id} item={object} classNames={panelClassNames}>
-          <Surface role='section' limit={1} data={{ subject: object }} />
+          <Surface.Surface role='section' limit={1} data={{ subject: object }} />
         </StackItem.Root>
       ))}
     </Stack>

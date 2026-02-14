@@ -2009,6 +2009,9 @@ importers:
 
   .:
     dependencies:
+      '@dxos/app-toolkit':
+        specifier: workspace:*
+        version: link:packages/sdk/app-toolkit
       js-yaml:
         specifier: 'catalog:'
         version: 4.1.1
@@ -2452,6 +2455,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
+      '@dxos/app-toolkit':
+        specifier: workspace:*
+        version: link:../../sdk/app-toolkit
       '@dxos/brand':
         specifier: workspace:*
         version: link:../../ui/brand
@@ -2584,6 +2590,9 @@ importers:
       '@dxos/plugin-search':
         specifier: workspace:*
         version: link:../../plugins/plugin-search
+      '@dxos/plugin-settings':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-settings
       '@dxos/plugin-sheet':
         specifier: workspace:*
         version: link:../../plugins/plugin-sheet
@@ -7140,6 +7149,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
+      '@dxos/app-toolkit':
+        specifier: workspace:*
+        version: link:../../sdk/app-toolkit
       '@dxos/assistant':
         specifier: workspace:*
         version: link:../../core/assistant
@@ -7423,6 +7435,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
+      '@dxos/app-toolkit':
+        specifier: workspace:*
+        version: link:../../sdk/app-toolkit
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
@@ -7463,6 +7478,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
+      '@dxos/app-toolkit':
+        specifier: workspace:*
+        version: link:../../sdk/app-toolkit
       '@dxos/assistant':
         specifier: workspace:*
         version: link:../../core/assistant
@@ -7608,6 +7626,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
+      '@dxos/app-toolkit':
+        specifier: workspace:*
+        version: link:../../sdk/app-toolkit
       '@dxos/assistant':
         specifier: workspace:*
         version: link:../../core/assistant
@@ -7735,6 +7756,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
+      '@dxos/app-toolkit':
+        specifier: workspace:*
+        version: link:../../sdk/app-toolkit
       '@dxos/assistant':
         specifier: workspace:*
         version: link:../../core/assistant
@@ -7847,6 +7871,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
+      '@dxos/app-toolkit':
+        specifier: workspace:*
+        version: link:../../sdk/app-toolkit
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -7965,6 +7992,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
+      '@dxos/app-toolkit':
+        specifier: workspace:*
+        version: link:../../sdk/app-toolkit
       '@dxos/assistant':
         specifier: workspace:*
         version: link:../../core/assistant
@@ -8062,6 +8092,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
+      '@dxos/app-toolkit':
+        specifier: workspace:*
+        version: link:../../sdk/app-toolkit
       '@dxos/assistant-toolkit':
         specifier: workspace:*
         version: link:../../core/assistant-toolkit
@@ -8264,6 +8297,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
+      '@dxos/app-toolkit':
+        specifier: workspace:*
+        version: link:../../sdk/app-toolkit
       '@dxos/assistant':
         specifier: workspace:*
         version: link:../../core/assistant
@@ -8397,6 +8433,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
+      '@dxos/app-toolkit':
+        specifier: workspace:*
+        version: link:../../sdk/app-toolkit
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -8509,6 +8548,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
+      '@dxos/app-toolkit':
+        specifier: workspace:*
+        version: link:../../sdk/app-toolkit
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -8651,6 +8693,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
+      '@dxos/app-toolkit':
+        specifier: workspace:*
+        version: link:../../sdk/app-toolkit
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -8748,6 +8793,9 @@ importers:
       '@dxos/app-graph':
         specifier: workspace:*
         version: link:../../sdk/app-graph
+      '@dxos/app-toolkit':
+        specifier: workspace:*
+        version: link:../../sdk/app-toolkit
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -8803,6 +8851,9 @@ importers:
       '@dxos/app-graph':
         specifier: workspace:*
         version: link:../../sdk/app-graph
+      '@dxos/app-toolkit':
+        specifier: workspace:*
+        version: link:../../sdk/app-toolkit
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
@@ -8897,6 +8948,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
+      '@dxos/app-toolkit':
+        specifier: workspace:*
+        version: link:../../sdk/app-toolkit
       '@dxos/assistant':
         specifier: workspace:*
         version: link:../../core/assistant
@@ -9120,6 +9174,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
+      '@dxos/app-toolkit':
+        specifier: workspace:*
+        version: link:../../sdk/app-toolkit
       '@dxos/assistant':
         specifier: workspace:*
         version: link:../../core/assistant
@@ -9241,6 +9298,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
+      '@dxos/app-toolkit':
+        specifier: workspace:*
+        version: link:../../sdk/app-toolkit
       '@dxos/assistant':
         specifier: workspace:*
         version: link:../../core/assistant
@@ -9405,6 +9465,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
+      '@dxos/app-toolkit':
+        specifier: workspace:*
+        version: link:../../sdk/app-toolkit
       '@dxos/assistant':
         specifier: workspace:*
         version: link:../../core/assistant
@@ -9571,6 +9634,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
+      '@dxos/app-toolkit':
+        specifier: workspace:*
+        version: link:../../sdk/app-toolkit
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
@@ -9662,6 +9728,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
+      '@dxos/app-toolkit':
+        specifier: workspace:*
+        version: link:../../sdk/app-toolkit
       '@dxos/assistant':
         specifier: workspace:*
         version: link:../../core/assistant
@@ -9919,6 +9988,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
+      '@dxos/app-toolkit':
+        specifier: workspace:*
+        version: link:../../sdk/app-toolkit
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -9980,6 +10052,9 @@ importers:
       '@dxos/app-graph':
         specifier: workspace:*
         version: link:../../sdk/app-graph
+      '@dxos/app-toolkit':
+        specifier: workspace:*
+        version: link:../../sdk/app-toolkit
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -10110,6 +10185,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
+      '@dxos/app-toolkit':
+        specifier: workspace:*
+        version: link:../../sdk/app-toolkit
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -10198,6 +10276,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
+      '@dxos/app-toolkit':
+        specifier: workspace:*
+        version: link:../../sdk/app-toolkit
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -10313,6 +10394,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
+      '@dxos/app-toolkit':
+        specifier: workspace:*
+        version: link:../../sdk/app-toolkit
       '@dxos/assistant-toolkit':
         specifier: workspace:*
         version: link:../../core/assistant-toolkit
@@ -10443,6 +10527,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
+      '@dxos/app-toolkit':
+        specifier: workspace:*
+        version: link:../../sdk/app-toolkit
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -10576,6 +10663,9 @@ importers:
       '@dxos/app-graph':
         specifier: workspace:*
         version: link:../../sdk/app-graph
+      '@dxos/app-toolkit':
+        specifier: workspace:*
+        version: link:../../sdk/app-toolkit
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -10685,6 +10775,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
+      '@dxos/app-toolkit':
+        specifier: workspace:*
+        version: link:../../sdk/app-toolkit
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -10737,6 +10830,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
+      '@dxos/app-toolkit':
+        specifier: workspace:*
+        version: link:../../sdk/app-toolkit
       '@dxos/cli-util':
         specifier: workspace:*
         version: link:../../devtools/cli-util
@@ -10843,6 +10939,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
+      '@dxos/app-toolkit':
+        specifier: workspace:*
+        version: link:../../sdk/app-toolkit
       '@dxos/assistant':
         specifier: workspace:*
         version: link:../../core/assistant
@@ -11105,6 +11204,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
+      '@dxos/app-toolkit':
+        specifier: workspace:*
+        version: link:../../sdk/app-toolkit
       '@dxos/assistant':
         specifier: workspace:*
         version: link:../../core/assistant
@@ -11224,6 +11326,34 @@ importers:
         specifier: 'catalog:'
         version: 7.1.9(@types/node@22.10.2)(jiti@2.6.1)(terser@5.19.2)(tsx@4.21.0)(yaml@2.8.2)
 
+  packages/plugins/plugin-settings:
+    dependencies:
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../../sdk/app-framework
+      '@dxos/app-graph':
+        specifier: workspace:*
+        version: link:../../sdk/app-graph
+      '@dxos/app-toolkit':
+        specifier: workspace:*
+        version: link:../../sdk/app-toolkit
+      '@dxos/operation':
+        specifier: workspace:*
+        version: link:../../core/operation
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
+    devDependencies:
+      '@types/react':
+        specifier: ~19.2.7
+        version: 19.2.7
+      effect:
+        specifier: 'catalog:'
+        version: 3.19.11
+      react:
+        specifier: ~19.2.3
+        version: 19.2.3
+
   packages/plugins/plugin-sheet:
     dependencies:
       '@codemirror/autocomplete':
@@ -11253,6 +11383,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
+      '@dxos/app-toolkit':
+        specifier: workspace:*
+        version: link:../../sdk/app-toolkit
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -11470,6 +11603,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
+      '@dxos/app-toolkit':
+        specifier: workspace:*
+        version: link:../../sdk/app-toolkit
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -11573,6 +11709,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
+      '@dxos/app-toolkit':
+        specifier: workspace:*
+        version: link:../../sdk/app-toolkit
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -11715,6 +11854,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
+      '@dxos/app-toolkit':
+        specifier: workspace:*
+        version: link:../../sdk/app-toolkit
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -11920,6 +12062,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
+      '@dxos/app-toolkit':
+        specifier: workspace:*
+        version: link:../../sdk/app-toolkit
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -12020,6 +12165,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
+      '@dxos/app-toolkit':
+        specifier: workspace:*
+        version: link:../../sdk/app-toolkit
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -12093,6 +12241,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
+      '@dxos/app-toolkit':
+        specifier: workspace:*
+        version: link:../../sdk/app-toolkit
       '@dxos/assistant':
         specifier: workspace:*
         version: link:../../core/assistant
@@ -12205,6 +12356,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
+      '@dxos/app-toolkit':
+        specifier: workspace:*
+        version: link:../../sdk/app-toolkit
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -12272,6 +12426,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
+      '@dxos/app-toolkit':
+        specifier: workspace:*
+        version: link:../../sdk/app-toolkit
       '@dxos/operation':
         specifier: workspace:*
         version: link:../../core/operation
@@ -12284,6 +12441,9 @@ importers:
       '@dxos/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
+      '@dxos/plugin-settings':
+        specifier: workspace:*
+        version: link:../plugin-settings
       '@dxos/plugin-theme':
         specifier: workspace:*
         version: link:../plugin-theme
@@ -12330,6 +12490,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
+      '@dxos/app-toolkit':
+        specifier: workspace:*
+        version: link:../../sdk/app-toolkit
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
@@ -12382,6 +12545,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
+      '@dxos/app-toolkit':
+        specifier: workspace:*
+        version: link:../../sdk/app-toolkit
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -12467,6 +12633,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
+      '@dxos/app-toolkit':
+        specifier: workspace:*
+        version: link:../../sdk/app-toolkit
       '@dxos/assistant':
         specifier: workspace:*
         version: link:../../core/assistant
@@ -12536,6 +12705,9 @@ importers:
       '@dxos/plugin-observability':
         specifier: workspace:*
         version: link:../plugin-observability
+      '@dxos/plugin-settings':
+        specifier: workspace:*
+        version: link:../plugin-settings
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
@@ -12669,6 +12841,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
+      '@dxos/app-toolkit':
+        specifier: workspace:*
+        version: link:../../sdk/app-toolkit
       '@dxos/cli-util':
         specifier: workspace:*
         version: link:../../devtools/cli-util
@@ -12817,6 +12992,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
+      '@dxos/app-toolkit':
+        specifier: workspace:*
+        version: link:../../sdk/app-toolkit
       '@dxos/assistant':
         specifier: workspace:*
         version: link:../../core/assistant
@@ -13013,6 +13191,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
+      '@dxos/app-toolkit':
+        specifier: workspace:*
+        version: link:../../sdk/app-toolkit
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -13107,6 +13288,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
+      '@dxos/app-toolkit':
+        specifier: workspace:*
+        version: link:../../sdk/app-toolkit
       '@dxos/crypto':
         specifier: workspace:*
         version: link:../../common/crypto
@@ -13225,24 +13409,9 @@ importers:
 
   packages/sdk/app-framework:
     dependencies:
-      '@dxos/ai':
-        specifier: workspace:*
-        version: link:../../core/ai
-      '@dxos/app-graph':
-        specifier: workspace:*
-        version: link:../app-graph
-      '@dxos/assistant':
-        specifier: workspace:*
-        version: link:../../core/assistant
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
-      '@dxos/blueprints':
-        specifier: workspace:*
-        version: link:../../core/blueprints
-      '@dxos/client-protocol':
-        specifier: workspace:*
-        version: link:../client-protocol
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
@@ -13252,15 +13421,9 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
-      '@dxos/functions':
-        specifier: workspace:*
-        version: link:../../core/functions
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
-      '@dxos/keys':
-        specifier: workspace:*
-        version: link:../../common/keys
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -13270,12 +13433,6 @@ importers:
       '@dxos/react-hooks':
         specifier: workspace:*
         version: link:../../ui/react-primitives/react-hooks
-      '@dxos/schema':
-        specifier: workspace:*
-        version: link:../schema
-      '@dxos/types':
-        specifier: workspace:*
-        version: link:../types
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -13285,9 +13442,6 @@ importers:
       '@dxos/web-context-react':
         specifier: workspace:*
         version: link:../../common/web-context-react
-      '@effect/ai':
-        specifier: 'catalog:'
-        version: 0.32.1(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
       '@effect/cli':
         specifier: 'catalog:'
         version: 0.72.1(@effect/platform@0.93.6(effect@3.19.11))(@effect/printer-ansi@0.47.0(@effect/typeclass@0.38.0(effect@3.19.11))(effect@3.19.11))(@effect/printer@0.47.0(@effect/typeclass@0.38.0(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
@@ -13301,9 +13455,6 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
-      '@dxos/react-ui-syntax-highlighter':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-syntax-highlighter
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../common/storybook-utils
@@ -13419,6 +13570,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../app-framework
+      '@dxos/app-toolkit':
+        specifier: workspace:*
+        version: link:../app-toolkit
       '@dxos/effect-atom-solid':
         specifier: workspace:*
         version: link:../../common/effect-atom-solid
@@ -13447,6 +13601,73 @@ importers:
       vite-plugin-solid:
         specifier: 'catalog:'
         version: 2.11.10(@testing-library/jest-dom@6.9.1)(solid-js@1.9.10)(vite@7.1.9(@types/node@22.10.2)(jiti@2.6.1)(terser@5.19.2)(tsx@4.21.0)(yaml@2.8.2))
+
+  packages/sdk/app-toolkit:
+    dependencies:
+      '@dxos/ai':
+        specifier: workspace:*
+        version: link:../../core/ai
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../app-framework
+      '@dxos/app-graph':
+        specifier: workspace:*
+        version: link:../app-graph
+      '@dxos/assistant':
+        specifier: workspace:*
+        version: link:../../core/assistant
+      '@dxos/blueprints':
+        specifier: workspace:*
+        version: link:../../core/blueprints
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../../core/echo/echo
+      '@dxos/functions':
+        specifier: workspace:*
+        version: link:../../core/functions
+      '@dxos/operation':
+        specifier: workspace:*
+        version: link:../../core/operation
+      '@dxos/types':
+        specifier: workspace:*
+        version: link:../types
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
+      '@effect/cli':
+        specifier: 'catalog:'
+        version: 0.72.1(@effect/platform@0.93.6(effect@3.19.11))(@effect/printer-ansi@0.47.0(@effect/typeclass@0.38.0(effect@3.19.11))(effect@3.19.11))(@effect/printer@0.47.0(@effect/typeclass@0.38.0(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
+    devDependencies:
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../ui/react-ui
+      '@dxos/react-ui-syntax-highlighter':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-syntax-highlighter
+      '@dxos/storybook-utils':
+        specifier: workspace:*
+        version: link:../../common/storybook-utils
+      '@dxos/ui-theme':
+        specifier: workspace:*
+        version: link:../../ui/ui-theme
+      '@effect-atom/atom-react':
+        specifier: 'catalog:'
+        version: 0.4.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
+      '@types/react':
+        specifier: ~19.2.7
+        version: 19.2.7
+      effect:
+        specifier: 'catalog:'
+        version: 3.19.11
+      react:
+        specifier: ~19.2.3
+        version: 19.2.3
+      react-dom:
+        specifier: ~19.2.3
+        version: 19.2.3(react@19.2.3)
 
   packages/sdk/client:
     dependencies:
@@ -14493,6 +14714,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
+      '@dxos/app-toolkit':
+        specifier: workspace:*
+        version: link:../../sdk/app-toolkit
       '@dxos/assistant':
         specifier: workspace:*
         version: link:../../core/assistant

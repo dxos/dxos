@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { useAtomCapability, useCapability } from '@dxos/app-framework/react';
+import { useAtomCapability, useCapability } from '@dxos/app-framework/ui';
 import { Filter } from '@dxos/echo';
 import { Script } from '@dxos/functions';
 import { ScriptCapabilities, ScriptContainer as ScriptContainerComponent } from '@dxos/plugin-script';

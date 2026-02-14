@@ -5,7 +5,7 @@
 import { RegistryContext, useAtomValue } from '@effect-atom/atom-react';
 import React, { type PropsWithChildren, useCallback, useContext, useEffect, useRef, useState } from 'react';
 
-import { Surface, useCapability } from '@dxos/app-framework/react';
+import { Surface, useCapability } from '@dxos/app-framework/ui';
 import {
   AlertDialog,
   Dialog,
@@ -102,7 +102,7 @@ export const Layout = ({ children }: PropsWithChildren<{}>) => {
             onOpenChange={(nextOpen) => updateState({ dialogOpen: nextOpen })}
           >
             {layout.dialogBlockAlign === 'end' ? (
-              <Surface
+              <Surface.Surface
                 role='dialog'
                 data={layout.dialogContent}
                 limit={1}
@@ -115,7 +115,7 @@ export const Layout = ({ children }: PropsWithChildren<{}>) => {
                 classNames={layout.dialogOverlayClasses}
                 style={layout.dialogOverlayStyle}
               >
-                <Surface role='dialog' data={layout.dialogContent} limit={1} fallback={ContentError} />
+                <Surface.Surface role='dialog' data={layout.dialogContent} limit={1} fallback={ContentError} />
               </DialogOverlay>
             )}
           </DialogRoot>
@@ -142,10 +142,12 @@ export const Layout = ({ children }: PropsWithChildren<{}>) => {
                       )}
                       <Card.Close onClick={handleClose} />
                     </Card.Toolbar>
-                    <Surface role='card--content' data={layout.popoverContent} limit={1} />
+                    <Surface.Surface role='card--content' data={layout.popoverContent} limit={1} />
                   </Card.Root>
                 )}
-                {layout.popoverKind === 'base' && <Surface role='popover' data={layout.popoverContent} limit={1} />}
+                {layout.popoverKind === 'base' && (
+                  <Surface.Surface role='popover' data={layout.popoverContent} limit={1} />
+                )}
               </Popover.Viewport>
               <Popover.Arrow />
             </Popover.Content>

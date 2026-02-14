@@ -4,7 +4,7 @@
 
 import { useEffect, useMemo } from 'react';
 
-import { useCapabilities } from '@dxos/app-framework/react';
+import { useCapabilities } from '@dxos/app-framework/ui';
 
 import { type Transcriber } from '../transcriber';
 import { TranscriptionCapabilities } from '../types';

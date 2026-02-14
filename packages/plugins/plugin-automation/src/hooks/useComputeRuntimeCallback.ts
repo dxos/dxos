@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import { type DependencyList, useCallback } from 'react';
 
-import { useCapability } from '@dxos/app-framework/react';
+import { useCapability } from '@dxos/app-framework/ui';
 import { type Key } from '@dxos/echo';
 import { type FunctionDefinition, FunctionInvocationService, TracingService } from '@dxos/functions';
 import { log } from '@dxos/log';

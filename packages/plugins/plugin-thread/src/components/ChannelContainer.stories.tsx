@@ -5,8 +5,9 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { Capability, Common } from '@dxos/app-framework';
+import { Capability } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
+import { AppCapabilities } from '@dxos/app-toolkit';
 import { Query, useDatabase, useQuery } from '@dxos/react-client/echo';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { render } from '@dxos/storybook-utils';
@@ -38,9 +39,7 @@ const meta = {
     withLayout({ layout: 'column' }),
     withPluginManager({
       plugins: [...(await createThreadPlugins())],
-      capabilities: [
-        Capability.contributes(Common.Capability.Schema, [Channel.Channel, Thread.Thread, Message.Message]),
-      ],
+      capabilities: [Capability.contributes(AppCapabilities.Schema, [Channel.Channel, Thread.Thread, Message.Message])],
     }),
   ],
   parameters: {

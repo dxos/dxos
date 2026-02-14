@@ -5,8 +5,9 @@
 import * as Effect from 'effect/Effect';
 import React from 'react';
 
-import { Capability, Common } from '@dxos/app-framework';
-import { useSettingsState } from '@dxos/app-framework/react';
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { Surface, useSettingsState } from '@dxos/app-framework/ui';
+import { AppCapabilities } from '@dxos/app-toolkit';
 import { Chat, Initiative } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { getSpace } from '@dxos/client/echo';
@@ -30,25 +31,25 @@ import { type Assistant } from '../../types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
-    Capability.contributes(Common.Capability.ReactSurface, [
-      Common.createSurface({
+    Capability.contributes(Capabilities.ReactSurface, [
+      Surface.create({
         id: `${meta.id}/plugin-settings`,
         role: 'article',
-        filter: (data): data is { subject: Common.Capability.Settings } =>
-          Common.Capability.isSettings(data.subject) && data.subject.prefix === meta.id,
+        filter: (data): data is { subject: AppCapabilities.Settings } =>
+          AppCapabilities.isSettings(data.subject) && data.subject.prefix === meta.id,
         component: ({ data: { subject } }) => {
           const { settings, updateSettings } = useSettingsState<Assistant.Settings>(subject.atom);
           return <AssistantSettings settings={settings} onSettingsChange={updateSettings} />;
         },
       }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/chat`,
         role: 'article',
         filter: (data): data is { subject: Chat.Chat; variant: undefined } =>
           Obj.instanceOf(Chat.Chat, data.subject) && data.variant !== 'assistant-chat',
         component: ({ data, role, ref }) => <ChatContainer role={role} subject={data.subject} ref={ref} />,
       }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/initiative`,
         role: 'article',
         filter: (data): data is { subject: Initiative.Initiative } =>
@@ -56,7 +57,7 @@ export default Capability.makeModule(() =>
         component: ({ data, role }) => <InitiativeContainer role={role} initiative={data.subject} />,
       }),
       // TODO(wittjosiah): This is flashing when chat changes.
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/companion-chat`,
         role: 'article',
         filter: (data): data is { companionTo: Obj.Unknown; subject: Chat.Chat | 'assistant-chat' } =>
@@ -64,7 +65,7 @@ export default Capability.makeModule(() =>
           (Obj.instanceOf(Chat.Chat, data.subject) || data.subject === 'assistant-chat'),
         component: ({ data, role, ref }) => <ChatCompanion role={role} data={data} ref={ref} />,
       }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/companion-invocations`,
         role: 'article',
         filter: (data): data is { companionTo: Sequence } =>
@@ -82,25 +83,25 @@ export default Capability.makeModule(() =>
           );
         },
       }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/blueprint`,
         role: 'article',
         filter: (data): data is { subject: Blueprint.Blueprint } => Obj.instanceOf(Blueprint.Blueprint, data.subject),
         component: ({ data }) => <BlueprintArticle subject={data.subject} />,
       }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/prompt`,
         role: 'article',
         filter: (data): data is { subject: Prompt.Prompt } => Obj.instanceOf(Prompt.Prompt, data.subject),
         component: ({ data }) => <PromptArticle subject={data.subject} />,
       }),
-      Common.createSurface({
+      Surface.create({
         id: ASSISTANT_DIALOG,
         role: 'dialog',
         filter: (data): data is { props: { chat: Chat.Chat } } => data.component === ASSISTANT_DIALOG,
         component: ({ data }) => <ChatDialog {...data.props} />,
       }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/status`,
         role: 'status',
         component: () => <TriggerStatus />,

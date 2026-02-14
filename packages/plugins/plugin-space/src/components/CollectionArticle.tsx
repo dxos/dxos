@@ -4,8 +4,9 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { Common } from '@dxos/app-framework';
-import { type SurfaceComponentProps, useCapabilities, useOperationInvoker } from '@dxos/app-framework/react';
+import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
+import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
+import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { Filter, Obj } from '@dxos/echo';
 import { useClient } from '@dxos/react-client';
 import { getSpace, useQuery } from '@dxos/react-client/echo';
@@ -21,7 +22,7 @@ import { meta } from '../meta';
  * Hook to resolve metadata (icon, iconHue, etc.) for objects based on their typename.
  */
 const useMetadataResolver = () => {
-  const allMetadata = useCapabilities(Common.Capability.Metadata);
+  const allMetadata = useCapabilities(AppCapabilities.Metadata);
   return useCallback((typename: string) => allMetadata.find((m) => m.id === typename)?.metadata ?? {}, [allMetadata]);
 };
 
@@ -69,7 +70,7 @@ const ObjectTile: StackTileComponent<ObjectItem> = ({ data: item }) => {
   const styles = item.iconHue ? getStyles(item.iconHue) : undefined;
 
   const handleClick = () => {
-    invokeSync(Common.LayoutOperation.Open, { subject: [item.id] });
+    invokeSync(LayoutOperation.Open, { subject: [item.id] });
   };
 
   return (

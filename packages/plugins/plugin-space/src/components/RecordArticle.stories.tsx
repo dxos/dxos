@@ -5,8 +5,9 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { Capability, Common } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
+import { Surface } from '@dxos/app-framework/ui';
 import { Filter, Obj, Ref, Relation, type Type } from '@dxos/echo';
 import { faker } from '@dxos/random';
 import { useQuery } from '@dxos/react-client/echo';
@@ -45,8 +46,8 @@ const meta = {
     // TODO(wittjosiah): Try to write story which does not depend on plugin manager.
     withPluginManager({
       capabilities: [
-        Capability.contributes(Common.Capability.ReactSurface, [
-          Common.createSurface({
+        Capability.contributes(Capabilities.ReactSurface, [
+          Surface.create({
             id: 'section',
             role: 'section',
             component: ({ data }) => (
@@ -55,7 +56,7 @@ const meta = {
               </Card.Root>
             ),
           }),
-          Common.createSurface({
+          Surface.create({
             id: 'card',
             role: 'card',
             component: ({ data }) => (

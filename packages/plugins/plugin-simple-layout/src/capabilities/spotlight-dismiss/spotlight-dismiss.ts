@@ -7,7 +7,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
 import { log } from '@dxos/log';
 import { isTauri } from '@dxos/util';
 
@@ -76,7 +76,7 @@ export default Capability.makeModule(({ isPopover = false }: SpotlightDismissOpt
     };
     window.addEventListener('keydown', handleKeyDown);
 
-    return Capability.contributes(Common.Capability.Null, null, () =>
+    return Capability.contributes(Capabilities.Null, null, () =>
       Effect.sync(() => {
         focusCleanup?.();
         window.removeEventListener('keydown', handleKeyDown);

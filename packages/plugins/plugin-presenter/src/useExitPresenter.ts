@@ -5,8 +5,8 @@
 import { useAtomValue } from '@effect-atom/atom-react';
 import { useCallback, useMemo } from 'react';
 
-import { Common } from '@dxos/app-framework';
-import { useCapability, useOperationInvoker } from '@dxos/app-framework/react';
+import { useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
+import { LayoutOperation } from '@dxos/app-toolkit';
 import { Obj } from '@dxos/echo';
 import { DeckCapabilities } from '@dxos/plugin-deck';
 import { DeckOperation } from '@dxos/plugin-deck/types';
@@ -27,7 +27,7 @@ export const useExitPresenter = (object: any) => {
         id: objectId,
       });
     }
-    return invokePromise(Common.LayoutOperation.Open, {
+    return invokePromise(LayoutOperation.Open, {
       subject: [objectId],
       workspace: Obj.getDatabase(object)?.spaceId,
     });

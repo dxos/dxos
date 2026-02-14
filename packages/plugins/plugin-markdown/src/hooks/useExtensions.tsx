@@ -6,8 +6,9 @@ import { type ViewUpdate } from '@codemirror/view';
 import React, { type AnchorHTMLAttributes, type ReactNode, useMemo } from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { Common } from '@dxos/app-framework';
-import { useOperationInvoker } from '@dxos/app-framework/react';
+import { type Capabilities } from '@dxos/app-framework';
+import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { LayoutOperation } from '@dxos/app-toolkit';
 import { debounceAndThrottle } from '@dxos/async';
 import { Obj } from '@dxos/echo';
 import { createDocAccessor } from '@dxos/echo-db';
@@ -49,7 +50,7 @@ export type DocumentType = Markdown.Document | Text.Text | { id: string; text: s
 export type ExtensionsOptions = {
   id: string;
   object?: DocumentType;
-  invokePromise?: Common.Capability.OperationInvoker['invokePromise'];
+  invokePromise?: Capabilities.OperationInvoker['invokePromise'];
   settings?: Markdown.Settings;
   selectionManager?: SelectionManager;
   viewMode?: EditorViewMode;
@@ -171,7 +172,7 @@ const createBaseExtensions = ({
           renderLinkButton:
             invokePromise && (object || id)
               ? createLinkRenderer((targetId: string) => {
-                  void invokePromise(Common.LayoutOperation.Open, {
+                  void invokePromise(LayoutOperation.Open, {
                     subject: [targetId],
                     pivotId: object && Obj.isObject(object) ? Obj.getDXN(object).toString() : id,
                   });

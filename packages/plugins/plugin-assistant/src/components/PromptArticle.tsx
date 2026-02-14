@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { type SurfaceComponentProps } from '@dxos/app-framework/react';
+import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { Agent } from '@dxos/assistant-toolkit';
 import { type Prompt } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';

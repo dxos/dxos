@@ -4,8 +4,9 @@
 
 import React, { forwardRef, useMemo, useState } from 'react';
 
-import { Common } from '@dxos/app-framework';
-import { useAppGraph, useOperationInvoker } from '@dxos/app-framework/react';
+import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { LayoutOperation } from '@dxos/app-toolkit';
+import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Keyboard, keySymbols } from '@dxos/keyboard';
 import { Graph, Node, useActionRunner } from '@dxos/plugin-graph';
 import { useActions } from '@dxos/plugin-graph';
@@ -97,7 +98,7 @@ export const CommandsDialogContent = forwardRef<HTMLDivElement, CommandsDialogCo
                         return;
                       }
 
-                      invokeSync(Common.LayoutOperation.UpdateDialog, { state: false });
+                      invokeSync(LayoutOperation.UpdateDialog, { state: false });
                       setTimeout(() => {
                         const node = Graph.getConnections(graph, group?.id ?? action.id, 'inbound')[0];
                         if (node && Node.isAction(action)) {

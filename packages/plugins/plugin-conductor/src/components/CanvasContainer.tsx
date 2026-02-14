@@ -4,7 +4,8 @@
 
 import React, { Fragment, useEffect, useMemo, useRef } from 'react';
 
-import { type SurfaceComponentProps, useCapability } from '@dxos/app-framework/react';
+import { useCapability } from '@dxos/app-framework/ui';
+import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { ComputeGraphModel } from '@dxos/conductor';
 import { Obj } from '@dxos/echo';
 import { AutomationCapabilities } from '@dxos/plugin-automation';

@@ -5,8 +5,9 @@
 import { RegistryContext } from '@effect-atom/atom-react';
 import React, { useCallback, useContext, useEffect, useState } from 'react';
 
-import { Common } from '@dxos/app-framework';
-import { type SurfaceComponentProps, useCapabilities, useOperationInvoker } from '@dxos/app-framework/react';
+import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
+import { AppCapabilities } from '@dxos/app-toolkit';
+import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Type } from '@dxos/echo';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { useQuery } from '@dxos/react-client/echo';
@@ -21,7 +22,7 @@ export type KanbanContainerProps = SurfaceComponentProps<Kanban.Kanban>;
 
 export const KanbanContainer = ({ role, subject: object }: KanbanContainerProps) => {
   const registry = useContext(RegistryContext);
-  const schemas = useCapabilities(Common.Capability.Schema);
+  const schemas = useCapabilities(AppCapabilities.Schema);
   const [cardSchema, setCardSchema] = useState<Type.Obj.Any>();
   const db = Obj.getDatabase(object);
   const { invokePromise } = useOperationInvoker();

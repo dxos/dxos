@@ -4,8 +4,9 @@
 
 import React, { useCallback } from 'react';
 
-import { Common } from '@dxos/app-framework';
-import { useAppGraph, useOperationInvoker } from '@dxos/app-framework/react';
+import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { LayoutOperation } from '@dxos/app-toolkit';
+import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Trigger } from '@dxos/async';
 import { Graph } from '@dxos/plugin-graph';
 import { ObservabilityOperation } from '@dxos/plugin-observability/types';
@@ -38,13 +39,13 @@ export const JoinDialog = ({ navigableCollections, onDone, ...props }: JoinDialo
       }
 
       await Promise.all([
-        invokePromise(Common.LayoutOperation.AddToast, {
+        invokePromise(LayoutOperation.AddToast, {
           id: `${meta.id}/join-success`,
           duration: 5_000,
           title: ['join success label', { ns: meta.id }],
           closeLabel: ['dismiss label', { ns: meta.id }],
         }),
-        invokePromise(Common.LayoutOperation.UpdateDialog, { state: false }),
+        invokePromise(LayoutOperation.UpdateDialog, { state: false }),
       ]);
 
       let space = client.spaces.get(spaceKey);
@@ -60,7 +61,7 @@ export const JoinDialog = ({ navigableCollections, onDone, ...props }: JoinDialo
         space = await trigger.wait();
       }
 
-      await invokePromise(Common.LayoutOperation.SwitchWorkspace, { subject: space.id });
+      await invokePromise(LayoutOperation.SwitchWorkspace, { subject: space.id });
 
       // TODO(wittjosiah): If navigableCollections is false and there's no target,
       //   should try to navigate to the first object of the space replicates.
@@ -71,8 +72,8 @@ export const JoinDialog = ({ navigableCollections, onDone, ...props }: JoinDialo
         // If the target has not yet replicated, this will trigger a loading toast.
         await Graph.waitForPath(graph, { target }).catch(() => {});
         await Promise.all([
-          invokePromise(Common.LayoutOperation.Open, { subject: [target] }),
-          invokePromise(Common.LayoutOperation.Expose, { subject: target }),
+          invokePromise(LayoutOperation.Open, { subject: [target] }),
+          invokePromise(LayoutOperation.Expose, { subject: target }),
         ]);
       }
 

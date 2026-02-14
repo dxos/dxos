@@ -47,6 +47,7 @@
     "@automerge/automerge": "catalog:",
     "@dxos/ai": "workspace:*",
     "@dxos/app-framework": "workspace:*",
+    "@dxos/app-toolkit": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/blueprints": "workspace:*",
     "@dxos/cli-util": "workspace:*",

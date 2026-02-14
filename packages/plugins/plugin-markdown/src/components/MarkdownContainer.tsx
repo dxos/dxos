@@ -6,8 +6,10 @@ import { type Extension } from '@codemirror/state';
 import { Atom } from '@effect-atom/atom-react';
 import React, { forwardRef, useMemo } from 'react';
 
-import { Common } from '@dxos/app-framework';
-import { type SurfaceComponentProps, useAppGraph, useCapabilities } from '@dxos/app-framework/react';
+import { useCapabilities } from '@dxos/app-framework/ui';
+import { AppCapabilities } from '@dxos/app-toolkit';
+import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
+import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { useActionRunner } from '@dxos/plugin-graph';
 import { useObject } from '@dxos/react-client/echo';
@@ -73,7 +75,7 @@ export const MarkdownContainer = forwardRef<HTMLDivElement, MarkdownContainerPro
     }, [graph]);
 
     // File upload.
-    const [upload] = useCapabilities(Common.Capability.FileUploader);
+    const [upload] = useCapabilities(AppCapabilities.FileUploader);
     const handleFileUpload = useMemo(() => {
       if (!db || !upload) {
         return undefined;

@@ -8,9 +8,10 @@ import * as Effect from 'effect/Effect';
 import React, { type KeyboardEvent, useCallback, useRef } from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
-import { Capability, Common } from '@dxos/app-framework';
-import { useAtomCapability } from '@dxos/app-framework/react';
+import { Capabilities, Capability } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
+import { useAtomCapability } from '@dxos/app-framework/ui';
+import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
 import { OperationResolver } from '@dxos/operation';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { faker } from '@dxos/random';
@@ -133,13 +134,13 @@ const meta = {
         const storyStateAtom = Atom.make({ tab: 'space-0' }).pipe(Atom.keepAlive);
         return [
           Capability.contributes(StoryState, storyStateAtom),
-          Capability.contributes(Common.Capability.AppGraphBuilder, storybookGraphBuilders()),
-          Capability.contributes(Common.Capability.OperationResolver, [
+          Capability.contributes(AppCapabilities.AppGraphBuilder, storybookGraphBuilders()),
+          Capability.contributes(Capabilities.OperationResolver, [
             OperationResolver.make({
-              operation: Common.LayoutOperation.SwitchWorkspace,
+              operation: LayoutOperation.SwitchWorkspace,
               handler: ({ subject }) =>
                 Effect.gen(function* () {
-                  const registry: Registry.Registry = yield* Capability.get(Common.Capability.AtomRegistry);
+                  const registry: Registry.Registry = yield* Capability.get(Capabilities.AtomRegistry);
                   registry.set(storyStateAtom, { tab: subject });
                 }),
             }),

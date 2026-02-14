@@ -5,8 +5,9 @@
 import * as Effect from 'effect/Effect';
 import React, { useCallback } from 'react';
 
-import { Capability, type CapabilityManager, Common } from '@dxos/app-framework';
-import { useOperationInvoker } from '@dxos/app-framework/react';
+import { Capability, type CapabilityManager } from '@dxos/app-framework';
+import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { LayoutOperation } from '@dxos/app-toolkit';
 import { runAndForwardErrors } from '@dxos/effect';
 import { useClient } from '@dxos/react-client';
 import { Dialog, useTranslation } from '@dxos/react-ui';
@@ -35,7 +36,7 @@ export const ResetDialog = ({ mode, onReset, capabilityManager }: ResetDialogPro
   }, [client, mode, onReset, capabilityManager]);
 
   const handleCancel = useCallback(() => {
-    void invokePromise(Common.LayoutOperation.UpdateDialog, { state: false });
+    void invokePromise(LayoutOperation.UpdateDialog, { state: false });
   }, [invokePromise]);
 
   // TODO(wittjosiah): Add the sr-only translations.

@@ -4,7 +4,8 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { Surface, type SurfaceComponentProps, useOperationInvoker } from '@dxos/app-framework/react';
+import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
+import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { IconButton, useTranslation } from '@dxos/react-ui';
 import { Layout } from '@dxos/react-ui-mosaic';
@@ -49,7 +50,7 @@ export const MeetingContainer = ({ role, subject: meeting }: MeetingContainerPro
             </StackItem.HeadingStickyContent>
           </StackItem.Heading>
           <StackItem.Content>
-            <Surface role='section' data={notesData} />
+            <Surface.Surface role='section' data={notesData} />
           </StackItem.Content>
         </StackItem.Root>
         <StackItem.Root item={summary} role='section'>
@@ -71,7 +72,7 @@ export const MeetingContainer = ({ role, subject: meeting }: MeetingContainerPro
           </StackItem.Heading>
           <StackItem.Content>
             {summaryData ? (
-              <Surface role='section' data={summaryData} />
+              <Surface.Surface role='section' data={summaryData} />
             ) : (
               <div className='grid place-items-center min-h-32'>
                 <IconButton

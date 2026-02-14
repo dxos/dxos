@@ -4,7 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common, Plugin } from '@dxos/app-framework';
+import { Capability, Plugin } from '@dxos/app-framework';
+import { AppPlugin } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/operation';
 import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
 import { type CreateObject } from '@dxos/plugin-space/types';
@@ -15,8 +16,8 @@ import { translations } from './translations';
 import { Journal, Outline, OutlinerOperation } from './types';
 
 export const OutlinerPlugin = Plugin.define(meta).pipe(
-  Common.Plugin.addTranslationsModule({ translations }),
-  Common.Plugin.addMetadataModule({
+  AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
+  AppPlugin.addMetadataModule({
     metadata: [
       {
         id: Journal.Journal.typename,
@@ -36,9 +37,12 @@ export const OutlinerPlugin = Plugin.define(meta).pipe(
       },
     ],
   }),
-  Common.Plugin.addSchemaModule({
+  AppPlugin.addOperationResolverModule({ activate: OperationResolver }),
+  AppPlugin.addSchemaModule({
     schema: [Journal.JournalEntry, Journal.Journal, Outline.Outline],
   }),
+  AppPlugin.addSurfaceModule({ activate: ReactSurface }),
+  AppPlugin.addTranslationsModule({ translations }),
   Plugin.addModule({
     id: 'on-space-created',
     activatesOn: SpaceEvents.SpaceCreated,
@@ -49,8 +53,5 @@ export const OutlinerPlugin = Plugin.define(meta).pipe(
         ),
       ),
   }),
-  Common.Plugin.addAppGraphModule({ activate: AppGraphBuilder }),
-  Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
-  Common.Plugin.addOperationResolverModule({ activate: OperationResolver }),
   Plugin.make,
 );

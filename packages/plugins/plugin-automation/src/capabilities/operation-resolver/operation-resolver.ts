@@ -4,7 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { LayoutOperation } from '@dxos/app-toolkit';
 import { Obj, Ref } from '@dxos/echo';
 import { Function, Script, Trigger } from '@dxos/functions';
 import { type DXN } from '@dxos/keys';
@@ -17,7 +18,7 @@ import { AutomationOperation } from '../../types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contributes(Common.Capability.OperationResolver, [
+    return Capability.contributes(Capabilities.OperationResolver, [
       OperationResolver.make({
         operation: AutomationOperation.CreateTriggerFromTemplate,
         handler: Effect.fnUntraced(function* ({ db, template, enabled = false, scriptName, input }) {
@@ -68,7 +69,7 @@ export default Capability.makeModule(
             target: db,
             hidden: true,
           });
-          yield* Operation.invoke(Common.LayoutOperation.Open, {
+          yield* Operation.invoke(LayoutOperation.Open, {
             subject: [`automation-settings${ATTENDABLE_PATH_SEPARATOR}${db.spaceId}`],
             workspace: db.spaceId,
           });

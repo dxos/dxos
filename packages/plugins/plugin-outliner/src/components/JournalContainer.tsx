@@ -4,7 +4,7 @@
 
 import React, { useCallback, useRef } from 'react';
 
-import { type SurfaceComponentProps } from '@dxos/app-framework/react';
+import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { useMediaQuery } from '@dxos/react-ui';
 import { Calendar, type CalendarController } from '@dxos/react-ui-calendar';
 import { Layout } from '@dxos/react-ui-mosaic';
