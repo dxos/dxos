@@ -32,6 +32,7 @@ const defaultOptions: ScrollableProps['options'] = {
 
 export type ScrollableProps = ThemedClassName<Omit<OverlayScrollbarsComponentProps, 'ref'>> & {
   axis?: Axis;
+  snap?: boolean;
   padding?: boolean;
   onScroll?: (event: Event) => void;
   viewportRef?: RefCallback<HTMLElement | null>;
@@ -42,7 +43,16 @@ export type ScrollableProps = ThemedClassName<Omit<OverlayScrollbarsComponentPro
  */
 export const Scrollable = forwardRef<HTMLDivElement, ScrollableProps>(
   (
-    { classNames, axis = 'vertical', padding, options: optionsProp = defaultOptions, onScroll, viewportRef, ...props },
+    {
+      classNames,
+      axis = 'vertical',
+      snap,
+      padding,
+      options: optionsProp = defaultOptions,
+      onScroll,
+      viewportRef,
+      ...props
+    },
     forwardedRef,
   ) => {
     const osRef = useRef<OverlayScrollbarsComponentRef>(null);
@@ -62,10 +72,15 @@ export const Scrollable = forwardRef<HTMLDivElement, ScrollableProps>(
 
     useEffect(() => {
       const instance = osRef.current?.osInstance();
+      const viewport = instance?.elements().viewport;
       if (viewportRef) {
-        viewportRef(instance?.elements().viewport ?? null);
+        viewportRef(viewport ?? null);
       }
-    }, [osRef, viewportRef]);
+
+      if (viewport && snap) {
+        viewport.className = mx(viewport.className, 'snap-mandatory', axis === 'vertical' ? 'snap-y' : 'snap-x');
+      }
+    }, [viewportRef, axis, snap]);
 
     const events = useMemo<EventListeners | null>(() => {
       if (!onScroll) {
@@ -82,6 +97,7 @@ export const Scrollable = forwardRef<HTMLDivElement, ScrollableProps>(
     return (
       <OverlayScrollbarsComponent
         {...props}
+        // TODO(burdon): Factor out padding to container.
         className={mx(padding && (axis === 'vertical' ? 'pli-3' : 'pbe-3'), classNames)}
         options={options}
         events={events}

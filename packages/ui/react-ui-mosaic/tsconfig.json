@@ -7,7 +7,7 @@
   },
   "include": [
     "src"
-  ],
+, "../react-ui/src/primitives/slot.stories.tsx"  ],
   "references": [
     {
       "path": "../../common/async"

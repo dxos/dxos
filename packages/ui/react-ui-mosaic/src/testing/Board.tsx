@@ -80,7 +80,7 @@ const Root = forwardRef<HTMLDivElement, RootProps>(({ id, columns, debug }, forw
   return (
     <div
       role='none'
-      className={mx('plb-2 grid bs-full is-full overflow-hidden', debug && 'grid-cols-[1fr_20rem] gap-2')}
+      className={mx('md:pbs-2 grid bs-full is-full', debug && 'grid-cols-[1fr_20rem] gap-2')}
       ref={forwardedRef}
     >
       <Focus.Group asChild axis='horizontal'>
@@ -92,8 +92,8 @@ const Root = forwardRef<HTMLDivElement, RootProps>(({ id, columns, debug }, forw
           eventHandler={eventHandler}
           debug={debugHandler}
         >
-          <Mosaic.Viewport axis='horizontal' padding viewportRef={setViewport}>
-            <Mosaic.Stack axis='horizontal' items={columns} getId={(item) => item.id} Tile={Column} debug={debug} />
+          <Mosaic.Viewport snap padding viewportRef={setViewport}>
+            <Mosaic.Stack items={columns} getId={(item) => item.id} Tile={Column} debug={debug} />
           </Mosaic.Viewport>
         </Mosaic.Container>
       </Focus.Group>
@@ -146,7 +146,8 @@ const Column = forwardRef<HTMLDivElement, ColumnProps>(({ classNames, location, 
       <Focus.Group asChild>
         <div
           className={mx(
-            'grid bs-full is-full md:is-card-default-width overflow-hidden bg-deckSurface',
+            'grid bs-full is-screen md:is-card-default-width bg-deckSurface',
+            'snap-center ms:snap-align-none',
             debug ? 'grid-rows-[min-content_1fr_20rem]' : 'grid-rows-[min-content_1fr_min-content]',
             classNames,
           )}

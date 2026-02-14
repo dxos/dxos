@@ -11,9 +11,11 @@ import { faker } from '@dxos/random';
 import { Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { Mosaic, type Stack } from '../components';
+import { TestItem } from '../../testing';
+import { Layout } from '../Layout';
+import { Mosaic } from '../Mosaic';
 
-import { TestItem } from './Board';
+import { type Stack } from './Stack';
 
 faker.seed(999);
 
@@ -61,39 +63,43 @@ export const Default = {
     const virtualItems = virtualizer.getVirtualItems();
 
     return (
-      <div className='flex flex-col bs-full'>
+      <Layout.Main toolbar>
         <ScrollToolbar items={items} index={index} setIndex={setIndex} />
-        <Mosaic.Viewport axis='vertical' padding viewportRef={setViewport} ref={parentRef}>
-          <div
-            role='none'
-            style={{
-              position: 'relative',
-              height: virtualizer.getTotalSize(),
-              width: '100%',
-            }}
-          >
-            {virtualItems.map((virtualItem) => (
+        <Mosaic.Root asChild>
+          <Mosaic.Container asChild axis='vertical'>
+            <Mosaic.Viewport padding viewportRef={setViewport} ref={parentRef}>
               <div
-                key={virtualItem.key}
-                role='list'
-                className='grid grid-cols-[3rem_1fr] overflow-hidden border border-separator rounded-sm'
+                role='none'
                 style={{
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
+                  position: 'relative',
+                  height: virtualizer.getTotalSize(),
                   width: '100%',
-                  transform: `translateY(${virtualItem.start}px)`,
                 }}
-                data-index={virtualItem.index}
-                ref={virtualizer.measureElement}
               >
-                <div className='p-1'>{virtualItem.index + 1}</div>
-                <div className='p-1'>{items[virtualItem.index].name}</div>
+                {virtualItems.map((virtualItem) => (
+                  <div
+                    key={virtualItem.key}
+                    role='list'
+                    className='grid grid-cols-[3rem_1fr] overflow-hidden border border-separator rounded-sm'
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      width: '100%',
+                      transform: `translateY(${virtualItem.start}px)`,
+                    }}
+                    data-index={virtualItem.index}
+                    ref={virtualizer.measureElement}
+                  >
+                    <div className='p-1'>{virtualItem.index + 1}</div>
+                    <div className='p-1'>{items[virtualItem.index].name}</div>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-        </Mosaic.Viewport>
-      </div>
+            </Mosaic.Viewport>
+          </Mosaic.Container>
+        </Mosaic.Root>
+      </Layout.Main>
     );
   },
 };

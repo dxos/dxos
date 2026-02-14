@@ -3,9 +3,10 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React from 'react';
+import React, { type PropsWithChildren } from 'react';
 
 import { mx } from '@dxos/ui-theme';
+import { type ThemedClassName } from '@dxos/ui-types';
 
 import { withLayout, withTheme } from '../../testing';
 
@@ -14,7 +15,7 @@ import { Scrollable, type ScrollableProps } from './Scrollable';
 const DefaultStory = (props: ScrollableProps) => {
   return (
     <Scrollable {...props} classNames='bs-full is-full'>
-      <div role='none' className={mx('bg-cubes', props.axis === 'vertical' ? 'bs-[200rem]' : 'bs-full is-[200rem]')} />
+      <div className={mx('bg-cubes', props.axis === 'vertical' ? 'bs-[200rem]' : 'bs-full is-[200rem]')} />
     </Scrollable>
   );
 };
@@ -57,4 +58,34 @@ export const HorizontalPadding: Story = {
     axis: 'horizontal',
     padding: true,
   },
+};
+
+const Column = ({ classNames, children }: ThemedClassName<PropsWithChildren>) => {
+  return (
+    <div
+      className={mx(
+        'shrink-0 flex flex-col border border-separator is-screen md:is-card-default-width md:rounded',
+        classNames,
+      )}
+    >
+      <div className='p-2'>{children}</div>
+    </div>
+  );
+};
+
+/**
+ * Snap center of column.
+ */
+export const Snap = {
+  render: () => (
+    <Scrollable axis='horizontal' snap>
+      <div className='flex bs-full gap-4'>
+        {Array.from({ length: 8 }).map((_, i) => (
+          <Column key={i} classNames='snap-center md:snap-align-none'>
+            Column {i + 1}
+          </Column>
+        ))}
+      </div>
+    </Scrollable>
+  ),
 };

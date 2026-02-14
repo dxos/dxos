@@ -41,6 +41,7 @@ import React, {
 } from 'react';
 import { createPortal } from 'react-dom';
 
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import {
   type AllowedAxis,
@@ -618,10 +619,11 @@ const VIEWPORT_NAME = 'Mosaic.Viewport';
 
 type ViewportProps = ScrollableProps;
 
-const Viewport = (props: ViewportProps) => {
-  const { axis } = useContainerContext(VIEWPORT_NAME);
-  return <Scrollable {...props} axis={axis} />;
-};
+const Viewport = forwardRef<HTMLDivElement, ViewportProps>(({ axis: axisProp = 'vertical', ...props }, ref) => {
+  const { axis = axisProp } = useContainerContext(VIEWPORT_NAME);
+  invariant(axis === 'horizontal' || axis === 'vertical');
+  return <Scrollable {...props} axis={axis} ref={ref} />;
+});
 
 Viewport.displayName = VIEWPORT_NAME;
 
