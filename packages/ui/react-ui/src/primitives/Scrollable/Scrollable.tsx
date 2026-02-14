@@ -10,8 +10,8 @@ import {
 } from 'overlayscrollbars-react';
 import React, { type RefCallback, forwardRef, useEffect, useImperativeHandle, useMemo, useRef } from 'react';
 
-import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
+import { type ThemedClassName } from '@dxos/ui-types';
 
 // These are not exported from the pragmatic-drag-and-drop-auto-scroll package.
 export type Axis = 'vertical' | 'horizontal';

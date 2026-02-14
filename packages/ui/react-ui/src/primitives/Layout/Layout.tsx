@@ -4,8 +4,8 @@
 
 import React, { type HTMLAttributes, type PropsWithChildren, forwardRef, useMemo } from 'react';
 
-import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
+import { type ThemedClassName } from '@dxos/ui-types';
 
 //
 // Main
