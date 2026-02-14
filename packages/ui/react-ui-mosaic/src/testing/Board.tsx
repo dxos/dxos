@@ -9,7 +9,7 @@ import React, { forwardRef, useMemo, useRef, useState } from 'react';
 import { Obj, Ref, Type } from '@dxos/echo';
 import { ObjectId } from '@dxos/keys';
 import { useObject } from '@dxos/react-client/echo';
-import { Tag, type ThemedClassName } from '@dxos/react-ui';
+import { Layout, Tag, type ThemedClassName } from '@dxos/react-ui';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { getHashStyles, mx } from '@dxos/ui-theme';
 
@@ -78,11 +78,7 @@ const Root = forwardRef<HTMLDivElement, RootProps>(({ id, columns, debug }, forw
   });
 
   return (
-    <div
-      role='none'
-      className={mx('md:pbs-2 grid bs-full is-full', debug && 'grid-cols-[1fr_20rem] gap-2')}
-      ref={forwardedRef}
-    >
+    <Layout.Main ref={forwardedRef}>
       <Focus.Group asChild axis='horizontal'>
         <Mosaic.Container
           asChild
@@ -98,7 +94,7 @@ const Root = forwardRef<HTMLDivElement, RootProps>(({ id, columns, debug }, forw
         </Mosaic.Container>
       </Focus.Group>
       <DebugInfo />
-    </div>
+    </Layout.Main>
   );
 });
 

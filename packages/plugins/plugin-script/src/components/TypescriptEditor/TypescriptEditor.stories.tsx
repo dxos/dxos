@@ -9,7 +9,7 @@ import { createDocAccessor } from '@dxos/echo-db';
 import { createObject } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { Layout } from '@dxos/react-ui-mosaic';
+import { Layout } from '@dxos/react-ui';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { createDataExtensions } from '@dxos/ui-editor';
 import { trim } from '@dxos/util';

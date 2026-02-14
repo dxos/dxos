@@ -23,7 +23,7 @@ import { useQueue, useSpace } from '@dxos/react-client/echo';
 import { IconButton, Toolbar } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 import { useTextEditor } from '@dxos/react-ui-editor';
-import { Layout } from '@dxos/react-ui-mosaic';
+import { Layout } from '@dxos/react-ui';
 import { render } from '@dxos/storybook-utils';
 import { Message } from '@dxos/types';
 import { type EditorSelection, type Range } from '@dxos/ui-editor';

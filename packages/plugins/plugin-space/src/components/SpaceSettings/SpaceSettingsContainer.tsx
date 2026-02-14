@@ -21,7 +21,7 @@ import {
   Form,
   type FormFieldMap,
 } from '@dxos/react-ui-form';
-import { Layout } from '@dxos/react-ui-mosaic';
+import { Layout } from '@dxos/react-ui';
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
 
 import { meta } from '../../meta';

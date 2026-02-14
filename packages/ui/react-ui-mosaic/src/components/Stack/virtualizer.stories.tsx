@@ -8,11 +8,10 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
 import { faker } from '@dxos/random';
-import { Toolbar } from '@dxos/react-ui';
+import { Layout, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { TestItem } from '../../testing';
-import { Layout } from '../Layout';
 import { Mosaic } from '../Mosaic';
 
 import { type Stack } from './Stack';

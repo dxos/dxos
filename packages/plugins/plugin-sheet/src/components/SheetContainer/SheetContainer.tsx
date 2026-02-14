@@ -7,7 +7,7 @@ import React, { Fragment } from 'react';
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { type Space } from '@dxos/react-client/echo';
-import { Layout, type LayoutFlexProps } from '@dxos/react-ui-mosaic';
+import { Layout, type LayoutFlexProps } from '@dxos/react-ui';
 
 import { type Sheet } from '../../types';
 import { useComputeGraph } from '../ComputeGraph';

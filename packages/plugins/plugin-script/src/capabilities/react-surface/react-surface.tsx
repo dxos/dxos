@@ -12,7 +12,7 @@ import { InvocationTraceContainer } from '@dxos/devtools';
 import { Obj } from '@dxos/echo';
 import { Script } from '@dxos/functions';
 import { getSpace } from '@dxos/react-client/echo';
-import { Layout } from '@dxos/react-ui-mosaic';
+import { Layout } from '@dxos/react-ui';
 import { type AccessToken } from '@dxos/types';
 
 import {

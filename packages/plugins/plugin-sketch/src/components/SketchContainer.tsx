@@ -8,8 +8,8 @@ import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { useActions } from '@dxos/plugin-graph';
+import { Layout, type LayoutFlexProps } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
-import { Layout, type LayoutFlexProps } from '@dxos/react-ui-mosaic';
 import { isTauri } from '@dxos/util';
 
 import { type Diagram, type SketchSettingsProps } from '../types';

@@ -5,8 +5,9 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { Input, Scrollable, Toolbar } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { Input, Toolbar } from '../../components';
+import { withLayout, withTheme } from '../../testing';
+import { Scrollable } from '../Scrollable';
 
 import { Layout } from './Layout';
 
@@ -38,7 +39,7 @@ const DefaultStory = ({ count }: { count: number }) => {
 };
 
 const meta: Meta<typeof DefaultStory> = {
-  title: 'ui/react-ui-mosaic/Layout',
+  title: 'ui/react-ui-core/primitives/Layout',
   component: DefaultStory,
   decorators: [withTheme, withLayout({ layout: 'column' })],
   parameters: {

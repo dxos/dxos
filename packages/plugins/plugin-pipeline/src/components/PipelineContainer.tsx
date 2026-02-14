@@ -10,7 +10,7 @@ import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { ATTENDABLE_PATH_SEPARATOR, DeckOperation } from '@dxos/plugin-deck/types';
 import { useAttention } from '@dxos/react-ui-attention';
-import { Layout } from '@dxos/react-ui-mosaic';
+import { Layout } from '@dxos/react-ui';
 import { type Pipeline as PipelineType } from '@dxos/types';
 
 import { type ItemProps, PipelineComponent } from './PipelineComponent';

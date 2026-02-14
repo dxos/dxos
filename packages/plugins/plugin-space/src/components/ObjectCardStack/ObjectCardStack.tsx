@@ -9,7 +9,7 @@ import { Filter, useQuery, useSchema } from '@dxos/react-client/echo';
 import { Callout, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useSelected } from '@dxos/react-ui-attention';
 import { Card } from '@dxos/react-ui-mosaic';
-import { Layout } from '@dxos/react-ui-mosaic';
+import { Layout } from '@dxos/react-ui';
 import { CardStack, StackItem } from '@dxos/react-ui-stack';
 import { type View, getTypenameFromQuery } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';

@@ -9,11 +9,11 @@ import {
   type ButtonProps,
   Input,
   type Label,
+  Layout,
   type ThemedClassName,
   toLocalizedString,
   useTranslation,
 } from '@dxos/react-ui';
-import { Layout } from '@dxos/react-ui-mosaic';
 import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations';

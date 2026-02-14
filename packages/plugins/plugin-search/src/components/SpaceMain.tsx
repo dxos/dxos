@@ -12,7 +12,7 @@ import { Graph, Node, useActionRunner, useConnections } from '@dxos/plugin-graph
 import { type Space, useQuery } from '@dxos/react-client/echo';
 import { Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Card, Mosaic, type StackTileComponent } from '@dxos/react-ui-mosaic';
-import { Layout } from '@dxos/react-ui-mosaic';
+import { Layout } from '@dxos/react-ui';
 import { SearchList } from '@dxos/react-ui-searchlist';
 import { Text } from '@dxos/schema';
 import { getStyles } from '@dxos/ui-theme';

@@ -8,7 +8,7 @@ import { type Type } from '@dxos/echo';
 import { type Space } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { ControlPage, ControlSection, controlItemClasses } from '@dxos/react-ui-form';
-import { Layout } from '@dxos/react-ui-mosaic';
+import { Layout } from '@dxos/react-ui';
 
 import { meta } from '../meta';
 

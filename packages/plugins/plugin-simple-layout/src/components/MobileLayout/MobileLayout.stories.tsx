@@ -6,9 +6,9 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type PropsWithChildren, useEffect, useState } from 'react';
 
 import { addEventListener, combine } from '@dxos/async';
-import { Input, Toolbar } from '@dxos/react-ui';
+import { Input, Layout, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { Layout, Splitter, type SplitterMode } from '@dxos/react-ui-mosaic';
+import { Splitter, type SplitterMode } from '@dxos/react-ui-mosaic';
 
 import { MobileLayout, type MobileLayoutRootProps } from './MobileLayout';
 

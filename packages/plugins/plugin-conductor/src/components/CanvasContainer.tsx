@@ -10,6 +10,7 @@ import { ComputeGraphModel } from '@dxos/conductor';
 import { Obj } from '@dxos/echo';
 import { AutomationCapabilities } from '@dxos/plugin-automation';
 import { useObject } from '@dxos/react-client/echo';
+import { Layout, type LayoutFlexProps } from '@dxos/react-ui';
 import {
   ComputeContext,
   ComputeGraphController,
@@ -27,7 +28,6 @@ import {
   KeyboardContainer,
   ShapeRegistry,
 } from '@dxos/react-ui-canvas-editor';
-import { Layout, type LayoutFlexProps } from '@dxos/react-ui-mosaic';
 
 export type CanvasContainerProps = SurfaceComponentProps<CanvasBoard.CanvasBoard>;
 

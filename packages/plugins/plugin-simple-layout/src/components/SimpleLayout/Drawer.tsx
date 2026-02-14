@@ -9,7 +9,7 @@ import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { type Node, useNode } from '@dxos/plugin-graph';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention';
 import { MenuProvider, ToolbarMenu, useMenuActions } from '@dxos/react-ui-menu';
-import { Layout } from '@dxos/react-ui-mosaic';
+import { Layout } from '@dxos/react-ui';
 
 import { useCompanions, useDrawerActions, useSimpleLayoutState } from '../../hooks';
 import { ContentError } from '../ContentError';
