@@ -78,7 +78,7 @@ const Column = ({ classNames, children }: ThemedClassName<PropsWithChildren>) =>
  */
 export const Snap = {
   render: () => (
-    <Scrollable axis='horizontal' snap>
+    <Scrollable classNames='md:p-2' axis='horizontal' snap padding>
       <div className='flex bs-full gap-4'>
         {Array.from({ length: 8 }).map((_, i) => (
           <Column key={i} classNames='snap-center md:snap-align-none'>
