@@ -12,6 +12,7 @@ import { AssistantTestLayer } from '@dxos/assistant/testing';
 import { TestHelpers } from '@dxos/effect/testing';
 import { ObjectId } from '@dxos/keys';
 import * as Layer from 'effect/Layer';
+import { trim } from '@dxos/util';
 
 import * as PlanningToolkit from './PlanningToolkit';
 import * as WebToolkit from './WebToolkit';
@@ -30,6 +31,7 @@ describe('Scraping', () => {
       function* (_) {
         yield* new AiSession()
           .run({
+            system: SYSTEM,
             prompt:
               'find people working on electric sql and companies and people using it. I want a markdown list as the result. Research each person: company, role, email, phone number, and website, github.',
             toolkit: yield* Toolkit.merge(WebToolkit.WebToolkit, PlanningToolkit.PlanningToolkit),
@@ -42,3 +44,8 @@ describe('Scraping', () => {
     { timeout: 600_000 },
   );
 });
+
+const SYSTEM = trim`
+  You are a helpful assistant with access to planing mode.
+  Keep the user updated on the progress by creating and updating tasks. 
+`;
