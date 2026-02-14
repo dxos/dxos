@@ -33,12 +33,24 @@ type StackProps<TData = any> = SlottableClassName<
  */
 const StackInner = forwardRef<HTMLDivElement, StackProps>(
   (
-    { className, classNames, role = 'list', axis = 'vertical', draggable = true, items, getId, Tile, debug, ...props },
+    {
+      className,
+      classNames,
+      role = 'list',
+      axis: axisProp = 'vertical',
+      draggable = true,
+      items,
+      getId,
+      Tile,
+      debug,
+      ...props
+    },
     forwardedRef,
   ) => {
     invariant(Tile);
-    const { id, dragging } = useMosaicContainer(STACK_NAME);
+    const { id, axis = axisProp, dragging } = useMosaicContainer(STACK_NAME);
     const visibleItems = useVisibleItems({ id, items, dragging: dragging?.source.data, getId });
+    invariant(axis === 'vertical' || axis === 'horizontal', `Invalid axis: ${axis}`);
 
     return (
       <div

@@ -611,6 +611,21 @@ const Container = forwardRef<HTMLDivElement, ContainerProps>(
 Container.displayName = CONTAINER_NAME;
 
 //
+// Viewport
+//
+
+const VIEWPORT_NAME = 'Mosaic.Viewport';
+
+type ViewportProps = ScrollableProps;
+
+const Viewport = (props: ViewportProps) => {
+  const { axis } = useContainerContext(VIEWPORT_NAME);
+  return <Scrollable {...props} axis={axis} />;
+};
+
+Viewport.displayName = VIEWPORT_NAME;
+
+//
 // Tile
 //
 
@@ -921,9 +936,7 @@ export const Mosaic = {
   Tile,
   Placeholder,
   DropIndicator,
-
-  // TODO(burdon): Move out of Mosaic namespace?
-  Viewport: Scrollable,
+  Viewport,
   Stack,
   VirtualStack,
 };

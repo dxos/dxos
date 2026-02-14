@@ -166,8 +166,8 @@ const Column = forwardRef<HTMLDivElement, ColumnProps>(({ classNames, location, 
               eventHandler={eventHandler}
               debug={debugHandler}
             >
-              <Mosaic.Viewport axis='vertical' padding viewportRef={setViewport}>
-                <Mosaic.Stack axis='vertical' items={column.items} getId={(data) => data.dxn.toString()} Tile={Item} />
+              <Mosaic.Viewport padding viewportRef={setViewport}>
+                <Mosaic.Stack items={column.items} getId={(data) => data.dxn.toString()} Tile={Item} />
               </Mosaic.Viewport>
             </Mosaic.Container>
           </Card.Context>
