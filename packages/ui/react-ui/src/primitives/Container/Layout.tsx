@@ -101,6 +101,7 @@ const Flex = ({ children, classNames, role, column, grow }: FlexProps) => {
 // Layout
 //
 
+// TODO(burdon): Reconcile with Container.
 export const Layout = {
   Main,
   Container,
