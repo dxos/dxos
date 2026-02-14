@@ -6,8 +6,10 @@
     ]
   },
   "include": [
+    "../react-ui/src/primitives/Layout",
+    "../react-ui/src/primitives/slot.stories.tsx",
     "src"
-, "../react-ui/src/primitives/slot.stories.tsx", "../react-ui/src/primitives/Layout"  ],
+  ],
   "references": [
     {
       "path": "../../common/async"
