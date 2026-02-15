@@ -43,7 +43,7 @@ const meta = {
   title: 'plugins/plugin-table/Card',
   render: DefaultStory,
   decorators: [
-    withTheme, // TODO(burdon): Should not require space.
+    withTheme(), // TODO(burdon): Should not require space.
     withClientProvider({
       types: [View.View, Table.Table],
       createIdentity: true,
