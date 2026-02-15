@@ -4,7 +4,7 @@
 
 import React, { type PropsWithChildren } from 'react';
 
-import { IconButton, useTranslation } from '@dxos/react-ui';
+import { IconButton, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations';
@@ -40,19 +40,16 @@ const CardStackDragPreviewContent = ({
   children,
   itemsCount = 0,
 }: PropsWithChildren<Pick<StackProps, 'itemsCount'>>) => {
-  return (
-    <div
-      className={mx('overflow-y-auto flex-1 pli-2 flex flex-col gap-2', 'plb-1', itemsCount > 0 ? 'plb-2' : 'plb-1')}
-    >
-      {children}
-    </div>
-  );
+  return <ScrollArea classNames={mx('pli-2 plb-1 gap-2', itemsCount > 0 ? 'plb-2' : 'plb-1')}>{children}</ScrollArea>;
 };
 
 const CardStackDragPreviewFooter = ({ children }: PropsWithChildren<{}>) => {
   return <div className='p-2 border-bs border-separator'>{children}</div>;
 };
 
+/**
+ * @deprecated
+ */
 export const CardStackDragPreview = {
   Root: CardStackDragPreviewRoot,
   Heading: CardStackDragPreviewHeading,

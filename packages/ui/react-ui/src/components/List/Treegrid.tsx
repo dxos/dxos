@@ -97,10 +97,10 @@ const TreegridRoot = forwardRef<HTMLDivElement, TreegridRootProps>(
     return (
       <Root
         role='treegrid'
-        onKeyDown={handleKeyDown}
         {...props}
         className={tx('treegrid.root', 'treegrid', {}, classNames)}
         style={{ ...style, gridTemplateColumns }}
+        onKeyDown={handleKeyDown}
         ref={forwardedRef}
       >
         {children}

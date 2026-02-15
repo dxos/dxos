@@ -17,6 +17,7 @@ const meta = {
   component: PluginDetail,
   decorators: [withTheme(), withLayout({ layout: 'column' })],
   parameters: {
+    layout: 'fullscreen',
     translations,
   },
 } satisfies Meta<typeof PluginDetail>;

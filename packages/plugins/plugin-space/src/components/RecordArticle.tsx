@@ -8,7 +8,7 @@ import { Surface } from '@dxos/app-framework/ui';
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { type Database, Entity, Filter, Obj, Ref, Relation } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
-import { Layout, useTranslation } from '@dxos/react-ui';
+import { Layout, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { Card as MosaicCard } from '@dxos/react-ui-mosaic';
 import { mx } from '@dxos/ui-theme';
@@ -28,7 +28,7 @@ export const RecordArticle = ({ role, subject }: SurfaceComponentProps) => {
 
   return (
     <Layout.Main role={role}>
-      <div role='none' className={mx('flex flex-col gap-4 p-4 is-full overflow-y-auto')}>
+      <ScrollArea classNames={mx('p-4 gap-4')}>
         <div role='none' className={mx('flex is-full card-max-width')}>
           <Surface.Surface role='section' data={data} limit={1} />
         </div>
@@ -44,7 +44,7 @@ export const RecordArticle = ({ role, subject }: SurfaceComponentProps) => {
             />
           </div>
         )}
-      </div>
+      </ScrollArea>
     </Layout.Main>
   );
 };

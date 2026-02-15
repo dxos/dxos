@@ -5,7 +5,7 @@
 import React, { forwardRef, useEffect, useRef, useState } from 'react';
 
 import { log } from '@dxos/log';
-import { Avatar, Icon, Input, type ThemedClassName, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Avatar, Icon, Input, ScrollArea, type ThemedClassName, Toolbar, useTranslation } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { errorText, mx } from '@dxos/ui-theme';
 
@@ -219,7 +219,7 @@ type MessageThreadProps = {
 const MessageThread = forwardRef<HTMLDivElement, MessageThreadProps>(
   ({ state, history, result }: MessageThreadProps, forwardedRef) => {
     return (
-      <div ref={forwardedRef} className='flex flex-col gap-6 bs-full p-2 overflow-x-hidden overflow-y-auto'>
+      <ScrollArea ref={forwardedRef} classNames='gap-6 bs-full p-2'>
         {history.map((message, i) => (
           <div key={i} className='grid grid-cols-[2rem_1fr_2rem]'>
             <div className='p-1'>{message.type === 'response' && <RobotAvatar />}</div>
@@ -241,7 +241,7 @@ const MessageThread = forwardRef<HTMLDivElement, MessageThreadProps>(
             </div>
           </div>
         )}
-      </div>
+      </ScrollArea>
     );
   },
 );

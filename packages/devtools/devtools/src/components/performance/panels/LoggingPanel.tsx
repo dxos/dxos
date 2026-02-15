@@ -5,7 +5,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 
 import { type LogConfig, type LogEntry, LogLevel, log, shortLevelName, shouldLog } from '@dxos/log';
-import { IconButton, Input, Toolbar } from '@dxos/react-ui';
+import { IconButton, Input, ScrollArea, Toolbar } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { type CustomPanelProps, Panel } from '../Panel';
@@ -47,7 +47,7 @@ export const LoggingPanel = ({ maxLines = 100, ...props }: CustomPanelProps<{ ma
         </Input.Root>
         <Toolbar.IconButton icon='ph--x--regular' iconOnly label='Clear' onClick={handleClear} />
       </Toolbar.Root>
-      <div className='flex flex-col max-bs-[240px] overflow-y-auto text-xs'>
+      <ScrollArea classNames='max-bs-[240px] text-xs'>
         {entries.map((entry, index) => (
           <div key={index} className='group pli-1 grid grid-cols-[1rem_1fr_1fr_min-content] items-center'>
             <div
@@ -78,7 +78,7 @@ export const LoggingPanel = ({ maxLines = 100, ...props }: CustomPanelProps<{ ma
             />
           </div>
         ))}
-      </div>
+      </ScrollArea>
     </Panel>
   );
 };

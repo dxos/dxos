@@ -14,72 +14,69 @@
   "type": "module",
   "exports": {
     ".": {
-      "source": "./src/index.ts",
-      "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
-      "node": "./dist/lib/node-esm/index.mjs"
-    },
-    "./cli": {
-      "source": "./src/cli/index.ts",
-      "types": "./dist/types/src/cli/index.d.ts",
-      "browser": "./dist/lib/browser/cli/index.mjs",
-      "node": "./dist/lib/node-esm/cli/index.mjs"
+      "node": "./dist/lib/node-esm/index.mjs",
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts"
     },
     "./ActivationEvent": {
-      "source": "./src/core/activation-event.ts",
-      "types": "./dist/types/src/activation-event/index.d.ts",
       "browser": "./dist/lib/browser/activation-event/index.mjs",
-      "node": "./dist/lib/node-esm/activation-event/index.mjs"
+      "node": "./dist/lib/node-esm/activation-event/index.mjs",
+      "source": "./src/core/activation-event.ts",
+      "types": "./dist/types/src/activation-event/index.d.ts"
     },
     "./ActivationEvents": {
-      "source": "./src/common/activation-events.ts",
-      "types": "./dist/types/src/common/activation-events.d.ts",
       "browser": "./dist/lib/browser/common/activation-events.mjs",
-      "node": "./dist/lib/node-esm/common/activation-events.mjs"
+      "node": "./dist/lib/node-esm/common/activation-events.mjs",
+      "source": "./src/common/activation-events.ts",
+      "types": "./dist/types/src/common/activation-events.d.ts"
     },
     "./Capabilities": {
-      "source": "./src/common/capabilities.ts",
-      "types": "./dist/types/src/common/capabilities.d.ts",
       "browser": "./dist/lib/browser/common/capabilities.mjs",
-      "node": "./dist/lib/node-esm/common/capabilities.mjs"
+      "node": "./dist/lib/node-esm/common/capabilities.mjs",
+      "source": "./src/common/capabilities.ts",
+      "types": "./dist/types/src/common/capabilities.d.ts"
     },
     "./Capability": {
-      "source": "./src/core/capability.ts",
-      "types": "./dist/types/src/capability/index.d.ts",
       "browser": "./dist/lib/browser/capability/index.mjs",
-      "node": "./dist/lib/node-esm/capability/index.mjs"
+      "node": "./dist/lib/node-esm/capability/index.mjs",
+      "source": "./src/core/capability.ts",
+      "types": "./dist/types/src/capability/index.d.ts"
     },
     "./Plugin": {
-      "source": "./src/core/plugin.ts",
-      "types": "./dist/types/src/plugin/index.d.ts",
       "browser": "./dist/lib/browser/plugin/index.mjs",
-      "node": "./dist/lib/node-esm/plugin/index.mjs"
+      "node": "./dist/lib/node-esm/plugin/index.mjs",
+      "source": "./src/core/plugin.ts",
+      "types": "./dist/types/src/plugin/index.d.ts"
     },
     "./PluginManager": {
-      "source": "./src/core/plugin-manager.ts",
-      "types": "./dist/types/src/plugin-manager/index.d.ts",
       "browser": "./dist/lib/browser/plugin-manager/index.mjs",
-      "node": "./dist/lib/node-esm/plugin-manager/index.mjs"
+      "node": "./dist/lib/node-esm/plugin-manager/index.mjs",
+      "source": "./src/core/plugin-manager.ts",
+      "types": "./dist/types/src/plugin-manager/index.d.ts"
+    },
+    "./cli": {
+      "browser": "./dist/lib/browser/cli/index.mjs",
+      "node": "./dist/lib/node-esm/cli/index.mjs",
+      "source": "./src/cli/index.ts",
+      "types": "./dist/types/src/cli/index.d.ts"
     },
     "./testing": {
-      "source": "./src/testing/index.ts",
-      "types": "./dist/types/src/testing/index.d.ts",
       "browser": "./dist/lib/browser/testing/index.mjs",
-      "node": "./dist/lib/node-esm/testing/index.mjs"
+      "node": "./dist/lib/node-esm/testing/index.mjs",
+      "source": "./src/testing/index.ts",
+      "types": "./dist/types/src/testing/index.d.ts"
     },
     "./ui": {
-      "source": "./src/ui/index.ts",
-      "types": "./dist/types/src/ui/index.d.ts",
       "browser": "./dist/lib/browser/ui/index.mjs",
-      "node": "./dist/lib/node-esm/ui/index.mjs"
+      "node": "./dist/lib/node-esm/ui/index.mjs",
+      "source": "./src/ui/index.ts",
+      "types": "./dist/types/src/ui/index.d.ts"
     }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
-      "cli": [
-        "dist/types/src/cli/index.d.ts"
-      ],
       "ActivationEvent": [
         "dist/types/src/activation-event/index.d.ts"
       ],
@@ -97,6 +94,9 @@
       ],
       "PluginManager": [
         "dist/types/src/plugin-manager/index.d.ts"
+      ],
+      "cli": [
+        "dist/types/src/cli/index.d.ts"
       ],
       "testing": [
         "dist/types/src/testing/index.d.ts"
@@ -118,6 +118,7 @@
     "@dxos/log": "workspace:*",
     "@dxos/operation": "workspace:*",
     "@dxos/react-hooks": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
     "@dxos/util": "workspace:*",
     "@dxos/web-context": "workspace:*",
     "@dxos/web-context-react": "workspace:*",
@@ -126,7 +127,6 @@
   "devDependencies": {
     "@dxos/echo-db": "workspace:*",
     "@dxos/random": "workspace:*",
-    "@dxos/react-ui": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/test-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",

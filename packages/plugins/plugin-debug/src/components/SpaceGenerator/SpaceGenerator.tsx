@@ -12,7 +12,7 @@ import { Sheet } from '@dxos/plugin-sheet/types';
 import { Diagram } from '@dxos/plugin-sketch/types';
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
-import { IconButton, Input, Toolbar, useAsyncEffect } from '@dxos/react-ui';
+import { IconButton, Input, Layout, ScrollArea, Toolbar, useAsyncEffect } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { Organization, Person, Task } from '@dxos/types';
 import { jsonKeyReplacer, sortKeys } from '@dxos/util';
@@ -93,7 +93,7 @@ export const SpaceGenerator = ({ space, onCreateObjects }: SpaceGeneratorProps) 
   );
 
   return (
-    <div role='none' className='flex flex-col grow overflow-hidden'>
+    <Layout.Main toolbar>
       <Toolbar.Root classNames='border-be border-subduedSeparator'>
         <IconButton icon='ph--arrow-clockwise--regular' iconOnly label='Refresh' onClick={updateInfo} />
         <Toolbar.Separator variant='gap' />
@@ -111,17 +111,14 @@ export const SpaceGenerator = ({ space, onCreateObjects }: SpaceGeneratorProps) 
         </Input.Root>
       </Toolbar.Root>
 
-      <div className='flex flex-col overflow-y-auto divide-y divide-separator'>
+      <ScrollArea classNames='divide-y divide-separator'>
         <SchemaTable types={staticTypes} objects={info.objects} label='Static Types' onClick={handleCreateData} />
         <SchemaTable types={recordTypes} objects={info.objects} label='Record Types' onClick={handleCreateData} />
         <SchemaTable types={presets.types} objects={info.objects} label='Presets' onClick={handleCreateData} />
-
-        <div>
-          <SyntaxHighlighter language='json' classNames='text-xs'>
-            {JSON.stringify({ space, ...info }, jsonKeyReplacer({ truncate: true }), 2)}
-          </SyntaxHighlighter>
-        </div>
-      </div>
-    </div>
+        <SyntaxHighlighter language='json' classNames='text-xs'>
+          {JSON.stringify({ space, ...info }, jsonKeyReplacer({ truncate: true }), 2)}
+        </SyntaxHighlighter>
+      </ScrollArea>
+    </Layout.Main>
   );
 };

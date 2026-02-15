@@ -5,7 +5,7 @@
 import { createContext } from '@radix-ui/react-context';
 import React, { type Dispatch, type PropsWithChildren, type SetStateAction, useEffect, useState } from 'react';
 
-import { Dialog, Icon, IconButton, type ThemedClassName, useControlledState } from '@dxos/react-ui';
+import { Dialog, Icon, IconButton, ScrollArea, type ThemedClassName, useControlledState } from '@dxos/react-ui';
 import { ResizeHandle, type Size, resizeAttributes, sizeStyle } from '@dxos/react-ui-dnd';
 import { mx } from '@dxos/ui-theme';
 
@@ -146,9 +146,9 @@ const ChatDialogContent = ({ children, classNames }: ChatDialogContentProps) => 
   }, [expanded]);
 
   return (
-    <div
-      className={mx(
-        'flex flex-col overflow-y-auto border-bs border-be border-subduedSeparator',
+    <ScrollArea
+      classNames={mx(
+        'border-bs border-be border-subduedSeparator',
         'transition-[block-size] ease-in-out duration-0 [&:not([data-dx-resizing="true"])]:duration-200',
         classNames,
       )}
@@ -167,7 +167,7 @@ const ChatDialogContent = ({ children, classNames }: ChatDialogContentProps) => 
         onSizeChange={setSize}
       />
       {children}
-    </div>
+    </ScrollArea>
   );
 };
 

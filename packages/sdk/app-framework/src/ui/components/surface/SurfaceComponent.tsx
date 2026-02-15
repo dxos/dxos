@@ -16,6 +16,7 @@ import React, {
 
 import { log } from '@dxos/log';
 import { useDefaultValue } from '@dxos/react-hooks';
+import { ScrollArea } from '@dxos/react-ui';
 import { byPosition } from '@dxos/util';
 
 import { Capabilities } from '../../../common';
@@ -47,7 +48,9 @@ const WebComponentWrapper = memo(
 
       // Create element only once
       useEffect(() => {
-        if (!containerRef.current || elementRef.current) return;
+        if (!containerRef.current || elementRef.current) {
+          return;
+        }
 
         // Create the Web Component
         const element = document.createElement(definition.tagName);
@@ -84,7 +87,9 @@ const WebComponentWrapper = memo(
       // This runs on every render to ensure all props (including those in `rest`) are kept up to date
       useEffect(() => {
         const element = elementRef.current;
-        if (!element) return;
+        if (!element) {
+          return;
+        }
 
         // Update properties on the existing Web Component
         Object.assign(element, propsRef.current);
@@ -216,19 +221,19 @@ const findCandidates = (surfaces: Definition[], { role, data }: Pick<Props, 'rol
 const DefaultFallback = ({ data, error, dev }: { data: any; error: Error; dev?: boolean }) => {
   if (dev) {
     return (
-      <div className='flex flex-col gap-4 p-4 is-full overflow-y-auto'>
+      <ScrollArea classNames='p-4 gap-4'>
         <h1 className='flex gap-2 text-sm mbs-2'>{error.message}</h1>
         <pre className='overflow-auto text-xs text-description'>{JSON.stringify(data, null, 2)}</pre>
-      </div>
+      </ScrollArea>
     );
   }
 
   return (
-    <div className='flex flex-col gap-4 p-4 is-full overflow-y-auto border border-roseFill'>
-      <h1 className='flex gap-2 text-sm mbs-2 text-rose-500'>{error.message}</h1>
-      <pre className='overflow-auto text-xs text-description'>{error.stack}</pre>
-      <pre className='overflow-auto text-xs text-description'>{JSON.stringify(data, null, 2)}</pre>
-    </div>
+    <ScrollArea classNames='p-4 gap-4 border border-roseFill'>
+      <h1 className='flex gap-2 text-sm mbs-2 text-errorText'>{error.message}</h1>
+      <pre className='overflow-x-auto text-xs text-description'>{error.stack}</pre>
+      <pre className='overflow-x-auto text-xs text-description'>{JSON.stringify(data, null, 2)}</pre>
+    </ScrollArea>
   );
 };
 
