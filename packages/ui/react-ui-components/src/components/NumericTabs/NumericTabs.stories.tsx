@@ -6,6 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { faker } from '@dxos/random';
+import { ScrollArea } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { ToggleContainer } from '../ToggleContainer';
@@ -43,7 +44,9 @@ export const Default: Story = {
             <div className='pli-1'>
               <NumericTabs length={content.length} selected={selected} onSelect={setSelected} />
             </div>
-            <div className='flex-1 pli-2 overflow-y-auto'>{content[selected].content}</div>
+            <ScrollArea thin padding>
+              {content[selected].content}
+            </ScrollArea>
           </ToggleContainer.Content>
         </ToggleContainer.Root>
       </div>

@@ -9,26 +9,23 @@ import { type Database, type Ref } from '@dxos/echo';
 import { Function } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { Filter, useQuery } from '@dxos/react-client/echo';
-import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { ScrollArea, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { meta } from '../../meta';
 import { type AiChatProcessor } from '../../processor';
 import { ServiceType } from '../../types';
 
-export type ToolboxProps = ThemedClassName<{
+export type ToolboxProps = {
   services?: { service: ServiceType }[];
   functions?: Function.Function[];
   // TODO(burdon): Combine into single array.
   blueprints?: readonly Blueprint.Blueprint[];
   activeBlueprints?: readonly Ref.Ref<Blueprint.Blueprint>[];
-}>;
+};
 
-export const Toolbox = ({ classNames, functions, services, blueprints, activeBlueprints }: ToolboxProps) => {
-  const { t } = useTranslation(meta.id);
-
+export const Toolbox = ({ functions, services, blueprints, activeBlueprints }: ToolboxProps) => {
   return (
-    <div className={mx('flex flex-col overflow-y-auto box-content', classNames)}>
+    <ScrollArea thin>
       {blueprints && blueprints.length > 0 && (
         <Section
           title='Blueprints'
@@ -65,7 +62,7 @@ export const Toolbox = ({ classNames, functions, services, blueprints, activeBlu
       {functions && functions.length > 0 && (
         <Section title='Functions' items={functions.map(({ name, description }) => ({ name, description }))} />
       )}
-    </div>
+    </ScrollArea>
   );
 };
 

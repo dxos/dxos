@@ -51,40 +51,11 @@ const Main = forwardRef<HTMLDivElement, MainProps>(
 );
 
 //
-// Container
-//
-
-type ContainerProps = ThemedClassName<
-  PropsWithChildren<{
-    role?: string;
-    scrollable?: boolean;
-  }>
->;
-
-// TODO(burdon): Reconcile with Container.Column.
-// - Require container?
-// - Custom vs. natural scroll container.
-const Container = forwardRef<HTMLDivElement, ContainerProps>(
-  ({ classNames, children, role, scrollable }, forwardedRef) => {
-    return (
-      <div
-        ref={forwardedRef}
-        role={role ?? 'none'}
-        className={mx('flex flex-col is-full', scrollable ? 'overflow-y-auto' : 'overflow-hidden', classNames)}
-      >
-        {children}
-      </div>
-    );
-  },
-);
-
-//
 // Layout
 //
 
 export const Layout = {
   Main,
-  Container,
 };
 
-export type { MainProps as LayoutMainProps, ContainerProps as LayoutContainerProps };
+export type { MainProps as LayoutMainProps };

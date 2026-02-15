@@ -7,7 +7,7 @@ import React, { useState } from 'react';
 
 import { type Plugin, Plugin as PluginNS } from '@dxos/app-framework';
 import { faker } from '@dxos/random';
-import { Layout } from '@dxos/react-ui';
+import { ScrollArea } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { getHashHue } from '@dxos/ui-theme';
 
@@ -51,9 +51,9 @@ const DefaultStory = () => {
   };
 
   return (
-    <Layout.Container scrollable>
+    <ScrollArea>
       <PluginList plugins={plugins} enabled={enabled} onChange={handleChange} hasSettings={() => true} />
-    </Layout.Container>
+    </ScrollArea>
   );
 };
 

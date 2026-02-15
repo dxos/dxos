@@ -57,7 +57,7 @@ export const Vertical = {
 export const VerticalThin = {
   render: () => (
     <div className='bs-72 is-48 p-2 border border-separator rounded-md'>
-      <ScrollArea thin orientation='vertical'>
+      <ScrollArea orientation='vertical' thin>
         <Column />
       </ScrollArea>
     </div>
@@ -77,7 +77,7 @@ export const Horizontal = {
 export const HorizontalThin = {
   render: () => (
     <div className='is-96 p-2 border border-separator rounded-md'>
-      <ScrollArea thin orientation='horizontal'>
+      <ScrollArea orientation='horizontal' thin>
         <Row />
       </ScrollArea>
     </div>

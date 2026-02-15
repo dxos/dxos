@@ -7,8 +7,7 @@ import browser from 'webextension-polyfill';
 
 import { Composer, DXOSHorizontalType } from '@dxos/brand';
 import { SpaceId } from '@dxos/keys';
-import { Input, type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { mx } from '@dxos/ui-theme';
+import { Input, ScrollArea, useTranslation } from '@dxos/react-ui';
 
 import { DEVELOPER_MODE_PROP, SPACE_ID_PROP, SPACE_MODE_PROP, getProp } from '../../config';
 import { translationKey } from '../../translations';
@@ -17,9 +16,7 @@ const headerGrid = 'grid grid-cols-[8rem_2fr_1fr_8rem] p-4 overflow-hidden';
 const propertiesGrid =
   'grid grid-cols-[8rem_1fr_1fr_8rem] p-4 overflow-hidden items-center [&_label]:m-0 [&_label]:text-base';
 
-export type OptionsProps = ThemedClassName<{}>;
-
-export const Options = ({ classNames }: OptionsProps) => {
+export const Options = () => {
   const { t } = useTranslation(translationKey);
   const [developerMode, setDeveloperMode] = useState(false);
   const [spaceMode, setSpaceMode] = useState(false);
@@ -59,7 +56,7 @@ export const Options = ({ classNames }: OptionsProps) => {
   };
 
   return (
-    <div className={mx('flex flex-col grow overflow-y-auto', classNames)}>
+    <ScrollArea>
       <div className={headerGrid}>
         <a href='https://dxos.org/composer' target='_blank' rel='noreferrer' className='flex justify-end -mie-4'>
           <Composer className='is-[8rem] bs-[8rem]' />
@@ -109,6 +106,6 @@ export const Options = ({ classNames }: OptionsProps) => {
           </div>
         </Input.Root>
       </div>
-    </div>
+    </ScrollArea>
   );
 };

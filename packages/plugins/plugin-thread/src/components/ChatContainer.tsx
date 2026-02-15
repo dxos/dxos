@@ -128,7 +128,7 @@ export const ChatContainer = ({
         classNames,
       ]}
     >
-      <ScrollArea orientation='vertical' classNames='col-span-2'>
+      <ScrollArea classNames='col-span-2'>
         <div role='none' className={mx(threadLayout, 'place-self-end')}>
           {thread.messages
             .map((message) => message.target)

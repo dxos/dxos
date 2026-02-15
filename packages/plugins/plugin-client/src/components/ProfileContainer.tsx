@@ -169,8 +169,8 @@ export const ProfileContainer = () => {
   );
 
   return (
-    <ControlPage>
-      <Clipboard.Provider>
+    <Clipboard.Provider>
+      <ControlPage>
         <ControlSection title={t('profile label')} description={t('profile description')}>
           <Form.Root schema={UserProfile} values={values} fieldMap={fieldMap} onValuesChanged={handleChange}>
             <Form.Content>
@@ -178,7 +178,7 @@ export const ProfileContainer = () => {
             </Form.Content>
           </Form.Root>
         </ControlSection>
-      </Clipboard.Provider>
-    </ControlPage>
+      </ControlPage>
+    </Clipboard.Provider>
   );
 };

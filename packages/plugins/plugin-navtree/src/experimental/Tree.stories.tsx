@@ -3,38 +3,16 @@
 //
 
 import { type Meta } from '@storybook/react-vite';
-import React, { type JSX, type PropsWithChildren, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { faker } from '@dxos/random';
-import { Icon, IconButton } from '@dxos/react-ui';
+import { Icon, IconButton, Layout, ScrollArea } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
 import { type ItemMap, Tree, type TreeNodeData, type TreeProps, visitNodes, visitor } from './Tree';
 
 faker.seed(1234);
-
-/**
- * Space:
- * - Space panels are separated from each other to give them more weight than folders.
- * - Private space isn't different (just first, different icon).
- * - Edit titles in place.
- *
- * Navigation:
- *  - up/down across spaces/folder peers
- *  - right to enter space/folder children
- *  - left to parent
- */
-const Container = ({ children, sidebar }: PropsWithChildren<{ sidebar: JSX.Element }>) => {
-  return (
-    <div className='flex'>
-      {/* TODO(burdon): Custom thin scrollbar. */}
-      {/* TODO(burdon): Horizontal scrolling within navtree? */}
-      <div className='flex flex-col overflow-y-auto is-[300px] bg-neutral-100 dark:bg-neutral-950'>{sidebar}</div>
-      <div className='flex flex-col grow overflow-hidden'>{children}</div>
-    </div>
-  );
-};
 
 // TODO(burdon): Generate.
 const data: TreeNodeData[] = [
@@ -134,7 +112,7 @@ const Sidebar = ({ mutate }: { mutate?: boolean }) => {
     }
   }, []);
 
-  const handleCreateItem: TreeProps['onMenuAction'] = (id, action) => {
+  const handleCreateItem: TreeProps['onMenuAction'] = (id) => {
     setItems((items) => {
       let parent: TreeNodeData | undefined;
       visitNodes(root, (node) => {
@@ -167,8 +145,8 @@ const Sidebar = ({ mutate }: { mutate?: boolean }) => {
   };
 
   return (
-    <div className='flex flex-col overflow-hidden'>
-      <div className='flex flex-col overflow-y-auto'>
+    <Layout.Main>
+      <ScrollArea thin>
         <Tree
           className='p-0.5 gap-1'
           node={root}
@@ -178,7 +156,7 @@ const Sidebar = ({ mutate }: { mutate?: boolean }) => {
           onChangeOpen={(id, open) => setOpenItems((items) => ({ ...items, [id]: open }))}
           onChangeSelected={(id, open) => setSelectedItems((items) => ({ ...items, [id]: open }))}
           onMenuAction={handleCreateItem}
-          getSlots={(node, open, depth, ancestors) => {
+          getSlots={(node, open, depth) => {
             if (depth === 1) {
               return {
                 root: 'rounded bg-white dark:bg-neutral-850',
@@ -187,7 +165,7 @@ const Sidebar = ({ mutate }: { mutate?: boolean }) => {
             }
           }}
         />
-      </div>
+      </ScrollArea>
 
       <div className='flex items-center my-2 pli-2 gap-2'>
         <IconButton icon='ph--plus-circle--regular' iconOnly label='Create space' onClick={handleCreateSpace} />
@@ -196,20 +174,34 @@ const Sidebar = ({ mutate }: { mutate?: boolean }) => {
         </span>
         <Icon icon='ph--list--regular' />
       </div>
-    </div>
+    </Layout.Main>
   );
 };
 
 const meta = {
   title: 'plugins/plugin-navtree/experimental/Tree',
   component: Tree,
-  decorators: [withTheme(), withLayout({ layout: 'column' })],
+  decorators: [withTheme(), withLayout({ layout: 'column', classNames: 'is-[20rem]' })],
+  parameters: {
+    layout: 'fullscreen',
+  },
 } satisfies Meta<typeof Tree>;
 
 export default meta;
 
+/**
+ * Space:
+ * - Space panels are separated from each other to give them more weight than folders.
+ * - Private space isn't different (just first, different icon).
+ * - Edit titles in place.
+ *
+ * Navigation:
+ *  - up/down across spaces/folder peers
+ *  - right to enter space/folder children
+ *  - left to parent
+ */
 export const Default = () => {
-  return <Container sidebar={<Sidebar mutate />} />;
+  return <Sidebar mutate />;
 };
 
 export const Visitor = () => {

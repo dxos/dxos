@@ -6,7 +6,7 @@ import React from 'react';
 
 import { type Plugin } from '@dxos/app-framework';
 import { Icon, Input, Link, useTranslation } from '@dxos/react-ui';
-import { Layout } from '@dxos/react-ui';
+import { ScrollArea } from '@dxos/react-ui';
 import { getStyles, mx } from '@dxos/ui-theme';
 
 import { meta } from '../meta';
@@ -32,7 +32,7 @@ export const PluginDetail = ({ plugin, enabled, onEnabledChange }: PluginDetailP
   const styles = getStyles(iconHue);
 
   return (
-    <Layout.Container scrollable>
+    <ScrollArea>
       <div role='none' className='grid grid-cols-[min-content_1fr] gap-4 container-max-width p-4'>
         <div role='none'>
           <Icon classNames={mx('p-1 rounded', styles.bg, styles.icon)} icon={icon} size={14} />
@@ -74,6 +74,6 @@ export const PluginDetail = ({ plugin, enabled, onEnabledChange }: PluginDetailP
           </div>
         </div>
       </div>
-    </Layout.Container>
+    </ScrollArea>
   );
 };

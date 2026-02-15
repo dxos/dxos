@@ -6,7 +6,7 @@ import { format } from 'date-fns/format';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Obj, Ref } from '@dxos/echo';
-import { IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { IconButton, ScrollArea, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
@@ -52,7 +52,7 @@ export const Journal = ({ classNames, journal, ...props }: JournalProps) => {
   }, [journal, date]);
 
   return (
-    <div className={mx('flex flex-col is-full overflow-y-auto', classNames)}>
+    <ScrollArea classNames={classNames}>
       {showAddEntry && (
         <div className='p-2'>
           <IconButton label={t('create entry label')} icon='ph--plus--regular' onClick={handleCreateEntry} />
@@ -61,7 +61,7 @@ export const Journal = ({ classNames, journal, ...props }: JournalProps) => {
       {JournalType.getEntries(journal).map((entry, i) => (
         <JournalEntry key={entry.id} entry={entry} classNames='p-2' {...props} autoFocus={i === 0} />
       ))}
-    </div>
+    </ScrollArea>
   );
 };
 

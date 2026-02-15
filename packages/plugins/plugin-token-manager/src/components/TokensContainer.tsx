@@ -10,7 +10,6 @@ import { type Database, Filter, Obj } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space/types';
 import { useQuery } from '@dxos/react-client/echo';
 import { Separator, useTranslation } from '@dxos/react-ui';
-import { Layout } from '@dxos/react-ui';
 import { ControlItem, ControlPage, ControlSection, Form, controlItemClasses } from '@dxos/react-ui-form';
 import { AccessToken } from '@dxos/types';
 
@@ -65,32 +64,26 @@ export const TokensContainer = ({ db }: { db: Database.Database }) => {
   const handleDelete = useCallback((token: AccessToken.AccessToken) => db.remove(token), [db]);
 
   return (
-    <Layout.Container scrollable>
-      <ControlPage>
-        <ControlSection
-          title={t('integrations verbose label', { ns: meta.id })}
-          description={t('integrations description', { ns: meta.id })}
-        >
-          {adding ? (
-            <ControlItem title={t('new integration label')}>
-              <Form.Root schema={FormSchema} values={initialValues} onCancel={handleCancel} onSave={handleAdd}>
-                <Form.FieldSet />
-                <Form.Actions />
-              </Form.Root>
-            </ControlItem>
-          ) : (
-            <div role='none' className={controlItemClasses}>
-              <TokenManager tokens={tokens} onDelete={handleDelete} />
-              {tokens.length > 0 && <Separator classNames='mlb-4' />}
-              <NewTokenSelector
-                spaceId={db.spaceId}
-                onAddAccessToken={handleAddAccessToken}
-                onCustomToken={handleNew}
-              />
-            </div>
-          )}
-        </ControlSection>
-      </ControlPage>
-    </Layout.Container>
+    <ControlPage>
+      <ControlSection
+        title={t('integrations verbose label', { ns: meta.id })}
+        description={t('integrations description', { ns: meta.id })}
+      >
+        {adding ? (
+          <ControlItem title={t('new integration label')}>
+            <Form.Root schema={FormSchema} values={initialValues} onCancel={handleCancel} onSave={handleAdd}>
+              <Form.FieldSet />
+              <Form.Actions />
+            </Form.Root>
+          </ControlItem>
+        ) : (
+          <div role='none' className={controlItemClasses}>
+            <TokenManager tokens={tokens} onDelete={handleDelete} />
+            {tokens.length > 0 && <Separator classNames='mlb-4' />}
+            <NewTokenSelector spaceId={db.spaceId} onAddAccessToken={handleAddAccessToken} onCustomToken={handleNew} />
+          </div>
+        )}
+      </ControlSection>
+    </ControlPage>
   );
 };

@@ -22,6 +22,7 @@ type ScrollAreaProps = ThemedClassName<ScrollAreaPrimitive.ScrollAreaProps> & {
 
 /**
  * ScrollArea provides native and custom scrollbar variants.
+ * The native variant is used on mobile.
  */
 const ScrollArea = forwardRef<HTMLDivElement, ScrollAreaProps>(
   ({ classNames, children, viewportRef, orientation = 'vertical', padding, thin, snap, ...props }, forwardedRef) => {

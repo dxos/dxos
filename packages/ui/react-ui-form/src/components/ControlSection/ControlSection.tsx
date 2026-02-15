@@ -9,7 +9,7 @@ import {
   type ButtonProps,
   Input,
   type Label,
-  Layout,
+  ScrollArea,
   type ThemedClassName,
   toLocalizedString,
   useTranslation,
@@ -23,13 +23,7 @@ import { translationKey } from '../../translations';
 export type ControlPageParams = PropsWithChildren;
 
 export const ControlPage = ({ children }: ControlPageParams) => {
-  return (
-    <Layout.Container scrollable>
-      <div role='none' className='pli-cardSpacingInline pbe-trimMd'>
-        {children}
-      </div>
-    </Layout.Container>
-  );
+  return <ScrollArea classNames='pli-cardSpacingInline pbe-trimMd'>{children}</ScrollArea>;
 };
 
 export type ControlSectionProps = PropsWithChildren<{

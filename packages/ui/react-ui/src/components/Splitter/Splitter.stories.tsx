@@ -5,6 +5,8 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
+import { ScrollArea } from '@dxos/react-ui';
+
 import { Layout } from '../../primitives';
 import { withLayout, withTheme } from '../../testing';
 import { Toolbar } from '../Toolbar';
@@ -15,13 +17,13 @@ const Panel = ({ label }: { label: string }) => {
   return (
     <Layout.Main toolbar>
       <Toolbar.Root>{label}</Toolbar.Root>
-      <div className='flex-1 overflow-y-auto'>
+      <ScrollArea>
         {Array.from({ length: 100 }).map((_, i) => (
           <div key={i} className='p-1'>
             {label}-{i}
           </div>
         ))}
-      </div>
+      </ScrollArea>
     </Layout.Main>
   );
 };

@@ -11,7 +11,7 @@ import { useCapabilities, useOperationInvoker, usePluginManager } from '@dxos/ap
 import { AppCapabilities, LayoutOperation, SettingsOperation } from '@dxos/app-toolkit';
 import { runAndForwardErrors } from '@dxos/effect';
 import { ObservabilityOperation } from '@dxos/plugin-observability/types';
-import { Layout } from '@dxos/react-ui';
+import { ScrollArea } from '@dxos/react-ui';
 
 import { PluginList } from './PluginList';
 
@@ -70,7 +70,7 @@ export const RegistryContainer = ({ id, plugins: pluginsProp }: RegistryContaine
   );
 
   return (
-    <Layout.Container scrollable>
+    <ScrollArea>
       <PluginList
         plugins={plugins}
         enabled={enabled}
@@ -79,6 +79,6 @@ export const RegistryContainer = ({ id, plugins: pluginsProp }: RegistryContaine
         hasSettings={hasSettings}
         onSettings={handleSettings}
       />
-    </Layout.Container>
+    </ScrollArea>
   );
 };
