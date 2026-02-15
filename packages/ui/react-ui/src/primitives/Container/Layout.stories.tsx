@@ -7,8 +7,9 @@ import React from 'react';
 
 import { Input, Toolbar } from '../../components';
 import { withLayout, withTheme } from '../../testing';
-import { Layout } from '../L/Layout';
 import { Scrollable } from '../Scrollable';
+
+import { Layout } from './Layout';
 
 const DefaultStory = ({ count }: { count: number }) => {
   return (

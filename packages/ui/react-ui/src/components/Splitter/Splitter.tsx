@@ -5,11 +5,14 @@
 import { createContextScope } from '@radix-ui/react-context';
 import React, { type ComponentPropsWithoutRef, forwardRef } from 'react';
 
-import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
+
+import { type ThemedClassName } from '../../util';
 
 type ScopedProps<P> = P & { __scopeSplitter?: any };
 
+// TODO(burdon): Generalize styles.
+// TODO(burdon): Generalize horizontal/vertical and change to start/end.
 type Mode = 'upper' | 'lower' | 'both';
 
 type SplitterContextValue = {
