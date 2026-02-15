@@ -21,24 +21,22 @@ type ScrollAreaProps = ThemedClassName<ScrollAreaPrimitive.ScrollAreaProps> & {
 };
 
 /**
- * ScrollArea provides a styled scrollable area with custom scrollbars.
+ * ScrollArea provides native and custom scrollbar variants.
  */
 const ScrollArea = forwardRef<HTMLDivElement, ScrollAreaProps>(
   ({ classNames, children, viewportRef, orientation = 'vertical', padding, thin, snap, ...props }, forwardedRef) => {
     const { tx, platform } = useThemeContext();
     const vertical = orientation === 'vertical' || orientation === 'all';
     const horizontal = orientation === 'horizontal' || orientation === 'all';
+    const native = platform === 'mobile' && orientation !== 'all';
+    const options = { native, orientation, padding, thin, snap };
 
-    if (platform === 'mobile') {
+    if (native) {
       return (
-        <div
-          role='none'
-          className={tx('scrollArea.root', 'scroll-area', { orientation, padding, thin }, classNames)}
-          ref={viewportRef}
-        >
+        <div role='none' className={tx('scrollArea.root', 'scroll-area', options, classNames)} ref={viewportRef}>
           <div
             role='none'
-            className={tx('scrollArea.viewport', 'scroll-area__viewport', { orientation, snap }, [
+            className={tx('scrollArea.viewport', 'scroll-area__viewport', options, [
               vertical && 'flex flex-col overflow-y-auto',
               horizontal && 'flex overflow-x-auto',
             ])}
@@ -53,11 +51,11 @@ const ScrollArea = forwardRef<HTMLDivElement, ScrollAreaProps>(
     return (
       <ScrollAreaPrimitive.Root
         {...props}
-        className={tx('scrollArea.root', 'scroll-area', { orientation, padding, thin }, classNames)}
+        className={tx('scrollArea.root', 'scroll-area', options, classNames)}
         ref={forwardedRef}
       >
         <ScrollAreaPrimitive.Viewport
-          className={tx('scrollArea.viewport', 'scroll-area__viewport', { orientation, snap })}
+          className={tx('scrollArea.viewport', 'scroll-area__viewport', options)}
           ref={viewportRef}
         >
           {children}

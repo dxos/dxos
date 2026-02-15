@@ -7,33 +7,43 @@ import { type AllowedAxis, type ComponentFunction, type Theme } from '@dxos/ui-t
 import { mx } from '../../util';
 
 export type ScrollAreaStyleProps = {
+  native?: boolean;
   orientation?: AllowedAxis;
   padding?: boolean;
   thin?: boolean;
   snap?: boolean;
 };
 
-export const scrollAreaRoot: ComponentFunction<ScrollAreaStyleProps> = ({ orientation, padding }, ...etc) =>
+export const scrollAreaRoot: ComponentFunction<ScrollAreaStyleProps> = ({ orientation }, ...etc) =>
   mx(
     'relative overflow-hidden',
-    padding && orientation === 'vertical' && 'pli-3',
-    padding && orientation === 'horizontal' && 'pbe-3',
-    padding && orientation === 'all' && 'pli-3 pbe-3',
     orientation === 'vertical' && 'bs-full is-full min-bs-0',
     orientation === 'horizontal' && 'bs-full is-full min-is-0',
     orientation === 'all' && 'bs-full is-full min-bs-0 min-is-0',
     ...etc,
   );
 
-export const scrollAreaViewport: ComponentFunction<ScrollAreaStyleProps> = ({ orientation, snap }, ...etc) =>
+export const scrollAreaViewport: ComponentFunction<ScrollAreaStyleProps> = (
+  { native, orientation, padding, snap },
+  ...etc
+) =>
   mx(
     'bs-full is-full rounded-[inherit]',
-    snap && orientation === 'vertical' && 'snap-y snap-mandatory',
-    snap && orientation === 'horizontal' && 'snap-x snap-mandatory',
-    snap && orientation === 'all' && 'snap-both snap-mandatory',
-    orientation === 'vertical' && '[&>*]:!block [&>*]:is-full',
-    orientation === 'horizontal' && '[&>*]:!block [&>*]:bs-full',
-    orientation === 'all' && '[&>*]:!block',
+    padding && [
+      orientation === 'vertical' && 'pli-3',
+      orientation === 'horizontal' && 'pbe-3',
+      orientation === 'all' && 'pli-3 pbe-3',
+    ],
+    snap && [
+      orientation === 'vertical' && 'snap-y snap-mandatory',
+      orientation === 'horizontal' && 'snap-x snap-mandatory',
+      orientation === 'all' && 'snap-both snap-mandatory',
+    ],
+    !native && [
+      orientation === 'vertical' && '[&>*]:!block [&>*]:is-full',
+      orientation === 'horizontal' && '[&>*]:!block [&>*]:bs-full',
+      orientation === 'all' && '[&>*]:!block',
+    ],
     ...etc,
   );
 

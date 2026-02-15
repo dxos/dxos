@@ -13,8 +13,8 @@ import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { useActionRunner } from '@dxos/plugin-graph';
 import { useObject } from '@dxos/react-client/echo';
-import { type SelectionManager } from '@dxos/react-ui-attention';
 import { Layout } from '@dxos/react-ui';
+import { type SelectionManager } from '@dxos/react-ui-attention';
 import { Text } from '@dxos/schema';
 
 import { useLinkQuery } from '../hooks';
