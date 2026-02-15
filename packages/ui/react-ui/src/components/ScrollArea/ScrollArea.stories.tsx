@@ -1,101 +1,101 @@
 //
-// Copyright 2023 DXOS.org
+// Copyright 2026 DXOS.org
 //
 
-import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { type PropsWithChildren } from 'react';
+import React from 'react';
 
-import { faker } from '@dxos/random';
-import { activeSurface, surfaceShadow } from '@dxos/ui-theme';
-
-import { withLayout, withTheme } from '../../testing';
+import { withTheme } from '../../testing';
 
 import { ScrollArea } from './ScrollArea';
 
-faker.seed(1234);
-
-const DefaultStory = ({ children }: PropsWithChildren<{}>) => {
-  return (
-    <ScrollArea.Root
-      classNames={['is-[300px] bs-[400px] rounded', activeSurface, surfaceShadow({ elevation: 'positioned' })]}
-    >
-      <ScrollArea.Viewport classNames='rounded p-4'>
-        <p>{children}</p>
-      </ScrollArea.Viewport>
-      <ScrollArea.Scrollbar orientation='horizontal'>
-        <ScrollArea.Thumb />
-      </ScrollArea.Scrollbar>
-      <ScrollArea.Scrollbar orientation='vertical'>
-        <ScrollArea.Thumb />
-      </ScrollArea.Scrollbar>
-      <ScrollArea.Corner />
-    </ScrollArea.Root>
-  );
-};
-
-const meta = {
+export default {
   title: 'ui/react-ui-core/components/ScrollArea',
-  component: ScrollArea as any,
-  render: DefaultStory,
-  decorators: [withTheme, withLayout({ layout: 'fullscreen' })],
+  component: ScrollArea,
+  decorators: [withTheme],
   parameters: {
-    layout: 'fullscreen',
-  },
-} satisfies Meta<typeof DefaultStory>;
-
-export default meta;
-
-type Story = StoryObj<typeof meta>;
-
-export const Default: Story = {
-  args: {
-    children: faker.lorem.paragraphs(5),
+    layout: 'centered',
   },
 };
 
-export const NestedScrollAreas: Story = {
-  render: () => {
-    const columns = Array.from({ length: 3 }).map((_, index) => ({
-      id: String(index),
-      itemCount: 20,
-    }));
-
-    return (
-      <div className='p-4 bs-full is-full overflow-hidden'>
-        <div className='flex bs-full is-full overflow-hidden border border-sky-500'>
-          <ScrollArea.Root>
-            <ScrollArea.Viewport>
-              <div className='flex gap-4 p-3 bs-full overflow-hidden'>
-                {columns.map((column) => (
-                  <div key={column.id} className='flex flex-col gap-1 bs-full overflow-hidden is-[300px]'>
-                    <div className='flex shrink-0 p-2 border border-separator'>Column {column.id}</div>
-                    <ScrollArea.Expander classNames='border border-rose-500'>
-                      <ScrollArea.Root>
-                        <ScrollArea.Viewport>
-                          <div className='flex flex-col p-3 space-y-2'>
-                            {Array.from({ length: column.itemCount }, (_, i) => (
-                              <div key={i} className={`p-3 border border-separator rounded-sm`}>
-                                Item {i + 1}
-                              </div>
-                            ))}
-                          </div>
-                        </ScrollArea.Viewport>
-                        <ScrollArea.Scrollbar orientation='vertical'>
-                          <ScrollArea.Thumb />
-                        </ScrollArea.Scrollbar>
-                      </ScrollArea.Root>
-                    </ScrollArea.Expander>
-                    <div className={`p-2 border border-separator`}>Footer</div>
-                  </div>
-                ))}
-              </div>
-            </ScrollArea.Viewport>
-            <ScrollArea.Scrollbar orientation='horizontal'>
-              <ScrollArea.Thumb />
-            </ScrollArea.Scrollbar>
-          </ScrollArea.Root>
-        </div>
+const Column = () => (
+  <div>
+    {Array.from({ length: 50 }).map((_, index) => (
+      <div key={index} className='text-sm'>
+        Item {index + 1}
       </div>
-    );
-  },
+    ))}
+  </div>
+);
+
+const Row = () => (
+  <div className='flex gap-4 is-max'>
+    {Array.from({ length: 50 }).map((_, index) => (
+      <div
+        key={index}
+        className='shrink-0 bs-20 is-20 border border-separator rounded-md flex items-center justify-center text-sm'
+      >
+        {index + 1}
+      </div>
+    ))}
+  </div>
+);
+
+export const Vertical = {
+  render: () => (
+    <div className='bs-72 is-48 p-2 border border-separator rounded-md'>
+      <ScrollArea>
+        <Column />
+      </ScrollArea>
+    </div>
+  ),
+};
+
+export const VerticalThin = {
+  render: () => (
+    <div className='bs-72 is-48 p-2 border border-separator rounded-md'>
+      <ScrollArea thin>
+        <Column />
+      </ScrollArea>
+    </div>
+  ),
+};
+
+export const Horizontal = {
+  render: () => (
+    <div className='is-96 p-2 border border-separator rounded-md'>
+      <ScrollArea orientation='horizontal'>
+        <Row />
+      </ScrollArea>
+    </div>
+  ),
+};
+
+export const HorizontalThin = {
+  render: () => (
+    <div className='is-96 p-2 border border-separator rounded-md'>
+      <ScrollArea thin orientation='horizontal'>
+        <Row />
+      </ScrollArea>
+    </div>
+  ),
+};
+
+export const Both = {
+  render: () => (
+    <div className='bs-72 is-96 p-2 border border-separator rounded-md'>
+      <ScrollArea orientation='both' classNames='grid flex bs-full overflow-hidden'>
+        <div className='is-max'>
+          {Array.from({ length: 50 }).map((_, rowIndex) => (
+            <div key={rowIndex} className='flex gap-4'>
+              {Array.from({ length: 50 }).map((_, colIndex) => (
+                <div key={colIndex} className='shrink-0 bs-20 is-20 flex items-center justify-center text-sm'>
+                  {rowIndex},{colIndex}
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+      </ScrollArea>
+    </div>
+  ),
 };

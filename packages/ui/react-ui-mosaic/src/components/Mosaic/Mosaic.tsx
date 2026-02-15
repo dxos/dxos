@@ -46,8 +46,8 @@ import { log } from '@dxos/log';
 import {
   type AllowedAxis,
   type Axis,
-  Scrollable,
-  type ScrollableProps,
+  ScrollArea,
+  type ScrollAreaProps,
   type SlottableClassName,
   type ThemedClassName,
 } from '@dxos/react-ui';
@@ -617,12 +617,12 @@ Container.displayName = CONTAINER_NAME;
 
 const VIEWPORT_NAME = 'Mosaic.Viewport';
 
-type ViewportProps = ScrollableProps;
+type ViewportProps = ScrollAreaProps;
 
-const Viewport = forwardRef<HTMLDivElement, ViewportProps>(({ axis: axisProp = 'vertical', ...props }, ref) => {
+const Viewport = forwardRef<HTMLDivElement, ViewportProps>(({ orientation: axisProp = 'vertical', ...props }, ref) => {
   const { axis = axisProp } = useContainerContext(VIEWPORT_NAME);
   invariant(axis === 'horizontal' || axis === 'vertical');
-  return <Scrollable {...props} axis={axis} ref={ref} />;
+  return <ScrollArea {...props} orientation={axis} ref={ref} />;
 });
 
 Viewport.displayName = VIEWPORT_NAME;

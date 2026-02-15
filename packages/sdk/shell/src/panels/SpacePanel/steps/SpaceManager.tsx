@@ -135,27 +135,22 @@ export const SpaceManagerImpl = (props: SpaceManagerImplProps) => {
 
   return (
     <>
-      <ScrollArea.Root classNames='grow shrink basis-28 -mli-2'>
-        <ScrollArea.Viewport classNames='is-full pie-2'>
-          {!!visibleInvitations?.length && (
-            <>
-              <h3 className={mx(headingFragment, descriptionText)}>{t('invitation list heading')}</h3>
-              <InvitationListComponent
-                className='mb-2'
-                send={send}
-                invitations={visibleInvitations ?? []}
-                onClickRemove={(invitation) => invitation.cancel()}
-                createInvitationUrl={createInvitationUrl}
-              />
-              <h3 className={mx(headingFragment, descriptionText, 'mbs-2')}>{t('space member list heading')}</h3>
-            </>
-          )}
-          <SpaceMemberListComponent spaceKey={space.key} includeSelf />
-        </ScrollArea.Viewport>
-        <ScrollArea.Scrollbar orientation='vertical'>
-          <ScrollArea.Thumb />
-        </ScrollArea.Scrollbar>
-      </ScrollArea.Root>
+      <ScrollArea orientation='vertical' classNames='grow shrink basis-28 -mli-2'>
+        {!!visibleInvitations?.length && (
+          <>
+            <h3 className={mx(headingFragment, descriptionText)}>{t('invitation list heading')}</h3>
+            <InvitationListComponent
+              className='mb-2'
+              send={send}
+              invitations={visibleInvitations ?? []}
+              onClickRemove={(invitation) => invitation.cancel()}
+              createInvitationUrl={createInvitationUrl}
+            />
+            <h3 className={mx(headingFragment, descriptionText, 'mbs-2')}>{t('space member list heading')}</h3>
+          </>
+        )}
+        <SpaceMemberListComponent spaceKey={space.key} includeSelf />
+      </ScrollArea>
       <Actions>
         <BifurcatedAction
           disabled={!active}

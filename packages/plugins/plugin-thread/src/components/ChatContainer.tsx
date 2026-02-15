@@ -128,23 +128,18 @@ export const ChatContainer = ({
         classNames,
       ]}
     >
-      <ScrollArea.Root classNames='col-span-2'>
-        <ScrollArea.Viewport classNames='overflow-anchored after:overflow-anchor after:block after:bs-px after:-mbs-px [&>div]:min-bs-full [&>div]:!grid [&>div]:grid-rows-[1fr_0]'>
-          <div role='none' className={mx(threadLayout, 'place-self-end')}>
-            {thread.messages
-              .map((message) => message.target)
-              .filter(isNonNullable)
-              .map((message) => (
-                <MessageContainer key={message.id} message={message} members={members} />
-              ))}
-          </div>
-          {/* NOTE(thure): This can’t also be the `overflow-anchor` because `ScrollArea` injects an interceding node that contains this necessary ref’d element. */}
-          <div role='none' className='bs-px -mbs-px' ref={threadScrollRef} />
-        </ScrollArea.Viewport>
-        <ScrollArea.Scrollbar>
-          <ScrollArea.Thumb />
-        </ScrollArea.Scrollbar>
-      </ScrollArea.Root>
+      <ScrollArea orientation='vertical' classNames='col-span-2'>
+        <div role='none' className={mx(threadLayout, 'place-self-end')}>
+          {thread.messages
+            .map((message) => message.target)
+            .filter(isNonNullable)
+            .map((message) => (
+              <MessageContainer key={message.id} message={message} members={members} />
+            ))}
+        </div>
+        {/* NOTE(thure): This can't also be the `overflow-anchor` because `ScrollArea` injects an interceding node that contains this necessary ref'd element. */}
+        <div role='none' className='bs-px -mbs-px' ref={threadScrollRef} />
+      </ScrollArea>
 
       <MessageTextbox extensions={extensions} autoFocus={autoFocus} onSend={handleCreate} {...textboxMetadata} />
       <ThreadComponent.Status activity={activity}>{t('activity message')}</ThreadComponent.Status>
