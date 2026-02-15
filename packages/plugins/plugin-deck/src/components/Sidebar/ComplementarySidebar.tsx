@@ -14,7 +14,7 @@ import React, {
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
-import { IconButton, type Label, Main, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { IconButton, type Label, Main, ScrollArea, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { mx } from '@dxos/ui-theme';
 
@@ -178,7 +178,7 @@ const ComplementarySidebarPanel = ({ companion, activeId, data, hoistStatusbar }
     return null;
   }
 
-  const Wrapper = companion.properties.fixed ? Fragment : ScrollArea;
+  const Wrapper = companion.properties.fixed ? Fragment : ScrollAreaWrapper;
 
   return (
     <>
@@ -216,6 +216,6 @@ const ComplementarySidebarPanel = ({ companion, activeId, data, hoistStatusbar }
   );
 };
 
-const ScrollArea = ({ children }: PropsWithChildren) => {
-  return <div className='flex flex-col grow overflow-x-hidden overflow-y-auto scrollbar-thin'>{children}</div>;
+const ScrollAreaWrapper = ({ children }: PropsWithChildren) => {
+  return <ScrollArea classNames='grow' thin>{children}</ScrollArea>;
 };

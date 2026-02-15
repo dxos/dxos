@@ -3,17 +3,15 @@
 //
 
 import * as ScrollAreaPrimitive from '@radix-ui/react-scroll-area';
-import React, { type RefCallback, forwardRef } from 'react';
+import React, { type Ref, forwardRef } from 'react';
 
 import { type AllowedAxis, type Axis } from '@dxos/ui-types';
 
 import { useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
 
-// TODO(burdon): Create natural alternative for mobile (use theme context).
-
 type ScrollAreaProps = ThemedClassName<ScrollAreaPrimitive.ScrollAreaProps> & {
-  viewportRef?: RefCallback<HTMLElement | null>;
+  viewportRef?: Ref<HTMLDivElement | null>;
   orientation?: AllowedAxis;
   padding?: boolean;
   thin?: boolean;
@@ -34,7 +32,7 @@ const ScrollArea = forwardRef<HTMLDivElement, ScrollAreaProps>(
 
     if (native) {
       return (
-        <div role='none' className={tx('scrollArea.root', 'scroll-area', options, classNames)} ref={viewportRef}>
+        <div role='none' className={tx('scrollArea.root', 'scroll-area', options, classNames)} ref={forwardedRef}>
           <div
             role='none'
             className={tx('scrollArea.viewport', 'scroll-area__viewport', options, [

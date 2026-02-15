@@ -12,7 +12,7 @@ import { type Decorator, type Meta, type StoryObj } from '@storybook/react-vite'
 import React, { forwardRef, useEffect, useMemo, useRef } from 'react';
 import { createTabster, disposeTabster } from 'tabster';
 
-import { Input } from '@dxos/react-ui';
+import { Input, ScrollArea } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
@@ -43,16 +43,16 @@ const Column = forwardRef<HTMLDivElement, { items: string[] }>(({ items }, ref) 
   const tabsterAttrs = useMergedTabsterAttributes_unstable(focusableGroupAttrs, arrowNavigationAttrs);
 
   return (
-    <div
+    <ScrollArea
       ref={ref}
       tabIndex={0}
       {...tabsterAttrs}
-      className={mx('flex flex-col shrink-0 bs-full is-[25rem] overflow-y-auto p-4 gap-4', border)}
+      classNames={mx('shrink-0 bs-full is-[25rem] p-4 gap-4', border)}
     >
       {items.map((item) => (
         <Item key={item} value={item} />
       ))}
-    </div>
+    </ScrollArea>
   );
 });
 

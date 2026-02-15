@@ -12,6 +12,7 @@ import { invariant } from '@dxos/invariant';
 import { faker } from '@dxos/random';
 import { PublicKey } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
+import { ScrollArea } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 import { ViewEditor, translations as formTranslations } from '@dxos/react-ui-form';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
@@ -131,12 +132,12 @@ const DefaultStory = () => {
           />
         </TableComponent.Root>
       </div>
-      <div className='flex flex-col bs-full border-l border-separator overflow-y-auto'>
+      <ScrollArea classNames='bs-full border-l border-separator'>
         <StoryViewEditor view={table.view.target} schema={schema} db={db} handleDeleteColumn={handleDeleteColumn} />
         <SyntaxHighlighter language='json' className='text-xs'>
           {JSON.stringify({ view: table.view.target, schema }, null, 2)}
         </SyntaxHighlighter>
-      </div>
+      </ScrollArea>
     </div>
   );
 };

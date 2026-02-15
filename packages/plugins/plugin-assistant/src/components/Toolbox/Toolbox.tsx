@@ -15,17 +15,17 @@ import { mx } from '@dxos/ui-theme';
 import { type AiChatProcessor } from '../../processor';
 import { ServiceType } from '../../types';
 
-export type ToolboxProps = {
+export type ToolboxProps = ThemedClassName<{
   services?: { service: ServiceType }[];
   functions?: Function.Function[];
   // TODO(burdon): Combine into single array.
   blueprints?: readonly Blueprint.Blueprint[];
   activeBlueprints?: readonly Ref.Ref<Blueprint.Blueprint>[];
-};
+}>;
 
-export const Toolbox = ({ functions, services, blueprints, activeBlueprints }: ToolboxProps) => {
+export const Toolbox = ({ classNames, functions, services, blueprints, activeBlueprints }: ToolboxProps) => {
   return (
-    <ScrollArea thin>
+    <ScrollArea thin classNames={classNames}>
       {blueprints && blueprints.length > 0 && (
         <Section
           title='Blueprints'

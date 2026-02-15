@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 import React, { useEffect, useRef } from 'react';
 
 import { createInputSchema, createOutputSchema } from '@dxos/conductor';
-import { type ThemedClassName } from '@dxos/react-ui';
+import { ScrollArea, type ThemedClassName } from '@dxos/react-ui';
 import { type ShapeComponentProps, type ShapeDef } from '@dxos/react-ui-canvas-editor';
 import { Message } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
@@ -42,18 +42,18 @@ export const ThreadComponent = ({ shape }: ShapeComponentProps<ThreadShape>) => 
 
   return (
     <Box shape={shape}>
-      <div ref={scrollRef} className='flex flex-col is-full overflow-y-auto gap-2 p-2'>
+      <ScrollArea viewportRef={scrollRef} classNames='gap-2 p-2'>
         {[...items].map((item, i) => (
           <ThreadItem key={i} item={item} />
         ))}
-      </div>
+      </ScrollArea>
     </Box>
   );
 };
 
 export const ThreadItem = ({ classNames, item }: ThemedClassName<{ item: any }>) => {
   if (typeof item !== 'object') {
-    return <div className={mx(classNames)}>{item}</div>;
+    return <div role='none' className={mx(classNames)}>{item}</div>;
   }
 
   // TODO(burdon): Hack; introspect type.
