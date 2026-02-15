@@ -106,7 +106,6 @@ export const Both = {
 /**
  * NOTE: This example demonstrates how to use ScrollArea with nested ScrollAreas.
  * However, due to a Radix UI bug, this example will not work as expected.
- * See: https://github.com/radix-ui/primitives/issues/3053
  */
 export const NestedScrollAreas = {
   decorators: [withTheme, withLayout({ layout: 'fullscreen' })],

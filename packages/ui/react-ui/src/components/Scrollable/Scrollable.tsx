@@ -57,8 +57,8 @@ export const Scrollable = forwardRef<HTMLDivElement, ScrollableProps>(
       const options = { ...optionsProp };
       if (orientation) {
         options.overflow = {
-          x: orientation === 'horizontal' ? 'scroll' : 'hidden',
           y: orientation === 'vertical' ? 'scroll' : 'hidden',
+          x: orientation === 'horizontal' ? 'scroll' : 'hidden',
         };
       }
 
