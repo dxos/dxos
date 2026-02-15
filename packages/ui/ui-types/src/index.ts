@@ -3,6 +3,7 @@
 //
 
 export * from './anchor';
+export * from './axis';
 export * from './menu';
 export * from './translations';
 

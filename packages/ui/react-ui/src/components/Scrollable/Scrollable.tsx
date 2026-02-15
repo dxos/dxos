@@ -11,11 +11,7 @@ import {
 import React, { type RefCallback, forwardRef, useEffect, useImperativeHandle, useMemo, useRef } from 'react';
 
 import { mx } from '@dxos/ui-theme';
-import { type ThemedClassName } from '@dxos/ui-types';
-
-// These are not exported from the pragmatic-drag-and-drop-auto-scroll package.
-export type Axis = 'vertical' | 'horizontal';
-export type AllowedAxis = Axis | 'all';
+import { type Axis, type ThemedClassName } from '@dxos/ui-types';
 
 import 'overlayscrollbars/styles/overlayscrollbars.css';
 
@@ -31,7 +27,7 @@ const defaultOptions: ScrollableProps['options'] = {
 };
 
 export type ScrollableProps = ThemedClassName<Omit<OverlayScrollbarsComponentProps, 'ref'>> & {
-  axis?: Axis;
+  orientation?: Axis;
   snap?: boolean;
   padding?: boolean;
   onScroll?: (event: Event) => void;
@@ -46,7 +42,7 @@ export const Scrollable = forwardRef<HTMLDivElement, ScrollableProps>(
   (
     {
       classNames,
-      axis = 'vertical',
+      orientation = 'vertical',
       snap,
       padding,
       options: optionsProp = defaultOptions,
@@ -59,15 +55,15 @@ export const Scrollable = forwardRef<HTMLDivElement, ScrollableProps>(
     const osRef = useRef<OverlayScrollbarsComponentRef>(null);
     const options = useMemo(() => {
       const options = { ...optionsProp };
-      if (axis) {
+      if (orientation) {
         options.overflow = {
-          x: axis === 'horizontal' ? 'scroll' : 'hidden',
-          y: axis === 'vertical' ? 'scroll' : 'hidden',
+          x: orientation === 'horizontal' ? 'scroll' : 'hidden',
+          y: orientation === 'vertical' ? 'scroll' : 'hidden',
         };
       }
 
       return options;
-    }, [axis, optionsProp]);
+    }, [orientation, optionsProp]);
 
     useImperativeHandle(forwardedRef, () => osRef.current?.getElement() as HTMLDivElement, [osRef]);
 
@@ -79,9 +75,9 @@ export const Scrollable = forwardRef<HTMLDivElement, ScrollableProps>(
       }
 
       if (viewport && snap) {
-        viewport.className = mx(viewport.className, 'snap-mandatory', axis === 'vertical' ? 'snap-y' : 'snap-x');
+        viewport.className = mx(viewport.className, 'snap-mandatory', orientation === 'vertical' ? 'snap-y' : 'snap-x');
       }
-    }, [viewportRef, axis, snap]);
+    }, [viewportRef, orientation, snap]);
 
     const events = useMemo<EventListeners | null>(() => {
       if (!onScroll) {
@@ -99,7 +95,7 @@ export const Scrollable = forwardRef<HTMLDivElement, ScrollableProps>(
       <OverlayScrollbarsComponent
         {...props}
         // TODO(burdon): Factor out padding to container.
-        className={mx(padding && (axis === 'vertical' ? 'pli-3' : 'pbe-3'), classNames)}
+        className={mx(padding && (orientation === 'vertical' ? 'pli-3' : 'pbe-3'), classNames)}
         options={options}
         events={events}
         ref={osRef}

@@ -28,7 +28,7 @@ const Column = () => (
 );
 
 const Row = () => (
-  <div className='flex gap-4 is-max'>
+  <div className='flex gap-2 is-max'>
     {Array.from({ length: 50 }).map((_, index) => (
       <div
         key={index}
@@ -83,13 +83,13 @@ export const HorizontalThin = {
 export const Both = {
   render: () => (
     <div className='bs-72 is-96 p-2 border border-separator rounded-md'>
-      <ScrollArea orientation='both' classNames='grid flex bs-full overflow-hidden'>
+      <ScrollArea orientation='all' classNames='grid flex bs-full overflow-hidden'>
         <div className='is-max'>
           {Array.from({ length: 50 }).map((_, rowIndex) => (
-            <div key={rowIndex} className='flex gap-4'>
+            <div key={rowIndex} className='flex gap-2'>
               {Array.from({ length: 50 }).map((_, colIndex) => (
                 <div key={colIndex} className='shrink-0 bs-20 is-20 flex items-center justify-center text-sm'>
-                  {rowIndex},{colIndex}
+                  [{rowIndex}:{colIndex}]
                 </div>
               ))}
             </div>

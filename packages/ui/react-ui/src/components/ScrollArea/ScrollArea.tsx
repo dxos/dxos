@@ -5,18 +5,18 @@
 import * as ScrollAreaPrimitive from '@radix-ui/react-scroll-area';
 import React, { forwardRef } from 'react';
 
+import { type AllowedAxis, type Axis } from '@dxos/ui-types';
+
 import { useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
 
-// TODO(burdon): Reconcile with Axis. Move to ui-types.
-type Orientation = 'vertical' | 'horizontal' | 'both';
-
 type ScrollAreaProps = ThemedClassName<ScrollAreaPrimitive.ScrollAreaProps> & {
-  orientation?: Orientation;
+  orientation?: AllowedAxis;
   thin?: boolean;
 };
 
 type ScrollBarProps = ThemedClassName<ScrollAreaPrimitive.ScrollAreaScrollbarProps> & {
+  orientation?: Axis;
   thin?: boolean;
 };
 
@@ -27,21 +27,21 @@ type ScrollBarProps = ThemedClassName<ScrollAreaPrimitive.ScrollAreaScrollbarPro
 const ScrollArea = forwardRef<HTMLDivElement, ScrollAreaProps>(
   ({ classNames, children, orientation = 'vertical', thin, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
-    const showVertical = orientation === 'vertical' || orientation === 'both';
-    const showHorizontal = orientation === 'horizontal' || orientation === 'both';
+    const showVertical = orientation === 'vertical' || orientation === 'all';
+    const showHorizontal = orientation === 'horizontal' || orientation === 'all';
 
     return (
       <ScrollAreaPrimitive.Root
         {...props}
-        className={tx('scrollArea.root', 'scroll-area', { orientation, thin }, classNames)}
+        className={tx('scrollarea.root', 'scroll-area', { orientation, thin }, classNames)}
         ref={forwardedRef}
       >
-        <ScrollAreaPrimitive.Viewport className={tx('scrollArea.viewport', 'scroll-area__viewport')}>
+        <ScrollAreaPrimitive.Viewport className={tx('scrollarea.viewport', 'scroll-area__viewport')}>
           {children}
         </ScrollAreaPrimitive.Viewport>
         {showVertical && <ScrollBar orientation='vertical' thin={thin} />}
         {showHorizontal && <ScrollBar orientation='horizontal' thin={thin} />}
-        <ScrollAreaPrimitive.Corner className={tx('scrollArea.corner', 'scroll-area__corner')} />
+        <ScrollAreaPrimitive.Corner className={tx('scrollarea.corner', 'scroll-area__corner')} />
       </ScrollAreaPrimitive.Root>
     );
   },
@@ -57,10 +57,10 @@ const ScrollBar = forwardRef<HTMLDivElement, ScrollBarProps>(
       <ScrollAreaPrimitive.Scrollbar
         orientation={orientation}
         {...props}
-        className={tx('scrollArea.scrollbar', 'scroll-area__scrollbar', { orientation, thin }, classNames)}
+        className={tx('scrollarea.scrollbar', 'scroll-area__scrollbar', { orientation, thin }, classNames)}
         ref={forwardedRef}
       >
-        <ScrollAreaPrimitive.Thumb className={tx('scrollArea.thumb', 'scroll-area__thumb', { thin })} />
+        <ScrollAreaPrimitive.Thumb className={tx('scrollarea.thumb', 'scroll-area__thumb', { thin })} />
       </ScrollAreaPrimitive.Scrollbar>
     );
   },

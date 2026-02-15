@@ -65,7 +65,7 @@ export const Default = {
       <Layout.Main toolbar>
         <ScrollToolbar items={items} index={index} setIndex={setIndex} />
         <Mosaic.Root asChild>
-          <Mosaic.Container asChild axis='vertical'>
+          <Mosaic.Container asChild orientation='vertical'>
             <Mosaic.Viewport padding viewportRef={setViewport} ref={parentRef}>
               <div
                 role='none'

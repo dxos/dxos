@@ -15,7 +15,7 @@ import { Scrollable, type ScrollableProps } from './Scrollable';
 const DefaultStory = (props: ScrollableProps) => {
   return (
     <Scrollable {...props} classNames='bs-full is-full'>
-      <div className={mx('bg-cubes', props.axis === 'vertical' ? 'bs-[200rem]' : 'bs-full is-[200rem]')} />
+      <div className={mx('bg-cubes', props.orientation === 'vertical' ? 'bs-[200rem]' : 'bs-full is-[200rem]')} />
     </Scrollable>
   );
 };
@@ -36,26 +36,26 @@ type Story = StoryObj<typeof meta>;
 
 export const Vertical: Story = {
   args: {
-    axis: 'vertical',
+    orientation: 'vertical',
   },
 };
 
 export const Horizontal: Story = {
   args: {
-    axis: 'horizontal',
+    orientation: 'horizontal',
   },
 };
 
 export const VerticalPadding: Story = {
   args: {
-    axis: 'vertical',
+    orientation: 'vertical',
     padding: true,
   },
 };
 
 export const HorizontalPadding: Story = {
   args: {
-    axis: 'horizontal',
+    orientation: 'horizontal',
     padding: true,
   },
 };
@@ -78,7 +78,7 @@ const Column = ({ classNames, children }: ThemedClassName<PropsWithChildren>) =>
  */
 export const Snap = {
   render: () => (
-    <Scrollable classNames='md:p-2' axis='horizontal' snap padding>
+    <Scrollable classNames='md:p-2' orientation='horizontal' snap padding>
       <div className='flex bs-full gap-4'>
         {Array.from({ length: 8 }).map((_, i) => (
           <Column key={i} classNames='snap-center md:snap-align-none'>

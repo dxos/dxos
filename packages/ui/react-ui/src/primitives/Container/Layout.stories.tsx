@@ -5,10 +5,9 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { Input, Toolbar } from '../../components';
+import { Input, Scrollable, Toolbar } from '../../components';
 import { withLayout, withTheme } from '../../testing';
 import { Flex } from '../Flex';
-import { Scrollable } from '../Scrollable';
 
 import { Layout } from './Layout';
 
@@ -22,7 +21,7 @@ const DefaultStory = ({ count }: { count: number }) => {
         </Input.Root>
         <Toolbar.IconButton icon='ph--dots-three-vertical--regular' iconOnly label='Menu' />
       </Toolbar.Root>
-      <Scrollable axis='vertical'>
+      <Scrollable orientation='vertical'>
         <Flex role='list' column classNames='pli-2 plb-1 gap-1'>
           {Array.from({ length: count }).map((_, index) => (
             <div key={index} role='listitem' className='pli-2 plb-1 border border-separator'>

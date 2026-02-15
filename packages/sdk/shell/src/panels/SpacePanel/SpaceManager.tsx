@@ -19,9 +19,10 @@ import {
   type InvitationListProps,
   SpaceMemberList,
   type SpaceMemberListProps,
-} from '../../../components';
-import { translationKey } from '../../../translations';
-import { type SpacePanelStepProps } from '../SpacePanelProps';
+} from '../../components';
+import { translationKey } from '../../translations';
+
+import { type SpacePanelStepProps } from './SpacePanelProps';
 
 export type SpaceManagerImplProps = SpacePanelStepProps & {
   target?: string;
@@ -135,7 +136,7 @@ export const SpaceManagerImpl = (props: SpaceManagerImplProps) => {
 
   return (
     <>
-      <ScrollArea orientation='vertical' classNames='grow shrink basis-28 -mli-2'>
+      <ScrollArea thin orientation='vertical' classNames='grow shrink basis-28 -mli-2'>
         {!!visibleInvitations?.length && (
           <>
             <h3 className={mx(headingFragment, descriptionText)}>{t('invitation list heading')}</h3>

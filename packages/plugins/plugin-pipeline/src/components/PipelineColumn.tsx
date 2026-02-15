@@ -93,9 +93,9 @@ export const PipelineColumn = ({ column }: PipelineColumnProps) => {
           <Card.Title>{column.name ?? t('untitled view title')}</Card.Title>
           <Card.Menu />
         </Card.Toolbar>
-        <Mosaic.Container asChild axis='vertical' withFocus>
-          <Mosaic.Viewport axis='vertical' padding>
-            <Mosaic.Stack axis='vertical' items={sortedItems} getId={(item) => item.id} Tile={Tile} />
+        <Mosaic.Container asChild orientation='vertical' withFocus>
+          <Mosaic.Viewport orientation='vertical' padding>
+            <Mosaic.Stack orientation='vertical' items={sortedItems} getId={(item) => item.id} Tile={Tile} />
           </Mosaic.Viewport>
         </Mosaic.Container>
       </div>

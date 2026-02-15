@@ -322,7 +322,7 @@ export const L0Menu = ({ menuActions, topLevelItems, pinnedItems, userAccountIte
                   role='none'
                   className={mx(
                     l0ItemContent,
-                    'is-[--rail-action] bs-[--rail-action] group-hover/l0item:bg-hoverSurface',
+                    'bs-[--rail-action] is-[--rail-action] group-hover/l0item:bg-hoverSurface',
                   )}
                 >
                   <Icon icon='ph--list--regular' size={5} />

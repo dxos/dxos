@@ -79,11 +79,11 @@ const Root = forwardRef<HTMLDivElement, RootProps>(({ id, columns, debug }, forw
 
   return (
     <Layout.Main ref={forwardedRef}>
-      <Focus.Group asChild axis='horizontal'>
+      <Focus.Group asChild orientation='horizontal'>
         <Mosaic.Container
           asChild
           withFocus
-          axis='horizontal'
+          orientation='horizontal'
           autoScroll={viewport}
           eventHandler={eventHandler}
           debug={debugHandler}
@@ -158,7 +158,7 @@ const Column = forwardRef<HTMLDivElement, ColumnProps>(({ classNames, location, 
             <Mosaic.Container
               asChild
               withFocus
-              axis='vertical'
+              orientation='vertical'
               autoScroll={viewport}
               eventHandler={eventHandler}
               debug={debugHandler}

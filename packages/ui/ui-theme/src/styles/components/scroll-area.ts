@@ -2,12 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type ComponentFunction, type Theme } from '@dxos/ui-types';
+import { type Axis, type ComponentFunction, type Theme } from '@dxos/ui-types';
 
 import { mx } from '../../util';
 
 export type ScrollAreaStyleProps = {
-  orientation?: 'vertical' | 'horizontal';
+  orientation?: Axis;
   thin?: boolean;
 };
 
