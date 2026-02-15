@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme() } from '@dxos/react-ui/testing';
 import { Event as EventType } from '@dxos/types';
 
 import { translations } from '../../translations';
@@ -31,7 +31,7 @@ const DefaultStory = () => {
 const meta = {
   title: 'plugins/plugin-inbox/Event',
   component: DefaultStory,
-  decorators: [withTheme, withLayout({ layout: 'column' })],
+  decorators: [withTheme(), withLayout({ layout: 'column' })],
   parameters: {
     layout: 'fullscreen',
     translations,

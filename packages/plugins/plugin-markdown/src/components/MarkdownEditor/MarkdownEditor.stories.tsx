@@ -11,7 +11,7 @@ import { Filter, Obj } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { corePlugins } from '@dxos/plugin-testing';
 import { useQuery, useSpace } from '@dxos/react-client/echo';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme() } from '@dxos/react-ui/testing';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { translations as editorTranslations } from '@dxos/react-ui-editor';
 import { Layout } from '@dxos/react-ui';
@@ -51,7 +51,7 @@ const meta: Meta<typeof DefaultStory> = {
   component: DefaultStory,
   render: DefaultStory as any,
   decorators: [
-    withTheme,
+    withTheme(),
     withLayout({ layout: 'column' }),
     withPluginManager({
       plugins: [

@@ -12,7 +12,7 @@ import { ClientPlugin, StorybookPlugin, corePlugins } from '@dxos/plugin-testing
 import { faker } from '@dxos/random';
 import { useSpaces } from '@dxos/react-client/echo';
 import { IconButton, Toolbar } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme() } from '@dxos/react-ui/testing';
 import { Focus, Mosaic } from '@dxos/react-ui-mosaic';
 import { Board, TestColumn, TestItem } from '@dxos/react-ui-mosaic/testing';
 import { type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
@@ -79,7 +79,7 @@ const meta = {
   title: 'stories/stories-ui/MosaicSurface',
   render: DefaultStory,
   decorators: [
-    withTheme,
+    withTheme(),
     withLayout({ layout: 'fullscreen' }),
     withPluginManager<{ title?: string; content?: string }>(() => ({
       plugins: [

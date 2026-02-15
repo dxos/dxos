@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useRef, useState } from 'react';
 
-import { withTheme } from '@dxos/react-ui/testing';
+import { withTheme() } from '@dxos/react-ui/testing';
 
 import { type ProjectionState } from '../../hooks';
 
@@ -26,7 +26,7 @@ const meta = {
   title: 'ui/react-ui-canvas/Grid',
   component: GridComponent,
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'fullscreen',
   },

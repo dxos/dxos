@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { withTheme } from '../../testing';
+import { withTheme() } from '../../testing';
 import { Button } from '../Button';
 import { Toolbar } from '../Toolbar';
 
@@ -50,7 +50,7 @@ const meta = {
   title: 'ui/react-ui-core/components/AlertDialog',
   component: AlertDialog.Root as any,
   render: DefaultStory as any,
-  decorators: [withTheme],
+  decorators: [withTheme()],
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

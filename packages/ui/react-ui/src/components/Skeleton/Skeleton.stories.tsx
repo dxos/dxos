@@ -4,14 +4,14 @@
 
 import React from 'react';
 
-import { withTheme } from '../../testing';
+import { withTheme() } from '../../testing';
 
 import { Skeleton } from './Skeleton';
 
 export default {
   title: 'ui/react-ui-core/components/Skeleton',
   component: Skeleton,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'centered',
   },

@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { withTheme } from '@dxos/react-ui/testing';
+import { withTheme() } from '@dxos/react-ui/testing';
 
 import { ConfirmReset } from '../../steps';
 import { StorybookDialog } from '../../story-components';
@@ -25,7 +25,7 @@ const meta = {
   title: 'sdk/shell/JoinPanel',
   component: JoinPanelImpl,
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'centered',
     translations,

@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type PropsWithChildren } from 'react';
 
 import { Icon } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withTheme() } from '@dxos/react-ui/testing';
 
 import { CompoundButton, type CompoundButtonProps } from './CompoundButton';
 
@@ -23,7 +23,7 @@ const meta = {
   title: 'sdk/shell/CompoundButton',
   component: CompoundButton,
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     chromatic: {
       disableSnapshot: false,

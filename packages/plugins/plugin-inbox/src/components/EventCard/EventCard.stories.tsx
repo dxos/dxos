@@ -8,7 +8,7 @@ import React, { useMemo } from 'react';
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { faker } from '@dxos/random';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withTheme() } from '@dxos/react-ui/testing';
 import { Card } from '@dxos/react-ui-mosaic';
 import { IntrinsicCardContainer } from '@dxos/react-ui-mosaic/testing';
 import { Event } from '@dxos/types';
@@ -58,7 +58,7 @@ const EventCardStory = ({ role }: Pick<SurfaceComponentProps<Event.Event>, 'role
 const meta = {
   title: 'plugins/plugin-inbox/EventCard',
   component: EventCardStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'centered',
   },

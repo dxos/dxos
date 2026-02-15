@@ -13,7 +13,7 @@ import React, { forwardRef, useEffect, useMemo, useRef } from 'react';
 import { createTabster, disposeTabster } from 'tabster';
 
 import { Input } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme() } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
 // TODO(burdon): Factor out styles (incl. tabster debugging).
@@ -115,7 +115,7 @@ const withTabster: Decorator = (Story) => {
 const meta: Meta<typeof DefaultStory> = {
   title: 'ui/react-ui/tabster',
   component: DefaultStory,
-  decorators: [withTheme, withLayout({ layout: 'fullscreen' }), withTabster],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' }), withTabster],
   parameters: {
     layout: 'fullscreen',
   },

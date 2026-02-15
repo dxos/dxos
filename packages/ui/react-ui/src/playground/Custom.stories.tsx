@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { Button, type ButtonProps, IconButton, Tooltip } from '../components';
-import { withTheme } from '../testing';
+import { withTheme() } from '../testing';
 
 const DefaultStory = ({ children, ...args }: Omit<ButtonProps, 'ref'>) => {
   return (
@@ -111,7 +111,7 @@ const meta = {
   title: 'ui/react-ui-core/playground/Custom',
   component: Button,
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'centered',
   },

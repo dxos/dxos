@@ -8,7 +8,7 @@ import React from 'react';
 import { IdentityDid, PublicKey } from '@dxos/keys';
 import { HaloSpaceMember, SpaceMember } from '@dxos/react-client/echo';
 import { Invitation } from '@dxos/react-client/invitations';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withTheme() } from '@dxos/react-ui/testing';
 
 import { InvitationList, InvitationListItemImpl, SpaceMemberListImpl } from '../../components';
 import { InvitationManager, type InvitationManagerProps } from '../../steps';
@@ -30,7 +30,7 @@ const noopProps: SpacePanelImplProps = {
 const meta = {
   title: 'sdk/shell/SpacePanel',
   component: SpacePanelImpl,
-  decorators: [withTheme],
+  decorators: [withTheme()],
 } satisfies Meta<typeof SpacePanelImpl>;
 
 export default meta;

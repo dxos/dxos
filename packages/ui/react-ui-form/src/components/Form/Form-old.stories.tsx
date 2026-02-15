@@ -9,7 +9,7 @@ import React, { useCallback, useState } from 'react';
 import { Format } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
 import { Tooltip } from '@dxos/react-ui';
-import { withLayoutVariants, withTheme } from '@dxos/react-ui/testing';
+import { withLayoutVariants, withTheme() } from '@dxos/react-ui/testing';
 import { TestSchema } from '@dxos/schema/testing';
 
 import { translations } from '../../translations';
@@ -98,7 +98,7 @@ const meta = {
   title: 'ui/react-ui-form/Form-Old',
   component: Form.Root as any,
   render: DefaultStory,
-  decorators: [withTheme, withLayoutVariants()],
+  decorators: [withTheme(), withLayoutVariants()],
   parameters: {
     layout: 'fullscreen',
     translations,

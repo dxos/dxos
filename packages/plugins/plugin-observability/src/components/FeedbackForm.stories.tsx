@@ -4,7 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme() } from '@dxos/react-ui/testing';
 
 import { translations } from '../translations';
 
@@ -13,7 +13,7 @@ import { FeedbackForm } from './FeedbackForm';
 const meta = {
   title: 'plugins/plugin-observability/FeedbackForm',
   component: FeedbackForm,
-  decorators: [withTheme, withLayout({ layout: 'column' })],
+  decorators: [withTheme(), withLayout({ layout: 'column' })],
   parameters: {
     layout: 'fullscreen',
     translations,

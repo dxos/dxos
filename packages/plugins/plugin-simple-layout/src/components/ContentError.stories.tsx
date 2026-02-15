@@ -4,7 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
-import { withTheme } from '@dxos/react-ui/testing';
+import { withTheme() } from '@dxos/react-ui/testing';
 
 import { translations } from '../translations';
 
@@ -13,7 +13,7 @@ import { ContentError } from './ContentError';
 const meta = {
   title: 'plugins/plugin-simple-layout/ContentError',
   component: ContentError,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'centered',
     translations,

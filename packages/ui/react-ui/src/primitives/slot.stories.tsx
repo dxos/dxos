@@ -8,7 +8,7 @@ import React, { type PropsWithChildren, forwardRef } from 'react';
 
 import { mx } from '@dxos/ui-theme';
 
-import { withTheme } from '../testing';
+import { withTheme() } from '../testing';
 
 // Outer primitive (like Tooltip.Trigger or Focus.Group).
 const Outer = forwardRef<HTMLDivElement, PropsWithChildren<{ className?: string; asChild?: boolean; role?: string }>>(
@@ -78,7 +78,7 @@ const TestInner = (props: { className?: string; role?: string }) => (
 
 const meta = {
   title: 'ui/react-ui-core/primitives/slot',
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'centered',
   },

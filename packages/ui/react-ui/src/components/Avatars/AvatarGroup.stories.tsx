@@ -8,7 +8,7 @@ import React from 'react';
 import { useId } from '@dxos/react-hooks';
 import { toEmoji } from '@dxos/util';
 
-import { withTheme } from '../../testing';
+import { withTheme() } from '../../testing';
 
 import { Avatar } from './Avatar';
 
@@ -40,7 +40,7 @@ const DefaultStory = () => {
 const meta = {
   title: 'ui/react-ui-core/components/AvatarGroup',
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

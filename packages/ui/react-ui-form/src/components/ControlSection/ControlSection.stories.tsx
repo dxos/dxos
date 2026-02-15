@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme() } from '@dxos/react-ui/testing';
 
 import { translations } from '../../translations';
 
@@ -19,7 +19,7 @@ const meta = {
       <ControlSection {...args} />
     </ControlPage>
   ),
-  decorators: [withTheme, withLayout({ layout: 'column' })],
+  decorators: [withTheme(), withLayout({ layout: 'column' })],
   parameters: {
     layout: 'fullscreen',
     translations,

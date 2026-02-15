@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { Input } from '../../components';
-import { withTheme } from '../../testing';
+import { withTheme() } from '../../testing';
 
 import { Container, type ContainerRootProps } from './Container';
 
@@ -29,7 +29,7 @@ const meta: Meta<typeof Container.Root> = {
   title: 'ui/react-ui-core/primitives/Container',
   component: Container.Root,
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'centered',
   },

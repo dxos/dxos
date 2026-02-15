@@ -14,7 +14,7 @@ import { PreviewPlugin } from '@dxos/plugin-preview';
 import { corePlugins } from '@dxos/plugin-testing';
 import { faker } from '@dxos/random';
 import { useSpaces } from '@dxos/react-client/echo';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme() } from '@dxos/react-ui/testing';
 import { withMosaic } from '@dxos/react-ui-mosaic/testing';
 
 import { SearchContextProvider } from '../hooks';
@@ -43,7 +43,7 @@ const meta = {
   component: SearchMain,
   render: DefaultStory,
   decorators: [
-    withTheme,
+    withTheme(),
     withLayout({ layout: 'column' }),
     withMosaic(),
     withSearchContext(),

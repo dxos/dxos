@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo, useState } from 'react';
 
-import { withTheme } from '@dxos/react-ui/testing';
+import { withTheme() } from '@dxos/react-ui/testing';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { deleteItem, hashtag, join, listItemToString, outliner, treeFacet } from '@dxos/ui-editor';
 
@@ -68,7 +68,7 @@ const DefaultStory = ({ text }: StoryProps) => {
 const meta = {
   title: 'ui/react-ui-editor/Outliner',
   render: DefaultStory,
-  decorators: [withTheme, withAttention()],
+  decorators: [withTheme(), withAttention()],
   parameters: {
     layout: 'fullscreen',
   },

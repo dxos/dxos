@@ -13,7 +13,7 @@ import { SearchPlugin } from '@dxos/plugin-search';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { SpaceOperation } from '@dxos/plugin-space/types';
 import { corePlugins } from '@dxos/plugin-testing';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme() } from '@dxos/react-ui/testing';
 import { translations as searchTranslation } from '@dxos/react-ui-searchlist';
 import { Collection } from '@dxos/schema';
 
@@ -98,7 +98,7 @@ type Story = StoryObj<typeof meta>;
  */
 export const Default: Story = {
   decorators: [
-    withTheme,
+    withTheme(),
     withLayout({ layout: 'column', classNames: 'relative' }),
     createPluginManager({ isPopover: false }),
   ],
@@ -106,7 +106,7 @@ export const Default: Story = {
 
 export const Popover: Story = {
   decorators: [
-    withTheme,
+    withTheme(),
     withLayout({ layout: 'column', classNames: 'relative' }),
     createPluginManager({ isPopover: true }),
   ],

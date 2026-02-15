@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo, useState } from 'react';
 
 import { PublicKey } from '@dxos/keys';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withTheme() } from '@dxos/react-ui/testing';
 
 import { type PropertiesSchema, PropertiesTable, PropertySchemaFormat } from './PropertiesTable';
 
@@ -46,7 +46,7 @@ const DefaultStory = () => {
 const meta = {
   title: 'devtools/devtools/PropertiesTable',
   component: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

@@ -7,7 +7,7 @@ import React from 'react';
 
 import { faker } from '@dxos/random';
 
-import { withTheme } from '../../testing';
+import { withTheme() } from '../../testing';
 import { Icon } from '../Icon';
 
 import { Treegrid } from './Treegrid';
@@ -147,7 +147,7 @@ const meta = {
   title: 'ui/react-ui-core/components/Treegrid',
   component: Treegrid.Root as any,
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

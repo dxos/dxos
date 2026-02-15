@@ -10,7 +10,7 @@ import React, { useState } from 'react';
 import { useIdentity } from '@dxos/react-client/halo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { AlertDialog } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withTheme() } from '@dxos/react-ui/testing';
 
 import { translations } from '../../translations';
 
@@ -40,7 +40,7 @@ const meta = {
   title: 'apps/composer-app/Welcome',
   component: Welcome as any,
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     translations,
     chromatic: {

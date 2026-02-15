@@ -9,7 +9,7 @@ import { Blueprint, Template } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';
 import { useClient } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme() } from '@dxos/react-ui/testing';
 import { trim } from '@dxos/util';
 
 import { translations } from '../../translations';
@@ -58,7 +58,7 @@ const meta = {
   component: TemplateForm,
   render: DefaultStory,
   decorators: [
-    withTheme,
+    withTheme(),
     withLayout({ layout: 'column' }),
     withClientProvider({
       types: [Blueprint.Blueprint],

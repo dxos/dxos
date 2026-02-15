@@ -13,7 +13,7 @@ import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Button, Toolbar, useAsyncEffect, useInterval } from '@dxos/react-ui';
 import { type ScrollController } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme() } from '@dxos/react-ui/testing';
 import { useExecutionGraph } from '@dxos/react-ui-components';
 import { Message } from '@dxos/types';
 
@@ -139,7 +139,7 @@ const generateCommit = (
 const meta = {
   title: 'ui/react-ui-components/Timeline',
   component: Timeline,
-  decorators: [withTheme, withLayout({ layout: 'column' })],
+  decorators: [withTheme(), withLayout({ layout: 'column' })],
 } satisfies Meta<typeof Timeline>;
 
 export default meta;

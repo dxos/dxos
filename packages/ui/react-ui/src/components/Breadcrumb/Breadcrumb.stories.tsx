@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { withTheme } from '../../testing';
+import { withTheme() } from '../../testing';
 import { Button } from '../Button';
 
 import { Breadcrumb, type BreadcrumbRootProps } from './Breadcrumb';
@@ -42,7 +42,7 @@ const meta = {
   title: 'ui/react-ui-core/components/Breadcrumb',
   component: Breadcrumb.Root as any,
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

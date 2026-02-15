@@ -16,7 +16,7 @@ import { Query, useQuery, useSpace } from '@dxos/react-client/echo';
 import { type Identity, useIdentity } from '@dxos/react-client/halo';
 import { useClientStory, withMultiClientProvider } from '@dxos/react-client/testing';
 import { Button, useThemeContext } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withTheme() } from '@dxos/react-ui/testing';
 import { render } from '@dxos/storybook-utils';
 import { createBasicExtensions, createDataExtensions, createThemeExtensions } from '@dxos/ui-editor';
 
@@ -149,14 +149,14 @@ type Story = StoryObj<typeof meta>;
 
 // TODO(burdon): ERROR: factories.ts:126 Error: Non-base58 character
 export const Default: Story = {
-  decorators: [withTheme],
+  decorators: [withTheme()],
   render: render(DefaultStory),
 };
 
 // TODO(burdon): Failing (doesn't sync)
 export const WithEcho: Story = {
   decorators: [
-    withTheme,
+    withTheme(),
     withMultiClientProvider({
       numClients: 2,
       createIdentity: true,

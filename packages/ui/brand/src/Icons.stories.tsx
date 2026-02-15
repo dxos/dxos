@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { withTheme } from '@dxos/react-ui/testing';
+import { withTheme() } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
 import { Composer, DXNS, DXOS, ECHO, HALO, KUBE, MESH } from './icons';
@@ -15,7 +15,7 @@ const Icon = () => null;
 const meta = {
   title: 'ui/brand/Icons',
   component: Icon,
-  decorators: [withTheme],
+  decorators: [withTheme()],
 } satisfies Meta<typeof Icon>;
 
 export default meta;

@@ -13,7 +13,7 @@ import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { Filter, useDatabase, useQuery } from '@dxos/react-client/echo';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withTheme() } from '@dxos/react-ui/testing';
 import { useAttentionAttributes, useSelected } from '@dxos/react-ui-attention';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { withMosaic } from '@dxos/react-ui-mosaic/testing';
@@ -61,7 +61,7 @@ const meta = {
   title: 'plugins/plugin-inbox/Mailbox',
   component: MailboxComponent as any,
   render: DefaultStory,
-  decorators: [withTheme, withAttention(), withMosaic()],
+  decorators: [withTheme(), withAttention(), withMosaic()],
   parameters: {
     layout: 'fullscreen',
   },

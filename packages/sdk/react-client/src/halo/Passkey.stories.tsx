@@ -9,7 +9,7 @@ import { Config, PublicKey } from '@dxos/client';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Button } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withTheme() } from '@dxos/react-ui/testing';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 
 import { useClient } from '../client';
@@ -148,7 +148,7 @@ const config = new Config({
 const meta = {
   title: 'sdk/react-client/Passkeys',
   render: Test,
-  decorators: [withClientProvider({ config }), withTheme],
+  decorators: [withClientProvider({ config }), withTheme()],
 } satisfies Meta;
 
 export default meta;

@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { faker } from '@dxos/random';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme() } from '@dxos/react-ui/testing';
 
 import { Accordion } from './Accordion';
 
@@ -42,7 +42,7 @@ const DefaultStory = () => {
 const meta = {
   title: 'ui/react-ui-list/Accordion',
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ layout: 'column' })],
+  decorators: [withTheme(), withLayout({ layout: 'column' })],
 } satisfies Meta<typeof Accordion>;
 
 export default meta;

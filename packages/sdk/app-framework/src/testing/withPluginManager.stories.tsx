@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { withTheme } from '@dxos/react-ui/testing';
+import { withTheme() } from '@dxos/react-ui/testing';
 
 import { Capabilities } from '../common';
 import { Capability } from '../core';
@@ -27,7 +27,7 @@ const meta = {
   title: 'sdk/app-framework/withPluginManager',
   render: DefaultStory,
   decorators: [
-    withTheme,
+    withTheme(),
     withPluginManager({
       capabilities: [
         Capability.contributes(

@@ -7,7 +7,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import { faker } from '@dxos/random';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme() } from '@dxos/react-ui/testing';
 import { type Organization, type Person, type Pipeline, type Task } from '@dxos/types';
 
 import { FormCard, OrganizationCard, PersonCard, ProjectCard, TaskCard } from '../cards';
@@ -21,7 +21,7 @@ const meta = {
   title: 'plugins/plugin-preview/Card',
   render: DefaultStory,
   decorators: [
-    withTheme,
+    withTheme(),
     withLayout({ layout: 'column', scroll: true }),
     // TODO(wittjosiah): Try to write story which does not depend on plugin manager.
     withPluginManager({ plugins: corePlugins() }),

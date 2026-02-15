@@ -10,7 +10,7 @@ import React, { useCallback, useContext, useEffect, useMemo, useRef } from 'reac
 
 import { faker } from '@dxos/random';
 import { Icon } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withTheme() } from '@dxos/react-ui/testing';
 import { withRegistry } from '@dxos/storybook-utils';
 
 import { Path } from '../../util';
@@ -116,7 +116,7 @@ const DefaultStory = ({ draggable }: { draggable?: boolean }) => {
 const meta = {
   title: 'ui/react-ui-list/Tree',
 
-  decorators: [withTheme, withRegistry],
+  decorators: [withTheme(), withRegistry],
   component: Tree,
   render: DefaultStory,
 } satisfies Meta<typeof Tree<TestItem>>;

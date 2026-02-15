@@ -25,9 +25,30 @@ type ScrollAreaProps = ThemedClassName<ScrollAreaPrimitive.ScrollAreaProps> & {
  */
 const ScrollArea = forwardRef<HTMLDivElement, ScrollAreaProps>(
   ({ classNames, children, viewportRef, orientation = 'vertical', padding, thin, snap, ...props }, forwardedRef) => {
-    const { tx } = useThemeContext();
-    const showVertical = orientation === 'vertical' || orientation === 'all';
-    const showHorizontal = orientation === 'horizontal' || orientation === 'all';
+    const { tx, platform } = useThemeContext();
+    const vertical = orientation === 'vertical' || orientation === 'all';
+    const horizontal = orientation === 'horizontal' || orientation === 'all';
+
+    if (platform === 'mobile') {
+      return (
+        <div
+          role='none'
+          className={tx('scrollArea.root', 'scroll-area', { orientation, padding, thin }, classNames)}
+          ref={viewportRef}
+        >
+          <div
+            role='none'
+            className={tx('scrollArea.viewport', 'scroll-area__viewport', { orientation, snap }, [
+              vertical && 'flex flex-col overflow-y-auto',
+              horizontal && 'flex overflow-x-auto',
+            ])}
+            ref={viewportRef}
+          >
+            {children}
+          </div>
+        </div>
+      );
+    }
 
     return (
       <ScrollAreaPrimitive.Root
@@ -41,8 +62,8 @@ const ScrollArea = forwardRef<HTMLDivElement, ScrollAreaProps>(
         >
           {children}
         </ScrollAreaPrimitive.Viewport>
-        {showVertical && <ScrollBar orientation='vertical' thin={thin} />}
-        {showHorizontal && <ScrollBar orientation='horizontal' thin={thin} />}
+        {vertical && <ScrollBar orientation='vertical' thin={thin} />}
+        {horizontal && <ScrollBar orientation='horizontal' thin={thin} />}
         <ScrollAreaPrimitive.Corner className={tx('scrollArea.corner', 'scroll-area__corner')} />
       </ScrollAreaPrimitive.Root>
     );
@@ -73,6 +94,6 @@ const ScrollBar = forwardRef<HTMLDivElement, ScrollBarProps>(
   },
 );
 
-export { ScrollArea, ScrollBar };
+export { ScrollArea };
 
-export type { ScrollAreaProps, ScrollBarProps };
+export type { ScrollAreaProps };

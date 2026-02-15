@@ -7,7 +7,7 @@ import React from 'react';
 
 import { faker } from '@dxos/random';
 
-import { withTheme } from '../../testing';
+import { withTheme() } from '../../testing';
 import { Button } from '../Button';
 
 import { Dialog, type DialogContentProps } from './Dialog';
@@ -55,7 +55,7 @@ const meta = {
   title: 'ui/react-ui-core/components/Dialog',
   component: Dialog as any,
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     chromatic: {
       disableSnapshot: false,

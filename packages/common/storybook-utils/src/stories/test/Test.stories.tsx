@@ -7,7 +7,7 @@ import React from 'react';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
 import { log } from '@dxos/log';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withTheme() } from '@dxos/react-ui/testing';
 
 import { TEST_ID, Test } from './Test';
 
@@ -18,7 +18,7 @@ const meta: Meta<typeof Test> = {
   title: 'common/storybook-utils/Test',
   component: Test,
   render: (args) => <Test {...{ 'data-testid': TEST_ID }} {...args} />,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   tags: ['test'],
 };
 

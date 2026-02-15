@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type ChangeEvent, useCallback } from 'react';
 
 import { Input } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme() } from '@dxos/react-ui/testing';
 
 import { type FormFieldComponentProps, FormFieldWrapper } from './FormFieldComponent';
 
@@ -44,7 +44,7 @@ const Component = ({
 const meta: Meta<typeof Component> = {
   title: 'ui/react-ui-form/FormFieldComponent',
   component: Component,
-  decorators: [withTheme, withLayout({ layout: 'column' })],
+  decorators: [withTheme(), withLayout({ layout: 'column' })],
   parameters: {
     layout: 'fullscreen',
   },

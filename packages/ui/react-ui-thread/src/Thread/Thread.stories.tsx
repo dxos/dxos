@@ -7,7 +7,7 @@ import React, { useMemo, useRef, useState } from 'react';
 
 import { PublicKey } from '@dxos/keys';
 import { faker } from '@dxos/random';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withTheme() } from '@dxos/react-ui/testing';
 import { createBasicExtensions, createThemeExtensions } from '@dxos/ui-editor';
 import { hoverableControls, hoverableFocusedWithinControls } from '@dxos/ui-theme';
 
@@ -85,7 +85,7 @@ const meta = {
   title: 'ui/react-ui-thread/Thread',
   component: Thread.Root,
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'fullscreen',
     translations,

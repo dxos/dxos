@@ -9,7 +9,7 @@ import { createSystemPrompt } from '@dxos/assistant';
 import { Blueprint, Template } from '@dxos/blueprints';
 import { useClient } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme() } from '@dxos/react-ui/testing';
 import { trim } from '@dxos/util';
 
 import { translations } from '../../translations';
@@ -69,7 +69,7 @@ const meta = {
   component: TemplateEditor as any,
   render: DefaultStory,
   decorators: [
-    withTheme,
+    withTheme(),
     withLayout({ layout: 'column' }),
     withClientProvider({
       types: [Blueprint.Blueprint],

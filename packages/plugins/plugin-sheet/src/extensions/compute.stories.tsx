@@ -11,7 +11,7 @@ import { PublicKey } from '@dxos/keys';
 import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { useThemeContext } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withTheme() } from '@dxos/react-ui/testing';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import {
   createBasicExtensions,
@@ -107,7 +107,7 @@ const GraphStory = (props: EditorProps) => {
 const meta = {
   title: 'plugins/plugin-sheet/extensions',
   decorators: [
-    withTheme,
+    withTheme(),
     withClientProvider({
       types: [Sheet.Sheet],
       createIdentity: true,

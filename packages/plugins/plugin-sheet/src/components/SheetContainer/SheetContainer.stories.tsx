@@ -13,7 +13,7 @@ import { OperationResolver } from '@dxos/operation';
 import { corePlugins } from '@dxos/plugin-testing';
 import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme() } from '@dxos/react-ui/testing';
 import { AttendableContainer } from '@dxos/react-ui-attention';
 
 import { createTestCells, useTestSheet, withComputeGraphDecorator } from '../../testing';
@@ -28,7 +28,7 @@ const meta = {
   title: 'plugins/plugin-sheet/SheetContainer',
   component: SheetContainer,
   decorators: [
-    withTheme,
+    withTheme(),
     withLayout({ layout: 'fullscreen' }),
     withClientProvider({ types: [Sheet.Sheet], createSpace: true }),
     withComputeGraphDecorator(),

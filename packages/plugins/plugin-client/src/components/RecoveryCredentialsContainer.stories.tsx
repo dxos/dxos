@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 
 import { OperationPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withTheme() } from '@dxos/react-ui/testing';
 
 import { ClientPlugin } from '../ClientPlugin';
 import { translations } from '../translations';
@@ -18,7 +18,7 @@ const meta = {
   title: 'plugins/plugin-client/RecoveryCredentialsContainer',
   component: RecoveryCredentialsContainer,
   decorators: [
-    withTheme,
+    withTheme(),
     withPluginManager({
       plugins: [
         ClientPlugin({

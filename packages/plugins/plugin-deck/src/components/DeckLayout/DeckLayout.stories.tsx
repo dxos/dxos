@@ -9,7 +9,7 @@ import { Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { corePlugins } from '@dxos/plugin-testing';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withTheme() } from '@dxos/react-ui/testing';
 
 import { DeckState, LayoutOperationResolver } from '../../capabilities';
 import { meta as pluginMeta } from '../../meta';
@@ -34,7 +34,7 @@ const meta = {
   component: DeckLayout,
   render: (args) => <DeckLayout {...args} />,
   decorators: [
-    withTheme,
+    withTheme(),
     withPluginManager({
       plugins: [...corePlugins(), TestPlugin()],
     }),

@@ -10,7 +10,7 @@ import { OperationPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { useSpaces } from '@dxos/react-client/echo';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withTheme() } from '@dxos/react-ui/testing';
 import { render } from '@dxos/storybook-utils';
 
 import { SpaceGenerator } from './SpaceGenerator';
@@ -29,7 +29,7 @@ const meta = {
   component: SpaceGenerator as any,
   render: render(DefaultStory),
   decorators: [
-    withTheme,
+    withTheme(),
     withPluginManager({
       plugins: [
         ClientPlugin({

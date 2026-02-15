@@ -8,7 +8,7 @@ import React from 'react';
 import { mx, surfaceShadow } from '@dxos/ui-theme';
 import { type MessageValence } from '@dxos/ui-types';
 
-import { withTheme } from '../../testing';
+import { withTheme() } from '../../testing';
 
 import {
   type CheckboxProps,
@@ -91,7 +91,7 @@ const meta = {
   title: 'ui/react-ui-core/components/Input',
   component: Input.Root as any,
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

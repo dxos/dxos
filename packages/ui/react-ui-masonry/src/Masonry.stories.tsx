@@ -9,7 +9,7 @@ import { Filter } from '@dxos/client/echo';
 import { faker } from '@dxos/random';
 import { useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withTheme() } from '@dxos/react-ui/testing';
 import { Card } from '@dxos/react-ui-mosaic';
 import { createObjectFactory } from '@dxos/schema/testing';
 import { Organization } from '@dxos/types';
@@ -42,7 +42,7 @@ const DefaultStory = () => {
 const meta = {
   title: 'ui/react-ui-masonry/Masonry',
   decorators: [
-    withTheme,
+    withTheme(),
     withClientProvider({
       types: [Organization.Organization],
       createIdentity: true,

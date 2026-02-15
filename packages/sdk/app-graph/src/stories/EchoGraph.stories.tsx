@@ -16,7 +16,7 @@ import { faker } from '@dxos/random';
 import { type Client, useClient } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Icon, IconButton, Input, Select } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withTheme() } from '@dxos/react-ui/testing';
 import { Path, Tree } from '@dxos/react-ui-list';
 import { getSize, mx } from '@dxos/ui-theme';
 import { byPosition, isNonNullable, safeParseInt } from '@dxos/util';
@@ -252,7 +252,7 @@ const Controls = ({ children }: PropsWithChildren) => {
 const meta = {
   title: 'sdk/app-graph/EchoGraph',
   decorators: [
-    withTheme,
+    withTheme(),
     withClientProvider({
       createIdentity: true,
       onCreateIdentity: async ({ client }) => {

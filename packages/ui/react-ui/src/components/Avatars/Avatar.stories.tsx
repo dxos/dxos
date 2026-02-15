@@ -9,7 +9,7 @@ import { type HuePalette } from '@dxos/ui-theme';
 import { type Size } from '@dxos/ui-types';
 import { hexToFallback } from '@dxos/util';
 
-import { withTheme } from '../../testing';
+import { withTheme() } from '../../testing';
 
 import { Avatar, type AvatarAnimation, type AvatarStatus, type AvatarVariant } from './Avatar';
 
@@ -59,7 +59,7 @@ const DefaultStory = (props: StoryProps) => {
 const meta = {
   title: 'ui/react-ui-core/components/Avatar',
   component: Avatar.Root,
-  decorators: [withTheme],
+  decorators: [withTheme()],
 } satisfies Meta<typeof Avatar.Root>;
 
 export default meta;

@@ -14,7 +14,7 @@ import '@dxos/lit-ui/dx-tag-picker.pcss';
 import { faker } from '@dxos/random';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme() } from '@dxos/react-ui/testing';
 import { translations as formTranslations } from '@dxos/react-ui-form';
 import { View } from '@dxos/schema';
 import { type ValueGenerator, createAsyncGenerator } from '@dxos/schema/testing';
@@ -125,7 +125,7 @@ const meta = {
   title: 'ui/react-ui-table/Relations',
   render: DefaultStory,
   decorators: [
-    withTheme,
+    withTheme(),
     withRegistry,
     // TODO(thure): Shouldn't `layout: 'fullscreen'` below make this unnecessary?
     withLayout({ classNames: 'fixed inset-0' }),

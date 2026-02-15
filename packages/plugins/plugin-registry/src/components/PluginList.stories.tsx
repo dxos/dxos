@@ -8,7 +8,7 @@ import React, { useState } from 'react';
 import { type Plugin, Plugin as PluginNS } from '@dxos/app-framework';
 import { faker } from '@dxos/random';
 import { Layout } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme() } from '@dxos/react-ui/testing';
 import { getHashHue } from '@dxos/ui-theme';
 
 import { translations } from '../translations';
@@ -71,11 +71,11 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  decorators: [withTheme, withLayout({ layout: 'column' })],
+  decorators: [withTheme(), withLayout({ layout: 'column' })],
 };
 
 export const FullScreen: Story = {
-  decorators: [withTheme, withLayout({ scroll: true })],
+  decorators: [withTheme(), withLayout({ scroll: true })],
   parameters: {
     layout: 'fullscreen',
   },

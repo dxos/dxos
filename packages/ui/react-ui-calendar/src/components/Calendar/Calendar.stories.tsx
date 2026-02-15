@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { withTheme } from '@dxos/react-ui/testing';
+import { withTheme() } from '@dxos/react-ui/testing';
 
 import { translations } from '../../translations';
 
@@ -14,7 +14,7 @@ import { Calendar } from './Calendar';
 const meta = {
   title: 'ui/react-ui-calendar/Calendar',
   component: Calendar.Grid,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'centered',
     translations,

@@ -6,7 +6,7 @@ import { Registry, RegistryContext } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useState } from 'react';
 
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme() } from '@dxos/react-ui/testing';
 
 import { type KanbanModel } from '../model';
 import { type TaskItem, createKanbanModel, createTaskItem } from '../testing';
@@ -53,7 +53,7 @@ const meta = {
   title: 'ui/react-ui-kanban/Kanban',
   render: DefaultStory,
   decorators: [
-    withTheme,
+    withTheme(),
     withLayout({ layout: 'fullscreen' }),
     // withClientProvider({
     //   types: [],

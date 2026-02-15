@@ -10,7 +10,7 @@ import { testFunctionPlugins } from '@dxos/compute/testing';
 import { OperationPlugin, RuntimePlugin } from '@dxos/plugin-testing';
 import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withTheme() } from '@dxos/react-ui/testing';
 
 import { createTestCells, useTestSheet, withComputeGraphDecorator } from '../../testing';
 import { translations } from '../../translations';
@@ -41,7 +41,7 @@ const meta = {
   title: 'plugins/plugin-sheet/GridSheet',
   component: GridSheet,
   decorators: [
-    withTheme,
+    withTheme(),
     withClientProvider({ types: [Sheet.Sheet], createSpace: true }),
     withComputeGraphDecorator({ plugins: testFunctionPlugins }),
     withPluginManager({

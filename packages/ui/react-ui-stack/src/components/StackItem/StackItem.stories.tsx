@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { DropdownMenu, Icon } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withTheme() } from '@dxos/react-ui/testing';
 
 import { StackItem, type StackItemRootProps } from './StackItem';
 
@@ -36,7 +36,7 @@ const meta = {
   title: 'ui/react-ui-stack/StackItem',
   component: StackItem.Root as any,
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'centered',
   },

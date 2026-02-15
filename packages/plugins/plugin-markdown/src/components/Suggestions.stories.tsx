@@ -21,7 +21,7 @@ import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { faker } from '@dxos/random';
 import { useQueue, useSpace } from '@dxos/react-client/echo';
 import { IconButton, Toolbar } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withTheme() } from '@dxos/react-ui/testing';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import { Layout } from '@dxos/react-ui';
 import { render } from '@dxos/storybook-utils';
@@ -154,7 +154,7 @@ const storybook: Meta<typeof DefaultStory> = {
   title: 'plugins/plugin-markdown/Suggestions',
   render: render(DefaultStory),
   decorators: [
-    withTheme,
+    withTheme(),
     withPluginManager({
       plugins: [
         ...corePlugins(),

@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { AlertDialog } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withTheme() } from '@dxos/react-ui/testing';
 
 import { Action } from '../Panel';
 
@@ -57,7 +57,7 @@ const StorybookViewport = (props: StorybookViewportProps) => {
 const meta = {
   title: 'sdk/shell/StorybookViewport',
   component: StorybookViewport,
-  decorators: [withTheme],
+  decorators: [withTheme()],
 } satisfies Meta<typeof StorybookViewport>;
 
 export default meta;

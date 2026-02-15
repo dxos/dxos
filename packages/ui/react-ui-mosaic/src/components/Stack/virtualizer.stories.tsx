@@ -9,7 +9,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Obj } from '@dxos/echo';
 import { faker } from '@dxos/random';
 import { Layout, Toolbar } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme() } from '@dxos/react-ui/testing';
 
 import { TestItem } from '../../testing';
 import { Mosaic } from '../Mosaic';
@@ -20,7 +20,7 @@ faker.seed(999);
 
 const meta: Meta<typeof Stack> = {
   title: 'ui/react-ui-mosaic/virtualizer',
-  decorators: [withLayout({ layout: 'column' }), withTheme],
+  decorators: [withLayout({ layout: 'column' }), withTheme()],
   parameters: {
     layout: 'fullscreen',
   },

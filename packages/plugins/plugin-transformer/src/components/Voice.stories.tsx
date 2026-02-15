@@ -4,14 +4,14 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
-import { withTheme } from '@dxos/react-ui/testing';
+import { withTheme() } from '@dxos/react-ui/testing';
 
 import { Voice } from './Voice';
 
 const meta = {
   title: 'plugins/plugin-transformer/Voice',
   component: Voice,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'centered',
   },

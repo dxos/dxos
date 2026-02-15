@@ -10,7 +10,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { Dialog } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withTheme() } from '@dxos/react-ui/testing';
 import { AccessToken } from '@dxos/types';
 
 import { translations } from '../../translations';
@@ -48,7 +48,7 @@ const meta = {
   parameters: { translations },
   // TODO(wittjosiah): Try to write story which does not depend on plugin manager.
   decorators: [
-    withTheme,
+    withTheme(),
     withPluginManager({
       plugins: [OperationPlugin(), ClientPlugin({})],
     }),

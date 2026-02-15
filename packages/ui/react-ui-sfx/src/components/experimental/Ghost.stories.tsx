@@ -7,7 +7,7 @@ import React from 'react';
 
 import { DXOS } from '@dxos/brand';
 import { log } from '@dxos/log';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withTheme() } from '@dxos/react-ui/testing';
 
 import { Ghost, type GhostProps } from './Ghost';
 
@@ -26,7 +26,7 @@ const meta = {
   title: 'ui/react-ui-sfx/Ghost',
   component: Ghost,
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'fullscreen',
   },

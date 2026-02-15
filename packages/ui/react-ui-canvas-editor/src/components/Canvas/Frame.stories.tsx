@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme() } from '@dxos/react-ui/testing';
 import { Canvas } from '@dxos/react-ui-canvas';
 import { withRegistry } from '@dxos/storybook-utils';
 
@@ -28,7 +28,7 @@ const meta = {
   title: 'ui/react-ui-canvas-editor/Frame',
   component: Canvas,
   render: DefaultStory,
-  decorators: [withRegistry, withTheme, withLayout()],
+  decorators: [withRegistry, withTheme(), withLayout()],
   parameters: {
     layout: 'fullscreen',
   },

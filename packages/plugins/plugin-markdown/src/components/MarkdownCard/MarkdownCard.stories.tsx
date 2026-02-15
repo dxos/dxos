@@ -9,7 +9,7 @@ import { OperationPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { faker } from '@dxos/random';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withTheme() } from '@dxos/react-ui/testing';
 import { CardContainer } from '@dxos/react-ui-mosaic/testing';
 
 import { translations } from '../../translations';
@@ -39,7 +39,7 @@ const meta: Meta<typeof MarkdownCardStory> = {
   title: 'plugins/plugin-markdown/Card',
   component: MarkdownCardStory,
   decorators: [
-    withTheme,
+    withTheme(),
     withPluginManager({
       plugins: [OperationPlugin()],
     }),

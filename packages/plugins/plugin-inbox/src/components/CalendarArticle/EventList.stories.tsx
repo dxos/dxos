@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme() } from '@dxos/react-ui/testing';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 
 import { createEvents } from '../../testing';
@@ -31,9 +31,9 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  decorators: [withTheme, withLayout({ layout: 'column' }), withAttention()],
+  decorators: [withTheme(), withLayout({ layout: 'column' }), withAttention()],
 };
 
 export const Responsive: Story = {
-  decorators: [withTheme, withLayout({ layout: 'column', classNames: 'is-[30rem]' }), withAttention()],
+  decorators: [withTheme(), withLayout({ layout: 'column', classNames: 'is-[30rem]' }), withAttention()],
 };

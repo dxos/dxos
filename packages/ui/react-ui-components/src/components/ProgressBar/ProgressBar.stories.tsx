@@ -7,7 +7,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 
 import { faker } from '@dxos/random';
 import { Toolbar } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withTheme() } from '@dxos/react-ui/testing';
 
 import { TextCrawl } from '../TextCrawl';
 
@@ -73,7 +73,7 @@ const DefaultStory = ({ items, ...props }: StoryProps) => {
 const meta = {
   title: 'ui/react-ui-components/ProgressBar',
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'centered',
   },

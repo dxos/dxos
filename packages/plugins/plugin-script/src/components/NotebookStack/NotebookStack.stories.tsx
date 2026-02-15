@@ -10,7 +10,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { AutomationPlugin } from '@dxos/plugin-automation';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { corePlugins } from '@dxos/plugin-testing';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme() } from '@dxos/react-ui/testing';
 
 import { createNotebook } from '../../testing';
 import { translations } from '../../translations';
@@ -27,7 +27,7 @@ const meta = {
   title: 'plugins/plugin-script/NotebookStack',
   component: NotebookStackStory,
   decorators: [
-    withTheme,
+    withTheme(),
     withLayout({ layout: 'column', classNames: 'is-proseMaxWidth' }),
     withPluginManager({
       plugins: [

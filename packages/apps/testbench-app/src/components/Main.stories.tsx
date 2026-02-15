@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
 import { withMultiClientProvider } from '@dxos/react-client/testing';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme() } from '@dxos/react-ui/testing';
 
 import { Item } from '../data';
 
@@ -15,7 +15,7 @@ const meta = {
   title: 'apps/testbench-app/Main',
   component: Main,
   decorators: [
-    withTheme,
+    withTheme(),
     withLayout({
       classNames: 'grid grid-rows-2 bs-full divide-y divide-separator grow overflow-hidden',
     }),

@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { faker } from '@dxos/random';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme() } from '@dxos/react-ui/testing';
 
 import { translations } from '../../translations';
 
@@ -469,7 +469,7 @@ const WithGroupsStory = () => {
 const meta = {
   title: 'ui/react-ui-searchlist/SearchList',
   component: SearchList.Root as any,
-  decorators: [withTheme, withLayout({ layout: 'column' })],
+  decorators: [withTheme(), withLayout({ layout: 'column' })],
   parameters: {
     layout: 'fullscreen',
     translations,

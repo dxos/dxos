@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { withTheme } from '@dxos/react-ui/testing';
+import { withTheme() } from '@dxos/react-ui/testing';
 
 import { alice } from '../../testing/fixtures';
 
@@ -14,7 +14,7 @@ import { SpaceMemberListImpl } from './SpaceMemberList';
 const meta = {
   title: 'sdk/shell/SpaceMemberList',
   component: SpaceMemberListImpl,
-  decorators: [withTheme],
+  decorators: [withTheme()],
 } satisfies Meta<typeof SpaceMemberListImpl>;
 
 export default meta;

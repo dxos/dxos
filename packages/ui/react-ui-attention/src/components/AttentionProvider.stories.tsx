@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { withTheme } from '@dxos/react-ui/testing';
+import { withTheme() } from '@dxos/react-ui/testing';
 
 import { withAttention } from '../testing';
 
@@ -35,7 +35,7 @@ const Story = () => {
 const meta = {
   title: 'ui/react-ui-attention/AttentionProvider',
   render: Story,
-  decorators: [withTheme, withAttention()],
+  decorators: [withTheme(), withAttention()],
 } satisfies Meta;
 
 export default meta;

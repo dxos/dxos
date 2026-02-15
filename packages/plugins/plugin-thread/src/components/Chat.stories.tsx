@@ -14,7 +14,7 @@ import { type Space } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withTheme() } from '@dxos/react-ui/testing';
 import { Thread as ThreadComponent } from '@dxos/react-ui-thread';
 import { render } from '@dxos/storybook-utils';
 import { Message, Thread } from '@dxos/types';
@@ -57,7 +57,7 @@ const meta = {
   component: ThreadComponent.Root as any,
   render: render(DefaultStory),
   decorators: [
-    withTheme,
+    withTheme(),
     withPluginManager({
       plugins: [OperationPlugin()],
       capabilities: [

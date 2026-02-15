@@ -8,7 +8,7 @@ import React, { useCallback, useState } from 'react';
 
 import { faker } from '@dxos/random';
 import { IconButton } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withTheme() } from '@dxos/react-ui/testing';
 import { Card, CardDragPreview } from '@dxos/react-ui-mosaic';
 
 import { StackItem } from '../StackItem';
@@ -160,7 +160,7 @@ const CardStackStory = () => {
 const meta = {
   title: 'ui/react-ui-stack/CardStack',
   component: CardStackStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'fullscreen',
   },

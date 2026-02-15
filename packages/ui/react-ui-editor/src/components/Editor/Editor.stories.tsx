@@ -8,7 +8,7 @@ import React, { useMemo } from 'react';
 import { createDocAccessor, createObject } from '@dxos/echo-db';
 import { faker } from '@dxos/random';
 import { useThemeContext } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme() } from '@dxos/react-ui/testing';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { Text } from '@dxos/schema';
 import {
@@ -53,7 +53,7 @@ const withExtensions: Decorator<EditorContentProps> = (Story, { args }) => {
 const meta = {
   title: 'ui/react-ui-editor/Editor',
   component: Editor.Content,
-  decorators: [withExtensions, withTheme, withLayout({ layout: 'column' }), withAttention()],
+  decorators: [withExtensions, withTheme(), withLayout({ layout: 'column' }), withAttention()],
   parameters: {
     layout: 'fullscreen',
   },

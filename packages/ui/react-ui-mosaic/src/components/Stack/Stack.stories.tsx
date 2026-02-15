@@ -9,7 +9,7 @@ import { useMemo } from 'react';
 import { Obj } from '@dxos/echo';
 import { faker } from '@dxos/random';
 import { Toolbar } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme() } from '@dxos/react-ui/testing';
 
 import { useContainerDebug } from '../../hooks';
 import { DefaultStackTile, TestItem } from '../../testing';
@@ -33,7 +33,7 @@ const createTestItems = (n: number) =>
 const meta: Meta<typeof Stack<Obj.Any>> = {
   title: 'ui/react-ui-mosaic/Stack',
   component: Stack,
-  decorators: [withLayout({ layout: 'column' }), withTheme],
+  decorators: [withLayout({ layout: 'column' }), withTheme()],
   parameters: {
     layout: 'fullscreen',
   },

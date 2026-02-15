@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { withTheme } from '../../testing';
+import { withTheme() } from '../../testing';
 import { withLayoutVariants } from '../../testing';
 import { Icon } from '../Icon';
 
@@ -36,7 +36,7 @@ const meta = {
   title: 'ui/react-ui-core/components/Button',
   component: Button,
   render: DefaultStory,
-  decorators: [withTheme, withLayoutVariants()],
+  decorators: [withTheme(), withLayoutVariants()],
 } satisfies Meta<typeof Button>;
 
 export default meta;

@@ -10,7 +10,7 @@ import { OperationPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Script } from '@dxos/functions';
 import { ClientPlugin } from '@dxos/plugin-client';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme() } from '@dxos/react-ui/testing';
 
 import { type ScriptToolbarState, type ScriptToolbarStateStore } from '../../hooks';
 import { translations } from '../../translations';
@@ -51,7 +51,7 @@ const meta = {
   component: ScriptToolbarStory,
   // TODO(wittjosiah): Try to write story which does not depend on plugin manager.
   decorators: [
-    withTheme,
+    withTheme(),
     withLayout({ classNames: 'is-proseMaxWidth' }),
     withPluginManager({
       plugins: [OperationPlugin(), ClientPlugin({})],

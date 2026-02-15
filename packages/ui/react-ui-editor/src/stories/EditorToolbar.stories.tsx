@@ -8,7 +8,7 @@ import React, { useCallback, useContext, useState } from 'react';
 
 import { invariant } from '@dxos/invariant';
 import { useThemeContext } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withTheme() } from '@dxos/react-ui/testing';
 import { withRegistry } from '@dxos/storybook-utils';
 import {
   type EditorInputMode,
@@ -91,7 +91,7 @@ const DefaultStory = ({ autoFocus, initialValue, placeholder }: StoryProps) => {
 const meta = {
   title: 'ui/react-ui-editor/EditorToolbar',
   render: DefaultStory,
-  decorators: [withRegistry, withTheme],
+  decorators: [withRegistry, withTheme()],
   parameters: {
     layout: 'fullscreen',
     translations,

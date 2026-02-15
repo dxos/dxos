@@ -8,14 +8,14 @@ import { faker } from '@dxos/random';
 
 faker.seed(123);
 
-import { withLayout, withTheme } from '../../testing';
+import { withLayout, withTheme() } from '../../testing';
 
 import { ScrollArea } from './ScrollArea';
 
 export default {
   title: 'ui/react-ui-core/components/ScrollArea',
   component: ScrollArea,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'centered',
   },
@@ -108,7 +108,7 @@ export const Both = {
 };
 
 export const NestedScrollAreas = {
-  decorators: [withTheme, withLayout({ layout: 'fullscreen' })],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   render: () => {
     const columns = useMemo(
       () =>

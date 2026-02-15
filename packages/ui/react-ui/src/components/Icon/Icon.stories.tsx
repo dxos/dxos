@@ -8,7 +8,7 @@ import React, { type FC, type ReactElement, type SVGProps, forwardRef } from 're
 
 import { getSize, mx } from '@dxos/ui-theme';
 
-import { withTheme } from '../../testing';
+import { withTheme() } from '../../testing';
 
 import { Icon } from './Icon';
 
@@ -62,7 +62,7 @@ const DefaultStory = ({ CustomIcon }: { CustomIcon: FC<IconProps> }) => {
 const meta = {
   title: 'ui/react-ui-core/components/Icon',
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'centered',
   },

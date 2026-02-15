@@ -7,7 +7,7 @@ import React from 'react';
 
 import { PublicKey } from '@dxos/keys';
 import { Toolbar } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withTheme() } from '@dxos/react-ui/testing';
 
 import { PublicKeySelector } from './PublicKeySelector';
 
@@ -19,7 +19,7 @@ const meta = {
       <PublicKeySelector {...args} />
     </Toolbar.Root>
   ),
-  decorators: [withTheme],
+  decorators: [withTheme()],
 } satisfies Meta<typeof PublicKeySelector>;
 
 export default meta;

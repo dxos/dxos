@@ -8,7 +8,7 @@ import React from 'react';
 import { Function, Trigger } from '@dxos/functions';
 import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withTheme() } from '@dxos/react-ui/testing';
 
 import { functions } from '../../testing';
 import { translations } from '../../translations';
@@ -31,7 +31,7 @@ const meta = {
   component: AutomationPanel as any,
   render: DefaultStory,
   decorators: [
-    withTheme,
+    withTheme(),
     withClientProvider({
       createIdentity: true,
       createSpace: true,

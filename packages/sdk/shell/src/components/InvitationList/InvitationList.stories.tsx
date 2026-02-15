@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { Invitation } from '@dxos/react-client/invitations';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withTheme() } from '@dxos/react-ui/testing';
 
 import { inviteWithState } from '../../testing/fixtures';
 
@@ -15,7 +15,7 @@ import { InvitationList } from './InvitationList';
 const meta = {
   title: 'sdk/shell/InvitationList',
   component: InvitationList,
-  decorators: [withTheme],
+  decorators: [withTheme()],
 } satisfies Meta<typeof InvitationList>;
 
 export default meta;

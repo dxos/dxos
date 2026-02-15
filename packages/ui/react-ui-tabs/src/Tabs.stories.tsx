@@ -7,7 +7,7 @@ import React from 'react';
 
 import { faker } from '@dxos/random';
 import { Dialog, Icon } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withTheme() } from '@dxos/react-ui/testing';
 
 import { Tabs as NaturalTabs } from './Tabs';
 
@@ -60,7 +60,7 @@ const meta = {
   title: 'ui/react-ui-tabs/Tabs',
   component: NaturalTabs.Root,
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

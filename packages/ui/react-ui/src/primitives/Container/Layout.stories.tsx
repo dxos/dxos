@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { Input, ScrollArea, Toolbar } from '../../components';
-import { withLayout, withTheme } from '../../testing';
+import { withLayout, withTheme() } from '../../testing';
 import { Flex } from '../Flex';
 
 import { Layout } from './Layout';
@@ -41,7 +41,7 @@ const DefaultStory = ({ count }: { count: number }) => {
 const meta: Meta<typeof DefaultStory> = {
   title: 'ui/react-ui-core/primitives/Layout',
   component: DefaultStory,
-  decorators: [withTheme, withLayout({ layout: 'column' })],
+  decorators: [withTheme(), withLayout({ layout: 'column' })],
   parameters: {
     layout: 'fullscreen',
   },

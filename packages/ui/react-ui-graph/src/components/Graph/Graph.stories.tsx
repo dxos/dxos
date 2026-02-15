@@ -9,7 +9,7 @@ import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } 
 
 import { type Graph, type GraphModel, SelectionModel } from '@dxos/graph';
 import { IconButton, Popover, Toolbar } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withTheme() } from '@dxos/react-ui/testing';
 import { Card } from '@dxos/react-ui-mosaic';
 import { JsonFilter, SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withRegistry } from '@dxos/storybook-utils';
@@ -328,7 +328,7 @@ const Debug = ({
 const meta = {
   title: 'ui/react-ui-graph/Graph',
   render: DefaultStory,
-  decorators: [withRegistry, withTheme],
+  decorators: [withRegistry, withTheme()],
   parameters: {
     layout: 'fullscreen',
     controls: { disable: true },

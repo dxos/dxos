@@ -7,7 +7,7 @@ import React from 'react';
 
 import { type MessageValence } from '@dxos/ui-types';
 
-import { withTheme } from '../../testing';
+import { withTheme() } from '../../testing';
 
 import { Callout } from './Message';
 
@@ -28,7 +28,7 @@ const meta = {
   title: 'ui/react-ui-core/components/Callout',
   component: Callout.Root as any,
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: { chromatic: { disableSnapshot: false } },
   argTypes: {
     valence: {

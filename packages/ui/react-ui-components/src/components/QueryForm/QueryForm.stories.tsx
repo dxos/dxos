@@ -9,7 +9,7 @@ import { Filter, Query } from '@dxos/echo';
 import { Tag, Type } from '@dxos/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Toolbar } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme() } from '@dxos/react-ui/testing';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { Employer, Organization, Person, Pipeline } from '@dxos/types';
 
@@ -48,7 +48,7 @@ const meta = {
     );
   },
   decorators: [
-    withTheme,
+    withTheme(),
     withLayout({ layout: 'column' }),
     withClientProvider({
       types: [Organization.Organization, Person.Person, Pipeline.Pipeline, Employer.Employer],

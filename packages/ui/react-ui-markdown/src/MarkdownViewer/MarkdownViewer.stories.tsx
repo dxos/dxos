@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
 import { faker } from '@dxos/random';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme() } from '@dxos/react-ui/testing';
 import { trim } from '@dxos/util';
 
 import { MarkdownViewer } from './MarkdownViewer';
@@ -15,7 +15,7 @@ faker.seed(0);
 const meta = {
   title: 'ui/react-ui-markdown/MarkdownViewer',
   component: MarkdownViewer,
-  decorators: [withTheme, withLayout({ layout: 'column' })],
+  decorators: [withTheme(), withLayout({ layout: 'column' })],
 } satisfies Meta<typeof MarkdownViewer>;
 
 export default meta;

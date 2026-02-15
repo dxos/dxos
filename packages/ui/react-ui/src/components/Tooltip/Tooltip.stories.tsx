@@ -7,7 +7,7 @@ import React from 'react';
 
 import { faker } from '@dxos/random';
 
-import { withTheme } from '../../testing';
+import { withTheme() } from '../../testing';
 import { Button } from '../Button';
 
 import { Tooltip } from './Tooltip';
@@ -33,7 +33,7 @@ const meta = {
   title: 'ui/react-ui-core/components/Tooltip',
   component: Tooltip as any,
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

@@ -7,14 +7,14 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { Toolbar } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme() } from '@dxos/react-ui/testing';
 
 import { EmojiPickerBlock, type EmojiPickerProps, EmojiPickerToolbarButton } from './EmojiPicker';
 
 const meta = {
   title: 'ui/react-ui-pickers/EmojiPicker',
   component: EmojiPicker,
-  decorators: [withTheme, withLayout({ layout: 'column' })],
+  decorators: [withTheme(), withLayout({ layout: 'column' })],
 } satisfies Meta<typeof EmojiPicker>;
 
 export default meta;

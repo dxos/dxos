@@ -4,7 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
-import { withTheme } from '@dxos/react-ui/testing';
+import { withTheme() } from '@dxos/react-ui/testing';
 import { trim } from '@dxos/util';
 
 import { SyntaxHighlighter } from './SyntaxHighlighter';
@@ -12,7 +12,7 @@ import { SyntaxHighlighter } from './SyntaxHighlighter';
 const meta = {
   title: 'ui/react-ui-syntax-highlighter/SyntaxHighlighter',
   component: SyntaxHighlighter,
-  decorators: [withTheme],
+  decorators: [withTheme()],
 } satisfies Meta<typeof SyntaxHighlighter>;
 
 export default meta;

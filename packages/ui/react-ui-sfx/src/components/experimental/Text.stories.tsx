@@ -7,7 +7,7 @@ import { motion } from 'motion/react';
 import React, { type PropsWithChildren, useState } from 'react';
 
 import { IconButton } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withTheme() } from '@dxos/react-ui/testing';
 
 const Text = ({ children, initial = 'open' }: PropsWithChildren<{ initial?: string }>) => {
   const [state, setState] = useState(initial);
@@ -49,7 +49,7 @@ const Text = ({ children, initial = 'open' }: PropsWithChildren<{ initial?: stri
 const meta = {
   title: 'ui/react-ui-sfx/Text',
   component: Text,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'centered',
   },

@@ -5,14 +5,14 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { withTheme } from '@dxos/react-ui/testing';
+import { withTheme() } from '@dxos/react-ui/testing';
 
 import { Tree } from './Tree';
 
 const meta = {
   title: 'devtools/devtools/Tree',
   component: Tree,
-  decorators: [withTheme],
+  decorators: [withTheme()],
 } satisfies Meta<typeof Tree>;
 
 export default meta;

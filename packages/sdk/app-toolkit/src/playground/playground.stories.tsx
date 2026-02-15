@@ -8,7 +8,7 @@ import React from 'react';
 
 import { OperationPlugin } from '@dxos/app-framework';
 import { useApp } from '@dxos/app-framework/ui';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withTheme() } from '@dxos/react-ui/testing';
 
 import { DebugPlugin } from './debug';
 import { GeneratorPlugin, createNumberPlugin } from './generator';
@@ -43,7 +43,7 @@ const DefaultStory = () => {
 const meta = {
   title: 'sdk/composer-toolkit/playground',
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

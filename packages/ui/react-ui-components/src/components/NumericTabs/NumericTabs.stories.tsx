@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { faker } from '@dxos/random';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withTheme() } from '@dxos/react-ui/testing';
 
 import { ToggleContainer } from '../ToggleContainer';
 
@@ -20,7 +20,7 @@ const content = Array.from({ length: 15 }, () => ({
 const meta = {
   title: 'ui/react-ui-components/NumericTabs',
   component: NumericTabs,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'centered',
   },

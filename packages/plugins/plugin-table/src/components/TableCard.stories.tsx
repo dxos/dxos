@@ -11,7 +11,7 @@ import { Obj } from '@dxos/echo';
 import { Format } from '@dxos/echo/internal';
 import { faker } from '@dxos/random';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withTheme() } from '@dxos/react-ui/testing';
 import { CardContainer } from '@dxos/react-ui-mosaic/testing';
 import { translations as tableTranslations } from '@dxos/react-ui-table';
 import { useTestTableModel } from '@dxos/react-ui-table/testing';
@@ -43,7 +43,7 @@ const meta = {
   title: 'plugins/plugin-table/Card',
   render: DefaultStory,
   decorators: [
-    withTheme, // TODO(burdon): Should not require space.
+    withTheme(), // TODO(burdon): Should not require space.
     withClientProvider({
       types: [View.View, Table.Table],
       createIdentity: true,

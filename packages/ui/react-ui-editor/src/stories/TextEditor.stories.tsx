@@ -8,7 +8,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { log } from '@dxos/log';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withTheme() } from '@dxos/react-ui/testing';
 import {
   InputModeExtensions,
   decorateMarkdown,
@@ -37,7 +37,7 @@ import {
 const meta = {
   title: 'ui/react-ui-editor/TextEditor',
   component: EditorStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'fullscreen',
     controls: { disable: true },

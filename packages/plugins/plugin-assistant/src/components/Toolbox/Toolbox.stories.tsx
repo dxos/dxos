@@ -13,7 +13,7 @@ import { ClientPlugin } from '@dxos/plugin-client';
 import { MapPlugin } from '@dxos/plugin-map';
 import { TablePlugin } from '@dxos/plugin-table';
 import { corePlugins } from '@dxos/plugin-testing';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withTheme() } from '@dxos/react-ui/testing';
 
 import { translations } from '../../translations';
 
@@ -28,7 +28,7 @@ const meta = {
   component: Toolbox as any,
   render: DefaultStory,
   decorators: [
-    withTheme,
+    withTheme(),
     withPluginManager({
       plugins: [
         ...corePlugins(),

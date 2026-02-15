@@ -8,7 +8,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useRef, useState } from 'react';
 
 import { Button, Icon } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withTheme() } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
 import { DXOS } from '../../icons';
@@ -22,7 +22,7 @@ import { type AnimationController, ComposerLogo, ComposerSpinner } from './Compo
 const meta = {
   title: 'ui/brand/Logo',
   component: ComposerLogo,
-  decorators: [withTheme],
+  decorators: [withTheme()],
 } satisfies Meta<typeof ComposerLogo>;
 
 export default meta;

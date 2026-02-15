@@ -9,7 +9,7 @@ import { defaultRowSize } from '@dxos/lit-grid';
 import { type DxGridPlaneCells } from '@dxos/lit-grid';
 import { faker } from '@dxos/random';
 import { DropdownMenu } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme() } from '@dxos/react-ui/testing';
 import { toPlaneCellIndex } from '@dxos/react-ui-grid';
 import { Combobox, type ComboboxRootProps, useSearchListResults } from '@dxos/react-ui-searchlist';
 
@@ -114,7 +114,7 @@ const ComboboxContentWithFiltering = () => {
 const meta = {
   title: 'ui/react-ui-grid/Grid',
   component: GridStory,
-  decorators: [withTheme, withLayout({ layout: 'column' })],
+  decorators: [withTheme(), withLayout({ layout: 'column' })],
   parameters: {
     layout: 'fullscreen',
   },

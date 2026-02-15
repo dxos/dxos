@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useRef, useState } from 'react';
 
-import { withTheme } from '../../testing';
+import { withTheme() } from '../../testing';
 import { Button } from '../Button';
 
 import { DropdownMenu } from './DropdownMenu';
@@ -95,7 +95,7 @@ const meta = {
   title: 'ui/react-ui-core/components/DropdownMenu',
   component: DropdownMenu.Root,
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

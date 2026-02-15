@@ -10,7 +10,7 @@ import { faker } from '@dxos/random';
 import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { useThemeContext } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withTheme() } from '@dxos/react-ui/testing';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import {
   createBasicExtensions,
@@ -94,7 +94,7 @@ const DefaultStory = () => {
 const meta = {
   title: 'plugins/plugin-wnfs/image',
   render: DefaultStory,
-  decorators: [withTheme, withClientProvider({ createIdentity: true, createSpace: true })],
+  decorators: [withTheme(), withClientProvider({ createIdentity: true, createSpace: true })],
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

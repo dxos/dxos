@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { withTheme } from '../../testing';
+import { withTheme() } from '../../testing';
 
 import { Tree, TreeItem } from './Tree';
 
@@ -59,7 +59,7 @@ const meta = {
   title: 'ui/react-ui-core/components/Tree',
   component: Tree as any,
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

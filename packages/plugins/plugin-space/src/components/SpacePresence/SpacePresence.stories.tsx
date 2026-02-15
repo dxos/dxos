@@ -7,7 +7,7 @@ import React from 'react';
 
 import { IdentityDid, PublicKey } from '@dxos/keys';
 import { HaloSpaceMember, SpaceMember } from '@dxos/react-client/echo';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withTheme() } from '@dxos/react-ui/testing';
 
 import { translations } from '../../translations';
 
@@ -24,7 +24,7 @@ const viewers = (n: number, currentlyAttended = true): Member[] =>
 
 const meta = {
   title: 'plugins/plugin-space/SpacePresence',
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     translations,
   },

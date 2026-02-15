@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { withTheme } from '../../testing';
+import { withTheme() } from '../../testing';
 import { Icon } from '../Icon';
 
 import { Toggle, type ToggleProps } from './Toggle';
@@ -22,7 +22,7 @@ const meta = {
   title: 'ui/react-ui-core/components/Toggle',
   component: Toggle,
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'centered',
   },

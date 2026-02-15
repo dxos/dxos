@@ -19,7 +19,7 @@ import { SpacePlugin } from '@dxos/plugin-space';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { faker } from '@dxos/random';
 import { Filter, type Space, useQuery, useSchema, useSpaces } from '@dxos/react-client/echo';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withTheme() } from '@dxos/react-ui/testing';
 import { ViewEditor } from '@dxos/react-ui-form';
 import {
   Kanban as KanbanComponent,
@@ -169,7 +169,7 @@ const meta = {
   title: 'plugins/plugin-kanban/Kanban',
   component: DefaultComponent,
   render: () => <DefaultComponent />,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'fullscreen',
     translations: [...translations, ...kanbanTranslations],

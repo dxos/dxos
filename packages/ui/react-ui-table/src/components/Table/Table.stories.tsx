@@ -12,7 +12,7 @@ import { invariant } from '@dxos/invariant';
 import { faker } from '@dxos/random';
 import { PublicKey } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withTheme() } from '@dxos/react-ui/testing';
 import { ViewEditor, translations as formTranslations } from '@dxos/react-ui-form';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { View, getSchemaFromPropertyDefinitions, getTypenameFromQuery } from '@dxos/schema';
@@ -153,7 +153,7 @@ const meta = {
   title: 'ui/react-ui-table/Table',
   render: DefaultStory,
   decorators: [
-    withTheme,
+    withTheme(),
     withRegistry,
     withClientProvider({
       types: [View.View, Table.Table],

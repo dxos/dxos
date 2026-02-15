@@ -11,7 +11,7 @@ import { useClient } from '@dxos/react-client';
 import { type SpaceSyncStateMap, getSyncSummary } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withTheme() } from '@dxos/react-ui/testing';
 
 import { SyncStatus } from './SyncStatus';
 
@@ -57,7 +57,7 @@ const createSpaceSyncStateMap = async (client: Client): Promise<SpaceSyncStateMa
 const meta = {
   title: 'devtools/devtools/SyncStatus',
   component: SyncStatus,
-  decorators: [withTheme, withClientProvider({ createIdentity: true })],
+  decorators: [withTheme(), withClientProvider({ createIdentity: true })],
   parameters: {
     layout: 'centered',
   },

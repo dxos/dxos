@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { withLayout, withTheme } from '../../testing';
+import { withLayout, withTheme() } from '../../testing';
 import { IconButton } from '../Button';
 import { Toolbar } from '../Toolbar';
 
@@ -70,7 +70,7 @@ const meta = {
   title: 'ui/react-ui-core/components/Main',
   component: Main.Root,
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ layout: 'fullscreen' })],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
     chromatic: {

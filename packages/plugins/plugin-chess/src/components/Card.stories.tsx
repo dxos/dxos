@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
-import { withTheme } from '@dxos/react-ui/testing';
+import { withTheme() } from '@dxos/react-ui/testing';
 import { CardContainer } from '@dxos/react-ui-mosaic/testing';
 
 import { meta as pluginMeta } from '../meta';
@@ -33,7 +33,7 @@ const CardStory = () => {
 const meta = {
   title: 'plugins/plugin-chess/Card',
   render: () => <CardStory />,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'centered',
   },
