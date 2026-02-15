@@ -8,7 +8,7 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { type Diagram } from '@dxos/plugin-sketch/types';
-import { Layout, type LayoutFlexProps, useThemeContext } from '@dxos/react-ui';
+import { Flex, type FlexProps, Layout, useThemeContext } from '@dxos/react-ui';
 
 import { useStoreAdapter } from '../../hooks';
 import { type SketchSettingsProps } from '../../types';
@@ -113,4 +113,4 @@ export const SketchContainer = ({ role, subject: sketch }: SketchContainerProps)
   );
 };
 
-const Container = (props: LayoutFlexProps) => <Layout.Flex {...props} classNames='aspect-square' />;
+const Container = (props: FlexProps) => <Flex {...props} classNames='aspect-square' />;

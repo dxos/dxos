@@ -10,7 +10,7 @@ import { ComputeGraphModel } from '@dxos/conductor';
 import { Obj } from '@dxos/echo';
 import { AutomationCapabilities } from '@dxos/plugin-automation';
 import { useObject } from '@dxos/react-client/echo';
-import { Layout, type LayoutFlexProps } from '@dxos/react-ui';
+import { Flex, type FlexProps } from '@dxos/react-ui';
 import {
   ComputeContext,
   ComputeGraphController,
@@ -77,7 +77,7 @@ export const CanvasContainer = ({ role, subject: canvas }: CanvasContainerProps)
   );
 };
 
-const Container = (props: LayoutFlexProps) => <Layout.Flex {...props} classNames='aspect-square' />;
+const Container = (props: FlexProps) => <Flex {...props} classNames='aspect-square' />;
 
 const useGraphController = (canvas: CanvasBoard.CanvasBoard) => {
   const db = Obj.getDatabase(canvas);

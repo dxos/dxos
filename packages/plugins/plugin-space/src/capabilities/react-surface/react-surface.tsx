@@ -131,7 +131,7 @@ export default Capability.makeModule(
             return null;
           }
 
-          return <SpaceSettingsContainer space={space} ref={ref} />;
+          return <SpaceSettingsContainer space={space} />;
         },
       }),
       Surface.create({

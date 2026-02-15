@@ -59,6 +59,7 @@ export type CoreProps<T extends Record<string, any> = Record<string, unknown>> =
   limit?: number | undefined;
 }>;
 
+// TODO(burdon): Remove ref since relying on this would be error prone.
 export type ComponentProps<T extends Record<string, any> = Record<string, any>> = CoreProps<T> & {
   ref?: RefCallback<HTMLElement>;
 } & Record<string, any>;

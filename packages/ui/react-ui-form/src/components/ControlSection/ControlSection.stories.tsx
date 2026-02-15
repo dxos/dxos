@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '../../translations';
 
@@ -15,13 +15,13 @@ const meta = {
   title: 'ui/react-ui-form/ControlSection',
   component: ControlSection,
   render: (args) => (
-    <ControlPage classNames='is-[40rem]'>
+    <ControlPage>
       <ControlSection {...args} />
     </ControlPage>
   ),
-  decorators: [withTheme],
+  decorators: [withTheme, withLayout({ layout: 'column' })],
   parameters: {
-    layout: 'centered',
+    layout: 'fullscreen',
     translations,
   },
 } satisfies Meta<typeof ControlSection>;

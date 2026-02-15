@@ -39,6 +39,15 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+// TODO(burdon): Requires container.
+export const Default = () => {
+  return (
+    <Container.Root>
+      <Container.Column>Column</Container.Column>
+    </Container.Root>
+  );
+};
+
 export const SM: Story = {
   args: {
     variant: 'sm',

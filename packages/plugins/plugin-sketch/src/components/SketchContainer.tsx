@@ -8,7 +8,7 @@ import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { useActions } from '@dxos/plugin-graph';
-import { Layout, type LayoutFlexProps } from '@dxos/react-ui';
+import { Flex, type FlexProps, Layout } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { isTauri } from '@dxos/util';
 
@@ -57,6 +57,6 @@ export const SketchContainer = ({ role, subject: sketch, settings }: SketchConta
   );
 };
 
-const Container = (props: LayoutFlexProps) => <Layout.Flex {...props} classNames='aspect-square' />;
+const Container = (props: FlexProps) => <Flex {...props} classNames='aspect-square' />;
 
 export default SketchContainer;

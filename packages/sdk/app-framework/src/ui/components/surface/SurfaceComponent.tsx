@@ -161,6 +161,7 @@ SurfaceContextProvider.displayName = 'SurfaceContextProvider';
 /**
  * A surface is a named region of the screen that can be populated by plugins.
  */
+// TODO(burdon): Remove ref since relying on this would be error prone.
 export const Surface: NamedExoticComponent<Props & RefAttributes<HTMLElement>> = memo(
   forwardRef(({ id: _id, role, data: dataProp, limit, placeholder = DEFAULT_PLACEHOLDER, ...rest }, forwardedRef) => {
     const data = useDefaultValue(dataProp, () => ({}));

@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type PropsWithChildren, useEffect, useState } from 'react';
 
 import { addEventListener, combine } from '@dxos/async';
-import { Input, Layout, Splitter, type SplitterMode, Toolbar } from '@dxos/react-ui';
+import { Flex, Input, Layout, Splitter, type SplitterMode, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { MobileLayout, type MobileLayoutRootProps } from './MobileLayout';
@@ -62,11 +62,11 @@ const Panel = ({ children, label }: PropsWithChildren<{ label: string }>) => {
         <Toolbar.Separator variant='gap' />
         {children}
       </Toolbar.Root>
-      <Layout.Flex column classNames='p-1'>
+      <Flex column classNames='p-1'>
         <Input.Root>
           <Input.TextInput />
         </Input.Root>
-      </Layout.Flex>
+      </Flex>
     </Layout.Main>
   );
 };

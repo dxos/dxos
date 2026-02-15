@@ -8,7 +8,7 @@ import React, { Fragment } from 'react';
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { Filter, useQuery, useSchema } from '@dxos/react-client/echo';
-import { Layout, type LayoutFlexProps, useControlledState } from '@dxos/react-ui';
+import { Flex, type FlexProps, Layout, useControlledState } from '@dxos/react-ui';
 import { useSelected } from '@dxos/react-ui-attention';
 import { type GeoMarker, type MapRootProps } from '@dxos/react-ui-geo';
 import { getTypenameFromQuery } from '@dxos/schema';
@@ -78,6 +78,6 @@ export const MapContainer = ({ role, subject: object, type: typeProp = 'map', ..
   );
 };
 
-const Container = (props: LayoutFlexProps) => <Layout.Flex {...props} classNames='aspect-square' />;
+const Container = (props: FlexProps) => <Flex {...props} classNames='aspect-square' />;
 
 export default MapContainer;

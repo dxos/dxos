@@ -39,6 +39,7 @@ export type ScrollableProps = ThemedClassName<Omit<OverlayScrollbarsComponentPro
 };
 
 /**
+ * Custom scrollable container.
  * https://www.npmjs.com/package/overlayscrollbars-react
  */
 export const Scrollable = forwardRef<HTMLDivElement, ScrollableProps>(

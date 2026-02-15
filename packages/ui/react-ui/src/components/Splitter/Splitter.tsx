@@ -12,6 +12,7 @@ import { type ThemedClassName } from '../../util';
 type ScopedProps<P> = P & { __scopeSplitter?: any };
 
 // TODO(burdon): Generalize styles.
+// TODO(burdon): Enalbe resize.
 // TODO(burdon): Generalize horizontal/vertical and change to start/end.
 type Mode = 'upper' | 'lower' | 'both';
 

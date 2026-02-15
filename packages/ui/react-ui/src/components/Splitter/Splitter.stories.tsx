@@ -49,7 +49,7 @@ const DefaultStory = (props: SplitterRootProps) => {
 };
 
 const meta: Meta<SplitterRootProps> = {
-  title: 'ui/react-ui-core/Splitter',
+  title: 'ui/react-ui-core/components/Splitter',
   component: Splitter.Root,
   render: DefaultStory,
   decorators: [withTheme, withLayout({ layout: 'column' })],

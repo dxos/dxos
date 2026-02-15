@@ -6,9 +6,8 @@ import React, { useEffect, useState } from 'react';
 
 import { type Type } from '@dxos/echo';
 import { type Space } from '@dxos/react-client/echo';
-import { useTranslation } from '@dxos/react-ui';
+import { Layout, useTranslation } from '@dxos/react-ui';
 import { ControlPage, ControlSection, controlItemClasses } from '@dxos/react-ui-form';
-import { Layout } from '@dxos/react-ui';
 
 import { meta } from '../meta';
 
@@ -18,7 +17,6 @@ export const SchemaContainer = ({ space }: SchemaPanelProps) => {
   const { t } = useTranslation(meta.id);
   const schemas = useQuerySpaceSchemas(space);
 
-  // TODO(ZaymonFC): Support deleting Schema (DangerZone section).
   return (
     <Layout.Container scrollable>
       <ControlPage>

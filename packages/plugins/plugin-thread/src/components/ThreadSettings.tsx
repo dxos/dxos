@@ -15,6 +15,7 @@ export type ThreadSettingsComponentProps = {
   onSettingsChange: (fn: (current: ThreadSettingsProps) => ThreadSettingsProps) => void;
 };
 
+// TODO(burdon): Settings.
 export const ThreadSettings = ({ settings: _settings }: ThreadSettingsComponentProps) => {
   const { t: _t } = useTranslation(meta.id);
   return <ControlPage></ControlPage>;
