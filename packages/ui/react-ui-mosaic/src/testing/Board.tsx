@@ -163,7 +163,7 @@ const Column = forwardRef<HTMLDivElement, ColumnProps>(({ classNames, location, 
               eventHandler={eventHandler}
               debug={debugHandler}
             >
-              <Mosaic.Viewport padding viewportRef={setViewport}>
+              <Mosaic.Viewport snap padding viewportRef={setViewport}>
                 <Mosaic.Stack items={column.items} getId={(data) => data.dxn.toString()} Tile={Item} />
               </Mosaic.Viewport>
             </Mosaic.Container>
@@ -205,7 +205,11 @@ const Item = forwardRef<HTMLDivElement, ItemProps>(({ classNames, data: ref, loc
       debug={debug}
     >
       <Focus.Group asChild>
-        <Card.Root classNames={classNames} onClick={() => rootRef.current?.focus()} ref={composedRef}>
+        <Card.Root
+          classNames={mx('snap-start md:snap-align-none', classNames)}
+          onClick={() => rootRef.current?.focus()}
+          ref={composedRef}
+        >
           <Card.Toolbar>
             <Card.DragHandle ref={dragHandleRef} />
             <Card.Title>{object.name}</Card.Title>
