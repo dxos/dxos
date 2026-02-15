@@ -138,6 +138,9 @@ const ScrollAreaExpander = ({ classNames, children }: ScrollAreaExpanderProps) =
 // ScrollArea
 //
 
+/**
+ * @deprecated
+ */
 export const ScrollArea = {
   Root: ScrollAreaRoot,
   Viewport: ScrollAreaViewport,
