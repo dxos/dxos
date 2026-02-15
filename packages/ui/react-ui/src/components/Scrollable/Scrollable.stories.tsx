@@ -21,7 +21,7 @@ const DefaultStory = (props: ScrollableProps) => {
 };
 
 const meta: Meta<typeof Scrollable> = {
-  title: 'ui/react-ui-core/primitives/Scrollable',
+  title: 'ui/react-ui-core/components/Scrollable',
   component: Scrollable,
   render: (args) => <DefaultStory {...args} />,
   decorators: [withTheme, withLayout({ layout: 'fullscreen' })],
