@@ -131,13 +131,13 @@ export const NestedScrollAreas = {
               <ScrollArea thin orientation='vertical'>
                 <div className='flex flex-col p-3 gap-1'>
                   {Array.from({ length: column.count }, (_, i) => (
-                    <div key={i} className={`p-2 border border-separator rounded-sm`}>
+                    <div key={i} className={`p-2 border border-separator rounded-sm text-sm`}>
                       Item {i + 1}
                     </div>
                   ))}
                 </div>
               </ScrollArea>
-              <div className={`p-2 border-bs border-separator`}>Footer</div>
+              <div className={`p-2 text-subdued border-bs border-separator`}>{column.count}</div>
             </div>
           ))}
         </div>
