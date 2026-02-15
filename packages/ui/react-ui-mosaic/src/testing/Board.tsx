@@ -88,7 +88,7 @@ const Root = forwardRef<HTMLDivElement, RootProps>(({ id, columns, debug }, forw
           eventHandler={eventHandler}
           debug={debugHandler}
         >
-          <Mosaic.Viewport padding thin snap viewportRef={setViewport}>
+          <Mosaic.Viewport padding thin snap viewportRef={setViewport} classNames='md:pbs-3'>
             <Mosaic.Stack items={columns} getId={(item) => item.id} Tile={Column} debug={debug} />
           </Mosaic.Viewport>
         </Mosaic.Container>

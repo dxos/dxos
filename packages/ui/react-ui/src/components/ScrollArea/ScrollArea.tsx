@@ -22,7 +22,6 @@ type ScrollAreaProps = ThemedClassName<ScrollAreaPrimitive.ScrollAreaProps> & {
 
 /**
  * ScrollArea provides a styled scrollable area with custom scrollbars.
- * Based on shadcn/ui's ScrollArea component pattern.
  */
 const ScrollArea = forwardRef<HTMLDivElement, ScrollAreaProps>(
   ({ classNames, children, viewportRef, orientation = 'vertical', padding, thin, snap, ...props }, forwardedRef) => {
@@ -37,7 +36,7 @@ const ScrollArea = forwardRef<HTMLDivElement, ScrollAreaProps>(
         ref={forwardedRef}
       >
         <ScrollAreaPrimitive.Viewport
-          className={tx('scrollArea.viewport', 'scroll-area__viewport', { orientation })}
+          className={tx('scrollArea.viewport', 'scroll-area__viewport', { orientation, snap })}
           ref={viewportRef}
         >
           {children}

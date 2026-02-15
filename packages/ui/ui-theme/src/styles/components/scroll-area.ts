@@ -10,6 +10,7 @@ export type ScrollAreaStyleProps = {
   orientation?: AllowedAxis;
   padding?: boolean;
   thin?: boolean;
+  snap?: boolean;
 };
 
 export const scrollAreaRoot: ComponentFunction<ScrollAreaStyleProps> = ({ orientation, padding }, ...etc) =>
@@ -24,9 +25,12 @@ export const scrollAreaRoot: ComponentFunction<ScrollAreaStyleProps> = ({ orient
     ...etc,
   );
 
-export const scrollAreaViewport: ComponentFunction<ScrollAreaStyleProps> = ({ orientation }, ...etc) =>
+export const scrollAreaViewport: ComponentFunction<ScrollAreaStyleProps> = ({ orientation, snap }, ...etc) =>
   mx(
     'bs-full is-full rounded-[inherit]',
+    snap && orientation === 'vertical' && 'snap-y snap-mandatory',
+    snap && orientation === 'horizontal' && 'snap-x snap-mandatory',
+    snap && orientation === 'all' && 'snap-both snap-mandatory',
     orientation === 'vertical' && '[&>*]:!block [&>*]:is-full',
     orientation === 'horizontal' && '[&>*]:!block [&>*]:bs-full',
     orientation === 'all' && '[&>*]:!block',
