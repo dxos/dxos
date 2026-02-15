@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 
 import { OperationPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { withTheme() } from '@dxos/react-ui/testing';
+import { withTheme } from '@dxos/react-ui/testing';
 import { translations as shellTranslations } from '@dxos/shell/react';
 
 import { ClientPlugin } from '../ClientPlugin';

@@ -4,7 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
-import { withTheme() } from '@dxos/react-ui/testing';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { ContentLoading } from './ContentLoading';
 

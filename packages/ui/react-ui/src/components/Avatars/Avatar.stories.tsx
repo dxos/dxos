@@ -9,7 +9,7 @@ import { type HuePalette } from '@dxos/ui-theme';
 import { type Size } from '@dxos/ui-types';
 import { hexToFallback } from '@dxos/util';
 
-import { withTheme() } from '../../testing';
+import { withTheme } from '../../testing';
 
 import { Avatar, type AvatarAnimation, type AvatarStatus, type AvatarVariant } from './Avatar';
 

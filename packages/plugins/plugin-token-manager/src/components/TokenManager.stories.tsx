@@ -7,7 +7,7 @@ import React, { useEffect, useState } from 'react';
 
 import { TestObjectGenerator } from '@dxos/echo-generator';
 import { faker } from '@dxos/random';
-import { withTheme() } from '@dxos/react-ui/testing';
+import { withTheme } from '@dxos/react-ui/testing';
 import { AccessToken } from '@dxos/types';
 
 import { TokenManager, type TokenManagerProps } from './TokenManager';

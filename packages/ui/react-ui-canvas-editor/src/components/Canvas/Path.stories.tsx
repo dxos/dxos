@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useMemo, useRef } from 'react';
 
-import { withTheme() } from '@dxos/react-ui/testing';
+import { withTheme } from '@dxos/react-ui/testing';
 import { Canvas, type CanvasController, Grid, useCanvasContext, useWheel } from '@dxos/react-ui-canvas';
 
 import { useRope } from '../../hooks';

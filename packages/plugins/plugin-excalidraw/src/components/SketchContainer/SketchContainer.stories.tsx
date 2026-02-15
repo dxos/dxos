@@ -7,7 +7,7 @@ import React, { useState } from 'react';
 
 import { createObject } from '@dxos/echo-db';
 import { Diagram } from '@dxos/plugin-sketch/types';
-import { withTheme() } from '@dxos/react-ui/testing';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { EXCALIDRAW_SCHEMA } from '../../types';
 

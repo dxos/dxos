@@ -8,7 +8,7 @@ import React from 'react';
 import { Obj } from '@dxos/echo';
 import { faker } from '@dxos/random';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { withLayout, withTheme() } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Grid, type GridEditing, defaultRowSize } from '@dxos/react-ui-grid';
 import { View } from '@dxos/schema';
 import { Task } from '@dxos/types';

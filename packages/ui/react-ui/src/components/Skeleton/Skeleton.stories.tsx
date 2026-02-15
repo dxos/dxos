@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { withTheme() } from '../../testing';
+import { withTheme } from '../../testing';
 
 import { Skeleton } from './Skeleton';
 

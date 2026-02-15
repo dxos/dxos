@@ -8,7 +8,7 @@ import { faker } from '@dxos/random';
 
 faker.seed(123);
 
-import { withLayout, withTheme() } from '../../testing';
+import { withLayout, withTheme } from '../../testing';
 
 import { ScrollArea } from './ScrollArea';
 

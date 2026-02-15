@@ -13,7 +13,7 @@ import { SearchPlugin } from '@dxos/plugin-search';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { SpaceOperation } from '@dxos/plugin-space/types';
 import { corePlugins } from '@dxos/plugin-testing';
-import { withLayout, withTheme() } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as searchTranslation } from '@dxos/react-ui-searchlist';
 import { Collection } from '@dxos/schema';
 

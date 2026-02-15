@@ -8,7 +8,7 @@ import React, { useCallback, useState } from 'react';
 import { Obj, Query } from '@dxos/echo';
 import { faker } from '@dxos/random';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
-import { withTheme() } from '@dxos/react-ui/testing';
+import { withTheme } from '@dxos/react-ui/testing';
 import { TestSchema, type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
 import { Domino, mx } from '@dxos/ui';
 import { insertAtCursor, insertAtLineStart, join } from '@dxos/ui-editor';

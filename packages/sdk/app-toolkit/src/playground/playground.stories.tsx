@@ -8,7 +8,7 @@ import React from 'react';
 
 import { OperationPlugin } from '@dxos/app-framework';
 import { useApp } from '@dxos/app-framework/ui';
-import { withTheme() } from '@dxos/react-ui/testing';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { DebugPlugin } from './debug';
 import { GeneratorPlugin, createNumberPlugin } from './generator';

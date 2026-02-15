@@ -8,7 +8,7 @@ import React, { useEffect } from 'react';
 
 import { log } from '@dxos/log';
 import { useAsyncState } from '@dxos/react-ui';
-import { withTheme() } from '@dxos/react-ui/testing';
+import { withTheme } from '@dxos/react-ui/testing';
 import { render } from '@dxos/storybook-utils';
 import { mx } from '@dxos/ui-theme';
 

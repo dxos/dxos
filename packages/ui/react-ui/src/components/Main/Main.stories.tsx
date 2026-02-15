@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { withLayout, withTheme() } from '../../testing';
+import { withLayout, withTheme } from '../../testing';
 import { IconButton } from '../Button';
 import { Toolbar } from '../Toolbar';
 

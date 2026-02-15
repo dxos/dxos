@@ -7,7 +7,7 @@ import React, { type PropsWithChildren, useEffect, useState } from 'react';
 
 import { addEventListener, combine } from '@dxos/async';
 import { Flex, Input, Layout, Splitter, type SplitterMode, Toolbar } from '@dxos/react-ui';
-import { withLayout, withTheme() } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { MobileLayout, type MobileLayoutRootProps } from './MobileLayout';
 

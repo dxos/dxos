@@ -7,7 +7,7 @@ import React, { useEffect, useState } from 'react';
 
 import { faker } from '@dxos/random';
 import { Toolbar } from '@dxos/react-ui';
-import { withTheme() } from '@dxos/react-ui/testing';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { TextCrawl, sizes } from './TextCrawl';
 

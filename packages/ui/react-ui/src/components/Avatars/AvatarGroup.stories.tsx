@@ -8,7 +8,7 @@ import React from 'react';
 import { useId } from '@dxos/react-hooks';
 import { toEmoji } from '@dxos/util';
 
-import { withTheme() } from '../../testing';
+import { withTheme } from '../../testing';
 
 import { Avatar } from './Avatar';
 

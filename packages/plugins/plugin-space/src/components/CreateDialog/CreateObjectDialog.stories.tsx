@@ -11,7 +11,7 @@ import { Filter, Obj } from '@dxos/echo';
 import { useDatabase, useQuery } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Dialog } from '@dxos/react-ui';
-import { withTheme() } from '@dxos/react-ui/testing';
+import { withTheme } from '@dxos/react-ui/testing';
 import { Collection } from '@dxos/schema';
 import { translations as shellTranslations } from '@dxos/shell/react';
 
@@ -35,7 +35,7 @@ const meta = {
   component: CreateObjectDialog,
   render: DefaultStory,
   decorators: [
-    withTheme(), // TODO(wittjosiah): Try to write story which does not depend on plugin manager.
+    withTheme, // TODO(wittjosiah): Try to write story which does not depend on plugin manager.
     withPluginManager({
       plugins: [RuntimePlugin(), OperationPlugin()],
     }),

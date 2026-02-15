@@ -7,7 +7,7 @@ import React, { useState } from 'react';
 
 import { createObject } from '@dxos/echo-db';
 import { Button, Toolbar } from '@dxos/react-ui';
-import { withTheme() } from '@dxos/react-ui/testing';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { migrateCanvas } from '../../migrations';
 import { data } from '../../testing';

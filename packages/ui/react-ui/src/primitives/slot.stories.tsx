@@ -8,7 +8,7 @@ import React, { type PropsWithChildren, forwardRef } from 'react';
 
 import { mx } from '@dxos/ui-theme';
 
-import { withTheme() } from '../testing';
+import { withTheme } from '../testing';
 
 // Outer primitive (like Tooltip.Trigger or Focus.Group).
 const Outer = forwardRef<HTMLDivElement, PropsWithChildren<{ className?: string; asChild?: boolean; role?: string }>>(

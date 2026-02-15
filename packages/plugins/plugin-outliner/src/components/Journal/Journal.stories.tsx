@@ -8,7 +8,7 @@ import React, { useMemo, useState } from 'react';
 import { Obj, Ref } from '@dxos/echo';
 import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { withTheme() } from '@dxos/react-ui/testing';
+import { withTheme } from '@dxos/react-ui/testing';
 import { Text as TextType } from '@dxos/schema';
 
 import { translations } from '../../translations';

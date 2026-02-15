@@ -7,7 +7,7 @@ import React, { type PropsWithChildren, type ReactNode, useRef, useState } from 
 
 import { faker } from '@dxos/random';
 
-import { withTheme() } from '../../testing';
+import { withTheme } from '../../testing';
 import { Button } from '../Button';
 
 import { Popover } from './Popover';

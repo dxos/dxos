@@ -9,7 +9,7 @@ import { OperationPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { faker } from '@dxos/random';
-import { withTheme() } from '@dxos/react-ui/testing';
+import { withTheme } from '@dxos/react-ui/testing';
 import { CardContainer } from '@dxos/react-ui-mosaic/testing';
 
 import { translations } from '../../translations';

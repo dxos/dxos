@@ -12,7 +12,7 @@ import { faker } from '@dxos/random';
 import { Filter, useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { Button } from '@dxos/react-ui';
-import { withTheme() } from '@dxos/react-ui/testing';
+import { withTheme } from '@dxos/react-ui/testing';
 import { Person } from '@dxos/types';
 import { osTranslations } from '@dxos/ui-theme';
 

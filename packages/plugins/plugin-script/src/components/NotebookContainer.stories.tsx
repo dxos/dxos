@@ -19,7 +19,7 @@ import { Markdown, MarkdownPlugin } from '@dxos/plugin-markdown';
 import { corePlugins } from '@dxos/plugin-testing';
 import { Config, useClient } from '@dxos/react-client';
 import { useQuery } from '@dxos/react-client/echo';
-import { withLayout, withTheme() } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { DataTypes } from '@dxos/schema';
 
 import { createNotebook } from '../testing';

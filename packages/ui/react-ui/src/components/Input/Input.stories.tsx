@@ -8,7 +8,7 @@ import React from 'react';
 import { mx, surfaceShadow } from '@dxos/ui-theme';
 import { type MessageValence } from '@dxos/ui-types';
 
-import { withTheme() } from '../../testing';
+import { withTheme } from '../../testing';
 
 import {
   type CheckboxProps,

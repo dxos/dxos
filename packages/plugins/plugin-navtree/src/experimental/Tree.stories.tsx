@@ -7,7 +7,7 @@ import React, { type JSX, type PropsWithChildren, useEffect, useState } from 're
 
 import { faker } from '@dxos/random';
 import { Icon, IconButton } from '@dxos/react-ui';
-import { withLayout, withTheme() } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
 import { type ItemMap, Tree, type TreeNodeData, type TreeProps, visitNodes, visitor } from './Tree';

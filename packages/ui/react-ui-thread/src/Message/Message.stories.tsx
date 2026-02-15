@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { PublicKey } from '@dxos/keys';
-import { withTheme() } from '@dxos/react-ui/testing';
+import { withTheme } from '@dxos/react-ui/testing';
 import { hoverableControls, hoverableFocusedWithinControls } from '@dxos/ui-theme';
 
 import { type MessageEntity, MessageStoryText } from '../testing';

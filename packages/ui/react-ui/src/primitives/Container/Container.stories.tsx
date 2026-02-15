@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { Input } from '../../components';
-import { withTheme() } from '../../testing';
+import { withTheme } from '../../testing';
 
 import { Container, type ContainerRootProps } from './Container';
 

@@ -10,7 +10,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { type Node } from '@dxos/app-graph';
 import { corePlugins } from '@dxos/plugin-testing';
 import { faker } from '@dxos/random';
-import { withTheme() } from '@dxos/react-ui/testing';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { NavTreeItemAction, type NavTreeItemActionMenuProps } from './NavTreeItemAction';
 

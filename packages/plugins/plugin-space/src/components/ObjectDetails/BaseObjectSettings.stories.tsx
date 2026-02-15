@@ -7,7 +7,7 @@ import React, { useEffect, useState } from 'react';
 
 import { type Obj, Tag } from '@dxos/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
-import { withTheme() } from '@dxos/react-ui/testing';
+import { withTheme } from '@dxos/react-ui/testing';
 import { render } from '@dxos/storybook-utils';
 import { Pipeline } from '@dxos/types';
 

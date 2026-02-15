@@ -7,7 +7,7 @@ import React, { useState } from 'react';
 
 import { faker } from '@dxos/random';
 
-import { withTheme() } from '../../testing';
+import { withTheme } from '../../testing';
 import { withLayoutVariants } from '../../testing';
 
 import { Select } from './Select';

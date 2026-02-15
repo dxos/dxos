@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { Layout } from '../../primitives';
-import { withLayout, withTheme() } from '../../testing';
+import { withLayout, withTheme } from '../../testing';
 import { Toolbar } from '../Toolbar';
 
 import { Splitter, type SplitterRootProps } from './Splitter';

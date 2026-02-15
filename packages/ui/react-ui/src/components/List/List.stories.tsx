@@ -18,7 +18,7 @@ import {
   surfaceShadow,
 } from '@dxos/ui-theme';
 
-import { withTheme() } from '../../testing';
+import { withTheme } from '../../testing';
 import { Icon } from '../Icon';
 
 import { List, ListItem, type ListScopedProps } from './List';

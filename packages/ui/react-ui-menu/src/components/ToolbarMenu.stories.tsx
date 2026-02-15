@@ -8,7 +8,7 @@ import React, { useMemo } from 'react';
 
 import { faker } from '@dxos/random';
 import { IconButton } from '@dxos/react-ui';
-import { withTheme() } from '@dxos/react-ui/testing';
+import { withTheme } from '@dxos/react-ui/testing';
 import { withRegistry } from '@dxos/storybook-utils';
 
 import { MenuProvider, DropdownMenu as NaturalDropdownMenu, ToolbarMenu } from '../components';

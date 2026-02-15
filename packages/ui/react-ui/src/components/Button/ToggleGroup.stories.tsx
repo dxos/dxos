@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { withTheme() } from '../../testing';
+import { withTheme } from '../../testing';
 import { Icon } from '../Icon';
 
 import { ToggleGroup, ToggleGroupItem, type ToggleGroupProps } from './ToggleGroup';

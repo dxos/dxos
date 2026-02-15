@@ -9,7 +9,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { StorybookPlugin } from '@dxos/plugin-testing';
 import { faker } from '@dxos/random';
 import { Button, Icon } from '@dxos/react-ui';
-import { withTheme() } from '@dxos/react-ui/testing';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { useHelp } from '../../hooks';
 

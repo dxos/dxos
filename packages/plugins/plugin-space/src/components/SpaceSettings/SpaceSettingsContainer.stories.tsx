@@ -8,7 +8,7 @@ import React from 'react';
 import { OperationPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
-import { withTheme() } from '@dxos/react-ui/testing';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '../../translations';
 

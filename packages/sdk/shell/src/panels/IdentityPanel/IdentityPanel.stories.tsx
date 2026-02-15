@@ -10,7 +10,7 @@ import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { faker } from '@dxos/random';
 import { PublicKey } from '@dxos/react-client';
 import { Invitation } from '@dxos/react-client/invitations';
-import { withTheme() } from '@dxos/react-ui/testing';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { InvitationManager, type InvitationManagerProps } from '../../steps';
 import { StorybookDialog } from '../../story-components';

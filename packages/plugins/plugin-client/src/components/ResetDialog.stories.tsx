@@ -10,7 +10,7 @@ import { OperationPlugin, RuntimePlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { usePluginManager } from '@dxos/app-framework/ui';
 import { Dialog } from '@dxos/react-ui';
-import { withTheme() } from '@dxos/react-ui/testing';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { ClientPlugin } from '../ClientPlugin';
 import { translations } from '../translations';

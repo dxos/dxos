@@ -7,7 +7,7 @@ import React from 'react';
 
 import { faker } from '@dxos/random';
 
-import { withTheme() } from '../../testing';
+import { withTheme } from '../../testing';
 import { Button } from '../Button';
 
 import { Dialog, type DialogContentProps } from './Dialog';

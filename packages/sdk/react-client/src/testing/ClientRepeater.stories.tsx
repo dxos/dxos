@@ -7,7 +7,7 @@ import React from 'react';
 
 import { Obj } from '@dxos/echo';
 import { Input } from '@dxos/react-ui';
-import { withTheme() } from '@dxos/react-ui/testing';
+import { withTheme } from '@dxos/react-ui/testing';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 
 import { useClient } from '../client';

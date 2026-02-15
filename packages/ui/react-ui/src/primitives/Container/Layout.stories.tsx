@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { Input, ScrollArea, Toolbar } from '../../components';
-import { withLayout, withTheme() } from '../../testing';
+import { withLayout, withTheme } from '../../testing';
 import { Flex } from '../Flex';
 
 import { Layout } from './Layout';

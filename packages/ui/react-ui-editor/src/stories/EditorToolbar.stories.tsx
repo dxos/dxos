@@ -8,7 +8,7 @@ import React, { useCallback, useContext, useState } from 'react';
 
 import { invariant } from '@dxos/invariant';
 import { useThemeContext } from '@dxos/react-ui';
-import { withTheme() } from '@dxos/react-ui/testing';
+import { withTheme } from '@dxos/react-ui/testing';
 import { withRegistry } from '@dxos/storybook-utils';
 import {
   type EditorInputMode,

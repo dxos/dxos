@@ -7,7 +7,7 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import { faker } from '@dxos/random';
 
-import { withLayout, withTheme() } from '../../testing';
+import { withLayout, withTheme } from '../../testing';
 import { Button } from '../Button';
 import { Toolbar } from '../Toolbar';
 

@@ -8,7 +8,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { type Filter, Tag } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
-import { withLayout, withTheme() } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { Employer, Organization, Person, Pipeline } from '@dxos/types';
 
