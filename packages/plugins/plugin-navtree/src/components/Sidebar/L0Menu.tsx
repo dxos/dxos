@@ -334,7 +334,7 @@ export const L0Menu = ({ menuActions, topLevelItems, pinnedItems, userAccountIte
       </MenuProvider>
 
       {/* Space list. */}
-      <ScrollArea orientation='vertical' thin>
+      <ScrollArea thin orientation='vertical'>
         <div
           role='none'
           className={mx([

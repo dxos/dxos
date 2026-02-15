@@ -5,10 +5,12 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
-import { ScrollArea } from '@dxos/react-ui';
+import { ScrollArea } from '../Toolbar';
 
 import { Layout } from '../../primitives';
+
 import { withLayout, withTheme } from '../../testing';
+
 import { Toolbar } from '../Toolbar';
 
 import { Splitter, type SplitterRootProps } from './Splitter';
