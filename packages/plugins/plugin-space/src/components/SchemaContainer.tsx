@@ -6,7 +6,7 @@ import React, { useEffect, useState } from 'react';
 
 import { type Type } from '@dxos/echo';
 import { type Space } from '@dxos/react-client/echo';
-import { Layout, useTranslation } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-ui';
 import { ControlPage, ControlSection, controlItemClasses } from '@dxos/react-ui-form';
 
 import { meta } from '../meta';

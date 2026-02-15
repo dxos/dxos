@@ -8,7 +8,7 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { type Diagram } from '@dxos/plugin-sketch/types';
-import { Flex, type FlexProps, ScrollArea, Layout, useThemeContext } from '@dxos/react-ui';
+import { Flex, type FlexProps, ScrollArea, useThemeContext } from '@dxos/react-ui';
 
 import { useStoreAdapter } from '../../hooks';
 import { type SketchSettingsProps } from '../../types';
