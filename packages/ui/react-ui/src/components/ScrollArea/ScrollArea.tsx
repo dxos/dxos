@@ -10,10 +10,6 @@ import { type AllowedAxis, type Axis } from '@dxos/ui-types';
 import { useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
 
-//
-// NOTE: Due to a Radix UI bug, ScrollArea does not support nesting.
-//
-
 type ScrollAreaProps = ThemedClassName<ScrollAreaPrimitive.ScrollAreaProps> & {
   viewportRef?: RefCallback<HTMLElement | null>;
   orientation?: AllowedAxis;
@@ -36,7 +32,10 @@ const ScrollArea = forwardRef<HTMLDivElement, ScrollAreaProps>(
         className={tx('scrollArea.root', 'scroll-area', { orientation, thin }, classNames)}
         ref={forwardedRef}
       >
-        <ScrollAreaPrimitive.Viewport className={tx('scrollArea.viewport', 'scroll-area__viewport')} ref={viewportRef}>
+        <ScrollAreaPrimitive.Viewport
+          className={tx('scrollArea.viewport', 'scroll-area__viewport', { orientation })}
+          ref={viewportRef}
+        >
           {children}
         </ScrollAreaPrimitive.Viewport>
         {showVertical && <ScrollBar orientation='vertical' thin={thin} />}

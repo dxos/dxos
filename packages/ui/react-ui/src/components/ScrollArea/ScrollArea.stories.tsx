@@ -2,7 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import React from 'react';
+import React, { useMemo } from 'react';
+
+import { faker } from '@dxos/random';
+
+faker.seed(123);
 
 import { withLayout, withTheme } from '../../testing';
 
@@ -103,43 +107,41 @@ export const Both = {
   ),
 };
 
-/**
- * NOTE: This example demonstrates how to use ScrollArea with nested ScrollAreas.
- * However, due to a Radix UI bug, this example will not work as expected.
- */
 export const NestedScrollAreas = {
   decorators: [withTheme, withLayout({ layout: 'fullscreen' })],
   render: () => {
-    const columns = Array.from({ length: 8 }).map((_, index) => ({
-      id: String(index),
-      count: 20,
-    }));
+    const columns = useMemo(
+      () =>
+        Array.from({ length: 8 }).map((_, index) => ({
+          id: String(index),
+          count: faker.number.int({ min: 5, max: 50 }),
+        })),
+      [],
+    );
 
     return (
-      <div className='flex bs-full is-full overflow-hidden border border-sky-500'>
-        <ScrollArea orientation='horizontal'>
-          <div className='flex gap-4 p-3 bs-full overflow-hidden'>
-            {columns.map((column) => (
-              <div
-                key={column.id}
-                className='grid grid-rows-[min-content_1fr_min-content] bs-full overflow-hidden is-[300px]'
-              >
-                <div className='flex shrink-0 p-2 border border-separator'>Column {column.id}</div>
-                <ScrollArea orientation='vertical'>
-                  <div className='flex flex-col p-3 space-y-2'>
-                    {Array.from({ length: column.count }, (_, i) => (
-                      <div key={i} className={`p-3 border border-separator rounded-sm`}>
-                        Item {i + 1}
-                      </div>
-                    ))}
-                  </div>
-                </ScrollArea>
-                <div className={`p-2 border border-separator`}>Footer</div>
-              </div>
-            ))}
-          </div>
-        </ScrollArea>
-      </div>
+      <ScrollArea thin orientation='horizontal'>
+        <div className='flex gap-4 p-3 bs-full'>
+          {columns.map((column) => (
+            <div
+              key={column.id}
+              className='shrink-0 bs-full is-[16rem] grid grid-rows-[min-content_1fr_min-content] overflow-hidden border border-separator'
+            >
+              <div className='flex shrink-0 p-2 border-be border-separator'>Column {column.id}</div>
+              <ScrollArea thin orientation='vertical'>
+                <div className='flex flex-col p-3 gap-1'>
+                  {Array.from({ length: column.count }, (_, i) => (
+                    <div key={i} className={`p-2 border border-separator rounded-sm`}>
+                      Item {i + 1}
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
+              <div className={`p-2 border-bs border-separator`}>Footer</div>
+            </div>
+          ))}
+        </div>
+      </ScrollArea>
     );
   },
 };

@@ -2,20 +2,32 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Axis, type ComponentFunction, type Theme } from '@dxos/ui-types';
+import { type AllowedAxis, type ComponentFunction, type Theme } from '@dxos/ui-types';
 
 import { mx } from '../../util';
 
 export type ScrollAreaStyleProps = {
-  orientation?: Axis;
+  orientation?: AllowedAxis;
   thin?: boolean;
 };
 
-export const scrollAreaRoot: ComponentFunction<ScrollAreaStyleProps> = (_props, ...etc) =>
-  mx('bs-full is-full relative overflow-hidden', ...etc);
+export const scrollAreaRoot: ComponentFunction<ScrollAreaStyleProps> = ({ orientation }, ...etc) =>
+  mx(
+    'relative overflow-hidden',
+    orientation === 'vertical' && 'bs-full is-full min-bs-0',
+    orientation === 'horizontal' && 'bs-full is-full min-is-0',
+    orientation === 'all' && 'bs-full is-full min-bs-0 min-is-0',
+    ...etc,
+  );
 
-export const scrollAreaViewport: ComponentFunction<ScrollAreaStyleProps> = (_props, ...etc) =>
-  mx('bs-full is-full rounded-[inherit]', ...etc);
+export const scrollAreaViewport: ComponentFunction<ScrollAreaStyleProps> = ({ orientation }, ...etc) =>
+  mx(
+    'bs-full is-full rounded-[inherit]',
+    orientation === 'vertical' && '[&>*]:!block [&>*]:is-full',
+    orientation === 'horizontal' && '[&>*]:!block [&>*]:bs-full',
+    orientation === 'all' && '[&>*]:!block',
+    ...etc,
+  );
 
 export const scrollAreaScrollbar: ComponentFunction<ScrollAreaStyleProps> = (
   { orientation = 'vertical', thin },
