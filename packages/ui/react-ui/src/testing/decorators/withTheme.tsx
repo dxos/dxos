@@ -8,25 +8,27 @@ import React, { memo } from 'react';
 import { defaultTx } from '@dxos/ui-theme';
 import { type ThemeMode } from '@dxos/ui-types';
 
-import { ThemeProvider, Tooltip } from '../../components';
+import { type ThemeContextValue, ThemeProvider, Tooltip } from '../../components';
 
 /**
- * Adds theme decorator (add to preview.ts)
+ * Adds theme decorator.
  */
-export const withTheme: Decorator = (Story, context) => {
-  const {
-    globals: { theme },
-    parameters: { translations },
-  } = context;
+export const withTheme =
+  ({ tx = defaultTx, ...props }: Partial<ThemeContextValue> = {}): Decorator =>
+  (Story, context) => {
+    const {
+      globals: { theme },
+      parameters: { translations },
+    } = context;
 
-  // Prevent re-rendering of the story.
-  const MemoizedStory = memo(Story);
+    // Prevent re-rendering of the story.
+    const MemoizedStory = memo(Story);
 
-  return (
-    <ThemeProvider tx={defaultTx} themeMode={theme as ThemeMode} resourceExtensions={translations} noCache>
-      <Tooltip.Provider>
-        <MemoizedStory />
-      </Tooltip.Provider>
-    </ThemeProvider>
-  );
-};
+    return (
+      <ThemeProvider {...props} tx={tx} themeMode={theme as ThemeMode} resourceExtensions={translations} noCache>
+        <Tooltip.Provider>
+          <MemoizedStory />
+        </Tooltip.Provider>
+      </ThemeProvider>
+    );
+  };

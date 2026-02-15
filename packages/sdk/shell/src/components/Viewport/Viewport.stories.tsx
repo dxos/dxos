@@ -57,7 +57,7 @@ const StorybookViewport = (props: StorybookViewportProps) => {
 const meta = {
   title: 'sdk/shell/StorybookViewport',
   component: StorybookViewport,
-  decorators: [withTheme],
+  decorators: [withTheme()],
 } satisfies Meta<typeof StorybookViewport>;
 
 export default meta;

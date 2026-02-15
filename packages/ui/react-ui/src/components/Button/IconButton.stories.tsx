@@ -27,7 +27,7 @@ const meta = {
   title: 'ui/react-ui-core/components/IconButton',
   component: IconButton,
   render: DefaultStory as any,
-  decorators: [withTheme],
+  decorators: [withTheme()],
 } satisfies Meta<typeof IconButton>;
 
 export default meta;

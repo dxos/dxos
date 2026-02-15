@@ -42,7 +42,7 @@ const meta = {
   title: 'ui/react-ui-core/components/Breadcrumb',
   component: Breadcrumb.Root as any,
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

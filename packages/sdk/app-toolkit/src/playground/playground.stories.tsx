@@ -43,7 +43,7 @@ const DefaultStory = () => {
 const meta = {
   title: 'sdk/composer-toolkit/playground',
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

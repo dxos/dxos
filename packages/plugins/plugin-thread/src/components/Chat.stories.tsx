@@ -57,7 +57,7 @@ const meta = {
   component: ThreadComponent.Root as any,
   render: render(DefaultStory),
   decorators: [
-    withTheme,
+    withTheme(),
     withPluginManager({
       plugins: [OperationPlugin()],
       capabilities: [

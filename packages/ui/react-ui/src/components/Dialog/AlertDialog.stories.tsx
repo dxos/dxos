@@ -50,7 +50,7 @@ const meta = {
   title: 'ui/react-ui-core/components/AlertDialog',
   component: AlertDialog.Root as any,
   render: DefaultStory as any,
-  decorators: [withTheme],
+  decorators: [withTheme()],
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

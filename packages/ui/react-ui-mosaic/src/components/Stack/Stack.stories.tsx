@@ -33,12 +33,12 @@ const createTestItems = (n: number) =>
 const meta: Meta<typeof Stack<Obj.Any>> = {
   title: 'ui/react-ui-mosaic/Stack',
   component: Stack,
-  decorators: [withLayout({ layout: 'column' }), withTheme],
+  decorators: [withLayout({ layout: 'column' }), withTheme()],
   parameters: {
     layout: 'fullscreen',
   },
   args: {
-    axis: 'vertical',
+    orientation: 'vertical',
     getId: (item) => item.id,
     Tile: DefaultStackTile,
     // debug: true,
@@ -62,12 +62,12 @@ export const Default: Story = {
         </Toolbar.Root>
         <Mosaic.Container
           asChild
-          axis='vertical'
+          orientation='vertical'
           autoScroll={viewport}
           eventHandler={{ id: 'test', canDrop: () => true }}
           debug={debugHandler}
         >
-          <Mosaic.Viewport axis='vertical' padding viewportRef={setViewport}>
+          <Mosaic.Viewport padding viewportRef={setViewport}>
             <Mosaic.Stack {...props} items={items} />
           </Mosaic.Viewport>
         </Mosaic.Container>
@@ -91,12 +91,12 @@ export const Virtual: Story = {
         </Toolbar.Root>
         <Mosaic.Container
           asChild
-          axis='vertical'
+          orientation='vertical'
           autoScroll={viewport}
           eventHandler={{ id: 'test', canDrop: () => true }}
           debug={debugHandler}
         >
-          <Mosaic.Viewport axis='vertical' padding viewportRef={setViewport}>
+          <Mosaic.Viewport padding viewportRef={setViewport}>
             <Mosaic.VirtualStack
               {...props}
               items={items}

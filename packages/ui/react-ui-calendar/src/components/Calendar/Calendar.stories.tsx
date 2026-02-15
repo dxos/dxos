@@ -14,7 +14,7 @@ import { Calendar } from './Calendar';
 const meta = {
   title: 'ui/react-ui-calendar/Calendar',
   component: Calendar.Grid,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'centered',
     translations,

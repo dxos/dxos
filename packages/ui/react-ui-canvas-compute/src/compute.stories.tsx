@@ -190,7 +190,7 @@ const meta = {
   component: Editor.Root as any,
   render: DefaultStory,
   decorators: [
-    withTheme,
+    withTheme(),
     withAttention(),
     withClientProvider({ createIdentity: true, createSpace: true }),
     withPluginManager({ capabilities }),

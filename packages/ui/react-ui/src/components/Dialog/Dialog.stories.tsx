@@ -55,7 +55,7 @@ const meta = {
   title: 'ui/react-ui-core/components/Dialog',
   component: Dialog as any,
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     chromatic: {
       disableSnapshot: false,

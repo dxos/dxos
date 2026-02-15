@@ -84,7 +84,7 @@ const meta = {
   title: 'ui/react-ui-gameboard/Chessboard',
   component: Chessboard,
   render: DefaultStory,
-  decorators: [withRegistry, withTheme, withLayout({ layout: 'column' })],
+  decorators: [withRegistry, withTheme(), withLayout({ layout: 'column' })],
 } satisfies Meta<typeof Chessboard>;
 
 export default meta;

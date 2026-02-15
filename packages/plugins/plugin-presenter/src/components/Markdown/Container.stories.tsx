@@ -23,7 +23,7 @@ const DefaultStory = ({ content = '' }: SlideProps) => {
 const meta = {
   title: 'plugins/plugin-presenter/Container',
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'fullscreen',
   },

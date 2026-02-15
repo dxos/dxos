@@ -28,7 +28,7 @@ const meta = {
   title: 'ui/react-ui-core/components/ToggleGroup',
   component: ToggleGroup,
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
 } satisfies Meta<typeof ToggleGroup>;
 
 export default meta;

@@ -1,35 +1,67 @@
 //
-// Copyright 2023 DXOS.org
+// Copyright 2026 DXOS.org
 //
 
-import { type ComponentFunction, type Theme } from '@dxos/ui-types';
+import { type AllowedAxis, type ComponentFunction, type Theme } from '@dxos/ui-types';
 
 import { mx } from '../../util';
 
-export type ScrollAreaStyleProps = {};
+export type ScrollAreaStyleProps = {
+  native?: boolean;
+  orientation?: AllowedAxis;
+  padding?: boolean;
+  thin?: boolean;
+  snap?: boolean;
+};
 
-export const scrollAreaRoot: ComponentFunction<ScrollAreaStyleProps> = (_props, ...etc) =>
-  mx('bs-full overflow-hidden', ...etc);
-
-export const scrollAreaViewport: ComponentFunction<ScrollAreaStyleProps> = (_props, ...etc) =>
-  mx('bs-full is-full [&>div]:table-fixed [&>div]:is-full', ...etc);
-
-export const scrollAreaScrollbar: ComponentFunction<ScrollAreaStyleProps> = (_props, ...etc) =>
+export const scrollAreaRoot: ComponentFunction<ScrollAreaStyleProps> = ({ orientation }, ...etc) =>
   mx(
-    'flex select-none touch-none p-0.5 ease-out',
-    'data-[orientation=vertical]:is-1.5 sm:data-[orientation=vertical]:data-[variant=coarse]:is-3',
-    'data-[orientation=horizontal]:flex-col data-[orientation=horizontal]:bs-1.5 sm:data-[orientation=horizontal]:data-[variant=coarse]:bs-3',
-    'sm:data-[variant=coarse]:bg-separator rounded-full',
-    '[&>div]:bg-unAccent sm:[&[data-variant=coarse]>div]:bg-attention',
+    'relative overflow-hidden',
+    orientation === 'vertical' && 'bs-full is-full min-bs-0',
+    orientation === 'horizontal' && 'bs-full is-full min-is-0',
+    orientation === 'all' && 'bs-full is-full min-bs-0 min-is-0',
     ...etc,
   );
 
-export const scrollAreaThumb: ComponentFunction<ScrollAreaStyleProps> = (_props, ...etc) =>
+export const scrollAreaViewport: ComponentFunction<ScrollAreaStyleProps> = (
+  { native, orientation, padding, snap },
+  ...etc
+) =>
   mx(
-    'flex-1 rounded-full relative',
-    "before:content-[''] before:absolute before:top-1/2 before:left-1/2 before:-translate-x-1/2 before:-translate-y-1/2 before:is-full before:bs-full before:min-w-[6px] before:min-h-[6px]",
+    'bs-full is-full rounded-[inherit]',
+    padding && [
+      orientation === 'vertical' && 'pli-3',
+      orientation === 'horizontal' && 'pbe-3',
+      orientation === 'all' && 'pli-3 pbe-3',
+    ],
+    snap && [
+      orientation === 'vertical' && 'snap-y snap-mandatory',
+      orientation === 'horizontal' && 'snap-x snap-mandatory',
+      orientation === 'all' && 'snap-both snap-mandatory',
+    ],
+    !native && [
+      orientation === 'vertical' && '[&>*]:!block [&>*]:is-full',
+      orientation === 'horizontal' && '[&>*]:!block [&>*]:bs-full',
+      orientation === 'all' && '[&>*]:!block',
+    ],
     ...etc,
   );
+
+export const scrollAreaScrollbar: ComponentFunction<ScrollAreaStyleProps> = (
+  { orientation = 'vertical', thin },
+  ...etc
+) =>
+  mx(
+    'flex touch-none select-none transition-colors',
+    orientation === 'vertical' && !thin && 'bs-full is-2.5 border-l border-l-transparent p-[1px]',
+    orientation === 'vertical' && thin && 'bs-full is-1.5 border-l border-l-transparent p-[1px]',
+    orientation === 'horizontal' && !thin && 'is-full bs-2.5 flex-col border-t border-t-transparent p-[1px]',
+    orientation === 'horizontal' && thin && 'is-full bs-1.5 flex-col border-t border-t-transparent p-[1px]',
+    ...etc,
+  );
+
+export const scrollAreaThumb: ComponentFunction<ScrollAreaStyleProps> = ({ thin }, ...etc) =>
+  mx('relative flex-1 rounded-full bg-neutral-300 dark:bg-neutral-600', thin && 'min-w-[4px] min-h-[4px]', ...etc);
 
 export const scrollAreaCorner: ComponentFunction<ScrollAreaStyleProps> = (_props, ...etc) => mx(...etc);
 

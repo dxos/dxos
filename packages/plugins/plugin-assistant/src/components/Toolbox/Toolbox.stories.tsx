@@ -28,7 +28,7 @@ const meta = {
   component: Toolbox as any,
   render: DefaultStory,
   decorators: [
-    withTheme,
+    withTheme(),
     withPluginManager({
       plugins: [
         ...corePlugins(),

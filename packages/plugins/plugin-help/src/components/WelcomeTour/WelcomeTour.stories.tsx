@@ -109,7 +109,7 @@ const meta = {
   component: WelcomeTour,
   render: DefaultStory,
   decorators: [
-    withTheme,
+    withTheme(),
     withPluginManager({
       plugins: [StorybookPlugin({})],
     }),

@@ -17,7 +17,7 @@ import { type ClientRepeatedComponentProps, ClientRepeater } from './ClientRepea
 
 const meta = {
   title: 'sdk/react-client/ClientRepeater',
-  decorators: [withTheme],
+  decorators: [withTheme()],
 } satisfies Meta<typeof Input>;
 
 export default meta;

@@ -34,7 +34,7 @@ const meta = {
   title: 'plugins/plugin-outliner/Outline',
   component: OutlineStory,
   decorators: [
-    withTheme,
+    withTheme(),
     // TODO(burdon): Can we create a storybook for the Outliner without the database?
     withClientProvider({
       createIdentity: true,

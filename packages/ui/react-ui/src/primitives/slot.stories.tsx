@@ -4,13 +4,14 @@
 
 import { Slot } from '@radix-ui/react-slot';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { type ReactNode, forwardRef } from 'react';
+import React, { type PropsWithChildren, forwardRef } from 'react';
 
-import { withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
+import { withTheme } from '../testing';
+
 // Outer primitive (like Tooltip.Trigger or Focus.Group).
-const Outer = forwardRef<HTMLDivElement, { children: ReactNode; className?: string; asChild?: boolean; role?: string }>(
+const Outer = forwardRef<HTMLDivElement, PropsWithChildren<{ className?: string; asChild?: boolean; role?: string }>>(
   (props, ref) => {
     const { children, className, asChild, ...rest } = props;
     const Comp = asChild ? Slot : 'div';
@@ -23,21 +24,20 @@ const Outer = forwardRef<HTMLDivElement, { children: ReactNode; className?: stri
 );
 
 // Middle primitive (like Dialog.Trigger or Mosaic.Cell).
-const Middle = forwardRef<
-  HTMLDivElement,
-  { children: ReactNode; className?: string; asChild?: boolean; role?: string }
->((props, ref) => {
-  const { children, className, asChild, ...rest } = props;
-  const Comp = asChild ? Slot : 'div';
-  return (
-    <Comp {...rest} className={mx('p-2', className)} data-middle='true' ref={ref}>
-      {children}
-    </Comp>
-  );
-});
+const Middle = forwardRef<HTMLDivElement, PropsWithChildren<{ className?: string; asChild?: boolean; role?: string }>>(
+  (props, ref) => {
+    const { children, className, asChild, ...rest } = props;
+    const Comp = asChild ? Slot : 'div';
+    return (
+      <Comp {...rest} className={mx('p-2', className)} data-middle='true' ref={ref}>
+        {children}
+      </Comp>
+    );
+  },
+);
 
-// Leaf component (like MyButton or Card.Root).
-const Leaf = forwardRef<HTMLButtonElement, { children: ReactNode; className?: string; role?: string }>(
+// Leaf component (like Card.Root).
+const Leaf = forwardRef<HTMLButtonElement, PropsWithChildren<{ className?: string; role?: string }>>(
   ({ className, ...props }, ref) => {
     return (
       <button className={mx('p-2 outline-none border rounded', className)} {...props} ref={ref}>
@@ -77,8 +77,8 @@ const TestInner = (props: { className?: string; role?: string }) => (
 );
 
 const meta = {
-  title: 'ui/react-ui-mosaic/Slot',
-  decorators: [withTheme],
+  title: 'ui/react-ui-core/primitives/slot',
+  decorators: [withTheme()],
   parameters: {
     layout: 'centered',
   },

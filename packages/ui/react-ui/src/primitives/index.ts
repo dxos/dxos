@@ -3,4 +3,4 @@
 //
 
 export * from './Container';
-export * from './Scrollable';
+export * from './Flex';

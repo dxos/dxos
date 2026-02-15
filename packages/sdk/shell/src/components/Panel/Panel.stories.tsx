@@ -17,7 +17,7 @@ import { Label } from './Label';
 const meta = {
   title: 'sdk/shell/StorybookDialog',
   component: StorybookDialog,
-  decorators: [withTheme],
+  decorators: [withTheme()],
 } satisfies Meta<typeof StorybookDialog>;
 
 export default meta;

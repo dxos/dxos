@@ -70,7 +70,7 @@ const meta = {
   title: 'ui/react-ui-core/components/Main',
   component: Main.Root,
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ layout: 'fullscreen' })],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
     chromatic: {

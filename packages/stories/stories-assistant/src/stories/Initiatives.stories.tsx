@@ -130,7 +130,7 @@ const StackContainer = ({ objects }: { objects: Obj.Any[] }) => {
 const storybook: Meta<typeof DefaultStory> = {
   title: 'stories/stories-assistant/Initiatives',
   render: render(DefaultStory),
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'fullscreen',
     translations,

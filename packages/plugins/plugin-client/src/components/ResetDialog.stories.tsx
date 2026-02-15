@@ -38,7 +38,7 @@ const meta = {
   component: ResetDialog,
   render: DefaultStory,
   decorators: [
-    withTheme,
+    withTheme(),
     withPluginManager({
       plugins: [RuntimePlugin(), OperationPlugin(), ClientPlugin({})],
     }),

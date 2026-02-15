@@ -10,10 +10,10 @@ import { Filter, Obj, Ref } from '@dxos/echo';
 import { useObject, useObjects } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
 import { useQuery } from '@dxos/react-client/echo';
+import { Layout } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { Board, type BoardController, type BoardRootProps, type Position } from '@dxos/react-ui-board';
 import { ObjectPicker, type ObjectPickerContentProps } from '@dxos/react-ui-form';
-import { Layout } from '@dxos/react-ui-mosaic';
 import { isNonNullable } from '@dxos/util';
 
 import { type Board as BoardType } from '../types';

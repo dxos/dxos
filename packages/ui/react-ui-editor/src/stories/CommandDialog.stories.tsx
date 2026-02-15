@@ -68,7 +68,7 @@ const CommandDialog = ({ onAction }: { onAction: (action?: any) => void }) => {
 const meta = {
   title: 'ui/react-ui-editor/CommandDialog',
   render: () => <EditorStory text={join('# Command', '', '')} extensions={[]} />,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'fullscreen',
   },

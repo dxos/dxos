@@ -127,7 +127,7 @@ const meta = {
   render: DefaultStory,
 
   decorators: [
-    withTheme,
+    withTheme(),
     withLayout({
       layout: 'fullscreen',
     }),

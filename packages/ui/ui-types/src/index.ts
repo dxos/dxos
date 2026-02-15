@@ -9,6 +9,7 @@ export * from './translations';
 export type * from './density';
 export type * from './elevation';
 export type * from './message';
+export type * from './orientation';
 export type * from './palette';
 export type * from './size';
 export type * from './theme';

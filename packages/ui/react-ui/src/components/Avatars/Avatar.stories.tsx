@@ -59,7 +59,7 @@ const DefaultStory = (props: StoryProps) => {
 const meta = {
   title: 'ui/react-ui-core/components/Avatar',
   component: Avatar.Root,
-  decorators: [withTheme],
+  decorators: [withTheme()],
 } satisfies Meta<typeof Avatar.Root>;
 
 export default meta;

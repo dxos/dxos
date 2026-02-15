@@ -116,7 +116,7 @@ const meta = {
   title: 'ui/react-ui-canvas-editor/GraphCanvas',
   component: GraphCanvas,
   render: render(DefaultStory),
-  decorators: [withRegistry, withTheme, withLayout()],
+  decorators: [withRegistry, withTheme(), withLayout()],
 } satisfies Meta<typeof GraphCanvas>;
 
 export default meta;

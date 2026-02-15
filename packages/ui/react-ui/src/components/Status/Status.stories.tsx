@@ -12,7 +12,7 @@ import { Status } from './Status';
 const meta = {
   title: 'ui/react-ui-core/components/Status',
   component: Status,
-  decorators: [withTheme],
+  decorators: [withTheme()],
 } satisfies Meta<typeof Status>;
 
 export default meta;

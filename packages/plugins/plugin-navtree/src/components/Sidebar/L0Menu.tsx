@@ -322,7 +322,7 @@ export const L0Menu = ({ menuActions, topLevelItems, pinnedItems, userAccountIte
                   role='none'
                   className={mx(
                     l0ItemContent,
-                    'is-[--rail-action] bs-[--rail-action] group-hover/l0item:bg-hoverSurface',
+                    'bs-[--rail-action] is-[--rail-action] group-hover/l0item:bg-hoverSurface',
                   )}
                 >
                   <Icon icon='ph--list--regular' size={5} />
@@ -334,31 +334,26 @@ export const L0Menu = ({ menuActions, topLevelItems, pinnedItems, userAccountIte
       </MenuProvider>
 
       {/* Space list. */}
-      <ScrollArea.Root>
-        <ScrollArea.Viewport>
-          <div
-            role='none'
-            className={mx([
-              'flex flex-col gap-1 pbs-1',
-              '[body[data-platform="macos"]_&]:pbs-[30px]',
-              '[body[data-platform="ios"]_&]:pbs-[max(env(safe-area-inset-top),0.25rem)]',
-            ])}
-          >
-            {topLevelItems.map((item) => (
-              <L0Item
-                key={item.id}
-                item={item}
-                parent={parent}
-                path={path}
-                {...(hasRearrangeableItems && { onRearrange: handleRearrange })}
-              />
-            ))}
-          </div>
-          <ScrollArea.Scrollbar orientation='vertical'>
-            <ScrollArea.Thumb />
-          </ScrollArea.Scrollbar>
-        </ScrollArea.Viewport>
-      </ScrollArea.Root>
+      <ScrollArea thin orientation='vertical'>
+        <div
+          role='none'
+          className={mx([
+            'flex flex-col gap-1 pbs-1',
+            '[body[data-platform="macos"]_&]:pbs-[30px]',
+            '[body[data-platform="ios"]_&]:pbs-[max(env(safe-area-inset-top),0.25rem)]',
+          ])}
+        >
+          {topLevelItems.map((item) => (
+            <L0Item
+              key={item.id}
+              item={item}
+              parent={parent}
+              path={path}
+              {...(hasRearrangeableItems && { onRearrange: handleRearrange })}
+            />
+          ))}
+        </div>
+      </ScrollArea>
 
       {/* Actions. */}
       <div role='none' className='grid grid-cols-1 auto-rows-[--rail-action] pbs-2'>

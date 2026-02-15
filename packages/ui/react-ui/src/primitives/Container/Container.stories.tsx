@@ -29,7 +29,7 @@ const meta: Meta<typeof Container.Root> = {
   title: 'ui/react-ui-core/primitives/Container',
   component: Container.Root,
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'centered',
   },
@@ -38,6 +38,15 @@ const meta: Meta<typeof Container.Root> = {
 export default meta;
 
 type Story = StoryObj<typeof meta>;
+
+// TODO(burdon): Requires container.
+export const Default = () => {
+  return (
+    <Container.Root>
+      <Container.Column>Column</Container.Column>
+    </Container.Root>
+  );
+};
 
 export const SM: Story = {
   args: {

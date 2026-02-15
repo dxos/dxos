@@ -58,7 +58,7 @@ const EventCardStory = ({ role }: Pick<SurfaceComponentProps<Event.Event>, 'role
 const meta = {
   title: 'plugins/plugin-inbox/EventCard',
   component: EventCardStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'centered',
   },

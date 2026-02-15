@@ -83,7 +83,7 @@ const DefaultStory = () => {
 const meta = {
   title: 'ui/react-ui-core/playground/Controls',
   render: DefaultStory,
-  decorators: [withTheme, withLayoutVariants()],
+  decorators: [withTheme(), withLayoutVariants()],
 } satisfies Meta<typeof Icon>;
 
 export default meta;

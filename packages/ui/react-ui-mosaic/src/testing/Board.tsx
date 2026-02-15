@@ -9,7 +9,7 @@ import React, { forwardRef, useMemo, useRef, useState } from 'react';
 import { Obj, Ref, Type } from '@dxos/echo';
 import { ObjectId } from '@dxos/keys';
 import { useObject } from '@dxos/react-client/echo';
-import { Tag, type ThemedClassName } from '@dxos/react-ui';
+import { Layout, Tag, type ThemedClassName } from '@dxos/react-ui';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { getHashStyles, mx } from '@dxos/ui-theme';
 
@@ -78,27 +78,23 @@ const Root = forwardRef<HTMLDivElement, RootProps>(({ id, columns, debug }, forw
   });
 
   return (
-    <div
-      role='none'
-      className={mx('plb-2 grid bs-full is-full overflow-hidden', debug && 'grid-cols-[1fr_20rem] gap-2')}
-      ref={forwardedRef}
-    >
-      <Focus.Group asChild axis='horizontal'>
+    <Layout.Main ref={forwardedRef}>
+      <Focus.Group asChild orientation='horizontal'>
         <Mosaic.Container
           asChild
           withFocus
-          axis='horizontal'
+          orientation='horizontal'
           autoScroll={viewport}
           eventHandler={eventHandler}
           debug={debugHandler}
         >
-          <Mosaic.Viewport axis='horizontal' padding viewportRef={setViewport}>
-            <Mosaic.Stack axis='horizontal' items={columns} getId={(item) => item.id} Tile={Column} debug={debug} />
+          <Mosaic.Viewport padding thin snap viewportRef={setViewport} classNames='md:pbs-3'>
+            <Mosaic.Stack items={columns} getId={(item) => item.id} Tile={Column} debug={debug} />
           </Mosaic.Viewport>
         </Mosaic.Container>
       </Focus.Group>
       <DebugInfo />
-    </div>
+    </Layout.Main>
   );
 });
 
@@ -146,7 +142,8 @@ const Column = forwardRef<HTMLDivElement, ColumnProps>(({ classNames, location, 
       <Focus.Group asChild>
         <div
           className={mx(
-            'grid bs-full card-default-width overflow-hidden bg-deckSurface',
+            'grid bs-full is-screen md:is-card-default-width bg-deckSurface',
+            'snap-center ms:snap-align-none',
             debug ? 'grid-rows-[min-content_1fr_20rem]' : 'grid-rows-[min-content_1fr_min-content]',
             classNames,
           )}
@@ -161,13 +158,13 @@ const Column = forwardRef<HTMLDivElement, ColumnProps>(({ classNames, location, 
             <Mosaic.Container
               asChild
               withFocus
-              axis='vertical'
+              orientation='vertical'
               autoScroll={viewport}
               eventHandler={eventHandler}
               debug={debugHandler}
             >
-              <Mosaic.Viewport axis='vertical' padding viewportRef={setViewport}>
-                <Mosaic.Stack axis='vertical' items={column.items} getId={(data) => data.dxn.toString()} Tile={Item} />
+              <Mosaic.Viewport padding thin snap viewportRef={setViewport}>
+                <Mosaic.Stack items={column.items} getId={(data) => data.dxn.toString()} Tile={Item} />
               </Mosaic.Viewport>
             </Mosaic.Container>
           </Card.Context>
@@ -208,7 +205,11 @@ const Item = forwardRef<HTMLDivElement, ItemProps>(({ classNames, data: ref, loc
       debug={debug}
     >
       <Focus.Group asChild>
-        <Card.Root classNames={classNames} onClick={() => rootRef.current?.focus()} ref={composedRef}>
+        <Card.Root
+          classNames={mx('snap-start md:snap-align-none', classNames)}
+          onClick={() => rootRef.current?.focus()}
+          ref={composedRef}
+        >
           <Card.Toolbar>
             <Card.DragHandle ref={dragHandleRef} />
             <Card.Title>{object.name}</Card.Title>

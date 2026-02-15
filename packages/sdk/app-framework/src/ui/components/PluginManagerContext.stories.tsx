@@ -172,7 +172,7 @@ const DefaultStory = () => {
 const meta = {
   title: 'sdk/app-framework/PluginManagerContext',
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'fullscreen',
   },

@@ -25,7 +25,7 @@ const meta = {
   title: 'sdk/shell/JoinPanel',
   component: JoinPanelImpl,
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'centered',
     translations,

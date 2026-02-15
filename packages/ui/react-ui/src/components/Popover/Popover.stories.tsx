@@ -32,7 +32,7 @@ const meta = {
   title: 'ui/react-ui-core/components/Popover',
   component: Popover.Root,
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

@@ -33,7 +33,7 @@ const CardStory = () => {
 const meta = {
   title: 'plugins/plugin-chess/Card',
   render: () => <CardStory />,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'centered',
   },

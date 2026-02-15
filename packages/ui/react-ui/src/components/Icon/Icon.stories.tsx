@@ -62,7 +62,7 @@ const DefaultStory = ({ CustomIcon }: { CustomIcon: FC<IconProps> }) => {
 const meta = {
   title: 'ui/react-ui-core/components/Icon',
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'centered',
   },

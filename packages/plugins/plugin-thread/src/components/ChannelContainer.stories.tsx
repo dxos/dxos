@@ -35,7 +35,7 @@ const meta = {
   component: ChannelContainer,
   render: render(DefaultStory),
   decorators: [
-    withTheme,
+    withTheme(),
     withLayout({ layout: 'column' }),
     withPluginManager({
       plugins: [...(await createThreadPlugins())],

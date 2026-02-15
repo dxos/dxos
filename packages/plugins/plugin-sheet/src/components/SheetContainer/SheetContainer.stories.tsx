@@ -28,7 +28,7 @@ const meta = {
   title: 'plugins/plugin-sheet/SheetContainer',
   component: SheetContainer,
   decorators: [
-    withTheme,
+    withTheme(),
     withLayout({ layout: 'fullscreen' }),
     withClientProvider({ types: [Sheet.Sheet], createSpace: true }),
     withComputeGraphDecorator(),

@@ -8,8 +8,7 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { type Diagram } from '@dxos/plugin-sketch/types';
-import { useThemeContext } from '@dxos/react-ui';
-import { Layout, type LayoutFlexProps } from '@dxos/react-ui-mosaic';
+import { Flex, type FlexProps, Layout, useThemeContext } from '@dxos/react-ui';
 
 import { useStoreAdapter } from '../../hooks';
 import { type SketchSettingsProps } from '../../types';
@@ -24,7 +23,7 @@ export type SketchContainerProps = SurfaceComponentProps<
 /**
  * https://docs.excalidraw.com/docs/@excalidraw/excalidraw/api/props
  */
-export const SketchContainer = ({ role, subject: sketch, settings }: SketchContainerProps) => {
+export const SketchContainer = ({ role, subject: sketch }: SketchContainerProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const { themeMode } = useThemeContext();
   const [down, setDown] = useState<boolean>(false);
@@ -114,4 +113,4 @@ export const SketchContainer = ({ role, subject: sketch, settings }: SketchConta
   );
 };
 
-const Container = (props: LayoutFlexProps) => <Layout.Flex {...props} classNames='aspect-square' />;
+const Container = (props: FlexProps) => <Flex {...props} classNames='aspect-square' />;

@@ -85,7 +85,7 @@ const OrganizationItem = ({ organization }: { organization: Organization.Organiz
 const meta = {
   title: 'plugins/plugin-inbox/Popover',
   decorators: [
-    withTheme,
+    withTheme(),
     withPluginManager({
       plugins: [
         ...corePlugins(),

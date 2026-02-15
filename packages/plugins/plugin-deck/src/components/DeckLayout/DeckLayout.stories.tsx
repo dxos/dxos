@@ -34,7 +34,7 @@ const meta = {
   component: DeckLayout,
   render: (args) => <DeckLayout {...args} />,
   decorators: [
-    withTheme,
+    withTheme(),
     withPluginManager({
       plugins: [...corePlugins(), TestPlugin()],
     }),

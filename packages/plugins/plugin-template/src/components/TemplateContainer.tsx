@@ -6,7 +6,7 @@ import React from 'react';
 
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
-import { Layout } from '@dxos/react-ui-mosaic';
+import { Layout } from '@dxos/react-ui';
 
 export type TemplateContainerProps = SurfaceComponentProps<Obj.Unknown>;
 

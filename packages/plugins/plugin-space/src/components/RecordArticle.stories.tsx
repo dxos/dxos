@@ -42,7 +42,7 @@ const meta = {
   component: RecordArticle as any,
   render: render(DefaultStory),
   decorators: [
-    withTheme,
+    withTheme(),
     // TODO(wittjosiah): Try to write story which does not depend on plugin manager.
     withPluginManager({
       capabilities: [

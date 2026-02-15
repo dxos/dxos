@@ -41,7 +41,7 @@ const noOpProps: IdentityPanelImplProps = {
 
 const meta = {
   title: 'sdk/shell/IdentityPanel',
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     translations,
     chromatic: {

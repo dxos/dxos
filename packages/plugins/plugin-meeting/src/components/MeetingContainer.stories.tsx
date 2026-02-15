@@ -38,7 +38,7 @@ const meta = {
   component: MeetingContainer,
   render: () => <Render />,
   decorators: [
-    withTheme,
+    withTheme(),
     withLayout({ layout: 'column' }),
     withPluginManager({
       plugins: [

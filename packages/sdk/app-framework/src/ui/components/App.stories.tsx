@@ -49,7 +49,7 @@ const DefaultStory = () => {
 const meta = {
   title: 'sdk/app-framework/App',
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'fullscreen',
   },

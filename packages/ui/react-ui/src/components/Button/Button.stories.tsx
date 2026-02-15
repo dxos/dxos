@@ -36,7 +36,7 @@ const meta = {
   title: 'ui/react-ui-core/components/Button',
   component: Button,
   render: DefaultStory,
-  decorators: [withTheme, withLayoutVariants()],
+  decorators: [withTheme(), withLayoutVariants()],
 } satisfies Meta<typeof Button>;
 
 export default meta;

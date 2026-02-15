@@ -6,7 +6,7 @@ import React from 'react';
 
 import { type Plugin } from '@dxos/app-framework';
 import { Icon, Input, Link, useTranslation } from '@dxos/react-ui';
-import { Layout } from '@dxos/react-ui-mosaic';
+import { Layout } from '@dxos/react-ui';
 import { getStyles, mx } from '@dxos/ui-theme';
 
 import { meta } from '../meta';

@@ -79,7 +79,7 @@ const meta = {
   title: 'stories/stories-ui/MosaicSurface',
   render: DefaultStory,
   decorators: [
-    withTheme,
+    withTheme(),
     withLayout({ layout: 'fullscreen' }),
     withPluginManager<{ title?: string; content?: string }>(() => ({
       plugins: [

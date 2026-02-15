@@ -12,10 +12,9 @@ import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
-import { Board, TestColumn, TestItem } from '../../testing';
-import { Focus } from '../Focus';
+import { Focus, Mosaic } from '../components';
 
-import { Mosaic } from './Mosaic';
+import { Board, TestColumn, TestItem } from './Board';
 
 faker.seed(999);
 
@@ -67,10 +66,10 @@ const DefaultStory = ({ debug = false }: StoryProps) => {
 };
 
 const meta = {
-  title: 'ui/react-ui-mosaic/Mosaic',
+  title: 'ui/react-ui-mosaic/Board',
   render: DefaultStory,
   decorators: [
-    withTheme,
+    withTheme({ platform: 'desktop' }),
     withLayout({ layout: 'fullscreen' }),
     withClientProvider({
       types: [TestColumn, TestItem],

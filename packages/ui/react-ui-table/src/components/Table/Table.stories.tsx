@@ -153,7 +153,7 @@ const meta = {
   title: 'ui/react-ui-table/Table',
   render: DefaultStory,
   decorators: [
-    withTheme,
+    withTheme(),
     withRegistry,
     withClientProvider({
       types: [View.View, Table.Table],

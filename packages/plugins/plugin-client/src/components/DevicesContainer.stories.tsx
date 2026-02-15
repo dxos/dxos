@@ -19,7 +19,7 @@ const meta = {
   title: 'plugins/plugin-client/DevicesContainer',
   component: DevicesContainer,
   decorators: [
-    withTheme,
+    withTheme(),
     withPluginManager({
       plugins: [
         ClientPlugin({

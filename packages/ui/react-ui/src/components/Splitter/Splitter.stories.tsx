@@ -5,10 +5,9 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
-import { Toolbar } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
-
-import { Layout } from '../Layout';
+import { Layout } from '../../primitives';
+import { withLayout, withTheme } from '../../testing';
+import { Toolbar } from '../Toolbar';
 
 import { Splitter, type SplitterRootProps } from './Splitter';
 
@@ -50,10 +49,10 @@ const DefaultStory = (props: SplitterRootProps) => {
 };
 
 const meta: Meta<SplitterRootProps> = {
-  title: 'ui/react-ui-mosaic/Splitter',
+  title: 'ui/react-ui-core/components/Splitter',
   component: Splitter.Root,
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ layout: 'column' })],
+  decorators: [withTheme(), withLayout({ layout: 'column' })],
   parameters: {
     layout: 'fullscreen',
   },

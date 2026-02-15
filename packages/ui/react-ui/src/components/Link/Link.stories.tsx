@@ -11,7 +11,7 @@ import { Link } from './Link';
 const meta = {
   title: 'ui/react-ui-core/components/Link',
   component: Link,
-  decorators: [withTheme],
+  decorators: [withTheme()],
 } satisfies Meta<typeof Link>;
 
 export default meta;

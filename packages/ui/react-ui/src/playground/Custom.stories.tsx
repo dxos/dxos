@@ -111,7 +111,7 @@ const meta = {
   title: 'ui/react-ui-core/playground/Custom',
   component: Button,
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'centered',
   },

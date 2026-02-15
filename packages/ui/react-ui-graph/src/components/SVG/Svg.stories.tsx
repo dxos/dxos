@@ -45,7 +45,7 @@ const DefaultStory = (props: ComponentProps) => {
 const meta = {
   title: 'ui/react-ui-graph/SVGRoot',
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'fullscreen',
   },

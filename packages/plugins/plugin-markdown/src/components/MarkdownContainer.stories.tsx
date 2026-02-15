@@ -55,7 +55,7 @@ const meta = {
   title: 'plugins/plugin-markdown/MarkdownContainer',
   render: DefaultStory,
   decorators: [
-    withTheme,
+    withTheme(),
     withLayout({ layout: 'column' }),
     withPluginManager<{ title?: string; content?: string }>((context) => ({
       plugins: [

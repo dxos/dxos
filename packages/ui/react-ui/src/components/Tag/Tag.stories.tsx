@@ -26,7 +26,7 @@ const meta = {
       ))}
     </div>
   ),
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     chromatic: {
       disableSnapshot: false,

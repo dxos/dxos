@@ -10,7 +10,7 @@ export const styles = {
     // TODO(burdon): Handle selection (aria-current?)
     // TODO(burdon): Use ring instead of border?
     root: [
-      'outline-none border border-separator rounded-sm',
+      'outline-none border border-separator md:rounded-sm',
       // Focus (e.g., via tabster).
       // TODO(burdon): Why is ! required?
       'focus:!border-accentSurface',

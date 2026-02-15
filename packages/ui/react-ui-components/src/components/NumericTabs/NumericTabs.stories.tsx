@@ -20,7 +20,7 @@ const content = Array.from({ length: 15 }, () => ({
 const meta = {
   title: 'ui/react-ui-components/NumericTabs',
   component: NumericTabs,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'centered',
   },

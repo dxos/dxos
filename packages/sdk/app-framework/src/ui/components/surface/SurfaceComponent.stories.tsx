@@ -129,7 +129,7 @@ const DefaultStory = () => {
 const meta = {
   title: 'sdk/app-framework/Surface',
   render: DefaultStory,
-  decorators: [withTheme, withPluginManager({ capabilities: [] })],
+  decorators: [withTheme(), withPluginManager({ capabilities: [] })],
   parameters: {
     layout: 'fullscreen',
   },

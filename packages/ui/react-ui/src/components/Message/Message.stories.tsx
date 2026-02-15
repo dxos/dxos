@@ -28,7 +28,7 @@ const meta = {
   title: 'ui/react-ui-core/components/Callout',
   component: Callout.Root as any,
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: { chromatic: { disableSnapshot: false } },
   argTypes: {
     valence: {

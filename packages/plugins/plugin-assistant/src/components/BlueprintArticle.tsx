@@ -7,9 +7,8 @@ import React from 'react';
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { type Blueprint } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';
-import { Toolbar } from '@dxos/react-ui';
+import { Layout, Toolbar } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
-import { Layout } from '@dxos/react-ui-mosaic';
 
 import { TemplateEditor } from './TemplateEditor';
 

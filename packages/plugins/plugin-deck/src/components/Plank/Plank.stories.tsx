@@ -38,7 +38,7 @@ const meta = {
     );
   },
   decorators: [
-    withTheme,
+    withTheme(),
     withPluginManager({
       plugins: [...corePlugins(), TestPlugin()],
     }),

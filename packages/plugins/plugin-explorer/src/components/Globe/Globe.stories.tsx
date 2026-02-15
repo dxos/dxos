@@ -81,7 +81,7 @@ const ExtendedStory = () => {
 
 const meta = {
   title: 'plugins/plugin-explorer/Globe',
-  decorators: [withTheme, withLayout()],
+  decorators: [withTheme(), withLayout()],
   parameters: {
     layout: 'fullscreen',
   },

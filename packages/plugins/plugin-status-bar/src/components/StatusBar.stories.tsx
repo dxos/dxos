@@ -35,7 +35,7 @@ const meta = {
   title: 'plugins/plugin-status/StatusBar',
   component: StatusBar as any,
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
 } satisfies Meta<typeof StatusBar>;
 
 export default meta;

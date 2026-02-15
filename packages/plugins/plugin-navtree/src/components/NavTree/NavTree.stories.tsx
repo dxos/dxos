@@ -120,7 +120,7 @@ const meta = {
   component: NavTreeContainer,
   render: DefaultStory,
   decorators: [
-    withTheme,
+    withTheme(),
     withPluginManager({
       plugins: [
         ...corePlugins(),

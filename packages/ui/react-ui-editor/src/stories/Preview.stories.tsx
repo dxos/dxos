@@ -181,7 +181,7 @@ const PreviewBlockComponent = ({ link, el, view }: { link: PreviewLinkRef; el: H
 const meta = {
   title: 'ui/react-ui-editor/Preview',
   component: EditorStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'fullscreen',
   },

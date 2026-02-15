@@ -27,7 +27,7 @@ const meta = {
   title: 'sdk/app-framework/withPluginManager',
   render: DefaultStory,
   decorators: [
-    withTheme,
+    withTheme(),
     withPluginManager({
       capabilities: [
         Capability.contributes(

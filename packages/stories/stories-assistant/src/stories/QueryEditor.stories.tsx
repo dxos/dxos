@@ -63,7 +63,7 @@ const meta: Meta<typeof QueryEditor> = {
   component: QueryEditor,
   render: render(DefaultStory),
   decorators: [
-    withTheme,
+    withTheme(),
     withClientProvider({
       types: [Organization.Organization, Person.Person, Pipeline.Pipeline, Employer.Employer],
       createIdentity: true,

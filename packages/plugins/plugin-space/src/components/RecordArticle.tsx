@@ -8,9 +8,9 @@ import { Surface } from '@dxos/app-framework/ui';
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { type Database, Entity, Filter, Obj, Ref, Relation } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
-import { useTranslation } from '@dxos/react-ui';
+import { Layout, useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
-import { Layout, Card as MosaicCard } from '@dxos/react-ui-mosaic';
+import { Card as MosaicCard } from '@dxos/react-ui-mosaic';
 import { mx } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 

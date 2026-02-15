@@ -54,7 +54,7 @@ const MessageCardStory = ({ role }: Pick<SurfaceComponentProps<Message.Message>,
 const meta = {
   title: 'plugins/plugin-inbox/MessageCard',
   component: MessageCardStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'centered',
   },

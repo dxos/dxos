@@ -194,7 +194,7 @@ const StackContainer = ({ objects }: { objects: Obj.Unknown[] }) => {
 const storybook: Meta<typeof DefaultStory> = {
   title: 'stories/stories-assistant/Chat',
   render: render(DefaultStory),
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'fullscreen',
     translations,
