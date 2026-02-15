@@ -48,8 +48,6 @@ import {
   type Axis,
   Scrollable,
   type ScrollableProps,
-  // ScrollArea,
-  // type ScrollAreaProps,
   type SlottableClassName,
   type ThemedClassName,
 } from '@dxos/react-ui';
@@ -622,10 +620,10 @@ const VIEWPORT_NAME = 'Mosaic.Viewport';
 type ViewportProps = ScrollableProps;
 
 const Viewport = forwardRef<HTMLDivElement, ViewportProps>(
-  ({ orientation: orientationProp = 'vertical', ...props }, ref) => {
+  ({ orientation: orientationProp = 'vertical', ...props }, forwardedRef) => {
     const { orientation = orientationProp } = useContainerContext(VIEWPORT_NAME);
     invariant(orientation === 'horizontal' || orientation === 'vertical');
-    return <Scrollable {...props} orientation={orientation} ref={ref} />;
+    return <Scrollable {...props} orientation={orientation} ref={forwardedRef} />;
   },
 );
 

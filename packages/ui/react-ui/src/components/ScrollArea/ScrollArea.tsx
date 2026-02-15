@@ -33,15 +33,14 @@ const ScrollArea = forwardRef<HTMLDivElement, ScrollAreaProps>(
     return (
       <ScrollAreaPrimitive.Root
         {...props}
-        className={tx('scrollarea.root', 'scroll-area', { orientation, thin }, classNames)}
-        ref={forwardedRef}
+        className={tx('scrollarea.root', 'scrollarea', { orientation, thin }, classNames)}
       >
-        <ScrollAreaPrimitive.Viewport className={tx('scrollarea.viewport', 'scroll-area__viewport')}>
+        <ScrollAreaPrimitive.Viewport className={tx('scrollarea.viewport', 'scrollarea__viewport')} ref={forwardedRef}>
           {children}
         </ScrollAreaPrimitive.Viewport>
         {showVertical && <ScrollBar orientation='vertical' thin={thin} />}
         {showHorizontal && <ScrollBar orientation='horizontal' thin={thin} />}
-        <ScrollAreaPrimitive.Corner className={tx('scrollarea.corner', 'scroll-area__corner')} />
+        <ScrollAreaPrimitive.Corner className={tx('scrollarea.corner', 'scrollarea__corner')} />
       </ScrollAreaPrimitive.Root>
     );
   },
@@ -57,10 +56,10 @@ const ScrollBar = forwardRef<HTMLDivElement, ScrollBarProps>(
       <ScrollAreaPrimitive.Scrollbar
         orientation={orientation}
         {...props}
-        className={tx('scrollarea.scrollbar', 'scroll-area__scrollbar', { orientation, thin }, classNames)}
+        className={tx('scrollarea.scrollbar', 'scrollarea__scrollbar', { orientation, thin }, classNames)}
         ref={forwardedRef}
       >
-        <ScrollAreaPrimitive.Thumb className={tx('scrollarea.thumb', 'scroll-area__thumb', { thin })} />
+        <ScrollAreaPrimitive.Thumb className={tx('scrollarea.thumb', 'scrollarea__thumb', { thin })} />
       </ScrollAreaPrimitive.Scrollbar>
     );
   },
