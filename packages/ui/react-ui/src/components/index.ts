@@ -17,7 +17,6 @@ export * from './Menu';
 export * from './Message';
 export * from './Popover';
 export * from './Status';
-export * from './Scrollable';
 export * from './ScrollArea';
 export * from './ScrollContainer';
 export * from './Select';

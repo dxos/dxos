@@ -10,10 +10,14 @@ import { type AllowedAxis, type Axis } from '@dxos/ui-types';
 import { useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
 
+// TODO(burdon): Create natural alternative for mobile (use theme context).
+
 type ScrollAreaProps = ThemedClassName<ScrollAreaPrimitive.ScrollAreaProps> & {
   viewportRef?: RefCallback<HTMLElement | null>;
   orientation?: AllowedAxis;
+  padding?: boolean;
   thin?: boolean;
+  snap?: boolean;
 };
 
 /**
@@ -21,7 +25,7 @@ type ScrollAreaProps = ThemedClassName<ScrollAreaPrimitive.ScrollAreaProps> & {
  * Based on shadcn/ui's ScrollArea component pattern.
  */
 const ScrollArea = forwardRef<HTMLDivElement, ScrollAreaProps>(
-  ({ classNames, children, viewportRef, orientation = 'vertical', thin, ...props }, forwardedRef) => {
+  ({ classNames, children, viewportRef, orientation = 'vertical', padding, thin, snap, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     const showVertical = orientation === 'vertical' || orientation === 'all';
     const showHorizontal = orientation === 'horizontal' || orientation === 'all';
@@ -29,7 +33,7 @@ const ScrollArea = forwardRef<HTMLDivElement, ScrollAreaProps>(
     return (
       <ScrollAreaPrimitive.Root
         {...props}
-        className={tx('scrollArea.root', 'scroll-area', { orientation, thin }, classNames)}
+        className={tx('scrollArea.root', 'scroll-area', { orientation, padding, thin }, classNames)}
         ref={forwardedRef}
       >
         <ScrollAreaPrimitive.Viewport

@@ -41,13 +41,12 @@ import React, {
 } from 'react';
 import { createPortal } from 'react-dom';
 
-import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import {
   type AllowedAxis,
   type Axis,
-  Scrollable,
-  type ScrollableProps,
+  ScrollArea,
+  type ScrollAreaProps,
   type SlottableClassName,
   type ThemedClassName,
 } from '@dxos/react-ui';
@@ -617,13 +616,12 @@ Container.displayName = CONTAINER_NAME;
 
 const VIEWPORT_NAME = 'Mosaic.Viewport';
 
-type ViewportProps = ScrollableProps;
+type ViewportProps = ScrollAreaProps;
 
 const Viewport = forwardRef<HTMLDivElement, ViewportProps>(
   ({ orientation: orientationProp = 'vertical', ...props }, forwardedRef) => {
     const { orientation = orientationProp } = useContainerContext(VIEWPORT_NAME);
-    invariant(orientation === 'horizontal' || orientation === 'vertical');
-    return <Scrollable {...props} orientation={orientation} ref={forwardedRef} />;
+    return <ScrollArea {...props} orientation={orientation} ref={forwardedRef} />;
   },
 );
 

@@ -1,43 +1,6 @@
 {
-  "name": "@dxos/react-ui",
-  "version": "0.8.3",
-  "description": "Low-level React components for DXOS, applying a theme to a core group of primitives",
-  "homepage": "https://dxos.org",
-  "bugs": "https://github.com/dxos/dxos/issues",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/dxos/dxos"
-  },
-  "license": "MIT",
   "author": "DXOS.org",
-  "sideEffects": false,
-  "type": "module",
-  "exports": {
-    ".": {
-      "source": "./src/index.ts",
-      "types": "./dist/types/src/index.d.ts",
-      "browser": "./dist/lib/browser/index.mjs",
-      "node": "./dist/lib/node-esm/index.mjs"
-    },
-    "./testing": {
-      "source": "./src/testing/index.ts",
-      "types": "./dist/types/src/testing/index.d.ts",
-      "browser": "./dist/lib/browser/testing/index.mjs",
-      "node": "./dist/lib/node-esm/testing/index.mjs"
-    }
-  },
-  "types": "dist/types/src/index.d.ts",
-  "typesVersions": {
-    "*": {
-      "testing": [
-        "./dist/types/src/testing/index.d.ts"
-      ]
-    }
-  },
-  "files": [
-    "dist",
-    "src"
-  ],
+  "bugs": "https://github.com/dxos/dxos/issues",
   "dependencies": {
     "@atlaskit/pragmatic-drag-and-drop-hitbox": "catalog:",
     "@dxos/async": "workspace:*",
@@ -86,11 +49,10 @@
     "date-fns": "catalog:",
     "i18next": "catalog:",
     "keyborg": "catalog:",
-    "overlayscrollbars": "catalog:",
-    "overlayscrollbars-react": "catalog:",
     "react-i18next": "catalog:",
     "react-remove-scroll": "catalog:"
   },
+  "description": "Low-level React components for DXOS, applying a theme to a core group of primitives",
   "devDependencies": {
     "@dnd-kit/core": "catalog:",
     "@dnd-kit/sortable": "catalog:",
@@ -106,6 +68,27 @@
     "tabster": "catalog:",
     "vite": "catalog:"
   },
+  "exports": {
+    ".": {
+      "browser": "./dist/lib/browser/index.mjs",
+      "node": "./dist/lib/node-esm/index.mjs",
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts"
+    },
+    "./testing": {
+      "browser": "./dist/lib/browser/testing/index.mjs",
+      "node": "./dist/lib/node-esm/testing/index.mjs",
+      "source": "./src/testing/index.ts",
+      "types": "./dist/types/src/testing/index.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "homepage": "https://dxos.org",
+  "license": "MIT",
+  "name": "@dxos/react-ui",
   "peerDependencies": {
     "@dxos/ui-theme": "workspace:*",
     "react": "catalog:",
@@ -113,5 +96,20 @@
   },
   "publishConfig": {
     "access": "public"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "sideEffects": false,
+  "type": "module",
+  "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "testing": [
+        "./dist/types/src/testing/index.d.ts"
+      ]
+    }
+  },
+  "version": "0.8.3"
 }

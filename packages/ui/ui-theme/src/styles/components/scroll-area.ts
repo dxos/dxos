@@ -8,12 +8,16 @@ import { mx } from '../../util';
 
 export type ScrollAreaStyleProps = {
   orientation?: AllowedAxis;
+  padding?: boolean;
   thin?: boolean;
 };
 
-export const scrollAreaRoot: ComponentFunction<ScrollAreaStyleProps> = ({ orientation }, ...etc) =>
+export const scrollAreaRoot: ComponentFunction<ScrollAreaStyleProps> = ({ orientation, padding }, ...etc) =>
   mx(
     'relative overflow-hidden',
+    padding && orientation === 'vertical' && 'pli-3',
+    padding && orientation === 'horizontal' && 'pbe-3',
+    padding && orientation === 'all' && 'pli-3 pbe-3',
     orientation === 'vertical' && 'bs-full is-full min-bs-0',
     orientation === 'horizontal' && 'bs-full is-full min-is-0',
     orientation === 'all' && 'bs-full is-full min-bs-0 min-is-0',
