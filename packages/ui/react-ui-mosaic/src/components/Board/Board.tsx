@@ -16,6 +16,7 @@ import { useContainerDebug, useEventHandlerAdapter } from '../../hooks';
 import { Card, type CardMenuProps } from '../Card';
 import { Focus } from '../Focus';
 import { Mosaic, type MosaicTileProps, type MosiacPlaceholderProps, mosaicStyles, useMosaic } from '../Mosaic';
+import { type StackProps } from '../Stack';
 
 //
 // Model
@@ -45,56 +46,59 @@ const [BoardContextProvider, useBoardContext] = createContext<BoardContextValue>
 
 const BOARD_ROOT_NAME = 'Board.Root';
 
-type RootProps<TColumn extends Obj.Unknown = any, TItem extends Obj.Unknown = any> = ThemedClassName<
+type BoardRootProps<TColumn extends Obj.Unknown = any, TItem extends Obj.Unknown = any> = ThemedClassName<
   {
     id: string;
     debug?: boolean;
+    Tile?: StackProps<TColumn>['Tile'];
   } & BoardContextValue<TColumn, TItem>
 >;
 
-const RootInner = forwardRef<HTMLDivElement, RootProps>(({ classNames, id, model, debug }, forwardedRef) => {
-  const [DebugInfo, debugHandler] = useContainerDebug(debug);
-  const [viewport, setViewport] = useState<HTMLElement | null>(null);
+const BoardRootInner = forwardRef<HTMLDivElement, BoardRootProps>(
+  ({ classNames, id, model, debug, Tile = BoardColumn }, forwardedRef) => {
+    const [DebugInfo, debugHandler] = useContainerDebug(debug);
+    const [viewport, setViewport] = useState<HTMLElement | null>(null);
 
-  const items = model.getColumns();
-  const eventHandler = useEventHandlerAdapter({
-    id,
-    items,
-    getId: (data) => data.id,
-    get: (data) => data,
-    make: (object) => object,
-    canDrop: ({ source }) => model.isColumn(source.data),
-  });
+    const items = model.getColumns();
+    const eventHandler = useEventHandlerAdapter({
+      id,
+      items,
+      getId: (data) => data.id,
+      get: (data) => data,
+      make: (object) => object,
+      canDrop: ({ source }) => model.isColumn(source.data),
+    });
 
-  return (
-    <BoardContextProvider model={model}>
-      <Layout.Main ref={forwardedRef} classNames={mx('border-red-500', classNames)}>
-        <Focus.Group asChild orientation='horizontal'>
-          <Mosaic.Container
-            asChild
-            withFocus
-            orientation='horizontal'
-            autoScroll={viewport}
-            eventHandler={eventHandler}
-            debug={debugHandler}
-          >
-            <ScrollArea.Root orientation='horizontal' classNames='md:pbs-3' padding>
-              <ScrollArea.Viewport classNames='snap-x md:snap-none' ref={setViewport}>
-                <Mosaic.Stack items={items} getId={(item) => item.id} Tile={Column} debug={debug} />
-              </ScrollArea.Viewport>
-            </ScrollArea.Root>
-          </Mosaic.Container>
-        </Focus.Group>
-        <DebugInfo />
-      </Layout.Main>
-    </BoardContextProvider>
-  );
-});
+    return (
+      <BoardContextProvider model={model}>
+        <Layout.Main ref={forwardedRef} classNames={mx('border-red-500', classNames)}>
+          <Focus.Group asChild orientation='horizontal'>
+            <Mosaic.Container
+              asChild
+              withFocus
+              orientation='horizontal'
+              autoScroll={viewport}
+              eventHandler={eventHandler}
+              debug={debugHandler}
+            >
+              <ScrollArea.Root orientation='horizontal' classNames='md:pbs-3' padding>
+                <ScrollArea.Viewport classNames='snap-x md:snap-none' ref={setViewport}>
+                  <Mosaic.Stack items={items} getId={(item) => item.id} Tile={Tile} debug={debug} />
+                </ScrollArea.Viewport>
+              </ScrollArea.Root>
+            </Mosaic.Container>
+          </Focus.Group>
+          <DebugInfo />
+        </Layout.Main>
+      </BoardContextProvider>
+    );
+  },
+);
 
-RootInner.displayName = BOARD_ROOT_NAME;
+BoardRootInner.displayName = BOARD_ROOT_NAME;
 
-const Root = RootInner as <TColumn extends Obj.Unknown>(
-  props: RootProps<TColumn> & { ref?: ReactRef<HTMLDivElement> },
+const BoardRoot = BoardRootInner as <TColumn extends Obj.Unknown>(
+  props: BoardRootProps<TColumn> & { ref?: ReactRef<HTMLDivElement> },
 ) => ReactElement;
 
 //
@@ -103,12 +107,13 @@ const Root = RootInner as <TColumn extends Obj.Unknown>(
 
 const BOARD_COLUMN_NAME = 'Board.Column';
 
-type ColumnProps<TColumn extends Obj.Unknown> = Pick<
+type BoardColumnProps<TColumn extends Obj.Unknown> = Pick<
   MosaicTileProps<TColumn>,
   'classNames' | 'location' | 'data' | 'debug'
 >;
 
-const ColumnInner = forwardRef<HTMLDivElement, ColumnProps<Obj.Unknown>>(
+// TODO(burdon): Break into parts.
+const BoardColumnInner = forwardRef<HTMLDivElement, BoardColumnProps<Obj.Unknown>>(
   ({ classNames, location, data, debug }, forwardedRef) => {
     const { model } = useBoardContext(BOARD_COLUMN_NAME);
     const [column, updateColumn] = useObject(data);
@@ -181,7 +186,11 @@ const ColumnInner = forwardRef<HTMLDivElement, ColumnProps<Obj.Unknown>>(
               >
                 <ScrollArea.Root orientation='vertical' thin padding>
                   <ScrollArea.Viewport classNames='snap-y md:snap-none' ref={setViewport}>
-                    <Mosaic.Stack items={model.getItems(column)} getId={(data) => data.dxn.toString()} Tile={Item} />
+                    <Mosaic.Stack
+                      items={model.getItems(column)}
+                      getId={(data) => data.dxn.toString()}
+                      Tile={BoardItem}
+                    />
                   </ScrollArea.Viewport>
                 </ScrollArea.Root>
               </Mosaic.Container>
@@ -197,10 +206,10 @@ const ColumnInner = forwardRef<HTMLDivElement, ColumnProps<Obj.Unknown>>(
   },
 );
 
-ColumnInner.displayName = BOARD_COLUMN_NAME;
+BoardColumnInner.displayName = BOARD_COLUMN_NAME;
 
-const Column = ColumnInner as <TColumn extends Obj.Unknown>(
-  props: ColumnProps<TColumn> & { ref?: ReactRef<HTMLDivElement> },
+const BoardColumn = BoardColumnInner as <TColumn extends Obj.Unknown>(
+  props: BoardColumnProps<TColumn> & { ref?: ReactRef<HTMLDivElement> },
 ) => ReactElement;
 
 //
@@ -209,12 +218,12 @@ const Column = ColumnInner as <TColumn extends Obj.Unknown>(
 
 const BOARD_ITEM_NAME = 'Board.Item';
 
-type ItemProps<TItem extends Obj.Unknown> = Pick<
+type BoardItemProps<TItem extends Obj.Unknown> = Pick<
   MosaicTileProps<Ref.Ref<TItem>>,
   'classNames' | 'location' | 'data' | 'debug'
 >;
 
-const ItemInner = forwardRef<HTMLDivElement, ItemProps<Obj.Unknown>>(
+const BoardItemInner = forwardRef<HTMLDivElement, BoardItemProps<Obj.Unknown>>(
   ({ classNames, data: ref, location, debug }, forwardedRef) => {
     const rootRef = useRef<HTMLDivElement>(null);
     const composedRef = useComposedRefs<HTMLDivElement>(rootRef, forwardedRef);
@@ -260,19 +269,19 @@ const ItemInner = forwardRef<HTMLDivElement, ItemProps<Obj.Unknown>>(
   },
 );
 
-ItemInner.displayName = BOARD_ITEM_NAME;
+BoardItemInner.displayName = BOARD_ITEM_NAME;
 
-const Item = ItemInner as <TItem extends Obj.Unknown>(
-  props: ItemProps<TItem> & { ref?: ReactRef<HTMLDivElement> },
+const BoardItem = BoardItemInner as <TItem extends Obj.Unknown>(
+  props: BoardItemProps<TItem> & { ref?: ReactRef<HTMLDivElement> },
 ) => ReactElement;
 
 //
 // Placeholder
 //
 
-const PLACEHOLDER_NAME = 'Board.Placeholder';
+const BOARD_PLACEHOLDER_NAME = 'Board.Placeholder';
 
-const Placeholder = (props: MosiacPlaceholderProps<number>) => {
+const BoardPlaceholder = (props: MosiacPlaceholderProps<number>) => {
   return (
     <Mosaic.Placeholder {...props} classNames={mosaicStyles.placeholder.root}>
       <div
@@ -285,7 +294,7 @@ const Placeholder = (props: MosiacPlaceholderProps<number>) => {
   );
 };
 
-Placeholder.displayName = PLACEHOLDER_NAME;
+BoardPlaceholder.displayName = BOARD_PLACEHOLDER_NAME;
 
 //
 // Debug
@@ -293,7 +302,7 @@ Placeholder.displayName = PLACEHOLDER_NAME;
 
 const BOARD_DEBUG_NAME = 'Board.Debug';
 
-export const Debug = forwardRef<HTMLDivElement, ThemedClassName>(({ classNames }, forwardedRef) => {
+export const BoardDebug = forwardRef<HTMLDivElement, ThemedClassName>(({ classNames }, forwardedRef) => {
   const { containers, dragging } = useMosaic(BOARD_DEBUG_NAME);
   const counter = useRef(0);
   return (
@@ -305,12 +314,18 @@ export const Debug = forwardRef<HTMLDivElement, ThemedClassName>(({ classNames }
   );
 });
 
-Debug.displayName = BOARD_DEBUG_NAME;
+BoardDebug.displayName = BOARD_DEBUG_NAME;
 
 //
 // Board
 //
 
-export const Board = { Root, Column, Item, Placeholder, Debug };
+export const Board = {
+  Root: BoardRoot,
+  Column: BoardColumn,
+  Item: BoardItem,
+  Placeholder: BoardPlaceholder,
+  Debug: BoardDebug,
+};
 
-export type { RootProps, ColumnProps, ItemProps };
+export type { BoardRootProps, BoardColumnProps, BoardItemProps };

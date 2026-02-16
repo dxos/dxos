@@ -83,6 +83,8 @@ const DefaultStory = ({ debug = false }: StoryProps) => {
   );
 };
 
+// TODO(burdon): Specialize Column.
+
 const meta = {
   title: 'ui/react-ui-mosaic/Board',
   render: DefaultStory,
