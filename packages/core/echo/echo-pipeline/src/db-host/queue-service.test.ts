@@ -15,16 +15,17 @@ import { SqlTransaction } from '@dxos/sql-sqlite';
 
 import { LocalQueueServiceImpl } from './local-queue-service';
 
-const SqliteLayer = SqliteClient.layer({
-  filename: ':memory:',
-});
-const TransactionLayer = SqlTransaction.layer.pipe(Layer.provide(SqliteLayer));
-const TestLayer = Layer.merge(SqliteLayer, TransactionLayer);
+const TestLayer = SqlTransaction.layer.pipe(
+  Layer.provideMerge(
+    SqliteClient.layer({
+      filename: ':memory:',
+    }),
+  ),
+);
 
 describe('LocalQueueServiceImpl', () => {
   it.effect('should insert and query items', () =>
     Effect.gen(function* () {
-      const sql = yield* SqliteClient.SqliteClient;
       const feedStore = new FeedStore({ localActorId: 'actor-id', assignPositions: true });
       const runtime = yield* RuntimeProvider.currentRuntime<SqlClient.SqlClient | SqlTransaction.SqlTransaction>();
       const service = new LocalQueueServiceImpl(runtime, feedStore);
@@ -56,7 +57,6 @@ describe('LocalQueueServiceImpl', () => {
 
   it.effect('should delete items', () =>
     Effect.gen(function* () {
-      const sql = yield* SqliteClient.SqliteClient;
       const runtime = Effect.succeed(yield* Effect.runtime<any>());
       const feedStore = new FeedStore({ localActorId: 'actor-id', assignPositions: true });
       const service = new LocalQueueServiceImpl(runtime, feedStore);
@@ -96,7 +96,6 @@ describe('LocalQueueServiceImpl', () => {
 
   it.effect('should support pagination', () =>
     Effect.gen(function* () {
-      const sql = yield* SqliteClient.SqliteClient;
       const runtime = Effect.succeed(yield* Effect.runtime<any>());
       const feedStore = new FeedStore({ localActorId: 'actor-id', assignPositions: true });
       yield* feedStore.migrate();

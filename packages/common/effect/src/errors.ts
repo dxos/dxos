@@ -173,7 +173,7 @@ export const causeToError = (cause: Cause.Cause<any>): Error => {
  *
  * @throws AggregateError if there are multiple errors.
  */
-export const throwCause = (cause: Cause.Cause<any>, { stackTip }: { stackTip?: Function } = {}): never => {
+export const throwCause = (cause: Cause.Cause<any>): never => {
   throw causeToError(cause);
 };
 
