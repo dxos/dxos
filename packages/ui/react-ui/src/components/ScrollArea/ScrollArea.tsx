@@ -3,7 +3,7 @@
 //
 
 import { createContext } from '@radix-ui/react-context';
-import React, { type PropsWithChildren, forwardRef } from 'react';
+import React, { type HTMLAttributes, type PropsWithChildren, forwardRef } from 'react';
 
 import { type AllowedAxis } from '@dxos/ui-types';
 
@@ -18,6 +18,7 @@ const SCROLLAREA_NAME = 'ScrollArea';
 
 type ScrollAreaContextType = {
   orientation: AllowedAxis;
+  autoHide: boolean;
   padding: boolean;
   thin: boolean;
   snap: boolean;
@@ -31,26 +32,33 @@ const [ScrollAreaProvider, useScrollAreaContext] = createContext<ScrollAreaConte
 
 const SCROLLAREA_ROOT_NAME = 'ScrollArea.Root';
 
-type ScrollAreaRootProps = ThemedClassName<PropsWithChildren<{}>> & Partial<ScrollAreaContextType>;
+type ScrollAreaRootProps = ThemedClassName<
+  PropsWithChildren<HTMLAttributes<HTMLDivElement> & Partial<ScrollAreaContextType>>
+>;
 
 /**
  * ScrollArea provides native scrollbars with custom styling.
  */
 const ScrollAreaRoot = forwardRef<HTMLDivElement, ScrollAreaRootProps>(
   (
-    { classNames, children, orientation = 'vertical', padding = false, thin = false, snap = false, ...props },
+    {
+      classNames,
+      children,
+      orientation = 'vertical',
+      autoHide = true,
+      padding = false,
+      thin = false,
+      snap = false,
+      ...props
+    },
     forwardedRef,
   ) => {
     const { tx } = useThemeContext();
-    const options = { orientation, padding, thin, snap };
+    const options = { orientation, autoHide, padding, thin, snap };
 
     return (
       <ScrollAreaProvider {...options}>
-        <div
-          {...props}
-          className={tx('scrollArea.root', 'scroll-area', options, classNames)}
-          ref={forwardedRef}
-        >
+        <div {...props} className={tx('scrollArea.root', 'scroll-area', options, classNames)} ref={forwardedRef}>
           {children}
         </div>
       </ScrollAreaProvider>

@@ -70,12 +70,12 @@ export const Default = {
               <ScrollArea.Viewport classNames='p-2' ref={setViewport}>
                 <div
                   role='none'
-                  ref={parentRef}
                   style={{
                     position: 'relative',
                     height: virtualizer.getTotalSize(),
                     width: '100%',
                   }}
+                  ref={parentRef}
                 >
                   {virtualItems.map((virtualItem) => (
                     <div

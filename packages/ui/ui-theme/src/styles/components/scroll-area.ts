@@ -8,6 +8,7 @@ import { mx } from '../../util';
 
 export type ScrollAreaStyleProps = {
   orientation?: AllowedAxis;
+  autoHide?: boolean;
   padding?: boolean;
   thin?: boolean;
   snap?: boolean;
@@ -26,7 +27,7 @@ export const scrollAreaRoot: ComponentFunction<ScrollAreaStyleProps> = ({ orient
  * NOTE: The browser reserves space for scrollbars.
  */
 export const scrollAreaViewport: ComponentFunction<ScrollAreaStyleProps> = (
-  { orientation, padding, snap, thin },
+  { orientation, autoHide, padding, snap, thin },
   ...etc
 ) =>
   mx(
@@ -35,26 +36,30 @@ export const scrollAreaViewport: ComponentFunction<ScrollAreaStyleProps> = (
     orientation === 'horizontal' && 'flex overflow-x-scroll',
     orientation === 'all' && 'overflow-scroll',
 
-    // Scrollbar styling.
     thin
       ? '[&::-webkit-scrollbar]:is-[3px] [&::-webkit-scrollbar]:bs-[3px]'
       : '[&::-webkit-scrollbar]:is-[6px] [&::-webkit-scrollbar]:bs-[6px]',
 
+    // '[&::-webkit-scrollbar-thumb]:rounded-full',
     '[&::-webkit-scrollbar-thumb]:bg-transparent',
     '[&::-webkit-scrollbar-corner]:bg-transparent',
 
-    // '[&::-webkit-scrollbar-thumb]:rounded-full',
+    // TODO(burdon): Define token.
+    'hover:[&::-webkit-scrollbar-thumb]:bg-separator',
+    autoHide
+      ? [
+          orientation === 'vertical' && 'group-hover/scroll-v:[&::-webkit-scrollbar-thumb]:bg-subduedSeparator',
+          orientation === 'horizontal' && 'group-hover/scroll-h:[&::-webkit-scrollbar-thumb]:bg-subduedSeparator',
+          orientation === 'all' && 'group-hover/scroll-all:[&::-webkit-scrollbar-thumb]:bg-subduedSeparator',
+        ]
+      : [
+          orientation === 'vertical' && '[&::-webkit-scrollbar-thumb]:bg-subduedSeparator',
+          orientation === 'horizontal' && '[&::-webkit-scrollbar-thumb]:bg-subduedSeparator',
+          orientation === 'all' && '[&::-webkit-scrollbar-thumb]:bg-subduedSeparator',
+        ],
 
-    orientation === 'vertical' && 'group-hover/scroll-v:[&::-webkit-scrollbar-thumb]:bg-neutral-300',
-    orientation === 'vertical' && 'dark:group-hover/scroll-v:[&::-webkit-scrollbar-thumb]:bg-neutral-600',
-    orientation === 'horizontal' && 'group-hover/scroll-h:[&::-webkit-scrollbar-thumb]:bg-neutral-300',
-    orientation === 'horizontal' && 'dark:group-hover/scroll-h:[&::-webkit-scrollbar-thumb]:bg-neutral-600',
-    orientation === 'all' && 'group-hover/scroll-all:[&::-webkit-scrollbar-thumb]:bg-neutral-300',
-    orientation === 'all' && 'dark:group-hover/scroll-all:[&::-webkit-scrollbar-thumb]:bg-neutral-600',
-
-    // TODO(burdon): FIX.
     padding && [
-      orientation === 'vertical' && 'pie-2',
+      orientation === 'vertical' && 'pli-2',
       orientation === 'horizontal' && 'pbe-2',
       orientation === 'all' && 'pie-2 pbe-2',
     ],

@@ -112,15 +112,13 @@ export const SpaceGenerator = ({ space, onCreateObjects }: SpaceGeneratorProps) 
       </Toolbar.Root>
 
       <ScrollArea.Root thin orientation='vertical'>
-        <ScrollArea.Viewport>
-          <div className='divide-y divide-subduedSeparator'>
-            <SchemaTable types={staticTypes} objects={info.objects} label='Static Types' onClick={handleCreateData} />
-            <SchemaTable types={recordTypes} objects={info.objects} label='Record Types' onClick={handleCreateData} />
-            <SchemaTable types={presets.types} objects={info.objects} label='Presets' onClick={handleCreateData} />
-            <SyntaxHighlighter language='json' classNames='text-xs'>
-              {JSON.stringify({ space, ...info }, jsonKeyReplacer({ truncate: true }), 2)}
-            </SyntaxHighlighter>
-          </div>
+        <ScrollArea.Viewport classNames='gap-4 divide-y divide-subduedSeparator'>
+          <SchemaTable types={staticTypes} objects={info.objects} label='Static Types' onClick={handleCreateData} />
+          <SchemaTable types={recordTypes} objects={info.objects} label='Record Types' onClick={handleCreateData} />
+          <SchemaTable types={presets.types} objects={info.objects} label='Presets' onClick={handleCreateData} />
+          <SyntaxHighlighter language='json' classNames='text-xs'>
+            {JSON.stringify({ space, ...info }, jsonKeyReplacer({ truncate: true }), 2)}
+          </SyntaxHighlighter>
         </ScrollArea.Viewport>
       </ScrollArea.Root>
     </Layout.Main>

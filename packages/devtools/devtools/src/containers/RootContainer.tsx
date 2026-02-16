@@ -34,24 +34,22 @@ const Sidebar = () => {
   const sections = useSections();
   return (
     <ScrollArea.Root orientation='vertical' classNames='is-[180px] border-ie border-separator'>
-      <ScrollArea.Viewport>
-        <div className='flex flex-col gap-4 divide-y divide-separator'>
-          {sections.map((section) => (
-            <div key={section.id}>
-              <div className='flex text-sm pis-4 plb-1'>{section.title}</div>
-              <div>
-                {section.items?.map(({ id, title, icon }) => (
-                  <div key={id} className={mx('flex items-center pis-4 gap-2', id === pathname && 'bg-activeSurface')}>
-                    <Icon icon={icon} size={4} />
-                    <Link to={id} className='grow'>
-                      <span>{title}</span>
-                    </Link>
-                  </div>
-                ))}
-              </div>
+      <ScrollArea.Viewport classNames='gap-4 divide-y divide-separator'>
+        {sections.map((section) => (
+          <div key={section.id}>
+            <div className='flex text-sm pis-4 plb-1'>{section.title}</div>
+            <div>
+              {section.items?.map(({ id, title, icon }) => (
+                <div key={id} className={mx('flex items-center pis-4 gap-2', id === pathname && 'bg-activeSurface')}>
+                  <Icon icon={icon} size={4} />
+                  <Link to={id} className='grow'>
+                    <span>{title}</span>
+                  </Link>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
+          </div>
+        ))}
         <div className='grow' />
         <Footer />
       </ScrollArea.Viewport>

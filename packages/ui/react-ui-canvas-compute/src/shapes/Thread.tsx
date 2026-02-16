@@ -43,7 +43,7 @@ export const ThreadComponent = ({ shape }: ShapeComponentProps<ThreadShape>) => 
   return (
     <Box shape={shape}>
       <ScrollArea.Root orientation='vertical'>
-        <ScrollArea.Viewport ref={scrollRef} classNames='gap-2 p-2'>
+        <ScrollArea.Viewport classNames='gap-2 p-2' ref={scrollRef}>
           {[...items].map((item, i) => (
             <ThreadItem key={i} item={item} />
           ))}

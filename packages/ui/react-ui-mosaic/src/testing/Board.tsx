@@ -88,7 +88,7 @@ const Root = forwardRef<HTMLDivElement, RootProps>(({ id, columns, debug }, forw
           eventHandler={eventHandler}
           debug={debugHandler}
         >
-          <ScrollArea.Root orientation='horizontal' classNames='md:pbs-3' thin snap>
+          <ScrollArea.Root orientation='horizontal' classNames='md:pbs-3' snap padding>
             <ScrollArea.Viewport ref={setViewport}>
               <Mosaic.Stack items={columns} getId={(item) => item.id} Tile={Column} debug={debug} />
             </ScrollArea.Viewport>
@@ -165,8 +165,8 @@ const Column = forwardRef<HTMLDivElement, ColumnProps>(({ classNames, location, 
               eventHandler={eventHandler}
               debug={debugHandler}
             >
-              <ScrollArea.Root orientation='vertical' thin snap>
-                <ScrollArea.Viewport classNames='p-2' ref={setViewport}>
+              <ScrollArea.Root orientation='vertical' thin snap padding>
+                <ScrollArea.Viewport ref={setViewport}>
                   <Mosaic.Stack items={column.items} getId={(data) => data.dxn.toString()} Tile={Item} />
                 </ScrollArea.Viewport>
               </ScrollArea.Root>

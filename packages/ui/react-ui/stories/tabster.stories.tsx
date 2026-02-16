@@ -44,14 +44,14 @@ const Column = forwardRef<HTMLDivElement, { items: string[] }>(({ items }, ref) 
 
   return (
     <ScrollArea.Root
+      tabIndex={0}
       orientation='vertical'
       classNames={mx('shrink-0 bs-full is-[25rem]', border)}
     >
       <ScrollArea.Viewport
-        ref={ref}
-        tabIndex={0}
         {...tabsterAttrs}
         classNames='p-4 gap-4'
+        ref={ref}
       >
         {items.map((item) => (
           <Item key={item} value={item} />
