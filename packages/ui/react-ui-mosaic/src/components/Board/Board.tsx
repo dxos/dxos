@@ -170,10 +170,7 @@ const BoardColumnInner = forwardRef<HTMLDivElement, BoardColumnProps<Obj.Unknown
             classNames='grid bs-full is-[calc(100vw-2px)] md:is-card-default-width snap-center bg-deckSurface'
           >
             <div
-              className={mx(
-                debug ? 'grid-rows-[min-content_1fr_20rem]' : 'grid-rows-[min-content_1fr_min-content]',
-                classNames,
-              )}
+              className={mx(debug ? 'grid-rows-[min-content_1fr_20rem]' : 'grid-rows-[min-content_1fr]', classNames)}
               ref={forwardedRef}
             >
               <Card.Toolbar classNames='border-be border-separator'>
@@ -195,10 +192,12 @@ const BoardColumnInner = forwardRef<HTMLDivElement, BoardColumnProps<Obj.Unknown
                   </ScrollArea.Viewport>
                 </ScrollArea.Root>
               </Mosaic.Container>
-              <div role='none' className='border-bs border-separator'>
-                <div className='grow flex p-1 justify-center text-xs'>{model.getItems(column).length}</div>
-                <DebugInfo />
-              </div>
+              {debug && (
+                <div role='none' className='border-bs border-separator'>
+                  <div className='grow flex p-1 justify-center text-xs'>{model.getItems(column).length}</div>
+                  <DebugInfo />
+                </div>
+              )}
             </div>
           </Focus.Group>
         </Card.Context>
