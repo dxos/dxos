@@ -53,6 +53,7 @@ export class TestBuilder extends Resource {
           actorId: `peer-${i}`,
           serverPeerId: i === 0 ? undefined : 'peer-0',
           sendMessage: (msg) => this.#routeMessage(msg),
+          logSql,
         }),
     );
   }
