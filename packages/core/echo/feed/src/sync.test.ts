@@ -13,12 +13,12 @@ import { TestBuilder } from './testing';
 
 const WellKnownNamespaces = QueueProtocol.WellKnownNamespaces;
 
-const LOG_SQL = false;
-
-const spaceId = SpaceId.random();
-const feedId = ObjectId.random();
-
 describe('Sync', () => {
+  const LOG_SQL = false;
+
+  const spaceId = SpaceId.random();
+  const feedId = ObjectId.random();
+
   test('pull blocks from server', async () => {
     await using builder = await new TestBuilder({ numPeers: 2, spaceId, logSql: LOG_SQL }).open();
     const [server, client] = builder.peers;
