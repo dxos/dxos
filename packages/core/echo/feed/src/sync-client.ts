@@ -13,11 +13,15 @@ import type { SqlTransaction } from '@dxos/sql-sqlite';
 
 import type { FeedStore } from './feed-store';
 
-type AppendRequest = QueueProtocol.AppendRequest;
 type AppendResponse = QueueProtocol.AppendResponse;
 type ProtocolMessage = QueueProtocol.ProtocolMessage;
-type QueryRequest = QueueProtocol.QueryRequest;
 type QueryResponse = QueueProtocol.QueryResponse;
+type QueryRequestMessage = Extract<ProtocolMessage, { _tag: 'QueryRequest' }>;
+type AppendRequestMessage = Extract<ProtocolMessage, { _tag: 'AppendRequest' }>;
+type RequestMessage = QueryRequestMessage | AppendRequestMessage;
+type RequestPayload =
+  | Omit<QueryRequestMessage, 'senderPeerId' | 'recipientPeerId'>
+  | Omit<AppendRequestMessage, 'senderPeerId' | 'recipientPeerId'>;
 
 export type SyncClientOptions = {
   /** This client's peer id. Set as senderPeerId on all requests. */
@@ -26,7 +30,7 @@ export type SyncClientOptions = {
   serverPeerId?: string;
   feedStore: FeedStore;
   /** Send a protocol message to the server. Returns Effect. */
-  sendMessage: (message: ProtocolMessage) => Effect.Effect<void, unknown, never>;
+  sendMessage: (message: RequestMessage) => Effect.Effect<void, unknown, never>;
 };
 
 /**
@@ -39,7 +43,7 @@ export class SyncClient {
   readonly #peerId: string;
   readonly #serverPeerId: string | undefined;
   readonly #feedStore: FeedStore;
-  readonly #sendMessage: (message: ProtocolMessage) => Effect.Effect<void, unknown, never>;
+  readonly #sendMessage: SyncClientOptions['sendMessage'];
   readonly #handlers = new Map<string, Deferred.Deferred<ProtocolMessage, Error>>();
 
   constructor(options: SyncClientOptions) {
@@ -49,12 +53,19 @@ export class SyncClient {
     this.#sendMessage = options.sendMessage;
   }
 
-  #withPeerIds(payload: Omit<ProtocolMessage, 'senderPeerId' | 'recipientPeerId'>): ProtocolMessage {
+  #withPeerIds(payload: RequestPayload): RequestMessage {
+    if (payload._tag === 'QueryRequest') {
+      return {
+        ...payload,
+        senderPeerId: this.#peerId,
+        recipientPeerId: this.#serverPeerId,
+      };
+    }
     return {
       ...payload,
       senderPeerId: this.#peerId,
       recipientPeerId: this.#serverPeerId,
-    } as ProtocolMessage;
+    };
   }
 
   /**
@@ -86,14 +97,15 @@ export class SyncClient {
       const requestId = crypto.randomUUID();
       const deferred = yield* Deferred.make<ProtocolMessage, Error>();
       self.#handlers.set(requestId, deferred);
-      const request: QueryRequest = {
+      const request: RequestPayload = {
+        _tag: 'QueryRequest',
         requestId,
         spaceId: opts.spaceId,
         feedNamespace: opts.feedNamespace,
         position: lastPulledPosition,
         limit: opts.limit,
       };
-      yield* self.#sendMessage(self.#withPeerIds({ _tag: 'QueryRequest', ...request }));
+      yield* self.#sendMessage(self.#withPeerIds(request));
       const message = yield* Deferred.await(deferred);
       const response = yield* self.#expectResponse<QueryResponse>(requestId, message, 'QueryResponse');
       if (response.blocks.length === 0) {
@@ -139,13 +151,14 @@ export class SyncClient {
       const requestId = crypto.randomUUID();
       const deferred = yield* Deferred.make<ProtocolMessage, Error>();
       self.#handlers.set(requestId, deferred);
-      const request: AppendRequest = {
+      const request: RequestPayload = {
+        _tag: 'AppendRequest',
         requestId,
         spaceId: opts.spaceId,
         feedNamespace: opts.feedNamespace,
         blocks: unpositioned.blocks,
       };
-      yield* self.#sendMessage(self.#withPeerIds({ _tag: 'AppendRequest', ...request }));
+      yield* self.#sendMessage(self.#withPeerIds(request));
       const message = yield* Deferred.await(deferred);
       const response = yield* self.#expectResponse<AppendResponse>(requestId, message, 'AppendResponse');
       yield* self.#feedStore.setPosition({
