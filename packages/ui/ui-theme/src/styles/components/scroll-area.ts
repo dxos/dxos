@@ -45,7 +45,6 @@ export const scrollAreaViewport: ComponentFunction<ScrollAreaStyleProps> = (
     '[&::-webkit-scrollbar-corner]:bg-transparent',
 
     // TODO(burdon): Define token.
-    'hover:[&::-webkit-scrollbar-thumb]:bg-separator',
     autoHide
       ? [
           orientation === 'vertical' && 'group-hover/scroll-v:[&::-webkit-scrollbar-thumb]:bg-subduedSeparator',

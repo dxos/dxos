@@ -73,7 +73,6 @@ export const defaultTheme: Theme<Record<string, any>> = {
 };
 
 // TODO(burdon): Missing!
-// scrollArea.corner => scroll-area__corner
 // treegrid.cell => treegrid__cell
 const missing = new Set();
 
@@ -83,11 +82,11 @@ export const bindTheme = <P extends Record<string, any>>(theme: Theme<Record<str
     const className = typeof result === 'function' && result(styleProps ?? ({} as P), ...etc);
     if (!className) {
       if (!missing.has(path)) {
-        console.warn(`Missing theme path: ${path} => ${defaultClassName}`);
+        // console.warn(`Missing theme path: ${path} => ${defaultClassName}`);
         missing.add(path);
       }
     }
-    return className || ''; // || defaultClassName;
+    return className || defaultClassName;
   };
 };
 
