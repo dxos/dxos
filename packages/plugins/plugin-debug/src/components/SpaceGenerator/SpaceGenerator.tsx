@@ -94,31 +94,35 @@ export const SpaceGenerator = ({ space, onCreateObjects }: SpaceGeneratorProps) 
 
   return (
     <Layout.Main toolbar>
-      <Toolbar.Root classNames='border-be border-subduedSeparator'>
+      <Toolbar.Root>
         <IconButton icon='ph--arrow-clockwise--regular' iconOnly label='Refresh' onClick={updateInfo} />
         <Toolbar.Separator variant='gap' />
         <Input.Root>
           <Input.TextInput
             type='number'
+            placeholder='Count'
+            classNames='is-[4rem] text-right'
             min={1}
             max={100}
-            placeholder={'Count'}
-            classNames='!w-[4rem] !text-right'
             size={8}
             value={count}
-            onChange={(ev) => setCount(parseInt(ev.target.value))}
+            onChange={(event) => setCount(parseInt(event.target.value))}
           />
         </Input.Root>
       </Toolbar.Root>
 
-      <ScrollArea classNames='divide-y divide-separator'>
-        <SchemaTable types={staticTypes} objects={info.objects} label='Static Types' onClick={handleCreateData} />
-        <SchemaTable types={recordTypes} objects={info.objects} label='Record Types' onClick={handleCreateData} />
-        <SchemaTable types={presets.types} objects={info.objects} label='Presets' onClick={handleCreateData} />
-        <SyntaxHighlighter language='json' classNames='text-xs'>
-          {JSON.stringify({ space, ...info }, jsonKeyReplacer({ truncate: true }), 2)}
-        </SyntaxHighlighter>
-      </ScrollArea>
+      <ScrollArea.Root thin orientation='vertical'>
+        <ScrollArea.Viewport>
+          <div className='divide-y divide-subduedSeparator'>
+            <SchemaTable types={staticTypes} objects={info.objects} label='Static Types' onClick={handleCreateData} />
+            <SchemaTable types={recordTypes} objects={info.objects} label='Record Types' onClick={handleCreateData} />
+            <SchemaTable types={presets.types} objects={info.objects} label='Presets' onClick={handleCreateData} />
+            <SyntaxHighlighter language='json' classNames='text-xs'>
+              {JSON.stringify({ space, ...info }, jsonKeyReplacer({ truncate: true }), 2)}
+            </SyntaxHighlighter>
+          </div>
+        </ScrollArea.Viewport>
+      </ScrollArea.Root>
     </Layout.Main>
   );
 };

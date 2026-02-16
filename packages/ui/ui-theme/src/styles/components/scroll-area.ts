@@ -7,7 +7,6 @@ import { type AllowedAxis, type ComponentFunction, type Theme } from '@dxos/ui-t
 import { mx } from '../../util';
 
 export type ScrollAreaStyleProps = {
-  native?: boolean;
   orientation?: AllowedAxis;
   padding?: boolean;
   thin?: boolean;
@@ -16,59 +15,60 @@ export type ScrollAreaStyleProps = {
 
 export const scrollAreaRoot: ComponentFunction<ScrollAreaStyleProps> = ({ orientation }, ...etc) =>
   mx(
-    'relative overflow-hidden',
-    orientation === 'vertical' && 'bs-full is-full min-bs-0',
-    orientation === 'horizontal' && 'bs-full is-full min-is-0',
-    orientation === 'all' && 'bs-full is-full min-bs-0 min-is-0',
+    'overflow-hidden',
+    orientation === 'vertical' && 'group/scroll-v bs-full is-full min-bs-0',
+    orientation === 'horizontal' && 'group/scroll-h bs-full is-full min-is-0',
+    orientation === 'all' && 'group/scroll-all bs-full is-full min-bs-0 min-is-0',
     ...etc,
   );
 
+/**
+ * NOTE: The browser reserves space for scrollbars.
+ */
 export const scrollAreaViewport: ComponentFunction<ScrollAreaStyleProps> = (
-  { native, orientation, padding, snap },
+  { orientation, padding, snap, thin },
   ...etc
 ) =>
   mx(
-    'bs-full is-full rounded-[inherit]',
+    'bs-full is-full',
+    orientation === 'vertical' && 'flex flex-col overflow-y-scroll',
+    orientation === 'horizontal' && 'flex overflow-x-scroll',
+    orientation === 'all' && 'overflow-scroll',
+
+    // Scrollbar styling.
+    thin
+      ? '[&::-webkit-scrollbar]:is-[3px] [&::-webkit-scrollbar]:bs-[3px]'
+      : '[&::-webkit-scrollbar]:is-[6px] [&::-webkit-scrollbar]:bs-[6px]',
+
+    '[&::-webkit-scrollbar-thumb]:bg-transparent',
+    '[&::-webkit-scrollbar-corner]:bg-transparent',
+
+    // '[&::-webkit-scrollbar-thumb]:rounded-full',
+
+    orientation === 'vertical' && 'group-hover/scroll-v:[&::-webkit-scrollbar-thumb]:bg-neutral-300',
+    orientation === 'vertical' && 'dark:group-hover/scroll-v:[&::-webkit-scrollbar-thumb]:bg-neutral-600',
+    orientation === 'horizontal' && 'group-hover/scroll-h:[&::-webkit-scrollbar-thumb]:bg-neutral-300',
+    orientation === 'horizontal' && 'dark:group-hover/scroll-h:[&::-webkit-scrollbar-thumb]:bg-neutral-600',
+    orientation === 'all' && 'group-hover/scroll-all:[&::-webkit-scrollbar-thumb]:bg-neutral-300',
+    orientation === 'all' && 'dark:group-hover/scroll-all:[&::-webkit-scrollbar-thumb]:bg-neutral-600',
+
+    // TODO(burdon): FIX.
     padding && [
-      orientation === 'vertical' && 'pli-3',
-      orientation === 'horizontal' && 'pbe-3',
-      orientation === 'all' && 'pli-3 pbe-3',
+      orientation === 'vertical' && 'pie-2',
+      orientation === 'horizontal' && 'pbe-2',
+      orientation === 'all' && 'pie-2 pbe-2',
     ],
+
     snap && [
       orientation === 'vertical' && 'snap-y snap-mandatory',
       orientation === 'horizontal' && 'snap-x snap-mandatory',
       orientation === 'all' && 'snap-both snap-mandatory',
     ],
-    !native && [
-      orientation === 'vertical' && '[&>*]:!block [&>*]:is-full',
-      orientation === 'horizontal' && '[&>*]:!block [&>*]:bs-full',
-      orientation === 'all' && '[&>*]:!block',
-    ],
+
     ...etc,
   );
-
-export const scrollAreaScrollbar: ComponentFunction<ScrollAreaStyleProps> = (
-  { orientation = 'vertical', thin },
-  ...etc
-) =>
-  mx(
-    'flex touch-none select-none transition-colors',
-    orientation === 'vertical' && !thin && 'bs-full is-2.5 border-l border-l-transparent p-[1px]',
-    orientation === 'vertical' && thin && 'bs-full is-1.5 border-l border-l-transparent p-[1px]',
-    orientation === 'horizontal' && !thin && 'is-full bs-2.5 flex-col border-t border-t-transparent p-[1px]',
-    orientation === 'horizontal' && thin && 'is-full bs-1.5 flex-col border-t border-t-transparent p-[1px]',
-    ...etc,
-  );
-
-export const scrollAreaThumb: ComponentFunction<ScrollAreaStyleProps> = ({ thin }, ...etc) =>
-  mx('relative flex-1 rounded-full bg-neutral-300 dark:bg-neutral-600', thin && 'min-w-[4px] min-h-[4px]', ...etc);
-
-export const scrollAreaCorner: ComponentFunction<ScrollAreaStyleProps> = (_props, ...etc) => mx(...etc);
 
 export const scrollAreaTheme: Theme<ScrollAreaStyleProps> = {
   root: scrollAreaRoot,
   viewport: scrollAreaViewport,
-  scrollbar: scrollAreaScrollbar,
-  thumb: scrollAreaThumb,
-  corner: scrollAreaCorner,
 };

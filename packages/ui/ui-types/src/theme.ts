@@ -12,6 +12,7 @@ export type Theme<P extends Record<string, any>> = { [key: string]: Theme<P> | C
 export type ThemeMode = 'dark' | 'light';
 export type ThemeFunction<P extends Record<string, any>> = (
   path: string,
+  // TODO(burdon): Remove need for this?
   defaultClassName: string,
   styleProps?: P,
   ...etc: ClassNameArray

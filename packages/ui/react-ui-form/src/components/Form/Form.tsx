@@ -170,7 +170,11 @@ type FormViewportProps = PropsWithChildren<{}>;
 
 // TODO(burdon): Ref and props (allow asChild).
 const FormViewport = ({ children }: FormViewportProps) => {
-  return <ScrollArea orientation='vertical'>{children}</ScrollArea>;
+  return (
+    <ScrollArea.Root orientation='vertical'>
+      <ScrollArea.Viewport>{children}</ScrollArea.Viewport>
+    </ScrollArea.Root>
+  );
 };
 
 FormViewport.displayName = FORM_VIEWPORT_NAME;

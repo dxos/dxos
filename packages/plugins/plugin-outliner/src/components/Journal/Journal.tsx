@@ -52,16 +52,18 @@ export const Journal = ({ classNames, journal, ...props }: JournalProps) => {
   }, [journal, date]);
 
   return (
-    <ScrollArea classNames={classNames}>
-      {showAddEntry && (
-        <div className='p-2'>
-          <IconButton label={t('create entry label')} icon='ph--plus--regular' onClick={handleCreateEntry} />
-        </div>
-      )}
-      {JournalType.getEntries(journal).map((entry, i) => (
-        <JournalEntry key={entry.id} entry={entry} classNames='p-2' {...props} autoFocus={i === 0} />
-      ))}
-    </ScrollArea>
+    <ScrollArea.Root orientation='vertical'>
+      <ScrollArea.Viewport classNames={classNames}>
+        {showAddEntry && (
+          <div className='p-2'>
+            <IconButton label={t('create entry label')} icon='ph--plus--regular' onClick={handleCreateEntry} />
+          </div>
+        )}
+        {JournalType.getEntries(journal).map((entry, i) => (
+          <JournalEntry key={entry.id} entry={entry} classNames='p-2' {...props} autoFocus={i === 0} />
+        ))}
+      </ScrollArea.Viewport>
+    </ScrollArea.Root>
   );
 };
 

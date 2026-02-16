@@ -42,14 +42,7 @@ import React, {
 import { createPortal } from 'react-dom';
 
 import { log } from '@dxos/log';
-import {
-  type AllowedAxis,
-  type Axis,
-  ScrollArea,
-  type ScrollAreaProps,
-  type SlottableClassName,
-  type ThemedClassName,
-} from '@dxos/react-ui';
+import { type AllowedAxis, type Axis, type SlottableClassName, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 import { isTruthy } from '@dxos/util';
 
@@ -611,23 +604,6 @@ const Container = forwardRef<HTMLDivElement, ContainerProps>(
 Container.displayName = CONTAINER_NAME;
 
 //
-// Viewport
-//
-
-const VIEWPORT_NAME = 'Mosaic.Viewport';
-
-type ViewportProps = ScrollAreaProps;
-
-const Viewport = forwardRef<HTMLDivElement, ViewportProps>(
-  ({ orientation: orientationProp = 'vertical', ...props }, forwardedRef) => {
-    const { orientation = orientationProp } = useContainerContext(VIEWPORT_NAME);
-    return <ScrollArea {...props} orientation={orientation} ref={forwardedRef} />;
-  },
-);
-
-Viewport.displayName = VIEWPORT_NAME;
-
-//
 // Tile
 //
 
@@ -938,7 +914,6 @@ export const Mosaic = {
   Tile,
   Placeholder,
   DropIndicator,
-  Viewport,
   Stack,
   VirtualStack,
 };
@@ -949,7 +924,6 @@ export type {
   TileProps as MosaicTileProps,
   PlaceholderProps as MosiacPlaceholderProps,
   DropIndicatorProps as MosaicDropIndicatorProps,
-  ViewportProps as MosaicViewportProps,
   StackProps as MosaicStackProps,
 };
 

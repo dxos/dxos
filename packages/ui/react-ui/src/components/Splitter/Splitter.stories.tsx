@@ -16,13 +16,15 @@ const Panel = ({ label }: { label: string }) => {
   return (
     <Layout.Main toolbar>
       <Toolbar.Root>{label}</Toolbar.Root>
-      <ScrollArea>
-        {Array.from({ length: 100 }).map((_, i) => (
-          <div key={i} className='p-1'>
-            {label}-{i}
-          </div>
-        ))}
-      </ScrollArea>
+      <ScrollArea.Root orientation='vertical'>
+        <ScrollArea.Viewport>
+          {Array.from({ length: 100 }).map((_, i) => (
+            <div key={i} className='p-1'>
+              {label}-{i}
+            </div>
+          ))}
+        </ScrollArea.Viewport>
+      </ScrollArea.Root>
     </Layout.Main>
   );
 };

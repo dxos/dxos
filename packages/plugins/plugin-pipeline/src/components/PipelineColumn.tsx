@@ -9,7 +9,7 @@ import React, { forwardRef, useMemo, useRef, useState } from 'react';
 import { Obj, Query, Type } from '@dxos/echo';
 import { getQueryTarget, resolveSchemaWithRegistry } from '@dxos/plugin-space';
 import { Filter, getSpace, isSpace, useObject, useQuery } from '@dxos/react-client/echo';
-import { useAsyncEffect, useTranslation } from '@dxos/react-ui';
+import { ScrollArea, useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { Card, Focus, Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import { ProjectionModel, createEchoChangeCallback } from '@dxos/schema';
 import { type Pipeline } from '@dxos/types';
@@ -94,9 +94,11 @@ export const PipelineColumn = ({ column }: PipelineColumnProps) => {
           <Card.Menu />
         </Card.Toolbar>
         <Mosaic.Container asChild orientation='vertical' withFocus>
-          <Mosaic.Viewport orientation='vertical' padding>
-            <Mosaic.Stack orientation='vertical' items={sortedItems} getId={(item) => item.id} Tile={Tile} />
-          </Mosaic.Viewport>
+          <ScrollArea.Root orientation='vertical'>
+            <ScrollArea.Viewport classNames='p-2'>
+              <Mosaic.Stack orientation='vertical' items={sortedItems} getId={(item) => item.id} Tile={Tile} />
+            </ScrollArea.Viewport>
+          </ScrollArea.Root>
         </Mosaic.Container>
       </div>
     </Focus.Group>

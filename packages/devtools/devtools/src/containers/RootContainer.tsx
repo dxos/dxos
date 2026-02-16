@@ -33,27 +33,29 @@ const Sidebar = () => {
   const { pathname } = useLocation();
   const sections = useSections();
   return (
-    <ScrollArea classNames='is-[180px] border-ie border-separator'>
-      <div className='flex flex-col gap-4 divide-y divide-separator'>
-        {sections.map((section) => (
-          <div key={section.id}>
-            <div className='flex text-sm pis-4 plb-1'>{section.title}</div>
-            <div>
-              {section.items?.map(({ id, title, icon }) => (
-                <div key={id} className={mx('flex items-center pis-4 gap-2', id === pathname && 'bg-activeSurface')}>
-                  <Icon icon={icon} size={4} />
-                  <Link to={id} className='grow'>
-                    <span>{title}</span>
-                  </Link>
-                </div>
-              ))}
+    <ScrollArea.Root orientation='vertical' classNames='is-[180px] border-ie border-separator'>
+      <ScrollArea.Viewport>
+        <div className='flex flex-col gap-4 divide-y divide-separator'>
+          {sections.map((section) => (
+            <div key={section.id}>
+              <div className='flex text-sm pis-4 plb-1'>{section.title}</div>
+              <div>
+                {section.items?.map(({ id, title, icon }) => (
+                  <div key={id} className={mx('flex items-center pis-4 gap-2', id === pathname && 'bg-activeSurface')}>
+                    <Icon icon={icon} size={4} />
+                    <Link to={id} className='grow'>
+                      <span>{title}</span>
+                    </Link>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
-      <div className='grow' />
-      <Footer />
-    </ScrollArea>
+          ))}
+        </div>
+        <div className='grow' />
+        <Footer />
+      </ScrollArea.Viewport>
+    </ScrollArea.Root>
   );
 };
 

@@ -221,19 +221,23 @@ const findCandidates = (surfaces: Definition[], { role, data }: Pick<Props, 'rol
 const DefaultFallback = ({ data, error, dev }: { data: any; error: Error; dev?: boolean }) => {
   if (dev) {
     return (
-      <ScrollArea classNames='p-4 gap-4'>
-        <h1 className='flex gap-2 text-sm mbs-2'>{error.message}</h1>
-        <pre className='overflow-auto text-xs text-description'>{JSON.stringify(data, null, 2)}</pre>
-      </ScrollArea>
+      <ScrollArea.Root orientation='vertical'>
+        <ScrollArea.Viewport classNames='p-4 gap-4'>
+          <h1 className='flex gap-2 text-sm mbs-2'>{error.message}</h1>
+          <pre className='overflow-auto text-xs text-description'>{JSON.stringify(data, null, 2)}</pre>
+        </ScrollArea.Viewport>
+      </ScrollArea.Root>
     );
   }
 
   return (
-    <ScrollArea classNames='p-4 gap-4 border border-roseFill'>
-      <h1 className='flex gap-2 text-sm mbs-2 text-errorText'>{error.message}</h1>
-      <pre className='overflow-x-auto text-xs text-description'>{error.stack}</pre>
-      <pre className='overflow-x-auto text-xs text-description'>{JSON.stringify(data, null, 2)}</pre>
-    </ScrollArea>
+    <ScrollArea.Root orientation='vertical'>
+      <ScrollArea.Viewport classNames='p-4 gap-4 border border-roseFill'>
+        <h1 className='flex gap-2 text-sm mbs-2 text-errorText'>{error.message}</h1>
+        <pre className='overflow-x-auto text-xs text-description'>{error.stack}</pre>
+        <pre className='overflow-x-auto text-xs text-description'>{JSON.stringify(data, null, 2)}</pre>
+      </ScrollArea.Viewport>
+    </ScrollArea.Root>
   );
 };
 

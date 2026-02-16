@@ -10,7 +10,7 @@ import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { Filter, Obj } from '@dxos/echo';
 import { useClient } from '@dxos/react-client';
 import { getSpace, useQuery } from '@dxos/react-client/echo';
-import { Layout, Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Layout, ScrollArea, Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Card, Mosaic, type StackTileComponent } from '@dxos/react-ui-mosaic';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-searchlist';
 import { Collection } from '@dxos/schema';
@@ -42,9 +42,11 @@ export const CollectionArticle = ({ subject }: SurfaceComponentProps<Collection.
         </Toolbar.Root>
         <SearchList.Content>
           <Mosaic.Container asChild>
-            <Mosaic.Viewport padding>
-              <Mosaic.Stack items={items} getId={(item) => item.id} Tile={ObjectTile} />
-            </Mosaic.Viewport>
+            <ScrollArea.Root orientation='vertical'>
+              <ScrollArea.Viewport classNames='p-2'>
+                <Mosaic.Stack items={items} getId={(item) => item.id} Tile={ObjectTile} />
+              </ScrollArea.Viewport>
+            </ScrollArea.Root>
           </Mosaic.Container>
         </SearchList.Content>
       </SearchList.Root>

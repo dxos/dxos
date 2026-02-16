@@ -8,7 +8,7 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { type Node, useConnections } from '@dxos/plugin-graph';
-import { Avatar, Icon, Layout, Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Avatar, Icon, Layout, ScrollArea, Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Card, Mosaic, type StackTileComponent } from '@dxos/react-ui-mosaic';
 import { SearchList, useSearchListItem, useSearchListResults } from '@dxos/react-ui-searchlist';
 import { mx } from '@dxos/ui-theme';
@@ -48,9 +48,11 @@ export const Workspace = ({ id }: WorkspaceProps) => {
         </Toolbar.Root>
         <SearchList.Content>
           <Mosaic.Container asChild>
-            <Mosaic.Viewport padding>
-              <Mosaic.Stack items={results} getId={(child) => child.id} Tile={WorkspaceChildTile} />
-            </Mosaic.Viewport>
+            <ScrollArea.Root orientation='vertical'>
+              <ScrollArea.Viewport classNames='p-2'>
+                <Mosaic.Stack items={results} getId={(child) => child.id} Tile={WorkspaceChildTile} />
+              </ScrollArea.Viewport>
+            </ScrollArea.Root>
           </Mosaic.Container>
         </SearchList.Content>
       </SearchList.Root>

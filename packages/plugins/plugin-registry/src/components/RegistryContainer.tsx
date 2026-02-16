@@ -70,15 +70,17 @@ export const RegistryContainer = ({ id, plugins: pluginsProp }: RegistryContaine
   );
 
   return (
-    <ScrollArea>
-      <PluginList
-        plugins={plugins}
-        enabled={enabled}
-        onClick={handleClick}
-        onChange={handleChange}
-        hasSettings={hasSettings}
-        onSettings={handleSettings}
-      />
-    </ScrollArea>
+    <ScrollArea.Root orientation='vertical'>
+      <ScrollArea.Viewport>
+        <PluginList
+          plugins={plugins}
+          enabled={enabled}
+          onClick={handleClick}
+          onChange={handleChange}
+          hasSettings={hasSettings}
+          onSettings={handleSettings}
+        />
+      </ScrollArea.Viewport>
+    </ScrollArea.Root>
   );
 };

@@ -188,9 +188,7 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
     <ControlPage>
       <ControlSection
         title={t('space properties settings verbose label')}
-        description={t('space properties settings description', {
-          ns: meta.id,
-        })}
+        description={t('space properties settings description', { ns: meta.id })}
       >
         <Form.Root fieldMap={fieldMap} schema={SpaceFormSchema} values={values} onValuesChanged={handleValuesChanged}>
           <Form.FieldSet />

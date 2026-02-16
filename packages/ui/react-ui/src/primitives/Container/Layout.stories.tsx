@@ -7,7 +7,6 @@ import React from 'react';
 
 import { Input, ScrollArea, Toolbar } from '../../components';
 import { withLayout, withTheme } from '../../testing';
-import { Flex } from '../Flex';
 
 import { Layout } from './Layout';
 
@@ -21,15 +20,15 @@ const DefaultStory = ({ count }: { count: number }) => {
         </Input.Root>
         <Toolbar.IconButton icon='ph--dots-three-vertical--regular' iconOnly label='Menu' />
       </Toolbar.Root>
-      <ScrollArea thin orientation='vertical'>
-        <Flex role='list' column classNames='pli-2 plb-1 gap-1'>
+      <ScrollArea.Root thin orientation='vertical'>
+        <ScrollArea.Viewport classNames='pli-2 plb-1 gap-1'>
           {Array.from({ length: count }).map((_, index) => (
             <div key={index} role='listitem' className='pli-2 plb-1 border border-separator'>
               {index}
             </div>
           ))}
-        </Flex>
-      </ScrollArea>
+        </ScrollArea.Viewport>
+      </ScrollArea.Root>
       <Toolbar.Root classNames='justify-between'>
         <Toolbar.IconButton variant='ghost' icon='ph--house--regular' iconOnly label='Add' size={4} />
         <Toolbar.IconButton variant='ghost' icon='ph--alarm--regular' iconOnly label='Status' size={4} />
