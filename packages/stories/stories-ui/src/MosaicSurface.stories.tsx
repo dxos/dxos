@@ -4,7 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj, Ref } from '@dxos/echo';
@@ -13,7 +13,7 @@ import { faker } from '@dxos/random';
 import { useSpaces } from '@dxos/react-client/echo';
 import { IconButton, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { Board, Focus, Mosaic } from '@dxos/react-ui-mosaic';
+import { Board, type BoardModel, Focus, Mosaic } from '@dxos/react-ui-mosaic';
 import { TestColumn, TestItem } from '@dxos/react-ui-mosaic/testing';
 import { type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
 import { Organization, Person, Pipeline } from '@dxos/types';
@@ -52,10 +52,18 @@ const DefaultStory = ({ columns: columnsProp = 1, debug = false }: StoryProps) =
     }),
   );
 
+  const model = useMemo<BoardModel<TestColumn, TestItem>>(() => {
+    return {
+      isColumn: (obj: Obj.Unknown): obj is TestColumn => obj instanceof TestColumn,
+      isItem: (obj: Obj.Unknown): obj is TestItem => obj instanceof TestItem,
+      getItems: (column: TestColumn) => column.items,
+    } satisfies BoardModel<TestColumn, TestItem>;
+  }, []);
+
   return (
     <Mosaic.Root asChild debug={debug}>
       <div className={mx('grid overflow-hidden', debug && 'grid-cols-[1fr_20rem] gap-2')}>
-        <Board.Root id='board' columns={columns} debug={debug} />
+        <Board.Root id='board' model={model} columns={columns} debug={debug} />
 
         {debug && (
           <Focus.Group classNames='flex flex-col gap-2 overflow-hidden'>

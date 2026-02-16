@@ -3,7 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React from 'react';
+import React, { useMemo } from 'react';
 
 import { type Database, Filter, Obj, Ref } from '@dxos/echo';
 import { faker } from '@dxos/random';
@@ -16,7 +16,7 @@ import { TestColumn, TestItem } from '../../testing';
 import { Focus } from '../Focus';
 import { Mosaic } from '../Mosaic';
 
-import { Board } from './Board';
+import { Board, type BoardModel } from './Board';
 
 faker.seed(999);
 
@@ -54,6 +54,14 @@ type StoryProps = {
 const DefaultStory = ({ debug = false }: StoryProps) => {
   const { space } = useClientStory();
   const columns = useQuery(space?.db, Filter.type(TestColumn));
+  const model = useMemo<BoardModel<TestColumn, TestItem>>(() => {
+    return {
+      isColumn: (obj: Obj.Unknown): obj is TestColumn => obj instanceof TestColumn,
+      isItem: (obj: Obj.Unknown): obj is TestItem => obj instanceof TestItem,
+      getItems: (column: TestColumn) => column.items,
+    } satisfies BoardModel<TestColumn, TestItem>;
+  }, []);
+
   if (columns.length === 0) {
     return <></>;
   }
@@ -61,7 +69,7 @@ const DefaultStory = ({ debug = false }: StoryProps) => {
   return (
     <Mosaic.Root asChild debug={debug}>
       <div role='none' className={mx('grid md:p-2 overflow-hidden', debug && 'grid-cols-[1fr_20rem] gap-2')}>
-        <Board.Root id='board' columns={columns} debug={debug} />
+        <Board.Root id='board' model={model} columns={columns} debug={debug} />
         {debug && (
           <Focus.Group classNames='flex flex-col gap-2 overflow-hidden'>
             <Board.Debug classNames='p-2' />

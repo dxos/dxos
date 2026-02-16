@@ -9,8 +9,6 @@ import { type SlottableProps } from '@dxos/ui-types';
 
 import { withTheme } from '../testing';
 
-type ComponentProps = SlottableProps<HTMLDivElement>;
-
 const ComponentInner = forwardRef<HTMLDivElement, ComponentProps>(({ children, ...props }, forwardedRef) => {
   return (
     <div {...props} ref={forwardedRef}>
@@ -24,6 +22,8 @@ ComponentInner.displayName = 'Component';
 /**
  * Generic component pattern.
  */
+type ComponentProps<P extends HTMLElement = any> = SlottableProps<P>;
+
 const Component = ComponentInner as <P extends HTMLElement>(
   props: SlottableProps<P> & { ref?: Ref<P> },
 ) => ReactElement;
