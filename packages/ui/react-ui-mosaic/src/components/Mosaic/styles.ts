@@ -11,6 +11,7 @@ export const styles = {
       'group-data-[mosaic-debug="true"]:opacity-100',
       'group-data-[mosaic-debug="true"]:bg-orange-500',
       'data-[mosaic-placeholder-state=active]:opacity-100',
+      'data-[mosaic-placeholder-orientation=vertical]:snap-start', // TODO(burdon): Option.
       'data-[mosaic-placeholder-orientation=vertical]:plb-1',
       'data-[mosaic-placeholder-orientation=vertical]:data-[mosaic-placeholder-state=active]:plb-2.5',
       'data-[mosaic-placeholder-orientation=horizontal]:pli-1',

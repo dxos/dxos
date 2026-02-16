@@ -12,9 +12,11 @@ import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
-import { Focus, Mosaic } from '../components';
+import { TestColumn, TestItem } from '../../testing';
+import { Focus } from '../Focus';
+import { Mosaic } from '../Mosaic';
 
-import { Board, TestColumn, TestItem } from './Board';
+import { Board } from './Board';
 
 faker.seed(999);
 
@@ -58,7 +60,7 @@ const DefaultStory = ({ debug = false }: StoryProps) => {
 
   return (
     <Mosaic.Root asChild debug={debug}>
-      <div className={mx('grid p-2 overflow-hidden', debug && 'grid-cols-[1fr_20rem] gap-2')}>
+      <div role='none' className={mx('grid md:p-2 overflow-hidden', debug && 'grid-cols-[1fr_20rem] gap-2')}>
         <Board.Root id='board' columns={columns} debug={debug} />
         {debug && (
           <Focus.Group classNames='flex flex-col gap-2 overflow-hidden'>

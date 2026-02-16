@@ -3,7 +3,7 @@
 //
 
 import { createContext } from '@radix-ui/react-context';
-import React, { type HTMLAttributes, type PropsWithChildren, forwardRef } from 'react';
+import React, { type PropsWithChildren, forwardRef } from 'react';
 
 import { type AllowedAxis, type SlottableProps } from '@dxos/ui-types';
 
@@ -32,9 +32,7 @@ const [ScrollAreaProvider, useScrollAreaContext] = createContext<ScrollAreaConte
 
 const SCROLLAREA_ROOT_NAME = 'ScrollArea.Root';
 
-type ScrollAreaRootProps = SlottableProps<
-  PropsWithChildren<HTMLAttributes<HTMLDivElement> & Partial<ScrollAreaContextType>>
->;
+type ScrollAreaRootProps = SlottableProps<HTMLDivElement> & Partial<ScrollAreaContextType>;
 
 /**
  * ScrollArea provides native scrollbars with custom styling.

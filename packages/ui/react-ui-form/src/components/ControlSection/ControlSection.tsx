@@ -20,7 +20,7 @@ import { translationKey } from '../../translations';
 
 // TOOD(burdon): Re-implement with radix pattern for Settings; adapt to form.
 
-export type ControlPageParams = PropsWithChildren;
+export type ControlPageParams = PropsWithChildren<{}>;
 
 export const ControlPage = ({ children }: ControlPageParams) => {
   return (

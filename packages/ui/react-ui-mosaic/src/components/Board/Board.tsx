@@ -3,56 +3,19 @@
 //
 
 import { useComposedRefs } from '@radix-ui/react-compose-refs';
-import * as Schema from 'effect/Schema';
 import React, { forwardRef, useMemo, useRef, useState } from 'react';
 
-import { Obj, Ref, Type } from '@dxos/echo';
-import { ObjectId } from '@dxos/keys';
+import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/react-client/echo';
 import { Layout, ScrollArea, Tag, type ThemedClassName } from '@dxos/react-ui';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { getHashStyles, mx } from '@dxos/ui-theme';
 
-import {
-  Card,
-  type CardMenuProps,
-  Focus,
-  Mosaic,
-  type MosaicTileProps,
-  type MosiacPlaceholderProps,
-  mosaicStyles,
-  useMosaic,
-} from '../components';
-import { useContainerDebug, useEventHandlerAdapter } from '../hooks';
-
-//
-// Test Data
-//
-
-export const TestItem = Schema.Struct({
-  name: Schema.String,
-  description: Schema.optional(Schema.String),
-  label: Schema.optional(Schema.String),
-}).pipe(
-  Type.object({
-    typename: 'example.com/type/Item',
-    version: '0.1.0',
-  }),
-);
-
-export interface TestItem extends Schema.Schema.Type<typeof TestItem> {}
-
-export const TestColumn = Schema.Struct({
-  id: ObjectId,
-  items: Schema.mutable(Schema.Array(Type.Ref(TestItem))),
-}).pipe(
-  Type.object({
-    typename: 'example.com/type/Column',
-    version: '0.1.0',
-  }),
-);
-
-export interface TestColumn extends Schema.Schema.Type<typeof TestColumn> {}
+import { useContainerDebug, useEventHandlerAdapter } from '../../hooks';
+import { TestColumn, TestItem } from '../../testing';
+import { Card, type CardMenuProps } from '../Card';
+import { Focus } from '../Focus';
+import { Mosaic, type MosaicTileProps, type MosiacPlaceholderProps, mosaicStyles, useMosaic } from '../Mosaic';
 
 //
 // Root
@@ -139,12 +102,13 @@ const Column = forwardRef<HTMLDivElement, ColumnProps>(({ classNames, location, 
     [updateColumn],
   );
 
+  // TODO(burdon): box-border
   return (
     <Mosaic.Tile asChild dragHandle={dragHandleRef.current} location={location} id={data.id} data={data} debug={debug}>
-      <Focus.Group asChild>
+      <Focus.Group asChild classNames=''>
         <div
           className={mx(
-            'grid bs-full is-screen md:is-card-default-width bg-deckSurface snap-center',
+            'grid bs-full box-border is-screen !border !border-red-500 md:is-card-default-width bg-deckSurface snap-center',
             debug ? 'grid-rows-[min-content_1fr_20rem]' : 'grid-rows-[min-content_1fr_min-content]',
             classNames,
           )}
@@ -208,7 +172,7 @@ const Item = forwardRef<HTMLDivElement, ItemProps>(({ classNames, data: ref, loc
       debug={debug}
     >
       <Focus.Group asChild>
-        <Card.Root classNames={mx('snap-start', classNames)} onClick={() => rootRef.current?.focus()} ref={composedRef}>
+        <Card.Root classNames={classNames} onClick={() => rootRef.current?.focus()} ref={composedRef}>
           <Card.Toolbar>
             <Card.DragHandle ref={dragHandleRef} />
             <Card.Title>{object.name}</Card.Title>

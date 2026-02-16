@@ -43,16 +43,8 @@ const Column = forwardRef<HTMLDivElement, { items: string[] }>(({ items }, ref) 
   const tabsterAttrs = useMergedTabsterAttributes_unstable(focusableGroupAttrs, arrowNavigationAttrs);
 
   return (
-    <ScrollArea.Root
-      tabIndex={0}
-      orientation='vertical'
-      classNames={mx('shrink-0 bs-full is-[25rem]', border)}
-    >
-      <ScrollArea.Viewport
-        {...tabsterAttrs}
-        classNames='p-4 gap-4'
-        ref={ref}
-      >
+    <ScrollArea.Root tabIndex={0} orientation='vertical' classNames={mx('shrink-0 bs-full is-[25rem]', border)}>
+      <ScrollArea.Viewport {...tabsterAttrs} classNames='p-4 gap-4' ref={ref}>
         {items.map((item) => (
           <Item key={item} value={item} />
         ))}
@@ -118,7 +110,7 @@ const withTabster: Decorator = (Story) => {
 };
 
 const meta: Meta<typeof DefaultStory> = {
-  title: 'ui/react-ui/tabster',
+  title: 'ui/react-ui/exemplars/tabster',
   component: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' }), withTabster],
   parameters: {
