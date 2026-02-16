@@ -102,13 +102,15 @@ const Column = forwardRef<HTMLDivElement, ColumnProps>(({ classNames, location, 
     [updateColumn],
   );
 
-  // TODO(burdon): box-border
   return (
     <Mosaic.Tile asChild dragHandle={dragHandleRef.current} location={location} id={data.id} data={data} debug={debug}>
-      <Focus.Group asChild classNames=''>
+      <Focus.Group
+        asChild
+        // NOTE: Width reserves 2px for outer Focus.Group border.
+        classNames='grid bs-full is-[calc(100vw-2px)] md:is-card-default-width snap-center bg-deckSurface'
+      >
         <div
           className={mx(
-            'grid bs-full box-border is-screen !border !border-red-500 md:is-card-default-width bg-deckSurface snap-center',
             debug ? 'grid-rows-[min-content_1fr_20rem]' : 'grid-rows-[min-content_1fr_min-content]',
             classNames,
           )}

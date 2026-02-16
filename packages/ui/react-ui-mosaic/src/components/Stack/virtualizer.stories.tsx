@@ -18,6 +18,8 @@ import { type Stack } from './Stack';
 
 faker.seed(999);
 
+// TODO(burdon): Move to react-ui/exemplars
+
 const meta: Meta<typeof Stack> = {
   title: 'ui/react-ui-mosaic/virtualizer',
   decorators: [withLayout({ layout: 'column' }), withTheme()],

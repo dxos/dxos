@@ -96,13 +96,13 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Single: Story = {
-  render: () => <TestSingle role='listitem' className='border-red-500' />,
+  render: () => <TestSingle role='listitem' classNames='border-red-500' />,
 };
 
 export const Nested: Story = {
-  render: () => <TestNested role='listitem' className='border-green-500' />,
+  render: () => <TestNested role='listitem' classNames='border-green-500' />,
 };
 
 export const Inner: Story = {
-  render: () => <TestInner role='listitem' className='border-blue-500' />,
+  render: () => <TestInner role='listitem' classNames='border-blue-500' />,
 };

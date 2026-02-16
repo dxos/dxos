@@ -3,12 +3,11 @@
 //
 
 import { createContext } from '@radix-ui/react-context';
-import React, { type PropsWithChildren, forwardRef } from 'react';
+import React, { type HTMLAttributes, forwardRef } from 'react';
 
-import { type AllowedAxis, type SlottableProps } from '@dxos/ui-types';
+import { type AllowedAxis, type SlottableProps, type ThemedClassName } from '@dxos/ui-types';
 
 import { useThemeContext } from '../../hooks';
-import { type ThemedClassName } from '../../util';
 
 //
 // Context
@@ -77,7 +76,7 @@ ScrollAreaRoot.displayName = SCROLLAREA_ROOT_NAME;
 
 const SCROLLAREA_VIEWPORT_NAME = 'ScrollArea.Viewport';
 
-type ScrollAreaViewportProps = ThemedClassName<PropsWithChildren<{}>>;
+type ScrollAreaViewportProps = ThemedClassName<HTMLAttributes<HTMLDivElement>>;
 
 const ScrollAreaViewport = forwardRef<HTMLDivElement, ScrollAreaViewportProps>(
   ({ classNames, children, ...props }, forwardedRef) => {
