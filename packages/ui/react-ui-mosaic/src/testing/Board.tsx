@@ -89,7 +89,7 @@ const Root = forwardRef<HTMLDivElement, RootProps>(({ id, columns, debug }, forw
           debug={debugHandler}
         >
           <ScrollArea.Root orientation='horizontal' classNames='md:pbs-3' thin snap>
-            <ScrollArea.Viewport classNames='p-2' ref={setViewport}>
+            <ScrollArea.Viewport ref={setViewport}>
               <Mosaic.Stack items={columns} getId={(item) => item.id} Tile={Column} debug={debug} />
             </ScrollArea.Viewport>
           </ScrollArea.Root>
