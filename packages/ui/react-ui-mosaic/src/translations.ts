@@ -9,7 +9,9 @@ export const translationKey = '@dxos/react-ui-mosaic';
 export const translations = [
   {
     'en-US': {
-      [translationKey]: {},
+      [translationKey]: {
+        'delete menu label': 'Delete',
+      },
     },
   },
 ] as const satisfies Resource[];

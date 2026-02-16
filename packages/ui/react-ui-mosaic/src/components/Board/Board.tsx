@@ -8,11 +8,12 @@ import React, { type ReactElement, type Ref as ReactRef, forwardRef, useMemo, us
 
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/react-client/echo';
-import { Layout, ScrollArea, Tag, type ThemedClassName } from '@dxos/react-ui';
+import { Layout, ScrollArea, Tag, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { getHashStyles, mx } from '@dxos/ui-theme';
 
 import { useContainerDebug, useEventHandlerAdapter } from '../../hooks';
+import { translationKey } from '../../translations';
 import { Card, type CardMenuProps } from '../Card';
 import { Focus } from '../Focus';
 import { Mosaic, type MosaicTileProps, type MosiacPlaceholderProps, mosaicStyles, useMosaic } from '../Mosaic';
@@ -103,6 +104,7 @@ const BoardRoot = BoardRootInner as <TColumn extends Obj.Unknown>(
 
 //
 // Column
+// TODO(burdon): Break into parts.
 //
 
 const BOARD_COLUMN_NAME = 'Board.Column';
@@ -110,11 +112,13 @@ const BOARD_COLUMN_NAME = 'Board.Column';
 type BoardColumnProps<TColumn extends Obj.Unknown> = Pick<
   MosaicTileProps<TColumn>,
   'classNames' | 'location' | 'data' | 'debug'
->;
+> & {
+  Tile?: StackProps<TColumn>['Tile'];
+};
 
-// TODO(burdon): Break into parts.
 const BoardColumnInner = forwardRef<HTMLDivElement, BoardColumnProps<Obj.Unknown>>(
-  ({ classNames, location, data, debug }, forwardedRef) => {
+  ({ classNames, location, data, debug, Tile = BoardItem }, forwardedRef) => {
+    const { t } = useTranslation(translationKey);
     const { model } = useBoardContext(BOARD_COLUMN_NAME);
     const [column, updateColumn] = useObject(data);
     const [DebugInfo, debugHandler] = useContainerDebug(debug);
@@ -135,7 +139,7 @@ const BoardColumnInner = forwardRef<HTMLDivElement, BoardColumnProps<Obj.Unknown
     const menuItems = useMemo<NonNullable<CardMenuProps<Obj.Unknown>['items']>>(
       () => [
         {
-          label: 'Delete',
+          label: t('delete menu label'),
           onClick: (obj) => {
             updateColumn((column) => {
               const idx = model.getItems(column).findIndex((item) => item.target?.id === obj?.id);
@@ -158,24 +162,25 @@ const BoardColumnInner = forwardRef<HTMLDivElement, BoardColumnProps<Obj.Unknown
         data={data}
         debug={debug}
       >
-        <Focus.Group
-          asChild
-          // NOTE: Width reserves 2px for outer Focus.Group border.
-          classNames='grid bs-full is-[calc(100vw-2px)] md:is-card-default-width snap-center bg-deckSurface'
-        >
-          <div
-            className={mx(
-              debug ? 'grid-rows-[min-content_1fr_20rem]' : 'grid-rows-[min-content_1fr_min-content]',
-              classNames,
-            )}
-            ref={forwardedRef}
+        {/* TODO(burdon): Factor out context. */}
+        <Card.Context value={{ menuItems }}>
+          <Focus.Group
+            asChild
+            // NOTE: Width reserves 2px for outer Focus.Group border.
+            classNames='grid bs-full is-[calc(100vw-2px)] md:is-card-default-width snap-center bg-deckSurface'
           >
-            <Card.Toolbar classNames='border-be border-separator'>
-              <Card.DragHandle ref={dragHandleRef} />
-              <Card.Title>{column.id}</Card.Title>
-              <Card.Menu items={[]} />
-            </Card.Toolbar>
-            <Card.Context value={{ menuItems }}>
+            <div
+              className={mx(
+                debug ? 'grid-rows-[min-content_1fr_20rem]' : 'grid-rows-[min-content_1fr_min-content]',
+                classNames,
+              )}
+              ref={forwardedRef}
+            >
+              <Card.Toolbar classNames='border-be border-separator'>
+                <Card.DragHandle ref={dragHandleRef} />
+                <Card.Title>{column.id}</Card.Title>
+                <Card.Menu items={[]} />
+              </Card.Toolbar>
               <Mosaic.Container
                 asChild
                 withFocus
@@ -186,21 +191,17 @@ const BoardColumnInner = forwardRef<HTMLDivElement, BoardColumnProps<Obj.Unknown
               >
                 <ScrollArea.Root orientation='vertical' thin padding>
                   <ScrollArea.Viewport classNames='snap-y md:snap-none' ref={setViewport}>
-                    <Mosaic.Stack
-                      items={model.getItems(column)}
-                      getId={(data) => data.dxn.toString()}
-                      Tile={BoardItem}
-                    />
+                    <Mosaic.Stack items={model.getItems(column)} getId={(data) => data.dxn.toString()} Tile={Tile} />
                   </ScrollArea.Viewport>
                 </ScrollArea.Root>
               </Mosaic.Container>
-            </Card.Context>
-            <div role='none' className='border-bs border-separator'>
-              <div className='grow flex p-1 justify-center text-xs'>{model.getItems(column).length}</div>
-              <DebugInfo />
+              <div role='none' className='border-bs border-separator'>
+                <div className='grow flex p-1 justify-center text-xs'>{model.getItems(column).length}</div>
+                <DebugInfo />
+              </div>
             </div>
-          </div>
-        </Focus.Group>
+          </Focus.Group>
+        </Card.Context>
       </Mosaic.Tile>
     );
   },
