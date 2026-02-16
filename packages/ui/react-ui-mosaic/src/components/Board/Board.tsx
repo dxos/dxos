@@ -23,6 +23,7 @@ import { Mosaic, type MosaicTileProps, type MosiacPlaceholderProps, mosaicStyles
 export interface BoardModel<TColumn extends Obj.Unknown = any, TItem extends Obj.Unknown = any> {
   isColumn: (obj: Obj.Unknown) => obj is TColumn;
   isItem: (obj: Obj.Unknown) => obj is TItem;
+  getColumns: () => TColumn[];
   getItems: (column: TColumn) => Ref.Ref<TItem>[];
 }
 
@@ -47,18 +48,18 @@ const BOARD_ROOT_NAME = 'Board.Root';
 type RootProps<TColumn extends Obj.Unknown = any, TItem extends Obj.Unknown = any> = ThemedClassName<
   {
     id: string;
-    columns: TColumn[]; // TODO(burdon): Move into model?
     debug?: boolean;
   } & BoardContextValue<TColumn, TItem>
 >;
 
-const RootInner = forwardRef<HTMLDivElement, RootProps>(({ classNames, id, model, columns, debug }, forwardedRef) => {
+const RootInner = forwardRef<HTMLDivElement, RootProps>(({ classNames, id, model, debug }, forwardedRef) => {
   const [DebugInfo, debugHandler] = useContainerDebug(debug);
   const [viewport, setViewport] = useState<HTMLElement | null>(null);
 
+  const items = model.getColumns();
   const eventHandler = useEventHandlerAdapter({
     id,
-    items: columns,
+    items,
     getId: (data) => data.id,
     get: (data) => data,
     make: (object) => object,
@@ -79,7 +80,7 @@ const RootInner = forwardRef<HTMLDivElement, RootProps>(({ classNames, id, model
           >
             <ScrollArea.Root orientation='horizontal' classNames='md:pbs-3' padding>
               <ScrollArea.Viewport classNames='snap-x md:snap-none' ref={setViewport}>
-                <Mosaic.Stack items={columns} getId={(item) => item.id} Tile={Column} debug={debug} />
+                <Mosaic.Stack items={items} getId={(item) => item.id} Tile={Column} debug={debug} />
               </ScrollArea.Viewport>
             </ScrollArea.Root>
           </Mosaic.Container>

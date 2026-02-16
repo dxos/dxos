@@ -53,14 +53,17 @@ type StoryProps = {
 
 const DefaultStory = ({ debug = false }: StoryProps) => {
   const { space } = useClientStory();
+
+  // TODO(burdon): Reactivity check.
   const columns = useQuery(space?.db, Filter.type(TestColumn));
   const model = useMemo<BoardModel<TestColumn, TestItem>>(() => {
     return {
       isColumn: (obj: Obj.Unknown): obj is TestColumn => obj instanceof TestColumn,
       isItem: (obj: Obj.Unknown): obj is TestItem => obj instanceof TestItem,
+      getColumns: () => columns,
       getItems: (column: TestColumn) => column.items,
     } satisfies BoardModel<TestColumn, TestItem>;
-  }, []);
+  }, [columns]);
 
   if (columns.length === 0) {
     return <></>;
@@ -69,7 +72,7 @@ const DefaultStory = ({ debug = false }: StoryProps) => {
   return (
     <Mosaic.Root asChild debug={debug}>
       <div role='none' className={mx('grid md:p-2 overflow-hidden', debug && 'grid-cols-[1fr_20rem] gap-2')}>
-        <Board.Root id='board' model={model} columns={columns} debug={debug} />
+        <Board.Root id='board' model={model} debug={debug} />
         {debug && (
           <Focus.Group classNames='flex flex-col gap-2 overflow-hidden'>
             <Board.Debug classNames='p-2' />
