@@ -18,14 +18,13 @@ const Block = QueueProtocol.Block;
 type Block = QueueProtocol.Block;
 const WellKnownNamespaces = QueueProtocol.WellKnownNamespaces;
 
-const SqliteLayer = SqliteClient.layer({
-  filename: ':memory:',
-});
-
-// Compose layers: SqliteLayer provides SqlClient, and we also need SqlTransaction.
-// SqlTransaction.layer requires SqlClient, so we provide SqliteLayer to it.
-const TransactionLayer = SqlTransaction.layer.pipe(Layer.provide(SqliteLayer));
-const TestLayer = Layer.merge(SqliteLayer, TransactionLayer);
+const TestLayer = SqlTransaction.layer.pipe(
+  Layer.provideMerge(
+    SqliteClient.layer({
+      filename: ':memory:',
+    }),
+  ),
+);
 
 // ActorIds.
 const ALICE = 'alice';

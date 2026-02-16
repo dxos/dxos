@@ -75,23 +75,11 @@ export class TestBuilder extends Resource {
   }
 
   async pull(client: TestPeer, { limit = 10 }: { limit?: number } = {}): Promise<{ done: boolean }> {
-    return RuntimeProvider.runPromise(client.runtime.runtimeEffect)(
-      client.syncClient!.pull({
-        spaceId: this.#spaceId,
-        feedNamespace: this.#feedNamespace,
-        limit,
-      }),
-    );
+    return client.pull({ spaceId: this.#spaceId, feedNamespace: this.#feedNamespace, limit });
   }
 
   async push(client: TestPeer, { limit = 10 }: { limit?: number } = {}): Promise<{ done: boolean }> {
-    return RuntimeProvider.runPromise(client.runtime.runtimeEffect)(
-      client.syncClient!.push({
-        spaceId: this.#spaceId,
-        feedNamespace: this.#feedNamespace,
-        limit,
-      }),
-    );
+    return client.push({ spaceId: this.#spaceId, feedNamespace: this.#feedNamespace, limit });
   }
 
   /** Route a message to the peer identified by recipientPeerId. Runs the recipient's handleMessage with that peer's runtime. */
@@ -219,5 +207,17 @@ export class TestPeer extends Resource {
 
   appendLocal(req: Parameters<FeedStore['appendLocal']>[0]) {
     return this.#feedStore.appendLocal(req).pipe(RuntimeProvider.runPromise(this.#runtime.runtimeEffect));
+  }
+
+  pull({ spaceId, feedNamespace, limit = 10 }: { spaceId: SpaceId; feedNamespace: string; limit?: number }) {
+    return this.#client!.pull({ spaceId, feedNamespace, limit }).pipe(
+      RuntimeProvider.runPromise(this.#runtime.runtimeEffect),
+    );
+  }
+
+  push({ spaceId, feedNamespace, limit = 10 }: { spaceId: SpaceId; feedNamespace: string; limit?: number }) {
+    return this.#client!.push({ spaceId, feedNamespace, limit }).pipe(
+      RuntimeProvider.runPromise(this.#runtime.runtimeEffect),
+    );
   }
 }
