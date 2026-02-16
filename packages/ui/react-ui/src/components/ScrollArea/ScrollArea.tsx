@@ -5,7 +5,7 @@
 import { createContext } from '@radix-ui/react-context';
 import React, { type HTMLAttributes, type PropsWithChildren, forwardRef } from 'react';
 
-import { type AllowedAxis } from '@dxos/ui-types';
+import { type AllowedAxis, type SlottableProps } from '@dxos/ui-types';
 
 import { useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
@@ -32,7 +32,7 @@ const [ScrollAreaProvider, useScrollAreaContext] = createContext<ScrollAreaConte
 
 const SCROLLAREA_ROOT_NAME = 'ScrollArea.Root';
 
-type ScrollAreaRootProps = ThemedClassName<
+type ScrollAreaRootProps = SlottableProps<
   PropsWithChildren<HTMLAttributes<HTMLDivElement> & Partial<ScrollAreaContextType>>
 >;
 
@@ -42,6 +42,7 @@ type ScrollAreaRootProps = ThemedClassName<
 const ScrollAreaRoot = forwardRef<HTMLDivElement, ScrollAreaRootProps>(
   (
     {
+      className,
       classNames,
       children,
       orientation = 'vertical',
@@ -58,7 +59,11 @@ const ScrollAreaRoot = forwardRef<HTMLDivElement, ScrollAreaRootProps>(
 
     return (
       <ScrollAreaProvider {...options}>
-        <div {...props} className={tx('scrollArea.root', 'scroll-area', options, classNames)} ref={forwardedRef}>
+        <div
+          {...props}
+          className={tx('scrollArea.root', 'scroll-area', options, [className, classNames])}
+          ref={forwardedRef}
+        >
           {children}
         </div>
       </ScrollAreaProvider>
