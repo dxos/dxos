@@ -253,6 +253,7 @@ const BoardItemInner = forwardRef<HTMLDivElement, BoardItemProps<Obj.Unknown>>(
               <Card.Title>{label}</Card.Title>
               <Card.Menu context={object} />
             </Card.Toolbar>
+            {/* TODO(burdon): Replace with surface. */}
             <Card.Row icon='ph--note--regular' classNames='text-description'>
               {description}
             </Card.Row>
