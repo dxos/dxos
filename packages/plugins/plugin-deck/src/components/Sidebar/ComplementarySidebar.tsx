@@ -218,8 +218,8 @@ const ComplementarySidebarPanel = ({ companion, activeId, data, hoistStatusbar }
 
 const ScrollAreaWrapper = ({ children }: PropsWithChildren) => {
   return (
-    <ScrollArea classNames='grow' thin>
-      {children}
-    </ScrollArea>
+    <ScrollArea.Root thin orientation='vertical' classNames='grow'>
+      <ScrollArea.Viewport>{children}</ScrollArea.Viewport>
+    </ScrollArea.Root>
   );
 };

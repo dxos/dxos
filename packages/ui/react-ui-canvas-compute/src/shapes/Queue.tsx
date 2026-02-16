@@ -46,11 +46,13 @@ export const QueueComponent = ({ shape }: ShapeComponentProps<QueueShape>) => {
 
   return (
     <Box shape={shape} status={`${items.length} items`} onAction={handleAction}>
-      <ScrollArea classNames='divide-y divide-separator'>
-        {[...items].map((item, i) => (
-          <QueueItem key={i} classNames='p-1 pli-2' item={item} />
-        ))}
-      </ScrollArea>
+      <ScrollArea.Root orientation='vertical'>
+        <ScrollArea.Viewport classNames='divide-y divide-separator'>
+          {[...items].map((item, i) => (
+            <QueueItem key={i} classNames='p-1 pli-2' item={item} />
+          ))}
+        </ScrollArea.Viewport>
+      </ScrollArea.Root>
     </Box>
   );
 };

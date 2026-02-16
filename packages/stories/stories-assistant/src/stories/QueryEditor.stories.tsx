@@ -34,18 +34,20 @@ const DefaultStory = ({ value: valueProp }: QueryEditorProps) => {
     <div role='none' className='grid grid-cols-2 grow divide-x divide-subduedSeparator overflow-hidden'>
       <div className='flex flex-col overflow-hidden'>
         <QueryEditor classNames='p-2 is-full border-be border-subduedSeparator' db={space?.db} onChange={setQuery} />
-        <ScrollArea>
-          {objects.map((object) => (
-            <div
-              key={object.id}
-              className='grid grid-cols-3 gap-2 p-2 border-be border-subduedSeparator overflow-hidden'
-            >
-              <span className='truncate text-sm font-mono'>{object.id}</span>
-              <span className='truncate text-sm font-mono'>{Obj.getTypename(object)}</span>
-              <span className='truncate'>{Obj.getLabel(object)}</span>
-            </div>
-          ))}
-        </ScrollArea>
+        <ScrollArea.Root orientation='vertical'>
+          <ScrollArea.Viewport>
+            {objects.map((object) => (
+              <div
+                key={object.id}
+                className='grid grid-cols-3 gap-2 p-2 border-be border-subduedSeparator overflow-hidden'
+              >
+                <span className='truncate text-sm font-mono'>{object.id}</span>
+                <span className='truncate text-sm font-mono'>{Obj.getTypename(object)}</span>
+                <span className='truncate'>{Obj.getLabel(object)}</span>
+              </div>
+            ))}
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
         <div className='p-2 text-right text-infoText text-xs'>{objects.length}</div>
       </div>
       <D3ForceGraph model={model} />

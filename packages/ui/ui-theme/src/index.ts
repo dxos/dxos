@@ -2,14 +2,15 @@
 // Copyright 2022 DXOS.org
 //
 
-import { type TailwindConfig, tailwindConfig } from './config';
+import { tailwindConfig } from './config';
 
+// TODO(burdon): Factor out public vs. internals.
 export { cardDefaultInlineSize, cardMinInlineSize, cardMaxInlineSize, hues, userDefaultTokenSet } from './config';
 export * from './styles';
 export * from './types';
 export * from './util';
 
-const tokens: TailwindConfig['theme'] = tailwindConfig({}).theme;
+const { theme: tokens } = tailwindConfig({});
 
 export { tokens };
 

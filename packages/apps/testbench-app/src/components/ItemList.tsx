@@ -18,19 +18,21 @@ export type ItemListProps<T> = { objects: T[] } & Pick<ItemProps<T>, 'debug' | '
 
 export const ItemList = ({ objects, debug, ...props }: ItemListProps<Obj.Any>) => {
   return (
-    <ScrollArea padding thin>
-      {objects
-        .slice(0, MAX_RENDERED_COUNT)
-        .map(
-          (object) =>
-            (debug && <DebugItem key={object.id} object={object} {...props} />) || (
-              <Item key={object.id} object={object} {...props} />
-            ),
+    <ScrollArea.Root padding thin orientation='vertical'>
+      <ScrollArea.Viewport>
+        {objects
+          .slice(0, MAX_RENDERED_COUNT)
+          .map(
+            (object) =>
+              (debug && <DebugItem key={object.id} object={object} {...props} />) || (
+                <Item key={object.id} object={object} {...props} />
+              ),
+          )}
+        {objects.length > MAX_RENDERED_COUNT && (
+          <div className='text-xs text-gray-400'>({objects.length - MAX_RENDERED_COUNT} more items)</div>
         )}
-      {objects.length > MAX_RENDERED_COUNT && (
-        <div className='text-xs text-gray-400'>({objects.length - MAX_RENDERED_COUNT} more items)</div>
-      )}
-    </ScrollArea>
+      </ScrollArea.Viewport>
+    </ScrollArea.Root>
   );
 };
 

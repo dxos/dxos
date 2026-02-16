@@ -25,44 +25,46 @@ export type ToolboxProps = ThemedClassName<{
 
 export const Toolbox = ({ classNames, functions, services, blueprints, activeBlueprints }: ToolboxProps) => {
   return (
-    <ScrollArea thin classNames={classNames}>
-      {blueprints && blueprints.length > 0 && (
-        <Section
-          title='Blueprints'
-          items={blueprints.map(({ name, description, tools }) => ({
-            name,
-            description,
-            subitems: tools.map((toolId) => ({ name: `∙ ${safeToolId(toolId)}` })),
-          }))}
-        />
-      )}
+    <ScrollArea.Root thin orientation='vertical'>
+      <ScrollArea.Viewport classNames={classNames}>
+        {blueprints && blueprints.length > 0 && (
+          <Section
+            title='Blueprints'
+            items={blueprints.map(({ name, description, tools }) => ({
+              name,
+              description,
+              subitems: tools.map((toolId) => ({ name: `∙ ${safeToolId(toolId)}` })),
+            }))}
+          />
+        )}
 
-      {activeBlueprints && activeBlueprints.length > 0 && (
-        <Section
-          title='Blueprints'
-          items={activeBlueprints.map(({ target }) => ({
-            name: target?.name ?? '',
-            description: target?.description ?? '',
-            subitems: target?.tools.map((toolId) => ({ name: `∙ ${safeToolId(toolId)}` })),
-          }))}
-        />
-      )}
+        {activeBlueprints && activeBlueprints.length > 0 && (
+          <Section
+            title='Blueprints'
+            items={activeBlueprints.map(({ target }) => ({
+              name: target?.name ?? '',
+              description: target?.description ?? '',
+              subitems: target?.tools.map((toolId) => ({ name: `∙ ${safeToolId(toolId)}` })),
+            }))}
+          />
+        )}
 
-      {services && services.length > 0 && (
-        <Section
-          title='Services'
-          items={services.map(({ service: { serviceId, name, description } }) => ({
-            name: name ?? serviceId,
-            description,
-            // subitems: tools.map(({ name, description }) => ({ name: `∙ ${name}`, description })),
-          }))}
-        />
-      )}
+        {services && services.length > 0 && (
+          <Section
+            title='Services'
+            items={services.map(({ service: { serviceId, name, description } }) => ({
+              name: name ?? serviceId,
+              description,
+              // subitems: tools.map(({ name, description }) => ({ name: `∙ ${name}`, description })),
+            }))}
+          />
+        )}
 
-      {functions && functions.length > 0 && (
-        <Section title='Functions' items={functions.map(({ name, description }) => ({ name, description }))} />
-      )}
-    </ScrollArea>
+        {functions && functions.length > 0 && (
+          <Section title='Functions' items={functions.map(({ name, description }) => ({ name, description }))} />
+        )}
+      </ScrollArea.Viewport>
+    </ScrollArea.Root>
   );
 };
 

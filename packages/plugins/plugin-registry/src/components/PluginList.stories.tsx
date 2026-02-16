@@ -51,9 +51,11 @@ const DefaultStory = () => {
   };
 
   return (
-    <ScrollArea>
-      <PluginList plugins={plugins} enabled={enabled} onChange={handleChange} hasSettings={() => true} />
-    </ScrollArea>
+    <ScrollArea.Root orientation='vertical'>
+      <ScrollArea.Viewport>
+        <PluginList plugins={plugins} enabled={enabled} onChange={handleChange} hasSettings={() => true} />
+      </ScrollArea.Viewport>
+    </ScrollArea.Root>
   );
 };
 

@@ -139,9 +139,9 @@ const Root = forwardRef<ScrollController, RootProps>(
               )}
             />
           )}
-          <ScrollArea classNames={mx('min-bs-0', classNames)} ref={scrollerRef} thin>
-            {children}
-          </ScrollArea>
+          <ScrollArea.Root classNames={mx('min-bs-0', classNames)} ref={scrollerRef} thin>
+            <ScrollArea.Viewport>{children}</ScrollArea.Viewport>
+          </ScrollArea.Root>
         </div>
       </ScrollContainerProvider>
     );

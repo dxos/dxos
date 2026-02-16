@@ -9,7 +9,7 @@ import React, { forwardRef, useMemo, useRef, useState } from 'react';
 import { Obj, Ref, Type } from '@dxos/echo';
 import { ObjectId } from '@dxos/keys';
 import { useObject } from '@dxos/react-client/echo';
-import { Layout, Tag, type ThemedClassName } from '@dxos/react-ui';
+import { Layout, ScrollArea, Tag, type ThemedClassName } from '@dxos/react-ui';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { getHashStyles, mx } from '@dxos/ui-theme';
 
@@ -78,7 +78,7 @@ const Root = forwardRef<HTMLDivElement, RootProps>(({ id, columns, debug }, forw
   });
 
   return (
-    <Layout.Main ref={forwardedRef}>
+    <Layout.Main ref={forwardedRef} classNames='border-red-500'>
       <Focus.Group asChild orientation='horizontal'>
         <Mosaic.Container
           asChild
@@ -88,9 +88,11 @@ const Root = forwardRef<HTMLDivElement, RootProps>(({ id, columns, debug }, forw
           eventHandler={eventHandler}
           debug={debugHandler}
         >
-          <Mosaic.Viewport padding thin snap viewportRef={setViewport} classNames='md:pbs-3'>
-            <Mosaic.Stack items={columns} getId={(item) => item.id} Tile={Column} debug={debug} />
-          </Mosaic.Viewport>
+          <ScrollArea.Root orientation='horizontal' classNames='md:pbs-3' padding>
+            <ScrollArea.Viewport classNames='snap-x md:snap-none' ref={setViewport}>
+              <Mosaic.Stack items={columns} getId={(item) => item.id} Tile={Column} debug={debug} />
+            </ScrollArea.Viewport>
+          </ScrollArea.Root>
         </Mosaic.Container>
       </Focus.Group>
       <DebugInfo />
@@ -142,14 +144,13 @@ const Column = forwardRef<HTMLDivElement, ColumnProps>(({ classNames, location, 
       <Focus.Group asChild>
         <div
           className={mx(
-            'grid bs-full is-screen md:is-card-default-width bg-deckSurface',
-            'snap-center ms:snap-align-none',
+            'grid bs-full is-screen md:is-card-default-width bg-deckSurface snap-center',
             debug ? 'grid-rows-[min-content_1fr_20rem]' : 'grid-rows-[min-content_1fr_min-content]',
             classNames,
           )}
           ref={forwardedRef}
         >
-          <Card.Toolbar>
+          <Card.Toolbar classNames='border-be border-separator'>
             <Card.DragHandle ref={dragHandleRef} />
             <Card.Title>{column.id}</Card.Title>
             <Card.Menu items={[]} />
@@ -163,12 +164,14 @@ const Column = forwardRef<HTMLDivElement, ColumnProps>(({ classNames, location, 
               eventHandler={eventHandler}
               debug={debugHandler}
             >
-              <Mosaic.Viewport padding thin snap viewportRef={setViewport}>
-                <Mosaic.Stack items={column.items} getId={(data) => data.dxn.toString()} Tile={Item} />
-              </Mosaic.Viewport>
+              <ScrollArea.Root orientation='vertical' thin padding>
+                <ScrollArea.Viewport classNames='snap-y md:snap-none' ref={setViewport}>
+                  <Mosaic.Stack items={column.items} getId={(data) => data.dxn.toString()} Tile={Item} />
+                </ScrollArea.Viewport>
+              </ScrollArea.Root>
             </Mosaic.Container>
           </Card.Context>
-          <div role='none'>
+          <div role='none' className='border-bs border-separator'>
             <div className='grow flex p-1 justify-center text-xs'>{column.items.length}</div>
             <DebugInfo />
           </div>
@@ -205,11 +208,7 @@ const Item = forwardRef<HTMLDivElement, ItemProps>(({ classNames, data: ref, loc
       debug={debug}
     >
       <Focus.Group asChild>
-        <Card.Root
-          classNames={mx('snap-start md:snap-align-none', classNames)}
-          onClick={() => rootRef.current?.focus()}
-          ref={composedRef}
-        >
+        <Card.Root classNames={mx('snap-start', classNames)} onClick={() => rootRef.current?.focus()} ref={composedRef}>
           <Card.Toolbar>
             <Card.DragHandle ref={dragHandleRef} />
             <Card.Title>{object.name}</Card.Title>

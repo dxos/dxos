@@ -8,7 +8,7 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { type Diagram } from '@dxos/plugin-sketch/types';
-import { Flex, type FlexProps, ScrollArea, useThemeContext } from '@dxos/react-ui';
+import { Flex, type FlexProps, Layout, useThemeContext } from '@dxos/react-ui';
 
 import { useStoreAdapter } from '../../hooks';
 import { type SketchSettingsProps } from '../../types';
@@ -89,8 +89,9 @@ export const SketchContainer = ({ role, subject: sketch }: SketchContainerProps)
   };
 
   // NOTE: Min 500px height (for tools palette to be visible).
-  const Root = role === 'section' ? Container : ScrollArea;
+  const Root = role === 'section' ? Container : Layout.Main;
 
+  // NOTE: Min 500px height (for tools palette to be visible).
   // TODO(burdon): Disable scrolling with mouse pad unless focused.
   // TODO(burdon): Show live collaborators.
   //  https://docs.excalidraw.com/docs/@excalidraw/excalidraw/api/children-components/live-collaboration-trigger

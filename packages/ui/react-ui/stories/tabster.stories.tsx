@@ -43,16 +43,21 @@ const Column = forwardRef<HTMLDivElement, { items: string[] }>(({ items }, ref) 
   const tabsterAttrs = useMergedTabsterAttributes_unstable(focusableGroupAttrs, arrowNavigationAttrs);
 
   return (
-    <ScrollArea
-      ref={ref}
+    <ScrollArea.Root
       tabIndex={0}
-      {...tabsterAttrs}
-      classNames={mx('shrink-0 bs-full is-[25rem] p-4 gap-4', border)}
+      orientation='vertical'
+      classNames={mx('shrink-0 bs-full is-[25rem]', border)}
     >
-      {items.map((item) => (
-        <Item key={item} value={item} />
-      ))}
-    </ScrollArea>
+      <ScrollArea.Viewport
+        {...tabsterAttrs}
+        classNames='p-4 gap-4'
+        ref={ref}
+      >
+        {items.map((item) => (
+          <Item key={item} value={item} />
+        ))}
+      </ScrollArea.Viewport>
+    </ScrollArea.Root>
   );
 });
 

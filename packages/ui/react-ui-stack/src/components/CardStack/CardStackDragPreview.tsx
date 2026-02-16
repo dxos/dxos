@@ -40,7 +40,13 @@ const CardStackDragPreviewContent = ({
   children,
   itemsCount = 0,
 }: PropsWithChildren<Pick<StackProps, 'itemsCount'>>) => {
-  return <ScrollArea classNames={mx('pli-2 plb-1 gap-2', itemsCount > 0 ? 'plb-2' : 'plb-1')}>{children}</ScrollArea>;
+  return (
+    <ScrollArea.Root orientation='vertical'>
+      <ScrollArea.Viewport classNames={mx('pli-2 plb-1 gap-2', itemsCount > 0 ? 'plb-2' : 'plb-1')}>
+        {children}
+      </ScrollArea.Viewport>
+    </ScrollArea.Root>
+  );
 };
 
 const CardStackDragPreviewFooter = ({ children }: PropsWithChildren<{}>) => {

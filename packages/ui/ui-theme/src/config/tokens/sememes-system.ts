@@ -113,7 +113,6 @@ export const systemSememes = {
   separatorBase: contrastCadence(3, 2),
   separatorGroup: contrastCadence(3, 2.5),
   separatorModal: contrastCadence(3, 3),
-
   subduedSeparator: contrastCadence(3, 1),
 
   unAccent: {

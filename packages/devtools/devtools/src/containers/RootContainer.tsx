@@ -33,8 +33,8 @@ const Sidebar = () => {
   const { pathname } = useLocation();
   const sections = useSections();
   return (
-    <ScrollArea classNames='is-[180px] border-ie border-separator'>
-      <div className='flex flex-col gap-4 divide-y divide-separator'>
+    <ScrollArea.Root orientation='vertical' classNames='is-[180px] border-ie border-separator'>
+      <ScrollArea.Viewport classNames='gap-4 divide-y divide-separator'>
         {sections.map((section) => (
           <div key={section.id}>
             <div className='flex text-sm pis-4 plb-1'>{section.title}</div>
@@ -50,10 +50,10 @@ const Sidebar = () => {
             </div>
           </div>
         ))}
-      </div>
-      <div className='grow' />
-      <Footer />
-    </ScrollArea>
+        <div className='grow' />
+        <Footer />
+      </ScrollArea.Viewport>
+    </ScrollArea.Root>
   );
 };
 

@@ -146,26 +146,28 @@ const Sidebar = ({ mutate }: { mutate?: boolean }) => {
 
   return (
     <Layout.Main>
-      <ScrollArea thin>
-        <Tree
-          className='p-0.5 gap-1'
-          node={root}
-          open={openItems}
-          selected={selectedItems}
-          active={activeItems}
-          onChangeOpen={(id, open) => setOpenItems((items) => ({ ...items, [id]: open }))}
-          onChangeSelected={(id, open) => setSelectedItems((items) => ({ ...items, [id]: open }))}
-          onMenuAction={handleCreateItem}
-          getSlots={(node, open, depth) => {
-            if (depth === 1) {
-              return {
-                root: 'rounded bg-white dark:bg-neutral-850',
-                header: mx('rounded-t bg-neutral-50 dark:bg-neutral-900', !open && 'rounded-b'),
-              };
-            }
-          }}
-        />
-      </ScrollArea>
+      <ScrollArea.Root orientation='vertical' thin>
+        <ScrollArea.Viewport>
+          <Tree
+            className='p-0.5 gap-1'
+            node={root}
+            open={openItems}
+            selected={selectedItems}
+            active={activeItems}
+            onChangeOpen={(id, open) => setOpenItems((items) => ({ ...items, [id]: open }))}
+            onChangeSelected={(id, open) => setSelectedItems((items) => ({ ...items, [id]: open }))}
+            onMenuAction={handleCreateItem}
+            getSlots={(node, open, depth) => {
+              if (depth === 1) {
+                return {
+                  root: 'rounded bg-white dark:bg-neutral-850',
+                  header: mx('rounded-t bg-neutral-50 dark:bg-neutral-900', !open && 'rounded-b'),
+                };
+              }
+            }}
+          />
+        </ScrollArea.Viewport>
+      </ScrollArea.Root>
 
       <div className='flex items-center my-2 pli-2 gap-2'>
         <IconButton icon='ph--plus-circle--regular' iconOnly label='Create space' onClick={handleCreateSpace} />

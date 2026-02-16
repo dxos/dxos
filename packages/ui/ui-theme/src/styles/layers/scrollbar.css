@@ -1,0 +1,9 @@
+@layer components {
+  ::-webkit-scrollbar-thumb:hover:not(:active) {
+    @apply bg-separator !important;
+  }
+
+  ::-webkit-scrollbar-thumb:active {
+    @apply bg-separator !important;
+  }
+}

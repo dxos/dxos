@@ -132,12 +132,14 @@ const DefaultStory = () => {
           />
         </TableComponent.Root>
       </div>
-      <ScrollArea classNames='bs-full border-l border-separator'>
-        <StoryViewEditor view={table.view.target} schema={schema} db={db} handleDeleteColumn={handleDeleteColumn} />
-        <SyntaxHighlighter language='json' className='text-xs'>
-          {JSON.stringify({ view: table.view.target, schema }, null, 2)}
-        </SyntaxHighlighter>
-      </ScrollArea>
+      <ScrollArea.Root orientation='vertical' classNames='bs-full border-l border-separator'>
+        <ScrollArea.Viewport>
+          <StoryViewEditor view={table.view.target} schema={schema} db={db} handleDeleteColumn={handleDeleteColumn} />
+          <SyntaxHighlighter language='json' className='text-xs'>
+            {JSON.stringify({ view: table.view.target, schema }, null, 2)}
+          </SyntaxHighlighter>
+        </ScrollArea.Viewport>
+      </ScrollArea.Root>
     </div>
   );
 };

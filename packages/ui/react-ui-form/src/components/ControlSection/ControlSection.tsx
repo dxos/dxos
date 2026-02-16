@@ -23,7 +23,11 @@ import { translationKey } from '../../translations';
 export type ControlPageParams = PropsWithChildren;
 
 export const ControlPage = ({ children }: ControlPageParams) => {
-  return <ScrollArea classNames='pli-cardSpacingInline pbe-trimMd'>{children}</ScrollArea>;
+  return (
+    <ScrollArea.Root orientation='vertical'>
+      <ScrollArea.Viewport classNames='pli-cardSpacingInline pbe-trimMd'>{children}</ScrollArea.Viewport>
+    </ScrollArea.Root>
+  );
 };
 
 export type ControlSectionProps = PropsWithChildren<{
@@ -87,7 +91,7 @@ export const ControlFrame = ({ children }: ControlGroupProps) => (
 
 export const controlItemClasses = mx([
   'container-max-width grid md:col-span-2 grid-cols-subgrid gap-trimSm items-center',
-  '*:first:!mbs-0 *:last:!mbe-0 pli-trimMd plb-trimMd',
+  'mbe-4 *:first:!mbs-0 *:last:!mbe-0 pli-trimMd plb-trimMd',
   'border border-separator rounded-md',
 ]);
 

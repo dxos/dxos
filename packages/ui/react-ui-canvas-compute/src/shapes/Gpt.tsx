@@ -76,9 +76,9 @@ export const GptComponent = ({ shape }: ShapeComponentProps<GptShape>) => {
     <FunctionBody
       shape={shape}
       content={
-        <ScrollArea thin padding>
-          {text}
-        </ScrollArea>
+        <ScrollArea.Root thin padding orientation='vertical'>
+          <ScrollArea.Viewport>{text}</ScrollArea.Viewport>
+        </ScrollArea.Root>
       }
       status={`${tokens} tokens`}
       inputSchema={meta.input}

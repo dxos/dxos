@@ -18,6 +18,12 @@ import { Board, TestColumn, TestItem } from './Board';
 
 faker.seed(999);
 
+// TODO(burdon): Outer focus border.
+// TODO(burdon): Create model with Kanban, Pipeline, and Hierarchical implementations.
+// TODO(burdon): Factor out Baord to react-ui-kanban (replace kanban).
+// TODO(burdon): Mobile implementation.
+// TODO(burdon): Tests/stories.
+
 const createTestData = (db: Database.Database, columnCount: number) => {
   Array.from({ length: columnCount }).forEach((_, i) => {
     db.add(
@@ -46,14 +52,13 @@ type StoryProps = {
 const DefaultStory = ({ debug = false }: StoryProps) => {
   const { space } = useClientStory();
   const columns = useQuery(space?.db, Filter.type(TestColumn));
-
   if (columns.length === 0) {
     return <></>;
   }
 
   return (
     <Mosaic.Root asChild debug={debug}>
-      <div className={mx('grid overflow-hidden', debug && 'grid-cols-[1fr_20rem] gap-2')}>
+      <div className={mx('grid p-2 overflow-hidden', debug && 'grid-cols-[1fr_20rem] gap-2')}>
         <Board.Root id='board' columns={columns} debug={debug} />
         {debug && (
           <Focus.Group classNames='flex flex-col gap-2 overflow-hidden'>
@@ -100,7 +105,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    columns: 5,
+    columns: 8,
   },
 };
 

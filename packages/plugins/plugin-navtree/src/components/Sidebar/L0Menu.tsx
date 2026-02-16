@@ -334,26 +334,28 @@ export const L0Menu = ({ menuActions, topLevelItems, pinnedItems, userAccountIte
       </MenuProvider>
 
       {/* Space list. */}
-      <ScrollArea thin orientation='vertical'>
-        <div
-          role='none'
-          className={mx([
-            'flex flex-col gap-1 pbs-1',
-            '[body[data-platform="macos"]_&]:pbs-[30px]',
-            '[body[data-platform="ios"]_&]:pbs-[max(env(safe-area-inset-top),0.25rem)]',
-          ])}
-        >
-          {topLevelItems.map((item) => (
-            <L0Item
-              key={item.id}
-              item={item}
-              parent={parent}
-              path={path}
-              {...(hasRearrangeableItems && { onRearrange: handleRearrange })}
-            />
-          ))}
-        </div>
-      </ScrollArea>
+      <ScrollArea.Root thin orientation='vertical'>
+        <ScrollArea.Viewport>
+          <div
+            role='none'
+            className={mx([
+              'flex flex-col gap-1 pbs-1',
+              '[body[data-platform="macos"]_&]:pbs-[30px]',
+              '[body[data-platform="ios"]_&]:pbs-[max(env(safe-area-inset-top),0.25rem)]',
+            ])}
+          >
+            {topLevelItems.map((item) => (
+              <L0Item
+                key={item.id}
+                item={item}
+                parent={parent}
+                path={path}
+                {...(hasRearrangeableItems && { onRearrange: handleRearrange })}
+              />
+            ))}
+          </div>
+        </ScrollArea.Viewport>
+      </ScrollArea.Root>
 
       {/* Actions. */}
       <div role='none' className='grid grid-cols-1 auto-rows-[--rail-action] pbs-2'>

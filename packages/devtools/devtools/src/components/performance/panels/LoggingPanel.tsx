@@ -47,38 +47,40 @@ export const LoggingPanel = ({ maxLines = 100, ...props }: CustomPanelProps<{ ma
         </Input.Root>
         <Toolbar.IconButton icon='ph--x--regular' iconOnly label='Clear' onClick={handleClear} />
       </Toolbar.Root>
-      <ScrollArea classNames='max-bs-[240px] text-xs'>
-        {entries.map((entry, index) => (
-          <div key={index} className='group pli-1 grid grid-cols-[1rem_1fr_1fr_min-content] items-center'>
-            <div
-              className={mx(
-                entry.level > LogLevel.WARN
-                  ? 'text-errorText'
-                  : entry.level > LogLevel.INFO
-                    ? 'text-warningText'
-                    : entry.level > LogLevel.VERBOSE
-                      ? 'text-infoText'
-                      : 'text-successText',
-              )}
-            >
-              {shortLevelName[entry.level]}
+      <ScrollArea.Root orientation='vertical' classNames='max-bs-[240px]'>
+        <ScrollArea.Viewport classNames='text-xs'>
+          {entries.map((entry, index) => (
+            <div key={index} className='group pli-1 grid grid-cols-[1rem_1fr_1fr_min-content] items-center'>
+              <div
+                className={mx(
+                  entry.level > LogLevel.WARN
+                    ? 'text-errorText'
+                    : entry.level > LogLevel.INFO
+                      ? 'text-warningText'
+                      : entry.level > LogLevel.VERBOSE
+                        ? 'text-infoText'
+                        : 'text-successText',
+                )}
+              >
+                {shortLevelName[entry.level]}
+              </div>
+              <div className='truncate text-subdued'>{entry.meta?.F?.split('/').pop()?.split('.')[0]}</div>
+              <div className='truncate cursor-pointer' title={entry.message}>
+                {entry.message}
+              </div>
+              <IconButton
+                icon='ph--clipboard--regular'
+                iconOnly
+                size={4}
+                label='Copy'
+                variant='ghost'
+                classNames='cursor-pointer opacity-50 group-hover:opacity-100'
+                onClick={() => navigator.clipboard.writeText(JSON.stringify(entry, null, 2))}
+              />
             </div>
-            <div className='truncate text-subdued'>{entry.meta?.F?.split('/').pop()?.split('.')[0]}</div>
-            <div className='truncate cursor-pointer' title={entry.message}>
-              {entry.message}
-            </div>
-            <IconButton
-              icon='ph--clipboard--regular'
-              iconOnly
-              size={4}
-              label='Copy'
-              variant='ghost'
-              classNames='cursor-pointer opacity-50 group-hover:opacity-100'
-              onClick={() => navigator.clipboard.writeText(JSON.stringify(entry, null, 2))}
-            />
-          </div>
-        ))}
-      </ScrollArea>
+          ))}
+        </ScrollArea.Viewport>
+      </ScrollArea.Root>
     </Panel>
   );
 };
