@@ -46,6 +46,7 @@ export class LocalQueueServiceImpl implements QueueService {
         const cursor = query.after ? parseInt(query.after) : -1;
         const result = yield* this.#feedStore.query({
           requestId: crypto.randomUUID(),
+          feedNamespace: request.query.queuesNamespace || QueueProtocol.WellKnownNamespaces.data,
           spaceId: spaceId! as SpaceId,
           query: { feedIds: queueIds ?? [] },
           position: cursor,
