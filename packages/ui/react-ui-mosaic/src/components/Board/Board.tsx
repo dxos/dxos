@@ -113,7 +113,7 @@ type BoardColumnProps<TColumn extends Obj.Unknown> = Pick<
   MosaicTileProps<TColumn>,
   'classNames' | 'location' | 'data' | 'debug'
 > & {
-  Tile?: StackProps<TColumn>['Tile'];
+  Tile?: StackProps<Ref.Ref<Obj.Unknown>>['Tile'];
 };
 
 const BoardColumnInner = forwardRef<HTMLDivElement, BoardColumnProps<Obj.Unknown>>(
