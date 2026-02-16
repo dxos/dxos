@@ -9,7 +9,7 @@ import { ObjectId, SpaceId } from '@dxos/keys';
 import { QueueProtocol } from '@dxos/protocols';
 import { range } from '@dxos/util';
 
-import { TestBuilder } from './test-builder';
+import { TestBuilder } from './testing';
 
 const WellKnownNamespaces = QueueProtocol.WellKnownNamespaces;
 
