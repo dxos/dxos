@@ -5,14 +5,13 @@
 import React, { useMemo } from 'react';
 
 import { faker } from '@dxos/random';
-
-faker.seed(123);
-
 import { mx } from '@dxos/ui-theme';
 
 import { withLayout, withTheme } from '../../testing';
 
 import { ScrollArea } from './ScrollArea';
+
+faker.seed(123);
 
 export default {
   title: 'ui/react-ui-core/components/ScrollArea',

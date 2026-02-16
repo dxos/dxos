@@ -101,14 +101,14 @@ export const Virtual: Story = {
           <ScrollArea.Root orientation='vertical'>
             <ScrollArea.Viewport classNames='p-2' ref={setViewport}>
               <Mosaic.VirtualStack
-              {...props}
-              items={items}
-              getScrollElement={() => viewport}
-              estimateSize={() => 40}
-              onChange={(virtualizer) => {
-                setInfo({ range: virtualizer.range });
-              }}
-            />
+                {...props}
+                items={items}
+                getScrollElement={() => viewport}
+                estimateSize={() => 40}
+                onChange={(virtualizer) => {
+                  setInfo({ range: virtualizer.range });
+                }}
+              />
             </ScrollArea.Viewport>
           </ScrollArea.Root>
         </Mosaic.Container>
