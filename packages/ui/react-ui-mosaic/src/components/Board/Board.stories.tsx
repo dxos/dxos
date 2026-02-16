@@ -20,9 +20,8 @@ import { Board, type BoardModel } from './Board';
 
 faker.seed(999);
 
-// TODO(burdon): Outer focus border.
 // TODO(burdon): Create model with Kanban, Pipeline, and Hierarchical implementations.
-// TODO(burdon): Factor out Baord to react-ui-kanban (replace kanban).
+// TODO(burdon): Factor out Board to react-ui-kanban (replace kanban).
 // TODO(burdon): Mobile implementation.
 // TODO(burdon): Tests/stories.
 
