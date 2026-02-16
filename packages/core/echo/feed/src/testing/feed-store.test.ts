@@ -12,7 +12,7 @@ import { log } from '@dxos/log';
 import { QueueProtocol } from '@dxos/protocols';
 import { SqlTransaction } from '@dxos/sql-sqlite';
 
-import { FeedStore } from './feed-store';
+import { FeedStore } from '../feed-store';
 
 const Block = QueueProtocol.Block;
 type Block = QueueProtocol.Block;
