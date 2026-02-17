@@ -6,6 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
 import { type Database, Filter, Obj, Ref } from '@dxos/echo';
+import { invariant } from '@dxos/invariant';
 import { faker } from '@dxos/random';
 import { useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
@@ -64,7 +65,7 @@ const DefaultStory = ({ debug = false }: StoryProps) => {
       isItem: (obj: Obj.Unknown): obj is TestItem => Obj.instanceOf(TestItem, obj),
       getColumns: () => columns,
       getItems: (column: TestColumn) => column.items,
-      onDeleteItem: (column: TestColumn, current: TestItem) => {
+      onItemDelete: (column: TestColumn, current: TestItem) => {
         const idx = model.getItems(column).findIndex((item) => item.target?.id === current?.id);
         if (idx !== -1) {
           Obj.change(column, (mutableColumn) => {
@@ -72,8 +73,23 @@ const DefaultStory = ({ debug = false }: StoryProps) => {
           });
         }
       },
+      onItemCreate: async (column: TestColumn) => {
+        invariant(space);
+        const item = space.db.add(
+          Obj.make(TestItem, {
+            name: faker.lorem.sentence(3),
+            description: faker.lorem.paragraph(1),
+          }),
+        );
+
+        Obj.change(column, (column) => {
+          model.getItems(column).push(Ref.make(item));
+        });
+
+        return item;
+      },
     } satisfies BoardModel<TestColumn, TestItem>;
-  }, [columns]);
+  }, [space, columns]);
 
   if (columns.length === 0) {
     return <></>;
