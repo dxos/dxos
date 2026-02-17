@@ -8,6 +8,7 @@ import * as AnthropicTool from '@effect/ai-anthropic/AnthropicTool';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
+// TODO(dmaretskyi): Testing only.
 export const WebToolkit = Toolkit.make(
   AnthropicTool.WebSearch_20250305({})
     .pipe

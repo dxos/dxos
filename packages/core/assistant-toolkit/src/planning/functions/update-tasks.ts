@@ -1,13 +1,8 @@
-import * as Toolkit from '@effect/ai/Toolkit';
-import { Tool } from '@effect/ai';
 import { Effect, Schema } from 'effect';
-import { trim } from '@dxos/util';
+import { defineFunction } from '@dxos/functions';
 
-const TaskSchema = Schema.Struct({
-  id: Schema.String,
-  title: Schema.String,
-  status: Schema.Literal('todo', 'in-progress', 'done'),
-});
+import { trim } from '@dxos/util';
+import type { Mutable } from 'effect/Types';
 
 const INSTRUCTIONS = trim`
 TASK MANAGEMENT TOOL - USAGE GUIDELINES
@@ -22,7 +17,7 @@ Skip task management for: single straightforward actions, simple requests achiev
 
 === TOOL SPECIFICATION ===
 
-update_tasks requires an array of task objects. Each task object contains:
+update-tasks requires an array of task objects. Each task object contains:
 - id (string, required): unique identifier like "task_1" or "research_sources"
 - title (string, optional): update to clarify or refine task description
 - status (string, optional): 'todo' | 'in-progress' | 'done'
@@ -115,49 +110,47 @@ For task creation: use descriptive unique IDs reflecting the work, start first t
 When uncertain whether to use task management, err on the side of creating tasks. Proactive organization demonstrates thoroughness and ensures comprehensive work completion.
 `;
 
-export class PlanningToolkit extends Toolkit.make(
-  Tool.make('update_tasks', {
-    description: INSTRUCTIONS,
-    parameters: {
-      tasks: Schema.Array(TaskSchema),
-    },
-    success: Schema.String,
-    failure: Schema.Never,
+const Task = Schema.Struct({
+  id: Schema.String,
+  title: Schema.String,
+  status: Schema.Literal('todo', 'in-progress', 'done'),
+});
+interface Task extends Schema.Schema.Type<typeof Task> {}
+
+export default defineFunction({
+  key: 'dxos.org/function/planning/update-tasks',
+  name: 'Update tasks',
+  description: INSTRUCTIONS,
+  inputSchema: Schema.Struct({
+    tasks: Schema.Array(Task),
   }),
-) {}
+  handler: Effect.fn(function* ({ data: { tasks: newTasks } }) {
+    const tasks: Mutable<Task>[] = [];
 
-export const layer = PlanningToolkit.toLayer(
-  Effect.gen(function* () {
-    const tasks: TaskSchema.Type[] = [];
-
-    return {
-      update_tasks: Effect.fnUntraced(function* ({ tasks: newTasks }) {
-        newTasks.forEach((task) => {
-          const existingTask = tasks.find((t) => t.id === task.id);
-          if (existingTask) {
-            if (task.title) {
-              existingTask.title = task.title;
-            }
-            if (task.status) {
-              existingTask.status = task.status;
-            }
-          } else {
-            tasks.push(task);
-          }
-        });
-
-        console.log('\n====== TASKS ======\n');
-        for (const task of tasks) {
-          console.log(`- **${task.status?.toLocaleUpperCase()}**: ${task.title ?? 'No title'} (id: ${task.id})`);
+    newTasks.forEach((task) => {
+      const existingTask = tasks.find((t) => t.id === task.id);
+      if (existingTask) {
+        if (task.title) {
+          existingTask.title = task.title;
         }
-        console.log('\n====== END TASKS ======\n');
+        if (task.status) {
+          existingTask.status = task.status;
+        }
+      } else {
+        tasks.push(task);
+      }
+    });
 
-        return `
-          Tasks updated. Don't forget to mark tasks as done when you're done with them or update their status to 'in-progress' when you start working on them.
-          Last tasks:
-          ${tasks.map((task) => `- **${task.status?.toLocaleUpperCase()}**: ${task.title ?? 'No title'} (id: ${task.id})`).join('\n')}
-        `;
-      }),
-    };
+    console.log('\n====== TASKS ======\n');
+    for (const task of tasks) {
+      console.log(`- **${task.status?.toLocaleUpperCase()}**: ${task.title ?? 'No title'} (id: ${task.id})`);
+    }
+    console.log('\n====== END TASKS ======\n');
+
+    return `
+      Tasks updated. Don't forget to mark tasks as done when you're done with them or update their status to 'in-progress' when you start working on them.
+      Last tasks:
+      ${tasks.map((task) => `- **${task.status?.toLocaleUpperCase()}**: ${task.title ?? 'No title'} (id: ${task.id})`).join('\n')}
+    `;
   }),
-);
+});
