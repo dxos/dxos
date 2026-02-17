@@ -84,7 +84,7 @@ const BoardColumnRoot = BoardColumnRootImpl as <TColumn extends Obj.Unknown = an
 ) => ReactElement;
 
 //
-// ColumnHeader
+// Column Header
 //
 
 const BOARD_COLUMN_HEADER_NAME = 'Board.Column.Header';
@@ -106,7 +106,7 @@ const BoardColumnHeader = forwardRef<HTMLDivElement, BoardColumnHeaderProps>(
 BoardColumnHeader.displayName = BOARD_COLUMN_HEADER_NAME;
 
 //
-// ColumnBody
+// Column Body
 //
 
 const BOARD_COLUMN_BODY_NAME = 'Board.Column.Body';
@@ -168,7 +168,7 @@ const BoardColumnBody = ({ data, Tile = BoardItem, debug }: BoardColumnBodyProps
 BoardColumnBody.displayName = BOARD_COLUMN_BODY_NAME;
 
 //
-// ColumnFooter
+// Column Footer
 //
 
 const BOARD_COLUMN_FOOTER_NAME = 'Board.Column.Footer';
