@@ -1,8 +1,11 @@
 import { Effect, Schema } from 'effect';
 import { defineFunction } from '@dxos/functions';
+import * as Initiative from '../../initiative';
+import { AiContextService } from '@dxos/assistant';
 
 import { trim } from '@dxos/util';
 import type { Mutable } from 'effect/Types';
+import { Database, Obj } from '@dxos/echo';
 
 const INSTRUCTIONS = trim`
 TASK MANAGEMENT TOOL - USAGE GUIDELINES
@@ -110,47 +113,51 @@ For task creation: use descriptive unique IDs reflecting the work, start first t
 When uncertain whether to use task management, err on the side of creating tasks. Proactive organization demonstrates thoroughness and ensures comprehensive work completion.
 `;
 
-const Task = Schema.Struct({
-  id: Schema.String,
+const TaskProps = Schema.Struct({
+  id: Initiative.TaskId,
   title: Schema.String,
   status: Schema.Literal('todo', 'in-progress', 'done'),
 });
-interface Task extends Schema.Schema.Type<typeof Task> {}
 
 export default defineFunction({
   key: 'dxos.org/function/planning/update-tasks',
   name: 'Update tasks',
   description: INSTRUCTIONS,
   inputSchema: Schema.Struct({
-    tasks: Schema.Array(Task),
+    tasks: Schema.Array(TaskProps),
   }),
   handler: Effect.fn(function* ({ data: { tasks: newTasks } }) {
-    const tasks: Mutable<Task>[] = [];
+    const initiative = yield* Initiative.getFromChatContext;
+    const plan = yield* Database.load(initiative.plan);
 
-    newTasks.forEach((task) => {
-      const existingTask = tasks.find((t) => t.id === task.id);
-      if (existingTask) {
-        if (task.title) {
+    Obj.change(plan, (plan) => {
+      for (const task of newTasks) {
+        const existingTask = plan.tasks.find((t) => t.id === task.id);
+        if (existingTask) {
           existingTask.title = task.title;
-        }
-        if (task.status) {
           existingTask.status = task.status;
+        } else {
+          plan.tasks.push({
+            id: task.id,
+            title: task.title,
+            status: task.status,
+          });
         }
-      } else {
-        tasks.push(task);
       }
     });
 
-    console.log('\n====== TASKS ======\n');
-    for (const task of tasks) {
-      console.log(`- **${task.status?.toLocaleUpperCase()}**: ${task.title ?? 'No title'} (id: ${task.id})`);
-    }
-    console.log('\n====== END TASKS ======\n');
+    // console.log('\n====== TASKS ======\n');
+    // for (const task of tasks) {
+    //   console.log(`- **${task.status?.toLocaleUpperCase()}**: ${task.title ?? 'No title'} (id: ${task.id})`);
+    // }
+    // console.log('\n====== END TASKS ======\n');
 
     return `
       Tasks updated. Don't forget to mark tasks as done when you're done with them or update their status to 'in-progress' when you start working on them.
-      Last tasks:
-      ${tasks.map((task) => `- **${task.status?.toLocaleUpperCase()}**: ${task.title ?? 'No title'} (id: ${task.id})`).join('\n')}
+      Current plan:
+      <plan>
+        ${Initiative.formatPlan(plan)}
+      </plan>
     `;
-  }),
+  }, AiContextService.fixFunctionHandlerType),
 });

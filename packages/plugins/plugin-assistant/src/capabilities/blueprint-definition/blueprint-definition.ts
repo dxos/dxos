@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Record from 'effect/Record';
 
 import { Capability, Common } from '@dxos/app-framework';
 import {
@@ -16,6 +17,7 @@ import {
   Research,
   ResearchBlueprint,
   WebSearchBlueprint,
+  Planning,
 } from '@dxos/assistant-toolkit';
 import { type Blueprint } from '@dxos/blueprints';
 
@@ -25,6 +27,8 @@ export const createBlueprint: () => Blueprint.Blueprint = AssistantBlueprint.mak
 export { AssistantBlueprint };
 
 export type BlueprintCapabilities = [
+  Capability.Capability<typeof Common.Capability.Functions>,
+  Capability.Capability<typeof Common.Capability.BlueprintDefinition>,
   Capability.Capability<typeof Common.Capability.Functions>,
   Capability.Capability<typeof Common.Capability.BlueprintDefinition>,
   Capability.Capability<typeof Common.Capability.Functions>,
@@ -62,5 +66,8 @@ export default Capability.makeModule<[], BlueprintCapabilities>(() =>
 
     Capability.contributes(Common.Capability.Functions, Initiative.getFunctions()),
     Capability.contributes(Common.Capability.BlueprintDefinition, Initiative.makeBlueprint()),
+
+    Capability.contributes(Common.Capability.Functions, Record.values(Planning.PlanningFunctions)),
+    Capability.contributes(Common.Capability.BlueprintDefinition, Planning.PlanningBlueprint),
   ]),
 );

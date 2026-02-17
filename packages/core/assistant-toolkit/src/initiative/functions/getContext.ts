@@ -4,12 +4,17 @@
 
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
+import * as Array from 'effect/Array';
+import * as Option from 'effect/Option';
 
 import { AiContextService } from '@dxos/assistant';
 import { Database, Obj } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
 
 import * as Initiative from '../Initiative';
+import { pipe } from 'effect/Function';
+import { getFromChatContext } from '../util';
+import { formatPlan } from '../plan';
 
 export default defineFunction({
   key: 'dxos.org/function/initiative/get-context',
@@ -17,31 +22,27 @@ export default defineFunction({
   description: 'Get the context of an initiative.',
   inputSchema: Schema.Struct({}),
   outputSchema: Schema.Struct({
+    id: Schema.String,
+    name: Schema.String,
     spec: Schema.String,
     plan: Schema.String,
     artifacts: Schema.Array(
       Schema.Struct({
         name: Schema.String,
-        type: Schema.String,
-        dxn: Schema.String,
+        type: Schema.optional(Schema.String),
+        dxn: Schema.optional(Schema.String),
       }),
     ),
   }),
   services: [AiContextService],
   handler: Effect.fnUntraced(function* ({ data: _data }) {
-    const { binder } = yield* AiContextService;
-
-    const initiative = binder
-      .getObjects()
-      .filter((_) => Obj.instanceOf(Initiative.Initiative, _))
-      .at(0);
-    if (!initiative) {
-      throw new Error('No initiative in context.');
-    }
+    const initiative = yield* getFromChatContext;
 
     return {
+      id: initiative.id,
+      name: initiative.name,
       spec: yield* initiative.spec.pipe(Database.load).pipe(Effect.map((_) => _.content)),
-      plan: yield* initiative.plan?.pipe(Database.load).pipe(Effect.map((_) => _.content)) ??
+      plan: yield* initiative.plan?.pipe(Database.load).pipe(Effect.map(formatPlan)) ??
         Effect.succeed('No plan found.'),
       artifacts: yield* Effect.forEach(initiative.artifacts, (artifact) =>
         Effect.gen(function* () {
@@ -53,5 +54,5 @@ export default defineFunction({
         }),
       ),
     };
-  }) as any, // TODO(dmaretskyi): Services don't align -- need to refactor how functions are defined.
+  }, AiContextService.fixFunctionHandlerType),
 });

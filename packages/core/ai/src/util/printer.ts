@@ -104,6 +104,13 @@ export class ConsolePrinter {
                   payload = inspect(payload, { depth: null, colors: true });
                 }
               } catch {}
+            } else {
+              try {
+                payload = JSON.parse(content.input);
+                if (typeof payload !== 'string') {
+                  payload = inspect(payload, { depth: null, colors: true });
+                }
+              } catch {}
             }
             if (!payload) {
               payload = inspect(content.input, { depth: null, colors: true });
@@ -125,6 +132,13 @@ export class ConsolePrinter {
                     JSON.parse(content.result ?? '{}'),
                   );
                   payload = formatter.debugFormatResult(result as never);
+                  if (typeof payload !== 'string') {
+                    payload = inspect(payload, { depth: null, colors: true });
+                  }
+                } catch {}
+              } else {
+                try {
+                  payload = JSON.parse(content.result ?? '{}');
                   if (typeof payload !== 'string') {
                     payload = inspect(payload, { depth: null, colors: true });
                   }

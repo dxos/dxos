@@ -107,6 +107,7 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
       Prompt.Prompt,
       ResearchGraph,
       Initiative.Initiative,
+      Initiative.Plan,
       Sequence,
     ],
   }),
