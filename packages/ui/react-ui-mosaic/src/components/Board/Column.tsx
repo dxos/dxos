@@ -112,7 +112,7 @@ BoardColumnHeader.displayName = BOARD_COLUMN_HEADER_NAME;
 const BOARD_COLUMN_BODY_NAME = 'Board.Column.Body';
 
 type BoardColumnBodyProps = Pick<BoardColumnProps, 'data'> & {
-  Tile?: StackProps<Ref.Ref<Obj.Unknown>>['Tile']; // TODO(burdon): GENERALIZE VIA MODEL.
+  Tile?: StackProps<Ref.Ref<Obj.Unknown>>['Tile'];
 } & Pick<MosaicContainerProps, 'debug'>;
 
 const BoardColumnBody = ({ data, Tile = BoardItem, debug }: BoardColumnBodyProps) => {
