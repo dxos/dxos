@@ -8,7 +8,6 @@ import { registerSW } from 'virtual:pwa-register';
 import { ActivationEvents, Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { AppPlugin, LayoutOperation } from '@dxos/app-toolkit';
 import { log } from '@dxos/log';
-import { captureException } from '@dxos/observability/sentry';
 
 import { meta } from './meta';
 import { translations } from './translations';
@@ -41,7 +40,6 @@ export const PwaPlugin = Plugin.define(meta).pipe(
           });
         },
         onRegisterError: (err) => {
-          captureException(err);
           log.error(err);
         },
       });

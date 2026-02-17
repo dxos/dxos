@@ -6,12 +6,12 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
-import { getTelemetryIdentity, storeObservabilityDisabled } from '@dxos/observability';
+import { Observability } from '@dxos/observability';
 import { OperationResolver } from '@dxos/operation';
 
 import { type ObservabilitySettingsProps } from '../../components';
 import { meta } from '../../meta';
-import { ClientCapability, ObservabilityCapabilities, ObservabilityOperation } from '../../types';
+import { ObservabilityCapabilities, ObservabilityOperation } from '../../types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* (props?: { namespace: string }) {
@@ -25,7 +25,6 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: ObservabilityOperation.Toggle,
         handler: Effect.fnUntraced(function* (input) {
-          const client = yield* Capability.get(ClientCapability);
           const observability = yield* Capability.get(ObservabilityCapabilities.Observability);
           const registry = capabilities.get(Capabilities.AtomRegistry);
           const allSettings = capabilities.getAll(AppCapabilities.Settings);
@@ -36,15 +35,16 @@ export default Capability.makeModule(
           const settings = registry.get(settingsObj.atom) as ObservabilitySettingsProps;
           const newEnabled = input.state ?? !settings.enabled;
           registry.set(settingsObj.atom, { ...settings, enabled: newEnabled });
-          observability.track({
-            ...getTelemetryIdentity(client),
-            action: 'observability.toggle',
-            properties: {
-              enabled: newEnabled,
-            },
+          observability.events.captureEvent('observability.toggle', {
+            enabled: newEnabled,
           });
-          observability.setMode(newEnabled ? 'basic' : 'disabled');
-          yield* Effect.promise(() => storeObservabilityDisabled(namespace, !newEnabled));
+
+          if (newEnabled) {
+            yield* observability.enable();
+          } else {
+            yield* observability.disable();
+          }
+          yield* Effect.promise(() => Observability.storeObservabilityDisabled(namespace, !newEnabled));
           return newEnabled;
         }),
       }),
@@ -57,14 +57,8 @@ export default Capability.makeModule(
         handler: Effect.fnUntraced(function* (input) {
           // NOTE: This is to ensure that events fired before observability is ready are still sent.
           const observability = yield* Capability.waitFor(ObservabilityCapabilities.Observability);
-          const client = yield* Capability.get(ClientCapability);
           const properties = input.properties ?? {};
-
-          observability.track({
-            ...getTelemetryIdentity(client),
-            action: input.name,
-            properties,
-          });
+          observability.events.captureEvent(input.name, properties);
         }),
       }),
 
@@ -75,7 +69,7 @@ export default Capability.makeModule(
         operation: ObservabilityOperation.CaptureUserFeedback,
         handler: Effect.fnUntraced(function* (input) {
           const observability = yield* Capability.get(ObservabilityCapabilities.Observability);
-          observability.captureUserFeedback(input.message);
+          observability.feedback.captureUserFeedback({ message: input.message });
         }),
       }),
     ]);

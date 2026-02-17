@@ -37,6 +37,7 @@ export type CreateSessionProps = {
   appPort: RpcPort;
   systemPort: RpcPort;
   shellPort?: RpcPort;
+  onClose?: () => Promise<void>;
 };
 
 export type WorkerRuntimeOptions = {
@@ -184,7 +185,7 @@ export class WorkerRuntime {
   /**
    * Create a new session.
    */
-  async createSession({ appPort, systemPort, shellPort }: CreateSessionProps): Promise<WorkerSession> {
+  async createSession({ appPort, systemPort, shellPort, onClose }: CreateSessionProps): Promise<WorkerSession> {
     const session = new WorkerSession({
       serviceHost: this._clientServices,
       appPort,
@@ -204,6 +205,7 @@ export class WorkerRuntime {
           this._reconnectWebrtc();
         }
       }
+      await onClose?.();
     });
 
     await session.open();

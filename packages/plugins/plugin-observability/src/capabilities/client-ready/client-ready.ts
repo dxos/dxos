@@ -6,19 +6,19 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { LayoutOperation, SettingsOperation } from '@dxos/app-toolkit';
-import { type Observability, setupTelemetryListeners } from '@dxos/observability';
+import { type Observability, ObservabilityProvider } from '@dxos/observability';
 
 import { meta } from '../../meta';
 import { ClientCapability, ObservabilityCapabilities, ObservabilityOperation } from '../../types';
 
-type ClientReadyOptions = {
+export type ClientReadyOptions = {
   namespace: string;
-  observability: Observability;
+  observability: Observability.Observability;
 };
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* (props?: ClientReadyOptions) {
-    const { namespace, observability } = props!;
+    const { observability } = props!;
     const manager = yield* Capability.get(Capabilities.PluginManager);
     const { invokePromise } = yield* Capability.get(Capabilities.OperationInvoker);
     const registry = yield* Capability.get(Capabilities.AtomRegistry);
@@ -50,7 +50,7 @@ export default Capability.makeModule(
     // Ensure errors are tagged with enabled plugins to help with reproductions.
     const enabledPlugins = manager.getEnabled();
     for (const plugin of enabledPlugins) {
-      observability?.setTag(`pluginEnabled-${plugin}`, 'true', 'errors');
+      observability.setTags({ [`pluginEnabled-${plugin}`]: 'true' }, 'errors');
     }
 
     yield* Effect.tryPromise(() =>
@@ -63,18 +63,11 @@ export default Capability.makeModule(
       }),
     );
 
-    // Start client observability (i.e. not running as shared worker)
-    // TODO(nf): how to prevent multiple instances for single shared worker?
-    const cleanup = setupTelemetryListeners(namespace, client, observability);
-
-    yield* Effect.tryPromise(() =>
-      Promise.all([
-        observability.setIdentityTags(client.services.services),
-        observability.startRuntimeMetrics(client),
-        observability.startNetworkMetrics(client.services.services),
-        observability.startSpacesMetrics(client, namespace),
-      ]),
-    );
+    // Add client data providers.
+    yield* observability.addDataProvider(ObservabilityProvider.Client.identityProvider(client.services.services));
+    yield* observability.addDataProvider(ObservabilityProvider.Client.networkMetricsProvider(client.services.services));
+    yield* observability.addDataProvider(ObservabilityProvider.Client.runtimeMetricsProvider(client.services.services));
+    yield* observability.addDataProvider(ObservabilityProvider.Client.spacesMetricsProvider(client));
 
     if (client.halo.identity.get()) {
       yield* Effect.tryPromise(() => sendPrivacyNotice());
@@ -82,17 +75,11 @@ export default Capability.makeModule(
       const subscription = client.halo.identity.subscribe(async (identity) => {
         if (identity && observability) {
           await sendPrivacyNotice();
-          await observability.setIdentityTags(client.services.services);
           subscription.unsubscribe();
         }
       });
     }
 
-    return Capability.contributes(ObservabilityCapabilities.Observability, observability, () =>
-      Effect.tryPromise(async () => {
-        cleanup();
-        await observability.close();
-      }),
-    );
+    return Capability.contributes(ObservabilityCapabilities.Observability, observability, () => observability.close());
   }),
 );
