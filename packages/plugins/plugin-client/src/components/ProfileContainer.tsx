@@ -149,7 +149,7 @@ export const ProfileContainer = () => {
       did: ({ label, getValue }) => {
         return (
           <Settings.ItemInput title={label} description={t('did description')}>
-            <ButtonGroup>
+            <ButtonGroup classNames='is-full'>
               <Input.TextInput value={getValue()} disabled classNames='min-is-64' />
               <Clipboard.IconButton value={getValue() ?? ''} />
             </ButtonGroup>
@@ -166,7 +166,7 @@ export const ProfileContainer = () => {
         <Settings.Section title={t('profile label')} description={t('profile description')}>
           <Form.Root schema={UserProfile} values={values} fieldMap={fieldMap} onValuesChanged={handleChange}>
             <Form.Content>
-              <Form.FieldSet classNames='container-max-width grid grid-cols-1 md:grid-cols-[1fr_min-content]' />
+              <Form.FieldSet classNames='space-y-trimMd' />
             </Form.Content>
           </Form.Root>
         </Settings.Section>

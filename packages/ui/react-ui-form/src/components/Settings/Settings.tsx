@@ -30,8 +30,9 @@ const SETTINGS_ITEM_NAME = 'Settings.Item';
 const SETTINGS_ITEM_INPUT_NAME = 'Settings.ItemInput';
 
 const styles = {
-  title: 'mbe-0 text-lg text-baseText font-normal',
-  description: 'mlb-trimSm md:mbe-0 text-base text-description',
+  title: 'pbe-trimMd text-baseText text-lg',
+  description: 'text-base text-description',
+  grid: 'grid grid-cols-1 md:grid-cols-[3fr_2fr] gap-x-trimLg',
 };
 
 //
@@ -63,7 +64,7 @@ const SettingsSection = ({ title, description, children }: SettingsSectionProps)
   return (
     <>
       <SettingsSectionHeading title={title} description={description} />
-      <div className='is-full space-y-trimMd'>{children}</div>
+      <div className='is-full pbs-trimMd space-y-trimMd'>{children}</div>
     </>
   );
 };
@@ -107,14 +108,7 @@ SettingsGroupButton.displayName = SETTINGS_GROUP_BUTTON_NAME;
 type SettingsGroupProps = ThemedClassName<PropsWithChildren>;
 
 const SettingsGroup = ({ children, classNames }: SettingsGroupProps) => (
-  <div
-    role='none'
-    className={mx(
-      'group container-max-width grid grid-cols-1 md:grid-cols-[1fr_min-content] gap-trimMd',
-      '[&_input]:justify-self-end [&_button]:justify-self-end',
-      classNames,
-    )}
-  >
+  <div role='none' className={mx('group container-max-width space-y-trimMd', classNames)}>
     {children}
   </div>
 );
@@ -126,13 +120,7 @@ SettingsGroup.displayName = SETTINGS_GROUP_NAME;
 //
 
 const SettingsFrame = ({ children }: SettingsGroupProps) => (
-  <div
-    role='none'
-    className={mx(
-      'container-max-width grid grid-cols-1 md:grid-cols-[1fr_1fr] gap-trimSm md:gap-trimMd p-trimMd',
-      'border border-separator rounded-md',
-    )}
-  >
+  <div role='none' className={mx('container-max-width p-trimMd', 'border border-separator rounded-md')}>
     {children}
   </div>
 );
@@ -161,14 +149,15 @@ SettingsFrameItem.displayName = SETTINGS_FRAME_ITEM_NAME;
 // Container
 //
 
-const SettingsContainer = ({ children }: PropsWithChildren) => {
+const SettingsContainer = ({ classNames, children }: ThemedClassName<PropsWithChildren>) => {
   return (
     <div
       role='none'
       className={mx([
-        'container-max-width grid md:col-span-2 grid-cols-subgrid gap-trimSm items-center',
+        'container-max-width',
         '*:first:!mbs-0 *:last:!mbe-0 pli-trimMd plb-trimMd',
         'border border-separator rounded-md',
+        classNames,
       ])}
     >
       {children}
@@ -187,16 +176,16 @@ type SettingsItemProps = PropsWithChildren<{
   description?: Label;
 }>;
 
-const SettingsItem = ({ title, description, children }: SettingsItemProps) => {
+const SettingsItem = ({ title, description = '', children }: SettingsItemProps) => {
   const { t } = useTranslation(translationKey);
 
   return (
-    <SettingsContainer>
-      <div role='none'>
-        <h3 className={styles.title}>{toLocalizedString(title, t)}</h3>
-        {description && <p className={styles.description}>{toLocalizedString(description, t)}</p>}
+    <SettingsContainer classNames={styles.grid}>
+      <h3 className={mx(styles.title, 'md:col-span-2')}>{toLocalizedString(title, t)}</h3>
+      <p className={styles.description}>{toLocalizedString(description, t)}</p>
+      <div role='none' className='text-end plb-1'>
+        {children}
       </div>
-      {children}
     </SettingsContainer>
   );
 };
@@ -207,21 +196,19 @@ SettingsItem.displayName = SETTINGS_ITEM_NAME;
 // Item Input
 //
 
-const SettingsItemInput = ({ title, description, children }: SettingsItemProps) => {
+const SettingsItemInput = ({ title, description = '', children }: SettingsItemProps) => {
   const { t } = useTranslation(translationKey);
 
   return (
     <Input.Root>
-      <SettingsContainer>
-        <div role='none'>
-          <Input.Label classNames={styles.title}>{toLocalizedString(title, t)}</Input.Label>
-          {description && (
-            <Input.DescriptionAndValidation>
-              <Input.Description classNames={styles.description}>{toLocalizedString(description, t)}</Input.Description>
-            </Input.DescriptionAndValidation>
-          )}
+      <SettingsContainer classNames={styles.grid}>
+        <Input.Label classNames={mx(styles.title, 'md:col-span-2')}>{toLocalizedString(title, t)}</Input.Label>
+        <Input.DescriptionAndValidation>
+          <Input.Description classNames={styles.description}>{toLocalizedString(description, t)}</Input.Description>
+        </Input.DescriptionAndValidation>
+        <div role='none' className='text-end plb-1'>
+          {children}
         </div>
-        {children}
       </SettingsContainer>
     </Input.Root>
   );

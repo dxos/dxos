@@ -17,7 +17,7 @@
 ### Phase 2
 
 - [x] Remove defaultClassName from tx() in theme.ts
-- [ ] Remove trimXX (only used in ControlSection)
+- [x] Clean up ControlSection => Settings
 - [ ] Determine extensible classname format for colors (e.g., bg-base-surface; [area]-[type]-[valence])
 
 ## Semantic Tokens Generation

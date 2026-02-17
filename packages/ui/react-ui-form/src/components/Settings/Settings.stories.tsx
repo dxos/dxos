@@ -5,6 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
+import { faker } from '@dxos/random';
 import { Button, Input } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
@@ -12,24 +13,24 @@ import { translations } from '../../translations';
 
 import { Settings } from './Settings';
 
-// TODO(burdon): Import and naming rules for consistent settings.
+faker.seed(132);
 
 const DefaultStory = () => {
   return (
     <Settings.Root>
-      <Settings.Section title='Settings' description='This is a settings section'>
+      <Settings.Section title='Settings' description={faker.lorem.paragraphs(1)}>
         <Settings.Group>
-          <Settings.ItemInput title='Item 1' description='Item 1 description'>
+          <Settings.ItemInput title={faker.lorem.sentence(2)} description={faker.lorem.paragraphs(1)}>
             <Input.Root>
-              <Input.TextInput />
+              <Input.TextInput placeholder='Input' />
             </Input.Root>
           </Settings.ItemInput>
-          <Settings.ItemInput title='Item 2' description='Item 2 description'>
+          <Settings.ItemInput title={faker.lorem.sentence(2)} description={faker.lorem.paragraphs(2)}>
             <Input.Root>
               <Input.Switch />
             </Input.Root>
           </Settings.ItemInput>
-          <Settings.ItemInput title='Item 3' description='Item 3 description'>
+          <Settings.ItemInput title={faker.lorem.sentence(3)} description={faker.lorem.paragraphs(2)}>
             <Button>Test</Button>
           </Settings.ItemInput>
         </Settings.Group>
@@ -41,7 +42,7 @@ const DefaultStory = () => {
 const meta = {
   title: 'ui/react-ui-form/Settings',
   render: DefaultStory,
-  decorators: [withTheme(), withLayout({ layout: 'column', classNames: 'is-full' })],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
     translations,
@@ -53,7 +54,3 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
-
-export const Mobile: Story = {
-  decorators: [withTheme(), withLayout({ layout: 'column', classNames: 'is-[20rem]' })],
-};
