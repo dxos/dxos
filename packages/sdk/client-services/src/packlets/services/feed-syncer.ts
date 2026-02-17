@@ -36,7 +36,7 @@ interface FeedSyncerOptions {
   /**
    * Namespace to sync.
    */
-  // TODO(dmaretskyi): Syncing only one namespace is suported.
+  // TODO(dmaretskyi): Syncing only one namespace is supported.
   syncNamespace: string;
 
   /**

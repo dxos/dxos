@@ -185,14 +185,14 @@ export const SubscribeRequest = Schema.Struct({
   requestId: Schema.optional(Schema.String),
 
   /**
-   * Feeds to include in the subscription.
-   */
-  feedIds: Schema.Array(Schema.String),
-
-  /**
    * Optional space scope for the subscription.
    */
   spaceId: Schema.optional(Schema.String),
+
+  /**
+   * Feeds to include in the subscription.
+   */
+  feedIds: Schema.Array(Schema.String),
 });
 export interface SubscribeRequest extends Schema.Schema.Type<typeof SubscribeRequest> {}
 
