@@ -29,12 +29,12 @@
   ],
   "dependencies": {
     "@dxos/echo": "workspace:*",
-    "@dxos/echo-atom": "workspace:*"
+    "@dxos/echo-atom": "workspace:*",
+    "@effect-atom/atom": "catalog:",
+    "@effect-atom/atom-react": "catalog:"
   },
   "devDependencies": {
     "@dxos/echo-db": "workspace:*",
-    "@effect-atom/atom": "catalog:",
-    "@effect-atom/atom-react": "catalog:",
     "@testing-library/react": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
@@ -42,8 +42,6 @@
     "react-dom": "catalog:"
   },
   "peerDependencies": {
-    "@effect-atom/atom": "catalog:",
-    "@effect-atom/atom-react": "catalog:",
     "react": "catalog:"
   },
   "publishConfig": {

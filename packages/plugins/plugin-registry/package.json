@@ -49,6 +49,7 @@
     "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@effect-atom/atom-react": "catalog:",
     "@effect/cli": "catalog:"
   },
   "devDependencies": {

@@ -53,6 +53,7 @@
     "@dxos/log": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@effect-atom/atom-react": "catalog:",
     "@effect/schema": "catalog:",
     "date-fns": "catalog:",
     "effect": "catalog:",
@@ -63,13 +64,11 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
-    "@effect-atom/atom-react": "catalog:",
     "@types/jsonpath": "catalog:",
     "fast-check": "catalog:",
     "vite": "catalog:"
   },
   "peerDependencies": {
-    "@effect-atom/atom-react": "catalog:",
     "effect": "catalog:"
   },
   "publishConfig": {

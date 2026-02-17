@@ -61,6 +61,8 @@
     "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@effect-atom/atom": "catalog:",
+    "@effect-atom/atom-react": "catalog:",
     "@effect/ai": "catalog:",
     "@effect/ai-anthropic": "catalog:",
     "@effect/ai-openai": "catalog:",
@@ -88,8 +90,6 @@
     "yaml": "catalog:"
   },
   "devDependencies": {
-    "@effect-atom/atom": "catalog:",
-    "@effect-atom/atom-react": "catalog:",
     "@opentui/core-darwin-arm64": "catalog:",
     "@opentui/core-darwin-x64": "catalog:",
     "@opentui/core-linux-arm64": "catalog:",
@@ -99,6 +99,5 @@
     "@types/wtfnode": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
-  },
-  "peerDependencies": {}
+  }
 }
