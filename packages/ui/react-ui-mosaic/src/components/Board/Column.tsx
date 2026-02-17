@@ -37,9 +37,7 @@ const BOARD_COLUMN_NAME = 'Board.Column';
 type BoardColumnProps<TColumn extends Obj.Unknown = any> = Pick<
   MosaicTileProps<TColumn>,
   'classNames' | 'location' | 'data' | 'debug'
-> & {
-  Tile?: StackProps<Ref.Ref<Obj.Unknown>>['Tile'];
-};
+>;
 
 const BoardColumnRootInner = forwardRef<HTMLDivElement, PropsWithChildren<BoardColumnProps>>(
   ({ classNames, children, location, data, debug }, forwardedRef) => {
@@ -72,13 +70,14 @@ const BoardColumnRootInner = forwardRef<HTMLDivElement, PropsWithChildren<BoardC
           debug={debug}
         >
           <Focus.Group
-            asChild
             // NOTE: Width reserves 2px for outer Focus.Group border.
-            classNames='grid bs-full is-[calc(100vw-2px)] md:is-card-default-width snap-center bg-deckSurface'
+            classNames={mx(
+              'grid bs-full is-[calc(100vw-2px)] md:is-card-default-width snap-center bg-deckSurface',
+              classNames,
+            )}
+            ref={forwardedRef}
           >
-            <div role='none' className={mx(classNames)} ref={forwardedRef}>
-              {children}
-            </div>
+            {children}
           </Focus.Group>
         </Mosaic.Tile>
       </Card.Context>
@@ -120,7 +119,9 @@ BoardColumnHeader.displayName = BOARD_COLUMN_HEADER_NAME;
 
 const BOARD_COLUMN_BODY_NAME = 'Board.ColumnBody';
 
-type BoardColumnBodyProps = Pick<BoardColumnProps, 'data' | 'Tile'> & Pick<MosaicContainerProps, 'debug'>;
+type BoardColumnBodyProps = Pick<BoardColumnProps, 'data'> & {
+  Tile?: StackProps<Ref.Ref<Obj.Unknown>>['Tile']; // TODO(burdon): GENERALIZE VIA MODEL.
+} & Pick<MosaicContainerProps, 'debug'>;
 
 const BoardColumnBody = ({ data, Tile = BoardItem, debug }: BoardColumnBodyProps) => {
   const { model } = useBoardContext(BOARD_COLUMN_NAME);
@@ -161,7 +162,9 @@ BoardColumnBody.displayName = BOARD_COLUMN_BODY_NAME;
 // DefaultBoardColumn
 //
 
-const DefaultBoardColumn = forwardRef<HTMLDivElement, BoardColumnProps>(
+type DefaultBoardColumnProps = BoardColumnProps & Pick<BoardColumnBodyProps, 'Tile'>;
+
+const DefaultBoardColumn = forwardRef<HTMLDivElement, DefaultBoardColumnProps>(
   ({ classNames, location, data, debug, Tile = BoardItem }, forwardedRef) => {
     const { model } = useBoardContext(BOARD_COLUMN_NAME);
     const [DebugInfo, debugHandler] = useContainerDebug(debug);
