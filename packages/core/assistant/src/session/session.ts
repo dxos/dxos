@@ -119,8 +119,6 @@ export class AiSession {
       // Generate system and prompt messages.
       const system = yield* formatSystemPrompt({ system: systemTemplate, blueprints, objects }).pipe(Effect.orDie);
 
-      // log('system', { prompt: system });
-
       // Tool call loop.
       do {
         log('request', {
@@ -137,9 +135,6 @@ export class AiSession {
         });
 
         // Execute the stream request.
-        // logDump('prompt', Prompt.Prompt.pipe(Schema.encodeSync)(prompt));
-        // eslint-disable-next-line no-console
-        console.time('streamText');
         const blocks = yield* LanguageModel.streamText({
           prompt,
           toolkit,
@@ -155,8 +150,6 @@ export class AiSession {
           Stream.runCollect,
           Effect.map(Chunk.toArray),
         );
-        // eslint-disable-next-line no-console
-        console.timeEnd('streamText');
 
         // Create the response message.
         const response = yield* submitMessage(

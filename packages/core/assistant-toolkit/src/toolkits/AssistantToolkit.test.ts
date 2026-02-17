@@ -8,7 +8,14 @@ import * as Layer from 'effect/Layer';
 
 import { AiService, ConsolePrinter } from '@dxos/ai';
 import { MemoizedAiService, TestAiService } from '@dxos/ai/testing';
-import { AiConversation, type ContextBinding, GenerationObserver, GenericToolkit } from '@dxos/assistant';
+import {
+  AiContextService,
+  AiConversation,
+  AiConversationService,
+  type ContextBinding,
+  GenerationObserver,
+  GenericToolkit,
+} from '@dxos/assistant';
 import { waitForCondition } from '@dxos/async';
 import { Blueprint, Template } from '@dxos/blueprints';
 import { Database, Obj, Ref } from '@dxos/echo';
@@ -26,6 +33,8 @@ ObjectId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayer({
   types: [Blueprint.Blueprint, Message.Message, Person.Person, Organization.Organization],
+  toolkits: [GenericToolkit.make(AssistantToolkit.AssistantToolkit, AssistantToolkit.layer())],
+  tracing: 'pretty',
 });
 
 const blueprint = Blueprint.make({
@@ -40,16 +49,9 @@ describe('AssistantToolkit', () => {
     'can add to context',
     Effect.fnUntraced(
       function* (_) {
-        const { db } = yield* Database.Service;
-        const queue = yield* QueueService.createQueue<Message.Message | ContextBinding>();
-        const conversation = yield* acquireReleaseResource(() => new AiConversation({ queue }));
-        const observer = GenerationObserver.fromPrinter(new ConsolePrinter());
-
-        yield* Effect.promise(() =>
-          conversation.context.bind({
-            blueprints: [Ref.make(db.add(blueprint))],
-          }),
-        );
+        yield* AiContextService.bindContext({
+          blueprints: [Ref.make(yield* Database.add(blueprint))],
+        });
 
         const organization = yield* Database.add(
           Obj.make(Organization.Organization, {
@@ -58,22 +60,22 @@ describe('AssistantToolkit', () => {
           }),
         );
 
-        yield* conversation.createRequest({
+        yield* AiConversationService.run({
           prompt: `Add to context: ${JSON.stringify(organization)}`,
-          observer,
         });
 
+        const { binder } = yield* AiContextService;
         yield* Effect.promise(() =>
           waitForCondition({
-            condition: () =>
-              conversation.context.getBlueprints().length > 0 && conversation.context.getObjects().length > 0,
+            condition: () => binder.getBlueprints().length > 0 && binder.getObjects().length > 0,
+            timeout: 10_000,
           }),
         );
 
-        expect(conversation.context.getBlueprints()).toEqual([blueprint]);
-        expect(conversation.context.getObjects()).toEqual([organization]);
+        expect(binder.getBlueprints()).toEqual([blueprint]);
+        expect(binder.getObjects()).toEqual([organization]);
       },
-      Effect.provide(TestLayer),
+      Effect.provide(AiConversationService.layerNewQueue().pipe(Layer.provideMerge(TestLayer))),
       TestHelpers.provideTestContext,
     ),
     MemoizedAiService.isGenerationEnabled() ? 60_000 : undefined,
