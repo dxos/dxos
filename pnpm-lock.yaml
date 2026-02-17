@@ -1540,8 +1540,8 @@ catalogs:
       specifier: ^1.347.2
       version: 1.347.2
     preact:
-      specifier: ^10.26.9
-      version: 10.26.9
+      specifier: ^10.26.10
+      version: 10.28.3
     prettier:
       specifier: ^3.6.2
       version: 3.6.2
@@ -9891,7 +9891,7 @@ importers:
         version: 3.19.16
       preact:
         specifier: 'catalog:'
-        version: 10.26.9
+        version: 10.28.3
       react:
         specifier: ~19.2.3
         version: 19.2.3
