@@ -14,9 +14,7 @@ import * as Ref from 'effect/Ref';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 
-import { ArtifactId } from '@dxos/assistant';
-import { DXN, Obj } from '@dxos/echo';
-import { Database } from '@dxos/echo';
+import { Database, Obj, Type } from '@dxos/echo';
 import { CredentialsService, QueueService, defineFunction } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { type Event } from '@dxos/types';
@@ -34,9 +32,10 @@ export default defineFunction({
   name: 'Sync Google Calendar',
   description:
     'Sync events from Google Calendar. The initial sync uses startTime ordering for specified number of days. Subsequent syncs use updatedMin to catch all changes.',
-  // TODO(wittjosiah): Change calendarId to Type.Ref(Calendar.Calendar) to match mailbox sync pattern.
   inputSchema: Schema.Struct({
-    calendarId: ArtifactId,
+    calendar: Type.Ref(Calendar.Calendar).annotations({
+      description: 'The ID of the calendar object.',
+    }),
     googleCalendarId: Schema.optional(Schema.String),
     syncBackDays: Schema.optional(Schema.Number),
     syncForwardDays: Schema.optional(Schema.Number),
@@ -47,18 +46,18 @@ export default defineFunction({
   }),
   handler: ({
     // TODO(wittjosiah): Schema-based defaults are not yet supported.
-    data: { calendarId, googleCalendarId = 'primary', syncBackDays = 30, syncForwardDays = 365, pageSize = 100 },
+    data: { calendar: calendarRef, googleCalendarId = 'primary', syncBackDays = 30, syncForwardDays = 365, pageSize = 100 },
   }) =>
     Effect.gen(function* () {
       log('syncing google calendar', {
-        calendarId,
+        calendar: calendarRef,
         googleCalendarId,
         syncBackDays,
         syncForwardDays,
         pageSize,
       });
 
-      const calendar = yield* Database.resolve(DXN.parse(calendarId), Calendar.Calendar);
+      const calendar = yield* Database.load(calendarRef);
       const queue = yield* QueueService.getQueue<Event.Event>(calendar.queue.dxn);
 
       // State management for sync process.
@@ -115,7 +114,6 @@ export default defineFunction({
         newEvents: queueEvents.length,
       };
     }).pipe(
-      // TODO(wittjosiah): Use GoogleCredentials.fromCalendarRef once input schema accepts Type.Ref.
       Effect.provide(
         Layer.mergeAll(
           FetchHttpClient.layer,
@@ -123,11 +121,11 @@ export default defineFunction({
           Layer.effect(
             GoogleCredentials,
             Effect.gen(function* () {
-              const calendar = yield* Database.resolve(DXN.parse(calendarId), Calendar.Calendar);
+              const calendarObj = yield* Database.load(calendarRef);
               // Pre-load token at effect creation time.
               let cachedToken: string | undefined;
-              if (calendar.accessToken) {
-                const accessToken = yield* Database.load(calendar.accessToken);
+              if (calendarObj.accessToken) {
+                const accessToken = yield* Database.load(calendarObj.accessToken);
                 if (accessToken?.token) {
                   log('using calendar-specific access token', { note: accessToken.note });
                   cachedToken = accessToken.token;
