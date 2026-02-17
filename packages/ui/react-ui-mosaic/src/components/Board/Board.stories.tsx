@@ -3,7 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React from 'react';
+import React, { useMemo } from 'react';
 
 import { type Database, Filter, Obj, Ref } from '@dxos/echo';
 import { faker } from '@dxos/random';
@@ -12,22 +12,26 @@ import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
-import { Focus, Mosaic } from '../components';
+import { TestColumn, TestItem } from '../../testing';
+import { translations } from '../../translations';
+import { Focus } from '../Focus';
+import { Mosaic } from '../Mosaic';
 
-import { Board, TestColumn, TestItem } from './Board';
+import { Board, type BoardModel } from './Board';
+import { DefaultBoardColumn } from './Column';
 
 faker.seed(999);
 
-// TODO(burdon): Outer focus border.
 // TODO(burdon): Create model with Kanban, Pipeline, and Hierarchical implementations.
-// TODO(burdon): Factor out Baord to react-ui-kanban (replace kanban).
+// TODO(burdon): Factor out Board to react-ui-kanban (replace kanban).
 // TODO(burdon): Mobile implementation.
-// TODO(burdon): Tests/stories.
+// TODO(burdon): Tests/stories (sanity check).
 
 const createTestData = (db: Database.Database, columnCount: number) => {
   Array.from({ length: columnCount }).forEach((_, i) => {
     db.add(
       Obj.make(TestColumn, {
+        name: `Column ${i}`,
         items: Array.from({ length: faker.number.int({ min: 0, max: 20 }) }).map((_, j) => {
           const item = db.add(
             Obj.make(TestItem, {
@@ -51,15 +55,34 @@ type StoryProps = {
 
 const DefaultStory = ({ debug = false }: StoryProps) => {
   const { space } = useClientStory();
+
+  // TODO(burdon): Reactivity check.
   const columns = useQuery(space?.db, Filter.type(TestColumn));
+  const model = useMemo<BoardModel<TestColumn, TestItem>>(() => {
+    return {
+      isColumn: (obj: Obj.Unknown): obj is TestColumn => Obj.instanceOf(TestColumn, obj),
+      isItem: (obj: Obj.Unknown): obj is TestItem => Obj.instanceOf(TestItem, obj),
+      getColumns: () => columns,
+      getItems: (column: TestColumn) => column.items,
+      onDeleteItem: (column: TestColumn, current: TestItem) => {
+        const idx = model.getItems(column).findIndex((item) => item.target?.id === current?.id);
+        if (idx !== -1) {
+          Obj.change(column, (mutableColumn) => {
+            model.getItems(mutableColumn).splice(idx, 1);
+          });
+        }
+      },
+    } satisfies BoardModel<TestColumn, TestItem>;
+  }, [columns]);
+
   if (columns.length === 0) {
     return <></>;
   }
 
   return (
     <Mosaic.Root asChild debug={debug}>
-      <div className={mx('grid p-2 overflow-hidden', debug && 'grid-cols-[1fr_20rem] gap-2')}>
-        <Board.Root id='board' columns={columns} debug={debug} />
+      <div role='none' className={mx('grid md:p-2 overflow-hidden', debug && 'grid-cols-[1fr_20rem] gap-2')}>
+        <Board.Root id='board' model={model} debug={debug} Tile={DefaultBoardColumn} />
         {debug && (
           <Focus.Group classNames='flex flex-col gap-2 overflow-hidden'>
             <Board.Debug classNames='p-2' />
@@ -88,6 +111,7 @@ const meta = {
   ],
   parameters: {
     layout: 'fullscreen',
+    translations,
   },
   argTypes: {
     columns: {

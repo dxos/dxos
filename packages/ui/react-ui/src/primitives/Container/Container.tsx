@@ -5,7 +5,7 @@
 import { createContext } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
-import React, { type HTMLAttributes, type PropsWithChildren, type Ref, forwardRef } from 'react';
+import React, { type PropsWithChildren, type Ref, forwardRef } from 'react';
 
 import { type ColumnPadding } from '@dxos/ui-theme';
 import { type SlottableProps } from '@dxos/ui-types';
@@ -30,9 +30,7 @@ const [ContainerProvider, useContext] = createContext<ContainerContext>('Contain
 // Root
 //
 
-type RootProps = Partial<ContainerContext> & {
-  children: React.ReactNode;
-};
+type RootProps = PropsWithChildren<Partial<ContainerContext>>;
 
 const Root = ({ variant, children }: RootProps) => {
   return <ContainerProvider {...{ variant }}>{children}</ContainerProvider>;
@@ -44,13 +42,7 @@ const Root = ({ variant, children }: RootProps) => {
 
 const CONTAINER_COLUMN_NAME = 'Container.Column';
 
-type ColumnProps = SlottableProps<
-  PropsWithChildren<
-    HTMLAttributes<HTMLDivElement> & {
-      variant?: ColumnPadding;
-    }
-  >
->;
+type ColumnProps = SlottableProps<HTMLDivElement> & { variant?: ColumnPadding };
 
 const Column = forwardRef(
   (

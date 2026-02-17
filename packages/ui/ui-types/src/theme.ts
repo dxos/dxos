@@ -21,18 +21,3 @@ export type ThemeFunction<P extends Record<string, any>> = (
 export type ThemedClassName<P = {}> = Omit<P, 'className'> & {
   classNames?: ClassNameValue;
 };
-
-/**
- * For components that are children of Radix-style asChild primitives.
- * `<Root className={mx(<custom>, className, classNames)}>`
- */
-export type SlottableClassName<P = unknown> = P & {
-  className?: string;
-  classNames?: ClassNameValue;
-};
-
-export type SlottableProps<P = unknown> = SlottableClassName<
-  P & {
-    asChild?: boolean;
-  }
->;
