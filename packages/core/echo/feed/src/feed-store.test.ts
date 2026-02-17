@@ -380,6 +380,93 @@ describe('Feed V2', () => {
     }).pipe(Effect.provide(TestLayer)),
   );
 
+  it.effect('assigns positions independently per feed and namespace pair', () =>
+    Effect.gen(function* () {
+      const feed = new FeedStore({ localActorId: ALICE, assignPositions: true });
+      yield* feed.migrate();
+
+      const spaceA = SpaceId.random();
+      const spaceB = SpaceId.random();
+
+      const nsData = WellKnownNamespaces.data;
+      const nsTrace = WellKnownNamespaces.trace;
+      const getPersistedPosition = (spaceId: SpaceId, feedNamespace: string, feedId: string) =>
+        feed.query({
+          query: { feedIds: [feedId] },
+          position: -1,
+          spaceId,
+          feedNamespace,
+        });
+
+      // First append in each (spaceId, feedNamespace) pair starts at 0.
+      const feedAData = ObjectId.random();
+      const firstAData = yield* feed.appendLocal([
+        {
+          spaceId: spaceA,
+          feedId: feedAData,
+          feedNamespace: nsData,
+          data: new Uint8Array([1]),
+        },
+      ]);
+      const feedATrace = ObjectId.random();
+      const firstATrace = yield* feed.appendLocal([
+        {
+          spaceId: spaceA,
+          feedId: feedATrace,
+          feedNamespace: nsTrace,
+          data: new Uint8Array([2]),
+        },
+      ]);
+      const feedBData = ObjectId.random();
+      const firstBData = yield* feed.appendLocal([
+        {
+          spaceId: spaceB,
+          feedId: feedBData,
+          feedNamespace: nsData,
+          data: new Uint8Array([3]),
+        },
+      ]);
+      const feedBTrace = ObjectId.random();
+      const firstBHalo = yield* feed.appendLocal([
+        {
+          spaceId: spaceB,
+          feedId: feedBTrace,
+          feedNamespace: nsTrace,
+          data: new Uint8Array([4]),
+        },
+      ]);
+
+      // A second append in one pair should only advance that specific pair.
+      const feedAData2 = ObjectId.random();
+      const secondAData = yield* feed.appendLocal([
+        {
+          spaceId: spaceA,
+          feedId: feedAData2,
+          feedNamespace: nsData,
+          data: new Uint8Array([5]),
+        },
+      ]);
+
+      expect(firstAData[0].position).toBeNull();
+      expect(firstATrace[0].position).toBeNull();
+      expect(firstBData[0].position).toBeNull();
+      expect(firstBHalo[0].position).toBeNull();
+      expect(secondAData[0].position).toBeNull();
+
+      const posAData = yield* getPersistedPosition(spaceA, nsData, feedAData);
+      const posATrace = yield* getPersistedPosition(spaceA, nsTrace, feedATrace);
+      const posBData = yield* getPersistedPosition(spaceB, nsData, feedBData);
+      const posBTrace = yield* getPersistedPosition(spaceB, nsTrace, feedBTrace);
+      const posAData2 = yield* getPersistedPosition(spaceA, nsData, feedAData2);
+
+      expect(posAData.blocks[0].position).toBe(0);
+      expect(posATrace.blocks[0].position).toBe(0);
+      expect(posBData.blocks[0].position).toBe(0);
+      expect(posBTrace.blocks[0].position).toBe(0);
+      expect(posAData2.blocks[0].position).toBe(1);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
   it.effect('tailing a feed', () =>
     Effect.gen(function* () {
       const spaceId = SpaceId.random();
