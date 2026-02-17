@@ -49,11 +49,11 @@ const BoardColumnRootInner = forwardRef<HTMLDivElement, PropsWithChildren<BoardC
     return (
       <Mosaic.Tile
         asChild
-        dragHandle={dragHandleRef.current}
         location={location}
         id={data.id}
         data={data}
         debug={debug}
+        dragHandle={dragHandleRef.current}
       >
         <Focus.Group
           classNames={mx(
