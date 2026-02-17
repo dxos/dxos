@@ -1,0 +1,80 @@
+//
+// Copyright 2023 DXOS.org
+//
+
+import { useComposedRefs } from '@radix-ui/react-compose-refs';
+import React, { type ReactElement, type Ref as ReactRef, forwardRef, useRef } from 'react';
+
+import { Obj, type Ref } from '@dxos/echo';
+import { Tag } from '@dxos/react-ui';
+import { getHashStyles } from '@dxos/ui-theme';
+
+import { Card } from '../Card';
+import { Focus } from '../Focus';
+import { Mosaic, type MosaicTileProps } from '../Mosaic';
+
+//
+// Item
+//
+
+const BOARD_ITEM_NAME = 'Board.Item';
+
+type BoardItemProps<TItem extends Obj.Unknown = any> = Pick<
+  MosaicTileProps<Ref.Ref<TItem>>,
+  'classNames' | 'location' | 'data' | 'debug'
+>;
+
+const BoardItemInner = forwardRef<HTMLDivElement, BoardItemProps>(
+  ({ classNames, data: ref, location, debug }, forwardedRef) => {
+    const rootRef = useRef<HTMLDivElement>(null);
+    const composedRef = useComposedRefs<HTMLDivElement>(rootRef, forwardedRef);
+    const dragHandleRef = useRef<HTMLButtonElement>(null);
+    const object = ref.target;
+    if (!object) {
+      return null;
+    }
+
+    const label = Obj.getLabel(object);
+    const description = Obj.getDescription(object);
+
+    return (
+      <Mosaic.Tile
+        asChild
+        dragHandle={dragHandleRef.current}
+        id={ref.dxn.toString()}
+        data={ref}
+        location={location}
+        debug={debug}
+      >
+        <Focus.Group asChild>
+          <Card.Root classNames={classNames} onClick={() => rootRef.current?.focus()} ref={composedRef}>
+            <Card.Toolbar>
+              <Card.DragHandle ref={dragHandleRef} />
+              <Card.Title>{label}</Card.Title>
+              <Card.Menu context={object} />
+            </Card.Toolbar>
+            {/* TODO(burdon): Replace with surface. */}
+            <Card.Row icon='ph--note--regular' classNames='text-description'>
+              {description}
+            </Card.Row>
+            <Card.Row icon='ph--tag--regular'>
+              {label && (
+                <div role='none' className='shrink-0 flex gap-1 items-center text-xs'>
+                  <Tag palette={getHashStyles(label).hue}>{label}</Tag>
+                </div>
+              )}
+            </Card.Row>
+          </Card.Root>
+        </Focus.Group>
+      </Mosaic.Tile>
+    );
+  },
+);
+
+BoardItemInner.displayName = BOARD_ITEM_NAME;
+
+const BoardItem = BoardItemInner as <TItem extends Obj.Unknown = any>(
+  props: BoardItemProps<TItem> & { ref?: ReactRef<HTMLDivElement> },
+) => ReactElement;
+
+export { BoardItem, type BoardItemProps };

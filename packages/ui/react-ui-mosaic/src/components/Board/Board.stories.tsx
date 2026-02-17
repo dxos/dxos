@@ -17,13 +17,14 @@ import { Focus } from '../Focus';
 import { Mosaic } from '../Mosaic';
 
 import { Board, type BoardModel } from './Board';
+import { DefaultBoardColumn } from './Column';
 
 faker.seed(999);
 
 // TODO(burdon): Create model with Kanban, Pipeline, and Hierarchical implementations.
 // TODO(burdon): Factor out Board to react-ui-kanban (replace kanban).
 // TODO(burdon): Mobile implementation.
-// TODO(burdon): Tests/stories.
+// TODO(burdon): Tests/stories (sanity check).
 
 const createTestData = (db: Database.Database, columnCount: number) => {
   Array.from({ length: columnCount }).forEach((_, i) => {
@@ -61,6 +62,12 @@ const DefaultStory = ({ debug = false }: StoryProps) => {
       isItem: (obj: Obj.Unknown): obj is TestItem => obj instanceof TestItem,
       getColumns: () => columns,
       getItems: (column: TestColumn) => column.items,
+      onDeleteItem: (column: TestColumn, current: TestItem) => {
+        const idx = model.getItems(column).findIndex((item) => item.target?.id === current?.id);
+        if (idx !== -1) {
+          model.getItems(column).splice(idx, 1);
+        }
+      },
     } satisfies BoardModel<TestColumn, TestItem>;
   }, [columns]);
 
@@ -71,7 +78,7 @@ const DefaultStory = ({ debug = false }: StoryProps) => {
   return (
     <Mosaic.Root asChild debug={debug}>
       <div role='none' className={mx('grid md:p-2 overflow-hidden', debug && 'grid-cols-[1fr_20rem] gap-2')}>
-        <Board.Root id='board' model={model} debug={debug} />
+        <Board.Root id='board' model={model} debug={debug} Tile={DefaultBoardColumn} />
         {debug && (
           <Focus.Group classNames='flex flex-col gap-2 overflow-hidden'>
             <Board.Debug classNames='p-2' />
