@@ -94,7 +94,7 @@ type BoardColumnHeaderProps = ThemedClassName<{ label: string; dragHandleRef: Re
 const BoardColumnHeader = forwardRef<HTMLDivElement, BoardColumnHeaderProps>(
   ({ classNames, label, dragHandleRef }, forwardedRef) => {
     return (
-      <Card.Toolbar classNames={classNames} ref={forwardedRef}>
+      <Card.Toolbar classNames={classNames} data-testid='board-column-header' ref={forwardedRef}>
         <Card.DragHandle ref={dragHandleRef} />
         <Card.Title>{label}</Card.Title>
         <Card.Menu items={[]} />
@@ -188,6 +188,7 @@ const BoardColumnFooter = forwardRef<HTMLDivElement, BoardColumnFooterProps>(({ 
     <Toolbar.Root classNames={mx('rounded-b-sm', classNames)} ref={forwardedRef}>
       {model.onItemCreate && data && (
         <IconButton
+          data-testid='board-column-add-item'
           classNames='group-hover/column:opacity-100 opacity-0 transition transition-opacity duration-500'
           variant='ghost'
           icon='ph--plus--regular'
@@ -219,6 +220,7 @@ const DefaultBoardColumn = forwardRef<HTMLDivElement, DefaultBoardColumnProps>(
       <BoardColumnRootInner location={location} data={data} dragHandleRef={dragHandleRef} ref={forwardedRef}>
         <div
           role='none'
+          data-testid='board-column'
           className={mx(
             'group/column grid bs-full overflow-hidden',
             debug

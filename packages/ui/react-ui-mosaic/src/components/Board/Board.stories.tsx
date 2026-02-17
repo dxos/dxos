@@ -5,6 +5,7 @@
 import { Atom, RegistryContext } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useContext, useMemo } from 'react';
+import { expect, within } from 'storybook/test';
 
 import { type Database, Filter, Obj, Ref } from '@dxos/echo';
 import { AtomObj, AtomQuery } from '@dxos/echo-atom';
@@ -31,7 +32,7 @@ faker.seed(999);
 // TODO(burdon): Mobile implementation.
 // TODO(burdon): Tests/stories (sanity check).
 
-const createTestData = (db: Database.Database, columnCount: number) => {
+const createTestData = (db: Database.Database, columnCount: number, emptyColumns = 0) => {
   Array.from({ length: columnCount }).forEach((_, i) => {
     db.add(
       Obj.make(TestColumn, {
@@ -50,10 +51,15 @@ const createTestData = (db: Database.Database, columnCount: number) => {
       }),
     );
   });
+
+  for (let i = 0; i < emptyColumns; i++) {
+    db.add(Obj.make(TestColumn, { name: `Column ${columnCount + i}`, items: [] }));
+  }
 };
 
 type StoryProps = {
   columns?: number;
+  emptyColumns?: number;
   debug?: boolean;
 };
 
@@ -142,8 +148,8 @@ const meta = {
       createIdentity: true,
       createSpace: true,
       onCreateSpace: ({ space }, context) => {
-        const columnCount = (context.args as StoryProps).columns ?? 4;
-        createTestData(space.db, columnCount);
+        const args = context.args as StoryProps;
+        createTestData(space.db, args.columns ?? 4, args.emptyColumns ?? 0);
       },
     }),
   ],
@@ -175,5 +181,25 @@ export const Debug: Story = {
   args: {
     debug: true,
     columns: 2,
+  },
+};
+
+export const Spec: Story = {
+  args: {
+    columns: 2,
+    emptyColumns: 1,
+  },
+  play: async () => {
+    const body = within(document.body);
+    const columns = await body.findAllByTestId('board-column', undefined, { timeout: 30_000 });
+    await expect(columns).toHaveLength(3);
+
+    // First two columns have items, third is empty.
+    for (const column of columns.slice(0, 2)) {
+      const items = within(column).queryAllByTestId('board-item');
+      await expect(items).toHaveLength(0);
+    }
+    const emptyItems = within(columns[2]).queryAllByTestId('board-item');
+    await expect(emptyItems).toHaveLength(0);
   },
 };
