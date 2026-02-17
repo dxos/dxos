@@ -150,6 +150,7 @@ catalog:
   '@phosphor-icons/core': ^2.1.1
   '@phosphor-icons/react': 2.1.10
   '@playwright/test': 1.57.0
+  '@posthog/cli': ^0.5.29
   '@radix-ui/primitive': 1.1.1
   '@radix-ui/react-accordion': 1.2.3
   '@radix-ui/react-alert-dialog': 1.1.6
@@ -225,7 +226,6 @@ catalog:
   '@tauri-apps/plugin-process': ^2.3.0
   '@tauri-apps/plugin-shell': ^2.3.1
   '@tauri-apps/plugin-updater': ^2.9.0
-  tauri-plugin-web-auth-api: ^1.0.0
   '@testing-library/dom': ^10.4.1
   '@testing-library/jest-dom': ^6.9.1
   '@testing-library/react': ^16.3.0
@@ -559,7 +559,6 @@ catalog:
   playwright: 1.57.0
   plotly.js-dist-min: ^2.25.1
   posthog-js: ^1.347.2
-  '@posthog/cli': ^0.5.29
   postcss: ^8.4.41
   postcss-import: ^16.1.0
   preact: ^10.26.9
@@ -639,6 +638,7 @@ catalog:
   tailwindcss: ~3.4.1
   tailwindcss-logical: ^3.0.0
   tailwindcss-radix: ^2.8.0
+  tauri-plugin-web-auth-api: ^1.0.0
   three: ^0.178.0
   todomvc-app-css: ^2.4.2
   todomvc-common: ^1.0.5
