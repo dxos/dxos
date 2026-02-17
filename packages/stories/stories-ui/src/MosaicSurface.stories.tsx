@@ -73,7 +73,9 @@ const DefaultStory = ({ columns: columnsProp = 1, debug = false }: StoryProps) =
   return (
     <Mosaic.Root asChild debug={debug}>
       <div className={mx('grid overflow-hidden', debug && 'grid-cols-[1fr_20rem] gap-2')}>
-        <Board.Root id='board' model={model} debug={debug} />
+        <Board.Root model={model}>
+          <Board.Content id='board' debug={debug} />
+        </Board.Root>
 
         {debug && (
           <Focus.Group classNames='flex flex-col gap-2 overflow-hidden'>

@@ -4,7 +4,14 @@
 
 import { type Atom, useAtomValue } from '@effect-atom/atom-react';
 import { createContext } from '@radix-ui/react-context';
-import React, { type ReactElement, type Ref as ReactRef, forwardRef, useRef, useState } from 'react';
+import React, {
+  type PropsWithChildren,
+  type ReactElement,
+  type Ref as ReactRef,
+  forwardRef,
+  useRef,
+  useState,
+} from 'react';
 
 import { type Obj } from '@dxos/echo';
 import { Layout, ScrollArea, type ThemedClassName } from '@dxos/react-ui';
@@ -60,16 +67,36 @@ const BOARD_ROOT_NAME = 'Board.Root';
 type BoardRootProps<
   TColumn extends Obj.Unknown = Obj.Unknown,
   TItem extends Obj.Unknown = Obj.Unknown,
-> = ThemedClassName<
-  {
-    id: string;
-    debug?: boolean;
-    Tile?: StackProps<TColumn>['Tile'];
-  } & BoardContextValue<TColumn, TItem>
->;
+> = PropsWithChildren<BoardContextValue<TColumn, TItem>>;
 
-const BoardRootInner = forwardRef<HTMLDivElement, BoardRootProps>(
-  ({ classNames, id, model, debug, Tile = DefaultBoardColumn }, forwardedRef) => {
+const BoardRootInner = ({ model, children }: BoardRootProps) => {
+  return <BoardContextProvider model={model}>{children}</BoardContextProvider>;
+};
+
+BoardRootInner.displayName = BOARD_ROOT_NAME;
+
+const BoardRoot = BoardRootInner as <
+  TColumn extends Obj.Unknown = Obj.Unknown,
+  TItem extends Obj.Unknown = Obj.Unknown,
+>(
+  props: BoardRootProps<TColumn, TItem>,
+) => ReactElement;
+
+//
+// Content
+//
+
+const BOARD_CONTENT_NAME = 'Board.Content';
+
+type BoardContentProps<TColumn extends Obj.Unknown = Obj.Unknown> = ThemedClassName<{
+  id: string;
+  debug?: boolean;
+  Tile?: StackProps<TColumn>['Tile'];
+}>;
+
+const BoardContentInner = forwardRef<HTMLDivElement, BoardContentProps>(
+  ({ classNames, id, debug, Tile = DefaultBoardColumn }, forwardedRef) => {
+    const { model } = useBoardContext(BOARD_CONTENT_NAME);
     const [DebugInfo, debugHandler] = useContainerDebug(debug);
     const [viewport, setViewport] = useState<HTMLElement | null>(null);
 
@@ -84,35 +111,33 @@ const BoardRootInner = forwardRef<HTMLDivElement, BoardRootProps>(
     });
 
     return (
-      <BoardContextProvider model={model}>
-        <Layout.Main ref={forwardedRef} classNames={mx('border-red-500', classNames)}>
-          <Focus.Group asChild orientation='horizontal'>
-            <Mosaic.Container
-              asChild
-              withFocus
-              orientation='horizontal'
-              autoScroll={viewport}
-              eventHandler={eventHandler}
-              debug={debugHandler}
-            >
-              <ScrollArea.Root orientation='horizontal' classNames='md:pbs-3' margin padding>
-                <ScrollArea.Viewport classNames='snap-mandatory snap-x md:snap-none' ref={setViewport}>
-                  <Mosaic.Stack items={items} getId={(item) => item.id} Tile={Tile} debug={debug} />
-                </ScrollArea.Viewport>
-              </ScrollArea.Root>
-            </Mosaic.Container>
-          </Focus.Group>
-          <DebugInfo />
-        </Layout.Main>
-      </BoardContextProvider>
+      <Layout.Main ref={forwardedRef} classNames={mx('border-red-500', classNames)}>
+        <Focus.Group asChild orientation='horizontal'>
+          <Mosaic.Container
+            asChild
+            withFocus
+            orientation='horizontal'
+            autoScroll={viewport}
+            eventHandler={eventHandler}
+            debug={debugHandler}
+          >
+            <ScrollArea.Root orientation='horizontal' classNames='md:pbs-3' margin padding>
+              <ScrollArea.Viewport classNames='snap-mandatory snap-x md:snap-none' ref={setViewport}>
+                <Mosaic.Stack items={items} getId={(item) => item.id} Tile={Tile} debug={debug} />
+              </ScrollArea.Viewport>
+            </ScrollArea.Root>
+          </Mosaic.Container>
+        </Focus.Group>
+        <DebugInfo />
+      </Layout.Main>
     );
   },
 );
 
-BoardRootInner.displayName = BOARD_ROOT_NAME;
+BoardContentInner.displayName = BOARD_CONTENT_NAME;
 
-const BoardRoot = BoardRootInner as <TColumn extends Obj.Unknown, TItem extends Obj.Unknown = Obj.Unknown>(
-  props: BoardRootProps<TColumn, TItem> & { ref?: ReactRef<HTMLDivElement> },
+const BoardContent = BoardContentInner as <TColumn extends Obj.Unknown = Obj.Unknown>(
+  props: BoardContentProps<TColumn> & { ref?: ReactRef<HTMLDivElement> },
 ) => ReactElement;
 
 //
@@ -162,10 +187,11 @@ BoardDebug.displayName = BOARD_DEBUG_NAME;
 
 export const Board = {
   Root: BoardRoot,
+  Content: BoardContent,
   Column: BoardColumn,
   Item: BoardItem,
   Placeholder: BoardPlaceholder,
   Debug: BoardDebug,
 };
 
-export type { BoardRootProps, BoardColumnProps, BoardItemProps };
+export type { BoardRootProps, BoardContentProps, BoardColumnProps, BoardItemProps };

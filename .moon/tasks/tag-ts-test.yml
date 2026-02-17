@@ -5,6 +5,7 @@ tasks:
     deps:
       - esbuild-plugins:compile
       - node-std:compile
+      - vite-plugin-icons:compile
       - vite-plugin-import-source:compile
       - ^:compile
     inputs:
