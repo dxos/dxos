@@ -281,9 +281,9 @@ FormActions.displayName = FORM_ACTIONS_NAME;
 
 const FORM_SUBMIT_NAME = 'Form.Submit';
 
-type FormSubmitProps = ThemedClassName<Partial<Pick<IconButtonProps, 'icon' | 'label'>>>;
+type FormSubmitProps = ThemedClassName<Partial<Pick<IconButtonProps, 'icon' | 'label' | 'disabled'>>>;
 
-const FormSubmit = ({ classNames, label, icon }: FormSubmitProps) => {
+const FormSubmit = ({ classNames, label, icon, disabled }: FormSubmitProps) => {
   const { t } = useTranslation(translationKey);
   const {
     form: { canSave, onSave },
@@ -301,7 +301,7 @@ const FormSubmit = ({ classNames, label, icon }: FormSubmitProps) => {
         classNames='is-full'
         type='submit'
         variant='primary'
-        disabled={!canSave}
+        disabled={disabled ?? !canSave}
         icon={icon ?? 'ph--check--regular'}
         label={label ?? t('save button label')}
         onClick={onSave}
@@ -336,5 +336,6 @@ export type {
   FormContentProps,
   FormFieldSetProps,
   FormActionsProps,
+  FormSubmitProps,
   FormFieldLabelProps as LabelProps,
 };

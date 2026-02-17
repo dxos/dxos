@@ -23,7 +23,7 @@ import { ObservabilityCapabilities } from './types';
 
 export type ObservabilityPluginOptions = {
   namespace: string;
-  observability: () => Promise<Observability>;
+  observability: () => Promise<Observability.Observability>;
 };
 
 export const ObservabilityPlugin = Plugin.define<ObservabilityPluginOptions>(meta).pipe(

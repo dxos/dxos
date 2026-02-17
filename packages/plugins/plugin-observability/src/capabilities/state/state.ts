@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { createKvsStore } from '@dxos/effect';
-import { getObservabilityGroup } from '@dxos/observability';
+import { Observability } from '@dxos/observability';
 
 import { meta } from '../../meta';
 import { ObservabilityCapabilities } from '../../types';
@@ -21,7 +21,7 @@ export default Capability.makeModule(
     });
 
     // NOTE: Group is set at runtime, not persisted.
-    const group = yield* Effect.tryPromise(() => getObservabilityGroup(namespace));
+    const group = yield* Effect.tryPromise(() => Observability.getObservabilityGroup(namespace));
     const registry = yield* Capability.get(Capabilities.AtomRegistry);
     registry.set(stateAtom, { ...registry.get(stateAtom), group });
 
