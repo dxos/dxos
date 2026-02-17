@@ -13,8 +13,7 @@ import {
   type ContextBinding,
   GenericToolkit,
   GenerationObserver,
-  makeToolExecutionServiceFromFunctions,
-  makeToolResolverFromFunctions,
+  ToolExecutionServices,
 } from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
 import { Obj, Ref } from '@dxos/echo';
@@ -84,15 +83,9 @@ describe('Design Blueprint', { timeout: 120_000 }, () => {
         }
       },
       Effect.provide(
-        Layer.mergeAll(
-          makeToolResolverFromFunctions([Document.read, Document.update]),
-          makeToolExecutionServiceFromFunctions(),
-          AiService.model('@anthropic/claude-3-5-sonnet-20241022'),
-        ).pipe(
+        Layer.mergeAll(ToolExecutionServices, AiService.model('@anthropic/claude-3-5-sonnet-20241022')).pipe(
           Layer.provideMerge(TestDatabaseLayer({ types: [Text.Text, Markdown.Document, Blueprint.Blueprint] })),
-          Layer.provideMerge(
-            Layer.mergeAll(GenericToolkit.providerEmpty, AiServiceTestingPreset('direct')),
-          ),
+          Layer.provideMerge(Layer.mergeAll(GenericToolkit.providerEmpty, AiServiceTestingPreset('direct'))),
           Layer.provideMerge(
             FunctionInvocationServiceLayerTestMocked({ functions: [Document.read, Document.update] }).pipe(
               Layer.provideMerge(TracingService.layerNoop),

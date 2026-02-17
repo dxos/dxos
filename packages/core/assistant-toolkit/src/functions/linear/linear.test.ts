@@ -10,11 +10,7 @@ import * as Layer from 'effect/Layer';
 
 import { AiService } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
-import {
-  GenericToolkit,
-  makeToolExecutionServiceFromFunctions,
-  makeToolResolverFromFunctions,
-} from '@dxos/assistant';
+import { GenericToolkit } from '@dxos/assistant';
 import { Obj, Query } from '@dxos/echo';
 import { Database } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
@@ -28,29 +24,17 @@ import {
 import { Person, Pipeline, Task } from '@dxos/types';
 
 import { LINEAR_ID_KEY, default as fetchLinearIssues } from './sync-issues';
+import { AssistantTestLayer } from '@dxos/assistant/testing';
+import { Redacted } from 'effect';
 
-const TestLayer = Layer.mergeAll(
-  AiService.model('@anthropic/claude-opus-4-0'),
-  makeToolResolverFromFunctions([]),
-  makeToolExecutionServiceFromFunctions(),
-).pipe(
-  Layer.provideMerge(
-    Layer.mergeAll(
-      GenericToolkit.providerEmpty,
-      AiServiceTestingPreset('direct'),
-      TestDatabaseLayer({
-        // indexing: { vector: true },
-        types: [Task.Task, Person.Person, Pipeline.Pipeline],
-        storagePath: testStoragePath({ name: 'feed-test-13' }),
-      }),
-      CredentialsService.layerConfig([{ service: 'linear.app', apiKey: Config.redacted('LINEAR_API_KEY') }]),
-      FunctionInvocationServiceLayerTestMocked({
-        functions: [fetchLinearIssues],
-      }).pipe(Layer.provideMerge(TracingServiceExt.layerLogInfo())),
-      FetchHttpClient.layer,
-    ),
-  ),
-);
+const TestLayer = AssistantTestLayer({
+  functions: [fetchLinearIssues],
+  types: [Task.Task, Person.Person, Pipeline.Pipeline],
+  credentials: [
+    { service: 'linear.app', apiKey: Config.redacted('LINEAR_API_KEY').pipe(Effect.runSync, Redacted.value) },
+  ],
+  tracing: 'pretty',
+});
 
 describe('Linear', { timeout: 600_000 }, () => {
   it.effect(
@@ -83,6 +67,7 @@ describe('Linear', { timeout: 600_000 }, () => {
       },
       Effect.provide(TestLayer),
       TestHelpers.taggedTest('sync'),
+      TestHelpers.provideTestContext,
     ),
   );
 });

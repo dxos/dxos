@@ -18,8 +18,7 @@ import {
   GenerationObserver,
   GenericToolkit,
   createToolkit,
-  makeToolExecutionServiceFromFunctions,
-  makeToolResolverFromFunctions,
+  ToolExecutionServices,
 } from '@dxos/assistant';
 import { Template } from '@dxos/blueprints';
 import { type DXN, Entity, Obj } from '@dxos/echo';
@@ -147,11 +146,7 @@ export default defineFunction({
       };
     },
     Effect.provide(
-      Layer.mergeAll(
-        AiService.model('@anthropic/claude-sonnet-4-0'),
-        makeToolResolverFromFunctions([exaFunction, exaMockFunction]),
-        makeToolExecutionServiceFromFunctions(),
-      ).pipe(
+      Layer.mergeAll(AiService.model('@anthropic/claude-sonnet-4-0'), ToolExecutionServices).pipe(
         Layer.provide(
           // TODO(dmaretskyi): This should be provided by environment.
 

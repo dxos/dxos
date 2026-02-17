@@ -14,8 +14,7 @@ import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import {
   AiConversation,
   GenericToolkit,
-  makeToolExecutionServiceFromFunctions,
-  makeToolResolverFromFunctions,
+  ToolExecutionServices,
 } from '@dxos/assistant';
 import { acquireReleaseResource } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
@@ -47,8 +46,7 @@ const TestServicesLayer = Layer.mergeAll(
 
 const TestLayer: Layer.Layer<AiChatServices, never, never> = Layer.mergeAll(
   AiService.model('@anthropic/claude-opus-4-0'),
-  makeToolResolverFromFunctions([]),
-  makeToolExecutionServiceFromFunctions(),
+  ToolExecutionServices,
   CredentialsService.layerFromDatabase(),
 ).pipe(
   Layer.provideMerge(GenericToolkit.providerLayer(GenericToolkit.make(TestToolkit, TestToolkit.toLayer({} as any)))),

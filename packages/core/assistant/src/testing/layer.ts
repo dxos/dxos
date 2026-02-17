@@ -13,7 +13,7 @@ import { CredentialsService, type FunctionDefinition, type ServiceCredential, Tr
 import { TracingServiceExt, TriggerDispatcher, TriggerStateStore } from '@dxos/functions-runtime';
 import { FunctionInvocationServiceLayerTest, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
 
-import { makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '../functions';
+import { ToolExecutionServices } from '../functions';
 import { GenericToolkit } from '../session';
 
 interface TestLayerOptions {
@@ -41,13 +41,9 @@ export const AssistantTestLayer = ({
   credentials = [],
   tracing = 'noop',
   disableLlmMemoization = false,
-}: TestLayerOptions) => {
+}: TestLayerOptions = {}) => {
   const toolkit = GenericToolkit.merge(...toolkits);
-  return Layer.mergeAll(
-    AiService.model(model),
-    makeToolResolverFromFunctions(functions),
-    makeToolExecutionServiceFromFunctions(),
-  ).pipe(
+  return Layer.mergeAll(AiService.model(model), ToolExecutionServices).pipe(
     Layer.provideMerge(
       FunctionInvocationServiceLayerTest({
         functions,

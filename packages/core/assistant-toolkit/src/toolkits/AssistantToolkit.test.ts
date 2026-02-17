@@ -8,14 +8,7 @@ import * as Layer from 'effect/Layer';
 
 import { AiService, ConsolePrinter } from '@dxos/ai';
 import { MemoizedAiService, TestAiService } from '@dxos/ai/testing';
-import {
-  AiConversation,
-  type ContextBinding,
-  GenerationObserver,
-  GenericToolkit,
-  makeToolExecutionServiceFromFunctions,
-  makeToolResolverFromFunctions,
-} from '@dxos/assistant';
+import { AiConversation, type ContextBinding, GenerationObserver, GenericToolkit } from '@dxos/assistant';
 import { waitForCondition } from '@dxos/async';
 import { Blueprint, Template } from '@dxos/blueprints';
 import { Database, Obj, Ref } from '@dxos/echo';
@@ -25,33 +18,15 @@ import { CredentialsService, QueueService, TracingService } from '@dxos/function
 import { FunctionInvocationServiceLayerTest, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
 import { ObjectId } from '@dxos/keys';
 import { Message, Organization, Person } from '@dxos/types';
+import { AssistantTestLayer } from '@dxos/assistant/testing';
 
 import * as AssistantToolkit from './AssistantToolkit';
 
 ObjectId.dangerouslyDisableRandomness();
 
-const TestLayer = Layer.mergeAll(
-  AiService.model('@anthropic/claude-opus-4-0'),
-  
-  makeToolResolverFromFunctions([]),
-  makeToolExecutionServiceFromFunctions(),
-).pipe(
-  Layer.provideMerge(GenericToolkit.providerLayer(
-    GenericToolkit.make(AssistantToolkit.AssistantToolkit, AssistantToolkit.layer()),
-  )),
-  Layer.provideMerge(FunctionInvocationServiceLayerTest()),
-  Layer.provideMerge(
-    Layer.mergeAll(
-      TestAiService(),
-      TestDatabaseLayer({
-        spaceKey: 'fixed',
-        types: [Blueprint.Blueprint, Message.Message, Person.Person, Organization.Organization],
-      }),
-      CredentialsService.configuredLayer([]),
-      TracingService.layerNoop,
-    ),
-  ),
-);
+const TestLayer = AssistantTestLayer({
+  types: [Blueprint.Blueprint, Message.Message, Person.Person, Organization.Organization],
+});
 
 const blueprint = Blueprint.make({
   key: 'dxos.org/blueprint/assistant',

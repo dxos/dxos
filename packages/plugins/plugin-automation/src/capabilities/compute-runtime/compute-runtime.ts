@@ -10,7 +10,7 @@ import * as ManagedRuntime from 'effect/ManagedRuntime';
 
 import { Capabilities, Capability, type CapabilityManager } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
-import { GenericToolkit, makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
+import { GenericToolkit, ToolExecutionServices } from '@dxos/assistant';
 import { SpaceProperties } from '@dxos/client/echo';
 import { Resource } from '@dxos/context';
 import { Database, Obj, Query, Ref } from '@dxos/echo';
@@ -90,8 +90,7 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
             Layer.mergeAll(
               TracingServiceLive,
               TriggerStateStore.layerKv.pipe(Layer.provide(BrowserKeyValueStore.layerLocalStorage)),
-              makeToolResolverFromFunctions(functions),
-              makeToolExecutionServiceFromFunctions(),
+              ToolExecutionServices,
             ),
           ),
           Layer.provideMerge(

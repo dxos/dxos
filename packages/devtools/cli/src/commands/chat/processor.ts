@@ -13,11 +13,10 @@ import * as Runtime from 'effect/Runtime';
 import { AiService, type ModelName } from '@dxos/ai';
 import {
   AiConversation,
+  ToolExecutionServices,
   type AiSessionRunError,
   type AiSessionRunRequirements,
   GenericToolkit,
-  makeToolExecutionServiceFromFunctions,
-  makeToolResolverFromFunctions,
 } from '@dxos/assistant';
 import { Chat } from '@dxos/assistant-toolkit';
 import { Blueprint } from '@dxos/blueprints';
@@ -29,6 +28,7 @@ import { type Message } from '@dxos/types';
 import { isTruthy } from '@dxos/util';
 
 import { type AiChatServices, blueprintRegistry } from '../../util';
+import { FunctionImplementationResolver } from '@dxos/functions-runtime';
 
 export type ChatProcessorOptions = {
   runtime: Runtime.Runtime<AiChatServices>;
@@ -72,12 +72,10 @@ export class ChatProcessor {
   ) {
     const fiber = request.pipe(
       Effect.provide(
-        Layer.mergeAll(
-          AiService.model(model),
-
-          makeToolResolverFromFunctions(this._functions),
-          makeToolExecutionServiceFromFunctions(),
-        ).pipe(Layer.provideMerge(GenericToolkit.providerLayer(this._toolkit))),
+        Layer.mergeAll(AiService.model(model), ToolExecutionServices).pipe(
+          Layer.provideMerge(GenericToolkit.providerLayer(this._toolkit)),
+          Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions: this._functions })),
+        ),
       ),
       Effect.asVoid,
       Runtime.runFork(this.runtime),

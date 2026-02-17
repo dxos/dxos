@@ -15,15 +15,12 @@ import {
   type ContextBinding,
   GenericToolkit,
   GenerationObserver,
-  makeToolExecutionServiceFromFunctions,
-  makeToolResolverFromFunctions,
 } from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
 import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
 import { CredentialsService, FunctionInvocationService, QueueService, TracingService } from '@dxos/functions';
-import { FunctionInvocationServiceLayerTest, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
 import { invariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
 import { MarkdownBlueprint } from '@dxos/plugin-markdown/blueprints';
@@ -36,32 +33,14 @@ import { default as createDocument } from './document-create';
 import { default as research } from './research';
 import { ResearchGraph, queryResearchGraph } from './research-graph';
 import { ResearchDataTypes } from './types';
+import { AssistantTestLayer } from '@dxos/assistant/testing';
 
 ObjectId.dangerouslyDisableRandomness();
 
-const TestLayer = Layer.mergeAll(
-  AiService.model('@anthropic/claude-opus-4-0'),
-  makeToolResolverFromFunctions([research, createDocument, ...MarkdownBlueprint.functions]),
-  makeToolExecutionServiceFromFunctions(),
-).pipe(
-  Layer.provideMerge(
-    FunctionInvocationServiceLayerTest({
-      functions: [research, createDocument, ...MarkdownBlueprint.functions],
-    }),
-  ),
-  Layer.provideMerge(
-    Layer.mergeAll(
-      GenericToolkit.providerEmpty,
-      TestAiService(),
-      TestDatabaseLayer({
-        spaceKey: 'fixed',
-        types: [...ResearchDataTypes, ResearchGraph, Blueprint.Blueprint, Markdown.Document, HasSubject.HasSubject],
-      }),
-      CredentialsService.configuredLayer([]),
-      TracingService.layerNoop,
-    ),
-  ),
-);
+const TestLayer = AssistantTestLayer({
+  functions: [research, createDocument, ...MarkdownBlueprint.functions],
+  types: [...ResearchDataTypes, ResearchGraph, Blueprint.Blueprint, Markdown.Document, HasSubject.HasSubject],
+});
 
 describe('Research', () => {
   it.effect(

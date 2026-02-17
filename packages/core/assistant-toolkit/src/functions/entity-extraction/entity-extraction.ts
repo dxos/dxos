@@ -8,12 +8,7 @@ import * as Predicate from 'effect/Predicate';
 import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
-import {
-  AiSession,
-  GenericToolkit,
-  makeToolExecutionServiceFromFunctions,
-  makeToolResolverFromFunctions,
-} from '@dxos/assistant';
+import { AiSession, GenericToolkit, ToolExecutionServices } from '@dxos/assistant';
 import { Filter, Obj, Ref, Type } from '@dxos/echo';
 import { Database } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
@@ -97,8 +92,7 @@ export default defineFunction({
     Effect.provide(
       Layer.mergeAll(
         AiService.model('@anthropic/claude-sonnet-4-0'), // TODO(dmaretskyi): Extract.
-        makeToolResolverFromFunctions([]),
-        makeToolExecutionServiceFromFunctions(),
+        ToolExecutionServices,
       ).pipe(
         Layer.provide(
           // TODO(dmaretskyi): This should be provided by environment.

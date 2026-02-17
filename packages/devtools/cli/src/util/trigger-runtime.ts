@@ -13,14 +13,14 @@ import * as Layer from 'effect/Layer';
 import type * as Option from 'effect/Option';
 
 import { type ToolExecutionService, type ToolResolverService } from '@dxos/ai';
-import { GenericToolkit, makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
+import { GenericToolkit, ToolExecutionServices } from '@dxos/assistant';
 import { type ClientService, type ConfigService } from '@dxos/client';
 import { getProfilePath } from '@dxos/client-protocol';
 import { DX_DATA } from '@dxos/client-protocol';
 import { Database, Query } from '@dxos/echo';
 import { type Key } from '@dxos/echo';
 import { Function, FunctionDefinition, TracingService } from '@dxos/functions';
-import { TriggerDispatcher, TriggerStateStore } from '@dxos/functions-runtime';
+import { FunctionImplementationResolver, TriggerDispatcher, TriggerStateStore } from '@dxos/functions-runtime';
 
 import { functions as blueprintFunctions, toolkits } from './blueprints';
 import { type AiChatServices, chatLayer } from './runtime';
@@ -91,9 +91,9 @@ export const triggerRuntimeLayer = ({
         Layer.provide(Registry.layer),
         Layer.provideMerge(triggerStateStoreLayer),
         Layer.provideMerge(TracingService.layerNoop),
-        Layer.provideMerge(makeToolResolverFromFunctions(functions)),
-        Layer.provideMerge(makeToolExecutionServiceFromFunctions()),
+        Layer.provideMerge(ToolExecutionServices),
         Layer.provideMerge(GenericToolkit.providerLayer(toolkit)),
+        Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions })),
         Layer.provideMerge(baseChatLayer),
       );
     }),

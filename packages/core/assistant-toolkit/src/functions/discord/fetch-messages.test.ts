@@ -10,7 +10,7 @@ import * as Layer from 'effect/Layer';
 
 import { AiService } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
-import { GenericToolkit, makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
+import { GenericToolkit, ToolExecutionServices } from '@dxos/assistant';
 import { TestHelpers } from '@dxos/effect/testing';
 import { CredentialsService, FunctionInvocationService, TracingService } from '@dxos/functions';
 import { FunctionInvocationServiceLayerTestMocked, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
@@ -19,8 +19,7 @@ import { default as fetchMessages } from './fetch-messages';
 
 const TestLayer = Layer.mergeAll(
   AiService.model('@anthropic/claude-opus-4-0'),
-  makeToolResolverFromFunctions([]),
-  makeToolExecutionServiceFromFunctions(),
+  ToolExecutionServices,
 ).pipe(
   Layer.provideMerge(
     Layer.mergeAll(

@@ -11,7 +11,7 @@ import * as Redacted from 'effect/Redacted';
 
 import { AiService } from '@dxos/ai';
 import { AiServiceTestingPreset, EXA_API_KEY } from '@dxos/ai/testing';
-import { GenericToolkit, makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
+import { GenericToolkit, ToolExecutionServices } from '@dxos/assistant';
 import { TestHelpers } from '@dxos/effect/testing';
 import { CredentialsService, FunctionInvocationService } from '@dxos/functions';
 import { TracingServiceExt } from '@dxos/functions-runtime';
@@ -25,8 +25,7 @@ import { Discord, Linear } from '../functions';
 
 const TestLayer = Layer.mergeAll(
   AiService.model('@anthropic/claude-opus-4-0'),
-  makeToolResolverFromFunctions([]),
-  makeToolExecutionServiceFromFunctions(),
+  ToolExecutionServices,
 ).pipe(
   Layer.provideMerge(GenericToolkit.providerEmpty),
   Layer.provideMerge(

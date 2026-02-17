@@ -32,19 +32,19 @@ import { GenericToolkit } from '../session';
  *
  * Requires `Database.Service` in the environment.
  */
-export const makeToolResolverFromFunctions = (
-  functions: FunctionDefinition.Any[],
-): Layer.Layer<ToolResolverService, never, Database.Service | GenericToolkit.Provider> => {
+export const makeToolResolverFromFunctions = (): Layer.Layer<
+  ToolResolverService,
+  never,
+  GenericToolkit.Provider | FunctionInvocationService
+> => {
   return Layer.effect(
     ToolResolverService,
     Effect.gen(function* () {
-      const dbService = yield* Database.Service;
       const toolkitProvider = yield* GenericToolkit.Provider;
+      const functionInvocationService = yield* FunctionInvocationService;
       return {
         resolve: (id): Effect.Effect<Tool.Any, AiToolNotFoundError> =>
           Effect.gen(function* () {
-            // TODO(dmaretskyi): Use FunctionInvocationService.resolveFunction().
-
             const toolkit = toolkitProvider.getToolkit();
 
             const tool = toolkit.toolkit.tools[id];
@@ -52,18 +52,11 @@ export const makeToolResolverFromFunctions = (
               return tool;
             }
 
-            const [dbFunction] = yield* Database.runQuery(Query.type(Function.Function, { key: id }));
-
-            const functionDef = dbFunction
-              ? FunctionDefinition.deserialize(dbFunction)
-              : functions.find((fn) => fn.key === id);
-
-            if (!functionDef) {
-              return yield* Effect.fail(new AiToolNotFoundError(id));
-            }
-
-            return projectFunctionToTool(functionDef);
-          }).pipe(Effect.provideService(Database.Service, dbService)),
+            return yield* functionInvocationService.resolveFunction(id).pipe(
+              Effect.map(projectFunctionToTool),
+              Effect.catchTag('FunctionNotFound', () => Effect.fail(new AiToolNotFoundError(id))),
+            );
+          }),
       } satisfies Context.Tag.Service<ToolResolverService>;
     }),
   );
@@ -114,6 +107,11 @@ export const makeToolExecutionServiceFromFunctions = (): Layer.Layer<
     }),
   );
 };
+
+export const ToolExecutionServices = Layer.mergeAll(
+  makeToolResolverFromFunctions(),
+  makeToolExecutionServiceFromFunctions(),
+);
 
 class FunctionToolAnnotation extends Context.Tag('@dxos/assistant/FunctionToolAnnotation')<
   FunctionToolAnnotation,
