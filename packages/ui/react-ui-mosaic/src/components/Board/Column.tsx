@@ -15,7 +15,7 @@ import React, {
 
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/react-client/echo';
-import { ScrollArea, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { IconButton, ScrollArea, type ThemedClassName, Toolbar, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 
@@ -135,14 +135,14 @@ const BoardColumnBody = ({ data, Tile = BoardItem, debug }: BoardColumnBodyProps
   const menuItems = useMemo<NonNullable<CardMenuProps<Obj.Unknown>['items']>>(
     () =>
       [
-        model.onDeleteItem && {
+        model.onItemDelete && {
           label: t('delete menu label'),
           onClick: (obj: Obj.Unknown) => {
-            model.onDeleteItem?.(data, obj);
+            model.onItemDelete?.(data, obj);
           },
         },
       ].filter(isNonNullable),
-    [model.onDeleteItem, data, t],
+    [model.onItemDelete, data, t],
   );
 
   return (
@@ -178,12 +178,16 @@ type DefaultBoardColumnProps = BoardColumnProps & Pick<BoardColumnBodyProps, 'Ti
 const DefaultBoardColumn = forwardRef<HTMLDivElement, DefaultBoardColumnProps>(
   ({ classNames, location, data, debug, Tile = BoardItem }, forwardedRef) => {
     const { model } = useBoardContext(BOARD_DEFAULT_COLUMN_NAME);
+    const { t } = useTranslation(translationKey);
     const [DebugInfo, debugHandler] = useContainerDebug(debug);
     const dragHandleRef = useRef<HTMLButtonElement>(null);
 
     return (
       <BoardColumnRootInner
-        classNames={mx(debug ? 'grid-rows-[min-content_1fr_20rem]' : 'grid-rows-[min-content_1fr]', classNames)}
+        classNames={mx(
+          debug ? 'grid-rows-[min-content_1fr_20rem]' : 'grid-rows-[min-content_1fr_min-content]',
+          classNames,
+        )}
         location={location}
         data={data}
         dragHandleRef={dragHandleRef}
@@ -195,12 +199,14 @@ const DefaultBoardColumn = forwardRef<HTMLDivElement, DefaultBoardColumnProps>(
           dragHandleRef={dragHandleRef}
         />
         <BoardColumnBody data={data} Tile={Tile} debug={debugHandler} />
-        {debug && (
-          <div role='none' className='border-bs border-separator'>
-            <div className='grow flex p-1 justify-center text-xs'>{model.getItems(data).length}</div>
-            <DebugInfo />
-          </div>
-        )}
+        <div role='none' className='border-bs border-separator'>
+          {model.onItemCreate && (
+            <Toolbar.Root classNames='rounded-s rounded-sm'>
+              <IconButton icon='ph--plus--regular' iconOnly label={t('add item label')} />
+            </Toolbar.Root>
+          )}
+          <DebugInfo />
+        </div>
       </BoardColumnRootInner>
     );
   },

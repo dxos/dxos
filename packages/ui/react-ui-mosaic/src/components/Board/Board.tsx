@@ -20,16 +20,18 @@ import { BoardItem, type BoardItemProps } from './Item';
 
 //
 // Model
-// TODO(burdon): Normalize Column/Item object vs refs?
 //
 
 export interface BoardModel<TColumn extends Obj.Unknown = any, TItem extends Obj.Unknown = any> {
   isColumn: (obj: Obj.Unknown) => obj is TColumn;
   isItem: (obj: Obj.Unknown) => obj is TItem;
+  // TODO(burdon): Normalize Column/Item object vs refs?
   getColumns: () => TColumn[];
   getItems: (column: TColumn) => Ref.Ref<TItem>[];
-  onDeleteColumn?: (column: TColumn) => void;
-  onDeleteItem?: (column: TColumn, item: TItem) => void;
+  onColumnDelete?: (column: TColumn) => void;
+  onColumnCreate?: () => Promise<TColumn>;
+  onItemDelete?: (column: TColumn, item: TItem) => void;
+  onItemCreate?: (column: TColumn) => Promise<TItem>;
 }
 
 //

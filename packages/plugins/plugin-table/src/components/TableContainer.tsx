@@ -132,7 +132,7 @@ export const TableContainer = forwardRef<HTMLDivElement, TableContainerProps>(
       rowActions,
       onInsertRow: addRow,
       onDeleteRows: handleDeleteRows,
-      onDeleteColumn: handleDeleteColumn,
+      onColumnDelete: handleDeleteColumn,
       onCellUpdate: handleCellUpdate,
       onRowAction: handleRowAction,
       onRowOrderChange: handleRowOrderChange,
