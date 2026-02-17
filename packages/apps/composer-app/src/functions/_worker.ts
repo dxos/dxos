@@ -41,6 +41,10 @@ const handleFeedbackLogs = async (request: Request, env: Env): Promise<Response>
     return new Response('Empty body', { status: 400 });
   }
 
+  if (body.length > MAX_BODY_SIZE) {
+    return new Response('Payload too large', { status: 413 });
+  }
+
   const date = new Date().toISOString().slice(0, 10);
   const id = crypto.randomUUID();
   const key = `logs/${date}/${id}.ndjson`;

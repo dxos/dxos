@@ -60,17 +60,17 @@ export class LogBuffer {
     }
 
     if (entry.context != null) {
-      const ctx = typeof entry.context === 'function' ? entry.context() : entry.context;
-      if (ctx != null && !(ctx instanceof Error)) {
-        try {
+      try {
+        const ctx = typeof entry.context === 'function' ? entry.context() : entry.context;
+        if (ctx != null && !(ctx instanceof Error)) {
           let json = JSON.stringify(ctx);
           if (json.length > MAX_CONTEXT_LENGTH) {
             json = json.slice(0, MAX_CONTEXT_LENGTH);
           }
           record.c = json;
-        } catch {
-          // Skip non-serializable context.
         }
+      } catch {
+        // Skip context that throws or is non-serializable.
       }
     }
 
