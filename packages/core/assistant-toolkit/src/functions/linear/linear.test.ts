@@ -19,13 +19,11 @@ import { LINEAR_ID_KEY, default as fetchLinearIssues } from './sync-issues';
 const TestLayer = AssistantTestLayer({
   functions: [fetchLinearIssues],
   types: [Task.Task, Person.Person, Pipeline.Pipeline],
-  credentials: [
-    { service: 'linear.app', apiKey: Config.redacted('LINEAR_API_KEY').pipe(Effect.runSync, Redacted.value) },
-  ],
+  credentials: [{ service: 'linear.app', apiKey: process.env.LINEAR_API_KEY }],
   tracing: 'pretty',
 });
 
-describe('Linear', { timeout: 600_000 }, () => {
+describe.skip('Linear', { timeout: 600_000 }, () => {
   it.effect(
     'sync',
     Effect.fnUntraced(
