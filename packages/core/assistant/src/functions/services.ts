@@ -13,13 +13,12 @@ import type * as SchemaAST from 'effect/SchemaAST';
 
 import { AiToolNotFoundError, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { todo } from '@dxos/debug';
-import { Query, Type } from '@dxos/echo';
-import { Database } from '@dxos/echo';
-import { Function, FunctionDefinition, FunctionInvocationService } from '@dxos/functions';
+import { Type } from '@dxos/echo';
+import { type FunctionDefinition, FunctionInvocationService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 
-import { RefFromLLM } from '../types';
 import { GenericToolkit } from '../session';
+import { RefFromLLM } from '../types';
 
 /**
  * Constructs a `ToolResolverService` whose `resolve(id)` looks up tools in the following order:

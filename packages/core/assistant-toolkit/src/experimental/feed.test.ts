@@ -23,10 +23,7 @@ import {
 
 import { Discord, Linear } from '../functions';
 
-const TestLayer = Layer.mergeAll(
-  AiService.model('@anthropic/claude-opus-4-0'),
-  ToolExecutionServices,
-).pipe(
+const TestLayer = Layer.mergeAll(AiService.model('@anthropic/claude-opus-4-0'), ToolExecutionServices).pipe(
   Layer.provideMerge(GenericToolkit.providerEmpty),
   Layer.provideMerge(
     Layer.mergeAll(

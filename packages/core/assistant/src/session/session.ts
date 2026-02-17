@@ -25,7 +25,7 @@ import { type Blueprint } from '@dxos/blueprints';
 import { todo } from '@dxos/debug';
 import { Obj } from '@dxos/echo';
 import { type FunctionInvocationService, TracingService } from '@dxos/functions';
-import { dbg, log } from '@dxos/log';
+import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
 
 import { type AiAssistantError } from '../errors';

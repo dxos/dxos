@@ -2,30 +2,19 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import { describe, it } from '@effect/vitest';
 import * as Config from 'effect/Config';
 import * as Effect from 'effect/Effect';
-import * as Layer from 'effect/Layer';
+import * as Redacted from 'effect/Redacted';
 
-import { AiService } from '@dxos/ai';
-import { AiServiceTestingPreset } from '@dxos/ai/testing';
-import { GenericToolkit } from '@dxos/assistant';
+import { AssistantTestLayer } from '@dxos/assistant/testing';
 import { Obj, Query } from '@dxos/echo';
 import { Database } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { CredentialsService, FunctionInvocationService } from '@dxos/functions';
-import { TracingServiceExt } from '@dxos/functions-runtime';
-import {
-  FunctionInvocationServiceLayerTestMocked,
-  TestDatabaseLayer,
-  testStoragePath,
-} from '@dxos/functions-runtime/testing';
+import { FunctionInvocationService } from '@dxos/functions';
 import { Person, Pipeline, Task } from '@dxos/types';
 
 import { LINEAR_ID_KEY, default as fetchLinearIssues } from './sync-issues';
-import { AssistantTestLayer } from '@dxos/assistant/testing';
-import { Redacted } from 'effect';
 
 const TestLayer = AssistantTestLayer({
   functions: [fetchLinearIssues],

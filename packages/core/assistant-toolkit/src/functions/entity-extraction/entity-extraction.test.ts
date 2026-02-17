@@ -4,21 +4,17 @@
 
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
-import * as Layer from 'effect/Layer';
 
-import { AiService } from '@dxos/ai';
-import { MemoizedAiService, TestAiService } from '@dxos/ai/testing';
-import { GenericToolkit, ToolExecutionServices } from '@dxos/assistant';
+import { MemoizedAiService } from '@dxos/ai/testing';
+import { AssistantTestLayer } from '@dxos/assistant/testing';
 import { Blueprint } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';
 import { Database } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { CredentialsService, FunctionInvocationService, TracingService } from '@dxos/functions';
-import { FunctionInvocationServiceLayerTest, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
+import { FunctionInvocationService } from '@dxos/functions';
 import { ObjectId } from '@dxos/keys';
 import { Message, Organization, Person } from '@dxos/types';
 
-import { AssistantTestLayer } from '@dxos/assistant/testing';
 import { ResearchGraph } from '../research';
 
 import { default as entityExtraction } from './entity-extraction';

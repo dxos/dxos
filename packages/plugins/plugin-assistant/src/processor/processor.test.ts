@@ -11,11 +11,7 @@ import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
-import {
-  AiConversation,
-  GenericToolkit,
-  ToolExecutionServices,
-} from '@dxos/assistant';
+import { AiConversation, GenericToolkit, ToolExecutionServices } from '@dxos/assistant';
 import { acquireReleaseResource } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
 import { CredentialsService, QueueService, TracingService } from '@dxos/functions';

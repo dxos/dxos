@@ -17,10 +17,7 @@ import { FunctionInvocationServiceLayerTestMocked, TestDatabaseLayer } from '@dx
 
 import { default as fetchMessages } from './fetch-messages';
 
-const TestLayer = Layer.mergeAll(
-  AiService.model('@anthropic/claude-opus-4-0'),
-  ToolExecutionServices,
-).pipe(
+const TestLayer = Layer.mergeAll(AiService.model('@anthropic/claude-opus-4-0'), ToolExecutionServices).pipe(
   Layer.provideMerge(
     Layer.mergeAll(
       GenericToolkit.providerEmpty,

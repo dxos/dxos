@@ -6,21 +6,16 @@ import { inspect } from 'node:util';
 
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
-import * as Layer from 'effect/Layer';
 
-import { AiService, ConsolePrinter } from '@dxos/ai';
-import { MemoizedAiService, TestAiService } from '@dxos/ai/testing';
-import {
-  AiConversation,
-  type ContextBinding,
-  GenericToolkit,
-  GenerationObserver,
-} from '@dxos/assistant';
+import { ConsolePrinter } from '@dxos/ai';
+import { MemoizedAiService } from '@dxos/ai/testing';
+import { AiConversation, type ContextBinding, GenerationObserver } from '@dxos/assistant';
+import { AssistantTestLayer } from '@dxos/assistant/testing';
 import { Blueprint } from '@dxos/blueprints';
 import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
-import { CredentialsService, FunctionInvocationService, QueueService, TracingService } from '@dxos/functions';
+import { FunctionInvocationService, QueueService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
 import { MarkdownBlueprint } from '@dxos/plugin-markdown/blueprints';
@@ -33,7 +28,6 @@ import { default as createDocument } from './document-create';
 import { default as research } from './research';
 import { ResearchGraph, queryResearchGraph } from './research-graph';
 import { ResearchDataTypes } from './types';
-import { AssistantTestLayer } from '@dxos/assistant/testing';
 
 ObjectId.dangerouslyDisableRandomness();
 

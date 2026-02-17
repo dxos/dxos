@@ -11,8 +11,8 @@ import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import {
   AiConversation,
   type ContextBinding,
-  GenericToolkit,
   GenerationObserver,
+  GenericToolkit,
   ToolExecutionServices,
 } from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';

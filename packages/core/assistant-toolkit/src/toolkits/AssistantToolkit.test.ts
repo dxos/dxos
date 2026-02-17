@@ -6,26 +6,15 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { AiService, ConsolePrinter } from '@dxos/ai';
-import { MemoizedAiService, TestAiService } from '@dxos/ai/testing';
-import {
-  AiContextService,
-  AiConversation,
-  AiConversationService,
-  type ContextBinding,
-  GenerationObserver,
-  GenericToolkit,
-} from '@dxos/assistant';
+import { MemoizedAiService } from '@dxos/ai/testing';
+import { AiContextService, AiConversationService, GenericToolkit } from '@dxos/assistant';
+import { AssistantTestLayer } from '@dxos/assistant/testing';
 import { waitForCondition } from '@dxos/async';
 import { Blueprint, Template } from '@dxos/blueprints';
 import { Database, Obj, Ref } from '@dxos/echo';
-import { acquireReleaseResource } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
-import { CredentialsService, QueueService, TracingService } from '@dxos/functions';
-import { FunctionInvocationServiceLayerTest, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
 import { ObjectId } from '@dxos/keys';
 import { Message, Organization, Person } from '@dxos/types';
-import { AssistantTestLayer } from '@dxos/assistant/testing';
 
 import * as AssistantToolkit from './AssistantToolkit';
 

@@ -13,13 +13,7 @@ import * as Schema from 'effect/Schema';
 import * as String from 'effect/String';
 
 import { AiService, ConsolePrinter } from '@dxos/ai';
-import {
-  AiSession,
-  GenerationObserver,
-  GenericToolkit,
-  createToolkit,
-  ToolExecutionServices,
-} from '@dxos/assistant';
+import { AiSession, GenerationObserver, GenericToolkit, ToolExecutionServices, createToolkit } from '@dxos/assistant';
 import { Template } from '@dxos/blueprints';
 import { type DXN, Entity, Obj } from '@dxos/echo';
 import { Database } from '@dxos/echo';

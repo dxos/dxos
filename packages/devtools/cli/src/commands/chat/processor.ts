@@ -13,22 +13,22 @@ import * as Runtime from 'effect/Runtime';
 import { AiService, type ModelName } from '@dxos/ai';
 import {
   AiConversation,
-  ToolExecutionServices,
   type AiSessionRunError,
   type AiSessionRunRequirements,
   GenericToolkit,
+  ToolExecutionServices,
 } from '@dxos/assistant';
 import { Chat } from '@dxos/assistant-toolkit';
 import { Blueprint } from '@dxos/blueprints';
 import { type Space } from '@dxos/client/echo';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { type FunctionDefinition } from '@dxos/functions';
+import { FunctionImplementationResolver } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
 import { type Message } from '@dxos/types';
 import { isTruthy } from '@dxos/util';
 
 import { type AiChatServices, blueprintRegistry } from '../../util';
-import { FunctionImplementationResolver } from '@dxos/functions-runtime';
 
 export type ChatProcessorOptions = {
   runtime: Runtime.Runtime<AiChatServices>;
