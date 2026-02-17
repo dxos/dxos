@@ -185,6 +185,7 @@ const DefaultBoardColumn = forwardRef<HTMLDivElement, DefaultBoardColumnProps>(
     return (
       <BoardColumnRootInner
         classNames={mx(
+          'group/column',
           debug ? 'grid-rows-[min-content_1fr_20rem]' : 'grid-rows-[min-content_1fr_min-content]',
           classNames,
         )}
@@ -202,7 +203,13 @@ const DefaultBoardColumn = forwardRef<HTMLDivElement, DefaultBoardColumnProps>(
         <div role='none' className='border-bs border-separator'>
           {model.onItemCreate && (
             <Toolbar.Root classNames='rounded-s rounded-sm'>
-              <IconButton icon='ph--plus--regular' iconOnly label={t('add item label')} />
+              <IconButton
+                classNames='group-hover/column:opacity-100 opacity-0 transition transition-opacity duration-500'
+                variant='ghost'
+                icon='ph--plus--regular'
+                iconOnly
+                label={t('add item label')}
+              />
             </Toolbar.Root>
           )}
           <DebugInfo />
