@@ -372,33 +372,7 @@ export const parseResponse =
 
         log('begin');
         yield* onBegin();
-        yield* Stream.runForEach(input, handlePart).pipe(
-          Effect.catchAll((error) =>
-            Effect.gen(function* () {
-              // Sometimes the model can output tool parameters that don't match the tool schema.
-              // Instead of failing the entire request, we want to error this specific tool call only and return the error to the model.
-              // This way the model can retry the request with the correct tool parameters.
-              if (error instanceof AiError.MalformedOutput) {
-                const actual = (error.cause as any)?.issue?.actual;
-                if (Chunk.isChunk(actual)) {
-                  // Assuming the error is always caused by decoding the stream parts.
-                  const partsEncoded = Chunk.toArray(actual) as Response.StreamPartEncoded[];
-                  // Filter out tool calls and try decoding the remaining parts.
-                  const partsWithoutToolCalls = yield* Function.pipe(
-                    partsEncoded.filter((part) => part.type !== 'tool-call'),
-                    Schema.decode(Schema.Array(Response.StreamPart(Toolkit.empty))),
-                    Effect.orDie,
-                  );
-                  // Emit the remaining parts and close the stream without error.
-                  // The mallformed tool schema will be handled by the tool execution call in the session.
-                  yield* Effect.forEach(partsWithoutToolCalls, handlePart, { concurrency: 1 });
-                  return;
-                }
-              }
-              return yield* Effect.fail(error);
-            }),
-          ),
-        );
+        yield* Stream.runForEach(input, handlePart);
 
         yield* flushText();
         log('end', { blocks, parts, summary });

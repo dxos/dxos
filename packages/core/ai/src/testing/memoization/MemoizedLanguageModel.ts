@@ -20,6 +20,9 @@ import * as Stream from 'effect/Stream';
 import jsonStableStringify from 'json-stable-stringify';
 
 import { deepMapValues } from '@dxos/util';
+import { Cause, Chunk } from 'effect';
+import { dbg } from '@dxos/log';
+import { withoutToolCallParising } from '../../util';
 
 // Can be performance-intensive
 const DISABLE_CLOSEST_MATCH_SEARCH = false;
@@ -122,6 +125,7 @@ export const make = (options: MakeProps): Effect.Effect<LanguageModel.Service> =
                 disableToolCallResolution: true,
               })
               .pipe(
+                withoutToolCallParising,
                 Stream.mapEffect((part) =>
                   Schema.encode(PartCodec)(part).pipe(
                     Effect.catchTag('ParseError', (error) =>
@@ -139,13 +143,14 @@ export const make = (options: MakeProps): Effect.Effect<LanguageModel.Service> =
                     return chunk;
                   }),
                 ),
-                Stream.onEnd(
+                Stream.onDone(() =>
                   Effect.gen(function* () {
                     const conversation: MemoziedConversation = {
                       parameters: getMemoizedConversationParameters(options.modelName, true, params),
                       prompt: params.prompt,
                       response: parts,
                     };
+                    dbg(parts.map((part) => part.type));
                     yield* store.saveMemoizedConversation(conversation);
                   }),
                 ),

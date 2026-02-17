@@ -14,6 +14,7 @@ import * as Stream from 'effect/Stream';
 import {
   AiParser,
   AiPreprocessor,
+  withoutToolCallParising,
   type AiToolNotFoundError,
   type PromptPreprocessingError,
   type ToolExecutionService,
@@ -140,6 +141,8 @@ export class AiSession {
           toolkit,
           disableToolCallResolution: true,
         }).pipe(
+          // Disable tool call parsing so that we can handle parameter schema errors on a per-tool call basis.
+          withoutToolCallParising,
           // TOOD(dmaretskyi): Error mapping.
           AiParser.parseResponse({
             onBegin: () => observer.onBegin(),
