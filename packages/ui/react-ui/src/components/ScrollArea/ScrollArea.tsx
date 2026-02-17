@@ -16,11 +16,17 @@ import { useThemeContext } from '../../hooks';
 const SCROLLAREA_NAME = 'ScrollArea';
 
 type ScrollAreaContextType = {
+  /** Orientation of scrollbars. */
   orientation: AllowedAxis;
+  /** Hide scrollbars when not scrolling. */
   autoHide: boolean;
-  // TODO(burdon): Rethink padding; apply minimal to balance left/right of scrollbar if mobile.
+  /** Apply padding to opposite side of scrollbar. */
+  margin?: boolean;
+  /** Apply padding. */
   padding: boolean;
+  /** Use thin scrollbars. */
   thin: boolean;
+  /** Enable snap scrolling. */
   snap: boolean;
 };
 
@@ -45,6 +51,7 @@ const ScrollAreaRoot = forwardRef<HTMLDivElement, ScrollAreaRootProps>(
       children,
       orientation = 'vertical',
       autoHide = true,
+      margin = false,
       padding = false,
       thin = false,
       snap = false,
@@ -53,7 +60,7 @@ const ScrollAreaRoot = forwardRef<HTMLDivElement, ScrollAreaRootProps>(
     forwardedRef,
   ) => {
     const { tx } = useThemeContext();
-    const options = { orientation, autoHide, padding, thin, snap };
+    const options = { orientation, autoHide, margin, padding, thin, snap };
 
     return (
       <ScrollAreaProvider {...options}>

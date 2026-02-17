@@ -155,7 +155,7 @@ const BoardColumnBody = ({ data, Tile = BoardItem, debug }: BoardColumnBodyProps
         eventHandler={eventHandler}
         debug={debug}
       >
-        <ScrollArea.Root orientation='vertical' thin padding>
+        <ScrollArea.Root orientation='vertical' thin margin padding>
           <ScrollArea.Viewport classNames='snap-y md:snap-none' ref={setViewport}>
             <Mosaic.Stack items={model.getItems(column)} getId={(data) => data.dxn.toString()} Tile={Tile} />
           </ScrollArea.Viewport>
