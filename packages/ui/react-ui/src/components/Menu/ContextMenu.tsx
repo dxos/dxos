@@ -36,7 +36,7 @@ const ContextMenuContent = forwardRef<HTMLDivElement, ContextMenuContentProps>(
         {...props}
         data-arrow-keys='up down'
         collisionPadding={safeCollisionPadding}
-        className={tx('menu.content', 'menu', { elevation }, classNames)}
+        className={tx('menu.content', { elevation }, classNames)}
         ref={forwardedRef}
       >
         {children}
@@ -54,7 +54,7 @@ const ContextMenuViewport = forwardRef<HTMLDivElement, ContextMenuViewportProps>
     const { tx } = useThemeContext();
     const Root = asChild ? Slot : Primitive.div;
     return (
-      <Root {...props} className={tx('menu.viewport', 'menu__viewport', {}, classNames)} ref={forwardedRef}>
+      <Root {...props} className={tx('menu.viewport', {}, classNames)} ref={forwardedRef}>
         {children}
       </Root>
     );
@@ -68,7 +68,7 @@ const ContextMenuArrow = forwardRef<SVGSVGElement, ContextMenuArrowProps>(({ cla
   return (
     <ContextMenuPrimitive.Arrow
       {...props}
-      className={tx('menu.arrow', 'menu__arrow', {}, classNames)}
+      className={tx('menu.arrow', {}, classNames)}
       ref={forwardedRef}
     />
   );
@@ -90,7 +90,7 @@ const ContextMenuItem = forwardRef<HTMLDivElement, ContextMenuItemProps>(
     return (
       <ContextMenuPrimitive.Item
         {...props}
-        className={tx('menu.item', 'menu__item', {}, classNames)}
+        className={tx('menu.item', {}, classNames)}
         ref={forwardedRef}
       />
     );
@@ -105,7 +105,7 @@ const ContextMenuCheckboxItem = forwardRef<HTMLDivElement, ContextMenuCheckboxIt
     return (
       <ContextMenuPrimitive.CheckboxItem
         {...props}
-        className={tx('menu.item', 'menu__item--checkbox', {}, classNames)}
+        className={tx('menu.item', {}, classNames)}
         ref={forwardedRef}
       />
     );
@@ -120,7 +120,7 @@ const ContextMenuSeparator = forwardRef<HTMLDivElement, ContextMenuSeparatorProp
     return (
       <ContextMenuPrimitive.Separator
         {...props}
-        className={tx('menu.separator', 'menu__item', {}, classNames)}
+        className={tx('menu.separator', {}, classNames)}
         ref={forwardedRef}
       />
     );
@@ -135,7 +135,7 @@ const ContextMenuGroupLabel = forwardRef<HTMLDivElement, ContextMenuGroupLabelPr
     return (
       <ContextMenuPrimitive.Label
         {...props}
-        className={tx('menu.groupLabel', 'menu__group__label', {}, classNames)}
+        className={tx('menu.groupLabel', {}, classNames)}
         ref={forwardedRef}
       />
     );

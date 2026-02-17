@@ -40,7 +40,7 @@ const List = forwardRef<HTMLOListElement, ListProps>(({ classNames, children, ..
 
   return (
     <DensityProvider density={density}>
-      <ListPrimitive {...props} className={tx('list.root', 'list', {}, classNames)} ref={forwardedRef}>
+      <ListPrimitive {...props} className={tx('list.root', {}, classNames)} ref={forwardedRef}>
         {children}
       </ListPrimitive>
     </DensityProvider>
@@ -58,7 +58,7 @@ const ListItemEndcap = forwardRef<HTMLDivElement, ListItemEndcapProps>(
       <Root
         {...(!asChild && { role: 'none' })}
         {...props}
-        className={tx('list.item.endcap', 'list__listItem__endcap', { density }, classNames)}
+        className={tx('list.item.endcap', { density }, classNames)}
         ref={forwardedRef}
       >
         {children}
@@ -77,7 +77,7 @@ const MockListItemOpenTrigger = ({
     <div
       role='none'
       {...props}
-      className={tx('list.item.openTrigger', 'list__listItem__openTrigger--mock', { density }, classNames)}
+      className={tx('list.item.openTrigger', { density }, classNames)}
     />
   );
 };
@@ -91,7 +91,7 @@ const ListItemHeading = forwardRef<HTMLParagraphElement, ListItemHeadingProps>(
     return (
       <ListPrimitiveItemHeading
         {...props}
-        className={tx('list.item.heading', 'list__listItem__heading', { density }, classNames)}
+        className={tx('list.item.heading', { density }, classNames)}
         ref={forwardedRef}
       >
         {children}
@@ -110,14 +110,14 @@ const ListItemOpenTrigger = forwardRef<HTMLButtonElement, ListItemOpenTriggerPro
     return (
       <ListPrimitiveItemOpenTrigger
         {...props}
-        className={tx('list.item.openTrigger', 'list__listItem__openTrigger', { density }, classNames)}
+        className={tx('list.item.openTrigger', { density }, classNames)}
         ref={forwardedRef}
       >
         {children || (
           <Icon
             size={3}
             icon={open ? 'ph--caret-down--bold' : 'ph--caret-right--bold'}
-            classNames={tx('list.item.openTriggerIcon', 'list__listItem__openTrigger__icon', {})}
+            classNames={tx('list.item.openTriggerIcon', {})}
           />
         )}
       </ListPrimitiveItemOpenTrigger>
@@ -134,7 +134,7 @@ const ListItemRoot = forwardRef<HTMLLIElement, ListItemRootProps>(
     return (
       <ListPrimitiveItem
         {...props}
-        className={tx('list.item.root', 'list__listItem', { density, collapsible: props.collapsible }, classNames)}
+        className={tx('list.item.root', { density, collapsible: props.collapsible }, classNames)}
         ref={forwardedRef}
       >
         {children}

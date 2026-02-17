@@ -13,8 +13,6 @@ export type ThemeMode = 'dark' | 'light';
 export type ThemeFunction<P extends Record<string, any>> = (
   /** Path to resolve theme style. */
   path: string,
-  /** Global class name. */
-  defaultClassName: string,
   /** Custom style properties. */
   styleProps?: P,
   /** Additional class names (passed to component). */

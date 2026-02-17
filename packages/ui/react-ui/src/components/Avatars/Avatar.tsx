@@ -72,7 +72,7 @@ const AvatarLabel = forwardRef<HTMLSpanElement, AvatarLabelProps>(
         {...props}
         id={labelId}
         ref={forwardedRef}
-        className={tx('avatar.label', 'avatar__label', { srOnly }, classNames)}
+        className={tx('avatar.label', { srOnly }, classNames)}
       />
     );
   },
@@ -93,7 +93,7 @@ const AvatarDescription = forwardRef<HTMLSpanElement, AvatarDescriptionProps>(
         {...props}
         id={descriptionId}
         ref={forwardedRef}
-        className={tx('avatar.description', 'avatar__description', { srOnly }, classNames)}
+        className={tx('avatar.description', { srOnly }, classNames)}
       />
     );
   },

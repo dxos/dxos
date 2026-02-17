@@ -73,7 +73,7 @@ export const defaultTheme: Theme<Record<string, any>> = {
 };
 
 export const bindTheme = <P extends Record<string, any>>(theme: Theme<Record<string, any>>): ThemeFunction<P> => {
-  return (path: string, defaultClassName: string, styleProps?: P, ...etc: ClassNameArray) => {
+  return (path: string, styleProps?: P, ...etc: ClassNameArray) => {
     const result: Theme<P> | ComponentFunction<P> = get(theme, path);
     return typeof result === 'function' ? result(styleProps ?? ({} as P), ...etc) : undefined;
   };

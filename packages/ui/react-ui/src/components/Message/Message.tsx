@@ -65,7 +65,7 @@ const MessageRoot = forwardRef<HTMLDivElement, MessageRootProps>(
         <Root
           role={valence === 'neutral' ? 'paragraph' : 'alert'}
           {...props}
-          className={tx('message.root', 'message', { valence, elevation }, classNames)}
+          className={tx('message.root', { valence, elevation }, classNames)}
           aria-labelledby={titleId}
           aria-describedby={descriptionId}
           ref={forwardedRef}
@@ -99,7 +99,7 @@ const MessageTitle = forwardRef<HTMLHeadingElement, MessageTitleProps>(
     return (
       <Root
         {...props}
-        className={tx('message.title', 'message__title', {}, classNames)}
+        className={tx('message.title', {}, classNames)}
         id={titleId}
         ref={forwardedRef}
       >
@@ -107,7 +107,7 @@ const MessageTitle = forwardRef<HTMLHeadingElement, MessageTitleProps>(
           <Icon
             size={5}
             icon={icon ?? messageIcons[valence]}
-            classNames={tx('message.icon', 'message__icon', { valence })}
+            classNames={tx('message.icon', { valence })}
           />
         )}
         <span>{children}</span>
@@ -136,7 +136,7 @@ const MessageContent = forwardRef<HTMLParagraphElement, MessageContentProps>(
     return (
       <Root
         {...props}
-        className={tx('message.content', 'message__content', {}, classNames)}
+        className={tx('message.content', {}, classNames)}
         id={descriptionId}
         ref={forwardedRef}
       >

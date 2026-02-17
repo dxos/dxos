@@ -66,7 +66,7 @@ const ScrollAreaRoot = forwardRef<HTMLDivElement, ScrollAreaRootProps>(
       <ScrollAreaProvider {...options}>
         <div
           {...props}
-          className={tx('scrollArea.root', 'scroll-area', options, [className, classNames])}
+          className={tx('scrollArea.root', options, [className, classNames])}
           ref={forwardedRef}
         >
           {children}
@@ -94,7 +94,7 @@ const ScrollAreaViewport = forwardRef<HTMLDivElement, ScrollAreaViewportProps>(
     return (
       <div
         {...props}
-        className={tx('scrollArea.viewport', 'scroll-area__viewport', options, classNames)}
+        className={tx('scrollArea.viewport', options, classNames)}
         ref={forwardedRef}
       >
         {children}

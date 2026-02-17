@@ -245,7 +245,6 @@ const MainOverlay = forwardRef<HTMLDivElement, MainOverlayProps>(({ classNames, 
       }}
       className={tx(
         'main.overlay',
-        'main__overlay',
         {
           isLg,
           inlineStartSidebarOpen: navigationSidebarState,
@@ -317,7 +316,7 @@ const MainSidebar = forwardRef<HTMLDivElement, MainSidebarProps>(
           data-side={side === 'inline-end' ? 'ie' : 'is'}
           data-state={state}
           data-resizing={resizing ? 'true' : 'false'}
-          className={tx('main.sidebar', 'main__sidebar', {}, classNames)}
+          className={tx('main.sidebar', {}, classNames)}
           onKeyDownCapture={handleKeyDown}
           ref={ref}
         >
@@ -405,7 +404,7 @@ const MainContent = forwardRef<HTMLDivElement, MainContentProps>(
         data-sidebar-inline-start-state={navigationSidebarState}
         data-sidebar-inline-end-state={complementarySidebarState}
         data-handles-focus={handlesFocus}
-        className={tx('main.content', 'main', { bounce, handlesFocus }, classNames)}
+        className={tx('main.content', { bounce, handlesFocus }, classNames)}
         ref={forwardedRef}
       >
         {children}

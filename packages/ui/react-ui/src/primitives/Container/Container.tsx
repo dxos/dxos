@@ -55,7 +55,7 @@ const Column = forwardRef(
     return (
       <Root
         {...props}
-        className={tx('container.column', 'container__column', { variant: variant ?? context.variant }, [
+        className={tx('container.column', { variant: variant ?? context.variant }, [
           className,
           classNames,
         ])}

@@ -21,7 +21,7 @@ const AnchoredOverflowRoot = forwardRef<HTMLDivElement, AnchoredOverflowRootProp
       <Root
         role='none'
         {...props}
-        className={tx('anchoredOverflow.root', 'overflow-anchored', {}, classNames)}
+        className={tx('anchoredOverflow.root', {}, classNames)}
         ref={forwardedRef}
       >
         {children}
@@ -42,7 +42,7 @@ const AnchoredOverflowAnchor = forwardRef<HTMLDivElement, AnchoredOverflowAnchor
       <Root
         role='none'
         {...props}
-        className={tx('anchoredOverflow.anchor', 'overflow-anchor', {}, classNames)}
+        className={tx('anchoredOverflow.anchor', {}, classNames)}
         ref={forwardedRef}
       >
         {children}

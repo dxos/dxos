@@ -24,7 +24,7 @@ const BreadcrumbRoot = forwardRef<HTMLDivElement, BreadcrumbRootProps>(
       <Root
         role='navigation'
         {...props}
-        className={tx('breadcrumb.root', 'breadcrumb', {}, classNames)}
+        className={tx('breadcrumb.root', {}, classNames)}
         ref={forwardedRef}
       />
     );
@@ -41,7 +41,7 @@ const BreadcrumbList = forwardRef<HTMLOListElement, BreadcrumbListProps>(
       <Root
         role='list'
         {...props}
-        className={tx('breadcrumb.list', 'breadcrumb__list', {}, classNames)}
+        className={tx('breadcrumb.list', {}, classNames)}
         ref={forwardedRef}
       />
     );
@@ -58,7 +58,7 @@ const BreadcrumbListItem = forwardRef<HTMLLIElement, BreadcrumbListItemProps>(
       <Root
         role='listitem'
         {...props}
-        className={tx('breadcrumb.listItem', 'breadcrumb__list__item', {}, classNames)}
+        className={tx('breadcrumb.listItem', {}, classNames)}
         ref={forwardedRef}
       />
     );
@@ -82,7 +82,7 @@ const BreadcrumbCurrent = forwardRef<HTMLHeadingElement, BreadcrumbCurrentProps>
       <Root
         {...props}
         aria-current='page'
-        className={tx('breadcrumb.current', 'breadcrumb__item__heading--current', {}, classNames)}
+        className={tx('breadcrumb.current', {}, classNames)}
         ref={forwardedRef}
       />
     );
@@ -98,7 +98,7 @@ const BreadcrumbSeparator = ({ children, classNames, ...props }: BreadcrumbSepar
       role='separator'
       aria-hidden='true'
       {...props}
-      className={tx('breadcrumb.separator', 'breadcrumb__separator', {}, classNames)}
+      className={tx('breadcrumb.separator', {}, classNames)}
     >
       {children ?? <Icon icon='ph--dot--bold' />}
     </Primitive.span>

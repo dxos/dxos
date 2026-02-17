@@ -18,7 +18,16 @@ import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations';
 
-// TOOD(burdon): Re-implement with radix pattern for Settings; adapt to form.
+// TODO(burdon): Fix trims.
+// TODO(burdon): Remove export.
+export const controlItemClasses = mx([
+  'container-max-width grid md:col-span-2 grid-cols-subgrid gap-trimSm items-center',
+  '*:first:!mbs-0 *:last:!mbe-0 pli-trimMd plb-trimMd',
+  'border border-separator rounded-md',
+]);
+
+const controlItemTitleClasses = 'mbe-0 text-lg text-baseText font-normal';
+const controlItemDescriptionClasses = 'mlb-trimSm md:mbe-0 text-base text-description';
 
 export type ControlPageParams = PropsWithChildren<{}>;
 
@@ -39,7 +48,7 @@ export const ControlSection = ({ title, description, children }: ControlSectionP
   return (
     <>
       <ControlSectionHeading title={title} description={description} />
-      {children}
+      <div className='is-full space-y-trimMd'>{children}</div>
     </>
   );
 };
@@ -63,8 +72,6 @@ export const ControlGroupButton = ({ classNames, ...props }: ButtonProps) => {
 };
 
 export type ControlGroupProps = ThemedClassName<PropsWithChildren>;
-
-// TODO(burdon): Fix trims.
 
 export const ControlGroup = ({ children, classNames }: ControlGroupProps) => (
   <div
@@ -90,15 +97,6 @@ export const ControlFrame = ({ children }: ControlGroupProps) => (
     {children}
   </div>
 );
-
-export const controlItemClasses = mx([
-  'container-max-width grid md:col-span-2 grid-cols-subgrid gap-trimSm items-center',
-  '*:first:!mbs-0 *:last:!mbe-0 pli-trimMd plb-trimMd',
-  'border border-separator rounded-md',
-]);
-
-const controlItemTitleClasses = 'mbe-0 text-lg text-baseText font-normal';
-const controlItemDescriptionClasses = 'mlb-trimSm md:mbe-0 text-base text-description';
 
 export type ControlItemProps = PropsWithChildren<{
   title: Label;

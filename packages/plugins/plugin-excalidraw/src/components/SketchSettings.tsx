@@ -28,7 +28,6 @@ export const SketchSettings = ({ settings, onSettingsChange }: SketchSettingsCom
               onCheckedChange={(checked) => onSettingsChange((s) => ({ ...s, autoHideControls: !!checked }))}
             />
           </ControlItemInput>
-
           <ControlItemInput title={t('settings grid type label')}>
             <Input.Switch
               checked={settings.gridType === 'dotted'}

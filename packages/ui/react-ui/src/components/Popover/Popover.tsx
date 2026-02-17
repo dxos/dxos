@@ -485,7 +485,7 @@ const PopoverContentImpl = forwardRef<PopoverContentImplElement, PopoverContentI
             {...contentProps}
             collisionPadding={safeCollisionPadding}
             collisionBoundary={computedCollisionBoundary}
-            className={tx('popover.content', 'popover', { elevation }, classNames)}
+            className={tx('popover.content', { elevation }, classNames)}
             ref={forwardedRef}
             style={{
               ...contentProps.style,
@@ -550,7 +550,7 @@ const PopoverArrow = forwardRef<PopoverArrowElement, PopoverArrowProps>(
       <PopperPrimitive.Arrow
         {...popperScope}
         {...arrowProps}
-        className={tx('popover.arrow', 'popover__arrow', {}, classNames)}
+        className={tx('popover.arrow', {}, classNames)}
         ref={forwardedRef}
       />
     );
@@ -576,7 +576,7 @@ const PopoverViewport = forwardRef<HTMLDivElement, PopoverViewportProps>(
     return (
       <Root
         {...props}
-        className={tx('popover.viewport', 'popover__viewport', { constrainInline, constrainBlock }, classNames)}
+        className={tx('popover.viewport', { constrainInline, constrainBlock }, classNames)}
         ref={forwardedRef}
       >
         {children}

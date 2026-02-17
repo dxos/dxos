@@ -61,7 +61,7 @@ const SelectContent = forwardRef<HTMLDivElement, SelectContentProps>(
         {...props}
         data-arrow-keys='up down'
         collisionPadding={safeCollisionPadding}
-        className={tx('select.content', 'select__content', { elevation }, classNames)}
+        className={tx('select.content', { elevation }, classNames)}
         position='popper'
         ref={forwardedRef}
       >
@@ -79,7 +79,7 @@ const SelectScrollUpButton = forwardRef<HTMLDivElement, SelectScrollUpButtonProp
     return (
       <SelectPrimitive.SelectScrollUpButton
         {...props}
-        className={tx('select.scrollButton', 'select__scroll-button--up', {}, classNames)}
+        className={tx('select.scrollButton', {}, classNames)}
         ref={forwardedRef}
       >
         {children ?? <Icon size={3} icon='ph--caret-up--bold' />}
@@ -96,7 +96,7 @@ const SelectScrollDownButton = forwardRef<HTMLDivElement, SelectScrollDownButton
     return (
       <SelectPrimitive.SelectScrollDownButton
         {...props}
-        className={tx('select.scrollButton', 'select__scroll-button--down', {}, classNames)}
+        className={tx('select.scrollButton', {}, classNames)}
         ref={forwardedRef}
       >
         {children ?? <Icon size={3} icon='ph--caret-down--bold' />}
@@ -113,7 +113,7 @@ const SelectViewport = forwardRef<HTMLDivElement, SelectViewportProps>(
     return (
       <SelectPrimitive.SelectViewport
         {...props}
-        className={tx('select.viewport', 'select__viewport', {}, classNames)}
+        className={tx('select.viewport', {}, classNames)}
         ref={forwardedRef}
       >
         {children}
@@ -126,7 +126,7 @@ type SelectItemProps = ThemedClassName<SelectPrimitive.SelectItemProps>;
 
 const SelectItem = forwardRef<HTMLDivElement, SelectItemProps>(({ classNames, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
-  return <SelectPrimitive.Item {...props} className={tx('select.item', 'option', {}, classNames)} ref={forwardedRef} />;
+  return <SelectPrimitive.Item {...props} className={tx('select.item', {}, classNames)} ref={forwardedRef} />;
 });
 
 type SelectItemTextProps = SelectPrimitive.SelectItemTextProps;
@@ -141,7 +141,7 @@ const SelectItemIndicator = forwardRef<HTMLDivElement, SelectItemIndicatorProps>
     return (
       <SelectPrimitive.ItemIndicator
         {...props}
-        className={tx('select.itemIndicator', 'option__indicator', {}, classNames)}
+        className={tx('select.itemIndicator', {}, classNames)}
         ref={forwardedRef}
       >
         {children}
@@ -156,7 +156,7 @@ type SelectOptionProps = SelectItemProps;
 const SelectOption = forwardRef<HTMLDivElement, SelectItemProps>(({ children, classNames, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
   return (
-    <SelectPrimitive.Item {...props} className={tx('select.item', 'option', {}, classNames)} ref={forwardedRef}>
+    <SelectPrimitive.Item {...props} className={tx('select.item', {}, classNames)} ref={forwardedRef}>
       <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
       <span className='grow is-1' />
       {/* <SelectPrimitive.ItemIndicator className={tx('select.itemIndicator', 'option__indicator', {})}> */}
@@ -181,7 +181,7 @@ const SelectSeparator = forwardRef<HTMLDivElement, SelectSeparatorProps>(({ clas
   return (
     <SelectPrimitive.Separator
       {...props}
-      className={tx('select.separator', 'select__separator', {}, classNames)}
+      className={tx('select.separator', {}, classNames)}
       ref={forwardedRef}
     />
   );
@@ -194,7 +194,7 @@ const SelectArrow = forwardRef<SVGSVGElement, SelectArrowProps>(({ classNames, .
   return (
     <SelectPrimitive.Arrow
       {...props}
-      className={tx('select.arrow', 'select__arrow', {}, classNames)}
+      className={tx('select.arrow', {}, classNames)}
       ref={forwardedRef}
     />
   );

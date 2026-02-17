@@ -191,19 +191,16 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
         description={t('space properties settings description', { ns: meta.id })}
       >
         <Form.Root fieldMap={fieldMap} schema={SpaceFormSchema} values={values} onValuesChanged={handleValuesChanged}>
-          <Form.FieldSet />
+          <Form.FieldSet classNames='space-y-trimMd' />
         </Form.Root>
       </ControlSection>
-
       <ControlSection title={t('space controls title')} description={t('space controls description')}>
-        <div role='none' className='container-max-width grid grid-cols-1 md:grid-cols-[1fr_min-content]'>
-          <ControlItemInput title={t('backup space title')} description={t('backup space description')}>
-            <Button onClick={handleBackup}>{t('download backup label')}</Button>
-          </ControlItemInput>
-          <ControlItemInput title={t('repair space title')} description={t('repair space description')}>
-            <Button onClick={handleRepair}>{t('repair space label')}</Button>
-          </ControlItemInput>
-        </div>
+        <ControlItemInput title={t('backup space title')} description={t('backup space description')}>
+          <Button onClick={handleBackup}>{t('download backup label')}</Button>
+        </ControlItemInput>
+        <ControlItemInput title={t('repair space title')} description={t('repair space description')}>
+          <Button onClick={handleRepair}>{t('repair space label')}</Button>
+        </ControlItemInput>
       </ControlSection>
     </ControlPage>
   );
