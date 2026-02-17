@@ -9,8 +9,6 @@ import { Entity, Filter, Obj, Query, type Ref, Relation, Type } from '@dxos/echo
 import { TestSchema } from '@dxos/echo/testing';
 import { DXN, SpaceId } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
-import { layerMemory } from '@dxos/sql-sqlite/platform';
-import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 
 import { type Queue } from '../queue';
 

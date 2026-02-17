@@ -36,17 +36,28 @@ export interface FeedStoreOptions {
   assignPositions: boolean;
 }
 
-// TODO(dmaretskyi): JSdoc
-// TODO(dmaretskyi): Use #private.
-// TODO(dmaretskyi): JSDoc for each method.
-// TODO(dmaretskyi): Effect span for each method.
+/**
+ * Persistent storage for feed metadata, blocks, subscriptions, and sync state.
+ *
+ */
 export class FeedStore {
-  constructor(private readonly _options: FeedStoreOptions) {}
+  readonly #options: FeedStoreOptions;
 
+  constructor(options: FeedStoreOptions) {
+    this.#options = options;
+  }
+
+  /**
+   * Emits after successful block append operations.
+   */
   readonly onNewBlocks = new Event<void>();
 
-  migrate = Effect.fn('FeedStore.migrate')(function* () {
-    const sql = yield* SqlClient.SqlClient;
+  /**
+   * Creates required feed store tables and indexes if they do not exist.
+   */
+  migrate = Effect.fn('FeedStore.migrate')(() =>
+    Effect.gen(function* () {
+      const sql = yield* SqlClient.SqlClient;
 
     // Feeds Table
     yield* sql`CREATE TABLE IF NOT EXISTS feeds (
@@ -86,16 +97,20 @@ export class FeedStore {
           token TEXT NOT NULL
       )`;
 
-    // Sync State Table
-    yield* sql`CREATE TABLE IF NOT EXISTS sync_state (
+      // Sync State Table.
+      yield* sql`CREATE TABLE IF NOT EXISTS sync_state (
           spaceId TEXT NOT NULL,
           feedNamespace TEXT NOT NULL,
           lastPulledPosition INTEGER NOT NULL DEFAULT -1,
           PRIMARY KEY (spaceId, feedNamespace)
       )`;
-  });
+    }).pipe(Effect.withSpan('FeedStore.migrate')),
+  );
 
-  private _ensureFeed = Effect.fn('Feed.ensureFeed')(
+  /**
+   * Ensures a feed row exists and returns its internal feed ID.
+   */
+  #ensureFeed = Effect.fn('Feed.ensureFeed')(
     (
       spaceId: string,
       feedId: string,
@@ -113,10 +128,13 @@ export class FeedStore {
               INSERT INTO feeds (spaceId, feedId, feedNamespace) VALUES (${spaceId}, ${feedId}, ${namespace}) RETURNING feedPrivateId
           `;
         return newRows[0].feedPrivateId;
-      }),
+      }).pipe(Effect.withSpan('FeedStore.ensureFeed')),
   );
 
-  private _ensureCursorToken = Effect.fn('Feed.ensureCursorToken')(
+  /**
+   * Ensures cursor token exists for a space and returns it.
+   */
+  #ensureCursorToken = Effect.fn('Feed.ensureCursorToken')(
     (spaceId: string): Effect.Effect<string, SqlError.SqlError, SqlClient.SqlClient> =>
       Effect.gen(this, function* () {
         const sql = yield* SqlClient.SqlClient;
@@ -126,9 +144,12 @@ export class FeedStore {
         const token = crypto.randomUUID().replace(/-/g, '').slice(0, 6);
         yield* sql`INSERT INTO cursor_tokens (spaceId, token) VALUES (${spaceId}, ${token})`;
         return token;
-      }),
+      }).pipe(Effect.withSpan('FeedStore.ensureCursorToken')),
   );
 
+  /**
+   * Queries feed blocks by feed IDs or subscription with cursor/position pagination.
+   */
   query = Effect.fn('Feed.query')(
     (request: QueryRequest): Effect.Effect<QueryResponse, SqlError.SqlError, SqlClient.SqlClient> =>
       Effect.gen(this, function* () {
@@ -159,8 +180,8 @@ export class FeedStore {
           cursorInsertionId = insertionId;
         }
 
-        // Validate Token if cursor used
-        const validCursorToken = yield* this._ensureCursorToken(request.spaceId);
+        // Validate Token if cursor used.
+        const validCursorToken = yield* this.#ensureCursorToken(request.spaceId);
         if (request.cursor && cursorToken !== validCursorToken) {
           return yield* Effect.die(new Error(`Cursor token mismatch`));
         }
@@ -179,7 +200,7 @@ export class FeedStore {
 
         const position = request.position ?? -1;
 
-        // Resolve Subscriptions or FeedIds
+        // Resolve subscriptions or feed IDs.
         if (request.query && 'subscriptionId' in request.query) {
           const rows = yield* sql<{ feedPrivateIds: string; expiresAt: number }>`
                 SELECT feedPrivateIds, expiresAt FROM subscriptions WHERE subscriptionId = ${request.query.subscriptionId}
@@ -211,7 +232,7 @@ export class FeedStore {
           };
         }
 
-        // Fetch Blocks
+        // Fetch blocks.
         const query = sql<Block>`
             SELECT blocks.*, feeds.feedId, feeds.feedNamespace
             FROM blocks
@@ -222,7 +243,7 @@ export class FeedStore {
             ${sql`AND feeds.feedNamespace = ${request.feedNamespace}`}
         `;
 
-        // Add filter based on cursor or position
+        // Add filter based on cursor or position.
         const filter = request.cursor
           ? sql`AND blocks.insertionId > ${cursorInsertionId}`
           : request.unpositionedOnly
@@ -259,9 +280,12 @@ export class FeedStore {
         }
 
         return { requestId: request.requestId, blocks, nextCursor, hasMore } satisfies QueryResponse;
-      }),
+      }).pipe(Effect.withSpan('FeedStore.query')),
   );
 
+  /**
+   * Creates a subscription and stores the resolved internal feed IDs.
+   */
   subscribe = Effect.fn('Feed.subscribe')(
     (request: SubscribeRequest): Effect.Effect<SubscribeResponse, SqlError.SqlError, SqlClient.SqlClient> =>
       Effect.gen(this, function* () {
@@ -277,7 +301,7 @@ export class FeedStore {
 
         const feedPrivateIds = yield* Effect.forEach(
           request.feedIds,
-          (feedId) => this._ensureFeed(request.spaceId!, feedId),
+          (feedId) => this.#ensureFeed(request.spaceId!, feedId),
           { concurrency: 'unbounded' },
         );
 
@@ -291,7 +315,7 @@ export class FeedStore {
           subscriptionId,
           expiresAt,
         };
-      }),
+      }).pipe(Effect.withSpan('FeedStore.subscribe')),
   );
 
   /**
@@ -309,7 +333,7 @@ export class FeedStore {
         WHERE spaceId = ${opts.spaceId} AND feedNamespace = ${opts.feedNamespace}
       `;
       return rows[0]?.lastPulledPosition ?? -1;
-    });
+    }).pipe(Effect.withSpan('FeedStore.getSyncState'));
 
   /**
    * Update the last pulled position for the given space and namespace.
@@ -326,8 +350,11 @@ export class FeedStore {
         VALUES (${opts.spaceId}, ${opts.feedNamespace}, ${opts.lastPulledPosition})
         ON CONFLICT (spaceId, feedNamespace) DO UPDATE SET lastPulledPosition = ${opts.lastPulledPosition}
       `;
-    });
+    }).pipe(Effect.withSpan('FeedStore.setSyncState'));
 
+  /**
+   * Appends blocks for a space/namespace and optionally assigns global positions.
+   */
   append = (
     request: AppendRequest,
   ): Effect.Effect<AppendResponse, SqlError.SqlError, SqlClient.SqlClient | SqlTransaction.SqlTransaction> =>
@@ -353,7 +380,7 @@ export class FeedStore {
         Effect.gen(this, function* () {
           const sql = yield* SqlClient.SqlClient;
 
-          // 1. Collect unique feed IDs and batch _ensureFeed calls.
+          // 1. Collect unique feed IDs and batch #ensureFeed calls.
           const feedKeys = new Map<string, { feedId: string }>();
           for (const block of request.blocks) {
             const key = block.feedId!;
@@ -367,7 +394,7 @@ export class FeedStore {
             [...feedKeys.entries()],
             ([key, { feedId }]) =>
               Effect.gen(this, function* () {
-                const id = yield* this._ensureFeed(request.spaceId!, feedId, request.feedNamespace);
+                const id = yield* this.#ensureFeed(request.spaceId!, feedId, request.feedNamespace);
                 feedPrivateIds.set(key, id);
               }),
             { concurrency: 'unbounded' },
@@ -375,7 +402,7 @@ export class FeedStore {
 
           // 2. Get max position per namespace ONCE (not per block).
           const maxPositions = new Map<string, number>();
-          if (this._options.assignPositions) {
+          if (this.#options.assignPositions) {
             const maxPosResult = yield* sql<{ maxPos: number | null }>`
               SELECT MAX(position) as maxPos 
               FROM blocks 
@@ -392,7 +419,7 @@ export class FeedStore {
             const feedPrivateId = feedPrivateIds.get(key)!;
 
             let positionToInsert: number | null = null;
-            if (this._options.assignPositions) {
+            if (this.#options.assignPositions) {
               const currentMax = maxPositions.get(request.feedNamespace)!;
               positionToInsert = currentMax + 1;
               maxPositions.set(request.feedNamespace, positionToInsert); // Increment for next block in same namespace.
@@ -421,6 +448,9 @@ export class FeedStore {
       return { requestId: request.requestId, positions };
     }).pipe(Effect.withSpan('FeedStore.append'));
 
+  /**
+   * Creates local blocks with sequential predecessors and appends grouped batches.
+   */
   appendLocal = Effect.fn('Feed.appendLocal')(
     (
       messages: { spaceId: string; feedId: string; feedNamespace: string; data: Uint8Array }[],
@@ -444,7 +474,7 @@ export class FeedStore {
           [...feedKeys.entries()],
           ([key, { spaceId, feedId, feedNamespace }]) =>
             Effect.gen(this, function* () {
-              const id = yield* this._ensureFeed(spaceId, feedId, feedNamespace);
+              const id = yield* this.#ensureFeed(spaceId, feedId, feedNamespace);
               feedPrivateIds.set(key, id);
             }),
           { concurrency: 'unbounded' },
@@ -493,7 +523,7 @@ export class FeedStore {
 
           const block: Block = {
             feedId: msg.feedId,
-            actorId: this._options.localActorId,
+            actorId: this.#options.localActorId,
             sequence,
             predActorId,
             predSequence,
@@ -505,7 +535,7 @@ export class FeedStore {
           blocks.push(block);
 
           // Update in-flight tracking.
-          currentSeqs.set(key, { sequence, actorId: this._options.localActorId });
+          currentSeqs.set(key, { sequence, actorId: this.#options.localActorId });
 
           // Group by (spaceId, feedNamespace).
           const spaceNamespaceKey = `${msg.spaceId}|${msg.feedNamespace}`;
@@ -533,6 +563,9 @@ export class FeedStore {
       }).pipe(Effect.withSpan('FeedStore.appendLocal')),
   );
 
+  /**
+   * Sets positions for existing blocks while preventing conflicting reassignments.
+   */
   setPosition = (request: {
     spaceId: string;
     blocks: (Pick<Block, 'feedId' | 'actorId' | 'sequence' | 'position'> & { feedNamespace: string })[];
