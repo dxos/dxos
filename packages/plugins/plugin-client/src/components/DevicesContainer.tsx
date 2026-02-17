@@ -12,16 +12,8 @@ import { type Device, useDevices } from '@dxos/react-client/halo';
 import { type CancellableInvitationObservable, Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 import { useNetworkStatus } from '@dxos/react-client/mesh';
 import { Button, Clipboard, Icon, IconButton, List, useId, useTranslation } from '@dxos/react-ui';
-import {
-  ControlFrame,
-  ControlFrameItem,
-  ControlGroup,
-  ControlItem,
-  ControlPage,
-  ControlSection,
-} from '@dxos/react-ui-form';
-import { translationKey } from '@dxos/shell/react';
-import { AuthCode, Centered, DeviceListItem, Emoji, Viewport } from '@dxos/shell/react';
+import { Settings } from '@dxos/react-ui-form';
+import { AuthCode, Centered, DeviceListItem, Emoji, Viewport, translationKey } from '@dxos/shell/react';
 import { osTranslations } from '@dxos/ui-theme';
 import { hexToEmoji } from '@dxos/util';
 
@@ -52,13 +44,13 @@ export const DevicesContainer = ({ createInvitationUrl }: DevicesContainerProps)
 
   return (
     <Clipboard.Provider>
-      <ControlPage>
-        <ControlSection
+      <Settings.Root>
+        <Settings.Section
           title={t('devices verbose label', { ns: meta.id })}
           description={t('devices description', { ns: meta.id })}
         >
-          <ControlFrame>
-            <ControlFrameItem title={t('devices label', { ns: meta.id })}>
+          <Settings.Frame>
+            <Settings.FrameItem title={t('devices label', { ns: meta.id })}>
               <List>
                 {devices.map((device: Device) => {
                   return (
@@ -66,43 +58,43 @@ export const DevicesContainer = ({ createInvitationUrl }: DevicesContainerProps)
                   );
                 })}
               </List>
-            </ControlFrameItem>
+            </Settings.FrameItem>
             {createInvitationUrl && (
-              <ControlFrameItem title='Add device'>
+              <Settings.FrameItem title='Add device'>
                 <DeviceInvitation createInvitationUrl={createInvitationUrl} />
-              </ControlFrameItem>
+              </Settings.FrameItem>
             )}
-          </ControlFrame>
-        </ControlSection>
-        <ControlSection
+          </Settings.Frame>
+        </Settings.Section>
+        <Settings.Section
           title={t('danger zone title', { ns: meta.id })}
           description={t('danger zone description', { ns: meta.id })}
         >
-          <ControlGroup>
-            <ControlItem title={t('reset device label')} description={t('reset device description', { ns: meta.id })}>
+          <Settings.Group>
+            <Settings.Item title={t('reset device label')} description={t('reset device description', { ns: meta.id })}>
               <Button variant='destructive' onClick={handleResetStorage} data-testid='devicesContainer.reset'>
                 {t('reset device label')}
               </Button>
-            </ControlItem>
-            <ControlItem
+            </Settings.Item>
+            <Settings.Item
               title={t('recover identity label')}
               description={t('recover identity description', { ns: meta.id })}
             >
               <Button variant='destructive' onClick={handleRecover} data-testid='devicesContainer.recover'>
                 {t('recover identity label')}
               </Button>
-            </ControlItem>
-            <ControlItem
+            </Settings.Item>
+            <Settings.Item
               title={t('join new identity label')}
               description={t('join new identity description', { ns: meta.id })}
             >
               <Button variant='destructive' onClick={handleJoinNewIdentity} data-testid='devicesContainer.joinExisting'>
                 {t('join new identity label')}
               </Button>
-            </ControlItem>
-          </ControlGroup>
-        </ControlSection>
-      </ControlPage>
+            </Settings.Item>
+          </Settings.Group>
+        </Settings.Section>
+      </Settings.Root>
     </Clipboard.Provider>
   );
 };

@@ -13,14 +13,7 @@ import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata
 import { useClient } from '@dxos/react-client';
 import { type Space, SpaceState } from '@dxos/react-client/echo';
 import { Button, Input, useFileDownload, useMulticastObservable, useTranslation } from '@dxos/react-ui';
-import {
-  ControlItem,
-  ControlItemInput,
-  ControlPage,
-  ControlSection,
-  Form,
-  type FormFieldMap,
-} from '@dxos/react-ui-form';
+import { Form, type FormFieldMap, Settings } from '@dxos/react-ui-form';
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
 
 import { meta } from '../../meta';
@@ -114,51 +107,51 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
           [onValueChange, type],
         );
         return (
-          <ControlItemInput title={label} description={t('display name description')}>
+          <Settings.ItemInput title={label} description={t('display name description')}>
             <Input.TextInput
               value={getValue()}
               onChange={handleChange}
               placeholder={t('display name input placeholder')}
               classNames='min-is-64'
             />
-          </ControlItemInput>
+          </Settings.ItemInput>
         );
       },
       icon: ({ type, label, getValue, onValueChange }) => {
         const handleChange = useCallback((icon: string) => onValueChange(type, icon), [onValueChange, type]);
         const handleReset = useCallback(() => onValueChange(type, undefined), [onValueChange, type]);
         return (
-          <ControlItem title={label} description={t('icon description')}>
+          <Settings.Item title={label} description={t('icon description')}>
             <IconPicker
               value={getValue()}
               onChange={handleChange}
               onReset={handleReset}
               classNames='justify-self-end'
             />
-          </ControlItem>
+          </Settings.Item>
         );
       },
       hue: ({ type, label, getValue, onValueChange }) => {
         const handleChange = useCallback((nextHue: string) => onValueChange(type, nextHue), [onValueChange, type]);
         const handleReset = useCallback(() => onValueChange(type, undefined), [onValueChange, type]);
         return (
-          <ControlItem title={label} description={t('hue description')}>
+          <Settings.Item title={label} description={t('hue description')}>
             <HuePicker value={getValue()} onChange={handleChange} onReset={handleReset} classNames='justify-self-end' />
-          </ControlItem>
+          </Settings.Item>
         );
       },
       edgeReplication: ({ type, label, getValue, onValueChange }) => {
         const handleChange = useCallback((checked: boolean) => onValueChange(type, checked), [onValueChange, type]);
         return (
-          <ControlItemInput title={label} description={t('edge replication description')}>
+          <Settings.ItemInput title={label} description={t('edge replication description')}>
             <Input.Switch checked={getValue()} onCheckedChange={handleChange} classNames='justify-self-end' />
-          </ControlItemInput>
+          </Settings.ItemInput>
         );
       },
       archived: ({ type, label, getValue, onValueChange }) => {
         const handleChange = useCallback(() => onValueChange(type, !getValue()), [onValueChange, type, getValue]);
         return (
-          <ControlItemInput title={label} description={t('archive space description')}>
+          <Settings.ItemInput title={label} description={t('archive space description')}>
             <Button
               disabled={space === client.spaces.default}
               variant={getValue() ? 'default' : 'destructive'}
@@ -166,7 +159,7 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
             >
               {getValue() ? t('unarchive space label') : t('archive space label')}
             </Button>
-          </ControlItemInput>
+          </Settings.ItemInput>
         );
       },
     }),
@@ -185,24 +178,24 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
   }, [client, space, repairs]);
 
   return (
-    <ControlPage>
-      <ControlSection
+    <Settings.Root>
+      <Settings.Section
         title={t('space properties settings verbose label')}
         description={t('space properties settings description', { ns: meta.id })}
       >
         <Form.Root fieldMap={fieldMap} schema={SpaceFormSchema} values={values} onValuesChanged={handleValuesChanged}>
           <Form.FieldSet classNames='space-y-trimMd' />
         </Form.Root>
-      </ControlSection>
-      <ControlSection title={t('space controls title')} description={t('space controls description')}>
-        <ControlItemInput title={t('backup space title')} description={t('backup space description')}>
+      </Settings.Section>
+      <Settings.Section title={t('space controls title')} description={t('space controls description')}>
+        <Settings.ItemInput title={t('backup space title')} description={t('backup space description')}>
           <Button onClick={handleBackup}>{t('download backup label')}</Button>
-        </ControlItemInput>
-        <ControlItemInput title={t('repair space title')} description={t('repair space description')}>
+        </Settings.ItemInput>
+        <Settings.ItemInput title={t('repair space title')} description={t('repair space description')}>
           <Button onClick={handleRepair}>{t('repair space label')}</Button>
-        </ControlItemInput>
-      </ControlSection>
-    </ControlPage>
+        </Settings.ItemInput>
+      </Settings.Section>
+    </Settings.Root>
   );
 };
 

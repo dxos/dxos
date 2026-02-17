@@ -12,7 +12,7 @@ import { useConfig } from '@dxos/react-client';
 import { type Space, useSpaceInvitations } from '@dxos/react-client/echo';
 import { type CancellableInvitationObservable, Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 import { Button, Clipboard, Icon, Input, useId, useTranslation } from '@dxos/react-ui';
-import { ControlFrame, ControlFrameItem, ControlItemInput, ControlPage, ControlSection } from '@dxos/react-ui-form';
+import { Settings } from '@dxos/react-ui-form';
 import { Collection } from '@dxos/schema';
 import {
   type ActionMenuItem,
@@ -129,19 +129,19 @@ export const MembersContainer = ({ space, createInvitationUrl }: MembersContaine
 
   return (
     <Clipboard.Provider>
-      <ControlPage>
-        <ControlSection title={t('members verbose label')} description={t('members description')}>
-          <ControlFrame>
-            <ControlFrameItem title={t('members label')}>
+      <Settings.Root>
+        <Settings.Section title={t('members verbose label')} description={t('members description')}>
+          <Settings.Frame>
+            <Settings.FrameItem title={t('members label')}>
               <SpaceMemberList spaceKey={space.key} includeSelf />
-            </ControlFrameItem>
+            </Settings.FrameItem>
             {locked && (
-              <ControlFrameItem title={t('invitations label')}>
+              <Settings.FrameItem title={t('invitations label')}>
                 <p className='text-description mbe-2'>{t('locked space description')}</p>
-              </ControlFrameItem>
+              </Settings.FrameItem>
             )}
             {!locked && (
-              <ControlFrameItem title={t('invitations label')}>
+              <Settings.FrameItem title={t('invitations label')}>
                 {selectedInvitation && <InvitationSection {...selectedInvitation} onBack={handleBack} />}
                 {!selectedInvitation && (
                   <>
@@ -161,17 +161,17 @@ export const MembersContainer = ({ space, createInvitationUrl }: MembersContaine
                     />
                   </>
                 )}
-              </ControlFrameItem>
+              </Settings.FrameItem>
             )}
-          </ControlFrame>
-          {/* TODO(wittjosiah): Make ControlItemInput & ControlFrame compatible. */}
+          </Settings.Frame>
+          {/* TODO(wittjosiah): Make Settings.ItemInput & Settings.Frame compatible. */}
           <div className='justify-center p-0 mbs-4 container-max-width grid grid-cols-1 md:grid-cols-[1fr_min-content]'>
-            <ControlItemInput title={t('space locked label')} description={t('space locked description')}>
+            <Settings.ItemInput title={t('space locked label')} description={t('space locked description')}>
               <Input.Switch checked={locked} onCheckedChange={handleChangeLocked} classNames='justify-self-end' />
-            </ControlItemInput>
+            </Settings.ItemInput>
           </div>
-        </ControlSection>
-      </ControlPage>
+        </Settings.Section>
+      </Settings.Root>
     </Clipboard.Provider>
   );
 };

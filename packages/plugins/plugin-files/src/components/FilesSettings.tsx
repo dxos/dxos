@@ -6,7 +6,7 @@ import React from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { IconButton, Input, Message, useTranslation } from '@dxos/react-ui';
-import { ControlGroup, ControlItemInput, ControlPage, ControlSection } from '@dxos/react-ui-form';
+import { Settings } from '@dxos/react-ui-form';
 
 import { meta } from '../meta';
 import { type FilesSettingsProps, type FilesState, LocalFilesOperation } from '../types';
@@ -22,13 +22,13 @@ export const FilesSettings = ({ settings, state, onSettingsChange }: FilesSettin
   const { invokePromise } = useOperationInvoker();
 
   return (
-    <ControlPage>
-      <ControlSection title={t('settings title', { ns: meta.id })}>
+    <Settings.Root>
+      <Settings.Section title={t('settings title', { ns: meta.id })}>
         <Message.Root valence='warning' classNames='container-max-width'>
           <Message.Content>{t('save files to directory description')}</Message.Content>
         </Message.Root>
-        <ControlGroup>
-          <ControlItemInput
+        <Settings.Group>
+          <Settings.ItemInput
             title={t('save files to directory label')}
             {...(state.rootHandle && { description: state.rootHandle.name })}
           >
@@ -39,8 +39,8 @@ export const FilesSettings = ({ settings, state, onSettingsChange }: FilesSettin
               label={t('save files to directory label')}
               onClick={() => invokePromise(LocalFilesOperation.SelectRoot)}
             />
-          </ControlItemInput>
-          <ControlItemInput title={t('trigger export label')}>
+          </Settings.ItemInput>
+          <Settings.ItemInput title={t('trigger export label')}>
             <IconButton
               classNames='mis-2'
               icon='ph--floppy-disk--regular'
@@ -48,8 +48,8 @@ export const FilesSettings = ({ settings, state, onSettingsChange }: FilesSettin
               label={t('trigger export label')}
               onClick={() => invokePromise(LocalFilesOperation.Export)}
             />
-          </ControlItemInput>
-          <ControlItemInput title={t('trigger import label')}>
+          </Settings.ItemInput>
+          <Settings.ItemInput title={t('trigger import label')}>
             <IconButton
               classNames='mis-2'
               icon='ph--folder-open--regular'
@@ -57,15 +57,15 @@ export const FilesSettings = ({ settings, state, onSettingsChange }: FilesSettin
               label={t('trigger import label')}
               onClick={() => invokePromise(LocalFilesOperation.Import, {})}
             />
-          </ControlItemInput>
-          <ControlItemInput title={t('auto export label')}>
+          </Settings.ItemInput>
+          <Settings.ItemInput title={t('auto export label')}>
             <Input.Switch
               disabled={!state.rootHandle}
               checked={state.rootHandle ? settings.autoExport : false}
               onCheckedChange={(checked) => onSettingsChange((s) => ({ ...s, autoExport: !!checked }))}
             />
-          </ControlItemInput>
-          <ControlItemInput title={t('auto export interval label')}>
+          </Settings.ItemInput>
+          <Settings.ItemInput title={t('auto export interval label')}>
             <Input.TextInput
               type='number'
               min={1}
@@ -74,15 +74,15 @@ export const FilesSettings = ({ settings, state, onSettingsChange }: FilesSettin
                 onSettingsChange((s) => ({ ...s, autoExportInterval: parseInt(event.currentTarget.value, 10) * 1000 }))
               }
             />
-          </ControlItemInput>
-          <ControlItemInput title={t('open local files label')}>
+          </Settings.ItemInput>
+          <Settings.ItemInput title={t('open local files label')}>
             <Input.Switch
               checked={settings.openLocalFiles}
               onCheckedChange={(checked) => onSettingsChange((s) => ({ ...s, openLocalFiles: !!checked }))}
             />
-          </ControlItemInput>
-        </ControlGroup>
-      </ControlSection>
-    </ControlPage>
+          </Settings.ItemInput>
+        </Settings.Group>
+      </Settings.Section>
+    </Settings.Root>
   );
 };

@@ -10,7 +10,7 @@ import { type ConfigProto, SaveConfig, Storage, defs } from '@dxos/config';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 import { Icon, IconButton, Input, Select, Toast, useFileDownload, useTranslation } from '@dxos/react-ui';
-import { ControlGroup, ControlItemInput, ControlPage, ControlSection } from '@dxos/react-ui-form';
+import { Settings } from '@dxos/react-ui-form';
 import { setDeep } from '@dxos/util';
 
 import { meta } from '../meta';
@@ -97,31 +97,31 @@ export const DebugSettings = ({ settings, onSettingsChange }: DebugSettingsCompo
   };
 
   return (
-    <ControlPage>
-      <ControlSection title={t('settings title', { ns: meta.id })}>
-        <ControlGroup>
-          <ControlItemInput title={t('settings wireframe')}>
+    <Settings.Root>
+      <Settings.Section title={t('settings title', { ns: meta.id })}>
+        <Settings.Group>
+          <Settings.ItemInput title={t('settings wireframe')}>
             <Input.Switch
               checked={settings.wireframe}
               onCheckedChange={(checked) => onSettingsChange((s) => ({ ...s, wireframe: !!checked }))}
             />
-          </ControlItemInput>
-          <ControlItemInput title={t('settings download diagnostics')}>
+          </Settings.ItemInput>
+          <Settings.ItemInput title={t('settings download diagnostics')}>
             <IconButton
               icon='ph--download-simple--regular'
               iconOnly
               label={t('settings download diagnostics')}
               onClick={handleDownload}
             />
-          </ControlItemInput>
-          <ControlItemInput title={t('settings repair')}>
+          </Settings.ItemInput>
+          <Settings.ItemInput title={t('settings repair')}>
             <IconButton
               icon='ph--first-aid-kit--regular'
               iconOnly
               label={t('settings repair')}
               onClick={handleRepair}
             />
-          </ControlItemInput>
+          </Settings.ItemInput>
 
           {/* TODO(burdon): Move to layout? */}
           {toast && (
@@ -136,7 +136,7 @@ export const DebugSettings = ({ settings, onSettingsChange }: DebugSettingsCompo
             </Toast.Root>
           )}
 
-          <ControlItemInput title={t('settings choose storage adaptor')}>
+          <Settings.ItemInput title={t('settings choose storage adaptor')}>
             <Select.Root
               value={
                 Object.entries(StorageAdapters).find(
@@ -168,10 +168,10 @@ export const DebugSettings = ({ settings, onSettingsChange }: DebugSettingsCompo
                 </Select.Content>
               </Select.Portal>
             </Select.Root>
-          </ControlItemInput>
-        </ControlGroup>
-      </ControlSection>
-    </ControlPage>
+          </Settings.ItemInput>
+        </Settings.Group>
+      </Settings.Section>
+    </Settings.Root>
   );
 };
 

@@ -10,7 +10,7 @@ import { type Database, Filter, Obj } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space/types';
 import { useQuery } from '@dxos/react-client/echo';
 import { Separator, useTranslation } from '@dxos/react-ui';
-import { ControlItem, ControlPage, ControlSection, Form, controlItemClasses } from '@dxos/react-ui-form';
+import { Form, Settings } from '@dxos/react-ui-form';
 import { AccessToken } from '@dxos/types';
 
 import { meta } from '../meta';
@@ -64,26 +64,26 @@ export const TokensContainer = ({ db }: { db: Database.Database }) => {
   const handleDelete = useCallback((token: AccessToken.AccessToken) => db.remove(token), [db]);
 
   return (
-    <ControlPage>
-      <ControlSection
+    <Settings.Root>
+      <Settings.Section
         title={t('integrations verbose label', { ns: meta.id })}
         description={t('integrations description', { ns: meta.id })}
       >
         {adding ? (
-          <ControlItem title={t('new integration label')}>
+          <Settings.Item title={t('new integration label')}>
             <Form.Root schema={FormSchema} values={initialValues} onCancel={handleCancel} onSave={handleAdd}>
               <Form.FieldSet />
               <Form.Actions />
             </Form.Root>
-          </ControlItem>
+          </Settings.Item>
         ) : (
-          <div role='none' className={controlItemClasses}>
+          <Settings.Group>
             <TokenManager tokens={tokens} onDelete={handleDelete} />
             {tokens.length > 0 && <Separator classNames='mlb-4' />}
             <NewTokenSelector spaceId={db.spaceId} onAddAccessToken={handleAddAccessToken} onCustomToken={handleNew} />
-          </div>
+          </Settings.Group>
         )}
-      </ControlSection>
-    </ControlPage>
+      </Settings.Section>
+    </Settings.Root>
   );
 };

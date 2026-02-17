@@ -8,7 +8,7 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { useClient } from '@dxos/react-client';
 import { useSpaces } from '@dxos/react-client/echo';
 import { IconButton, Input, List, ListItem, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { ControlGroup, ControlItemInput, ControlPage, ControlSection, controlItemClasses } from '@dxos/react-ui-form';
+import { Settings } from '@dxos/react-ui-form';
 
 import { meta } from '../meta';
 import { SpaceOperation, type SpaceSettingsProps } from '../types';
@@ -26,17 +26,19 @@ export const SpacePluginSettings = ({ settings, onSettingsChange }: SpacePluginS
   const { invokePromise } = useOperationInvoker();
 
   return (
-    <ControlPage>
-      <ControlSection title={t('space settings label')} description={t('space settings description')}>
-        <ControlGroup>
-          <ControlItemInput title={t('show hidden spaces label')}>
+    <Settings.Root>
+      <Settings.Section title={t('space settings label')} description={t('space settings description')}>
+        <Settings.Group>
+          <Settings.ItemInput title={t('show hidden spaces label')}>
             <Input.Switch
               checked={settings.showHidden}
               onCheckedChange={(checked) => onSettingsChange((state) => ({ ...state, showHidden: !!checked }))}
             />
-          </ControlItemInput>
+          </Settings.ItemInput>
+        </Settings.Group>
 
-          <List classNames={[controlItemClasses, 'flex flex-col gap-trimSm']}>
+        <Settings.Container>
+          <List classNames='flex flex-col gap-trimSm'>
             {spaces.map((space) => (
               <ListItem.Root key={space.id} classNames='is-full items-center'>
                 {/* TODO(burdon): Should auto center and truncate; NOTE truncate doesn't work with flex grow. */}
@@ -56,8 +58,8 @@ export const SpacePluginSettings = ({ settings, onSettingsChange }: SpacePluginS
               </ListItem.Root>
             ))}
           </List>
-        </ControlGroup>
-      </ControlSection>
-    </ControlPage>
+        </Settings.Container>
+      </Settings.Section>
+    </Settings.Root>
   );
 };
