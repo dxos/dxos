@@ -46,7 +46,13 @@ export default defineFunction({
   }),
   handler: ({
     // TODO(wittjosiah): Schema-based defaults are not yet supported.
-    data: { calendar: calendarRef, googleCalendarId = 'primary', syncBackDays = 30, syncForwardDays = 365, pageSize = 100 },
+    data: {
+      calendar: calendarRef,
+      googleCalendarId = 'primary',
+      syncBackDays = 30,
+      syncForwardDays = 365,
+      pageSize = 100,
+    },
   }) =>
     Effect.gen(function* () {
       log('syncing google calendar', {
