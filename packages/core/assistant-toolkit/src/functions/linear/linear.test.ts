@@ -3,9 +3,7 @@
 //
 
 import { describe, it } from '@effect/vitest';
-import * as Config from 'effect/Config';
 import * as Effect from 'effect/Effect';
-import * as Redacted from 'effect/Redacted';
 
 import { AssistantTestLayer } from '@dxos/assistant/testing';
 import { Obj, Query } from '@dxos/echo';

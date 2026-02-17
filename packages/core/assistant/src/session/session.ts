@@ -14,13 +14,13 @@ import * as Stream from 'effect/Stream';
 import {
   AiParser,
   AiPreprocessor,
-  withoutToolCallParising,
   type AiToolNotFoundError,
   type PromptPreprocessingError,
   type ToolExecutionService,
   type ToolResolverService,
   callTool,
   getToolCalls,
+  withoutToolCallParising,
 } from '@dxos/ai';
 import { type Blueprint } from '@dxos/blueprints';
 import { todo } from '@dxos/debug';
