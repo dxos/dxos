@@ -12,7 +12,6 @@ import * as Runtime from 'effect/Runtime';
 import type * as Tracer from 'effect/Tracer';
 
 const spanSymbol = Symbol.for('effect/SpanAnnotation');
-const originalSymbol = Symbol.for('effect/OriginalAnnotation');
 const spanToTrace = GlobalValue.globalValue('effect/Tracer/spanToTrace', () => new WeakMap());
 const locationRegex = /\((.*)\)/g;
 
@@ -87,9 +86,7 @@ const prettyErrorStack = (error: any, appendStacks: string[] = []): any => {
 
   out.push(...appendStacks);
 
-  if (error[originalSymbol]) {
-    error = error[originalSymbol];
-  }
+  error = Cause.originalError(error);
   if (error.cause) {
     error.cause = prettyErrorStack(error.cause);
   }

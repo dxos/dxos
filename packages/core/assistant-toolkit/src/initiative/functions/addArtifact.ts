@@ -9,7 +9,7 @@ import { AiContextService } from '@dxos/assistant';
 import { Database, Obj, Type } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
 
-import * as Initiative from '../Initiative';
+import { getFromChatContext } from '../util';
 
 export default defineFunction({
   key: 'dxos.org/function/initiative/add-artifact',
@@ -23,22 +23,13 @@ export default defineFunction({
       description: 'The artifact to add. Do NOT guess or try to generate the ID.',
     }),
   }),
-  outputSchema: Schema.Void,
   services: [AiContextService],
   handler: Effect.fnUntraced(function* ({ data }) {
     if (!(yield* Database.load(data.artifact))) {
       throw new Error('Artifact not found.');
     }
 
-    const { binder } = yield* AiContextService;
-
-    const initiative = binder
-      .getObjects()
-      .filter((_) => Obj.instanceOf(Initiative.Initiative, _))
-      .at(0);
-    if (!initiative) {
-      throw new Error('No initiative in context.');
-    }
+    const initiative = yield* getFromChatContext;
 
     Obj.change(initiative, (initiative) => {
       initiative.artifacts.push({
@@ -46,5 +37,5 @@ export default defineFunction({
         data: data.artifact,
       });
     });
-  }) as any, // TODO(dmaretskyi): Services don't align -- need to refactor how functions are defined.
+  }, AiContextService.fixFunctionHandlerType),
 });
