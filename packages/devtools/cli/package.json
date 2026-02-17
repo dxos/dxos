@@ -100,8 +100,5 @@
     "typescript": "catalog:",
     "vitest": "catalog:"
   },
-  "peerDependencies": {
-    "@effect-atom/atom": "catalog:",
-    "@effect-atom/atom-react": "catalog:"
-  }
+  "peerDependencies": {}
 }

@@ -46,7 +46,12 @@ const BoardItemInner = forwardRef<HTMLDivElement, BoardItemProps>(
         debug={debug}
       >
         <Focus.Group asChild>
-          <Card.Root classNames={classNames} data-testid='board-item' onClick={() => rootRef.current?.focus()} ref={composedRef}>
+          <Card.Root
+            classNames={classNames}
+            data-testid='board-item'
+            onClick={() => rootRef.current?.focus()}
+            ref={composedRef}
+          >
             <Card.Toolbar>
               <Card.DragHandle ref={dragHandleRef} />
               <Card.Title>{label}</Card.Title>

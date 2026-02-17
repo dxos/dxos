@@ -242,15 +242,11 @@ export const getReactive = <T extends Unknown>(snapshot: Snapshot<T>): Effect.Ef
   Effect.gen(function* () {
     const db = getDatabase$(snapshot);
     if (!db) {
-      return yield* Effect.fail(
-        new Err.GetReactiveError({ reason: 'no-database', snapshotId: snapshot.id }),
-      );
+      return yield* Effect.fail(new Err.GetReactiveError({ reason: 'no-database', snapshotId: snapshot.id }));
     }
     const obj = db.getObjectById(snapshot.id);
     if (!obj) {
-      return yield* Effect.fail(
-        new Err.GetReactiveError({ reason: 'object-not-found', snapshotId: snapshot.id }),
-      );
+      return yield* Effect.fail(new Err.GetReactiveError({ reason: 'object-not-found', snapshotId: snapshot.id }));
     }
     return obj as T;
   });
@@ -262,9 +258,7 @@ export const getReactive = <T extends Unknown>(snapshot: Snapshot<T>): Effect.Ef
  * @param snapshot - A snapshot of the object (from `Obj.getSnapshot`).
  * @returns Effect that succeeds with `Option.some(reactive)` or `Option.none()`.
  */
-export const getReactiveOption = <T extends Unknown>(
-  snapshot: Snapshot<T>,
-): Effect.Effect<Option.Option<T>, never> =>
+export const getReactiveOption = <T extends Unknown>(snapshot: Snapshot<T>): Effect.Effect<Option.Option<T>, never> =>
   getReactive(snapshot).pipe(
     Effect.map(Option.some),
     Effect.catchAll(() => Effect.succeed(Option.none())),
@@ -449,10 +443,7 @@ export const snapshotOf: {
   <S extends Type.Entity.Any>(schema: S, value: unknown): value is Snapshot<Schema.Schema.Type<S>>;
 } = ((...args: [schema: Type.Entity.Any, value: unknown] | [schema: Type.Entity.Any]) => {
   const check = (entity: unknown) =>
-    entity != null &&
-    typeof entity === 'object' &&
-    SnapshotKindId in entity &&
-    isInstanceOf(args[0], entity);
+    entity != null && typeof entity === 'object' && SnapshotKindId in entity && isInstanceOf(args[0], entity);
 
   if (args.length === 1) {
     return (entity: unknown) => check(entity);

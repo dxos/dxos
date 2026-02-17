@@ -16333,16 +16333,16 @@ importers:
       '@atlaskit/pragmatic-drag-and-drop':
         specifier: 'catalog:'
         version: 1.7.7
+      '@radix-ui/react-use-controllable-state':
+        specifier: 'catalog:'
+        version: 1.1.0(@types/react@19.2.7)(react@19.2.3)
+    devDependencies:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../react-ui
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../ui-theme
-      '@radix-ui/react-use-controllable-state':
-        specifier: 'catalog:'
-        version: 1.1.0(@types/react@19.2.7)(react@19.2.3)
-    devDependencies:
       '@types/react':
         specifier: ~19.2.7
         version: 19.2.7

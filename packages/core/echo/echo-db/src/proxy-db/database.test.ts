@@ -507,7 +507,7 @@ describe('Database', () => {
   };
 
   describe('Obj.getReactive', () => {
-    test('returns reactive object when snapshot has database and object exists', async () => {
+    test('returns reactive object when snapshot has database and object exists', async ({ expect }) => {
       const { db } = await builder.createDatabase({ types: [TestSchema.Person] });
       const obj = db.add(Obj.make(TestSchema.Person, { name: 'Test' }));
       const snapshot = Obj.getSnapshot(obj);
@@ -518,7 +518,7 @@ describe('Database', () => {
       expect(result.name).toBe('Test');
     });
 
-    test('fails with no-database when snapshot has no database', async () => {
+    test('fails with no-database when snapshot has no database', ({ expect }) => {
       const obj = Obj.make(TestSchema.Person, { name: 'Test' });
       const snapshot = Obj.getSnapshot(obj);
 
@@ -533,7 +533,7 @@ describe('Database', () => {
       expect((error as Err.GetReactiveError).context?.reason).toBe('no-database');
     });
 
-    test('fails with object-not-found when object was removed from database', async () => {
+    test('fails with object-not-found when object was removed from database', async ({ expect }) => {
       const { db } = await builder.createDatabase({ types: [TestSchema.Person] });
       const obj = db.add(Obj.make(TestSchema.Person, { name: 'Test' }));
       const snapshot = Obj.getSnapshot(obj);

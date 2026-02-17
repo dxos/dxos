@@ -344,7 +344,7 @@ describe('AtomObj.makeWithReactive', () => {
       await testBuilder.close();
     });
 
-    test('returns resolved object for ref', async () => {
+    test('returns resolved object for ref', async ({ expect }) => {
       const { db } = await testBuilder.createDatabase({
         types: [TestSchema.Person, TestSchema.Task],
       });
@@ -368,7 +368,7 @@ describe('AtomObj.makeWithReactive', () => {
       expect(result?.title).toBe('Task 1');
     });
 
-    test('returns undefined when ref target was removed', async () => {
+    test('returns undefined when ref target was removed', async ({ expect }) => {
       const { db } = await testBuilder.createDatabase({
         types: [TestSchema.Person, TestSchema.Task],
       });

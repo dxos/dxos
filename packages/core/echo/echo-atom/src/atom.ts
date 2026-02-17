@@ -208,9 +208,7 @@ const refWithReactiveFamily = Atom.family(<T extends Obj.Unknown>(ref: Ref.Ref<T
  */
 export function makeWithReactive<T extends Obj.Unknown>(obj: T): Atom.Atom<T>;
 export function makeWithReactive<T extends Obj.Unknown>(ref: Ref.Ref<T>): Atom.Atom<T | undefined>;
-export function makeWithReactive<T extends Obj.Unknown>(
-  objOrRef: T | Ref.Ref<T> | undefined,
-): Atom.Atom<T | undefined>;
+export function makeWithReactive<T extends Obj.Unknown>(objOrRef: T | Ref.Ref<T> | undefined): Atom.Atom<T | undefined>;
 export function makeWithReactive<T extends Obj.Unknown>(
   objOrRef: T | Ref.Ref<T> | undefined,
 ): Atom.Atom<T | undefined> {

@@ -94,6 +94,9 @@ const DefaultStory = ({ debug = false }: StoryProps) => {
       getItems: (column) => registry.get(itemsAtomFamily(column)),
       onItemDelete: (column: TestColumn, current: TestItem) => {
         Obj.change(column, (mutableColumn) => {
+          if (!mutableColumn.items) {
+            return;
+          }
           const idx = mutableColumn.items.findIndex((ref) => ref.target?.id === current?.id);
           if (idx !== -1) {
             mutableColumn.items.splice(idx, 1);
@@ -116,7 +119,7 @@ const DefaultStory = ({ debug = false }: StoryProps) => {
         return item;
       },
     } satisfies BoardModel<TestColumn, TestItem>;
-  }, [space?.db, columns, registry]);
+  }, [space?.db, registry]);
 
   if (columns.length === 0) {
     return <></>;
@@ -197,7 +200,7 @@ export const Spec: Story = {
     // First two columns have items, third is empty.
     for (const column of columns.slice(0, 2)) {
       const items = within(column).queryAllByTestId('board-item');
-      await expect(items).toHaveLength(0);
+      await expect(items.length).toBeGreaterThan(0);
     }
     const emptyItems = within(columns[2]).queryAllByTestId('board-item');
     await expect(emptyItems).toHaveLength(0);

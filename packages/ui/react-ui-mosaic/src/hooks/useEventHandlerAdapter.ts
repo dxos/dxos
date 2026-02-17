@@ -75,15 +75,15 @@ export const useEventHandlerAdapter = <TItem = any, TObject extends Obj.Unknown 
         void cb(source.data);
       },
       onDrop: ({ source, target }) => {
-        const to =
-          target?.type === 'tile' || target?.type === 'placeholder'
-            ? target.location
-            : target?.type === 'container'
-              ? items.length
-              : -1;
-        log.info('onDrop', { source, target, to });
+        log.info('onDrop', { source, target });
 
         const mutate = (items: TItem[]) => {
+          const to =
+            target?.type === 'tile' || target?.type === 'placeholder'
+              ? target.location
+              : target?.type === 'container'
+                ? items.length
+                : -1;
           const from = items.findIndex((item) => getId(item) === source.id);
           const insertIndex = typeof to === 'number' && to >= 0 ? Math.floor(to) : -1;
           if (insertIndex !== -1) {

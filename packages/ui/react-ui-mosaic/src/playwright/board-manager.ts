@@ -55,11 +55,7 @@ export class ColumnManager {
       await this._page.mouse.down();
       // Allow the drag monitor to register the grab before moving.
       await this._page.waitForTimeout(100);
-      await this._page.mouse.move(
-        offset.x + box.x + box.width / 2,
-        offset.y + box.y + box.height / 2,
-        { steps: 4 },
-      );
+      await this._page.mouse.move(offset.x + box.x + box.width / 2, offset.y + box.y + box.height / 2, { steps: 4 });
       // Allow the drop target to process the hover before releasing.
       await this._page.waitForTimeout(100);
       await this._page.mouse.up();
@@ -86,11 +82,7 @@ export class ItemManager {
       await this._page.mouse.down();
       // Allow the drag monitor to register the grab before moving.
       await this._page.waitForTimeout(100);
-      await this._page.mouse.move(
-        offset.x + box.x + box.width / 2,
-        offset.y + box.y + box.height / 2,
-        { steps: 4 },
-      );
+      await this._page.mouse.move(offset.x + box.x + box.width / 2, offset.y + box.y + box.height / 2, { steps: 4 });
       // Allow the drop target to process the hover before releasing.
       await this._page.waitForTimeout(100);
       await this._page.mouse.up();
@@ -105,11 +97,7 @@ export class ItemManager {
    * @param dropTarget - The element to drop on once it scrolls into view.
    * @param dropOffset - Offset from the drop target center.
    */
-  async dragToEndWithAutoScroll(
-    holdTarget: Locator,
-    dropTarget: Locator,
-    dropOffset = { x: 0, y: 0 },
-  ): Promise<void> {
+  async dragToEndWithAutoScroll(holdTarget: Locator, dropTarget: Locator, dropOffset = { x: 0, y: 0 }): Promise<void> {
     const handle = this.locator.getByTestId('card-drag-handle');
     const holdBox = await holdTarget.boundingBox();
     if (!holdBox) {

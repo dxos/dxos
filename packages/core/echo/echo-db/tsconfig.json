@@ -5,10 +5,6 @@
       "@dxos/typings"
     ]
   },
-  "exclude": [
-    "**/*.blueprint-test.ts",
-    "**/*.test.ts"
-  ],
   "include": [
     "src"
   ],
