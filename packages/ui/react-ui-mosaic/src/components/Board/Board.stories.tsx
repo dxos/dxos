@@ -65,10 +65,11 @@ const DefaultStory = ({ debug = false }: StoryProps) => {
       getColumns: () => columns,
       getItems: (column: TestColumn) => column.items,
       onDeleteItem: (column: TestColumn, current: TestItem) => {
-        // TODO(burdon): Obj.change.
         const idx = model.getItems(column).findIndex((item) => item.target?.id === current?.id);
         if (idx !== -1) {
-          model.getItems(column).splice(idx, 1);
+          Obj.change(column, (mutableColumn) => {
+            model.getItems(mutableColumn).splice(idx, 1);
+          });
         }
       },
     } satisfies BoardModel<TestColumn, TestItem>;
