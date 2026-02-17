@@ -115,6 +115,12 @@ export const systemSememes = {
   separatorModal: contrastCadence(3, 3),
   subduedSeparator: contrastCadence(3, 1),
 
+  scrollbarTrack: contrastCadence(0),
+  scrollbarThumbSubdued: contrastCadence(1, 1),
+  scrollbarThumb: contrastCadence(2.5, 2.5),
+  scrollbarThumbHover: contrastCadence(3.5, 3.5),
+  scrollbarThumbActive: contrastCadence(4.5, 4.5),
+
   unAccent: {
     light: ['neutral', 400],
     dark: ['neutral', 400],
