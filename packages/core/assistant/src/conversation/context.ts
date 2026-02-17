@@ -16,7 +16,6 @@ import { type Queue } from '@dxos/echo-db';
 import { assertArgument } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ComplexSet, isTruthy } from '@dxos/util';
-import type { A } from 'vitest/dist/chunks/reporters.d.BFLkQcL6.js';
 
 /**
  * Thread message that binds or unbinds contextual objects to a conversation.

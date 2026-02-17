@@ -1,6 +1,12 @@
+//
+// Copyright 2026 DXOS.org
+//
+
 import * as Schema from 'effect/Schema';
-import * as Chat from '../chat/Chat';
+
 import { Obj, Type } from '@dxos/echo';
+
+import * as Chat from '../chat/Chat';
 
 export const TaskId = Schema.String.pipe(Schema.brand('@dxos/assistant-toolkit/TaskId'));
 export type TaskId = Schema.Schema.Type<typeof TaskId>;

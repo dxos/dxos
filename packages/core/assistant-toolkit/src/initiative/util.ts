@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Function from 'effect/Function';
 
 import { AiContextBinder, AiContextService, type ContextBinding } from '@dxos/assistant';
 import { type Blueprint } from '@dxos/blueprints';
@@ -17,8 +18,7 @@ import type { Message } from '@dxos/types';
 import * as Chat from '../chat/Chat';
 
 import { Initiative } from './Initiative';
-import { pipe } from 'effect/Function';
-import { makePlan, Plan } from './plan';
+import { makePlan } from './plan';
 
 /**
  * Creates a fully initialized Initiative with chat, queue, and context bindings.
@@ -128,7 +128,7 @@ export const resetChatHistory = (
   }).pipe(Effect.scoped);
 
 export const getFromChatContext: Effect.Effect<Initiative, never, AiContextService> = Effect.gen(function* () {
-  const initiatives = yield* pipe(AiContextService.findObjects(Initiative));
+  const initiatives = yield* Function.pipe(AiContextService.findObjects(Initiative));
   if (initiatives.length !== 1) {
     throw new Error('There should be exactly one initiative in context. Got: ' + initiatives.length);
   }

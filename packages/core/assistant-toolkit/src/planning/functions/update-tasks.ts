@@ -1,11 +1,16 @@
-import { Effect, Schema } from 'effect';
-import { defineFunction } from '@dxos/functions';
-import * as Initiative from '../../initiative';
-import { AiContextService } from '@dxos/assistant';
+//
+// Copyright 2026 DXOS.org
+//
 
-import { trim } from '@dxos/util';
-import type { Mutable } from 'effect/Types';
+import * as Effect from 'effect/Effect';
+import * as Schema from 'effect/Schema';
+
+import { AiContextService } from '@dxos/assistant';
 import { Database, Obj } from '@dxos/echo';
+import { defineFunction } from '@dxos/functions';
+import { trim } from '@dxos/util';
+
+import * as Initiative from '../../initiative';
 
 const INSTRUCTIONS = trim`
 TASK MANAGEMENT TOOL - USAGE GUIDELINES

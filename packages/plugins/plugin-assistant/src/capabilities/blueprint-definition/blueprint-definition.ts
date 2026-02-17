@@ -15,10 +15,10 @@ import {
   Initiative,
   Linear,
   LinearBlueprint,
+  Planning,
   Research,
   ResearchBlueprint,
   WebSearchBlueprint,
-  Planning,
 } from '@dxos/assistant-toolkit';
 import { type Blueprint } from '@dxos/blueprints';
 

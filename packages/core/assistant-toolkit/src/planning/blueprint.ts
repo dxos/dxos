@@ -1,7 +1,9 @@
+//
+// Copyright 2026 DXOS.org
+//
+
 import { Blueprint } from '@dxos/blueprints';
-import { Ref } from '@dxos/echo';
-import { Text } from '@dxos/schema';
-import { trim } from '@dxos/util';
+
 import { updateTasks } from './functions';
 
 export const PlanningBlueprint = Blueprint.make({

@@ -4,17 +4,13 @@
 
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
-import * as Array from 'effect/Array';
-import * as Option from 'effect/Option';
 
 import { AiContextService } from '@dxos/assistant';
 import { Database, Obj } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
 
-import * as Initiative from '../Initiative';
-import { pipe } from 'effect/Function';
-import { getFromChatContext } from '../util';
 import { formatPlan } from '../plan';
+import { getFromChatContext } from '../util';
 
 export default defineFunction({
   key: 'dxos.org/function/initiative/get-context',

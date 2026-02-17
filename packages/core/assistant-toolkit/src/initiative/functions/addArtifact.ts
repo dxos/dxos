@@ -9,7 +9,6 @@ import { AiContextService } from '@dxos/assistant';
 import { Database, Obj, Type } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
 
-import * as Initiative from '../Initiative';
 import { getFromChatContext } from '../util';
 
 export default defineFunction({

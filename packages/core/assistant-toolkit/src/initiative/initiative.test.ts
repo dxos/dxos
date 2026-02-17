@@ -5,11 +5,13 @@
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
+import * as Record from 'effect/Record';
 
 import { MemoizedAiService } from '@dxos/ai/testing';
-import { AiContextService, AiConversation, AiConversationService } from '@dxos/assistant';
+import { AiConversation } from '@dxos/assistant';
 import { AssistantTestLayerWithTriggers } from '@dxos/assistant/testing';
 import { Blueprint } from '@dxos/blueprints';
+import { SpaceProperties } from '@dxos/client-protocol';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
@@ -20,19 +22,16 @@ import { ObjectId } from '@dxos/keys';
 import { MarkdownBlueprint } from '@dxos/plugin-markdown/blueprints';
 import { WithProperties } from '@dxos/plugin-markdown/testing';
 import { Markdown } from '@dxos/plugin-markdown/types';
-import { Text, Collection } from '@dxos/schema';
+import { Collection, Text } from '@dxos/schema';
 import { Message } from '@dxos/types';
 import { trim } from '@dxos/util';
-import { SpaceProperties } from '@dxos/client-protocol';
 
+import { Planning } from '..';
 import { Chat } from '../chat';
-import { Document } from '../functions';
 
 import { agent } from './functions';
 
 import * as Initiative from '.';
-import { Planning } from '..';
-import { Layer, Record } from 'effect';
 
 ObjectId.dangerouslyDisableRandomness();
 
