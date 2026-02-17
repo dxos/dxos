@@ -58,7 +58,7 @@ const BoardColumnRootInner = forwardRef<HTMLDivElement, PropsWithChildren<BoardC
         <Focus.Group
           // NOTE: Width reserves 2px for outer Focus.Group border.
           classNames={mx(
-            'grid bs-full is-[calc(100vw-2px)] md:is-card-default-width snap-center bg-deckSurface',
+            'bs-full overflow-hidden is-[calc(100vw-2px)] md:is-card-default-width snap-center bg-deckSurface',
             classNames,
           )}
           ref={forwardedRef}
@@ -181,38 +181,47 @@ const DefaultBoardColumn = forwardRef<HTMLDivElement, DefaultBoardColumnProps>(
     const { t } = useTranslation(translationKey);
     const [DebugInfo, debugHandler] = useContainerDebug(debug);
     const dragHandleRef = useRef<HTMLButtonElement>(null);
+    // const style = useMemo(
+    //   () => ({
+    //     gridTemplateRows: [toolbar && 'var(--toolbar-size)', '1fr', debug ? '20rem' : 'var(--toolbar-size)']
+    //       .filter(Boolean)
+    //       .join(' '),
+    //   }),
+    //   [debug],
+    // );
 
     return (
-      <BoardColumnRootInner
-        classNames={mx(
-          'group/column',
-          debug ? 'grid-rows-[min-content_1fr_20rem]' : 'grid-rows-[min-content_1fr_min-content]',
-          classNames,
-        )}
-        location={location}
-        data={data}
-        dragHandleRef={dragHandleRef}
-        ref={forwardedRef}
-      >
-        <BoardColumnHeader
-          classNames='border-be border-separator'
-          label={Obj.getLabel(data) ?? data.id}
-          dragHandleRef={dragHandleRef}
-        />
-        <BoardColumnBody data={data} Tile={Tile} debug={debugHandler} />
-        <div role='none' className='border-bs border-separator'>
-          {model.onItemCreate && (
-            <Toolbar.Root classNames='rounded-s rounded-sm'>
-              <IconButton
-                classNames='group-hover/column:opacity-100 opacity-0 transition transition-opacity duration-500'
-                variant='ghost'
-                icon='ph--plus--regular'
-                iconOnly
-                label={t('add item label')}
-              />
-            </Toolbar.Root>
+      <BoardColumnRootInner location={location} data={data} dragHandleRef={dragHandleRef} ref={forwardedRef}>
+        <div
+          role='none'
+          className={mx(
+            'group/column bs-full grid overflow-hidden',
+            debug
+              ? 'grid-rows-[var(--rail-action)_1fr_20rem]'
+              : 'grid-rows-[var(--rail-action)_1fr_var(--rail-action)]',
+            classNames,
           )}
-          <DebugInfo />
+        >
+          <BoardColumnHeader
+            classNames='border-be border-separator'
+            label={Obj.getLabel(data) ?? data.id}
+            dragHandleRef={dragHandleRef}
+          />
+          <BoardColumnBody data={data} Tile={Tile} debug={debugHandler} />
+          <div role='none' className='flex flex-col border-bs border-separator'>
+            {model.onItemCreate && (
+              <Toolbar.Root classNames='rounded-s rounded-sm'>
+                <IconButton
+                  classNames='group-hover/column:opacity-100 opacity-0 transition transition-opacity duration-500'
+                  variant='ghost'
+                  icon='ph--plus--regular'
+                  iconOnly
+                  label={t('add item label')}
+                />
+              </Toolbar.Root>
+            )}
+            <DebugInfo />
+          </div>
         </div>
       </BoardColumnRootInner>
     );
