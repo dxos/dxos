@@ -1,11 +1,17 @@
-import { Effect, type Record } from 'effect';
-import * as Stream from 'effect/Stream';
+//
+// Copyright 2026 DXOS.org
+//
+
+import type * as AiError from '@effect/ai/AiError';
 import * as Response from '@effect/ai/Response';
 import type * as Tool from '@effect/ai/Tool';
-import { Toolkit, type AiError } from '@effect/ai';
-import { Chunk } from 'effect';
-import { pipe } from 'effect';
-import { Schema } from 'effect';
+import * as Toolkit from '@effect/ai/Toolkit';
+import * as Chunk from 'effect/Chunk';
+import * as Effect from 'effect/Effect';
+import { pipe } from 'effect/Function';
+import type * as Record from 'effect/Record';
+import * as Schema from 'effect/Schema';
+import * as Stream from 'effect/Stream';
 
 /**
  * Removes the `tool-call` parts from the stream that contain parsed tool call parameters.

@@ -2,16 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as AiError from '@effect/ai/AiError';
-import * as Response from '@effect/ai/Response';
+import type * as Response from '@effect/ai/Response';
 import type * as Tool from '@effect/ai/Tool';
-import * as Toolkit from '@effect/ai/Toolkit';
-import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 import * as Predicate from 'effect/Predicate';
-import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 import type * as Types from 'effect/Types';
 

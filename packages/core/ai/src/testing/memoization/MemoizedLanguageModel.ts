@@ -20,8 +20,7 @@ import * as Stream from 'effect/Stream';
 import jsonStableStringify from 'json-stable-stringify';
 
 import { deepMapValues } from '@dxos/util';
-import { Cause, Chunk } from 'effect';
-import { dbg } from '@dxos/log';
+
 import { withoutToolCallParising } from '../../util';
 
 // Can be performance-intensive
@@ -150,7 +149,6 @@ export const make = (options: MakeProps): Effect.Effect<LanguageModel.Service> =
                       prompt: params.prompt,
                       response: parts,
                     };
-                    dbg(parts.map((part) => part.type));
                     yield* store.saveMemoizedConversation(conversation);
                   }),
                 ),
