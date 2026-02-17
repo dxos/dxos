@@ -68,8 +68,8 @@ const DefaultStory = ({ debug = false }: StoryProps) => {
       onItemDelete: (column: TestColumn, current: TestItem) => {
         const idx = model.getItems(column).findIndex((item) => item.target?.id === current?.id);
         if (idx !== -1) {
-          Obj.change(column, (mutableColumn) => {
-            model.getItems(mutableColumn).splice(idx, 1);
+          Obj.change(column, (column) => {
+            model.getItems(column).splice(idx, 1);
           });
         }
       },
@@ -90,10 +90,6 @@ const DefaultStory = ({ debug = false }: StoryProps) => {
       },
     } satisfies BoardModel<TestColumn, TestItem>;
   }, [space, columns]);
-
-  if (columns.length === 0) {
-    return <></>;
-  }
 
   return (
     <Mosaic.Root asChild debug={debug}>
