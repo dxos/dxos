@@ -55,8 +55,8 @@ const DefaultStory = ({ columns: columnsProp = 1, debug = false }: StoryProps) =
 
   const model = useMemo<BoardModel<TestColumn, TestItem>>(() => {
     return {
-      isColumn: (obj: Obj.Unknown): obj is TestColumn => obj instanceof TestColumn,
-      isItem: (obj: Obj.Unknown): obj is TestItem => obj instanceof TestItem,
+      isColumn: (obj: Obj.Unknown): obj is TestColumn => Obj.instanceOf(TestColumn, obj),
+      isItem: (obj: Obj.Unknown): obj is TestItem => Obj.instanceOf(TestItem, obj),
       getColumns: () => columns,
       getItems: (column: TestColumn) => column.items,
     } satisfies BoardModel<TestColumn, TestItem>;
