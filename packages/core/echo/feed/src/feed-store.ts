@@ -12,6 +12,8 @@ import { type SpaceId } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
 import { SqlTransaction } from '@dxos/sql-sqlite';
 
+import { PositionConflictError } from './errors';
+
 type AppendRequest = FeedProtocol.AppendRequest;
 type AppendResponse = FeedProtocol.AppendResponse;
 type Block = FeedProtocol.Block;
@@ -59,17 +61,17 @@ export class FeedStore {
     Effect.gen(function* () {
       const sql = yield* SqlClient.SqlClient;
 
-    // Feeds Table
-    yield* sql`CREATE TABLE IF NOT EXISTS feeds (
+      // Feeds Table
+      yield* sql`CREATE TABLE IF NOT EXISTS feeds (
         feedPrivateId INTEGER PRIMARY KEY AUTOINCREMENT,
         spaceId TEXT NOT NULL,
         feedId TEXT NOT NULL,
         feedNamespace TEXT
       )`;
-    yield* sql`CREATE UNIQUE INDEX IF NOT EXISTS idx_feeds_spaceId_feedId ON feeds(spaceId, feedId)`;
+      yield* sql`CREATE UNIQUE INDEX IF NOT EXISTS idx_feeds_spaceId_feedId ON feeds(spaceId, feedId)`;
 
-    // Blocks Table
-    yield* sql`CREATE TABLE IF NOT EXISTS blocks (
+      // Blocks Table
+      yield* sql`CREATE TABLE IF NOT EXISTS blocks (
         insertionId INTEGER PRIMARY KEY AUTOINCREMENT,
         feedPrivateId INTEGER NOT NULL,
         position INTEGER,
@@ -81,18 +83,18 @@ export class FeedStore {
         data BLOB NOT NULL,
         FOREIGN KEY(feedPrivateId) REFERENCES feeds(feedPrivateId)
       )`;
-    yield* sql`CREATE UNIQUE INDEX IF NOT EXISTS idx_blocks_feedPrivateId_position ON blocks(feedPrivateId, position)`;
-    yield* sql`CREATE UNIQUE INDEX IF NOT EXISTS idx_blocks_feedPrivateId_sequence_actorId ON blocks(feedPrivateId, sequence, actorId)`;
+      yield* sql`CREATE UNIQUE INDEX IF NOT EXISTS idx_blocks_feedPrivateId_position ON blocks(feedPrivateId, position)`;
+      yield* sql`CREATE UNIQUE INDEX IF NOT EXISTS idx_blocks_feedPrivateId_sequence_actorId ON blocks(feedPrivateId, sequence, actorId)`;
 
-    // Subscriptions Table
-    yield* sql`CREATE TABLE IF NOT EXISTS subscriptions (
+      // Subscriptions Table
+      yield* sql`CREATE TABLE IF NOT EXISTS subscriptions (
           subscriptionId TEXT PRIMARY KEY,
           expiresAt INTEGER NOT NULL,
           feedPrivateIds TEXT NOT NULL -- JSON array
       )`;
 
-    // Cursor Tokens Table
-    yield* sql`CREATE TABLE IF NOT EXISTS cursor_tokens (
+      // Cursor Tokens Table
+      yield* sql`CREATE TABLE IF NOT EXISTS cursor_tokens (
           spaceId TEXT PRIMARY KEY,
           token TEXT NOT NULL
       )`;
@@ -165,7 +167,7 @@ export class FeedStore {
         if (
           (request.position !== undefined ? 1 : 0) +
             (request.cursor !== undefined ? 1 : 0) +
-            (request.unpositionedOnly !== undefined ? 1 : 0) >
+            (request.unpositionedOnly === true ? 1 : 0) >
           1
         ) {
           return yield* Effect.die(new Error('Only one of position, cursor, or unpositionedOnly can be used'));
@@ -569,7 +571,7 @@ export class FeedStore {
   setPosition = (request: {
     spaceId: string;
     blocks: (Pick<Block, 'feedId' | 'actorId' | 'sequence' | 'position'> & { feedNamespace: string })[];
-  }): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> =>
+  }): Effect.Effect<void, SqlError.SqlError | PositionConflictError, SqlClient.SqlClient> =>
     Effect.gen(this, function* () {
       const sql = yield* SqlClient.SqlClient;
       for (const block of request.blocks) {
@@ -583,10 +585,14 @@ export class FeedStore {
         `;
         const current = existing[0];
         if (current?.position != null && current.position !== block.position) {
-          yield* Effect.die(
-            new Error(
-              `Block already has position ${current.position}, cannot set to ${block.position} (feedId=${block.feedId} actorId=${block.actorId} sequence=${block.sequence})`,
-            ),
+          yield* Effect.fail(
+            new PositionConflictError({
+              feedId: block.feedId,
+              actorId: block.actorId,
+              sequence: block.sequence,
+              currentPosition: current.position,
+              requestedPosition: block.position,
+            }),
           );
         }
         yield* sql`

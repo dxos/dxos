@@ -153,6 +153,37 @@ describe('Feed V2', () => {
     }).pipe(Effect.provide(TestLayer)),
   );
 
+  it.effect('should allow position query with unpositionedOnly false', () =>
+    Effect.gen(function* () {
+      const spaceId = SpaceId.random();
+      const feedId = ObjectId.random();
+
+      const feed = new FeedStore({ localActorId: ALICE, assignPositions: true });
+      yield* feed.migrate();
+
+      yield* feed.appendLocal([
+        {
+          spaceId,
+          feedId,
+          feedNamespace: WellKnownNamespaces.data,
+          data: new Uint8Array([1]),
+        },
+      ]);
+
+      const queryRes = yield* feed.query({
+        requestId: 'req-position-false',
+        spaceId,
+        feedNamespace: WellKnownNamespaces.data,
+        query: { feedIds: [feedId] },
+        position: -1,
+        unpositionedOnly: false,
+      });
+
+      expect(queryRes.blocks.length).toBe(1);
+      expect(queryRes.blocks[0].feedId).toBe(feedId);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
   it.effect('should assign monotonic insertionId', () =>
     Effect.gen(function* () {
       const feedStore = new FeedStore({ localActorId: ALICE, assignPositions: true });

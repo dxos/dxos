@@ -62,6 +62,7 @@ catalog:
   '@dxos/cli-linux-arm64': 0.8.3
   '@dxos/cli-linux-x64': 0.8.3
   '@dxos/cli-win32-x64': 0.8.3
+  '@dxos/errors': ^0.8.3
   '@dxos/protocols': ^0.8.3
   '@dxos/wa-sqlite': ^0.2.1
   '@effect-atom/atom': ^0.4.13
@@ -226,7 +227,6 @@ catalog:
   '@tauri-apps/plugin-process': ^2.3.0
   '@tauri-apps/plugin-shell': ^2.3.1
   '@tauri-apps/plugin-updater': ^2.9.0
-  tauri-plugin-web-auth-api: ^1.0.0
   '@testing-library/dom': ^10.4.1
   '@testing-library/jest-dom': ^6.9.1
   '@testing-library/react': ^16.3.0
@@ -638,6 +638,7 @@ catalog:
   tailwindcss: ~3.4.1
   tailwindcss-logical: ^3.0.0
   tailwindcss-radix: ^2.8.0
+  tauri-plugin-web-auth-api: ^1.0.0
   three: ^0.178.0
   todomvc-app-css: ^2.4.2
   todomvc-common: ^1.0.5

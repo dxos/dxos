@@ -144,6 +144,9 @@ catalogs:
     '@dnd-kit/utilities':
       specifier: ^3.2.0
       version: 3.2.0
+    '@dxos/errors':
+      specifier: ^0.8.3
+      version: 0.8.3
     '@dxos/wa-sqlite':
       specifier: ^0.2.1
       version: 0.2.1
@@ -5134,6 +5137,9 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../../common/effect
+      '@dxos/errors':
+        specifier: 'catalog:'
+        version: 0.8.3
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant
@@ -20519,6 +20525,9 @@ packages:
     resolution: {integrity: sha512-h65/pn2IPCCIWwdlR2BMLqRkDxpTEONA+HQW3n765HBijLYGyrnTCLa2YQt8VVjjSQD6EfFlTE6aS2Q/b6nb2g==}
     peerDependencies:
       react: ~19.2.3
+
+  '@dxos/errors@0.8.3':
+    resolution: {integrity: sha512-N4fVTt40oc+i23mpft6h74RF6X34S/suRdfjojFNBZa2ReF1laB5z/9WACl7nZR1KkA2zwYkyrqRvJALDfBNVg==}
 
   '@dxos/wa-sqlite@0.2.1':
     resolution: {integrity: sha512-RVktTCzwJ1ix1MP/LWDjpO1HOOP0JpnAtjB/Zp/csbrlBEhhYYpwIlgDJzCi1Ri4cWHOo04iy+YtlnjfshM1Zw==}
@@ -40505,6 +40514,8 @@ snapshots:
     dependencies:
       react: 19.2.3
       tslib: 2.8.1
+
+  '@dxos/errors@0.8.3': {}
 
   '@dxos/wa-sqlite@0.2.1': {}
 
