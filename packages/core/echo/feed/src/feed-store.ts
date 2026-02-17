@@ -430,6 +430,7 @@ export class FeedStore {
               positionToInsert = block.position;
             }
 
+            // TODO(mykola): Conflict means failure, we need to handle it.
             yield* sql`
               INSERT INTO blocks (
                 feedPrivateId, position, sequence, actorId, 
