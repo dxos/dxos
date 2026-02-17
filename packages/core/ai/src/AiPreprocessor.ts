@@ -205,7 +205,7 @@ const convertAssistantMessagePart: (
         return Prompt.makePart('tool-call', {
           id: block.toolCallId,
           name: block.name,
-          params: JSON.parse(block.input),
+          params: block.input === '' ? {} : JSON.parse(block.input),
           providerExecuted: block.providerExecuted,
         });
       case 'toolResult':

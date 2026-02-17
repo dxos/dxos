@@ -25,7 +25,7 @@ import { type Blueprint } from '@dxos/blueprints';
 import { todo } from '@dxos/debug';
 import { Obj } from '@dxos/echo';
 import { type FunctionInvocationService, TracingService } from '@dxos/functions';
-import { log } from '@dxos/log';
+import { dbg, log } from '@dxos/log';
 import { Message } from '@dxos/types';
 
 import { type AiAssistantError } from '../errors';
@@ -157,8 +157,6 @@ export class AiSession {
         );
         // eslint-disable-next-line no-console
         console.timeEnd('streamText');
-
-        // log('blocks', { blocks });
 
         // Create the response message.
         const response = yield* submitMessage(
