@@ -8,6 +8,7 @@ import { type PostHogConfig } from 'posthog-js';
 import { type Config } from '@dxos/config';
 import { log } from '@dxos/log';
 
+import { LogBuffer } from '../../log-buffer';
 import { type Extension } from '../../observability-extension';
 import { stubExtension } from '../stub';
 
@@ -18,6 +19,26 @@ export type ExtensionsOptions = {
   /** Deployment environment, e.g. `production` or `staging`. */
   environment?: string;
   posthog?: Partial<PostHogConfig>;
+};
+
+/** Upload serialized logs to the feedback-logs endpoint. Returns the R2 key on success. */
+const uploadLogs = async (body: string): Promise<string | undefined> => {
+  try {
+    const response = await fetch('/api/feedback-logs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-ndjson' },
+      body,
+    });
+    if (!response.ok) {
+      log.warn('feedback log upload failed', { status: response.status });
+      return undefined;
+    }
+    const { key } = await response.json();
+    return key;
+  } catch (err) {
+    log.warn('feedback log upload error', { error: err });
+    return undefined;
+  }
 };
 
 /** Create a PostHog-backed observability extension for events, errors, and feedback. */
@@ -42,6 +63,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
 
   const { default: posthog } = yield* Effect.promise(() => import('posthog-js'));
   const { logProcessor } = yield* Effect.promise(() => import('./log-processor'));
+  const logBuffer = new LogBuffer();
   let feedbackSurveyAvailable: boolean | null = null;
 
   const checkFeedbackSurveyAvailable = (): Effect.Effect<boolean> =>
@@ -77,12 +99,15 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
           });
         }
         log.runtimeConfig.processors.push(logProcessor);
+        log.runtimeConfig.processors.push(logBuffer.logProcessor);
       }),
     close: () =>
       Effect.sync(() => {
-        const index = log.runtimeConfig.processors.indexOf(logProcessor);
-        if (index !== -1) {
-          log.runtimeConfig.processors.splice(index, 1);
+        for (const processor of [logProcessor, logBuffer.logProcessor]) {
+          const index = log.runtimeConfig.processors.indexOf(processor);
+          if (index !== -1) {
+            log.runtimeConfig.processors.splice(index, 1);
+          }
         }
       }),
     enable: () => Effect.sync(() => posthog.opt_in_capturing()),
@@ -118,11 +143,16 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
         kind: 'feedback',
         // TODO(wittjosiah): Support custom surveys.
         captureUserFeedback: (form) => {
-          posthog.getSurveys((surveys) => {
+          posthog.getSurveys(async (surveys) => {
             const survey = surveys.find((survey) => survey.id === feedbackSurveyId);
             if (!survey || survey.questions.length === 0) {
               log.error('Missing feedback survey or survey has no questions', { feedbackSurveyId });
               return;
+            }
+
+            let debugLogDumpKey: string | undefined;
+            if (form.includeLogs !== false && logBuffer.size > 0) {
+              debugLogDumpKey = await uploadLogs(logBuffer.serialize());
             }
 
             // https://posthog.com/docs/surveys/implementing-custom-surveys
@@ -131,6 +161,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
               $survey_id: survey.id,
               $survey_questions: [{ id: question.id, question: question.question }],
               [`$survey_response_${question.id}`]: form.message,
+              ...(debugLogDumpKey ? { debug_log_dump_key: debugLogDumpKey } : {}),
             });
           });
         },

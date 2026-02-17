@@ -70,7 +70,7 @@ export type ExtensionApi =
  * Feedback form to be captured by the feedback extension.
  */
 // TODO(wittjosiah): Support more form fields (e.g., PostHog custom surveys).
-export type FeedbackForm = { message: string };
+export type FeedbackForm = { message: string; includeLogs?: boolean };
 
 /**
  * Attributes to be attached to observability events.

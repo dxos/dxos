@@ -69,7 +69,7 @@ export default Capability.makeModule(
         operation: ObservabilityOperation.CaptureUserFeedback,
         handler: Effect.fnUntraced(function* (input) {
           const observability = yield* Capability.get(ObservabilityCapabilities.Observability);
-          observability.feedback.captureUserFeedback({ message: input.message });
+          observability.feedback.captureUserFeedback({ message: input.message, includeLogs: input.includeLogs });
         }),
       }),
     ]);

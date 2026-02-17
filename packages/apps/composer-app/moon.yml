@@ -15,14 +15,16 @@ tasks:
     deps:
       - prebuild
   prebuild:
-    command: pnpm run --silent copy:assets
+    script: pnpm run --silent copy:assets && pnpm run --silent build:functions
     deps:
       - ^:prebuild
     inputs:
       - package.json
       - moon.yml
+      - src/functions/_worker.ts
     outputs:
       - public/assets/plugin-sketch
+      - out/composer/_worker.js
   serve:
     deps:
       - prebuild
