@@ -16,15 +16,15 @@ tasks:
       - $DX_LABS
       - $DX_MINIFY
       - $DX_PWA
-      - $DX_SENTRY_DESTINATION
+      - $DX_POSTHOG_API_KEY
+      - $DX_POSTHOG_API_HOST
+      - $DX_POSTHOG_FEEDBACK_SURVEY_ID
       - $DX_SHARED_WORKER
-      - $DX_TELEMETRY_API_KEY
       - $LOG_FILTER
       - $LOG_PREFIX
       - $NODE_ENV
       - $NODE_OPTIONS
       - $REMOTE_SOURCE
-      - $SENTRY_RELEASE_AUTH_TOKEN
     outputs:
       - out
   serve:

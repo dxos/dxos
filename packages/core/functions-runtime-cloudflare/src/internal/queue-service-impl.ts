@@ -4,21 +4,14 @@
 
 import { NotImplementedError, RuntimeServiceError } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
-import { type QueueService as QueueServiceProto } from '@dxos/protocols';
-import type {
-  DeleteFromQueueRequest,
-  EdgeFunctionEnv,
-  InsertIntoQueueRequest,
-  QueryQueueRequest,
-  QueryResult,
-} from '@dxos/protocols';
+import { type EdgeFunctionEnv, type FeedProtocol } from '@dxos/protocols';
 
-export class QueueServiceImpl implements QueueServiceProto {
+export class QueueServiceImpl implements FeedProtocol.QueueService {
   constructor(
     protected _ctx: EdgeFunctionEnv.ExecutionContext,
     private readonly _queueService: EdgeFunctionEnv.QueueService,
   ) {}
-  async queryQueue(request: QueryQueueRequest): Promise<QueryResult> {
+  async queryQueue(request: FeedProtocol.QueryQueueRequest): Promise<FeedProtocol.QueryResult> {
     const { query } = request;
     const { queueIds, ...filter } = query!;
     const spaceId = query!.spaceId;
@@ -46,7 +39,7 @@ export class QueueServiceImpl implements QueueServiceProto {
     }
   }
 
-  async insertIntoQueue(request: InsertIntoQueueRequest): Promise<void> {
+  async insertIntoQueue(request: FeedProtocol.InsertIntoQueueRequest): Promise<void> {
     const { subspaceTag, spaceId, queueId, objects } = request;
     try {
       await this._queueService.append(this._ctx, `dxn:queue:${subspaceTag}:${spaceId}:${queueId}`, objects ?? []);
@@ -59,7 +52,7 @@ export class QueueServiceImpl implements QueueServiceProto {
     }
   }
 
-  deleteFromQueue(request: DeleteFromQueueRequest): Promise<void> {
+  deleteFromQueue(request: FeedProtocol.DeleteFromQueueRequest): Promise<void> {
     const { subspaceTag, spaceId, queueId } = request;
     throw new NotImplementedError({
       message: 'Deleting from queue is not supported.',

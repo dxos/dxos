@@ -192,7 +192,7 @@ export default Capability.makeModule(
                 const runtime = computeRuntime.getRuntime(db.spaceId);
                 yield* Effect.tryPromise(() =>
                   runtime.runPromise(
-                    invokeFunctionWithTracing(calendar.sync, { calendarId: Obj.getDXN(cal).toString() }),
+                    invokeFunctionWithTracing(calendar.sync, { calendar: Ref.fromDXN(Obj.getDXN(cal)) }),
                   ),
                 );
               }),

@@ -7,9 +7,7 @@ import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
-import { ArtifactId } from '@dxos/assistant';
-import { Entity } from '@dxos/echo';
-import { Database } from '@dxos/echo';
+import { Database, Entity, Type } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
 
 // TODO(burdon): Move to toolkit (i.e., tool not function).
@@ -18,8 +16,7 @@ export default defineFunction({
   name: 'Load object',
   description: 'Loads the object.',
   inputSchema: Schema.Struct({
-    // TODO(dmaretskyi): Use Ref.
-    id: ArtifactId.annotations({
+    object: Type.Ref(Type.Obj).annotations({
       description: 'The ID of the object.',
     }),
     typename: Schema.String.annotations({
@@ -30,16 +27,16 @@ export default defineFunction({
     // TODO(wittjosiah): Type.Entity.Any
     object: Schema.Any,
   }),
-  handler: Effect.fn(function* ({ data: { id, typename } }) {
-    const object = yield* Database.resolve(ArtifactId.toDXN(id));
+  handler: Effect.fn(function* ({ data: { object, typename } }) {
+    const loadedObject = yield* Database.load(object);
     return yield* Function.pipe(
-      Option.fromNullable(object),
-      Option.flatMap((object) => (Entity.getTypename(object) === typename ? Option.some(object) : Option.none())),
+      Option.fromNullable(loadedObject),
+      Option.flatMap((obj) => (Entity.getTypename(obj) === typename ? Option.some(obj) : Option.none())),
       Option.match({
         onNone: () => Effect.fail('Object not found.'),
-        onSome: (object) => {
-          // log.info('object', { object });
-          return Effect.succeed({ object });
+        onSome: (obj) => {
+          // log.info('object', { object: obj });
+          return Effect.succeed({ object: obj });
         },
       }),
     );

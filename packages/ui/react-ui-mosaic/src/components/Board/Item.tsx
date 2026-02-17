@@ -5,7 +5,7 @@
 import { useComposedRefs } from '@radix-ui/react-compose-refs';
 import React, { type ReactElement, type Ref as ReactRef, forwardRef, useRef } from 'react';
 
-import { Obj, type Ref } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
 import { Tag } from '@dxos/react-ui';
 import { getHashStyles } from '@dxos/ui-theme';
 
@@ -20,38 +20,42 @@ import { Mosaic, type MosaicTileProps } from '../Mosaic';
 const BOARD_ITEM_NAME = 'Board.Item';
 
 type BoardItemProps<TItem extends Obj.Unknown = any> = Pick<
-  MosaicTileProps<Ref.Ref<TItem>>,
+  MosaicTileProps<TItem>,
   'classNames' | 'location' | 'data' | 'debug'
 >;
 
 const BoardItemInner = forwardRef<HTMLDivElement, BoardItemProps>(
-  ({ classNames, data: ref, location, debug }, forwardedRef) => {
+  ({ classNames, data, location, debug }, forwardedRef) => {
     const rootRef = useRef<HTMLDivElement>(null);
     const composedRef = useComposedRefs<HTMLDivElement>(rootRef, forwardedRef);
     const dragHandleRef = useRef<HTMLButtonElement>(null);
-    const object = ref.target;
-    if (!object) {
+    if (!data) {
       return null;
     }
 
-    const label = Obj.getLabel(object);
-    const description = Obj.getDescription(object);
+    const label = Obj.getLabel(data);
+    const description = Obj.getDescription(data);
 
     return (
       <Mosaic.Tile
         asChild
         dragHandle={dragHandleRef.current}
-        id={ref.dxn.toString()}
-        data={ref}
+        id={data.id}
+        data={data}
         location={location}
         debug={debug}
       >
         <Focus.Group asChild>
-          <Card.Root classNames={classNames} onClick={() => rootRef.current?.focus()} ref={composedRef}>
+          <Card.Root
+            classNames={classNames}
+            data-testid='board-item'
+            onClick={() => rootRef.current?.focus()}
+            ref={composedRef}
+          >
             <Card.Toolbar>
               <Card.DragHandle ref={dragHandleRef} />
               <Card.Title>{label}</Card.Title>
-              <Card.Menu context={object} />
+              <Card.Menu context={data} />
             </Card.Toolbar>
             {/* TODO(burdon): Replace with surface. */}
             <Card.Row icon='ph--note--regular' classNames='text-description'>

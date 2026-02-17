@@ -27,9 +27,11 @@ const reduceRefinements = (
   refinements: SchemaAST.Refinement['filter'][] = [],
 ): { type: SchemaAST.AST; refinements: SchemaAST.Refinement['filter'][] } => {
   if (SchemaAST.isRefinement(type)) {
-    const annotations = type.annotations;
     const filter = type.filter;
-    const nextType = { ...type.from, annotations: { ...type.annotations, ...annotations } } as SchemaAST.AST;
+    const nextType = {
+      ...type.from,
+      annotations: { ...type.from.annotations, ...type.annotations },
+    } as SchemaAST.AST;
     return reduceRefinements(nextType, [...refinements, filter]);
   }
 

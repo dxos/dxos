@@ -16,7 +16,7 @@ import { createBuf } from '@dxos/protocols/buf';
 import type { Peer } from '@dxos/protocols/proto/dxos/edge/messenger';
 import { openAndClose } from '@dxos/test-utils';
 
-import type { EchoReplicatorContext, ReplicatorConnection } from '../automerge';
+import type { AutomergeReplicatorConnection, AutomergeReplicatorContext } from '../automerge';
 
 import { EchoEdgeReplicator } from './echo-edge-replicator';
 
@@ -79,7 +79,7 @@ describe('EchoEdgeReplicator', () => {
     });
   });
 
-  const connectReplicator = async (client: EdgeClient, context: EchoReplicatorContext) => {
+  const connectReplicator = async (client: EdgeClient, context: AutomergeReplicatorContext) => {
     // EdgeHttpClient functionality is not tested here.
     const replicator = new EchoEdgeReplicator({ edgeConnection: client, edgeHttpClient: {} as EdgeHttpClient });
     await replicator.connect(context);
@@ -101,7 +101,7 @@ const createMockContext = (args?: {
   documentSpaceId?: { [documentId: string]: SpaceId };
 }) => {
   const connectionOpen = new Event();
-  const openConnections: ReplicatorConnection[] = [];
+  const openConnections: AutomergeReplicatorConnection[] = [];
   return {
     context: {
       getContainingSpaceIdForDocument: async (documentId) => args?.documentSpaceId?.[documentId] ?? null,
@@ -121,7 +121,7 @@ const createMockContext = (args?: {
       },
 
       peerId: PublicKey.random().toHex(),
-    } satisfies EchoReplicatorContext,
+    } satisfies AutomergeReplicatorContext,
 
     openConnections,
     connectionOpen,

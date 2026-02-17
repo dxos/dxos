@@ -94,7 +94,7 @@ type BoardColumnHeaderProps = ThemedClassName<{ label: string; dragHandleRef: Re
 const BoardColumnHeader = forwardRef<HTMLDivElement, BoardColumnHeaderProps>(
   ({ classNames, label, dragHandleRef }, forwardedRef) => {
     return (
-      <Card.Toolbar classNames={classNames} ref={forwardedRef}>
+      <Card.Toolbar classNames={classNames} data-testid='board-column-header' ref={forwardedRef}>
         <Card.DragHandle ref={dragHandleRef} />
         <Card.Title>{label}</Card.Title>
         <Card.Menu items={[]} />
@@ -112,7 +112,7 @@ BoardColumnHeader.displayName = BOARD_COLUMN_HEADER_NAME;
 const BOARD_COLUMN_BODY_NAME = 'Board.Column.Body';
 
 type BoardColumnBodyProps = Pick<BoardColumnProps, 'data'> & {
-  Tile?: StackProps<Ref.Ref<Obj.Unknown>>['Tile'];
+  Tile?: StackProps<Obj.Unknown>['Tile'];
 } & Pick<MosaicContainerProps, 'debug'>;
 
 const BoardColumnBody = ({ data, Tile = BoardItem, debug }: BoardColumnBodyProps) => {
@@ -123,12 +123,15 @@ const BoardColumnBody = ({ data, Tile = BoardItem, debug }: BoardColumnBodyProps
 
   const eventHandler = useEventHandlerAdapter<Ref.Unknown>({
     id: data.id,
-    items: model.getItems(column),
-    getId: (data) => data.dxn.toString(),
-    get: (data) => data.target!,
+    items: column?.items ?? [],
+    getId: (ref) => ref.target?.id ?? ref.dxn.toString(),
+    get: (refOrObj) => (Ref.isRef(refOrObj) ? refOrObj.target! : refOrObj),
     make: (object) => Ref.make(object),
-    canDrop: ({ source }) => (source.data.target ? model.isItem(source.data.target) : false),
-    onChange: (mutator) => updateColumn((column) => mutator(model.getItems(column))),
+    canDrop: ({ source }) => {
+      const item = Ref.isRef(source.data) ? source.data.target : source.data;
+      return item != null && Obj.isObject(item) && model.isItem(item);
+    },
+    onChange: (mutator) => updateColumn((col) => mutator(col.items)),
   });
 
   // Context menu for items.
@@ -157,7 +160,7 @@ const BoardColumnBody = ({ data, Tile = BoardItem, debug }: BoardColumnBodyProps
       >
         <ScrollArea.Root orientation='vertical' thin margin padding>
           <ScrollArea.Viewport classNames='snap-y md:snap-none' ref={setViewport}>
-            <Mosaic.Stack items={model.getItems(column)} getId={(data) => data.dxn.toString()} Tile={Tile} />
+            <Mosaic.Stack items={model.getItems(data)} getId={(item) => item.id} Tile={Tile} />
           </ScrollArea.Viewport>
         </ScrollArea.Root>
       </Mosaic.Container>
@@ -173,21 +176,25 @@ BoardColumnBody.displayName = BOARD_COLUMN_BODY_NAME;
 
 const BOARD_COLUMN_FOOTER_NAME = 'Board.Column.Footer';
 
-type BoardColumnFooterProps = ThemedClassName;
+type BoardColumnFooterProps = ThemedClassName & {
+  data?: Obj.Unknown;
+};
 
-const BoardColumnFooter = forwardRef<HTMLDivElement, BoardColumnFooterProps>(({ classNames }, forwardedRef) => {
+const BoardColumnFooter = forwardRef<HTMLDivElement, BoardColumnFooterProps>(({ classNames, data }, forwardedRef) => {
   const { t } = useTranslation(translationKey);
   const { model } = useBoardContext(BOARD_COLUMN_FOOTER_NAME);
 
   return (
     <Toolbar.Root classNames={mx('rounded-b-sm', classNames)} ref={forwardedRef}>
-      {model.onItemCreate && (
+      {model.onItemCreate && data && (
         <IconButton
+          data-testid='board-column-add-item'
           classNames='group-hover/column:opacity-100 md:opacity-0 transition transition-opacity duration-500'
           variant='ghost'
           icon='ph--plus--regular'
           iconOnly
           label={t('add item label')}
+          onClick={() => void model.onItemCreate?.(data)}
         />
       )}
     </Toolbar.Root>
@@ -213,6 +220,7 @@ const DefaultBoardColumn = forwardRef<HTMLDivElement, DefaultBoardColumnProps>(
       <BoardColumnRootInner location={location} data={data} dragHandleRef={dragHandleRef} ref={forwardedRef}>
         <div
           role='none'
+          data-testid='board-column'
           className={mx(
             'group/column grid bs-full overflow-hidden',
             debug
@@ -228,7 +236,7 @@ const DefaultBoardColumn = forwardRef<HTMLDivElement, DefaultBoardColumnProps>(
           />
           <BoardColumnBody data={data} debug={debugHandler} Tile={Tile} />
           <div role='none' className='flex flex-col'>
-            <BoardColumnFooter classNames='border-bs border-separator' />
+            <BoardColumnFooter classNames='border-bs border-separator' data={data} />
             <DebugInfo />
           </div>
         </div>

@@ -65,7 +65,7 @@ export type State = {
   appKey: string;
   config: Config;
   services: ClientServicesProvider;
-  observability: Promise<Observability>;
+  observability: Promise<Observability.Observability>;
 };
 
 export type PluginConfig = State & {

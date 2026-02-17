@@ -86,6 +86,7 @@
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect-atom/atom": "catalog:",
+    "@effect/ai": "catalog:",
     "@effect/platform": "catalog:",
     "effect": "catalog:",
     "esbuild": "catalog:",

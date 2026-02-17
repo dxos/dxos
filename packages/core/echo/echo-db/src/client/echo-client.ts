@@ -6,7 +6,7 @@ import { type Context, ContextDisposedError, LifecycleState, Resource } from '@d
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type QueueService } from '@dxos/protocols';
+import { type FeedProtocol } from '@dxos/protocols';
 import { type QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 import { type DataService } from '@dxos/protocols/proto/dxos/echo/service';
 
@@ -21,7 +21,7 @@ export type EchoClientProps = {};
 export type ConnectToServiceProps = {
   dataService: DataService;
   queryService: QueryService;
-  queueService?: QueueService;
+  queueService?: FeedProtocol.QueueService;
 };
 
 export type ConstructDatabaseProps = {
@@ -63,7 +63,7 @@ export class EchoClient extends Resource {
 
   private _dataService: DataService | undefined = undefined;
   private _queryService: QueryService | undefined = undefined;
-  private _queuesService: QueueService | undefined = undefined;
+  private _queuesService: FeedProtocol.QueueService | undefined = undefined;
 
   private _indexQuerySourceProvider: IndexQuerySourceProvider | undefined = undefined;
 
@@ -173,7 +173,7 @@ export class EchoClient extends Resource {
   }: {
     dataService: DataService;
     queryService: QueryService;
-    queueService?: QueueService;
+    queueService?: FeedProtocol.QueueService;
   }): void {
     log('updating service references');
     this._dataService = dataService;

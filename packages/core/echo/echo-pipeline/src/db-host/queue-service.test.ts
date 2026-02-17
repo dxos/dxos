@@ -6,23 +6,29 @@ import type * as SqlClient from '@effect/sql/SqlClient';
 import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 
 import { RuntimeProvider } from '@dxos/effect';
 import { FeedStore } from '@dxos/feed';
 import { ObjectId, SpaceId } from '@dxos/keys';
+import { FeedProtocol } from '@dxos/protocols';
+import { SqlTransaction } from '@dxos/sql-sqlite';
 
 import { LocalQueueServiceImpl } from './local-queue-service';
 
-const TestLayer = SqliteClient.layer({
-  filename: ':memory:',
-});
+const TestLayer = SqlTransaction.layer.pipe(
+  Layer.provideMerge(
+    SqliteClient.layer({
+      filename: ':memory:',
+    }),
+  ),
+);
 
 describe('LocalQueueServiceImpl', () => {
   it.effect('should insert and query items', () =>
     Effect.gen(function* () {
-      const sql = yield* SqliteClient.SqliteClient;
       const feedStore = new FeedStore({ localActorId: 'actor-id', assignPositions: true });
-      const runtime = yield* RuntimeProvider.currentRuntime<SqlClient.SqlClient>();
+      const runtime = yield* RuntimeProvider.currentRuntime<SqlClient.SqlClient | SqlTransaction.SqlTransaction>();
       const service = new LocalQueueServiceImpl(runtime, feedStore);
       yield* feedStore.migrate();
 
@@ -33,7 +39,7 @@ describe('LocalQueueServiceImpl', () => {
 
       yield* Effect.promise(() =>
         service.insertIntoQueue({
-          subspaceTag: 'default',
+          subspaceTag: FeedProtocol.WellKnownNamespaces.data,
           spaceId,
           queueId,
           objects: [object1, object2],
@@ -52,7 +58,6 @@ describe('LocalQueueServiceImpl', () => {
 
   it.effect('should delete items', () =>
     Effect.gen(function* () {
-      const sql = yield* SqliteClient.SqliteClient;
       const runtime = Effect.succeed(yield* Effect.runtime<any>());
       const feedStore = new FeedStore({ localActorId: 'actor-id', assignPositions: true });
       const service = new LocalQueueServiceImpl(runtime, feedStore);
@@ -65,7 +70,7 @@ describe('LocalQueueServiceImpl', () => {
 
       yield* Effect.promise(() =>
         service.insertIntoQueue({
-          subspaceTag: 'default',
+          subspaceTag: FeedProtocol.WellKnownNamespaces.data,
           spaceId,
           queueId,
           objects: [object1],
@@ -73,7 +78,7 @@ describe('LocalQueueServiceImpl', () => {
       );
       yield* Effect.promise(() =>
         service.deleteFromQueue({
-          subspaceTag: 'default',
+          subspaceTag: FeedProtocol.WellKnownNamespaces.data,
           spaceId,
           queueId,
           objectIds: [object1Id],
@@ -92,7 +97,6 @@ describe('LocalQueueServiceImpl', () => {
 
   it.effect('should support pagination', () =>
     Effect.gen(function* () {
-      const sql = yield* SqliteClient.SqliteClient;
       const runtime = Effect.succeed(yield* Effect.runtime<any>());
       const feedStore = new FeedStore({ localActorId: 'actor-id', assignPositions: true });
       yield* feedStore.migrate();
@@ -104,7 +108,7 @@ describe('LocalQueueServiceImpl', () => {
       const items = Array.from({ length: 10 }, (_, i) => ({ id: `obj${i}`, data: `test${i}` }));
       yield* Effect.promise(() =>
         service.insertIntoQueue({
-          subspaceTag: 'default',
+          subspaceTag: FeedProtocol.WellKnownNamespaces.data,
           spaceId,
           queueId,
           objects: items,

@@ -6,23 +6,16 @@ import { inspect } from 'node:util';
 
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
-import * as Layer from 'effect/Layer';
 
-import { AiService, ConsolePrinter } from '@dxos/ai';
-import { MemoizedAiService, TestAiService } from '@dxos/ai/testing';
-import {
-  AiConversation,
-  type ContextBinding,
-  GenerationObserver,
-  makeToolExecutionServiceFromFunctions,
-  makeToolResolverFromFunctions,
-} from '@dxos/assistant';
+import { ConsolePrinter } from '@dxos/ai';
+import { MemoizedAiService } from '@dxos/ai/testing';
+import { AiConversation, type ContextBinding, GenerationObserver } from '@dxos/assistant';
+import { AssistantTestLayer } from '@dxos/assistant/testing';
 import { Blueprint } from '@dxos/blueprints';
 import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
-import { CredentialsService, FunctionInvocationService, QueueService, TracingService } from '@dxos/functions';
-import { FunctionInvocationServiceLayerTest, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
+import { FunctionInvocationService, QueueService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
 import { MarkdownBlueprint } from '@dxos/plugin-markdown/blueprints';
@@ -30,7 +23,6 @@ import { Markdown } from '@dxos/plugin-markdown/types';
 import { HasSubject, type Message, Organization } from '@dxos/types';
 
 import { ResearchBlueprint } from '../../blueprints';
-import { testToolkit } from '../../blueprints/testing';
 
 import { default as createDocument } from './document-create';
 import { default as research } from './research';
@@ -39,28 +31,10 @@ import { ResearchDataTypes } from './types';
 
 ObjectId.dangerouslyDisableRandomness();
 
-const TestLayer = Layer.mergeAll(
-  AiService.model('@anthropic/claude-opus-4-0'),
-  makeToolResolverFromFunctions([research, createDocument, ...MarkdownBlueprint.functions], testToolkit),
-  makeToolExecutionServiceFromFunctions(testToolkit, testToolkit.toLayer({}) as any),
-).pipe(
-  Layer.provideMerge(
-    FunctionInvocationServiceLayerTest({
-      functions: [research, createDocument, ...MarkdownBlueprint.functions],
-    }),
-  ),
-  Layer.provideMerge(
-    Layer.mergeAll(
-      TestAiService(),
-      TestDatabaseLayer({
-        spaceKey: 'fixed',
-        types: [...ResearchDataTypes, ResearchGraph, Blueprint.Blueprint, Markdown.Document, HasSubject.HasSubject],
-      }),
-      CredentialsService.configuredLayer([]),
-      TracingService.layerNoop,
-    ),
-  ),
-);
+const TestLayer = AssistantTestLayer({
+  functions: [research, createDocument, ...MarkdownBlueprint.functions],
+  types: [...ResearchDataTypes, ResearchGraph, Blueprint.Blueprint, Markdown.Document, HasSubject.HasSubject],
+});
 
 describe('Research', () => {
   it.effect(

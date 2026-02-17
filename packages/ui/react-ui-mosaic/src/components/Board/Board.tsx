@@ -2,10 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type Atom, useAtomValue } from '@effect-atom/atom-react';
 import { createContext } from '@radix-ui/react-context';
 import React, { type ReactElement, type Ref as ReactRef, forwardRef, useRef, useState } from 'react';
 
-import { type Obj, type Ref } from '@dxos/echo';
+import { type Obj } from '@dxos/echo';
 import { Layout, ScrollArea, type ThemedClassName } from '@dxos/react-ui';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
@@ -22,12 +23,13 @@ import { BoardItem, type BoardItemProps } from './Item';
 // Model
 //
 
-export interface BoardModel<TColumn extends Obj.Unknown = any, TItem extends Obj.Unknown = any> {
+export interface BoardModel<TColumn extends Obj.Unknown = Obj.Unknown, TItem extends Obj.Unknown = Obj.Unknown> {
   isColumn: (obj: Obj.Unknown) => obj is TColumn;
   isItem: (obj: Obj.Unknown) => obj is TItem;
-  // TODO(burdon): Normalize Column/Item object vs refs?
+  columns: Atom.Atom<TColumn[]>;
+  items: (column: TColumn) => Atom.Atom<TItem[]>;
   getColumns: () => TColumn[];
-  getItems: (column: TColumn) => Ref.Ref<TItem>[];
+  getItems: (column: TColumn) => TItem[];
   onColumnDelete?: (column: TColumn) => void;
   onColumnCreate?: () => Promise<TColumn>;
   onItemDelete?: (column: TColumn, item: TItem) => void;
@@ -40,7 +42,7 @@ export interface BoardModel<TColumn extends Obj.Unknown = any, TItem extends Obj
 
 const BOARD_NAME = 'Board';
 
-type BoardContextValue<TColumn extends Obj.Unknown = any, TItem extends Obj.Unknown = any> = {
+type BoardContextValue<TColumn extends Obj.Unknown = Obj.Unknown, TItem extends Obj.Unknown = Obj.Unknown> = {
   model: BoardModel<TColumn, TItem>;
 };
 
@@ -55,7 +57,10 @@ export const [BoardContextProvider, useBoardContext] = createContext<BoardContex
 
 const BOARD_ROOT_NAME = 'Board.Root';
 
-type BoardRootProps<TColumn extends Obj.Unknown = any, TItem extends Obj.Unknown = any> = ThemedClassName<
+type BoardRootProps<
+  TColumn extends Obj.Unknown = Obj.Unknown,
+  TItem extends Obj.Unknown = Obj.Unknown,
+> = ThemedClassName<
   {
     id: string;
     debug?: boolean;
@@ -68,7 +73,7 @@ const BoardRootInner = forwardRef<HTMLDivElement, BoardRootProps>(
     const [DebugInfo, debugHandler] = useContainerDebug(debug);
     const [viewport, setViewport] = useState<HTMLElement | null>(null);
 
-    const items = model.getColumns();
+    const items = useAtomValue(model.columns);
     const eventHandler = useEventHandlerAdapter({
       id,
       items,
@@ -106,8 +111,8 @@ const BoardRootInner = forwardRef<HTMLDivElement, BoardRootProps>(
 
 BoardRootInner.displayName = BOARD_ROOT_NAME;
 
-const BoardRoot = BoardRootInner as <TColumn extends Obj.Unknown>(
-  props: BoardRootProps<TColumn> & { ref?: ReactRef<HTMLDivElement> },
+const BoardRoot = BoardRootInner as <TColumn extends Obj.Unknown, TItem extends Obj.Unknown = Obj.Unknown>(
+  props: BoardRootProps<TColumn, TItem> & { ref?: ReactRef<HTMLDivElement> },
 ) => ReactElement;
 
 //
