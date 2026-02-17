@@ -12,7 +12,7 @@ import * as ManagedRuntime from 'effect/ManagedRuntime';
 import { Resource } from '@dxos/context';
 import { RuntimeProvider } from '@dxos/effect';
 import { type SpaceId } from '@dxos/keys';
-import { QueueProtocol } from '@dxos/protocols';
+import { FeedProtocol } from '@dxos/protocols';
 import { SqlTransaction } from '@dxos/sql-sqlite';
 import { layerMemory } from '@dxos/sql-sqlite/platform';
 import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
@@ -21,10 +21,10 @@ import { FeedStore } from '../feed-store';
 import { SyncClient } from '../sync-client';
 import { SyncServer } from '../sync-server';
 
-type ProtocolMessage = QueueProtocol.ProtocolMessage;
-const WellKnownNamespaces = QueueProtocol.WellKnownNamespaces;
-type AppendRequest = QueueProtocol.AppendRequest;
-type QueryRequest = QueueProtocol.QueryRequest;
+type ProtocolMessage = FeedProtocol.ProtocolMessage;
+const WellKnownNamespaces = FeedProtocol.WellKnownNamespaces;
+type AppendRequest = FeedProtocol.AppendRequest;
+type QueryRequest = FeedProtocol.QueryRequest;
 
 export class TestBuilder extends Resource {
   #peers: TestPeer[] = [];

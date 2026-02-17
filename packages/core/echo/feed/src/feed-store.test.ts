@@ -9,14 +9,14 @@ import * as Layer from 'effect/Layer';
 
 import { ObjectId, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { QueueProtocol } from '@dxos/protocols';
+import { FeedProtocol } from '@dxos/protocols';
 import { SqlTransaction } from '@dxos/sql-sqlite';
 
 import { FeedStore } from './feed-store';
 
-const Block = QueueProtocol.Block;
-type Block = QueueProtocol.Block;
-const WellKnownNamespaces = QueueProtocol.WellKnownNamespaces;
+const Block = FeedProtocol.Block;
+type Block = FeedProtocol.Block;
+const WellKnownNamespaces = FeedProtocol.WellKnownNamespaces;
 
 const TestLayer = SqlTransaction.layer.pipe(
   Layer.provideMerge(

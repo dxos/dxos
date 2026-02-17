@@ -6,12 +6,12 @@ import { describe, expect, test } from '@effect/vitest';
 
 import { RuntimeProvider } from '@dxos/effect';
 import { ObjectId, SpaceId } from '@dxos/keys';
-import { QueueProtocol } from '@dxos/protocols';
+import { FeedProtocol } from '@dxos/protocols';
 import { range } from '@dxos/util';
 
 import { TestBuilder } from './testing';
 
-const WellKnownNamespaces = QueueProtocol.WellKnownNamespaces;
+const WellKnownNamespaces = FeedProtocol.WellKnownNamespaces;
 
 describe('Sync', () => {
   const LOG_SQL = false;
