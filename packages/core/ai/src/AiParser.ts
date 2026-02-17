@@ -2,12 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as AiError from '@effect/ai/AiError';
 import * as Response from '@effect/ai/Response';
 import type * as Tool from '@effect/ai/Tool';
+import * as Toolkit from '@effect/ai/Toolkit';
+import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 import * as Predicate from 'effect/Predicate';
+import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 import type * as Types from 'effect/Types';
 
@@ -18,10 +22,6 @@ import { log } from '@dxos/log';
 import { type ContentBlock } from '@dxos/types';
 
 import { type StreamBlock, StreamTransform } from './parser';
-import { AiError, MalformedOutput } from '@effect/ai/AiError';
-import { ParseError } from '@effect/ai/McpSchema';
-import { Chunk, Schema } from 'effect';
-import { Toolkit } from '@effect/ai';
 
 /**
  * Tags that are used by the model to indicate the type of content.
@@ -378,7 +378,7 @@ export const parseResponse =
               // Sometimes the model can output tool parameters that don't match the tool schema.
               // Instead of failing the entire request, we want to error this specific tool call only and return the error to the model.
               // This way the model can retry the request with the correct tool parameters.
-              if (error instanceof MalformedOutput) {
+              if (error instanceof AiError.MalformedOutput) {
                 const actual = (error.cause as any)?.issue?.actual;
                 if (Chunk.isChunk(actual)) {
                   // Assuming the error is always caused by decoding the stream parts.
