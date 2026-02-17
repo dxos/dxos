@@ -34,9 +34,7 @@ type ToastViewportProps = ThemedClassName<ToastViewportPrimitiveProps>;
 
 const ToastViewport = forwardRef<HTMLOListElement, ToastViewportProps>(({ classNames, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
-  return (
-    <ToastViewportPrimitive className={tx('toast.viewport', {}, classNames)} ref={forwardedRef} />
-  );
+  return <ToastViewportPrimitive className={tx('toast.viewport', {}, classNames)} ref={forwardedRef} />;
 });
 
 type ToastRootProps = ThemedClassName<ToastRootPrimitiveProps>;
@@ -74,9 +72,7 @@ const ToastDescription = forwardRef<HTMLParagraphElement, ToastDescriptionProps>
   ({ asChild, classNames, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     const Root = asChild ? Slot : ToastDescriptionPrimitive;
-    return (
-      <Root {...props} className={tx('toast.description', {}, classNames)} ref={forwardedRef} />
-    );
+    return <Root {...props} className={tx('toast.description', {}, classNames)} ref={forwardedRef} />;
   },
 );
 

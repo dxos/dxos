@@ -120,11 +120,7 @@ const DialogContent: ForwardRefExoticComponent<DialogContentProps> = forwardRef<
         // https://www.radix-ui.com/primitives/docs/components/dialog#description
         aria-describedby={undefined}
         {...props}
-        className={tx(
-          'dialog.content',
-          { inOverlayLayout: propsInOverlayLayout || inOverlayLayout, size },
-          classNames,
-        )}
+        className={tx('dialog.content', { inOverlayLayout: propsInOverlayLayout || inOverlayLayout, size }, classNames)}
         ref={forwardedRef}
       >
         {children}
@@ -144,14 +140,7 @@ type DialogHeaderProps = ThemedClassName<PropsWithChildren> & { srOnly?: boolean
 const DialogHeader: ForwardRefExoticComponent<DialogTitleProps> = forwardRef<HTMLHeadingElement, DialogTitleProps>(
   ({ classNames, srOnly, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
-    return (
-      <div
-        {...props}
-        role='header'
-        className={tx('dialog.header', { srOnly }, classNames)}
-        ref={forwardedRef}
-      />
-    );
+    return <div {...props} role='header' className={tx('dialog.header', { srOnly }, classNames)} ref={forwardedRef} />;
   },
 );
 
@@ -184,11 +173,7 @@ const DialogTitle: ForwardRefExoticComponent<DialogTitleProps> = forwardRef<HTML
   ({ classNames, srOnly, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     return (
-      <DialogTitlePrimitive
-        {...props}
-        className={tx('dialog.title', { srOnly }, classNames)}
-        ref={forwardedRef}
-      />
+      <DialogTitlePrimitive {...props} className={tx('dialog.title', { srOnly }, classNames)} ref={forwardedRef} />
     );
   },
 );

@@ -111,11 +111,7 @@ const SelectViewport = forwardRef<HTMLDivElement, SelectViewportProps>(
   ({ classNames, children, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     return (
-      <SelectPrimitive.SelectViewport
-        {...props}
-        className={tx('select.viewport', {}, classNames)}
-        ref={forwardedRef}
-      >
+      <SelectPrimitive.SelectViewport {...props} className={tx('select.viewport', {}, classNames)} ref={forwardedRef}>
         {children}
       </SelectPrimitive.SelectViewport>
     );
@@ -178,26 +174,14 @@ type SelectSeparatorProps = ThemedClassName<SelectPrimitive.SelectSeparatorProps
 
 const SelectSeparator = forwardRef<HTMLDivElement, SelectSeparatorProps>(({ classNames, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
-  return (
-    <SelectPrimitive.Separator
-      {...props}
-      className={tx('select.separator', {}, classNames)}
-      ref={forwardedRef}
-    />
-  );
+  return <SelectPrimitive.Separator {...props} className={tx('select.separator', {}, classNames)} ref={forwardedRef} />;
 });
 
 type SelectArrowProps = ThemedClassName<SelectPrimitive.SelectArrowProps>;
 
 const SelectArrow = forwardRef<SVGSVGElement, SelectArrowProps>(({ classNames, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
-  return (
-    <SelectPrimitive.Arrow
-      {...props}
-      className={tx('select.arrow', {}, classNames)}
-      ref={forwardedRef}
-    />
-  );
+  return <SelectPrimitive.Arrow {...props} className={tx('select.arrow', {}, classNames)} ref={forwardedRef} />;
 });
 
 export const Select = {

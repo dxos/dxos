@@ -18,12 +18,7 @@ const AnchoredOverflowRoot = forwardRef<HTMLDivElement, AnchoredOverflowRootProp
     const { tx } = useThemeContext();
     const Root = asChild ? Slot : Primitive.div;
     return (
-      <Root
-        role='none'
-        {...props}
-        className={tx('anchoredOverflow.root', {}, classNames)}
-        ref={forwardedRef}
-      >
+      <Root role='none' {...props} className={tx('anchoredOverflow.root', {}, classNames)} ref={forwardedRef}>
         {children}
       </Root>
     );
@@ -39,12 +34,7 @@ const AnchoredOverflowAnchor = forwardRef<HTMLDivElement, AnchoredOverflowAnchor
     const { tx } = useThemeContext();
     const Root = asChild ? Slot : Primitive.div;
     return (
-      <Root
-        role='none'
-        {...props}
-        className={tx('anchoredOverflow.anchor', {}, classNames)}
-        ref={forwardedRef}
-      >
+      <Root role='none' {...props} className={tx('anchoredOverflow.anchor', {}, classNames)} ref={forwardedRef}>
         {children}
       </Root>
     );

@@ -67,14 +67,7 @@ const AvatarLabel = forwardRef<HTMLSpanElement, AvatarLabelProps>(
     const Root = asChild ? Slot : Primitive.span;
     const { tx } = useThemeContext();
     const { labelId } = useAvatarContext('AvatarLabel');
-    return (
-      <Root
-        {...props}
-        id={labelId}
-        ref={forwardedRef}
-        className={tx('avatar.label', { srOnly }, classNames)}
-      />
-    );
+    return <Root {...props} id={labelId} ref={forwardedRef} className={tx('avatar.label', { srOnly }, classNames)} />;
   },
 );
 

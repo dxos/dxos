@@ -61,11 +61,7 @@ const AlertDialogTitle: ForwardRefExoticComponent<AlertDialogTitleProps> = forwa
 >(({ classNames, srOnly, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
   return (
-    <AlertDialogTitlePrimitive
-      {...props}
-      className={tx('dialog.title', { srOnly }, classNames)}
-      ref={forwardedRef}
-    />
+    <AlertDialogTitlePrimitive {...props} className={tx('dialog.title', { srOnly }, classNames)} ref={forwardedRef} />
   );
 });
 

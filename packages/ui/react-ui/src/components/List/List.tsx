@@ -73,13 +73,7 @@ const MockListItemOpenTrigger = ({
 }: ThemedClassName<Omit<ComponentPropsWithoutRef<'div'>, 'children'>>) => {
   const density = useDensityContext();
   const { tx } = useThemeContext();
-  return (
-    <div
-      role='none'
-      {...props}
-      className={tx('list.item.openTrigger', { density }, classNames)}
-    />
-  );
+  return <div role='none' {...props} className={tx('list.item.openTrigger', { density }, classNames)} />;
 };
 
 type ListItemHeadingProps = ThemedClassName<ListPrimitiveItemHeadingProps>;

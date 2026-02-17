@@ -21,12 +21,7 @@ export const Tag = forwardRef<HTMLSpanElement, TagProps>(
     const { tx } = useThemeContext();
     const Root = asChild ? Slot : Primitive.span;
     return (
-      <Root
-        {...props}
-        className={tx('tag.root', { palette }, classNames)}
-        data-hue={palette}
-        ref={forwardedRef}
-      />
+      <Root {...props} className={tx('tag.root', { palette }, classNames)} data-hue={palette} ref={forwardedRef} />
     );
   },
 );

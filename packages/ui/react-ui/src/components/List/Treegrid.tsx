@@ -168,12 +168,7 @@ const TreegridCell = forwardRef<HTMLDivElement, TreegridCellProps>(
   ({ classNames, children, indent, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     return (
-      <div
-        role='gridcell'
-        className={tx('treegrid.cell', { indent }, classNames)}
-        {...props}
-        ref={forwardedRef}
-      >
+      <div role='gridcell' className={tx('treegrid.cell', { indent }, classNames)} {...props} ref={forwardedRef}>
         {children}
       </div>
     );
