@@ -144,6 +144,9 @@ catalogs:
     '@dnd-kit/utilities':
       specifier: ^3.2.0
       version: 3.2.0
+    '@dxos/errors':
+      specifier: ^0.8.3
+      version: 0.8.3
     '@dxos/wa-sqlite':
       specifier: ^0.2.1
       version: 0.2.1
@@ -569,7 +572,7 @@ catalogs:
       version: 3.13.18
     '@tauri-apps/api':
       specifier: ^2.8.0
-      version: 2.8.0
+      version: 2.10.1
     '@tauri-apps/cli':
       specifier: ^2.8.4
       version: 2.8.4
@@ -2656,7 +2659,7 @@ importers:
         version: 5.2.8
       '@tauri-apps/api':
         specifier: 'catalog:'
-        version: 2.8.0
+        version: 2.10.1
       '@tauri-apps/plugin-deep-link':
         specifier: 'catalog:'
         version: 2.4.7
@@ -5126,6 +5129,15 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
+      '@dxos/context':
+        specifier: workspace:*
+        version: link:../../../common/context
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../../common/effect
+      '@dxos/errors':
+        specifier: 'catalog:'
+        version: 0.8.3
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant
@@ -5135,6 +5147,12 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../../common/log
+      '@dxos/protocols':
+        specifier: workspace:*
+        version: link:../../protocols
+      '@dxos/sql-sqlite':
+        specifier: workspace:*
+        version: link:../../../common/sql-sqlite
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
@@ -10003,7 +10021,7 @@ importers:
         version: 0.94.4(effect@3.19.16)
       '@tauri-apps/api':
         specifier: 'catalog:'
-        version: 2.8.0
+        version: 2.10.1
       '@tauri-apps/plugin-os':
         specifier: 'catalog:'
         version: 2.3.1
@@ -12913,7 +12931,7 @@ importers:
         version: 0.87.1(@effect/cluster@0.56.3(@effect/platform@0.94.4(effect@3.19.16))(@effect/rpc@0.73.0(@effect/platform@0.94.4(effect@3.19.16))(effect@3.19.16))(@effect/sql@0.49.0(@effect/experimental@0.58.0(@effect/platform@0.94.4(effect@3.19.16))(effect@3.19.16)(ioredis@5.3.2))(@effect/platform@0.94.4(effect@3.19.16))(effect@3.19.16))(@effect/workflow@0.16.0(@effect/experimental@0.58.0(@effect/platform@0.94.4(effect@3.19.16))(effect@3.19.16)(ioredis@5.3.2))(@effect/platform@0.94.4(effect@3.19.16))(@effect/rpc@0.73.0(@effect/platform@0.94.4(effect@3.19.16))(effect@3.19.16))(effect@3.19.16))(effect@3.19.16))(@effect/platform@0.94.4(effect@3.19.16))(@effect/rpc@0.73.0(@effect/platform@0.94.4(effect@3.19.16))(effect@3.19.16))(@effect/sql@0.49.0(@effect/experimental@0.58.0(@effect/platform@0.94.4(effect@3.19.16))(effect@3.19.16)(ioredis@5.3.2))(@effect/platform@0.94.4(effect@3.19.16))(effect@3.19.16))(effect@3.19.16)
       '@tauri-apps/api':
         specifier: 'catalog:'
-        version: 2.8.0
+        version: 2.10.1
       '@tauri-apps/plugin-deep-link':
         specifier: 'catalog:'
         version: 2.4.7
@@ -13898,6 +13916,9 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
+      '@dxos/feed':
+        specifier: workspace:*
+        version: link:../../core/echo/feed
       '@dxos/feed-store':
         specifier: workspace:*
         version: link:../../common/feed-store
@@ -20703,6 +20724,9 @@ packages:
     peerDependencies:
       react: ~19.2.3
 
+  '@dxos/errors@0.8.3':
+    resolution: {integrity: sha512-N4fVTt40oc+i23mpft6h74RF6X34S/suRdfjojFNBZa2ReF1laB5z/9WACl7nZR1KkA2zwYkyrqRvJALDfBNVg==}
+
   '@dxos/wa-sqlite@0.2.1':
     resolution: {integrity: sha512-RVktTCzwJ1ix1MP/LWDjpO1HOOP0JpnAtjB/Zp/csbrlBEhhYYpwIlgDJzCi1Ri4cWHOo04iy+YtlnjfshM1Zw==}
 
@@ -26143,9 +26167,6 @@ packages:
 
   '@tauri-apps/api@2.10.1':
     resolution: {integrity: sha512-hKL/jWf293UDSUN09rR69hrToyIXBb8CjGaWC7gfinvnQrBVvnLr08FeFi38gxtugAVyVcTa5/FD/Xnkb1siBw==}
-
-  '@tauri-apps/api@2.8.0':
-    resolution: {integrity: sha512-ga7zdhbS2GXOMTIZRT0mYjKJtR9fivsXzsyq5U3vjDL0s6DTMwYRm0UHNjzTY5dh4+LSC68Sm/7WEiimbQNYlw==}
 
   '@tauri-apps/cli-darwin-arm64@2.8.4':
     resolution: {integrity: sha512-BKu8HRkYV01SMTa7r4fLx+wjgtRK8Vep7lmBdHDioP6b8XH3q2KgsAyPWfEZaZIkZ2LY4SqqGARaE9oilNe0oA==}
@@ -40557,6 +40578,8 @@ snapshots:
       react: 19.2.3
       tslib: 2.8.1
 
+  '@dxos/errors@0.8.3': {}
+
   '@dxos/wa-sqlite@0.2.1': {}
 
   '@effect-atom/atom-react@0.5.0(@effect/experimental@0.58.0(@effect/platform@0.94.4(effect@3.19.16))(effect@3.19.16)(ioredis@5.3.2))(@effect/platform@0.94.4(effect@3.19.16))(@effect/rpc@0.73.0(@effect/platform@0.94.4(effect@3.19.16))(effect@3.19.16))(effect@3.19.16)(react@19.2.3)(scheduler@0.27.0)':
@@ -46291,8 +46314,6 @@ snapshots:
 
   '@tauri-apps/api@2.10.1': {}
 
-  '@tauri-apps/api@2.8.0': {}
-
   '@tauri-apps/cli-darwin-arm64@2.8.4':
     optional: true
 
@@ -46350,23 +46371,23 @@ snapshots:
 
   '@tauri-apps/plugin-opener@2.5.3':
     dependencies:
-      '@tauri-apps/api': 2.8.0
+      '@tauri-apps/api': 2.10.1
 
   '@tauri-apps/plugin-os@2.3.1':
     dependencies:
-      '@tauri-apps/api': 2.8.0
+      '@tauri-apps/api': 2.10.1
 
   '@tauri-apps/plugin-process@2.3.0':
     dependencies:
-      '@tauri-apps/api': 2.8.0
+      '@tauri-apps/api': 2.10.1
 
   '@tauri-apps/plugin-shell@2.3.1':
     dependencies:
-      '@tauri-apps/api': 2.8.0
+      '@tauri-apps/api': 2.10.1
 
   '@tauri-apps/plugin-updater@2.9.0':
     dependencies:
-      '@tauri-apps/api': 2.8.0
+      '@tauri-apps/api': 2.10.1
 
   '@testing-library/dom@10.4.1':
     dependencies:
@@ -59227,7 +59248,7 @@ snapshots:
 
   tauri-plugin-web-auth-api@1.0.0:
     dependencies:
-      '@tauri-apps/api': 2.8.0
+      '@tauri-apps/api': 2.10.1
 
   temp-dir@2.0.0: {}
 

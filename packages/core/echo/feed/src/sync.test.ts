@@ -2,102 +2,162 @@
 // Copyright 2026 DXOS.org
 //
 
-import type * as SqlClient from '@effect/sql/SqlClient';
-import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
-import { describe, expect, it } from '@effect/vitest';
-import * as Effect from 'effect/Effect';
-import * as ManagedRuntime from 'effect/ManagedRuntime';
+import { describe, expect, test } from '@effect/vitest';
 
-import { SpaceId } from '@dxos/keys';
+import { RuntimeProvider } from '@dxos/effect';
+import { ObjectId, SpaceId } from '@dxos/keys';
+import { FeedProtocol } from '@dxos/protocols';
+import { range } from '@dxos/util';
 
-import { FeedStore } from './feed-store';
-import { type Block } from './protocol';
+import { TestBuilder } from './testing';
 
-describe.skip('Feed Sync V2 (RPC)', () => {
-  const makePeer = () => {
-    const layer = SqliteClient.layer({ filename: ':memory:' });
-    const runtime = ManagedRuntime.make(layer);
-    const run = <A, E>(effect: Effect.Effect<A, E, SqlClient.SqlClient>) => runtime.runPromise(effect);
-    return { run };
-  };
+const WellKnownNamespaces = FeedProtocol.WellKnownNamespaces;
 
-  it('should sync blocks from server to client via RPC', async () => {
-    const server = makePeer();
-    const client = makePeer();
+describe('Sync', () => {
+  const LOG_SQL = false;
 
-    const spaceId = SpaceId.random();
-    const feedId = '01H1V1X1X1X1X1X1X1X1X1X1X3';
+  const spaceId = SpaceId.random();
+  const feedId = ObjectId.random();
 
-    // Server setup: Append blocks
-    await server.run(
-      Effect.gen(function* () {
-        const feed = new FeedStore({ localActorId: 'server', assignPositions: true });
-        const blocks: Block[] = [
-          {
-            feedId: undefined,
-            actorId: feedId,
-            sequence: 1,
-            predActorId: null,
-            predSequence: null,
-            position: null,
-            timestamp: 100,
-            data: new Uint8Array([1]),
-          },
-          {
-            feedId: undefined,
-            actorId: feedId,
-            sequence: 2,
-            predActorId: feedId,
-            predSequence: 1,
-            position: null,
-            timestamp: 200,
-            data: new Uint8Array([2]),
-          },
-        ];
-        yield* feed.append({ requestId: 'req-0', blocks, spaceId, namespace: 'data', feedId });
-      }),
-    );
+  test('pull blocks from server', async () => {
+    await using builder = await new TestBuilder({ numPeers: 2, spaceId, logSql: LOG_SQL }).open();
+    const [server, client] = builder.peers;
 
-    // Sync Simulation: Client polls Server
-    // 1. Client subscribes
-    const subId = await server.run(
-      Effect.gen(function* () {
-        // Wait, we flattened it. Tests need to update to NOT use SqlFeedStore!
-        // I will fix the class instantiation in a moment.
-        const feed = new FeedStore({ localActorId: 'server', assignPositions: true });
-        const res = yield* feed.subscribe({ requestId: 'req-sub', feedIds: [feedId], spaceId });
-        return res.subscriptionId;
-      }),
-    );
+    const testBlocks = generateTestBlocks(0, 5);
 
-    // 2. Client queries using subscription
-    const blocks = await server.run(
-      Effect.gen(function* () {
-        const feed = new FeedStore({ localActorId: 'server', assignPositions: true }); // Updated class usage
-        const res = yield* feed.query({ requestId: 'req-query', query: { subscriptionId: subId }, position: 0 });
-        return res.blocks;
-      }),
-    );
-
-    expect(blocks.length).toBe(2);
-    expect(blocks[0].sequence).toBe(1);
-
-    // 3. Client stores them (Verify client persistence)
-    await client.run(
-      Effect.gen(function* () {
-        const feed = new FeedStore({ localActorId: 'client', assignPositions: true }); // Updated class usage
-        // Client appends them.
-        yield* feed.append({ requestId: 'req-push', blocks, spaceId, namespace: 'data', feedId });
-
-        // Verify
-        const myBlocks = yield* feed.query({
-          requestId: 'req-verify',
-          query: { feedIds: [feedId] },
-          position: 0,
+    await server.feedStore
+      .appendLocal(
+        testBlocks.map((block) => ({
           spaceId,
-        });
-        expect(myBlocks.blocks.length).toBe(2);
-      }),
+          feedId,
+          feedNamespace: WellKnownNamespaces.data,
+          data: block,
+        })),
+      )
+      .pipe(RuntimeProvider.runPromise(server.runtime.runtimeEffect));
+
+    await builder.pull(client);
+
+    const { blocks } = await client.feedStore
+      .query({
+        spaceId,
+        feedNamespace: WellKnownNamespaces.data,
+      })
+      .pipe(RuntimeProvider.runPromise(client.runtime.runtimeEffect));
+    expect(blocks.map((block) => block.data)).toEqual(testBlocks);
+  });
+
+  test('push blocks from client to server', async () => {
+    await using builder = await new TestBuilder({ numPeers: 2, spaceId, logSql: LOG_SQL }).open();
+    const [server, client] = builder.peers;
+
+    const testBlocks = generateTestBlocks(0, 5);
+
+    await client.feedStore
+      .appendLocal(
+        testBlocks.map((block) => ({
+          spaceId,
+          feedId,
+          feedNamespace: WellKnownNamespaces.data,
+          data: block,
+        })),
+      )
+      .pipe(RuntimeProvider.runPromise(client.runtime.runtimeEffect));
+
+    await builder.push(client);
+
+    const serverBlocks = await server.feedStore
+      .query({
+        spaceId,
+        feedNamespace: WellKnownNamespaces.data,
+      })
+      .pipe(RuntimeProvider.runPromise(server.runtime.runtimeEffect));
+    expect(serverBlocks.blocks.map((block) => block.data)).toEqual(testBlocks);
+    expect(serverBlocks.blocks.every((block) => block.position != null)).toBe(true);
+
+    const clientBlocks = await client.feedStore
+      .query({
+        spaceId,
+        feedNamespace: WellKnownNamespaces.data,
+      })
+      .pipe(RuntimeProvider.runPromise(client.runtime.runtimeEffect));
+    expect(clientBlocks.blocks.map((block) => block.position)).toEqual(
+      serverBlocks.blocks.map((block) => block.position),
     );
   });
+
+  test('push blocks incrementally in batches', async () => {
+    await using builder = await new TestBuilder({ numPeers: 2, spaceId, logSql: LOG_SQL }).open();
+    const [server, client] = builder.peers;
+
+    const testBlocks = generateTestBlocks(0, 5);
+
+    await client.feedStore
+      .appendLocal(
+        testBlocks.map((block) => ({
+          spaceId,
+          feedId,
+          feedNamespace: WellKnownNamespaces.data,
+          data: block,
+        })),
+      )
+      .pipe(RuntimeProvider.runPromise(client.runtime.runtimeEffect));
+
+    let done = false,
+      numBatches = 0;
+    while (!done) {
+      numBatches++;
+      const result = await builder.push(client, { limit: 2 });
+      done = result.done;
+    }
+    await builder.push(client);
+    expect(numBatches).toBeGreaterThan(2);
+    expect(numBatches).toBeLessThan(10);
+
+    const serverBlocks = await server.feedStore
+      .query({
+        spaceId,
+        feedNamespace: WellKnownNamespaces.data,
+      })
+      .pipe(RuntimeProvider.runPromise(server.runtime.runtimeEffect));
+    expect(serverBlocks.blocks.map((block) => block.data)).toEqual(testBlocks);
+    expect(serverBlocks.blocks.every((block) => block.position != null)).toBe(true);
+
+    const clientBlocks = await client.feedStore
+      .query({
+        spaceId,
+        feedNamespace: WellKnownNamespaces.data,
+      })
+      .pipe(RuntimeProvider.runPromise(client.runtime.runtimeEffect));
+    expect(clientBlocks.blocks.map((block) => block.position)).toEqual(
+      serverBlocks.blocks.map((block) => block.position),
+    );
+  });
+
+  test('3-way sync', async () => {
+    await using builder = await new TestBuilder({ numPeers: 3, spaceId, logSql: LOG_SQL }).open();
+    const [, client1, client2] = builder.peers;
+
+    const testBlocks = generateTestBlocks(0, 5);
+
+    await client1.feedStore
+      .appendLocal(
+        testBlocks.map((block) => ({ spaceId, feedId, feedNamespace: WellKnownNamespaces.data, data: block })),
+      )
+      .pipe(RuntimeProvider.runPromise(client1.runtime.runtimeEffect));
+    await builder.push(client1);
+
+    await builder.pull(client2);
+
+    const { blocks: client1Blocks } = await client1.feedStore
+      .query({ spaceId, feedNamespace: WellKnownNamespaces.data })
+      .pipe(RuntimeProvider.runPromise(client1.runtime.runtimeEffect));
+    const { blocks: client2Blocks } = await client2.feedStore
+      .query({ spaceId, feedNamespace: WellKnownNamespaces.data })
+      .pipe(RuntimeProvider.runPromise(client2.runtime.runtimeEffect));
+    expect(client1Blocks).toEqual(client2Blocks);
+    expect(client1Blocks.every((block) => block.position != null)).toBe(true);
+  });
 });
+
+const generateTestBlocks = (start: number, count: number) => range(count, (i) => new Uint8Array([start + i]));

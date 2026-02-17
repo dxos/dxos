@@ -28,6 +28,7 @@ import { log } from '@dxos/log';
 import { type SignalManager } from '@dxos/messaging';
 import { type SwarmNetworkManager } from '@dxos/network-manager';
 import { InvalidStorageVersionError, STORAGE_VERSION, trace } from '@dxos/protocols';
+import { FeedProtocol } from '@dxos/protocols';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
@@ -55,6 +56,8 @@ import {
   SpaceInvitationProtocol,
 } from '../invitations';
 import { DataSpaceManager, type DataSpaceManagerRuntimeProps, type SigningContext } from '../spaces';
+
+import { FeedSyncer } from './feed-syncer';
 
 export type ServiceContextRuntimeProps = Pick<
   IdentityManagerProps,
@@ -89,6 +92,7 @@ export class ServiceContext extends Resource {
   public readonly echoHost: EchoHost;
   private readonly _meshReplicator?: MeshEchoReplicator = undefined;
   private readonly _echoEdgeReplicator?: EchoEdgeReplicator = undefined;
+  private readonly _feedSyncer?: FeedSyncer = undefined;
 
   // Initialized after identity is initialized.
   public dataSpaceManager?: DataSpaceManager;
@@ -201,6 +205,17 @@ export class ServiceContext extends Resource {
         edgeHttpClient: this._edgeHttpClient,
       });
     }
+
+    if (this.echoHost.feedStore && this._edgeConnection) {
+      this._feedSyncer = new FeedSyncer({
+        runtime: this._runtime,
+        feedStore: this.echoHost.feedStore,
+        edgeClient: this._edgeConnection,
+        peerId: this.identityManager.identity?.deviceKey?.toHex() ?? '',
+        getSpaceIds: () => this.echoHost!.spaceIds,
+        syncNamespace: FeedProtocol.WellKnownNamespaces.data,
+      });
+    }
   }
 
   @Trace.span()
@@ -235,6 +250,8 @@ export class ServiceContext extends Resource {
       await this._initialize(ctx);
     }
 
+    await this._feedSyncer?.open();
+
     const loadedInvitations = await this.invitationsManager.loadPersistentInvitations();
     log('loaded persistent invitations', { count: loadedInvitations.invitations?.length });
 
@@ -244,6 +261,9 @@ export class ServiceContext extends Resource {
 
   protected override async _close(ctx: Context): Promise<void> {
     log('closing...');
+
+    await this._feedSyncer?.close();
+
     if (this._deviceSpaceSync && this.identityManager.identity) {
       await this.identityManager.identity.space.spaceState.removeCredentialProcessor(this._deviceSpaceSync);
     }

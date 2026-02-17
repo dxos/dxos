@@ -85,6 +85,9 @@
       "path": "../../core/echo/echo-protocol"
     },
     {
+      "path": "../../core/echo/feed"
+    },
+    {
       "path": "../../core/halo/credentials"
     },
     {

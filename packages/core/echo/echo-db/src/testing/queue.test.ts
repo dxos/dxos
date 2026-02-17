@@ -8,7 +8,7 @@ import { Event } from '@dxos/async';
 import { Entity, Filter, Obj, Query, type Ref, Relation, Type } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { DXN, SpaceId } from '@dxos/keys';
-import { KEY_QUEUE_POSITION } from '@dxos/protocols';
+import { FeedProtocol } from '@dxos/protocols';
 
 import { type Queue } from '../queue';
 
@@ -93,16 +93,16 @@ describe('queues', () => {
     {
       const objects = await queue.query(Filter.everything()).run();
       expect(objects).toHaveLength(2);
-      expect(Entity.getKeys(objects[0], KEY_QUEUE_POSITION).at(0)?.id).toEqual('0');
-      expect(Entity.getKeys(objects[1], KEY_QUEUE_POSITION).at(0)?.id).toEqual('1');
+      expect(Entity.getKeys(objects[0], FeedProtocol.KEY_QUEUE_POSITION).at(0)?.id).toEqual('0');
+      expect(Entity.getKeys(objects[1], FeedProtocol.KEY_QUEUE_POSITION).at(0)?.id).toEqual('1');
     }
 
     {
       await queue.refresh();
       const objects = queue.objects;
       expect(objects).toHaveLength(2);
-      expect(Entity.getKeys(objects[0], KEY_QUEUE_POSITION).at(0)?.id).toEqual('0');
-      expect(Entity.getKeys(objects[1], KEY_QUEUE_POSITION).at(0)?.id).toEqual('1');
+      expect(Entity.getKeys(objects[0], FeedProtocol.KEY_QUEUE_POSITION).at(0)?.id).toEqual('0');
+      expect(Entity.getKeys(objects[1], FeedProtocol.KEY_QUEUE_POSITION).at(0)?.id).toEqual('1');
     }
   });
 
