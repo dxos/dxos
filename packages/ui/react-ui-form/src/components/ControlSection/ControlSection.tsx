@@ -64,6 +64,8 @@ export const ControlGroupButton = ({ classNames, ...props }: ButtonProps) => {
 
 export type ControlGroupProps = ThemedClassName<PropsWithChildren>;
 
+// TODO(burdon): Fix trims.
+
 export const ControlGroup = ({ children, classNames }: ControlGroupProps) => (
   <div
     role='none'
@@ -91,7 +93,7 @@ export const ControlFrame = ({ children }: ControlGroupProps) => (
 
 export const controlItemClasses = mx([
   'container-max-width grid md:col-span-2 grid-cols-subgrid gap-trimSm items-center',
-  'mbe-4 *:first:!mbs-0 *:last:!mbe-0 pli-trimMd plb-trimMd',
+  '*:first:!mbs-0 *:last:!mbe-0 pli-trimMd plb-trimMd',
   'border border-separator rounded-md',
 ]);
 
