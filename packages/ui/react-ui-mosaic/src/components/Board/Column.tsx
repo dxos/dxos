@@ -77,7 +77,7 @@ const BoardColumnRootImpl = forwardRef<HTMLDivElement, BoardColumnProps>((props,
   return <BoardColumnRootInner {...props} dragHandleRef={dragHandleRef} ref={forwardedRef} />;
 });
 
-BoardColumnRootImpl.displayName = 'Board.ColumnRoot';
+BoardColumnRootImpl.displayName = 'Board.Column.Root';
 
 const BoardColumnRoot = BoardColumnRootImpl as <TColumn extends Obj.Unknown = any>(
   props: BoardColumnProps<TColumn> & { ref?: ReactRef<HTMLDivElement> },
@@ -87,7 +87,7 @@ const BoardColumnRoot = BoardColumnRootImpl as <TColumn extends Obj.Unknown = an
 // ColumnHeader
 //
 
-const BOARD_COLUMN_HEADER_NAME = 'Board.ColumnHeader';
+const BOARD_COLUMN_HEADER_NAME = 'Board.Column.Header';
 
 type BoardColumnHeaderProps = ThemedClassName<{ label: string; dragHandleRef: ReactRef<HTMLButtonElement> }>;
 
@@ -109,7 +109,7 @@ BoardColumnHeader.displayName = BOARD_COLUMN_HEADER_NAME;
 // ColumnBody
 //
 
-const BOARD_COLUMN_BODY_NAME = 'Board.ColumnBody';
+const BOARD_COLUMN_BODY_NAME = 'Board.Column.Body';
 
 type BoardColumnBodyProps = Pick<BoardColumnProps, 'data'> & {
   Tile?: StackProps<Ref.Ref<Obj.Unknown>>['Tile']; // TODO(burdon): GENERALIZE VIA MODEL.
@@ -168,6 +168,35 @@ const BoardColumnBody = ({ data, Tile = BoardItem, debug }: BoardColumnBodyProps
 BoardColumnBody.displayName = BOARD_COLUMN_BODY_NAME;
 
 //
+// ColumnFooter
+//
+
+const BOARD_COLUMN_FOOTER_NAME = 'Board.Column.Footer';
+
+type BoardColumnFooterProps = ThemedClassName;
+
+const BoardColumnFooter = forwardRef<HTMLDivElement, BoardColumnFooterProps>(({ classNames }, forwardedRef) => {
+  const { t } = useTranslation(translationKey);
+  const { model } = useBoardContext(BOARD_COLUMN_FOOTER_NAME);
+
+  return (
+    <Toolbar.Root classNames={mx('rounded-b-sm', classNames)} ref={forwardedRef}>
+      {model.onItemCreate && (
+        <IconButton
+          classNames='group-hover/column:opacity-100 opacity-0 transition transition-opacity duration-500'
+          variant='ghost'
+          icon='ph--plus--regular'
+          iconOnly
+          label={t('add item label')}
+        />
+      )}
+    </Toolbar.Root>
+  );
+});
+
+BoardColumnFooter.displayName = BOARD_COLUMN_FOOTER_NAME;
+
+//
 // DefaultBoardColumn
 //
 
@@ -177,25 +206,15 @@ type DefaultBoardColumnProps = BoardColumnProps & Pick<BoardColumnBodyProps, 'Ti
 
 const DefaultBoardColumn = forwardRef<HTMLDivElement, DefaultBoardColumnProps>(
   ({ classNames, location, data, debug, Tile = BoardItem }, forwardedRef) => {
-    const { model } = useBoardContext(BOARD_DEFAULT_COLUMN_NAME);
-    const { t } = useTranslation(translationKey);
     const [DebugInfo, debugHandler] = useContainerDebug(debug);
     const dragHandleRef = useRef<HTMLButtonElement>(null);
-    // const style = useMemo(
-    //   () => ({
-    //     gridTemplateRows: [toolbar && 'var(--toolbar-size)', '1fr', debug ? '20rem' : 'var(--toolbar-size)']
-    //       .filter(Boolean)
-    //       .join(' '),
-    //   }),
-    //   [debug],
-    // );
 
     return (
       <BoardColumnRootInner location={location} data={data} dragHandleRef={dragHandleRef} ref={forwardedRef}>
         <div
           role='none'
           className={mx(
-            'group/column bs-full grid overflow-hidden',
+            'group/column grid bs-full overflow-hidden',
             debug
               ? 'grid-rows-[var(--rail-action)_1fr_20rem]'
               : 'grid-rows-[var(--rail-action)_1fr_var(--rail-action)]',
@@ -207,19 +226,9 @@ const DefaultBoardColumn = forwardRef<HTMLDivElement, DefaultBoardColumnProps>(
             label={Obj.getLabel(data) ?? data.id}
             dragHandleRef={dragHandleRef}
           />
-          <BoardColumnBody data={data} Tile={Tile} debug={debugHandler} />
-          <div role='none' className='flex flex-col border-bs border-separator'>
-            {model.onItemCreate && (
-              <Toolbar.Root classNames='rounded-s rounded-sm'>
-                <IconButton
-                  classNames='group-hover/column:opacity-100 opacity-0 transition transition-opacity duration-500'
-                  variant='ghost'
-                  icon='ph--plus--regular'
-                  iconOnly
-                  label={t('add item label')}
-                />
-              </Toolbar.Root>
-            )}
+          <BoardColumnBody data={data} debug={debugHandler} Tile={Tile} />
+          <div role='none' className='flex flex-col'>
+            <BoardColumnFooter classNames='border-bs border-separator' />
             <DebugInfo />
           </div>
         </div>
