@@ -247,6 +247,7 @@ const BoardColumn = {
   Root: BoardColumnRoot,
   Header: BoardColumnHeader,
   Body: BoardColumnBody,
+  Footer: BoardColumnFooter,
 };
 
 export { BoardColumn, DefaultBoardColumn, type BoardColumnProps };
