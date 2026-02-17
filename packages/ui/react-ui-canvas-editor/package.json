@@ -58,7 +58,6 @@
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/ui-editor": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom-react": "catalog:",
     "@radix-ui/react-context": "catalog:",
     "@xyflow/react": "catalog:",
     "bind-event-listener": "catalog:",
@@ -74,6 +73,7 @@
     "@dxos/schema": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
+    "@effect-atom/atom-react": "catalog:",
     "@types/d3": "catalog:",
     "@types/lodash.defaultsdeep": "catalog:",
     "@types/react": "catalog:",
@@ -86,6 +86,7 @@
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
+    "@effect-atom/atom-react": "catalog:",
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"

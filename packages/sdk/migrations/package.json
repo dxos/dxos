@@ -39,7 +39,12 @@
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/protocols": "workspace:*",
-    "@dxos/util": "workspace:*",
+    "@dxos/util": "workspace:*"
+  },
+  "devDependencies": {
+    "@effect-atom/atom": "catalog:"
+  },
+  "peerDependencies": {
     "@effect-atom/atom": "catalog:"
   },
   "publishConfig": {

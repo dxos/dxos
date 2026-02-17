@@ -33,16 +33,17 @@
     "@dxos/debug": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
-    "@dxos/util": "workspace:*",
-    "@effect-atom/atom-react": "catalog:"
+    "@dxos/util": "workspace:*"
   },
   "devDependencies": {
     "@dxos/echo": "workspace:*",
     "@dxos/echo-db": "workspace:*",
     "@dxos/random": "workspace:*",
+    "@effect-atom/atom-react": "catalog:",
     "effect": "catalog:"
   },
   "peerDependencies": {
+    "@effect-atom/atom-react": "catalog:",
     "effect": "catalog:"
   },
   "publishConfig": {

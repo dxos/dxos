@@ -16,13 +16,13 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/shell": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom": "catalog:",
-    "@effect-atom/atom-react": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
     "react-router-dom": "catalog:"
   },
   "devDependencies": {
+    "@effect-atom/atom": "catalog:",
+    "@effect-atom/atom-react": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "autoprefixer": "catalog:",
@@ -32,5 +32,9 @@
     "vite-plugin-top-level-await": "catalog:",
     "vite-plugin-wasm": "catalog:",
     "workbox-window": "catalog:"
+  },
+  "peerDependencies": {
+    "@effect-atom/atom": "catalog:",
+    "@effect-atom/atom-react": "catalog:"
   }
 }

@@ -10,7 +10,10 @@ import { arrayMove } from '@dxos/util';
 
 import { type GetId, type MosaicEventHandler } from '../components';
 
-export type UseEventHandlerProps<TItem = any, TObject = any> = Pick<MosaicEventHandler<TItem>, 'id' | 'canDrop'> & {
+export type UseEventHandlerProps<TItem = any, TObject extends Obj.Unknown = Obj.Unknown> = Pick<
+  MosaicEventHandler<TItem>,
+  'id' | 'canDrop'
+> & {
   /**
    * The items to manage.
    */
@@ -72,17 +75,23 @@ export const useEventHandlerAdapter = <TItem = any, TObject extends Obj.Unknown 
         void cb(source.data);
       },
       onDrop: ({ source, target }) => {
-        const to = target?.type === 'tile' || target?.type === 'placeholder' ? target.location : -1;
+        const to =
+          target?.type === 'tile' || target?.type === 'placeholder'
+            ? target.location
+            : target?.type === 'container'
+              ? items.length
+              : -1;
         log.info('onDrop', { source, target, to });
 
         const mutate = (items: TItem[]) => {
           const from = items.findIndex((item) => getId(item) === source.id);
-          if (to !== -1) {
+          const insertIndex = typeof to === 'number' && to >= 0 ? Math.floor(to) : -1;
+          if (insertIndex !== -1) {
             if (from !== -1) {
-              arrayMove(items, from, to);
+              arrayMove(items, from, insertIndex);
             } else {
               // TODO(burdon): This should be the responsibility of the source container.
-              items.splice(to, 0, make(get(source.data)));
+              items.splice(insertIndex, 0, make(get(source.data)));
             }
           }
         };

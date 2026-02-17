@@ -64,6 +64,7 @@
     "bind-event-listener": "catalog:"
   },
   "devDependencies": {
+    "@dxos/echo-atom": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
@@ -72,6 +73,7 @@
     "@dxos/test-utils": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
+    "@effect-atom/atom-react": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "effect": "catalog:",
@@ -83,6 +85,7 @@
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
+    "@effect-atom/atom-react": "catalog:",
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"

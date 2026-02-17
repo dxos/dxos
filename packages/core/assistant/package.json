@@ -69,8 +69,6 @@
     "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom": "catalog:",
-    "@effect-atom/atom-react": "catalog:",
     "@effect/ai": "catalog:",
     "@effect/experimental": "catalog:",
     "@effect/platform": "catalog:",
@@ -78,10 +76,14 @@
     "lodash.defaultsdeep": "catalog:"
   },
   "devDependencies": {
+    "@effect-atom/atom": "catalog:",
+    "@effect-atom/atom-react": "catalog:",
     "@types/lodash.defaultsdeep": "catalog:",
     "effect": "catalog:"
   },
   "peerDependencies": {
+    "@effect-atom/atom": "catalog:",
+    "@effect-atom/atom-react": "catalog:",
     "effect": "catalog:"
   },
   "publishConfig": {

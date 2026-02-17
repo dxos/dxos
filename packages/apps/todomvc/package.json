@@ -21,8 +21,6 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/shell": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom": "catalog:",
-    "@effect-atom/atom-react": "catalog:",
     "@sentry/react": "catalog:",
     "classnames": "catalog:",
     "react": "catalog:",
@@ -34,11 +32,17 @@
   "devDependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/test-utils": "workspace:*",
+    "@effect-atom/atom": "catalog:",
+    "@effect-atom/atom-react": "catalog:",
     "@sentry/vite-plugin": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "vite": "catalog:",
     "vite-plugin-top-level-await": "catalog:",
     "vite-plugin-wasm": "catalog:"
+  },
+  "peerDependencies": {
+    "@effect-atom/atom": "catalog:",
+    "@effect-atom/atom-react": "catalog:"
   }
 }

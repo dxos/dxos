@@ -50,7 +50,6 @@
     "@dxos/react-list": "workspace:*",
     "@dxos/ui-types": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom-react": "catalog:",
     "@fluentui/react-tabster": "catalog:",
     "@radix-ui/primitive": "catalog:",
     "@radix-ui/react-alert-dialog": "catalog:",
@@ -96,6 +95,7 @@
     "@dxos/random": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@effect-atom/atom-react": "catalog:",
     "@phosphor-icons/react": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
@@ -106,6 +106,7 @@
   },
   "peerDependencies": {
     "@dxos/ui-theme": "workspace:*",
+    "@effect-atom/atom-react": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"
   },

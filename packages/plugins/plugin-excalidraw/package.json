@@ -49,8 +49,6 @@
     "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom": "catalog:",
-    "@effect-atom/atom-react": "catalog:",
     "@excalidraw/excalidraw": "catalog:",
     "effect": "catalog:",
     "lodash.defaultsdeep": "catalog:",
@@ -61,6 +59,8 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
+    "@effect-atom/atom": "catalog:",
+    "@effect-atom/atom-react": "catalog:",
     "@types/lodash.defaultsdeep": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
@@ -71,6 +71,8 @@
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
+    "@effect-atom/atom": "catalog:",
+    "@effect-atom/atom-react": "catalog:",
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"

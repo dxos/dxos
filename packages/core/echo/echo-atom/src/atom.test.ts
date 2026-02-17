@@ -3,11 +3,12 @@
 //
 
 import * as Registry from '@effect-atom/atom/Registry';
-import { describe, expect, test } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Obj, Ref } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { createObject } from '@dxos/echo-db';
+import { EchoTestBuilder } from '@dxos/echo-db/testing';
 
 import * as AtomObj from './atom';
 
@@ -304,5 +305,94 @@ describe('Echo Atom - Referential Equality', () => {
     const atom1 = AtomObj.make(ref1);
     const atom2 = AtomObj.make(ref2);
     expect(atom1).toBe(atom2);
+  });
+});
+
+describe('AtomObj.makeWithReactive', () => {
+  test('returns object for direct obj input', () => {
+    const obj = createObject(
+      Obj.make(TestSchema.Person, { name: 'Test', username: 'test', email: 'test@example.com' }),
+    );
+
+    const registry = Registry.make();
+    const atom = AtomObj.makeWithReactive(obj);
+    const result = registry.get(atom);
+
+    expect(result).toBe(obj);
+    expect(result?.name).toBe('Test');
+  });
+
+  test('returns same atom for same object', () => {
+    const obj = createObject(
+      Obj.make(TestSchema.Person, { name: 'Test', username: 'test', email: 'test@example.com' }),
+    );
+
+    const atom1 = AtomObj.makeWithReactive(obj);
+    const atom2 = AtomObj.makeWithReactive(obj);
+
+    expect(atom1).toBe(atom2);
+  });
+
+  describe('with ref input', () => {
+    let testBuilder: InstanceType<typeof EchoTestBuilder>;
+
+    beforeEach(async () => {
+      testBuilder = await new EchoTestBuilder().open();
+    });
+
+    afterEach(async () => {
+      await testBuilder.close();
+    });
+
+    test('returns resolved object for ref', async () => {
+      const { db } = await testBuilder.createDatabase({
+        types: [TestSchema.Person, TestSchema.Task],
+      });
+      const task = db.add(Obj.make(TestSchema.Task, { title: 'Task 1' }));
+      const person = db.add(
+        Obj.make(TestSchema.Person, {
+          name: 'Test',
+          username: 'test',
+          email: 'test@example.com',
+          tasks: [Ref.make(task)],
+        }),
+      );
+      await db.flush({ indexes: true });
+
+      const ref = person.tasks![0];
+      const registry = Registry.make();
+      const atom = AtomObj.makeWithReactive(ref);
+      const result = registry.get(atom);
+
+      expect(result).toBe(task);
+      expect(result?.title).toBe('Task 1');
+    });
+
+    test('returns undefined when ref target was removed', async () => {
+      const { db } = await testBuilder.createDatabase({
+        types: [TestSchema.Person, TestSchema.Task],
+      });
+      const task = db.add(Obj.make(TestSchema.Task, { title: 'Task 1' }));
+      const person = db.add(
+        Obj.make(TestSchema.Person, {
+          name: 'Test',
+          username: 'test',
+          email: 'test@example.com',
+          tasks: [Ref.make(task)],
+        }),
+      );
+      await db.flush({ indexes: true });
+
+      const ref = person.tasks![0];
+      const registry = Registry.make();
+      const atom = AtomObj.makeWithReactive(ref);
+
+      expect(registry.get(atom)).toBe(task);
+
+      db.remove(task);
+      await db.flush({ indexes: true });
+
+      expect(registry.get(atom)).toBeUndefined();
+    });
   });
 });

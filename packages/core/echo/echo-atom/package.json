@@ -32,13 +32,17 @@
     "@dxos/echo-db": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom": "catalog:",
+    "effect": "catalog:",
     "lodash.isequal": "catalog:"
   },
   "devDependencies": {
     "@dxos/random": "workspace:*",
     "@dxos/test-utils": "workspace:*",
+    "@effect-atom/atom": "catalog:",
     "@types/lodash.isequal": "catalog:"
+  },
+  "peerDependencies": {
+    "@effect-atom/atom": "catalog:"
   },
   "publishConfig": {
     "access": "public"

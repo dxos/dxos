@@ -54,8 +54,7 @@
     "@dxos/types": "workspace:*",
     "@dxos/ui-editor": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
-    "@dxos/util": "workspace:*",
-    "@effect-atom/atom-react": "catalog:"
+    "@dxos/util": "workspace:*"
   },
   "devDependencies": {
     "@dxos/echo-db": "workspace:*",
@@ -63,12 +62,14 @@
     "@dxos/random": "workspace:*",
     "@dxos/react-ui-components": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
+    "@effect-atom/atom-react": "catalog:",
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
     "vite": "catalog:"
   },
   "peerDependencies": {
+    "@effect-atom/atom-react": "catalog:",
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"

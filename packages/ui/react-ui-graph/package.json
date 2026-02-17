@@ -50,7 +50,6 @@
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
-    "@effect-atom/atom-react": "catalog:",
     "d3": "catalog:",
     "d3-force": "catalog:",
     "immutability-helper": "catalog:",
@@ -67,6 +66,7 @@
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
+    "@effect-atom/atom-react": "catalog:",
     "@types/d3": "catalog:",
     "@types/lodash.defaultsdeep": "catalog:",
     "@types/react": "catalog:",
@@ -80,6 +80,7 @@
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
+    "@effect-atom/atom-react": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"
   },

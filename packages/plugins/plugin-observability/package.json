@@ -62,8 +62,6 @@
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom": "catalog:",
-    "@effect-atom/atom-react": "catalog:",
     "effect": "catalog:",
     "localforage": "catalog:"
   },
@@ -71,6 +69,7 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
+    "@effect-atom/atom": "catalog:",
     "@effect-atom/atom-react": "catalog:",
     "@effect/platform": "catalog:",
     "@types/react": "catalog:",
@@ -80,6 +79,7 @@
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
+    "@effect-atom/atom": "catalog:",
     "@effect-atom/atom-react": "catalog:",
     "@effect/platform": "catalog:",
     "effect": "catalog:",

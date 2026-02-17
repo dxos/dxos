@@ -35,7 +35,6 @@
     "@dxos/tracing": "workspace:*",
     "@dxos/ui-editor": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom-react": "catalog:",
     "@effect/platform-browser": "catalog:",
     "@ngneat/falso": "catalog:",
     "@opentelemetry/api": "catalog:",
@@ -54,6 +53,7 @@
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/test-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
+    "@effect-atom/atom-react": "catalog:",
     "@sentry/vite-plugin": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
@@ -61,5 +61,8 @@
     "vite": "catalog:",
     "vite-plugin-top-level-await": "catalog:",
     "vite-plugin-wasm": "catalog:"
+  },
+  "peerDependencies": {
+    "@effect-atom/atom-react": "catalog:"
   }
 }

@@ -85,7 +85,6 @@
     "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom": "catalog:",
     "@effect/platform": "catalog:",
     "effect": "catalog:",
     "esbuild": "catalog:",
@@ -99,7 +98,11 @@
     "@aws-sdk/client-s3": "3.955.0",
     "@dxos/ai": "workspace:*",
     "@dxos/types": "workspace:*",
+    "@effect-atom/atom": "catalog:",
     "chess.js": "catalog:"
+  },
+  "peerDependencies": {
+    "@effect-atom/atom": "catalog:"
   },
   "publishConfig": {
     "access": "public"

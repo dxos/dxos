@@ -2,15 +2,18 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Atom, RegistryContext } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useMemo } from 'react';
+import React, { useContext, useMemo } from 'react';
 
 import { type Database, Filter, Obj, Ref } from '@dxos/echo';
+import { AtomObj, AtomQuery } from '@dxos/echo-atom';
 import { invariant } from '@dxos/invariant';
 import { faker } from '@dxos/random';
 import { useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { withRegistry } from '@dxos/storybook-utils';
 import { mx } from '@dxos/ui-theme';
 
 import { TestColumn, TestItem } from '../../testing';
@@ -56,22 +59,40 @@ type StoryProps = {
 
 const DefaultStory = ({ debug = false }: StoryProps) => {
   const { space } = useClientStory();
+  const registry = useContext(RegistryContext);
 
-  // TODO(burdon): Reactivity check.
   const columns = useQuery(space?.db, Filter.type(TestColumn));
   const model = useMemo<BoardModel<TestColumn, TestItem>>(() => {
+    const columnsAtom =
+      space?.db != null ? AtomQuery.make(space.db, Filter.type(TestColumn)) : Atom.make<TestColumn[]>([]);
+    const itemsAtomFamily =
+      space?.db != null
+        ? Atom.family((column: TestColumn) =>
+            Atom.make((get) => {
+              const refs = get(AtomObj.makeProperty(column, 'items'));
+              return (
+                refs
+                  ?.map((ref) => get(AtomObj.makeWithReactive(ref)))
+                  .filter((item): item is TestItem => item != null) ?? []
+              );
+            }),
+          )
+        : Atom.family((_column: TestColumn) => Atom.make<TestItem[]>([]));
+
     return {
       isColumn: (obj: Obj.Unknown): obj is TestColumn => Obj.instanceOf(TestColumn, obj),
       isItem: (obj: Obj.Unknown): obj is TestItem => Obj.instanceOf(TestItem, obj),
-      getColumns: () => columns,
-      getItems: (column: TestColumn) => column.items,
+      columns: columnsAtom,
+      items: (column) => itemsAtomFamily(column),
+      getColumns: () => registry.get(columnsAtom),
+      getItems: (column) => registry.get(itemsAtomFamily(column)),
       onItemDelete: (column: TestColumn, current: TestItem) => {
-        const idx = model.getItems(column).findIndex((item) => item.target?.id === current?.id);
-        if (idx !== -1) {
-          Obj.change(column, (mutableColumn) => {
-            model.getItems(mutableColumn).splice(idx, 1);
-          });
-        }
+        Obj.change(column, (mutableColumn) => {
+          const idx = mutableColumn.items.findIndex((ref) => ref.target?.id === current?.id);
+          if (idx !== -1) {
+            mutableColumn.items.splice(idx, 1);
+          }
+        });
       },
       onItemCreate: async (column: TestColumn) => {
         invariant(space);
@@ -83,13 +104,13 @@ const DefaultStory = ({ debug = false }: StoryProps) => {
         );
 
         Obj.change(column, (column) => {
-          model.getItems(column).push(Ref.make(item));
+          column.items.push(Ref.make(item));
         });
 
         return item;
       },
     } satisfies BoardModel<TestColumn, TestItem>;
-  }, [space, columns]);
+  }, [space?.db, columns, registry]);
 
   if (columns.length === 0) {
     return <></>;
@@ -113,6 +134,7 @@ const meta = {
   title: 'ui/react-ui-mosaic/Board',
   render: DefaultStory,
   decorators: [
+    withRegistry,
     withTheme({ platform: 'desktop' }),
     withLayout({ layout: 'fullscreen' }),
     withClientProvider({

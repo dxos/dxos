@@ -78,7 +78,6 @@
     "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom-react": "catalog:",
     "chess.js": "catalog:",
     "effect": "catalog:"
   },
@@ -87,6 +86,7 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
+    "@effect-atom/atom-react": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "react": "catalog:",
@@ -96,6 +96,7 @@
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
+    "@effect-atom/atom-react": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"
   },

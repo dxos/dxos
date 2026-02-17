@@ -41,7 +41,6 @@
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom-react": "catalog:",
     "@radix-ui/react-context": "catalog:",
     "chess.js": "catalog:",
     "react-resize-detector": "catalog:"
@@ -50,6 +49,7 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
+    "@effect-atom/atom-react": "catalog:",
     "@svgr/cli": "catalog:",
     "@types/lodash.defaultsdeep": "catalog:",
     "@types/react": "catalog:",
@@ -62,6 +62,7 @@
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
+    "@effect-atom/atom-react": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"
   },

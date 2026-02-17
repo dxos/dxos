@@ -16,3 +16,16 @@ export class ObjectNotFoundError extends BaseError.extend('ObjectNotFoundError',
     super({ context: { dxn }, ...options });
   }
 }
+
+export type GetReactiveErrorReason = 'no-database' | 'object-not-found';
+
+export class GetReactiveError extends BaseError.extend(
+  'GetReactiveError',
+  'Failed to get reactive object from snapshot',
+) {
+  constructor(
+    options: { reason: GetReactiveErrorReason; snapshotId?: string } & BaseErrorOptions,
+  ) {
+    super({ context: { reason: options.reason, snapshotId: options.snapshotId }, ...options });
+  }
+}

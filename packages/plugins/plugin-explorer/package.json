@@ -72,7 +72,6 @@
     "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom-react": "catalog:",
     "@observablehq/plot": "catalog:",
     "d3": "catalog:",
     "effect": "catalog:",
@@ -88,6 +87,7 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
+    "@effect-atom/atom-react": "catalog:",
     "@types/d3": "catalog:",
     "@types/d3-hierarchy": "catalog:",
     "@types/lodash.defaultsdeep": "catalog:",
@@ -102,6 +102,7 @@
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
+    "@effect-atom/atom-react": "catalog:",
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"
