@@ -91,8 +91,9 @@ export const triggerRuntimeLayer = ({
         Layer.provide(Registry.layer),
         Layer.provideMerge(triggerStateStoreLayer),
         Layer.provideMerge(TracingService.layerNoop),
-        Layer.provideMerge(makeToolResolverFromFunctions(functions, toolkit.toolkit)),
-        Layer.provideMerge(makeToolExecutionServiceFromFunctions(toolkit.toolkit, toolkit.layer)),
+        Layer.provideMerge(makeToolResolverFromFunctions(functions)),
+        Layer.provideMerge(makeToolExecutionServiceFromFunctions()),
+        Layer.provideMerge(GenericToolkit.providerLayer(toolkit)),
         Layer.provideMerge(baseChatLayer),
       );
     }),

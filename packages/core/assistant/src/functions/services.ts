@@ -19,6 +19,7 @@ import { Function, FunctionDefinition, FunctionInvocationService } from '@dxos/f
 import { invariant } from '@dxos/invariant';
 
 import { RefFromLLM } from '../types';
+import { GenericToolkit } from '../session';
 
 /**
  * Constructs a `ToolResolverService` whose `resolve(id)` looks up tools in the following order:
@@ -33,18 +34,20 @@ import { RefFromLLM } from '../types';
  */
 export const makeToolResolverFromFunctions = (
   functions: FunctionDefinition.Any[],
-  toolkit: Toolkit.Toolkit<any>,
-): Layer.Layer<ToolResolverService, never, Database.Service> => {
+): Layer.Layer<ToolResolverService, never, Database.Service | GenericToolkit.Provider> => {
   return Layer.effect(
     ToolResolverService,
     Effect.gen(function* () {
       const dbService = yield* Database.Service;
+      const toolkitProvider = yield* GenericToolkit.Provider;
       return {
         resolve: (id): Effect.Effect<Tool.Any, AiToolNotFoundError> =>
           Effect.gen(function* () {
             // TODO(dmaretskyi): Use FunctionInvocationService.resolveFunction().
 
-            const tool = toolkit.tools[id];
+            const toolkit = toolkitProvider.getToolkit();
+
+            const tool = toolkit.toolkit.tools[id];
             if (tool) {
               return tool;
             }
@@ -66,14 +69,18 @@ export const makeToolResolverFromFunctions = (
   );
 };
 
-export const makeToolExecutionServiceFromFunctions = (
-  toolkit: Toolkit.Toolkit<any>,
-  handlersLayer: Layer.Layer<Tool.Handler<any>, never, never>,
-): Layer.Layer<ToolExecutionService, never, FunctionInvocationService> => {
+export const makeToolExecutionServiceFromFunctions = (): Layer.Layer<
+  ToolExecutionService,
+  never,
+  FunctionInvocationService | GenericToolkit.Provider
+> => {
   return Layer.effect(
     ToolExecutionService,
     Effect.gen(function* () {
-      const toolkitHandler = yield* toolkit.pipe(Effect.provide(handlersLayer));
+      const toolkitProvider = yield* GenericToolkit.Provider;
+      const toolkit = toolkitProvider.getToolkit();
+
+      const toolkitHandler = yield* toolkit.toolkit.pipe(Effect.provide(toolkit.layer));
       invariant(isHandlerLike(toolkitHandler));
       const functionInvocationService = yield* FunctionInvocationService;
 

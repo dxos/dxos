@@ -2,14 +2,18 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Toolkit from '@effect/ai/Toolkit';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Predicate from 'effect/Predicate';
 import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
-import { AiSession, makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
+import {
+  AiSession,
+  GenericToolkit,
+  makeToolExecutionServiceFromFunctions,
+  makeToolResolverFromFunctions,
+} from '@dxos/assistant';
 import { Filter, Obj, Ref, Type } from '@dxos/echo';
 import { Database } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
@@ -93,12 +97,12 @@ export default defineFunction({
     Effect.provide(
       Layer.mergeAll(
         AiService.model('@anthropic/claude-sonnet-4-0'), // TODO(dmaretskyi): Extract.
-        makeToolResolverFromFunctions([], Toolkit.make()),
-        makeToolExecutionServiceFromFunctions(Toolkit.make() as any, Layer.empty as any),
+        makeToolResolverFromFunctions([]),
+        makeToolExecutionServiceFromFunctions(),
       ).pipe(
         Layer.provide(
           // TODO(dmaretskyi): This should be provided by environment.
-          Layer.mergeAll(FunctionInvocationServiceLayerTest()),
+          Layer.mergeAll(GenericToolkit.providerEmpty, FunctionInvocationServiceLayerTest()),
         ),
       ),
     ),

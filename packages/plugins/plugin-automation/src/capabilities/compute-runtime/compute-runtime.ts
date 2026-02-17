@@ -68,15 +68,17 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
         const client = this.#capabilities.get(ClientCapabilities.Client);
         const aiServiceLayer =
           this.#capabilities.get(AppCapabilities.AiServiceLayer) ?? Layer.die('AiService not found');
+        const registry = this.#capabilities.get(Capabilities.AtomRegistry);
 
         // TODO(dmaretskyi): Make these reactive.
         const functions = this.#capabilities.getAll(AppCapabilities.Functions).flat();
-        const toolkits = this.#capabilities.getAll(AppCapabilities.Toolkit);
-        const mergedToolkit = GenericToolkit.merge(...toolkits);
-        const toolkit = mergedToolkit.toolkit;
-        const toolkitLayer = mergedToolkit.layer;
 
-        const registry = this.#capabilities.get(Capabilities.AtomRegistry);
+        const genericToolkitProvider = Layer.succeed(GenericToolkit.Provider, {
+          getToolkit: () => {
+            const toolkits = this.#capabilities.getAll(AppCapabilities.Toolkit);
+            return GenericToolkit.merge(...toolkits);
+          },
+        });
 
         const space = client.spaces.get(spaceId);
         invariant(space, `Invalid space: ${spaceId}`);
@@ -88,12 +90,13 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
             Layer.mergeAll(
               TracingServiceLive,
               TriggerStateStore.layerKv.pipe(Layer.provide(BrowserKeyValueStore.layerLocalStorage)),
-              makeToolResolverFromFunctions(functions, toolkit),
-              makeToolExecutionServiceFromFunctions(toolkit, toolkitLayer),
+              makeToolResolverFromFunctions(functions),
+              makeToolExecutionServiceFromFunctions(),
             ),
           ),
           Layer.provideMerge(
             FunctionInvocationServiceLayerWithLocalLoopbackExecutor.pipe(
+              Layer.provideMerge(genericToolkitProvider),
               Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions })),
               Layer.provideMerge(
                 RemoteFunctionExecutionService.fromClient(

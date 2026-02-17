@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Toolkit from '@effect/ai/Toolkit';
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import { describe, it } from '@effect/vitest';
 import * as Config from 'effect/Config';
@@ -11,7 +10,11 @@ import * as Layer from 'effect/Layer';
 
 import { AiService } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
-import { makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
+import {
+  GenericToolkit,
+  makeToolExecutionServiceFromFunctions,
+  makeToolResolverFromFunctions,
+} from '@dxos/assistant';
 import { Obj, Query } from '@dxos/echo';
 import { Database } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
@@ -28,11 +31,12 @@ import { LINEAR_ID_KEY, default as fetchLinearIssues } from './sync-issues';
 
 const TestLayer = Layer.mergeAll(
   AiService.model('@anthropic/claude-opus-4-0'),
-  makeToolResolverFromFunctions([], Toolkit.make()),
-  makeToolExecutionServiceFromFunctions(Toolkit.make() as any, Layer.empty as any),
+  makeToolResolverFromFunctions([]),
+  makeToolExecutionServiceFromFunctions(),
 ).pipe(
   Layer.provideMerge(
     Layer.mergeAll(
+      GenericToolkit.providerEmpty,
       AiServiceTestingPreset('direct'),
       TestDatabaseLayer({
         // indexing: { vector: true },

@@ -15,7 +15,7 @@ import {
   AiConversation,
   type AiSessionRunError,
   type AiSessionRunRequirements,
-  type GenericToolkit,
+  GenericToolkit,
   makeToolExecutionServiceFromFunctions,
   makeToolResolverFromFunctions,
 } from '@dxos/assistant';
@@ -74,10 +74,10 @@ export class ChatProcessor {
       Effect.provide(
         Layer.mergeAll(
           AiService.model(model),
-          // TODO(dmaretskyi): Introduce new FunctionRegistry service (injected above) that will provide functions here.
-          makeToolResolverFromFunctions(this._functions, this._toolkit.toolkit),
-          makeToolExecutionServiceFromFunctions(this._toolkit.toolkit, this._toolkit.layer),
-        ),
+
+          makeToolResolverFromFunctions(this._functions),
+          makeToolExecutionServiceFromFunctions(),
+        ).pipe(Layer.provideMerge(GenericToolkit.providerLayer(this._toolkit))),
       ),
       Effect.asVoid,
       Runtime.runFork(this.runtime),

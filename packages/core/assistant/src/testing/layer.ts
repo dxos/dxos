@@ -41,14 +41,12 @@ export const AssistantTestLayer = ({
   credentials = [],
   tracing = 'noop',
   disableLlmMemoization = false,
-}: TestLayerOptions) =>
-  Layer.mergeAll(
+}: TestLayerOptions) => {
+  const toolkit = GenericToolkit.merge(...toolkits);
+  return Layer.mergeAll(
     AiService.model(model),
-    makeToolResolverFromFunctions(functions, GenericToolkit.merge(...toolkits).toolkit as any),
-    makeToolExecutionServiceFromFunctions(
-      GenericToolkit.merge(...toolkits).toolkit as any,
-      GenericToolkit.merge(...toolkits).layer as any,
-    ),
+    makeToolResolverFromFunctions(functions),
+    makeToolExecutionServiceFromFunctions(),
   ).pipe(
     Layer.provideMerge(
       FunctionInvocationServiceLayerTest({
@@ -67,13 +65,17 @@ export const AssistantTestLayer = ({
           Match.when('noop', () => TracingService.layerNoop),
           Match.when('console', () => TracingServiceExt.layerLogInfo()),
           Match.when('pretty', () =>
-            TracingServiceExt.layerConsolePrettyPrint({ toolkit: GenericToolkit.merge(...toolkits).toolkit as any }),
+            TracingServiceExt.layerConsolePrettyPrint({
+              toolkit: (toolkits.length > 0 ? GenericToolkit.merge(...toolkits) : GenericToolkit.empty).toolkit as any,
+            }),
           ),
           Match.exhaustive,
         ),
       ),
     ),
+    Layer.provideMerge(GenericToolkit.providerLayer(toolkit)),
   );
+};
 
 interface TestLayerWithTriggersOptions extends TestLayerOptions {}
 

@@ -12,6 +12,7 @@ import {
   AiConversation,
   type ContextBinding,
   GenerationObserver,
+  GenericToolkit,
   makeToolExecutionServiceFromFunctions,
   makeToolResolverFromFunctions,
 } from '@dxos/assistant';
@@ -31,9 +32,13 @@ ObjectId.dangerouslyDisableRandomness();
 
 const TestLayer = Layer.mergeAll(
   AiService.model('@anthropic/claude-opus-4-0'),
-  makeToolResolverFromFunctions([], AssistantToolkit.AssistantToolkit),
-  makeToolExecutionServiceFromFunctions(AssistantToolkit.AssistantToolkit, AssistantToolkit.layer()),
+  
+  makeToolResolverFromFunctions([]),
+  makeToolExecutionServiceFromFunctions(),
 ).pipe(
+  Layer.provideMerge(GenericToolkit.providerLayer(
+    GenericToolkit.make(AssistantToolkit.AssistantToolkit, AssistantToolkit.layer()),
+  )),
   Layer.provideMerge(FunctionInvocationServiceLayerTest()),
   Layer.provideMerge(
     Layer.mergeAll(

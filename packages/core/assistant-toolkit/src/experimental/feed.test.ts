@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Toolkit from '@effect/ai/Toolkit';
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import { describe, it } from '@effect/vitest';
 import * as Config from 'effect/Config';
@@ -12,7 +11,7 @@ import * as Redacted from 'effect/Redacted';
 
 import { AiService } from '@dxos/ai';
 import { AiServiceTestingPreset, EXA_API_KEY } from '@dxos/ai/testing';
-import { makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
+import { GenericToolkit, makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
 import { TestHelpers } from '@dxos/effect/testing';
 import { CredentialsService, FunctionInvocationService } from '@dxos/functions';
 import { TracingServiceExt } from '@dxos/functions-runtime';
@@ -26,9 +25,10 @@ import { Discord, Linear } from '../functions';
 
 const TestLayer = Layer.mergeAll(
   AiService.model('@anthropic/claude-opus-4-0'),
-  makeToolResolverFromFunctions([], Toolkit.make()),
-  makeToolExecutionServiceFromFunctions(Toolkit.make() as any, Layer.empty as any),
+  makeToolResolverFromFunctions([]),
+  makeToolExecutionServiceFromFunctions(),
 ).pipe(
+  Layer.provideMerge(GenericToolkit.providerEmpty),
   Layer.provideMerge(
     Layer.mergeAll(
       AiServiceTestingPreset('direct'),

@@ -11,6 +11,7 @@ import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import {
   AiConversation,
   type ContextBinding,
+  GenericToolkit,
   GenerationObserver,
   makeToolExecutionServiceFromFunctions,
   makeToolResolverFromFunctions,
@@ -29,7 +30,6 @@ import { type Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { Document } from '../../functions';
-import { testToolkit } from '../testing';
 
 import { blueprint } from './design-blueprint';
 
@@ -85,12 +85,14 @@ describe('Design Blueprint', { timeout: 120_000 }, () => {
       },
       Effect.provide(
         Layer.mergeAll(
-          makeToolResolverFromFunctions([Document.read, Document.update], testToolkit),
-          makeToolExecutionServiceFromFunctions(testToolkit, testToolkit.toLayer({}) as any),
+          makeToolResolverFromFunctions([Document.read, Document.update]),
+          makeToolExecutionServiceFromFunctions(),
           AiService.model('@anthropic/claude-3-5-sonnet-20241022'),
         ).pipe(
           Layer.provideMerge(TestDatabaseLayer({ types: [Text.Text, Markdown.Document, Blueprint.Blueprint] })),
-          Layer.provideMerge(AiServiceTestingPreset('direct')),
+          Layer.provideMerge(
+            Layer.mergeAll(GenericToolkit.providerEmpty, AiServiceTestingPreset('direct')),
+          ),
           Layer.provideMerge(
             FunctionInvocationServiceLayerTestMocked({ functions: [Document.read, Document.update] }).pipe(
               Layer.provideMerge(TracingService.layerNoop),

@@ -16,6 +16,7 @@ import { AiService, ConsolePrinter } from '@dxos/ai';
 import {
   AiSession,
   GenerationObserver,
+  GenericToolkit,
   createToolkit,
   makeToolExecutionServiceFromFunctions,
   makeToolResolverFromFunctions,
@@ -148,13 +149,16 @@ export default defineFunction({
     Effect.provide(
       Layer.mergeAll(
         AiService.model('@anthropic/claude-sonnet-4-0'),
-        // TODO(dmaretskyi): Extract.
-        makeToolResolverFromFunctions([exaFunction, exaMockFunction], Toolkit.make()),
-        makeToolExecutionServiceFromFunctions(Toolkit.make() as any, Layer.empty as any),
+        makeToolResolverFromFunctions([exaFunction, exaMockFunction]),
+        makeToolExecutionServiceFromFunctions(),
       ).pipe(
         Layer.provide(
           // TODO(dmaretskyi): This should be provided by environment.
-          Layer.mergeAll(FunctionInvocationServiceLayerTestMocked({ functions: [exaFunction, exaMockFunction] })),
+
+          Layer.mergeAll(
+            GenericToolkit.providerEmpty,
+            FunctionInvocationServiceLayerTestMocked({ functions: [exaFunction, exaMockFunction] }),
+          ),
         ),
       ),
     ),

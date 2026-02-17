@@ -8,7 +8,7 @@ import * as Layer from 'effect/Layer';
 
 import { AiService } from '@dxos/ai';
 import { MemoizedAiService, TestAiService } from '@dxos/ai/testing';
-import { makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
+import { GenericToolkit, makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';
 import { Database } from '@dxos/echo';
@@ -18,7 +18,6 @@ import { FunctionInvocationServiceLayerTest, TestDatabaseLayer } from '@dxos/fun
 import { ObjectId } from '@dxos/keys';
 import { Message, Organization, Person } from '@dxos/types';
 
-import { testToolkit } from '../../blueprints/testing';
 import { ResearchGraph } from '../research';
 
 import { default as entityExtraction } from './entity-extraction';
@@ -27,12 +26,13 @@ ObjectId.dangerouslyDisableRandomness();
 
 const TestLayer = Layer.mergeAll(
   AiService.model('@anthropic/claude-opus-4-0'),
-  makeToolResolverFromFunctions([], testToolkit),
-  makeToolExecutionServiceFromFunctions(testToolkit, testToolkit.toLayer({}) as any),
+  makeToolResolverFromFunctions([]),
+  makeToolExecutionServiceFromFunctions(),
 ).pipe(
   Layer.provideMerge(FunctionInvocationServiceLayerTest({ functions: [entityExtraction] })),
   Layer.provideMerge(
     Layer.mergeAll(
+      GenericToolkit.providerEmpty,
       TestAiService(),
       TestDatabaseLayer({
         spaceKey: 'fixed',

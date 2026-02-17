@@ -13,6 +13,7 @@ import { MemoizedAiService, TestAiService } from '@dxos/ai/testing';
 import {
   AiConversation,
   type ContextBinding,
+  GenericToolkit,
   GenerationObserver,
   makeToolExecutionServiceFromFunctions,
   makeToolResolverFromFunctions,
@@ -30,7 +31,6 @@ import { Markdown } from '@dxos/plugin-markdown/types';
 import { HasSubject, type Message, Organization } from '@dxos/types';
 
 import { ResearchBlueprint } from '../../blueprints';
-import { testToolkit } from '../../blueprints/testing';
 
 import { default as createDocument } from './document-create';
 import { default as research } from './research';
@@ -41,8 +41,8 @@ ObjectId.dangerouslyDisableRandomness();
 
 const TestLayer = Layer.mergeAll(
   AiService.model('@anthropic/claude-opus-4-0'),
-  makeToolResolverFromFunctions([research, createDocument, ...MarkdownBlueprint.functions], testToolkit),
-  makeToolExecutionServiceFromFunctions(testToolkit, testToolkit.toLayer({}) as any),
+  makeToolResolverFromFunctions([research, createDocument, ...MarkdownBlueprint.functions]),
+  makeToolExecutionServiceFromFunctions(),
 ).pipe(
   Layer.provideMerge(
     FunctionInvocationServiceLayerTest({
@@ -51,6 +51,7 @@ const TestLayer = Layer.mergeAll(
   ),
   Layer.provideMerge(
     Layer.mergeAll(
+      GenericToolkit.providerEmpty,
       TestAiService(),
       TestDatabaseLayer({
         spaceKey: 'fixed',
