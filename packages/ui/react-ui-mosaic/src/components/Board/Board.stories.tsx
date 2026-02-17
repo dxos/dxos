@@ -13,6 +13,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
 import { TestColumn, TestItem } from '../../testing';
+import { translations } from '../../translations';
 import { Focus } from '../Focus';
 import { Mosaic } from '../Mosaic';
 
@@ -30,6 +31,7 @@ const createTestData = (db: Database.Database, columnCount: number) => {
   Array.from({ length: columnCount }).forEach((_, i) => {
     db.add(
       Obj.make(TestColumn, {
+        name: `Column ${i}`,
         items: Array.from({ length: faker.number.int({ min: 0, max: 20 }) }).map((_, j) => {
           const item = db.add(
             Obj.make(TestItem, {
@@ -63,6 +65,7 @@ const DefaultStory = ({ debug = false }: StoryProps) => {
       getColumns: () => columns,
       getItems: (column: TestColumn) => column.items,
       onDeleteItem: (column: TestColumn, current: TestItem) => {
+        // TODO(burdon): Obj.change.
         const idx = model.getItems(column).findIndex((item) => item.target?.id === current?.id);
         if (idx !== -1) {
           model.getItems(column).splice(idx, 1);
@@ -89,8 +92,6 @@ const DefaultStory = ({ debug = false }: StoryProps) => {
   );
 };
 
-// TODO(burdon): Specialize Column.
-
 const meta = {
   title: 'ui/react-ui-mosaic/Board',
   render: DefaultStory,
@@ -109,6 +110,7 @@ const meta = {
   ],
   parameters: {
     layout: 'fullscreen',
+    translations,
   },
   argTypes: {
     columns: {

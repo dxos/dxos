@@ -12,7 +12,7 @@ import React, {
   useState,
 } from 'react';
 
-import { type Obj, Ref } from '@dxos/echo';
+import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/react-client/echo';
 import { ScrollArea, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
@@ -124,7 +124,7 @@ type BoardColumnBodyProps = Pick<BoardColumnProps, 'data'> & {
 } & Pick<MosaicContainerProps, 'debug'>;
 
 const BoardColumnBody = ({ data, Tile = BoardItem, debug }: BoardColumnBodyProps) => {
-  const { model } = useBoardContext(BOARD_COLUMN_NAME);
+  const { model } = useBoardContext(BOARD_COLUMN_BODY_NAME);
   const [column, updateColumn] = useObject(data);
   const [viewport, setViewport] = useState<HTMLElement | null>(null);
 
@@ -162,11 +162,13 @@ BoardColumnBody.displayName = BOARD_COLUMN_BODY_NAME;
 // DefaultBoardColumn
 //
 
+const BOARD_DEFAULT_COLUMN_NAME = 'Board.DefaultColumn';
+
 type DefaultBoardColumnProps = BoardColumnProps & Pick<BoardColumnBodyProps, 'Tile'>;
 
 const DefaultBoardColumn = forwardRef<HTMLDivElement, DefaultBoardColumnProps>(
   ({ classNames, location, data, debug, Tile = BoardItem }, forwardedRef) => {
-    const { model } = useBoardContext(BOARD_COLUMN_NAME);
+    const { model } = useBoardContext(BOARD_DEFAULT_COLUMN_NAME);
     const [DebugInfo, debugHandler] = useContainerDebug(debug);
     const dragHandleRef = useRef<HTMLButtonElement>(null);
 
@@ -177,7 +179,7 @@ const DefaultBoardColumn = forwardRef<HTMLDivElement, DefaultBoardColumnProps>(
         location={location}
         data={data}
       >
-        <BoardColumnHeader label={data.id} ref={dragHandleRef} />
+        <BoardColumnHeader label={Obj.getLabel(data) ?? data.id} ref={dragHandleRef} />
         <BoardColumnBody data={data} Tile={Tile} debug={debugHandler} />
         {debug && (
           <div role='none' className='border-bs border-separator'>
@@ -189,6 +191,8 @@ const DefaultBoardColumn = forwardRef<HTMLDivElement, DefaultBoardColumnProps>(
     );
   },
 );
+
+DefaultBoardColumn.displayName = BOARD_DEFAULT_COLUMN_NAME;
 
 //
 // BoardColumn

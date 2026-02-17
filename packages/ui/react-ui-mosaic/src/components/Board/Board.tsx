@@ -20,7 +20,9 @@ import { BoardItem, type BoardItemProps } from './Item';
 
 //
 // Model
+// TODO(burdon): Normalize Column/Item object vs refs?
 //
+
 export interface BoardModel<TColumn extends Obj.Unknown = any, TItem extends Obj.Unknown = any> {
   isColumn: (obj: Obj.Unknown) => obj is TColumn;
   isItem: (obj: Obj.Unknown) => obj is TItem;

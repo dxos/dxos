@@ -26,6 +26,7 @@ export interface TestItem extends Schema.Schema.Type<typeof TestItem> {}
 
 export const TestColumn = Schema.Struct({
   id: ObjectId,
+  name: Schema.String,
   items: Schema.mutable(Schema.Array(Type.Ref(TestItem))),
 }).pipe(
   Type.object({
