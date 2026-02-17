@@ -2,15 +2,19 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Atom, RegistryContext } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useMemo } from 'react';
+import React, { useContext, useMemo } from 'react';
+import { expect, within } from 'storybook/test';
 
 import { type Database, Filter, Obj, Ref } from '@dxos/echo';
+import { AtomObj, AtomQuery } from '@dxos/echo-atom';
 import { invariant } from '@dxos/invariant';
 import { faker } from '@dxos/random';
 import { useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { withRegistry } from '@dxos/storybook-utils';
 import { mx } from '@dxos/ui-theme';
 
 import { TestColumn, TestItem } from '../../testing';
@@ -28,7 +32,7 @@ faker.seed(999);
 // TODO(burdon): Mobile implementation.
 // TODO(burdon): Tests/stories (sanity check).
 
-const createTestData = (db: Database.Database, columnCount: number) => {
+const createTestData = (db: Database.Database, columnCount: number, emptyColumns = 0) => {
   Array.from({ length: columnCount }).forEach((_, i) => {
     db.add(
       Obj.make(TestColumn, {
@@ -47,31 +51,57 @@ const createTestData = (db: Database.Database, columnCount: number) => {
       }),
     );
   });
+
+  for (let i = 0; i < emptyColumns; i++) {
+    db.add(Obj.make(TestColumn, { name: `Column ${columnCount + i}`, items: [] }));
+  }
 };
 
 type StoryProps = {
   columns?: number;
+  emptyColumns?: number;
   debug?: boolean;
 };
 
 const DefaultStory = ({ debug = false }: StoryProps) => {
   const { space } = useClientStory();
+  const registry = useContext(RegistryContext);
 
-  // TODO(burdon): Reactivity check.
   const columns = useQuery(space?.db, Filter.type(TestColumn));
   const model = useMemo<BoardModel<TestColumn, TestItem>>(() => {
+    const columnsAtom =
+      space?.db != null ? AtomQuery.make(space.db, Filter.type(TestColumn)) : Atom.make<TestColumn[]>([]);
+    const itemsAtomFamily =
+      space?.db != null
+        ? Atom.family((column: TestColumn) =>
+            Atom.make((get) => {
+              const refs = get(AtomObj.makeProperty(column, 'items'));
+              return (
+                refs
+                  ?.map((ref) => get(AtomObj.makeWithReactive(ref)))
+                  .filter((item): item is TestItem => item != null) ?? []
+              );
+            }),
+          )
+        : Atom.family((_column: TestColumn) => Atom.make<TestItem[]>([]));
+
     return {
       isColumn: (obj: Obj.Unknown): obj is TestColumn => Obj.instanceOf(TestColumn, obj),
       isItem: (obj: Obj.Unknown): obj is TestItem => Obj.instanceOf(TestItem, obj),
-      getColumns: () => columns,
-      getItems: (column: TestColumn) => column.items,
+      columns: columnsAtom,
+      items: (column) => itemsAtomFamily(column),
+      getColumns: () => registry.get(columnsAtom),
+      getItems: (column) => registry.get(itemsAtomFamily(column)),
       onItemDelete: (column: TestColumn, current: TestItem) => {
-        const idx = model.getItems(column).findIndex((item) => item.target?.id === current?.id);
-        if (idx !== -1) {
-          Obj.change(column, (mutableColumn) => {
-            model.getItems(mutableColumn).splice(idx, 1);
-          });
-        }
+        Obj.change(column, (mutableColumn) => {
+          if (!mutableColumn.items) {
+            return;
+          }
+          const idx = mutableColumn.items.findIndex((ref) => ref.target?.id === current?.id);
+          if (idx !== -1) {
+            mutableColumn.items.splice(idx, 1);
+          }
+        });
       },
       onItemCreate: async (column: TestColumn) => {
         invariant(space);
@@ -83,13 +113,13 @@ const DefaultStory = ({ debug = false }: StoryProps) => {
         );
 
         Obj.change(column, (column) => {
-          model.getItems(column).push(Ref.make(item));
+          column.items.push(Ref.make(item));
         });
 
         return item;
       },
     } satisfies BoardModel<TestColumn, TestItem>;
-  }, [space, columns]);
+  }, [space?.db, registry]);
 
   if (columns.length === 0) {
     return <></>;
@@ -113,6 +143,7 @@ const meta = {
   title: 'ui/react-ui-mosaic/Board',
   render: DefaultStory,
   decorators: [
+    withRegistry,
     withTheme({ platform: 'desktop' }),
     withLayout({ layout: 'fullscreen' }),
     withClientProvider({
@@ -120,8 +151,8 @@ const meta = {
       createIdentity: true,
       createSpace: true,
       onCreateSpace: ({ space }, context) => {
-        const columnCount = (context.args as StoryProps).columns ?? 4;
-        createTestData(space.db, columnCount);
+        const args = context.args as StoryProps;
+        createTestData(space.db, args.columns ?? 4, args.emptyColumns ?? 0);
       },
     }),
   ],
@@ -153,5 +184,25 @@ export const Debug: Story = {
   args: {
     debug: true,
     columns: 2,
+  },
+};
+
+export const Spec: Story = {
+  args: {
+    columns: 2,
+    emptyColumns: 1,
+  },
+  play: async () => {
+    const body = within(document.body);
+    const columns = await body.findAllByTestId('board-column', undefined, { timeout: 30_000 });
+    await expect(columns).toHaveLength(3);
+
+    // First two columns have items, third is empty.
+    for (const column of columns.slice(0, 2)) {
+      const items = within(column).queryAllByTestId('board-item');
+      await expect(items.length).toBeGreaterThan(0);
+    }
+    const emptyItems = within(columns[2]).queryAllByTestId('board-item');
+    await expect(emptyItems).toHaveLength(0);
   },
 };

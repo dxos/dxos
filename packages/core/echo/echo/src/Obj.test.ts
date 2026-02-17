@@ -77,6 +77,36 @@ describe('Obj', () => {
     });
   });
 
+  describe('snapshotOf', () => {
+    test('returns true for snapshot of matching schema', ({ expect }) => {
+      const obj = Obj.make(TestSchema.Person, { name: 'Test' });
+      const snapshot = Obj.getSnapshot(obj);
+
+      expect(Obj.snapshotOf(TestSchema.Person, snapshot)).toBe(true);
+      expect(Obj.snapshotOf(TestSchema.Organization, snapshot)).toBe(false);
+    });
+
+    test('returns false for reactive object', ({ expect }) => {
+      const obj = Obj.make(TestSchema.Person, { name: 'Test' });
+
+      expect(Obj.snapshotOf(TestSchema.Person, obj)).toBe(false);
+    });
+
+    test('returns false for plain object with matching shape', ({ expect }) => {
+      const plain = { id: 'test', name: 'Test' };
+
+      expect(Obj.snapshotOf(TestSchema.Person, plain)).toBe(false);
+    });
+
+    test('curried form works', ({ expect }) => {
+      const snapshot = Obj.getSnapshot(Obj.make(TestSchema.Person, { name: 'Test' }));
+      const isPersonSnapshot = Obj.snapshotOf(TestSchema.Person);
+
+      expect(isPersonSnapshot(snapshot)).toBe(true);
+      expect(isPersonSnapshot({})).toBe(false);
+    });
+  });
+
   describe('getKeys', () => {
     const SOURCE = 'test-source';
 

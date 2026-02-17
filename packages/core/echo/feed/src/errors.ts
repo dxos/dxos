@@ -6,15 +6,19 @@ import { BaseError } from '@dxos/errors';
 
 export class DuplicateBlockPositionError extends BaseError.extend('DuplicateBlockPositionError') {
   constructor(args: { feedId: string; position: number }) {
-    super(`Non-unique block position detected (feedId=${args.feedId} position=${args.position}).`);
+    super({
+      message: `Non-unique block position detected (feedId=${args.feedId} position=${args.position}).`,
+      context: args,
+    });
   }
 }
 
 export class DuplicateBlockLamportTimestampError extends BaseError.extend('DuplicateBlockLamportTimestampError') {
   constructor(args: { feedId: string; actorId: string; sequence: number }) {
-    super(
-      `Non-unique block Lamport timestamp detected (feedId=${args.feedId} actorId=${args.actorId} sequence=${args.sequence}).`,
-    );
+    super({
+      message: `Non-unique block Lamport timestamp detected (feedId=${args.feedId} actorId=${args.actorId} sequence=${args.sequence}).`,
+      context: args,
+    });
   }
 }
 
@@ -26,8 +30,9 @@ export class PositionConflictError extends BaseError.extend('PositionConflictErr
     currentPosition: number;
     requestedPosition: number | null;
   }) {
-    super(
-      `Block already has position ${args.currentPosition}, cannot set to ${args.requestedPosition} (feedId=${args.feedId} actorId=${args.actorId} sequence=${args.sequence}).`,
-    );
+    super({
+      message: `Block already has position ${args.currentPosition}, cannot set to ${args.requestedPosition} (feedId=${args.feedId} actorId=${args.actorId} sequence=${args.sequence}).`,
+      context: args,
+    });
   }
 }
