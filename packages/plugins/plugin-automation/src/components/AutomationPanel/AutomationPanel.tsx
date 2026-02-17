@@ -2,21 +2,19 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Atom, useAtomValue } from '@effect-atom/atom-react';
 import * as Array from 'effect/Array';
 import * as EFn from 'effect/Function';
 import * as Match from 'effect/Match';
 import * as Schema from 'effect/Schema';
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 
 import { Filter, Obj, Tag } from '@dxos/echo';
-import { AtomObj } from '@dxos/echo-atom';
 import { Function, Script, Trigger } from '@dxos/functions';
 import { KEY_QUEUE_CURSOR } from '@dxos/functions-runtime';
 import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
 import { useTypeOptions } from '@dxos/plugin-space';
 import { type Client, useClient } from '@dxos/react-client';
-import { type Space, useQuery } from '@dxos/react-client/echo';
+import { type Space, useObject, useQuery } from '@dxos/react-client/echo';
 import { Clipboard, IconButton, Input, Separator, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { ControlItem, controlItemClasses } from '@dxos/react-ui-form';
 import { List } from '@dxos/react-ui-list';
@@ -77,7 +75,9 @@ export const AutomationPanel = ({ classNames, space, object, initialTrigger, onD
 
   const handleSave: TriggerEditorProps['onSave'] = (trigger) => {
     if (selected) {
-      Object.assign(selected, trigger);
+      Obj.change(selected, (mutable) => {
+        Object.assign(mutable, trigger);
+      });
     } else {
       space.db.add(Trigger.make(trigger));
     }
@@ -134,10 +134,10 @@ export const AutomationPanel = ({ classNames, space, object, initialTrigger, onD
                   key={trigger.id}
                   trigger={trigger}
                   functions={functions}
-                  handleSelect={handleSelect}
-                  handleForceRunTrigger={handleForceRunTrigger}
-                  handleResetCursor={handleResetCursor}
-                  handleDelete={handleDelete}
+                  onSelect={handleSelect}
+                  onDelete={handleDelete}
+                  onResetCursor={handleResetCursor}
+                  onForceRun={handleForceRunTrigger}
                 />
               ))}
             </div>
@@ -153,74 +153,88 @@ export const AutomationPanel = ({ classNames, space, object, initialTrigger, onD
 const TriggerListItem = ({
   trigger,
   functions,
-  handleSelect,
-  handleForceRunTrigger,
-  handleResetCursor,
-  handleDelete,
+  onSelect,
+  onDelete,
+  onResetCursor,
+  onForceRun,
 }: {
   trigger: Trigger.Trigger;
   functions: Function.Function[];
-  handleSelect: (trigger: Trigger.Trigger) => void;
-  handleForceRunTrigger: (trigger: Trigger.Trigger) => void;
-  handleResetCursor: (trigger: Trigger.Trigger) => void;
-  handleDelete: (trigger: Trigger.Trigger) => void;
+  onSelect?: (trigger: Trigger.Trigger) => void;
+  onDelete?: (trigger: Trigger.Trigger) => void;
+  onResetCursor?: (trigger: Trigger.Trigger) => void;
+  onForceRun?: (trigger: Trigger.Trigger) => void;
 }) => {
   const client = useClient();
   const copyAction = getCopyAction(client, trigger);
-  const cursor = useAtomValue(
-    AtomObj.make(trigger).pipe((_) => Atom.make((get) => Obj.getKeys(get(_), KEY_QUEUE_CURSOR).at(0)?.id)),
-  );
   const { t } = useTranslation(meta.id);
+  const cursor = Obj.getKeys(trigger, KEY_QUEUE_CURSOR).at(0)?.id;
+  const [snapshot, updateTrigger] = useObject(trigger);
+
+  const enabled = snapshot.enabled ?? false;
+  const onEnabledChange = (checked: boolean) => {
+    updateTrigger((trigger) => {
+      trigger.enabled = checked;
+    });
+  };
+
+  const handleSelect = useCallback(() => {
+    onSelect?.(trigger);
+  }, [onSelect, trigger]);
+
+  const handleDelete = useCallback(() => {
+    onDelete?.(trigger);
+  }, [onDelete, trigger]);
+
+  const handleResetCursor = useCallback(() => {
+    onResetCursor?.(trigger);
+  }, [onResetCursor, trigger]);
+
+  const handleForceRun = useCallback(() => {
+    onForceRun?.(trigger);
+  }, [onForceRun, trigger]);
 
   return (
-    <List.Item<Trigger.Trigger>
+    <List.Item<Obj.Snapshot<Trigger.Trigger>>
       key={trigger.id}
-      item={trigger}
+      item={snapshot}
       classNames={mx(grid, ghostHover, 'items-center', 'pli-2')}
     >
       <Input.Root>
-        <Input.Switch
-          checked={trigger.enabled}
-          onCheckedChange={(checked) =>
-            Obj.change(trigger, (t) => {
-              t.enabled = checked;
-            })
-          }
-        />
+        <Input.Switch checked={enabled} onCheckedChange={onEnabledChange} />
       </Input.Root>
 
       <div className={'flex'}>
-        <List.ItemTitle classNames='pli-1 cursor-pointer is-0 shrink truncate' onClick={() => handleSelect(trigger)}>
+        <List.ItemTitle classNames='pli-1 cursor-pointer is-0 shrink truncate' onClick={handleSelect}>
           {getFunctionName(functions, trigger) ?? '∅'}
           {cursor && <div className='text-xs text-description truncate ml-4'>Position: {cursor}</div>}
         </List.ItemTitle>
 
-        {/* TODO: a better way to expose copy action */}
         {copyAction && (
           <Clipboard.IconButton label={t(copyAction.translationKey)} value={copyAction.contentProvider()} />
         )}
       </div>
 
-      {trigger.spec?.kind === 'timer' && (
+      {trigger.spec?.kind === 'timer' && onForceRun && (
         <List.ItemButton
           autoHide={false}
-          disabled={!trigger.enabled || trigger.spec?.kind !== 'timer'}
+          disabled={!enabled || trigger.spec?.kind !== 'timer'}
           icon='ph--play--regular'
           label='Force run'
-          onClick={() => handleForceRunTrigger(trigger)}
+          onClick={handleForceRun}
         />
       )}
-      {trigger.spec?.kind === 'queue' && (
+      {trigger.spec?.kind === 'queue' && onResetCursor && (
         <List.ItemButton
           autoHide={false}
           disabled={!cursor}
           icon='ph--arrow-clockwise--regular'
           label='Reset cursor'
-          onClick={() => handleResetCursor(trigger)}
+          onClick={handleResetCursor}
         />
       )}
 
-      <List.ItemDeleteButton onClick={() => handleDelete(trigger)} />
+      {onDelete && <List.ItemDeleteButton onClick={handleDelete} />}
     </List.Item>
   );
 };
@@ -228,13 +242,16 @@ const TriggerListItem = ({
 const getCopyAction = (client: Client, trigger: Trigger.Trigger | undefined) => {
   if (trigger?.spec?.kind === 'email') {
     return {
-      translationKey: 'trigger copy email',
+      translationKey: 'trigger copy email' as const,
       contentProvider: () => `${Obj.getDatabase(trigger)!.spaceId}@dxos.network`,
     };
   }
 
   if (trigger?.spec?.kind === 'webhook') {
-    return { translationKey: 'trigger copy url', contentProvider: () => getWebhookUrl(client, trigger) };
+    return {
+      translationKey: 'trigger copy url' as const,
+      contentProvider: () => getWebhookUrl(client, trigger!),
+    };
   }
 
   return undefined;

@@ -77,6 +77,32 @@ describe('Obj', () => {
     });
   });
 
+  describe('getKeys', () => {
+    const SOURCE = 'test-source';
+
+    test('returns keys from reactive object and snapshot', ({ expect }) => {
+      const obj = Obj.make(TestSchema.Person, { name: 'Test' });
+      Obj.change(obj, (o) => {
+        const meta = Obj.getMeta(o);
+        meta.keys.push({ source: SOURCE, id: 'key-1' });
+        meta.keys.push({ source: SOURCE, id: 'key-2' });
+        meta.keys.push({ source: 'other', id: 'key-3' });
+      });
+
+      expect(Obj.getKeys(obj, SOURCE)).toHaveLength(2);
+      expect(Obj.getKeys(obj, SOURCE).map((k) => k.id)).toEqual(['key-1', 'key-2']);
+
+      const snapshot = Obj.getSnapshot(obj);
+      expect(Obj.getKeys(snapshot, SOURCE)).toHaveLength(2);
+      expect(Obj.getKeys(snapshot, SOURCE).map((k) => k.id)).toEqual(['key-1', 'key-2']);
+    });
+
+    test('throws for plain object without metadata', ({ expect }) => {
+      const plain = { id: 'plain-1', name: 'Plain' };
+      expect(() => Obj.getKeys(plain as any, SOURCE)).toThrow(/ObjectMeta not found/);
+    });
+  });
+
   describe('clone', () => {
     test('clones object with same properties', ({ expect }) => {
       const original = Obj.make(TestSchema.Person, {
