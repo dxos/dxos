@@ -5,6 +5,7 @@
 import type * as SqlClient from '@effect/sql/SqlClient';
 import { Encoder, decode as cborXdecode } from 'cbor-x';
 import * as Effect from 'effect/Effect';
+import * as Schema from 'effect/Schema';
 
 import { AsyncTask, scheduleTask } from '@dxos/async';
 import { Resource } from '@dxos/context';
@@ -100,8 +101,16 @@ export class FeedSyncer extends Resource {
         if (service !== EdgeService.QUEUE_REPLICATOR) {
           return;
         }
-        const payload = cborXdecode(msg.payload!.value) as FeedProtocol.ProtocolMessage;
-        this.#syncClient.handleMessage(payload);
+        const handleMessageEffect = Effect.gen(this, function* () {
+          const decoded = yield* Effect.try({
+            try: () => cborXdecode(msg.payload!.value),
+            catch: (error) => new Error(`Failed to decode feed sync message: ${error}`),
+          });
+          const payload = yield* Schema.decodeUnknown(FeedProtocol.ProtocolMessage)(decoded);
+          yield* this.#syncClient.handleMessage(payload);
+        });
+
+        void RuntimeProvider.runPromise(this.#runtime)(handleMessageEffect);
       }),
     );
 
@@ -136,7 +145,7 @@ export class FeedSyncer extends Resource {
   #sendMessage(message: FeedProtocol.QueryRequest | FeedProtocol.AppendRequest): Effect.Effect<void, unknown, never> {
     return Effect.gen(this, function* () {
       const encoded = encoder.encode(message);
-      Effect.tryPromise(async () =>
+      yield* Effect.tryPromise(async () =>
         this.#edgeClient.send(
           createBuf(MessageSchema, {
             source: {
