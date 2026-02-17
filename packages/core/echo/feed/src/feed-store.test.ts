@@ -43,8 +43,8 @@ describe('Feed V2', () => {
         feedId,
         actorId: feedId,
         sequence: 123, // Author sequence provided by peer
-        predActorId: null,
-        predSequence: null,
+        prevActorId: null,
+        prevSequence: null,
         position: null, // Input doesn't have position
         timestamp: Date.now(),
         data: new Uint8Array([1, 2, 3]),
@@ -89,8 +89,8 @@ describe('Feed V2', () => {
         feedId,
         actorId: ALICE,
         sequence: 1,
-        predActorId: null,
-        predSequence: null,
+        prevActorId: null,
+        prevSequence: null,
         position: null,
         timestamp: Date.now(),
         data: new Uint8Array([1]),
@@ -124,8 +124,8 @@ describe('Feed V2', () => {
             feedId,
             actorId: feedId,
             sequence: 1,
-            predActorId: null,
-            predSequence: null,
+            prevActorId: null,
+            prevSequence: null,
             position: null,
             timestamp: Date.now(),
             data: new Uint8Array([1]),
@@ -330,8 +330,8 @@ describe('Feed V2', () => {
       expect(blocks[0].position).toBeNull();
       expect(blocks[0].sequence).toBe(0);
       expect(blocks[0].actorId).toBe(ALICE);
-      expect(blocks[0].predActorId).toBeNull();
-      expect(blocks[0].predSequence).toBeNull();
+      expect(blocks[0].prevActorId).toBeNull();
+      expect(blocks[0].prevSequence).toBeNull();
       expect(blocks[0].timestamp).toBeGreaterThan(0);
       expect(blocks[0].data).toEqual(new Uint8Array([1]));
 

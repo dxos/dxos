@@ -48,12 +48,12 @@ export const Block = Schema.Struct({
   /**
    * Actor of the immediate predecessor block, if any.
    */
-  predActorId: Schema.NullOr(Schema.String),
+  prevActorId: Schema.NullOr(Schema.String),
 
   /**
    * Sequence of the immediate predecessor block, if any.
    */
-  predSequence: Schema.NullOr(Schema.Number),
+  prevSequence: Schema.NullOr(Schema.Number),
 
   /**
    * Globally ordered position assigned by a position authority.

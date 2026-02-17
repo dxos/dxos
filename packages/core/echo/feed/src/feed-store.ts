@@ -75,8 +75,8 @@ export class FeedStore {
         position INTEGER,
         sequence INTEGER NOT NULL,
         actorId TEXT NOT NULL,
-        predSequence INTEGER,
-        predActorId TEXT,
+        prevSequence INTEGER,
+        prevActorId TEXT,
         timestamp INTEGER NOT NULL,
         data BLOB NOT NULL,
         FOREIGN KEY(feedPrivateId) REFERENCES feeds(feedPrivateId)
@@ -431,10 +431,10 @@ export class FeedStore {
             yield* sql`
               INSERT INTO blocks (
                 feedPrivateId, position, sequence, actorId, 
-                predSequence, predActorId, timestamp, data
+                prevSequence, prevActorId, timestamp, data
               ) VALUES (
                 ${feedPrivateId}, ${positionToInsert}, ${block.sequence}, ${block.actorId},
-                ${block.predSequence}, ${block.predActorId}, ${block.timestamp}, ${block.data}
+                ${block.prevSequence}, ${block.prevActorId}, ${block.timestamp}, ${block.data}
               ) ON CONFLICT DO NOTHING
             `;
           }
@@ -504,29 +504,29 @@ export class FeedStore {
 
           // Determine predecessor: either from in-flight blocks or from DB.
           let sequence: number;
-          let predSequence: number | null;
-          let predActorId: string | null;
+          let prevSequence: number | null;
+          let prevActorId: string | null;
 
           const inFlight = currentSeqs.get(key);
           if (inFlight) {
             // We've already added blocks for this feed - continue from last in-flight.
             sequence = inFlight.sequence + 1;
-            predSequence = inFlight.sequence;
-            predActorId = inFlight.actorId;
+            prevSequence = inFlight.sequence;
+            prevActorId = inFlight.actorId;
           } else {
             // First block for this feed - use DB state.
             const lastBlock = lastSeqs.get(key);
             sequence = (lastBlock?.sequence ?? -1) + 1;
-            predSequence = lastBlock?.sequence ?? null;
-            predActorId = lastBlock?.actorId ?? null;
+            prevSequence = lastBlock?.sequence ?? null;
+            prevActorId = lastBlock?.actorId ?? null;
           }
 
           const block: Block = {
             feedId: msg.feedId,
             actorId: this.#options.localActorId,
             sequence,
-            predActorId,
-            predSequence,
+            prevActorId,
+            prevSequence,
             timestamp: Date.now(),
             data: msg.data,
             position: null, // Assigned by append.
