@@ -76,7 +76,7 @@ export const GptComponent = ({ shape }: ShapeComponentProps<GptShape>) => {
     <FunctionBody
       shape={shape}
       content={
-        <ScrollArea.Root thin padding orientation='vertical'>
+        <ScrollArea.Root orientation='vertical' thin>
           <ScrollArea.Viewport>{text}</ScrollArea.Viewport>
         </ScrollArea.Root>
       }

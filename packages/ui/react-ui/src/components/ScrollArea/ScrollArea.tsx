@@ -18,6 +18,7 @@ const SCROLLAREA_NAME = 'ScrollArea';
 type ScrollAreaContextType = {
   orientation: AllowedAxis;
   autoHide: boolean;
+  // TODO(burdon): Rethink padding; apply minimal to balance left/right of scrollbar if mobile.
   padding: boolean;
   thin: boolean;
   snap: boolean;

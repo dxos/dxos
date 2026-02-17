@@ -57,10 +57,11 @@ export const scrollAreaViewport: ComponentFunction<ScrollAreaStyleProps> = (
           orientation === 'all' && '[&::-webkit-scrollbar-thumb]:bg-subduedSeparator',
         ],
 
+    // TODO(burdon): Are scrollbars reserved on native devices?
     padding && [
-      orientation === 'vertical' && 'pli-2',
-      orientation === 'horizontal' && 'pbe-2',
-      orientation === 'all' && 'pie-2 pbe-2',
+      orientation === 'vertical' && (thin ? 'pis-[8px] pie-[5px]' : 'pis-[8px] pie-[2px]'),
+      orientation === 'horizontal' && (thin ? 'pbe-[5px]' : 'pbe-[2px]'),
+      orientation === 'all' && (thin ? 'pis-[8px] pie-[5px] pbe-[5px]' : 'pis-[8px] pie-[2px] pbe-[2px]'),
     ],
 
     snap && [

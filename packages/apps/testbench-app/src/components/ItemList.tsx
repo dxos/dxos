@@ -18,7 +18,7 @@ export type ItemListProps<T> = { objects: T[] } & Pick<ItemProps<T>, 'debug' | '
 
 export const ItemList = ({ objects, debug, ...props }: ItemListProps<Obj.Any>) => {
   return (
-    <ScrollArea.Root padding thin orientation='vertical'>
+    <ScrollArea.Root padding>
       <ScrollArea.Viewport>
         {objects
           .slice(0, MAX_RENDERED_COUNT)

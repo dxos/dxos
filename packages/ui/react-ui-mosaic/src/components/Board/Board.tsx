@@ -91,7 +91,7 @@ const BoardRootInner = forwardRef<HTMLDivElement, BoardRootProps>(
               debug={debugHandler}
             >
               <ScrollArea.Root orientation='horizontal' classNames='md:pbs-3' padding>
-                <ScrollArea.Viewport classNames='snap-x md:snap-none' ref={setViewport}>
+                <ScrollArea.Viewport classNames='snap-mandatory snap-x md:snap-none' ref={setViewport}>
                   <Mosaic.Stack items={items} getId={(item) => item.id} Tile={Tile} debug={debug} />
                 </ScrollArea.Viewport>
               </ScrollArea.Root>
