@@ -12,7 +12,7 @@ import { RuntimeProvider } from '@dxos/effect';
 import { type FeedStore } from '@dxos/feed';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
-import { QueueProtocol } from '@dxos/protocols';
+import { FeedProtocol } from '@dxos/protocols';
 import {
   type DeleteFromQueueRequest,
   type InsertIntoQueueRequest,
@@ -46,14 +46,14 @@ export class LocalQueueServiceImpl implements QueueService {
         const cursor = query.after ? parseInt(query.after) : -1;
         const result = yield* this.#feedStore.query({
           requestId: crypto.randomUUID(),
-          feedNamespace: request.query.queuesNamespace || QueueProtocol.WellKnownNamespaces.data,
+          feedNamespace: request.query.queuesNamespace || FeedProtocol.WellKnownNamespaces.data,
           spaceId: spaceId! as SpaceId,
           query: { feedIds: queueIds ?? [] },
           position: cursor,
           limit: query.limit,
         });
 
-        const objects = result.blocks.map((block: QueueProtocol.Block) => {
+        const objects = result.blocks.map((block: FeedProtocol.Block) => {
           const data = JSON.parse(new TextDecoder().decode(block.data));
           if (block.position !== null) {
             setQueuePosition(data, block.position);
@@ -81,9 +81,9 @@ export class LocalQueueServiceImpl implements QueueService {
       Effect.gen(this, function* () {
         const messages = objects!.map((obj) => {
           const data = structuredClone(obj);
-          if (data[ATTR_META]?.keys?.find((key: ForeignKey) => key.source === QueueProtocol.KEY_QUEUE_POSITION)) {
+          if (data[ATTR_META]?.keys?.find((key: ForeignKey) => key.source === FeedProtocol.KEY_QUEUE_POSITION)) {
             data[ATTR_META].keys = data[ATTR_META].keys.filter(
-              (key: ForeignKey) => key.source !== QueueProtocol.KEY_QUEUE_POSITION,
+              (key: ForeignKey) => key.source !== FeedProtocol.KEY_QUEUE_POSITION,
             );
           }
 
@@ -123,13 +123,13 @@ const setQueuePosition = (obj: ObjectJSON, position: number) => {
   obj[ATTR_META].keys ??= [];
   for (let i = 0; i < obj[ATTR_META].keys.length; i++) {
     const key = obj[ATTR_META].keys[i];
-    if (key.source === QueueProtocol.KEY_QUEUE_POSITION) {
+    if (key.source === FeedProtocol.KEY_QUEUE_POSITION) {
       obj[ATTR_META].keys.splice(i, 1);
       i--;
     }
   }
   obj[ATTR_META].keys.push({
-    source: QueueProtocol.KEY_QUEUE_POSITION,
+    source: FeedProtocol.KEY_QUEUE_POSITION,
     id: position.toString(),
   });
 };

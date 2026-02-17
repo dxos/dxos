@@ -16,7 +16,7 @@ import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
 import { log } from '@dxos/log';
-import { type QueueProtocol } from '@dxos/protocols';
+import { type FeedProtocol } from '@dxos/protocols';
 import type * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 import { trace } from '@dxos/tracing';
 
@@ -82,7 +82,7 @@ export class EchoHost extends Resource {
 
   private _updateIndexes!: DeferredTask;
 
-  private _queuesService: QueueProtocol.QueueService;
+  private _queuesService: FeedProtocol.QueueService;
 
   private _indexesUpToDate = false;
 
@@ -192,7 +192,7 @@ export class EchoHost extends Resource {
     return this._dataService;
   }
 
-  get queuesService(): QueueProtocol.QueueService {
+  get queuesService(): FeedProtocol.QueueService {
     return this._queuesService;
   }
 

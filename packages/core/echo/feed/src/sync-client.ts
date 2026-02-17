@@ -8,14 +8,14 @@ import * as Deferred from 'effect/Deferred';
 import * as Effect from 'effect/Effect';
 
 import type { SpaceId } from '@dxos/keys';
-import { type QueueProtocol } from '@dxos/protocols';
+import { type FeedProtocol } from '@dxos/protocols';
 import type { SqlTransaction } from '@dxos/sql-sqlite';
 
 import type { FeedStore } from './feed-store';
 
-type AppendResponse = QueueProtocol.AppendResponse;
-type ProtocolMessage = QueueProtocol.ProtocolMessage;
-type QueryResponse = QueueProtocol.QueryResponse;
+type AppendResponse = FeedProtocol.AppendResponse;
+type ProtocolMessage = FeedProtocol.ProtocolMessage;
+type QueryResponse = FeedProtocol.QueryResponse;
 type QueryRequestMessage = Extract<ProtocolMessage, { _tag: 'QueryRequest' }>;
 type AppendRequestMessage = Extract<ProtocolMessage, { _tag: 'AppendRequest' }>;
 type RequestMessage = QueryRequestMessage | AppendRequestMessage;

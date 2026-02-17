@@ -7,7 +7,7 @@ import type * as QueryProto from '@dxos/protocols/proto/dxos/echo/query';
 import type * as DataProto from '@dxos/protocols/proto/dxos/echo/service';
 
 import { type EdgeFunctionEnv } from './edge';
-import type * as QueueProtocol from './QueueProtoocol';
+import type * as FeedProtocol from './FeedProtocol';
 
 //
 // Function protocol definition
@@ -77,7 +77,7 @@ export interface Context {
      * Queue service.
      * Available if the function is invoked in context of a space.
      */
-    queueService?: QueueProtocol.QueueService;
+    queueService?: FeedProtocol.QueueService;
 
     /**
      * Functions service.

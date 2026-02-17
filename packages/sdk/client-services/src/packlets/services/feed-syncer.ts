@@ -12,7 +12,7 @@ import { type EdgeConnection, MessageSchema } from '@dxos/edge-client';
 import { RuntimeProvider } from '@dxos/effect';
 import { type FeedStore, SyncClient } from '@dxos/feed';
 import { type SpaceId } from '@dxos/keys';
-import { QueueProtocol } from '@dxos/protocols';
+import { FeedProtocol } from '@dxos/protocols';
 import { EdgeService } from '@dxos/protocols';
 import { createBuf } from '@dxos/protocols/buf';
 import { type Message as RouterMessage } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
@@ -96,11 +96,11 @@ export class FeedSyncer extends Resource {
         if (!msg.serviceId) {
           return;
         }
-        const service = msg.serviceId;
+        const service = msg.serviceId.split(':')[0];
         if (service !== EdgeService.QUEUE_REPLICATOR) {
           return;
         }
-        const payload = cborXdecode(msg.payload!.value) as QueueProtocol.ProtocolMessage;
+        const payload = cborXdecode(msg.payload!.value) as FeedProtocol.ProtocolMessage;
         this.#syncClient.handleMessage(payload);
       }),
     );
@@ -133,7 +133,7 @@ export class FeedSyncer extends Resource {
     this.#lastFullPoll = Date.now();
   }
 
-  #sendMessage(message: QueueProtocol.QueryRequest | QueueProtocol.AppendRequest): Effect.Effect<void, unknown, never> {
+  #sendMessage(message: FeedProtocol.QueryRequest | FeedProtocol.AppendRequest): Effect.Effect<void, unknown, never> {
     return Effect.gen(this, function* () {
       const encoded = encoder.encode(message);
       Effect.tryPromise(async () =>
@@ -151,11 +151,11 @@ export class FeedSyncer extends Resource {
     });
   }
 
-  #getTargetServiceId(message: QueueProtocol.QueryRequest | QueueProtocol.AppendRequest): string {
+  #getTargetServiceId(message: FeedProtocol.QueryRequest | FeedProtocol.AppendRequest): string {
     // TODO(dmaretskyi): Perhaps in the future we will want to include the queue namespace here as well.
     //                   This would require putting it at the top level of the message.
     //                   For now, we let the edge router handle it.
-    return QueueProtocol.encodeServiceId(message.feedNamespace, message.spaceId as SpaceId);
+    return FeedProtocol.encodeServiceId(message.feedNamespace, message.spaceId as SpaceId);
   }
 
   readonly #pollTask = new AsyncTask(async () =>
@@ -189,7 +189,7 @@ export class FeedSyncer extends Resource {
         scheduleTask(
           this._ctx,
           () => this.#pollTask.schedule(),
-          Math.min(this.#pollingInterval - (Date.now() - (this.#lastFullPoll ?? 0)), 0),
+          Math.max(this.#pollingInterval - (Date.now() - (this.#lastFullPoll ?? 0)), 0),
         );
       }
     }).pipe(RuntimeProvider.runPromise(this.#runtime)),

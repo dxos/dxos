@@ -9,19 +9,19 @@ import * as Effect from 'effect/Effect';
 import { Event } from '@dxos/async';
 import { assertArgument } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
-import { QueueProtocol } from '@dxos/protocols';
+import { FeedProtocol } from '@dxos/protocols';
 import { SqlTransaction } from '@dxos/sql-sqlite';
 
-type AppendRequest = QueueProtocol.AppendRequest;
-type AppendResponse = QueueProtocol.AppendResponse;
-type Block = QueueProtocol.Block;
-const FeedCursor = QueueProtocol.FeedCursor;
-type FeedCursor = QueueProtocol.FeedCursor;
-const isWellKnownNamespace = QueueProtocol.isWellKnownNamespace;
-type QueryRequest = QueueProtocol.QueryRequest;
-type QueryResponse = QueueProtocol.QueryResponse;
-type SubscribeRequest = QueueProtocol.SubscribeRequest;
-type SubscribeResponse = QueueProtocol.SubscribeResponse;
+type AppendRequest = FeedProtocol.AppendRequest;
+type AppendResponse = FeedProtocol.AppendResponse;
+type Block = FeedProtocol.Block;
+const FeedCursor = FeedProtocol.FeedCursor;
+type FeedCursor = FeedProtocol.FeedCursor;
+const isWellKnownNamespace = FeedProtocol.isWellKnownNamespace;
+type QueryRequest = FeedProtocol.QueryRequest;
+type QueryResponse = FeedProtocol.QueryResponse;
+type SubscribeRequest = FeedProtocol.SubscribeRequest;
+type SubscribeResponse = FeedProtocol.SubscribeResponse;
 
 export interface FeedStoreOptions {
   /**

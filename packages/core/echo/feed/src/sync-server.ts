@@ -5,15 +5,15 @@
 import type * as SqlClient from '@effect/sql/SqlClient';
 import * as Effect from 'effect/Effect';
 
-import { type QueueProtocol } from '@dxos/protocols';
+import { type FeedProtocol } from '@dxos/protocols';
 import type { SqlTransaction } from '@dxos/sql-sqlite';
 
 import type { FeedStore } from './feed-store';
 
-type AppendRequest = QueueProtocol.AppendRequest;
-type ProtocolMessage = QueueProtocol.ProtocolMessage;
-type QueryRequest = QueueProtocol.QueryRequest;
-type QueryResponse = QueueProtocol.QueryResponse;
+type AppendRequest = FeedProtocol.AppendRequest;
+type ProtocolMessage = FeedProtocol.ProtocolMessage;
+type QueryRequest = FeedProtocol.QueryRequest;
+type QueryResponse = FeedProtocol.QueryResponse;
 
 export type SyncServerOptions = {
   /** This server's peer id. Set as senderPeerId on all replies. */

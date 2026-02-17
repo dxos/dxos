@@ -11,7 +11,7 @@ import { type DataSourceCursor, type IndexDataSource, type IndexerObject } from 
 import { failedInvariant } from '@dxos/invariant';
 import type { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { QueueProtocol } from '@dxos/protocols';
+import { FeedProtocol } from '@dxos/protocols';
 
 export type QueueDataSourceOptions = {
   feedStore: FeedStore;
@@ -85,7 +85,7 @@ export class QueueDataSource implements IndexDataSource {
         // Empty string cursor means "start from beginning".
         const currentCursor =
           typeof cursor.cursor === 'string' && cursor.cursor !== ''
-            ? QueueProtocol.FeedCursor.make(cursor.cursor)
+            ? FeedProtocol.FeedCursor.make(cursor.cursor)
             : undefined;
 
         try {

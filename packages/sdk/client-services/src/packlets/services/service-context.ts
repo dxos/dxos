@@ -28,7 +28,7 @@ import { log } from '@dxos/log';
 import { type SignalManager } from '@dxos/messaging';
 import { type SwarmNetworkManager } from '@dxos/network-manager';
 import { InvalidStorageVersionError, STORAGE_VERSION, trace } from '@dxos/protocols';
-import { QueueProtocol } from '@dxos/protocols';
+import { FeedProtocol } from '@dxos/protocols';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
@@ -213,7 +213,7 @@ export class ServiceContext extends Resource {
         edgeClient: this._edgeConnection,
         peerId: this.identityManager.identity?.deviceKey?.toHex() ?? '',
         getSpaceIds: () => this.echoHost!.spaceIds,
-        syncNamespace: QueueProtocol.WellKnownNamespaces.data,
+        syncNamespace: FeedProtocol.WellKnownNamespaces.data,
       });
     }
   }

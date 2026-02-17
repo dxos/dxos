@@ -13,4 +13,4 @@ export * from './storage.ts';
 export * from './tracing.ts';
 export type * from './types.ts';
 export * as FunctionProtocol from './FunctionProtocol.ts';
-export * as QueueProtocol from './QueueProtoocol.ts';
+export * as FeedProtocol from './FeedProtocol.ts';
