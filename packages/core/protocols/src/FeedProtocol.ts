@@ -39,27 +39,33 @@ export const Block = Schema.Struct({
    * Actor that produced this block.
    */
   actorId: Schema.String,
+
   /**
    * Per-feed monotonic sequence assigned by the actor.
    */
   sequence: Schema.Number,
+
   /**
    * Actor of the immediate predecessor block, if any.
    */
   predActorId: Schema.NullOr(Schema.String),
+
   /**
    * Sequence of the immediate predecessor block, if any.
    */
   predSequence: Schema.NullOr(Schema.Number),
+
   /**
    * Globally ordered position assigned by a position authority.
    * Unlike `sequence` (per-feed causal order), this enables merged incremental reads across feeds.
    */
   position: Schema.NullOr(Schema.Number),
+
   /**
    * Milliseconds since Unix epoch when the block was created.
    */
   timestamp: Schema.Number,
+
   /**
    * Serialized application payload.
    */
@@ -91,6 +97,7 @@ export const QueryRequest = Schema.Struct({
    * Target space identifier.
    */
   spaceId: SpaceId,
+
   /**
    * Feed namespace to query.
    */
@@ -150,14 +157,17 @@ export const QueryResponse = Schema.Struct({
    * Echoed request correlation identifier.
    */
   requestId: Schema.optional(Schema.String),
+
   /**
    * Cursor to continue reading from this result boundary.
    */
   nextCursor: FeedCursor,
+
   /**
    * Indicates whether more matching blocks are available.
    */
   hasMore: Schema.Boolean,
+
   /**
    * Returned blocks for the current page.
    */
@@ -173,10 +183,12 @@ export const SubscribeRequest = Schema.Struct({
    * Optional request correlation identifier.
    */
   requestId: Schema.optional(Schema.String),
+
   /**
    * Feeds to include in the subscription.
    */
   feedIds: Schema.Array(Schema.String),
+
   /**
    * Optional space scope for the subscription.
    */
@@ -192,10 +204,12 @@ export const SubscribeResponse = Schema.Struct({
    * Echoed request correlation identifier.
    */
   requestId: Schema.optional(Schema.String),
+
   /**
    * Identifier to use in subsequent subscription queries.
    */
   subscriptionId: Schema.String,
+
   /**
    * Expiration timestamp in milliseconds since Unix epoch.
    */
@@ -216,6 +230,7 @@ export const AppendRequest = Schema.Struct({
    * Target space identifier.
    */
   spaceId: Schema.String,
+
   /**
    * Namespace that all appended blocks belong to.
    */
@@ -236,6 +251,7 @@ export const AppendResponse = Schema.Struct({
    * Echoed request correlation identifier.
    */
   requestId: Schema.optional(Schema.String),
+
   /**
    * Assigned global positions for appended blocks.
    */
