@@ -5,6 +5,7 @@
 - Thoroughly research the @dxos/ui-theme system.
 - Create a plan to simplify this overly complicated tailwind theme.
 
+
 ## Plan
 
 ### Phase 1
@@ -12,6 +13,10 @@
 - [x] Document how semantic tokens are generated
 - [x] Create a list of all custom semantic tokens
 - [x] List and very concisely docment the external util functions used from `@ch-ui`
+
+### Phase 2
+
+- [ ] Determine extensible classname format for colors (e.g., bg-base-surface; [area]-[type]-[valence])
 
 ## Semantic Tokens Generation
 
@@ -42,12 +47,22 @@ The semantic token system uses a three-layer architecture from `@ch-ui/tokens`:
 - `contrastCadence(lightDepth, darkDepth, alpha)`: Contrast from high to low (scale 0-3)
 - Generates consistent spacing of luminosity values based on predefined extrema
 
+
 ## Semantic Tokens List
 
 ### System Sememes (sememes-system.ts)
 
 **Elevation Cadence** (0=base → 2=highest):
 - `baseSurface`, `groupSurface`, `modalSurface`
+
+**Special Surfaces**:
+- `scrimSurface`, `focusSurface`, `deckSurface`, `inverseSurface`
+- `accentSurfaceRelated`, `accentSurfaceHover`, `accentSurface`
+- `unAccent`, `unAccentHover`, `hoverOverlay`
+
+**System Aliases** (defined in aliasDefs):
+- `activeSurface`, `sidebarSurface`, `headerSurface`, `toolbarSurface`, `cardSurface`
+- `textInputSurface`, `inputSurface`, `hoverSurface`, `attention`, `currentRelated`, `separator`
 
 **Contrast Cadence** (0=lowest contrast → 3=highest):
 - `textInputSurfaceBase`, `textInputSurfaceGroup`, `textInputSurfaceModal`
@@ -60,15 +75,6 @@ The semantic token system uses a three-layer architecture from `@ch-ui/tokens`:
 - `baseText`, `inverseSurfaceText`, `description`, `subdued`, `placeholder`
 - `accentText`, `accentSurfaceText`, `accentTextHover`
 - `accentFocusIndicator`, `neutralFocusIndicator`
-
-**Special Surfaces**:
-- `scrimSurface`, `focusSurface`, `deckSurface`, `inverseSurface`
-- `accentSurfaceRelated`, `accentSurfaceHover`, `accentSurface`
-- `unAccent`, `unAccentHover`, `hoverOverlay`
-
-**System Aliases** (defined in aliasDefs):
-- `activeSurface`, `sidebarSurface`, `headerSurface`, `toolbarSurface`, `cardSurface`
-- `textInputSurface`, `inputSurface`, `hoverSurface`, `attention`, `currentRelated`, `separator`
 
 ### Hue Sememes (sememes-hue.ts)
 Generated for each hue palette (neutral, primary, red, orange, amber, yellow, lime, green, emerald, teal, cyan, sky, blue, indigo, violet, purple, fuchsia, pink, rose):
@@ -97,6 +103,7 @@ Generated for each hue palette (neutral, primary, red, orange, amber, yellow, li
 **Sheet Aliases**:
 - `activeSurface`         → `gridLine`
 - `accentFocusIndicator`  → `gridFocusIndicatorColor`
+
 
 ## Utils @ch-ui
 
