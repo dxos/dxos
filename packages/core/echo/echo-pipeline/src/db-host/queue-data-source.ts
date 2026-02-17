@@ -91,11 +91,8 @@ export class QueueDataSource implements IndexDataSource {
         try {
           const result = yield* this._feedStore.query({
             spaceId: cursor.spaceId,
+            feedNamespace: FeedProtocol.WellKnownNamespaces.data,
             cursor: currentCursor,
-            query: {
-              // Query all feeds in data namespace
-              feedNamespace: 'data',
-            },
             limit: remainingLimit,
           });
 
