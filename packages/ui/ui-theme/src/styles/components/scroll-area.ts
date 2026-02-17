@@ -1,42 +1,90 @@
 //
-// Copyright 2023 DXOS.org
+// Copyright 2026 DXOS.org
 //
 
-import { type ComponentFunction, type Theme } from '@dxos/ui-types';
+import { type AllowedAxis, type ComponentFunction, type Theme } from '@dxos/ui-types';
 
 import { mx } from '../../util';
 
-export type ScrollAreaStyleProps = {};
+export type ScrollAreaStyleProps = {
+  orientation?: AllowedAxis;
+  autoHide?: boolean;
+  margin?: boolean;
+  padding?: boolean;
+  thin?: boolean;
+  snap?: boolean;
+};
 
-export const scrollAreaRoot: ComponentFunction<ScrollAreaStyleProps> = (_props, ...etc) =>
-  mx('bs-full overflow-hidden', ...etc);
-
-export const scrollAreaViewport: ComponentFunction<ScrollAreaStyleProps> = (_props, ...etc) =>
-  mx('bs-full is-full [&>div]:table-fixed [&>div]:is-full', ...etc);
-
-export const scrollAreaScrollbar: ComponentFunction<ScrollAreaStyleProps> = (_props, ...etc) =>
+export const scrollAreaRoot: ComponentFunction<ScrollAreaStyleProps> = ({ orientation, margin, thin }, ...etc) =>
   mx(
-    'flex select-none touch-none p-0.5 ease-out',
-    'data-[orientation=vertical]:is-1.5 sm:data-[orientation=vertical]:data-[variant=coarse]:is-3',
-    'data-[orientation=horizontal]:flex-col data-[orientation=horizontal]:bs-1.5 sm:data-[orientation=horizontal]:data-[variant=coarse]:bs-3',
-    'sm:data-[variant=coarse]:bg-separator rounded-full',
-    '[&>div]:bg-unAccent sm:[&[data-variant=coarse]>div]:bg-attention',
+    'overflow-hidden',
+
+    orientation === 'vertical' && 'group/scroll-v bs-full is-full min-bs-0',
+    orientation === 'horizontal' && 'group/scroll-h bs-full is-full min-is-0',
+    orientation === 'all' && 'group/scroll-all bs-full is-full min-bs-0 min-is-0',
+
+    // Balance left/right, top/bottom "margin" with scrollbar.
+    margin && [
+      orientation === 'vertical' && (thin ? 'pis-[4px]' : 'pis-[8px]'),
+      orientation === 'horizontal' && (thin ? 'pbs-[4px]' : 'pbs-[8px]'),
+      orientation === 'all' && (thin ? 'pis-[4px] pbs-[8px]' : 'pis-[8px] pbs-[8px]'),
+    ],
+
     ...etc,
   );
 
-export const scrollAreaThumb: ComponentFunction<ScrollAreaStyleProps> = (_props, ...etc) =>
+/**
+ * NOTE: The browser reserves space for scrollbars.
+ */
+export const scrollAreaViewport: ComponentFunction<ScrollAreaStyleProps> = (
+  { orientation, autoHide, padding, snap, thin },
+  ...etc
+) =>
   mx(
-    'flex-1 rounded-full relative',
-    "before:content-[''] before:absolute before:top-1/2 before:left-1/2 before:-translate-x-1/2 before:-translate-y-1/2 before:is-full before:bs-full before:min-w-[6px] before:min-h-[6px]",
+    'bs-full is-full',
+
+    orientation === 'vertical' && 'flex flex-col overflow-y-scroll',
+    orientation === 'horizontal' && 'flex overflow-x-scroll',
+    orientation === 'all' && 'overflow-scroll',
+
+    thin
+      ? '[&::-webkit-scrollbar]:is-[4px] [&::-webkit-scrollbar]:bs-[4px]'
+      : '[&::-webkit-scrollbar]:is-[8px] [&::-webkit-scrollbar]:bs-[8px]',
+
+    // '[&::-webkit-scrollbar-thumb]:rounded-full',
+    '[&::-webkit-scrollbar-thumb]:bg-transparent',
+    '[&::-webkit-scrollbar-corner]:bg-transparent',
+
+    // TODO(burdon): Define token.
+    autoHide
+      ? [
+          orientation === 'vertical' && 'group-hover/scroll-v:[&::-webkit-scrollbar-thumb]:bg-subduedSeparator',
+          orientation === 'horizontal' && 'group-hover/scroll-h:[&::-webkit-scrollbar-thumb]:bg-subduedSeparator',
+          orientation === 'all' && 'group-hover/scroll-all:[&::-webkit-scrollbar-thumb]:bg-subduedSeparator',
+        ]
+      : [
+          orientation === 'vertical' && '[&::-webkit-scrollbar-thumb]:bg-subduedSeparator',
+          orientation === 'horizontal' && '[&::-webkit-scrollbar-thumb]:bg-subduedSeparator',
+          orientation === 'all' && '[&::-webkit-scrollbar-thumb]:bg-subduedSeparator',
+        ],
+
+    // TODO(burdon): Are scrollbars reserved on native devices?
+    padding && [
+      orientation === 'vertical' && 'pli-[4px]',
+      orientation === 'horizontal' && 'pbe-[4px]',
+      orientation === 'all' && 'pis-[4px] pbe-[4px]',
+    ],
+
+    snap && [
+      orientation === 'vertical' && 'snap-y snap-mandatory',
+      orientation === 'horizontal' && 'snap-x snap-mandatory',
+      orientation === 'all' && 'snap-both snap-mandatory',
+    ],
+
     ...etc,
   );
-
-export const scrollAreaCorner: ComponentFunction<ScrollAreaStyleProps> = (_props, ...etc) => mx(...etc);
 
 export const scrollAreaTheme: Theme<ScrollAreaStyleProps> = {
   root: scrollAreaRoot,
   viewport: scrollAreaViewport,
-  scrollbar: scrollAreaScrollbar,
-  thumb: scrollAreaThumb,
-  corner: scrollAreaCorner,
 };

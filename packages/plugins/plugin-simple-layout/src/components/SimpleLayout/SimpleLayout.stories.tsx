@@ -5,8 +5,9 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common, Plugin } from '@dxos/app-framework';
+import { ActivationEvents, Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
+import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { ClientOperation, ClientPlugin } from '@dxos/plugin-client';
 import { SearchPlugin } from '@dxos/plugin-search';
 import { SpacePlugin } from '@dxos/plugin-space';
@@ -24,18 +25,18 @@ import { translations } from '../../translations';
 import { SimpleLayout } from './SimpleLayout';
 
 const TestPlugin = Plugin.define<SimpleLayoutPluginOptions>(pluginMeta).pipe(
+  AppPlugin.addOperationResolverModule({ activate: OperationResolver }),
   Plugin.addModule(({ isPopover = false }) => ({
     id: Capability.getModuleTag(State),
-    activatesOn: Common.ActivationEvent.Startup,
-    activatesAfter: [Common.ActivationEvent.LayoutReady],
+    activatesOn: ActivationEvents.Startup,
+    activatesAfter: [AppActivationEvents.LayoutReady],
     activate: () => State({ initialState: { isPopover } } satisfies SimpleLayoutStateOptions),
   })),
-  Common.Plugin.addOperationResolverModule({ activate: OperationResolver }),
   Plugin.addModule({
     id: 'setup',
-    activatesOn: Common.ActivationEvent.OperationInvokerReady,
+    activatesOn: ActivationEvents.OperationInvokerReady,
     activate: Effect.fnUntraced(function* () {
-      const { invoke } = yield* Capability.get(Common.Capability.OperationInvoker);
+      const { invoke } = yield* Capability.get(Capabilities.OperationInvoker);
       yield* invoke(ClientOperation.CreateIdentity, {});
       const { space: work } = yield* invoke(SpaceOperation.Create, { name: 'Work Space' });
       const { space: sharedProject } = yield* invoke(SpaceOperation.Create, { name: 'Shared Project' });
@@ -97,7 +98,7 @@ type Story = StoryObj<typeof meta>;
  */
 export const Default: Story = {
   decorators: [
-    withTheme,
+    withTheme(),
     withLayout({ layout: 'column', classNames: 'relative' }),
     createPluginManager({ isPopover: false }),
   ],
@@ -105,7 +106,7 @@ export const Default: Story = {
 
 export const Popover: Story = {
   decorators: [
-    withTheme,
+    withTheme(),
     withLayout({ layout: 'column', classNames: 'relative' }),
     createPluginManager({ isPopover: true }),
   ],

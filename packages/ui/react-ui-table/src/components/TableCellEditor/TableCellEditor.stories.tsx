@@ -45,7 +45,7 @@ const meta = {
   component: DefaultStory,
   render: DefaultStory,
   decorators: [
-    withTheme,
+    withTheme(),
     withLayout({ layout: 'column' }),
     withClientProvider({
       types: [View.View, Task.Task, Table.Table],

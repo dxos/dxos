@@ -6,7 +6,8 @@ import { Octokit } from '@octokit/core';
 import * as Effect from 'effect/Effect';
 import * as Predicate from 'effect/Predicate';
 
-import { Capability, Common } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { LayoutOperation } from '@dxos/app-toolkit';
 import { Script } from '@dxos/functions';
 import { Operation, OperationResolver } from '@dxos/operation';
 import { TokenManagerOperation } from '@dxos/plugin-token-manager/types';
@@ -18,7 +19,7 @@ import { ScriptOperation } from '../../types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contributes(Common.Capability.OperationResolver, [
+    return Capability.contributes(Capabilities.OperationResolver, [
       OperationResolver.make({
         operation: ScriptOperation.CreateScript,
         handler: Effect.fnUntraced(function* ({ name, gistUrl, initialTemplateId }) {
@@ -60,7 +61,7 @@ export default Capability.makeModule(
             .filter(Predicate.isNotNullable);
 
           if (scriptTemplates.length > 0) {
-            yield* Operation.invoke(Common.LayoutOperation.UpdateDialog, {
+            yield* Operation.invoke(LayoutOperation.UpdateDialog, {
               subject: DEPLOYMENT_DIALOG,
               blockAlign: 'start',
               state: true,

@@ -2,31 +2,31 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type ComponentPropsWithoutRef, type PropsWithChildren } from 'react';
+import React, { type PropsWithChildren } from 'react';
 
 import {
   Button,
   type ButtonProps,
   Input,
   type Label,
+  ScrollArea,
   type ThemedClassName,
   toLocalizedString,
   useTranslation,
 } from '@dxos/react-ui';
-import { Layout } from '@dxos/react-ui-mosaic';
 import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations';
 
-export type ControlPageParams = ThemedClassName<ComponentPropsWithoutRef<'div'>>;
+// TOOD(burdon): Re-implement with radix pattern for Settings; adapt to form.
 
-export const ControlPage = ({ children, classNames, ...props }: ControlPageParams) => {
+export type ControlPageParams = PropsWithChildren<{}>;
+
+export const ControlPage = ({ children }: ControlPageParams) => {
   return (
-    <Layout.Container scrollable classNames='[--control-spacing:var(--dx-trimMd)]'>
-      <div role='none' className={mx('pli-cardSpacingInline pbe-trimMd', classNames)} {...props}>
-        {children}
-      </div>
-    </Layout.Container>
+    <ScrollArea.Root orientation='vertical'>
+      <ScrollArea.Viewport classNames='pli-cardSpacingInline pbe-trimMd'>{children}</ScrollArea.Viewport>
+    </ScrollArea.Root>
   );
 };
 
@@ -69,7 +69,7 @@ export const ControlGroup = ({ children, classNames }: ControlGroupProps) => (
     role='none'
     className={mx(
       'group container-max-width grid grid-cols-1 md:grid-cols-[1fr_min-content] gap-trimMd',
-      '[--control-spacing:0px] [&_input]:justify-self-end [&_button]:justify-self-end',
+      '[&_input]:justify-self-end [&_button]:justify-self-end',
       classNames,
     )}
   >
@@ -91,8 +91,7 @@ export const ControlFrame = ({ children }: ControlGroupProps) => (
 
 export const controlItemClasses = mx([
   'container-max-width grid md:col-span-2 grid-cols-subgrid gap-trimSm items-center',
-  // TODO(burdon): Use grid gap consistently or apply margins consistently?
-  'mlb-[--control-spacing] *:first:!mbs-0 *:last:!mbe-0 pli-trimMd plb-trimMd',
+  'mbe-4 *:first:!mbs-0 *:last:!mbe-0 pli-trimMd plb-trimMd',
   'border border-separator rounded-md',
 ]);
 

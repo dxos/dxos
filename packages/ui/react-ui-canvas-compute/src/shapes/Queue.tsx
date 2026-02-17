@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 import React, { Fragment } from 'react';
 
 import { DEFAULT_OUTPUT, QueueInput, QueueOutput } from '@dxos/conductor';
-import { type ThemedClassName } from '@dxos/react-ui';
+import { ScrollArea, type ThemedClassName } from '@dxos/react-ui';
 import { type ShapeComponentProps, type ShapeDef } from '@dxos/react-ui-canvas-editor';
 import { mx } from '@dxos/ui-theme';
 
@@ -46,11 +46,13 @@ export const QueueComponent = ({ shape }: ShapeComponentProps<QueueShape>) => {
 
   return (
     <Box shape={shape} status={`${items.length} items`} onAction={handleAction}>
-      <div className='flex flex-col is-full overflow-y-auto divide-y divide-separator'>
-        {[...items].map((item, i) => (
-          <QueueItem key={i} classNames='p-1 pli-2' item={item} />
-        ))}
-      </div>
+      <ScrollArea.Root orientation='vertical'>
+        <ScrollArea.Viewport classNames='divide-y divide-separator'>
+          {[...items].map((item, i) => (
+            <QueueItem key={i} classNames='p-1 pli-2' item={item} />
+          ))}
+        </ScrollArea.Viewport>
+      </ScrollArea.Root>
     </Box>
   );
 };

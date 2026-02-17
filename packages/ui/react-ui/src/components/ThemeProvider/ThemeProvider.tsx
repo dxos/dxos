@@ -20,6 +20,7 @@ export type ThemeContextValue = {
   hasIosKeyboard: boolean;
   safeAreaPadding?: SafeAreaPadding;
   noCache?: boolean;
+  platform?: 'mobile' | 'desktop';
 };
 
 /**

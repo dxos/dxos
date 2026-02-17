@@ -4,14 +4,13 @@
 
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { type SurfaceComponentProps } from '@dxos/app-framework/react';
+import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { type Filter } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { useGlobalSearch } from '@dxos/plugin-search';
 import { getSpace, useObject } from '@dxos/react-client/echo';
-import { Toolbar } from '@dxos/react-ui';
+import { Layout, Toolbar } from '@dxos/react-ui';
 import { QueryEditor, type QueryEditorProps } from '@dxos/react-ui-components';
-import { Layout } from '@dxos/react-ui-mosaic';
 import { type View } from '@dxos/schema';
 
 import { useGraphModel } from '../hooks';

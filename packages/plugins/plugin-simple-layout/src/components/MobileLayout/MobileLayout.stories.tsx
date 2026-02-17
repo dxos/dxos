@@ -6,9 +6,8 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type PropsWithChildren, useEffect, useState } from 'react';
 
 import { addEventListener, combine } from '@dxos/async';
-import { Input, Toolbar } from '@dxos/react-ui';
+import { Flex, Input, Layout, Splitter, type SplitterMode, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { Layout, Splitter, type SplitterMode } from '@dxos/react-ui-mosaic';
 
 import { MobileLayout, type MobileLayoutRootProps } from './MobileLayout';
 
@@ -63,11 +62,11 @@ const Panel = ({ children, label }: PropsWithChildren<{ label: string }>) => {
         <Toolbar.Separator variant='gap' />
         {children}
       </Toolbar.Root>
-      <Layout.Flex column classNames='p-1'>
+      <Flex column classNames='p-1'>
         <Input.Root>
           <Input.TextInput />
         </Input.Root>
-      </Layout.Flex>
+      </Flex>
     </Layout.Main>
   );
 };
@@ -113,7 +112,7 @@ const meta: Meta<MobileLayoutRootProps> = {
   title: 'plugins/plugin-simple-layout/MobileLayout',
   component: MobileLayout.Root,
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ layout: 'column', classNames: 'relative' })],
+  decorators: [withTheme(), withLayout({ layout: 'column', classNames: 'relative' })],
   parameters: {
     layout: 'fullscreen',
   },

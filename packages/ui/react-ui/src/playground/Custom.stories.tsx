@@ -108,10 +108,10 @@ const DefaultStory = ({ children, ...args }: Omit<ButtonProps, 'ref'>) => {
 };
 
 const meta = {
-  title: 'ui/react-ui-core/Playground/Custom',
+  title: 'ui/react-ui-core/playground/Custom',
   component: Button,
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'centered',
   },

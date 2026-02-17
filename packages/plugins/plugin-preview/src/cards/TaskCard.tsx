@@ -5,7 +5,7 @@
 import * as SchemaAST from 'effect/SchemaAST';
 import React from 'react';
 
-import { type SurfaceComponentProps } from '@dxos/app-framework/react';
+import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { type PropertyMetaAnnotation, PropertyMetaAnnotationId } from '@dxos/echo/internal';
 import { Card } from '@dxos/react-ui-mosaic';
 import { Task } from '@dxos/types';

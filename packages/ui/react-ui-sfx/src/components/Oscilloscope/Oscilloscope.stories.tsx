@@ -11,7 +11,7 @@ import { Oscilloscope } from './Oscilloscope';
 const meta = {
   title: 'ui/react-ui-sfx/Oscilloscope',
   component: Oscilloscope,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'centered',
   },

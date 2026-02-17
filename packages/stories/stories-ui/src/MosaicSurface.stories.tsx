@@ -4,7 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj, Ref } from '@dxos/echo';
@@ -13,8 +13,8 @@ import { faker } from '@dxos/random';
 import { useSpaces } from '@dxos/react-client/echo';
 import { IconButton, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { Focus, Mosaic } from '@dxos/react-ui-mosaic';
-import { Board, TestColumn, TestItem } from '@dxos/react-ui-mosaic/testing';
+import { Board, type BoardModel, Focus, Mosaic } from '@dxos/react-ui-mosaic';
+import { TestColumn, TestItem } from '@dxos/react-ui-mosaic/testing';
 import { type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
 import { Organization, Person, Pipeline } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
@@ -35,6 +35,7 @@ const DefaultStory = ({ columns: columnsProp = 1, debug = false }: StoryProps) =
   const [columns, setColumns] = useState<TestColumn[]>(
     Array.from({ length: columnsProp }).map((_, i) => {
       const col = Obj.make(TestColumn, {
+        name: `Column ${i}`,
         items: Array.from({ length: faker.number.int({ min: 8, max: 20 }) }).map((_, j) => {
           const item = db.add(
             Obj.make(TestItem, {
@@ -52,10 +53,19 @@ const DefaultStory = ({ columns: columnsProp = 1, debug = false }: StoryProps) =
     }),
   );
 
+  const model = useMemo<BoardModel<TestColumn, TestItem>>(() => {
+    return {
+      isColumn: (obj: Obj.Unknown): obj is TestColumn => Obj.instanceOf(TestColumn, obj),
+      isItem: (obj: Obj.Unknown): obj is TestItem => Obj.instanceOf(TestItem, obj),
+      getColumns: () => columns,
+      getItems: (column: TestColumn) => column.items,
+    } satisfies BoardModel<TestColumn, TestItem>;
+  }, [columns]);
+
   return (
     <Mosaic.Root asChild debug={debug}>
       <div className={mx('grid overflow-hidden', debug && 'grid-cols-[1fr_20rem] gap-2')}>
-        <Board.Root id='board' columns={columns} debug={debug} />
+        <Board.Root id='board' model={model} debug={debug} />
 
         {debug && (
           <Focus.Group classNames='flex flex-col gap-2 overflow-hidden'>
@@ -79,7 +89,7 @@ const meta = {
   title: 'stories/stories-ui/MosaicSurface',
   render: DefaultStory,
   decorators: [
-    withTheme,
+    withTheme(),
     withLayout({ layout: 'fullscreen' }),
     withPluginManager<{ title?: string; content?: string }>(() => ({
       plugins: [

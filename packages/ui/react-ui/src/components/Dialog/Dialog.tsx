@@ -157,6 +157,25 @@ const DialogHeader: ForwardRefExoticComponent<DialogTitleProps> = forwardRef<HTM
 );
 
 //
+// Body
+//
+
+type DialogBodyProps = PropsWithChildren;
+
+const DialogBody: ForwardRefExoticComponent<DialogBodyProps> = forwardRef<HTMLDivElement, DialogBodyProps>(
+  ({ children, ...props }, forwardedRef) => {
+    const { tx } = useThemeContext();
+    return (
+      <div {...props} className={tx('dialog.body', 'dialog__body')} ref={forwardedRef}>
+        {children}
+      </div>
+    );
+  },
+);
+
+// TODO(burdon): Add ActionBar.
+
+//
 // Title
 //
 
@@ -192,6 +211,24 @@ const DialogDescription: ForwardRefExoticComponent<DialogTitleProps> = forwardRe
       className={tx('dialog.description', 'dialog__description', { srOnly }, classNames)}
       ref={forwardedRef}
     />
+  );
+});
+
+//
+// ActionBar
+//
+
+type DialogActionBarProps = ThemedClassName<PropsWithChildren>;
+
+const DialogActionBar: ForwardRefExoticComponent<DialogActionBarProps> = forwardRef<
+  HTMLDivElement,
+  DialogActionBarProps
+>(({ children, classNames, ...props }, forwardedRef) => {
+  const { tx } = useThemeContext();
+  return (
+    <div {...props} className={tx('dialog.actionbar', 'dialog__actionbar', {}, classNames)} ref={forwardedRef}>
+      {children}
+    </div>
   );
 });
 
@@ -239,8 +276,10 @@ export const Dialog = {
   Overlay: DialogOverlay,
   Content: DialogContent,
   Header: DialogHeader,
+  Body: DialogBody,
   Title: DialogTitle,
   Description: DialogDescription,
+  ActionBar: DialogActionBar,
   Close: DialogClose,
   CloseIconButton: DialogCloseIconButton,
 };
@@ -252,8 +291,10 @@ export type {
   DialogOverlayProps,
   DialogContentProps,
   DialogHeaderProps,
+  DialogBodyProps,
   DialogTitleProps,
   DialogDescriptionProps,
+  DialogActionBarProps,
   DialogCloseProps,
   DialogCloseIconButtonProps,
 };

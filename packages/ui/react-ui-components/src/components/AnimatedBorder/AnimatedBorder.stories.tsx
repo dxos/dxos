@@ -17,7 +17,7 @@ const meta = {
       control: 'boolean',
     },
   },
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'centered',
   },

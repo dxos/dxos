@@ -5,14 +5,16 @@
 import * as Effect from 'effect/Effect';
 import React, { forwardRef, useCallback, useMemo } from 'react';
 
-import { Capability, Common } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
 import {
-  type SurfaceComponentProps,
+  Surface,
   useAtomCapability,
   useAtomCapabilityState,
   useCapability,
   useSettingsState,
-} from '@dxos/app-framework/react';
+} from '@dxos/app-framework/ui';
+import { AppCapabilities } from '@dxos/app-toolkit';
+import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { Text } from '@dxos/schema';
@@ -24,8 +26,8 @@ import { Markdown, MarkdownCapabilities } from '../../types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
-    Capability.contributes(Common.Capability.ReactSurface, [
-      Common.createSurface({
+    Capability.contributes(Capabilities.ReactSurface, [
+      Surface.create({
         id: `${meta.id}/surface/document`,
         role: ['article', 'section', 'tabpanel'],
         filter: (data): data is { subject: Markdown.Document; variant: undefined } =>
@@ -34,7 +36,7 @@ export default Capability.makeModule(() =>
           return <Container id={Obj.getDXN(data.subject).toString()} subject={data.subject} role={role} ref={ref} />;
         },
       }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/surface/text`,
         role: ['article', 'section', 'tabpanel'],
         filter: (data): data is { id: string; subject: Text.Text } =>
@@ -43,17 +45,17 @@ export default Capability.makeModule(() =>
           return <Container id={data.id} subject={data.subject} role={role} />;
         },
       }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/surface/plugin-settings`,
         role: 'article',
-        filter: (data): data is { subject: Common.Capability.Settings } =>
-          Common.Capability.isSettings(data.subject) && data.subject.prefix === meta.id,
+        filter: (data): data is { subject: AppCapabilities.Settings } =>
+          AppCapabilities.isSettings(data.subject) && data.subject.prefix === meta.id,
         component: ({ data: { subject } }) => {
           const { settings, updateSettings } = useSettingsState<Markdown.Settings>(subject.atom);
           return <MarkdownSettings settings={settings} onSettingsChange={updateSettings} />;
         },
       }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/surface/preview`,
         role: 'card--content',
         filter: (data): data is { subject: Markdown.Document | Text.Text } =>

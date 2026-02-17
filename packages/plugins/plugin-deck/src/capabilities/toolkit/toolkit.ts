@@ -7,7 +7,8 @@ import * as Toolkit from '@effect/ai/Toolkit';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { Capability, type CapabilityManager, Common } from '@dxos/app-framework';
+import { Capabilities, Capability, type CapabilityManager } from '@dxos/app-framework';
+import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
 import { GenericToolkit } from '@dxos/assistant';
 import { ArtifactId } from '@dxos/assistant';
 import { type SpaceId } from '@dxos/keys';
@@ -35,7 +36,7 @@ export namespace DeckToolkit {
     Toolkit$.toLayer({
       'open-item': ({ id }) =>
         Effect.gen(function* () {
-          const registry = capabilityManager.get(Common.Capability.AtomRegistry);
+          const registry = capabilityManager.get(Capabilities.AtomRegistry);
           const stateAtom = capabilityManager.get(DeckCapabilities.State);
           const state = registry.get(stateAtom);
           const dxn = ArtifactId.toDXN(id, state.activeDeck as SpaceId).asEchoDXN();
@@ -45,8 +46,8 @@ export namespace DeckToolkit {
           }
 
           // TODO(wittjosiah): Get capabilities via layers.
-          const { invoke } = capabilityManager.get(Common.Capability.OperationInvoker);
-          yield* invoke(Common.LayoutOperation.Open, { subject: [`${dxn.spaceId!}:${dxn.echoId}`] });
+          const { invoke } = capabilityManager.get(Capabilities.OperationInvoker);
+          yield* invoke(LayoutOperation.Open, { subject: [`${dxn.spaceId!}:${dxn.echoId}`] });
         }).pipe(Effect.orDie),
     });
 }
@@ -56,7 +57,7 @@ export default Capability.makeModule(
     const capabilityManager = yield* Capability.Service;
 
     return Capability.contributes(
-      Common.Capability.Toolkit,
+      AppCapabilities.Toolkit,
       GenericToolkit.make(DeckToolkit.Toolkit, DeckToolkit.createLayer(capabilityManager)),
     );
   }),

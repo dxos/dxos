@@ -24,9 +24,9 @@ import { Icon } from '../Icon';
 import { List, ListItem, type ListScopedProps } from './List';
 
 const meta = {
-  title: 'ui/react-ui-core/List',
+  title: 'ui/react-ui-core/components/List',
   component: List,
-  decorators: [withTheme],
+  decorators: [withTheme()],
 } satisfies Meta<typeof List>;
 
 export default meta;

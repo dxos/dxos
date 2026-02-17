@@ -19,6 +19,7 @@ export * from './popover';
 export * from './scroll-area';
 export * from './select';
 export * from './separator';
+export * from './skeleton';
 export * from './status';
 export * from './tag';
 export * from './toast';

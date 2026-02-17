@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common, UndoMapping } from '@dxos/app-framework';
+import { Capabilities, Capability, UndoMapping } from '@dxos/app-framework';
 import { sleep } from '@dxos/async';
 import { Obj, Relation, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
@@ -23,7 +23,7 @@ import { Channel, ThreadCapabilities, ThreadOperation } from '../../types';
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return [
-      Capability.contributes(Common.Capability.UndoMapping, [
+      Capability.contributes(Capabilities.UndoMapping, [
         UndoMapping.make({
           operation: ThreadOperation.Delete,
           inverse: ThreadOperation.Restore,
@@ -56,7 +56,7 @@ export default Capability.makeModule(
           message: ['message deleted label', { ns: meta.id }],
         }),
       ]),
-      Capability.contributes(Common.Capability.OperationResolver, [
+      Capability.contributes(Capabilities.OperationResolver, [
         //
         // CreateChannel
         //
@@ -90,7 +90,7 @@ export default Capability.makeModule(
         OperationResolver.make({
           operation: ThreadOperation.Select,
           handler: Effect.fnUntraced(function* (input) {
-            const registry = yield* Capability.get(Common.Capability.AtomRegistry);
+            const registry = yield* Capability.get(Capabilities.AtomRegistry);
             const stateAtom = yield* Capability.get(ThreadCapabilities.State);
             const current = registry.get(stateAtom);
             registry.set(stateAtom, { ...current, current: input.current });
@@ -155,7 +155,7 @@ export default Capability.makeModule(
         OperationResolver.make({
           operation: ThreadOperation.Create,
           handler: Effect.fnUntraced(function* ({ name, anchor: _anchor, subject }) {
-            const registry = yield* Capability.get(Common.Capability.AtomRegistry);
+            const registry = yield* Capability.get(Capabilities.AtomRegistry);
             const stateAtom = yield* Capability.get(ThreadCapabilities.State);
             const subjectId = Obj.getDXN(subject).toString();
             const thread = Thread.make({ name });
@@ -190,7 +190,7 @@ export default Capability.makeModule(
         OperationResolver.make({
           operation: ThreadOperation.Delete,
           handler: Effect.fnUntraced(function* ({ subject, anchor, thread: _thread }) {
-            const registry = yield* Capability.get(Common.Capability.AtomRegistry);
+            const registry = yield* Capability.get(Capabilities.AtomRegistry);
             const stateAtom = yield* Capability.get(ThreadCapabilities.State);
             const thread = _thread ?? (Relation.getSource(anchor) as Thread.Thread);
             const subjectId = Obj.getDXN(subject).toString();
@@ -242,7 +242,7 @@ export default Capability.makeModule(
         OperationResolver.make({
           operation: ThreadOperation.AddMessage,
           handler: Effect.fnUntraced(function* ({ anchor, subject, sender, text }) {
-            const registry = yield* Capability.get(Common.Capability.AtomRegistry);
+            const registry = yield* Capability.get(Capabilities.AtomRegistry);
             const stateAtom = yield* Capability.get(ThreadCapabilities.State);
             const thread = Relation.getSource(anchor) as Thread.Thread;
             const subjectId = Obj.getDXN(subject).toString();

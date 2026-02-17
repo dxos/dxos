@@ -8,7 +8,6 @@ import { type Type } from '@dxos/echo';
 import { type Space } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { ControlPage, ControlSection, controlItemClasses } from '@dxos/react-ui-form';
-import { Layout } from '@dxos/react-ui-mosaic';
 
 import { meta } from '../meta';
 
@@ -18,22 +17,19 @@ export const SchemaContainer = ({ space }: SchemaPanelProps) => {
   const { t } = useTranslation(meta.id);
   const schemas = useQuerySpaceSchemas(space);
 
-  // TODO(ZaymonFC): Support deleting Schema (DangerZone section).
   return (
-    <Layout.Container scrollable>
-      <ControlPage>
-        <ControlSection title={t('schema verbose label')} description={t('schema description')}>
-          <div role='none' className={controlItemClasses}>
-            {schemas.length === 0 && <div className='text-center plb-4'>{t('no schemas found message')}</div>}
-            {schemas.map((schema) => (
-              <div role='none' key={schema.id}>
-                {schema.typename}
-              </div>
-            ))}
-          </div>
-        </ControlSection>
-      </ControlPage>
-    </Layout.Container>
+    <ControlPage>
+      <ControlSection title={t('schema verbose label')} description={t('schema description')}>
+        <div role='none' className={controlItemClasses}>
+          {schemas.length === 0 && <div className='text-center plb-4'>{t('no schemas found message')}</div>}
+          {schemas.map((schema) => (
+            <div role='none' key={schema.id}>
+              {schema.typename}
+            </div>
+          ))}
+        </div>
+      </ControlSection>
+    </ControlPage>
   );
 };
 

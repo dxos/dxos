@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type ComponentFunction, type Theme } from '@dxos/ui-types';
+import { type ClassNameArray, type ComponentFunction, type Theme, type ThemeFunction } from '@dxos/ui-types';
 import { get } from '@dxos/util';
 
 import {
@@ -23,6 +23,7 @@ import {
   scrollAreaTheme,
   selectTheme,
   separatorTheme,
+  skeletonTheme,
   statusTheme,
   tagTheme,
   toastTheme,
@@ -30,9 +31,20 @@ import {
   tooltipTheme,
   treegridTheme,
 } from './components';
+import { containerTheme } from './primitives';
 
 export const defaultTheme: Theme<Record<string, any>> = {
   themeName: () => 'default',
+
+  //
+  // Primitives
+  //
+
+  container: containerTheme,
+
+  //
+  // Components
+  //
 
   anchoredOverflow: anchoredOverflowTheme,
   avatar: avatarTheme,
@@ -48,9 +60,10 @@ export const defaultTheme: Theme<Record<string, any>> = {
   message: messageTheme,
   menu: menuTheme,
   popover: popoverTheme,
-  select: selectTheme,
   scrollArea: scrollAreaTheme,
+  select: selectTheme,
   separator: separatorTheme,
+  skeleton: skeletonTheme,
   status: statusTheme,
   tag: tagTheme,
   toast: toastTheme,
@@ -59,10 +72,21 @@ export const defaultTheme: Theme<Record<string, any>> = {
   treegrid: treegridTheme,
 };
 
-export const bindTheme = <P extends Record<string, any>>(theme: Theme<Record<string, any>>) => {
-  return (path: string, defaultClassName: string, styleProps: P, ...options: any[]): string => {
+// TODO(burdon): Missing!
+// treegrid.cell => treegrid__cell
+const missing = new Set();
+
+export const bindTheme = <P extends Record<string, any>>(theme: Theme<Record<string, any>>): ThemeFunction<P> => {
+  return (path: string, defaultClassName: string, styleProps?: P, ...etc: ClassNameArray): string => {
     const result: Theme<P> | ComponentFunction<P> = get(theme, path);
-    return typeof result === 'function' ? result(styleProps, ...options) : defaultClassName;
+    const className = typeof result === 'function' && result(styleProps ?? ({} as P), ...etc);
+    if (!className) {
+      if (!missing.has(path)) {
+        // console.warn(`Missing theme path: ${path} => ${defaultClassName}`);
+        missing.add(path);
+      }
+    }
+    return className || defaultClassName;
   };
 };
 

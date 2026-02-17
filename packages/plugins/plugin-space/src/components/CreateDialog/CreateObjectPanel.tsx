@@ -128,6 +128,8 @@ export const CreateObjectPanel = ({
   ) : null;
 };
 
+CreateObjectPanel.displayName = 'CreateObjectPanel';
+
 const SelectSpace = ({
   spaces,
   defaultSpaceId,
@@ -166,33 +168,32 @@ const SelectSpace = ({
       ),
   });
 
+  // TODO(burdon): Replace with Combobox.
   return (
     <SearchList.Root onSearch={handleSearch}>
-      <div aria-label={t('space input label')} role='combobox' aria-expanded='true'>
+      <SearchList.Content>
         <SearchList.Input
           autoFocus
           data-testid='create-object-form.space-input'
           placeholder={t('space input placeholder')}
         />
-        <SearchList.Content>
-          <SearchList.Viewport>
-            {results.map((space) => (
-              <SearchList.Item
-                key={space.id}
-                value={space.id}
-                label={toLocalizedString(
-                  getSpaceDisplayName(space, {
-                    personal: space.id === defaultSpaceId,
-                  }),
-                  t,
-                )}
-                onSelect={() => onChange?.(space.db)}
-                classNames='flex items-center gap-2'
-              />
-            ))}
-          </SearchList.Viewport>
-        </SearchList.Content>
-      </div>
+        <SearchList.Viewport>
+          {results.map((space) => (
+            <SearchList.Item
+              key={space.id}
+              value={space.id}
+              label={toLocalizedString(
+                getSpaceDisplayName(space, {
+                  personal: space.id === defaultSpaceId,
+                }),
+                t,
+              )}
+              onSelect={() => onChange?.(space.db)}
+              classNames='flex items-center gap-2'
+            />
+          ))}
+        </SearchList.Viewport>
+      </SearchList.Content>
     </SearchList.Root>
   );
 };
@@ -218,30 +219,28 @@ const SelectSchema = ({
 
   return (
     <SearchList.Root onSearch={handleSearch}>
-      <div aria-label={t('schema input label')} role='combobox' aria-expanded='true'>
+      <SearchList.Content>
         <SearchList.Input
           autoFocus
           data-testid='create-object-form.schema-input'
           placeholder={t('schema input placeholder')}
         />
-        <SearchList.Content>
-          <SearchList.Viewport>
-            {results.map((option) => (
-              <SearchList.Item
-                key={option.typename}
-                value={option.typename}
-                label={t('typename label', {
-                  ns: option.typename,
-                  defaultValue: option.typename,
-                })}
-                icon={resolve?.(option.typename)?.icon ?? 'ph--placeholder--regular'}
-                onSelect={() => onChange(option.typename)}
-                classNames='flex items-center gap-2'
-              />
-            ))}
-          </SearchList.Viewport>
-        </SearchList.Content>
-      </div>
+        <SearchList.Viewport>
+          {results.map((option) => (
+            <SearchList.Item
+              key={option.typename}
+              value={option.typename}
+              label={t('typename label', {
+                ns: option.typename,
+                defaultValue: option.typename,
+              })}
+              icon={resolve?.(option.typename)?.icon ?? 'ph--placeholder--regular'}
+              onSelect={() => onChange(option.typename)}
+              classNames='flex items-center gap-2'
+            />
+          ))}
+        </SearchList.Viewport>
+      </SearchList.Content>
     </SearchList.Root>
   );
 };

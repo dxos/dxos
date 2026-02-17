@@ -26,7 +26,7 @@ const meta = {
   title: 'ui/react-ui-canvas/Grid',
   component: GridComponent,
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'fullscreen',
   },

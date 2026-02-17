@@ -23,7 +23,7 @@ const meta = {
   title: 'sdk/shell/CompoundButton',
   component: CompoundButton,
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     chromatic: {
       disableSnapshot: false,

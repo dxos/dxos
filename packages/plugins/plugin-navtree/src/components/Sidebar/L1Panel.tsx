@@ -7,7 +7,7 @@ import React, { useCallback, useMemo } from 'react';
 
 import { Node } from '@dxos/app-graph';
 import { useActionRunner } from '@dxos/plugin-graph';
-import { DensityProvider, IconButton, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { DensityProvider, IconButton, ScrollArea, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Tree } from '@dxos/react-ui-list';
 import { DropdownMenu, type MenuItem, MenuProvider } from '@dxos/react-ui-menu';
 import { Tabs } from '@dxos/react-ui-tabs';
@@ -65,31 +65,33 @@ export const L1Panel = ({ open, path, item, currentItemId, onBack }: L1PanelProp
       {item.id === currentItemId && (
         <DensityProvider density='fine'>
           <L1PanelHeader path={path} item={item} currentItemId={currentItemId} onBack={onBack} />
-          <div role='none' className='overflow-y-auto'>
-            {isAlternate ? (
-              <Tree
-                {...navTreeContext}
-                id={alternateTree.id}
-                root={alternateTree}
-                path={alternatePath}
-                levelOffset={5}
-                gridTemplateColumns='[tree-row-start] 1fr min-content min-content min-content [tree-row-end]'
-                renderColumns={NavTreeItemColumns}
-                useItems={useAlternateItems}
-              />
-            ) : (
-              <Tree
-                {...navTreeContext}
-                id={item.id}
-                root={item}
-                path={path}
-                levelOffset={5}
-                gridTemplateColumns='[tree-row-start] 1fr min-content min-content min-content [tree-row-end]'
-                renderColumns={NavTreeItemColumns}
-                draggable
-              />
-            )}
-          </div>
+          <ScrollArea.Root thin orientation='vertical'>
+            <ScrollArea.Viewport>
+              {isAlternate ? (
+                <Tree
+                  {...navTreeContext}
+                  id={alternateTree.id}
+                  root={alternateTree}
+                  path={alternatePath}
+                  levelOffset={5}
+                  gridTemplateColumns='[tree-row-start] 1fr min-content min-content min-content [tree-row-end]'
+                  renderColumns={NavTreeItemColumns}
+                  useItems={useAlternateItems}
+                />
+              ) : (
+                <Tree
+                  {...navTreeContext}
+                  id={item.id}
+                  root={item}
+                  path={path}
+                  levelOffset={5}
+                  gridTemplateColumns='[tree-row-start] 1fr min-content min-content min-content [tree-row-end]'
+                  renderColumns={NavTreeItemColumns}
+                  draggable
+                />
+              )}
+            </ScrollArea.Viewport>
+          </ScrollArea.Root>
         </DensityProvider>
       )}
     </Tabs.Tabpanel>

@@ -4,7 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { Surface } from '@dxos/app-framework/ui';
 import { Obj } from '@dxos/echo';
 import { Map } from '@dxos/plugin-map/types';
 
@@ -14,8 +15,8 @@ import '../../components/MapSurface';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
-    Capability.contributes(Common.Capability.ReactSurface, [
-      Common.createWebSurface({
+    Capability.contributes(Capabilities.ReactSurface, [
+      Surface.createWeb({
         id: `${meta.id}/surface/map`,
         role: ['article', 'section'],
         tagName: 'dx-map-surface',

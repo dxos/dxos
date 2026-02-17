@@ -2,14 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Common, Plugin } from '@dxos/app-framework';
+import { Plugin } from '@dxos/app-framework';
+import { AppPlugin } from '@dxos/app-toolkit';
 
 import { meta } from '../meta';
 
 import { integration } from './commands';
 
 export const TokenManagerPlugin = Plugin.define(meta).pipe(
-  Common.Plugin.addCommandModule({
+  AppPlugin.addCommandModule({
     commands: [integration],
   }),
   Plugin.make,

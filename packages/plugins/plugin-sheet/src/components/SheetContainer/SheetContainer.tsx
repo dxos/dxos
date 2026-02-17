@@ -4,10 +4,10 @@
 
 import React, { Fragment } from 'react';
 
-import { type SurfaceComponentProps } from '@dxos/app-framework/react';
+import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { type Space } from '@dxos/react-client/echo';
-import { Layout, type LayoutFlexProps } from '@dxos/react-ui-mosaic';
+import { Flex, type FlexProps, Layout } from '@dxos/react-ui';
 
 import { type Sheet } from '../../types';
 import { useComputeGraph } from '../ComputeGraph';
@@ -45,4 +45,4 @@ export const SheetContainer = ({ role, subject: sheet, space, ignoreAttention }:
   );
 };
 
-const Container = (props: LayoutFlexProps) => <Layout.Flex {...props} classNames='aspect-square' />;
+const Container = (props: FlexProps) => <Flex {...props} classNames='aspect-square' />;

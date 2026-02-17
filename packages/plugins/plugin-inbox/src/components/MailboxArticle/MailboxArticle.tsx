@@ -5,20 +5,22 @@
 import { Atom, useAtomSet, useAtomValue } from '@effect-atom/atom-react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Common } from '@dxos/app-framework';
-import { type SurfaceComponentProps, useLayout, useOperationInvoker } from '@dxos/app-framework/react';
+import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { LayoutOperation } from '@dxos/app-toolkit';
+import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
+import { useLayout } from '@dxos/app-toolkit/ui';
 import { type Database, Obj, Relation, Tag } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { AttentionOperation } from '@dxos/plugin-attention/types';
 import { ATTENDABLE_PATH_SEPARATOR, DeckOperation } from '@dxos/plugin-deck/types';
 import { Filter, useQuery } from '@dxos/react-client/echo';
 import { ElevationProvider, IconButton, useTranslation } from '@dxos/react-ui';
+import { Layout } from '@dxos/react-ui';
 import { useSelected } from '@dxos/react-ui-attention';
 import { QueryEditor } from '@dxos/react-ui-components';
 import { type EditorController } from '@dxos/react-ui-editor';
 import { MenuBuilder, createGapSeparator, useMenuActions } from '@dxos/react-ui-menu';
 import { MenuProvider, ToolbarMenu } from '@dxos/react-ui-menu';
-import { Layout } from '@dxos/react-ui-mosaic';
 import { HasSubject, Message } from '@dxos/types';
 
 import { POPOVER_SAVE_FILTER } from '../../constants';
@@ -129,7 +131,7 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
           const companionId = `${id}${ATTENDABLE_PATH_SEPARATOR}message`;
           if (layout.mode === 'simple') {
             // Simple layout: navigate to companion as standalone view.
-            void invokePromise(Common.LayoutOperation.Open, {
+            void invokePromise(LayoutOperation.Open, {
               subject: [companionId],
             });
           } else {
@@ -158,7 +160,7 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
         }
 
         case 'save': {
-          void invokePromise(Common.LayoutOperation.UpdatePopover, {
+          void invokePromise(LayoutOperation.UpdatePopover, {
             subject: POPOVER_SAVE_FILTER,
             state: true,
             variant: 'virtual',

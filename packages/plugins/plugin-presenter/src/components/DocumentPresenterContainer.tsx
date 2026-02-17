@@ -4,7 +4,7 @@
 import React, { type FC } from 'react';
 
 import { type Markdown } from '@dxos/plugin-markdown/types';
-import { Layout } from '@dxos/react-ui-mosaic';
+import { Layout } from '@dxos/react-ui';
 
 import { useExitPresenter } from '../useExitPresenter';
 

@@ -42,7 +42,7 @@ const DefaultStory = () => {
 const meta = {
   title: 'ui/react-ui-masonry/Masonry',
   decorators: [
-    withTheme,
+    withTheme(),
     withClientProvider({
       types: [Organization.Organization],
       createIdentity: true,

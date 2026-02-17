@@ -8,7 +8,8 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 
-import { Capability, type CapabilityManager, Common } from '@dxos/app-framework';
+import { Capabilities, Capability, type CapabilityManager } from '@dxos/app-framework';
+import { AppCapabilities } from '@dxos/app-toolkit';
 import { GenericToolkit, makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
 import { SpaceProperties } from '@dxos/client/echo';
 import { Resource } from '@dxos/context';
@@ -66,16 +67,16 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
       Effect.gen(this, function* () {
         const client = this.#capabilities.get(ClientCapabilities.Client);
         const aiServiceLayer =
-          this.#capabilities.get(Common.Capability.AiServiceLayer) ?? Layer.die('AiService not found');
+          this.#capabilities.get(AppCapabilities.AiServiceLayer) ?? Layer.die('AiService not found');
 
         // TODO(dmaretskyi): Make these reactive.
-        const functions = this.#capabilities.getAll(Common.Capability.Functions).flat();
-        const toolkits = this.#capabilities.getAll(Common.Capability.Toolkit);
+        const functions = this.#capabilities.getAll(AppCapabilities.Functions).flat();
+        const toolkits = this.#capabilities.getAll(AppCapabilities.Toolkit);
         const mergedToolkit = GenericToolkit.merge(...toolkits);
         const toolkit = mergedToolkit.toolkit;
         const toolkitLayer = mergedToolkit.layer;
 
-        const registry = this.#capabilities.get(Common.Capability.AtomRegistry);
+        const registry = this.#capabilities.get(Capabilities.AtomRegistry);
 
         const space = client.spaces.get(spaceId);
         invariant(space, `Invalid space: ${spaceId}`);

@@ -5,7 +5,7 @@
 import { EditorView } from '@codemirror/view';
 import React, { forwardRef, useCallback, useEffect, useRef, useState } from 'react';
 
-import { Surface } from '@dxos/app-framework/react';
+import { Surface } from '@dxos/app-framework/ui';
 import { type Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { PublicKey } from '@dxos/react-client';
@@ -210,7 +210,7 @@ const MessageBlockObjectTile = forwardRef<HTMLDivElement, { subject: Obj.Unknown
       className={mx('grid col-span-3 plb-1 pr-4', hoverableControls, hoverableFocusedWithinControls)}
       ref={forwardedRef}
     >
-      <Surface role='card-content' limit={1} data={{ subject }} fallback={title} />
+      <Surface.Surface role='card-content' limit={1} data={{ subject }} fallback={title} />
     </Card.Root>
   );
 });

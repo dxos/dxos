@@ -7,6 +7,7 @@ import React, { useState } from 'react';
 
 import { type Plugin, Plugin as PluginNS } from '@dxos/app-framework';
 import { faker } from '@dxos/random';
+import { ScrollArea } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { getHashHue } from '@dxos/ui-theme';
 
@@ -49,7 +50,13 @@ const DefaultStory = () => {
     setEnabled((plugins) => (enabled ? [...plugins, id] : plugins.filter((plugin) => plugin === id)));
   };
 
-  return <PluginList plugins={plugins} enabled={enabled} onChange={handleChange} hasSettings={() => true} />;
+  return (
+    <ScrollArea.Root orientation='vertical'>
+      <ScrollArea.Viewport>
+        <PluginList plugins={plugins} enabled={enabled} onChange={handleChange} hasSettings={() => true} />
+      </ScrollArea.Viewport>
+    </ScrollArea.Root>
+  );
 };
 
 const meta = {
@@ -66,11 +73,11 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  decorators: [withTheme, withLayout({ layout: 'column', scroll: true })],
+  decorators: [withTheme(), withLayout({ layout: 'column' })],
 };
 
 export const FullScreen: Story = {
-  decorators: [withTheme, withLayout({ scroll: true })],
+  decorators: [withTheme(), withLayout({ scroll: true })],
   parameters: {
     layout: 'fullscreen',
   },

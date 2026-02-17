@@ -3,7 +3,7 @@
 //
 
 export * from './decorator';
+export * from './types';
 
-export * from './Board';
 export * from './CardContainer';
 export * from './DefaultStackTile';

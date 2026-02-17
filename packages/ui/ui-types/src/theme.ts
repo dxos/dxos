@@ -12,20 +12,12 @@ export type Theme<P extends Record<string, any>> = { [key: string]: Theme<P> | C
 export type ThemeMode = 'dark' | 'light';
 export type ThemeFunction<P extends Record<string, any>> = (
   path: string,
+  // TODO(burdon): Remove need for this?
   defaultClassName: string,
   styleProps?: P,
   ...etc: ClassNameArray
 ) => string;
 
 export type ThemedClassName<P = {}> = Omit<P, 'className'> & {
-  classNames?: ClassNameValue;
-};
-
-/**
- * For components that are children of Radix-style asChild primitives.
- * `<Root className={mx(<custom>, className, classNames)}>`
- */
-export type SlottableClassName<P = {}> = P & {
-  className?: string;
   classNames?: ClassNameValue;
 };

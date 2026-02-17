@@ -169,7 +169,7 @@ const meta = {
   title: 'plugins/plugin-kanban/Kanban',
   component: DefaultComponent,
   render: () => <DefaultComponent />,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'fullscreen',
     translations: [...translations, ...kanbanTranslations],

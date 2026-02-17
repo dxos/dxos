@@ -12,7 +12,7 @@ import { SyntaxHighlighter } from './SyntaxHighlighter';
 const meta = {
   title: 'ui/react-ui-syntax-highlighter/SyntaxHighlighter',
   component: SyntaxHighlighter,
-  decorators: [withTheme],
+  decorators: [withTheme()],
 } satisfies Meta<typeof SyntaxHighlighter>;
 
 export default meta;

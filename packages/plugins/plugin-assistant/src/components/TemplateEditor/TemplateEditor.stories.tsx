@@ -69,7 +69,7 @@ const meta = {
   component: TemplateEditor as any,
   render: DefaultStory,
   decorators: [
-    withTheme,
+    withTheme(),
     withLayout({ layout: 'column' }),
     withClientProvider({
       types: [Blueprint.Blueprint],

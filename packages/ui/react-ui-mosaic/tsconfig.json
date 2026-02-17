@@ -6,6 +6,8 @@
     ]
   },
   "include": [
+    "../react-ui/src/primitives/Layout",
+    "../react-ui/src/exemplars/slot.stories.tsx",
     "src"
   ],
   "references": [

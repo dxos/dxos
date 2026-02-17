@@ -5,8 +5,8 @@
 import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren, useCallback, useEffect, useRef, useState } from 'react';
 
-import { Common } from '@dxos/app-framework';
-import { Surface, useOperationInvoker } from '@dxos/app-framework/react';
+import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
+import { LayoutOperation } from '@dxos/app-toolkit';
 import { Popover, type PopoverContentInteractOutsideEvent, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui-mosaic';
 
@@ -99,7 +99,7 @@ export const PopoverContent = () => {
       >
         <Popover.Viewport>
           {/* TODO(burdon): Set/disable column context. */}
-          {state.popoverKind === 'base' && <Surface role='popover' data={state.popoverContent} limit={1} />}
+          {state.popoverKind === 'base' && <Surface.Surface role='popover' data={state.popoverContent} limit={1} />}
           {state.popoverKind === 'card' && (
             <Card.Root border={false} classNames='popover-card-max-width'>
               <Card.Toolbar>
@@ -110,7 +110,7 @@ export const PopoverContent = () => {
                     iconOnly
                     label={t('open item label')}
                     onClick={() => {
-                      invokeSync(Common.LayoutOperation.Open, {
+                      invokeSync(LayoutOperation.Open, {
                         subject: [state.popoverContentRef!],
                       });
                     }}
@@ -121,7 +121,7 @@ export const PopoverContent = () => {
                 {state.popoverTitle ? <Card.Title>{toLocalizedString(state.popoverTitle, t)}</Card.Title> : <span />}
                 <Card.Close onClick={handleClose} />
               </Card.Toolbar>
-              <Surface role='card--content' data={state.popoverContent} limit={1} />
+              <Surface.Surface role='card--content' data={state.popoverContent} limit={1} />
             </Card.Root>
           )}
         </Popover.Viewport>

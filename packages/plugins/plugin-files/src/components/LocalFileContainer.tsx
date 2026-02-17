@@ -5,10 +5,10 @@
 import * as Option from 'effect/Option';
 import React, { type FC, useMemo } from 'react';
 
-import { Surface, useAppGraph } from '@dxos/app-framework/react';
+import { Surface } from '@dxos/app-framework/ui';
+import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Graph, Node, useActionRunner } from '@dxos/plugin-graph';
-import { Button, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { Layout } from '@dxos/react-ui-mosaic';
+import { Button, Layout, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { descriptionMessage, mx } from '@dxos/ui-theme';
 
 import { meta } from '../meta';
@@ -29,7 +29,7 @@ const LocalFileContainer: FC<{ file: LocalFile }> = ({ file }) => {
     return null;
   }
 
-  return <Surface role='article' data={transformedData} />;
+  return <Surface.Surface role='article' data={transformedData} />;
 };
 
 const PermissionsGate = ({ entity }: { entity: LocalEntity }) => {

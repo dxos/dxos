@@ -56,7 +56,7 @@ const meta = {
   title: 'plugins/plugin-simple-layout/AppBar',
   render: DefaultStory,
   decorators: [
-    withTheme,
+    withTheme(),
     withLayout({
       layout: 'column',
       classNames: 'relative',
