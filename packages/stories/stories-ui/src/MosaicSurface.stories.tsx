@@ -35,6 +35,7 @@ const DefaultStory = ({ columns: columnsProp = 1, debug = false }: StoryProps) =
   const [columns, setColumns] = useState<TestColumn[]>(
     Array.from({ length: columnsProp }).map((_, i) => {
       const col = Obj.make(TestColumn, {
+        name: `Column ${i}`,
         items: Array.from({ length: faker.number.int({ min: 8, max: 20 }) }).map((_, j) => {
           const item = db.add(
             Obj.make(TestItem, {
@@ -64,7 +65,7 @@ const DefaultStory = ({ columns: columnsProp = 1, debug = false }: StoryProps) =
   return (
     <Mosaic.Root asChild debug={debug}>
       <div className={mx('grid overflow-hidden', debug && 'grid-cols-[1fr_20rem] gap-2')}>
-        <Board.Root id='board' model={model} debug={debug} Tile={Board.Column} />
+        <Board.Root id='board' model={model} debug={debug} />
 
         {debug && (
           <Focus.Group classNames='flex flex-col gap-2 overflow-hidden'>
