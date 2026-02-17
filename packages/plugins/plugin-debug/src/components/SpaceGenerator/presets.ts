@@ -132,7 +132,7 @@ export const generator = () => ({
               },
               function: Ref.make(serializeFunction(gmail.sync)),
               input: {
-                mailboxId: Obj.getDXN(mailbox).toString(),
+                mailbox: Ref.make(mailbox),
               },
             }),
           );

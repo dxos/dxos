@@ -4,8 +4,22 @@
 
 import { createRequire } from 'node:module';
 
-
 const EXCLUDED_EFFECT_PACKAGES = ['@effect/vitest'];
+
+/**
+ * Map of Effect base-package exports that come from a subpath (not a direct segment).
+ * Used when resolving imports like `import { pipe } from 'effect'` → effect/Function.
+ */
+const EFFECT_EXPORT_TO_SUBPATH = {
+  pipe: 'Function',
+  flow: 'Function',
+};
+
+/**
+ * Subpaths that allow named imports (e.g. `import { pipe, flow } from 'effect/Function'`).
+ * Other subpaths still require namespace imports.
+ */
+const NAMED_IMPORT_ALLOWED_SUBPATHS = new Set(['Function']);
 
 /**
  * ESLint rule to transform combined imports from 'effect' and '@effect/*'
@@ -59,6 +73,15 @@ export default {
       return exported.has(segment);
     };
 
+    const resolveExportToSegment = (pkgName, exportName) => {
+      if (isValidSubpath(pkgName, exportName)) return exportName;
+      if (pkgName === 'effect' && EFFECT_EXPORT_TO_SUBPATH[exportName]) {
+        const segment = EFFECT_EXPORT_TO_SUBPATH[exportName];
+        return isValidSubpath(pkgName, segment) ? segment : null;
+      }
+      return null;
+    };
+
     const isEffectPackage = (source) => {
       return source === 'effect' || source.startsWith('effect/') || source.startsWith('@effect/');
     };
@@ -66,7 +89,7 @@ export default {
     const shouldSkipEffectPackage = (basePackage) => {
       return EXCLUDED_EFFECT_PACKAGES.includes(basePackage);
     };
-    
+
     /**
      * Get the base package name from a source string.
      * @param {string} source - The source string to get the base package name from.
@@ -91,11 +114,13 @@ export default {
         const basePackage = getBasePackage(source);
         if (shouldSkipEffectPackage(basePackage)) return;
 
-        // If it's a subpath import (e.g., 'effect/Schema'), enforce namespace import only.
+        // If it's a subpath import (e.g., 'effect/Schema'), enforce namespace import except for allowed subpaths.
         if (source.startsWith(basePackage + '/')) {
+          const segment = source.slice(basePackage.length + 1);
+          const allowsNamed = NAMED_IMPORT_ALLOWED_SUBPATHS.has(segment);
           const isNamespaceOnly =
             node.specifiers.length === 1 && node.specifiers[0].type === 'ImportNamespaceSpecifier';
-          if (!isNamespaceOnly) {
+          if (!allowsNamed && !isNamespaceOnly) {
             context.report({
               node,
               message: 'Use namespace import for Effect subpaths',
@@ -129,18 +154,22 @@ export default {
           else regularImports.push(entry);
         }
 
-        // Partition into resolvable vs unresolved specifiers.
+        // Partition into resolvable vs unresolved specifiers (resolved entries include segment for fix).
         const resolvedType = [];
         const unresolvedType = [];
         const resolvedRegular = [];
         const unresolvedRegular = [];
 
-        typeImports.forEach((s) =>
-          isValidSubpath(packageName, s.imported) ? resolvedType.push(s) : unresolvedType.push(s),
-        );
-        regularImports.forEach((s) =>
-          isValidSubpath(packageName, s.imported) ? resolvedRegular.push(s) : unresolvedRegular.push(s),
-        );
+        typeImports.forEach((spec) => {
+          const segment = resolveExportToSegment(packageName, spec.imported);
+          if (segment) resolvedType.push({ ...spec, segment });
+          else unresolvedType.push(spec);
+        });
+        regularImports.forEach((spec) => {
+          const segment = resolveExportToSegment(packageName, spec.imported);
+          if (segment) resolvedRegular.push({ ...spec, segment });
+          else unresolvedRegular.push(spec);
+        });
 
         const unresolved = [...unresolvedType, ...unresolvedRegular].map(({ imported }) => imported);
 
@@ -160,26 +189,54 @@ export default {
               return null;
             }
 
-            // Prefer regular (value) imports over type imports on duplicates.
-            const seenResolved = new Set(); // key: `${alias}|${segment}`
-
-            // First, emit value imports and record keys.
-            resolvedRegular.forEach(({ imported, local }) => {
-              const alias = imported !== local ? local : imported;
-              const key = `${alias}|${imported}`;
-              if (seenResolved.has(key)) return;
-              seenResolved.add(key);
-              imports.push(`import * as ${alias} from '${packageName}/${imported}';`);
+            // Group resolved imports by segment.
+            const bySegment = new Map(); // segment -> { regular: [...], type: [...] }
+            resolvedRegular.forEach((entry) => {
+              const seg = entry.segment;
+              let group = bySegment.get(seg);
+              if (!group) {
+                group = { regular: [], type: [] };
+                bySegment.set(seg, group);
+              }
+              group.regular.push(entry);
+            });
+            resolvedType.forEach((entry) => {
+              const seg = entry.segment;
+              let group = bySegment.get(seg);
+              if (!group) {
+                group = { regular: [], type: [] };
+                bySegment.set(seg, group);
+              }
+              group.type.push(entry);
             });
 
-            // Then, emit type imports only if a value import for the same alias/segment was not emitted.
-            resolvedType.forEach(({ imported, local }) => {
-              const alias = imported !== local ? local : imported;
-              const key = `${alias}|${imported}`;
-              if (seenResolved.has(key)) return; // skip type if value exists
-              seenResolved.add(key);
-              imports.push(`import type * as ${alias} from '${packageName}/${imported}';`);
-            });
+            for (const [segment, group] of bySegment) {
+              const useNamed = NAMED_IMPORT_ALLOWED_SUBPATHS.has(segment);
+              const merged = [...group.regular];
+              for (const t of group.type) {
+                if (!group.regular.some((r) => r.local === t.local)) merged.push(t);
+              }
+              if (useNamed && merged.length > 0) {
+                const specParts = merged.map(({ imported, local }) =>
+                  imported !== local ? `${imported} as ${local}` : imported,
+                );
+                imports.push(`import { ${specParts.join(', ')} } from '${packageName}/${segment}';`);
+              } else {
+                const seen = new Set();
+                for (const { imported, local } of merged) {
+                  const alias = imported !== local ? local : imported;
+                  if (seen.has(alias)) continue;
+                  seen.add(alias);
+                  const isTypeOnly =
+                    group.type.some((t) => t.imported === imported) &&
+                    !group.regular.some((r) => r.imported === imported);
+                  const importStr = isTypeOnly
+                    ? `import type * as ${alias} from '${packageName}/${segment}';`
+                    : `import * as ${alias} from '${packageName}/${segment}';`;
+                  imports.push(importStr);
+                }
+              }
+            }
 
             // If there are unresolved, keep them in a single base import.
             if (unresolvedType.length || unresolvedRegular.length) {
