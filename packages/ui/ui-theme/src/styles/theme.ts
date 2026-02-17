@@ -72,22 +72,10 @@ export const defaultTheme: Theme<Record<string, any>> = {
   treegrid: treegridTheme,
 };
 
-// TODO(burdon): Missing!
-// treegrid.cell => treegrid__cell
-// select.viewport => select__viewport
-const missing = new Set();
-
 export const bindTheme = <P extends Record<string, any>>(theme: Theme<Record<string, any>>): ThemeFunction<P> => {
-  return (path: string, defaultClassName: string, styleProps?: P, ...etc: ClassNameArray): string => {
+  return (path: string, defaultClassName: string, styleProps?: P, ...etc: ClassNameArray) => {
     const result: Theme<P> | ComponentFunction<P> = get(theme, path);
-    const className = typeof result === 'function' && result(styleProps ?? ({} as P), ...etc);
-    if (!className) {
-      if (!missing.has(path)) {
-        console.warn(`Missing theme path: ${path} => ${defaultClassName}`);
-        missing.add(path);
-      }
-    }
-    return className || '';
+    return typeof result === 'function' ? result(styleProps ?? ({} as P), ...etc) : undefined;
   };
 };
 

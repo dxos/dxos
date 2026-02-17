@@ -23,7 +23,7 @@ export const Tag = forwardRef<HTMLSpanElement, TagProps>(
     return (
       <Root
         {...props}
-        className={tx('tag.root', 'dx-tag', { palette }, classNames)}
+        className={tx('tag.root', 'tag__root', { palette }, classNames)}
         data-hue={palette}
         ref={forwardedRef}
       />
