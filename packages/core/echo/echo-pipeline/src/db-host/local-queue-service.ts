@@ -10,7 +10,7 @@ import { ATTR_META, type ObjectJSON } from '@dxos/echo/internal';
 import type { ForeignKey } from '@dxos/echo-protocol';
 import { RuntimeProvider } from '@dxos/effect';
 import { type FeedStore } from '@dxos/feed';
-import { invariant } from '@dxos/invariant';
+import { assertArgument, invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
 import {
@@ -77,6 +77,12 @@ export class LocalQueueServiceImpl implements QueueService {
 
   insertIntoQueue(request: InsertIntoQueueRequest): Promise<void> {
     const { subspaceTag, spaceId, queueId, objects } = request;
+    const feedNamespace = subspaceTag ?? FeedProtocol.WellKnownNamespaces.data;
+    assertArgument(
+      FeedProtocol.isWellKnownNamespace(feedNamespace),
+      'request.subspaceTag',
+      'expected a well-known queue namespace',
+    );
     return RuntimeProvider.runPromise(this.#runtime)(
       Effect.gen(this, function* () {
         const messages = objects!.map((obj) => {
@@ -90,7 +96,7 @@ export class LocalQueueServiceImpl implements QueueService {
           return {
             spaceId: spaceId,
             feedId: queueId!,
-            feedNamespace: subspaceTag,
+            feedNamespace,
             data: new TextEncoder().encode(JSON.stringify(obj)),
           };
         });
@@ -102,12 +108,18 @@ export class LocalQueueServiceImpl implements QueueService {
 
   deleteFromQueue(request: DeleteFromQueueRequest): Promise<void> {
     const { subspaceTag, spaceId, queueId, objectIds } = request;
+    const feedNamespace = subspaceTag ?? FeedProtocol.WellKnownNamespaces.data;
+    assertArgument(
+      FeedProtocol.isWellKnownNamespace(feedNamespace),
+      'request.subspaceTag',
+      'expected a well-known queue namespace',
+    );
     return RuntimeProvider.runPromise(this.#runtime)(
       Effect.gen(this, function* () {
         const messages = objectIds!.map((id) => ({
           spaceId: spaceId,
           feedId: queueId!,
-          feedNamespace: subspaceTag,
+          feedNamespace,
           data: new TextEncoder().encode(JSON.stringify({ id, '@deleted': true })),
         }));
 

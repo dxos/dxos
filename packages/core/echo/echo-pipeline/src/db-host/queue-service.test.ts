@@ -11,6 +11,7 @@ import * as Layer from 'effect/Layer';
 import { RuntimeProvider } from '@dxos/effect';
 import { FeedStore } from '@dxos/feed';
 import { ObjectId, SpaceId } from '@dxos/keys';
+import { FeedProtocol } from '@dxos/protocols';
 import { SqlTransaction } from '@dxos/sql-sqlite';
 
 import { LocalQueueServiceImpl } from './local-queue-service';
@@ -38,7 +39,7 @@ describe('LocalQueueServiceImpl', () => {
 
       yield* Effect.promise(() =>
         service.insertIntoQueue({
-          subspaceTag: 'default',
+          subspaceTag: FeedProtocol.WellKnownNamespaces.data,
           spaceId,
           queueId,
           objects: [object1, object2],
@@ -69,7 +70,7 @@ describe('LocalQueueServiceImpl', () => {
 
       yield* Effect.promise(() =>
         service.insertIntoQueue({
-          subspaceTag: 'default',
+          subspaceTag: FeedProtocol.WellKnownNamespaces.data,
           spaceId,
           queueId,
           objects: [object1],
@@ -77,7 +78,7 @@ describe('LocalQueueServiceImpl', () => {
       );
       yield* Effect.promise(() =>
         service.deleteFromQueue({
-          subspaceTag: 'default',
+          subspaceTag: FeedProtocol.WellKnownNamespaces.data,
           spaceId,
           queueId,
           objectIds: [object1Id],
@@ -107,7 +108,7 @@ describe('LocalQueueServiceImpl', () => {
       const items = Array.from({ length: 10 }, (_, i) => ({ id: `obj${i}`, data: `test${i}` }));
       yield* Effect.promise(() =>
         service.insertIntoQueue({
-          subspaceTag: 'default',
+          subspaceTag: FeedProtocol.WellKnownNamespaces.data,
           spaceId,
           queueId,
           objects: items,
