@@ -54,7 +54,6 @@ for APP_PATH in "${APPS[@]}"; do
   if [[ $APP == *-app ]]; then
     set +e
     eval "export DX_POSTHOG_API_KEY=$""${PACKAGE_ENV}"_POSTHOG_API_KEY""
-    eval "export DX_POSTHOG_API_HOST=$""${PACKAGE_ENV}"_POSTHOG_API_HOST""
     eval "export DX_POSTHOG_PROJECT_ID=$""${PACKAGE_ENV}"_POSTHOG_PROJECT_ID""
     eval "export DX_POSTHOG_FEEDBACK_SURVEY_ID=$""${PACKAGE_ENV}"_POSTHOG_FEEDBACK_SURVEY_ID""
     export LOG_FILTER="error"
