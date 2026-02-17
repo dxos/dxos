@@ -159,16 +159,15 @@ export const NestedScrollAreas = {
 
 export const NativeScroll = {
   render: () => (
-    <div className='group bs-72 is-48 p-2 border border-separator rounded-md'>
+    <div className='group bs-48 is-48 border border-separator'>
       <div
         className={mx(
-          'group bs-full is-full overflow-y-auto',
-          '[&::-webkit-scrollbar]:is-1',
-          '[&::-webkit-scrollbar-thumb]:bg-transparent',
-          'group-hover:[&::-webkit-scrollbar-thumb]:bg-neutral-300',
-          'dark:group-hover:[&::-webkit-scrollbar-thumb]:bg-neutral-600',
-          '[&::-webkit-scrollbar-thumb]:rounded-full',
-          '[&::-webkit-scrollbar-thumb]:transition-colors',
+          'group bs-full is-full overflow-y-scroll',
+          '[&::-webkit-scrollbar]:is-3',
+          '[&::-webkit-scrollbar-thumb]:rounded-none',
+          '[&::-webkit-scrollbar-track]:bg-scrollbarTrack',
+          '[&::-webkit-scrollbar-thumb]:bg-scrollbarThumbSubdued',
+          'group-hover:[&::-webkit-scrollbar-thumb]:bg-scrollbarThumb',
         )}
       >
         <Column />

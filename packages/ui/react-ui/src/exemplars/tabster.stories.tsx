@@ -110,7 +110,7 @@ const withTabster: Decorator = (Story) => {
 };
 
 const meta: Meta<typeof DefaultStory> = {
-  title: 'ui/react-ui/exemplars/tabster',
+  title: 'ui/react-ui-core/exemplars/tabster',
   component: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' }), withTabster],
   parameters: {
