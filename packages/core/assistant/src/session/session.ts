@@ -27,7 +27,7 @@ import { todo } from '@dxos/debug';
 import { Obj } from '@dxos/echo';
 import { type FunctionInvocationService, TracingService } from '@dxos/functions';
 import { log } from '@dxos/log';
-import { Message } from '@dxos/types';
+import { Message, type ContentBlock } from '@dxos/types';
 
 import { type AiAssistantError } from '../errors';
 
@@ -136,7 +136,7 @@ export class AiSession {
         });
 
         // Execute the stream request.
-        const blocks = yield* LanguageModel.streamText({
+        const messages = yield* LanguageModel.streamText({
           prompt,
           toolkit,
           disableToolCallResolution: true,
@@ -150,21 +150,29 @@ export class AiSession {
             onPart: (part) => observer.onPart(part),
             onEnd: (summary) => observer.onEnd(summary),
           }),
+          Stream.mapEffect((block) =>
+            Effect.gen(function* () {
+              return yield* submitMessage(
+                Obj.make(Message.Message, {
+                  created: new Date().toISOString(),
+                  sender: { role: 'assistant' },
+                  blocks: [block],
+                }),
+              );
+            }),
+          ),
           Stream.runCollect,
           Effect.map(Chunk.toArray),
         );
 
-        // Create the response message.
-        const response = yield* submitMessage(
-          Obj.make(Message.Message, {
-            created: new Date().toISOString(),
-            sender: { role: 'assistant' },
-            blocks,
-          }),
-        );
-
         // Parse the response for tool calls.
-        const toolCalls = getToolCalls(response);
+        const toolCalls = messages.flatMap((message) =>
+          message.blocks
+            .filter(
+              (block): block is ContentBlock.ToolCall => block._tag === 'toolCall' && block.providerExecuted === false,
+            )
+            .map((block) => ({ block, message })),
+        );
         if (toolCalls.length === 0) {
           break;
         } else if (!toolkit) {
@@ -173,13 +181,13 @@ export class AiSession {
 
         // Execute the tool calls.
         // TODO(burdon): Retry errors? Write result when each completes individually?
-        const toolResults = yield* Effect.forEach(toolCalls, (toolCall) => {
-          return callTool(toolkit, toolCall).pipe(
+        const toolResults = yield* Effect.forEach(toolCalls, ({ block, message }) => {
+          return callTool(toolkit, block).pipe(
             Effect.provide(
               TracingService.layerSubframe((context) => ({
                 ...context,
-                parentMessage: response.id,
-                toolCallId: toolCall.toolCallId,
+                parentMessage: message.id,
+                toolCallId: block.toolCallId,
               })),
             ),
           );
@@ -188,6 +196,7 @@ export class AiSession {
         // Add to queue and continue loop.
         // TODO(wittjosiah): Sometimes tool error results are added to the queue before the tool agent statuses.
         //   This results in a broken execution graph.
+        // TODO(dmaretskyi): Stream tool results one by one.
         yield* submitMessage(
           Obj.make(Message.Message, {
             created: new Date().toISOString(),
