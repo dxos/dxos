@@ -43,9 +43,6 @@ const meta = {
   decorators: [withTheme()],
   parameters: {
     translations,
-    chromatic: {
-      disableSnapshot: false,
-    },
   },
 } satisfies Meta<typeof DefaultStory>;
 
