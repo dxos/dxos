@@ -60,8 +60,9 @@ const DefaultStory = ({ columns: columnsProp = 1, debug = false }: StoryProps) =
     );
 
     const model: BoardModel<TestColumn, TestItem> = {
-      isColumn: (obj: Obj.Unknown): obj is TestColumn => Obj.instanceOf(TestColumn, obj),
-      isItem: (obj: Obj.Unknown): obj is TestItem => Obj.instanceOf(TestItem, obj),
+      getId: (data: TestColumn | TestItem) => data.id,
+      isColumn: (obj: unknown): obj is TestColumn => Obj.isObject(obj) && Obj.instanceOf(TestColumn, obj),
+      isItem: (obj: unknown): obj is TestItem => Obj.isObject(obj) && Obj.instanceOf(TestItem, obj),
       columns: columnsAtom,
       items: (column) => itemsAtomFamily(column),
       getColumns: () => registry.get(columnsAtom),

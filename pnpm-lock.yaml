@@ -10419,6 +10419,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/echo-atom':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-atom
       '@dxos/echo-query':
         specifier: workspace:*
         version: link:../../core/echo/echo-query
