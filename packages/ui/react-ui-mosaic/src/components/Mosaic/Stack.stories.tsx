@@ -13,8 +13,8 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { useContainerDebug } from '../../hooks';
 import { DefaultStackTile, TestItem } from '../../testing';
-import { Mosaic } from '../Mosaic';
 
+import { Mosaic } from './Mosaic';
 import { MosaicStack } from './Stack';
 
 faker.seed(999);

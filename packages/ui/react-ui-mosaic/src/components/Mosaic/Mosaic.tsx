@@ -2,8 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { MosaicStack, type MosaicStackProps, MosaicVirtualStack } from '../Stack';
-
 import {
   MosaicContainer,
   type MosaicContainerProps,
@@ -17,6 +15,7 @@ import {
   type MosaicPlaceholderProps,
 } from './Placeholder';
 import { MosaicRoot, type MosaicRootProps, useMosaicRootContext } from './Root';
+import { MosaicStack, type MosaicStackProps, type MosaicStackTileComponent, MosaicVirtualStack } from './Stack';
 import { MosaicTile, type MosaicTileProps, type MosaicTileState, useMosaicTileContext } from './Tile';
 
 //
@@ -42,6 +41,7 @@ export type {
   MosaicPlaceholderProps,
   MosaicDropIndicatorProps,
   MosaicStackProps,
+  MosaicStackTileComponent,
 };
 
 export {

@@ -84,8 +84,8 @@ type MosaicContainerProps = SlottableClassName<
 const MosaicContainer = forwardRef<HTMLDivElement, MosaicContainerProps>(
   (
     {
-      className,
       classNames,
+      className,
       children,
       eventHandler: eventHandlerProp,
       orientation = 'vertical',

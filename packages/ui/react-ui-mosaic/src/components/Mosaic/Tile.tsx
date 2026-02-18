@@ -74,8 +74,8 @@ type MosaicTileProps<TData = any, TLocation = LocationType> = SlottableClassName
 const MosaicTile = forwardRef<HTMLDivElement, MosaicTileProps>(
   (
     {
-      className,
       classNames,
+      className,
       children,
       asChild,
       dragHandle,

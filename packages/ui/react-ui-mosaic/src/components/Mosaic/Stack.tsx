@@ -10,14 +10,11 @@ import { type Axis, type SlottableClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { useVisibleItems } from '../../hooks';
-import {
-  type GetId,
-  MosaicPlaceholder,
-  type MosaicPlaceholderProps,
-  type MosaicTileProps,
-  mosaicStyles,
-  useMosaicContainer,
-} from '../Mosaic';
+
+import { type MosaicPlaceholderProps, type MosaicTileProps, useMosaicContainer } from './Mosaic';
+import { MosaicPlaceholder } from './Placeholder';
+import { styles } from './styles';
+import { type GetId } from './types';
 
 //
 // Mosaic Drag-and-drop
@@ -61,8 +58,8 @@ type MosaicStackProps<TData = any> = SlottableClassName<
 const MosaicStackInner = forwardRef<HTMLDivElement, MosaicStackProps>(
   (
     {
-      className,
       classNames,
+      className,
       role = 'list',
       orientation: orientationProp = 'vertical',
       draggable = true,
@@ -125,8 +122,8 @@ type MosaicVirtualStackProps<TData = any> = MosaicStackProps<TData> &
 const MosaicVirtualStackInner = forwardRef<HTMLDivElement, MosaicVirtualStackProps>(
   (
     {
-      className,
       classNames,
+      className,
       role = 'list',
       orientation = 'vertical',
       items,
@@ -226,11 +223,11 @@ const MosaicVirtualStack = MosaicVirtualStackInner as <TData = any>(
 
 const InternalPlaceholder = (props: MosaicPlaceholderProps<number>) => {
   return (
-    <MosaicPlaceholder {...props} classNames={mosaicStyles.placeholder.root}>
+    <MosaicPlaceholder {...props} classNames={styles.placeholder.root}>
       <div
         className={mx(
           'flex bs-full bg-baseSurface border border-dashed border-separator rounded-sm',
-          mosaicStyles.placeholder.content,
+          styles.placeholder.content,
         )}
       />
     </MosaicPlaceholder>

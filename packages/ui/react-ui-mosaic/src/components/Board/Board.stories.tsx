@@ -11,7 +11,6 @@ import { type Database, Filter, Obj, Ref } from '@dxos/echo';
 import { AtomObj, AtomQuery } from '@dxos/echo-atom';
 import { invariant } from '@dxos/invariant';
 import { faker } from '@dxos/random';
-import { useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { withRegistry } from '@dxos/storybook-utils';
@@ -28,7 +27,7 @@ import { DefaultBoardColumn } from './Column';
 faker.seed(999);
 
 // TODO(burdon): Create model with Kanban, Pipeline, and Hierarchical implementations.
-// TODO(burdon): Factor out Board to react-ui-kanban (replace kanban).
+// TODO(burdon): Remove react-ui-kanban (replace kanban).
 // TODO(burdon): Mobile implementation.
 // TODO(burdon): Tests/stories (sanity check).
 
@@ -67,7 +66,6 @@ const DefaultStory = ({ debug = false }: StoryProps) => {
   const { space } = useClientStory();
   const registry = useContext(RegistryContext);
 
-  const columns = useQuery(space?.db, Filter.type(TestColumn));
   const model = useMemo<BoardModel<TestColumn, TestItem>>(() => {
     const columnsAtom =
       space?.db != null ? AtomQuery.make(space.db, Filter.type(TestColumn)) : Atom.make<TestColumn[]>([]);
@@ -92,17 +90,6 @@ const DefaultStory = ({ debug = false }: StoryProps) => {
       items: (column) => itemsAtomFamily(column),
       getColumns: () => registry.get(columnsAtom),
       getItems: (column) => registry.get(itemsAtomFamily(column)),
-      onItemDelete: (column: TestColumn, current: TestItem) => {
-        Obj.change(column, (mutableColumn) => {
-          if (!mutableColumn.items) {
-            return;
-          }
-          const idx = mutableColumn.items.findIndex((ref) => ref.target?.id === current?.id);
-          if (idx !== -1) {
-            mutableColumn.items.splice(idx, 1);
-          }
-        });
-      },
       onItemCreate: async (column: TestColumn) => {
         invariant(space);
         const item = space.db.add(
@@ -117,6 +104,17 @@ const DefaultStory = ({ debug = false }: StoryProps) => {
         });
 
         return item;
+      },
+      onItemDelete: (column: TestColumn, current: TestItem) => {
+        Obj.change(column, (mutableColumn) => {
+          if (!mutableColumn.items) {
+            return;
+          }
+          const idx = mutableColumn.items.findIndex((ref) => ref.target?.id === current?.id);
+          if (idx !== -1) {
+            mutableColumn.items.splice(idx, 1);
+          }
+        });
       },
     } satisfies BoardModel<TestColumn, TestItem>;
   }, [space?.db, registry]);

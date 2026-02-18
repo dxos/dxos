@@ -23,8 +23,7 @@ import { useContainerDebug, useEventHandlerAdapter } from '../../hooks';
 import { translationKey } from '../../translations';
 import { Card, type CardMenuProps } from '../Card';
 import { Focus } from '../Focus';
-import { Mosaic, type MosaicContainerProps, type MosaicTileProps } from '../Mosaic';
-import { type MosaicStackProps } from '../Stack';
+import { Mosaic, type MosaicContainerProps, type MosaicStackProps, type MosaicTileProps } from '../Mosaic';
 
 import { useBoardContext } from './Board';
 import { BoardItem } from './Item';

@@ -140,7 +140,7 @@ const cli = Command.run(command, {
 
 /**
  * ```bash
- * npx tsx ./scripts/20251117-migrate.ts <path-to-archive>
+ * npx tsx ./scripts/migrations/20251117-migrate.ts <path-to-archive>
  * ```
  */
 cli(process.argv).pipe(Effect.provide(NodeContext.layer), NodeRuntime.runMain);

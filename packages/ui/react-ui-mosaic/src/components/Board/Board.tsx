@@ -13,8 +13,7 @@ import { mx } from '@dxos/ui-theme';
 
 import { useContainerDebug, useEventHandlerAdapter } from '../../hooks';
 import { Focus } from '../Focus';
-import { Mosaic, type MosaicPlaceholderProps, mosaicStyles, useMosaic } from '../Mosaic';
-import { type MosaicStackProps } from '../Stack';
+import { Mosaic, type MosaicPlaceholderProps, type MosaicStackProps, mosaicStyles, useMosaic } from '../Mosaic';
 
 import { BoardColumn, type BoardColumnProps, DefaultBoardColumn } from './Column';
 import { BoardItem, type BoardItemProps } from './Item';
@@ -30,10 +29,10 @@ export interface BoardModel<TColumn extends Obj.Unknown = Obj.Unknown, TItem ext
   items: (column: TColumn) => Atom.Atom<TItem[]>;
   getColumns: () => TColumn[];
   getItems: (column: TColumn) => TItem[];
-  onColumnDelete?: (column: TColumn) => void;
   onColumnCreate?: () => Promise<TColumn>;
-  onItemDelete?: (column: TColumn, item: TItem) => void;
+  onColumnDelete?: (column: TColumn) => void;
   onItemCreate?: (column: TColumn) => Promise<TItem>;
+  onItemDelete?: (column: TColumn, item: TItem) => void;
 }
 
 //
