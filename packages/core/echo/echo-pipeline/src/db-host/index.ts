@@ -9,3 +9,4 @@ export * from './echo-host';
 export * from './database-root';
 export * from './query-service';
 export * from './space-state-manager';
+export * from './queue-feed-codec';
