@@ -1,3 +1,7 @@
+//
+// Copyright 2026 DXOS.org
+//
+
 import { deepMapValues } from '@dxos/util';
 
 interface Template {
@@ -41,7 +45,7 @@ const makeContext = (segments: string[]): Context<any> => {
   const target: Path<any> = {
     [PathTypeId]: PathTypeId,
     [symbolSegments]: segments,
-    toString() {
+    toString: () => {
       if (segments.length === 0) {
         return '{{$}}';
       }

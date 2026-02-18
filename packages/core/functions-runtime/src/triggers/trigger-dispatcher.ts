@@ -13,6 +13,7 @@ import * as Effect from 'effect/Effect';
 import * as Either from 'effect/Either';
 import * as Exit from 'effect/Exit';
 import * as Fiber from 'effect/Fiber';
+import { pipe } from 'effect/Function';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Record from 'effect/Record';
@@ -36,7 +37,6 @@ import { FeedProtocol, type ObjectId } from '@dxos/protocols';
 
 import { createInvocationPayload } from './input-builder';
 import { type TriggerState, TriggerStateStore } from './trigger-state-store';
-import { pipe } from 'effect';
 
 export type TimeControl = 'natural' | 'manual';
 
@@ -450,7 +450,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
                   chunk,
                   (object) =>
                     Effect.gen(this, function* () {
-                      const objectPos = Entity.getKeys(object, FeedProtocol.KEY_QUEUE_POSITION).at(0)?.id!;
+                      const objectPos = Entity.getKeys(object, FeedProtocol.KEY_QUEUE_POSITION).at(0)!.id;
 
                       return yield* this.invokeTrigger({
                         trigger,

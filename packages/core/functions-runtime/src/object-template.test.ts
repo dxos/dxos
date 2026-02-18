@@ -1,3 +1,7 @@
+//
+// Copyright 2026 DXOS.org
+//
+
 import { describe, expect, it } from 'vitest';
 
 import { objectTemplate } from './object-template';

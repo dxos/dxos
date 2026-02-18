@@ -19,16 +19,14 @@ import {
   type ToolExecutionService,
   type ToolResolverService,
   callTool,
-  getToolCalls,
   withoutToolCallParising,
 } from '@dxos/ai';
 import { type Blueprint } from '@dxos/blueprints';
 import { todo } from '@dxos/debug';
 import { Obj } from '@dxos/echo';
 import { type FunctionInvocationService, TracingService } from '@dxos/functions';
-import { dbg,
-log } from '@dxos/log';
-import { Message, type ContentBlock } from '@dxos/types';
+import { log } from '@dxos/log';
+import { type ContentBlock, Message } from '@dxos/types';
 
 import { type AiAssistantError } from '../errors';
 

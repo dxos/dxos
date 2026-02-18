@@ -35,6 +35,7 @@ export const make = () =>
         }),
         '@anthropic/claude-opus-4-6': yield* AnthropicLanguageModel.model('claude-opus-4-6', {
           thinking,
+          
         }),
         '@anthropic/claude-sonnet-4-0': yield* AnthropicLanguageModel.model('claude-sonnet-4-0'),
         '@anthropic/claude-sonnet-4-5': yield* AnthropicLanguageModel.model('claude-sonnet-4-5'),
