@@ -5,6 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
+import { IdentityDid, PublicKey } from '@dxos/keys';
 import { create } from '@dxos/protocols/buf';
 import { decodePublicKey, encodePublicKey } from '@dxos/protocols/buf';
 import {
@@ -13,8 +14,7 @@ import {
   SpaceMember_PresenceState,
 } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
-import { IdentityDid, PublicKey } from '@dxos/keys';
-import { SpaceMember_Role, type SpaceMember } from '@dxos/react-client/echo';
+import { SpaceMember_Role } from '@dxos/react-client/echo';
 import { Invitation_State } from '@dxos/react-client/invitations';
 import { withTheme } from '@dxos/react-ui/testing';
 

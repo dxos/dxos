@@ -10,6 +10,7 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type Mesh } from '@dxos/protocols';
 import { EMPTY } from '@dxos/protocols/buf';
+import { type PublicKey as BufPublicKey } from '@dxos/protocols/buf/dxos/keys_pb';
 import {
   type BridgeEvent,
   type CloseRequest,
@@ -23,8 +24,6 @@ import {
   type StatsResponse,
 } from '@dxos/protocols/buf/dxos/mesh/bridge_pb';
 import { ComplexMap } from '@dxos/util';
-
-import { type PublicKey as BufPublicKey } from '@dxos/protocols/buf/dxos/keys_pb';
 
 import { type IceProvider } from '../../signal';
 import { type Transport, type TransportFactory } from '../transport';

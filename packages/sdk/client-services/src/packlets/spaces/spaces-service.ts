@@ -16,7 +16,7 @@ import { raise } from '@dxos/debug';
 import { type SpaceManager } from '@dxos/echo-pipeline';
 import { writeMessages } from '@dxos/feed-store';
 import { assertArgument, assertState, invariant } from '@dxos/invariant';
-import { PublicKey, SpaceId } from '@dxos/keys';
+import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import {
   ApiError,
@@ -27,6 +27,7 @@ import {
   encodeError,
 } from '@dxos/protocols';
 import { type Empty, EmptySchema, create, decodePublicKey } from '@dxos/protocols/buf';
+import { SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import {
   type AdmitContactRequest,
   type ContactAdmission,
@@ -54,7 +55,6 @@ import {
   type UpdateSpaceRequest,
   type WriteCredentialsRequest,
 } from '@dxos/protocols/buf/dxos/client/services_pb';
-import { SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type GossipMessage } from '@dxos/protocols/buf/dxos/mesh/teleport/gossip_pb';
 import { trace } from '@dxos/tracing';

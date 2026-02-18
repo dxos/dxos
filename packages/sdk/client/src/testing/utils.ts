@@ -5,10 +5,10 @@
 import { Trigger } from '@dxos/async';
 import { type Space } from '@dxos/client-protocol';
 import type { Config } from '@dxos/config';
-import type { ProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type Context } from '@dxos/context';
 import { type PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
+import type { ProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { range } from '@dxos/util';
 

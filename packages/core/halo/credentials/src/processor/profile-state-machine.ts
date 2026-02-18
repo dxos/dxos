@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { PublicKey } from '@dxos/keys';
+import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
@@ -31,10 +31,7 @@ export class ProfileStateMachine implements CredentialProcessor {
       case 'dxos.halo.credentials.IdentityProfile': {
         const issuer = fromBufPublicKey(credential.issuer);
         const subjectId = fromBufPublicKey(credential.subject?.id);
-        if (
-          !issuer?.equals(this._params.identityKey) ||
-          !subjectId?.equals(this._params.identityKey)
-        ) {
+        if (!issuer?.equals(this._params.identityKey) || !subjectId?.equals(this._params.identityKey)) {
           log.warn('Invalid profile credential', { expectedIdentity: this._params.identityKey, credential });
           return;
         }

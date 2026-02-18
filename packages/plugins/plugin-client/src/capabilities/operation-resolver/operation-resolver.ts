@@ -178,10 +178,20 @@ export default Capability.makeModule(
 
           invariant(credential, 'Credential not available');
           const recoveryKey = PublicKey.from(
-            new Uint8Array((credential as PublicKeyCredential).response as AuthenticatorAttestationResponse extends { getPublicKey(): ArrayBuffer } ? never : ArrayBuffer),
+            new Uint8Array(
+              (credential as PublicKeyCredential).response as AuthenticatorAttestationResponse extends {
+                getPublicKey(): ArrayBuffer;
+              }
+                ? never
+                : ArrayBuffer,
+            ),
           );
           const algorithm =
-            ((credential as PublicKeyCredential).response as AuthenticatorAttestationResponse & { getPublicKeyAlgorithm(): number }).getPublicKeyAlgorithm() === -7
+            (
+              (credential as PublicKeyCredential).response as AuthenticatorAttestationResponse & {
+                getPublicKeyAlgorithm(): number;
+              }
+            ).getPublicKeyAlgorithm() === -7
               ? 'ES256'
               : 'ED25519';
 
@@ -219,7 +229,9 @@ export default Capability.makeModule(
             }),
           );
           const lookupKey = PublicKey.from(
-            new Uint8Array(((credential as PublicKeyCredential).response as AuthenticatorAssertionResponse).userHandle!),
+            new Uint8Array(
+              ((credential as PublicKeyCredential).response as AuthenticatorAssertionResponse).userHandle!,
+            ),
           );
           yield* Effect.promise(() =>
             client.services.services.IdentityService!.recoverIdentity(
@@ -228,9 +240,15 @@ export default Capability.makeModule(
                   lookupKey,
                   deviceKey,
                   controlFeedKey,
-                  signature: Buffer.from(((credential as PublicKeyCredential).response as AuthenticatorAssertionResponse).signature),
-                  clientDataJson: Buffer.from(((credential as PublicKeyCredential).response as AuthenticatorAssertionResponse).clientDataJSON),
-                  authenticatorData: Buffer.from(((credential as PublicKeyCredential).response as AuthenticatorAssertionResponse).authenticatorData),
+                  signature: Buffer.from(
+                    ((credential as PublicKeyCredential).response as AuthenticatorAssertionResponse).signature,
+                  ),
+                  clientDataJson: Buffer.from(
+                    ((credential as PublicKeyCredential).response as AuthenticatorAssertionResponse).clientDataJSON,
+                  ),
+                  authenticatorData: Buffer.from(
+                    ((credential as PublicKeyCredential).response as AuthenticatorAssertionResponse).authenticatorData,
+                  ),
                 },
               },
               { timeout: RECOVER_IDENTITY_RPC_TIMEOUT },

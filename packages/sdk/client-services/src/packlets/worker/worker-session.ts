@@ -4,10 +4,10 @@
 
 import { Trigger, asyncTimeout } from '@dxos/async';
 import { PROXY_CONNECTION_TIMEOUT, iframeServiceBundle, workerServiceBundle } from '@dxos/client-protocol';
-import { type StartRequest } from '@dxos/protocols/buf/dxos/iframe_pb';
 import { invariant } from '@dxos/invariant';
 import { log, logInfo } from '@dxos/log';
 import { type Mesh } from '@dxos/protocols';
+import { type StartRequest } from '@dxos/protocols/buf/dxos/iframe_pb';
 import { type BufProtoRpcPeer, type RpcPort, createBufProtoRpcPeer } from '@dxos/rpc';
 import { Callback, type MaybePromise } from '@dxos/util';
 

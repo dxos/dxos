@@ -19,13 +19,7 @@ import {
 } from '@dxos/cli-util';
 import { FormBuilder } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
-import {
-  type Invitation,
-  Invitation_AuthMethod,
-  Invitation_State,
-  InvitationEncoder,
-  hostInvitation,
-} from '@dxos/client/invitations';
+import { InvitationEncoder, Invitation_AuthMethod, Invitation_State, hostInvitation } from '@dxos/client/invitations';
 import { type Key } from '@dxos/echo';
 
 export const handler = Effect.fn(function* ({

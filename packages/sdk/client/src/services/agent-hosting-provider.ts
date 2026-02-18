@@ -10,12 +10,12 @@ import { type Config } from '@dxos/config';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { schema } from '@dxos/protocols/proto';
 import { decodePublicKey, timestampMs } from '@dxos/protocols/buf';
+import type { GenService, GenServiceMethods } from '@dxos/protocols/buf';
 import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { schema } from '@dxos/protocols/proto';
 import { InitAuthSequenceResponse } from '@dxos/protocols/proto/dxos/service/agentmanager';
 import type { AgentManager } from '@dxos/protocols/proto/dxos/service/agentmanager';
-import type { GenService, GenServiceMethods } from '@dxos/protocols/buf';
 import { type WebsocketRpcClient } from '@dxos/websocket-rpc';
 
 export type AgentHostingProvider = {

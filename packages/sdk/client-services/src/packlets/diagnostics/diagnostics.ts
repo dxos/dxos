@@ -10,6 +10,14 @@ import { createDidFromIdentityKey, credentialTypeFilter } from '@dxos/credential
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { STORAGE_VERSION } from '@dxos/protocols';
+import { type QueryDevicesResponse } from '@dxos/protocols/buf/dxos/client/services_pb';
+import {
+  type SubscribeToFeedsResponse,
+  type SubscribeToFeedsResponse_Feed,
+} from '@dxos/protocols/buf/dxos/devtools/host_pb';
+import { type SwarmInfo } from '@dxos/protocols/buf/dxos/devtools/swarm_pb';
+import { type Epoch } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { type Resource, type Span } from '@dxos/protocols/buf/dxos/tracing_pb';
 import {
   type Device,
   type Identity,
@@ -20,14 +28,6 @@ import {
   SpaceMember,
   type Space as SpaceProto,
 } from '@dxos/protocols/proto/dxos/client/services';
-import { type QueryDevicesResponse } from '@dxos/protocols/buf/dxos/client/services_pb';
-import {
-  type SubscribeToFeedsResponse,
-  type SubscribeToFeedsResponse_Feed,
-} from '@dxos/protocols/buf/dxos/devtools/host_pb';
-import { type SwarmInfo } from '@dxos/protocols/buf/dxos/devtools/swarm_pb';
-import { type Epoch } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
-import { type Resource, type Span } from '@dxos/protocols/buf/dxos/tracing_pb';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
 
 import { DXOS_VERSION } from '../../version';

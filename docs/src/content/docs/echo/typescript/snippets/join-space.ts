@@ -23,4 +23,6 @@ const invitation = client.spaces.join(receivedInvitation);
 await invitation.authenticate('<authentication code here>');
 
 // Space joined!
-const _space = client.spaces.get(invitation.get().spaceKey! as unknown as PublicKey);
+const _space = client.spaces.get(
+  invitation.get().spaceKey! as unknown as PublicKey,
+);

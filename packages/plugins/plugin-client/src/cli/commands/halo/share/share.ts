@@ -10,7 +10,7 @@ import * as Effect from 'effect/Effect';
 import { CommandConfig, copyToClipboard, openBrowser, print } from '@dxos/cli-util';
 import { FormBuilder } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
-import { Invitation_AuthMethod, Invitation_State, InvitationEncoder, hostInvitation } from '@dxos/client/invitations';
+import { InvitationEncoder, Invitation_AuthMethod, Invitation_State, hostInvitation } from '@dxos/client/invitations';
 
 export const handler = Effect.fn(function* ({
   lifetime,

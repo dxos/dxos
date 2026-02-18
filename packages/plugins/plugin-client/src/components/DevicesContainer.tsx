@@ -12,8 +12,8 @@ import { type Device, useDevices } from '@dxos/react-client/halo';
 import {
   type CancellableInvitationObservable,
   type Invitation,
-  Invitation_State,
   InvitationEncoder,
+  Invitation_State,
 } from '@dxos/react-client/invitations';
 import { useNetworkStatus } from '@dxos/react-client/mesh';
 import { Button, Clipboard, Icon, IconButton, List, useId, useTranslation } from '@dxos/react-ui';

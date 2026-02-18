@@ -32,14 +32,14 @@ import { failedInvariant, invariant } from '@dxos/invariant';
 import { PublicKey, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ApiError, trace as Trace } from '@dxos/protocols';
-import { decodePublicKey, EMPTY, encodePublicKey } from '@dxos/protocols/buf';
+import { EMPTY, decodePublicKey, encodePublicKey } from '@dxos/protocols/buf';
 import { type Invitation, Invitation_Kind } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import { SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import {
   type QuerySpacesResponse,
   type Space as SerializedSpace,
   type SpaceArchive,
 } from '@dxos/protocols/buf/dxos/client/services_pb';
-import { SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { type IndexConfig } from '@dxos/protocols/buf/dxos/echo/indexing_pb';
 import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { trace } from '@dxos/tracing';

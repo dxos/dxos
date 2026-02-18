@@ -93,7 +93,7 @@ export class SwarmNetworkManager {
     this._signalManager = signalManager;
     this._signalManager.swarmEvent.on((event) => {
       if (event.topic) {
-        this._swarms.get(PublicKey.from(event.topic.data))?.onSwarmEvent(event);
+        void this._swarms.get(PublicKey.from(event.topic.data))?.onSwarmEvent(event);
       }
     });
     this._messenger = new Messenger({ signalManager: this._signalManager });

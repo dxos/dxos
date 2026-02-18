@@ -6,8 +6,8 @@ import React, { type ComponentPropsWithoutRef, useCallback } from 'react';
 
 import {
   type CancellableInvitationObservable,
-  Invitation_State,
   type InvitationStatus,
+  Invitation_State,
   useInvitationStatus,
 } from '@dxos/react-client/invitations';
 import {

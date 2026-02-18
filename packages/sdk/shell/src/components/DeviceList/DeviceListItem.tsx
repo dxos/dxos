@@ -6,8 +6,8 @@ import React, { type ComponentPropsWithoutRef, forwardRef } from 'react';
 
 import { generateName } from '@dxos/display-name';
 import { decodePublicKey } from '@dxos/protocols/buf';
-import { DeviceKind, DeviceType, type Device } from '@dxos/react-client/halo';
 import { Device_PresenceState } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { DeviceKind, DeviceType } from '@dxos/react-client/halo';
 import { ConnectionState } from '@dxos/react-client/mesh';
 import {
   Avatar,

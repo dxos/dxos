@@ -5,7 +5,7 @@
 import { NotImplementedError, RuntimeServiceError } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
 import { type Echo, type EdgeFunctionEnv } from '@dxos/protocols';
-import { type Empty, EMPTY } from '@dxos/protocols/buf';
+import { EMPTY, type Empty } from '@dxos/protocols/buf';
 import type {
   DeleteFromQueueRequest,
   InsertIntoQueueRequest,

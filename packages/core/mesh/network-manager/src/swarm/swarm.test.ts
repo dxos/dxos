@@ -211,29 +211,33 @@ const connectSwarms = async (peer1: TestPeer, peer2: TestPeer, delay = async () 
   const connect1 = peer1.swarm.connected.waitForCount(1);
   const connect2 = peer2.swarm.connected.waitForCount(1);
 
-  void peer1.swarm.onSwarmEvent(create(SwarmEventSchema, {
-    topic: create(PublicKeySchema, { data: peer2.topic.asUint8Array() }),
-    event: {
-      case: 'peerAvailable',
-      value: {
-        peer: peer2.peer,
-        since: timestampFromDate(new Date()),
+  void peer1.swarm.onSwarmEvent(
+    create(SwarmEventSchema, {
+      topic: create(PublicKeySchema, { data: peer2.topic.asUint8Array() }),
+      event: {
+        case: 'peerAvailable',
+        value: {
+          peer: peer2.peer,
+          since: timestampFromDate(new Date()),
+        },
       },
-    },
-  }));
+    }),
+  );
 
   await delay();
 
-  void peer2.swarm.onSwarmEvent(create(SwarmEventSchema, {
-    topic: create(PublicKeySchema, { data: peer1.topic.asUint8Array() }),
-    event: {
-      case: 'peerAvailable',
-      value: {
-        peer: peer1.peer,
-        since: timestampFromDate(new Date()),
+  void peer2.swarm.onSwarmEvent(
+    create(SwarmEventSchema, {
+      topic: create(PublicKeySchema, { data: peer1.topic.asUint8Array() }),
+      event: {
+        case: 'peerAvailable',
+        value: {
+          peer: peer1.peer,
+          since: timestampFromDate(new Date()),
+        },
       },
-    },
-  }));
+    }),
+  );
 
   if (
     !(

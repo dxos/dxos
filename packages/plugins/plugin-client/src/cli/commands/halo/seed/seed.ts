@@ -25,7 +25,9 @@ export const handler = Effect.fn(function* () {
     return;
   }
 
-  const result = (yield* Effect.tryPromise(() => identityService.createRecoveryCredential({}))) as CreateRecoveryCredentialResponse;
+  const result = (yield* Effect.tryPromise(() =>
+    identityService.createRecoveryCredential({}),
+  )) as CreateRecoveryCredentialResponse;
 
   if (json) {
     yield* Console.log(JSON.stringify({ recoveryCode: result.recoveryCode }, null, 2));

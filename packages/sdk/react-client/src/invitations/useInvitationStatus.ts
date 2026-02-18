@@ -5,17 +5,17 @@
 import { useCallback, useEffect, useMemo, useReducer } from 'react';
 
 import { type PublicKey } from '@dxos/client';
-import { decodePublicKey } from '@dxos/protocols/buf';
 import {
   type AuthenticatingInvitationObservable,
   type CancellableInvitationObservable,
   type Invitation,
+  InvitationEncoder,
   Invitation_AuthMethod,
   Invitation_State,
-  Invitation_Type,
-  InvitationEncoder,
+  type Invitation_Type,
 } from '@dxos/client/invitations';
 import { log } from '@dxos/log';
+import { decodePublicKey } from '@dxos/protocols/buf';
 
 export type InvitationResult = {
   spaceKey: PublicKey | null;

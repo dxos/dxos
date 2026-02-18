@@ -4,6 +4,7 @@
 
 import React, { useEffect, useState } from 'react';
 
+import { type PublicKey as KeysPublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { create, decodePublicKey, encodePublicKey } from '@dxos/protocols/buf';
 import {
@@ -52,7 +53,7 @@ export const Shell = ({ runtime }: { runtime: ShellRuntime }) => {
   const spaceKeyPk =
     spaceKey && '$typeName' in (spaceKey as object)
       ? decodePublicKey(spaceKey as Parameters<typeof decodePublicKey>[0])
-      : (spaceKey as import('@dxos/keys').PublicKey | undefined);
+      : (spaceKey as KeysPublicKey | undefined);
   const space = useSpace((spaceId as SpaceId | undefined) ?? spaceKeyPk);
 
   const createDeviceInvitationUrl = (invitationCode: string) => {
@@ -167,7 +168,7 @@ export const Shell = ({ runtime }: { runtime: ShellRuntime }) => {
             blurActiveElement();
             const target = result?.target ?? undefined;
             const spaceKeyBuf = result?.spaceKey
-              ? encodePublicKey(result.spaceKey as import('@dxos/keys').PublicKey)
+              ? encodePublicKey(result.spaceKey as KeysPublicKey)
               : undefined;
             await runtime.setAppContext(
               create(AppContextRequestSchema, { display: ShellDisplay.NONE, spaceKey: spaceKeyBuf, target }),

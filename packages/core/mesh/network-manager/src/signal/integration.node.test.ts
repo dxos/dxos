@@ -46,11 +46,12 @@ describe('Signal Integration Test', () => {
     onTestFinished(() => messenger.close());
     await messenger.listen({
       peer,
-      onMessage: async (message) => await messageRouter.receiveMessage({
-        author: message.author!,
-        recipient: message.recipient!,
-        payload: message.payload as never,
-      }),
+      onMessage: async (message) =>
+        await messageRouter.receiveMessage({
+          author: message.author!,
+          recipient: message.recipient!,
+          payload: message.payload as never,
+        }),
     });
 
     const receivedSignals: SignalMessage[] = [];
@@ -87,8 +88,12 @@ describe('Signal Integration Test', () => {
       (evt) => evt.event.case === 'peerAvailable' && peerNetworking1.peer.peerKey === evt.event.value.peer!.peerKey,
     );
 
-    await peerNetworking1.signalManager.join(create(JoinRequestSchema, { topic: toBufKey(topic), peer: peerNetworking1.peer }));
-    await peerNetworking2.signalManager.join(create(JoinRequestSchema, { topic: toBufKey(topic), peer: peerNetworking2.peer }));
+    await peerNetworking1.signalManager.join(
+      create(JoinRequestSchema, { topic: toBufKey(topic), peer: peerNetworking1.peer }),
+    );
+    await peerNetworking2.signalManager.join(
+      create(JoinRequestSchema, { topic: toBufKey(topic), peer: peerNetworking2.peer }),
+    );
 
     await promise1;
     await promise2;

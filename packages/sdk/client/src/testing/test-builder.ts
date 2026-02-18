@@ -30,7 +30,11 @@ import {
   createRtcTransportFactory,
 } from '@dxos/network-manager';
 import { TcpTransportFactory } from '@dxos/network-manager/transport/tcp';
-import { type Invitation, Invitation_AuthMethod, Invitation_State } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import {
+  type Invitation,
+  Invitation_AuthMethod,
+  Invitation_State,
+} from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { type Storage } from '@dxos/random-access-storage';
 import { type BufProtoRpcPeer, createBufProtoRpcPeer, createLinkedPorts } from '@dxos/rpc';
 import { layerMemory as sqliteLayerMemory } from '@dxos/sql-sqlite/platform';

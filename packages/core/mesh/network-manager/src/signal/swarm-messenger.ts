@@ -124,14 +124,16 @@ export class SwarmMessenger implements SignalMessenger {
     };
 
     log('sending', { from: author, to: recipient, msg: networkMessage });
-    await this._sendMessage(create(MessageSchema, {
-      author,
-      recipient,
-      payload: create(bufWkt.AnySchema, {
-        typeUrl: 'dxos.mesh.swarm.SwarmMessage',
-        value: SwarmMessage.encode(networkMessage),
+    await this._sendMessage(
+      create(MessageSchema, {
+        author,
+        recipient,
+        payload: create(bufWkt.AnySchema, {
+          typeUrl: 'dxos.mesh.swarm.SwarmMessage',
+          value: SwarmMessage.encode(networkMessage),
+        }),
       }),
-    }));
+    );
   }
 
   private async _resolveAnswers(message: SwarmMessage): Promise<void> {

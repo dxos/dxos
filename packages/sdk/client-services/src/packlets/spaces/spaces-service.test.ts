@@ -7,7 +7,6 @@ import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'v
 import { Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
-import type { Client } from '@dxos/protocols';
 import { type Space, type SpacesService } from '@dxos/protocols/proto/dxos/client/services';
 
 import { type ServiceContext } from '../services';

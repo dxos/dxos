@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { invariant } from '@dxos/invariant';
 import { type EdgeIdentity } from '@dxos/edge-client';
-import { decodePublicKey, EMPTY } from '@dxos/protocols/buf';
+import { invariant } from '@dxos/invariant';
+import { EMPTY, decodePublicKey } from '@dxos/protocols/buf';
 
 import { type Client } from '../client';
 import { RPC_TIMEOUT } from '../common';

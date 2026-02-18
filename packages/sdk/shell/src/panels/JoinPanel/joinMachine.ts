@@ -21,8 +21,8 @@ import { type Identity } from '@dxos/react-client/halo';
 import {
   type AuthenticatingInvitationObservable,
   type Invitation,
-  Invitation_State,
   InvitationEncoder,
+  Invitation_State,
 } from '@dxos/react-client/invitations';
 
 import { type FailReason } from '../../types';
@@ -191,7 +191,9 @@ const acceptingInvitationTemplate = (Kind: Kind, successTarget: string) => {
                   if (Kind !== 'Space') {
                     return false;
                   } else {
-                    const spaceKey = context.space.invitation?.spaceKey ? decodePublicKey(context.space.invitation.spaceKey).toHex() : undefined;
+                    const spaceKey = context.space.invitation?.spaceKey
+                      ? decodePublicKey(context.space.invitation.spaceKey).toHex()
+                      : undefined;
                     const succeededKeys = context.space.succeededKeys;
                     return spaceKey ? !!succeededKeys?.has(spaceKey) : false;
                   }

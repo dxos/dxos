@@ -359,4 +359,6 @@ const objectSetChanged = (before: Entity.Unknown[], after: Entity.Unknown[]) => 
 };
 
 const isSqliteNotOpenError = (err: unknown) =>
-  err instanceof Error && 'cause' in err && (err.cause as Error)?.message?.includes('The database connection is not open');
+  err instanceof Error &&
+  'cause' in err &&
+  (err.cause as Error)?.message?.includes('The database connection is not open');

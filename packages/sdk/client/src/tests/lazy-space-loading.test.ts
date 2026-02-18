@@ -13,7 +13,7 @@ import { TestSchema } from '@dxos/echo/testing';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { decodePublicKey, encodePublicKey } from '@dxos/protocols/buf';
-import { type SpaceMember, SpaceMember_PresenceState } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { SpaceMember_PresenceState } from '@dxos/protocols/buf/dxos/client/services_pb';
 
 import { type Client } from '../client';
 import { SpaceState } from '../echo';

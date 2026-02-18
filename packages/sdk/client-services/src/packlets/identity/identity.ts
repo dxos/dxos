@@ -19,9 +19,9 @@ import { type FeedWrapper, writeMessages } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { type IdentityDid, PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { type Chain } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { type Chain } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import {
   AdmittedFeed,
   type Credential,

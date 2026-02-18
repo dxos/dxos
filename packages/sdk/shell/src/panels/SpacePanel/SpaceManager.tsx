@@ -10,10 +10,10 @@ import { useSpaceInvitations } from '@dxos/react-client/echo';
 import {
   type CancellableInvitationObservable,
   type Invitation,
+  InvitationEncoder,
   Invitation_AuthMethod,
   Invitation_State,
   Invitation_Type,
-  InvitationEncoder,
 } from '@dxos/react-client/invitations';
 import { ScrollArea, useTranslation } from '@dxos/react-ui';
 import { descriptionText, mx } from '@dxos/ui-theme';
