@@ -9,7 +9,6 @@ type PathTypeId = typeof PathTypeId;
 
 type Path<T> = {
   [PathTypeId]: PathTypeId;
-  [symbolSegments]: string[];
   toString(): string;
 };
 
@@ -48,7 +47,7 @@ const makeContext = (segments: string[]): Context<any> => {
       }
       return `{{${segments.join('.')}}}`;
     },
-  };
+  } as any;
   return new Proxy(target, {
     get: (target, prop) => {
       if (typeof prop === 'string' && !(prop in target)) {
