@@ -8,7 +8,10 @@ import { asyncTimeout, scheduleTask } from '@dxos/async';
 import { createEdgeIdentity } from '@dxos/client/edge';
 import { Context } from '@dxos/context';
 import { type EdgeStatus } from '@dxos/protocols';
-import { type QueryEdgeStatusResponse, EdgeStatus as WsStatus } from '@dxos/protocols/proto/dxos/client/services';
+import {
+  EdgeStatus_ConnectionState as WsStatus,
+  type QueryEdgeStatusResponse,
+} from '@dxos/protocols/buf/dxos/client/services_pb';
 import { useClient } from '@dxos/react-client';
 import { IconButton } from '@dxos/react-ui';
 
@@ -78,7 +81,7 @@ export const EdgePanel = ({ edge, ...props }: CustomPanelProps<{ edge?: QueryEdg
 };
 
 const getHealthReportTable = (status?: EdgeStatus, wsStatus?: WsStatus): TableProps['rows'] => {
-  const isConnected = wsStatus?.state === WsStatus.ConnectionState.CONNECTED;
+  const isConnected = wsStatus?.state === EdgeStatus_ConnectionState.CONNECTED;
   const rows: TableProps['rows'] = [
     [isConnected ? '✅' : '❌', 'web socket', isConnected ? 'Connected' : 'Disconnected'],
     ...(!isConnected

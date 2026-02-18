@@ -7,6 +7,7 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 import { waitForCondition } from '@dxos/async';
 import { Config } from '@dxos/config';
 import { PublicKey } from '@dxos/keys';
+import { type ProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { createTestLevel } from '@dxos/kv-store/testing';
 
 import { Client } from '../client';
@@ -34,7 +35,7 @@ describe('Halo', () => {
       onTestFinished(() => client.destroy());
       await client.initialize();
 
-      await client.halo.createIdentity({ displayName: 'test-user' });
+      await client.halo.createIdentity({ displayName: 'test-user' } as ProfileDocument);
       expect(client.halo.identity).exist;
       await client.spaces.waitUntilReady();
       await client.destroy();

@@ -23,7 +23,7 @@ import { Keyring } from '@dxos/keyring';
 import { type PublicKey } from '@dxos/keys';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
 import { MemoryTransportFactory, SwarmNetworkManager } from '@dxos/network-manager';
-import { EdgeStatus } from '@dxos/protocols/proto/dxos/client/services';
+import { EdgeStatus_ConnectionState } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
@@ -109,7 +109,7 @@ describe('identity/identity', () => {
 
   test('edge feed replicator', async () => {
     let replicationStarted = false;
-    let status = EdgeStatus.ConnectionState.NOT_CONNECTED;
+    let status = EdgeStatus_ConnectionState.NOT_CONNECTED;
     const listeners: Array<() => void> = [];
     const setup = await setupIdentity({
       edgeConnection: {
@@ -117,8 +117,8 @@ describe('identity/identity', () => {
         get status() {
           return { state: status };
         },
-        onReconnected: (listener) => {
-          if (status === EdgeStatus.ConnectionState.CONNECTED) {
+        onReconnected: (listener: () => void) => {
+          if (status === EdgeStatus_ConnectionState.CONNECTED) {
             listener();
           } else {
             listeners.push(listener);
@@ -130,15 +130,15 @@ describe('identity/identity', () => {
         onMessage: (_: MessageListener): (() => void) => {
           return () => {};
         },
-        send: async (_) => {
+        send: async (_: unknown) => {
           replicationStarted = true;
         },
-      } as EdgeConnection,
+      } as unknown as EdgeConnection,
     });
 
     await writeGenesisCredential(setup);
     listeners.forEach((callback) => callback());
-    status = EdgeStatus.ConnectionState.CONNECTED;
+    status = EdgeStatus_ConnectionState.CONNECTED;
 
     await expect.poll(() => replicationStarted).toBeTruthy();
   });

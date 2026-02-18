@@ -7,7 +7,7 @@ import { beforeEach, describe, expect, test } from 'vitest';
 import { Event, Trigger } from '@dxos/async';
 import { Config } from '@dxos/config';
 import { type QueryStatusResponse } from '@dxos/protocols/buf/dxos/client/services_pb';
-import { SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
+import { SystemStatus } from '@dxos/protocols/buf/dxos/client/services_pb';
 
 import { SystemServiceImpl } from './system-service';
 

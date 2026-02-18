@@ -6,6 +6,7 @@ import { Event, MulticastObservable, type Observable, PushStream, Trigger } from
 import {
   AuthenticatingInvitation,
   CancellableInvitation,
+  type ClientServices,
   InvitationEncoder,
   type Invitations,
 } from '@dxos/client-protocol';
@@ -14,9 +15,10 @@ import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { EMPTY, encodePublicKey } from '@dxos/protocols/buf';
+import { create, EMPTY, encodePublicKey } from '@dxos/protocols/buf';
 import {
   type Invitation,
+  InvitationSchema,
   Invitation_AuthMethod,
   Invitation_State,
   Invitation_Type,
@@ -26,8 +28,7 @@ import {
   QueryInvitationsResponse_Action,
   QueryInvitationsResponse_Type,
 } from '@dxos/protocols/buf/dxos/client/services_pb';
-import { type IdentityService, type InvitationsService } from '@dxos/protocols/proto/dxos/client/services';
-import { type DeviceProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type DeviceProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 import { RPC_TIMEOUT } from '../common';
 
@@ -69,8 +70,8 @@ export class InvitationsProxy implements Invitations {
   private _opened = false;
 
   constructor(
-    private readonly _invitationsService: InvitationsService,
-    private readonly _identityService: IdentityService | undefined,
+    private readonly _invitationsService: ClientServices['InvitationsService'],
+    private readonly _identityService: ClientServices['IdentityService'] | undefined,
     private readonly _getInvitationContext: () => Partial<Invitation> & Pick<Invitation, 'kind'>,
   ) {}
 
@@ -105,8 +106,8 @@ export class InvitationsProxy implements Invitations {
     // TODO(nf): actually needed?
     const initialAcceptedReceived = new Trigger();
 
-    const stream = this._invitationsService.queryInvitations(EMPTY as never, { timeout: RPC_TIMEOUT });
-    (stream as never as Stream<QueryInvitationsResponse>).subscribe((msg: QueryInvitationsResponse) => {
+    const stream = this._invitationsService.queryInvitations(EMPTY, { timeout: RPC_TIMEOUT });
+    stream.subscribe((msg: QueryInvitationsResponse) => {
       const { action, type, invitations, existing } = msg;
       switch (action) {
         case QueryInvitationsResponse_Action.ADDED: {
@@ -115,9 +116,7 @@ export class InvitationsProxy implements Invitations {
             ?.filter((invitation) => this._matchesInvitationContext(invitation))
             .filter((invitation) => !this._invitations.has(invitation.invitationId))
             .forEach((invitation) => {
-              type === QueryInvitationsResponse_Type.CREATED
-                ? this.share(invitation)
-                : this.join(invitation);
+              type === QueryInvitationsResponse_Type.CREATED ? this.share(invitation) : this.join(invitation);
             });
           if (existing) {
             type === QueryInvitationsResponse_Type.CREATED
@@ -177,14 +176,16 @@ export class InvitationsProxy implements Invitations {
   }
 
   getInvitationOptions(): Invitation {
-    return {
+    const context = this._getInvitationContext() as Record<string, unknown>;
+    const { $typeName, $unknown, ...rest } = context;
+    return create(InvitationSchema, {
       invitationId: PublicKey.random().toHex(),
       type: Invitation_Type.INTERACTIVE,
       authMethod: Invitation_AuthMethod.SHARED_SECRET,
       state: Invitation_State.INIT,
       swarmKey: encodePublicKey(PublicKey.random()),
-      ...this._getInvitationContext(),
-    } as never;
+      ...rest,
+    });
   }
 
   // TODO(nf): Some way to retrieve observables for resumed invitations?
@@ -199,7 +200,7 @@ export class InvitationsProxy implements Invitations {
 
     const observable = new CancellableInvitation({
       initialInvitation: invitation,
-      subscriber: createObservable(this._invitationsService.createInvitation(invitation as never)) as never,
+      subscriber: createObservable(this._invitationsService.createInvitation(invitation)),
       onCancel: async () => {
         const invitationId = observable.get().invitationId;
         invariant(invitationId, 'Invitation missing identifier');
@@ -226,7 +227,7 @@ export class InvitationsProxy implements Invitations {
 
     const observable = new AuthenticatingInvitation({
       initialInvitation: invitation,
-      subscriber: createObservable(this._invitationsService.acceptInvitation({ invitation: invitation as never, deviceProfile })) as never,
+      subscriber: createObservable(this._invitationsService.acceptInvitation({ invitation, deviceProfile })),
       onCancel: async () => {
         const invitationId = observable.get().invitationId;
         invariant(invitationId, 'Invitation missing identifier');

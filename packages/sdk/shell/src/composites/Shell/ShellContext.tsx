@@ -13,6 +13,8 @@ import React, {
   useState,
 } from 'react';
 
+import { create, decodePublicKey, encodePublicKey } from '@dxos/protocols/buf';
+import { LayoutRequestSchema } from '@dxos/protocols/buf/dxos/iframe_pb';
 import { type LayoutRequest, type PublicKey, ShellDisplay, ShellLayout, useClient } from '@dxos/react-client';
 import type { Space } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
@@ -45,7 +47,7 @@ export const useShell = (): { setLayout: SetLayout } => {
         setDisplay?.(ShellDisplay.FULLSCREEN);
       }
 
-      runtime.setLayout({ layout, ...options });
+      runtime.setLayout(create(LayoutRequestSchema, { layout, ...options }));
     }
 
     await client.shell.open(layout, options);
@@ -117,10 +119,12 @@ export const ShellProvider = ({
 
       const modifier = event.ctrlKey || event.metaKey;
       if (event.key === '>' && event.shiftKey && modifier) {
-        shellRuntime.setLayout({ layout: ShellLayout.SHARE_IDENTITY });
+        shellRuntime.setLayout(create(LayoutRequestSchema, { layout: ShellLayout.SHARE_IDENTITY }));
         setDisplay(ShellDisplay.FULLSCREEN);
       } else if (event.key === '.' && modifier) {
-        shellRuntime.setLayout({ layout: ShellLayout.SPACE, spaceKey: space.key });
+        shellRuntime.setLayout(
+          create(LayoutRequestSchema, { layout: ShellLayout.SPACE, spaceKey: encodePublicKey(space.key) }),
+        );
         setDisplay(ShellDisplay.FULLSCREEN);
       }
     },
@@ -145,7 +149,7 @@ export const ShellProvider = ({
       if (display) {
         setDisplay(display);
       }
-      onJoinedSpace?.(spaceKey);
+      onJoinedSpace?.(spaceKey ? decodePublicKey(spaceKey) : undefined);
     });
   }, [shellRuntime]);
 

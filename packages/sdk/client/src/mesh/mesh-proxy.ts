@@ -9,7 +9,7 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/protocols';
 import { EMPTY } from '@dxos/protocols/buf';
-import { ConnectionState, type NetworkStatus } from '@dxos/protocols/proto/dxos/client/services';
+import { ConnectionState, type NetworkStatus } from '@dxos/protocols/buf/dxos/client/services_pb';
 
 import { RPC_TIMEOUT } from '../common';
 
@@ -21,7 +21,7 @@ export class MeshProxy {
   private readonly _networkStatus = MulticastObservable.from(this._networkStatusUpdated, {
     swarm: ConnectionState.OFFLINE,
     signaling: [],
-  });
+  } as unknown as NetworkStatus);
 
   /** Subscriptions for RPC streams that need to be re-established on reconnect. */
   private readonly _streamSubscriptions = new SubscriptionList();

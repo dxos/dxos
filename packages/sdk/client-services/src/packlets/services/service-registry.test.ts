@@ -12,7 +12,7 @@ import { log } from '@dxos/log';
 import { type Client } from '@dxos/protocols';
 import { EMPTY } from '@dxos/protocols/buf';
 import * as ClientServicesPb from '@dxos/protocols/buf/dxos/client/services_pb';
-import { SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
+import { SystemStatus } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { createBufProtoRpcPeer, createBufServiceBundle, createLinkedPorts } from '@dxos/rpc';
 
 import { SystemServiceImpl } from '../system';

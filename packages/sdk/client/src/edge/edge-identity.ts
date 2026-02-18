@@ -2,8 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
+import { invariant } from '@dxos/invariant';
 import { type EdgeIdentity } from '@dxos/edge-client';
-import { EMPTY } from '@dxos/protocols/buf';
+import { decodePublicKey, EMPTY } from '@dxos/protocols/buf';
 
 import { type Client } from '../client';
 import { RPC_TIMEOUT } from '../common';
@@ -14,9 +15,11 @@ export const createEdgeIdentity = (client: Client): EdgeIdentity => {
   if (!identity || !device) {
     throw new Error('Identity not available');
   }
+  invariant(identity.identityKey, 'Identity key not available');
+  invariant(device.deviceKey, 'Device key not available');
   return {
-    identityKey: identity.identityKey.toHex(),
-    peerKey: device.deviceKey.toHex(),
+    identityKey: decodePublicKey(identity.identityKey).toHex(),
+    peerKey: decodePublicKey(device.deviceKey).toHex(),
     presentCredentials: async ({ challenge }) => {
       const identityService = client.services.services.IdentityService!;
       const authCredential = await identityService.createAuthCredential(EMPTY);

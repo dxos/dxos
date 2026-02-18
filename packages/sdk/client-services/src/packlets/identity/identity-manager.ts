@@ -297,7 +297,9 @@ export class IdentityManager {
       },
     });
 
-    const receipt = await this._identity.controlPipeline.writer.write({ credential: { credential: credential as never } });
+    const receipt = await this._identity.controlPipeline.writer.write({
+      credential: { credential: credential as never },
+    });
     await this._identity.controlPipeline.state.waitUntilTimeframe(new Timeframe([[receipt.feedKey, receipt.seq]]));
     this.stateUpdate.emit();
     return profile;
@@ -318,7 +320,9 @@ export class IdentityManager {
       },
     });
 
-    const receipt = await this._identity.controlPipeline.writer.write({ credential: { credential: credential as never } });
+    const receipt = await this._identity.controlPipeline.writer.write({
+      credential: { credential: credential as never },
+    });
     await this._identity.controlPipeline.state.waitUntilTimeframe(new Timeframe([[receipt.feedKey, receipt.seq]]));
     this.stateUpdate.emit();
     return {

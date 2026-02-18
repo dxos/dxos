@@ -8,7 +8,7 @@ import { Event, synchronized } from '@dxos/async';
 import { type Client } from '@dxos/client';
 import { Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
-import { type Tracks } from '@dxos/protocols/proto/dxos/edge/calls';
+import { type Tracks } from '@dxos/protocols/buf/dxos/edge/calls_pb';
 import { isNonNullable } from '@dxos/util';
 
 import { type CallState, CallSwarmSynchronizer } from './call-swarm-synchronizer';

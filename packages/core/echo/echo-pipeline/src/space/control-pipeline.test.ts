@@ -91,7 +91,7 @@ describe('space/control-pipeline', () => {
       await controlPipeline.pipeline.writer!.write({
         credential: {
           // buf Credential cast to proto Credential for feed encoding.
-          credential: await createCredential({
+          credential: (await createCredential({
             signer: keyring,
             issuer: identityKey,
             subject: controlFeed2.key,
@@ -102,7 +102,7 @@ describe('space/control-pipeline', () => {
               deviceKey,
               designation: AdmittedFeed.Designation.CONTROL,
             },
-          }) as never,
+          })) as never,
         },
       });
 
@@ -116,7 +116,7 @@ describe('space/control-pipeline', () => {
       await controlPipeline.pipeline.writer!.write({
         credential: {
           // buf Credential cast to proto Credential for feed encoding.
-          credential: await createCredential({
+          credential: (await createCredential({
             signer: keyring,
             issuer: identityKey,
             subject: dataFeed1.key,
@@ -127,7 +127,7 @@ describe('space/control-pipeline', () => {
               deviceKey,
               designation: AdmittedFeed.Designation.DATA,
             },
-          }) as never,
+          })) as never,
         },
       });
 

@@ -21,8 +21,12 @@ import {
   Invitation_Type,
 } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { type DeviceProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { AuthenticationResponse, type IntroductionResponse } from '@dxos/protocols/proto/dxos/halo/invitations';
-import { InvitationOptions } from '@dxos/protocols/proto/dxos/halo/invitations';
+import {
+  AuthenticationResponse,
+  type IntroductionResponse,
+  InvitationOptions,
+} from '@dxos/protocols/proto/dxos/halo/invitations';
+import { InvitationOptions_Role } from '@dxos/protocols/buf/dxos/halo/invitations_pb';
 import { type ExtensionContext, type TeleportExtension, type TeleportProps } from '@dxos/teleport';
 import { trace as _trace } from '@dxos/tracing';
 import { ComplexSet } from '@dxos/util';
@@ -218,7 +222,7 @@ export class InvitationsHandler {
 
     let swarmConnection: SwarmConnection;
     scheduleTask(ctx, async () => {
-      swarmConnection = await this._joinSwarm(ctx, invitation, InvitationOptions.Role.HOST, createExtension);
+      swarmConnection = await this._joinSwarm(ctx, invitation, InvitationOptions_Role.HOST, createExtension);
       guardedState.set(null, Invitation_State.CONNECTING);
     });
   }
@@ -423,7 +427,7 @@ export class InvitationsHandler {
         // Timeout if no connection is established.
         scheduleTask(ctx, timeoutInactive, timeout);
 
-        await this._joinSwarm(ctx, invitation, InvitationOptions.Role.GUEST, createExtension);
+        await this._joinSwarm(ctx, invitation, InvitationOptions_Role.GUEST, createExtension);
         guardedState.set(null, Invitation_State.CONNECTING);
       }
     });
@@ -432,11 +436,11 @@ export class InvitationsHandler {
   private async _joinSwarm(
     ctx: Context,
     invitation: Invitation,
-    role: InvitationOptions.Role,
+    role: InvitationOptions_Role,
     extensionFactory: () => TeleportExtension,
   ): Promise<SwarmConnection> {
     let label: string;
-    if (role === InvitationOptions.Role.GUEST) {
+    if (role === InvitationOptions_Role.GUEST) {
       label = 'invitation guest';
     } else if (invitation.kind === Invitation_Kind.DEVICE) {
       label = 'invitation host for device';
@@ -498,7 +502,10 @@ export class InvitationsHandler {
       throw new Error('challenge missing in the introduction');
     }
     log('sending authentication request');
-    const signature = sign(Buffer.from(introductionResponse.challenge), Buffer.from(invitation.guestKeypair.privateKey!.data));
+    const signature = sign(
+      Buffer.from(introductionResponse.challenge),
+      Buffer.from(invitation.guestKeypair.privateKey!.data),
+    );
     const response = await extension.rpc.InvitationHostService.authenticate({
       signedChallenge: signature,
     });

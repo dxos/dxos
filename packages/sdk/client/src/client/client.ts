@@ -36,7 +36,7 @@ import {
   trace as Trace,
 } from '@dxos/protocols';
 import { EMPTY } from '@dxos/protocols/buf';
-import { type QueryStatusResponse, SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
+import { type QueryStatusResponse, SystemStatus } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { type BufProtoRpcPeer, createBufProtoRpcPeer } from '@dxos/rpc';
 import { createIFramePort } from '@dxos/rpc-tunnel';
 import { trace } from '@dxos/tracing';

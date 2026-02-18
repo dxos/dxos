@@ -4,7 +4,13 @@
 
 import type { MulticastObservable } from '@dxos/async';
 import { type PublicKey } from '@dxos/keys';
-import { type LayoutRequest, ShellDisplay, ShellLayout } from '@dxos/protocols/proto/dxos/iframe';
+import { decodePublicKey, encodePublicKey } from '@dxos/protocols/buf';
+import {
+  type InvitationUrlRequest,
+  type LayoutRequest,
+  ShellDisplay,
+  ShellLayout,
+} from '@dxos/protocols/buf/dxos/iframe_pb';
 import { ComplexSet } from '@dxos/util';
 
 import type { Space, SpaceMember } from '../echo';
@@ -57,19 +63,18 @@ export class Shell {
     this._spaces = spaces;
   }
 
-  async setInvitationUrl(request: {
-    invitationUrl: string;
-    deviceInvitationParam: string;
-    spaceInvitationParam: string;
-  }): Promise<void> {
+  async setInvitationUrl(request: InvitationUrlRequest): Promise<void> {
     await this._shellManager.setInvitationUrl(request);
   }
 
   /**
    * Open the shell with the given layout.
    */
-  async open(layout: ShellLayout = ShellLayout.IDENTITY, options: Omit<LayoutRequest, 'layout'> = {}): Promise<void> {
-    await this._shellManager.setLayout({ layout, ...options });
+  async open(
+    layout: ShellLayout = ShellLayout.IDENTITY,
+    options: Omit<LayoutRequest, 'layout'> = {} as Omit<LayoutRequest, 'layout'>,
+  ): Promise<void> {
+    await this._shellManager.setLayout({ layout, ...options } as LayoutRequest);
   }
 
   get display() {
@@ -107,7 +112,7 @@ export class Shell {
   async createIdentity(): Promise<InitializeIdentityResult> {
     await this._shellManager.setLayout({
       layout: ShellLayout.INITIALIZE_IDENTITY,
-    });
+    } as LayoutRequest);
     return new Promise((resolve) => {
       this._shellManager.contextUpdate.on((context) => {
         if (context.display === ShellDisplay.NONE) {
@@ -139,7 +144,7 @@ export class Shell {
     await this._shellManager.setLayout({
       layout: ShellLayout.INITIALIZE_IDENTITY_FROM_INVITATION,
       invitationCode,
-    });
+    } as LayoutRequest);
     return new Promise((resolve) => {
       this._shellManager.contextUpdate.on((context) => {
         if (context.display === ShellDisplay.NONE) {
@@ -168,13 +173,18 @@ export class Shell {
 
     const initialDevices = new ComplexSet<PublicKey>(
       (key) => key.toHex(),
-      this._devices.get().map((device) => device.deviceKey),
+      this._devices
+        .get()
+        .filter((device) => device.deviceKey)
+        .map((device) => decodePublicKey(device.deviceKey!)),
     );
-    await this._shellManager.setLayout({ layout: ShellLayout.SHARE_IDENTITY });
+    await this._shellManager.setLayout({ layout: ShellLayout.SHARE_IDENTITY } as LayoutRequest);
     return new Promise((resolve) => {
       this._shellManager.contextUpdate.on((context) => {
         if (context.display === ShellDisplay.NONE) {
-          const device = this._devices.get().find((device) => !initialDevices.has(device.deviceKey));
+          const device = this._devices
+            .get()
+            .find((device) => device.deviceKey && !initialDevices.has(decodePublicKey(device.deviceKey)));
           resolve({ device, cancelled: !device });
         }
       });
@@ -189,7 +199,7 @@ export class Shell {
   async recoverIdentity(): Promise<InitializeIdentityResult> {
     await this._shellManager.setLayout({
       layout: ShellLayout.INITIALIZE_IDENTITY_FROM_RECOVERY,
-    });
+    } as LayoutRequest);
     return new Promise((resolve) => {
       this._shellManager.contextUpdate.on((context) => {
         if (context.display === ShellDisplay.NONE) {
@@ -235,18 +245,26 @@ export class Shell {
 
     const initialMembers = new ComplexSet<PublicKey>(
       (key) => key.toHex(),
-      space.members.get().map((member) => member.identity.identityKey),
+      space.members
+        .get()
+        .filter((member) => member.identity?.identityKey)
+        .map((member) => decodePublicKey(member.identity!.identityKey!)),
     );
     await this._shellManager.setLayout({
       layout: ShellLayout.SPACE,
-      spaceKey,
+      spaceKey: encodePublicKey(space.key),
       spaceId,
       target,
-    });
+    } as LayoutRequest);
     return new Promise((resolve) => {
       this._shellManager.contextUpdate.on((context) => {
         if (context.display === ShellDisplay.NONE) {
-          const members = space.members.get().filter((member) => !initialMembers.has(member.identity.identityKey));
+          const members = space.members
+            .get()
+            .filter(
+              (member) =>
+                member.identity?.identityKey && !initialMembers.has(decodePublicKey(member.identity.identityKey)),
+            );
           resolve({ members, cancelled: members.length === 0 });
         }
       });
@@ -274,10 +292,11 @@ export class Shell {
     await this._shellManager.setLayout({
       layout: ShellLayout.JOIN_SPACE,
       invitationCode,
-    });
+    } as LayoutRequest);
     return new Promise((resolve) => {
       this._shellManager.contextUpdate.on((context) => {
-        const space = context.spaceKey && this._spaces.get().find((space) => context.spaceKey?.equals(space.key));
+        const space =
+          context.spaceKey && this._spaces.get().find((space) => decodePublicKey(context.spaceKey!).equals(space.key));
         if (space) {
           resolve({ space, target: context.target, cancelled: false });
         }

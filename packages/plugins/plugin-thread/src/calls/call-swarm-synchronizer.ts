@@ -13,8 +13,9 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { buf } from '@dxos/protocols/buf';
 import { ActivitySchema } from '@dxos/protocols/buf/dxos/edge/calls_pb';
-import { type Device, type NetworkService } from '@dxos/protocols/proto/dxos/client/services';
-import { ConnectionState, type SwarmResponse } from '@dxos/protocols/proto/dxos/edge/messenger';
+import type { Client } from '@dxos/protocols';
+import { type Device } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { ConnectionState, type SwarmResponse } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { isNonNullable } from '@dxos/util';
 
 import { type ActivityState, type UserState, codec } from './types';
@@ -50,7 +51,7 @@ export type CallState = {
   tracks?: UserState['tracks'];
 };
 
-export type CallSwarmSynchronizerProps = { networkService: NetworkService };
+export type CallSwarmSynchronizerProps = { networkService: Client.NetworkService };
 
 /**
  * Period for peer to reconnect to the call swarm gracefully if connection was lost abruptly.
@@ -64,7 +65,7 @@ export class CallSwarmSynchronizer extends Resource {
   public readonly stateUpdated = new Event<CallState>();
 
   private readonly _state: CallState = { activities: {} };
-  private readonly _networkService: NetworkService;
+  private readonly _networkService: Client.NetworkService;
   private _lastSwarmEvent?: SwarmResponse = undefined;
   private _reconcileSwarmStateTask?: DeferredTask = undefined;
 

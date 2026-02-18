@@ -8,7 +8,7 @@ import type { Stream } from '@dxos/codec-protobuf/stream';
 import { Config } from '@dxos/config';
 import type { PublicKey } from '@dxos/keys';
 import { type CallMetadata, type LogFilter, log, parseFilter } from '@dxos/log';
-import { type LogEntry, LogLevel } from '@dxos/protocols/proto/dxos/client/services';
+import { type LogEntry, type LogEntry_Meta, LogLevel } from '@dxos/protocols/buf/dxos/client/logging_pb';
 import { createWorkerPort } from '@dxos/rpc-tunnel';
 import { trace } from '@dxos/tracing';
 
@@ -162,7 +162,7 @@ export class WorkerClientServices implements ClientServicesProvider {
   }
 }
 
-const mapLogMeta = (meta: LogEntry.Meta | undefined): CallMetadata | undefined => {
+const mapLogMeta = (meta: LogEntry_Meta | undefined): CallMetadata | undefined => {
   return (
     meta && {
       F: meta.file,

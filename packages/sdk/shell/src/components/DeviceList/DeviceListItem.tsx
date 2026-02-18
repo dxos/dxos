@@ -5,7 +5,9 @@
 import React, { type ComponentPropsWithoutRef, forwardRef } from 'react';
 
 import { generateName } from '@dxos/display-name';
-import { Device, DeviceKind, DeviceType } from '@dxos/react-client/halo';
+import { decodePublicKey } from '@dxos/protocols/buf';
+import { DeviceKind, DeviceType, type Device } from '@dxos/react-client/halo';
+import { Device_PresenceState } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { ConnectionState } from '@dxos/react-client/mesh';
 import {
   Avatar,
@@ -18,7 +20,7 @@ import {
   useId,
   useTranslation,
 } from '@dxos/react-ui';
-import { keyToFallback } from '@dxos/util';
+import { hexToFallback, keyToFallback } from '@dxos/util';
 
 import { translationKey } from '../../translations';
 
@@ -46,11 +48,14 @@ export const DeviceListItem = forwardRef<
     forwardedRef,
   ) => {
     const { t } = useTranslation(translationKey);
-    const fallbackValue = keyToFallback(device.deviceKey);
+    const deviceKeyPk = device.deviceKey ? decodePublicKey(device.deviceKey) : undefined;
+    const fallbackValue = deviceKeyPk ? keyToFallback(deviceKeyPk) : hexToFallback('0');
     const labelId = useId('identityListItem__label');
     const displayName = device.profile
       ? t('device name placeholder', { os: device.profile.os, platform: device.profile.platform })
-      : generateName(device.deviceKey.toHex());
+      : deviceKeyPk
+        ? generateName(deviceKeyPk.toHex())
+        : 'Unknown';
     const isCurrent = device.kind === DeviceKind.CURRENT;
     return (
       <ListItem.Root
@@ -65,7 +70,7 @@ export const DeviceListItem = forwardRef<
             status={
               isCurrent && connectionState === ConnectionState.OFFLINE
                 ? 'error'
-                : device.presence === Device.PresenceState.ONLINE
+                : device.presence === Device_PresenceState.ONLINE
                   ? 'active'
                   : 'inactive'
             }

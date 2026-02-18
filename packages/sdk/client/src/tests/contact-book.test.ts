@@ -8,8 +8,10 @@ import { waitForCondition } from '@dxos/async';
 import type { Space } from '@dxos/client-protocol';
 import { Obj } from '@dxos/echo';
 import { type PublicKey } from '@dxos/keys';
+import { decodePublicKey } from '@dxos/protocols/buf';
 import { Invitation_State } from '@dxos/protocols/buf/dxos/client/invitation_pb';
-import { type Contact } from '@dxos/protocols/proto/dxos/client/services';
+import { type Contact } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { type ProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { range } from '@dxos/util';
 
 import { Client } from '../client';
@@ -96,7 +98,7 @@ describe('ContactBook', () => {
       await waitForCondition({ condition: allSpacesReflected });
       const contact = expectInContactBook(client1.halo.contacts.get(), client2);
       const expectedSpaces = spaces.map((s) => s.key.toHex()).sort();
-      expect(contact.commonSpaces?.map((k) => k.toHex()).sort()).to.deep.eq(expectedSpaces);
+      expect(contact.commonSpaces?.map((k) => decodePublicKey(k).toHex()).sort()).to.deep.eq(expectedSpaces);
     });
 
     test('different contacts in different spaces', async () => {
@@ -135,7 +137,7 @@ describe('ContactBook', () => {
     const initialized = await Promise.all(
       clients.map(async (c, index) => {
         await c.initialize();
-        await c.halo.createIdentity({ displayName: `Peer ${index}` });
+        await c.halo.createIdentity({ displayName: `Peer ${index}` } as ProfileDocument);
         return c;
       }),
     );
@@ -153,7 +155,12 @@ describe('ContactBook', () => {
   };
 
   const expectInContactBook = (contacts: Contact[], client: Client) => {
-    const contact = contacts.find((c) => c.identityKey.equals(client.halo.identity.get()!.identityKey));
+    const clientIdentityKey = client.halo.identity.get()?.identityKey;
+    const contact = contacts.find((c) =>
+      c.identityKey && clientIdentityKey
+        ? decodePublicKey(c.identityKey).equals(decodePublicKey(clientIdentityKey))
+        : false,
+    );
     expect(contact).not.to.be.undefined;
     return contact!;
   };

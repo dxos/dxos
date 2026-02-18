@@ -6,9 +6,8 @@ import * as Option from 'effect/Option';
 import React, { useEffect, useState } from 'react';
 
 import { useAppGraph } from '@dxos/app-framework/react';
-import { type QueryEdgeStatusResponse } from '@dxos/protocols/buf/dxos/client/services_pb';
-import { EdgeStatus } from '@dxos/protocols/proto/dxos/client/services';
-import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
+import { EdgeStatus_ConnectionState, type QueryEdgeStatusResponse } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import { useClient } from '@dxos/react-client';
 import { type Space, useSpaceSyncState } from '@dxos/react-client/echo';
 import { Tooltip, useTranslation } from '@dxos/react-ui';
@@ -17,8 +16,8 @@ import { AttentionGlyph, useAttended, useAttention } from '@dxos/react-ui-attent
 import { usePath } from '../../hooks';
 import { meta } from '../../meta';
 
-const useEdgeStatus = (): EdgeStatus.ConnectionState => {
-  const [status, setStatus] = useState(EdgeStatus.ConnectionState.NOT_CONNECTED);
+const useEdgeStatus = (): EdgeStatus_ConnectionState => {
+  const [status, setStatus] = useState(EdgeStatus_ConnectionState.NOT_CONNECTED);
   const client = useClient();
   useEffect(() => {
     client.services.services.EdgeAgentService?.queryEdgeStatus().subscribe(({ status }: QueryEdgeStatusResponse) => {
@@ -44,7 +43,7 @@ export const InlineSyncStatus = ({ space, open }: { space: Space; open?: boolean
   const path = usePath(graph, startOfAttention);
   const containsAttended = !open && !isAttended && id && Option.isSome(path) ? path.value.includes(id) : false;
 
-  const connectedToEdge = useEdgeStatus() === EdgeStatus.ConnectionState.CONNECTED;
+  const connectedToEdge = useEdgeStatus() === EdgeStatus_ConnectionState.CONNECTED;
   // TODO(wittjosiah): This is not reactive.
   const edgeSyncEnabled = space.internal.data.edgeReplication === EdgeReplicationSetting.ENABLED;
   const syncState = useSpaceSyncState(space);

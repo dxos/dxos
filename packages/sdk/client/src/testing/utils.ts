@@ -5,6 +5,7 @@
 import { Trigger } from '@dxos/async';
 import { type Space } from '@dxos/client-protocol';
 import type { Config } from '@dxos/config';
+import type { ProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type Context } from '@dxos/context';
 import { type PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
@@ -71,7 +72,7 @@ export const createInitializedClientsWithContext = async (
   const initialized = await Promise.all(
     clients.map(async (client, index) => {
       await client.initialize();
-      await client.halo.createIdentity({ displayName: `Peer ${index}` });
+      await client.halo.createIdentity({ displayName: `Peer ${index}` } as ProfileDocument);
       return client;
     }),
   );

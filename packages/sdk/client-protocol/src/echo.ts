@@ -6,7 +6,7 @@ import type { MulticastObservable } from '@dxos/async';
 import type { Database } from '@dxos/echo';
 import type { PublicKey, SpaceId } from '@dxos/keys';
 import type { Invitation } from '@dxos/protocols/buf/dxos/client/invitation_pb';
-import type { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
+import type { SpaceArchive } from '@dxos/protocols/buf/dxos/client/services_pb';
 
 import type { AuthenticatingInvitation } from './invitations';
 import type { Space } from './space';

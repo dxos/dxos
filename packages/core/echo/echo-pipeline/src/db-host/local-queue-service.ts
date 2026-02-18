@@ -11,7 +11,6 @@ import type { ForeignKey } from '@dxos/echo-protocol';
 import { RuntimeProvider } from '@dxos/effect';
 import { type Block, type FeedStore } from '@dxos/feed';
 import { invariant } from '@dxos/invariant';
-import { KEY_QUEUE_POSITION } from '@dxos/protocols';
 import {
   type DeleteFromQueueRequest,
   type InsertIntoQueueRequest,
@@ -19,6 +18,8 @@ import {
   type QueueQueryResult,
   type QueueService,
 } from '@dxos/protocols/proto/dxos/client/services';
+
+import { KEY_QUEUE_POSITION } from '@dxos/protocols';
 
 /**
  * Writes queue data to a local FeedStore.

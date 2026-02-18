@@ -21,10 +21,13 @@ import {
   type Space as SpaceProto,
 } from '@dxos/protocols/proto/dxos/client/services';
 import { type QueryDevicesResponse } from '@dxos/protocols/buf/dxos/client/services_pb';
-import { type SubscribeToFeedsResponse, type SubscribeToFeedsResponse_Feed } from '@dxos/protocols/buf/dxos/devtools/host_pb';
-import { type SwarmInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
-import { type Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { type Resource, type Span } from '@dxos/protocols/proto/dxos/tracing';
+import {
+  type SubscribeToFeedsResponse,
+  type SubscribeToFeedsResponse_Feed,
+} from '@dxos/protocols/buf/dxos/devtools/host_pb';
+import { type SwarmInfo } from '@dxos/protocols/buf/dxos/devtools/swarm_pb';
+import { type Epoch } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { type Resource, type Span } from '@dxos/protocols/buf/dxos/tracing_pb';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
 
 import { DXOS_VERSION } from '../../version';
@@ -128,10 +131,9 @@ export const createDiagnostics = async (
         };
 
         // Devices.
-        const { devices } =
-          ((await getFirstStreamValue(clientServices.DevicesService!.queryDevices(), {
-            timeout: DEFAULT_TIMEOUT,
-          }).catch(() => undefined)) ?? {}) as Partial<QueryDevicesResponse>;
+        const { devices } = ((await getFirstStreamValue(clientServices.DevicesService!.queryDevices(), {
+          timeout: DEFAULT_TIMEOUT,
+        }).catch(() => undefined)) ?? {}) as Partial<QueryDevicesResponse>;
         diagnostics.devices = devices as never;
 
         // TODO(dmaretskyi): Add metrics for halo space.
@@ -144,10 +146,9 @@ export const createDiagnostics = async (
         }
 
         // Feeds.
-        const { feeds = [] } =
-          ((await getFirstStreamValue(clientServices.DevtoolsHost!.subscribeToFeeds({}), {
-            timeout: DEFAULT_TIMEOUT,
-          }).catch(() => undefined)) ?? {}) as Partial<SubscribeToFeedsResponse>;
+        const { feeds = [] } = ((await getFirstStreamValue(clientServices.DevtoolsHost!.subscribeToFeeds({}), {
+          timeout: DEFAULT_TIMEOUT,
+        }).catch(() => undefined)) ?? {}) as Partial<SubscribeToFeedsResponse>;
         diagnostics.feeds = feeds.map(({ feedKey, bytes, length }) => ({ feedKey, bytes, length }));
 
         // Signal servers.

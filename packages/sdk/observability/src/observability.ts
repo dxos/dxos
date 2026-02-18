@@ -10,12 +10,14 @@ import { invariant } from '@dxos/invariant';
 import { LogLevel, log } from '@dxos/log';
 import { ConnectionState } from '@dxos/network-manager';
 import {
-  type NetworkStatus as BufNetworkStatus,
+  DeviceKind,
+  type NetworkStatus,
   type Platform as BufPlatform,
+  Platform_PLATFORM_TYPE,
   type QueryDevicesResponse,
   type QueryIdentityResponse,
 } from '@dxos/protocols/buf/dxos/client/services_pb';
-import { DeviceKind, type NetworkStatus, Platform } from '@dxos/protocols/proto/dxos/client/services';
+import { decodePublicKey } from '@dxos/protocols/buf';
 import { isNode } from '@dxos/util';
 
 import buildSecrets from './cli-observability-secrets.json';
@@ -273,7 +275,7 @@ export class Observability {
           return;
         }
 
-        this.setTag('deviceKey', PublicKey.from(thisDevice.deviceKey!.data).truncate());
+        this.setTag('deviceKey', decodePublicKey(thisDevice.deviceKey!).truncate());
         if (thisDevice.profile?.label) {
           this.setTag('deviceProfile', thisDevice.profile.label);
         }
@@ -365,7 +367,7 @@ export class Observability {
     const updateSignalMetrics = new Event<NetworkStatus>().debounce(NETWORK_METRICS_MIN_INTERVAL);
     updateSignalMetrics.on(this._ctx, async () => {
       log('send signal metrics');
-      (this._lastNetworkStatus?.signaling as NetworkStatus.Signal[])?.forEach(({ server, state }) => {
+      this._lastNetworkStatus?.signaling?.forEach(({ server, state }) => {
         this.gauge('dxos.client.network.signal.connectionState', state, { server });
       });
 
@@ -401,8 +403,8 @@ export class Observability {
       });
     });
 
-    clientServices.NetworkService.queryStatus().subscribe((networkStatus: BufNetworkStatus) => {
-      this._lastNetworkStatus = networkStatus as never;
+    clientServices.NetworkService.queryStatus().subscribe((networkStatus: NetworkStatus) => {
+      this._lastNetworkStatus = networkStatus;
       updateSignalMetrics.emit();
     });
 
@@ -468,7 +470,7 @@ export class Observability {
     const platform = await client.services.services.SystemService?.getPlatform();
     invariant(platform, 'platform is required');
 
-    this.setTag('platformType', Platform.PLATFORM_TYPE[platform.type as number].toLowerCase());
+    this.setTag('platformType', Platform_PLATFORM_TYPE[platform.type as number].toLowerCase());
     if (this._mode === 'full') {
       if (platform.platform) {
         this.setTag('platform', platform.platform);

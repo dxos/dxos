@@ -5,8 +5,12 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
+import { create } from '@dxos/protocols/buf';
+import { IdentitySchema } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { encodePublicKey } from '@dxos/protocols/buf';
 import { IdentityDid } from '@dxos/keys';
-import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
+import { ConnectionState } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { faker } from '@dxos/random';
 import { PublicKey } from '@dxos/react-client';
 import { Invitation_State } from '@dxos/react-client/invitations';
@@ -27,13 +31,11 @@ const noOpProps: IdentityPanelImplProps = {
   send: () => {},
   activeView: 'identity action chooser',
   createInvitationUrl: (code) => code,
-  identity: {
+  identity: create(IdentitySchema, {
     did: IdentityDid.random(),
-    identityKey: PublicKey.random(),
-    profile: {
-      displayName: faker.person.firstName(),
-    },
-  },
+    identityKey: encodePublicKey(PublicKey.random()),
+    profile: create(ProfileDocumentSchema, { displayName: faker.person.firstName() }),
+  }),
   devices: [],
   connectionState: ConnectionState.ONLINE,
   onManageCredentials: async () => console.log('manage credentials'),

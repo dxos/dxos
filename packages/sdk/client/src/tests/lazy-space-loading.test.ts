@@ -12,7 +12,8 @@ import { Obj } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
+import { decodePublicKey, encodePublicKey } from '@dxos/protocols/buf';
+import { type SpaceMember, SpaceMember_PresenceState } from '@dxos/protocols/buf/dxos/client/services_pb';
 
 import { type Client } from '../client';
 import { SpaceState } from '../echo';
@@ -47,7 +48,7 @@ describe('Lazy Space Loading', () => {
     const space = findClientSpace(client, createdSpace);
     const actions = [
       () => space.properties,
-      () => space.updateMemberRole({ memberKey: PublicKey.random(), newRole: 1 }),
+      () => space.updateMemberRole({ memberKey: encodePublicKey(PublicKey.random()), newRole: 1 } as never),
       () => space.share(),
     ];
     actions.forEach((action) => expect(action).to.throw);
@@ -81,9 +82,15 @@ describe('Lazy Space Loading', () => {
     });
 
     const connectionEstablished = new Trigger();
+    const client2IdentityKey = client2.halo.identity.get()?.identityKey;
     space.members.subscribe((members) => {
-      const client2State = members.find((m) => m.identity.identityKey.equals(client2.halo.identity.get()!.identityKey));
-      if (client2State?.presence === SpaceMember.PresenceState.ONLINE) {
+      const client2State = members.find(
+        (m) =>
+          m.identity?.identityKey &&
+          client2IdentityKey &&
+          decodePublicKey(m.identity.identityKey).equals(decodePublicKey(client2IdentityKey)),
+      );
+      if (client2State?.presence === SpaceMember_PresenceState.ONLINE) {
         connectionEstablished.wake();
       }
     });

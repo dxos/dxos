@@ -6,6 +6,7 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, asyncTimeout } from '@dxos/async';
 import { Filter, Obj } from '@dxos/echo';
+import type { ProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { TestSchema } from '@dxos/echo/testing';
 import { log } from '@dxos/log';
 
@@ -84,7 +85,7 @@ describe('DedicatedWorkerClientServices', { timeout: 1_000, retry: 0 }, () => {
 
     await using services1 = await testBuilder.createDedicatedWorkerClientServices().open();
     await using client1 = await new Client({ services: services1 }).initialize();
-    await client1.halo.createIdentity({ displayName: 'initial-name' });
+    await client1.halo.createIdentity({ displayName: 'initial-name' } as ProfileDocument);
 
     await using services2 = await testBuilder.createDedicatedWorkerClientServices().open();
     await using client2 = await new Client({ services: services2 }).initialize();
@@ -110,7 +111,7 @@ describe('DedicatedWorkerClientServices', { timeout: 1_000, retry: 0 }, () => {
     await asyncTimeout(reconnected.wait(), 1000);
 
     // Update display name after leader change.
-    await client2.halo.updateProfile({ displayName: updatedDisplayName });
+    await client2.halo.updateProfile({ displayName: updatedDisplayName } as ProfileDocument);
 
     // Subscription should still receive the update.
     await asyncTimeout(trigger.wait(), 500);

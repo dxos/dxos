@@ -15,21 +15,23 @@ import { type Invitation } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import {
   type Contact,
   type CreateEpochRequest,
+  type CreateEpochRequest_Migration,
   type SpaceArchive,
   type Space as SpaceData,
+  type Space_PipelineState,
   type SpaceMember,
-  type SpaceState,
   type UpdateMemberRoleRequest,
-} from '@dxos/protocols/proto/dxos/client/services';
-import { type EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
-import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
-import { type Credential, type Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
+} from '@dxos/protocols/buf/dxos/client/services_pb';
+import { type SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import { type EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
+import { type SpaceSnapshot } from '@dxos/protocols/buf/dxos/echo/snapshot_pb';
+import { type Credential, type Epoch } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 import { type CancellableInvitation } from './invitations';
 import { type SpaceProperties } from './types';
 
 export type CreateEpochOptions = {
-  migration?: CreateEpochRequest.Migration;
+  migration?: CreateEpochRequest_Migration;
   automergeRootUrl?: string;
 };
 
@@ -109,7 +111,7 @@ export interface Space extends Messenger {
   /**
    * Current state of space pipeline.
    */
-  get pipeline(): MulticastObservable<SpaceData.PipelineState>;
+  get pipeline(): MulticastObservable<Space_PipelineState>;
 
   get invitations(): MulticastObservable<CancellableInvitation[]>;
 

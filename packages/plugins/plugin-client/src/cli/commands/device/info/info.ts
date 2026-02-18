@@ -9,7 +9,7 @@ import * as Effect from 'effect/Effect';
 import { CommandConfig } from '@dxos/cli-util';
 import { print } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
-import { DeviceType } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { DeviceType } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 import { printDevice } from '../util';
 

@@ -11,7 +11,7 @@ import {
   type InvitationUrlRequest,
   type LayoutRequest,
   ShellDisplay,
-} from '@dxos/protocols/proto/dxos/iframe';
+} from '@dxos/protocols/buf/dxos/iframe_pb';
 import { type BufProtoRpcPeer, createBufProtoRpcPeer } from '@dxos/rpc';
 import { createIFramePort } from '@dxos/rpc-tunnel';
 
@@ -53,7 +53,7 @@ export class ShellManager {
     invariant(this._shellRpc, 'ShellManager not open');
     log('set layout', request);
     this._display = ShellDisplay.FULLSCREEN;
-    this.contextUpdate.emit({ display: this._display });
+    this.contextUpdate.emit({ display: this._display } as AppContextRequest);
     await this._shellRpc.rpc.ShellService.setLayout(request, { timeout: RPC_TIMEOUT });
     // Focus the first focusable element when the iframe has something to display so that keybindings global to the iframe (e.g. Escape) work as expected.
     (

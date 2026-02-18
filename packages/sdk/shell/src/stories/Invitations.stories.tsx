@@ -7,8 +7,11 @@ import React, { useMemo, useState } from 'react';
 
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
+import { create } from '@dxos/protocols/buf';
+import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { SpaceMember_PresenceState } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { useClient } from '@dxos/react-client';
-import { type Space, type SpaceMember, useSpaces } from '@dxos/react-client/echo';
+import { type Space, useSpaces } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { type Invitation, Invitation_State, InvitationEncoder } from '@dxos/react-client/invitations';
 import { ConnectionState, useNetworkStatus } from '@dxos/react-client/mesh';
@@ -143,7 +146,9 @@ const Invitations = () => {
         size={6}
         label='Create Identity'
         iconOnly
-        onClick={() => client.halo.createIdentity({ displayName: faker.person.firstName() })}
+        onClick={() =>
+          client.halo.createIdentity(create(ProfileDocumentSchema, { displayName: faker.person.firstName() }))
+        }
         disabled={Boolean(identity)}
         data-testid='invitations.create-identity'
       />
@@ -204,7 +209,14 @@ const Invitations = () => {
         <div data-testid='invitations.identity-header'>{controls}</div>
         {identity ? (
           <List>
-            <IdentityListItem identity={identity} presence={networkStatus as unknown as SpaceMember.PresenceState} />
+            <IdentityListItem
+              identity={identity}
+              presence={
+                networkStatus === ConnectionState.ONLINE
+                  ? SpaceMember_PresenceState.ONLINE
+                  : SpaceMember_PresenceState.OFFLINE
+              }
+            />
           </List>
         ) : (
           <div className='text-center'>No identity</div>

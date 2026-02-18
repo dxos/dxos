@@ -29,9 +29,10 @@ import { type SignalManager } from '@dxos/messaging';
 import { type SwarmNetworkManager } from '@dxos/network-manager';
 import { InvalidStorageVersionError, STORAGE_VERSION, trace } from '@dxos/protocols';
 import { create } from '@dxos/protocols/buf';
+import { decodePublicKey } from '@dxos/protocols/buf';
+import { type Invitation, Invitation_Kind } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { ChainSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
-import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type Credential, type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
@@ -99,7 +100,7 @@ export class ServiceContext extends Resource {
   public edgeAgentManager?: EdgeAgentManager;
 
   private readonly _handlerFactories = new Map<
-    Invitation.Kind,
+    Invitation_Kind,
     (invitation: Partial<Invitation>) => InvitationProtocol
   >();
 
@@ -191,7 +192,7 @@ export class ServiceContext extends Resource {
     // TODO(burdon): _initialize called in multiple places.
     // TODO(burdon): Call _initialize on success.
     this._handlerFactories.set(
-      Invitation.Kind.DEVICE,
+      Invitation_Kind.DEVICE,
       () =>
         new DeviceInvitationProtocol(
           this.keyring,
@@ -279,7 +280,7 @@ export class ServiceContext extends Resource {
   }
 
   getInvitationHandler(invitation: Partial<Invitation> & Pick<Invitation, 'kind'>): InvitationProtocol {
-    if (this.identityManager.identity == null && invitation.kind === Invitation.Kind.SPACE) {
+    if (this.identityManager.identity == null && invitation.kind === Invitation_Kind.SPACE) {
       throw new Error('Identity must be created before joining a space.');
     }
     const factory = this._handlerFactories.get(invitation.kind);
@@ -354,9 +355,14 @@ export class ServiceContext extends Resource {
     );
     await this.edgeAgentManager.open();
 
-    this._handlerFactories.set(Invitation.Kind.SPACE, (invitation) => {
+    this._handlerFactories.set(Invitation_Kind.SPACE, (invitation) => {
       invariant(this.dataSpaceManager, 'dataSpaceManager not initialized yet');
-      return new SpaceInvitationProtocol(this.dataSpaceManager, signingContext, this.keyring, invitation.spaceKey);
+      return new SpaceInvitationProtocol(
+        this.dataSpaceManager,
+        signingContext,
+        this.keyring,
+        invitation.spaceKey ? decodePublicKey(invitation.spaceKey) : undefined,
+      );
     });
     this.initialized.wake();
 
@@ -435,9 +441,11 @@ export class ServiceContext extends Resource {
 
     this._edgeConnection?.setIdentity(edgeIdentity);
     this._edgeHttpClient?.setIdentity(edgeIdentity);
-    this.networkManager.setPeerInfo(create(PeerSchema, {
-      identityKey: edgeIdentity.identityKey,
-      peerKey: edgeIdentity.peerKey,
-    }));
+    this.networkManager.setPeerInfo(
+      create(PeerSchema, {
+        identityKey: edgeIdentity.identityKey,
+        peerKey: edgeIdentity.peerKey,
+      }),
+    );
   }
 }

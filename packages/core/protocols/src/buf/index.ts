@@ -48,3 +48,15 @@ export const encodePublicKey = (publicKey: PublicKey): KeysPb.PublicKey => {
 export const decodePublicKey = (publicKey: KeysPb.PublicKey): PublicKey => {
   return new PublicKey(publicKey.data);
 };
+
+//
+// Proto/buf boundary cast helpers.
+// These are safe at runtime because proto and buf share the same wire format (generated from the same .proto files).
+// They make the boundary casts self-documenting and auditable.
+//
+
+/** Cast buf type to proto equivalent at a codec/feed boundary. */
+export const bufToProto = <T>(value: unknown): T => value as T;
+
+/** Cast proto type to buf equivalent after codec/feed decoding. */
+export const protoToBuf = <T>(value: unknown): T => value as T;

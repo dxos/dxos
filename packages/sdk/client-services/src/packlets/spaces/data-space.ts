@@ -25,6 +25,7 @@ import { type Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { CancelledError, SystemError } from '@dxos/protocols';
+import { type CreateEpochRequest_Migration } from '@dxos/protocols/buf/dxos/client/services_pb';
 import {
   type CreateEpochRequest,
   type Space as SpaceProto,
@@ -90,7 +91,7 @@ export type DataSpaceProps = {
 };
 
 export type CreateEpochOptions = {
-  migration?: CreateEpochRequest.Migration;
+  migration?: CreateEpochRequest.Migration | CreateEpochRequest_Migration;
   newAutomergeRoot?: string;
 };
 
@@ -538,7 +539,7 @@ export class DataSpace {
       echoHost: this._echoHost,
       spaceId: this.id,
       spaceKey: this.key,
-      migration: options.migration,
+      migration: options.migration as CreateEpochRequest_Migration,
       currentRoot: this._automergeSpaceState.rootUrl ?? null,
       newAutomergeRoot: options.newAutomergeRoot,
     });

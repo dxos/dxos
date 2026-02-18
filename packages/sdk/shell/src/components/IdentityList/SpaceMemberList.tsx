@@ -4,6 +4,7 @@
 
 import React, { useMemo } from 'react';
 
+import { decodePublicKey } from '@dxos/protocols/buf';
 import { type PublicKey, useClient } from '@dxos/react-client';
 import type { SpaceMember } from '@dxos/react-client/echo';
 import { useMembers } from '@dxos/react-client/echo';
@@ -29,29 +30,40 @@ export interface SpaceMemberListProps extends Partial<SpaceMemberListImplProps> 
 export const SpaceMemberList = ({ spaceKey, includeSelf, onSelect }: SpaceMemberListProps) => {
   const client = useClient();
   const allUnsortedMembers = useMembers(spaceKey);
+  const currentIdentityKey = client.halo.identity.get()?.identityKey;
+  const currentIdentityKeyPk = currentIdentityKey ? decodePublicKey(currentIdentityKey) : undefined;
   const members = useMemo(
     () =>
-      includeSelf
-        ? allUnsortedMembers.sort((member) =>
-            member.identity.identityKey.equals(client.halo.identity.get()!.identityKey) ? -1 : 1,
-          )
-        : allUnsortedMembers.filter(
-            (member) => !member.identity.identityKey.equals(client.halo.identity.get()!.identityKey),
-          ),
-    [allUnsortedMembers],
+      includeSelf && currentIdentityKeyPk
+        ? allUnsortedMembers.sort((member) => {
+            const memberKey = member.identity?.identityKey;
+            if (!memberKey) return 1;
+            return decodePublicKey(memberKey).equals(currentIdentityKeyPk) ? -1 : 1;
+          })
+        : currentIdentityKeyPk
+          ? allUnsortedMembers.filter((member) => {
+              const memberKey = member.identity?.identityKey;
+              if (!memberKey) return true;
+              return !decodePublicKey(memberKey).equals(currentIdentityKeyPk);
+            })
+          : allUnsortedMembers,
+    [allUnsortedMembers, currentIdentityKeyPk],
   );
   return <SpaceMemberListImpl members={members} onSelect={onSelect} />;
 };
 
 export const SpaceMemberListImpl = ({ members, onSelect }: SpaceMemberListImplProps) => {
   const { t } = useTranslation(translationKey);
-  const visibleMembers = members.filter((member) => member.identity);
+  const visibleMembers = members.filter(
+    (member): member is SpaceMember & { identity: NonNullable<SpaceMember['identity']> } => !!member.identity,
+  );
   return visibleMembers.length > 0 ? (
     <List classNames='flex flex-col gap-2' data-testid='space-members-list'>
       {visibleMembers.map((member) => {
+        const keyHex = member.identity.identityKey ? decodePublicKey(member.identity.identityKey).toHex() : 'unknown';
         return (
           <IdentityListItem
-            key={member.identity.identityKey.toHex()}
+            key={keyHex}
             identity={member.identity}
             presence={member.presence}
             onClick={onSelect && (() => onSelect(member))}

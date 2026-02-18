@@ -31,6 +31,7 @@ import {
   Invitation_Kind,
   Invitation_State,
 } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import { type ProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
 
@@ -398,7 +399,9 @@ describe('Invitations', () => {
         expect(invitation.get().state).to.eq(Invitation_State.EXPIRED);
         // TODO: assumes too much about implementation.
         expect(hostMetadata.getInvitations()).to.have.lengthOf(0);
-        const swarmTopic = hostContext.networkManager.topics.find((topic) => topic.equals(decodePublicKey(invitation.get().swarmKey!)));
+        const swarmTopic = hostContext.networkManager.topics.find((topic) =>
+          topic.equals(decodePublicKey(invitation.get().swarmKey!)),
+        );
         expect(swarmTopic).to.be.undefined;
       });
     });
@@ -440,7 +443,8 @@ describe('Invitations', () => {
           persistentInvitationId = persistentInvitation.get().invitationId;
           await savedTrigger.wait();
           await waitForCondition({
-            condition: () => hostContext.networkManager.topics.includes(decodePublicKey(persistentInvitation.get().swarmKey!)),
+            condition: () =>
+              hostContext.networkManager.topics.includes(decodePublicKey(persistentInvitation.get().swarmKey!)),
           });
           // TODO(nf): expose this in API as suspendInvitation()/SuspendableInvitation?
           await hostContext.networkManager.leaveSwarm(decodePublicKey(persistentInvitation.get().swarmKey!));
@@ -623,7 +627,7 @@ describe('Invitations', () => {
       await host.initialize();
       await guest.initialize();
 
-      await host.halo.createIdentity({ displayName: 'Peer' });
+      await host.halo.createIdentity({ displayName: 'Peer' } as ProfileDocument);
 
       onTestFinished(async () => {
         await Promise.all([host.destroy()]);
@@ -650,8 +654,8 @@ describe('Invitations', () => {
       guest = new Client({ services: testBuilder.createLocalClientServices() });
       await host.initialize();
       await guest.initialize();
-      await host.halo.createIdentity({ displayName: 'Peer 1' });
-      await guest.halo.createIdentity({ displayName: 'Peer 2' });
+      await host.halo.createIdentity({ displayName: 'Peer 1' } as ProfileDocument);
+      await guest.halo.createIdentity({ displayName: 'Peer 2' } as ProfileDocument);
 
       onTestFinished(async () => {
         await Promise.all([host.destroy()]);

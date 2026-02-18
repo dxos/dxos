@@ -8,6 +8,7 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { waitForCondition } from '@dxos/async';
 import { Client, Config, SystemStatus, fromHost } from '@dxos/client';
+import { type ProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { log } from '@dxos/log';
 
 import { useIdentity } from '../halo';
@@ -94,7 +95,7 @@ describe('ClientProvider', () => {
     // TODO(wittjosiah): Use test builder to avoid warnings.
     client = new Client({ services: fromHost() });
     await client.initialize();
-    await client.halo.createIdentity({ displayName: 'test-user' });
+    await client.halo.createIdentity({ displayName: 'test-user' } as ProfileDocument);
   });
 
   afterEach(() => {

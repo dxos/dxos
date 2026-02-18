@@ -11,7 +11,7 @@ import { type Keyring } from '@dxos/keyring';
 import { log } from '@dxos/log';
 import { type Halo } from '@dxos/protocols';
 import { create } from '@dxos/protocols/buf';
-import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
+import { SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import {
   type CreateIdentityRequest,
   type CreateRecoveryCredentialRequest,

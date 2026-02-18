@@ -7,9 +7,11 @@ import { useEffect, useState } from 'react';
 import { type CancellableInvitation } from '@dxos/client-protocol';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { QueryAgentStatusResponse } from '@dxos/protocols/proto/dxos/client/services';
-import { type QueryAgentStatusResponse as BufQueryAgentStatusResponse } from '@dxos/protocols/buf/dxos/client/services_pb';
-import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
+import {
+  type QueryAgentStatusResponse as BufQueryAgentStatusResponse,
+  QueryAgentStatusResponse_AgentStatus,
+} from '@dxos/protocols/buf/dxos/client/services_pb';
+import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import { useClient } from '@dxos/react-client';
 import { type Identity } from '@dxos/react-client/halo';
 
@@ -22,24 +24,24 @@ export const useEdgeAgentHandlers = ({
   identity: Identity | null;
 }): AgentFormProps => {
   const [validationMessage, setValidationMessage] = useState('');
-  const [lastReceivedStatus, setLastReceivedStatus] = useState<QueryAgentStatusResponse.AgentStatus>(
-    QueryAgentStatusResponse.AgentStatus.UNKNOWN,
+  const [lastReceivedStatus, setLastReceivedStatus] = useState<QueryAgentStatusResponse_AgentStatus>(
+    QueryAgentStatusResponse_AgentStatus.UNKNOWN,
   );
   const [agentStatus, setAgentStatus] = useState<AgentFormProps['agentStatus']>('getting');
   const client = useClient();
   // TODO(wittjosiah): This should be based on HALO credentials.
   const agentHostingEnabled = Boolean(client.config.values.runtime?.client?.edgeFeatures?.agents);
 
-  const handleStatus = (status: QueryAgentStatusResponse.AgentStatus) => {
+  const handleStatus = (status: QueryAgentStatusResponse_AgentStatus) => {
     switch (status) {
-      case QueryAgentStatusResponse.AgentStatus.ACTIVE:
-      case QueryAgentStatusResponse.AgentStatus.INACTIVE:
+      case QueryAgentStatusResponse_AgentStatus.ACTIVE:
+      case QueryAgentStatusResponse_AgentStatus.INACTIVE:
         setAgentStatus('created');
         break;
-      case QueryAgentStatusResponse.AgentStatus.NOT_FOUND:
+      case QueryAgentStatusResponse_AgentStatus.NOT_FOUND:
         setAgentStatus('creatable');
         break;
-      case QueryAgentStatusResponse.AgentStatus.UNKNOWN:
+      case QueryAgentStatusResponse_AgentStatus.UNKNOWN:
         setAgentStatus('getting');
         break;
     }

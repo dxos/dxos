@@ -6,6 +6,8 @@ import React, { useState } from 'react';
 import { type Event, type SingleOrArray } from 'xstate';
 
 import { log } from '@dxos/log';
+import { create, decodePublicKey } from '@dxos/protocols/buf';
+import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type Identity } from '@dxos/react-client/halo';
 import { useClipboard, useTranslation } from '@dxos/react-ui';
 import { EmojiPickerBlock, HuePicker } from '@dxos/react-ui-pickers';
@@ -39,10 +41,16 @@ export const ProfileForm = (props: ProfileFormProps) => {
   return <ProfileFormImpl {...props} onUpdateProfile={handleUpdateProfile} validationMessage={validationMessage} />;
 };
 
-const getHueValue = (identity?: Identity) =>
-  identity?.profile?.data?.hue || hexToHue(identity?.identityKey.toHex() ?? '0');
-const getEmojiValue = (identity?: Identity) =>
-  identity?.profile?.data?.emoji || hexToEmoji(identity?.identityKey.toHex() ?? '0');
+const getHueValue = (identity?: Identity) => {
+  const hue = identity?.profile?.data?.hue;
+  const hex = identity?.identityKey ? decodePublicKey(identity.identityKey).toHex() : '0';
+  return (typeof hue === 'string' ? hue : undefined) || hexToHue(hex);
+};
+const getEmojiValue = (identity?: Identity) => {
+  const emoji = identity?.profile?.data?.emoji;
+  const hex = identity?.identityKey ? decodePublicKey(identity.identityKey).toHex() : '0';
+  return (typeof emoji === 'string' ? emoji : undefined) || hexToEmoji(hex);
+};
 
 // TODO(zhenyasav): impl shouldn't need send()
 const ProfileFormImpl = (props: ProfileFormImplProps) => {
@@ -54,7 +62,7 @@ const ProfileFormImpl = (props: ProfileFormImplProps) => {
   const [hue, setHue] = useState<string>(getHueValue(identity));
   const [emoji, setEmoji] = useState<string>(getEmojiValue(identity));
   const { textValue, setTextValue } = useClipboard();
-  const identityHex = identity?.identityKey.toHex();
+  const identityHex = identity?.identityKey ? decodePublicKey(identity.identityKey).toHex() : undefined;
   const copied = textValue === identityHex;
   return (
     <>
@@ -104,10 +112,14 @@ const ProfileFormImpl = (props: ProfileFormImplProps) => {
           variant='primary'
           disabled={disabled}
           onClick={() =>
-            onUpdateProfile?.({
-              ...(displayName && { displayName }),
-              ...((emoji || hue) && { data: { ...(emoji && { emoji }), ...(hue && { hue }) } }),
-            })
+            onUpdateProfile?.(
+              create(ProfileDocumentSchema, {
+                ...(displayName && { displayName }),
+                ...((emoji || hue) && {
+                  data: { ...(emoji && { emoji }), ...(hue && { hue }) } as import('@dxos/protocols/buf').JsonObject,
+                }),
+              }),
+            )
           }
           data-testid='update-profile-form-continue'
         >

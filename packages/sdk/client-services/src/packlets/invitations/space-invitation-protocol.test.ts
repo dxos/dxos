@@ -47,7 +47,9 @@ describe('services/space-invitations-protocol', () => {
     const space1 = await host.dataSpaceManager!.createSpace();
     const spaceKey = space1.key;
 
-    await Promise.all(performInvitation({ host, guest, options: { kind: Invitation_Kind.SPACE, spaceKey: encodePublicKey(spaceKey) } }));
+    await Promise.all(
+      performInvitation({ host, guest, options: { kind: Invitation_Kind.SPACE, spaceKey: encodePublicKey(spaceKey) } }),
+    );
 
     {
       const space1 = host.dataSpaceManager!.spaces.get(spaceKey)!;
@@ -71,7 +73,9 @@ describe('services/space-invitations-protocol', () => {
     const space1 = await host.dataSpaceManager!.createSpace();
     const spaceKey = space1.key;
 
-    await Promise.all(performInvitation({ host, guest, options: { kind: Invitation_Kind.SPACE, spaceKey: encodePublicKey(spaceKey) } }));
+    await Promise.all(
+      performInvitation({ host, guest, options: { kind: Invitation_Kind.SPACE, spaceKey: encodePublicKey(spaceKey) } }),
+    );
 
     {
       const space1 = host.dataSpaceManager!.spaces.get(spaceKey)!;

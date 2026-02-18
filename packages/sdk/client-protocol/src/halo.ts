@@ -5,13 +5,13 @@
 import { type MulticastObservable } from '@dxos/async';
 import { type PublicKey } from '@dxos/keys';
 import { type Invitation } from '@dxos/protocols/buf/dxos/client/invitation_pb';
-import { type Contact, type Device, type Identity } from '@dxos/protocols/proto/dxos/client/services';
+import { type Contact, type Device, type Identity } from '@dxos/protocols/buf/dxos/client/services_pb';
 import {
   type Credential,
   type DeviceProfileDocument,
   type Presentation,
   type ProfileDocument,
-} from '@dxos/protocols/proto/dxos/halo/credentials';
+} from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 import { type AuthenticatingInvitation, type CancellableInvitation } from './invitations';
 
