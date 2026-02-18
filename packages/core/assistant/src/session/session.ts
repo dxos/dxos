@@ -26,7 +26,8 @@ import { type Blueprint } from '@dxos/blueprints';
 import { todo } from '@dxos/debug';
 import { Obj } from '@dxos/echo';
 import { type FunctionInvocationService, TracingService } from '@dxos/functions';
-import { log } from '@dxos/log';
+import { dbg,
+log } from '@dxos/log';
 import { Message, type ContentBlock } from '@dxos/types';
 
 import { type AiAssistantError } from '../errors';
@@ -54,6 +55,12 @@ export type AiSessionRunProps<Tools extends Record<string, Tool.Any>> = {
   blueprints?: readonly Blueprint.Blueprint[];
   toolkit?: Toolkit.WithHandler<Tools>;
   observer?: GenerationObserver<Tools>;
+  /**
+   * Callback for when a message is received from the user, model, or tool.
+   * This is useful for streaming the output to a queue.
+   */
+  // TODO(dmaretskyi): This is duplicated by generation observer. Better solution would be to convert the return type from effect to stream.
+  onOutput?: (message: Message.Message) => Effect.Effect<void, never, never>;
 };
 
 /**
@@ -99,6 +106,7 @@ export class AiSession {
     blueprints = [],
     toolkit,
     observer = GenerationObserver.noop(),
+    onOutput = () => Effect.void,
   }: AiSessionRunProps<Tools>): Effect.Effect<Message.Message[], AiSessionRunError, AiSessionRunRequirements> =>
     Effect.gen(this, function* () {
       this._started = Date.now();
@@ -110,6 +118,7 @@ export class AiSession {
         pending.push(message);
         yield* observer.onMessage(message);
         yield* TracingService.emitConverationMessage(message);
+        yield* onOutput(message);
         return message;
       });
 

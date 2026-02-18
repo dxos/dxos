@@ -118,16 +118,25 @@ export class AiConversation extends Resource {
 
       // Process request.
       const session = new AiSession();
-      const messages = yield* session.run({ history, blueprints, toolkit, objects, ...params }).pipe(
-        Effect.provide(
-          Layer.mergeAll(
-            Layer.succeed(AiContextService, {
-              binder: this.context,
-            }),
-            Layer.succeed(AiConversationService, this),
+      const messages = yield* session
+        .run({
+          history,
+          blueprints,
+          toolkit,
+          objects,
+          ...params,
+          onOutput: (message) => Effect.promise(() => this._queue.append([message])),
+        })
+        .pipe(
+          Effect.provide(
+            Layer.mergeAll(
+              Layer.succeed(AiContextService, {
+                binder: this.context,
+              }),
+              Layer.succeed(AiConversationService, this),
+            ),
           ),
-        ),
-      );
+        );
 
       log('result', {
         messages: messages.length,
@@ -135,8 +144,6 @@ export class AiConversation extends Resource {
         toolCalls: session.toolCalls,
       });
 
-      // Append to queue.
-      yield* Effect.promise(() => this._queue.append(messages));
       return messages;
     });
   }
