@@ -26,3 +26,14 @@ export const layerMemory: Layer.Layer<
   SqlClient.SqlClient | SqlExport.SqlExport,
   ConfigError.ConfigError | SqlError.SqlError
 > = sqlExportLayer.pipe(Layer.provideMerge(SqliteClient.layerMemory({})));
+
+/**
+ * File-based SQLite is not available in browser.
+ * Use OPFS worker for persistent storage in browser environments.
+ * @throws Always throws - use OPFS worker instead.
+ */
+export const layerFile = (
+  _filename: string,
+): Layer.Layer<SqlClient.SqlClient | SqlExport.SqlExport, ConfigError.ConfigError | SqlError.SqlError> => {
+  throw new Error('layerFile is not available in browser. Use OPFS worker for persistent storage.');
+};

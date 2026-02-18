@@ -11,7 +11,7 @@ import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
-import { AiConversation, makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
+import { AiConversation, GenericToolkit, ToolExecutionServices } from '@dxos/assistant';
 import { acquireReleaseResource } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
 import { CredentialsService, QueueService, TracingService } from '@dxos/functions';
@@ -28,9 +28,6 @@ const TestToolkit = Toolkit.make(
   }),
 );
 
-// TODO(burdon): Create minimal toolkit.
-const toolkit = Toolkit.merge(TestToolkit) as Toolkit.Toolkit<any>;
-
 // TODO(burdon): Explain structure.
 const TestServicesLayer = Layer.mergeAll(
   TracingService.layerNoop,
@@ -45,10 +42,13 @@ const TestServicesLayer = Layer.mergeAll(
 
 const TestLayer: Layer.Layer<AiChatServices, never, never> = Layer.mergeAll(
   AiService.model('@anthropic/claude-opus-4-0'),
-  makeToolResolverFromFunctions([], toolkit),
-  makeToolExecutionServiceFromFunctions(toolkit, toolkit.toLayer({}) as any),
+  ToolExecutionServices,
   CredentialsService.layerFromDatabase(),
-).pipe(Layer.provideMerge(TestServicesLayer), Layer.orDie);
+).pipe(
+  Layer.provideMerge(GenericToolkit.providerLayer(GenericToolkit.make(TestToolkit, TestToolkit.toLayer({} as any)))),
+  Layer.provideMerge(TestServicesLayer),
+  Layer.orDie,
+);
 
 // TODO(burdon): Create actual test with mock LLM.
 describe('Chat processor', () => {

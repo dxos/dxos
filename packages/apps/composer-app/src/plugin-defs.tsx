@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { OperationPlugin, type Plugin, RuntimePlugin, SettingsPlugin } from '@dxos/app-framework';
+import { OperationPlugin, type Plugin, RuntimePlugin } from '@dxos/app-framework';
 import { type ClientServicesProvider, type Config } from '@dxos/client';
 import { type Observability } from '@dxos/observability';
 import { AssistantPlugin } from '@dxos/plugin-assistant';
@@ -40,6 +40,7 @@ import { PwaPlugin } from '@dxos/plugin-pwa';
 import { RegistryPlugin } from '@dxos/plugin-registry';
 import { ScriptPlugin } from '@dxos/plugin-script';
 import { SearchPlugin } from '@dxos/plugin-search';
+import { SettingsPlugin } from '@dxos/plugin-settings';
 import { SheetPlugin } from '@dxos/plugin-sheet';
 import { SimpleLayoutPlugin } from '@dxos/plugin-simple-layout';
 import { SketchPlugin } from '@dxos/plugin-sketch';
@@ -64,7 +65,7 @@ export type State = {
   appKey: string;
   config: Config;
   services: ClientServicesProvider;
-  observability: Promise<Observability>;
+  observability: Promise<Observability.Observability>;
 };
 
 export type PluginConfig = State & {

@@ -5,11 +5,13 @@
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
+import * as Record from 'effect/Record';
 
 import { MemoizedAiService } from '@dxos/ai/testing';
 import { AiConversation } from '@dxos/assistant';
 import { AssistantTestLayerWithTriggers } from '@dxos/assistant/testing';
 import { Blueprint } from '@dxos/blueprints';
+import { SpaceProperties } from '@dxos/client-protocol';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
@@ -18,14 +20,16 @@ import { TriggerDispatcher } from '@dxos/functions-runtime';
 import { invariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
 import { MarkdownBlueprint } from '@dxos/plugin-markdown/blueprints';
+import { WithProperties } from '@dxos/plugin-markdown/testing';
 import { Markdown } from '@dxos/plugin-markdown/types';
-import { Text } from '@dxos/schema';
+import { Collection, Text } from '@dxos/schema';
 import { Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { Chat } from '../../chat';
 import { Document, Initiative as InitiativeFunctions } from '../../functions';
 import { Initiative } from '../../initiative';
+import { Planning } from '..';
 
 import { blueprint, getFunctions } from './initiative-blueprint';
 
@@ -33,20 +37,29 @@ ObjectId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayerWithTriggers({
   aiServicePreset: 'edge-remote',
-  functions: [...getFunctions(), Document.read, Document.update, Document.create],
+  functions: [
+    ...getFunctions(),
+    ...MarkdownBlueprint.functions,
+    ...Record.values(Planning.PlanningFunctions),
+  ],
   types: [
     Initiative.Initiative,
+    Initiative.Plan,
     Chat.CompanionTo,
     Chat.Chat,
+    SpaceProperties,
     Blueprint.Blueprint,
     Trigger.Trigger,
     Text.Text,
     Markdown.Document,
+    Collection.Collection,
   ],
   tracing: 'pretty',
 });
 
 const SYSTEM = trim`
+  You are a helpful assistant that can help with tasks in the outside world.
+  Be transparent about what you are doing and what you are not doing.
   If you do not have tools to complete the task, inform the user.
   DO NOT PRETEND TO DO SOMETHING YOU CAN'T DO.
 `;
@@ -137,6 +150,64 @@ describe.runIf(TestHelpers.tagEnabled('flaky'))('Initiative', () => {
 
         console.log(yield* Effect.promise(() => dumpInitiative(initiative)));
       },
+      WithProperties,
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+    MemoizedAiService.isGenerationEnabled() ? 240_000 : 30_000,
+  );
+
+  it.scoped(
+    'planning',
+    Effect.fnUntraced(
+      function* (_) {
+        const initiative = yield* Database.add(
+          yield* Initiative.makeInitialized(
+            {
+              name: 'Egg making',
+              spec: trim`
+                I'm testing how planning (task management) works.
+                Create tasks to make scrambled eggs.
+
+                Then simulate this plan execution in a markdown document.
+                The document should reflect the state of all objects involved in the cooking process.
+                The document should also have the log of actions taken.
+
+                Important: simualte actions one by one, in the order they are listed.
+                Simlate by updating the local document.
+
+                <example>
+                  # State
+
+                  - 2 raw eggs
+                  - 1 frying pan
+                  
+                  # Action log
+                  
+                  - Taken 2 raw eggs out of the fridge.
+                </example>
+              `,
+              blueprints: [Ref.make(MarkdownBlueprint.make()), Ref.make(Obj.clone(Planning.PlanningBlueprint))],
+            },
+            Initiative.makeBlueprint(),
+          ),
+        );
+        yield* Database.flush({ indexes: true });
+
+        const chatQueue = initiative.chat?.target?.queue?.target as any;
+        invariant(chatQueue, 'Initiative chat queue not found.');
+        yield* Database.flush({ indexes: true });
+        const conversation = yield* acquireReleaseResource(() => new AiConversation({ queue: chatQueue }));
+        yield* Effect.promise(() => conversation.context.open());
+
+        yield* conversation.createRequest({
+          system: SYSTEM,
+          prompt: `Go`,
+        });
+
+        console.log(yield* Effect.promise(() => dumpInitiative(initiative)));
+      },
+      WithProperties,
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
     ),
@@ -147,6 +218,11 @@ describe.runIf(TestHelpers.tagEnabled('flaky'))('Initiative', () => {
 const dumpInitiative = async (initiative: Initiative.Initiative) => {
   let text = '';
   text += `============== Initiative: ${initiative.name} ==============\n\n`;
+  text += `============== Spec ==============\n\n`;
+  text += `${await initiative.spec.load().then((_) => _.content)}\n`;
+  text += `============== Plan ==============\n\n`;
+  text += `${await initiative.plan?.load().then((_) => Initiative.formatPlan(_))}\n`;
+  text += `============== Artifacts ==============\n\n`;
   for (const artifact of initiative.artifacts) {
     const data = await artifact.data.load();
     text += `============== ${artifact.name} (${Obj.getTypename(data)}) ==============\n`;

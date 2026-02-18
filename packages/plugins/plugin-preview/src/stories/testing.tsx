@@ -4,7 +4,7 @@
 
 import React, { type FC, useMemo } from 'react';
 
-import { type SurfaceComponentProps } from '@dxos/app-framework/react';
+import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
 import { faker } from '@dxos/random';
 import { Card } from '@dxos/react-ui-mosaic';
@@ -20,16 +20,16 @@ export type DefaultStoryProps<T extends Obj.Any> = {
 export const DefaultStory = <T extends Obj.Any>({ Component, createObject, image }: DefaultStoryProps<T>) => {
   // TODO(wittjosiah): ECHO objects don't work when passed via Storybook args.
   const object = useMemo(() => createObject(), [createObject]);
-  const roles: SurfaceComponentProps['role'][] = ['card--popover', 'card--intrinsic'];
+  const roles: SurfaceComponentProps['role'][] = ['card--intrinsic', 'card--popover'];
 
   return (
-    <div className='grid grid-rows-4 gap-16 plb-8'>
+    <div className='bs-full grid grid-rows-2 p-16 gap-16'>
       {roles.map((role, i) => (
-        <div key={i} className='flex justify-center'>
+        <div key={i} className='flex bs-full justify-center overflow-hidden'>
           <div className='flex flex-col gap-4 is-full items-center'>
             <label className='text-sm text-description'>{role}</label>
             <CardContainer role={role}>
-              <Card.Root>
+              <Card.Root border={false}>
                 <Component role={role} subject={image ? object : omitImage(object)} />
               </Card.Root>
             </CardContainer>

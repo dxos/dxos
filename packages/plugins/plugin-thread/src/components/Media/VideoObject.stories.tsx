@@ -47,7 +47,7 @@ const meta = {
   title: 'plugins/plugin-thread/VideoObject',
   component: VideoObject,
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'fullscreen',
   },

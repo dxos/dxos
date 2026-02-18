@@ -7,73 +7,112 @@ import type * as SqlError from '@effect/sql/SqlError';
 import * as Effect from 'effect/Effect';
 
 import { Event } from '@dxos/async';
+import { assertArgument } from '@dxos/invariant';
+import { type SpaceId } from '@dxos/keys';
+import { FeedProtocol } from '@dxos/protocols';
+import { SqlTransaction } from '@dxos/sql-sqlite';
 
-import {
-  type AppendRequest,
-  type AppendResponse,
-  type Block,
-  FeedCursor,
-  type QueryRequest,
-  type QueryResponse,
-  type SubscribeRequest,
-  type SubscribeResponse,
-} from './protocol';
+import { DuplicateBlockLamportTimestampError, DuplicateBlockPositionError, PositionConflictError } from './errors';
+
+type AppendRequest = FeedProtocol.AppendRequest;
+type AppendResponse = FeedProtocol.AppendResponse;
+type Block = FeedProtocol.Block;
+const FeedCursor = FeedProtocol.FeedCursor;
+type FeedCursor = FeedProtocol.FeedCursor;
+const isWellKnownNamespace = FeedProtocol.isWellKnownNamespace;
+type QueryRequest = FeedProtocol.QueryRequest;
+type QueryResponse = FeedProtocol.QueryResponse;
+type SubscribeRequest = FeedProtocol.SubscribeRequest;
+type SubscribeResponse = FeedProtocol.SubscribeResponse;
 
 export interface FeedStoreOptions {
+  /**
+   * The actor ID of the local user.
+   */
   localActorId: string;
+
+  /**
+   * Whether to assign positions to appended blocks.
+   * Only a single peer (usually the server) can assign positions.
+   */
   assignPositions: boolean;
 }
 
+/**
+ * Persistent storage for feed metadata, blocks, subscriptions, and sync state.
+ *
+ */
 export class FeedStore {
-  constructor(private readonly _options: FeedStoreOptions) {}
+  readonly #options: FeedStoreOptions;
 
+  constructor(options: FeedStoreOptions) {
+    this.#options = options;
+  }
+
+  /**
+   * Emits after successful block append operations.
+   */
   readonly onNewBlocks = new Event<void>();
 
-  migrate = Effect.fn('FeedStore.migrate')(function* () {
-    const sql = yield* SqlClient.SqlClient;
+  /**
+   * Creates required feed store tables and indexes if they do not exist.
+   */
+  migrate = Effect.fn('FeedStore.migrate')(() =>
+    Effect.gen(function* () {
+      const sql = yield* SqlClient.SqlClient;
 
-    // Feeds Table
-    yield* sql`CREATE TABLE IF NOT EXISTS feeds (
+      // Feeds Table
+      yield* sql`CREATE TABLE IF NOT EXISTS feeds (
         feedPrivateId INTEGER PRIMARY KEY AUTOINCREMENT,
         spaceId TEXT NOT NULL,
         feedId TEXT NOT NULL,
         feedNamespace TEXT
       )`;
-    yield* sql`CREATE UNIQUE INDEX IF NOT EXISTS idx_feeds_spaceId_feedId ON feeds(spaceId, feedId)`;
+      yield* sql`CREATE UNIQUE INDEX IF NOT EXISTS idx_feeds_spaceId_feedId ON feeds(spaceId, feedId)`;
 
-    // Blocks Table
-    yield* sql`CREATE TABLE IF NOT EXISTS blocks (
+      // Blocks Table
+      yield* sql`CREATE TABLE IF NOT EXISTS blocks (
         insertionId INTEGER PRIMARY KEY AUTOINCREMENT,
         feedPrivateId INTEGER NOT NULL,
         position INTEGER,
         sequence INTEGER NOT NULL,
         actorId TEXT NOT NULL,
-        predSequence INTEGER,
-        predActorId TEXT,
+        prevSequence INTEGER,
+        prevActorId TEXT,
         timestamp INTEGER NOT NULL,
         data BLOB NOT NULL,
         FOREIGN KEY(feedPrivateId) REFERENCES feeds(feedPrivateId)
       )`;
-    yield* sql`CREATE UNIQUE INDEX IF NOT EXISTS idx_blocks_feedPrivateId_position ON blocks(feedPrivateId, position)`;
-    yield* sql`CREATE UNIQUE INDEX IF NOT EXISTS idx_blocks_feedPrivateId_sequence_actorId ON blocks(feedPrivateId, sequence, actorId)`;
+      yield* sql`CREATE UNIQUE INDEX IF NOT EXISTS idx_blocks_feedPrivateId_position ON blocks(feedPrivateId, position)`;
+      yield* sql`CREATE UNIQUE INDEX IF NOT EXISTS idx_blocks_feedPrivateId_sequence_actorId ON blocks(feedPrivateId, sequence, actorId)`;
 
-    // Subscriptions Table
-    yield* sql`CREATE TABLE IF NOT EXISTS subscriptions (
+      // Subscriptions Table
+      yield* sql`CREATE TABLE IF NOT EXISTS subscriptions (
           subscriptionId TEXT PRIMARY KEY,
           expiresAt INTEGER NOT NULL,
           feedPrivateIds TEXT NOT NULL -- JSON array
       )`;
 
-    // Cursor Tokens Table
-    yield* sql`CREATE TABLE IF NOT EXISTS cursor_tokens (
+      // Cursor Tokens Table
+      yield* sql`CREATE TABLE IF NOT EXISTS cursor_tokens (
           spaceId TEXT PRIMARY KEY,
           token TEXT NOT NULL
       )`;
-  });
 
-  // Internal Logic
+      // Sync State Table.
+      yield* sql`CREATE TABLE IF NOT EXISTS sync_state (
+          spaceId TEXT NOT NULL,
+          feedNamespace TEXT NOT NULL,
+          lastPulledPosition INTEGER NOT NULL DEFAULT -1,
+          PRIMARY KEY (spaceId, feedNamespace)
+      )`;
+    }).pipe(Effect.withSpan('FeedStore.migrate')),
+  );
 
-  private _ensureFeed = Effect.fn('Feed.ensureFeed')(
+  /**
+   * Ensures a feed row exists and returns its internal feed ID.
+   */
+  #ensureFeed = Effect.fn('Feed.ensureFeed')(
     (
       spaceId: string,
       feedId: string,
@@ -91,10 +130,13 @@ export class FeedStore {
               INSERT INTO feeds (spaceId, feedId, feedNamespace) VALUES (${spaceId}, ${feedId}, ${namespace}) RETURNING feedPrivateId
           `;
         return newRows[0].feedPrivateId;
-      }),
+      }).pipe(Effect.withSpan('FeedStore.ensureFeed')),
   );
 
-  private _ensureCursorToken = Effect.fn('Feed.ensureCursorToken')(
+  /**
+   * Ensures cursor token exists for a space and returns it.
+   */
+  #ensureCursorToken = Effect.fn('Feed.ensureCursorToken')(
     (spaceId: string): Effect.Effect<string, SqlError.SqlError, SqlClient.SqlClient> =>
       Effect.gen(this, function* () {
         const sql = yield* SqlClient.SqlClient;
@@ -104,11 +146,12 @@ export class FeedStore {
         const token = crypto.randomUUID().replace(/-/g, '').slice(0, 6);
         yield* sql`INSERT INTO cursor_tokens (spaceId, token) VALUES (${spaceId}, ${token})`;
         return token;
-      }),
+      }).pipe(Effect.withSpan('FeedStore.ensureCursorToken')),
   );
 
-  // RPCs
-
+  /**
+   * Queries feed blocks by feed IDs or subscription with cursor/position pagination.
+   */
   query = Effect.fn('Feed.query')(
     (request: QueryRequest): Effect.Effect<QueryResponse, SqlError.SqlError, SqlClient.SqlClient> =>
       Effect.gen(this, function* () {
@@ -121,6 +164,15 @@ export class FeedStore {
           return yield* Effect.die(new Error('spaceId is required'));
         }
 
+        if (
+          (request.position !== undefined ? 1 : 0) +
+            (request.cursor !== undefined ? 1 : 0) +
+            (request.unpositionedOnly === true ? 1 : 0) >
+          1
+        ) {
+          return yield* Effect.die(new Error('Only one of position, cursor, or unpositionedOnly can be used'));
+        }
+
         if (request.cursor) {
           const { token, insertionId } = decodeCursor(request.cursor as FeedCursor);
           if (!token || insertionId === undefined || isNaN(insertionId)) {
@@ -130,8 +182,8 @@ export class FeedStore {
           cursorInsertionId = insertionId;
         }
 
-        // Validate Token if cursor used
-        const validCursorToken = yield* this._ensureCursorToken(request.spaceId);
+        // Validate Token if cursor used.
+        const validCursorToken = yield* this.#ensureCursorToken(request.spaceId);
         if (request.cursor && cursorToken !== validCursorToken) {
           return yield* Effect.die(new Error(`Cursor token mismatch`));
         }
@@ -150,8 +202,8 @@ export class FeedStore {
 
         const position = request.position ?? -1;
 
-        // Resolve Subscriptions or FeedIds
-        if ('subscriptionId' in request.query) {
+        // Resolve subscriptions or feed IDs.
+        if (request.query && 'subscriptionId' in request.query) {
           const rows = yield* sql<{ feedPrivateIds: string; expiresAt: number }>`
                 SELECT feedPrivateIds, expiresAt FROM subscriptions WHERE subscriptionId = ${request.query.subscriptionId}
             `;
@@ -167,50 +219,57 @@ export class FeedStore {
               }
             }
           }
-        } else if ('feedIds' in request.query) {
-          feedIds = [...(request.query as any).feedIds];
+        } else if (request.query && 'feedIds' in request.query) {
+          feedIds = [...request.query.feedIds];
         } else {
           feedIds = undefined;
         }
 
         if (feedIds !== undefined && feedIds.length === 0) {
-          return { requestId: request.requestId, blocks: [], nextCursor: encodeCursor(validCursorToken, -1) };
+          return {
+            requestId: request.requestId,
+            blocks: [],
+            nextCursor: encodeCursor(validCursorToken, -1),
+            hasMore: false,
+          };
         }
 
-        // Fetch Blocks
+        // Fetch blocks.
         const query = sql<Block>`
-            SELECT blocks.*, feeds.feedId
+            SELECT blocks.*, feeds.feedId, feeds.feedNamespace
             FROM blocks
             JOIN feeds ON blocks.feedPrivateId = feeds.feedPrivateId
             WHERE 1=1
             ${feedIds !== undefined ? sql`AND feeds.feedId IN ${sql.in(feedIds)}` : sql``}
             ${request.spaceId ? sql`AND feeds.spaceId = ${request.spaceId}` : sql``}
-            ${
-              'feedNamespace' in request.query && request.query.feedNamespace
-                ? sql`AND feeds.feedNamespace = ${request.query.feedNamespace}`
-                : sql``
-            }
+            ${sql`AND feeds.feedNamespace = ${request.feedNamespace}`}
         `;
 
-        // Add filter based on cursor or position
+        // Add filter based on cursor or position.
         const filter = request.cursor
           ? sql`AND blocks.insertionId > ${cursorInsertionId}`
-          : sql`AND (blocks.position > ${position} OR blocks.position IS NULL)`;
+          : request.unpositionedOnly
+            ? sql`AND blocks.position IS NULL`
+            : sql`AND (blocks.position > ${position} OR blocks.position IS NULL)`;
 
         const orderBy = request.cursor
           ? sql`ORDER BY blocks.insertionId ASC`
           : sql`ORDER BY blocks.position ASC NULLS LAST`;
 
+        const requestLimit = request.limit;
+        const queryLimit = requestLimit != null ? requestLimit + 1 : undefined;
         const rows = yield* sql<Block>`
             ${query}
             ${filter}
             ${orderBy}
-            ${request.limit ? sql`LIMIT ${request.limit}` : sql``}
+            ${queryLimit != null ? sql`LIMIT ${queryLimit}` : sql``}
         `;
 
-        const blocks = rows.map((row) => ({
+        const hasMore = requestLimit != null && rows.length > requestLimit;
+        const slice = hasMore ? rows.slice(0, requestLimit) : rows;
+        const blocks = slice.map((row) => ({
           ...row,
-          // Have to buffer otherwise we get empty Uint8Array.
+          // Have to clone buffer otherwise we get empty Uint8Array.
           data: new Uint8Array(row.data),
         }));
 
@@ -222,10 +281,13 @@ export class FeedStore {
           }
         }
 
-        return { requestId: request.requestId, blocks, nextCursor } satisfies QueryResponse;
-      }),
+        return { requestId: request.requestId, blocks, nextCursor, hasMore } satisfies QueryResponse;
+      }).pipe(Effect.withSpan('FeedStore.query')),
   );
 
+  /**
+   * Creates a subscription and stores the resolved internal feed IDs.
+   */
   subscribe = Effect.fn('Feed.subscribe')(
     (request: SubscribeRequest): Effect.Effect<SubscribeResponse, SqlError.SqlError, SqlClient.SqlClient> =>
       Effect.gen(this, function* () {
@@ -241,7 +303,7 @@ export class FeedStore {
 
         const feedPrivateIds = yield* Effect.forEach(
           request.feedIds,
-          (feedId) => this._ensureFeed(request.spaceId!, feedId),
+          (feedId) => this.#ensureFeed(request.spaceId!, feedId),
           { concurrency: 'unbounded' },
         );
 
@@ -255,119 +317,411 @@ export class FeedStore {
           subscriptionId,
           expiresAt,
         };
-      }),
+      }).pipe(Effect.withSpan('FeedStore.subscribe')),
   );
 
-  append = Effect.fn('Feed.append')(
-    (request: AppendRequest): Effect.Effect<AppendResponse, SqlError.SqlError, SqlClient.SqlClient> =>
+  /**
+   * Get the last pulled position for the given space and namespace.
+   * Returns -1 if no sync state exists yet.
+   */
+  getSyncState = (opts: {
+    spaceId: SpaceId;
+    feedNamespace: string;
+  }): Effect.Effect<number, SqlError.SqlError, SqlClient.SqlClient> =>
+    Effect.gen(this, function* () {
+      const sql = yield* SqlClient.SqlClient;
+      const rows = yield* sql<{ lastPulledPosition: number }>`
+        SELECT lastPulledPosition FROM sync_state
+        WHERE spaceId = ${opts.spaceId} AND feedNamespace = ${opts.feedNamespace}
+      `;
+      return rows[0]?.lastPulledPosition ?? -1;
+    }).pipe(Effect.withSpan('FeedStore.getSyncState'));
+
+  /**
+   * Update the last pulled position for the given space and namespace.
+   */
+  setSyncState = (opts: {
+    spaceId: SpaceId;
+    feedNamespace: string;
+    lastPulledPosition: number;
+  }): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> =>
+    Effect.gen(this, function* () {
+      const sql = yield* SqlClient.SqlClient;
+      yield* sql`
+        INSERT INTO sync_state (spaceId, feedNamespace, lastPulledPosition)
+        VALUES (${opts.spaceId}, ${opts.feedNamespace}, ${opts.lastPulledPosition})
+        ON CONFLICT (spaceId, feedNamespace) DO UPDATE SET lastPulledPosition = ${opts.lastPulledPosition}
+      `;
+    }).pipe(Effect.withSpan('FeedStore.setSyncState'));
+
+  /**
+   * Validates that appended blocks do not introduce position or Lamport conflicts.
+   */
+  #validateAppendBlocks = Effect.fn('FeedStore.validateAppendBlocks')(
+    (
+      blocks: readonly Block[],
+      feedPrivateIds: Map<string, number>,
+    ): Effect.Effect<
+      void,
+      SqlError.SqlError | DuplicateBlockPositionError | DuplicateBlockLamportTimestampError,
+      SqlClient.SqlClient
+    > =>
       Effect.gen(this, function* () {
         const sql = yield* SqlClient.SqlClient;
-        const positions: number[] = [];
 
-        if (!request.spaceId) {
-          return yield* Effect.die(new Error('spaceId required for append'));
-        }
-
-        for (const block of request.blocks) {
-          const feedId = request.feedId ?? block.actorId;
-          const feedPrivateId = yield* this._ensureFeed(request.spaceId, feedId, request.namespace);
-
-          let nextPos = null;
-          if (this._options.assignPositions) {
-            const maxPosResult = yield* sql<{ maxPos: number | null }>`
-                  SELECT MAX(position) as maxPos 
-                  FROM blocks 
-                  JOIN feeds ON blocks.feedPrivateId = feeds.feedPrivateId
-                  WHERE feeds.spaceId = ${request.spaceId}
-              `;
-            nextPos = (maxPosResult[0]?.maxPos ?? -1) + 1;
-            positions.push(nextPos);
+        // Validate request-level uniqueness before writing.
+        const positionFeedIdByKey = new Map<string, string>();
+        const lamportFeedIdByKey = new Map<string, string>();
+        for (const block of blocks) {
+          const feedPrivateId = feedPrivateIds.get(block.feedId!)!;
+          if (!this.#options.assignPositions && block.position != null) {
+            const positionKey = `${feedPrivateId}|${block.position}`;
+            if (positionFeedIdByKey.has(positionKey)) {
+              yield* Effect.fail(
+                new DuplicateBlockPositionError({
+                  feedId: block.feedId!,
+                  position: block.position,
+                }),
+              );
+            }
+            positionFeedIdByKey.set(positionKey, block.feedId!);
           }
 
-          yield* sql`
-                INSERT INTO blocks (
-                    feedPrivateId, position, sequence, actorId, 
-                    predSequence, predActorId, timestamp, data
-                ) VALUES (
-                    ${feedPrivateId}, ${nextPos}, ${block.sequence}, ${block.actorId},
-                    ${block.predSequence}, ${block.predActorId}, ${block.timestamp}, ${block.data}
-                ) ON CONFLICT DO NOTHING
-            `;
+          const lamportKey = `${feedPrivateId}|${block.actorId}|${block.sequence}`;
+          if (lamportFeedIdByKey.has(lamportKey)) {
+            yield* Effect.fail(
+              new DuplicateBlockLamportTimestampError({
+                feedId: block.feedId!,
+                actorId: block.actorId,
+                sequence: block.sequence,
+              }),
+            );
+          }
+          lamportFeedIdByKey.set(lamportKey, block.feedId!);
         }
 
-        this.onNewBlocks.emit();
+        // Bulk-validate against persisted rows with exact tuple matching.
+        const lamportConditions = blocks.map((block) => {
+          const feedPrivateId = feedPrivateIds.get(block.feedId!)!;
+          return sql`(feedPrivateId = ${feedPrivateId} AND actorId = ${block.actorId} AND sequence = ${block.sequence})`;
+        });
+        if (lamportConditions.length > 0) {
+          const existingLamports = yield* sql<{ feedPrivateId: number; actorId: string; sequence: number }>`
+            SELECT feedPrivateId, actorId, sequence
+            FROM blocks
+            WHERE ${sql.or(lamportConditions)}
+            LIMIT 1
+          `;
+          const lamportConflict = existingLamports[0];
+          if (lamportConflict) {
+            const key = `${lamportConflict.feedPrivateId}|${lamportConflict.actorId}|${lamportConflict.sequence}`;
+            yield* Effect.fail(
+              new DuplicateBlockLamportTimestampError({
+                feedId: lamportFeedIdByKey.get(key)!,
+                actorId: lamportConflict.actorId,
+                sequence: lamportConflict.sequence,
+              }),
+            );
+          }
+        }
 
-        return { requestId: request.requestId, positions };
+        if (!this.#options.assignPositions) {
+          const positionedBlocks = blocks.filter((block) => block.position != null);
+          const positionConditions = positionedBlocks.map((block) => {
+            const feedPrivateId = feedPrivateIds.get(block.feedId!)!;
+            return sql`(feedPrivateId = ${feedPrivateId} AND position = ${block.position})`;
+          });
+          if (positionConditions.length > 0) {
+            const existingPositions = yield* sql<{ feedPrivateId: number; position: number }>`
+              SELECT feedPrivateId, position
+              FROM blocks
+              WHERE position IS NOT NULL
+                AND (${sql.or(positionConditions)})
+              LIMIT 1
+            `;
+            const positionConflict = existingPositions[0];
+            if (positionConflict) {
+              const key = `${positionConflict.feedPrivateId}|${positionConflict.position}`;
+              yield* Effect.fail(
+                new DuplicateBlockPositionError({
+                  feedId: positionFeedIdByKey.get(key)!,
+                  position: positionConflict.position,
+                }),
+              );
+            }
+          }
+        }
       }),
   );
 
+  /**
+   * Appends blocks for a space/namespace and optionally assigns global positions.
+   */
+  append = (
+    request: AppendRequest,
+  ): Effect.Effect<
+    AppendResponse,
+    SqlError.SqlError | DuplicateBlockPositionError | DuplicateBlockLamportTimestampError,
+    SqlClient.SqlClient | SqlTransaction.SqlTransaction
+  > =>
+    Effect.gen(this, function* () {
+      if (!request.spaceId) {
+        return yield* Effect.die(new Error('spaceId required for append'));
+      }
+
+      assertArgument(
+        isWellKnownNamespace(request.feedNamespace),
+        'request.feedNamespace',
+        'specified well-known namespace',
+      );
+
+      // Validate all blocks upfront.
+      for (const block of request.blocks) {
+        assertArgument(block.feedId, 'block.feedId', 'feedId is required');
+      }
+
+      // Wrap in transaction to ensure atomicity when assigning positions.
+      const sqlTransaction = yield* SqlTransaction.SqlTransaction;
+      const positions = yield* sqlTransaction.withTransaction(
+        Effect.gen(this, function* () {
+          const sql = yield* SqlClient.SqlClient;
+
+          // 1. Collect unique feed IDs and batch #ensureFeed calls.
+          const feedKeys = new Map<string, { feedId: string }>();
+          for (const block of request.blocks) {
+            const key = block.feedId!;
+            if (!feedKeys.has(key)) {
+              feedKeys.set(key, { feedId: block.feedId! });
+            }
+          }
+
+          const feedPrivateIds = new Map<string, number>();
+          yield* Effect.forEach(
+            [...feedKeys.entries()],
+            ([key, { feedId }]) =>
+              Effect.gen(this, function* () {
+                const id = yield* this.#ensureFeed(request.spaceId!, feedId, request.feedNamespace);
+                feedPrivateIds.set(key, id);
+              }),
+            { concurrency: 'unbounded' },
+          );
+
+          yield* this.#validateAppendBlocks(request.blocks, feedPrivateIds);
+
+          // 2. Get max position per namespace ONCE (not per block).
+          const maxPositions = new Map<string, number>();
+          if (this.#options.assignPositions) {
+            const maxPosResult = yield* sql<{ maxPos: number | null }>`
+              SELECT MAX(position) as maxPos 
+              FROM blocks 
+              JOIN feeds ON blocks.feedPrivateId = feeds.feedPrivateId
+              WHERE feeds.spaceId = ${request.spaceId} AND feeds.feedNamespace = ${request.feedNamespace}
+            `;
+            maxPositions.set(request.feedNamespace, maxPosResult[0]?.maxPos ?? -1);
+          }
+
+          // 3. Insert all blocks and compute positions.
+          const positions: number[] = [];
+          for (const block of request.blocks) {
+            const key = block.feedId!;
+            const feedPrivateId = feedPrivateIds.get(key)!;
+
+            let positionToInsert: number | null = null;
+            if (this.#options.assignPositions) {
+              const currentMax = maxPositions.get(request.feedNamespace)!;
+              positionToInsert = currentMax + 1;
+              maxPositions.set(request.feedNamespace, positionToInsert); // Increment for next block in same namespace.
+              positions.push(positionToInsert);
+            } else if (block.position != null) {
+              positionToInsert = block.position;
+            }
+
+            yield* sql`
+              INSERT INTO blocks (
+                feedPrivateId, position, sequence, actorId, 
+                prevSequence, prevActorId, timestamp, data
+              ) VALUES (
+                ${feedPrivateId}, ${positionToInsert}, ${block.sequence}, ${block.actorId},
+                ${block.prevSequence}, ${block.prevActorId}, ${block.timestamp}, ${block.data}
+              ) ON CONFLICT DO NOTHING
+            `;
+          }
+
+          return positions;
+        }),
+      );
+
+      this.onNewBlocks.emit();
+
+      return { requestId: request.requestId, positions };
+    }).pipe(Effect.withSpan('FeedStore.append'));
+
+  /**
+   * Creates local blocks with sequential predecessors and appends grouped batches.
+   */
   appendLocal = Effect.fn('Feed.appendLocal')(
     (
       messages: { spaceId: string; feedId: string; feedNamespace: string; data: Uint8Array }[],
-    ): Effect.Effect<Block[], SqlError.SqlError, SqlClient.SqlClient> =>
+    ): Effect.Effect<
+      Block[],
+      SqlError.SqlError | DuplicateBlockPositionError | DuplicateBlockLamportTimestampError,
+      SqlClient.SqlClient | SqlTransaction.SqlTransaction
+    > =>
       Effect.gen(this, function* () {
         const sql = yield* SqlClient.SqlClient;
-        const blocks: Block[] = [];
 
-        // Group by spaceId for efficient processing? Or just iterate.
-        // Assuming small batch.
+        // 1. Collect unique feeds and ensure they exist.
+        type FeedKey = string; // `${spaceId}|${feedNamespace}|${feedId}`
+        const feedKeys = new Map<FeedKey, { spaceId: string; feedId: string; feedNamespace: string }>();
+        for (const msg of messages) {
+          const key = `${msg.spaceId}|${msg.feedNamespace}|${msg.feedId}`;
+          if (!feedKeys.has(key)) {
+            feedKeys.set(key, { spaceId: msg.spaceId, feedId: msg.feedId, feedNamespace: msg.feedNamespace });
+          }
+        }
+
+        // Batch ensure feeds and get their private IDs.
+        const feedPrivateIds = new Map<FeedKey, number>();
+        yield* Effect.forEach(
+          [...feedKeys.entries()],
+          ([key, { spaceId, feedId, feedNamespace }]) =>
+            Effect.gen(this, function* () {
+              const id = yield* this.#ensureFeed(spaceId, feedId, feedNamespace);
+              feedPrivateIds.set(key, id);
+            }),
+          { concurrency: 'unbounded' },
+        );
+
+        // 2. Get last sequence for each unique feed (batch query).
+        const lastSeqs = new Map<FeedKey, { sequence: number; actorId: string } | null>();
+        for (const [key] of feedKeys) {
+          const feedPrivateId = feedPrivateIds.get(key)!;
+          const lastBlockResult = yield* sql<{ sequence: number; actorId: string }>`
+            SELECT sequence, actorId FROM blocks 
+            WHERE feedPrivateId = ${feedPrivateId} 
+            ORDER BY sequence DESC 
+            LIMIT 1
+          `;
+          lastSeqs.set(key, lastBlockResult[0] ?? null);
+        }
+
+        // 3. Build all blocks with correct sequences.
+        // Track in-flight sequences per feed to handle multiple messages to same feed.
+        const currentSeqs = new Map<FeedKey, { sequence: number; actorId: string }>();
+        const blocks: Block[] = [];
+        const blocksBySpaceNamespace = new Map<string, { spaceId: string; feedNamespace: string; blocks: Block[] }>();
 
         for (const msg of messages) {
-          // Get last block for this feed to determine sequence and predecessor.
-          // Assumes we are the writer (localActorId).
-          // If we are not localActorId, we shouldn't be creating blocks this way?
-          // The user said: "uses local actorId". So feedId in message might be ignored?
-          // Or message provides feedId?
-          // User said: "client provides (only data + spaceId, feedId, feedNamespace)".
-          // If client provides feedId, does it match localActorId?
-          // If localActorId is fixed for the device, and we are appending to "my" feed, feedId should be localActorId.
-          // If the client explicitly passes feedId, maybe they want to write to a specific feed (e.g. if they have multiple identities?).
-          // But spec says "uses local actorId". I will use `this._options.localActorId`.
-          // But `messages` arg has `feedId`.
-          // I'll assume `msg.feedId` must match `localActorId` or we just use `localActorId` and ignore `msg.feedId`?
-          // User: "client provides ... feedId".
-          // I will use passed feedId but it should probably match localActorId if we are signing? (No signing here yet).
-          // I'll use passed `feedId`.
+          const key = `${msg.spaceId}|${msg.feedNamespace}|${msg.feedId}`;
 
-          const feedPrivateId = yield* this._ensureFeed(msg.spaceId, msg.feedId, msg.feedNamespace);
+          // Determine predecessor: either from in-flight blocks or from DB.
+          let sequence: number;
+          let prevSequence: number | null;
+          let prevActorId: string | null;
 
-          // Get last block to determine sequence.
-          const lastBlockResult = yield* sql<{ sequence: number; actorId: string }>`
-              SELECT sequence, actorId FROM blocks 
-              WHERE feedPrivateId = ${feedPrivateId} 
-              ORDER BY sequence DESC 
-              LIMIT 1
-           `; // This gets checks only THIS feed.
-
-          const lastBlock = lastBlockResult[0];
-          const sequence = (lastBlock?.sequence ?? -1) + 1;
-          const predSequence = lastBlock?.sequence ?? null;
-          const predActorId = lastBlock?.actorId ?? null;
+          const inFlight = currentSeqs.get(key);
+          if (inFlight) {
+            // We've already added blocks for this feed - continue from last in-flight.
+            sequence = inFlight.sequence + 1;
+            prevSequence = inFlight.sequence;
+            prevActorId = inFlight.actorId;
+          } else {
+            // First block for this feed - use DB state.
+            const lastBlock = lastSeqs.get(key);
+            sequence = (lastBlock?.sequence ?? -1) + 1;
+            prevSequence = lastBlock?.sequence ?? null;
+            prevActorId = lastBlock?.actorId ?? null;
+          }
 
           const block: Block = {
-            feedId: undefined,
-            actorId: this._options.localActorId,
+            feedId: msg.feedId,
+            actorId: this.#options.localActorId,
             sequence,
-            predActorId,
-            predSequence,
+            prevActorId,
+            prevSequence,
             timestamp: Date.now(),
             data: msg.data,
-            position: null, // assigned by append
+            position: null, // Assigned by append.
           };
+
           blocks.push(block);
 
-          // Call append to persist (and assign position if allowed).
-          yield* this.append({
-            requestId: 'local-append',
-            namespace: msg.feedNamespace,
-            blocks: [block],
-            spaceId: msg.spaceId,
-            feedId: msg.feedId,
-          });
+          // Update in-flight tracking.
+          currentSeqs.set(key, { sequence, actorId: this.#options.localActorId });
+
+          // Group by (spaceId, feedNamespace).
+          const spaceNamespaceKey = `${msg.spaceId}|${msg.feedNamespace}`;
+          if (!blocksBySpaceNamespace.has(spaceNamespaceKey)) {
+            blocksBySpaceNamespace.set(spaceNamespaceKey, {
+              spaceId: msg.spaceId,
+              feedNamespace: msg.feedNamespace,
+              blocks: [],
+            });
+          }
+          blocksBySpaceNamespace.get(spaceNamespaceKey)!.blocks.push(block);
         }
-        return blocks;
-      }),
+
+        // 4. Call append once per (spaceId, namespace) batch and assign returned positions.
+        const positionByBlock = new Map<Block, number | null>();
+        for (const { spaceId, feedNamespace, blocks: batchBlocks } of blocksBySpaceNamespace.values()) {
+          const { positions } = yield* this.append({
+            requestId: 'local-append',
+            blocks: batchBlocks,
+            spaceId,
+            feedNamespace,
+          });
+          for (let i = 0; i < batchBlocks.length; i++) {
+            positionByBlock.set(batchBlocks[i], positions[i] ?? null);
+          }
+        }
+
+        return blocks.map((block) => ({
+          ...block,
+          position: positionByBlock.get(block) ?? block.position,
+        }));
+      }).pipe(Effect.withSpan('FeedStore.appendLocal')),
   );
+
+  /**
+   * Sets positions for existing blocks while preventing conflicting reassignments.
+   */
+  setPosition = (request: {
+    spaceId: string;
+    blocks: (Pick<Block, 'feedId' | 'actorId' | 'sequence' | 'position'> & { feedNamespace: string })[];
+  }): Effect.Effect<void, SqlError.SqlError | PositionConflictError, SqlClient.SqlClient> =>
+    Effect.gen(this, function* () {
+      const sql = yield* SqlClient.SqlClient;
+      for (const block of request.blocks) {
+        const existing = yield* sql<{ position: number | null }>`
+          SELECT position FROM blocks
+          WHERE feedPrivateId = (
+            SELECT feedPrivateId FROM feeds
+            WHERE spaceId = ${request.spaceId} AND feedId = ${block.feedId} AND feedNamespace = ${block.feedNamespace}
+          )
+          AND actorId = ${block.actorId} AND sequence = ${block.sequence}
+        `;
+        const current = existing[0];
+        if (current?.position != null && current.position !== block.position) {
+          yield* Effect.fail(
+            new PositionConflictError({
+              feedId: block.feedId,
+              actorId: block.actorId,
+              sequence: block.sequence,
+              currentPosition: current.position,
+              requestedPosition: block.position,
+            }),
+          );
+        }
+        yield* sql`
+          UPDATE blocks SET position = ${block.position}
+          WHERE feedPrivateId = (
+            SELECT feedPrivateId FROM feeds
+            WHERE spaceId = ${request.spaceId} AND feedId = ${block.feedId} AND feedNamespace = ${block.feedNamespace}
+          )
+          AND actorId = ${block.actorId} AND sequence = ${block.sequence}
+        `;
+      }
+    }).pipe(Effect.withSpan('FeedStore.setPosition'));
 }
 
 const encodeCursor = (token: string, insertionId: number) => FeedCursor.make(`${token}|${insertionId}`);

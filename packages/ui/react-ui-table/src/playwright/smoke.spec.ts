@@ -121,8 +121,22 @@ test.describe('Table', () => {
     await page.close();
   });
 
-  // Rest of add column test remains the same as it's a more complex flow.
-  test('add column', async ({ browser, browserName }) => {
+  test('add column without changing format', async ({ browser, browserName }) => {
+    test.skip(browserName === 'webkit');
+    test.skip(browserName === 'firefox');
+    const { page } = await setupPage(browser, { url: storyUrl });
+    const table = new TableManager(page);
+
+    await table.grid.ready();
+    const newColumnLabel = 'DEFAULT FORMAT COL';
+
+    await table.addColumn({ label: newColumnLabel });
+
+    await expect(page.getByRole('gridcell', { name: newColumnLabel })).toBeVisible();
+    await page.close();
+  });
+
+  test('add column with format', async ({ browser, browserName }) => {
     test.skip(browserName === 'webkit');
     test.skip(browserName === 'firefox');
     const { page } = await setupPage(browser, { url: storyUrl });

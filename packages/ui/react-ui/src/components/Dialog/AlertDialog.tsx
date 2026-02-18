@@ -23,11 +23,20 @@ import {
   type AlertDialogTriggerProps as AlertDialogTriggerPrimitiveProps,
 } from '@radix-ui/react-alert-dialog';
 import { createContext } from '@radix-ui/react-context';
-import React, { type ForwardRefExoticComponent, type FunctionComponent, forwardRef } from 'react';
+import React, {
+  type ForwardRefExoticComponent,
+  type FunctionComponent,
+  type PropsWithChildren,
+  forwardRef,
+} from 'react';
 
 import { useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
 import { ElevationProvider } from '../ElevationProvider';
+
+//
+// Root
+//
 
 type AlertDialogRootProps = AlertDialogRootPrimitiveProps;
 
@@ -37,21 +46,41 @@ const AlertDialogRoot: FunctionComponent<AlertDialogRootProps> = (props) => (
   </ElevationProvider>
 );
 
+//
+// Trigger
+//
+
 type AlertDialogTriggerProps = AlertDialogTriggerPrimitiveProps;
 
 const AlertDialogTrigger: FunctionComponent<AlertDialogTriggerProps> = AlertDialogTriggerPrimitive;
+
+//
+// Portal
+//
 
 type AlertDialogPortalProps = AlertDialogPortalPrimitiveProps;
 
 const AlertDialogPortal: FunctionComponent<AlertDialogPortalProps> = AlertDialogPortalPrimitive;
 
+//
+// Cancel
+//
+
 type AlertDialogCancelProps = AlertDialogCancelPrimitiveProps;
 
 const AlertDialogCancel: FunctionComponent<AlertDialogCancelProps> = AlertDialogCancelPrimitive;
 
+//
+// Action
+//
+
 type AlertDialogActionProps = AlertDialogActionPrimitiveProps;
 
 const AlertDialogAction: FunctionComponent<AlertDialogActionProps> = AlertDialogActionPrimitive;
+
+//
+// Title
+//
 
 type AlertDialogTitleProps = ThemedClassName<AlertDialogTitlePrimitiveProps> & { srOnly?: boolean };
 
@@ -61,13 +90,13 @@ const AlertDialogTitle: ForwardRefExoticComponent<AlertDialogTitleProps> = forwa
 >(({ classNames, srOnly, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
   return (
-    <AlertDialogTitlePrimitive
-      {...props}
-      className={tx('dialog.title', 'dialog--alert__title', { srOnly }, classNames)}
-      ref={forwardedRef}
-    />
+    <AlertDialogTitlePrimitive {...props} className={tx('dialog.title', { srOnly }, classNames)} ref={forwardedRef} />
   );
 });
+
+//
+// Description
+//
 
 type AlertDialogDescriptionProps = ThemedClassName<AlertDialogDescriptionPrimitiveProps> & { srOnly?: boolean };
 
@@ -79,21 +108,32 @@ const AlertDialogDescription: ForwardRefExoticComponent<AlertDialogTitleProps> =
   return (
     <AlertDialogDescriptionPrimitive
       {...props}
-      className={tx('dialog.description', 'dialog--alert__description', { srOnly }, classNames)}
+      className={tx('dialog.description', { srOnly }, classNames)}
       ref={forwardedRef}
     />
   );
 });
 
 type OverlayLayoutContextValue = { inOverlayLayout?: boolean };
+
+//
+// Context
+//
+
 const ALERT_DIALOG_OVERLAY_NAME = 'AlertDialogOverlay';
 const ALERT_DIALOG_CONTENT_NAME = 'AlertDialogContent';
+const ALERT_DIALOG_ACTIONBAR_NAME = 'AlertDialogActionBar';
+
 const [OverlayLayoutProvider, useOverlayLayoutContext] = createContext<OverlayLayoutContextValue>(
   ALERT_DIALOG_OVERLAY_NAME,
   {
     inOverlayLayout: false,
   },
 );
+
+//
+// Overlay
+//
 
 type AlertDialogOverlayProps = ThemedClassName<AlertDialogOverlayPrimitiveProps> & {
   blockAlign?: 'center' | 'start' | 'end';
@@ -109,7 +149,6 @@ const AlertDialogOverlay: ForwardRefExoticComponent<AlertDialogOverlayProps> = f
       {...props}
       className={tx(
         'dialog.overlay',
-        'dialog--alert__overlay',
         {},
         classNames,
         'data-[block-align=start]:justify-center',
@@ -126,6 +165,10 @@ const AlertDialogOverlay: ForwardRefExoticComponent<AlertDialogOverlayProps> = f
 
 AlertDialogOverlay.displayName = ALERT_DIALOG_OVERLAY_NAME;
 
+//
+// Content
+//
+
 type AlertDialogContentProps = ThemedClassName<AlertDialogContentPrimitiveProps>;
 
 const AlertDialogContent: ForwardRefExoticComponent<AlertDialogContentProps> = forwardRef<
@@ -137,7 +180,7 @@ const AlertDialogContent: ForwardRefExoticComponent<AlertDialogContentProps> = f
   return (
     <AlertDialogContentPrimitive
       {...props}
-      className={tx('dialog.content', 'dialog--alert', { inOverlayLayout }, classNames)}
+      className={tx('dialog.content', { inOverlayLayout }, classNames)}
       ref={forwardedRef}
     >
       {children}
@@ -147,6 +190,30 @@ const AlertDialogContent: ForwardRefExoticComponent<AlertDialogContentProps> = f
 
 AlertDialogContent.displayName = ALERT_DIALOG_CONTENT_NAME;
 
+//
+// ActionBar
+//
+
+type AlertDialogActionBarProps = ThemedClassName<PropsWithChildren>;
+
+const AlertDialogActionBar: ForwardRefExoticComponent<AlertDialogActionBarProps> = forwardRef<
+  HTMLDivElement,
+  AlertDialogActionBarProps
+>(({ children, classNames, ...props }, forwardedRef) => {
+  const { tx } = useThemeContext();
+  return (
+    <div {...props} className={tx('dialog.actionbar', {}, classNames)} ref={forwardedRef}>
+      {children}
+    </div>
+  );
+});
+
+AlertDialogActionBar.displayName = ALERT_DIALOG_ACTIONBAR_NAME;
+
+//
+// AlertDialog
+//
+
 export const AlertDialog = {
   Root: AlertDialogRoot,
   Trigger: AlertDialogTrigger,
@@ -155,6 +222,7 @@ export const AlertDialog = {
   Content: AlertDialogContent,
   Title: AlertDialogTitle,
   Description: AlertDialogDescription,
+  ActionBar: AlertDialogActionBar,
   Cancel: AlertDialogCancel,
   Action: AlertDialogAction,
 };
@@ -167,6 +235,7 @@ export type {
   AlertDialogContentProps,
   AlertDialogTitleProps,
   AlertDialogDescriptionProps,
+  AlertDialogActionBarProps,
   AlertDialogCancelProps,
   AlertDialogActionProps,
 };

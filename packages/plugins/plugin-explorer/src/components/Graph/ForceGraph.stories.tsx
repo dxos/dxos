@@ -57,7 +57,7 @@ const meta = {
   render: render(DefaultStory),
   decorators: [
     withRegistry,
-    withTheme,
+    withTheme(),
     withLayout(),
     withClientProvider({
       createSpace: true,

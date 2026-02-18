@@ -98,7 +98,7 @@ const meta = {
   title: 'ui/react-ui-form/Form-Old',
   component: Form.Root as any,
   render: DefaultStory,
-  decorators: [withTheme, withLayoutVariants()],
+  decorators: [withTheme(), withLayoutVariants()],
   parameters: {
     layout: 'fullscreen',
     translations,

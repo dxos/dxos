@@ -67,6 +67,7 @@ const toolkitLayer = TestToolkit.toLayer({
 const TestLayer = Layer.mergeAll(
   AssistantTestLayer({
     types: [CalendarEventSchema],
+    tracing: 'pretty',
   }),
   toolkitLayer,
 );
@@ -97,6 +98,25 @@ describe('AiSession', () => {
         const response = yield* session.run({
           toolkit,
           prompt: 'What is 10 + 30?',
+          history: [],
+        });
+        log.info('response', { response });
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'tool schema error',
+    Effect.fnUntraced(
+      function* (_) {
+        const session = new AiSession({ operationModel: 'configured' });
+        const toolkit = yield* TestToolkit;
+        const response = yield* session.run({
+          toolkit,
+          prompt:
+            'I am testing error handling in tool paramter parsing. I want you to call the calculator tool but omit the input parameter to intentionally differ from the tool schema.',
           history: [],
         });
         log.info('response', { response });

@@ -8,12 +8,7 @@ import * as Layer from 'effect/Layer';
 
 import { AiService } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
-import {
-  AiConversation,
-  type ContextBinding,
-  makeToolExecutionServiceFromFunctions,
-  makeToolResolverFromFunctions,
-} from '@dxos/assistant';
+import { AiConversation, type ContextBinding, GenericToolkit, ToolExecutionServices } from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
 import { Obj, Ref } from '@dxos/echo';
 import { Database } from '@dxos/echo';
@@ -29,7 +24,7 @@ import { type Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { Tasks } from '../../functions';
-import { type TestStep, runSteps, testToolkit } from '../testing';
+import { type TestStep, runSteps } from '../testing';
 
 import { blueprint } from './planning-blueprint';
 
@@ -105,8 +100,7 @@ describe('Planning Blueprint', { timeout: 120_000 }, () => {
       Effect.provide(
         Layer.mergeAll(
           TestDatabaseLayer({ types: [Text.Text, Markdown.Document, Blueprint.Blueprint] }),
-          makeToolResolverFromFunctions([Tasks.read, Tasks.update], testToolkit),
-          makeToolExecutionServiceFromFunctions(testToolkit, testToolkit.toLayer({}) as any),
+          ToolExecutionServices,
           AiService.model('@anthropic/claude-3-5-sonnet-20241022'),
         ).pipe(
           Layer.provideMerge(
@@ -116,7 +110,7 @@ describe('Planning Blueprint', { timeout: 120_000 }, () => {
           ),
           Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions: [Tasks.read, Tasks.update] })),
           Layer.provideMerge(TestDatabaseLayer({ types: [Text.Text, Markdown.Document, Blueprint.Blueprint] })),
-          Layer.provideMerge(AiServiceTestingPreset('direct')),
+          Layer.provideMerge(Layer.mergeAll(GenericToolkit.providerEmpty, AiServiceTestingPreset('direct'))),
         ),
       ),
       TestHelpers.provideTestContext,

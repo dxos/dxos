@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Toolkit from '@effect/ai/Toolkit';
 import * as Effect from 'effect/Effect';
 
 import { ConsolePrinter } from '@dxos/ai';
@@ -29,6 +28,3 @@ export const runSteps = Effect.fn(function* (conversation: AiConversation, steps
     }
   }
 });
-
-// TODO(wittjosiah): Don't cast.
-export const testToolkit = Toolkit.empty as Toolkit.Toolkit<any>;

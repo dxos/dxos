@@ -40,12 +40,9 @@ const meta = {
   title: 'apps/composer-app/Welcome',
   component: Welcome as any,
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     translations,
-    chromatic: {
-      disableSnapshot: false,
-    },
   },
 } satisfies Meta<typeof DefaultStory>;
 

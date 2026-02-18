@@ -47,7 +47,7 @@ const DefaultStory = () => {
 const meta = {
   title: 'ui/react-ui-sfx/sounds',
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'centered',
   },

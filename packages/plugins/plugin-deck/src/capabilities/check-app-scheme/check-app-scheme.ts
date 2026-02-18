@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
 import { isTauri } from '@dxos/util';
 
 import { DeckCapabilities } from '../../types';
@@ -37,7 +37,7 @@ const checkAppScheme = (url: string) => {
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const settings = yield* Common.Capability.getAtomValue(DeckCapabilities.Settings);
+    const settings = yield* Capabilities.getAtomValue(DeckCapabilities.Settings);
     if (!isTauri() && settings?.enableNativeRedirect) {
       checkAppScheme(APP_SCHEME);
     }

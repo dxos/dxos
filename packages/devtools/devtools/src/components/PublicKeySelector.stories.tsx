@@ -19,7 +19,7 @@ const meta = {
       <PublicKeySelector {...args} />
     </Toolbar.Root>
   ),
-  decorators: [withTheme],
+  decorators: [withTheme()],
 } satisfies Meta<typeof PublicKeySelector>;
 
 export default meta;

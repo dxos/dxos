@@ -7,33 +7,36 @@ import React, { useEffect, useState } from 'react';
 import { type Type } from '@dxos/echo';
 import { type Space } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
-import { ControlPage, ControlSection, controlItemClasses } from '@dxos/react-ui-form';
-import { Layout } from '@dxos/react-ui-mosaic';
+import { Settings } from '@dxos/react-ui-form';
+import { mx } from '@dxos/ui-theme';
 
 import { meta } from '../meta';
 
 type SchemaPanelProps = { space: Space };
 
+const itemClasses = mx([
+  'container-max-width grid md:col-span-2 grid-cols-subgrid gap-trimSm items-center',
+  '*:first:!mbs-0 *:last:!mbe-0 pli-trimMd plb-trimMd',
+  'border border-separator rounded-md',
+]);
+
 export const SchemaContainer = ({ space }: SchemaPanelProps) => {
   const { t } = useTranslation(meta.id);
   const schemas = useQuerySpaceSchemas(space);
 
-  // TODO(ZaymonFC): Support deleting Schema (DangerZone section).
   return (
-    <Layout.Container scrollable>
-      <ControlPage>
-        <ControlSection title={t('schema verbose label')} description={t('schema description')}>
-          <div role='none' className={controlItemClasses}>
-            {schemas.length === 0 && <div className='text-center plb-4'>{t('no schemas found message')}</div>}
-            {schemas.map((schema) => (
-              <div role='none' key={schema.id}>
-                {schema.typename}
-              </div>
-            ))}
-          </div>
-        </ControlSection>
-      </ControlPage>
-    </Layout.Container>
+    <Settings.Root>
+      <Settings.Section title={t('schema verbose label')} description={t('schema description')}>
+        <div role='none' className={itemClasses}>
+          {schemas.length === 0 && <div className='text-center plb-4'>{t('no schemas found message')}</div>}
+          {schemas.map((schema) => (
+            <div role='none' key={schema.id}>
+              {schema.typename}
+            </div>
+          ))}
+        </div>
+      </Settings.Section>
+    </Settings.Root>
   );
 };
 

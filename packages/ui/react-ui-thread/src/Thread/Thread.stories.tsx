@@ -85,7 +85,7 @@ const meta = {
   title: 'ui/react-ui-thread/Thread',
   component: Thread.Root,
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'fullscreen',
     translations,

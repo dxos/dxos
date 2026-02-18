@@ -3,8 +3,9 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Function from 'effect/Function';
 
-import { AiContextBinder, type ContextBinding } from '@dxos/assistant';
+import { AiContextBinder, AiContextService, type ContextBinding } from '@dxos/assistant';
 import { type Blueprint } from '@dxos/blueprints';
 import { Database, Obj, Ref, Relation } from '@dxos/echo';
 import { type ObjectNotFoundError } from '@dxos/echo/Err';
@@ -17,6 +18,7 @@ import type { Message } from '@dxos/types';
 import { Chat } from '../chat';
 
 import { Initiative } from './Initiative';
+import { makePlan } from './plan';
 
 /**
  * Creates a fully initialized Initiative with chat, queue, and context bindings.
@@ -30,7 +32,6 @@ export const makeInitialized = (
   props: Omit<Obj.MakeProps<typeof Initiative>, 'spec' | 'plan' | 'artifacts' | 'subscriptions' | 'chat'> &
     Partial<Pick<Obj.MakeProps<typeof Initiative>, 'artifacts' | 'subscriptions'>> & {
       spec: string;
-      plan?: string;
       blueprints?: Ref.Ref<Blueprint.Blueprint>[];
       contextObjects?: Ref.Ref<Obj.Any>[];
     },
@@ -40,7 +41,7 @@ export const makeInitialized = (
     const initiative = Obj.make(Initiative, {
       ...props,
       spec: Ref.make(Text.make(props.spec)),
-      plan: Ref.make(Text.make(props.plan ?? '')),
+      plan: Ref.make(makePlan({ tasks: [] })),
       artifacts: props.artifacts ?? [],
       subscriptions: props.subscriptions ?? [],
     });
@@ -128,3 +129,12 @@ export const resetChatHistory = (
       }),
     );
   }).pipe(Effect.scoped);
+
+export const getFromChatContext: Effect.Effect<Initiative, never, AiContextService> = Effect.gen(function* () {
+  const initiatives = yield* Function.pipe(AiContextService.findObjects(Initiative));
+  if (initiatives.length !== 1) {
+    throw new Error('There should be exactly one initiative in context. Got: ' + initiatives.length);
+  }
+  const initiative = initiatives[0];
+  return initiative;
+});

@@ -14,6 +14,7 @@ import { invariant } from '@dxos/invariant';
 import { trim } from '@dxos/util';
 
 import { Initiative } from '../../initiative';
+import { formatPlan } from '../plan';
 
 export default defineFunction({
   key: 'dxos.org/function/initiative/qualifier',
@@ -32,13 +33,13 @@ export default defineFunction({
       invariant(Obj.instanceOf(Initiative.Initiative, initiative));
       invariant(initiative.chat, 'Initiative has no chat.');
 
-      const { id, name, plan, spec, queue } = initiative;
+      const { id, name, queue } = initiative;
       if (!queue) {
         throw new Error('Initiative has no queue.');
       }
 
-      const { content: planContent } = yield* Database.load(plan);
-      const { content: specContent } = yield* Database.load(spec);
+      const plan = yield* Database.load(initiative.plan);
+      const spec = yield* Database.load(initiative.spec);
 
       const {
         value: { isRelevant },
@@ -53,17 +54,13 @@ export default defineFunction({
               Respond with true if the event is relevant to the initiative, false otherwise.
               If you are not sure, return true.
               The qualified events will be forwarded to the larger agent that will process them.
-              <initiative>
-                ${JSON.stringify(
-                  {
-                    id,
-                    name,
-                    plan: planContent,
-                    spec: specContent,
-                  },
-                  null,
-                  2,
-                )}
+              <initiative id="${id}" name="${name}">
+                <spec>
+                ${spec.content}
+                </spec>
+                <plan>
+                  ${formatPlan(plan)}
+                </plan>
               </initiative>
             `,
           }),

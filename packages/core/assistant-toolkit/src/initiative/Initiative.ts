@@ -12,6 +12,8 @@ import { Chat } from '../chat';
 
 export * from './util';
 
+import { Plan } from './plan';
+
 /**
  * Initiative schema definition.
  */
@@ -19,7 +21,7 @@ export const Initiative = Schema.Struct({
   name: Schema.String,
 
   spec: Type.Ref(Text.Text),
-  plan: Type.Ref(Text.Text),
+  plan: Type.Ref(Plan),
 
   artifacts: Schema.Array(
     Schema.Struct({

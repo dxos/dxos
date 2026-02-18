@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 
-import { OperationPlugin } from '@dxos/app-framework';
+import { OperationPlugin, RuntimePlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { withTheme } from '@dxos/react-ui/testing';
 import { translations as shellTranslations } from '@dxos/shell/react';
@@ -19,7 +19,7 @@ const meta = {
   title: 'plugins/plugin-client/DevicesContainer',
   component: DevicesContainer,
   decorators: [
-    withTheme,
+    withTheme(),
     withPluginManager({
       plugins: [
         ClientPlugin({
@@ -29,6 +29,7 @@ const meta = {
             }),
         }),
         OperationPlugin(),
+        RuntimePlugin(),
       ],
     }),
   ],

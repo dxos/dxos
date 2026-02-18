@@ -55,12 +55,9 @@ Default.parameters = { layout: 'fullscreen' };
 const meta = {
   title: 'sdk/shell/All',
   component: StoryRow,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     translations,
-    chromatic: {
-      disableSnapshot: false,
-    },
   },
 } satisfies Meta<typeof StoryRow>;
 

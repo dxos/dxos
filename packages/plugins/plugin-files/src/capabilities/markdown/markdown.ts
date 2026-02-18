@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
 import { MarkdownCapabilities } from '@dxos/plugin-markdown';
 import { listener } from '@dxos/ui-editor';
 
@@ -18,7 +18,7 @@ export default Capability.makeModule(
     const extensionProvider = () =>
       listener({
         onChange: ({ id, text }) => {
-          const registry = capabilities.get(Common.Capability.AtomRegistry);
+          const registry = capabilities.get(Capabilities.AtomRegistry);
           const settingsAtom = capabilities.get(FileCapabilities.Settings);
           const settings = registry.get(settingsAtom);
           const stateAtom = capabilities.get(FileCapabilities.State);

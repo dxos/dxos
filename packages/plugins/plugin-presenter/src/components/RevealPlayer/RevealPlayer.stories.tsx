@@ -22,7 +22,7 @@ import { RevealPlayer } from './RevealPlayer';
 const meta = {
   title: 'plugins/plugin-presenter/RevealPlayer',
   component: RevealPlayer,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'fullscreen',
     translations,

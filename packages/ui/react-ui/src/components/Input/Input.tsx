@@ -43,7 +43,7 @@ type LabelProps = ThemedClassName<LabelPrimitiveProps> & { srOnly?: boolean };
 const Label = forwardRef<HTMLLabelElement, LabelProps>(({ srOnly, classNames, children, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
   return (
-    <LabelPrimitive {...props} className={tx('input.label', 'input__label', { srOnly }, classNames)} ref={forwardedRef}>
+    <LabelPrimitive {...props} className={tx('input.label', { srOnly }, classNames)} ref={forwardedRef}>
       {children}
     </LabelPrimitive>
   );
@@ -55,11 +55,7 @@ const Description = forwardRef<HTMLSpanElement, DescriptionProps>(
   ({ srOnly, classNames, children, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     return (
-      <DescriptionPrimitive
-        {...props}
-        className={tx('input.description', 'input__description', { srOnly }, classNames)}
-        ref={forwardedRef}
-      >
+      <DescriptionPrimitive {...props} className={tx('input.description', { srOnly }, classNames)} ref={forwardedRef}>
         {children}
       </DescriptionPrimitive>
     );
@@ -75,12 +71,7 @@ const Validation = forwardRef<HTMLSpanElement, InputScopedProps<ValidationProps>
     return (
       <ValidationPrimitive
         {...props}
-        className={tx(
-          'input.validation',
-          `input__validation-message input__validation-message--${validationValence}`,
-          { srOnly, validationValence },
-          classNames,
-        )}
+        className={tx('input.validation', { srOnly, validationValence }, classNames)}
         ref={forwardedRef}
       >
         {children}
@@ -97,7 +88,7 @@ const DescriptionAndValidation = forwardRef<HTMLParagraphElement, DescriptionAnd
     return (
       <DescriptionAndValidationPrimitive
         {...props}
-        className={tx('input.descriptionAndValidation', 'input__description-and-validation', { srOnly }, classNames)}
+        className={tx('input.descriptionAndValidation', { srOnly }, classNames)}
         ref={forwardedRef}
       >
         {children}
@@ -119,7 +110,6 @@ const PinInput = forwardRef<HTMLInputElement, PinInputProps>(
       elevation: propsElevation,
       segmentClassName: propsSegmentClassName,
       inputClassName,
-      variant,
       ...props
     },
     forwardedRef,
@@ -128,12 +118,10 @@ const PinInput = forwardRef<HTMLInputElement, PinInputProps>(
     const { tx } = useThemeContext();
     const density = useDensityContext(propsDensity);
     const elevation = useElevationContext(propsElevation);
-
     const segmentClassName = useCallback(
       ({ focused, validationValence }: Parameters<Exclude<PinInputPrimitiveProps['segmentClassName'], undefined>>[0]) =>
         tx(
           'input.input',
-          'input--pin-segment',
           {
             variant: 'static',
             focused,
@@ -143,9 +131,10 @@ const PinInput = forwardRef<HTMLInputElement, PinInputProps>(
             validationValence,
           },
           propsSegmentClassName,
-        ),
+        ) || '',
       [tx, props.disabled, elevation, propsElevation, density],
     );
+
     return (
       <PinInputPrimitive
         {...{
@@ -153,7 +142,7 @@ const PinInput = forwardRef<HTMLInputElement, PinInputProps>(
           segmentClassName,
           ...(props.autoFocus && !hasIosKeyboard && { autoFocus: true }),
         }}
-        inputClassName={tx('input.inputWithSegments', 'input input--pin', { disabled: props.disabled }, inputClassName)}
+        inputClassName={tx('input.inputWithSegments', { disabled: props.disabled }, inputClassName) || ''}
         ref={forwardedRef}
       />
     );
@@ -174,12 +163,10 @@ const TextInput = forwardRef<HTMLInputElement, InputScopedProps<TextInputProps>>
     forwardedRef,
   ) => {
     const { hasIosKeyboard } = useThemeContext();
-    const themeContextValue = useThemeContext();
+    const { tx } = useThemeContext();
     const density = useDensityContext(propsDensity);
     const elevation = useElevationContext(propsElevation);
     const { validationValence } = useInputContext(INPUT_NAME, __inputScope);
-
-    const { tx } = themeContextValue;
 
     return (
       <TextInputPrimitive
@@ -188,7 +175,6 @@ const TextInput = forwardRef<HTMLInputElement, InputScopedProps<TextInputProps>>
         {...{ 'data-1p-ignore': noAutoFill }}
         className={tx(
           'input.input',
-          'input',
           {
             variant,
             disabled: props.disabled,
@@ -220,7 +206,6 @@ const TextArea = forwardRef<HTMLTextAreaElement, InputScopedProps<TextAreaProps>
         {...props}
         className={tx(
           'input.input',
-          'input--text-area',
           {
             variant,
             disabled: props.disabled,
@@ -278,13 +263,13 @@ const Checkbox: ForwardRefExoticComponent<CheckboxProps> = forwardRef<
             'aria-invalid': 'true' as const,
             'aria-errormessage': errorMessageId,
           }),
-          className: tx('input.checkbox', 'input--checkbox', { size }, 'shrink-0', classNames),
+          className: tx('input.checkbox', { size }, 'shrink-0', classNames),
         }}
         ref={forwardedRef}
       >
         <Icon
           icon={checked === 'indeterminate' ? 'ph--minus--regular' : 'ph--check--regular'}
-          classNames={tx('input.checkboxIndicator', 'input--checkbox__indicator', { size, checked })}
+          classNames={tx('input.checkboxIndicator', { size, checked })}
         />
       </CheckboxPrimitive>
     );

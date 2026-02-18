@@ -47,7 +47,7 @@ const parseError = (t: (name: string, context?: object) => string, error: Error)
 export type FatalErrorProps = Pick<AlertDialogRootProps, 'defaultOpen' | 'open' | 'onOpenChange'> & {
   error?: Error;
   isDev?: boolean;
-  observability?: Promise<Observability>;
+  observability?: Promise<Observability.Observability>;
 };
 
 export const ResetDialog = ({
@@ -84,7 +84,7 @@ export const ResetDialog = ({
       }
 
       const observability = await observabilityPromise;
-      observability.captureUserFeedback(values.message);
+      observability.feedback.captureUserFeedback(values);
       setFeedbackOpen(false);
     },
     [observabilityPromise],

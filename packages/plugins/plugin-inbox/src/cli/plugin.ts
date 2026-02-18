@@ -4,7 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common, Plugin } from '@dxos/app-framework';
+import { Capability, Plugin } from '@dxos/app-framework';
+import { AppPlugin } from '@dxos/app-toolkit';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
 import { type CreateObject } from '@dxos/plugin-space/types';
 import { Event, Message } from '@dxos/types';
@@ -15,10 +16,7 @@ import { Calendar, Mailbox } from '../types';
 
 // TODO(wittjosiah): Factor out shared modules.
 export const InboxPlugin = Plugin.define(meta).pipe(
-  Common.Plugin.addSchemaModule({
-    schema: [Calendar.Calendar, Event.Event, Mailbox.Mailbox, Message.Message],
-  }),
-  Common.Plugin.addMetadataModule({
+  AppPlugin.addMetadataModule({
     metadata: [
       {
         id: Mailbox.Mailbox.typename,
@@ -46,6 +44,9 @@ export const InboxPlugin = Plugin.define(meta).pipe(
       },
     ],
   }),
-  Common.Plugin.addOperationResolverModule({ activate: OperationResolver }),
+  AppPlugin.addOperationResolverModule({ activate: OperationResolver }),
+  AppPlugin.addSchemaModule({
+    schema: [Calendar.Calendar, Event.Event, Mailbox.Mailbox, Message.Message],
+  }),
   Plugin.make,
 );

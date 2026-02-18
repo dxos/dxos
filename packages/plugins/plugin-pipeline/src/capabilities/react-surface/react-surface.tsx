@@ -5,10 +5,11 @@
 import * as Effect from 'effect/Effect';
 import React from 'react';
 
-import { Capability, Common } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { Surface } from '@dxos/app-framework/ui';
 import { InvocationTraceContainer } from '@dxos/devtools';
 import { Obj } from '@dxos/echo';
-import { Layout } from '@dxos/react-ui-mosaic';
+import { Layout } from '@dxos/react-ui';
 import { Pipeline } from '@dxos/types';
 
 import { PipelineContainer, PipelineObjectSettings } from '../../components';
@@ -16,14 +17,14 @@ import { meta } from '../../meta';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
-    Capability.contributes(Common.Capability.ReactSurface, [
-      Common.createSurface({
+    Capability.contributes(Capabilities.ReactSurface, [
+      Surface.create({
         id: meta.id,
         role: 'article',
         filter: (data): data is { subject: Pipeline.Pipeline } => Obj.instanceOf(Pipeline.Pipeline, data.subject),
         component: ({ data, role }) => <PipelineContainer role={role} subject={data.subject} />,
       }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/companion/invocations`,
         role: 'article',
         filter: (data): data is { companionTo: Pipeline.Pipeline } =>
@@ -38,7 +39,7 @@ export default Capability.makeModule(() =>
           );
         },
       }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/object-settings`,
         role: 'object-settings',
         filter: (data): data is { subject: Pipeline.Pipeline } => Obj.instanceOf(Pipeline.Pipeline, data.subject),

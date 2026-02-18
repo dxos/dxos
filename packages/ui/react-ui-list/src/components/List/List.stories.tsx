@@ -106,7 +106,7 @@ const SimpleStory = (props: Omit<ListRootProps<TestItemType>, 'items'>) => {
 const meta = {
   title: 'ui/react-ui-list/List',
   component: List.Root,
-  decorators: [withTheme, withRegistry],
+  decorators: [withTheme(), withRegistry],
   parameters: {
     layout: 'fullscreen',
   },

@@ -94,7 +94,7 @@ const createNode: D3Callable<SVGGElement, Datum> = (group, classNames, options) 
 const meta = {
   title: 'ui/react-ui-graph/fx',
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'fullscreen',
   },

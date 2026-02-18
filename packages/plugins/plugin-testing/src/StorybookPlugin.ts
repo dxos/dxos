@@ -4,7 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common, Plugin } from '@dxos/app-framework';
+import { ActivationEvents, Capabilities, Capability, Plugin } from '@dxos/app-framework';
+import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 
 import { OperationResolver, State } from './capabilities';
 import { Layout } from './components';
@@ -16,23 +17,23 @@ export type StorybookPluginOptions = {
 };
 
 export const StorybookPlugin = Plugin.define<StorybookPluginOptions>(meta).pipe(
-  Plugin.addModule(({ initialState }) => ({
-    id: Capability.getModuleTag(State),
-    activatesOn: Common.ActivationEvent.Startup,
-    activatesAfter: [Common.ActivationEvent.LayoutReady],
-    activate: () => State({ initialState }),
-  })),
-  Common.Plugin.addReactContextModule({
+  AppPlugin.addOperationResolverModule({
+    activate: OperationResolver,
+  }),
+  AppPlugin.addReactContextModule({
     activate: () =>
       Effect.succeed(
-        Capability.contributes(Common.Capability.ReactContext, {
+        Capability.contributes(Capabilities.ReactContext, {
           id: 'storybook-layout',
           context: Layout,
         }),
       ),
   }),
-  Common.Plugin.addOperationResolverModule({
-    activate: OperationResolver,
-  }),
+  Plugin.addModule(({ initialState }) => ({
+    id: Capability.getModuleTag(State),
+    activatesOn: ActivationEvents.Startup,
+    activatesAfter: [AppActivationEvents.LayoutReady],
+    activate: () => State({ initialState }),
+  })),
   Plugin.make,
 );

@@ -6,11 +6,12 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { AiModelResolver } from '@dxos/ai';
-import { Capability, Common } from '@dxos/app-framework';
+import { Capability } from '@dxos/app-framework';
+import { AppCapabilities } from '@dxos/app-toolkit';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const resolvers = yield* Capability.getAll(Common.Capability.AiModelResolver);
+    const resolvers = yield* Capability.getAll(AppCapabilities.AiModelResolver);
 
     // TODO(dmaretskyi): Extract function to reduce them.
     const combinedLayer = resolvers.reduce(
@@ -21,7 +22,7 @@ export default Capability.makeModule(
     return [
       // TODO(dmaretskyi): Read config from settings.
       Capability.contributes(
-        Common.Capability.AiServiceLayer,
+        AppCapabilities.AiServiceLayer,
         AiModelResolver.AiModelResolver.buildAiService.pipe(Layer.provide(combinedLayer)),
       ),
     ];

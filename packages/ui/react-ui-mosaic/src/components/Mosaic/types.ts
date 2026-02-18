@@ -2,11 +2,23 @@
 // Copyright 2025 DXOS.org
 //
 
-// These are not exported from the pragmatic-drag-and-drop-auto-scroll package.
-export type Axis = 'vertical' | 'horizontal';
-export type AllowedAxis = Axis | 'all';
+import { type ElementDragPayload } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 
 export type GetId<TData = any> = (data: TData) => string;
+
+/**
+ * NOTE: Must implement value equivalence.
+ */
+export type LocationType = string | number;
+
+/**
+ * Get the source data from the drag payload.
+ */
+export const getSourceData = <TData = any, TLocation = any>(
+  source: ElementDragPayload,
+): MosaicTileData<TData, TLocation> | null => {
+  return source.data.type === 'tile' ? (source.data as MosaicTileData<TData, TLocation>) : null;
+};
 
 /**
  * Draggable item.

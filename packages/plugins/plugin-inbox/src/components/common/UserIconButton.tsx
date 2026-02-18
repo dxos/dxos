@@ -9,11 +9,15 @@ import { DxAnchorActivate, IconButton, type ThemedClassName, useTranslation } fr
 
 import { meta } from '../../meta';
 
-export type UserIconButtonProps = ThemedClassName<{ title?: string; value?: DXN; onContactCreate?: () => void }>;
+export type UserIconButtonProps = ThemedClassName<{
+  value?: DXN;
+  title?: string;
+  onContactCreate?: () => void;
+}>;
 
 // TODO(burdon): Factor out.
 // TODO(burdon): Reconcile with Avatar if space member.
-export const UserIconButton = ({ title, value, onContactCreate }: UserIconButtonProps) => {
+export const UserIconButton = ({ value, title, onContactCreate }: UserIconButtonProps) => {
   const { t } = useTranslation(meta.id);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const handleSenderClick = useCallback(() => {
@@ -21,7 +25,7 @@ export const UserIconButton = ({ title, value, onContactCreate }: UserIconButton
       buttonRef.current?.dispatchEvent(
         new DxAnchorActivate({
           trigger: buttonRef.current,
-          refId: value.toString(),
+          dxn: value.toString(),
           label: 'never',
           kind: 'card',
           title,

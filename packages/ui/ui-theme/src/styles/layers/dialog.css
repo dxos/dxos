@@ -44,7 +44,7 @@
   }
 
   .dx-dialog__content {
-    @apply flex flex-col is-dvw max-is-full p-4 shadow-md backdrop-blur;
+    @apply flex flex-col is-dvw max-bs-full max-is-full p-4 overflow-hidden shadow-md backdrop-blur;
 
     &[data-state='open'] {
       @apply animate-slide-up-and-fade;
@@ -69,9 +69,5 @@
 
   .dx-dialog__title {
     @apply shrink-0 text-xl font-medium;
-  }
-
-  .dx-dialog__description {
-    @apply mlb-2;
   }
 }

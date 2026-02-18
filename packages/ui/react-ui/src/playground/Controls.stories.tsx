@@ -6,8 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { Icon, Input, Select, Toggle, Toolbar } from '../components';
-import { withTheme } from '../testing';
-import { withLayoutVariants } from '../testing';
+import { withLayoutVariants, withTheme } from '../testing';
 
 const DefaultStory = () => {
   const [checked, setChecked] = useState<boolean>(false);
@@ -82,9 +81,9 @@ const DefaultStory = () => {
 };
 
 const meta = {
-  title: 'ui/react-ui-core/Playground/Controls',
+  title: 'ui/react-ui-core/playground/Controls',
   render: DefaultStory,
-  decorators: [withTheme, withLayoutVariants()],
+  decorators: [withTheme(), withLayoutVariants()],
 } satisfies Meta<typeof Icon>;
 
 export default meta;

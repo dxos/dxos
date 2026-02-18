@@ -5,20 +5,30 @@
 import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 
 import { ObjectId, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { FeedProtocol } from '@dxos/protocols';
+import { SqlTransaction } from '@dxos/sql-sqlite';
 
+import { DuplicateBlockLamportTimestampError, DuplicateBlockPositionError } from './errors';
 import { FeedStore } from './feed-store';
-import { Block } from './protocol';
 
-const TestLayer = SqliteClient.layer({
-  filename: ':memory:',
-});
+const Block = FeedProtocol.Block;
+type Block = FeedProtocol.Block;
+const WellKnownNamespaces = FeedProtocol.WellKnownNamespaces;
+
+const TestLayer = SqlTransaction.layer.pipe(
+  Layer.provideMerge(
+    SqliteClient.layer({
+      filename: ':memory:',
+    }),
+  ),
+);
 
 // ActorIds.
 const ALICE = 'alice';
-const BOB = 'bob';
 
 describe('Feed V2', () => {
   it.effect('should append and query blocks via RPC', () =>
@@ -31,23 +41,34 @@ describe('Feed V2', () => {
 
       // Append
       const block: Block = {
-        feedId: undefined,
+        feedId,
         actorId: feedId,
         sequence: 123, // Author sequence provided by peer
-        predActorId: null,
-        predSequence: null,
+        prevActorId: null,
+        prevSequence: null,
         position: null, // Input doesn't have position
         timestamp: Date.now(),
         data: new Uint8Array([1, 2, 3]),
       };
 
-      const appendRes = yield* feed.append({ requestId: 'req-1', blocks: [block], spaceId, feedId, namespace: 'data' });
+      const appendRes = yield* feed.append({
+        requestId: 'req-1',
+        blocks: [block],
+        spaceId,
+        feedNamespace: WellKnownNamespaces.data,
+      });
       expect(appendRes.positions.length).toBe(1);
       expect(appendRes.positions[0]).toBeDefined();
       expect(appendRes.requestId).toBe('req-1');
 
       // Query by feedId
-      const queryRes = yield* feed.query({ requestId: 'req-2', query: { feedIds: [feedId] }, position: -1, spaceId }); // Use position -1 to get everything
+      const queryRes = yield* feed.query({
+        requestId: 'req-2',
+        query: { feedIds: [feedId] },
+        position: -1,
+        spaceId,
+        feedNamespace: WellKnownNamespaces.data,
+      }); // Use position -1 to get everything
       expect(queryRes.blocks.length).toBe(1);
       expect(queryRes.blocks[0].position).toBe(appendRes.positions[0]);
       expect(queryRes.blocks[0].sequence).toBe(123); // Verify Author Sequence is preserved
@@ -59,24 +80,24 @@ describe('Feed V2', () => {
     Effect.gen(function* () {
       const spaceId = SpaceId.random();
       const feedId = ObjectId.random();
-      const namespace = 'data';
+      const feedNamespace = WellKnownNamespaces.data;
 
       const feed = new FeedStore({ localActorId: ALICE, assignPositions: true });
       yield* feed.migrate();
 
       // Append with namespace
       const block = Block.make({
-        feedId: undefined,
+        feedId,
         actorId: ALICE,
         sequence: 1,
-        predActorId: null,
-        predSequence: null,
+        prevActorId: null,
+        prevSequence: null,
         position: null,
         timestamp: Date.now(),
         data: new Uint8Array([1]),
       });
 
-      yield* feed.append({ requestId: 'req-ns', blocks: [block], namespace, spaceId, feedId });
+      yield* feed.append({ requestId: 'req-ns', blocks: [block], spaceId, feedNamespace });
 
       // Verify directly from DB (white-box test) to ensure schema is correct
       const sql = yield* SqliteClient.SqliteClient;
@@ -84,7 +105,7 @@ describe('Feed V2', () => {
         SELECT feedNamespace FROM feeds WHERE spaceId = ${spaceId} AND feedId = ${feedId}
       `;
       expect(rows.length).toBeGreaterThan(0);
-      expect(rows[0].feedNamespace).toBe(namespace);
+      expect(rows[0].feedNamespace).toBe(feedNamespace);
     }).pipe(Effect.provide(TestLayer)),
   );
 
@@ -101,19 +122,18 @@ describe('Feed V2', () => {
         requestId: 'req-1',
         blocks: [
           Block.make({
-            feedId: undefined,
+            feedId,
             actorId: feedId,
             sequence: 1,
-            predActorId: null,
-            predSequence: null,
+            prevActorId: null,
+            prevSequence: null,
             position: null,
             timestamp: Date.now(),
             data: new Uint8Array([1]),
           }),
         ],
         spaceId,
-        feedId,
-        namespace: 'data',
+        feedNamespace: WellKnownNamespaces.data,
       });
 
       // Subscribe
@@ -125,11 +145,43 @@ describe('Feed V2', () => {
       const queryRes = yield* feed.query({
         requestId: 'req-3',
         spaceId,
+        feedNamespace: WellKnownNamespaces.data,
         query: { subscriptionId: subRes.subscriptionId },
         position: 0,
       });
       expect(queryRes.blocks.length).toBe(0);
       expect(queryRes.requestId).toBe('req-3');
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('should allow position query with unpositionedOnly false', () =>
+    Effect.gen(function* () {
+      const spaceId = SpaceId.random();
+      const feedId = ObjectId.random();
+
+      const feed = new FeedStore({ localActorId: ALICE, assignPositions: true });
+      yield* feed.migrate();
+
+      yield* feed.appendLocal([
+        {
+          spaceId,
+          feedId,
+          feedNamespace: WellKnownNamespaces.data,
+          data: new Uint8Array([1]),
+        },
+      ]);
+
+      const queryRes = yield* feed.query({
+        requestId: 'req-position-false',
+        spaceId,
+        feedNamespace: WellKnownNamespaces.data,
+        query: { feedIds: [feedId] },
+        position: -1,
+        unpositionedOnly: false,
+      });
+
+      expect(queryRes.blocks.length).toBe(1);
+      expect(queryRes.blocks[0].feedId).toBe(feedId);
     }).pipe(Effect.provide(TestLayer)),
   );
 
@@ -144,7 +196,7 @@ describe('Feed V2', () => {
         {
           spaceId,
           feedId: 'feed-1',
-          feedNamespace: 'default',
+          feedNamespace: WellKnownNamespaces.data,
           data: new Uint8Array([1]),
         },
       ]);
@@ -153,7 +205,7 @@ describe('Feed V2', () => {
         {
           spaceId,
           feedId: 'feed-2',
-          feedNamespace: 'default',
+          feedNamespace: WellKnownNamespaces.data,
           data: new Uint8Array([2]),
         },
       ]);
@@ -161,6 +213,7 @@ describe('Feed V2', () => {
       const result1 = yield* feedStore.query({
         requestId: 'req1',
         spaceId,
+        feedNamespace: WellKnownNamespaces.data,
         query: { feedIds: ['feed-1'] },
         position: -1,
       });
@@ -168,6 +221,7 @@ describe('Feed V2', () => {
       const result2 = yield* feedStore.query({
         requestId: 'req2',
         spaceId,
+        feedNamespace: WellKnownNamespaces.data,
         query: { feedIds: ['feed-2'] },
         position: -1,
       });
@@ -190,7 +244,7 @@ describe('Feed V2', () => {
         {
           spaceId,
           feedId: 'feed-1',
-          feedNamespace: 'default',
+          feedNamespace: WellKnownNamespaces.data,
           data: new Uint8Array([1]),
         },
       ]);
@@ -198,7 +252,7 @@ describe('Feed V2', () => {
         {
           spaceId,
           feedId: 'feed-2',
-          feedNamespace: 'default',
+          feedNamespace: WellKnownNamespaces.data,
           data: new Uint8Array([2]),
         },
       ]);
@@ -206,7 +260,7 @@ describe('Feed V2', () => {
         {
           spaceId,
           feedId: 'feed-1',
-          feedNamespace: 'default',
+          feedNamespace: WellKnownNamespaces.data,
           data: new Uint8Array([3]),
         },
       ]);
@@ -215,12 +269,14 @@ describe('Feed V2', () => {
       const feed1Res = yield* feedStore.query({
         requestId: 'req1',
         spaceId,
+        feedNamespace: WellKnownNamespaces.data,
         query: { feedIds: ['feed-1'] },
         cursor: undefined,
       });
       const feed2Res = yield* feedStore.query({
         requestId: 'req2',
         spaceId,
+        feedNamespace: WellKnownNamespaces.data,
         query: { feedIds: ['feed-2'] },
         cursor: undefined,
       });
@@ -243,6 +299,7 @@ describe('Feed V2', () => {
         .query({
           requestId: 'req-bad',
           spaceId,
+          feedNamespace: WellKnownNamespaces.data,
           query: { feedIds: ['feed-1'] },
           cursor: invalidCursor as any,
         })
@@ -275,6 +332,7 @@ describe('Feed V2', () => {
       const nextRes = yield* feedStore.query({
         requestId: 'req-next',
         spaceId,
+        feedNamespace: WellKnownNamespaces.data,
         query: { feedIds: ['feed-1'] },
         cursor: validCursor as any,
       });
@@ -296,24 +354,118 @@ describe('Feed V2', () => {
         {
           spaceId,
           feedId,
-          feedNamespace: 'data',
+          feedNamespace: WellKnownNamespaces.data,
           data: new Uint8Array([1]),
         },
       ]);
       expect(blocks.length).toBe(1);
-      expect(blocks[0].position).toBeNull();
+      expect(blocks[0].position).toBeDefined();
+      expect(blocks[0].position).toBeGreaterThanOrEqual(0);
       expect(blocks[0].sequence).toBe(0);
       expect(blocks[0].actorId).toBe(ALICE);
-      expect(blocks[0].predActorId).toBeNull();
-      expect(blocks[0].predSequence).toBeNull();
+      expect(blocks[0].prevActorId).toBeNull();
+      expect(blocks[0].prevSequence).toBeNull();
       expect(blocks[0].timestamp).toBeGreaterThan(0);
       expect(blocks[0].data).toEqual(new Uint8Array([1]));
 
-      // Query by feedId
-      const queryRes = yield* feed.query({ query: { feedIds: [feedId] }, position: -1, spaceId }); // Use position '-1' to get everything
+      // Query by feedId: persisted position matches returned block position.
+      const queryRes = yield* feed.query({
+        query: { feedIds: [feedId] },
+        position: -1,
+        spaceId,
+        feedNamespace: WellKnownNamespaces.data,
+      });
       expect(queryRes.blocks.length).toBe(1);
-      expect(queryRes.blocks.length).toBe(1);
-      expect(queryRes.blocks[0]).toMatchObject({ ...blocks[0], feedId, position: expect.any(Number) });
+      expect(queryRes.blocks[0].position).toBe(blocks[0].position);
+      expect(queryRes.blocks[0]).toMatchObject({ ...blocks[0], feedId });
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('appendLocal returns blocks with positions from append when assignPositions is true', () =>
+    Effect.gen(function* () {
+      const spaceId = SpaceId.random();
+      const feed = new FeedStore({ localActorId: ALICE, assignPositions: true });
+      yield* feed.migrate();
+
+      const blocks = yield* feed.appendLocal([
+        { spaceId, feedId: 'feed-a', feedNamespace: WellKnownNamespaces.data, data: new Uint8Array([1]) },
+        { spaceId, feedId: 'feed-b', feedNamespace: WellKnownNamespaces.data, data: new Uint8Array([2]) },
+        { spaceId, feedId: 'feed-a', feedNamespace: WellKnownNamespaces.data, data: new Uint8Array([3]) },
+      ]);
+
+      expect(blocks.length).toBe(3);
+      expect(blocks.every((block) => block.position != null && block.position >= 0)).toBe(true);
+      expect(blocks[0].position).toBeLessThan(blocks[1].position!);
+      expect(blocks[1].position).toBeLessThan(blocks[2].position!);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('assigns positions independently per feed and namespace pair', () =>
+    Effect.gen(function* () {
+      const feed = new FeedStore({ localActorId: ALICE, assignPositions: true });
+      yield* feed.migrate();
+
+      const spaceA = SpaceId.random();
+      const spaceB = SpaceId.random();
+
+      const nsData = WellKnownNamespaces.data;
+      const nsTrace = WellKnownNamespaces.trace;
+
+      // First append in each (spaceId, feedNamespace) pair starts at 0.
+      const feedAData = ObjectId.random();
+      const firstAData = yield* feed.appendLocal([
+        {
+          spaceId: spaceA,
+          feedId: feedAData,
+          feedNamespace: nsData,
+          data: new Uint8Array([1]),
+        },
+      ]);
+      const feedATrace = ObjectId.random();
+      const firstATrace = yield* feed.appendLocal([
+        {
+          spaceId: spaceA,
+          feedId: feedATrace,
+          feedNamespace: nsTrace,
+          data: new Uint8Array([2]),
+        },
+      ]);
+      const feedBData = ObjectId.random();
+      const firstBData = yield* feed.appendLocal([
+        {
+          spaceId: spaceB,
+          feedId: feedBData,
+          feedNamespace: nsData,
+          data: new Uint8Array([3]),
+        },
+      ]);
+      const feedBTrace = ObjectId.random();
+      const firstBHalo = yield* feed.appendLocal([
+        {
+          spaceId: spaceB,
+          feedId: feedBTrace,
+          feedNamespace: nsTrace,
+          data: new Uint8Array([4]),
+        },
+      ]);
+
+      // A second append in one pair should only advance that specific pair.
+      const feedAData2 = ObjectId.random();
+      const secondAData = yield* feed.appendLocal([
+        {
+          spaceId: spaceA,
+          feedId: feedAData2,
+          feedNamespace: nsData,
+          data: new Uint8Array([5]),
+        },
+      ]);
+
+      // appendLocal returns blocks with positions matching persisted values.
+      expect(firstAData[0].position).toBe(0);
+      expect(firstATrace[0].position).toBe(0);
+      expect(firstBData[0].position).toBe(0);
+      expect(firstBHalo[0].position).toBe(0);
+      expect(secondAData[0].position).toBe(1);
     }).pipe(Effect.provide(TestLayer)),
   );
 
@@ -329,15 +481,24 @@ describe('Feed V2', () => {
         {
           spaceId,
           feedId,
-          feedNamespace: 'data',
+          feedNamespace: WellKnownNamespaces.data,
           data: new Uint8Array([1]),
         },
       ]);
-      const query1 = yield* feed.query({ spaceId, query: { feedIds: [feedId] } }); // Use position '-1' to get everything
+      const query1 = yield* feed.query({
+        spaceId,
+        feedNamespace: WellKnownNamespaces.data,
+        query: { feedIds: [feedId] },
+      }); // Use position '-1' to get everything
       log.info('query 1', { blocks: query1.blocks.length, cursor: query1.nextCursor });
       expect(query1.blocks.length).toBe(1);
 
-      const query2 = yield* feed.query({ spaceId, query: { feedIds: [feedId] }, cursor: query1.nextCursor });
+      const query2 = yield* feed.query({
+        spaceId,
+        feedNamespace: WellKnownNamespaces.data,
+        query: { feedIds: [feedId] },
+        cursor: query1.nextCursor,
+      });
       log.info('query 2', { blocks: query2.blocks.length, cursor: query2.nextCursor });
       expect(query2.blocks.length).toBe(0);
 
@@ -345,13 +506,102 @@ describe('Feed V2', () => {
         {
           spaceId,
           feedId,
-          feedNamespace: 'data',
+          feedNamespace: WellKnownNamespaces.data,
           data: new Uint8Array([2]),
         },
       ]);
-      const query3 = yield* feed.query({ spaceId, query: { feedIds: [feedId] }, cursor: query2.nextCursor });
+      const query3 = yield* feed.query({
+        spaceId,
+        feedNamespace: WellKnownNamespaces.data,
+        query: { feedIds: [feedId] },
+        cursor: query2.nextCursor,
+      });
       log.info('query 3', { blocks: query3.blocks.length, cursor: query3.nextCursor });
       expect(query3.blocks.length).toBe(1);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('append fails on non-unique position in request', () =>
+    Effect.gen(function* () {
+      const spaceId = SpaceId.random();
+      const feedId = ObjectId.random();
+      const feed = new FeedStore({ localActorId: ALICE, assignPositions: false });
+      yield* feed.migrate();
+
+      const error = yield* feed
+        .append({
+          requestId: 'req-dup-position',
+          spaceId,
+          feedNamespace: WellKnownNamespaces.data,
+          blocks: [
+            Block.make({
+              feedId,
+              actorId: 'actor-1',
+              sequence: 1,
+              prevActorId: null,
+              prevSequence: null,
+              position: 10,
+              timestamp: Date.now(),
+              data: new Uint8Array([1]),
+            }),
+            Block.make({
+              feedId,
+              actorId: 'actor-2',
+              sequence: 1,
+              prevActorId: null,
+              prevSequence: null,
+              position: 10,
+              timestamp: Date.now(),
+              data: new Uint8Array([2]),
+            }),
+          ],
+        })
+        .pipe(Effect.flip);
+
+      expect(error).toBeInstanceOf(DuplicateBlockPositionError);
+      expect(error.message).toContain('Non-unique block position detected');
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('append fails on non-unique Lamport timestamp in request', () =>
+    Effect.gen(function* () {
+      const spaceId = SpaceId.random();
+      const feedId = ObjectId.random();
+      const feed = new FeedStore({ localActorId: ALICE, assignPositions: false });
+      yield* feed.migrate();
+
+      const error = yield* feed
+        .append({
+          requestId: 'req-dup-lamport',
+          spaceId,
+          feedNamespace: WellKnownNamespaces.data,
+          blocks: [
+            Block.make({
+              feedId,
+              actorId: 'actor-1',
+              sequence: 5,
+              prevActorId: null,
+              prevSequence: null,
+              position: 1,
+              timestamp: Date.now(),
+              data: new Uint8Array([1]),
+            }),
+            Block.make({
+              feedId,
+              actorId: 'actor-1',
+              sequence: 5,
+              prevActorId: null,
+              prevSequence: null,
+              position: 2,
+              timestamp: Date.now(),
+              data: new Uint8Array([2]),
+            }),
+          ],
+        })
+        .pipe(Effect.flip);
+
+      expect(error).toBeInstanceOf(DuplicateBlockLamportTimestampError);
+      expect(error.message).toContain('Non-unique block Lamport timestamp detected');
     }).pipe(Effect.provide(TestLayer)),
   );
 });

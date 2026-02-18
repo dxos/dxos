@@ -215,9 +215,9 @@ const TooltipProvider: FC<TooltipProviderProps> = (props: TooltipScopedProps<Too
           isPointerInTransitRef.current = inTransit;
         }, [])}
       >
-        <TooltipContent side={side} className={tx('tooltip.content', 'tooltip', { elevation })}>
+        <TooltipContent side={side} className={tx('tooltip.content', { elevation })}>
           {content}
-          <TooltipArrow className={tx('tooltip.arrow', 'tooltip__arrow')} />
+          <TooltipArrow className={tx('tooltip.arrow')} />
         </TooltipContent>
         <TooltipVirtualTrigger virtualRef={triggerRef as RefObject<HTMLButtonElement>} />
         {children}

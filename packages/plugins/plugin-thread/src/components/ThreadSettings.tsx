@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { useTranslation } from '@dxos/react-ui';
-import { ControlPage } from '@dxos/react-ui-form';
+import { Settings } from '@dxos/react-ui-form';
 
 import { meta } from '../meta';
 import type { ThreadSettingsProps } from '../types';
@@ -15,7 +15,8 @@ export type ThreadSettingsComponentProps = {
   onSettingsChange: (fn: (current: ThreadSettingsProps) => ThreadSettingsProps) => void;
 };
 
+// TODO(burdon): Settings.
 export const ThreadSettings = ({ settings: _settings }: ThreadSettingsComponentProps) => {
   const { t: _t } = useTranslation(meta.id);
-  return <ControlPage></ControlPage>;
+  return <Settings.Root></Settings.Root>;
 };

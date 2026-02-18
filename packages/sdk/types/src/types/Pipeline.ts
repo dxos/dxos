@@ -28,7 +28,7 @@ export const Pipeline = Schema.Struct({
   }),
   Schema.annotations({ title: 'Pipeline' }),
   LabelAnnotation.set(['name']),
-  IconAnnotation.set('ph--check-square-offset--regular'),
+  IconAnnotation.set('ph--path--regular'),
 );
 
 export type Pipeline = Schema.Schema.Type<typeof Pipeline>;

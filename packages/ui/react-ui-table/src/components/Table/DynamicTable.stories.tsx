@@ -59,7 +59,7 @@ const DynamicTableStory = () => {
 const meta = {
   title: 'ui/react-ui-table/DynamicTable',
   component: DynamicTable,
-  decorators: [withTheme, withRegistry],
+  decorators: [withTheme(), withRegistry],
   parameters: {
     layout: 'fullscreen',
     translations,

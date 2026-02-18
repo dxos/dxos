@@ -6,7 +6,7 @@ import { Atom } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 import localforage from 'localforage';
 
-import { Capability, Common } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
 import { SubscriptionList } from '@dxos/async';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 
@@ -23,8 +23,8 @@ export default Capability.makeModule(
       current: undefined,
     }).pipe(Atom.keepAlive);
 
-    const registry = yield* Capability.get(Common.Capability.AtomRegistry);
-    const { invokePromise } = yield* Capability.get(Common.Capability.OperationInvoker);
+    const registry = yield* Capability.get(Capabilities.AtomRegistry);
+    const { invokePromise } = yield* Capability.get(Capabilities.OperationInvoker);
     const attention = yield* Capability.get(AttentionCapabilities.Attention);
     const settingsAtom = yield* Capability.get(FileCapabilities.Settings);
     const getSettings = () => registry.get(settingsAtom);

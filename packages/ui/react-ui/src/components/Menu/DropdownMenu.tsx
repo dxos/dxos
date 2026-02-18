@@ -216,7 +216,7 @@ const DropdownMenuViewport = forwardRef<HTMLDivElement, DropdownMenuViewportProp
     const { tx } = useThemeContext();
     const Root = asChild ? Slot : Primitive.div;
     return (
-      <Root {...props} className={tx('menu.viewport', 'menu__viewport', {}, classNames)} ref={forwardedRef}>
+      <Root {...props} className={tx('menu.viewport', {}, classNames)} ref={forwardedRef}>
         {children}
       </Root>
     );
@@ -283,7 +283,7 @@ const DropdownMenuContent = forwardRef<DropdownMenuContentElement, DropdownMenuC
           }
         })}
         data-arrow-keys='up down'
-        className={tx('menu.content', 'menu', { elevation }, classNames)}
+        className={tx('menu.content', { elevation }, classNames)}
         style={{
           ...props.style,
           // re-namespace exposed content custom properties
@@ -341,7 +341,7 @@ const DropdownMenuGroupLabel = forwardRef<DropdownMenuLabelElement, DropdownMenu
       <MenuPrimitive.Label
         {...menuScope}
         {...labelProps}
-        className={tx('menu.groupLabel', 'menu__group__label', {}, classNames)}
+        className={tx('menu.groupLabel', {}, classNames)}
         ref={forwardedRef}
       />
     );
@@ -369,7 +369,7 @@ const DropdownMenuItem = forwardRef<DropdownMenuItemElement, DropdownMenuItemPro
       <MenuPrimitive.Item
         {...menuScope}
         {...itemProps}
-        className={tx('menu.item', 'menu__item', {}, classNames)}
+        className={tx('menu.item', {}, classNames)}
         ref={forwardedRef}
       />
     );
@@ -397,7 +397,7 @@ const DropdownMenuCheckboxItem = forwardRef<DropdownMenuCheckboxItemElement, Dro
       <MenuPrimitive.CheckboxItem
         {...menuScope}
         {...checkboxItemProps}
-        className={tx('menu.item', 'menu__item--checkbox', {}, classNames)}
+        className={tx('menu.item', {}, classNames)}
         ref={forwardedRef}
       />
     );
@@ -445,7 +445,7 @@ const DropdownMenuRadioItem = forwardRef<DropdownMenuRadioItemElement, DropdownM
       <MenuPrimitive.Item
         {...menuScope}
         {...itemProps}
-        className={tx('menu.item', 'menu__item', {}, classNames)}
+        className={tx('menu.item', {}, classNames)}
         ref={forwardedRef}
       />
     );
@@ -493,7 +493,7 @@ const DropdownMenuSeparator = forwardRef<DropdownMenuSeparatorElement, DropdownM
       <MenuPrimitive.Separator
         {...menuScope}
         {...separatorProps}
-        className={tx('menu.separator', 'menu__item', {}, classNames)}
+        className={tx('menu.separator', {}, classNames)}
         ref={forwardedRef}
       />
     );
@@ -521,7 +521,7 @@ const DropdownMenuArrow = forwardRef<DropdownMenuArrowElement, DropdownMenuArrow
       <MenuPrimitive.Arrow
         {...menuScope}
         {...arrowProps}
-        className={tx('menu.arrow', 'menu__arrow', {}, classNames)}
+        className={tx('menu.arrow', {}, classNames)}
         ref={forwardedRef}
       />
     );

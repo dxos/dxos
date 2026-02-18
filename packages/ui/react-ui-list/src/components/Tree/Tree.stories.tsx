@@ -116,7 +116,7 @@ const DefaultStory = ({ draggable }: { draggable?: boolean }) => {
 const meta = {
   title: 'ui/react-ui-list/Tree',
 
-  decorators: [withTheme, withRegistry],
+  decorators: [withTheme(), withRegistry],
   component: Tree,
   render: DefaultStory,
 } satisfies Meta<typeof Tree<TestItem>>;

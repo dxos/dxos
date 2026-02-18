@@ -4,15 +4,16 @@
 
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
-import { Surface, type SurfaceComponentProps } from '@dxos/app-framework/react';
+import { Surface } from '@dxos/app-framework/ui';
+import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useObject, useObjects } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
 import { useQuery } from '@dxos/react-client/echo';
+import { Layout } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { Board, type BoardController, type BoardRootProps, type Position } from '@dxos/react-ui-board';
 import { ObjectPicker, type ObjectPickerContentProps } from '@dxos/react-ui-form';
-import { Layout } from '@dxos/react-ui-mosaic';
 import { isNonNullable } from '@dxos/util';
 
 import { type Board as BoardType } from '../types';
@@ -135,7 +136,7 @@ export const BoardContainer = ({ role, subject: board }: BoardContainerProps) =>
               <Board.Content>
                 {items?.map((item, index) => (
                   <Board.Cell item={item} key={index} layout={board.layout?.cells[item.id] ?? { x: 0, y: 0 }}>
-                    <Surface role='card--content' data={{ subject: item }} limit={1} />
+                    <Surface.Surface role='card--content' data={{ subject: item }} limit={1} />
                   </Board.Cell>
                 ))}
               </Board.Content>

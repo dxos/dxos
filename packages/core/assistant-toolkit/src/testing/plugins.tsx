@@ -5,7 +5,8 @@
 import * as Schema from 'effect/Schema';
 import React from 'react';
 
-import { Capability, Common } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { Surface } from '@dxos/app-framework/ui';
 import { Format, type Obj, Type } from '@dxos/echo';
 import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
 
@@ -38,8 +39,8 @@ const isImage = (data: any): data is any => false;
 
 export const capabilities: Capability.Any[] = [
   Capability.contributes(
-    Common.Capability.ReactSurface,
-    Common.createSurface({
+    Capabilities.ReactSurface,
+    Surface.create({
       id: 'plugin-image',
       role: 'card--extrinsic',
       filter: (data: any): data is any => isImage(data.value),
@@ -57,8 +58,8 @@ export const capabilities: Capability.Any[] = [
   // Default
   //
   Capability.contributes(
-    Common.Capability.ReactSurface,
-    Common.createSurface({
+    Capabilities.ReactSurface,
+    Surface.create({
       id: 'plugin-default',
       role: 'card--extrinsic',
       position: 'fallback',

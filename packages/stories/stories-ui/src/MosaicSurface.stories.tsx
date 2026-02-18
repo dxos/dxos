@@ -2,20 +2,22 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Atom, RegistryContext } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
-import React, { useState } from 'react';
+import React, { useContext, useMemo } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Obj, Ref } from '@dxos/echo';
+import { type Database, Obj, Ref } from '@dxos/echo';
 import { ClientPlugin, StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { faker } from '@dxos/random';
 import { useSpaces } from '@dxos/react-client/echo';
 import { IconButton, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { Focus, Mosaic } from '@dxos/react-ui-mosaic';
-import { Board, TestColumn, TestItem } from '@dxos/react-ui-mosaic/testing';
+import { Board, type BoardModel, Focus, Mosaic } from '@dxos/react-ui-mosaic';
+import { TestColumn, TestItem } from '@dxos/react-ui-mosaic/testing';
 import { type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
+import { withRegistry } from '@dxos/storybook-utils';
 import { Organization, Person, Pipeline } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
@@ -28,34 +30,50 @@ type StoryProps = {
   debug?: boolean;
 };
 
+const createColumns = (count: number, db: Database.Database) =>
+  Array.from({ length: count }).map((_, i) => {
+    const col = Obj.make(TestColumn, {
+      name: `Column ${i}`,
+      items: Array.from({ length: faker.number.int({ min: 8, max: 20 }) }).map((_, j) => {
+        const item = db.add(
+          Obj.make(TestItem, {
+            name: faker.lorem.sentence(3),
+            description: faker.lorem.paragraph(1),
+            label: `${String.fromCharCode(65 + i)}-${j}`,
+          }),
+        );
+        return Ref.make(item);
+      }),
+    });
+    return col;
+  });
+
 const DefaultStory = ({ columns: columnsProp = 1, debug = false }: StoryProps) => {
   const [space] = useSpaces();
   const db = space.db;
+  const registry = useContext(RegistryContext);
 
-  const [columns, setColumns] = useState<TestColumn[]>(
-    Array.from({ length: columnsProp }).map((_, i) => {
-      const col = Obj.make(TestColumn, {
-        items: Array.from({ length: faker.number.int({ min: 8, max: 20 }) }).map((_, j) => {
-          const item = db.add(
-            Obj.make(TestItem, {
-              name: faker.lorem.sentence(3),
-              description: faker.lorem.paragraph(1),
-              label: `${String.fromCharCode(65 + i)}-${j}`,
-            }),
-          );
+  const { model, columnsAtom } = useMemo(() => {
+    const columnsAtom = Atom.make(createColumns(columnsProp, db));
+    const itemsAtomFamily = Atom.family((column: TestColumn) =>
+      Atom.make(() => (column.items ?? []).map((ref) => ref.target).filter((item): item is TestItem => item != null)),
+    );
 
-          return Ref.make(item);
-        }),
-      });
-
-      return col;
-    }),
-  );
+    const model: BoardModel<TestColumn, TestItem> = {
+      isColumn: (obj: Obj.Unknown): obj is TestColumn => Obj.instanceOf(TestColumn, obj),
+      isItem: (obj: Obj.Unknown): obj is TestItem => Obj.instanceOf(TestItem, obj),
+      columns: columnsAtom,
+      items: (column) => itemsAtomFamily(column),
+      getColumns: () => registry.get(columnsAtom),
+      getItems: (column: TestColumn) => registry.get(itemsAtomFamily(column)),
+    };
+    return { model, columnsAtom };
+  }, [columnsProp, db, registry]);
 
   return (
     <Mosaic.Root asChild debug={debug}>
       <div className={mx('grid overflow-hidden', debug && 'grid-cols-[1fr_20rem] gap-2')}>
-        <Board.Root id='board' columns={columns} debug={debug} />
+        <Board.Root id='board' model={model} debug={debug} />
 
         {debug && (
           <Focus.Group classNames='flex flex-col gap-2 overflow-hidden'>
@@ -64,7 +82,7 @@ const DefaultStory = ({ columns: columnsProp = 1, debug = false }: StoryProps) =
                 icon='ph--arrows-clockwise--regular'
                 iconOnly
                 label='refresh'
-                onClick={() => setColumns([...columns])}
+                onClick={() => registry.set(columnsAtom, [...registry.get(columnsAtom)])}
               />
             </Toolbar.Root>
             <Board.Debug classNames='p-2' />
@@ -79,7 +97,8 @@ const meta = {
   title: 'stories/stories-ui/MosaicSurface',
   render: DefaultStory,
   decorators: [
-    withTheme,
+    withRegistry,
+    withTheme(),
     withLayout({ layout: 'fullscreen' }),
     withPluginManager<{ title?: string; content?: string }>(() => ({
       plugins: [
@@ -122,6 +141,3 @@ export const Default: Story = {
     columns: 3,
   },
 };
-function PreviewPlugin() {
-  throw new Error('Function not implemented.');
-}

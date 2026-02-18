@@ -49,7 +49,6 @@
     "@dxos/plugin-kanban": "workspace:*",
     "@dxos/plugin-map": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
-    "@dxos/plugin-observability": "workspace:*",
     "@dxos/plugin-registry": "workspace:*",
     "@dxos/plugin-script": "workspace:*",
     "@dxos/plugin-space": "workspace:*",

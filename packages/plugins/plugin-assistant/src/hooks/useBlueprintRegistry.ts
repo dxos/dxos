@@ -4,8 +4,8 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Common } from '@dxos/app-framework';
-import { useCapabilities } from '@dxos/app-framework/react';
+import { useCapabilities } from '@dxos/app-framework/ui';
+import { AppCapabilities } from '@dxos/app-toolkit';
 import { type AiContextBinder } from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
 import { type Database, Filter, Obj, Ref } from '@dxos/echo';
@@ -17,7 +17,7 @@ import { distinctBy } from '@dxos/util';
  */
 // TODO(burdon): Reconcile with eventual public registry.
 export const useBlueprintRegistry = () => {
-  const blueprints = useCapabilities(Common.Capability.BlueprintDefinition);
+  const blueprints = useCapabilities(AppCapabilities.BlueprintDefinition);
   return useMemo(() => new Blueprint.Registry(blueprints), [blueprints]);
 };
 

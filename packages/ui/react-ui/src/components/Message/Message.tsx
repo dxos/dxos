@@ -65,7 +65,7 @@ const MessageRoot = forwardRef<HTMLDivElement, MessageRootProps>(
         <Root
           role={valence === 'neutral' ? 'paragraph' : 'alert'}
           {...props}
-          className={tx('message.root', 'message', { valence, elevation }, classNames)}
+          className={tx('message.root', { valence, elevation }, classNames)}
           aria-labelledby={titleId}
           aria-describedby={descriptionId}
           ref={forwardedRef}
@@ -95,22 +95,14 @@ const MessageTitle = forwardRef<HTMLHeadingElement, MessageTitleProps>(
     const { tx } = useThemeContext();
     const { titleId, valence } = useMessageContext(MESSAGE_TITLE_NAME);
     const Root = asChild ? Slot : Primitive.h2;
-
     return (
-      <Root
-        {...props}
-        className={tx('message.title', 'message__title', {}, classNames)}
-        id={titleId}
-        ref={forwardedRef}
-      >
-        {!icon && valence === 'neutral' ? null : (
-          <Icon
-            size={5}
-            icon={icon ?? messageIcons[valence]}
-            classNames={tx('message.icon', 'message__icon', { valence })}
-          />
+      <Root {...props} className={tx('message.header', {}, classNames)} id={titleId} ref={forwardedRef}>
+        {!icon && valence === 'neutral' ? (
+          <div />
+        ) : (
+          <Icon size={5} icon={icon ?? messageIcons[valence]} classNames={tx('message.icon', { valence })} />
         )}
-        <span>{children}</span>
+        <span className={tx('message.title', {}, classNames)}>{children}</span>
       </Root>
     );
   },
@@ -134,12 +126,7 @@ const MessageContent = forwardRef<HTMLParagraphElement, MessageContentProps>(
     const { descriptionId } = useMessageContext(MESSAGE_CONTENT_NAME);
     const Root = asChild ? Slot : Primitive.p;
     return (
-      <Root
-        {...props}
-        className={tx('message.content', 'message__content', {}, classNames)}
-        id={descriptionId}
-        ref={forwardedRef}
-      >
+      <Root {...props} className={tx('message.content', {}, classNames)} id={descriptionId} ref={forwardedRef}>
         {children}
       </Root>
     );

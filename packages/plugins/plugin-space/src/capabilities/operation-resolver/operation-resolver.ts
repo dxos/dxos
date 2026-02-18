@@ -4,7 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common, Plugin, UndoMapping } from '@dxos/app-framework';
+import { Capabilities, Capability, Plugin, UndoMapping } from '@dxos/app-framework';
+import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
 import { SpaceState, getSpace } from '@dxos/client/echo';
 import { Database, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
 import { EchoDatabaseImpl, Serializer } from '@dxos/echo-db';
@@ -44,11 +45,11 @@ export default Capability.makeModule(
     const capabilityManager = yield* Capability.Service;
 
     const resolve = (typename: string) =>
-      capabilityManager.getAll(Common.Capability.Metadata).find(({ id }: { id: string }) => id === typename)
-        ?.metadata ?? {};
+      capabilityManager.getAll(AppCapabilities.Metadata).find(({ id }: { id: string }) => id === typename)?.metadata ??
+      {};
 
     return [
-      Capability.contributes(Common.Capability.UndoMapping, [
+      Capability.contributes(Capabilities.UndoMapping, [
         UndoMapping.make({
           operation: SpaceOperation.DeleteField,
           inverse: SpaceOperation.RestoreField,
@@ -78,7 +79,7 @@ export default Capability.makeModule(
           },
         }),
       ]),
-      Capability.contributes(Common.Capability.OperationResolver, [
+      Capability.contributes(Capabilities.OperationResolver, [
         //
         // Open
         //
@@ -107,7 +108,7 @@ export default Capability.makeModule(
         OperationResolver.make({
           operation: SpaceOperation.Join,
           handler: Effect.fnUntraced(function* (input) {
-            yield* Operation.invoke(Common.LayoutOperation.UpdateDialog, {
+            yield* Operation.invoke(LayoutOperation.UpdateDialog, {
               subject: JOIN_DIALOG,
               blockAlign: 'start',
               props: {
@@ -124,7 +125,7 @@ export default Capability.makeModule(
         OperationResolver.make({
           operation: SpaceOperation.WaitForObject,
           handler: Effect.fnUntraced(function* (input) {
-            yield* Common.Capability.updateAtomValue(SpaceCapabilities.EphemeralState, (current) => ({
+            yield* Capabilities.updateAtomValue(SpaceCapabilities.EphemeralState, (current) => ({
               ...current,
               awaiting: input.id,
             }));
@@ -137,7 +138,7 @@ export default Capability.makeModule(
         OperationResolver.make({
           operation: SpaceOperation.OpenSettings,
           handler: Effect.fnUntraced(function* (input) {
-            yield* Operation.invoke(Common.LayoutOperation.Open, {
+            yield* Operation.invoke(LayoutOperation.Open, {
               subject: [`properties-settings${ATTENDABLE_PATH_SEPARATOR}${input.space.id}`],
               workspace: input.space.id,
             });
@@ -150,7 +151,7 @@ export default Capability.makeModule(
         OperationResolver.make({
           operation: SpaceOperation.RemoveObjects,
           handler: Effect.fnUntraced(function* (input) {
-            const layout = yield* Common.Capability.getAtomValue(Common.Capability.Layout);
+            const layout = yield* Capabilities.getAtomValue(AppCapabilities.Layout);
             const objects = input.objects as Obj.Unknown[];
 
             // All objects must be a member of the same space.
@@ -206,7 +207,7 @@ export default Capability.makeModule(
             }
 
             if (wasActive.length > 0) {
-              yield* Operation.invoke(Common.LayoutOperation.Close, { subject: wasActive });
+              yield* Operation.invoke(LayoutOperation.Close, { subject: wasActive });
             }
 
             // Return data needed for undo.
@@ -226,7 +227,7 @@ export default Capability.makeModule(
         OperationResolver.make({
           operation: SpaceOperation.DeleteField,
           handler: Effect.fnUntraced(function* (input) {
-            const registry = yield* Capability.get(Common.Capability.AtomRegistry);
+            const registry = yield* Capability.get(Capabilities.AtomRegistry);
             const view = input.view as any;
             const db = Obj.getDatabase(view);
             invariant(db);
@@ -260,9 +261,9 @@ export default Capability.makeModule(
         OperationResolver.make({
           operation: SpaceOperation.OpenCreateObject,
           handler: Effect.fnUntraced(function* (input) {
-            const ephemeralState = yield* Common.Capability.getAtomValue(SpaceCapabilities.EphemeralState);
+            const ephemeralState = yield* Capabilities.getAtomValue(SpaceCapabilities.EphemeralState);
             const navigable = input.navigable ?? true;
-            yield* Operation.invoke(Common.LayoutOperation.UpdateDialog, {
+            yield* Operation.invoke(LayoutOperation.UpdateDialog, {
               subject: CREATE_OBJECT_DIALOG,
               blockAlign: 'start',
               props: {
@@ -382,7 +383,7 @@ export default Capability.makeModule(
         OperationResolver.make({
           operation: SpaceOperation.OpenCreateSpace,
           handler: Effect.fnUntraced(function* () {
-            yield* Operation.invoke(Common.LayoutOperation.UpdateDialog, {
+            yield* Operation.invoke(LayoutOperation.UpdateDialog, {
               subject: CREATE_SPACE_DIALOG,
               blockAlign: 'start',
             });
@@ -448,12 +449,12 @@ export default Capability.makeModule(
             const { space, version: targetVersion } = input;
 
             if (space.state.get() === SpaceState.SPACE_REQUIRES_MIGRATION) {
-              yield* Common.Capability.updateAtomValue(SpaceCapabilities.EphemeralState, (current) => ({
+              yield* Capabilities.updateAtomValue(SpaceCapabilities.EphemeralState, (current) => ({
                 ...current,
                 sdkMigrationRunning: { ...current.sdkMigrationRunning, [space.id]: true },
               }));
               yield* Effect.promise(() => space.internal.migrate());
-              yield* Common.Capability.updateAtomValue(SpaceCapabilities.EphemeralState, (current) => ({
+              yield* Capabilities.updateAtomValue(SpaceCapabilities.EphemeralState, (current) => ({
                 ...current,
                 sdkMigrationRunning: { ...current.sdkMigrationRunning, [space.id]: false },
               }));
@@ -495,7 +496,7 @@ export default Capability.makeModule(
         OperationResolver.make({
           operation: SpaceOperation.Rename,
           handler: Effect.fnUntraced(function* (input) {
-            yield* Operation.invoke(Common.LayoutOperation.UpdatePopover, {
+            yield* Operation.invoke(LayoutOperation.UpdatePopover, {
               subject: SPACE_RENAME_POPOVER,
               anchorId: `dxos.org/ui/${input.caller}/${input.space.id}`,
               props: input.space,
@@ -510,7 +511,7 @@ export default Capability.makeModule(
           operation: SpaceOperation.RenameObject,
           handler: Effect.fnUntraced(function* (input) {
             const object = input.object as Obj.Unknown;
-            yield* Operation.invoke(Common.LayoutOperation.UpdatePopover, {
+            yield* Operation.invoke(LayoutOperation.UpdatePopover, {
               subject: OBJECT_RENAME_POPOVER,
               anchorId: `dxos.org/ui/${input.caller}/${Obj.getDXN(object).toString()}`,
               props: object,
@@ -524,7 +525,7 @@ export default Capability.makeModule(
         OperationResolver.make({
           operation: SpaceOperation.OpenMembers,
           handler: Effect.fnUntraced(function* (input) {
-            yield* Operation.invoke(Common.LayoutOperation.Open, {
+            yield* Operation.invoke(LayoutOperation.Open, {
               subject: [`members-settings${ATTENDABLE_PATH_SEPARATOR}${input.space.id}`],
               workspace: input.space.id,
             });
@@ -616,10 +617,10 @@ export default Capability.makeModule(
         OperationResolver.make({
           operation: SpaceOperation.AddSchema,
           handler: Effect.fnUntraced(function* (input) {
-            const db = input.db as any;
-            const schemas = (yield* Effect.promise(() => db.schemaRegistry.register([input.schema]))) as any[];
+            const db = input.db;
+            const schemas = yield* Effect.promise(() => db.schemaRegistry.register([input.schema]));
             const schema = schemas[0];
-            Obj.change(schema.storedSchema, (s) => {
+            Obj.change(schema.persistentSchema, (s) => {
               if (input.name) {
                 s.name = input.name;
               }
@@ -647,7 +648,7 @@ export default Capability.makeModule(
               },
             });
 
-            return { id: schema.id, object: schema.storedSchema, schema };
+            return { id: schema.id, object: schema.persistentSchema, schema };
           }),
         }),
 
@@ -691,7 +692,7 @@ export default Capability.makeModule(
         OperationResolver.make({
           operation: SpaceOperation.RestoreField,
           handler: Effect.fnUntraced(function* (input) {
-            const registry = yield* Capability.get(Common.Capability.AtomRegistry);
+            const registry = yield* Capability.get(Capabilities.AtomRegistry);
             const view = input.view as any;
             const db = Obj.getDatabase(view);
             invariant(db);
@@ -751,7 +752,7 @@ export default Capability.makeModule(
 
             // Re-open objects that were active.
             if (wasActive.length > 0) {
-              yield* Operation.invoke(Common.LayoutOperation.Open, { subject: wasActive });
+              yield* Operation.invoke(LayoutOperation.Open, { subject: wasActive });
             }
           }),
         }),

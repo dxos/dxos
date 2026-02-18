@@ -4,14 +4,15 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Common } from '@dxos/app-framework';
-import { useAppGraph, useCapabilities, useOperationInvoker } from '@dxos/app-framework/react';
+import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
+import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
+import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query } from '@dxos/echo';
 import { Graph, Node, useActionRunner, useConnections } from '@dxos/plugin-graph';
 import { type Space, useQuery } from '@dxos/react-client/echo';
-import { Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { Card, Mosaic, type StackTileComponent } from '@dxos/react-ui-mosaic';
-import { Layout } from '@dxos/react-ui-mosaic';
+import { ScrollArea, Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Layout } from '@dxos/react-ui';
+import { Card, Mosaic, type MosaicStackTileComponent } from '@dxos/react-ui-mosaic';
 import { SearchList } from '@dxos/react-ui-searchlist';
 import { Text } from '@dxos/schema';
 import { getStyles } from '@dxos/ui-theme';
@@ -33,9 +34,11 @@ export const SpaceMain = ({ space }: { space: Space }) => {
         </Toolbar.Root>
         <SearchList.Content>
           <Mosaic.Container asChild>
-            <Mosaic.Viewport padding>
-              <Mosaic.Stack items={items} getId={(node) => node.id} Tile={NodeTile} />
-            </Mosaic.Viewport>
+            <ScrollArea.Root orientation='vertical'>
+              <ScrollArea.Viewport classNames='p-2'>
+                <Mosaic.Stack items={items} getId={(node) => node.id} Tile={NodeTile} />
+              </ScrollArea.Viewport>
+            </ScrollArea.Root>
           </Mosaic.Container>
         </SearchList.Content>
       </SearchList.Root>
@@ -43,7 +46,8 @@ export const SpaceMain = ({ space }: { space: Space }) => {
   );
 };
 
-const NodeTile: StackTileComponent<Node.Node> = ({ data: node }) => {
+const NodeTile: MosaicStackTileComponent<Node.Node> = (props) => {
+  const node = props.data;
   const { t } = useTranslation(meta.id);
   const { graph } = useAppGraph();
   const { invokeSync } = useOperationInvoker();
@@ -63,7 +67,7 @@ const NodeTile: StackTileComponent<Node.Node> = ({ data: node }) => {
       }
     } else {
       // Navigate to the node.
-      invokeSync(Common.LayoutOperation.Open, { subject: [node.id] });
+      invokeSync(LayoutOperation.Open, { subject: [node.id] });
     }
   };
 
@@ -83,7 +87,7 @@ const NodeTile: StackTileComponent<Node.Node> = ({ data: node }) => {
  */
 // TODO(wittjosiah): Factor out.
 const useMetadataResolver = () => {
-  const allMetadata = useCapabilities(Common.Capability.Metadata);
+  const allMetadata = useCapabilities(AppCapabilities.Metadata);
   return useCallback((typename: string) => allMetadata.find((m) => m.id === typename)?.metadata ?? {}, [allMetadata]);
 };
 

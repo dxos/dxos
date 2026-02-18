@@ -5,6 +5,7 @@
 import comment from './rules/comment.js';
 import effectSubpathImports from './rules/effect-subpath-imports.js';
 import header from './rules/header.js';
+import noBareDotImports from './rules/no-bare-dot-imports.js';
 import noEffectRunPromise from './rules/no-effect-run-promise.js';
 import noEmptyPromiseCatch from './rules/no-empty-promise-catch.js';
 import fs from 'node:fs';
@@ -21,6 +22,7 @@ const plugin = {
     comment,
     'effect-subpath-imports': effectSubpathImports,
     header,
+    'no-bare-dot-imports': noBareDotImports,
     'no-effect-run-promise': noEffectRunPromise,
     'no-empty-promise-catch': noEmptyPromiseCatch,
   },
@@ -32,6 +34,7 @@ const plugin = {
       rules: {
         'dxos-plugin/effect-subpath-imports': 'error',
         'dxos-plugin/header': 'error',
+        'dxos-plugin/no-bare-dot-imports': 'error',
         'dxos-plugin/no-effect-run-promise': 'error',
         'dxos-plugin/no-empty-promise-catch': 'error',
         // TODO(dmaretskyi): Turned off due to large number of errors and no auto-fix.

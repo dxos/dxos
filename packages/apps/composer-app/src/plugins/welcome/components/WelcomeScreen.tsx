@@ -4,8 +4,8 @@
 
 import React, { useCallback, useRef, useState } from 'react';
 
-import { Common } from '@dxos/app-framework';
-import { useOperationInvoker } from '@dxos/app-framework/react';
+import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { LayoutOperation } from '@dxos/app-toolkit';
 import { log } from '@dxos/log';
 import { ClientOperation } from '@dxos/plugin-client/types';
 import { SpaceOperation } from '@dxos/plugin-space/types';
@@ -52,7 +52,7 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
             data: { emoji: '🧪', hue: 'amber' },
           });
         }
-        await invokePromise(Common.LayoutOperation.UpdateDialog, { state: false });
+        await invokePromise(LayoutOperation.UpdateDialog, { state: false });
         return;
       }
 
@@ -100,8 +100,8 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
     }
 
     const handleDone = async (result: InvitationResult | null) => {
-      await invokePromise(Common.LayoutOperation.UpdateDialog, { state: false });
-      await invokePromise(Common.LayoutOperation.SetLayoutMode, {
+      await invokePromise(LayoutOperation.UpdateDialog, { state: false });
+      await invokePromise(LayoutOperation.SetLayoutMode, {
         subject: result?.target ?? undefined,
         mode: 'solo',
       });
