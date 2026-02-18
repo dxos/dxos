@@ -97,10 +97,10 @@ const TreegridRoot = forwardRef<HTMLDivElement, TreegridRootProps>(
     return (
       <Root
         role='treegrid'
-        onKeyDown={handleKeyDown}
         {...props}
-        className={tx('treegrid.root', 'treegrid', {}, classNames)}
+        className={tx('treegrid.root', {}, classNames)}
         style={{ ...style, gridTemplateColumns }}
+        onKeyDown={handleKeyDown}
         ref={forwardedRef}
       >
         {children}
@@ -149,7 +149,7 @@ const TreegridRow = forwardRef<HTMLDivElement, TreegridRowScopedProps<TreegridRo
         <Root
           role='row'
           aria-level={level}
-          className={tx('treegrid.row', 'treegrid__row', { level }, classNames)}
+          className={tx('treegrid.row', { level }, classNames)}
           {...(parentOf && { 'aria-expanded': open, 'aria-owns': parentOf })}
           {...props}
           id={id}
@@ -168,12 +168,7 @@ const TreegridCell = forwardRef<HTMLDivElement, TreegridCellProps>(
   ({ classNames, children, indent, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     return (
-      <div
-        role='gridcell'
-        className={tx('treegrid.cell', 'treegrid__cell', { indent }, classNames)}
-        {...props}
-        ref={forwardedRef}
-      >
+      <div role='gridcell' className={tx('treegrid.cell', { indent }, classNames)} {...props} ref={forwardedRef}>
         {children}
       </div>
     );

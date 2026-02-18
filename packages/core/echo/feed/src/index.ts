@@ -3,4 +3,6 @@
 //
 
 export * from './feed-store';
-export * from './protocol';
+export * from './errors';
+export * from './sync-server';
+export * from './sync-client';

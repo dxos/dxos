@@ -38,7 +38,7 @@ const meta = {
   component: BaseObjectSettings as any,
   render: render(DefaultStory),
   decorators: [
-    withTheme,
+    withTheme(),
     withClientProvider({
       createIdentity: true,
       createSpace: true,

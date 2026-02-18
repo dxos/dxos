@@ -41,16 +41,16 @@ import {
   type QueueFactory,
   type SpaceSyncState,
 } from '@dxos/echo-db';
-import { type SpaceSyncState_PeerState } from '@dxos/protocols/buf/dxos/echo/service_pb';
 import { invariant } from '@dxos/invariant';
 import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { EdgeService, decodeError } from '@dxos/protocols';
 import { decodePublicKey, encodePublicKey } from '@dxos/protocols/buf';
+import { create } from '@dxos/protocols/buf';
 import { type Invitation, Invitation_Kind } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import { SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import {
   type Contact,
-  type CreateEpochRequest,
   CreateEpochRequest_Migration,
   type SpaceArchive,
   type Space as SpaceData,
@@ -59,13 +59,12 @@ import {
   Space_PipelineStateSchema,
   type UpdateMemberRoleRequest,
 } from '@dxos/protocols/buf/dxos/client/services_pb';
-import { create } from '@dxos/protocols/buf';
-import { SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
-import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
+import { type SpaceSyncState_PeerState } from '@dxos/protocols/buf/dxos/echo/service_pb';
 import { type SpaceSnapshot } from '@dxos/protocols/buf/dxos/echo/snapshot_pb';
 import { type Credential, type Epoch, SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type GossipMessage } from '@dxos/protocols/buf/dxos/mesh/teleport/gossip_pb';
+import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { Timeframe } from '@dxos/timeframe';
 import { trace } from '@dxos/tracing';
 

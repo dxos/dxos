@@ -58,7 +58,7 @@ const meta = {
   component: TemplateForm,
   render: DefaultStory,
   decorators: [
-    withTheme,
+    withTheme(),
     withLayout({ layout: 'column' }),
     withClientProvider({
       types: [Blueprint.Blueprint],

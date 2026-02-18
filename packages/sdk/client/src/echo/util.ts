@@ -4,8 +4,8 @@
 
 import { type Space } from '@dxos/client-protocol';
 import { getDatabaseFromObject } from '@dxos/echo-db';
-import { type SpaceSyncState_PeerState } from '@dxos/protocols/buf/dxos/echo/service_pb';
 import { type ObjectId, type SpaceId } from '@dxos/keys';
+import { type SpaceSyncState_PeerState } from '@dxos/protocols/buf/dxos/echo/service_pb';
 
 import { SpaceProxy } from './space-proxy';
 

@@ -4,6 +4,7 @@ tags:
   - ts-build
   - ts-test
   - pack
+  - memoized-llm
 tasks:
   compile:
     args:

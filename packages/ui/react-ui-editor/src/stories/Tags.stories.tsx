@@ -87,7 +87,7 @@ const text = trim`
 const meta = {
   title: 'ui/react-ui-editor/Tags',
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'fullscreen',
   },

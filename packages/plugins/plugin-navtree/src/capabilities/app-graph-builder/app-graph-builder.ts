@@ -4,7 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common } from '@dxos/app-framework';
+import { Capability } from '@dxos/app-framework';
+import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/operation';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 
@@ -20,7 +21,7 @@ export default Capability.makeModule(
           {
             id: COMMANDS_DIALOG,
             data: () =>
-              Operation.invoke(Common.LayoutOperation.UpdateDialog, {
+              Operation.invoke(LayoutOperation.UpdateDialog, {
                 subject: COMMANDS_DIALOG,
                 blockAlign: 'start',
               }),
@@ -36,6 +37,6 @@ export default Capability.makeModule(
         ]),
     });
 
-    return Capability.contributes(Common.Capability.AppGraphBuilder, extensions);
+    return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
   }),
 );

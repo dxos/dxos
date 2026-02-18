@@ -9,15 +9,7 @@ import { debounce } from '@dxos/async';
 import { useClient } from '@dxos/react-client';
 import { type Identity, useIdentity } from '@dxos/react-client/halo';
 import { ButtonGroup, Clipboard, Input, useTranslation } from '@dxos/react-ui';
-import {
-  ControlItem,
-  ControlItemInput,
-  ControlPage,
-  ControlSection,
-  Form,
-  type FormFieldMap,
-  type FormUpdateMeta,
-} from '@dxos/react-ui-form';
+import { Form, type FormFieldMap, type FormUpdateMeta, Settings } from '@dxos/react-ui-form';
 import { EmojiPickerBlock, HuePicker } from '@dxos/react-ui-pickers';
 import { hexToEmoji, hexToHue } from '@dxos/util';
 
@@ -109,14 +101,14 @@ export const ProfileContainer = () => {
         );
 
         return (
-          <ControlItemInput title={label} description={t('display name description')}>
+          <Settings.ItemInput title={label} description={t('display name description')}>
             <Input.TextInput
               value={getValue()}
               onChange={handleChange}
               placeholder={t('display name input placeholder')}
               classNames='min-is-64'
             />
-          </ControlItemInput>
+          </Settings.ItemInput>
         );
       },
       emoji: ({ type, label, getValue, onValueChange }) => {
@@ -127,7 +119,7 @@ export const ProfileContainer = () => {
         );
 
         return (
-          <ControlItem title={label} description={t('icon description')}>
+          <Settings.Item title={label} description={t('icon description')}>
             <EmojiPickerBlock
               triggerVariant='default'
               emoji={getValue()}
@@ -135,7 +127,7 @@ export const ProfileContainer = () => {
               onClickClear={handleEmojiReset}
               classNames='justify-self-end'
             />
-          </ControlItem>
+          </Settings.Item>
         );
       },
       hue: ({ type, label, getValue, onValueChange }) => {
@@ -146,22 +138,22 @@ export const ProfileContainer = () => {
         );
 
         return (
-          <ControlItem title={label} description={t('hue description')}>
+          <Settings.Item title={label} description={t('hue description')}>
             <div role='none' className='flex justify-self-end'>
               <HuePicker value={getValue()} onChange={handleChange} onReset={handleHueReset} />
             </div>
-          </ControlItem>
+          </Settings.Item>
         );
       },
       // TODO(wittjosiah): We need text input annotations for disabled and copyable.
       did: ({ label, getValue }) => {
         return (
-          <ControlItemInput title={label} description={t('did description')}>
-            <ButtonGroup>
+          <Settings.ItemInput title={label} description={t('did description')}>
+            <ButtonGroup classNames='is-full'>
               <Input.TextInput value={getValue()} disabled classNames='min-is-64' />
               <Clipboard.IconButton value={getValue() ?? ''} />
             </ButtonGroup>
-          </ControlItemInput>
+          </Settings.ItemInput>
         );
       },
     }),
@@ -169,16 +161,16 @@ export const ProfileContainer = () => {
   );
 
   return (
-    <ControlPage>
-      <Clipboard.Provider>
-        <ControlSection title={t('profile label')} description={t('profile description')}>
+    <Clipboard.Provider>
+      <Settings.Root>
+        <Settings.Section title={t('profile label')} description={t('profile description')}>
           <Form.Root schema={UserProfile} values={values} fieldMap={fieldMap} onValuesChanged={handleChange}>
             <Form.Content>
-              <Form.FieldSet classNames='container-max-width grid grid-cols-1 md:grid-cols-[1fr_min-content]' />
+              <Form.FieldSet classNames='space-y-trimMd' />
             </Form.Content>
           </Form.Root>
-        </ControlSection>
-      </Clipboard.Provider>
-    </ControlPage>
+        </Settings.Section>
+      </Settings.Root>
+    </Clipboard.Provider>
   );
 };

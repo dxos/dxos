@@ -35,7 +35,7 @@ const meta = {
   component: CreateObjectDialog,
   render: DefaultStory,
   decorators: [
-    withTheme, // TODO(wittjosiah): Try to write story which does not depend on plugin manager.
+    withTheme(), // TODO(wittjosiah): Try to write story which does not depend on plugin manager.
     withPluginManager({
       plugins: [RuntimePlugin(), OperationPlugin()],
     }),

@@ -21,7 +21,7 @@ const useEdgeStatus = (): EdgeStatus_ConnectionState => {
   const client = useClient();
   useEffect(() => {
     client.services.services.EdgeAgentService?.queryEdgeStatus().subscribe(({ status }: QueryEdgeStatusResponse) => {
-      setStatus(status!.state as never);
+      setStatus(status!.state);
     });
   }, [client]);
 

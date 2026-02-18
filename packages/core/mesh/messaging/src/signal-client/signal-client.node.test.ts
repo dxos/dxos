@@ -53,10 +53,16 @@ describe('SignalClient', () => {
     const [peer1, peer2] = setupPeers({ peerCount: 2 });
 
     await peer1.client.join(
-      create(JoinRequestSchema, { topic: create(PublicKeySchema, { data: topic.asUint8Array() }), peer: peer1.peerInfo }),
+      create(JoinRequestSchema, {
+        topic: create(PublicKeySchema, { data: topic.asUint8Array() }),
+        peer: peer1.peerInfo,
+      }),
     );
     await peer2.client.join(
-      create(JoinRequestSchema, { topic: create(PublicKeySchema, { data: topic.asUint8Array() }), peer: peer2.peerInfo }),
+      create(JoinRequestSchema, {
+        topic: create(PublicKeySchema, { data: topic.asUint8Array() }),
+        peer: peer2.peerInfo,
+      }),
     );
 
     await peer1.waitForPeer(peer2.peerKey);

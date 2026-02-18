@@ -17,7 +17,7 @@ import * as Layer from 'effect/Layer';
 import * as Logger from 'effect/Logger';
 import * as Option from 'effect/Option';
 
-import { createCliApp } from '@dxos/app-framework';
+import { createCliApp } from '@dxos/app-framework/cli';
 import { unrefTimeout } from '@dxos/async';
 import { ConfigService, DXOS_VERSION } from '@dxos/client';
 import { DEFAULT_PROFILE } from '@dxos/client-protocol';

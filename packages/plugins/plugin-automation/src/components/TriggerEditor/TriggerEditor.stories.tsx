@@ -76,7 +76,7 @@ const meta = {
   component: TriggerEditor as any,
   render: DefaultStory,
   decorators: [
-    withTheme,
+    withTheme(),
     withLayout({ layout: 'column' }),
     withClientProvider({
       createIdentity: true,

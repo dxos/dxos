@@ -84,18 +84,18 @@ const createAlignActions = ({ model, state, stateAtom, registry, cursorFallbackR
         };
         const currentState = registry.get(stateAtom);
         if (index < 0) {
-          Obj.change(model.sheet, (s) => {
-            s.ranges?.push(nextRangeEntity);
+          Obj.change(model.sheet, (obj) => {
+            obj.ranges?.push(nextRangeEntity);
           });
           registry.set(stateAtom, { ...currentState, [alignKey]: nextRangeEntity.value });
         } else if (model.sheet.ranges![index].value === nextRangeEntity.value) {
-          Obj.change(model.sheet, (s) => {
-            s.ranges?.splice(index, 1);
+          Obj.change(model.sheet, (obj) => {
+            obj.ranges?.splice(index, 1);
           });
           registry.set(stateAtom, { ...currentState, [alignKey]: undefined });
         } else {
-          Obj.change(model.sheet, (s) => {
-            s.ranges?.splice(index, 1, nextRangeEntity);
+          Obj.change(model.sheet, (obj) => {
+            obj.ranges?.splice(index, 1, nextRangeEntity);
           });
           registry.set(stateAtom, { ...currentState, [alignKey]: nextRangeEntity.value });
         }

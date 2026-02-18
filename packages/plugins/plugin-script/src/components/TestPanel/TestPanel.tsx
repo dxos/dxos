@@ -5,7 +5,7 @@
 import React, { forwardRef, useEffect, useRef, useState } from 'react';
 
 import { log } from '@dxos/log';
-import { Avatar, Icon, Input, type ThemedClassName, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Avatar, Icon, Input, ScrollArea, type ThemedClassName, Toolbar, useTranslation } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { errorText, mx } from '@dxos/ui-theme';
 
@@ -219,29 +219,31 @@ type MessageThreadProps = {
 const MessageThread = forwardRef<HTMLDivElement, MessageThreadProps>(
   ({ state, history, result }: MessageThreadProps, forwardedRef) => {
     return (
-      <div ref={forwardedRef} className='flex flex-col gap-6 bs-full p-2 overflow-x-hidden overflow-y-auto'>
-        {history.map((message, i) => (
-          <div key={i} className='grid grid-cols-[2rem_1fr_2rem]'>
-            <div className='p-1'>{message.type === 'response' && <RobotAvatar />}</div>
-            <div className='overflow-auto'>
-              <MessageItem message={message} />
+      <ScrollArea.Root orientation='vertical' classNames='bs-full' ref={forwardedRef}>
+        <ScrollArea.Viewport classNames='gap-6 p-2'>
+          {history.map((message, i) => (
+            <div key={i} className='grid grid-cols-[2rem_1fr_2rem]'>
+              <div className='p-1'>{message.type === 'response' && <RobotAvatar />}</div>
+              <div className='overflow-auto'>
+                <MessageItem message={message} />
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
 
-        {result?.length > 0 && (
-          <div className='grid grid-cols-[2rem_1fr_2rem]'>
-            <div className='p-1'>
-              {(state === 'pending' && <Icon icon='ph--spinner--regular' size={6} classNames='animate-spin' />) || (
-                <Icon icon='ph--robot--regular' size={6} classNames='animate-[pulse_1s_ease-in-out_infinite]' />
-              )}
+          {result?.length > 0 && (
+            <div className='grid grid-cols-[2rem_1fr_2rem]'>
+              <div className='p-1'>
+                {(state === 'pending' && <Icon icon='ph--spinner--regular' size={6} classNames='animate-spin' />) || (
+                  <Icon icon='ph--robot--regular' size={6} classNames='animate-[pulse_1s_ease-in-out_infinite]' />
+                )}
+              </div>
+              <div className='overflow-auto'>
+                <MessageItem message={{ type: 'response', text: result }} />
+              </div>
             </div>
-            <div className='overflow-auto'>
-              <MessageItem message={{ type: 'response', text: result }} />
-            </div>
-          </div>
-        )}
-      </div>
+          )}
+        </ScrollArea.Viewport>
+      </ScrollArea.Root>
     );
   },
 );

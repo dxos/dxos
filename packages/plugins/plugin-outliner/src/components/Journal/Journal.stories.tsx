@@ -58,7 +58,7 @@ const JournalsStory = () => {
 const meta = {
   title: 'plugins/plugin-outliner/Journal',
   decorators: [
-    withTheme,
+    withTheme(),
     withClientProvider({
       createIdentity: true,
       createSpace: true,

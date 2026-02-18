@@ -32,6 +32,7 @@
     "@antv/layout": "catalog:",
     "@automerge/automerge": "catalog:",
     "@dxos/app-framework": "workspace:*",
+    "@dxos/app-toolkit": "workspace:*",
     "@dxos/assistant-toolkit": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/blueprints": "workspace:*",

@@ -4,7 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { LayoutOperation } from '@dxos/app-toolkit';
 import { invariant } from '@dxos/invariant';
 
 import { DeckCapabilities, type DeckStateProps, defaultDeck } from '../../types';
@@ -12,8 +13,8 @@ import { DeckCapabilities, type DeckStateProps, defaultDeck } from '../../types'
 // TODO(wittjosiah): Cleanup the url handling. May justify introducing routing capabilities.
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const { invokeSync } = yield* Capability.get(Common.Capability.OperationInvoker);
-    const registry = yield* Capability.get(Common.Capability.AtomRegistry);
+    const { invokeSync } = yield* Capability.get(Capabilities.OperationInvoker);
+    const registry = yield* Capability.get(Capabilities.AtomRegistry);
     const stateAtom = yield* Capability.get(DeckCapabilities.State);
 
     // Helper to get state.
@@ -49,14 +50,14 @@ export default Capability.makeModule(
 
       const [_, nextDeck, nextSolo] = pathname.split('/');
       if (nextDeck && nextDeck !== state.activeDeck) {
-        invokeSync(Common.LayoutOperation.SwitchWorkspace, { subject: nextDeck });
+        invokeSync(LayoutOperation.SwitchWorkspace, { subject: nextDeck });
       }
 
       const deck = getDeck();
       if (nextSolo && nextSolo !== deck.solo) {
-        invokeSync(Common.LayoutOperation.SetLayoutMode, { subject: nextSolo, mode: 'solo' });
+        invokeSync(LayoutOperation.SetLayoutMode, { subject: nextSolo, mode: 'solo' });
       } else if (!nextSolo && deck.solo) {
-        invokeSync(Common.LayoutOperation.SetLayoutMode, { mode: 'deck' });
+        invokeSync(LayoutOperation.SetLayoutMode, { mode: 'deck' });
       }
     };
 
@@ -85,7 +86,7 @@ export default Capability.makeModule(
       }
     });
 
-    return Capability.contributes(Common.Capability.Null, null, () =>
+    return Capability.contributes(Capabilities.Null, null, () =>
       Effect.sync(() => {
         window.removeEventListener('popstate', handleNavigation);
         unsubscribe();

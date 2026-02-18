@@ -4,7 +4,7 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { Surface } from '@dxos/app-framework/react';
+import { Surface } from '@dxos/app-framework/ui';
 import { type Database, Obj } from '@dxos/echo';
 import { createDocAccessor } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
@@ -124,7 +124,7 @@ export const NotebookCell = ({ db, graph, dragging, cell, promptResults, env }: 
             value={cell.source.target.content}
             onChange={handleQueryChange}
           />
-          {explorerGraph && !dragging && <Surface role='section' limit={1} data={{ subject: explorerGraph }} />}
+          {explorerGraph && !dragging && <Surface.Surface role='section' limit={1} data={{ subject: explorerGraph }} />}
         </div>
       );
 

@@ -6,8 +6,7 @@ import React, { type PropsWithChildren, type ReactNode, forwardRef } from 'react
 
 import { invariant } from '@dxos/invariant';
 import { Icon, IconButton, type ThemedClassName } from '@dxos/react-ui';
-import { useEditorContext, useShapeDef } from '@dxos/react-ui-canvas-editor';
-import { type Shape } from '@dxos/react-ui-canvas-editor';
+import { type CanvasBoard, useEditorContext, useShapeDef } from '@dxos/react-ui-canvas-editor';
 import { mx } from '@dxos/ui-theme';
 
 export const headerHeight = 32;
@@ -17,7 +16,7 @@ export type BoxActionHandler = (action: 'run' | 'open' | 'close') => void;
 
 export type BoxProps = PropsWithChildren<
   ThemedClassName<{
-    shape: Shape;
+    shape: CanvasBoard.Shape;
     title?: string;
     status?: string | ReactNode;
     open?: boolean;

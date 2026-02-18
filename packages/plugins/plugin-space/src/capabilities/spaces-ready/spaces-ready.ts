@@ -5,7 +5,8 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { Capability, Common } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
 import { SubscriptionList } from '@dxos/async';
 import { Filter, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
@@ -32,10 +33,10 @@ export default Capability.makeModule(
     const subscriptions = new SubscriptionList();
     const spaceSubscriptions = new SubscriptionList();
 
-    const { invoke, invokePromise } = yield* Capability.get(Common.Capability.OperationInvoker);
-    const { graph } = yield* Capability.get(Common.Capability.AppGraph);
-    const registry = yield* Capability.get(Common.Capability.AtomRegistry);
-    const layoutAtom = yield* Capability.get(Common.Capability.Layout);
+    const { invoke, invokePromise } = yield* Capability.get(Capabilities.OperationInvoker);
+    const { graph } = yield* Capability.get(AppCapabilities.AppGraph);
+    const registry = yield* Capability.get(Capabilities.AtomRegistry);
+    const layoutAtom = yield* Capability.get(AppCapabilities.Layout);
     const attention = yield* Capability.get(AttentionCapabilities.Attention);
     const stateAtom = yield* Capability.get(SpaceCapabilities.State);
     const ephemeralAtom = yield* Capability.get(SpaceCapabilities.EphemeralState);
@@ -47,7 +48,7 @@ export default Capability.makeModule(
     // Check if deck state indicates we should switch to default space.
     const layout = registry.get(layoutAtom);
     if (layout.workspace === 'default') {
-      yield* invoke(Common.LayoutOperation.SwitchWorkspace, { subject: defaultSpace.id });
+      yield* invoke(LayoutOperation.SwitchWorkspace, { subject: defaultSpace.id });
     }
 
     // Initialize space sharing lock in default space.
@@ -279,7 +280,7 @@ export default Capability.makeModule(
       log.catch(err);
     }
 
-    return Capability.contributes(Common.Capability.Null, null, () =>
+    return Capability.contributes(Capabilities.Null, null, () =>
       Effect.sync(() => {
         spaceSubscriptions.clear();
         subscriptions.clear();

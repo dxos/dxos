@@ -128,7 +128,7 @@ describe('AtomRef - Referential Equality', () => {
     expect(atom1).not.toBe(atom2);
   });
 
-  test('AtomRef.make returns different atoms for refs created separately to same target', async () => {
+  test('AtomRef.make returns same atom for refs created separately to same target', async () => {
     await db.graph.schemaRegistry.register([TestSchema.Person]);
 
     const targetObj = Obj.make(TestSchema.Person, { name: 'Target', username: 'target', email: 'target@example.com' });
@@ -145,10 +145,10 @@ describe('AtomRef - Referential Equality', () => {
     const atom1 = AtomRef.make(ref1);
     const atom2 = AtomRef.make(ref2);
 
-    // Different ref objects mean different atoms (keyed by ref reference).
-    expect(atom1).not.toBe(atom2);
+    // Refs with the same DXN resolve to the same atom via Hash/Equal traits.
+    expect(atom1).toBe(atom2);
 
-    // But both atoms should return the same target data.
+    // Both atoms should return the same target data.
     expect(registry.get(atom1)?.name).toBe('Target');
     expect(registry.get(atom2)?.name).toBe('Target');
   });

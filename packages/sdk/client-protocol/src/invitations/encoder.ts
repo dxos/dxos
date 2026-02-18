@@ -4,8 +4,8 @@
 
 import base from 'base-x';
 
-import { schema } from '@dxos/protocols/proto';
 import { type Invitation, Invitation_Type } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import { schema } from '@dxos/protocols/proto';
 
 // Encode with URL-safe alpha-numeric characters.
 const base62 = base('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ');

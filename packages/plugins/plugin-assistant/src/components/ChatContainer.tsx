@@ -4,10 +4,11 @@
 
 import React, { forwardRef } from 'react';
 
-import { type SurfaceComponentProps, useAtomCapability } from '@dxos/app-framework/react';
+import { useAtomCapability } from '@dxos/app-framework/ui';
+import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { type Space, getSpace } from '@dxos/client/echo';
 import { type Obj } from '@dxos/echo';
-import { Layout } from '@dxos/react-ui-mosaic';
+import { Layout } from '@dxos/react-ui';
 
 import { useBlueprintRegistry, useChatProcessor, useChatServices, useOnline, usePresets } from '../hooks';
 import { AssistantCapabilities, type ChatType } from '../types';

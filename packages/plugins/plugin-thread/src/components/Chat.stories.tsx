@@ -5,8 +5,9 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
-import { Capability, Common, OperationPlugin } from '@dxos/app-framework';
+import { Capabilities, Capability, OperationPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
+import { Surface } from '@dxos/app-framework/ui';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
@@ -56,13 +57,13 @@ const meta = {
   component: ThreadComponent.Root as any,
   render: render(DefaultStory),
   decorators: [
-    withTheme,
+    withTheme(),
     withPluginManager({
       plugins: [OperationPlugin()],
       capabilities: [
         Capability.contributes(
-          Common.Capability.ReactSurface,
-          Common.createSurface({
+          Capabilities.ReactSurface,
+          Surface.create({
             id: 'test',
             role: 'card',
             component: ({ role }) => <span>{JSON.stringify({ role })}</span>,

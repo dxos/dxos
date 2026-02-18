@@ -5,9 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { ArtifactId } from '@dxos/assistant';
-import { Obj, Relation } from '@dxos/echo';
-import { Database } from '@dxos/echo';
+import { Database, Obj, Relation, Type } from '@dxos/echo';
 import { TracingService, defineFunction } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { Markdown } from '@dxos/plugin-markdown/types';
@@ -19,7 +17,7 @@ export default defineFunction({
   name: 'Create research document',
   description: 'Creates a note summarizing the research.',
   inputSchema: Schema.Struct({
-    subject: ArtifactId.annotations({
+    subject: Type.Ref(Type.Obj).annotations({
       description: trim`
         ID of the object (organization, contact, etc.) for which the research was performed. 
       `,
@@ -35,7 +33,7 @@ export default defineFunction({
     }),
   }),
   outputSchema: Schema.Struct({
-    document: ArtifactId.annotations({
+    document: Schema.String.annotations({
       description: 'DXN of the created document.',
     }),
   }),
@@ -46,8 +44,7 @@ export default defineFunction({
     yield* Database.flush({ indexes: true });
     yield* TracingService.emitStatus({ message: 'Creating research document...' });
 
-    // TODO(burdon): Type check.
-    const target = (yield* Database.resolve(ArtifactId.toDXN(subject))) as Obj.Unknown;
+    const target = yield* Database.load(subject);
 
     // Create document.
     const object = yield* Database.add(

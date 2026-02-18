@@ -4,7 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { LayoutOperation } from '@dxos/app-toolkit';
 import { Operation, OperationResolver } from '@dxos/operation';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention';
 
@@ -21,7 +22,7 @@ const parseEntryId = (entryId: string) => {
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const registry = yield* Capability.get(Common.Capability.AtomRegistry);
+    const registry = yield* Capability.get(Capabilities.AtomRegistry);
     const stateAtom = yield* Capability.get(SimpleLayoutStateCapability);
 
     const getState = () => registry.get(stateAtom);
@@ -29,13 +30,13 @@ export default Capability.makeModule(
       registry.set(stateAtom, fn(getState()));
     };
 
-    return Capability.contributes(Common.Capability.OperationResolver, [
+    return Capability.contributes(Capabilities.OperationResolver, [
       //
       // SetLayoutMode
       //
       // TODO(burdon): No-op for to fix startup bug?
       OperationResolver.make({
-        operation: Common.LayoutOperation.SetLayoutMode,
+        operation: LayoutOperation.SetLayoutMode,
         handler: Effect.fnUntraced(function* () {}),
       }),
 
@@ -43,7 +44,7 @@ export default Capability.makeModule(
       // UpdateSidebar - No-op for simple layout.
       //
       OperationResolver.make({
-        operation: Common.LayoutOperation.UpdateSidebar,
+        operation: LayoutOperation.UpdateSidebar,
         handler: () => Effect.void,
       }),
 
@@ -51,7 +52,7 @@ export default Capability.makeModule(
       // UpdateComplementary - Controls companion drawer.
       //
       OperationResolver.make({
-        operation: Common.LayoutOperation.UpdateComplementary,
+        operation: LayoutOperation.UpdateComplementary,
         handler: Effect.fnUntraced(function* (input) {
           if (input.state === 'closed') {
             updateState((state) => ({
@@ -66,7 +67,7 @@ export default Capability.makeModule(
       // UpdateDialog
       //
       OperationResolver.make({
-        operation: Common.LayoutOperation.UpdateDialog,
+        operation: LayoutOperation.UpdateDialog,
         handler: Effect.fnUntraced(function* (input) {
           updateState((state) => ({
             ...state,
@@ -84,7 +85,7 @@ export default Capability.makeModule(
       // UpdatePopover
       //
       OperationResolver.make({
-        operation: Common.LayoutOperation.UpdatePopover,
+        operation: LayoutOperation.UpdatePopover,
         handler: Effect.fnUntraced(function* (input) {
           updateState((state) => ({
             ...state,
@@ -109,7 +110,7 @@ export default Capability.makeModule(
       // SwitchWorkspace
       //
       OperationResolver.make({
-        operation: Common.LayoutOperation.SwitchWorkspace,
+        operation: LayoutOperation.SwitchWorkspace,
         handler: Effect.fnUntraced(function* (input) {
           updateState((state) => ({
             ...state,
@@ -128,10 +129,10 @@ export default Capability.makeModule(
       // RevertWorkspace
       //
       OperationResolver.make({
-        operation: Common.LayoutOperation.RevertWorkspace,
+        operation: LayoutOperation.RevertWorkspace,
         handler: Effect.fnUntraced(function* () {
           const state = getState();
-          yield* Operation.invoke(Common.LayoutOperation.SwitchWorkspace, {
+          yield* Operation.invoke(LayoutOperation.SwitchWorkspace, {
             subject: state.previousWorkspace,
           });
         }),
@@ -141,7 +142,7 @@ export default Capability.makeModule(
       // Open
       //
       OperationResolver.make({
-        operation: Common.LayoutOperation.Open,
+        operation: LayoutOperation.Open,
         handler: Effect.fnUntraced(function* (input) {
           const id = input.subject[0];
           const { id: primaryId, variant } = parseEntryId(id);
@@ -177,7 +178,7 @@ export default Capability.makeModule(
       // Close
       //
       OperationResolver.make({
-        operation: Common.LayoutOperation.Close,
+        operation: LayoutOperation.Close,
         handler: Effect.fnUntraced(function* () {
           updateState((state) => {
             // Pop from history if available.
@@ -203,7 +204,7 @@ export default Capability.makeModule(
       // Set
       //
       OperationResolver.make({
-        operation: Common.LayoutOperation.Set,
+        operation: LayoutOperation.Set,
         handler: Effect.fnUntraced(function* (input) {
           updateState((state) => ({
             ...state,

@@ -3,7 +3,6 @@
 //
 
 import { verifySignature } from '@dxos/crypto';
-import { PublicKey } from '@dxos/keys';
 import { type Presentation, type Proof } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 import { SIGNATURE_TYPE_ED25519, type VerificationResult, verifyChain, verifyCredential } from '../credentials';

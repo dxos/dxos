@@ -20,6 +20,7 @@ import {
   type ToolResolverService,
   callTool,
   getToolCalls,
+  withoutToolCallParising,
 } from '@dxos/ai';
 import { type Blueprint } from '@dxos/blueprints';
 import { todo } from '@dxos/debug';
@@ -119,8 +120,6 @@ export class AiSession {
       // Generate system and prompt messages.
       const system = yield* formatSystemPrompt({ system: systemTemplate, blueprints, objects }).pipe(Effect.orDie);
 
-      // log('system', { prompt: system });
-
       // Tool call loop.
       do {
         log('request', {
@@ -131,15 +130,19 @@ export class AiSession {
           objects: objects?.length ?? 0,
         });
 
-        const prompt = yield* AiPreprocessor.preprocessPrompt([...this._history, ...this._pending], { system });
+        const prompt = yield* AiPreprocessor.preprocessPrompt([...this._history, ...this._pending], {
+          system,
+          cacheControl: 'ephemeral',
+        });
 
         // Execute the stream request.
-        // logDump('prompt', Prompt.Prompt.pipe(Schema.encodeSync)(prompt));
         const blocks = yield* LanguageModel.streamText({
           prompt,
           toolkit,
           disableToolCallResolution: true,
         }).pipe(
+          // Disable tool call parsing so that we can handle parameter schema errors on a per-tool call basis.
+          withoutToolCallParising,
           // TOOD(dmaretskyi): Error mapping.
           AiParser.parseResponse({
             onBegin: () => observer.onBegin(),
@@ -150,8 +153,6 @@ export class AiSession {
           Stream.runCollect,
           Effect.map(Chunk.toArray),
         );
-
-        // log('blocks', { blocks });
 
         // Create the response message.
         const response = yield* submitMessage(

@@ -4,12 +4,13 @@
 
 import React, { useCallback } from 'react';
 
-import { type SurfaceComponentProps, useOperationInvoker } from '@dxos/app-framework/react';
-import { Surface } from '@dxos/app-framework/react';
+import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { Surface } from '@dxos/app-framework/ui';
+import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { ATTENDABLE_PATH_SEPARATOR, DeckOperation } from '@dxos/plugin-deck/types';
+import { Layout } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
-import { Layout } from '@dxos/react-ui-mosaic';
 import { type Pipeline as PipelineType } from '@dxos/types';
 
 import { type ItemProps, PipelineComponent } from './PipelineComponent';
@@ -42,7 +43,7 @@ export const PipelineContainer = ({ role, subject: pipeline }: PipelineContainer
 
 const PipelineItem = ({ item, projectionModel }: ItemProps) => {
   return (
-    <Surface
+    <Surface.Surface
       role='card--content'
       data={{
         subject: item,

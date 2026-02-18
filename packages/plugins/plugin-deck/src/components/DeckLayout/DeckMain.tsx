@@ -4,8 +4,8 @@
 
 import React, { Fragment, type UIEvent, useCallback, useEffect, useMemo, useRef } from 'react';
 
-import { Common } from '@dxos/app-framework';
-import { useAtomCapability, useOperationInvoker, usePluginManager } from '@dxos/app-framework/react';
+import { useAtomCapability, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
+import { LayoutOperation } from '@dxos/app-toolkit';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { Main, type MainContentProps, useMediaQuery, useOnTransition } from '@dxos/react-ui';
 import { DEFAULT_HORIZONTAL_SIZE, Stack, StackContext } from '@dxos/react-ui-stack';
@@ -61,9 +61,9 @@ export const DeckMain = () => {
       const attended = attention.getCurrent();
 
       shouldRevert.current = true;
-      invokeSync(Common.LayoutOperation.SetLayoutMode, { subject: attended[0], mode: 'solo' });
+      invokeSync(LayoutOperation.SetLayoutMode, { subject: attended[0], mode: 'solo' });
     } else if (isNotMobile && layoutMode === 'solo' && shouldRevert.current) {
-      invokeSync(Common.LayoutOperation.SetLayoutMode, { revert: true });
+      invokeSync(LayoutOperation.SetLayoutMode, { revert: true });
     }
     // NOTE: Using `layoutMode` instead of `deck` to avoid infinite loops caused by object reference changes.
   }, [isNotMobile, layoutMode, invokeSync]);
@@ -72,7 +72,7 @@ export const DeckMain = () => {
   // TODO(thure): Applying this as an effect should be avoided over emitting the operation only when the setting changes.
   useEffect(() => {
     if (!settings?.enableDeck && layoutMode === 'deck') {
-      invokeSync(Common.LayoutOperation.SetLayoutMode, { subject: active[0], mode: 'solo' });
+      invokeSync(LayoutOperation.SetLayoutMode, { subject: active[0], mode: 'solo' });
     }
   }, [settings?.enableDeck, invokeSync, active, layoutMode]);
 

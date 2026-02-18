@@ -9,10 +9,7 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { create, timestampFromDate } from '@dxos/protocols/buf';
 import { type SwarmResponse } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
-import {
-  type QueryRequest,
-  SwarmEventSchema,
-} from '@dxos/protocols/buf/dxos/edge/signal_pb';
+import { type QueryRequest, SwarmEventSchema } from '@dxos/protocols/buf/dxos/edge/signal_pb';
 import { PublicKeySchema } from '@dxos/protocols/buf/dxos/keys_pb';
 import { schema } from '@dxos/protocols/proto';
 import { ComplexMap, ComplexSet } from '@dxos/util';
@@ -25,8 +22,7 @@ import { type SignalManager } from './signal-manager';
 const toBufKey = (key: PublicKey) => create(PublicKeySchema, { data: key.asUint8Array() });
 
 /** Convert buf PublicKey message to @dxos/keys PublicKey. */
-const fromBufKey = (key?: { data: Uint8Array }): PublicKey | undefined =>
-  key ? PublicKey.from(key.data) : undefined;
+const fromBufKey = (key?: { data: Uint8Array }): PublicKey | undefined => (key ? PublicKey.from(key.data) : undefined);
 
 /**
  * Common signaling context that connects multiple MemorySignalManager instances.
@@ -75,9 +71,7 @@ export class MemorySignalManager implements SignalManager {
     this._ctx.onDispose(this._context.swarmEvent.on((data) => this.swarmEvent.emit(data)));
 
     await Promise.all(
-      [...this._joinedSwarms.values()].map(({ topic, peer }) =>
-        this.join({ topic: toBufKey(topic), peer } as never),
-      ),
+      [...this._joinedSwarms.values()].map(({ topic, peer }) => this.join({ topic: toBufKey(topic), peer } as never)),
     );
   }
 
@@ -92,9 +86,7 @@ export class MemorySignalManager implements SignalManager {
     );
 
     await Promise.all(
-      [...this._joinedSwarms.values()].map(({ topic, peer }) =>
-        this.leave({ topic: toBufKey(topic), peer } as never),
-      ),
+      [...this._joinedSwarms.values()].map(({ topic, peer }) => this.leave({ topic: toBufKey(topic), peer } as never)),
     );
 
     // assign joined swarms back because .leave() deletes it.
@@ -179,11 +171,7 @@ export class MemorySignalManager implements SignalManager {
     throw new Error('Not implemented');
   }
 
-  async sendMessage({
-    author,
-    recipient,
-    payload,
-  }: Message): Promise<void> {
+  async sendMessage({ author, recipient, payload }: Message): Promise<void> {
     log('send message', { author, recipient, ...dec(payload) });
 
     invariant(recipient);

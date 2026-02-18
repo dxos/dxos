@@ -5,7 +5,8 @@
 import { type Atom } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 
-import { Common } from '@dxos/app-framework';
+import { type Capabilities } from '@dxos/app-framework';
+import { type AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
 import { Node } from '@dxos/plugin-graph';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention';
 import { type ActionGraphProps } from '@dxos/react-ui-menu';
@@ -22,7 +23,7 @@ export type CompanionActionsConfig = {
   /** Optional: highlight companion with this variant */
   selectedVariant?: string;
   /** invokeSync function for dispatching operations */
-  invokeSync: Common.Capability.OperationInvoker['invokeSync'];
+  invokeSync: Capabilities.OperationInvoker['invokeSync'];
 };
 
 /**
@@ -31,7 +32,7 @@ export type CompanionActionsConfig = {
  */
 // TODO(burdon): Use builder pattern.
 export const createCompanionActions = (
-  graph: Common.Capability.AppGraph['graph'],
+  graph: AppCapabilities.AppGraph['graph'],
   stateAtom: Atom.Atom<SimpleLayoutState>,
   get: (atom: Atom.Atom<any>) => any,
   config: CompanionActionsConfig,
@@ -71,7 +72,7 @@ export const createCompanionActions = (
       },
       data: () =>
         Effect.sync(() =>
-          invokeSync(Common.LayoutOperation.Open, {
+          invokeSync(LayoutOperation.Open, {
             subject: [companion.id],
           }),
         ),

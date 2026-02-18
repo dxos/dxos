@@ -5,8 +5,8 @@
 import * as Effect from 'effect/Effect';
 import React from 'react';
 
-import { Capability, Common } from '@dxos/app-framework';
-import { Surface } from '@dxos/app-framework/react';
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { Surface } from '@dxos/app-framework/ui';
 import { Obj } from '@dxos/echo';
 import { Card } from '@dxos/react-ui-mosaic';
 import { type ProjectionModel } from '@dxos/schema';
@@ -17,13 +17,13 @@ import { meta } from '../../meta';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
-    Capability.contributes(Common.Capability.ReactSurface, [
+    Capability.contributes(Capabilities.ReactSurface, [
       //
       // Specific schema types.
       // TODO(burdon): Create helpers and factor out.
       //
 
-      Common.createSurface<{ subject: Person.Person }>({
+      Surface.create<{ subject: Person.Person }>({
         id: `${meta.id}/schema-popover--contact`,
         role: 'card--content',
         position: 'hoist',
@@ -32,7 +32,7 @@ export default Capability.makeModule(() =>
           return <PersonCard role={role} subject={data.subject} />;
         },
       }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/schema-popover--organization`,
         role: 'card--content',
         position: 'hoist',
@@ -42,7 +42,7 @@ export default Capability.makeModule(() =>
           return <OrganizationCard role={role} subject={data.subject} />;
         },
       }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/schema-popover--project`,
         role: 'card--content',
         position: 'hoist',
@@ -51,7 +51,7 @@ export default Capability.makeModule(() =>
           return <ProjectCard role={role} subject={data.subject} />;
         },
       }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/schema-popover--task`,
         role: 'card--content',
         position: 'hoist',
@@ -65,7 +65,7 @@ export default Capability.makeModule(() =>
       // Fallback for any object.
       //
 
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/fallback-popover`,
         role: 'card--content',
         position: 'fallback',
@@ -75,7 +75,7 @@ export default Capability.makeModule(() =>
         },
       }),
 
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/section`,
         role: ['section'],
         position: 'fallback',
@@ -85,7 +85,7 @@ export default Capability.makeModule(() =>
             <div role='none' className='flex is-full justify-center'>
               <div role='none' className='pbs-2 pbe-2 card-min-width card-max-width'>
                 <Card.Root>
-                  <Surface role='card--content' data={data} limit={1} />
+                  <Surface.Surface role='card--content' data={data} limit={1} />
                 </Card.Root>
               </div>
             </div>

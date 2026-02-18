@@ -53,7 +53,7 @@ const meta = {
   title: 'ui/react-ui-kanban/Kanban',
   render: DefaultStory,
   decorators: [
-    withTheme,
+    withTheme(),
     withLayout({ layout: 'fullscreen' }),
     // withClientProvider({
     //   types: [],

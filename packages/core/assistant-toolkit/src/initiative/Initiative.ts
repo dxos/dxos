@@ -10,6 +10,8 @@ import { QueueAnnotation, Text } from '@dxos/schema';
 
 import * as Chat from '../chat/Chat';
 
+import { Plan } from './plan';
+
 /**
  * Initiative schema definition.
  */
@@ -17,7 +19,7 @@ export const Initiative = Schema.Struct({
   name: Schema.String,
 
   spec: Type.Ref(Text.Text),
-  plan: Type.Ref(Text.Text),
+  plan: Type.Ref(Plan),
 
   artifacts: Schema.Array(
     Schema.Struct({

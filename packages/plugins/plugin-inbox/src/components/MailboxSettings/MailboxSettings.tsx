@@ -4,8 +4,9 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { Common } from '@dxos/app-framework';
-import { type SurfaceComponentProps, useOperationInvoker } from '@dxos/app-framework/react';
+import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { LayoutOperation } from '@dxos/app-toolkit';
+import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
 import { Trigger } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
@@ -30,7 +31,7 @@ export const MailboxSettings = ({ subject }: SurfaceComponentProps<Mailbox.Mailb
       (trigger) => trigger.spec?.kind === 'timer' && trigger.input?.mailboxId === subject.id,
     );
     if (syncTrigger) {
-      void invokePromise(Common.LayoutOperation.Open, {
+      void invokePromise(LayoutOperation.Open, {
         subject: [`automation-settings${ATTENDABLE_PATH_SEPARATOR}${db.spaceId}`],
         workspace: db.spaceId,
       });
@@ -56,7 +57,7 @@ export const MailboxSettings = ({ subject }: SurfaceComponentProps<Mailbox.Mailb
       return false;
     });
     if (subscriptionTrigger) {
-      void invokePromise(Common.LayoutOperation.Open, {
+      void invokePromise(LayoutOperation.Open, {
         subject: [`automation-settings${ATTENDABLE_PATH_SEPARATOR}${db.spaceId}`],
         workspace: db.spaceId,
       });

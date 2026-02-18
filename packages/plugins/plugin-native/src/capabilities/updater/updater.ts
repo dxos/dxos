@@ -11,7 +11,8 @@ import * as Fiber from 'effect/Fiber';
 import * as Match from 'effect/Match';
 import * as Schedule from 'effect/Schedule';
 
-import { Capability, Common } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { LayoutOperation } from '@dxos/app-toolkit';
 import { log } from '@dxos/log';
 
 import { meta } from '../../meta';
@@ -55,7 +56,7 @@ export default Capability.makeModule(
       return;
     }
 
-    const { invoke } = yield* Capability.get(Common.Capability.OperationInvoker);
+    const { invoke } = yield* Capability.get(Capabilities.OperationInvoker);
 
     // https://tauri.app/plugin/updater/#checking-for-updates
     const action = Effect.gen(function* () {
@@ -95,7 +96,7 @@ export default Capability.makeModule(
         const downloadSuccess = yield* Effect.promise(() => downloadAndInstall(update, handleDownload));
 
         if (downloadSuccess) {
-          yield* invoke(Common.LayoutOperation.AddToast, {
+          yield* invoke(LayoutOperation.AddToast, {
             id: `${meta.id}/update-ready`,
             title: ['update ready label', { ns: meta.id }],
             description: ['update ready description', { ns: meta.id }],
@@ -112,7 +113,7 @@ export default Capability.makeModule(
     const fiber = yield* action.pipe(Effect.repeat(Schedule.fixed(Duration.hours(1))), Effect.forkDaemon);
     log.info('updater module initialized, update check scheduled');
 
-    return Capability.contributes(Common.Capability.Null, null, () =>
+    return Capability.contributes(Capabilities.Null, null, () =>
       Effect.sync(() => Effect.runSync(Fiber.interrupt(fiber))),
     );
   }),

@@ -23,7 +23,7 @@ export const sqlExportLayer: Layer.Layer<SqlExport.SqlExport, SqlError.SqlError,
   );
 
 export const layerMemory: Layer.Layer<
-  SqlClient.SqlClient | SqliteClient.SqliteClient,
+  SqlClient.SqlClient | SqliteClient.SqliteClient | SqlExport.SqlExport,
   ConfigError.ConfigError | SqlError.SqlError
 > = sqlExportLayer.pipe(
   Layer.provideMerge(
@@ -32,3 +32,21 @@ export const layerMemory: Layer.Layer<
     }),
   ),
 );
+
+/**
+ * Creates a file-based SQLite layer for Node.js.
+ * Unlike layerMemory, this persists data across runtime restarts.
+ */
+export const layerFile = (
+  filename: string,
+): Layer.Layer<
+  SqlClient.SqlClient | SqliteClient.SqliteClient | SqlExport.SqlExport,
+  ConfigError.ConfigError | SqlError.SqlError
+> =>
+  sqlExportLayer.pipe(
+    Layer.provideMerge(
+      SqliteClient.layer({
+        filename,
+      }),
+    ),
+  );

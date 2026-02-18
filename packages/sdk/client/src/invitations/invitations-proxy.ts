@@ -15,7 +15,7 @@ import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { create, EMPTY, encodePublicKey } from '@dxos/protocols/buf';
+import { EMPTY, create, encodePublicKey } from '@dxos/protocols/buf';
 import {
   type Invitation,
   InvitationSchema,

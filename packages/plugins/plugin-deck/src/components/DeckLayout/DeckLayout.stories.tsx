@@ -5,8 +5,9 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { Capability, Common, Plugin } from '@dxos/app-framework';
+import { Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
+import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { corePlugins } from '@dxos/plugin-testing';
 import { withTheme } from '@dxos/react-ui/testing';
 
@@ -19,10 +20,10 @@ import { DeckLayout } from './DeckLayout';
 const TestPlugin = Plugin.define(pluginMeta).pipe(
   Plugin.addModule({
     id: Capability.getModuleTag(DeckState),
-    activatesOn: Common.ActivationEvent.AppGraphReady,
+    activatesOn: AppActivationEvents.AppGraphReady,
     activate: () => DeckState(),
   }),
-  Common.Plugin.addOperationResolverModule({
+  AppPlugin.addOperationResolverModule({
     activate: LayoutOperationResolver,
   }),
   Plugin.make,
@@ -33,7 +34,7 @@ const meta = {
   component: DeckLayout,
   render: (args) => <DeckLayout {...args} />,
   decorators: [
-    withTheme,
+    withTheme(),
     withPluginManager({
       plugins: [...corePlugins(), TestPlugin()],
     }),

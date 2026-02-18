@@ -309,4 +309,22 @@ export class AiContextService extends Context.Tag('@dxos/assistant/AiContextServ
       const { binder } = yield* AiContextService;
       yield* Effect.promise(() => binder.bind({ blueprints, objects }));
     });
+
+  static findObjects = <T extends Type.Entity.Any>(
+    type: T,
+  ): Effect.Effect<Schema.Schema.Type<T>[], never, AiContextService> => {
+    return Effect.gen(function* () {
+      const { binder } = yield* AiContextService;
+      return binder.getObjects().filter(Obj.instanceOf(type));
+    });
+  };
+
+  /**
+   * Glorified type cast until we figure out function service typing.
+   * For context, the AiContextService is provided to functions called from tool calls, but it's not implemented in types yet.
+   * @deprecated
+   */
+  static fixFunctionHandlerType = <A, E, R>(
+    eff: Effect.Effect<A, E, R>,
+  ): Effect.Effect<A, E, Exclude<R, AiContextService>> => eff as any;
 }

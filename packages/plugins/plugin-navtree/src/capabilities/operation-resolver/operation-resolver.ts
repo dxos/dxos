@@ -4,7 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
 import { log } from '@dxos/log';
 import { OperationResolver } from '@dxos/operation';
 import { Graph } from '@dxos/plugin-graph';
@@ -13,11 +14,11 @@ import { NavTreeCapabilities } from '../../types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contributes(Common.Capability.OperationResolver, [
+    return Capability.contributes(Capabilities.OperationResolver, [
       OperationResolver.make({
-        operation: Common.LayoutOperation.Expose,
+        operation: LayoutOperation.Expose,
         handler: Effect.fnUntraced(function* ({ subject }) {
-          const { graph } = yield* Capability.get(Common.Capability.AppGraph);
+          const { graph } = yield* Capability.get(AppCapabilities.AppGraph);
           const { getItem, setItem } = yield* Capability.get(NavTreeCapabilities.State);
           yield* Effect.tryPromise(() => Graph.waitForPath(graph, { target: subject }, { timeout: 1_000 })).pipe(
             Effect.andThen((path) => {

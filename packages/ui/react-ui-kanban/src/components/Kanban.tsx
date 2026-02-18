@@ -5,7 +5,7 @@
 import { useAtomValue } from '@effect-atom/atom-react';
 import React, { useCallback, useEffect } from 'react';
 
-import { Surface } from '@dxos/app-framework/react';
+import { Surface } from '@dxos/app-framework/ui';
 import { IconButton, Tag, useTranslation } from '@dxos/react-ui';
 import { AttentionGlyph, type UseSelectionActions, useSelected, useSelectionActions } from '@dxos/react-ui-attention';
 import { Card, CardDragPreview } from '@dxos/react-ui-mosaic';
@@ -114,7 +114,7 @@ export const Kanban = <T extends BaseKanbanItem = BaseKanbanItem>({
                               <Card.DragHandle />
                               <Card.ToolbarSeparator />
                             </Card.Toolbar>
-                            <Surface
+                            <Surface.Surface
                               role='card--content'
                               limit={1}
                               data={{
@@ -269,7 +269,7 @@ const CardComponent = <T extends BaseKanbanItem = { id: string }>({
               />
             )}
           </Card.Toolbar>
-          <Surface role='card--content' limit={1} data={{ subject: item, projection }} />
+          <Surface.Surface role='card--content' limit={1} data={{ subject: item, projection }} />
         </Card.Root>
         <StackItem.DragPreview>
           {({ item }) => (
@@ -279,7 +279,7 @@ const CardComponent = <T extends BaseKanbanItem = { id: string }>({
                   <Card.Toolbar>
                     <Card.DragHandle />
                   </Card.Toolbar>
-                  <Surface role='card--content' limit={1} data={{ subject: item, projection }} />
+                  <Surface.Surface role='card--content' limit={1} data={{ subject: item, projection }} />
                 </Card.Root>
               </CardDragPreview.Content>
             </CardDragPreview.Root>

@@ -14,8 +14,8 @@ import { type PublicKey } from '@dxos/keys';
 import { MemorySignalManagerContext } from '@dxos/messaging';
 import { decodePublicKey } from '@dxos/protocols/buf';
 import { type Identity } from '@dxos/protocols/buf/dxos/client/services_pb';
-import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type QueryIdentityResponse } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { isNode } from '@dxos/util';
 
 import { createMockCredential, createServiceHost } from '../testing';

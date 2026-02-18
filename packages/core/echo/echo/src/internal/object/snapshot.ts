@@ -4,18 +4,35 @@
 
 import { deepMapValues } from '@dxos/util';
 
+import { ObjectDatabaseId } from '../entities/model';
 import { RelationSourceDXNId, RelationSourceId, RelationTargetDXNId, RelationTargetId } from '../entities/relation';
 import { KindId, SnapshotKindId } from '../types/entity';
 import { MetaId } from '../types/meta';
 import { SchemaId, TypeId } from '../types/typename';
 
 /**
- * Copy a Symbol-keyed property from source to target if it exists.
+ * Copy a Symbol-keyed property from source to target if it has a defined value.
+ * Handles both plain objects (symbol in source) and proxies where get returns a value
+ * but has/in returns false (e.g. ObjectDatabaseId on echo-db proxies).
+ * Optional transform clones or mutates the value before assignment (e.g. for MetaId).
  */
-const copySymbolProperty = (source: any, target: any, symbol: symbol): void => {
-  if (symbol in source) {
+const copySymbolProperty = (
+  source: any,
+  target: any,
+  symbol: symbol,
+  transform?: (value: unknown) => unknown,
+): void => {
+  let value: unknown;
+  // Echo-db proxy getters (e.g. RelationSourceId, RelationTargetId) can throw in certain states.
+  try {
+    value = source[symbol];
+  } catch {
+    return;
+  }
+  if (value !== undefined) {
+    const finalValue = transform ? transform(value) : value;
     Object.defineProperty(target, symbol, {
-      value: source[symbol],
+      value: finalValue,
       writable: false,
       enumerable: false,
       configurable: false,
@@ -56,18 +73,14 @@ export const getSnapshot = <T extends object>(obj: T): T => {
     copySymbolProperty(source, snapshot, TypeId);
     copySymbolProperty(source, snapshot, SchemaId);
 
-    // Metadata symbol. -- deep clone to ensure immutability.
-    if (MetaId in source) {
-      Object.defineProperty(snapshot, MetaId, {
-        value: {
-          keys: [...(source[MetaId]?.keys ?? [])],
-          tags: [...(source[MetaId]?.tags ?? [])],
-        },
-        writable: false,
-        enumerable: false,
-        configurable: false,
-      });
-    }
+    // Database reference (required for Obj.getDatabase to work on snapshots).
+    copySymbolProperty(source, snapshot, ObjectDatabaseId);
+
+    // Metadata symbol. Copy arrays so the snapshot is not affected by mutations to the live meta's keys/tags.
+    copySymbolProperty(source, snapshot, MetaId, (meta: any) => ({
+      keys: [...(meta?.keys ?? [])],
+      tags: [...(meta?.tags ?? [])],
+    }));
 
     // Relation endpoint symbols.
     copySymbolProperty(source, snapshot, RelationSourceDXNId);

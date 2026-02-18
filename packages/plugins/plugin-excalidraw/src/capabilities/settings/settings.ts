@@ -4,7 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common } from '@dxos/app-framework';
+import { Capability } from '@dxos/app-framework';
+import { AppCapabilities } from '@dxos/app-toolkit';
 import { createKvsStore } from '@dxos/effect';
 
 import { meta } from '../../meta';
@@ -20,7 +21,7 @@ export default Capability.makeModule(() =>
 
     return [
       Capability.contributes(ExcalidrawCapabilities.Settings, settingsAtom),
-      Capability.contributes(Common.Capability.Settings, {
+      Capability.contributes(AppCapabilities.Settings, {
         prefix: meta.id,
         schema: SketchSettingsSchema,
         atom: settingsAtom,

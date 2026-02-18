@@ -4,7 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common } from '@dxos/app-framework';
+import { Capability } from '@dxos/app-framework';
+import { AppCapabilities } from '@dxos/app-toolkit';
 import { createKvsStore } from '@dxos/effect';
 
 import { meta } from '../../meta';
@@ -23,7 +24,7 @@ export default Capability.makeModule(() =>
       // Expose atom directly for programmatic access.
       Capability.contributes(ThreadCapabilities.Settings, settingsAtom),
       // Contribute to common settings for UI discovery.
-      Capability.contributes(Common.Capability.Settings, {
+      Capability.contributes(AppCapabilities.Settings, {
         prefix: meta.id,
         schema: ThreadSettingsSchema,
         atom: settingsAtom,

@@ -205,9 +205,9 @@ const GlobeCanvas = (props: GlobeCanvasProps) => {
         },
         translation,
         rotation,
-        setZoom: (s) => {
-          if (typeof s === 'function') {
-            const is = interpolateNumber(zoomValue, s(zoomValue));
+        setZoom: (state) => {
+          if (typeof state === 'function') {
+            const is = interpolateNumber(zoomValue, state(zoomValue));
             // Stop easing if already zooming.
             transition()
               .ease(zooming ? easeLinear : easeSinOut)
@@ -221,8 +221,8 @@ const GlobeCanvas = (props: GlobeCanvasProps) => {
                 zooming = false;
               });
           } else {
-            zoomValue = s;
-            setZoom(s);
+            zoomValue = state;
+            setZoom(state);
           }
         },
         setTranslation,

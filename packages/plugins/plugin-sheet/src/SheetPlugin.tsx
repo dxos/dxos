@@ -4,7 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { ActivationEvent, Capability, Common, Plugin } from '@dxos/app-framework';
+import { ActivationEvent, Capability, Plugin } from '@dxos/app-framework';
+import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/operation';
 import { AutomationEvents } from '@dxos/plugin-automation';
 import { ClientEvents } from '@dxos/plugin-client';
@@ -19,12 +20,7 @@ import { translations } from './translations';
 import { Sheet, SheetOperation } from './types';
 
 export const SheetPlugin = Plugin.define(meta).pipe(
-  Plugin.addModule({
-    activatesOn: ActivationEvent.allOf(ClientEvents.ClientReady, AutomationEvents.ComputeRuntimeReady),
-    activate: ComputeGraphRegistry,
-  }),
-  Common.Plugin.addTranslationsModule({ translations }),
-  Common.Plugin.addMetadataModule({
+  AppPlugin.addMetadataModule({
     metadata: {
       id: Sheet.Sheet.typename,
       metadata: {
@@ -37,7 +33,14 @@ export const SheetPlugin = Plugin.define(meta).pipe(
       },
     },
   }),
-  Common.Plugin.addSchemaModule({ schema: [Sheet.Sheet] }),
+  AppPlugin.addOperationResolverModule({ activate: OperationResolver }),
+  AppPlugin.addSchemaModule({ schema: [Sheet.Sheet] }),
+  AppPlugin.addSurfaceModule({ activate: ReactSurface }),
+  AppPlugin.addTranslationsModule({ translations }),
+  Plugin.addModule({
+    activatesOn: ActivationEvent.allOf(ClientEvents.ClientReady, AutomationEvents.ComputeRuntimeReady),
+    activate: ComputeGraphRegistry,
+  }),
   Plugin.addModule({
     id: 'on-space-created',
     activatesOn: SpaceEvents.SpaceCreated,
@@ -54,10 +57,8 @@ export const SheetPlugin = Plugin.define(meta).pipe(
   }),
   Plugin.addModule({
     // TODO(wittjosiah): More relevant event?
-    activatesOn: Common.ActivationEvent.AppGraphReady,
+    activatesOn: AppActivationEvents.AppGraphReady,
     activate: AnchorSort,
   }),
-  Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
-  Common.Plugin.addOperationResolverModule({ activate: OperationResolver }),
   Plugin.make,
 );

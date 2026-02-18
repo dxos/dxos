@@ -72,7 +72,7 @@ const meta = {
   title: 'plugins/plugin-board/Board',
   render: DefaultStory,
   decorators: [
-    withTheme,
+    withTheme(),
     withPluginManager({
       plugins: [
         ...corePlugins(),

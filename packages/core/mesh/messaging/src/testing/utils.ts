@@ -13,8 +13,7 @@ import { type Message, type PeerInfo, type SignalMethods } from '../signal-metho
 import { PAYLOAD_1 } from './test-messages';
 
 /** Convert buf PublicKey message to @dxos/keys PublicKey. */
-const fromBufKey = (key?: BufPublicKey): PublicKey | undefined =>
-  key ? PublicKey.from(key.data) : undefined;
+const fromBufKey = (key?: BufPublicKey): PublicKey | undefined => (key ? PublicKey.from(key.data) : undefined);
 
 export const expectPeerAvailable = (client: SignalMethods, expectedTopic: PublicKey, peer: PeerInfo) =>
   asyncTimeout(

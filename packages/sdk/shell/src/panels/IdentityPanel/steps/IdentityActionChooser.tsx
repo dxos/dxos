@@ -7,7 +7,7 @@ import React from 'react';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 import { DeviceType, useHaloInvitations } from '@dxos/react-client/halo';
-import { type Invitation, Invitation_State, InvitationEncoder } from '@dxos/react-client/invitations';
+import { type Invitation, InvitationEncoder, Invitation_State } from '@dxos/react-client/invitations';
 
 import { AgentConfig, type AgentFormProps, DeviceList, type DeviceListProps } from '../../../components';
 import { type IdentityPanelStepProps } from '../IdentityPanelProps';
@@ -63,7 +63,7 @@ export const IdentityActionChooserImpl = ({
     (device) => device.profile?.type === DeviceType.AGENT_MANAGED && device.profile?.os?.toUpperCase() === 'EDGE',
   );
   return (
-    <div role='none' className='bs-40 grow overflow-y-auto'>
+    <div role='none' className='bs-40 is-full overflow-y-auto'>
       <DeviceList
         devices={devices}
         connectionState={connectionState}

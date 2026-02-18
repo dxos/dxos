@@ -4,7 +4,9 @@
 
 import { create } from '@bufbuild/protobuf';
 import { EmptySchema } from '@bufbuild/protobuf/wkt';
+
 import { PublicKey } from '@dxos/keys';
+
 import * as KeysPb from './proto/gen/dxos/keys_pb';
 
 export * as buf from '@bufbuild/protobuf';

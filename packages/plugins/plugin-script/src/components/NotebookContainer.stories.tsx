@@ -38,7 +38,7 @@ const meta: Meta<typeof NotebookContainer> = {
     return <NotebookContainer {...args} subject={notebooks[0]} />;
   },
   decorators: [
-    withTheme,
+    withTheme(),
     withLayout({ layout: 'column', classNames: 'is-proseMaxWidth' }),
     withPluginManager({
       plugins: [

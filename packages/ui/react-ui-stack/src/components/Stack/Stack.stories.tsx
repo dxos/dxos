@@ -132,7 +132,7 @@ const meta = {
   title: 'ui/react-ui-stack/Stack',
   component: DefaultStory,
   argTypes: { orientation: { control: 'radio', options: ['horizontal', 'vertical'] } },
-  decorators: [withTheme],
+  decorators: [withTheme()],
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

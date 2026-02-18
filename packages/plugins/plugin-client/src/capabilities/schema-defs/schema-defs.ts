@@ -4,16 +4,17 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { AppCapabilities } from '@dxos/app-toolkit';
 import { type Type } from '@dxos/echo';
 
 import { ClientCapabilities } from '../../types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const registry = yield* Capability.get(Common.Capability.AtomRegistry);
+    const registry = yield* Capability.get(Capabilities.AtomRegistry);
     const client = yield* Capability.get(ClientCapabilities.Client);
-    const schemasAtom = yield* Capability.atom(Common.Capability.Schema);
+    const schemasAtom = yield* Capability.atom(AppCapabilities.Schema);
 
     // TODO(wittjosiah): Unregister schemas when they are disabled.
     let previous: Type.Entity.Any[] = [];
@@ -30,6 +31,6 @@ export default Capability.makeModule(
       { immediate: true },
     );
 
-    return Capability.contributes(Common.Capability.Null, null, () => Effect.sync(() => cancel()));
+    return Capability.contributes(Capabilities.Null, null, () => Effect.sync(() => cancel()));
   }),
 );

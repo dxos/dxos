@@ -35,6 +35,7 @@ import { useSwipeToDismiss } from './useSwipeToDismiss';
 
 const MAIN_NAME = 'Main';
 const MAIN_ROOT_NAME = 'MainRoot';
+const MAIN_OVERLAY_NAME = 'MainOverlay';
 const NAVIGATION_SIDEBAR_NAME = 'NavigationSidebar';
 const COMPLEMENTARY_SIDEBAR_NAME = 'ComplementarySidebar';
 
@@ -225,6 +226,42 @@ const MainRoot = ({
 MainRoot.displayName = MAIN_ROOT_NAME;
 
 //
+// Overlay
+//
+
+type MainOverlayProps = ThemedClassName<Omit<ComponentPropsWithRef<typeof Primitive.div>, 'children' | 'onClick'>>;
+
+const MainOverlay = forwardRef<HTMLDivElement, MainOverlayProps>(({ classNames, ...props }, forwardedRef) => {
+  const [isLg] = useMediaQuery('lg');
+  const { navigationSidebarState, setNavigationSidebarState, complementarySidebarState, setComplementarySidebarState } =
+    useMainContext(MAIN_OVERLAY_NAME);
+  const { tx } = useThemeContext();
+  return (
+    <div
+      {...props}
+      onClick={() => {
+        setNavigationSidebarState('collapsed');
+        setComplementarySidebarState('collapsed');
+      }}
+      className={tx(
+        'main.overlay',
+        {
+          isLg,
+          inlineStartSidebarOpen: navigationSidebarState,
+          inlineEndSidebarOpen: complementarySidebarState,
+        },
+        classNames,
+      )}
+      data-state={navigationSidebarState === 'expanded' || complementarySidebarState === 'expanded' ? 'open' : 'closed'}
+      aria-hidden='true'
+      ref={forwardedRef}
+    />
+  );
+});
+
+MainOverlay.displayName = MAIN_OVERLAY_NAME;
+
+//
 // Sidebar
 //
 
@@ -279,7 +316,7 @@ const MainSidebar = forwardRef<HTMLDivElement, MainSidebarProps>(
           data-side={side === 'inline-end' ? 'ie' : 'is'}
           data-state={state}
           data-resizing={resizing ? 'true' : 'false'}
-          className={tx('main.sidebar', 'main__sidebar', {}, classNames)}
+          className={tx('main.sidebar', {}, classNames)}
           onKeyDownCapture={handleKeyDown}
           ref={ref}
         >
@@ -367,7 +404,7 @@ const MainContent = forwardRef<HTMLDivElement, MainContentProps>(
         data-sidebar-inline-start-state={navigationSidebarState}
         data-sidebar-inline-end-state={complementarySidebarState}
         data-handles-focus={handlesFocus}
-        className={tx('main.content', 'main', { bounce, handlesFocus }, classNames)}
+        className={tx('main.content', { bounce, handlesFocus }, classNames)}
         ref={forwardedRef}
       >
         {children}
@@ -378,45 +415,18 @@ const MainContent = forwardRef<HTMLDivElement, MainContentProps>(
 
 MainContent.displayName = MAIN_NAME;
 
-type MainOverlayProps = ThemedClassName<Omit<ComponentPropsWithRef<typeof Primitive.div>, 'children' | 'onClick'>>;
-
-const MainOverlay = forwardRef<HTMLDivElement, MainOverlayProps>(({ classNames, ...props }, forwardedRef) => {
-  const [isLg] = useMediaQuery('lg');
-  const { navigationSidebarState, setNavigationSidebarState, complementarySidebarState, setComplementarySidebarState } =
-    useMainContext(MAIN_NAME);
-  const { tx } = useThemeContext();
-  return (
-    <div
-      {...props}
-      onClick={() => {
-        setNavigationSidebarState('collapsed');
-        setComplementarySidebarState('collapsed');
-      }}
-      className={tx(
-        'main.overlay',
-        'main__overlay',
-        {
-          isLg,
-          inlineStartSidebarOpen: navigationSidebarState,
-          inlineEndSidebarOpen: complementarySidebarState,
-        },
-        classNames,
-      )}
-      data-state={navigationSidebarState === 'expanded' || complementarySidebarState === 'expanded' ? 'open' : 'closed'}
-      aria-hidden='true'
-      ref={forwardedRef}
-    />
-  );
-});
+//
+// Main
+//
 
 export const Main = {
   Root: MainRoot,
-  Content: MainContent,
   Overlay: MainOverlay,
+  Content: MainContent,
   NavigationSidebar: MainNavigationSidebar,
   ComplementarySidebar: MainComplementarySidebar,
 };
 
 export { useMainContext, useSidebars, useLandmarkMover };
 
-export type { MainRootProps, MainContentProps, MainOverlayProps, MainNavigationSidebarProps, SidebarState };
+export type { MainRootProps, MainOverlayProps, MainContentProps, MainNavigationSidebarProps, SidebarState };

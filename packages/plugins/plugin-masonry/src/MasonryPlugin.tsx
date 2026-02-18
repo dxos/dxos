@@ -4,7 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Common, Plugin } from '@dxos/app-framework';
+import { Plugin } from '@dxos/app-framework';
+import { AppPlugin } from '@dxos/app-toolkit';
 import { Type } from '@dxos/echo';
 import { type CreateObject } from '@dxos/plugin-space/types';
 import { View } from '@dxos/schema';
@@ -15,9 +16,7 @@ import { translations } from './translations';
 import { Masonry, MasonryAction } from './types';
 
 export const MasonryPlugin = Plugin.define(meta).pipe(
-  Common.Plugin.addTranslationsModule({ translations }),
-  Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
-  Common.Plugin.addMetadataModule({
+  AppPlugin.addMetadataModule({
     metadata: {
       id: Type.getTypename(Masonry.Masonry),
       metadata: {
@@ -32,6 +31,8 @@ export const MasonryPlugin = Plugin.define(meta).pipe(
       },
     },
   }),
-  Common.Plugin.addSchemaModule({ schema: [Masonry.Masonry] }),
+  AppPlugin.addSchemaModule({ schema: [Masonry.Masonry] }),
+  AppPlugin.addSurfaceModule({ activate: ReactSurface }),
+  AppPlugin.addTranslationsModule({ translations }),
   Plugin.make,
 );

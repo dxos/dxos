@@ -4,9 +4,7 @@
 
 import { type AnyEntity } from '@dxos/echo/internal';
 import { type DXN, type SpaceId } from '@dxos/keys';
-import type { QueryResult } from '@dxos/protocols';
-import { type EdgeFunctionEnv } from '@dxos/protocols';
-import { type QueueService as QueueServiceProto } from '@dxos/protocols';
+import { type EdgeFunctionEnv, type FeedProtocol } from '@dxos/protocols';
 import { type QueryService as QueryServiceProto } from '@dxos/protocols/proto/dxos/echo/query';
 import type { DataService as DataServiceProto } from '@dxos/protocols/proto/dxos/echo/service';
 
@@ -40,7 +38,7 @@ export class ServiceContainer {
   async createServices(): Promise<{
     dataService: DataServiceProto;
     queryService: QueryServiceProto;
-    queueService: QueueServiceProto;
+    queueService: FeedProtocol.QueueService;
     functionsAiService: EdgeFunctionEnv.FunctionsAiService;
   }> {
     const dataService = new DataServiceImpl(this._executionContext, this._dataService);
@@ -55,7 +53,7 @@ export class ServiceContainer {
     };
   }
 
-  async queryQueue(queue: DXN): Promise<QueryResult> {
+  async queryQueue(queue: DXN): Promise<FeedProtocol.QueryResult> {
     const { spaceId } = queue.asQueueDXN() ?? {};
     using result = (await this._queueService.query({}, queue.toString(), { spaceId: spaceId! } as never)) as {
       objects: unknown[];

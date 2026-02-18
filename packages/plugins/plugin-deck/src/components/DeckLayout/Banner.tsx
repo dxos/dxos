@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Surface } from '@dxos/app-framework/react';
+import { Surface } from '@dxos/app-framework/ui';
 import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx, osTranslations } from '@dxos/ui-theme';
 
@@ -27,13 +27,13 @@ export const Banner = ({ variant, classNames }: ThemedClassName<{ variant?: 'top
       {variant === 'topbar' && (
         <div role='none' className='absolute inset-0 pointer-events-none'>
           <div role='none' className='grid bs-full pointer-fine:p-1 max-is-md mli-auto pointer-events-auto'>
-            <Surface role='search-input' limit={1} />
+            <Surface.Surface role='search-input' limit={1} />
           </div>
         </div>
       )}
       <span role='none' className='grow' />
-      <Surface role='header-end' limit={1} />
-      <Surface role='notch-start' limit={1} />
+      <Surface.Surface role='header-end' limit={1} />
+      <Surface.Surface role='notch-start' limit={1} />
     </header>
   );
 };

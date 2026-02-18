@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { Surface } from '@dxos/app-framework/react';
+import { Surface } from '@dxos/app-framework/ui';
 import { type Label, Main } from '@dxos/react-ui';
 
 import { useBreakpoints, useDeckState, useHoistStatusbar } from '../../hooks';
@@ -36,7 +36,7 @@ export const Sidebar = () => {
         hoistStatusbar && 'block-end-[--statusbar-size]',
       ]}
     >
-      <Surface role='navigation' data={navigationData} limit={1} />
+      <Surface.Surface role='navigation' data={navigationData} limit={1} />
     </Main.NavigationSidebar>
   );
 };

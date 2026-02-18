@@ -253,6 +253,7 @@ export const baseTheme = EditorView.baseTheme({
   },
   '.cm-panel button': {
     '&:hover': {
+      // TODO(burdon): Replace with layer and @apply bg-accentSurfaceHover
       backgroundColor: 'var(--dx-accentSurfaceHover) !important',
     },
     '&:active': {

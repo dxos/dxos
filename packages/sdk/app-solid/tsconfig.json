@@ -25,6 +25,9 @@
     },
     {
       "path": "../app-framework"
+    },
+    {
+      "path": "../app-toolkit"
     }
   ]
 }

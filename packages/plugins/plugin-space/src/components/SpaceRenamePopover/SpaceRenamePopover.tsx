@@ -4,8 +4,8 @@
 
 import React, { useCallback, useRef, useState } from 'react';
 
-import { Common } from '@dxos/app-framework';
-import { useOperationInvoker } from '@dxos/app-framework/react';
+import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { LayoutOperation } from '@dxos/app-toolkit';
 import { type Space } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';
 import { Button, Input, Popover, useTranslation } from '@dxos/react-ui';
@@ -25,7 +25,7 @@ export const SpaceRenamePopover = ({ space }: { space: Space }) => {
     Obj.change(space.properties, (p) => {
       p.name = name;
     });
-    void invokePromise(Common.LayoutOperation.UpdatePopover, { anchorId: '', state: false });
+    void invokePromise(LayoutOperation.UpdatePopover, { anchorId: '', state: false });
   }, [space, name, invokePromise]);
 
   // TODO(thure): Why does the input value need to be uncontrolled to work?

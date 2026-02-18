@@ -7,8 +7,8 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 import { waitForCondition } from '@dxos/async';
 import { Config } from '@dxos/config';
 import { PublicKey } from '@dxos/keys';
-import { type ProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { createTestLevel } from '@dxos/kv-store/testing';
+import { type ProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 import { Client } from '../client';
 import { TestBuilder } from '../testing';

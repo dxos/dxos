@@ -227,7 +227,7 @@ const meta = {
   title: 'ui/react-ui-geo/Globe',
   component: Globe.Root,
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'fullscreen',
   },

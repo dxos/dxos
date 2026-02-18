@@ -5,7 +5,8 @@
 import { Atom } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { AppCapabilities } from '@dxos/app-toolkit';
 import { Path } from '@dxos/react-ui-list';
 
 import { meta } from '../../meta';
@@ -40,8 +41,8 @@ const getInitialState = (): Map<string, NC.NavTreeItemState> => {
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const registry = yield* Capability.get(Common.Capability.AtomRegistry);
-    const layoutAtom = yield* Capability.get(Common.Capability.Layout);
+    const registry = yield* Capability.get(Capabilities.AtomRegistry);
+    const layoutAtom = yield* Capability.get(AppCapabilities.Layout);
 
     // Backing state for persistence (not reactive).
     const backingState = getInitialState();

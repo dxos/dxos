@@ -30,10 +30,10 @@ const DefaultStory = ({ tooltips, defaultOpen }: StoryProps) => (
 );
 
 const meta = {
-  title: 'ui/react-ui-core/Tooltip',
+  title: 'ui/react-ui-core/components/Tooltip',
   component: Tooltip as any,
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

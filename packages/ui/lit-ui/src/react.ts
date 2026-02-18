@@ -54,4 +54,5 @@ export const DxTagPickerItem = createComponent({
 export type DxTagPickerItemProps = ComponentPropsWithRef<typeof DxTagPickerItem>;
 
 export { createComponent };
+
 export type { EventName };

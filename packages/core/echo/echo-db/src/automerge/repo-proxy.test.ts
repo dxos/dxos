@@ -11,7 +11,6 @@ import { Trigger, asyncTimeout, latch, sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { AutomergeHost, DataServiceImpl, SpaceStateManager } from '@dxos/echo-pipeline';
 import { TestReplicationNetwork } from '@dxos/echo-pipeline/testing';
-import { IndexMetadataStore } from '@dxos/indexing';
 import { SpaceId } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { log } from '@dxos/log';
@@ -370,7 +369,6 @@ const setup = async (kv = createTestLevel()) => {
   await openAndClose(kv);
   const host = new AutomergeHost({
     db: kv,
-    indexMetadataStore: new IndexMetadataStore({ db: kv.sublevel('index-metadata') }),
   });
   await openAndClose(host);
 

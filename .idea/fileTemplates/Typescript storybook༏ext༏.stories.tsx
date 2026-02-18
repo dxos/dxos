@@ -13,7 +13,7 @@ const Component = () => <div>Test</div>;
 const meta = {
   title: 'example/Story',
   component: Component,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'centered',
   },

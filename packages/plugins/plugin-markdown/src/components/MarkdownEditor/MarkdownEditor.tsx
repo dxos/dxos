@@ -9,7 +9,7 @@ import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { Surface } from '@dxos/app-framework/react';
+import { Surface } from '@dxos/app-framework/ui';
 import { DXN } from '@dxos/keys';
 import { useClient } from '@dxos/react-client';
 import {
@@ -92,7 +92,7 @@ const MarkdownEditorRoot = ({
         setPreviewBlocks((prev) => [...prev, block]);
       },
       removeBlockContainer: ({ link }) => {
-        setPreviewBlocks((prev) => prev.filter(({ link: prevLink }) => prevLink.ref !== link.ref));
+        setPreviewBlocks((prev) => prev.filter(({ link: prevLink }) => prevLink.dxn !== link.dxn));
       },
     }),
     [],
@@ -212,7 +212,7 @@ const MarkdownEditorBlocks = (_props: MarkdownEditorBlocksProps) => {
   return (
     <>
       {previewBlocks.map(({ link, el }) => (
-        <PreviewBlock key={link.ref} link={link} el={el} />
+        <PreviewBlock key={link.dxn} link={link} el={el} />
       ))}
     </>
   );
@@ -222,11 +222,11 @@ MarkdownEditorBlocks.displayName = MARKDOWN_EDITOR_BLOCKS_NAME;
 
 const PreviewBlock = ({ el, link }: PreviewBlock) => {
   const client = useClient();
-  const dxn = DXN.parse(link.ref);
+  const dxn = DXN.parse(link.dxn);
   const subject = client.graph.makeRef(dxn).target;
   const data = useMemo(() => ({ subject }), [subject]);
 
-  return createPortal(<Surface role='card--transclusion' data={data} limit={1} />, el);
+  return createPortal(<Surface.Surface role='card--transclusion' data={data} limit={1} />, el);
 };
 
 //

@@ -2,14 +2,15 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Common, Plugin } from '@dxos/app-framework';
+import { Plugin } from '@dxos/app-framework';
+import { AppPlugin } from '@dxos/app-toolkit';
 
 import { ReactSurface } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
 
 export const StatusBarPlugin = Plugin.define(meta).pipe(
-  Common.Plugin.addTranslationsModule({ translations }),
-  Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
+  AppPlugin.addSurfaceModule({ activate: ReactSurface }),
+  AppPlugin.addTranslationsModule({ translations }),
   Plugin.make,
 );

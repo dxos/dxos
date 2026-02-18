@@ -12,6 +12,7 @@ import { type ActionGraphProps, createMenuAction } from '@dxos/react-ui-menu';
 import { withRegistry } from '@dxos/storybook-utils';
 
 import { translations } from '../../translations';
+import { MobileLayout } from '../MobileLayout';
 
 import { AppBar, type AppBarProps } from './AppBar';
 
@@ -44,13 +45,24 @@ type StoryProps = Omit<AppBarProps, 'actions'> & {
 
 const DefaultStory = ({ actions: actionsProp, ...props }: StoryProps) => {
   const actions = useMemo(() => Atom.make(actionsProp).pipe(Atom.keepAlive), [actionsProp]);
-  return <AppBar {...props} actions={actions} />;
+  return (
+    <MobileLayout.Root>
+      <AppBar {...props} actions={actions} />
+    </MobileLayout.Root>
+  );
 };
 
 const meta = {
   title: 'plugins/plugin-simple-layout/AppBar',
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ layout: 'column', classNames: 'relative' }), withRegistry],
+  decorators: [
+    withTheme(),
+    withLayout({
+      layout: 'column',
+      classNames: 'relative',
+    }),
+    withRegistry,
+  ],
   parameters: {
     layout: 'fullscreen',
     translations,
@@ -67,8 +79,8 @@ export const Default: Story = {
     actions: buildDefaultActions(),
     title: 'Document Title',
     showBackButton: true,
-    onBack: fn(),
     onAction: fn(),
+    onBack: fn(),
   },
   play: async ({ args, canvasElement }) => {
     const canvas = within(canvasElement);

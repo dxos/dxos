@@ -106,7 +106,7 @@ const meta = {
   render: DefaultStory,
   decorators: [
     withRegistry,
-    withTheme,
+    withTheme(),
     withLayout(),
     withClientProvider({
       createIdentity: true,

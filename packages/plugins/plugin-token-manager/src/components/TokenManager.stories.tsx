@@ -41,7 +41,7 @@ const TokenManagerStory = (props: Omit<TokenManagerProps, 'tokens'>) => {
 
 const meta = {
   title: 'plugins/plugin-token-manager/TokenManager',
-  decorators: [withTheme],
+  decorators: [withTheme()],
   component: TokenManagerStory,
   args: {
     onDelete: console.log,

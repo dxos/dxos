@@ -6,6 +6,7 @@ import { Trigger } from '@dxos/async';
 import { Config, Defaults, Envs, Local, Storage } from '@dxos/config';
 import { log } from '@dxos/log';
 import { createWorkerPort } from '@dxos/rpc-tunnel';
+import { layerMemory } from '@dxos/sql-sqlite/platform';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
 
 import { mountDevtoolsHooks } from '../devtools';
@@ -16,7 +17,7 @@ TRACE_PROCESSOR.setInstanceTag('shared-worker');
 let releaseLock: () => void;
 const lockPromise = new Promise<void>((resolve) => (releaseLock = resolve));
 const lockAcquired = new Trigger();
-void navigator.locks.request(STORAGE_LOCK_KEY, (lock: Lock | null) => {
+void navigator.locks.request(STORAGE_LOCK_KEY, (_lock: Lock | null) => {
   lockAcquired.wake();
   return lockPromise;
 });
@@ -36,6 +37,8 @@ const setupRuntime = async () => {
       // Close the shared worker, lock will be released automatically.
       self.close();
     },
+    // TODO(mykola): OPFS SQLite doesn't work in Shared worker.
+    sqliteLayer: layerMemory,
   });
 
   // Allow to access host from console.

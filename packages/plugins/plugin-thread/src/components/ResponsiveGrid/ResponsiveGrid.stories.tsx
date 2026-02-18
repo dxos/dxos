@@ -92,7 +92,7 @@ const meta = {
   title: 'plugins/plugin-thread/ResponsiveGrid',
   component: ResponsiveGrid as any,
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'fullscreen',
     translations,

@@ -49,7 +49,7 @@ const Text = ({ children, initial = 'open' }: PropsWithChildren<{ initial?: stri
 const meta = {
   title: 'ui/react-ui-sfx/Text',
   component: Text,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'centered',
   },

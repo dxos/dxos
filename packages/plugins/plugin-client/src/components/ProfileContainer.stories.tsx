@@ -14,7 +14,7 @@ import { ProfileContainer } from './ProfileContainer';
 const meta = {
   title: 'plugins/plugin-client/ProfileContainer',
   component: ProfileContainer,
-  decorators: [withTheme, withClientProvider({ createIdentity: true })],
+  decorators: [withTheme(), withClientProvider({ createIdentity: true })],
   parameters: {
     layout: 'fullscreen',
     translations,

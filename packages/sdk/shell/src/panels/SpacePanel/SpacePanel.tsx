@@ -14,9 +14,9 @@ import { InvitationManager } from '../../steps';
 import { stepStyles } from '../../styles';
 import { translationKey } from '../../translations';
 
-import { useSpaceMachine } from './spaceMachine';
+import { useSpaceMachine } from './space-machine';
+import { SpaceManager } from './SpaceManager';
 import { type SpacePanelHeadingProps, type SpacePanelImplProps, type SpacePanelProps } from './SpacePanelProps';
-import { SpaceManager } from './steps';
 
 const SpacePanelHeading = ({ titleId, space, onDone }: SpacePanelHeadingProps) => {
   const { t } = useTranslation(translationKey);

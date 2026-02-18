@@ -5,6 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
+import { IdentityDid, PublicKey } from '@dxos/keys';
 import { create } from '@dxos/protocols/buf';
 import { decodePublicKey, encodePublicKey } from '@dxos/protocols/buf';
 import {
@@ -13,21 +14,20 @@ import {
   SpaceMember_PresenceState,
 } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
-import { IdentityDid, PublicKey } from '@dxos/keys';
-import { SpaceMember_Role, type SpaceMember } from '@dxos/react-client/echo';
+import { SpaceMember_Role } from '@dxos/react-client/echo';
 import { Invitation_State } from '@dxos/react-client/invitations';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { InvitationList, InvitationListItemImpl, SpaceMemberListImpl } from '../../components';
-import { StorybookDialog } from '../../components/StorybookDialog';
 import { InvitationManager, type InvitationManagerProps } from '../../steps';
+import { StorybookDialog } from '../../story-components';
 import { inviteWithState } from '../../testing/fixtures';
 
+import { SpaceManagerImpl } from './SpaceManager';
 import { SpacePanelImpl } from './SpacePanel';
 import { type SpacePanelImplProps } from './SpacePanelProps';
-import { SpaceManagerImpl } from './steps';
 
-const noOpProps: SpacePanelImplProps = {
+const noopProps: SpacePanelImplProps = {
   titleId: 'storybookSpacePanel__title',
   send: () => {},
   createInvitationUrl: (code: string) => code,
@@ -38,7 +38,7 @@ const noOpProps: SpacePanelImplProps = {
 const meta = {
   title: 'sdk/shell/SpacePanel',
   component: SpacePanelImpl,
-  decorators: [withTheme],
+  decorators: [withTheme()],
 } satisfies Meta<typeof SpacePanelImpl>;
 
 export default meta;
@@ -49,7 +49,7 @@ export const SpaceManager = () => {
   return (
     <StorybookDialog inOverlayLayout>
       <SpacePanelImpl
-        {...noOpProps}
+        {...noopProps}
         activeView='space manager'
         SpaceManager={(props) => {
           return (
@@ -69,7 +69,7 @@ export const SpaceManagerWithInvites = () => {
   return (
     <StorybookDialog inOverlayLayout>
       <SpacePanelImpl
-        {...noOpProps}
+        {...noopProps}
         activeView='space manager'
         SpaceManager={(props) => {
           return (
@@ -89,7 +89,7 @@ export const SpaceManagerWithMoreInvites = () => {
   return (
     <StorybookDialog inOverlayLayout>
       <SpacePanelImpl
-        {...noOpProps}
+        {...noopProps}
         activeView='space manager'
         SpaceManager={(props) => {
           return (
@@ -113,7 +113,7 @@ export const SpaceManagerWithEvenMoreInvites = () => {
   return (
     <StorybookDialog inOverlayLayout>
       <SpacePanelImpl
-        {...noOpProps}
+        {...noopProps}
         activeView='space manager'
         SpaceManager={(props) => {
           return (
@@ -180,7 +180,7 @@ export const SpaceManagerWithMember = () => {
   return (
     <StorybookDialog inOverlayLayout>
       <SpacePanelImpl
-        {...noOpProps}
+        {...noopProps}
         activeView='space manager'
         SpaceManager={(props) => {
           return (
@@ -214,7 +214,7 @@ export const SpaceManagerWithMembers = () => {
   return (
     <StorybookDialog inOverlayLayout>
       <SpacePanelImpl
-        {...noOpProps}
+        {...noopProps}
         activeView='space manager'
         SpaceManager={(props) => {
           return (
@@ -249,7 +249,7 @@ export const SpaceManagerWithMoreMembers = () => {
   return (
     <StorybookDialog inOverlayLayout>
       <SpacePanelImpl
-        {...noOpProps}
+        {...noopProps}
         activeView='space manager'
         SpaceManager={(props) => {
           return (
@@ -306,7 +306,7 @@ const SpaceInvitationManagerState = (extraprops?: Partial<InvitationManagerProps
   return (
     <StorybookDialog inOverlayLayout>
       <SpacePanelImpl
-        {...noOpProps}
+        {...noopProps}
         activeView='space invitation manager'
         SpaceManager={(props) => {
           return (

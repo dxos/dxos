@@ -15,15 +15,15 @@ import {
   AiConversation,
   type AiSessionRunError,
   type AiSessionRunRequirements,
-  type GenericToolkit,
-  makeToolExecutionServiceFromFunctions,
-  makeToolResolverFromFunctions,
+  GenericToolkit,
+  ToolExecutionServices,
 } from '@dxos/assistant';
 import { Chat } from '@dxos/assistant-toolkit';
 import { Blueprint } from '@dxos/blueprints';
 import { type Space } from '@dxos/client/echo';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { type FunctionDefinition } from '@dxos/functions';
+import { FunctionImplementationResolver } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
 import { type Message } from '@dxos/types';
 import { isTruthy } from '@dxos/util';
@@ -72,11 +72,9 @@ export class ChatProcessor {
   ) {
     const fiber = request.pipe(
       Effect.provide(
-        Layer.mergeAll(
-          AiService.model(model),
-          // TODO(dmaretskyi): Introduce new FunctionRegistry service (injected above) that will provide functions here.
-          makeToolResolverFromFunctions(this._functions, this._toolkit.toolkit),
-          makeToolExecutionServiceFromFunctions(this._toolkit.toolkit, this._toolkit.layer),
+        Layer.mergeAll(AiService.model(model), ToolExecutionServices).pipe(
+          Layer.provideMerge(GenericToolkit.providerLayer(this._toolkit)),
+          Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions: this._functions })),
         ),
       ),
       Effect.asVoid,

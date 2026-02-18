@@ -4,7 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { AppCapabilities } from '@dxos/app-toolkit';
 import { Obj } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space/types';
 import { isSpace } from '@dxos/react-client/echo';
@@ -18,7 +19,7 @@ export default Capability.makeModule(
     // Get context for lazy capability access in callbacks.
     const capabilities = yield* Capability.Service;
 
-    return Capability.contributes(Common.Capability.AppGraphSerializer, [
+    return Capability.contributes(AppCapabilities.AppGraphSerializer, [
       {
         inputType: Diagram.Diagram.typename,
         outputType: 'application/tldraw',
@@ -43,7 +44,7 @@ export default Capability.makeModule(
 
           const { schema, content } = JSON.parse(data.data);
 
-          const { invokePromise } = capabilities.get(Common.Capability.OperationInvoker);
+          const { invokePromise } = capabilities.get(Capabilities.OperationInvoker);
           const createResult = await invokePromise(SketchOperation.Create, { name: data.name, schema, content });
           if (!createResult.data?.object) {
             return undefined;

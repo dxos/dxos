@@ -22,6 +22,12 @@ export const UserFeedback = Schema.Struct({
       description: t['feedback textarea placeholder'],
     }),
   ),
+  includeLogs: Schema.Boolean.pipe(
+    Schema.annotations({
+      title: t['include debug logs label'],
+    }),
+    Schema.optional,
+  ),
 });
 
 export type UserFeedback = Schema.Schema.Type<typeof UserFeedback>;

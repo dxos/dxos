@@ -4,7 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { ActivationEvent, Capability, Common, Plugin } from '@dxos/app-framework';
+import { ActivationEvent, Capability, Plugin } from '@dxos/app-framework';
+import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { Type } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 import { ClientEvents } from '@dxos/plugin-client';
@@ -23,25 +24,12 @@ import { meta } from './meta';
 import { translations } from './translations';
 import { Meeting, MeetingCapabilities, MeetingOperation } from './types';
 
-const StateReady = Common.ActivationEvent.createStateEvent(meta.id);
-const SettingsReady = Common.ActivationEvent.createSettingsEvent(MeetingCapabilities.Settings.identifier);
+const StateReady = AppActivationEvents.createStateEvent(meta.id);
+const SettingsReady = AppActivationEvents.createSettingsEvent(MeetingCapabilities.Settings.identifier);
 
 export const MeetingPlugin = Plugin.define(meta).pipe(
-  Plugin.addModule({
-    activatesOn: Common.ActivationEvent.SetupSettings,
-    activatesAfter: [SettingsReady],
-    activate: MeetingSettings,
-  }),
-  Plugin.addModule({
-    // TODO(wittjosiah): Does not integrate with settings store.
-    //   Should this be a different event?
-    //   Should settings store be renamed to be more generic?
-    activatesOn: ActivationEvent.oneOf(Common.ActivationEvent.SetupSettings, Common.ActivationEvent.SetupAppGraph),
-    activatesAfter: [StateReady],
-    activate: MeetingState,
-  }),
-  Common.Plugin.addTranslationsModule({ translations }),
-  Common.Plugin.addMetadataModule({
+  AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
+  AppPlugin.addMetadataModule({
     metadata: {
       id: Type.getTypename(Meeting.Meeting),
       metadata: {
@@ -51,7 +39,23 @@ export const MeetingPlugin = Plugin.define(meta).pipe(
       },
     },
   }),
-  Common.Plugin.addSchemaModule({ schema: [Meeting.Meeting], id: 'schemas' }),
+  AppPlugin.addOperationResolverModule({ activate: OperationResolver }),
+  AppPlugin.addSchemaModule({ schema: [Meeting.Meeting], id: 'schemas' }),
+  AppPlugin.addSurfaceModule({ activate: ReactSurface }),
+  AppPlugin.addTranslationsModule({ translations }),
+  Plugin.addModule({
+    activatesOn: AppActivationEvents.SetupSettings,
+    activatesAfter: [SettingsReady],
+    activate: MeetingSettings,
+  }),
+  Plugin.addModule({
+    // TODO(wittjosiah): Does not integrate with settings store.
+    //   Should this be a different event?
+    //   Should settings store be renamed to be more generic?
+    activatesOn: ActivationEvent.oneOf(AppActivationEvents.SetupSettings, AppActivationEvents.SetupAppGraph),
+    activatesAfter: [StateReady],
+    activate: MeetingState,
+  }),
   Plugin.addModule({
     id: 'on-space-created',
     activatesOn: SpaceEvents.SpaceCreated,
@@ -66,9 +70,6 @@ export const MeetingPlugin = Plugin.define(meta).pipe(
     activatesOn: ClientEvents.SpacesReady,
     activate: Repair,
   }),
-  Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
-  Common.Plugin.addOperationResolverModule({ activate: OperationResolver }),
-  Common.Plugin.addAppGraphModule({ activate: AppGraphBuilder }),
   Plugin.addModule({
     activatesOn: ActivationEvent.allOf(SettingsReady, StateReady),
     activate: CallExtension,

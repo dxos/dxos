@@ -5,7 +5,8 @@
 import { type Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
 import * as Effect from 'effect/Effect';
 
-import { type CapabilityManager, Common } from '@dxos/app-framework';
+import { type CapabilityManager } from '@dxos/app-framework';
+import { LayoutOperation } from '@dxos/app-toolkit';
 import { type Space, SpaceState, isSpace } from '@dxos/client/echo';
 import { type Database, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
@@ -308,7 +309,7 @@ export const constructSpaceActions = ({
         properties: {
           label: ['create object in space label', { ns: meta.id }],
           icon: 'ph--plus--regular',
-          disposition: 'item',
+          disposition: 'list-item-primary',
           testId: 'spacePlugin.createObject',
         },
       },
@@ -633,7 +634,7 @@ export const constructObjectActions = ({
                   object: createdObject,
                 });
                 if (addResult.id) {
-                  yield* Operation.invoke(Common.LayoutOperation.Open, { subject: [addResult.id] });
+                  yield* Operation.invoke(LayoutOperation.Open, { subject: [addResult.id] });
                 }
               }
             }),
@@ -710,9 +711,9 @@ export const constructObjectActions = ({
       : []),
     // TODO(wittjosiah): Factor out and apply to all nodes.
     {
-      id: getId(Common.LayoutOperation.Expose.meta.key),
+      id: getId(LayoutOperation.Expose.meta.key),
       type: Node.ActionType,
-      data: () => Operation.invoke(Common.LayoutOperation.Expose, { subject: Obj.getDXN(object).toString() }),
+      data: () => Operation.invoke(LayoutOperation.Expose, { subject: Obj.getDXN(object).toString() }),
       properties: {
         label: ['expose object label', { ns: meta.id }],
         icon: 'ph--eye--regular',

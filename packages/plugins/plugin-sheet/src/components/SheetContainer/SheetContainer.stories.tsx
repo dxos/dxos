@@ -6,7 +6,7 @@ import { type Meta } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React from 'react';
 
-import { Capability, Common } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj } from '@dxos/echo';
 import { OperationResolver } from '@dxos/operation';
@@ -28,7 +28,7 @@ const meta = {
   title: 'plugins/plugin-sheet/SheetContainer',
   component: SheetContainer,
   decorators: [
-    withTheme,
+    withTheme(),
     withLayout({ layout: 'fullscreen' }),
     withClientProvider({ types: [Sheet.Sheet], createSpace: true }),
     withComputeGraphDecorator(),
@@ -36,7 +36,7 @@ const meta = {
     withPluginManager({
       plugins: [...corePlugins()],
       capabilities: [
-        Capability.contributes(Common.Capability.OperationResolver, [
+        Capability.contributes(Capabilities.OperationResolver, [
           OperationResolver.make({
             operation: SheetOperation.DropAxis,
             handler: ({ model, axis, axisIndex }) =>

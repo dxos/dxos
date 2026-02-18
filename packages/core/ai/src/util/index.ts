@@ -4,3 +4,4 @@
 
 export * from './printer';
 export * from './sse';
+export * from './tool-call-parsing';

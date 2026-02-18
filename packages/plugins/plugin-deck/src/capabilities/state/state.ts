@@ -5,7 +5,8 @@
 import { Atom } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { AppCapabilities } from '@dxos/app-toolkit';
 import { createKvsStore } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
@@ -49,7 +50,7 @@ const defaultDeckEphemeralState: DeckEphemeralStateProps = {
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const registry = yield* Capability.get(Common.Capability.AtomRegistry);
+    const registry = yield* Capability.get(Capabilities.AtomRegistry);
 
     // Persisted state using KVS store.
     const stateAtom = createKvsStore({
@@ -92,13 +93,13 @@ export default Capability.makeModule(
         active: deck.solo ? [deck.solo] : deck.active,
         inactive: deck.inactive,
         scrollIntoView: ephemeral.scrollIntoView,
-      } satisfies Common.Capability.Layout;
+      } satisfies AppCapabilities.Layout;
     }).pipe(Atom.keepAlive);
 
     return [
       Capability.contributes(DeckCapabilities.State, stateAtom),
       Capability.contributes(DeckCapabilities.EphemeralState, ephemeralAtom),
-      Capability.contributes(Common.Capability.Layout, layoutAtom),
+      Capability.contributes(AppCapabilities.Layout, layoutAtom),
     ];
   }),
 );

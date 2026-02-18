@@ -1,0 +1,50 @@
+{
+  "name": "@dxos/plugin-settings",
+  "version": "0.8.3",
+  "description": "DXOS Settings plugin for managing application settings.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "MIT",
+  "author": "DXOS.org",
+  "sideEffects": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "browser": "./dist/lib/browser/index.mjs",
+      "node": "./dist/lib/node-esm/index.mjs",
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {}
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@dxos/app-framework": "workspace:*",
+    "@dxos/app-graph": "workspace:*",
+    "@dxos/app-toolkit": "workspace:*",
+    "@dxos/operation": "workspace:*",
+    "@dxos/util": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/react": "catalog:",
+    "effect": "catalog:",
+    "react": "catalog:"
+  },
+  "peerDependencies": {
+    "effect": "catalog:",
+    "react": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

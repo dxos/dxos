@@ -12,11 +12,10 @@ import { EdgeService } from '@dxos/protocols';
 import { type buf, bufWkt, create, timestampFromDate } from '@dxos/protocols/buf';
 import {
   type Message as EdgeMessage,
-  type Peer,
   PeerSchema,
-  type SwarmResponse,
   SwarmRequest_Action as SwarmRequestAction,
   SwarmRequestSchema,
+  type SwarmResponse,
   SwarmResponseSchema,
 } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import {
@@ -133,10 +132,13 @@ export class EdgeSignalManager extends Resource implements SignalManager {
     await this._edgeConnection.send(
       protocol.createMessage(SwarmRequestSchema, {
         serviceId: EdgeService.SWARM,
-        source: createMessageSource(topic, create(PeerSchema, {
-          peerKey: this._edgeConnection.peerKey,
-          identityKey: this._edgeConnection.identityKey,
-        })),
+        source: createMessageSource(
+          topic,
+          create(PeerSchema, {
+            peerKey: this._edgeConnection.peerKey,
+            identityKey: this._edgeConnection.identityKey,
+          }),
+        ),
         payload: { action: SwarmRequestAction.INFO, swarmKeys: [topic.toHex()] },
       }),
     );

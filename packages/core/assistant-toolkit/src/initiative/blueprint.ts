@@ -30,6 +30,7 @@ export const makeBlueprint = () =>
         IMPORTANT: When create a new artifact, always add it to the initiative using the add-artifact function.
         
         {{#with initiative}}
+        <initiative id="{{id}}" name="{{name}}">
           <spec>
             {{spec}}
           </spec>
@@ -44,6 +45,7 @@ export const makeBlueprint = () =>
             </artifact>
           {{/each}}
           </artifacts>
+        </initiative>
         {{/with}}
       `,
       inputs: [

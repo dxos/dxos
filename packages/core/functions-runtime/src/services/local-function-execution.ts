@@ -62,12 +62,14 @@ export class LocalFunctionExecutionService extends Context.Tag('@dxos/functions/
           ),
         resolveFunction: (key: string) =>
           Effect.gen(function* () {
+            // Try to resolve function from database.
             const [dbFunction] = yield* Database.runQuery(Query.type(Function.Function, { key }));
             const functionDef = dbFunction ? FunctionDefinition.deserialize(dbFunction) : null;
             if (functionDef) {
               return functionDef;
             }
 
+            // Try to resolve function from the FunctionImplementationResolver.
             const resolved = yield* resolver.resolveByKey(key).pipe(Effect.either);
             if (Either.isRight(resolved)) {
               return resolved.right;

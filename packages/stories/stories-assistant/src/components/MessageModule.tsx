@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { Surface } from '@dxos/app-framework/react';
+import { Surface } from '@dxos/app-framework/ui';
 import { Filter, Obj } from '@dxos/echo';
 import { Mailbox } from '@dxos/plugin-inbox/types';
 import { useQuery } from '@dxos/react-client/echo';
@@ -19,5 +19,5 @@ export const MessageModule = ({ space }: ComponentProps) => {
   const message = useQuery(mailbox?.queue.target, selected ? Filter.id(selected) : Filter.nothing())[0];
   const data = useMemo(() => ({ subject: message ?? 'message', companionTo: mailbox }), [message, mailbox]);
 
-  return <Surface role='section' data={data} limit={1} />;
+  return <Surface.Surface role='section' data={data} limit={1} />;
 };

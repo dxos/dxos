@@ -72,5 +72,6 @@ export default defineFunction({
     },
     Effect.scoped,
     Effect.provide(AiService.model('@anthropic/claude-sonnet-4-5')),
-  ) as any, // TODO(dmaretskyi): Services don't align -- need to refactor how functions are defined.
+    AiContextService.fixFunctionHandlerType,
+  ) as any,
 });

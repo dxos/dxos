@@ -23,6 +23,7 @@ import { mx } from '@dxos/ui-theme';
 
 import { type ThemedClassName } from '../../util';
 import { IconButton } from '../Button';
+import { ScrollArea } from '../ScrollArea';
 
 const isBottom = (el: HTMLElement | null) => {
   return !!(el && el.scrollHeight - el.scrollTop === el.clientHeight);
@@ -138,9 +139,9 @@ const Root = forwardRef<ScrollController, RootProps>(
               )}
             />
           )}
-          <div className={mx('flex flex-col min-bs-0 overflow-y-auto scrollbar-thin', classNames)} ref={scrollerRef}>
-            {children}
-          </div>
+          <ScrollArea.Root classNames={mx('min-bs-0', classNames)} ref={scrollerRef} thin>
+            <ScrollArea.Viewport>{children}</ScrollArea.Viewport>
+          </ScrollArea.Root>
         </div>
       </ScrollContainerProvider>
     );

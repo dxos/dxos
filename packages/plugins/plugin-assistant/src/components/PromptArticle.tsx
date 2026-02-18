@@ -4,14 +4,13 @@
 
 import React, { useMemo } from 'react';
 
-import { type SurfaceComponentProps } from '@dxos/app-framework/react';
+import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { Agent } from '@dxos/assistant-toolkit';
 import { type Prompt } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';
 import { invokeFunctionWithTracing, useComputeRuntimeCallback } from '@dxos/plugin-automation';
-import { Toolbar, useTranslation } from '@dxos/react-ui';
+import { Layout, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
-import { Layout } from '@dxos/react-ui-mosaic';
 
 import { meta } from '../meta';
 

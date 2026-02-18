@@ -21,9 +21,6 @@
       "path": "../../common/invariant"
     },
     {
-      "path": "../../common/keys"
-    },
-    {
       "path": "../../common/log"
     },
     {
@@ -45,22 +42,10 @@
       "path": "../../common/web-context-react"
     },
     {
-      "path": "../../core/ai"
-    },
-    {
-      "path": "../../core/assistant"
-    },
-    {
-      "path": "../../core/blueprints"
-    },
-    {
       "path": "../../core/echo/echo"
     },
     {
       "path": "../../core/echo/echo-db"
-    },
-    {
-      "path": "../../core/functions"
     },
     {
       "path": "../../core/operation"
@@ -72,22 +57,7 @@
       "path": "../../ui/react-ui"
     },
     {
-      "path": "../../ui/react-ui-syntax-highlighter"
-    },
-    {
       "path": "../../ui/ui-theme"
-    },
-    {
-      "path": "../app-graph"
-    },
-    {
-      "path": "../client-protocol"
-    },
-    {
-      "path": "../schema"
-    },
-    {
-      "path": "../types"
     }
   ]
 }

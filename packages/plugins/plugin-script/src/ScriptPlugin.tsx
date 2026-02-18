@@ -4,7 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Common, Plugin } from '@dxos/app-framework';
+import { Plugin } from '@dxos/app-framework';
+import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { Ref } from '@dxos/echo';
 import { Script } from '@dxos/functions';
 import { Operation } from '@dxos/operation';
@@ -24,16 +25,9 @@ import { ScriptEvents } from './types';
 import { Notebook, ScriptOperation } from './types';
 
 export const ScriptPlugin = Plugin.define(meta).pipe(
-  Plugin.addModule({
-    activatesOn: Common.ActivationEvent.SetupSettings,
-    activate: ScriptSettings,
-  }),
-  Plugin.addModule({
-    activatesOn: ScriptEvents.SetupCompiler,
-    activate: Compiler,
-  }),
-  Common.Plugin.addTranslationsModule({ translations }),
-  Common.Plugin.addMetadataModule({
+  AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
+  AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
+  AppPlugin.addMetadataModule({
     metadata: [
       {
         id: Script.Script.typename,
@@ -63,10 +57,17 @@ export const ScriptPlugin = Plugin.define(meta).pipe(
       },
     ],
   }),
-  Common.Plugin.addAppGraphModule({ activate: AppGraphBuilder }),
-  Common.Plugin.addSchemaModule({ schema: [Script.Script] }),
-  Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
-  Common.Plugin.addOperationResolverModule({ activate: OperationResolver }),
-  Common.Plugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
+  AppPlugin.addOperationResolverModule({ activate: OperationResolver }),
+  AppPlugin.addSchemaModule({ schema: [Script.Script] }),
+  AppPlugin.addSurfaceModule({ activate: ReactSurface }),
+  AppPlugin.addTranslationsModule({ translations }),
+  Plugin.addModule({
+    activatesOn: AppActivationEvents.SetupSettings,
+    activate: ScriptSettings,
+  }),
+  Plugin.addModule({
+    activatesOn: ScriptEvents.SetupCompiler,
+    activate: Compiler,
+  }),
   Plugin.make,
 );

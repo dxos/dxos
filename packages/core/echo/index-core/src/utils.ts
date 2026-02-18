@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { invariant } from '@dxos/invariant';
 
-export type ObjectPropPath = (string | number)[];
+export type ObjectPropPath = string[];
 
 /**
  * Escaped property path within an object.

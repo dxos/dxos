@@ -6,8 +6,8 @@ import React, { useEffect, useState } from 'react';
 
 import { StatusBar } from '@dxos/plugin-status-bar';
 import {
-  EdgeStatus_ConnectionState,
   type EdgeStatus,
+  EdgeStatus_ConnectionState,
   type QueryEdgeStatusResponse,
 } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { useClient } from '@dxos/react-client';

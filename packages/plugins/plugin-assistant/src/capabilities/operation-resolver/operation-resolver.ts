@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
 import { AiContextBinder, AiConversation } from '@dxos/assistant';
 import { Agent, Chat } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
@@ -24,7 +24,7 @@ import { AssistantBlueprint, createBlueprint } from '../blueprint-definition/blu
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contributes(Common.Capability.OperationResolver, [
+    return Capability.contributes(Capabilities.OperationResolver, [
       OperationResolver.make({
         operation: AssistantOperation.OnCreateSpace,
         handler: Effect.fnUntraced(function* ({ space, rootCollection }) {
@@ -46,7 +46,7 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: AssistantOperation.CreateChat,
         handler: Effect.fnUntraced(function* ({ db, name, addToSpace = true }) {
-          const registry = yield* Capability.get(Common.Capability.AtomRegistry);
+          const registry = yield* Capability.get(Capabilities.AtomRegistry);
           const client = yield* Capability.get(ClientCapabilities.Client);
           const space = client.spaces.get(db.spaceId);
           invariant(space, 'Space not found');
@@ -75,7 +75,7 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: AssistantOperation.UpdateChatName,
         handler: Effect.fnUntraced(function* ({ chat }) {
-          const registry = yield* Capability.get(Common.Capability.AtomRegistry);
+          const registry = yield* Capability.get(Capabilities.AtomRegistry);
           const db = Obj.getDatabase(chat);
           const queue = chat.queue.target as Queue<Message.Message>;
           if (!db || !queue) {
@@ -101,7 +101,7 @@ export default Capability.makeModule(
         handler: Effect.fnUntraced(function* ({ companionTo, chat }) {
           const companionToId = Obj.getDXN(companionTo).toString();
           const chatId = chat && Obj.getDXN(chat).toString();
-          yield* Common.Capability.updateAtomValue(AssistantCapabilities.State, (current) => ({
+          yield* Capabilities.updateAtomValue(AssistantCapabilities.State, (current) => ({
             ...current,
             currentChat: { ...current.currentChat, [companionToId]: chatId },
           }));

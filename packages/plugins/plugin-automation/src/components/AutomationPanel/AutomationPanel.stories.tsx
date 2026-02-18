@@ -31,7 +31,7 @@ const meta = {
   component: AutomationPanel as any,
   render: DefaultStory,
   decorators: [
-    withTheme,
+    withTheme(),
     withClientProvider({
       createIdentity: true,
       createSpace: true,

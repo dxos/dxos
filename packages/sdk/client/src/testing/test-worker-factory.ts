@@ -7,6 +7,7 @@ import { Config } from '@dxos/config';
 import { Resource } from '@dxos/context';
 import { log } from '@dxos/log';
 import { createWorkerPort } from '@dxos/rpc-tunnel';
+import { layerMemory as sqliteLayerMemory } from '@dxos/sql-sqlite/platform';
 
 import { STORAGE_LOCK_KEY } from '../lock-key';
 import type { DedicatedWorkerMessage } from '../services/dedicated/types';
@@ -61,6 +62,8 @@ export class TestWorkerFactory extends Resource {
               acquireLock: async () => {},
               releaseLock: () => {},
               automaticallyConnectWebrtc: false,
+              // Use in-memory SQLite for testing instead of OPFS which only works in browsers.
+              sqliteLayer: sqliteLayerMemory,
             });
             await runtime.start();
             this._ctx.onDispose(() => runtime.stop());

@@ -242,8 +242,10 @@ class OperationInvokerImpl implements OperationInvokerInternal {
     });
   }
 
-  /** @internal */
-  // Arrow function to preserve `this` context when destructured.
+  /**
+   * @internal
+   * NOTE: Arrow function to preserve `this` context when destructured.
+   */
   _invokeCore = <I, O>(
     op: Operation.Definition<I, O>,
     input: I,
@@ -255,7 +257,8 @@ class OperationInvokerImpl implements OperationInvokerInternal {
         return yield* Effect.fail(new NoHandlerError(op.meta.key));
       }
 
-      log('invoking operation', { key: op.meta.key, input });
+      // TODO(burdon): Add debug flag to composer to enable this.
+      log('invoke', { key: op.meta.key, input });
 
       // Build the effect with Operation.Service provided.
       let handlerEffect = handler(input).pipe(
@@ -289,8 +292,7 @@ class OperationInvokerImpl implements OperationInvokerInternal {
         output = yield* handlerEffect;
       }
 
-      log('operation completed', { key: op.meta.key, output });
-
+      log('invocation completed', { key: op.meta.key, output });
       return output;
     });
   };

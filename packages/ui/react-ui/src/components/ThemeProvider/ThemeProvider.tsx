@@ -20,6 +20,7 @@ export type ThemeContextValue = {
   hasIosKeyboard: boolean;
   safeAreaPadding?: SafeAreaPadding;
   noCache?: boolean;
+  platform?: 'mobile' | 'desktop';
 };
 
 /**
@@ -39,7 +40,7 @@ export const ThemeProvider = ({
   fallback = null,
   resourceExtensions,
   appNs,
-  tx = (_path, defaultClassName, _styleProps, ..._options) => defaultClassName,
+  tx = (_path, _styleProps, ..._options) => undefined,
   themeMode = 'dark',
   rootDensity = 'fine',
   ...rest

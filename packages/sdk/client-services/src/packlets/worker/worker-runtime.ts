@@ -37,6 +37,7 @@ export type CreateSessionProps = {
   appPort: RpcPort;
   systemPort: RpcPort;
   shellPort?: RpcPort;
+  onClose?: () => Promise<void>;
 };
 
 export type WorkerRuntimeOptions = {
@@ -50,7 +51,11 @@ export type WorkerRuntimeOptions = {
    */
   automaticallyConnectWebrtc?: boolean;
 
-  enableSqlite?: boolean;
+  /**
+   * Optional SQLite layer for Effect. Defaults to LocalSqliteOpfsLayer.
+   * For testing in Node.js, use `sqliteLayerMemory` from `@dxos/sql-sqlite/platform`.
+   */
+  sqliteLayer?: Layer.Layer<SqlClient.SqlClient | SqlExport.SqlExport, unknown>;
 };
 
 /**
@@ -87,16 +92,19 @@ export class WorkerRuntime {
     releaseLock,
     onStop,
     automaticallyConnectWebrtc = true,
-    enableSqlite,
+    sqliteLayer,
   }: WorkerRuntimeOptions) {
     this._configProvider = configProvider;
     this._acquireLock = acquireLock;
     this._releaseLock = releaseLock;
     this._onStop = onStop;
     this._channel = channel;
+    if (sqliteLayer) {
+      log.warn('Using testing SQLite layer');
+    }
     this._runtime = ManagedRuntime.make(
       SqlTransaction.layer
-        .pipe(Layer.provideMerge(LocalSqliteOpfsLayer), Layer.provideMerge(Reactivity.layer))
+        .pipe(Layer.provideMerge(sqliteLayer ?? LocalSqliteOpfsLayer), Layer.provideMerge(Reactivity.layer))
         .pipe(Layer.orDie),
     );
     this._clientServices = new ClientServicesHost({
@@ -105,7 +113,6 @@ export class WorkerRuntime {
       },
       runtime: this._runtime.runtimeEffect,
       runtimeProps: {
-        enableSqlite,
         // Auto-activate spaces that were previously active after leader changeover.
         autoActivateSpaces: true,
       },
@@ -178,7 +185,7 @@ export class WorkerRuntime {
   /**
    * Create a new session.
    */
-  async createSession({ appPort, systemPort, shellPort }: CreateSessionProps): Promise<WorkerSession> {
+  async createSession({ appPort, systemPort, shellPort, onClose }: CreateSessionProps): Promise<WorkerSession> {
     const session = new WorkerSession({
       serviceHost: this._clientServices,
       appPort,
@@ -198,6 +205,7 @@ export class WorkerRuntime {
           this._reconnectWebrtc();
         }
       }
+      await onClose?.();
     });
 
     await session.open();

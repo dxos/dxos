@@ -6,11 +6,12 @@ import type * as SqlClient from '@effect/sql/SqlClient';
 import * as Effect from 'effect/Effect';
 
 import { RuntimeProvider } from '@dxos/effect';
-import { FeedCursor, type FeedStore } from '@dxos/feed';
+import { type FeedStore } from '@dxos/feed';
 import { type DataSourceCursor, type IndexDataSource, type IndexerObject } from '@dxos/index-core';
 import { failedInvariant } from '@dxos/invariant';
 import type { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { FeedProtocol } from '@dxos/protocols';
 
 export type QueueDataSourceOptions = {
   feedStore: FeedStore;
@@ -83,16 +84,15 @@ export class QueueDataSource implements IndexDataSource {
 
         // Empty string cursor means "start from beginning".
         const currentCursor =
-          typeof cursor.cursor === 'string' && cursor.cursor !== '' ? FeedCursor.make(cursor.cursor) : undefined;
+          typeof cursor.cursor === 'string' && cursor.cursor !== ''
+            ? FeedProtocol.FeedCursor.make(cursor.cursor)
+            : undefined;
 
         try {
           const result = yield* this._feedStore.query({
             spaceId: cursor.spaceId,
+            feedNamespace: FeedProtocol.WellKnownNamespaces.data,
             cursor: currentCursor,
-            query: {
-              // Query all feeds in data namespace
-              feedNamespace: 'data',
-            },
             limit: remainingLimit,
           });
 

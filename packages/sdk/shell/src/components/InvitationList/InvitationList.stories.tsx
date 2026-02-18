@@ -15,7 +15,7 @@ import { InvitationList } from './InvitationList';
 const meta = {
   title: 'sdk/shell/InvitationList',
   component: InvitationList,
-  decorators: [withTheme],
+  decorators: [withTheme()],
 } satisfies Meta<typeof InvitationList>;
 
 export default meta;

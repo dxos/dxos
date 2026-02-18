@@ -100,7 +100,7 @@ const meta = {
   title: 'ui/react-ui-form/ObjectPicker',
   render: DefaultStory,
   decorators: [
-    withTheme,
+    withTheme(),
     withClientProvider({
       types: [Person.Person],
       createIdentity: true,

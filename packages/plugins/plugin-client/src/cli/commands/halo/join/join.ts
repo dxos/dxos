@@ -11,7 +11,7 @@ import * as Match from 'effect/Match';
 
 import { CommandConfig, print } from '@dxos/cli-util';
 import { type Client, ClientService } from '@dxos/client';
-import { type AuthenticatingInvitationObservable, Invitation_State, InvitationEncoder } from '@dxos/client/invitations';
+import { type AuthenticatingInvitationObservable, InvitationEncoder, Invitation_State } from '@dxos/client/invitations';
 import { invariant } from '@dxos/invariant';
 
 import { printIdentity } from '../util';

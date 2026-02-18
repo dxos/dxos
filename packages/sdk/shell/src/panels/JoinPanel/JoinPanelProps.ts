@@ -7,9 +7,9 @@ import { type FC, type cloneElement } from 'react';
 import type { Identity } from '@dxos/react-client/halo';
 import type {
   AuthenticatingInvitationObservable,
+  InvitationResult,
   Invitation_AuthMethod,
   Invitation_State,
-  InvitationResult,
 } from '@dxos/react-client/invitations';
 
 import { type ConfirmResetProps, type StepProps } from '../../steps';
@@ -46,7 +46,7 @@ export type JoinPanelImplProps = Pick<
 > & {
   send: JoinSend;
   titleId: string;
-  activeView: string;
+  activeView: string; // TODO(burdon): Should be literal type.
   failed: Set<'Halo' | 'Space'>;
   pending: boolean;
   unredeemedCodes?: Partial<{

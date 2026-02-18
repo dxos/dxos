@@ -15,7 +15,7 @@ import { Tag } from './Tag';
 const palettes = ['neutral', 'success', 'info', 'warning', 'error', ...hues] as (ChromaticPalette | MessageValence)[];
 
 const meta = {
-  title: 'ui/react-ui-core/Tag',
+  title: 'ui/react-ui-core/components/Tag',
   component: Tag,
   render: () => (
     <div role='grid' className='grid grid-cols-5 gap-2 max-is-screen-md'>
@@ -26,7 +26,7 @@ const meta = {
       ))}
     </div>
   ),
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     chromatic: {
       disableSnapshot: false,

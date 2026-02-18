@@ -897,6 +897,18 @@ describe('Reactive Object with ECHO database', () => {
     expect(Obj.getDXN(obj).toString()).to.eq(`dxn:echo:${db.spaceId}:${obj.id}`);
   });
 
+  test('Obj.getDatabase works with both reactive object and snapshot', async () => {
+    const { db } = await builder.createDatabase();
+    const obj = db.add(Obj.make(TestSchema.Expando, { title: 'Test' }));
+
+    const snapshot = Obj.getSnapshot(obj);
+
+    const dbFromObj = Obj.getDatabase(obj);
+    const dbFromSnapshot = Obj.getDatabase(snapshot);
+    expect(dbFromObj).to.equal(db);
+    expect(dbFromSnapshot).to.equal(db);
+  });
+
   test('set id throws', async () => {
     const { db } = await builder.createDatabase();
     const obj = db.add(Obj.make(TestSchema.Expando, { string: 'Object 1' }));

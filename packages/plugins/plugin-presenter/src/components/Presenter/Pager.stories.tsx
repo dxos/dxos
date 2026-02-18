@@ -25,7 +25,7 @@ const DefaultStory = ({ count = 20 }: PagerProps) => {
 const meta = {
   title: 'plugins/plugin-presenter/Pager',
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'centered',
   },

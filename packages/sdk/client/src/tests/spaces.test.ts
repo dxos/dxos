@@ -15,8 +15,8 @@ import { getObjectCore } from '@dxos/echo-db';
 import { EncodedReference } from '@dxos/echo-protocol';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type ProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { decodePublicKey } from '@dxos/protocols/buf';
+import { type ProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { range } from '@dxos/util';
 
 import { Client } from '../client';

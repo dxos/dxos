@@ -4,14 +4,15 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common } from '@dxos/app-framework';
+import { Capability } from '@dxos/app-framework';
+import { AppCapabilities } from '@dxos/app-toolkit';
 import { Relation } from '@dxos/echo';
 
 import { Sheet, compareIndexPositions } from '../../types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
-    Capability.contributes(Common.Capability.AnchorSort, {
+    Capability.contributes(AppCapabilities.AnchorSort, {
       key: Sheet.Sheet.typename,
       sort: (anchorA, anchorB) => {
         const sheet = Relation.getTarget(anchorA) as Sheet.Sheet;

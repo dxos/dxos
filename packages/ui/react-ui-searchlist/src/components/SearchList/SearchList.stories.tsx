@@ -39,28 +39,26 @@ const DefaultStory = ({ items = defaultItems }: DefaultStoryProps) => {
   const { results, handleSearch } = useSearchListResults({ items });
 
   return (
-    <div className='flex flex-col is-full bs-[400px]'>
-      <SearchList.Root onSearch={handleSearch}>
+    <SearchList.Root onSearch={handleSearch}>
+      <SearchList.Content classNames='bs-[400px]'>
         <SearchList.Input placeholder='Search items...' autoFocus />
-        <SearchList.Content>
-          <SearchList.Viewport>
-            {results.length > 0 ? (
-              results.map((item) => (
-                <SearchList.Item
-                  key={item.id}
-                  value={item.id}
-                  label={item.label}
-                  icon={item.icon}
-                  onSelect={() => console.log('[SearchList.Item.onSelect]', item.id, item.label)}
-                />
-              ))
-            ) : (
-              <SearchList.Empty>No results found</SearchList.Empty>
-            )}
-          </SearchList.Viewport>
-        </SearchList.Content>
-      </SearchList.Root>
-    </div>
+        <SearchList.Viewport>
+          {results.length > 0 ? (
+            results.map((item) => (
+              <SearchList.Item
+                key={item.id}
+                value={item.id}
+                label={item.label}
+                icon={item.icon}
+                onSelect={() => console.log('[SearchList.Item.onSelect]', item.id, item.label)}
+              />
+            ))
+          ) : (
+            <SearchList.Empty>No results found</SearchList.Empty>
+          )}
+        </SearchList.Viewport>
+      </SearchList.Content>
+    </SearchList.Root>
   );
 };
 
@@ -471,7 +469,7 @@ const WithGroupsStory = () => {
 const meta = {
   title: 'ui/react-ui-searchlist/SearchList',
   component: SearchList.Root as any,
-  decorators: [withTheme, withLayout({ layout: 'column' })],
+  decorators: [withTheme(), withLayout({ layout: 'column' })],
   parameters: {
     layout: 'fullscreen',
     translations,

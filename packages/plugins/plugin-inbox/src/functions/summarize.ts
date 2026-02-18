@@ -11,7 +11,7 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import { AiService, ConsolePrinter, ToolExecutionService, ToolResolverService } from '@dxos/ai';
-import { AiSession, ArtifactId, GenerationObserver } from '@dxos/assistant';
+import { AiSession, GenerationObserver } from '@dxos/assistant';
 import {
   LocalSearchHandler,
   LocalSearchToolkit,
@@ -19,8 +19,7 @@ import {
   makeGraphWriterHandler,
   makeGraphWriterToolkit,
 } from '@dxos/assistant-toolkit';
-import { Obj } from '@dxos/echo';
-import { Database } from '@dxos/echo';
+import { Database, Obj, Type } from '@dxos/echo';
 import { QueueService, TracingService, defineFunction } from '@dxos/functions';
 import { Message, Organization, Person, Pipeline } from '@dxos/types';
 import { trim } from '@dxos/util';
@@ -36,7 +35,7 @@ export default defineFunction({
   name: 'Summarize',
   description: 'Summarize a mailbox.',
   inputSchema: Schema.Struct({
-    id: ArtifactId.annotations({
+    mailbox: Type.Ref(Mailbox.Mailbox).annotations({
       description: 'The ID of the mailbox object.',
     }),
     skip: Schema.Number.pipe(
@@ -58,9 +57,9 @@ export default defineFunction({
     }),
   }),
   handler: Effect.fnUntraced(
-    function* ({ data: { id, skip = 0, limit = 20 } }) {
-      const mailbox = yield* Database.resolve(ArtifactId.toDXN(id), Mailbox.Mailbox);
-      const queue = yield* QueueService.getQueue(mailbox.queue.dxn);
+    function* ({ data: { mailbox, skip = 0, limit = 20 } }) {
+      const mailboxObj = yield* Database.load(mailbox);
+      const queue = yield* QueueService.getQueue(mailboxObj.queue.dxn);
       yield* Effect.promise(() => queue?.queryObjects());
       const messages = Function.pipe(
         queue?.objects ?? [],

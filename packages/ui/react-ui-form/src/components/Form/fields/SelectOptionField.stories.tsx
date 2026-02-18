@@ -50,7 +50,7 @@ const meta = {
   title: 'ui/react-ui-form/SelectOptionField',
   component: SelectOptionField as any,
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'fullscreen',
     translations,

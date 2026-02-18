@@ -50,10 +50,12 @@ export const useSelectionManager = () => {
 
 const getDefaultResult = <T extends SelectionMode>(mode: T): SelectionResult<T> => {
   return Match.type<Selection>().pipe(
-    Match.when({ mode: 'single' }, (s) => s.id),
-    Match.when({ mode: 'multi' }, (s) => s.ids),
-    Match.when({ mode: 'range' }, (s) => (s.from && s.to ? { from: s.from, to: s.to } : undefined)),
-    Match.when({ mode: 'multi-range' }, (s) => s.ranges),
+    Match.when({ mode: 'single' }, (selection) => selection.id),
+    Match.when({ mode: 'multi' }, (selection) => selection.ids),
+    Match.when({ mode: 'range' }, (selection) =>
+      selection.from && selection.to ? { from: selection.from, to: selection.to } : undefined,
+    ),
+    Match.when({ mode: 'multi-range' }, (selection) => selection.ranges),
     Match.exhaustive,
   )(defaultSelection(mode)) as SelectionResult<T>;
 };

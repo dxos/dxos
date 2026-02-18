@@ -11,10 +11,10 @@ import { generateName } from '@dxos/display-name';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { buf } from '@dxos/protocols/buf';
-import { ActivitySchema } from '@dxos/protocols/buf/dxos/edge/calls_pb';
 import type { Client } from '@dxos/protocols';
+import { buf } from '@dxos/protocols/buf';
 import { type Device } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { ActivitySchema } from '@dxos/protocols/buf/dxos/edge/calls_pb';
 import { ConnectionState, type SwarmResponse } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { isNonNullable } from '@dxos/util';
 

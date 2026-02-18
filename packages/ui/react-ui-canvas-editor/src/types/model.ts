@@ -16,9 +16,12 @@ export class CanvasGraphModel<S extends Shape = Shape> extends GraphModel.Abstra
   CanvasGraphModel<S>,
   CanvasGraphBuilder<S>
 > {
-  static create<S extends Shape>(graph?: Partial<Graph.Any>): CanvasGraphModel<S> {
+  static create<S extends Shape>(
+    graph?: Partial<Graph.Any>,
+    change?: GraphModel.GraphChangeFunction,
+  ): CanvasGraphModel<S> {
     if (isProxy(graph) as any) {
-      return new CanvasGraphModel<S>(graph as Graph.Graph<S, Connection>);
+      return new CanvasGraphModel<S>(graph as Graph.Graph<S, Connection>, change);
     }
 
     return new CanvasGraphModel<S>({

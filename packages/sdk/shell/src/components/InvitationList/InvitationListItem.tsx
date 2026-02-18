@@ -6,8 +6,8 @@ import React, { type ComponentPropsWithoutRef, useCallback } from 'react';
 
 import {
   type CancellableInvitationObservable,
-  Invitation_State,
   type InvitationStatus,
+  Invitation_State,
   useInvitationStatus,
 } from '@dxos/react-client/invitations';
 import {
@@ -69,11 +69,7 @@ const AvatarStackEffect = ({
       >
         <span
           role='none'
-          className={tx('avatar.ring', 'avatar__ring', {
-            ...avatarProps,
-            status,
-            animation,
-          })}
+          className={tx('avatar.ring', { ...avatarProps, status, animation })}
           style={{ animationDelay: '400ms' }}
         />
       </span>
@@ -87,11 +83,7 @@ const AvatarStackEffect = ({
       >
         <span
           role='none'
-          className={tx('avatar.ring', 'avatar__ring', {
-            ...avatarProps,
-            status,
-            animation,
-          })}
+          className={tx('avatar.ring', { ...avatarProps, status, animation })}
           style={{ animationDelay: '200ms' }}
         />
       </span>

@@ -10,15 +10,7 @@ import { type Point, type Rect } from '@dxos/react-ui-canvas';
 import { type Anchor, type ShapeLayout, defaultAnchorSize } from '../components';
 import { createNormalsFromRectangles, findClosestIntersection, getDistance, getRect, pointAdd } from '../layout';
 import { createAnchorId, createPath, parseAnchorId } from '../shapes';
-import {
-  type CanvasGraphModel,
-  type Connection,
-  type Layout,
-  type PathShape,
-  type Polygon,
-  type Shape,
-  isPolygon,
-} from '../types';
+import { type CanvasBoard, type CanvasGraphModel, type PathShape, type Polygon, isPolygon } from '../types';
 
 import { type DragDropPayload } from './useDragMonitor';
 import { useEditorContext } from './useEditorContext';
@@ -26,7 +18,7 @@ import { useEditorContext } from './useEditorContext';
 /**
  * Generate layout from graph (including linking).
  */
-export const useLayout = (): Layout => {
+export const useLayout = (): CanvasBoard.Layout => {
   const { dragMonitor, graph, layout } = useEditorContext();
 
   // Subscribe to dragging state changes for layout updates.
@@ -42,7 +34,7 @@ export const useLayout = (): Layout => {
     target: targetId,
     output,
     input,
-  }: Connection): PathShape | undefined => {
+  }: CanvasBoard.Connection): PathShape | undefined => {
     const sourceNode = graph.getNode(sourceId);
     const targetNode = graph.getNode(targetId);
     if (!sourceNode || !targetNode || !isPolygon(sourceNode) || !isPolygon(targetNode)) {
@@ -71,7 +63,7 @@ export const useLayout = (): Layout => {
   };
 
   // TODO(burdon): Cache with useMemo? Can we determine what changed?
-  const shapes: Shape[] = [];
+  const shapes: CanvasBoard.Shape[] = [];
 
   //
   // Edges.

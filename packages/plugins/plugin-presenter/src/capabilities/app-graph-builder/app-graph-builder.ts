@@ -5,7 +5,8 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { Capability, Common } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
 import { Obj } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 import { DeckCapabilities } from '@dxos/plugin-deck';
@@ -72,7 +73,7 @@ export default Capability.makeModule(
             // TODO(burdon): Allow function so can generate state when activated.
             //  So can set explicit fullscreen state coordinated with current presenter state.
             data: Effect.fnUntraced(function* () {
-              const deckState = yield* Common.Capability.getAtomValue(DeckCapabilities.State);
+              const deckState = yield* Capabilities.getAtomValue(DeckCapabilities.State);
               const deck = deckState.decks[deckState.activeDeck];
               const presenterId = [id, 'presenter'].join(ATTENDABLE_PATH_SEPARATOR);
               if (!deck?.fullscreen) {
@@ -81,7 +82,7 @@ export default Capability.makeModule(
                   id: presenterId,
                 });
               }
-              yield* Operation.invoke(Common.LayoutOperation.Open, {
+              yield* Operation.invoke(LayoutOperation.Open, {
                 subject: [presenterId],
                 workspace: spaceId,
               });
@@ -100,6 +101,6 @@ export default Capability.makeModule(
       },
     });
 
-    return Capability.contributes(Common.Capability.AppGraphBuilder, extensions);
+    return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
   }),
 );

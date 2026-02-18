@@ -4,8 +4,9 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 
-import { Common } from '@dxos/app-framework';
-import { useLayout, useOperationInvoker } from '@dxos/app-framework/react';
+import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { LayoutOperation } from '@dxos/app-toolkit';
+import { useLayout } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { useClient } from '@dxos/react-client';
 import { Filter, useQuery } from '@dxos/react-client/echo';
@@ -53,7 +54,7 @@ export const AwaitingObject = ({ id }: { id: string }) => {
   );
 
   const handleNavigate = useCallback(() => {
-    void invokePromise(Common.LayoutOperation.Open, { subject: [id] });
+    void invokePromise(LayoutOperation.Open, { subject: [id] });
     void handleClose();
   }, [id, handleClose, invokePromise]);
 

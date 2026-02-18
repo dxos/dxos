@@ -29,7 +29,7 @@ const meta = {
   component: SpaceGenerator as any,
   render: render(DefaultStory),
   decorators: [
-    withTheme,
+    withTheme(),
     withPluginManager({
       plugins: [
         ClientPlugin({

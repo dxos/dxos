@@ -42,7 +42,7 @@ const ToolbarRoot = forwardRef<HTMLDivElement, ToolbarRootProps>(
     const innerRootProps = textBlockWidthProp
       ? {
           role: 'none',
-          className: tx('toolbar.inner', 'toolbar', { layoutManaged }, classNames),
+          className: tx('toolbar.inner', { layoutManaged }, classNames),
         }
       : {};
 
@@ -50,7 +50,7 @@ const ToolbarRoot = forwardRef<HTMLDivElement, ToolbarRootProps>(
       <ToolbarPrimitive.Root
         {...props}
         data-arrow-keys={props.orientation === 'vertical' ? 'up down' : 'left right'}
-        className={tx('toolbar.root', 'toolbar', { density, disabled, layoutManaged }, classNames)}
+        className={tx('toolbar.root', { density, disabled, layoutManaged }, classNames)}
         ref={forwardedRef}
       >
         <InnerRoot {...innerRootProps}>{children}</InnerRoot>

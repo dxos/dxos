@@ -22,9 +22,9 @@ import { isNonNullable } from '@dxos/util';
 import { createIdFromSpaceKey } from '../common/space-id';
 
 import {
-  type EchoReplicator,
+  type AutomergeReplicator,
+  type AutomergeReplicatorConnection,
   type RemoteDocumentExistenceCheckProps,
-  type ReplicatorConnection,
   type ShouldAdvertiseProps,
   type ShouldSyncCollectionProps,
 } from './echo-replicator';
@@ -53,17 +53,17 @@ export type EchoNetworkAdapterProps = {
 
 type ConnectionEntry = {
   isOpen: boolean;
-  connection: ReplicatorConnection;
+  connection: AutomergeReplicatorConnection;
   reader: ReadableStreamDefaultReader<AutomergeProtocolMessage>;
   writer: WritableStreamDefaultWriter<AutomergeProtocolMessage>;
   requestedDocuments: Set<DocumentId>;
 };
 
 /**
- * Manages a set of {@link EchoReplicator} instances.
+ * Manages a set of {@link AutomergeReplicator} instances.
  */
 export class EchoNetworkAdapter extends NetworkAdapter {
-  private readonly _replicators = new Set<EchoReplicator>();
+  private readonly _replicators = new Set<AutomergeReplicator>();
   /**
    * Remote peer id -> connection.
    */
@@ -136,7 +136,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
   }
 
   @synchronized
-  async addReplicator(replicator: EchoReplicator): Promise<void> {
+  async addReplicator(replicator: AutomergeReplicator): Promise<void> {
     invariant(this._lifecycleState === LifecycleState.OPEN);
     invariant(this.peerId);
     invariant(!this._replicators.has(replicator));
@@ -157,7 +157,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
   }
 
   @synchronized
-  async removeReplicator(replicator: EchoReplicator): Promise<void> {
+  async removeReplicator(replicator: AutomergeReplicator): Promise<void> {
     invariant(this._lifecycleState === LifecycleState.OPEN);
     invariant(this._replicators.has(replicator));
     await replicator.disconnect();
@@ -260,7 +260,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
       });
   }
 
-  private _onConnectionOpen(connection: ReplicatorConnection): void {
+  private _onConnectionOpen(connection: AutomergeReplicatorConnection): void {
     log('connection opened', { peerId: connection.peerId });
     invariant(!this._connections.has(connection.peerId as PeerId));
     const connectionEntry: ConnectionEntry = {
@@ -316,7 +316,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
     this._params.monitor?.recordMessageReceived(message);
   }
 
-  private _onConnectionClosed(connection: ReplicatorConnection): void {
+  private _onConnectionClosed(connection: AutomergeReplicatorConnection): void {
     log('connection closed', { peerId: connection.peerId });
     const entry = this._connections.get(connection.peerId as PeerId);
     invariant(entry);
@@ -335,7 +335,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
    * Trigger doc-synchronizer shared documents set recalculation. Happens on peer-candidate.
    * TODO(y): replace with a proper API call when sharePolicy update becomes supported by automerge-repo
    */
-  private _onConnectionAuthScopeChanged(connection: ReplicatorConnection): void {
+  private _onConnectionAuthScopeChanged(connection: AutomergeReplicatorConnection): void {
     log('Connection auth scope changed', { peerId: connection.peerId });
     const entry = this._connections.get(connection.peerId as PeerId);
     invariant(entry);
@@ -343,7 +343,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
     this._emitPeerCandidate(connection);
   }
 
-  private _emitPeerCandidate(connection: ReplicatorConnection): void {
+  private _emitPeerCandidate(connection: AutomergeReplicatorConnection): void {
     this.emit('peer-candidate', {
       peerId: connection.peerId as PeerId,
       peerMetadata: createEchoPeerMetadata(),

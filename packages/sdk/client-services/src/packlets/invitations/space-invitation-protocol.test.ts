@@ -7,7 +7,7 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 import { type MulticastObservable, Trigger, chain } from '@dxos/async';
 import { raise } from '@dxos/debug';
 import { AlreadyJoinedError } from '@dxos/protocols';
-import { encodePublicKey, decodePublicKey } from '@dxos/protocols/buf';
+import { decodePublicKey, encodePublicKey } from '@dxos/protocols/buf';
 import { type Invitation, Invitation_Kind, Invitation_State } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 
 import { type ServiceContext } from '../services';

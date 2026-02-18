@@ -4,18 +4,19 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common, SettingsOperation } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { LayoutOperation, SettingsOperation } from '@dxos/app-toolkit';
 import { Operation, OperationResolver } from '@dxos/operation';
 
 import { REGISTRY_ID } from '../../meta';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contributes(Common.Capability.OperationResolver, [
+    return Capability.contributes(Capabilities.OperationResolver, [
       OperationResolver.make({
         operation: SettingsOperation.OpenPluginRegistry,
         handler: Effect.fnUntraced(function* () {
-          yield* Operation.invoke(Common.LayoutOperation.SwitchWorkspace, { subject: REGISTRY_ID });
+          yield* Operation.invoke(LayoutOperation.SwitchWorkspace, { subject: REGISTRY_ID });
         }),
       }),
     ]);

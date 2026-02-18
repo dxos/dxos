@@ -135,7 +135,7 @@ export const typeToFormat: Partial<Record<TypeEnum, TypeFormat>> = {
  * Map of format to type.
  */
 export const formatToType: Record<TypeFormat, TypeEnum> = {
-  [TypeFormat.None]: undefined as any,
+  [TypeFormat.None]: TypeEnum.String,
   [TypeFormat.String]: TypeEnum.String,
   [TypeFormat.Number]: TypeEnum.Number,
   [TypeFormat.Boolean]: TypeEnum.Boolean,

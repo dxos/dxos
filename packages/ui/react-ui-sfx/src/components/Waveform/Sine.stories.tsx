@@ -11,7 +11,7 @@ import { Sine } from './Sine';
 const meta = {
   title: 'ui/react-ui-sfx/Sine',
   component: Sine,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'centered',
   },

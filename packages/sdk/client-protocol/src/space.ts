@@ -8,22 +8,21 @@ import { type MulticastObservable } from '@dxos/async';
 import { type SpecificCredential } from '@dxos/credentials';
 import { type Database, type Obj } from '@dxos/echo';
 import { type EchoDatabase, type QueueFactory } from '@dxos/echo-db';
-import { type SpaceSyncState_PeerState } from '@dxos/protocols/buf/dxos/echo/service_pb';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { type Messenger } from '@dxos/protocols';
 import { type Invitation } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import { type SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import {
   type Contact,
-  type CreateEpochRequest,
   type CreateEpochRequest_Migration,
   type SpaceArchive,
   type Space as SpaceData,
-  type Space_PipelineState,
   type SpaceMember,
+  type Space_PipelineState,
   type UpdateMemberRoleRequest,
 } from '@dxos/protocols/buf/dxos/client/services_pb';
-import { type SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { type EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
+import { type SpaceSyncState_PeerState } from '@dxos/protocols/buf/dxos/echo/service_pb';
 import { type SpaceSnapshot } from '@dxos/protocols/buf/dxos/echo/snapshot_pb';
 import { type Credential, type Epoch } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 

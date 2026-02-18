@@ -182,6 +182,9 @@
       "path": "../../plugins/plugin-search"
     },
     {
+      "path": "../../plugins/plugin-settings"
+    },
+    {
       "path": "../../plugins/plugin-sheet"
     },
     {
@@ -228,6 +231,9 @@
     },
     {
       "path": "../../sdk/app-graph"
+    },
+    {
+      "path": "../../sdk/app-toolkit"
     },
     {
       "path": "../../sdk/client"

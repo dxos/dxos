@@ -14,6 +14,7 @@
 - Run all tests: `MOON_CONCURRENCY=4 moon run :test -- --no-file-parallelism`.
 - Lint & fix: `moon run :lint -- --fix`.
 - Check package tasks: see `moon.yml` in package directory.
+- **Expected warning**: `Auth token DEPOT_TOKEN does not exist` is a normal warning about remote caching and should be ignored. Focus only on actual compilation/type errors.
 
 ## Important
 
@@ -29,6 +30,7 @@
 - JSDoc comments for public functions, all comments end with period.
 - React: arrow function components, TailwindCSS for styles, proper event handler types.
 - Remember to remove/update TODOs as you go.
+- Avoid single letter variable names.
 
 ## PR Checklist
 

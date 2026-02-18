@@ -5,7 +5,7 @@
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
 
 /**
  * Window capability module.
@@ -21,7 +21,7 @@ export default Capability.makeModule(
     const cleanupDragRegions = setupWindowDrag(appWindow);
 
     return Capability.contributes(
-      Common.Capability.Null,
+      Capabilities.Null,
       null,
       Effect.fnUntraced(function* () {
         cleanupDragRegions();

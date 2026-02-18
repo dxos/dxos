@@ -26,8 +26,8 @@ export const RangeList = ({ sheet }: RangeListProps) => {
   const handleDeleteRange = useCallback(
     (range: Sheet.Range) => {
       const index = sheet.ranges.findIndex((sheetRange) => sheetRange === range);
-      Obj.change(sheet, (s) => {
-        s.ranges.splice(index, 1);
+      Obj.change(sheet, (obj) => {
+        obj.ranges.splice(index, 1);
       });
     },
     [sheet],

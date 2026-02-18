@@ -7,8 +7,8 @@ import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 import React, { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Common } from '@dxos/app-framework';
-import { useAtomCapability, useCapabilities, useOperationInvoker } from '@dxos/app-framework/react';
+import { useAtomCapability, useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
+import { AppCapabilities } from '@dxos/app-toolkit';
 import { Chat } from '@dxos/assistant-toolkit';
 import { Blueprint } from '@dxos/blueprints';
 import { getSpace } from '@dxos/client/echo';
@@ -145,7 +145,7 @@ export const ChatCompanion = forwardRef<HTMLDivElement, ChatCompanionProps>(
       [chat, space, companionTo, invokePromise],
     );
 
-    const metadata = useCapabilities(Common.Capability.Metadata);
+    const metadata = useCapabilities(AppCapabilities.Metadata);
     const blueprintKeys = useMemo(
       () =>
         Function.pipe(

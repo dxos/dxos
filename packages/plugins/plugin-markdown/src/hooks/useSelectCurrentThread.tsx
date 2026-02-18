@@ -6,8 +6,8 @@ import { EditorView } from '@codemirror/view';
 import * as Effect from 'effect/Effect';
 import { useMemo } from 'react';
 
-import { Common } from '@dxos/app-framework';
-import { useOperationResolver } from '@dxos/app-framework/react';
+import { useOperationResolver } from '@dxos/app-framework/ui';
+import { LayoutOperation } from '@dxos/app-toolkit';
 import { invariant } from '@dxos/invariant';
 import { OperationResolver } from '@dxos/operation';
 import { Cursor, setSelection } from '@dxos/ui-editor';
@@ -21,7 +21,7 @@ export const useSelectCurrentThread = (editorView: EditorView | null, documentId
   const scrollIntoViewHandler = useMemo(
     () =>
       OperationResolver.make({
-        operation: Common.LayoutOperation.ScrollIntoView,
+        operation: LayoutOperation.ScrollIntoView,
         position: 'hoist',
         filter: (input) => !!editorView && input.subject === documentId && !!input.cursor,
         handler: (input) =>

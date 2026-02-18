@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
 import { ClientCapabilities } from '@dxos/plugin-client';
 
 import { MediaStreamRecorder, Transcriber, TranscriptionManager } from '../../transcriber';
@@ -35,7 +35,7 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     // Get context for lazy capability access in callbacks.
     const capabilities = yield* Capability.Service;
-    const registry = yield* Capability.get(Common.Capability.AtomRegistry);
+    const registry = yield* Capability.get(Capabilities.AtomRegistry);
 
     const getTranscriber: TranscriptionCapabilities.GetTranscriber = ({
       audioStreamTrack,

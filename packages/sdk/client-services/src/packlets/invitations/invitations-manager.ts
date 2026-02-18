@@ -15,13 +15,13 @@ import { type MetadataStore, hasInvitationExpired } from '@dxos/echo-pipeline';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { encodePublicKey, timestampFromDate } from '@dxos/protocols/buf';
 import {
   type Invitation,
   Invitation_AuthMethod,
   Invitation_State,
   Invitation_Type,
 } from '@dxos/protocols/buf/dxos/client/invitation_pb';
-import { encodePublicKey, timestampFromDate } from '@dxos/protocols/buf';
 import { type AcceptInvitationRequest, type AuthenticationRequest } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
@@ -128,7 +128,14 @@ export class InvitationsManager {
 
     const handler = this._getHandler(options);
     const { ctx, invitation, stream, otpEnteredTrigger } = this._createObservableAcceptingInvitation(handler, options);
-    this._invitationsHandler.acceptInvitation(ctx, stream, handler, options, otpEnteredTrigger, request.deviceProfile as never);
+    this._invitationsHandler.acceptInvitation(
+      ctx,
+      stream,
+      handler,
+      options,
+      otpEnteredTrigger,
+      request.deviceProfile as never,
+    );
     this._acceptInvitations.set(invitation.get().invitationId, invitation);
     this.invitationAccepted.emit(invitation.get());
 

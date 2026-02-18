@@ -20,12 +20,12 @@ const Status = forwardRef<HTMLSpanElement, StatusProps>(
       <span
         role='status'
         {...props}
-        className={tx('status.root', 'status', { indeterminate, variant }, classNames)}
+        className={tx('status.root', { indeterminate, variant }, classNames)}
         ref={forwardedRef}
       >
         <span
           role='none'
-          className={tx('status.bar', 'status__bar', { indeterminate, variant }, classNames)}
+          className={tx('status.bar', { indeterminate, variant }, classNames)}
           {...(!indeterminate && { style: { width: `${Math.round(progress * 100)}%` } })}
         />
         {children}

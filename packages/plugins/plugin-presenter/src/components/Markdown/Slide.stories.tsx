@@ -13,7 +13,7 @@ import { Slide } from './Slide';
 const meta = {
   title: 'plugins/plugin-presenter/Slide',
   component: Slide,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'fullscreen',
   },

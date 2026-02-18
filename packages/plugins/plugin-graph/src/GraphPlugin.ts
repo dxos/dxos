@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capability, Common, Plugin } from '@dxos/app-framework';
+import { ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
+import { AppActivationEvents } from '@dxos/app-toolkit';
 
 import { meta } from './meta';
 
@@ -15,9 +16,9 @@ const Graph = Capability.lazy('Graph', () => import('./graph'));
  */
 export const GraphPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
-    activatesOn: Common.ActivationEvent.Startup,
-    activatesBefore: [Common.ActivationEvent.SetupAppGraph, Common.ActivationEvent.SetupMetadata],
-    activatesAfter: [Common.ActivationEvent.AppGraphReady],
+    activatesOn: ActivationEvents.Startup,
+    activatesBefore: [AppActivationEvents.SetupAppGraph, AppActivationEvents.SetupMetadata],
+    activatesAfter: [AppActivationEvents.AppGraphReady],
     activate: Graph,
   }),
   Plugin.make,

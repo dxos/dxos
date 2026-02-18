@@ -9,7 +9,7 @@ import * as Exit from 'effect/Exit';
 import type * as Types from 'effect/Types';
 import React, { useCallback, useContext, useMemo, useState } from 'react';
 
-import { type SurfaceComponentProps } from '@dxos/app-framework/react';
+import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { Agent } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
@@ -20,8 +20,8 @@ import { log } from '@dxos/log';
 import { useComputeRuntimeCallback } from '@dxos/plugin-automation';
 import { Graph } from '@dxos/plugin-explorer/types';
 import { DropdownMenu, IconButton, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Layout } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
-import { Layout } from '@dxos/react-ui-mosaic';
 import { Text, View } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 

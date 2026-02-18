@@ -11,8 +11,8 @@ import {
   WebsocketSignalManager,
 } from '@dxos/messaging';
 import { create } from '@dxos/protocols/buf';
-import * as MeshBridgePb from '@dxos/protocols/buf/dxos/mesh/bridge_pb';
 import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
+import * as MeshBridgePb from '@dxos/protocols/buf/dxos/mesh/bridge_pb';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import { type BufProtoRpcPeer, createBufProtoRpcPeer, createBufServiceBundle, createLinkedPorts } from '@dxos/rpc';

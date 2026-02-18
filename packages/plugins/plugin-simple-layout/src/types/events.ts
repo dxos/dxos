@@ -2,13 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type ActivationEvent, Common } from '@dxos/app-framework';
+import { type ActivationEvent } from '@dxos/app-framework';
+import { AppActivationEvents } from '@dxos/app-toolkit';
 
 import { SimpleLayoutState } from './capabilities';
 
 export namespace SimpleLayoutEvents {
   /** Fired when SimpleLayoutState capability is ready. */
-  export const StateReady: ActivationEvent.ActivationEvent = Common.ActivationEvent.createStateEvent(
+  export const StateReady: ActivationEvent.ActivationEvent = AppActivationEvents.createStateEvent(
     SimpleLayoutState.identifier,
   );
 }

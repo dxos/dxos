@@ -37,7 +37,7 @@ const meta = {
   component: StorybookMasonry,
   render: () => <StorybookMasonry />,
   decorators: [
-    withTheme,
+    withTheme(),
     withPluginManager({
       plugins: [
         ...corePlugins(),

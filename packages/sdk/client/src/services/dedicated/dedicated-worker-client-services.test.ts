@@ -6,9 +6,9 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, asyncTimeout } from '@dxos/async';
 import { Filter, Obj } from '@dxos/echo';
-import type { ProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { TestSchema } from '@dxos/echo/testing';
 import { log } from '@dxos/log';
+import type { ProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 import { Client } from '../../client';
 import { TestBuilder } from '../../testing';

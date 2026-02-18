@@ -47,6 +47,7 @@ export type InputMetaStyleProps = Partial<{
   validationValence: MessageValence;
 }>;
 
+// TODO(burdon): Use semantic tokens.
 export const neutralInputValence = '';
 export const successInputValence = 'shadow-emerald-500/50 dark:shadow-emerald-600/50';
 export const infoInputValence = 'shadow-cyan-500/50 dark:shadow-cyan-600/50';
@@ -64,8 +65,7 @@ const booleanInputSurface =
 const booleanInputSurfaceHover =
   'hover:bg-unAccentHover hover:aria-checked:bg-accentSurfaceHover hover:aria-[checked=mixed]:bg-accentSurfaceHover';
 
-export const inputTextLabel =
-  'text-description text-xs font-medium mbs-inputSpacingBlock mbe-labelSpacingBlock first:mbs-0';
+const inputTextLabel = 'text-sm text-description plb-1';
 
 export const inputValence = (valence?: MessageValence) => {
   switch (valence) {

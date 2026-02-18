@@ -43,7 +43,7 @@ export class QueueFactory extends Resource implements QueueAPI {
     const stringDxn = dxn.toString();
     const queue = this._queues.get(stringDxn);
     if (queue) {
-      return queue as any as Queue<T>;
+      return queue as Queue<T>;
     }
 
     const newQueue = new QueueImpl<T>(
@@ -52,7 +52,7 @@ export class QueueFactory extends Resource implements QueueAPI {
       dxn,
     );
     this._queues.set(stringDxn, newQueue);
-    return newQueue as any as Queue<T>;
+    return newQueue as Queue<T>;
   }
 
   create<T extends Entity.Unknown>({

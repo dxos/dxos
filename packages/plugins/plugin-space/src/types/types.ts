@@ -9,12 +9,7 @@ import { Capability, Plugin } from '@dxos/app-framework';
 import { type PublicKey } from '@dxos/client';
 // TODO(wittjosiah): This pulls in full client.
 import { SpaceSchema } from '@dxos/client/echo';
-import {
-  CancellableInvitationObservable,
-  type Invitation,
-  Invitation_Type,
-  Invitation_AuthMethod,
-} from '@dxos/client/invitations';
+import { CancellableInvitationObservable, Invitation_AuthMethod, Invitation_Type } from '@dxos/client/invitations';
 import { Database, type Obj, QueryAST, Type } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 import { Collection, FieldSchema, View } from '@dxos/schema';

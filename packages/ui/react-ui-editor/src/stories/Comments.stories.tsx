@@ -20,7 +20,7 @@ import { EditorStory, content, longText } from './components';
 const meta = {
   title: 'ui/react-ui-editor/Comments',
   component: EditorStory,
-  decorators: [withRegistry, withTheme],
+  decorators: [withRegistry, withTheme()],
   parameters: {
     layout: 'fullscreen',
   },

@@ -21,7 +21,7 @@ const meta = {
   title: 'ui/react-ui-board/Chain',
   component: Chain.Root,
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'fullscreen',
   },

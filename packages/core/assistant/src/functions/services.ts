@@ -13,11 +13,11 @@ import type * as SchemaAST from 'effect/SchemaAST';
 
 import { AiToolNotFoundError, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { todo } from '@dxos/debug';
-import { Query, Type } from '@dxos/echo';
-import { Database } from '@dxos/echo';
-import { Function, FunctionDefinition, FunctionInvocationService } from '@dxos/functions';
+import { Type } from '@dxos/echo';
+import { type FunctionDefinition, FunctionInvocationService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 
+import { GenericToolkit } from '../session';
 import { RefFromLLM } from '../types';
 
 /**
@@ -31,49 +31,48 @@ import { RefFromLLM } from '../types';
  *
  * Requires `Database.Service` in the environment.
  */
-export const makeToolResolverFromFunctions = (
-  functions: FunctionDefinition.Any[],
-  toolkit: Toolkit.Toolkit<any>,
-): Layer.Layer<ToolResolverService, never, Database.Service> => {
+export const makeToolResolverFromFunctions = (): Layer.Layer<
+  ToolResolverService,
+  never,
+  GenericToolkit.Provider | FunctionInvocationService
+> => {
   return Layer.effect(
     ToolResolverService,
     Effect.gen(function* () {
-      const dbService = yield* Database.Service;
+      const toolkitProvider = yield* GenericToolkit.Provider;
+      const functionInvocationService = yield* FunctionInvocationService;
       return {
         resolve: (id): Effect.Effect<Tool.Any, AiToolNotFoundError> =>
           Effect.gen(function* () {
-            // TODO(dmaretskyi): Use FunctionInvocationService.resolveFunction().
+            const toolkit = toolkitProvider.getToolkit();
 
-            const tool = toolkit.tools[id];
+            const tool = toolkit.toolkit.tools[id];
             if (tool) {
               return tool;
             }
 
-            const [dbFunction] = yield* Database.runQuery(Query.type(Function.Function, { key: id }));
-
-            const functionDef = dbFunction
-              ? FunctionDefinition.deserialize(dbFunction)
-              : functions.find((fn) => fn.key === id);
-
-            if (!functionDef) {
-              return yield* Effect.fail(new AiToolNotFoundError(id));
-            }
-
-            return projectFunctionToTool(functionDef);
-          }).pipe(Effect.provideService(Database.Service, dbService)),
+            return yield* functionInvocationService.resolveFunction(id).pipe(
+              Effect.map(projectFunctionToTool),
+              Effect.catchTag('FunctionNotFound', () => Effect.fail(new AiToolNotFoundError(id))),
+            );
+          }),
       } satisfies Context.Tag.Service<ToolResolverService>;
     }),
   );
 };
 
-export const makeToolExecutionServiceFromFunctions = (
-  toolkit: Toolkit.Toolkit<any>,
-  handlersLayer: Layer.Layer<Tool.Handler<any>, never, never>,
-): Layer.Layer<ToolExecutionService, never, FunctionInvocationService> => {
+export const makeToolExecutionServiceFromFunctions = (): Layer.Layer<
+  ToolExecutionService,
+  never,
+  FunctionInvocationService | GenericToolkit.Provider
+> => {
   return Layer.effect(
     ToolExecutionService,
     Effect.gen(function* () {
-      const toolkitHandler = yield* toolkit.pipe(Effect.provide(handlersLayer));
+      const toolkitProvider = yield* GenericToolkit.Provider;
+      const toolkit = toolkitProvider.getToolkit();
+
+      const toolkitHandler = yield* toolkit.toolkit.pipe(Effect.provide(toolkit.layer));
       invariant(isHandlerLike(toolkitHandler));
       const functionInvocationService = yield* FunctionInvocationService;
 
@@ -107,6 +106,11 @@ export const makeToolExecutionServiceFromFunctions = (
     }),
   );
 };
+
+export const ToolExecutionServices = Layer.mergeAll(
+  makeToolResolverFromFunctions(),
+  makeToolExecutionServiceFromFunctions(),
+);
 
 class FunctionToolAnnotation extends Context.Tag('@dxos/assistant/FunctionToolAnnotation')<
   FunctionToolAnnotation,

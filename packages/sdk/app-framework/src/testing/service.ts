@@ -7,7 +7,7 @@ import * as Layer from 'effect/Layer';
 
 import { invariant } from '@dxos/invariant';
 
-import * as Common from '../common';
+import { ActivationEvents, Capabilities } from '../common';
 import { Plugin, PluginManager } from '../core';
 
 /**
@@ -34,18 +34,18 @@ export const fromPlugins = (plugins: Plugin.Plugin[]) =>
       });
 
       manager.capabilities.contribute({
-        interface: Common.Capability.PluginManager,
+        interface: Capabilities.PluginManager,
         implementation: manager,
         module: 'dxos.org/app-framework/plugin-manager',
       });
 
       manager.capabilities.contribute({
-        interface: Common.Capability.AtomRegistry,
+        interface: Capabilities.AtomRegistry,
         implementation: manager.registry,
         module: 'dxos.org/app-framework/atom-registry',
       });
 
-      yield* manager.activate(Common.ActivationEvent.Startup);
+      yield* manager.activate(ActivationEvents.Startup);
 
       return manager;
     }),

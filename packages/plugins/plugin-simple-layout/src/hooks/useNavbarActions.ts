@@ -5,7 +5,8 @@
 import { Atom } from '@effect-atom/atom-react';
 import { useMemo } from 'react';
 
-import { useAppGraph, useCapability, useOperationInvoker } from '@dxos/app-framework/react';
+import { useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
+import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Node, useActionRunner } from '@dxos/plugin-graph';
 import { useTranslation } from '@dxos/react-ui';
 import {

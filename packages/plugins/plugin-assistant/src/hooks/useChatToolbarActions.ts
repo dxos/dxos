@@ -6,7 +6,7 @@ import { Atom } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 import { useMemo } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/react';
+import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { Chat } from '@dxos/assistant-toolkit';
 import { Filter, Obj, Query } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';

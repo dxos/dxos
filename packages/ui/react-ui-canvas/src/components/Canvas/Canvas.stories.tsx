@@ -92,7 +92,7 @@ const meta = {
   title: 'ui/react-ui-canvas/Canvas',
   component: Grid,
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'fullscreen',
   },

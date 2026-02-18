@@ -6,7 +6,7 @@ import React, { useState } from 'react';
 import { type Event, type SingleOrArray } from 'xstate';
 
 import { log } from '@dxos/log';
-import { create, decodePublicKey } from '@dxos/protocols/buf';
+import { create, decodePublicKey, type JsonObject } from '@dxos/protocols/buf';
 import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type Identity } from '@dxos/react-client/halo';
 import { useClipboard, useTranslation } from '@dxos/react-ui';
@@ -116,7 +116,7 @@ const ProfileFormImpl = (props: ProfileFormImplProps) => {
               create(ProfileDocumentSchema, {
                 ...(displayName && { displayName }),
                 ...((emoji || hue) && {
-                  data: { ...(emoji && { emoji }), ...(hue && { hue }) } as import('@dxos/protocols/buf').JsonObject,
+                  data: { ...(emoji && { emoji }), ...(hue && { hue }) } as JsonObject,
                 }),
               }),
             )

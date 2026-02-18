@@ -5,7 +5,6 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { ArtifactId } from '@dxos/assistant';
 import { Obj } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
 import { Collection } from '@dxos/schema';
@@ -21,7 +20,9 @@ export default defineFunction({
     content: Schema.String,
   }),
   outputSchema: Schema.Struct({
-    id: ArtifactId,
+    id: Schema.String.annotations({
+      description: 'The DXN of the created document.',
+    }),
   }),
   handler: Effect.fn(function* ({ data: { name, content } }) {
     const object = Markdown.make({ name, content });

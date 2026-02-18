@@ -184,9 +184,6 @@
       "path": "packages/core/echo/index-core/tsconfig.json"
     },
     {
-      "path": "packages/core/echo/indexing/tsconfig.json"
-    },
-    {
       "path": "packages/core/functions/tsconfig.json"
     },
     {
@@ -379,6 +376,9 @@
       "path": "packages/plugins/plugin-search/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-settings/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-sheet/tsconfig.json"
     },
     {
@@ -434,6 +434,9 @@
     },
     {
       "path": "packages/sdk/app-solid/tsconfig.json"
+    },
+    {
+      "path": "packages/sdk/app-toolkit/tsconfig.json"
     },
     {
       "path": "packages/sdk/client/tsconfig.json"

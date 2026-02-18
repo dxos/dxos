@@ -103,7 +103,7 @@ const LinkStory = (args: StoryProps) => {
 const meta = {
   title: 'ui/react-ui-editor/Popover',
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'fullscreen',
   },

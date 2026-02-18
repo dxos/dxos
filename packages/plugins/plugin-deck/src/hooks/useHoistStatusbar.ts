@@ -4,7 +4,7 @@
 
 import { useMemo } from 'react';
 
-import { useAtomCapability } from '@dxos/app-framework/react';
+import { useAtomCapability } from '@dxos/app-framework/ui';
 import { useThemeContext } from '@dxos/react-ui';
 
 import { DeckCapabilities, type LayoutMode } from '../types';

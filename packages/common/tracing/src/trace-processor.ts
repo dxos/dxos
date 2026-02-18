@@ -5,7 +5,7 @@
 import { unrefTimeout } from '@dxos/async';
 import { type Context } from '@dxos/context';
 import { LogLevel, type LogProcessor, getContextFromEntry, log } from '@dxos/log';
-import { create, timestampFromDate, type JsonObject } from '@dxos/protocols/buf';
+import { type JsonObject, create, timestampFromDate } from '@dxos/protocols/buf';
 import { type LogEntry, LogEntrySchema, LogEntry_MetaSchema } from '@dxos/protocols/buf/dxos/client/logging_pb';
 import { type Error as SerializedError } from '@dxos/protocols/proto/dxos/error';
 import { type Metric, type Resource, type Span } from '@dxos/protocols/proto/dxos/tracing';

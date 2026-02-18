@@ -14,7 +14,7 @@ import { EditorStory, content, defaultExtensions, headings, renderLinkTooltip, t
 const meta = {
   title: 'ui/react-ui-editor/Markdown',
   component: EditorStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'fullscreen',
   },

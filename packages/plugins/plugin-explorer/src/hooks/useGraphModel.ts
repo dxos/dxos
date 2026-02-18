@@ -2,9 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { RegistryContext } from '@effect-atom/atom-react';
-import { useContext, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
+import { Capabilities } from '@dxos/app-framework';
+import { useCapability } from '@dxos/app-framework/ui';
 import { type Filter, type Queue, type Space } from '@dxos/client/echo';
 import { SpaceGraphModel, type SpaceGraphModelOptions } from '@dxos/schema';
 
@@ -15,7 +16,7 @@ export const useGraphModel = (
   options?: SpaceGraphModelOptions,
   queue?: Queue,
 ): SpaceGraphModel | undefined => {
-  const registry = useContext(RegistryContext);
+  const registry = useCapability(Capabilities.AtomRegistry);
   const [model, setModel] = useState<SpaceGraphModel | undefined>(undefined);
   useEffect(() => {
     if (!space) {

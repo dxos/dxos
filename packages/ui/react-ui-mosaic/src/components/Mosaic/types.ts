@@ -2,10 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-// These are not exported from the pragmatic-drag-and-drop-auto-scroll package.
-export type Axis = 'vertical' | 'horizontal';
-export type AllowedAxis = Axis | 'all';
-
 export type GetId<TData = any> = (data: TData) => string;
 
 /**

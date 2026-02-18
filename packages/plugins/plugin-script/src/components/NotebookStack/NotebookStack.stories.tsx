@@ -27,7 +27,7 @@ const meta = {
   title: 'plugins/plugin-script/NotebookStack',
   component: NotebookStackStory,
   decorators: [
-    withTheme,
+    withTheme(),
     withLayout({ layout: 'column', classNames: 'is-proseMaxWidth' }),
     withPluginManager({
       plugins: [

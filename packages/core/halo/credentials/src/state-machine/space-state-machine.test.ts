@@ -7,7 +7,7 @@ import { describe, expect, test } from 'vitest';
 import { Keyring } from '@dxos/keyring';
 import { type PublicKey } from '@dxos/keys';
 import { create } from '@dxos/protocols/buf';
-import { type Credential, ChainSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { ChainSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { AdmittedFeed, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { createCredential, fromBufPublicKey, getCredentialAssertion, verifyCredential } from '../credentials';

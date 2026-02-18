@@ -4,8 +4,8 @@
 
 import React from 'react';
 
-import { type SurfaceComponentProps } from '@dxos/app-framework/react';
-import { Layout } from '@dxos/react-ui-mosaic';
+import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
+import { Layout } from '@dxos/react-ui';
 
 import { type Outline as OutlineType } from '../types';
 

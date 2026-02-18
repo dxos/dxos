@@ -5,7 +5,8 @@
 import { Atom } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common } from '@dxos/app-framework';
+import { Capability } from '@dxos/app-framework';
+import { AppCapabilities } from '@dxos/app-toolkit';
 
 import { LayoutState, type LayoutStateProps } from '../../types';
 
@@ -21,7 +22,7 @@ export default Capability.makeModule(
     const { initialState } = props ?? {};
     const stateAtom = Atom.make<LayoutStateProps>({ ...defaultState, ...initialState });
 
-    const layoutAtom = Atom.make((get): Common.Capability.Layout => {
+    const layoutAtom = Atom.make((get): AppCapabilities.Layout => {
       const state = get(stateAtom);
       return {
         mode: 'storybook',
@@ -35,9 +36,6 @@ export default Capability.makeModule(
       };
     });
 
-    return [
-      Capability.contributes(LayoutState, stateAtom),
-      Capability.contributes(Common.Capability.Layout, layoutAtom),
-    ];
+    return [Capability.contributes(LayoutState, stateAtom), Capability.contributes(AppCapabilities.Layout, layoutAtom)];
   }),
 );

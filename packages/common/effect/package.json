@@ -44,12 +44,13 @@
     "@dxos/util": "workspace:*",
     "@effect-atom/atom-react": "catalog:",
     "@effect/opentelemetry": "catalog:",
-    "@effect/platform-browser": "catalog:",
     "@opentelemetry/api": "catalog:",
     "jsonpath-plus": "catalog:"
   },
   "devDependencies": {
     "@dxos/log": "workspace:*",
+    "@effect/platform": "catalog:",
+    "@effect/platform-browser": "catalog:",
     "@opentelemetry/api-logs": "catalog:",
     "@opentelemetry/resources": "catalog:",
     "@opentelemetry/sdk-logs": "catalog:",
@@ -59,6 +60,8 @@
     "effect": "catalog:"
   },
   "peerDependencies": {
+    "@effect/platform": "catalog:",
+    "@effect/platform-browser": "catalog:",
     "effect": "catalog:"
   },
   "publishConfig": {

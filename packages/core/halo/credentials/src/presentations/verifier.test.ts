@@ -189,7 +189,10 @@ describe('presentation verifier', () => {
         chain: create(ChainSchema, {
           credential: {
             ...chain.credential!,
-            proof: { ...chain.credential!.proof!, signer: create(PublicKeySchema, { data: PublicKey.random().asUint8Array() }) },
+            proof: {
+              ...chain.credential!.proof!,
+              signer: create(PublicKeySchema, { data: PublicKey.random().asUint8Array() }),
+            },
           },
         }),
         nonce: randomBytes(32),

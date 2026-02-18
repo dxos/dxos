@@ -37,7 +37,7 @@ import {
 const meta = {
   title: 'ui/react-ui-editor/TextEditor',
   component: EditorStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'fullscreen',
     controls: { disable: true },

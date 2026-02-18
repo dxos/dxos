@@ -2,12 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './activation-event';
-export * from './capability';
-export * from './collaboration';
-export * from './file';
-export * from './graph';
-export * from './operations';
-export * from './plugin';
-export * from './surface';
-export * from './translations';
+export * as Capabilities from './capabilities';
+export * as ActivationEvents from './activation-events';
+export { UndoOperation } from './operations';
+export { Label } from './translations';

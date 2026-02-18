@@ -36,7 +36,7 @@ const DefaultStory = () => {
 const meta = {
   title: 'plugins/plugin-inbox/Message',
   component: DefaultStory,
-  decorators: [withTheme, withLayout({ layout: 'column' })],
+  decorators: [withTheme(), withLayout({ layout: 'column' })],
   parameters: {
     layout: 'fullscreen',
     translations,

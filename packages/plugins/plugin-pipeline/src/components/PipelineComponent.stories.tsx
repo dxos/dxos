@@ -150,7 +150,7 @@ const MutationsStory = () => {
 const meta = {
   title: 'plugins/plugin-pipeline/PipelineComponent',
   decorators: [
-    withTheme,
+    withTheme(),
     withLayout({ layout: 'column' }),
     withMosaic(),
     withClientProvider({

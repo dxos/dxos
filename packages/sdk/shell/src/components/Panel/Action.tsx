@@ -126,15 +126,13 @@ export const BifurcatedAction = forwardRef<HTMLButtonElement, BifurcatedActionPr
   );
 });
 
+/**
+ * @deprecated
+ */
 export const Action = forwardRef<HTMLButtonElement, LargeButtonProps>((props, forwardedRef) => {
   const { children, classNames, variant, isFull = true, ...rest } = props;
   return (
-    <Button
-      {...rest}
-      classNames={[isFull && 'is-full', 'bs-11 flex gap-2 mbs-2', classNames]}
-      ref={forwardedRef}
-      variant={variant}
-    >
+    <Button {...rest} classNames={[isFull && 'is-full', classNames]} ref={forwardedRef} variant={variant}>
       {children}
     </Button>
   );

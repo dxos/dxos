@@ -15,7 +15,7 @@ import React, {
 
 import { type Format } from '@dxos/echo/internal';
 import { Icon, Input, Tooltip } from '@dxos/react-ui';
-import { errorText, mx } from '@dxos/ui-theme';
+import { errorText } from '@dxos/ui-theme';
 
 import { type FormFieldStatus } from '../../hooks';
 
@@ -79,17 +79,15 @@ export type FormFieldLabelProps = {
 
 export const FormFieldLabel = ({ label, error, readonly, asChild }: FormFieldLabelProps) => {
   const Label = readonly || asChild ? 'span' : Input.Label;
-  const labelProps = readonly || asChild ? { className: 'text-description text-sm' } : { classNames: '!mlb-0 text-sm' };
-
   return (
-    <div role='none' className={mx('flex justify-between items-center', labelSpacing)}>
-      <Label {...labelProps}>{label}</Label>
+    <>
+      <Label>{label}</Label>
       {error && (
         <Tooltip.Trigger asChild content={error} side='bottom'>
           <Icon icon='ph--warning--regular' size={4} classNames={errorText} />
         </Tooltip.Trigger>
       )}
-    </div>
+    </>
   );
 };
 
@@ -118,15 +116,17 @@ export const FormFieldWrapper = <T,>(props: FormFieldWrapperProps<T>) => {
   const str = String(value ?? '');
 
   return (
-    <Input.Root validationValence={status}>
-      {layout !== 'inline' && <FormFieldLabel error={error} readonly={readonly} label={label} />}
-      {layout === 'static' ? <p>{str}</p> : children ? children({ value }) : null}
-      {layout === 'full' && (
-        <Input.DescriptionAndValidation>
-          <Input.Validation>{error}</Input.Validation>
-        </Input.DescriptionAndValidation>
-      )}
-    </Input.Root>
+    <div role='none' className='contents'>
+      <Input.Root validationValence={status}>
+        {layout !== 'inline' && <FormFieldLabel error={error} readonly={readonly} label={label} />}
+        {layout === 'static' ? <p>{str}</p> : children ? children({ value }) : null}
+        {layout === 'full' && (
+          <Input.DescriptionAndValidation>
+            <Input.Validation>{error}</Input.Validation>
+          </Input.DescriptionAndValidation>
+        )}
+      </Input.Root>
+    </div>
   );
 };
 

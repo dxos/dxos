@@ -10,8 +10,8 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import React, { type FC, useEffect, useMemo, useState } from 'react';
 
-import { useAtomCapability, useCapability } from '@dxos/app-framework/react';
 import { withPluginManager } from '@dxos/app-framework/testing';
+import { useAtomCapability, useCapability } from '@dxos/app-framework/ui';
 import { Obj, Ref, Type } from '@dxos/echo';
 import { createDocAccessor, toCursorRange } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
@@ -21,9 +21,9 @@ import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { faker } from '@dxos/random';
 import { useQueue, useSpace } from '@dxos/react-client/echo';
 import { IconButton, Toolbar } from '@dxos/react-ui';
+import { Layout } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 import { useTextEditor } from '@dxos/react-ui-editor';
-import { Layout } from '@dxos/react-ui-mosaic';
 import { render } from '@dxos/storybook-utils';
 import { Message } from '@dxos/types';
 import { type EditorSelection, type Range } from '@dxos/ui-editor';
@@ -154,7 +154,7 @@ const storybook: Meta<typeof DefaultStory> = {
   title: 'plugins/plugin-markdown/Suggestions',
   render: render(DefaultStory),
   decorators: [
-    withTheme,
+    withTheme(),
     withPluginManager({
       plugins: [
         ...corePlugins(),

@@ -99,7 +99,7 @@ const meta = {
   title: 'sdk/schema/ECHO',
   render: DefaultStory,
   decorators: [
-    withTheme,
+    withTheme(),
     withClientProvider({
       createIdentity: true,
       config: new Config({

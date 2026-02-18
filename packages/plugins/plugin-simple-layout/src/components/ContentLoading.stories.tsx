@@ -11,7 +11,7 @@ import { ContentLoading } from './ContentLoading';
 const meta = {
   title: 'plugins/plugin-simple-layout/ContentLoading',
   component: ContentLoading,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'centered',
   },

@@ -60,11 +60,12 @@ describe('SwarmMessenger', { timeout: 7000 }, () => {
     await messenger.listen({
       peer,
       payloadType: 'dxos.mesh.swarm.SwarmMessage',
-      onMessage: async (message) => await router.receiveMessage({
-        author: message.author!,
-        recipient: message.recipient!,
-        payload: message.payload as never,
-      }),
+      onMessage: async (message) =>
+        await router.receiveMessage({
+          author: message.author!,
+          recipient: message.recipient!,
+          payload: message.payload as never,
+        }),
     });
 
     const router: SwarmMessenger = new SwarmMessenger({
