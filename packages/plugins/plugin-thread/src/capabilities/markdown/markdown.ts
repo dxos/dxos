@@ -5,7 +5,7 @@
 import { EditorView } from '@codemirror/view';
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { ATTENDABLE_PATH_SEPARATOR, DeckOperation } from '@dxos/plugin-deck/types';
 import { MarkdownCapabilities } from '@dxos/plugin-markdown';
@@ -21,14 +21,14 @@ export default Capability.makeModule(
 
     return Capability.contributes(MarkdownCapabilities.Extensions, [
       ({ document: doc }) => {
-        const { invokePromise } = capabilities.get(Common.Capability.OperationInvoker);
-        const registry = capabilities.get(Common.Capability.AtomRegistry);
+        const { invokePromise } = capabilities.get(Capabilities.OperationInvoker);
+        const registry = capabilities.get(Capabilities.AtomRegistry);
         const stateAtom = capabilities.get(ThreadCapabilities.State);
         return threads({ registry, stateAtom }, doc, invokePromise);
       },
       ({ document: doc }) => {
         if (!doc) return [];
-        const registry = capabilities.get(Common.Capability.AtomRegistry);
+        const registry = capabilities.get(Capabilities.AtomRegistry);
         const stateAtom = capabilities.get(ThreadCapabilities.State);
 
         return EditorView.updateListener.of((update) => {
@@ -45,7 +45,7 @@ export default Capability.makeModule(
       },
       ({ document: doc }) => {
         if (!doc) return [];
-        const { invokePromise } = capabilities.get(Common.Capability.OperationInvoker);
+        const { invokePromise } = capabilities.get(Capabilities.OperationInvoker);
         const id = Obj.getDXN(doc).toString();
 
         return EditorView.updateListener.of((update) => {

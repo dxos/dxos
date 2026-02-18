@@ -4,8 +4,8 @@
 
 import React, { useCallback } from 'react';
 
-import { Common } from '@dxos/app-framework';
-import { useOperationInvoker } from '@dxos/app-framework/react';
+import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { LayoutOperation } from '@dxos/app-toolkit';
 import { IconButton, type IconButtonProps, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 
 import { getCompanionId, useDeckCompanions, useDeckState } from '../../hooks';
@@ -15,13 +15,13 @@ export const ToggleSidebarButton = ({
   classNames,
   variant = 'ghost',
 }: ThemedClassName<Pick<IconButtonProps, 'variant'>>) => {
-  const { state, updateState } = useDeckState();
+  const { updateState } = useDeckState();
   const { t } = useTranslation(meta.id);
 
   const handleClick = useCallback(() => {
-    updateState((s) => ({
-      ...s,
-      sidebarState: s.sidebarState === 'expanded' ? 'collapsed' : 'expanded',
+    updateState((state) => ({
+      ...state,
+      sidebarState: state.sidebarState === 'expanded' ? 'collapsed' : 'expanded',
     }));
   }, [updateState]);
 
@@ -43,7 +43,7 @@ export const CloseSidebarButton = () => {
   const { t } = useTranslation(meta.id);
 
   const handleClick = useCallback(() => {
-    updateState((s) => ({ ...s, sidebarState: 'collapsed' }));
+    updateState((state) => ({ ...state, sidebarState: 'collapsed' }));
   }, [updateState]);
 
   return (
@@ -71,11 +71,11 @@ export const ToggleComplementarySidebarButton = ({
   const companions = useDeckCompanions();
   const handleClick = useCallback(() => {
     const nextState = state.complementarySidebarState === 'expanded' ? 'collapsed' : 'expanded';
-    updateState((s) => ({ ...s, complementarySidebarState: nextState }));
+    updateState((state) => ({ ...state, complementarySidebarState: nextState }));
 
     const subject = state.complementarySidebarPanel ?? (companions[0] && getCompanionId(companions[0].id));
     if (nextState === 'expanded' && !current && subject) {
-      invokeSync(Common.LayoutOperation.UpdateComplementary, { subject });
+      invokeSync(LayoutOperation.UpdateComplementary, { subject });
     }
   }, [state, updateState, current, companions, invokeSync]);
 

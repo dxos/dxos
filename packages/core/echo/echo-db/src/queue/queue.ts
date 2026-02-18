@@ -67,7 +67,7 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
         (objects ?? []).map((obj) =>
           Obj.fromJSON(obj, {
             refResolver: this._refResolver,
-            dxn: this._dxn.extend([(obj as any).id]),
+            dxn: this._dxn.extend([(obj as { id?: string }).id ?? '']),
           }),
         ),
       );
@@ -212,7 +212,7 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
   async delete(ids: string[]): Promise<void> {
     // Optimistic update.
     // TODO(dmaretskyi): Restrict types.
-    this._objects = this._objects.filter((item) => !ids.includes((item as any).id));
+    this._objects = this._objects.filter((item) => !ids.includes(item.id));
     for (const id of ids) {
       this._objectCache.delete(id);
     }
@@ -254,7 +254,7 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
       objects.map(async (obj) => {
         const decoded = await Obj.fromJSON(obj, {
           refResolver: this._refResolver,
-          dxn: this._dxn.extend([(obj as any).id]),
+          dxn: this._dxn.extend([(obj as { id?: string }).id ?? '']),
         });
         this._objectCache.set(decoded.id, decoded as T);
         return decoded;
@@ -280,7 +280,7 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
   async hydrateObject(obj: ObjectJSON): Promise<Entity.Unknown> {
     const decoded = await Obj.fromJSON(obj, {
       refResolver: this._refResolver,
-      dxn: this._dxn.extend([(obj as any).id]),
+      dxn: this._dxn.extend([(obj as { id?: string }).id ?? '']),
     });
     return decoded;
   }
@@ -358,4 +358,5 @@ const objectSetChanged = (before: Entity.Unknown[], after: Entity.Unknown[]) => 
   return before.some((item, index) => item.id !== after[index].id);
 };
 
-const isSqliteNotOpenError = (err: any) => err.cause?.message?.includes('The database connection is not open');
+const isSqliteNotOpenError = (err: unknown) =>
+  err instanceof Error && 'cause' in err && (err.cause as Error)?.message?.includes('The database connection is not open');

@@ -4,7 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common } from '@dxos/app-framework';
+import { Capability } from '@dxos/app-framework';
+import { AppCapabilities } from '@dxos/app-toolkit';
 import { Obj } from '@dxos/echo';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ATTENDABLE_PATH_SEPARATOR, DECK_COMPANION_TYPE, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
@@ -27,11 +28,11 @@ export default Capability.makeModule(
         connector: (node, get) =>
           Effect.gen(function* () {
             const client = yield* Capability.get(ClientCapabilities.Client);
-            const layoutAtom = get(yield* Capability.atom(Common.Capability.Layout))[0];
+            const layoutAtom = get(yield* Capability.atom(AppCapabilities.Layout))[0];
             const layout = layoutAtom ? get(layoutAtom) : undefined;
             const { spaceId } = parseId(layout?.workspace);
             const space = spaceId ? client.spaces.get(spaceId) : undefined;
-            const [graph] = get(yield* Capability.atom(Common.Capability.AppGraph));
+            const [graph] = get(yield* Capability.atom(AppCapabilities.AppGraph));
 
             return [
               {
@@ -415,6 +416,6 @@ export default Capability.makeModule(
       }),
     ]);
 
-    return Capability.contributes(Common.Capability.AppGraphBuilder, extensions);
+    return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
   }),
 );

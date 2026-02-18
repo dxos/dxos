@@ -4,12 +4,12 @@
 
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { Surface } from '@dxos/app-framework/react';
+import { Surface } from '@dxos/app-framework/ui';
 import { Entity, Query } from '@dxos/echo';
 import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
-import { Toolbar, useTranslation } from '@dxos/react-ui';
+import { ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Layout } from '@dxos/react-ui';
 import { Card, Mosaic, type StackTileComponent } from '@dxos/react-ui-mosaic';
-import { Layout } from '@dxos/react-ui-mosaic';
 import { SearchList } from '@dxos/react-ui-searchlist';
 import { Text } from '@dxos/schema';
 
@@ -58,9 +58,11 @@ export const SearchMain = ({ space }: { space?: Space }) => {
         </Toolbar.Root>
         <SearchList.Content>
           <Mosaic.Container asChild>
-            <Mosaic.Viewport>
-              <Mosaic.Stack items={allResults} getId={(result) => result.object!.id} Tile={SearchResultTile} />
-            </Mosaic.Viewport>
+            <ScrollArea.Root orientation='vertical'>
+              <ScrollArea.Viewport>
+                <Mosaic.Stack items={allResults} getId={(result) => result.object!.id} Tile={SearchResultTile} />
+              </ScrollArea.Viewport>
+            </ScrollArea.Root>
           </Mosaic.Container>
           {allResults.length === 0 && <SearchList.Empty>{t('empty results message')}</SearchList.Empty>}
         </SearchList.Content>
@@ -77,7 +79,7 @@ const SearchResultTile: StackTileComponent<SearchResult> = ({ data }) => {
         <Card.Title>{data.label ?? (data.object && Entity.getLabel(data.object))}</Card.Title>
         <Card.Menu />
       </Card.Toolbar>
-      <Surface role='card--content' data={{ subject: data.object }} limit={1} />
+      <Surface.Surface role='card--content' data={{ subject: data.object }} limit={1} />
     </Card.Root>
   );
 };

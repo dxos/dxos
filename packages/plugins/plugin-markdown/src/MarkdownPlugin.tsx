@@ -4,7 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common, Plugin } from '@dxos/app-framework';
+import { Capability, Plugin } from '@dxos/app-framework';
+import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { type Obj, Ref } from '@dxos/echo';
 import { createDocAccessor, getTextInRange } from '@dxos/echo-db';
 import { Operation } from '@dxos/operation';
@@ -29,20 +30,8 @@ import { Markdown, MarkdownEvents, MarkdownOperation } from './types';
 import { serializer } from './util';
 
 export const MarkdownPlugin = Plugin.define(meta).pipe(
-  Common.Plugin.addTranslationsModule({ translations: [...translations, ...editorTranslations] }),
-  Plugin.addModule({
-    activatesOn: Common.ActivationEvent.SetupSettings,
-    activate: MarkdownSettings,
-  }),
-  Plugin.addModule({
-    id: 'state',
-    // TODO(wittjosiah): Does not integrate with settings store.
-    //   Should this be a different event?
-    //   Should settings store be renamed to be more generic?
-    activatesOn: Common.ActivationEvent.SetupSettings,
-    activate: MarkdownState,
-  }),
-  Common.Plugin.addMetadataModule({
+  AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
+  AppPlugin.addMetadataModule({
     metadata: {
       id: Markdown.Document.typename,
       metadata: {
@@ -69,7 +58,25 @@ export const MarkdownPlugin = Plugin.define(meta).pipe(
       },
     },
   }),
-  Common.Plugin.addSchemaModule({ schema: [Markdown.Document, Text.Text] }),
+  AppPlugin.addOperationResolverModule({ activate: OperationResolver }),
+  AppPlugin.addSchemaModule({ schema: [Markdown.Document, Text.Text] }),
+  AppPlugin.addSurfaceModule({
+    activate: ReactSurface,
+    activatesBefore: [MarkdownEvents.SetupExtensions],
+  }),
+  AppPlugin.addTranslationsModule({ translations: [...translations, ...editorTranslations] }),
+  Plugin.addModule({
+    activatesOn: AppActivationEvents.SetupSettings,
+    activate: MarkdownSettings,
+  }),
+  Plugin.addModule({
+    id: 'state',
+    // TODO(wittjosiah): Does not integrate with settings store.
+    //   Should this be a different event?
+    //   Should settings store be renamed to be more generic?
+    activatesOn: AppActivationEvents.SetupSettings,
+    activate: MarkdownState,
+  }),
   Plugin.addModule({
     id: 'on-space-created',
     activatesOn: SpaceEvents.SpaceCreated,
@@ -80,20 +87,14 @@ export const MarkdownPlugin = Plugin.define(meta).pipe(
         ),
       ),
   }),
-  Common.Plugin.addSurfaceModule({
-    activate: ReactSurface,
-    activatesBefore: [MarkdownEvents.SetupExtensions],
-  }),
-  Common.Plugin.addOperationResolverModule({ activate: OperationResolver }),
   Plugin.addModule({
-    activatesOn: Common.ActivationEvent.AppGraphReady,
+    activatesOn: AppActivationEvents.AppGraphReady,
     activate: AppGraphSerializer,
   }),
   Plugin.addModule({
     // TODO(wittjosiah): More relevant event?
-    activatesOn: Common.ActivationEvent.AppGraphReady,
+    activatesOn: AppActivationEvents.AppGraphReady,
     activate: AnchorSort,
   }),
-  Common.Plugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
   Plugin.make,
 );

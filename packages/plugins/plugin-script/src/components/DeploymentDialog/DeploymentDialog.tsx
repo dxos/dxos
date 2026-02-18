@@ -4,8 +4,8 @@
 
 import React, { useEffect, useMemo } from 'react';
 
-import { Common } from '@dxos/app-framework';
-import { useOperationInvoker } from '@dxos/app-framework/react';
+import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { LayoutOperation } from '@dxos/app-toolkit';
 import { getSpace } from '@dxos/react-client/echo';
 import { Button, Dialog, IconButton, useTranslation } from '@dxos/react-ui';
 import { type AccessToken } from '@dxos/types';
@@ -38,7 +38,7 @@ export const DeploymentDialog = ({ accessToken, scriptTemplates }: DeploymentDia
   useEffect(() => {
     if (status === 'success') {
       // TODO(ZaymonFC): We can probably re-use this toast for normal script deployment.
-      void invokePromise(Common.LayoutOperation.AddToast, {
+      void invokePromise(LayoutOperation.AddToast, {
         id: `${meta.id}/deployment-success`,
         icon: 'ph--check--regular',
         duration: Infinity,
@@ -46,11 +46,11 @@ export const DeploymentDialog = ({ accessToken, scriptTemplates }: DeploymentDia
         description: ['script deployment toast description', { ns: meta.id, count: scriptTemplates.length }],
         closeLabel: ['script deployment toast close label', { ns: meta.id, count: scriptTemplates.length }],
       });
-      void invokePromise(Common.LayoutOperation.UpdateDialog, { state: false });
+      void invokePromise(LayoutOperation.UpdateDialog, { state: false });
     }
     if (status === 'error') {
-      void invokePromise(Common.LayoutOperation.UpdateDialog, { state: false });
-      void invokePromise(Common.LayoutOperation.AddToast, {
+      void invokePromise(LayoutOperation.UpdateDialog, { state: false });
+      void invokePromise(LayoutOperation.AddToast, {
         id: `${meta.id}/deployment-error`,
         icon: 'ph--warning--regular',
         duration: Infinity,

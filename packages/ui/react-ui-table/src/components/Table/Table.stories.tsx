@@ -12,6 +12,7 @@ import { invariant } from '@dxos/invariant';
 import { faker } from '@dxos/random';
 import { PublicKey } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
+import { ScrollArea } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 import { ViewEditor, translations as formTranslations } from '@dxos/react-ui-form';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
@@ -103,6 +104,15 @@ const DefaultStory = () => {
   const { db, schema, table, tableRef, model, presentation, handleInsertRow, handleSaveView, handleDeleteColumn } =
     useTestTableModel();
 
+  const handleRowClick = useCallback(
+    (row: any) => {
+      if (model?.getDraftRowCount() === 0 && ['frozenRowsEnd', 'fixedEndStart', 'fixedEndEnd'].includes(row?.plane)) {
+        handleInsertRow();
+      }
+    },
+    [model, handleInsertRow],
+  );
+
   if (!schema || !table?.view.target) {
     return <div />;
   }
@@ -117,16 +127,19 @@ const DefaultStory = () => {
             schema={schema}
             model={model}
             presentation={presentation}
+            onRowClick={handleRowClick}
             ignoreAttention
           />
         </TableComponent.Root>
       </div>
-      <div className='flex flex-col bs-full border-l border-separator overflow-y-auto'>
-        <StoryViewEditor view={table.view.target} schema={schema} db={db} handleDeleteColumn={handleDeleteColumn} />
-        <SyntaxHighlighter language='json' className='text-xs'>
-          {JSON.stringify({ view: table.view.target, schema }, null, 2)}
-        </SyntaxHighlighter>
-      </div>
+      <ScrollArea.Root orientation='vertical' classNames='bs-full border-l border-separator'>
+        <ScrollArea.Viewport>
+          <StoryViewEditor view={table.view.target} schema={schema} db={db} handleDeleteColumn={handleDeleteColumn} />
+          <SyntaxHighlighter language='json' className='text-xs'>
+            {JSON.stringify({ view: table.view.target, schema }, null, 2)}
+          </SyntaxHighlighter>
+        </ScrollArea.Viewport>
+      </ScrollArea.Root>
     </div>
   );
 };
@@ -143,7 +156,7 @@ const meta = {
   title: 'ui/react-ui-table/Table',
   render: DefaultStory,
   decorators: [
-    withTheme,
+    withTheme(),
     withRegistry,
     withClientProvider({
       types: [View.View, Table.Table],

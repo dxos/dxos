@@ -39,6 +39,9 @@
       "path": "../../sdk/app-framework"
     },
     {
+      "path": "../../sdk/client-protocol"
+    },
+    {
       "path": "../../sdk/schema"
     },
     {

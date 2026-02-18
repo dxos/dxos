@@ -9,7 +9,7 @@ import * as Option from 'effect/Option';
 import type * as Record from 'effect/Record';
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { Surface, useCapability } from '@dxos/app-framework/react';
+import { Surface, useCapability } from '@dxos/app-framework/ui';
 import { Initiative } from '@dxos/assistant-toolkit';
 import { DXN, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { type JsonPath, splitJsonPath } from '@dxos/echo/internal';
@@ -97,8 +97,8 @@ export const InitiativeContainer = ({ role, initiative }: InitiativeContainerPro
         ))}
       </div>
       {selectedTab === TAB_INITATIVE && <InitiativeForm initiative={initiative} />}
-      {selectedTab === TAB_CHAT && <Surface role='article' data={{ subject: chat }} limit={1} />}
-      {selectedArtifact && <Surface role='section' data={{ subject: selectedArtifact.data }} limit={1} />}
+      {selectedTab === TAB_CHAT && <Surface.Surface role='article' data={{ subject: chat }} limit={1} />}
+      {selectedArtifact && <Surface.Surface role='section' data={{ subject: selectedArtifact.data }} limit={1} />}
     </StackItem.Content>
   );
 };
@@ -213,7 +213,7 @@ const InitiativeForm = ({ initiative }: { initiative: Initiative.Initiative }) =
       <h3 className='mb-2'>Input Queue</h3>
       <div className='border border-subduedSeparator rounded-md p-2 h-64 overflow-y-auto'>
         {inputQueueItems.map((item) => (
-          <Surface key={item.id} role='section' data={{ subject: item }} limit={1} />
+          <Surface.Surface key={item.id} role='section' data={{ subject: item }} limit={1} />
         ))}
         {inputQueueItems.length === 0 && <div className='text-subdued'>No items in queue</div>}
       </div>

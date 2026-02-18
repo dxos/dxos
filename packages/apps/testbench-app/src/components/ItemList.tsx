@@ -6,7 +6,7 @@ import React from 'react';
 
 import { Obj } from '@dxos/echo';
 import { createDocAccessor } from '@dxos/echo-db';
-import { IconButton, Input, useThemeContext } from '@dxos/react-ui';
+import { IconButton, Input, ScrollArea, useThemeContext } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import { mapSchemaToFields } from '@dxos/schema';
 import { automerge, createBasicExtensions, createMarkdownExtensions, createThemeExtensions } from '@dxos/ui-editor';
@@ -18,8 +18,8 @@ export type ItemListProps<T> = { objects: T[] } & Pick<ItemProps<T>, 'debug' | '
 
 export const ItemList = ({ objects, debug, ...props }: ItemListProps<Obj.Any>) => {
   return (
-    <div className='flex flex-col grow overflow-hidden'>
-      <div className='flex flex-col overflow-y-auto pr-2'>
+    <ScrollArea.Root padding>
+      <ScrollArea.Viewport>
         {objects
           .slice(0, MAX_RENDERED_COUNT)
           .map(
@@ -31,8 +31,8 @@ export const ItemList = ({ objects, debug, ...props }: ItemListProps<Obj.Any>) =
         {objects.length > MAX_RENDERED_COUNT && (
           <div className='text-xs text-gray-400'>({objects.length - MAX_RENDERED_COUNT} more items)</div>
         )}
-      </div>
-    </div>
+      </ScrollArea.Viewport>
+    </ScrollArea.Root>
   );
 };
 

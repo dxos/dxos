@@ -6,7 +6,7 @@ import { ATTR_META, type ObjectJSON } from '@dxos/echo/internal';
 import type { EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import type { ObjectId, SpaceId } from '@dxos/keys';
-import { type Echo, KEY_QUEUE_POSITION } from '@dxos/protocols';
+import { type Echo, FeedProtocol } from '@dxos/protocols';
 import { type Empty, EmptySchema, type JsonObject, create } from '@dxos/protocols/buf';
 import {
   type DeleteFromQueueRequest,
@@ -103,13 +103,13 @@ const setQueuePosition = (obj: ObjectJSON, position: number) => {
   obj[ATTR_META].keys ??= [];
   for (let i = 0; i < obj[ATTR_META].keys.length; i++) {
     const key = obj[ATTR_META].keys[i];
-    if (key.source === KEY_QUEUE_POSITION) {
+    if (key.source === FeedProtocol.KEY_QUEUE_POSITION) {
       obj[ATTR_META].keys.splice(i, 1);
       i--;
     }
   }
   obj[ATTR_META].keys.push({
-    source: KEY_QUEUE_POSITION,
+    source: FeedProtocol.KEY_QUEUE_POSITION,
     id: position.toString(),
   });
 };

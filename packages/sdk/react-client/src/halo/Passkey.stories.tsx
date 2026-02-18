@@ -148,7 +148,7 @@ const config = new Config({
 const meta = {
   title: 'sdk/react-client/Passkeys',
   render: Test,
-  decorators: [withClientProvider({ config }), withTheme],
+  decorators: [withClientProvider({ config }), withTheme()],
 } satisfies Meta;
 
 export default meta;

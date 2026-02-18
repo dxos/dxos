@@ -16,7 +16,7 @@ import {
 } from '@dxos/plugin-assistant';
 import { useQuery } from '@dxos/react-client/echo';
 import { IconButton, Popover, Toolbar } from '@dxos/react-ui';
-import { Layout } from '@dxos/react-ui-mosaic';
+import { Layout } from '@dxos/react-ui';
 
 import { ExecutionGraphModule } from './ExecutionGraphModule';
 import { type ComponentProps } from './types';

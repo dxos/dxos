@@ -4,7 +4,8 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 
-import { Mosaic, Splitter, type SplitterMode } from '@dxos/react-ui-mosaic';
+import { Splitter, type SplitterMode } from '@dxos/react-ui';
+import { Mosaic } from '@dxos/react-ui-mosaic';
 
 import { useSimpleLayoutState } from '../../hooks';
 import { Dialog } from '../Dialog';
@@ -40,7 +41,7 @@ export const SimpleLayout = () => {
       >
         <MobileLayout.Panel safe={{ top: true, bottom: splitterMode === 'upper' }}>
           <PopoverRoot>
-            <Splitter.Root mode={splitterMode} ratio={0.6}>
+            <Splitter.Root mode={splitterMode} ratio={0.55}>
               <Splitter.Panel position='upper'>
                 <Main />
               </Splitter.Panel>

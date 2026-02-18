@@ -24,7 +24,7 @@ const viewers = (n: number, currentlyAttended = true): Member[] =>
 
 const meta = {
   title: 'plugins/plugin-space/SpacePresence',
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     translations,
   },

@@ -4,7 +4,7 @@
 
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/react';
+import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { ComputeGraph } from '@dxos/conductor';
 import { Filter, Obj, type Type } from '@dxos/echo';
 import { Markdown } from '@dxos/plugin-markdown/types';
@@ -12,7 +12,7 @@ import { Sheet } from '@dxos/plugin-sheet/types';
 import { Diagram } from '@dxos/plugin-sketch/types';
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
-import { IconButton, Input, Toolbar, useAsyncEffect } from '@dxos/react-ui';
+import { IconButton, Input, Layout, ScrollArea, Toolbar, useAsyncEffect } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { Organization, Person, Task } from '@dxos/types';
 import { jsonKeyReplacer, sortKeys } from '@dxos/util';
@@ -93,35 +93,34 @@ export const SpaceGenerator = ({ space, onCreateObjects }: SpaceGeneratorProps) 
   );
 
   return (
-    <div role='none' className='flex flex-col grow overflow-hidden'>
-      <Toolbar.Root classNames='border-be border-subduedSeparator'>
+    <Layout.Main toolbar>
+      <Toolbar.Root>
         <IconButton icon='ph--arrow-clockwise--regular' iconOnly label='Refresh' onClick={updateInfo} />
         <Toolbar.Separator variant='gap' />
         <Input.Root>
           <Input.TextInput
             type='number'
+            placeholder='Count'
+            classNames='is-[4rem] text-right'
             min={1}
             max={100}
-            placeholder={'Count'}
-            classNames='!w-[4rem] !text-right'
             size={8}
             value={count}
-            onChange={(ev) => setCount(parseInt(ev.target.value))}
+            onChange={(event) => setCount(parseInt(event.target.value))}
           />
         </Input.Root>
       </Toolbar.Root>
 
-      <div className='flex flex-col overflow-y-auto divide-y divide-separator'>
-        <SchemaTable types={staticTypes} objects={info.objects} label='Static Types' onClick={handleCreateData} />
-        <SchemaTable types={recordTypes} objects={info.objects} label='Record Types' onClick={handleCreateData} />
-        <SchemaTable types={presets.types} objects={info.objects} label='Presets' onClick={handleCreateData} />
-
-        <div>
+      <ScrollArea.Root thin orientation='vertical'>
+        <ScrollArea.Viewport classNames='gap-4 divide-y divide-subduedSeparator'>
+          <SchemaTable types={staticTypes} objects={info.objects} label='Static Types' onClick={handleCreateData} />
+          <SchemaTable types={recordTypes} objects={info.objects} label='Record Types' onClick={handleCreateData} />
+          <SchemaTable types={presets.types} objects={info.objects} label='Presets' onClick={handleCreateData} />
           <SyntaxHighlighter language='json' classNames='text-xs'>
             {JSON.stringify({ space, ...info }, jsonKeyReplacer({ truncate: true }), 2)}
           </SyntaxHighlighter>
-        </div>
-      </div>
-    </div>
+        </ScrollArea.Viewport>
+      </ScrollArea.Root>
+    </Layout.Main>
   );
 };

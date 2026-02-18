@@ -160,7 +160,7 @@ const CardStackStory = () => {
 const meta = {
   title: 'ui/react-ui-stack/CardStack',
   component: CardStackStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'fullscreen',
   },

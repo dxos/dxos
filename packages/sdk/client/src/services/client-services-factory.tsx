@@ -18,6 +18,8 @@ export type CreateClientServicesOptions = {
   createWorker?: WorkerClientServicesProps['createWorker'];
   /** Factory for creating a dedicated worker. */
   createDedicatedWorker?: DedeciatedWorkerClientServicesOptions['createWorker'];
+  /** Factory for creating the coordinator SharedWorker (for dedicated worker mode). Use for a custom entrypoint that e.g. initializes observability. */
+  createCoordinatorWorker?: () => SharedWorker;
   /** Factory for creating an OPFS worker. */
   createOpfsWorker?: LocalClientServicesParams['createOpfsWorker'];
   /**
@@ -29,6 +31,8 @@ export type CreateClientServicesOptions = {
   observabilityGroup?: string;
   /** Enable telemetry metadata sent with signaling requests. */
   signalTelemetryEnabled?: boolean;
+  /** Path to SQLite database file for persistent indexing in Node/Bun. */
+  sqlitePath?: LocalClientServicesParams['sqlitePath'];
 };
 
 /**
@@ -41,10 +45,12 @@ export const createClientServices = async (
   const {
     createWorker,
     createDedicatedWorker,
+    createCoordinatorWorker,
     singleClientMode,
     createOpfsWorker,
     observabilityGroup,
     signalTelemetryEnabled,
+    sqlitePath,
   } = options;
   const remote = config.values.runtime?.client?.remoteSource;
   if (remote) {
@@ -75,7 +81,12 @@ export const createClientServices = async (
   return createDedicatedWorker
     ? new DedicatedWorkerClientServices({
         createWorker: createDedicatedWorker,
-        createCoordinator: () => (singleClientMode ? new SingleClientCoordinator() : new SharedWorkerCoordinator()),
+        createCoordinator: () =>
+          singleClientMode
+            ? new SingleClientCoordinator()
+            : createCoordinatorWorker
+              ? new SharedWorkerCoordinator(createCoordinatorWorker)
+              : new SharedWorkerCoordinator(),
         config,
       })
     : createWorker && useWorker
@@ -84,7 +95,7 @@ export const createClientServices = async (
           config,
           {
             createOpfsWorker,
-            runtimeProps: { enableSqlite: true },
+            sqlitePath,
           },
           observabilityGroup,
           signalTelemetryEnabled,

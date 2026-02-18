@@ -78,10 +78,8 @@ export const EditorMenuProvider = ({
       root,
       DX_ANCHOR_ACTIVATE as any,
       (event: DxAnchorActivate) => {
-        const { trigger, refId } = event;
-
-        // If this has a `refId`, then it’s probably a URL or DXN and out of scope for this component.
-        if (!refId) {
+        const { trigger, dxn } = event;
+        if (!dxn) {
           triggerRef.current = trigger as HTMLButtonElement;
           if (onActivate) {
             onActivate({ view: viewRef.current!, trigger: trigger.getAttribute('data-trigger') ?? undefined });
@@ -115,7 +113,7 @@ export const EditorMenuProvider = ({
       <Popover.Portal>
         <Popover.Content
           align='start'
-          classNames={tx('menu.content', 'menu--exotic-unfocusable', { elevation: 'positioned' }, [
+          classNames={tx('menu.content', { elevation: 'positioned' }, [
             'overflow-y-auto',
             !menuGroups.length && 'hidden',
           ])}
@@ -132,7 +130,7 @@ export const EditorMenuProvider = ({
           }}
           onOpenAutoFocus={(event) => event.preventDefault()}
         >
-          <Popover.Viewport classNames={tx('menu.viewport', 'menu__viewport--exotic-unfocusable', {})}>
+          <Popover.Viewport classNames={tx('menu.viewport', {})}>
             <Menu groups={menuGroups} currentItem={currentItem} onSelect={handleSelect} />
           </Popover.Viewport>
           <Popover.Arrow />
@@ -162,7 +160,7 @@ const Menu = ({ groups, currentItem, onSelect }: MenuProps) => {
       {groups.map((group, index) => (
         <Fragment key={group.id}>
           <MenuGroup group={group} currentItem={currentItem} onSelect={onSelect} />
-          {index < groups.length - 1 && <div className={tx('menu.separator', 'menu__item', {})} />}
+          {index < groups.length - 1 && <div className={tx('menu.separator', {})} />}
         </Fragment>
       ))}
     </ul>
@@ -185,7 +183,7 @@ const MenuGroup = ({ group, currentItem, onSelect }: MenuGroupProps) => {
   return (
     <>
       {group.label && (
-        <div className={tx('menu.groupLabel', 'menu__group__label', {})}>
+        <div className={tx('menu.groupLabel', {})}>
           <span>{toLocalizedString(group.label, t)}</span>
         </div>
       )}
@@ -221,11 +219,7 @@ const MenuItem = ({ item, current, onSelect }: MenuItemProps) => {
   const handleSelect = useCallback(() => onSelect?.(item), [item, onSelect]);
 
   return (
-    <li
-      ref={listRef}
-      className={tx('menu.item', 'menu__item--exotic-unfocusable', {}, [current && 'bg-hoverSurface'])}
-      onClick={handleSelect}
-    >
+    <li ref={listRef} className={tx('menu.item', {}, [current && 'bg-hoverSurface'])} onClick={handleSelect}>
       {item.icon && <Icon icon={item.icon} size={5} />}
       <span className='grow truncate'>{toLocalizedString(item.label, t)}</span>
     </li>

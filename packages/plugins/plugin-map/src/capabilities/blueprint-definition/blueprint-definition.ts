@@ -4,19 +4,20 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common } from '@dxos/app-framework';
+import { Capability } from '@dxos/app-framework';
+import { AppCapabilities } from '@dxos/app-toolkit';
 
 import { MapBlueprint } from '../../blueprints';
 
 export type BlueprintCapabilities = [
-  Capability.Capability<typeof Common.Capability.Functions>,
-  Capability.Capability<typeof Common.Capability.BlueprintDefinition>,
+  Capability.Capability<typeof AppCapabilities.Functions>,
+  Capability.Capability<typeof AppCapabilities.BlueprintDefinition>,
 ];
 
 const blueprintDefinition = Capability.makeModule<[], BlueprintCapabilities>(() =>
   Effect.succeed([
-    Capability.contributes(Common.Capability.Functions, MapBlueprint.functions),
-    Capability.contributes(Common.Capability.BlueprintDefinition, MapBlueprint.make()),
+    Capability.contributes(AppCapabilities.Functions, MapBlueprint.functions),
+    Capability.contributes(AppCapabilities.BlueprintDefinition, MapBlueprint.make()),
   ]),
 );
 

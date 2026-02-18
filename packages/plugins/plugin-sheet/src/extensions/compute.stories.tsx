@@ -107,7 +107,7 @@ const GraphStory = (props: EditorProps) => {
 const meta = {
   title: 'plugins/plugin-sheet/extensions',
   decorators: [
-    withTheme,
+    withTheme(),
     withClientProvider({
       types: [Sheet.Sheet],
       createIdentity: true,

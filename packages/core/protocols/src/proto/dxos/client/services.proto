@@ -72,6 +72,7 @@ message Platform {
     BROWSER = 0;
     SHARED_WORKER = 1;
     NODE = 2;
+    DEDICATED_WORKER = 3;
   }
 
   PLATFORM_TYPE type = 1;

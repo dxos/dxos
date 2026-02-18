@@ -233,7 +233,7 @@ const Invitations = () => {
 
 const meta = {
   title: 'sdk/shell/Invitations',
-  decorators: [withTheme],
+  decorators: [withTheme()],
 } satisfies Meta;
 
 export default meta;

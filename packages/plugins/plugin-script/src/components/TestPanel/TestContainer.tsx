@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { type Script } from '@dxos/functions';
-import { Layout } from '@dxos/react-ui-mosaic';
+import { Layout } from '@dxos/react-ui';
 
 import { useDeployState, useToolbarState } from '../../hooks';
 

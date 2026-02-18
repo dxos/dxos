@@ -4,10 +4,10 @@
 
 import React from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/react';
+import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { useCredentials } from '@dxos/react-client/halo';
 import { Icon, IconButton, List, ListItem, Message, useTranslation } from '@dxos/react-ui';
-import { ControlGroup, ControlItem, ControlPage, ControlSection } from '@dxos/react-ui-form';
+import { Settings } from '@dxos/react-ui-form';
 
 import { meta } from '../meta';
 import { ClientOperation } from '../types';
@@ -23,28 +23,28 @@ export const RecoveryCredentialsContainer = () => {
   );
 
   return (
-    <ControlPage>
-      <ControlSection title={t('recovery setup dialog title')} description={t('recovery setup dialog description')}>
-        <ControlGroup>
-          <ControlItem title={t('create passkey label')} description={t('create passkey description')}>
+    <Settings.Root>
+      <Settings.Section title={t('recovery setup dialog title')} description={t('recovery setup dialog description')}>
+        <Settings.Group>
+          <Settings.Item title={t('create passkey label')} description={t('create passkey description')}>
             <IconButton
               label={t('create passkey label')}
               icon='ph--key--duotone'
               variant='primary'
               onClick={() => invokePromise(ClientOperation.CreatePasskey)}
             />
-          </ControlItem>
-          <ControlItem title={t('create recovery code label')} description={t('create recovery code description')}>
+          </Settings.Item>
+          <Settings.Item title={t('create recovery code label')} description={t('create recovery code description')}>
             <IconButton
               label={t('create recovery code label')}
               icon='ph--receipt--duotone'
               variant='default'
               onClick={() => invokePromise(ClientOperation.CreateRecoveryCode)}
             />
-          </ControlItem>
-        </ControlGroup>
-      </ControlSection>
-      <ControlSection title={t('credentials list label')}>
+          </Settings.Item>
+        </Settings.Group>
+      </Settings.Section>
+      <Settings.Section title={t('credentials list label')}>
         {recoveryCredentials.length < 1 ? (
           <Message.Root valence='error' classNames='container-max-width'>
             <Message.Title icon='ph--shield-warning--duotone'>{t('no credentials title')}</Message.Title>
@@ -62,7 +62,7 @@ export const RecoveryCredentialsContainer = () => {
             ))}
           </List>
         )}
-      </ControlSection>
-    </ControlPage>
+      </Settings.Section>
+    </Settings.Root>
   );
 };

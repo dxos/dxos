@@ -19,6 +19,6 @@ export const Link = forwardRef<HTMLAnchorElement, LinkProps>(
   ({ asChild, variant, classNames, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     const Root = asChild ? Slot : Primitive.a;
-    return <Root {...props} className={tx('link.root', 'link', { variant }, classNames)} ref={forwardedRef} />;
+    return <Root {...props} className={tx('link.root', { variant }, classNames)} ref={forwardedRef} />;
   },
 );

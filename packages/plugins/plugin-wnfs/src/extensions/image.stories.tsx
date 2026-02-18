@@ -94,7 +94,7 @@ const DefaultStory = () => {
 const meta = {
   title: 'plugins/plugin-wnfs/image',
   render: DefaultStory,
-  decorators: [withTheme, withClientProvider({ createIdentity: true, createSpace: true })],
+  decorators: [withTheme(), withClientProvider({ createIdentity: true, createSpace: true })],
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

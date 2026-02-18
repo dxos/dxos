@@ -175,7 +175,7 @@ const meta = {
         space.db.add(Tag.make({ label: 'New' }));
       },
     }),
-    withTheme,
+    withTheme(),
   ],
   parameters: {
     layout: 'fullscreen',

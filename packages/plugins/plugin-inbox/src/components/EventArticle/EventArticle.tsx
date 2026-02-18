@@ -4,10 +4,11 @@
 
 import React, { useCallback } from 'react';
 
-import { Surface, type SurfaceComponentProps, useOperationInvoker } from '@dxos/app-framework/react';
+import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
+import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { Layout } from '@dxos/react-ui-mosaic';
+import { Layout } from '@dxos/react-ui';
 import { Text } from '@dxos/schema';
 import { Event as EventType } from '@dxos/types';
 
@@ -58,7 +59,7 @@ export const EventArticle = ({ role, subject, calendar }: EventArticleProps) => 
           <Event.Header db={db} onContactCreate={handleContactCreate} />
           <Event.Content />
           {/* TODO(burdon): Suppress markdown toolbar if section. */}
-          {notes && <Surface role='section' data={{ id, subject: notes }} limit={1} />}
+          {notes && <Surface.Surface role='section' data={{ id, subject: notes }} limit={1} />}
         </Event.Viewport>
       </Event.Root>
     </Layout.Main>

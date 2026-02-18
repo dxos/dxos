@@ -36,7 +36,7 @@ const meta = {
   title: 'ui/react-ui-stack/StackItem',
   component: StackItem.Root as any,
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'centered',
   },

@@ -1,6 +1,11 @@
 {
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
+    "lib": [
+      "DOM",
+      "ESNext",
+      "WebWorker"
+    ],
     "types": [
       "@dxos/typings",
       "node"
@@ -80,7 +85,7 @@
       "path": "../../core/echo/echo-protocol"
     },
     {
-      "path": "../../core/echo/indexing"
+      "path": "../../core/echo/feed"
     },
     {
       "path": "../../core/halo/credentials"

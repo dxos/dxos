@@ -14,7 +14,7 @@ import { SyncStatusIndicator } from './SyncStatus';
 const meta = {
   title: 'plugins/plugin-space/SyncStatusIndicator',
   component: SyncStatusIndicator,
-  decorators: [withTheme, withClientProvider({ createIdentity: true })],
+  decorators: [withTheme(), withClientProvider({ createIdentity: true })],
   parameters: {
     layout: 'centered',
     translations,

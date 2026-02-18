@@ -6,8 +6,8 @@ import * as Effect from 'effect/Effect';
 import type * as Schema from 'effect/Schema';
 import React, { useCallback, useRef } from 'react';
 
-import { Common } from '@dxos/app-framework';
-import { useOperationInvoker } from '@dxos/app-framework/react';
+import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { LayoutOperation } from '@dxos/app-toolkit';
 import { runAndForwardErrors } from '@dxos/effect';
 import { Dialog, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
@@ -33,10 +33,8 @@ export const CreateSpaceDialog = () => {
       const program = Effect.gen(function* () {
         const { data: result } = yield* Effect.promise(() => invokePromise(SpaceOperation.Create, data));
         if (result?.space) {
-          yield* Effect.promise(() =>
-            invokePromise(Common.LayoutOperation.SwitchWorkspace, { subject: result.space.id }),
-          );
-          yield* Effect.promise(() => invokePromise(Common.LayoutOperation.UpdateDialog, { state: false }));
+          yield* Effect.promise(() => invokePromise(LayoutOperation.SwitchWorkspace, { subject: result.space.id }));
+          yield* Effect.promise(() => invokePromise(LayoutOperation.UpdateDialog, { state: false }));
         }
       });
       await runAndForwardErrors(program);
@@ -52,21 +50,23 @@ export const CreateSpaceDialog = () => {
           <Dialog.CloseIconButton ref={closeRef} />
         </Dialog.Close>
       </Dialog.Header>
-      <Form.Root
-        testId='create-space-form'
-        autoFocus
-        schema={SpaceForm}
-        values={initialValues}
-        fieldProvider={inputSurfaceLookup}
-        onSave={handleCreateSpace}
-      >
-        <Form.Viewport>
-          <Form.Content>
-            <Form.FieldSet />
-            <Form.Submit />
-          </Form.Content>
-        </Form.Viewport>
-      </Form.Root>
+      <Dialog.Body>
+        <Form.Root
+          testId='create-space-form'
+          autoFocus
+          schema={SpaceForm}
+          values={initialValues}
+          fieldProvider={inputSurfaceLookup}
+          onSave={handleCreateSpace}
+        >
+          <Form.Viewport>
+            <Form.Content>
+              <Form.FieldSet />
+              <Form.Submit />
+            </Form.Content>
+          </Form.Viewport>
+        </Form.Root>
+      </Dialog.Body>
     </Dialog.Content>
   );
 };

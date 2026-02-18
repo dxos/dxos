@@ -451,6 +451,9 @@ export class DataSpace {
 
         log('credentials notarized');
       } catch (err) {
+        if (err instanceof ContextDisposedError) {
+          return;
+        }
         log.error('error notarizing credentials for feed admission', err);
         throw err;
       }

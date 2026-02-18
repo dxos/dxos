@@ -6,30 +6,23 @@ import { type ReactVirtualizerOptions, useVirtualizer } from '@tanstack/react-vi
 import React, { type FC, Fragment, type ReactElement, type Ref, forwardRef } from 'react';
 
 import { invariant } from '@dxos/invariant';
-import { type SlottableClassName } from '@dxos/react-ui';
+import { type Axis, type SlottableClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { useVisibleItems } from '../../hooks';
-import {
-  type Axis,
-  type GetId,
-  Mosaic,
-  type MosaicTileProps,
-  type MosiacPlaceholderProps,
-  useMosaicContainer,
-} from '../Mosaic';
+import { type GetId, Mosaic, type MosaicTileProps, type MosiacPlaceholderProps, useMosaicContainer } from '../Mosaic';
 import { mosaicStyles } from '../Mosaic';
 
-type StackTileComponent<TData = any> = FC<MosaicTileProps<TData>>;
-
 const STACK_NAME = 'Stack';
+
+type StackTileComponent<TData = any> = FC<MosaicTileProps<TData>>;
 
 type StackProps<TData = any> = SlottableClassName<
   {
     Tile: StackTileComponent<TData>;
     getId: GetId<TData>;
     role?: string;
-    axis?: Axis;
+    orientation?: Axis;
     items?: TData[];
   } & Pick<MosaicTileProps<TData>, 'draggable' | 'debug'>
 >;
@@ -40,12 +33,24 @@ type StackProps<TData = any> = SlottableClassName<
  */
 const StackInner = forwardRef<HTMLDivElement, StackProps>(
   (
-    { className, classNames, role = 'list', axis = 'vertical', draggable = true, items, getId, Tile, debug, ...props },
+    {
+      className,
+      classNames,
+      role = 'list',
+      orientation: orientationProp = 'vertical',
+      draggable = true,
+      items,
+      getId,
+      Tile,
+      debug,
+      ...props
+    },
     forwardedRef,
   ) => {
     invariant(Tile);
-    const { id, dragging } = useMosaicContainer(STACK_NAME);
+    const { id, orientation = orientationProp, dragging } = useMosaicContainer(STACK_NAME);
     const visibleItems = useVisibleItems({ id, items, dragging: dragging?.source.data, getId });
+    invariant(orientation === 'vertical' || orientation === 'horizontal', `Invalid orientation: ${orientation}`);
 
     return (
       <div
@@ -53,18 +58,18 @@ const StackInner = forwardRef<HTMLDivElement, StackProps>(
         role={role}
         className={mx(
           'flex',
-          axis === 'horizontal' && 'bs-full [&>*]:shrink-0',
-          axis === 'vertical' && 'flex-col',
+          orientation === 'horizontal' && 'bs-full [&>*]:shrink-0',
+          orientation === 'vertical' && 'flex-col',
           classNames,
           className,
         )}
         ref={forwardedRef}
       >
-        <Placeholder axis={axis} location={0.5} />
+        <Placeholder orientation={orientation} location={0.5} />
         {visibleItems?.map((item, index) => (
           <Fragment key={getId(item)}>
             <Tile id={getId(item)} data={item} location={index + 1} draggable={draggable} debug={debug} />
-            <Placeholder axis={axis} location={index + 1.5} />
+            <Placeholder orientation={orientation} location={index + 1.5} />
           </Fragment>
         ))}
       </div>
@@ -94,7 +99,7 @@ const VirtualStackInner = forwardRef<HTMLDivElement, VirtualStackProps>(
       className,
       classNames,
       role = 'list',
-      axis = 'vertical',
+      orientation = 'vertical',
       items,
       getId,
       Tile,
@@ -126,14 +131,14 @@ const VirtualStackInner = forwardRef<HTMLDivElement, VirtualStackProps>(
         role={role}
         className={mx(
           'flex',
-          axis === 'horizontal' && 'bs-full [&>*]:shrink-0',
-          axis === 'vertical' && 'flex-col',
+          orientation === 'horizontal' && 'bs-full [&>*]:shrink-0',
+          orientation === 'vertical' && 'flex-col',
           classNames,
           className,
         )}
         style={{
           position: 'relative',
-          ...(axis === 'vertical'
+          ...(orientation === 'vertical'
             ? {
                 width: '100%',
                 height: virtualizer.getTotalSize(),
@@ -155,7 +160,7 @@ const VirtualStackInner = forwardRef<HTMLDivElement, VirtualStackProps>(
                 position: 'absolute',
                 top: 0,
                 left: 0,
-                ...(axis === 'vertical'
+                ...(orientation === 'vertical'
                   ? {
                       width: '100%',
                       transform: `translateY(${virtualItem.start}px)`,
@@ -168,7 +173,7 @@ const VirtualStackInner = forwardRef<HTMLDivElement, VirtualStackProps>(
               ref={virtualizer.measureElement}
             >
               {virtualItem.index % 2 === 0 ? (
-                <Placeholder axis={axis} location={Math.floor(virtualItem.index / 2) + 0.5} />
+                <Placeholder orientation={orientation} location={Math.floor(virtualItem.index / 2) + 0.5} />
               ) : (
                 <Tile id={getId(data)} data={data} location={Math.floor(virtualItem.index / 2) + 1} debug={debug} />
               )}

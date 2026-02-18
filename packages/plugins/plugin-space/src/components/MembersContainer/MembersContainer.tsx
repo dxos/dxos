@@ -5,7 +5,7 @@
 import React, { type Dispatch, type SetStateAction, useCallback, useMemo, useState } from 'react';
 import { QR } from 'react-qr-rounded';
 
-import { useOperationInvoker } from '@dxos/app-framework/react';
+import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { useConfig } from '@dxos/react-client';
@@ -19,8 +19,7 @@ import {
   InvitationEncoder,
 } from '@dxos/react-client/invitations';
 import { Button, Clipboard, Icon, Input, useId, useTranslation } from '@dxos/react-ui';
-import { ControlFrame, ControlFrameItem, ControlItemInput, ControlPage, ControlSection } from '@dxos/react-ui-form';
-import { Layout } from '@dxos/react-ui-mosaic';
+import { Settings } from '@dxos/react-ui-form';
 import { Collection } from '@dxos/schema';
 import {
   type ActionMenuItem,
@@ -137,51 +136,49 @@ export const MembersContainer = ({ space, createInvitationUrl }: MembersContaine
 
   return (
     <Clipboard.Provider>
-      <Layout.Container scrollable>
-        <ControlPage>
-          <ControlSection title={t('members verbose label')} description={t('members description')}>
-            <ControlFrame>
-              <ControlFrameItem title={t('members label')}>
-                <SpaceMemberList spaceKey={space.key} includeSelf />
-              </ControlFrameItem>
-              {locked && (
-                <ControlFrameItem title={t('invitations label')}>
-                  <p className='text-description mbe-2'>{t('locked space description')}</p>
-                </ControlFrameItem>
-              )}
-              {!locked && (
-                <ControlFrameItem title={t('invitations label')}>
-                  {selectedInvitation && <InvitationSection {...selectedInvitation} onBack={handleBack} />}
-                  {!selectedInvitation && (
-                    <>
-                      <p className='text-description mbe-2'>{t('space invitation description')}</p>
-                      <InvitationList
-                        className='mb-2'
-                        send={handleSend}
-                        invitations={visibleInvitations ?? []}
-                        onClickRemove={(invitation) => invitation.cancel()}
-                        createInvitationUrl={createInvitationUrl}
-                      />
-                      <BifurcatedAction
-                        actions={inviteActions}
-                        activeAction={activeAction}
-                        onChangeActiveAction={setActiveAction as Dispatch<SetStateAction<string>>}
-                        data-testid='membersContainer.createInvitation'
-                      />
-                    </>
-                  )}
-                </ControlFrameItem>
-              )}
-            </ControlFrame>
-            {/* TODO(wittjosiah): Make ControlItemInput & ControlFrame compatible. */}
-            <div className='justify-center p-0 mbs-4 container-max-width grid grid-cols-1 md:grid-cols-[1fr_min-content]'>
-              <ControlItemInput title={t('space locked label')} description={t('space locked description')}>
-                <Input.Switch checked={locked} onCheckedChange={handleChangeLocked} classNames='justify-self-end' />
-              </ControlItemInput>
-            </div>
-          </ControlSection>
-        </ControlPage>
-      </Layout.Container>
+      <Settings.Root>
+        <Settings.Section title={t('members verbose label')} description={t('members description')}>
+          <Settings.Frame>
+            <Settings.FrameItem title={t('members label')}>
+              <SpaceMemberList spaceKey={space.key} includeSelf />
+            </Settings.FrameItem>
+            {locked && (
+              <Settings.FrameItem title={t('invitations label')}>
+                <p className='text-description mbe-2'>{t('locked space description')}</p>
+              </Settings.FrameItem>
+            )}
+            {!locked && (
+              <Settings.FrameItem title={t('invitations label')}>
+                {selectedInvitation && <InvitationSection {...selectedInvitation} onBack={handleBack} />}
+                {!selectedInvitation && (
+                  <>
+                    <p className='text-description mbe-2'>{t('space invitation description')}</p>
+                    <InvitationList
+                      className='mb-2'
+                      send={handleSend}
+                      invitations={visibleInvitations ?? []}
+                      onClickRemove={(invitation) => invitation.cancel()}
+                      createInvitationUrl={createInvitationUrl}
+                    />
+                    <BifurcatedAction
+                      actions={inviteActions}
+                      activeAction={activeAction}
+                      onChangeActiveAction={setActiveAction as Dispatch<SetStateAction<string>>}
+                      data-testid='membersContainer.createInvitation'
+                    />
+                  </>
+                )}
+              </Settings.FrameItem>
+            )}
+          </Settings.Frame>
+          {/* TODO(wittjosiah): Make Settings.ItemInput & Settings.Frame compatible. */}
+          <div className='justify-center p-0 mbs-4 container-max-width grid grid-cols-1 md:grid-cols-[1fr_min-content]'>
+            <Settings.ItemInput title={t('space locked label')} description={t('space locked description')}>
+              <Input.Switch checked={locked} onCheckedChange={handleChangeLocked} classNames='justify-self-end' />
+            </Settings.ItemInput>
+          </div>
+        </Settings.Section>
+      </Settings.Root>
     </Clipboard.Provider>
   );
 };

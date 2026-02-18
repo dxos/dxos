@@ -85,7 +85,7 @@ const DefaultStory = () => {
 const meta = {
   title: 'ui/brand/Rive',
   render: render(DefaultStory),
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'fullscreen',
   },

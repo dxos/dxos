@@ -42,17 +42,14 @@ import React, {
 import { createPortal } from 'react-dom';
 
 import { log } from '@dxos/log';
-import { type SlottableClassName, type ThemedClassName } from '@dxos/react-ui';
+import { type AllowedAxis, type Axis, type SlottableClassName, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 import { isTruthy } from '@dxos/util';
 
 import { useFocus } from '../Focus';
-import { Scrollable, type ScrollableProps } from '../Scrollable';
 import { Stack, type StackProps, VirtualStack } from '../Stack';
 
 import {
-  type AllowedAxis,
-  type Axis,
   type MosaicContainerData,
   type MosaicData,
   type MosaicEventHandler,
@@ -370,7 +367,7 @@ type ContainerState = { type: 'idle' } | { type: 'active'; bounds?: DOMRect };
 type ContainerContextValue<TData = any, Location = LocationType> = {
   id: string;
   eventHandler: MosaicEventHandler<TData>;
-  axis?: AllowedAxis;
+  orientation?: AllowedAxis;
   dragging?: DraggingState;
   scrolling?: boolean;
   state: ContainerState;
@@ -391,7 +388,7 @@ const CONTAINER_PLACEHOLDER_HEIGHT = '--mosaic-placeholder-height';
 
 type ContainerProps = SlottableClassName<
   PropsWithChildren<
-    Partial<Pick<ContainerContextValue, 'eventHandler' | 'axis'>> & {
+    Partial<Pick<ContainerContextValue, 'eventHandler' | 'orientation'>> & {
       asChild?: boolean;
       autoScroll?: HTMLElement | null;
       withFocus?: boolean;
@@ -410,7 +407,7 @@ const Container = forwardRef<HTMLDivElement, ContainerProps>(
       classNames,
       children,
       eventHandler: eventHandlerProp,
-      axis = 'vertical',
+      orientation = 'vertical',
       asChild,
       autoScroll: autoscrollElement,
       withFocus,
@@ -550,7 +547,7 @@ const Container = forwardRef<HTMLDivElement, ContainerProps>(
               // canScroll: ({ element: _ }) => {
               //   return true;
               // },
-              getAllowedAxis: () => axis,
+              getAllowedAxis: () => orientation,
               getConfiguration: () => ({
                 maxScrollSpeed: 'fast',
               }),
@@ -573,7 +570,7 @@ const Container = forwardRef<HTMLDivElement, ContainerProps>(
       <ContainerContextProvider
         id={eventHandler.id}
         eventHandler={eventHandler}
-        axis={axis}
+        orientation={orientation}
         state={state}
         dragging={state.type === 'active' ? dragging : undefined}
         scrolling={scrolling}
@@ -664,12 +661,12 @@ const Tile = forwardRef<HTMLDivElement, TileProps>(
     const Root = asChild ? Slot : Primitive.div;
 
     // State.
-    const { id: containerId, eventHandler, axis, scrolling, setActiveLocation } = useContainerContext(TILE_NAME);
+    const { id: containerId, eventHandler, orientation, scrolling, setActiveLocation } = useContainerContext(TILE_NAME);
     const [state, setState] = useState<TileState>({ type: 'idle' });
 
     const allowedEdges = useMemo<Edge[]>(
-      () => allowedEdgesProp || (axis === 'vertical' ? ['top', 'bottom'] : ['left', 'right']),
-      [allowedEdgesProp, axis],
+      () => allowedEdgesProp || (orientation === 'vertical' ? ['top', 'bottom'] : ['left', 'right']),
+      [allowedEdgesProp, orientation],
     );
 
     const data = useMemo<MosaicTileData>(
@@ -807,8 +804,8 @@ Tile.displayName = TILE_NAME;
 
 const PLACEHOLDER_NAME = 'Mosaic.Placeholder';
 
-// Axis: data-[mosaic-placeholder-axis=vertical]
-const PLACEHOLDER_AXIS_ATTR = 'mosaic-placeholder-axis';
+// Orientation: data-[mosaic-placeholder-orientation=vertical]
+const PLACEHOLDER_ORIENTATION_ATTR = 'mosaic-placeholder-orientation';
 
 // State attribute: data-[mosaic-placeholder-state=active]
 const PLACEHOLDER_STATE_ATTR = 'mosaic-placeholder-state';
@@ -816,7 +813,7 @@ const PLACEHOLDER_STATE_ATTR = 'mosaic-placeholder-state';
 type PlaceholderProps<Location = LocationType> = ThemedClassName<
   PropsWithChildren<{
     asChild?: boolean;
-    axis?: Axis;
+    orientation?: Axis;
     location: Location;
   }>
 >;
@@ -825,7 +822,7 @@ const Placeholder = <Location extends LocationType = LocationType>({
   classNames,
   children,
   asChild,
-  axis = 'vertical',
+  orientation = 'vertical',
   location,
 }: PlaceholderProps<Location>) => {
   const rootRef = useRef<HTMLDivElement>(null);
@@ -875,7 +872,7 @@ const Placeholder = <Location extends LocationType = LocationType>({
   return (
     <Root
       {...{
-        [`data-${PLACEHOLDER_AXIS_ATTR}`]: axis,
+        [`data-${PLACEHOLDER_ORIENTATION_ATTR}`]: orientation,
         [`data-${PLACEHOLDER_STATE_ATTR}`]: data.location === activeLocation ? 'active' : 'idle',
       }}
       role='none'
@@ -917,9 +914,6 @@ export const Mosaic = {
   Tile,
   Placeholder,
   DropIndicator,
-
-  // TODO(burdon): Move out of Mosaic namespace?
-  Viewport: Scrollable,
   Stack,
   VirtualStack,
 };
@@ -930,9 +924,6 @@ export type {
   TileProps as MosaicTileProps,
   PlaceholderProps as MosiacPlaceholderProps,
   DropIndicatorProps as MosaicDropIndicatorProps,
-
-  // TODO(burdon): Move out of Mosaic namespace?
-  ScrollableProps as MosaicViewportProps,
   StackProps as MosaicStackProps,
 };
 

@@ -5,7 +5,8 @@
 import * as Effect from 'effect/Effect';
 import React from 'react';
 
-import { Capability, Common } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { Surface } from '@dxos/app-framework/ui';
 import { Node } from '@dxos/plugin-graph';
 
 import { CommandsDialogContent, CommandsTrigger, NavTreeContainer, NavTreeDocumentTitle } from '../../components';
@@ -13,14 +14,14 @@ import { COMMANDS_DIALOG, meta } from '../../meta';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
-    Capability.contributes(Common.Capability.ReactSurface, [
-      Common.createSurface({
+    Capability.contributes(Capabilities.ReactSurface, [
+      Surface.create({
         id: COMMANDS_DIALOG,
         role: 'dialog',
         filter: (data): data is { props: { selected?: string } } => data.component === COMMANDS_DIALOG,
         component: ({ data, ref }) => <CommandsDialogContent {...data.props} ref={ref} />,
       }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/navigation`,
         role: 'navigation',
         filter: (data): data is { popoverAnchorId?: string; topbar: boolean; current: string } =>
@@ -36,14 +37,14 @@ export default Capability.makeModule(() =>
           );
         },
       }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/document-title`,
         role: 'document-title',
         component: ({ data }) => (
           <NavTreeDocumentTitle node={Node.isGraphNode(data.subject) ? data.subject : undefined} />
         ),
       }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/search-input`,
         role: 'search-input',
         position: 'fallback',

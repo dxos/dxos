@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
 import { Obj, Ref, Type } from '@dxos/echo';
 import { OperationResolver } from '@dxos/operation';
 import { Collection } from '@dxos/schema';
@@ -13,7 +13,7 @@ import { Markdown, MarkdownCapabilities, MarkdownOperation } from '../../types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contributes(Common.Capability.OperationResolver, [
+    return Capability.contributes(Capabilities.OperationResolver, [
       OperationResolver.make({
         operation: MarkdownOperation.OnCreateSpace,
         handler: Effect.fnUntraced(function* ({ rootCollection }) {
@@ -34,7 +34,7 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: MarkdownOperation.SetViewMode,
         handler: Effect.fnUntraced(function* ({ id, viewMode }) {
-          yield* Common.Capability.updateAtomValue(MarkdownCapabilities.State, (current) => ({
+          yield* Capabilities.updateAtomValue(MarkdownCapabilities.State, (current) => ({
             ...current,
             viewMode: { ...current.viewMode, [id]: viewMode },
           }));

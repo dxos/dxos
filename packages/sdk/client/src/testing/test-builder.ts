@@ -123,7 +123,7 @@ export class TestBuilder {
    * Create local services host.
    * @param options - fastPeerPresenceUpdate: enable for faster space-member online/offline status changes.
    */
-  createLocalClientServices(options?: { fastPeerPresenceUpdate?: boolean }): LocalClientServices {
+  createLocalClientServices(options?: { fastPeerPresenceUpdate?: boolean; sqlitePath?: string }): LocalClientServices {
     const services = new LocalClientServices({
       config: this.config,
       storage: this?.storage?.(),
@@ -134,6 +134,7 @@ export class TestBuilder {
           : {}),
         invitationConnectionDefaultProps: { teleport: { controlHeartbeatInterval: 200 } },
       },
+      sqlitePath: options?.sqlitePath,
       ...this.networking,
     });
 

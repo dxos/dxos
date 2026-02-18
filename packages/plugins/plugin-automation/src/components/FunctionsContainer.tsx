@@ -6,7 +6,7 @@ import React from 'react';
 
 import { type Space } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
-import { ControlPage, ControlSection } from '@dxos/react-ui-form';
+import { Settings } from '@dxos/react-ui-form';
 
 import { meta } from '../meta';
 
@@ -16,20 +16,20 @@ import { FunctionsRegistry } from './FunctionsRegistry';
 export const FunctionsContainer = ({ space }: { space: Space }) => {
   const { t } = useTranslation(meta.id);
   return (
-    <ControlPage>
-      <ControlSection
+    <Settings.Root>
+      <Settings.Section
         title={t('functions verbose label', { ns: meta.id })}
         description={t('functions description', { ns: meta.id })}
       >
         <FunctionsPanel space={space} />
-      </ControlSection>
-      <ControlSection
+      </Settings.Section>
+      <Settings.Section
         title={t('functions registry verbose label', { ns: meta.id })}
         description={t('functions registry description', { ns: meta.id })}
       >
         <FunctionsRegistry space={space} />
-      </ControlSection>
-    </ControlPage>
+      </Settings.Section>
+    </Settings.Root>
   );
 };
 

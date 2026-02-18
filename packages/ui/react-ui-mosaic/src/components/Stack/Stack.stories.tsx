@@ -8,7 +8,7 @@ import { useMemo } from 'react';
 
 import { Obj } from '@dxos/echo';
 import { faker } from '@dxos/random';
-import { Toolbar } from '@dxos/react-ui';
+import { ScrollArea, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { useContainerDebug } from '../../hooks';
@@ -33,12 +33,12 @@ const createTestItems = (n: number) =>
 const meta: Meta<typeof Stack<Obj.Any>> = {
   title: 'ui/react-ui-mosaic/Stack',
   component: Stack,
-  decorators: [withLayout({ layout: 'column' }), withTheme],
+  decorators: [withLayout({ layout: 'column' }), withTheme()],
   parameters: {
     layout: 'fullscreen',
   },
   args: {
-    axis: 'vertical',
+    orientation: 'vertical',
     getId: (item) => item.id,
     Tile: DefaultStackTile,
     // debug: true,
@@ -62,14 +62,16 @@ export const Default: Story = {
         </Toolbar.Root>
         <Mosaic.Container
           asChild
-          axis='vertical'
+          orientation='vertical'
           autoScroll={viewport}
           eventHandler={{ id: 'test', canDrop: () => true }}
           debug={debugHandler}
         >
-          <Mosaic.Viewport axis='vertical' padding viewportRef={setViewport}>
-            <Mosaic.Stack {...props} items={items} />
-          </Mosaic.Viewport>
+          <ScrollArea.Root orientation='vertical'>
+            <ScrollArea.Viewport classNames='p-2' ref={setViewport}>
+              <Mosaic.Stack {...props} items={items} />
+            </ScrollArea.Viewport>
+          </ScrollArea.Root>
         </Mosaic.Container>
         <DebugInfo classNames='border-bs border-separator' />
       </Mosaic.Root>
@@ -91,22 +93,24 @@ export const Virtual: Story = {
         </Toolbar.Root>
         <Mosaic.Container
           asChild
-          axis='vertical'
+          orientation='vertical'
           autoScroll={viewport}
           eventHandler={{ id: 'test', canDrop: () => true }}
           debug={debugHandler}
         >
-          <Mosaic.Viewport axis='vertical' padding viewportRef={setViewport}>
-            <Mosaic.VirtualStack
-              {...props}
-              items={items}
-              getScrollElement={() => viewport}
-              estimateSize={() => 40}
-              onChange={(virtualizer) => {
-                setInfo({ range: virtualizer.range });
-              }}
-            />
-          </Mosaic.Viewport>
+          <ScrollArea.Root orientation='vertical'>
+            <ScrollArea.Viewport classNames='p-2' ref={setViewport}>
+              <Mosaic.VirtualStack
+                {...props}
+                items={items}
+                getScrollElement={() => viewport}
+                estimateSize={() => 40}
+                onChange={(virtualizer) => {
+                  setInfo({ range: virtualizer.range });
+                }}
+              />
+            </ScrollArea.Viewport>
+          </ScrollArea.Root>
         </Mosaic.Container>
         <DebugInfo />
       </Mosaic.Root>

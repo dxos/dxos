@@ -16,7 +16,7 @@ import { EditorStory, content } from './components';
 const meta = {
   title: 'ui/react-ui-editor/Experimental',
   component: EditorStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'fullscreen',
   },

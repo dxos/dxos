@@ -166,15 +166,13 @@ FormRoot.displayName = 'Form.Root';
 
 const FORM_VIEWPORT_NAME = 'Form.Viewport';
 
-type FormViewportProps = ThemedClassName<PropsWithChildren<{}>>;
+type FormViewportProps = PropsWithChildren<{}>;
 
-const FormViewport = ({ classNames, children }: FormViewportProps) => {
+// TODO(burdon): Ref and props (allow asChild).
+const FormViewport = ({ children }: FormViewportProps) => {
   return (
-    <ScrollArea.Root>
-      <ScrollArea.Viewport classNames={['plb-cardSpacingBlock', classNames]}>{children}</ScrollArea.Viewport>
-      <ScrollArea.Scrollbar orientation='vertical'>
-        <ScrollArea.Thumb />
-      </ScrollArea.Scrollbar>
+    <ScrollArea.Root orientation='vertical'>
+      <ScrollArea.Viewport>{children}</ScrollArea.Viewport>
     </ScrollArea.Root>
   );
 };
@@ -283,9 +281,9 @@ FormActions.displayName = FORM_ACTIONS_NAME;
 
 const FORM_SUBMIT_NAME = 'Form.Submit';
 
-type FormSubmitProps = ThemedClassName<Partial<Pick<IconButtonProps, 'icon' | 'label'>>>;
+type FormSubmitProps = ThemedClassName<Partial<Pick<IconButtonProps, 'icon' | 'label' | 'disabled'>>>;
 
-const FormSubmit = ({ classNames, label, icon }: FormSubmitProps) => {
+const FormSubmit = ({ classNames, label, icon, disabled }: FormSubmitProps) => {
   const { t } = useTranslation(translationKey);
   const {
     form: { canSave, onSave },
@@ -303,7 +301,7 @@ const FormSubmit = ({ classNames, label, icon }: FormSubmitProps) => {
         classNames='is-full'
         type='submit'
         variant='primary'
-        disabled={!canSave}
+        disabled={disabled ?? !canSave}
         icon={icon ?? 'ph--check--regular'}
         label={label ?? t('save button label')}
         onClick={onSave}
@@ -338,5 +336,6 @@ export type {
   FormContentProps,
   FormFieldSetProps,
   FormActionsProps,
+  FormSubmitProps,
   FormFieldLabelProps as LabelProps,
 };

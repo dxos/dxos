@@ -103,8 +103,8 @@ Stores the mapping between global feed identifiers and local integer IDs.
 | `position`      | `number \| null` | The global position index. `null` if unpositioned.    |
 | `sequence`      | `number`         | **Sequence Number** (Assigned by Author).             |
 | `actorId`       | `string`         | **Actor ID** (Public Key).                            |
-| `predSequence`  | `number`         | **Sequence Number** part of the Predecessor ID.       |
-| `predActorId`   | `string`         | **Actor ID** (Public Key) part of the Predecessor ID. |
+| `prevSequence`  | `number`         | **Sequence Number** part of the Predecessor ID.       |
+| `prevActorId`   | `string`         | **Actor ID** (Public Key) part of the Predecessor ID. |
 | `timestamp`     | `number`         | Unix timestamp in milliseconds.                       |
 | `data`          | `Uint8Array`     | The content of the block. **Immutable**.              |
 
@@ -256,3 +256,8 @@ All timestamps (e.g., `insertionTimestamp`) are Unix timestamps in milliseconds.
   ]
 }
 ```
+
+### TODOs
+
+- [ ] Sync protocol only works if each namespace is synced separately.
+

@@ -41,7 +41,7 @@ const DefaultStory = () => {
 const meta = {
   title: 'sdk/react-client/withClientProvider',
   render: render(DefaultStory),
-  decorators: [withTheme],
+  decorators: [withTheme()],
   tags: ['test'],
 } satisfies Meta<typeof DefaultStory>;
 
@@ -74,7 +74,7 @@ export const Default: Story = {
 
 export const Multiple: Story = {
   decorators: [
-    withTheme,
+    withTheme(),
     withLayout({ classNames: 'grid grid-cols-3' }),
     withMultiClientProvider({ ...clientProps, numClients: 3 }),
   ],

@@ -50,7 +50,7 @@ const meta = {
   title: 'plugins/plugin-pipeline/PipelineContainer',
   render: DefaultStory,
   decorators: [
-    withTheme,
+    withTheme(),
     withPluginManager({
       plugins: [
         ...corePlugins(),

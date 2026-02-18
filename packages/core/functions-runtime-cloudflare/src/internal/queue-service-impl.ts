@@ -4,22 +4,22 @@
 
 import { NotImplementedError, RuntimeServiceError } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
-import { type QueueService as QueueServiceProto } from '@dxos/protocols';
+import { type Echo, type EdgeFunctionEnv } from '@dxos/protocols';
+import { type Empty, EMPTY } from '@dxos/protocols/buf';
 import type {
   DeleteFromQueueRequest,
-  EdgeFunctionEnv,
   InsertIntoQueueRequest,
   QueryQueueRequest,
-  QueryResult,
-} from '@dxos/protocols';
-import { type Empty, EMPTY } from '@dxos/protocols/buf';
+  QueueQueryResult,
+} from '@dxos/protocols/buf/dxos/client/queue_pb';
 
-export class QueueServiceImpl implements QueueServiceProto {
+export class QueueServiceImpl implements Echo.QueueService {
   constructor(
     protected _ctx: EdgeFunctionEnv.ExecutionContext,
     private readonly _queueService: EdgeFunctionEnv.QueueService,
   ) {}
-  async queryQueue(request: QueryQueueRequest): Promise<QueryResult> {
+
+  async queryQueue(request: QueryQueueRequest): Promise<QueueQueryResult> {
     const { query } = request;
     const { queueIds, ...filter } = query!;
     const spaceId = query!.spaceId;
@@ -37,7 +37,7 @@ export class QueueServiceImpl implements QueueServiceProto {
         objects: structuredClone(result.objects),
         nextCursor: result.nextCursor,
         prevCursor: result.prevCursor,
-      } as never;
+      } as QueueQueryResult;
     } catch (error) {
       throw RuntimeServiceError.wrap({
         message: 'Queue query failed.',

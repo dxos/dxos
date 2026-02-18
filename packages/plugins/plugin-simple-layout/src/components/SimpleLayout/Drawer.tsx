@@ -4,11 +4,12 @@
 
 import React, { useMemo } from 'react';
 
-import { Surface, useAppGraph } from '@dxos/app-framework/react';
+import { Surface } from '@dxos/app-framework/ui';
+import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { type Node, useNode } from '@dxos/plugin-graph';
+import { Layout } from '@dxos/react-ui';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention';
 import { MenuProvider, ToolbarMenu, useMenuActions } from '@dxos/react-ui-menu';
-import { Layout } from '@dxos/react-ui-mosaic';
 
 import { useCompanions, useDrawerActions, useSimpleLayoutState } from '../../hooks';
 import { ContentError } from '../ContentError';
@@ -56,7 +57,7 @@ export const Drawer = () => {
       <MenuProvider {...menu} onAction={onAction} alwaysActive>
         <ToolbarMenu density='coarse' />
       </MenuProvider>
-      <Surface role='article' data={data} limit={1} fallback={ContentError} placeholder={placeholder} />
+      <Surface.Surface role='article' data={data} limit={1} fallback={ContentError} placeholder={placeholder} />
     </Layout.Main>
   );
 };

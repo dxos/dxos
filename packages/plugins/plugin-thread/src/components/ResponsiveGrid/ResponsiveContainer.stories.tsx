@@ -15,7 +15,7 @@ import { ResponsiveContainer } from './ResponsiveContainer';
 const meta = {
   title: 'plugins/plugin-thread/ResponsiveContainer',
   component: ResponsiveContainer,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'fullscreen',
     translations,

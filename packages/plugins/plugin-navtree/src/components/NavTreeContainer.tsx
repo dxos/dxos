@@ -6,8 +6,9 @@ import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/ad
 import { type Instruction, extractInstruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
 import React, { forwardRef, memo, useCallback, useEffect, useMemo } from 'react';
 
-import { Common } from '@dxos/app-framework';
-import { Surface, useAppGraph, useLayout, useOperationInvoker } from '@dxos/app-framework/react';
+import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
+import { LayoutOperation } from '@dxos/app-toolkit';
+import { useAppGraph, useLayout } from '@dxos/app-toolkit/ui';
 import { PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { Graph, Node, useActionRunner } from '@dxos/plugin-graph';
 import { useConnections, useActions as useGraphActions } from '@dxos/plugin-graph';
@@ -29,7 +30,7 @@ import { type NavTreeContextValue } from './types';
 export const NODE_TYPE = 'dxos/app-graph/node';
 
 const renderItemEnd = ({ node, open }: { node: Node.Node; open: boolean }) => (
-  <Surface role='navtree-item-end' data={{ id: node.id, subject: node.data, open }} limit={1} />
+  <Surface.Surface role='navtree-item-end' data={{ id: node.id, subject: node.data, open }} limit={1} />
 );
 
 const getChildrenFilter = (node: Node.Node): node is Node.Node =>
@@ -141,7 +142,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
 
     const handleTabChange = useCallback(
       (node: NavTreeItemGraphNode) => {
-        invokeSync(Common.LayoutOperation.UpdateSidebar, {
+        invokeSync(LayoutOperation.UpdateSidebar, {
           state:
             node.id === tab
               ? navigationSidebarState === 'expanded'
@@ -152,13 +153,13 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
               : 'expanded',
         });
 
-        invokeSync(Common.LayoutOperation.SwitchWorkspace, { subject: node.id });
+        invokeSync(LayoutOperation.SwitchWorkspace, { subject: node.id });
 
         // Open the first item if the workspace is empty.
         if (layout.active.length === 0) {
           const [item] = getItems(graph, node).filter((node) => !Node.isActionLike(node));
           if (item && item.data) {
-            invokeSync(Common.LayoutOperation.Open, { subject: [item.id] });
+            invokeSync(LayoutOperation.Open, { subject: [item.id] });
           }
         }
       },
@@ -196,11 +197,11 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
 
         const current = getItem(path).current;
         if (!current) {
-          invokeSync(Common.LayoutOperation.Open, { subject: [node.id], key: node.properties.key });
+          invokeSync(LayoutOperation.Open, { subject: [node.id], key: node.properties.key });
         } else if (option) {
-          invokeSync(Common.LayoutOperation.Close, { subject: [node.id] });
+          invokeSync(LayoutOperation.Close, { subject: [node.id] });
         } else {
-          void invokePromise(Common.LayoutOperation.ScrollIntoView, { subject: node.id });
+          void invokePromise(LayoutOperation.ScrollIntoView, { subject: node.id });
         }
 
         const defaultAction = Graph.getActions(graph, node.id).find(
@@ -211,13 +212,13 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
         }
 
         if (!isLg) {
-          invokeSync(Common.LayoutOperation.UpdateSidebar, { state: 'closed' });
+          invokeSync(LayoutOperation.UpdateSidebar, { state: 'closed' });
         }
       },
       [graph, invokeSync, invokePromise, getItem, isLg, runAction],
     );
 
-    const handleBack = useCallback(() => invokeSync(Common.LayoutOperation.RevertWorkspace), [invokeSync]);
+    const handleBack = useCallback(() => invokeSync(LayoutOperation.RevertWorkspace), [invokeSync]);
 
     // TODO(wittjosiah): Factor out hook.
     useEffect(() => {

@@ -4,7 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { LayoutOperation } from '@dxos/app-toolkit';
 import { Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { Operation, OperationResolver } from '@dxos/operation';
@@ -17,7 +18,7 @@ import { TableOperation } from '../../types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contributes(Common.Capability.OperationResolver, [
+    return Capability.contributes(Capabilities.OperationResolver, [
       OperationResolver.make({
         operation: TableOperation.OnCreateSpace,
         handler: Effect.fnUntraced(function* ({ space }) {
@@ -41,7 +42,7 @@ export default Capability.makeModule(
           yield* Operation.invoke(SpaceOperation.AddObject, { target: db, object, hidden: true });
 
           if (show) {
-            yield* Operation.invoke(Common.LayoutOperation.Open, {
+            yield* Operation.invoke(LayoutOperation.Open, {
               subject: [Obj.getDXN(object).toString()],
             });
           }

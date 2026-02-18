@@ -47,7 +47,7 @@ const meta = {
   title: 'plugins/plugin-explorer/Tree',
   component: Tree as any,
   render: DefaultStory,
-  decorators: [withRegistry, withTheme, withLayout()],
+  decorators: [withRegistry, withTheme(), withLayout()],
   parameters: {
     layout: 'fullscreen',
   },

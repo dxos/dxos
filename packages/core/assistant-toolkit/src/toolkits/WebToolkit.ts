@@ -1,0 +1,34 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import * as Tool from '@effect/ai/Tool';
+import * as Toolkit from '@effect/ai/Toolkit';
+import * as AnthropicTool from '@effect/ai-anthropic/AnthropicTool';
+import * as Effect from 'effect/Effect';
+import * as Schema from 'effect/Schema';
+
+// TODO(dmaretskyi): Testing only.
+export const WebToolkit = Toolkit.make(
+  AnthropicTool.WebSearch_20250305({})
+    .pipe
+    // TODO(dmaretskyi): Effect bug -- provider-defined tools don't support annotations.
+    // ToolFormatter.assign({
+    //   debugFormatResult: (result) =>
+    //     Array.isArray(result) ? result.map(Struct.pick('title', 'type', 'url', 'page_age')) : result,
+    // }),
+    (),
+  Tool.make('WebFetch', {
+    parameters: {
+      url: Schema.String,
+    },
+    success: Schema.String,
+  }),
+);
+
+export const layer = WebToolkit.toLayer({
+  WebFetch: Effect.fnUntraced(function* ({ url }) {
+    const response = yield* Effect.promise(() => fetch(url).then((response) => response.text()));
+    return response;
+  }),
+});
