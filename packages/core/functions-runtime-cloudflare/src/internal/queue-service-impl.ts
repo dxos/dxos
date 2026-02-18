@@ -25,7 +25,7 @@ export class QueueServiceImpl implements FeedProtocol.QueueService {
       throw RuntimeServiceError.wrap({
         message: 'Queue query failed.',
         context: {
-          subspaceTag: request.query?.queuesNamespace,
+          subspaceTag: query?.queuesNamespace,
           spaceId: query?.spaceId,
           queueId: query?.queueIds?.[0],
         },
