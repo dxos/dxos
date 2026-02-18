@@ -13,9 +13,9 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { useContainerDebug } from '../../hooks';
 import { DefaultStackTile, TestItem } from '../../testing';
-import { Mosaic } from '../Mosaic';
 
-import { Stack } from './Stack';
+import { Mosaic } from './Mosaic';
+import { MosaicStack } from './Stack';
 
 faker.seed(999);
 
@@ -30,9 +30,9 @@ const createTestItems = (n: number) =>
     }),
   );
 
-const meta: Meta<typeof Stack<Obj.Any>> = {
+const meta: Meta<typeof MosaicStack<Obj.Any>> = {
   title: 'ui/react-ui-mosaic/Stack',
-  component: Stack,
+  component: MosaicStack,
   decorators: [withLayout({ layout: 'column' }), withTheme()],
   parameters: {
     layout: 'fullscreen',

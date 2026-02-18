@@ -13,8 +13,7 @@ import { mx } from '@dxos/ui-theme';
 
 import { useContainerDebug, useEventHandlerAdapter } from '../../hooks';
 import { Focus } from '../Focus';
-import { Mosaic, type MosiacPlaceholderProps, mosaicStyles, useMosaic } from '../Mosaic';
-import { type StackProps } from '../Stack';
+import { Mosaic, type MosaicPlaceholderProps, type MosaicStackProps, mosaicStyles, useMosaic } from '../Mosaic';
 
 import { BoardColumn, type BoardColumnProps, DefaultBoardColumn } from './Column';
 import { BoardItem, type BoardItemProps } from './Item';
@@ -30,10 +29,10 @@ export interface BoardModel<TColumn extends Obj.Unknown = Obj.Unknown, TItem ext
   items: (column: TColumn) => Atom.Atom<TItem[]>;
   getColumns: () => TColumn[];
   getItems: (column: TColumn) => TItem[];
-  onColumnDelete?: (column: TColumn) => void;
   onColumnCreate?: () => Promise<TColumn>;
-  onItemDelete?: (column: TColumn, item: TItem) => void;
+  onColumnDelete?: (column: TColumn) => void;
   onItemCreate?: (column: TColumn) => Promise<TItem>;
+  onItemDelete?: (column: TColumn, item: TItem) => void;
 }
 
 //
@@ -64,7 +63,7 @@ type BoardRootProps<
   {
     id: string;
     debug?: boolean;
-    Tile?: StackProps<TColumn>['Tile'];
+    Tile?: MosaicStackProps<TColumn>['Tile'];
   } & BoardContextValue<TColumn, TItem>
 >;
 
@@ -121,7 +120,7 @@ const BoardRoot = BoardRootInner as <TColumn extends Obj.Unknown, TItem extends 
 
 const BOARD_PLACEHOLDER_NAME = 'Board.Placeholder';
 
-const BoardPlaceholder = (props: MosiacPlaceholderProps<number>) => {
+const BoardPlaceholder = (props: MosaicPlaceholderProps<number>) => {
   return (
     <Mosaic.Placeholder {...props} classNames={mosaicStyles.placeholder.root}>
       <div

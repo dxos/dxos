@@ -56,11 +56,7 @@ const meta = {
   component: Dialog as any,
   render: DefaultStory,
   decorators: [withTheme()],
-  parameters: {
-    chromatic: {
-      disableSnapshot: false,
-    },
-  },
+  parameters: {},
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

@@ -41,7 +41,7 @@ export const dialogBody: ComponentFunction<DialogStyleProps> = (_props, ...etc) 
   mx('dx-dialog__body flex flex-col gap-4 bs-full overflow-hidden', ...etc);
 
 export const dialogActionBar: ComponentFunction<DialogStyleProps> = (_props, ...etc) =>
-  mx('dx-dialog__actionbar flex items-center density-coarse', ...etc);
+  mx('dx-dialog__actionbar flex items-center gap-2 density-coarse', ...etc);
 
 export const dialogTitle: ComponentFunction<DialogStyleProps> = ({ srOnly }, ...etc) =>
   mx('dx-dialog__title', srOnly && 'sr-only', ...etc);

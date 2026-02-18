@@ -73,9 +73,6 @@ const meta = {
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
-    chromatic: {
-      disableSnapshot: false,
-    },
   },
 } satisfies Meta<typeof DefaultStory>;
 
