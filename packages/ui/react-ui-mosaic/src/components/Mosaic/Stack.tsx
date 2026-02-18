@@ -140,7 +140,7 @@ const MosaicVirtualStackInner = forwardRef<HTMLDivElement, MosaicVirtualStackPro
     forwardedRef,
   ) => {
     invariant(Tile);
-    const { id, dragging } = useMosaicContainer(MOSAIC_VIRTUAL_STACK_NAME);
+    const { id, dragging } = useMosaicContainerContext(MOSAIC_VIRTUAL_STACK_NAME);
     const visibleItems = useVisibleItems({ id, items, dragging: dragging?.source.data, getId });
     const virtualizer = useVirtualizer({
       count: visibleItems.length * 2 + 1,
