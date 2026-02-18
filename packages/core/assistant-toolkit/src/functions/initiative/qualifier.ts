@@ -13,8 +13,7 @@ import { TriggerEvent, defineFunction } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { trim } from '@dxos/util';
 
-import { Initiative } from '../../initiative';
-import { formatPlan } from '../plan';
+import { Initiative, Plan } from '../../initiative';
 
 export default defineFunction({
   key: 'dxos.org/function/initiative/qualifier',
@@ -59,7 +58,7 @@ export default defineFunction({
                 ${spec.content}
                 </spec>
                 <plan>
-                  ${formatPlan(plan)}
+                  ${Plan.formatPlan(plan)}
                 </plan>
               </initiative>
             `,

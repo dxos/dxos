@@ -26,8 +26,8 @@ async () => {
     names.push(object.name);
   });
 
-  Obj.change(object, (o) => {
-    o.name = 'buy cookies';
+  Obj.change(object, (obj) => {
+    obj.name = 'buy cookies';
   });
 
   if (names.join() === ['buy milk', 'buy cookies'].join()) {

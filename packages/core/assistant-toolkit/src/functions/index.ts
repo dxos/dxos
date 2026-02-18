@@ -6,6 +6,8 @@ export * from './agent';
 export * from './discord';
 export * from './document';
 export * from './entity-extraction';
+export * from './exa';
+export * from './github';
 export * from './initiative';
 export * from './linear';
 export * from './research';

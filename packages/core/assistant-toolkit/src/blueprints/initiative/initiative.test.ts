@@ -27,24 +27,20 @@ import { Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { Chat } from '../../chat';
-import { Document, Initiative as InitiativeFunctions } from '../../functions';
-import { Initiative } from '../../initiative';
-import { Planning } from '..';
+import { InitiativeFunctions } from '../../functions';
+import * as Initiative from '../../initiative';
+import * as Planning from '../../planning';
 
-import { blueprint, getFunctions } from './initiative-blueprint';
+import { blueprint, getFunctions, blueprint as makeBlueprint } from './initiative-blueprint';
 
 ObjectId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayerWithTriggers({
   aiServicePreset: 'edge-remote',
-  functions: [
-    ...getFunctions(),
-    ...MarkdownBlueprint.functions,
-    ...Record.values(Planning.PlanningFunctions),
-  ],
+  functions: [...getFunctions(), ...MarkdownBlueprint.functions, ...Record.values(Planning.PlanningFunctions)],
   types: [
-    Initiative.Initiative,
-    Initiative.Plan,
+    Initiative.Initiative.Initiative,
+    Initiative.Plan.Plan,
     Chat.CompanionTo,
     Chat.Chat,
     SpaceProperties,
@@ -189,7 +185,7 @@ describe.runIf(TestHelpers.tagEnabled('flaky'))('Initiative', () => {
               `,
               blueprints: [Ref.make(MarkdownBlueprint.make()), Ref.make(Obj.clone(Planning.PlanningBlueprint))],
             },
-            Initiative.makeBlueprint(),
+            makeBlueprint,
           ),
         );
         yield* Database.flush({ indexes: true });
@@ -215,13 +211,13 @@ describe.runIf(TestHelpers.tagEnabled('flaky'))('Initiative', () => {
   );
 });
 
-const dumpInitiative = async (initiative: Initiative.Initiative) => {
+const dumpInitiative = async (initiative: Initiative.Initiative.Initiative) => {
   let text = '';
   text += `============== Initiative: ${initiative.name} ==============\n\n`;
   text += `============== Spec ==============\n\n`;
   text += `${await initiative.spec.load().then((_) => _.content)}\n`;
   text += `============== Plan ==============\n\n`;
-  text += `${await initiative.plan?.load().then((_) => Initiative.formatPlan(_))}\n`;
+  text += `${await initiative.plan?.load().then((_) => Initiative.Plan.formatPlan(_))}\n`;
   text += `============== Artifacts ==============\n\n`;
   for (const artifact of initiative.artifacts) {
     const data = await artifact.data.load();

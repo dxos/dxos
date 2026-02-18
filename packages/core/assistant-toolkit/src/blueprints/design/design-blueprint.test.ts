@@ -28,7 +28,7 @@ import { Text } from '@dxos/schema';
 import { type Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { Document } from '../../functions';
+import { DocumentFunctions } from '../../functions';
 
 import { blueprint } from './design-blueprint';
 
@@ -87,7 +87,7 @@ describe('Design Blueprint', { timeout: 120_000 }, () => {
           Layer.provideMerge(TestDatabaseLayer({ types: [Text.Text, Markdown.Document, Blueprint.Blueprint] })),
           Layer.provideMerge(Layer.mergeAll(GenericToolkit.providerEmpty, AiServiceTestingPreset('direct'))),
           Layer.provideMerge(
-            FunctionInvocationServiceLayerTestMocked({ functions: [Document.read, Document.update] }).pipe(
+            FunctionInvocationServiceLayerTestMocked({ functions: [DocumentFunctions.read, DocumentFunctions.update] }).pipe(
               Layer.provideMerge(TracingService.layerNoop),
             ),
           ),

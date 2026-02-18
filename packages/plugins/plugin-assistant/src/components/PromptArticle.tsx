@@ -5,7 +5,7 @@
 import React, { useMemo } from 'react';
 
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
-import { Agent } from '@dxos/assistant-toolkit';
+import { AgentFunctions } from '@dxos/assistant-toolkit';
 import { type Prompt } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';
 import { invokeFunctionWithTracing, useComputeRuntimeCallback } from '@dxos/plugin-automation';
@@ -32,7 +32,7 @@ export const PromptArticle = ({ role, subject }: PromptArticleProps) => {
     [subject, db],
   );
 
-  const handleRun = useComputeRuntimeCallback(db?.spaceId, () => invokeFunctionWithTracing(Agent.prompt, inputData), [
+  const handleRun = useComputeRuntimeCallback(db?.spaceId, () => invokeFunctionWithTracing(AgentFunctions.prompt, inputData), [
     inputData,
   ]);
 

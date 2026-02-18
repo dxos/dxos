@@ -5,17 +5,17 @@
 import { Blueprint, Template } from '@dxos/blueprints';
 import { trim } from '@dxos/util';
 
-import { Initiative } from '../../functions';
+import { InitiativeFunctions } from '../../functions';
 
 /**
  * Get all initiative functions. This is a function to avoid circular dependency issues.
  */
 // TODO(burdon): Remove?
 export const getFunctions = () => [
-  Initiative.getContext,
-  Initiative.addArtifact,
-  Initiative.agent,
-  Initiative.qualifier,
+  InitiativeFunctions.getContext,
+  InitiativeFunctions.addArtifact,
+  InitiativeFunctions.agent,
+  InitiativeFunctions.qualifier,
 ];
 
 /**
@@ -62,6 +62,6 @@ export const blueprint = Blueprint.make({
     ],
   }),
   tools: Blueprint.toolDefinitions({
-    functions: [Initiative.addArtifact],
+    functions: [InitiativeFunctions.addArtifact],
   }),
 });

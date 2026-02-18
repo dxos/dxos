@@ -5,7 +5,7 @@
 import { default as read$ } from './read';
 import { default as update$ } from './update';
 
-export namespace Tasks {
+export namespace TasksFunctions {
   export const read = read$;
   export const update = update$;
 }

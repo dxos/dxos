@@ -8,7 +8,7 @@ import { Ref } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
-import { Document } from '../../functions';
+import { DocumentFunctions } from '../../functions';
 
 const instructions = trim`
   You manage a design spec based on the conversation.
@@ -27,5 +27,5 @@ export const blueprint = Blueprint.make({
   instructions: {
     source: Ref.make(Text.make(instructions)),
   },
-  tools: [Document.read, Document.update].map((fn) => ToolId.make(fn.key)),
+  tools: [DocumentFunctions.read, DocumentFunctions.update].map((fn) => ToolId.make(fn.key)),
 });

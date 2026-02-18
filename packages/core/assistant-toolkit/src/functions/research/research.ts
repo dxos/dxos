@@ -23,7 +23,7 @@ import { type Message, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { LocalSearchHandler, LocalSearchToolkit, makeGraphWriterHandler, makeGraphWriterToolkit } from '../../crud';
-import { exaFunction, exaMockFunction } from '../exa';
+import { ExaFunctions } from '../exa';
 
 import { contextQueueLayerFromResearchGraph } from './research-graph';
 import PROMPT from './research-instructions.tpl?raw';
@@ -146,7 +146,7 @@ export default defineFunction({
 
           Layer.mergeAll(
             GenericToolkit.providerEmpty,
-            FunctionInvocationServiceLayerTestMocked({ functions: [exaFunction, exaMockFunction] }),
+            FunctionInvocationServiceLayerTestMocked({ functions: [ExaFunctions.exa, ExaFunctions.mock] }),
           ),
         ),
       ),

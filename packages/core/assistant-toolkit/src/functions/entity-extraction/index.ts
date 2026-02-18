@@ -4,6 +4,6 @@
 
 import { default as extract$ } from './entity-extraction';
 
-export namespace EntityExtraction {
+export namespace EntityExtractionFunctions {
   export const extract = extract$;
 }

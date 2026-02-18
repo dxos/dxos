@@ -119,7 +119,7 @@ When uncertain whether to use task management, err on the side of creating tasks
 `;
 
 const TaskProps = Schema.Struct({
-  id: Initiative.TaskId,
+  id: Initiative.Plan.TaskId,
   title: Schema.String,
   status: Schema.Literal('todo', 'in-progress', 'done'),
 });
@@ -161,7 +161,7 @@ export default defineFunction({
       Tasks updated. Don't forget to mark tasks as done when you're done with them or update their status to 'in-progress' when you start working on them.
       Current plan:
       <plan>
-        ${Initiative.formatPlan(plan)}
+        ${Initiative.Plan.formatPlan(plan)}
       </plan>
     `;
   }, AiContextService.fixFunctionHandlerType),

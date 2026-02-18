@@ -8,7 +8,7 @@ import { Ref } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
-import { Linear } from '../../functions';
+import { LinearFunctions } from '../../functions';
 
 /**
  * Agent prompt instructions for managing hierarchical task lists.
@@ -29,5 +29,5 @@ export const blueprint = Blueprint.make({
   instructions: {
     source: Ref.make(Text.make(instructions)),
   },
-  tools: [Linear.sync].map((tool) => ToolId.make(tool.key)),
+  tools: [LinearFunctions.sync].map((tool) => ToolId.make(tool.key)),
 });

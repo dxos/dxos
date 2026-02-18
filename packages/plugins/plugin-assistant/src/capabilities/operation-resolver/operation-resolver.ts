@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AiContextBinder, AiConversation } from '@dxos/assistant';
-import { Agent, Chat } from '@dxos/assistant-toolkit';
+import { AgentFunctions, Chat } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { type Queue } from '@dxos/client/echo';
 import { Filter, Obj, Ref, Type } from '@dxos/echo';
@@ -36,7 +36,7 @@ export default Capability.makeModule(
           });
 
           // TODO(wittjosiah): Remove once function registry is avaiable.
-          space.db.add(serializeFunction(Agent.prompt));
+          space.db.add(serializeFunction(AgentFunctions.prompt));
 
           // Create default chat.
           const { object: chat } = yield* Operation.invoke(AssistantOperation.CreateChat, { db: space.db });

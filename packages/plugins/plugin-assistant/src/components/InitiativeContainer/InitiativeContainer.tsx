@@ -11,7 +11,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import { Surface, useCapability } from '@dxos/app-framework/ui';
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
-import { Initiative } from '@dxos/assistant-toolkit';
+import { Initiative, InitiativeFunctions } from '@dxos/assistant-toolkit';
 import { DXN, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { type JsonPath, splitJsonPath } from '@dxos/echo/internal';
 import { AtomObj, AtomRef } from '@dxos/echo-atom';
@@ -27,7 +27,7 @@ import { type Text } from '@dxos/schema';
 const TAB_INITATIVE = 'Initiative';
 const TAB_CHAT = 'Chat';
 
-export type InitiativeContainerProps = SurfaceComponentProps<Initiative.Initiative>;
+export type InitiativeContainerProps = SurfaceComponentProps<Initiative.Initiative.Initiative>;
 
 export const InitiativeContainer = ({ subject: initiative }: InitiativeContainerProps) => {
   const [selectedTab, setSelectedTab] = useState<string>(TAB_INITATIVE);
@@ -103,10 +103,10 @@ export const InitiativeContainer = ({ subject: initiative }: InitiativeContainer
 
 export default InitiativeContainer;
 
-const InitiativeForm = ({ initiative }: { initiative: Initiative.Initiative }) => {
+const InitiativeForm = ({ initiative }: { initiative: Initiative.Initiative.Initiative }) => {
   const handleChange = useCallback(
     (
-      values: Omit<Initiative.Initiative, 'id'>,
+      values: Omit<Initiative.Initiative.Initiative, 'id'>,
       { isValid, changed }: { isValid: boolean; changed: Record<string, boolean> },
     ) => {
       if (!isValid) {
@@ -153,7 +153,7 @@ const InitiativeForm = ({ initiative }: { initiative: Initiative.Initiative }) =
       plan: ({ type, label, getValue, onValueChange }) => {
         const { t } = useTranslation();
 
-        const value: Ref.Ref<Initiative.Plan> = getValue();
+        const value: Ref.Ref<Initiative.Plan.Plan> = getValue();
         const target = useAtomValue(AtomRef.make(value));
 
         return (
@@ -162,7 +162,7 @@ const InitiativeForm = ({ initiative }: { initiative: Initiative.Initiative }) =
               <Input.Label>{toLocalizedString(label, t)}</Input.Label>
             </div>
             <MarkdownEditor.Root id={target?.id ?? ''}>
-              <MarkdownEditor.Content initialValue={target ? Initiative.formatPlan(target) : ''} />
+              <MarkdownEditor.Content initialValue={target ? Initiative.Plan.formatPlan(target) : ''} />
             </MarkdownEditor.Root>
           </Input.Root>
         );
@@ -215,7 +215,7 @@ const InitiativeForm = ({ initiative }: { initiative: Initiative.Initiative }) =
         {inputQueueItems.length === 0 && <div className='text-subdued'>No items in queue</div>}
       </div>
       <Form.Root
-        schema={omitId(Initiative.Initiative)}
+        schema={omitId(Initiative.Initiative.Initiative)}
         onValuesChanged={handleChange as any}
         values={spreadValue}
         db={Obj.getDatabase(initiative)}
@@ -243,7 +243,7 @@ const INITIATIVE_TRIGGER_TARGET_EXTENSION_KEY = 'dxos.org/extension/InitiativeTr
  * Syncs triggers in the database with the initiative subscriptions.
  */
 
-const syncTriggers = async (initiative: Initiative.Initiative) => {
+const syncTriggers = async (initiative: Initiative.Initiative.Initiative) => {
   const db = Obj.getDatabase(initiative);
   if (!db) {
     return;
@@ -293,7 +293,7 @@ const syncTriggers = async (initiative: Initiative.Initiative) => {
           queue: target.queue.dxn.toString(),
         },
         function: Ref.make(
-          FunctionDefinition.serialize(initiative.useQualifyingAgent ? Initiative.qualifier : Initiative.agent),
+          FunctionDefinition.serialize(initiative.useQualifyingAgent ? InitiativeFunctions.qualifier : InitiativeFunctions.agent),
         ),
         input: {
           initiative: Ref.make(initiative),
@@ -319,7 +319,7 @@ const syncTriggers = async (initiative: Initiative.Initiative) => {
               { source: INITIATIVE_TRIGGER_TARGET_EXTENSION_KEY, id: Obj.getDXN(initiative)?.toString() ?? '' },
             ],
           },
-          function: Ref.make(FunctionDefinition.serialize(Initiative.agent)),
+          function: Ref.make(FunctionDefinition.serialize(InitiativeFunctions.agent)),
           enabled: true,
           spec: {
             kind: 'queue',

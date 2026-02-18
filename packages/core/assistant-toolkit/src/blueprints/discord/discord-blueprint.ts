@@ -8,7 +8,7 @@ import { Ref } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
-import { Discord } from '../../functions';
+import { DiscordFunctions } from '../../functions';
 
 /**
  * Agent prompt instructions for managing hierarchical task lists.
@@ -28,5 +28,5 @@ export const blueprint = Blueprint.make({
   instructions: {
     source: Ref.make(Text.make(instructions)),
   },
-  tools: [ToolId.make(Discord.fetch.key)],
+  tools: [ToolId.make(DiscordFunctions.fetch.key)],
 });

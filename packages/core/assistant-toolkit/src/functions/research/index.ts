@@ -8,7 +8,7 @@ import { default as research$ } from './research';
 export * from './research-graph';
 export * from './types';
 
-export namespace Research {
+export namespace ResearchFunctions {
   export const create = create$;
   export const research = research$;
 }

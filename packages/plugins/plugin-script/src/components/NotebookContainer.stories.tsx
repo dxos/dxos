@@ -8,7 +8,7 @@ import React from 'react';
 
 import { SERVICES_CONFIG } from '@dxos/ai/testing';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Agent } from '@dxos/assistant-toolkit';
+import { AgentFunctions } from '@dxos/assistant-toolkit';
 import { Filter } from '@dxos/echo';
 import { Function, serializeFunction } from '@dxos/functions';
 import { AssistantPlugin } from '@dxos/plugin-assistant';
@@ -60,7 +60,7 @@ const meta: Meta<typeof NotebookContainer> = {
 
               space.db.add(createNotebook());
               space.db.add(Markdown.make({ content: '# Hello World' }));
-              space.db.add(serializeFunction(Agent.prompt));
+              space.db.add(serializeFunction(AgentFunctions.prompt));
             }),
         }),
         AssistantPlugin(),

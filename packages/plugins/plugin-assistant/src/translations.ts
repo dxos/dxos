@@ -53,7 +53,7 @@ export const translations = [
         'delete object label': 'Delete AI Chat',
         'object deleted label': 'AI Chat deleted',
       },
-      [Initiative.Initiative.typename]: {
+      [Initiative.Initiative.Initiative.typename]: {
         'typename label': 'Initiative',
         'typename label_zero': 'Initiatives',
         'typename label_one': 'Initiative',

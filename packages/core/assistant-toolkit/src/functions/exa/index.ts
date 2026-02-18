@@ -2,5 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-export { default as exaFunction } from './exa';
-export { default as exaMockFunction } from './mock';
+import { default as exa$ } from './exa';
+import { default as mock$ } from './mock';
+
+export namespace ExaFunctions {
+  export const exa = exa$;
+  export const mock = mock$;
+}

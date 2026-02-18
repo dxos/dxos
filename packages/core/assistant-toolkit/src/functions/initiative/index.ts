@@ -7,7 +7,7 @@ import { default as agent$ } from './agent';
 import { default as getContext$ } from './get-context';
 import { default as qualifier$ } from './qualifier';
 
-export namespace Initiative {
+export namespace InitiativeFunctions {
   export const addArtifact = addArtifact$;
   export const agent = agent$;
   export const getContext = getContext$;
