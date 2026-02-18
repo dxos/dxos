@@ -34,6 +34,11 @@ export const preprocessPrompt: (
 ) {
   let prompt = yield* Function.pipe(
     messages,
+    (messages) =>
+      Array.isNonEmptyArray(messages)
+        ? Array.groupWith((a: Message.Message, b: Message.Message) => a.sender.role === b.sender.role)(messages)
+        : [],
+    Array.map(mergeMessages),
     Effect.forEach(
       Effect.fnUntraced(function* (msg) {
         switch (msg.sender.role) {
@@ -294,3 +299,8 @@ const splitBy = <T>(arr: T[], predicate: (left: T, right: T) => boolean): T[][] 
 
   return result;
 };
+
+const mergeMessages = (messages: Message.Message[]): Message.Message => ({
+  ...messages[0],
+  blocks: messages.flatMap((msg) => msg.blocks),
+});
