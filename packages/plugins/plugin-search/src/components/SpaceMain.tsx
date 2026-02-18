@@ -12,7 +12,7 @@ import { Graph, Node, useActionRunner, useConnections } from '@dxos/plugin-graph
 import { type Space, useQuery } from '@dxos/react-client/echo';
 import { ScrollArea, Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Layout } from '@dxos/react-ui';
-import { Card, Mosaic, type StackTileComponent } from '@dxos/react-ui-mosaic';
+import { Card, Mosaic, type MosaicStackTileComponent } from '@dxos/react-ui-mosaic';
 import { SearchList } from '@dxos/react-ui-searchlist';
 import { Text } from '@dxos/schema';
 import { getStyles } from '@dxos/ui-theme';
@@ -46,7 +46,8 @@ export const SpaceMain = ({ space }: { space: Space }) => {
   );
 };
 
-const NodeTile: StackTileComponent<Node.Node> = ({ data: node }) => {
+const NodeTile: MosaicStackTileComponent<Node.Node> = (props) => {
+  const node = props.data;
   const { t } = useTranslation(meta.id);
   const { graph } = useAppGraph();
   const { invokeSync } = useOperationInvoker();

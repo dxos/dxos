@@ -24,7 +24,7 @@ import { translationKey } from '../../translations';
 import { Card, type CardMenuProps } from '../Card';
 import { Focus } from '../Focus';
 import { Mosaic, type MosaicContainerProps, type MosaicTileProps } from '../Mosaic';
-import { type StackProps } from '../Stack';
+import { type MosaicStackProps } from '../Stack';
 
 import { useBoardContext } from './Board';
 import { BoardItem } from './Item';
@@ -112,8 +112,9 @@ BoardColumnHeader.displayName = BOARD_COLUMN_HEADER_NAME;
 const BOARD_COLUMN_BODY_NAME = 'Board.Column.Body';
 
 type BoardColumnBodyProps = Pick<BoardColumnProps, 'data'> & {
-  Tile?: StackProps<Obj.Unknown>['Tile'];
-} & Pick<MosaicContainerProps, 'debug'>;
+  Tile?: MosaicStackProps<Obj.Unknown>['Tile'];
+  debug?: MosaicContainerProps['debug'];
+};
 
 const BoardColumnBody = ({ data, Tile = BoardItem, debug }: BoardColumnBodyProps) => {
   const { t } = useTranslation(translationKey);

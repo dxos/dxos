@@ -17,7 +17,7 @@ type TestItem = {
 };
 
 const meta: Meta = {
-  title: 'ui/react-ui-mosaic/virtualizer',
+  title: 'ui/react-ui-core/exemplars/virtualizer',
   decorators: [withLayout({ layout: 'column' }), withTheme()],
   parameters: {
     layout: 'fullscreen',
@@ -60,7 +60,7 @@ export const Default = {
     return (
       <Layout.Main toolbar>
         <ScrollToolbar items={items} index={index} setIndex={setIndex} />
-        <ScrollArea.Root orientation='vertical'>
+        <ScrollArea.Root orientation='vertical' margin>
           <ScrollArea.Viewport classNames='p-2' ref={setViewport}>
             <div
               role='none'

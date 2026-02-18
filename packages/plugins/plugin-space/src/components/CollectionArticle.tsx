@@ -11,7 +11,7 @@ import { Filter, Obj } from '@dxos/echo';
 import { useClient } from '@dxos/react-client';
 import { getSpace, useQuery } from '@dxos/react-client/echo';
 import { Layout, ScrollArea, Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { Card, Mosaic, type StackTileComponent } from '@dxos/react-ui-mosaic';
+import { Card, Mosaic, type MosaicStackTileComponent } from '@dxos/react-ui-mosaic';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-searchlist';
 import { Collection } from '@dxos/schema';
 import { getStyles } from '@dxos/ui-theme';
@@ -61,7 +61,8 @@ type ObjectItem = {
   iconHue?: string;
 };
 
-const ObjectTile: StackTileComponent<ObjectItem> = ({ data: item }) => {
+const ObjectTile: MosaicStackTileComponent<ObjectItem> = (props) => {
+  const item = props.data;
   const { t } = useTranslation(meta.id);
   const { invokeSync } = useOperationInvoker();
 

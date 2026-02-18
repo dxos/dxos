@@ -13,8 +13,8 @@ import { mx } from '@dxos/ui-theme';
 
 import { useContainerDebug, useEventHandlerAdapter } from '../../hooks';
 import { Focus } from '../Focus';
-import { Mosaic, type MosiacPlaceholderProps, mosaicStyles, useMosaic } from '../Mosaic';
-import { type StackProps } from '../Stack';
+import { Mosaic, type MosaicPlaceholderProps, mosaicStyles, useMosaic } from '../Mosaic';
+import { type MosaicStackProps } from '../Stack';
 
 import { BoardColumn, type BoardColumnProps, DefaultBoardColumn } from './Column';
 import { BoardItem, type BoardItemProps } from './Item';
@@ -64,7 +64,7 @@ type BoardRootProps<
   {
     id: string;
     debug?: boolean;
-    Tile?: StackProps<TColumn>['Tile'];
+    Tile?: MosaicStackProps<TColumn>['Tile'];
   } & BoardContextValue<TColumn, TItem>
 >;
 
@@ -121,7 +121,7 @@ const BoardRoot = BoardRootInner as <TColumn extends Obj.Unknown, TItem extends 
 
 const BOARD_PLACEHOLDER_NAME = 'Board.Placeholder';
 
-const BoardPlaceholder = (props: MosiacPlaceholderProps<number>) => {
+const BoardPlaceholder = (props: MosaicPlaceholderProps<number>) => {
   return (
     <Mosaic.Placeholder {...props} classNames={mosaicStyles.placeholder.root}>
       <div

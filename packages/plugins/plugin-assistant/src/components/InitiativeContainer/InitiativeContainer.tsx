@@ -10,6 +10,7 @@ import type * as Record from 'effect/Record';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { Surface, useCapability } from '@dxos/app-framework/ui';
+import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { Initiative } from '@dxos/assistant-toolkit';
 import { DXN, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { type JsonPath, splitJsonPath } from '@dxos/echo/internal';
@@ -18,20 +19,17 @@ import { FunctionDefinition, QueueService, Trigger } from '@dxos/functions';
 import { AutomationCapabilities } from '@dxos/plugin-automation/types';
 import { MarkdownEditor } from '@dxos/plugin-markdown';
 import { useObject, useQuery } from '@dxos/react-client/echo';
-import { Button, ButtonGroup, IconButton, Input, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Button, ButtonGroup, IconButton, Input, Layout, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldMap, omitId } from '@dxos/react-ui-form';
 import { StackItem } from '@dxos/react-ui-stack';
 import { type Text } from '@dxos/schema';
 
-export type InitiativeContainerProps = {
-  role?: string;
-  initiative: Initiative.Initiative;
-};
-
 const TAB_INITATIVE = 'Initiative';
 const TAB_CHAT = 'Chat';
 
-export const InitiativeContainer = ({ role, initiative }: InitiativeContainerProps) => {
+export type InitiativeContainerProps = SurfaceComponentProps<Initiative.Initiative>;
+
+export const InitiativeContainer = ({ subject: initiative }: InitiativeContainerProps) => {
   const [selectedTab, setSelectedTab] = useState<string>(TAB_INITATIVE);
 
   const tabs = useAtomValue(
@@ -80,7 +78,7 @@ export const InitiativeContainer = ({ role, initiative }: InitiativeContainerPro
     <StackItem.Content toolbar>
       <div
         role='none'
-        className='flex-1 min-is-0 overflow-x-auto scrollbar-none flex gap-1 border-b border-subduedSeparator'
+        className='flex flex-1 min-is-0 overflow-x-auto scrollbar-none gap-1 border-b border-subduedSeparator'
       >
         {tabs.map((tab) => (
           <IconButton
@@ -206,7 +204,7 @@ const InitiativeForm = ({ initiative }: { initiative: Initiative.Initiative }) =
   // TODO(dmaretskyi): Form breaks if we provide the echo object directly.
   const spreadValue = useMemo(() => ({ ...initiative }), [initiative]);
   return (
-    <div className='flex flex-col gap-2'>
+    <Layout.Main>
       <ButtonGroup classNames='h-10'>
         <Button onClick={handleResetHistory}>Reset History</Button>
       </ButtonGroup>
@@ -226,7 +224,7 @@ const InitiativeForm = ({ initiative }: { initiative: Initiative.Initiative }) =
       >
         <Form.FieldSet />
       </Form.Root>
-    </div>
+    </Layout.Main>
   );
 };
 
