@@ -4,25 +4,30 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common } from '@dxos/app-framework';
+import { Capability } from '@dxos/app-framework';
+import { AppCapabilities } from '@dxos/app-toolkit';
 
-import { CalendarBlueprint, InboxBlueprint } from '../../blueprints';
+import { CalendarBlueprint, InboxBlueprint, InboxSendBlueprint } from '../../blueprints';
 
-export { CalendarBlueprint, InboxBlueprint };
+export { CalendarBlueprint, InboxBlueprint, InboxSendBlueprint };
 
 export type BlueprintCapabilities = [
-  Capability.Capability<typeof Common.Capability.Functions>,
-  Capability.Capability<typeof Common.Capability.BlueprintDefinition>,
-  Capability.Capability<typeof Common.Capability.Functions>,
-  Capability.Capability<typeof Common.Capability.BlueprintDefinition>,
+  Capability.Capability<typeof AppCapabilities.Functions>,
+  Capability.Capability<typeof AppCapabilities.BlueprintDefinition>,
+  Capability.Capability<typeof AppCapabilities.Functions>,
+  Capability.Capability<typeof AppCapabilities.BlueprintDefinition>,
+  Capability.Capability<typeof AppCapabilities.Functions>,
+  Capability.Capability<typeof AppCapabilities.BlueprintDefinition>,
 ];
 
 const blueprintDefinition = Capability.makeModule<[], BlueprintCapabilities>(() =>
   Effect.succeed([
-    Capability.contributes(Common.Capability.Functions, InboxBlueprint.functions),
-    Capability.contributes(Common.Capability.BlueprintDefinition, InboxBlueprint.make()),
-    Capability.contributes(Common.Capability.Functions, CalendarBlueprint.functions),
-    Capability.contributes(Common.Capability.BlueprintDefinition, CalendarBlueprint.make()),
+    Capability.contributes(AppCapabilities.Functions, InboxBlueprint.functions),
+    Capability.contributes(AppCapabilities.BlueprintDefinition, InboxBlueprint.make()),
+    Capability.contributes(AppCapabilities.Functions, InboxSendBlueprint.functions),
+    Capability.contributes(AppCapabilities.BlueprintDefinition, InboxSendBlueprint.make()),
+    Capability.contributes(AppCapabilities.Functions, CalendarBlueprint.functions),
+    Capability.contributes(AppCapabilities.BlueprintDefinition, CalendarBlueprint.make()),
   ]),
 );
 

@@ -221,7 +221,7 @@ const Invitations = () => {
 
 const meta = {
   title: 'sdk/shell/Invitations',
-  decorators: [withTheme],
+  decorators: [withTheme()],
 } satisfies Meta;
 
 export default meta;
@@ -241,6 +241,7 @@ export const Default: Story = {
     );
   },
   decorators: [withMultiClientProvider({ numClients: 3 }), withLayout({ classNames: 'grid grid-cols-3' })],
+  tags: ['test'],
   parameters: {
     layout: 'fullscreen',
     chromatic: {

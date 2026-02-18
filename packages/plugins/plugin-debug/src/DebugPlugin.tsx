@@ -4,7 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Common, Plugin } from '@dxos/app-framework';
+import { ActivationEvents, Plugin } from '@dxos/app-framework';
+import { AppPlugin } from '@dxos/app-toolkit';
 import { type Client } from '@dxos/react-client';
 
 import { AppGraphBuilder, DebugSettings, ReactContext, ReactSurface } from './capabilities';
@@ -13,16 +14,16 @@ import { translations } from './translations';
 
 // TODO(wittjosiah): Factor out DevtoolsPlugin?
 export const DebugPlugin = Plugin.define(meta).pipe(
+  AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
+  AppPlugin.addReactContextModule({ activate: ReactContext }),
+  AppPlugin.addSettingsModule({ activate: DebugSettings }),
+  AppPlugin.addSurfaceModule({ activate: ReactSurface }),
+  AppPlugin.addTranslationsModule({ translations }),
   Plugin.addModule({
     id: 'setup-devtools',
-    activatesOn: Common.ActivationEvent.Startup,
+    activatesOn: ActivationEvents.Startup,
     activate: () => Effect.sync(() => setupDevtools()),
   }),
-  Common.Plugin.addSettingsModule({ activate: DebugSettings }),
-  Common.Plugin.addTranslationsModule({ translations }),
-  Common.Plugin.addReactContextModule({ activate: ReactContext }),
-  Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
-  Common.Plugin.addAppGraphModule({ activate: AppGraphBuilder }),
   Plugin.make,
 );
 

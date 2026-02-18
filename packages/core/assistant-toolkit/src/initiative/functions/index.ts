@@ -3,5 +3,6 @@
 //
 
 export { default as getContext } from './getContext';
-export { default as update } from './update';
+export { default as addArtifact } from './addArtifact';
 export { default as agent } from './agent';
+export { default as qualifier } from './qualifier';

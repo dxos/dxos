@@ -3,12 +3,14 @@
 //
 
 import * as BrowserKeyValueStore from '@effect/platform-browser/BrowserKeyValueStore';
+import { Registry } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 
-import { Capability, type CapabilityManager, Common } from '@dxos/app-framework';
-import { GenericToolkit, makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
+import { Capabilities, Capability, type CapabilityManager } from '@dxos/app-framework';
+import { AppCapabilities } from '@dxos/app-toolkit';
+import { GenericToolkit, ToolExecutionServices } from '@dxos/assistant';
 import { SpaceProperties } from '@dxos/client/echo';
 import { Resource } from '@dxos/context';
 import { Database, Obj, Query, Ref } from '@dxos/echo';
@@ -65,30 +67,35 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
       Effect.gen(this, function* () {
         const client = this.#capabilities.get(ClientCapabilities.Client);
         const aiServiceLayer =
-          this.#capabilities.get(Common.Capability.AiServiceLayer) ?? Layer.die('AiService not found');
+          this.#capabilities.get(AppCapabilities.AiServiceLayer) ?? Layer.die('AiService not found');
+        const registry = this.#capabilities.get(Capabilities.AtomRegistry);
 
         // TODO(dmaretskyi): Make these reactive.
-        const functions = this.#capabilities.getAll(Common.Capability.Functions).flat();
-        const toolkits = this.#capabilities.getAll(Common.Capability.Toolkit);
-        const mergedToolkit = GenericToolkit.merge(...toolkits);
-        const toolkit = mergedToolkit.toolkit;
-        const toolkitLayer = mergedToolkit.layer;
+        const functions = this.#capabilities.getAll(AppCapabilities.Functions).flat();
+
+        const genericToolkitProvider = Layer.succeed(GenericToolkit.Provider, {
+          getToolkit: () => {
+            const toolkits = this.#capabilities.getAll(AppCapabilities.Toolkit);
+            return GenericToolkit.merge(...toolkits);
+          },
+        });
 
         const space = client.spaces.get(spaceId);
         invariant(space, `Invalid space: ${spaceId}`);
         yield* Effect.promise(() => space.waitUntilReady());
 
         return Layer.mergeAll(TriggerDispatcher.layer({ timeControl: 'natural' })).pipe(
+          Layer.provideMerge(Layer.succeed(Registry.AtomRegistry, registry)),
           Layer.provideMerge(
             Layer.mergeAll(
               TracingServiceLive,
               TriggerStateStore.layerKv.pipe(Layer.provide(BrowserKeyValueStore.layerLocalStorage)),
-              makeToolResolverFromFunctions(functions, toolkit),
-              makeToolExecutionServiceFromFunctions(toolkit, toolkitLayer),
+              ToolExecutionServices,
             ),
           ),
           Layer.provideMerge(
             FunctionInvocationServiceLayerWithLocalLoopbackExecutor.pipe(
+              Layer.provideMerge(genericToolkitProvider),
               Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions })),
               Layer.provideMerge(
                 RemoteFunctionExecutionService.fromClient(

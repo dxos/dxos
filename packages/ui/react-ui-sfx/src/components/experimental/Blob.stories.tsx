@@ -11,7 +11,7 @@ import { Blob } from './Blob';
 const meta = {
   title: 'ui/react-ui-sfx/Blob',
   component: Blob,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'fullscreen',
   },

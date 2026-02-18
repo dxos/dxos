@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { Input, Select, useTranslation } from '@dxos/react-ui';
-import { ControlGroup, ControlItemInput, ControlPage, ControlSection } from '@dxos/react-ui-form';
+import { Settings } from '@dxos/react-ui-form';
 import { type EditorInputMode, EditorInputModes, type EditorViewMode, EditorViewModes } from '@dxos/ui-editor';
 
 import { meta } from '../../meta';
@@ -21,10 +21,10 @@ export const MarkdownSettings = ({ settings, onSettingsChange }: MarkdownSetting
 
   // TODO(wittjosiah): Add skill test confirmation for entering vim mode.
   return (
-    <ControlPage>
-      <ControlSection title={t('settings title', { ns: meta.id })}>
-        <ControlGroup>
-          <ControlItemInput title={t('default view mode label')}>
+    <Settings.Root>
+      <Settings.Section title={t('settings title', { ns: meta.id })}>
+        <Settings.Group>
+          <Settings.ItemInput title={t('default view mode label')}>
             <Select.Root
               value={settings.defaultViewMode}
               onValueChange={(value) => {
@@ -37,7 +37,7 @@ export const MarkdownSettings = ({ settings, onSettingsChange }: MarkdownSetting
                   <Select.Viewport>
                     {EditorViewModes.map((mode) => (
                       <Select.Option key={mode} value={mode}>
-                        {t(`${mode} mode label`, { ns: 'react-ui-editor' })}
+                        {t(`${mode} mode label`, { ns: '@dxos/react-ui-editor' })}
                       </Select.Option>
                     ))}
                   </Select.Viewport>
@@ -45,9 +45,9 @@ export const MarkdownSettings = ({ settings, onSettingsChange }: MarkdownSetting
                 </Select.Content>
               </Select.Portal>
             </Select.Root>
-          </ControlItemInput>
+          </Settings.ItemInput>
 
-          <ControlItemInput title={t('editor input mode label')}>
+          <Settings.ItemInput title={t('editor input mode label')}>
             <Select.Root
               value={settings.editorInputMode ?? 'default'}
               onValueChange={(value) => {
@@ -68,55 +68,55 @@ export const MarkdownSettings = ({ settings, onSettingsChange }: MarkdownSetting
                 </Select.Content>
               </Select.Portal>
             </Select.Root>
-          </ControlItemInput>
+          </Settings.ItemInput>
 
-          <ControlItemInput title={t('settings toolbar label')}>
+          <Settings.ItemInput title={t('settings toolbar label')}>
             <Input.Switch
               checked={settings.toolbar}
               onCheckedChange={(checked) => onSettingsChange((s) => ({ ...s, toolbar: !!checked }))}
             />
-          </ControlItemInput>
+          </Settings.ItemInput>
 
-          <ControlItemInput title={t('settings numbered headings label')}>
+          <Settings.ItemInput title={t('settings numbered headings label')}>
             <Input.Switch
               checked={settings.numberedHeadings}
               onCheckedChange={(checked) => onSettingsChange((s) => ({ ...s, numberedHeadings: !!checked }))}
             />
-          </ControlItemInput>
+          </Settings.ItemInput>
 
-          <ControlItemInput title={t('settings folding label')}>
+          <Settings.ItemInput title={t('settings folding label')}>
             <Input.Switch
               checked={settings.folding}
               onCheckedChange={(checked) => onSettingsChange((s) => ({ ...s, folding: !!checked }))}
             />
-          </ControlItemInput>
+          </Settings.ItemInput>
 
-          <ControlItemInput title={t('settings experimental label')}>
+          <Settings.ItemInput title={t('settings experimental label')}>
             <Input.Switch
               checked={settings.experimental}
               onCheckedChange={(checked) => onSettingsChange((s) => ({ ...s, experimental: !!checked }))}
             />
-          </ControlItemInput>
+          </Settings.ItemInput>
 
-          <ControlItemInput title={t('settings debug label')}>
+          <Settings.ItemInput title={t('settings debug label')}>
             <Input.Switch
               checked={settings.debug}
               onCheckedChange={(checked) => onSettingsChange((s) => ({ ...s, debug: !!checked }))}
             />
-          </ControlItemInput>
+          </Settings.ItemInput>
 
           {settings.debug && (
-            <ControlItemInput title={t('settings debug textarea label', { ns: meta.id })}>
+            <Settings.ItemInput title={t('settings debug textarea label', { ns: meta.id })}>
               <Input.TextArea
                 rows={5}
                 value={settings.typewriter}
                 onChange={({ target: { value } }) => onSettingsChange((s) => ({ ...s, typewriter: value }))}
                 placeholder={t('settings debug placeholder')}
               />
-            </ControlItemInput>
+            </Settings.ItemInput>
           )}
-        </ControlGroup>
-      </ControlSection>
-    </ControlPage>
+        </Settings.Group>
+      </Settings.Section>
+    </Settings.Root>
   );
 };

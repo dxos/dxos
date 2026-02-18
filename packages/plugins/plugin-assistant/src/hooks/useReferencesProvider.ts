@@ -4,8 +4,8 @@
 
 import { useMemo } from 'react';
 
-import { Common } from '@dxos/app-framework';
-import { useCapabilities } from '@dxos/app-framework/react';
+import { useCapabilities } from '@dxos/app-framework/ui';
+import { AppCapabilities } from '@dxos/app-toolkit';
 import { type Space } from '@dxos/client/echo';
 import { Filter, Obj } from '@dxos/echo';
 import { type ReferencesProvider } from '@dxos/react-ui-chat';
@@ -14,7 +14,7 @@ import { type ReferencesProvider } from '@dxos/react-ui-chat';
  * Resolve references to objects in the space.
  */
 export const useReferencesProvider = (space?: Space): ReferencesProvider | undefined => {
-  const blueprints = useCapabilities(Common.Capability.BlueprintDefinition);
+  const blueprints = useCapabilities(AppCapabilities.BlueprintDefinition);
 
   return useMemo<ReferencesProvider | undefined>((): ReferencesProvider | undefined => {
     if (!space) {

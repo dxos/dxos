@@ -7,8 +7,9 @@ import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 import React, { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Common } from '@dxos/app-framework';
-import { useAtomCapability, useCapabilities, useOperationInvoker } from '@dxos/app-framework/react';
+import { useAtomCapability, useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
+import { AppCapabilities } from '@dxos/app-toolkit';
+import { Chat } from '@dxos/assistant-toolkit';
 import { Blueprint } from '@dxos/blueprints';
 import { getSpace } from '@dxos/client/echo';
 import { DXN, Filter, Obj, Query, Ref } from '@dxos/echo';
@@ -23,7 +24,7 @@ import { Assistant, AssistantCapabilities, AssistantOperation } from '../types';
 export type ChatCompanionProps = {
   role?: string;
   data: {
-    subject: Assistant.Chat | 'assistant-chat';
+    subject: Chat.Chat | 'assistant-chat';
     companionTo: Obj.Unknown;
   };
 };
@@ -93,7 +94,7 @@ export const ChatCompanion = forwardRef<HTMLDivElement, ChatCompanionProps>(
       if (!initialSetupDoneRef.current) {
         // Query for existing companion chats linked to this object.
         const existingChats = await space.db
-          .query(Query.select(Filter.id(companionTo.id)).targetOf(Assistant.CompanionTo).source())
+          .query(Query.select(Filter.id(companionTo.id)).targetOf(Chat.CompanionTo).source())
           .run();
 
         initialSetupDoneRef.current = true;
@@ -131,7 +132,7 @@ export const ChatCompanion = forwardRef<HTMLDivElement, ChatCompanionProps>(
           });
           await invokePromise(SpaceOperation.AddRelation, {
             db: space.db,
-            schema: Assistant.CompanionTo,
+            schema: Chat.CompanionTo,
             source: chat,
             target: companionTo,
           });
@@ -144,7 +145,7 @@ export const ChatCompanion = forwardRef<HTMLDivElement, ChatCompanionProps>(
       [chat, space, companionTo, invokePromise],
     );
 
-    const metadata = useCapabilities(Common.Capability.Metadata);
+    const metadata = useCapabilities(AppCapabilities.Metadata);
     const blueprintKeys = useMemo(
       () =>
         Function.pipe(
@@ -187,7 +188,7 @@ export const ChatCompanion = forwardRef<HTMLDivElement, ChatCompanionProps>(
           continue;
         }
 
-        space.db.add(Obj.clone(blueprint));
+        space.db.add(Obj.clone(blueprint, { deep: true }));
       }
     }, [space, blueprintRegistry, blueprintKeys]);
 

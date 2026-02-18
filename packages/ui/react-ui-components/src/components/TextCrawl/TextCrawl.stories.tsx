@@ -16,7 +16,7 @@ faker.seed(1234);
 const meta = {
   title: 'ui/react-ui-components/TextCrawl',
   component: TextCrawl,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'centered',
   },

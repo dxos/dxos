@@ -2,7 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import { sentryVitePlugin } from '@sentry/vite-plugin';
 import ReactPlugin from '@vitejs/plugin-react-swc';
 import { join, resolve } from 'node:path';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
@@ -15,6 +14,11 @@ import { ConfigPlugin } from '@dxos/config/vite-plugin';
 // https://vitejs.dev/config
 export default defineConfig({
   root: __dirname,
+  optimizeDeps: {
+    // Avoid prebundling wa-sqlite into .vite/deps where the adjacent wasm file is not emitted.
+    // Keeping it as a normal node_modules module preserves import.meta.url-based wasm resolution.
+    exclude: ['@effect/sql-sqlite-wasm', '@dxos/wa-sqlite'],
+  },
   server: {
     host: true,
     https:
@@ -62,17 +66,6 @@ export default defineConfig({
     TopLevelAwaitPlugin(),
     WasmPlugin(),
     ReactPlugin({ tsDecorators: true }),
-    // https://docs.sentry.io/platforms/javascript/sourcemaps/uploading/vite
-    // https://www.npmjs.com/package/@sentry/vite-plugin
-    sentryVitePlugin({
-      org: 'dxos',
-      project: 'todomvc',
-      sourcemaps: {
-        assets: './packages/apps/todomvc/out/todomvc/**',
-      },
-      authToken: process.env.SENTRY_RELEASE_AUTH_TOKEN,
-      disable: process.env.DX_ENVIRONMENT !== 'production',
-    }),
     // https://www.bundle-buddy.com/rollup
     {
       name: 'bundle-buddy',

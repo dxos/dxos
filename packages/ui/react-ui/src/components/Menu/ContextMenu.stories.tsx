@@ -92,10 +92,10 @@ const DefaultStory = () => {
 };
 
 const meta = {
-  title: 'ui/react-ui-core/ContextMenu',
+  title: 'ui/react-ui-core/components/ContextMenu',
   component: ContextMenu.Root as any,
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

@@ -4,3 +4,4 @@
 
 export * as AssistantToolkit from './AssistantToolkit';
 export * as SystemToolkit from './SystemToolkit';
+export * as WebToolkit from './WebToolkit';

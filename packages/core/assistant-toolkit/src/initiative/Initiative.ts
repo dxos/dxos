@@ -2,98 +2,60 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
+import * as Schema from 'effect/Schema';
 
-import { AiContextBinder, type ContextBinding } from '@dxos/assistant';
-import { Blueprint, Template } from '@dxos/blueprints';
-import { Database, Obj, Ref } from '@dxos/echo';
-import { QueueService } from '@dxos/functions';
-import { Text } from '@dxos/schema';
-import type { Message } from '@dxos/types';
-import { trim } from '@dxos/util';
+import { Type } from '@dxos/echo';
+import { Queue } from '@dxos/echo-db';
+import { QueueAnnotation, Text } from '@dxos/schema';
 
-import { agent, getContext, update } from './functions';
-import { Initiative, PLAN_ARTIFACT_NAME, SPEC_ARTIFACT_NAME } from './InitiativeSchema';
+import * as Chat from '../chat/Chat';
 
-export { Initiative, PLAN_ARTIFACT_NAME, SPEC_ARTIFACT_NAME } from './InitiativeSchema';
-export type { Initiative as InitiativeType } from './InitiativeSchema';
+import { Plan } from './plan';
 
-export const make = (
-  props: Omit<Obj.MakeProps<typeof Initiative>, 'artifacts' | 'chat'> &
-    Partial<Pick<Obj.MakeProps<typeof Initiative>, 'artifacts'>> & {
-      spec: string;
-      plan?: string;
-      blueprints?: Ref.Ref<Blueprint.Blueprint>[];
-      contextObjects?: Ref.Ref<Obj.Any>[];
-    },
-): Effect.Effect<Initiative, never, QueueService | Database.Service> =>
-  Effect.gen(function* () {
-    const initiative = Obj.make(Initiative, {
-      ...props,
-      artifacts: [
-        {
-          name: SPEC_ARTIFACT_NAME,
-          data: Ref.make(Text.make(props.spec)),
-        },
-        {
-          name: PLAN_ARTIFACT_NAME,
-          data: Ref.make(Text.make(props.plan ?? '')),
-        },
-        ...(props.artifacts ?? []),
-      ],
-    });
-    yield* Database.add(initiative);
-    const queue = yield* QueueService.createQueue<Message.Message | ContextBinding>();
-    const contextBinder = new AiContextBinder({ queue });
-    const initiativeBlueprint = yield* Database.add(Obj.clone(InitiativeBlueprint, { deep: true }));
-    yield* Effect.promise(() =>
-      contextBinder.bind({
-        blueprints: [Ref.make(initiativeBlueprint), ...(props.blueprints ?? [])],
-        objects: [Ref.make(initiative), ...(props.contextObjects ?? [])],
-      }),
-    );
-    Obj.change(initiative, (initiative) => {
-      initiative.chat = Ref.fromDXN(queue.dxn);
-    });
+/**
+ * Initiative schema definition.
+ */
+export const Initiative = Schema.Struct({
+  name: Schema.String,
 
-    return initiative;
-  });
+  spec: Type.Ref(Text.Text),
+  plan: Type.Ref(Plan),
 
-export const functions = [getContext, update, agent];
+  artifacts: Schema.Array(
+    Schema.Struct({
+      // TODO(dmaretskyi): Consider gettings names from the artifact itself using Obj.getLabel.
+      name: Schema.String,
+      data: Type.Ref(Type.Obj),
+    }),
+  ),
 
-export const InitiativeBlueprint = Blueprint.make({
-  key: 'dxos.org/blueprint/initiative',
-  name: 'Initiative blueprint',
-  instructions: Template.make({
-    source: trim`
-      You work on an initiative. Each initiative has a spec - the goal of the initiative.
-      The initiative plan shows the current progress of the initiative.
-      Initiative has an number of associated artifacts you can read/write.
-      Spec and plan are also artifacts.
-      You can edit them if necessary.
-      
-      {{#with initiative}}
-        Initiative spec:
-          {{spec.dxn}}
-          {{spec.content}}
+  /**
+   * Incoming queue that the agent processes.
+   */
+  // NOTE: Named `queue` to conform to subscribable schema (see QueueAnnotation).
+  queue: Schema.optional(Type.Ref(Queue)),
 
-        Initiative plan:
-          {{plan.dxn}}
-          {{plan.content}}
+  // TODO(dmaretskyi): Multiple chats.
+  chat: Schema.optional(Type.Ref(Chat.Chat)),
 
-        All artifacts:
-        {{#each artifacts}}
-          {{name}}: {{type}} {{dxn}}
-        {{/each}}
-      {{/with}}
-    `,
-    inputs: [
-      {
-        name: 'initiative',
-        kind: 'function',
-        function: 'dxos.org/function/initiative/get-context',
-      },
-    ],
+  /**
+   * Objects to subscribe to.
+   * References to objects with a a canonical queue property.
+   * Schema must have the QueueAnnotation.
+   */
+  // TODO(dmaretskyi): Turn into an array of objects when form-data
+  subscriptions: Schema.Array(Type.Ref(Type.Obj)),
+
+  useQualifyingAgent: Schema.optional(Schema.Boolean),
+
+  newChatOnEveryEvent: Schema.optional(Schema.Boolean),
+
+  // TODO(dmaretskyi): input queue?
+}).pipe(
+  Type.object({
+    typename: 'dxos.org/type/Initiative',
+    version: '0.1.0',
   }),
-  tools: Blueprint.toolDefinitions({ functions: [update] }),
-});
+  QueueAnnotation.set(true),
+);
+export interface Initiative extends Schema.Schema.Type<typeof Initiative> {}

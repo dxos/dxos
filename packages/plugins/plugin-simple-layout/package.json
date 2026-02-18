@@ -14,10 +14,10 @@
   "type": "module",
   "exports": {
     ".": {
-      "source": "./src/index.ts",
-      "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
-      "node": "./dist/lib/node-esm/index.mjs"
+      "node": "./dist/lib/node-esm/index.mjs",
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -27,6 +27,8 @@
   ],
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
+    "@dxos/app-toolkit": "workspace:*",
+    "@dxos/async": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/operation": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
@@ -39,7 +41,9 @@
     "@dxos/util": "workspace:*",
     "@effect-atom/atom": "catalog:",
     "@effect-atom/atom-react": "catalog:",
-    "@radix-ui/react-context": "catalog:"
+    "@radix-ui/react-context": "catalog:",
+    "@tauri-apps/plugin-deep-link": "catalog:",
+    "@tauri-apps/plugin-haptics": "catalog:"
   },
   "devDependencies": {
     "@dxos/app-graph": "workspace:*",

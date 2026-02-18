@@ -97,7 +97,7 @@ export const useTestTableModel = <T extends Type.Obj.Any = Type.Obj.Any>(): Test
     rows: filteredObjects,
     onInsertRow: addRow,
     onDeleteRows: handleDeleteRows,
-    onDeleteColumn: handleDeleteColumn,
+    onColumnDelete: handleDeleteColumn,
     onCellUpdate: handleCellUpdate,
     onRowOrderChange: handleRowOrderChange,
   });

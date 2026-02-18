@@ -1,16 +1,29 @@
 /**
  * @layer dx-components
+ * See lengths.ts for dx- sememes.
  */
 
 /** 
  * Container query root.
  */
+
 .size-container {
   container-type: size;
 }
 
 .container-max-width {
   @apply is-full max-is-container-max-width mli-auto;
+}
+
+/**
+ * Card
+ */
+
+.card-square {
+  inline-size: min(min(var(--radix-popper-available-width), var(--dx-card-max-width)),
+      min(var(--radix-popper-available-height), 100dvh));
+  block-size: min(min(var(--radix-popper-available-width), var(--dx-card-max-width)),
+      min(var(--radix-popper-available-height), 100dvh));
 }
 
 .card-default-width {
@@ -25,27 +38,12 @@
   @apply is-full max-is-card-max-width;
 }
 
-.popover-max-width {
-  @apply is-max max-is-popover-max-width;
-}
-
-.popover-card-width {
-  inline-size: min(var(--radix-popper-available-width), calc(var(--dx-popover-max-width) - 2 * var(--dx-hairLine)));
-}
-
-.popover-card-height {
-  block-size: min(var(--radix-popper-available-height), 100dvh);
-}
-
-.popover-square {
-  inline-size: min(min(var(--radix-popper-available-width), var(--dx-popover-max-width)),
-      min(var(--radix-popper-available-height), 100dvh));
-  block-size: min(min(var(--radix-popper-available-width), var(--dx-popover-max-width)),
-      min(var(--radix-popper-available-height), 100dvh));
-}
-
 .popover-card-max-width {
-  max-inline-size: min(var(--radix-popper-available-width), var(--dx-popover-max-width));
+  inline-size: min(var(--radix-popper-available-width), var(--dx-card-max-width));
+}
+
+.popover-card-max-height {
+  block-size: min(var(--radix-popper-available-height), var(--dx-card-max-height));
 }
 
 @layer dx-components {

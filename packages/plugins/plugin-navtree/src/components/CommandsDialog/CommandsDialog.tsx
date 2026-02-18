@@ -4,8 +4,9 @@
 
 import React, { forwardRef, useMemo, useState } from 'react';
 
-import { Common } from '@dxos/app-framework';
-import { useAppGraph, useOperationInvoker } from '@dxos/app-framework/react';
+import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { LayoutOperation } from '@dxos/app-toolkit';
+import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Keyboard, keySymbols } from '@dxos/keyboard';
 import { Graph, Node, useActionRunner } from '@dxos/plugin-graph';
 import { useActions } from '@dxos/plugin-graph';
@@ -71,52 +72,50 @@ export const CommandsDialogContent = forwardRef<HTMLDivElement, CommandsDialogCo
       <Dialog.Content ref={forwardedRef}>
         <Dialog.Title>{t('commands dialog title', { ns: meta.id })}</Dialog.Title>
         <SearchList.Root onSearch={handleSearch}>
-          <div aria-label={t('command list input placeholder')} role='combobox' aria-expanded='true'>
+          <SearchList.Content>
             <SearchList.Input placeholder={t('command list input placeholder')} />
-            <SearchList.Content>
-              <SearchList.Viewport>
-                {results.map((action) => {
-                  const shortcut =
-                    typeof action.properties.keyBinding === 'string'
-                      ? action.properties.keyBinding
-                      : action.properties.keyBinding?.[getHostPlatform()];
+            <SearchList.Viewport>
+              {results.map((action) => {
+                const shortcut =
+                  typeof action.properties.keyBinding === 'string'
+                    ? action.properties.keyBinding
+                    : action.properties.keyBinding?.[getHostPlatform()];
 
-                  return (
-                    <SearchList.Item
-                      value={action.id}
-                      key={action.id}
-                      label={toLocalizedString(action.properties.label, t)}
-                      icon={action.properties.icon}
-                      suffix={shortcut ? keySymbols(shortcut).join('') : undefined}
-                      onSelect={() => {
-                        if (action.properties.disabled) {
-                          return;
+                return (
+                  <SearchList.Item
+                    value={action.id}
+                    key={action.id}
+                    label={toLocalizedString(action.properties.label, t)}
+                    icon={action.properties.icon}
+                    suffix={shortcut ? keySymbols(shortcut).join('') : undefined}
+                    onSelect={() => {
+                      if (action.properties.disabled) {
+                        return;
+                      }
+
+                      if (Node.isActionGroup(action)) {
+                        setSelected(action.id);
+                        return;
+                      }
+
+                      invokeSync(LayoutOperation.UpdateDialog, { state: false });
+                      setTimeout(() => {
+                        const node = Graph.getConnections(graph, group?.id ?? action.id, 'inbound')[0];
+                        if (node && Node.isAction(action)) {
+                          void runAction(action, { parent: node, caller: KEY_BINDING });
                         }
-
-                        if (Node.isActionGroup(action)) {
-                          setSelected(action.id);
-                          return;
-                        }
-
-                        invokeSync(Common.LayoutOperation.UpdateDialog, { state: false });
-                        setTimeout(() => {
-                          const node = Graph.getConnections(graph, group?.id ?? action.id, 'inbound')[0];
-                          if (node && Node.isAction(action)) {
-                            void runAction(action, { parent: node, caller: KEY_BINDING });
-                          }
-                        });
-                      }}
-                      classNames='flex items-center gap-2'
-                      disabled={action.properties.disabled}
-                      {...(action.properties?.testId && {
-                        'data-testid': action.properties.testId,
-                      })}
-                    />
-                  );
-                })}
-              </SearchList.Viewport>
-            </SearchList.Content>
-          </div>
+                      });
+                    }}
+                    classNames='flex items-center gap-2'
+                    disabled={action.properties.disabled}
+                    {...(action.properties?.testId && {
+                      'data-testid': action.properties.testId,
+                    })}
+                  />
+                );
+              })}
+            </SearchList.Viewport>
+          </SearchList.Content>
         </SearchList.Root>
         <div role='none' className='pli-cardSpacingInline pbe-cardSpacingBlock'>
           <Dialog.Close asChild>

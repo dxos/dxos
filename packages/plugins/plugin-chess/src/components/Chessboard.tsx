@@ -112,7 +112,7 @@ type ContentProps = ThemedClassName<PropsWithChildren<{ role?: Role }>>;
 const Content = ({ classNames, children, role }: ContentProps) => {
   return (
     <Gameboard.Content
-      classNames={mx(classNames, role === 'card--popover' && 'size-container popover-square')}
+      classNames={mx(classNames, role === 'card--popover' && 'size-container card-square')}
       grow={!role || role === 'card--extrinsic'}
       contain={!role || role === 'card--extrinsic' || role === 'card--popover'}
     >
@@ -125,11 +125,13 @@ const Content = ({ classNames, children, role }: ContentProps) => {
 // Board
 //
 
+const BOARD_NAME = 'Chessboard.Board';
+
 type BoardProps = NaturalChessboardProps;
 
 const Board = (props: BoardProps) => {
   const registry = useContext(RegistryContext);
-  const { model } = useGameboardContext<ChessModel>(Board.displayName);
+  const { model } = useGameboardContext<ChessModel>(BOARD_NAME);
 
   // Keyboard navigation.
   const ref = useRef<HTMLDivElement>(null);
@@ -167,7 +169,7 @@ const Board = (props: BoardProps) => {
   return <NaturalChessboard ref={ref} {...props} />;
 };
 
-Board.displayName = 'Chessboard.Board';
+Board.displayName = BOARD_NAME;
 
 //
 // Chessboard

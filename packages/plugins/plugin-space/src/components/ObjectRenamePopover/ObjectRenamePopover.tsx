@@ -4,8 +4,8 @@
 
 import React, { useCallback, useRef, useState } from 'react';
 
-import { Common } from '@dxos/app-framework';
-import { useOperationInvoker } from '@dxos/app-framework/react';
+import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { LayoutOperation } from '@dxos/app-toolkit';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { Button, Input, useTranslation } from '@dxos/react-ui';
@@ -27,7 +27,7 @@ export const ObjectRenamePopover = ({ object }: { object: Obj.Unknown }) => {
     } catch (err) {
       log.error('Failed to rename object', { err });
     }
-    void invokePromise(Common.LayoutOperation.UpdatePopover, { anchorId: '', state: false });
+    void invokePromise(LayoutOperation.UpdatePopover, { anchorId: '', state: false });
   }, [object, name, invokePromise]);
 
   return (

@@ -26,7 +26,7 @@ import { EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type QueueService } from '@dxos/protocols';
+import { type FeedProtocol } from '@dxos/protocols';
 import {
   ApiError,
   AuthorizationError,
@@ -66,6 +66,9 @@ export type ClientOptions = {
 
   /** When running in the host mode, a factory to create the worker for OPFS sqlite database. */
   createOpfsWorker?: () => Worker;
+
+  /** Path to SQLite database file for persistent indexing in Node/Bun. */
+  sqlitePath?: string;
 };
 
 /**
@@ -118,7 +121,7 @@ export class Client {
   private _shellClientProxy?: ProtoRpcPeer<ClientServices>;
   private _edgeHttpClient?: EdgeHttpClient = undefined;
   private _edgeApi?: ClientEdgeAPI = undefined;
-  private _queuesService?: QueueService = undefined;
+  private _queuesService?: FeedProtocol.QueueService = undefined;
 
   constructor(options: ClientOptions = {}) {
     if (
@@ -368,6 +371,7 @@ export class Client {
       createClientServices(this._config, {
         createWorker: this._options.createWorker,
         createOpfsWorker: this._options.createOpfsWorker,
+        sqlitePath: this._options.sqlitePath,
       }));
     this._iframeManager = this._options.shell
       ? new IFrameManager({ source: new URL(this._options.shell, window.location.origin) })

@@ -1,0 +1,11 @@
+/* Pseudo-classes not supported by Tailwind. */
+/* TODO(burdon): Scope with dx- class. */
+@layer components {
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-scrollbarThumbHover !important;
+  }
+
+  ::-webkit-scrollbar-thumb:active {
+    @apply bg-scrollbarThumbActive !important;
+  }
+}

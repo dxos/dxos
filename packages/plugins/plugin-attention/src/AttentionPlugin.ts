@@ -4,7 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { ActivationEvent, Capability, Common, Plugin } from '@dxos/app-framework';
+import { ActivationEvent, ActivationEvents, Capabilities, Capability, Plugin } from '@dxos/app-framework';
+import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { AttentionManager, SelectionManager } from '@dxos/react-ui-attention';
 
 import { Keyboard, OperationResolver, ReactContext } from './capabilities';
@@ -13,13 +14,14 @@ import { AttentionEvents } from './types';
 import { AttentionCapabilities } from './types';
 
 export const AttentionPlugin = Plugin.define(meta).pipe(
+  AppPlugin.addOperationResolverModule({ activate: OperationResolver }),
   Plugin.addModule({
     id: 'attention',
-    activatesOn: Common.ActivationEvent.Startup,
+    activatesOn: ActivationEvents.Startup,
     activatesAfter: [AttentionEvents.AttentionReady],
     activate: () =>
       Effect.gen(function* () {
-        const registry = yield* Capability.get(Common.Capability.AtomRegistry);
+        const registry = yield* Capability.get(Capabilities.AtomRegistry);
         const attention = new AttentionManager(registry);
         const selection = new SelectionManager(registry);
         setupDevtools(attention);
@@ -30,14 +32,13 @@ export const AttentionPlugin = Plugin.define(meta).pipe(
       }),
   }),
   Plugin.addModule({
-    activatesOn: Common.ActivationEvent.Startup,
+    activatesOn: ActivationEvents.Startup,
     activate: ReactContext,
   }),
   Plugin.addModule({
-    activatesOn: ActivationEvent.allOf(Common.ActivationEvent.AppGraphReady, AttentionEvents.AttentionReady),
+    activatesOn: ActivationEvent.allOf(AppActivationEvents.AppGraphReady, AttentionEvents.AttentionReady),
     activate: Keyboard,
   }),
-  Common.Plugin.addOperationResolverModule({ activate: OperationResolver }),
   Plugin.make,
 );
 

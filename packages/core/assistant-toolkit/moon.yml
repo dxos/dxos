@@ -4,8 +4,10 @@ tags:
   - ts-build
   - ts-test
   - pack
+  - memoized-llm
 tasks:
   compile:
     args:
       - '--entryPoint=src/index.ts'
       - '--entryPoint=src/testing/index.ts'
+      - '--platform=neutral'

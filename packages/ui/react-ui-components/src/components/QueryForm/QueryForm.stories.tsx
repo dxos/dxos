@@ -11,7 +11,7 @@ import { withClientProvider } from '@dxos/react-client/testing';
 import { Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
-import { Employer, Organization, Person, Project } from '@dxos/types';
+import { Employer, Organization, Person, Pipeline } from '@dxos/types';
 
 import { translations } from '../../translations';
 
@@ -21,7 +21,7 @@ const types = [
   // TODO(burdon): Get label from annotation.
   { value: Organization.Organization.typename, label: 'Organization' },
   { value: Person.Person.typename, label: 'Person' },
-  { value: Type.getTypename(Project.Project), label: 'Project' },
+  { value: Type.getTypename(Pipeline.Pipeline), label: 'Project' },
   { value: Employer.Employer.typename, label: 'Employer' },
 ];
 
@@ -48,10 +48,10 @@ const meta = {
     );
   },
   decorators: [
-    withTheme,
+    withTheme(),
     withLayout({ layout: 'column' }),
     withClientProvider({
-      types: [Organization.Organization, Person.Person, Project.Project, Employer.Employer],
+      types: [Organization.Organization, Person.Person, Pipeline.Pipeline, Employer.Employer],
       createIdentity: true,
     }),
   ],

@@ -4,10 +4,11 @@
 
 import { Atom, Registry } from '@effect-atom/atom-react';
 import * as Schema from 'effect/Schema';
+import type * as Types from 'effect/Types';
 
 import { Format, Obj } from '@dxos/echo';
 import {
-  type EchoSchema,
+  EchoSchema,
   type JsonProp,
   type JsonSchemaType,
   type Mutable,
@@ -49,7 +50,7 @@ export type ProjectionChangeCallback = {
   /** Callback to wrap projection mutations. */
   projection: (mutate: (mutableProjection: Mutable<View.Projection>) => void) => void;
   /** Callback to wrap schema mutations. */
-  schema: (mutate: (mutableSchema: Mutable<JsonSchemaType>) => void) => void;
+  schema: (mutate: (mutableSchema: Types.DeepMutable<JsonSchemaType>) => void) => void;
 };
 
 /**
@@ -63,14 +64,20 @@ export type ProjectionChangeCallback = {
  * @param view - The ECHO-backed view object.
  * @param schema - Optional EchoSchema. If not provided, schema mutations will throw.
  */
-export const createEchoChangeCallback = (view: View.View, schema?: EchoSchema): ProjectionChangeCallback => ({
+export const createEchoChangeCallback = (
+  view: View.View,
+  schema?: EchoSchema | Types.DeepMutable<JsonSchemaType>,
+): ProjectionChangeCallback => ({
   // Inside Obj.change, v is Mutable<View.View>, so v.projection is already mutable.
   projection: (mutate) => Obj.change(view, (v) => mutate(v.projection as Mutable<View.Projection>)),
-  schema: schema
-    ? (mutate) => Obj.change(schema.persistentSchema as unknown as Obj.Unknown, (s: any) => mutate(s.jsonSchema))
-    : () => {
-        throw new Error('Schema is not mutable');
-      },
+  schema:
+    schema instanceof EchoSchema
+      ? (mutate) => Obj.change(schema.persistentSchema as unknown as Obj.Unknown, (s: any) => mutate(s.jsonSchema))
+      : schema
+        ? (mutate) => mutate(schema)
+        : () => {
+            throw new Error('Schema is not mutable');
+          },
 });
 
 /**
@@ -80,10 +87,10 @@ export const createEchoChangeCallback = (view: View.View, schema?: EchoSchema): 
  */
 export const createDirectChangeCallback = (
   projection: View.Projection,
-  schema: JsonSchemaType,
+  schema: Types.DeepMutable<JsonSchemaType>,
 ): ProjectionChangeCallback => ({
   projection: (mutate) => mutate(projection as Mutable<View.Projection>),
-  schema: (mutate) => mutate(schema as Mutable<JsonSchemaType>),
+  schema: (mutate) => mutate(schema),
 });
 
 /**
@@ -397,11 +404,13 @@ export class ProjectionModel {
               projection.fields.push(clonedField);
             }
           } else {
-            Object.assign(
-              projection.fields[fieldIndex],
-              clonedField,
-              isRename ? { path: targetPropertyName } : undefined,
-            );
+            const existing = projection.fields[fieldIndex];
+            const updatedField: FieldType = {
+              ...existing,
+              ...clonedField,
+              ...(isRename ? { path: targetPropertyName } : undefined),
+            };
+            projection.fields[fieldIndex] = updatedField;
           }
         }
       });
@@ -444,7 +453,7 @@ export class ProjectionModel {
           format,
           ...jsonProperty,
           ...rest,
-        } as Mutable<JsonSchemaType>;
+        } as Types.DeepMutable<JsonSchemaType>;
         if (isRename) {
           delete baseSchema.properties[sourcePropertyName!];
 

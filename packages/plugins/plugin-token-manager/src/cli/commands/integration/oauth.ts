@@ -24,7 +24,12 @@ import { createEdgeClient } from '@dxos/functions-runtime/edge';
 import { type OAuthFlowResult } from '@dxos/protocols';
 import { type AccessToken } from '@dxos/types';
 
-import { type OAuthServerProvider, getRelayPageHtml, performOAuthFlow as performOAuthFlowShared } from '../../../oauth';
+import {
+  type OAuthServerProvider,
+  createFetchOAuthInitiator,
+  getRelayPageHtml,
+  performOAuthFlow as performOAuthFlowShared,
+} from '../../../oauth';
 
 import { type OAuthPreset } from './util';
 
@@ -186,5 +191,13 @@ export const performOAuthFlow = Effect.fn(function* (preset: OAuthPreset, access
   const edgeClient = createEdgeClient(client);
   const spaceId = yield* Database.spaceId;
 
-  yield* performOAuthFlowShared(preset, accessToken, edgeClient, spaceId, createBunServerProvider(), openBrowser);
+  yield* performOAuthFlowShared(
+    preset,
+    accessToken,
+    edgeClient,
+    spaceId,
+    createBunServerProvider(),
+    openBrowser,
+    createFetchOAuthInitiator(),
+  );
 });

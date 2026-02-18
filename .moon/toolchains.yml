@@ -2,6 +2,7 @@
 
 javascript:
   packageManager: pnpm
+  dedupeOnLockfileChange: false
 
 node: {}
 

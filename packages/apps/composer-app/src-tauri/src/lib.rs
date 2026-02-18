@@ -1,5 +1,6 @@
 //! Composer Tauri application entry point.
 
+#[cfg(desktop)]
 mod oauth;
 #[cfg(desktop)]
 mod window_state;
@@ -8,7 +9,9 @@ mod menubar;
 #[cfg(target_os = "macos")]
 mod spotlight;
 
+#[cfg(desktop)]
 use oauth::OAuthServerState;
+#[cfg(desktop)]
 use tauri::Manager;
 #[cfg(desktop)]
 use window_state::WindowState;
@@ -27,11 +30,23 @@ pub fn run() {
     #[cfg(target_os = "macos")]
     let builder = builder.plugin(tauri_nspanel::init());
 
+    // Initialize haptics plugin for mobile platforms.
+    // Initialize web-auth plugin for mobile (ASWebAuthenticationSession on iOS, Custom Tabs on Android).
+    #[cfg(mobile)]
+    let builder = builder
+        .plugin(tauri_plugin_haptics::init())
+        .plugin(tauri_plugin_web_auth::init());
+
+    // NOTE: iOS keyboard handling is done via KeyboardPlugin.swift which uses UIApplication.didBecomeActiveNotification
+    // to find the WKWebView and initialize the KeyboardObserver. No Rust registration needed.
+
     // Configure plugins and spotlight shortcut.
     let builder = {
         let builder = builder
             .plugin(tauri_plugin_os::init())
-            .plugin(tauri_plugin_shell::init());
+            .plugin(tauri_plugin_opener::init())
+            .plugin(tauri_plugin_shell::init())
+            .plugin(tauri_plugin_deep_link::init());
 
         // Spotlight panel and global shortcut are macOS-only.
         #[cfg(target_os = "macos")]
@@ -63,25 +78,23 @@ pub fn run() {
     };
 
     // Configure invoke handler with platform-specific commands.
-    #[cfg(target_os = "macos")]
+    #[cfg(desktop)]
     let builder = builder.invoke_handler(tauri::generate_handler![
         oauth::start_oauth_server,
         oauth::stop_oauth_server,
         oauth::get_oauth_result,
         oauth::initiate_oauth_flow,
+        #[cfg(target_os = "macos")]
         spotlight::hide_spotlight,
     ]);
 
-    #[cfg(not(target_os = "macos"))]
-    let builder = builder.invoke_handler(tauri::generate_handler![
-        oauth::start_oauth_server,
-        oauth::stop_oauth_server,
-        oauth::get_oauth_result,
-        oauth::initiate_oauth_flow,
-    ]);
+    #[cfg(mobile)]
+    let builder = builder.invoke_handler(tauri::generate_handler![]);
+
+    #[cfg(desktop)]
+    let builder = builder.manage(OAuthServerState::new());
 
     builder
-        .manage(OAuthServerState::new())
         .setup(move |app| {
             // Initialize logging in debug mode.
             if cfg!(debug_assertions) {

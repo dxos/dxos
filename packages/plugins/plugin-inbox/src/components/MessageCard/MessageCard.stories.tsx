@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
-import { type SurfaceComponentProps } from '@dxos/app-framework/react';
+import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { faker } from '@dxos/random';
 import { withTheme } from '@dxos/react-ui/testing';
@@ -54,7 +54,7 @@ const MessageCardStory = ({ role }: Pick<SurfaceComponentProps<Message.Message>,
 const meta = {
   title: 'plugins/plugin-inbox/MessageCard',
   component: MessageCardStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'centered',
   },

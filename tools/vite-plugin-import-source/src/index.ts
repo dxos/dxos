@@ -56,7 +56,7 @@ const PluginImportSource = ({
       async handler(source, importer) {
         // Check if source looks like an npm package name or a subpath import (#).
         if (!source.match(/^[a-zA-Z@#][a-zA-Z0-9._-]*(\/[a-zA-Z0-9._-]+)*$/)) {
-          return null;
+          return null; // Skip to next resolver.
         }
 
         // Filter by package name pattern before resolving.
@@ -100,10 +100,8 @@ const PluginImportSource = ({
       // Strip query params (e.g., ?v=123).
       const filePath = id.split('?')[0];
 
-      if (isMatch(filePath)) {
-        this.addWatchFile(filePath);
-        verbose && console.log(`[watch] ${filePath}`);
-      }
+      this.addWatchFile(filePath);
+      verbose && console.log(`[watch] ${filePath}`);
 
       // Return null to let Vite load the file normally.
       return null;

@@ -5,20 +5,18 @@
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo } from 'react';
 
-import { Common } from '@dxos/app-framework';
-import { useOperationInvoker } from '@dxos/app-framework/react';
+import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { LayoutOperation } from '@dxos/app-toolkit';
 import { Obj } from '@dxos/echo';
 import { Function, Script } from '@dxos/functions';
 import { SpaceOperation } from '@dxos/plugin-space/types';
 import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
 import { Button, IconButton, useTranslation } from '@dxos/react-ui';
-import { controlItemClasses } from '@dxos/react-ui-form';
+import { Settings } from '@dxos/react-ui-form';
 import { List } from '@dxos/react-ui-list';
 import { ghostHover, mx } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
-
-const grid = 'grid grid-cols-[1fr_auto] min-bs-[2.5rem]';
 
 export type FunctionsPanelProps = {
   space: Space;
@@ -60,7 +58,7 @@ export const FunctionsPanel = ({ space }: FunctionsPanelProps) => {
     (func: Function.Function) => {
       const script = functionToScriptMap[func.id];
       if (script) {
-        void invokePromise(Common.LayoutOperation.Open, { subject: [Obj.getDXN(script).toString()] });
+        void invokePromise(LayoutOperation.Open, { subject: [Obj.getDXN(script).toString()] });
       }
     },
     [functionToScriptMap, invokePromise],
@@ -72,7 +70,7 @@ export const FunctionsPanel = ({ space }: FunctionsPanelProps) => {
   );
 
   return (
-    <div role='none' className={mx(controlItemClasses)}>
+    <Settings.Container>
       {functions.length > 0 && (
         <List.Root<Function.Function> items={functions} isItem={Schema.is(Function.Function)} getId={(func) => func.id}>
           {({ items }) => (
@@ -81,7 +79,10 @@ export const FunctionsPanel = ({ space }: FunctionsPanelProps) => {
                 <List.Item<Function.Function>
                   key={func.id}
                   item={func}
-                  classNames={mx(grid, ghostHover, 'items-center', 'pli-2', 'min-bs-[3rem]')}
+                  classNames={mx(
+                    'grid grid-cols-[1fr_auto] min-bs-[2.5rem] min-bs-[3rem] pli-2 items-center',
+                    ghostHover,
+                  )}
                 >
                   <div className='flex flex-col truncate'>
                     <List.ItemTitle classNames='truncate'>{func.name}</List.ItemTitle>
@@ -105,7 +106,7 @@ export const FunctionsPanel = ({ space }: FunctionsPanelProps) => {
         </List.Root>
       )}
 
-      {functions.length === 0 && <div className='text-center plb-4 text-gray-500'>{t('no functions found')}</div>}
-    </div>
+      {functions.length === 0 && <div className='text-center plb-4 text-description'>{t('no functions found')}</div>}
+    </Settings.Container>
   );
 };

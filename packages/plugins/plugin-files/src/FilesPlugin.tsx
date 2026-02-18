@@ -4,7 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { ActivationEvent, Capability, Common, Plugin } from '@dxos/app-framework';
+import { ActivationEvent, ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
+import { AppActivationEvents, AppCapabilities, AppPlugin } from '@dxos/app-toolkit';
 import { AttentionEvents } from '@dxos/plugin-attention';
 import { Node } from '@dxos/plugin-graph';
 
@@ -15,34 +16,34 @@ import { FileCapabilities } from './types';
 
 // TODO(burdon): Rename package plugin-file (singular).
 
-const SettingsReady = Common.ActivationEvent.createSettingsEvent(FileCapabilities.Settings.identifier);
+const SettingsReady = AppActivationEvents.createSettingsEvent(FileCapabilities.Settings.identifier);
 
 export const FilesPlugin = Plugin.define(meta).pipe(
-  Common.Plugin.addSettingsModule({ activate: FileSettings, activatesAfter: [SettingsReady] }),
+  AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
+  AppPlugin.addOperationResolverModule({ activate: OperationResolver }),
+  AppPlugin.addSettingsModule({ activate: FileSettings, activatesAfter: [SettingsReady] }),
+  AppPlugin.addSurfaceModule({ activate: ReactSurface }),
+  AppPlugin.addTranslationsModule({ translations }),
   Plugin.addModule({
     id: 'state',
     activatesOn: ActivationEvent.allOf(
-      Common.ActivationEvent.OperationInvokerReady,
+      ActivationEvents.OperationInvokerReady,
       SettingsReady,
       AttentionEvents.AttentionReady,
     ),
     activate: FileState,
   }),
-  Common.Plugin.addTranslationsModule({ translations }),
   Plugin.addModule({
     id: 'markdown',
     activatesOn: SettingsReady,
     activate: Markdown,
   }),
-  Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
-  Common.Plugin.addOperationResolverModule({ activate: OperationResolver }),
-  Common.Plugin.addAppGraphModule({ activate: AppGraphBuilder }),
   Plugin.addModule({
     id: 'app-graph-serializer',
-    activatesOn: Common.ActivationEvent.AppGraphReady,
+    activatesOn: AppActivationEvents.AppGraphReady,
     activate: () =>
       Effect.succeed(
-        Capability.contributes(Common.Capability.AppGraphSerializer, [
+        Capability.contributes(AppCapabilities.AppGraphSerializer, [
           {
             inputType: Node.RootType,
             outputType: 'text/directory',

@@ -42,6 +42,9 @@
       "path": "../../core/echo/echo-generator"
     },
     {
+      "path": "../../core/functions"
+    },
+    {
       "path": "../../core/functions-runtime"
     },
     {
@@ -58,6 +61,9 @@
     },
     {
       "path": "../../sdk/app-framework"
+    },
+    {
+      "path": "../../sdk/app-toolkit"
     },
     {
       "path": "../../sdk/client"

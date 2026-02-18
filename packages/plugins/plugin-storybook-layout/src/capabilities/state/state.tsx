@@ -5,7 +5,8 @@
 import { Atom } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common } from '@dxos/app-framework';
+import { Capability } from '@dxos/app-framework';
+import { AppCapabilities } from '@dxos/app-toolkit';
 
 import { LayoutState } from '../../types';
 
@@ -47,12 +48,12 @@ export default Capability.makeModule(({ initialState }: { initialState?: Partial
         get scrollIntoView() {
           return undefined;
         },
-      } satisfies Common.Capability.Layout;
+      } satisfies AppCapabilities.Layout;
     }).pipe(Atom.keepAlive);
 
     return [
       Capability.contributes(LayoutState, stateAtom),
-      Capability.contributes(Common.Capability.Layout, layoutAtom),
+      Capability.contributes(AppCapabilities.Layout, layoutAtom),
     ];
   }),
 );

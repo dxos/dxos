@@ -4,13 +4,14 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { Common } from '@dxos/app-framework';
-import { type SurfaceComponentProps, useCapabilities, useOperationInvoker } from '@dxos/app-framework/react';
+import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
+import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
+import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { Filter, Obj } from '@dxos/echo';
 import { useClient } from '@dxos/react-client';
 import { getSpace, useQuery } from '@dxos/react-client/echo';
-import { Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { Card, Layout, Mosaic, type StackTileComponent } from '@dxos/react-ui-mosaic';
+import { Layout, ScrollArea, Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Card, Mosaic, type StackTileComponent } from '@dxos/react-ui-mosaic';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-searchlist';
 import { Collection } from '@dxos/schema';
 import { getStyles } from '@dxos/ui-theme';
@@ -21,7 +22,7 @@ import { meta } from '../meta';
  * Hook to resolve metadata (icon, iconHue, etc.) for objects based on their typename.
  */
 const useMetadataResolver = () => {
-  const allMetadata = useCapabilities(Common.Capability.Metadata);
+  const allMetadata = useCapabilities(AppCapabilities.Metadata);
   return useCallback((typename: string) => allMetadata.find((m) => m.id === typename)?.metadata ?? {}, [allMetadata]);
 };
 
@@ -41,9 +42,11 @@ export const CollectionArticle = ({ subject }: SurfaceComponentProps<Collection.
         </Toolbar.Root>
         <SearchList.Content>
           <Mosaic.Container asChild>
-            <Mosaic.Viewport padding>
-              <Mosaic.Stack items={items} getId={(item) => item.id} Tile={ObjectTile} />
-            </Mosaic.Viewport>
+            <ScrollArea.Root orientation='vertical'>
+              <ScrollArea.Viewport classNames='p-2'>
+                <Mosaic.Stack items={items} getId={(item) => item.id} Tile={ObjectTile} />
+              </ScrollArea.Viewport>
+            </ScrollArea.Root>
           </Mosaic.Container>
         </SearchList.Content>
       </SearchList.Root>
@@ -69,7 +72,7 @@ const ObjectTile: StackTileComponent<ObjectItem> = ({ data: item }) => {
   const styles = item.iconHue ? getStyles(item.iconHue) : undefined;
 
   const handleClick = () => {
-    invokeSync(Common.LayoutOperation.Open, { subject: [item.id] });
+    invokeSync(LayoutOperation.Open, { subject: [item.id] });
   };
 
   return (

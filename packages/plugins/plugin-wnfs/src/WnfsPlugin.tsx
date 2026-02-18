@@ -4,7 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common, Plugin } from '@dxos/app-framework';
+import { Capability, Plugin } from '@dxos/app-framework';
+import { AppPlugin } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/operation';
 import { ClientEvents } from '@dxos/plugin-client';
 import { MarkdownEvents } from '@dxos/plugin-markdown';
@@ -17,22 +18,7 @@ import { translations } from './translations';
 import { WnfsAction, WnfsCapabilities, WnfsFile, WnfsOperation } from './types';
 
 export const WnfsPlugin = Plugin.define(meta).pipe(
-  Plugin.addModule({
-    id: 'blockstore',
-    activatesOn: ClientEvents.ClientReady,
-    activate: Blockstore,
-  }),
-  Plugin.addModule({
-    id: 'instances',
-    activatesOn: ClientEvents.ClientReady,
-    activate: () =>
-      Effect.sync(() => {
-        const instances: WnfsCapabilities.Instances = {};
-        return Capability.contributes(WnfsCapabilities.Instances, instances);
-      }),
-  }),
-  Common.Plugin.addTranslationsModule({ translations }),
-  Common.Plugin.addMetadataModule({
+  AppPlugin.addMetadataModule({
     metadata: {
       id: WnfsFile.File.typename,
       metadata: {
@@ -48,7 +34,24 @@ export const WnfsPlugin = Plugin.define(meta).pipe(
       },
     },
   }),
-  Common.Plugin.addSchemaModule({ schema: [WnfsFile.File] }),
+  AppPlugin.addOperationResolverModule({ activate: OperationResolver }),
+  AppPlugin.addSchemaModule({ schema: [WnfsFile.File] }),
+  AppPlugin.addSurfaceModule({ activate: ReactSurface }),
+  AppPlugin.addTranslationsModule({ translations }),
+  Plugin.addModule({
+    id: 'blockstore',
+    activatesOn: ClientEvents.ClientReady,
+    activate: Blockstore,
+  }),
+  Plugin.addModule({
+    id: 'instances',
+    activatesOn: ClientEvents.ClientReady,
+    activate: () =>
+      Effect.sync(() => {
+        const instances: WnfsCapabilities.Instances = {};
+        return Capability.contributes(WnfsCapabilities.Instances, instances);
+      }),
+  }),
   Plugin.addModule({
     id: 'on-space-created',
     activatesOn: SpaceEvents.SpaceCreated,
@@ -69,7 +72,5 @@ export const WnfsPlugin = Plugin.define(meta).pipe(
     activatesOn: MarkdownEvents.SetupExtensions,
     activate: Markdown,
   }),
-  Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
-  Common.Plugin.addOperationResolverModule({ activate: OperationResolver }),
   Plugin.make,
 );

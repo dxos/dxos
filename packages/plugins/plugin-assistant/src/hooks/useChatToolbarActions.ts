@@ -6,7 +6,8 @@ import { Atom } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 import { useMemo } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/react';
+import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { Chat } from '@dxos/assistant-toolkit';
 import { Filter, Obj, Query } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
@@ -15,10 +16,10 @@ import { MenuBuilder, useMenuActions } from '@dxos/react-ui-menu';
 
 import { useChatContext } from '../components';
 import { meta } from '../meta';
-import { Assistant, AssistantOperation } from '../types';
+import { AssistantOperation } from '../types';
 
 export type ChatToolbarActionsProps = {
-  chat?: Assistant.Chat;
+  chat?: Chat.Chat;
   companionTo?: Obj.Unknown;
 };
 
@@ -26,7 +27,7 @@ export const useChatToolbarActions = ({ chat, companionTo }: ChatToolbarActionsP
   const { invoke } = useOperationInvoker();
   const { db } = useChatContext('useChatToolbarActions');
   const query = companionTo
-    ? Query.select(Filter.id(companionTo.id)).targetOf(Assistant.CompanionTo).source()
+    ? Query.select(Filter.id(companionTo.id)).targetOf(Chat.CompanionTo).source()
     : Query.select(Filter.nothing());
 
   // TODO(wittjosiah): Query in react vs query in atom?
@@ -98,7 +99,7 @@ export const useChatToolbarActions = ({ chat, companionTo }: ChatToolbarActionsP
                   builder.action(
                     chat.id,
                     {
-                      label: Obj.getLabel(chat) ?? ['object name placeholder', { ns: Assistant.Chat.typename }],
+                      label: Obj.getLabel(chat) ?? ['object name placeholder', { ns: Chat.Chat.typename }],
                     },
                     () =>
                       Effect.gen(function* () {

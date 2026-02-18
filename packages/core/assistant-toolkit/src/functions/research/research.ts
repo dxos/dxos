@@ -13,13 +13,7 @@ import * as Schema from 'effect/Schema';
 import * as String from 'effect/String';
 
 import { AiService, ConsolePrinter } from '@dxos/ai';
-import {
-  AiSession,
-  GenerationObserver,
-  createToolkit,
-  makeToolExecutionServiceFromFunctions,
-  makeToolResolverFromFunctions,
-} from '@dxos/assistant';
+import { AiSession, GenerationObserver, GenericToolkit, ToolExecutionServices, createToolkit } from '@dxos/assistant';
 import { Template } from '@dxos/blueprints';
 import { type DXN, Entity, Obj } from '@dxos/echo';
 import { Database } from '@dxos/echo';
@@ -146,15 +140,14 @@ export default defineFunction({
       };
     },
     Effect.provide(
-      Layer.mergeAll(
-        AiService.model('@anthropic/claude-sonnet-4-0'),
-        // TODO(dmaretskyi): Extract.
-        makeToolResolverFromFunctions([exaFunction, exaMockFunction], Toolkit.make()),
-        makeToolExecutionServiceFromFunctions(Toolkit.make() as any, Layer.empty as any),
-      ).pipe(
+      Layer.mergeAll(AiService.model('@anthropic/claude-sonnet-4-0'), ToolExecutionServices).pipe(
         Layer.provide(
           // TODO(dmaretskyi): This should be provided by environment.
-          Layer.mergeAll(FunctionInvocationServiceLayerTestMocked({ functions: [exaFunction, exaMockFunction] })),
+
+          Layer.mergeAll(
+            GenericToolkit.providerEmpty,
+            FunctionInvocationServiceLayerTestMocked({ functions: [exaFunction, exaMockFunction] }),
+          ),
         ),
       ),
     ),

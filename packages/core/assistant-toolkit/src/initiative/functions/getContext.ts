@@ -8,9 +8,9 @@ import * as Schema from 'effect/Schema';
 import { AiContextService } from '@dxos/assistant';
 import { Database, Obj } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
-import { Text } from '@dxos/schema';
 
-import * as Initiative from '../InitiativeSchema';
+import { formatPlan } from '../plan';
+import { getFromChatContext } from '../util';
 
 export default defineFunction({
   key: 'dxos.org/function/initiative/get-context',
@@ -18,48 +18,28 @@ export default defineFunction({
   description: 'Get the context of an initiative.',
   inputSchema: Schema.Struct({}),
   outputSchema: Schema.Struct({
-    spec: Schema.Struct({
-      dxn: Schema.String,
-      content: Schema.String,
-    }),
-    plan: Schema.Struct({
-      dxn: Schema.String,
-      content: Schema.String,
-    }),
+    id: Schema.String,
+    name: Schema.String,
+    spec: Schema.String,
+    plan: Schema.String,
     artifacts: Schema.Array(
       Schema.Struct({
         name: Schema.String,
-        type: Schema.String,
-        dxn: Schema.String,
+        type: Schema.optional(Schema.String),
+        dxn: Schema.optional(Schema.String),
       }),
     ),
   }),
   services: [AiContextService],
-  handler: Effect.fnUntraced(function* ({ data }) {
-    const { binder } = yield* AiContextService;
-
-    const initiative = binder
-      .getObjects()
-      .filter((_) => Obj.instanceOf(Initiative.Initiative, _))
-      .at(0);
-    if (!initiative) {
-      throw new Error('No initiative in context.');
-    }
-
-    const spec = initiative.artifacts.find((artifact) => artifact.name === Initiative.SPEC_ARTIFACT_NAME);
-    const plan = initiative.artifacts.find((artifact) => artifact.name === Initiative.PLAN_ARTIFACT_NAME);
-    const specObj = !spec ? undefined : yield* Database.resolve(spec.data, Text.Text);
-    const planObj = !plan ? undefined : yield* Database.resolve(plan.data, Text.Text);
+  handler: Effect.fnUntraced(function* ({ data: _data }) {
+    const initiative = yield* getFromChatContext;
 
     return {
-      spec: {
-        dxn: spec?.data.dxn.toString(),
-        content: specObj?.content ?? 'No spec found.',
-      },
-      plan: {
-        dxn: plan?.data.dxn.toString(),
-        content: planObj?.content ?? 'No plan found.',
-      },
+      id: initiative.id,
+      name: initiative.name,
+      spec: yield* initiative.spec.pipe(Database.load).pipe(Effect.map((_) => _.content)),
+      plan: yield* initiative.plan?.pipe(Database.load).pipe(Effect.map(formatPlan)) ??
+        Effect.succeed('No plan found.'),
       artifacts: yield* Effect.forEach(initiative.artifacts, (artifact) =>
         Effect.gen(function* () {
           return {
@@ -70,5 +50,5 @@ export default defineFunction({
         }),
       ),
     };
-  }) as any, // TODO(dmaretskyi): Services don't align -- need to refactor how functions are defined.
+  }, AiContextService.fixFunctionHandlerType),
 });

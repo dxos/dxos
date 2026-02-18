@@ -6,14 +6,16 @@ import { Atom, RegistryContext } from '@effect-atom/atom-react';
 import * as Match from 'effect/Match';
 import React, { forwardRef, useCallback, useContext, useMemo, useRef } from 'react';
 
-import { Common } from '@dxos/app-framework';
-import { type SurfaceComponentProps, useAppGraph, useOperationInvoker } from '@dxos/app-framework/react';
+import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { LayoutOperation } from '@dxos/app-toolkit';
+import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
+import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { type Database, Filter, Obj, Order, Query, type QueryAST, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { SpaceOperation } from '@dxos/plugin-space/types';
 import { useQuery, useSchema } from '@dxos/react-client/echo';
-import { Layout } from '@dxos/react-ui-mosaic';
+import { Layout } from '@dxos/react-ui';
 import {
   Table as TableComponent,
   type TableController,
@@ -102,9 +104,7 @@ export const TableContainer = forwardRef<HTMLDivElement, TableContainerProps>(
     const handleRowAction = useCallback(
       (actionId: string, data: any) =>
         Match.value(actionId).pipe(
-          Match.when('open', () =>
-            invokePromise(Common.LayoutOperation.Open, { subject: [Obj.getDXN(data).toString()] }),
-          ),
+          Match.when('open', () => invokePromise(LayoutOperation.Open, { subject: [Obj.getDXN(data).toString()] })),
           Match.orElseAbsurd,
         ),
       [invokePromise],
@@ -132,7 +132,7 @@ export const TableContainer = forwardRef<HTMLDivElement, TableContainerProps>(
       rowActions,
       onInsertRow: addRow,
       onDeleteRows: handleDeleteRows,
-      onDeleteColumn: handleDeleteColumn,
+      onColumnDelete: handleDeleteColumn,
       onCellUpdate: handleCellUpdate,
       onRowAction: handleRowAction,
       onRowOrderChange: handleRowOrderChange,

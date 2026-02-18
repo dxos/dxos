@@ -175,11 +175,11 @@ export const ContextProtocolProvider = <T extends UnknownContext>({
     [context],
   );
 
-  // Notify subscribers when value changes
+  // Notify subscribers when value changes.
   useEffect(() => {
     // Skip notification if value hasn't changed? React does this for us if we use dependencies correctly?
     // No, we need to imperatively call callbacks.
-    // value constraint is in the dependency array
+    // value constraint is in the dependency array.
 
     for (const ref of subscriptionRefs) {
       const callback = ref.deref();
@@ -203,7 +203,7 @@ export const ContextProtocolProvider = <T extends UnknownContext>({
     el.addEventListener(CONTEXT_REQUEST_EVENT, handleContextRequestEvent);
     el.addEventListener(CONTEXT_PROVIDER_EVENT, handleContextProviderEvent);
 
-    // Announce provider
+    // Announce provider.
     el.dispatchEvent(new ContextProviderEvent(context, el));
 
     return () => {
@@ -215,7 +215,7 @@ export const ContextProtocolProvider = <T extends UnknownContext>({
 
   return (
     <ContextRequestHandlerContext.Provider value={handleRequest}>
-      <div ref={containerRef} style={{ display: 'contents' }}>
+      <div role='none' className='contents' ref={containerRef}>
         {children}
       </div>
     </ContextRequestHandlerContext.Provider>

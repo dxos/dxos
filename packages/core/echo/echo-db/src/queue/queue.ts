@@ -11,7 +11,7 @@ import { defineHiddenProperty } from '@dxos/echo/internal';
 import { assertArgument, failedInvariant } from '@dxos/invariant';
 import { type DXN, type ObjectId, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type QueueService } from '@dxos/protocols';
+import { type FeedProtocol } from '@dxos/protocols';
 
 import { Filter, Query, QueryResultImpl } from '../query';
 
@@ -34,7 +34,6 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
 
   public readonly updated = new Event();
 
-  // TODO(dmaretskyi): This task occasionally fails with "The database connection is not open" error in tests -- some issue with teardown ordering.
   private readonly _refreshTask = new DeferredTask(this._ctx, async () => {
     const thisRefreshId = ++this._refreshId;
     let changed = false;
@@ -79,7 +78,11 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
         log.info('queue refresh', { changed, objects: objects?.length ?? 0, refreshId: thisRefreshId });
       this._objects = decodedObjects as T[];
     } catch (err) {
-      log.catch(err);
+      // TODO(dmaretskyi): This task occasionally fails with "The database connection is not open" error in tests -- some issue with teardown ordering.
+      //                   We should find the root cause and fix it instead of muting the error.
+      if (!isSqliteNotOpenError(err)) {
+        log.catch(err);
+      }
       this._error = err as Error;
     } finally {
       this._isLoading = false;
@@ -106,7 +109,7 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
   private _querying = false;
 
   constructor(
-    private readonly _service: QueueService,
+    private readonly _service: FeedProtocol.QueueService,
     private readonly _refResolver: Ref.Resolver,
     private readonly _dxn: DXN,
   ) {
@@ -340,3 +343,5 @@ const objectSetChanged = (before: Entity.Unknown[], after: Entity.Unknown[]) => 
   // TODO(dmaretskyi):  We might want to compare the objects data.
   return before.some((item, index) => item.id !== after[index].id);
 };
+
+const isSqliteNotOpenError = (err: any) => err.cause?.message?.includes('The database connection is not open');

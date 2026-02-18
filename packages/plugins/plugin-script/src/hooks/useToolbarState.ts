@@ -2,8 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom, RegistryContext, useAtomValue } from '@effect-atom/atom-react';
-import { useContext, useMemo } from 'react';
+import { Atom } from '@effect-atom/atom-react';
+import { useMemo } from 'react';
+
+import { Capabilities } from '@dxos/app-framework';
+import { useCapability } from '@dxos/app-framework/ui';
 
 import { type DeployState } from './deploy';
 
@@ -16,11 +19,9 @@ export type ScriptToolbarStateStore = {
   set: <K extends keyof ScriptToolbarState>(key: K, value: ScriptToolbarState[K]) => void;
 };
 
-// TODO(burdon): Replace with context provider?
 export const useToolbarState = (initialState: ScriptToolbarState = {}): ScriptToolbarStateStore => {
-  const registry = useContext(RegistryContext);
+  const registry = useCapability(Capabilities.AtomRegistry);
   const atom = useMemo(() => Atom.make<ScriptToolbarState>(initialState), []);
-  const value = useAtomValue(atom);
 
   return useMemo(
     () => ({
@@ -35,6 +36,6 @@ export const useToolbarState = (initialState: ScriptToolbarState = {}): ScriptTo
         registry.set(atom, { ...registry.get(atom), [key]: v });
       },
     }),
-    [atom, registry, value],
+    [atom, registry],
   );
 };

@@ -10,6 +10,9 @@
       "path": "packages/apps/composer-crx/tsconfig.json"
     },
     {
+      "path": "packages/apps/composer-dxos-org/tsconfig.json"
+    },
+    {
       "path": "packages/apps/testbench-app/tsconfig.json"
     },
     {
@@ -179,9 +182,6 @@
     },
     {
       "path": "packages/core/echo/index-core/tsconfig.json"
-    },
-    {
-      "path": "packages/core/echo/indexing/tsconfig.json"
     },
     {
       "path": "packages/core/functions/tsconfig.json"
@@ -355,13 +355,13 @@
       "path": "packages/plugins/plugin-outliner/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-pipeline/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-presenter/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-preview/tsconfig.json"
-    },
-    {
-      "path": "packages/plugins/plugin-project/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-pwa/tsconfig.json"
@@ -374,6 +374,9 @@
     },
     {
       "path": "packages/plugins/plugin-search/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-settings/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-sheet/tsconfig.json"
@@ -431,6 +434,9 @@
     },
     {
       "path": "packages/sdk/app-solid/tsconfig.json"
+    },
+    {
+      "path": "packages/sdk/app-toolkit/tsconfig.json"
     },
     {
       "path": "packages/sdk/client/tsconfig.json"

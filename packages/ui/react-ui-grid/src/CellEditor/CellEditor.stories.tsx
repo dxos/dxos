@@ -70,7 +70,7 @@ const meta = {
   title: 'ui/react-ui-grid/CellEditor',
   component: CellEditor,
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'centered',
   },

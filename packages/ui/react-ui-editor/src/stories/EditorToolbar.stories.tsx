@@ -91,7 +91,7 @@ const DefaultStory = ({ autoFocus, initialValue, placeholder }: StoryProps) => {
 const meta = {
   title: 'ui/react-ui-editor/EditorToolbar',
   render: DefaultStory,
-  decorators: [withRegistry, withTheme],
+  decorators: [withRegistry, withTheme()],
   parameters: {
     layout: 'fullscreen',
     translations,

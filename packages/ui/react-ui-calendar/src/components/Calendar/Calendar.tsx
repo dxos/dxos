@@ -101,6 +101,8 @@ const CalendarRoot = forwardRef<CalendarController, CalendarRootProps>(
 // Viewport
 //
 
+const CALENDAR_VIEWPORT_NAME = 'CalendarContent';
+
 type CalendarViewportProps = PropsWithChildren<ThemedClassName>;
 
 const CalendarViewport = ({ children, classNames }: CalendarViewportProps) => {
@@ -111,17 +113,19 @@ const CalendarViewport = ({ children, classNames }: CalendarViewportProps) => {
   );
 };
 
-CalendarViewport.displayName = 'CalendarContent';
+CalendarViewport.displayName = CALENDAR_VIEWPORT_NAME;
 
 //
 // Header
 //
 
+const CALENDAR_TOOLBAR_NAME = 'CalendarHeader';
+
 type CalendarToolbarProps = ThemedClassName;
 
 const CalendarToolbar = ({ classNames }: CalendarToolbarProps) => {
   const { t } = useTranslation(translationKey);
-  const { weekStartsOn, event, index, selected } = useCalendarContext(CalendarToolbar.displayName);
+  const { weekStartsOn, event, index, selected } = useCalendarContext(CALENDAR_TOOLBAR_NAME);
   const top = useMemo(() => getDate(start, index ?? 0, 6, weekStartsOn), [index, weekStartsOn]);
   const today = useMemo(() => new Date(), []);
 
@@ -152,7 +156,7 @@ const CalendarToolbar = ({ classNames }: CalendarToolbarProps) => {
   );
 };
 
-CalendarToolbar.displayName = 'CalendarHeader';
+CalendarToolbar.displayName = CALENDAR_TOOLBAR_NAME;
 
 //
 // Grid
@@ -160,13 +164,15 @@ CalendarToolbar.displayName = 'CalendarHeader';
 // TODO(burdon): Drag range.
 //
 
+const CALENDAR_GRID_NAME = 'CalendarGrid';
+
 type CalendarGridProps = ThemedClassName<{
   rows?: number;
   onSelect?: (event: { date: Date }) => void;
 }>;
 
 const CalendarGrid = ({ classNames, rows, onSelect }: CalendarGridProps) => {
-  const { weekStartsOn, event, setIndex, selected, setSelected } = useCalendarContext(CalendarGrid.displayName);
+  const { weekStartsOn, event, setIndex, selected, setSelected } = useCalendarContext(CALENDAR_GRID_NAME);
   const { ref: containerRef, width = 0, height = 0 } = useResizeDetector();
   const maxHeight = rows ? rows * size : undefined;
   const listRef = useRef<List>(null);
@@ -302,7 +308,7 @@ const CalendarGrid = ({ classNames, rows, onSelect }: CalendarGridProps) => {
   );
 };
 
-CalendarGrid.displayName = 'CalendarGrid';
+CalendarGrid.displayName = CALENDAR_GRID_NAME;
 
 //
 // Calendar

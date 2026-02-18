@@ -164,30 +164,32 @@ FormRoot.displayName = 'Form.Root';
 // Viewport
 //
 
-type FormViewportProps = ThemedClassName<PropsWithChildren<{}>>;
+const FORM_VIEWPORT_NAME = 'Form.Viewport';
 
-const FormViewport = ({ classNames, children }: FormViewportProps) => {
+type FormViewportProps = PropsWithChildren<{}>;
+
+// TODO(burdon): Ref and props (allow asChild).
+const FormViewport = ({ children }: FormViewportProps) => {
   return (
-    <ScrollArea.Root>
-      <ScrollArea.Viewport classNames={['plb-cardSpacingBlock', classNames]}>{children}</ScrollArea.Viewport>
-      <ScrollArea.Scrollbar orientation='vertical'>
-        <ScrollArea.Thumb />
-      </ScrollArea.Scrollbar>
+    <ScrollArea.Root orientation='vertical'>
+      <ScrollArea.Viewport>{children}</ScrollArea.Viewport>
     </ScrollArea.Root>
   );
 };
 
-FormViewport.displayName = 'Form.Viewport';
+FormViewport.displayName = FORM_VIEWPORT_NAME;
 
 //
 // Content
 //
 
+const FORM_CONTENT_NAME = 'Form.Content';
+
 type FormContentProps = ThemedClassName<PropsWithChildren<{}>>;
 
 // TOOD(burdon): Figure out nesting (indent and testId).
 const FormContent = ({ classNames, children }: FormContentProps) => {
-  const { form, testId } = useFormContext(FormContent.displayName);
+  const { form, testId } = useFormContext(FORM_CONTENT_NAME);
   const ref = useRef<HTMLDivElement>(null);
   useKeyHandler(ref.current, form);
 
@@ -203,25 +205,29 @@ const FormContent = ({ classNames, children }: FormContentProps) => {
   );
 };
 
-FormContent.displayName = 'Form.Content';
+FormContent.displayName = FORM_CONTENT_NAME;
 
 //
 // FieldSet
 //
 
+const FORM_FIELDSET_NAME = 'Form.FieldSet';
+
 type FormFieldSetProps = ThemedClassName<{}>;
 
 const FormFieldSet = ({ classNames }: FormFieldSetProps) => {
-  const { form, ...props } = useFormContext(FormFieldSet.displayName);
+  const { form, ...props } = useFormContext(FORM_FIELDSET_NAME);
 
   return <NaturalFormFieldSet classNames={classNames} schema={form.schema} {...props} />;
 };
 
-FormFieldSet.displayName = 'Form.FieldSet';
+FormFieldSet.displayName = FORM_FIELDSET_NAME;
 
 //
 // Actions
 //
+
+const FORM_ACTIONS_NAME = 'Form.Actions';
 
 type FormActionsProps = ThemedClassName<{}>;
 
@@ -231,7 +237,7 @@ const FormActions = ({ classNames }: FormActionsProps) => {
     form: { canSave, onSave, onCancel },
     readonly,
     layout,
-  } = useFormContext(FormActions.displayName);
+  } = useFormContext(FORM_ACTIONS_NAME);
 
   if (readonly || layout === 'static') {
     return null;
@@ -267,21 +273,23 @@ const FormActions = ({ classNames }: FormActionsProps) => {
   );
 };
 
-FormActions.displayName = 'Form.Actions';
+FormActions.displayName = FORM_ACTIONS_NAME;
 
 //
 // Submit
 //
 
-type FormSubmitProps = ThemedClassName<Partial<Pick<IconButtonProps, 'icon' | 'label'>>>;
+const FORM_SUBMIT_NAME = 'Form.Submit';
 
-const FormSubmit = ({ classNames, label, icon }: FormSubmitProps) => {
+type FormSubmitProps = ThemedClassName<Partial<Pick<IconButtonProps, 'icon' | 'label' | 'disabled'>>>;
+
+const FormSubmit = ({ classNames, label, icon, disabled }: FormSubmitProps) => {
   const { t } = useTranslation(translationKey);
   const {
     form: { canSave, onSave },
     readonly,
     layout,
-  } = useFormContext(FormSubmit.displayName);
+  } = useFormContext(FORM_SUBMIT_NAME);
 
   if (readonly || layout === 'static') {
     return null;
@@ -293,7 +301,7 @@ const FormSubmit = ({ classNames, label, icon }: FormSubmitProps) => {
         classNames='is-full'
         type='submit'
         variant='primary'
-        disabled={!canSave}
+        disabled={disabled ?? !canSave}
         icon={icon ?? 'ph--check--regular'}
         label={label ?? t('save button label')}
         onClick={onSave}
@@ -303,7 +311,7 @@ const FormSubmit = ({ classNames, label, icon }: FormSubmitProps) => {
   );
 };
 
-FormSubmit.displayName = 'Form.Submit';
+FormSubmit.displayName = FORM_SUBMIT_NAME;
 
 //
 // Form
@@ -328,5 +336,6 @@ export type {
   FormContentProps,
   FormFieldSetProps,
   FormActionsProps,
+  FormSubmitProps,
   FormFieldLabelProps as LabelProps,
 };

@@ -5,6 +5,7 @@ tags:
   - ts-test
   - pack
   - storybook
+  - memoized-llm
 tasks:
   compile:
     args:
@@ -15,3 +16,4 @@ tasks:
   test:
     inputs:
       - .storybook/*
+      - /tools/storybook-react/.storybook/main.ts

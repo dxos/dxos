@@ -4,18 +4,19 @@
 
 import React, { useMemo } from 'react';
 
-import { Surface, useAppGraph } from '@dxos/app-framework/react';
+import { Surface } from '@dxos/app-framework/ui';
+import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { useNode } from '@dxos/plugin-graph';
-import { Main as NaturalMain, useSidebars } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { mx } from '@dxos/ui-theme';
 
-import { useBannerProps, useNavbarActions, useSimpleLayoutState } from '../../hooks';
+import { useAppBarProps, useNavbarActions, useSimpleLayoutState } from '../../hooks';
 import { ContentError } from '../ContentError';
 import { ContentLoading } from '../ContentLoading';
 import { useLoadDescendents } from '../hooks';
+import { useMobileLayout } from '../MobileLayout/MobileLayout';
 
-import { Banner } from './Banner';
+import { AppBar } from './AppBar';
 import { NavBar } from './NavBar';
 
 const MAIN_NAME = 'SimpleLayout.Main';
@@ -27,14 +28,14 @@ export const Main = () => {
   const { state } = useSimpleLayoutState();
   const id = state.active ?? state.workspace;
   const attentionAttrs = useAttentionAttributes(id);
-  const { graph } = useAppGraph();
-  const node = useNode(graph, id);
-
-  // Ensures that children are loaded so that they are available to navigate to.
-  useLoadDescendents(id);
+  const { keyboardOpen } = useMobileLayout(MAIN_NAME);
+  const { actions, onAction } = useNavbarActions();
+  const appBarProps = useAppBarProps();
 
   const placeholder = useMemo(() => <ContentLoading />, []);
 
+  const { graph } = useAppGraph();
+  const node = useNode(graph, id);
   const data = useMemo(() => {
     return (
       node && {
@@ -46,29 +47,34 @@ export const Main = () => {
     );
   }, [id, node, node?.data, node?.properties, state.popoverAnchorId]);
 
-  const { drawerState } = useSidebars(MAIN_NAME);
-  const showNavBar = !state.isPopover && drawerState === 'closed';
+  // Ensures that children are loaded so that they are available to navigate to.
+  useLoadDescendents(id);
 
-  const bannerProps = useBannerProps(graph);
-  const { actions, onAction } = useNavbarActions();
+  // TODO(burdon): BUG: When showing ANY statusbar the size progressively shrinks when the keyboard opens/closes.
+  const showNavBar = !keyboardOpen && !state.isPopover && state.drawerState === 'closed';
 
   return (
-    <NaturalMain.Content
-      bounce
-      classNames={mx(
-        'dx-mobile', // TODO(burdon): Replace with updated density system (for side padding).
-        'grid bs-full pbs-[max(0.25rem,env(safe-area-inset-top))] pbe-[max(0.25rem,env(safe-area-inset-bottom))] overflow-hidden',
-        'bg-toolbarSurface',
-        showNavBar ? 'grid-rows-[min-content_1fr_min-content]' : 'grid-rows-[min-content_1fr]',
+    <div
+      role='none'
+      className={mx(
+        'bs-full grid overflow-hidden bg-toolbarSurface',
+        showNavBar ? 'grid-rows-[var(--rail-action)_1fr_var(--toolbar-size)]' : 'grid-rows-[var(--rail-action)_1fr]',
       )}
       {...attentionAttrs}
     >
-      <Banner {...bannerProps} />
+      <AppBar {...appBarProps} />
       <article className='bs-full overflow-hidden bg-baseSurface'>
-        <Surface key={id} role='article' data={data} limit={1} fallback={ContentError} placeholder={placeholder} />
+        <Surface.Surface
+          key={id}
+          role='article'
+          data={data}
+          limit={1}
+          fallback={ContentError}
+          placeholder={placeholder}
+        />
       </article>
-      {showNavBar && <NavBar classNames='border-bs border-separator' actions={actions} onAction={onAction} />}
-    </NaturalMain.Content>
+      {showNavBar && <NavBar classNames='border-bs border-subduedSeparator' actions={actions} onAction={onAction} />}
+    </div>
   );
 };
 

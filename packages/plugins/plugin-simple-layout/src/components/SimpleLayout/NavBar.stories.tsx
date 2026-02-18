@@ -92,7 +92,7 @@ const buildDefaultActions = (): ActionGraphProps => {
 const meta = {
   title: 'plugins/plugin-simple-layout/NavBar',
   component: NavBar,
-  decorators: [withTheme, withRegistry],
+  decorators: [withTheme(), withRegistry],
   parameters: {
     layout: 'fullscreen',
     translations,

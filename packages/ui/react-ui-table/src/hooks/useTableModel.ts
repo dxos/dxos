@@ -29,7 +29,7 @@ export type UseTableModelProps<T extends TableRow = TableRow> = {
   onRowAction?: (actionId: string, data: T) => void;
 } & Pick<
   TableModelProps<T>,
-  'features' | 'onInsertRow' | 'onDeleteRows' | 'onDeleteColumn' | 'onCellUpdate' | 'onRowOrderChange'
+  'features' | 'onInsertRow' | 'onDeleteRows' | 'onColumnDelete' | 'onCellUpdate' | 'onRowOrderChange'
 >;
 
 export const useTableModel = <T extends TableRow = TableRow>({

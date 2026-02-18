@@ -16,8 +16,7 @@
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "browser": "./dist/lib/browser/index.mjs",
-      "node": "./dist/lib/node-esm/index.mjs"
+      "default": "./dist/lib/neutral/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -39,7 +38,11 @@
   "devDependencies": {
     "@dxos/random": "workspace:*",
     "@dxos/test-utils": "workspace:*",
-    "@types/lodash.isequal": "catalog:"
+    "@types/lodash.isequal": "catalog:",
+    "effect": "catalog:"
+  },
+  "peerDependencies": {
+    "effect": "catalog:"
   },
   "publishConfig": {
     "access": "public"

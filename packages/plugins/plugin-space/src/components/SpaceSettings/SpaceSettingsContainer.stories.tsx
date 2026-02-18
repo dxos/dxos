@@ -28,7 +28,7 @@ const meta = {
   component: SpaceSettingsContainer,
   render: Story,
   decorators: [
-    withTheme,
+    withTheme(),
     withClientProvider({ createIdentity: true, createSpace: true }),
     // TODO(wittjosiah): Try to write story which does not depend on plugin manager.
     withPluginManager({ plugins: [OperationPlugin()] }),

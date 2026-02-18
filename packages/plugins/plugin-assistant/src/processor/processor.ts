@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import type * as Tool from '@effect/ai/Tool';
 import { Atom, Registry } from '@effect-atom/atom-react';
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
@@ -19,16 +20,19 @@ import {
   type ToolResolverService,
 } from '@dxos/ai';
 import {
+  AiContextService,
   type AiConversation,
   type AiConversationRunProps,
   ArtifactDiffResolver,
   GenerationObserver,
   createSystemPrompt,
 } from '@dxos/assistant';
+import { formatSystemPrompt } from '@dxos/assistant';
+import { type Chat } from '@dxos/assistant-toolkit';
 import { type Blueprint } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';
 import { type Database } from '@dxos/echo';
-import { runAndForwardErrors, throwCause } from '@dxos/effect';
+import { runAndForwardErrors, throwCause, unwrapExit } from '@dxos/effect';
 import {
   type CredentialsService,
   type FunctionInvocationService,
@@ -37,8 +41,6 @@ import {
 } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { type ContentBlock, Message } from '@dxos/types';
-
-import { type Assistant } from '../types';
 
 import { updateName } from './update-name';
 
@@ -141,6 +143,30 @@ export class AiChatProcessor {
     return this._options.blueprintRegistry;
   }
 
+  get system(): string {
+    return this._options.system ?? '';
+  }
+
+  async getTools(): Promise<Record<string, Tool.Any>> {
+    return unwrapExit(await this._conversation.getTools().pipe(await Runtime.runPromiseExit(await this._services())));
+  }
+
+  async getSystemPrompt(): Promise<string> {
+    return unwrapExit(
+      await Effect.gen(this, function* () {
+        const blueprints = this.context.getBlueprints();
+        const objects = this.context.getObjects();
+        const system = yield* formatSystemPrompt({ system: this._options.system, blueprints, objects });
+        return system;
+      }).pipe(
+        Effect.provideService(AiContextService, {
+          binder: this.context,
+        }),
+        await Runtime.runPromiseExit(await this._services()),
+      ),
+    );
+  }
+
   /**
    * Initiates a new request.
    */
@@ -218,7 +244,7 @@ export class AiChatProcessor {
   /**
    * Update the current chat's name.
    */
-  async updateName(chat: Assistant.Chat): Promise<void> {
+  async updateName(chat: Chat.Chat): Promise<void> {
     const runtime = await this._services();
     await updateName(runtime, this._conversation, chat, this._options.model);
   }

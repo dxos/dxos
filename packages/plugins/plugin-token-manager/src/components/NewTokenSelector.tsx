@@ -12,6 +12,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 
 import { type Key, Obj } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
+import { withAuthorization } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { type OAuthFlowResult } from '@dxos/protocols';
 import { useEdgeClient } from '@dxos/react-edge-client';
@@ -21,8 +22,16 @@ import { isTauri } from '@dxos/util';
 
 import { OAUTH_PRESETS, type OAuthPreset } from '../defs';
 import { meta } from '../meta';
-import { createTauriOAuthInitiator, createTauriServerProvider, openTauriBrowser, performOAuthFlow } from '../oauth';
+import {
+  createTauriOAuthInitiator,
+  createTauriServerProvider,
+  isMobilePlatform,
+  openTauriBrowser,
+  performMobileOAuthFlow,
+  performOAuthFlow,
+} from '../oauth';
 
+/** Response from Google OAuth2 userinfo endpoint. */
 const GoogleUserInfo = Schema.Struct({
   email: Schema.optional(Schema.String),
 });
@@ -36,9 +45,15 @@ const enrichGoogleTokenWithEmail = (token: AccessToken.AccessToken) =>
       return;
     }
 
+    const httpClient = yield* HttpClient.HttpClient.pipe(Effect.map(withAuthorization(token.token, 'Bearer')));
+
+    // TODO(wittjosiah): Without this, executing the request results in CORS errors when traced.
+    //  Is this an issue on Google's side or is it a bug in `@effect/platform`?
+    //  https://github.com/Effect-TS/effect/issues/4568
+    const httpClientWithTracerDisabled = httpClient.pipe(HttpClient.withTracerDisabledWhen(() => true));
+
     const userInfo = yield* HttpClientRequest.get('https://www.googleapis.com/oauth2/v3/userinfo').pipe(
-      HttpClientRequest.setHeader('Authorization', `Bearer ${token.token}`),
-      HttpClient.execute,
+      httpClientWithTracerDisabled.execute,
       Effect.flatMap(HttpClientResponse.schemaBodyJson(GoogleUserInfo)),
       Effect.scoped,
     );
@@ -119,18 +134,30 @@ export const NewTokenSelector = ({ spaceId, onAddAccessToken, onCustomToken }: N
     tokenMap.set(token.id, token);
 
     if (isTauri()) {
-      // Tauri path: Use shared OAuth flow with Tauri implementations.
-      // Uses Rust to make HTTP request to Edge (bypasses browser Origin header restrictions).
+      // Tauri path: Check if mobile platform.
+      const oauthEffect = Effect.gen(function* () {
+        const isMobile = yield* isMobilePlatform();
+        if (isMobile) {
+          yield* performMobileOAuthFlow({
+            preset,
+            accessToken: token,
+            edgeClient,
+            spaceId,
+          });
+        } else {
+          yield* performOAuthFlow(
+            preset,
+            token,
+            edgeClient,
+            spaceId,
+            createTauriServerProvider(),
+            openTauriBrowser,
+            createTauriOAuthInitiator(),
+          );
+        }
+      });
       await runAndForwardErrors(
-        performOAuthFlow(
-          preset,
-          token,
-          edgeClient,
-          spaceId,
-          createTauriServerProvider(),
-          openTauriBrowser,
-          createTauriOAuthInitiator(),
-        ).pipe(
+        oauthEffect.pipe(
           Effect.tap(() => enrichGoogleTokenWithEmail(token)),
           Effect.tap(() => onAddAccessToken(token)),
           Effect.catchAll((error) => Effect.sync(() => log.catch(error))),

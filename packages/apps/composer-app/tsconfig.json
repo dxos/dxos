@@ -161,13 +161,13 @@
       "path": "../../plugins/plugin-outliner"
     },
     {
+      "path": "../../plugins/plugin-pipeline"
+    },
+    {
       "path": "../../plugins/plugin-presenter"
     },
     {
       "path": "../../plugins/plugin-preview"
-    },
-    {
-      "path": "../../plugins/plugin-project"
     },
     {
       "path": "../../plugins/plugin-pwa"
@@ -180,6 +180,9 @@
     },
     {
       "path": "../../plugins/plugin-search"
+    },
+    {
+      "path": "../../plugins/plugin-settings"
     },
     {
       "path": "../../plugins/plugin-sheet"
@@ -228,6 +231,9 @@
     },
     {
       "path": "../../sdk/app-graph"
+    },
+    {
+      "path": "../../sdk/app-toolkit"
     },
     {
       "path": "../../sdk/client"

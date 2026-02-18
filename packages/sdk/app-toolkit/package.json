@@ -1,0 +1,74 @@
+{
+  "name": "@dxos/app-toolkit",
+  "version": "0.8.3",
+  "description": "Composer-specific capabilities, plugin helpers, and playground for building Composer plugins.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "MIT",
+  "author": "DXOS.org",
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
+      "browser": "./dist/lib/browser/index.mjs",
+      "node": "./dist/lib/node-esm/index.mjs"
+    },
+    "./ui": {
+      "source": "./src/ui/index.ts",
+      "types": "./dist/types/src/ui/index.d.ts",
+      "browser": "./dist/lib/browser/ui/index.mjs",
+      "node": "./dist/lib/node-esm/ui/index.mjs"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "ui": [
+        "dist/types/src/ui/index.d.ts"
+      ]
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@dxos/ai": "workspace:*",
+    "@dxos/app-framework": "workspace:*",
+    "@dxos/app-graph": "workspace:*",
+    "@dxos/assistant": "workspace:*",
+    "@dxos/blueprints": "workspace:*",
+    "@dxos/echo": "workspace:*",
+    "@dxos/functions": "workspace:*",
+    "@dxos/operation": "workspace:*",
+    "@dxos/types": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "@effect/cli": "catalog:"
+  },
+  "devDependencies": {
+    "@dxos/log": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-syntax-highlighter": "workspace:*",
+    "@dxos/storybook-utils": "workspace:*",
+    "@dxos/ui-theme": "workspace:*",
+    "@effect-atom/atom-react": "catalog:",
+    "@types/react": "catalog:",
+    "effect": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  },
+  "peerDependencies": {
+    "@effect-atom/atom-react": "catalog:",
+    "effect": "catalog:",
+    "react": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

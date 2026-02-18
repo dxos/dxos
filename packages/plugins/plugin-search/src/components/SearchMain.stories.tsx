@@ -43,7 +43,7 @@ const meta = {
   component: SearchMain,
   render: DefaultStory,
   decorators: [
-    withTheme,
+    withTheme(),
     withLayout({ layout: 'column' }),
     withMosaic(),
     withSearchContext(),

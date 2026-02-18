@@ -133,10 +133,10 @@
       "path": "../../plugins/plugin-markdown"
     },
     {
-      "path": "../../plugins/plugin-preview"
+      "path": "../../plugins/plugin-pipeline"
     },
     {
-      "path": "../../plugins/plugin-project"
+      "path": "../../plugins/plugin-preview"
     },
     {
       "path": "../../plugins/plugin-script"
@@ -173,6 +173,9 @@
     },
     {
       "path": "../../sdk/app-framework"
+    },
+    {
+      "path": "../../sdk/app-toolkit"
     },
     {
       "path": "../../sdk/client"

@@ -8,8 +8,9 @@ import React, { type FC, useCallback } from 'react';
 
 import { ToolId } from '@dxos/ai';
 import { EXA_API_KEY } from '@dxos/ai/testing';
-import { Common } from '@dxos/app-framework';
-import { Surface, useCapabilities, useCapability } from '@dxos/app-framework/react';
+import { Capabilities } from '@dxos/app-framework';
+import { Surface, useCapabilities, useCapability } from '@dxos/app-framework/ui';
+import { AppCapabilities } from '@dxos/app-toolkit';
 import { AiContextBinder } from '@dxos/assistant';
 import { Agent, LinearBlueprint, ResearchBlueprint, ResearchDataTypes, ResearchGraph } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt, Template } from '@dxos/blueprints';
@@ -27,8 +28,8 @@ import { Calendar, Mailbox } from '@dxos/plugin-inbox/types';
 import { Map, MapPlugin } from '@dxos/plugin-map';
 import { createLocationSchema } from '@dxos/plugin-map/testing';
 import { Markdown, MarkdownPlugin } from '@dxos/plugin-markdown';
+import { PipelinePlugin } from '@dxos/plugin-pipeline';
 import { PreviewPlugin } from '@dxos/plugin-preview';
-import { ProjectPlugin } from '@dxos/plugin-project';
 import { ScriptPlugin, getAccessCredential } from '@dxos/plugin-script';
 import { templates } from '@dxos/plugin-script/templates';
 import { TablePlugin } from '@dxos/plugin-table';
@@ -51,7 +52,7 @@ import {
   Message,
   Organization,
   Person,
-  Project,
+  Pipeline,
   Task,
   Transcript,
 } from '@dxos/types';
@@ -97,8 +98,8 @@ type StoryProps = {
 };
 
 const DefaultStory = ({ modules, showContext, blueprints = [] }: StoryProps) => {
-  const blueprintsDefinitions = useCapabilities(Common.Capability.BlueprintDefinition);
-  const atomRegistry = useCapability(Common.Capability.AtomRegistry);
+  const blueprintsDefinitions = useCapabilities(AppCapabilities.BlueprintDefinition);
+  const atomRegistry = useCapability(Capabilities.AtomRegistry);
 
   const space = useSpace();
   useAsyncEffect(async () => {
@@ -183,7 +184,7 @@ const StackContainer = ({ objects }: { objects: Obj.Unknown[] }) => {
     >
       {objects.map((object) => (
         <StackItem.Root key={object.id} item={object} classNames={panelClassNames}>
-          <Surface role='section' limit={1} data={{ subject: object }} />
+          <Surface.Surface role='section' limit={1} data={{ subject: object }} />
         </StackItem.Root>
       ))}
     </Stack>
@@ -193,7 +194,7 @@ const StackContainer = ({ objects }: { objects: Obj.Unknown[] }) => {
 const storybook: Meta<typeof DefaultStory> = {
   title: 'stories/stories-assistant/Chat',
   render: render(DefaultStory),
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'fullscreen',
     translations,
@@ -605,7 +606,7 @@ export const WithLinearSync: Story = {
   decorators: getDecorators({
     plugins: [],
     config: config.remote,
-    types: [Task.Task, Person.Person, Project.Project],
+    types: [Task.Task, Person.Person, Pipeline.Pipeline],
     accessTokens: accessTokensFromEnv({
       'linear.app': VITE_LINEAR_API_KEY,
     }),
@@ -747,7 +748,7 @@ export const WithResearchQueue: Story = {
 
 export const WithProject: Story = {
   decorators: getDecorators({
-    plugins: [InboxPlugin(), MarkdownPlugin(), ProjectPlugin()],
+    plugins: [InboxPlugin(), MarkdownPlugin(), PipelinePlugin()],
     config: config.remote,
     accessTokens: [Obj.make(AccessToken.AccessToken, { source: 'exa.ai', token: EXA_API_KEY })],
     types: [
@@ -758,7 +759,7 @@ export const WithProject: Story = {
       Message.Message,
       Organization.Organization,
       Person.Person,
-      Project.Project,
+      Pipeline.Pipeline,
       View.View,
       Mailbox.Mailbox,
     ],
@@ -884,7 +885,7 @@ export const WithProject: Story = {
       });
 
       space.db.add(
-        Project.make({
+        Pipeline.make({
           name: 'Investor Research',
           columns: [
             {

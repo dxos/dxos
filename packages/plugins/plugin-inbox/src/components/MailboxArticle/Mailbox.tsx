@@ -5,6 +5,7 @@
 import React, { forwardRef, useCallback, useMemo, useRef, useState } from 'react';
 
 import { DxAvatar } from '@dxos/lit-ui/react';
+import { ScrollArea } from '@dxos/react-ui';
 import { Card, Focus, Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import { type Message } from '@dxos/types';
 import { getHashStyles } from '@dxos/ui-theme';
@@ -168,9 +169,11 @@ export const Mailbox = ({ messages, labels, currentMessageId, onAction }: Mailbo
   return (
     <Focus.Group asChild>
       <Mosaic.Container asChild withFocus autoScroll={viewport}>
-        <Mosaic.Viewport padding viewportRef={setViewport}>
-          <Mosaic.Stack items={items} getId={(item) => item.message.id} draggable={false} Tile={MessageTile} />
-        </Mosaic.Viewport>
+        <ScrollArea.Root orientation='vertical'>
+          <ScrollArea.Viewport classNames='p-2' ref={setViewport}>
+            <Mosaic.Stack items={items} getId={(item) => item.message.id} draggable={false} Tile={MessageTile} />
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
       </Mosaic.Container>
     </Focus.Group>
   );

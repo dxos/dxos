@@ -5,9 +5,9 @@
 import * as Schema from 'effect/Schema';
 import React from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/react';
+import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { Input, Message, useTranslation } from '@dxos/react-ui';
-import { ControlGroup, ControlItemInput, ControlPage, ControlSection } from '@dxos/react-ui-form';
+import { Settings } from '@dxos/react-ui-form';
 
 import { meta } from '../meta';
 import { ObservabilityOperation } from '../types';
@@ -34,20 +34,20 @@ export const ObservabilitySettings = ({ settings }: ObservabilitySettingsCompone
   const { invokePromise } = useOperationInvoker();
 
   return (
-    <ControlPage>
-      <ControlSection title={t('settings title', { ns: meta.id })}>
+    <Settings.Root>
+      <Settings.Section title={t('settings title', { ns: meta.id })}>
         <Message.Root valence='info' classNames='container-max-width mbe-cardSpacingBlock'>
           <Message.Content>{t('observability description')}</Message.Content>
         </Message.Root>
-        <ControlGroup>
-          <ControlItemInput title={t('observability enabled label')}>
+        <Settings.Group>
+          <Settings.ItemInput title={t('observability enabled label')}>
             <Input.Switch
               checked={settings.enabled}
               onCheckedChange={(checked) => invokePromise(ObservabilityOperation.Toggle, { state: !!checked })}
             />
-          </ControlItemInput>
-        </ControlGroup>
-      </ControlSection>
-    </ControlPage>
+          </Settings.ItemInput>
+        </Settings.Group>
+      </Settings.Section>
+    </Settings.Root>
   );
 };

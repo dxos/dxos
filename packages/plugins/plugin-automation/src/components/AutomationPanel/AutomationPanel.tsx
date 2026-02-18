@@ -6,18 +6,19 @@ import * as Array from 'effect/Array';
 import * as EFn from 'effect/Function';
 import * as Match from 'effect/Match';
 import * as Schema from 'effect/Schema';
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 
 import { Filter, Obj, Tag } from '@dxos/echo';
 import { Function, Script, Trigger } from '@dxos/functions';
+import { KEY_QUEUE_CURSOR } from '@dxos/functions-runtime';
 import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
 import { useTypeOptions } from '@dxos/plugin-space';
 import { type Client, useClient } from '@dxos/react-client';
-import { type Space, useQuery } from '@dxos/react-client/echo';
-import { Clipboard, IconButton, Input, Separator, type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { ControlItem, controlItemClasses } from '@dxos/react-ui-form';
+import { type Space, useObject, useQuery } from '@dxos/react-client/echo';
+import { Clipboard, IconButton, Input, Separator, useTranslation } from '@dxos/react-ui';
+import { Settings } from '@dxos/react-ui-form';
 import { List } from '@dxos/react-ui-list';
-import { Project } from '@dxos/types';
+import { Pipeline } from '@dxos/types';
 import { ghostHover, mx } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 
@@ -26,15 +27,15 @@ import { TriggerEditor, type TriggerEditorProps } from '../TriggerEditor';
 
 const grid = 'grid grid-cols-[40px_1fr_32px_32px] min-bs-[2.5rem]';
 
-export type AutomationPanelProps = ThemedClassName<{
+export type AutomationPanelProps = {
   space: Space;
   object?: Obj.Unknown;
   initialTrigger?: Trigger.Trigger;
   onDone?: () => void;
-}>;
+};
 
 // TODO(burdon): Factor out common layout with ViewEditor.
-export const AutomationPanel = ({ classNames, space, object, initialTrigger, onDone }: AutomationPanelProps) => {
+export const AutomationPanel = ({ space, object, initialTrigger, onDone }: AutomationPanelProps) => {
   const { t } = useTranslation(meta.id);
   const client = useClient();
   const functionsServiceClient = useMemo(() => FunctionsServiceClient.fromClient(client), [client]);
@@ -74,7 +75,9 @@ export const AutomationPanel = ({ classNames, space, object, initialTrigger, onD
 
   const handleSave: TriggerEditorProps['onSave'] = (trigger) => {
     if (selected) {
-      Object.assign(selected, trigger);
+      Obj.change(selected, (mutable) => {
+        Object.assign(mutable, trigger);
+      });
     } else {
       space.db.add(Trigger.make(trigger));
     }
@@ -93,9 +96,16 @@ export const AutomationPanel = ({ classNames, space, object, initialTrigger, onD
     await functionsServiceClient.forceRunCronTrigger(space.id, trigger.id);
   };
 
+  const handleResetCursor = async (trigger: Trigger.Trigger) => {
+    Obj.change(trigger, (t) => {
+      Obj.deleteKeys(t, KEY_QUEUE_CURSOR);
+    });
+    await space.db.flush({ indexes: true });
+  };
+
   if (trigger) {
     return (
-      <ControlItem title={t('trigger editor title')}>
+      <Settings.Item title={t('trigger editor title')}>
         <TriggerEditor
           db={space.db}
           trigger={trigger}
@@ -105,12 +115,12 @@ export const AutomationPanel = ({ classNames, space, object, initialTrigger, onD
           onSave={handleSave}
           onCancel={handleCancel}
         />
-      </ControlItem>
+      </Settings.Item>
     );
   }
 
   return (
-    <div className={mx(controlItemClasses, classNames)}>
+    <Settings.Container>
       {filteredTriggers.length > 0 && (
         <List.Root<Trigger.Trigger>
           items={filteredTriggers}
@@ -119,74 +129,130 @@ export const AutomationPanel = ({ classNames, space, object, initialTrigger, onD
         >
           {({ items: filteredTriggers }) => (
             <div role='list' className='flex flex-col is-full'>
-              {filteredTriggers?.map((trigger) => {
-                const copyAction = getCopyAction(client, trigger);
-                return (
-                  <List.Item<Trigger.Trigger>
-                    key={trigger.id}
-                    item={trigger}
-                    classNames={mx(grid, ghostHover, 'items-center', 'pli-2')}
-                  >
-                    <Input.Root>
-                      <Input.Switch
-                        checked={trigger.enabled}
-                        onCheckedChange={(checked) =>
-                          Obj.change(trigger, (t) => {
-                            t.enabled = checked;
-                          })
-                        }
-                      />
-                    </Input.Root>
-
-                    <div className={'flex'}>
-                      <List.ItemTitle
-                        classNames='pli-1 cursor-pointer is-0 shrink truncate'
-                        onClick={() => handleSelect(trigger)}
-                      >
-                        {getFunctionName(functions, trigger) ?? '∅'}
-                      </List.ItemTitle>
-
-                      {/* TODO: a better way to expose copy action */}
-                      {copyAction && (
-                        <Clipboard.IconButton
-                          label={t(copyAction.translationKey)}
-                          value={copyAction.contentProvider()}
-                        />
-                      )}
-                    </div>
-
-                    <List.ItemButton
-                      autoHide={false}
-                      disabled={!trigger.enabled || trigger.spec?.kind !== 'timer'}
-                      icon='ph--play--regular'
-                      label='Force run'
-                      onClick={() => handleForceRunTrigger(trigger)}
-                    />
-
-                    <List.ItemDeleteButton onClick={() => handleDelete(trigger)} />
-                  </List.Item>
-                );
-              })}
+              {filteredTriggers?.map((trigger) => (
+                <TriggerListItem
+                  key={trigger.id}
+                  trigger={trigger}
+                  functions={functions}
+                  onSelect={handleSelect}
+                  onDelete={handleDelete}
+                  onResetCursor={handleResetCursor}
+                  onForceRun={handleForceRunTrigger}
+                />
+              ))}
             </div>
           )}
         </List.Root>
       )}
+
       {filteredTriggers.length > 0 && <Separator classNames='mlb-4' />}
       <IconButton icon='ph--plus--regular' label={t('new trigger label')} onClick={handleAdd} />
-    </div>
+    </Settings.Container>
+  );
+};
+
+const TriggerListItem = ({
+  trigger,
+  functions,
+  onSelect,
+  onDelete,
+  onResetCursor,
+  onForceRun,
+}: {
+  trigger: Trigger.Trigger;
+  functions: Function.Function[];
+  onSelect?: (trigger: Trigger.Trigger) => void;
+  onDelete?: (trigger: Trigger.Trigger) => void;
+  onResetCursor?: (trigger: Trigger.Trigger) => void;
+  onForceRun?: (trigger: Trigger.Trigger) => void;
+}) => {
+  const client = useClient();
+  const copyAction = getCopyAction(client, trigger);
+  const { t } = useTranslation(meta.id);
+  const cursor = Obj.getKeys(trigger, KEY_QUEUE_CURSOR).at(0)?.id;
+  const [snapshot, updateTrigger] = useObject(trigger);
+
+  const enabled = snapshot.enabled ?? false;
+  const onEnabledChange = (checked: boolean) => {
+    updateTrigger((trigger) => {
+      trigger.enabled = checked;
+    });
+  };
+
+  const handleSelect = useCallback(() => {
+    onSelect?.(trigger);
+  }, [onSelect, trigger]);
+
+  const handleDelete = useCallback(() => {
+    onDelete?.(trigger);
+  }, [onDelete, trigger]);
+
+  const handleResetCursor = useCallback(() => {
+    onResetCursor?.(trigger);
+  }, [onResetCursor, trigger]);
+
+  const handleForceRun = useCallback(() => {
+    onForceRun?.(trigger);
+  }, [onForceRun, trigger]);
+
+  return (
+    <List.Item<Obj.Snapshot<Trigger.Trigger>>
+      key={trigger.id}
+      item={snapshot}
+      classNames={mx(grid, ghostHover, 'items-center', 'pli-2')}
+    >
+      <Input.Root>
+        <Input.Switch checked={enabled} onCheckedChange={onEnabledChange} />
+      </Input.Root>
+
+      <div className={'flex'}>
+        <List.ItemTitle classNames='pli-1 cursor-pointer is-0 shrink truncate' onClick={handleSelect}>
+          {getFunctionName(functions, trigger) ?? '∅'}
+          {cursor && <div className='text-xs text-description truncate ml-4'>Position: {cursor}</div>}
+        </List.ItemTitle>
+
+        {copyAction && (
+          <Clipboard.IconButton label={t(copyAction.translationKey)} value={copyAction.contentProvider()} />
+        )}
+      </div>
+
+      {trigger.spec?.kind === 'timer' && onForceRun && (
+        <List.ItemButton
+          autoHide={false}
+          disabled={!enabled || trigger.spec?.kind !== 'timer'}
+          icon='ph--play--regular'
+          label='Force run'
+          onClick={handleForceRun}
+        />
+      )}
+      {trigger.spec?.kind === 'queue' && onResetCursor && (
+        <List.ItemButton
+          autoHide={false}
+          disabled={!cursor}
+          icon='ph--arrow-clockwise--regular'
+          label='Reset cursor'
+          onClick={handleResetCursor}
+        />
+      )}
+
+      {onDelete && <List.ItemDeleteButton onClick={handleDelete} />}
+    </List.Item>
   );
 };
 
 const getCopyAction = (client: Client, trigger: Trigger.Trigger | undefined) => {
   if (trigger?.spec?.kind === 'email') {
     return {
-      translationKey: 'trigger copy email',
+      translationKey: 'trigger copy email' as const,
       contentProvider: () => `${Obj.getDatabase(trigger)!.spaceId}@dxos.network`,
     };
   }
 
   if (trigger?.spec?.kind === 'webhook') {
-    return { translationKey: 'trigger copy url', contentProvider: () => getWebhookUrl(client, trigger) };
+    return {
+      translationKey: 'trigger copy url' as const,
+      contentProvider: () => getWebhookUrl(client, trigger!),
+    };
   }
 
   return undefined;
@@ -217,7 +283,7 @@ const scriptMatch = (script: Script.Script) => (trigger: Trigger.Trigger) => {
   return fn.source?.target === script;
 };
 
-const projectMatch = (project: Project.Project) => {
+const projectMatch = (project: Pipeline.Pipeline) => {
   const viewQueries = EFn.pipe(
     project.columns,
     Array.map((column) => column.view.target),
@@ -244,7 +310,7 @@ const triggerMatch = Match.type<Obj.Unknown>().pipe(
     (obj) => scriptMatch(obj),
   ),
   Match.when(
-    (obj) => Obj.instanceOf(Project.Project, obj),
+    (obj) => Obj.instanceOf(Pipeline.Pipeline, obj),
     (obj) => projectMatch(obj),
   ),
   Match.orElse((_obj) => () => true),

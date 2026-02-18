@@ -524,6 +524,46 @@ describe('Integration tests', () => {
       expect(Type.getTypename(Obj.getSchema(obj)!)).toEqual(TestSchema.Person.typename);
     }
   });
+
+  test('deleted objects remain deleted after reload', async () => {
+    await using peer = await builder.createPeer({
+      types: [TestSchema.Person],
+    });
+
+    {
+      await using db = await peer.createDatabase();
+      const person = db.add(Obj.make(TestSchema.Person, { name: 'Alice' }));
+      await db.flush({ indexes: true });
+
+      // Verify object exists before deletion.
+      const beforeDelete = await db.query(Filter.type(TestSchema.Person)).run();
+      expect(beforeDelete.length).to.eq(1);
+
+      // Delete the object.
+      db.remove(person);
+      await db.flush({ indexes: true });
+
+      // Verify object is deleted before reload.
+      const afterDelete = await db.query(Filter.type(TestSchema.Person)).run();
+      expect(afterDelete.length).to.eq(0);
+    }
+
+    await peer.reload();
+
+    {
+      await using db = await peer.openLastDatabase();
+
+      // Verify object is still not returned in normal queries.
+      const objects = await db.query(Filter.type(TestSchema.Person)).run();
+      expect(objects.length).to.eq(0);
+
+      // Verify object appears in deleted-only query.
+      const deletedObjects = await db.query(Query.select(Filter.type(TestSchema.Person)), { deleted: 'only' }).run();
+      expect(deletedObjects.length).to.eq(1);
+      expect(deletedObjects[0].name).to.eq('Alice');
+      expect(Obj.isDeleted(deletedObjects[0])).to.be.true;
+    }
+  });
 });
 
 describe('load tests', () => {

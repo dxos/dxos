@@ -13,7 +13,7 @@ import { NetworkToggle } from '../template/src/components';
 
 const meta = {
   title: 'sdk/examples/DXOS',
-  decorators: [withTheme],
+  decorators: [withTheme()],
 } satisfies Meta<typeof ClientRepeater>;
 
 export default meta;

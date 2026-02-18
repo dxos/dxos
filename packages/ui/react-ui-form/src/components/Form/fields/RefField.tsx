@@ -6,7 +6,7 @@ import '@dxos/lit-ui/dx-tag-picker.pcss';
 
 import React, { useCallback, useMemo } from 'react';
 
-import { type Database, Entity, Filter, Ref, type Type } from '@dxos/echo';
+import { type Database, Entity, Filter, Ref, Type } from '@dxos/echo';
 import { ReferenceAnnotationId, type ReferenceAnnotationValue } from '@dxos/echo/internal';
 import { useQuery, useSchema as useSchema$ } from '@dxos/echo-react';
 import { findAnnotation } from '@dxos/effect';
@@ -33,7 +33,15 @@ const defaultGetOptions: NonNullable<RefFieldProps['getOptions']> = (results) =>
   });
 
 const defaultResultsHook: NonNullable<RefFieldProps['resultsHook']> = (db, typename) =>
-  useQuery(db, typename ? Filter.typename(typename) : Filter.nothing());
+  useQuery(
+    db,
+    typename
+      ? // For Type.Ref(Type.Obj) we want to show all objects.
+        typename === Type.getTypename(Type.Obj)
+        ? Filter.everything()
+        : Filter.typename(typename)
+      : Filter.nothing(),
+  );
 
 export type RefFieldProps = FormFieldComponentProps &
   Pick<ObjectPickerContentProps, 'createOptionLabel' | 'createOptionIcon' | 'createInitialValuePath'> & {
@@ -137,7 +145,7 @@ export const RefField = (props: RefFieldProps) => {
           !item ? (
             <p className={mx(descriptionText, 'mbe-2')}>{t('empty readonly ref field label')}</p>
           ) : (
-            <DxAnchor key={item.id} refid={item.id} rootclassname='mie-1'>
+            <DxAnchor key={item.id} dxn={item.id} rootclassname='mie-1'>
               {item.label}
             </DxAnchor>
           )

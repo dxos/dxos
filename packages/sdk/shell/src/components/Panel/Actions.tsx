@@ -11,6 +11,9 @@ type ActionsProps = Omit<ThemedClassName<ComponentPropsWithoutRef<'div'>>, 'chil
   children: ReactNode | ReactNode[];
 };
 
+/**
+ * @deprecated Use Dialog.ActionBar
+ */
 const Actions = forwardRef<HTMLDivElement, ActionsProps>(({ classNames, children, ...props }, forwardedRef) => {
   return (
     <div
@@ -28,4 +31,5 @@ const Actions = forwardRef<HTMLDivElement, ActionsProps>(({ classNames, children
 });
 
 export { Actions };
+
 export type { ActionsProps };

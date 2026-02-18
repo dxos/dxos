@@ -4,9 +4,10 @@
 
 import * as Effect from 'effect/Effect';
 
-import { OperationPlugin, type Plugin, SettingsPlugin } from '@dxos/app-framework';
+import { OperationPlugin, type Plugin } from '@dxos/app-framework';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { GraphPlugin } from '@dxos/plugin-graph';
+import { SettingsPlugin } from '@dxos/plugin-settings';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { ThemePlugin } from '@dxos/plugin-theme';
 import { Config } from '@dxos/react-client';
