@@ -2,8 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { NotImplementedError, RuntimeServiceError } from '@dxos/errors';
-import { invariant } from '@dxos/invariant';
+import { RuntimeServiceError } from '@dxos/errors';
 import { type EdgeFunctionEnv, type FeedProtocol } from '@dxos/protocols';
 
 export class QueueServiceImpl implements FeedProtocol.QueueService {
@@ -11,39 +10,35 @@ export class QueueServiceImpl implements FeedProtocol.QueueService {
     protected _ctx: EdgeFunctionEnv.ExecutionContext,
     private readonly _queueService: EdgeFunctionEnv.QueueService,
   ) {}
+
   async queryQueue(request: FeedProtocol.QueryQueueRequest): Promise<FeedProtocol.QueryResult> {
-    const { query } = request;
-    const { queueIds, ...filter } = query!;
-    const spaceId = query!.spaceId;
-    const queueId = queueIds?.[0];
-    invariant(request.query.queuesNamespace);
     try {
-      using result = await this._queueService.query(
-        this._ctx,
-        `dxn:queue:${request.query.queuesNamespace}:${spaceId}:${queueId}`,
-        filter,
-      );
+      using result = await this._queueService.queryQueue(this._ctx, request);
+      // Copy to avoid hanging RPC stub (Workers RPC lifecycle).
       return {
-        // Copy returned object to avoid hanging RPC stub
-        // See https://developers.cloudflare.com/workers/runtime-apis/rpc/lifecycle/
         objects: structuredClone(result.objects),
         nextCursor: result.nextCursor,
         prevCursor: result.prevCursor,
       };
     } catch (error) {
+      const { query } = request;
       throw RuntimeServiceError.wrap({
         message: 'Queue query failed.',
-        context: { subspaceTag: request.query.queuesNamespace, spaceId, queueId },
+        context: {
+          subspaceTag: request.query?.queuesNamespace,
+          spaceId: query?.spaceId,
+          queueId: query?.queueIds?.[0],
+        },
         ifTypeDiffers: true,
       })(error);
     }
   }
 
   async insertIntoQueue(request: FeedProtocol.InsertIntoQueueRequest): Promise<void> {
-    const { subspaceTag, spaceId, queueId, objects } = request;
     try {
-      await this._queueService.append(this._ctx, `dxn:queue:${subspaceTag}:${spaceId}:${queueId}`, objects ?? []);
+      using _ = await this._queueService.insertIntoQueue(this._ctx, request);
     } catch (error) {
+      const { subspaceTag, spaceId, queueId } = request;
       throw RuntimeServiceError.wrap({
         message: 'Queue append failed.',
         context: { subspaceTag, spaceId, queueId },
@@ -52,11 +47,16 @@ export class QueueServiceImpl implements FeedProtocol.QueueService {
     }
   }
 
-  deleteFromQueue(request: FeedProtocol.DeleteFromQueueRequest): Promise<void> {
-    const { subspaceTag, spaceId, queueId } = request;
-    throw new NotImplementedError({
-      message: 'Deleting from queue is not supported.',
-      context: { subspaceTag, spaceId, queueId },
-    });
+  async deleteFromQueue(request: FeedProtocol.DeleteFromQueueRequest): Promise<void> {
+    try {
+      using _ = await this._queueService.deleteFromQueue(this._ctx, request);
+    } catch (error) {
+      const { subspaceTag, spaceId, queueId } = request;
+      throw RuntimeServiceError.wrap({
+        message: 'Queue delete failed.',
+        context: { subspaceTag, spaceId, queueId },
+        ifTypeDiffers: true,
+      })(error);
+    }
   }
 }
