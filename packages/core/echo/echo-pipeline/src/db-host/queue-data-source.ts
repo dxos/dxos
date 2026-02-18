@@ -14,7 +14,7 @@ import type { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { FeedProtocol } from '@dxos/protocols';
 
-import { EchoFeedCodec } from './queue-feed-codec';
+import { EchoFeedCodec } from './echo-feed-codec';
 
 export type QueueDataSourceOptions = {
   feedStore: FeedStore;

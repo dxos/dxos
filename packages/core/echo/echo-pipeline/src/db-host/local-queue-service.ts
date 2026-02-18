@@ -21,7 +21,7 @@ import {
 } from '@dxos/protocols/proto/dxos/client/services';
 import type { SqlTransaction } from '@dxos/sql-sqlite';
 
-import { EchoFeedCodec } from './queue-feed-codec';
+import { EchoFeedCodec } from './echo-feed-codec';
 
 /**
  * Writes queue data to a local FeedStore.
