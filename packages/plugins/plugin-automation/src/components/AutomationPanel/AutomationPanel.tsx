@@ -15,8 +15,8 @@ import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
 import { useTypeOptions } from '@dxos/plugin-space';
 import { type Client, useClient } from '@dxos/react-client';
 import { type Space, useObject, useQuery } from '@dxos/react-client/echo';
-import { Clipboard, IconButton, Input, Separator, type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { ControlItem, controlItemClasses } from '@dxos/react-ui-form';
+import { Clipboard, IconButton, Input, Separator, useTranslation } from '@dxos/react-ui';
+import { Settings } from '@dxos/react-ui-form';
 import { List } from '@dxos/react-ui-list';
 import { Pipeline } from '@dxos/types';
 import { ghostHover, mx } from '@dxos/ui-theme';
@@ -27,15 +27,15 @@ import { TriggerEditor, type TriggerEditorProps } from '../TriggerEditor';
 
 const grid = 'grid grid-cols-[40px_1fr_32px_32px] min-bs-[2.5rem]';
 
-export type AutomationPanelProps = ThemedClassName<{
+export type AutomationPanelProps = {
   space: Space;
   object?: Obj.Unknown;
   initialTrigger?: Trigger.Trigger;
   onDone?: () => void;
-}>;
+};
 
 // TODO(burdon): Factor out common layout with ViewEditor.
-export const AutomationPanel = ({ classNames, space, object, initialTrigger, onDone }: AutomationPanelProps) => {
+export const AutomationPanel = ({ space, object, initialTrigger, onDone }: AutomationPanelProps) => {
   const { t } = useTranslation(meta.id);
   const client = useClient();
   const functionsServiceClient = useMemo(() => FunctionsServiceClient.fromClient(client), [client]);
@@ -105,7 +105,7 @@ export const AutomationPanel = ({ classNames, space, object, initialTrigger, onD
 
   if (trigger) {
     return (
-      <ControlItem title={t('trigger editor title')}>
+      <Settings.Item title={t('trigger editor title')}>
         <TriggerEditor
           db={space.db}
           trigger={trigger}
@@ -115,12 +115,12 @@ export const AutomationPanel = ({ classNames, space, object, initialTrigger, onD
           onSave={handleSave}
           onCancel={handleCancel}
         />
-      </ControlItem>
+      </Settings.Item>
     );
   }
 
   return (
-    <div className={mx(controlItemClasses, classNames)}>
+    <Settings.Container>
       {filteredTriggers.length > 0 && (
         <List.Root<Trigger.Trigger>
           items={filteredTriggers}
@@ -144,9 +144,10 @@ export const AutomationPanel = ({ classNames, space, object, initialTrigger, onD
           )}
         </List.Root>
       )}
+
       {filteredTriggers.length > 0 && <Separator classNames='mlb-4' />}
       <IconButton icon='ph--plus--regular' label={t('new trigger label')} onClick={handleAdd} />
-    </div>
+    </Settings.Container>
   );
 };
 

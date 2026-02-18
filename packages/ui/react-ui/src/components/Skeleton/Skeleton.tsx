@@ -17,7 +17,7 @@ type SkeletonProps = ThemedClassName<ComponentPropsWithRef<'div'>> & {
 const Skeleton = forwardRef<HTMLDivElement, SkeletonProps>(
   ({ classNames, variant = 'default', ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
-    return <div {...props} className={tx('skeleton.root', 'skeleton', { variant }, classNames)} ref={forwardedRef} />;
+    return <div {...props} className={tx('skeleton.root', { variant }, classNames)} ref={forwardedRef} />;
   },
 );
 

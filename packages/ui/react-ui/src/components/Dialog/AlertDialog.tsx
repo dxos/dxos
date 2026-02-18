@@ -61,11 +61,7 @@ const AlertDialogTitle: ForwardRefExoticComponent<AlertDialogTitleProps> = forwa
 >(({ classNames, srOnly, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
   return (
-    <AlertDialogTitlePrimitive
-      {...props}
-      className={tx('dialog.title', 'dialog--alert__title', { srOnly }, classNames)}
-      ref={forwardedRef}
-    />
+    <AlertDialogTitlePrimitive {...props} className={tx('dialog.title', { srOnly }, classNames)} ref={forwardedRef} />
   );
 });
 
@@ -79,7 +75,7 @@ const AlertDialogDescription: ForwardRefExoticComponent<AlertDialogTitleProps> =
   return (
     <AlertDialogDescriptionPrimitive
       {...props}
-      className={tx('dialog.description', 'dialog--alert__description', { srOnly }, classNames)}
+      className={tx('dialog.description', { srOnly }, classNames)}
       ref={forwardedRef}
     />
   );
@@ -109,7 +105,6 @@ const AlertDialogOverlay: ForwardRefExoticComponent<AlertDialogOverlayProps> = f
       {...props}
       className={tx(
         'dialog.overlay',
-        'dialog--alert__overlay',
         {},
         classNames,
         'data-[block-align=start]:justify-center',
@@ -137,7 +132,7 @@ const AlertDialogContent: ForwardRefExoticComponent<AlertDialogContentProps> = f
   return (
     <AlertDialogContentPrimitive
       {...props}
-      className={tx('dialog.content', 'dialog--alert', { inOverlayLayout }, classNames)}
+      className={tx('dialog.content', { inOverlayLayout }, classNames)}
       ref={forwardedRef}
     >
       {children}

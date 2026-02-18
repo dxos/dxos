@@ -121,10 +121,6 @@ const DefaultStory = ({ debug = false }: StoryProps) => {
     } satisfies BoardModel<TestColumn, TestItem>;
   }, [space?.db, registry]);
 
-  if (columns.length === 0) {
-    return <></>;
-  }
-
   return (
     <Mosaic.Root asChild debug={debug}>
       <div role='none' className={mx('grid md:p-2 overflow-hidden', debug && 'grid-cols-[1fr_20rem] gap-2')}>

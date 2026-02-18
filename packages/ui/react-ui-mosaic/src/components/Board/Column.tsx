@@ -189,7 +189,7 @@ const BoardColumnFooter = forwardRef<HTMLDivElement, BoardColumnFooterProps>(({ 
       {model.onItemCreate && data && (
         <IconButton
           data-testid='board-column-add-item'
-          classNames='group-hover/column:opacity-100 opacity-0 transition transition-opacity duration-500'
+          classNames='group-hover/column:opacity-100 md:opacity-0 transition transition-opacity duration-500'
           variant='ghost'
           icon='ph--plus--regular'
           iconOnly

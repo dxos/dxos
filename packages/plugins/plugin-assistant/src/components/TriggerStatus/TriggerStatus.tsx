@@ -12,7 +12,7 @@ import { ClientCapabilities } from '@dxos/plugin-client/types';
 import { StatusBar } from '@dxos/plugin-status-bar';
 import { parseId } from '@dxos/react-client/echo';
 import { Icon, Input, Popover, useTranslation } from '@dxos/react-ui';
-import { ControlItemInput } from '@dxos/react-ui-form';
+import { Settings } from '@dxos/react-ui-form';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
@@ -123,9 +123,9 @@ const TriggerStatusPopover = ({
   return (
     <div className='min-is-[240px] p-2 space-y-3'>
       {/* Runtime Toggle */}
-      <ControlItemInput title={t('trigger runtime label')} description={t('trigger runtime description')}>
+      <Settings.ItemInput title={t('trigger runtime label')} description={t('trigger runtime description')}>
         <Input.Switch classNames='justify-self-end' checked={isRunning} onCheckedChange={onToggle} />
-      </ControlItemInput>
+      </Settings.ItemInput>
 
       {/* Status Indicator */}
       <div className='flex items-center gap-2 pt-2 border-t border-separator'>
