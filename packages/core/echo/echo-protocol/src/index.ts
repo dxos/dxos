@@ -7,5 +7,6 @@ export * from './reference';
 export * from './space-doc-version';
 export type * from './collection-sync';
 export * from './space-id';
+export * from './echo-feed-codec';
 export * from './foreign-key';
 export * from './query';
