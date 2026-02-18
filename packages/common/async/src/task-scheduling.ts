@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Context, ContextDisposedError } from '@dxos/context';
+import { type Context, ContextDisposedError } from '@dxos/context';
 import { StackTrace } from '@dxos/debug';
 import { type MaybePromise } from '@dxos/util';
 
@@ -98,16 +98,22 @@ export class AsyncTask {
    * Context of the resource that owns the task.
    * When the context is disposed, the task is cancelled and cannot be scheduled again.
    */
-  open(): void {
-    this.#ctx = new Context();
+  open(ctx: Context): void {
+    this.#ctx = ctx;
+    this.#ctx.onDispose(() => {
+      // Unblock any waiters on #nextTask when context is disposed.
+      this.#nextTask.throw(new ContextDisposedError());
+    });
   }
 
   /**
    * Closes the task and waits for it to finish if it is running.
    */
   async close(): Promise<void> {
-    await this.#ctx?.dispose();
+    // First wait for any running task to complete.
     await this.join();
+    // Then dispose the context, which will unblock any pending waiters on #nextTask.
+    await this.#ctx?.dispose();
     this.#ctx = undefined;
   }
 
@@ -121,7 +127,7 @@ export class AsyncTask {
   // TODO(dmaretskyi): Add scheduleAt. Where the earlier time will override the later one.
   schedule(): void {
     if (!this.#ctx || this.#ctx.disposed) {
-      throw new Error('AsyncTask not open');
+      throw new ContextDisposedError();
     }
 
     if (this.#scheduled) {
@@ -140,6 +146,11 @@ export class AsyncTask {
       this.#scheduled = false;
       const completionTrigger = this.#nextTask;
       this.#nextTask = new Trigger(); // Re-create the trigger as opposed to resetting it since there might be listeners waiting for it.
+
+      // Re-register dispose handler for the new trigger.
+      this.#ctx.onDispose(() => {
+        this.#nextTask.throw(new ContextDisposedError());
+      });
 
       // Store the promise so that new tasks could wait for this one to finish.
       this.#currentTask = runInContextAsync(this.#ctx, () => this.#callback()).then(() => {
