@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 
 import { type ObjectJSON } from '@dxos/echo/internal';
+import { EchoFeedCodec } from '@dxos/echo-protocol';
 import { RuntimeProvider } from '@dxos/effect';
 import { type FeedStore } from '@dxos/feed';
 import { assertArgument, invariant } from '@dxos/invariant';
@@ -20,8 +21,6 @@ import {
   type QueueService,
 } from '@dxos/protocols/proto/dxos/client/services';
 import type { SqlTransaction } from '@dxos/sql-sqlite';
-
-import { EchoFeedCodec } from './echo-feed-codec';
 
 /**
  * Writes queue data to a local FeedStore.
