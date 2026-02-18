@@ -5,7 +5,8 @@ tasks:
     deps:
       - esbuild-plugins:compile
       - node-std:compile
-      - storybook-addon-logger:compile
+      # TODO(burdon): Create separate test-storybook build.
+      # - storybook-addon-logger:compile
       - vite-plugin-import-source:compile
       - ^:compile
     inputs:

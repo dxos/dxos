@@ -11,9 +11,10 @@ import { mx } from '@dxos/ui-theme';
 
 import { useVisibleItems } from '../../hooks';
 
-import { type MosaicPlaceholderProps, type MosaicTileProps, useMosaicContainer } from './Mosaic';
-import { MosaicPlaceholder } from './Placeholder';
+import { useMosaicContainerContext } from './Container';
+import { MosaicPlaceholder, type MosaicPlaceholderProps } from './Placeholder';
 import { styles } from './styles';
+import { type MosaicTileProps } from './Tile';
 import { type GetId } from './types';
 
 //
@@ -72,7 +73,7 @@ const MosaicStackInner = forwardRef<HTMLDivElement, MosaicStackProps>(
     forwardedRef,
   ) => {
     invariant(Tile);
-    const { id, orientation = orientationProp, dragging } = useMosaicContainer(MOSAIC_STACK_NAME);
+    const { id, orientation = orientationProp, dragging } = useMosaicContainerContext(MOSAIC_STACK_NAME);
     const visibleItems = useVisibleItems({ id, items, dragging: dragging?.source.data, getId });
     invariant(orientation === 'vertical' || orientation === 'horizontal', `Invalid orientation: ${orientation}`);
 
