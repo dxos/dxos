@@ -661,17 +661,24 @@ export class FeedStore {
           blocksBySpaceNamespace.get(spaceNamespaceKey)!.blocks.push(block);
         }
 
-        // 4. Call append once per (spaceId, namespace) batch.
-        for (const { spaceId, feedNamespace, blocks } of blocksBySpaceNamespace.values()) {
-          yield* this.append({
+        // 4. Call append once per (spaceId, namespace) batch and assign returned positions.
+        const positionByBlock = new Map<Block, number | null>();
+        for (const { spaceId, feedNamespace, blocks: batchBlocks } of blocksBySpaceNamespace.values()) {
+          const { positions } = yield* this.append({
             requestId: 'local-append',
-            blocks,
+            blocks: batchBlocks,
             spaceId,
             feedNamespace,
           });
+          for (let i = 0; i < batchBlocks.length; i++) {
+            positionByBlock.set(batchBlocks[i], positions[i] ?? null);
+          }
         }
 
-        return blocks;
+        return blocks.map((block) => ({
+          ...block,
+          position: positionByBlock.get(block) ?? block.position,
+        }));
       }).pipe(Effect.withSpan('FeedStore.appendLocal')),
   );
 

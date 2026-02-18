@@ -434,6 +434,50 @@ describe('TriggerDispatcher', () => {
         });
       }, Effect.provide(TestTriggerDispatcherLayer)),
     );
+
+    it.effect(
+      'respects trigger concurrency without untilExhausted',
+      Effect.fnUntraced(function* ({ expect }) {
+        const queue = yield* QueueService.createQueue();
+        const functionObj = serializeFunction(Example.reply);
+        yield* Database.add(functionObj);
+        const trigger = Trigger.make({
+          function: Ref.make(functionObj),
+          enabled: true,
+          concurrency: 2,
+          spec: {
+            kind: 'queue',
+            queue: queue.dxn.toString(),
+          },
+        });
+        yield* Database.add(trigger);
+        yield* QueueService.append(queue, [
+          Obj.make(Person.Person, { fullName: 'Alice' }),
+          Obj.make(Person.Person, { fullName: 'Bob' }),
+          Obj.make(Person.Person, { fullName: 'Charlie' }),
+        ]);
+
+        const dispatcher = yield* TriggerDispatcher;
+
+        {
+          const results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['queue'] });
+          expect(results.length).toBe(2);
+          expect(results.every((r) => Exit.isSuccess(r.result))).toBe(true);
+        }
+
+        {
+          const results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['queue'] });
+          expect(results.length).toBe(1);
+          expect(results[0].triggerId).toBe(trigger.id);
+          expect(Exit.isSuccess(results[0].result)).toBe(true);
+        }
+
+        {
+          const results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['queue'] });
+          expect(results.length).toBe(0);
+        }
+      }, Effect.provide(TestTriggerDispatcherLayer)),
+    );
   });
 
   describe('Database Triggers (Subscription)', () => {
