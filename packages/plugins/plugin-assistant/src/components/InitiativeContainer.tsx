@@ -155,17 +155,16 @@ const InitiativeForm = ({ initiative }: { initiative: Initiative.Initiative }) =
       plan: ({ type, label, getValue, onValueChange }) => {
         const { t } = useTranslation();
 
-        const value: Ref.Ref<Text.Text> = getValue();
+        const value: Ref.Ref<Initiative.Plan> = getValue();
         const target = useAtomValue(AtomRef.make(value));
-        const [initialValue] = useObject(target, 'content');
 
         return (
           <Input.Root>
             <div role='none'>
               <Input.Label>{toLocalizedString(label, t)}</Input.Label>
             </div>
-            <MarkdownEditor.Root id={target?.id ?? ''} object={target}>
-              <MarkdownEditor.Content initialValue={initialValue} />
+            <MarkdownEditor.Root id={target?.id ?? ''}>
+              <MarkdownEditor.Content initialValue={target ? Initiative.formatPlan(target) : ''} />
             </MarkdownEditor.Root>
           </Input.Root>
         );
@@ -302,6 +301,7 @@ const syncTriggers = async (initiative: Initiative.Initiative) => {
           initiative: Ref.make(initiative),
           event: '{{event}}',
         },
+        concurrency: initiative.useQualifyingAgent ? 5 : undefined,
       }),
     );
   }
