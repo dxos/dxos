@@ -2,6 +2,5 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './blueprint';
-export * from './functions';
+export { default as ResearchBlueprint } from './blueprint';
 export * from './types';

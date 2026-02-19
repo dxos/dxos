@@ -22,7 +22,7 @@ import { MarkdownBlueprint } from '@dxos/plugin-markdown/blueprints';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { HasSubject, type Message, Organization } from '@dxos/types';
 
-import { ResearchBlueprint } from '../blueprint';
+import ResearchBlueprint from '../blueprint';
 import { ResearchDataTypes, ResearchGraph } from '../types';
 
 import { default as createDocument } from './document-create';
@@ -90,7 +90,7 @@ describe('Research', () => {
         const conversation = yield* acquireReleaseResource(() => new AiConversation({ queue }));
 
         yield* Database.flush({ indexes: true });
-        const researchBlueprint = yield* Database.add(Obj.clone(ResearchBlueprint));
+        const researchBlueprint = yield* Database.add(Obj.clone(ResearchBlueprint.make()));
         const markdownBlueprint = yield* Database.add(Obj.clone(MarkdownBlueprint.make()));
         yield* Effect.promise(() =>
           conversation.context.bind({

@@ -85,7 +85,7 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
                 name: 'New Initiative',
                 spec: 'Not specified yet',
               },
-              InitiativeBlueprint,
+              InitiativeBlueprint.make(),
             ).pipe(withComputeRuntime(db.spaceId))) satisfies CreateObject,
           addToCollectionOnCreate: true,
         },

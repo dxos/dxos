@@ -2,5 +2,5 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './blueprint';
-export * from './functions';
+export { default as InitiativeBlueprint } from './blueprint';
+export { InitiativeFunctions } from './functions';

@@ -20,14 +20,7 @@ import {
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AppActivationEvents, AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
 import { AiContextBinder, ArtifactId, GenericToolkit } from '@dxos/assistant';
-import {
-  AgentFunctions,
-  DesignBlueprint,
-  MarkdownFunctions,
-  PlanningBlueprint,
-  ResearchFunctions,
-  TaskFunctions,
-} from '@dxos/assistant-toolkit';
+import { AgentFunctions, DesignBlueprint, MarkdownBlueprint, PlanningBlueprint } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { type Space } from '@dxos/client/echo';
 import { Obj, Ref } from '@dxos/echo';
@@ -208,12 +201,14 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>({
     activatesOn: AppActivationEvents.SetupArtifactDefinition,
     activate: () =>
       Effect.succeed([
+        // TODO(burdon): Needs attention!!!
+        Capability.contributes(AppCapabilities.BlueprintDefinition, MarkdownBlueprint),
         Capability.contributes(AppCapabilities.BlueprintDefinition, DesignBlueprint),
         Capability.contributes(AppCapabilities.BlueprintDefinition, PlanningBlueprint),
+        Capability.contributes(AppCapabilities.Functions, MarkdownBlueprint.functions),
+        Capability.contributes(AppCapabilities.Functions, DesignBlueprint.functions),
+        Capability.contributes(AppCapabilities.Functions, PlanningBlueprint.functions),
         Capability.contributes(AppCapabilities.Functions, Object.values(AgentFunctions)),
-        Capability.contributes(AppCapabilities.Functions, Object.values(MarkdownFunctions)),
-        Capability.contributes(AppCapabilities.Functions, Object.values(TaskFunctions)),
-        Capability.contributes(AppCapabilities.Functions, Object.values(ResearchFunctions)),
         Capability.contributes(AppCapabilities.Functions, Object.values(ExampleFunctions)),
       ]),
   }),

@@ -2,24 +2,30 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type AppCapabilities } from '@dxos/app-toolkit';
 import { Blueprint, Template } from '@dxos/blueprints';
-import { type FunctionDefinition } from '@dxos/functions';
 import { trim } from '@dxos/util';
 
-export const Key = 'dxos.org/blueprint/script';
+const BLUEPRINT_KEY = 'dxos.org/blueprint/script';
 
-export const functions: FunctionDefinition[] = [];
+const functions: AppCapabilities.BlueprintDefinition['functions'] = [];
 
-export const tools: string[] = [];
-
-export const make = () =>
+const make = () =>
   Blueprint.make({
-    key: Key,
+    key: BLUEPRINT_KEY,
     name: 'Script',
-    tools: Blueprint.toolDefinitions({ functions, tools }),
+    tools: Blueprint.toolDefinitions({ functions, tools: [] }),
     instructions: Template.make({
       source: trim`
         You can create and update scripts which contain Typescript code.
       `,
     }),
   });
+
+const blueprint: AppCapabilities.BlueprintDefinition = {
+  key: BLUEPRINT_KEY,
+  functions,
+  make,
+};
+
+export default blueprint;

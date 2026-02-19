@@ -30,7 +30,7 @@ import { trim } from '@dxos/util';
 
 import { MarkdownFunctions } from '../markdown';
 
-import { DesignBlueprint } from './blueprint';
+import DesignBlueprint from './blueprint';
 
 describe('Design Blueprint', { timeout: 120_000 }, () => {
   it.scoped(
@@ -41,10 +41,11 @@ describe('Design Blueprint', { timeout: 120_000 }, () => {
         const queue = yield* QueueService.createQueue<Message.Message | ContextBinding>();
         const conversation = yield* acquireReleaseResource(() => new AiConversation({ queue }));
 
-        yield* Database.add(DesignBlueprint);
+        const blueprint = DesignBlueprint.make();
+        yield* Database.add(blueprint);
         yield* Effect.promise(() =>
           conversation.context.bind({
-            blueprints: [Ref.make(DesignBlueprint)],
+            blueprints: [Ref.make(blueprint)],
           }),
         );
 
@@ -88,7 +89,7 @@ describe('Design Blueprint', { timeout: 120_000 }, () => {
           Layer.provideMerge(Layer.mergeAll(GenericToolkit.providerEmpty, AiServiceTestingPreset('direct'))),
           Layer.provideMerge(
             FunctionInvocationServiceLayerTestMocked({
-              functions: [MarkdownFunctions.Read, MarkdownFunctions.Update],
+              functions: Object.values(MarkdownFunctions),
             }).pipe(Layer.provideMerge(TracingService.layerNoop)),
           ),
         ),
