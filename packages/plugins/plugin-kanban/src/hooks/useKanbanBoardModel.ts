@@ -10,15 +10,8 @@ import { AtomObj } from '@dxos/echo-atom';
 import type { BoardModel } from '@dxos/react-ui-mosaic';
 import type { ProjectionModel } from '@dxos/schema';
 
-import { type Kanban, UNCATEGORIZED_VALUE } from '../types';
-import {
-  type BaseKanbanItem,
-  type ColumnStructure,
-  type KanbanArrangementSnapshot,
-  computeColumnStructure,
-  getEffectiveArrangementByColumn,
-  getEffectiveArrangementOrder,
-} from '../util';
+import { type BaseKanbanItem, type ColumnStructure, type Kanban, UNCATEGORIZED_VALUE } from '../types';
+import { computeColumnStructure, getEffectiveByColumnFromArrangement, getEffectiveOrderFromArrangement } from '../util';
 
 export function useKanbanBoardModel<T extends BaseKanbanItem = BaseKanbanItem>(
   kanban: Kanban.Kanban,
@@ -27,57 +20,34 @@ export function useKanbanBoardModel<T extends BaseKanbanItem = BaseKanbanItem>(
   registry: Registry.Registry,
 ): BoardModel<ColumnStructure, T> {
   // Source atoms: reactive reads from the kanban object; items come from the passed-in atom (e.g. AtomQuery or in-memory).
-  const kanbanSnapshotAtom = useMemo(() => AtomObj.make(kanban), [kanban]);
   const arrangementAtom = useMemo(() => AtomObj.makeProperty(kanban, 'arrangement'), [kanban]);
   const viewSnapshotAtom = useMemo(
     () => (kanban?.view ? AtomObj.make(kanban.view) : Atom.make<undefined>(() => undefined)),
     [kanban?.view],
   );
 
-  // Effective column order: from kanban.arrangement.order, or fallback from snapshot (for legacy/empty).
-  const effectiveOrderAtom = useMemo(
-    () =>
-      Atom.make((get) => {
-        const arrangement = get(arrangementAtom);
-        const order = arrangement?.order;
-        if (order != null && order.length > 0) {
-          return [...order];
-        }
-
-        return getEffectiveArrangementOrder(get(kanbanSnapshotAtom) as unknown as KanbanArrangementSnapshot);
-      }),
-    [arrangementAtom, kanbanSnapshotAtom],
+  /** Only changes when view.projection.pivotFieldId changes; keeps columns from firing on other view updates. */
+  const pivotFieldIdAtom = useMemo(
+    () => Atom.make((get) => get(viewSnapshotAtom)?.projection?.pivotFieldId as string | undefined),
+    [viewSnapshotAtom],
   );
 
-  // Effective per-column ids: from kanban.arrangement.columns, copied to mutable; fallback from snapshot.
+  // Effective per-column ids: from kanban.arrangement.columns; empty when arrangement has no columns.
   const effectiveByColumnAtom = useMemo(
-    () =>
-      Atom.make((get) => {
-        const arrangement = get(arrangementAtom);
-        const columns = arrangement?.columns;
-        if (columns != null && Object.keys(columns).length > 0) {
-          return Object.fromEntries(
-            Object.entries(columns).map(([key, entry]) => [
-              key,
-              { ids: [...(entry.ids ?? [])], ...(entry.hidden !== undefined && { hidden: entry.hidden }) },
-            ]),
-          );
-        }
-        return getEffectiveArrangementByColumn(get(kanbanSnapshotAtom) as unknown as KanbanArrangementSnapshot);
-      }),
-    [arrangementAtom, kanbanSnapshotAtom],
+    () => Atom.make((get) => getEffectiveByColumnFromArrangement(get(arrangementAtom))),
+    [arrangementAtom],
   );
 
-  // Column structure for the board: order + selectOptions from view/projection; no item data.
+  // Column structure: depends on pivotFieldId (not full view), arrangement, and projection so columns only fire when pivot or arrangement changes.
   const columnsAtom = useMemo(
     () =>
       Atom.make((get) => {
-        const view = get(viewSnapshotAtom);
-        const pivotFieldId = view?.projection?.pivotFieldId;
+        const pivotFieldId = get(pivotFieldIdAtom);
         if (pivotFieldId === undefined) {
           return [];
         }
 
+        get(projection.fields);
         const fieldProj = projection.tryGetFieldProjection(pivotFieldId);
         if (!fieldProj) {
           return [];
@@ -88,12 +58,12 @@ export function useKanbanBoardModel<T extends BaseKanbanItem = BaseKanbanItem>(
           return [];
         }
 
-        const order = get(effectiveOrderAtom);
-        const byColumn = get(effectiveByColumnAtom);
-        get(projection.fields);
+        const arrangement = get(arrangementAtom);
+        const order = getEffectiveOrderFromArrangement(arrangement);
+        const byColumn = getEffectiveByColumnFromArrangement(arrangement);
         return computeColumnStructure(order, byColumn, selectOptions);
       }),
-    [viewSnapshotAtom, effectiveOrderAtom, effectiveByColumnAtom, projection],
+    [pivotFieldIdAtom, arrangementAtom, projection],
   );
 
   // Per-column slice of arrangement so each column’s items atom only depends on that column’s ids.

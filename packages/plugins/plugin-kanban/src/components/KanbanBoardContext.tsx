@@ -10,8 +10,7 @@ import { type Obj } from '@dxos/echo';
 import type { MosaicTileProps } from '@dxos/react-ui-mosaic';
 import type { ProjectionModel } from '@dxos/schema';
 
-import { UNCATEGORIZED_ATTRIBUTES, UNCATEGORIZED_VALUE } from '../types';
-import type { KanbanChangeCallback } from '../util';
+import { type KanbanChangeCallback, UNCATEGORIZED_ATTRIBUTES, UNCATEGORIZED_VALUE } from '../types';
 
 const KANBAN_BOARD_CONTEXT_NAME = 'KanbanBoardContext';
 

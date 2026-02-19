@@ -8,8 +8,7 @@ import type { BoardModel, MosaicEventHandler, MosaicTileData } from '@dxos/react
 import type { ProjectionModel } from '@dxos/schema';
 import { arrayMove } from '@dxos/util';
 
-import { UNCATEGORIZED_VALUE } from '../types';
-import type { BaseKanbanItem, ColumnStructure } from '../util';
+import { type BaseKanbanItem, type ColumnStructure, UNCATEGORIZED_VALUE } from '../types';
 
 export function useKanbanColumnEventHandler<T extends BaseKanbanItem>({
   id,

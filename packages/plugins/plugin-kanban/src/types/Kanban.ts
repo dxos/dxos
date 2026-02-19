@@ -21,10 +21,12 @@ const ArrangementColumns = Schema.Record({
 }).pipe(FormInputAnnotation.set(false));
 
 /** Column order and per-column card ids. */
-const Arrangement = Schema.Struct({
+export const Arrangement = Schema.Struct({
   order: Schema.Array(Schema.String).pipe(FormInputAnnotation.set(false)),
   columns: ArrangementColumns,
 }).pipe(FormInputAnnotation.set(false));
+
+export type Arrangement = Schema.Schema.Type<typeof Arrangement>;
 
 export const Kanban = Schema.Struct({
   name: Schema.optional(Schema.String),

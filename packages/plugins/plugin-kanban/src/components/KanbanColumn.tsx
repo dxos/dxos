@@ -11,8 +11,7 @@ import { mx } from '@dxos/ui-theme';
 
 import { useKanbanItemEventHandler } from '../hooks';
 import { meta } from '../meta';
-import { UNCATEGORIZED_VALUE } from '../types';
-import type { ColumnStructure } from '../util';
+import { type ColumnStructure, UNCATEGORIZED_VALUE } from '../types';
 
 import { useKanbanBoard } from './KanbanBoardContext';
 

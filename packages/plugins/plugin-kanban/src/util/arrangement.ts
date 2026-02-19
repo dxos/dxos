@@ -43,6 +43,44 @@ export const getEffectiveArrangementByColumn = (
   return {};
 };
 
+/** Arrangement shape (order + columns) for helper inputs. */
+type ArrangementLike =
+  | {
+      order?: readonly string[];
+      columns?: Readonly<Record<string, { ids?: readonly string[]; hidden?: boolean }>>;
+    }
+  | undefined;
+
+/**
+ * Returns effective column order from arrangement; empty when arrangement has no order.
+ */
+export const getEffectiveOrderFromArrangement = (arrangement: ArrangementLike): string[] => {
+  const order = arrangement?.order;
+  if (order != null && order.length > 0) {
+    return [...order];
+  }
+  return [];
+};
+
+/**
+ * Returns effective per-column ids from arrangement; empty when arrangement has no columns.
+ * Always returns mutable copies.
+ */
+export const getEffectiveByColumnFromArrangement = (
+  arrangement: ArrangementLike,
+): Record<string, { ids: string[]; hidden?: boolean }> => {
+  const columns = arrangement?.columns;
+  if (columns != null && Object.keys(columns).length > 0) {
+    return Object.fromEntries(
+      Object.entries(columns).map(([key, entry]) => [
+        key,
+        { ids: [...(entry.ids ?? [])], ...(entry.hidden !== undefined && { hidden: entry.hidden }) },
+      ]),
+    );
+  }
+  return {};
+};
+
 /**
  * Builds ordered column structure from effective order + byColumn + selectOptions.
  * Ensures uncategorized first, then order from arrangement.order, then any selectOption columns not yet present.
