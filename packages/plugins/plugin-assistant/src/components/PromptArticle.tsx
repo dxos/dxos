@@ -20,14 +20,12 @@ import { TemplateEditor } from './TemplateEditor';
 
 export type PromptArticleProps = SurfaceComponentProps<Prompt.Prompt>;
 
-type PromptInput = FunctionDefinition.Input<typeof AgentFunctions.Prompt>;
-
 export const PromptArticle = ({ role, subject }: PromptArticleProps) => {
   const { t } = useTranslation(meta.id);
   const { hasAttention } = useAttention(Obj.getDXN(subject).toString());
   const db = Obj.getDatabase(subject);
 
-  const inputData = useMemo<PromptInput | undefined>(
+  const inputData = useMemo<FunctionDefinition.Input<typeof AgentFunctions.Prompt> | undefined>(
     () =>
       subject && db
         ? {
