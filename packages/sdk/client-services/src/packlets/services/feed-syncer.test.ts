@@ -6,7 +6,7 @@ import { Encoder, decode as cborDecode } from 'cbor-x';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
-import { describe, expect, test, vi } from 'vitest';
+import { describe, expect, onTestFinished, test, vi } from 'vitest';
 
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
@@ -28,24 +28,120 @@ import { FeedSyncer } from './feed-syncer';
 type ProtocolMessage = FeedProtocol.ProtocolMessage;
 
 const encoder = new Encoder({ tagUint8Array: false, useRecords: false });
+const syncNamespace = FeedProtocol.WellKnownNamespaces.data;
+
+const createRuntime = () => {
+  const baseLayer = layerMemory;
+  const transactionLayer = SqlTransaction.layer.pipe(Layer.provide(baseLayer));
+  return ManagedRuntime.make(Layer.merge(baseLayer, transactionLayer).pipe(Layer.orDie));
+};
+
+const createFeedStore = (localActorId: string, assignPositions: boolean) =>
+  new FeedStore({ localActorId, assignPositions });
+
+const createEdgeConnection = ({
+  syncServer,
+  serverRuntime,
+  messageListeners,
+}: {
+  syncServer: SyncServer;
+  serverRuntime: ReturnType<typeof createRuntime>;
+  messageListeners: Set<(message: RouterMessage) => void>;
+}): EdgeConnection => {
+  const reconnectListeners = new Set<() => void>();
+
+  return {
+    statusChanged: new Event<any>(),
+    info: {},
+    identityKey: 'client-identity',
+    peerKey: 'client-peer',
+    isOpen: true,
+    status: {
+      state: EdgeStatus.ConnectionState.CONNECTED,
+      rtt: 0,
+      uptime: 0,
+      rateBytesUp: 0,
+      rateBytesDown: 0,
+      messagesSent: 0,
+      messagesReceived: 0,
+    },
+    setIdentity: () => {},
+    open: async () => {},
+    close: async () => {},
+    send: async (routerMessage: RouterMessage) => {
+      const decoded = cborDecode(routerMessage.payload!.value) as ProtocolMessage;
+      await syncServer.handleMessage(decoded).pipe(RuntimeProvider.runPromise(serverRuntime.runtimeEffect));
+    },
+    onMessage: (listener: (message: RouterMessage) => void) => {
+      messageListeners.add(listener);
+      return () => messageListeners.delete(listener);
+    },
+    onReconnected: (listener: () => void) => {
+      reconnectListeners.add(listener);
+      return () => reconnectListeners.delete(listener);
+    },
+  };
+};
+
+const createFeedSyncHarness = async ({ spaceId, pollingInterval }: { spaceId: SpaceId; pollingInterval?: number }) => {
+  const serverRuntime = createRuntime();
+  const clientRuntime = createRuntime();
+  const serverFeedStore = createFeedStore('server', true);
+  const clientFeedStore = createFeedStore('client', false);
+
+  await serverFeedStore.migrate().pipe(RuntimeProvider.runPromise(serverRuntime.runtimeEffect));
+  await clientFeedStore.migrate().pipe(RuntimeProvider.runPromise(clientRuntime.runtimeEffect));
+
+  const messageListeners = new Set<(message: RouterMessage) => void>();
+  const syncServer = new SyncServer({
+    peerId: 'server',
+    feedStore: serverFeedStore,
+    sendMessage: (message) =>
+      Effect.promise(async () => {
+        const routerMessage = createBuf(MessageSchema, {
+          source: {
+            identityKey: 'server-identity',
+            peerKey: 'server-peer',
+          },
+          serviceId: `${EdgeService.QUEUE_REPLICATOR}:test`,
+          payload: { value: bufferToArray(encoder.encode(message)) },
+        });
+
+        for (const listener of messageListeners) {
+          listener(routerMessage);
+        }
+      }),
+  });
+
+  const edgeClient = createEdgeConnection({ syncServer, serverRuntime, messageListeners });
+
+  const syncer = new FeedSyncer({
+    runtime: clientRuntime.runtimeEffect,
+    feedStore: clientFeedStore,
+    edgeClient: edgeClient as any,
+    peerId: 'client',
+    getSpaceIds: () => [spaceId],
+    syncNamespace,
+    pollingInterval,
+  });
+
+  const close = async () => {
+    await syncer.close();
+    await clientRuntime.dispose();
+    await serverRuntime.dispose();
+  };
+
+  onTestFinished(close);
+
+  return { serverRuntime, clientRuntime, serverFeedStore, clientFeedStore, syncer, close };
+};
 
 describe('FeedSyncer', () => {
   test('syncs mixed pull and push traffic', async () => {
-    const serverBaseLayer = layerMemory;
-    const serverTransactionLayer = SqlTransaction.layer.pipe(Layer.provide(serverBaseLayer));
-    const serverRuntime = ManagedRuntime.make(Layer.merge(serverBaseLayer, serverTransactionLayer).pipe(Layer.orDie));
-
-    const clientBaseLayer = layerMemory;
-    const clientTransactionLayer = SqlTransaction.layer.pipe(Layer.provide(clientBaseLayer));
-    const clientRuntime = ManagedRuntime.make(Layer.merge(clientBaseLayer, clientTransactionLayer).pipe(Layer.orDie));
-
-    const serverFeedStore = new FeedStore({ localActorId: 'server', assignPositions: true });
-    const clientFeedStore = new FeedStore({ localActorId: 'client', assignPositions: false });
-
-    await serverFeedStore.migrate().pipe(RuntimeProvider.runPromise(serverRuntime.runtimeEffect));
-    await clientFeedStore.migrate().pipe(RuntimeProvider.runPromise(clientRuntime.runtimeEffect));
-
     const spaceId = SpaceId.random();
+    const { serverRuntime, clientRuntime, serverFeedStore, clientFeedStore, syncer } = await createFeedSyncHarness({
+      spaceId,
+    });
     const serverFeedId = ObjectId.random();
     const clientFeedId = ObjectId.random();
 
@@ -54,75 +150,11 @@ describe('FeedSyncer', () => {
         {
           spaceId,
           feedId: serverFeedId,
-          feedNamespace: FeedProtocol.WellKnownNamespaces.data,
+          feedNamespace: syncNamespace,
           data: new Uint8Array([1, 2, 3]),
         },
       ])
       .pipe(RuntimeProvider.runPromise(serverRuntime.runtimeEffect));
-
-    const messageListeners = new Set<(message: RouterMessage) => void>();
-    const reconnectListeners = new Set<() => void>();
-
-    const syncServer = new SyncServer({
-      peerId: 'server',
-      feedStore: serverFeedStore,
-      sendMessage: (message) =>
-        Effect.promise(async () => {
-          const routerMessage = createBuf(MessageSchema, {
-            source: {
-              identityKey: 'server-identity',
-              peerKey: 'server-peer',
-            },
-            serviceId: `${EdgeService.QUEUE_REPLICATOR}:test`,
-            payload: { value: bufferToArray(encoder.encode(message)) },
-          });
-
-          for (const listener of messageListeners) {
-            listener(routerMessage);
-          }
-        }),
-    });
-
-    const edgeClient: EdgeConnection = {
-      statusChanged: new Event<any>(),
-      info: {},
-      identityKey: 'client-identity',
-      peerKey: 'client-peer',
-      isOpen: true,
-      status: {
-        state: EdgeStatus.ConnectionState.CONNECTED,
-        rtt: 0,
-        uptime: 0,
-        rateBytesUp: 0,
-        rateBytesDown: 0,
-        messagesSent: 0,
-        messagesReceived: 0,
-      },
-      setIdentity: () => {},
-      open: async () => {},
-      close: async () => {},
-      send: async (routerMessage: RouterMessage) => {
-        const decoded = cborDecode(routerMessage.payload!.value) as ProtocolMessage;
-        await syncServer.handleMessage(decoded).pipe(RuntimeProvider.runPromise(serverRuntime.runtimeEffect));
-      },
-      onMessage: (listener: (message: RouterMessage) => void) => {
-        messageListeners.add(listener);
-        return () => messageListeners.delete(listener);
-      },
-      onReconnected: (listener: () => void) => {
-        reconnectListeners.add(listener);
-        return () => reconnectListeners.delete(listener);
-      },
-    };
-
-    const syncer = new FeedSyncer({
-      runtime: clientRuntime.runtimeEffect,
-      feedStore: clientFeedStore,
-      edgeClient: edgeClient as any,
-      peerId: 'client',
-      getSpaceIds: () => [spaceId],
-      syncNamespace: FeedProtocol.WellKnownNamespaces.data,
-    });
 
     await syncer.open(new Context());
 
@@ -130,7 +162,7 @@ describe('FeedSyncer', () => {
       const { blocks } = await clientFeedStore
         .query({
           spaceId,
-          feedNamespace: FeedProtocol.WellKnownNamespaces.data,
+          feedNamespace: syncNamespace,
           position: -1,
           query: { feedIds: [serverFeedId] },
         })
@@ -146,48 +178,34 @@ describe('FeedSyncer', () => {
         {
           spaceId,
           feedId: clientFeedId,
-          feedNamespace: FeedProtocol.WellKnownNamespaces.data,
+          feedNamespace: syncNamespace,
           data: new Uint8Array([9, 8, 7]),
         },
       ])
       .pipe(RuntimeProvider.runPromise(clientRuntime.runtimeEffect));
 
     await vi.waitFor(async () => {
-      const { blocks: serverBlocks } = await serverFeedStore
+      const { blocks } = await serverFeedStore
         .query({
           spaceId,
-          feedNamespace: FeedProtocol.WellKnownNamespaces.data,
+          feedNamespace: syncNamespace,
           position: -1,
           query: { feedIds: [clientFeedId] },
         })
         .pipe(RuntimeProvider.runPromise(serverRuntime.runtimeEffect));
 
-      expect(serverBlocks).toHaveLength(1);
-      expect(serverBlocks[0].data).toEqual(new Uint8Array([9, 8, 7]));
-      expect(serverBlocks[0].position).toBeDefined();
+      expect(blocks).toHaveLength(1);
+      expect(blocks[0].data).toEqual(new Uint8Array([9, 8, 7]));
+      expect(blocks[0].position).toBeDefined();
     });
-
-    await syncer.close();
-    await clientRuntime.dispose();
-    await serverRuntime.dispose();
   });
 
   test('requestPoll triggers best-effort pull for a space', async () => {
-    const serverBaseLayer = layerMemory;
-    const serverTransactionLayer = SqlTransaction.layer.pipe(Layer.provide(serverBaseLayer));
-    const serverRuntime = ManagedRuntime.make(Layer.merge(serverBaseLayer, serverTransactionLayer).pipe(Layer.orDie));
-
-    const clientBaseLayer = layerMemory;
-    const clientTransactionLayer = SqlTransaction.layer.pipe(Layer.provide(clientBaseLayer));
-    const clientRuntime = ManagedRuntime.make(Layer.merge(clientBaseLayer, clientTransactionLayer).pipe(Layer.orDie));
-
-    const serverFeedStore = new FeedStore({ localActorId: 'server', assignPositions: true });
-    const clientFeedStore = new FeedStore({ localActorId: 'client', assignPositions: false });
-
-    await serverFeedStore.migrate().pipe(RuntimeProvider.runPromise(serverRuntime.runtimeEffect));
-    await clientFeedStore.migrate().pipe(RuntimeProvider.runPromise(clientRuntime.runtimeEffect));
-
     const spaceId = SpaceId.random();
+    const { serverRuntime, clientRuntime, serverFeedStore, clientFeedStore, syncer } = await createFeedSyncHarness({
+      spaceId,
+      pollingInterval: 60_000,
+    });
     const serverFeedId = ObjectId.random();
 
     await serverFeedStore
@@ -195,76 +213,11 @@ describe('FeedSyncer', () => {
         {
           spaceId,
           feedId: serverFeedId,
-          feedNamespace: FeedProtocol.WellKnownNamespaces.data,
+          feedNamespace: syncNamespace,
           data: new Uint8Array([1, 2, 3]),
         },
       ])
       .pipe(RuntimeProvider.runPromise(serverRuntime.runtimeEffect));
-
-    const messageListeners = new Set<(message: RouterMessage) => void>();
-    const reconnectListeners = new Set<() => void>();
-
-    const syncServer = new SyncServer({
-      peerId: 'server',
-      feedStore: serverFeedStore,
-      sendMessage: (message) =>
-        Effect.promise(async () => {
-          const routerMessage = createBuf(MessageSchema, {
-            source: {
-              identityKey: 'server-identity',
-              peerKey: 'server-peer',
-            },
-            serviceId: `${EdgeService.QUEUE_REPLICATOR}:test`,
-            payload: { value: bufferToArray(encoder.encode(message)) },
-          });
-
-          for (const listener of messageListeners) {
-            listener(routerMessage);
-          }
-        }),
-    });
-
-    const edgeClient: EdgeConnection = {
-      statusChanged: new Event<any>(),
-      info: {},
-      identityKey: 'client-identity',
-      peerKey: 'client-peer',
-      isOpen: true,
-      status: {
-        state: EdgeStatus.ConnectionState.CONNECTED,
-        rtt: 0,
-        uptime: 0,
-        rateBytesUp: 0,
-        rateBytesDown: 0,
-        messagesSent: 0,
-        messagesReceived: 0,
-      },
-      setIdentity: () => {},
-      open: async () => {},
-      close: async () => {},
-      send: async (routerMessage: RouterMessage) => {
-        const decoded = cborDecode(routerMessage.payload!.value) as ProtocolMessage;
-        await syncServer.handleMessage(decoded).pipe(RuntimeProvider.runPromise(serverRuntime.runtimeEffect));
-      },
-      onMessage: (listener: (message: RouterMessage) => void) => {
-        messageListeners.add(listener);
-        return () => messageListeners.delete(listener);
-      },
-      onReconnected: (listener: () => void) => {
-        reconnectListeners.add(listener);
-        return () => reconnectListeners.delete(listener);
-      },
-    };
-
-    const syncer = new FeedSyncer({
-      runtime: clientRuntime.runtimeEffect,
-      feedStore: clientFeedStore,
-      edgeClient: edgeClient as any,
-      peerId: 'client',
-      getSpaceIds: () => [spaceId],
-      syncNamespace: FeedProtocol.WellKnownNamespaces.data,
-      pollingInterval: 60_000,
-    });
 
     await syncer.open(new Context());
 
@@ -272,7 +225,7 @@ describe('FeedSyncer', () => {
       const { blocks } = await clientFeedStore
         .query({
           spaceId,
-          feedNamespace: FeedProtocol.WellKnownNamespaces.data,
+          feedNamespace: syncNamespace,
           position: -1,
           query: { feedIds: [serverFeedId] },
         })
@@ -287,7 +240,7 @@ describe('FeedSyncer', () => {
         {
           spaceId,
           feedId: serverFeedId,
-          feedNamespace: FeedProtocol.WellKnownNamespaces.data,
+          feedNamespace: syncNamespace,
           data: new Uint8Array([4, 5, 6]),
         },
       ])
@@ -298,7 +251,7 @@ describe('FeedSyncer', () => {
       const { blocks } = await clientFeedStore
         .query({
           spaceId,
-          feedNamespace: FeedProtocol.WellKnownNamespaces.data,
+          feedNamespace: syncNamespace,
           position: -1,
           query: { feedIds: [serverFeedId] },
         })
@@ -306,13 +259,13 @@ describe('FeedSyncer', () => {
       expect(blocks).toHaveLength(1);
     }
 
-    syncer.requestPoll(spaceId);
+    syncer.schedulePoll();
 
     await vi.waitFor(async () => {
       const { blocks } = await clientFeedStore
         .query({
           spaceId,
-          feedNamespace: FeedProtocol.WellKnownNamespaces.data,
+          feedNamespace: syncNamespace,
           position: -1,
           query: { feedIds: [serverFeedId] },
         })
@@ -321,9 +274,5 @@ describe('FeedSyncer', () => {
       expect(blocks).toHaveLength(2);
       expect(blocks[1].data).toEqual(new Uint8Array([4, 5, 6]));
     });
-
-    await syncer.close();
-    await clientRuntime.dispose();
-    await serverRuntime.dispose();
   });
 });
