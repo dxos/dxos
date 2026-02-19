@@ -113,7 +113,7 @@ export default defineFunction({
 
         toolkit = Toolkit.merge(toolkit, LocalSearchToolkit, GraphWriterToolkit);
         handlers = Layer.mergeAll(handlers, LocalSearchHandler, GraphWriterHandler).pipe(
-          Layer.provide(ResearchGraph.contextQueueLayerFromResearchGraph),
+          Layer.provide(ResearchGraph.contextQueueLayer),
         ) as any;
       }
 

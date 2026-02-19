@@ -18,7 +18,7 @@ import { log } from '@dxos/log';
 import { type Actor, LegacyOrganization, Message, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { contextQueueLayerFromResearchGraph } from '../../blueprints/research/types/research-graph';
+import { ResearchGraph } from '../../blueprints';
 import { makeGraphWriterHandler, makeGraphWriterToolkit } from '../../crud';
 
 export default defineFunction({
@@ -57,7 +57,7 @@ export default defineFunction({
           onAppend: (dxns) => created.push(...dxns),
         });
         const toolkit = yield* GraphWriterToolkit.pipe(
-          Effect.provide(GraphWriterHandler.pipe(Layer.provide(contextQueueLayerFromResearchGraph))),
+          Effect.provide(GraphWriterHandler.pipe(Layer.provide(ResearchGraph.contextQueueLayer))),
         );
 
         yield* new AiSession().run({

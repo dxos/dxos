@@ -83,7 +83,7 @@ export default defineFunction({
             //
             GraphWriterHandler,
             LocalSearchHandler,
-          ).pipe(Layer.provide(ResearchGraph.contextQueueLayerFromResearchGraph)),
+          ).pipe(Layer.provide(ResearchGraph.contextQueueLayer)),
         ),
       );
 

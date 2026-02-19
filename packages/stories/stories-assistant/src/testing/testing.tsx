@@ -26,12 +26,12 @@ import {
   MarkdownFunctions,
   PlanningBlueprint,
   ResearchFunctions,
-  Tasks,
+  TaskFunctions,
 } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { type Space } from '@dxos/client/echo';
 import { Obj, Ref } from '@dxos/echo';
-import { Example, Function, Trigger } from '@dxos/functions';
+import { ExampleFunctions, Function, Trigger } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { OperationResolver } from '@dxos/operation';
@@ -210,11 +210,11 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>({
       Effect.succeed([
         Capability.contributes(AppCapabilities.BlueprintDefinition, DesignBlueprint),
         Capability.contributes(AppCapabilities.BlueprintDefinition, PlanningBlueprint),
-        Capability.contributes(AppCapabilities.Functions, [AgentFunctions.Prompt]),
-        Capability.contributes(AppCapabilities.Functions, [MarkdownFunctions.Read, MarkdownFunctions.Update]),
-        Capability.contributes(AppCapabilities.Functions, [Tasks.Read, Tasks.Update]),
-        Capability.contributes(AppCapabilities.Functions, [ResearchFunctions.Create, ResearchFunctions.Research]),
-        Capability.contributes(AppCapabilities.Functions, [Example.reply]),
+        Capability.contributes(AppCapabilities.Functions, Object.values(AgentFunctions)),
+        Capability.contributes(AppCapabilities.Functions, Object.values(MarkdownFunctions)),
+        Capability.contributes(AppCapabilities.Functions, Object.values(TaskFunctions)),
+        Capability.contributes(AppCapabilities.Functions, Object.values(ResearchFunctions)),
+        Capability.contributes(AppCapabilities.Functions, Object.values(ExampleFunctions)),
       ]),
   }),
   Plugin.addModule({

@@ -21,7 +21,7 @@ import {
 } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt, Template } from '@dxos/blueprints';
 import { Filter, Obj, Query, Ref, Tag, Type } from '@dxos/echo';
-import { Example, Script, Trigger, serializeFunction } from '@dxos/functions';
+import { ExampleFunctions, Script, Trigger, serializeFunction } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { AssistantBlueprint, translations, useContextBinder } from '@dxos/plugin-assistant';
@@ -630,7 +630,7 @@ export const WithTriggers: Story = {
     onInit: async ({ space }) => {
       space.db.add(
         Trigger.make({
-          function: Ref.make(serializeFunction(Example.reply)),
+          function: Ref.make(serializeFunction(ExampleFunctions.Reply)),
           enabled: true,
           spec: {
             kind: 'timer',

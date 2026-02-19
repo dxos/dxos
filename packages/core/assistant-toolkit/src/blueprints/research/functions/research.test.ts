@@ -61,7 +61,7 @@ describe('Research', () => {
         console.log(JSON.stringify(result, null, 2));
 
         yield* Database.flush({ indexes: true });
-        const researchGraph = yield* ResearchGraph.queryResearchGraph();
+        const researchGraph = yield* ResearchGraph.query();
         if (researchGraph) {
           const data = yield* Database.load(researchGraph.queue).pipe(
             Effect.flatMap((queue) => Effect.promise(() => queue.queryObjects())),

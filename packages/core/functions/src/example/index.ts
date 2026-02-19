@@ -2,12 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { default as fib$ } from './fib';
-import { default as reply$ } from './reply';
-import { default as sleep$ } from './sleep';
+import { default as Fibonacci } from './fib';
+import { default as Reply } from './reply';
+import { default as Sleep } from './sleep';
 
-export namespace Example {
-  export const fib = fib$;
-  export const reply = reply$;
-  export const sleep = sleep$;
-}
+export const ExampleFunctions = {
+  Fibonacci,
+  Reply,
+  Sleep,
+};
