@@ -48,7 +48,7 @@ type MosaicStackProps<TData = any> = SlottableClassName<
     getId: GetId<TData>;
     role?: string;
     orientation?: Axis;
-    items?: TData[];
+    items?: readonly TData[];
   } & Pick<MosaicTileProps<TData>, 'draggable' | 'debug'>
 >;
 

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Atom, RegistryContext } from '@effect-atom/atom-react';
+import { Atom, RegistryContext, useAtomValue } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useContext, useMemo } from 'react';
 import { expect, within } from 'storybook/test';
@@ -16,10 +16,11 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { withRegistry } from '@dxos/storybook-utils';
 import { mx } from '@dxos/ui-theme';
 
+import { useEventHandlerAdapter } from '../../hooks';
 import { TestColumn, TestItem } from '../../testing';
 import { translations } from '../../translations';
 import { Focus } from '../Focus';
-import { Mosaic } from '../Mosaic';
+import { Mosaic, type MosaicEventHandler } from '../Mosaic';
 
 import { Board, type BoardModel } from './Board';
 import { DefaultBoardColumn } from './Column';
@@ -62,13 +63,37 @@ type StoryProps = {
   debug?: boolean;
 };
 
-const DefaultStory = ({ debug = false }: StoryProps) => {
+type TestBoardModelResult = {
+  model: BoardModel<TestColumn, TestItem>;
+  eventHandler: MosaicEventHandler<TestColumn>;
+};
+
+const useTestBoardModel = (): TestBoardModelResult => {
   const { space } = useClientStory();
   const registry = useContext(RegistryContext);
 
-  const model = useMemo<BoardModel<TestColumn, TestItem>>(() => {
+  const { model, orderedColumnsAtom, orderAtom } = useMemo(() => {
+    const getColumnId = (data: TestColumn) => data.id;
+    const getItemId = (data: TestItem) => data.id;
+
+    // In-memory column order (ids only). Empty until the user first reorders; then persist drag/drop order.
+    const orderAtom = Atom.make<string[]>([]);
+
+    // Source of truth for which columns exist; subscribed to ECHO query.
     const columnsAtom =
       space?.db != null ? AtomQuery.make(space.db, Filter.type(TestColumn)) : Atom.make<TestColumn[]>([]);
+
+    // If orderAtom is empty, use Echo order as-is; else sort by orderAtom and append new columns.
+    const orderedColumnsAtom = Atom.make((get) => {
+      const cols = get(columnsAtom);
+      const order = get(orderAtom);
+      if (order.length === 0) return cols;
+      const byId = new Map(cols.map((column) => [getColumnId(column), column]));
+      const ordered = order.map((id) => byId.get(id)).filter((column): column is TestColumn => column != null);
+      const appended = cols.filter((column) => !order.includes(getColumnId(column)));
+      return [...ordered, ...appended];
+    });
+
     const itemsAtomFamily =
       space?.db != null
         ? Atom.family((column: TestColumn) =>
@@ -83,13 +108,15 @@ const DefaultStory = ({ debug = false }: StoryProps) => {
           )
         : Atom.family((_column: TestColumn) => Atom.make<TestItem[]>([]));
 
-    return {
-      isColumn: (obj: Obj.Unknown): obj is TestColumn => Obj.instanceOf(TestColumn, obj),
-      isItem: (obj: Obj.Unknown): obj is TestItem => Obj.instanceOf(TestItem, obj),
-      columns: columnsAtom,
-      items: (column) => itemsAtomFamily(column),
-      getColumns: () => registry.get(columnsAtom),
-      getItems: (column) => registry.get(itemsAtomFamily(column)),
+    const model = {
+      getColumnId,
+      getItemId,
+      isColumn: (obj: unknown): obj is TestColumn => Obj.isObject(obj) && Obj.instanceOf(TestColumn, obj),
+      isItem: (obj: unknown): obj is TestItem => Obj.isObject(obj) && Obj.instanceOf(TestItem, obj),
+      columns: orderedColumnsAtom,
+      items: (column: TestColumn) => itemsAtomFamily(column),
+      getColumns: () => registry.get(orderedColumnsAtom),
+      getItems: (column: TestColumn) => registry.get(itemsAtomFamily(column)),
       onItemCreate: async (column: TestColumn) => {
         invariant(space);
         const item = space.db.add(
@@ -117,12 +144,47 @@ const DefaultStory = ({ debug = false }: StoryProps) => {
         });
       },
     } satisfies BoardModel<TestColumn, TestItem>;
+
+    return { model, orderedColumnsAtom, orderAtom };
   }, [space?.db, registry]);
+
+  const orderedColumns = useAtomValue(model.columns);
+  const eventHandler = useEventHandlerAdapter<TestColumn, TestColumn>({
+    id: 'board',
+    items: orderedColumns,
+    getId: model.getColumnId,
+    get: (data) => data,
+    make: (object) => object,
+    canDrop: ({ source }) => model.isColumn(source.data),
+    // On drag/drop, adapter mutates a copy of the list; we write the new order into orderAtom so it persists in memory.
+    onChange: (mutate) => {
+      const current = registry.get(orderedColumnsAtom);
+      const next = [...current];
+      mutate(next);
+      registry.set(
+        orderAtom,
+        next.map((column) => model.getColumnId(column)),
+      );
+    },
+  });
+
+  return { model, eventHandler };
+};
+
+const DefaultStory = ({ debug = false }: StoryProps) => {
+  const { model, eventHandler } = useTestBoardModel();
+  const columns = useAtomValue(model.columns);
+
+  if (columns.length === 0) {
+    return <></>;
+  }
 
   return (
     <Mosaic.Root asChild debug={debug}>
       <div role='none' className={mx('grid md:p-2 overflow-hidden', debug && 'grid-cols-[1fr_20rem] gap-2')}>
-        <Board.Root id='board' model={model} debug={debug} Tile={DefaultBoardColumn} />
+        <Board.Root model={model}>
+          <Board.Content id='board' debug={debug} eventHandler={eventHandler} Tile={DefaultBoardColumn} />
+        </Board.Root>
         {debug && (
           <Focus.Group classNames='flex flex-col gap-2 overflow-hidden'>
             <Board.Debug classNames='p-2' />

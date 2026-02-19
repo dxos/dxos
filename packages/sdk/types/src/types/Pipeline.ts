@@ -16,6 +16,7 @@ export const Column = Schema.Struct({
 
 export type Column = Schema.Schema.Type<typeof Column>;
 
+// TODO(wittjosiah): Move to plugin-pipeline. This isn't a common type.
 export const Pipeline = Schema.Struct({
   name: Schema.String.pipe(GeneratorAnnotation.set('commerce.productName'), Schema.optional),
   description: Schema.String.pipe(Schema.optional),
