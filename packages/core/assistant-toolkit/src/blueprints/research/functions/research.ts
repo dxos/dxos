@@ -23,7 +23,7 @@ import { type Message, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { LocalSearchHandler, LocalSearchToolkit, makeGraphWriterHandler, makeGraphWriterToolkit } from '../../../crud';
-import { Functions as ExaFunctions } from '../../../functions/exa';
+import { ExaFunctions } from '../../../functions';
 import { ResearchGraph } from '../types';
 import { ResearchDataTypes } from '../types';
 
@@ -143,10 +143,12 @@ export default defineFunction({
       Layer.mergeAll(AiService.model('@anthropic/claude-sonnet-4-0'), ToolExecutionServices).pipe(
         Layer.provide(
           // TODO(dmaretskyi): This should be provided by environment.
-
           Layer.mergeAll(
             GenericToolkit.providerEmpty,
-            FunctionInvocationServiceLayerTestMocked({ functions: [ExaFunctions.Exa, ExaFunctions.Mock] }),
+            FunctionInvocationServiceLayerTestMocked({
+              // TODO(burdon): Remove Mock form prod?
+              functions: [ExaFunctions.Search, ExaFunctions.Mock],
+            }),
           ),
         ),
       ),
