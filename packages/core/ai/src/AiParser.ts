@@ -121,7 +121,6 @@ export const parseResponse =
         });
 
         const emitFullBlock = Effect.fnUntraced(function* (block: Types.Mutable<ContentBlock.Any>) {
-          log('block', { block });
           if (block.pending === false) {
             delete block.pending;
           }
