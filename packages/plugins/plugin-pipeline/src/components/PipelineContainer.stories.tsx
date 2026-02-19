@@ -39,7 +39,7 @@ const DefaultStory = () => {
   }
 
   return (
-    <Stack orientation='horizontal' size='split' rail={false} classNames='pli-0'>
+    <Stack orientation='horizontal' size='split' rail={false} classNames='pli-0 bs-full'>
       <PipelineContainer role='article' subject={pipeline} />
       <PipelineObjectSettings pipeline={pipeline} classNames='border-is border-separator' />
     </Stack>
@@ -144,7 +144,7 @@ const meta = {
               space.db.add(pipeline);
 
               // Generate sample Organizations
-              Array.from({ length: 5 }).forEach(() => {
+              Array.from({ length: 20 }).forEach(() => {
                 const org = Obj.make(
                   Organization.Organization,
                   {
@@ -161,7 +161,7 @@ const meta = {
               });
 
               // Generate sample Tasks
-              Array.from({ length: 8 }).forEach(() => {
+              Array.from({ length: 20 }).forEach(() => {
                 const task = Obj.make(
                   Task.Task,
                   {
@@ -181,7 +181,7 @@ const meta = {
               yield* Effect.promise(() => factory([{ type: Person.Person, count: 12 }]));
 
               // Generate sample Projects
-              Array.from({ length: 3 }).forEach(() => {
+              Array.from({ length: 20 }).forEach(() => {
                 const nestedProject = Pipeline.make({
                   name: faker.commerce.productName(),
                   description: faker.lorem.sentence(),
@@ -190,7 +190,7 @@ const meta = {
               });
 
               // Generate sample Messages
-              const messages = Array.from({ length: 6 }).map(() => {
+              const messages = Array.from({ length: 20 }).map(() => {
                 const message = Obj.make(Message.Message, {
                   created: faker.date.recent().toISOString(),
                   sender: { role: 'user' },

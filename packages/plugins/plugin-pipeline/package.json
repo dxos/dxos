@@ -43,6 +43,7 @@
     "@dxos/async": "workspace:*",
     "@dxos/devtools": "workspace:*",
     "@dxos/echo": "workspace:*",
+    "@dxos/echo-atom": "workspace:*",
     "@dxos/echo-query": "workspace:*",
     "@dxos/functions": "workspace:*",
     "@dxos/log": "workspace:*",

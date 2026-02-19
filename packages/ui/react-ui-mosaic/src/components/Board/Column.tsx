@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { useAtomValue } from '@effect-atom/atom-react';
 import React, {
   type PropsWithChildren,
   type ReactElement,
@@ -23,10 +24,9 @@ import { useContainerDebug, useEventHandlerAdapter } from '../../hooks';
 import { translationKey } from '../../translations';
 import { Card, type CardMenuProps } from '../Card';
 import { Focus } from '../Focus';
-import { Mosaic, type MosaicContainerProps, type MosaicTileProps } from '../Mosaic';
-import { type StackProps } from '../Stack';
+import { Mosaic, type MosaicContainerProps, type MosaicStackProps, type MosaicTileProps } from '../Mosaic';
 
-import { useBoardContext } from './Board';
+import { useBoard } from './Board';
 import { BoardItem } from './Item';
 
 //
@@ -35,22 +35,20 @@ import { BoardItem } from './Item';
 
 const BOARD_COLUMN_NAME = 'Board.Column';
 
-type BoardColumnProps<TColumn extends Obj.Unknown = any> = Pick<
-  MosaicTileProps<TColumn>,
-  'classNames' | 'location' | 'data' | 'debug'
->;
+type BoardColumnProps<TColumn = any> = Pick<MosaicTileProps<TColumn>, 'classNames' | 'location' | 'data' | 'debug'>;
 
-type BoardColumnRootInnerProps<TColumn extends Obj.Unknown = any> = BoardColumnProps<TColumn> & {
+type BoardColumnRootInnerProps<TColumn = any> = BoardColumnProps<TColumn> & {
   dragHandleRef: RefObject<HTMLButtonElement | null>;
 };
 
 const BoardColumnRootInner = forwardRef<HTMLDivElement, PropsWithChildren<BoardColumnRootInnerProps>>(
   ({ classNames, children, location, data, debug, dragHandleRef }, forwardedRef) => {
+    const { model } = useBoard(BOARD_COLUMN_NAME);
     return (
       <Mosaic.Tile
         asChild
         location={location}
-        id={data.id}
+        id={model.getColumnId(data)}
         data={data}
         debug={debug}
         dragHandle={dragHandleRef.current}
@@ -72,15 +70,22 @@ const BoardColumnRootInner = forwardRef<HTMLDivElement, PropsWithChildren<BoardC
 
 BoardColumnRootInner.displayName = BOARD_COLUMN_NAME;
 
-const BoardColumnRootImpl = forwardRef<HTMLDivElement, BoardColumnProps>((props, forwardedRef) => {
-  const dragHandleRef = useRef<HTMLButtonElement>(null);
-  return <BoardColumnRootInner {...props} dragHandleRef={dragHandleRef} ref={forwardedRef} />;
-});
+type BoardColumnRootProps<TColumn = any> = PropsWithChildren<BoardColumnProps<TColumn>> & {
+  dragHandleRef?: RefObject<HTMLButtonElement | null>;
+};
+
+const BoardColumnRootImpl = forwardRef<HTMLDivElement, BoardColumnRootProps>(
+  ({ dragHandleRef: dragHandleRefProp, ...props }, forwardedRef) => {
+    const internalRef = useRef<HTMLButtonElement>(null);
+    const dragHandleRef = dragHandleRefProp ?? internalRef;
+    return <BoardColumnRootInner {...props} dragHandleRef={dragHandleRef} ref={forwardedRef} />;
+  },
+);
 
 BoardColumnRootImpl.displayName = 'Board.Column.Root';
 
-const BoardColumnRoot = BoardColumnRootImpl as <TColumn extends Obj.Unknown = any>(
-  props: BoardColumnProps<TColumn> & { ref?: ReactRef<HTMLDivElement> },
+const BoardColumnRoot = BoardColumnRootImpl as <TColumn = any>(
+  props: BoardColumnRootProps<TColumn> & { ref?: ReactRef<HTMLDivElement> },
 ) => ReactElement;
 
 //
@@ -112,27 +117,16 @@ BoardColumnHeader.displayName = BOARD_COLUMN_HEADER_NAME;
 const BOARD_COLUMN_BODY_NAME = 'Board.Column.Body';
 
 type BoardColumnBodyProps = Pick<BoardColumnProps, 'data'> & {
-  Tile?: StackProps<Obj.Unknown>['Tile'];
-} & Pick<MosaicContainerProps, 'debug'>;
+  eventHandler?: MosaicContainerProps['eventHandler'];
+  Tile?: MosaicStackProps<Obj.Unknown>['Tile'];
+  debug?: MosaicContainerProps['debug'];
+};
 
-const BoardColumnBody = ({ data, Tile = BoardItem, debug }: BoardColumnBodyProps) => {
+const BoardColumnBody = ({ data, eventHandler, Tile = BoardItem, debug }: BoardColumnBodyProps) => {
   const { t } = useTranslation(translationKey);
-  const { model } = useBoardContext(BOARD_COLUMN_BODY_NAME);
-  const [column, updateColumn] = useObject(data);
   const [viewport, setViewport] = useState<HTMLElement | null>(null);
-
-  const eventHandler = useEventHandlerAdapter<Ref.Unknown>({
-    id: data.id,
-    items: column?.items ?? [],
-    getId: (ref) => ref.target?.id ?? ref.dxn.toString(),
-    get: (refOrObj) => (Ref.isRef(refOrObj) ? refOrObj.target! : refOrObj),
-    make: (object) => Ref.make(object),
-    canDrop: ({ source }) => {
-      const item = Ref.isRef(source.data) ? source.data.target : source.data;
-      return item != null && Obj.isObject(item) && model.isItem(item);
-    },
-    onChange: (mutator) => updateColumn((col) => mutator(col.items)),
-  });
+  const { model } = useBoard(BOARD_COLUMN_BODY_NAME);
+  const items = useAtomValue(model.items(data));
 
   // Context menu for items.
   const menuItems = useMemo<NonNullable<CardMenuProps<Obj.Unknown>['items']>>(
@@ -160,7 +154,7 @@ const BoardColumnBody = ({ data, Tile = BoardItem, debug }: BoardColumnBodyProps
       >
         <ScrollArea.Root orientation='vertical' thin margin padding>
           <ScrollArea.Viewport classNames='snap-y md:snap-none' ref={setViewport}>
-            <Mosaic.Stack items={model.getItems(data)} getId={(item) => item.id} Tile={Tile} />
+            <Mosaic.Stack items={items} getId={model.getItemId} Tile={Tile} />
           </ScrollArea.Viewport>
         </ScrollArea.Root>
       </Mosaic.Container>
@@ -177,12 +171,12 @@ BoardColumnBody.displayName = BOARD_COLUMN_BODY_NAME;
 const BOARD_COLUMN_FOOTER_NAME = 'Board.Column.Footer';
 
 type BoardColumnFooterProps = ThemedClassName & {
-  data?: Obj.Unknown;
+  data?: any;
 };
 
 const BoardColumnFooter = forwardRef<HTMLDivElement, BoardColumnFooterProps>(({ classNames, data }, forwardedRef) => {
   const { t } = useTranslation(translationKey);
-  const { model } = useBoardContext(BOARD_COLUMN_FOOTER_NAME);
+  const { model } = useBoard(BOARD_COLUMN_FOOTER_NAME);
 
   return (
     <Toolbar.Root classNames={mx('rounded-b-sm', classNames)} ref={forwardedRef}>
@@ -213,8 +207,23 @@ type DefaultBoardColumnProps = BoardColumnProps & Pick<BoardColumnBodyProps, 'Ti
 
 const DefaultBoardColumn = forwardRef<HTMLDivElement, DefaultBoardColumnProps>(
   ({ classNames, location, data, debug, Tile = BoardItem }, forwardedRef) => {
+    const { model } = useBoard(BOARD_DEFAULT_COLUMN_NAME);
     const [DebugInfo, debugHandler] = useContainerDebug(debug);
     const dragHandleRef = useRef<HTMLButtonElement>(null);
+    const [column, updateColumn] = useObject(data);
+
+    const eventHandler = useEventHandlerAdapter<Ref.Unknown>({
+      id: model.getColumnId(data),
+      items: column?.items ?? [],
+      getId: (ref) => ref.target?.id ?? ref.dxn.toString(),
+      get: (refOrObj) => (Ref.isRef(refOrObj) ? refOrObj.target! : refOrObj),
+      make: (object) => Ref.make(object),
+      canDrop: ({ source }) => {
+        const item = Ref.isRef(source.data) ? source.data.target : source.data;
+        return item != null && Obj.isObject(item) && model.isItem(item);
+      },
+      onChange: (mutator) => updateColumn((col) => mutator(col.items)),
+    });
 
     return (
       <BoardColumnRootInner location={location} data={data} dragHandleRef={dragHandleRef} ref={forwardedRef}>
@@ -234,7 +243,7 @@ const DefaultBoardColumn = forwardRef<HTMLDivElement, DefaultBoardColumnProps>(
             label={Obj.getLabel(data) ?? data.id}
             dragHandleRef={dragHandleRef}
           />
-          <BoardColumnBody data={data} debug={debugHandler} Tile={Tile} />
+          <BoardColumnBody data={data} eventHandler={eventHandler} debug={debugHandler} Tile={Tile} />
           <div role='none' className='flex flex-col'>
             <BoardColumnFooter classNames='border-bs border-separator' data={data} />
             <DebugInfo />

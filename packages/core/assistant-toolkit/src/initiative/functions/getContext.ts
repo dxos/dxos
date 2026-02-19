@@ -37,14 +37,22 @@ export default defineFunction({
     return {
       id: initiative.id,
       name: initiative.name,
-      spec: yield* initiative.spec.pipe(Database.load).pipe(Effect.map((_) => _.content)),
-      plan: yield* initiative.plan?.pipe(Database.load).pipe(Effect.map(formatPlan)) ??
-        Effect.succeed('No plan found.'),
+      spec: yield* initiative.spec.pipe(Database.load).pipe(
+        Effect.map((_) => _.content),
+        Effect.catchTag('ObjectNotFoundError', () => Effect.succeed('No spec found.')),
+      ),
+      plan: yield* initiative.plan?.pipe(Database.load).pipe(
+        Effect.map(formatPlan),
+        Effect.catchTag('ObjectNotFoundError', () => Effect.succeed('No plan found.')),
+      ) ?? Effect.succeed('No plan found.'),
       artifacts: yield* Effect.forEach(initiative.artifacts, (artifact) =>
         Effect.gen(function* () {
           return {
             name: artifact.name,
-            type: Obj.getTypename(yield* Database.load(artifact.data)),
+            type: yield* Database.load(artifact.data).pipe(
+              Effect.map(Obj.getTypename),
+              Effect.catchTag('ObjectNotFoundError', () => Effect.succeed('Artifact not found.')),
+            ),
             dxn: artifact.data.dxn.toString(),
           };
         }),

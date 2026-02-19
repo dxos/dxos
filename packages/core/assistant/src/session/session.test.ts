@@ -67,6 +67,7 @@ const toolkitLayer = TestToolkit.toLayer({
 const TestLayer = Layer.mergeAll(
   AssistantTestLayer({
     types: [CalendarEventSchema],
+    tracing: 'pretty',
   }),
   toolkitLayer,
 );

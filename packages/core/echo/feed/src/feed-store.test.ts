@@ -359,7 +359,8 @@ describe('Feed V2', () => {
         },
       ]);
       expect(blocks.length).toBe(1);
-      expect(blocks[0].position).toBeNull();
+      expect(blocks[0].position).toBeDefined();
+      expect(blocks[0].position).toBeGreaterThanOrEqual(0);
       expect(blocks[0].sequence).toBe(0);
       expect(blocks[0].actorId).toBe(ALICE);
       expect(blocks[0].prevActorId).toBeNull();
@@ -367,16 +368,35 @@ describe('Feed V2', () => {
       expect(blocks[0].timestamp).toBeGreaterThan(0);
       expect(blocks[0].data).toEqual(new Uint8Array([1]));
 
-      // Query by feedId
+      // Query by feedId: persisted position matches returned block position.
       const queryRes = yield* feed.query({
         query: { feedIds: [feedId] },
         position: -1,
         spaceId,
         feedNamespace: WellKnownNamespaces.data,
-      }); // Use position '-1' to get everything
+      });
       expect(queryRes.blocks.length).toBe(1);
-      expect(queryRes.blocks.length).toBe(1);
-      expect(queryRes.blocks[0]).toMatchObject({ ...blocks[0], feedId, position: expect.any(Number) });
+      expect(queryRes.blocks[0].position).toBe(blocks[0].position);
+      expect(queryRes.blocks[0]).toMatchObject({ ...blocks[0], feedId });
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('appendLocal returns blocks with positions from append when assignPositions is true', () =>
+    Effect.gen(function* () {
+      const spaceId = SpaceId.random();
+      const feed = new FeedStore({ localActorId: ALICE, assignPositions: true });
+      yield* feed.migrate();
+
+      const blocks = yield* feed.appendLocal([
+        { spaceId, feedId: 'feed-a', feedNamespace: WellKnownNamespaces.data, data: new Uint8Array([1]) },
+        { spaceId, feedId: 'feed-b', feedNamespace: WellKnownNamespaces.data, data: new Uint8Array([2]) },
+        { spaceId, feedId: 'feed-a', feedNamespace: WellKnownNamespaces.data, data: new Uint8Array([3]) },
+      ]);
+
+      expect(blocks.length).toBe(3);
+      expect(blocks.every((block) => block.position != null && block.position >= 0)).toBe(true);
+      expect(blocks[0].position).toBeLessThan(blocks[1].position!);
+      expect(blocks[1].position).toBeLessThan(blocks[2].position!);
     }).pipe(Effect.provide(TestLayer)),
   );
 
@@ -390,13 +410,6 @@ describe('Feed V2', () => {
 
       const nsData = WellKnownNamespaces.data;
       const nsTrace = WellKnownNamespaces.trace;
-      const getPersistedPosition = (spaceId: SpaceId, feedNamespace: string, feedId: string) =>
-        feed.query({
-          query: { feedIds: [feedId] },
-          position: -1,
-          spaceId,
-          feedNamespace,
-        });
 
       // First append in each (spaceId, feedNamespace) pair starts at 0.
       const feedAData = ObjectId.random();
@@ -447,23 +460,12 @@ describe('Feed V2', () => {
         },
       ]);
 
-      expect(firstAData[0].position).toBeNull();
-      expect(firstATrace[0].position).toBeNull();
-      expect(firstBData[0].position).toBeNull();
-      expect(firstBHalo[0].position).toBeNull();
-      expect(secondAData[0].position).toBeNull();
-
-      const posAData = yield* getPersistedPosition(spaceA, nsData, feedAData);
-      const posATrace = yield* getPersistedPosition(spaceA, nsTrace, feedATrace);
-      const posBData = yield* getPersistedPosition(spaceB, nsData, feedBData);
-      const posBTrace = yield* getPersistedPosition(spaceB, nsTrace, feedBTrace);
-      const posAData2 = yield* getPersistedPosition(spaceA, nsData, feedAData2);
-
-      expect(posAData.blocks[0].position).toBe(0);
-      expect(posATrace.blocks[0].position).toBe(0);
-      expect(posBData.blocks[0].position).toBe(0);
-      expect(posBTrace.blocks[0].position).toBe(0);
-      expect(posAData2.blocks[0].position).toBe(1);
+      // appendLocal returns blocks with positions matching persisted values.
+      expect(firstAData[0].position).toBe(0);
+      expect(firstATrace[0].position).toBe(0);
+      expect(firstBData[0].position).toBe(0);
+      expect(firstBHalo[0].position).toBe(0);
+      expect(secondAData[0].position).toBe(1);
     }).pipe(Effect.provide(TestLayer)),
   );
 

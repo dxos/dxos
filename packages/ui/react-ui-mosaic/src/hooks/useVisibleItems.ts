@@ -11,7 +11,7 @@ export type UseVisibleItemsProps<TItem = any> = {
   id: string;
 
   /** Current items. */
-  items?: TItem[];
+  items?: readonly TItem[] | TItem[];
 
   /** Currently dragging item. */
   dragging: MosaicTileData<TItem> | undefined;
@@ -23,7 +23,12 @@ export type UseVisibleItemsProps<TItem = any> = {
 /**
  * Returns items with the dragging item removed.
  */
-export const useVisibleItems = <TItem = any>({ id, items, dragging, getId }: UseVisibleItemsProps<TItem>): TItem[] => {
+export const useVisibleItems = <TItem = any>({
+  id,
+  items,
+  dragging,
+  getId,
+}: UseVisibleItemsProps<TItem>): readonly TItem[] | TItem[] => {
   const visibleItems = useMemo(() => {
     if (!items || !dragging || id !== dragging.containerId) {
       return items ?? [];

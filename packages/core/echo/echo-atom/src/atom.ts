@@ -7,7 +7,6 @@ import * as Result from '@effect-atom/atom/Result';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
-import isEqual from 'lodash.isequal';
 
 import { Obj, Ref } from '@dxos/echo';
 import { assertArgument } from '@dxos/invariant';
@@ -84,7 +83,7 @@ const propertyFamily = Atom.family(<T extends Obj.Unknown>(obj: T) =>
 
       const unsubscribe = Obj.subscribe(obj, () => {
         const newValue = obj[key];
-        if (!isEqual(previousSnapshot, newValue)) {
+        if (previousSnapshot !== newValue) {
           previousSnapshot = snapshotForComparison(newValue);
           // Return a snapshot copy so React sees a new reference.
           get.setSelf(snapshotForComparison(newValue));

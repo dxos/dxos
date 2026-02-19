@@ -2,15 +2,19 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Atom, type Registry, useAtomValue } from '@effect-atom/atom-react';
 import { createContext } from '@radix-ui/react-context';
-import React, { type FC } from 'react';
+import * as Schema from 'effect/Schema';
+import React, { type FC, type PropsWithChildren, useMemo } from 'react';
 
-import { type Obj } from '@dxos/echo';
-import { useObject } from '@dxos/react-client/echo';
+import { Obj, Query } from '@dxos/echo';
+import { AtomObj, AtomQuery } from '@dxos/echo-atom';
+import { getQueryTarget } from '@dxos/plugin-space';
+import { getSpace, isSpace } from '@dxos/react-client/echo';
 import { Toolbar, type ToolbarRootProps, useTranslation } from '@dxos/react-ui';
-import { Stack } from '@dxos/react-ui-stack';
+import { Board, type BoardModel, useBoard, useEventHandlerAdapter } from '@dxos/react-ui-mosaic';
 import { type ProjectionModel } from '@dxos/schema';
-import { type Pipeline as PipelineType } from '@dxos/types';
+import { Pipeline, type Pipeline as PipelineType } from '@dxos/types';
 
 import { meta } from '../meta';
 
@@ -35,15 +39,89 @@ type PipelineContextValue = {
 // Root
 //
 
-type PipelineRootProps = PipelineContextValue;
+type PipelineRootProps = PropsWithChildren<
+  PipelineContextValue & {
+    model: BoardModel<PipelineType.Column, Obj.Unknown>;
+  }
+>;
 
 const PIPELINE_ROOT = 'Pipeline.Root';
 
-const [PipelineRoot, usePipeline] = createContext<PipelineContextValue>(PIPELINE_ROOT, {
+const [PipelineRootContext, usePipeline] = createContext<PipelineContextValue>(PIPELINE_ROOT, {
   Item: itemNoOp,
 });
 
+const PipelineRoot = ({ model, children, ...contextValue }: PipelineRootProps) => (
+  <PipelineRootContext {...contextValue}>
+    <Board.Root model={model}>{children}</Board.Root>
+  </PipelineRootContext>
+);
+
 PipelineRoot.displayName = PIPELINE_ROOT;
+
+//
+// usePipelineBoardModel
+//
+
+const emptyColumnsAtom = Atom.make(() => [] as PipelineType.Column[]);
+const emptyItemsAtom = Atom.make(() => [] as Obj.Unknown[]);
+const emptyPipelineModel: BoardModel<PipelineType.Column, Obj.Unknown> = {
+  getColumnId: (data) => (data as PipelineType.Column).view.dxn.toString(),
+  getItemId: (data) => (data as Obj.Unknown).id,
+  isColumn: (obj: unknown): obj is PipelineType.Column => Schema.is(Pipeline.Column)(obj),
+  isItem: (obj): obj is Obj.Unknown => Obj.isObject(obj),
+  columns: emptyColumnsAtom,
+  items: () => emptyItemsAtom,
+  getColumns: () => [],
+  getItems: () => [],
+};
+
+const usePipelineBoardModel = (
+  pipeline: PipelineType.Pipeline | undefined,
+  registry: Registry.Registry,
+): BoardModel<PipelineType.Column, Obj.Unknown> =>
+  useMemo<BoardModel<PipelineType.Column, Obj.Unknown>>(() => {
+    if (pipeline == null) {
+      return emptyPipelineModel;
+    }
+    const space = getSpace(pipeline);
+    const columnsAtom = AtomObj.makeProperty(pipeline, 'columns');
+    const columnAtomFamily = Atom.family<string, Atom.Atom<PipelineType.Column | undefined>>((viewKey: string) =>
+      Atom.make((get) => {
+        const columns = get(columnsAtom);
+        return columns.find((c) => c.view.dxn.toString() === viewKey);
+      }),
+    );
+    const itemsAtomFamily = Atom.family<string, Atom.Atom<Obj.Unknown[]>>((viewKey: string) =>
+      Atom.make((get) => {
+        const column = get(columnAtomFamily(viewKey));
+        if (column == null) {
+          return [];
+        }
+        const viewSnapshot = get(AtomObj.make(column.view));
+        if (!viewSnapshot?.query?.ast) {
+          return [];
+        }
+        const query = Query.fromAst(JSON.parse(JSON.stringify(viewSnapshot.query.ast)));
+        const queryTarget = space ? getQueryTarget(query.ast, space) : undefined;
+        if (!queryTarget) {
+          return [];
+        }
+        const raw = get(AtomQuery.make(queryTarget, query));
+        return isSpace(queryTarget) ? raw : [...raw].reverse();
+      }),
+    );
+    return {
+      getColumnId: (data) => (data as PipelineType.Column).view.dxn.toString(),
+      getItemId: (data) => (data as Obj.Unknown).id,
+      isColumn: (obj: unknown): obj is PipelineType.Column => Schema.is(Pipeline.Column)(obj),
+      isItem: (obj: unknown): obj is Obj.Unknown => Obj.isObject(obj),
+      columns: columnsAtom,
+      items: (column) => itemsAtomFamily(column.view.dxn.toString()),
+      getColumns: () => [...registry.get(columnsAtom)],
+      getItems: (column) => registry.get(itemsAtomFamily(column.view.dxn.toString())) ?? [],
+    };
+  }, [pipeline, registry]);
 
 //
 // Content
@@ -56,15 +134,20 @@ type PipelineContentProps = {
 };
 
 const PipelineContent = ({ pipeline }: PipelineContentProps) => {
-  const [columns] = useObject(pipeline, 'columns');
+  const { model } = useBoard(PIPELINE_CONTENT_NAME);
+  const columns = useAtomValue(model.columns);
+  const eventHandler = useEventHandlerAdapter<PipelineType.Column, Obj.Unknown>({
+    id: pipeline.id,
+    // TODO(wittjosiah): Cast because columns array is readonly.
+    items: columns as any,
+    getId: model.getColumnId,
+    get: (data) => data as unknown as Obj.Unknown,
+    make: (object) => object as unknown as PipelineType.Column,
+    canDrop: ({ source }) => model.isColumn(source.data),
+    onChange: (mutate) => Obj.change(pipeline, (p) => mutate(p.columns)),
+  });
 
-  return (
-    <Stack orientation='horizontal' size='contain' rail={false}>
-      {columns.map((column) => {
-        return <PipelineColumn key={column.view.dxn.toString()} column={column} />;
-      })}
-    </Stack>
-  );
+  return <Board.Content id='pipeline' eventHandler={eventHandler} Tile={PipelineColumn} />;
 };
 
 PipelineContent.displayName = PIPELINE_CONTENT_NAME;
@@ -98,6 +181,6 @@ export const PipelineComponent = {
   Toolbar: PipelineToolbar,
 };
 
-export { usePipeline };
+export { usePipeline, usePipelineBoardModel };
 
 export type { ItemProps, PipelineContextValue, PipelineRootProps };
