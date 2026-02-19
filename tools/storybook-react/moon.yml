@@ -1,7 +1,5 @@
 layer: tool
 language: typescript
-tags:
-  - ts-test-storybook
 tasks:
   #
   # Test locally via: npx http-server ./tools/storybook-reactout/storybook
