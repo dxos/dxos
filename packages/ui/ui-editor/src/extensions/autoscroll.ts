@@ -14,8 +14,8 @@ import { scrollToLineEffect } from './scrolling';
 export const scrollToBottomEffect = StateEffect.define<ScrollBehavior | undefined>();
 
 export type AutoScrollOptions = {
-  /** Auto-scroll when reaches the bottom. */
-  autoScroll?: boolean;
+  /** Initial pinned state. */
+  pinned?: boolean;
   /** Threshold in px to trigger scroll from bottom. */
   threshold?: number;
   /** Throttle time in ms. */
@@ -28,14 +28,14 @@ export type AutoScrollOptions = {
  * Extension that supports pinning the scroll position and automatically scrolls to the bottom when content is added.
  */
 export const autoScroll = ({
-  autoScroll = true,
+  pinned = true,
   threshold = 100,
   throttleDelay = 1_000,
   onAutoScroll,
 }: Partial<AutoScrollOptions> = {}) => {
   let buttonContainer: HTMLDivElement | undefined;
   let lastScrollTop = 0;
-  let isPinned = true;
+  let isPinned = pinned;
 
   const setPinned = (pin: boolean) => {
     isPinned = pin;
@@ -87,7 +87,7 @@ export const autoScroll = ({
           const coords = view.coordsAtPos(view.state.doc.length);
           const scrollerRect = view.scrollDOM.getBoundingClientRect();
           const distanceFromBottom = coords ? scrollerRect.bottom - coords.bottom : 0;
-          if (autoScroll && distanceFromBottom < threshold) {
+          if (distanceFromBottom < threshold) {
             const shouldScroll = onAutoScroll?.({ view, distanceFromBottom }) ?? true;
             if (shouldScroll) {
               triggerUpdate(view);
