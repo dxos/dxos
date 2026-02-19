@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import updateTasks$ from './update-tasks';
+import UpdateTasks from './update-tasks';
 
-export namespace Functions {
-  export const updateTasks = updateTasks$;
-}
+export const PlanningFunctions = {
+  UpdateTasks,
+};

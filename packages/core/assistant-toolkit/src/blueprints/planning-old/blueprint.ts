@@ -92,5 +92,5 @@ export const blueprint = Blueprint.make({
   instructions: {
     source: Ref.make(Text.make(instructions)),
   },
-  tools: [Tasks.read, Tasks.update].map((fn) => ToolId.make(fn.key)),
+  tools: [Tasks.Read, Tasks.Update].map((fn) => ToolId.make(fn.key)),
 });

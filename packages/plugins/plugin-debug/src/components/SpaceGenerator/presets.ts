@@ -145,7 +145,7 @@ export const generator = () => ({
                 kind: 'queue',
                 queue: mailbox.queue.dxn.toString(),
               },
-              function: Ref.make(serializeFunction(EntityExtractionFunctions.extract)),
+              function: Ref.make(serializeFunction(EntityExtractionFunctions.Extract)),
               input: {
                 source: '{{event.item}}',
               },
@@ -181,7 +181,7 @@ export const generator = () => ({
                   ast: organizationsQuery.ast,
                 },
               },
-              function: Ref.make(serializeFunction(AgentFunctions.prompt)),
+              function: Ref.make(serializeFunction(AgentFunctions.Prompt)),
               input: {
                 prompt: Ref.make(researchPrompt),
                 input: '{{event.subject}}',

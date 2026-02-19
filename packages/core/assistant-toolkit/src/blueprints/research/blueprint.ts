@@ -40,12 +40,12 @@ const instructions = trim`
   </unstructured_mode>
 `;
 
-export const blueprint = Blueprint.make({
+export const ResearchBlueprint = Blueprint.make({
   key: 'dxos.org/blueprint/research',
   name: 'Research',
   description: 'Researches the web and creates structured data.',
   instructions: {
     source: Ref.make(Text.make(instructions)),
   },
-  tools: [ResearchFunctions.create, ResearchFunctions.research].map((fn) => ToolId.make(fn.key)),
+  tools: [ResearchFunctions.Create, ResearchFunctions.Research].map((fn) => ToolId.make(fn.key)),
 });

@@ -37,7 +37,7 @@ const TestLayer = Layer.mergeAll(AiService.model('@anthropic/claude-opus-4-0'), 
         { service: 'discord.com', apiKey: Config.redacted('DISCORD_TOKEN') },
         { service: 'linear.app', apiKey: Config.redacted('LINEAR_API_KEY') },
       ]),
-      FunctionInvocationServiceLayerTestMocked({ functions: [LinearFunctions.sync, DiscordFunctions.fetch] }).pipe(
+      FunctionInvocationServiceLayerTestMocked({ functions: [LinearFunctions.Sync, DiscordFunctions.Fetch] }).pipe(
         Layer.provideMerge(TracingServiceExt.layerLogInfo()),
       ),
       FetchHttpClient.layer,
@@ -81,7 +81,7 @@ describe('Feed', { timeout: 600_000 }, () => {
         // }).pipe(Effect.provide(AiService.model('@anthropic/claude-3-5-haiku-latest')));
         // console.log(result);
 
-        const linearIssues = yield* FunctionInvocationService.invokeFunction(LinearFunctions.sync, {
+        const linearIssues = yield* FunctionInvocationService.invokeFunction(LinearFunctions.Sync, {
           team: '1127c63a-6f77-4725-9229-50f6cd47321c',
         });
         console.log(linearIssues);

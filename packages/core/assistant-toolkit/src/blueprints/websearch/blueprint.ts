@@ -7,7 +7,7 @@ import { Blueprint } from '@dxos/blueprints';
 import { Ref } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 
-export const blueprint = Blueprint.make({
+export const WebSearchBlueprint = Blueprint.make({
   key: 'dxos.org/blueprint/web-search',
   name: 'Web Search',
   description: 'Search the web.',

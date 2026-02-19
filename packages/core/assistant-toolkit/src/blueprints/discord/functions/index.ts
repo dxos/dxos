@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { default as fetch$ } from './fetch-messages';
+import { default as Fetch } from './fetch-messages';
 
-export namespace Functions {
-  export const fetch = fetch$;
-}
+export const DiscordFunctions = {
+  Fetch,
+};

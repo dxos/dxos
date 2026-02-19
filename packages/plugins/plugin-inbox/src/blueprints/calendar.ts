@@ -11,6 +11,7 @@ import { calendar } from '../functions';
 export const Key = 'dxos.org/blueprint/calendar';
 
 export const functions: FunctionDefinition[] = [calendar.sync];
+
 export const tools: string[] = [];
 
 export const make = () =>

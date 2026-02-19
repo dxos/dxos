@@ -28,13 +28,14 @@ import { trim } from '@dxos/util';
 import { Chat, Initiative, Plan } from '../../types';
 import { PlanningBlueprint } from '../planning';
 
-import { Functions, blueprint, getFunctions, blueprint as makeBlueprint } from './blueprint';
+import { InitiativeBlueprint } from './blueprint';
+import { InitiativeFunctions } from './functions';
 
 ObjectId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayerWithTriggers({
   aiServicePreset: 'edge-remote',
-  functions: [...getFunctions(), ...MarkdownBlueprint.functions],
+  functions: [...Object.values(InitiativeFunctions), ...MarkdownBlueprint.functions],
   types: [
     Initiative.Initiative,
     Plan.Plan,
@@ -69,7 +70,7 @@ describe.runIf(TestHelpers.tagEnabled('flaky'))('Initiative', () => {
               spec: 'Keep a shopping list of items to buy.',
               blueprints: [Ref.make(MarkdownBlueprint.make())],
             },
-            blueprint,
+            InitiativeBlueprint,
           ),
         );
         const chatQueue = initiative.chat?.target?.queue?.target as any;
@@ -111,7 +112,7 @@ describe.runIf(TestHelpers.tagEnabled('flaky'))('Initiative', () => {
               `,
               blueprints: [Ref.make(MarkdownBlueprint.make())],
             },
-            blueprint,
+            InitiativeBlueprint,
           ),
         );
         yield* Database.flush({ indexes: true });
@@ -124,7 +125,7 @@ describe.runIf(TestHelpers.tagEnabled('flaky'))('Initiative', () => {
               kind: 'queue',
               queue: inboxQueue.dxn.toString(),
             },
-            function: Ref.make(FunctionDefinition.serialize(Functions.agent)),
+            function: Ref.make(FunctionDefinition.serialize(InitiativeFunctions.Agent)),
             input: {
               initiative: Ref.make(initiative),
               event: '{{event}}',
@@ -182,7 +183,7 @@ describe.runIf(TestHelpers.tagEnabled('flaky'))('Initiative', () => {
               `,
               blueprints: [Ref.make(MarkdownBlueprint.make()), Ref.make(Obj.clone(PlanningBlueprint))],
             },
-            makeBlueprint,
+            InitiativeBlueprint,
           ),
         );
         yield* Database.flush({ indexes: true });

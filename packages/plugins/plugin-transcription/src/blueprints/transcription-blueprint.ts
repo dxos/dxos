@@ -8,9 +8,9 @@ import { trim } from '@dxos/util';
 
 import { open, summarize } from '../functions';
 
-export const functions: FunctionDefinition[] = [open, summarize];
-
 export const Key = 'dxos.org/blueprint/transcription';
+
+export const functions: FunctionDefinition[] = [open, summarize];
 
 export const make = () =>
   Blueprint.make({

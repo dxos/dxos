@@ -34,7 +34,7 @@ export const PromptArticle = ({ role, subject }: PromptArticleProps) => {
 
   const handleRun = useComputeRuntimeCallback(
     db?.spaceId,
-    () => invokeFunctionWithTracing(AgentFunctions.prompt, inputData),
+    () => invokeFunctionWithTracing(AgentFunctions.Prompt, inputData),
     [inputData],
   );
 

@@ -52,8 +52,8 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}/initiative`,
         role: 'article',
-        filter: (data): data is { subject: Initiative.Initiative.Initiative } =>
-          Obj.instanceOf(Initiative.Initiative.Initiative, data.subject),
+        filter: (data): data is { subject: Initiative.Initiative } =>
+          Obj.instanceOf(Initiative.Initiative, data.subject),
         component: ({ data, role }) => <InitiativeContainer role={role} subject={data.subject} />,
       }),
       // TODO(wittjosiah): This is flashing when chat changes.

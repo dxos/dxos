@@ -13,22 +13,20 @@ import {
   DiscordFunctions,
   EntityExtractionFunctions,
   InitiativeBlueprint,
+  InitiativeFunctions,
   LinearBlueprint,
   LinearFunctions,
-  Planning,
+  PlanningBlueprint,
+  PlanningFunctions,
   ResearchBlueprint,
   ResearchFunctions,
   WebSearchBlueprint,
 } from '@dxos/assistant-toolkit';
-import { type Blueprint } from '@dxos/blueprints';
 
 import { AssistantBlueprint } from '../../blueprints';
 
-export const createBlueprint: () => Blueprint.Blueprint = AssistantBlueprint.make;
-export { AssistantBlueprint };
-
+// TODO(burdon): Remove need for this type? Or change to simpler array of tuples?
 export type BlueprintCapabilities = [
-  Capability.Capability<typeof AppCapabilities.Functions>,
   Capability.Capability<typeof AppCapabilities.BlueprintDefinition>,
   Capability.Capability<typeof AppCapabilities.Functions>,
   Capability.Capability<typeof AppCapabilities.BlueprintDefinition>,
@@ -42,33 +40,33 @@ export type BlueprintCapabilities = [
   Capability.Capability<typeof AppCapabilities.BlueprintDefinition>,
   Capability.Capability<typeof AppCapabilities.Functions>,
   Capability.Capability<typeof AppCapabilities.BlueprintDefinition>,
+  Capability.Capability<typeof AppCapabilities.Functions>,
 ];
 
 export default Capability.makeModule<[], BlueprintCapabilities>(() =>
   Effect.succeed([
-    Capability.contributes(AppCapabilities.Functions, AssistantBlueprint.functions$),
-    Capability.contributes(AppCapabilities.BlueprintDefinition, AssistantBlueprint.blueprint),
+    Capability.contributes(AppCapabilities.BlueprintDefinition, AssistantBlueprint.make()),
+    Capability.contributes(AppCapabilities.Functions, AssistantBlueprint.functions),
 
-    // TODO(burdon): Factor out.
-    Capability.contributes(AppCapabilities.Functions, [ResearchFunctions.create, ResearchFunctions.research]),
     Capability.contributes(AppCapabilities.BlueprintDefinition, ResearchBlueprint),
+    Capability.contributes(AppCapabilities.Functions, Record.values(ResearchFunctions)),
 
-    // TODO(burdon): Factor out.
-    Capability.contributes(AppCapabilities.Functions, [AgentFunctions.prompt, EntityExtractionFunctions.extract]),
     Capability.contributes(AppCapabilities.BlueprintDefinition, WebSearchBlueprint),
+    Capability.contributes(AppCapabilities.Functions, [
+      ...Record.values(AgentFunctions),
+      ...Record.values(EntityExtractionFunctions),
+    ]),
 
-    // TODO(burdon): Factor out.
-    Capability.contributes(AppCapabilities.Functions, [DiscordFunctions.fetch]),
     Capability.contributes(AppCapabilities.BlueprintDefinition, DiscordBlueprint),
+    Capability.contributes(AppCapabilities.Functions, Record.values(DiscordFunctions)),
 
-    // TODO(burdon): Factor out.
-    Capability.contributes(AppCapabilities.Functions, [LinearFunctions.sync]),
     Capability.contributes(AppCapabilities.BlueprintDefinition, LinearBlueprint),
+    Capability.contributes(AppCapabilities.Functions, Record.values(LinearFunctions)),
 
-    Capability.contributes(AppCapabilities.Functions, InitiativeBlueprint.getFunctions()),
-    Capability.contributes(AppCapabilities.BlueprintDefinition, InitiativeBlueprint.blueprint),
+    Capability.contributes(AppCapabilities.BlueprintDefinition, InitiativeBlueprint),
+    Capability.contributes(AppCapabilities.Functions, Record.values(InitiativeFunctions)),
 
-    Capability.contributes(AppCapabilities.Functions, Record.values(Planning.PlanningFunctions)),
-    Capability.contributes(AppCapabilities.BlueprintDefinition, Planning.PlanningBlueprint),
+    Capability.contributes(AppCapabilities.BlueprintDefinition, PlanningBlueprint),
+    Capability.contributes(AppCapabilities.Functions, Record.values(PlanningFunctions)),
   ]),
 );

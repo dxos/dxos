@@ -5,20 +5,12 @@
 import { Blueprint, Template } from '@dxos/blueprints';
 import { trim } from '@dxos/util';
 
-import { Functions } from './functions';
-
-export { Functions };
-
-/**
- * Get all initiative functions. This is a function to avoid circular dependency issues.
- */
-// TODO(burdon): Remove?
-export const getFunctions = () => [Functions.getContext, Functions.addArtifact, Functions.agent, Functions.qualifier];
+import { InitiativeFunctions } from './functions';
 
 /**
  * Creates the Initiative blueprint. This is a function to avoid circular dependency issues.
  */
-export const blueprint = Blueprint.make({
+export const InitiativeBlueprint = Blueprint.make({
   key: 'dxos.org/blueprint/initiative',
   name: 'Initiative blueprint',
   instructions: Template.make({
@@ -59,6 +51,6 @@ export const blueprint = Blueprint.make({
     ],
   }),
   tools: Blueprint.toolDefinitions({
-    functions: [Functions.addArtifact],
+    functions: Object.values(InitiativeFunctions),
   }),
 });

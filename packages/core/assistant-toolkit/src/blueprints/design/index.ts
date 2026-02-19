@@ -2,6 +2,4 @@
 // Copyright 2025 DXOS.org
 //
 
-import { blueprint } from './blueprint';
-
-export const DesignBlueprint = blueprint;
+export * from './blueprint';

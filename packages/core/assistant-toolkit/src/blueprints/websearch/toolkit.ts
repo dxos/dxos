@@ -5,4 +5,4 @@
 import * as Toolkit from '@effect/ai/Toolkit';
 import * as AnthropicTool from '@effect/ai-anthropic/AnthropicTool';
 
-export const toolkit = Toolkit.make(AnthropicTool.WebSearch_20250305({}));
+export const WebSearchToolkit = Toolkit.make(AnthropicTool.WebSearch_20250305({}));

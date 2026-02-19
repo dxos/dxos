@@ -18,9 +18,9 @@ import { ClientCapabilities } from '@dxos/plugin-client';
 import { Collection } from '@dxos/schema';
 import { type Message } from '@dxos/types';
 
+import { AssistantBlueprint } from '../../blueprints';
 import { type AiChatServices, updateName } from '../../processor';
 import { AssistantCapabilities, AssistantOperation } from '../../types';
-import { AssistantBlueprint, createBlueprint } from '../blueprint-definition/blueprint-definition';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -36,7 +36,7 @@ export default Capability.makeModule(
           });
 
           // TODO(wittjosiah): Remove once function registry is avaiable.
-          space.db.add(serializeFunction(AgentFunctions.prompt));
+          space.db.add(serializeFunction(AgentFunctions.Prompt));
 
           // Create default chat.
           const { object: chat } = yield* Operation.invoke(AssistantOperation.CreateChat, { db: space.db });
@@ -61,7 +61,7 @@ export default Capability.makeModule(
           const blueprints = yield* Effect.promise(() => db.query(Filter.type(Blueprint.Blueprint)).run());
           let defaultBlueprint = blueprints.find((blueprint) => blueprint.key === AssistantBlueprint.Key);
           if (!defaultBlueprint) {
-            defaultBlueprint = db.add(createBlueprint());
+            defaultBlueprint = db.add(AssistantBlueprint.make());
           }
 
           const binder = new AiContextBinder({ queue, registry });

@@ -10,14 +10,14 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 import { MapBlueprint } from '../../blueprints';
 
 export type BlueprintCapabilities = [
-  Capability.Capability<typeof AppCapabilities.Functions>,
   Capability.Capability<typeof AppCapabilities.BlueprintDefinition>,
+  Capability.Capability<typeof AppCapabilities.Functions>,
 ];
 
 const blueprintDefinition = Capability.makeModule<[], BlueprintCapabilities>(() =>
   Effect.succeed([
-    Capability.contributes(AppCapabilities.Functions, MapBlueprint.functions),
     Capability.contributes(AppCapabilities.BlueprintDefinition, MapBlueprint.make()),
+    Capability.contributes(AppCapabilities.Functions, MapBlueprint.functions),
   ]),
 );
 

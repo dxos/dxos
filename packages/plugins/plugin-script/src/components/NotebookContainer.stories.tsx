@@ -60,7 +60,7 @@ const meta: Meta<typeof NotebookContainer> = {
 
               space.db.add(createNotebook());
               space.db.add(Markdown.make({ content: '# Hello World' }));
-              space.db.add(serializeFunction(AgentFunctions.prompt));
+              space.db.add(serializeFunction(AgentFunctions.Prompt));
             }),
         }),
         AssistantPlugin(),

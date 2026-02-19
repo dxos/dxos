@@ -8,7 +8,7 @@ import { Ref } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
-import { Functions } from './functions';
+import { DiscordFunctions } from './functions';
 
 /**
  * Agent prompt instructions for managing hierarchical task lists.
@@ -21,12 +21,12 @@ const instructions = trim`
   DXOS serverId: 837138313172353095
 `;
 
-export const blueprint = Blueprint.make({
+export const DiscordBlueprint = Blueprint.make({
   key: 'dxos.org/blueprint/discord',
   name: 'Discord',
   description: 'Discord integration.',
   instructions: {
     source: Ref.make(Text.make(instructions)),
   },
-  tools: [ToolId.make(Functions.fetch.key)],
+  tools: [ToolId.make(DiscordFunctions.Fetch.key)],
 });

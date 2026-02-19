@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { default as sync$ } from './sync-issues';
+import { default as Sync } from './sync-issues';
 
-export namespace Functions {
-  export const sync = sync$;
-}
+export const LinearFunctions = {
+  Sync,
+};

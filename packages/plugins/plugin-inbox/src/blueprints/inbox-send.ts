@@ -11,6 +11,7 @@ import { gmail } from '../functions';
 export const Key = 'dxos.org/blueprint/inbox-send';
 
 export const functions: FunctionDefinition[] = [gmail.send];
+
 export const tools: string[] = [];
 
 export const make = () =>

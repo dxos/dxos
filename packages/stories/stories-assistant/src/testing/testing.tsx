@@ -23,10 +23,10 @@ import { AiContextBinder, ArtifactId, GenericToolkit } from '@dxos/assistant';
 import {
   AgentFunctions,
   DesignBlueprint,
-  DocumentFunctions,
+  MarkdownFunctions,
   PlanningBlueprint,
   ResearchFunctions,
-  TasksFunctions,
+  Tasks,
 } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { type Space } from '@dxos/client/echo';
@@ -210,10 +210,10 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>({
       Effect.succeed([
         Capability.contributes(AppCapabilities.BlueprintDefinition, DesignBlueprint),
         Capability.contributes(AppCapabilities.BlueprintDefinition, PlanningBlueprint),
-        Capability.contributes(AppCapabilities.Functions, [AgentFunctions.prompt]),
-        Capability.contributes(AppCapabilities.Functions, [DocumentFunctions.read, DocumentFunctions.update]),
-        Capability.contributes(AppCapabilities.Functions, [TasksFunctions.read, TasksFunctions.update]),
-        Capability.contributes(AppCapabilities.Functions, [ResearchFunctions.create, ResearchFunctions.research]),
+        Capability.contributes(AppCapabilities.Functions, [AgentFunctions.Prompt]),
+        Capability.contributes(AppCapabilities.Functions, [MarkdownFunctions.Read, MarkdownFunctions.Update]),
+        Capability.contributes(AppCapabilities.Functions, [Tasks.Read, Tasks.Update]),
+        Capability.contributes(AppCapabilities.Functions, [ResearchFunctions.Create, ResearchFunctions.Research]),
         Capability.contributes(AppCapabilities.Functions, [Example.reply]),
       ]),
   }),

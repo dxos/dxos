@@ -6,10 +6,11 @@ import { Blueprint, Template } from '@dxos/blueprints';
 import { type FunctionDefinition } from '@dxos/functions';
 import { trim } from '@dxos/util';
 
-export const functions: FunctionDefinition[] = [];
-export const tools: string[] = [];
-
 export const Key = 'dxos.org/blueprint/table';
+
+export const functions: FunctionDefinition[] = [];
+
+export const tools: string[] = [];
 
 export const make = () =>
   Blueprint.make({

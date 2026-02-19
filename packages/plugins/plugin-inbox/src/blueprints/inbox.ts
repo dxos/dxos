@@ -11,6 +11,7 @@ import { create, gmail, open, summarize } from '../functions';
 export const Key = 'dxos.org/blueprint/inbox';
 
 export const functions: FunctionDefinition[] = [open, summarize, create, gmail.sync];
+
 export const tools: string[] = [];
 
 export const make = () =>

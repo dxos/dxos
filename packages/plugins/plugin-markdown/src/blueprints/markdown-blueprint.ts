@@ -8,9 +8,9 @@ import { trim } from '@dxos/util';
 
 import { create, open, update } from './functions';
 
-export const functions: FunctionDefinition[] = [create, open, update];
-
 export const Key = 'dxos.org/blueprint/markdown';
+
+export const functions: FunctionDefinition[] = [create, open, update];
 
 export const make = () =>
   Blueprint.make({

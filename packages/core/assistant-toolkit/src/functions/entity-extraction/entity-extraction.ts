@@ -18,7 +18,7 @@ import { log } from '@dxos/log';
 import { type Actor, LegacyOrganization, Message, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { contextQueueLayerFromResearchGraph } from '../../blueprints/research/functions/research-graph';
+import { contextQueueLayerFromResearchGraph } from '../../blueprints/research/types/research-graph';
 import { makeGraphWriterHandler, makeGraphWriterToolkit } from '../../crud';
 
 export default defineFunction({

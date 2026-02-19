@@ -8,7 +8,7 @@ import { Ref } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
-import { Functions } from './functions';
+import { LinearFunctions } from './functions';
 
 /**
  * Agent prompt instructions for managing hierarchical task lists.
@@ -22,12 +22,12 @@ const instructions = trim`
   DXOS teamId: 1127c63a-6f77-4725-9229-50f6cd47321c
 `;
 
-export const blueprint = Blueprint.make({
+export const LinearBlueprint = Blueprint.make({
   key: 'dxos.org/blueprint/linear',
   name: 'Linear',
   description: 'Syncs Linear workspaces.',
   instructions: {
     source: Ref.make(Text.make(instructions)),
   },
-  tools: [Functions.sync].map((tool) => ToolId.make(tool.key)),
+  tools: [LinearFunctions.Sync].map((tool) => ToolId.make(tool.key)),
 });

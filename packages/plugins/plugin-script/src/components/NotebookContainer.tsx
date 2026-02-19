@@ -234,7 +234,7 @@ const runPrompt = Effect.fn(function* ({
   input: Record<string, any>;
   onResult: (result: string) => void;
 }) {
-  const inputData: FunctionDefinition.Input<typeof AgentFunctions.prompt> = {
+  const inputData: FunctionDefinition.Input<typeof AgentFunctions.Prompt> = {
     prompt,
     input,
   };
@@ -247,7 +247,7 @@ const runPrompt = Effect.fn(function* ({
   });
 
   // Invoke the function.
-  const result = yield* FunctionInvocationService.invokeFunction(AgentFunctions.prompt, inputData).pipe(
+  const result = yield* FunctionInvocationService.invokeFunction(AgentFunctions.Prompt, inputData).pipe(
     Effect.provide(trace.invocationTraceQueue ? TracingService.layerInvocation(trace) : TracingService.layerNoop),
     Effect.exit,
   );

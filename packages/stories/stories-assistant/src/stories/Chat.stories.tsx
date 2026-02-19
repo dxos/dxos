@@ -546,7 +546,7 @@ export const WithResearch: Story = {
   decorators: getDecorators({
     plugins: [MarkdownPlugin(), TablePlugin(), ThreadPlugin()],
     config: config.remote,
-    types: [...ResearchDataTypes, ResearchGraph],
+    types: [...ResearchDataTypes, ResearchGraph.ResearchGraph],
     accessTokens: [Obj.make(AccessToken.AccessToken, { source: 'exa.ai', token: EXA_API_KEY })],
     onInit: async ({ space }) => {
       space.db.add(Obj.make(Organization.Organization, { name: 'BlueYard Capital' }));
@@ -703,7 +703,7 @@ export const WithResearchQueue: Story = {
   decorators: getDecorators({
     plugins: [],
     config: config.remote,
-    types: [...ResearchDataTypes, ResearchGraph, ResearchInputQueue],
+    types: [...ResearchDataTypes, ResearchGraph.ResearchGraph, ResearchInputQueue],
     accessTokens: [Obj.make(AccessToken.AccessToken, { source: 'exa.ai', token: EXA_API_KEY })],
     onInit: async ({ space }) => {
       const researchInputQueue = space.db.add(
@@ -729,7 +729,7 @@ export const WithResearchQueue: Story = {
 
       space.db.add(
         Trigger.make({
-          function: Ref.make(serializeFunction(AgentFunctions.prompt)),
+          function: Ref.make(serializeFunction(AgentFunctions.Prompt)),
           enabled: true,
           spec: {
             kind: 'queue',
@@ -852,7 +852,7 @@ export const WithProject: Story = {
       );
 
       const researchTrigger = Trigger.make({
-        function: Ref.make(serializeFunction(AgentFunctions.prompt)),
+        function: Ref.make(serializeFunction(AgentFunctions.Prompt)),
         enabled: true,
         spec: {
           kind: 'subscription',
@@ -979,7 +979,7 @@ export const WithPrompt: Story = {
     config: config.remote,
     types: [Text.Text],
     onInit: async ({ space }) => {
-      space.db.add(serializeFunction(AgentFunctions.prompt));
+      space.db.add(serializeFunction(AgentFunctions.Prompt));
 
       space.db.add(
         Prompt.make({

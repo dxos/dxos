@@ -22,18 +22,23 @@ import { MarkdownBlueprint } from '@dxos/plugin-markdown/blueprints';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { HasSubject, type Message, Organization } from '@dxos/types';
 
-import { blueprint as ResearchBlueprint } from '../blueprint';
+import { ResearchBlueprint } from '../blueprint';
+import { ResearchDataTypes, ResearchGraph } from '../types';
 
 import { default as createDocument } from './document-create';
 import { default as research } from './research';
-import { ResearchGraph, queryResearchGraph } from './research-graph';
-import { ResearchDataTypes } from './types';
 
 ObjectId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayer({
   functions: [research, createDocument, ...MarkdownBlueprint.functions],
-  types: [...ResearchDataTypes, ResearchGraph, Blueprint.Blueprint, Markdown.Document, HasSubject.HasSubject],
+  types: [
+    ...ResearchDataTypes,
+    ResearchGraph.ResearchGraph,
+    Blueprint.Blueprint,
+    Markdown.Document,
+    HasSubject.HasSubject,
+  ],
 });
 
 describe('Research', () => {
@@ -56,7 +61,7 @@ describe('Research', () => {
         console.log(JSON.stringify(result, null, 2));
 
         yield* Database.flush({ indexes: true });
-        const researchGraph = yield* queryResearchGraph();
+        const researchGraph = yield* ResearchGraph.queryResearchGraph();
         if (researchGraph) {
           const data = yield* Database.load(researchGraph.queue).pipe(
             Effect.flatMap((queue) => Effect.promise(() => queue.queryObjects())),

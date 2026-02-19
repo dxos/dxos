@@ -2,16 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { default as create$ } from './document-create';
-import { default as research$ } from './research';
+import { default as Create } from './document-create';
+import { default as Research } from './research';
 
-export * as ResearchGraph from './research-graph';
-export * from './types';
+export * from '../types/types';
 
-export namespace Functions {
-  export const create = create$;
-  export const research = research$;
-}
-
-// Backwards compatibility
-export const ResearchFunctions = Functions;
+export const ResearchFunctions = {
+  Create,
+  Research,
+};

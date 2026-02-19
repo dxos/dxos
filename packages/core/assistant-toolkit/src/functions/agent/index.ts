@@ -4,9 +4,9 @@
 
 import { type FunctionDefinition } from '@dxos/functions';
 
-import { default as prompt$ } from './prompt';
+import { default as Prompt } from './prompt';
 
-export namespace AgentFunctions {
+export const AgentFunctions = {
   // TODO(burdon): Temp fix for TS error.
-  export const prompt: FunctionDefinition.Any = prompt$;
-}
+  Prompt: Prompt as FunctionDefinition.Any,
+};

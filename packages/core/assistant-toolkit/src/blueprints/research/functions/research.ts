@@ -22,17 +22,12 @@ import { FunctionInvocationServiceLayerTestMocked } from '@dxos/functions-runtim
 import { type Message, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import {
-  LocalSearchHandler,
-  LocalSearchToolkit,
-  makeGraphWriterHandler,
-  makeGraphWriterToolkit,
-} from '../../../crud';
+import { LocalSearchHandler, LocalSearchToolkit, makeGraphWriterHandler, makeGraphWriterToolkit } from '../../../crud';
 import { Functions as ExaFunctions } from '../../../functions/exa';
+import { ResearchGraph } from '../types';
+import { ResearchDataTypes } from '../types';
 
-import { contextQueueLayerFromResearchGraph } from './research-graph';
 import PROMPT from './research-instructions.tpl?raw';
-import { ResearchDataTypes } from './types';
 
 /**
  * Exec external service and return the results as a Subgraph.
@@ -118,7 +113,7 @@ export default defineFunction({
 
         toolkit = Toolkit.merge(toolkit, LocalSearchToolkit, GraphWriterToolkit);
         handlers = Layer.mergeAll(handlers, LocalSearchHandler, GraphWriterHandler).pipe(
-          Layer.provide(contextQueueLayerFromResearchGraph),
+          Layer.provide(ResearchGraph.contextQueueLayerFromResearchGraph),
         ) as any;
       }
 
@@ -151,7 +146,7 @@ export default defineFunction({
 
           Layer.mergeAll(
             GenericToolkit.providerEmpty,
-            FunctionInvocationServiceLayerTestMocked({ functions: [ExaFunctions.exa, ExaFunctions.mock] }),
+            FunctionInvocationServiceLayerTestMocked({ functions: [ExaFunctions.Exa, ExaFunctions.Mock] }),
           ),
         ),
       ),
