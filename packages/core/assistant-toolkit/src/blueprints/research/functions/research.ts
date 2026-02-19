@@ -18,7 +18,6 @@ import { Template } from '@dxos/blueprints';
 import { type DXN, Entity, Obj } from '@dxos/echo';
 import { Database } from '@dxos/echo';
 import { TracingService, defineFunction } from '@dxos/functions';
-import { FunctionInvocationServiceLayerTestMocked } from '@dxos/functions-runtime/testing';
 import { type Message, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
