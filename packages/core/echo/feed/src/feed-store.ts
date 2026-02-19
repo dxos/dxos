@@ -385,7 +385,7 @@ export class FeedStore {
    *
    * @returns Number of deleted rows.
    */
-  dropOldestBlocks = (opts: {
+  deleteOldestBlocks = (opts: {
     spaceId: SpaceId;
     feedNamespace: string;
     feedId: string;
