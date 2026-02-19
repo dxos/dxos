@@ -52,6 +52,7 @@ export default Capability.makeModule<[], BlueprintCapabilities>(() =>
     Capability.contributes(AppCapabilities.Functions, Record.values(ResearchFunctions)),
 
     Capability.contributes(AppCapabilities.BlueprintDefinition, WebSearchBlueprint),
+    // TODO(burdon): This doesn't match?
     Capability.contributes(AppCapabilities.Functions, [
       ...Record.values(AgentFunctions),
       ...Record.values(EntityExtractionFunctions),
