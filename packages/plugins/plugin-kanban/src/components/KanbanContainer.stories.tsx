@@ -5,34 +5,31 @@
 import { RegistryContext } from '@effect-atom/atom-react';
 import { type Decorator, type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
-import React, { useCallback, useContext } from 'react';
+import React, { useCallback, useContext, useMemo } from 'react';
 import { expect, waitFor, within } from 'storybook/test';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
+import { Surface } from '@dxos/app-framework/ui';
 import { Obj, type QueryAST, Type } from '@dxos/echo';
-import { type Mutable } from '@dxos/echo/internal';
+import type { Mutable } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
-import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { faker } from '@dxos/random';
 import { Filter, type Space, useQuery, useSchema, useSpaces } from '@dxos/react-client/echo';
 import { withTheme } from '@dxos/react-ui/testing';
 import { ViewEditor } from '@dxos/react-ui-form';
-import {
-  Kanban as KanbanComponent,
-  translations as kanbanTranslations,
-  useKanbanModel,
-  useProjectionModel,
-} from '@dxos/react-ui-kanban';
-import { Kanban } from '@dxos/react-ui-kanban/types';
+import { Stack } from '@dxos/react-ui-stack';
 import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
 import { View, getTypenameFromQuery } from '@dxos/schema';
 import { Organization, Person } from '@dxos/types';
 
+import { useProjectionModel } from '../hooks';
+import { KanbanPlugin } from '../KanbanPlugin';
 import { translations } from '../translations';
+import { Kanban } from '../types';
 
 faker.seed(0);
 
@@ -55,6 +52,7 @@ type ClientSetupOptions = {
 
 /**
  * Creates the standard plugin manager decorator with client configuration.
+ * Includes KanbanPlugin so the Surface resolves to KanbanContainer.
  */
 const withKanbanPlugins = ({ types = [], onSpaceCreated }: ClientSetupOptions): Decorator =>
   withPluginManager({
@@ -73,61 +71,37 @@ const withKanbanPlugins = ({ types = [], onSpaceCreated }: ClientSetupOptions): 
       PreviewPlugin(),
       SpacePlugin({}),
       StorybookPlugin({}),
+      KanbanPlugin(),
     ],
   });
 
-//
-// Story components.
-//
-
+/**
+ * Renders the first Kanban in the space via Surface (resolves to KanbanContainer),
+ * with a sidebar containing ViewEditor and JsonFilter.
+ */
 const DefaultComponent = () => {
   const registry = useContext(RegistryContext);
   const spaces = useSpaces();
   const space = spaces[spaces.length - 1];
-  const [object] = useQuery(space?.db, Filter.type(Kanban.Kanban));
-  const typename = object?.view.target?.query ? getTypenameFromQuery(object.view.target.query.ast) : undefined;
+  const [kanban] = useQuery(space?.db, Filter.type(Kanban.Kanban));
+  const typename = kanban?.view.target?.query ? getTypenameFromQuery(kanban.view.target.query.ast) : undefined;
   const schema = useSchema(space?.db, typename);
+  const projection = useProjectionModel(schema, kanban, registry);
 
-  const objects = useQuery(space?.db, schema ? Filter.type(schema) : Filter.nothing());
-  const filteredObjects = useGlobalFilteredObjects(objects);
-
-  const projection = useProjectionModel(schema, object, registry);
-  const model = useKanbanModel({
-    object,
-    projection,
-    items: filteredObjects,
-  });
-
-  const handleAddCard = useCallback(
-    (columnValue: string | undefined) => {
-      const path = model?.columnFieldPath;
-      if (space && schema && Type.isObjectSchema(schema) && path) {
-        const card = Obj.make(schema, {
-          ...createOrg(),
-          [path]: columnValue,
-        });
-
-        space.db.add(card);
-        return card.id;
-      }
-    },
-    [space, schema, model],
-  );
-
-  const handleRemoveCard = useCallback((card: { id: string }) => Obj.isObject(card) && space?.db.remove(card), [space]);
+  const data = useMemo(() => (kanban ? { subject: kanban } : {}), [kanban]);
 
   const handleUpdateQuery = useCallback(
     (newQuery: QueryAST.Query) => {
       invariant(schema);
-      invariant(Type.isMutable(schema));
-      invariant(object.view.target);
-
-      schema.updateTypename(getTypenameFromQuery(newQuery));
-      Obj.change(object.view.target, (v) => {
-        v.query.ast = newQuery as Mutable<typeof newQuery>;
+      invariant(kanban?.view.target);
+      if (Type.isMutable(schema)) {
+        schema.updateTypename(getTypenameFromQuery(newQuery));
+      }
+      Obj.change(kanban.view.target, (view) => {
+        view.query.ast = newQuery as Mutable<QueryAST.Query>;
       });
     },
-    [object, schema],
+    [kanban, schema],
   );
 
   const handleDeleteField = useCallback(
@@ -139,25 +113,25 @@ const DefaultComponent = () => {
     [schema, projection],
   );
 
-  if (!schema || !object.view.target) {
+  if (!kanban || !schema || !kanban.view.target) {
     return null;
   }
 
   return (
-    <div className='grow grid grid-cols-[1fr_350px] overflow-hidden'>
-      {model ? <KanbanComponent model={model} onAddCard={handleAddCard} onRemoveCard={handleRemoveCard} /> : <div />}
+    <Stack orientation='horizontal' size='split' rail={false} classNames='pli-0 bs-full'>
+      <Surface.Surface role='article' data={data} limit={1} />
       <div className='flex flex-col bs-full overflow-hidden border-l border-separator'>
         <ViewEditor
           classNames='p-2'
           registry={space?.db.schemaRegistry}
           schema={schema}
-          view={object.view.target}
+          view={kanban.view.target}
           onQueryChanged={handleUpdateQuery}
-          onDelete={Type.isMutable(schema) ? handleDeleteField : undefined}
+          onDelete={schema && Type.isMutable(schema) ? handleDeleteField : undefined}
         />
-        <JsonFilter data={{ view: object.view.target, schema }} classNames='text-xs' />
+        <JsonFilter data={{ view: kanban.view.target, schema }} classNames='text-xs' />
       </div>
-    </div>
+    </Stack>
   );
 };
 
@@ -172,7 +146,7 @@ const meta = {
   decorators: [withTheme()],
   parameters: {
     layout: 'fullscreen',
-    translations: [...translations, ...kanbanTranslations],
+    translations,
   },
 } satisfies Meta<typeof DefaultComponent>;
 
@@ -218,16 +192,15 @@ export const Default: Story = {
     await expect(prospectTag).toBeTruthy();
     await expect(commitTag).toBeTruthy();
 
-    // Find the column containers.
-    const activeColumn = activeTag.closest('[data-dx-stack-item]') as HTMLElement;
-    const prospectColumn = prospectTag.closest('[data-dx-stack-item]') as HTMLElement;
+    // Find the column containers (Board uses data-testid="board-column").
+    const activeColumn = activeTag.closest('[data-testid="board-column"]') as HTMLElement;
+    const prospectColumn = prospectTag.closest('[data-testid="board-column"]') as HTMLElement;
     await expect(activeColumn).toBeTruthy();
     await expect(prospectColumn).toBeTruthy();
 
-    // Wait for cards to render in the columns.
-    // Cards have data-dx-item-id attribute from StackItem.Root.
+    // Wait for cards to render in the columns (Board items use data-testid="board-item").
     const getColumnCards = (column: HTMLElement) =>
-      Array.from(column.querySelectorAll('[data-dx-item-id]')) as HTMLElement[];
+      Array.from(column.querySelectorAll('[data-testid="board-item"]')) as HTMLElement[];
 
     await waitFor(() => expect(getColumnCards(activeColumn).length).toBeGreaterThan(0));
 
@@ -237,16 +210,16 @@ export const Default: Story = {
     await expect(activeCards.length).toBeGreaterThan(0);
     await expect(prospectCards.length).toBeGreaterThan(0);
 
-    // Verify cards have drag handles (first button in toolbar).
+    // Verify cards have drag handles (Card.Toolbar includes drag handle).
     const firstActiveCard = activeCards[0];
     const buttons = firstActiveCard.querySelectorAll('button');
     await expect(buttons.length).toBeGreaterThan(0);
 
-    // Verify the drop zone exists in each column.
-    const activeDropZone = activeColumn.querySelector('.kanban-drop');
-    const prospectDropZone = prospectColumn.querySelector('.kanban-drop');
-    await expect(activeDropZone).toBeTruthy();
-    await expect(prospectDropZone).toBeTruthy();
+    // Verify add-card action exists in columns (optional footer).
+    const activeAddItem = activeColumn.querySelector('[data-testid="board-column-add-item"]');
+    const prospectAddItem = prospectColumn.querySelector('[data-testid="board-column-add-item"]');
+    await expect(activeAddItem).toBeTruthy();
+    await expect(prospectAddItem).toBeTruthy();
 
     // TODO(wittjosiah): Get drag & drop tests working.
     //   See packages/apps/composer-app/src/playwright/stack.spec.ts for reference.

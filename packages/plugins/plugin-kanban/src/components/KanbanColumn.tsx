@@ -1,0 +1,94 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import React, { forwardRef, useRef } from 'react';
+
+import type { Obj } from '@dxos/echo';
+import { IconButton, useTranslation } from '@dxos/react-ui';
+import { Board, type MosaicTileProps, useBoard } from '@dxos/react-ui-mosaic';
+import { mx } from '@dxos/ui-theme';
+
+import { useKanbanItemEventHandler } from '../hooks';
+import { meta } from '../meta';
+import { UNCATEGORIZED_VALUE } from '../types';
+import type { ColumnStructure } from '../util';
+
+import { useKanbanBoard } from './KanbanBoardContext';
+
+const KANBAN_COLUMN_NAME = 'KanbanColumn';
+
+/** Column tile; items are Obj.Unknown from Echo. */
+export type KanbanColumnProps = Pick<MosaicTileProps<ColumnStructure>, 'classNames' | 'location' | 'data' | 'debug'>;
+
+export const KanbanColumn = forwardRef<HTMLDivElement, KanbanColumnProps>(
+  ({ data: column, location, classNames, debug }, _forwardedRef) => {
+    const { t } = useTranslation(meta.id);
+    const { model } = useBoard<ColumnStructure, Obj.Unknown>(KANBAN_COLUMN_NAME);
+    const { columnFieldPath, change, onAddCard, getPivotAttributes, itemTile } = useKanbanBoard(KANBAN_COLUMN_NAME);
+
+    const { title } = getPivotAttributes(column.columnValue);
+    const uncategorized = column.columnValue === UNCATEGORIZED_VALUE;
+    const dragHandleRef = useRef<HTMLButtonElement | null>(null);
+
+    const eventHandler = useKanbanItemEventHandler({
+      column,
+      columnFieldPath,
+      model,
+      change,
+    });
+
+    return (
+      <Board.Column.Root
+        data={column}
+        location={location}
+        classNames={classNames}
+        debug={debug}
+        dragHandleRef={dragHandleRef}
+      >
+        <div
+          role='none'
+          data-testid='board-column'
+          className={mx(
+            'group/column grid bs-full overflow-hidden grid-rows-[var(--rail-action)_1fr_var(--rail-action)]',
+            classNames,
+          )}
+        >
+          {uncategorized ? (
+            <div className='border-be border-separator p-2' data-testid='board-column-header'>
+              <span className='font-medium'>{title}</span>
+            </div>
+          ) : (
+            <Board.Column.Header
+              classNames='border-be border-separator'
+              label={title}
+              dragHandleRef={dragHandleRef as React.RefObject<HTMLButtonElement>}
+            />
+          )}
+          <Board.Column.Body
+            data={column}
+            eventHandler={eventHandler}
+            Tile={itemTile as React.FC<MosaicTileProps<Obj.Unknown>>}
+          />
+          {onAddCard && (
+            <div
+              role='none'
+              className='rounded-b-sm border-bs border-separator p-1'
+              data-testid='board-column-add-item'
+            >
+              <IconButton
+                icon='ph--plus--regular'
+                iconOnly
+                label={t('add card label')}
+                classNames='is-full'
+                onClick={() => onAddCard(column.columnValue === UNCATEGORIZED_VALUE ? undefined : column.columnValue)}
+              />
+            </div>
+          )}
+        </div>
+      </Board.Column.Root>
+    );
+  },
+);
+
+KanbanColumn.displayName = KANBAN_COLUMN_NAME;

@@ -7,21 +7,19 @@ import React, { useCallback, useContext, useMemo } from 'react';
 
 import { Obj } from '@dxos/echo';
 import { Format } from '@dxos/echo/internal';
-import { invariant } from '@dxos/invariant';
-import { useSchema } from '@dxos/react-client/echo';
+import { useObject, useSchema } from '@dxos/react-client/echo';
 import { Form, type FormFieldMap, SelectField } from '@dxos/react-ui-form';
-import { useProjectionModel } from '@dxos/react-ui-kanban';
-import { type Kanban } from '@dxos/react-ui-kanban/types';
 import { getTypenameFromQuery } from '@dxos/schema';
 
-import { SettingsSchema } from '../types';
+import { useProjectionModel } from '../hooks';
+import { type Kanban, SettingsSchema } from '../types';
 
 type KanbanViewEditorProps = { object: Kanban.Kanban };
 
 export const KanbanViewEditor = ({ object }: KanbanViewEditorProps) => {
   const registry = useContext(RegistryContext);
   const db = Obj.getDatabase(object);
-  const view = object.view.target;
+  const [view, updateView] = useObject(object.view);
   const currentTypename = view?.query ? getTypenameFromQuery(view.query.ast) : undefined;
   const schema = useSchema(db, currentTypename);
   const projection = useProjectionModel(schema, object, registry);
@@ -33,12 +31,11 @@ export const KanbanViewEditor = ({ object }: KanbanViewEditorProps) => {
 
   const handleSave = useCallback(
     (values: Partial<{ columnFieldId: string }>) => {
-      invariant(view);
-      Obj.change(view, (v) => {
-        v.projection.pivotFieldId = values.columnFieldId;
+      updateView((view) => {
+        view.projection.pivotFieldId = values.columnFieldId;
       });
     },
-    [view],
+    [updateView],
   );
 
   const initialValues = useMemo(
