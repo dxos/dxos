@@ -2,5 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
-export { default as open } from './open';
-export { default as summarize } from './summarize';
+import Open from './open';
+import Summarize from './summarize';
+
+export { Open, Summarize };
+
+export const TranscriptionFunctions = {
+  Open,
+  Summarize,
+};

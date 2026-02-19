@@ -201,13 +201,14 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>({
     activatesOn: AppActivationEvents.SetupArtifactDefinition,
     activate: () =>
       Effect.succeed([
-        Capability.contributes(AppCapabilities.BlueprintDefinition, DesignBlueprint.make()),
-        Capability.contributes(AppCapabilities.BlueprintDefinition, PlanningBlueprint.make()),
+        // TODO(burdon): Needs attention!!!
+        Capability.contributes(AppCapabilities.BlueprintDefinition, MarkdownBlueprint),
+        Capability.contributes(AppCapabilities.BlueprintDefinition, DesignBlueprint),
+        Capability.contributes(AppCapabilities.BlueprintDefinition, PlanningBlueprint),
         Capability.contributes(AppCapabilities.Functions, MarkdownBlueprint.functions),
-        // Capability.contributes(AppCapabilities.Functions, Object.values(TaskFunctions)),
-        Capability.contributes(AppCapabilities.Functions, Object.values(AgentFunctions)),
         Capability.contributes(AppCapabilities.Functions, DesignBlueprint.functions),
         Capability.contributes(AppCapabilities.Functions, PlanningBlueprint.functions),
+        Capability.contributes(AppCapabilities.Functions, Object.values(AgentFunctions)),
         Capability.contributes(AppCapabilities.Functions, Object.values(ExampleFunctions)),
       ]),
   }),

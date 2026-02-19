@@ -59,7 +59,7 @@ export default Capability.makeModule(
           // TODO(wittjosiah): This should be a space-level setting.
           // TODO(burdon): Clone when activated. Copy-on-write for template.
           const blueprints = yield* Effect.promise(() => db.query(Filter.type(Blueprint.Blueprint)).run());
-          let defaultBlueprint = blueprints.find((blueprint) => blueprint.key === AssistantBlueprint.Key);
+          let defaultBlueprint = blueprints.find((blueprint) => blueprint.key === AssistantBlueprint.key);
           if (!defaultBlueprint) {
             defaultBlueprint = db.add(AssistantBlueprint.make());
           }

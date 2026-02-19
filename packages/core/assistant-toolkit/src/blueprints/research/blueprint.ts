@@ -3,6 +3,7 @@
 //
 
 import { ToolId } from '@dxos/ai';
+import { type AppCapabilities } from '@dxos/app-toolkit';
 import { Blueprint } from '@dxos/blueprints';
 import { Ref } from '@dxos/echo';
 import { Text } from '@dxos/schema';
@@ -10,7 +11,9 @@ import { trim } from '@dxos/util';
 
 import { ResearchFunctions } from './functions';
 
-export const Key = 'dxos.org/blueprint/research';
+const BLUEPRINT_KEY = 'dxos.org/blueprint/research';
+
+const functions = Object.values(ResearchFunctions);
 
 /**
  * Agent prompt instructions for managing hierarchical task lists.
@@ -22,7 +25,7 @@ const instructions = trim`
   Structured data extraction is an experimental feature -- only enable it if the user explicitly requests it in the prompt.
   Prefer updating existing notes instead of creating new ones.
 
-  <strcutured_mode>
+  <structured_mode>
     When you are done, reply with the created objects.
     Do not print the data, instead reply with inline references to the created objects.
     Those will be later substituted with the pills representing the created objects.
@@ -42,15 +45,21 @@ const instructions = trim`
   </unstructured_mode>
 `;
 
-export const make = () =>
+const make = () =>
   Blueprint.make({
-    key: Key,
+    key: BLUEPRINT_KEY,
     name: 'Research',
     description: 'Researches the web and creates structured data.',
     instructions: {
       source: Ref.make(Text.make(instructions)),
     },
-    tools: [ResearchFunctions.Create, ResearchFunctions.Research].map((fn) => ToolId.make(fn.key)),
+    tools: functions.map((fn) => ToolId.make(fn.key)),
   });
 
-export const functions = [ResearchFunctions.Create, ResearchFunctions.Research];
+const blueprint: AppCapabilities.BlueprintDefinition = {
+  key: BLUEPRINT_KEY,
+  functions,
+  make,
+};
+
+export default blueprint;

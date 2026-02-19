@@ -2,17 +2,22 @@
 // Copyright 2026 DXOS.org
 //
 
+import { type AppCapabilities } from '@dxos/app-toolkit';
 import { Blueprint, Template } from '@dxos/blueprints';
 import { trim } from '@dxos/util';
 
 import { InitiativeFunctions } from './functions';
 
+const BLUEPRINT_KEY = 'dxos.org/blueprint/initiative';
+
+const functions = Object.values(InitiativeFunctions);
+
 /**
  * Creates the Initiative blueprint. This is a function to avoid circular dependency issues.
  */
-export const make = () =>
+const make = () =>
   Blueprint.make({
-    key: 'dxos.org/blueprint/initiative',
+    key: BLUEPRINT_KEY,
     name: 'Initiative blueprint',
     instructions: Template.make({
       source: trim`
@@ -51,10 +56,13 @@ export const make = () =>
         },
       ],
     }),
-    tools: Blueprint.toolDefinitions({
-      functions: Object.values(InitiativeFunctions),
-    }),
+    tools: Blueprint.toolDefinitions({ functions }),
   });
 
-export const functions = Object.values(InitiativeFunctions);
-export { InitiativeFunctions };
+const blueprint: AppCapabilities.BlueprintDefinition = {
+  key: BLUEPRINT_KEY,
+  functions,
+  make,
+};
+
+export default blueprint;

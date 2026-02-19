@@ -2,23 +2,21 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type AppCapabilities } from '@dxos/app-toolkit';
 import { Blueprint, Template } from '@dxos/blueprints';
-import { type FunctionDefinition } from '@dxos/functions';
 import { trim } from '@dxos/util';
 
-import { create, gmail, open, summarize } from '../functions';
+import { GmailFunctions, InboxFunctions } from '../functions';
 
-export const Key = 'dxos.org/blueprint/inbox';
+const BLUEPRINT_KEY = 'dxos.org/blueprint/inbox';
 
-export const functions: FunctionDefinition[] = [open, summarize, create, gmail.sync];
+const functions = [...Object.values(InboxFunctions), GmailFunctions.Sync];
 
-export const tools: string[] = [];
-
-export const make = () =>
+const make = () =>
   Blueprint.make({
-    key: Key,
+    key: BLUEPRINT_KEY,
     name: 'Inbox',
-    tools: Blueprint.toolDefinitions({ functions, tools }),
+    tools: Blueprint.toolDefinitions({ functions, tools: [] }),
     instructions: Template.make({
       source: trim`
         You manage my email inbox.
@@ -50,3 +48,11 @@ export const make = () =>
       `,
     }),
   });
+
+const blueprint: AppCapabilities.BlueprintDefinition = {
+  key: BLUEPRINT_KEY,
+  functions,
+  make,
+};
+
+export default blueprint;

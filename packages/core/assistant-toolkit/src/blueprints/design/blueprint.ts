@@ -3,12 +3,18 @@
 //
 
 import { ToolId } from '@dxos/ai';
+import { type AppCapabilities } from '@dxos/app-toolkit';
 import { Blueprint } from '@dxos/blueprints';
 import { Ref } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
-import { MarkdownBlueprint } from '../markdown';
+import { MarkdownFunctions } from '../markdown';
+
+const BLUEPRINT_KEY = 'dxos.org/blueprint/design';
+
+// TODO(burdon): Should this expose the functions directly or just reference them? How do we manage cross blueprint function dependencies?
+const functions = Object.values(MarkdownFunctions);
 
 const instructions = trim`
   You manage a design spec based on the conversation.
@@ -20,17 +26,21 @@ const instructions = trim`
   Do not announce when you read or write the design spec document.
 `;
 
-export const make = () =>
+const make = () =>
   Blueprint.make({
-    key: 'dxos.org/blueprint/design',
+    key: BLUEPRINT_KEY,
     name: 'Design Spec',
     description: 'Preserve the conversation in the design spec.',
     instructions: {
       source: Ref.make(Text.make(instructions)),
     },
-    tools: [MarkdownBlueprint.MarkdownFunctions.Read, MarkdownBlueprint.MarkdownFunctions.Update].map((fn) =>
-      ToolId.make(fn.key),
-    ),
+    tools: functions.map((fn) => ToolId.make(fn.key)),
   });
 
-export const functions = [MarkdownBlueprint.MarkdownFunctions.Read, MarkdownBlueprint.MarkdownFunctions.Update];
+const blueprint: AppCapabilities.BlueprintDefinition = {
+  key: BLUEPRINT_KEY,
+  functions,
+  make,
+};
+
+export default blueprint;

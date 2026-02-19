@@ -28,7 +28,7 @@ import { trim } from '@dxos/util';
 import { Chat, Initiative, Plan } from '../../types';
 import { PlanningBlueprint } from '../planning';
 
-import { make } from './blueprint';
+import InitiativeBlueprintDef from './blueprint';
 import { InitiativeFunctions } from './functions';
 
 ObjectId.dangerouslyDisableRandomness();
@@ -59,7 +59,7 @@ const SYSTEM = trim`
 `;
 
 describe.runIf(TestHelpers.tagEnabled('flaky'))('Initiative', () => {
-  const blueprint = make();
+  const blueprint = InitiativeBlueprintDef.make();
   it.scoped(
     'shopping list',
     Effect.fnUntraced(

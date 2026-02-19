@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * as PlanningBlueprint from './blueprint';
+export { default as PlanningBlueprint } from './blueprint';

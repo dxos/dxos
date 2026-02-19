@@ -25,11 +25,11 @@ import { trim } from '@dxos/util';
 
 import { type TestStep, runSteps } from '../testing';
 
-import { make } from './blueprint';
+import PlanningOldBlueprint from './blueprint';
 import { TaskFunctions } from './functions';
 
 describe('Planning Blueprint', { timeout: 120_000 }, () => {
-  const blueprint = make();
+  const blueprint = PlanningOldBlueprint.make();
   it.scoped(
     'planning blueprint',
     Effect.fn(

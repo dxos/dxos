@@ -15,9 +15,11 @@ import { AiContextBinder } from '@dxos/assistant';
 import {
   AgentFunctions,
   LinearBlueprint,
+  MarkdownBlueprint,
   ResearchBlueprint,
   ResearchDataTypes,
   ResearchGraph,
+  WebSearchBlueprint,
 } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt, Template } from '@dxos/blueprints';
 import { Filter, Obj, Query, Ref, Tag, Type } from '@dxos/echo';
@@ -28,10 +30,12 @@ import { AssistantBlueprint, translations, useContextBinder } from '@dxos/plugin
 import { Assistant } from '@dxos/plugin-assistant/types';
 import { Board, BoardPlugin } from '@dxos/plugin-board';
 import { Chess, ChessPlugin } from '@dxos/plugin-chess';
-import { ChessFunctions } from '@dxos/plugin-chess/blueprints';
+import { ChessBlueprint, ChessFunctions } from '@dxos/plugin-chess/blueprints';
 import { InboxPlugin } from '@dxos/plugin-inbox';
+import { CalendarBlueprint, InboxBlueprint } from '@dxos/plugin-inbox/blueprints';
 import { Calendar, Mailbox } from '@dxos/plugin-inbox/types';
 import { Map, MapPlugin } from '@dxos/plugin-map';
+import { MapBlueprint } from '@dxos/plugin-map/blueprints';
 import { createLocationSchema } from '@dxos/plugin-map/testing';
 import { Markdown, MarkdownPlugin } from '@dxos/plugin-markdown';
 import { PipelinePlugin } from '@dxos/plugin-pipeline';
@@ -40,8 +44,10 @@ import { ScriptPlugin, getAccessCredential } from '@dxos/plugin-script';
 import { templates } from '@dxos/plugin-script/templates';
 import { TablePlugin } from '@dxos/plugin-table';
 import { ThreadPlugin } from '@dxos/plugin-thread';
+import { ThreadBlueprint } from '@dxos/plugin-thread/blueprints';
 import { TokenManagerPlugin } from '@dxos/plugin-token-manager';
 import { TranscriptionPlugin } from '@dxos/plugin-transcription';
+import { TranscriptionBlueprint } from '@dxos/plugin-transcription/blueprints';
 import { useQuery, useSpace } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
@@ -120,7 +126,7 @@ const DefaultStory = ({ modules, showContext, blueprints = [] }: StoryProps) => 
     }
 
     // Add blueprints to context.
-    const blueprintRegistry = new Blueprint.Registry(blueprintsDefinitions);
+    const blueprintRegistry = new Blueprint.Registry(blueprintsDefinitions.map((blueprint) => blueprint.make()));
     const blueprintObjects = blueprints
       .map((key) => {
         const blueprint = blueprintRegistry.getByKey(key);
@@ -279,7 +285,7 @@ export const WithWebSearch: Story = {
   }),
   args: {
     modules: [[ChatModule]],
-    blueprints: ['dxos.org/blueprint/web-search'],
+    blueprints: [WebSearchBlueprint.key],
   },
 };
 
@@ -310,7 +316,7 @@ export const WithDocument: Story = {
   args: {
     showContext: true,
     modules: [[ChatModule], [CommentsModule]],
-    blueprints: [AssistantBlueprint.Key, 'dxos.org/blueprint/markdown', 'dxos.org/blueprint/thread'],
+    blueprints: [AssistantBlueprint.key, MarkdownBlueprint.key, ThreadBlueprint.key],
   },
 };
 
@@ -368,7 +374,7 @@ export const WithChess: Story = {
   args: {
     showContext: true,
     modules: [[ChatModule]],
-    blueprints: [AssistantBlueprint.Key, 'dxos.org/blueprint/chess'],
+    blueprints: [AssistantBlueprint.key, ChessBlueprint.key],
   },
 };
 
@@ -392,7 +398,7 @@ export const WithMail: Story = {
   args: {
     showContext: true,
     modules: [[ChatModule]],
-    blueprints: [AssistantBlueprint.Key, 'dxos.org/blueprint/inbox', 'dxos.org/blueprint/markdown'],
+    blueprints: [AssistantBlueprint.key, MarkdownBlueprint.key, InboxBlueprint.key],
   },
 };
 
@@ -413,7 +419,7 @@ export const WithGmail: Story = {
   args: {
     showContext: true,
     modules: [[ChatModule], [InboxModule], [TokenManagerModule]],
-    blueprints: [AssistantBlueprint.Key, 'dxos.org/blueprint/inbox'],
+    blueprints: [AssistantBlueprint.key, InboxBlueprint.key],
   },
 };
 
@@ -434,7 +440,7 @@ export const WithCalendar: Story = {
   args: {
     showContext: true,
     modules: [[ChatModule], [TokenManagerModule]],
-    blueprints: [AssistantBlueprint.Key, 'dxos.org/blueprint/calendar'],
+    blueprints: [AssistantBlueprint.key, CalendarBlueprint.key],
   },
 };
 
@@ -465,7 +471,7 @@ export const WithMap: Story = {
   args: {
     showContext: true,
     modules: [[ChatModule]],
-    blueprints: [AssistantBlueprint.Key, 'dxos.org/blueprint/map'],
+    blueprints: [AssistantBlueprint.key, MapBlueprint.key],
   },
 };
 
@@ -562,9 +568,9 @@ export const WithResearch: Story = {
     showContext: true,
     modules: [[ChatModule], [GraphModule, ExecutionGraphModule]],
     blueprints: [
-      // AssistantBlueprint.Key
+      // AssistantBlueprint.key
       // TODO(burdon): Too many open-ended tools (querying for tools, querying for schema) confuses the model.
-      ResearchBlueprint.Key,
+      ResearchBlueprint.key,
     ],
   },
 };
@@ -601,7 +607,7 @@ export const WithTranscription: Story = {
   args: {
     showContext: true,
     modules: [[ChatModule]],
-    blueprints: [AssistantBlueprint.Key, 'dxos.org/blueprint/transcription'],
+    blueprints: [AssistantBlueprint.key, TranscriptionBlueprint.key],
   },
 };
 
@@ -619,7 +625,7 @@ export const WithLinearSync: Story = {
   }),
   args: {
     modules: [[ChatModule], [GraphModule]],
-    blueprints: [LinearBlueprint.Key],
+    blueprints: [LinearBlueprint.key],
   },
 };
 
@@ -677,7 +683,7 @@ export const WithChessTrigger: Story = {
 
       space.db.add(
         Trigger.make({
-          function: Ref.make(serializeFunction(ChessFunctions.play)),
+          function: Ref.make(serializeFunction(ChessFunctions.Play)),
           enabled: true,
           spec: {
             kind: 'subscription',
@@ -748,7 +754,7 @@ export const WithResearchQueue: Story = {
       [ResearchInputModule, ResearchOutputModule],
       [TriggersModule, InvocationsModule, PromptModule, GraphModule],
     ],
-    blueprints: [ResearchBlueprint.Key],
+    blueprints: [ResearchBlueprint.key],
   },
 };
 

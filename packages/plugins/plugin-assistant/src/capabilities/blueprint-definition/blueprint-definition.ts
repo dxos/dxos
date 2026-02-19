@@ -20,50 +20,27 @@ import {
 
 import { AssistantBlueprint } from '../../blueprints';
 
-// TODO(burdon): Remove need for this type? Or change to simpler array of tuples?
-export type BlueprintCapabilities = [
-  Capability.Capability<typeof AppCapabilities.BlueprintDefinition>,
-  Capability.Capability<typeof AppCapabilities.Functions>,
-  Capability.Capability<typeof AppCapabilities.BlueprintDefinition>,
-  Capability.Capability<typeof AppCapabilities.Functions>,
-  Capability.Capability<typeof AppCapabilities.BlueprintDefinition>,
-  Capability.Capability<typeof AppCapabilities.Functions>,
-  Capability.Capability<typeof AppCapabilities.BlueprintDefinition>,
-  Capability.Capability<typeof AppCapabilities.Functions>,
-  Capability.Capability<typeof AppCapabilities.BlueprintDefinition>,
-  Capability.Capability<typeof AppCapabilities.Functions>,
-  Capability.Capability<typeof AppCapabilities.BlueprintDefinition>,
-  Capability.Capability<typeof AppCapabilities.Functions>,
-  Capability.Capability<typeof AppCapabilities.BlueprintDefinition>,
-  Capability.Capability<typeof AppCapabilities.Functions>,
-];
-
-export default Capability.makeModule<[], BlueprintCapabilities>(() =>
+const blueprintDefinition = Capability.makeModule<
+  [],
+  Capability.Capability<typeof AppCapabilities.BlueprintDefinition>[]
+>(() =>
   Effect.succeed([
-    Capability.contributes(AppCapabilities.BlueprintDefinition, AssistantBlueprint.make()),
-    Capability.contributes(AppCapabilities.Functions, [
-      ...AssistantBlueprint.functions,
-      // TODO(burdon): Where should these go?
-      ...Record.values(AgentFunctions),
-      ...Record.values(EntityExtractionFunctions),
-    ]),
-
-    Capability.contributes(AppCapabilities.BlueprintDefinition, ResearchBlueprint.make()),
-    Capability.contributes(AppCapabilities.Functions, ResearchBlueprint.functions),
-
-    Capability.contributes(AppCapabilities.BlueprintDefinition, WebSearchBlueprint.make()),
-    Capability.contributes(AppCapabilities.Functions, WebSearchBlueprint.functions),
-
-    Capability.contributes(AppCapabilities.BlueprintDefinition, DiscordBlueprint.make()),
-    Capability.contributes(AppCapabilities.Functions, DiscordBlueprint.functions),
-
-    Capability.contributes(AppCapabilities.BlueprintDefinition, LinearBlueprint.make()),
-    Capability.contributes(AppCapabilities.Functions, LinearBlueprint.functions),
-
-    Capability.contributes(AppCapabilities.BlueprintDefinition, InitiativeBlueprint.make()),
-    Capability.contributes(AppCapabilities.Functions, InitiativeBlueprint.functions),
-
-    Capability.contributes(AppCapabilities.BlueprintDefinition, PlanningBlueprint.make()),
-    Capability.contributes(AppCapabilities.Functions, PlanningBlueprint.functions),
+    Capability.contributes(AppCapabilities.BlueprintDefinition, {
+      ...AssistantBlueprint,
+      functions: [
+        // TODO(burdon): Co-locate all of these functions?
+        ...AssistantBlueprint.functions,
+        ...Record.values(AgentFunctions),
+        ...Record.values(EntityExtractionFunctions),
+      ],
+    }),
+    Capability.contributes(AppCapabilities.BlueprintDefinition, ResearchBlueprint),
+    Capability.contributes(AppCapabilities.BlueprintDefinition, WebSearchBlueprint),
+    Capability.contributes(AppCapabilities.BlueprintDefinition, DiscordBlueprint),
+    Capability.contributes(AppCapabilities.BlueprintDefinition, LinearBlueprint),
+    Capability.contributes(AppCapabilities.BlueprintDefinition, InitiativeBlueprint),
+    Capability.contributes(AppCapabilities.BlueprintDefinition, PlanningBlueprint),
   ]),
 );
+
+export default blueprintDefinition;
