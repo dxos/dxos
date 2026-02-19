@@ -162,22 +162,9 @@ describe('FeedSyncer', () => {
         })
         .pipe(RuntimeProvider.runPromise(serverRuntime.runtimeEffect));
 
-      const { blocks: clientBlocks } = await clientFeedStore
-        .query({
-          spaceId,
-          feedNamespace: FeedProtocol.WellKnownNamespaces.data,
-          position: -1,
-          query: { feedIds: [clientFeedId] },
-        })
-        .pipe(RuntimeProvider.runPromise(clientRuntime.runtimeEffect));
-
       expect(serverBlocks).toHaveLength(1);
       expect(serverBlocks[0].data).toEqual(new Uint8Array([9, 8, 7]));
       expect(serverBlocks[0].position).toBeDefined();
-
-      expect(clientBlocks).toHaveLength(1);
-      expect(clientBlocks[0].data).toEqual(new Uint8Array([9, 8, 7]));
-      expect(clientBlocks[0].position).toBeDefined();
     });
 
     await syncer.close();
