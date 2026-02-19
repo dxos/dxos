@@ -294,9 +294,7 @@ const syncTriggers = async (initiative: Initiative.Initiative) => {
         },
         function: Ref.make(
           FunctionDefinition.serialize(
-            initiative.useQualifyingAgent
-              ? InitiativeFunctions.Qualifier
-              : InitiativeFunctions.Agent,
+            initiative.useQualifyingAgent ? InitiativeFunctions.Qualifier : InitiativeFunctions.Agent,
           ),
         ),
         input: {

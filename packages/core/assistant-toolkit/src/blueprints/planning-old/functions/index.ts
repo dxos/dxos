@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { default as Read } from './read';
-import { default as Update } from './update';
+import Read from './read';
+import Update from './update';
 
 export const TaskFunctions = {
   Read,

@@ -5,8 +5,6 @@
 import Open from './open';
 import Summarize from './summarize';
 
-export { Open, Summarize };
-
 export const TranscriptionFunctions = {
   Open,
   Summarize,

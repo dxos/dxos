@@ -4,8 +4,6 @@
 
 import CreateProposals from './create-proposals';
 
-export { CreateProposals };
-
 export const ThreadFunctions = {
   CreateProposals,
 };
