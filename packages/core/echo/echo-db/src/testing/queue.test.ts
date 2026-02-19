@@ -214,6 +214,42 @@ describe('queues', () => {
       expect(result.map((o) => (o as TestSchema.Person).name).sort()).toEqual(['jane', 'john']);
     });
 
+    test('queries local queue with TestSchema.Person schema', async ({ expect }) => {
+      await using peer = await builder.createPeer();
+      const db = await peer.createDatabase();
+      const queues = peer.client.constructQueueFactory(db.spaceId);
+      const queue = queues.create();
+
+      const localObject = Obj.make(TestSchema.Person, { name: 'local-only' });
+      await queue.append([localObject]);
+
+      const localQueueObjects = await queue
+        .query(Query.select(Filter.type(TestSchema.Person, { name: 'local-only' })))
+        .run();
+
+      expect(localQueueObjects).toHaveLength(1);
+      expect(localQueueObjects[0].id).toEqual(localObject.id);
+      expect(localQueueObjects[0].name).toEqual('local-only');
+    });
+
+    test('queries local queue with TestSchema.Expando schema', async ({ expect }) => {
+      await using peer = await builder.createPeer();
+      const db = await peer.createDatabase();
+      const queues = peer.client.constructQueueFactory(db.spaceId);
+      const queue = queues.create();
+
+      const localObject = Obj.make(TestSchema.Expando, { message: 'local-only' });
+      await queue.append([localObject]);
+
+      const localQueueObjects = await queue
+        .query(Query.select(Filter.type(TestSchema.Expando, { message: 'local-only' })))
+        .run();
+
+      expect(localQueueObjects).toHaveLength(1);
+      expect(localQueueObjects[0].id).toEqual(localObject.id);
+      expect(localQueueObjects[0].message).toEqual('local-only');
+    });
+
     test('one shot query with name predicate', async ({ expect }) => {
       await using peer = await builder.createPeer({
         types: [TestSchema.Person],
