@@ -68,13 +68,14 @@ export interface FunctionContext {
 
 const typeId = Symbol.for('@dxos/functions/FunctionDefinition');
 
-export type FunctionDefinition<T = any, O = any, S extends FunctionServices = FunctionServices> = {
+export type FunctionDefinition<TInput = any, TOutput = any, S extends FunctionServices = FunctionServices> = {
   [typeId]: true;
+
   key: string;
   name: string;
   description?: string;
-  inputSchema: Schema.Schema<T, any>;
-  outputSchema?: Schema.Schema<O, any>;
+  inputSchema: Schema.Schema<TInput, any>;
+  outputSchema?: Schema.Schema<TOutput, any>;
 
   /**
    * List of types the function uses.
@@ -87,7 +88,6 @@ export type FunctionDefinition<T = any, O = any, S extends FunctionServices = Fu
    */
   services: readonly string[];
 
-  handler: FunctionHandler<T, O, S>;
   meta?: {
     /**
      * Tools that are projected from functions have this annotation.
@@ -100,6 +100,8 @@ export type FunctionDefinition<T = any, O = any, S extends FunctionServices = Fu
      */
     deployedFunctionId?: string;
   };
+
+  handler: FunctionHandler<TInput, TOutput, S>;
 };
 
 export declare namespace FunctionDefinition {
@@ -121,6 +123,7 @@ export type FunctionProps<T, O> = {
    * This is used to ensure that the types are available when the function is executed.
    */
   types?: readonly Type.Entity.Any[];
+
   // TODO(dmaretskyi): This currently doesn't cause a compile-time error if the handler requests a service that is not specified
   services?: readonly Context.Tag<any, any>[];
 
@@ -177,7 +180,7 @@ export const defineFunction: {
     handler: handlerWithSpan,
     types: types ?? [],
     services: !services ? [] : getServiceKeys(services),
-  } satisfies FunctionDefinition.Any;
+  };
 };
 
 const getServiceKeys = (services: readonly Context.Tag<any, any>[]) => {
