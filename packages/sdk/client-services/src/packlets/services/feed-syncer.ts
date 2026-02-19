@@ -24,7 +24,7 @@ const encoder = new Encoder({ tagUint8Array: false, useRecords: false });
 
 const DEFAULT_MESSAGE_BLOCKS_LIMIT = 50;
 const DEFAULT_SYNC_CONCURRENCY = 5;
-const DEFAULT_POLLING_INTERVAL = 1_000;
+const DEFAULT_POLLING_INTERVAL = 5_000;
 
 interface FeedSyncerOptions {
   runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransaction.SqlTransaction>;
