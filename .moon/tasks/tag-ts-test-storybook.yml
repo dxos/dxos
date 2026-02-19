@@ -10,13 +10,12 @@ tasks:
       - vite-plugin-import-source:compile
       - ^:compile
     inputs:
-      - /vitest.base.config.ts
-      - vitest.config.ts
-      - .storybook/*
+      - '@group(sources)'
       - /tools/storybook-react/.storybook/main.ts
       - /tools/storybook-react/.storybook/vitest.setup.ts
-      - '@group(sources)'
-      - $NODE_VERSION
+      - /vitest.base.config.ts
+      - .storybook/*
+      - vitest.config.ts
       - $VITEST_COVERAGE
       - $VITEST_DEBUG
       - $VITEST_ENV

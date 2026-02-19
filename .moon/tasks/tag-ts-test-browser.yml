@@ -9,10 +9,9 @@ tasks:
       - vite-plugin-import-source:compile
       - ^:compile
     inputs:
+      - '@group(sources)'
       - /vitest.base.config.ts
       - vitest.config.ts
-      - '@group(sources)'
-      - $NODE_VERSION
       - $VITEST_COVERAGE
       - $VITEST_DEBUG
       - $VITEST_ENV
