@@ -27,7 +27,6 @@ export type AutoScrollOptions = {
 /**
  * Extension that supports pinning the scroll position and automatically scrolls to the bottom when content is added.
  */
-// TODO(burdon): Reconcile with transcript-extension.
 export const autoScroll = ({
   autoScroll = true,
   threshold = 100,
@@ -35,7 +34,6 @@ export const autoScroll = ({
   onAutoScroll,
 }: Partial<AutoScrollOptions> = {}) => {
   let buttonContainer: HTMLDivElement | undefined;
-  let hideTimeout: NodeJS.Timeout | undefined;
   let lastScrollTop = 0;
   let isPinned = true;
 
@@ -44,19 +42,9 @@ export const autoScroll = ({
     buttonContainer?.classList.toggle('opacity-0', pin);
   };
 
-  // Temporarily hide the scrollbar while auto-scrolling.
-  const hideScrollbar = (view: EditorView) => {
-    view.scrollDOM.classList.add('cm-hide-scrollbar');
-    clearTimeout(hideTimeout);
-    hideTimeout = setTimeout(() => {
-      view.scrollDOM.classList.remove('cm-hide-scrollbar');
-    }, 1_000);
-  };
-
   // Throttled scroll to bottom.
   const scrollToBottom = (view: EditorView, behavior?: ScrollBehavior) => {
     setPinned(true);
-    hideScrollbar(view);
     const line = view.state.doc.lineAt(view.state.doc.length);
     view.dispatch({
       selection: { anchor: line.to, head: line.to },
@@ -78,9 +66,11 @@ export const autoScroll = ({
   // Debounce scroll updates so rapid edits don't cause clunky scrolling.
   const triggerUpdate = debounce((view: EditorView) => scrollToBottom(view), throttleDelay);
 
+  // TODO(burdon): Reset pin if height 0.
+
   return [
     // Update listener for logging when scrolling is needed.
-    EditorView.updateListener.of(({ view, transactions, heightChanged }) => {
+    EditorView.updateListener.of(({ view, transactions, heightChanged, state }) => {
       // TODO(burdon): Remove and use scrollToLineEffect instead.
       transactions.forEach((transaction) => {
         for (const effect of transaction.effects) {
@@ -92,17 +82,24 @@ export const autoScroll = ({
 
       // Maybe scroll if doc changed and pinned.
       // NOTE: Geometry changed is triggered when widgets change height (e.g., toggle tool block).
-      if (heightChanged && isPinned) {
-        const coords = view.coordsAtPos(view.state.doc.length);
-        const scrollerRect = view.scrollDOM.getBoundingClientRect();
-        const distanceFromBottom = coords ? scrollerRect.bottom - coords.bottom : 0;
-        if (autoScroll && distanceFromBottom < threshold) {
-          const shouldScroll = onAutoScroll?.({ view, distanceFromBottom }) ?? true;
-          if (shouldScroll) {
-            triggerUpdate(view);
+      if (heightChanged) {
+        if (isPinned) {
+          const coords = view.coordsAtPos(view.state.doc.length);
+          const scrollerRect = view.scrollDOM.getBoundingClientRect();
+          const distanceFromBottom = coords ? scrollerRect.bottom - coords.bottom : 0;
+          if (autoScroll && distanceFromBottom < threshold) {
+            const shouldScroll = onAutoScroll?.({ view, distanceFromBottom }) ?? true;
+            if (shouldScroll) {
+              triggerUpdate(view);
+            }
+          } else if (distanceFromBottom < 0) {
+            setPinned(false);
           }
-        } else if (distanceFromBottom < 0) {
-          setPinned(false);
+        } else {
+          // TODO(burdon): Pin if shrinks.
+          if (state.doc.length === 0) {
+            setPinned(true);
+          }
         }
       }
     }),
@@ -146,15 +143,12 @@ export const autoScroll = ({
 
     // Styles.
     EditorView.theme({
-      // '.cm-scroller': {
-      //   scrollbarWidth: 'thin',
-      // },
-      // '.cm-scroller.cm-hide-scrollbar': {
-      //   scrollbarWidth: 'none',
-      // },
-      // '.cm-scroller.cm-hide-scrollbar::-webkit-scrollbar': {
-      //   display: 'none',
-      // },
+      '.cm-scroller.cm-hide-scrollbar::-webkit-scrollbar': {
+        display: 'none',
+      },
+      '.cm-scroller::-webkit-scrollbar-thumb': {
+        background: 'var(--dx-scrollbarThumb)',
+      },
       '.cm-scroll-button': {
         position: 'absolute',
         bottom: '0.5rem',

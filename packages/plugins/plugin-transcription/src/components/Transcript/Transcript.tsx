@@ -51,7 +51,7 @@ export const TranscriptView = ({ classNames, transcript: object, model }: Transc
           model,
           started: object?.started ? new Date(object.started) : undefined,
         }),
-        autoScroll(),
+        autoScroll({ autoScroll: true }),
       ].filter(isTruthy),
     };
   }, [model]);
