@@ -17,7 +17,7 @@ import {
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import type { Template } from '..';
+import type { Template } from '../index';
 
 /**
  * Process Handlebars template.

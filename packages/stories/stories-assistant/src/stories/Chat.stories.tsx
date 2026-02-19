@@ -12,10 +12,16 @@ import { Capabilities } from '@dxos/app-framework';
 import { Surface, useCapabilities, useCapability } from '@dxos/app-framework/ui';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { AiContextBinder } from '@dxos/assistant';
-import { Agent, LinearBlueprint, ResearchBlueprint, ResearchDataTypes, ResearchGraph } from '@dxos/assistant-toolkit';
+import {
+  AgentFunctions,
+  LinearBlueprint,
+  ResearchBlueprint,
+  ResearchDataTypes,
+  ResearchGraph,
+} from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt, Template } from '@dxos/blueprints';
 import { Filter, Obj, Query, Ref, Tag, Type } from '@dxos/echo';
-import { Example, Script, Trigger, serializeFunction } from '@dxos/functions';
+import { ExampleFunctions, Script, Trigger, serializeFunction } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { AssistantBlueprint, translations, useContextBinder } from '@dxos/plugin-assistant';
@@ -540,7 +546,7 @@ export const WithResearch: Story = {
   decorators: getDecorators({
     plugins: [MarkdownPlugin(), TablePlugin(), ThreadPlugin()],
     config: config.remote,
-    types: [...ResearchDataTypes, ResearchGraph],
+    types: [...ResearchDataTypes, ResearchGraph.ResearchGraph],
     accessTokens: [Obj.make(AccessToken.AccessToken, { source: 'exa.ai', token: EXA_API_KEY })],
     onInit: async ({ space }) => {
       space.db.add(Obj.make(Organization.Organization, { name: 'BlueYard Capital' }));
@@ -624,7 +630,7 @@ export const WithTriggers: Story = {
     onInit: async ({ space }) => {
       space.db.add(
         Trigger.make({
-          function: Ref.make(serializeFunction(Example.reply)),
+          function: Ref.make(serializeFunction(ExampleFunctions.Reply)),
           enabled: true,
           spec: {
             kind: 'timer',
@@ -697,7 +703,7 @@ export const WithResearchQueue: Story = {
   decorators: getDecorators({
     plugins: [],
     config: config.remote,
-    types: [...ResearchDataTypes, ResearchGraph, ResearchInputQueue],
+    types: [...ResearchDataTypes, ResearchGraph.ResearchGraph, ResearchInputQueue],
     accessTokens: [Obj.make(AccessToken.AccessToken, { source: 'exa.ai', token: EXA_API_KEY })],
     onInit: async ({ space }) => {
       const researchInputQueue = space.db.add(
@@ -723,7 +729,7 @@ export const WithResearchQueue: Story = {
 
       space.db.add(
         Trigger.make({
-          function: Ref.make(serializeFunction(Agent.prompt)),
+          function: Ref.make(serializeFunction(AgentFunctions.Prompt)),
           enabled: true,
           spec: {
             kind: 'queue',
@@ -846,7 +852,7 @@ export const WithProject: Story = {
       );
 
       const researchTrigger = Trigger.make({
-        function: Ref.make(serializeFunction(Agent.prompt)),
+        function: Ref.make(serializeFunction(AgentFunctions.Prompt)),
         enabled: true,
         spec: {
           kind: 'subscription',
@@ -973,7 +979,7 @@ export const WithPrompt: Story = {
     config: config.remote,
     types: [Text.Text],
     onInit: async ({ space }) => {
-      space.db.add(serializeFunction(Agent.prompt));
+      space.db.add(serializeFunction(AgentFunctions.Prompt));
 
       space.db.add(
         Prompt.make({

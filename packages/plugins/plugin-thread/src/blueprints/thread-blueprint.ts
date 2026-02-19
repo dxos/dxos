@@ -8,9 +8,9 @@ import { trim } from '@dxos/util';
 
 import { createProposals } from '../functions';
 
-export const functions: FunctionDefinition[] = [createProposals];
-
 export const Key = 'dxos.org/blueprint/thread';
+
+export const functions: FunctionDefinition[] = [createProposals];
 
 export const make = () =>
   Blueprint.make({

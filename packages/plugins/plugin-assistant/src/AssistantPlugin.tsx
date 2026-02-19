@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
-import { Chat, Initiative, ResearchGraph } from '@dxos/assistant-toolkit';
+import { Chat, Initiative, InitiativeBlueprint, Plan, ResearchGraph } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { Sequence } from '@dxos/conductor';
 import { Obj, Type } from '@dxos/echo';
@@ -85,7 +85,7 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
                 name: 'New Initiative',
                 spec: 'Not specified yet',
               },
-              Initiative.makeBlueprint(),
+              InitiativeBlueprint,
             ).pipe(withComputeRuntime(db.spaceId))) satisfies CreateObject,
           addToCollectionOnCreate: true,
         },
@@ -100,9 +100,9 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
       Blueprint.Blueprint,
       HasSubject.HasSubject,
       Prompt.Prompt,
-      ResearchGraph,
+      ResearchGraph.ResearchGraph,
       Initiative.Initiative,
-      Initiative.Plan,
+      Plan.Plan,
       Sequence,
     ],
   }),
