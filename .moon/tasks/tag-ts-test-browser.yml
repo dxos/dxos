@@ -17,8 +17,8 @@ tasks:
       - $VITEST_ENV
       - $VITEST_XML_REPORT
     outputs:
-      - /coverage/$project/**
-      - /test-results/$project/**
+      - /coverage/$project/browser/**
+      - /test-results/$project/browser/**
     options:
       timeout: 600
 
