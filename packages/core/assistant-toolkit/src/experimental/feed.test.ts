@@ -21,7 +21,7 @@ import {
   testStoragePath,
 } from '@dxos/functions-runtime/testing';
 
-import { DiscordFunctions, LinearFunctions } from '../functions';
+import { DiscordFunctions, LinearFunctions } from '../blueprints';
 
 const TestLayer = Layer.mergeAll(AiService.model('@anthropic/claude-opus-4-0'), ToolExecutionServices).pipe(
   Layer.provideMerge(GenericToolkit.providerEmpty),

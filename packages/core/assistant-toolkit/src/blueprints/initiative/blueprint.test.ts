@@ -5,7 +5,6 @@
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
-import * as Record from 'effect/Record';
 
 import { MemoizedAiService } from '@dxos/ai/testing';
 import { AiConversation } from '@dxos/assistant';
@@ -26,21 +25,19 @@ import { Collection, Text } from '@dxos/schema';
 import { Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { Chat } from '../../chat';
-import { InitiativeFunctions } from '../../functions';
-import * as Initiative from '../../initiative';
-import * as Planning from '../../planning';
+import { Chat, Initiative, Plan } from '../../types';
+import { PlanningBlueprint } from '../planning';
 
-import { blueprint, getFunctions, blueprint as makeBlueprint } from './initiative-blueprint';
+import { Functions, blueprint, getFunctions, blueprint as makeBlueprint } from './blueprint';
 
 ObjectId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayerWithTriggers({
   aiServicePreset: 'edge-remote',
-  functions: [...getFunctions(), ...MarkdownBlueprint.functions, ...Record.values(Planning.PlanningFunctions)],
+  functions: [...getFunctions(), ...MarkdownBlueprint.functions],
   types: [
-    Initiative.Initiative.Initiative,
-    Initiative.Plan.Plan,
+    Initiative.Initiative,
+    Plan.Plan,
     Chat.CompanionTo,
     Chat.Chat,
     SpaceProperties,
@@ -127,7 +124,7 @@ describe.runIf(TestHelpers.tagEnabled('flaky'))('Initiative', () => {
               kind: 'queue',
               queue: inboxQueue.dxn.toString(),
             },
-            function: Ref.make(FunctionDefinition.serialize(InitiativeFunctions.agent)),
+            function: Ref.make(FunctionDefinition.serialize(Functions.agent)),
             input: {
               initiative: Ref.make(initiative),
               event: '{{event}}',
@@ -183,7 +180,7 @@ describe.runIf(TestHelpers.tagEnabled('flaky'))('Initiative', () => {
                   - Taken 2 raw eggs out of the fridge.
                 </example>
               `,
-              blueprints: [Ref.make(MarkdownBlueprint.make()), Ref.make(Obj.clone(Planning.PlanningBlueprint))],
+              blueprints: [Ref.make(MarkdownBlueprint.make()), Ref.make(Obj.clone(PlanningBlueprint))],
             },
             makeBlueprint,
           ),
@@ -211,13 +208,13 @@ describe.runIf(TestHelpers.tagEnabled('flaky'))('Initiative', () => {
   );
 });
 
-const dumpInitiative = async (initiative: Initiative.Initiative.Initiative) => {
+const dumpInitiative = async (initiative: Initiative.Initiative) => {
   let text = '';
   text += `============== Initiative: ${initiative.name} ==============\n\n`;
   text += `============== Spec ==============\n\n`;
   text += `${await initiative.spec.load().then((_) => _.content)}\n`;
   text += `============== Plan ==============\n\n`;
-  text += `${await initiative.plan?.load().then((_) => Initiative.Plan.formatPlan(_))}\n`;
+  text += `${await initiative.plan?.load().then((_) => Plan.formatPlan(_))}\n`;
   text += `============== Artifacts ==============\n\n`;
   for (const artifact of initiative.artifacts) {
     const data = await artifact.data.load();

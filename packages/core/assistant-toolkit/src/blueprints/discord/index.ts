@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { blueprint } from './discord-blueprint';
+import { blueprint } from './blueprint';
+import { Functions } from './functions';
 
-export default blueprint;
+export const DiscordBlueprint = blueprint;
+export const DiscordFunctions = Functions;

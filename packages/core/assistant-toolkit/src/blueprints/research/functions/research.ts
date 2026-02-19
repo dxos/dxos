@@ -22,8 +22,13 @@ import { FunctionInvocationServiceLayerTestMocked } from '@dxos/functions-runtim
 import { type Message, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { LocalSearchHandler, LocalSearchToolkit, makeGraphWriterHandler, makeGraphWriterToolkit } from '../../crud';
-import { ExaFunctions } from '../exa';
+import {
+  LocalSearchHandler,
+  LocalSearchToolkit,
+  makeGraphWriterHandler,
+  makeGraphWriterToolkit,
+} from '../../../crud';
+import { Functions as ExaFunctions } from '../../../functions/exa';
 
 import { contextQueueLayerFromResearchGraph } from './research-graph';
 import PROMPT from './research-instructions.tpl?raw';

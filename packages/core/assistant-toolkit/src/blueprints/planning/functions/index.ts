@@ -2,4 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-export { default as updateTasks } from './update-tasks';
+import updateTasks$ from './update-tasks';
+
+export namespace Functions {
+  export const updateTasks = updateTasks$;
+}

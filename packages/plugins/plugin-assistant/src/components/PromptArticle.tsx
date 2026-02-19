@@ -32,9 +32,11 @@ export const PromptArticle = ({ role, subject }: PromptArticleProps) => {
     [subject, db],
   );
 
-  const handleRun = useComputeRuntimeCallback(db?.spaceId, () => invokeFunctionWithTracing(AgentFunctions.prompt, inputData), [
-    inputData,
-  ]);
+  const handleRun = useComputeRuntimeCallback(
+    db?.spaceId,
+    () => invokeFunctionWithTracing(AgentFunctions.prompt, inputData),
+    [inputData],
+  );
 
   return (
     <Layout.Main role={role} toolbar>

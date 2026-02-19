@@ -5,7 +5,7 @@
 import { default as exa$ } from './exa';
 import { default as mock$ } from './mock';
 
-export namespace ExaFunctions {
+export namespace Functions {
   export const exa = exa$;
   export const mock = mock$;
 }

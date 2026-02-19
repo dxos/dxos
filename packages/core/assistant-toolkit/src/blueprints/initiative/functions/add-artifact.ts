@@ -9,7 +9,7 @@ import { AiContextService } from '@dxos/assistant';
 import { Database, Obj, Type } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
 
-import { getFromChatContext } from '../../initiative/util';
+import { Initiative } from '../../../types';
 
 export default defineFunction({
   key: 'dxos.org/function/initiative/add-artifact',
@@ -29,7 +29,7 @@ export default defineFunction({
       throw new Error('Artifact not found.');
     }
 
-    const initiative = yield* getFromChatContext;
+    const initiative = yield* Initiative.getFromChatContext;
 
     Obj.change(initiative, (initiative) => {
       initiative.artifacts.push({

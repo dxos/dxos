@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { blueprint } from './research-blueprint';
+import { blueprint } from './blueprint';
+import { Functions } from './functions';
 
-export default blueprint;
+export const ResearchBlueprint = blueprint;
+export const ResearchFunctions = Functions;

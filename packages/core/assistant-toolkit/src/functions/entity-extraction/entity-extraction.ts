@@ -18,8 +18,8 @@ import { log } from '@dxos/log';
 import { type Actor, LegacyOrganization, Message, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
+import { contextQueueLayerFromResearchGraph } from '../../blueprints/research/functions/research-graph';
 import { makeGraphWriterHandler, makeGraphWriterToolkit } from '../../crud';
-import { contextQueueLayerFromResearchGraph } from '../research';
 
 export default defineFunction({
   key: 'dxos.org/functions/entity-extraction',

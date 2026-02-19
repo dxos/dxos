@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { blueprint } from './markdown-blueprint';
+import { blueprint } from './blueprint';
+import { Functions } from './functions';
 
-export default blueprint;
+export const MarkdownBlueprint = blueprint;
+export const MarkdownFunctions = Functions;

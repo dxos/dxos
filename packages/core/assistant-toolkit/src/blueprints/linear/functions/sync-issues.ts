@@ -15,8 +15,8 @@ import { CredentialsService, defineFunction, withAuthorization } from '@dxos/fun
 import { log } from '@dxos/log';
 import { Person, Pipeline, Task } from '@dxos/types';
 
-import { syncObjects } from '../../sync';
-import { graphqlRequestBody } from '../../util';
+import { syncObjects } from '../../../sync';
+import { graphqlRequestBody } from '../../../util';
 
 const queryIssues = `
 query Issues($teamId: String!, $after: DateTimeOrDuration!) {

@@ -7,7 +7,7 @@ import { Ref } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
-import { DocumentFunctions } from '../../functions';
+import { Functions } from './functions';
 
 const instructions = trim`
   You read, write & create markdown documents.
@@ -20,5 +20,5 @@ export const blueprint = Blueprint.make({
   instructions: {
     source: Ref.make(Text.make(instructions)),
   },
-  tools: Blueprint.toolDefinitions({ functions: [DocumentFunctions.read, DocumentFunctions.update, DocumentFunctions.create] }),
+  tools: Blueprint.toolDefinitions({ functions: [Functions.read, Functions.update, Functions.create] }),
 });

@@ -4,11 +4,11 @@
 
 import { Blueprint } from '@dxos/blueprints';
 
-import { updateTasks } from './functions';
+import { Functions } from './functions';
 
-export const PlanningBlueprint = Blueprint.make({
+export const blueprint = Blueprint.make({
   key: 'dxos.org/blueprint/planning',
   name: 'Planning',
   description: 'Plans and tracks complex tasks with artifact management.',
-  tools: Blueprint.toolDefinitions({ functions: [updateTasks] }),
+  tools: Blueprint.toolDefinitions({ functions: [Functions.updateTasks] }),
 });

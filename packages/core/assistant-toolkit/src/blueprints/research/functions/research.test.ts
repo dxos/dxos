@@ -22,7 +22,7 @@ import { MarkdownBlueprint } from '@dxos/plugin-markdown/blueprints';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { HasSubject, type Message, Organization } from '@dxos/types';
 
-import { ResearchBlueprint } from '../../blueprints';
+import { blueprint as ResearchBlueprint } from '../blueprint';
 
 import { default as createDocument } from './document-create';
 import { default as research } from './research';

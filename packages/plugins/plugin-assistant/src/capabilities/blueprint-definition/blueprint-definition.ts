@@ -9,16 +9,15 @@ import { Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import {
   AgentFunctions,
-  DiscordFunctions,
   DiscordBlueprint,
+  DiscordFunctions,
   EntityExtractionFunctions,
-  InitiativeFunctions,
   InitiativeBlueprint,
-  LinearFunctions,
   LinearBlueprint,
+  LinearFunctions,
   Planning,
-  ResearchFunctions,
   ResearchBlueprint,
+  ResearchFunctions,
   WebSearchBlueprint,
 } from '@dxos/assistant-toolkit';
 import { type Blueprint } from '@dxos/blueprints';

@@ -20,7 +20,14 @@ import {
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AppActivationEvents, AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
 import { AiContextBinder, ArtifactId, GenericToolkit } from '@dxos/assistant';
-import { AgentFunctions, DesignBlueprint, DocumentFunctions, PlanningBlueprint, ResearchFunctions, TasksFunctions } from '@dxos/assistant-toolkit';
+import {
+  AgentFunctions,
+  DesignBlueprint,
+  DocumentFunctions,
+  PlanningBlueprint,
+  ResearchFunctions,
+  TasksFunctions,
+} from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { type Space } from '@dxos/client/echo';
 import { Obj, Ref } from '@dxos/echo';

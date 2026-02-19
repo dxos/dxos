@@ -293,7 +293,9 @@ const syncTriggers = async (initiative: Initiative.Initiative.Initiative) => {
           queue: target.queue.dxn.toString(),
         },
         function: Ref.make(
-          FunctionDefinition.serialize(initiative.useQualifyingAgent ? InitiativeFunctions.qualifier : InitiativeFunctions.agent),
+          FunctionDefinition.serialize(
+            initiative.useQualifyingAgent ? InitiativeFunctions.qualifier : InitiativeFunctions.agent,
+          ),
         ),
         input: {
           initiative: Ref.make(initiative),

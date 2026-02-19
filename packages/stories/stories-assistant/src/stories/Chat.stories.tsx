@@ -12,7 +12,13 @@ import { Capabilities } from '@dxos/app-framework';
 import { Surface, useCapabilities, useCapability } from '@dxos/app-framework/ui';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { AiContextBinder } from '@dxos/assistant';
-import { AgentFunctions, LinearBlueprint, ResearchBlueprint, ResearchDataTypes, ResearchGraph } from '@dxos/assistant-toolkit';
+import {
+  AgentFunctions,
+  LinearBlueprint,
+  ResearchBlueprint,
+  ResearchDataTypes,
+  ResearchGraph,
+} from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt, Template } from '@dxos/blueprints';
 import { Filter, Obj, Query, Ref, Tag, Type } from '@dxos/echo';
 import { Example, Script, Trigger, serializeFunction } from '@dxos/functions';

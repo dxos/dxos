@@ -15,7 +15,7 @@ import { FunctionInvocationService } from '@dxos/functions';
 import { ObjectId } from '@dxos/keys';
 import { Message, Organization, Person } from '@dxos/types';
 
-import { ResearchGraph } from '../research';
+import { ResearchGraph } from '../../blueprints/research/functions/research-graph';
 
 import { default as entityExtraction } from './entity-extraction';
 

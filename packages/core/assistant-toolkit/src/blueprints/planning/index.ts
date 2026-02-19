@@ -1,7 +1,9 @@
 //
-// Copyright 2025 DXOS.org
+// Copyright 2026 DXOS.org
 //
 
-import { blueprint } from './planning-blueprint';
+import { blueprint } from './blueprint';
+import { Functions } from './functions';
 
-export default blueprint;
+export const PlanningBlueprint = blueprint;
+export const PlanningFunctions = Functions;

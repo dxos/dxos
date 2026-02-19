@@ -14,7 +14,7 @@ import { TriggerEvent, defineFunction } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { type Message } from '@dxos/types';
 
-import { Initiative } from '../../initiative';
+import { Initiative } from '../../../types';
 
 export default defineFunction({
   key: 'dxos.org/function/initiative/agent',

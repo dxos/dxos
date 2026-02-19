@@ -9,8 +9,7 @@ import { AiContextService } from '@dxos/assistant';
 import { Database, Obj } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
 
-import { formatPlan } from '../../initiative/plan';
-import { getFromChatContext } from '../../initiative/util';
+import { Initiative, Plan } from '../../../types';
 
 export default defineFunction({
   key: 'dxos.org/function/initiative/get-context',
@@ -32,7 +31,7 @@ export default defineFunction({
   }),
   services: [AiContextService],
   handler: Effect.fnUntraced(function* ({ data: _data }) {
-    const initiative = yield* getFromChatContext;
+    const initiative = yield* Initiative.getFromChatContext;
 
     return {
       id: initiative.id,
@@ -42,7 +41,7 @@ export default defineFunction({
         Effect.catchTag('ObjectNotFoundError', () => Effect.succeed('No spec found.')),
       ),
       plan: yield* initiative.plan?.pipe(Database.load).pipe(
-        Effect.map(formatPlan),
+        Effect.map(Plan.formatPlan),
         Effect.catchTag('ObjectNotFoundError', () => Effect.succeed('No plan found.')),
       ) ?? Effect.succeed('No plan found.'),
       artifacts: yield* Effect.forEach(initiative.artifacts, (artifact) =>

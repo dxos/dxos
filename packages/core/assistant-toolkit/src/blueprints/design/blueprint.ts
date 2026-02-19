@@ -8,7 +8,7 @@ import { Ref } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
-import { DocumentFunctions } from '../../functions';
+import { Functions as DocumentFunctions } from '../markdown/functions';
 
 const instructions = trim`
   You manage a design spec based on the conversation.

@@ -4,6 +4,6 @@
 
 import { default as fetch$ } from './fetch-messages';
 
-export namespace DiscordFunctions {
+export namespace Functions {
   export const fetch = fetch$;
 }

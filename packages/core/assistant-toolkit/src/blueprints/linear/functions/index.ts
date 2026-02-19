@@ -4,6 +4,6 @@
 
 import { default as sync$ } from './sync-issues';
 
-export namespace LinearFunctions {
+export namespace Functions {
   export const sync = sync$;
 }

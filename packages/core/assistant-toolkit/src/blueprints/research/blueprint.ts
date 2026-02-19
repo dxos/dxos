@@ -8,7 +8,7 @@ import { Ref } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
-import { ResearchFunctions } from '../../functions';
+import { ResearchFunctions } from './functions';
 
 /**
  * Agent prompt instructions for managing hierarchical task lists.

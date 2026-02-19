@@ -10,7 +10,7 @@ import { Database, Obj } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
 import { trim } from '@dxos/util';
 
-import * as Initiative from '../../initiative';
+import { Initiative, Plan } from '../../../types';
 
 const INSTRUCTIONS = trim`
 TASK MANAGEMENT TOOL - USAGE GUIDELINES
@@ -119,7 +119,7 @@ When uncertain whether to use task management, err on the side of creating tasks
 `;
 
 const TaskProps = Schema.Struct({
-  id: Initiative.Plan.TaskId,
+  id: Plan.TaskId,
   title: Schema.String,
   status: Schema.Literal('todo', 'in-progress', 'done'),
 });
@@ -157,11 +157,11 @@ export default defineFunction({
     // }
     // console.log('\n====== END TASKS ======\n');
 
-    return `
+    return trim`
       Tasks updated. Don't forget to mark tasks as done when you're done with them or update their status to 'in-progress' when you start working on them.
       Current plan:
       <plan>
-        ${Initiative.Plan.formatPlan(plan)}
+        ${Plan.formatPlan(plan)}
       </plan>
     `;
   }, AiContextService.fixFunctionHandlerType),

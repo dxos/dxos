@@ -4,4 +4,4 @@
 
 import { blueprint } from './blueprint';
 
-export const DesignBlueprint = blueprint;
+export const PlanningBlueprint = blueprint;
