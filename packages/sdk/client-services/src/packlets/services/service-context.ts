@@ -214,7 +214,7 @@ export class ServiceContext extends Resource {
         edgeClient: this._edgeConnection,
         peerId: this.identityManager.identity?.deviceKey?.toHex() ?? '',
         getSpaceIds: () => this.echoHost!.spaceIds,
-        syncNamespace: FeedProtocol.WellKnownNamespaces.data,
+        syncNamespaces: [FeedProtocol.WellKnownNamespaces.data, FeedProtocol.WellKnownNamespaces.trace],
       });
     }
   }

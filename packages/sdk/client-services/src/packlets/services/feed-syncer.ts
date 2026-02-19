@@ -35,10 +35,9 @@ interface FeedSyncerOptions {
   getSpaceIds: () => SpaceId[];
 
   /**
-   * Namespace to sync.
+   * Namespaces to sync.
    */
-  // TODO(dmaretskyi): Syncing only one namespace is supported.
-  syncNamespace: string;
+  syncNamespaces: string[];
 
   /**
    * Maximum number of blocks to sync in a single message.
@@ -66,7 +65,7 @@ interface FeedSyncerOptions {
 }
 
 export class FeedSyncer extends Resource {
-  readonly #syncNamespace: string;
+  readonly #syncNamespaces: string[];
   readonly #messageBlocksLimit: number;
   readonly #syncConcurrency: number;
   readonly #pollingInterval: number;
@@ -95,7 +94,7 @@ export class FeedSyncer extends Resource {
       sendMessage: this.#sendMessage.bind(this),
     });
     this.#getSpaceIds = options.getSpaceIds;
-    this.#syncNamespace = options.syncNamespace;
+    this.#syncNamespaces = options.syncNamespaces;
     this.#messageBlocksLimit = options.messageBlocksLimit ?? DEFAULT_MESSAGE_BLOCKS_LIMIT;
     this.#syncConcurrency = options.syncConcurrency ?? DEFAULT_SYNC_CONCURRENCY;
     this.#pollingInterval = options.pollingInterval ?? DEFAULT_POLLING_INTERVAL;
@@ -211,12 +210,18 @@ export class FeedSyncer extends Resource {
         this.#spacesToPoll,
         (spaceId) =>
           Effect.gen(this, function* () {
-            const { done } = yield* this.#syncClient.pull({
-              spaceId,
-              feedNamespace: this.#syncNamespace,
-              limit: this.#messageBlocksLimit,
-            });
-            if (done) {
+            let doneForAllNamespaces = true;
+            for (const feedNamespace of this.#syncNamespaces) {
+              const { done } = yield* this.#syncClient.pull({
+                spaceId,
+                feedNamespace,
+                limit: this.#messageBlocksLimit,
+              });
+              if (!done) {
+                doneForAllNamespaces = false;
+              }
+            }
+            if (doneForAllNamespaces) {
               this.#spacesToPoll.delete(spaceId);
             }
           }),
@@ -248,12 +253,18 @@ export class FeedSyncer extends Resource {
         this.#getSpaceIds(),
         (spaceId) =>
           Effect.gen(this, function* () {
-            const { done } = yield* this.#syncClient.push({
-              spaceId,
-              feedNamespace: this.#syncNamespace,
-              limit: this.#messageBlocksLimit,
-            });
-            if (!done) {
+            let doneForAllNamespaces = true;
+            for (const feedNamespace of this.#syncNamespaces) {
+              const { done } = yield* this.#syncClient.push({
+                spaceId,
+                feedNamespace,
+                limit: this.#messageBlocksLimit,
+              });
+              if (!done) {
+                doneForAllNamespaces = false;
+              }
+            }
+            if (!doneForAllNamespaces) {
               // Keep pushing until all blocks are pushed.
               this.#pushTask.schedule();
             }

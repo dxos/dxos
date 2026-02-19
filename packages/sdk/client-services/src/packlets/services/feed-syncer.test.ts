@@ -29,6 +29,7 @@ type ProtocolMessage = FeedProtocol.ProtocolMessage;
 
 const encoder = new Encoder({ tagUint8Array: false, useRecords: false });
 const syncNamespace = FeedProtocol.WellKnownNamespaces.data;
+const syncNamespaces = [FeedProtocol.WellKnownNamespaces.data, FeedProtocol.WellKnownNamespaces.trace];
 
 const createRuntime = () => {
   const baseLayer = layerMemory;
@@ -83,7 +84,15 @@ const createEdgeConnection = ({
   };
 };
 
-const createFeedSyncHarness = async ({ spaceId, pollingInterval }: { spaceId: SpaceId; pollingInterval?: number }) => {
+const createFeedSyncHarness = async ({
+  spaceId,
+  pollingInterval,
+  syncNamespaces: namespaces = [syncNamespace],
+}: {
+  spaceId: SpaceId;
+  pollingInterval?: number;
+  syncNamespaces?: string[];
+}) => {
   const serverRuntime = createRuntime();
   const clientRuntime = createRuntime();
   const serverFeedStore = createFeedStore('server', true);
@@ -121,7 +130,7 @@ const createFeedSyncHarness = async ({ spaceId, pollingInterval }: { spaceId: Sp
     edgeClient: edgeClient as any,
     peerId: 'client',
     getSpaceIds: () => [spaceId],
-    syncNamespace,
+    syncNamespaces: namespaces,
     pollingInterval,
   });
 
@@ -273,6 +282,59 @@ describe('FeedSyncer', () => {
 
       expect(blocks).toHaveLength(2);
       expect(blocks[1].data).toEqual(new Uint8Array([4, 5, 6]));
+    });
+  });
+
+  test('syncs all configured namespaces', async () => {
+    const spaceId = SpaceId.random();
+    const { serverRuntime, clientRuntime, serverFeedStore, clientFeedStore, syncer } = await createFeedSyncHarness({
+      spaceId,
+      syncNamespaces,
+    });
+    const serverDataFeedId = ObjectId.random();
+    const serverTraceFeedId = ObjectId.random();
+
+    await serverFeedStore
+      .appendLocal([
+        {
+          spaceId,
+          feedId: serverDataFeedId,
+          feedNamespace: FeedProtocol.WellKnownNamespaces.data,
+          data: new Uint8Array([1, 2, 3]),
+        },
+        {
+          spaceId,
+          feedId: serverTraceFeedId,
+          feedNamespace: FeedProtocol.WellKnownNamespaces.trace,
+          data: new Uint8Array([7, 8, 9]),
+        },
+      ])
+      .pipe(RuntimeProvider.runPromise(serverRuntime.runtimeEffect));
+
+    await syncer.open(new Context());
+
+    await vi.waitFor(async () => {
+      const dataResult = await clientFeedStore
+        .query({
+          spaceId,
+          feedNamespace: FeedProtocol.WellKnownNamespaces.data,
+          position: -1,
+          query: { feedIds: [serverDataFeedId] },
+        })
+        .pipe(RuntimeProvider.runPromise(clientRuntime.runtimeEffect));
+      const traceResult = await clientFeedStore
+        .query({
+          spaceId,
+          feedNamespace: FeedProtocol.WellKnownNamespaces.trace,
+          position: -1,
+          query: { feedIds: [serverTraceFeedId] },
+        })
+        .pipe(RuntimeProvider.runPromise(clientRuntime.runtimeEffect));
+
+      expect(dataResult.blocks).toHaveLength(1);
+      expect(traceResult.blocks).toHaveLength(1);
+      expect(dataResult.blocks[0].data).toEqual(new Uint8Array([1, 2, 3]));
+      expect(traceResult.blocks[0].data).toEqual(new Uint8Array([7, 8, 9]));
     });
   });
 });
