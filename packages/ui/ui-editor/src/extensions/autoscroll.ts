@@ -146,15 +146,15 @@ export const autoScroll = ({
 
     // Styles.
     EditorView.theme({
-      '.cm-scroller': {
-        scrollbarWidth: 'thin',
-      },
-      '.cm-scroller.cm-hide-scrollbar': {
-        scrollbarWidth: 'none',
-      },
-      '.cm-scroller.cm-hide-scrollbar::-webkit-scrollbar': {
-        display: 'none',
-      },
+      // '.cm-scroller': {
+      //   scrollbarWidth: 'thin',
+      // },
+      // '.cm-scroller.cm-hide-scrollbar': {
+      //   scrollbarWidth: 'none',
+      // },
+      // '.cm-scroller.cm-hide-scrollbar::-webkit-scrollbar': {
+      //   display: 'none',
+      // },
       '.cm-scroll-button': {
         position: 'absolute',
         bottom: '0.5rem',
