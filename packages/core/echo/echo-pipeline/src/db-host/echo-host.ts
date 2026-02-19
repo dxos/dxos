@@ -59,6 +59,11 @@ export type EchoHostProps = {
    * @default false
    */
   assignQueuePositions?: boolean;
+
+  /**
+   * Callback to notify when a queue query is made.
+   */
+  onQueueQuery?: () => Promise<void>;
 };
 
 /**
@@ -93,6 +98,7 @@ export class EchoHost extends Resource {
     getSpaceKeyByRootDocumentId,
     runtime,
     assignQueuePositions = false,
+    onQueueQuery,
   }: EchoHostProps) {
     super();
 
@@ -114,7 +120,7 @@ export class EchoHost extends Resource {
         runtime: this._runtime,
         getSpaceIds: () => this._spaceStateManager.spaceIds,
       });
-      this._queuesService = new LocalQueueServiceImpl(runtime, this._feedStore);
+      this._queuesService = new LocalQueueServiceImpl(runtime, this._feedStore, onQueueQuery);
     } else {
       this._queuesService = new QueueServiceStub();
     }

@@ -135,6 +135,14 @@ export class FeedSyncer extends Resource {
     await this.#pushTask.close();
   }
 
+  /**
+   * Schedules a best-effort pull without blocking the caller.
+   */
+  schedulePoll(): void {
+    this.#resetSpacesToPoll();
+    this.#pollTask.schedule();
+  }
+
   #resetSpacesToPoll(): void {
     this.#spacesToPoll.clear();
     this.#getSpaceIds().forEach((spaceId) => {

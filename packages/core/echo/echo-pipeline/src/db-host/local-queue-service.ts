@@ -28,16 +28,20 @@ import type { SqlTransaction } from '@dxos/sql-sqlite';
 export class LocalQueueServiceImpl implements QueueService {
   #runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransaction.SqlTransaction>;
   #feedStore: FeedStore;
+  #onQuery?: () => Promise<void>;
 
   constructor(
     runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransaction.SqlTransaction>,
     feedStore: FeedStore,
+    onQuery?: () => Promise<void>,
   ) {
     this.#runtime = runtime;
     this.#feedStore = feedStore;
+    this.#onQuery = onQuery;
   }
 
   queryQueue(request: QueryQueueRequest): Promise<QueueQueryResult> {
+    void this.#onQuery?.();
     const { query } = request;
     invariant(query, 'query is required');
     const { spaceId, queueIds } = query;
