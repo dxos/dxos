@@ -104,6 +104,7 @@ const createBrowserProject = ({
       target: 'esnext',
     },
     test: {
+      name: `browser-${browserName}`,
       env: {
         LOG_CONFIG: 'log-config.yaml',
       },

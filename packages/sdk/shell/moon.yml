@@ -3,6 +3,8 @@ language: typescript
 tags:
   - ts-build
   - ts-test
+  - ts-test-browser
+  - ts-test-storybook
   - vite
   - pack
   - storybook
@@ -18,6 +20,4 @@ tasks:
       - '--entryPoint=src/testing/index.ts'
   test:
     inputs:
-      - .storybook/*
-      - /tools/storybook-react/.storybook/main.ts
       - vite.config.ts

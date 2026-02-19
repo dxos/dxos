@@ -13,6 +13,7 @@ export default defineConfig({
     },
   },
   test: {
+    name: 'node',
     environment: 'happy-dom',
   },
 });

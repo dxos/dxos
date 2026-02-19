@@ -1,0 +1,26 @@
+$schema: https://moonrepo.dev/schemas/tasks.json
+tasks:
+  test-browser:
+    command: pnpm exec dx-killorphans vitest run --passWithNoTests --project="browser-*"
+    deps:
+      - esbuild-plugins:compile
+      - node-std:compile
+      - vite-plugin-import-source:compile
+      - ^:compile
+    inputs:
+      - /vitest.base.config.ts
+      - vitest.config.ts
+      - '@group(sources)'
+      - $NODE_VERSION
+      - $VITEST_COVERAGE
+      - $VITEST_DEBUG
+      - $VITEST_ENV
+      - $VITEST_XML_REPORT
+    outputs:
+      - /coverage/$project/**
+      - /test-results/$project/**
+    options:
+      timeout: 600
+
+inheritedBy:
+  tags: ts-test-browser

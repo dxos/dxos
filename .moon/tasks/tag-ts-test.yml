@@ -1,7 +1,7 @@
 $schema: https://moonrepo.dev/schemas/tasks.json
 tasks:
   test:
-    command: pnpm exec dx-killorphans vitest run --passWithNoTests
+    command: pnpm exec dx-killorphans vitest run --passWithNoTests --project=node
     deps:
       - esbuild-plugins:compile
       - node-std:compile
