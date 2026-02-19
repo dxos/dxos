@@ -6,7 +6,7 @@ import React from 'react';
 
 import { DEFAULT_EDGE_MODELS, DEFAULT_OLLAMA_MODELS } from '@dxos/ai';
 import { Input, Select, useTranslation } from '@dxos/react-ui';
-import { ControlGroup, ControlItemInput, ControlPage, ControlSection } from '@dxos/react-ui-form';
+import { Settings } from '@dxos/react-ui-form';
 
 import { meta } from '../../meta';
 import { type Assistant, LLM_PROVIDERS } from '../../types';
@@ -29,17 +29,17 @@ export const AssistantSettings = ({ settings, onSettingsChange }: AssistantSetti
   const { t } = useTranslation(meta.id);
 
   return (
-    <ControlPage>
-      <ControlSection title={t('settings title', { ns: meta.id })}>
-        <ControlGroup>
-          <ControlItemInput title={t('settings custom prompts label')}>
+    <Settings.Root>
+      <Settings.Section title={t('settings title', { ns: meta.id })}>
+        <Settings.Group>
+          <Settings.ItemInput title={t('settings custom prompts label')}>
             <Input.Switch
               checked={!!settings.customPrompts}
               onCheckedChange={(checked) => onSettingsChange((s) => ({ ...s, customPrompts: checked }))}
             />
-          </ControlItemInput>
+          </Settings.ItemInput>
 
-          <ControlItemInput title={t('settings llm provider label')}>
+          <Settings.ItemInput title={t('settings llm provider label')}>
             <Select.Root
               value={settings.llmProvider ?? 'edge'}
               onValueChange={(value) => {
@@ -64,9 +64,9 @@ export const AssistantSettings = ({ settings, onSettingsChange }: AssistantSetti
                 </Select.Content>
               </Select.Portal>
             </Select.Root>
-          </ControlItemInput>
+          </Settings.ItemInput>
 
-          <ControlItemInput title={t('settings edge llm model label')}>
+          <Settings.ItemInput title={t('settings edge llm model label')}>
             <Select.Root
               value={settings.edgeModel ?? DEFAULT_VALUE}
               onValueChange={(value) => {
@@ -88,9 +88,9 @@ export const AssistantSettings = ({ settings, onSettingsChange }: AssistantSetti
                 </Select.Content>
               </Select.Portal>
             </Select.Root>
-          </ControlItemInput>
+          </Settings.ItemInput>
 
-          <ControlItemInput title={t('settings ollama llm model label')}>
+          <Settings.ItemInput title={t('settings ollama llm model label')}>
             <Select.Root
               value={settings.ollamaModel ?? DEFAULT_VALUE}
               onValueChange={(value) => {
@@ -112,9 +112,9 @@ export const AssistantSettings = ({ settings, onSettingsChange }: AssistantSetti
                 </Select.Content>
               </Select.Portal>
             </Select.Root>
-          </ControlItemInput>
-        </ControlGroup>
-      </ControlSection>
-    </ControlPage>
+          </Settings.ItemInput>
+        </Settings.Group>
+      </Settings.Section>
+    </Settings.Root>
   );
 };

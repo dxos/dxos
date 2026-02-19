@@ -9,7 +9,7 @@ import { LayoutOperation } from '@dxos/app-toolkit';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Node, useConnections } from '@dxos/plugin-graph';
 import { Avatar, Icon, Layout, ScrollArea, Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { Card, Mosaic, type StackTileComponent } from '@dxos/react-ui-mosaic';
+import { Card, Mosaic, type MosaicStackTileComponent } from '@dxos/react-ui-mosaic';
 import { SearchList, useSearchListItem, useSearchListResults } from '@dxos/react-ui-searchlist';
 import { mx } from '@dxos/ui-theme';
 import { byPosition } from '@dxos/util';
@@ -59,7 +59,8 @@ export const Home = (_: HomeProps) => {
   );
 };
 
-const WorkspaceTile: StackTileComponent<Node.Node> = ({ data }) => {
+const WorkspaceTile: MosaicStackTileComponent<Node.Node> = (props) => {
+  const data = props.data;
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
   const { selectedValue, registerItem, unregisterItem } = useSearchListItem();

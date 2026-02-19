@@ -117,6 +117,15 @@ const TriggerSchema = Schema.Struct({
 
   spec: Schema.optional(Spec),
 
+  concurrency: Schema.optional(
+    Schema.Number.annotations({
+      title: 'Concurrency',
+      default: 1,
+      description:
+        'Maximum number of concurrent invocations of the trigger. For queue triggers, this will process queue items in parallel.',
+    }),
+  ),
+
   /**
    * Passed as the input data to the function.
    * Must match the function's input schema.

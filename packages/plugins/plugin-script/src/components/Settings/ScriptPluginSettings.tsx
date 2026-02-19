@@ -6,7 +6,7 @@ import React from 'react';
 
 import { useClient } from '@dxos/react-client';
 import { Button, Select, useTranslation } from '@dxos/react-ui';
-import { ControlGroup, ControlItemInput, ControlPage, ControlSection } from '@dxos/react-ui-form';
+import { Settings } from '@dxos/react-ui-form';
 import { type EditorInputMode, EditorInputModes } from '@dxos/ui-editor';
 
 import { meta } from '../../meta';
@@ -29,15 +29,15 @@ export const ScriptPluginSettings = ({ settings, onSettingsChange }: ScriptPlugi
   };
 
   return (
-    <ControlPage>
-      <ControlSection title={t('settings title', { ns: meta.id })}>
-        <ControlGroup>
+    <Settings.Root>
+      <Settings.Section title={t('settings title', { ns: meta.id })}>
+        <Settings.Group>
           {/* TODO(wittjosiah): Hide outside of dev environments. */}
-          <ControlItemInput title={t('authenticate action label')}>
+          <Settings.ItemInput title={t('authenticate action label')}>
             <Button onClick={handleAuthenticate}>{t('authenticate button label')}</Button>
-          </ControlItemInput>
+          </Settings.ItemInput>
 
-          <ControlItemInput title={t('editor input mode label')}>
+          <Settings.ItemInput title={t('editor input mode label')}>
             <Select.Root
               value={settings.editorInputMode ?? 'default'}
               onValueChange={(value) => {
@@ -58,9 +58,9 @@ export const ScriptPluginSettings = ({ settings, onSettingsChange }: ScriptPlugi
                 </Select.Content>
               </Select.Portal>
             </Select.Root>
-          </ControlItemInput>
-        </ControlGroup>
-      </ControlSection>
-    </ControlPage>
+          </Settings.ItemInput>
+        </Settings.Group>
+      </Settings.Section>
+    </Settings.Root>
   );
 };

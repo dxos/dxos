@@ -15,7 +15,7 @@ import { Form, ViewEditor } from '@dxos/react-ui-form';
 import { List } from '@dxos/react-ui-list';
 import { type ProjectionModel, View } from '@dxos/schema';
 import { Pipeline, Task } from '@dxos/types';
-import { inputTextLabel, mx, osTranslations, subtleHover } from '@dxos/ui-theme';
+import { mx, osTranslations, subtleHover } from '@dxos/ui-theme';
 import { arrayMove } from '@dxos/util';
 
 import { meta } from '../meta';
@@ -159,7 +159,7 @@ export const PipelineObjectSettings = ({ classNames, pipeline }: PipelineObjectS
 
   return (
     <div role='none' className={mx('plb-cardSpacingBlock overflow-y-auto', classNames)}>
-      <h2 className={mx(inputTextLabel)}>{t('views label')}</h2>
+      <h2 className='text-sm text-description plb-1'>{t('views label')}</h2>
 
       <List.Root<Pipeline.Column>
         items={columns}

@@ -46,12 +46,12 @@ type ScrollAreaRootProps = SlottableProps<HTMLDivElement> & Partial<ScrollAreaCo
 const ScrollAreaRoot = forwardRef<HTMLDivElement, ScrollAreaRootProps>(
   (
     {
-      className,
       classNames,
+      className,
       children,
       orientation = 'vertical',
       autoHide = true,
-      margin = false,
+      margin = true, // TODO(burdon): Is this the right default?
       padding = false,
       thin = false,
       snap = false,
@@ -64,11 +64,7 @@ const ScrollAreaRoot = forwardRef<HTMLDivElement, ScrollAreaRootProps>(
 
     return (
       <ScrollAreaProvider {...options}>
-        <div
-          {...props}
-          className={tx('scrollArea.root', 'scroll-area', options, [className, classNames])}
-          ref={forwardedRef}
-        >
+        <div {...props} className={tx('scrollArea.root', options, [className, classNames])} ref={forwardedRef}>
           {children}
         </div>
       </ScrollAreaProvider>
@@ -92,11 +88,7 @@ const ScrollAreaViewport = forwardRef<HTMLDivElement, ScrollAreaViewportProps>(
     const options = useScrollAreaContext(SCROLLAREA_VIEWPORT_NAME);
 
     return (
-      <div
-        {...props}
-        className={tx('scrollArea.viewport', 'scroll-area__viewport', options, classNames)}
-        ref={forwardedRef}
-      >
+      <div {...props} className={tx('scrollArea.viewport', options, classNames)} ref={forwardedRef}>
         {children}
       </div>
     );

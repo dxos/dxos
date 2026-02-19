@@ -86,7 +86,7 @@ const DialogOverlay: ForwardRefExoticComponent<DialogOverlayProps> = forwardRef<
     return (
       <DialogOverlayPrimitive
         {...props}
-        className={tx('dialog.overlay', 'dialog__overlay', {}, classNames)}
+        className={tx('dialog.overlay', {}, classNames)}
         ref={forwardedRef}
         data-block-align={blockAlign}
       >
@@ -120,12 +120,7 @@ const DialogContent: ForwardRefExoticComponent<DialogContentProps> = forwardRef<
         // https://www.radix-ui.com/primitives/docs/components/dialog#description
         aria-describedby={undefined}
         {...props}
-        className={tx(
-          'dialog.content',
-          'dialog',
-          { inOverlayLayout: propsInOverlayLayout || inOverlayLayout, size },
-          classNames,
-        )}
+        className={tx('dialog.content', { inOverlayLayout: propsInOverlayLayout || inOverlayLayout, size }, classNames)}
         ref={forwardedRef}
       >
         {children}
@@ -145,14 +140,7 @@ type DialogHeaderProps = ThemedClassName<PropsWithChildren> & { srOnly?: boolean
 const DialogHeader: ForwardRefExoticComponent<DialogTitleProps> = forwardRef<HTMLHeadingElement, DialogTitleProps>(
   ({ classNames, srOnly, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
-    return (
-      <div
-        {...props}
-        role='header'
-        className={tx('dialog.header', 'dialog__header', { srOnly }, classNames)}
-        ref={forwardedRef}
-      />
-    );
+    return <div {...props} role='header' className={tx('dialog.header', { srOnly }, classNames)} ref={forwardedRef} />;
   },
 );
 
@@ -166,7 +154,7 @@ const DialogBody: ForwardRefExoticComponent<DialogBodyProps> = forwardRef<HTMLDi
   ({ children, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     return (
-      <div {...props} className={tx('dialog.body', 'dialog__body')} ref={forwardedRef}>
+      <div {...props} className={tx('dialog.body')} ref={forwardedRef}>
         {children}
       </div>
     );
@@ -185,11 +173,7 @@ const DialogTitle: ForwardRefExoticComponent<DialogTitleProps> = forwardRef<HTML
   ({ classNames, srOnly, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     return (
-      <DialogTitlePrimitive
-        {...props}
-        className={tx('dialog.title', 'dialog__title', { srOnly }, classNames)}
-        ref={forwardedRef}
-      />
+      <DialogTitlePrimitive {...props} className={tx('dialog.title', { srOnly }, classNames)} ref={forwardedRef} />
     );
   },
 );
@@ -208,7 +192,7 @@ const DialogDescription: ForwardRefExoticComponent<DialogTitleProps> = forwardRe
   return (
     <DialogDescriptionPrimitive
       {...props}
-      className={tx('dialog.description', 'dialog__description', { srOnly }, classNames)}
+      className={tx('dialog.description', { srOnly }, classNames)}
       ref={forwardedRef}
     />
   );
@@ -226,7 +210,7 @@ const DialogActionBar: ForwardRefExoticComponent<DialogActionBarProps> = forward
 >(({ children, classNames, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
   return (
-    <div {...props} className={tx('dialog.actionbar', 'dialog__actionbar', {}, classNames)} ref={forwardedRef}>
+    <div {...props} className={tx('dialog.actionbar', {}, classNames)} ref={forwardedRef}>
       {children}
     </div>
   );

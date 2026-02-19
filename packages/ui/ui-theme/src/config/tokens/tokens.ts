@@ -6,23 +6,8 @@ import { type TailwindAdapterConfig } from '@ch-ui/tailwind-tokens';
 import adapter from '@ch-ui/tailwind-tokens';
 import { type TokenSet } from '@ch-ui/tokens';
 
-import { aliasColors } from './alias-colors';
+import { aliasColors, huePalettes, physicalColors, semanticColors, systemAliases, systemSememes } from './colors';
 import { lengthsFacet, maxSizesFacet } from './lengths';
-import { huePalettes, physicalColors } from './physical-colors';
-import { semanticColors } from './semantic-colors';
-import { systemAliases, systemSememes } from './sememes-system';
-
-export const hues = Object.keys(huePalettes);
-
-export const tokenSet = {
-  colors: {
-    physical: physicalColors,
-    semantic: semanticColors,
-    alias: aliasColors,
-  },
-  lengths: lengthsFacet,
-  maxSizes: maxSizesFacet,
-} satisfies TokenSet;
 
 const adapterConfig: TailwindAdapterConfig = {
   colors: {
@@ -56,6 +41,18 @@ const adapterConfig: TailwindAdapterConfig = {
     tokenization: 'keep-series',
   },
 };
+
+export const hues = Object.keys(huePalettes);
+
+export const tokenSet = {
+  colors: {
+    physical: physicalColors,
+    semantic: semanticColors,
+    alias: aliasColors,
+  },
+  lengths: lengthsFacet,
+  maxSizes: maxSizesFacet,
+} satisfies TokenSet;
 
 export const userDefaultTokenSet = {
   colors: {

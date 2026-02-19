@@ -24,8 +24,7 @@ import { useContainerDebug, useEventHandlerAdapter } from '../../hooks';
 import { translationKey } from '../../translations';
 import { Card, type CardMenuProps } from '../Card';
 import { Focus } from '../Focus';
-import { Mosaic, type MosaicContainerProps, type MosaicTileProps } from '../Mosaic';
-import { type StackProps } from '../Stack';
+import { Mosaic, type MosaicContainerProps, type MosaicStackProps, type MosaicTileProps } from '../Mosaic';
 
 import { useBoard } from './Board';
 import { BoardItem } from './Item';
@@ -119,8 +118,9 @@ const BOARD_COLUMN_BODY_NAME = 'Board.Column.Body';
 
 type BoardColumnBodyProps = Pick<BoardColumnProps, 'data'> & {
   eventHandler?: MosaicContainerProps['eventHandler'];
-  Tile?: StackProps['Tile'];
-} & Pick<MosaicContainerProps, 'debug'>;
+  Tile?: MosaicStackProps<Obj.Unknown>['Tile'];
+  debug?: MosaicContainerProps['debug'];
+};
 
 const BoardColumnBody = ({ data, eventHandler, Tile = BoardItem, debug }: BoardColumnBodyProps) => {
   const { t } = useTranslation(translationKey);
@@ -183,7 +183,7 @@ const BoardColumnFooter = forwardRef<HTMLDivElement, BoardColumnFooterProps>(({ 
       {model.onItemCreate && data && (
         <IconButton
           data-testid='board-column-add-item'
-          classNames='group-hover/column:opacity-100 opacity-0 transition transition-opacity duration-500'
+          classNames='group-hover/column:opacity-100 md:opacity-0 transition transition-opacity duration-500'
           variant='ghost'
           icon='ph--plus--regular'
           iconOnly

@@ -24,11 +24,7 @@ const meta = {
   component: CompoundButton,
   render: DefaultStory,
   decorators: [withTheme()],
-  parameters: {
-    chromatic: {
-      disableSnapshot: false,
-    },
-  },
+  parameters: {},
 } satisfies Meta<typeof CompoundButton>;
 
 export default meta;

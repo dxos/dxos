@@ -8,7 +8,6 @@ import * as _colors from '@ch-ui/colors';
 
 import { type ColorAliases, type ColorSememes } from './types';
 
-// TODO(burdon): Move to util.
 const getMapValue = <T>(map: Record<string, T>, key: string, defaultValue: () => T): T => {
   let value = map[key];
   if (!value) {
@@ -85,6 +84,79 @@ const contrastCadence = (lightDepth: number, darkDepth: number = lightDepth, alp
     alpha,
   );
 
+type SememeName = keyof typeof systemSememes;
+type SememeKey = 'root' | 'group' | 'modal';
+
+/**
+ * Alias map.
+ */
+const aliasDefs: Record<string, Partial<Record<SememeKey, SememeName>>> = {
+  // Selected items, current items, other surfaces needing special contrast against baseSurface.
+  activeSurface: {
+    root: 'inputSurfaceBase',
+  },
+
+  // Main sidebar panel.
+  sidebarSurface: {
+    root: 'groupSurface',
+  },
+
+  // Plank header.
+  headerSurface: {
+    root: 'groupSurface',
+  },
+
+  // Toolbars, table/sheet headers, etc.
+  toolbarSurface: {
+    root: 'groupSurface',
+  },
+
+  // Forms, cards, etc.
+  cardSurface: {
+    root: 'groupSurface',
+  },
+
+  // Secondary aliases.
+  textInputSurface: {
+    root: 'textInputSurfaceBase',
+    group: 'textInputSurfaceGroup',
+    modal: 'textInputSurfaceModal',
+  },
+  inputSurface: {
+    root: 'inputSurfaceBase',
+    group: 'inputSurfaceGroup',
+    modal: 'inputSurfaceModal',
+  },
+  hoverSurface: {
+    root: 'hoverSurfaceBase',
+    group: 'hoverSurfaceGroup',
+    modal: 'hoverSurfaceModal',
+  },
+
+  // TODO(thure): Rename uses of this token to `focusSurface` and remove this alias.
+  attention: {
+    root: 'focusSurface',
+  },
+
+  // In “master-detail” patterns, the background of the item in the list which is enumerated in the adjacent view.
+  // TODO(burdon): Review tokens.
+  currentRelated: {
+    root: 'modalSurface',
+  },
+
+  // Borders and dividers.
+  separator: {
+    root: 'separatorBase',
+    group: 'separatorGroup',
+    modal: 'separatorModal',
+  },
+};
+
+//
+// Exports
+//
+
+// TODO(burdon): Separate definitions from utils.
 export const systemSememes = {
   //
   // Elevation cadence tokens
@@ -227,74 +299,6 @@ export const systemSememes = {
     dark: ['neutral', 550],
   },
 } satisfies ColorSememes;
-
-type SememeName = keyof typeof systemSememes;
-type SememeKey = 'root' | 'group' | 'modal';
-
-/**
- * Alias map.
- */
-const aliasDefs: Record<string, Partial<Record<SememeKey, SememeName>>> = {
-  // Selected items, current items, other surfaces needing special contrast against baseSurface.
-  activeSurface: {
-    root: 'inputSurfaceBase',
-  },
-
-  // Main sidebar panel.
-  sidebarSurface: {
-    root: 'groupSurface',
-  },
-
-  // Plank header.
-  headerSurface: {
-    root: 'groupSurface',
-  },
-
-  // Toolbars, table/sheet headers, etc.
-  toolbarSurface: {
-    root: 'groupSurface',
-  },
-
-  // Forms, cards, etc.
-  cardSurface: {
-    root: 'groupSurface',
-  },
-
-  // Secondary aliases.
-  textInputSurface: {
-    root: 'textInputSurfaceBase',
-    group: 'textInputSurfaceGroup',
-    modal: 'textInputSurfaceModal',
-  },
-  inputSurface: {
-    root: 'inputSurfaceBase',
-    group: 'inputSurfaceGroup',
-    modal: 'inputSurfaceModal',
-  },
-  hoverSurface: {
-    root: 'hoverSurfaceBase',
-    group: 'hoverSurfaceGroup',
-    modal: 'hoverSurfaceModal',
-  },
-
-  // TODO(thure): Rename uses of this token to `focusSurface` and remove this alias.
-  attention: {
-    root: 'focusSurface',
-  },
-
-  // In “master-detail” patterns, the background of the item in the list which is enumerated in the adjacent view.
-  // TODO(burdon): Review tokens.
-  currentRelated: {
-    root: 'modalSurface',
-  },
-
-  // Borders and dividers.
-  separator: {
-    root: 'separatorBase',
-    group: 'separatorGroup',
-    modal: 'separatorModal',
-  },
-};
 
 export const systemAliases: ColorAliases = Object.entries(aliasDefs).reduce((aliases, [alias, values]) => {
   Object.entries(values).forEach(([key, sememe]) => {

@@ -5,11 +5,14 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
+import { faker } from '@dxos/random';
 import { type MessageValence } from '@dxos/ui-types';
 
 import { withTheme } from '../../testing';
 
 import { Callout } from './Message';
+
+faker.seed(123);
 
 type StoryProps = {
   valence: MessageValence;
@@ -18,18 +21,22 @@ type StoryProps = {
 };
 
 const DefaultStory = ({ valence, title, body }: StoryProps) => (
-  <Callout.Root valence={valence}>
-    {title && <Callout.Title>{title}</Callout.Title>}
-    {body && <Callout.Content>{body}</Callout.Content>}
-  </Callout.Root>
+  <div className='is-[30rem]'>
+    <Callout.Root valence={valence}>
+      {title && <Callout.Title>{title}</Callout.Title>}
+      {body && <Callout.Content>{body}</Callout.Content>}
+    </Callout.Root>
+  </div>
 );
 
 const meta = {
-  title: 'ui/react-ui-core/components/Callout',
+  title: 'ui/react-ui-core/components/Message',
   component: Callout.Root as any,
   render: DefaultStory,
   decorators: [withTheme()],
-  parameters: { chromatic: { disableSnapshot: false } },
+  parameters: {
+    layout: 'centered',
+  },
   argTypes: {
     valence: {
       control: 'select',
@@ -46,6 +53,14 @@ export const Default: Story = {
   args: {
     valence: 'neutral',
     title: 'Alert title',
-    body: 'Alert content',
+    body: faker.lorem.paragraphs(1),
+  },
+};
+
+export const Error: Story = {
+  args: {
+    valence: 'error',
+    title: 'Error title',
+    body: faker.lorem.paragraphs(1),
   },
 };

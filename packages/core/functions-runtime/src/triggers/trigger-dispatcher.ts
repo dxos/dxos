@@ -13,6 +13,7 @@ import * as Effect from 'effect/Effect';
 import * as Either from 'effect/Either';
 import * as Exit from 'effect/Exit';
 import * as Fiber from 'effect/Fiber';
+import { pipe } from 'effect/Function';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Record from 'effect/Record';
@@ -30,7 +31,7 @@ import {
   deserializeFunction,
 } from '@dxos/functions';
 import { Function, Trigger, type TriggerEvent } from '@dxos/functions';
-import { invariant } from '@dxos/invariant';
+import { failedInvariant, invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { FeedProtocol, type ObjectId } from '@dxos/protocols';
 
@@ -60,6 +61,13 @@ export interface TriggerDispatcherOptions {
    * @default 1 second
    */
   livePollInterval?: Duration.Duration;
+
+  /**
+   * Maximum concurrency for triggers.
+   * Also limited by per-trigger concurrency.
+   * @default 5
+   */
+  maxConcurrency?: number;
 }
 
 export interface InvokeTriggerOptions {
@@ -69,6 +77,11 @@ export interface InvokeTriggerOptions {
 export interface TriggerExecutionResult {
   triggerId: string;
   result: Exit.Exit<unknown>;
+
+  /**
+   * Only for queue triggers.
+   */
+  queueCursor?: string;
 }
 
 /**
@@ -172,6 +185,8 @@ export class TriggerDispatcher extends Context.Tag('@dxos/functions/TriggerDispa
     );
 }
 
+const DEFAULT_MAX_CONCURRENCY = 5;
+
 class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
   readonly livePollInterval: Duration.Duration;
   readonly timeControl: TimeControl;
@@ -186,12 +201,14 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
     invocations: [],
     errors: [],
   });
+  private _maxConcurrency: number;
 
   constructor(options: TriggerDispatcherOptions) {
     this._registry = options.registry;
     this.timeControl = options.timeControl;
     this.livePollInterval = options.livePollInterval ?? Duration.seconds(1);
     this._internalTime = options.startingTime ?? new Date();
+    this._maxConcurrency = options.maxConcurrency ?? DEFAULT_MAX_CONCURRENCY;
   }
 
   get running(): boolean {
@@ -339,6 +356,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
       const triggerExecutionResult: TriggerExecutionResult = {
         triggerId: trigger.id,
         result,
+        queueCursor: trigger.spec?.kind === 'queue' && 'cursor' in event ? event.cursor : undefined,
       };
       if (Exit.isSuccess(result)) {
         log('trigger execution success', {
@@ -413,30 +431,53 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
               const cursor = Obj.getKeys(trigger, KEY_QUEUE_CURSOR).at(0)?.id;
               const queue = yield* QueueService.getQueue(DXN.parse(spec.queue));
 
-              // TODO(dmaretskyi): Include cursor & limit in the query.
-              const objects = yield* Effect.promise(() => queue.queryObjects());
-              for (const object of objects) {
-                const objectPos = Entity.getKeys(object, FeedProtocol.KEY_QUEUE_POSITION).at(0)?.id;
-                // TODO(dmaretskyi): Extract methods for managing queue position.
-                if (!objectPos || (cursor && parseInt(cursor) >= parseInt(objectPos))) {
-                  continue;
-                }
+              const concurrency = Math.min(trigger.concurrency ?? 1, this._maxConcurrency);
 
-                const invocation = yield* this.invokeTrigger({
-                  trigger,
-                  event: {
-                    queue: spec.queue,
-                    item: object,
-                    cursor: objectPos,
-                  } satisfies TriggerEvent.QueueEvent,
-                });
-                invocations.push(invocation);
+              // TODO(dmaretskyi): Include cursor & limit in the query.
+              const chunks = yield* Effect.promise(() => queue.queryObjects()).pipe(
+                Effect.map(
+                  Array.dropWhile((object) => {
+                    const objectPos = Entity.getKeys(object, FeedProtocol.KEY_QUEUE_POSITION).at(0)?.id;
+                    // TODO(dmaretskyi): Extract methods for managing queue position.
+                    return objectPos === undefined || (cursor !== undefined && parseInt(cursor) >= parseInt(objectPos));
+                  }),
+                ),
+                Effect.map(Array.chunksOf(concurrency)),
+              );
+
+              for (const chunk of chunks) {
+                const invocationsThisIteration = yield* Effect.forEach(
+                  chunk,
+                  (object) =>
+                    Effect.gen(this, function* () {
+                      const objectPos = Entity.getKeys(object, FeedProtocol.KEY_QUEUE_POSITION).at(0)!.id;
+
+                      return yield* this.invokeTrigger({
+                        trigger,
+                        event: {
+                          queue: spec.queue,
+                          item: object,
+                          cursor: objectPos,
+                        } satisfies TriggerEvent.QueueEvent,
+                      });
+                    }),
+                  { concurrency: 'unbounded' },
+                );
+                invocations.push(...invocationsThisIteration);
 
                 // Update trigger cursor only if the invocation was successful.
-                if (Exit.isSuccess(invocation.result)) {
+                const lastSuccessfulInvocation = pipe(
+                  invocationsThisIteration,
+                  Array.takeWhile((invocation) => Exit.isSuccess(invocation.result)),
+                  Array.last,
+                );
+                if (Option.isSome(lastSuccessfulInvocation)) {
                   Obj.change(trigger, (trigger) => {
                     Obj.deleteKeys(trigger, KEY_QUEUE_CURSOR);
-                    Obj.getMeta(trigger).keys.push({ source: KEY_QUEUE_CURSOR, id: objectPos });
+                    Obj.getMeta(trigger).keys.push({
+                      source: KEY_QUEUE_CURSOR,
+                      id: lastSuccessfulInvocation.value.queueCursor ?? failedInvariant(),
+                    });
                   });
                   yield* Database.flush();
                 } else {

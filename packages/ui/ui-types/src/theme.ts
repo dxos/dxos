@@ -11,12 +11,13 @@ export type ComponentFragment<P extends Record<string, any>> = (styleProps: P) =
 export type Theme<P extends Record<string, any>> = { [key: string]: Theme<P> | ComponentFunction<P> };
 export type ThemeMode = 'dark' | 'light';
 export type ThemeFunction<P extends Record<string, any>> = (
+  /** Path to resolve theme style. */
   path: string,
-  // TODO(burdon): Remove need for this?
-  defaultClassName: string,
+  /** Custom style properties. */
   styleProps?: P,
+  /** Additional class names (passed to component). */
   ...etc: ClassNameArray
-) => string;
+) => string | undefined;
 
 export type ThemedClassName<P = {}> = Omit<P, 'className'> & {
   classNames?: ClassNameValue;

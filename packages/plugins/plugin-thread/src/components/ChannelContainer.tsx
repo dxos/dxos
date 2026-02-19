@@ -15,7 +15,7 @@ import { useClient } from '@dxos/react-client';
 import { getSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { ElevationProvider, Input, useTranslation } from '@dxos/react-ui';
-import { ControlGroup, ControlGroupButton, ControlItemInput } from '@dxos/react-ui-form';
+import { Settings } from '@dxos/react-ui-form';
 import { MenuProvider, ToolbarMenu, createMenuAction, createMenuItemGroup, useMenuActions } from '@dxos/react-ui-menu';
 import { useSoundEffect } from '@dxos/react-ui-sfx';
 import { StackItem } from '@dxos/react-ui-stack';
@@ -149,19 +149,19 @@ const DisplayNameMissing = () => {
   const handleSave = useCallback(() => client.halo.updateProfile({ displayName }), [client, displayName]);
 
   return (
-    <ControlGroup classNames='p-4 place-content-center'>
-      <ControlItemInput title={t('display name label')} description={t('display name description')}>
+    <Settings.Group classNames='p-4 place-content-center'>
+      <Settings.ItemInput title={t('display name label')} description={t('display name description')}>
         <Input.TextInput
           value={displayName}
           onChange={handleChange}
           placeholder={t('display name input placeholder')}
           classNames='md:min-is-64'
         />
-      </ControlItemInput>
-      <ControlGroupButton disabled={!displayName} onClick={handleSave}>
+      </Settings.ItemInput>
+      <Settings.GroupButton disabled={!displayName} onClick={handleSave}>
         {t('set display name label')}
-      </ControlGroupButton>
-    </ControlGroup>
+      </Settings.GroupButton>
+    </Settings.Group>
   );
 };
 

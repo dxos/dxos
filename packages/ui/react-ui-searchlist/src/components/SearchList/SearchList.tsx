@@ -383,7 +383,6 @@ const SearchListInput = forwardRef<HTMLInputElement, SearchListInputProps>(
         placeholder={placeholder ?? defaultPlaceholder}
         className={tx(
           'input.input',
-          'input',
           {
             variant,
             disabled: props.disabled,

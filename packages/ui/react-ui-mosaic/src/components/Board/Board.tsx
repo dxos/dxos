@@ -23,11 +23,11 @@ import {
   type GetId,
   Mosaic,
   type MosaicEventHandler,
-  type MosiacPlaceholderProps,
+  type MosaicPlaceholderProps,
+  type MosaicStackProps,
   mosaicStyles,
   useMosaic,
 } from '../Mosaic';
-import { type StackProps } from '../Stack';
 
 import { BoardColumn, type BoardColumnProps, DefaultBoardColumn } from './Column';
 import { BoardItem, type BoardItemProps } from './Item';
@@ -45,10 +45,10 @@ export interface BoardModel<TColumn = any, TItem = any> {
   items: (column: TColumn) => Atom.Atom<TItem[]>;
   getColumns: () => TColumn[];
   getItems: (column: TColumn) => TItem[];
-  onColumnDelete?: (column: TColumn) => void;
   onColumnCreate?: () => Promise<TColumn>;
-  onItemDelete?: (column: TColumn, item: TItem) => void;
+  onColumnDelete?: (column: TColumn) => void;
   onItemCreate?: (column: TColumn) => Promise<TItem>;
+  onItemDelete?: (column: TColumn, item: TItem) => void;
 }
 
 //
@@ -94,7 +94,7 @@ type BoardContentProps<TColumn = any> = ThemedClassName<{
   id: string;
   debug?: boolean;
   eventHandler?: MosaicEventHandler<TColumn>;
-  Tile?: StackProps<TColumn>['Tile'];
+  Tile?: MosaicStackProps<TColumn>['Tile'];
 }>;
 
 const BoardContentInner = forwardRef<HTMLDivElement, BoardContentProps>(
@@ -141,7 +141,7 @@ const BoardContent = BoardContentInner as <TColumn = any>(
 
 const BOARD_PLACEHOLDER_NAME = 'Board.Placeholder';
 
-const BoardPlaceholder = (props: MosiacPlaceholderProps<number>) => {
+const BoardPlaceholder = (props: MosaicPlaceholderProps<number>) => {
   return (
     <Mosaic.Placeholder {...props} classNames={mosaicStyles.placeholder.root}>
       <div
