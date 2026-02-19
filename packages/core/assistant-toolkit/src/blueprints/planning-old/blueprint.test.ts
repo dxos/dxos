@@ -23,7 +23,7 @@ import { Text } from '@dxos/schema';
 import { type Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { Tasks } from '../../functions';
+import { TaskFunctions } from '../../functions';
 import { type TestStep, runSteps } from '../testing';
 
 import { blueprint } from './blueprint';
@@ -104,11 +104,11 @@ describe('Planning Blueprint', { timeout: 120_000 }, () => {
           AiService.model('@anthropic/claude-3-5-sonnet-20241022'),
         ).pipe(
           Layer.provideMerge(
-            FunctionInvocationServiceLayerTestMocked({ functions: [Tasks.Read, Tasks.Update] }).pipe(
+            FunctionInvocationServiceLayerTestMocked({ functions: Object.values(TaskFunctions) }).pipe(
               Layer.provideMerge(TracingService.layerNoop),
             ),
           ),
-          Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions: [Tasks.Read, Tasks.Update] })),
+          Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions: Object.values(TaskFunctions) })),
           Layer.provideMerge(TestDatabaseLayer({ types: [Text.Text, Markdown.Document, Blueprint.Blueprint] })),
           Layer.provideMerge(Layer.mergeAll(GenericToolkit.providerEmpty, AiServiceTestingPreset('direct'))),
         ),

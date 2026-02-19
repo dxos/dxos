@@ -5,7 +5,7 @@
 import { default as Read } from './read';
 import { default as Update } from './update';
 
-export const Tasks = {
+export const TaskFunctions = {
   Read,
   Update,
 };

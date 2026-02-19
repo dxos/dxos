@@ -44,6 +44,7 @@ export type BlueprintCapabilities = [
 ];
 
 export default Capability.makeModule<[], BlueprintCapabilities>(() =>
+  // TODO(burdon): Standardize blueprint and function contributions.
   Effect.succeed([
     Capability.contributes(AppCapabilities.BlueprintDefinition, AssistantBlueprint.make()),
     Capability.contributes(AppCapabilities.Functions, AssistantBlueprint.functions),
@@ -52,7 +53,7 @@ export default Capability.makeModule<[], BlueprintCapabilities>(() =>
     Capability.contributes(AppCapabilities.Functions, Record.values(ResearchFunctions)),
 
     Capability.contributes(AppCapabilities.BlueprintDefinition, WebSearchBlueprint),
-    // TODO(burdon): This doesn't match?
+    // TODO(burdon): Should these functions be provided by WebSearchBlueprint?
     Capability.contributes(AppCapabilities.Functions, [
       ...Record.values(AgentFunctions),
       ...Record.values(EntityExtractionFunctions),
