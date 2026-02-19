@@ -127,6 +127,7 @@ export class FeedSyncer extends Resource {
     await this.#pushTask.open();
 
     this.#resetSpacesToPoll();
+    this.#pollTask.schedule();
   }
 
   protected override async _close(): Promise<void> {
