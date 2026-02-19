@@ -10,6 +10,8 @@ import { trim } from '@dxos/util';
 
 import { LinearFunctions } from './functions';
 
+export const Key = 'dxos.org/blueprint/linear';
+
 /**
  * Agent prompt instructions for managing hierarchical task lists.
  */
@@ -22,12 +24,15 @@ const instructions = trim`
   DXOS teamId: 1127c63a-6f77-4725-9229-50f6cd47321c
 `;
 
-export const LinearBlueprint = Blueprint.make({
-  key: 'dxos.org/blueprint/linear',
-  name: 'Linear',
-  description: 'Syncs Linear workspaces.',
-  instructions: {
-    source: Ref.make(Text.make(instructions)),
-  },
-  tools: [LinearFunctions.Sync].map((tool) => ToolId.make(tool.key)),
-});
+export const make = () =>
+  Blueprint.make({
+    key: Key,
+    name: 'Linear',
+    description: 'Syncs Linear workspaces.',
+    instructions: {
+      source: Ref.make(Text.make(instructions)),
+    },
+    tools: [LinearFunctions.Sync].map((tool) => ToolId.make(tool.key)),
+  });
+
+export const functions = [LinearFunctions.Sync];

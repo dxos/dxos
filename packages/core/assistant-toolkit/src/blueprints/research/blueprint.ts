@@ -10,6 +10,8 @@ import { trim } from '@dxos/util';
 
 import { ResearchFunctions } from './functions';
 
+export const Key = 'dxos.org/blueprint/research';
+
 /**
  * Agent prompt instructions for managing hierarchical task lists.
  */
@@ -40,12 +42,15 @@ const instructions = trim`
   </unstructured_mode>
 `;
 
-export const ResearchBlueprint = Blueprint.make({
-  key: 'dxos.org/blueprint/research',
-  name: 'Research',
-  description: 'Researches the web and creates structured data.',
-  instructions: {
-    source: Ref.make(Text.make(instructions)),
-  },
-  tools: [ResearchFunctions.Create, ResearchFunctions.Research].map((fn) => ToolId.make(fn.key)),
-});
+export const make = () =>
+  Blueprint.make({
+    key: Key,
+    name: 'Research',
+    description: 'Researches the web and creates structured data.',
+    instructions: {
+      source: Ref.make(Text.make(instructions)),
+    },
+    tools: [ResearchFunctions.Create, ResearchFunctions.Research].map((fn) => ToolId.make(fn.key)),
+  });
+
+export const functions = [ResearchFunctions.Create, ResearchFunctions.Research];

@@ -11,7 +11,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import { Surface, useCapability } from '@dxos/app-framework/ui';
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
-import { Initiative, InitiativeFunctions, Plan } from '@dxos/assistant-toolkit';
+import { Initiative, InitiativeBlueprint, Plan } from '@dxos/assistant-toolkit';
 import { DXN, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { type JsonPath, splitJsonPath } from '@dxos/echo/internal';
 import { AtomObj, AtomRef } from '@dxos/echo-atom';
@@ -294,7 +294,9 @@ const syncTriggers = async (initiative: Initiative.Initiative) => {
         },
         function: Ref.make(
           FunctionDefinition.serialize(
-            initiative.useQualifyingAgent ? InitiativeFunctions.Qualifier : InitiativeFunctions.Agent,
+            initiative.useQualifyingAgent
+              ? InitiativeBlueprint.InitiativeFunctions.Qualifier
+              : InitiativeBlueprint.InitiativeFunctions.Agent,
           ),
         ),
         input: {
@@ -321,7 +323,7 @@ const syncTriggers = async (initiative: Initiative.Initiative) => {
               { source: INITIATIVE_TRIGGER_TARGET_EXTENSION_KEY, id: Obj.getDXN(initiative)?.toString() ?? '' },
             ],
           },
-          function: Ref.make(FunctionDefinition.serialize(InitiativeFunctions.Agent)),
+          function: Ref.make(FunctionDefinition.serialize(InitiativeBlueprint.InitiativeFunctions.Agent)),
           enabled: true,
           spec: {
             kind: 'queue',

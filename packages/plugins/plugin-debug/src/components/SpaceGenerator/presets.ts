@@ -168,7 +168,7 @@ export const generator = () => ({
                 Create a research note for it at the end.
                 NOTE: Do mocked reseach (set mockSearch to true).
               `,
-              blueprints: [Ref.make(ResearchBlueprint)],
+              blueprints: [Ref.make(ResearchBlueprint.make())],
             }),
           );
 

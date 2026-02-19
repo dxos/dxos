@@ -564,7 +564,7 @@ export const WithResearch: Story = {
     blueprints: [
       // AssistantBlueprint.Key
       // TODO(burdon): Too many open-ended tools (querying for tools, querying for schema) confuses the model.
-      ResearchBlueprint.key,
+      ResearchBlueprint.Key,
     ],
   },
 };
@@ -619,7 +619,7 @@ export const WithLinearSync: Story = {
   }),
   args: {
     modules: [[ChatModule], [GraphModule]],
-    blueprints: [LinearBlueprint.key],
+    blueprints: [LinearBlueprint.Key],
   },
 };
 
@@ -723,7 +723,7 @@ export const WithResearchQueue: Story = {
 
           instructions:
             'Research the organization provided as input. Create a research note for it at the end. NOTE: Do mocked reseach (set mockSearch to true).',
-          blueprints: [Ref.make(ResearchBlueprint)],
+          blueprints: [Ref.make(ResearchBlueprint.make())],
         }),
       );
 
@@ -748,7 +748,7 @@ export const WithResearchQueue: Story = {
       [ResearchInputModule, ResearchOutputModule],
       [TriggersModule, InvocationsModule, PromptModule, GraphModule],
     ],
-    blueprints: [ResearchBlueprint.key],
+    blueprints: [ResearchBlueprint.Key],
   },
 };
 
@@ -847,7 +847,7 @@ export const WithProject: Story = {
 
             {{organization}}
           `,
-          blueprints: [Ref.make(ResearchBlueprint)],
+          blueprints: [Ref.make(ResearchBlueprint.make())],
         }),
       );
 
@@ -980,7 +980,6 @@ export const WithPrompt: Story = {
     types: [Text.Text],
     onInit: async ({ space }) => {
       space.db.add(serializeFunction(AgentFunctions.Prompt));
-
       space.db.add(
         Prompt.make({
           name: 'Research',
@@ -992,7 +991,7 @@ export const WithPrompt: Story = {
 
           instructions:
             'Research the organization provided as input. Absolutely, in all cases, create a research note for it at the end. NOTE: Do mocked reseach (set mockSearch to true).',
-          blueprints: [Ref.make(ResearchBlueprint)],
+          blueprints: [Ref.make(ResearchBlueprint.make())],
         }),
       );
 

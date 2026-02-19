@@ -13,14 +13,18 @@ const instructions = trim`
   You read, write & create markdown documents.
 `;
 
-export const MarkdownBlueprint = Blueprint.make({
-  key: 'dxos.org/blueprint/markdown',
-  name: 'Markdown',
-  description: 'Work with markdown documents.',
-  instructions: {
-    source: Ref.make(Text.make(instructions)),
-  },
-  tools: Blueprint.toolDefinitions({
-    functions: Object.values(MarkdownFunctions),
-  }),
-});
+export const make = () =>
+  Blueprint.make({
+    key: 'dxos.org/blueprint/markdown',
+    name: 'Markdown',
+    description: 'Work with markdown documents.',
+    instructions: {
+      source: Ref.make(Text.make(instructions)),
+    },
+    tools: Blueprint.toolDefinitions({
+      functions: Object.values(MarkdownFunctions),
+    }),
+  });
+
+export const functions = Object.values(MarkdownFunctions);
+export { MarkdownFunctions };

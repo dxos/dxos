@@ -8,7 +8,9 @@ import { Ref } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
-import { TaskFunctions } from '../../functions';
+import { TaskFunctions } from './functions';
+
+export const functions = Object.values(TaskFunctions);
 
 /**
  * Agent prompt instructions for managing hierarchical task lists.
@@ -85,12 +87,13 @@ const instructions = trim`
   - Be precise with task descriptions and hierarchy levels
 `;
 
-export const blueprint = Blueprint.make({
-  key: 'dxos.org/blueprint/planning',
-  name: 'Planning',
-  description: 'Plans and tracks complex tasks with artifact management.',
-  instructions: {
-    source: Ref.make(Text.make(instructions)),
-  },
-  tools: [TaskFunctions.Read, TaskFunctions.Update].map((fn) => ToolId.make(fn.key)),
-});
+export const make = () =>
+  Blueprint.make({
+    key: 'dxos.org/blueprint/planning',
+    name: 'Planning',
+    description: 'Plans and tracks complex tasks with artifact management.',
+    instructions: {
+      source: Ref.make(Text.make(instructions)),
+    },
+    tools: [TaskFunctions.Read, TaskFunctions.Update].map((fn) => ToolId.make(fn.key)),
+  });

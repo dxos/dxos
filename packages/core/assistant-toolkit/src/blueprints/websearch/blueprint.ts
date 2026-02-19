@@ -7,12 +7,15 @@ import { Blueprint } from '@dxos/blueprints';
 import { Ref } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 
-export const WebSearchBlueprint = Blueprint.make({
-  key: 'dxos.org/blueprint/web-search',
-  name: 'Web Search',
-  description: 'Search the web.',
-  instructions: {
-    source: Ref.make(Text.make()),
-  },
-  tools: [ToolId.make('AnthropicWebSearch')],
-});
+export const functions = [];
+
+export const make = () =>
+  Blueprint.make({
+    key: 'dxos.org/blueprint/web-search',
+    name: 'Web Search',
+    description: 'Search the web.',
+    instructions: {
+      source: Ref.make(Text.make()),
+    },
+    tools: [ToolId.make('AnthropicWebSearch')],
+  });

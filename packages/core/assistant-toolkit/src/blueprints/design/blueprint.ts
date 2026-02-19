@@ -8,7 +8,7 @@ import { Ref } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
-import { MarkdownFunctions } from '../markdown';
+import { MarkdownBlueprint } from '../markdown';
 
 const instructions = trim`
   You manage a design spec based on the conversation.
@@ -20,12 +20,17 @@ const instructions = trim`
   Do not announce when you read or write the design spec document.
 `;
 
-export const DesignBlueprint = Blueprint.make({
-  key: 'dxos.org/blueprint/design',
-  name: 'Design Spec',
-  description: 'Preserve the conversation in the design spec.',
-  instructions: {
-    source: Ref.make(Text.make(instructions)),
-  },
-  tools: [MarkdownFunctions.Read, MarkdownFunctions.Update].map((fn) => ToolId.make(fn.key)),
-});
+export const make = () =>
+  Blueprint.make({
+    key: 'dxos.org/blueprint/design',
+    name: 'Design Spec',
+    description: 'Preserve the conversation in the design spec.',
+    instructions: {
+      source: Ref.make(Text.make(instructions)),
+    },
+    tools: [MarkdownBlueprint.MarkdownFunctions.Read, MarkdownBlueprint.MarkdownFunctions.Update].map((fn) =>
+      ToolId.make(fn.key),
+    ),
+  });
+
+export const functions = [MarkdownBlueprint.MarkdownFunctions.Read, MarkdownBlueprint.MarkdownFunctions.Update];

@@ -28,7 +28,7 @@ import { trim } from '@dxos/util';
 import { Chat, Initiative, Plan } from '../../types';
 import { PlanningBlueprint } from '../planning';
 
-import { InitiativeBlueprint } from './blueprint';
+import { make } from './blueprint';
 import { InitiativeFunctions } from './functions';
 
 ObjectId.dangerouslyDisableRandomness();
@@ -59,6 +59,7 @@ const SYSTEM = trim`
 `;
 
 describe.runIf(TestHelpers.tagEnabled('flaky'))('Initiative', () => {
+  const blueprint = make();
   it.scoped(
     'shopping list',
     Effect.fnUntraced(
@@ -70,7 +71,7 @@ describe.runIf(TestHelpers.tagEnabled('flaky'))('Initiative', () => {
               spec: 'Keep a shopping list of items to buy.',
               blueprints: [Ref.make(MarkdownBlueprint.make())],
             },
-            InitiativeBlueprint,
+            blueprint,
           ),
         );
         const chatQueue = initiative.chat?.target?.queue?.target as any;
@@ -112,7 +113,7 @@ describe.runIf(TestHelpers.tagEnabled('flaky'))('Initiative', () => {
               `,
               blueprints: [Ref.make(MarkdownBlueprint.make())],
             },
-            InitiativeBlueprint,
+            blueprint,
           ),
         );
         yield* Database.flush({ indexes: true });
@@ -181,9 +182,9 @@ describe.runIf(TestHelpers.tagEnabled('flaky'))('Initiative', () => {
                   - Taken 2 raw eggs out of the fridge.
                 </example>
               `,
-              blueprints: [Ref.make(MarkdownBlueprint.make()), Ref.make(Obj.clone(PlanningBlueprint))],
+              blueprints: [Ref.make(MarkdownBlueprint.make()), Ref.make(Obj.clone(PlanningBlueprint.make()))],
             },
-            InitiativeBlueprint,
+            blueprint,
           ),
         );
         yield* Database.flush({ indexes: true });

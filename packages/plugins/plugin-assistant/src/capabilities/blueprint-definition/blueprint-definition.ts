@@ -10,16 +10,11 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 import {
   AgentFunctions,
   DiscordBlueprint,
-  DiscordFunctions,
   EntityExtractionFunctions,
   InitiativeBlueprint,
-  InitiativeFunctions,
   LinearBlueprint,
-  LinearFunctions,
   PlanningBlueprint,
-  PlanningFunctions,
   ResearchBlueprint,
-  ResearchFunctions,
   WebSearchBlueprint,
 } from '@dxos/assistant-toolkit';
 
@@ -44,31 +39,31 @@ export type BlueprintCapabilities = [
 ];
 
 export default Capability.makeModule<[], BlueprintCapabilities>(() =>
-  // TODO(burdon): Standardize blueprint and function contributions.
   Effect.succeed([
     Capability.contributes(AppCapabilities.BlueprintDefinition, AssistantBlueprint.make()),
-    Capability.contributes(AppCapabilities.Functions, AssistantBlueprint.functions),
-
-    Capability.contributes(AppCapabilities.BlueprintDefinition, ResearchBlueprint),
-    Capability.contributes(AppCapabilities.Functions, Record.values(ResearchFunctions)),
-
-    Capability.contributes(AppCapabilities.BlueprintDefinition, WebSearchBlueprint),
-    // TODO(burdon): Should these functions be provided by WebSearchBlueprint?
     Capability.contributes(AppCapabilities.Functions, [
+      ...AssistantBlueprint.functions,
+      // TODO(burdon): Where should these go?
       ...Record.values(AgentFunctions),
       ...Record.values(EntityExtractionFunctions),
     ]),
 
-    Capability.contributes(AppCapabilities.BlueprintDefinition, DiscordBlueprint),
-    Capability.contributes(AppCapabilities.Functions, Record.values(DiscordFunctions)),
+    Capability.contributes(AppCapabilities.BlueprintDefinition, ResearchBlueprint.make()),
+    Capability.contributes(AppCapabilities.Functions, ResearchBlueprint.functions),
 
-    Capability.contributes(AppCapabilities.BlueprintDefinition, LinearBlueprint),
-    Capability.contributes(AppCapabilities.Functions, Record.values(LinearFunctions)),
+    Capability.contributes(AppCapabilities.BlueprintDefinition, WebSearchBlueprint.make()),
+    Capability.contributes(AppCapabilities.Functions, WebSearchBlueprint.functions),
 
-    Capability.contributes(AppCapabilities.BlueprintDefinition, InitiativeBlueprint),
-    Capability.contributes(AppCapabilities.Functions, Record.values(InitiativeFunctions)),
+    Capability.contributes(AppCapabilities.BlueprintDefinition, DiscordBlueprint.make()),
+    Capability.contributes(AppCapabilities.Functions, DiscordBlueprint.functions),
 
-    Capability.contributes(AppCapabilities.BlueprintDefinition, PlanningBlueprint),
-    Capability.contributes(AppCapabilities.Functions, Record.values(PlanningFunctions)),
+    Capability.contributes(AppCapabilities.BlueprintDefinition, LinearBlueprint.make()),
+    Capability.contributes(AppCapabilities.Functions, LinearBlueprint.functions),
+
+    Capability.contributes(AppCapabilities.BlueprintDefinition, InitiativeBlueprint.make()),
+    Capability.contributes(AppCapabilities.Functions, InitiativeBlueprint.functions),
+
+    Capability.contributes(AppCapabilities.BlueprintDefinition, PlanningBlueprint.make()),
+    Capability.contributes(AppCapabilities.Functions, PlanningBlueprint.functions),
   ]),
 );

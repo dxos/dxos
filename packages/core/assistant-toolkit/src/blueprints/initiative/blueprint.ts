@@ -10,11 +10,12 @@ import { InitiativeFunctions } from './functions';
 /**
  * Creates the Initiative blueprint. This is a function to avoid circular dependency issues.
  */
-export const InitiativeBlueprint = Blueprint.make({
-  key: 'dxos.org/blueprint/initiative',
-  name: 'Initiative blueprint',
-  instructions: Template.make({
-    source: trim`
+export const make = () =>
+  Blueprint.make({
+    key: 'dxos.org/blueprint/initiative',
+    name: 'Initiative blueprint',
+    instructions: Template.make({
+      source: trim`
         You work on an initiative. Each initiative has a spec - the goal of the initiative.
         The initiative plan shows the current progress of the initiative.
         Initiative has an number of associated artifacts you can read/write.
@@ -22,7 +23,7 @@ export const InitiativeBlueprint = Blueprint.make({
         You can edit them if necessary.
 
         IMPORTANT: When create a new artifact, always add it to the initiative using the add-artifact function.
-        
+
         {{#with initiative}}
         <initiative id="{{id}}" name="{{name}}">
           <spec>
@@ -42,15 +43,18 @@ export const InitiativeBlueprint = Blueprint.make({
         </initiative>
         {{/with}}
       `,
-    inputs: [
-      {
-        name: 'initiative',
-        kind: 'function',
-        function: 'dxos.org/function/initiative/get-context',
-      },
-    ],
-  }),
-  tools: Blueprint.toolDefinitions({
-    functions: Object.values(InitiativeFunctions),
-  }),
-});
+      inputs: [
+        {
+          name: 'initiative',
+          kind: 'function',
+          function: 'dxos.org/function/initiative/get-context',
+        },
+      ],
+    }),
+    tools: Blueprint.toolDefinitions({
+      functions: Object.values(InitiativeFunctions),
+    }),
+  });
+
+export const functions = Object.values(InitiativeFunctions);
+export { InitiativeFunctions };

@@ -21,12 +21,15 @@ const instructions = trim`
   DXOS serverId: 837138313172353095
 `;
 
-export const DiscordBlueprint = Blueprint.make({
-  key: 'dxos.org/blueprint/discord',
-  name: 'Discord',
-  description: 'Discord integration.',
-  instructions: {
-    source: Ref.make(Text.make(instructions)),
-  },
-  tools: [ToolId.make(DiscordFunctions.Fetch.key)],
-});
+export const make = () =>
+  Blueprint.make({
+    key: 'dxos.org/blueprint/discord',
+    name: 'Discord',
+    description: 'Discord integration.',
+    instructions: {
+      source: Ref.make(Text.make(instructions)),
+    },
+    tools: [ToolId.make(DiscordFunctions.Fetch.key)],
+  });
+
+export const functions = [DiscordFunctions.Fetch];
