@@ -126,10 +126,14 @@ export const PipelineObjectSettings = ({ classNames, pipeline }: PipelineObjectS
   );
 
   const handleAdd = useCallback(() => {
+    if (!space) {
+      return;
+    }
     const newView = View.make({
       query: Query.select(Filter.type(Task.Task)),
       jsonSchema: Type.toJsonSchema(Task.Task),
     });
+    space.db.add(newView);
     updateColumns((columns) => {
       columns.push({
         name: 'Tasks',
@@ -139,7 +143,7 @@ export const PipelineObjectSettings = ({ classNames, pipeline }: PipelineObjectS
       });
     });
     setExpandedId(newView.id);
-  }, [updateColumns]);
+  }, [space, updateColumns]);
 
   const handleColumnSave = useCallback(
     (values: Schema.Schema.Type<typeof ColumnFormSchema>) => {

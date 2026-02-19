@@ -37,7 +37,8 @@ import { BoardItem, type BoardItemProps } from './Item';
 //
 
 export interface BoardModel<TColumn = any, TItem = any> {
-  getId: GetId<TColumn | TItem>;
+  getColumnId: GetId<TColumn>;
+  getItemId: GetId<TItem>;
   isColumn: (obj: unknown) => obj is TColumn;
   isItem: (obj: unknown) => obj is TItem;
   columns: Atom.Atom<readonly TColumn[] | TColumn[]>;
@@ -117,7 +118,7 @@ const BoardContentInner = forwardRef<HTMLDivElement, BoardContentProps>(
           >
             <ScrollArea.Root orientation='horizontal' classNames='md:pbs-3' margin padding>
               <ScrollArea.Viewport classNames='snap-mandatory snap-x md:snap-none' ref={setViewport}>
-                <Mosaic.Stack items={items} getId={model.getId} Tile={Tile} debug={debug} />
+                <Mosaic.Stack items={items} getId={model.getColumnId} Tile={Tile} debug={debug} />
               </ScrollArea.Viewport>
             </ScrollArea.Root>
           </Mosaic.Container>

@@ -12,7 +12,7 @@ import { useEventHandlerAdapter } from './useEventHandlerAdapter';
  * Minimal model shape needed to build the default column handler.
  */
 export type DefaultColumnEventHandlerModel<TColumn = unknown> = {
-  getId: GetId<TColumn>;
+  getColumnId: GetId<TColumn>;
   isColumn: (obj: unknown) => obj is TColumn;
 };
 
@@ -28,7 +28,7 @@ export const useDefaultColumnEventHandler = <TColumn extends Obj.Unknown = Obj.U
   useEventHandlerAdapter<TColumn, TColumn>({
     id,
     items,
-    getId: model.getId as GetId<TColumn>,
+    getId: model.getColumnId,
     get: (data) => data,
     make: (object) => object,
     canDrop: ({ source }) => model.isColumn(source.data),

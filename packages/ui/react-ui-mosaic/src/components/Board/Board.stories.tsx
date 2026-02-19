@@ -73,7 +73,8 @@ const useTestBoardModel = (): TestBoardModelResult => {
   const registry = useContext(RegistryContext);
 
   const { model, orderedColumnsAtom, orderAtom } = useMemo(() => {
-    const getId = (data: TestColumn | TestItem) => data.id;
+    const getColumnId = (data: TestColumn) => data.id;
+    const getItemId = (data: TestItem) => data.id;
 
     // In-memory column order (ids only). Empty until the user first reorders; then persist drag/drop order.
     const orderAtom = Atom.make<string[]>([]);
@@ -87,9 +88,9 @@ const useTestBoardModel = (): TestBoardModelResult => {
       const cols = get(columnsAtom);
       const order = get(orderAtom);
       if (order.length === 0) return cols;
-      const byId = new Map(cols.map((column) => [getId(column), column]));
+      const byId = new Map(cols.map((column) => [getColumnId(column), column]));
       const ordered = order.map((id) => byId.get(id)).filter((column): column is TestColumn => column != null);
-      const appended = cols.filter((column) => !order.includes(getId(column)));
+      const appended = cols.filter((column) => !order.includes(getColumnId(column)));
       return [...ordered, ...appended];
     });
 
@@ -108,7 +109,8 @@ const useTestBoardModel = (): TestBoardModelResult => {
         : Atom.family((_column: TestColumn) => Atom.make<TestItem[]>([]));
 
     const model = {
-      getId,
+      getColumnId,
+      getItemId,
       isColumn: (obj: unknown): obj is TestColumn => Obj.isObject(obj) && Obj.instanceOf(TestColumn, obj),
       isItem: (obj: unknown): obj is TestItem => Obj.isObject(obj) && Obj.instanceOf(TestItem, obj),
       columns: orderedColumnsAtom,
@@ -150,7 +152,7 @@ const useTestBoardModel = (): TestBoardModelResult => {
   const eventHandler = useEventHandlerAdapter<TestColumn, TestColumn>({
     id: 'board',
     items: orderedColumns,
-    getId: model.getId,
+    getId: model.getColumnId,
     get: (data) => data,
     make: (object) => object,
     canDrop: ({ source }) => model.isColumn(source.data),
@@ -161,7 +163,7 @@ const useTestBoardModel = (): TestBoardModelResult => {
       mutate(next);
       registry.set(
         orderAtom,
-        next.map((column) => model.getId(column)),
+        next.map((column) => model.getColumnId(column)),
       );
     },
   });

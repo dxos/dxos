@@ -49,7 +49,7 @@ const BoardColumnRootInner = forwardRef<HTMLDivElement, PropsWithChildren<BoardC
       <Mosaic.Tile
         asChild
         location={location}
-        id={model.getId(data)}
+        id={model.getColumnId(data)}
         data={data}
         debug={debug}
         dragHandle={dragHandleRef.current}
@@ -154,7 +154,7 @@ const BoardColumnBody = ({ data, eventHandler, Tile = BoardItem, debug }: BoardC
       >
         <ScrollArea.Root orientation='vertical' thin margin padding>
           <ScrollArea.Viewport classNames='snap-y md:snap-none' ref={setViewport}>
-            <Mosaic.Stack items={items} getId={model.getId} Tile={Tile} />
+            <Mosaic.Stack items={items} getId={model.getItemId} Tile={Tile} />
           </ScrollArea.Viewport>
         </ScrollArea.Root>
       </Mosaic.Container>
@@ -213,7 +213,7 @@ const DefaultBoardColumn = forwardRef<HTMLDivElement, DefaultBoardColumnProps>(
     const [column, updateColumn] = useObject(data);
 
     const eventHandler = useEventHandlerAdapter<Ref.Unknown>({
-      id: model.getId(data),
+      id: model.getColumnId(data),
       items: column?.items ?? [],
       getId: (ref) => ref.target?.id ?? ref.dxn.toString(),
       get: (refOrObj) => (Ref.isRef(refOrObj) ? refOrObj.target! : refOrObj),

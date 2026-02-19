@@ -60,7 +60,8 @@ const DefaultStory = ({ columns: columnsProp = 1, debug = false }: StoryProps) =
     );
 
     const model: BoardModel<TestColumn, TestItem> = {
-      getId: (data: TestColumn | TestItem) => data.id,
+      getColumnId: (data: TestColumn) => data.id,
+      getItemId: (data: TestItem) => data.id,
       isColumn: (obj: unknown): obj is TestColumn => Obj.isObject(obj) && Obj.instanceOf(TestColumn, obj),
       isItem: (obj: unknown): obj is TestItem => Obj.isObject(obj) && Obj.instanceOf(TestItem, obj),
       columns: columnsAtom,

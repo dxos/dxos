@@ -63,12 +63,15 @@ PipelineRoot.displayName = PIPELINE_ROOT;
 // usePipelineBoardModel
 //
 
+const emptyColumnsAtom = Atom.make(() => [] as PipelineType.Column[]);
+const emptyItemsAtom = Atom.make(() => [] as Obj.Unknown[]);
 const emptyPipelineModel: BoardModel<PipelineType.Column, Obj.Unknown> = {
-  getId: (data) => (Obj.isObject(data) ? data.id : (data as PipelineType.Column).view.dxn.toString()),
+  getColumnId: (data) => (data as PipelineType.Column).view.dxn.toString(),
+  getItemId: (data) => (data as Obj.Unknown).id,
   isColumn: (obj: unknown): obj is PipelineType.Column => Schema.is(Pipeline.Column)(obj),
   isItem: (obj): obj is Obj.Unknown => Obj.isObject(obj),
-  columns: Atom.make(() => []),
-  items: () => Atom.make(() => []),
+  columns: emptyColumnsAtom,
+  items: () => emptyItemsAtom,
   getColumns: () => [],
   getItems: () => [],
 };
@@ -109,8 +112,8 @@ const usePipelineBoardModel = (
       }),
     );
     return {
-      getId: (data: PipelineType.Column | Obj.Unknown) =>
-        Obj.isObject(data) ? data.id : (data as PipelineType.Column).view.dxn.toString(),
+      getColumnId: (data) => (data as PipelineType.Column).view.dxn.toString(),
+      getItemId: (data) => (data as Obj.Unknown).id,
       isColumn: (obj: unknown): obj is PipelineType.Column => Schema.is(Pipeline.Column)(obj),
       isItem: (obj: unknown): obj is Obj.Unknown => Obj.isObject(obj),
       columns: columnsAtom,
@@ -132,12 +135,12 @@ type PipelineContentProps = {
 
 const PipelineContent = ({ pipeline }: PipelineContentProps) => {
   const { model } = useBoard(PIPELINE_CONTENT_NAME);
-  const items = useAtomValue(model.columns);
+  const columns = useAtomValue(model.columns);
   const eventHandler = useEventHandlerAdapter<PipelineType.Column, Obj.Unknown>({
     id: pipeline.id,
-    // TODO(wittjosiah): Cast because items array is readonly.
-    items: items as any,
-    getId: model.getId,
+    // TODO(wittjosiah): Cast because columns array is readonly.
+    items: columns as any,
+    getId: model.getColumnId,
     get: (data) => data as unknown as Obj.Unknown,
     make: (object) => object as unknown as PipelineType.Column,
     canDrop: ({ source }) => model.isColumn(source.data),
