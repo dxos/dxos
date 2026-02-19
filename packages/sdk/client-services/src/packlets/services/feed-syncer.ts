@@ -25,6 +25,7 @@ const encoder = new Encoder({ tagUint8Array: false, useRecords: false });
 const DEFAULT_MESSAGE_BLOCKS_LIMIT = 50;
 const DEFAULT_SYNC_CONCURRENCY = 5;
 const DEFAULT_POLLING_INTERVAL = 5_000;
+const DEFAULT_POLL_REQUEST_STAGGER_MS = 250;
 
 interface FeedSyncerOptions {
   runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransaction.SqlTransaction>;
@@ -56,6 +57,12 @@ interface FeedSyncerOptions {
    * @default 10 seconds
    */
   pollingInterval?: number;
+
+  /**
+   * Minimum delay between externally requested best-effort polls.
+   * @default 250 ms
+   */
+  pollRequestStaggerMs?: number;
 }
 
 export class FeedSyncer extends Resource {
@@ -63,6 +70,7 @@ export class FeedSyncer extends Resource {
   readonly #messageBlocksLimit: number;
   readonly #syncConcurrency: number;
   readonly #pollingInterval: number;
+  readonly #pollRequestStaggerMs: number;
 
   readonly #runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransaction.SqlTransaction>;
   readonly #feedStore: FeedStore;
@@ -73,6 +81,8 @@ export class FeedSyncer extends Resource {
   #spacesToPoll = new Set<SpaceId>();
   /** Last time full poll was completed. */
   #lastFullPoll: number | null = null;
+  #staggeredPollScheduled = false;
+  #lastRequestedPollAt: number | null = null;
 
   constructor(options: FeedSyncerOptions) {
     super();
@@ -89,6 +99,7 @@ export class FeedSyncer extends Resource {
     this.#messageBlocksLimit = options.messageBlocksLimit ?? DEFAULT_MESSAGE_BLOCKS_LIMIT;
     this.#syncConcurrency = options.syncConcurrency ?? DEFAULT_SYNC_CONCURRENCY;
     this.#pollingInterval = options.pollingInterval ?? DEFAULT_POLLING_INTERVAL;
+    this.#pollRequestStaggerMs = options.pollRequestStaggerMs ?? DEFAULT_POLL_REQUEST_STAGGER_MS;
   }
 
   protected override async _open(): Promise<void> {
@@ -140,7 +151,25 @@ export class FeedSyncer extends Resource {
    */
   schedulePoll(): void {
     this.#resetSpacesToPoll();
-    this.#pollTask.schedule();
+    if (this.#staggeredPollScheduled) {
+      return;
+    }
+
+    const now = Date.now();
+    const delay =
+      this.#lastRequestedPollAt == null
+        ? 0
+        : Math.max(this.#pollRequestStaggerMs - (now - this.#lastRequestedPollAt), 0);
+    this.#staggeredPollScheduled = true;
+    scheduleTask(
+      this._ctx,
+      () => {
+        this.#staggeredPollScheduled = false;
+        this.#lastRequestedPollAt = Date.now();
+        this.#pollTask.schedule();
+      },
+      delay,
+    );
   }
 
   #resetSpacesToPoll(): void {
