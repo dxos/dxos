@@ -73,16 +73,6 @@ export class MessageSyncer {
    * Syncs messages with the editor.
    */
   append(messages: Message.Message[], flush = false): boolean {
-    console.log(
-      'append message\n',
-      messages
-        .map(
-          (message) =>
-            `${message.sender.role}(${message.blocks.map((block) => (block.pending ? `[${block._tag}]` : block._tag)).join(' ')})`,
-        )
-        .join('\n'),
-    );
-
     // TODO(dmaretskyi): MarkdownStream currently does not support streaming XML tags, so we need to remove pending non-text blocks.
     messages = messages.map((message) => ({
       ...message,
@@ -91,7 +81,6 @@ export class MessageSyncer {
 
     // Check if new set of messages.
     if (this._initialMessageId !== messages[0]?.id) {
-      console.log('reset');
       this.reset();
       this._initialMessageId = messages[0]?.id;
     }

@@ -289,10 +289,6 @@ export class AiChatProcessor {
 
   private _onMessage = Effect.fn(
     function* (this: AiChatProcessor, message: Message.Message) {
-      console.log('onMessage', {
-        turn: message.sender.role,
-        blocks: message.blocks.map((block) => block._tag).join(' '),
-      });
       this._registry.set(this._streaming, []);
       this._registry.update(this._pending, (pending) => [...pending, message]);
     }.bind(this),
