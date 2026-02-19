@@ -3,7 +3,6 @@
 //
 
 import { templates } from '@dxos/assistant';
-import { AssistantToolkit, SystemToolkit } from '@dxos/assistant-toolkit';
 import { Blueprint } from '@dxos/blueprints';
 
 import { AssistantFunctions } from './functions';
@@ -14,7 +13,7 @@ export const deckTools = ['open-item'];
 
 export const functions = Object.values(AssistantFunctions);
 
-export const tools = [...AssistantToolkit.tools, ...SystemToolkit.tools, ...deckTools];
+export const tools = [...deckTools];
 
 export const make = () =>
   Blueprint.make({

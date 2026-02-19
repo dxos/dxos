@@ -50,23 +50,6 @@ export const SystemToolkit = Toolkit.make(
   }),
 
   //
-  // Query
-  //
-
-  Tool.make('query', {
-    description: trim`
-      Queries objects in the space.
-      Get the typename from the schema-list tool.
-    `,
-    parameters: {
-      typename: Schema.String,
-    },
-    success: Schema.Any,
-    failure: Schema.Never,
-    dependencies: [Database.Service],
-  }),
-
-  //
   // Objects
   //
 
@@ -223,11 +206,6 @@ export const layer = (): Layer.Layer<Tool.Handler<any>, never, never> =>
           },
         ]),
       );
-    }),
-
-    ['query' as const]: Effect.fnUntraced(function* ({ typename }) {
-      const objects = yield* Database.runQuery(Filter.typename(typename));
-      return objects;
     }),
 
     ['object-create' as const]: Effect.fnUntraced(function* ({ typename, data }) {
