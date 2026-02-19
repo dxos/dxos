@@ -9,7 +9,7 @@ import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
 import { ArtifactId, GenericToolkit } from '@dxos/assistant';
-import { AssistantToolkit, Chat, SystemToolkit, WebSearchToolkit } from '@dxos/assistant-toolkit';
+import { Chat, WebSearchToolkit } from '@dxos/assistant-toolkit';
 import { Blueprint } from '@dxos/blueprints';
 import { Tag, type Type } from '@dxos/echo';
 import { type FunctionDefinition } from '@dxos/functions';
@@ -90,8 +90,6 @@ const StubDeckToolkit = Toolkit.make(
 
 export const toolkits: GenericToolkit.GenericToolkit[] = [
   // NOTE: Toolkits referenced by blueprints above need to be added here.
-  GenericToolkit.make(AssistantToolkit.AssistantToolkit, AssistantToolkit.layer()),
-  GenericToolkit.make(SystemToolkit.SystemToolkit, SystemToolkit.layer()),
   GenericToolkit.make(WebSearchToolkit, Layer.empty),
 
   // TODO(burdon): Remove?
