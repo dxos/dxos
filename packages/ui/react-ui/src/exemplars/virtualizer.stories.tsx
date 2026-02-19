@@ -6,22 +6,18 @@ import { type Meta } from '@storybook/react-vite';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
-import { Obj } from '@dxos/echo';
 import { faker } from '@dxos/random';
 import { Layout, ScrollArea, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { TestItem } from '../../testing';
-import { Mosaic } from '../Mosaic';
-
-import { type Stack } from './Stack';
-
 faker.seed(999);
 
-// TODO(burdon): Move to react-ui/exemplars
+type TestItem = {
+  name: string;
+};
 
-const meta: Meta<typeof Stack> = {
-  title: 'ui/react-ui-mosaic/virtualizer',
+const meta: Meta = {
+  title: 'ui/react-ui-core/exemplars/virtualizer',
   decorators: [withLayout({ layout: 'column' }), withTheme()],
   parameters: {
     layout: 'fullscreen',
@@ -40,11 +36,9 @@ export const Default = {
     const [index, setIndex] = useState(0);
     const items = useMemo<TestItem[]>(
       () =>
-        Array.from({ length: NUM_ITEMS }, () =>
-          Obj.make(TestItem, {
-            name: faker.lorem.paragraph(),
-          }),
-        ),
+        Array.from({ length: NUM_ITEMS }, () => ({
+          name: faker.lorem.paragraph(),
+        })),
       [],
     );
 
@@ -66,43 +60,39 @@ export const Default = {
     return (
       <Layout.Main toolbar>
         <ScrollToolbar items={items} index={index} setIndex={setIndex} />
-        <Mosaic.Root asChild>
-          <Mosaic.Container asChild orientation='vertical'>
-            <ScrollArea.Root orientation='vertical'>
-              <ScrollArea.Viewport classNames='p-2' ref={setViewport}>
+        <ScrollArea.Root orientation='vertical' margin>
+          <ScrollArea.Viewport classNames='p-2' ref={setViewport}>
+            <div
+              role='none'
+              style={{
+                position: 'relative',
+                height: virtualizer.getTotalSize(),
+                width: '100%',
+              }}
+              ref={parentRef}
+            >
+              {virtualItems.map((virtualItem) => (
                 <div
-                  role='none'
+                  key={virtualItem.key}
+                  role='list'
+                  className='grid grid-cols-[3rem_1fr] overflow-hidden border border-separator rounded-sm'
                   style={{
-                    position: 'relative',
-                    height: virtualizer.getTotalSize(),
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
                     width: '100%',
+                    transform: `translateY(${virtualItem.start}px)`,
                   }}
-                  ref={parentRef}
+                  data-index={virtualItem.index}
+                  ref={virtualizer.measureElement}
                 >
-                  {virtualItems.map((virtualItem) => (
-                    <div
-                      key={virtualItem.key}
-                      role='list'
-                      className='grid grid-cols-[3rem_1fr] overflow-hidden border border-separator rounded-sm'
-                      style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        width: '100%',
-                        transform: `translateY(${virtualItem.start}px)`,
-                      }}
-                      data-index={virtualItem.index}
-                      ref={virtualizer.measureElement}
-                    >
-                      <div className='p-1'>{virtualItem.index + 1}</div>
-                      <div className='p-1'>{items[virtualItem.index].name}</div>
-                    </div>
-                  ))}
+                  <div className='p-1'>{virtualItem.index + 1}</div>
+                  <div className='p-1'>{items[virtualItem.index].name}</div>
                 </div>
-              </ScrollArea.Viewport>
-            </ScrollArea.Root>
-          </Mosaic.Container>
-        </Mosaic.Root>
+              ))}
+            </div>
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
       </Layout.Main>
     );
   },

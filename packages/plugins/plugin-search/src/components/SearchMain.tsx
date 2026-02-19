@@ -9,7 +9,7 @@ import { Entity, Query } from '@dxos/echo';
 import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
 import { ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Layout } from '@dxos/react-ui';
-import { Card, Mosaic, type StackTileComponent } from '@dxos/react-ui-mosaic';
+import { Card, Mosaic, type MosaicStackTileComponent } from '@dxos/react-ui-mosaic';
 import { SearchList } from '@dxos/react-ui-searchlist';
 import { Text } from '@dxos/schema';
 
@@ -71,7 +71,8 @@ export const SearchMain = ({ space }: { space?: Space }) => {
   );
 };
 
-const SearchResultTile: StackTileComponent<SearchResult> = ({ data }) => {
+const SearchResultTile: MosaicStackTileComponent<SearchResult> = (props) => {
+  const data = props.data;
   return (
     <Card.Root key={data.id}>
       <Card.Toolbar>

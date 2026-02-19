@@ -29,9 +29,6 @@ const meta = {
   parameters: {
     layout: 'centered',
     translations,
-    chromatic: {
-      disableSnapshot: false,
-    },
   },
   args: {
     titleId: 'storybookJoinPanel__title',

@@ -95,13 +95,14 @@ const MessageTitle = forwardRef<HTMLHeadingElement, MessageTitleProps>(
     const { tx } = useThemeContext();
     const { titleId, valence } = useMessageContext(MESSAGE_TITLE_NAME);
     const Root = asChild ? Slot : Primitive.h2;
-
     return (
-      <Root {...props} className={tx('message.title', {}, classNames)} id={titleId} ref={forwardedRef}>
-        {!icon && valence === 'neutral' ? null : (
+      <Root {...props} className={tx('message.header', {}, classNames)} id={titleId} ref={forwardedRef}>
+        {!icon && valence === 'neutral' ? (
+          <div />
+        ) : (
           <Icon size={5} icon={icon ?? messageIcons[valence]} classNames={tx('message.icon', { valence })} />
         )}
-        <span>{children}</span>
+        <span className={tx('message.title', {}, classNames)}>{children}</span>
       </Root>
     );
   },
