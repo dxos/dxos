@@ -88,7 +88,7 @@ export class AiChatProcessor {
   private readonly _pending = Atom.make<Message.Message[]>([]);
 
   /** Currently streaming message (from the AI service). */
-  private readonly _streaming = Atom.make<Option.Option<Message.Message>>(Option.none());
+  private readonly _streaming = Atom.make<Message.Message[]>([]);
 
   /** Currently active request fiber. */
   private _fiber: Fiber.Fiber<void, any> | undefined;
@@ -97,18 +97,13 @@ export class AiChatProcessor {
   private _lastRequest: AiRequest | undefined;
 
   /** Streaming state. */
-  public readonly streaming = Atom.make<boolean>((get) => Option.isSome(get(this._streaming)));
+  public readonly streaming = Atom.make<boolean>((get) => get(this._streaming).length > 0);
 
   /** Active state. */
   public readonly active = Atom.make(false);
 
   /** Array of Messages (incl. the current message being streamed). */
-  public readonly messages = Atom.make<Message.Message[]>((get) =>
-    Option.match(get(this._streaming), {
-      onNone: () => get(this._pending),
-      onSome: (streaming) => [...get(this._pending), streaming],
-    }),
-  );
+  public readonly messages = Atom.make<Message.Message[]>((get) => [...get(this._pending), ...get(this._streaming)]);
 
   /** Last error. */
   public readonly error = Atom.make<Option.Option<Error>>(Option.none());
@@ -273,29 +268,33 @@ export class AiChatProcessor {
     },
   };
 
-  private _onMessage = Effect.fn(
-    function* (this: AiChatProcessor, message: Message.Message) {
-      this._registry.set(this._streaming, Option.none());
-      this._registry.update(this._pending, (pending) => [...pending, message]);
-    }.bind(this),
-  );
-
+  // TODO(dmaretskyi): Due to the way effect streams do buffering, we cannot rely on _onBlock and _onMessage to be called in order.
   private _onBlock = Effect.fn(
     function* (this: AiChatProcessor, block: ContentBlock.Any) {
       this._registry.update(this._streaming, (streaming) => {
-        const blocks = streaming.pipe(
-          Option.map((streaming) => streaming.blocks.filter((b: ContentBlock.Any) => !b.pending)),
-          Option.getOrElse(() => []),
-        );
+        const blocks = streaming.filter((message) => message.blocks.every((block) => !block.pending));
 
-        return Option.some(
+        // AiSession emits a message per each assistant content-block, so we do the same.
+        return [
+          ...blocks,
           Obj.make(Message.Message, {
             created: new Date().toISOString(),
             sender: { role: 'assistant' },
-            blocks: [...blocks, block],
+            blocks: [block],
           }),
-        );
+        ];
       });
+    }.bind(this),
+  );
+
+  private _onMessage = Effect.fn(
+    function* (this: AiChatProcessor, message: Message.Message) {
+      console.log('onMessage', {
+        turn: message.sender.role,
+        blocks: message.blocks.map((block) => block._tag).join(' '),
+      });
+      this._registry.set(this._streaming, []);
+      this._registry.update(this._pending, (pending) => [...pending, message]);
     }.bind(this),
   );
 }
