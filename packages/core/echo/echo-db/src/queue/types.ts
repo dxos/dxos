@@ -53,7 +53,7 @@ export interface Queue<T extends Entity.Unknown = Entity.Unknown> extends Databa
    * @param shouldPush - Whether to push local changes to the server. Defaults to true.
    * @param shouldPull - Whether to pull remote changes from the server. Defaults to true.
    */
-  sync(request: { shouldPush?: boolean; shouldPull?: boolean }): Promise<void>;
+  sync(request?: { shouldPush?: boolean; shouldPull?: boolean }): Promise<void>;
 
   /**
    * Query all objects in the queue.
