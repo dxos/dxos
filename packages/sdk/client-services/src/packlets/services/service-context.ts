@@ -22,7 +22,7 @@ import { type RuntimeProvider } from '@dxos/effect';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { Keyring } from '@dxos/keyring';
-import { PublicKey } from '@dxos/keys';
+import { PublicKey, type SpaceId } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
 import { log } from '@dxos/log';
 import { type SignalManager } from '@dxos/messaging';
@@ -171,7 +171,14 @@ export class ServiceContext extends Resource {
       getSpaceKeyByRootDocumentId: (documentId) => this.spaceManager.findSpaceByRootDocumentId(documentId)?.key,
       runtime: this._runtime,
       localQueues: this._runtimeProps?.enableLocalQueues,
-      syncQueue: async (request) => this._feedSyncer?.syncBlocking(request),
+      syncQueue: async (request) => {
+        return this._feedSyncer?.syncBlocking({
+          spaceId: request.spaceId as SpaceId,
+          subspaceTag: request.subspaceTag,
+          shouldPush: request.shouldPush,
+          shouldPull: request.shouldPull,
+        });
+      },
     });
 
     this.invitations = new InvitationsHandler(
