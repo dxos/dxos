@@ -12,7 +12,8 @@ import { Resource } from '@dxos/context';
 import { type EdgeConnection, MessageSchema } from '@dxos/edge-client';
 import { RuntimeProvider } from '@dxos/effect';
 import { type FeedStore, SyncClient } from '@dxos/feed';
-import { type SpaceId } from '@dxos/keys';
+import { invariant } from '@dxos/invariant';
+import { SpaceId } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
 import { EdgeService } from '@dxos/protocols';
 import { createBuf } from '@dxos/protocols/buf';
@@ -26,6 +27,7 @@ const DEFAULT_MESSAGE_BLOCKS_LIMIT = 50;
 const DEFAULT_SYNC_CONCURRENCY = 5;
 const DEFAULT_POLLING_INTERVAL = 5_000;
 const DEFAULT_POLL_REQUEST_THROTTLE_MS = 250;
+const MAX_BLOCKING_SYNC_ITERATIONS = 100;
 
 interface FeedSyncerOptions {
   runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransaction.SqlTransaction>;
@@ -174,18 +176,14 @@ export class FeedSyncer extends Resource {
   /**
    * Performs queue sync and blocks until there are no pending sync batches.
    */
-  async syncBlocking(request: FeedProtocol.SyncQueueRequest): Promise<void> {
-    const spaceId = request.spaceId as SpaceId | undefined;
-    if (!spaceId) {
-      throw new Error('syncQueue requires spaceId.');
-    }
-    const feedNamespace = request.subspaceTag ?? FeedProtocol.WellKnownNamespaces.data;
-    if (!FeedProtocol.isWellKnownNamespace(feedNamespace)) {
-      throw new Error('syncQueue expected a well-known queue namespace.');
-    }
-
-    const shouldPush = request.shouldPush ?? true;
-    const shouldPull = request.shouldPull ?? true;
+  async syncBlocking({
+    spaceId,
+    subspaceTag,
+    shouldPush = true,
+    shouldPull = true,
+  }: FeedProtocol.SyncQueueRequest): Promise<void> {
+    invariant(SpaceId.isValid(spaceId));
+    invariant(FeedProtocol.isWellKnownNamespace(subspaceTag));
     if (!shouldPush && !shouldPull) {
       return;
     }
@@ -193,12 +191,13 @@ export class FeedSyncer extends Resource {
     await RuntimeProvider.runPromise(this.#runtime)(
       Effect.gen(this, function* () {
         let done = false;
+        let iterations = 0;
         while (!done) {
           done = true;
           if (shouldPull) {
             const pullResult = yield* this.#syncClient.pull({
               spaceId,
-              feedNamespace,
+              feedNamespace: subspaceTag,
               limit: this.#messageBlocksLimit,
             });
             done &&= pullResult.done;
@@ -207,10 +206,14 @@ export class FeedSyncer extends Resource {
           if (shouldPush) {
             const pushResult = yield* this.#syncClient.push({
               spaceId,
-              feedNamespace,
+              feedNamespace: subspaceTag,
               limit: this.#messageBlocksLimit,
             });
             done &&= pushResult.done;
+          }
+          iterations++;
+          if (iterations > MAX_BLOCKING_SYNC_ITERATIONS) {
+            throw new Error('Blocking sync exceeded max iterations.');
           }
         }
       }),
