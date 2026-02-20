@@ -72,7 +72,6 @@
     "@dxos/react-ui-canvas-compute": "workspace:*",
     "@dxos/react-ui-canvas-editor": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
-    "@dxos/react-ui-kanban": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",

@@ -2727,9 +2727,6 @@ importers:
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
-      '@dxos/react-ui-kanban':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-kanban
       '@dxos/react-ui-stack':
         specifier: workspace:*
         version: link:../../ui/react-ui-stack
@@ -8225,9 +8222,6 @@ importers:
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../../ui/react-ui-form
-      '@dxos/react-ui-kanban':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-kanban
       '@dxos/react-ui-mosaic':
         specifier: workspace:*
         version: link:../../ui/react-ui-mosaic
@@ -17141,97 +17135,6 @@ importers:
       '@types/react-dom':
         specifier: ~19.2.3
         version: 19.2.3(@types/react@19.2.7)
-      react:
-        specifier: ~19.2.3
-        version: 19.2.3
-      react-dom:
-        specifier: ~19.2.3
-        version: 19.2.3(react@19.2.3)
-      vite:
-        specifier: 'catalog:'
-        version: 7.1.9(@types/node@22.10.2)(jiti@2.6.1)(terser@5.19.2)(tsx@4.21.0)(yaml@2.8.2)
-
-  packages/ui/react-ui-kanban:
-    dependencies:
-      '@dxos/app-framework':
-        specifier: workspace:*
-        version: link:../../sdk/app-framework
-      '@dxos/async':
-        specifier: workspace:*
-        version: link:../../common/async
-      '@dxos/context':
-        specifier: workspace:*
-        version: link:../../common/context
-      '@dxos/echo':
-        specifier: workspace:*
-        version: link:../../core/echo/echo
-      '@dxos/effect':
-        specifier: workspace:*
-        version: link:../../common/effect
-      '@dxos/invariant':
-        specifier: workspace:*
-        version: link:../../common/invariant
-      '@dxos/log':
-        specifier: workspace:*
-        version: link:../../common/log
-      '@dxos/plugin-space':
-        specifier: workspace:*
-        version: link:../../plugins/plugin-space
-      '@dxos/react-client':
-        specifier: workspace:*
-        version: link:../../sdk/react-client
-      '@dxos/react-ui-attention':
-        specifier: workspace:*
-        version: link:../react-ui-attention
-      '@dxos/react-ui-form':
-        specifier: workspace:*
-        version: link:../react-ui-form
-      '@dxos/react-ui-mosaic':
-        specifier: workspace:*
-        version: link:../react-ui-mosaic
-      '@dxos/react-ui-stack':
-        specifier: workspace:*
-        version: link:../react-ui-stack
-      '@dxos/schema':
-        specifier: workspace:*
-        version: link:../../sdk/schema
-      '@dxos/util':
-        specifier: workspace:*
-        version: link:../../common/util
-      '@effect-atom/atom-react':
-        specifier: 'catalog:'
-        version: 0.5.0(@effect/experimental@0.58.0(@effect/platform@0.94.4(effect@3.19.16))(effect@3.19.16)(ioredis@5.3.2))(@effect/platform@0.94.4(effect@3.19.16))(@effect/rpc@0.73.0(@effect/platform@0.94.4(effect@3.19.16))(effect@3.19.16))(effect@3.19.16)(react@19.2.3)(scheduler@0.27.0)
-    devDependencies:
-      '@dxos/plugin-search':
-        specifier: workspace:*
-        version: link:../../plugins/plugin-search
-      '@dxos/random':
-        specifier: workspace:*
-        version: link:../../common/random
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../react-ui
-      '@dxos/react-ui-syntax-highlighter':
-        specifier: workspace:*
-        version: link:../react-ui-syntax-highlighter
-      '@dxos/storybook-utils':
-        specifier: workspace:*
-        version: link:../../common/storybook-utils
-      '@dxos/test-utils':
-        specifier: workspace:*
-        version: link:../../common/test-utils
-      '@dxos/ui-theme':
-        specifier: workspace:*
-        version: link:../ui-theme
-      '@types/react':
-        specifier: ~19.2.7
-        version: 19.2.7
-      '@types/react-dom':
-        specifier: ~19.2.3
-        version: 19.2.3(@types/react@19.2.7)
-      effect:
-        specifier: 3.19.16
-        version: 3.19.16
       react:
         specifier: ~19.2.3
         version: 19.2.3
