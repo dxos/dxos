@@ -13,14 +13,14 @@ import { Database, Entity, Obj, Query, Ref, Relation, Tag } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { Employer, Organization, Person } from '@dxos/types';
 
-import * as AssistantBlueprint from './blueprint';
-import { dbg } from '@dxos/log';
+import { AssistantFunctions } from './functions';
+import AssistantBlueprint from './blueprint';
 import { ObjectId } from '@dxos/keys';
 
 ObjectId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayer({
-  functions: [...AssistantBlueprint.functions],
+  functions: [...Object.values(AssistantFunctions)],
   types: [Organization.Organization, Person.Person, Employer.Employer, Tag.Tag, Blueprint.Blueprint],
   tracing: 'pretty',
 });

@@ -16,30 +16,28 @@ import {
   PlanningBlueprint,
   ResearchBlueprint,
   WebSearchBlueprint,
+  InitiativeFunctions,
 } from '@dxos/assistant-toolkit';
 
 import { AssistantBlueprint } from '../../blueprints';
 
-const blueprintDefinition = Capability.makeModule<
-  [],
-  Capability.Capability<typeof AppCapabilities.BlueprintDefinition>[]
->(() =>
+const blueprintDefinition = Capability.makeModule(() =>
   Effect.succeed([
-    Capability.contributes(AppCapabilities.BlueprintDefinition, {
-      ...AssistantBlueprint,
-      functions: [
-        // TODO(burdon): Co-locate all of these functions?
-        ...AssistantBlueprint.functions,
-        ...Record.values(AgentFunctions),
-        ...Record.values(EntityExtractionFunctions),
-      ],
-    }),
+    Capability.contributes(AppCapabilities.BlueprintDefinition, AssistantBlueprint),
     Capability.contributes(AppCapabilities.BlueprintDefinition, ResearchBlueprint),
     Capability.contributes(AppCapabilities.BlueprintDefinition, WebSearchBlueprint),
     Capability.contributes(AppCapabilities.BlueprintDefinition, DiscordBlueprint),
     Capability.contributes(AppCapabilities.BlueprintDefinition, LinearBlueprint),
     Capability.contributes(AppCapabilities.BlueprintDefinition, InitiativeBlueprint),
     Capability.contributes(AppCapabilities.BlueprintDefinition, PlanningBlueprint),
+
+    Capability.contributes(AppCapabilities.Functions, Record.values(AgentFunctions)),
+    Capability.contributes(AppCapabilities.Functions, Record.values(EntityExtractionFunctions)),
+    Capability.contributes(AppCapabilities.Functions, [
+      InitiativeFunctions.Agent,
+      InitiativeFunctions.GetContext,
+      InitiativeFunctions.Qualifier,
+    ]),
   ]),
 );
 

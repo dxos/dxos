@@ -128,7 +128,6 @@ export namespace AppCapabilities {
   // TODO(burdon): Move type upstream (into blueprint package).
   export type BlueprintDefinition = {
     key: string;
-    // TODO(burdon): Is this currently used by the framework?
     functions: FunctionDefinition.Any[];
     make: () => Blueprint.Blueprint;
   };
