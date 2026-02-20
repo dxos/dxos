@@ -33,3 +33,6 @@ tasks:
   test:
     deps:
       - compile-node
+  test-storybook:
+    deps:
+      - compile-node
