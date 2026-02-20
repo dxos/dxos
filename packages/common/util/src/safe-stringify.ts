@@ -38,7 +38,7 @@ export function safeStringify(obj: any, filter: StringifyReplacer = defaultFilte
       }
 
       // Ignore exotic objects (non-plain objects like DOM elements, class instances, etc.)
-      if (typeof value === 'object' && Object.getPrototypeOf(value) !== Object.prototype) {
+      if (typeof value === 'object' && Object.getPrototypeOf(value) !== Object.prototype && !Array.isArray(value)) {
         return undefined;
       }
 
