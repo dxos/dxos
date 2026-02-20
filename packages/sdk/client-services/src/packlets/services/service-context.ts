@@ -171,7 +171,7 @@ export class ServiceContext extends Resource {
       getSpaceKeyByRootDocumentId: (documentId) => this.spaceManager.findSpaceByRootDocumentId(documentId)?.key,
       runtime: this._runtime,
       localQueues: this._runtimeProps?.enableLocalQueues,
-      onQueueQuery: async () => this._feedSyncer?.schedulePoll(),
+      syncQueue: async (request) => this._feedSyncer?.syncBlocking(request),
     });
 
     this.invitations = new InvitationsHandler(

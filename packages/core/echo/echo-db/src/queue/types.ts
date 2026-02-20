@@ -49,6 +49,13 @@ export interface Queue<T extends Entity.Unknown = Entity.Unknown> extends Databa
   delete(ids: string[]): Promise<void>;
 
   /**
+   * Syncs the queue with the server.
+   * @param shouldPush - Whether to push local changes to the server. Defaults to true.
+   * @param shouldPull - Whether to pull remote changes from the server. Defaults to true.
+   */
+  sync(request: { shouldPush?: boolean; shouldPull?: boolean }): Promise<void>;
+
+  /**
    * Query all objects in the queue.
    * @deprecated Use query() API instead.
    */

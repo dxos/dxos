@@ -233,6 +233,16 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
     return new QueryResultImpl(new QueueQueryContext(this), queryOrFilter);
   }
 
+  async sync(request: { shouldPush?: boolean; shouldPull?: boolean }): Promise<void> {
+    await this._service.syncQueue({
+      subspaceTag: this._subspaceTag,
+      spaceId: this._spaceId,
+      queueId: this._queueId,
+      shouldPush: request.shouldPush,
+      shouldPull: request.shouldPull,
+    });
+  }
+
   /**
    * @deprecated Use `query` method instead.
    */

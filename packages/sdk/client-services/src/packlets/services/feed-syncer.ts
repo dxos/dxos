@@ -171,6 +171,52 @@ export class FeedSyncer extends Resource {
     );
   }
 
+  /**
+   * Performs queue sync and blocks until there are no pending sync batches.
+   */
+  async syncBlocking(request: FeedProtocol.SyncQueueRequest): Promise<void> {
+    const spaceId = request.spaceId as SpaceId | undefined;
+    if (!spaceId) {
+      throw new Error('syncQueue requires spaceId.');
+    }
+    const feedNamespace = request.subspaceTag ?? FeedProtocol.WellKnownNamespaces.data;
+    if (!FeedProtocol.isWellKnownNamespace(feedNamespace)) {
+      throw new Error('syncQueue expected a well-known queue namespace.');
+    }
+
+    const shouldPush = request.shouldPush ?? true;
+    const shouldPull = request.shouldPull ?? true;
+    if (!shouldPush && !shouldPull) {
+      return;
+    }
+
+    await RuntimeProvider.runPromise(this.#runtime)(
+      Effect.gen(this, function* () {
+        let done = false;
+        while (!done) {
+          done = true;
+          if (shouldPull) {
+            const pullResult = yield* this.#syncClient.pull({
+              spaceId,
+              feedNamespace,
+              limit: this.#messageBlocksLimit,
+            });
+            done &&= pullResult.done;
+          }
+
+          if (shouldPush) {
+            const pushResult = yield* this.#syncClient.push({
+              spaceId,
+              feedNamespace,
+              limit: this.#messageBlocksLimit,
+            });
+            done &&= pushResult.done;
+          }
+        }
+      }),
+    );
+  }
+
   #resetSpacesToPoll(): void {
     this.#spacesToPoll.clear();
     this.#getSpaceIds().forEach((spaceId) => {

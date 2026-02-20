@@ -19,6 +19,7 @@ import {
   type QueryQueueRequest,
   type QueueQueryResult,
   type QueueService,
+  type SyncQueueRequest,
 } from '@dxos/protocols/proto/dxos/client/services';
 import type { SqlTransaction } from '@dxos/sql-sqlite';
 
@@ -28,20 +29,19 @@ import type { SqlTransaction } from '@dxos/sql-sqlite';
 export class LocalQueueServiceImpl implements QueueService {
   #runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransaction.SqlTransaction>;
   #feedStore: FeedStore;
-  #onQuery?: () => Promise<void>;
+  #syncQueue?: (request: SyncQueueRequest) => Promise<void>;
 
   constructor(
     runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransaction.SqlTransaction>,
     feedStore: FeedStore,
-    onQuery?: () => Promise<void>,
+    syncQueue?: (request: SyncQueueRequest) => Promise<void>,
   ) {
     this.#runtime = runtime;
     this.#feedStore = feedStore;
-    this.#onQuery = onQuery;
+    this.#syncQueue = syncQueue;
   }
 
   queryQueue(request: QueryQueueRequest): Promise<QueueQueryResult> {
-    void this.#onQuery?.();
     const { query } = request;
     invariant(query, 'query is required');
     const { spaceId, queueIds } = query;
@@ -117,5 +117,9 @@ export class LocalQueueServiceImpl implements QueueService {
         yield* this.#feedStore.appendLocal(messages);
       }),
     );
+  }
+
+  async syncQueue(request: SyncQueueRequest): Promise<void> {
+    await this.#syncQueue?.(request);
   }
 }

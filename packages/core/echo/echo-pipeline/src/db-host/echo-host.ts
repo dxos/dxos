@@ -17,6 +17,7 @@ import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
 import { log } from '@dxos/log';
 import { type FeedProtocol } from '@dxos/protocols';
+import type { SyncQueueRequest } from '@dxos/protocols/proto/dxos/client/services';
 import type * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 import { trace } from '@dxos/tracing';
 
@@ -61,9 +62,9 @@ export type EchoHostProps = {
   assignQueuePositions?: boolean;
 
   /**
-   * Callback to notify when a queue query is made.
+   * Callback to run blocking queue sync.
    */
-  onQueueQuery?: () => Promise<void>;
+  syncQueue?: (request: SyncQueueRequest) => Promise<void>;
 };
 
 /**
@@ -98,7 +99,7 @@ export class EchoHost extends Resource {
     getSpaceKeyByRootDocumentId,
     runtime,
     assignQueuePositions = false,
-    onQueueQuery,
+    syncQueue,
   }: EchoHostProps) {
     super();
 
@@ -120,7 +121,7 @@ export class EchoHost extends Resource {
         runtime: this._runtime,
         getSpaceIds: () => this._spaceStateManager.spaceIds,
       });
-      this._queuesService = new LocalQueueServiceImpl(runtime, this._feedStore, onQueueQuery);
+      this._queuesService = new LocalQueueServiceImpl(runtime, this._feedStore, syncQueue);
     } else {
       this._queuesService = new QueueServiceStub();
     }
