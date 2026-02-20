@@ -12,7 +12,6 @@ import { log } from '@dxos/log';
 import { FeedProtocol } from '@dxos/protocols';
 import { SqlTransaction } from '@dxos/sql-sqlite';
 
-import { DuplicateBlockLamportTimestampError, DuplicateBlockPositionError } from './errors';
 import { FeedStore } from './feed-store';
 
 const Block = FeedProtocol.Block;
@@ -648,87 +647,67 @@ describe('Feed V2', () => {
     }).pipe(Effect.provide(TestLayer)),
   );
 
-  it.effect('append fails on non-unique position in request', () =>
+  it.effect('append ignores duplicate Lamport timestamp and preserves original data', () =>
     Effect.gen(function* () {
       const spaceId = SpaceId.random();
       const feedId = ObjectId.random();
       const feed = new FeedStore({ localActorId: ALICE, assignPositions: false });
       yield* feed.migrate();
 
-      const error = yield* feed
-        .append({
-          requestId: 'req-dup-position',
-          spaceId,
-          feedNamespace: WellKnownNamespaces.data,
-          blocks: [
-            Block.make({
-              feedId,
-              actorId: 'actor-1',
-              sequence: 1,
-              prevActorId: null,
-              prevSequence: null,
-              position: 10,
-              timestamp: Date.now(),
-              data: new Uint8Array([1]),
-            }),
-            Block.make({
-              feedId,
-              actorId: 'actor-2',
-              sequence: 1,
-              prevActorId: null,
-              prevSequence: null,
-              position: 10,
-              timestamp: Date.now(),
-              data: new Uint8Array([2]),
-            }),
-          ],
-        })
-        .pipe(Effect.flip);
+      const actorId = 'actor-1';
+      const sequence = 5;
+      const timestamp = Date.now();
 
-      expect(error).toBeInstanceOf(DuplicateBlockPositionError);
-      expect(error.message).toContain('Non-unique block position detected');
-    }).pipe(Effect.provide(TestLayer)),
-  );
+      yield* feed.append({
+        requestId: 'req-first',
+        spaceId,
+        feedNamespace: WellKnownNamespaces.data,
+        blocks: [
+          Block.make({
+            feedId,
+            actorId,
+            sequence,
+            prevActorId: null,
+            prevSequence: null,
+            position: 1,
+            timestamp,
+            data: new Uint8Array([1]),
+          }),
+        ],
+      });
 
-  it.effect('append fails on non-unique Lamport timestamp in request', () =>
-    Effect.gen(function* () {
-      const spaceId = SpaceId.random();
-      const feedId = ObjectId.random();
-      const feed = new FeedStore({ localActorId: ALICE, assignPositions: false });
-      yield* feed.migrate();
+      // Same Lamport tuple with different data and position should be ignored.
+      yield* feed.append({
+        requestId: 'req-duplicate',
+        spaceId,
+        feedNamespace: WellKnownNamespaces.data,
+        blocks: [
+          Block.make({
+            feedId,
+            actorId,
+            sequence,
+            prevActorId: null,
+            prevSequence: null,
+            position: 2,
+            timestamp: timestamp + 1,
+            data: new Uint8Array([2]),
+          }),
+        ],
+      });
 
-      const error = yield* feed
-        .append({
-          requestId: 'req-dup-lamport',
-          spaceId,
-          feedNamespace: WellKnownNamespaces.data,
-          blocks: [
-            Block.make({
-              feedId,
-              actorId: 'actor-1',
-              sequence: 5,
-              prevActorId: null,
-              prevSequence: null,
-              position: 1,
-              timestamp: Date.now(),
-              data: new Uint8Array([1]),
-            }),
-            Block.make({
-              feedId,
-              actorId: 'actor-1',
-              sequence: 5,
-              prevActorId: null,
-              prevSequence: null,
-              position: 2,
-              timestamp: Date.now(),
-              data: new Uint8Array([2]),
-            }),
-          ],
-        })
-        .pipe(Effect.flip);
+      const queryRes = yield* feed.query({
+        requestId: 'req-query',
+        spaceId,
+        feedNamespace: WellKnownNamespaces.data,
+        query: { feedIds: [feedId] },
+        position: -1,
+      });
 
-      expect(error).toBeInstanceOf(DuplicateBlockLamportTimestampError);
-      expect(error.message).toContain('Non-unique block Lamport timestamp detected');
+      expect(queryRes.blocks.length).toBe(1);
+      expect(queryRes.blocks[0].actorId).toBe(actorId);
+      expect(queryRes.blocks[0].sequence).toBe(sequence);
+      expect(queryRes.blocks[0].position).toBe(1);
+      expect(queryRes.blocks[0].data).toEqual(new Uint8Array([1]));
     }).pipe(Effect.provide(TestLayer)),
   );
 });
