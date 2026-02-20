@@ -24,7 +24,7 @@ const KANBAN_BOARD_CONTEXT_NAME = 'KanbanBoard.Context';
  * Props for the card tile used inside columns.
  * Tiles can read projection, onRemoveCard, etc. from useKanbanBoard() when needed.
  */
-export type KanbanCardTileProps = Pick<MosaicTileProps<Obj.Unknown>, 'classNames' | 'location' | 'data' | 'debug'>;
+export type KanbanCardTileProps = Pick<MosaicTileProps<Obj.Unknown>, 'location' | 'data' | 'debug'>;
 
 /** Context value for the Kanban board; items are Echo objects (Obj.Unknown). */
 type KanbanBoardContextValue = {

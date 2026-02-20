@@ -16,11 +16,14 @@ import { useKanbanBoard } from './KanbanBoard';
 
 const KANBAN_COLUMN_NAME = 'KanbanBoard.Column';
 
-/** Column tile; items are Obj.Unknown from Echo. */
-export type KanbanColumnProps = Pick<MosaicTileProps<ColumnStructure>, 'classNames' | 'location' | 'data' | 'debug'>;
+/**
+ * Column tile.
+ * Items are Obj.Unknown from Echo.
+ */
+export type KanbanColumnProps = Pick<MosaicTileProps<ColumnStructure>, 'location' | 'data' | 'debug'>;
 
 export const KanbanColumn = forwardRef<HTMLDivElement, KanbanColumnProps>(
-  ({ data: column, location, classNames, debug }, forwardedRef) => {
+  ({ data: column, location, debug }, forwardedRef) => {
     const { t } = useTranslation(meta.id);
     const { model } = useBoard<ColumnStructure, Obj.Unknown>(KANBAN_COLUMN_NAME);
     const { columnFieldPath, change, onCardAdd, getPivotAttributes, itemTile } = useKanbanBoard(KANBAN_COLUMN_NAME);
@@ -40,7 +43,6 @@ export const KanbanColumn = forwardRef<HTMLDivElement, KanbanColumnProps>(
       <Board.Column.Root
         data={column}
         location={location}
-        classNames={classNames}
         debug={debug}
         dragHandleRef={dragHandleRef}
         ref={forwardedRef}

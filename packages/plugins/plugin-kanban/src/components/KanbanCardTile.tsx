@@ -15,9 +15,11 @@ import { type KanbanCardTileProps, useKanbanBoard } from './KanbanBoard';
 
 const KANBAN_CARD_TILE_NAME = 'KanbanBoard.CardTile';
 
-/** Card tile that uses Surface for content; requires plugin manager context. */
+/**
+ * Card tile that uses Surface for content; requires plugin manager context.
+ */
 export const KanbanCardTile = forwardRef<HTMLDivElement, KanbanCardTileProps>(
-  ({ classNames, data, location, debug }, forwardedRef) => {
+  ({ data, location, debug }, forwardedRef) => {
     const { t } = useTranslation(meta.id);
     const { model } = useBoard(KANBAN_CARD_TILE_NAME);
     const { projection, onCardRemove } = useKanbanBoard(KANBAN_CARD_TILE_NAME);
@@ -47,7 +49,7 @@ export const KanbanCardTile = forwardRef<HTMLDivElement, KanbanCardTileProps>(
         dragHandle={dragHandle}
       >
         <Focus.Group asChild>
-          <Card.Root classNames={classNames} ref={forwardedRef} data-testid='board-item'>
+          <Card.Root ref={forwardedRef} data-testid='board-item'>
             <Card.Toolbar>
               <Card.DragHandle ref={dragHandleRef} />
               <Card.Title>{Obj.getLabel(data)}</Card.Title>
