@@ -181,7 +181,12 @@ export class FeedSyncer extends Resource {
     subspaceTag,
     shouldPush = true,
     shouldPull = true,
-  }: FeedProtocol.SyncQueueRequest): Promise<void> {
+  }: {
+    spaceId: SpaceId;
+    subspaceTag: string;
+    shouldPush?: boolean;
+    shouldPull?: boolean;
+  }): Promise<void> {
     invariant(SpaceId.isValid(spaceId));
     invariant(FeedProtocol.isWellKnownNamespace(subspaceTag));
     if (!shouldPush && !shouldPull) {
