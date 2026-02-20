@@ -234,10 +234,7 @@ const runPrompt = Effect.fn(function* ({
   input: Record<string, any>;
   onResult: (result: string) => void;
 }) {
-  const inputData: FunctionDefinition.Input<typeof AgentFunctions.Prompt> = {
-    prompt,
-    input,
-  };
+  const inputData: FunctionDefinition.Input<typeof AgentFunctions.Prompt> = { prompt, input };
   const tracer = yield* TracingService;
   const trace = yield* tracer.traceInvocationStart({
     target: undefined,

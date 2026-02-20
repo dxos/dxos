@@ -68,6 +68,9 @@ export interface FunctionContext {
 
 const typeId = Symbol.for('@dxos/functions/FunctionDefinition');
 
+/**
+ * Deployable function definition.
+ */
 export type FunctionDefinition<TInput = any, TOutput = any, S extends FunctionServices = FunctionServices> = {
   [typeId]: true;
 
