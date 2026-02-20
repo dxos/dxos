@@ -13,6 +13,7 @@ import type {
   QueryQueueRequest,
   QueueQueryResult,
   QueueService,
+  SyncQueueRequest,
 } from '@dxos/protocols/proto/dxos/client/services';
 import { ComplexMap } from '@dxos/util';
 
@@ -48,6 +49,10 @@ export class QueueServiceImpl implements QueueService {
       request.queueId as ObjectId,
       request.objectIds as ObjectId[],
     );
+  }
+
+  async syncQueue(_: SyncQueueRequest): Promise<void> {
+    // no-op
   }
 }
 
@@ -90,6 +95,10 @@ export class MockQueueService implements QueueService {
       key,
       existing.filter((obj: any) => !objectIds!.includes(obj.id)),
     );
+  }
+
+  async syncQueue(_: SyncQueueRequest): Promise<void> {
+    // no-op
   }
 }
 
