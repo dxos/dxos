@@ -61,8 +61,9 @@ export const baseTheme = EditorView.baseTheme({
   '.cm-scroller::-webkit-scrollbar-track': {},
   '.cm-scroller::-webkit-scrollbar-thumb': {
     background: 'transparent',
+    transition: 'background 0.15s',
   },
-  '.cm-scroller:hover::-webkit-scrollbar-thumb': {
+  '&:hover .cm-scroller::-webkit-scrollbar-thumb': {
     background: 'var(--dx-scrollbarThumb)',
   },
 
