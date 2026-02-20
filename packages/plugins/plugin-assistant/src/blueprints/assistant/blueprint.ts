@@ -4,7 +4,6 @@
 
 import { type AppCapabilities } from '@dxos/app-toolkit';
 import { templates } from '@dxos/assistant';
-import { AssistantToolkit, SystemToolkit } from '@dxos/assistant-toolkit';
 import { Blueprint } from '@dxos/blueprints';
 
 import { AssistantFunctions } from './functions';
@@ -15,7 +14,7 @@ const functions = Object.values(AssistantFunctions);
 
 const deckTools = ['open-item'];
 
-const tools = [...AssistantToolkit.tools, ...SystemToolkit.tools, ...deckTools];
+const tools = [...deckTools];
 
 const make = () =>
   Blueprint.make({

@@ -79,7 +79,7 @@ export const triggerRuntimeLayer = ({
       // Merge database functions with blueprint functions
       const functions = [...dbFunctions, ...blueprintFunctions];
 
-      // Use the same merged toolkit as chat (AssistantToolkit, SystemToolkit, etc.)
+      // Use the same merged toolkit as chat.
       const toolkit = GenericToolkit.merge(...toolkits);
 
       // Use chat layer as the base (with 'edge' provider since we're using Edge AI service)

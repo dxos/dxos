@@ -9,7 +9,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Record from 'effect/Record';
 import * as Schema from 'effect/Schema';
-import type * as SchemaAST from 'effect/SchemaAST';
+import * as SchemaAST from 'effect/SchemaAST';
 
 import { AiToolNotFoundError, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { todo } from '@dxos/debug';
@@ -177,6 +177,28 @@ const mapSchemaTypeForLLM = (ast: SchemaAST.AST): SchemaAST.AST => {
       ? ast.annotations.description + '\n' + RefFromLLM.ast.annotations.description
       : (RefFromLLM.ast.annotations.description as string);
     return RefFromLLM.annotations({ description }).ast;
+  } else if (SchemaAST.isTupleType(ast)) {
+    return new SchemaAST.TupleType(
+      ast.elements.map((t) => new SchemaAST.OptionalType(mapSchemaTypeForLLM(t.type), t.isOptional, t.annotations)),
+      ast.rest.map((t) => new SchemaAST.Type(mapSchemaTypeForLLM(t.type), t.annotations)),
+      ast.isReadonly,
+      ast.annotations,
+    );
+  } else if (SchemaAST.isTypeLiteral(ast)) {
+    return new SchemaAST.TypeLiteral(
+      ast.propertySignatures.map(
+        (p) =>
+          new SchemaAST.PropertySignature(
+            p.name,
+            mapSchemaTypeForLLM(p.type),
+            p.isOptional,
+            p.isReadonly,
+            p.annotations,
+          ),
+      ),
+      ast.indexSignatures,
+      ast.annotations,
+    );
   }
 
   return ast;

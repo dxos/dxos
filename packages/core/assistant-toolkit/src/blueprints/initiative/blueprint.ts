@@ -10,7 +10,7 @@ import { InitiativeFunctions } from './functions';
 
 const BLUEPRINT_KEY = 'dxos.org/blueprint/initiative';
 
-const functions = Object.values(InitiativeFunctions);
+const functions = [InitiativeFunctions.AddArtifact];
 
 /**
  * Creates the Initiative blueprint. This is a function to avoid circular dependency issues.

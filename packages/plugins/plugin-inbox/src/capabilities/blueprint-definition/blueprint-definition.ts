@@ -9,10 +9,7 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 
 import { CalendarBlueprint, InboxBlueprint, InboxSendBlueprint } from '../../blueprints';
 
-const blueprintDefinition = Capability.makeModule<
-  [],
-  Capability.Capability<typeof AppCapabilities.BlueprintDefinition>[]
->(() =>
+const blueprintDefinition = Capability.makeModule(() =>
   Effect.succeed([
     Capability.contributes(AppCapabilities.BlueprintDefinition, InboxBlueprint),
     Capability.contributes(AppCapabilities.BlueprintDefinition, InboxSendBlueprint),
