@@ -59,4 +59,8 @@ export class QueueServiceImpl implements FeedProtocol.QueueService {
       })(error);
     }
   }
+
+  async syncQueue(_: FeedProtocol.SyncQueueRequest): Promise<void> {
+    // No-op in Cloudflare runtime.
+  }
 }

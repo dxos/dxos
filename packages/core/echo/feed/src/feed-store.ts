@@ -355,6 +355,67 @@ export class FeedStore {
     }).pipe(Effect.withSpan('FeedStore.setSyncState'));
 
   /**
+   * Returns the number of stored blocks for a single feed in a space/namespace.
+   * Intended as a low-level primitive for callers (for example Cloudflare Worker code)
+   * that need to make retention decisions under constrained storage resources.
+   */
+  countBlocks = (opts: {
+    spaceId: SpaceId;
+    feedNamespace: string;
+    feedId: string;
+  }): Effect.Effect<number, SqlError.SqlError, SqlClient.SqlClient> =>
+    Effect.gen(this, function* () {
+      const sql = yield* SqlClient.SqlClient;
+      const rows = yield* sql<{ count: number }>`
+        SELECT COUNT(*) AS count
+        FROM blocks
+        JOIN feeds ON blocks.feedPrivateId = feeds.feedPrivateId
+        WHERE feeds.spaceId = ${opts.spaceId}
+          AND feeds.feedNamespace = ${opts.feedNamespace}
+          AND feeds.feedId = ${opts.feedId}
+      `;
+      return rows[0]?.count ?? 0;
+    }).pipe(Effect.withSpan('FeedStore.countBlocks'));
+
+  /**
+   * Deletes the oldest blocks for a single feed in a space/namespace.
+   * This API intentionally does not enforce any retention policy (such as max size);
+   * callers decide when and how much to prune, which is useful for constrained
+   * environments like Cloudflare Workers.
+   *
+   * @returns Number of deleted rows.
+   */
+  deleteOldestBlocks = (opts: {
+    spaceId: SpaceId;
+    feedNamespace: string;
+    feedId: string;
+    count: number;
+  }): Effect.Effect<number, SqlError.SqlError, SqlClient.SqlClient> =>
+    Effect.gen(this, function* () {
+      const sql = yield* SqlClient.SqlClient;
+      if (opts.count <= 0) {
+        return 0;
+      }
+
+      const deletedRows = yield* sql<{ insertionId: number }>`
+        DELETE FROM blocks
+        WHERE insertionId IN (
+          SELECT blocks.insertionId
+          FROM blocks
+          JOIN feeds ON blocks.feedPrivateId = feeds.feedPrivateId
+          WHERE feeds.spaceId = ${opts.spaceId}
+            AND feeds.feedNamespace = ${opts.feedNamespace}
+            AND feeds.feedId = ${opts.feedId}
+          ORDER BY blocks.insertionId ASC
+          LIMIT ${opts.count}
+        )
+        RETURNING insertionId
+      `;
+
+      return deletedRows.length;
+    }).pipe(Effect.withSpan('FeedStore.deleteOldestBlocks'));
+
+  /**
    * Validates that appended blocks do not introduce position or Lamport conflicts.
    */
   #validateAppendBlocks = Effect.fn('FeedStore.validateAppendBlocks')(

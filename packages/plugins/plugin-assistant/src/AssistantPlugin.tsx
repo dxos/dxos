@@ -45,7 +45,10 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
         metadata: {
           icon: 'ph--atom--regular',
           iconHue: 'sky',
-          createObject: ((props) => Effect.sync(() => Chat.make(props))) satisfies CreateObject,
+          createObject: ((props, { db }) =>
+            Operation.invoke(AssistantOperation.CreateChat, { db, name: props?.name }).pipe(
+              Effect.map(({ object }) => object),
+            )) satisfies CreateObject,
         },
       },
       {
