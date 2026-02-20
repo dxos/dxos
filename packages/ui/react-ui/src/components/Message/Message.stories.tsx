@@ -10,7 +10,7 @@ import { type MessageValence } from '@dxos/ui-types';
 
 import { withTheme } from '../../testing';
 
-import { Callout } from './Message';
+import { Message } from './Message';
 
 faker.seed(123);
 

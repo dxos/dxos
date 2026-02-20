@@ -61,15 +61,31 @@ export const lengthsFacet = {
       gridFocusStack: ['[data-grid-focus-indicator-variant="stack"]'],
     },
     aliases: {
-      noLine: { fine: ['focusOffset'] },
-      hairLine: { fine: ['modalLine', 'landmarkLine', 'positionedLine', 'gridGap', 'gridFocusIndicatorWidth'] },
-      thickLine: { fine: ['focusLine'], gridFocusStack: ['gridFocusIndicatorWidth'] },
-      inputFine: { fine: ['iconButtonPadding'] },
-      inputCoarse: { coarse: ['iconButtonPadding'] },
-
-      trimXs: { fine: ['cardSpacingChrome', 'labelSpacingBlock', 'inputSpacingBlock'] },
-      trimSm: { fine: ['cardSpacingInline', 'cardSpacingBlock', 'cardSpacingGap'] },
-      trimMd: { coarse: ['cardSpacingInline', 'cardSpacingBlock', 'cardSpacingGap'] },
+      noLine: {
+        fine: ['focusOffset'],
+      },
+      hairLine: {
+        fine: ['modalLine', 'landmarkLine', 'positionedLine', 'gridGap', 'gridFocusIndicatorWidth'],
+      },
+      thickLine: {
+        fine: ['focusLine'],
+        gridFocusStack: ['gridFocusIndicatorWidth'],
+      },
+      inputFine: {
+        fine: ['iconButtonPadding'],
+      },
+      inputCoarse: {
+        coarse: ['iconButtonPadding'],
+      },
+      trimXs: {
+        fine: ['cardSpacingChrome', 'labelSpacingBlock', 'inputSpacingBlock'],
+      },
+      trimSm: {
+        fine: ['cardSpacingInline', 'cardSpacingBlock', 'cardSpacingGap'],
+      },
+      trimMd: {
+        coarse: ['cardSpacingInline', 'cardSpacingBlock', 'cardSpacingGap'],
+      },
     },
   },
 } satisfies Facet;

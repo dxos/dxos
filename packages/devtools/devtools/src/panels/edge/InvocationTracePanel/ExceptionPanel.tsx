@@ -5,7 +5,7 @@
 import React, { type FC, useMemo } from 'react';
 
 import { type TraceEvent } from '@dxos/functions-runtime';
-import { Callout } from '@dxos/react-ui';
+import { Message } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 type ExceptionPanelProps = {

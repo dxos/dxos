@@ -7,7 +7,7 @@ import React, { useCallback } from 'react';
 
 import { rangeToA1Notation } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
-import { Callout, useTranslation } from '@dxos/react-ui';
+import { Message, useTranslation } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';
 import { ghostHover } from '@dxos/ui-theme';
 
