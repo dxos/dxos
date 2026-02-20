@@ -6,29 +6,31 @@ import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { Format } from '@dxos/echo';
-import { Dialog, Message, useTranslation } from '@dxos/react-ui';
+import { Message, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Message as MessageType } from '@dxos/types';
 
 import { meta } from '../../meta';
 
-export type ComposeEmailDialogProps = {
+//
+// ComposeEmailPanel
+//
+
+export type ComposeEmailPanelProps = {
   mode?: 'compose' | 'reply' | 'reply-all' | 'forward';
   message?: MessageType.Message;
   subject?: string;
   body?: string;
   onSend?: (message: MessageType.Message) => Promise<void>;
-  onCancel?: () => void;
 };
 
-export const ComposeEmailDialog = ({
+export const ComposeEmailPanel = ({
   mode = 'compose',
   message: messageProp,
   subject,
   body,
   onSend,
-  onCancel,
-}: ComposeEmailDialogProps) => {
+}: ComposeEmailPanelProps) => {
   const { t } = useTranslation(meta.id);
   const [error, setError] = useState<string | null>(null);
 
@@ -63,18 +65,6 @@ export const ComposeEmailDialog = ({
         return { to: '', body: '' };
     }
   }, [mode, messageProp, subject, body]);
-
-  const dialogTitle = useMemo(() => {
-    switch (mode) {
-      case 'reply':
-      case 'reply-all':
-        return t('compose email dialog title reply');
-      case 'forward':
-        return t('compose email dialog title forward');
-      default:
-        return t('compose email dialog title');
-    }
-  }, [mode, t]);
 
   const handleSendEmail = useCallback(
     async (data: ComposeEmailForm) => {
@@ -117,36 +107,32 @@ export const ComposeEmailDialog = ({
   );
 
   return (
-    <Dialog.Content>
-      <Dialog.Header>
-        <Dialog.Title>{dialogTitle}</Dialog.Title>
-        <Dialog.Close asChild>
-          <Dialog.CloseIconButton onClick={onCancel} />
-        </Dialog.Close>
-      </Dialog.Header>
-      <Form.Root
-        testId='compose-email-form'
-        autoFocus
-        schema={ComposeEmailForm}
-        values={initialValues}
-        onSave={handleSendEmail}
-      >
-        <Form.Viewport>
-          <Form.Content>
-            <Form.FieldSet />
-            {error && (
-              <Message.Root valence='error'>
-                <Message.Title>{t('send email error title')}</Message.Title>
-                <Message.Content>{error}</Message.Content>
-              </Message.Root>
-            )}
-            <Form.Submit icon='ph--paper-plane-right--regular' label={t('send email button label')} />
-          </Form.Content>
-        </Form.Viewport>
-      </Form.Root>
-    </Dialog.Content>
+    <Form.Root
+      testId='compose-email-form'
+      autoFocus
+      schema={ComposeEmailForm}
+      values={initialValues}
+      onSave={handleSendEmail}
+    >
+      <Form.Viewport>
+        <Form.Content>
+          <Form.FieldSet />
+          {error && (
+            <Message.Root valence='error'>
+              <Message.Title>{t('send email error title')}</Message.Title>
+              <Message.Content>{error}</Message.Content>
+            </Message.Root>
+          )}
+          <Form.Submit icon='ph--paper-plane-right--regular' label={t('send email button label')} />
+        </Form.Content>
+      </Form.Viewport>
+    </Form.Root>
   );
 };
+
+//
+// ComposeEmailForm
+//
 
 const ComposeEmailForm = Schema.Struct({
   to: Schema.String.annotations({ description: 'Recipient email address' }),

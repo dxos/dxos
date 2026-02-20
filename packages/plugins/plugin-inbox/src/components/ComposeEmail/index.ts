@@ -3,3 +3,4 @@
 //
 
 export * from './ComposeEmailDialog';
+export * from './ComposeEmailPanel';
