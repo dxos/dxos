@@ -12,7 +12,7 @@ import { type SpaceId } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
 import { SqlTransaction } from '@dxos/sql-sqlite';
 
-import { DuplicateBlockLamportTimestampError, DuplicateBlockPositionError, PositionConflictError } from './errors';
+import { PositionConflictError } from './errors';
 
 type AppendRequest = FeedProtocol.AppendRequest;
 type AppendResponse = FeedProtocol.AppendResponse;
@@ -416,115 +416,11 @@ export class FeedStore {
     }).pipe(Effect.withSpan('FeedStore.deleteOldestBlocks'));
 
   /**
-   * Validates that appended blocks do not introduce position or Lamport conflicts.
-   */
-  #validateAppendBlocks = Effect.fn('FeedStore.validateAppendBlocks')(
-    (
-      blocks: readonly Block[],
-      feedPrivateIds: Map<string, number>,
-    ): Effect.Effect<
-      void,
-      SqlError.SqlError | DuplicateBlockPositionError | DuplicateBlockLamportTimestampError,
-      SqlClient.SqlClient
-    > =>
-      Effect.gen(this, function* () {
-        const sql = yield* SqlClient.SqlClient;
-
-        // Validate request-level uniqueness before writing.
-        const positionFeedIdByKey = new Map<string, string>();
-        const lamportFeedIdByKey = new Map<string, string>();
-        for (const block of blocks) {
-          const feedPrivateId = feedPrivateIds.get(block.feedId!)!;
-          if (!this.#options.assignPositions && block.position != null) {
-            const positionKey = `${feedPrivateId}|${block.position}`;
-            if (positionFeedIdByKey.has(positionKey)) {
-              yield* Effect.fail(
-                new DuplicateBlockPositionError({
-                  feedId: block.feedId!,
-                  position: block.position,
-                }),
-              );
-            }
-            positionFeedIdByKey.set(positionKey, block.feedId!);
-          }
-
-          const lamportKey = `${feedPrivateId}|${block.actorId}|${block.sequence}`;
-          if (lamportFeedIdByKey.has(lamportKey)) {
-            yield* Effect.fail(
-              new DuplicateBlockLamportTimestampError({
-                feedId: block.feedId!,
-                actorId: block.actorId,
-                sequence: block.sequence,
-              }),
-            );
-          }
-          lamportFeedIdByKey.set(lamportKey, block.feedId!);
-        }
-
-        // Bulk-validate against persisted rows with exact tuple matching.
-        const lamportConditions = blocks.map((block) => {
-          const feedPrivateId = feedPrivateIds.get(block.feedId!)!;
-          return sql`(feedPrivateId = ${feedPrivateId} AND actorId = ${block.actorId} AND sequence = ${block.sequence})`;
-        });
-        if (lamportConditions.length > 0) {
-          const existingLamports = yield* sql<{ feedPrivateId: number; actorId: string; sequence: number }>`
-            SELECT feedPrivateId, actorId, sequence
-            FROM blocks
-            WHERE ${sql.or(lamportConditions)}
-            LIMIT 1
-          `;
-          const lamportConflict = existingLamports[0];
-          if (lamportConflict) {
-            const key = `${lamportConflict.feedPrivateId}|${lamportConflict.actorId}|${lamportConflict.sequence}`;
-            yield* Effect.fail(
-              new DuplicateBlockLamportTimestampError({
-                feedId: lamportFeedIdByKey.get(key)!,
-                actorId: lamportConflict.actorId,
-                sequence: lamportConflict.sequence,
-              }),
-            );
-          }
-        }
-
-        if (!this.#options.assignPositions) {
-          const positionedBlocks = blocks.filter((block) => block.position != null);
-          const positionConditions = positionedBlocks.map((block) => {
-            const feedPrivateId = feedPrivateIds.get(block.feedId!)!;
-            return sql`(feedPrivateId = ${feedPrivateId} AND position = ${block.position})`;
-          });
-          if (positionConditions.length > 0) {
-            const existingPositions = yield* sql<{ feedPrivateId: number; position: number }>`
-              SELECT feedPrivateId, position
-              FROM blocks
-              WHERE position IS NOT NULL
-                AND (${sql.or(positionConditions)})
-              LIMIT 1
-            `;
-            const positionConflict = existingPositions[0];
-            if (positionConflict) {
-              const key = `${positionConflict.feedPrivateId}|${positionConflict.position}`;
-              yield* Effect.fail(
-                new DuplicateBlockPositionError({
-                  feedId: positionFeedIdByKey.get(key)!,
-                  position: positionConflict.position,
-                }),
-              );
-            }
-          }
-        }
-      }),
-  );
-
-  /**
    * Appends blocks for a space/namespace and optionally assigns global positions.
    */
   append = (
     request: AppendRequest,
-  ): Effect.Effect<
-    AppendResponse,
-    SqlError.SqlError | DuplicateBlockPositionError | DuplicateBlockLamportTimestampError,
-    SqlClient.SqlClient | SqlTransaction.SqlTransaction
-  > =>
+  ): Effect.Effect<AppendResponse, SqlError.SqlError, SqlClient.SqlClient | SqlTransaction.SqlTransaction> =>
     Effect.gen(this, function* () {
       if (!request.spaceId) {
         return yield* Effect.die(new Error('spaceId required for append'));
@@ -566,8 +462,6 @@ export class FeedStore {
               }),
             { concurrency: 'unbounded' },
           );
-
-          yield* this.#validateAppendBlocks(request.blocks, feedPrivateIds);
 
           // 2. Get max position per namespace ONCE (not per block).
           const maxPositions = new Map<string, number>();
@@ -623,11 +517,7 @@ export class FeedStore {
   appendLocal = Effect.fn('Feed.appendLocal')(
     (
       messages: { spaceId: string; feedId: string; feedNamespace: string; data: Uint8Array }[],
-    ): Effect.Effect<
-      Block[],
-      SqlError.SqlError | DuplicateBlockPositionError | DuplicateBlockLamportTimestampError,
-      SqlClient.SqlClient | SqlTransaction.SqlTransaction
-    > =>
+    ): Effect.Effect<Block[], SqlError.SqlError, SqlClient.SqlClient | SqlTransaction.SqlTransaction> =>
       Effect.gen(this, function* () {
         const sql = yield* SqlClient.SqlClient;
 
