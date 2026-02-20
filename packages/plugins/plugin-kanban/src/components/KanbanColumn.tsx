@@ -12,9 +12,9 @@ import { useKanbanItemEventHandler } from '../hooks';
 import { meta } from '../meta';
 import { type ColumnStructure, UNCATEGORIZED_VALUE } from '../types';
 
-import { useKanbanBoard } from './KanbanBoardContext';
+import { useKanbanBoard } from './KanbanBoard';
 
-const KANBAN_COLUMN_NAME = 'KanbanColumn';
+const KANBAN_COLUMN_NAME = 'KanbanBoard.Column';
 
 /** Column tile; items are Obj.Unknown from Echo. */
 export type KanbanColumnProps = Pick<MosaicTileProps<ColumnStructure>, 'classNames' | 'location' | 'data' | 'debug'>;
@@ -23,7 +23,7 @@ export const KanbanColumn = forwardRef<HTMLDivElement, KanbanColumnProps>(
   ({ data: column, location, classNames, debug }, forwardedRef) => {
     const { t } = useTranslation(meta.id);
     const { model } = useBoard<ColumnStructure, Obj.Unknown>(KANBAN_COLUMN_NAME);
-    const { columnFieldPath, change, onAddCard, getPivotAttributes, itemTile } = useKanbanBoard(KANBAN_COLUMN_NAME);
+    const { columnFieldPath, change, onCardAdd, getPivotAttributes, itemTile } = useKanbanBoard(KANBAN_COLUMN_NAME);
 
     const { title } = getPivotAttributes(column.columnValue);
     const uncategorized = column.columnValue === UNCATEGORIZED_VALUE;
@@ -38,12 +38,12 @@ export const KanbanColumn = forwardRef<HTMLDivElement, KanbanColumnProps>(
 
     return (
       <Board.Column.Root
-        ref={forwardedRef}
         data={column}
         location={location}
         classNames={classNames}
         debug={debug}
         dragHandleRef={dragHandleRef}
+        ref={forwardedRef}
       >
         <div
           role='none'
@@ -66,7 +66,7 @@ export const KanbanColumn = forwardRef<HTMLDivElement, KanbanColumnProps>(
             eventHandler={eventHandler}
             Tile={itemTile as React.FC<MosaicTileProps<Obj.Unknown>>}
           />
-          {onAddCard && (
+          {onCardAdd && (
             <div
               role='none'
               className='rounded-b-sm border-bs border-separator p-1'
@@ -77,7 +77,7 @@ export const KanbanColumn = forwardRef<HTMLDivElement, KanbanColumnProps>(
                 iconOnly
                 label={t('add card label')}
                 classNames='is-full'
-                onClick={() => onAddCard(column.columnValue === UNCATEGORIZED_VALUE ? undefined : column.columnValue)}
+                onClick={() => onCardAdd(column.columnValue === UNCATEGORIZED_VALUE ? undefined : column.columnValue)}
               />
             </div>
           )}

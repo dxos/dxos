@@ -31,13 +31,11 @@ const createOrg = () => ({
   status: faker.helpers.arrayElement(Organization.StatusOptions).id as Organization.Organization['status'],
 });
 
-type StoryProps = object;
-
 /**
  * In-memory Kanban board: View + ProjectionModel + Kanban + items, no plugin manager or Space.
  * Similar to react-ui-kanban Kanban.stories.tsx.
  */
-const DefaultStory = (_: StoryProps) => {
+const DefaultStory = () => {
   const registry = useContext(RegistryContext);
   const items = useMemo(() => Atom.make<Obj.Unknown[]>([]), []);
   const [state, setState] = useState<{
@@ -48,7 +46,6 @@ const DefaultStory = (_: StoryProps) => {
   }>();
 
   useEffect(() => {
-    if (!registry) return;
     const view = View.make({
       query: Query.select(Filter.typename(Organization.Organization.typename)),
       jsonSchema: Type.toJsonSchema(Organization.Organization),
@@ -79,7 +76,7 @@ const DefaultStory = (_: StoryProps) => {
   const columnFieldPath =
     state?.projection.tryGetFieldProjection(state.projection.getFieldId('status') ?? '')?.props.property ?? 'status';
 
-  const handleAddCard = useCallback(
+  const handleCardAdd = useCallback(
     (columnValue: string | undefined) => {
       if (!state || !columnFieldPath || !registry) return undefined;
       const card = Obj.make(Organization.Organization, {
@@ -93,7 +90,7 @@ const DefaultStory = (_: StoryProps) => {
     [state, columnFieldPath, registry, items],
   );
 
-  const handleRemoveCard = useCallback(
+  const handleCardRemove = useCallback(
     (card: Obj.Unknown) => {
       if (!registry) return;
       const current = registry.get(items) ?? [];
@@ -117,8 +114,8 @@ const DefaultStory = (_: StoryProps) => {
         items={items}
         itemTile={KanbanCardTileSimple}
         change={state.change}
-        onAddCard={handleAddCard}
-        onRemoveCard={handleRemoveCard}
+        onAddCard={handleCardAdd}
+        onRemoveCard={handleCardRemove}
       >
         <KanbanBoard.Content />
       </KanbanBoard.Root>

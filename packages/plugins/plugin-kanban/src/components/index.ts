@@ -3,7 +3,5 @@
 //
 
 export * from './KanbanBoard';
-export * from './KanbanCardTile';
-export * from './KanbanColumn';
 export * from './KanbanContainer';
 export * from './KanbanViewEditor';
