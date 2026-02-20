@@ -3,7 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
-import { YoutubeTranscript, type TranscriptResponse } from 'youtube-transcript';
+import { type TranscriptResponse, YoutubeTranscript } from 'youtube-transcript';
 
 import { log } from '@dxos/log';
 
@@ -19,7 +19,9 @@ export type TranscriptResult = {
  * Uses the youtube-transcript package which scrapes transcripts from YouTube.
  * This does not require authentication.
  */
-export const fetchTranscript = Effect.fn(function* (videoId: string): Generator<
+export const fetchTranscript = Effect.fn(function* (
+  videoId: string,
+): Generator<
   Effect.Effect<TranscriptResult | undefined, never, never>,
   TranscriptResult | undefined,
   TranscriptResponse[]

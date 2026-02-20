@@ -18,7 +18,7 @@ import { type SelectionManager } from '@dxos/react-ui-attention';
 
 import { YouTubeFunctions } from '../../functions';
 import { meta } from '../../meta';
-import { Channel, Video } from '../../types';
+import { Channel, type Video } from '../../types';
 
 /**
  * Atom family to derive the selected item ID from selection state.

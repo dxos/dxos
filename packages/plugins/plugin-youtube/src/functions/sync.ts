@@ -324,7 +324,5 @@ export default defineFunction({
         newVideos: newVideosCount,
         channelTitle,
       };
-    }).pipe(
-      Effect.provide(Layer.mergeAll(FetchHttpClient.layer, GoogleCredentials.fromChannelRef(channelRef))),
-    ),
+    }).pipe(Effect.provide(Layer.mergeAll(FetchHttpClient.layer, GoogleCredentials.fromChannelRef(channelRef)))),
 });

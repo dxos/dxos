@@ -12,10 +12,6 @@ import { YouTubeBlueprint } from '../../blueprints';
 const blueprintDefinition = Capability.makeModule<
   [],
   Capability.Capability<typeof AppCapabilities.BlueprintDefinition>[]
->(() =>
-  Effect.succeed([
-    Capability.contributes(AppCapabilities.BlueprintDefinition, YouTubeBlueprint),
-  ]),
-);
+>(() => Effect.succeed([Capability.contributes(AppCapabilities.BlueprintDefinition, YouTubeBlueprint)]));
 
 export default blueprintDefinition;

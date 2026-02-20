@@ -4,7 +4,6 @@
 
 import React, { useMemo } from 'react';
 
-import { Obj } from '@dxos/echo';
 import { Filter, useQuery } from '@dxos/react-client/echo';
 
 import type { Channel, Video } from '../../types';
