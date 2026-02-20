@@ -8,18 +8,20 @@ import type { BoardModel, MosaicEventHandler, MosaicTileData } from '@dxos/react
 import type { ProjectionModel } from '@dxos/schema';
 import { arrayMove } from '@dxos/util';
 
-import { type BaseKanbanItem, type ColumnStructure, UNCATEGORIZED_VALUE } from '../types';
+import { type BaseKanbanItem, type ColumnStructure, type KanbanChangeCallback, UNCATEGORIZED_VALUE } from '../types';
 
 export function useKanbanColumnEventHandler<T extends BaseKanbanItem>({
   id,
   model,
   projection,
   pivotFieldId,
+  change,
 }: {
   id: string;
   model: BoardModel<ColumnStructure, T>;
   projection: ProjectionModel | undefined;
   pivotFieldId: string | undefined;
+  change: KanbanChangeCallback<T>;
 }): MosaicEventHandler<ColumnStructure> {
   return useMemo<MosaicEventHandler<ColumnStructure>>(
     () => ({
@@ -81,8 +83,13 @@ export function useKanbanColumnEventHandler<T extends BaseKanbanItem>({
           ...fieldProjection,
           props: { ...fieldProjection.props, options: optionsInNewOrder },
         });
+
+        // Persist column order to kanban.arrangement so the board UI reflects the new order.
+        change.kanban((kanban) => {
+          kanban.arrangement.order = reorderedColumnIds;
+        });
       },
     }),
-    [id, model, projection, pivotFieldId],
+    [id, model, projection, pivotFieldId, change],
   );
 }

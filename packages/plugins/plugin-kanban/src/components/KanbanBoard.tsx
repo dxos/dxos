@@ -89,13 +89,14 @@ const KANBAN_BOARD_CONTENT = 'KanbanBoard.Content';
 
 export const KanbanBoardContent = () => {
   const { model } = useBoard(KANBAN_BOARD_CONTENT);
-  const { kanbanId, projection, pivotFieldId } = useKanbanBoard(KANBAN_BOARD_CONTENT);
+  const { kanbanId, projection, pivotFieldId, change } = useKanbanBoard(KANBAN_BOARD_CONTENT);
 
   const columnEventHandler = useKanbanColumnEventHandler({
     id: `${kanbanId}-columns`,
     model,
     projection: projection ?? undefined,
     pivotFieldId: pivotFieldId ?? undefined,
+    change,
   });
 
   return <Board.Content id={kanbanId} eventHandler={columnEventHandler} Tile={KanbanColumnTile} />;

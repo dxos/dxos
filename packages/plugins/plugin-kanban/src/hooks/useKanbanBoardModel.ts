@@ -11,7 +11,7 @@ import type { BoardModel } from '@dxos/react-ui-mosaic';
 import type { ProjectionModel } from '@dxos/schema';
 
 import { type BaseKanbanItem, type ColumnStructure, type Kanban, UNCATEGORIZED_VALUE } from '../types';
-import { computeColumnStructure, getEffectiveByColumnFromArrangement, getEffectiveOrderFromArrangement } from '../util';
+import { computeColumnStructure, getOrderByColumnFromArrangement, getOrderFromArrangement } from '../util';
 
 export function useKanbanBoardModel<T extends BaseKanbanItem = BaseKanbanItem>(
   kanban: Kanban.Kanban,
@@ -34,7 +34,7 @@ export function useKanbanBoardModel<T extends BaseKanbanItem = BaseKanbanItem>(
 
   // Effective per-column ids: from kanban.arrangement.columns; empty when arrangement has no columns.
   const effectiveByColumnAtom = useMemo(
-    () => Atom.make((get) => getEffectiveByColumnFromArrangement(get(arrangementAtom))),
+    () => Atom.make((get) => getOrderByColumnFromArrangement(get(arrangementAtom))),
     [arrangementAtom],
   );
 
@@ -59,8 +59,8 @@ export function useKanbanBoardModel<T extends BaseKanbanItem = BaseKanbanItem>(
         }
 
         const arrangement = get(arrangementAtom);
-        const order = getEffectiveOrderFromArrangement(arrangement);
-        const byColumn = getEffectiveByColumnFromArrangement(arrangement);
+        const order = getOrderFromArrangement(arrangement);
+        const byColumn = getOrderByColumnFromArrangement(arrangement);
         return computeColumnStructure(order, byColumn, selectOptions);
       }),
     [pivotFieldIdAtom, arrangementAtom, projection],

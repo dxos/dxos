@@ -144,6 +144,7 @@ describe('useKanbanBoardModel', () => {
 
     const columnsBefore = result.current.getColumns();
     const orderBefore = columnsBefore.map((c) => c.columnValue);
+    expect(orderBefore).toEqual(['__uncategorized__', 'a', 'b']);
 
     act(() => {
       Obj.change(kanban, (kanban) => {
@@ -153,9 +154,7 @@ describe('useKanbanBoardModel', () => {
 
     const columnsAfter = registry.get(result.current.columns) ?? [];
     const orderAfter = columnsAfter.map((c) => c.columnValue);
-    expect(orderAfter[0]).toBe('__uncategorized__');
-    expect(orderAfter.slice(1)).toEqual(['b', 'a']);
-    expect(orderAfter).not.toEqual(orderBefore);
+    expect(orderAfter).toEqual(['__uncategorized__', 'b', 'a']);
     // TODO(wittjosiah): Try to reduce to 1.
     expect(columnsUpdateCount).toBe(2);
   });

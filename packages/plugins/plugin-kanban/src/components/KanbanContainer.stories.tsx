@@ -21,7 +21,6 @@ import { faker } from '@dxos/random';
 import { Filter, type Space, useQuery, useSchema, useSpaces } from '@dxos/react-client/echo';
 import { withTheme } from '@dxos/react-ui/testing';
 import { ViewEditor } from '@dxos/react-ui-form';
-import { Stack } from '@dxos/react-ui-stack';
 import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
 import { View, getTypenameFromQuery } from '@dxos/schema';
 import { Organization, Person } from '@dxos/types';
@@ -118,7 +117,7 @@ const DefaultComponent = () => {
   }
 
   return (
-    <Stack orientation='horizontal' size='split' rail={false} classNames='pli-0 bs-full'>
+    <div className='grow grid grid-cols-[1fr_350px] overflow-hidden bs-full is-full'>
       <Surface.Surface role='article' data={data} limit={1} />
       <div className='flex flex-col bs-full overflow-hidden border-l border-separator'>
         <ViewEditor
@@ -131,7 +130,7 @@ const DefaultComponent = () => {
         />
         <JsonFilter data={{ view: kanban.view.target, schema }} classNames='text-xs' />
       </div>
-    </Stack>
+    </div>
   );
 };
 
