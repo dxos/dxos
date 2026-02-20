@@ -5,8 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { ArtifactId } from '@dxos/assistant';
-import { DXN, Database } from '@dxos/echo';
+import { Database, Type } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
 import { trim } from '@dxos/util';
 
@@ -17,14 +16,13 @@ export default defineFunction({
     Deletes the relation.
   `,
   inputSchema: Schema.Struct({
-    id: ArtifactId.annotations({
-      description: 'The ID of the relation.',
-    }),
+    rel: Type.Ref(Type.Relation),
   }),
   outputSchema: Schema.Void,
-  handler: Effect.fn(function* ({ data: { id } }) {
+  handler: Effect.fn(function* ({ data: { rel } }) {
     const { db } = yield* Database.Service;
-    const object = yield* Database.resolve(DXN.parse(id));
-    db.remove(object);
+    const relation = yield* Database.load(rel);
+    // TODO(dmaretskyi): Echo types broken.
+    db.remove(relation as any);
   }),
 });

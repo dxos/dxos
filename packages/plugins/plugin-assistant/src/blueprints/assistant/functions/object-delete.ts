@@ -5,8 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { ArtifactId } from '@dxos/assistant';
-import { DXN, Database } from '@dxos/echo';
+import { Database, Type } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
 import { trim } from '@dxos/util';
 
@@ -17,14 +16,12 @@ export default defineFunction({
     Deletes the object.
   `,
   inputSchema: Schema.Struct({
-    id: ArtifactId.annotations({
-      description: 'The ID of the object.',
-    }),
+    obj: Type.Ref(Type.Obj),
   }),
   outputSchema: Schema.Void,
-  handler: Effect.fn(function* ({ data: { id } }) {
+  handler: Effect.fn(function* ({ data: { obj } }) {
     const { db } = yield* Database.Service;
-    const object = yield* Database.resolve(DXN.parse(id));
+    const object = yield* Database.load(obj);
     db.remove(object);
   }),
 });

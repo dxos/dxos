@@ -15,10 +15,8 @@ import * as Array from 'effect/Array';
 // TODO(burdon): Move to toolkit (i.e., tool not function).
 export default defineFunction({
   key: 'dxos.org/function/assistant/query',
-  name: 'List objects',
-  description:
-    // TODO(wittjosiah): Find a better way to prompt for looking up typenames before querying with them.
-    trim`
+  name: 'Query',
+  description: trim`
       Query for objects in ECHO.
       Use this tool when searching for information in the space (both automerge and queues).
       Currently, two types of queries are supported:
@@ -79,9 +77,20 @@ export default defineFunction({
         default: 10,
       }),
     ),
+    // TODO(dmaretskyi): There's a problem with querying queues, that the agent keeps finding message from agent threads.
+    //                   Let's think about a better way to do this.
+    //                   And queues don't have predicatble ids, so queue DXNs blow up the conversation cache.
+    includeQueues: Schema.optional(
+      Schema.Boolean.annotations({
+        description: 'Search in queues as well as spaces. Only use this if searching for emails.',
+        default: false,
+      }),
+    ),
   }),
   outputSchema: Schema.Array(Schema.Unknown),
-  handler: Effect.fn(function* ({ data: { typename, text, includeContent = false, limit = 10 } }) {
+  handler: Effect.fn(function* ({
+    data: { typename, text, includeContent = false, limit = 10, includeQueues = false },
+  }) {
     let query: Query.Any;
     if (text) {
       query = Query.all(...text.split(' ').map((term) => Query.select(Filter.text(term, { type: 'full-text' }))));
@@ -93,8 +102,10 @@ export default defineFunction({
     } else {
       query = Query.select(Filter.everything());
     }
-    query = query.limit(limit).options({ allQueuesFromSpaces: true });
+    query = query.limit(limit).options({ allQueuesFromSpaces: includeQueues });
 
+    // Update indexes before querying to make sure we get the latest results.
+    yield* Database.flush({ indexes: true });
     const results = yield* Database.runQuery(query);
     if (includeContent) {
       return results.map((obj) => Entity.toJSON(obj));

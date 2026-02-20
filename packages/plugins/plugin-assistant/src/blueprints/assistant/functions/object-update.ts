@@ -5,8 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { ArtifactId } from '@dxos/assistant';
-import { DXN, Database, Entity } from '@dxos/echo';
+import { Database, Entity, Type } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
 import { trim } from '@dxos/util';
 
@@ -17,14 +16,12 @@ export default defineFunction({
     Updates the object properties.
   `,
   inputSchema: Schema.Struct({
-    id: ArtifactId.annotations({
-      description: 'The ID of the object.',
-    }),
+    obj: Type.Ref(Type.Obj),
     properties: Schema.Record({ key: Schema.String, value: Schema.Any }),
   }),
   outputSchema: Schema.Unknown,
-  handler: Effect.fn(function* ({ data: { id, properties } }) {
-    const object = yield* Database.resolve(DXN.parse(id));
+  handler: Effect.fn(function* ({ data: { obj, properties } }) {
+    const object = yield* Database.load(obj);
     Entity.change(object as Entity.Any, (obj) => {
       for (const [key, value] of Object.entries(properties)) {
         obj[key] = value;

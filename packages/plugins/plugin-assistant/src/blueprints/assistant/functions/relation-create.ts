@@ -5,8 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { ArtifactId } from '@dxos/assistant';
-import { DXN, Database, Entity, Relation, Type } from '@dxos/echo';
+import { Database, Entity, Relation, Type } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { trim } from '@dxos/util';
@@ -20,31 +19,27 @@ export default defineFunction({
   `,
   inputSchema: Schema.Struct({
     typename: Schema.String,
-    source: ArtifactId.annotations({
-      description: 'The ID of the source object.',
-    }),
-    target: ArtifactId.annotations({
-      description: 'The ID of the target object.',
-    }),
-    data: Schema.Any.annotations({
+    source: Type.Ref(Type.Obj),
+    target: Type.Ref(Type.Obj),
+    properties: Schema.Any.annotations({
       description: 'The data to be stored in the relation.',
     }),
   }),
   outputSchema: Schema.Unknown,
-  handler: Effect.fn(function* ({ data: { typename, source, target, data } }) {
+  handler: Effect.fn(function* ({ data: { typename, source, target, properties } }) {
     const { db } = yield* Database.Service;
     const schema = yield* Effect.promise(() =>
       db.schemaRegistry.query({ typename, location: ['database', 'runtime'] }).first(),
     );
     invariant(Type.isRelationSchema(schema), 'Schema is not a relation schema');
 
-    const sourceObj = yield* Database.resolve(DXN.parse(source));
-    const targetObj = yield* Database.resolve(DXN.parse(target));
+    const sourceObj = yield* Database.load(source);
+    const targetObj = yield* Database.load(target);
     const relation = db.add(
       Relation.make(schema, {
         [Relation.Source]: sourceObj,
         [Relation.Target]: targetObj,
-        ...data,
+        ...properties,
       }),
     );
     return Entity.toJSON(relation);

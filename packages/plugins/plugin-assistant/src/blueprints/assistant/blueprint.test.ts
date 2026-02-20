@@ -14,6 +14,10 @@ import { TestHelpers } from '@dxos/effect/testing';
 import { Employer, Organization, Person } from '@dxos/types';
 
 import * as AssistantBlueprint from './blueprint';
+import { dbg } from '@dxos/log';
+import { ObjectId } from '@dxos/keys';
+
+ObjectId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayer({
   functions: [...AssistantBlueprint.functions],
@@ -231,13 +235,12 @@ describe('Assistant Blueprint', () => {
         yield* addAssistantBlueprint();
         const org = yield* Database.add(Obj.make(Organization.Organization, { name: 'Tagged Corp' }));
         const tag = yield* Database.add(Tag.make({ label: 'important' }));
-        const orgDxn = Obj.getDXN(org).toString();
-        const tagDxn = Obj.getDXN(tag).toString();
         yield* AiConversationService.run({
           prompt: `Add tag "important" to the organization "Tagged Corp".`,
         });
         const tags = Obj.getMeta(org).tags ?? [];
-        expect(tags).toContain(tagDxn);
+        // TODO(dmaretskyi): matcher doesnt work with echo proxies.
+        expect([...tags]).toContain(Obj.getDXN(tag).toString());
       },
       provideTestLayers,
       TestHelpers.provideTestContext,
@@ -259,7 +262,8 @@ describe('Assistant Blueprint', () => {
           prompt: `Remove tag "obsolete" from the organization "Untagged Corp".`,
         });
         const tags = Obj.getMeta(org).tags ?? [];
-        expect(tags).not.toContain(tagDxn);
+        // TODO(dmaretskyi): matcher doesnt work with echo proxies.
+        expect([...tags]).not.toContain(tagDxn);
       },
       provideTestLayers,
       TestHelpers.provideTestContext,

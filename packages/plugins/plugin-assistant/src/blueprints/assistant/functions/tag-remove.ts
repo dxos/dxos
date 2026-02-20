@@ -5,8 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { ArtifactId } from '@dxos/assistant';
-import { DXN, Database, Entity, Tag } from '@dxos/echo';
+import { Database, Entity, Obj, Tag, Type } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
 import { trim } from '@dxos/util';
 
@@ -18,17 +17,14 @@ export default defineFunction({
     Tags are objects of type ${Tag.Tag.typename}.
   `,
   inputSchema: Schema.Struct({
-    tagId: ArtifactId.annotations({
-      description: 'The ID of the tag.',
-    }),
-    objectId: ArtifactId.annotations({
-      description: 'The ID of the object.',
-    }),
+    tag: Type.Ref(Type.Obj),
+    obj: Type.Ref(Type.Obj),
   }),
   outputSchema: Schema.Unknown,
-  handler: Effect.fn(function* ({ data: { tagId, objectId } }) {
-    const object = yield* Database.resolve(DXN.parse(objectId));
-    Entity.change(object, (obj) => Entity.removeTag(obj, DXN.parse(tagId).toString()));
+  handler: Effect.fn(function* ({ data: { tag, obj } }) {
+    const object = yield* Database.load(obj);
+    const tagObj = yield* Database.load(tag);
+    Entity.change(object, (obj) => Entity.removeTag(obj, Obj.getDXN(tagObj).toString()));
     return Entity.toJSON(object);
   }),
 });
