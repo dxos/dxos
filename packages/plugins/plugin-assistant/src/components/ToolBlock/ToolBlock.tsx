@@ -97,8 +97,6 @@ export const ToolBlock = ({ view, blocks = [] }: ToolBlockProps) => {
     return null;
   }
 
-  dbg(items);
-
   return <ToolContainer items={items} onChangeOpen={handleChangeOpen} />;
 };
 

@@ -24,7 +24,7 @@ export class ToolFormatter extends Context.Tag('@dxos/ai/ToolFormatter')<
 export const assign =
   <Tool extends AnyTool>(options: FormattingOptions<Tool>) =>
   (tool: Tool): Tool =>
-    dbg(tool).annotate(ToolFormatter, options) as Tool;
+    tool.annotate(ToolFormatter, options) as Tool;
 
 type AnyTool = Tool.Tool<
   string,
