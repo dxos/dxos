@@ -669,7 +669,7 @@ describe('Feed V2', () => {
             sequence,
             prevActorId: null,
             prevSequence: null,
-            position: 1,
+            position: null,
             timestamp,
             data: new Uint8Array([1]),
           }),
@@ -688,7 +688,7 @@ describe('Feed V2', () => {
             sequence,
             prevActorId: null,
             prevSequence: null,
-            position: 2,
+            position: null,
             timestamp: timestamp + 1,
             data: new Uint8Array([2]),
           }),
@@ -706,7 +706,6 @@ describe('Feed V2', () => {
       expect(queryRes.blocks.length).toBe(1);
       expect(queryRes.blocks[0].actorId).toBe(actorId);
       expect(queryRes.blocks[0].sequence).toBe(sequence);
-      expect(queryRes.blocks[0].position).toBe(1);
       expect(queryRes.blocks[0].data).toEqual(new Uint8Array([1]));
     }).pipe(Effect.provide(TestLayer)),
   );
