@@ -6,11 +6,11 @@ import { type Registry } from '@effect-atom/atom-react';
 import { useState } from 'react';
 
 import { Type } from '@dxos/echo';
+import { log } from '@dxos/log';
 import { useAsyncEffect } from '@dxos/react-ui';
 import { ProjectionModel, createEchoChangeCallback } from '@dxos/schema';
 
 import { type Kanban } from '../types';
-import { log } from '@dxos/log';
 
 /**
  * Loads the kanban view and builds a ProjectionModel for field projections and pivot.
