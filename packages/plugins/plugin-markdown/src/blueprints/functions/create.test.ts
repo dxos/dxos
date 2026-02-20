@@ -21,7 +21,7 @@ import { Collection } from '@dxos/schema';
 import { HasSubject } from '@dxos/types';
 
 import { WithProperties } from '../../testing';
-import * as MarkdownBlueprint from '../markdown-blueprint';
+import MarkdownBlueprint from '../markdown-blueprint';
 
 import create from './create';
 

@@ -15,7 +15,7 @@ import { AiSession, GenerationObserver } from '@dxos/assistant';
 import {
   LocalSearchHandler,
   LocalSearchToolkit,
-  contextQueueLayerFromResearchGraph,
+  ResearchGraph,
   makeGraphWriterHandler,
   makeGraphWriterToolkit,
 } from '@dxos/assistant-toolkit';
@@ -83,7 +83,7 @@ export default defineFunction({
             //
             GraphWriterHandler,
             LocalSearchHandler,
-          ).pipe(Layer.provide(contextQueueLayerFromResearchGraph)),
+          ).pipe(Layer.provide(ResearchGraph.contextQueueLayer)),
         ),
       );
 

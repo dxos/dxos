@@ -9,16 +9,9 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 
 import { TranscriptionBlueprint } from '../../blueprints';
 
-export type BlueprintCapabilities = [
-  Capability.Capability<typeof AppCapabilities.Functions>,
-  Capability.Capability<typeof AppCapabilities.BlueprintDefinition>,
-];
-
-const blueprintDefinition = Capability.makeModule<[], BlueprintCapabilities>(() =>
-  Effect.succeed([
-    Capability.contributes(AppCapabilities.Functions, TranscriptionBlueprint.functions),
-    Capability.contributes(AppCapabilities.BlueprintDefinition, TranscriptionBlueprint.make()),
-  ]),
-);
+const blueprintDefinition = Capability.makeModule<
+  [],
+  Capability.Capability<typeof AppCapabilities.BlueprintDefinition>[]
+>(() => Effect.succeed([Capability.contributes(AppCapabilities.BlueprintDefinition, TranscriptionBlueprint)]));
 
 export default blueprintDefinition;

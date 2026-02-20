@@ -5,9 +5,11 @@
 import React, { useMemo } from 'react';
 
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
-import { Agent } from '@dxos/assistant-toolkit';
+import { AgentFunctions } from '@dxos/assistant-toolkit';
 import { type Prompt } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';
+import { type FunctionDefinition } from '@dxos/functions';
+import { invariant } from '@dxos/invariant';
 import { invokeFunctionWithTracing, useComputeRuntimeCallback } from '@dxos/plugin-automation';
 import { Layout, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
@@ -20,21 +22,28 @@ export type PromptArticleProps = SurfaceComponentProps<Prompt.Prompt>;
 
 export const PromptArticle = ({ role, subject }: PromptArticleProps) => {
   const { t } = useTranslation(meta.id);
-  const db = Obj.getDatabase(subject);
   const { hasAttention } = useAttention(Obj.getDXN(subject).toString());
+  const db = Obj.getDatabase(subject);
 
-  const inputData = useMemo(
+  const inputData = useMemo<FunctionDefinition.Input<typeof AgentFunctions.Prompt> | undefined>(
     () =>
-      subject && {
-        prompt: db?.makeRef(Obj.getDXN(subject)),
-        input: {},
-      },
+      subject && db
+        ? {
+            prompt: db.makeRef(Obj.getDXN(subject)),
+            input: {},
+          }
+        : undefined,
     [subject, db],
   );
 
-  const handleRun = useComputeRuntimeCallback(db?.spaceId, () => invokeFunctionWithTracing(Agent.prompt, inputData), [
-    inputData,
-  ]);
+  const handleRun = useComputeRuntimeCallback(
+    db?.spaceId,
+    () => {
+      invariant(inputData);
+      return invokeFunctionWithTracing(AgentFunctions.Prompt, inputData);
+    },
+    [inputData],
+  );
 
   return (
     <Layout.Main role={role} toolbar>

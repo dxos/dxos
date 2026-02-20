@@ -9,6 +9,7 @@ export {
   type QueryQueueRequest,
   type InsertIntoQueueRequest,
   type DeleteFromQueueRequest,
+  type SyncQueueRequest,
 } from './proto/gen/dxos/client/services.js';
 
 export const KEY_QUEUE_POSITION = 'dxos.org/key/queue-position';

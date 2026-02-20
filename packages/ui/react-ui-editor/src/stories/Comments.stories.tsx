@@ -9,7 +9,7 @@ import React, { type FC, useContext, useMemo } from 'react';
 import { keySymbols, parseShortcut } from '@dxos/keyboard';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { withRegistry } from '@dxos/storybook-utils';
 import { type Comment, annotations, comments, createExternalCommentSync } from '@dxos/ui-editor';
 
@@ -20,7 +20,7 @@ import { EditorStory, content, longText } from './components';
 const meta = {
   title: 'ui/react-ui-editor/Comments',
   component: EditorStory,
-  decorators: [withRegistry, withTheme()],
+  decorators: [withRegistry, withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
   },

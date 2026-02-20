@@ -30,7 +30,7 @@ export const InboxPlugin = Plugin.define(meta).pipe(
         metadata: {
           icon: 'ph--tray--regular',
           iconHue: 'rose',
-          blueprints: [InboxBlueprint.Key],
+          blueprints: [InboxBlueprint.key],
           inputSchema: CreateMailboxSchema,
           createObject: ((props, { db }) =>
             Effect.gen(function* () {
@@ -52,7 +52,7 @@ export const InboxPlugin = Plugin.define(meta).pipe(
         metadata: {
           icon: 'ph--calendar--regular',
           iconHue: 'rose',
-          blueprints: [CalendarBlueprint.Key],
+          blueprints: [CalendarBlueprint.key],
           inputSchema: CreateCalendarSchema,
           createObject: ((props, { db }) =>
             Effect.gen(function* () {

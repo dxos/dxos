@@ -15,7 +15,7 @@ import { FunctionInvocationService } from '@dxos/functions';
 import { ObjectId } from '@dxos/keys';
 import { Message, Organization, Person } from '@dxos/types';
 
-import { ResearchGraph } from '../research';
+import { ResearchGraph } from '../../blueprints';
 
 import { default as entityExtraction } from './entity-extraction';
 
@@ -23,12 +23,12 @@ ObjectId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayer({
   functions: [entityExtraction],
-  types: [Blueprint.Blueprint, Message.Message, Person.Person, Organization.Organization, ResearchGraph],
+  types: [Blueprint.Blueprint, Message.Message, Person.Person, Organization.Organization, ResearchGraph.ResearchGraph],
 });
 
 describe('Entity extraction', () => {
   it.effect(
-    'call a function to generate a research report',
+    'calls a function to generate a research report',
     Effect.fnUntraced(
       function* (_) {
         const email = yield* Database.add(

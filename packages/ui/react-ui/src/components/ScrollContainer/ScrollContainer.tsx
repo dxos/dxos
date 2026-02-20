@@ -15,7 +15,6 @@ import React, {
   useState,
 } from 'react';
 
-// TODO(burdon): Move these deps to @dxos/dom-util.
 import { addEventListener, combine } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { useForwardedRef } from '@dxos/react-hooks';
@@ -69,7 +68,7 @@ const Root = forwardRef<ScrollController, RootProps>(
     const timeoutRef = useRef<NodeJS.Timeout>(undefined);
     const scrollToBottom = useCallback((behavior: ScrollBehavior = behaviorProp) => {
       if (scrollerRef.current) {
-        // Temporarily hide scrollbar to prevent flicker.
+        // Temporarily hide scrollbar to prevent flickering.
         autoScrollRef.current = true;
         scrollerRef.current.classList.add('scrollbar-none');
         scrollerRef.current.scrollTo({
@@ -84,6 +83,7 @@ const Root = forwardRef<ScrollController, RootProps>(
             autoScrollRef.current = false;
           }, 500);
         }
+
         setPinned(true);
       }
     }, []);
@@ -139,8 +139,8 @@ const Root = forwardRef<ScrollController, RootProps>(
               )}
             />
           )}
-          <ScrollArea.Root classNames={mx('min-bs-0', classNames)} ref={scrollerRef} thin>
-            <ScrollArea.Viewport>{children}</ScrollArea.Viewport>
+          <ScrollArea.Root classNames={mx('min-bs-0', classNames)} thin>
+            <ScrollArea.Viewport ref={scrollerRef}>{children}</ScrollArea.Viewport>
           </ScrollArea.Root>
         </div>
       </ScrollContainerProvider>

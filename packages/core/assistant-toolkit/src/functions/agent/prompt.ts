@@ -5,15 +5,13 @@
 import * as Array from 'effect/Array';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
-import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import { AiService, ConsolePrinter, ModelName } from '@dxos/ai';
 import { AiSession, GenerationObserver, createToolkit } from '@dxos/assistant';
 import { Prompt, Template } from '@dxos/blueprints';
-import { Obj, Ref, Type } from '@dxos/echo';
-import { Database } from '@dxos/echo';
+import { Database, Obj, Ref, Type } from '@dxos/echo';
 import { TracingService, defineFunction } from '@dxos/functions';
 import { log } from '@dxos/log';
 
@@ -25,7 +23,7 @@ export default defineFunction({
   description: 'Agentic worker that executes a provided prompt using blueprints and tools.',
   inputSchema: Schema.Struct({
     prompt: Type.Ref(Prompt.Prompt),
-    systemPrompt: Type.Ref(Prompt.Prompt).pipe(Schema.optional),
+    systemPrompt: Schema.optional(Type.Ref(Prompt.Prompt)),
     /**
      * @default @anthropic/claude-opus-4-0
      */
@@ -52,16 +50,10 @@ export default defineFunction({
     //     input[key] = JSON.stringify(value);
     //   }
     // }
-    const input = yield* Match.value(data.input).pipe(
-      Match.when(
-        (value: any) => Ref.isRef(value),
-        Effect.fnUntraced(function* (ref) {
-          const object = yield* Database.load(ref);
-          return Obj.toJSON(object as Obj.Unknown);
-        }),
-      ),
-      Match.orElse(() => Effect.succeed(data.input)),
-    );
+
+    const input = yield* Ref.isRef(data.input)
+      ? Database.load(data.input).pipe(Effect.map(Obj.toJSON))
+      : Effect.succeed(data.input);
 
     yield* Database.flush({ indexes: true });
     const prompt = yield* Database.load(data.prompt);
