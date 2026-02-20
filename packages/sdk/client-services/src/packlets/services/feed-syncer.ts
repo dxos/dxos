@@ -12,7 +12,8 @@ import { Resource } from '@dxos/context';
 import { type EdgeConnection, MessageSchema } from '@dxos/edge-client';
 import { RuntimeProvider } from '@dxos/effect';
 import { type FeedStore, SyncClient } from '@dxos/feed';
-import { type SpaceId } from '@dxos/keys';
+import { invariant } from '@dxos/invariant';
+import { SpaceId } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
 import { EdgeService } from '@dxos/protocols';
 import { createBuf } from '@dxos/protocols/buf';
@@ -24,7 +25,9 @@ const encoder = new Encoder({ tagUint8Array: false, useRecords: false });
 
 const DEFAULT_MESSAGE_BLOCKS_LIMIT = 50;
 const DEFAULT_SYNC_CONCURRENCY = 5;
-const DEFAULT_POLLING_INTERVAL = 10_000;
+const DEFAULT_POLLING_INTERVAL = 5_000;
+const DEFAULT_POLL_REQUEST_THROTTLE_MS = 250;
+const MAX_BLOCKING_SYNC_ITERATIONS = 100;
 
 interface FeedSyncerOptions {
   runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransaction.SqlTransaction>;
@@ -34,10 +37,9 @@ interface FeedSyncerOptions {
   getSpaceIds: () => SpaceId[];
 
   /**
-   * Namespace to sync.
+   * Namespaces to sync.
    */
-  // TODO(dmaretskyi): Syncing only one namespace is supported.
-  syncNamespace: string;
+  syncNamespaces: string[];
 
   /**
    * Maximum number of blocks to sync in a single message.
@@ -56,13 +58,20 @@ interface FeedSyncerOptions {
    * @default 10 seconds
    */
   pollingInterval?: number;
+
+  /**
+   * Minimum delay between externally requested best-effort polls.
+   * @default 250 ms
+   */
+  pollRequestThrottleMs?: number;
 }
 
 export class FeedSyncer extends Resource {
-  readonly #syncNamespace: string;
+  readonly #syncNamespaces: string[];
   readonly #messageBlocksLimit: number;
   readonly #syncConcurrency: number;
   readonly #pollingInterval: number;
+  readonly #pollRequestThrottleMs: number;
 
   readonly #runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransaction.SqlTransaction>;
   readonly #feedStore: FeedStore;
@@ -73,6 +82,8 @@ export class FeedSyncer extends Resource {
   #spacesToPoll = new Set<SpaceId>();
   /** Last time full poll was completed. */
   #lastFullPoll: number | null = null;
+  #throttledPollScheduled = false;
+  #lastRequestedPollAt: number | null = null;
 
   constructor(options: FeedSyncerOptions) {
     super();
@@ -85,10 +96,11 @@ export class FeedSyncer extends Resource {
       sendMessage: this.#sendMessage.bind(this),
     });
     this.#getSpaceIds = options.getSpaceIds;
-    this.#syncNamespace = options.syncNamespace;
+    this.#syncNamespaces = options.syncNamespaces;
     this.#messageBlocksLimit = options.messageBlocksLimit ?? DEFAULT_MESSAGE_BLOCKS_LIMIT;
     this.#syncConcurrency = options.syncConcurrency ?? DEFAULT_SYNC_CONCURRENCY;
     this.#pollingInterval = options.pollingInterval ?? DEFAULT_POLLING_INTERVAL;
+    this.#pollRequestThrottleMs = options.pollRequestThrottleMs ?? DEFAULT_POLL_REQUEST_THROTTLE_MS;
   }
 
   protected override async _open(): Promise<void> {
@@ -106,7 +118,7 @@ export class FeedSyncer extends Resource {
             try: () => cborXdecode(msg.payload!.value),
             catch: (error) => new Error(`Failed to decode feed sync message: ${error}`),
           });
-          const payload = yield* Schema.decodeUnknown(FeedProtocol.ProtocolMessage)(decoded);
+          const payload = yield* Schema.validate(FeedProtocol.ProtocolMessage)(decoded);
           yield* this.#syncClient.handleMessage(payload);
         });
 
@@ -127,11 +139,90 @@ export class FeedSyncer extends Resource {
     await this.#pushTask.open();
 
     this.#resetSpacesToPoll();
+    this.#pollTask.schedule();
   }
 
   protected override async _close(): Promise<void> {
     await this.#pollTask.close();
     await this.#pushTask.close();
+  }
+
+  /**
+   * Schedules a best-effort pull without blocking the caller.
+   */
+  schedulePoll(): void {
+    this.#resetSpacesToPoll();
+    if (this.#throttledPollScheduled) {
+      return;
+    }
+
+    const now = Date.now();
+    const delay =
+      this.#lastRequestedPollAt == null
+        ? 0
+        : Math.max(this.#pollRequestThrottleMs - (now - this.#lastRequestedPollAt), 0);
+    this.#throttledPollScheduled = true;
+    scheduleTask(
+      this._ctx,
+      () => {
+        this.#throttledPollScheduled = false;
+        this.#lastRequestedPollAt = Date.now();
+        this.#pollTask.schedule();
+      },
+      delay,
+    );
+  }
+
+  /**
+   * Performs queue sync and blocks until there are no pending sync batches.
+   */
+  async syncBlocking({
+    spaceId,
+    subspaceTag,
+    shouldPush = true,
+    shouldPull = true,
+  }: {
+    spaceId: SpaceId;
+    subspaceTag: string;
+    shouldPush?: boolean;
+    shouldPull?: boolean;
+  }): Promise<void> {
+    invariant(SpaceId.isValid(spaceId));
+    invariant(FeedProtocol.isWellKnownNamespace(subspaceTag));
+    if (!shouldPush && !shouldPull) {
+      return;
+    }
+
+    await RuntimeProvider.runPromise(this.#runtime)(
+      Effect.gen(this, function* () {
+        let done = false;
+        let iterations = 0;
+        while (!done) {
+          done = true;
+          if (shouldPull) {
+            const pullResult = yield* this.#syncClient.pull({
+              spaceId,
+              feedNamespace: subspaceTag,
+              limit: this.#messageBlocksLimit,
+            });
+            done &&= pullResult.done;
+          }
+
+          if (shouldPush) {
+            const pushResult = yield* this.#syncClient.push({
+              spaceId,
+              feedNamespace: subspaceTag,
+              limit: this.#messageBlocksLimit,
+            });
+            done &&= pushResult.done;
+          }
+          iterations++;
+          if (iterations > MAX_BLOCKING_SYNC_ITERATIONS) {
+            throw new Error('Blocking sync exceeded max iterations.');
+          }
+        }
+      }),
+    );
   }
 
   #resetSpacesToPoll(): void {
@@ -173,12 +264,18 @@ export class FeedSyncer extends Resource {
         this.#spacesToPoll,
         (spaceId) =>
           Effect.gen(this, function* () {
-            const { done } = yield* this.#syncClient.pull({
-              spaceId,
-              feedNamespace: this.#syncNamespace,
-              limit: this.#messageBlocksLimit,
-            });
-            if (done) {
+            let doneForAllNamespaces = true;
+            for (const feedNamespace of this.#syncNamespaces) {
+              const { done } = yield* this.#syncClient.pull({
+                spaceId,
+                feedNamespace,
+                limit: this.#messageBlocksLimit,
+              });
+              if (!done) {
+                doneForAllNamespaces = false;
+              }
+            }
+            if (doneForAllNamespaces) {
               this.#spacesToPoll.delete(spaceId);
             }
           }),
@@ -210,12 +307,18 @@ export class FeedSyncer extends Resource {
         this.#getSpaceIds(),
         (spaceId) =>
           Effect.gen(this, function* () {
-            const { done } = yield* this.#syncClient.push({
-              spaceId,
-              feedNamespace: this.#syncNamespace,
-              limit: this.#messageBlocksLimit,
-            });
-            if (!done) {
+            let doneForAllNamespaces = true;
+            for (const feedNamespace of this.#syncNamespaces) {
+              const { done } = yield* this.#syncClient.push({
+                spaceId,
+                feedNamespace,
+                limit: this.#messageBlocksLimit,
+              });
+              if (!done) {
+                doneForAllNamespaces = false;
+              }
+            }
+            if (!doneForAllNamespaces) {
               // Keep pushing until all blocks are pushed.
               this.#pushTask.schedule();
             }

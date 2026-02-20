@@ -29,8 +29,8 @@ const panelClassNames = 'bg-baseSurface rounded-sm border border-separator overf
 
 type StoryProps = {
   modules: FC<ComponentProps>[][];
-  showContext?: boolean;
   blueprints?: string[];
+  showContext?: boolean;
 };
 
 const DefaultStory = ({ modules, showContext, blueprints = [] }: StoryProps) => {
@@ -50,7 +50,7 @@ const DefaultStory = ({ modules, showContext, blueprints = [] }: StoryProps) => 
     }
 
     // Add blueprints to context.
-    const blueprintRegistry = new Blueprint.Registry(blueprintsDefinitions);
+    const blueprintRegistry = new Blueprint.Registry(blueprintsDefinitions.map((blueprint) => blueprint.make()));
     const blueprintObjects = blueprints
       .map((key) => {
         const blueprint = blueprintRegistry.getByKey(key);

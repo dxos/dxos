@@ -15,7 +15,7 @@ import { Dialog, Message, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Message as MessageType } from '@dxos/types';
 
-import { gmail } from '../../functions';
+import { GmailFunctions } from '../../functions';
 import { meta } from '../../meta';
 
 export type ComposeEmailDialogProps = {
@@ -137,7 +137,7 @@ export const ComposeEmailDialog = ({ mode = 'compose', originalMessage, subject,
       });
 
       try {
-        await runtime.runPromise(invokeFunctionWithTracing(gmail.send, { message }));
+        await runtime.runPromise(invokeFunctionWithTracing(GmailFunctions.Send, { message }));
         // Close the dialog after successful send.
         await invokePromise(LayoutOperation.UpdateDialog, { state: false });
       } catch (err) {

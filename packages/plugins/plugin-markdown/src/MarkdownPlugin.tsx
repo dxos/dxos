@@ -38,7 +38,7 @@ export const MarkdownPlugin = Plugin.define(meta).pipe(
         label: (object: Markdown.Document) => object.name || object.fallbackName,
         icon: 'ph--text-aa--regular',
         iconHue: 'indigo',
-        blueprints: [MarkdownBlueprint.Key],
+        blueprints: [MarkdownBlueprint.key],
         graphProps: {
           managesAutofocus: true,
         },

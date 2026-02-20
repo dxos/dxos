@@ -9,16 +9,9 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 
 import { KanbanBlueprint } from '../../blueprints';
 
-export type BlueprintCapabilities = [
-  Capability.Capability<typeof AppCapabilities.Functions>,
-  Capability.Capability<typeof AppCapabilities.BlueprintDefinition>,
-];
-
-const blueprintDefinition = Capability.makeModule<[], BlueprintCapabilities>(() =>
-  Effect.succeed([
-    Capability.contributes(AppCapabilities.Functions, KanbanBlueprint.functions),
-    Capability.contributes(AppCapabilities.BlueprintDefinition, KanbanBlueprint.make()),
-  ]),
-);
+const blueprintDefinition = Capability.makeModule<
+  [],
+  Capability.Capability<typeof AppCapabilities.BlueprintDefinition>[]
+>(() => Effect.succeed([Capability.contributes(AppCapabilities.BlueprintDefinition, KanbanBlueprint)]));
 
 export default blueprintDefinition;

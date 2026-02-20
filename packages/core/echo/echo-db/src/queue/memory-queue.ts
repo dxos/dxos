@@ -73,6 +73,10 @@ export class MemoryQueue<T extends Entity.Unknown> implements Queue<T> {
     throw new Error('Method not implemented.');
   }
 
+  async sync(): Promise<void> {
+    // No-op.
+  }
+
   /**
    * Insert into queue with optimistic update.
    */

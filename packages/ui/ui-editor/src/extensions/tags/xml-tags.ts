@@ -21,7 +21,7 @@ import { log } from '@dxos/log';
 
 import { type Range } from '../../types';
 import { decorationSetToArray } from '../../util';
-import { scrollToLineEffect } from '../scrolling';
+import { scrollToLineEffect } from '../smooth-scroll';
 
 import { nodeToJson } from './xml-util';
 

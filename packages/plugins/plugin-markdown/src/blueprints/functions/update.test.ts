@@ -22,7 +22,7 @@ import { HasSubject } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { WithProperties } from '../../testing';
-import * as MarkdownBlueprint from '../markdown-blueprint';
+import MarkdownBlueprint from '../markdown-blueprint';
 
 import update from './update';
 

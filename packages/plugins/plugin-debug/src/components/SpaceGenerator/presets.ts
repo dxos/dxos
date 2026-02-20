@@ -4,13 +4,13 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Agent, EntityExtraction, ResearchBlueprint } from '@dxos/assistant-toolkit';
+import { AgentFunctions, EntityExtractionFunctions, ResearchBlueprint } from '@dxos/assistant-toolkit';
 import { Prompt } from '@dxos/blueprints';
 import { type ComputeGraphModel, NODE_INPUT } from '@dxos/conductor';
 import { DXN, Filter, Key, Obj, Query, type QueryAST, Ref, Tag, Type } from '@dxos/echo';
 import { Trigger, serializeFunction } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
-import { gmail } from '@dxos/plugin-inbox';
+import { GmailFunctions } from '@dxos/plugin-inbox';
 import { Mailbox } from '@dxos/plugin-inbox/types';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { type Space } from '@dxos/react-client/echo';
@@ -130,7 +130,7 @@ export const generator = () => ({
                 kind: 'timer',
                 cron: '* * * * *', // Every minute.
               },
-              function: Ref.make(serializeFunction(gmail.sync)),
+              function: Ref.make(serializeFunction(GmailFunctions.Sync)),
               input: {
                 mailbox: Ref.make(mailbox),
               },
@@ -145,7 +145,7 @@ export const generator = () => ({
                 kind: 'queue',
                 queue: mailbox.queue.dxn.toString(),
               },
-              function: Ref.make(serializeFunction(EntityExtraction.extract)),
+              function: Ref.make(serializeFunction(EntityExtractionFunctions.Extract)),
               input: {
                 source: '{{event.item}}',
               },
@@ -168,7 +168,7 @@ export const generator = () => ({
                 Create a research note for it at the end.
                 NOTE: Do mocked reseach (set mockSearch to true).
               `,
-              blueprints: [Ref.make(ResearchBlueprint)],
+              blueprints: [Ref.make(ResearchBlueprint.make())],
             }),
           );
 
@@ -181,7 +181,7 @@ export const generator = () => ({
                   ast: organizationsQuery.ast,
                 },
               },
-              function: Ref.make(serializeFunction(Agent.prompt)),
+              function: Ref.make(serializeFunction(AgentFunctions.Prompt)),
               input: {
                 prompt: Ref.make(researchPrompt),
                 input: '{{event.subject}}',
