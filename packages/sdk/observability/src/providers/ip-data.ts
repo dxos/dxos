@@ -82,7 +82,7 @@ export const provider =
       Effect.provide(FetchHttpClient.layer),
       Effect.catchAll((err) =>
         Effect.sync(() => {
-          log.catch(err);
+          log.verbose('ipdata fetch failed', { err });
         }),
       ),
     );
