@@ -11,12 +11,11 @@ import { Surface } from '@dxos/app-framework/ui';
 import { Database, Obj, Type } from '@dxos/echo';
 import { findAnnotation } from '@dxos/effect';
 import { type FormFieldComponentProps, SelectField, useFormValues } from '@dxos/react-ui-form';
-import { Kanban } from '@dxos/react-ui-kanban/types';
 import { type Collection } from '@dxos/schema';
 
 import { KanbanContainer, KanbanViewEditor } from '../../components';
 import { meta } from '../../meta';
-import { PivotColumnAnnotationId } from '../../types';
+import { Kanban, PivotColumnAnnotationId } from '../../types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

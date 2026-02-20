@@ -3,73 +3,60 @@
 //
 
 import { RegistryContext } from '@effect-atom/atom-react';
-import React, { useCallback, useContext, useEffect, useState } from 'react';
+import React, { useCallback, useContext, useMemo } from 'react';
 
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Type } from '@dxos/echo';
-import { useGlobalFilteredObjects } from '@dxos/plugin-search';
-import { useQuery } from '@dxos/react-client/echo';
+import { AtomQuery } from '@dxos/echo-atom';
+import { useObject, useSchema } from '@dxos/react-client/echo';
 import { Layout } from '@dxos/react-ui';
-import { Kanban as KanbanComponent, useKanbanModel, useProjectionModel } from '@dxos/react-ui-kanban';
-import { type Kanban } from '@dxos/react-ui-kanban/types';
 import { getTypenameFromQuery } from '@dxos/schema';
 
-import { KanbanOperation } from '../types';
+import { useEchoChangeCallback, useProjectionModel } from '../hooks';
+import { type Kanban, KanbanOperation } from '../types';
+
+import { KanbanBoard } from './KanbanBoard';
+import { KanbanCardTile } from './KanbanCardTile';
 
 export type KanbanContainerProps = SurfaceComponentProps<Kanban.Kanban>;
 
 export const KanbanContainer = ({ role, subject: object }: KanbanContainerProps) => {
   const registry = useContext(RegistryContext);
   const schemas = useCapabilities(AppCapabilities.Schema);
-  const [cardSchema, setCardSchema] = useState<Type.Obj.Any>();
   const db = Obj.getDatabase(object);
   const { invokePromise } = useOperationInvoker();
-  const typename = object.view.target?.query ? getTypenameFromQuery(object.view.target.query.ast) : undefined;
+  const [view] = useObject(object.view);
+  const typename = view?.query ? getTypenameFromQuery(view.query.ast) : undefined;
 
-  useEffect(() => {
-    const staticSchema = schemas.flat().find((schema) => Type.getTypename(schema) === typename);
-    if (staticSchema) {
-      // NOTE: Use functional update to prevent React from calling the schema as a function.
-      setCardSchema(() => staticSchema);
-    }
-    if (!staticSchema && typename && db) {
-      const query = db.schemaRegistry.query({ typename });
-      const unsubscribe = query.subscribe(
-        () => {
-          const [schema] = query.results;
-          if (schema) {
-            // NOTE: Use functional update to prevent React from calling the schema as a function.
-            setCardSchema(() => schema);
-          }
-        },
-        { fire: true },
-      );
-      return unsubscribe;
-    }
-  }, [schemas, db, typename]);
+  const schemaFromDb = useSchema(db, typename);
+  const cardSchema = useMemo(
+    () => schemaFromDb ?? schemas.flat().find((schema) => Type.getTypename(schema) === typename),
+    [schemaFromDb, schemas, typename],
+  );
 
-  const objects = useQuery(db, cardSchema ? Filter.type(cardSchema) : Filter.nothing());
-  const filteredObjects = useGlobalFilteredObjects(objects);
+  const items = useMemo(
+    () => (db ? AtomQuery.make(db, cardSchema ? Filter.type(cardSchema) : Filter.nothing()) : null),
+    [db, cardSchema],
+  );
 
   const projection = useProjectionModel(cardSchema, object, registry);
-  const model = useKanbanModel({
-    object,
-    projection,
-    items: filteredObjects,
-  });
+  const change = useEchoChangeCallback(object);
+
+  const pivotFieldId = view?.projection?.pivotFieldId;
+  const columnFieldPath =
+    projection && pivotFieldId ? projection.tryGetFieldProjection(pivotFieldId)?.props.property : undefined;
 
   const handleAddCard = useCallback(
     (columnValue: string | undefined) => {
-      const path = model?.columnFieldPath;
-      if (db && cardSchema && path) {
-        const card = Obj.make(cardSchema, { [path]: columnValue });
+      if (db && cardSchema && columnFieldPath) {
+        const card = Obj.make(cardSchema, { [columnFieldPath]: columnValue });
         db.add(card);
         return card.id;
       }
     },
-    [db, cardSchema, model],
+    [db, cardSchema, columnFieldPath],
   );
 
   const handleRemoveCard = useCallback(
@@ -79,9 +66,23 @@ export const KanbanContainer = ({ role, subject: object }: KanbanContainerProps)
     [invokePromise],
   );
 
+  if (!object || !db || !items || !projection || !change) {
+    return null;
+  }
+
   return (
     <Layout.Main role={role}>
-      {model && <KanbanComponent model={model} onAddCard={handleAddCard} onRemoveCard={handleRemoveCard} />}
+      <KanbanBoard.Root
+        kanban={object}
+        projection={projection}
+        items={items}
+        itemTile={KanbanCardTile}
+        change={change}
+        onAddCard={handleAddCard}
+        onRemoveCard={handleRemoveCard}
+      >
+        <KanbanBoard.Content />
+      </KanbanBoard.Root>
     </Layout.Main>
   );
 };

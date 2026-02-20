@@ -120,7 +120,6 @@
     "@dxos/log": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/random": "workspace:*",
-    "@dxos/react-ui-kanban": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
     "@dxos/react-ui-table": "workspace:*",
     "@dxos/shell": "workspace:*",
