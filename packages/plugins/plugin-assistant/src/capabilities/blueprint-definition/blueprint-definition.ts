@@ -53,15 +53,17 @@ export default Capability.makeModule<[], BlueprintCapabilities>(() =>
     Capability.contributes(AppCapabilities.Functions, Record.values(ResearchFunctions)),
 
     Capability.contributes(AppCapabilities.BlueprintDefinition, WebSearchBlueprint),
-    // TODO(burdon): Should these functions be provided by WebSearchBlueprint?
     Capability.contributes(AppCapabilities.Functions, [
       ...Record.values(AgentFunctions),
+      // TODO(dmaretskyi): This is only used in the pipeline. Find a better place for it.
       ...Record.values(EntityExtractionFunctions),
     ]),
 
+    // TODO(dmaretskyi): Extract to separate plugin.
     Capability.contributes(AppCapabilities.BlueprintDefinition, DiscordBlueprint),
     Capability.contributes(AppCapabilities.Functions, Record.values(DiscordFunctions)),
 
+    // TODO(dmaretskyi): Extract to separate plugin.
     Capability.contributes(AppCapabilities.BlueprintDefinition, LinearBlueprint),
     Capability.contributes(AppCapabilities.Functions, Record.values(LinearFunctions)),
 
