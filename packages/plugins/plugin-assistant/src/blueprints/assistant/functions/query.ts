@@ -9,8 +9,6 @@ import { Entity, Filter, Obj, Query } from '@dxos/echo';
 import { Database } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
 import { trim } from '@dxos/util';
-import { pipe, String } from 'effect';
-import * as Array from 'effect/Array';
 
 // TODO(burdon): Move to toolkit (i.e., tool not function).
 export default defineFunction({

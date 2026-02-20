@@ -6,8 +6,6 @@ import type * as Tool from '@effect/ai/Tool';
 import * as Context from 'effect/Context';
 import type * as Schema from 'effect/Schema';
 
-import { dbg } from '@dxos/log';
-
 export interface FormattingOptions<Tool extends Tool.Any> {
   readonly debugFormatCall?: (parameters: Tool.Parameters<Tool>) => string | unknown;
   readonly debugFormatResult?: (result: Tool.Result<Tool>) => string | unknown;

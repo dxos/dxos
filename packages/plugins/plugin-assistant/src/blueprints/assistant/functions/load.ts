@@ -2,11 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Array from 'effect/Array';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import * as Array from 'effect/Array';
-import { Database, Entity, Obj, Type } from '@dxos/echo';
+import { Database, Entity, Type } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
 import { trim } from '@dxos/util';
 

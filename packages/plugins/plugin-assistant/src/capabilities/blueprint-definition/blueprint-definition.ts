@@ -12,11 +12,11 @@ import {
   DiscordBlueprint,
   EntityExtractionFunctions,
   InitiativeBlueprint,
+  InitiativeFunctions,
   LinearBlueprint,
   PlanningBlueprint,
   ResearchBlueprint,
   WebSearchBlueprint,
-  InitiativeFunctions,
 } from '@dxos/assistant-toolkit';
 
 import { AssistantBlueprint } from '../../blueprints';

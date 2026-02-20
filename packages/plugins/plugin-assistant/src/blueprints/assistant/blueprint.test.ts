@@ -11,11 +11,11 @@ import { AssistantTestLayer } from '@dxos/assistant/testing';
 import { Blueprint } from '@dxos/blueprints';
 import { Database, Entity, Obj, Query, Ref, Relation, Tag } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
+import { ObjectId } from '@dxos/keys';
 import { Employer, Organization, Person } from '@dxos/types';
 
-import { AssistantFunctions } from './functions';
 import AssistantBlueprint from './blueprint';
-import { ObjectId } from '@dxos/keys';
+import { AssistantFunctions } from './functions';
 
 ObjectId.dangerouslyDisableRandomness();
 
