@@ -171,6 +171,7 @@ export class ServiceContext extends Resource {
       getSpaceKeyByRootDocumentId: (documentId) => this.spaceManager.findSpaceByRootDocumentId(documentId)?.key,
       runtime: this._runtime,
       localQueues: this._runtimeProps?.enableLocalQueues,
+      syncQueue: async (request) => this._feedSyncer?.syncBlocking(request),
     });
 
     this.invitations = new InvitationsHandler(
@@ -213,7 +214,7 @@ export class ServiceContext extends Resource {
         edgeClient: this._edgeConnection,
         peerId: this.identityManager.identity?.deviceKey?.toHex() ?? '',
         getSpaceIds: () => this.echoHost!.spaceIds,
-        syncNamespace: FeedProtocol.WellKnownNamespaces.data,
+        syncNamespaces: [FeedProtocol.WellKnownNamespaces.data, FeedProtocol.WellKnownNamespaces.trace],
       });
     }
   }
