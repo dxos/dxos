@@ -105,6 +105,11 @@ export const createReplacer = ({
       return SKIP;
     }
 
+    // Show array length.
+    if (maxArrayLen != null && Array.isArray(value) && value.length > maxArrayLen) {
+      return `[length: ${value.length}]`;
+    }
+
     // Store depth for this object.
     if (value && typeof value === 'object') {
       depthMap.set(value, currentDepth);
@@ -127,11 +132,6 @@ export const createReplacer = ({
       } catch {
         return value;
       }
-    }
-
-    // Show array length.
-    if (maxArrayLen != null && Array.isArray(value) && value.length > maxArrayLen) {
-      return `[length: ${value.length}]`;
     }
 
     // Truncate strings.

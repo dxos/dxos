@@ -13,6 +13,7 @@ import { type XmlWidgetProps } from '@dxos/ui-editor';
 import { isNonNullable, safeParseJson } from '@dxos/util';
 
 import { meta } from '../../meta';
+import { dbg } from '@dxos/log';
 
 export const isToolMessage = (message: Message.Message) => {
   return message.blocks.some((block: ContentBlock.Any) => block._tag === 'toolCall' || block._tag === 'toolResult');
@@ -95,6 +96,8 @@ export const ToolBlock = ({ view, blocks = [] }: ToolBlockProps) => {
   if (!items.length) {
     return null;
   }
+
+  dbg(items);
 
   return <ToolContainer items={items} onChangeOpen={handleChangeOpen} />;
 };
