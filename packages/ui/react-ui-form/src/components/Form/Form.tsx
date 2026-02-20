@@ -70,7 +70,7 @@ type FormContextValue<T extends AnyProperties = any> = {
    * Testing.
    */
   testId?: string;
-} & Pick<NaturalFormFieldSetProps<T>, 'readonly' | 'layout' | 'fieldMap' | 'fieldProvider'>;
+} & Pick<NaturalFormFieldSetProps<T>, 'readonly' | 'layout' | 'fieldMap' | 'fieldProvider' | 'projection'>;
 
 const [FormContextProvider, useFormContext] = createContext<FormContextValue>('Form');
 
