@@ -74,11 +74,15 @@ export const scrollToLineEffect = StateEffect.define<ScrollToLineProps>();
  * });
  * ```
  */
+// TODO(burdon): Move into scroller.
 export const smoothScroll = ({ offset = 0, position = 'start' }: Partial<SmoothScrollOptions> = {}) => {
   // ViewPlugin to manage scroll animations.
   const scrollPlugin = ViewPlugin.fromClass(
     class SmoothScrollPlugin {
-      constructor(private readonly view: EditorView) {}
+      private readonly scroller: () => void;
+      constructor(private readonly view: EditorView) {
+        this.scroller = createBottomScroller(this.view.scrollDOM, 1000);
+      }
 
       // No-op.
       destroy() {}
@@ -105,7 +109,8 @@ export const smoothScroll = ({ offset = 0, position = 'start' }: Partial<SmoothS
 
         // Scroll to bottom.
         if (lineNumber === -1) {
-          this.animateScroll(scroller, scroller.scrollHeight - scroller.clientHeight);
+          this.scroller();
+          // this.animateScroll(scroller, scroller.scrollHeight - scroller.clientHeight);
           return;
         }
 
@@ -193,3 +198,34 @@ export const scrollToLine = (view: EditorView, line: number, options?: SmoothScr
     effects: scrollToLineEffect.of({ line, options }),
   });
 };
+
+function easeInOutCubic(t: number): number {
+  return t < 0.5 ? 4 * t ** 3 : 1 - (-2 * t + 2) ** 3 / 2;
+}
+
+function createBottomScroller(el: HTMLElement, duration = 200) {
+  let animFrame: number | null = null;
+  let startTop: number;
+  let startTime: number;
+
+  function tick(now: number) {
+    const target = el.scrollHeight - el.clientHeight;
+    const elapsed = now - startTime;
+    const t = Math.min(elapsed / duration, 1);
+    el.scrollTop = startTop + (target - startTop) * easeInOutCubic(t);
+    animFrame = t < 1 ? requestAnimationFrame(tick) : null;
+  }
+
+  return function scroll() {
+    // Already animating — just let tick() chase the new target naturally.
+    if (animFrame) {
+      console.log('=');
+      return;
+    }
+
+    console.log('START');
+    startTop = el.scrollTop;
+    startTime = performance.now();
+    animFrame = requestAnimationFrame(tick);
+  };
+}
