@@ -3,77 +3,53 @@
 //
 
 import * as Schema from 'effect/Schema';
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 
-import { useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
 import { Format } from '@dxos/echo';
-import { log } from '@dxos/log';
-import { AutomationCapabilities, invokeFunctionWithTracing } from '@dxos/plugin-automation';
-import { useActiveSpace } from '@dxos/plugin-space';
 import { Dialog, Message, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Message as MessageType } from '@dxos/types';
 
-import { GmailFunctions } from '../../functions';
 import { meta } from '../../meta';
 
 export type ComposeEmailDialogProps = {
   mode?: 'compose' | 'reply' | 'reply-all' | 'forward';
-  originalMessage?: MessageType.Message;
+  message?: MessageType.Message;
   subject?: string;
   body?: string;
+  onSend?: (message: MessageType.Message) => Promise<void>;
+  onCancel?: () => void;
 };
 
-const ComposeEmailForm = Schema.Struct({
-  to: Schema.String.annotations({ description: 'Recipient email address' }),
-  cc: Schema.optional(Schema.String.annotations({ description: 'CC recipients' })),
-  bcc: Schema.optional(Schema.String.annotations({ description: 'BCC recipients' })),
-  subject: Schema.optional(Schema.String.annotations({ description: 'Email subject' })),
-  body: Schema.String.pipe(
-    Format.FormatAnnotation.set(Format.TypeFormat.Markdown),
-    Schema.annotations({ description: 'Email body' }),
-  ),
-});
-
-type FormValues = Schema.Schema.Type<typeof ComposeEmailForm>;
-
-const formatQuotedBody = (message: MessageType.Message): string => {
-  const textBlock = message.blocks.find((b) => b._tag === 'text');
-  const originalText = textBlock?.text ?? '';
-  const senderName = message.sender?.name ?? message.sender?.email ?? 'Unknown';
-  const date = message.created ? new Date(message.created).toLocaleString() : '';
-  return `\n\n---\nOn ${date}, ${senderName} wrote:\n\n${originalText}`;
-};
-
-export const ComposeEmailDialog = ({ mode = 'compose', originalMessage, subject, body }: ComposeEmailDialogProps) => {
-  const closeRef = useRef<HTMLButtonElement | null>(null);
+export const ComposeEmailDialog = ({
+  mode = 'compose',
+  message: messageProp,
+  subject,
+  body,
+  onSend,
+  onCancel,
+}: ComposeEmailDialogProps) => {
   const { t } = useTranslation(meta.id);
-  const { invokePromise } = useOperationInvoker();
   const [error, setError] = useState<string | null>(null);
 
-  const space = useActiveSpace();
-  const computeRuntime = useCapability(AutomationCapabilities.ComputeRuntime);
-  const runtime = space?.id ? computeRuntime.getRuntime(space.id) : undefined;
-
-  const initialValues = useMemo<FormValues>(() => {
-    if (!originalMessage || mode === 'compose') {
+  const initialValues = useMemo<ComposeEmailForm>(() => {
+    if (!messageProp || mode === 'compose') {
       return { to: '', subject: subject ?? '', body: body ?? '' };
     }
 
-    const originalSubject = originalMessage.properties?.subject ?? '';
-    const quotedBody = formatQuotedBody(originalMessage);
+    const originalSubject = messageProp.properties?.subject ?? '';
+    const quotedBody = formatQuotedBody(messageProp);
 
     switch (mode) {
       case 'reply': {
-        const senderEmail = originalMessage.sender?.email ?? '';
+        const senderEmail = messageProp.sender?.email ?? '';
         const subject = originalSubject.startsWith('Re:') ? originalSubject : `Re: ${originalSubject}`;
         return { to: senderEmail, subject, body: quotedBody };
       }
       case 'reply-all': {
-        const senderEmail = originalMessage.sender?.email ?? '';
-        const originalTo = originalMessage.properties?.to ?? '';
-        const originalCc = originalMessage.properties?.cc ?? '';
+        const senderEmail = messageProp.sender?.email ?? '';
+        const originalTo = messageProp.properties?.to ?? '';
+        const originalCc = messageProp.properties?.cc ?? '';
         // Combine original To and Cc for the CC field, excluding sender (who becomes To).
         const ccRecipients = [originalTo, originalCc].filter((r) => r && r !== senderEmail).join(', ');
         const subject = originalSubject.startsWith('Re:') ? originalSubject : `Re: ${originalSubject}`;
@@ -86,7 +62,7 @@ export const ComposeEmailDialog = ({ mode = 'compose', originalMessage, subject,
       default:
         return { to: '', body: '' };
     }
-  }, [mode, originalMessage, subject, body]);
+  }, [mode, messageProp, subject, body]);
 
   const dialogTitle = useMemo(() => {
     switch (mode) {
@@ -101,24 +77,18 @@ export const ComposeEmailDialog = ({ mode = 'compose', originalMessage, subject,
   }, [mode, t]);
 
   const handleSendEmail = useCallback(
-    async (data: FormValues) => {
+    async (data: ComposeEmailForm) => {
       setError(null);
-
-      if (!runtime) {
-        setError(t('send email error no runtime'));
-        log.error('Runtime not available');
-        return;
-      }
 
       // Build threading properties for replies.
       const isReply = mode === 'reply' || mode === 'reply-all';
       const threadingProps: Record<string, string | undefined> = {};
-      if (isReply && originalMessage) {
-        threadingProps.threadId = originalMessage.properties?.threadId;
-        threadingProps.inReplyTo = originalMessage.properties?.messageId;
+      if (isReply && messageProp) {
+        threadingProps.threadId = messageProp.properties?.threadId;
+        threadingProps.inReplyTo = messageProp.properties?.messageId;
         // Build references chain: existing references + original message ID.
-        const existingRefs = originalMessage.properties?.references ?? '';
-        const originalMsgId = originalMessage.properties?.messageId ?? '';
+        const existingRefs = messageProp.properties?.references ?? '';
+        const originalMsgId = messageProp.properties?.messageId ?? '';
         threadingProps.references = [existingRefs, originalMsgId].filter(Boolean).join(' ');
       }
 
@@ -137,16 +107,13 @@ export const ComposeEmailDialog = ({ mode = 'compose', originalMessage, subject,
       });
 
       try {
-        await runtime.runPromise(invokeFunctionWithTracing(GmailFunctions.Send, { message }));
-        // Close the dialog after successful send.
-        await invokePromise(LayoutOperation.UpdateDialog, { state: false });
+        await onSend?.(message);
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : t('send email error unknown');
         setError(errorMessage);
-        log.error('Failed to send email', { error: err });
       }
     },
-    [runtime, invokePromise, t, mode, originalMessage],
+    [t, onSend, mode, messageProp],
   );
 
   return (
@@ -154,7 +121,7 @@ export const ComposeEmailDialog = ({ mode = 'compose', originalMessage, subject,
       <Dialog.Header>
         <Dialog.Title>{dialogTitle}</Dialog.Title>
         <Dialog.Close asChild>
-          <Dialog.CloseIconButton ref={closeRef} />
+          <Dialog.CloseIconButton onClick={onCancel} />
         </Dialog.Close>
       </Dialog.Header>
       <Form.Root
@@ -179,4 +146,25 @@ export const ComposeEmailDialog = ({ mode = 'compose', originalMessage, subject,
       </Form.Root>
     </Dialog.Content>
   );
+};
+
+const ComposeEmailForm = Schema.Struct({
+  to: Schema.String.annotations({ description: 'Recipient email address' }),
+  cc: Schema.optional(Schema.String.annotations({ description: 'CC recipients' })),
+  bcc: Schema.optional(Schema.String.annotations({ description: 'BCC recipients' })),
+  subject: Schema.optional(Schema.String.annotations({ description: 'Email subject' })),
+  body: Schema.String.pipe(
+    Format.FormatAnnotation.set(Format.TypeFormat.Markdown),
+    Schema.annotations({ description: 'Email body' }),
+  ),
+});
+
+type ComposeEmailForm = Schema.Schema.Type<typeof ComposeEmailForm>;
+
+const formatQuotedBody = (message: MessageType.Message): string => {
+  const textBlock = message.blocks.find((b) => b._tag === 'text');
+  const originalText = textBlock?.text ?? '';
+  const senderName = message.sender?.name ?? message.sender?.email ?? 'Unknown';
+  const date = message.created ? new Date(message.created).toLocaleString() : '';
+  return `\n\n---\nOn ${date}, ${senderName} wrote:\n\n${originalText}`;
 };

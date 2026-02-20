@@ -36,9 +36,9 @@ export const RangeList = ({ sheet }: RangeListProps) => {
     <>
       <h2 className='mbs-cardSpacingBlock mbe-labelSpacingBlock text-sm font-semibold'>{t('range list heading')}</h2>
       {sheet.ranges.length < 1 ? (
-        <Callout.Root>
-          <Callout.Title>{t('no ranges message')}</Callout.Title>
-        </Callout.Root>
+        <Message.Root>
+          <Message.Title>{t('no ranges message')}</Message.Title>
+        </Message.Root>
       ) : (
         <List.Root<Sheet.Range> items={sheet.ranges} isItem={Schema.is(Sheet.Range)}>
           {({ items: ranges }) =>

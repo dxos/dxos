@@ -162,9 +162,9 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
       <div role='none' className={mx(classNames)}>
         {/* If readonly is set, then the callout is not needed. */}
         {schemaReadonly && !readonly && (
-          <Callout.Root valence='info' classNames='mlb-cardSpacingBlock'>
-            <Callout.Title>{t('system schema description')}</Callout.Title>
-          </Callout.Root>
+          <Message.Root valence='info' classNames='mlb-cardSpacingBlock'>
+            <Message.Title>{t('system schema description')}</Message.Title>
+          </Message.Root>
         )}
 
         {/* TODO(burdon): Is the form read-only or just the schema? */}

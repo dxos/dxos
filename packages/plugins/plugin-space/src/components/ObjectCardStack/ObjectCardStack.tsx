@@ -45,9 +45,9 @@ export const ObjectCardStack = forwardRef<HTMLDivElement, ObjectCardStackProps>(
           <CardStack.Stack id={objectId} itemsCount={selectedObjects.length}>
             {selectedObjects.length === 0 && (
               <CardStack.Item>
-                <Callout.Root>
-                  <Callout.Title>{t('row details no selection label')}</Callout.Title>
-                </Callout.Root>
+                <Message.Root>
+                  <Message.Title>{t('row details no selection label')}</Message.Title>
+                </Message.Root>
               </CardStack.Item>
             )}
             {selectedObjects.map((object) => (

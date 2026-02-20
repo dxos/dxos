@@ -219,11 +219,9 @@ function createBottomScroller(el: HTMLElement, duration = 200) {
   return function scroll() {
     // Already animating — just let tick() chase the new target naturally.
     if (animFrame) {
-      console.log('=');
       return;
     }
 
-    console.log('START');
     startTop = el.scrollTop;
     startTime = performance.now();
     animFrame = requestAnimationFrame(tick);
