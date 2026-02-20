@@ -10,6 +10,17 @@ import { arrayMove } from '@dxos/util';
 
 import { type BaseKanbanItem, type ColumnStructure, type KanbanChangeCallback, UNCATEGORIZED_VALUE } from '../types';
 
+/**
+ * Builds the column drag-and-drop handler for the kanban board (reorder columns).
+ *
+ * @template T - Item type (extends BaseKanbanItem).
+ * @param id - Handler id.
+ * @param model - Board model for getColumns / getColumnId.
+ * @param projection - ProjectionModel for pivot field options (column order).
+ * @param pivotFieldId - Pivot field id; undefined disables drop.
+ * @param change - Callback to persist kanban.arrangement.order.
+ * @returns MosaicEventHandler for column tiles.
+ */
 export function useKanbanColumnEventHandler<T extends BaseKanbanItem>({
   id,
   model,
@@ -86,7 +97,7 @@ export function useKanbanColumnEventHandler<T extends BaseKanbanItem>({
 
         // Persist column order to kanban.arrangement so the board UI reflects the new order.
         change.kanban((kanban) => {
-          kanban.arrangement.order = reorderedColumnIds;
+          kanban.arrangement.order = reorderedColumnIds.filter((columnId) => columnId !== UNCATEGORIZED_VALUE);
         });
       },
     }),

@@ -137,7 +137,7 @@ export default Capability.makeModule(() =>
 
             return ToolResult.Success({
               schema,
-              columnField: kanban.columnFieldId,
+              columnField: view.projection.pivotFieldId,
               viewFields: view.projection.fields,
             });
           },

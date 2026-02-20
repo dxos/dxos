@@ -3,7 +3,6 @@
 //
 
 import { createContext } from '@radix-ui/react-context';
-import type React from 'react';
 import { type ComponentType } from 'react';
 
 import { type Obj } from '@dxos/echo';
@@ -41,7 +40,7 @@ const [KanbanBoardContext, useKanbanBoard] = createContext<KanbanBoardContextVal
   pivotFieldId: undefined,
   getPivotAttributes: (id: string) =>
     id === UNCATEGORIZED_VALUE ? UNCATEGORIZED_ATTRIBUTES : { title: id, color: 'neutral' },
-  itemTile: (() => null) as React.ComponentType<KanbanCardTileProps>,
+  itemTile: (() => null) as ComponentType<KanbanCardTileProps>,
 });
 
 export { KanbanBoardContext, useKanbanBoard };

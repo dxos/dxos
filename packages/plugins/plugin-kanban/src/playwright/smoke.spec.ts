@@ -29,6 +29,8 @@ test.describe('Kanban MutableSchema', () => {
   test('rearrange columns', async () => {
     const col1Label = await board.column(1).title().textContent();
     const col2Label = await board.column(2).title().textContent();
+    expect(col1Label).not.toBeNull();
+    expect(col2Label).not.toBeNull();
 
     await board.column(1).dragTo(board.column(2).header());
 
@@ -43,6 +45,8 @@ test.describe('Kanban MutableSchema', () => {
 
     const firstLabel = await column.item(0).title().textContent();
     const secondLabel = await column.item(1).title().textContent();
+    expect(firstLabel).not.toBeNull();
+    expect(secondLabel).not.toBeNull();
 
     // Drag first item below the second item.
     await column.item(0).dragTo(column.item(1).locator, { x: 0, y: 200 });
@@ -65,6 +69,7 @@ test.describe('Kanban MutableSchema', () => {
     const col1CountBefore = await col1.items().count();
     const col2CountBefore = await col2.items().count();
     const draggedLabel = await col1.item(0).title().textContent();
+    expect(draggedLabel).not.toBeNull();
 
     // Drop above first item. Kanban cards are taller; use larger negative y so we land in top half.
     await col1.item(0).dragTo(col2.item(0).locator, { x: 0, y: -30 });
@@ -75,12 +80,13 @@ test.describe('Kanban MutableSchema', () => {
   });
 
   test('drag into empty column', async () => {
-    // Uncategorized is column 0 (empty); first populated column is column 2 (index 1).
+    // Uncategorized is column 0 (empty); first populated column is at index 1.
     const emptyColumn = board.column(0);
     const sourceColumn = board.column(1);
 
     const sourceCountBefore = await sourceColumn.items().count();
     const draggedLabel = await sourceColumn.item(0).title().textContent();
+    expect(draggedLabel).not.toBeNull();
 
     await sourceColumn.item(0).dragTo(emptyColumn.header(), { x: 0, y: 40 });
 

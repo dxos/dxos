@@ -8,7 +8,6 @@ import { e2ePreset } from '@dxos/test-utils/playwright';
 
 export default defineConfig({
   ...e2ePreset(import.meta.dirname),
-  forbidOnly: false,
   // TODO(wittjosiah): Avoid hard-coding ports.
   webServer: {
     command: 'moon run storybook-react:serve-e2e -- --port=9011',

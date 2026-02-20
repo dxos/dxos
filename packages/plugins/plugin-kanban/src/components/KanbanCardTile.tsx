@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { forwardRef, useMemo, useState } from 'react';
+import React, { forwardRef, useCallback, useMemo, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
 import { Obj } from '@dxos/echo';
@@ -22,7 +22,7 @@ export const KanbanCardTile = forwardRef<HTMLDivElement, KanbanCardTileProps>(
     const { model } = useBoard(KANBAN_CARD_TILE_NAME);
     const { projection, onRemoveCard } = useKanbanBoard(KANBAN_CARD_TILE_NAME);
     const [dragHandle, setDragHandle] = useState<HTMLButtonElement | null>(null);
-    const dragHandleRef = useMemo(() => (el: HTMLButtonElement | null) => setDragHandle(el), []);
+    const dragHandleRef = useCallback((el: HTMLButtonElement | null) => setDragHandle(el), []);
 
     const menuItems = useMemo(
       () =>

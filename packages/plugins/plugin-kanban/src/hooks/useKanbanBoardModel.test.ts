@@ -5,7 +5,7 @@
 import { Atom, Registry } from '@effect-atom/atom-react';
 import { act, renderHook } from '@testing-library/react';
 import * as Schema from 'effect/Schema';
-import { afterEach, beforeEach, describe, test } from 'vitest';
+import { beforeEach, describe, test } from 'vitest';
 
 import { Filter, Obj, Query, Type } from '@dxos/echo';
 import { Format, FormatAnnotation, PropertyMetaAnnotationId } from '@dxos/echo/internal';
@@ -72,8 +72,6 @@ describe('useKanbanBoardModel', () => {
       change: createDirectChangeCallback(view.projection, jsonSchema),
     });
   });
-
-  afterEach(() => {});
 
   test('returns model with getColumns and getItems', ({ expect }) => {
     const itemA = Obj.make(KanbanTaskSchema, { status: 'a' });

@@ -24,10 +24,14 @@ export const KanbanViewEditor = ({ object }: KanbanViewEditorProps) => {
   const schema = useSchema(db, currentTypename);
   const projection = useProjectionModel(schema, object, registry);
 
-  const fieldProjections = projection?.getFieldProjections() || [];
-  const selectFields = fieldProjections
-    .filter((field) => field.props.format === Format.TypeFormat.SingleSelect)
-    .map(({ field }) => ({ value: field.id, label: field.path }));
+  const fieldProjections = projection?.getFieldProjections() ?? [];
+  const selectFields = useMemo(
+    () =>
+      fieldProjections
+        .filter((field) => field.props.format === Format.TypeFormat.SingleSelect)
+        .map(({ field }) => ({ value: field.id, label: field.path })),
+    [fieldProjections],
+  );
 
   const handleSave = useCallback(
     (values: Partial<{ columnFieldId: string }>) => {

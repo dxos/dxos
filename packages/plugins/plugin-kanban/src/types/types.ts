@@ -22,12 +22,12 @@ export type ColumnStructure = {
   ids: string[];
 };
 
-export type KanbanColumn<T extends BaseKanbanItem = { id: string }> = {
+export type KanbanColumn<T extends BaseKanbanItem = BaseKanbanItem> = {
   columnValue: string;
   cards: T[];
 };
 
-export type ArrangedCards<T extends BaseKanbanItem = { id: string }> = KanbanColumn<T>[];
+export type ArrangedCards<T extends BaseKanbanItem = BaseKanbanItem> = KanbanColumn<T>[];
 
 /**
  * Callback type for wrapping mutations in Obj.change().

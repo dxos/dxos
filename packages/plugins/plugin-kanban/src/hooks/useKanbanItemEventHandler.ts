@@ -21,6 +21,16 @@ function findColumn<T extends BaseKanbanItem>(
   return arrangement.find(({ columnValue, cards }) => columnValue === id || cards.some((card) => card.id === id));
 }
 
+/**
+ * Builds the item drag-and-drop handler for a single column (reorder and move between columns).
+ *
+ * @template T - Item type (extends BaseKanbanItem).
+ * @param column - Column structure for this tile.
+ * @param columnFieldPath - Item property path for the pivot field (used when moving to another column).
+ * @param model - Board model for getColumns / getItems.
+ * @param change - Callback to persist arrangement and item field updates.
+ * @returns MosaicEventHandler for item tiles in this column.
+ */
 export function useKanbanItemEventHandler<T extends BaseKanbanItem>({
   column,
   columnFieldPath,

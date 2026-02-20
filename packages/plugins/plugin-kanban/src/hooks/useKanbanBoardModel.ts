@@ -10,9 +10,24 @@ import { AtomObj } from '@dxos/echo-atom';
 import type { BoardModel } from '@dxos/react-ui-mosaic';
 import type { ProjectionModel } from '@dxos/schema';
 
-import { type BaseKanbanItem, type ColumnStructure, type Kanban, UNCATEGORIZED_VALUE } from '../types';
-import { computeColumnStructure, getOrderByColumnFromArrangement, getOrderFromArrangement } from '../util';
+import { type BaseKanbanItem, type ColumnStructure, type Kanban } from '../types';
+import {
+  computeColumnStructure,
+  getOrderByColumnFromArrangement,
+  getOrderFromArrangement,
+  orderItemsInColumn,
+} from '../util';
 
+/**
+ * Builds a board model that maps kanban arrangement and projection onto columns and per-column items.
+ *
+ * @template T - Item type (must have id; defaults to BaseKanbanItem).
+ * @param kanban - Kanban object (arrangement, view).
+ * @param projection - ProjectionModel for pivot field and options.
+ * @param itemsAtom - Atom holding the full item list.
+ * @param registry - Registry for reading atom values.
+ * @returns BoardModel with columns atom, items family, and getColumns/getItems.
+ */
 export function useKanbanBoardModel<T extends BaseKanbanItem = BaseKanbanItem>(
   kanban: Kanban.Kanban,
   projection: ProjectionModel,
@@ -88,13 +103,14 @@ export function useKanbanBoardModel<T extends BaseKanbanItem = BaseKanbanItem>(
         Atom.make((get) => {
           const columnArr = get(columnArrangementAtomFamily(columnValue));
           const allItems = get(itemsAtom);
-          const view = get(viewSnapshotAtom);
+          const pivotFieldId = get(pivotFieldIdAtom);
 
-          const pivotFieldId = view?.projection?.pivotFieldId;
           if (pivotFieldId === undefined) {
             return [];
           }
 
+          // TODO(wittjosiah): Try to narrow this down further.
+          get(projection.fields);
           const fieldProj = projection.tryGetFieldProjection(pivotFieldId);
           if (!fieldProj) {
             return [];
@@ -103,36 +119,10 @@ export function useKanbanBoardModel<T extends BaseKanbanItem = BaseKanbanItem>(
           const selectOptions = fieldProj.props.options ?? [];
           const pivotPath = fieldProj.props.property;
           const validColumnValues = new Set(selectOptions.map((opt) => opt.id));
-          const ids = columnArr.ids;
-          const orderMap = new Map(ids.map((id, index) => [id, index]));
-
-          const cardsWithExistingOrder: T[] = [];
-          const newCards: T[] = [];
-
-          for (const item of allItems) {
-            const itemColumn = item[pivotPath as keyof typeof item];
-            const isValidColumn = itemColumn && validColumnValues.has(itemColumn as string);
-            const belongsInColumn = columnValue === UNCATEGORIZED_VALUE ? !isValidColumn : itemColumn === columnValue;
-
-            if (belongsInColumn) {
-              if (orderMap.has(item.id)) {
-                cardsWithExistingOrder.push(item);
-              } else {
-                newCards.push(item);
-              }
-            }
-          }
-
-          cardsWithExistingOrder.sort((a, b) => {
-            const indexA = orderMap.get(a.id) ?? Infinity;
-            const indexB = orderMap.get(b.id) ?? Infinity;
-            return indexA - indexB;
-          });
-
-          return [...cardsWithExistingOrder, ...newCards];
+          return orderItemsInColumn(allItems, columnArr.ids, columnValue, pivotPath, validColumnValues);
         }),
       ),
-    [columnArrangementAtomFamily, itemsAtom, viewSnapshotAtom, projection],
+    [columnArrangementAtomFamily, itemsAtom, pivotFieldIdAtom, projection],
   );
 
   return useMemo(

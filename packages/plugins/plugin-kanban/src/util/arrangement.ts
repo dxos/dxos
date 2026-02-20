@@ -85,6 +85,47 @@ export const computeColumnStructure = (
 };
 
 /**
+ * Orders items for a single column: partition by saved order vs new, sort by orderMap, concatenate.
+ * Uses explicit null/undefined check for itemColumn so empty string is handled consistently.
+ *
+ * @param items - All items to filter.
+ * @param ids - Saved id order for this column.
+ * @param columnValue - Column id (e.g. UNCATEGORIZED_VALUE or option id).
+ * @param pivotPath - Item property key for column value (undefined = no pivot).
+ * @param validColumnValues - Set of valid option ids.
+ * @returns Items belonging to this column in display order.
+ */
+export const orderItemsInColumn = <T extends BaseKanbanItem>(
+  items: T[],
+  ids: string[],
+  columnValue: string,
+  pivotPath: string | undefined,
+  validColumnValues: Set<string>,
+): T[] => {
+  const orderMap = new Map(ids.map((id, index) => [id, index]));
+  const cardsWithExistingOrder: T[] = [];
+  const newCards: T[] = [];
+
+  for (const item of items) {
+    const itemColumn = pivotPath !== undefined ? (item[pivotPath as keyof T] as string | undefined) : undefined;
+    const isValidColumn = itemColumn != null && validColumnValues.has(itemColumn);
+    const belongsInColumn = columnValue === UNCATEGORIZED_VALUE ? !isValidColumn : itemColumn === columnValue;
+
+    if (belongsInColumn) {
+      (orderMap.has(item.id) ? cardsWithExistingOrder : newCards).push(item);
+    }
+  }
+
+  cardsWithExistingOrder.sort((a, b) => {
+    const indexA = orderMap.get(a.id) ?? Infinity;
+    const indexB = orderMap.get(b.id) ?? Infinity;
+    return indexA - indexB;
+  });
+
+  return [...cardsWithExistingOrder, ...newCards];
+};
+
+/**
  * Computes the full item arrangement for the board: one entry per column with items in display order.
  *
  * Columns follow selectOptions order (uncategorized first, then each option). Within each column,
@@ -97,7 +138,7 @@ export const computeColumnStructure = (
  * @param selectOptions - Defines valid column ids and their display order.
  * @returns Array of { columnValue, cards } in column order, with cards ordered as above.
  */
-export const computeItemArrangement = <T extends BaseKanbanItem = { id: string }>({
+export const computeItemArrangement = <T extends BaseKanbanItem = BaseKanbanItem>({
   object,
   items,
   pivotPath,
@@ -119,29 +160,8 @@ export const computeItemArrangement = <T extends BaseKanbanItem = { id: string }
       .map((opt) => ({ columnValue: opt.id, ids: byColumn[opt.id]?.ids ?? [] })),
   ];
 
-  return columnEntries.map(({ columnValue, ids }) => {
-    const orderMap = new Map(ids.map((id, index) => [id, index]));
-
-    const cardsWithExistingOrder: T[] = [];
-    const newCards: T[] = [];
-
-    for (const item of items) {
-      const itemColumn = pivotPath ? (item[pivotPath as keyof T] as string | undefined) : undefined;
-      const isValidColumn = itemColumn != null && validColumnValues.has(itemColumn);
-      const belongsInColumn = columnValue === UNCATEGORIZED_VALUE ? !isValidColumn : itemColumn === columnValue;
-
-      if (belongsInColumn) {
-        (orderMap.has(item.id) ? cardsWithExistingOrder : newCards).push(item);
-      }
-    }
-
-    // Preserve saved order; items not in saved order go to the end.
-    cardsWithExistingOrder.sort((a, b) => {
-      const indexA = orderMap.get(a.id) ?? Infinity;
-      const indexB = orderMap.get(b.id) ?? Infinity;
-      return indexA - indexB;
-    });
-
-    return { columnValue, cards: [...cardsWithExistingOrder, ...newCards] };
-  });
+  return columnEntries.map(({ columnValue, ids }) => ({
+    columnValue,
+    cards: orderItemsInColumn(items, ids, columnValue, pivotPath, validColumnValues),
+  }));
 };

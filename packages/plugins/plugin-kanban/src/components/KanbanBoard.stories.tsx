@@ -99,7 +99,7 @@ const DefaultStory = (_: StoryProps) => {
       const current = registry.get(items) ?? [];
       registry.set(
         items,
-        current.filter((i) => i.id !== (card as { id: string }).id),
+        current.filter((i) => i.id !== card.id),
       );
     },
     [registry, items],

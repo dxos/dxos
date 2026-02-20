@@ -7,7 +7,6 @@ import React, { forwardRef, useRef } from 'react';
 import type { Obj } from '@dxos/echo';
 import { IconButton, useTranslation } from '@dxos/react-ui';
 import { Board, type MosaicTileProps, useBoard } from '@dxos/react-ui-mosaic';
-import { mx } from '@dxos/ui-theme';
 
 import { useKanbanItemEventHandler } from '../hooks';
 import { meta } from '../meta';
@@ -21,7 +20,7 @@ const KANBAN_COLUMN_NAME = 'KanbanColumn';
 export type KanbanColumnProps = Pick<MosaicTileProps<ColumnStructure>, 'classNames' | 'location' | 'data' | 'debug'>;
 
 export const KanbanColumn = forwardRef<HTMLDivElement, KanbanColumnProps>(
-  ({ data: column, location, classNames, debug }, _forwardedRef) => {
+  ({ data: column, location, classNames, debug }, forwardedRef) => {
     const { t } = useTranslation(meta.id);
     const { model } = useBoard<ColumnStructure, Obj.Unknown>(KANBAN_COLUMN_NAME);
     const { columnFieldPath, change, onAddCard, getPivotAttributes, itemTile } = useKanbanBoard(KANBAN_COLUMN_NAME);
@@ -39,6 +38,7 @@ export const KanbanColumn = forwardRef<HTMLDivElement, KanbanColumnProps>(
 
     return (
       <Board.Column.Root
+        ref={forwardedRef}
         data={column}
         location={location}
         classNames={classNames}
@@ -48,10 +48,7 @@ export const KanbanColumn = forwardRef<HTMLDivElement, KanbanColumnProps>(
         <div
           role='none'
           data-testid='board-column'
-          className={mx(
-            'group/column grid bs-full overflow-hidden grid-rows-[var(--rail-action)_1fr_var(--rail-action)]',
-            classNames,
-          )}
+          className='group/column grid bs-full overflow-hidden grid-rows-[var(--rail-action)_1fr_var(--rail-action)]'
         >
           {uncategorized ? (
             <div className='border-be border-separator p-2' data-testid='board-column-header'>
