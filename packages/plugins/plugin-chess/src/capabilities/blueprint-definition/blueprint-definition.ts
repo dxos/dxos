@@ -9,16 +9,9 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 
 import { ChessBlueprint } from '../../blueprints';
 
-export type BlueprintCapabilities = [
-  Capability.Capability<typeof AppCapabilities.Functions>,
-  Capability.Capability<typeof AppCapabilities.BlueprintDefinition>,
-];
-
-const blueprintDefinition = Capability.makeModule<[], BlueprintCapabilities>(() =>
-  Effect.succeed([
-    Capability.contributes(AppCapabilities.Functions, ChessBlueprint.functions),
-    Capability.contributes(AppCapabilities.BlueprintDefinition, ChessBlueprint.make()),
-  ]),
-);
+const blueprintDefinition = Capability.makeModule<
+  [],
+  Capability.Capability<typeof AppCapabilities.BlueprintDefinition>[]
+>(() => Effect.succeed([Capability.contributes(AppCapabilities.BlueprintDefinition, ChessBlueprint)]));
 
 export default blueprintDefinition;

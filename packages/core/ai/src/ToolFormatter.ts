@@ -6,8 +6,6 @@ import type * as Tool from '@effect/ai/Tool';
 import * as Context from 'effect/Context';
 import type * as Schema from 'effect/Schema';
 
-import { dbg } from '@dxos/log';
-
 export interface FormattingOptions<Tool extends Tool.Any> {
   readonly debugFormatCall?: (parameters: Tool.Parameters<Tool>) => string | unknown;
   readonly debugFormatResult?: (result: Tool.Result<Tool>) => string | unknown;
@@ -24,7 +22,7 @@ export class ToolFormatter extends Context.Tag('@dxos/ai/ToolFormatter')<
 export const assign =
   <Tool extends AnyTool>(options: FormattingOptions<Tool>) =>
   (tool: Tool): Tool =>
-    dbg(tool).annotate(ToolFormatter, options) as Tool;
+    tool.annotate(ToolFormatter, options) as Tool;
 
 type AnyTool = Tool.Tool<
   string,

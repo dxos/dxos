@@ -3,7 +3,8 @@ language: typescript
 tags:
   - e2e
   - ts-build
-  - ts-test
+  - ts-test-browser
+  - ts-test-storybook
   - pack
   - storybook
 tasks:
@@ -15,10 +16,6 @@ tasks:
       - '--platform=browser'
       - '--platform=node'
   e2e:
-    inputs:
-      - .storybook/*
-      - /tools/storybook-react/.storybook/main.ts
-  test:
     inputs:
       - .storybook/*
       - /tools/storybook-react/.storybook/main.ts

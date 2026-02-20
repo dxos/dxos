@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AiContextBinder, AiConversation } from '@dxos/assistant';
-import { Agent, Chat } from '@dxos/assistant-toolkit';
+import { AgentFunctions, Chat } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { type Queue } from '@dxos/client/echo';
 import { Filter, Obj, Ref, Type } from '@dxos/echo';
@@ -18,9 +18,9 @@ import { ClientCapabilities } from '@dxos/plugin-client';
 import { Collection } from '@dxos/schema';
 import { type Message } from '@dxos/types';
 
+import { AssistantBlueprint } from '../../blueprints';
 import { type AiChatServices, updateName } from '../../processor';
 import { AssistantCapabilities, AssistantOperation } from '../../types';
-import { AssistantBlueprint, createBlueprint } from '../blueprint-definition/blueprint-definition';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -36,7 +36,7 @@ export default Capability.makeModule(
           });
 
           // TODO(wittjosiah): Remove once function registry is avaiable.
-          space.db.add(serializeFunction(Agent.prompt));
+          space.db.add(serializeFunction(AgentFunctions.Prompt));
 
           // Create default chat.
           const { object: chat } = yield* Operation.invoke(AssistantOperation.CreateChat, { db: space.db });
@@ -59,9 +59,9 @@ export default Capability.makeModule(
           // TODO(wittjosiah): This should be a space-level setting.
           // TODO(burdon): Clone when activated. Copy-on-write for template.
           const blueprints = yield* Effect.promise(() => db.query(Filter.type(Blueprint.Blueprint)).run());
-          let defaultBlueprint = blueprints.find((blueprint) => blueprint.key === AssistantBlueprint.Key);
+          let defaultBlueprint = blueprints.find((blueprint) => blueprint.key === AssistantBlueprint.key);
           if (!defaultBlueprint) {
-            defaultBlueprint = db.add(createBlueprint());
+            defaultBlueprint = db.add(AssistantBlueprint.make());
           }
 
           const binder = new AiContextBinder({ queue, registry });

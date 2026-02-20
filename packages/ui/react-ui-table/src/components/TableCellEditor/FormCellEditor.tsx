@@ -170,6 +170,7 @@ export const FormCellEditor = <T extends Type.Entity.Any = Type.Entity.Any>({
               autoFocus
               schema={narrowedSchema}
               values={formValues}
+              projection={model?.projection}
               createInitialValuePath={fieldProjection.field.referencePath}
               createOptionIcon='ph--plus--regular'
               createOptionLabel={createOptionLabel}

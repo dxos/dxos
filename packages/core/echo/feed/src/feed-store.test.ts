@@ -521,6 +521,133 @@ describe('Feed V2', () => {
     }).pipe(Effect.provide(TestLayer)),
   );
 
+  it.effect('countBlocks and deleteOldestBlocks operate per feed within space and namespace', () =>
+    Effect.gen(function* () {
+      const feed = new FeedStore({ localActorId: ALICE, assignPositions: true });
+      yield* feed.migrate();
+
+      const spaceA = SpaceId.random();
+      const spaceB = SpaceId.random();
+      const nsData = WellKnownNamespaces.data;
+      const nsTrace = WellKnownNamespaces.trace;
+      const targetFeedId = 'feed-target';
+
+      // Target feed in target namespace/space.
+      yield* feed.appendLocal([
+        { spaceId: spaceA, feedId: targetFeedId, feedNamespace: nsData, data: new Uint8Array([1]) },
+        { spaceId: spaceA, feedId: targetFeedId, feedNamespace: nsData, data: new Uint8Array([2]) },
+        { spaceId: spaceA, feedId: targetFeedId, feedNamespace: nsData, data: new Uint8Array([3]) },
+        { spaceId: spaceA, feedId: targetFeedId, feedNamespace: nsData, data: new Uint8Array([4]) },
+        { spaceId: spaceA, feedId: targetFeedId, feedNamespace: nsData, data: new Uint8Array([5]) },
+      ]);
+
+      // Data that must not be affected by target cleanup.
+      yield* feed.appendLocal([
+        { spaceId: spaceA, feedId: 'feed-other', feedNamespace: nsData, data: new Uint8Array([11]) },
+        { spaceId: spaceA, feedId: 'feed-trace', feedNamespace: nsTrace, data: new Uint8Array([12]) },
+        { spaceId: spaceB, feedId: targetFeedId, feedNamespace: nsData, data: new Uint8Array([13]) },
+      ]);
+
+      const beforeCount = yield* feed.countBlocks({
+        spaceId: spaceA,
+        feedNamespace: nsData,
+        feedId: targetFeedId,
+      });
+      expect(beforeCount).toBe(5);
+
+      const deleted = yield* feed.deleteOldestBlocks({
+        spaceId: spaceA,
+        feedNamespace: nsData,
+        feedId: targetFeedId,
+        count: 3,
+      });
+      expect(deleted).toBe(3);
+
+      const afterCount = yield* feed.countBlocks({
+        spaceId: spaceA,
+        feedNamespace: nsData,
+        feedId: targetFeedId,
+      });
+      expect(afterCount).toBe(2);
+
+      const targetRemaining = yield* feed.query({
+        requestId: 'req-target-remaining',
+        spaceId: spaceA,
+        feedNamespace: nsData,
+        query: { feedIds: [targetFeedId] },
+        position: -1,
+      });
+      expect(targetRemaining.blocks.length).toBe(2);
+      expect(targetRemaining.blocks.map((block) => block.data[0])).toEqual([4, 5]);
+
+      const unaffectedFeed = yield* feed.countBlocks({
+        spaceId: spaceA,
+        feedNamespace: nsData,
+        feedId: 'feed-other',
+      });
+      expect(unaffectedFeed).toBe(1);
+
+      const unaffectedNamespace = yield* feed.countBlocks({
+        spaceId: spaceA,
+        feedNamespace: nsTrace,
+        feedId: 'feed-trace',
+      });
+      expect(unaffectedNamespace).toBe(1);
+
+      const unaffectedSpace = yield* feed.countBlocks({
+        spaceId: spaceB,
+        feedNamespace: nsData,
+        feedId: targetFeedId,
+      });
+      expect(unaffectedSpace).toBe(1);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('deleteOldestBlocks handles non-positive and oversized delete counts', () =>
+    Effect.gen(function* () {
+      const spaceId = SpaceId.random();
+      const feedId = 'feed-delete-count';
+      const feed = new FeedStore({ localActorId: ALICE, assignPositions: true });
+      yield* feed.migrate();
+
+      yield* feed.appendLocal([
+        { spaceId, feedId, feedNamespace: WellKnownNamespaces.data, data: new Uint8Array([1]) },
+        { spaceId, feedId, feedNamespace: WellKnownNamespaces.data, data: new Uint8Array([2]) },
+      ]);
+
+      const deletedZero = yield* feed.deleteOldestBlocks({
+        spaceId,
+        feedNamespace: WellKnownNamespaces.data,
+        feedId,
+        count: 0,
+      });
+      expect(deletedZero).toBe(0);
+
+      const deletedNegative = yield* feed.deleteOldestBlocks({
+        spaceId,
+        feedNamespace: WellKnownNamespaces.data,
+        feedId,
+        count: -5,
+      });
+      expect(deletedNegative).toBe(0);
+
+      const deletedOversized = yield* feed.deleteOldestBlocks({
+        spaceId,
+        feedNamespace: WellKnownNamespaces.data,
+        feedId,
+        count: 10,
+      });
+      expect(deletedOversized).toBe(2);
+
+      const remainingCount = yield* feed.countBlocks({
+        spaceId,
+        feedNamespace: WellKnownNamespaces.data,
+        feedId,
+      });
+      expect(remainingCount).toBe(0);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
   it.effect('append fails on non-unique position in request', () =>
     Effect.gen(function* () {
       const spaceId = SpaceId.random();

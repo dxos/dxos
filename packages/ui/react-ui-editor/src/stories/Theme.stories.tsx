@@ -46,7 +46,7 @@ const DefaultStory = () => {
 const meta: Meta<typeof DefaultStory> = {
   title: 'ui/react-ui-editor/Theme',
   component: DefaultStory,
-  decorators: [withTheme(), withLayout()],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
   },
