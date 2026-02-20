@@ -21,6 +21,9 @@ export function safeStringify(obj: any, filter: StringifyReplacer = defaultFilte
       let path = key;
       if (!key) {
         path = '$';
+        if (value != null && typeof value === 'object') {
+          seen.set(value, path);
+        }
         return value;
       } else if (this) {
         const parentPath = seen.get(this);
