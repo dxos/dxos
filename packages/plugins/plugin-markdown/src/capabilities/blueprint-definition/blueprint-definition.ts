@@ -9,18 +9,9 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 
 import { MarkdownBlueprint } from '../../blueprints';
 
-export const functions = MarkdownBlueprint.functions;
-
-export type BlueprintCapabilities = [
-  Capability.Capability<typeof AppCapabilities.Functions>,
-  Capability.Capability<typeof AppCapabilities.BlueprintDefinition>,
-];
-
-const blueprintDefinition = Capability.makeModule<[], BlueprintCapabilities>(() =>
-  Effect.succeed([
-    Capability.contributes(AppCapabilities.Functions, functions),
-    Capability.contributes(AppCapabilities.BlueprintDefinition, MarkdownBlueprint.make()),
-  ]),
-);
+const blueprintDefinition = Capability.makeModule<
+  [],
+  Capability.Capability<typeof AppCapabilities.BlueprintDefinition>[]
+>(() => Effect.succeed([Capability.contributes(AppCapabilities.BlueprintDefinition, MarkdownBlueprint)]));
 
 export default blueprintDefinition;

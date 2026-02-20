@@ -3,12 +3,17 @@
 //
 
 import { ToolId } from '@dxos/ai';
+import { type AppCapabilities } from '@dxos/app-toolkit';
 import { Blueprint } from '@dxos/blueprints';
 import { Ref } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
 import { LinearFunctions } from './functions';
+
+const BLUEPRINT_KEY = 'dxos.org/blueprint/linear';
+
+const functions = Object.values(LinearFunctions);
 
 /**
  * Agent prompt instructions for managing hierarchical task lists.
@@ -22,12 +27,21 @@ const instructions = trim`
   DXOS teamId: 1127c63a-6f77-4725-9229-50f6cd47321c
 `;
 
-export const LinearBlueprint = Blueprint.make({
-  key: 'dxos.org/blueprint/linear',
-  name: 'Linear',
-  description: 'Syncs Linear workspaces.',
-  instructions: {
-    source: Ref.make(Text.make(instructions)),
-  },
-  tools: [LinearFunctions.Sync].map((tool) => ToolId.make(tool.key)),
-});
+const make = () =>
+  Blueprint.make({
+    key: BLUEPRINT_KEY,
+    name: 'Linear',
+    description: 'Syncs Linear workspaces.',
+    instructions: {
+      source: Ref.make(Text.make(instructions)),
+    },
+    tools: functions.map((tool) => ToolId.make(tool.key)),
+  });
+
+const blueprint: AppCapabilities.BlueprintDefinition = {
+  key: BLUEPRINT_KEY,
+  functions,
+  make,
+};
+
+export default blueprint;

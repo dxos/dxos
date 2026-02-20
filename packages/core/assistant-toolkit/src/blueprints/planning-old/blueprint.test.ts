@@ -23,12 +23,13 @@ import { Text } from '@dxos/schema';
 import { type Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { TaskFunctions } from '../../functions';
 import { type TestStep, runSteps } from '../testing';
 
-import { blueprint } from './blueprint';
+import PlanningOldBlueprint from './blueprint';
+import { TaskFunctions } from './functions';
 
 describe('Planning Blueprint', { timeout: 120_000 }, () => {
+  const blueprint = PlanningOldBlueprint.make();
   it.scoped(
     'planning blueprint',
     Effect.fn(

@@ -39,7 +39,7 @@ import {
   navigateNextEffect,
   navigatePreviousEffect,
   preview,
-  scrollToBottomEffect,
+  scrollToLineEffect,
   smoothScroll,
   streamer,
   xmlTagContextEffect,
@@ -98,7 +98,7 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
               },
             },
           }),
-          createBasicExtensions({ lineWrapping: true, readOnly: true, scrollPastEnd: true }),
+          createBasicExtensions({ lineWrapping: true, readOnly: true, scrollPastEnd: false }),
           extendedMarkdown({ registry }),
           smoothScroll(),
           debug
@@ -110,7 +110,7 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
                 preview(),
                 xmlTags({ registry, setWidgets, bookmarks: ['prompt'] }),
                 streamer({ cursor, fadeIn }),
-                autoScroll({ autoScroll: false }),
+                autoScroll(),
               ],
         ].filter(isNonNullable),
       };
@@ -158,7 +158,7 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
         },
         scrollToBottom: (behavior?: ScrollBehavior) => {
           viewRef.current?.dispatch({
-            effects: scrollToBottomEffect.of(behavior),
+            effects: scrollToLineEffect.of({ line: -1, options: { behavior } }),
           });
         },
         navigatePrevious: () => {

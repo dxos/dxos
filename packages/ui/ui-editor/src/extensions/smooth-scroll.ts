@@ -88,8 +88,8 @@ export const smoothScroll = ({ offset = 0, position = 'start' }: Partial<SmoothS
        */
       scrollToLine(lineNumber: number, options: SmoothScrollOptions) {
         const { offset: animOffset = 0, position: animPosition, behavior } = options;
-        const doc = this.view.state.doc;
         const scroller = this.view.scrollDOM;
+        const doc = this.view.state.doc;
 
         // Convert 1-based line number to 0-based.
         const targetLine = Math.max(0, lineNumber - 1);
@@ -100,6 +100,12 @@ export const smoothScroll = ({ offset = 0, position = 'start' }: Partial<SmoothS
               scrollIntoView: true,
             });
           });
+          return;
+        }
+
+        // Scroll to bottom.
+        if (lineNumber === -1) {
+          this.animateScroll(scroller, scroller.scrollHeight - scroller.clientHeight);
           return;
         }
 
@@ -145,11 +151,11 @@ export const smoothScroll = ({ offset = 0, position = 'start' }: Partial<SmoothS
           return;
         }
 
-        // Use browser's built-in smooth scrolling.
-        element.scrollTo({
-          top: targetScrollTop,
-          behavior: 'smooth',
-        });
+        // Defer until after CM's own post-update DOM reconciliation, which
+        // would otherwise overwrite any scrollTop changes made synchronously.
+        setTimeout(() => {
+          element.scrollTo({ top: targetScrollTop, behavior: 'smooth' });
+        }, 100);
       }
     },
   );

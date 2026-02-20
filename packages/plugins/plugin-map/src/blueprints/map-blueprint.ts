@@ -2,24 +2,30 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type AppCapabilities } from '@dxos/app-toolkit';
 import { Blueprint, Template } from '@dxos/blueprints';
-import { type FunctionDefinition } from '@dxos/functions';
 import { trim } from '@dxos/util';
 
-export const functions: FunctionDefinition[] = [];
+const BLUEPRINT_KEY = 'dxos.org/blueprint/map';
 
-export const tools: string[] = [];
+const functions: AppCapabilities.BlueprintDefinition['functions'] = [];
 
-export const Key = 'dxos.org/blueprint/map';
-
-export const make = () =>
+const make = () =>
   Blueprint.make({
-    key: Key,
+    key: BLUEPRINT_KEY,
     name: 'Map',
-    tools: Blueprint.toolDefinitions({ functions, tools }),
+    tools: Blueprint.toolDefinitions({ functions, tools: [] }),
     instructions: Template.make({
       source: trim`
         You can create and update maps to show geospatial data.
       `,
     }),
   });
+
+const blueprint: AppCapabilities.BlueprintDefinition = {
+  key: BLUEPRINT_KEY,
+  functions,
+  make,
+};
+
+export default blueprint;

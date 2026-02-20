@@ -7,7 +7,7 @@ import { type SyntaxHighlighterProps as NaturalSyntaxHighlighterProps } from 're
 import NativeSyntaxHighlighter from 'react-syntax-highlighter/dist/esm/prism-async-light';
 import { coldarkDark as dark, coldarkCold as light } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
-import { type ThemedClassName, useThemeContext } from '@dxos/react-ui';
+import { ScrollArea, type ThemedClassName, useThemeContext } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 const zeroWidthSpace = '\u200b';
@@ -36,24 +36,27 @@ export const SyntaxHighlighter = ({
   const { themeMode } = useThemeContext();
 
   return (
-    <div className={mx('flex is-full p-1 overflow-hidden', classNames)}>
-      <NativeSyntaxHighlighter
-        className='!m-0 is-full overflow-auto scrollbar-thin'
-        language={languages[language as keyof typeof languages] || language}
-        style={themeMode === 'dark' ? dark : light}
-        customStyle={{
-          background: 'unset',
-          border: 'none',
-          boxShadow: 'none',
-          padding: 0,
-          margin: 0,
-        }}
-        {...props}
-      >
-        {/* Non-empty fallback prevents collapse. */}
-        {children || fallback}
-      </NativeSyntaxHighlighter>
-    </div>
+    <ScrollArea.Root thin classNames={mx('p1', classNames)}>
+      <ScrollArea.Viewport>
+        <div role='none'>
+          <NativeSyntaxHighlighter
+            language={languages[language as keyof typeof languages] || language}
+            style={themeMode === 'dark' ? dark : light}
+            customStyle={{
+              background: 'unset',
+              border: 'none',
+              boxShadow: 'none',
+              padding: 0,
+              margin: 0,
+            }}
+            {...props}
+          >
+            {/* Non-empty fallback prevents collapse. */}
+            {children || fallback}
+          </NativeSyntaxHighlighter>
+        </div>
+      </ScrollArea.Viewport>
+    </ScrollArea.Root>
   );
 };
 

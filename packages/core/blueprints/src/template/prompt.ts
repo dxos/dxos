@@ -54,6 +54,5 @@ export const processTemplate = (
     ).pipe(Effect.map(Record.fromEntries));
 
     log('processTemplate', { variables });
-
     return process((yield* Database.load(template.source)).content, variables);
   });

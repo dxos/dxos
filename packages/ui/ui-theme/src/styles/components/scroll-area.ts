@@ -51,24 +51,22 @@ export const scrollAreaViewport: ComponentFunction<ScrollAreaStyleProps> = (
       ? '[&::-webkit-scrollbar]:is-[4px] [&::-webkit-scrollbar]:bs-[4px]'
       : '[&::-webkit-scrollbar]:is-[8px] [&::-webkit-scrollbar]:bs-[8px]',
 
-    // '[&::-webkit-scrollbar-thumb]:rounded-full',
-    '[&::-webkit-scrollbar-thumb]:bg-transparent',
     '[&::-webkit-scrollbar-corner]:bg-transparent',
+    '[&::-webkit-scrollbar-track]:bg-transparent',
+    '[&::-webkit-scrollbar-thumb]:rounded-none',
 
-    // TODO(burdon): Define token.
     autoHide
       ? [
-          orientation === 'vertical' && 'group-hover/scroll-v:[&::-webkit-scrollbar-thumb]:bg-subduedSeparator',
-          orientation === 'horizontal' && 'group-hover/scroll-h:[&::-webkit-scrollbar-thumb]:bg-subduedSeparator',
-          orientation === 'all' && 'group-hover/scroll-all:[&::-webkit-scrollbar-thumb]:bg-subduedSeparator',
+          orientation === 'vertical' && 'group-hover/scroll-v:[&::-webkit-scrollbar-thumb]:bg-scrollbarThumb',
+          orientation === 'horizontal' && 'group-hover/scroll-h:[&::-webkit-scrollbar-thumb]:bg-scrollbarThumb',
+          orientation === 'all' && 'group-hover/scroll-all:[&::-webkit-scrollbar-thumb]:bg-scrollbarThumb',
         ]
       : [
-          orientation === 'vertical' && '[&::-webkit-scrollbar-thumb]:bg-subduedSeparator',
-          orientation === 'horizontal' && '[&::-webkit-scrollbar-thumb]:bg-subduedSeparator',
-          orientation === 'all' && '[&::-webkit-scrollbar-thumb]:bg-subduedSeparator',
+          orientation === 'vertical' && '[&::-webkit-scrollbar-thumb]:bg-scrollbarThumb',
+          orientation === 'horizontal' && '[&::-webkit-scrollbar-thumb]:bg-scrollbarThumb',
+          orientation === 'all' && '[&::-webkit-scrollbar-thumb]:bg-scrollbarThumb',
         ],
 
-    // TODO(burdon): Are scrollbars reserved on native devices?
     padding && [
       orientation === 'vertical' && 'pli-[4px]',
       orientation === 'horizontal' && 'pbe-[4px]',
