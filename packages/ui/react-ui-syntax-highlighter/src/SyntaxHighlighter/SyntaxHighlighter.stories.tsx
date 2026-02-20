@@ -4,15 +4,21 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { trim } from '@dxos/util';
+
+// @ts-ignore - Vite raw import.
+import TEXT from '../../package.json?raw';
 
 import { SyntaxHighlighter } from './SyntaxHighlighter';
 
 const meta = {
   title: 'ui/react-ui-syntax-highlighter/SyntaxHighlighter',
   component: SyntaxHighlighter,
-  decorators: [withTheme()],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
+  parameters: {
+    layout: 'fullscreen',
+  },
 } satisfies Meta<typeof SyntaxHighlighter>;
 
 export default meta;
@@ -23,7 +29,7 @@ export const Default: Story = {
   args: {
     language: 'json',
     classNames: 'text-sm',
-    children: JSON.stringify({ message: 'DXOS', initialized: true }, null, 2),
+    children: TEXT,
   },
 };
 
@@ -32,7 +38,7 @@ export const Typescript: Story = {
     language: 'tsx',
     children: trim`
       import React from 'react'
-      
+
       const Test = () => {
         return <div>Test</div>
       }
@@ -40,8 +46,4 @@ export const Typescript: Story = {
   },
 };
 
-export const Empty: Story = {
-  args: {
-    children: false,
-  },
-};
+export const Empty: Story = {};

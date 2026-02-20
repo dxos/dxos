@@ -25,7 +25,7 @@ export default {
 const Column = () => (
   <div>
     {Array.from({ length: 50 }).map((_, index) => (
-      <div key={index} className='text-sm'>
+      <div key={index} className='pli-1 text-sm cursor-pointer hover:bg-hoverSurface'>
         Item {index + 1}
       </div>
     ))}
@@ -37,7 +37,7 @@ const Row = () => (
     {Array.from({ length: 50 }).map((_, index) => (
       <div
         key={index}
-        className='shrink-0 bs-20 is-20 border border-separator rounded-md flex items-center justify-center text-sm'
+        className='shrink-0 bs-20 is-20 cursor-pointer border border-separator rounded-md flex items-center justify-center text-sm hover:bg-hoverSurface'
       >
         {index + 1}
       </div>
@@ -48,7 +48,7 @@ const Row = () => (
 export const Vertical = {
   render: () => (
     <div className='bs-72 is-48 p-2 border border-separator rounded-md'>
-      <ScrollArea.Root orientation='vertical'>
+      <ScrollArea.Root orientation='vertical' padding>
         <ScrollArea.Viewport>
           <Column />
         </ScrollArea.Viewport>
@@ -60,7 +60,7 @@ export const Vertical = {
 export const VerticalThin = {
   render: () => (
     <div className='bs-72 is-48 p-2 border border-separator rounded-md'>
-      <ScrollArea.Root orientation='vertical' thin>
+      <ScrollArea.Root orientation='vertical' padding thin>
         <ScrollArea.Viewport>
           <Column />
         </ScrollArea.Viewport>
@@ -72,7 +72,7 @@ export const VerticalThin = {
 export const Horizontal = {
   render: () => (
     <div className='is-96 p-2 border border-separator rounded-md'>
-      <ScrollArea.Root orientation='horizontal'>
+      <ScrollArea.Root orientation='horizontal' padding>
         <ScrollArea.Viewport>
           <Row />
         </ScrollArea.Viewport>
@@ -84,7 +84,7 @@ export const Horizontal = {
 export const HorizontalThin = {
   render: () => (
     <div className='is-96 p-2 border border-separator rounded-md'>
-      <ScrollArea.Root orientation='horizontal' thin>
+      <ScrollArea.Root orientation='horizontal' padding thin>
         <ScrollArea.Viewport>
           <Row />
         </ScrollArea.Viewport>
@@ -95,8 +95,8 @@ export const HorizontalThin = {
 
 export const Both = {
   render: () => (
-    <div className='bs-72 is-96 p-2 border border-separator rounded-md'>
-      <ScrollArea.Root thin orientation='all'>
+    <div className='bs-96 is-96 p-2 border border-separator rounded-md'>
+      <ScrollArea.Root orientation='all' padding>
         <ScrollArea.Viewport>
           <div className='flex flex-col gap-2'>
             {Array.from({ length: 50 }).map((_, rowIndex) => (

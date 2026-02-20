@@ -43,6 +43,9 @@ import { fontBody, fontMono } from './tokens';
  * </div>
  */
 export const baseTheme = EditorView.baseTheme({
+  /**
+   * Outer frame.
+   */
   '&': {},
   '&.cm-focused': {
     outline: 'none',
@@ -51,8 +54,16 @@ export const baseTheme = EditorView.baseTheme({
   /**
    * Scroller
    */
-  '.cm-scroller': {
-    overflowY: 'auto',
+  '.cm-scroller': {},
+  '.cm-scroller::-webkit-scrollbar': {
+    width: '8px',
+  },
+  '.cm-scroller::-webkit-scrollbar-track': {},
+  '.cm-scroller::-webkit-scrollbar-thumb': {
+    background: 'transparent',
+  },
+  '.cm-scroller:hover::-webkit-scrollbar-thumb': {
+    background: 'var(--dx-scrollbarThumb)',
   },
 
   /**

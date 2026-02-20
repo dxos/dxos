@@ -110,7 +110,7 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
                 preview(),
                 xmlTags({ registry, setWidgets, bookmarks: ['prompt'] }),
                 streamer({ cursor, fadeIn }),
-                autoScroll({ autoScroll: false }),
+                autoScroll(),
               ],
         ].filter(isNonNullable),
       };
