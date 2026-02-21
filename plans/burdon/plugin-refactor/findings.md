@@ -1,39 +1,57 @@
-# Findings: plugin-kanban className / div audit
+# Plugin UI Refactor — Session Notes
 
-## Package structure (current state)
-- `plugin-kanban` already has `src/components/` and `src/containers/` split — good.
-- `react-ui-kanban` has no source (dist only); Board primitives live in `react-ui-mosaic`.
+## Goal
+Simplify plugin UI components by pushing layout/styling into `react-ui-xxx` primitives.
+Plugins should contain minimal raw `<div className=...>` usage.
 
-## File-by-file analysis
+## Rules
 
-### KanbanColumn.tsx — MOST issues
+1. **No raw layout divs in plugins** — use primitives from `react-ui-xxx` instead.
+2. **No className on primitive components** — if every caller passes the same classNames, bake them in.
+3. **Split plugin structure** — `src/components/` (low-level, reusable) and `src/containers/` (high-level, wired to Echo/surfaces).
+4. **Stories are exempt** — wrapper divs in `.stories.tsx` are acceptable.
+5. **Handler naming convention** — `on{Noun}{Verb}` for props (e.g. `onCardAdd`, `onCardRemove`); `handle{Noun}{Verb}` for local callbacks (e.g. `handleCardAdd`).
 
-| Line | Element | className | Issue |
-|------|---------|-----------|-------|
-| 50-54 | `<div role='none'>` | `group/column grid bs-full overflow-hidden grid-rows-[var(--rail-action)_1fr_var(--rail-action)]` | Layout wrapper; should be a Board.Column primitive |
-| 56 | `<div>` (uncategorized header) | `border-be border-separator p-2` | Mimics Board.Column.Header styling without using it |
-| 62 | `<Board.Column.Header>` | `classNames='border-be border-separator'` | Passes layout classNames into a ui component |
-| 72-76 | `<div role='none'>` (add card footer) | `rounded-b-sm border-bs border-separator p-1` | Footer area; should be a Board.Column.Footer primitive |
+## What We Did in plugin-kanban
 
-### KanbanBoard.tsx — clean
-No raw divs with classNames outside stories.
+### Audit
+Scanned all `.tsx` files in `plugin-kanban` for raw `<div className=...>` and custom `classNames` props.
+Only `KanbanColumn.tsx` had issues.
 
-### KanbanCardTile.tsx — clean
-Uses Card.* primitives throughout.
+### react-ui-mosaic changes (`Board/Column.tsx`)
+- Added `Board.Column.Grid` — encapsulates the `group/column grid bs-full overflow-hidden` wrapper div; callers pass grid-rows via `classNames`.
+- Baked `border-be border-separator` into `Board.Column.Header` (all callers passed it).
+- Baked `border-bs border-separator` + `rounded-b-sm` into `Board.Column.Footer`.
+- Added `onAdd` prop to `Board.Column.Footer` — falls back to `model.onItemCreate` when not provided.
+- Updated `DefaultBoardColumn` to use `BoardColumnGrid`.
+- Exported `Grid` from the `BoardColumn` namespace.
 
-### KanbanContainer.tsx — clean
-Uses Layout.Main; no raw divs.
+### plugin-kanban changes (`KanbanColumn.tsx`)
+- Replaced outer grid div → `<Board.Column.Grid classNames='grid-rows-...'>`
+- Removed `classNames='border-be border-separator'` from `Board.Column.Header`.
+- Replaced footer div + `IconButton` → `<Board.Column.Footer onAdd={...}>`.
+- Removed unused `IconButton`, `useTranslation`, `meta` imports.
 
-### KanbanViewEditor.tsx — clean
-Uses Form.Root / Form.FieldSet; no raw divs.
+### plugin-pipeline side-effect (`PipelineColumn.tsx`)
+- Removed now-redundant `classNames='border-be border-separator'` from `Board.Column.Header`.
 
-### KanbanBoard.stories.tsx — excluded (story file)
-`<div className='fixed inset-0 flex flex-col overflow-hidden'>` — acceptable in stories.
+### Prop rename (KanbanBoard.tsx / KanbanContainer.tsx)
+- `onAddCard` → `onCardAdd`, `onRemoveCard` → `onCardRemove` (props)
+- `handleAddCard` → `handleCardAdd`, `handleRemoveCard` → `handleCardRemove` (locals)
 
-## Summary
-The only file requiring attention is `KanbanColumn.tsx`. Issues centre on:
-1. The outer wrapper grid div that structures header / body / footer rows.
-2. The uncategorized-header div that duplicates Board.Column.Header styling.
-3. The add-card footer div.
+## Remaining Issue in plugin-kanban
+- Uncategorized column header is still a raw `<div className='border-be border-separator p-2'>` — it can't use `Board.Column.Header` because it has no drag handle. Low priority.
 
-Proposed fix: add `Board.Column.Footer` (or similar) to react-ui-mosaic so the wrapper and footer can be expressed as primitives rather than raw divs. Alternatively, check whether `Board.Column.Root` already supports a slot-based layout.
+## Process for Next Plugin
+
+1. **Find all `.tsx` files** in `packages/plugins/plugin-xxx/src/`.
+2. **Search for**: `className=`, `classNames=` on raw `<div>`/`<span>`, and `classNames` props passed to primitives.
+3. **Check the corresponding `react-ui-xxx` package** for existing primitives before adding new ones.
+4. **If multiple callers pass the same classNames** to a primitive → bake them in.
+5. **If a layout pattern recurs** across plugins → extract it into a new primitive in `react-ui-xxx`.
+6. Run `tsc --noEmit` in the plugin package to verify after each change.
+7. Run `pnpm -w pre-ci` at the end.
+
+## Candidate Plugins
+- `plugin-pipeline` — still has raw grid div in `PipelineColumn.tsx` (2-row variant).
+- Others: `plugin-table`, `plugin-sheet`, `plugin-thread`, etc.
