@@ -40,7 +40,7 @@ export const CommentsContainer = ({ anchors, currentId, showResolvedThreads, ...
 
   if (filteredAnchors.length === 0) {
     return (
-      <div role='none' className='plb-cardSpacingBlock pli-cardSpacingInline'>
+      <div role='none' className='p-cardPadding'>
         <Message.Root>
           <Message.Title>
             <Trans

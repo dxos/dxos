@@ -30,10 +30,10 @@ import {
 
 // New features/polish
 // [x] Unify readonly/inline modes
+// [ ] auto save doesn't work for combobox + select due to only firing on blur (workaround is to use onValuesChanged)
 // [ ] Don't call save/autoSave if value hasn't changed
 // [ ] Fix onCancel (restore values)
 // [ ] Fix useSchema Type.Obj.Any cast
-// [ ] Remove @dxos/echo-db deps
 // [ ] TableCellEditor (handleEnter/ModalController).
 // [ ] Use FormFieldWrapper uniformly
 // [ ] Inline tables for object arrays
@@ -42,7 +42,6 @@ import {
 // [x] Refs
 //   [x] Single-select (fix popover)
 //   [x] Multi-select (array)
-// [ ] auto save doesn't work for combobox + select due to only firing on blur (workaround is to use onValuesChanged)
 
 // TODO(burdon): Move to @dxos/schema (re-export here).
 export type ExcludeId<S extends Schema.Schema.AnyNoContext> = Omit<Schema.Schema.Type<S>, 'id'>;
@@ -197,7 +196,7 @@ const FormContent = ({ classNames, children }: FormContentProps) => {
     <div
       ref={ref}
       role='form'
-      className={mx('is-full flex flex-col gap-trimLg pli-cardSpacingInline density-fine', classNames)}
+      className={mx('is-full flex flex-col gap-cardPadding pli-cardPadding', classNames)}
       data-testid={testId}
     >
       {children}
@@ -247,7 +246,7 @@ const FormActions = ({ classNames }: FormActionsProps) => {
   //   Deprecate FormSubmit ans use FormActions without Cancel button if no callback is supplied.
 
   return (
-    <div role='none' className={mx('grid grid-flow-col auto-cols-fr gap-2', classNames)}>
+    <div role='none' className={mx('grid grid-flow-col gap-2 auto-cols-fr plb-cardPadding', classNames)}>
       {onCancel && (
         <IconButton
           icon='ph--x--regular'
@@ -296,7 +295,7 @@ const FormSubmit = ({ classNames, label, icon, disabled }: FormSubmitProps) => {
   }
 
   return (
-    <div role='none' className={mx('flex is-full pbs-cardSpacingBlock', classNames)}>
+    <div role='none' className={mx('flex is-full pbs-formSpacing', classNames)}>
       <IconButton
         classNames='is-full'
         type='submit'
@@ -323,9 +322,9 @@ export const Form = {
   Viewport: FormViewport,
   Content: FormContent,
   FieldSet: FormFieldSet,
+  Label: FormFieldLabel,
   Actions: FormActions,
   Submit: FormSubmit,
-  Label: FormFieldLabel,
 };
 
 export { useFormContext, useFormValues, useFormFieldState };
@@ -335,7 +334,7 @@ export type {
   FormViewportProps,
   FormContentProps,
   FormFieldSetProps,
+  FormFieldLabelProps as LabelProps,
   FormActionsProps,
   FormSubmitProps,
-  FormFieldLabelProps as LabelProps,
 };

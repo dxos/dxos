@@ -7,7 +7,7 @@ import React, { useCallback } from 'react';
 
 import { rangeToA1Notation } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
-import { Message, useTranslation } from '@dxos/react-ui';
+import { Input, Message, useTranslation } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';
 import { ghostHover } from '@dxos/ui-theme';
 
@@ -34,7 +34,9 @@ export const RangeList = ({ sheet }: RangeListProps) => {
   );
   return (
     <>
-      <h2 className='mbs-cardSpacingBlock mbe-labelSpacingBlock text-sm font-semibold'>{t('range list heading')}</h2>
+      <Input.Root>
+        <Input.Label>{t('range list heading')}</Input.Label>
+      </Input.Root>
       {sheet.ranges.length < 1 ? (
         <Message.Root>
           <Message.Title>{t('no ranges message')}</Message.Title>
