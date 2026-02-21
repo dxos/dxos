@@ -237,7 +237,7 @@ const ComboboxInput = forwardRef<HTMLInputElement, ComboboxInputProps>(({ classN
   return (
     <SearchList.Input
       {...props}
-      classNames={['mli-cardChrome mbs-cardChrome mbe-0 is-[calc(100%-2*var(--dx-cardChrome))]', classNames]}
+      classNames={['m-cardChrome mbe-0 is-[calc(100%-2*var(--dx-cardChrome))]', classNames]}
       ref={forwardedRef}
     />
   );

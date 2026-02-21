@@ -11,6 +11,7 @@ import { useQuery } from '@dxos/react-client/echo';
 import { IconButton, Popover, Select, useTranslation } from '@dxos/react-ui';
 import { Listbox, SearchList, useSearchListResults } from '@dxos/react-ui-searchlist';
 import { Tabs } from '@dxos/react-ui-tabs';
+import { mx } from '@dxos/ui-theme';
 
 import {
   useActiveBlueprints,
@@ -67,7 +68,14 @@ export const ChatOptions = ({ db, context, blueprintRegistry, presets, preset, o
           <Popover.Content side='top' classNames={panelClassNames}>
             <Popover.Viewport>
               <Tabs.Root orientation='horizontal' defaultValue='blueprints' defaultActivePart='list' tabIndex={-1}>
-                <Tabs.Viewport classNames='max-bs-[--radix-popover-content-available-height] grid grid-rows-[1fr_min-content] [&_[cmdk-root]]:contents [&_[role="tabpanel"]]:grid [&_[role="tabpanel"]]:grid-rows-[1fr_min-content] [&_[role="listbox"]]:min-bs-0 [&_[role="listbox"]]:overflow-y-auto [&_[role="tabpanel"]]:min-bs-0 [&_[role="tabpanel"]]:pli-cardChrome [&_[role="tabpanel"][data-state="active"]]:order-first [&_[role="tabpanel"][data-state="inactive"]]:hidden'>
+                <Tabs.Viewport
+                  classNames={mx(
+                    'max-bs-[--radix-popover-content-available-height] grid grid-rows-[1fr_min-content]',
+                    '[&_[cmdk-root]]:contents [&_[role="tabpanel"]]:grid [&_[role="tabpanel"]]:grid-rows-[1fr_min-content]',
+                    '[&_[role="listbox"]]:min-bs-0 [&_[role="listbox"]]:overflow-y-auto',
+                    '[&_[role="tabpanel"]]:min-bs-0 [&_[role="tabpanel"]]:pli-cardChrome [&_[role="tabpanel"][data-state="active"]]:order-first [&_[role="tabpanel"][data-state="inactive"]]:hidden',
+                  )}
+                >
                   <Tabs.Tabpanel value='blueprints' tabIndex={-1} classNames='dx-focus-ring-inset'>
                     <BlueprintsPanel blueprintRegistry={blueprintRegistry} db={db} context={context} />
                   </Tabs.Tabpanel>
