@@ -1,0 +1,82 @@
+//
+// Copyright 2024 DXOS.org
+//
+
+import * as Schema from 'effect/Schema';
+
+import { Annotation, JsonSchema, Obj, Type } from '@dxos/echo';
+import { SystemTypeAnnotation } from '@dxos/echo/internal';
+
+import { Script } from './Script';
+
+/**
+ * Function deployment.
+ */
+export const Function = Schema.Struct({
+  /**
+   * Global registry ID.
+   * NOTE: The `key` property refers to the original registry entry.
+   */
+  // TODO(burdon): Create Format type for DXN-like ids, such as this and schema type.
+  // TODO(dmaretskyi): Consider making it part of ECHO meta.
+  // TODO(dmaretskyi): Make required.
+  key: Schema.optional(Schema.String).annotations({
+    description: 'Unique registration key for the blueprint',
+  }),
+
+  name: Schema.NonEmptyString,
+  version: Schema.String,
+
+  description: Schema.optional(Schema.String),
+
+  /**
+   * ISO date string of the last deployment.
+   */
+  updated: Schema.optional(Schema.String),
+
+  // Reference to a source script if it exists within ECHO.
+  // TODO(burdon): Don't ref ScriptType directly (core).
+  source: Schema.optional(Type.Ref(Script)),
+
+  inputSchema: Schema.optional(JsonSchema.JsonSchema),
+  outputSchema: Schema.optional(JsonSchema.JsonSchema),
+
+  /**
+   * List of required services.
+   * Match the Context.Tag keys of the FunctionServices variants.
+   */
+  services: Schema.optional(Schema.Array(Schema.String)),
+
+  // Local binding to a function name.
+  binding: Schema.optional(Schema.String),
+}).pipe(
+  Type.object({
+    typename: 'dxos.org/type/Function',
+    version: '0.1.0',
+  }),
+  Annotation.LabelAnnotation.set(['name']),
+  SystemTypeAnnotation.set(true),
+);
+
+export interface Function extends Schema.Schema.Type<typeof Function> {}
+
+export const make = (props: Obj.MakeProps<typeof Function>) => Obj.make(Function, props);
+
+/**
+ * Copies properties from source to target.
+ * @param target - Target object to copy properties to.
+ * @param source - Source object to copy properties from.
+ */
+export const setFrom = (target: Function, source: Function) => {
+  Obj.change(target, (t) => {
+    t.key = source.key ?? target.key;
+    t.name = source.name ?? target.name;
+    t.version = source.version;
+    t.description = source.description;
+    t.updated = source.updated;
+    // TODO(dmaretskyi): A workaround for an ECHO bug.
+    t.inputSchema = source.inputSchema ? JSON.parse(JSON.stringify(source.inputSchema)) : undefined;
+    t.outputSchema = source.outputSchema ? JSON.parse(JSON.stringify(source.outputSchema)) : undefined;
+    Obj.getMeta(t).keys = JSON.parse(JSON.stringify(Obj.getMeta(source).keys));
+  });
+};
