@@ -47,6 +47,7 @@ export type ScrollToLineProps = {
  * StateEffect for triggering smooth scroll to a specific line.
  */
 export const scrollToLineEffect = StateEffect.define<ScrollToLineProps>();
+export const scrollCancelEffect = StateEffect.define<void>();
 
 /**
  * Extension that provides smooth scrolling to specific lines in the editor.
@@ -79,13 +80,17 @@ export const smoothScroll = ({ offset = 0, position = 'start' }: Partial<SmoothS
   // ViewPlugin to manage scroll animations.
   const scrollPlugin = ViewPlugin.fromClass(
     class SmoothScrollPlugin {
-      private readonly scroller: () => void;
+      private readonly scroller: ReturnType<typeof createSmoothScrollTo>;
       constructor(private readonly view: EditorView) {
-        this.scroller = createBottomScroller(this.view.scrollDOM, 1000);
+        this.scroller = createSmoothScrollTo(this.view);
       }
 
       // No-op.
       destroy() {}
+
+      cancel() {
+        this.scroller.cancel();
+      }
 
       /**
        * Perform smooth scroll to the specified line.
@@ -109,8 +114,7 @@ export const smoothScroll = ({ offset = 0, position = 'start' }: Partial<SmoothS
 
         // Scroll to bottom.
         if (lineNumber === -1) {
-          this.scroller();
-          // this.animateScroll(scroller, scroller.scrollHeight - scroller.clientHeight);
+          this.scroller.scrollTo();
           return;
         }
 
@@ -172,7 +176,12 @@ export const smoothScroll = ({ offset = 0, position = 'start' }: Partial<SmoothS
     EditorView.updateListener.of((update) => {
       update.transactions.forEach((transaction) => {
         for (const effect of transaction.effects) {
-          if (effect.is(scrollToLineEffect)) {
+          if (effect.is(scrollCancelEffect)) {
+            const plugin = update.view.plugin(scrollPlugin);
+            if (plugin) {
+              plugin.cancel();
+            }
+          } else if (effect.is(scrollToLineEffect)) {
             const { line, options = {} } = effect.value;
             const plugin = update.view.plugin(scrollPlugin);
             if (plugin) {
@@ -199,31 +208,57 @@ export const scrollToLine = (view: EditorView, line: number, options?: SmoothScr
   });
 };
 
-function easeInOutCubic(t: number): number {
-  return t < 0.5 ? 4 * t ** 3 : 1 - (-2 * t + 2) ** 3 / 2;
-}
+/**
+ * Creates a smooth, retargetable scrolling function for a CodeMirror 6 EditorView.
+ *
+ * The returned `scrollTo()` smoothly moves `view.scrollDOM.scrollTop` toward a target using a single
+ * requestAnimationFrame loop with exponential convergence (a fixed fraction of the remaining distance
+ * each frame). Repeated calls while animating retarget the destination without restarting the loop.
+ *
+ * Movement per frame is:
+ *   step = clamp(delta * k, -maxStepPx..maxStepPx)
+ *
+ * and is floored to `minStepPx` to avoid stalling when `scrollTop` is quantized. When the remaining
+ * distance is within `snapPx`, it snaps to the exact target and stops.
+ */
+export function createSmoothScrollTo(view: EditorView) {
+  const k = 0.05; // Fraction of remaining distance moved each frame (0 < k < 1).
+  const maxStep = 80; // Max step size (px).
+  const el = view.scrollDOM;
 
-function createBottomScroller(el: HTMLElement, duration = 200) {
-  let animFrame: number | null = null;
-  let startTop: number;
-  let startTime: number;
+  let currentTop = 0; // Float-precision position; avoids browser integer-rounding of scrollTop.
+  let rafId: number | null = null;
 
-  function tick(now: number) {
-    const target = el.scrollHeight - el.clientHeight;
-    const elapsed = now - startTime;
-    const t = Math.min(elapsed / duration, 1);
-    el.scrollTop = startTop + (target - startTop) * easeInOutCubic(t);
-    animFrame = t < 1 ? requestAnimationFrame(tick) : null;
-  }
-
-  return function scroll() {
-    // Already animating — just let tick() chase the new target naturally.
-    if (animFrame) {
+  function frame() {
+    // Recompute each frame so the animation chases a live-updating document's bottom.
+    const targetTop = el.scrollHeight - el.clientHeight;
+    const delta = targetTop - currentTop;
+    if (Math.abs(delta) < 0.5) {
+      el.scrollTop = targetTop;
+      currentTop = targetTop;
+      rafId = null;
       return;
     }
 
-    startTop = el.scrollTop;
-    startTime = performance.now();
-    animFrame = requestAnimationFrame(tick);
-  };
+    const step = Math.sign(delta) * Math.min(Math.abs(delta * k), maxStep);
+    currentTop += step;
+    el.scrollTop = currentTop;
+    rafId = requestAnimationFrame(frame);
+  }
+
+  function scrollTo() {
+    if (rafId === null) {
+      currentTop = el.scrollTop;
+      rafId = requestAnimationFrame(frame);
+    }
+  }
+
+  function cancel() {
+    if (rafId !== null) {
+      cancelAnimationFrame(rafId);
+      rafId = null;
+    }
+  }
+
+  return { scrollTo, cancel };
 }
