@@ -31,8 +31,8 @@ import {
 } from '@dxos/react-ui-table';
 import { getTypenameFromQuery } from '@dxos/schema';
 
-import { meta } from '../meta';
-import { type Table } from '../types';
+import { meta } from '../../meta';
+import { type Table } from '../../types';
 
 export type TableContainerProps = SurfaceComponentProps<Table.Table>;
 

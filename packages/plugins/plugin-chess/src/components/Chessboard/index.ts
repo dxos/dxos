@@ -1,5 +1,5 @@
 //
-// Copyright 2026 DXOS.org
+// Copyright 2023 DXOS.org
 //
 
 export * from './Chessboard';

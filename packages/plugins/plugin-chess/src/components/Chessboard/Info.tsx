@@ -12,9 +12,9 @@ import { Icon, IconButton, Select, type ThemedClassName, useTranslation } from '
 import { type Player, useGameboardContext } from '@dxos/react-ui-gameboard';
 import { mx } from '@dxos/ui-theme';
 
-import { meta } from '../meta';
+import { meta } from '../../meta';
 
-import { type ExtendedChessModel } from './Chessboard';
+import { type ExtendedChessModel } from './types';
 
 const INFO_NAME = 'Chessboard.Info';
 

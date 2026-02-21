@@ -11,7 +11,7 @@ import { useSchema } from '@dxos/react-client/echo';
 import { Form, type FormFieldMap, SelectField } from '@dxos/react-ui-form';
 import { getTypenameFromQuery } from '@dxos/schema';
 
-import { type Map } from '../types';
+import { type Map } from '../../types';
 
 // TODO(wittjosiah): Add center and zoom.
 export const MapSettingsSchema = Schema.Struct({
@@ -26,7 +26,6 @@ export const MapViewEditor = ({ object }: MapViewEditorProps) => {
   const view = object?.view?.target;
   const typename = view?.query ? getTypenameFromQuery(view.query.ast) : undefined;
   const currentSchema = useSchema(db, typename);
-
   const [allSchemata, setAllSchemata] = useState<Type.RuntimeType[]>([]);
 
   useEffect(() => {

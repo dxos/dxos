@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Registry, RegistryContext } from '@effect-atom/atom-react';
+import { RegistryContext } from '@effect-atom/atom-react';
 import React, {
   type PropsWithChildren,
   forwardRef,
@@ -18,7 +18,7 @@ import { addEventListener } from '@dxos/async';
 import { Obj } from '@dxos/echo';
 import { type ThemedClassName } from '@dxos/react-ui';
 import {
-  ChessModel,
+  type ChessModel,
   Gameboard,
   type GameboardRootProps,
   Chessboard as NaturalChessboard,
@@ -29,21 +29,13 @@ import {
 import { useSoundEffect } from '@dxos/react-ui-sfx';
 import { mx } from '@dxos/ui-theme';
 
-import { type Chess } from '../types';
+import { type Chess } from '../../types';
 
 import { Info, type InfoProps } from './Info';
+import { ExtendedChessModel } from './types';
 
 export interface ChessboardController {
   setMoveNumber(index: number): void;
-}
-
-export class ExtendedChessModel extends ChessModel {
-  constructor(
-    registry: Registry.Registry,
-    readonly object: Chess.Game,
-  ) {
-    super(registry);
-  }
 }
 
 //
@@ -86,8 +78,8 @@ const Root = forwardRef<ChessboardController, RootProps>(({ game, children }, fo
       }
 
       void click.play();
-      Obj.change(game, (g) => {
-        g.pgn = model.pgn;
+      Obj.change(game, (game) => {
+        game.pgn = model.pgn;
       });
       return true;
     },
@@ -105,16 +97,17 @@ const Root = forwardRef<ChessboardController, RootProps>(({ game, children }, fo
 // Content
 //
 
-type Role = 'card--popover' | 'card--intrinsic' | 'card--extrinsic';
+type Role = 'card--content';
 
 type ContentProps = ThemedClassName<PropsWithChildren<{ role?: Role }>>;
 
 const Content = ({ classNames, children, role }: ContentProps) => {
   return (
     <Gameboard.Content
-      classNames={mx(classNames, role === 'card--popover' && 'size-container card-square')}
-      grow={!role || role === 'card--extrinsic'}
-      contain={!role || role === 'card--extrinsic' || role === 'card--popover'}
+      classNames={mx(
+        classNames,
+        role === 'card--content' ? 'size-container card-square' : 'flex flex-col justify-center',
+      )}
     >
       {children}
     </Gameboard.Content>
@@ -166,7 +159,7 @@ const Board = (props: BoardProps) => {
     });
   }, [registry, model]);
 
-  return <NaturalChessboard ref={ref} {...props} />;
+  return <NaturalChessboard {...props} ref={ref} />;
 };
 
 Board.displayName = BOARD_NAME;

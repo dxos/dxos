@@ -9,14 +9,13 @@ import { Layout, Toolbar, useTranslation } from '@dxos/react-ui';
 import { type Player } from '@dxos/react-ui-gameboard';
 import { mx } from '@dxos/ui-theme';
 
-import { meta } from '../meta';
-import { type Chess } from '../types';
+import { Chessboard, type ChessboardController, type ChessboardInfoProps } from '../../components';
+import { meta } from '../../meta';
+import { type Chess } from '../../types';
 
-import { Chessboard, type ChessboardController, type ChessboardInfoProps } from './Chessboard';
+export type ChessArticleProps = SurfaceComponentProps<Chess.Game>;
 
-export type ChessboardArticleProps = SurfaceComponentProps<Chess.Game>;
-
-export const ChessboardArticle = ({ role, subject: game }: ChessboardArticleProps) => {
+export const ChessArticle = ({ role, subject: game }: ChessArticleProps) => {
   const { t } = useTranslation(meta.id);
   const [orientation, setOrientation] = useState<Player>('white');
   const [open, setOpen] = useState(true);

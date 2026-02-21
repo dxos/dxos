@@ -13,14 +13,14 @@
   "type": "module",
   "exports": {
     ".": {
+      "default": "./dist/lib/neutral/index.mjs",
       "source": "./src/index.ts",
-      "types": "./dist/types/src/index.d.ts",
-      "default": "./dist/lib/neutral/index.mjs"
+      "types": "./dist/types/src/index.d.ts"
     },
     "./testing": {
+      "default": "./dist/lib/neutral/testing/index.mjs",
       "source": "./src/testing/index.ts",
-      "types": "./dist/types/src/testing/index.d.ts",
-      "default": "./dist/lib/neutral/testing/index.mjs"
+      "types": "./dist/types/src/testing/index.d.ts"
     }
   },
   "files": [
@@ -47,6 +47,7 @@
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
+    "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",
