@@ -6,10 +6,10 @@ Plugins should contain minimal raw `<div className=...>` usage.
 
 ## Rules
 
-1. **No @dxos/app-framework hooks in plugin components** — factor out usage of hooks into surface containers.
-2. **No raw layout divs in plugins** — use primitives from `react-ui-xxx` instead.
-3. **No className on primitive components** — if every caller passes the same classNames, bake them in.
-4. **Split plugin structure** — `src/components/` (low-level, reusable) and `src/containers/` (high-level, wired to Echo/surfaces).
+1. **Split plugin structure** — `src/components/` (low-level, reusable) and `src/containers/` (high-level, wired to Echo/surfaces).
+2. **No @dxos/app-framework hooks in plugin components** — factor out usage of hooks into surface containers.
+3. **No raw layout divs in plugins** — use primitives from `react-ui-xxx` instead.
+4. **No className on primitive components** — if every caller passes the same classNames, bake them in.
 5. **Stories are exempt** — wrapper divs in `.stories.tsx` are acceptable.
 6. **Handler naming convention** — `on{Noun}{Verb}` for props (e.g. `onCardAdd`, `onCardRemove`); `handle{Noun}{Verb}` for local callbacks (e.g. `handleCardAdd`).
 
