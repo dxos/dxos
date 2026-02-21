@@ -197,7 +197,7 @@ const FormContent = ({ classNames, children }: FormContentProps) => {
     <div
       ref={ref}
       role='form'
-      className={mx('flex flex-col is-full pli-cardSpacingInline density-fine', classNames)}
+      className={mx('is-full flex flex-col gap-trimLg pli-cardSpacingInline density-fine', classNames)}
       data-testid={testId}
     >
       {children}
@@ -247,7 +247,7 @@ const FormActions = ({ classNames }: FormActionsProps) => {
   //   Deprecate FormSubmit ans use FormActions without Cancel button if no callback is supplied.
 
   return (
-    <div role='none' className={mx('grid grid-flow-col auto-cols-fr gap-2 pbs-cardSpacingBlock', classNames)}>
+    <div role='none' className={mx('grid grid-flow-col auto-cols-fr gap-2', classNames)}>
       {onCancel && (
         <IconButton
           icon='ph--x--regular'
