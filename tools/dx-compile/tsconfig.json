@@ -4,7 +4,8 @@
     "emitDeclarationOnly": false,
     "module": "CommonJS",
     "moduleResolution": "Node",
-    "outDir": "dist"
+    "outDir": "dist",
+    "verbatimModuleSyntax": false
   },
   "include": [
     "src"
