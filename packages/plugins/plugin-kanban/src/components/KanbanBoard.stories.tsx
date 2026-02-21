@@ -107,28 +107,24 @@ const DefaultStory = () => {
   }
 
   return (
-    <div className='fixed inset-0 flex flex-col overflow-hidden'>
-      <KanbanBoard.Root
-        kanban={state.kanban}
-        projection={state.projection}
-        items={items}
-        itemTile={KanbanCardTileSimple}
-        change={state.change}
-        onAddCard={handleCardAdd}
-        onRemoveCard={handleCardRemove}
-      >
-        <KanbanBoard.Content />
-      </KanbanBoard.Root>
-    </div>
+    <KanbanBoard.Root
+      kanban={state.kanban}
+      projection={state.projection}
+      items={items}
+      itemTile={KanbanCardTileSimple}
+      change={state.change}
+      onCardAdd={handleCardAdd}
+      onCardRemove={handleCardRemove}
+    >
+      <KanbanBoard.Content />
+    </KanbanBoard.Root>
   );
 };
 
 const meta = {
   title: 'plugins/plugin-kanban/KanbanBoard',
   component: DefaultStory,
-  decorators: [withTheme(), withMosaic(), withRegistry, withLayout({ layout: 'fullscreen' })] as Meta<
-    typeof DefaultStory
-  >['decorators'],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' }), withMosaic(), withRegistry],
   parameters: {
     layout: 'fullscreen',
     translations,

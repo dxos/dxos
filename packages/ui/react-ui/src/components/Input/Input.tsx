@@ -205,7 +205,7 @@ const TextArea = forwardRef<HTMLTextAreaElement, InputScopedProps<TextAreaProps>
       <TextAreaPrimitive
         {...props}
         className={tx(
-          'input.input',
+          'input.textArea',
           {
             variant,
             disabled: props.disabled,
@@ -213,7 +213,6 @@ const TextArea = forwardRef<HTMLTextAreaElement, InputScopedProps<TextAreaProps>
             elevation,
             validationValence,
           },
-          '-mbe-labelSpacingBlock',
           classNames,
         )}
         {...(props.autoFocus && !hasIosKeyboard && { autoFocus: true })}

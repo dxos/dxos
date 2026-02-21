@@ -49,21 +49,21 @@ export const MessageArticle = ({
   const handleReply = useCallback(() => {
     void invokePromise(InboxOperation.OpenComposeEmail, {
       mode: 'reply',
-      originalMessage: message,
+      message,
     });
   }, [invokePromise, message]);
 
   const handleReplyAll = useCallback(() => {
     void invokePromise(InboxOperation.OpenComposeEmail, {
       mode: 'reply-all',
-      originalMessage: message,
+      message,
     });
   }, [invokePromise, message]);
 
   const handleForward = useCallback(() => {
     void invokePromise(InboxOperation.OpenComposeEmail, {
       mode: 'forward',
-      originalMessage: message,
+      message,
     });
   }, [invokePromise, message]);
 

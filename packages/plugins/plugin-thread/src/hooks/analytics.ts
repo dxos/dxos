@@ -21,6 +21,7 @@ export const useOnEditAnalytics = (
     if (!message || !textBlock) {
       return;
     }
+
     const db = Obj.getDatabase(message);
     if (!db) {
       return;

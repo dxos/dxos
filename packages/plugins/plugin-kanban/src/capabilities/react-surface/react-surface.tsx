@@ -13,7 +13,7 @@ import { findAnnotation } from '@dxos/effect';
 import { type FormFieldComponentProps, SelectField, useFormValues } from '@dxos/react-ui-form';
 import { type Collection } from '@dxos/schema';
 
-import { KanbanContainer, KanbanViewEditor } from '../../components';
+import { KanbanContainer, KanbanViewEditor } from '../../containers';
 import { meta } from '../../meta';
 import { Kanban, PivotColumnAnnotationId } from '../../types';
 
@@ -31,7 +31,7 @@ export default Capability.makeModule(() =>
         role: 'object-settings',
         position: 'hoist',
         filter: (data): data is { subject: Kanban.Kanban } => Obj.instanceOf(Kanban.Kanban, data.subject),
-        component: ({ data }) => <KanbanViewEditor object={data.subject} />,
+        component: ({ data }) => <KanbanViewEditor subject={data.subject} />,
       }),
       Surface.create({
         id: `${meta.id}/create-initial-schema-form-[pivot-column]`,

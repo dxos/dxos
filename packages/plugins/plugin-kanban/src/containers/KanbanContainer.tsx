@@ -14,11 +14,9 @@ import { useObject, useSchema } from '@dxos/react-client/echo';
 import { Layout } from '@dxos/react-ui';
 import { getTypenameFromQuery } from '@dxos/schema';
 
+import { KanbanBoard, KanbanCardTile } from '../components';
 import { useEchoChangeCallback, useProjectionModel } from '../hooks';
 import { type Kanban, KanbanOperation } from '../types';
-
-import { KanbanBoard } from './KanbanBoard';
-import { KanbanCardTile } from './KanbanCardTile';
 
 export type KanbanContainerProps = SurfaceComponentProps<Kanban.Kanban>;
 
@@ -48,7 +46,7 @@ export const KanbanContainer = ({ role, subject: object }: KanbanContainerProps)
   const columnFieldPath =
     projection && pivotFieldId ? projection.tryGetFieldProjection(pivotFieldId)?.props.property : undefined;
 
-  const handleAddCard = useCallback(
+  const handleCardAdd = useCallback(
     (columnValue: string | undefined) => {
       if (db && cardSchema && columnFieldPath) {
         const card = Obj.make(cardSchema, { [columnFieldPath]: columnValue });
@@ -59,7 +57,7 @@ export const KanbanContainer = ({ role, subject: object }: KanbanContainerProps)
     [db, cardSchema, columnFieldPath],
   );
 
-  const handleRemoveCard = useCallback(
+  const handleCardRemove = useCallback(
     (card: { id: string }) => {
       void invokePromise(KanbanOperation.DeleteCard, { card });
     },
@@ -78,8 +76,8 @@ export const KanbanContainer = ({ role, subject: object }: KanbanContainerProps)
         items={items}
         itemTile={KanbanCardTile}
         change={change}
-        onAddCard={handleAddCard}
-        onRemoveCard={handleRemoveCard}
+        onCardAdd={handleCardAdd}
+        onCardRemove={handleCardRemove}
       >
         <KanbanBoard.Content />
       </KanbanBoard.Root>

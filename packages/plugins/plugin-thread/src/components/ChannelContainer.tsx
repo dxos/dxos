@@ -42,6 +42,7 @@ export type ChannelContainerProps = SurfaceComponentProps<
 export const ChannelContainer = ({ role, subject: channel, roomId: roomIdProp, fullscreen }: ChannelContainerProps) => {
   const space = getSpace(channel);
   const callManager = useCapability(ThreadCapabilities.CallManager);
+  const extensions = useCapabilities(ThreadCapabilities.CallExtension);
   const joined = useAtomValue(callManager.joinedAtom);
   const currentRoomId = useAtomValue(callManager.roomIdAtom);
   const attendableId = channel ? Obj.getDXN(channel).toString() : undefined;
@@ -51,7 +52,6 @@ export const ChannelContainer = ({ role, subject: channel, roomId: roomIdProp, f
   const joinSound = useSoundEffect('JoinCall');
   const leaveSound = useSoundEffect('LeaveCall');
 
-  const extensions = useCapabilities(ThreadCapabilities.CallExtension);
   useEffect(() => {
     const ctx = new Context();
     callManager.left.on(ctx, (roomId) => {

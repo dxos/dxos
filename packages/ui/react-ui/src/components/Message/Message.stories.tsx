@@ -10,7 +10,7 @@ import { type MessageValence } from '@dxos/ui-types';
 
 import { withTheme } from '../../testing';
 
-import { Callout } from './Message';
+import { Message } from './Message';
 
 faker.seed(123);
 
@@ -22,16 +22,16 @@ type StoryProps = {
 
 const DefaultStory = ({ valence, title, body }: StoryProps) => (
   <div className='is-[30rem]'>
-    <Callout.Root valence={valence}>
-      {title && <Callout.Title>{title}</Callout.Title>}
-      {body && <Callout.Content>{body}</Callout.Content>}
-    </Callout.Root>
+    <Message.Root valence={valence}>
+      {title && <Message.Title>{title}</Message.Title>}
+      {body && <Message.Content>{body}</Message.Content>}
+    </Message.Root>
   </div>
 );
 
 const meta = {
   title: 'ui/react-ui-core/components/Message',
-  component: Callout.Root as any,
+  component: Message.Root as any,
   render: DefaultStory,
   decorators: [withTheme()],
   parameters: {

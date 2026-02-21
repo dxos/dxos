@@ -21,7 +21,7 @@ export const messageHeader: ComponentFunction<MessageStyleProps> = (_, etc) => {
 };
 
 export const messageTitle: ComponentFunction<MessageStyleProps> = (_, etc) => {
-  return mx('col-start-2 text-lg flex gap-trimSm', etc);
+  return mx('col-start-2 text-lg gap-trimSm', etc);
 };
 
 export const messageIcon: ComponentFunction<MessageStyleProps> = (_, etc) => {

@@ -11,7 +11,7 @@ import { expect, waitFor, within } from 'storybook/test';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
 import { Obj, type QueryAST, Type } from '@dxos/echo';
-import type { Mutable } from '@dxos/echo/internal';
+import { type Mutable } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
@@ -121,7 +121,6 @@ const DefaultComponent = () => {
       <Surface.Surface role='article' data={data} limit={1} />
       <div className='flex flex-col bs-full overflow-hidden border-l border-separator'>
         <ViewEditor
-          classNames='p-2'
           registry={space?.db.schemaRegistry}
           schema={schema}
           view={kanban.view.target}

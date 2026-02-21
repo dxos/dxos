@@ -36,13 +36,18 @@ export const lengthsFacet = {
     },
   } satisfies LinearPhysicalLayer,
 
+  /**
+   *
+   */
   semantic: {
     namespace: 'dx-',
     conditions: { root: [':root'] },
     sememes: {
+      // Unit: px
       noLine: { root: ['line', 0] },
       hairLine: { root: ['line', 1] },
       thickLine: { root: ['line', 2] },
+      // Unit: 0.125rem (2px)
       trimXs: { root: ['lacuna', 3] },
       trimSm: { root: ['lacuna', 4] },
       trimMd: { root: ['lacuna', 6] },
@@ -61,15 +66,31 @@ export const lengthsFacet = {
       gridFocusStack: ['[data-grid-focus-indicator-variant="stack"]'],
     },
     aliases: {
-      noLine: { fine: ['focusOffset'] },
-      hairLine: { fine: ['modalLine', 'landmarkLine', 'positionedLine', 'gridGap', 'gridFocusIndicatorWidth'] },
-      thickLine: { fine: ['focusLine'], gridFocusStack: ['gridFocusIndicatorWidth'] },
-      inputFine: { fine: ['iconButtonPadding'] },
-      inputCoarse: { coarse: ['iconButtonPadding'] },
-
-      trimXs: { fine: ['cardSpacingChrome', 'labelSpacingBlock', 'inputSpacingBlock'] },
-      trimSm: { fine: ['cardSpacingInline', 'cardSpacingBlock', 'cardSpacingGap'] },
-      trimMd: { coarse: ['cardSpacingInline', 'cardSpacingBlock', 'cardSpacingGap'] },
+      noLine: {
+        fine: ['focusOffset'],
+      },
+      hairLine: {
+        fine: ['modalLine', 'landmarkLine', 'positionedLine', 'gridGap', 'gridFocusIndicatorWidth'],
+      },
+      thickLine: {
+        fine: ['focusLine'],
+        gridFocusStack: ['gridFocusIndicatorWidth'],
+      },
+      inputFine: {
+        fine: ['iconButtonPadding'],
+      },
+      inputCoarse: {
+        coarse: ['iconButtonPadding'],
+      },
+      trimXs: {
+        fine: ['cardChrome'],
+      },
+      trimSm: {
+        fine: ['cardPadding'],
+      },
+      trimMd: {
+        coarse: ['cardPadding'],
+      },
     },
   },
 } satisfies Facet;

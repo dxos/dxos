@@ -263,7 +263,7 @@ const DefaultStory = ({
           <Card.Root>
             <SyntaxHighlighter
               language='json'
-              classNames='text-xs mlb-cardSpacingBlock pli-cardSpacingInline bg-transparent'
+              classNames='text-xs mlb-cardPadding pli-cardPadding bg-transparent'
               code={JSON.stringify(popover, null, 2)}
             />
           </Card.Root>

@@ -117,7 +117,7 @@ export const CommandsDialogContent = forwardRef<HTMLDivElement, CommandsDialogCo
             </SearchList.Viewport>
           </SearchList.Content>
         </SearchList.Root>
-        <div role='none' className='pli-cardSpacingInline pbe-cardSpacingBlock'>
+        <div role='none' className='p-cardPadding'>
           <Dialog.Close asChild>
             <Button classNames='is-full'>{t('close label', { ns: osTranslations })}</Button>
           </Dialog.Close>

@@ -60,7 +60,7 @@ export namespace InboxOperation {
 
   export const OpenComposeEmailInputStruct = Schema.Struct({
     mode: Schema.optional(ComposeEmailMode),
-    originalMessage: Schema.optional(Message.Message),
+    message: Schema.optional(Message.Message),
     subject: Schema.optional(Schema.String),
     body: Schema.optional(Schema.String),
   });
