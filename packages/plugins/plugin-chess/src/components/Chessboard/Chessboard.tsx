@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Registry, RegistryContext } from '@effect-atom/atom-react';
+import { RegistryContext } from '@effect-atom/atom-react';
 import React, {
   type PropsWithChildren,
   forwardRef,
@@ -18,7 +18,7 @@ import { addEventListener } from '@dxos/async';
 import { Obj } from '@dxos/echo';
 import { type ThemedClassName } from '@dxos/react-ui';
 import {
-  ChessModel,
+  type ChessModel,
   Gameboard,
   type GameboardRootProps,
   Chessboard as NaturalChessboard,
@@ -29,21 +29,13 @@ import {
 import { useSoundEffect } from '@dxos/react-ui-sfx';
 import { mx } from '@dxos/ui-theme';
 
-import { type Chess } from '../types';
+import { type Chess } from '../../types';
 
 import { Info, type InfoProps } from './Info';
+import { ExtendedChessModel } from './types';
 
 export interface ChessboardController {
   setMoveNumber(index: number): void;
-}
-
-export class ExtendedChessModel extends ChessModel {
-  constructor(
-    registry: Registry.Registry,
-    readonly object: Chess.Game,
-  ) {
-    super(registry);
-  }
 }
 
 //

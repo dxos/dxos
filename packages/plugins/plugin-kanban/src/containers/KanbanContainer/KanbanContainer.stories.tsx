@@ -25,10 +25,10 @@ import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
 import { View, getTypenameFromQuery } from '@dxos/schema';
 import { Organization, Person } from '@dxos/types';
 
-import { useProjectionModel } from '../hooks';
-import { KanbanPlugin } from '../KanbanPlugin';
-import { translations } from '../translations';
-import { Kanban } from '../types';
+import { useProjectionModel } from '../../hooks';
+import { KanbanPlugin } from '../../KanbanPlugin';
+import { translations } from '../../translations';
+import { Kanban } from '../../types';
 
 faker.seed(0);
 

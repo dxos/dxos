@@ -14,9 +14,10 @@ import { useObject, useSchema } from '@dxos/react-client/echo';
 import { Layout } from '@dxos/react-ui';
 import { getTypenameFromQuery } from '@dxos/schema';
 
-import { KanbanBoard, KanbanCardTile } from '../components';
-import { useEchoChangeCallback, useProjectionModel } from '../hooks';
-import { type Kanban, KanbanOperation } from '../types';
+import { KanbanBoard } from '../../components';
+import { useEchoChangeCallback, useProjectionModel } from '../../hooks';
+import { type Kanban, KanbanOperation } from '../../types';
+import { change } from '@dxos/echo/internal';
 
 export type KanbanContainerProps = SurfaceComponentProps<Kanban.Kanban>;
 
@@ -74,7 +75,6 @@ export const KanbanContainer = ({ role, subject: object }: KanbanContainerProps)
         kanban={object}
         projection={projection}
         items={items}
-        itemTile={KanbanCardTile}
         change={change}
         onCardAdd={handleCardAdd}
         onCardRemove={handleCardRemove}

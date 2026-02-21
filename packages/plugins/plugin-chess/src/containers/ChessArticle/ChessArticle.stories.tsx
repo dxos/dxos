@@ -8,8 +8,8 @@ import React, { useMemo } from 'react';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { translations } from '../translations';
-import { Chess } from '../types';
+import { translations } from '../../translations';
+import { Chess } from '../../types';
 
 import { ChessArticle } from './ChessArticle';
 

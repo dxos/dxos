@@ -12,8 +12,8 @@ import { useObject, useSchema } from '@dxos/react-client/echo';
 import { Form, type FormFieldMap, SelectField } from '@dxos/react-ui-form';
 import { getTypenameFromQuery } from '@dxos/schema';
 
-import { useProjectionModel } from '../hooks';
-import { type Kanban, SettingsSchema } from '../types';
+import { useProjectionModel } from '../../hooks';
+import { type Kanban, SettingsSchema } from '../../types';
 
 export type KanbanViewEditorProps = SurfaceComponentProps<Kanban.Kanban>;
 

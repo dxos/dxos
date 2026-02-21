@@ -6,8 +6,8 @@ import React from 'react';
 
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 
-import { Chessboard } from '../components';
-import { type Chess } from '../types';
+import { Chessboard } from '../../components/Chessboard';
+import { type Chess } from '../../types';
 
 export type ChessCardProps = SurfaceComponentProps<Chess.Game>;
 
@@ -20,5 +20,3 @@ export const ChessCard = ({ subject: game }: ChessCardProps) => {
     </Chessboard.Root>
   );
 };
-
-export default ChessCard;

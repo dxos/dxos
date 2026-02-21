@@ -67,5 +67,3 @@ export const TableCard = ({ role, subject: object }: TableCardProps) => {
     </Card.Content>
   );
 };
-
-export default TableCard;

@@ -18,7 +18,7 @@ import { useTestTableModel } from '@dxos/react-ui-table/testing';
 import { Table } from '@dxos/react-ui-table/types';
 import { View, getSchemaFromPropertyDefinitions } from '@dxos/schema';
 
-import { translations } from '../translations';
+import { translations } from '../../translations';
 
 import { TableCard } from './TableCard';
 
@@ -32,7 +32,7 @@ const DefaultStory = () => {
 
   return (
     <CardContainer icon='ph--text-aa--regular'>
-      <TableCard object={table} />
+      <TableCard subject={table} />
     </CardContainer>
   );
 };
