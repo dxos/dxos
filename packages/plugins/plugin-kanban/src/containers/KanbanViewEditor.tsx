@@ -5,6 +5,7 @@
 import { RegistryContext } from '@effect-atom/atom-react';
 import React, { useCallback, useContext, useMemo } from 'react';
 
+import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { Format } from '@dxos/echo/internal';
 import { useObject, useSchema } from '@dxos/react-client/echo';
@@ -14,9 +15,9 @@ import { getTypenameFromQuery } from '@dxos/schema';
 import { useProjectionModel } from '../hooks';
 import { type Kanban, SettingsSchema } from '../types';
 
-type KanbanViewEditorProps = { object: Kanban.Kanban };
+export type KanbanViewEditorProps = SurfaceComponentProps<Kanban.Kanban>;
 
-export const KanbanViewEditor = ({ object }: KanbanViewEditorProps) => {
+export const KanbanViewEditor = ({ subject: object }: KanbanViewEditorProps) => {
   const registry = useContext(RegistryContext);
   const db = Obj.getDatabase(object);
   const [view, updateView] = useObject(object.view);

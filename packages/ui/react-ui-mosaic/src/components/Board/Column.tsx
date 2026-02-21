@@ -89,6 +89,22 @@ const BoardColumnRoot = BoardColumnRootImpl as <TColumn = any>(
 ) => ReactElement;
 
 //
+// Column Grid
+//
+
+const BOARD_COLUMN_GRID_NAME = 'Board.Column.Grid';
+
+type BoardColumnGridProps = ThemedClassName<PropsWithChildren>;
+
+const BoardColumnGrid = ({ classNames, children }: BoardColumnGridProps) => (
+  <div role='none' data-testid='board-column' className={mx('group/column grid bs-full overflow-hidden', classNames)}>
+    {children}
+  </div>
+);
+
+BoardColumnGrid.displayName = BOARD_COLUMN_GRID_NAME;
+
+//
 // Column Header
 //
 
@@ -99,7 +115,11 @@ type BoardColumnHeaderProps = ThemedClassName<{ label: string; dragHandleRef: Re
 const BoardColumnHeader = forwardRef<HTMLDivElement, BoardColumnHeaderProps>(
   ({ classNames, label, dragHandleRef }, forwardedRef) => {
     return (
-      <Card.Toolbar classNames={classNames} data-testid='board-column-header' ref={forwardedRef}>
+      <Card.Toolbar
+        classNames={mx('border-be border-separator', classNames)}
+        data-testid='board-column-header'
+        ref={forwardedRef}
+      >
         <Card.DragHandle ref={dragHandleRef} />
         <Card.Title>{label}</Card.Title>
         <Card.Menu items={[]} />
@@ -172,28 +192,33 @@ const BOARD_COLUMN_FOOTER_NAME = 'Board.Column.Footer';
 
 type BoardColumnFooterProps = ThemedClassName & {
   data?: any;
+  onAdd?: () => void;
 };
 
-const BoardColumnFooter = forwardRef<HTMLDivElement, BoardColumnFooterProps>(({ classNames, data }, forwardedRef) => {
-  const { t } = useTranslation(translationKey);
-  const { model } = useBoard(BOARD_COLUMN_FOOTER_NAME);
+const BoardColumnFooter = forwardRef<HTMLDivElement, BoardColumnFooterProps>(
+  ({ classNames, data, onAdd }, forwardedRef) => {
+    const { t } = useTranslation(translationKey);
+    const { model } = useBoard(BOARD_COLUMN_FOOTER_NAME);
 
-  return (
-    <Toolbar.Root classNames={mx('rounded-b-sm', classNames)} ref={forwardedRef}>
-      {model.onItemCreate && data && (
-        <IconButton
-          data-testid='board-column-add-item'
-          classNames='group-hover/column:opacity-100 md:opacity-0 transition transition-opacity duration-500'
-          variant='ghost'
-          icon='ph--plus--regular'
-          iconOnly
-          label={t('add item label')}
-          onClick={() => void model.onItemCreate?.(data)}
-        />
-      )}
-    </Toolbar.Root>
-  );
-});
+    const handleAdd = onAdd ?? (model.onItemCreate && data ? () => void model.onItemCreate?.(data) : undefined);
+
+    return (
+      <Toolbar.Root classNames={mx('rounded-b-sm border-bs border-separator', classNames)} ref={forwardedRef}>
+        {handleAdd && (
+          <IconButton
+            data-testid='board-column-add-item'
+            classNames='group-hover/column:opacity-100 md:opacity-0 transition transition-opacity duration-500'
+            variant='ghost'
+            icon='ph--plus--regular'
+            iconOnly
+            label={t('add item label')}
+            onClick={handleAdd}
+          />
+        )}
+      </Toolbar.Root>
+    );
+  },
+);
 
 BoardColumnFooter.displayName = BOARD_COLUMN_FOOTER_NAME;
 
@@ -227,28 +252,21 @@ const DefaultBoardColumn = forwardRef<HTMLDivElement, DefaultBoardColumnProps>(
 
     return (
       <BoardColumnRootInner location={location} data={data} dragHandleRef={dragHandleRef} ref={forwardedRef}>
-        <div
-          role='none'
-          data-testid='board-column'
-          className={mx(
-            'group/column grid bs-full overflow-hidden',
+        <BoardColumnGrid
+          classNames={mx(
             debug
               ? 'grid-rows-[var(--rail-action)_1fr_20rem]'
               : 'grid-rows-[var(--rail-action)_1fr_var(--rail-action)]',
             classNames,
           )}
         >
-          <BoardColumnHeader
-            classNames='border-be border-separator'
-            label={Obj.getLabel(data) ?? data.id}
-            dragHandleRef={dragHandleRef}
-          />
+          <BoardColumnHeader label={Obj.getLabel(data) ?? data.id} dragHandleRef={dragHandleRef} />
           <BoardColumnBody data={data} eventHandler={eventHandler} debug={debugHandler} Tile={Tile} />
           <div role='none' className='flex flex-col'>
-            <BoardColumnFooter classNames='border-bs border-separator' data={data} />
+            <BoardColumnFooter data={data} />
             <DebugInfo />
           </div>
-        </div>
+        </BoardColumnGrid>
       </BoardColumnRootInner>
     );
   },
@@ -262,6 +280,7 @@ DefaultBoardColumn.displayName = BOARD_DEFAULT_COLUMN_NAME;
 
 const BoardColumn = {
   Root: BoardColumnRoot,
+  Grid: BoardColumnGrid,
   Header: BoardColumnHeader,
   Body: BoardColumnBody,
   Footer: BoardColumnFooter,
