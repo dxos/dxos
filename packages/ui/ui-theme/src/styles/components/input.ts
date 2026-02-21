@@ -111,7 +111,7 @@ const sharedStaticInputStyles: ComponentFragment<InputStyleProps> = (props) => [
   props.focused && staticFocusRing,
 ];
 
-export const inputInput: ComponentFunction<InputStyleProps> = (props, ...etc) =>
+const inputInput: ComponentFunction<InputStyleProps> = (props, ...etc) =>
   props.variant === 'subdued'
     ? mx(...sharedSubduedInputStyles(props), ...etc)
     : props.variant === 'static'
@@ -123,13 +123,15 @@ export const inputInput: ComponentFunction<InputStyleProps> = (props, ...etc) =>
           ...etc,
         );
 
-export const inputCheckbox: ComponentFunction<InputStyleProps> = ({ size = 5 }, ...etc) =>
+const inputTextArea: ComponentFunction<InputStyleProps> = (props, ...etc) => inputInput(props, ...['-mbe-1.5', ...etc]);
+
+const inputCheckbox: ComponentFunction<InputStyleProps> = ({ size = 5 }, ...etc) =>
   mx('dx-checkbox dx-focus-ring', getSize(size), ...etc);
 
-export const inputCheckboxIndicator: ComponentFunction<InputStyleProps> = ({ size = 5, checked }, ...etc) =>
+const inputCheckboxIndicator: ComponentFunction<InputStyleProps> = ({ size = 5, checked }, ...etc) =>
   mx(getSize(computeSize(sizeValue(size) * 0.65, 4)), !checked && 'invisible', ...etc);
 
-export const inputSwitch: ComponentFunction<InputStyleProps> = ({ size = 5, disabled }, ...etc) =>
+const inputSwitch: ComponentFunction<InputStyleProps> = ({ size = 5, disabled }, ...etc) =>
   mx(
     getSizeHeight(size),
     getSizeWidth(computeSize(sizeValue(size) * 1.75, 9)),
@@ -141,37 +143,38 @@ export const inputSwitch: ComponentFunction<InputStyleProps> = ({ size = 5, disa
     ...etc,
   );
 
-export const inputSwitchThumb: ComponentFunction<InputStyleProps> = ({ size = 5 }, ...etc) =>
+const inputSwitchThumb: ComponentFunction<InputStyleProps> = ({ size = 5 }, ...etc) =>
   mx(
     getSize(size === 'px' ? 'px' : ((size - 2) as Size)),
     'block bg-white rounded-full transition-transform duration-100 will-change-transform data-[state=checked]:translate-x-[100%]',
     ...etc,
   );
 
-export const inputWithSegmentsInput: ComponentFunction<InputStyleProps> = (props, ...etc) =>
+const inputWithSegmentsInput: ComponentFunction<InputStyleProps> = (props, ...etc) =>
   mx('font-mono selection:bg-transparent mli-auto', props.disabled && 'cursor-not-allowed', ...etc);
 
-export const inputLabel: ComponentFunction<InputMetaStyleProps> = (props, ...etc) =>
+const inputLabel: ComponentFunction<InputMetaStyleProps> = (props, ...etc) =>
   mx('block', inputTextLabel, props.srOnly && 'sr-only', ...etc);
 
-export const inputDescription: ComponentFunction<InputMetaStyleProps> = (props, ...etc) =>
+const inputDescription: ComponentFunction<InputMetaStyleProps> = (props, ...etc) =>
   mx(descriptionText, props.srOnly && 'sr-only', ...etc);
 
-export const inputDescriptionAndValidation: ComponentFunction<InputMetaStyleProps> = (props, ...etc) =>
-  mx('leading-none mlb-labelSpacingBlock', props.srOnly && 'sr-only', ...etc);
+const inputDescriptionAndValidation: ComponentFunction<InputMetaStyleProps> = (props, ...etc) =>
+  mx('leading-none mlb-1.5', props.srOnly && 'sr-only', ...etc);
 
-export const inputValidation: ComponentFunction<InputMetaStyleProps> = (props, ...etc) =>
+const inputValidation: ComponentFunction<InputMetaStyleProps> = (props, ...etc) =>
   mx(descriptionText, props.srOnly ? 'sr-only' : valenceColorText(props.validationValence), ...etc);
 
 export const inputTheme = {
   input: inputInput,
+  textArea: inputTextArea,
   inputWithSegments: inputWithSegmentsInput,
   checkbox: inputCheckbox,
   checkboxIndicator: inputCheckboxIndicator,
   label: inputLabel,
   description: inputDescription,
-  validation: inputValidation,
   switch: inputSwitch,
   switchThumb: inputSwitchThumb,
+  validation: inputValidation,
   descriptionAndValidation: inputDescriptionAndValidation,
 };

@@ -36,13 +36,18 @@ export const lengthsFacet = {
     },
   } satisfies LinearPhysicalLayer,
 
+  /**
+   *
+   */
   semantic: {
     namespace: 'dx-',
     conditions: { root: [':root'] },
     sememes: {
+      // Unit: px
       noLine: { root: ['line', 0] },
       hairLine: { root: ['line', 1] },
       thickLine: { root: ['line', 2] },
+      // Unit: 0.125rem (2px)
       trimXs: { root: ['lacuna', 3] },
       trimSm: { root: ['lacuna', 4] },
       trimMd: { root: ['lacuna', 6] },
@@ -78,13 +83,13 @@ export const lengthsFacet = {
         coarse: ['iconButtonPadding'],
       },
       trimXs: {
-        fine: ['cardSpacingChrome', 'labelSpacingBlock', 'inputSpacingBlock'],
+        fine: ['cardChrome'],
       },
       trimSm: {
-        fine: ['cardSpacingInline', 'cardSpacingBlock', 'cardSpacingGap'],
+        fine: ['cardPadding'],
       },
       trimMd: {
-        coarse: ['cardSpacingInline', 'cardSpacingBlock', 'cardSpacingGap'],
+        coarse: ['cardPadding'],
       },
     },
   },

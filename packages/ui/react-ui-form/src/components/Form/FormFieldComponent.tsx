@@ -19,8 +19,6 @@ import { errorText } from '@dxos/ui-theme';
 
 import { type FormFieldStatus } from '../../hooks';
 
-const labelSpacing = 'mbs-inputSpacingBlock mbe-labelSpacingBlock';
-
 /**
  * Dynamic props passed to input components.
  */
@@ -80,14 +78,14 @@ export type FormFieldLabelProps = {
 export const FormFieldLabel = ({ label, error, readonly, asChild }: FormFieldLabelProps) => {
   const Label = readonly || asChild ? 'span' : Input.Label;
   return (
-    <>
+    <div role='none' className='flex items-center justify-between'>
       <Label>{label}</Label>
       {error && (
         <Tooltip.Trigger asChild content={error} side='bottom'>
           <Icon icon='ph--warning--regular' size={4} classNames={errorText} />
         </Tooltip.Trigger>
       )}
-    </>
+    </div>
   );
 };
 
