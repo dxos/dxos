@@ -83,15 +83,16 @@ export const objectFromJSON = async (
   const type = DXN.parse(jsonData[ATTR_TYPE]);
   const schema = await refResolver?.resolveSchema(type);
   invariant(schema === undefined || Schema.isSchema(schema));
+  const decodedInput = stripInternalJsonKeys(jsonData);
 
   let obj: any;
   if (schema != null) {
-    obj = await schema.pipe(Schema.decodeUnknownPromise)(jsonData);
+    obj = await schema.pipe(Schema.decodeUnknownPromise)(decodedInput);
     if (refResolver) {
       setRefResolverOnData(obj, refResolver);
     }
   } else {
-    obj = decodeGeneric(jsonData, { refResolver });
+    obj = decodeGeneric(decodedInput, { refResolver });
   }
 
   invariant(ObjectId.isValid(obj.id), 'Invalid object id');
@@ -149,6 +150,18 @@ export const objectFromJSON = async (
 };
 
 const decodeGeneric = (jsonData: unknown, options: { refResolver?: RefResolver }) => {
+  const props = stripInternalJsonKeys(jsonData);
+
+  return deepMapValues(props, (value, visitor) => {
+    if (isEncodedReference(value)) {
+      return refFromEncodedReference(value, options.refResolver);
+    }
+
+    return visitor(value);
+  });
+};
+
+const stripInternalJsonKeys = (jsonData: unknown) => {
   const {
     [ATTR_TYPE]: _type,
     [ATTR_META]: _meta,
@@ -159,13 +172,7 @@ const decodeGeneric = (jsonData: unknown, options: { refResolver?: RefResolver }
     ...props
   } = jsonData as any;
 
-  return deepMapValues(props, (value, visitor) => {
-    if (isEncodedReference(value)) {
-      return refFromEncodedReference(value, options.refResolver);
-    }
-
-    return visitor(value);
-  });
+  return props;
 };
 
 export const setRefResolverOnData = (obj: AnyEntity, refResolver: RefResolver) => {

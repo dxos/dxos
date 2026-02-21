@@ -8,14 +8,15 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { AnthropicResolver } from '@dxos/ai/resolvers';
-import { Capability, Common } from '@dxos/app-framework';
+import { Capability } from '@dxos/app-framework';
+import { AppCapabilities } from '@dxos/app-toolkit';
 
-export type EdgeModelResolverCapabilities = [Capability.Capability<typeof Common.Capability.AiModelResolver>];
+export type EdgeModelResolverCapabilities = [Capability.Capability<typeof AppCapabilities.AiModelResolver>];
 
 const edgeModelResolver = Capability.makeModule<[], EdgeModelResolverCapabilities>(() =>
   Effect.succeed([
     Capability.contributes(
-      Common.Capability.AiModelResolver,
+      AppCapabilities.AiModelResolver,
       AnthropicResolver.make().pipe(
         Layer.provide(
           AnthropicClient.layer({

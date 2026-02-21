@@ -4,14 +4,15 @@
 
 import React, { useCallback } from 'react';
 
-import { type SurfaceComponentProps, useOperationInvoker } from '@dxos/app-framework/react';
+import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { ATTENDABLE_PATH_SEPARATOR, DeckOperation } from '@dxos/plugin-deck/types';
 import { Filter, useQuery, useQueue } from '@dxos/react-client/echo';
 import { Toolbar, useTranslation } from '@dxos/react-ui';
+import { Layout } from '@dxos/react-ui';
 import { useSelected, useSelectionActions } from '@dxos/react-ui-attention';
 import { Calendar as NaturalCalendar } from '@dxos/react-ui-calendar';
-import { Layout } from '@dxos/react-ui-mosaic';
 import { Event } from '@dxos/types';
 
 import { meta } from '../../meta';

@@ -6,8 +6,8 @@ import { Octokit } from '@octokit/core';
 import React, { type ChangeEvent, useCallback, useState } from 'react';
 
 import { ToolId } from '@dxos/ai';
-import { SettingsOperation } from '@dxos/app-framework';
-import { useOperationInvoker } from '@dxos/app-framework/react';
+import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { SettingsOperation } from '@dxos/app-toolkit';
 import { Blueprint, Template } from '@dxos/blueprints';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { Function, type Script, getUserFunctionIdInMetadata } from '@dxos/functions';

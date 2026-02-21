@@ -2,14 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Toolkit from '@effect/ai/Toolkit';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Predicate from 'effect/Predicate';
 import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
-import { AiSession, makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
+import { AiSession, GenericToolkit, ToolExecutionServices } from '@dxos/assistant';
 import { Filter, Obj, Ref, Type } from '@dxos/echo';
 import { Database } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
@@ -19,8 +18,8 @@ import { log } from '@dxos/log';
 import { type Actor, LegacyOrganization, Message, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
+import { ResearchGraph } from '../../blueprints';
 import { makeGraphWriterHandler, makeGraphWriterToolkit } from '../../crud';
-import { contextQueueLayerFromResearchGraph } from '../research';
 
 export default defineFunction({
   key: 'dxos.org/functions/entity-extraction',
@@ -58,7 +57,7 @@ export default defineFunction({
           onAppend: (dxns) => created.push(...dxns),
         });
         const toolkit = yield* GraphWriterToolkit.pipe(
-          Effect.provide(GraphWriterHandler.pipe(Layer.provide(contextQueueLayerFromResearchGraph))),
+          Effect.provide(GraphWriterHandler.pipe(Layer.provide(ResearchGraph.contextQueueLayer))),
         );
 
         yield* new AiSession().run({
@@ -93,12 +92,11 @@ export default defineFunction({
     Effect.provide(
       Layer.mergeAll(
         AiService.model('@anthropic/claude-sonnet-4-0'), // TODO(dmaretskyi): Extract.
-        makeToolResolverFromFunctions([], Toolkit.make()),
-        makeToolExecutionServiceFromFunctions(Toolkit.make() as any, Layer.empty as any),
+        ToolExecutionServices,
       ).pipe(
         Layer.provide(
           // TODO(dmaretskyi): This should be provided by environment.
-          Layer.mergeAll(FunctionInvocationServiceLayerTest()),
+          Layer.mergeAll(GenericToolkit.providerEmpty, FunctionInvocationServiceLayerTest()),
         ),
       ),
     ),

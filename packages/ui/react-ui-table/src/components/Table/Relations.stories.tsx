@@ -125,7 +125,7 @@ const meta = {
   title: 'ui/react-ui-table/Relations',
   render: DefaultStory,
   decorators: [
-    withTheme,
+    withTheme(),
     withRegistry,
     // TODO(thure): Shouldn't `layout: 'fullscreen'` below make this unnecessary?
     withLayout({ classNames: 'fixed inset-0' }),

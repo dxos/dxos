@@ -4,7 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common } from '@dxos/app-framework';
+import { Capability, Capabilities } from '@dxos/app-framework';
+import { LayoutOperation } from '@dxos/app-toolkit';
 import { OperationResolver } from '@dxos/operation';
 
 import { LayoutState } from '../../types';
@@ -12,9 +13,9 @@ import { LayoutState } from '../../types';
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const layout = yield* Capability.get(LayoutState);
-    return Capability.contributes(Common.Capability.OperationResolver, [
+    return Capability.contributes(Capabilities.OperationResolver, [
       OperationResolver.make({
-        operation: Common.LayoutOperation.UpdateSidebar,
+        operation: LayoutOperation.UpdateSidebar,
         handler: ({ state }) =>
           Effect.sync(() => {
             const next = state ?? layout.sidebarState;
@@ -24,7 +25,7 @@ export default Capability.makeModule(
           }),
       }),
       OperationResolver.make({
-        operation: Common.LayoutOperation.UpdateComplementary,
+        operation: LayoutOperation.UpdateComplementary,
         handler: ({ state }) =>
           Effect.sync(() => {
             const next = state ?? layout.complementarySidebarState;
@@ -34,7 +35,7 @@ export default Capability.makeModule(
           }),
       }),
       OperationResolver.make({
-        operation: Common.LayoutOperation.UpdateDialog,
+        operation: LayoutOperation.UpdateDialog,
         handler: ({ subject, state, type, blockAlign, overlayClasses, overlayStyle, props }) =>
           Effect.sync(() => {
             layout.dialogOpen = state ?? Boolean(subject);
@@ -46,7 +47,7 @@ export default Capability.makeModule(
           }),
       }),
       OperationResolver.make({
-        operation: Common.LayoutOperation.UpdatePopover,
+        operation: LayoutOperation.UpdatePopover,
         handler: (input) =>
           Effect.sync(() => {
             const { subject, state, side, props } = input;
@@ -64,7 +65,7 @@ export default Capability.makeModule(
           }),
       }),
       OperationResolver.make({
-        operation: Common.LayoutOperation.SwitchWorkspace,
+        operation: LayoutOperation.SwitchWorkspace,
         handler: ({ subject }) =>
           Effect.sync(() => {
             layout.workspace = subject;

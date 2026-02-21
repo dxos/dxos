@@ -10,9 +10,8 @@ import { Function } from '@dxos/functions';
 import { getDeployedFunctions } from '@dxos/functions-runtime/edge';
 import { useClient } from '@dxos/react-client';
 import { Filter, Query, type Space, useQuery } from '@dxos/react-client/echo';
-import { useAsyncEffect } from '@dxos/react-ui';
-import { IconButton, useTranslation } from '@dxos/react-ui';
-import { controlItemClasses } from '@dxos/react-ui-form';
+import { IconButton, useAsyncEffect, useTranslation } from '@dxos/react-ui';
+import { Settings } from '@dxos/react-ui-form';
 import { List } from '@dxos/react-ui-list';
 import { ghostHover, mx } from '@dxos/ui-theme';
 
@@ -64,7 +63,7 @@ export const FunctionsRegistry = ({ space }: FunctionsRegistryProps) => {
   );
 
   return (
-    <div role='none' className={mx(controlItemClasses)}>
+    <Settings.Container>
       {functions.length > 0 && (
         <List.Root<Function.Function> items={functions} isItem={Schema.is(Function.Function)} getId={(func) => func.id}>
           {({ items }) => (
@@ -106,6 +105,6 @@ export const FunctionsRegistry = ({ space }: FunctionsRegistryProps) => {
         <div className='text-center plb-4 text-gray-500'>{t('no functions found')}</div>
       )}
       {loading && <div className='text-center plb-4 text-gray-500'>{t('loading functions')}</div>}
-    </div>
+    </Settings.Container>
   );
 };

@@ -252,7 +252,7 @@ const Controls = ({ children }: PropsWithChildren) => {
 const meta = {
   title: 'sdk/app-graph/EchoGraph',
   decorators: [
-    withTheme,
+    withTheme(),
     withClientProvider({
       createIdentity: true,
       onCreateIdentity: async ({ client }) => {

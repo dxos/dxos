@@ -5,8 +5,8 @@
 import type * as Schema from 'effect/Schema';
 import React, { useEffect, useState } from 'react';
 
-import { Common } from '@dxos/app-framework';
-import { Surface, useCapabilities } from '@dxos/app-framework/react';
+import { Surface, useCapabilities } from '@dxos/app-framework/ui';
+import { AppCapabilities } from '@dxos/app-toolkit';
 import { Filter, Obj, type Ref, Type } from '@dxos/echo';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { useObject, useQuery } from '@dxos/react-client/echo';
@@ -27,7 +27,7 @@ export const MasonryContainer = ({
   role?: string;
 }) => {
   const [view] = useObject(viewOrRef);
-  const schemas = useCapabilities(Common.Capability.Schema);
+  const schemas = useCapabilities(AppCapabilities.Schema);
   const db = view && Obj.getDatabase(view);
   const typename = view?.query ? getTypenameFromQuery(view.query.ast) : undefined;
 
@@ -73,7 +73,7 @@ const Item = ({ data }: { data: any }) => {
         <Card.Title>{Obj.getLabel(data)}</Card.Title>
         <Card.Menu />
       </Card.Toolbar>
-      <Surface role='card--content' limit={1} data={{ subject: data }} />
+      <Surface.Surface role='card--content' limit={1} data={{ subject: data }} />
     </Card.Root>
   );
 };

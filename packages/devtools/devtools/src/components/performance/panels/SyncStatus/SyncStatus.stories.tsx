@@ -57,7 +57,7 @@ const createSpaceSyncStateMap = async (client: Client): Promise<SpaceSyncStateMa
 const meta = {
   title: 'devtools/devtools/SyncStatus',
   component: SyncStatus,
-  decorators: [withTheme, withClientProvider({ createIdentity: true })],
+  decorators: [withTheme(), withClientProvider({ createIdentity: true })],
   parameters: {
     layout: 'centered',
   },

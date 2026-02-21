@@ -4,7 +4,10 @@
 
 import type { Operation } from '@dxos/operation';
 
-import type { Label } from '../../common/translations';
+/**
+ * Label type for translatable text (canonical definition in @dxos/app-toolkit).
+ */
+type Label = string | [string, { ns: string; count?: number; defaultValue?: string }];
 
 /**
  * Extract the input type from an OperationDefinition.

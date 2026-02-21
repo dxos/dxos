@@ -2,19 +2,19 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type AppCapabilities } from '@dxos/app-toolkit';
 import { Blueprint, Template } from '@dxos/blueprints';
-import { type FunctionDefinition } from '@dxos/functions';
 import { trim } from '@dxos/util';
 
-import { create, move, play, print } from './functions';
+import { ChessFunctions } from './functions';
 
-export const Key = 'dxos.org/blueprint/chess';
+const BLUEPRINT_KEY = 'dxos.org/blueprint/chess';
 
-export const functions: FunctionDefinition[] = [create, move, play, print];
+const functions = Object.values(ChessFunctions);
 
-export const make = () =>
+const make = () =>
   Blueprint.make({
-    key: Key,
+    key: BLUEPRINT_KEY,
     name: 'Chess',
     tools: Blueprint.toolDefinitions({ functions }),
     instructions: Template.make({
@@ -26,3 +26,11 @@ export const make = () =>
       `,
     }),
   });
+
+const blueprint: AppCapabilities.BlueprintDefinition = {
+  key: BLUEPRINT_KEY,
+  functions,
+  make,
+};
+
+export default blueprint;

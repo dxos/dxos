@@ -34,7 +34,7 @@ export const Default = () => <ClientRepeater component={Story} />;
 const meta = {
   title: 'plugins/plugin-explorer/Chart',
   component: Chart,
-  decorators: [withTheme, withLayout()],
+  decorators: [withTheme(), withLayout()],
   parameters: {
     layout: 'fullscreen',
   },

@@ -1,138 +1,101 @@
 //
-// Copyright 2023 DXOS.org
+// Copyright 2026 DXOS.org
 //
 
-import {
-  Corner as ScrollAreaPrimitiveCorner,
-  type ScrollAreaCornerProps as ScrollAreaPrimitiveCornerProps,
-  Root as ScrollAreaPrimitiveRoot,
-  type ScrollAreaProps as ScrollAreaPrimitiveRootProps,
-  Scrollbar as ScrollAreaPrimitiveScrollbar,
-  type ScrollAreaScrollbarProps as ScrollAreaPrimitiveScrollbarProps,
-  Thumb as ScrollAreaPrimitiveThumb,
-  type ScrollAreaThumbProps as ScrollAreaPrimitiveThumbProps,
-  Viewport as ScrollAreaPrimitiveViewport,
-  type ScrollAreaViewportProps as ScrollAreaPrimitiveViewportProps,
-} from '@radix-ui/react-scroll-area';
-import React, { type PropsWithChildren, forwardRef } from 'react';
+import { createContext } from '@radix-ui/react-context';
+import React, { type HTMLAttributes, forwardRef } from 'react';
 
-import { mx } from '@dxos/ui-theme';
+import { type AllowedAxis, type SlottableProps, type ThemedClassName } from '@dxos/ui-types';
 
 import { useThemeContext } from '../../hooks';
-import { type ThemedClassName } from '../../util';
 
-type ScrollAreaVariant = 'coarse' | 'fine';
+//
+// Context
+//
+
+const SCROLLAREA_NAME = 'ScrollArea';
+
+type ScrollAreaContextType = {
+  /** Orientation of scrollbars. */
+  orientation: AllowedAxis;
+  /** Hide scrollbars when not scrolling. */
+  autoHide: boolean;
+  /** Apply padding to opposite side of scrollbar. */
+  margin?: boolean;
+  /** Apply padding. */
+  padding: boolean;
+  /** Use thin scrollbars. */
+  thin: boolean;
+  /** Enable snap scrolling. */
+  snap: boolean;
+};
+
+const [ScrollAreaProvider, useScrollAreaContext] = createContext<ScrollAreaContextType>(SCROLLAREA_NAME);
 
 //
 // Root
 //
 
-type ScrollAreaRootProps = ThemedClassName<ScrollAreaPrimitiveRootProps>;
+const SCROLLAREA_ROOT_NAME = 'ScrollArea.Root';
 
-const ScrollAreaRoot = forwardRef<HTMLDivElement, ScrollAreaRootProps>(({ classNames, ...props }, forwardedRef) => {
-  const { tx } = useThemeContext();
-  return (
-    <ScrollAreaPrimitiveRoot
-      {...props}
-      className={tx('scrollArea.root', 'scroll-area', {}, classNames)}
-      ref={forwardedRef}
-    />
-  );
-});
+type ScrollAreaRootProps = SlottableProps<HTMLDivElement> & Partial<ScrollAreaContextType>;
+
+/**
+ * ScrollArea provides native scrollbars with custom styling.
+ */
+const ScrollAreaRoot = forwardRef<HTMLDivElement, ScrollAreaRootProps>(
+  (
+    {
+      classNames,
+      className,
+      children,
+      orientation = 'vertical',
+      autoHide = true,
+      margin = true, // TODO(burdon): Is this the right default?
+      padding = false,
+      thin = false,
+      snap = false,
+      ...props
+    },
+    forwardedRef,
+  ) => {
+    const { tx } = useThemeContext();
+    const options = { orientation, autoHide, margin, padding, thin, snap };
+
+    return (
+      <ScrollAreaProvider {...options}>
+        <div {...props} className={tx('scrollArea.root', options, [className, classNames])} ref={forwardedRef}>
+          {children}
+        </div>
+      </ScrollAreaProvider>
+    );
+  },
+);
+
+ScrollAreaRoot.displayName = SCROLLAREA_ROOT_NAME;
 
 //
 // Viewport
 //
 
-type ScrollAreaViewportProps = ThemedClassName<ScrollAreaPrimitiveViewportProps>;
+const SCROLLAREA_VIEWPORT_NAME = 'ScrollArea.Viewport';
+
+type ScrollAreaViewportProps = ThemedClassName<HTMLAttributes<HTMLDivElement>>;
 
 const ScrollAreaViewport = forwardRef<HTMLDivElement, ScrollAreaViewportProps>(
-  ({ classNames, ...props }, forwardedRef) => {
+  ({ classNames, children, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
+    const options = useScrollAreaContext(SCROLLAREA_VIEWPORT_NAME);
+
     return (
-      <ScrollAreaPrimitiveViewport
-        {...props}
-        className={tx('scrollArea.viewport', 'scroll-area', {}, classNames)}
-        ref={forwardedRef}
-      />
-    );
-  },
-);
-
-//
-// Scrollbar
-//
-
-type ScrollAreaScrollbarProps = ThemedClassName<ScrollAreaPrimitiveScrollbarProps> & { variant?: ScrollAreaVariant };
-
-const ScrollAreaScrollbar = forwardRef<HTMLDivElement, ScrollAreaScrollbarProps>(
-  ({ classNames, variant = 'fine', ...props }, forwardedRef) => {
-    const { tx } = useThemeContext();
-    return (
-      <ScrollAreaPrimitiveScrollbar
-        data-variant={variant}
-        {...props}
-        className={tx('scrollArea.scrollbar', 'scroll-area__scrollbar', {}, classNames)}
-        ref={forwardedRef}
-      />
-    );
-  },
-);
-
-//
-// Thumb
-//
-
-type ScrollAreaThumbProps = ThemedClassName<ScrollAreaPrimitiveThumbProps>;
-
-const ScrollAreaThumb = forwardRef<HTMLDivElement, ScrollAreaThumbProps>(({ classNames, ...props }, forwardedRef) => {
-  const { tx } = useThemeContext();
-  return (
-    <ScrollAreaPrimitiveThumb
-      {...props}
-      className={tx('scrollArea.thumb', 'scroll-area__thumb', {}, classNames)}
-      ref={forwardedRef}
-    />
-  );
-});
-
-//
-// Corner
-//
-
-type ScrollAreaCornerProps = ThemedClassName<ScrollAreaPrimitiveCornerProps>;
-
-const ScrollAreaCorner = forwardRef<HTMLDivElement, ScrollAreaCornerProps>(({ classNames, ...props }, forwardedRef) => {
-  const { tx } = useThemeContext();
-  return (
-    <ScrollAreaPrimitiveCorner
-      {...props}
-      className={tx('scrollArea.corner', 'scroll-area__corner', {}, classNames)}
-      ref={forwardedRef}
-    />
-  );
-});
-
-//
-// Expander
-//
-
-type ScrollAreaExpanderProps = ThemedClassName<PropsWithChildren>;
-
-/**
- * Size-locking wrapper required for inner ScrollArea to function correctly.
- * NOTE: Radix ScrollArea.Viewport applies `display: table` to its immediate child,
- * causing the content to participate in table layout and escape the intended fixed-size viewport.
- */
-const ScrollAreaExpander = ({ classNames, children }: ScrollAreaExpanderProps) => {
-  return (
-    <div role='none' className={mx('relative bs-full is-full overflow-hidden', classNames)}>
-      <div role='none' className='absolute inset-0 overflow-hidden'>
+      <div {...props} className={tx('scrollArea.viewport', options, classNames)} ref={forwardedRef}>
         {children}
       </div>
-    </div>
-  );
-};
+    );
+  },
+);
+
+ScrollAreaViewport.displayName = SCROLLAREA_VIEWPORT_NAME;
 
 //
 // ScrollArea
@@ -141,17 +104,6 @@ const ScrollAreaExpander = ({ classNames, children }: ScrollAreaExpanderProps) =
 export const ScrollArea = {
   Root: ScrollAreaRoot,
   Viewport: ScrollAreaViewport,
-  Scrollbar: ScrollAreaScrollbar,
-  Thumb: ScrollAreaThumb,
-  Corner: ScrollAreaCorner,
-  Expander: ScrollAreaExpander,
 };
 
-export type {
-  ScrollAreaRootProps,
-  ScrollAreaViewportProps,
-  ScrollAreaScrollbarProps,
-  ScrollAreaThumbProps,
-  ScrollAreaCornerProps,
-  ScrollAreaExpanderProps,
-};
+export type { ScrollAreaRootProps, ScrollAreaViewportProps };

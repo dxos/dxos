@@ -29,7 +29,7 @@ const meta = {
   title: 'ui/react-ui-sfx/Matrix',
   component: Matrix,
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'fullscreen',
   },

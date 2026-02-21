@@ -2,7 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Common } from '@dxos/app-framework';
+import { type Capabilities } from '@dxos/app-framework';
+import { LayoutOperation } from '@dxos/app-toolkit';
 import { SubscriptionList, type Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
@@ -22,7 +23,7 @@ import { activateAccount, getProfile, matchServiceCredential, upgradeCredential 
 import { meta } from './meta';
 
 export type OnboardingManagerProps = {
-  invokePromise: Common.Capability.OperationInvoker['invokePromise'];
+  invokePromise: Capabilities.OperationInvoker['invokePromise'];
   client: Client;
   firstRun?: Trigger;
   hubUrl?: string;
@@ -36,7 +37,7 @@ export type OnboardingManagerProps = {
 export class OnboardingManager {
   private readonly _ctx = new Context();
   private readonly _subscriptions = new SubscriptionList();
-  private readonly _invokePromise: Common.Capability.OperationInvoker['invokePromise'];
+  private readonly _invokePromise: Capabilities.OperationInvoker['invokePromise'];
   private readonly _client: Client;
   private readonly _hubUrl?: string;
   private readonly _skipAuth: boolean;
@@ -150,7 +151,7 @@ export class OnboardingManager {
       return;
     }
 
-    await this._invokePromise(Common.LayoutOperation.AddToast, {
+    await this._invokePromise(LayoutOperation.AddToast, {
       id: 'passkey-setup-toast',
       title: ['passkey setup toast title', { ns: meta.id }],
       description: ['passkey setup toast description', { ns: meta.id }],
@@ -160,8 +161,8 @@ export class OnboardingManager {
       actionLabel: ['passkey setup toast action label', { ns: meta.id }],
       actionAlt: ['passkey setup toast action alt', { ns: meta.id }],
       onAction: async () => {
-        await this._invokePromise(Common.LayoutOperation.SwitchWorkspace, { subject: Account.id });
-        await this._invokePromise(Common.LayoutOperation.Open, { subject: [Account.Security] });
+        await this._invokePromise(LayoutOperation.SwitchWorkspace, { subject: Account.id });
+        await this._invokePromise(LayoutOperation.Open, { subject: [Account.Security] });
       },
     });
   }
@@ -226,7 +227,7 @@ export class OnboardingManager {
 
   private async _showWelcome(): Promise<void> {
     // NOTE: Active parts cannot contain '/' characters currently.
-    await this._invokePromise(Common.LayoutOperation.UpdateDialog, {
+    await this._invokePromise(LayoutOperation.UpdateDialog, {
       subject: WELCOME_SCREEN,
       type: 'alert',
       overlayClasses: OVERLAY_CLASSES,
@@ -235,7 +236,7 @@ export class OnboardingManager {
   }
 
   private async _closeWelcome(): Promise<void> {
-    await this._invokePromise(Common.LayoutOperation.UpdateDialog, { state: false });
+    await this._invokePromise(LayoutOperation.UpdateDialog, { state: false });
   }
 
   private async _createIdentity(): Promise<void> {

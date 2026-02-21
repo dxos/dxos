@@ -8,6 +8,7 @@ import { log } from '@dxos/log';
 import { ToggleContainer } from '@dxos/react-ui-components';
 import {
   PromptWidget,
+  ReasoningWidget,
   ReferenceWidget,
   SelectWidget,
   SuggestionWidget,
@@ -45,6 +46,13 @@ export const componentRegistry: XmlWidgetRegistry = {
     factory: ({ children }) => {
       const text = getXmlTextChild(children);
       return text ? new PromptWidget(text) : null;
+    },
+  },
+  ['reasoning' as const]: {
+    block: true,
+    factory: ({ children }) => {
+      const text = getXmlTextChild(children);
+      return text ? new ReasoningWidget(text) : null;
     },
   },
   ['reference' as const]: {
@@ -158,13 +166,22 @@ const blockToMarkdownImpl = (context: MessageThreadContext, message: Message.Mes
       return `<toolCall id="${block.toolCallId}" />`;
     }
     case 'toolResult': {
-      context.updateWidget<{ blocks: ContentBlock.Any[] }>(block.toolCallId, ({ blocks = [] }) => ({
+      // TODO(dmaretskyi): the parameter could be undefined, perhaps tool blocks are not arriving in order.
+      context.updateWidget<{ blocks: ContentBlock.Any[] }>(block.toolCallId, ({ blocks = [] } = { blocks: [] }) => ({
         blocks: [...blocks, block],
       }));
       break;
     }
     case 'summary': {
       return `<summary>${ContentBlock.createSummaryMessage(block)}</summary>`;
+    }
+    case 'reasoning': {
+      const text = block.reasoningText ?? block.redactedText;
+      if (!text) {
+        return;
+      }
+      // TODO(dmaretskyi): The mixed Markdown/XML parser does not support parsing multi-line XML tags.
+      return `<reasoning>${text.replace(/\n/g, ' ').trim()}</reasoning>`;
     }
     default: {
       // TODO(burdon): Needs stable ID.

@@ -114,7 +114,7 @@ const ComboboxContentWithFiltering = () => {
 const meta = {
   title: 'ui/react-ui-grid/Grid',
   component: GridStory,
-  decorators: [withTheme, withLayout({ layout: 'column' })],
+  decorators: [withTheme(), withLayout({ layout: 'column' })],
   parameters: {
     layout: 'fullscreen',
   },

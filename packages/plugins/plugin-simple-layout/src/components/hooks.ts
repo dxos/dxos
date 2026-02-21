@@ -4,7 +4,7 @@
 
 import { useEffect } from 'react';
 
-import { useAppGraph } from '@dxos/app-framework/react';
+import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Graph } from '@dxos/plugin-graph';
 
 /**

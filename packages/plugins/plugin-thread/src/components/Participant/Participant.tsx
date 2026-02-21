@@ -5,7 +5,7 @@
 import { useAtomValue } from '@effect-atom/atom-react';
 import React, { memo, useMemo } from 'react';
 
-import { useCapability } from '@dxos/app-framework/react';
+import { useCapability } from '@dxos/app-framework/ui';
 
 import { type EncodedTrackName, type UserState } from '../../calls';
 import { ThreadCapabilities } from '../../types';

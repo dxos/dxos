@@ -328,7 +328,7 @@ const Debug = ({
 const meta = {
   title: 'ui/react-ui-graph/Graph',
   render: DefaultStory,
-  decorators: [withRegistry, withTheme],
+  decorators: [withRegistry, withTheme()],
   parameters: {
     layout: 'fullscreen',
     controls: { disable: true },

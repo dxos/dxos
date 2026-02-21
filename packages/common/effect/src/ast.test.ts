@@ -15,6 +15,7 @@ import {
   getAnnotation,
   getDiscriminatedType,
   getDiscriminatingProps,
+  getProperties,
   isArrayType,
   isDiscriminatedUnion,
   isOption,
@@ -88,6 +89,30 @@ describe('AST', () => {
       const prop = findProperty(Contact, 'address.city' as JsonPath);
       expect(prop).not.to.exist;
     }
+  });
+
+  test('getProperties preserves annotation on property type after refinements', ({ expect }) => {
+    // When a property is e.g. Format.Text.pipe(nonEmptyString(), maxLength(), Schema.annotations({ title, description })),
+    // the form uses getProperties(schema.ast) and then Format.FormatAnnotation.getFromAst(property.type).
+    // Custom title and description from the outer Schema.annotations() must not be lost.
+    const WithRefinements = Schema.Struct({
+      message: Schema.String.annotations({ title: 'Feedback' }).pipe(
+        Schema.minLength(1),
+        Schema.maxLength(4096),
+        Schema.annotations({
+          title: 'Feedback label',
+          description: 'Feedback placeholder',
+        }),
+      ),
+    });
+    const properties = getProperties(WithRefinements.ast);
+    const messageProp = properties.find((p) => p.name === 'message');
+    invariant(messageProp);
+    const title = findAnnotation(messageProp.type, SchemaAST.TitleAnnotationId);
+    const description = findAnnotation(messageProp.type, SchemaAST.DescriptionAnnotationId);
+    // Outer Schema.annotations() wins so form labels/placeholders are preserved.
+    expect(title).to.eq('Feedback label');
+    expect(description).to.eq('Feedback placeholder');
   });
 
   test('findAnnotation', ({ expect }) => {

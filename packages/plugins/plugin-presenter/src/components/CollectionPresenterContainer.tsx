@@ -4,8 +4,9 @@
 
 import React, { useContext, useState } from 'react';
 
-import { Surface, type SurfaceComponentProps } from '@dxos/app-framework/react';
-import { Layout } from '@dxos/react-ui-mosaic';
+import { Surface } from '@dxos/app-framework/ui';
+import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
+import { Layout } from '@dxos/react-ui';
 import { type Collection } from '@dxos/schema';
 
 import { PresenterContext } from '../types';
@@ -34,7 +35,7 @@ const CollectionPresenterContainer = ({ role, subject: collection }: CollectionP
           />
         }
       >
-        <Surface role='slide' data={{ subject: collection.objects[slide] }} />
+        <Surface.Surface role='slide' data={{ subject: collection.objects[slide] }} />
       </PresenterLayout>
     </Layout.Main>
   );

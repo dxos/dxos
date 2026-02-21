@@ -5,7 +5,8 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { Capability, Common } from '@dxos/app-framework';
+import { Capability } from '@dxos/app-framework';
+import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/operation';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 
@@ -81,7 +82,7 @@ export default Capability.makeModule(
               data: Effect.fnUntraced(function* () {
                 const result = yield* Operation.invoke(LocalFilesOperation.OpenFile);
                 if (result?.subject) {
-                  yield* Operation.invoke(Common.LayoutOperation.Open, { subject: [...result.subject] });
+                  yield* Operation.invoke(LayoutOperation.Open, { subject: [...result.subject] });
                 }
               }),
               properties: {
@@ -96,7 +97,7 @@ export default Capability.makeModule(
                     data: Effect.fnUntraced(function* () {
                       const result = yield* Operation.invoke(LocalFilesOperation.OpenDirectory);
                       if (result?.subject) {
-                        yield* Operation.invoke(Common.LayoutOperation.Open, { subject: [...result.subject] });
+                        yield* Operation.invoke(LayoutOperation.Open, { subject: [...result.subject] });
                       }
                     }),
                     properties: {
@@ -189,6 +190,6 @@ export default Capability.makeModule(
       }),
     ]);
 
-    return Capability.contributes(Common.Capability.AppGraphBuilder, extensions);
+    return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
   }),
 );

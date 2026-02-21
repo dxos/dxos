@@ -97,7 +97,7 @@ const DefaultStory = ({ layout: _layout, items: _items, grid, ...props }: StoryP
 const meta = {
   title: 'ui/react-ui-board/Board',
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'fullscreen',
     translations: [...translations, ...stackTranslations],

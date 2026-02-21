@@ -56,7 +56,6 @@ const Button = memo(
           data-props={inGroup ? 'grouped' : ''}
           className={tx(
             'button.root',
-            'button',
             {
               variant,
               inGroup,
@@ -88,12 +87,7 @@ const ButtonGroup = forwardRef<HTMLDivElement, ButtonGroupProps>(
     const elevation = useElevationContext(propsElevation);
     const Root = asChild ? Slot : Primitive.div;
     return (
-      <Root
-        role='none'
-        {...props}
-        className={tx('button.group', 'button-group', { elevation }, classNames)}
-        ref={forwardedRef}
-      >
+      <Root role='none' {...props} className={tx('button.group', { elevation }, classNames)} ref={forwardedRef}>
         <ButtonGroupProvider inGroup>{children}</ButtonGroupProvider>
       </Root>
     );

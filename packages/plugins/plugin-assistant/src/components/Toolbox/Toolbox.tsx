@@ -9,10 +9,9 @@ import { type Database, type Ref } from '@dxos/echo';
 import { Function } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { Filter, useQuery } from '@dxos/react-client/echo';
-import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { ScrollArea, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { meta } from '../../meta';
 import { type AiChatProcessor } from '../../processor';
 import { ServiceType } from '../../types';
 
@@ -25,47 +24,47 @@ export type ToolboxProps = ThemedClassName<{
 }>;
 
 export const Toolbox = ({ classNames, functions, services, blueprints, activeBlueprints }: ToolboxProps) => {
-  const { t } = useTranslation(meta.id);
-
   return (
-    <div className={mx('flex flex-col overflow-y-auto box-content', classNames)}>
-      {blueprints && blueprints.length > 0 && (
-        <Section
-          title='Blueprints'
-          items={blueprints.map(({ name, description, tools }) => ({
-            name,
-            description,
-            subitems: tools.map((toolId) => ({ name: `∙ ${safeToolId(toolId)}` })),
-          }))}
-        />
-      )}
+    <ScrollArea.Root thin orientation='vertical'>
+      <ScrollArea.Viewport classNames={classNames}>
+        {blueprints && blueprints.length > 0 && (
+          <Section
+            title='Blueprints'
+            items={blueprints.map(({ name, description, tools }) => ({
+              name,
+              description,
+              subitems: tools.map((toolId) => ({ name: `∙ ${safeToolId(toolId)}` })),
+            }))}
+          />
+        )}
 
-      {activeBlueprints && activeBlueprints.length > 0 && (
-        <Section
-          title='Blueprints'
-          items={activeBlueprints.map(({ target }) => ({
-            name: target?.name ?? '',
-            description: target?.description ?? '',
-            subitems: target?.tools.map((toolId) => ({ name: `∙ ${safeToolId(toolId)}` })),
-          }))}
-        />
-      )}
+        {activeBlueprints && activeBlueprints.length > 0 && (
+          <Section
+            title='Blueprints'
+            items={activeBlueprints.map(({ target }) => ({
+              name: target?.name ?? '',
+              description: target?.description ?? '',
+              subitems: target?.tools.map((toolId) => ({ name: `∙ ${safeToolId(toolId)}` })),
+            }))}
+          />
+        )}
 
-      {services && services.length > 0 && (
-        <Section
-          title='Services'
-          items={services.map(({ service: { serviceId, name, description } }) => ({
-            name: name ?? serviceId,
-            description,
-            // subitems: tools.map(({ name, description }) => ({ name: `∙ ${name}`, description })),
-          }))}
-        />
-      )}
+        {services && services.length > 0 && (
+          <Section
+            title='Services'
+            items={services.map(({ service: { serviceId, name, description } }) => ({
+              name: name ?? serviceId,
+              description,
+              // subitems: tools.map(({ name, description }) => ({ name: `∙ ${name}`, description })),
+            }))}
+          />
+        )}
 
-      {functions && functions.length > 0 && (
-        <Section title='Functions' items={functions.map(({ name, description }) => ({ name, description }))} />
-      )}
-    </div>
+        {functions && functions.length > 0 && (
+          <Section title='Functions' items={functions.map(({ name, description }) => ({ name, description }))} />
+        )}
+      </ScrollArea.Viewport>
+    </ScrollArea.Root>
   );
 };
 

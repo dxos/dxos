@@ -8,6 +8,7 @@ import type {
   QueryQueueRequest,
   QueueQueryResult,
   QueueService,
+  SyncQueueRequest,
 } from '@dxos/protocols/proto/dxos/client/services';
 
 /**
@@ -23,6 +24,10 @@ export class QueueServiceStub implements QueueService {
   }
 
   deleteFromQueue(request: DeleteFromQueueRequest): Promise<void> {
+    throw new Error('Not available.');
+  }
+
+  async syncQueue(_: SyncQueueRequest): Promise<void> {
     throw new Error('Not available.');
   }
 }

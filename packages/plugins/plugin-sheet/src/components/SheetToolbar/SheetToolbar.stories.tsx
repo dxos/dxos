@@ -21,7 +21,7 @@ const meta = {
   title: 'plugins/plugin-sheet/Toolbar',
   component: SheetToolbar as any,
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'fullscreen',
     translations,

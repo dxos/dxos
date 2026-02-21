@@ -64,7 +64,7 @@ const meta = {
   title: 'plugins/plugin-thread/Comments',
   render: render(DefaultStory),
   decorators: [
-    withTheme,
+    withTheme(),
     withLayout({ layout: 'column', scroll: true }),
     // TODO(wittjosiah): This shouldn't depend on app framework (use withClientProvider instead).
     //  Currently this is required due to useOnEditAnalytics.

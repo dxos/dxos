@@ -48,7 +48,7 @@ const meta = {
   parameters: { translations },
   // TODO(wittjosiah): Try to write story which does not depend on plugin manager.
   decorators: [
-    withTheme,
+    withTheme(),
     withPluginManager({
       plugins: [OperationPlugin(), ClientPlugin({})],
     }),

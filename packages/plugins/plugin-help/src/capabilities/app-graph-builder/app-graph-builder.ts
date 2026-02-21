@@ -4,8 +4,9 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
 import { GraphBuilder, NodeMatcher } from '@dxos/app-graph';
+import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/operation';
 
 import { SHORTCUTS_DIALOG } from '../../components';
@@ -22,7 +23,7 @@ export default Capability.makeModule(
           {
             id: HelpOperation.Start.meta.key,
             data: Effect.fnUntraced(function* () {
-              yield* Common.Capability.updateAtomValue(HelpCapabilities.State, (s) => ({ ...s, showHints: true }));
+              yield* Capabilities.updateAtomValue(HelpCapabilities.State, (s) => ({ ...s, showHints: true }));
               yield* Operation.invoke(HelpOperation.Start);
             }),
             properties: {
@@ -39,8 +40,8 @@ export default Capability.makeModule(
           {
             id: `${meta.id}/open-shortcuts`,
             data: Effect.fnUntraced(function* () {
-              yield* Common.Capability.updateAtomValue(HelpCapabilities.State, (s) => ({ ...s, showHints: true }));
-              yield* Operation.invoke(Common.LayoutOperation.UpdateDialog, {
+              yield* Capabilities.updateAtomValue(HelpCapabilities.State, (s) => ({ ...s, showHints: true }));
+              yield* Operation.invoke(LayoutOperation.UpdateDialog, {
                 subject: SHORTCUTS_DIALOG,
                 blockAlign: 'center',
               });
@@ -56,6 +57,6 @@ export default Capability.makeModule(
         ]),
     });
 
-    return Capability.contributes(Common.Capability.AppGraphBuilder, extensions);
+    return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
   }),
 );

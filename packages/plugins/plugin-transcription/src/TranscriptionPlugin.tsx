@@ -2,7 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Common, Plugin } from '@dxos/app-framework';
+import { Plugin } from '@dxos/app-framework';
+import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { Obj } from '@dxos/echo';
 import { getSpace } from '@dxos/react-client/echo';
 import { Message, Transcript } from '@dxos/types';
@@ -13,8 +14,8 @@ import { translations } from './translations';
 import { renderByline } from './util';
 
 export const TranscriptionPlugin = Plugin.define(meta).pipe(
-  Common.Plugin.addTranslationsModule({ translations }),
-  Common.Plugin.addMetadataModule({
+  AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
+  AppPlugin.addMetadataModule({
     metadata: {
       id: Transcript.Transcript.typename,
       metadata: {
@@ -35,14 +36,14 @@ export const TranscriptionPlugin = Plugin.define(meta).pipe(
       },
     },
   }),
-  Common.Plugin.addSchemaModule({ schema: [Transcript.Transcript] }),
-  Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
-  Common.Plugin.addOperationResolverModule({ activate: OperationResolver }),
+  AppPlugin.addOperationResolverModule({ activate: OperationResolver }),
+  AppPlugin.addSchemaModule({ schema: [Transcript.Transcript] }),
+  AppPlugin.addSurfaceModule({ activate: ReactSurface }),
+  AppPlugin.addTranslationsModule({ translations }),
   Plugin.addModule({
     id: 'transcription',
-    activatesOn: Common.ActivationEvent.SetupAppGraph,
+    activatesOn: AppActivationEvents.SetupAppGraph,
     activate: Transcriber,
   }),
-  Common.Plugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
   Plugin.make,
 );

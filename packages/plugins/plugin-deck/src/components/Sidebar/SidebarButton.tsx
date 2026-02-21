@@ -4,8 +4,8 @@
 
 import React, { useCallback } from 'react';
 
-import { Common } from '@dxos/app-framework';
-import { useOperationInvoker } from '@dxos/app-framework/react';
+import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { LayoutOperation } from '@dxos/app-toolkit';
 import { IconButton, type IconButtonProps, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 
 import { getCompanionId, useDeckCompanions, useDeckState } from '../../hooks';
@@ -75,7 +75,7 @@ export const ToggleComplementarySidebarButton = ({
 
     const subject = state.complementarySidebarPanel ?? (companions[0] && getCompanionId(companions[0].id));
     if (nextState === 'expanded' && !current && subject) {
-      invokeSync(Common.LayoutOperation.UpdateComplementary, { subject });
+      invokeSync(LayoutOperation.UpdateComplementary, { subject });
     }
   }, [state, updateState, current, companions, invokeSync]);
 

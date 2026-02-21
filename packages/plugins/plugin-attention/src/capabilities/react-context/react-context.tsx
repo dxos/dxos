@@ -5,8 +5,8 @@
 import * as Effect from 'effect/Effect';
 import React, { type PropsWithChildren } from 'react';
 
-import { Capability, Common } from '@dxos/app-framework';
-import { useCapability } from '@dxos/app-framework/react';
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { useCapability } from '@dxos/app-framework/ui';
 import { RootAttentionProvider, SelectionProvider } from '@dxos/react-ui-attention';
 
 import { meta } from '../../meta';
@@ -14,7 +14,7 @@ import { AttentionCapabilities } from '../../types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
-    Capability.contributes(Common.Capability.ReactContext, {
+    Capability.contributes(Capabilities.ReactContext, {
       id: meta.id,
       context: (props: PropsWithChildren) => {
         const attention = useCapability(AttentionCapabilities.Attention);

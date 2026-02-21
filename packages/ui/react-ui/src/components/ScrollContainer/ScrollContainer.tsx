@@ -15,7 +15,6 @@ import React, {
   useState,
 } from 'react';
 
-// TODO(burdon): Move these deps to @dxos/dom-util.
 import { addEventListener, combine } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { useForwardedRef } from '@dxos/react-hooks';
@@ -23,6 +22,7 @@ import { mx } from '@dxos/ui-theme';
 
 import { type ThemedClassName } from '../../util';
 import { IconButton } from '../Button';
+import { ScrollArea } from '../ScrollArea';
 
 const isBottom = (el: HTMLElement | null) => {
   return !!(el && el.scrollHeight - el.scrollTop === el.clientHeight);
@@ -68,7 +68,7 @@ const Root = forwardRef<ScrollController, RootProps>(
     const timeoutRef = useRef<NodeJS.Timeout>(undefined);
     const scrollToBottom = useCallback((behavior: ScrollBehavior = behaviorProp) => {
       if (scrollerRef.current) {
-        // Temporarily hide scrollbar to prevent flicker.
+        // Temporarily hide scrollbar to prevent flickering.
         autoScrollRef.current = true;
         scrollerRef.current.classList.add('scrollbar-none');
         scrollerRef.current.scrollTo({
@@ -83,6 +83,7 @@ const Root = forwardRef<ScrollController, RootProps>(
             autoScrollRef.current = false;
           }, 500);
         }
+
         setPinned(true);
       }
     }, []);
@@ -138,9 +139,9 @@ const Root = forwardRef<ScrollController, RootProps>(
               )}
             />
           )}
-          <div className={mx('flex flex-col min-bs-0 overflow-y-auto scrollbar-thin', classNames)} ref={scrollerRef}>
-            {children}
-          </div>
+          <ScrollArea.Root classNames={mx('min-bs-0', classNames)} thin>
+            <ScrollArea.Viewport ref={scrollerRef}>{children}</ScrollArea.Viewport>
+          </ScrollArea.Root>
         </div>
       </ScrollContainerProvider>
     );

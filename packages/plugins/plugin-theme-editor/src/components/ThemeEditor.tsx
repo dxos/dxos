@@ -5,8 +5,8 @@
 import { Atom } from '@effect-atom/atom-react';
 import React, { useMemo, useState } from 'react';
 
+import { Layout } from '@dxos/react-ui';
 import { MenuProvider, ToolbarMenu, createGapSeparator, createMenuAction, useMenuActions } from '@dxos/react-ui-menu';
-import { Layout } from '@dxos/react-ui-mosaic';
 
 import { themeEditorId } from '../defs';
 import { meta } from '../meta';

@@ -13,8 +13,9 @@ import React, {
   useRef,
 } from 'react';
 
-import { Common } from '@dxos/app-framework';
-import { Surface, useAppGraph, useOperationInvoker } from '@dxos/app-framework/react';
+import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
+import { LayoutOperation } from '@dxos/app-toolkit';
+import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { debounce } from '@dxos/async';
 import { type Node, useNode } from '@dxos/plugin-graph';
 import { ATTENDABLE_PATH_SEPARATOR, useAttentionAttributes } from '@dxos/react-ui-attention';
@@ -200,7 +201,7 @@ const PlankComponent = memo(
       if (scrollIntoView === id) {
         layoutMode === 'deck' && rootElement.current?.scrollIntoView({ behavior: 'smooth', inline: 'center' });
         // Clear the scroll into view state once it has been actioned.
-        void invokePromise(Common.LayoutOperation.ScrollIntoView, { subject: undefined });
+        void invokePromise(LayoutOperation.ScrollIntoView, { subject: undefined });
       }
     }, [id, scrollIntoView, layoutMode, invokePromise]);
 
@@ -280,7 +281,7 @@ const PlankComponent = memo(
                 companions={companions}
               />
             )}
-            <Surface
+            <Surface.Surface
               key={node.id}
               role='article'
               data={data}

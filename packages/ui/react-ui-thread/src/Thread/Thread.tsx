@@ -10,7 +10,7 @@ import { hoverableControlItem, hoverableFocusedWithinControls, mx } from '@dxos/
 import { translationKey } from '../translations';
 import type { ThreadEntity } from '../types';
 
-// TODO(burdon): Why is this exported?
+// TODO(burdon): Avoid exporting fragments.
 export const threadLayout = 'is-full place-self-start grid grid-cols-[var(--rail-size)_1fr]';
 
 //

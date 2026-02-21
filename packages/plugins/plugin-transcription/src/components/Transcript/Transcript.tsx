@@ -47,10 +47,7 @@ export const TranscriptView = ({ classNames, transcript: object, model }: Transc
         createThemeExtensions({ themeMode, slots: editorSlots }),
         decorateMarkdown(),
         preview(),
-        transcript({
-          model,
-          started: object?.started ? new Date(object.started) : undefined,
-        }),
+        transcript({ model, started: object?.started ? new Date(object.started) : undefined }),
         autoScroll(),
       ].filter(isTruthy),
     };

@@ -22,7 +22,6 @@ const cardStackDefaultInlineSizeRem = cardDefaultInlineSize + 2.125;
 
 const cardStackRoot = 'flex flex-col';
 
-// TODO(burdon): Root should be headless.
 const CardStackRoot = forwardRef<HTMLDivElement, SharedCardStackProps>(
   ({ children, classNames, asChild, role = 'none', ...props }, forwardedRef) => {
     const Root = asChild ? Slot : 'div';

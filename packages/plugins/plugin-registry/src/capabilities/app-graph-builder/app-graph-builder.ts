@@ -4,7 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common, SettingsOperation } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { AppCapabilities, SettingsOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/operation';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 
@@ -114,7 +115,7 @@ export default Capability.makeModule(
         id: `${meta.id}/plugins`,
         match: NodeMatcher.whenId(REGISTRY_ID),
         connector: () => {
-          const manager = capabilities.get(Common.Capability.PluginManager);
+          const manager = capabilities.get(Capabilities.PluginManager);
           return Effect.succeed(
             manager.getPlugins().map((plugin) => ({
               id: plugin.meta.id.replaceAll('/', ':'),
@@ -131,6 +132,6 @@ export default Capability.makeModule(
       }),
     ]);
 
-    return Capability.contributes(Common.Capability.AppGraphBuilder, extensions);
+    return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
   }),
 );

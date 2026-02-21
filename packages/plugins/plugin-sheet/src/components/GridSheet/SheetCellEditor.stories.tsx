@@ -63,7 +63,7 @@ const AutomergeStory = ({ value, ...props }: CellEditorProps) => {
 const meta = {
   title: 'plugins/plugin-sheet/CellEditor',
 
-  decorators: [withTheme],
+  decorators: [withTheme()],
   component: CellEditor,
   render: DefaultStory,
 } satisfies Meta<typeof DefaultStory>;

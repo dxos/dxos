@@ -4,4 +4,6 @@
 
 import { Capability } from '@dxos/app-framework';
 
-export const ClientReady = Capability.lazy('ClientReady', () => import('./client-ready'));
+import { type ClientReadyOptions } from './client-ready';
+
+export const ClientReady = Capability.lazy<ClientReadyOptions>('ClientReady', () => import('./client-ready'));

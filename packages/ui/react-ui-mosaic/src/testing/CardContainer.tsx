@@ -41,7 +41,7 @@ export const PopoverCardContainer = ({
 }: PopoverCardContainerProps) => {
   return (
     <Popover.Root open>
-      <Popover.Content onOpenAutoFocus={(event) => event.preventDefault()}>
+      <Popover.Content onOpenAutoFocus={(event: Event) => event.preventDefault()}>
         <Popover.Viewport classNames='popover-card-max-height popover-card-max-width'>{children}</Popover.Viewport>
         <Popover.Arrow />
       </Popover.Content>

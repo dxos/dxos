@@ -4,8 +4,8 @@
 
 import React, { useCallback } from 'react';
 
-import { Common } from '@dxos/app-framework';
-import { useOperationInvoker } from '@dxos/app-framework/react';
+import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { LayoutOperation } from '@dxos/app-toolkit';
 import { ObservabilityOperation } from '@dxos/plugin-observability/types';
 import { type InvitationResult } from '@dxos/react-client/invitations';
 import { Dialog, useTranslation } from '@dxos/react-ui';
@@ -25,7 +25,7 @@ export const JoinDialog = (props: JoinPanelProps) => {
     async (result: InvitationResult | null) => {
       if (result?.identityKey) {
         await Promise.all([
-          invokePromise(Common.LayoutOperation.UpdateDialog, { state: false }),
+          invokePromise(LayoutOperation.UpdateDialog, { state: false }),
           invokePromise(ObservabilityOperation.SendEvent, {
             name: props.initialDisposition === 'recover-identity' ? 'identity.recover' : 'identity.join',
           }),

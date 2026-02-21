@@ -5,7 +5,7 @@
 import * as CollapsiblePrimitive from '@radix-ui/react-collapsible';
 import React, { useMemo, useState } from 'react';
 
-import { Surface } from '@dxos/app-framework/react';
+import { Surface } from '@dxos/app-framework/ui';
 import { DropdownMenu, Icon, IconButton, useTranslation } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { StackItem } from '@dxos/react-ui-stack';
@@ -107,7 +107,7 @@ export const StackSection = ({
           </StackItem.HeadingStickyContent>
         </StackItem.Heading>
         <CollapsiblePrimitive.Content>
-          <Surface role='section' data={{ subject: object }} limit={1} placeholder={<></>} />
+          <Surface.Surface role='section' data={{ subject: object }} limit={1} placeholder={<></>} />
         </CollapsiblePrimitive.Content>
         {view.collapsed && (
           <StackItem.Content classNames='attention-surface'>

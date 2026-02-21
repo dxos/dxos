@@ -41,7 +41,7 @@ export type JoinPanelImplProps = Pick<
 > & {
   send: JoinSend;
   titleId: string;
-  activeView: string;
+  activeView: string; // TODO(burdon): Should be literal type.
   failed: Set<'Halo' | 'Space'>;
   pending: boolean;
   unredeemedCodes?: Partial<{

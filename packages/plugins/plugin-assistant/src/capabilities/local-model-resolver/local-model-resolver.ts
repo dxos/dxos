@@ -8,9 +8,10 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { LMStudioResolver } from '@dxos/ai/resolvers';
-import { Capability, Common } from '@dxos/app-framework';
+import { Capability } from '@dxos/app-framework';
+import { AppCapabilities } from '@dxos/app-toolkit';
 
-export type LocalModelResolverCapabilities = [Capability.Capability<typeof Common.Capability.AiModelResolver>];
+export type LocalModelResolverCapabilities = [Capability.Capability<typeof AppCapabilities.AiModelResolver>];
 
 /**
  * To start LM Studio server:
@@ -21,7 +22,7 @@ export type LocalModelResolverCapabilities = [Capability.Capability<typeof Commo
 const localModelResolver = Capability.makeModule<[], LocalModelResolverCapabilities>(() =>
   Effect.succeed([
     Capability.contributes(
-      Common.Capability.AiModelResolver,
+      AppCapabilities.AiModelResolver,
       LMStudioResolver.make().pipe(
         Layer.provide(
           OpenAiClient.layer({

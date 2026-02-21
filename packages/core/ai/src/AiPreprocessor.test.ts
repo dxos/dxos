@@ -76,6 +76,7 @@ describe('preprocessor', () => {
           name: 'calculator',
           result: 'Result of tool 1',
           isFailure: false,
+          providerExecuted: false,
         }),
       );
       expect(toolMessage.content[1]).toEqual(
@@ -84,6 +85,7 @@ describe('preprocessor', () => {
           name: 'calculator',
           result: 'Result of tool 2',
           isFailure: false,
+          providerExecuted: false,
         }),
       );
     }),
@@ -192,6 +194,30 @@ describe('preprocessor', () => {
               redactedData: '[Reasoning redacted]',
             },
           },
+        }),
+      );
+    }),
+  );
+
+  it.effect(
+    'should handle reasoning without signature or redacted text',
+    Effect.fn(function* ({ expect }) {
+      const message = Obj.make(Message.Message, {
+        created: new Date().toISOString(),
+        sender: { role: 'assistant' },
+        blocks: [
+          {
+            _tag: 'reasoning',
+            reasoningText: 'Thinking without a signature...',
+          },
+        ],
+      });
+
+      const input = yield* preprocessPrompt([message]);
+      const assistantMessage = input.content[0] as Prompt.AssistantMessage;
+      expect(assistantMessage.content[0]).toEqual(
+        Prompt.makePart('reasoning', {
+          text: 'Thinking without a signature...',
         }),
       );
     }),
@@ -412,6 +438,7 @@ describe('preprocessor', () => {
           name: 'test',
           result: 'Testing',
           isFailure: false,
+          providerExecuted: false,
         }),
       ]);
     }),

@@ -4,7 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Common, Plugin } from '@dxos/app-framework';
+import { Plugin } from '@dxos/app-framework';
+import { AppPlugin } from '@dxos/app-toolkit';
 import { ComputeGraph } from '@dxos/conductor';
 import { type CreateObject } from '@dxos/plugin-space/types';
 import { CanvasBoard } from '@dxos/react-ui-canvas-editor';
@@ -14,8 +15,7 @@ import { meta } from './meta';
 import { translations } from './translations';
 
 export const ConductorPlugin = Plugin.define(meta).pipe(
-  Common.Plugin.addTranslationsModule({ translations }),
-  Common.Plugin.addMetadataModule({
+  AppPlugin.addMetadataModule({
     metadata: {
       id: CanvasBoard.CanvasBoard.typename,
       metadata: {
@@ -26,7 +26,8 @@ export const ConductorPlugin = Plugin.define(meta).pipe(
       },
     },
   }),
-  Common.Plugin.addSchemaModule({ schema: [CanvasBoard.CanvasBoard, ComputeGraph] }),
-  Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
+  AppPlugin.addSchemaModule({ schema: [CanvasBoard.CanvasBoard, ComputeGraph] }),
+  AppPlugin.addSurfaceModule({ activate: ReactSurface }),
+  AppPlugin.addTranslationsModule({ translations }),
   Plugin.make,
 );

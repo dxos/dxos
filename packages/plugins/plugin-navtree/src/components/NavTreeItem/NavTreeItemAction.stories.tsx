@@ -52,7 +52,7 @@ const meta = {
     label: 'Select action',
   } satisfies Partial<NavTreeItemActionMenuProps>,
   decorators: [
-    withTheme,
+    withTheme(),
     withPluginManager({
       plugins: [...corePlugins(), RuntimePlugin()],
     }),

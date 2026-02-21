@@ -12,7 +12,7 @@ import { log } from '@dxos/log';
 import type { AutomergeProtocolMessage } from '@dxos/protocols';
 import { AutomergeReplicator, type AutomergeReplicatorFactory } from '@dxos/teleport-extension-automerge-replicator';
 
-import type { ReplicatorConnection, ShouldAdvertiseProps, ShouldSyncCollectionProps } from './echo-replicator';
+import type { AutomergeReplicatorConnection, ShouldAdvertiseProps, ShouldSyncCollectionProps } from './echo-replicator';
 
 const DEFAULT_FACTORY: AutomergeReplicatorFactory = (params) => new AutomergeReplicator(...params);
 
@@ -25,7 +25,7 @@ export type MeshReplicatorConnectionProps = {
   replicatorFactory?: AutomergeReplicatorFactory;
 };
 
-export class MeshReplicatorConnection extends Resource implements ReplicatorConnection {
+export class MeshReplicatorConnection extends Resource implements AutomergeReplicatorConnection {
   public readable: ReadableStream<AutomergeProtocolMessage>;
   public writable: WritableStream<AutomergeProtocolMessage>;
   public remoteDeviceKey: PublicKey | null = null;

@@ -4,7 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { AppCapabilities } from '@dxos/app-toolkit';
 import { runAndForwardErrors } from '@dxos/effect';
 import { SpaceOperation } from '@dxos/plugin-space/types';
 
@@ -15,8 +16,8 @@ export default Capability.makeModule(
     // Get context for lazy capability access in callbacks.
     const capabilities = yield* Capability.Service;
 
-    return Capability.contributes(Common.Capability.FileUploader, (db, file) => {
-      const { invoke } = capabilities.get(Common.Capability.OperationInvoker);
+    return Capability.contributes(AppCapabilities.FileUploader, (db, file) => {
+      const { invoke } = capabilities.get(Capabilities.OperationInvoker);
       const program = Effect.gen(function* () {
         const fileInfo = yield* invoke(WnfsOperation.Upload, { db, file });
         const createResult = yield* invoke(WnfsOperation.Create, fileInfo);

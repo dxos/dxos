@@ -54,6 +54,9 @@
       "path": "../../sdk/app-graph"
     },
     {
+      "path": "../../sdk/app-toolkit"
+    },
+    {
       "path": "../../sdk/client"
     },
     {

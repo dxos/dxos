@@ -5,7 +5,8 @@
 import * as Effect from 'effect/Effect';
 import React from 'react';
 
-import { Capability, Common } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { Surface } from '@dxos/app-framework/ui';
 import { useActiveSpace } from '@dxos/plugin-space';
 import { type Space, SpaceState, isSpace } from '@dxos/react-client/echo';
 
@@ -15,8 +16,8 @@ import { meta } from '../../meta';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
-    Capability.contributes(Common.Capability.ReactSurface, [
-      Common.createSurface({
+    Capability.contributes(Capabilities.ReactSurface, [
+      Surface.create({
         id: SEARCH_DIALOG,
         role: 'dialog',
         filter: (data): data is { props: SearchDialogProps } => data.component === SEARCH_DIALOG,
@@ -26,7 +27,7 @@ export default Capability.makeModule(() =>
           </SearchContextProvider>
         ),
       }),
-      Common.createSurface({
+      Surface.create({
         id: `${SEARCH_DIALOG}/search-input`,
         role: 'search-input',
         component: () => {
@@ -39,7 +40,7 @@ export default Capability.makeModule(() =>
           );
         },
       }),
-      Common.createSurface({
+      Surface.create({
         id: `${SEARCH_DIALOG}/search`,
         role: 'deck-companion--search',
         filter: (data): data is { subject: Space } => isSpace(data.subject),
@@ -56,7 +57,7 @@ export default Capability.makeModule(() =>
           );
         },
       }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/space-article`,
         role: 'article',
         position: 'hoist',

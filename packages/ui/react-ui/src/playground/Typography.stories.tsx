@@ -43,9 +43,9 @@ const DefaultStory = () => {
 };
 
 const meta = {
-  title: 'ui/react-ui-core/Playground/Typography',
+  title: 'ui/react-ui-core/playground/Typography',
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

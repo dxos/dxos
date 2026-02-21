@@ -4,7 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { ActivationEvent, Capability, Common, Plugin } from '@dxos/app-framework';
+import { ActivationEvent, ActivationEvents, Capabilities, Capability, Plugin } from '@dxos/app-framework';
+import { AppActivationEvents, AppCapabilities, AppPlugin, LayoutOperation } from '@dxos/app-toolkit';
 import { Graph } from '@dxos/plugin-graph';
 import { type TreeData } from '@dxos/react-ui-list';
 
@@ -15,14 +16,8 @@ import { translations } from './translations';
 import { NavTreeEvents } from './types';
 
 export const NavTreePlugin = Plugin.define(meta).pipe(
-  Plugin.addModule({
-    id: 'state',
-    activatesOn: Common.ActivationEvent.LayoutReady,
-    activatesAfter: [NavTreeEvents.StateReady],
-    activate: State,
-  }),
-  Common.Plugin.addTranslationsModule({ translations }),
-  Common.Plugin.addMetadataModule({
+  AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
+  AppPlugin.addMetadataModule({
     metadata: {
       id: NODE_TYPE,
       metadata: {
@@ -39,23 +34,32 @@ export const NavTreePlugin = Plugin.define(meta).pipe(
       },
     },
   }),
+  AppPlugin.addOperationResolverModule({ activate: OperationResolver }),
+  AppPlugin.addSurfaceModule({ activate: ReactSurface }),
+  AppPlugin.addTranslationsModule({ translations }),
+  Plugin.addModule({
+    id: 'state',
+    activatesOn: AppActivationEvents.LayoutReady,
+    activatesAfter: [NavTreeEvents.StateReady],
+    activate: State,
+  }),
   Plugin.addModule({
     id: 'expose',
     activatesOn: ActivationEvent.allOf(
-      Common.ActivationEvent.OperationInvokerReady,
-      Common.ActivationEvent.AppGraphReady,
-      Common.ActivationEvent.LayoutReady,
+      ActivationEvents.OperationInvokerReady,
+      AppActivationEvents.AppGraphReady,
+      AppActivationEvents.LayoutReady,
       NavTreeEvents.StateReady,
     ),
     activate: Effect.fnUntraced(function* () {
-      const layout = yield* Common.Capability.getAtomValue(Common.Capability.Layout);
-      const { invokePromise } = yield* Capability.get(Common.Capability.OperationInvoker);
-      const { graph } = yield* Capability.get(Common.Capability.AppGraph);
+      const layout = yield* Capabilities.getAtomValue(AppCapabilities.Layout);
+      const { invokePromise } = yield* Capability.get(Capabilities.OperationInvoker);
+      const { graph } = yield* Capability.get(AppCapabilities.AppGraph);
       if (invokePromise && layout.active.length === 1) {
         // TODO(wittjosiah): This should really be fired once the navtree renders for the first time.
         //   That is the point at which the graph is expanded and the path should be available.
         void Graph.waitForPath(graph, { target: layout.active[0] }, { timeout: 30_000 })
-          .then(() => invokePromise(Common.LayoutOperation.Expose, { subject: layout.active[0] }))
+          .then(() => invokePromise(LayoutOperation.Expose, { subject: layout.active[0] }))
           .catch(() => {});
       }
 
@@ -64,14 +68,8 @@ export const NavTreePlugin = Plugin.define(meta).pipe(
   }),
   Plugin.addModule({
     id: 'keyboard',
-    activatesOn: ActivationEvent.allOf(
-      Common.ActivationEvent.AppGraphReady,
-      Common.ActivationEvent.OperationInvokerReady,
-    ),
+    activatesOn: ActivationEvent.allOf(AppActivationEvents.AppGraphReady, ActivationEvents.OperationInvokerReady),
     activate: Keyboard,
   }),
-  Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
-  Common.Plugin.addOperationResolverModule({ activate: OperationResolver }),
-  Common.Plugin.addAppGraphModule({ activate: AppGraphBuilder }),
   Plugin.make,
 );

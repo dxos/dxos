@@ -21,7 +21,7 @@ const meta = {
   title: 'plugins/plugin-preview/Card',
   render: DefaultStory,
   decorators: [
-    withTheme,
+    withTheme(),
     withLayout({ layout: 'column', scroll: true }),
     // TODO(wittjosiah): Try to write story which does not depend on plugin manager.
     withPluginManager({ plugins: corePlugins() }),

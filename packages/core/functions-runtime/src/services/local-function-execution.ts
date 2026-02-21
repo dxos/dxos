@@ -29,7 +29,6 @@ export class LocalFunctionExecutionService extends Context.Tag('@dxos/functions/
   {
     // TODO(dmaretskyi): This should take function id instead of the definition object.
     invokeFunction<I, O>(functionDef: FunctionDefinition<I, O>, input: I): Effect.Effect<O, never, InvocationServices>;
-
     resolveFunction(key: string): Effect.Effect<FunctionDefinition.Any, FunctionNotFoundError>;
   }
 >() {
@@ -62,12 +61,14 @@ export class LocalFunctionExecutionService extends Context.Tag('@dxos/functions/
           ),
         resolveFunction: (key: string) =>
           Effect.gen(function* () {
+            // Try to resolve function from database.
             const [dbFunction] = yield* Database.runQuery(Query.type(Function.Function, { key }));
             const functionDef = dbFunction ? FunctionDefinition.deserialize(dbFunction) : null;
             if (functionDef) {
               return functionDef;
             }
 
+            // Try to resolve function from the FunctionImplementationResolver.
             const resolved = yield* resolver.resolveByKey(key).pipe(Effect.either);
             if (Either.isRight(resolved)) {
               return resolved.right;
@@ -155,6 +156,7 @@ export class FunctionImplementationResolver extends Context.Tag('@dxos/functions
         if (!resolved) {
           return Effect.fail(new FunctionNotFoundError(functionDef.name));
         }
+
         return Effect.succeed(resolved);
       },
 

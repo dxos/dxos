@@ -7,7 +7,8 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
-import { Capability, Common } from '@dxos/app-framework';
+import { Capability } from '@dxos/app-framework';
+import { AppCapabilities } from '@dxos/app-toolkit';
 import { type Space, SpaceState, getSpace, isSpace, parseId } from '@dxos/client/echo';
 import { DXN, Filter, Obj, type Ref, Type } from '@dxos/echo';
 import { AtomObj, AtomQuery } from '@dxos/echo-atom';
@@ -42,7 +43,7 @@ export default Capability.makeModule(
 
     // TODO(wittjosiah): Using `get` and being reactive seems to cause a bug with Atom where disposed atoms are accessed.
     const resolve = (get: Atom.Context) => (typename: string) =>
-      capabilities.getAll(Common.Capability.Metadata).find(({ id }) => id === typename)?.metadata ?? {};
+      capabilities.getAll(AppCapabilities.Metadata).find(({ id }) => id === typename)?.metadata ?? {};
 
     const extensions = yield* Effect.all([
       // Primary actions.
@@ -135,7 +136,7 @@ export default Capability.makeModule(
             const [spacesOrder] = get(
               AtomQuery.make(client.spaces.default.db, Filter.type(Expando.Expando, { key: SHARED })),
             );
-            const { graph } = capabilities.get(Common.Capability.AppGraph);
+            const { graph } = capabilities.get(AppCapabilities.AppGraph);
 
             // Get order from spacesOrder snapshot using AtomObj (cached via Atom.family).
             const spacesOrderSnapshot = spacesOrder ? get(AtomObj.make(spacesOrder)) : undefined;
@@ -196,7 +197,7 @@ export default Capability.makeModule(
           const state = get(capabilities.get(SpaceCapabilities.State));
           const ephemeralState = get(capabilities.get(SpaceCapabilities.EphemeralState));
 
-          const { graph } = capabilities.get(Common.Capability.AppGraph);
+          const { graph } = capabilities.get(AppCapabilities.AppGraph);
           const [spacesOrder] = get(
             AtomQuery.make(client.spaces.default.db, Filter.type(Expando.Expando, { key: SHARED })),
           );
@@ -538,7 +539,7 @@ export default Capability.makeModule(
             deletable = filteredViews.length === 0;
           }
 
-          const [appGraph] = get(capabilities.atom(Common.Capability.AppGraph));
+          const [appGraph] = get(capabilities.atom(AppCapabilities.AppGraph));
           const ephemeralAtom = capabilities.get(SpaceCapabilities.EphemeralState);
           const ephemeralState = get(ephemeralAtom);
 
@@ -615,6 +616,6 @@ export default Capability.makeModule(
       }),
     ]);
 
-    return Capability.contributes(Common.Capability.AppGraphBuilder, extensions);
+    return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
   }),
 );

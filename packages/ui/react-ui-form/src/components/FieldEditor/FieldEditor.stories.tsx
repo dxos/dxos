@@ -82,7 +82,7 @@ const meta = {
   title: 'ui/react-ui-form/FieldEditor',
   component: FieldEditor as any,
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'fullscreen',
     translations,

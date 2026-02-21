@@ -28,7 +28,7 @@ const meta = {
   title: 'ui/react-ui-canvas-editor/Frame',
   component: Canvas,
   render: DefaultStory,
-  decorators: [withRegistry, withTheme, withLayout()],
+  decorators: [withRegistry, withTheme(), withLayout()],
   parameters: {
     layout: 'fullscreen',
   },

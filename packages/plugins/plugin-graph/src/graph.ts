@@ -5,8 +5,9 @@
 import * as Effect from 'effect/Effect';
 import * as Record from 'effect/Record';
 
-import { Capability, Common } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
 import { Graph, GraphBuilder, Node } from '@dxos/app-graph';
+import { AppCapabilities } from '@dxos/app-toolkit';
 
 // TODO(wittjosiah): Remove or restore graph caching.
 // import { meta } from './meta';
@@ -15,8 +16,8 @@ import { Graph, GraphBuilder, Node } from '@dxos/app-graph';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const registry = yield* Capability.get(Common.Capability.AtomRegistry);
-    const extensionsAtom = yield* Capability.atom(Common.Capability.AppGraphBuilder);
+    const registry = yield* Capability.get(Capabilities.AtomRegistry);
+    const extensionsAtom = yield* Capability.atom(AppCapabilities.AppGraphBuilder);
 
     const builder = GraphBuilder.from(/* localStorage.getItem(KEY) ?? */ undefined, registry);
     // const interval = setInterval(() => {
@@ -41,7 +42,7 @@ export default Capability.makeModule(
     setupDevtools(builder.graph);
 
     return Capability.contributes(
-      Common.Capability.AppGraph,
+      AppCapabilities.AppGraph,
       { graph: builder.graph, explore: GraphBuilder.explore },
       () =>
         Effect.sync(() => {

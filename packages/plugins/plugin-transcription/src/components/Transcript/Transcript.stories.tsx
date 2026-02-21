@@ -173,7 +173,7 @@ const QueueStoryWrapper = () => {
 const meta = {
   title: 'plugins/plugin-transcription/Transcript',
   decorators: [
-    withTheme,
+    withTheme(),
     withPluginManager({
       plugins: [
         ...corePlugins(),

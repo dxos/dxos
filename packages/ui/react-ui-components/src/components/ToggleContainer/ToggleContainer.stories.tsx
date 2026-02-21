@@ -102,7 +102,7 @@ const meta = {
   title: 'ui/react-ui-components/ToggleContainer',
   component: ToggleContainer.Root,
   render: DefaultStory,
-  decorators: [withRegistry, withTheme],
+  decorators: [withRegistry, withTheme()],
   parameters: {
     layout: 'centered',
   },

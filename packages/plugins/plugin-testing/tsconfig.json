@@ -27,6 +27,9 @@
       "path": "../../sdk/app-framework"
     },
     {
+      "path": "../../sdk/app-toolkit"
+    },
+    {
       "path": "../../ui/react-ui"
     },
     {
@@ -43,6 +46,9 @@
     },
     {
       "path": "../plugin-graph"
+    },
+    {
+      "path": "../plugin-settings"
     },
     {
       "path": "../plugin-theme"

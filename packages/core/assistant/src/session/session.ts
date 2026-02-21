@@ -19,14 +19,14 @@ import {
   type ToolExecutionService,
   type ToolResolverService,
   callTool,
-  getToolCalls,
+  withoutToolCallParising,
 } from '@dxos/ai';
 import { type Blueprint } from '@dxos/blueprints';
 import { todo } from '@dxos/debug';
 import { Obj } from '@dxos/echo';
 import { type FunctionInvocationService, TracingService } from '@dxos/functions';
 import { log } from '@dxos/log';
-import { Message } from '@dxos/types';
+import { type ContentBlock, Message } from '@dxos/types';
 
 import { type AiAssistantError } from '../errors';
 
@@ -53,6 +53,12 @@ export type AiSessionRunProps<Tools extends Record<string, Tool.Any>> = {
   blueprints?: readonly Blueprint.Blueprint[];
   toolkit?: Toolkit.WithHandler<Tools>;
   observer?: GenerationObserver<Tools>;
+  /**
+   * Callback for when a message is received from the user, model, or tool.
+   * This is useful for streaming the output to a queue.
+   */
+  // TODO(dmaretskyi): This is duplicated by generation observer. Better solution would be to convert the return type from effect to stream.
+  onOutput?: (message: Message.Message) => Effect.Effect<void, never, never>;
 };
 
 /**
@@ -98,6 +104,7 @@ export class AiSession {
     blueprints = [],
     toolkit,
     observer = GenerationObserver.noop(),
+    onOutput = () => Effect.void,
   }: AiSessionRunProps<Tools>): Effect.Effect<Message.Message[], AiSessionRunError, AiSessionRunRequirements> =>
     Effect.gen(this, function* () {
       this._started = Date.now();
@@ -109,6 +116,7 @@ export class AiSession {
         pending.push(message);
         yield* observer.onMessage(message);
         yield* TracingService.emitConverationMessage(message);
+        yield* onOutput(message);
         return message;
       });
 
@@ -118,8 +126,6 @@ export class AiSession {
 
       // Generate system and prompt messages.
       const system = yield* formatSystemPrompt({ system: systemTemplate, blueprints, objects }).pipe(Effect.orDie);
-
-      // log('system', { prompt: system });
 
       // Tool call loop.
       do {
@@ -131,15 +137,19 @@ export class AiSession {
           objects: objects?.length ?? 0,
         });
 
-        const prompt = yield* AiPreprocessor.preprocessPrompt([...this._history, ...this._pending], { system });
+        const prompt = yield* AiPreprocessor.preprocessPrompt([...this._history, ...this._pending], {
+          system,
+          cacheControl: 'ephemeral',
+        });
 
         // Execute the stream request.
-        // logDump('prompt', Prompt.Prompt.pipe(Schema.encodeSync)(prompt));
-        const blocks = yield* LanguageModel.streamText({
+        const messages = yield* LanguageModel.streamText({
           prompt,
           toolkit,
           disableToolCallResolution: true,
         }).pipe(
+          // Disable tool call parsing so that we can handle parameter schema errors on a per-tool call basis.
+          withoutToolCallParising,
           // TOOD(dmaretskyi): Error mapping.
           AiParser.parseResponse({
             onBegin: () => observer.onBegin(),
@@ -147,23 +157,29 @@ export class AiSession {
             onPart: (part) => observer.onPart(part),
             onEnd: (summary) => observer.onEnd(summary),
           }),
+          Stream.mapEffect((block) =>
+            Effect.gen(function* () {
+              return yield* submitMessage(
+                Obj.make(Message.Message, {
+                  created: new Date().toISOString(),
+                  sender: { role: 'assistant' },
+                  blocks: [block],
+                }),
+              );
+            }),
+          ),
           Stream.runCollect,
           Effect.map(Chunk.toArray),
         );
 
-        // log('blocks', { blocks });
-
-        // Create the response message.
-        const response = yield* submitMessage(
-          Obj.make(Message.Message, {
-            created: new Date().toISOString(),
-            sender: { role: 'assistant' },
-            blocks,
-          }),
-        );
-
         // Parse the response for tool calls.
-        const toolCalls = getToolCalls(response);
+        const toolCalls = messages.flatMap((message) =>
+          message.blocks
+            .filter(
+              (block): block is ContentBlock.ToolCall => block._tag === 'toolCall' && block.providerExecuted === false,
+            )
+            .map((block) => ({ block, message })),
+        );
         if (toolCalls.length === 0) {
           break;
         } else if (!toolkit) {
@@ -172,13 +188,13 @@ export class AiSession {
 
         // Execute the tool calls.
         // TODO(burdon): Retry errors? Write result when each completes individually?
-        const toolResults = yield* Effect.forEach(toolCalls, (toolCall) => {
-          return callTool(toolkit, toolCall).pipe(
+        const toolResults = yield* Effect.forEach(toolCalls, ({ block, message }) => {
+          return callTool(toolkit, block).pipe(
             Effect.provide(
               TracingService.layerSubframe((context) => ({
                 ...context,
-                parentMessage: response.id,
-                toolCallId: toolCall.toolCallId,
+                parentMessage: message.id,
+                toolCallId: block.toolCallId,
               })),
             ),
           );
@@ -187,6 +203,7 @@ export class AiSession {
         // Add to queue and continue loop.
         // TODO(wittjosiah): Sometimes tool error results are added to the queue before the tool agent statuses.
         //   This results in a broken execution graph.
+        // TODO(dmaretskyi): Stream tool results one by one.
         yield* submitMessage(
           Obj.make(Message.Message, {
             created: new Date().toISOString(),

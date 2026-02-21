@@ -2,4 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-export { default as sync } from './sync';
+import Sync from './sync';
+
+export const CalendarFunctions = {
+  Sync,
+};

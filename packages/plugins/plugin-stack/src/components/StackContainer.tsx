@@ -5,9 +5,10 @@
 import * as Option from 'effect/Option';
 import React, { useCallback, useState } from 'react';
 
-import { Common } from '@dxos/app-framework';
-import { useAppGraph, useCapabilities, useOperationInvoker } from '@dxos/app-framework/react';
-import { type SurfaceComponentProps } from '@dxos/app-framework/react';
+import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
+import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
+import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
+import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { Graph } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space/types';
@@ -37,7 +38,7 @@ const StackContainer = ({ id, subject: collection }: StackContainerProps) => {
   const { invokePromise } = useOperationInvoker();
   const { graph } = useAppGraph();
   const { t } = useTranslation(meta.id);
-  const allMetadata = useCapabilities(Common.Capability.Metadata);
+  const allMetadata = useCapabilities(AppCapabilities.Metadata);
   const [collapsedSections, setCollapsedSections] = useState<CollapsedSections>({});
 
   // TODO(wittjosiah): Re-implement stack views with relations.
@@ -95,7 +96,7 @@ const StackContainer = ({ id, subject: collection }: StackContainerProps) => {
   const handleAdd = useCallback(
     async (id: string, position: AddSectionPosition) => {
       // TODO(wittjosiah): Use object creation dialog.
-      await invokePromise(Common.LayoutOperation.UpdateDialog, {
+      await invokePromise(LayoutOperation.UpdateDialog, {
         subject: `${meta.id}/AddSectionDialog`,
         blockAlign: 'start',
         props: {
@@ -110,7 +111,7 @@ const StackContainer = ({ id, subject: collection }: StackContainerProps) => {
 
   const handleNavigate = useCallback(
     async (id: string) => {
-      await invokePromise(Common.LayoutOperation.Open, { subject: [id] });
+      await invokePromise(LayoutOperation.Open, { subject: [id] });
     },
     [invokePromise],
   );

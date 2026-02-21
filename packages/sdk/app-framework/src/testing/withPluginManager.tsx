@@ -10,9 +10,9 @@ import { raise } from '@dxos/debug';
 import { useAsyncEffect } from '@dxos/react-hooks';
 import { type MaybeProvider, getProviderValue } from '@dxos/util';
 
-import * as Common from '../common';
+import { ActivationEvents, Capabilities } from '../common';
 import { type ActivationEvent, Capability, type CapabilityManager, Plugin, PluginManager } from '../core';
-import { type UseAppOptions, useApp } from '../react';
+import { type UseAppOptions, useApp } from '../ui';
 
 /**
  * @internal
@@ -65,7 +65,7 @@ export const withPluginManager = <Args,>(init: WithPluginManagerInitializer<Args
 
     // Set-up root capability.
     useEffect(() => {
-      const capability = Capability.contributes(Common.Capability.ReactRoot, {
+      const capability = Capability.contributes(Capabilities.ReactRoot, {
         id: context.id,
         root: () => <Story />,
       });
@@ -102,7 +102,7 @@ const storyMeta = {
 const StoryPlugin = Plugin.define(storyMeta).pipe(
   Plugin.addModule({
     id: 'Story',
-    activatesOn: Common.ActivationEvent.Startup,
+    activatesOn: ActivationEvents.Startup,
     activate: () => Effect.succeed([]),
   }),
   Plugin.make,

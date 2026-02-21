@@ -7,7 +7,6 @@ import React from 'react';
 
 import { withTheme } from '../../testing';
 import { Button } from '../Button';
-import { Toolbar } from '../Toolbar';
 
 import { AlertDialog } from './AlertDialog';
 
@@ -31,15 +30,15 @@ const DefaultStory = ({ title, description, body, openTrigger, cancelTrigger, ac
           <AlertDialog.Title>{title}</AlertDialog.Title>
           <AlertDialog.Description>{description}</AlertDialog.Description>
           <p className='mbs-2 mbe-8'>{body}</p>
-          <Toolbar.Root>
+          <AlertDialog.ActionBar>
             <div className='grow' />
             <AlertDialog.Cancel asChild>
-              <Toolbar.Button>{cancelTrigger}</Toolbar.Button>
+              <Button>{cancelTrigger}</Button>
             </AlertDialog.Cancel>
             <AlertDialog.Action asChild>
-              <Toolbar.Button variant='primary'>{actionTrigger}</Toolbar.Button>
+              <Button variant='primary'>{actionTrigger}</Button>
             </AlertDialog.Action>
-          </Toolbar.Root>
+          </AlertDialog.ActionBar>
         </AlertDialog.Content>
       </AlertDialog.Overlay>
     </AlertDialog.Root>
@@ -47,10 +46,10 @@ const DefaultStory = ({ title, description, body, openTrigger, cancelTrigger, ac
 };
 
 const meta = {
-  title: 'ui/react-ui-core/AlertDialog',
+  title: 'ui/react-ui-core/components/AlertDialog',
   component: AlertDialog.Root as any,
   render: DefaultStory as any,
-  decorators: [withTheme],
+  decorators: [withTheme()],
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

@@ -21,6 +21,9 @@ export function safeStringify(obj: any, filter: StringifyReplacer = defaultFilte
       let path = key;
       if (!key) {
         path = '$';
+        if (value != null && typeof value === 'object') {
+          seen.set(value, path);
+        }
         return value;
       } else if (this) {
         const parentPath = seen.get(this);
@@ -38,7 +41,7 @@ export function safeStringify(obj: any, filter: StringifyReplacer = defaultFilte
       }
 
       // Ignore exotic objects (non-plain objects like DOM elements, class instances, etc.)
-      if (typeof value === 'object' && Object.getPrototypeOf(value) !== Object.prototype) {
+      if (typeof value === 'object' && Object.getPrototypeOf(value) !== Object.prototype && !Array.isArray(value)) {
         return undefined;
       }
 
@@ -105,6 +108,11 @@ export const createReplacer = ({
       return SKIP;
     }
 
+    // Show array length.
+    if (maxArrayLen != null && Array.isArray(value) && value.length > maxArrayLen) {
+      return `[length: ${value.length}]`;
+    }
+
     // Store depth for this object.
     if (value && typeof value === 'object') {
       depthMap.set(value, currentDepth);
@@ -127,11 +135,6 @@ export const createReplacer = ({
       } catch {
         return value;
       }
-    }
-
-    // Show array length.
-    if (maxArrayLen != null && Array.isArray(value) && value.length > maxArrayLen) {
-      return `[length: ${value.length}]`;
     }
 
     // Truncate strings.

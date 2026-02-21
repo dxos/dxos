@@ -3,12 +3,13 @@
 //
 
 export * from './anchor';
+export * from './axis';
+export * from './density';
+export * from './elevation';
 export * from './menu';
+export * from './message';
+export * from './palette';
+export * from './size';
+export * from './slot';
+export * from './theme';
 export * from './translations';
-
-export type * from './density';
-export type * from './elevation';
-export type * from './message';
-export type * from './palette';
-export type * from './size';
-export type * from './theme';

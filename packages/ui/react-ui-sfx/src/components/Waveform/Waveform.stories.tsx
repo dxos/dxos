@@ -64,7 +64,7 @@ const meta = {
   title: 'ui/react-ui-sfx/Waveform',
   component: Waveform,
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'fullscreen',
   },

@@ -60,7 +60,7 @@ const meta = {
   title: 'ui/react-ui-tabs/Tabs',
   component: NaturalTabs.Root,
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

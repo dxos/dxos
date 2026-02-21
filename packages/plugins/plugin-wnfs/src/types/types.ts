@@ -4,7 +4,8 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Capability, Common } from '@dxos/app-framework';
+import { Capability } from '@dxos/app-framework';
+import { FileInfoSchema } from '@dxos/app-toolkit';
 import { Database } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 import { SpaceSchema } from '@dxos/react-client/echo';
@@ -51,7 +52,7 @@ export namespace WnfsOperation {
     meta: { key: `${WNFS_OPERATION}/create`, name: 'Create WNFS File' },
     services: [Capability.Service],
     schema: {
-      input: Common.FileInfoSchema.pick('name', 'type', 'cid').pipe(Schema.required),
+      input: FileInfoSchema.pick('name', 'type', 'cid').pipe(Schema.required),
       output: Schema.Struct({
         object: File.File,
       }),
@@ -63,7 +64,7 @@ export namespace WnfsOperation {
     services: [Capability.Service],
     schema: {
       input: Schema.extend(WnfsAction.UploadFileSchema, Schema.Struct({ db: Database.Database })),
-      output: Schema.required(Common.FileInfoSchema),
+      output: Schema.required(FileInfoSchema),
     },
   });
 

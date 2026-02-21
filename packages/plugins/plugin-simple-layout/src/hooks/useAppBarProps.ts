@@ -7,8 +7,9 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import { useCallback, useMemo } from 'react';
 
-import { Common } from '@dxos/app-framework';
-import { useAppGraph, useCapability, useOperationInvoker } from '@dxos/app-framework/react';
+import { useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
+import { LayoutOperation } from '@dxos/app-toolkit';
+import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Graph, Node, useActionRunner, useNode } from '@dxos/plugin-graph';
 import { toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { type ActionGraphProps } from '@dxos/react-ui-menu';
@@ -59,7 +60,7 @@ export const useAppBarProps = (): Omit<AppBarProps, 'classNames'> => {
           const settingsAction = {
             id: `appbar-settings-${alternateTreeNode.id}`,
             type: Node.ActionType,
-            data: () => Effect.sync(() => invokeSync(Common.LayoutOperation.Open, { subject: [alternateTreeNode.id] })),
+            data: () => Effect.sync(() => invokeSync(LayoutOperation.Open, { subject: [alternateTreeNode.id] })),
             properties: {
               label: alternateTreeNode.properties.label ?? alternateTreeNode.id,
               icon: alternateTreeNode.properties.icon ?? 'ph--placeholder--regular',
@@ -86,13 +87,13 @@ export const useAppBarProps = (): Omit<AppBarProps, 'classNames'> => {
 
       // If history is empty and this is a workspace, go to home.
       if (state.history.length === 0 && isWorkspace) {
-        invokeSync(Common.LayoutOperation.SwitchWorkspace, { subject: Node.RootId });
+        invokeSync(LayoutOperation.SwitchWorkspace, { subject: Node.RootId });
       } else {
         // Otherwise, close (which will pop from history or clear active).
-        invokeSync(Common.LayoutOperation.Close, { subject: [state.active] });
+        invokeSync(LayoutOperation.Close, { subject: [state.active] });
       }
     } else {
-      invokeSync(Common.LayoutOperation.SwitchWorkspace, { subject: Node.RootId });
+      invokeSync(LayoutOperation.SwitchWorkspace, { subject: Node.RootId });
     }
   }, [graph, invokeSync, state.active, state.history.length]);
 

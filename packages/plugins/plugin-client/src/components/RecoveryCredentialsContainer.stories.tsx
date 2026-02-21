@@ -18,7 +18,7 @@ const meta = {
   title: 'plugins/plugin-client/RecoveryCredentialsContainer',
   component: RecoveryCredentialsContainer,
   decorators: [
-    withTheme,
+    withTheme(),
     withPluginManager({
       plugins: [
         ClientPlugin({

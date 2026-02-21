@@ -62,7 +62,7 @@ const DefaultStory = () => {
 const meta = {
   title: 'devtools/devtools/Bitbar',
   component: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

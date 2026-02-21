@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common, UndoMapping } from '@dxos/app-framework';
+import { Capabilities, Capability, UndoMapping } from '@dxos/app-framework';
 import { JsonSchema, Obj } from '@dxos/echo';
 import { type EchoSchema } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
@@ -16,7 +16,7 @@ import { KanbanOperation } from '../../types';
 
 export default Capability.makeModule(() =>
   Effect.succeed([
-    Capability.contributes(Common.Capability.UndoMapping, [
+    Capability.contributes(Capabilities.UndoMapping, [
       UndoMapping.make({
         operation: KanbanOperation.DeleteCardField,
         inverse: KanbanOperation.RestoreCardField,
@@ -37,11 +37,11 @@ export default Capability.makeModule(() =>
         message: ['card deleted label', { ns: meta.id }],
       }),
     ]),
-    Capability.contributes(Common.Capability.OperationResolver, [
+    Capability.contributes(Capabilities.OperationResolver, [
       OperationResolver.make({
         operation: KanbanOperation.DeleteCardField,
         handler: Effect.fnUntraced(function* ({ view, fieldId }) {
-          const registry = yield* Capability.get(Common.Capability.AtomRegistry);
+          const registry = yield* Capability.get(Capabilities.AtomRegistry);
           const db = Obj.getDatabase(view);
           invariant(db, 'Database not found');
           const schema = yield* Effect.promise(() =>
@@ -91,7 +91,7 @@ export default Capability.makeModule(() =>
       OperationResolver.make({
         operation: KanbanOperation.RestoreCardField,
         handler: Effect.fnUntraced(function* ({ view, field, props, index }) {
-          const registry = yield* Capability.get(Common.Capability.AtomRegistry);
+          const registry = yield* Capability.get(Capabilities.AtomRegistry);
           const db = Obj.getDatabase(view);
           invariant(db, 'Database not found');
           const schema = yield* Effect.promise(() =>

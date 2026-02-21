@@ -13,7 +13,7 @@ import { ContentError } from './ContentError';
 const meta = {
   title: 'plugins/plugin-simple-layout/ContentError',
   component: ContentError,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'centered',
     translations,

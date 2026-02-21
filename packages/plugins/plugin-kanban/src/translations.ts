@@ -4,9 +4,9 @@
 
 import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
-import { Kanban } from '@dxos/react-ui-kanban/types';
 
 import { meta } from './meta';
+import { Kanban } from './types';
 
 export const translations = [
   {
@@ -27,6 +27,12 @@ export const translations = [
         'column title label': 'Column title',
         'column title placeholder': 'New column',
         'add column label': 'Add column',
+        'add card label': 'Add card',
+        'new column name label': 'New column name',
+        'remove card label': 'Remove card',
+        'remove empty column label': 'Remove empty column',
+        'column drag handle label': 'Drag to rearrange',
+        'action menu label': 'Action menu',
         'delete column label': 'Delete column',
         'card field deleted label': 'Card field deleted',
         'card deleted label': 'Card deleted',

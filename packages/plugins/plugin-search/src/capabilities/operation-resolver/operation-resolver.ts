@@ -4,18 +4,19 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { LayoutOperation } from '@dxos/app-toolkit';
 import { Operation, OperationResolver } from '@dxos/operation';
 
 import { SearchOperation } from '../../types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contributes(Common.Capability.OperationResolver, [
+    return Capability.contributes(Capabilities.OperationResolver, [
       OperationResolver.make({
         operation: SearchOperation.OpenSearch,
         handler: Effect.fnUntraced(function* () {
-          yield* Operation.invoke(Common.LayoutOperation.UpdateComplementary, { subject: 'search' });
+          yield* Operation.invoke(LayoutOperation.UpdateComplementary, { subject: 'search' });
         }),
       }),
     ]);

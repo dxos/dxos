@@ -25,7 +25,7 @@ const DefaultStory = ({ pgn }: StoryProps) => {
 const meta = {
   title: 'plugins/plugin-chess/Chessboard',
   component: DefaultStory,
-  decorators: [withTheme, withClientProvider({ createIdentity: true })],
+  decorators: [withTheme(), withClientProvider({ createIdentity: true })],
   parameters: {
     layout: 'fullscreen',
     translations,

@@ -95,4 +95,27 @@ describe('Object JSON serializer', () => {
     expect(getObjectDXN(contactFromJson)).toEqual(getObjectDXN(contact));
     expect(getTypeDXN(contactFromJson)).toEqual(getSchemaDXN(TestSchema.Person));
   });
+
+  test('deserializes expando without leaking internal json keys', async () => {
+    const expando = Obj.make(TestSchema.Expando, { message: 'local-only' });
+    const expandoJson = objectToJSON(expando);
+
+    const refResolver = new StaticRefResolver().addSchema(TestSchema.Expando);
+    const expandoFromJson = (await objectFromJSON(expandoJson, { refResolver })) as TestSchema.Expando;
+
+    expect(expandoFromJson.id).toBe(expando.id);
+    expect(expandoFromJson.message).toBe('local-only');
+    expect((expandoFromJson as any)[ATTR_TYPE]).toBeUndefined();
+  });
+
+  test('deserializes expando without schema resolver and without leaking internal json keys', async () => {
+    const expando = Obj.make(TestSchema.Expando, { message: 'local-only' });
+    const expandoJson = objectToJSON(expando);
+
+    const expandoFromJson = (await objectFromJSON(expandoJson)) as TestSchema.Expando;
+
+    expect(expandoFromJson.id).toBe(expando.id);
+    expect(expandoFromJson.message).toBe('local-only');
+    expect((expandoFromJson as any)[ATTR_TYPE]).toBeUndefined();
+  });
 });

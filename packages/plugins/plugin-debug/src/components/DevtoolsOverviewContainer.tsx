@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Surface } from '@dxos/app-framework/react';
+import { Surface } from '@dxos/app-framework/ui';
 import { StatsPanel, useStats } from '@dxos/devtools';
 
 export const DevtoolsOverviewContainer = () => {
@@ -12,7 +12,7 @@ export const DevtoolsOverviewContainer = () => {
 
   return (
     <StatsPanel stats={stats} onRefresh={refreshStats}>
-      <Surface role='devtools-overview' />
+      <Surface.Surface role='devtools-overview' />
     </StatsPanel>
   );
 };

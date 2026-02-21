@@ -4,10 +4,17 @@
 
 import { inspect } from 'node:util';
 
+import * as Cause from 'effect/Cause';
+import * as Chunk from 'effect/Chunk';
+import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
+import * as Option from 'effect/Option';
+import * as Runtime from 'effect/Runtime';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { asyncTimeout, sleep } from '@dxos/async';
 import { Obj, Query, Ref, Type } from '@dxos/echo';
+import { Err } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
@@ -437,7 +444,7 @@ describe('Database', () => {
     test('splice', async () => {
       const root = newTask();
       Obj.change(root, (r) => {
-        r.subTasks = range(3).map((i) => Ref.make(newTask()));
+        r.subTasks = range(3).map((_i) => Ref.make(newTask()));
       });
       Obj.change(root, (r) => {
         r.subTasks!.splice(0, 2, Ref.make(newTask()));
@@ -498,6 +505,141 @@ describe('Database', () => {
     await db.flush();
     return { db, obj };
   };
+
+  describe('Obj.getReactive', () => {
+    test('returns reactive object when snapshot has database and object exists', async ({ expect }) => {
+      const { db } = await builder.createDatabase({ types: [TestSchema.Person] });
+      const obj = db.add(Obj.make(TestSchema.Person, { name: 'Test' }));
+      const snapshot = Obj.getSnapshot(obj);
+
+      const result = Obj.getReactive(snapshot).pipe(Effect.runSync);
+
+      expect(result).toBe(obj);
+      expect(result.name).toBe('Test');
+    });
+
+    test('fails with no-database when snapshot has no database', ({ expect }) => {
+      const obj = Obj.make(TestSchema.Person, { name: 'Test' });
+      const snapshot = Obj.getSnapshot(obj);
+
+      const exit = Effect.runSyncExit(Obj.getReactive(snapshot));
+      if (!Exit.isFailure(exit)) {
+        throw new Error('Expected failure');
+      }
+      const failures = Chunk.toArray(Cause.failures(exit.cause));
+      expect(failures.length).toBeGreaterThan(0);
+      const error = failures[0];
+      expect(Err.GetReactiveError.is(error)).toBe(true);
+      expect((error as Err.GetReactiveError).context?.reason).toBe('no-database');
+    });
+
+    test('fails with object-not-found when object was removed from database', async ({ expect }) => {
+      const { db } = await builder.createDatabase({ types: [TestSchema.Person] });
+      const obj = db.add(Obj.make(TestSchema.Person, { name: 'Test' }));
+      const snapshot = Obj.getSnapshot(obj);
+
+      db.remove(obj);
+
+      const exit = Effect.runSyncExit(Obj.getReactive(snapshot));
+      if (!Exit.isFailure(exit)) {
+        throw new Error('Expected failure');
+      }
+      const failures = Chunk.toArray(Cause.failures(exit.cause));
+      expect(failures.length).toBeGreaterThan(0);
+      const error = failures[0];
+      expect(Err.GetReactiveError.is(error)).toBe(true);
+      expect((error as Err.GetReactiveError).context?.reason).toBe('object-not-found');
+      expect((error as Err.GetReactiveError).context?.snapshotId).toBe(obj.id);
+    });
+  });
+
+  describe('Obj.getReactiveOption', () => {
+    test('returns Option.some when snapshot has database and object exists', async () => {
+      const { db } = await builder.createDatabase({ types: [TestSchema.Person] });
+      const obj = db.add(Obj.make(TestSchema.Person, { name: 'Test' }));
+      const snapshot = Obj.getSnapshot(obj);
+
+      const result = Obj.getReactiveOption(snapshot).pipe(Effect.runSync);
+
+      expect(Option.isSome(result)).toBe(true);
+      expect(Option.getOrThrow(result)).toBe(obj);
+      expect(Option.getOrThrow(result).name).toBe('Test');
+    });
+
+    test('returns Option.none when snapshot has no database', async () => {
+      const obj = Obj.make(TestSchema.Person, { name: 'Test' });
+      const snapshot = Obj.getSnapshot(obj);
+
+      const result = Obj.getReactiveOption(snapshot).pipe(Effect.runSync);
+
+      expect(Option.isNone(result)).toBe(true);
+    });
+
+    test('returns Option.none when object was removed from database', async () => {
+      const { db } = await builder.createDatabase({ types: [TestSchema.Person] });
+      const obj = db.add(Obj.make(TestSchema.Person, { name: 'Test' }));
+      const snapshot = Obj.getSnapshot(obj);
+
+      db.remove(obj);
+
+      const result = Obj.getReactiveOption(snapshot).pipe(Effect.runSync);
+
+      expect(Option.isNone(result)).toBe(true);
+    });
+  });
+
+  describe('Obj.getReactiveOrThrow', () => {
+    test('returns reactive object when snapshot has database and object exists', async () => {
+      const { db } = await builder.createDatabase({ types: [TestSchema.Person] });
+      const obj = db.add(Obj.make(TestSchema.Person, { name: 'Test' }));
+      const snapshot = Obj.getSnapshot(obj);
+
+      const result = Obj.getReactiveOrThrow(snapshot);
+
+      expect(result).toBe(obj);
+      expect(result.name).toBe('Test');
+    });
+
+    test('throws GetReactiveError with no-database when snapshot has no database', async () => {
+      const obj = Obj.make(TestSchema.Person, { name: 'Test' });
+      const snapshot = Obj.getSnapshot(obj);
+
+      try {
+        Obj.getReactiveOrThrow(snapshot);
+        expect.fail('Expected throw');
+      } catch (error) {
+        expect(Runtime.isFiberFailure(error)).toBe(true);
+        const cause = (error as Runtime.FiberFailure)[Runtime.FiberFailureCauseId];
+        const failures = Chunk.toArray(Cause.failures(cause));
+        expect(failures.length).toBeGreaterThan(0);
+        const getReactiveError = failures[0];
+        expect(Err.GetReactiveError.is(getReactiveError)).toBe(true);
+        expect((getReactiveError as Err.GetReactiveError).context?.reason).toBe('no-database');
+      }
+    });
+
+    test('throws GetReactiveError with object-not-found when object was removed from database', async () => {
+      const { db } = await builder.createDatabase({ types: [TestSchema.Person] });
+      const obj = db.add(Obj.make(TestSchema.Person, { name: 'Test' }));
+      const snapshot = Obj.getSnapshot(obj);
+
+      db.remove(obj);
+
+      try {
+        Obj.getReactiveOrThrow(snapshot);
+        expect.fail('Expected throw');
+      } catch (error) {
+        expect(Runtime.isFiberFailure(error)).toBe(true);
+        const cause = (error as Runtime.FiberFailure)[Runtime.FiberFailureCauseId];
+        const failures = Chunk.toArray(Cause.failures(cause));
+        expect(failures.length).toBeGreaterThan(0);
+        const getReactiveError = failures[0];
+        expect(Err.GetReactiveError.is(getReactiveError)).toBe(true);
+        expect((getReactiveError as Err.GetReactiveError).context?.reason).toBe('object-not-found');
+        expect((getReactiveError as Err.GetReactiveError).context?.snapshotId).toBe(obj.id);
+      }
+    });
+  });
 });
 
 const expectObjects = (echoObjects: any[], expectedObjects: any) => {

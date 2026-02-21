@@ -2,7 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
+import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import type { ForeignKey } from '@dxos/echo-protocol';
@@ -13,6 +15,7 @@ import { assumeType } from '@dxos/util';
 
 import type * as Database from './Database';
 import * as Entity from './Entity';
+import * as Err from './Err';
 import {
   type ObjectJSON as APIJSON,
   type AnyEntity,
@@ -29,7 +32,7 @@ import {
   type ObjectMeta,
   // TODO(dmaretskyi): Export ParentId?
   ParentId,
-  type SnapshotKindId,
+  SnapshotKindId,
   type VersionCompareResult,
   VersionTypeId,
   addTag as addTag$,
@@ -218,6 +221,60 @@ export const subscribe = (obj: Unknown, callback: () => void): (() => void) => {
  */
 export const getSnapshot: <T extends Unknown>(obj: T) => Snapshot<T> = getSnapshot$ as any;
 
+/**
+ * Returns the reactive version of an object from the database, given its snapshot.
+ * Inverse of `Obj.getSnapshot`.
+ *
+ * Uses `Obj.getDatabase` internally to get the database from the snapshot,
+ * then resolves the reactive object by ID.
+ *
+ * @param snapshot - A snapshot of the object (from `Obj.getSnapshot`).
+ * @returns Effect that succeeds with the reactive object, or fails with `GetReactiveError`.
+ * @example
+ * ```ts
+ * const snapshot = Obj.getSnapshot(obj);
+ * const reactive = Obj.getReactive(snapshot).pipe(
+ *   Effect.runSync
+ * );
+ * ```
+ */
+export const getReactive = <T extends Unknown>(snapshot: Snapshot<T>): Effect.Effect<T, Err.GetReactiveError> =>
+  Effect.gen(function* () {
+    const db = getDatabase$(snapshot);
+    if (!db) {
+      return yield* Effect.fail(new Err.GetReactiveError({ reason: 'no-database', snapshotId: snapshot.id }));
+    }
+    const obj = db.getObjectById(snapshot.id);
+    if (!obj) {
+      return yield* Effect.fail(new Err.GetReactiveError({ reason: 'object-not-found', snapshotId: snapshot.id }));
+    }
+    return obj as T;
+  });
+
+/**
+ * Like `Obj.getReactive` but returns `Option.none()` instead of failing when the object
+ * cannot be resolved (no database, object not found).
+ *
+ * @param snapshot - A snapshot of the object (from `Obj.getSnapshot`).
+ * @returns Effect that succeeds with `Option.some(reactive)` or `Option.none()`.
+ */
+export const getReactiveOption = <T extends Unknown>(snapshot: Snapshot<T>): Effect.Effect<Option.Option<T>, never> =>
+  getReactive(snapshot).pipe(
+    Effect.map(Option.some),
+    Effect.catchAll(() => Effect.succeed(Option.none())),
+  );
+
+/**
+ * Synchronous version of `Obj.getReactive`. Returns the reactive object or throws
+ * `GetReactiveError` when the object cannot be resolved (no database, object not found).
+ *
+ * @param snapshot - A snapshot of the object (from `Obj.getSnapshot`).
+ * @returns The reactive object.
+ * @throws {Err.GetReactiveError} When the object cannot be resolved.
+ */
+export const getReactiveOrThrow = <T extends Unknown>(snapshot: Snapshot<T>): T =>
+  Effect.runSync(getReactive(snapshot));
+
 export type CloneOptions = {
   /**
    * Retain the original object's ID.
@@ -366,6 +423,33 @@ export const instanceOf: {
   }
 
   return isInstanceOf(args[0], args[1]);
+}) as any;
+
+/**
+ * Test if a snapshot is an instance of a schema.
+ * Mirrors `instanceOf` but only accepts values branded with SnapshotKindId.
+ * Use when the value is known to be a snapshot (e.g. from `getSnapshot` or `useObject`).
+ *
+ * @example
+ * ```ts
+ * const snapshot = Obj.getSnapshot(person);
+ * if (Obj.snapshotOf(Person, snapshot)) {
+ *   // snapshot is Obj.Snapshot<Person>
+ * }
+ * ```
+ */
+export const snapshotOf: {
+  <S extends Type.Entity.Any>(schema: S): (value: unknown) => value is Snapshot<Schema.Schema.Type<S>>;
+  <S extends Type.Entity.Any>(schema: S, value: unknown): value is Snapshot<Schema.Schema.Type<S>>;
+} = ((...args: [schema: Type.Entity.Any, value: unknown] | [schema: Type.Entity.Any]) => {
+  const check = (entity: unknown) =>
+    entity != null && typeof entity === 'object' && SnapshotKindId in entity && isInstanceOf(args[0], entity);
+
+  if (args.length === 1) {
+    return (entity: unknown) => check(entity);
+  }
+
+  return check(args[1]);
 }) as any;
 
 // TODO(dmaretskyi): Allow returning undefined.

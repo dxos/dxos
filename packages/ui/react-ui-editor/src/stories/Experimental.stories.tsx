@@ -8,7 +8,7 @@ import React from 'react';
 
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { blast, defaultOptions, dropFile, join, typewriter } from '@dxos/ui-editor';
 
 import { EditorStory, content } from './components';
@@ -16,7 +16,7 @@ import { EditorStory, content } from './components';
 const meta = {
   title: 'ui/react-ui-editor/Experimental',
   component: EditorStory,
-  decorators: [withTheme],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
   },

@@ -30,9 +30,9 @@ import {
 import { bufferToArray, setDeep } from '@dxos/util';
 
 import {
-  type EchoReplicator,
-  type EchoReplicatorContext,
-  type ReplicatorConnection,
+  type AutomergeReplicator,
+  type AutomergeReplicatorConnection,
+  type AutomergeReplicatorContext,
   type ShouldAdvertiseProps,
   type ShouldSyncCollectionProps,
   getSpaceIdFromCollectionId,
@@ -53,13 +53,13 @@ export type EchoEdgeReplicatorProps = {
   disableSharePolicy?: boolean;
 };
 
-export class EchoEdgeReplicator implements EchoReplicator {
+export class EchoEdgeReplicator implements AutomergeReplicator {
   private readonly _edgeConnection: EdgeConnection;
   private readonly _edgeHttpClient: EdgeHttpClient;
   private readonly _mutex = new Mutex();
 
   private _ctx?: Context = undefined;
-  private _context: EchoReplicatorContext | null = null;
+  private _context: AutomergeReplicatorContext | null = null;
   private _connectedSpaces = new Set<SpaceId>();
   private _connections = new Map<SpaceId, EdgeReplicatorConnection>();
   private _sharePolicyEnabled = true;
@@ -70,7 +70,7 @@ export class EchoEdgeReplicator implements EchoReplicator {
     this._sharePolicyEnabled = !disableSharePolicy;
   }
 
-  async connect(context: EchoReplicatorContext): Promise<void> {
+  async connect(context: AutomergeReplicatorContext): Promise<void> {
     log('connecting...', { peerId: context.peerId, connectedSpaces: this._connectedSpaces.size });
     this._context = context;
     this._ctx = Context.default();
@@ -196,7 +196,7 @@ type EdgeReplicatorConnectionsProps = {
   edgeConnection: EdgeConnection;
   edgeHttpClient: EdgeHttpClient;
   spaceId: SpaceId;
-  context: EchoReplicatorContext;
+  context: AutomergeReplicatorContext;
   sharedPolicyEnabled: boolean;
   onRemoteConnected: () => Promise<void>;
   onRemoteDisconnected: () => Promise<void>;
@@ -206,14 +206,14 @@ type EdgeReplicatorConnectionsProps = {
 const MAX_INFLIGHT_REQUESTS = 5;
 const MAX_RATE_LIMIT_WAIT_TIME_MS = 3000;
 
-class EdgeReplicatorConnection extends Resource implements ReplicatorConnection {
+class EdgeReplicatorConnection extends Resource implements AutomergeReplicatorConnection {
   private readonly _connectionId = randomUUID();
   private readonly _edgeConnection: EdgeConnection;
   private readonly _edgeHttpClient: EdgeHttpClient;
   private readonly _remotePeerId: string | null = null;
   private readonly _targetServiceId: string;
   private readonly _spaceId: SpaceId;
-  private readonly _context: EchoReplicatorContext;
+  private readonly _context: AutomergeReplicatorContext;
   private readonly _sharedPolicyEnabled: boolean;
   private readonly _onRemoteConnected: () => Promise<void>;
   private readonly _onRemoteDisconnected: () => Promise<void>;

@@ -39,7 +39,7 @@ const meta = {
   title: 'ui/react-ui-thread/Message',
   component: MessageRoot as any,
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'fullscreen',
     translations,

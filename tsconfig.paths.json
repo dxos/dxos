@@ -363,12 +363,6 @@
       "@dxos/react-ui-grid": [
         "packages/ui/react-ui-grid/src/index.ts"
       ],
-      "@dxos/react-ui-kanban": [
-        "packages/ui/react-ui-kanban/src/index.ts"
-      ],
-      "@dxos/react-ui-kanban/types": [
-        "packages/ui/react-ui-kanban/src/types/index.ts"
-      ],
       "@dxos/react-ui-list": [
         "packages/ui/react-ui-list/src/index.ts"
       ],

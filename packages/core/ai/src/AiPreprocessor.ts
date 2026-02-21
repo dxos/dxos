@@ -27,13 +27,18 @@ import { PromptPreprocessingError as PromptPreprocesorError } from './errors';
  */
 export const preprocessPrompt: (
   messages: Message.Message[],
-  opts?: { system?: string },
+  opts?: { system?: string; cacheControl?: 'no-cache' | 'ephemeral' },
 ) => Effect.Effect<Prompt.Prompt, PromptPreprocesorError, never> = Effect.fn('preprocessPrompt')(function* (
   messages,
-  { system } = {},
+  { system, cacheControl = 'none' } = {},
 ) {
   let prompt = yield* Function.pipe(
     messages,
+    (messages) =>
+      Array.isNonEmptyArray(messages)
+        ? Array.groupWith((a: Message.Message, b: Message.Message) => a.sender.role === b.sender.role)(messages)
+        : [],
+    Array.map(mergeMessages),
     Effect.forEach(
       Effect.fnUntraced(function* (msg) {
         switch (msg.sender.role) {
@@ -81,6 +86,26 @@ export const preprocessPrompt: (
 
   if (system) {
     prompt = Prompt.setSystem(prompt, system);
+  }
+
+  if (cacheControl === 'ephemeral') {
+    prompt = Prompt.fromMessages(
+      prompt.content.map((message, index) =>
+        index !== prompt.content.length - 1
+          ? message
+          : {
+              ...message,
+              options: {
+                anthropic: {
+                  cacheControl: {
+                    ttl: '5m',
+                    type: 'ephemeral',
+                  },
+                },
+              },
+            },
+      ),
+    );
   }
 
   return prompt;
@@ -151,6 +176,7 @@ export const convertToolMessagePart: (
           name: block.name,
           result: block.error ?? (block.result ? JSON.parse(block.result) : {}),
           isFailure: false,
+          providerExecuted: false,
         });
       default:
         return yield* Effect.fail(new PromptPreprocesorError({ message: `Invalid tool content block: ${block._tag}` }));
@@ -168,29 +194,23 @@ const convertAssistantMessagePart: (
         return Prompt.makePart('text', {
           text: block.text,
         });
-      case 'reasoning':
+      case 'reasoning': {
+        const anthropicOptions = block.redactedText
+          ? { type: 'redacted_thinking' as const, redactedData: block.redactedText }
+          : block.signature
+            ? { type: 'thinking' as const, signature: block.signature }
+            : undefined;
         return Prompt.makePart('reasoning', {
           text: block.reasoningText ?? '',
-          options: {
-            anthropic: block.redactedText
-              ? {
-                  type: 'redacted_thinking',
-                  redactedData: block.redactedText,
-                }
-              : {
-                  type: 'thinking',
-                  signature:
-                    block.signature ??
-                    (yield* Effect.fail(new PromptPreprocesorError({ message: 'Invalid reasoning part' }))),
-                },
-          },
+          ...(anthropicOptions ? { options: { anthropic: anthropicOptions } } : {}),
         });
+      }
 
       case 'toolCall':
         return Prompt.makePart('tool-call', {
           id: block.toolCallId,
           name: block.name,
-          params: JSON.parse(block.input),
+          params: block.input === '' ? {} : JSON.parse(block.input),
           providerExecuted: block.providerExecuted,
         });
       case 'toolResult':
@@ -199,6 +219,7 @@ const convertAssistantMessagePart: (
           name: block.name,
           result: block.error ?? (block.result ? JSON.parse(block.result) : {}),
           isFailure: false,
+          providerExecuted: false,
         });
 
       case 'reference':
@@ -278,3 +299,8 @@ const splitBy = <T>(arr: T[], predicate: (left: T, right: T) => boolean): T[][] 
 
   return result;
 };
+
+const mergeMessages = (messages: Message.Message[]): Message.Message => ({
+  ...messages[0],
+  blocks: messages.flatMap((msg) => msg.blocks),
+});

@@ -7,9 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Schema from 'effect/Schema';
 
-import { ArtifactId } from '@dxos/assistant';
-import { Obj } from '@dxos/echo';
-import { Database } from '@dxos/echo';
+import { Database, Obj, Type } from '@dxos/echo';
 import { QueueService, defineFunction } from '@dxos/functions';
 import { Message } from '@dxos/types';
 
@@ -21,7 +19,7 @@ export default defineFunction({
   name: 'Open email',
   description: 'Opens and reads the contents of an mailbox object.',
   inputSchema: Schema.Struct({
-    id: ArtifactId.annotations({
+    mailbox: Type.Ref(Mailbox.Mailbox).annotations({
       description: 'The ID of the mailbox object.',
     }),
     skip: Schema.Number.pipe(
@@ -40,9 +38,9 @@ export default defineFunction({
   outputSchema: Schema.Struct({
     content: Schema.String,
   }),
-  handler: Effect.fn(function* ({ data: { id, skip = 0, limit = 20 } }) {
-    const mailbox = yield* Database.resolve(ArtifactId.toDXN(id), Mailbox.Mailbox);
-    const queue = yield* QueueService.getQueue(mailbox.queue.dxn);
+  handler: Effect.fn(function* ({ data: { mailbox, skip = 0, limit = 20 } }) {
+    const mailboxObj = yield* Database.load(mailbox);
+    const queue = yield* QueueService.getQueue(mailboxObj.queue.dxn);
     yield* Effect.promise(() => queue?.queryObjects());
     const content = Function.pipe(
       queue?.objects ?? [],

@@ -7,14 +7,12 @@ import '@dxos-theme';
 import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { initializeAppObservability } from '@dxos/observability';
 import { Config, Defaults, Remote, Storage } from '@dxos/react-client';
 
 import { DevtoolsApp as App } from './app';
-import { namespace } from './hooks';
 
 const main = async () => {
-  void initializeAppObservability({ namespace, config: new Config(Defaults()) });
+  // TODO(wittjosiah): Restore observability for devtools.
 
   const searchProps = new URLSearchParams(window.location.search);
   const target = searchProps.get('target') ?? undefined;

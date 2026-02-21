@@ -104,6 +104,7 @@ const createBrowserProject = ({
       target: 'esnext',
     },
     test: {
+      name: `browser-${browserName}`,
       env: {
         LOG_CONFIG: 'log-config.yaml',
       },
@@ -227,6 +228,31 @@ const createNodeProject = ({ environment = 'node', retry, timeout, setupFiles = 
     ],
   });
 
+/** Detect which project filter is active from CLI args to split coverage/results by project type. */
+const resolveProjectType = (): string | undefined => {
+  const projectArg = process.argv.reduce<string | undefined>((found, arg, idx, argv) => {
+    if (found) {
+      return found;
+    }
+    if (arg.startsWith('--project=')) {
+      return arg.slice('--project='.length);
+    }
+    if (arg === '--project') {
+      return argv[idx + 1];
+    }
+    return undefined;
+  }, undefined);
+
+  if (projectArg?.startsWith('browser')) {
+    return 'browser';
+  } else if (projectArg === 'node') {
+    return 'node';
+  } else if (projectArg === 'storybook') {
+    return 'storybook';
+  }
+  return undefined;
+};
+
 const resolveReporterConfig = (cwd: string): ViteUserConfig['test'] => {
   const packageJson = pkgUp.sync({ cwd });
   const packageDir = packageJson!.split('/').slice(0, -1).join('/');
@@ -235,16 +261,15 @@ const resolveReporterConfig = (cwd: string): ViteUserConfig['test'] => {
     throw new Error('packageDirName not found');
   }
 
-  const resultsDirectory = join(__dirname, 'test-results', packageDirName);
-  const reportsDirectory = join(__dirname, 'coverage', packageDirName);
+  const projectType = resolveProjectType();
+  const resultsDirectory = join(__dirname, 'test-results', packageDirName, ...(projectType ? [projectType] : []));
+  const reportsDirectory = join(__dirname, 'coverage', packageDirName, ...(projectType ? [projectType] : []));
   const coverageEnabled = Boolean(process.env.VITEST_COVERAGE);
 
   if (xmlReport) {
     return {
       passWithNoTests: true,
       reporters: ['junit', 'verbose'],
-      // TODO(wittjosiah): Browser mode will overwrite this, should be separate directories
-      //    however moon outputs config also needs to be aware of this.
       outputFile: join(resultsDirectory, 'results.xml'),
       coverage: {
         enabled: coverageEnabled,

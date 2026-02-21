@@ -57,7 +57,7 @@ const DefaultStory = ({ title, description, image, fullWidth }: CardStoryProps) 
 const meta = {
   title: 'ui/react-ui-mosaic/Card',
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ layout: 'column', classNames: 'grid is-[30rem] place-items-center' })],
+  decorators: [withTheme(), withLayout({ layout: 'column', classNames: 'grid is-[30rem] place-items-center' })],
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

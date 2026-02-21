@@ -1,5 +1,10 @@
 # Agent Guidelines for DXOS
 
+## General Interaction
+
+- If you are unsure about the best way to implement something, ask the user for clarification.
+- When asking the user a question; either make it yes/no, or provide numbered options.
+
 ## Dependencies
 
 - All dependency versions are managed in the default pnpm catalog.
@@ -14,6 +19,7 @@
 - Run all tests: `MOON_CONCURRENCY=4 moon run :test -- --no-file-parallelism`.
 - Lint & fix: `moon run :lint -- --fix`.
 - Check package tasks: see `moon.yml` in package directory.
+- **Expected warning**: `Auth token DEPOT_TOKEN does not exist` is a normal warning about remote caching and should be ignored. Focus only on actual compilation/type errors.
 
 ## Important
 

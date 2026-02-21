@@ -4,7 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { LayoutOperation } from '@dxos/app-toolkit';
 import { log } from '@dxos/log';
 import { Node } from '@dxos/plugin-graph';
 import { isTauri } from '@dxos/util';
@@ -20,7 +21,7 @@ import { type SimpleLayoutState, SimpleLayoutState as SimpleLayoutStateCapabilit
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const { invokeSync } = yield* Capability.get(Common.Capability.OperationInvoker);
+    const { invokeSync } = yield* Capability.get(Capabilities.OperationInvoker);
 
     /**
      * Handle navigation from a pathname.
@@ -36,9 +37,9 @@ export default Capability.makeModule(
       const targetWorkspace = !nextWorkspace || nextWorkspace === 'root' ? Node.RootId : nextWorkspace;
 
       // Navigate via operations (they will update state accordingly).
-      invokeSync(Common.LayoutOperation.SwitchWorkspace, { subject: targetWorkspace });
+      invokeSync(LayoutOperation.SwitchWorkspace, { subject: targetWorkspace });
       if (nextActive) {
-        invokeSync(Common.LayoutOperation.Open, { subject: [nextActive] });
+        invokeSync(LayoutOperation.Open, { subject: [nextActive] });
       }
     };
 
@@ -84,25 +85,22 @@ export default Capability.makeModule(
     // Subscribe to state changes to update the URL.
     let lastWorkspace: string | undefined;
     let lastActive: string | undefined;
-    const unsubscribe = yield* Common.Capability.subscribeAtom(
-      SimpleLayoutStateCapability,
-      (state: SimpleLayoutState) => {
-        const { workspace, active } = state;
+    const unsubscribe = yield* Capabilities.subscribeAtom(SimpleLayoutStateCapability, (state: SimpleLayoutState) => {
+      const { workspace, active } = state;
 
-        // Only update URL if relevant state changed.
-        if (workspace !== lastWorkspace || active !== lastActive) {
-          lastWorkspace = workspace;
-          lastActive = active;
+      // Only update URL if relevant state changed.
+      if (workspace !== lastWorkspace || active !== lastActive) {
+        lastWorkspace = workspace;
+        lastActive = active;
 
-          const path = pathFromState(workspace, active);
-          if (window.location.pathname !== path) {
-            history.pushState(null, '', `${path}${window.location.search}`);
-          }
+        const path = pathFromState(workspace, active);
+        if (window.location.pathname !== path) {
+          history.pushState(null, '', `${path}${window.location.search}`);
         }
-      },
-    );
+      }
+    });
 
-    return Capability.contributes(Common.Capability.Null, null, () =>
+    return Capability.contributes(Capabilities.Null, null, () =>
       Effect.sync(() => {
         window.removeEventListener('popstate', onNavigation);
         unsubscribe();

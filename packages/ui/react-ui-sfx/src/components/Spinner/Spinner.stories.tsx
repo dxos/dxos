@@ -32,7 +32,7 @@ const meta = {
   title: 'ui/react-ui-sfx/Spinner',
   component: Spinner,
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'fullscreen',
   },

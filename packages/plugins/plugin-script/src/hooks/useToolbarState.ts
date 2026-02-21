@@ -5,8 +5,8 @@
 import { Atom } from '@effect-atom/atom-react';
 import { useMemo } from 'react';
 
-import { Common } from '@dxos/app-framework';
-import { useCapability } from '@dxos/app-framework/react';
+import { Capabilities } from '@dxos/app-framework';
+import { useCapability } from '@dxos/app-framework/ui';
 
 import { type DeployState } from './deploy';
 
@@ -20,7 +20,7 @@ export type ScriptToolbarStateStore = {
 };
 
 export const useToolbarState = (initialState: ScriptToolbarState = {}): ScriptToolbarStateStore => {
-  const registry = useCapability(Common.Capability.AtomRegistry);
+  const registry = useCapability(Capabilities.AtomRegistry);
   const atom = useMemo(() => Atom.make<ScriptToolbarState>(initialState), []);
 
   return useMemo(

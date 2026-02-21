@@ -36,7 +36,7 @@ const meta = {
   component: MembersContainer as any,
   render: render(DefaultStory),
   decorators: [
-    withTheme, // TODO(wittjosiah): Try to write story which does not depend on plugin manager.
+    withTheme(), // TODO(wittjosiah): Try to write story which does not depend on plugin manager.
     withPluginManager({ plugins: [OperationPlugin()] }),
     withClientProvider({
       createIdentity: true,

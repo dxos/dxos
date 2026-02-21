@@ -4,8 +4,8 @@
 
 import { type SpaceId } from '@dxos/keys';
 
+import type * as FeedProtocol from '../FeedProtocol';
 import { type CreateDocumentRequest, type CreateDocumentResponse } from '../proto/gen/dxos/echo/service';
-import { type QueryResult, type QueueQuery } from '../queue';
 
 /*
 
@@ -88,8 +88,18 @@ export interface DataService {
 }
 
 export interface QueueService {
-  query(ctx: ExecutionContext, queueDXN: string, query: Omit<QueueQuery, 'queueId'>): Promise<RpcResult<QueryResult>>;
-  append(ctx: ExecutionContext, queueDXN: string, objects: unknown[]): Promise<void>;
+  queryQueue: (
+    ctx: ExecutionContext,
+    request: FeedProtocol.QueryQueueRequest,
+  ) => Promise<RpcResult<FeedProtocol.QueryResult>>;
+  insertIntoQueue: (
+    ctx: ExecutionContext,
+    request: FeedProtocol.InsertIntoQueueRequest,
+  ) => Promise<RpcResult<RpcDisposable>>;
+  deleteFromQueue: (
+    ctx: ExecutionContext,
+    request: FeedProtocol.DeleteFromQueueRequest,
+  ) => Promise<RpcResult<RpcDisposable>>;
 }
 
 /**

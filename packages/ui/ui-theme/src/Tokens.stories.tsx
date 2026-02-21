@@ -14,7 +14,7 @@ const Swatch = ({ variableName, value, semantic, physical }: TokenAudit<HelicalA
   const [luminosity, alpha] = parseAlphaLuminosity(value);
 
   return (
-    <div className='shrink-0 is-40 flex flex-col rounded overflow-hidden'>
+    <div className='shrink-0 is-48 flex flex-col rounded overflow-hidden'>
       <dd className='aspect-video' style={{ background: `var(${variableName})` }}></dd>
       <dt className='text-xs bg-baseSurface grow pli-2 plb-1'>
         <p className='text-sm'>
@@ -26,7 +26,7 @@ const Swatch = ({ variableName, value, semantic, physical }: TokenAudit<HelicalA
         {semantic.length > 0 && (
           <ul>
             {semantic.map(({ sememeName, conditionId }) => {
-              const sememeCondition = `${sememeName} / ${conditionId}`;
+              const sememeCondition = `${conditionId}:${sememeName}`;
               return <li key={sememeCondition}>{sememeCondition}</li>;
             })}
           </ul>

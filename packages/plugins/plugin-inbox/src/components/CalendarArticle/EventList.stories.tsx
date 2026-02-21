@@ -31,9 +31,9 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  decorators: [withTheme, withLayout({ layout: 'column' }), withAttention()],
+  decorators: [withTheme(), withLayout({ layout: 'column' }), withAttention()],
 };
 
 export const Responsive: Story = {
-  decorators: [withTheme, withLayout({ layout: 'column', classNames: 'is-[30rem]' }), withAttention()],
+  decorators: [withTheme(), withLayout({ layout: 'column', classNames: 'is-[30rem]' }), withAttention()],
 };

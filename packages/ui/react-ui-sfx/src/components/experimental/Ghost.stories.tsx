@@ -26,7 +26,7 @@ const meta = {
   title: 'ui/react-ui-sfx/Ghost',
   component: Ghost,
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'fullscreen',
   },

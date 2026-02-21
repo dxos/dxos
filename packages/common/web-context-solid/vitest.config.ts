@@ -9,6 +9,7 @@ import solidPlugin from 'vite-plugin-solid';
 export default defineConfig({
   plugins: [solidPlugin()],
   test: {
-    environment: "happy-dom",
+    name: 'node',
+    environment: 'happy-dom',
   },
 });

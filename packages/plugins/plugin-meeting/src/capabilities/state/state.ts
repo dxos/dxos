@@ -5,13 +5,13 @@
 import { Atom } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
 
 import { type MeetingCapabilities as MC, MeetingCapabilities } from '../../types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const registry = yield* Capability.get(Common.Capability.AtomRegistry);
+    const registry = yield* Capability.get(Capabilities.AtomRegistry);
     const stateAtom = Atom.make<MC.MeetingState>({}).pipe(Atom.keepAlive);
 
     const updateState = (updater: (current: MC.MeetingState) => MC.MeetingState) => {

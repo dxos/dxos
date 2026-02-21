@@ -9,7 +9,7 @@ import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { Surface } from '@dxos/app-framework/react';
+import { Surface } from '@dxos/app-framework/ui';
 import { DXN } from '@dxos/keys';
 import { useClient } from '@dxos/react-client';
 import {
@@ -226,7 +226,7 @@ const PreviewBlock = ({ el, link }: PreviewBlock) => {
   const subject = client.graph.makeRef(dxn).target;
   const data = useMemo(() => ({ subject }), [subject]);
 
-  return createPortal(<Surface role='card--transclusion' data={data} limit={1} />, el);
+  return createPortal(<Surface.Surface role='card--transclusion' data={data} limit={1} />, el);
 };
 
 //

@@ -11,7 +11,7 @@ import { Voice } from './Voice';
 const meta = {
   title: 'plugins/plugin-transformer/Voice',
   component: Voice,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'centered',
   },

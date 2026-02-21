@@ -6,7 +6,7 @@ import React, { Component, type PropsWithChildren, type ReactNode } from 'react'
 // import { useNavigate } from 'react-router-dom';
 
 // import { Button, Message } from '@dxos/react-ui';
-import { captureException } from '@dxos/observability/sentry';
+import { log } from '@dxos/log';
 
 const ErrorPopup = ({ error, onReset }: { error: Error; onReset?: () => void }) => {
   return <div>{error.message}</div>;
@@ -59,7 +59,7 @@ export class ErrorBoundary extends Component<
   }
 
   static getDerivedStateFromError(error: Error): { hasError: boolean; error: Error } {
-    captureException(error);
+    log.catch(error);
     return { hasError: true, error };
   }
 

@@ -12,7 +12,7 @@ import { SignalMessageTable } from './SignalMessageTable';
 const meta = {
   title: 'devtools/devtools/SignalMessageTable',
   component: SignalMessageTable,
-  decorators: [withTheme, withClientProvider()],
+  decorators: [withTheme(), withClientProvider()],
   parameters: {
     layout: 'fullscreen',
   },

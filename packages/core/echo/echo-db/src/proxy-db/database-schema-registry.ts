@@ -8,7 +8,7 @@ import type * as Types from 'effect/Types';
 
 import { type CleanupFn, Event } from '@dxos/async';
 import { type Context, Resource } from '@dxos/context';
-import { JsonSchema, type QueryResult, type SchemaRegistry, Type } from '@dxos/echo';
+import { JsonSchema, Obj, type QueryResult, type SchemaRegistry, Type } from '@dxos/echo';
 import {
   PersistentSchema,
   TypeAnnotationId,
@@ -280,7 +280,9 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
         );
         results.push(schema);
         if (input.name) {
-          schema.persistentSchema.name = input.name;
+          Obj.change(schema.persistentSchema, (persistentSchema) => {
+            persistentSchema.name = input.name;
+          });
         }
       } else {
         throw new TypeError('Invalid schema');

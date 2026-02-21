@@ -4,7 +4,8 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Capability, Common } from '@dxos/app-framework';
+import { Capability } from '@dxos/app-framework';
+import { Label, LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/operation';
 import { type DeepReadonly } from '@dxos/util';
 
@@ -106,13 +107,13 @@ export const DeckEphemeralStateSchema = Schema.Struct({
   popoverAnchor: Schema.optional(Schema.Any),
   popoverAnchorId: Schema.optional(Schema.String),
   popoverKind: Schema.optional(Schema.Literal('base', 'card')),
-  popoverTitle: Schema.optional(Common.Label.annotations({ description: 'The title of the popover.' })),
+  popoverTitle: Schema.optional(Label.annotations({ description: 'The title of the popover.' })),
   /** Ref of the subject to be passed to the popover Surface. */
   popoverContentRef: Schema.optional(Schema.String),
   /** Data to be passed to the popover Surface. */
   popoverContent: Schema.optional(Schema.Any),
 
-  toasts: Schema.mutable(Schema.Array(Common.LayoutOperation.Toast)),
+  toasts: Schema.mutable(Schema.Array(LayoutOperation.Toast)),
   currentUndoId: Schema.optional(Schema.String),
 
   /** The identifier of a component to scroll into view when it is mounted. */

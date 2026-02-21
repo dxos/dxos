@@ -4,22 +4,14 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common } from '@dxos/app-framework';
+import { Capability } from '@dxos/app-framework';
+import { AppCapabilities } from '@dxos/app-toolkit';
 
 import { MarkdownBlueprint } from '../../blueprints';
 
-export const functions = MarkdownBlueprint.functions;
-
-export type BlueprintCapabilities = [
-  Capability.Capability<typeof Common.Capability.Functions>,
-  Capability.Capability<typeof Common.Capability.BlueprintDefinition>,
-];
-
-const blueprintDefinition = Capability.makeModule<[], BlueprintCapabilities>(() =>
-  Effect.succeed([
-    Capability.contributes(Common.Capability.Functions, functions),
-    Capability.contributes(Common.Capability.BlueprintDefinition, MarkdownBlueprint.make()),
-  ]),
-);
+const blueprintDefinition = Capability.makeModule<
+  [],
+  Capability.Capability<typeof AppCapabilities.BlueprintDefinition>[]
+>(() => Effect.succeed([Capability.contributes(AppCapabilities.BlueprintDefinition, MarkdownBlueprint)]));
 
 export default blueprintDefinition;

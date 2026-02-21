@@ -30,7 +30,7 @@ const meta = {
   title: 'ui/react-ui-geo/Map',
   component: Map.Root as any,
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'fullscreen',
   },

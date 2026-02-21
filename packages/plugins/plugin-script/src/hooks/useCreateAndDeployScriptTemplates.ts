@@ -4,7 +4,7 @@
 
 import { useCallback, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/react';
+import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { Obj } from '@dxos/echo';
 import { Script } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';

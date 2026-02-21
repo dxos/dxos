@@ -44,7 +44,7 @@ export const safariCheck = () =>
  */
 // From https://flaming.codes/posts/how-to-determine-os-in-browser.
 export const getHostPlatform = () => {
-  if (!('navigator' in window)) {
+  if (!('navigator' in globalThis)) {
     return 'unknown';
   }
 

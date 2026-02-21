@@ -122,7 +122,7 @@ export type TableModelProps<T extends TableRow = TableRow> = {
   onResolveSchema?: (typename: string) => Promise<JsonSchemaType>;
   onInsertRow?: (data?: any) => InsertRowResult;
   onDeleteRows?: (index: number, obj: T[]) => void;
-  onDeleteColumn?: (fieldId: string) => void;
+  onColumnDelete?: (fieldId: string) => void;
   onCellUpdate?: (cell: DxGridPosition) => void;
   onRowOrderChange?: () => void;
   onRowAction?: (actionId: string, data: T) => void;
@@ -139,7 +139,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
 
   private readonly _onInsertRow?: (data?: any) => InsertRowResult;
   private readonly _onDeleteRows?: TableModelProps<T>['onDeleteRows'];
-  private readonly _onDeleteColumn?: TableModelProps<T>['onDeleteColumn'];
+  private readonly _onColumnDelete?: TableModelProps<T>['onColumnDelete'];
   private readonly _onCellUpdate?: TableModelProps<T>['onCellUpdate'];
   private readonly _onRowOrderChange?: TableModelProps<T>['onRowOrderChange'];
   private readonly _onRowAction?: TableModelProps<T>['onRowAction'];
@@ -176,7 +176,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
     pinnedRows = { top: [], bottom: [] },
     rowActions = [],
     onCellUpdate,
-    onDeleteColumn,
+    onColumnDelete,
     onDeleteRows,
     onInsertRow,
     onRowOrderChange,
@@ -292,7 +292,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
     this._rowActions = rowActions;
     this._onInsertRow = onInsertRow;
     this._onDeleteRows = onDeleteRows;
-    this._onDeleteColumn = onDeleteColumn;
+    this._onColumnDelete = onColumnDelete;
     this._onCellUpdate = onCellUpdate;
     this._onRowOrderChange = onRowOrderChange;
     this._onRowAction = onRowAction;
@@ -796,8 +796,8 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
     }
 
     const field = this._projection?.getFields().find((field) => field.id === fieldId);
-    if (field && this._onDeleteColumn) {
-      this._onDeleteColumn(field.id);
+    if (field && this._onColumnDelete) {
+      this._onColumnDelete(field.id);
     }
   }
 

@@ -9,8 +9,8 @@ import * as Exit from 'effect/Exit';
 import type * as Types from 'effect/Types';
 import React, { useCallback, useContext, useMemo, useState } from 'react';
 
-import { type SurfaceComponentProps } from '@dxos/app-framework/react';
-import { Agent } from '@dxos/assistant-toolkit';
+import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
+import { AgentFunctions } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
@@ -20,8 +20,8 @@ import { log } from '@dxos/log';
 import { useComputeRuntimeCallback } from '@dxos/plugin-automation';
 import { Graph } from '@dxos/plugin-explorer/types';
 import { DropdownMenu, IconButton, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Layout } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
-import { Layout } from '@dxos/react-ui-mosaic';
 import { Text, View } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
@@ -234,10 +234,7 @@ const runPrompt = Effect.fn(function* ({
   input: Record<string, any>;
   onResult: (result: string) => void;
 }) {
-  const inputData: FunctionDefinition.Input<typeof Agent.prompt> = {
-    prompt,
-    input,
-  };
+  const inputData: FunctionDefinition.Input<typeof AgentFunctions.Prompt> = { prompt, input };
   const tracer = yield* TracingService;
   const trace = yield* tracer.traceInvocationStart({
     target: undefined,
@@ -247,7 +244,7 @@ const runPrompt = Effect.fn(function* ({
   });
 
   // Invoke the function.
-  const result = yield* FunctionInvocationService.invokeFunction(Agent.prompt, inputData).pipe(
+  const result = yield* FunctionInvocationService.invokeFunction(AgentFunctions.Prompt, inputData).pipe(
     Effect.provide(trace.invocationTraceQueue ? TracingService.layerInvocation(trace) : TracingService.layerNoop),
     Effect.exit,
   );

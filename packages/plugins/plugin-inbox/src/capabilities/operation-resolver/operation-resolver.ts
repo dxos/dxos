@@ -4,7 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { LayoutOperation } from '@dxos/app-toolkit';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -19,7 +20,7 @@ import { Calendar, InboxOperation, Mailbox } from '../../types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contributes(Common.Capability.OperationResolver, [
+    return Capability.contributes(Capabilities.OperationResolver, [
       OperationResolver.make({
         operation: InboxOperation.OnCreateSpace,
         handler: Effect.fnUntraced(function* ({ rootCollection }) {
@@ -135,7 +136,7 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: InboxOperation.OpenComposeEmail,
         handler: (input) =>
-          Operation.invoke(Common.LayoutOperation.UpdateDialog, {
+          Operation.invoke(LayoutOperation.UpdateDialog, {
             subject: COMPOSE_EMAIL_DIALOG,
             blockAlign: 'start',
             props: input ?? {},

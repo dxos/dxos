@@ -4,8 +4,8 @@
 
 import React from 'react';
 
-import { Common } from '@dxos/app-framework';
-import { useOperationInvoker } from '@dxos/app-framework/react';
+import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { LayoutOperation } from '@dxos/app-toolkit';
 import { Button, Icon, useTranslation } from '@dxos/react-ui';
 
 import { COMMANDS_DIALOG, meta } from '../../meta';
@@ -17,7 +17,7 @@ export const CommandsTrigger = () => {
   return (
     <Button
       classNames='m-1 pli-1 lg:pli-2'
-      onClick={() => invokeSync(Common.LayoutOperation.UpdateDialog, { subject: COMMANDS_DIALOG, blockAlign: 'start' })}
+      onClick={() => invokeSync(LayoutOperation.UpdateDialog, { subject: COMMANDS_DIALOG, blockAlign: 'start' })}
     >
       <span className='text-description font-normal grow text-start'>{t('command list input placeholder')}</span>
       <Icon icon='ph--magnifying-glass--regular' size={5} />

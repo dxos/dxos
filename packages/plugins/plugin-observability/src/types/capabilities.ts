@@ -26,7 +26,7 @@ export namespace ObservabilityCapabilities {
 
   export const State = Capability.make<Atom.Writable<State>>(`${meta.id}/capability/state`);
 
-  export const Observability = Capability.make<Observability>(`${meta.id}/capability/observability`);
+  export const Observability = Capability.make<Observability.Observability>(`${meta.id}/capability/observability`);
 }
 
 // NOTE: This is cloned from the client plugin to avoid circular dependencies.

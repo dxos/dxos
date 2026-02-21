@@ -5,7 +5,7 @@
 import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Surface } from '@dxos/app-framework/react';
+import { Surface } from '@dxos/app-framework/ui';
 import { Popover, type PopoverContentInteractOutsideEvent, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui-mosaic';
 
@@ -100,7 +100,7 @@ export const PopoverContent = () => {
         onEscapeKeyDown={handleInteractOutside}
       >
         <Popover.Viewport>
-          {state.popoverKind === 'base' && <Surface role='popover' data={state.popoverContent} limit={1} />}
+          {state.popoverKind === 'base' && <Surface.Surface role='popover' data={state.popoverContent} limit={1} />}
           {state.popoverKind === 'card' && (
             <Card.Root border={false} classNames='popover-card-max-width'>
               <Card.Toolbar>
@@ -109,7 +109,7 @@ export const PopoverContent = () => {
                 {state.popoverTitle ? <Card.Title>{toLocalizedString(state.popoverTitle, t)}</Card.Title> : <span />}
                 <Card.Close onClick={handleClose} />
               </Card.Toolbar>
-              <Surface role='card--content' data={state.popoverContent} limit={1} />
+              <Surface.Surface role='card--content' data={state.popoverContent} limit={1} />
             </Card.Root>
           )}
         </Popover.Viewport>

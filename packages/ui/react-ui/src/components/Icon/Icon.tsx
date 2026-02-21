@@ -20,7 +20,7 @@ export const Icon = memo(
     const { tx } = useThemeContext();
     const href = useIconHref(icon);
     return (
-      <svg {...props} className={tx('icon.root', 'icon', { size }, classNames)} ref={forwardedRef}>
+      <svg {...props} className={tx('icon.root', { size }, classNames)} ref={forwardedRef}>
         <use href={href} />
       </svg>
     );

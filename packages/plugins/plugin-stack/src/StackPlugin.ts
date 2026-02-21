@@ -2,7 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Common, Plugin } from '@dxos/app-framework';
+import { Plugin } from '@dxos/app-framework';
+import { AppPlugin } from '@dxos/app-toolkit';
 import { type Obj } from '@dxos/echo';
 
 import { ReactSurface } from './capabilities';
@@ -11,8 +12,7 @@ import { translations } from './translations';
 import { StackViewType } from './types';
 
 export const StackPlugin = Plugin.define(meta).pipe(
-  Common.Plugin.addTranslationsModule({ translations }),
-  Common.Plugin.addMetadataModule({
+  AppPlugin.addMetadataModule({
     metadata: {
       id: SECTION_IDENTIFIER,
       metadata: {
@@ -29,7 +29,8 @@ export const StackPlugin = Plugin.define(meta).pipe(
       },
     },
   }),
-  Common.Plugin.addSchemaModule({ schema: [StackViewType] }),
-  Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
+  AppPlugin.addSchemaModule({ schema: [StackViewType] }),
+  AppPlugin.addSurfaceModule({ activate: ReactSurface }),
+  AppPlugin.addTranslationsModule({ translations }),
   Plugin.make,
 );

@@ -36,7 +36,7 @@ const pluginTranslations = [
         'display name description': 'Your name as it appears in the app.',
         'display name input placeholder': 'Enter a name',
         'icon label': 'Avatar',
-        'icon description': 'The emoji used to represent you in the app.',
+        'icon description': 'The emoji used to represent the user.',
         'hue label': 'Color',
         'hue description':
           'The color used to represent you in the app, including as your avatar’s background, your cursor as it appears to others, and the messages you send in group threads.',

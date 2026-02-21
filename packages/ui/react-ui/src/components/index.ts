@@ -21,6 +21,8 @@ export * from './ScrollArea';
 export * from './ScrollContainer';
 export * from './Select';
 export * from './Separator';
+export * from './Skeleton';
+export * from './Splitter';
 export * from './Tag';
 export * from './Toast';
 export * from './Toolbar';

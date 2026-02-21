@@ -67,7 +67,7 @@ const meta = {
   title: 'devtools/devtools/InvocationTrace/LogPanel',
   component: LogPanel,
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'fullscreen',
   },

@@ -15,7 +15,7 @@ import * as TestClock from 'effect/TestClock';
 import { invariant } from '@dxos/invariant';
 import { type LogConfig, type LogEntry, LogLevel, log } from '@dxos/log';
 
-import * as Common from '../common';
+import { ActivationEvents } from '../common';
 
 import * as ActivationEvent from './activation-event';
 import * as Capability from './capability';
@@ -89,12 +89,12 @@ describe('PluginManager', () => {
       const TestPluginFactory = Plugin.define<TestPluginOptions>(testMeta).pipe(
         Plugin.addModule((options: TestPluginOptions) => ({
           id: 'Hello',
-          activatesOn: Common.ActivationEvent.Startup,
+          activatesOn: ActivationEvents.Startup,
           activate: () => Effect.succeed(Capability.contributes(String, { string: `hello-${options.count}` })),
         })),
         Plugin.addModule({
           id: 'World',
-          activatesOn: Common.ActivationEvent.Startup,
+          activatesOn: ActivationEvents.Startup,
           activate: () => Effect.succeed(Capability.contributes(String, { string: 'world' })),
         }),
         Plugin.make,
@@ -105,7 +105,7 @@ describe('PluginManager', () => {
 
       const manager = PluginManager.make({ plugins: [plugin], core: [], pluginLoader });
       yield* manager.enable(testMeta.id);
-      yield* manager.activate(Common.ActivationEvent.Startup);
+      yield* manager.activate(ActivationEvents.Startup);
       const strings = manager.capabilities.getAll(String);
       assert.strictEqual(strings.length, 2);
       assert.strictEqual(strings[0].string, 'hello-5');
@@ -118,7 +118,7 @@ describe('PluginManager', () => {
       const Test = Plugin.define(testMeta).pipe(
         Plugin.addModule({
           id: 'Hello',
-          activatesOn: Common.ActivationEvent.Startup,
+          activatesOn: ActivationEvents.Startup,
           activate: () => Effect.succeed(Capability.contributes(String, { string: 'hello' })),
         }),
         Plugin.make,
@@ -140,7 +140,7 @@ describe('PluginManager', () => {
       const Test = Plugin.define(testMeta).pipe(
         Plugin.addModule({
           id: 'Hello',
-          activatesOn: Common.ActivationEvent.Startup,
+          activatesOn: ActivationEvents.Startup,
           activate: () => Effect.succeed(Capability.contributes(String, { string: 'hello' })),
         }),
         Plugin.make,
@@ -154,9 +154,9 @@ describe('PluginManager', () => {
       assert.deepStrictEqual(manager.getModules(), [testPlugin.modules[0]]);
       assert.deepStrictEqual(manager.getActive(), []);
       assert.deepStrictEqual(manager.getEventsFired(), []);
-      yield* manager.activate(Common.ActivationEvent.Startup);
+      yield* manager.activate(ActivationEvents.Startup);
       assert.deepStrictEqual(manager.getActive(), [testPlugin.modules[0].id]);
-      assert.deepStrictEqual(manager.getEventsFired(), [Common.ActivationEvent.Startup.id]);
+      assert.deepStrictEqual(manager.getEventsFired(), [ActivationEvents.Startup.id]);
     }),
   );
 
@@ -165,7 +165,7 @@ describe('PluginManager', () => {
       const Test = Plugin.define(testMeta).pipe(
         Plugin.addModule({
           id: 'NoCapabilities',
-          activatesOn: Common.ActivationEvent.Startup,
+          activatesOn: ActivationEvents.Startup,
           activate: Effect.fnUntraced(function* () {}),
         }),
         Plugin.make,
@@ -175,7 +175,7 @@ describe('PluginManager', () => {
       const manager = PluginManager.make({ plugins: [testPlugin], pluginLoader });
       yield* manager.enable(Test.meta.id);
 
-      const result = yield* manager.activate(Common.ActivationEvent.Startup);
+      const result = yield* manager.activate(ActivationEvents.Startup);
       assert.isTrue(result);
       assert.deepStrictEqual(manager.getActive(), [testPlugin.modules[0].id]);
       assert.strictEqual(manager.capabilities.getAll(String).length, 0);
@@ -303,7 +303,7 @@ describe('PluginManager', () => {
         Plugin.define(testMeta).pipe(
           Plugin.addModule({
             id: 'Hello',
-            activatesOn: Common.ActivationEvent.Startup,
+            activatesOn: ActivationEvents.Startup,
             activate: () => Effect.succeed(Capability.contributes(String, { string: 'hello' })),
           }),
           Plugin.addModule({
@@ -339,7 +339,7 @@ describe('PluginManager', () => {
       );
 
       yield* manager.add(testMeta.id);
-      yield* manager.activate(Common.ActivationEvent.Startup);
+      yield* manager.activate(ActivationEvents.Startup);
       yield* activating.await;
       yield* activated.await;
 
@@ -374,7 +374,7 @@ describe('PluginManager', () => {
       const Test = Plugin.define(testMeta).pipe(
         Plugin.addModule({
           id: 'Hello',
-          activatesOn: Common.ActivationEvent.Startup,
+          activatesOn: ActivationEvents.Startup,
           activate: () => {
             count++;
             return Effect.succeed(Capability.contributes(String, { string: 'hello' }));
@@ -389,19 +389,19 @@ describe('PluginManager', () => {
 
       {
         yield* manager.add(testMeta.id);
-        const result = yield* manager.activate(Common.ActivationEvent.Startup);
+        const result = yield* manager.activate(ActivationEvents.Startup);
         assert.isTrue(result);
         assert.deepStrictEqual(manager.getActive(), [testPlugin.modules[0].id]);
         assert.strictEqual(count, 1);
       }
 
       {
-        const result = yield* manager.activate(Common.ActivationEvent.Startup);
+        const result = yield* manager.activate(ActivationEvents.Startup);
         assert.isFalse(result);
       }
 
       {
-        const result = yield* manager.reset(Common.ActivationEvent.Startup);
+        const result = yield* manager.reset(ActivationEvents.Startup);
         assert.isTrue(result);
         assert.strictEqual(count, 2);
       }
@@ -477,7 +477,7 @@ describe('PluginManager', () => {
     Effect.gen(function* () {
       const Test = Plugin.define(testMeta).pipe(
         Plugin.addModule({
-          activatesOn: ActivationEvent.allOf(Common.ActivationEvent.Startup, CountEvent),
+          activatesOn: ActivationEvent.allOf(ActivationEvents.Startup, CountEvent),
           id: 'Hello',
           activate: () => {
             return Effect.succeed(Capability.contributes(String, { string: 'hello' }));
@@ -493,7 +493,7 @@ describe('PluginManager', () => {
       assert.strictEqual(manager.capabilities.getAll(String).length, 0);
 
       yield* manager.add(testMeta.id);
-      yield* manager.activate(Common.ActivationEvent.Startup);
+      yield* manager.activate(ActivationEvents.Startup);
       assert.deepStrictEqual(manager.getActive(), []);
       assert.strictEqual(manager.capabilities.getAll(String).length, 0);
 
@@ -509,7 +509,7 @@ describe('PluginManager', () => {
       const Test = Plugin.define(testMeta).pipe(
         Plugin.addModule({
           id: 'Hello',
-          activatesOn: ActivationEvent.oneOf(Common.ActivationEvent.Startup, CountEvent),
+          activatesOn: ActivationEvent.oneOf(ActivationEvents.Startup, CountEvent),
           activate: () => {
             count++;
             return Effect.succeed(Capability.contributes(String, { string: 'hello' }));
@@ -531,7 +531,7 @@ describe('PluginManager', () => {
       assert.strictEqual(manager.capabilities.getAll(String).length, 1);
       assert.strictEqual(count, 1);
 
-      yield* manager.activate(Common.ActivationEvent.Startup);
+      yield* manager.activate(ActivationEvents.Startup);
       assert.deepStrictEqual(manager.getActive(), [testPlugin.modules[0].id]);
       assert.strictEqual(manager.capabilities.getAll(String).length, 1);
       assert.strictEqual(count, 1);
@@ -549,7 +549,7 @@ describe('PluginManager', () => {
       const Count = Plugin.define({ id: 'dxos.org/test/count', name: 'Count' }).pipe(
         Plugin.addModule({
           id: 'Count',
-          activatesOn: Common.ActivationEvent.Startup,
+          activatesOn: ActivationEvents.Startup,
           activatesBefore: [CountEvent],
           activate: Effect.fnUntraced(function* () {
             const capabilityManager = yield* Capability.Service;
@@ -586,7 +586,7 @@ describe('PluginManager', () => {
       {
         yield* manager.add(Test.meta.id);
         yield* manager.add(Count.meta.id);
-        yield* manager.activate(Common.ActivationEvent.Startup);
+        yield* manager.activate(ActivationEvents.Startup);
         assert.deepStrictEqual(manager.getActive(), [
           ...testPlugin.modules.map((m) => m.id),
           countPlugin.modules[0].id,

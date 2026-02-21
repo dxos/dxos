@@ -5,7 +5,8 @@
 import * as Effect from 'effect/Effect';
 import React from 'react';
 
-import { Capability, Common } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { Surface } from '@dxos/app-framework/ui';
 import { invariant } from '@dxos/invariant';
 import { useClient } from '@dxos/react-client';
 
@@ -14,8 +15,8 @@ import { meta } from '../meta';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
-    Capability.contributes(Common.Capability.ReactSurface, [
-      Common.createSurface({
+    Capability.contributes(Capabilities.ReactSurface, [
+      Surface.create({
         id: `${meta.id}/welcome`,
         role: 'dialog',
         filter: (data): data is any => data.component === WELCOME_SCREEN,

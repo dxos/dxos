@@ -148,7 +148,7 @@ const ChatDialogContent = ({ children, classNames }: ChatDialogContentProps) => 
   return (
     <div
       className={mx(
-        'flex flex-col overflow-y-auto border-bs border-be border-subduedSeparator',
+        'border-bs border-be border-subduedSeparator',
         'transition-[block-size] ease-in-out duration-0 [&:not([data-dx-resizing="true"])]:duration-200',
         classNames,
       )}

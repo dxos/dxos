@@ -41,7 +41,7 @@ const meta = {
   title: 'plugins/plugin-sheet/GridSheet',
   component: GridSheet,
   decorators: [
-    withTheme,
+    withTheme(),
     withClientProvider({ types: [Sheet.Sheet], createSpace: true }),
     withComputeGraphDecorator({ plugins: testFunctionPlugins }),
     withPluginManager({

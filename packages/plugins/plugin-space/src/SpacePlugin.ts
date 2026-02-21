@@ -5,7 +5,8 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { ActivationEvent, Capability, Common, Plugin } from '@dxos/app-framework';
+import { ActivationEvent, ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
+import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { Ref, Tag, Type } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 import { AttentionEvents } from '@dxos/plugin-attention';
@@ -45,19 +46,7 @@ import { SpaceEvents } from './types';
 import { type CreateObject, SpaceOperation, type SpacePluginOptions } from './types';
 
 export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
-  Plugin.addModule({
-    // TODO(wittjosiah): Does not integrate with settings store.
-    //   Should this be a different event?
-    //   Should settings store be renamed to be more generic?
-    activatesOn: ActivationEvent.oneOf(Common.ActivationEvent.SetupSettings, Common.ActivationEvent.SetupAppGraph),
-    activatesAfter: [SpaceEvents.StateReady],
-    activate: SpaceState,
-  }),
-  Common.Plugin.addSettingsModule({ activate: SpaceSettings }),
-  Common.Plugin.addTranslationsModule({
-    translations: [...translations, ...componentsTranslations, ...formTranslations, ...shellTranslations],
-  }),
-  Common.Plugin.addMetadataModule({
+  AppPlugin.addMetadataModule({
     metadata: [
       {
         id: Collection.Collection.typename,
@@ -122,7 +111,8 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
       },
     ],
   }),
-  Common.Plugin.addSchemaModule({
+  AppPlugin.addReactRootModule({ activate: ReactRoot }),
+  AppPlugin.addSchemaModule({
     schema: [
       ...DataTypes,
       AnchoredTo.AnchoredTo,
@@ -138,7 +128,18 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
       Task.Task,
     ],
   }),
-  Common.Plugin.addReactRootModule({ activate: ReactRoot }),
+  AppPlugin.addSettingsModule({ activate: SpaceSettings }),
+  AppPlugin.addTranslationsModule({
+    translations: [...translations, ...componentsTranslations, ...formTranslations, ...shellTranslations],
+  }),
+  Plugin.addModule({
+    // TODO(wittjosiah): Does not integrate with settings store.
+    //   Should this be a different event?
+    //   Should settings store be renamed to be more generic?
+    activatesOn: ActivationEvent.oneOf(AppActivationEvents.SetupSettings, AppActivationEvents.SetupAppGraph),
+    activatesAfter: [SpaceEvents.StateReady],
+    activate: SpaceState,
+  }),
   Plugin.addModule(
     ({
       shareableLinkOrigin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost',
@@ -153,7 +154,7 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
 
       return {
         id: Capability.getModuleTag(ReactSurface),
-        activatesOn: Common.ActivationEvent.SetupReactSurface,
+        activatesOn: ActivationEvents.SetupReactSurface,
         // TODO(wittjosiah): Should occur before the settings dialog is loaded when surfaces activation is more granular.
         activatesBefore: [SpaceEvents.SetupSettingsPanel],
         activate: () => ReactSurface({ createInvitationUrl }),
@@ -163,7 +164,7 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
   Plugin.addModule(
     ({ shareableLinkOrigin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost' }) => ({
       id: Capability.getModuleTag(AppGraphBuilder()) ?? 'space-app-graph-builder',
-      activatesOn: Common.ActivationEvent.SetupAppGraph,
+      activatesOn: AppActivationEvents.SetupAppGraph,
       activate: () => AppGraphBuilder({ shareableLinkOrigin }),
     }),
   ),
@@ -182,14 +183,14 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
 
       return {
         id: Capability.getModuleTag(OperationResolver),
-        activatesOn: Common.ActivationEvent.SetupOperationResolver,
+        activatesOn: ActivationEvents.SetupOperationResolver,
         activate: () => OperationResolver({ createInvitationUrl, observability }),
       };
     },
   ),
   // TODO(wittjosiah): This could probably be deferred.
   Plugin.addModule({
-    activatesOn: Common.ActivationEvent.AppGraphReady,
+    activatesOn: AppActivationEvents.AppGraphReady,
     activate: AppGraphSerializer,
   }),
   Plugin.addModule({
@@ -199,9 +200,9 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
   }),
   Plugin.addModule({
     activatesOn: ActivationEvent.allOf(
-      Common.ActivationEvent.OperationInvokerReady,
-      Common.ActivationEvent.LayoutReady,
-      Common.ActivationEvent.AppGraphReady,
+      ActivationEvents.OperationInvokerReady,
+      AppActivationEvents.LayoutReady,
+      AppActivationEvents.AppGraphReady,
       AttentionEvents.AttentionReady,
       SpaceEvents.StateReady,
       ClientEvents.SpacesReady,

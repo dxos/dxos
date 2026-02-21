@@ -322,7 +322,7 @@ export const L0Menu = ({ menuActions, topLevelItems, pinnedItems, userAccountIte
                   role='none'
                   className={mx(
                     l0ItemContent,
-                    'is-[--rail-action] bs-[--rail-action] group-hover/l0item:bg-hoverSurface',
+                    'bs-[--rail-action] is-[--rail-action] group-hover/l0item:bg-hoverSurface',
                   )}
                 >
                   <Icon icon='ph--list--regular' size={5} />
@@ -334,7 +334,7 @@ export const L0Menu = ({ menuActions, topLevelItems, pinnedItems, userAccountIte
       </MenuProvider>
 
       {/* Space list. */}
-      <ScrollArea.Root>
+      <ScrollArea.Root thin orientation='vertical'>
         <ScrollArea.Viewport>
           <div
             role='none'
@@ -354,9 +354,6 @@ export const L0Menu = ({ menuActions, topLevelItems, pinnedItems, userAccountIte
               />
             ))}
           </div>
-          <ScrollArea.Scrollbar orientation='vertical'>
-            <ScrollArea.Thumb />
-          </ScrollArea.Scrollbar>
         </ScrollArea.Viewport>
       </ScrollArea.Root>
 

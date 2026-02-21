@@ -76,6 +76,9 @@ Examples of ways to start up different workloads in dev mode:
 | `moon run composer-app:serve` | Runs the `composer-app` in dev mode |
 | `moon run docs:serve` | Runs the `docs` astro app in dev mode |
 
+Use `--quiet` to suppress progress output (recommended for LLMs to keep context fresh).
+Use `--on-failure=continue` to continue running other unrelated tasks even if some fail.
+
 ## Test commands
 
 Examples of ways to run different test workloads:

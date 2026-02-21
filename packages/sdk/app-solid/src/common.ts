@@ -4,13 +4,14 @@
 
 import { type Accessor } from 'solid-js';
 
-import { Common } from '@dxos/app-framework';
+import { Capabilities } from '@dxos/app-framework';
+import { AppCapabilities } from '@dxos/app-toolkit';
 
 import { useCapability } from './useCapabilities';
 
-export const useOperationInvoker = (): Accessor<Common.Capability.OperationInvoker> =>
-  useCapability(Common.Capability.OperationInvoker);
+export const useOperationInvoker = (): Accessor<Capabilities.OperationInvoker> =>
+  useCapability(Capabilities.OperationInvoker);
 
-export const useAppGraph = (): Accessor<Common.Capability.AppGraph> => useCapability(Common.Capability.AppGraph);
+export const useAppGraph = (): Accessor<AppCapabilities.AppGraph> => useCapability(AppCapabilities.AppGraph);
 
-export const useLayout = () => useCapability(Common.Capability.Layout);
+export const useLayout = () => useCapability(AppCapabilities.Layout);

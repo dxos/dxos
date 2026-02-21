@@ -158,7 +158,7 @@ const DefaultStory = ({ children, ...props }: ComponentProps) => {
 const meta = {
   title: 'ui/react-ui-graph/hooks',
   render: DefaultStory,
-  decorators: [withRegistry, withTheme],
+  decorators: [withRegistry, withTheme()],
   parameters: {
     layout: 'fullscreen',
   },

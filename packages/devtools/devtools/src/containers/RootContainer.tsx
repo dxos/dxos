@@ -6,7 +6,7 @@ import React, { Suspense } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 
 import { DeviceKind, useDevices, useIdentity } from '@dxos/react-client/halo';
-import { Icon } from '@dxos/react-ui';
+import { Icon, ScrollArea } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { ErrorBoundary } from '../components';
@@ -33,8 +33,8 @@ const Sidebar = () => {
   const { pathname } = useLocation();
   const sections = useSections();
   return (
-    <div className='flex flex-col is-[180px] shrink-0 overflow-hidden overflow-y-auto border-r border-separator'>
-      <div className='flex flex-col gap-4 divide-y divide-separator'>
+    <ScrollArea.Root orientation='vertical' classNames='is-[180px] border-ie border-separator'>
+      <ScrollArea.Viewport classNames='gap-4 divide-y divide-separator'>
         {sections.map((section) => (
           <div key={section.id}>
             <div className='flex text-sm pis-4 plb-1'>{section.title}</div>
@@ -50,10 +50,10 @@ const Sidebar = () => {
             </div>
           </div>
         ))}
-      </div>
-      <div className='grow' />
-      <Footer />
-    </div>
+        <div className='grow' />
+        <Footer />
+      </ScrollArea.Viewport>
+    </ScrollArea.Root>
   );
 };
 

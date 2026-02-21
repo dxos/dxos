@@ -32,7 +32,7 @@ const DefaultStory = () => (
 const meta = {
   title: 'ui/react-ui-canvas/svg',
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'centered',
   },

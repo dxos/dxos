@@ -39,7 +39,7 @@ const meta: Meta<typeof MarkdownCardStory> = {
   title: 'plugins/plugin-markdown/Card',
   component: MarkdownCardStory,
   decorators: [
-    withTheme,
+    withTheme(),
     withPluginManager({
       plugins: [OperationPlugin()],
     }),

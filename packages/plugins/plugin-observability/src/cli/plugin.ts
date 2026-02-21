@@ -4,7 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common, Plugin } from '@dxos/app-framework';
+import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
+import { AppPlugin } from '@dxos/app-toolkit';
 import { OperationResolver } from '@dxos/operation';
 
 import { meta } from '../meta';
@@ -12,10 +13,10 @@ import { ObservabilityOperation } from '../types';
 
 // TODO(wittjosiah): Hook up.
 export const ObservabilityPlugin = Plugin.define(meta).pipe(
-  Common.Plugin.addOperationResolverModule({
+  AppPlugin.addOperationResolverModule({
     activate: () =>
       Effect.succeed(
-        Capability.contributes(Common.Capability.OperationResolver, [
+        Capability.contributes(Capabilities.OperationResolver, [
           OperationResolver.make({
             operation: ObservabilityOperation.SendEvent,
             handler: () => Effect.void,

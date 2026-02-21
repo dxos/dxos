@@ -13,7 +13,7 @@ import { Button, ButtonGroup, type ButtonProps } from './Button';
 
 const DefaultStory = ({ children, ...args }: Omit<ButtonProps, 'ref'>) => {
   return (
-    <div>
+    <div className='flex items-center gap-2 p-1'>
       <Button {...args}>{children}</Button>
       <Button {...args} disabled>
         {children}
@@ -33,10 +33,10 @@ const DefaultStory = ({ children, ...args }: Omit<ButtonProps, 'ref'>) => {
 };
 
 const meta = {
-  title: 'ui/react-ui-core/Button',
+  title: 'ui/react-ui-core/components/Button',
   component: Button,
   render: DefaultStory,
-  decorators: [withTheme, withLayoutVariants()],
+  decorators: [withTheme(), withLayoutVariants()],
 } satisfies Meta<typeof Button>;
 
 export default meta;

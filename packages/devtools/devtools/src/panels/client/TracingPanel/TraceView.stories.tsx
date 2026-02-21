@@ -12,7 +12,7 @@ import { type State } from './types';
 const meta = {
   title: 'devtools/devtools/TraceView',
   component: TraceView,
-  decorators: [withTheme],
+  decorators: [withTheme()],
 } satisfies Meta<typeof TraceView>;
 
 export default meta;

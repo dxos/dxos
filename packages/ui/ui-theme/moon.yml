@@ -3,6 +3,7 @@ language: typescript
 tags:
   - ts-build
   - ts-test
+  - ts-test-storybook
   - pack
   - storybook
 tasks:
@@ -32,6 +33,6 @@ tasks:
   test:
     deps:
       - compile-node
-    inputs:
-      - .storybook/*
-      - /tools/storybook-react/.storybook/main.ts
+  test-storybook:
+    deps:
+      - compile-node

@@ -29,10 +29,10 @@ const DefaultStory = ({ openTrigger, children }: PropsWithChildren<{ openTrigger
 };
 
 const meta = {
-  title: 'ui/react-ui-core/Popover',
+  title: 'ui/react-ui-core/components/Popover',
   component: Popover.Root,
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

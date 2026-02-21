@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { type SurfaceComponentProps } from '@dxos/app-framework/react';
+import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { useTranslation } from '@dxos/react-ui';
 import { type Collection } from '@dxos/schema';
 

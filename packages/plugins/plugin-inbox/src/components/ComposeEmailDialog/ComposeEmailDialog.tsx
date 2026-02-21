@@ -5,8 +5,8 @@
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
-import { Common } from '@dxos/app-framework';
-import { useCapability, useOperationInvoker } from '@dxos/app-framework/react';
+import { useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
+import { LayoutOperation } from '@dxos/app-toolkit';
 import { Format } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { AutomationCapabilities, invokeFunctionWithTracing } from '@dxos/plugin-automation';
@@ -15,7 +15,7 @@ import { Dialog, Message, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Message as MessageType } from '@dxos/types';
 
-import { gmail } from '../../functions';
+import { GmailFunctions } from '../../functions';
 import { meta } from '../../meta';
 
 export type ComposeEmailDialogProps = {
@@ -137,9 +137,9 @@ export const ComposeEmailDialog = ({ mode = 'compose', originalMessage, subject,
       });
 
       try {
-        await runtime.runPromise(invokeFunctionWithTracing(gmail.send, { message }));
+        await runtime.runPromise(invokeFunctionWithTracing(GmailFunctions.Send, { message }));
         // Close the dialog after successful send.
-        await invokePromise(Common.LayoutOperation.UpdateDialog, { state: false });
+        await invokePromise(LayoutOperation.UpdateDialog, { state: false });
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : t('send email error unknown');
         setError(errorMessage);

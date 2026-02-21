@@ -31,6 +31,7 @@
     "@ch-ui/tokens": "catalog:",
     "@codemirror/lang-json": "catalog:",
     "@dxos/app-framework": "workspace:*",
+    "@dxos/app-toolkit": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/operation": "workspace:*",
     "@dxos/plugin-debug": "workspace:*",

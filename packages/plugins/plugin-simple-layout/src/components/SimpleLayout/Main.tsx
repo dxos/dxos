@@ -4,7 +4,8 @@
 
 import React, { useMemo } from 'react';
 
-import { Surface, useAppGraph } from '@dxos/app-framework/react';
+import { Surface } from '@dxos/app-framework/ui';
+import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { useNode } from '@dxos/plugin-graph';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { mx } from '@dxos/ui-theme';
@@ -63,7 +64,14 @@ export const Main = () => {
     >
       <AppBar {...appBarProps} />
       <article className='bs-full overflow-hidden bg-baseSurface'>
-        <Surface key={id} role='article' data={data} limit={1} fallback={ContentError} placeholder={placeholder} />
+        <Surface.Surface
+          key={id}
+          role='article'
+          data={data}
+          limit={1}
+          fallback={ContentError}
+          placeholder={placeholder}
+        />
       </article>
       {showNavBar && <NavBar classNames='border-bs border-subduedSeparator' actions={actions} onAction={onAction} />}
     </div>

@@ -60,8 +60,19 @@ message DeleteFromQueueRequest {
   repeated string object_ids = 4;
 }
 
+message SyncQueueRequest {
+  string subspace_tag = 1;
+  string space_id = 2;
+  string queue_id = 3;
+  /// Whether to push local changes to the server. Defaults to true.
+  optional bool should_push = 4;
+  /// Whether to pull remote changes from the server. Defaults to true.
+  optional bool should_pull = 5;
+}
+
 service QueueService {
   rpc QueryQueue(QueryQueueRequest) returns (QueueQueryResult);
   rpc InsertIntoQueue(InsertIntoQueueRequest) returns (google.protobuf.Empty);
   rpc DeleteFromQueue(DeleteFromQueueRequest) returns (google.protobuf.Empty);
+  rpc SyncQueue(SyncQueueRequest) returns (google.protobuf.Empty);
 }

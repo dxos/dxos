@@ -5,8 +5,9 @@
 import * as Option from 'effect/Option';
 import React, { forwardRef, useCallback, useState } from 'react';
 
-import { Common } from '@dxos/app-framework';
-import { useAppGraph, useLayout, useOperationInvoker } from '@dxos/app-framework/react';
+import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { LayoutOperation } from '@dxos/app-toolkit';
+import { useAppGraph, useLayout } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { Graph, type Node } from '@dxos/plugin-graph';
 import { useClient } from '@dxos/react-client';
@@ -63,14 +64,14 @@ export const SearchDialog = ({ pivotId }: SearchDialogProps) => {
 
   const handleSelect = useCallback(
     async (nodeId: string) => {
-      await invokePromise(Common.LayoutOperation.UpdateDialog, { state: false });
+      await invokePromise(LayoutOperation.UpdateDialog, { state: false });
 
       // If node is already present in the active parts, scroll to it and close the dialog.
       const index = layout.active.findIndex((id) => id === nodeId);
       if (index !== -1) {
-        await invokePromise(Common.LayoutOperation.ScrollIntoView, { subject: nodeId });
+        await invokePromise(LayoutOperation.ScrollIntoView, { subject: nodeId });
       } else {
-        await invokePromise(Common.LayoutOperation.Open, {
+        await invokePromise(LayoutOperation.Open, {
           subject: [nodeId],
           pivotId,
           positioning: 'end',
@@ -88,42 +89,31 @@ export const SearchDialog = ({ pivotId }: SearchDialogProps) => {
     <Dialog.Content>
       <Dialog.Title>{t('search dialog title')}</Dialog.Title>
       <SearchList.Root onSearch={handleSearch}>
-        <div
-          role='combobox'
-          aria-expanded='true'
-          aria-label={t('search placeholder')}
-          className='flex flex-col grow overflow-hidden'
-        >
+        <SearchList.Content classNames='max-bs-[24rem] overflow-auto'>
           <SearchList.Input placeholder={t('search placeholder')} />
-          <SearchList.Content classNames='max-bs-[24rem] overflow-auto'>
-            <SearchList.Viewport>
-              {queryString.length > 0 ? (
-                resultObjects.length > 0 ? (
-                  resultObjects
-                    .map((object) => Graph.getNode(graph, Obj.getDXN(object).toString()))
-                    .filter(Option.isSome)
-                    .map((node) => <SearchListResult key={node.value.id} node={node.value} onSelect={handleSelect} />)
-                ) : (
-                  <p className='pli-1'>{t(pending ? 'pending results message' : 'empty results message')}</p>
-                )
+          <SearchList.Viewport>
+            {queryString.length > 0 ? (
+              resultObjects.length > 0 ? (
+                resultObjects
+                  .map((object) => Graph.getNode(graph, Obj.getDXN(object).toString()))
+                  .filter(Option.isSome)
+                  .map((node) => <SearchListResult key={node.value.id} node={node.value} onSelect={handleSelect} />)
               ) : (
-                <>
-                  {closed.length > 0 && (
-                    <h2 className={mx('mlb-1', descriptionText)}>{t('recently closed heading')}</h2>
-                  )}
-                  {closed.filter(Option.isSome).map((node) => (
-                    <SearchListResult key={node.value.id} node={node.value} onSelect={handleSelect} />
-                  ))}
-                </>
-              )}
-            </SearchList.Viewport>
-          </SearchList.Content>
-        </div>
+                <p className='pli-1'>{t(pending ? 'pending results message' : 'empty results message')}</p>
+              )
+            ) : (
+              <>
+                {closed.length > 0 && <h2 className={mx('mlb-1', descriptionText)}>{t('recently closed heading')}</h2>}
+                {closed.filter(Option.isSome).map((node) => (
+                  <SearchListResult key={node.value.id} node={node.value} onSelect={handleSelect} />
+                ))}
+              </>
+            )}
+          </SearchList.Viewport>
+        </SearchList.Content>
       </SearchList.Root>
       <Dialog.Close asChild>
-        <Button variant='primary' classNames='mbs-2'>
-          {t('close label', { ns: osTranslations })}
-        </Button>
+        <Button variant='primary'>{t('close label', { ns: osTranslations })}</Button>
       </Dialog.Close>
     </Dialog.Content>
   );

@@ -378,7 +378,7 @@ const meta = {
   title: 'ui/react-ui-thread/Comments',
   component: StoryThread as any,
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     translations,
     layout: 'fullscreen',

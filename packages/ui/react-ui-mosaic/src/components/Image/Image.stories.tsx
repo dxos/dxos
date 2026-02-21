@@ -22,7 +22,7 @@ const meta = {
       <Image {...args} />
     </div>
   ),
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'centered',
   },

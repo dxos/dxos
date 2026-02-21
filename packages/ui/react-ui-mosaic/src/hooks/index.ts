@@ -3,5 +3,6 @@
 //
 
 export * from './useContainerDebug';
+export * from './useDefaultColumnEventHandler';
 export * from './useEventHandlerAdapter';
 export * from './useVisibleItems';

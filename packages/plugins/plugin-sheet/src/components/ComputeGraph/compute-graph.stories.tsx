@@ -87,7 +87,7 @@ const meta = {
   title: 'plugins/plugin-sheet/functions',
   render: DefaultStory,
   decorators: [
-    withTheme,
+    withTheme(),
     withClientProvider({ types: [Function.Function, Sheet.Sheet], createIdentity: true, createSpace: true }),
     withComputeGraphDecorator({ plugins: testFunctionPlugins }),
   ],

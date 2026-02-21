@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import type * as Toolkit from '@effect/ai/Toolkit';
 import type * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
@@ -309,10 +310,21 @@ export namespace TracingServiceExt {
     }),
   );
 
-  export const layerConsolePrettyPrint = () => Layer.succeed(TracingService, new PrettyConsoleTracer());
+  export const layerConsolePrettyPrint = (opts: PrettyConsoleTracerOptions = {}) =>
+    Layer.succeed(TracingService, new PrettyConsoleTracer(opts));
+}
+
+interface PrettyConsoleTracerOptions {
+  readonly toolkit?: Toolkit.Any;
 }
 
 class PrettyConsoleTracer implements Context.Tag.Service<TracingService> {
+  // TODO(dmaretskyi): Use options for toolkit-aware tracing.
+  #options: PrettyConsoleTracerOptions; // eslint-disable-line no-unused-private-class-members
+
+  constructor(options: PrettyConsoleTracerOptions = {}) {
+    this.#options = options;
+  }
   getTraceContext(): TracingService.TraceContext {
     return {};
   }

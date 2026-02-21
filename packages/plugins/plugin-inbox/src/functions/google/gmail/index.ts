@@ -2,5 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-export { default as sync } from './sync';
-export { default as send } from './send';
+import Send from './send';
+import Sync from './sync';
+
+export const GmailFunctions = {
+  Send,
+  Sync,
+};

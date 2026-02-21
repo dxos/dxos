@@ -5,8 +5,9 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type FC, useCallback } from 'react';
 
-import { Common } from '@dxos/app-framework';
-import { Surface, useCapabilities, useCapability } from '@dxos/app-framework/react';
+import { Capabilities } from '@dxos/app-framework';
+import { Surface, useCapabilities, useCapability } from '@dxos/app-framework/ui';
+import { AppCapabilities } from '@dxos/app-toolkit';
 import { AiContextBinder } from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
 import { Filter, Obj, Ref } from '@dxos/echo';
@@ -28,13 +29,13 @@ const panelClassNames = 'bg-baseSurface rounded-sm border border-separator overf
 
 type StoryProps = {
   modules: FC<ComponentProps>[][];
-  showContext?: boolean;
   blueprints?: string[];
+  showContext?: boolean;
 };
 
 const DefaultStory = ({ modules, showContext, blueprints = [] }: StoryProps) => {
-  const blueprintsDefinitions = useCapabilities(Common.Capability.BlueprintDefinition);
-  const atomRegistry = useCapability(Common.Capability.AtomRegistry);
+  const blueprintsDefinitions = useCapabilities(AppCapabilities.BlueprintDefinition);
+  const atomRegistry = useCapability(Capabilities.AtomRegistry);
 
   const space = useSpace();
   useAsyncEffect(async () => {
@@ -49,7 +50,7 @@ const DefaultStory = ({ modules, showContext, blueprints = [] }: StoryProps) => 
     }
 
     // Add blueprints to context.
-    const blueprintRegistry = new Blueprint.Registry(blueprintsDefinitions);
+    const blueprintRegistry = new Blueprint.Registry(blueprintsDefinitions.map((blueprint) => blueprint.make()));
     const blueprintObjects = blueprints
       .map((key) => {
         const blueprint = blueprintRegistry.getByKey(key);
@@ -119,7 +120,7 @@ const StackContainer = ({ objects }: { objects: Obj.Any[] }) => {
     >
       {objects.map((object) => (
         <StackItem.Root key={object.id} item={object} classNames={panelClassNames}>
-          <Surface role='section' limit={1} data={{ subject: object }} />
+          <Surface.Surface role='section' limit={1} data={{ subject: object }} />
         </StackItem.Root>
       ))}
     </Stack>
@@ -129,7 +130,7 @@ const StackContainer = ({ objects }: { objects: Obj.Any[] }) => {
 const storybook: Meta<typeof DefaultStory> = {
   title: 'stories/stories-assistant/Initiatives',
   render: render(DefaultStory),
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'fullscreen',
     translations,

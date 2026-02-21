@@ -34,9 +34,7 @@ type ToastViewportProps = ThemedClassName<ToastViewportPrimitiveProps>;
 
 const ToastViewport = forwardRef<HTMLOListElement, ToastViewportProps>(({ classNames, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
-  return (
-    <ToastViewportPrimitive className={tx('toast.viewport', 'toast-viewport', {}, classNames)} ref={forwardedRef} />
-  );
+  return <ToastViewportPrimitive className={tx('toast.viewport', {}, classNames)} ref={forwardedRef} />;
 });
 
 type ToastRootProps = ThemedClassName<ToastRootPrimitiveProps>;
@@ -44,7 +42,7 @@ type ToastRootProps = ThemedClassName<ToastRootPrimitiveProps>;
 const ToastRoot = forwardRef<HTMLLIElement, ToastRootProps>(({ classNames, children, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
   return (
-    <ToastRootPrimitive {...props} className={tx('toast.root', 'toast', {}, classNames)} ref={forwardedRef}>
+    <ToastRootPrimitive {...props} className={tx('toast.root', {}, classNames)} ref={forwardedRef}>
       <ElevationProvider elevation='toast'>{children}</ElevationProvider>
     </ToastRootPrimitive>
   );
@@ -55,7 +53,7 @@ type ToastBodyProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.div
 const ToastBody = forwardRef<HTMLDivElement, ToastBodyProps>(({ asChild, classNames, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
   const Root = asChild ? Slot : Primitive.div;
-  return <Root {...props} className={tx('toast.body', 'toast__body', {}, classNames)} ref={forwardedRef} />;
+  return <Root {...props} className={tx('toast.body', {}, classNames)} ref={forwardedRef} />;
 });
 
 type ToastTitleProps = ThemedClassName<ToastTitlePrimitiveProps>;
@@ -64,7 +62,7 @@ const ToastTitle = forwardRef<HTMLHeadingElement, ToastTitleProps>(
   ({ asChild, classNames, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     const Root = asChild ? Slot : ToastTitlePrimitive;
-    return <Root {...props} className={tx('toast.title', 'toast__title', {}, classNames)} ref={forwardedRef} />;
+    return <Root {...props} className={tx('toast.title', {}, classNames)} ref={forwardedRef} />;
   },
 );
 
@@ -74,9 +72,7 @@ const ToastDescription = forwardRef<HTMLParagraphElement, ToastDescriptionProps>
   ({ asChild, classNames, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     const Root = asChild ? Slot : ToastDescriptionPrimitive;
-    return (
-      <Root {...props} className={tx('toast.description', 'toast__description', {}, classNames)} ref={forwardedRef} />
-    );
+    return <Root {...props} className={tx('toast.description', {}, classNames)} ref={forwardedRef} />;
   },
 );
 
@@ -86,7 +82,7 @@ const ToastActions = forwardRef<HTMLDivElement, ToastActionsProps>(
   ({ asChild, classNames, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     const Root = asChild ? Slot : Primitive.div;
-    return <Root {...props} className={tx('toast.actions', 'toast__actions', {}, classNames)} ref={forwardedRef} />;
+    return <Root {...props} className={tx('toast.actions', {}, classNames)} ref={forwardedRef} />;
   },
 );
 

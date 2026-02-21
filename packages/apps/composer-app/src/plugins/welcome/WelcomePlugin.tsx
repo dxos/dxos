@@ -4,7 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { ActivationEvent, Capability, Common, Plugin } from '@dxos/app-framework';
+import { ActivationEvent, ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
+import { AppActivationEvents, AppCapabilities } from '@dxos/app-toolkit';
 import { ClientEvents } from '@dxos/plugin-client';
 import { SpaceEvents } from '@dxos/plugin-space';
 
@@ -16,21 +17,21 @@ export const WelcomePlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
     id: `${meta.id}/module/onboarding`,
     activatesOn: ActivationEvent.allOf(
-      Common.ActivationEvent.AppGraphReady,
-      Common.ActivationEvent.OperationInvokerReady,
-      Common.ActivationEvent.LayoutReady,
+      AppActivationEvents.AppGraphReady,
+      ActivationEvents.OperationInvokerReady,
+      AppActivationEvents.LayoutReady,
       ClientEvents.ClientReady,
     ),
     activate: Onboarding,
   }),
   Plugin.addModule({
     id: `${meta.id}/module/translations`,
-    activatesOn: Common.ActivationEvent.SetupTranslations,
-    activate: () => Effect.succeed(Capability.contributes(Common.Capability.Translations, translations)),
+    activatesOn: AppActivationEvents.SetupTranslations,
+    activate: () => Effect.succeed(Capability.contributes(AppCapabilities.Translations, translations)),
   }),
   Plugin.addModule({
     id: `${meta.id}/module/react-surface`,
-    activatesOn: Common.ActivationEvent.SetupReactSurface,
+    activatesOn: ActivationEvents.SetupReactSurface,
     activate: ReactSurface,
   }),
   Plugin.addModule({

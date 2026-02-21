@@ -2,7 +2,16 @@
 // Copyright 2024 DXOS.org
 //
 
-export { default as create } from './create';
-export { default as move } from './move';
-export { default as play } from './play';
-export { default as print } from './print';
+import Create from './create';
+import Move from './move';
+import Play from './play';
+import Print from './print';
+
+export { Create, Move, Play, Print };
+
+export const ChessFunctions = {
+  Create,
+  Move,
+  Play,
+  Print,
+};

@@ -10,7 +10,7 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import { AiService, ConsolePrinter, ToolExecutionService, ToolResolverService } from '@dxos/ai';
-import { AiSession, ArtifactId, GenerationObserver } from '@dxos/assistant';
+import { AiSession, GenerationObserver } from '@dxos/assistant';
 import { Database, Filter, Obj, Relation, Tag, Type } from '@dxos/echo';
 import { ContextQueueService, QueueService, TracingService, defineFunction } from '@dxos/functions';
 import { DXN } from '@dxos/keys';
@@ -32,7 +32,7 @@ export default defineFunction({
   }),
   outputSchema: Schema.Union(
     Schema.Struct({
-      tagId: ArtifactId.annotations({
+      tagId: Schema.String.annotations({
         description: 'The ID of the selected tag.',
       }),
       tagLabel: Schema.String.annotations({

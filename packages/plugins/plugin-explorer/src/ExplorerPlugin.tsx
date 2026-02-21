@@ -4,7 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Common, Plugin } from '@dxos/app-framework';
+import { Plugin } from '@dxos/app-framework';
+import { AppPlugin } from '@dxos/app-toolkit';
 import { Type } from '@dxos/echo';
 import { type CreateObject } from '@dxos/plugin-space/types';
 import { View } from '@dxos/schema';
@@ -15,8 +16,7 @@ import { translations } from './translations';
 import { ExplorerAction, Graph } from './types';
 
 export const ExplorerPlugin = Plugin.define(meta).pipe(
-  Common.Plugin.addTranslationsModule({ translations }),
-  Common.Plugin.addMetadataModule({
+  AppPlugin.addMetadataModule({
     metadata: {
       id: Type.getTypename(Graph.Graph),
       metadata: {
@@ -31,7 +31,8 @@ export const ExplorerPlugin = Plugin.define(meta).pipe(
       },
     },
   }),
-  Common.Plugin.addSchemaModule({ schema: [Graph.Graph] }),
-  Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
+  AppPlugin.addSchemaModule({ schema: [Graph.Graph] }),
+  AppPlugin.addSurfaceModule({ activate: ReactSurface }),
+  AppPlugin.addTranslationsModule({ translations }),
   Plugin.make,
 );

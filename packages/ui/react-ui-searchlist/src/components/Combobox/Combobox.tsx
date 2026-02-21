@@ -20,11 +20,11 @@ import { mx, staticPlaceholderText } from '@dxos/ui-theme';
 
 import {
   SearchList,
-  type SearchListContentProps,
   type SearchListEmptyProps,
   type SearchListInputProps,
   type SearchListItemProps,
   type SearchListRootProps,
+  type SearchListViewportProps,
 } from '../SearchList';
 
 const COMBOBOX_NAME = 'Combobox';
@@ -164,9 +164,7 @@ const ComboboxContent = forwardRef<HTMLDivElement, ComboboxContentProps>(
         ref={forwardedRef}
       >
         <SearchList.Root onSearch={onSearch} value={value} defaultValue={defaultValue} debounceMs={debounceMs}>
-          <div className='contents density-fine' aria-label={label} role='combobox' aria-expanded='true'>
-            {children}
-          </div>
+          <SearchList.Content>{children}</SearchList.Content>
         </SearchList.Root>
       </Popover.Content>
     );
@@ -252,16 +250,10 @@ const ComboboxInput = forwardRef<HTMLInputElement, ComboboxInputProps>(({ classN
 // List
 //
 
-type ComboboxListProps = SearchListContentProps;
+type ComboboxListProps = SearchListViewportProps;
 
 const ComboboxList = forwardRef<HTMLDivElement, ComboboxListProps>(({ classNames, ...props }, forwardedRef) => {
-  return (
-    <SearchList.Content
-      {...props}
-      classNames={['min-bs-0 overflow-y-auto plb-cardSpacingChrome', classNames]}
-      ref={forwardedRef}
-    />
-  );
+  return <SearchList.Viewport {...props} classNames={['plb-cardSpacingChrome', classNames]} ref={forwardedRef} />;
 });
 
 //

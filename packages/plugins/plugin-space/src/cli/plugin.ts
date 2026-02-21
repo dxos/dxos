@@ -4,7 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common, Plugin } from '@dxos/app-framework';
+import { ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
+import { AppPlugin } from '@dxos/app-toolkit';
 import { Tag } from '@dxos/echo';
 import { ClientEvents } from '@dxos/plugin-client/types';
 import { Collection, DataTypes } from '@dxos/schema';
@@ -31,10 +32,19 @@ import { database, queue, space } from './commands';
 
 export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
   // TODO(wittjosiah): Could some of these commands make use of operations?
-  Common.Plugin.addCommandModule({
+  AppPlugin.addCommandModule({
     commands: [database, queue, space],
   }),
-  Common.Plugin.addSchemaModule({
+  AppPlugin.addMetadataModule({
+    metadata: {
+      id: Collection.Collection.typename,
+      metadata: {
+        createObject: ((props) => Effect.sync(() => Collection.make(props))) satisfies CreateObject,
+        addToCollectionOnCreate: true,
+      },
+    },
+  }),
+  AppPlugin.addSchemaModule({
     schema: [
       ...DataTypes,
       AnchoredTo.AnchoredTo,
@@ -50,15 +60,6 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
       Task.Task,
     ],
   }),
-  Common.Plugin.addMetadataModule({
-    metadata: {
-      id: Collection.Collection.typename,
-      metadata: {
-        createObject: ((props) => Effect.sync(() => Collection.make(props))) satisfies CreateObject,
-        addToCollectionOnCreate: true,
-      },
-    },
-  }),
   Plugin.addModule(
     ({
       shareableLinkOrigin = 'http://localhost:5173',
@@ -73,7 +74,7 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
 
       return {
         id: Capability.getModuleTag(OperationResolver),
-        activatesOn: Common.ActivationEvent.SetupOperationResolver,
+        activatesOn: ActivationEvents.SetupOperationResolver,
         activate: () => OperationResolver({ createInvitationUrl, observability: false }),
       };
     },

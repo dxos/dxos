@@ -17,7 +17,7 @@ import {
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import type { Template } from '..';
+import type { Template } from '../index';
 
 /**
  * Process Handlebars template.
@@ -54,6 +54,5 @@ export const processTemplate = (
     ).pipe(Effect.map(Record.fromEntries));
 
     log('processTemplate', { variables });
-
     return process((yield* Database.load(template.source)).content, variables);
   });

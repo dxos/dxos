@@ -30,7 +30,7 @@ const meta = {
   title: 'ui/react-ui-board/Cell',
   component: Board.Cell,
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'centered',
     translations: [...translations, ...stackTranslations],

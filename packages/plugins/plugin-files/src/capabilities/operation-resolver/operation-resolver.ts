@@ -4,7 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common, SettingsOperation } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { AppCapabilities, type SerializedNode, SettingsOperation } from '@dxos/app-toolkit';
 import { Trigger } from '@dxos/async';
 import { log } from '@dxos/log';
 import { Operation, OperationResolver } from '@dxos/operation';
@@ -39,7 +40,7 @@ const writeFile = async (handle: FileSystemFileHandle, content: string) => {
   await writable.close();
 };
 
-const getFileName = (node: Common.SerializedNode, counter = 0) => {
+const getFileName = (node: SerializedNode, counter = 0) => {
   let extension = '';
   switch (node.type) {
     case 'application/tldraw':
@@ -82,7 +83,7 @@ const createExportFile = (
   }: {
     node: Node.Node;
     path: string[];
-    serialized: Common.SerializedNode;
+    serialized: SerializedNode;
     state: FilesState;
   }) => {
     if (!state.rootHandle) {
@@ -137,13 +138,13 @@ export default Capability.makeModule(
     const directoryNameCounter: Record<string, Record<string, number>> = {};
     const exportFile = createExportFile(directoryHandles, directoryNameCounter);
 
-    return Capability.contributes(Common.Capability.OperationResolver, [
+    return Capability.contributes(Capabilities.OperationResolver, [
       OperationResolver.make({
         operation: LocalFilesOperation.SelectRoot,
         handler: Effect.fnUntraced(function* () {
           const rootDir = yield* Effect.promise(async () => (window as any).showDirectoryPicker({ mode: 'readwrite' }));
           if (rootDir) {
-            yield* Common.Capability.updateAtomValue(FileCapabilities.State, (current) => ({
+            yield* Capabilities.updateAtomValue(FileCapabilities.State, (current) => ({
               ...current,
               rootHandle: rootDir,
             }));
@@ -153,14 +154,14 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: LocalFilesOperation.Export,
         handler: Effect.fnUntraced(function* () {
-          const { explore } = yield* Capability.get(Common.Capability.AppGraph);
-          const state = yield* Common.Capability.getAtomValue(FileCapabilities.State);
+          const { explore } = yield* Capability.get(AppCapabilities.AppGraph);
+          const state = yield* Capabilities.getAtomValue(FileCapabilities.State);
           if (!state.rootHandle) {
             yield* Operation.invoke(SettingsOperation.Open, { plugin: meta.id });
             return;
           }
 
-          const serializers = yield* Capability.getAll(Common.Capability.AppGraphSerializer);
+          const serializers = yield* Capability.getAll(AppCapabilities.AppGraphSerializer);
 
           yield* Effect.promise(async () =>
             explore({
@@ -183,7 +184,7 @@ export default Capability.makeModule(
             }),
           );
 
-          yield* Common.Capability.updateAtomValue(FileCapabilities.State, (current) => ({
+          yield* Capabilities.updateAtomValue(FileCapabilities.State, (current) => ({
             ...current,
             lastExport: Date.now(),
           }));
@@ -198,7 +199,7 @@ export default Capability.makeModule(
             return;
           }
 
-          const serializers = yield* Capability.getAll(Common.Capability.AppGraphSerializer);
+          const serializers = yield* Capability.getAll(AppCapabilities.AppGraphSerializer);
 
           const importFile = async ({ handle, ancestors }: { handle: FileSystemHandle; ancestors: unknown[] }) => {
             const [name, ...extension] = handle.name.split('.');
@@ -242,14 +243,14 @@ export default Capability.makeModule(
               }),
             );
             const file = yield* Effect.promise(async () => handleToLocalFile(handle));
-            yield* Common.Capability.updateAtomValue(FileCapabilities.State, (current) => ({
+            yield* Capabilities.updateAtomValue(FileCapabilities.State, (current) => ({
               ...current,
               files: [...current.files, file],
             }));
             return { id: file.id, subject: [file.id] };
           }
 
-          const registry = yield* Capability.get(Common.Capability.AtomRegistry);
+          const registry = yield* Capability.get(Capabilities.AtomRegistry);
           const stateAtom = yield* Capability.get(FileCapabilities.State);
           const input = document.createElement('input');
           input.type = 'file';
@@ -273,7 +274,7 @@ export default Capability.makeModule(
         handler: Effect.fnUntraced(function* () {
           const handle = yield* Effect.promise(async () => (window as any).showDirectoryPicker({ mode: 'readwrite' }));
           const directory = yield* Effect.promise(async () => handleToLocalDirectory(handle));
-          yield* Common.Capability.updateAtomValue(FileCapabilities.State, (current) => ({
+          yield* Capabilities.updateAtomValue(FileCapabilities.State, (current) => ({
             ...current,
             files: [...current.files, directory],
           }));
@@ -283,7 +284,7 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: LocalFilesOperation.Reconnect,
         handler: Effect.fnUntraced(function* ({ id }) {
-          const state = yield* Common.Capability.getAtomValue(FileCapabilities.State);
+          const state = yield* Capabilities.getAtomValue(FileCapabilities.State);
           const entity = state.files.find((entity) => entity.id === id);
           if (!entity) {
             return;
@@ -297,7 +298,7 @@ export default Capability.makeModule(
               const children = yield* Effect.promise(async () =>
                 getDirectoryChildren(entity.handle, entity.handle.name),
               );
-              yield* Common.Capability.updateAtomValue(FileCapabilities.State, (current) => ({
+              yield* Capabilities.updateAtomValue(FileCapabilities.State, (current) => ({
                 ...current,
                 files: current.files.map((f) =>
                   f.id === id ? { ...f, children, permission } : f,
@@ -312,7 +313,7 @@ export default Capability.makeModule(
               const text = yield* Effect.promise(async () =>
                 (entity.handle as any).getFile?.().then((file: any) => file.text()),
               );
-              yield* Common.Capability.updateAtomValue(FileCapabilities.State, (current) => ({
+              yield* Capabilities.updateAtomValue(FileCapabilities.State, (current) => ({
                 ...current,
                 files: current.files.map((f) => (f.id === id ? { ...f, text, permission } : f)) as typeof current.files,
               }));
@@ -323,7 +324,7 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: LocalFilesOperation.Save,
         handler: Effect.fnUntraced(function* ({ id }) {
-          const state = yield* Common.Capability.getAtomValue(FileCapabilities.State);
+          const state = yield* Capabilities.getAtomValue(FileCapabilities.State);
           const file = findFile(state.files, [id]);
           if (file) {
             yield* Effect.promise(async () => handleSave(file));
@@ -333,7 +334,7 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: LocalFilesOperation.Close,
         handler: Effect.fnUntraced(function* ({ id }) {
-          yield* Common.Capability.updateAtomValue(FileCapabilities.State, (current) => ({
+          yield* Capabilities.updateAtomValue(FileCapabilities.State, (current) => ({
             ...current,
             files: current.files.filter((f) => f.id !== id),
           }));

@@ -5,8 +5,8 @@
 import * as Effect from 'effect/Effect';
 import React, { useCallback, useMemo } from 'react';
 
-import { Capability, Common, Plugin } from '@dxos/app-framework';
-import { usePluginManager } from '@dxos/app-framework/react';
+import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
+import { Surface, usePluginManager } from '@dxos/app-framework/ui';
 import { runAndForwardErrors } from '@dxos/effect';
 
 import { PluginDetail, RegistryContainer } from '../../components';
@@ -14,8 +14,8 @@ import { REGISTRY_KEY, meta } from '../../meta';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
-    Capability.contributes(Common.Capability.ReactSurface, [
-      Common.createSurface({
+    Capability.contributes(Capabilities.ReactSurface, [
+      Surface.create({
         id: `${meta.id}/all`,
         role: 'article',
         filter: (data): data is any => data.subject === `${REGISTRY_KEY}+all`,
@@ -29,7 +29,7 @@ export default Capability.makeModule(() =>
           return <RegistryContainer id={`${REGISTRY_KEY}+all`} plugins={filtered} />;
         },
       }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/installed`,
         role: 'article',
         filter: (data): data is any => data.subject === `${REGISTRY_KEY}+installed`,
@@ -47,7 +47,7 @@ export default Capability.makeModule(() =>
           return <RegistryContainer id={`${REGISTRY_KEY}+installed`} plugins={filtered} />;
         },
       }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/recommended`,
         role: 'article',
         filter: (data): data is any => data.subject === `${REGISTRY_KEY}+recommended`,
@@ -65,7 +65,7 @@ export default Capability.makeModule(() =>
           return <RegistryContainer id={`${REGISTRY_KEY}+recommended`} plugins={filtered} />;
         },
       }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/labs`,
         role: 'article',
         filter: (data): data is any => data.subject === `${REGISTRY_KEY}+labs`,
@@ -76,7 +76,7 @@ export default Capability.makeModule(() =>
           return <RegistryContainer id={`${REGISTRY_KEY}+labs`} plugins={filtered} />;
         },
       }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/plugin-details`,
         role: 'article',
         filter: (data): data is { subject: Plugin.Plugin } => Plugin.isPlugin(data.subject),

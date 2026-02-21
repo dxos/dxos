@@ -23,7 +23,7 @@ const meta = {
   title: 'plugins/plugin-excalidraw/SketchComponent',
   component: SketchContainer as any,
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'fullscreen',
   },

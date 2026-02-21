@@ -4,8 +4,9 @@
 
 import React, { useCallback } from 'react';
 
-import { Common } from '@dxos/app-framework';
-import { type SurfaceComponentProps, useOperationInvoker } from '@dxos/app-framework/react';
+import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { LayoutOperation } from '@dxos/app-toolkit';
+import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { type JsonPath, splitJsonPath } from '@dxos/effect';
 import { useTranslation } from '@dxos/react-ui';
@@ -22,8 +23,8 @@ export const FormCard = ({ subject, projection }: SurfaceComponentProps & { proj
   const label = Obj.getLabel(subject) ?? Obj.getTypename(subject) ?? t('unable to create preview message');
 
   const handleNavigate = useCallback(async () => {
-    await invokePromise(Common.LayoutOperation.UpdatePopover, { state: false, anchorId: '' });
-    await invokePromise(Common.LayoutOperation.Open, { subject: [Obj.getDXN(subject).toString()] });
+    await invokePromise(LayoutOperation.UpdatePopover, { state: false, anchorId: '' });
+    await invokePromise(LayoutOperation.Open, { subject: [Obj.getDXN(subject).toString()] });
   }, [invokePromise, subject]);
 
   const handleSave = useCallback((values: any, { changed }: { changed: Record<string, boolean> }) => {

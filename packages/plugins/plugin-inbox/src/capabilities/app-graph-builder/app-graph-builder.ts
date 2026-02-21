@@ -6,7 +6,8 @@ import { Atom } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { Capability, Common } from '@dxos/app-framework';
+import { Capability } from '@dxos/app-framework';
+import { AppCapabilities } from '@dxos/app-toolkit';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { AtomObj, AtomQuery, AtomRef } from '@dxos/echo-atom';
 import { invariant } from '@dxos/invariant';
@@ -20,7 +21,7 @@ import { type SelectionManager } from '@dxos/react-ui-attention';
 import { AccessToken, type Event, type Message } from '@dxos/types';
 import { kebabize } from '@dxos/util';
 
-import { calendar, gmail } from '../../functions';
+import { CalendarFunctions, GmailFunctions } from '../../functions';
 import { meta } from '../../meta';
 import { Calendar, InboxOperation, Mailbox } from '../../types';
 
@@ -166,7 +167,11 @@ export default Capability.makeModule(
                 invariant(db);
                 const runtime = computeRuntime.getRuntime(db.spaceId);
                 yield* Effect.tryPromise(() =>
-                  runtime.runPromise(invokeFunctionWithTracing(gmail.sync, { mailbox: Ref.make(mailbox) })),
+                  runtime.runPromise(
+                    invokeFunctionWithTracing(GmailFunctions.Sync, {
+                      mailbox: Ref.make(mailbox),
+                    }),
+                  ),
                 );
               }),
               properties: {
@@ -191,7 +196,9 @@ export default Capability.makeModule(
                 const runtime = computeRuntime.getRuntime(db.spaceId);
                 yield* Effect.tryPromise(() =>
                   runtime.runPromise(
-                    invokeFunctionWithTracing(calendar.sync, { calendarId: Obj.getDXN(cal).toString() }),
+                    invokeFunctionWithTracing(CalendarFunctions.Sync, {
+                      calendar: Ref.fromDXN(Obj.getDXN(cal)),
+                    }),
                   ),
                 );
               }),
@@ -239,6 +246,6 @@ export default Capability.makeModule(
       }),
     ]);
 
-    return Capability.contributes(Common.Capability.AppGraphBuilder, extensions);
+    return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
   }),
 );
