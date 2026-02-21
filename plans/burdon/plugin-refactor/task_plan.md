@@ -4,28 +4,33 @@
 Reduce custom className / raw-div layout in plugin-xxx components by relying on the react-ui-xxx component library; split into `src/components` (low-level) and `src/containers` (higher-level surfaces).
 
 ## Current Phase
-Phase 1
+Phase 4
 
 ## Phases
 
-### Phase 1: Audit
+### Phase 1: Audit plugin-kanban
 - [x] Identify raw divs + custom classNames in plugin-kanban
 - **Status:** complete
 
-### Phase 2: Refactor react-ui-kanban (if needed)
-- [ ] Determine if Board.Column wrappers should absorb the layout divs in KanbanColumn
-- [ ] Add any missing primitives to react-ui-mosaic/react-ui-kanban
-- **Status:** pending
+### Phase 2: Extend react-ui-mosaic primitives
+- [x] Add Board.Column.Grid primitive
+- [x] Bake border classNames into Board.Column.Header and Board.Column.Footer
+- [x] Add onAdd prop to Board.Column.Footer
+- [x] Update DefaultBoardColumn to use BoardColumnGrid
+- **Status:** complete
 
 ### Phase 3: Refactor plugin-kanban
-- [ ] Replace raw layout divs in KanbanColumn with react-ui-mosaic primitives
-- [ ] Remove classNames props passed to Board.Column.Header
-- [ ] Verify stories still work
-- **Status:** pending
+- [x] Replace outer grid div with Board.Column.Grid
+- [x] Replace footer div + IconButton with Board.Column.Footer
+- [x] Remove redundant classNames from Board.Column.Header calls (kanban + pipeline)
+- [x] Rename onAddCard/onRemoveCard → onCardAdd/onCardRemove
+- [x] pnpm -w pre-ci passed (only pre-existing functions:compile failure)
+- **Status:** complete
 
-### Phase 4: Audit other plugins (plugin-table, plugin-sheet, etc.)
-- [ ] Apply same pattern across other plugins
-- **Status:** pending
+### Phase 4: Audit and refactor other plugins
+- [ ] plugin-pipeline — raw grid div in PipelineColumn.tsx (2-row variant)
+- [ ] plugin-table, plugin-sheet, plugin-thread, others
+- **Status:** in_progress
 
 ### Phase 5: Lint & PR
 - [ ] pnpm -w pre-ci
@@ -37,8 +42,11 @@ Phase 1
 |----------|-----------|
 | Planning files in plans/burdon/plugin-refactor/ | User preference |
 | Start with plugin-kanban | Most contained, good reference case |
+| Bake repeated classNames into primitives | All callers passed identical values |
+| on{Noun}{Verb} prop naming | Consistency; matches handle{Noun}{Verb} local convention |
 
 ## Errors Encountered
 | Error | Attempt | Resolution |
 |-------|---------|------------|
-| react-ui-kanban has no source (dist only) | 1 | Focused on plugin-kanban src instead |
+| react-ui-kanban has no source (dist only) | 1 | Focused on plugin-kanban src and react-ui-mosaic instead |
+| functions:compile failure in build | 1 | Pre-existing deleted types on branch; restored with git checkout |
