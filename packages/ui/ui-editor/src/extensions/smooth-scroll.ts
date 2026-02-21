@@ -110,9 +110,10 @@ export const smoothScroll = ({ offset = 0, position = 'start' }: Partial<SmoothS
         // Scroll to bottom.
         if (lineNumber === -1) {
           this.scroller();
-          // this.animateScroll(scroller, scroller.scrollHeight - scroller.clientHeight);
           return;
         }
+
+        // TODO(burdon): SIMPLIFY
 
         // Get the position of the target line.
         if (targetLine >= doc.lines) {
@@ -203,6 +204,9 @@ function easeInOutCubic(t: number): number {
   return t < 0.5 ? 4 * t ** 3 : 1 - (-2 * t + 2) ** 3 / 2;
 }
 
+/**
+ * NOTE: This isn't perfectly smooth if codemirror updates while scrolling.
+ */
 function createBottomScroller(el: HTMLElement, duration = 200) {
   let animFrame: number | null = null;
   let startTop: number;

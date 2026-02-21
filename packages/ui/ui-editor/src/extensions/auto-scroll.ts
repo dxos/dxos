@@ -10,10 +10,8 @@ import { Domino } from '@dxos/ui';
 import { scrollToLineEffect } from './smooth-scroll';
 
 export type AutoScrollOptions = {
-  /** Initial pinned state. */
-  pinned?: boolean;
   /** Threshold in px to trigger scroll from bottom. */
-  threshold?: number;
+  overScroll?: number;
   /** Throttle time in ms. */
   throttleDelay?: number;
   /** Callback when auto-scrolling. */
@@ -24,13 +22,12 @@ export type AutoScrollOptions = {
  * Extension that supports pinning the scroll position and automatically scrolls to the bottom when content is added.
  */
 export const autoScroll = ({
-  pinned = true,
-  threshold = 100,
-  throttleDelay = 500,
+  overScroll = 100,
+  throttleDelay = 1_000,
   onAutoScroll,
 }: Partial<AutoScrollOptions> = {}) => {
   let buttonContainer: HTMLDivElement | undefined;
-  let isPinned = pinned;
+  let isPinned = true;
 
   const setPinned = (pinned: boolean) => {
     buttonContainer?.classList.toggle('opacity-0', pinned);
@@ -61,15 +58,15 @@ export const autoScroll = ({
       // NOTE: Geometry changed is triggered when widgets change height (e.g., toggle tool block).
       if (heightChanged) {
         if (isPinned) {
-          const coords = view.coordsAtPos(view.state.doc.length);
-          const scrollerRect = view.scrollDOM.getBoundingClientRect();
-          const distanceFromBottom = coords ? scrollerRect.bottom - coords.bottom : 0;
-          if (distanceFromBottom < threshold) {
-            const shouldScroll = onAutoScroll?.({ view, distanceFromBottom }) ?? true;
+          // NOTE: Use scroll geometry instead of coordsAtPos to avoid forced layout/scroll side-effects.
+          const { scrollTop, scrollHeight, clientHeight } = view.scrollDOM;
+          const delta = scrollHeight - scrollTop - clientHeight;
+          if (delta > 0) {
+            const shouldScroll = onAutoScroll?.({ view, distanceFromBottom: delta }) ?? true;
             if (shouldScroll) {
               triggerUpdate(view);
             }
-          } else if (distanceFromBottom < 0) {
+          } else if (delta < 0) {
             setPinned(false);
           }
         } else {
@@ -89,8 +86,8 @@ export const autoScroll = ({
           this.cleanup = createUserScrollDetector(view.scrollDOM, () => {
             requestAnimationFrame(() => {
               const { scrollTop, scrollHeight, clientHeight } = view.scrollDOM;
-              const atBottom = scrollHeight - scrollTop - clientHeight < threshold;
-              setPinned(atBottom);
+              const delta = scrollHeight - scrollTop - clientHeight;
+              setPinned(delta === 0);
             });
           });
         }
@@ -125,7 +122,7 @@ export const autoScroll = ({
     // Styles.
     EditorView.theme({
       '.cm-content': {
-        paddingBottom: `${threshold}px`,
+        paddingBottom: `${overScroll}px`,
       },
       '.cm-scroller': {
         paddingBottom: '0',
