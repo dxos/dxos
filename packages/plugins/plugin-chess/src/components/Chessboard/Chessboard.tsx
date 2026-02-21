@@ -159,7 +159,7 @@ const Board = (props: BoardProps) => {
     });
   }, [registry, model]);
 
-  return <NaturalChessboard ref={ref} {...props} />;
+  return <NaturalChessboard {...props} ref={ref} />;
 };
 
 Board.displayName = BOARD_NAME;
