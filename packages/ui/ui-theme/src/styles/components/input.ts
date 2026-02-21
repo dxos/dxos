@@ -54,6 +54,8 @@ export const infoInputValence = 'shadow-cyan-500/50 dark:shadow-cyan-600/50';
 export const warningInputValence = 'shadow-amber-500/50 dark:shadow-amber-600/50';
 export const errorInputValence = 'shadow-rose-500/50 dark:shadow-rose-600/50';
 
+export const inputTextLabel = 'text-sm text-description plb-1';
+
 const textInputSurfaceFocus =
   'transition-colors bg-textInputSurface focus:bg-focusSurface border border-separator focus:border-separator';
 
@@ -64,8 +66,6 @@ const booleanInputSurface =
 
 const booleanInputSurfaceHover =
   'hover:bg-unAccentHover hover:aria-checked:bg-accentSurfaceHover hover:aria-[checked=mixed]:bg-accentSurfaceHover';
-
-const inputTextLabel = 'text-sm text-description plb-1';
 
 export const inputValence = (valence?: MessageValence) => {
   switch (valence) {
