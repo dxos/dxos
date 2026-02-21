@@ -13,9 +13,9 @@ import { Chessboard, type ChessboardController, type ChessboardInfoProps } from 
 import { meta } from '../meta';
 import { type Chess } from '../types';
 
-export type ChessboardArticleProps = SurfaceComponentProps<Chess.Game>;
+export type ChessArticleProps = SurfaceComponentProps<Chess.Game>;
 
-export const ChessboardArticle = ({ role, subject: game }: ChessboardArticleProps) => {
+export const ChessArticle = ({ role, subject: game }: ChessArticleProps) => {
   const { t } = useTranslation(meta.id);
   const [orientation, setOrientation] = useState<Player>('white');
   const [open, setOpen] = useState(true);
@@ -68,4 +68,4 @@ export const ChessboardArticle = ({ role, subject: game }: ChessboardArticleProp
   );
 };
 
-export default ChessboardArticle;
+export default ChessArticle;

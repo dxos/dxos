@@ -9,9 +9,9 @@ import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { Chessboard } from '../components';
 import { type Chess } from '../types';
 
-export type ChessboardCardProps = SurfaceComponentProps<Chess.Game>;
+export type ChessCardProps = SurfaceComponentProps<Chess.Game>;
 
-export const ChessboardCard = ({ subject: game }: ChessboardCardProps) => {
+export const ChessCard = ({ subject: game }: ChessCardProps) => {
   return (
     <Chessboard.Root game={game}>
       <Chessboard.Content>
@@ -21,4 +21,4 @@ export const ChessboardCard = ({ subject: game }: ChessboardCardProps) => {
   );
 };
 
-export default ChessboardCard;
+export default ChessCard;

@@ -11,7 +11,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations } from '../translations';
 import { Chess } from '../types';
 
-import { ChessboardArticle } from './ChessboardArticle';
+import { ChessArticle } from './ChessArticle';
 
 type StoryProps = {
   pgn?: string;
@@ -19,11 +19,11 @@ type StoryProps = {
 
 const DefaultStory = ({ pgn }: StoryProps) => {
   const game = useMemo(() => Chess.make(pgn ? { pgn } : undefined), [pgn]);
-  return <ChessboardArticle subject={game} />;
+  return <ChessArticle subject={game} />;
 };
 
 const meta = {
-  title: 'plugins/plugin-chess/Article',
+  title: 'plugins/plugin-chess/ChessArticle',
   component: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' }), withClientProvider({ createIdentity: true })],
   parameters: {

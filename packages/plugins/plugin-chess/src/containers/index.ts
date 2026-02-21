@@ -4,5 +4,5 @@
 
 import { lazy } from 'react';
 
-export const ChessboardArticle = lazy(() => import('./ChessboardArticle'));
-export const ChessboardCard = lazy(() => import('./ChessboardCard'));
+export const ChessArticle = lazy(() => import('./ChessArticle'));
+export const ChessCard = lazy(() => import('./ChessCard'));
