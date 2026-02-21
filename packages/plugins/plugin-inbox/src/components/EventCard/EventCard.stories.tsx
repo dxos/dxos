@@ -5,7 +5,6 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
-import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { faker } from '@dxos/random';
 import { withTheme } from '@dxos/react-ui/testing';
@@ -39,8 +38,7 @@ const createMockEvent = (): Event.Event =>
     },
   });
 
-// TODO(wittjosiah): ECHO objects don't work when passed via Storybook args.
-const EventCardStory = ({ role }: Pick<SurfaceComponentProps<Event.Event>, 'role'>) => {
+const EventCardStory = () => {
   const subject = useMemo(() => createMockEvent(), []);
   return (
     <IntrinsicCardContainer>
@@ -49,7 +47,7 @@ const EventCardStory = ({ role }: Pick<SurfaceComponentProps<Event.Event>, 'role
           <Card.DragHandle />
           <Card.Title>{Obj.getLabel(subject)}</Card.Title>
         </Card.Toolbar>
-        <EventCard role={role} subject={subject} />
+        <EventCard subject={subject} />
       </Card.Root>
     </IntrinsicCardContainer>
   );
@@ -68,8 +66,4 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {
-  args: {
-    role: 'card--intrinsic',
-  },
-};
+export const Default: Story = {};
