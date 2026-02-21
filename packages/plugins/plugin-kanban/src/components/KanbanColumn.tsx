@@ -5,11 +5,9 @@
 import React, { forwardRef, useRef } from 'react';
 
 import type { Obj } from '@dxos/echo';
-import { IconButton, useTranslation } from '@dxos/react-ui';
 import { Board, type MosaicTileProps, useBoard } from '@dxos/react-ui-mosaic';
 
 import { useKanbanItemEventHandler } from '../hooks';
-import { meta } from '../meta';
 import { type ColumnStructure, UNCATEGORIZED_VALUE } from '../types';
 
 import { useKanbanBoard } from './KanbanBoard';
@@ -24,7 +22,6 @@ export type KanbanColumnProps = Pick<MosaicTileProps<ColumnStructure>, 'location
 
 export const KanbanColumn = forwardRef<HTMLDivElement, KanbanColumnProps>(
   ({ data: column, location, debug }, forwardedRef) => {
-    const { t } = useTranslation(meta.id);
     const { model } = useBoard<ColumnStructure, Obj.Unknown>(KANBAN_COLUMN_NAME);
     const { columnFieldPath, change, onCardAdd, getPivotAttributes, itemTile } = useKanbanBoard(KANBAN_COLUMN_NAME);
 
@@ -47,21 +44,13 @@ export const KanbanColumn = forwardRef<HTMLDivElement, KanbanColumnProps>(
         dragHandleRef={dragHandleRef}
         ref={forwardedRef}
       >
-        <div
-          role='none'
-          data-testid='board-column'
-          className='group/column grid bs-full overflow-hidden grid-rows-[var(--rail-action)_1fr_var(--rail-action)]'
-        >
+        <Board.Column.Grid classNames='grid-rows-[var(--rail-action)_1fr_var(--rail-action)]'>
           {uncategorized ? (
             <div className='border-be border-separator p-2' data-testid='board-column-header'>
               <span className='font-medium'>{title}</span>
             </div>
           ) : (
-            <Board.Column.Header
-              classNames='border-be border-separator'
-              label={title}
-              dragHandleRef={dragHandleRef as React.RefObject<HTMLButtonElement>}
-            />
+            <Board.Column.Header label={title} dragHandleRef={dragHandleRef as React.RefObject<HTMLButtonElement>} />
           )}
           <Board.Column.Body
             data={column}
@@ -69,21 +58,11 @@ export const KanbanColumn = forwardRef<HTMLDivElement, KanbanColumnProps>(
             Tile={itemTile as React.FC<MosaicTileProps<Obj.Unknown>>}
           />
           {onCardAdd && (
-            <div
-              role='none'
-              className='rounded-b-sm border-bs border-separator p-1'
-              data-testid='board-column-add-item'
-            >
-              <IconButton
-                icon='ph--plus--regular'
-                iconOnly
-                label={t('add card label')}
-                classNames='is-full'
-                onClick={() => onCardAdd(column.columnValue === UNCATEGORIZED_VALUE ? undefined : column.columnValue)}
-              />
-            </div>
+            <Board.Column.Footer
+              onAdd={() => onCardAdd(column.columnValue === UNCATEGORIZED_VALUE ? undefined : column.columnValue)}
+            />
           )}
-        </div>
+        </Board.Column.Grid>
       </Board.Column.Root>
     );
   },

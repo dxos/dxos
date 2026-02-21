@@ -62,6 +62,7 @@ type KanbanBoardRootProps = PropsWithChildren<
     projection: ProjectionModel;
     /** Atom of items (e.g. from AtomQuery for DB, or Atom.make([]) for in-memory). */
     items: Atom.Atom<Obj.Unknown[]>;
+    // TODO(burdon): onCardAdd/Remove
     onAddCard?: (columnValue: string | undefined) => string | undefined;
     onRemoveCard?: (card: Obj.Unknown) => void;
   }
