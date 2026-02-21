@@ -7,7 +7,7 @@ import { EditorView, ViewPlugin } from '@codemirror/view';
 import { addEventListener, combine } from '@dxos/async';
 import { Domino } from '@dxos/ui';
 
-import { scrollToLineEffect } from './smooth-scroll';
+import { scrollCancelEffect, scrollToLineEffect } from './smooth-scroll';
 
 export type AutoScrollOptions = {
   /** Threshold in px to trigger scroll from bottom. */
@@ -87,7 +87,11 @@ export const autoScroll = ({
             requestAnimationFrame(() => {
               const { scrollTop, scrollHeight, clientHeight } = view.scrollDOM;
               const delta = scrollHeight - scrollTop - clientHeight;
-              setPinned(delta === 0);
+              const pinned = delta === 0;
+              setPinned(pinned);
+              if (!pinned) {
+                view.dispatch({ effects: scrollCancelEffect.of(undefined) });
+              }
             });
           });
         }
