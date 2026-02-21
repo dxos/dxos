@@ -115,7 +115,11 @@ type BoardColumnHeaderProps = ThemedClassName<{ label: string; dragHandleRef: Re
 const BoardColumnHeader = forwardRef<HTMLDivElement, BoardColumnHeaderProps>(
   ({ classNames, label, dragHandleRef }, forwardedRef) => {
     return (
-      <Card.Toolbar classNames={mx('border-be border-separator', classNames)} data-testid='board-column-header' ref={forwardedRef}>
+      <Card.Toolbar
+        classNames={mx('border-be border-separator', classNames)}
+        data-testid='board-column-header'
+        ref={forwardedRef}
+      >
         <Card.DragHandle ref={dragHandleRef} />
         <Card.Title>{label}</Card.Title>
         <Card.Menu items={[]} />
@@ -250,7 +254,9 @@ const DefaultBoardColumn = forwardRef<HTMLDivElement, DefaultBoardColumnProps>(
       <BoardColumnRootInner location={location} data={data} dragHandleRef={dragHandleRef} ref={forwardedRef}>
         <BoardColumnGrid
           classNames={mx(
-            debug ? 'grid-rows-[var(--rail-action)_1fr_20rem]' : 'grid-rows-[var(--rail-action)_1fr_var(--rail-action)]',
+            debug
+              ? 'grid-rows-[var(--rail-action)_1fr_20rem]'
+              : 'grid-rows-[var(--rail-action)_1fr_var(--rail-action)]',
             classNames,
           )}
         >

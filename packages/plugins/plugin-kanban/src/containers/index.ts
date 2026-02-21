@@ -3,4 +3,4 @@
 //
 
 export * from './KanbanContainer';
-export * from './KanbanViewEditor'
+export * from './KanbanViewEditor';
