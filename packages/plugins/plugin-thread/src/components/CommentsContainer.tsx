@@ -5,7 +5,7 @@
 import React, { useEffect } from 'react';
 
 import { Obj, Relation } from '@dxos/echo';
-import { Callout, Icon, Trans, useTranslation } from '@dxos/react-ui';
+import { Icon, Message, Trans, useTranslation } from '@dxos/react-ui';
 import { type AnchoredTo, type Thread } from '@dxos/types';
 
 import { meta } from '../meta';
@@ -41,8 +41,8 @@ export const CommentsContainer = ({ anchors, currentId, showResolvedThreads, ...
   if (filteredAnchors.length === 0) {
     return (
       <div role='none' className='plb-cardSpacingBlock pli-cardSpacingInline'>
-        <Callout.Root>
-          <Callout.Title>
+        <Message.Root>
+          <Message.Title>
             <Trans
               {...{
                 t,
@@ -52,8 +52,8 @@ export const CommentsContainer = ({ anchors, currentId, showResolvedThreads, ...
                 },
               }}
             />
-          </Callout.Title>
-        </Callout.Root>
+          </Message.Title>
+        </Message.Root>
       </div>
     );
   }

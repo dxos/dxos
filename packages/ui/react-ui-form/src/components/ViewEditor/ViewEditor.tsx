@@ -13,7 +13,7 @@ import { Filter, Format, Obj, Query, QueryAST, type SchemaRegistry } from '@dxos
 import { EchoSchema, type JsonProp, isMutable, toJsonSchema } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { useObject } from '@dxos/react-client/echo';
-import { Callout, IconButton, Input, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { IconButton, Input, Message, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { QueryForm, type QueryFormProps } from '@dxos/react-ui-components';
 import { List } from '@dxos/react-ui-list';
 import {
@@ -36,9 +36,6 @@ import {
   FormFieldLabel,
   type FormFieldMap,
 } from '../Form';
-
-const listGrid = 'grid grid-cols-[min-content_1fr_min-content_min-content_min-content]';
-const listItemGrid = 'grid grid-cols-subgrid col-span-5';
 
 export type ViewEditorProps = ThemedClassName<
   {
@@ -162,9 +159,9 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
       <div role='none' className={mx(classNames)}>
         {/* If readonly is set, then the callout is not needed. */}
         {schemaReadonly && !readonly && (
-          <Callout.Root valence='info' classNames='mlb-cardSpacingBlock'>
-            <Callout.Title>{t('system schema description')}</Callout.Title>
-          </Callout.Root>
+          <Message.Root valence='info' classNames='mlb-cardSpacingBlock'>
+            <Message.Title>{t('system schema description')}</Message.Title>
+          </Message.Root>
         )}
 
         {/* TODO(burdon): Is the form read-only or just the schema? */}
@@ -288,17 +285,24 @@ const FieldList = ({ schema, view, registry, readonly, showHeading = false, onDe
       {({ items: fields }) => (
         <>
           {showHeading && <h3 className='text-sm'>{t('field path label')}</h3>}
-          <div role='list' className={listGrid}>
+          <div role='list' className='grid grid-cols-[min-content_1fr_min-content_min-content_min-content]'>
             {fields?.map((field) => {
               const hidden = field.visible === false;
               return (
                 <List.Item<FieldType>
                   key={field.id}
                   item={field}
-                  classNames={listItemGrid}
+                  classNames={'grid grid-cols-subgrid col-span-5'}
                   aria-expanded={expandedField === field.id}
                 >
-                  <div role='none' className={mx(subtleHover, listItemGrid, 'rounded-sm cursor-pointer min-bs-10')}>
+                  <div
+                    role='none'
+                    className={mx(
+                      subtleHover,
+                      'grid grid-cols-subgrid col-span-5',
+                      'rounded-sm cursor-pointer min-bs-10',
+                    )}
+                  >
                     <List.ItemDragHandle disabled={readonly || schemaReadonly} />
                     <List.ItemTitle classNames={hidden && 'text-subdued'} onClick={() => handleToggleField(field)}>
                       {field.path}

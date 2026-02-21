@@ -58,16 +58,18 @@ export const ChatContainer = ({
   autoFocusTextbox,
 }: ChatContainerProps) => {
   const { t } = useTranslation(meta.id);
+  const { themeMode } = useThemeContext();
+
   const id = Obj.getDXN(thread).toString();
   const identity = useIdentity()!;
   const members = useMembers(space?.id);
   const activity = useStatus(space, id);
+  const [autoFocus, setAutoFocus] = useState(autoFocusTextbox);
+  const threadScrollRef = useRef<HTMLDivElement | null>(null);
+
   // TODO(wittjosiah): This is a hack to reset the editor after a message is sent.
   const [_count, _setCount] = useState(0);
   const rerenderEditor = () => _setCount((count) => count + 1);
-  const [autoFocus, setAutoFocus] = useState(autoFocusTextbox);
-  const threadScrollRef = useRef<HTMLDivElement | null>(null);
-  const { themeMode } = useThemeContext();
 
   const textboxMetadata = getMessageMetadata(id, identity);
   const messageRef = useRef('');
@@ -128,8 +130,8 @@ export const ChatContainer = ({
         classNames,
       ]}
     >
-      <ScrollArea.Root orientation='vertical'>
-        <ScrollArea.Viewport classNames='col-span-2'>
+      <ScrollArea.Root classNames='col-span-2' orientation='vertical'>
+        <ScrollArea.Viewport ref={threadScrollRef}>
           <div role='none' className={mx(threadLayout, 'place-self-end')}>
             {thread.messages
               .map((message) => message.target)
@@ -138,8 +140,6 @@ export const ChatContainer = ({
                 <MessageContainer key={message.id} message={message} members={members} />
               ))}
           </div>
-          {/* NOTE(thure): This can't also be the `overflow-anchor` because `ScrollArea` injects an interceding node that contains this necessary ref'd element. */}
-          <div role='none' className='bs-px -mbs-px' ref={threadScrollRef} />
         </ScrollArea.Viewport>
       </ScrollArea.Root>
 
