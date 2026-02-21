@@ -86,8 +86,8 @@ const Root = forwardRef<ChessboardController, RootProps>(({ game, children }, fo
       }
 
       void click.play();
-      Obj.change(game, (g) => {
-        g.pgn = model.pgn;
+      Obj.change(game, (game) => {
+        game.pgn = model.pgn;
       });
       return true;
     },
@@ -105,16 +105,17 @@ const Root = forwardRef<ChessboardController, RootProps>(({ game, children }, fo
 // Content
 //
 
-type Role = 'card--popover' | 'card--intrinsic' | 'card--extrinsic';
+type Role = 'card--content';
 
 type ContentProps = ThemedClassName<PropsWithChildren<{ role?: Role }>>;
 
 const Content = ({ classNames, children, role }: ContentProps) => {
   return (
     <Gameboard.Content
-      classNames={mx(classNames, role === 'card--popover' && 'size-container card-square')}
-      grow={!role || role === 'card--extrinsic'}
-      contain={!role || role === 'card--extrinsic' || role === 'card--popover'}
+      classNames={mx(
+        classNames,
+        role === 'card--content' ? 'size-container card-square' : 'flex flex-col justify-center',
+      )}
     >
       {children}
     </Gameboard.Content>

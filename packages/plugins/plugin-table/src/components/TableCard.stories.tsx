@@ -24,17 +24,15 @@ import { TableCard } from './TableCard';
 
 faker.seed(1234);
 
-type StoryProps = { role: string };
-
-const DefaultStory = ({ role }: StoryProps) => {
+const DefaultStory = () => {
   const { schema, table } = useTestTableModel();
   if (!schema || !table) {
     return <div />;
   }
 
   return (
-    <CardContainer icon='ph--text-aa--regular' role={role}>
-      <TableCard role={role} object={table} />
+    <CardContainer icon='ph--text-aa--regular'>
+      <TableCard object={table} />
     </CardContainer>
   );
 };
@@ -105,20 +103,4 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Popover: Story = {
-  args: {
-    role: 'card--popover',
-  },
-};
-
-export const Intrinsic: Story = {
-  args: {
-    role: 'card--intrinsic',
-  },
-};
-
-export const Extrinsic: Story = {
-  args: {
-    role: 'card--extrinsic',
-  },
-};
+export const Default: Story = {};

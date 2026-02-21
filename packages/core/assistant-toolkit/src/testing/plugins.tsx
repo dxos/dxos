@@ -53,10 +53,6 @@ export const capabilities: Capability.Any[] = [
       ),
     }),
   ),
-
-  //
-  // Default
-  //
   Capability.contributes(
     Capabilities.ReactSurface,
     Surface.create({

@@ -61,10 +61,11 @@ const TableRoot = ({ children, role = 'article' }: TableRootProps) => {
       role='none'
       className={mx(
         'relative !border-separator [&_.dx-grid]:max-is-[--dx-grid-content-inline-size] [&_.dx-grid]:max-bs-[--dx-grid-content-block-size]',
-        role === 'card--popover' && 'popover-card-height',
         role === 'section' && 'attention-surface',
+        // TODO(burdon): Only need to support 'card--content'.
+        role === 'card--popover' && 'popover-card-height',
         role === 'card--intrinsic' && '[&_.dx-grid]:bs-[--dx-grid-content-block-size]',
-        ['card--popover', 'section', 'card--extrinsic'].includes(role) && 'overflow-hidden',
+        ['section', 'card--popover', 'card--extrinsic'].includes(role) && 'overflow-hidden',
         ['article', 'slide'].includes(role) && 'flex flex-col [&_.dx-grid]:grow [&_.dx-grid]:bs-0',
       )}
     >

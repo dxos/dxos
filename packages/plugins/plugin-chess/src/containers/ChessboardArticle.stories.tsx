@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
 import { withClientProvider } from '@dxos/react-client/testing';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '../translations';
 import { Chess } from '../types';
@@ -23,9 +23,9 @@ const DefaultStory = ({ pgn }: StoryProps) => {
 };
 
 const meta = {
-  title: 'plugins/plugin-chess/Chessboard',
+  title: 'plugins/plugin-chess/Article',
   component: DefaultStory,
-  decorators: [withTheme(), withClientProvider({ createIdentity: true })],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' }), withClientProvider({ createIdentity: true })],
   parameters: {
     layout: 'fullscreen',
     translations,

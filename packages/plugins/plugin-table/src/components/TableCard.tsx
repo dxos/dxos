@@ -5,6 +5,7 @@
 import { RegistryContext } from '@effect-atom/atom-react';
 import React, { useContext, useMemo, useRef } from 'react';
 
+import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { Filter, Obj } from '@dxos/echo';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { useQuery, useSchema } from '@dxos/react-client/echo';
@@ -20,12 +21,9 @@ import {
 import { type Table } from '@dxos/react-ui-table/types';
 import { getTypenameFromQuery } from '@dxos/schema';
 
-export type TableCardProps = {
-  role: string;
-  object: Table.Table;
-};
+export type TableCardProps = SurfaceComponentProps<Table.Table>;
 
-export const TableCard = ({ role, object }: TableCardProps) => {
+export const TableCard = ({ role, subject: object }: TableCardProps) => {
   const registry = useContext(RegistryContext);
   const tableRef = useRef<TableController>(null);
 
@@ -56,7 +54,7 @@ export const TableCard = ({ role, object }: TableCardProps) => {
   const presentation = useMemo(() => (model ? new TablePresentation(registry, model) : undefined), [registry, model]);
 
   return (
-    <Card.Root role={role}>
+    <Card.Content>
       <TableComponent.Root role={role}>
         <TableComponent.Main
           key={Obj.getDXN(object).toString()}
@@ -66,7 +64,7 @@ export const TableCard = ({ role, object }: TableCardProps) => {
           schema={schema}
         />
       </TableComponent.Root>
-    </Card.Root>
+    </Card.Content>
   );
 };
 
