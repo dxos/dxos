@@ -92,15 +92,18 @@ export const KanbanBoardRoot = ({
     return projection.tryGetFieldProjection(pivotFieldId)?.props.property;
   }, [projection, pivotFieldId]);
 
-  const getPivotAttributes = useCallback<KanbanBoardContextValue['getPivotAttributes']>((columnValue) => {
-    if (columnValue === UNCATEGORIZED_VALUE) {
-      return UNCATEGORIZED_ATTRIBUTES;
-    }
+  const getPivotAttributes = useCallback<KanbanBoardContextValue['getPivotAttributes']>(
+    (columnValue) => {
+      if (columnValue === UNCATEGORIZED_VALUE) {
+        return UNCATEGORIZED_ATTRIBUTES;
+      }
 
-    const options = projection?.tryGetFieldProjection(pivotFieldId ?? '')?.props.options ?? [];
-    const option = options.find((option) => option.id === columnValue);
-    return option ?? ({ title: columnValue, color: 'neutral' } as const);
-  }, [projection, pivotFieldId]);
+      const options = projection?.tryGetFieldProjection(pivotFieldId ?? '')?.props.options ?? [];
+      const option = options.find((option) => option.id === columnValue);
+      return option ?? ({ title: columnValue, color: 'neutral' } as const);
+    },
+    [projection, pivotFieldId],
+  );
 
   return (
     <KanbanBoardContext
@@ -156,6 +159,5 @@ export const KanbanBoard = {
 };
 
 export { useKanbanBoard };
-
 
 export type { KanbanBoardRootProps as KanbanBoardProps, KanbanCardProps, KanbanColumnProps };

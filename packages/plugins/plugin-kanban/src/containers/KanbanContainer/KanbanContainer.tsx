@@ -17,7 +17,6 @@ import { getTypenameFromQuery } from '@dxos/schema';
 import { KanbanBoard } from '../../components';
 import { useEchoChangeCallback, useProjectionModel } from '../../hooks';
 import { type Kanban, KanbanOperation } from '../../types';
-import { change } from '@dxos/echo/internal';
 
 export type KanbanContainerProps = SurfaceComponentProps<Kanban.Kanban>;
 
