@@ -113,8 +113,8 @@ const DefaultStory = () => {
       items={items}
       itemTile={KanbanCardTileSimple}
       change={state.change}
-      onAddCard={handleCardAdd}
-      onRemoveCard={handleCardRemove}
+      onCardAdd={handleCardAdd}
+      onCardRemove={handleCardRemove}
     >
       <KanbanBoard.Content />
     </KanbanBoard.Root>

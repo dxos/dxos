@@ -22,11 +22,14 @@ const KANBAN_BOARD_CONTEXT_NAME = 'KanbanBoard.Context';
 
 /**
  * Props for the card tile used inside columns.
- * Tiles can read projection, onRemoveCard, etc. from useKanbanBoard() when needed.
+ * Tiles can read projection, onCardRemove, etc. from useKanbanBoard() when needed.
  */
 export type KanbanCardTileProps = Pick<MosaicTileProps<Obj.Unknown>, 'location' | 'data' | 'debug'>;
 
-/** Context value for the Kanban board; items are Echo objects (Obj.Unknown). */
+/**
+ * Context value for the Kanban board.
+ * Items are Echo objects (Obj.Unknown).
+ */
 type KanbanBoardContextValue = {
   kanbanId: string;
   projection: ProjectionModel | undefined;
@@ -62,21 +65,20 @@ type KanbanBoardRootProps = PropsWithChildren<
     projection: ProjectionModel;
     /** Atom of items (e.g. from AtomQuery for DB, or Atom.make([]) for in-memory). */
     items: Atom.Atom<Obj.Unknown[]>;
-    // TODO(burdon): onCardAdd/Remove
-    onAddCard?: (columnValue: string | undefined) => string | undefined;
-    onRemoveCard?: (card: Obj.Unknown) => void;
+    onCardAdd?: (columnValue: string | undefined) => string | undefined;
+    onCardRemove?: (card: Obj.Unknown) => void;
   }
 >;
 
 export const KanbanBoardRoot = ({
+  children,
+  change,
+  itemTile,
   kanban,
   projection,
   items,
-  change,
-  onAddCard,
-  onRemoveCard,
-  itemTile,
-  children,
+  onCardAdd,
+  onCardRemove,
 }: KanbanBoardRootProps) => {
   const registry = useContext(RegistryContext);
   const model = useKanbanBoardModel(kanban, projection, items, registry);
@@ -112,10 +114,10 @@ export const KanbanBoardRoot = ({
       getPivotAttributes,
       itemTile,
       change,
-      onCardAdd: onAddCard,
-      onCardRemove: onRemoveCard,
+      onCardAdd,
+      onCardRemove,
     }),
-    [kanban, projection, columnFieldPath, pivotFieldId, getPivotAttributes, itemTile, change, onAddCard, onRemoveCard],
+    [kanban, projection, columnFieldPath, pivotFieldId, getPivotAttributes, itemTile, change, onCardAdd, onCardRemove],
   );
 
   return (
