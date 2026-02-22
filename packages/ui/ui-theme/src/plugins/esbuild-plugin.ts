@@ -8,7 +8,7 @@ import { basename, join, relative, resolve } from 'node:path';
 import autoprefixer from 'autoprefixer';
 import type { Plugin } from 'esbuild';
 import stylePlugin from 'esbuild-style-plugin';
-import tailwindcss from 'tailwindcss';
+import tailwindcss from '@tailwindcss/postcss';
 import type { ThemeConfig } from 'tailwindcss/plugin';
 
 import { resolveKnownPeers } from './resolveContent';

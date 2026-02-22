@@ -150,7 +150,44 @@ Tailwind CSS v4 has renamed several core utilities for better consistency:
 
 ### ✅ Fixed Issues
 
-#### 1. Utility Class Renames
+#### 1. PostCSS Plugin Migration
+
+**Breaking Change**: In Tailwind v4, the PostCSS plugin has moved to a separate package `@tailwindcss/postcss`.
+
+**Before (v3):**
+```javascript
+import tailwindcss from 'tailwindcss';
+
+module.exports = {
+  plugins: {
+    tailwindcss: {},
+    autoprefixer: {},
+  },
+};
+```
+
+**After (v4):**
+```javascript
+import tailwindcss from '@tailwindcss/postcss';
+
+module.exports = {
+  plugins: {
+    '@tailwindcss/postcss': {},
+    autoprefixer: {},
+  },
+};
+```
+
+**Files updated:**
+1. `/packages/ui/ui-theme/src/plugins/plugin.ts` - Updated import
+2. `/packages/ui/ui-theme/src/plugins/esbuild-plugin.ts` - Updated import
+3. `/packages/apps/tasks/postcss.config.cjs` - Updated plugin reference
+
+**Installation:**
+- Added `@tailwindcss/postcss: ^4.2.0` to pnpm catalog
+- Added to ui-theme dependencies
+
+#### 2. Utility Class Renames
 
 **Fixed automatically using sed:**
 
@@ -264,12 +301,14 @@ grep -rn 'grid-cols-\[[0-9a-z]*,[0-9a-z]*\]' packages/ --include="*.tsx" --inclu
 
 - ✅ Dependencies updated to v4.2.0
 - ✅ Configuration migrated to CSS-based approach
+- ✅ **PostCSS plugin migrated** to `@tailwindcss/postcss`
 - ✅ Build successful and 4.5x faster
 - ✅ No deprecated utilities found in codebase
 - ✅ **FIXED**: Utility class renames (227 files updated: 64 rounded-sm→xs + 171 rounded→sm + 18 outline)
 - ✅ **FIXED**: Important modifier placement (30 files updated)
 - ✅ **FIXED**: CSS variable syntax (2 files)
 - ✅ **FIXED**: Grid track list syntax (3 files)
+- ✅ **FIXED**: PostCSS plugin usage (3 files)
 - ⚠️ Visual regression testing pending
 - ⚠️ Full test suite pending
 

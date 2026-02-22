@@ -637,6 +637,7 @@ catalog:
   tabster: ^8.5.5
   tailwind-merge: ^2.2.1
   tailwind-scrollbar: ^4.0.0
+  '@tailwindcss/postcss': ^4.2.0
   tailwindcss: ^4.2.0
   tailwindcss-logical: ^4.0.1
   tailwindcss-radix: ^4.0.2

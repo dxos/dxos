@@ -55,6 +55,7 @@
     "@fontsource-variable/jetbrains-mono": "catalog:",
     "@fontsource/poiret-one": "catalog:",
     "@tailwindcss/forms": "catalog:",
+    "@tailwindcss/postcss": "catalog:",
     "autoprefixer": "catalog:",
     "esbuild-style-plugin": "catalog:",
     "glob": "catalog:",

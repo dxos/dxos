@@ -12,7 +12,7 @@ import autoprefixer from 'autoprefixer';
 import postcss from 'postcss';
 import postcssImport from 'postcss-import';
 import postcssNesting from 'postcss-nesting';
-import tailwindcss from 'tailwindcss';
+import tailwindcss from '@tailwindcss/postcss';
 import type { ThemeConfig } from 'tailwindcss/plugin';
 import { type Plugin, type UserConfig } from 'vite';
 
