@@ -63,7 +63,7 @@ export const QueueItem = ({ classNames, item }: ThemedClassName<{ item: any }>) 
   }
 
   return (
-    <div className={mx('grid grid-cols-[80px,1fr]', classNames)}>
+    <div className={mx('grid grid-cols-[80px_1fr]', classNames)}>
       {Object.entries(item).map(([key, value]) => (
         <Fragment key={key}>
           <div className='p-1 text-xs text-subdued'>{key}</div>
