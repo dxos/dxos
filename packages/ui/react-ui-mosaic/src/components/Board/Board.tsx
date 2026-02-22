@@ -116,7 +116,7 @@ const BoardContentInner = forwardRef<HTMLDivElement, BoardContentProps>(
             eventHandler={eventHandler}
             debug={debugHandler}
           >
-            <ScrollArea.Root orientation='horizontal' classNames='md:pbs-3' margin padding>
+            <ScrollArea.Root orientation='horizontal' classNames='md:pt-3' margin padding>
               <ScrollArea.Viewport classNames='snap-mandatory snap-x md:snap-none' ref={setViewport}>
                 <Mosaic.Stack items={items} getId={model.getColumnId} Tile={Tile} debug={debug} />
               </ScrollArea.Viewport>

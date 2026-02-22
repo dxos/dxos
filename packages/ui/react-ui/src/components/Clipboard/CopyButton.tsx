@@ -18,7 +18,7 @@ export type CopyButtonProps = ButtonProps &
     value: string;
   };
 
-const inactiveLabelStyles = 'invisible block-px -mbe-px overflow-hidden';
+const inactiveLabelStyles = 'invisible block-px -mb-px overflow-hidden';
 
 export const CopyButton = ({ classNames, value, size = 5, ...props }: CopyButtonProps) => {
   const { t } = useTranslation(osTranslations);

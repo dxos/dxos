@@ -37,7 +37,7 @@ const meta = {
           <ChatDialog.Header title='Chat' />
           <ChatDialog.Content>
             {items.map((item) => (
-              <div key={item} className='ps-4 pbe-1'>
+              <div key={item} className='pl-4 pb-1'>
                 {item}
               </div>
             ))}

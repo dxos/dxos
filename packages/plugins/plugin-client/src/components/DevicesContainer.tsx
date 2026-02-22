@@ -178,7 +178,7 @@ const InvitationSection = ({
           : 'qr-code';
   return activeView === 'init' ? (
     <>
-      <p className='text-description mbe-2'>{t('add device description')}</p>
+      <p className='text-description mb-2'>{t('add device description')}</p>
       <IconButton
         icon='ph--plus--regular'
         label={t('create device invitation label')}

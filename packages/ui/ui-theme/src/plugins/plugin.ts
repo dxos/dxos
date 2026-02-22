@@ -19,27 +19,10 @@ import { resolveKnownPeers } from './resolveContent';
 export type ThemePluginOptions = {
   srcCssPath?: string;
   virtualFileId?: string;
-  content?: string[];
   root?: string;
+  content?: string[];
   verbose?: boolean;
 };
-
-/**
- * Configures PostCSS pipeline for theme.css processing.
- */
-const createPostCSSPipeline = (config: ThemePluginOptions, content?: string[]): postcss.AcceptedPlugin[] => [
-  // Handles @import statements in CSS.
-  postcssImport(),
-  // Processes CSS nesting syntax.
-  postcssNesting(),
-  // Processes Tailwind directives and generates utilities from scanned content.
-  tailwindcss({
-    base: resolve(import.meta.dirname, '../../../..'),
-    ...(content ? { content } : {}),
-  }),
-  // Adds vendor prefixes.
-  autoprefixer,
-];
 
 /**
  * Vite plugin to configure theme.
@@ -55,15 +38,15 @@ export const ThemePlugin = (options: ThemePluginOptions): Plugin => {
     ...options,
   };
 
-  if (process.env.DEBUG) {
-    console.log('ThemePlugin config:\n', JSON.stringify(config, null, 2));
+  if (process.env.DEBUG || options.verbose) {
+    console.log('ThemePlugin:\n', JSON.stringify(config, null, 2));
   }
 
   let resolvedContent: string[] | undefined;
 
   return {
     name: 'vite-plugin-dxos-ui-theme',
-    config: async ({ root }, env): Promise<UserConfig> => {
+    config: async ({ root }): Promise<UserConfig> => {
       resolvedContent = root ? await resolveKnownPeers(config.content ?? [], root) : config.content;
       if (options.verbose) {
         console.log('[theme-plugin] content', resolvedContent);
@@ -84,3 +67,20 @@ export const ThemePlugin = (options: ThemePluginOptions): Plugin => {
     },
   };
 };
+
+/**
+ * Configures PostCSS pipeline for theme.css processing.
+ */
+const createPostCSSPipeline = (config: ThemePluginOptions, content?: string[]): postcss.AcceptedPlugin[] => [
+  // Handles @import statements in CSS.
+  postcssImport(),
+  // Processes CSS nesting syntax.
+  postcssNesting(),
+  // Processes Tailwind directives and generates utilities from scanned content.
+  tailwindcss({
+    base: resolve(import.meta.dirname, '../../../..'),
+    ...(content ? { content } : {}),
+  }),
+  // Adds vendor prefixes.
+  autoprefixer,
+];

@@ -39,7 +39,7 @@ export const TaskItem = (props: TaskItemProps) => {
 
   return (
     <li
-      className='flex items-center justify-between text-gray-700 max-is-md rounded-sm p-1 bs-8'
+      className='flex items-center justify-between text-gray-700 max-w-md rounded-sm p-1 h-8'
       onMouseOver={() => {
         onShowDelete(index);
       }}
@@ -59,7 +59,7 @@ export const TaskItem = (props: TaskItemProps) => {
         {isEditing ? (
           <span className='flex justify-between'>
             <input
-              className='border-none p-0 flex-grow bg-transparent is-full'
+              className='border-none p-0 flex-grow bg-transparent w-full'
               type='text'
               value={editingValue}
               onChange={(e) => {

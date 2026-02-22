@@ -40,7 +40,7 @@ const NAVIGATION_SIDEBAR_NAME = 'NavigationSidebar';
 const COMPLEMENTARY_SIDEBAR_NAME = 'ComplementarySidebar';
 
 const handleOpenAutoFocus = (event: Event) => {
-  !document.body.hasAttribute('data-is-keyboard') && event.preventDefault();
+  !document.body.hasAttribute('data-w-keyboard') && event.preventDefault();
 };
 
 //
@@ -401,8 +401,8 @@ const MainContent = forwardRef<HTMLDivElement, MainContentProps>(
         role={role}
         {...(handlesFocus && { ...mover })}
         {...props}
-        data-sidebar-inline-start-state={navigationSidebarState}
-        data-sidebar-inline-end-state={complementarySidebarState}
+        data-sidebar-left-state={navigationSidebarState}
+        data-sidebar-right-state={complementarySidebarState}
         data-handles-focus={handlesFocus}
         className={tx('main.content', { bounce, handlesFocus }, classNames)}
         ref={forwardedRef}

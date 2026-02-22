@@ -43,7 +43,7 @@ export const DeviceList = ({
       )}
       <Button
         variant='ghost'
-        classNames='justify-start gap-2 ps-0 pe-3 inline-full'
+        classNames='justify-start gap-2 pl-0 pr-3 inline-full'
         data-testid='devices-panel.create-invitation'
         onClick={onClickAdd}
       >

@@ -76,7 +76,7 @@ export const DeploymentDialog = ({ accessToken, scriptTemplates }: DeploymentDia
             count: scriptTemplates.length,
           })}
         </p>
-        <ul className='pbs-2'>
+        <ul className='pt-2'>
           {scriptTemplates.map((template) => {
             return <li key={template.id}>{template.name}</li>;
           })}

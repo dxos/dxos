@@ -156,12 +156,12 @@ const History = ({ classNames, model, min, max, onSelect }: HistoryProps) => {
       }}
     >
       {moves.map(([a, b], index) => (
-        <div key={index} className='grid grid-cols-[3rem_1fr_1fr_1rem] gap-2 ps-4 leading-1'>
+        <div key={index} className='grid grid-cols-[3rem_1fr_1fr_1rem] gap-2 pl-4 leading-1'>
           <div className='content-center text-xs text-subdued'>{index + 1}</div>
           {a && (
             <div
               data-index={a.index}
-              className={mx('ps-2 cursor-pointer', a.index === moveIndex - 1 && 'bg-primary-500')}
+              className={mx('pl-2 cursor-pointer', a.index === moveIndex - 1 && 'bg-primary-500')}
               onClick={() => onSelect?.(a.index + 1)}
             >
               {a.move}
@@ -170,7 +170,7 @@ const History = ({ classNames, model, min, max, onSelect }: HistoryProps) => {
           {b && (
             <div
               data-index={b.index}
-              className={mx('ps-2 cursor-pointer', b.index === moveIndex - 1 && 'bg-primary-500')}
+              className={mx('pl-2 cursor-pointer', b.index === moveIndex - 1 && 'bg-primary-500')}
               onClick={() => onSelect?.(b.index + 1)}
             >
               {b.move}

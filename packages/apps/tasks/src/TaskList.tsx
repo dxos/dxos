@@ -39,7 +39,7 @@ export const TaskList = (props: TaskListProps) => {
       >
         Share
       </button>
-      <div className='max-is-sm mx-auto'>
+      <div className='max-w-sm mx-auto'>
         <h1 className='mt-3 text-3xl font-bold leading-tight text-gray-900 mb-2'>Task List</h1>
         {tasks && (
           <ul className='mb-2'>

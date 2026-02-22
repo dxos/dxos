@@ -36,7 +36,7 @@ export const ItemList = ({ objects, debug, ...props }: ItemListProps<Obj.Any>) =
   );
 };
 
-const labelProps = 'shrink-0 is-20 text-right text-primary-500 px-2 py-[2px]';
+const labelProps = 'shrink-0 w-20 text-right text-primary-500 px-2 py-[2px]';
 
 export type ItemProps<T> = {
   object: T;
@@ -120,7 +120,7 @@ export const DebugItem = ({ object, onDelete }: Pick<ItemProps<Obj.Any>, 'object
   const meta = Obj.getMeta(object);
   const deleted = JSON.stringify(object).indexOf('@deleted') !== -1; // TODO(burdon): [API] Missing API.
   return (
-    <div className='flex is-full px-1.5 py-1 text-sm font-thin font-mono'>
+    <div className='flex w-full px-1.5 py-1 text-sm font-thin font-mono'>
       <pre className='grow'>{JSON.stringify({ id: object.id.slice(0, 8), deleted, ...meta }, undefined, 2)}</pre>
       <IconButton icon='ph--x--regular' variant='ghost' iconOnly onClick={() => onDelete(object.id)} label='Delete' />
     </div>

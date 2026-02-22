@@ -158,7 +158,7 @@ export const FullPresence = (props: MemberPresenceProps) => {
                   {members.map((member) => (
                     <ListItem.Root
                       key={member.identity.identityKey.toHex()}
-                      classNames='flex gap-2 items-center cursor-pointer mbe-2'
+                      classNames='flex gap-2 items-center cursor-pointer mb-2'
                       onClick={() => onMemberClick?.(member)}
                       data-testid='identity-list-item'
                     >
@@ -266,7 +266,7 @@ export const SmallPresence = ({ count = 0, attended, containsAttended }: SmallPr
         attended={attended}
         containsAttended={containsAttended}
         presence={count > 1 ? 'many' : count === 1 ? 'one' : 'none'}
-        classNames='self-center me-1'
+        classNames='self-center mr-1'
       />
     </Tooltip.Trigger>
   );

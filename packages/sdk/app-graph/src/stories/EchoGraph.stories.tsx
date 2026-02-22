@@ -217,13 +217,13 @@ const Controls = ({ children }: PropsWithChildren) => {
             <Input.TextInput
               autoComplete='off'
               size={5}
-              classNames='inline-[100px] text-right pe-[22px]'
+              classNames='inline-[100px] text-right pr-[22px]'
               placeholder='Interval'
               value={actionInterval}
               onChange={({ target: { value } }) => setActionInterval(value)}
             />
           </Input.Root>
-          <Icon icon='ph--timer--regular' classNames={mx('absolute inline-end-1 block-start-1 mt-[6px]', getSize(3))} />
+          <Icon icon='ph--timer--regular' classNames={mx('absolute right-1 top-1 mt-[6px]', getSize(3))} />
         </div>
         <IconButton icon='ph--plus--regular' label='Add' onClick={() => action && runAction(client, action)} />
         <Select.Root value={action?.toString()} onValueChange={(action) => setAction(action as unknown as Action)}>

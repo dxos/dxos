@@ -62,8 +62,8 @@ const AvatarStackEffect = ({
       <span
         role='none'
         className={mx(
-          'absolute inline-end-auto opacity-20',
-          reverseEffects ? 'inline-start-3' : 'inline-start-1',
+          'absolute right-auto opacity-20',
+          reverseEffects ? 'left-3' : 'left-1',
           getSize(avatarProps.size!),
         )}
       >
@@ -76,8 +76,8 @@ const AvatarStackEffect = ({
       <span
         role='none'
         className={mx(
-          'absolute inline-end-auto opacity-50',
-          reverseEffects ? 'inline-start-2' : 'inline-start-2',
+          'absolute right-auto opacity-50',
+          reverseEffects ? 'left-2' : 'left-2',
           getSize(avatarProps.size!),
         )}
       >
@@ -150,7 +150,7 @@ export const InvitationListItemImpl = ({
     <ListItem.Root
       id={invitationCode}
       {...props}
-      classNames={['flex gap-2 ps-3 pe-1 items-center relative', props.classNames]}
+      classNames={['flex gap-2 pl-3 pr-1 items-center relative', props.classNames]}
     >
       <ListItem.Heading classNames='sr-only'>
         {t(multiUse ? 'invite many list item label' : 'invite one list item label')}

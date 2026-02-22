@@ -192,7 +192,7 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
             >
               <QueryEditor
                 ref={filterEditorRef}
-                classNames='min-inline-0 ps-1'
+                classNames='min-inline-0 pl-1'
                 autoFocus
                 db={db}
                 tags={tagMap}

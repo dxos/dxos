@@ -8,7 +8,7 @@ import { mx } from '../../util';
 
 export const sizeWidthMap = new Map<Size, string>([
   [0, 'inline-0'],
-  ['px', 'is-px'], // 1px
+  ['px', 'w-px'], // 1px
   [0.5, 'inline-0.5'],
   [1, 'inline-1'],
   [1.5, 'inline-1.5'],

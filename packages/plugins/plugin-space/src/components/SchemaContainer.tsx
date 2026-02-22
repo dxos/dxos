@@ -16,7 +16,7 @@ type SchemaPanelProps = { space: Space };
 
 const itemClasses = mx([
   'container-max-width grid md:col-span-2 grid-cols-subgrid gap-trimSm items-center',
-  '*:first:!mbs-0 *:last:!mbe-0 pli-trimMd plb-trimMd',
+  '*:first:!mt-0 *:last:!mb-0 pli-trimMd plb-trimMd',
   'border border-separator rounded-md',
 ]);
 

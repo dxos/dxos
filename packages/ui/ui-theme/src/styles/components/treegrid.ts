@@ -12,14 +12,14 @@ export type TreegridStyleProps = Partial<{
 }>;
 
 const levelStyles = new Map<number, string>([
-  [1, '[&>.indent:first-of-type]:ps-0 font-medium'],
-  [2, '[&>.indent:first-of-type]:ps-0'],
-  [3, '[&>.indent:first-of-type]:ps-1'],
-  [4, '[&>.indent:first-of-type]:ps-2'],
-  [5, '[&>.indent:first-of-type]:ps-3'],
-  [6, '[&>.indent:first-of-type]:ps-4'],
-  [7, '[&>.indent:first-of-type]:ps-5'],
-  [8, '[&>.indent:first-of-type]:ps-6'],
+  [1, '[&>.indent:first-of-type]:pl-0 font-medium'],
+  [2, '[&>.indent:first-of-type]:pl-0'],
+  [3, '[&>.indent:first-of-type]:pl-1'],
+  [4, '[&>.indent:first-of-type]:pl-2'],
+  [5, '[&>.indent:first-of-type]:pl-3'],
+  [6, '[&>.indent:first-of-type]:pl-4'],
+  [7, '[&>.indent:first-of-type]:pl-5'],
+  [8, '[&>.indent:first-of-type]:pl-6'],
 ]);
 
 export const treegridRoot: ComponentFunction<TreegridStyleProps> = (_, ...etc) => mx('grid', ...etc);

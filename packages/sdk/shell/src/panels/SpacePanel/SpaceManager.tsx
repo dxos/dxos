@@ -96,7 +96,7 @@ export const SpaceManager = (props: SpaceManagerProps) => {
   return <SpaceManagerImpl {...props} invitations={invitations} inviteActions={inviteActions} />;
 };
 
-const headingFragment = 'ps-3 pe-1 py-1 mbe-1 font-medium';
+const headingFragment = 'pl-3 pr-1 py-1 mbe-1 font-medium';
 
 export const SpaceManagerImpl = (props: SpaceManagerImplProps) => {
   const {

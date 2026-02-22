@@ -58,7 +58,7 @@ const cellSpacing = 8 + 2;
 const timestampColumnWidth = 68;
 
 const authorClasses = 'font-medium text-base leading-[20px]';
-const timestampClasses = 'text-xs leading-[20px] text-description pe-0 tabular-nums';
+const timestampClasses = 'text-xs leading-[20px] text-description pr-0 tabular-nums';
 const segmentTextClasses = 'text-sm whitespace-normal hyphens-auto';
 const measureClasses = mx(
   // NOTE(thure): The `inline-start` value must equal `timestampColumnWidth` plus grid’s gap (1px)
@@ -250,7 +250,7 @@ export const Transcript: FC<TranscriptViewProps> = ({ classNames, blocks, attend
         tooltipSide='left'
         data-state={autoScroll ? 'invisible' : 'visible'}
         classNames={[
-          'absolute inline-end-2 block-end-2 opacity-0 pointer-events-none',
+          'absolute right-2 bottom-2 opacity-0 pointer-events-none',
           'data-[state="visible"]:pointer-events-auto data-[state="visible"]:opacity-100 transition-opacity',
         ]}
         onClick={handleScrollToEnd}

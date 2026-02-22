@@ -68,7 +68,7 @@ const CardRoot = forwardRef<HTMLDivElement, CardRootProps>(
         {...(id && { 'data-object-id': id })}
         {...props}
         role={role}
-        className={mx(styles.root, border && styles.border, fullWidth && 'max-is-none!', className, classNames)}
+        className={mx(styles.root, border && styles.border, fullWidth && 'max-w-none!', className, classNames)}
         ref={forwardedRef}
       >
         {children}
@@ -231,7 +231,7 @@ type CardContentProps = PropsWithChildren;
 
 const CardContent = forwardRef<HTMLDivElement, CardContentProps>(({ children, ...props }, forwardedRef) => {
   return (
-    <div role='none' className='contents [&>:last-child]:pbe-1' {...props} ref={forwardedRef}>
+    <div role='none' className='contents [&>:last-child]:pb-1' {...props} ref={forwardedRef}>
       {children}
     </div>
   );
@@ -328,7 +328,7 @@ const CardPoster = (props: CardPosterProps) => {
   const aspect = props.aspect === 'auto' ? 'aspect-auto' : 'aspect-video';
   if (props.image) {
     return (
-      <div role='none' className='mbe-1'>
+      <div role='none' className='mb-1'>
         <Image classNames={[styles.poster, aspect, props.classNames]} src={props.image} alt={props.alt} />
       </div>
     );

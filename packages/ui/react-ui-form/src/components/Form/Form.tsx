@@ -295,7 +295,7 @@ const FormSubmit = ({ classNames, label, icon, disabled }: FormSubmitProps) => {
   }
 
   return (
-    <div role='none' className={mx('flex inline-full pbs-formSpacing', classNames)}>
+    <div role='none' className={mx('flex inline-full pt-formSpacing', classNames)}>
       <IconButton
         classNames='inline-full'
         type='submit'

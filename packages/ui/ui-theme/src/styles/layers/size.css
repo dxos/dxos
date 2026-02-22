@@ -12,7 +12,7 @@
 }
 
 .container-max-width {
-  @apply inline-full max-is-container-max-width mx-auto;
+  @apply inline-full max-inline-[var(--dx-container-max-width)] mx-auto;
 }
 
 /**
@@ -27,15 +27,15 @@
 }
 
 .card-default-width {
-  @apply is-card-default-width;
+  @apply inline-[var(--dx-card-default-width)];
 }
 
 .card-min-width {
-  @apply min-is-card-min-width;
+  @apply min-inline-[var(--dx-card-min-width)];
 }
 
 .card-max-width {
-  @apply inline-full max-is-card-max-width;
+  @apply inline-full max-inline-[var(--dx-card-max-width)];
 }
 
 .popover-card {
@@ -229,7 +229,7 @@
 
   [data-size='px'],
   [data-inline-size='px'] {
-    @apply is-px;
+    @apply inline-px;
   }
 
   [data-size='0.5'],

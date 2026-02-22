@@ -74,7 +74,7 @@ const ChatDialogRoot = ({
             inOverlayLayout
             classNames={[
               'grid grid-rows-[var(--rail-action)_1fr_min-content] p-0 overflow-hidden',
-              'box-content md:inline-[35rem] md:max-is-none pointer-events-auto',
+              'box-content md:inline-[35rem] md:max-w-none pointer-events-auto',
             ]}
             onEscapeKeyDown={onEscape}
             onInteractOutside={preventDefault}

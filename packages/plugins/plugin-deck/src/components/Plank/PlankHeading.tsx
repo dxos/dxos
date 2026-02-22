@@ -152,7 +152,7 @@ export const PlankHeading = memo(
     return (
       <StackItem.Heading
         classNames={[
-          'py-1 items-stretch gap-1 sticky inline-start-12 app-drag min-inline-0 contain-layout density-coarse',
+          'py-1 items-stretch gap-1 sticky left-12 app-drag min-inline-0 contain-layout density-coarse',
           part === 'solo' ? soloInlinePadding : 'px-1',
           ...(layoutMode === 'solo--fullscreen'
             ? [

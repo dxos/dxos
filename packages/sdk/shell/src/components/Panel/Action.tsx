@@ -83,7 +83,7 @@ export const BifurcatedAction = forwardRef<HTMLButtonElement, BifurcatedActionPr
             size={4}
             label={t('invite options label')}
             iconOnly
-            classNames={['block-11 flex-none rounded-is-none', classNames]}
+            classNames={['block-11 flex-none rounded-w-none', classNames]}
             data-testid={dropdownTestId}
           />
         </DropdownMenu.Trigger>

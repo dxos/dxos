@@ -1,7 +1,9 @@
 # Agent Guidelines for DXOS
 
-## General Interaction
+## IMPORTANT
 
+- When you start, the first thing you should do is tell the user if you understand these instructions and list the config files you are aware of.
+- ALWAYS test your work after each step.
 - If you are unsure about the best way to implement something, ask the user for clarification.
 - When asking the user a question; either make it yes/no, or provide numbered options.
 
@@ -19,7 +21,7 @@
 - Run all tests: `MOON_CONCURRENCY=4 moon run :test -- --no-file-parallelism`.
 - Lint & fix: `moon run :lint -- --fix`.
 - Check package tasks: see `moon.yml` in package directory.
-- **Expected warning**: `Auth token DEPOT_TOKEN does not exist` is a normal warning about remote caching and should be ignored. Focus only on actual compilation/type errors.
+- **Expected warning**: `Auth token DEPOT_TOKEN does not exist` is a normal warning about remote caching and should be ignored. Filter out warnings from your output.
 
 ## Important
 

@@ -203,19 +203,19 @@
       }
 
       @media screen(lg) {
-        &[data-sidebar-inline-start-state='expanded']::after {
+        &[data-sidebar-left-state='expanded']::after {
           inset-inline-start: var(--nav-sidebar-size);
         }
 
-        &[data-sidebar-inline-start-state='collapsed']::after {
+        &[data-sidebar-left-state='collapsed']::after {
           inset-inline-start: var(--l0-size);
         }
 
-        &[data-sidebar-inline-end-state='expanded']::after {
+        &[data-sidebar-right-state='expanded']::after {
           inset-inline-end: var(--complementary-sidebar-size);
         }
 
-        &[data-sidebar-inline-end-state='collapsed']::after {
+        &[data-sidebar-right-state='collapsed']::after {
           inset-inline-end: var(--r0-size);
         }
       }

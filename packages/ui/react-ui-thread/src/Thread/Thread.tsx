@@ -60,7 +60,7 @@ const ThreadHeader = forwardRef<HTMLParagraphElement, ThreadHeaderProps>(
             data-testid='thread.heading'
             {...props}
             className={mx(
-              'me-2 text-description font-medium truncate italic',
+              'mr-2 text-description font-medium truncate italic',
               detached && 'line-through decoration-1',
             )}
             ref={forwardedRef}
@@ -88,7 +88,7 @@ const ThreadStatus = forwardRef<HTMLDivElement, ThreadStatusProps>(
       <div
         {...props}
         className={mx(
-          'col-start-2 grid grid-cols-[min-content_1fr_max-content] pb-2 pe-2 text-xs text-description',
+          'col-start-2 grid grid-cols-[min-content_1fr_max-content] pb-2 pr-2 text-xs text-description',
           classNames,
         )}
         ref={forwardedRef}

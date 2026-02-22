@@ -137,7 +137,7 @@ export const MembersContainer = ({ space, createInvitationUrl }: MembersContaine
             </Settings.FrameItem>
             {locked && (
               <Settings.FrameItem title={t('invitations label')}>
-                <p className='text-description mbe-2'>{t('locked space description')}</p>
+                <p className='text-description mb-2'>{t('locked space description')}</p>
               </Settings.FrameItem>
             )}
             {!locked && (
@@ -145,7 +145,7 @@ export const MembersContainer = ({ space, createInvitationUrl }: MembersContaine
                 {selectedInvitation && <InvitationSection {...selectedInvitation} onBack={handleBack} />}
                 {!selectedInvitation && (
                   <>
-                    <p className='text-description mbe-2'>{t('space invitation description')}</p>
+                    <p className='text-description mb-2'>{t('space invitation description')}</p>
                     <InvitationList
                       className='mb-2'
                       send={handleSend}
@@ -165,7 +165,7 @@ export const MembersContainer = ({ space, createInvitationUrl }: MembersContaine
             )}
           </Settings.Frame>
           {/* TODO(wittjosiah): Make Settings.ItemInput & Settings.Frame compatible. */}
-          <div className='justify-center p-0 mbs-4 container-max-width grid grid-cols-1 md:grid-cols-[1fr_min-content]'>
+          <div className='justify-center p-0 mt-4 container-max-width grid grid-cols-1 md:grid-cols-[1fr_min-content]'>
             <Settings.ItemInput title={t('space locked label')} description={t('space locked description')}>
               <Input.Switch checked={locked} onCheckedChange={handleChangeLocked} classNames='justify-self-end' />
             </Settings.ItemInput>

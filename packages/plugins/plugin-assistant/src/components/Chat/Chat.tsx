@@ -374,7 +374,7 @@ const ChatPrompt = ({
           ref={editorRef}
           autoFocus
           lineWrapping
-          classNames='col-span-2 pbs-0.5'
+          classNames='col-span-2 pt-0.5'
           placeholder={placeholder ?? t('prompt placeholder')}
           extensions={extensions}
           onSubmit={handleSubmit}

@@ -20,7 +20,7 @@ export const avatarRoot: ComponentFunction<AvatarStyleProps> = ({ size = 10, inG
   mx(
     'relative inline-flex shrink-0',
     getSize(size),
-    inGroup && (size === 'px' || size <= 3 ? '-me-1' : '-me-2'),
+    inGroup && (size === 'px' || size <= 3 ? '-mr-1' : '-mr-2'),
     ...etc,
   );
 
@@ -37,10 +37,10 @@ export const avatarStatusIcon: ComponentFunction<AvatarStyleProps> = ({ status, 
     'absolute bottom-0 end-0',
     getSize(size),
     status === 'inactive'
-      ? 'text-amber-350 dark:text-amber-250'
+      ? 'text-amber-400 dark:text-amber-300'
       : status === 'active'
-        ? 'text-emerald-350 dark:text-emerald-250'
-        : 'text-neutral-350 dark:text-neutral-250',
+        ? 'text-emerald-400 dark:text-emerald-300'
+        : 'text-neutral-400 dark:text-neutral-300',
     ...etc,
   );
 

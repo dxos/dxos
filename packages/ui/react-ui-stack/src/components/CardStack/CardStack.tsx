@@ -102,7 +102,7 @@ const CardStackStack = forwardRef<
 // Item
 //
 
-const cardStackItem = 'contain-layout px-2 py-1 first-of-type:pbs-0 last-of-type:pbe-0';
+const cardStackItem = 'contain-layout px-2 py-1 first-of-type:pt-0 last-of-type:pb-0';
 
 const CardStackItem = forwardRef<HTMLDivElement, SharedCardStackProps>(
   ({ children, classNames, asChild, role = 'none', ...props }, forwardedRef) => {
@@ -123,7 +123,7 @@ const CardStackItem = forwardRef<HTMLDivElement, SharedCardStackProps>(
 // Heading
 //
 
-const cardStackHeading = 'mx-2 order-first bg-transparent rounded-bs-md flex items-center';
+const cardStackHeading = 'mx-2 order-first bg-transparent rounded-h-md flex items-center';
 
 const CardStackHeading = forwardRef<HTMLDivElement, SharedCardStackProps>(
   ({ children, classNames, asChild, role = 'heading', ...props }, forwardedRef) => {

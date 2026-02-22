@@ -30,7 +30,7 @@ const SETTINGS_ITEM_NAME = 'Settings.Item';
 const SETTINGS_ITEM_INPUT_NAME = 'Settings.ItemInput';
 
 const styles = {
-  title: 'pbe-trimMd text-baseText text-lg',
+  title: 'pb-trimMd text-baseText text-lg',
   description: 'text-base text-description',
   grid: 'grid grid-cols-1 md:grid-cols-[1fr_1fr] gap-x-trimLg',
 };
@@ -64,7 +64,7 @@ const SettingsSection = ({ title, description, children }: SettingsSectionProps)
   return (
     <>
       <SettingsSectionHeading title={title} description={description} />
-      <div className='inline-full pbs-trimMd space-y-trimMd'>{children}</div>
+      <div className='inline-full pt-trimMd space-y-trimMd'>{children}</div>
     </>
   );
 };
@@ -79,7 +79,7 @@ const SettingsSectionHeading = ({ title, description }: Omit<SettingsSectionProp
   const { t } = useTranslation(translationKey);
   return (
     <>
-      <h2 className='pli-trimMd container-max-width text-xl mbs-trimMd mbe-trimMd'>{toLocalizedString(title, t)}</h2>
+      <h2 className='pli-trimMd container-max-width text-xl mt-trimMd mb-trimMd'>{toLocalizedString(title, t)}</h2>
       {description && (
         <p className='pli-trimMd mlb-trimMd container-max-width text-description'>
           {toLocalizedString(description, t)}
@@ -136,8 +136,8 @@ const SettingsFrameItem = ({ title, description, children }: SettingsItemProps) 
 
   return (
     <div role='group' className='min-inline-0'>
-      <h3 className='text-lg mbe-2'>{toLocalizedString(title, t)}</h3>
-      {description && <p className='mlb-trimSm md:mbe-0 text-description'>{toLocalizedString(description, t)}</p>}
+      <h3 className='text-lg mb-2'>{toLocalizedString(title, t)}</h3>
+      {description && <p className='mlb-trimSm md:mb-0 text-description'>{toLocalizedString(description, t)}</p>}
       {children}
     </div>
   );
@@ -155,7 +155,7 @@ const SettingsContainer = ({ classNames, children }: ThemedClassName<PropsWithCh
       role='none'
       className={mx([
         'container-max-width',
-        '*:first:!mbs-0 *:last:!mbe-0 pli-trimMd plb-trimMd',
+        '*:first:!mt-0 *:last:!mb-0 pli-trimMd plb-trimMd',
         'border border-separator rounded-md',
         classNames,
       ])}

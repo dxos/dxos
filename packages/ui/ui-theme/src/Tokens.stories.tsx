@@ -41,7 +41,7 @@ const DefaultStory = () => {
     <>
       <div className='flex'>
         <div className='p-2 bg-baseSurface rounded-sm'>
-          <h1 className='text-lg mbe-2'>Physical color tokens</h1>
+          <h1 className='text-lg mb-2'>Physical color tokens</h1>
           <pre className='text-xs'>
             Luminosity (/ alpha)?
             <br />
@@ -56,7 +56,7 @@ const DefaultStory = () => {
 
       {Object.entries(colorAudit).map(([seriesId, audits], i) => (
         <Fragment key={i}>
-          <h2 className='mbs-12 mbe-4'>
+          <h2 className='mt-12 mb-4'>
             <span className='px-2 py-1 bg-baseSurface rounded-sm'>{seriesId}</span>
           </h2>
           <dl className='flex flex-wrap gap-2'>
@@ -77,8 +77,11 @@ const DefaultStory = () => {
 };
 
 const meta = {
-  title: 'ui/react-ui-theme/Tokens',
+  title: 'ui/ui-theme/Tokens',
   render: DefaultStory,
+  parameters: {
+    layout: 'fullscreen',
+  },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;
@@ -86,3 +89,13 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
+
+export const Experimental = {
+  render: () => {
+    return (
+      <div className='absolute inset-0 grid place-items-center'>
+        <div className='p-test text-test border border-separator rounded-md'>Experimental</div>
+      </div>
+    );
+  },
+};

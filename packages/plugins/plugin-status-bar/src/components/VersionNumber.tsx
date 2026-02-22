@@ -48,7 +48,7 @@ export const VersionNumber = () => {
               <br />
               <Link href={previewUrl} target='_blank' rel='noreferrer' variant='neutral'>
                 {t('learn more label')}
-                <Icon icon='ph--arrow-square-out--bold' classNames='inline ms-1' />
+                <Icon icon='ph--arrow-square-out--bold' classNames='inline ml-1' />
               </Link>
             </Message.Content>
           </Message.Root>
@@ -61,7 +61,7 @@ export const VersionNumber = () => {
                 <br />
                 <Link href={releaseUrl} target='_blank' rel='noreferrer' variant='neutral'>
                   {t('see release label')}
-                  <Icon icon='ph--arrow-square-out--bold' classNames='inline ms-1' />
+                  <Icon icon='ph--arrow-square-out--bold' classNames='inline ml-1' />
                 </Link>
               </p>
             )}

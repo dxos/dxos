@@ -84,7 +84,7 @@ const meta = {
     withTheme(),
     withLayout({
       layout: 'column',
-      classNames: 'is-proseMaxWidth',
+      classNames: 'w-proseMaxWidth',
     }),
   ],
 } satisfies Meta<typeof DefaultStory>;

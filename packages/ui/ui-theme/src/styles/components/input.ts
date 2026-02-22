@@ -123,7 +123,7 @@ const inputInput: ComponentFunction<InputStyleProps> = (props, ...etc) =>
           ...etc,
         );
 
-const inputTextArea: ComponentFunction<InputStyleProps> = (props, ...etc) => inputInput(props, ...['-mbe-1.5', ...etc]);
+const inputTextArea: ComponentFunction<InputStyleProps> = (props, ...etc) => inputInput(props, ...['-mb-1.5', ...etc]);
 
 const inputCheckbox: ComponentFunction<InputStyleProps> = ({ size = 5 }, ...etc) =>
   mx('dx-checkbox dx-focus-ring', getSize(size), ...etc);

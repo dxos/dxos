@@ -135,7 +135,7 @@ export const Chat = ({ classNames, host, url }: ChatProps) => {
             value={text}
             onChange={(ev) => setText(ev.target.value)}
             onKeyDown={(ev) => ev.key === 'Enter' && handleSubmit()}
-            classNames='px-2 pbs-[4px] pbe-[4px] is-full rounded-none text-lg ring-none! ring-sky-500!'
+            classNames='px-2 pbs-[4px] pbe-[4px] w-full rounded-none text-lg ring-none! ring-sky-500!'
           />
         </Input.Root>
         {filteredMessages.length > 0 && (
@@ -153,7 +153,7 @@ export const Chat = ({ classNames, host, url }: ChatProps) => {
 
       {/* TODO(burdon): Replace with ChatThread. */}
       {filteredMessages.length > 0 && (
-        <ScrollContainer.Root pin classNames='max-bs-[480px] p-3'>
+        <ScrollContainer.Root pin classNames='max-h-[480px] p-3'>
           <ScrollContainer.Viewport classNames='scrollbar-none'>
             {filteredMessages.map((message, i) => (
               <div key={i} className={mx('flex', 'text-base', message.role === 'user' && 'justify-end my-3')}>

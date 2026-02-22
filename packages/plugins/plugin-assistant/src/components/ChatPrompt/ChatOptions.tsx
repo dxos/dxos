@@ -136,7 +136,7 @@ const BlueprintsPanel = ({
           })}
         </SearchList.Viewport>
       </SearchList.Content>
-      <SearchList.Input placeholder={t('search placeholder')} classNames='mbe-cardChrome' autoFocus />
+      <SearchList.Input placeholder={t('search placeholder')} classNames='mb-cardChrome' autoFocus />
     </SearchList.Root>
   );
 };
@@ -220,7 +220,7 @@ const ObjectsPanel = ({ db, context }: Pick<ChatOptionsProps, 'db' | 'context'>)
         </SearchList.Viewport>
       </SearchList.Content>
 
-      <div role='none' className='grid grid-cols-[min-content_1fr] gap-2 pli-cardChrome mbe-cardChrome'>
+      <div role='none' className='grid grid-cols-[min-content_1fr] gap-2 pli-cardChrome mb-cardChrome'>
         <Select.Root value={typename === ANY ? undefined : typename} onValueChange={setTypename}>
           <Select.TriggerButton density='fine' placeholder={t('type filter placeholder')} />
           <Select.Portal>
@@ -239,7 +239,7 @@ const ObjectsPanel = ({ db, context }: Pick<ChatOptionsProps, 'db' | 'context'>)
             </Select.Content>
           </Select.Portal>
         </Select.Root>
-        <SearchList.Input placeholder={t('search placeholder')} classNames='mbe-0' autoFocus />
+        <SearchList.Input placeholder={t('search placeholder')} classNames='mb-0' autoFocus />
       </div>
     </SearchList.Root>
   );

@@ -34,7 +34,7 @@ export const tailwindConfig = ({
     },
     extend: merge(
       {
-        // Generates is-card-default-width, is-card-min-width, etc.
+        // Generates w-card-default-width, w-card-min-width, etc.
         spacing: {
           'prose-max-width': 'var(--dx-prose-max-width)',
           'container-max-width': 'var(--dx-container-max-width)',

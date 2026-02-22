@@ -30,7 +30,7 @@ export class SelectWidget extends WidgetType {
     );
     return Domino.of('div')
       .attributes({ role: 'group' })
-      .classNames('flex flex-wrap mbs-2 mbe-2 gap-1')
+      .classNames('flex flex-wrap mt-2 mb-2 gap-1')
       .children(...buttons).root;
   }
 }

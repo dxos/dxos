@@ -28,7 +28,7 @@ const TaskList = ({ id, spaceId }: { id: number; spaceId?: SpaceId }) => {
   };
 
   return (
-    <div className='grow max-is-lg mbs-4 mx-1'>
+    <div className='grow max-w-lg mbs-4 mx-1'>
       <h2 className='mbe-2 font-bold'>{`Peer ${id + 1}`}</h2>
       <Input.Root>
         <Input.Label srOnly>Create new item</Input.Label>

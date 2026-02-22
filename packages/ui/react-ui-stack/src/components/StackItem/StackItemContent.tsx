@@ -44,7 +44,7 @@ export const StackItemContent = forwardRef<HTMLDivElement, StackItemContentProps
           stackItemSize === 'contain' && 'min-block-0 overflow-hidden',
           toolbar &&
             role === 'section' &&
-            '[&_.dx-toolbar]:sticky [&_.dx-toolbar]:z-[1] [&_.dx-toolbar]:top-0 [&_.dx-toolbar]:-mbe-px [&_.dx-toolbar]:min-inline-0',
+            '[&_.dx-toolbar]:sticky [&_.dx-toolbar]:z-[1] [&_.dx-toolbar]:top-0 [&_.dx-toolbar]:-mb-px [&_.dx-toolbar]:min-inline-0',
           toolbar && '[&>.dx-toolbar]:relative [&>.dx-toolbar]:border-be [&>.dx-toolbar]:border-subduedSeparator',
           classNames,
         )}

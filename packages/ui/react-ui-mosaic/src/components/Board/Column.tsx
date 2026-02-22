@@ -56,7 +56,7 @@ const BoardColumnRootInner = forwardRef<HTMLDivElement, PropsWithChildren<BoardC
         <Focus.Group
           classNames={mx(
             // NOTE: Reserves 2px for outer Focus.Group border.
-            'block-full overflow-hidden inline-[calc(100vw-2px)] md:is-card-default-width snap-center bg-deckSurface',
+            'block-full overflow-hidden inline-[calc(100vw-2px)] md:w-card-default-width snap-center bg-deckSurface',
             classNames,
           )}
           ref={forwardedRef}

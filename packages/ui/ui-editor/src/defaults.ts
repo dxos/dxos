@@ -16,7 +16,7 @@ export const editorWidth = '!mx-auto inline-full max-inline-[min(50rem,100%-4rem
 
 export const editorSlots: ThemeExtensionsOptions['slots'] = {
   scroll: {
-    className: 'pbs-2',
+    className: 'pt-2',
   },
   content: {
     className: editorWidth,
@@ -29,6 +29,6 @@ export const editorWithToolbarLayout =
 // NOTE: Padding is added to the editor to account for the focus ring (since otherwise the CM gutter will clip it)
 export const stackItemContentEditorClassNames = (role?: string) =>
   mx(
-    'p-0.5 dx-focus-ring-inset attention-surface data-[toolbar=disabled]:pbs-2',
+    'p-0.5 dx-focus-ring-inset attention-surface data-[toolbar=disabled]:pt-2',
     role === 'section' ? '[&_.cm-scroller]:overflow-hidden [&_.cm-scroller]:min-block-24' : 'min-block-0',
   );

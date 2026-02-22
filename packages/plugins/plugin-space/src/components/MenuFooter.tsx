@@ -21,10 +21,10 @@ export const MenuFooter = ({ object }: { object: Obj.Unknown }) => {
     <>
       <DropdownMenu.Separator />
       <DropdownMenu.GroupLabel>{t('menu footer label')}</DropdownMenu.GroupLabel>
-      <dl className='ps-2 mbe-2 text-xs grid grid-cols-[max-content_1fr] gap-2'>
-        <dt className='uppercase text-[.75em] tracking-wide font-medium mbs-px self-start'>{t('location label')}</dt>
+      <dl className='pl-2 mb-2 text-xs grid grid-cols-[max-content_1fr] gap-2'>
+        <dt className='uppercase text-[.75em] tracking-wide font-medium mt-px self-start'>{t('location label')}</dt>
         <dd className='line-clamp-3'>
-          <Icon icon='ph--planet--regular' classNames='inline-block me-1' />
+          <Icon icon='ph--planet--regular' classNames='inline-block mr-1' />
           {toLocalizedString(spaceName, t)}
         </dd>
       </dl>

@@ -109,8 +109,8 @@ export const ResetDialog = ({
         : { defaultOpen, open, onOpenChange })}
     >
       <AlertDialog.Overlay>
-        {/* TODO(burdon): Replace max-is-[40rem] with standard size. */}
-        <AlertDialog.Content classNames='md:max-is-[40rem]' data-testid='resetDialog'>
+        {/* TODO(burdon): Replace max-w-[40rem] with standard size. */}
+        <AlertDialog.Content classNames='md:max-w-[40rem]' data-testid='resetDialog'>
           <AlertDialog.Title>{t(error ? error.title : 'reset dialog label')}</AlertDialog.Title>
           <AlertDialog.Description>{t(error ? error.message : 'reset dialog message')}</AlertDialog.Description>
           {error && (
@@ -129,7 +129,7 @@ export const ResetDialog = ({
                 <Message.Root
                   key={error.message}
                   valence='error'
-                  classNames='my-4 overflow-auto max-bs-72 relative'
+                  classNames='my-4 overflow-auto max-h-72 relative'
                   data-testid='resetDialog.stackTrace'
                 >
                   <pre className='text-xs whitespace-pre-line'>{error.stack}</pre>

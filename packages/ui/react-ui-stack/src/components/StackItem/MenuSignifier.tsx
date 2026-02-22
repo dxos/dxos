@@ -27,7 +27,7 @@ export const MenuSignifierHorizontal = () => (
 );
 
 export const MenuSignifierVertical = () => (
-  <svg className='absolute inline-start-1' width={2} height={18} viewBox='0 0 2 18' stroke='currentColor'>
+  <svg className='absolute left-1' width={2} height={18} viewBox='0 0 2 18' stroke='currentColor'>
     <line x1={1} y1={3} x2={1} y2={18} strokeWidth={1.5} strokeLinecap='round' strokeDasharray='0 6' />
   </svg>
 );

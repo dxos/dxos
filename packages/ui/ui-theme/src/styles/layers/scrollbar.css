@@ -1,10 +1,10 @@
 /* Pseudo-classes are not supported by Tailwind. */
 @layer components {
   ::-webkit-scrollbar-thumb:hover {
-    @apply bg-scrollbarThumbHover !important;
+    @apply bg-scrollbarThumbHover!;
   }
   ::-webkit-scrollbar-thumb:active {
-    @apply bg-scrollbarThumbActive !important;
+    @apply bg-scrollbarThumbActive!;
   }
 
   .dx-scrollbar-thin::-webkit-scrollbar {

@@ -13,7 +13,7 @@ import { AttentionGlyph, type AttentionGlyphProps } from './AttentionGlyph';
 
 const DefaultStory = (props: AttentionGlyphProps) => {
   return (
-    <ul className='flex gap-2 mbe-2'>
+    <ul className='flex gap-2 mb-2'>
       <li>
         <AttentionGlyph presence='none' {...props} />
       </li>

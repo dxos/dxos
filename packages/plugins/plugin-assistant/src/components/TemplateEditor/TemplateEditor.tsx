@@ -53,7 +53,7 @@ export const TemplateEditor = ({ id, classNames, template, lineNumbers = true }:
         }),
         createThemeExtensions({
           themeMode,
-          slots: { content: { className: '!pe-4' } },
+          slots: { content: { className: '!pr-4' } },
         }),
         createMarkdownExtensions(),
         decorateMarkdown(),

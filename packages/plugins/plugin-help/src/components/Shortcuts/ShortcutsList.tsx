@@ -26,7 +26,7 @@ export const ShortcutsList = () => {
       {bindings.map((binding, i) => (
         <Fragment key={i}>
           <Key binding={binding.shortcut} />
-          <span role='definition' className='ms-4' aria-labelledby={binding.shortcut}>
+          <span role='definition' className='ml-4' aria-labelledby={binding.shortcut}>
             {toLocalizedString(binding.data, t)}
           </span>
         </Fragment>

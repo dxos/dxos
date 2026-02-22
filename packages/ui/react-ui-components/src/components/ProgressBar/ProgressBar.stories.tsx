@@ -64,7 +64,7 @@ const DefaultStory = ({ items, ...props }: StoryProps) => {
           onSelect={(node) => setIndex((index) => (index === node.index ? undefined : node.index))}
           {...props}
         />
-        <TextCrawl lines={lines} index={index} autoAdvance classNames='ps-4 text-sm text-subdued' />
+        <TextCrawl lines={lines} index={index} autoAdvance classNames='pl-4 text-sm text-subdued' />
       </div>
     </div>
   );

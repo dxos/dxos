@@ -22,7 +22,7 @@
 
   .dx-tag[data-hue='neutral'],
   .dx-tag--neutral {
-    @apply bg-separator text-neutral-700 dark:text-neutral-150;
+    @apply bg-separator text-neutral-700 dark:text-neutral-200;
   }
 
   .dx-tag[data-hue='red'],

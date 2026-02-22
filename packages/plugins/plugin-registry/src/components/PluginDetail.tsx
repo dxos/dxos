@@ -39,12 +39,12 @@ export const PluginDetail = ({ plugin, enabled, onEnabledChange }: PluginDetailP
             <Icon classNames={mx('p-1 rounded-sm', styles.bg, styles.icon)} icon={icon} size={14} />
           </div>
           <div role='none' className='flex flex-col gap-6'>
-            <div role='none' className='grid grid-cols-[1fr_min-content] gap-x-3 inline-full pbs-1'>
+            <div role='none' className='grid grid-cols-[1fr_min-content] gap-x-3 inline-full pt-1'>
               <h2 className='text-xl'>{name}</h2>
               <Input.Root>
                 <Input.Switch classNames='self-center' checked={enabled} onCheckedChange={onEnabledChange} />
               </Input.Root>
-              <p className='pbs-0.5 text-sm text-description'>{id}</p>
+              <p className='pt-0.5 text-sm text-description'>{id}</p>
             </div>
             <div role='none'>
               <p className='text-description'>{description}</p>

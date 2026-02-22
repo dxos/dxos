@@ -28,7 +28,7 @@ export const ChatReferences = ({ classNames, context, db }: ChatReferencesProps)
         const typename = Obj.getTypename(obj);
         const label: Label = Obj.getLabel(obj) ?? (typename ? ['object name placeholder', { ns: typename }] : obj.id);
         return (
-          <li key={dxn.toString()} className='dx-tag py-0 ps-2 flex items-center' data-hue='neutral'>
+          <li key={dxn.toString()} className='dx-tag py-0 pl-2 flex items-center' data-hue='neutral'>
             {toLocalizedString(label, t)}
             <IconButton
               icon='ph--x--bold'

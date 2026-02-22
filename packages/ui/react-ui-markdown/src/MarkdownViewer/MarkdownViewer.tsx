@@ -36,21 +36,21 @@ export const MarkdownViewer = ({ classNames, children, components, content = '' 
 
 const defaultComponents: ReactMarkdownOptions['components'] = {
   h1: ({ children }) => {
-    return <h1 className='pbs-1 pbe-1 text-xl'>{children}</h1>;
+    return <h1 className='pt-1 pb-1 text-xl'>{children}</h1>;
   },
   h2: ({ children }) => {
-    return <h2 className='pbs-1 pbe-1 text-lg'>{children}</h2>;
+    return <h2 className='pt-1 pb-1 text-lg'>{children}</h2>;
   },
   h3: ({ children }) => {
-    return <h3 className='pbs-1 pbe-1 text-base'>{children}</h3>;
+    return <h3 className='pt-1 pb-1 text-base'>{children}</h3>;
   },
   blockquote: ({ children, ...props }) => (
-    <blockquote className='ps-4 mbs-2 mbe-2 pbs-2 pbe-2 border-l-4 border-accentText text-accentText' {...props}>
+    <blockquote className='pl-4 mt-2 mb-2 pt-2 pb-2 border-l-4 border-accentText text-accentText' {...props}>
       {children}
     </blockquote>
   ),
   p: ({ children }) => {
-    return <div className='pbs-1 pbe-1'>{children}</div>;
+    return <div className='pt-1 pb-1'>{children}</div>;
   },
   a: ({ children, href, ...props }) => (
     <a
@@ -64,12 +64,12 @@ const defaultComponents: ReactMarkdownOptions['components'] = {
     </a>
   ),
   ol: ({ children, ...props }) => (
-    <ol className='pbs-1 pbe-1 ps-6 leading-tight list-decimal' {...props}>
+    <ol className='pt-1 pb-1 pl-6 leading-tight list-decimal' {...props}>
       {children}
     </ol>
   ),
   ul: ({ children, ...props }) => (
-    <ul className='pbs-1 pbe-1 ps-6 leading-tight list-disc' {...props}>
+    <ul className='pt-1 pb-1 pl-6 leading-tight list-disc' {...props}>
       {children}
     </ul>
   ),
@@ -85,7 +85,7 @@ const defaultComponents: ReactMarkdownOptions['components'] = {
     return (
       <SyntaxHighlighter
         language={language}
-        classNames='mbs-2 mbe-2 border border-separator rounded-xs text-sm bg-groupSurface'
+        classNames='mt-2 mb-2 border border-separator rounded-xs text-sm bg-groupSurface'
         PreTag='pre'
       >
         {children}

@@ -1,14 +1,17 @@
+/* Tailwind v4: Fixed @apply directives - converted to direct CSS */
 .dx-avatar-group {
-  @apply inline-flex items-center pie-2;
+  display: inline-flex;
+  align-items: center;
+  padding-right: 0.5rem;
 }
 
 .dx-avatar-group .dx-avatar {
-  @apply -mie-2
+  margin-right: -0.5rem;
 }
 
 .dx-avatar-group .dx-avatar {
   &[size="0"], &[size="px"], &[size="0.5"], &[size="1"], &[size="1.5"], &[size="2"], &[size="2.5"] {
-    @apply -mie-1
+    margin-right: -0.25rem;
   }
 }
 
@@ -17,67 +20,76 @@ dx-avatar {
 }
 
 .dx-avatar {
-  @apply relative inline-flex shrink-0;
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+  /* Tailwind v4 migration: converted @apply to direct CSS properties */
 
   .dx-avatar__frame {
-    @apply is-full bs-full;
+    width: 100%;
+    height: 100%;
   }
 
   .dx-avatar__frame, .dx-avatar__ring {
-    @apply rounded-full;
+    border-radius: 9999px;
   }
 
   &[data-variant="square"] {
     .dx-avatar__frame, .dx-avatar__ring {
-      @apply rounded-sm;
+      border-radius: 0.125rem;
     }
   }
 
   .dx-avatar__status-icon {
-    @apply absolute block-end-0 inline-end-0;
+    position: absolute;
+    bottom: 0;
+    right: 0;
   }
 
   .dx-avatar__ring {
-    @apply absolute inset-0 border-2 border-[color:var(--surface-bg)];
+    position: absolute;
+    inset: 0;
+    border-width: 2px;
+    border-color: var(--surface-bg);
   }
 
   &[data-status="current"] .dx-avatar__ring {
-    @apply border-[color:var(--dx-currentCursor)];
+    border-color: var(--dx-currentCursor);
   }
 
   &[data-status="active"] .dx-avatar__ring {
-    @apply border-[color:var(--dx-successCursor)];
+    border-color: var(--dx-successCursor);
   }
 
   &[data-status="error"] .dx-avatar__ring {
-    @apply border-[color:var(--dx-errorCursor)];
+    border-color: var(--dx-errorCursor);
   }
 
   &[data-status="warning"] .dx-avatar__ring {
-    @apply border-[color:var(--dx-warningCursor)];
+    border-color: var(--dx-warningCursor);
   }
 
   &[data-status="internal"] .dx-avatar__ring {
-    @apply border-[color:var(--dx-internalCursor)];
+    border-color: var(--dx-internalCursor);
   }
 
   &[data-status="inactive"] .dx-avatar__ring {
-    @apply border-separator;
+    border-color: var(--dx-separator);
   }
 
   &[data-animation="pulse"] .dx-avatar__ring {
-    @apply animate-halo-pulse;
+    animation: halo-pulse var(--duration, 1s) ease-in-out infinite;
   }
 
   &[data-state-loading-status="loaded"] {
     .dx-avatar__fallback-text, .dx-avatar__status-icon {
-      @apply hidden;
+      display: none;
     }
   }
 
   &[data-state-loading-status="error"] {
     .dx-avatar__image {
-      @apply hidden;
+      display: none;
     }
   }
 }

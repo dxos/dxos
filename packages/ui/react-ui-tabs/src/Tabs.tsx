@@ -147,8 +147,8 @@ const TabsViewport = ({ classNames, children, ...props }: TabsViewportProps) => 
       className={mx(
         orientation === 'vertical' &&
           verticalVariant === 'stateful' && [
-            'grid inline-[200%] grid-cols-2 data-[active=panel]:ms-[-100%]',
-            '@md:inline-auto @md:data-[active=panel]:ms-0 @md:grid-cols-[minmax(min-content,1fr)_3fr] @md:gap-1',
+            'grid inline-[200%] grid-cols-2 data-[active=panel]:ml-[-100%]',
+            '@md:inline-auto @md:data-[active=panel]:ml-0 @md:grid-cols-[minmax(min-content,1fr)_3fr] @md:gap-1',
           ],
         classNames,
       )}
@@ -189,7 +189,7 @@ const TabsBackButton = ({ onClick, classNames, ...props }: ButtonProps) => {
     [onClick, setActivePart],
   );
 
-  return <Button {...props} classNames={['inline-full text-start @md:hidden mbe-2', classNames]} onClick={handleClick} />;
+  return <Button {...props} classNames={['inline-full text-start @md:hidden mb-2', classNames]} onClick={handleClick} />;
 };
 
 type TabsTabGroupHeadingProps = ThemedClassName<ComponentPropsWithoutRef<'h2'>>;

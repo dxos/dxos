@@ -19,7 +19,7 @@ export const RecoveryCodeDialog = ({ code }: RecoveryCodeDialogProps) => {
   const handleConfirmation = useCallback((checked: boolean) => setConfirmation(checked), []);
 
   return (
-    <AlertDialog.Content classNames='bs-content min-block-[15rem] max-block-full md:max-inline-[40rem] overflow-hidden'>
+    <AlertDialog.Content classNames='h-content min-block-[15rem] max-block-full md:max-inline-[40rem] overflow-hidden'>
       <AlertDialog.Title>{t('recovery code dialog title')}</AlertDialog.Title>
       <p className='py-4'>{t('recovery code dialog description')}</p>
       <Clipboard.Provider>
@@ -29,7 +29,7 @@ export const RecoveryCodeDialog = ({ code }: RecoveryCodeDialogProps) => {
         <p>{t('recovery code dialog warning 1')}</p>
         <p>{t('recovery code dialog warning 2')}</p>
       </div>
-      <div className='flex items-center gap-2 pbe-4'>
+      <div className='flex items-center gap-2 pb-4'>
         <Input.Root>
           <Input.Checkbox
             data-testid='recoveryCode.confirm'

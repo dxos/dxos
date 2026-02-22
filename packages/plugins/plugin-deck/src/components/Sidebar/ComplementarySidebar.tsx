@@ -102,7 +102,7 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
           role='none'
           className={mx(
             'absolute z-[1] inset-block-0 end-0 !inline-[--r0-size]',
-            'py-[env(safe-area-inset-top)] pbe-[env(safe-area-inset-bottom)] border-is border-subduedSeparator',
+            'py-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] border-is border-subduedSeparator',
             'grid grid-cols-1 grid-rows-[1fr_min-content] bg-baseSurface contain-layout app-drag',
           )}
         >
@@ -207,7 +207,7 @@ const ComplementarySidebarPanel = ({ companion, activeId, data, hoistStatusbar }
       {!hoistStatusbar && (
         <div
           role='contentinfo'
-          className='flex flex-wrap justify-center items-center border-y border-subduedSeparator pbs-1 pbe-[max(env(safe-area-inset-bottom),0.25rem)]'
+          className='flex flex-wrap justify-center items-center border-y border-subduedSeparator pt-1 pb-[max(env(safe-area-inset-bottom),0.25rem)]'
         >
           <Surface.Surface role='status-bar--r1-footer' limit={1} />
         </div>

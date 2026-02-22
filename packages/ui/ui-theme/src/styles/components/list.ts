@@ -24,7 +24,7 @@ export const listItemHeading: ComponentFunction<ListStyleProps> = ({ density }, 
   mx(densityBlockSize(density), 'flex items-center', ...etc);
 
 export const listItemDragHandleIcon: ComponentFunction<ListStyleProps> = (_props, ...etc) =>
-  mx(getSize(5), 'mbs-2.5', ...etc);
+  mx(getSize(5), 'mt-2.5', ...etc);
 
 export const listItemOpenTrigger: ComponentFunction<ListStyleProps> = ({ density }, ...etc) =>
   mx('inline-5 rounded-sm flex justify-center items-center', densityBlockSize(density), ghostHover, focusRing, ...etc);

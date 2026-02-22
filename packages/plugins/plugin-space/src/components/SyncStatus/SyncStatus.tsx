@@ -88,7 +88,7 @@ const EdgeConnectionPopover = () => {
   return (
     <div className='min-inline-[240px] p-2'>
       {/* Connection Status Header */}
-      <div className='flex items-center gap-2 mbe-2'>
+      <div className='flex items-center gap-2 mb-2'>
         <Icon
           icon={isConnected ? 'ph--check-circle--regular' : 'ph--warning-circle--regular'}
           classNames={mx(isConnected ? 'text-successText' : 'text-errorText animate-pulse')}
@@ -146,7 +146,7 @@ const UnitValue = ({ value: input, format, suffix }: { value: number; format: Un
   return (
     <span className='font-mono'>
       {formattedValue}
-      <span className='ms-1 text-subdued'>
+      <span className='ml-1 text-subdued'>
         {unit.symbol}
         {suffix}
       </span>

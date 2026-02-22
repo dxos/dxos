@@ -38,7 +38,8 @@
    * TODO(burdon): Normalize format to kebab-case.
    */
 
-   --color-experimental: 'red';
+   --color-test: theme(colors.blue.500);
+   --spacing-test: theme(spacing.4);
 
    /*
     * TODO(burdon): Generate color utilities.

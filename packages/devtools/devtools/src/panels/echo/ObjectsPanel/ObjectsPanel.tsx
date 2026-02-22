@@ -198,7 +198,7 @@ export const ObjectsPanel = (props: { space?: Space }) => {
               'bg-baseSurface text-description',
             )}
           >
-            <div className='text-sm pe-2'>Objects: {items.length}</div>
+            <div className='text-sm pr-2'>Objects: {items.length}</div>
           </div>
         </div>
 

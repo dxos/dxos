@@ -33,7 +33,7 @@ export const FilesSettings = ({ settings, state, onSettingsChange }: FilesSettin
             {...(state.rootHandle && { description: state.rootHandle.name })}
           >
             <IconButton
-              classNames='ms-2'
+              classNames='ml-2'
               icon='ph--folder--regular'
               iconOnly
               label={t('save files to directory label')}
@@ -42,7 +42,7 @@ export const FilesSettings = ({ settings, state, onSettingsChange }: FilesSettin
           </Settings.ItemInput>
           <Settings.ItemInput title={t('trigger export label')}>
             <IconButton
-              classNames='ms-2'
+              classNames='ml-2'
               icon='ph--floppy-disk--regular'
               iconOnly
               label={t('trigger export label')}
@@ -51,7 +51,7 @@ export const FilesSettings = ({ settings, state, onSettingsChange }: FilesSettin
           </Settings.ItemInput>
           <Settings.ItemInput title={t('trigger import label')}>
             <IconButton
-              classNames='ms-2'
+              classNames='ml-2'
               icon='ph--folder-open--regular'
               iconOnly
               label={t('trigger import label')}
