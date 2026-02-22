@@ -106,7 +106,7 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
             'grid grid-cols-1 grid-rows-[1fr_min-content] bg-baseSurface contain-layout app-drag',
           )}
         >
-          <Tabs.Tablist classNames='grid grid-cols-1 auto-rows-[--rail-action] p-1 gap-1 !overflow-y-auto'>
+          <Tabs.Tablist classNames='grid grid-cols-1 auto-rows-[--rail-action] p-1 gap-1 overflow-y-auto!'>
             {companions.map((companion) => (
               <Tabs.Tab key={getCompanionId(companion.id)} value={getCompanionId(companion.id)} asChild>
                 <IconButton

@@ -249,7 +249,7 @@ const CustomControl = ({
   useEffect(() => {
     const control = new Control({ position });
     control.onAdd = () => {
-      const container = DomUtil.create('div', mx('!m-0', controlPositions[position]));
+      const container = DomUtil.create('div', mx('m-0!', controlPositions[position]));
       DomEvent.disableClickPropagation(container);
       DomEvent.disableScrollPropagation(container);
 

@@ -68,7 +68,7 @@ const CardRoot = forwardRef<HTMLDivElement, CardRootProps>(
         {...(id && { 'data-object-id': id })}
         {...props}
         role={role}
-        className={mx(styles.root, border && styles.border, fullWidth && '!max-is-none', className, classNames)}
+        className={mx(styles.root, border && styles.border, fullWidth && 'max-is-none!', className, classNames)}
         ref={forwardedRef}
       >
         {children}
@@ -358,7 +358,7 @@ const CardAction = ({ icon, actionIcon = 'ph--arrow-right--regular', label, onCl
     <div role='none' className='is-full pli-1'>
       <Button
         variant='ghost'
-        classNames={mx(styles.grid_3, '!p-0 is-full text-start overflow-hidden')}
+        classNames={mx(styles.grid_3, 'p-0! is-full text-start overflow-hidden')}
         onClick={onClick}
       >
         {icon ? <CardIcon classNames='text-subdued' icon={icon} /> : <div />}
@@ -379,7 +379,7 @@ const CardLink = ({ label, href }: CardLinkProps) => {
   return (
     <div role='none' className='is-full pli-1'>
       <a
-        className={mx(styles.grid_3, 'group !p-0 dx-button dx-focus-ring !min-bs-1')}
+        className={mx(styles.grid_3, 'group p-0! dx-button dx-focus-ring min-bs-1!')}
         data-variant='ghost'
         href={href}
         target='_blank'

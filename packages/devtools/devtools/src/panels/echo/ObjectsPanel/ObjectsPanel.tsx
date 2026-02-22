@@ -202,7 +202,7 @@ export const ObjectsPanel = (props: { space?: Space }) => {
           </div>
         </div>
 
-        <div className='min-bs-0 bs-full grid grid-rows-[1fr_16rem] !border-separator border-is border-bs'>
+        <div className='min-bs-0 bs-full grid grid-rows-[1fr_16rem] border-separator! border-is border-bs'>
           <div className={mx('p-1 min-bs-0 overflow-auto')}>
             {selected ? (
               <ObjectViewer
@@ -214,7 +214,7 @@ export const ObjectsPanel = (props: { space?: Space }) => {
               <Placeholder label='Data' />
             )}
           </div>
-          <div className={mx(!selected && 'p-1 border-bs !border-separator')}>
+          <div className={mx(!selected && 'p-1 border-bs border-separator!')}>
             {selected ? (
               <DynamicTable properties={historyProperties} rows={historyRows} onRowClick={handleHistoryRowClicked} />
             ) : (

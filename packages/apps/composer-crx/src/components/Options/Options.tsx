@@ -72,7 +72,7 @@ export const Options = () => {
                 target='_blank'
                 rel='noreferrer'
                 href='https://dxos.org'
-                className='text-base !text-subdued hover:opacity-50'
+                className='text-base text-subdued! hover:opacity-50'
               >
                 <DXOSHorizontalType className='bs-10 dark:fill-neutral-50' />
               </a>

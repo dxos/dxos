@@ -78,7 +78,7 @@ export const PlankControls = forwardRef<HTMLDivElement, PlankControlsProps>(
     const layoutIsAnySolo = !!layoutMode?.startsWith('solo');
 
     return (
-      <ButtonGroup {...props} classNames={['app-no-drag !opacity-100', classNames]} ref={forwardedRef}>
+      <ButtonGroup {...props} classNames={['app-no-drag opacity-100!', classNames]} ref={forwardedRef}>
         {capabilities.deck ? (
           <>
             {capabilities.solo && (

@@ -27,8 +27,36 @@ Tailwind CSS v4 has renamed several core utilities for better consistency:
 **Files updated:**
 - `rounded-sm` → `rounded-xs`: Updated across all source files (ui-theme styles, components, stories)
 - `outline-none` → `outline-hidden`: Updated in focus-ring.css and focus.ts
+- **Important modifier placement**: `!` moved from start to end of utilities (30 files)
 
-### 2. Removed Deprecated Utilities
+### 2. Important Modifier Placement
+
+**Breaking Change**: The `!` important modifier has moved from the beginning to the end of utility classes.
+
+**Before (v3):**
+```html
+<div class="!p-0 !bg-transparent hover:!opacity-100">
+```
+
+**After (v4):**
+```html
+<div class="p-0! bg-transparent! hover:opacity-100!">
+```
+
+**Impact**: ✅ **FIXED** - 30 files updated with automated script
+
+**Examples from codebase:**
+- `'!max-is-none'` → `'max-is-none!'`
+- `'!p-0 is-full'` → `'p-0! is-full'`
+- `'!bg-toolbarSurface'` → `'bg-toolbarSurface!'`
+- `'!min-bs-full'` → `'min-bs-full!'`
+
+**Files updated:**
+- UI components: Card.tsx, CellEditor.tsx, Timeline.tsx, etc.
+- Plugin components: ChatPrompt, DeckLayout, MessageContainer, etc.
+- Theme utilities and stories
+
+### 3. Removed Deprecated Utilities
 
 #### Box Decoration Utilities (RENAMED)
 - **Removed**: `decoration-slice`, `decoration-clone`
@@ -41,7 +69,7 @@ Tailwind CSS v4 has renamed several core utilities for better consistency:
 - **Migration**: These utilities can be safely removed from markup
 - **Impact**: ✅ **None found** - Codebase scan found no usage of these utilities
 
-### 3. Arbitrary Value Syntax Changes
+### 4. Arbitrary Value Syntax Changes
 
 #### CSS Variables in Arbitrary Values
 **Before (v3):**
@@ -75,7 +103,7 @@ Tailwind CSS v4 has renamed several core utilities for better consistency:
 - CSS variable usage without `var()`
 - Comma usage in grid/object utilities
 
-### 4. Preflight (Base Styles) Changes
+### 5. Preflight (Base Styles) Changes
 
 #### Placeholder Text Color
 **Before (v3):**
@@ -111,12 +139,13 @@ Tailwind CSS v4 has renamed several core utilities for better consistency:
 
 ### ✅ Passed Checks
 1. **Utility class renames completed** (`rounded-sm` → `rounded-xs`, `outline-none` → `outline-hidden`)
-2. **No deprecated box-decoration utilities** (`decoration-slice`, `decoration-clone`)
-3. **No removed filter utilities** (`filter`, `backdrop-filter`)
-4. **CSS variable syntax fixed** (2 files)
-5. **Grid track list syntax fixed** (3 files)
-6. **Build successful** with Tailwind v4.2.0
-7. **Linter passed** with no Tailwind-related issues
+2. **Important modifier placement fixed** (`!utility` → `utility!`) in 30 files
+3. **No deprecated box-decoration utilities** (`decoration-slice`, `decoration-clone`)
+4. **No removed filter utilities** (`filter`, `backdrop-filter`)
+5. **CSS variable syntax fixed** (2 files)
+6. **Grid track list syntax fixed** (3 files)
+7. **Build successful** with Tailwind v4.2.0
+8. **Linter passed** with no Tailwind-related issues
 
 ### ✅ Fixed Issues
 
@@ -231,6 +260,7 @@ grep -rn 'grid-cols-\[[0-9a-z]*,[0-9a-z]*\]' packages/ --include="*.tsx" --inclu
 - ✅ Build successful and 4.5x faster
 - ✅ No deprecated utilities found in codebase
 - ✅ **FIXED**: Utility class renames (99 files updated)
+- ✅ **FIXED**: Important modifier placement (30 files updated)
 - ✅ **FIXED**: CSS variable syntax (2 files)
 - ✅ **FIXED**: Grid track list syntax (3 files)
 - ⚠️ Visual regression testing pending

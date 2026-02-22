@@ -135,7 +135,7 @@ export const Chat = ({ classNames, host, url }: ChatProps) => {
             value={text}
             onChange={(ev) => setText(ev.target.value)}
             onKeyDown={(ev) => ev.key === 'Enter' && handleSubmit()}
-            classNames='pli-2 pbs-[4px] pbe-[4px] is-full rounded-none text-lg !ring-none !ring-sky-500'
+            classNames='pli-2 pbs-[4px] pbe-[4px] is-full rounded-none text-lg ring-none! ring-sky-500!'
           />
         </Input.Root>
         {filteredMessages.length > 0 && (

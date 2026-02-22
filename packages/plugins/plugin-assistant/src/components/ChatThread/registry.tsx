@@ -27,7 +27,7 @@ const Fallback = ({ _tag, ...props }: XmlWidgetProps<MessageThreadContext>) => {
     <ToggleContainer.Root classNames='rounded-xs'>
       <ToggleContainer.Header classNames='bg-groupSurface'>{_tag}</ToggleContainer.Header>
       <ToggleContainer.Content classNames='bg-modalSurface'>
-        <Json classNames='!p-2 text-sm' data={props} />
+        <Json classNames='p-2! text-sm' data={props} />
       </ToggleContainer.Content>
     </ToggleContainer.Root>
   );

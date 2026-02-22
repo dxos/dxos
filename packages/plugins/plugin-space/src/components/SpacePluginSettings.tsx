@@ -42,7 +42,7 @@ export const SpacePluginSettings = ({ settings, onSettingsChange }: SpacePluginS
             {spaces.map((space) => (
               <ListItem.Root key={space.id} classNames='is-full items-center'>
                 {/* TODO(burdon): Should auto center and truncate; NOTE truncate doesn't work with flex grow. */}
-                <ListItem.Heading classNames='grow truncate !min-bs-0'>
+                <ListItem.Heading classNames='grow truncate min-bs-0!'>
                   {toLocalizedString(
                     getSpaceDisplayName(space, {
                       personal: space === client.spaces.default,

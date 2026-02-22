@@ -339,7 +339,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
           ${direction !== undefined ? tableButtons.sort.render({ fieldId: field.id, direction }) : ''}
           ${tableButtons.columnSettings.render({ fieldId: field.id })}
         `,
-        className: '!bg-toolbarSurface !text-description [&>div]:flex [&>div]:items-stretch',
+        className: '!bg-toolbarSurface text-description! [&>div]:flex [&>div]:items-stretch',
       };
     }
 
@@ -465,7 +465,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
 export const cellClassesForRowSelection = (selected: boolean, selectionMode: SelectionMode) => {
   if (!selected) {
     if (selectionMode === 'single') {
-      return ['!cursor-pointer'];
+      return ['cursor-pointer!'];
     } else {
       return undefined;
     }
@@ -473,7 +473,7 @@ export const cellClassesForRowSelection = (selected: boolean, selectionMode: Sel
 
   switch (selectionMode) {
     case 'single':
-      return ['!bg-currentRelated dx-grid__cell--no-focus-unfurl hover:bg-hoverSurface !cursor-pointer'];
+      return ['!bg-currentRelated dx-grid__cell--no-focus-unfurl hover:bg-hoverSurface cursor-pointer!'];
     case 'multiple':
       return ['!bg-gridCellSelected'];
   }

@@ -120,7 +120,7 @@ const ChatDialogHeader = ({ classNames, title }: ChatDialogHeaderProps) => {
           variant='ghost'
           icon='ph--caret-up--regular'
           iconOnly
-          classNames={mx('!p-1 [&>svg]:transition [&>svg]:duration-200', expanded && '[&>svg]:rotate-180')}
+          classNames={mx('p-1! [&>svg]:transition [&>svg]:duration-200', expanded && '[&>svg]:rotate-180')}
           label={expanded ? 'Close' : 'Open'}
           onClick={() => setExpanded((expanded) => !expanded)}
         />

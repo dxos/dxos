@@ -60,7 +60,7 @@ const TableRoot = ({ children, role = 'article' }: TableRootProps) => {
     <div
       role='none'
       className={mx(
-        'relative !border-separator [&_.dx-grid]:max-is-[--dx-grid-content-inline-size] [&_.dx-grid]:max-bs-[--dx-grid-content-block-size]',
+        'relative border-separator! [&_.dx-grid]:max-is-[--dx-grid-content-inline-size] [&_.dx-grid]:max-bs-[--dx-grid-content-block-size]',
         // TODO(burdon): Move role-dependent logic to plugin.
         role === 'section' && 'attention-surface',
         role === 'card--content' && 'popover-card-height',

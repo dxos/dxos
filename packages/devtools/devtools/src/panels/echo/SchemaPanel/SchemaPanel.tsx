@@ -151,7 +151,7 @@ export const SchemaPanel = (props: { space?: Space }) => {
           </div>
         </div>
 
-        <div className='min-bs-0 bs-full !border-separator border-is border-bs'>
+        <div className='min-bs-0 bs-full border-separator! border-is border-bs'>
           <div className={mx('p-1 min-bs-0 bs-full overflow-auto')}>
             {selected ? (
               <ObjectViewer

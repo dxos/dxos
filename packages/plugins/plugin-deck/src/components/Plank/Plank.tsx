@@ -238,11 +238,11 @@ const PlankComponent = memo(
       part.startsWith('solo') && 'grid',
       part.startsWith('solo-') && 'grid-rows-subgrid row-span-2 min-is-0',
       fullscreen && 'grid-rows-1',
-      part === 'deck' && (companioned === 'companion' ? '!border-separator border-ie' : '!border-separator border-li'),
-      part === 'solo-companion' && '!border-separator border-is',
+      part === 'deck' && (companioned === 'companion' ? 'border-separator! border-ie' : 'border-separator! border-li'),
+      part === 'solo-companion' && 'border-separator! border-is',
       settings?.encapsulatedPlanks &&
         !part.startsWith('solo') &&
-        'mli-[--main-spacing] !border-separator border rounded overflow-hidden',
+        'mli-[--main-spacing] border-separator! border rounded overflow-hidden',
     );
 
     return (

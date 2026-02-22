@@ -166,7 +166,7 @@ export const RevealPlayer = ({ classNames, content, slide, fullscreen = true, on
             />
           </style>
           <div className='slides'>
-            <div className='!text-center' />
+            <div className='text-center!' />
             <section {...{ 'data-markdown': [] }}>
               <textarea {...{ 'data-template': true }} defaultValue={[styles, content].join('\n')}></textarea>
             </section>

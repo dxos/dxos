@@ -23,7 +23,7 @@ export const ActorComponent = ({ actor, classNames }: ThemedClassName<{ actor: A
         iconOnly
         size={4}
         label={t('open profile button')}
-        classNames='cursor-pointer text-subdued !p-0'
+        classNames='cursor-pointer text-subdued p-0!'
       />
       <div className='truncate text-description'>{actor.name ?? actor.email}</div>
     </div>

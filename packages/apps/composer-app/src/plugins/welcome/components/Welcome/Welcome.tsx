@@ -18,7 +18,7 @@ import { type WelcomeScreenProps, WelcomeState, validEmail } from './types';
 
 const supportsPasskeys = navigator.credentials && 'create' in navigator.credentials;
 
-export const OVERLAY_CLASSES = 'dark !bg-neutral-950 bg-no-repeat bg-center';
+export const OVERLAY_CLASSES = 'dark bg-neutral-950! bg-no-repeat bg-center';
 export const OVERLAY_STYLE = { backgroundImage: `url(${hero})` };
 
 export const Welcome = ({
@@ -133,7 +133,7 @@ export const Welcome = ({
                   <Input.TextInput
                     autoFocus
                     ref={emailRef}
-                    classNames='!bg-black'
+                    classNames='bg-black!'
                     placeholder={t('email input placeholder')}
                     value={email}
                     onChange={handleEmailChange}

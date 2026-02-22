@@ -37,7 +37,7 @@ export const StackItemHeading = ({
       role='heading'
       {...props}
       className={mx(
-        'flex items-center !border-is-0 bg-headerSurface',
+        'flex items-center border-is-0! bg-headerSurface',
         separateOnScroll
           ? 'border-transparent [[data-scroll-separator="true"]_&]:border-subduedSeparator'
           : 'border-subduedSeparator',
