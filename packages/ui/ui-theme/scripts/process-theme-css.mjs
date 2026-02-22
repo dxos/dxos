@@ -1,19 +1,16 @@
 #!/usr/bin/env node
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
-import { dirname, resolve } from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { dirname } from 'node:path';
 import postcss from 'postcss';
 import postcssImport from 'postcss-import';
 import postcssNesting from 'postcss-nesting';
-import chTokens from '@ch-ui/tokens/postcss';
-import tailwindcss from '@tailwindcss/postcss';
-import autoprefixer from 'autoprefixer';
 
-// Import tokenSet from the compiled plugin output
-const { tokenSet } = await import('../dist/plugin/node-esm/chunk-4A7CFNII.mjs');
-
-console.log('tokenSet loaded:', tokenSet ? 'yes' : 'no');
-console.log('tokenSet.colors:', tokenSet.colors ? Object.keys(tokenSet.colors) : 'none');
+// Only inline @imports and process nesting.
+// Do NOT run tailwindcss() here - @apply is processed at Vite runtime with content paths.
+const processor = postcss([
+  postcssImport(),
+  postcssNesting(),
+]);
 
 const inputFile = 'src/theme.css';
 const outputFiles = [
@@ -21,19 +18,11 @@ const outputFiles = [
   'dist/plugin/node-cjs/theme.css',
 ];
 
-const processor = postcss([
-  postcssImport(),
-  postcssNesting(),
-  chTokens({ config: () => tokenSet }),
-  tailwindcss(),
-  autoprefixer,
-]);
-
 async function processCSS() {
   console.log(`Reading ${inputFile}...`);
   const css = await readFile(inputFile, 'utf8');
 
-  console.log('Processing CSS with PostCSS...');
+  console.log('Processing CSS (inlining imports)...');
   const result = await processor.process(css, {
     from: inputFile,
     to: outputFiles[0],
@@ -43,9 +32,6 @@ async function processCSS() {
     console.log(`Writing ${outputFile}...`);
     await mkdir(dirname(outputFile), { recursive: true });
     await writeFile(outputFile, result.css);
-    if (result.map) {
-      await writeFile(`${outputFile}.map`, result.map.toString());
-    }
   }
 
   console.log('Done!');

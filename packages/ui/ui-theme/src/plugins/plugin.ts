@@ -4,6 +4,7 @@
 
 /* eslint-disable no-console */
 
+import { existsSync } from 'node:fs';
 import { readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
@@ -34,15 +35,24 @@ let environment!: string;
  * Configures PostCSS pipeline for theme.css processing.
  * @param environment - The current environment (development/production).
  * @param config - Theme plugin configuration options.
+ * @param content - Resolved content paths for Tailwind scanning.
  * @returns Array of PostCSS plugins.
  */
-const createPostCSSPipeline = (environment: string, config: ThemePluginOptions): postcss.Transformer[] => [
+const createPostCSSPipeline = (
+  environment: string,
+  config: ThemePluginOptions,
+  content?: string[],
+): postcss.Transformer[] => [
   // Handles @import statements in CSS.
   postcssImport(),
   // Processes CSS nesting syntax.
   postcssNesting(),
   // Processes Tailwind directives and utilities.
-  tailwindcss(),
+  // Pass content paths to Tailwind for utility class generation.
+  tailwindcss({
+    base: resolve(import.meta.dirname, '../../../..'),
+    ...(content ? { content } : {}),
+  }),
   // Adds vendor prefixes.
   autoprefixer as any,
 ];
@@ -51,10 +61,14 @@ const createPostCSSPipeline = (environment: string, config: ThemePluginOptions):
  * Vite plugin to configure theme.
  */
 export const ThemePlugin = (options: ThemePluginOptions): Plugin => {
+  // Prefer source CSS if available (monorepo dev), fall back to dist for installed package.
+  const srcThemePath = resolve(import.meta.dirname, '../../../../src/theme.css');
+  const distThemePath = resolve(import.meta.dirname, '../theme.css');
+
   const config: ThemePluginOptions = {
     jit: true,
     cssPath: resolve(import.meta.dirname, '../theme.css'),
-    srcCssPath: resolve(import.meta.dirname, '../../../../src/theme.css'),
+    srcCssPath: existsSync(srcThemePath) ? srcThemePath : distThemePath,
     virtualFileId: '@dxos-theme',
     ...options,
   };
@@ -63,19 +77,21 @@ export const ThemePlugin = (options: ThemePluginOptions): Plugin => {
     console.log('ThemePlugin config:\n', JSON.stringify(config, null, 2));
   }
 
+  let resolvedContent: string[] | undefined;
+
   return {
     name: 'vite-plugin-dxos-ui-theme',
     config: async ({ root }, env): Promise<UserConfig> => {
       environment = env.mode;
-      const content = root ? await resolveKnownPeers(config.content ?? [], root) : config.content;
+      resolvedContent = root ? await resolveKnownPeers(config.content ?? [], root) : config.content;
       if (options.verbose) {
-        console.log('content', content);
+        console.log('content', resolvedContent);
       }
 
       return {
         css: {
           postcss: {
-            plugins: createPostCSSPipeline(environment, config),
+            plugins: createPostCSSPipeline(environment, config, resolvedContent),
           },
         },
       };
@@ -96,7 +112,7 @@ export const ThemePlugin = (options: ThemePluginOptions): Plugin => {
           if (module) {
             // Read the source theme file that imports all other CSS files.
             const css = await readFile(config.srcCssPath!, 'utf8');
-            const processor = postcss(createPostCSSPipeline(environment, config));
+            const processor = postcss(createPostCSSPipeline(environment, config, resolvedContent));
             console.log('[theme-plugin] Reprocessing CSS with PostCSS.');
             const result = await processor.process(css, {
               from: config.srcCssPath,

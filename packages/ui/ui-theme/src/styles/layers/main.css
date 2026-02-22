@@ -4,7 +4,8 @@
    */
   .dx-main-bounce-layout {
     @apply fixed overflow-auto overscroll-auto;
-    @apply duration-200 ease-[cubic-bezier(0.4,0,0.6,1)];
+    transition-duration: 200ms;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.6, 1);
     transition-property: padding-inline-start, padding-inline-end, scroll-padding-start, scroll-padding-end;
     inset-inline-start: 0;
     inset-inline-end: 0;
@@ -24,28 +25,29 @@
    * Main content padding.
    */
   .dx-main-content-padding {
-    @apply ps-0 scroll-ps-0 pe-0 scroll-pe-0;
+    @apply pl-0 scroll-pl-0 pr-0 scroll-pr-0;
 
     @media (min-width: theme('screens.lg')) {
-      &[data-sidebar-inline-start-state='collapsed'] {
-        @apply ps-[--l0-size] scroll-ps-[--l0-size];
+      &[data-sidebar-left-state='collapsed'] {
+        @apply pl-[--l0-size] scroll-pl-[--l0-size];
       }
-      &[data-sidebar-inline-start-state='expanded'] {
-        @apply ps-[--nav-sidebar-size] scroll-ps-[--nav-sidebar-size];
+      &[data-sidebar-left-state='expanded'] {
+        @apply pl-[--nav-sidebar-size] scroll-pl-[--nav-sidebar-size];
       }
 
-      &[data-sidebar-inline-end-state='collapsed'] {
-        @apply pe-[--r0-size] scroll-pe-[--r0-size];
+      &[data-sidebar-right-state='collapsed'] {
+        @apply pr-[--r0-size] scroll-pr-[--r0-size];
       }
-      &[data-sidebar-inline-end-state='expanded'] {
-        @apply pe-[--complementary-sidebar-size] scroll-pe-[--complementary-sidebar-size];
+      &[data-sidebar-right-state='expanded'] {
+        @apply pr-[--complementary-sidebar-size] scroll-pr-[--complementary-sidebar-size];
       }
     }
   }
 
   /** TODO(burdon): Reconcile with dx-main-bounce-layout */
   .dx-main-content-padding-transitions {
-    @apply duration-200 ease-[cubic-bezier(0.4,0,0.6,1)];
+    transition-duration: 200ms;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.6, 1);
     transition-property: padding-inline-start, padding-inline-end, scroll-padding-start, scroll-padding-end;
   }
 
@@ -53,36 +55,39 @@
    *
    */
   .dx-main-intrinsic-size {
-    @apply inline-[calc(100dvw)-2*var(--main-spacing)] transition-[inline-size] ease-[cubic-bezier(0.4,0,0.6,1)] duration-200;
+    inline-size: calc(100dvw - 2 * var(--main-spacing));
+    transition-property: inline-size;
+    transition-duration: 200ms;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.6, 1);
 
     @media (min-width: theme('screens.lg')) {
-      &[data-sidebar-inline-start-state='closed'][data-sidebar-inline-end-state='closed'] {
+      &[data-sidebar-left-state='closed'][data-sidebar-right-state='closed'] {
         inline-size: calc(100dvw - 2 * var(--main-spacing));
       }
-      &[data-sidebar-inline-start-state='collapsed'][data-sidebar-inline-end-state='closed'] {
+      &[data-sidebar-left-state='collapsed'][data-sidebar-right-state='closed'] {
         inline-size: calc(100dvw - var(--l0-size) - 2 * var(--main-spacing));
       }
-      &[data-sidebar-inline-start-state='expanded'][data-sidebar-inline-end-state='closed'] {
+      &[data-sidebar-left-state='expanded'][data-sidebar-right-state='closed'] {
         inline-size: calc(100dvw - var(--nav-sidebar-size) - 2 * var(--main-spacing));
       }
 
-      &[data-sidebar-inline-start-state='closed'][data-sidebar-inline-end-state='collapsed'] {
+      &[data-sidebar-left-state='closed'][data-sidebar-right-state='collapsed'] {
         inline-size: calc(100dvw - var(--r0-size) - 2 * var(--main-spacing));
       }
-      &[data-sidebar-inline-start-state='collapsed'][data-sidebar-inline-end-state='collapsed'] {
+      &[data-sidebar-left-state='collapsed'][data-sidebar-right-state='collapsed'] {
         inline-size: calc(100dvw - var(--l0-size) - var(--r0-size) - 2 * var(--main-spacing));
       }
-      &[data-sidebar-inline-start-state='expanded'][data-sidebar-inline-end-state='collapsed'] {
+      &[data-sidebar-left-state='expanded'][data-sidebar-right-state='collapsed'] {
         inline-size: calc(100dvw - var(--nav-sidebar-size) - var(--r0-size) - 2 * var(--main-spacing));
       }
 
-      &[data-sidebar-inline-start-state='closed'][data-sidebar-inline-end-state='expanded'] {
+      &[data-sidebar-left-state='closed'][data-sidebar-right-state='expanded'] {
         inline-size: calc(100dvw - var(--complementary-sidebar-size) - 2 * var(--main-spacing));
       }
-      &[data-sidebar-inline-start-state='collapsed'][data-sidebar-inline-end-state='expanded'] {
+      &[data-sidebar-left-state='collapsed'][data-sidebar-right-state='expanded'] {
         inline-size: calc(100dvw - var(--l0-size) - var(--complementary-sidebar-size) - 2 * var(--main-spacing));
       }
-      &[data-sidebar-inline-start-state='expanded'][data-sidebar-inline-end-state='expanded'] {
+      &[data-sidebar-left-state='expanded'][data-sidebar-right-state='expanded'] {
         inline-size: calc(
           100dvw - var(--nav-sidebar-size) - var(--complementary-sidebar-size) - 2 * var(--main-spacing)
         );
@@ -94,9 +99,13 @@
 @layer dx-components {
   .dx-main-sidebar {
     @apply fixed overscroll-contain overflow-x-hidden overflow-y-auto;
-    @apply duration-200 ease-[cubic-bezier(0.4,0,0.6,1)];
+    transition-duration: 200ms;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.6, 1);
     @apply border-landmarkLine border-subduedSeparator rounded-md;
-    @apply backdrop-blur-md dark:backdrop-blur-lg;
+    @apply backdrop-blur-md;
+    .dark & {
+      @apply backdrop-blur-lg;
+    }
     background-color: var(--dx-sidebarSurface);
     --surface-bg: var(--dx-sidebarSurface);
 
@@ -170,7 +179,9 @@
 
   .dx-main-overlay {
     @apply fixed inset-0 bg-scrimSurface;
-    @apply transition-opacity duration-200 ease-[cubic-bezier(0.4,0,0.6,1)];
+    transition-property: opacity;
+    transition-duration: 200ms;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.6, 1);
     @apply opacity-0 hidden;
     z-index: 6;
 
