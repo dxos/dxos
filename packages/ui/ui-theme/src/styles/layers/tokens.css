@@ -1,5 +1,6 @@
 @layer dx-tokens {
   /* Generated design tokens - see scripts/generate-token-css.mjs */
+  /* TODO(burdon): Move to layers. */
   @import '../generated-tokens.css';
 
   :root {
