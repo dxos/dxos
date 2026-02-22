@@ -3,6 +3,7 @@
  */
 @layer dx-base {
   :root {
+    color-scheme: light;
     touch-action: pan-x pan-y;
     font-synthesis: none;
     font-variation-settings: 'wght' 400,
@@ -18,6 +19,10 @@
 }
 
 @layer dx-tokens {
+  .dark {
+    color-scheme: dark;
+  }
+
   html, html.dark, html .dark {
     background-color: var(--dx-baseSurface);
     color: var(--dx-baseText);

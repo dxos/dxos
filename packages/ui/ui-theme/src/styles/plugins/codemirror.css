@@ -1,17 +1,6 @@
 /**
  * CodeMirror theme tokens.
- *
- * Uses light-dark() so each token is defined once with both light and dark values.
- * Requires color-scheme to be set on :root / .dark (defined here until moved to base).
  */
-
-:root {
-  color-scheme: light;
-}
-
-.dark {
-  color-scheme: dark;
-}
 
 @theme {
   --color-cmCodeblock: theme(colors.neutral.500 / 0.1);
