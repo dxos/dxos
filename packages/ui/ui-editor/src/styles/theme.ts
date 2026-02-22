@@ -110,14 +110,14 @@ export const baseTheme = EditorView.baseTheme({
     paddingInline: 0,
   },
   '.cm-activeLine': {
-    background: 'var(--dx-cmActiveLine)',
+    background: 'var(--color-cmActiveLine)',
   },
 
   /**
    * Cursor (layer).
    */
   '.cm-cursor, .cm-dropCursor': {
-    borderLeft: '2px solid var(--dx-cmCursor)',
+    borderLeft: '2px solid var(--color-cmCursor)',
   },
   '.cm-placeholder': {
     color: 'var(--dx-placeholder)',
@@ -127,10 +127,10 @@ export const baseTheme = EditorView.baseTheme({
    * Selection (layer).
    */
   '.cm-selectionBackground': {
-    background: 'var(--dx-cmSelection)',
+    background: 'var(--color-cmSelection)',
   },
   '&.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground': {
-    background: 'var(--dx-cmFocusedSelection)',
+    background: 'var(--color-cmFocusedSelection)',
   },
 
   /**
@@ -141,8 +141,8 @@ export const baseTheme = EditorView.baseTheme({
     margin: '0 -3px',
     padding: '3px',
     borderRadius: '3px',
-    background: 'var(--dx-cmHighlightSurface)',
-    color: 'var(--dx-cmHighlight)',
+    background: 'var(--color-cmHighlightSurface)',
+    color: 'var(--color-cmHighlight)',
   },
   '.cm-searchMatch-selected': {
     textDecoration: 'underline',
