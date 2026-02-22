@@ -69,7 +69,6 @@
     "tailwindcss-radix": "catalog:"
   },
   "devDependencies": {
-    "@ch-ui/colors": "catalog:",
     "@dxos/ui-types": "workspace:*",
     "@types/lodash.merge": "catalog:",
     "@types/postcss-import": "catalog:",
