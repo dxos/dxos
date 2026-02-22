@@ -133,7 +133,7 @@ const Root = forwardRef<ScrollController, RootProps>(
               data-visible={overflow}
               className={mx(
                 // NOTE: Gradients may not be visible with dark reader extensions.
-                'z-10 absolute block-start-0 inset-inline-0 block-24 inline-full',
+                'z-10 absolute top-0 inset-x-0 block-24 inline-full',
                 'opacity-0 duration-200 transition-opacity data-[visible="true"]:opacity-100',
                 'bg-gradient-to-b from-[--surface-bg] to-transparent pointer-events-none',
               )}

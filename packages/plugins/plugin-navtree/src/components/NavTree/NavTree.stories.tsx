@@ -40,7 +40,7 @@ const StoryPlankHeading = ({ attendableId }: { attendableId: string }) => {
   const { hasAttention } = useAttention(attendableId);
   console.log('hasAttention', hasAttention);
   return (
-    <div className='flex p-1 items-center border-be border-separator'>
+    <div className='flex p-1 items-center border-b border-separator'>
       <IconButton
         density='coarse'
         icon='ph--atom--regular'
@@ -77,7 +77,7 @@ const StoryPlank = ({ attendableId }: { attendableId: string }) => {
     >
       <StoryPlankHeading attendableId={attendableId} />
       <StackItem.Content toolbar>
-        <Toolbar.Root classNames='border-be border-subduedSeparator'>
+        <Toolbar.Root classNames='border-b border-subduedSeparator'>
           <Toolbar.Button>Test</Toolbar.Button>
         </Toolbar.Root>
 

@@ -46,7 +46,7 @@ export const sizeWidthMap = new Map<Size, string>([
 
 export const sizeHeightMap = new Map<Size, string>([
   [0, 'block-0'],
-  ['px', 'bs-px'], // 1px
+  ['px', 'block-px'], // 1px
   [0.5, 'block-0.5'],
   [1, 'block-1'],
   [1.5, 'block-1.5'],

@@ -26,8 +26,8 @@ export const scrollAreaRoot: ComponentFunction<ScrollAreaStyleProps> = ({ orient
     // Balance left/right, top/bottom "margin" with scrollbar.
     margin && [
       orientation === 'vertical' && (thin ? 'ps-[4px]' : 'ps-[8px]'),
-      orientation === 'horizontal' && (thin ? 'pbs-[4px]' : 'pbs-[8px]'),
-      orientation === 'all' && (thin ? 'ps-[4px] pbs-[8px]' : 'ps-[8px] pbs-[8px]'),
+      orientation === 'horizontal' && (thin ? 'py-[4px]' : 'py-[8px]'),
+      orientation === 'all' && (thin ? 'ps-[4px] py-[8px]' : 'ps-[8px] py-[8px]'),
     ],
 
     ...etc,

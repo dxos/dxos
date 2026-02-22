@@ -93,7 +93,7 @@ const EventHeader = ({ db, onContactCreate }: EventHeaderProps) => {
   const { event } = useEventContext(EVENT_HEADER_NAME);
 
   return (
-    <div role='none' className='p-1 flex flex-col gap-2 border-be border-subduedSeparator'>
+    <div role='none' className='p-1 flex flex-col gap-2 border-b border-subduedSeparator'>
       <div role='none' className='grid grid-cols-[2rem_1fr] gap-1'>
         <div role='none' className='flex px-2 text-subdued block-[28px] items-center'>
           <Icon icon='ph--check--regular' />

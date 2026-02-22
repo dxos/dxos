@@ -34,7 +34,7 @@ export const avatarFrame: ComponentFunction<AvatarStyleProps> = ({ variant }, ..
 
 export const avatarStatusIcon: ComponentFunction<AvatarStyleProps> = ({ status, size = 3 }, ...etc) =>
   mx(
-    'absolute block-end-0 inline-end-0',
+    'absolute bottom-0 end-0',
     getSize(size),
     status === 'inactive'
       ? 'text-amber-350 dark:text-amber-250'

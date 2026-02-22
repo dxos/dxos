@@ -37,7 +37,7 @@ export const StackItemHeading = ({
       role='heading'
       {...props}
       className={mx(
-        'flex items-center border-inline-0! bg-headerSurface',
+        'flex items-center border-x-0! bg-headerSurface',
         separateOnScroll
           ? 'border-transparent [[data-scroll-separator="true"]_&]:border-subduedSeparator'
           : 'border-subduedSeparator',
@@ -53,7 +53,7 @@ export const StackItemHeading = ({
 
 export const StackItemHeadingStickyContent = ({ children }: PropsWithChildren<{}>) => {
   return (
-    <div role='none' className='sticky block-start-0 bg-[--sticky-bg] p-1 inline-full'>
+    <div role='none' className='sticky top-0 bg-[--sticky-bg] p-1 inline-full'>
       {children}
     </div>
   );

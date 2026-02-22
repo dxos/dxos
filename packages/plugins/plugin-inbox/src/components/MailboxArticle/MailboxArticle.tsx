@@ -188,7 +188,7 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
           {filterVisible.value && (
             <div
               role='none'
-              className='grid grid-cols-[1fr_min-content] inline-full items-center p-1 gap-1 border-be border-separator'
+              className='grid grid-cols-[1fr_min-content] inline-full items-center p-1 gap-1 border-b border-separator'
             >
               <QueryEditor
                 ref={filterEditorRef}

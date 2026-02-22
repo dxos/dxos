@@ -6,7 +6,7 @@ import React from 'react';
 
 export const MenuSignifierHorizontal = () => (
   <svg
-    className='absolute block-end-[7px]'
+    className='absolute bottom-[7px]'
     width={20}
     height={2}
     viewBox='0 0 20 2'

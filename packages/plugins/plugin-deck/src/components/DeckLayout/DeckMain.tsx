@@ -118,9 +118,9 @@ export const DeckMain = () => {
 
   const mainPosition = useMemo(
     () => [
-      'grid !block-start-[env(safe-area-inset-top)]',
-      topbar && '!block-start-[calc(env(safe-area-inset-top)+var(--rail-size))]',
-      hoistStatusbar && 'lg:block-end-[--statusbar-size]',
+      'grid !top-[env(safe-area-inset-top)]',
+      topbar && '!top-[calc(env(safe-area-inset-top)+var(--rail-size))]',
+      hoistStatusbar && 'lg:bottom-[--statusbar-size]',
     ],
     [topbar, hoistStatusbar],
   );

@@ -53,9 +53,9 @@ export const L1Panel = ({ open, path, item, currentItemId, onBack }: L1PanelProp
       key={item.id}
       value={item.id}
       classNames={[
-        'absolute inset-block-0 inline-end-0',
+        'absolute inset-block-0 end-0',
         'inline-[calc(100%-var(--l0-size))] lg:inline-[--l1-size] grid-cols-1 grid-rows-[var(--rail-size)_1fr]',
-        'pbs-[env(safe-area-inset-top)]',
+        'py-[env(safe-area-inset-top)]',
         item.id === currentItemId && 'grid',
       ]}
       tabIndex={-1}
@@ -110,7 +110,7 @@ const L1PanelHeader = ({ item, path, onBack }: L1PanelProps) => {
   useLoadDescendents(item);
 
   return (
-    <div className='flex inline-full items-center border-be border-subduedSeparator app-drag density-coarse'>
+    <div className='flex inline-full items-center border-b border-subduedSeparator app-drag density-coarse'>
       <div className='inline-6' />
       <h2 className='flex-1 truncate min-inline-0'>{title}</h2>
       {/* TODO(wittjosiah): Reconcile with NavTreeItemColumns. */}

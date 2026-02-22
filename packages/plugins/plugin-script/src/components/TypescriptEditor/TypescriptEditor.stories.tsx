@@ -73,7 +73,7 @@ const DefaultStory = (props: TypescriptEditorProps) => {
       </Toolbar.Root>
       <div role='none' className='grid grid-rows-[1fr_min-content] block-full overflow-hidden text-sm'>
         <TypescriptEditor {...props} initialValue={object.content} extensions={extensions} />
-        <Json data={result} classNames='shrink-0 p-2 border-bs border-subduedSeparator' />
+        <Json data={result} classNames='shrink-0 p-2 border-y border-subduedSeparator' />
       </div>
     </Layout.Main>
   );

@@ -136,8 +136,8 @@ export const ResizeHandle = ({
         'group absolute flex focus-visible:outline-hidden',
         surfaceZIndex({ elevation, level: 'tooltip' }),
         orientation === 'horizontal'
-          ? 'cursor-col-resize inline-4 inset-block-0 data-[side="inline-end"]:inline-end-0 data-[side="inline-end"]:before:inline-end-0 data-[side="inline-start"]:inline-start-0 data-[side="inline-start"]:before:inline-start-0 border-lb-0! before:inset-block-0 before:inline-1'
-          : 'cursor-row-resize block-4 inset-inline-0 data-[side="block-end"]:block-end-0 data-[side="block-end"]:before:block-end-0 data-[side="block-start"]:block-start-0 data-[side="block-start"]:before:block-start-0 border-li-0! before:inset-inline-0 before:block-1',
+          ? 'cursor-col-resize inline-4 inset-block-0 data-[side="inline-end"]:end-0 data-[side="inline-end"]:before:end-0 data-[side="inline-start"]:start-0 data-[side="inline-start"]:before:start-0 border-b-0! before:inset-block-0 before:inline-1'
+          : 'cursor-row-resize block-4 inset-x-0 data-[side="block-end"]:bottom-0 data-[side="block-end"]:before:bottom-0 data-[side="block-start"]:top-0 data-[side="block-start"]:before:top-0 border-x-0! before:inset-x-0 before:block-1',
         orientation === 'horizontal'
           ? iconPosition === 'end'
             ? 'align-end'

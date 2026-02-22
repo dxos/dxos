@@ -22,12 +22,12 @@ const orientationStyles: Record<Orientation, HTMLAttributes<HTMLElement>['classN
   // TODO(wittjosiah): Stop using left/right here.
   sibling:
     'block-[--line-thickness] left-[--horizontal-indent] right-0 bg-accentSurface before:left-[--negative-terminal-size]',
-  child: 'inline-full block-start-0 block-end-0 border-[length:--line-thickness] before:invisible',
+  child: 'inline-full top-0 bottom-0 border-[length:--line-thickness] before:invisible',
 };
 
 const instructionStyles: Record<InstructionType, HTMLAttributes<HTMLElement>['className']> = {
-  'reorder-above': 'block-start-[--line-offset] before:block-start-[--offset-terminal]',
-  'reorder-below': 'block-end-[--line-offset] before:block-end-[--offset-terminal]',
+  'reorder-above': 'top-[--line-offset] before:top-[--offset-terminal]',
+  'reorder-below': 'bottom-[--line-offset] before:bottom-[--offset-terminal]',
   'make-child': 'border-accentSurface',
   // TODO(wittjosiah): This is not occurring in the current implementation.
   reparent: '',

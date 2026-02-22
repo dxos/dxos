@@ -73,7 +73,7 @@ export const Main = () => {
           placeholder={placeholder}
         />
       </article>
-      {showNavBar && <NavBar classNames='border-bs border-subduedSeparator' actions={actions} onAction={onAction} />}
+      {showNavBar && <NavBar classNames='border-y border-subduedSeparator' actions={actions} onAction={onAction} />}
     </div>
   );
 };

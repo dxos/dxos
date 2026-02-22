@@ -21,4 +21,276 @@
   /* Font families */
   --font-body: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
   --font-mono: 'JetBrains Mono Variable', ui-monospace, 'Cascadia Code', 'Source Code Pro', monospace;
+
+  /* Custom theme colors - mapped from --dx-* CSS variables */
+  --color-accentSurface: var(--dx-accentSurface);
+  --color-accentSurfaceHover: var(--dx-accentSurfaceHover);
+  --color-accentSurfaceText: var(--dx-accentSurfaceText);
+  --color-accentText: var(--dx-accentText);
+  --color-accentTextHover: var(--dx-accentTextHover);
+  --color-activeSurface: var(--dx-activeSurface);
+  --color-amberFill: var(--dx-amberFill);
+  --color-amberSurface: var(--dx-amberSurface);
+  --color-amberSurfaceText: var(--dx-amberSurfaceText);
+  --color-amberText: var(--dx-amberText);
+  --color-attention: var(--dx-attention);
+  --color-axisSelectedSurface: var(--dx-axisSelectedSurface);
+  --color-axisSelectedText: var(--dx-axisSelectedText);
+  --color-axisSurface: var(--dx-axisSurface);
+  --color-axisText: var(--dx-axisText);
+  --color-baseSurface: var(--dx-baseSurface);
+  --color-baseText: var(--dx-baseText);
+  --color-blueFill: var(--dx-blueFill);
+  --color-blueSurface: var(--dx-blueSurface);
+  --color-blueSurfaceText: var(--dx-blueSurfaceText);
+  --color-blueText: var(--dx-blueText);
+  --color-callActive: var(--dx-callActive);
+  --color-cardSurface: var(--dx-cardSurface);
+  --color-cmActiveLine: var(--dx-cmActiveLine);
+  --color-cmCommentSurface: var(--dx-cmCommentSurface);
+  --color-cmCommentText: var(--dx-cmCommentText);
+  --color-cmHighlightSurface: var(--dx-cmHighlightSurface);
+  --color-cmSeparator: var(--dx-cmSeparator);
+  --color-currentFill: var(--dx-currentFill);
+  --color-currentSurface: var(--dx-currentSurface);
+  --color-currentSurfaceText: var(--dx-currentSurfaceText);
+  --color-currentText: var(--dx-currentText);
+  --color-cyanFill: var(--dx-cyanFill);
+  --color-cyanSurface: var(--dx-cyanSurface);
+  --color-cyanSurfaceText: var(--dx-cyanSurfaceText);
+  --color-cyanText: var(--dx-cyanText);
+  --color-deckSurface: var(--dx-deckSurface);
+  --color-emeraldFill: var(--dx-emeraldFill);
+  --color-emeraldSurface: var(--dx-emeraldSurface);
+  --color-emeraldSurfaceText: var(--dx-emeraldSurfaceText);
+  --color-emeraldText: var(--dx-emeraldText);
+  --color-errorFill: var(--dx-errorFill);
+  --color-errorSurface: var(--dx-errorSurface);
+  --color-errorSurfaceText: var(--dx-errorSurfaceText);
+  --color-errorText: var(--dx-errorText);
+  --color-focusLine: var(--dx-focusLine);
+  --color-focusSurface: var(--dx-focusSurface);
+  --color-fuchsiaFill: var(--dx-fuchsiaFill);
+  --color-fuchsiaSurface: var(--dx-fuchsiaSurface);
+  --color-fuchsiaSurfaceText: var(--dx-fuchsiaSurfaceText);
+  --color-fuchsiaText: var(--dx-fuchsiaText);
+  --color-greenFill: var(--dx-greenFill);
+  --color-greenSurface: var(--dx-greenSurface);
+  --color-greenSurfaceText: var(--dx-greenSurfaceText);
+  --color-greenText: var(--dx-greenText);
+  --color-gridCommentedActive: var(--dx-gridCommentedActive);
+  --color-gridLine: var(--dx-gridLine);
+  --color-groupSurface: var(--dx-groupSurface);
+  --color-hairLine: var(--dx-hairLine);
+  --color-headerSurface: var(--dx-headerSurface);
+  --color-hoverSurface: var(--dx-hoverSurface);
+  --color-hoverSurfaceGroup: var(--dx-hoverSurfaceGroup);
+  --color-indigoFill: var(--dx-indigoFill);
+  --color-indigoSurface: var(--dx-indigoSurface);
+  --color-indigoSurfaceText: var(--dx-indigoSurfaceText);
+  --color-indigoText: var(--dx-indigoText);
+  --color-infoFill: var(--dx-infoFill);
+  --color-infoSurface: var(--dx-infoSurface);
+  --color-infoSurfaceText: var(--dx-infoSurfaceText);
+  --color-infoText: var(--dx-infoText);
+  --color-inputSurface: var(--dx-inputSurface);
+  --color-inputSurfaceGroup: var(--dx-inputSurfaceGroup);
+  --color-internalFill: var(--dx-internalFill);
+  --color-internalSurface: var(--dx-internalSurface);
+  --color-internalSurfaceText: var(--dx-internalSurfaceText);
+  --color-internalText: var(--dx-internalText);
+  --color-inverseSurface: var(--dx-inverseSurface);
+  --color-inverseSurfaceText: var(--dx-inverseSurfaceText);
+  --color-landmarkLine: var(--dx-landmarkLine);
+  --color-limeFill: var(--dx-limeFill);
+  --color-limeSurface: var(--dx-limeSurface);
+  --color-limeSurfaceText: var(--dx-limeSurfaceText);
+  --color-limeText: var(--dx-limeText);
+  --color-modalLine: var(--dx-modalLine);
+  --color-modalSurface: var(--dx-modalSurface);
+  --color-neutralFill: var(--dx-neutralFill);
+  --color-neutralSurface: var(--dx-neutralSurface);
+  --color-neutralSurfaceText: var(--dx-neutralSurfaceText);
+  --color-neutralText: var(--dx-neutralText);
+  --color-noLine: var(--dx-noLine);
+  --color-orangeFill: var(--dx-orangeFill);
+  --color-orangeSurface: var(--dx-orangeSurface);
+  --color-orangeSurfaceText: var(--dx-orangeSurfaceText);
+  --color-orangeText: var(--dx-orangeText);
+  --color-pinkFill: var(--dx-pinkFill);
+  --color-pinkSurface: var(--dx-pinkSurface);
+  --color-pinkSurfaceText: var(--dx-pinkSurfaceText);
+  --color-pinkText: var(--dx-pinkText);
+  --color-positionedLine: var(--dx-positionedLine);
+  --color-primaryFill: var(--dx-primaryFill);
+  --color-primarySurface: var(--dx-primarySurface);
+  --color-primarySurfaceText: var(--dx-primarySurfaceText);
+  --color-primaryText: var(--dx-primaryText);
+  --color-purpleFill: var(--dx-purpleFill);
+  --color-purpleSurface: var(--dx-purpleSurface);
+  --color-purpleSurfaceText: var(--dx-purpleSurfaceText);
+  --color-purpleText: var(--dx-purpleText);
+  --color-redFill: var(--dx-redFill);
+  --color-redSurface: var(--dx-redSurface);
+  --color-redSurfaceText: var(--dx-redSurfaceText);
+  --color-redText: var(--dx-redText);
+  --color-roseFill: var(--dx-roseFill);
+  --color-roseSurface: var(--dx-roseSurface);
+  --color-roseSurfaceText: var(--dx-roseSurfaceText);
+  --color-roseText: var(--dx-roseText);
+  --color-scrimSurface: var(--dx-scrimSurface);
+  --color-scrollbarThumb: var(--dx-scrollbarThumb);
+  --color-scrollbarThumbActive: var(--dx-scrollbarThumbActive);
+  --color-scrollbarThumbHover: var(--dx-scrollbarThumbHover);
+  --color-separator: var(--dx-separator);
+  --color-separatorGroup: var(--dx-separatorGroup);
+  --color-sidebarSurface: var(--dx-sidebarSurface);
+  --color-skyFill: var(--dx-skyFill);
+  --color-skySurface: var(--dx-skySurface);
+  --color-skySurfaceText: var(--dx-skySurfaceText);
+  --color-skyText: var(--dx-skyText);
+  --color-subduedSeparator: var(--dx-subduedSeparator);
+  --color-successFill: var(--dx-successFill);
+  --color-successSurface: var(--dx-successSurface);
+  --color-successSurfaceText: var(--dx-successSurfaceText);
+  --color-successText: var(--dx-successText);
+  --color-tealFill: var(--dx-tealFill);
+  --color-tealSurface: var(--dx-tealSurface);
+  --color-tealSurfaceText: var(--dx-tealSurfaceText);
+  --color-tealText: var(--dx-tealText);
+  --color-textInputSurface: var(--dx-textInputSurface);
+  --color-textInputSurfaceGroup: var(--dx-textInputSurfaceGroup);
+  --color-thickLine: var(--dx-thickLine);
+  --color-toolbarSurface: var(--dx-toolbarSurface);
+  --color-unAccent: var(--dx-unAccent);
+  --color-unAccentHover: var(--dx-unAccentHover);
+  --color-violetFill: var(--dx-violetFill);
+  --color-violetSurface: var(--dx-violetSurface);
+  --color-violetSurfaceText: var(--dx-violetSurfaceText);
+  --color-violetText: var(--dx-violetText);
+  --color-warningFill: var(--dx-warningFill);
+  --color-warningSurface: var(--dx-warningSurface);
+  --color-warningSurfaceText: var(--dx-warningSurfaceText);
+  --color-warningText: var(--dx-warningText);
+  --color-yellowFill: var(--dx-yellowFill);
+  --color-yellowSurface: var(--dx-yellowSurface);
+  --color-yellowSurfaceText: var(--dx-yellowSurfaceText);
+  --color-yellowText: var(--dx-yellowText);
+  --color-accentFocusIndicator: var(--dx-accentFocusIndicator);
+  --color-neutralFocusIndicator: var(--dx-neutralFocusIndicator);
+  --color-gridFocusIndicatorColor: var(--dx-gridFocusIndicatorColor);
+
+  /* Custom spacing/sizing values - for ring, ring-offset, border-width, etc. */
+  --ring-offset-width-focusOffset: var(--dx-focusOffset);
+  --ring-width-focusLine: var(--dx-focusLine);
+  --ring-width-hairLine: var(--dx-hairLine);
+  --ring-width-thickLine: var(--dx-thickLine);
+  --ring-width-noLine: var(--dx-noLine);
+
+  /* Custom animations - migrated from tailwind.ts */
+
+  /* Fade animations */
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes fade-out {
+    from { opacity: 1; }
+    to { opacity: 0; }
+  }
+  --animate-fade-in: fade-in 200ms ease-out;
+  --animate-fade-out: fade-out 400ms ease-out;
+
+  /* Popper/dialog slide animations */
+  @keyframes slide-down-and-fade {
+    from { opacity: 1; transform: translateY(0); }
+    to { opacity: 0; transform: translateY(16px); }
+  }
+  @keyframes slide-left-and-fade {
+    from { opacity: 0; transform: translateX(-16px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+  @keyframes slide-up-and-fade {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes slide-right-and-fade {
+    from { opacity: 0; transform: translateX(16px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+  --animate-slide-down-and-fade: slide-down-and-fade 400ms cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-slide-left-and-fade: slide-left-and-fade 400ms cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-slide-up-and-fade: slide-up-and-fade 400ms cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-slide-right-and-fade: slide-right-and-fade 400ms cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Toast animations */
+  @keyframes toast-hide {
+    0% { opacity: 1; }
+    100% { opacity: 0; }
+  }
+  @keyframes toast-slide-in-right {
+    0% { transform: translateX(calc(100% + 1rem)); }
+    100% { transform: translateX(0); }
+  }
+  @keyframes toast-slide-in-bottom {
+    0% { transform: translateY(calc(100% + 1rem)); }
+    100% { transform: translateY(0); }
+  }
+  @keyframes toast-swipe-out {
+    0% { transform: translateX(var(--radix-toast-swipe-end-x)); }
+    100% { transform: translateX(calc(100% + 1rem)); }
+  }
+  --animate-toast-hide: toast-hide 100ms ease-in forwards;
+  --animate-toast-slide-in-right: toast-slide-in-right 150ms cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-toast-slide-in-bottom: toast-slide-in-bottom 150ms cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-toast-swipe-out: toast-swipe-out 100ms ease-out forwards;
+
+  /* Accordion animations */
+  @keyframes slide-down {
+    from { height: 0px; }
+    to { height: var(--radix-accordion-content-height); }
+  }
+  @keyframes slide-up {
+    from { height: var(--radix-accordion-content-height); }
+    to { height: 0px; }
+  }
+  --animate-slide-down: slide-down 300ms cubic-bezier(0.87, 0, 0.13, 1);
+  --animate-slide-up: slide-up 300ms cubic-bezier(0.87, 0, 0.13, 1);
+
+  /* Shimmer animation */
+  @keyframes shimmer-loop {
+    100% { transform: translateX(100%); }
+  }
+  --animate-shimmer: shimmer-loop 2s infinite;
+
+  /* Halo pulse animation */
+  @keyframes halo-pulse {
+    0% { opacity: 0.3; }
+    5% { opacity: 1; }
+    100% { opacity: 0.3; }
+  }
+  --animate-halo-pulse: halo-pulse 2s ease-out infinite;
+
+  /* Progress animations */
+  @keyframes progress-indeterminate {
+    0% { left: 0; width: 0%; }
+    25% { left: 25%; width: 50%; }
+    75% { left: 50%; width: 100%; }
+    100% { left: 100%; width: 0%; }
+  }
+  --animate-progress-indeterminate: progress-indeterminate 2s ease-out infinite;
+
+  /* Border trail animations */
+  @keyframes trail {
+    to { offset-distance: 100%; }
+  }
+  @keyframes trail-offset {
+    0% { offset-distance: 50%; }
+    100% { offset-distance: 150%; }
+  }
+  --animate-trail: trail 6s linear infinite;
+  --animate-trail-offset: trail-offset 6s linear infinite;
+
+  /* Spin animations (using built-in spin, just defining timing) */
+  --animate-spin-slow: spin 3s linear infinite;
 }

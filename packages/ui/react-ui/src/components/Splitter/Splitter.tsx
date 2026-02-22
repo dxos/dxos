@@ -93,7 +93,7 @@ const Panel = forwardRef<HTMLDivElement, ScopedProps<PanelProps>>(
       <div
         {...panelProps}
         ref={forwardedRef}
-        className={mx('absolute inset-inline-0 flex flex-col overflow-hidden', classNames)}
+        className={mx('absolute inset-x-0 flex flex-col overflow-hidden', classNames)}
         style={{
           top,
           height,

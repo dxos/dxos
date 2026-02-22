@@ -82,7 +82,7 @@ export const ChatOptions = ({ db, context, blueprintRegistry, presets, preset, o
                   <Tabs.Tabpanel value='model' tabIndex={-1} classNames='dx-focus-ring-inset px-0!'>
                     <ModelsPanel presets={presets} preset={preset} onPresetChange={onPresetChange} />
                   </Tabs.Tabpanel>
-                  <Tabs.Tablist classNames='sm:overflow-x-hidden justify-center p-[--dx-cardChrome] border-bs border-subduedSeparator order-last'>
+                  <Tabs.Tablist classNames='sm:overflow-x-hidden justify-center p-[--dx-cardChrome] border-y border-subduedSeparator order-last'>
                     <Tabs.IconTab
                       value='blueprints'
                       icon='ph--blueprint--regular'

@@ -12,7 +12,7 @@ export const anchoredOverflowRoot: ComponentFunction<AnchoredOverflowStyleProps>
   mx('overflow-anchored overflow-auto', ...etc);
 
 export const anchoredOverflowAnchor: ComponentFunction<AnchoredOverflowStyleProps> = (_props, ...etc) =>
-  mx('overflow-anchor is-px bs-px', ...etc);
+  mx('overflow-anchor is-px block-px', ...etc);
 
 export const anchoredOverflowTheme: Theme<AnchoredOverflowStyleProps> = {
   root: anchoredOverflowRoot,

@@ -106,7 +106,7 @@ type Story = StoryObj<typeof meta>;
 const DefaultStory = ({ onAction }: { onAction: (action: { id: string }) => void }) => {
   const actions = useMemo(() => Atom.make(buildDefaultActions()).pipe(Atom.keepAlive), []);
 
-  return <NavBar classNames='border-bs border-separator' actions={actions} onAction={onAction} />;
+  return <NavBar classNames='border-y border-separator' actions={actions} onAction={onAction} />;
 };
 
 export const Default: Story = {

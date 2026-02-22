@@ -8,10 +8,10 @@
       }
 
       &:focus-visible {
-        @apply ring-focusLine ring-offset-focusOffset z-[1] ring-neutralFocusIndicator;
+        @apply ring-focusLine ring-offset-focusOffset z-[1] ring-[var(--dx-neutralFocusIndicator)];
 
         &[data-variant='primary'] {
-          @apply ring-accentFocusIndicator;
+          @apply ring-[var(--dx-accentFocusIndicator)];
         }
 
         &:hover {
@@ -34,10 +34,10 @@
       }
 
       &:focus {
-        @apply ring-focusLine ring-offset-focusOffset z-[1] ring-neutralFocusIndicator;
+        @apply ring-focusLine ring-offset-focusOffset z-[1] ring-[var(--dx-neutralFocusIndicator)];
 
         &[data-variant='primary'] {
-          @apply ring-accentFocusIndicator;
+          @apply ring-[var(--dx-accentFocusIndicator)];
         }
 
         &:hover {
@@ -68,10 +68,10 @@
   .dx-focus-ring-group:focus-visible .dx-focus-ring-group-indicator,
   .dx-focus-ring-group-x:focus-visible .dx-focus-ring-group-x-indicator,
   .dx-focus-ring-group-y:focus-visible .dx-focus-ring-group-y-indicator {
-    @apply ring-focusLine ring-offset-focusOffset ring-neutralFocusIndicator;
+    @apply ring-focusLine ring-offset-focusOffset ring-[var(--dx-neutralFocusIndicator)];
 
     &[data-variant='primary'] {
-      @apply ring-accentFocusIndicator;
+      @apply ring-[var(--dx-accentFocusIndicator)];
     }
 
     &:hover {
@@ -86,10 +86,10 @@
   .dx-focus-ring-group-always:focus .dx-focus-ring-group-indicator,
   .dx-focus-ring-group-x-always:focus .dx-focus-ring-group-x-indicator,
   .dx-focus-ring-group-y-always:focus .dx-focus-ring-group-y-indicator {
-    @apply ring-focusLine ring-offset-focusOffset ring-neutralFocusIndicator;
+    @apply ring-focusLine ring-offset-focusOffset ring-[var(--dx-neutralFocusIndicator)];
 
     &[data-variant='primary'] {
-      @apply ring-accentFocusIndicator;
+      @apply ring-[var(--dx-accentFocusIndicator)];
     }
 
     &:hover {
@@ -134,11 +134,11 @@
 
       &:focus-visible {
         &::after {
-          @apply ring-focusLine ring-offset-focusOffset ring-inset z-[1] ring-neutralFocusIndicator;
+          @apply ring-focusLine ring-offset-focusOffset ring-inset z-[1] ring-[var(--dx-neutralFocusIndicator)];
         }
 
         &[data-variant='primary']::after {
-          @apply ring-accentFocusIndicator;
+          @apply ring-[var(--dx-accentFocusIndicator)];
         }
 
         &:hover {
@@ -167,11 +167,11 @@
 
       &:focus {
         &::after {
-          @apply ring-focusLine ring-offset-focusOffset ring-inset z-[1] ring-neutralFocusIndicator;
+          @apply ring-focusLine ring-offset-focusOffset ring-inset z-[1] ring-[var(--dx-neutralFocusIndicator)];
         }
 
         &[data-variant='primary']::after {
-          @apply ring-accentFocusIndicator;
+          @apply ring-[var(--dx-accentFocusIndicator)];
         }
 
         &:hover {

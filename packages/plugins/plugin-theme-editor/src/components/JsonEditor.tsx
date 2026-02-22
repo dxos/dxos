@@ -45,5 +45,5 @@ export const JsonEditor = (_: JsonEditorProps) => {
     [themeMode],
   );
 
-  return <div ref={parentRef} className='min-block-0 border-bs border-separator' {...focusAttributes} />;
+  return <div ref={parentRef} className='min-block-0 border-y border-separator' {...focusAttributes} />;
 };

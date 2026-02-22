@@ -93,16 +93,16 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
     <Main.ComplementarySidebar
       label={label}
       classNames={[
-        topbar && 'block-start-[calc(env(safe-area-inset-top)+var(--rail-size))]',
-        hoistStatusbar && 'block-end-[--statusbar-size]',
+        topbar && 'top-[calc(env(safe-area-inset-top)+var(--rail-size))]',
+        hoistStatusbar && 'bottom-[--statusbar-size]',
       ]}
     >
       <Tabs.Root orientation='vertical' verticalVariant='stateless' value={internalValue} classNames='contents'>
         <div
           role='none'
           className={mx(
-            'absolute z-[1] inset-block-0 inline-end-0 !inline-[--r0-size]',
-            'pbs-[env(safe-area-inset-top)] pbe-[env(safe-area-inset-bottom)] border-is border-subduedSeparator',
+            'absolute z-[1] inset-block-0 end-0 !inline-[--r0-size]',
+            'py-[env(safe-area-inset-top)] pbe-[env(safe-area-inset-bottom)] border-is border-subduedSeparator',
             'grid grid-cols-1 grid-rows-[1fr_min-content] bg-baseSurface contain-layout app-drag',
           )}
         >
@@ -143,8 +143,8 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
               value={getCompanionId(companion.id)}
               classNames={[
                 'absolute data-[state="inactive"]:-z-[1] overflow-hidden',
-                'inset-block-0 inline-start-0 inline-[calc(100%-var(--r0-size))] lg:inline-[--r1-size]',
-                'grid grid-cols-1 grid-rows-[var(--rail-size)_1fr_min-content] pbs-[env(safe-area-inset-top)]',
+                'inset-block-0 start-0 inline-[calc(100%-var(--r0-size))] lg:inline-[--r1-size]',
+                'grid grid-cols-1 grid-rows-[var(--rail-size)_1fr_min-content] py-[env(safe-area-inset-top)]',
               ]}
               {...(state.complementarySidebarState !== 'expanded' && { inert: true })}
             >
@@ -182,7 +182,7 @@ const ComplementarySidebarPanel = ({ companion, activeId, data, hoistStatusbar }
 
   return (
     <>
-      <div role='none' className='flex items-center p-1 gap-1 border-be border-subduedSeparator'>
+      <div role='none' className='flex items-center p-1 gap-1 border-b border-subduedSeparator'>
         <IconButton
           label={toLocalizedString(companion.properties.label, t)}
           icon={companion.properties.icon}
@@ -207,7 +207,7 @@ const ComplementarySidebarPanel = ({ companion, activeId, data, hoistStatusbar }
       {!hoistStatusbar && (
         <div
           role='contentinfo'
-          className='flex flex-wrap justify-center items-center border-bs border-subduedSeparator pbs-1 pbe-[max(env(safe-area-inset-bottom),0.25rem)]'
+          className='flex flex-wrap justify-center items-center border-y border-subduedSeparator pbs-1 pbe-[max(env(safe-area-inset-bottom),0.25rem)]'
         >
           <Surface.Surface role='status-bar--r1-footer' limit={1} />
         </div>

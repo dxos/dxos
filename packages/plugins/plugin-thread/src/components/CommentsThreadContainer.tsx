@@ -98,7 +98,7 @@ export const CommentsThreadContainer = ({
   return (
     <ThreadComponent.Root
       id={Obj.getDXN(thread).toString()}
-      classNames='pbs-2 border-be border-subduedSeparator last:border-none'
+      classNames='pbs-2 border-b border-subduedSeparator last:border-none'
       current={current}
       onClickCapture={handleAttend}
       onFocusCapture={handleAttend}
@@ -167,7 +167,7 @@ export const CommentsThreadContainer = ({
       <ThreadComponent.Status activity={activity}>{t('activity message')}</ThreadComponent.Status>
 
       {/* NOTE(thure): This can’t also be the `overflow-anchor` because `ScrollArea` injects an interceding node that contains this necessary ref’d element. */}
-      <div role='none' className='bs-px -mbs-px' ref={threadScrollRef} />
+      <div role='none' className='block-px -mbs-px' ref={threadScrollRef} />
     </ThreadComponent.Root>
   );
 };

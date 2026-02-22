@@ -139,7 +139,7 @@ export const L0ItemActiveTabIndicator = ({ classNames }: ThemedClassName<{}>) =>
   <div
     role='none'
     className={mx(
-      'hidden group-aria-selected/l0item:block absolute inline-start-0 inset-block-2 inline-1 bg-accentSurface rounded-ie',
+      'hidden group-aria-selected/l0item:block absolute start-0 inset-block-2 inline-1 bg-accentSurface rounded-ie',
       classNames,
     )}
   />
@@ -300,7 +300,7 @@ export const L0Menu = ({ menuActions, topLevelItems, pinnedItems, userAccountIte
   return (
     <Tabs.Tablist
       classNames={[
-        'group/l0 absolute z-[1] inset-block-0 inline-start-0 rounded-is',
+        'group/l0 absolute z-[1] inset-block-0 start-0 rounded-is',
         'grid grid-cols-[var(--l0-size)] grid-rows-[var(--rail-size)_1fr_min-content_var(--l0-size)] contain-layout',
         '!inline-[--l0-size] bg-baseSurface border-ie border-subduedSeparator app-drag pbe-[env(safe-area-inset-bottom)]',
       ]}
@@ -340,8 +340,8 @@ export const L0Menu = ({ menuActions, topLevelItems, pinnedItems, userAccountIte
             role='none'
             className={mx([
               'flex flex-col gap-1 pbs-1',
-              '[body[data-platform="macos"]_&]:pbs-[30px]',
-              '[body[data-platform="ios"]_&]:pbs-[max(env(safe-area-inset-top),0.25rem)]',
+              '[body[data-platform="macos"]_&]:py-[30px]',
+              '[body[data-platform="ios"]_&]:py-[max(env(safe-area-inset-top),0.25rem)]',
             ])}
           >
             {topLevelItems.map((item) => (

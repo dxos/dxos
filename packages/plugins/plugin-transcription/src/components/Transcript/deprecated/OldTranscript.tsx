@@ -62,7 +62,7 @@ const timestampClasses = 'text-xs leading-[20px] text-description pe-0 tabular-n
 const segmentTextClasses = 'text-sm whitespace-normal hyphens-auto';
 const measureClasses = mx(
   // NOTE(thure): The `inline-start` value must equal `timestampColumnWidth` plus grid’s gap (1px)
-  'absolute inline-start-[69px] inline-end-0 invisible z-[-1] border',
+  'absolute start-[69px] end-0 invisible z-[-1] border',
   'px-[--dx-grid-cell-padding-inline] py-[--dx-grid-cell-padding-block] leading-[20px]',
   segmentTextClasses,
 );

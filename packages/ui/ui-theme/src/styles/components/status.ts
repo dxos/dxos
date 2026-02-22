@@ -22,7 +22,7 @@ export const statusBar: ComponentFunction<StatusStyleProps> = ({ indeterminate, 
   mx(
     'absolute inset-block-0 block rounded-full',
     variant === 'main-bottom' ? 'bg-accentSurface' : 'bg-unAccent',
-    indeterminate ? 'animate-progress-indeterminate' : 'inline-start-0',
+    indeterminate ? 'animate-progress-indeterminate' : 'start-0',
     ...etc,
   );
 
