@@ -4,4 +4,14 @@
 
 @import 'tailwindcss';
 
+/**
+ * Tailwind v4 theme configuration using @theme directive.
+ * Replaces JavaScript config for theme values.
+ */
+@theme {
+  /* Font families */
+  --font-body: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono Variable', ui-monospace, 'Cascadia Code', 'Source Code Pro', monospace;
+}
+
 @import './styles/layers/index.css';

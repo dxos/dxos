@@ -150,7 +150,37 @@ Tailwind CSS v4 has renamed several core utilities for better consistency:
 
 ### ✅ Fixed Issues
 
-#### 1. PostCSS Plugin Migration
+#### 1. CSS-First Configuration with @theme Directive
+
+**Breaking Change**: Tailwind v4 uses CSS-first configuration instead of JavaScript config files.
+
+**Before (v3):** Theme values configured in `tailwind.config.js`
+```javascript
+export const tailwindConfig = () => ({
+  theme: {
+    fontFamily: {
+      body: ['Inter Variable', ...defaultTheme.fontFamily.sans],
+      mono: ['JetBrains Mono Variable', ...defaultTheme.fontFamily.mono],
+    },
+  },
+});
+```
+
+**After (v4):** Theme values defined in CSS using `@theme` directive
+```css
+@theme {
+  /* Font families */
+  --font-body: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono Variable', ui-monospace, monospace;
+}
+```
+
+**Files updated:**
+1. `/packages/ui/ui-theme/src/theme.css` - Added `@theme` block with font-family definitions
+
+**Impact**: Custom theme values like `font-body` and `font-mono` now work correctly in Tailwind v4.
+
+#### 2. PostCSS Plugin Migration
 
 **Breaking Change**: In Tailwind v4, the PostCSS plugin has moved to a separate package `@tailwindcss/postcss`.
 
@@ -187,7 +217,7 @@ module.exports = {
 - Added `@tailwindcss/postcss: ^4.2.0` to pnpm catalog
 - Added to ui-theme dependencies
 
-#### 2. Utility Class Renames
+#### 3. Utility Class Renames
 
 **Fixed automatically using sed:**
 
@@ -208,7 +238,7 @@ module.exports = {
    - focus.ts (1 occurrence)
    - Various component files
 
-#### 2. CSS Variables Without `var()` Wrapper (FIXED)
+#### 4. CSS Variables Without `var()` Wrapper (FIXED)
 
 **Files requiring updates:**
 
@@ -230,7 +260,7 @@ module.exports = {
    mx('rounded p-1 max-bs-[var(--radix-dropdown-menu-content-available-height)] overflow-y-auto', ...etc);
    ```
 
-#### 3. Grid Track List Commas (FIXED)
+#### 5. Grid Track List Commas (FIXED)
 
 **Files requiring updates:**
 
@@ -300,10 +330,11 @@ grep -rn 'grid-cols-\[[0-9a-z]*,[0-9a-z]*\]' packages/ --include="*.tsx" --inclu
 ## Migration Status
 
 - ✅ Dependencies updated to v4.2.0
-- ✅ Configuration migrated to CSS-based approach
+- ✅ Configuration migrated to CSS-based approach using `@theme` directive
 - ✅ **PostCSS plugin migrated** to `@tailwindcss/postcss`
 - ✅ Build successful and 4.5x faster
 - ✅ No deprecated utilities found in codebase
+- ✅ **FIXED**: CSS-first theme configuration (font-family)
 - ✅ **FIXED**: Utility class renames (227 files updated: 64 rounded-sm→xs + 171 rounded→sm + 18 outline)
 - ✅ **FIXED**: Important modifier placement (30 files updated)
 - ✅ **FIXED**: CSS variable syntax (2 files)
