@@ -15,7 +15,6 @@ tasks:
   compile-node:
     command: pnpm exec dx-compile
     args:
-      - '--entryPoint=src/config/tailwind.ts'
       - '--entryPoint=src/plugins/esbuild-plugin.ts'
       - '--entryPoint=src/plugins/plugin.ts'
       - '--entryPoint=src/theme.css'

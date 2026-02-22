@@ -2,16 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { tokens } from '@dxos/ui-theme';
-import { get } from '@dxos/util';
-
-/**
- * Returns the tailwind token value.
- */
-const getToken = (path: string, defaultValue?: string | string[]): string => {
-  const value = get(tokens, path, defaultValue);
-  return value?.toString() ?? '';
-};
-
-export const fontBody = getToken('fontFamily.body');
-export const fontMono = getToken('fontFamily.mono');
+// Font families matching --font-body and --font-mono in theme.css.
+export const fontBody = 'Inter Variable, ui-sans-serif, system-ui, sans-serif';
+export const fontMono = 'JetBrains Mono Variable, ui-monospace, Cascadia Code, Source Code Pro, monospace';
