@@ -128,10 +128,7 @@ export default defineConfig(
           root: dirname,
           env: ['DX_VAULT'],
         }),
-        ThemePlugin({
-          root: dirname,
-          content: [path.resolve(dirname, './index.html'), path.resolve(dirname, './src/**/*.{js,ts,jsx,tsx}')],
-        }),
+        ThemePlugin({}),
         WasmPlugin(),
         ReactPlugin({
           tsDecorators: true,

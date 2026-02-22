@@ -9,18 +9,13 @@ import { resolve } from 'node:path';
 
 import tailwindcss from '@tailwindcss/postcss';
 import autoprefixer from 'autoprefixer';
-import type postcss from 'postcss';
 import postcssImport from 'postcss-import';
 import postcssNesting from 'postcss-nesting';
 import { type Plugin, type UserConfig } from 'vite';
 
-import { resolveKnownPeers } from './resolveContent';
-
 export type ThemePluginOptions = {
   srcCssPath?: string;
   virtualFileId?: string;
-  root?: string;
-  content?: string[];
   verbose?: boolean;
 };
 
@@ -42,20 +37,24 @@ export const ThemePlugin = (options: ThemePluginOptions): Plugin => {
     console.log('ThemePlugin:\n', JSON.stringify(config, null, 2));
   }
 
-  let resolvedContent: string[] | undefined;
-
   return {
     name: 'vite-plugin-dxos-ui-theme',
-    config: async ({ root }): Promise<UserConfig> => {
-      resolvedContent = root ? await resolveKnownPeers(config.content ?? [], root) : config.content;
-      if (options.verbose) {
-        console.log('[theme-plugin] content', resolvedContent);
-      }
-
+    config: (): UserConfig => {
       return {
         css: {
           postcss: {
-            plugins: createPostCSSPipeline(config, resolvedContent),
+            plugins: [
+              // Handles @import statements in CSS.
+              postcssImport(),
+              // Processes CSS nesting syntax.
+              postcssNesting(),
+              // Processes Tailwind directives and generates utilities from scanned content.
+              tailwindcss({
+                base: resolve(import.meta.dirname, '../../../..'),
+              }),
+              // Adds vendor prefixes.
+              autoprefixer,
+            ],
           },
         },
       };
@@ -67,20 +66,3 @@ export const ThemePlugin = (options: ThemePluginOptions): Plugin => {
     },
   };
 };
-
-/**
- * Configures PostCSS pipeline for theme.css processing.
- */
-const createPostCSSPipeline = (config: ThemePluginOptions, content?: string[]): postcss.AcceptedPlugin[] => [
-  // Handles @import statements in CSS.
-  postcssImport(),
-  // Processes CSS nesting syntax.
-  postcssNesting(),
-  // Processes Tailwind directives and generates utilities from scanned content.
-  tailwindcss({
-    base: resolve(import.meta.dirname, '../../../..'),
-    ...(content ? { content } : {}),
-  }),
-  // Adds vendor prefixes.
-  autoprefixer,
-];
