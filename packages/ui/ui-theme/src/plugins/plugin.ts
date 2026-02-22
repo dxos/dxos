@@ -7,16 +7,13 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
-import chTokens from '@ch-ui/tokens/postcss';
+import tailwindcss from '@tailwindcss/postcss';
 import autoprefixer from 'autoprefixer';
 import postcss from 'postcss';
 import postcssImport from 'postcss-import';
 import postcssNesting from 'postcss-nesting';
-import tailwindcss from '@tailwindcss/postcss';
 import type { ThemeConfig } from 'tailwindcss/plugin';
 import { type Plugin, type UserConfig } from 'vite';
-
-import { tokenSet } from '../config';
 
 import { resolveKnownPeers } from './resolveContent';
 
@@ -44,8 +41,6 @@ const createPostCSSPipeline = (environment: string, config: ThemePluginOptions):
   postcssImport(),
   // Processes CSS nesting syntax.
   postcssNesting(),
-  // Processes custom design tokens.
-  chTokens({ config: () => tokenSet }),
   // Processes Tailwind directives and utilities.
   tailwindcss(),
   // Adds vendor prefixes.
@@ -87,7 +82,8 @@ export const ThemePlugin = (options: ThemePluginOptions): Plugin => {
     },
     resolveId: (id) => {
       if (id === config.virtualFileId) {
-        return config.cssPath;
+        // Return source CSS path so Vite processes it through PostCSS pipeline (including chTokens)
+        return config.srcCssPath;
       }
     },
     handleHotUpdate: async ({ file, server }) => {
