@@ -96,8 +96,8 @@ const invokeFunction = (
     try {
       const assertInput = functionDef.inputSchema.pipe(Schema.asserts);
       (assertInput as any)(input);
-    } catch (e) {
-      throw new FunctionError({ message: 'Invalid function input', context: { name: functionDef.name }, cause: e });
+    } catch (err) {
+      throw new FunctionError({ message: 'Invalid function input', context: { name: functionDef.name }, cause: err });
     }
 
     const context: FunctionContext = {};

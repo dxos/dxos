@@ -220,10 +220,11 @@ export const scrollToLine = (view: EditorView, line: number, options?: SmoothScr
  *
  * and is floored to `minStepPx` to avoid stalling when `scrollTop` is quantized. When the remaining
  * distance is within `snapPx`, it snaps to the exact target and stops.
+ *
+ * @param k Fraction of remaining distance moved each frame (0 < k < 1).
+ * @param maxStep Max step size (px).
  */
-export function createSmoothScrollTo(view: EditorView) {
-  const k = 0.05; // Fraction of remaining distance moved each frame (0 < k < 1).
-  const maxStep = 80; // Max step size (px).
+export function createSmoothScrollTo(view: EditorView, k = 0.01, maxStep = 20) {
   const el = view.scrollDOM;
 
   let currentTop = 0; // Float-precision position; avoids browser integer-rounding of scrollTop.
