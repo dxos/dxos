@@ -27,7 +27,7 @@ export const listItemDragHandleIcon: ComponentFunction<ListStyleProps> = (_props
   mx(getSize(5), 'mbs-2.5', ...etc);
 
 export const listItemOpenTrigger: ComponentFunction<ListStyleProps> = ({ density }, ...etc) =>
-  mx('is-5 rounded flex justify-center items-center', densityBlockSize(density), ghostHover, focusRing, ...etc);
+  mx('is-5 rounded-sm flex justify-center items-center', densityBlockSize(density), ghostHover, focusRing, ...etc);
 
 export const listItemOpenTriggerIcon: ComponentFunction<ListStyleProps> = (_props, ...etc) => {
   return mx(getSize(5), ...etc);

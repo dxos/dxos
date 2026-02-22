@@ -160,7 +160,7 @@ const Sidebar = ({ mutate }: { mutate?: boolean }) => {
             getSlots={(node, open, depth) => {
               if (depth === 1) {
                 return {
-                  root: 'rounded bg-white dark:bg-neutral-850',
+                  root: 'rounded-sm bg-white dark:bg-neutral-850',
                   header: mx('rounded-t bg-neutral-50 dark:bg-neutral-900', !open && 'rounded-b'),
                 };
               }

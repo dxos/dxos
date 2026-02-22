@@ -53,7 +53,7 @@ export const RecoveryCodeDialog = ({ code }: RecoveryCodeDialogProps) => {
 const Code = ({ code }: { code: string }) => {
   const words = code.split(' ');
   return (
-    <div className='relative p-2 border border-separator rounded group'>
+    <div className='relative p-2 border border-separator rounded-sm group'>
       <Clipboard.IconButton value={code} classNames='absolute top-2 right-2 invisible group-hover:visible' />
       <div className='grid grid-cols-4'>
         {words.map((word, i) => (

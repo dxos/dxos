@@ -19,7 +19,7 @@ const DefaultStory = () => {
   return (
     <div className='flex flex-col gap-4'>
       <p>Use the log level toolbar control to filter messages.</p>
-      <button className='p-1 border border-separator rounded hover:bg-hoverSurface' onClick={handleClick}>
+      <button className='p-1 border border-separator rounded-sm hover:bg-hoverSurface' onClick={handleClick}>
         Log messages
       </button>
     </div>

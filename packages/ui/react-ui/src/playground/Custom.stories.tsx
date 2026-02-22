@@ -89,14 +89,14 @@ const DefaultStory = ({ children, ...args }: Omit<ButtonProps, 'ref'>) => {
 
         {/* TODO(burdon): Full variant with max width. */}
         <div className='flex justify-center'>
-          <Button classNames='is-full max-is-[15rem] rounded' variant='default'>
+          <Button classNames='is-full max-is-[15rem] rounded-sm' variant='default'>
             Test
           </Button>
         </div>
         <div className='flex justify-center'>
           {/* TODO(burdon): Option to have button on RHS. Default size for icon should be 5 for this (medium) density. */}
           <IconButton
-            classNames='is-full max-is-[15rem] rounded'
+            classNames='is-full max-is-[15rem] rounded-sm'
             variant='primary'
             icon='ph--arrows-clockwise--regular'
             label='Test'

@@ -39,7 +39,7 @@ export const TaskItem = (props: TaskItemProps) => {
 
   return (
     <li
-      className='flex items-center justify-between text-gray-700 max-is-md rounded p-1 bs-8'
+      className='flex items-center justify-between text-gray-700 max-is-md rounded-sm p-1 bs-8'
       onMouseOver={() => {
         onShowDelete(index);
       }}
@@ -48,7 +48,7 @@ export const TaskItem = (props: TaskItemProps) => {
       }}
     >
       <input
-        className='mr-2 rounded shadow hover:pointer-cursor'
+        className='mr-2 rounded-sm shadow hover:pointer-cursor'
         type='checkbox'
         checked={completed}
         onChange={(e) => {
@@ -87,7 +87,7 @@ export const TaskItem = (props: TaskItemProps) => {
       </div>
       {isShowingDelete && (
         <button
-          className='bg-white rounded ml-2 p-0 pli-2 hover:bg-gray-100 hover:cursor-pointer shadow border border-gray-400 active:bg-gray-200'
+          className='bg-white rounded-sm ml-2 p-0 pli-2 hover:bg-gray-100 hover:cursor-pointer shadow border border-gray-400 active:bg-gray-200'
           onClick={() => onRemove(task)}
         >
           Delete

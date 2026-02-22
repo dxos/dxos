@@ -103,7 +103,7 @@ const ControlledStory = ({ items = defaultItems }: DefaultStoryProps) => {
           </SearchList.Viewport>
         </SearchList.Content>
       </SearchList.Root>
-      <button className='pli-2 plb-1 rounded bg-accentSurface text-accentText' onClick={() => handleQueryChange('')}>
+      <button className='pli-2 plb-1 rounded-sm bg-accentSurface text-accentText' onClick={() => handleQueryChange('')}>
         Clear Query
       </button>
     </div>
@@ -329,7 +329,7 @@ const CustomInput = () => {
   };
 
   return (
-    <div className='flex gap-2 items-center p-2 bg-input rounded'>
+    <div className='flex gap-2 items-center p-2 bg-input rounded-sm'>
       <input
         type='text'
         value={query}

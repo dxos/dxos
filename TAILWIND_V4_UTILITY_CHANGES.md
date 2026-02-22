@@ -20,13 +20,14 @@ Tailwind CSS v4 has renamed several core utilities for better consistency:
 | `backdrop-blur-sm` | `backdrop-blur-xs` | ✅ Not used in codebase |
 | `backdrop-blur` | `backdrop-blur-sm` | ✅ Not used in codebase |
 | `rounded-sm` | `rounded-xs` | ✅ **FIXED** - 64 occurrences in 56 files |
-| `rounded` | `rounded-sm` | ✅ Not used in codebase |
+| `rounded` | `rounded-sm` | ✅ **FIXED** - 274 occurrences in 171 files |
 | `outline-none` | `outline-hidden` | ✅ **FIXED** - 35 occurrences in 18 files |
 | `ring` | `ring-3` | ✅ Not used in codebase |
 
 **Files updated:**
-- `rounded-sm` → `rounded-xs`: Updated across all source files (ui-theme styles, components, stories)
-- `outline-none` → `outline-hidden`: Updated in focus-ring.css and focus.ts
+- `rounded-sm` → `rounded-xs`: 64 occurrences in 56 files (ui-theme styles, components, stories)
+- `rounded` → `rounded-sm`: 274 occurrences in 171 files (all UI components, plugins, apps)
+- `outline-none` → `outline-hidden`: 35 occurrences in 18 files (focus-ring.css and focus.ts)
 - **Important modifier placement**: `!` moved from start to end of utilities (30 files)
 
 ### 2. Important Modifier Placement
@@ -159,7 +160,13 @@ Tailwind CSS v4 has renamed several core utilities for better consistency:
    - Plugin components
    - CSS layers (button.css, checkbox.css, tag.css)
 
-2. `outline-none` → `outline-hidden` (35 occurrences in 18 files)
+2. `rounded` → `rounded-sm` (274 occurrences in 171 files)
+   - All UI components (Chat, Card, Board, Table, etc.)
+   - All plugins (assistant, deck, thread, etc.)
+   - Apps (tasks, composer-app, composer-crx)
+   - Devtools panels and stories
+
+3. `outline-none` → `outline-hidden` (35 occurrences in 18 files)
    - focus-ring.css (17 occurrences)
    - focus.ts (1 occurrence)
    - Various component files
@@ -259,7 +266,7 @@ grep -rn 'grid-cols-\[[0-9a-z]*,[0-9a-z]*\]' packages/ --include="*.tsx" --inclu
 - ✅ Configuration migrated to CSS-based approach
 - ✅ Build successful and 4.5x faster
 - ✅ No deprecated utilities found in codebase
-- ✅ **FIXED**: Utility class renames (99 files updated)
+- ✅ **FIXED**: Utility class renames (227 files updated: 64 rounded-sm→xs + 171 rounded→sm + 18 outline)
 - ✅ **FIXED**: Important modifier placement (30 files updated)
 - ✅ **FIXED**: CSS variable syntax (2 files)
 - ✅ **FIXED**: Grid track list syntax (3 files)

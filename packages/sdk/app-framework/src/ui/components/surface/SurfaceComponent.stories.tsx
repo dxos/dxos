@@ -25,7 +25,7 @@ type TestComponentProps = {
 const TestComponent = forwardRef<HTMLDivElement, TestComponentProps>(({ styles, id }, forwardedRef) => {
   return (
     <div
-      className={mx('flex justify-center items-center border rounded', styles.surface, styles.border)}
+      className={mx('flex justify-center items-center border rounded-sm', styles.surface, styles.border)}
       ref={forwardedRef}
     >
       <span className={mx('dx-tag font-mono text-lg', styles.text)}>{id}</span>
@@ -87,7 +87,7 @@ const DefaultStory = () => {
           }
 
           return (
-            <div className='flex justify-center items-center border border-roseFill rounded'>
+            <div className='flex justify-center items-center border border-roseFill rounded-sm'>
               <span className='font-mono'>Ticking... {count}</span>
             </div>
           );

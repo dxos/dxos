@@ -114,7 +114,7 @@ const PlankContainer = ({ children, solo, companion, encapsulate }: PlankContain
       data-popover-collision-boundary={true}
       className={mx(
         'absolute inset-[--main-spacing] grid',
-        encapsulate && 'border border-separator rounded overflow-hidden',
+        encapsulate && 'border border-separator rounded-sm overflow-hidden',
         companion && 'grid-cols-[6fr_4fr]', // TODO(burdon): Resize.
         railGridHorizontal,
         mainIntrinsicSize,
@@ -242,7 +242,7 @@ const PlankComponent = memo(
       part === 'solo-companion' && 'border-separator! border-is',
       settings?.encapsulatedPlanks &&
         !part.startsWith('solo') &&
-        'mli-[--main-spacing] border-separator! border rounded overflow-hidden',
+        'mli-[--main-spacing] border-separator! border rounded-sm overflow-hidden',
     );
 
     return (

@@ -20,7 +20,7 @@ export type SelectStyleProps = Partial<{
 
 export const selectContent: ComponentFunction<SelectStyleProps> = ({ elevation }, ...etc) => {
   return mx(
-    'min-w-[--radix-select-trigger-width] rounded max-bs-[--radix-select-content-available-height] border border-separator',
+    'min-w-[--radix-select-trigger-width] rounded-sm max-bs-[--radix-select-content-available-height] border border-separator',
     modalSurface,
     surfaceShadow({ elevation: 'positioned' }),
     surfaceZIndex({ elevation, level: 'menu' }),

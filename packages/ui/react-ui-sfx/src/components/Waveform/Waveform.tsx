@@ -42,7 +42,7 @@ export const Waveform = ({ classNames, active, size: _size = 4 }: WaveformProps)
 
   return (
     <AnimatePresence>
-      <div className={mx('flex p-1 bg-neutral-200 dark:bg-neutral-800 rounded', classNames)}>
+      <div className={mx('flex p-1 bg-neutral-200 dark:bg-neutral-800 rounded-sm', classNames)}>
         <div className={mx('flex is-full bs-full items-center justify-center', waveClassNames)}>
           {range.map(({ duration, scaleY }, i) => {
             return (

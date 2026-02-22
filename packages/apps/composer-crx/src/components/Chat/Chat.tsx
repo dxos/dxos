@@ -157,7 +157,7 @@ export const Chat = ({ classNames, host, url }: ChatProps) => {
           <ScrollContainer.Viewport classNames='scrollbar-none'>
             {filteredMessages.map((message, i) => (
               <div key={i} className={mx('flex', 'text-base', message.role === 'user' && 'justify-end mlb-3')}>
-                <p className={mx(message.role === 'user' ? 'bg-sky-500 pli-2 plb-1 rounded' : 'text-description')}>
+                <p className={mx(message.role === 'user' ? 'bg-sky-500 pli-2 plb-1 rounded-sm' : 'text-description')}>
                   <MarkdownViewer
                     content={message.parts
                       .map((part) => (part.type === 'text' ? part.text : null))

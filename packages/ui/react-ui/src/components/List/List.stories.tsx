@@ -132,7 +132,7 @@ export const ManySizesDraggable: Story = {
             className={mx(
               index % 3 === 0 ? 'bs-20' : index % 2 === 0 ? 'bs-12' : 'bs-8',
               surfaceShadow({ elevation: 'positioned' }),
-              'mbe-2 p-2 bg-white dark:bg-neutral-800 rounded',
+              'mbe-2 p-2 bg-white dark:bg-neutral-800 rounded-sm',
             )}
           >{`List item ${index + 1}`}</p>
         ),

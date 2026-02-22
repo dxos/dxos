@@ -16,7 +16,7 @@ import { List, type ListRootProps } from './List';
 import { TestItemSchema, type TestItemType, type TestList, createList } from './testing';
 
 // TODO(burdon): var-icon-size.
-const grid = 'grid grid-cols-[32px_1fr_32px] min-bs-[2rem] rounded';
+const grid = 'grid grid-cols-[32px_1fr_32px] min-bs-[2rem] rounded-sm';
 
 const DefaultStory = (props: Omit<ListRootProps<TestItemType>, 'items'>) => {
   const registry = useContext(RegistryContext);

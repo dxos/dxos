@@ -17,7 +17,7 @@ const Text = ({ children, initial = 'open' }: PropsWithChildren<{ initial?: stri
 
   return (
     <div className='flex flex-col gap-20 is-full'>
-      <div className='flex justify-center text-4xl p-2 rounded border border-separator'>
+      <div className='flex justify-center text-4xl p-2 rounded-sm border border-separator'>
         <motion.div className='pli-2 text-neutral-500'>{'{'}</motion.div>
         <motion.div
           transition={{ type: 'spring', stiffness: 300, damping: 20 }}

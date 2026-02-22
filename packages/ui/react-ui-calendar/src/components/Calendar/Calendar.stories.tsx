@@ -39,7 +39,7 @@ export const Default: Story = {
 export const Border: Story = {
   render: () => (
     <Calendar.Root>
-      <Calendar.Viewport classNames='bg-modalSurface border border-separator rounded'>
+      <Calendar.Viewport classNames='bg-modalSurface border border-separator rounded-sm'>
         <Calendar.Toolbar />
         <Calendar.Grid rows={6} />
       </Calendar.Viewport>

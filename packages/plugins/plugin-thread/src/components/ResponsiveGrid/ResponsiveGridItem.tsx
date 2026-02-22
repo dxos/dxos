@@ -89,7 +89,7 @@ export const ResponsiveGridItem = <T extends object = any>({
       {onClick && (
         <div className='z-10 absolute top-1 right-1 flex'>
           <IconButton
-            classNames={mx('p-1 min-bs-1 rounded', groupHoverControlItemWithTransition)}
+            classNames={mx('p-1 min-bs-1 rounded-sm', groupHoverControlItemWithTransition)}
             iconOnly
             icon={pinned ? 'ph--x--regular' : 'ph--arrows-out--regular'}
             size={pinned ? 5 : 4}
@@ -107,7 +107,7 @@ export const ResponsiveGridItem = <T extends object = any>({
           {screenshare && <Icon icon='ph--broadcast--regular' size={pinned ? 5 : 4} />}
           <div
             className={mx(
-              'bg-neutral-800 text-neutral-100 plb-0.5 truncate rounded',
+              'bg-neutral-800 text-neutral-100 plb-0.5 truncate rounded-sm',
               pinned ? 'pli-2' : 'pli-1 text-xs',
             )}
           >
@@ -121,7 +121,7 @@ export const ResponsiveGridItem = <T extends object = any>({
         {(speaking && <Waveform active size={pinned ? 5 : 4} />) ||
           (props && (
             <IconButton
-              classNames={mx('p-1 min-bs-1 rounded', props?.classNames)}
+              classNames={mx('p-1 min-bs-1 rounded-sm', props?.classNames)}
               icon={props?.icon}
               label={props?.label}
               size={pinned ? 5 : 4}

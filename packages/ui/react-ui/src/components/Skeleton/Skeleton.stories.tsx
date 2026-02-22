@@ -41,7 +41,7 @@ export const Card = {
           <Skeleton classNames='bs-3 is-32' />
         </div>
       </div>
-      <Skeleton classNames='bs-32 is-full rounded' />
+      <Skeleton classNames='bs-32 is-full rounded-sm' />
       <div className='flex flex-col gap-2'>
         <Skeleton classNames='bs-3 is-full' />
         <Skeleton classNames='bs-3 is-5/6' />

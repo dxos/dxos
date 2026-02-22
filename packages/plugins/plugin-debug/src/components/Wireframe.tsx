@@ -30,7 +30,7 @@ export const Wireframe = ({ classNames, label, object }: WireframeProps) => {
           <div>{`[${width}x${height}]`}</div>
         </div>
         {object && (
-          <SyntaxHighlighter language='json' classNames='text-xs opacity-75 rounded'>
+          <SyntaxHighlighter language='json' classNames='text-xs opacity-75 rounded-sm'>
             {JSON.stringify(object, undefined, 2)}
           </SyntaxHighlighter>
         )}

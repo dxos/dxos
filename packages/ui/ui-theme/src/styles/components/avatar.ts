@@ -30,7 +30,7 @@ export const avatarDescription: ComponentFunction<AvatarStyleProps> = ({ srOnly 
   mx(descriptionText, srOnly && 'sr-only', ...etc);
 
 export const avatarFrame: ComponentFunction<AvatarStyleProps> = ({ variant }, ...etc) =>
-  mx('is-full bs-full bg-[--surface-bg]', variant === 'circle' ? 'rounded-full' : 'rounded', ...etc);
+  mx('is-full bs-full bg-[--surface-bg]', variant === 'circle' ? 'rounded-full' : 'rounded-sm', ...etc);
 
 export const avatarStatusIcon: ComponentFunction<AvatarStyleProps> = ({ status, size = 3 }, ...etc) =>
   mx(
@@ -47,7 +47,7 @@ export const avatarStatusIcon: ComponentFunction<AvatarStyleProps> = ({ status, 
 export const avatarRing: ComponentFunction<AvatarStyleProps> = ({ status, variant, animation }, ...etc) =>
   mx(
     'absolute inset-0 border-2',
-    variant === 'circle' ? 'rounded-full' : 'rounded',
+    variant === 'circle' ? 'rounded-full' : 'rounded-sm',
     status === 'current'
       ? 'border-primary-400 dark:border-primary-500'
       : status === 'active'

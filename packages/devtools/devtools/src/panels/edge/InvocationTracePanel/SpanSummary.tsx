@@ -82,7 +82,7 @@ export const SpanSummary: FC<SpanSummaryProps> = ({ db, span, onClose }) => {
         <div className='mt-3'>
           <details className='text-sm'>
             <summary className='cursor-pointer font-medium'>Input Data</summary>
-            <pre className='mt-2 p-2 bg-neutral/5 rounded text-xs overflow-auto'>
+            <pre className='mt-2 p-2 bg-neutral/5 rounded-sm text-xs overflow-auto'>
               {JSON.stringify(span.input, null, 2)}
             </pre>
           </details>

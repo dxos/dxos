@@ -14,7 +14,7 @@ export const skeletonRoot: ComponentFunction<SkeletonStyleProps> = ({ variant = 
   mx(
     'animate-pulse bg-neutral-250 dark:bg-neutral-750 rounded-md',
     variant === 'circle' && 'rounded-full',
-    variant === 'text' && 'rounded',
+    variant === 'text' && 'rounded-sm',
     ...etc,
   );
 

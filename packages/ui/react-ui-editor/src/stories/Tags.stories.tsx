@@ -43,7 +43,7 @@ const registry = {
         return () => clearInterval(interval);
       }, []);
 
-      return <div className='p-2 border border-separator rounded'>Test {count}</div>;
+      return <div className='p-2 border border-separator rounded-sm'>Test {count}</div>;
     },
   },
 } satisfies XmlWidgetRegistry;
