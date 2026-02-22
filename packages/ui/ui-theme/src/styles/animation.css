@@ -107,22 +107,11 @@
 
   /* Spin */
   --animate-spin-slow: spin 3s linear infinite;
-}
 
-@layer utilities {
+  /* Blink */
   @keyframes blink {
-    0%,
-    50%,
-    100% {
-      opacity: 1;
-    }
-    25%,
-    75% {
-      opacity: 0;
-    }
+    0%, 50%, 100% { opacity: 1; }
+    25%, 75% { opacity: 0; }
   }
-
-  .animate-blink {
-    animation: blink 1s step-start infinite;
-  }
+  --animate-blink: blink 1s step-start infinite;
 }
