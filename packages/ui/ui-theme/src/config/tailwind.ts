@@ -2,12 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-import tailwindcssContainerQueries from '@tailwindcss/container-queries';
 import tailwindcssForms from '@tailwindcss/forms';
 import merge from 'lodash.merge';
 import tailwindScrollbar from 'tailwind-scrollbar';
-import defaultConfig from 'tailwindcss/stubs/config.full.js';
-import { type Config, type ThemeConfig } from 'tailwindcss/types/config';
+import defaultTheme from 'tailwindcss/defaultTheme';
+import type { Config, ThemeConfig } from 'tailwindcss/plugin';
 import tailwindcssLogical from 'tailwindcss-logical';
 import tailwindcssRadix from 'tailwindcss-radix';
 
@@ -16,7 +15,7 @@ import { tokensTailwindConfig } from './tokens';
 export type TailwindConfig = Config;
 export type TailwindThemeConfig = ThemeConfig;
 
-const { extend: extendTokens, ...overrideTokens } = tokensTailwindConfig;
+const { extend: extendTokens, ...overrideTokens } = tokensTailwindConfig ?? {};
 
 export const tailwindConfig = ({
   env = 'production',
@@ -31,8 +30,8 @@ export const tailwindConfig = ({
   theme: {
     // Configure fonts in theme.css and package.json.
     fontFamily: {
-      body: ['Inter Variable', ...defaultConfig.theme.fontFamily.sans],
-      mono: ['JetBrains Mono Variable', ...defaultConfig.theme.fontFamily.mono],
+      body: ['Inter Variable', ...defaultTheme.fontFamily.sans],
+      mono: ['JetBrains Mono Variable', ...defaultTheme.fontFamily.mono],
     },
     extend: merge(
       {
@@ -247,7 +246,6 @@ export const tailwindConfig = ({
     },
   },
   plugins: [
-    tailwindcssContainerQueries,
     tailwindcssForms,
     tailwindcssLogical,
     tailwindcssRadix(),

@@ -11,9 +11,9 @@ import chTokens from '@ch-ui/tokens/postcss';
 import autoprefixer from 'autoprefixer';
 import postcss from 'postcss';
 import postcssImport from 'postcss-import';
+import postcssNesting from 'postcss-nesting';
 import tailwindcss from 'tailwindcss';
-import nesting from 'tailwindcss/nesting/index.js';
-import { type ThemeConfig } from 'tailwindcss/types/config';
+import type { ThemeConfig } from 'tailwindcss/plugin';
 import { type Plugin, type UserConfig } from 'vite';
 
 import { tailwindConfig, tokenSet } from '../config';
@@ -43,17 +43,11 @@ const createPostCSSPipeline = (environment: string, config: ThemePluginOptions):
   // Handles @import statements in CSS.
   postcssImport(),
   // Processes CSS nesting syntax.
-  nesting,
+  postcssNesting(),
   // Processes custom design tokens.
   chTokens({ config: () => tokenSet }),
   // Processes Tailwind directives and utilities.
-  tailwindcss(
-    tailwindConfig({
-      env: environment,
-      content: config.content,
-      extensions: config.extensions,
-    }),
-  ),
+  tailwindcss(),
   // Adds vendor prefixes.
   autoprefixer as any,
 ];

@@ -9,7 +9,7 @@ import autoprefixer from 'autoprefixer';
 import type { Plugin } from 'esbuild';
 import stylePlugin from 'esbuild-style-plugin';
 import tailwindcss from 'tailwindcss';
-import type { ThemeConfig } from 'tailwindcss/types/config';
+import type { ThemeConfig } from 'tailwindcss/plugin';
 
 import { tailwindConfig } from '../config';
 
@@ -50,13 +50,7 @@ export const ThemePlugins = async (options: {
     stylePlugin({
       postcss: {
         plugins: [
-          tailwindcss(
-            tailwindConfig({
-              env: process.env.NODE_ENV,
-              content: resolvedContent,
-              extensions: options.extensions,
-            }),
-          ),
+          tailwindcss(),
           autoprefixer as any,
         ],
       },

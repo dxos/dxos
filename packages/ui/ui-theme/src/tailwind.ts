@@ -2,6 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { tailwindConfig } from './config';
+import { tailwindConfig, type TailwindConfig } from './config';
 
-export default tailwindConfig({ content: ['./src/**/*.{ts,tsx}'] });
+export default tailwindConfig({ content: ['./src/**/*.{ts,tsx}'] }) as TailwindConfig;
