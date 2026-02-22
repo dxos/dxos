@@ -21,6 +21,7 @@
 @import './surfaces.css';
 @import './tag.css';
 @import './tldraw.css';
+@import '../generated-tokens.css';
 @import './tokens.css';
 @import './typography.css';
 
