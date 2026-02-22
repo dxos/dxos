@@ -27,14 +27,26 @@
   );
   --color-cm-highlight-surface: light-dark(
     theme(colors.sky.200),
-    theme(colors.cyan.600)
+    theme(colors.cyan.800)
   );
   --color-cm-comment-text: light-dark(
     theme(colors.neutral.50),
     theme(colors.neutral.950)
   );
   --color-cm-comment-surface: light-dark(
-    theme(colors.amber.700),
+    theme(colors.amber.800),
     theme(colors.amber.200)
+  );
+
+  /* Markdown syntax highlighting */
+  --color-cm-code: light-dark(
+    theme(colors.neutral.700),
+    theme(colors.neutral.300)
+  );
+  --color-cm-code-mark: theme(colors.blue.500);
+  --color-cm-mark-opacity: 0.5;
+  --color-cm-heading: light-dark(
+    theme(colors.neutral.900),
+    theme(colors.neutral.400)
   );
 }

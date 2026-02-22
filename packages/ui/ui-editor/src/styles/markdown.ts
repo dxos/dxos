@@ -13,14 +13,14 @@ const headings: Record<HeadingLevel, string> = {
   3: 'text-2xl',
   4: 'text-xl',
   5: 'text-lg',
-  6: '', // TODO(burdon): Should be text-base, but that's a color in our system.
+  6: 'text-base',
 };
 
 export const markdownTheme = {
-  code: 'font-mono !no-underline text-neutral-700 dark:text-neutral-300',
-  codeMark: 'font-mono text-primary-500',
-  mark: 'opacity-50',
+  code: 'font-mono no-underline! text-cm-code',
+  codeMark: 'font-mono text-cm-code-mark',
+  mark: 'opacity-[var(--color-cm-mark-opacity)]',
   heading: (level: HeadingLevel) => {
-    return mx(headings[level], 'dark:text-neutral-400');
+    return mx(headings[level], 'text-cm-heading');
   },
 };
