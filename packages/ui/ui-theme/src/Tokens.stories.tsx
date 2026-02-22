@@ -2,79 +2,28 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type HelicalArcSeries, type TokenAudit, auditFacet, parseAlphaLuminosity } from '@ch-ui/tokens';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { Fragment } from 'react';
+import React from 'react';
 
-import { tokenSet } from './config';
+import { hues } from './tokens';
 
-const colorAudit = auditFacet(tokenSet.colors, { condition: 'p3' });
+const Swatch = ({ hue }: { hue: string }) => (
+  <div className='shrink-0 flex flex-col rounded-sm overflow-hidden'>
+    <div className='aspect-video w-24' style={{ background: `var(--dx-${hue}Fill)` }} />
+    <span className='text-xs bg-baseSurface px-2 py-1'>{hue}</span>
+  </div>
+);
 
-const Swatch = ({ variableName, value, semantic, physical }: TokenAudit<HelicalArcSeries>) => {
-  const [luminosity, alpha] = parseAlphaLuminosity(value);
-
-  return (
-    <div className='shrink-0 inline-48 flex flex-col rounded-sm overflow-hidden'>
-      <dd className='aspect-video' style={{ background: `var(${variableName})` }}></dd>
-      <dt className='text-xs bg-baseSurface grow px-2 py-1'>
-        <p className='text-sm'>
-          {luminosity}
-          {typeof alpha !== 'undefined' && ` / ${alpha}`}
-        </p>
-        {physical.includes('values') && <p>values</p>}
-        {physical.includes('naming') && <p>naming</p>}
-        {semantic.length > 0 && (
-          <ul>
-            {semantic.map(({ sememeName, conditionId }) => {
-              const sememeCondition = `${conditionId}:${sememeName}`;
-              return <li key={sememeCondition}>{sememeCondition}</li>;
-            })}
-          </ul>
-        )}
-      </dt>
-    </div>
-  );
-};
-
-const DefaultStory = () => {
-  return (
-    <>
-      <div className='flex'>
-        <div className='p-2 bg-baseSurface rounded-sm'>
-          <h1 className='text-lg mb-2'>Physical color tokens</h1>
-          <pre className='text-xs'>
-            Luminosity (/ alpha)?
-            <br />
-            value // (whether added directly as a physical value)
-            <br />
-            naming // (whether added as a named physical value)
-            <br />
-            ...`semantic token name / theme`[]
-          </pre>
-        </div>
-      </div>
-
-      {Object.entries(colorAudit).map(([seriesId, audits], i) => (
-        <Fragment key={i}>
-          <h2 className='mt-12 mb-4'>
-            <span className='px-2 py-1 bg-baseSurface rounded-sm'>{seriesId}</span>
-          </h2>
-          <dl className='flex flex-wrap gap-2'>
-            {audits
-              .sort((a, b) => {
-                const [aL, aA] = parseAlphaLuminosity(a.value);
-                const [bL, bA] = parseAlphaLuminosity(b.value);
-                return aL - bL - (Number.isFinite(aA) && Number.isFinite(bA) ? aA! - bA! : 0);
-              })
-              .map((audit, i) => (
-                <Swatch key={i} {...audit} />
-              ))}
-          </dl>
-        </Fragment>
+const DefaultStory = () => (
+  <div className='p-4'>
+    <h1 className='text-lg mb-4'>Color tokens</h1>
+    <div className='flex flex-wrap gap-2'>
+      {hues.map((hue) => (
+        <Swatch key={hue} hue={hue} />
       ))}
-    </>
-  );
-};
+    </div>
+  </div>
+);
 
 const meta = {
   title: 'ui/ui-theme/Tokens',

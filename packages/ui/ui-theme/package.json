@@ -48,7 +48,6 @@
     "tailwind-check": "tailwindcss -i ./dist/plugin/node-esm/theme.css --config ./src/tailwind.ts --content \"./src/**/*.{js,ts,jsx,tsx,vue}\" --check"
   },
   "dependencies": {
-    "@ch-ui/tokens": "catalog:",
     "@dxos/node-std": "workspace:*",
     "@dxos/util": "workspace:*",
     "@fontsource-variable/inter": "catalog:",

@@ -2,6 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type huePalettes } from './config/tokens/colors';
+import { hues } from './tokens';
 
-export type HuePalette = keyof typeof huePalettes;
+export type HuePalette = (typeof hues)[number];

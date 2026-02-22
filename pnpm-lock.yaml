@@ -72,9 +72,6 @@ catalogs:
     '@ch-ui/icons':
       specifier: ^1.0.1
       version: 1.0.1
-    '@ch-ui/tokens':
-      specifier: 3.0.1
-      version: 3.0.1
     '@cloudflare/vitest-pool-workers':
       specifier: ^0.8.61
       version: 0.8.61
@@ -18455,9 +18452,6 @@ importers:
 
   packages/ui/ui-theme:
     dependencies:
-      '@ch-ui/tokens':
-        specifier: 'catalog:'
-        version: 3.0.1
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../../common/node-std
@@ -20171,10 +20165,6 @@ packages:
 
   '@ch-ui/icons@1.0.1':
     resolution: {integrity: sha512-RKFKEC6jeNcERFAsdJ2AuK25ZevYLUI8I8PoH2CCIjD2xkP3oSVCDbnS7a2BjOOc/HTzK93Bt5cYbuvGyMR0PA==}
-    engines: {node: '>=20.0.0'}
-
-  '@ch-ui/tokens@3.0.1':
-    resolution: {integrity: sha512-B6W14xdXO3Hu7vsxMk78D3qFQFH2yWmSjvszgUNAh+AwvyGDBTCOmJ2Ie9XH/jrBZUcZ35GCW3K6z2BzyFpk6Q==}
     engines: {node: '>=20.0.0'}
 
   '@chainsafe/is-ip@2.0.2':
@@ -29596,10 +29586,6 @@ packages:
     resolution: {integrity: sha512-g7nH6P6dyDioJogAAGprGpCtVImJhpPk/roCzdb3fIh61/s/nPsfR6onyMwkCAR/OlC3yBC0lESvUoQEAssIrw==}
     engines: {node: '>= 0.8'}
 
-  dependency-graph@1.0.0:
-    resolution: {integrity: sha512-cW3gggJ28HZ/LExwxP2B++aiKxhJXMSIt9K48FOXQkm+vuG5gyatXnLsONRJdzO/7VfjDIiaOOa/bs4l464Lwg==}
-    engines: {node: '>=4'}
-
   dependency-tree@11.1.1:
     resolution: {integrity: sha512-pnkCd8VGOq70EVaEQxDC9mZCjCwYj4yG4j8h+PEJswuWp+rdE6p8zbtVvWk+yPwaVimOjlhNi782U9K5KOU9MQ==}
     engines: {node: '>=18'}
@@ -31589,9 +31575,6 @@ packages:
 
   interval-tree-1d@1.0.4:
     resolution: {integrity: sha512-wY8QJH+6wNI0uh4pDQzMvl+478Qh7Rl4qLmqiluxALlNvl+I+o5x38Pw3/z7mDPTPS1dQalZJXsmbvxx5gclhQ==}
-
-  invariant@2.2.4:
-    resolution: {integrity: sha512-phJfQVBuaJM5raOpJjSfkiD6BpbCE4Ns//LaXl6wGYtUBY83nWS6Rf9tXm2e8VaK60JEjYldbPif/A2B1C2gNA==}
 
   ioredis@5.3.2:
     resolution: {integrity: sha512-1DKMMzlIHM02eBBVOFQ1+AolGjs6+xEcM4PDL7NqOS6szq7H9jSaEkIUH6/a5Hl241LzW6JLSiAbNvTQjUupUA==}
@@ -40130,13 +40113,6 @@ snapshots:
   '@ch-ui/icons@1.0.1':
     dependencies:
       svg-sprite: 2.0.4
-
-  '@ch-ui/tokens@3.0.1':
-    dependencies:
-      '@ch-ui/colors': 1.2.1
-      dependency-graph: 1.0.0
-      invariant: 2.2.4
-      postcss: 8.5.6
 
   '@chainsafe/is-ip@2.0.2': {}
 
@@ -51287,8 +51263,6 @@ snapshots:
 
   depd@2.0.0: {}
 
-  dependency-graph@1.0.0: {}
-
   dependency-tree@11.1.1:
     dependencies:
       commander: 12.1.0
@@ -53964,10 +53938,6 @@ snapshots:
   interval-tree-1d@1.0.4:
     dependencies:
       binary-search-bounds: 2.0.5
-
-  invariant@2.2.4:
-    dependencies:
-      loose-envify: 1.4.0
 
   ioredis@5.3.2:
     dependencies:
