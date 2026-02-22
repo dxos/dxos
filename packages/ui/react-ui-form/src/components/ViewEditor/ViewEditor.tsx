@@ -300,7 +300,7 @@ const FieldList = ({ schema, view, registry, readonly, showHeading = false, onDe
                     className={mx(
                       subtleHover,
                       'grid grid-cols-subgrid col-span-5',
-                      'rounded-sm cursor-pointer min-bs-10',
+                      'rounded-xs cursor-pointer min-bs-10',
                     )}
                   >
                     <List.ItemDragHandle disabled={readonly || schemaReadonly} />

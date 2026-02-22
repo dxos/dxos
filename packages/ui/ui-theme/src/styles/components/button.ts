@@ -37,7 +37,7 @@ export const buttonRoot: ComponentFunction<ButtonStyleProps> = (_props, ...etc) 
 
 export const buttonGroup: ComponentFunction<{ elevation?: Elevation }> = (_props, ...etc) => {
   return mx(
-    'inline-flex rounded-sm [&>:first-child]:rounded-is-sm [&>:last-child]:rounded-ie-sm [&>button]:relative',
+    'inline-flex rounded-xs [&>:first-child]:rounded-is-sm [&>:last-child]:rounded-ie-sm [&>button]:relative',
     ...etc,
   );
 };

@@ -204,7 +204,7 @@ export const links: Completion[] = [
 export const names = ['adam', 'alice', 'alison', 'bob', 'carol', 'charlie', 'sayuri', 'shoko'];
 
 const hover =
-  'rounded-sm text-baseText text-primary-600 hover:text-primary-500 dark:text-primary-300 hover:dark:text-primary-200';
+  'rounded-xs text-baseText text-primary-600 hover:text-primary-500 dark:text-primary-300 hover:dark:text-primary-200';
 
 const LinkTooltip: FC<{ url: string }> = ({ url }) => {
   const web = new URL(url);

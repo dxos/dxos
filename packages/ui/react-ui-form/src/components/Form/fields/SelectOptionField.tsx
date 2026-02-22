@@ -134,7 +134,7 @@ export const SelectOptionField = ({
                     <List.Item
                       role='button'
                       item={item}
-                      classNames={[subtleHover, 'flex flex-col cursor-pointer rounded-sm']}
+                      classNames={[subtleHover, 'flex flex-col cursor-pointer rounded-xs']}
                       aria-expanded={selected === item.id}
                     >
                       <div className='flex items-center'>

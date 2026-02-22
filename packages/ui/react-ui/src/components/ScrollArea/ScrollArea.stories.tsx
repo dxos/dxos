@@ -142,7 +142,7 @@ export const NestedScrollAreas = {
               <ScrollArea.Root thin orientation='vertical'>
                 <ScrollArea.Viewport classNames='plb-2 pli-2 gap-2'>
                   {Array.from({ length: column.count }, (_, i) => (
-                    <div key={i} role='listitem' className={`shrink-0 p-2 text-sm border border-separator rounded-sm`}>
+                    <div key={i} role='listitem' className={`shrink-0 p-2 text-sm border border-separator rounded-xs`}>
                       Item {i + 1}
                     </div>
                   ))}

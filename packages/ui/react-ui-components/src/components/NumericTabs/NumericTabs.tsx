@@ -25,7 +25,7 @@ export const NumericTabs = forwardRef<HTMLDivElement, NumericTabsProps>(
     return (
       <div
         ref={forwardedRef}
-        className={mx('flex flex-col overflow-hidden outline-none', classNames)}
+        className={mx('flex flex-col overflow-hidden outline-hidden', classNames)}
         tabIndex={-1}
         onKeyDown={(ev) => {
           // TODO(burdon): Focus when open Toggle.

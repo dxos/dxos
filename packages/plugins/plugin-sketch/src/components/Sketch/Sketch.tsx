@@ -224,7 +224,7 @@ export const Sketch = ({
         store={adapter.store}
         hideUi={hideUi}
         inferDarkMode
-        className='!outline-none'
+        className='!outline-hidden'
         maxAssetSize={1024 * 1024}
         assetUrls={assetUrls}
         overrides={overrides}

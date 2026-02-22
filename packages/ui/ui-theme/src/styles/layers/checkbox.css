@@ -23,7 +23,7 @@
   }
 
   .dx-checkbox {
-    @apply is-4 bs-4 overflow-hidden shadow-inner transition-colors bg-unAccent accent-unAccent text-accentSurfaceText shrink-0 inline-grid place-items-center rounded-sm;
+    @apply is-4 bs-4 overflow-hidden shadow-inner transition-colors bg-unAccent accent-unAccent text-accentSurfaceText shrink-0 inline-grid place-items-center rounded-xs;
   }
 
   /* TODO(ZaymonFC): Focus is handled by .dx-focus-ring, but should ideally be applied as part of this component.*/

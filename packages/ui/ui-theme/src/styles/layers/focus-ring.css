@@ -4,7 +4,7 @@
     &:not([disabled]),
     &[disabled='false'] {
       &:focus {
-        @apply outline-none;
+        @apply outline-hidden;
       }
 
       &:focus-visible {
@@ -15,10 +15,10 @@
         }
 
         &:hover {
-          @apply outline-none;
+          @apply outline-hidden;
 
           .dark & {
-            @apply outline-none;
+            @apply outline-hidden;
           }
         }
       }
@@ -30,7 +30,7 @@
     &:not([disabled]),
     &[disabled='false'] {
       &:focus {
-        @apply outline-none;
+        @apply outline-hidden;
       }
 
       &:focus {
@@ -41,10 +41,10 @@
         }
 
         &:hover {
-          @apply outline-none;
+          @apply outline-hidden;
 
           .dark & {
-            @apply outline-none;
+            @apply outline-hidden;
           }
         }
       }
@@ -60,7 +60,7 @@
     &:not([disabled]),
     &[disabled='false'] {
       &:focus {
-        @apply outline-none;
+        @apply outline-hidden;
       }
     }
   }
@@ -75,10 +75,10 @@
     }
 
     &:hover {
-      @apply outline-none;
+      @apply outline-hidden;
 
       .dark & {
-        @apply outline-none;
+        @apply outline-hidden;
       }
     }
   }
@@ -93,10 +93,10 @@
     }
 
     &:hover {
-      @apply outline-none;
+      @apply outline-hidden;
 
       .dark & {
-        @apply outline-none;
+        @apply outline-hidden;
       }
     }
   }
@@ -129,7 +129,7 @@
       }
 
       &:focus {
-        @apply outline-none;
+        @apply outline-hidden;
       }
 
       &:focus-visible {
@@ -142,10 +142,10 @@
         }
 
         &:hover {
-          @apply outline-none;
+          @apply outline-hidden;
 
           .dark & {
-            @apply outline-none;
+            @apply outline-hidden;
           }
         }
       }
@@ -162,7 +162,7 @@
       }
 
       &:focus {
-        @apply outline-none;
+        @apply outline-hidden;
       }
 
       &:focus {
@@ -175,10 +175,10 @@
         }
 
         &:hover {
-          @apply outline-none;
+          @apply outline-hidden;
 
           .dark & {
-            @apply outline-none;
+            @apply outline-hidden;
           }
         }
       }

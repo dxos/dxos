@@ -47,7 +47,7 @@ const Middle = forwardRef<HTMLDivElement, SlottableProps<HTMLDivElement>>(
 const Leaf = forwardRef<HTMLButtonElement, SlottableClassName<PropsWithChildren>>(
   ({ className, classNames, children, ...props }, forwardedRef) => {
     return (
-      <button {...props} className={mx('p-2 outline-none border rounded', className, classNames)} ref={forwardedRef}>
+      <button {...props} className={mx('p-2 outline-hidden border rounded', className, classNames)} ref={forwardedRef}>
         {children}
       </button>
     );

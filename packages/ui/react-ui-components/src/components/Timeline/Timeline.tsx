@@ -201,7 +201,7 @@ export const Timeline = forwardRef<ScrollController, TimelineProps>(
     return (
       <ScrollContainer.Root pin ref={scrollerRef}>
         <ScrollContainer.Viewport
-          classNames={['flex flex-col is-full !outline-none', classNames]}
+          classNames={['flex flex-col is-full !outline-hidden', classNames]}
           tabIndex={0}
           ref={containerRef}
         >

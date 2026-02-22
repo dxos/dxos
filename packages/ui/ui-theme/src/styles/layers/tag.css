@@ -6,14 +6,14 @@
 
 @layer dx-components {
   .dx-tag {
-    @apply inline-block text-xs font-semibold m-0.5 pli-1 rounded-sm cursor-default truncate;
+    @apply inline-block text-xs font-semibold m-0.5 pli-1 rounded-xs cursor-default truncate;
     padding-block: var(--dx-tag-padding-block);
     user-select: none;
   }
 
   .dx-tag--anchor {
     /* NOTE: Margin offsets padding so that border is flush with text. This should only apply to anchor tags inside of Codemirror. */
-    @apply inline cursor-pointer -mli-[4px] pli-[3px] plb-0.5 border border-separator rounded-sm bg-groupSurface transition-colors;
+    @apply inline cursor-pointer -mli-[4px] pli-[3px] plb-0.5 border border-separator rounded-xs bg-groupSurface transition-colors;
 
     &:hover {
       @apply bg-hoverSurface;

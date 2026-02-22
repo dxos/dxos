@@ -167,7 +167,7 @@ export const MessageTextbox = ({
       <div
         role='none'
         ref={parentRef}
-        className={mx('plb-0.5 mie-1 rounded-sm', focusRing, disabled && 'opacity-50')}
+        className={mx('plb-0.5 mie-1 rounded-xs', focusRing, disabled && 'opacity-50')}
         {...focusAttributes}
       />
     </MessageRoot>

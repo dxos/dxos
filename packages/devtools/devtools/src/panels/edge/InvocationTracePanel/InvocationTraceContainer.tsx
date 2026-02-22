@@ -202,7 +202,7 @@ export const InvocationTraceContainer = ({
                         handleRowClick(row);
                       }
                     }}
-                    className='cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-accent'
+                    className='cursor-pointer focus:outline-hidden focus-visible:ring-2 focus-visible:ring-accent'
                   >
                     <td className='px-2 py-1 whitespace-nowrap border border-separator'>{row.id}</td>
                     <td className='px-2 py-1 whitespace-nowrap border border-separator'>{row.target}</td>

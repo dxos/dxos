@@ -63,7 +63,7 @@
   }
   /* Props */
   .dx-button:not([data-props~='grouped']) {
-    @apply rounded-sm;
+    @apply rounded-xs;
   }
   .dx-button:not([data-props~='wrap']) {
     @apply truncate;

@@ -85,7 +85,7 @@ export const AgentConfig = ({
             onClick={agentStatus === 'creatable' ? onAgentCreate : onAgentRefresh}
             aria-describedby='devices-panel.create-agent.description'
           >
-            <div role='img' className={mx(getSize(8), 'm-1 rounded-sm bg-inputSurface grid place-items-center')}>
+            <div role='img' className={mx(getSize(8), 'm-1 rounded-xs bg-inputSurface grid place-items-center')}>
               {agentStatus === 'creatable' ? (
                 <Icon icon='ph--plus--light' size={6} />
               ) : (

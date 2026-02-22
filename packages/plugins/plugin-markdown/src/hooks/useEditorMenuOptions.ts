@@ -56,7 +56,7 @@ export const useEditorMenuOptions = ({
       content: () => {
         const pressEl = Domino.of('span').text('Press');
         const triggerEls = trigger.map((text) =>
-          Domino.of('span').classNames('mx-1 pli-1.5 pt-[1px] pb-[2px] border border-separator rounded-sm').text(text),
+          Domino.of('span').classNames('mx-1 pli-1.5 pt-[1px] pb-[2px] border border-separator rounded-xs').text(text),
         );
         const forCommandsEl = Domino.of('span').text('for commands.');
         return Domino.of('div').children(pressEl, ...triggerEls, forCommandsEl).root;

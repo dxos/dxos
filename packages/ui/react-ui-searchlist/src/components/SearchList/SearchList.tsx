@@ -471,7 +471,7 @@ const SearchListItem = forwardRef<HTMLDivElement, SearchListItemProps>(
         tabIndex={-1}
         className={mx(
           'flex gap-2 items-center',
-          'plb-1 pli-2 rounded-sm select-none cursor-pointer data-[selected=true]:bg-hoverOverlay hover:bg-hoverOverlay',
+          'plb-1 pli-2 rounded-xs select-none cursor-pointer data-[selected=true]:bg-hoverOverlay hover:bg-hoverOverlay',
           disabled && 'opacity-50 cursor-not-allowed hover:bg-transparent data-[selected=true]:bg-transparent',
           classNames,
         )}

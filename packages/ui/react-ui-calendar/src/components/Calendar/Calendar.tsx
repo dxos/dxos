@@ -293,7 +293,7 @@ const CalendarGrid = ({ classNames, rows, onSelect }: CalendarGridProps) => {
           ref={listRef}
           role='none'
           // TODO(burdon): Snap isn't working.
-          className='[&>div]:snap-y scrollbar-none outline-none'
+          className='[&>div]:snap-y scrollbar-none outline-hidden'
           width={width}
           height={maxHeight ?? height}
           rowCount={maxRows}

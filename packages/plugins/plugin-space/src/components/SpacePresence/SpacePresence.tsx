@@ -125,7 +125,7 @@ export const FullPresence = (props: MemberPresenceProps) => {
           key={member.identity.identityKey.toHex()}
           side='bottom'
           content={getName(member.identity)}
-          className='grid focus:outline-none'
+          className='grid focus:outline-hidden'
         >
           <PresenceAvatar
             identity={member.identity}
@@ -139,7 +139,7 @@ export const FullPresence = (props: MemberPresenceProps) => {
 
       {members.length > 3 && (
         <Popover.Root>
-          <Popover.Trigger className='grid focus:outline-none'>
+          <Popover.Trigger className='grid focus:outline-hidden'>
             <Avatar.Root>
               {/* TODO(wittjosiah): Make text fit. */}
               <Avatar.Content

@@ -133,7 +133,7 @@ export const ResizeHandle = ({
       ref={buttonRef}
       data-side={side}
       className={mx(
-        'group absolute flex focus-visible:outline-none',
+        'group absolute flex focus-visible:outline-hidden',
         surfaceZIndex({ elevation, level: 'tooltip' }),
         orientation === 'horizontal'
           ? 'cursor-col-resize is-4 inset-block-0 data-[side="inline-end"]:inline-end-0 data-[side="inline-end"]:before:inline-end-0 data-[side="inline-start"]:inline-start-0 data-[side="inline-start"]:before:inline-start-0 !border-lb-0 before:inset-block-0 before:is-1'

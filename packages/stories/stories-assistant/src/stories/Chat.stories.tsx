@@ -101,7 +101,7 @@ import {
   testTypes,
 } from '../testing';
 
-const panelClassNames = 'bg-baseSurface rounded-sm border border-separator overflow-hidden';
+const panelClassNames = 'bg-baseSurface rounded-xs border border-separator overflow-hidden';
 
 type StoryProps = {
   modules: FC<ComponentProps>[][];

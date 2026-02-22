@@ -336,7 +336,7 @@ const CustomInput = () => {
         onChange={(ev) => onQueryChange(ev.target.value)}
         onKeyDown={handleKeyDown}
         placeholder='Custom input...'
-        className='bg-transparent outline-none grow'
+        className='bg-transparent outline-hidden grow'
       />
       {query && (
         <button onClick={() => onQueryChange('')} className='text-description hover:text-baseText'>

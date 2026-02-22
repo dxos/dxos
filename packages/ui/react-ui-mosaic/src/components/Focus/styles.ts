@@ -9,7 +9,7 @@ export const styles = {
   container: {
     root: [
       // TODO(burdon): Option for border/rounded; ring/outline vs border?
-      'outline-none border border-separator md:rounded-sm',
+      'outline-hidden border border-separator md:rounded-xs',
       // Focus (e.g., via tabster).
       'focus:!border-accentSurface',
       // Active (e.g., drop target).

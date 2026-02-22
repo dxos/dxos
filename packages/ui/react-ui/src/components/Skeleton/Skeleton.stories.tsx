@@ -19,7 +19,7 @@ export default {
 
 export const Default = {
   render: () => (
-    <div className='flex flex-col gap-4 p-4 border border-separator rounded-sm'>
+    <div className='flex flex-col gap-4 p-4 border border-separator rounded-xs'>
       <div className='flex is-fit items-center gap-4'>
         <Skeleton classNames='size-10 shrink-0 rounded-full' />
         <div className='grid gap-2'>
@@ -33,7 +33,7 @@ export const Default = {
 
 export const Card = {
   render: () => (
-    <div className='flex flex-col gap-3 is-96 p-4 border border-separator rounded-sm'>
+    <div className='flex flex-col gap-3 is-96 p-4 border border-separator rounded-xs'>
       <div className='flex items-center gap-3'>
         <Skeleton variant='circle' classNames='bs-12 is-12 rounded-full' />
         <div className='flex flex-col gap-2 flex-1'>

@@ -47,7 +47,7 @@ export const DeviceList = ({
         data-testid='devices-panel.create-invitation'
         onClick={onClickAdd}
       >
-        <div role='img' className={mx(getSize(8), 'm-1 rounded-sm bg-inputSurface grid place-items-center')}>
+        <div role='img' className={mx(getSize(8), 'm-1 rounded-xs bg-inputSurface grid place-items-center')}>
           <Icon icon='ph--plus--light' size={6} />
         </div>
         <span className='grow font-medium text-start'>{t('choose add device label')}</span>

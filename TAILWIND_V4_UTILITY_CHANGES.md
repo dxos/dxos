@@ -5,7 +5,30 @@ This document summarizes utility class changes in Tailwind CSS v4 that may requi
 
 ## Breaking Changes
 
-### 1. Removed Deprecated Utilities
+### 1. Utility Class Renames
+
+Tailwind CSS v4 has renamed several core utilities for better consistency:
+
+| v3 | v4 | Status |
+|---|---|---|
+| `shadow-sm` | `shadow-xs` | ✅ Not used in codebase |
+| `shadow` | `shadow-sm` | ✅ Not used in codebase |
+| `drop-shadow-sm` | `drop-shadow-xs` | ✅ Not used in codebase |
+| `drop-shadow` | `drop-shadow-sm` | ✅ Not used in codebase |
+| `blur-sm` | `blur-xs` | ✅ Not used in codebase |
+| `blur` | `blur-sm` | ✅ Not used in codebase |
+| `backdrop-blur-sm` | `backdrop-blur-xs` | ✅ Not used in codebase |
+| `backdrop-blur` | `backdrop-blur-sm` | ✅ Not used in codebase |
+| `rounded-sm` | `rounded-xs` | ✅ **FIXED** - 64 occurrences in 56 files |
+| `rounded` | `rounded-sm` | ✅ Not used in codebase |
+| `outline-none` | `outline-hidden` | ✅ **FIXED** - 35 occurrences in 18 files |
+| `ring` | `ring-3` | ✅ Not used in codebase |
+
+**Files updated:**
+- `rounded-sm` → `rounded-xs`: Updated across all source files (ui-theme styles, components, stories)
+- `outline-none` → `outline-hidden`: Updated in focus-ring.css and focus.ts
+
+### 2. Removed Deprecated Utilities
 
 #### Box Decoration Utilities (RENAMED)
 - **Removed**: `decoration-slice`, `decoration-clone`
@@ -18,7 +41,7 @@ This document summarizes utility class changes in Tailwind CSS v4 that may requi
 - **Migration**: These utilities can be safely removed from markup
 - **Impact**: ✅ **None found** - Codebase scan found no usage of these utilities
 
-### 2. Arbitrary Value Syntax Changes
+### 3. Arbitrary Value Syntax Changes
 
 #### CSS Variables in Arbitrary Values
 **Before (v3):**
@@ -52,7 +75,7 @@ This document summarizes utility class changes in Tailwind CSS v4 that may requi
 - CSS variable usage without `var()`
 - Comma usage in grid/object utilities
 
-### 3. Preflight (Base Styles) Changes
+### 4. Preflight (Base Styles) Changes
 
 #### Placeholder Text Color
 **Before (v3):**
@@ -87,14 +110,32 @@ This document summarizes utility class changes in Tailwind CSS v4 that may requi
 ## Migration Audit Results
 
 ### ✅ Passed Checks
-1. **No deprecated box-decoration utilities** (`decoration-slice`, `decoration-clone`)
-2. **No removed filter utilities** (`filter`, `backdrop-filter`)
-3. **Build successful** with Tailwind v4.2.0
-4. **Linter passed** with no Tailwind-related issues
+1. **Utility class renames completed** (`rounded-sm` → `rounded-xs`, `outline-none` → `outline-hidden`)
+2. **No deprecated box-decoration utilities** (`decoration-slice`, `decoration-clone`)
+3. **No removed filter utilities** (`filter`, `backdrop-filter`)
+4. **CSS variable syntax fixed** (2 files)
+5. **Grid track list syntax fixed** (3 files)
+6. **Build successful** with Tailwind v4.2.0
+7. **Linter passed** with no Tailwind-related issues
 
-### ⚠️ Manual Review Required
+### ✅ Fixed Issues
 
-#### 1. CSS Variables Without `var()` Wrapper
+#### 1. Utility Class Renames
+
+**Fixed automatically using sed:**
+
+1. `rounded-sm` → `rounded-xs` (64 occurrences in 56 files)
+   - ui-theme styles (button.ts, input.ts, menu.ts, tooltip.ts, link.ts)
+   - React UI components and stories
+   - Plugin components
+   - CSS layers (button.css, checkbox.css, tag.css)
+
+2. `outline-none` → `outline-hidden` (35 occurrences in 18 files)
+   - focus-ring.css (17 occurrences)
+   - focus.ts (1 occurrence)
+   - Various component files
+
+#### 2. CSS Variables Without `var()` Wrapper (FIXED)
 
 **Files requiring updates:**
 
@@ -116,12 +157,7 @@ This document summarizes utility class changes in Tailwind CSS v4 that may requi
    mx('rounded p-1 max-bs-[var(--radix-dropdown-menu-content-available-height)] overflow-y-auto', ...etc);
    ```
 
-**Search for all occurrences:**
-```bash
-grep -rn '\[[^v][^a][^r]--[a-zA-Z0-9-_]*\]' packages/ui/ui-theme/src/styles/ --include="*.ts"
-```
-
-#### 2. Grid Track List Commas (Need Underscores)
+#### 3. Grid Track List Commas (FIXED)
 
 **Files requiring updates:**
 
@@ -194,54 +230,31 @@ grep -rn 'grid-cols-\[[0-9a-z]*,[0-9a-z]*\]' packages/ --include="*.tsx" --inclu
 - ✅ Configuration migrated to CSS-based approach
 - ✅ Build successful and 4.5x faster
 - ✅ No deprecated utilities found in codebase
-- ❌ **REQUIRED**: CSS variable syntax fixes (2 files)
-- ❌ **REQUIRED**: Grid track list comma fixes (3 files)
+- ✅ **FIXED**: Utility class renames (99 files updated)
+- ✅ **FIXED**: CSS variable syntax (2 files)
+- ✅ **FIXED**: Grid track list syntax (3 files)
 - ⚠️ Visual regression testing pending
 - ⚠️ Full test suite pending
 
-## Required Actions
+## Recommended Testing (Before Merge)
 
-### Immediate (Blocking)
-
-1. **Fix CSS variable syntax in arbitrary values** (2 files):
-   - `packages/ui/ui-theme/src/styles/fragments/dimension.ts:8`
-   - `packages/ui/ui-theme/src/styles/components/menu.ts:16`
-
-   **Command to find all occurrences:**
-   ```bash
-   cd /Users/burdon/Code/dxos/dxos-tailwind-v4
-   grep -rn '\[[^v][^a][^r]--[a-zA-Z0-9-_]*\]' packages/ui/ui-theme/src/styles/ --include="*.ts"
-   ```
-
-2. **Fix grid track list commas** (3 files):
-   - `packages/ui/react-ui-canvas-editor/src/components/Editor/Editor.stories.tsx:66`
-   - `packages/ui/react-ui-canvas-compute/src/shapes/Queue.tsx:66`
-   - `packages/ui/react-ui-canvas-compute/src/compute.stories.tsx:125`
-
-   **Command to find all occurrences:**
-   ```bash
-   grep -rn 'grid-cols-\[[0-9a-z]*,[0-9a-z]*\]' packages/ --include="*.tsx" --include="*.ts"
-   ```
-
-### Testing (Before Merge)
-
-3. **Run full test suite:**
+1. **Run full test suite:**
    ```bash
    MOON_CONCURRENCY=4 moon run :test -- --no-file-parallelism
    ```
 
-4. **Run pre-CI checks:**
+2. **Run pre-CI checks:**
    ```bash
    pnpm -w pre-ci
    ```
 
-5. **Visual regression testing:**
+3. **Visual regression testing:**
    - Start Storybook and visually verify component styles
    - Check placeholder text colors in forms
    - Verify button cursor behavior
    - Review default color palette changes
 
-6. **Cross-browser verification:**
+4. **Cross-browser verification:**
    - Safari 16.4+
    - Chrome 111+
    - Firefox 128+

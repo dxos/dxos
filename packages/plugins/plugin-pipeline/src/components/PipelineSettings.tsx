@@ -177,7 +177,7 @@ export const PipelineObjectSettings = ({ classNames, pipeline }: PipelineObjectS
                   classNames={listItemGrid}
                   aria-expanded={expandedId === column.view.dxn.toString()}
                 >
-                  <div role='none' className={mx(subtleHover, listItemGrid, 'rounded-sm cursor-pointer min-bs-10')}>
+                  <div role='none' className={mx(subtleHover, listItemGrid, 'rounded-xs cursor-pointer min-bs-10')}>
                     <List.ItemDragHandle />
                     <List.ItemTitle onClick={() => handleToggleField(column)}>{column.name}</List.ItemTitle>
                     <List.ItemDeleteButton

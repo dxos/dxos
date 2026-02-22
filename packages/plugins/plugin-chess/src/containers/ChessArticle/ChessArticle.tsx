@@ -48,7 +48,7 @@ export const ChessArticle = ({ role, subject: game }: ChessArticleProps) => {
           )}
         >
           <Chessboard.Content>
-            <Chessboard.Board classNames='m-4 rounded-sm overflow-hidden' orientation={orientation} />
+            <Chessboard.Board classNames='m-4 rounded-xs overflow-hidden' orientation={orientation} />
           </Chessboard.Content>
           {open && (
             <div className='hidden @3xl:flex flex-col p-8 justify-center items-center overflow-hidden'>
