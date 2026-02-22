@@ -1,0 +1,44 @@
+/**
+ * CodeMirror theme tokens.
+ */
+
+:root {
+  --dx-cmCodeblock: var(--dx-neutral-500\/\.1);
+  --dx-cmActiveLine: var(--dx-neutral-200\/\.5);
+  --dx-cmSeparator: var(--dx-primary-500);
+  --dx-cmCursor: var(--dx-neutral-900);
+  --dx-cmSelection: var(--dx-primary-400\/\.5);
+  --dx-cmFocusedSelection: var(--dx-primary-400);
+  --dx-cmHighlight: var(--dx-neutral-950);
+  --dx-cmHighlightSurface: var(--dx-sky-200);
+  --dx-cmCommentText: var(--dx-neutral-50);
+  --dx-cmCommentSurface: var(--dx-amber-700);
+}
+
+.dark {
+  --dx-cmCodeblock: var(--dx-neutral-500\/\.1);
+  --dx-cmActiveLine: var(--dx-neutral-800\/\.5);
+  --dx-cmSeparator: var(--dx-primary-500);
+  --dx-cmCursor: var(--dx-neutral-100);
+  --dx-cmSelection: var(--dx-primary-600\/\.5);
+  --dx-cmFocusedSelection: var(--dx-primary-600);
+  --dx-cmHighlight: var(--dx-neutral-50);
+  --dx-cmHighlightSurface: var(--dx-cyan-600);
+  --dx-cmCommentText: var(--dx-neutral-950);
+  --dx-cmCommentSurface: var(--dx-amber-200);
+}
+
+@theme {
+  --color-cmActiveLine: theme(colors.neutral.200 / 0.5);
+  --color-cmCommentSurface: theme(colors.amber.700);
+  --color-cmCommentText: theme(colors.neutral.50);
+  --color-cmHighlightSurface: theme(colors.sky.200);
+  --color-cmSeparator: theme(colors.blue.500);
+}
+
+.dark {
+  --color-cmActiveLine: theme(colors.neutral.800 / 0.5);
+  --color-cmHighlightSurface: theme(colors.cyan.600);
+  --color-cmCommentText: theme(colors.neutral.950);
+  --color-cmCommentSurface: theme(colors.amber.200);
+}

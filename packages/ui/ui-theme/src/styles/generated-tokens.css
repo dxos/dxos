@@ -707,16 +707,6 @@
 :root {
   --dx-callActive: var(--dx-green-500);
   --dx-callAlert: var(--dx-rose-500);
-  --dx-cmCodeblock: var(--dx-neutral-500\/\.1);
-  --dx-cmActiveLine: var(--dx-neutral-200\/\.5);
-  --dx-cmSeparator: var(--dx-primary-500);
-  --dx-cmCursor: var(--dx-neutral-900);
-  --dx-cmSelection: var(--dx-primary-400\/\.5);
-  --dx-cmFocusedSelection: var(--dx-primary-400);
-  --dx-cmHighlight: var(--dx-neutral-950);
-  --dx-cmHighlightSurface: var(--dx-sky-200);
-  --dx-cmCommentText: var(--dx-neutral-50);
-  --dx-cmCommentSurface: var(--dx-amber-700);
   --dx-redCursor: var(--dx-red-400);
   --dx-redText: var(--dx-red-550);
   --dx-redFill: var(--dx-red-500);
@@ -888,16 +878,6 @@
 .dark {
   --dx-callActive: var(--dx-green-500);
   --dx-callAlert: var(--dx-rose-500);
-  --dx-cmCodeblock: var(--dx-neutral-500\/\.1);
-  --dx-cmActiveLine: var(--dx-neutral-800\/\.5);
-  --dx-cmSeparator: var(--dx-primary-500);
-  --dx-cmCursor: var(--dx-neutral-100);
-  --dx-cmSelection: var(--dx-primary-600\/\.5);
-  --dx-cmFocusedSelection: var(--dx-primary-600);
-  --dx-cmHighlight: var(--dx-neutral-50);
-  --dx-cmHighlightSurface: var(--dx-cyan-600);
-  --dx-cmCommentText: var(--dx-neutral-950);
-  --dx-cmCommentSurface: var(--dx-amber-200);
   --dx-redCursor: var(--dx-red-300);
   --dx-redText: var(--dx-red-300);
   --dx-redFill: var(--dx-red-500);

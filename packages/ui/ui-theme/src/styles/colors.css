@@ -189,14 +189,6 @@
   --color-scrollbarThumbActive: theme(colors.neutral.200);
   --color-scrollbarThumbHover: theme(colors.neutral.200);
 
-  /* CodeMirror */
-
-  --color-cmActiveLine: theme(colors.neutral.200 / 0.5);
-  --color-cmCommentSurface: theme(colors.amber.700);
-  --color-cmCommentText: theme(colors.neutral.50);
-  --color-cmHighlightSurface: theme(colors.sky.200);
-  --color-cmSeparator: theme(colors.blue.500);
-
   /* Sheet */
 
   --color-axisSelectedSurface: theme(colors.neutral.100);
@@ -223,11 +215,6 @@
 
 /* Dark mode color overrides */
 .dark {
-  --color-cmActiveLine: theme(colors.neutral.800 / 0.5);
-  --color-cmHighlightSurface: theme(colors.cyan.600);
-  --color-cmCommentText: theme(colors.neutral.950);
-  --color-cmCommentSurface: theme(colors.amber.200);
-
   --color-redText: theme(colors.red.300);
   --color-redSurface: theme(colors.red.700);
   --color-redSurfaceText: theme(colors.red.200);
